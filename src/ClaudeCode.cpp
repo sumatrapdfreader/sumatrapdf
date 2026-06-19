@@ -31,42 +31,23 @@
 #include "utils/GuessFileType.h"
 
 #include "AppTools.h"
+#include "AIChatCommon.h"
 #include "ClaudeCode.h"
 #include "EngineAll.h"
 
 bool IsClaudeCodeAvailable() {
-#ifdef _MSC_VER
-    return IsWindows10OrGreater();
-#else
-    return false;
-#endif
+    return IsAIChatAvailable();
 }
 
 static TempStr FindClaudeExecutableTemp() {
-#ifdef _MSC_VER
-    TempStr claudePath = nullptr;
+    StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
-        TempStr candidates[] = {
-            str::FormatTemp("%s\\.local\\bin\\claude.exe", userProfile),
-            str::FormatTemp("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile),
-            str::FormatTemp("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile),
-        };
-        for (auto& c : candidates) {
-            if (file::Exists(c)) {
-                return c;
-            }
-        }
+        candidates.Append(str::FormatTemp("%s\\.local\\bin\\claude.exe", userProfile));
+        candidates.Append(str::FormatTemp("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile));
+        candidates.Append(str::FormatTemp("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile));
     }
-    WCHAR claudePathW[MAX_PATH];
-    if (SearchPathW(nullptr, L"claude.exe", nullptr, MAX_PATH, claudePathW, nullptr) > 0) {
-        return ToUtf8Temp(claudePathW);
-    }
-    if (SearchPathW(nullptr, L"claude", L".exe", MAX_PATH, claudePathW, nullptr) > 0) {
-        return ToUtf8Temp(claudePathW);
-    }
-#endif
-    return nullptr;
+    return AIChatFindExecutableTemp(candidates, L"claude.exe", L"claude");
 }
 
 bool IsClaudeCodeInstalled() {
@@ -74,115 +55,28 @@ bool IsClaudeCodeInstalled() {
 }
 
 static Mutex gClaudeCodeLogMutex;
-
-static TempStr ClaudeCodeLogPathTemp() {
-    TempStr dir = GetNotImportantDataDirTemp();
-    if (!dir) {
-        return nullptr;
-    }
-    return path::JoinTemp(dir, "claude-code-log.txt");
-}
+static AIChatLogger gClaudeCodeLogger = {&gClaudeCodeLogMutex, "claude-code-log.txt", "claude-code"};
 
 static void ClaudeCodeLog(const char* direction, const char* text) {
-    if (!text) {
-        text = "";
-    }
-
-    SYSTEMTIME st;
-    GetLocalTime(&st);
-    StrBuilder entry;
-    entry.AppendFmt("[%04d-%02d-%02d %02d:%02d:%02d] %s: ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
-                    st.wSecond, direction);
-    entry.Append(text);
-    if (entry.LastChar() != '\n') {
-        entry.AppendChar('\n');
-    }
-
-    logfa("claude-code %s: %s", direction, text);
-
-    TempStr path = ClaudeCodeLogPathTemp();
-    if (!path) {
-        return;
-    }
-
-    gClaudeCodeLogMutex.Lock();
-    FILE* f = fopen(path, "a");
-    if (f) {
-        fwrite(entry.Get(), 1, entry.Size(), f);
-        fflush(f);
-        fclose(f);
-    }
-    gClaudeCodeLogMutex.Unlock();
+    AIChatLog(&gClaudeCodeLogger, direction, text);
 }
 
-constexpr int kBtnIdClaudeLearnMore = 100;
 constexpr const char* kClaudeCodeDocURI = "/AI-Chat-with-document#claude-code";
 
-static HRESULT CALLBACK ClaudeCodeNotInstalledDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-                                                             LONG_PTR lpRefData) {
-    switch (msg) {
-        case TDN_HYPERLINK_CLICKED:
-            LaunchDocumentation(kClaudeCodeDocURI);
-            break;
-        case TDN_BUTTON_CLICKED:
-            if ((int)wParam == kBtnIdClaudeLearnMore) {
-                LaunchDocumentation(kClaudeCodeDocURI);
-                return S_FALSE;
-            }
-            break;
-    }
-    return S_OK;
-}
-
 static void ShowClaudeCodeNotInstalledDialog() {
-    const char* mainInstr = _TRA("Claude Code cli must be installed for this functionality");
-    const char* linkLabel = _TRA("AI Chat documentation");
-    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions."), linkLabel);
-
-    TASKDIALOG_BUTTON buttons[2];
-    buttons[0].nButtonID = IDOK;
-    buttons[0].pszButtonText = ToWStrTemp(_TRA("OK"));
-    buttons[1].nButtonID = kBtnIdClaudeLearnMore;
-    buttons[1].pszButtonText = ToWStrTemp(_TRA("Learn more"));
-
-    TASKDIALOGCONFIG dialogConfig{};
-    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
-    if (trans::IsCurrLangRtl()) {
-        flags |= TDF_RTL_LAYOUT;
-    }
-    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = ToWStrTemp(_TRA("Claude chat"));
-    dialogConfig.pszMainInstruction = ToWStrTemp(mainInstr);
-    dialogConfig.pszContent = ToWStrTemp(content);
-    dialogConfig.nDefaultButton = IDOK;
-    dialogConfig.dwFlags = flags;
-    dialogConfig.pfCallback = ClaudeCodeNotInstalledDialogCallback;
-    dialogConfig.pButtons = buttons;
-    dialogConfig.cButtons = dimof(buttons);
-    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
-
-    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    AIChatNotInstalledDialogArgs args;
+    args.windowTitle = _TRA("Claude chat");
+    args.mainInstruction = _TRA("Claude Code cli must be installed for this functionality");
+    args.docUri = kClaudeCodeDocURI;
+    AIChatShowNotInstalledDialog(args);
 }
 
 bool IsClaudeCodeSupportedForFile(const char* filePath, Kind engineKind) {
-    if (!filePath) {
-        return false;
-    }
-    if (engineKind == kindEngineComicBooks || engineKind == kindEngineImageDir) {
-        return false;
-    }
-    Kind kind = GuessFileTypeFromName(filePath);
-    if (kind == kindFilePDF) {
-        return true;
-    }
-    return IsEngineImageSupportedFileType(kind);
+    return IsAIChatSupportedForFile(filePath, engineKind);
 }
 
 bool IsClaudeCodeSupportedForTab(WindowTab* tab) {
-    if (!tab || tab->IsAboutTab() || !tab->filePath) {
-        return false;
-    }
-    return IsClaudeCodeSupportedForFile(tab->filePath, tab->GetEngineType());
+    return IsAIChatSupportedForTab(tab);
 }
 
 #define IDC_CLAUDE_LABEL_WITH_CLOSE 1110
@@ -205,90 +99,31 @@ static const char* ClaudeBgColor() {
     return bg;
 }
 
-static bool ClaudeGetResource(void* ctx, const char* path, WebViewResourceResult* res) {
-    auto* data = (LoadedDataResource*)ctx;
-    if (!data || !res || str::IsEmpty(path)) {
-        return false;
-    }
-    if (!str::EqI(path, "/marked.min.js") && !str::EqI(path, "marked.min.js")) {
-        return false;
-    }
-    res->data = (char*)data->data;
-    res->dataLen = data->dataSize;
-    res->contentType = str::Dup("text/javascript");
-    res->ownsData = false;
-    return res->dataLen > 0;
-}
-
-static void AppendClaudeModelUnique(StrVec& models, const char* model) {
-    if (str::IsEmpty(model)) {
-        return;
-    }
-    TempStr norm = str::DupTemp(model);
-    char* s = norm;
-    while (str::IsWs(*s)) {
-        s++;
-    }
-    if (!*s) {
-        return;
-    }
-    str::ToLowerInPlace(s);
-    for (int i = 0; i < models.Size(); i++) {
-        if (str::EqI(models.At(i), s)) {
-            return;
-        }
-    }
-    models.Append(s);
-}
-
 static void BuildClaudeModelsList(StrVec& models) {
     models.Reset();
-    AppendClaudeModelUnique(models, "sonnet");
-    AppendClaudeModelUnique(models, "opus");
-    AppendClaudeModelUnique(models, "haiku");
+    AIChatAppendModelUnique(models, "sonnet");
+    AIChatAppendModelUnique(models, "opus");
+    AIChatAppendModelUnique(models, "haiku");
     const char* extra = gGlobalPrefs->claudeCode.models;
     if (!str::IsEmpty(extra)) {
         StrVec parts;
         Split(&parts, extra, ",", true);
         for (int i = 0; i < parts.Size(); i++) {
-            AppendClaudeModelUnique(models, parts.At(i));
+            AIChatAppendModelUnique(models, parts.At(i));
         }
     }
-}
-
-static int FindClaudeModelInList(const StrVec& models, const char* model) {
-    if (str::IsEmpty(model)) {
-        return -1;
-    }
-    TempStr norm = str::DupTemp(model);
-    str::ToLowerInPlace(norm);
-    for (int i = 0; i < models.Size(); i++) {
-        if (str::EqI(models.At(i), norm)) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 static const char* ResolveClaudeModel(const StrVec& models, const char* model) {
-    int idx = FindClaudeModelInList(models, model);
+    int idx = AIChatFindModelInList(models, model);
     if (idx >= 0) {
         return models.At(idx);
     }
-    idx = FindClaudeModelInList(models, "opus");
+    idx = AIChatFindModelInList(models, "opus");
     if (idx >= 0) {
         return models.At(idx);
     }
     return "opus";
-}
-
-static TempStr ClaudeModelDisplayNameTemp(const char* model) {
-    if (str::IsEmpty(model)) {
-        return (TempStr) "Opus";
-    }
-    char* dup = str::DupTemp(model);
-    dup[0] = (char)toupper((unsigned char)dup[0]);
-    return dup;
 }
 
 static void PopulateModelCombo(HWND combo) {
@@ -299,7 +134,7 @@ static void PopulateModelCombo(HWND combo) {
     StrVec models;
     BuildClaudeModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
-        TempStr display = ClaudeModelDisplayNameTemp(models.At(i));
+        TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Opus");
         WCHAR* displayW = ToWStrTemp(display);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
     }
@@ -316,7 +151,7 @@ static void ApplyClaudeSettingsToUI(MainWindow* win) {
         StrVec models;
         BuildClaudeModelsList(models);
         const char* model = ResolveClaudeModel(models, gGlobalPrefs->claudeCode.model);
-        int modelIdx = FindClaudeModelInList(models, model);
+        int modelIdx = AIChatFindModelInList(models, model);
         if (modelIdx < 0) {
             modelIdx = 0;
         }
@@ -352,126 +187,6 @@ static void SyncClaudeSettingsFromUI(MainWindow* win) {
         gGlobalPrefs->claudeCode.sidebarDx = win->claudeDx;
     }
     SaveSettings();
-}
-
-static char* GenerateSessionId() {
-    GUID guid;
-    if (FAILED(CoCreateGuid(&guid))) {
-        return nullptr;
-    }
-    return str::Format("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3,
-                       guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5],
-                       guid.Data4[6], guid.Data4[7]);
-}
-
-// clang-format off
-static const char* kClaudeChatHtmlFmt =
-    "<!DOCTYPE html><html><head><meta charset='utf-8'>"
-    "<script src='https://sumatrapdf.claude/marked.min.js'></script>"
-    "<style>"
-    "* { margin: 0; padding: 0; box-sizing: border-box; }"
-    "body { font-family: 'Segoe UI', sans-serif; font-size: 13px; margin: 0; padding: 6px; "
-    "  background: %s; color: #222; line-height: 1.4; }"
-    "p { margin: 2px 0; }"
-    "h1,h2,h3,h4 { margin: 6px 0 2px 0; }"
-    "ul,ol { margin: 2px 0 2px 18px; }"
-    "li { margin: 1px 0; }"
-    ".user { color: #1a5276; font-weight: bold; margin: 8px 0 2px 0; padding: 4px 0; "
-    "  border-top: 1px solid #ccc; }"
-    ".tool { color: #555; font-size: 11px; font-style: italic; "
-    "  border-left: 3px solid #999; padding-left: 6px; margin: 2px 0; }"
-    ".assistant { margin: 2px 0; }"
-    ".assistant pre { background: #f0f0f0; padding: 6px; border-radius: 4px; "
-    "  overflow-x: auto; margin: 3px 0; font-size: 12px; }"
-    ".assistant code { background: #e8e8e8; padding: 1px 3px; border-radius: 2px; font-size: 12px; }"
-    ".assistant pre code { background: none; padding: 0; }"
-    ".error { color: #c0392b; font-weight: bold; margin: 4px 0; }"
-    "</style></head><body><div id='chat'></div>"
-    "<script>"
-    "var chatDiv = document.getElementById('chat');"
-    "var currentBlock = null;"
-    "var currentRaw = '';"
-    "function addUser(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'user';"
-    "  d.textContent = 'You: ' + text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function addTool(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'tool';"
-    "  d.textContent = text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function addError(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'error';"
-    "  d.textContent = text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function appendText(text) {"
-    "  if (!currentBlock) {"
-    "    currentBlock = document.createElement('div');"
-    "    currentBlock.className = 'assistant';"
-    "    chatDiv.appendChild(currentBlock);"
-    "    currentRaw = '';"
-    "  }"
-    "  currentRaw += text;"
-    "  if (typeof marked !== 'undefined') {"
-    "    currentBlock.innerHTML = marked.parse(currentRaw);"
-    "  } else {"
-    "    currentBlock.textContent = currentRaw;"
-    "  }"
-    "  scrollToBottom();"
-    "}"
-    "function flushBlock() {"
-    "  currentBlock = null; currentRaw = '';"
-    "}"
-    "function clearChat() {"
-    "  chatDiv.innerHTML = '';"
-    "  flushBlock();"
-    "}"
-    "function scrollToBottom() {"
-    "  window.scrollTo(0, document.body.scrollHeight);"
-    "}"
-    "</script></body></html>";
-// clang-format on
-
-static TempStr JsEscapeTemp(const char* s) {
-    if (!s) {
-        return str::DupTemp("");
-    }
-    StrBuilder buf;
-    while (*s) {
-        switch (*s) {
-            case '\\':
-                buf.Append("\\\\");
-                break;
-            case '\'':
-                buf.Append("\\'");
-                break;
-            case '\n':
-                buf.Append("\\n");
-                break;
-            case '\r':
-                buf.Append("\\r");
-                break;
-            case '\t':
-                buf.Append("\\t");
-                break;
-            default:
-                buf.AppendChar(*s);
-                break;
-        }
-        s++;
-    }
-    return str::DupTemp(buf.LendData());
 }
 
 // Execute JS on the WebView AND record it in the current tab's chat log
@@ -523,15 +238,10 @@ static void SetClaudeWorking(MainWindow* win, bool /*working*/) {
 }
 
 static void CloseClaudeProcess(WindowTab* tab, bool terminateIfRunning) {
-    if (!tab || !tab->claudeProcess) {
+    if (!tab) {
         return;
     }
-    HANDLE h = tab->claudeProcess;
-    tab->claudeProcess = nullptr;
-    if (terminateIfRunning && WaitForSingleObject(h, 0) == WAIT_TIMEOUT) {
-        TerminateProcess(h, 0);
-    }
-    CloseHandle(h);
+    AIChatCloseProcess(&tab->claudeProcess, terminateIfRunning);
 }
 
 static void StopClaude(MainWindow* win) {
@@ -561,22 +271,22 @@ static void WebViewEval(MainWindow* win, const char* js, bool record = true) {
 }
 
 static void WebViewAppendText(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("appendText('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddUser(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("addUser('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddTool(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("addTool('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddError(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("addError('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
@@ -591,7 +301,7 @@ static void WebViewClearChat(MainWindow* win) {
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     const char* msg = "Claude Code is only available for PDF and image files.";
-    TempStr js = str::FormatTemp("addError('%s')", JsEscapeTemp(msg));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg));
     WebViewEval(win, js, false);
 }
 
@@ -619,53 +329,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     }
 }
 
-static MainWindow* FindMainWindowByFrame(HWND hwndFrame) {
-    for (MainWindow* w : gWindows) {
-        if (w->hwndFrame == hwndFrame) {
-            return w;
-        }
-    }
-    return nullptr;
-}
-
-// --- JSON helpers ---
-static TempStr JsonStrTemp(const char* json, const char* key) {
-    TempStr pattern = str::FormatTemp("\"%s\":\"", key);
-    const char* start = str::Find(json, pattern);
-    if (!start) {
-        return nullptr;
-    }
-    start += str::Len(pattern);
-    StrBuilder buf;
-    while (*start && *start != '"') {
-        if (*start == '\\' && *(start + 1)) {
-            start++;
-            if (*start == 'n') {
-                buf.AppendChar('\n');
-            } else if (*start == 't') {
-                buf.AppendChar('\t');
-            } else if (*start == '\\') {
-                buf.AppendChar('\\');
-            } else if (*start == '"') {
-                buf.AppendChar('"');
-            } else {
-                buf.AppendChar(*start);
-            }
-        } else {
-            buf.AppendChar(*start);
-        }
-        start++;
-    }
-    return str::DupTemp(buf.LendData());
-}
-
 // --- Session history ---
-struct SessionInfo {
-    char* sessionId;
-    char* display; // first user message
-    char* project; // directory
-    i64 timestamp;
-};
 
 // Compute the encoded project dir path that Claude uses:
 // E:\foo_bar -> E--foo-bar (: removed, \ -> -, _ -> -)
@@ -699,7 +363,7 @@ static TempStr ExtractUserTextTemp(const char* line) {
     }
     // try string format: "content":"text"
     if (str::Find(line, "\"content\":\"")) {
-        TempStr content = JsonStrTemp(line, "content");
+        TempStr content = AIChatJsonStrTemp(line, "content");
         if (content && str::Len(content) > 0 && !str::Find(content, "<command-")) {
             return content;
         }
@@ -712,7 +376,7 @@ static TempStr ExtractUserTextTemp(const char* line) {
             textBlock = str::Find(line, "\"text\":\"");
         }
         if (textBlock) {
-            TempStr text = JsonStrTemp(textBlock - 1, "text");
+            TempStr text = AIChatJsonStrTemp(textBlock - 1, "text");
             if (text && str::Len(text) > 0 && !str::Find(text, "<command-")) {
                 return text;
             }
@@ -754,7 +418,7 @@ static char* GetSessionDescription(const char* sessionPath) {
 }
 
 // Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files
-static void CollectSessions(const char* dir, Vec<SessionInfo>& sessions) {
+static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (!userProfile) {
         return;
@@ -790,7 +454,7 @@ static void CollectSessions(const char* dir, Vec<SessionInfo>& sessions) {
         uli.HighPart = fd.ftLastWriteTime.dwHighDateTime;
         i64 ts = (i64)(uli.QuadPart / 10000); // to milliseconds
 
-        SessionInfo si;
+        AIChatSessionInfo si;
         si.sessionId = str::Dup(sessionId);
         si.display = desc;
         si.project = str::Dup(dir);
@@ -800,26 +464,7 @@ static void CollectSessions(const char* dir, Vec<SessionInfo>& sessions) {
 
     FindClose(hFind);
 
-    // sort by timestamp descending (most recent first)
-    int n = sessions.Size();
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - 1 - i; j++) {
-            if (sessions[j].timestamp < sessions[j + 1].timestamp) {
-                SessionInfo tmp = sessions[j];
-                sessions[j] = sessions[j + 1];
-                sessions[j + 1] = tmp;
-            }
-        }
-    }
-}
-
-static void FreeSessions(Vec<SessionInfo>& sessions) {
-    for (int i = 0; i < sessions.Size(); i++) {
-        str::Free(sessions[i].sessionId);
-        str::Free(sessions[i].display);
-        str::Free(sessions[i].project);
-    }
-    sessions.Reset();
+    AIChatSortSessionsByTimestampDesc(sessions);
 }
 
 static bool gPopulatingCombo = false; // guard against re-entrant CBN_SELCHANGE
@@ -844,7 +489,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     }
 
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     int selectedIdx = 0;
@@ -873,7 +518,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     }
 
     SendMessageW(combo, CB_SETCURSEL, selectedIdx, 0);
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 
     gPopulatingCombo = false;
 }
@@ -920,15 +565,15 @@ static void LoadSessionHistory(MainWindow* win, const char* sessionId, const cha
                 if (str::Find(line, "\"type\":\"thinking\"")) {
                     // skip thinking blocks
                 } else if (str::Find(line, "\"type\":\"text\"")) {
-                    TempStr text = JsonStrTemp(line, "text");
+                    TempStr text = AIChatJsonStrTemp(line, "text");
                     if (text && str::Len(text) > 0) {
                         WebViewAppendText(win, text);
                         WebViewFlushBlock(win);
                     }
                 } else if (str::Find(line, "\"type\":\"tool_use\"")) {
-                    TempStr toolName = JsonStrTemp(line, "name");
+                    TempStr toolName = AIChatJsonStrTemp(line, "name");
                     if (toolName) {
-                        TempStr fp = JsonStrTemp(line, "file_path");
+                        TempStr fp = AIChatJsonStrTemp(line, "file_path");
                         StrBuilder desc;
                         desc.AppendFmt("Tool: %s", toolName);
                         if (fp) {
@@ -974,7 +619,7 @@ static void OnSessionComboChange(MainWindow* win) {
 
     // re-collect sessions to get the ID
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     int sessionIdx = sel - 1;
@@ -988,7 +633,7 @@ static void OnSessionComboChange(MainWindow* win) {
         // LoadSessionHistory calls WebViewEval which rebuilds claudeChatLog
     }
 
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 }
 
 // --- Stream JSON events ---
@@ -1008,7 +653,7 @@ struct ClaudeUpdateData {
 };
 
 static void OnClaudeUpdate(ClaudeUpdateData* data) {
-    MainWindow* win = FindMainWindowByFrame(data->hwndFrame);
+    MainWindow* win = AIChatFindMainWindowByFrame(data->hwndFrame);
     if (!win || !IsMainWindowValid(win) || !win->hwndClaudeBox) {
         str::Free(data->text);
         str::Free(data->sessionId);
@@ -1104,21 +749,21 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                 if (line && *line) {
                     ClaudeCodeLog("<<<", line);
                 }
-                TempStr eventType = JsonStrTemp(line, "type");
+                TempStr eventType = AIChatJsonStrTemp(line, "type");
 
                 if (eventType && str::Eq(eventType, "assistant")) {
                     if (str::Find(line, "\"type\":\"text\"")) {
-                        TempStr text = JsonStrTemp(line, "text");
+                        TempStr text = AIChatJsonStrTemp(line, "text");
                         if (text && str::Len(text) > 0) {
                             PostUpdate(hwndFrame, sessionId, text, ClaudeUpdateType::Text);
                         }
                     }
                     if (str::Find(line, "\"type\":\"tool_use\"")) {
-                        TempStr toolName = JsonStrTemp(line, "name");
+                        TempStr toolName = AIChatJsonStrTemp(line, "name");
                         if (toolName) {
-                            TempStr fp = JsonStrTemp(line, "file_path");
-                            TempStr cmd = JsonStrTemp(line, "command");
-                            TempStr pat = JsonStrTemp(line, "pattern");
+                            TempStr fp = AIChatJsonStrTemp(line, "file_path");
+                            TempStr cmd = AIChatJsonStrTemp(line, "command");
+                            TempStr pat = AIChatJsonStrTemp(line, "pattern");
                             StrBuilder desc;
                             desc.AppendFmt("Tool: %s", toolName);
                             if (fp) {
@@ -1137,7 +782,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                     }
                 } else if (eventType && str::Eq(eventType, "user")) {
                     if (str::Find(line, "\"tool_use_result\"")) {
-                        TempStr fp = JsonStrTemp(line, "filePath");
+                        TempStr fp = AIChatJsonStrTemp(line, "filePath");
                         if (fp) {
                             StrBuilder desc;
                             desc.AppendFmt("Result: %s", fp);
@@ -1145,9 +790,9 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                         }
                     }
                 } else if (eventType && str::Eq(eventType, "result")) {
-                    TempStr sub = JsonStrTemp(line, "subtype");
+                    TempStr sub = AIChatJsonStrTemp(line, "subtype");
                     if (sub && str::Eq(sub, "error")) {
-                        TempStr err = JsonStrTemp(line, "error");
+                        TempStr err = AIChatJsonStrTemp(line, "error");
                         if (err) {
                             PostUpdate(hwndFrame, sessionId, err, ClaudeUpdateType::Error);
                         }
@@ -1207,7 +852,7 @@ static void SendClaudeMessage(MainWindow* win) {
 
     bool isNewSession = (tab->claudeSessionId == nullptr);
     if (isNewSession) {
-        tab->claudeSessionId = GenerateSessionId();
+        tab->claudeSessionId = AIChatGenerateSessionId();
     }
 
     const char* filePath = tab->filePath;
@@ -1262,61 +907,21 @@ static void SendClaudeMessage(MainWindow* win) {
 
     ClaudeCodeLog(">>> cmd", cmdLine);
 
-    SECURITY_ATTRIBUTES sa;
-    sa.nLength = sizeof(sa);
-    sa.lpSecurityDescriptor = nullptr;
-    sa.bInheritHandle = TRUE;
-
-    HANDLE hReadPipe, hWritePipe;
-    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
-        ClaudeCodeLog("error", "Failed to create pipe");
-        WebViewAddError(win, "Failed to create pipe");
-        SetClaudeWorking(win, false);
-        return;
-    }
-    SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
-
-    STARTUPINFOW si = {};
-    si.cb = sizeof(si);
-    si.hStdOutput = hWritePipe;
-    si.hStdError = hWritePipe;
-    si.dwFlags = STARTF_USESTDHANDLES;
-
-    PROCESS_INFORMATION pi = {};
-    WCHAR* cmdLineW = ToWStrTemp(cmdLine);
-    WCHAR* dirW = ToWStrTemp(dir);
-
-    BOOL ok = CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, dirW, &si, &pi);
-    CloseHandle(hWritePipe);
-
-    if (!ok) {
-        CloseHandle(hReadPipe);
+    AIChatProcessLaunchResult launch;
+    if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, dir, &launch)) {
         ClaudeCodeLog("error", "Failed to launch claude process");
         WebViewAddError(win, "Failed to launch claude. Is it installed and in PATH?");
         SetClaudeWorking(win, false);
         return;
     }
 
-    CloseHandle(pi.hThread);
-    tab->claudeProcess = pi.hProcess;
+    tab->claudeProcess = launch.hProcess;
 
     auto ctx = (ClaudeReadCtx*)calloc(1, sizeof(ClaudeReadCtx));
-    ctx->hReadPipe = hReadPipe;
+    ctx->hReadPipe = launch.hReadPipe;
     ctx->hwndFrame = win->hwndFrame;
     ctx->sessionId = str::Dup(tab->claudeSessionId);
     RunAsync(MkFunc0(StartClaudeReadThread, ctx), "ClaudeReadThread");
-}
-
-constexpr int kClaudeLabelCloseBtnDx = 16;
-constexpr int kClaudeLabelCloseBtnSpaceDx = 8;
-constexpr int kClaudeLabelPadX = 2;
-
-static int ClaudeLabelMaxTextDx(HWND labelHwnd, int labelDx) {
-    int padX = DpiScale(labelHwnd, kClaudeLabelPadX);
-    int btnDx = DpiScale(labelHwnd, kClaudeLabelCloseBtnDx);
-    int spaceDx = DpiScale(labelHwnd, kClaudeLabelCloseBtnSpaceDx);
-    int maxDx = labelDx - btnDx - spaceDx - 2 * padX;
-    return maxDx > 0 ? maxDx : 0;
 }
 
 static TempStr FitClaudePanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
@@ -1348,7 +953,7 @@ static void UpdateClaudePanelTitle(MainWindow* win, int labelDx) {
     if (labelDx <= 0 && win->hwndClaudeBox) {
         labelDx = ClientRect(win->hwndClaudeBox).dx;
     }
-    int maxDx = ClaudeLabelMaxTextDx(labelHwnd, labelDx);
+    int maxDx = AIChatLabelMaxTextDx(labelHwnd, labelDx);
     TempStr label = FitClaudePanelTitleTemp(labelHwnd, font, docName, maxDx);
     win->claudeLabelWithClose->SetLabel(label);
 }
@@ -1550,7 +1155,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     str::Free(webView->resourceUriPrefix);
     webView->resourceUriPrefix = str::Dup(kClaudeVirtualHostW);
     webView->resourceProvider.ctx = &gClaudeMarkedJs;
-    webView->resourceProvider.getResource = ClaudeGetResource;
+    webView->resourceProvider.getResource = AIChatGetMarkedJsResource;
 
     Rect rc = ClientRect(win->hwndClaudeBox);
     CreateWebViewArgs wvArgs;
@@ -1559,7 +1164,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->Create(wvArgs);
 
     if (webView->hwnd) {
-        TempStr chatHtml = str::FormatTemp(kClaudeChatHtmlFmt, ClaudeBgColor());
+        TempStr chatHtml = AIChatFormatChatHtmlTemp(kClaudeVirtualHost, ClaudeBgColor());
         webView->SetHtml(chatHtml);
         win->claudeWebView = webView;
         win->claudeWebViewReady = true;
@@ -1677,7 +1282,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
     }
 
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     if (sessions.Size() > 0) {
@@ -1689,7 +1294,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
         LoadSessionHistory(win, tab->claudeSessionId, dir);
     }
 
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 }
 
 void OnAIChatWithClaudeCode(MainWindow* win) {
@@ -1711,23 +1316,8 @@ void ToggleClaudePanel(MainWindow* win) {
         return;
     }
     win->claudeVisible = !win->claudeVisible;
-    if (win->claudeVisible && win->grokVisible) {
-        win->grokVisible = false;
-        if (win->hwndGrokBox) {
-            HwndSetVisibility(win->hwndGrokBox, false);
-        }
-        if (win->grokSplitter && win->grokSplitter->hwnd) {
-            HwndSetVisibility(win->grokSplitter->hwnd, false);
-        }
-    }
-    if (win->claudeVisible && win->codexVisible) {
-        win->codexVisible = false;
-        if (win->hwndCodexBox) {
-            HwndSetVisibility(win->hwndCodexBox, false);
-        }
-        if (win->codexSplitter && win->codexSplitter->hwnd) {
-            HwndSetVisibility(win->codexSplitter->hwnd, false);
-        }
+    if (win->claudeVisible) {
+        AIChatHideOtherPanels(win, AIChatBackend::Claude);
     }
     HwndSetVisibility(win->hwndClaudeBox, win->claudeVisible);
     HwndSetVisibility(win->claudeSplitter->hwnd, win->claudeVisible);
@@ -1782,6 +1372,10 @@ void OnClaudeTabChanged(MainWindow* win) {
     }
 }
 
+static bool ClaudeTabHasRunningProcess(WindowTab* tab) {
+    return tab && tab->claudeProcess;
+}
+
 void ShutdownClaudeForMainWindow(MainWindow* win) {
     if (!win) {
         return;
@@ -1789,21 +1383,7 @@ void ShutdownClaudeForMainWindow(MainWindow* win) {
     for (WindowTab* tab : win->Tabs()) {
         CloseClaudeProcess(tab, true);
     }
-    // read threads post uitask updates when their pipes close
-    for (int i = 0; i < 20; i++) {
-        uitask::DrainQueue();
-        bool anyRunning = false;
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab && tab->claudeProcess) {
-                anyRunning = true;
-            }
-        }
-        if (!anyRunning) {
-            break;
-        }
-        Sleep(10);
-    }
-    uitask::DrainQueue();
+    AIChatWaitForTabProcessesToFinish(win, ClaudeTabHasRunningProcess);
 }
 
 void DestroyClaudePanel(MainWindow* win) {

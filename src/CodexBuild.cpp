@@ -31,40 +31,22 @@
 #include "utils/GuessFileType.h"
 
 #include "AppTools.h"
+#include "AIChatCommon.h"
 #include "CodexBuild.h"
 #include "EngineAll.h"
 
 bool IsCodexBuildAvailable() {
-#ifdef _MSC_VER
-    return IsWindows10OrGreater();
-#else
-    return false;
-#endif
+    return IsAIChatAvailable();
 }
 
 static TempStr FindCodexExecutableTemp() {
-#ifdef _MSC_VER
+    StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
-        TempStr candidates[] = {
-            str::FormatTemp("%s\\.codex\\bin\\codex.exe", userProfile),
-            str::FormatTemp("%s\\.local\\bin\\codex.exe", userProfile),
-        };
-        for (auto& c : candidates) {
-            if (file::Exists(c)) {
-                return c;
-            }
-        }
+        candidates.Append(str::FormatTemp("%s\\.codex\\bin\\codex.exe", userProfile));
+        candidates.Append(str::FormatTemp("%s\\.local\\bin\\codex.exe", userProfile));
     }
-    WCHAR codexPathW[MAX_PATH];
-    if (SearchPathW(nullptr, L"codex.exe", nullptr, MAX_PATH, codexPathW, nullptr) > 0) {
-        return ToUtf8Temp(codexPathW);
-    }
-    if (SearchPathW(nullptr, L"codex", L".exe", MAX_PATH, codexPathW, nullptr) > 0) {
-        return ToUtf8Temp(codexPathW);
-    }
-#endif
-    return nullptr;
+    return AIChatFindExecutableTemp(candidates, L"codex.exe", L"codex");
 }
 
 bool IsCodexBuildInstalled() {
@@ -72,115 +54,28 @@ bool IsCodexBuildInstalled() {
 }
 
 static Mutex gCodexBuildLogMutex;
-
-static TempStr CodexBuildLogPathTemp() {
-    TempStr dir = GetNotImportantDataDirTemp();
-    if (!dir) {
-        return nullptr;
-    }
-    return path::JoinTemp(dir, "gpt-5.5-log.txt");
-}
+static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, "gpt-5.5-log.txt", "gpt-5.5"};
 
 static void CodexBuildLog(const char* direction, const char* text) {
-    if (!text) {
-        text = "";
-    }
-
-    SYSTEMTIME st;
-    GetLocalTime(&st);
-    StrBuilder entry;
-    entry.AppendFmt("[%04d-%02d-%02d %02d:%02d:%02d] %s: ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
-                    st.wSecond, direction);
-    entry.Append(text);
-    if (entry.LastChar() != '\n') {
-        entry.AppendChar('\n');
-    }
-
-    logfa("gpt-5.5 %s: %s", direction, text);
-
-    TempStr path = CodexBuildLogPathTemp();
-    if (!path) {
-        return;
-    }
-
-    gCodexBuildLogMutex.Lock();
-    FILE* f = fopen(path, "a");
-    if (f) {
-        fwrite(entry.Get(), 1, entry.Size(), f);
-        fflush(f);
-        fclose(f);
-    }
-    gCodexBuildLogMutex.Unlock();
+    AIChatLog(&gCodexBuildLogger, direction, text);
 }
 
-constexpr int kBtnIdCodexLearnMore = 100;
 constexpr const char* kCodexBuildDocURI = "/AI-Chat-with-document#gpt-5.5";
 
-static HRESULT CALLBACK CodexBuildNotInstalledDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-                                                             LONG_PTR lpRefData) {
-    switch (msg) {
-        case TDN_HYPERLINK_CLICKED:
-            LaunchDocumentation(kCodexBuildDocURI);
-            break;
-        case TDN_BUTTON_CLICKED:
-            if ((int)wParam == kBtnIdCodexLearnMore) {
-                LaunchDocumentation(kCodexBuildDocURI);
-                return S_FALSE;
-            }
-            break;
-    }
-    return S_OK;
-}
-
 static void ShowCodexBuildNotInstalledDialog() {
-    const char* mainInstr = _TRA("OpenAI Codex CLI must be installed for this functionality");
-    const char* linkLabel = _TRA("AI Chat documentation");
-    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions."), linkLabel);
-
-    TASKDIALOG_BUTTON buttons[2];
-    buttons[0].nButtonID = IDOK;
-    buttons[0].pszButtonText = ToWStrTemp(_TRA("OK"));
-    buttons[1].nButtonID = kBtnIdCodexLearnMore;
-    buttons[1].pszButtonText = ToWStrTemp(_TRA("Learn more"));
-
-    TASKDIALOGCONFIG dialogConfig{};
-    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
-    if (trans::IsCurrLangRtl()) {
-        flags |= TDF_RTL_LAYOUT;
-    }
-    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = ToWStrTemp(_TRA("Codex chat"));
-    dialogConfig.pszMainInstruction = ToWStrTemp(mainInstr);
-    dialogConfig.pszContent = ToWStrTemp(content);
-    dialogConfig.nDefaultButton = IDOK;
-    dialogConfig.dwFlags = flags;
-    dialogConfig.pfCallback = CodexBuildNotInstalledDialogCallback;
-    dialogConfig.pButtons = buttons;
-    dialogConfig.cButtons = dimof(buttons);
-    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
-
-    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    AIChatNotInstalledDialogArgs args;
+    args.windowTitle = _TRA("Codex chat");
+    args.mainInstruction = _TRA("OpenAI Codex CLI must be installed for this functionality");
+    args.docUri = kCodexBuildDocURI;
+    AIChatShowNotInstalledDialog(args);
 }
 
 bool IsCodexBuildSupportedForFile(const char* filePath, Kind engineKind) {
-    if (!filePath) {
-        return false;
-    }
-    if (engineKind == kindEngineComicBooks || engineKind == kindEngineImageDir) {
-        return false;
-    }
-    Kind kind = GuessFileTypeFromName(filePath);
-    if (kind == kindFilePDF) {
-        return true;
-    }
-    return IsEngineImageSupportedFileType(kind);
+    return IsAIChatSupportedForFile(filePath, engineKind);
 }
 
 bool IsCodexBuildSupportedForTab(WindowTab* tab) {
-    if (!tab || tab->IsAboutTab() || !tab->filePath) {
-        return false;
-    }
-    return IsCodexBuildSupportedForFile(tab->filePath, tab->GetEngineType());
+    return IsAIChatSupportedForTab(tab);
 }
 
 #define IDC_CODEX_LABEL_WITH_CLOSE 1130
@@ -203,90 +98,31 @@ static const char* CodexBgColor() {
     return bg;
 }
 
-static bool CodexGetResource(void* ctx, const char* path, WebViewResourceResult* res) {
-    auto* data = (LoadedDataResource*)ctx;
-    if (!data || !res || str::IsEmpty(path)) {
-        return false;
-    }
-    if (!str::EqI(path, "/marked.min.js") && !str::EqI(path, "marked.min.js")) {
-        return false;
-    }
-    res->data = (char*)data->data;
-    res->dataLen = data->dataSize;
-    res->contentType = str::Dup("text/javascript");
-    res->ownsData = false;
-    return res->dataLen > 0;
-}
-
-static void AppendCodexModelUnique(StrVec& models, const char* model) {
-    if (str::IsEmpty(model)) {
-        return;
-    }
-    TempStr norm = str::DupTemp(model);
-    char* s = norm;
-    while (str::IsWs(*s)) {
-        s++;
-    }
-    if (!*s) {
-        return;
-    }
-    str::ToLowerInPlace(s);
-    for (int i = 0; i < models.Size(); i++) {
-        if (str::EqI(models.At(i), s)) {
-            return;
-        }
-    }
-    models.Append(s);
-}
-
 static void BuildCodexModelsList(StrVec& models) {
     models.Reset();
-    AppendCodexModelUnique(models, "gpt-5.5");
-    AppendCodexModelUnique(models, "gpt-5.4");
-    AppendCodexModelUnique(models, "o3");
+    AIChatAppendModelUnique(models, "gpt-5.5");
+    AIChatAppendModelUnique(models, "gpt-5.4");
+    AIChatAppendModelUnique(models, "o3");
     const char* extra = gGlobalPrefs->codexBuild.models;
     if (!str::IsEmpty(extra)) {
         StrVec parts;
         Split(&parts, extra, ",", true);
         for (int i = 0; i < parts.Size(); i++) {
-            AppendCodexModelUnique(models, parts.At(i));
+            AIChatAppendModelUnique(models, parts.At(i));
         }
     }
-}
-
-static int FindCodexModelInList(const StrVec& models, const char* model) {
-    if (str::IsEmpty(model)) {
-        return -1;
-    }
-    TempStr norm = str::DupTemp(model);
-    str::ToLowerInPlace(norm);
-    for (int i = 0; i < models.Size(); i++) {
-        if (str::EqI(models.At(i), norm)) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 static const char* ResolveCodexModel(const StrVec& models, const char* model) {
-    int idx = FindCodexModelInList(models, model);
+    int idx = AIChatFindModelInList(models, model);
     if (idx >= 0) {
         return models.At(idx);
     }
-    idx = FindCodexModelInList(models, "gpt-5.5");
+    idx = AIChatFindModelInList(models, "gpt-5.5");
     if (idx >= 0) {
         return models.At(idx);
     }
     return "gpt-5.5";
-}
-
-static TempStr CodexModelDisplayNameTemp(const char* model) {
-    if (str::IsEmpty(model)) {
-        return (TempStr) "Gpt-5.5";
-    }
-    char* dup = str::DupTemp(model);
-    dup[0] = (char)toupper((unsigned char)dup[0]);
-    return dup;
 }
 
 static void PopulateModelCombo(HWND combo) {
@@ -297,7 +133,7 @@ static void PopulateModelCombo(HWND combo) {
     StrVec models;
     BuildCodexModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
-        TempStr display = CodexModelDisplayNameTemp(models.At(i));
+        TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Gpt-5.5");
         WCHAR* displayW = ToWStrTemp(display);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
     }
@@ -314,7 +150,7 @@ static void ApplyCodexSettingsToUI(MainWindow* win) {
         StrVec models;
         BuildCodexModelsList(models);
         const char* model = ResolveCodexModel(models, gGlobalPrefs->codexBuild.model);
-        int modelIdx = FindCodexModelInList(models, model);
+        int modelIdx = AIChatFindModelInList(models, model);
         if (modelIdx < 0) {
             modelIdx = 0;
         }
@@ -350,116 +186,6 @@ static void SyncCodexSettingsFromUI(MainWindow* win) {
         gGlobalPrefs->codexBuild.sidebarDx = win->codexDx;
     }
     SaveSettings();
-}
-
-// clang-format off
-static const char* kCodexChatHtmlFmt =
-    "<!DOCTYPE html><html><head><meta charset='utf-8'>"
-    "<script src='https://sumatrapdf.codex/marked.min.js'></script>"
-    "<style>"
-    "* { margin: 0; padding: 0; box-sizing: border-box; }"
-    "body { font-family: 'Segoe UI', sans-serif; font-size: 13px; margin: 0; padding: 6px; "
-    "  background: %s; color: #222; line-height: 1.4; }"
-    "p { margin: 2px 0; }"
-    "h1,h2,h3,h4 { margin: 6px 0 2px 0; }"
-    "ul,ol { margin: 2px 0 2px 18px; }"
-    "li { margin: 1px 0; }"
-    ".user { color: #1a5276; font-weight: bold; margin: 8px 0 2px 0; padding: 4px 0; "
-    "  border-top: 1px solid #ccc; }"
-    ".tool { color: #555; font-size: 11px; font-style: italic; "
-    "  border-left: 3px solid #999; padding-left: 6px; margin: 2px 0; }"
-    ".assistant { margin: 2px 0; }"
-    ".assistant pre { background: #f0f0f0; padding: 6px; border-radius: 4px; "
-    "  overflow-x: auto; margin: 3px 0; font-size: 12px; }"
-    ".assistant code { background: #e8e8e8; padding: 1px 3px; border-radius: 2px; font-size: 12px; }"
-    ".assistant pre code { background: none; padding: 0; }"
-    ".error { color: #c0392b; font-weight: bold; margin: 4px 0; }"
-    "</style></head><body><div id='chat'></div>"
-    "<script>"
-    "var chatDiv = document.getElementById('chat');"
-    "var currentBlock = null;"
-    "var currentRaw = '';"
-    "function addUser(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'user';"
-    "  d.textContent = 'You: ' + text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function addTool(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'tool';"
-    "  d.textContent = text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function addError(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'error';"
-    "  d.textContent = text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function appendText(text) {"
-    "  if (!currentBlock) {"
-    "    currentBlock = document.createElement('div');"
-    "    currentBlock.className = 'assistant';"
-    "    chatDiv.appendChild(currentBlock);"
-    "    currentRaw = '';"
-    "  }"
-    "  currentRaw += text;"
-    "  if (typeof marked !== 'undefined') {"
-    "    currentBlock.innerHTML = marked.parse(currentRaw);"
-    "  } else {"
-    "    currentBlock.textContent = currentRaw;"
-    "  }"
-    "  scrollToBottom();"
-    "}"
-    "function flushBlock() {"
-    "  currentBlock = null; currentRaw = '';"
-    "}"
-    "function clearChat() {"
-    "  chatDiv.innerHTML = '';"
-    "  flushBlock();"
-    "}"
-    "function scrollToBottom() {"
-    "  window.scrollTo(0, document.body.scrollHeight);"
-    "}"
-    "</script></body></html>";
-// clang-format on
-
-static TempStr JsEscapeTemp(const char* s) {
-    if (!s) {
-        return str::DupTemp("");
-    }
-    StrBuilder buf;
-    while (*s) {
-        switch (*s) {
-            case '\\':
-                buf.Append("\\\\");
-                break;
-            case '\'':
-                buf.Append("\\'");
-                break;
-            case '\n':
-                buf.Append("\\n");
-                break;
-            case '\r':
-                buf.Append("\\r");
-                break;
-            case '\t':
-                buf.Append("\\t");
-                break;
-            default:
-                buf.AppendChar(*s);
-                break;
-        }
-        s++;
-    }
-    return str::DupTemp(buf.LendData());
 }
 
 // Execute JS on the WebView AND record it in the current tab's chat log
@@ -511,15 +237,10 @@ static void SetCodexWorking(MainWindow* win, bool /*working*/) {
 }
 
 static void CloseCodexProcess(WindowTab* tab, bool terminateIfRunning) {
-    if (!tab || !tab->codexProcess) {
+    if (!tab) {
         return;
     }
-    HANDLE h = tab->codexProcess;
-    tab->codexProcess = nullptr;
-    if (terminateIfRunning && WaitForSingleObject(h, 0) == WAIT_TIMEOUT) {
-        TerminateProcess(h, 0);
-    }
-    CloseHandle(h);
+    AIChatCloseProcess(&tab->codexProcess, terminateIfRunning);
 }
 
 static void StopCodex(MainWindow* win) {
@@ -549,23 +270,23 @@ static void WebViewEval(MainWindow* win, const char* js, bool record = true) {
 }
 
 static void WebViewAppendText(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("appendText('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddUser(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("addUser('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddTool(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("addTool('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddError(MainWindow* win, const char* text) {
     CodexBuildLog("error", text);
-    TempStr js = str::FormatTemp("addError('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
@@ -580,7 +301,7 @@ static void WebViewClearChat(MainWindow* win) {
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     const char* msg = "OpenAI Codex is only available for PDF and image files.";
-    TempStr js = str::FormatTemp("addError('%s')", JsEscapeTemp(msg));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg));
     WebViewEval(win, js, false);
 }
 
@@ -608,54 +329,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     }
 }
 
-static MainWindow* FindMainWindowByFrame(HWND hwndFrame) {
-    for (MainWindow* w : gWindows) {
-        if (w->hwndFrame == hwndFrame) {
-            return w;
-        }
-    }
-    return nullptr;
-}
-
-// --- JSON helpers ---
-static TempStr JsonStrTemp(const char* json, const char* key) {
-    TempStr pattern = str::FormatTemp("\"%s\":\"", key);
-    const char* start = str::Find(json, pattern);
-    if (!start) {
-        return nullptr;
-    }
-    start += str::Len(pattern);
-    StrBuilder buf;
-    while (*start && *start != '"') {
-        if (*start == '\\' && *(start + 1)) {
-            start++;
-            if (*start == 'n') {
-                buf.AppendChar('\n');
-            } else if (*start == 't') {
-                buf.AppendChar('\t');
-            } else if (*start == '\\') {
-                buf.AppendChar('\\');
-            } else if (*start == '"') {
-                buf.AppendChar('"');
-            } else {
-                buf.AppendChar(*start);
-            }
-        } else {
-            buf.AppendChar(*start);
-        }
-        start++;
-    }
-    return str::DupTemp(buf.LendData());
-}
-
 // --- Session history ---
-struct SessionInfo {
-    char* sessionId;
-    char* display; // first user message
-    char* project; // directory
-    i64 timestamp;
-};
-
 static TempStr CodexSessionsRootTemp() {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (!userProfile) {
@@ -688,11 +362,11 @@ static bool IsCodexRolloutFileName(const char* name) {
 }
 
 static TempStr ExtractCodexPromptFromHistoryLineTemp(const char* line, const char* sessionId) {
-    TempStr sid = JsonStrTemp(line, "session_id");
+    TempStr sid = AIChatJsonStrTemp(line, "session_id");
     if (!sid || !str::Eq(sid, sessionId)) {
         return nullptr;
     }
-    return JsonStrTemp(line, "text");
+    return AIChatJsonStrTemp(line, "text");
 }
 
 static char* GetCodexSessionDescription(const char* sessionId) {
@@ -729,20 +403,13 @@ static char* GetCodexSessionDescription(const char* sessionId) {
     return result ? result : str::Dup("(no description)");
 }
 
-static i64 FileTimeToMs(const FILETIME& ft) {
-    ULARGE_INTEGER uli;
-    uli.LowPart = ft.dwLowDateTime;
-    uli.HighPart = ft.dwHighDateTime;
-    return (i64)(uli.QuadPart / 10000);
-}
-
 static bool ParseCodexRolloutMetaLine(const char* line, const char* matchDir, char** sessionIdOut) {
     if (!str::Find(line, "\"type\":\"session_meta\"")) {
         return false;
     }
     const char* payload = str::Find(line, "\"payload\":");
-    TempStr cwd = payload ? JsonStrTemp(payload, "cwd") : nullptr;
-    TempStr id = payload ? JsonStrTemp(payload, "id") : nullptr;
+    TempStr cwd = payload ? AIChatJsonStrTemp(payload, "cwd") : nullptr;
+    TempStr id = payload ? AIChatJsonStrTemp(payload, "id") : nullptr;
     if (!cwd || !id || !CodexPathsEqual(cwd, matchDir)) {
         return false;
     }
@@ -751,7 +418,7 @@ static bool ParseCodexRolloutMetaLine(const char* line, const char* matchDir, ch
 }
 
 static void TryAddCodexSession(const char* rolloutPath, const FILETIME& ft, const char* matchDir,
-                               Vec<SessionInfo>& sessions) {
+                               Vec<AIChatSessionInfo>& sessions) {
     ByteSlice data = file::ReadFile(rolloutPath);
     if (data.empty()) {
         return;
@@ -771,7 +438,7 @@ static void TryAddCodexSession(const char* rolloutPath, const FILETIME& ft, cons
         data.Free();
         return;
     }
-    i64 ts = FileTimeToMs(ft);
+    i64 ts = AIChatFileTimeToMs(ft);
     for (int i = 0; i < sessions.Size(); i++) {
         if (str::Eq(sessions[i].sessionId, sessionId)) {
             if (ts > sessions[i].timestamp) {
@@ -782,7 +449,7 @@ static void TryAddCodexSession(const char* rolloutPath, const FILETIME& ft, cons
             return;
         }
     }
-    SessionInfo si;
+    AIChatSessionInfo si;
     si.sessionId = sessionId;
     si.display = GetCodexSessionDescription(sessionId);
     si.project = str::Dup(matchDir);
@@ -854,7 +521,7 @@ static TempStr FindCodexRolloutPathTemp(const char* sessionId) {
 }
 
 // Scan ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl for sessions with matching cwd
-static void CollectSessions(const char* dir, Vec<SessionInfo>& sessions) {
+static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr root = CodexSessionsRootTemp();
     if (!root || !dir::Exists(root)) {
         return;
@@ -911,25 +578,7 @@ static void CollectSessions(const char* dir, Vec<SessionInfo>& sessions) {
     } while (FindNextFileW(hY, &fdY));
     FindClose(hY);
 
-    int n = sessions.Size();
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - 1 - i; j++) {
-            if (sessions[j].timestamp < sessions[j + 1].timestamp) {
-                SessionInfo tmp = sessions[j];
-                sessions[j] = sessions[j + 1];
-                sessions[j + 1] = tmp;
-            }
-        }
-    }
-}
-
-static void FreeSessions(Vec<SessionInfo>& sessions) {
-    for (int i = 0; i < sessions.Size(); i++) {
-        str::Free(sessions[i].sessionId);
-        str::Free(sessions[i].display);
-        str::Free(sessions[i].project);
-    }
-    sessions.Reset();
+    AIChatSortSessionsByTimestampDesc(sessions);
 }
 
 static bool gPopulatingCombo = false; // guard against re-entrant CBN_SELCHANGE
@@ -954,7 +603,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     }
 
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     int selectedIdx = 0;
@@ -983,7 +632,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     }
 
     SendMessageW(combo, CB_SETCURSEL, selectedIdx, 0);
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 
     gPopulatingCombo = false;
 }
@@ -1018,7 +667,7 @@ static TempStr ExtractCodexRolloutUserTextTemp(const char* line) {
     if (!inputText) {
         return nullptr;
     }
-    TempStr text = JsonStrTemp(inputText, "text");
+    TempStr text = AIChatJsonStrTemp(inputText, "text");
     if (!text || IsCodexInjectedUserText(text)) {
         return nullptr;
     }
@@ -1037,7 +686,7 @@ static TempStr ExtractCodexRolloutAssistantTextTemp(const char* line) {
     if (!outputText) {
         return nullptr;
     }
-    return JsonStrTemp(outputText, "text");
+    return AIChatJsonStrTemp(outputText, "text");
 }
 
 static void AppendCodexRolloutTools(MainWindow* win, const char* line) {
@@ -1046,9 +695,9 @@ static void AppendCodexRolloutTools(MainWindow* win, const char* line) {
     }
     TempStr name = nullptr;
     if (str::Find(line, "\"type\":\"function_call\"")) {
-        name = JsonStrTemp(line, "name");
+        name = AIChatJsonStrTemp(line, "name");
     } else if (str::Find(line, "\"type\":\"custom_tool_call\"")) {
-        name = JsonStrTemp(line, "name");
+        name = AIChatJsonStrTemp(line, "name");
     }
     if (name && str::Len(name) > 0) {
         StrBuilder desc;
@@ -1129,7 +778,7 @@ static void OnSessionComboChange(MainWindow* win) {
 
     // re-collect sessions to get the ID
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     int sessionIdx = sel - 1;
@@ -1144,7 +793,7 @@ static void OnSessionComboChange(MainWindow* win) {
         // LoadSessionHistory calls WebViewEval which rebuilds codexChatLog
     }
 
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 }
 
 // --- Stream JSON events ---
@@ -1167,7 +816,7 @@ struct CodexUpdateData {
 };
 
 static void OnCodexUpdate(CodexUpdateData* data) {
-    MainWindow* win = FindMainWindowByFrame(data->hwndFrame);
+    MainWindow* win = AIChatFindMainWindowByFrame(data->hwndFrame);
     if (!win || !IsMainWindowValid(win) || !win->hwndCodexBox) {
         str::Free(data->text);
         str::Free(data->sessionId);
@@ -1293,10 +942,10 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                     CodexBuildLog("<<<", line);
                 }
                 if (line && *line == '{') {
-                    TempStr eventType = JsonStrTemp(line, "type");
+                    TempStr eventType = AIChatJsonStrTemp(line, "type");
 
                     if (eventType && str::Eq(eventType, "thread.started")) {
-                        TempStr threadId = JsonStrTemp(line, "thread_id");
+                        TempStr threadId = AIChatJsonStrTemp(line, "thread_id");
                         if (threadId) {
                             PostUpdate(hwndFrame, sessionId, threadId, CodexUpdateType::SessionId);
                             str::Free(sessionId);
@@ -1305,13 +954,13 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                     } else if (eventType && str::Eq(eventType, "item.completed")) {
                         if (str::Find(line, "\"type\":\"agent_message\"")) {
                             const char* p = str::Find(line, "\"type\":\"agent_message\"");
-                            TempStr text = JsonStrTemp(p, "text");
+                            TempStr text = AIChatJsonStrTemp(p, "text");
                             if (text && str::Len(text) > 0) {
                                 PostUpdate(hwndFrame, sessionId, text, CodexUpdateType::Text);
                             }
                         } else if (str::Find(line, "\"type\":\"command_execution\"")) {
                             const char* p = str::Find(line, "\"type\":\"command_execution\"");
-                            TempStr cmd = JsonStrTemp(p, "command");
+                            TempStr cmd = AIChatJsonStrTemp(p, "command");
                             if (cmd && str::Len(cmd) > 0) {
                                 TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);
                                 StrBuilder desc;
@@ -1430,62 +1079,22 @@ static void SendCodexMessage(MainWindow* win) {
 
     CodexBuildLog(">>> cmd", cmdLine);
 
-    SECURITY_ATTRIBUTES sa;
-    sa.nLength = sizeof(sa);
-    sa.lpSecurityDescriptor = nullptr;
-    sa.bInheritHandle = TRUE;
-
-    HANDLE hReadPipe, hWritePipe;
-    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
-        CodexBuildLog("error", "Failed to create pipe");
-        WebViewAddError(win, "Failed to create pipe");
-        SetCodexWorking(win, false);
-        return;
-    }
-    SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
-
-    STARTUPINFOW si = {};
-    si.cb = sizeof(si);
-    si.hStdOutput = hWritePipe;
-    si.hStdError = hWritePipe;
-    si.dwFlags = STARTF_USESTDHANDLES;
-
-    PROCESS_INFORMATION pi = {};
-    WCHAR* cmdLineW = ToWStrTemp(cmdLine);
-    WCHAR* dirW = ToWStrTemp(dir);
-
-    BOOL ok = CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, dirW, &si, &pi);
-    CloseHandle(hWritePipe);
-
-    if (!ok) {
-        CloseHandle(hReadPipe);
+    AIChatProcessLaunchResult launch;
+    if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, dir, &launch)) {
         CodexBuildLog("error", "Failed to launch codex process");
         WebViewAddError(win, "Failed to launch codex. Is it installed and in PATH?");
         SetCodexWorking(win, false);
         return;
     }
 
-    CloseHandle(pi.hThread);
-    tab->codexProcess = pi.hProcess;
-    CodexBuildLog(">>> start", str::FormatTemp("pid %lu", pi.dwProcessId));
+    tab->codexProcess = launch.hProcess;
+    CodexBuildLog(">>> start", str::FormatTemp("pid %lu", launch.processId));
 
     auto ctx = (CodexReadCtx*)calloc(1, sizeof(CodexReadCtx));
-    ctx->hReadPipe = hReadPipe;
+    ctx->hReadPipe = launch.hReadPipe;
     ctx->hwndFrame = win->hwndFrame;
     ctx->sessionId = str::Dup(tab->codexSessionId ? tab->codexSessionId : kCodexPendingSessionId);
     RunAsync(MkFunc0(StartCodexReadThread, ctx), "CodexReadThread");
-}
-
-constexpr int kCodexLabelCloseBtnDx = 16;
-constexpr int kCodexLabelCloseBtnSpaceDx = 8;
-constexpr int kCodexLabelPadX = 2;
-
-static int CodexLabelMaxTextDx(HWND labelHwnd, int labelDx) {
-    int padX = DpiScale(labelHwnd, kCodexLabelPadX);
-    int btnDx = DpiScale(labelHwnd, kCodexLabelCloseBtnDx);
-    int spaceDx = DpiScale(labelHwnd, kCodexLabelCloseBtnSpaceDx);
-    int maxDx = labelDx - btnDx - spaceDx - 2 * padX;
-    return maxDx > 0 ? maxDx : 0;
 }
 
 static TempStr FitCodexPanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
@@ -1517,7 +1126,7 @@ static void UpdateCodexPanelTitle(MainWindow* win, int labelDx) {
     if (labelDx <= 0 && win->hwndCodexBox) {
         labelDx = ClientRect(win->hwndCodexBox).dx;
     }
-    int maxDx = CodexLabelMaxTextDx(labelHwnd, labelDx);
+    int maxDx = AIChatLabelMaxTextDx(labelHwnd, labelDx);
     TempStr label = FitCodexPanelTitleTemp(labelHwnd, font, docName, maxDx);
     win->codexLabelWithClose->SetLabel(label);
 }
@@ -1719,7 +1328,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     str::Free(webView->resourceUriPrefix);
     webView->resourceUriPrefix = str::Dup(kCodexVirtualHostW);
     webView->resourceProvider.ctx = &gCodexMarkedJs;
-    webView->resourceProvider.getResource = CodexGetResource;
+    webView->resourceProvider.getResource = AIChatGetMarkedJsResource;
 
     Rect rc = ClientRect(win->hwndCodexBox);
     CreateWebViewArgs wvArgs;
@@ -1728,7 +1337,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->Create(wvArgs);
 
     if (webView->hwnd) {
-        TempStr chatHtml = str::FormatTemp(kCodexChatHtmlFmt, CodexBgColor());
+        TempStr chatHtml = AIChatFormatChatHtmlTemp(kCodexVirtualHost, CodexBgColor());
         webView->SetHtml(chatHtml);
         win->codexWebView = webView;
         win->codexWebViewReady = true;
@@ -1845,7 +1454,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
     }
 
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     if (sessions.Size() > 0) {
@@ -1857,7 +1466,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
         LoadSessionHistory(win, tab->codexSessionId, dir);
     }
 
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 }
 
 void OnAIChatWithOpenAICodex(MainWindow* win) {
@@ -1879,23 +1488,8 @@ void ToggleCodexPanel(MainWindow* win) {
         return;
     }
     win->codexVisible = !win->codexVisible;
-    if (win->codexVisible && win->claudeVisible) {
-        win->claudeVisible = false;
-        if (win->hwndClaudeBox) {
-            HwndSetVisibility(win->hwndClaudeBox, false);
-        }
-        if (win->claudeSplitter && win->claudeSplitter->hwnd) {
-            HwndSetVisibility(win->claudeSplitter->hwnd, false);
-        }
-    }
-    if (win->codexVisible && win->grokVisible) {
-        win->grokVisible = false;
-        if (win->hwndGrokBox) {
-            HwndSetVisibility(win->hwndGrokBox, false);
-        }
-        if (win->grokSplitter && win->grokSplitter->hwnd) {
-            HwndSetVisibility(win->grokSplitter->hwnd, false);
-        }
+    if (win->codexVisible) {
+        AIChatHideOtherPanels(win, AIChatBackend::Codex);
     }
     HwndSetVisibility(win->hwndCodexBox, win->codexVisible);
     HwndSetVisibility(win->codexSplitter->hwnd, win->codexVisible);
@@ -1950,6 +1544,10 @@ void OnCodexTabChanged(MainWindow* win) {
     }
 }
 
+static bool CodexTabHasRunningProcess(WindowTab* tab) {
+    return tab && tab->codexProcess;
+}
+
 void ShutdownCodexForMainWindow(MainWindow* win) {
     if (!win) {
         return;
@@ -1957,21 +1555,7 @@ void ShutdownCodexForMainWindow(MainWindow* win) {
     for (WindowTab* tab : win->Tabs()) {
         CloseCodexProcess(tab, true);
     }
-    // read threads post uitask updates when their pipes close
-    for (int i = 0; i < 20; i++) {
-        uitask::DrainQueue();
-        bool anyRunning = false;
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab && tab->codexProcess) {
-                anyRunning = true;
-            }
-        }
-        if (!anyRunning) {
-            break;
-        }
-        Sleep(10);
-    }
-    uitask::DrainQueue();
+    AIChatWaitForTabProcessesToFinish(win, CodexTabHasRunningProcess);
 }
 
 void DestroyCodexPanel(MainWindow* win) {

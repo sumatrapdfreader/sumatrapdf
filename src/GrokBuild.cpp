@@ -28,43 +28,22 @@
 #include "Translations.h"
 #include "resource.h"
 
-#include "utils/GuessFileType.h"
-
 #include "AppTools.h"
+#include "AIChatCommon.h"
 #include "GrokBuild.h"
-#include "EngineAll.h"
 
 bool IsGrokBuildAvailable() {
-#ifdef _MSC_VER
-    return IsWindows10OrGreater();
-#else
-    return false;
-#endif
+    return IsAIChatAvailable();
 }
 
 static TempStr FindGrokExecutableTemp() {
-#ifdef _MSC_VER
+    StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
-        TempStr candidates[] = {
-            str::FormatTemp("%s\\.grok\\bin\\grok.exe", userProfile),
-            str::FormatTemp("%s\\.local\\bin\\grok.exe", userProfile),
-        };
-        for (auto& c : candidates) {
-            if (file::Exists(c)) {
-                return c;
-            }
-        }
+        candidates.Append(str::FormatTemp("%s\\.grok\\bin\\grok.exe", userProfile));
+        candidates.Append(str::FormatTemp("%s\\.local\\bin\\grok.exe", userProfile));
     }
-    WCHAR grokPathW[MAX_PATH];
-    if (SearchPathW(nullptr, L"grok.exe", nullptr, MAX_PATH, grokPathW, nullptr) > 0) {
-        return ToUtf8Temp(grokPathW);
-    }
-    if (SearchPathW(nullptr, L"grok", L".exe", MAX_PATH, grokPathW, nullptr) > 0) {
-        return ToUtf8Temp(grokPathW);
-    }
-#endif
-    return nullptr;
+    return AIChatFindExecutableTemp(candidates, L"grok.exe", L"grok");
 }
 
 bool IsGrokBuildInstalled() {
@@ -72,115 +51,28 @@ bool IsGrokBuildInstalled() {
 }
 
 static Mutex gGrokBuildLogMutex;
-
-static TempStr GrokBuildLogPathTemp() {
-    TempStr dir = GetNotImportantDataDirTemp();
-    if (!dir) {
-        return nullptr;
-    }
-    return path::JoinTemp(dir, "grok-build-log.txt");
-}
+static AIChatLogger gGrokBuildLogger = {&gGrokBuildLogMutex, "grok-build-log.txt", "grok-build"};
 
 static void GrokBuildLog(const char* direction, const char* text) {
-    if (!text) {
-        text = "";
-    }
-
-    SYSTEMTIME st;
-    GetLocalTime(&st);
-    StrBuilder entry;
-    entry.AppendFmt("[%04d-%02d-%02d %02d:%02d:%02d] %s: ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
-                    st.wSecond, direction);
-    entry.Append(text);
-    if (entry.LastChar() != '\n') {
-        entry.AppendChar('\n');
-    }
-
-    logfa("grok-build %s: %s", direction, text);
-
-    TempStr path = GrokBuildLogPathTemp();
-    if (!path) {
-        return;
-    }
-
-    gGrokBuildLogMutex.Lock();
-    FILE* f = fopen(path, "a");
-    if (f) {
-        fwrite(entry.Get(), 1, entry.Size(), f);
-        fflush(f);
-        fclose(f);
-    }
-    gGrokBuildLogMutex.Unlock();
+    AIChatLog(&gGrokBuildLogger, direction, text);
 }
 
-constexpr int kBtnIdGrokLearnMore = 100;
 constexpr const char* kGrokBuildDocURI = "/AI-Chat-with-document#grok-build";
 
-static HRESULT CALLBACK GrokBuildNotInstalledDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-                                                            LONG_PTR lpRefData) {
-    switch (msg) {
-        case TDN_HYPERLINK_CLICKED:
-            LaunchDocumentation(kGrokBuildDocURI);
-            break;
-        case TDN_BUTTON_CLICKED:
-            if ((int)wParam == kBtnIdGrokLearnMore) {
-                LaunchDocumentation(kGrokBuildDocURI);
-                return S_FALSE;
-            }
-            break;
-    }
-    return S_OK;
-}
-
 static void ShowGrokBuildNotInstalledDialog() {
-    const char* mainInstr = _TRA("Grok Build cli must be installed for this functionality");
-    const char* linkLabel = _TRA("AI Chat documentation");
-    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions."), linkLabel);
-
-    TASKDIALOG_BUTTON buttons[2];
-    buttons[0].nButtonID = IDOK;
-    buttons[0].pszButtonText = ToWStrTemp(_TRA("OK"));
-    buttons[1].nButtonID = kBtnIdGrokLearnMore;
-    buttons[1].pszButtonText = ToWStrTemp(_TRA("Learn more"));
-
-    TASKDIALOGCONFIG dialogConfig{};
-    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
-    if (trans::IsCurrLangRtl()) {
-        flags |= TDF_RTL_LAYOUT;
-    }
-    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = ToWStrTemp(_TRA("Grok chat"));
-    dialogConfig.pszMainInstruction = ToWStrTemp(mainInstr);
-    dialogConfig.pszContent = ToWStrTemp(content);
-    dialogConfig.nDefaultButton = IDOK;
-    dialogConfig.dwFlags = flags;
-    dialogConfig.pfCallback = GrokBuildNotInstalledDialogCallback;
-    dialogConfig.pButtons = buttons;
-    dialogConfig.cButtons = dimof(buttons);
-    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
-
-    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    AIChatNotInstalledDialogArgs args;
+    args.windowTitle = _TRA("Grok chat");
+    args.mainInstruction = _TRA("Grok Build cli must be installed for this functionality");
+    args.docUri = kGrokBuildDocURI;
+    AIChatShowNotInstalledDialog(args);
 }
 
 bool IsGrokBuildSupportedForFile(const char* filePath, Kind engineKind) {
-    if (!filePath) {
-        return false;
-    }
-    if (engineKind == kindEngineComicBooks || engineKind == kindEngineImageDir) {
-        return false;
-    }
-    Kind kind = GuessFileTypeFromName(filePath);
-    if (kind == kindFilePDF) {
-        return true;
-    }
-    return IsEngineImageSupportedFileType(kind);
+    return IsAIChatSupportedForFile(filePath, engineKind);
 }
 
 bool IsGrokBuildSupportedForTab(WindowTab* tab) {
-    if (!tab || tab->IsAboutTab() || !tab->filePath) {
-        return false;
-    }
-    return IsGrokBuildSupportedForFile(tab->filePath, tab->GetEngineType());
+    return IsAIChatSupportedForTab(tab);
 }
 
 #define IDC_GROK_LABEL_WITH_CLOSE 1120
@@ -203,89 +95,30 @@ static const char* GrokBgColor() {
     return bg;
 }
 
-static bool GrokGetResource(void* ctx, const char* path, WebViewResourceResult* res) {
-    auto* data = (LoadedDataResource*)ctx;
-    if (!data || !res || str::IsEmpty(path)) {
-        return false;
-    }
-    if (!str::EqI(path, "/marked.min.js") && !str::EqI(path, "marked.min.js")) {
-        return false;
-    }
-    res->data = (char*)data->data;
-    res->dataLen = data->dataSize;
-    res->contentType = str::Dup("text/javascript");
-    res->ownsData = false;
-    return res->dataLen > 0;
-}
-
-static void AppendGrokModelUnique(StrVec& models, const char* model) {
-    if (str::IsEmpty(model)) {
-        return;
-    }
-    TempStr norm = str::DupTemp(model);
-    char* s = norm;
-    while (str::IsWs(*s)) {
-        s++;
-    }
-    if (!*s) {
-        return;
-    }
-    str::ToLowerInPlace(s);
-    for (int i = 0; i < models.Size(); i++) {
-        if (str::EqI(models.At(i), s)) {
-            return;
-        }
-    }
-    models.Append(s);
-}
-
 static void BuildGrokModelsList(StrVec& models) {
     models.Reset();
-    AppendGrokModelUnique(models, "grok-composer-2.5-fast");
-    AppendGrokModelUnique(models, "grok-build");
+    AIChatAppendModelUnique(models, "grok-composer-2.5-fast");
+    AIChatAppendModelUnique(models, "grok-build");
     const char* extra = gGlobalPrefs->grokBuild.models;
     if (!str::IsEmpty(extra)) {
         StrVec parts;
         Split(&parts, extra, ",", true);
         for (int i = 0; i < parts.Size(); i++) {
-            AppendGrokModelUnique(models, parts.At(i));
+            AIChatAppendModelUnique(models, parts.At(i));
         }
     }
-}
-
-static int FindGrokModelInList(const StrVec& models, const char* model) {
-    if (str::IsEmpty(model)) {
-        return -1;
-    }
-    TempStr norm = str::DupTemp(model);
-    str::ToLowerInPlace(norm);
-    for (int i = 0; i < models.Size(); i++) {
-        if (str::EqI(models.At(i), norm)) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 static const char* ResolveGrokModel(const StrVec& models, const char* model) {
-    int idx = FindGrokModelInList(models, model);
+    int idx = AIChatFindModelInList(models, model);
     if (idx >= 0) {
         return models.At(idx);
     }
-    idx = FindGrokModelInList(models, "grok-composer-2.5-fast");
+    idx = AIChatFindModelInList(models, "grok-composer-2.5-fast");
     if (idx >= 0) {
         return models.At(idx);
     }
     return "grok-composer-2.5-fast";
-}
-
-static TempStr GrokModelDisplayNameTemp(const char* model) {
-    if (str::IsEmpty(model)) {
-        return (TempStr) "Grok-composer-2.5-fast";
-    }
-    char* dup = str::DupTemp(model);
-    dup[0] = (char)toupper((unsigned char)dup[0]);
-    return dup;
 }
 
 static void PopulateModelCombo(HWND combo) {
@@ -296,7 +129,7 @@ static void PopulateModelCombo(HWND combo) {
     StrVec models;
     BuildGrokModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
-        TempStr display = GrokModelDisplayNameTemp(models.At(i));
+        TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Grok-composer-2.5-fast");
         WCHAR* displayW = ToWStrTemp(display);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
     }
@@ -313,7 +146,7 @@ static void ApplyGrokSettingsToUI(MainWindow* win) {
         StrVec models;
         BuildGrokModelsList(models);
         const char* model = ResolveGrokModel(models, gGlobalPrefs->grokBuild.model);
-        int modelIdx = FindGrokModelInList(models, model);
+        int modelIdx = AIChatFindModelInList(models, model);
         if (modelIdx < 0) {
             modelIdx = 0;
         }
@@ -349,116 +182,6 @@ static void SyncGrokSettingsFromUI(MainWindow* win) {
         gGlobalPrefs->grokBuild.sidebarDx = win->grokDx;
     }
     SaveSettings();
-}
-
-// clang-format off
-static const char* kGrokChatHtmlFmt =
-    "<!DOCTYPE html><html><head><meta charset='utf-8'>"
-    "<script src='https://sumatrapdf.grok/marked.min.js'></script>"
-    "<style>"
-    "* { margin: 0; padding: 0; box-sizing: border-box; }"
-    "body { font-family: 'Segoe UI', sans-serif; font-size: 13px; margin: 0; padding: 6px; "
-    "  background: %s; color: #222; line-height: 1.4; }"
-    "p { margin: 2px 0; }"
-    "h1,h2,h3,h4 { margin: 6px 0 2px 0; }"
-    "ul,ol { margin: 2px 0 2px 18px; }"
-    "li { margin: 1px 0; }"
-    ".user { color: #1a5276; font-weight: bold; margin: 8px 0 2px 0; padding: 4px 0; "
-    "  border-top: 1px solid #ccc; }"
-    ".tool { color: #555; font-size: 11px; font-style: italic; "
-    "  border-left: 3px solid #999; padding-left: 6px; margin: 2px 0; }"
-    ".assistant { margin: 2px 0; }"
-    ".assistant pre { background: #f0f0f0; padding: 6px; border-radius: 4px; "
-    "  overflow-x: auto; margin: 3px 0; font-size: 12px; }"
-    ".assistant code { background: #e8e8e8; padding: 1px 3px; border-radius: 2px; font-size: 12px; }"
-    ".assistant pre code { background: none; padding: 0; }"
-    ".error { color: #c0392b; font-weight: bold; margin: 4px 0; }"
-    "</style></head><body><div id='chat'></div>"
-    "<script>"
-    "var chatDiv = document.getElementById('chat');"
-    "var currentBlock = null;"
-    "var currentRaw = '';"
-    "function addUser(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'user';"
-    "  d.textContent = 'You: ' + text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function addTool(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'tool';"
-    "  d.textContent = text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function addError(text) {"
-    "  flushBlock();"
-    "  var d = document.createElement('div');"
-    "  d.className = 'error';"
-    "  d.textContent = text;"
-    "  chatDiv.appendChild(d);"
-    "  scrollToBottom();"
-    "}"
-    "function appendText(text) {"
-    "  if (!currentBlock) {"
-    "    currentBlock = document.createElement('div');"
-    "    currentBlock.className = 'assistant';"
-    "    chatDiv.appendChild(currentBlock);"
-    "    currentRaw = '';"
-    "  }"
-    "  currentRaw += text;"
-    "  if (typeof marked !== 'undefined') {"
-    "    currentBlock.innerHTML = marked.parse(currentRaw);"
-    "  } else {"
-    "    currentBlock.textContent = currentRaw;"
-    "  }"
-    "  scrollToBottom();"
-    "}"
-    "function flushBlock() {"
-    "  currentBlock = null; currentRaw = '';"
-    "}"
-    "function clearChat() {"
-    "  chatDiv.innerHTML = '';"
-    "  flushBlock();"
-    "}"
-    "function scrollToBottom() {"
-    "  window.scrollTo(0, document.body.scrollHeight);"
-    "}"
-    "</script></body></html>";
-// clang-format on
-
-static TempStr JsEscapeTemp(const char* s) {
-    if (!s) {
-        return str::DupTemp("");
-    }
-    StrBuilder buf;
-    while (*s) {
-        switch (*s) {
-            case '\\':
-                buf.Append("\\\\");
-                break;
-            case '\'':
-                buf.Append("\\'");
-                break;
-            case '\n':
-                buf.Append("\\n");
-                break;
-            case '\r':
-                buf.Append("\\r");
-                break;
-            case '\t':
-                buf.Append("\\t");
-                break;
-            default:
-                buf.AppendChar(*s);
-                break;
-        }
-        s++;
-    }
-    return str::DupTemp(buf.LendData());
 }
 
 // Execute JS on the WebView AND record it in the current tab's chat log
@@ -510,15 +233,10 @@ static void SetGrokWorking(MainWindow* win, bool /*working*/) {
 }
 
 static void CloseGrokProcess(WindowTab* tab, bool terminateIfRunning) {
-    if (!tab || !tab->grokProcess) {
+    if (!tab) {
         return;
     }
-    HANDLE h = tab->grokProcess;
-    tab->grokProcess = nullptr;
-    if (terminateIfRunning && WaitForSingleObject(h, 0) == WAIT_TIMEOUT) {
-        TerminateProcess(h, 0);
-    }
-    CloseHandle(h);
+    AIChatCloseProcess(&tab->grokProcess, terminateIfRunning);
 }
 
 static void StopGrok(MainWindow* win) {
@@ -548,23 +266,23 @@ static void WebViewEval(MainWindow* win, const char* js, bool record = true) {
 }
 
 static void WebViewAppendText(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("appendText('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddUser(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("addUser('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddTool(MainWindow* win, const char* text) {
-    TempStr js = str::FormatTemp("addTool('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 static void WebViewAddError(MainWindow* win, const char* text) {
     GrokBuildLog("error", text);
-    TempStr js = str::FormatTemp("addError('%s')", JsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
@@ -579,7 +297,7 @@ static void WebViewClearChat(MainWindow* win) {
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     const char* msg = "Grok Build is only available for PDF and image files.";
-    TempStr js = str::FormatTemp("addError('%s')", JsEscapeTemp(msg));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg));
     WebViewEval(win, js, false);
 }
 
@@ -607,53 +325,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     }
 }
 
-static MainWindow* FindMainWindowByFrame(HWND hwndFrame) {
-    for (MainWindow* w : gWindows) {
-        if (w->hwndFrame == hwndFrame) {
-            return w;
-        }
-    }
-    return nullptr;
-}
-
-// --- JSON helpers ---
-static TempStr JsonStrTemp(const char* json, const char* key) {
-    TempStr pattern = str::FormatTemp("\"%s\":\"", key);
-    const char* start = str::Find(json, pattern);
-    if (!start) {
-        return nullptr;
-    }
-    start += str::Len(pattern);
-    StrBuilder buf;
-    while (*start && *start != '"') {
-        if (*start == '\\' && *(start + 1)) {
-            start++;
-            if (*start == 'n') {
-                buf.AppendChar('\n');
-            } else if (*start == 't') {
-                buf.AppendChar('\t');
-            } else if (*start == '\\') {
-                buf.AppendChar('\\');
-            } else if (*start == '"') {
-                buf.AppendChar('"');
-            } else {
-                buf.AppendChar(*start);
-            }
-        } else {
-            buf.AppendChar(*start);
-        }
-        start++;
-    }
-    return str::DupTemp(buf.LendData());
-}
-
 // --- Session history ---
-struct SessionInfo {
-    char* sessionId;
-    char* display; // first user message
-    char* project; // directory
-    i64 timestamp;
-};
 
 // URL-encode a path the way Grok stores session dirs (e.g. C:\foo -> C%3A%5Cfoo)
 static TempStr EncodeGrokDirTemp(const char* dir) {
@@ -701,11 +373,11 @@ static TempStr GrokSessionsProjectDirTemp(const char* dir) {
 }
 
 static TempStr ExtractGrokPromptFromHistoryLineTemp(const char* line, const char* sessionId) {
-    TempStr sid = JsonStrTemp(line, "session_id");
+    TempStr sid = AIChatJsonStrTemp(line, "session_id");
     if (!sid || !str::Eq(sid, sessionId)) {
         return nullptr;
     }
-    return JsonStrTemp(line, "prompt");
+    return AIChatJsonStrTemp(line, "prompt");
 }
 
 static char* GetGrokSessionDescription(const char* projectDir, const char* sessionId) {
@@ -738,15 +410,8 @@ static char* GetGrokSessionDescription(const char* projectDir, const char* sessi
     return result ? result : str::Dup("(no description)");
 }
 
-static i64 FileTimeToMs(const FILETIME& ft) {
-    ULARGE_INTEGER uli;
-    uli.LowPart = ft.dwLowDateTime;
-    uli.HighPart = ft.dwHighDateTime;
-    return (i64)(uli.QuadPart / 10000);
-}
-
 // Scan ~/.grok/sessions/<url-encoded-dir>/ for session subdirectories
-static void CollectSessions(const char* dir, Vec<SessionInfo>& sessions) {
+static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr projectDir = GrokSessionsProjectDirTemp(dir);
     if (!projectDir || !dir::Exists(projectDir)) {
         return;
@@ -773,9 +438,9 @@ static void CollectSessions(const char* dir, Vec<SessionInfo>& sessions) {
         }
 
         char* desc = GetGrokSessionDescription(projectDir, fileName);
-        i64 ts = FileTimeToMs(fd.ftLastWriteTime);
+        i64 ts = AIChatFileTimeToMs(fd.ftLastWriteTime);
 
-        SessionInfo si;
+        AIChatSessionInfo si;
         si.sessionId = str::Dup(fileName);
         si.display = desc;
         si.project = str::Dup(dir);
@@ -785,25 +450,7 @@ static void CollectSessions(const char* dir, Vec<SessionInfo>& sessions) {
 
     FindClose(hFind);
 
-    int n = sessions.Size();
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - 1 - i; j++) {
-            if (sessions[j].timestamp < sessions[j + 1].timestamp) {
-                SessionInfo tmp = sessions[j];
-                sessions[j] = sessions[j + 1];
-                sessions[j + 1] = tmp;
-            }
-        }
-    }
-}
-
-static void FreeSessions(Vec<SessionInfo>& sessions) {
-    for (int i = 0; i < sessions.Size(); i++) {
-        str::Free(sessions[i].sessionId);
-        str::Free(sessions[i].display);
-        str::Free(sessions[i].project);
-    }
-    sessions.Reset();
+    AIChatSortSessionsByTimestampDesc(sessions);
 }
 
 static bool gPopulatingCombo = false; // guard against re-entrant CBN_SELCHANGE
@@ -828,7 +475,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     }
 
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     int selectedIdx = 0;
@@ -857,7 +504,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     }
 
     SendMessageW(combo, CB_SETCURSEL, selectedIdx, 0);
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 
     gPopulatingCombo = false;
 }
@@ -885,10 +532,10 @@ static TempStr ExtractGrokChatUserTextTemp(const char* line) {
         return nullptr;
     }
     if (str::Find(line, "\"type\":\"text\",\"text\":\"")) {
-        TempStr text = JsonStrTemp(line, "text");
+        TempStr text = AIChatJsonStrTemp(line, "text");
         return StripGrokUserQueryWrapperTemp(text);
     }
-    TempStr content = JsonStrTemp(line, "content");
+    TempStr content = AIChatJsonStrTemp(line, "content");
     return StripGrokUserQueryWrapperTemp(content);
 }
 
@@ -962,7 +609,7 @@ static void LoadSessionHistory(MainWindow* win, const char* sessionId, const cha
             if (userText) {
                 WebViewAddUser(win, userText);
             } else if (str::Find(line, "\"type\":\"assistant\"")) {
-                TempStr text = JsonStrTemp(line, "content");
+                TempStr text = AIChatJsonStrTemp(line, "content");
                 if (text && str::Len(text) > 0) {
                     WebViewAppendText(win, text);
                 }
@@ -1006,7 +653,7 @@ static void OnSessionComboChange(MainWindow* win) {
 
     // re-collect sessions to get the ID
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     int sessionIdx = sel - 1;
@@ -1021,7 +668,7 @@ static void OnSessionComboChange(MainWindow* win) {
         // LoadSessionHistory calls WebViewEval which rebuilds grokChatLog
     }
 
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 }
 
 // --- Stream JSON events ---
@@ -1044,7 +691,7 @@ struct GrokUpdateData {
 };
 
 static void OnGrokUpdate(GrokUpdateData* data) {
-    MainWindow* win = FindMainWindowByFrame(data->hwndFrame);
+    MainWindow* win = AIChatFindMainWindowByFrame(data->hwndFrame);
     if (!win || !IsMainWindowValid(win) || !win->hwndGrokBox) {
         str::Free(data->text);
         str::Free(data->sessionId);
@@ -1169,29 +816,29 @@ static void GrokReadThread(GrokReadCtx* ctx) {
                 if (line && *line) {
                     GrokBuildLog("<<<", line);
                 }
-                TempStr eventType = JsonStrTemp(line, "type");
+                TempStr eventType = AIChatJsonStrTemp(line, "type");
 
                 if (eventType && str::Eq(eventType, "thought")) {
-                    TempStr thought = JsonStrTemp(line, "data");
+                    TempStr thought = AIChatJsonStrTemp(line, "data");
                     if (thought && str::Len(thought) > 0) {
                         GrokBuildLog("<<< thought", thought);
                     }
                 } else if (eventType && str::Eq(eventType, "text")) {
-                    TempStr text = JsonStrTemp(line, "data");
+                    TempStr text = AIChatJsonStrTemp(line, "data");
                     if (text && str::Len(text) > 0) {
                         PostUpdate(hwndFrame, sessionId, text, GrokUpdateType::Text);
                     }
                 } else if (eventType && str::Eq(eventType, "error")) {
-                    TempStr err = JsonStrTemp(line, "data");
+                    TempStr err = AIChatJsonStrTemp(line, "data");
                     if (!err) {
-                        err = JsonStrTemp(line, "message");
+                        err = AIChatJsonStrTemp(line, "message");
                     }
                     if (err) {
                         PostUpdate(hwndFrame, sessionId, err, GrokUpdateType::Error);
                     }
                 } else if (eventType && str::Eq(eventType, "end")) {
                     GrokBuildLog("<<< end", line);
-                    TempStr newSessionId = JsonStrTemp(line, "sessionId");
+                    TempStr newSessionId = AIChatJsonStrTemp(line, "sessionId");
                     if (newSessionId) {
                         PostUpdate(hwndFrame, sessionId, newSessionId, GrokUpdateType::SessionId);
                         str::Free(sessionId);
@@ -1301,62 +948,22 @@ static void SendGrokMessage(MainWindow* win) {
 
     GrokBuildLog(">>> cmd", cmdLine);
 
-    SECURITY_ATTRIBUTES sa;
-    sa.nLength = sizeof(sa);
-    sa.lpSecurityDescriptor = nullptr;
-    sa.bInheritHandle = TRUE;
-
-    HANDLE hReadPipe, hWritePipe;
-    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
-        GrokBuildLog("error", "Failed to create pipe");
-        WebViewAddError(win, "Failed to create pipe");
-        SetGrokWorking(win, false);
-        return;
-    }
-    SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
-
-    STARTUPINFOW si = {};
-    si.cb = sizeof(si);
-    si.hStdOutput = hWritePipe;
-    si.hStdError = hWritePipe;
-    si.dwFlags = STARTF_USESTDHANDLES;
-
-    PROCESS_INFORMATION pi = {};
-    WCHAR* cmdLineW = ToWStrTemp(cmdLine);
-    WCHAR* dirW = ToWStrTemp(dir);
-
-    BOOL ok = CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, dirW, &si, &pi);
-    CloseHandle(hWritePipe);
-
-    if (!ok) {
-        CloseHandle(hReadPipe);
+    AIChatProcessLaunchResult launch;
+    if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, dir, &launch)) {
         GrokBuildLog("error", "Failed to launch grok process");
         WebViewAddError(win, "Failed to launch grok. Is it installed and in PATH?");
         SetGrokWorking(win, false);
         return;
     }
 
-    CloseHandle(pi.hThread);
-    tab->grokProcess = pi.hProcess;
-    GrokBuildLog(">>> start", str::FormatTemp("pid %lu", pi.dwProcessId));
+    tab->grokProcess = launch.hProcess;
+    GrokBuildLog(">>> start", str::FormatTemp("pid %lu", launch.processId));
 
     auto ctx = (GrokReadCtx*)calloc(1, sizeof(GrokReadCtx));
-    ctx->hReadPipe = hReadPipe;
+    ctx->hReadPipe = launch.hReadPipe;
     ctx->hwndFrame = win->hwndFrame;
     ctx->sessionId = str::Dup(tab->grokSessionId ? tab->grokSessionId : kGrokPendingSessionId);
     RunAsync(MkFunc0(StartGrokReadThread, ctx), "GrokReadThread");
-}
-
-constexpr int kGrokLabelCloseBtnDx = 16;
-constexpr int kGrokLabelCloseBtnSpaceDx = 8;
-constexpr int kGrokLabelPadX = 2;
-
-static int GrokLabelMaxTextDx(HWND labelHwnd, int labelDx) {
-    int padX = DpiScale(labelHwnd, kGrokLabelPadX);
-    int btnDx = DpiScale(labelHwnd, kGrokLabelCloseBtnDx);
-    int spaceDx = DpiScale(labelHwnd, kGrokLabelCloseBtnSpaceDx);
-    int maxDx = labelDx - btnDx - spaceDx - 2 * padX;
-    return maxDx > 0 ? maxDx : 0;
 }
 
 static TempStr FitGrokPanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
@@ -1388,7 +995,7 @@ static void UpdateGrokPanelTitle(MainWindow* win, int labelDx) {
     if (labelDx <= 0 && win->hwndGrokBox) {
         labelDx = ClientRect(win->hwndGrokBox).dx;
     }
-    int maxDx = GrokLabelMaxTextDx(labelHwnd, labelDx);
+    int maxDx = AIChatLabelMaxTextDx(labelHwnd, labelDx);
     TempStr label = FitGrokPanelTitleTemp(labelHwnd, font, docName, maxDx);
     win->grokLabelWithClose->SetLabel(label);
 }
@@ -1589,7 +1196,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     str::Free(webView->resourceUriPrefix);
     webView->resourceUriPrefix = str::Dup(kGrokVirtualHostW);
     webView->resourceProvider.ctx = &gGrokMarkedJs;
-    webView->resourceProvider.getResource = GrokGetResource;
+    webView->resourceProvider.getResource = AIChatGetMarkedJsResource;
 
     Rect rc = ClientRect(win->hwndGrokBox);
     CreateWebViewArgs wvArgs;
@@ -1598,7 +1205,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->Create(wvArgs);
 
     if (webView->hwnd) {
-        TempStr chatHtml = str::FormatTemp(kGrokChatHtmlFmt, GrokBgColor());
+        TempStr chatHtml = AIChatFormatChatHtmlTemp(kGrokVirtualHost, GrokBgColor());
         webView->SetHtml(chatHtml);
         win->grokWebView = webView;
         win->grokWebViewReady = true;
@@ -1717,7 +1324,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
     }
 
     TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<SessionInfo> sessions;
+    Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
     if (sessions.Size() > 0) {
@@ -1729,7 +1336,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
         LoadSessionHistory(win, tab->grokSessionId, dir);
     }
 
-    FreeSessions(sessions);
+    AIChatFreeSessions(sessions);
 }
 
 void OnAIChatWithGrokBuild(MainWindow* win) {
@@ -1751,23 +1358,8 @@ void ToggleGrokPanel(MainWindow* win) {
         return;
     }
     win->grokVisible = !win->grokVisible;
-    if (win->grokVisible && win->claudeVisible) {
-        win->claudeVisible = false;
-        if (win->hwndClaudeBox) {
-            HwndSetVisibility(win->hwndClaudeBox, false);
-        }
-        if (win->claudeSplitter && win->claudeSplitter->hwnd) {
-            HwndSetVisibility(win->claudeSplitter->hwnd, false);
-        }
-    }
-    if (win->grokVisible && win->codexVisible) {
-        win->codexVisible = false;
-        if (win->hwndCodexBox) {
-            HwndSetVisibility(win->hwndCodexBox, false);
-        }
-        if (win->codexSplitter && win->codexSplitter->hwnd) {
-            HwndSetVisibility(win->codexSplitter->hwnd, false);
-        }
+    if (win->grokVisible) {
+        AIChatHideOtherPanels(win, AIChatBackend::Grok);
     }
     HwndSetVisibility(win->hwndGrokBox, win->grokVisible);
     HwndSetVisibility(win->grokSplitter->hwnd, win->grokVisible);
@@ -1822,6 +1414,10 @@ void OnGrokTabChanged(MainWindow* win) {
     }
 }
 
+static bool GrokTabHasRunningProcess(WindowTab* tab) {
+    return tab && tab->grokProcess;
+}
+
 void ShutdownGrokForMainWindow(MainWindow* win) {
     if (!win) {
         return;
@@ -1829,21 +1425,7 @@ void ShutdownGrokForMainWindow(MainWindow* win) {
     for (WindowTab* tab : win->Tabs()) {
         CloseGrokProcess(tab, true);
     }
-    // read threads post uitask updates when their pipes close
-    for (int i = 0; i < 20; i++) {
-        uitask::DrainQueue();
-        bool anyRunning = false;
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab && tab->grokProcess) {
-                anyRunning = true;
-            }
-        }
-        if (!anyRunning) {
-            break;
-        }
-        Sleep(10);
-    }
-    uitask::DrainQueue();
+    AIChatWaitForTabProcessesToFinish(win, GrokTabHasRunningProcess);
 }
 
 void DestroyGrokPanel(MainWindow* win) {
