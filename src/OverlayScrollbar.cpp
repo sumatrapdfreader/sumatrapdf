@@ -454,6 +454,11 @@ static void HideScrollbarWindow(OverlayScrollbar* sb) {
 // ---- Global mouse tracking ----
 
 static void CALLBACK MouseTrackTimerProc(HWND, UINT, UINT_PTR, DWORD) {
+    // e.g. splitter drag uses SetCapture(); don't react to cursor proximity then
+    if (GetCapture()) {
+        return;
+    }
+
     POINT pt;
     GetCursorPos(&pt);
 
