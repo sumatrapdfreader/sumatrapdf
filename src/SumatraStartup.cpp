@@ -904,11 +904,12 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         return false;
     }
 
-    TempStr msg = str::FormatTemp(
-        "SumatraPDF.exe failed to load libmupdf.dll.\nError code: %d\nError message: %s\n"
-        "We can't proceed.\n"
-        "For more information see <a href=\"%s\">SumatraPDF docs</a>.",
-        (int)err, errStr ? errStr : "unknown", kFailedToLoadURL);
+    TempStr msg = str::FormatTemp(R"(SumatraPDF.exe failed to load libmupdf.dll.
+Error code: %d
+Error message: %s
+We can't proceed.
+For more information see <a href="%s">SumatraPDF docs</a>.)",
+                                  (int)err, errStr ? errStr : "unknown", kFailedToLoadURL);
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
@@ -1560,13 +1561,13 @@ static int MaybeRunMutool() {
             // Emit the message via raw WriteFile (CRT fwrite is what's broken
             // here) to the inherited stderr handle so it survives the bad pipe.
             if (WasLaunchedByPowershellWithPipeRedirect()) {
-                static const char* msg =
-                    "SumatraPDF: command-line tools don't work when their output is redirected by\n"
-                    "PowerShell (e.g. `SumatraPDF.exe info file.pdf > out.txt` or `... | more`).\n"
-                    "PowerShell pipes a GUI app's output through a pipe that drops the data.\n"
-                    "\n"
-                    "Run the command from cmd.exe instead, e.g.:\n"
-                    "    cmd /c \"SumatraPDF.exe info file.pdf > out.txt\"\n";
+                static const char* msg = R"(SumatraPDF: command-line tools don't work when their output is redirected by
+PowerShell (e.g. `SumatraPDF.exe info file.pdf > out.txt` or `... | more`).
+PowerShell pipes a GUI app's output through a pipe that drops the data.
+
+Run the command from cmd.exe instead, e.g.:
+    cmd /c "SumatraPDF.exe info file.pdf > out.txt"
+)";
                 HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
                 if (hErr && hErr != INVALID_HANDLE_VALUE) {
                     DWORD written = 0;

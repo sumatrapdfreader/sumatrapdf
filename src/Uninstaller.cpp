@@ -262,12 +262,11 @@ static void CreateUninstallerWindow() {
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
     TempStr caption = str::JoinTemp(kAppName, " Uninstaller Usage");
-    TempStr msg = str::FormatTemp(
-        "uninstall.exe [/s][/d <path>]\n\
-    \n\
-    /s\tuninstalls %s silently (without user interaction).\n\
-    /d\tchanges the directory from where %s will be uninstalled.",
-        kAppName, kAppName);
+    TempStr msg = str::FormatTemp(R"(uninstall.exe [/s][/d <path>]
+
+/s	uninstalls %s silently (without user interaction).
+/d	changes the directory from where %s will be uninstalled.)",
+                                  kAppName, kAppName);
     MsgBox(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 

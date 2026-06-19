@@ -414,13 +414,12 @@ static void NotifySuspiciousUpdate(HWND hwndParent, const char* dlURL) {
     logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL);
     ReportIfFast(true);
     auto title = _TRA("SumatraPDF Update");
-    auto content = str::FormatTemp(
-        "Suspicious update.\n"
-        "\n"
-        "Download link should come from <a href=\"%s\">%s</a> but is %s.\n"
-        "\n"
-        "Visit <a href=\"%s\">%s</a> to download the latest version.",
-        kExpectedDlHost, kExpectedDlHost, dlURL, kExpectedDlHost, kExpectedDlHost);
+    auto content = str::FormatTemp(R"(Suspicious update.
+
+Download link should come from <a href="%s">%s</a> but is %s.
+
+Visit <a href="%s">%s</a> to download the latest version.)",
+                                   kExpectedDlHost, kExpectedDlHost, dlURL, kExpectedDlHost, kExpectedDlHost);
 
     TASKDIALOGCONFIG dialogConfig{};
     DWORD flags =
