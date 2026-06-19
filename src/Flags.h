@@ -127,10 +127,10 @@ struct Flags {
     int sleepMs = 0;
 
     Flags() = default;
-    ~Flags();
+    ~Flags() = default;
 };
 
-void ParseFlags(const WCHAR* cmdLine, Flags&, const char* toolNames = nullptr);
+void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags&, const char* toolNames = nullptr);
 
 bool IsValidPageRange(const char* ranges);
 bool IsBenchPagesInfo(const char* s);

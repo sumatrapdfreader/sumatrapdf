@@ -30,7 +30,7 @@
 static void ParseCommandLineTest() {
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -bench foo.pdf", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -bench foo.pdf", i);
         utassert(2 == i.pathsToBenchmark.Size());
         utassert(str::Eq("foo.pdf", i.pathsToBenchmark.At(0)));
         utassert(nullptr == i.pathsToBenchmark.At(1));
@@ -38,7 +38,7 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5", i);
         utassert(i.globalPrefArgs.Size() == 2);
         const char* s = i.globalPrefArgs.At(0);
         utassert(str::Eq(s, "-fwdsearch-width"));
@@ -51,7 +51,7 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -bench bar.pdf loadonly", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -bench bar.pdf loadonly", i);
         utassert(2 == i.pathsToBenchmark.Size());
         utassert(str::Eq("bar.pdf", i.pathsToBenchmark.At(0)));
         utassert(str::Eq("loadonly", i.pathsToBenchmark.At(1)));
@@ -59,7 +59,7 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef", i);
         utassert(i.globalPrefArgs.Size() == 3);
         utassert(2 == i.pathsToBenchmark.Size());
         utassert(str::Eq("bar.pdf", i.pathsToBenchmark.At(0)));
@@ -68,7 +68,7 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34", i);
         utassert(4 == i.pathsToBenchmark.Size());
         utassert(str::Eq("bar.pdf", i.pathsToBenchmark.At(0)));
         utassert(str::Eq("1-5,3", i.pathsToBenchmark.At(1)));
@@ -78,7 +78,8 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf",
+                   i);
         utassert(true == i.enterPresentation);
         utassert(true == i.invertColors);
         utassert(2 == i.fileNames.Size());
@@ -88,7 +89,7 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
         utassert(true == i.invertColors);
         utassert(1 == i.fileNames.Size());
         utassert(0 == i.fileNames.Find("rosanna.pdf"));
@@ -96,7 +97,7 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(LR"(SumatraPDF.exe "foo \" bar \\.pdf" un\"quoted.pdf)", i);
+        ParseFlags(GetLifetimeArena(), LR"(SumatraPDF.exe "foo \" bar \\.pdf" un\"quoted.pdf)", i);
         utassert(2 == i.fileNames.Size());
         utassert(0 == i.fileNames.Find(R"(foo " bar \\.pdf)"));
         utassert(1 == i.fileNames.Find(R"(un"quoted.pdf)"));
@@ -105,6 +106,7 @@ static void ParseCommandLineTest() {
     {
         Flags i;
         ParseFlags(
+            GetLifetimeArena(),
             L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234         -reuse-instance",
             i);
         utassert(0 == i.fileNames.Size());
@@ -116,7 +118,7 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(LR"(SumatraPDF.exe -view "single page" -zoom 237.45 -scroll -21,-1)", i);
+        ParseFlags(GetLifetimeArena(), LR"(SumatraPDF.exe -view "single page" -zoom 237.45 -scroll -21,-1)", i);
         utassert(0 == i.fileNames.Size());
         utassert(i.startView == DisplayMode::SinglePage);
         utassert(i.startZoom == 237.45f);
@@ -125,14 +127,14 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -zoom 35%", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -zoom 35%", i);
         utassert(0 == i.fileNames.Size());
         utassert(i.startZoom == 35.f);
     }
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -zoom fit-content", i);
+        ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -zoom fit-content", i);
         utassert(i.startZoom == kZoomFitContent);
         utassert(0 == i.fileNames.Size());
     }

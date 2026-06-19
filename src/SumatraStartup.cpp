@@ -1665,7 +1665,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         return RunInstaller();
     }
 
-    ParseFlags(GetCommandLineW(), flags, gToolNames);
+    ParseFlags(GetLifetimeArena(), GetCommandLineW(), flags, gToolNames);
     gCli = &flags;
     gForTesting = flags.forTesting;
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();

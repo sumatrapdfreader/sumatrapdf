@@ -318,7 +318,8 @@ FileArgs* ParseFileArgs(const char* path) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
+void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, const char* toolNames) {
+    ReportIf(!a);
     // logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
     CmdLineArgsIter args(cmdLine);
 
@@ -354,7 +355,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             continue;
         }
         if (arg == Arg::PrintToDefault) {
-            i.printerName = str::Dup(GetDefaultPrinterNameTemp());
+            i.printerName = str::Dup(a, GetDefaultPrinterNameTemp());
             if (!i.printerName) {
                 i.printDialog = true;
             }
@@ -377,12 +378,12 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
                 if (i.fileNames.Size() == 0 || !str::Eq(i.fileNames.At(i.fileNames.Size() - 1), p1)) {
                     i.fileNames.Append(p1);
                 }
-                i.printerName = str::Dup(args.EatParam());
+                i.printerName = str::Dup(a, args.EatParam());
             } else if (i.fileNames.Size() > 0) {
-                i.printerName = str::Dup(p1);
+                i.printerName = str::Dup(a, p1);
             } else {
                 i.fileNames.Append(p1);
-                i.printerName = str::Dup(GetDefaultPrinterNameTemp());
+                i.printerName = str::Dup(a, GetDefaultPrinterNameTemp());
                 if (!i.printerName) {
                     i.printDialog = true;
                 }
@@ -528,7 +529,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
         paramInt = atoi(param);
 
         if (arg == Arg::LogToFile) {
-            i.logFile = str::Dup(param);
+            i.logFile = str::Dup(a, param);
             i.log = true;
             continue;
         }
@@ -539,7 +540,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
         }
 
         if (arg == Arg::PrintTo) {
-            i.printerName = str::Dup(param);
+            i.printerName = str::Dup(a, param);
             i.exitWhenDone = true;
             continue;
         }
@@ -548,30 +549,30 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             // advanced options [even|odd|last], [noscale|shrink|fit] and [autorotation|portrait|landscape] and
             // disable-auto-rotation; page numbers can be negative (-1 = last page)
             // e.g. -print-settings "1-3,5,10-8,odd,fit" or "last" or "-1"
-            i.printSettings = str::Dup(param);
+            i.printSettings = str::Dup(a, param);
             str::RemoveCharsInPlace(i.printSettings, " ");
             str::TransCharsInPlace(i.printSettings, ";", ",");
             continue;
         }
         if (arg == Arg::InverseSearch) {
-            i.inverseSearchCmdLine = str::Dup(param);
+            i.inverseSearchCmdLine = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::Control) {
-            i.controlPipeName = str::Dup(param);
+            i.controlPipeName = str::Dup(a, param);
             continue;
         }
         if ((arg == Arg::ForwardSearch1 || arg == Arg::ForwardSearch2) && args.AdditionalParam(1)) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
-            i.forwardSearchOrigin = str::Dup(param);
+            i.forwardSearchOrigin = str::Dup(a, param);
             i.forwardSearchLine = atoi(args.EatParam());
             continue;
         }
         if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
-            i.namedDest = str::Dup(param);
+            i.namedDest = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::Page) {
@@ -591,7 +592,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             continue;
         }
         if (arg == Arg::AppData) {
-            i.appdataDir = str::Dup(param);
+            i.appdataDir = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::Plugin) {
@@ -600,7 +601,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
             if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
-                i.pluginURL = str::Dup(param);
+                i.pluginURL = str::Dup(a, param);
                 i.hwndPluginParent = (HWND)(INT_PTR)atol(args.EatParam());
             } else {
                 i.hwndPluginParent = (HWND)(INT_PTR)atol(param);
@@ -615,14 +616,14 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
             //      -stress-test dir 301-  2x  render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
-            i.stressTestPath = str::Dup(param);
+            i.stressTestPath = str::Dup(a, param);
             const char* s = args.AdditionalParam(1);
             if (s && str::FindChar(s, '*')) {
-                i.stressTestFilter = str::Dup(args.EatParam());
+                i.stressTestFilter = str::Dup(a, args.EatParam());
                 s = args.AdditionalParam(1);
             }
             if (s && IsValidPageRange(s)) {
-                i.stressTestRanges = str::Dup(args.EatParam());
+                i.stressTestRanges = str::Dup(a, args.EatParam());
                 s = args.AdditionalParam(1);
             }
             int num;
@@ -671,19 +672,19 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             continue;
         }
         if (arg == Arg::Dir || arg == Arg::InstallDir) {
-            i.installDir = str::Dup(param);
+            i.installDir = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::DDE) {
-            i.dde = str::Dup(param);
+            i.dde = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::Pwd) {
-            i.password = str::Dup(param);
+            i.password = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::DumpExif) {
-            i.fileNames.Append(str::Dup(param));
+            i.fileNames.Append(str::Dup(a, param));
             i.dumpExif = true;
             i.exitImmediately = true;
             continue;
@@ -691,30 +692,30 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
         if (arg == Arg::Lang) {
             // TODO: remove the following deprecated options within
             // a release or two
-            i.lang = str::Dup(param);
+            i.lang = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::UpdateSelfTo) {
-            i.updateSelfTo = str::Dup(param);
+            i.updateSelfTo = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::UpgradeFrom) {
-            i.upgradeFrom = str::Dup(param);
+            i.upgradeFrom = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::ArgDeleteFile) {
-            i.deleteFile = str::Dup(param);
+            i.deleteFile = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::Search) {
-            i.search = str::Dup(param);
+            i.search = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::Adobe) {
             FileArgs fargs;
             ParseAdobeFlags(fargs, param);
-            i.search = fargs.search ? str::Dup(fargs.search) : i.search;
-            i.namedDest = fargs.destName ? str::Dup(fargs.destName) : i.namedDest;
+            i.search = fargs.search ? str::Dup(a, fargs.search) : i.search;
+            i.namedDest = fargs.destName ? str::Dup(a, fargs.destName) : i.namedDest;
             i.pageNumber = fargs.pageNumber > 0 ? fargs.pageNumber : i.pageNumber;
             // TODO: annotAttObjNum and attachmentNo?
             continue;
@@ -750,29 +751,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
         // or current directory if no /d given
         i.silent = true;
         if (!i.installDir) {
-            i.installDir = str::Dup(".");
+            i.installDir = str::Dup(a, ".");
         }
     }
-}
-
-Flags::~Flags() {
-    str::Free(printerName);
-    str::Free(printSettings);
-    str::Free(forwardSearchOrigin);
-    str::Free(namedDest);
-    str::Free(pluginURL);
-    str::Free(appdataDir);
-    str::Free(inverseSearchCmdLine);
-    str::Free(controlPipeName);
-    str::Free(stressTestPath);
-    str::Free(stressTestFilter);
-    str::Free(stressTestRanges);
-    str::Free(lang);
-    str::Free(updateSelfTo);
-    str::Free(upgradeFrom);
-    str::Free(deleteFile);
-    str::Free(search);
-    str::Free(password);
-    str::Free(logFile);
-    str::Free(dde);
 }
