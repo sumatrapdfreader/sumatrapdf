@@ -5,6 +5,7 @@
 #include "utils/Archive.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Dpi.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/Timer.h"
@@ -17,27 +18,158 @@
 
 #include "AppTools.h"
 #include "SumatraConfig.h"
+#include "Translations.h"
 
 #include "SimpleBrowserWindow.h"
 
+constexpr int kNavRowPadding = 6;
+constexpr int kNavBtnGap = 4;
+
+static LRESULT CALLBACK UrlStaticSubclassProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
+    if (msg == WM_ERASEBKGND) {
+        return 1;
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+static void SetCurrentUrl(SimpleBrowserWindow* w, const char* url) {
+    if (!w || !w->hwndUrl) {
+        return;
+    }
+    SetWindowTextA(w->hwndUrl, url ? url : "");
+}
+
+static void UpdateNavButtons(SimpleBrowserWindow* w) {
+    if (!w || !w->webView) {
+        return;
+    }
+    if (w->btnBack) {
+        w->btnBack->SetIsEnabled(w->webView->CanGoBack());
+    }
+    if (w->btnForward) {
+        w->btnForward->SetIsEnabled(w->webView->CanGoForward());
+    }
+}
+
+static void LayoutControls(SimpleBrowserWindow* w) {
+    if (!w || !w->hwnd || !w->btnBack || !w->btnForward || !w->hwndUrl) {
+        return;
+    }
+
+    Rect rc = ClientRect(w->hwnd);
+    int pad = DpiScale(w->hwnd, kNavRowPadding);
+    int gap = DpiScale(w->hwnd, kNavBtnGap);
+    int y = pad;
+    int x = pad;
+
+    Size backSize = w->btnBack->GetIdealSize();
+    Size fwdSize = w->btnForward->GetIdealSize();
+    int rowH = backSize.dy;
+    if (fwdSize.dy > rowH) {
+        rowH = fwdSize.dy;
+    }
+
+    MoveWindow(w->btnBack->hwnd, x, y, backSize.dx, backSize.dy, TRUE);
+    x += backSize.dx + gap;
+    MoveWindow(w->btnForward->hwnd, x, y, fwdSize.dx, fwdSize.dy, TRUE);
+    x += fwdSize.dx + gap;
+
+    int urlX = x;
+    int urlDx = rc.dx - urlX - pad;
+    if (urlDx < 0) {
+        urlDx = 0;
+    }
+    int urlDy = FontDyPx(w->hwnd, w->hFont);
+    if (urlDy <= 0) {
+        urlDy = rowH;
+    }
+    int urlY = y + (rowH - urlDy) / 2;
+    MoveWindow(w->hwndUrl, urlX, urlY, urlDx, urlDy, TRUE);
+
+    int navRowDy = rowH + 2 * pad;
+    int webDy = rc.dy - navRowDy - pad;
+    if (webDy < 0) {
+        webDy = 0;
+    }
+    int webDx = rc.dx - 2 * pad;
+    if (webDx < 0) {
+        webDx = 0;
+    }
+    if (w->webView) {
+        w->webView->SetBounds({pad, navRowDy, webDx, webDy});
+        w->webView->UpdateWebviewSize();
+    }
+}
+
+static void OnBack(SimpleBrowserWindow* w) {
+    if (w && w->webView) {
+        w->webView->GoBack();
+    }
+}
+
+static void OnForward(SimpleBrowserWindow* w) {
+    if (w && w->webView) {
+        w->webView->GoForward();
+    }
+}
+
+static bool NavigationStarting(void* ctx, const char* url, bool newWindow) {
+    auto* w = (SimpleBrowserWindow*)ctx;
+    if (!w || newWindow) {
+        return true;
+    }
+    SetCurrentUrl(w, url);
+    return true;
+}
+
+static void NavigationCompleted(void* ctx, const char* url, bool success) {
+    auto* w = (SimpleBrowserWindow*)ctx;
+    if (!w || !success) {
+        return;
+    }
+    SetCurrentUrl(w, url);
+    UpdateNavButtons(w);
+}
+
+static void HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
+    auto* w = (SimpleBrowserWindow*)ctx;
+    if (!w) {
+        return;
+    }
+    if (w->btnBack) {
+        w->btnBack->SetIsEnabled(canGoBack);
+    }
+    if (w->btnForward) {
+        w->btnForward->SetIsEnabled(canGoForward);
+    }
+}
+
 SimpleBrowserWindow::~SimpleBrowserWindow() {
+    delete btnBack;
+    delete btnForward;
     delete webView;
 }
 
 LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (msg == WM_SIZE && webView) {
-        Rect rc = ClientRect(hwnd);
-        rc.x += 10;
-        rc.y += 10;
-        rc.dx -= 20;
-        rc.dy -= 20;
-        webView->SetBounds(rc);
+    if (msg == WM_SIZE) {
+        LayoutControls(this);
+        return 0;
+    }
+    if (msg == WM_CTLCOLORSTATIC && (HWND)lparam == hwndUrl) {
+        HDC hdc = (HDC)wparam;
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+        HBRUSH br = BackgroundBrush();
+        if (!br) {
+            br = (HBRUSH)GetStockObject(WHITE_BRUSH);
+        }
+        return (LRESULT)br;
     }
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
 HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
-    HWND hwnd = nullptr;
+    HWND frameHwnd = nullptr;
     {
         CreateCustomArgs cargs;
         cargs.pos = args.pos;
@@ -53,11 +185,41 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         cargs.icon = LoadIconW(h, iconName);
         // TODO: if set, navigate to url doesn't work
         // args.visible = false;
-        hwnd = CreateCustom(cargs);
-        ReportIf(!hwnd);
+        frameHwnd = CreateCustom(cargs);
+        ReportIf(!frameHwnd);
+    }
+
+    hFont = GetDefaultGuiFont();
+
+    {
+        Button::CreateArgs bargs;
+        bargs.parent = frameHwnd;
+        bargs.font = hFont;
+        bargs.text = _TRA("Back");
+        btnBack = new Button();
+        btnBack->Create(bargs);
+        btnBack->onClick = MkFunc0<SimpleBrowserWindow>(OnBack, this);
+        btnBack->SetIsEnabled(false);
     }
     {
-        Rect rc = ClientRect(hwnd);
+        Button::CreateArgs bargs;
+        bargs.parent = frameHwnd;
+        bargs.font = hFont;
+        bargs.text = _TRA("Forward");
+        btnForward = new Button();
+        btnForward->Create(bargs);
+        btnForward->onClick = MkFunc0<SimpleBrowserWindow>(OnForward, this);
+        btnForward->SetIsEnabled(false);
+    }
+    {
+        HINSTANCE inst = GetInstance();
+        hwndUrl = CreateWindowExW(0, WC_STATICW, L"", WS_CHILD | WS_VISIBLE | SS_LEFT | SS_PATHELLIPSIS, 0, 0, 0, 0,
+                                  frameHwnd, nullptr, inst, nullptr);
+        SendMessageW(hwndUrl, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SetWindowSubclass(hwndUrl, UrlStaticSubclassProc, NextSubclassId(), 0);
+    }
+
+    {
         webView = new WebviewWnd();
         const char* dataDir = args.dataDir;
         if (!dataDir) {
@@ -69,21 +231,28 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         if (args.resourceUriPrefix) {
             webView->resourceUriPrefix = str::Dup(args.resourceUriPrefix);
         }
+        webView->events.ctx = this;
+        webView->events.navigationStarting = NavigationStarting;
+        webView->events.navigationCompleted = NavigationCompleted;
+        webView->events.historyChanged = HistoryChanged;
+
         CreateWebViewArgs cargs;
-        cargs.parent = hwnd;
-        cargs.pos = {10, 10, rc.dx - 20, rc.dy - 20};
-        hwnd = webView->Create(cargs);
-        if (!hwnd) {
-            // ReportIfFast(!hwnd);
+        cargs.parent = frameHwnd;
+        cargs.pos = ClientRect(frameHwnd);
+        if (!webView->Create(cargs)) {
             return nullptr;
         }
         webView->SetIsVisible(true);
     }
+
+    SetCurrentUrl(this, args.url);
+    LayoutControls(this);
+
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     webView->Navigate(args.url);
     SetIsVisible(true);
-    return hwnd;
+    return frameHwnd;
 }
 
 SimpleBrowserWindow* SimpleBrowserWindowCreate(const SimpleBrowserCreateArgs& args) {
