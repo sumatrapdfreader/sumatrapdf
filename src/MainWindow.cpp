@@ -34,6 +34,7 @@
 #include "SumatraPDF.h"
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
+#include "CodexBuild.h"
 #include "MainWindow.h"
 #include "RefHover.h"
 #include "WindowTab.h"
@@ -143,6 +144,7 @@ MainWindow::~MainWindow() {
     DeleteVecMembers(staticLinks);
     ShutdownClaudeForMainWindow(this);
     ShutdownGrokForMainWindow(this);
+    ShutdownCodexForMainWindow(this);
     auto tabs = Tabs();
     DeleteVecMembers(tabs);
     {
@@ -173,6 +175,7 @@ MainWindow::~MainWindow() {
 
     DestroyClaudePanel(this);
     DestroyGrokPanel(this);
+    DestroyCodexPanel(this);
 
     delete sidebarSplitter;
     delete favSplitter;

@@ -77,6 +77,11 @@ struct WindowTab {
     StrBuilder* grokChatLog = nullptr;
     HANDLE grokProcess = nullptr;
 
+    // OpenAI Codex session for this tab
+    char* codexSessionId = nullptr;
+    StrBuilder* codexChatLog = nullptr;
+    HANDLE codexProcess = nullptr;
+
     // read aloud: cleaned text that was being read and the utf8 offset
     // within it where the user stopped reading; enables "Continue reading"
     // (reset when the document is closed or reloaded)

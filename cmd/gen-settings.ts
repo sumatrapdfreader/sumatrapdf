@@ -359,6 +359,25 @@ const chmUI: Field[] = [
   ),
 ];
 
+const codexBuild: Field[] = [
+  mkField("Model", Str, "gpt-5.5", "Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)"),
+  mkField(
+    "Models",
+    Str,
+    "",
+    "extra Codex model IDs for the dropdown, comma-separated; gpt-5.5, gpt-5.4, and o3 are always included",
+  ),
+  mkField("Sandbox", Int, 1, "Codex sandbox mode: 0=read-only, 1=workspace-write, 2=danger-full-access"),
+  mkField(
+    "SkipSandbox",
+    Bool,
+    false,
+    "if true, pass --dangerously-bypass-approvals-and-sandbox to Codex",
+  ),
+  mkField("BgColor", Color, "#ffffff", "background color of the OpenAI Codex chat panel"),
+  mkField("SidebarDx", Int, 0, "width of the OpenAI Codex sidebar (0 = use default)"),
+];
+
 const grokBuild: Field[] = [
   mkField(
     "Model",
@@ -920,6 +939,11 @@ const globalPrefs: Field[] = [
   mkEmptyLine(),
   setVersion(
     setExpert(mkStruct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar")),
+    "3.7",
+  ),
+  mkEmptyLine(),
+  setVersion(
+    setExpert(mkStruct("CodexBuild", codexBuild, "settings for the OpenAI Codex chat sidebar")),
     "3.7",
   ),
   mkEmptyLine(),

@@ -1785,6 +1785,15 @@ void ToggleGrokPanel(MainWindow* win) {
             HwndSetVisibility(win->claudeSplitter->hwnd, false);
         }
     }
+    if (win->grokVisible && win->codexVisible) {
+        win->codexVisible = false;
+        if (win->hwndCodexBox) {
+            HwndSetVisibility(win->hwndCodexBox, false);
+        }
+        if (win->codexSplitter && win->codexSplitter->hwnd) {
+            HwndSetVisibility(win->codexSplitter->hwnd, false);
+        }
+    }
     HwndSetVisibility(win->hwndGrokBox, win->grokVisible);
     HwndSetVisibility(win->grokSplitter->hwnd, win->grokVisible);
 

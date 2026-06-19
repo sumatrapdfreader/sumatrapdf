@@ -250,6 +250,7 @@ static SeqStrings gCommandNames =
     "CmdStartAutoScroll\0"
     "CmdAIChatWithClaudeCode\0"
     "CmdAIChatWithGrokBuild\0"
+    "CmdAIChatWithOpenAICodex\0"
     "CmdNone\0"
     "\0";
 
@@ -490,6 +491,7 @@ static i32 gCommandIds[] = {
     CmdStartAutoScroll,
     CmdAIChatWithClaudeCode,
     CmdAIChatWithGrokBuild,
+    CmdAIChatWithOpenAICodex,
     CmdNone,
 };
 
@@ -730,6 +732,7 @@ SeqStrings gCommandDescriptions =
     "Start Auto-Scroll\0"
     "AI Chat with document using Claude Code\0"
     "AI Chat with document using Grok Build\0"
+    "AI Chat with document using OpenAI Codex\0"
     "Do nothing\0"
     "\0";
 // clang-format on

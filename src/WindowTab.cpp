@@ -80,6 +80,12 @@ WindowTab::~WindowTab() {
         TerminateProcess(grokProcess, 0);
         CloseHandle(grokProcess);
     }
+    str::Free(codexSessionId);
+    delete codexChatLog;
+    if (codexProcess) {
+        TerminateProcess(codexProcess, 0);
+        CloseHandle(codexProcess);
+    }
 }
 
 bool WindowTab::IsDocLoaded() const {

@@ -93,6 +93,7 @@
 #include "EditAnnotations.h"
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
+#include "CodexBuild.h"
 #include "CommandPalette.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -1830,6 +1831,7 @@ static void CreateSidebar(MainWindow* win) {
 
     CreateClaudePanel(win);
     CreateGrokPanel(win);
+    CreateCodexPanel(win);
 
     if (win->tocVisible) {
         HwndRepaintNow(win->hwndTocBox);
@@ -2817,6 +2819,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (IsMainWindowValid(win)) {
         OnClaudeTabChanged(win);
         OnGrokTabChanged(win);
+        OnCodexTabChanged(win);
     }
 }
 
@@ -4374,7 +4377,8 @@ static bool IsLayoutStateEq(LayoutState* s1, LayoutState* s2) {
            s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
            s1->showFavorites == s2->showFavorites && s1->showMenuBarRebar == s2->showMenuBarRebar &&
            s1->claudeVisible == s2->claudeVisible && s1->claudeDx == s2->claudeDx &&
-           s1->grokVisible == s2->grokVisible && s1->grokDx == s2->grokDx;
+           s1->grokVisible == s2->grokVisible && s1->grokDx == s2->grokDx &&
+           s1->codexVisible == s2->codexVisible && s1->codexDx == s2->codexDx;
 }
 
 static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
@@ -4398,6 +4402,8 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.claudeDx = win->claudeDx;
     curState.grokVisible = win->grokVisible;
     curState.grokDx = win->grokDx;
+    curState.codexVisible = win->codexVisible;
+    curState.codexDx = win->codexDx;
 
     // skip redundant relayouts when all layout-affecting state is unchanged
     if (IsLayoutStateEq(&curState, &win->lastLayoutState) && updateToolbars && sidebarDx == -1) {
@@ -4573,7 +4579,21 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         rc.dx -= toc.dx + kSplitterDx;
     }
 
-    if (win->grokVisible && win->hwndGrokBox) {
+    if (win->codexVisible && win->hwndCodexBox) {
+        int codexDx = win->codexDx;
+        if (codexDx <= 0) {
+            codexDx = rc.dx * 3 / 8;
+        }
+        codexDx = limitValue(codexDx, kSidebarMinDx, rc.dx / 2);
+        win->codexDx = codexDx;
+
+        Rect rSplitter(rc.x + rc.dx - codexDx - kSplitterDx, rc.y, kSplitterDx, rc.dy);
+        dh.MoveWindow(win->codexSplitter->hwnd, rSplitter);
+
+        Rect rCodex(rc.x + rc.dx - codexDx, rc.y, codexDx, rc.dy);
+        dh.MoveWindow(win->hwndCodexBox, rCodex);
+        rc.dx -= codexDx + kSplitterDx;
+    } else if (win->grokVisible && win->hwndGrokBox) {
         int grokDx = win->grokDx;
         if (grokDx <= 0) {
             grokDx = rc.dx * 3 / 8;
@@ -4620,7 +4640,9 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (favVisible) {
         RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
-    if (win->grokVisible && win->hwndGrokBox) {
+    if (win->codexVisible && win->hwndCodexBox) {
+        RelayoutCodexPanel(win);
+    } else if (win->grokVisible && win->hwndGrokBox) {
         RelayoutGrokPanel(win);
     } else if (win->claudeVisible && win->hwndClaudeBox) {
         RelayoutClaudePanel(win);
@@ -5839,6 +5861,10 @@ void RelayoutForGrokSplitter(MainWindow* win) {
     RelayoutFrame(win, false);
 }
 
+void RelayoutForCodexSplitter(MainWindow* win) {
+    RelayoutFrame(win, false);
+}
+
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout) {
     if (gPluginMode || !CanAccessDisk()) {
         showFavorites = false;
@@ -6901,6 +6927,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdAIChatWithGrokBuild:
             OnAIChatWithGrokBuild(win);
+            break;
+
+        case CmdAIChatWithOpenAICodex:
+            OnAIChatWithOpenAICodex(win);
             break;
 
         case CmdClearHistory:

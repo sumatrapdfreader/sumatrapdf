@@ -186,6 +186,21 @@ struct MainWindow {
     bool grokVisible = false;
     int grokDx = 0;
 
+    HWND hwndCodexBox = nullptr;
+    UINT_PTR codexBoxSubclassId = 0;
+    LabelWithCloseWnd* codexLabelWithClose = nullptr;
+    HWND hwndCodexSessionCombo = nullptr;
+    WebviewWnd* codexWebView = nullptr;
+    bool codexWebViewReady = false;
+    HWND hwndCodexModelCombo = nullptr;
+    HWND hwndCodexSandboxCombo = nullptr;
+    HWND hwndCodexSkipSandboxCheck = nullptr;
+    Edit* codexInput = nullptr;
+    HWND hwndCodexStopBtn = nullptr;
+    Splitter* codexSplitter = nullptr;
+    bool codexVisible = false;
+    int codexDx = 0;
+
     // vertical splitter for resizing left side panel
     Splitter* sidebarSplitter = nullptr;
 
@@ -289,6 +304,8 @@ struct MainWindow {
         int claudeDx = 0;
         bool grokVisible = false;
         int grokDx = 0;
+        bool codexVisible = false;
+        int codexDx = 0;
     };
     LayoutState lastLayoutState;
 

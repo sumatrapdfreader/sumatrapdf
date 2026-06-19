@@ -44,6 +44,7 @@
 #include "Accelerators.h"
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
+#include "CodexBuild.h"
 #include "ImageSaveCropResize.h"
 #include "Menu.h"
 
@@ -297,6 +298,10 @@ static MenuDef menuDefView[] = {
     {
         _TRN("AI Chat with document using Grok Build"),
         CmdAIChatWithGrokBuild,
+    },
+    {
+        _TRN("AI Chat with document using OpenAI Codex"),
+        CmdAIChatWithOpenAICodex,
     },
     {
         nullptr,
@@ -872,6 +877,10 @@ static MenuDef menuDefDocumentOperations[] = {
     {
         _TRN("AI Chat with document using Grok Build"),
         CmdAIChatWithGrokBuild,
+    },
+    {
+        _TRN("AI Chat with document using OpenAI Codex"),
+        CmdAIChatWithOpenAICodex,
     },
     {
         _TRN("Show PDF Info"),
@@ -1535,6 +1544,13 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
         if (!IsGrokBuildAvailable()) {
             remove = true;
         } else if (ctx && ctx->tab && !IsGrokBuildSupportedForTab(ctx->tab)) {
+            disable = true;
+        }
+    }
+    if (cmdId == CmdAIChatWithOpenAICodex) {
+        if (!IsCodexBuildAvailable()) {
+            remove = true;
+        } else if (ctx && ctx->tab && !IsCodexBuildSupportedForTab(ctx->tab)) {
             disable = true;
         }
     }

@@ -41,6 +41,7 @@
 #include "RegistrySearchFilter.h"
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
+#include "CodexBuild.h"
 
 #include "utils/Log.h"
 
@@ -327,6 +328,14 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
             return false;
         }
         if (!ctx.isDocLoaded || !IsGrokBuildSupportedForFile(ctx.filePath, ctx.engineKind)) {
+            return false;
+        }
+    }
+    if (cmdId == CmdAIChatWithOpenAICodex) {
+        if (!IsCodexBuildAvailable()) {
+            return false;
+        }
+        if (!ctx.isDocLoaded || !IsCodexBuildSupportedForFile(ctx.filePath, ctx.engineKind)) {
             return false;
         }
     }

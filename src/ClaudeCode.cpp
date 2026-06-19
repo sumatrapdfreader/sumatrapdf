@@ -1745,6 +1745,15 @@ void ToggleClaudePanel(MainWindow* win) {
             HwndSetVisibility(win->grokSplitter->hwnd, false);
         }
     }
+    if (win->claudeVisible && win->codexVisible) {
+        win->codexVisible = false;
+        if (win->hwndCodexBox) {
+            HwndSetVisibility(win->hwndCodexBox, false);
+        }
+        if (win->codexSplitter && win->codexSplitter->hwnd) {
+            HwndSetVisibility(win->codexSplitter->hwnd, false);
+        }
+    }
     HwndSetVisibility(win->hwndClaudeBox, win->claudeVisible);
     HwndSetVisibility(win->claudeSplitter->hwnd, win->claudeVisible);
 

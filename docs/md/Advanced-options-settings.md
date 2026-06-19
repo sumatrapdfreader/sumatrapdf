@@ -348,6 +348,28 @@ GrokBuild [
     SidebarDx = 0
 ]
 
+; settings for the OpenAI Codex chat sidebar (introduced in version 3.7)
+CodexBuild [
+    ; Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)
+    Model = gpt-5.5
+
+    ; extra Codex model IDs for the dropdown, comma-separated; gpt-5.5, gpt-5.4,
+    ; and o3 are always included
+    Models = 
+
+    ; Codex sandbox mode: 0=read-only, 1=workspace-write, 2=danger-full-access
+    Sandbox = 1
+
+    ; if true, pass --dangerously-bypass-approvals-and-sandbox to Codex
+    SkipSandbox = false
+
+    ; background color of the OpenAI Codex chat panel
+    BgColor = #ffffff
+
+    ; width of the OpenAI Codex sidebar (0 = use default)
+    SidebarDx = 0
+]
+
 ; default values for annotations in PDF documents (introduced in version 3.3)
 Annotations [
     ; highlight annotation color
