@@ -37,6 +37,8 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [Accessibility and Text-to-Speech](Accessibility-and-Text-to-Speech.md)
 
+[AI Chat with document](AI-Chat-with-document.md)
+
 [Customizing toolbar](Customize-toolbar.md)
 
 [Customizing UI colors / theme](Customize-theme-colors.md)

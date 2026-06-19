@@ -313,7 +313,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (cmdId <= CmdFirst) {
         return false;
     }
-    if (cmdId == CmdClaudeCode) {
+    if (cmdId == CmdAIChatWithClaudeCode) {
         if (!IsClaudeCodeAvailable()) {
             return false;
         }

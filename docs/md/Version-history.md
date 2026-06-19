@@ -4,7 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
-- add Claude Code chat sidebar (`CmdClaudeCode`, `Shift + Ctrl + E` in View menu and `Ctrl + k` [command palette](Command-Palette.md)) for asking questions about the open document via [Claude Code](https://docs.anthropic.com/en/docs/claude-code); per-tab session state, model/effort selection, and session history from `~/.claude/projects/`
+- add [AI Chat with document](AI-Chat-with-document.md) sidebar (`CmdAIChatWithClaudeCode`, in View menu and `Ctrl + k` [command palette](Command-Palette.md)) for asking questions about the open PDF or image via [Claude Code](https://docs.anthropic.com/en/docs/claude-code); per-tab session state, model/effort selection, and session history from `~/.claude/projects/`
 - add `ClaudeCode` advanced settings (`Model`, `Effort`, `SkipPermissions`, `BgColor`, `SidebarDx`) in `SumatraPDF-settings.txt`
 - add Adobe Reader-compatible `/p` (print dialog) and `/t` (silent print) command-line options
 - add `DisableAutoLinks` advanced setting to disable auto-linking of URLs and email addresses found in PDF text (fixes #5703)

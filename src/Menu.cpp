@@ -290,8 +290,8 @@ static MenuDef menuDefView[] = {
         0,
     },
     {
-        _TRN("Chat with document using Claude Code"),
-        CmdClaudeCode,
+        _TRN("AI Chat with document using Claude Code"),
+        CmdAIChatWithClaudeCode,
     },
     {
         nullptr,
@@ -1511,7 +1511,7 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
     if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
         remove = true;
     }
-    if (cmdId == CmdClaudeCode) {
+    if (cmdId == CmdAIChatWithClaudeCode) {
         if (!IsClaudeCodeAvailable()) {
             remove = true;
         } else if (ctx && ctx->tab && !IsClaudeCodeSupportedForTab(ctx->tab)) {

@@ -1189,7 +1189,7 @@ static int ClaudeLabelMaxTextDx(HWND labelHwnd, int labelDx) {
 }
 
 static TempStr FitClaudePanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
-    const char* prefix = "Chat with ";
+    const char* prefix = "AI Chat with ";
     TempStr full = str::JoinTemp(prefix, docName);
     if (maxDx <= 0) {
         return full;

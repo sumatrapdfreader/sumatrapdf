@@ -303,6 +303,7 @@ ChmUI [
 ]
 
 ; settings for the Claude Code chat sidebar (introduced in version 3.7)
+; see AI-Chat-with-document.md
 ClaudeCode [
     ; Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if
     ; not in the model list

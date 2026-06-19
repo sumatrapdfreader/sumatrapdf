@@ -248,7 +248,7 @@ static SeqStrings gCommandNames =
     "CmdConvertImageToPdf\0"
     "CmdExpandToCurrentPage\0"
     "CmdStartAutoScroll\0"
-    "CmdClaudeCode\0"
+    "CmdAIChatWithClaudeCode\0"
     "CmdNone\0"
     "\0";
 
@@ -487,7 +487,7 @@ static i32 gCommandIds[] = {
     CmdConvertImageToPdf,
     CmdExpandToCurrentPage,
     CmdStartAutoScroll,
-    CmdClaudeCode,
+    CmdAIChatWithClaudeCode,
     CmdNone,
 };
 
@@ -726,7 +726,7 @@ SeqStrings gCommandDescriptions =
     "Convert Image To PDF\0"
     "Expand TOC to Current Page\0"
     "Start Auto-Scroll\0"
-    "Chat with document using Claude Code\0"
+    "AI Chat with document using Claude Code\0"
     "Do nothing\0"
     "\0";
 // clang-format on

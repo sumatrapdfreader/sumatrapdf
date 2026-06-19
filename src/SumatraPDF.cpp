@@ -6834,7 +6834,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             RunCommandPalette(win, kPalettePrefixTOC, 0);
             break;
 
-        case CmdClaudeCode:
+        case CmdAIChatWithClaudeCode:
             ToggleClaudePanel(win);
             break;
 
