@@ -292,15 +292,15 @@ static MenuDef menuDefView[] = {
         0,
     },
     {
-        _TRN("AI Chat with document using Claude Code"),
+        _TRN("Claude chat"),
         CmdAIChatWithClaudeCode,
     },
     {
-        _TRN("AI Chat with document using Grok Build"),
+        _TRN("Grok chat"),
         CmdAIChatWithGrokBuild,
     },
     {
-        _TRN("AI Chat with document using OpenAI Codex"),
+        _TRN("Codex chat"),
         CmdAIChatWithOpenAICodex,
     },
     {
@@ -871,15 +871,15 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdProperties,
     },
     {
-        _TRN("AI Chat with document using Claude Code"),
+        _TRN("Claude chat"),
         CmdAIChatWithClaudeCode,
     },
     {
-        _TRN("AI Chat with document using Grok Build"),
+        _TRN("Grok chat"),
         CmdAIChatWithGrokBuild,
     },
     {
-        _TRN("AI Chat with document using OpenAI Codex"),
+        _TRN("Codex chat"),
         CmdAIChatWithOpenAICodex,
     },
     {

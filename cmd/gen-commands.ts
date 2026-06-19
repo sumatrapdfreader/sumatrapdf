@@ -238,9 +238,9 @@ export const commands = [
     "CmdConvertImageToPdf", "Convert Image To PDF",
     "CmdExpandToCurrentPage", "Expand TOC to Current Page",
     "CmdStartAutoScroll", "Start Auto-Scroll",
-    "CmdAIChatWithClaudeCode", "AI Chat with document using Claude Code",
-    "CmdAIChatWithGrokBuild", "AI Chat with document using Grok Build",
-    "CmdAIChatWithOpenAICodex", "AI Chat with document using OpenAI Codex",
+    "CmdAIChatWithClaudeCode", "Claude chat",
+    "CmdAIChatWithGrokBuild", "Grok chat",
+    "CmdAIChatWithOpenAICodex", "Codex chat",
     "CmdNone", "Do nothing",
 ];
 

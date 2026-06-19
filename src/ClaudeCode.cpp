@@ -151,7 +151,7 @@ static void ShowClaudeCodeNotInstalledDialog() {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = ToWStrTemp(_TRA("AI Chat"));
+    dialogConfig.pszWindowTitle = ToWStrTemp(_TRA("Claude chat"));
     dialogConfig.pszMainInstruction = ToWStrTemp(mainInstr);
     dialogConfig.pszContent = ToWStrTemp(content);
     dialogConfig.nDefaultButton = IDOK;
@@ -1320,36 +1320,11 @@ static int ClaudeLabelMaxTextDx(HWND labelHwnd, int labelDx) {
 }
 
 static TempStr FitClaudePanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
-    const char* prefix = "AI Chat with ";
-    TempStr full = str::JoinTemp(prefix, docName);
-    if (maxDx <= 0) {
-        return full;
-    }
-    Size sz = HwndMeasureText(labelHwnd, full, font);
-    if (sz.dx <= maxDx) {
-        return full;
-    }
-
-    int nRunes = utf8StrLen((u8*)docName);
-    if (nRunes < 0) {
-        return full;
-    }
-
-    TempStr best = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, 1));
-    int lo = 1;
-    int hi = nRunes;
-    while (lo <= hi) {
-        int mid = (lo + hi) / 2;
-        TempStr trial = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, mid));
-        sz = HwndMeasureText(labelHwnd, trial, font);
-        if (sz.dx <= maxDx) {
-            best = trial;
-            lo = mid + 1;
-        } else {
-            hi = mid - 1;
-        }
-    }
-    return best;
+    (void)labelHwnd;
+    (void)font;
+    (void)docName;
+    (void)maxDx;
+    return str::DupTemp("Claude chat");
 }
 
 static void UpdateClaudePanelTitle(MainWindow* win, int labelDx) {

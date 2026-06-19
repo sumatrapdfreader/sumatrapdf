@@ -691,6 +691,16 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
         return s;
     }
 
+    if (cmdId == CmdAIChatWithClaudeCode) {
+        return _TRA("AI Claude chat with document");
+    }
+    if (cmdId == CmdAIChatWithGrokBuild) {
+        return _TRA("AI Grok chat with document");
+    }
+    if (cmdId == CmdAIChatWithOpenAICodex) {
+        return _TRA("AI Codex chat with document");
+    }
+
     return s;
 }
 

@@ -730,9 +730,9 @@ SeqStrings gCommandDescriptions =
     "Convert Image To PDF\0"
     "Expand TOC to Current Page\0"
     "Start Auto-Scroll\0"
-    "AI Chat with document using Claude Code\0"
-    "AI Chat with document using Grok Build\0"
-    "AI Chat with document using OpenAI Codex\0"
+    "Claude chat\0"
+    "Grok chat\0"
+    "Codex chat\0"
     "Do nothing\0"
     "\0";
 // clang-format on
