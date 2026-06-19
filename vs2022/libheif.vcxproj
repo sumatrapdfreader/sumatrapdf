@@ -883,6 +883,7 @@
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_encoding.h" />
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image.h" />
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_metadata.h" />
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_omaf.h" />
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_plugin.h" />
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_security.h" />
@@ -968,6 +969,7 @@
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_encoding.cc" />
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image.cc" />
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_metadata.cc" />
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_omaf.cc" />
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_plugin.cc" />
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_security.cc" />

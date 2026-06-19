@@ -1066,8 +1066,8 @@
     <ClCompile Include="..\ext\gumbo-parser\src\attribute.c" />
     <ClCompile Include="..\ext\gumbo-parser\src\char_ref.c" />
     <ClCompile Include="..\ext\gumbo-parser\src\error.c" />
-    <ClCompile Include="..\ext\gumbo-parser\src\parser.c" />
     <ClCompile Include="..\ext\gumbo-parser\src\gumbo_utils.c" />
+    <ClCompile Include="..\ext\gumbo-parser\src\parser.c" />
     <ClCompile Include="..\ext\gumbo-parser\src\string_buffer.c" />
     <ClCompile Include="..\ext\gumbo-parser\src\string_piece.c" />
     <ClCompile Include="..\ext\gumbo-parser\src\tag.c" />

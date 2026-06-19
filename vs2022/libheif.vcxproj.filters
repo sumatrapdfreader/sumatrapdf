@@ -54,6 +54,9 @@
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.h">
       <Filter>api\libheif</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_metadata.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_omaf.h">
       <Filter>api\libheif</Filter>
     </ClInclude>
@@ -267,6 +270,9 @@
       <Filter>api\libheif</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_metadata.cc">
       <Filter>api\libheif</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_omaf.cc">

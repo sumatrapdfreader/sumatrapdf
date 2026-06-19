@@ -96,6 +96,7 @@ struct Flags {
     char* upgradeFrom = nullptr;
     char* dde = nullptr;
     bool engineDump = false; // -engine-dump
+    bool dumpExif = false;   // -dump-exif
 
     bool crashOnOpen = false;
 

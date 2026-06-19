@@ -165,6 +165,9 @@
     <ClInclude Include="..\src\EngineMupdf.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ExifDump.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ExternalViewers.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -492,6 +495,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EnginePs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ExifDump.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ExternalViewers.cpp">
@@ -867,6 +873,9 @@
     <None Include="..\cmd\build-codeql.ts">
       <Filter>cmd</Filter>
     </None>
+    <None Include="..\cmd\build-linux-wine.ts">
+      <Filter>cmd</Filter>
+    </None>
     <None Include="..\cmd\build-no-info.ts">
       <Filter>cmd</Filter>
     </None>
@@ -946,6 +955,9 @@
       <Filter>cmd</Filter>
     </None>
     <None Include="..\cmd\run-tests.ts">
+      <Filter>cmd</Filter>
+    </None>
+    <None Include="..\cmd\run.ts">
       <Filter>cmd</Filter>
     </None>
     <None Include="..\cmd\show-preview-reg.ts">
@@ -1069,6 +1081,9 @@
     <None Include="..\docs\md\Managing-favorites.md">
       <Filter>docs\md</Filter>
     </None>
+    <None Include="..\docs\md\Printing.md">
+      <Filter>docs\md</Filter>
+    </None>
     <None Include="..\docs\md\Reporting-printing-bugs.md">
       <Filter>docs\md</Filter>
     </None>
@@ -1082,9 +1097,6 @@
       <Filter>docs\md</Filter>
     </None>
     <None Include="..\docs\md\Submit-crash-report.md">
-      <Filter>docs\md</Filter>
-    </None>
-    <None Include="..\docs\md\SumatraPDF-documentation-website.md">
       <Filter>docs\md</Filter>
     </None>
     <None Include="..\docs\md\SumatraPDF-documentation.md">

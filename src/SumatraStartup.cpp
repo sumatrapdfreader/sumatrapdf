@@ -48,6 +48,7 @@
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"
+#include "ExifDump.h"
 #include "Scratch.h"
 #include "AppSettings.h"
 #include "Canvas.h"
@@ -1799,7 +1800,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         ::ExitProcess(exitCode);
     }
 
-    if (ForceRunningAsInstaller()) {
+    if (ForceRunningAsInstaller() && !flags.dumpExif && !flags.engineDump) {
         logf("forcing running as an installer\n");
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
@@ -1826,6 +1827,12 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     if (flags.engineDump) {
         void EngineDump(const Flags& flags);
         EngineDump(flags);
+        return 0;
+    }
+
+    if (flags.dumpExif) {
+        gLogToConsole = false;
+        DumpExif(flags);
         return 0;
     }
 

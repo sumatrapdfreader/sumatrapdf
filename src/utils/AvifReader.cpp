@@ -114,11 +114,59 @@ Exit:
     }
     return bmp;
 }
+
+bool AvifExifBlobFromData(const ByteSlice& d, u8** outData, size_t* outSize) {
+    *outData = nullptr;
+    *outSize = 0;
+    heif_context* ctx = heif_context_alloc();
+    if (!ctx) {
+        return false;
+    }
+    bool ok = false;
+    heif_image_handle* hdl = nullptr;
+    u8* buf = nullptr;
+    auto err = heif_context_read_from_memory_without_copy(ctx, d.Get(), d.size(), nullptr);
+    if (err.code == heif_error_Ok) {
+        err = heif_context_get_primary_image_handle(ctx, &hdl);
+    }
+    if (err.code == heif_error_Ok && hdl) {
+        int n = heif_image_handle_get_number_of_metadata_blocks(hdl, "Exif");
+        heif_item_id id = 0;
+        if (n > 0 && heif_image_handle_get_list_of_metadata_block_IDs(hdl, "Exif", &id, 1) == 1) {
+            size_t sz = heif_image_handle_get_metadata_size(hdl, id);
+            if (sz > 4) {
+                buf = (u8*)malloc(sz);
+                if (buf) {
+                    err = heif_image_handle_get_metadata(hdl, id, buf);
+                    if (err.code == heif_error_Ok) {
+                        size_t payload = sz - 4;
+                        u8* copy = (u8*)malloc(payload);
+                        if (copy) {
+                            memcpy(copy, buf + 4, payload);
+                            *outData = copy;
+                            *outSize = payload;
+                            ok = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    free(buf);
+    if (hdl) {
+        heif_image_handle_release(hdl);
+    }
+    heif_context_free(ctx);
+    return ok;
+}
 #else
 Size AvifSizeFromData(const ByteSlice&) {
     return {};
 }
 Gdiplus::Bitmap* AvifImageFromData(const ByteSlice&) {
     return nullptr;
+}
+bool AvifExifBlobFromData(const ByteSlice&, u8**, size_t*) {
+    return false;
 }
 #endif

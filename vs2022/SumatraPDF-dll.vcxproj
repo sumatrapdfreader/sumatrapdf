@@ -1114,6 +1114,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
+    <ClInclude Include="..\src\ExifDump.h" />
     <ClInclude Include="..\src\ExternalViewers.h" />
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FileHistory.h" />
@@ -1225,6 +1226,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\EnginePs.cpp" />
+    <ClCompile Include="..\src\ExifDump.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileHistory.cpp" />
@@ -1606,6 +1608,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <None Include="..\cmd\build-ci-daily.ts" />
     <None Include="..\cmd\build-ci.ts" />
     <None Include="..\cmd\build-codeql.ts" />
+    <None Include="..\cmd\build-linux-wine.ts" />
     <None Include="..\cmd\build-no-info.ts" />
     <None Include="..\cmd\build-smoke.ts" />
     <None Include="..\cmd\build-with-mingw.ts" />
@@ -1633,6 +1636,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <None Include="..\cmd\pdb-sizes.ts" />
     <None Include="..\cmd\premake.ts" />
     <None Include="..\cmd\run-tests.ts" />
+    <None Include="..\cmd\run.ts" />
     <None Include="..\cmd\show-preview-reg.ts" />
     <None Include="..\cmd\sync-bug-files.ts" />
     <None Include="..\cmd\test-plugin.ts" />
@@ -1674,12 +1678,12 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <None Include="..\docs\md\LaTeX-integration.md" />
     <None Include="..\docs\md\Logview.md" />
     <None Include="..\docs\md\Managing-favorites.md" />
+    <None Include="..\docs\md\Printing.md" />
     <None Include="..\docs\md\Reporting-printing-bugs.md" />
     <None Include="..\docs\md\Scrolling-and-zooming.md" />
     <None Include="..\docs\md\Set-as-default-pdf-viewer.md" />
     <None Include="..\docs\md\Source-code-downloads.md" />
     <None Include="..\docs\md\Submit-crash-report.md" />
-    <None Include="..\docs\md\SumatraPDF-documentation-website.md" />
     <None Include="..\docs\md\SumatraPDF-documentation.md" />
     <None Include="..\docs\md\Supported-document-formats.md" />
     <None Include="..\docs\md\Tool-audit.md" />

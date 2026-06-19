@@ -911,6 +911,10 @@ EXPORTS
 	heif_image_handle_get_width
 	heif_image_handle_get_height
 	heif_image_release
+	heif_image_handle_get_number_of_metadata_blocks
+	heif_image_handle_get_list_of_metadata_block_IDs
+	heif_image_handle_get_metadata_size
+	heif_image_handle_get_metadata
 	; gumbo-parser (used by EngineImages for ComicInfo.xml,
 	; ChmFile for TOC/index parsing)
 	gumbo_parse_with_options

@@ -69,6 +69,19 @@ Structure of each test (so they compose in tests/all.ts):
 - shared helpers (`EXE` path, `buildApp`, `runStandalone`) live in `tests/util.ts` — use them instead of re-implementing per file.
 - register every new test in `tests/all.ts` (import its `testit` and add it to the `tests` array). `bun tests/all.ts` builds once and runs them all in order, stopping at the first failure.
 
+### Ad-hoc tests
+
+Some checks are too slow, need large external corpora, or require network/git and should **not** run on every `tests/all.ts` invocation. Put those in `tests/ad-hoc-<name>.ts` (not `issue-<n>.ts`):
+
+- export `async function testit()` the same way as regular tests
+- end with the usual `if (import.meta.main) { await runStandalone(testit); }` standalone runner
+- do **not** register them in `tests/all.ts`
+- register them in `tests/before-release.ts` instead (that runner calls `all.ts` first, then each ad-hoc test)
+- run ad-hoc tests directly when working on that area: `bun tests/ad-hoc-<name>.ts`
+- run the full pre-release suite: `bun tests/before-release.ts`
+
+Example: `tests/ad-hoc-exif.ts` clones/updates `../exif-py` and compares `-dump-exif` output to exif-py's `dump.txt`.
+
 Guidelines for test scripts:
 - build the app the same way cmd/build.ts does (via `buildApp`/`runStandalone` in tests/util.ts) and test the resulting out/dbg64/SumatraPDF-dll.exe
 - if a needed external tool (e.g. MiKTeX) isn't installed, don't fail the test: print a clear message (with instructions to install it) and skip that part, returning normally so `tests/all.ts` continues
