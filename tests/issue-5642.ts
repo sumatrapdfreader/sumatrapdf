@@ -9,7 +9,7 @@
 // becomes "#nameddest=nameddest=<name>" and fails, leaving the target on page 1.
 //
 // Builds a PDF with a named destination "ch2" on page 2 and resolves it via the
-// headless `-test-named-dest <pdf> <name> <outfile>` flag (which runs the same
+// control pipe named-destination command (which runs the same
 // CleanRemoteDestName + GetNamedDest path LinkHandler::LaunchFile uses):
 //   - "nameddest=ch2" (the form a remote link provides) -> page 2   <- the fix
 //   - "ch2"           (already-clean name)               -> page 2
@@ -18,13 +18,13 @@
 //
 // Run:  bun tests/issue-5642.ts [--no-build]   (or via tests/all.ts)
 
-import { existsSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EXE, runStandalone } from "./util.ts";
+import { ControlCommand, runControlCommand } from "../cmd/control.ts";
 
 const PDF = join(tmpdir(), "sumatra-issue-5642.pdf");
-const OUT = join(tmpdir(), "sumatra-issue-5642-result.txt");
 
 // minimal 2-page PDF with a named destination "ch2" -> page 2 (in /Names/Dests)
 function makePdf(): Buffer {
@@ -53,10 +53,9 @@ function makePdf(): Buffer {
 }
 
 // resolves a named destination, returns the 1-based page or 0 if not found
-function resolve(name: string): { page: number; raw: string } {
-  rmSync(OUT, { force: true });
-  const p = Bun.spawnSync({ cmd: [EXE, "-test-named-dest", PDF, name, OUT], stdout: "pipe", stderr: "pipe" });
-  const raw = existsSync(OUT) ? readFileSync(OUT, "utf-8").trim() : p.stdout.toString().trim();
+async function resolve(name: string): Promise<{ page: number; raw: string }> {
+  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestNamedDest, [PDF, name]);
+  const raw = String(rawArg).trim();
   const m = raw.match(/page=(-?\d+)/);
   return { page: m ? parseInt(m[1]) : 0, raw };
 }
@@ -76,7 +75,7 @@ export async function testit(): Promise<void> {
 
   let allOk = true;
   for (const [name, expectPage, desc] of cases) {
-    const r = resolve(name);
+    const r = await resolve(name);
     const ok = r.page === expectPage;
     allOk &&= ok;
     console.log(`  ${ok ? "✅" : "❌"} "${name}": ${desc}`);
@@ -84,7 +83,6 @@ export async function testit(): Promise<void> {
   }
 
   rmSync(PDF, { force: true });
-  rmSync(OUT, { force: true });
   if (!allOk) {
     throw new Error("remote named-destination resolution is wrong");
   }

@@ -71,7 +71,7 @@
 #include "Theme.h"
 #include "DarkModeSubclass.h"
 #include "CommandPalette.h"
-#include "SumatraTest.h"
+#include "SumatraControl.h"
 
 #include "utils/Log.h"
 
@@ -1250,11 +1250,12 @@ static void LogWineDpiInfo() {
     if (envDpi > 0) {
         DpiSetWineOverride(envDpi);
     }
-    logf("WineDpi: screenDpi=%d monitorDpi=(%u,%u) GetDpiForMonitor hr=0x%lx envDpi=%d overrideDpi=%d "
-         "SM_CYCAPTION=%d SM_CYFRAME=%d SM_CXPADDEDBORDER=%d screen=(%d,%d)\n",
-         screenDpi, monitorDpiX, monitorDpiY, (unsigned long)hr, envDpi, DpiGet(HWND_DESKTOP),
-         GetSystemMetrics(SM_CYCAPTION), GetSystemMetrics(SM_CYFRAME), GetSystemMetrics(SM_CXPADDEDBORDER),
-         GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    logf(
+        "WineDpi: screenDpi=%d monitorDpi=(%u,%u) GetDpiForMonitor hr=0x%lx envDpi=%d overrideDpi=%d "
+        "SM_CYCAPTION=%d SM_CYFRAME=%d SM_CXPADDEDBORDER=%d screen=(%d,%d)\n",
+        screenDpi, monitorDpiX, monitorDpiY, (unsigned long)hr, envDpi, DpiGet(HWND_DESKTOP),
+        GetSystemMetrics(SM_CYCAPTION), GetSystemMetrics(SM_CYFRAME), GetSystemMetrics(SM_CXPADDEDBORDER),
+        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
 
 #if 0
@@ -1828,26 +1829,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         return 0;
     }
 
-    if (flags.testSynctex) {
-        return TestSynctex(flags);
-    }
-
-    if (flags.testSearch) {
-        return TestSearch(flags);
-    }
-
-    if (flags.testDest) {
-        return TestDest(flags);
-    }
-
-    if (flags.testNamedDest) {
-        return TestNamedDest(flags);
-    }
-
-    if (flags.testChm) {
-        return TestChm(flags);
-    }
-
     if (flags.appdataDir) {
         SetAppDataDir(flags.appdataDir);
     }
@@ -2200,6 +2181,8 @@ ContinueOpenWindow:
     // needed if RememberOpenedFiles = false
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/5456
     uitask::Post(MkFunc0(LayoutAndFocusOnStartup, win), "LayoutAndFocusOnStartup");
+
+    StartSumatraControl(flags.controlPipeName);
 
     exitCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);

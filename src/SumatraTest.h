@@ -1,10 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct Flags;
-
-int TestSynctex(const Flags& flags);
-int TestSearch(const Flags& flags);
-int TestDest(const Flags& flags);
-int TestNamedDest(const Flags& flags);
-int TestChm(const Flags& flags);
+char* TestSynctexResult(const char* pdfPath, const char* srcPath, int line);
+char* TestSearchResult(const char* pdfPath, const char* needle, const char* password = nullptr);
+char* TestDestResult(const char* pdfPath, int destNo);
+char* TestNamedDestResult(const char* pdfPath, const char* destName);
+char* TestChmResult(const char* chmPath, int* exitCodeOut = nullptr);

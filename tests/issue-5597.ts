@@ -4,7 +4,7 @@
 // The reported example: searching "ibradı" (lowercase i) should find the word
 // "İbradı" (capital dotted İ, U+0130).
 //
-// This drives the headless `-test-search` flag against tests/issue-5597.pdf
+// This drives the control pipe search command against tests/issue-5597.pdf
 // (which contains "İbradı", "CAFÉ" and "Ankara") and checks each search.
 //
 // Background: case folding goes through CharLowerW, which is LOCALE-DEPENDENT
@@ -16,20 +16,17 @@
 //
 // Run:  bun tests/issue-5597.ts [--no-build]   (or via tests/all.ts)
 
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
 import { EXE, runStandalone } from "./util.ts";
+import { ControlCommand, runControlCommand } from "../cmd/control.ts";
 
 const PDF = join(import.meta.dir, "issue-5597.pdf");
 
 // returns the 1-based page the needle was found on, or 0 if not found
-function search(needle: string): number {
-  const out = join(tmpdir(), "sumatra-issue-5597-result.txt");
-  rmSync(out, { force: true });
-  const p = Bun.spawnSync({ cmd: [EXE, "-test-search", PDF, needle, out], stdout: "pipe", stderr: "pipe" });
-  const raw = existsSync(out) ? readFileSync(out, "utf-8").trim() : p.stdout.toString().trim();
-  rmSync(out, { force: true });
+async function search(needle: string): Promise<number> {
+  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestSearch, [PDF, needle]);
+  const raw = String(rawArg).trim();
   const m = raw.match(/FOUND .*page=(\d+)/);
   return m ? parseInt(m[1]) : 0;
 }
@@ -54,7 +51,7 @@ export async function testit(): Promise<void> {
   console.log("• sanity checks (must all find on page 1):");
   let sanityOk = true;
   for (const s of sanity) {
-    const page = search(s.needle);
+    const page = await search(s.needle);
     const ok = page === 1;
     sanityOk &&= ok;
     console.log(`    ${ok ? "✅" : "❌"} "${s.needle}" (${s.desc}) -> ${page ? `page ${page}` : "NOT FOUND"}`);
@@ -65,7 +62,7 @@ export async function testit(): Promise<void> {
 
   // the headline #5597 case: lowercase 'i' must match capital dotted 'İ' (U+0130)
   console.log('\n• issue #5597: searching "ibradı" should find "İbradı":');
-  const page = search("ibradı");
+  const page = await search("ibradı");
   if (page === 1) {
     console.log('    ✅ FOUND on page 1 — issue #5597 is fixed on this system');
     return;

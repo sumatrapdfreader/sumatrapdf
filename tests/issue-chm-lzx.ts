@@ -1,15 +1,16 @@
 // Test for CHMLib LZX make_decode_table PRETREE overflow (CC-0010 class advisory).
 //
 // Builds SumatraPDF.exe with ASan (cmd/build-asan.ts), generates a minimal
-// malicious CHM (issue-chm-lzx-make.ts), and runs the headless -test-chm flag.
+// malicious CHM (issue-chm-lzx-make.ts), and runs the control pipe CHM test command.
 // With the fix, the isolated pretree check rejects malformed input and the
 // process exits 0. Without the fix, ASan aborts on the isolated heap buffer test.
 //
 // Run:  bun tests/issue-chm-lzx.ts [--no-build]
 
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, runStandalone, tmpPath } from "./util.ts";
+import { ROOT, runStandalone } from "./util.ts";
+import { ControlCommand, withControlledSumatra } from "../cmd/control.ts";
 
 const ASAN_EXE = join(ROOT, "out", "dbg64_asan", "SumatraPDF.exe");
 const CHM = join(import.meta.dir, "issue-chm-lzx.chm");
@@ -23,18 +24,20 @@ function buildAsanApp(): void {
   }
 }
 
-function runTestChm(chmPath: string, outPath: string): { code: number; out: string } {
-  rmSync(outPath, { force: true });
-  const p = Bun.spawnSync({
-    cmd: [ASAN_EXE, "-for-testing", "-test-chm", chmPath, outPath],
-    cwd: ROOT,
-    stdout: "pipe",
-    stderr: "pipe",
-    env: { ...process.env, ASAN_OPTIONS: "abort_on_error=1:halt_on_error=1:detect_leaks=0" },
-  });
-  const out = existsSync(outPath) ? readFileSync(outPath, "utf-8") : "";
-  const merged = out + p.stdout.toString() + p.stderr.toString();
-  return { code: p.exitCode ?? -1, out: merged };
+async function runTestChm(chmPath: string): Promise<{ code: number; out: string }> {
+  return await withControlledSumatra(
+    ASAN_EXE,
+    async (client) => {
+      const [code, out] = await client.request(ControlCommand.TestChm, [chmPath]);
+      return { code: Number(code), out: String(out) };
+    },
+    [],
+    {
+      cwd: ROOT,
+      env: { ...process.env, ASAN_OPTIONS: "abort_on_error=1:halt_on_error=1:detect_leaks=0" },
+      connectTimeoutMs: 30000,
+    },
+  );
 }
 
 export async function testit(): Promise<void> {
@@ -53,12 +56,11 @@ export async function testit(): Promise<void> {
     throw new Error(`missing fixture: ${CHM}`);
   }
 
-  const outPath = tmpPath("issue-chm-lzx-result.txt");
-  const res = runTestChm(CHM, outPath);
+  const res = await runTestChm(CHM);
   console.log(res.out.trim());
 
   if (res.code !== 0) {
-    throw new Error(`-test-chm exited with ${res.code} (expected 0; ASan abort means unfixed lzx.c)`);
+    throw new Error(`control TestChm exited with ${res.code} (expected 0; ASan abort means unfixed lzx.c)`);
   }
   if (!res.out.includes("pretree_isolated=REJECTED")) {
     throw new Error("expected pretree_isolated=REJECTED in output");

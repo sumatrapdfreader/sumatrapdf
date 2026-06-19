@@ -799,6 +799,7 @@ function sumatrapdf_files()
     "SimpleBrowserWindow.*",
     "StressTesting.*",
     "SumatraConfig.cpp",
+    "SumatraControl.*",
     "SumatraDialogs.*",
     "SumatraPDF.cpp",
     "SumatraPDF.h",

@@ -83,11 +83,7 @@ const args = [
     "SetColorRange", "set-color-range",
     "UpgradeFrom", "upgrade-from",
     "ForTesting", "for-testing",
-    "TestSynctex", "test-synctex",
-    "TestSearch", "test-search",
-    "TestDest", "test-dest",
-    "TestNamedDest", "test-named-dest",
-    "TestChm", "test-chm",
+    "Control", "dbg-control",
 ];
 
 function generateCode(): string {

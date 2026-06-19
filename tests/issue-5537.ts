@@ -6,7 +6,7 @@
 // which DisplayModel::ScrollTo treats as "don't change zoom".
 //
 // Builds a tiny PDF whose outline has three /XYZ destinations and checks each
-// via the headless `-test-dest <pdf> <no> <outfile>` flag:
+// via the control pipe test command:
 //   1. /XYZ 100 700 0    -> zoom 0    (retain current zoom)   <- the fix
 //   2. /XYZ 100 700 1.5  -> zoom 1.5  (explicit 150%)
 //   3. /XYZ 100 700 1    -> zoom 1    (explicit 100%, NOT retained)
@@ -14,13 +14,13 @@
 //
 // Run:  bun tests/issue-5537.ts [--no-build]   (or via tests/all.ts)
 
-import { existsSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EXE, runStandalone } from "./util.ts";
+import { ControlCommand, runControlCommand } from "../cmd/control.ts";
 
 const PDF = join(tmpdir(), "sumatra-issue-5537.pdf");
-const OUT = join(tmpdir(), "sumatra-issue-5537-result.txt");
 
 // build a minimal PDF (2 pages) with an outline of 3 /XYZ destinations
 function makePdf(): Buffer {
@@ -51,10 +51,9 @@ function makePdf(): Buffer {
 }
 
 // returns { page, zoom } for the n-th outline destination
-function resolveDest(no: number): { page: number; zoom: number; raw: string } {
-  rmSync(OUT, { force: true });
-  const p = Bun.spawnSync({ cmd: [EXE, "-test-dest", PDF, String(no), OUT], stdout: "pipe", stderr: "pipe" });
-  const raw = existsSync(OUT) ? readFileSync(OUT, "utf-8").trim() : p.stdout.toString().trim();
+async function resolveDest(no: number): Promise<{ page: number; zoom: number; raw: string }> {
+  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestDest, [PDF, no]);
+  const raw = String(rawArg).trim();
   const m = raw.match(/page=(-?\d+)\s+zoom=([\d.eE+-]+)/);
   if (!m) {
     return { page: -1, zoom: NaN, raw };
@@ -77,7 +76,7 @@ export async function testit(): Promise<void> {
 
   let allOk = true;
   for (const [no, expectZoom, desc] of cases) {
-    const r = resolveDest(no);
+    const r = await resolveDest(no);
     const ok = r.page === 2 && Math.abs(r.zoom - expectZoom) < 1e-4;
     allOk &&= ok;
     console.log(`  ${ok ? "✅" : "❌"} dest ${no}: ${desc}`);
@@ -85,7 +84,6 @@ export async function testit(): Promise<void> {
   }
 
   rmSync(PDF, { force: true });
-  rmSync(OUT, { force: true });
   if (!allOk) {
     throw new Error("destination zoom resolution is wrong");
   }

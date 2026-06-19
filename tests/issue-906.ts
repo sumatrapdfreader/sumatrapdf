@@ -2,29 +2,24 @@
 //
 // SumatraPDF should accept a document password from the command line via
 // `-pwd <password>`. The test creates an encrypted copy of an existing text
-// search fixture with the bundled `clean` tool, then checks that `-test-search`
+// search fixture with the bundled `clean` tool, then checks that the control search command
 // can only load/search it when the password is provided.
 //
 // Run:  bun tests/issue-906.ts [--no-build]   (or via tests/all.ts)
 
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { EXE, runStandalone } from "./util.ts";
+import { ControlCommand, runControlCommand } from "../cmd/control.ts";
 
 const SRC_PDF = join(import.meta.dir, "issue-5597.pdf");
 const PASSWORD = "issue-906-password";
 
-function runSearch(pdf: string, password: string | null): string {
-  const out = join(tmpdir(), `sumatra-issue-906-result-${password ? "pwd" : "nopwd"}.txt`);
-  rmSync(out, { force: true });
-  const cmd = password
-    ? [EXE, "-pwd", password, "-test-search", pdf, "Ankara", out]
-    : [EXE, "-test-search", pdf, "Ankara", out];
-  const p = Bun.spawnSync({ cmd, stdout: "pipe", stderr: "pipe" });
-  const raw = existsSync(out) ? readFileSync(out, "utf-8").trim() : p.stdout.toString().trim();
-  rmSync(out, { force: true });
-  return raw;
+async function runSearch(pdf: string, password: string | null): Promise<string> {
+  const extraArgs = password ? ["-pwd", password] : [];
+  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestSearch, [pdf, "Ankara"], extraArgs);
+  return String(rawArg).trim();
 }
 
 export async function testit(): Promise<void> {
@@ -49,12 +44,12 @@ export async function testit(): Promise<void> {
     throw new Error(`failed to create encrypted pdf: exit=${enc.exitCode} stdout=${enc.stdout} stderr=${enc.stderr}`);
   }
 
-  const withoutPwd = runSearch(encryptedPdf, null);
+  const withoutPwd = await runSearch(encryptedPdf, null);
   if (!withoutPwd.startsWith("ERROR engine-create-failed")) {
     throw new Error(`encrypted pdf unexpectedly opened without -pwd: ${withoutPwd}`);
   }
 
-  const withPwd = runSearch(encryptedPdf, PASSWORD);
+  const withPwd = await runSearch(encryptedPdf, PASSWORD);
   if (!withPwd.match(/^FOUND .*page=1$/)) {
     throw new Error(`encrypted pdf did not open/search with -pwd: ${withPwd}`);
   }

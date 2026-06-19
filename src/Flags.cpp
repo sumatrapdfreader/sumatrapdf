@@ -39,8 +39,7 @@ enum class Arg {
     MangaMode = 68, Search = 69, AllUsers = 70, AllUsers2 = 71,
     RunInstallNow = 72, Adobe = 73, DDE = 74, Pwd = 75,
     EngineDump = 76, SetColorRange = 77, UpgradeFrom = 78, ForTesting = 79,
-    TestSynctex = 80, TestSearch = 81, TestDest = 82, TestNamedDest = 83,
-    TestChm = 84,
+    Control = 80,
 };
 
 static const char* gArgNames =
@@ -64,8 +63,7 @@ static const char* gArgNames =
     "manga-mode\0" "search\0" "all-users\0" "allusers\0"
     "run-install-now\0" "a\0" "dde\0" "pwd\0"
     "engine-dump\0" "set-color-range\0" "upgrade-from\0" "for-testing\0"
-    "test-synctex\0" "test-search\0" "test-dest\0" "test-named-dest\0"
-    "test-chm\0";
+    "dbg-control\0";
 // clang-format on
 // @gen-end flags
 
@@ -519,6 +517,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             i.inverseSearchCmdLine = str::Dup(param);
             continue;
         }
+        if (arg == Arg::Control) {
+            i.controlPipeName = str::Dup(param);
+            continue;
+        }
         if ((arg == Arg::ForwardSearch1 || arg == Arg::ForwardSearch2) && args.AdditionalParam(1)) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
@@ -530,48 +532,6 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
             i.namedDest = str::Dup(param);
-            continue;
-        }
-        if (arg == Arg::TestSynctex && args.AdditionalParam(3)) {
-            // -test-synctex <pdf> <srcfile> <line> <outfile>
-            i.testSynctex = true;
-            i.testSynctexPdf = str::Dup(param);
-            i.testSynctexSrc = str::Dup(args.EatParam());
-            i.testSynctexLine = atoi(args.EatParam());
-            i.testSynctexOut = str::Dup(args.EatParam());
-            continue;
-        }
-        if (arg == Arg::TestSearch && args.AdditionalParam(2)) {
-            // -test-search <pdf> <needle> <outfile>
-            i.testSearch = true;
-            i.testSearchPdf = str::Dup(param);
-            i.testSearchNeedle = str::Dup(args.EatParam());
-            i.testSearchOut = str::Dup(args.EatParam());
-            continue;
-        }
-        if (arg == Arg::TestDest && args.AdditionalParam(2)) {
-            // -test-dest <pdf> <no> <outfile>
-            i.testDest = true;
-            i.testDestPdf = str::Dup(param);
-            i.testDestNo = atoi(args.EatParam());
-            i.testDestOut = str::Dup(args.EatParam());
-            continue;
-        }
-        if (arg == Arg::TestNamedDest && args.AdditionalParam(2)) {
-            // -test-named-dest <pdf> <name> <outfile>
-            i.testNamedDest = true;
-            i.testNamedDestPdf = str::Dup(param);
-            i.testNamedDestName = str::Dup(args.EatParam());
-            i.testNamedDestOut = str::Dup(args.EatParam());
-            continue;
-        }
-        if (arg == Arg::TestChm) {
-            // -test-chm <chm> [<outfile>]
-            i.testChm = true;
-            i.testChmFile = str::Dup(param);
-            if (args.AdditionalParam(1)) {
-                i.testChmOut = str::Dup(args.EatParam());
-            }
             continue;
         }
         if (arg == Arg::Page) {
@@ -757,6 +717,7 @@ Flags::~Flags() {
     str::Free(pluginURL);
     str::Free(appdataDir);
     str::Free(inverseSearchCmdLine);
+    str::Free(controlPipeName);
     str::Free(stressTestPath);
     str::Free(stressTestFilter);
     str::Free(stressTestRanges);
@@ -768,17 +729,4 @@ Flags::~Flags() {
     str::Free(password);
     str::Free(logFile);
     str::Free(dde);
-    str::Free(testSynctexPdf);
-    str::Free(testSynctexSrc);
-    str::Free(testSynctexOut);
-    str::Free(testSearchPdf);
-    str::Free(testSearchNeedle);
-    str::Free(testSearchOut);
-    str::Free(testDestPdf);
-    str::Free(testDestOut);
-    str::Free(testNamedDestPdf);
-    str::Free(testNamedDestName);
-    str::Free(testNamedDestOut);
-    str::Free(testChmFile);
-    str::Free(testChmOut);
 }

@@ -1642,6 +1642,7 @@ const sumatraFiles: FileGroup[] = [
       "Selection.*",
       "SettingsStructs.*",
       "SimpleBrowserWindow.*",
+      "SumatraControl.*",
       "SumatraPDF.cpp",
       "SumatraStartup.cpp",
       "SumatraConfig.cpp",

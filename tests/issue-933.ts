@@ -3,14 +3,15 @@
 //
 // Builds a tiny PDF whose text contains ONLY one spelling of each word
 // ("Straße"/"Fußball" with ß, "Klasse" with ss) and then searches for the
-// OTHER spelling via the headless -test-search flag. Each needle's literal
+// OTHER spelling via the control pipe search command. Each needle's literal
 // spelling is absent from the PDF, so a hit can only come from the ß<->ss
 // equivalence — reverting the fix turns the FOUND assertions into NOTFOUND.
 //
 // Run:  bun tests/issue-933.ts [--no-build]
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { ControlCommand, runControlCommand } from "../cmd/control.ts";
 
 // Build a minimal single-page PDF that shows the given lines using Helvetica
 // with WinAnsiEncoding (so byte 0xDF renders/extracts as ß). `lines` are raw
@@ -41,15 +42,9 @@ function buildPdf(lines: string[]): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-function search(pdfPath: string, needle: string): string {
-  const outPath = tmpPath("issue-933-result.txt");
-  const p = Bun.spawnSync({
-    cmd: [EXE, "-for-testing", "-test-search", pdfPath, needle, outPath],
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const out = existsSync(outPath) ? readFileSync(outPath, "utf-8") : p.stdout.toString();
-  return out.trim();
+async function search(pdfPath: string, needle: string): Promise<string> {
+  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestSearch, [pdfPath, needle]);
+  return String(rawArg).trim();
 }
 
 export async function testit(): Promise<void> {
@@ -67,7 +62,7 @@ export async function testit(): Promise<void> {
   ];
 
   for (const c of cases) {
-    const res = search(pdfPath, c.needle);
+    const res = await search(pdfPath, c.needle);
     const found = res.startsWith("FOUND");
     console.log(`  search "${c.needle}" -> ${res}`);
     if (found !== c.expectFound) {

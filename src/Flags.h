@@ -86,6 +86,7 @@ struct Flags {
     // -for-testing: for ad-hoc testing by humans or agents. Always starts
     // a new instance, doesn't restore session, doesn't save settings
     bool forTesting = false;
+    char* controlPipeName = nullptr; // -dbg-control <named-pipe>
     bool testRenderPage = false;
     bool testExtractPage = false;
     int testPageNo = 0;
@@ -95,46 +96,6 @@ struct Flags {
     char* upgradeFrom = nullptr;
     char* dde = nullptr;
     bool engineDump = false; // -engine-dump
-
-    // -test-synctex <pdf> <srcfile> <line> <outfile>: headless synctex
-    // forward-search test (issue #5633). Loads the pdf, runs SourceToDoc and
-    // writes the result to <outfile>, then exits without showing any UI.
-    bool testSynctex = false;
-    char* testSynctexPdf = nullptr;
-    char* testSynctexSrc = nullptr;
-    int testSynctexLine = 0;
-    char* testSynctexOut = nullptr;
-
-    // -test-search <pdf> <needle> <outfile>: headless case-insensitive search
-    // test (issue #5597). Searches the pdf for <needle> and writes the result
-    // (found page or NOTFOUND) to <outfile>, then exits without showing UI.
-    bool testSearch = false;
-    char* testSearchPdf = nullptr;
-    char* testSearchNeedle = nullptr;
-    char* testSearchOut = nullptr;
-
-    // -test-dest <pdf> <no> <outfile>: headless test for PDF destination zoom
-    // (issue #5537). Resolves the <no>-th (1-based) destination in the document
-    // outline and writes its page + zoom to <outfile>, then exits.
-    bool testDest = false;
-    char* testDestPdf = nullptr;
-    int testDestNo = 0;
-    char* testDestOut = nullptr;
-
-    // -test-named-dest <pdf> <name> <outfile>: headless test for resolving a
-    // remote link's named destination (issue #5642). Resolves <name> (which may
-    // carry mupdf's "nameddest=" prefix) and writes the page to <outfile>.
-    bool testNamedDest = false;
-    char* testNamedDestPdf = nullptr;
-    char* testNamedDestName = nullptr;
-    char* testNamedDestOut = nullptr;
-
-    // -test-chm <chm> [<outfile>]: headless CHM exercise test. Opens the chm,
-    // runs an isolated PRETREE make_decode_table check, enumerates objects,
-    // retrieves compressed content, and optionally loads via ChmFile/EngineChm.
-    bool testChm = false;
-    char* testChmFile = nullptr;
-    char* testChmOut = nullptr;
 
     bool crashOnOpen = false;
 

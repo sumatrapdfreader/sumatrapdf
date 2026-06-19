@@ -8,7 +8,6 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#include "Flags.h"
 #include "GlobalPrefs.h"
 #include "wingui/UIModels.h"
 #include "DocController.h"
@@ -28,20 +27,19 @@
 
 const char* CleanRemoteDestName(const char* destName);
 
-// Headless synctex forward-search test for issue #5633. Loads the pdf, builds
-// the synctex index (decompressing .synctex/.synctex.gz as needed) and runs a
-// SourceToDoc query, writing a machine-readable result line to the output file.
-// Used by tests/latex/issue-5633.ts; not meant for end users.
-int TestSynctex(const Flags& flags) {
-    ScopedGdiPlus gdiPlus;
-    const char* pdfPath = flags.testSynctexPdf;
-    const char* srcPath = flags.testSynctexSrc;
-    int line = flags.testSynctexLine;
-
+static void EnsureTestGlobalPrefs() {
     // engine creation reads a few fields off gGlobalPrefs (e.g. disableAntiAlias)
     if (!gGlobalPrefs) {
         gGlobalPrefs = NewGlobalPrefs(nullptr);
     }
+}
+
+// Headless synctex forward-search test for issue #5633. Loads the pdf, builds
+// the synctex index (decompressing .synctex/.synctex.gz as needed) and runs a
+// SourceToDoc query, returning a machine-readable result line.
+char* TestSynctexResult(const char* pdfPath, const char* srcPath, int line) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
 
     StrBuilder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
@@ -62,12 +60,7 @@ int TestSynctex(const Flags& flags) {
         SafeEngineRelease(&engine);
     }
 
-    if (flags.testSynctexOut) {
-        file::WriteFile(flags.testSynctexOut, out.AsByteSlice());
-    }
-    // also echo to stdout in case a console is attached
-    printf("%s", out.Get());
-    return 0;
+    return out.StealData();
 }
 
 // Headless case-insensitive text-search test for issue #5597. Loads the pdf,
@@ -91,17 +84,13 @@ class TestPasswordUI : public PasswordUI {
     }
 };
 
-int TestSearch(const Flags& flags) {
+char* TestSearchResult(const char* pdfPath, const char* needle, const char* password) {
     ScopedGdiPlus gdiPlus;
-    if (!gGlobalPrefs) {
-        gGlobalPrefs = NewGlobalPrefs(nullptr);
-    }
-    const char* pdfPath = flags.testSearchPdf;
-    const char* needle = flags.testSearchNeedle; // utf-8
+    EnsureTestGlobalPrefs();
 
     StrBuilder out;
-    TestPasswordUI pwdUI(flags.password);
-    EngineBase* engine = CreateEngineFromFile(pdfPath, flags.password ? &pwdUI : nullptr, false);
+    TestPasswordUI pwdUI(password);
+    EngineBase* engine = CreateEngineFromFile(pdfPath, password ? &pwdUI : nullptr, false);
     if (!engine) {
         out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
     } else {
@@ -119,11 +108,7 @@ int TestSearch(const Flags& flags) {
         SafeEngineRelease(&engine);
     }
 
-    if (flags.testSearchOut) {
-        file::WriteFile(flags.testSearchOut, out.AsByteSlice());
-    }
-    printf("%s", out.Get());
-    return 0;
+    return out.StealData();
 }
 
 // walk the outline tree in document order, return the `target`-th (1-based) item
@@ -145,74 +130,61 @@ static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
 }
 
 // Headless test for PDF destination zoom resolution (issue #5537). Resolves the
-// <no>-th (1-based) outline destination and writes "page=P zoom=Z" to the output
-// file. zoom is in SumatraPDF units (1.0 == 100%); zoom=0 means "retain current
-// zoom" (what /XYZ ... 0 must map to). Used by tests/issue-5537.ts.
-int TestDest(const Flags& flags) {
+// <no>-th (1-based) outline destination and returns "page=P zoom=Z". zoom is in
+// SumatraPDF units (1.0 == 100%); zoom=0 means "retain current zoom" (what /XYZ
+// ... 0 must map to). Used by tests/issue-5537.ts.
+char* TestDestResult(const char* pdfPath, int destNo) {
     ScopedGdiPlus gdiPlus;
-    if (!gGlobalPrefs) {
-        gGlobalPrefs = NewGlobalPrefs(nullptr);
-    }
+    EnsureTestGlobalPrefs();
 
     StrBuilder out;
-    EngineBase* engine = CreateEngineFromFile(flags.testDestPdf, nullptr, false);
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
-        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", flags.testDestPdf);
+        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
     } else {
         TocTree* toc = engine->GetToc();
         IPageDestination* dest = nullptr;
         if (toc && toc->root) {
             int counter = 0;
-            dest = NthDestInToc(toc->root, flags.testDestNo, counter);
+            dest = NthDestInToc(toc->root, destNo, counter);
         }
         if (dest) {
-            out.AppendFmt("dest=%d page=%d zoom=%g\n", flags.testDestNo, PageDestGetPageNo(dest),
-                          PageDestGetZoom(dest));
+            out.AppendFmt("dest=%d page=%d zoom=%g\n", destNo, PageDestGetPageNo(dest), PageDestGetZoom(dest));
         } else {
-            out.AppendFmt("dest=%d NODEST\n", flags.testDestNo);
+            out.AppendFmt("dest=%d NODEST\n", destNo);
         }
         SafeEngineRelease(&engine);
     }
 
-    if (flags.testDestOut) {
-        file::WriteFile(flags.testDestOut, out.AsByteSlice());
-    }
-    printf("%s", out.Get());
-    return 0;
+    return out.StealData();
 }
 
 // Headless test for remote named-destination resolution (issue #5642). Loads the
 // pdf and resolves <name> -- which may carry mupdf's "nameddest=" prefix, as a
 // remote GoToR link's name does -- the same way LinkHandler::LaunchFile does
-// (CleanRemoteDestName + GetNamedDest), writing the resolved page to <outfile>.
+// (CleanRemoteDestName + GetNamedDest), returning the resolved page.
 // Used by tests/issue-5642.ts.
-int TestNamedDest(const Flags& flags) {
+char* TestNamedDestResult(const char* pdfPath, const char* destName) {
     ScopedGdiPlus gdiPlus;
-    if (!gGlobalPrefs) {
-        gGlobalPrefs = NewGlobalPrefs(nullptr);
-    }
+    EnsureTestGlobalPrefs();
 
     StrBuilder out;
-    EngineBase* engine = CreateEngineFromFile(flags.testNamedDestPdf, nullptr, false);
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
-        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", flags.testNamedDestPdf);
+        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
     } else {
-        const char* name = CleanRemoteDestName(flags.testNamedDestName);
+        const char* name = CleanRemoteDestName(destName);
         IPageDestination* dest = engine->GetNamedDest(name);
         if (dest) {
-            out.AppendFmt("name=%s page=%d\n", flags.testNamedDestName, PageDestGetPageNo(dest));
+            out.AppendFmt("name=%s page=%d\n", destName, PageDestGetPageNo(dest));
             delete dest;
         } else {
-            out.AppendFmt("name=%s NOTFOUND\n", flags.testNamedDestName);
+            out.AppendFmt("name=%s NOTFOUND\n", destName);
         }
         SafeEngineRelease(&engine);
     }
 
-    if (flags.testNamedDestOut) {
-        file::WriteFile(flags.testNamedDestOut, out.AsByteSlice());
-    }
-    printf("%s", out.Get());
-    return 0;
+    return out.StealData();
 }
 
 static int ChmTestEnumerate(struct chmFile* h, struct chmUnitInfo* ui, void* ctx) {
@@ -228,13 +200,10 @@ static int ChmTestEnumerate(struct chmFile* h, struct chmUnitInfo* ui, void* ctx
 // ASan can catch the lzx.c overflow on a heap buffer), opens the chm via chm_open,
 // enumerates and retrieves objects, and optionally loads ChmFile / EngineChm.
 // Used by tests/issue-chm-lzx.ts; not meant for end users.
-int TestChm(const Flags& flags) {
+char* TestChmResult(const char* chmPath, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
-    if (!gGlobalPrefs) {
-        gGlobalPrefs = NewGlobalPrefs(nullptr);
-    }
+    EnsureTestGlobalPrefs();
 
-    const char* chmPath = flags.testChmFile;
     StrBuilder out;
     bool ok = true;
 
@@ -332,9 +301,8 @@ int TestChm(const Flags& flags) {
         out.Append("result=FAILED\n");
     }
 
-    if (flags.testChmOut) {
-        file::WriteFile(flags.testChmOut, out.AsByteSlice());
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
     }
-    printf("%s", out.Get());
-    return ok ? 0 : 1;
+    return out.StealData();
 }

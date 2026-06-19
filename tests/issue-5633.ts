@@ -8,8 +8,7 @@
 //
 // It builds the app (same as cmd/build.ts), uses MiKTeX's pdflatex to produce a
 // real PDF + .synctex pair, derives the three layouts from it, and runs the
-// headless `-test-synctex` flag (added for this test) which performs a
-// SourceToDoc() forward-search query and writes the result to a file.
+// control pipe test command, which performs a SourceToDoc() forward-search query.
 //
 // Run:  bun tests/issue-5633.ts [--no-build]   (or via tests/all.ts)
 //
@@ -21,6 +20,7 @@ import { gzipSync } from "node:zlib";
 import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { EXE, runStandalone } from "./util.ts";
+import { ControlCommand, runControlCommand } from "../cmd/control.ts";
 
 const DATA = join(import.meta.dir, "issue-5633-data");
 const WORK = join(DATA, ".work");
@@ -65,15 +65,13 @@ function run(cmd: string[], cwd: string): { ok: boolean; stdout: string; stderr:
 
 // runs the app's headless synctex forward-search for the given pdf and returns
 // the parsed result (ret is a PDFSYNCERR_* code; 0 == PDFSYNCERR_SUCCESS)
-function querySynctex(
+async function querySynctex(
   pdfPath: string,
   srcPath: string,
   cwd: string,
-): { ret: number; page: number; nrects: number; raw: string } {
-  const outPath = join(cwd, "result.txt");
-  rmSync(outPath, { force: true });
-  const r = run([EXE, "-test-synctex", pdfPath, srcPath, String(TARGET_LINE), outPath], cwd);
-  const raw = existsSync(outPath) ? readFileSync(outPath, "utf-8").trim() : `(no result file)\nstdout: ${r.stdout}\nstderr: ${r.stderr}`;
+): Promise<{ ret: number; page: number; nrects: number; raw: string }> {
+  const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestSynctex, [pdfPath, srcPath, TARGET_LINE]);
+  const raw = String(rawArg).trim();
   const m = raw.match(/ret=(-?\d+)\s+page=(-?\d+)\s+nrects=(-?\d+)/);
   if (!m) {
     return { ret: -999, page: -1, nrects: -1, raw };
@@ -88,7 +86,7 @@ type EngineCase = {
   srcPath: string;
 };
 
-function runEngineCase(engineCase: EngineCase): boolean {
+async function runEngineCase(engineCase: EngineCase): Promise<boolean> {
   const srcName = basename(engineCase.srcPath);
   mkdirSync(engineCase.cwd, { recursive: true });
   copyFileSync(join(DATA, TEX_FILE), engineCase.srcPath);
@@ -141,7 +139,7 @@ function runEngineCase(engineCase: EngineCase): boolean {
   let allPass = true;
   for (const c of cases) {
     c.setup();
-    const res = querySynctex(pdfPath, engineCase.srcPath, engineCase.cwd);
+    const res = await querySynctex(pdfPath, engineCase.srcPath, engineCase.cwd);
     const pass = res.ret === 0 && res.page >= 1 && res.nrects >= 1;
     allPass &&= pass;
     const mark = pass ? "PASS" : "FAIL";
@@ -206,7 +204,7 @@ export async function testit(): Promise<void> {
   let allPass = true;
   for (const c of cases) {
     console.log(`\n========== ${c.engine} ==========`);
-    allPass &&= runEngineCase(c);
+    allPass &&= await runEngineCase(c);
   }
 
   if (!allPass) {
