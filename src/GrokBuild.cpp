@@ -563,6 +563,7 @@ static void WebViewAddTool(MainWindow* win, const char* text) {
 }
 
 static void WebViewAddError(MainWindow* win, const char* text) {
+    GrokBuildLog("error", text);
     TempStr js = str::FormatTemp("addError('%s')", JsEscapeTemp(text));
     WebViewEval(win, js);
 }
@@ -950,6 +951,7 @@ static void OnSessionComboChange(MainWindow* win) {
 
     if (sel == 0) {
         // "New Session" — clear current session
+        GrokBuildLog("session", "new");
         str::Free(tab->grokSessionId);
         tab->grokSessionId = nullptr;
         delete tab->grokChatLog;
@@ -965,6 +967,7 @@ static void OnSessionComboChange(MainWindow* win) {
 
     int sessionIdx = sel - 1;
     if (sessionIdx >= 0 && sessionIdx < sessions.Size()) {
+        GrokBuildLog("session", sessions[sessionIdx].sessionId);
         str::Free(tab->grokSessionId);
         tab->grokSessionId = str::Dup(sessions[sessionIdx].sessionId);
         delete tab->grokChatLog;
@@ -1031,11 +1034,17 @@ static void OnGrokUpdate(GrokUpdateData* data) {
 
         switch (data->updateType) {
             case GrokUpdateType::Text:
+                if (data->text) {
+                    GrokBuildLog("<<< text", data->text);
+                }
                 if (isActiveTab) {
                     WebViewAppendText(win, data->text);
                 }
                 break;
             case GrokUpdateType::Tool:
+                if (data->text) {
+                    GrokBuildLog("<<< tool", data->text);
+                }
                 if (isActiveTab) {
                     WebViewAddTool(win, data->text);
                 }
@@ -1043,6 +1052,8 @@ static void OnGrokUpdate(GrokUpdateData* data) {
             case GrokUpdateType::Error:
                 if (isActiveTab) {
                     WebViewAddError(win, data->text);
+                } else if (data->text) {
+                    GrokBuildLog("error", data->text);
                 }
                 break;
             case GrokUpdateType::Flush:
@@ -1051,13 +1062,21 @@ static void OnGrokUpdate(GrokUpdateData* data) {
                 }
                 break;
             case GrokUpdateType::SessionId:
+                if (data->text) {
+                    GrokBuildLog("<<< session", data->text);
+                }
                 if (tab && data->text) {
                     str::Free(tab->grokSessionId);
                     tab->grokSessionId = str::Dup(data->text);
                 }
                 break;
             case GrokUpdateType::Finished:
-                if (tab) {
+                if (tab && tab->grokProcess) {
+                    if (WaitForSingleObject(tab->grokProcess, 0) == WAIT_OBJECT_0) {
+                        DWORD exitCode = 0;
+                        GetExitCodeProcess(tab->grokProcess, &exitCode);
+                        GrokBuildLog("exit", str::FormatTemp("%lu", exitCode));
+                    }
                     CloseGrokProcess(tab, false);
                 }
                 if (isActiveTab) {
@@ -1108,7 +1127,12 @@ static void GrokReadThread(GrokReadCtx* ctx) {
                 }
                 TempStr eventType = JsonStrTemp(line, "type");
 
-                if (eventType && str::Eq(eventType, "text")) {
+                if (eventType && str::Eq(eventType, "thought")) {
+                    TempStr thought = JsonStrTemp(line, "data");
+                    if (thought && str::Len(thought) > 0) {
+                        GrokBuildLog("<<< thought", thought);
+                    }
+                } else if (eventType && str::Eq(eventType, "text")) {
                     TempStr text = JsonStrTemp(line, "data");
                     if (text && str::Len(text) > 0) {
                         PostUpdate(hwndFrame, sessionId, text, GrokUpdateType::Text);
@@ -1122,6 +1146,7 @@ static void GrokReadThread(GrokReadCtx* ctx) {
                         PostUpdate(hwndFrame, sessionId, err, GrokUpdateType::Error);
                     }
                 } else if (eventType && str::Eq(eventType, "end")) {
+                    GrokBuildLog("<<< end", line);
                     TempStr newSessionId = JsonStrTemp(line, "sessionId");
                     if (newSessionId) {
                         PostUpdate(hwndFrame, sessionId, newSessionId, GrokUpdateType::SessionId);
@@ -1138,6 +1163,12 @@ static void GrokReadThread(GrokReadCtx* ctx) {
             }
         }
     }
+
+    const char* rem = lineBuf.LendData();
+    if (rem && *rem) {
+        GrokBuildLog("<<<", rem);
+    }
+    GrokBuildLog("eof", "(stdout closed)");
 
     CloseHandle(hPipe);
     PostUpdate(hwndFrame, sessionId, nullptr, GrokUpdateType::Finished);
@@ -1263,6 +1294,7 @@ static void SendGrokMessage(MainWindow* win) {
 
     CloseHandle(pi.hThread);
     tab->grokProcess = pi.hProcess;
+    GrokBuildLog(">>> start", str::FormatTemp("pid %lu", pi.dwProcessId));
 
     auto ctx = (GrokReadCtx*)calloc(1, sizeof(GrokReadCtx));
     ctx->hReadPipe = hReadPipe;
