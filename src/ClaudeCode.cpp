@@ -479,12 +479,22 @@ static void SetClaudeWorking(MainWindow* win, bool /*working*/) {
     UpdateClaudePanelForCurrentTab(win);
 }
 
+static void CloseClaudeProcess(WindowTab* tab, bool terminateIfRunning) {
+    if (!tab || !tab->claudeProcess) {
+        return;
+    }
+    HANDLE h = tab->claudeProcess;
+    tab->claudeProcess = nullptr;
+    if (terminateIfRunning && WaitForSingleObject(h, 0) == WAIT_TIMEOUT) {
+        TerminateProcess(h, 0);
+    }
+    CloseHandle(h);
+}
+
 static void StopClaude(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     if (tab && tab->claudeProcess) {
-        TerminateProcess(tab->claudeProcess, 0);
-        CloseHandle(tab->claudeProcess);
-        tab->claudeProcess = nullptr;
+        CloseClaudeProcess(tab, true);
         WebViewAddError(win, "Stopped by user.");
         SetClaudeWorking(win, false);
     }
@@ -970,6 +980,12 @@ static void OnClaudeUpdate(ClaudeUpdateData* data) {
                 break;
             }
         }
+        if (!tab) {
+            WindowTab* cur = win->CurrentTab();
+            if (cur && cur->claudeSessionId && data->sessionId && str::Eq(cur->claudeSessionId, data->sessionId)) {
+                tab = cur;
+            }
+        }
         // only update WebView if this tab is currently active
         bool isActiveTab = (tab && tab == win->CurrentTab());
 
@@ -995,13 +1011,13 @@ static void OnClaudeUpdate(ClaudeUpdateData* data) {
                 }
                 break;
             case ClaudeUpdateType::Finished:
+                if (tab) {
+                    CloseClaudeProcess(tab, true);
+                }
                 if (isActiveTab) {
                     WebViewFlushBlock(win);
                     SetClaudeWorking(win, false);
                     PopulateSessionCombo(win);
-                }
-                if (tab) {
-                    tab->claudeProcess = nullptr;
                 }
                 break;
         }
@@ -1088,6 +1104,11 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                         if (err) {
                             PostUpdate(hwndFrame, sessionId, err, ClaudeUpdateType::Error);
                         }
+                    }
+                    // claude emits result before the process exits; don't wait for EOF
+                    if (sub && (str::Eq(sub, "success") || str::Eq(sub, "completion") || str::Eq(sub, "error"))) {
+                        PostUpdate(hwndFrame, sessionId, nullptr, ClaudeUpdateType::Flush);
+                        PostUpdate(hwndFrame, sessionId, nullptr, ClaudeUpdateType::Finished);
                     }
                 }
 
@@ -1717,11 +1738,7 @@ void ShutdownClaudeForMainWindow(MainWindow* win) {
         return;
     }
     for (WindowTab* tab : win->Tabs()) {
-        if (tab && tab->claudeProcess) {
-            TerminateProcess(tab->claudeProcess, 0);
-            CloseHandle(tab->claudeProcess);
-            tab->claudeProcess = nullptr;
-        }
+        CloseClaudeProcess(tab, true);
     }
     // read threads post uitask updates when their pipes close
     for (int i = 0; i < 20; i++) {
