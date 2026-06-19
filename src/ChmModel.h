@@ -3,7 +3,7 @@
 
 struct ChmFile;
 struct ChmTocTraceItem;
-class HtmlWindow;
+class ChmDocView;
 struct HtmlWindowCallback;
 struct ChmCacheEntry;
 
@@ -77,7 +77,7 @@ struct ChmModel : DocController {
 
     StrVec pages;
     int currentPageNo = 1;
-    HtmlWindow* htmlWindow = nullptr;
+    ChmDocView* docView = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
     float initZoom = kInvalidZoom;
 

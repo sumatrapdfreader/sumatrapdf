@@ -797,6 +797,9 @@
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\ChmDocView.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\HtmlWindow.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>

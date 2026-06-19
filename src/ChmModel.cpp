@@ -8,6 +8,7 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/HtmlWindow.h"
+#include "wingui/ChmDocView.h"
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
@@ -77,7 +78,7 @@ ChmModel::~ChmModel() {
     // TODO: deleting htmlWindow seems to spin a modal loop which
     //       can lead to WM_PAINT being dispatched for the parent
     //       hwnd and then crashing in SumatraPDF.cpp's DrawDocument
-    delete htmlWindow;
+    delete docView;
     delete htmlWindowCb;
     delete doc;
     delete tocTrace;
@@ -119,12 +120,12 @@ void ChmModel::GoToPage(int pageNo, bool) {
 bool ChmModel::SetParentHwnd(HWND hwnd) {
     // can be already set if tab was restored at startup and then switched away
     // without going through the normal CloseDocumentInCurrentTab path
-    if (htmlWindow || htmlWindowCb) {
+    if (docView || htmlWindowCb) {
         RemoveParentHwnd();
     }
     htmlWindowCb = new HtmlWindowHandler(this);
-    htmlWindow = HtmlWindow::Create(hwnd, htmlWindowCb);
-    if (!htmlWindow) {
+    docView = ChmDocView::Create(hwnd, htmlWindowCb);
+    if (!docView) {
         delete htmlWindowCb;
         htmlWindowCb = nullptr;
         return false;
@@ -133,47 +134,47 @@ bool ChmModel::SetParentHwnd(HWND hwnd) {
 }
 
 void ChmModel::RemoveParentHwnd() {
-    if (!htmlWindow && !htmlWindowCb) {
+    if (!docView && !htmlWindowCb) {
         return;
     }
-    delete htmlWindow;
-    htmlWindow = nullptr;
+    delete docView;
+    docView = nullptr;
     delete htmlWindowCb;
     htmlWindowCb = nullptr;
 }
 
 void ChmModel::PrintCurrentPage(bool showUI) const {
-    if (htmlWindow) {
-        htmlWindow->PrintCurrentPage(showUI);
+    if (docView) {
+        docView->PrintCurrentPage(showUI);
     }
 }
 
 void ChmModel::FindInCurrentPage() const {
-    if (htmlWindow) {
-        htmlWindow->FindInCurrentPage();
+    if (docView) {
+        docView->FindInCurrentPage();
     }
 }
 
 void ChmModel::SelectAll() const {
-    if (htmlWindow) {
-        htmlWindow->SelectAll();
+    if (docView) {
+        docView->SelectAll();
     }
 }
 
 void ChmModel::CopySelection() const {
-    if (htmlWindow) {
-        htmlWindow->CopySelection();
+    if (docView) {
+        docView->CopySelection();
     }
 }
 
 static bool gSendingHtmlWindowMsg = false;
 
 LRESULT ChmModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
-    if (!htmlWindow || gSendingHtmlWindowMsg) {
+    if (!docView || gSendingHtmlWindowMsg) {
         return 0;
     }
     gSendingHtmlWindowMsg = true;
-    auto res = htmlWindow->SendMsg(msg, wp, lp);
+    auto res = docView->SendMsg(msg, wp, lp);
     gSendingHtmlWindowMsg = false;
     return res;
 }
@@ -214,7 +215,10 @@ bool ChmModel::DisplayPage(const char* pageUrl) {
         pageUrl++;
     }
 
-    htmlWindow->NavigateToDataUrl(pageUrl);
+    if (!docView) {
+        return false;
+    }
+    docView->NavigateToDataUrl(pageUrl);
     return pageNo > 0;
 }
 
@@ -238,27 +242,27 @@ bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler*) {
 }
 
 bool ChmModel::CanNavigate(int dir) const {
-    if (!htmlWindow) {
+    if (!docView) {
         return false;
     }
     if (dir < 0) {
-        return htmlWindow->canGoBack;
+        return docView->canGoBack;
     }
-    return htmlWindow->canGoForward;
+    return docView->canGoForward;
 }
 
 void ChmModel::Navigate(int dir) {
-    if (!htmlWindow) {
+    if (!docView) {
         return;
     }
 
     if (dir < 0) {
         for (; dir < 0 && CanNavigate(dir); dir++) {
-            htmlWindow->GoBack();
+            docView->GoBack();
         }
     } else {
         for (; dir > 0 && CanNavigate(dir); dir--) {
-            htmlWindow->GoForward();
+            docView->GoForward();
         }
     }
 }
@@ -295,16 +299,16 @@ void ChmModel::SetZoomVirtual(float zoom, Point*) {
 }
 
 void ChmModel::ZoomTo(float zoomLevel) const {
-    if (htmlWindow) {
-        htmlWindow->SetZoomPercent((int)zoomLevel);
+    if (docView) {
+        docView->SetZoomPercent((int)zoomLevel);
     }
 }
 
 float ChmModel::GetZoomVirtual(bool) const {
-    if (!htmlWindow) {
+    if (!docView) {
         return 100;
     }
-    return (float)htmlWindow->GetZoomPercent();
+    return (float)docView->GetZoomPercent();
 }
 
 class ChmTocBuilder : public EbookTocVisitor {

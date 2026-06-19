@@ -182,7 +182,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
 // Intercept accelerator keys so the host can handle app shortcuts.
 class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHandler {
   public:
-    explicit webview2_accel_handler(HWND hwnd) : m_hwnd(hwnd) {}
+    webview2_accel_handler(HWND hwnd, WebviewWnd* wnd) : m_hwnd(hwnd), m_wnd(wnd) {}
     ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
     ULONG STDMETHODCALLTYPE Release() {
         ULONG n = --m_refCount;
@@ -222,24 +222,26 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
             return S_OK;
         }
 
-        bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-        bool isAppAccel = false;
-        if (ctrl && (vk == 'O' || vk == 'P' || vk == 'S' || vk == 'F' || vk == 'G' || vk == 'C' || vk == 'V' ||
-                     vk == 'W' || vk == 'N' || vk == 'K')) {
-            isAppAccel = true;
-        }
-        if (vk == VK_F3) {
-            isAppAccel = true;
-        }
-
-        if (isAppAccel) {
-            args->put_Handled(TRUE);
-            HWND root = GetAncestor(m_hwnd, GA_ROOT);
-            if (root && ::IsWindow(root)) {
-                PostMessageW(root, WM_KEYDOWN, (WPARAM)vk, 0);
-                PostMessageW(root, WM_KEYUP, (WPARAM)vk, 0);
+        if (!m_wnd || m_wnd->forwardAppAccelerators) {
+            bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+            bool isAppAccel = false;
+            if (ctrl && (vk == 'O' || vk == 'P' || vk == 'S' || vk == 'F' || vk == 'G' || vk == 'C' || vk == 'V' ||
+                         vk == 'W' || vk == 'N' || vk == 'K')) {
+                isAppAccel = true;
             }
-            return S_OK;
+            if (vk == VK_F3) {
+                isAppAccel = true;
+            }
+
+            if (isAppAccel) {
+                args->put_Handled(TRUE);
+                HWND root = GetAncestor(m_hwnd, GA_ROOT);
+                if (root && ::IsWindow(root)) {
+                    PostMessageW(root, WM_KEYDOWN, (WPARAM)vk, 0);
+                    PostMessageW(root, WM_KEYUP, (WPARAM)vk, 0);
+                }
+                return S_OK;
+            }
         }
         return S_OK;
     }
@@ -247,6 +249,212 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
   private:
     ULONG m_refCount = 1;
     HWND m_hwnd = nullptr;
+    WebviewWnd* m_wnd = nullptr;
+};
+
+static TempWStr UriPathFromPrefix(const WCHAR* uri, const WCHAR* prefix);
+
+static TempStr UrlForWebViewEvent(const WCHAR* uri, const WCHAR* prefix) {
+    if (!uri) {
+        return nullptr;
+    }
+    if (prefix && str::StartsWith(uri, prefix)) {
+        TempWStr pathW = UriPathFromPrefix(uri, prefix);
+        if (!pathW) {
+            return nullptr;
+        }
+        TempStr path = ToUtf8Temp(pathW);
+        str::Free(pathW);
+        return path;
+    }
+    return ToUtf8Temp(uri);
+}
+
+static void UpdateWebViewHistory(WebviewWnd* wnd) {
+    if (!wnd || !wnd->events.historyChanged || !wnd->webview) {
+        return;
+    }
+    BOOL canGoBack = FALSE;
+    BOOL canGoForward = FALSE;
+    wnd->webview->get_CanGoBack(&canGoBack);
+    wnd->webview->get_CanGoForward(&canGoForward);
+    wnd->events.historyChanged(wnd->events.ctx, canGoBack != FALSE, canGoForward != FALSE);
+}
+
+class webview2_navigation_starting_handler : public ICoreWebView2NavigationStartingEventHandler {
+  public:
+    explicit webview2_navigation_starting_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2NavigationStartingEventHandler)) {
+            *ppv = static_cast<ICoreWebView2NavigationStartingEventHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2NavigationStartingEventArgs* args) {
+        if (!args || !m_wnd || !m_wnd->events.navigationStarting) {
+            return S_OK;
+        }
+        WCHAR* uri = nullptr;
+        if (FAILED(args->get_Uri(&uri)) || !uri) {
+            return S_OK;
+        }
+        TempStr url = UrlForWebViewEvent(uri, m_wnd->resourceUriPrefix);
+        CoTaskMemFree(uri);
+        if (!url) {
+            return S_OK;
+        }
+        bool allow = m_wnd->events.navigationStarting(m_wnd->events.ctx, url, false);
+        if (!allow) {
+            args->put_Cancel(TRUE);
+        }
+        return S_OK;
+    }
+
+  private:
+    WebviewWnd* m_wnd = nullptr;
+    ULONG m_refCount = 1;
+};
+
+class webview2_navigation_completed_handler : public ICoreWebView2NavigationCompletedEventHandler {
+  public:
+    explicit webview2_navigation_completed_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2NavigationCompletedEventHandler)) {
+            *ppv = static_cast<ICoreWebView2NavigationCompletedEventHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2NavigationCompletedEventArgs* args) {
+        if (!args || !m_wnd || !m_wnd->events.navigationCompleted) {
+            return S_OK;
+        }
+        BOOL success = FALSE;
+        args->get_IsSuccess(&success);
+        WCHAR* uri = nullptr;
+        ICoreWebView2* webview = m_wnd->webview;
+        if (webview) {
+            webview->get_Source(&uri);
+        }
+        TempStr url = UrlForWebViewEvent(uri, m_wnd->resourceUriPrefix);
+        if (uri) {
+            CoTaskMemFree(uri);
+        }
+        if (url) {
+            m_wnd->events.navigationCompleted(m_wnd->events.ctx, url, success != FALSE);
+        }
+        UpdateWebViewHistory(m_wnd);
+        return S_OK;
+    }
+
+  private:
+    WebviewWnd* m_wnd = nullptr;
+    ULONG m_refCount = 1;
+};
+
+class webview2_history_changed_handler : public ICoreWebView2HistoryChangedEventHandler {
+  public:
+    explicit webview2_history_changed_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2HistoryChangedEventHandler)) {
+            *ppv = static_cast<ICoreWebView2HistoryChangedEventHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, IUnknown* /*args*/) {
+        UpdateWebViewHistory(m_wnd);
+        return S_OK;
+    }
+
+  private:
+    WebviewWnd* m_wnd = nullptr;
+    ULONG m_refCount = 1;
+};
+
+class webview2_new_window_handler : public ICoreWebView2NewWindowRequestedEventHandler {
+  public:
+    explicit webview2_new_window_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2NewWindowRequestedEventHandler)) {
+            *ppv = static_cast<ICoreWebView2NewWindowRequestedEventHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2NewWindowRequestedEventArgs* args) {
+        if (!args || !m_wnd || !m_wnd->events.navigationStarting) {
+            return S_OK;
+        }
+        WCHAR* uri = nullptr;
+        if (FAILED(args->get_Uri(&uri)) || !uri) {
+            return S_OK;
+        }
+        TempStr url = UrlForWebViewEvent(uri, m_wnd->resourceUriPrefix);
+        CoTaskMemFree(uri);
+        args->put_Handled(TRUE);
+        if (url) {
+            m_wnd->events.navigationStarting(m_wnd->events.ctx, url, true);
+        }
+        return S_OK;
+    }
+
+  private:
+    WebviewWnd* m_wnd = nullptr;
+    ULONG m_refCount = 1;
 };
 
 class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler {
@@ -419,7 +627,9 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
         }
 
         CreateWebResourceResponseFromData(args, res.data, res.dataLen, res.contentType, 200);
-        free(res.data);
+        if (res.ownsData) {
+            free(res.data);
+        }
         str::Free(res.contentType);
         return S_OK;
     }
@@ -595,7 +805,7 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
     }
 
     {
-        webview2_accel_handler* accelHandler = new webview2_accel_handler(hwnd);
+        webview2_accel_handler* accelHandler = new webview2_accel_handler(hwnd, this);
         ::EventRegistrationToken token = {};
         if (SUCCEEDED(controller->add_AcceleratorKeyPressed(accelHandler, &token))) {
             accelHandler->Release();
@@ -613,6 +823,40 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
             resourceHandler->Release();
         } else {
             resourceHandler->Release();
+        }
+    }
+
+    if (events.navigationStarting || events.navigationCompleted || events.historyChanged) {
+        ::EventRegistrationToken token = {};
+        if (events.navigationStarting) {
+            auto* handler = new webview2_navigation_starting_handler(this);
+            if (SUCCEEDED(webview->add_NavigationStarting(handler, &token))) {
+                handler->Release();
+            } else {
+                handler->Release();
+            }
+            auto* newWindowHandler = new webview2_new_window_handler(this);
+            if (SUCCEEDED(webview->add_NewWindowRequested(newWindowHandler, &token))) {
+                newWindowHandler->Release();
+            } else {
+                newWindowHandler->Release();
+            }
+        }
+        if (events.navigationCompleted) {
+            auto* handler = new webview2_navigation_completed_handler(this);
+            if (SUCCEEDED(webview->add_NavigationCompleted(handler, &token))) {
+                handler->Release();
+            } else {
+                handler->Release();
+            }
+        }
+        if (events.historyChanged) {
+            auto* handler = new webview2_history_changed_handler(this);
+            if (SUCCEEDED(webview->add_HistoryChanged(handler, &token))) {
+                handler->Release();
+            } else {
+                handler->Release();
+            }
         }
     }
 
@@ -680,6 +924,52 @@ void WebviewWnd::Navigate(const char* url) {
     }
     TempWStr ws = ToWStrTemp(url);
     webview->Navigate(ws);
+}
+
+void WebviewWnd::GoBack() {
+    if (webview) {
+        webview->GoBack();
+    }
+}
+
+void WebviewWnd::GoForward() {
+    if (webview) {
+        webview->GoForward();
+    }
+}
+
+void WebviewWnd::SetZoomPercent(int zoom) {
+    if (controller) {
+        double factor = (double)zoom / 100.0;
+        controller->put_ZoomFactor(factor);
+    }
+}
+
+int WebviewWnd::GetZoomPercent() const {
+    if (!controller) {
+        return 100;
+    }
+    double factor = 1.0;
+    controller->get_ZoomFactor(&factor);
+    return (int)(factor * 100.0 + 0.5);
+}
+
+bool WebviewWnd::CanGoBack() const {
+    if (!webview) {
+        return false;
+    }
+    BOOL canGoBack = FALSE;
+    webview->get_CanGoBack(&canGoBack);
+    return canGoBack != FALSE;
+}
+
+bool WebviewWnd::CanGoForward() const {
+    if (!webview) {
+        return false;
+    }
+    BOOL canGoForward = FALSE;
+    webview->get_CanGoForward(&canGoForward);
+    return canGoForward != FALSE;
 }
 
 void WebviewWnd::Focus() {
@@ -905,6 +1195,18 @@ void WebviewWnd::Eval(const char*) {}
 void WebviewWnd::SetHtml(const char*) {}
 void WebviewWnd::Init(const char*) {}
 void WebviewWnd::Navigate(const char*) {}
+void WebviewWnd::GoBack() {}
+void WebviewWnd::GoForward() {}
+void WebviewWnd::SetZoomPercent(int) {}
+int WebviewWnd::GetZoomPercent() const {
+    return 100;
+}
+bool WebviewWnd::CanGoBack() const {
+    return false;
+}
+bool WebviewWnd::CanGoForward() const {
+    return false;
+}
 void WebviewWnd::Focus() {}
 bool WebviewWnd::Embed(WebViewMsgCb&) {
     return false;

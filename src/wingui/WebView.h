@@ -14,6 +14,14 @@ struct WebViewResourceResult {
     char* data = nullptr;
     size_t dataLen = 0;
     char* contentType = nullptr;
+    bool ownsData = true;
+};
+
+struct WebViewEvents {
+    void* ctx = nullptr;
+    bool (*navigationStarting)(void* ctx, const char* url, bool newWindow) = nullptr;
+    void (*navigationCompleted)(void* ctx, const char* url, bool success) = nullptr;
+    void (*historyChanged)(void* ctx, bool canGoBack, bool canGoForward) = nullptr;
 };
 
 struct WebViewResourceProvider {
@@ -48,6 +56,12 @@ struct WebviewWnd : Wnd {
     void SetHtml(const char* html);
     void Init(const char* js);
     void Navigate(const char* url);
+    void GoBack();
+    void GoForward();
+    void SetZoomPercent(int zoom);
+    int GetZoomPercent() const;
+    bool CanGoBack() const;
+    bool CanGoForward() const;
     void Focus();
     bool Embed(WebViewMsgCb& cb);
     void OnControllerReady(ICoreWebView2Controller* controller);
@@ -81,5 +95,7 @@ struct WebviewWnd : Wnd {
     WCHAR* userDataFolder = nullptr;
     WCHAR* resourceUriPrefix = nullptr;
     WebViewResourceProvider resourceProvider;
+    WebViewEvents events;
+    bool forwardAppAccelerators = true;
     Vec<PendingWebViewOp> pendingOps;
 };

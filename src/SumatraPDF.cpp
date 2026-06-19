@@ -6416,6 +6416,7 @@ static bool ManualGetResource(void* ctx, const char* path, WebViewResourceResult
     res->data = (char*)data;
     res->dataLen = fi->uncompressedSize;
     res->contentType = ManualMimeFromPath(path);
+    res->ownsData = true;
     return true;
 }
 
