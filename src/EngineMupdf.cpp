@@ -616,25 +616,53 @@ static inline int WcharsPerRune(int rune) {
     return 1;
 }
 
-static void AddChar(fz_stext_line* line, fz_stext_char* c, WStrBuilder& s, Vec<Rect>& rects) {
+struct SeenGlyph {
+    int rune;
+    Rect r;
+};
+
+static bool HasSeenGlyph(const Vec<SeenGlyph>& seen, int rune, const Rect& r) {
+    for (const SeenGlyph& glyph : seen) {
+        if (glyph.rune != rune) {
+            continue;
+        }
+        if (abs(glyph.r.x - r.x) <= 1 && abs(glyph.r.y - r.y) <= 1 && abs(glyph.r.dx - r.dx) <= 1 &&
+            abs(glyph.r.dy - r.dy) <= 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void AddSeenGlyph(Vec<SeenGlyph>& seen, int rune, const Rect& r) {
+    seen.Append({rune, r});
+}
+
+static void AddChar(fz_stext_line* line, fz_stext_char* c, WStrBuilder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
+    int rune = c->c;
+    if (HasSeenGlyph(seen, rune, r)) {
+        return;
+    }
 
-    int n = WcharsPerRune(c->c);
+    int n = WcharsPerRune(rune);
     if (n == 2) {
         WCHAR tmp[2];
-        tmp[0] = 0xD800 | ((c->c - 0x10000) >> 10) & 0x3FF;
-        tmp[1] = 0xDC00 | (c->c - 0x10000) & 0x3FF;
+        tmp[0] = 0xD800 | ((rune - 0x10000) >> 10) & 0x3FF;
+        tmp[1] = 0xDC00 | (rune - 0x10000) & 0x3FF;
         s.Append(tmp, 2);
         rects.Append(r);
         rects.Append(r);
+        AddSeenGlyph(seen, rune, r);
         return;
     }
-    WCHAR wc = c->c;
+    WCHAR wc = rune;
     bool isNonPrintable = (wc <= 32) || str::IsNonCharacter(wc);
     if (!isNonPrintable) {
         s.AppendChar(wc);
         rects.Append(r);
+        AddSeenGlyph(seen, rune, r);
         return;
     }
 
@@ -642,6 +670,7 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, WStrBuilder& s, Vec<R
     if (!str::IsWs(wc)) {
         s.AppendChar(L'?');
         rects.Append(r);
+        AddSeenGlyph(seen, rune, r);
         return;
     }
 
@@ -650,6 +679,7 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, WStrBuilder& s, Vec<R
     if (!str::IsWs(prev)) {
         s.AppendChar(L' ');
         rects.Append(r);
+        AddSeenGlyph(seen, rune, r);
     }
 }
 
@@ -671,16 +701,20 @@ static void AddLineSep(WStrBuilder& s, Vec<Rect>& rects, const WCHAR* lineSep, s
 
 // UTF-8 variant: append `c` as up to 4 UTF-8 bytes to `s` and the same
 // rect `r` for each byte, so rects.size() == s.size() holds.
-static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, StrBuilder& s, Vec<Rect>& rects) {
+static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, StrBuilder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
-
     int rune = c->c;
+    if (HasSeenGlyph(seen, rune, r)) {
+        return;
+    }
+
     bool isWhitespace = rune > 0 && rune <= 0x7f && str::IsWs((WCHAR)rune);
     bool isNonPrintable = rune <= 32 || str::IsNonCharacter((WCHAR)rune);
     if (isNonPrintable && !isWhitespace) {
         s.AppendChar('?');
         rects.Append(r);
+        AddSeenGlyph(seen, rune, r);
         return;
     }
     if (isWhitespace) {
@@ -691,6 +725,7 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, StrBuilder& s, Vec<Rec
         }
         s.AppendChar(' ');
         rects.Append(r);
+        AddSeenGlyph(seen, rune, r);
         return;
     }
     char buf[4];
@@ -699,6 +734,7 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, StrBuilder& s, Vec<Rec
     for (int i = 0; i < n; i++) {
         rects.Append(r);
     }
+    AddSeenGlyph(seen, rune, r);
 }
 
 static void AddLineSepUtf8(StrBuilder& s, Vec<Rect>& rects, const char* lineSep) {
@@ -721,6 +757,7 @@ static char* FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
     const char* lineSep = "\n";
     StrBuilder content;
     Vec<Rect> rects;
+    Vec<SeenGlyph> seen;
 
     fz_stext_block* block = text->first_block;
     while (block) {
@@ -732,7 +769,7 @@ static char* FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
         while (line) {
             fz_stext_char* c = line->first_char;
             while (c) {
-                AddCharUtf8(line, c, content, rects);
+                AddCharUtf8(line, c, content, rects, seen);
                 c = c->next;
             }
             AddLineSepUtf8(content, rects, lineSep);
@@ -757,6 +794,7 @@ static WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut) {
     // coordsOut is optional but we ask for it by default so we simplify the code
     // by always calculating it
     Vec<Rect> rects;
+    Vec<SeenGlyph> seen;
 
     fz_stext_block* block = text->first_block;
     while (block) {
@@ -768,7 +806,7 @@ static WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut) {
         while (line) {
             fz_stext_char* c = line->first_char;
             while (c) {
-                AddChar(line, c, content, rects);
+                AddChar(line, c, content, rects, seen);
                 c = c->next;
             }
             AddLineSep(content, rects, lineSep, lineSepLen);
