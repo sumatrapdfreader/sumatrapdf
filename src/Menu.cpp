@@ -864,6 +864,27 @@ static MenuDef menuDefContextImage[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Image)
 
+//[ ACCESSKEY_GROUP Context Menu (Document AI chat)
+static MenuDef menuDefDocumentAIChat[] = {
+    {
+        _TRN("Grok Build"),
+        CmdAIChatWithGrokBuild,
+    },
+    {
+        _TRN("OpenAI Codex"),
+        CmdAIChatWithOpenAICodex,
+    },
+    {
+        _TRN("Claude Code"),
+        CmdAIChatWithClaudeCode,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Context Menu (Document AI chat)
+
 //[ ACCESSKEY_GROUP Context Menu (Document )
 static MenuDef menuDefDocumentOperations[] = {
     {
@@ -871,16 +892,8 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdProperties,
     },
     {
-        _TRN("Claude chat"),
-        CmdAIChatWithClaudeCode,
-    },
-    {
-        _TRN("Grok chat"),
-        CmdAIChatWithGrokBuild,
-    },
-    {
-        _TRN("Codex chat"),
-        CmdAIChatWithOpenAICodex,
+        _TRN("AI chat using"),
+        (UINT_PTR)menuDefDocumentAIChat,
     },
     {
         _TRN("Show PDF Info"),
@@ -1680,6 +1693,10 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         if (isSubMenu) {
             HMENU subMenu = BuildMenuFromDef(subMenuDef, CreatePopupMenu(), ctx);
+            if (GetMenuItemCount(subMenu) == 0) {
+                DestroyMenu(subMenu);
+                continue;
+            }
             UINT flags = MF_POPUP | (disableMenu ? MF_DISABLED : MF_ENABLED);
             if (subMenuDef == menuDefFile) {
                 DynamicPartOfFileMenu(subMenu, ctx);
