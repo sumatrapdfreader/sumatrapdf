@@ -84,6 +84,7 @@ CmdChangeBackgroundColor,,Change Background Color,"Opens color picker to change 
 CmdToggleToolbar,F8,Toggle Toolbar,
 CmdToggleChmUI,,Toggle CHM UI,"Toggle dedicated CHM UI for CHM documents, reloading the current CHM document, ver 3.7+"
 CmdAIChatWithClaudeCode,,AI Chat with document using Claude Code,"Toggle Claude Code chat sidebar, ver 3.7+. See AI-Chat-with-document.md"
+CmdAIChatWithGrokBuild,,AI Chat with document using Grok Build,"Toggle Grok Build chat sidebar, ver 3.7+. See AI-Chat-with-document.md#grok-build"
 CmdToggleUseTabs,,Toggle Use Tabs,"Toggle UseTabs setting, only affects new windows, ver 3.7+"
 CmdToggleTabsMru,,Toggle Tabs MRU Order,"Toggle TabsMru setting: Ctrl+Tab switches tabs in most recently used order, ver 3.7+"
 CmdToggleFrequentlyRead,,Toggle Frequently Read,ver 3.5+

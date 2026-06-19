@@ -239,6 +239,7 @@ export const commands = [
     "CmdExpandToCurrentPage", "Expand TOC to Current Page",
     "CmdStartAutoScroll", "Start Auto-Scroll",
     "CmdAIChatWithClaudeCode", "AI Chat with document using Claude Code",
+    "CmdAIChatWithGrokBuild", "AI Chat with document using Grok Build",
     "CmdNone", "Do nothing",
 ];
 

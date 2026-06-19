@@ -40,6 +40,7 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 #include "ClaudeCode.h"
+#include "GrokBuild.h"
 
 #include "utils/Log.h"
 
@@ -318,6 +319,14 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
             return false;
         }
         if (!ctx.isDocLoaded || !IsClaudeCodeSupportedForFile(ctx.filePath, ctx.engineKind)) {
+            return false;
+        }
+    }
+    if (cmdId == CmdAIChatWithGrokBuild) {
+        if (!IsGrokBuildAvailable()) {
+            return false;
+        }
+        if (!ctx.isDocLoaded || !IsGrokBuildSupportedForFile(ctx.filePath, ctx.engineKind)) {
             return false;
         }
     }

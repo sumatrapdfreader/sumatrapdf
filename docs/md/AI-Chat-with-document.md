@@ -2,7 +2,9 @@
 
 **Available in pre-release 3.7+ on Windows 10 or later.**
 
-SumatraPDF can show a chat sidebar where you ask questions about the document you are reading. Answers come from [Claude Code](https://docs.anthropic.com/en/docs/claude-code) running on your computer — SumatraPDF does not send your files to its own servers.
+SumatraPDF can show a chat sidebar where you ask questions about the document you are reading. Answers come from an AI agent CLI running on your computer — SumatraPDF does not send your files to its own servers.
+
+Two backends are supported: [Claude Code](#claude-code) and [Grok Build](#grok-build).
 
 ## Claude Code
 
@@ -15,6 +17,18 @@ Install and set up Claude Code using Anthropic's official guide:
 - [Set up Claude Code](https://code.claude.com/docs/en/setup)
 
 After installation, make sure `claude` (or `claude.exe`) is on your `PATH`, or in one of the usual install locations under your user profile.
+
+## Grok Build
+
+This feature can also use **[Grok Build](https://x.ai/news/grok-build-cli)** (the `grok` command-line tool).
+
+If Grok Build is missing, the chat panel shows an error such as *Cannot find grok. Is Grok Build installed?*
+
+Install Grok Build and sign in using xAI's instructions. SumatraPDF looks for `grok.exe` in `%USERPROFILE%\.grok\bin\` and on `PATH`.
+
+Open the panel with **View → AI Chat with document using Grok Build** (`CmdAIChatWithGrokBuild`), or search for `Grok` in the command palette.
+
+Grok Build settings are in the `GrokBuild` section of [advanced settings](Advanced-options-settings.md). The **Always Approve** checkbox passes `--always-approve` to Grok Build.
 
 ## How to use
 
@@ -53,7 +67,7 @@ You can assign your own keyboard shortcut to `CmdAIChatWithClaudeCode` — there
 
 ## See also
 
-- [Commands](Commands.md) — `CmdAIChatWithClaudeCode`
+- [Commands](Commands.md) — `CmdAIChatWithClaudeCode`, `CmdAIChatWithGrokBuild`
 - [Command Palette](Command-Palette.md)
 - [Advanced options / settings](Advanced-options-settings.md) — `ClaudeCode` section
 - [Version history](Version-history.md) — 3.7 AI Chat entry

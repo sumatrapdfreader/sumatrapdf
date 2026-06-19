@@ -74,6 +74,12 @@ WindowTab::~WindowTab() {
         TerminateProcess(claudeProcess, 0);
         CloseHandle(claudeProcess);
     }
+    str::Free(grokSessionId);
+    delete grokChatLog;
+    if (grokProcess) {
+        TerminateProcess(grokProcess, 0);
+        CloseHandle(grokProcess);
+    }
 }
 
 bool WindowTab::IsDocLoaded() const {

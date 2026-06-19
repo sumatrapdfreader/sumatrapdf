@@ -244,7 +244,8 @@ enum {
     CmdExpandToCurrentPage = 433,
     CmdStartAutoScroll = 434,
     CmdAIChatWithClaudeCode = 435,
-    CmdNone = 436,
+    CmdAIChatWithGrokBuild = 436,
+    CmdNone = 437,
 
     /* range for file history */
     CmdFileHistoryFirst,

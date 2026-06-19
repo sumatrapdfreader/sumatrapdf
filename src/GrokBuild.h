@@ -1,0 +1,22 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+struct MainWindow;
+struct WindowTab;
+
+bool IsGrokBuildAvailable();
+bool IsGrokBuildInstalled();
+bool IsGrokBuildSupportedForFile(const char* filePath, Kind engineKind = nullptr);
+bool IsGrokBuildSupportedForTab(WindowTab* tab);
+
+void CreateGrokPanel(MainWindow* win);
+void OnAIChatWithGrokBuild(MainWindow* win);
+void ToggleGrokPanel(MainWindow* win);
+void ShutdownGrokForMainWindow(MainWindow* win);
+void DestroyGrokPanel(MainWindow* win);
+void OnGrokTabChanged(MainWindow* win);
+
+// called from SumatraPDF.cpp for width change relayout
+void RelayoutForGrokSplitter(MainWindow* win);
+// reposition children and repaint after the container is moved/resized
+void RelayoutGrokPanel(MainWindow* win);

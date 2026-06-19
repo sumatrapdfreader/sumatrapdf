@@ -155,7 +155,7 @@ struct MainWindow {
     TreeView* favTreeView = nullptr;
     Vec<FileState*> expandedFavorites;
 
-    // Claude Code chat sidebar (right side)
+    // AI chat sidebars (right side; Claude Code and Grok Build are mutually exclusive)
     HWND hwndClaudeBox = nullptr;
     UINT_PTR claudeBoxSubclassId = 0;
     LabelWithCloseWnd* claudeLabelWithClose = nullptr;
@@ -170,6 +170,21 @@ struct MainWindow {
     Splitter* claudeSplitter = nullptr;
     bool claudeVisible = false;
     int claudeDx = 0;
+
+    HWND hwndGrokBox = nullptr;
+    UINT_PTR grokBoxSubclassId = 0;
+    LabelWithCloseWnd* grokLabelWithClose = nullptr;
+    HWND hwndGrokSessionCombo = nullptr;
+    WebviewWnd* grokWebView = nullptr;
+    bool grokWebViewReady = false;
+    HWND hwndGrokModelCombo = nullptr;
+    HWND hwndGrokEffortCombo = nullptr;
+    HWND hwndGrokAlwaysApproveCheck = nullptr;
+    Edit* grokInput = nullptr;
+    HWND hwndGrokStopBtn = nullptr;
+    Splitter* grokSplitter = nullptr;
+    bool grokVisible = false;
+    int grokDx = 0;
 
     // vertical splitter for resizing left side panel
     Splitter* sidebarSplitter = nullptr;
@@ -272,6 +287,8 @@ struct MainWindow {
         bool showMenuBarRebar = false;
         bool claudeVisible = false;
         int claudeDx = 0;
+        bool grokVisible = false;
+        int grokDx = 0;
     };
     LayoutState lastLayoutState;
 

@@ -72,6 +72,11 @@ struct WindowTab {
     StrBuilder* claudeChatLog = nullptr;
     HANDLE claudeProcess = nullptr;
 
+    // Grok Build session for this tab
+    char* grokSessionId = nullptr;
+    StrBuilder* grokChatLog = nullptr;
+    HANDLE grokProcess = nullptr;
+
     // read aloud: cleaned text that was being read and the utf8 offset
     // within it where the user stopped reading; enables "Continue reading"
     // (reset when the document is closed or reloaded)

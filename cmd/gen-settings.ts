@@ -359,6 +359,30 @@ const chmUI: Field[] = [
   ),
 ];
 
+const grokBuild: Field[] = [
+  mkField(
+    "Model",
+    Str,
+    "grok-composer-2.5-fast",
+    "Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)",
+  ),
+  mkField(
+    "Models",
+    Str,
+    "",
+    "extra Grok model IDs for the dropdown, comma-separated; grok-composer-2.5-fast and grok-build are always included",
+  ),
+  mkField("Effort", Int, 1, "Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max"),
+  mkField(
+    "AlwaysApprove",
+    Bool,
+    false,
+    "if true, pass --always-approve to Grok Build (auto-approve tool executions)",
+  ),
+  mkField("BgColor", Color, "#ffffff", "background color of the Grok Build chat panel"),
+  mkField("SidebarDx", Int, 0, "width of the Grok Build sidebar (0 = use default)"),
+];
+
 const claudeCode: Field[] = [
   mkField(
     "Model",
@@ -891,6 +915,11 @@ const globalPrefs: Field[] = [
   mkEmptyLine(),
   setVersion(
     setExpert(mkStruct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar")),
+    "3.7",
+  ),
+  mkEmptyLine(),
+  setVersion(
+    setExpert(mkStruct("GrokBuild", grokBuild, "settings for the Grok Build chat sidebar")),
     "3.7",
   ),
   mkEmptyLine(),

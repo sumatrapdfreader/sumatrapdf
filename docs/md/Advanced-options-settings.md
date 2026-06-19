@@ -303,7 +303,6 @@ ChmUI [
 ]
 
 ; settings for the Claude Code chat sidebar (introduced in version 3.7)
-; see AI-Chat-with-document.md
 ClaudeCode [
     ; Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if
     ; not in the model list
@@ -323,6 +322,29 @@ ClaudeCode [
     BgColor = #ffffff
 
     ; width of the Claude Code sidebar (0 = use default)
+    SidebarDx = 0
+]
+
+; settings for the Grok Build chat sidebar (introduced in version 3.7)
+GrokBuild [
+    ; Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)
+    Model = grok-composer-2.5-fast
+
+    ; extra Grok model IDs for the dropdown, comma-separated;
+    ; grok-composer-2.5-fast and grok-build are always included
+    Models = 
+
+    ; Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max
+    Effort = 1
+
+    ; if true, pass --always-approve to Grok Build (auto-approve tool
+    ; executions)
+    AlwaysApprove = false
+
+    ; background color of the Grok Build chat panel
+    BgColor = #ffffff
+
+    ; width of the Grok Build sidebar (0 = use default)
     SidebarDx = 0
 ]
 

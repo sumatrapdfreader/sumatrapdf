@@ -43,6 +43,7 @@
 #include "EditAnnotations.h"
 #include "Accelerators.h"
 #include "ClaudeCode.h"
+#include "GrokBuild.h"
 #include "ImageSaveCropResize.h"
 #include "Menu.h"
 
@@ -292,6 +293,10 @@ static MenuDef menuDefView[] = {
     {
         _TRN("AI Chat with document using Claude Code"),
         CmdAIChatWithClaudeCode,
+    },
+    {
+        _TRN("AI Chat with document using Grok Build"),
+        CmdAIChatWithGrokBuild,
     },
     {
         nullptr,
@@ -863,6 +868,10 @@ static MenuDef menuDefDocumentOperations[] = {
     {
         _TRN("AI Chat with document using Claude Code"),
         CmdAIChatWithClaudeCode,
+    },
+    {
+        _TRN("AI Chat with document using Grok Build"),
+        CmdAIChatWithGrokBuild,
     },
     {
         _TRN("Show PDF Info"),
@@ -1519,6 +1528,13 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
         if (!IsClaudeCodeAvailable()) {
             remove = true;
         } else if (ctx && ctx->tab && !IsClaudeCodeSupportedForTab(ctx->tab)) {
+            disable = true;
+        }
+    }
+    if (cmdId == CmdAIChatWithGrokBuild) {
+        if (!IsGrokBuildAvailable()) {
+            remove = true;
+        } else if (ctx && ctx->tab && !IsGrokBuildSupportedForTab(ctx->tab)) {
             disable = true;
         }
     }

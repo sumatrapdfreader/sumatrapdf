@@ -33,6 +33,7 @@
 #include "OverlayScrollbar.h"
 #include "SumatraPDF.h"
 #include "ClaudeCode.h"
+#include "GrokBuild.h"
 #include "MainWindow.h"
 #include "RefHover.h"
 #include "WindowTab.h"
@@ -141,6 +142,7 @@ MainWindow::~MainWindow() {
     delete tabSelectionHistory;
     DeleteVecMembers(staticLinks);
     ShutdownClaudeForMainWindow(this);
+    ShutdownGrokForMainWindow(this);
     auto tabs = Tabs();
     DeleteVecMembers(tabs);
     {
@@ -170,6 +172,7 @@ MainWindow::~MainWindow() {
     }
 
     DestroyClaudePanel(this);
+    DestroyGrokPanel(this);
 
     delete sidebarSplitter;
     delete favSplitter;
