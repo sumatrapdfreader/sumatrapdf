@@ -4,12 +4,12 @@
 // imports them all and runs them. Builds the app once up front (unless
 // --no-build) so the individual tests don't each rebuild.
 //
-// Run:  bun tests/all.ts [--no-build]
+// Run:  bun tests/all.ts [--no-build] [-silent]
 //
 // When adding a new test, add it to tests/ as issue-<n>.ts (exporting testit)
 // and register it in the `tests` array below.
 
-import { buildApp, formatDuration, runTest } from "./util.ts";
+import { buildApp, formatDuration, isSilentArg, runTest } from "./util.ts";
 import { testit as cmdStartAutoScroll } from "./cmd-start-autoscroll.ts";
 import { testit as issue1998 } from "./issue-1998.ts";
 import { testit as issue2693 } from "./issue-2693.ts";
@@ -42,22 +42,32 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-5681", issue5681],
 ];
 
+export type AllTestOptions = {
+  silent?: boolean;
+};
+
 // runs all registered tests in order; throws (stopping) at the first failure
-export async function testit(): Promise<void> {
+export async function testit(opts?: AllTestOptions): Promise<void> {
+  const silent = opts?.silent ?? false;
   const t0 = performance.now();
   for (const [name, fn] of tests) {
-    console.log(`\n========== ${name} ==========`);
-    await runTest(name, fn);
+    if (!silent) {
+      console.log(`\n========== ${name} ==========`);
+    }
+    await runTest(name, fn, { silent });
   }
-  console.log(`\n✅ all ${tests.length} tests passed in ${formatDuration(performance.now() - t0)}`);
+  if (!silent) {
+    console.log(`\n✅ all ${tests.length} tests passed in ${formatDuration(performance.now() - t0)}`);
+  }
 }
 
 if (import.meta.main) {
+  const silent = isSilentArg();
   if (!process.argv.includes("--no-build")) {
-    buildApp();
+    buildApp({ silent });
   }
   try {
-    await testit();
+    await testit({ silent });
   } catch (e) {
     console.error(`\n❌ ${(e as Error)?.message ?? e}`);
     process.exit(1);

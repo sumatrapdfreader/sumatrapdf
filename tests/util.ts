@@ -34,21 +34,55 @@ export function formatDuration(ms: number): string {
   return `${min}m ${remSec.toFixed(1)}s`;
 }
 
+export type RunTestOptions = {
+  silent?: boolean;
+};
+
+function muteConsole(): () => void {
+  const log = console.log;
+  const error = console.error;
+  console.log = () => {};
+  console.error = () => {};
+  return () => {
+    console.log = log;
+    console.error = error;
+  };
+}
+
 // run one test and print pass/fail timing
-export async function runTest(name: string, fn: () => void | Promise<void>): Promise<void> {
+export async function runTest(
+  name: string,
+  fn: () => void | Promise<void>,
+  opts?: RunTestOptions,
+): Promise<void> {
+  const silent = opts?.silent ?? false;
   const t0 = performance.now();
+  const unmute = silent ? muteConsole() : () => {};
   try {
     await fn();
-    console.log(`✅ ${name} passed in ${formatDuration(performance.now() - t0)}`);
+    unmute();
+    const elapsed = formatDuration(performance.now() - t0);
+    if (silent) {
+      console.log(`== ${name} in ${elapsed}`);
+    } else {
+      console.log(`✅ ${name} passed in ${elapsed}`);
+    }
   } catch (e) {
+    unmute();
     const msg = (e as Error)?.message ?? e;
     throw new Error(`${name} failed after ${formatDuration(performance.now() - t0)}: ${msg}`);
   }
 }
 
+export function isSilentArg(argv: string[] = process.argv): boolean {
+  return argv.includes("-silent") || argv.includes("--silent");
+}
+
 // build SumatraPDF-dll.exe the same way cmd/build.ts does
-export function buildApp(): void {
-  console.log("• building SumatraPDF-dll.exe (cmd/build.ts) ...");
+export function buildApp(opts?: { silent?: boolean }): void {
+  if (!opts?.silent) {
+    console.log("• building SumatraPDF-dll.exe (cmd/build.ts) ...");
+  }
   const p = Bun.spawnSync({ cmd: ["bun", join(ROOT, "cmd", "build.ts")], cwd: ROOT, stdout: "inherit", stderr: "inherit" });
   if (p.exitCode !== 0) {
     throw new Error("build failed");
