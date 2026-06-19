@@ -180,6 +180,22 @@ function genCsvTableHTML(records: string[][]): string {
   return out.join("\n");
 }
 
+// Remove the Misc docs index section from the main documentation page
+// (still present in the .md source for the repo / website markdown copy).
+function stripMiscDocsSection(text: string): string {
+  const startMarker = "## Misc docs";
+  const endMarker = "## Downloads";
+  const startIdx = text.indexOf(startMarker);
+  if (startIdx < 0) {
+    return text;
+  }
+  const endIdx = text.indexOf(endMarker, startIdx);
+  if (endIdx < 0) {
+    return text;
+  }
+  return text.slice(0, startIdx) + text.slice(endIdx);
+}
+
 // Replace :columns markers with HTML div tags.
 // markdown-it with html:true will pass the divs through and parse
 // the markdown between them normally.
@@ -212,6 +228,9 @@ function mdToHTML(name: string): string {
 
   const isMainPage = name === "SumatraPDF-documentation.md";
   let text = readFileSync(join(mdDir, name), "utf-8");
+  if (isMainPage) {
+    text = stripMiscDocsSection(text);
+  }
 
   // extract and remove first H1 line before conversion
   let h1Text = "";
@@ -296,13 +315,21 @@ function mdToHTML(name: string): string {
       const ext = extname(fileName).toLowerCase();
 
       if (ext === ".md") {
-        if (!existsSync(join(mdDir, fileName))) {
-          throw new Error(`linked markdown file '${fileName}' not found`);
+        // hosted on the website, not in this repo
+        if (fileName === "SumatraPDF-all-docs-for-llm-ai.md") {
+          tok.attrSet(
+            "href",
+            "https://www.sumatrapdfreader.org/docs/SumatraPDF-all-docs-for-llm-ai.md",
+          );
+        } else {
+          if (!existsSync(join(mdDir, fileName))) {
+            throw new Error(`linked markdown file '${fileName}' not found`);
+          }
+          mdToProcess.push(fileName);
+          let dest = getHTMLFileName(fileName);
+          if (hash) dest += "#" + hash;
+          tok.attrSet("href", dest);
         }
-        mdToProcess.push(fileName);
-        let dest = getHTMLFileName(fileName);
-        if (hash) dest += "#" + hash;
-        tok.attrSet("href", dest);
       }
     }
     return self.renderToken(tokens, idx, options);

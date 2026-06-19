@@ -117,13 +117,6 @@ async function main() {
   rmSync(dstDir, { recursive: true, force: true });
   copyFilesRecur(dstDir, srcDir);
 
-  {
-    const dst = join(dstDir, "SumatraPDF-documentation.md");
-    const src = join(dstDir, "SumatraPDF-documentation-website.md");
-    copyFileNormalized(dst, src);
-    rmSync(src);
-  }
-
   // copy CSS and JS files
   const htmlFiles = ["sumatra.css", "gen_toc.js", "gen_code_copy.js", "favicon.ico"];
   for (const name of htmlFiles) {

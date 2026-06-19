@@ -1,5 +1,7 @@
 [SumatraPDF](https://www.sumatrapdfreader.org/) is a free [PDF, EPUB, MOBI, CHM, XPS, DjVu, CBZ and CBR](Supported-document-formats.md) reader for Windows. It's small, fast, customizable and full of features.
 
+Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? Tell them to read [SumatraPDF all docs for llms](SumatraPDF-all-docs-for-llm-ai.md) first.
+
 ## Documentation for users
 
 :columns
@@ -130,6 +132,26 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 
 [Search text in a PDF](Tool-x-search-pdf.md)
 
+:columns
+
+## Misc docs
+
+:columns
+[Contribute translation](Contribute-translation.md)
+
+[How to submit bug reports](How-to-submit-bug-reports.md)
+
+[Submit crash report](Submit-crash-report.md)
+
+[Reporting printing bugs](Reporting-printing-bugs.md)
+
+[Update check doesnt work?](Update-check-doesnt-work.md)
+
+[Failed to load libmupdf](Failed-to-load-libmupdf.md)
+
+[Corrupted installation](Corrupted-installation.md)
+
+[Why only Windows?](Why-only-Windows.md)
 :columns
 
 ## Downloads
