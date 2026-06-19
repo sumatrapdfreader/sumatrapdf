@@ -563,14 +563,11 @@ static void PopulateSessionCombo(MainWindow* win) {
     int selectedIdx = 0;
     bool foundCurrent = false;
     for (int i = 0; i < sessions.Size(); i++) {
-        TempStr label;
-        int dispLen = str::Leni(sessions[i].display);
-        if (dispLen > 50) {
-            TempStr shortDisp = str::DupTemp(sessions[i].display, 50);
-            label = str::FormatTemp("%.8s: %s...", sessions[i].sessionId, shortDisp);
-        } else {
-            label = str::FormatTemp("%.8s: %s", sessions[i].sessionId, sessions[i].display);
+        const char* display = sessions[i].display;
+        if (str::IsEmpty(display)) {
+            display = "(no description)";
         }
+        TempStr label = ShortenStringUtf8Temp(display, 50);
         WCHAR* labelW = ToWStrTemp(label);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
 
@@ -582,7 +579,7 @@ static void PopulateSessionCombo(MainWindow* win) {
 
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->claudeSessionId && !foundCurrent) {
-        TempStr label = str::FormatTemp("%.8s: (current session)", tab->claudeSessionId);
+        const char* label = "(current session)";
         WCHAR* labelW = ToWStrTemp(label);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
         selectedIdx = sessions.Size() + 1;
