@@ -9,17 +9,17 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [Installation](Installation.md)
 
-[Tabs and windows](Tabs-and-windows.md)
-
-[Finding text](Finding-text.md)
-
-[Hyperlinks](Hyperlinks.md)
-
 [Command Palette](Command-Palette.md)
 
 [Keyboard shortcuts](Keyboard-shortcuts.md)
 
 [Customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md)
+
+[Tabs and windows](Tabs-and-windows.md)
+
+[Finding text](Finding-text.md)
+
+[Hyperlinks](Hyperlinks.md)
 
 [Scrolling, zooming, navigating](Scrolling-and-zooming.md)
 
