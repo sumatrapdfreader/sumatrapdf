@@ -3,6 +3,8 @@
 
 struct MainWindow;
 
+bool IsClaudeCodeAvailable();
+
 void CreateClaudePanel(MainWindow* win);
 void ToggleClaudePanel(MainWindow* win);
 void ShutdownClaudeForMainWindow(MainWindow* win);

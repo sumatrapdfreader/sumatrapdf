@@ -28,6 +28,14 @@
 #include "AppTools.h"
 #include "ClaudeCode.h"
 
+bool IsClaudeCodeAvailable() {
+#ifdef _MSC_VER
+    return IsWindows10OrGreater();
+#else
+    return false;
+#endif
+}
+
 #define IDC_CLAUDE_LABEL_WITH_CLOSE 1110
 #define IDC_CLAUDE_SKIP_PERMS 1111
 #define IDC_CLAUDE_SESSION_COMBO 1112
@@ -1017,6 +1025,25 @@ static void SendClaudeMessage(MainWindow* win) {
     RunAsync(MkFunc0(StartClaudeReadThread, ctx), "ClaudeReadThread");
 }
 
+static void UpdateClaudePanelTitle(MainWindow* win) {
+    if (!win || !win->claudeLabelWithClose) {
+        return;
+    }
+    const char* docName = "document";
+    WindowTab* tab = win->CurrentTab();
+    if (tab) {
+        const char* title = tab->GetTabTitle();
+        if (!str::IsEmpty(title)) {
+            docName = ShortenStringUtf8Temp(title, 16);
+        }
+    }
+    TempStr label = str::FormatTemp("Chat with %s", docName);
+    win->claudeLabelWithClose->SetLabel(label);
+    if (win->claudeVisible && win->hwndClaudeBox) {
+        LayoutClaudeBox(win);
+    }
+}
+
 // --- Layout ---
 static void LayoutClaudeBox(MainWindow* win) {
     HWND hwndContainer = win->hwndClaudeBox;
@@ -1040,11 +1067,15 @@ static void LayoutClaudeBox(MainWindow* win) {
     }
     y += comboDy + 3;
 
-    // bottom: [Model▾][Effort▾][☐Skip] on one row, then input
+    // bottom: input, then [Model▾][Effort▾][☐Skip]
     Size inputSize = win->claudeInput->GetIdealSize();
     int inputDy = inputSize.dy + 4;
     int optRowDy = 32;
-    int bottomDy = optRowDy + 4 + inputDy;
+    if (win->hwndClaudeModelCombo) {
+        int itemH = (int)SendMessageW(win->hwndClaudeModelCombo, CB_GETITEMHEIGHT, (WPARAM)-1, 0);
+        optRowDy = itemH + 8;
+    }
+    int bottomDy = inputDy + 4 + optRowDy;
 
     int webViewDy = rc.dy - y - bottomDy;
     if (webViewDy < 0) {
@@ -1059,6 +1090,18 @@ static void LayoutClaudeBox(MainWindow* win) {
     }
     y += webViewDy;
 
+    // input row: [input box] [Stop] — stop button only visible when working
+    int stopBtnDx = 50;
+    WindowTab* curTab = win->CurrentTab();
+    bool isWorking = (curTab && curTab->claudeProcess != nullptr);
+    if (isWorking && win->hwndClaudeStopBtn) {
+        MoveWindow(win->claudeInput->hwnd, 0, y, rc.dx - stopBtnDx - 2, inputDy, TRUE);
+        MoveWindow(win->hwndClaudeStopBtn, rc.dx - stopBtnDx, y, stopBtnDx, inputDy, TRUE);
+    } else {
+        MoveWindow(win->claudeInput->hwnd, 0, y, rc.dx, inputDy, TRUE);
+    }
+    y += inputDy + 4;
+
     // options row: [Model▾] [Effort▾] [☐Skip]
     {
         int x = 2;
@@ -1072,20 +1115,8 @@ static void LayoutClaudeBox(MainWindow* win) {
             x += thirdDx + 2;
         }
         if (win->hwndClaudeSkipPermsCheck) {
-            MoveWindow(win->hwndClaudeSkipPermsCheck, x, y + 2, rc.dx - x - 2, optRowDy - 4, TRUE);
+            MoveWindow(win->hwndClaudeSkipPermsCheck, x + 8, y, rc.dx - x - 10, optRowDy, TRUE);
         }
-    }
-    y += optRowDy + 4;
-
-    // input row: [input box] [Stop] — stop button only visible when working
-    int stopBtnDx = 50;
-    WindowTab* curTab = win->CurrentTab();
-    bool isWorking = (curTab && curTab->claudeProcess != nullptr);
-    if (isWorking && win->hwndClaudeStopBtn) {
-        MoveWindow(win->claudeInput->hwnd, 0, y, rc.dx - stopBtnDx - 2, inputDy, TRUE);
-        MoveWindow(win->hwndClaudeStopBtn, rc.dx - stopBtnDx, y, stopBtnDx, inputDy, TRUE);
-    } else {
-        MoveWindow(win->claudeInput->hwnd, 0, y, rc.dx, inputDy, TRUE);
     }
 }
 
@@ -1093,7 +1124,7 @@ static void LayoutClaudeBox(MainWindow* win) {
 static LRESULT CALLBACK WndProcClaudeInput(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
                                            DWORD_PTR data) {
     MainWindow* win = (MainWindow*)data;
-    if (msg == WM_KEYDOWN && wp == VK_RETURN) {
+    if (msg == WM_KEYDOWN && wp == VK_RETURN && !IsShiftPressed()) {
         SendClaudeMessage(win);
         return 0;
     }
@@ -1229,6 +1260,9 @@ static void EnsureWebViewReady(MainWindow* win) {
 
 // --- Public API ---
 void CreateClaudePanel(MainWindow* win) {
+    if (!IsClaudeCodeAvailable()) {
+        return;
+    }
     HMODULE hmod = GetModuleHandle(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
     DWORD style = WS_CHILD | WS_CLIPCHILDREN;
@@ -1258,7 +1292,7 @@ void CreateClaudePanel(MainWindow* win) {
     }
     win->claudeLabelWithClose = label;
     label->SetPaddingXY(2, 2);
-    label->SetLabel("Claude Code");
+    UpdateClaudePanelTitle(win);
 
     // session combo
     win->hwndClaudeSessionCombo =
@@ -1308,7 +1342,8 @@ void CreateClaudePanel(MainWindow* win) {
     {
         Edit::CreateArgs args;
         args.parent = win->hwndClaudeBox;
-        args.isMultiLine = false;
+        args.isMultiLine = true;
+        args.idealSizeLines = 3;
         args.withBorder = true;
         args.cueText = "Ask about this PDF...";
         input->Create(args);
@@ -1351,11 +1386,15 @@ static void AutoSelectRecentSession(MainWindow* win) {
 }
 
 void ToggleClaudePanel(MainWindow* win) {
+    if (!IsClaudeCodeAvailable() || !win->hwndClaudeBox) {
+        return;
+    }
     win->claudeVisible = !win->claudeVisible;
     HwndSetVisibility(win->hwndClaudeBox, win->claudeVisible);
     HwndSetVisibility(win->claudeSplitter->hwnd, win->claudeVisible);
 
     if (win->claudeVisible) {
+        UpdateClaudePanelTitle(win);
         EnsureWebViewReady(win);
         PopulateSessionCombo(win);
         if (win->claudeInput) {
@@ -1369,6 +1408,7 @@ void ToggleClaudePanel(MainWindow* win) {
 
 // call when switching tabs to update session context
 void OnClaudeTabChanged(MainWindow* win) {
+    UpdateClaudePanelTitle(win);
     if (!win->claudeVisible) {
         return;
     }

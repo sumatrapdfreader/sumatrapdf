@@ -39,6 +39,7 @@
 #include "Installer.h"
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
+#include "ClaudeCode.h"
 
 #include "utils/Log.h"
 
@@ -310,6 +311,9 @@ static const char* SkipWS(const char* s) {
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (cmdId <= CmdFirst) {
+        return false;
+    }
+    if (cmdId == CmdClaudeCode && !IsClaudeCodeAvailable()) {
         return false;
     }
     CustomCommand* cmd = FindCustomCommand(cmdId);

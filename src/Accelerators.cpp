@@ -6,6 +6,7 @@
 #include "GlobalPrefs.h"
 #include "Translations.h"
 #include "Commands.h"
+#include "ClaudeCode.h"
 
 #include "Accelerators.h"
 
@@ -739,6 +740,9 @@ void CreateSumatraAcceleratorTable() {
 
     // add built-in but only if the shortcut doesn't conflict with custom shortcut
     for (ACCEL accel : gBuiltInAccelerators) {
+        if (accel.cmd == CmdClaudeCode && !IsClaudeCodeAvailable()) {
+            continue;
+        }
         addShortcutIfNotExists(accel);
     }
 

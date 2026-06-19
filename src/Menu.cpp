@@ -42,6 +42,7 @@
 #include "Toolbar.h"
 #include "EditAnnotations.h"
 #include "Accelerators.h"
+#include "ClaudeCode.h"
 #include "ImageSaveCropResize.h"
 #include "Menu.h"
 
@@ -289,7 +290,7 @@ static MenuDef menuDefView[] = {
         0,
     },
     {
-        _TRN("Claude Code"),
+        _TRN("Chat with document using Claude Code"),
         CmdClaudeCode,
     },
     {
@@ -1508,6 +1509,9 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
         remove |= cmdIdInList(removeIfNoCopyPerms);
     }
     if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
+        remove = true;
+    }
+    if (cmdId == CmdClaudeCode && !IsClaudeCodeAvailable()) {
         remove = true;
     }
 

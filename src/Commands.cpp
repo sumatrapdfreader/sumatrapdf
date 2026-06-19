@@ -726,7 +726,7 @@ SeqStrings gCommandDescriptions =
     "Convert Image To PDF\0"
     "Expand TOC to Current Page\0"
     "Start Auto-Scroll\0"
-    "Claude Code\0"
+    "Chat with document using Claude Code\0"
     "Do nothing\0"
     "\0";
 // clang-format on
