@@ -861,6 +861,10 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdProperties,
     },
     {
+        _TRN("AI Chat with document using Claude Code"),
+        CmdAIChatWithClaudeCode,
+    },
+    {
         _TRN("Show PDF Info"),
         CmdPdShowInfo,
     },
