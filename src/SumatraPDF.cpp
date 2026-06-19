@@ -6870,7 +6870,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdAIChatWithClaudeCode:
-            ToggleClaudePanel(win);
+            OnAIChatWithClaudeCode(win);
             break;
 
         case CmdClearHistory:

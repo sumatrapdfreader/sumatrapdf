@@ -5,10 +5,12 @@ struct MainWindow;
 struct WindowTab;
 
 bool IsClaudeCodeAvailable();
+bool IsClaudeCodeInstalled();
 bool IsClaudeCodeSupportedForFile(const char* filePath, Kind engineKind = nullptr);
 bool IsClaudeCodeSupportedForTab(WindowTab* tab);
 
 void CreateClaudePanel(MainWindow* win);
+void OnAIChatWithClaudeCode(MainWindow* win);
 void ToggleClaudePanel(MainWindow* win);
 void ShutdownClaudeForMainWindow(MainWindow* win);
 void DestroyClaudePanel(MainWindow* win);

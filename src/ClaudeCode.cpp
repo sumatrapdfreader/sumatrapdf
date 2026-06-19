@@ -24,6 +24,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
+#include "Translations.h"
 #include "resource.h"
 
 #include "utils/GuessFileType.h"
@@ -38,6 +39,86 @@ bool IsClaudeCodeAvailable() {
 #else
     return false;
 #endif
+}
+
+static TempStr FindClaudeExecutableTemp() {
+#ifdef _MSC_VER
+    TempStr claudePath = nullptr;
+    TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
+    if (userProfile) {
+        TempStr candidates[] = {
+            str::FormatTemp("%s\\.local\\bin\\claude.exe", userProfile),
+            str::FormatTemp("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile),
+            str::FormatTemp("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile),
+        };
+        for (auto& c : candidates) {
+            if (file::Exists(c)) {
+                return c;
+            }
+        }
+    }
+    WCHAR claudePathW[MAX_PATH];
+    if (SearchPathW(nullptr, L"claude.exe", nullptr, MAX_PATH, claudePathW, nullptr) > 0) {
+        return ToUtf8Temp(claudePathW);
+    }
+    if (SearchPathW(nullptr, L"claude", L".exe", MAX_PATH, claudePathW, nullptr) > 0) {
+        return ToUtf8Temp(claudePathW);
+    }
+#endif
+    return nullptr;
+}
+
+bool IsClaudeCodeInstalled() {
+    return FindClaudeExecutableTemp() != nullptr;
+}
+
+constexpr int kBtnIdClaudeLearnMore = 100;
+constexpr const char* kClaudeCodeDocURI = "/AI-Chat-with-document#claude-code";
+
+static HRESULT CALLBACK ClaudeCodeNotInstalledDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+                                                             LONG_PTR lpRefData) {
+    switch (msg) {
+        case TDN_HYPERLINK_CLICKED:
+            LaunchDocumentation(kClaudeCodeDocURI);
+            break;
+        case TDN_BUTTON_CLICKED:
+            if ((int)wParam == kBtnIdClaudeLearnMore) {
+                LaunchDocumentation(kClaudeCodeDocURI);
+                return S_FALSE;
+            }
+            break;
+    }
+    return S_OK;
+}
+
+static void ShowClaudeCodeNotInstalledDialog() {
+    const char* mainInstr = _TRA("Claude Code cli must be installed for this functionality");
+    const char* linkLabel = _TRA("AI Chat documentation");
+    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions."), linkLabel);
+
+    TASKDIALOG_BUTTON buttons[2];
+    buttons[0].nButtonID = IDOK;
+    buttons[0].pszButtonText = ToWStrTemp(_TRA("OK"));
+    buttons[1].nButtonID = kBtnIdClaudeLearnMore;
+    buttons[1].pszButtonText = ToWStrTemp(_TRA("Learn more"));
+
+    TASKDIALOGCONFIG dialogConfig{};
+    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.pszWindowTitle = ToWStrTemp(_TRA("AI Chat"));
+    dialogConfig.pszMainInstruction = ToWStrTemp(mainInstr);
+    dialogConfig.pszContent = ToWStrTemp(content);
+    dialogConfig.nDefaultButton = IDOK;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.pfCallback = ClaudeCodeNotInstalledDialogCallback;
+    dialogConfig.pButtons = buttons;
+    dialogConfig.cButtons = dimof(buttons);
+    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
+
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
 bool IsClaudeCodeSupportedForFile(const char* filePath, Kind engineKind) {
@@ -1080,38 +1161,11 @@ static void SendClaudeMessage(MainWindow* win) {
     }
     const char* permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? "--dangerously-skip-permissions" : "";
 
-    // find claude executable
-    TempStr claudePath = nullptr;
-    {
-        // check common install locations
-        TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-        if (userProfile) {
-            TempStr candidates[] = {
-                str::FormatTemp("%s\\.local\\bin\\claude.exe", userProfile),
-                str::FormatTemp("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile),
-                str::FormatTemp("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile),
-            };
-            for (auto& c : candidates) {
-                if (file::Exists(c)) {
-                    claudePath = c;
-                    break;
-                }
-            }
-        }
-        // fallback: SearchPath
-        if (!claudePath) {
-            WCHAR claudePathW[MAX_PATH];
-            if (SearchPathW(nullptr, L"claude.exe", nullptr, MAX_PATH, claudePathW, nullptr) > 0) {
-                claudePath = ToUtf8Temp(claudePathW);
-            } else if (SearchPathW(nullptr, L"claude", L".exe", MAX_PATH, claudePathW, nullptr) > 0) {
-                claudePath = ToUtf8Temp(claudePathW);
-            }
-        }
-        if (!claudePath) {
-            WebViewAddError(win, "Cannot find claude. Is Claude Code installed?");
-            SetClaudeWorking(win, false);
-            return;
-        }
+    TempStr claudePath = FindClaudeExecutableTemp();
+    if (!claudePath) {
+        WebViewAddError(win, "Cannot find claude. Is Claude Code installed?");
+        SetClaudeWorking(win, false);
+        return;
     }
 
     TempStr sessionName = str::FormatTemp("%s", fileName);
@@ -1584,6 +1638,17 @@ static void AutoSelectRecentSession(MainWindow* win) {
     }
 
     FreeSessions(sessions);
+}
+
+void OnAIChatWithClaudeCode(MainWindow* win) {
+    if (!IsClaudeCodeAvailable()) {
+        return;
+    }
+    if (!IsClaudeCodeInstalled()) {
+        ShowClaudeCodeNotInstalledDialog();
+        return;
+    }
+    ToggleClaudePanel(win);
 }
 
 void ToggleClaudePanel(MainWindow* win) {
