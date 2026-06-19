@@ -89,7 +89,7 @@ static void UpdateResizeOverlay(Splitter* splitter, Point pos) {
     InvalidateRect(splitter->resizeOverlayHwnd, nullptr, TRUE);
 }
 
-static LRESULT ResizeOverlayWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+static LRESULT CALLBACK ResizeOverlayWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     if (msg == WM_ERASEBKGND) {
         return TRUE;
     }
