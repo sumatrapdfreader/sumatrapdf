@@ -200,6 +200,62 @@ static ImageEditWindow* FindImageEditWindowByHwnd(HWND hwnd) {
     return nullptr;
 }
 
+static WCHAR UpperW(WCHAR c) {
+    if (c >= L'a' && c <= L'z') {
+        return (WCHAR)(c - L'a' + L'A');
+    }
+    return c;
+}
+
+static void HideKeyboardCues(HWND hwnd) {
+    SendMessageW(hwnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_SET, UISF_HIDEACCEL), 0);
+}
+
+static void RestoreImageEditFocus(ImageEditWindow* ew) {
+    if (!ew || !ew->hwnd) {
+        return;
+    }
+    if (ew->mode == ImageEditMode::Save) {
+        SetFocus(ew->hwndDestEdit);
+    } else {
+        SetFocus(ew->hwnd);
+    }
+}
+
+static bool HasFocusInImageEdit(ImageEditWindow* ew) {
+    if (!ew || !ew->hwnd) {
+        return false;
+    }
+    HWND focus = GetFocus();
+    return focus && (focus == ew->hwnd || IsChild(ew->hwnd, focus));
+}
+
+static bool TriggerImageEditMnemonic(ImageEditWindow* ew, WCHAR key) {
+    if (!ew) {
+        return false;
+    }
+    key = UpperW(key);
+    Button* btns[] = {ew->btnSave, ew->btnCrop, ew->btnResize};
+    for (Button* btn : btns) {
+        if (!btn || !btn->hwnd || !IsWindowEnabled(btn->hwnd)) {
+            continue;
+        }
+        WCHAR buf[256]{};
+        GetWindowTextW(btn->hwnd, buf, dimof(buf) - 1);
+        WCHAR* amp = wcschr(buf, L'&');
+        if (!amp || amp[1] == L'\0') {
+            continue;
+        }
+        if (UpperW(amp[1]) == key) {
+            if (btn->onClick.IsValid()) {
+                btn->onClick.Call();
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 // Convert display coordinates to image coordinates (crop mode)
 static int DisplayToImageX(ImageEditWindow* ew, int dx) {
     if (ew->imgDisplayW <= 0) {
@@ -296,7 +352,7 @@ static void UpdateSaveButtonText(ImageEditWindow* ew) {
     WCHAR destW[MAX_PATH + 1]{};
     GetWindowTextW(ew->hwndDestEdit, destW, MAX_PATH);
     TempStr dest = ToUtf8Temp(destW);
-    const char* text = file::Exists(dest) ? _TRA("Overwrite") : _TRA("Save");
+    const char* text = file::Exists(dest) ? _TRA("&Overwrite") : _TRA("&Save");
     ew->btnSave->SetText(text);
     // re-layout since button width may have changed
     LayoutControls(ew);
@@ -1128,20 +1184,20 @@ static bool IsResizeChanged(ImageEditWindow* ew) {
 
 static void UpdateModeButtons(ImageEditWindow* ew) {
     if (ew->mode == ImageEditMode::Crop) {
-        ew->btnCrop->SetText(_TRA("Apply Crop"));
+        ew->btnCrop->SetText(_TRA("&Apply Crop"));
         ew->btnCrop->SetIsEnabled(IsCropChanged(ew));
-        ew->btnResize->SetText(_TRA("Resize"));
+        ew->btnResize->SetText(_TRA("&Resize"));
         ew->btnResize->SetIsEnabled(true);
     } else if (ew->mode == ImageEditMode::Resize) {
-        ew->btnCrop->SetText(_TRA("Crop"));
+        ew->btnCrop->SetText(_TRA("&Crop"));
         ew->btnCrop->SetIsEnabled(true);
-        ew->btnResize->SetText(_TRA("Apply Resize"));
+        ew->btnResize->SetText(_TRA("&Apply Resize"));
         ew->btnResize->SetIsEnabled(IsResizeChanged(ew));
     } else {
         // Save mode
-        ew->btnCrop->SetText(_TRA("Crop"));
+        ew->btnCrop->SetText(_TRA("&Crop"));
         ew->btnCrop->SetIsEnabled(true);
-        ew->btnResize->SetText(_TRA("Resize"));
+        ew->btnResize->SetText(_TRA("&Resize"));
         ew->btnResize->SetIsEnabled(true);
     }
 }
@@ -1548,6 +1604,29 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return DefWindowProc(hwnd, msg, wp, lp);
         }
 
+        case WM_MOUSEACTIVATE:
+            ew = FindImageEditWindowByHwnd(hwnd);
+            if (ew) {
+                SetFocus(hwnd);
+            }
+            return MA_ACTIVATE;
+
+        case WM_SYSKEYDOWN: {
+            ew = FindImageEditWindowByHwnd(hwnd);
+            if (ew && GetFocus() == hwnd && wp != VK_MENU && TriggerImageEditMnemonic(ew, (WCHAR)wp)) {
+                return 0;
+            }
+            break;
+        }
+
+        case WM_SYSCHAR: {
+            ew = FindImageEditWindowByHwnd(hwnd);
+            if (ew && TriggerImageEditMnemonic(ew, (WCHAR)wp)) {
+                return 0;
+            }
+            break;
+        }
+
         case WM_CHAR:
             if (VK_ESCAPE == wp) {
                 return 0;
@@ -1694,7 +1773,26 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
         }
 
+        case WM_ACTIVATE:
+            // modeless dialog: route Alt+<mnemonic> / Tab via IsDialogMessage in main loop
+            if (LOWORD(wp) == WA_INACTIVE) {
+                if (GetCurrentModelessDialog() == hwnd) {
+                    SetCurrentModelessDialog(nullptr);
+                }
+            } else {
+                SetCurrentModelessDialog(hwnd);
+                ew = FindImageEditWindowByHwnd(hwnd);
+                // menu commands often leave keyboard focus on the main window
+                if (ew && !HasFocusInImageEdit(ew)) {
+                    RestoreImageEditFocus(ew);
+                }
+            }
+            break;
+
         case WM_DESTROY:
+            if (GetCurrentModelessDialog() == hwnd) {
+                SetCurrentModelessDialog(nullptr);
+            }
             ew = FindImageEditWindowByHwnd(hwnd);
             if (ew) {
                 gImageEditWindows.Remove(ew);
@@ -1821,8 +1919,9 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
     } else if (mode == ImageEditMode::Resize) {
         title = L"Resize Image";
     }
-    HWND hwnd = CreateWindowExW(0, kImageEditWinClassName, title, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT,
-                                CW_USEDEFAULT, winW, winH, nullptr, nullptr, h, nullptr);
+    HWND hwnd =
+        CreateWindowExW(WS_EX_CONTROLPARENT, kImageEditWinClassName, title, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+                        CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, nullptr, nullptr, h, nullptr);
     if (!hwnd) {
         gImageEditWindows.Remove(ew);
         delete ew;
@@ -1873,7 +1972,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
         auto* btn = new Button();
         Button::CreateArgs args;
         args.parent = hwnd;
-        args.text = _TRA("Save");
+        args.text = _TRA("&Save");
         btn->Create(args);
         btn->onClick = MkFunc0<ImageEditWindow>(OnSave, ew);
         ew->btnSave = btn;
@@ -1882,7 +1981,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
         auto* btn = new Button();
         Button::CreateArgs args;
         args.parent = hwnd;
-        args.text = _TRA("Crop");
+        args.text = _TRA("&Crop");
         btn->Create(args);
         btn->onClick = MkFunc0<ImageEditWindow>(OnCropButton, ew);
         ew->btnCrop = btn;
@@ -1891,7 +1990,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
         auto* btn = new Button();
         Button::CreateArgs args;
         args.parent = hwnd;
-        args.text = _TRA("Resize");
+        args.text = _TRA("&Resize");
         btn->Create(args);
         btn->onClick = MkFunc0<ImageEditWindow>(OnResizeButton, ew);
         ew->btnResize = btn;
@@ -1937,5 +2036,9 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
     }
+    HideKeyboardCues(hwnd);
     ShowWindow(hwnd, SW_SHOW);
+    SetCurrentModelessDialog(hwnd);
+    HwndToForeground(hwnd);
+    RestoreImageEditFocus(ew);
 }
