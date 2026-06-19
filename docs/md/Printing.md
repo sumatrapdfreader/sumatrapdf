@@ -89,6 +89,9 @@ SumatraPDF exits; check the process exit code for success/failure.
 - `-print-settings "<list>"` — tweak printing without the dialog (see below)
 - `-silent` — suppress error message boxes (for unattended/background printing)
 - `-print-dialog` — show the print dialog instead of printing silently
+- `/p` — Adobe Reader alias for `-print-dialog`
+- `/t <file> <printer>` — Adobe Reader silent print (`/t <printer>` if the file is
+  already on the command line); optional driver/port args are ignored
 - `-exit-when-done` — used with `-print-dialog` (and `-stress-test`); exit after
   the dialog is dismissed and the document printed
 

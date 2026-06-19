@@ -20,50 +20,50 @@
 enum class Arg {
     Unknown = -1,
     Silent = 0, Silent2 = 1, FastInstall = 2, PrintToDefault = 3,
-    PrintDialog = 4, Help = 5, Help2 = 6, Help3 = 7,
-    ExitWhenDone = 8, ExitOnPrint = 9, Restrict = 10, Presentation = 11,
-    FullScreen = 12, InvertColors = 13, InvertColors2 = 14, Console = 15,
-    Install = 16, UnInstall = 17, WithFilter = 18, WithSearch = 19,
-    WithPreview = 20, Rand = 21, Regress = 22, Extract = 23,
-    Tester = 24, TestApp = 25, TestPlugin = 26, TestPreview = 27,
-    NewWindow = 28, Log = 29, LogToFile = 30, CrashOnOpen = 31,
-    ReuseInstance = 32, EscToExit = 33, ArgEnumPrinters = 34, ListPrinters = 35,
-    SleepMs = 36, PrintTo = 37, PrintSettings = 38, InverseSearch = 39,
-    ForwardSearch1 = 40, ForwardSearch2 = 41, NamedDest = 42, NamedDest2 = 43,
-    Page = 44, View = 45, Zoom = 46, Scroll = 47,
-    AppData = 48, Plugin = 49, StressTest = 50, N = 51,
-    Max = 52, MaxFiles = 53, Render = 54, ExtractText = 55,
-    Bench = 56, Dir = 57, InstallDir = 58, Lang = 59,
-    UpdateSelfTo = 60, ArgDeleteFile = 61, BgCol = 62, BgCol2 = 63,
-    FwdSearchOffset = 64, FwdSearchWidth = 65, FwdSearchColor = 66, FwdSearchPermanent = 67,
-    MangaMode = 68, Search = 69, AllUsers = 70, AllUsers2 = 71,
-    RunInstallNow = 72, Adobe = 73, DDE = 74, Pwd = 75,
-    EngineDump = 76, SetColorRange = 77, UpgradeFrom = 78, ForTesting = 79,
-    Control = 80,
+    PrintDialog = 4, PrintDialogAdobe = 5, Help = 6, Help2 = 7,
+    Help3 = 8, ExitWhenDone = 9, ExitOnPrint = 10, Restrict = 11,
+    Presentation = 12, FullScreen = 13, InvertColors = 14, InvertColors2 = 15,
+    Console = 16, Install = 17, UnInstall = 18, WithFilter = 19,
+    WithSearch = 20, WithPreview = 21, Rand = 22, Regress = 23,
+    Extract = 24, Tester = 25, TestApp = 26, TestPlugin = 27,
+    TestPreview = 28, NewWindow = 29, Log = 30, LogToFile = 31,
+    CrashOnOpen = 32, ReuseInstance = 33, EscToExit = 34, ArgEnumPrinters = 35,
+    ListPrinters = 36, SleepMs = 37, PrintTo = 38, PrintSilent = 39,
+    PrintSettings = 40, InverseSearch = 41, ForwardSearch1 = 42, ForwardSearch2 = 43,
+    NamedDest = 44, NamedDest2 = 45, Page = 46, View = 47,
+    Zoom = 48, Scroll = 49, AppData = 50, Plugin = 51,
+    StressTest = 52, N = 53, Max = 54, MaxFiles = 55,
+    Render = 56, ExtractText = 57, Bench = 58, Dir = 59,
+    InstallDir = 60, Lang = 61, UpdateSelfTo = 62, ArgDeleteFile = 63,
+    BgCol = 64, BgCol2 = 65, FwdSearchOffset = 66, FwdSearchWidth = 67,
+    FwdSearchColor = 68, FwdSearchPermanent = 69, MangaMode = 70, Search = 71,
+    AllUsers = 72, AllUsers2 = 73, RunInstallNow = 74, Adobe = 75,
+    DDE = 76, Pwd = 77, EngineDump = 78, SetColorRange = 79,
+    UpgradeFrom = 80, ForTesting = 81, Control = 82,
 };
 
 static const char* gArgNames =
     "s\0" "silent\0" "fast-install\0" "print-to-default\0"
-    "print-dialog\0" "h\0" "?\0" "help\0"
-    "exit-when-done\0" "exit-on-print\0" "restrict\0" "presentation\0"
-    "fullscreen\0" "invertcolors\0" "invert-colors\0" "console\0"
-    "install\0" "uninstall\0" "with-filter\0" "with-search\0"
-    "with-preview\0" "rand\0" "regress\0" "x\0"
-    "tester\0" "testapp\0" "test-plugin\0" "test-preview\0"
-    "new-window\0" "log\0" "log-to-file\0" "crash-on-open\0"
-    "reuse-instance\0" "esc-to-exit\0" "enum-printers\0" "list-printers\0"
-    "sleep-ms\0" "print-to\0" "print-settings\0" "inverse-search\0"
-    "forward-search\0" "fwdsearch\0" "nameddest\0" "named-dest\0"
-    "page\0" "view\0" "zoom\0" "scroll\0"
-    "appdata\0" "plugin\0" "stress-test\0" "n\0"
-    "max\0" "max-files\0" "render\0" "extract-text\0"
-    "bench\0" "d\0" "install-dir\0" "lang\0"
-    "update-self-to\0" "delete-file\0" "bgcolor\0" "bg-color\0"
-    "fwdsearch-offset\0" "fwdsearch-width\0" "fwdsearch-color\0" "fwdsearch-permanent\0"
-    "manga-mode\0" "search\0" "all-users\0" "allusers\0"
-    "run-install-now\0" "a\0" "dde\0" "pwd\0"
-    "engine-dump\0" "set-color-range\0" "upgrade-from\0" "for-testing\0"
-    "dbg-control\0";
+    "print-dialog\0" "p\0" "h\0" "?\0"
+    "help\0" "exit-when-done\0" "exit-on-print\0" "restrict\0"
+    "presentation\0" "fullscreen\0" "invertcolors\0" "invert-colors\0"
+    "console\0" "install\0" "uninstall\0" "with-filter\0"
+    "with-search\0" "with-preview\0" "rand\0" "regress\0"
+    "x\0" "tester\0" "testapp\0" "test-plugin\0"
+    "test-preview\0" "new-window\0" "log\0" "log-to-file\0"
+    "crash-on-open\0" "reuse-instance\0" "esc-to-exit\0" "enum-printers\0"
+    "list-printers\0" "sleep-ms\0" "print-to\0" "t\0"
+    "print-settings\0" "inverse-search\0" "forward-search\0" "fwdsearch\0"
+    "nameddest\0" "named-dest\0" "page\0" "view\0"
+    "zoom\0" "scroll\0" "appdata\0" "plugin\0"
+    "stress-test\0" "n\0" "max\0" "max-files\0"
+    "render\0" "extract-text\0" "bench\0" "d\0"
+    "install-dir\0" "lang\0" "update-self-to\0" "delete-file\0"
+    "bgcolor\0" "bg-color\0" "fwdsearch-offset\0" "fwdsearch-width\0"
+    "fwdsearch-color\0" "fwdsearch-permanent\0" "manga-mode\0" "search\0"
+    "all-users\0" "allusers\0" "run-install-now\0" "a\0"
+    "dde\0" "pwd\0" "engine-dump\0" "set-color-range\0"
+    "upgrade-from\0" "for-testing\0" "dbg-control\0";
 // clang-format on
 // @gen-end flags
 
@@ -174,6 +174,20 @@ static void ParseScrollValue(Point* scroll, const char* txt) {
     if (str::Parse(txt, "%d,%d%$", &x, &y)) {
         *scroll = Point(x, y);
     }
+}
+
+// Adobe Reader /t accepts optional driver and port after the printer name; we ignore them.
+static void SkipOptionalAdobePrinterParams(CmdLineArgsIter& args) {
+    const char* driver = args.AdditionalParam(1);
+    if (!driver || CouldBeArg(driver)) {
+        return;
+    }
+    args.EatParam();
+    const char* port = args.AdditionalParam(1);
+    if (!port || CouldBeArg(port)) {
+        return;
+    }
+    args.EatParam();
 }
 
 static Arg GetArg(const char* s) {
@@ -347,8 +361,34 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             i.exitWhenDone = true;
             continue;
         }
-        if (arg == Arg::PrintDialog) {
+        if (arg == Arg::PrintDialog || arg == Arg::PrintDialogAdobe) {
             i.printDialog = true;
+            continue;
+        }
+        if (arg == Arg::PrintSilent) {
+            // Adobe Reader: /t <file> <printer> [<driver> [<port>]]
+            // also: <file> /t <printer> when the file is given earlier on the cmd-line
+            const char* p1 = args.EatParam();
+            if (!p1) {
+                goto CollectFile;
+            }
+            const char* p2 = args.AdditionalParam(1);
+            if (p2 && !CouldBeArg(p2)) {
+                if (i.fileNames.Size() == 0 || !str::Eq(i.fileNames.At(i.fileNames.Size() - 1), p1)) {
+                    i.fileNames.Append(p1);
+                }
+                i.printerName = str::Dup(args.EatParam());
+            } else if (i.fileNames.Size() > 0) {
+                i.printerName = str::Dup(p1);
+            } else {
+                i.fileNames.Append(p1);
+                i.printerName = str::Dup(GetDefaultPrinterNameTemp());
+                if (!i.printerName) {
+                    i.printDialog = true;
+                }
+            }
+            i.exitWhenDone = true;
+            SkipOptionalAdobePrinterParams(args);
             continue;
         }
         if (arg == Arg::Help || arg == Arg::Help2 || arg == Arg::Help3) {

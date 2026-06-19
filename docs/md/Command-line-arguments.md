@@ -4,7 +4,7 @@ For command-line arguments for the installer see [this page](Installer-cmd-line-
 
 You can launch Sumatra with additional command-line options: `SumatraPDF [argument ...] [filepath ...]`.
 
-All arguments start with dash (-). Some arguments are followed by additional parameter.
+Most arguments start with dash (`-`). Printing options also accept Adobe Reader's slash form (`/p`, `/t`). Some arguments are followed by additional parameters.
 
 Anything that is not recognized as a known option is interpreted as a file path so it's possible to mix file paths and command-line arguments.
 
@@ -70,7 +70,11 @@ For a detailed printing guide with examples for common tasks, see [Printing](Pri
   - For PDF files, print defaults embedded in the document's `ViewerPreferences` are applied automatically: `PrintScaling` (`/None` means no scaling), `NumCopies`, `Duplex` (`Simplex` / `DuplexFlipShortEdge` / `DuplexFlipLongEdge`) and `PickTrayByPDFSize` (pick the tray by page size). Any explicit value in `-print-settings` overrides the PDF's default; add `ignore-pdf-print-settings` to ignore the PDF's values entirely.
 - `-silent` : used in combination with `-print-to` and `-print-to-default`. Silences any error messages related to command line printing.
 - `-print-dialog` : displays the Print dialog for all the files indicated on this command line.
+- `/p` : Adobe Reader compatibility alias for `-print-dialog`.
+- `/t <file> <printer>` : Adobe Reader compatibility for silent printing (same as `-print-to <printer> <file>`). Optional driver and port arguments are accepted and ignored. If the file is already on the command line, `/t <printer>` is enough.
 - `-exit-when-done` : used in combination with `-print-dialog` (and `-stress-test`). Exits SumatraPDF after the Print dialog has been dismissed and the document printed.
+
+Adobe Reader flags that are **not** supported because they conflict with SumatraPDF options: `/h` (help, not hidden mode), `/n` (stress-test parallelism, not new instance), `/s` (silent printing errors, not suppress splash).
 
 When printing with `-print-to` / `-print-to-default`, the process exit code tells you why printing failed (useful for unattended/silent printing):
 
