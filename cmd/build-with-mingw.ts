@@ -8,7 +8,8 @@
  *
  * NOTE: .asm (NASM) files are skipped; C fallbacks are used instead.
  * NOTE: Font embedding (.cff/.ttf/.otf) uses objcopy.
- * NOTE: WebView2 may not be available for mingw builds.
+ * NOTE: WebView2 is not used for mingw builds. WebView.cpp provides stub
+ * implementations; CHM and the in-app manual fall back to IE / online docs.
  */
 
 import { Glob } from "bun";
@@ -1877,8 +1878,6 @@ async function buildSumatraExe(
     "ext/darkmodelib/include",
     "ext/zlib",
     "ext/libarchive",
-    // WebView2 - may not exist for mingw builds
-    "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include",
   ];
   const includeFlags = includes.map((d) => `-I${d}`);
 
@@ -2050,8 +2049,6 @@ void TestPreview(const WCHAR*) {}
     "-static-libstdc++",
     "-mwindows", // GUI app (WinMain entry point)
     "@" + rspPath,
-    // WebView2 import library (MSVC import lib, mingw can usually consume these)
-    "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/x64/WebView2Loader.dll.lib",
     // system libraries
     ...SYSTEM_LIBS.map((l) => `-l${l}`),
   ];

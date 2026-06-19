@@ -731,24 +731,6 @@ files {
 }
 
 function sumatrapdf_files()
-  files_in_dir(".", {
-    "*.md",
-    "*.txt",
-    "*.yml",
-    ".clang-format",
-    ".github/*.yml",
-    ".github/workflows/*.yml",
-    ".gitignore",
-    "cmd/*",
-    "do/*.go",
-    "docs/*.html",
-    "docs/*.txt",
-    "docs/*.css",
-    "docs/md/*.md",
-    "ext/versions.txt",
-    "premake5.files.lua",
-    "premake5.lua",
-  })
   files_in_dir("src", {
     "Accelerators.*",
     "Actions.*",

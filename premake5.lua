@@ -102,7 +102,8 @@ function winver_defines()
   -- winver_latest_defines()
 end
 
--- setup WebView2 paths
+-- WebView2 (manual viewer, SimpleBrowserWindow, ChmDocView). wingui/*.cpp is
+-- included via wingui_files() in premake5.files.lua.
 function webview_conf()
   includedirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include" }
   filter "platforms:x86"
