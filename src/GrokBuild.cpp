@@ -1214,13 +1214,14 @@ static void SendGrokMessage(MainWindow* win) {
 
     TempStr cmdLine;
     if (isNewSession) {
-        cmdLine =
-            str::FormatTemp("\"%s\" -p \"%s\" --output-format streaming-json --model %s --effort %s %s --rules \"%s\"",
-                            grokPath, escapedInput, model, efforts[effortIdx], permsFlag, rules);
+        cmdLine = str::FormatTemp(
+            "\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s --rules \"%s\"",
+            grokPath, escapedInput, dir, model, efforts[effortIdx], permsFlag, rules);
     } else {
         cmdLine = str::FormatTemp(
-            "\"%s\" -p \"%s\" --output-format streaming-json --model %s --effort %s %s -r %s --rules \"%s\"", grokPath,
-            escapedInput, model, efforts[effortIdx], permsFlag, tab->grokSessionId, rules);
+            "\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s -r %s --rules "
+            "\"%s\"",
+            grokPath, escapedInput, dir, model, efforts[effortIdx], permsFlag, tab->grokSessionId, rules);
     }
 
     GrokBuildLog(">>> cmd", cmdLine);
