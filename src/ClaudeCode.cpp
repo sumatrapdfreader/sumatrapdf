@@ -19,6 +19,7 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
@@ -34,107 +35,73 @@
 #define IDC_CLAUDE_EFFORT_COMBO 1114
 #define IDC_CLAUDE_STOP_BTN 1115
 
-// --- Persistent Claude settings ---
-struct ClaudeSettings {
-    int modelIdx = 0;  // 0=Sonnet, 1=Opus, 2=Haiku
-    int effortIdx = 1; // 0=Low, 1=Medium, 2=High, 3=Max
-    bool skipPerms = false;
-    char bgColor[16] = "#ffffff"; // chat background color (CSS hex)
-    int claudeDx = 0;             // sidebar width (0 = use default)
-};
+constexpr const char* kClaudeVirtualHost = "https://sumatrapdf.claude/";
+constexpr const WCHAR* kClaudeVirtualHostW = L"https://sumatrapdf.claude/";
 
-static ClaudeSettings gClaudeSettings;
+static LoadedDataResource gClaudeMarkedJs;
 
-static TempStr GetClaudeSettingsPathTemp() {
-    return GetPathInAppDataDirTemp("CCSumatraPDF-claude.txt");
+static const char* ClaudeBgColor() {
+    const char* bg = gGlobalPrefs->claudeCode.bgColor;
+    if (str::IsEmpty(bg)) {
+        return "#ffffff";
+    }
+    return bg;
 }
 
-static void LoadClaudeSettings() {
-    TempStr path = GetClaudeSettingsPathTemp();
-    if (!path || !file::Exists(path)) {
-        return;
+static bool ClaudeGetResource(void* ctx, const char* path, WebViewResourceResult* res) {
+    auto* data = (LoadedDataResource*)ctx;
+    if (!data || !res || str::IsEmpty(path)) {
+        return false;
     }
-    ByteSlice data = file::ReadFile(path);
-    if (data.empty()) {
-        return;
+    if (!str::EqI(path, "/marked.min.js") && !str::EqI(path, "marked.min.js")) {
+        return false;
     }
-    const char* s = (const char*)data.data();
-    const char* end = s + data.size();
-    while (s < end) {
-        const char* lineEnd = s;
-        while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
-            lineEnd++;
-        }
-        if (lineEnd > s) {
-            TempStr line = str::DupTemp(s, (int)(lineEnd - s));
-            if (str::StartsWith(line, "model=")) {
-                gClaudeSettings.modelIdx = atoi(line + 6);
-            } else if (str::StartsWith(line, "effort=")) {
-                gClaudeSettings.effortIdx = atoi(line + 7);
-            } else if (str::StartsWith(line, "skipPerms=")) {
-                gClaudeSettings.skipPerms = atoi(line + 10) != 0;
-            } else if (str::StartsWith(line, "bgColor=")) {
-                const char* val = line + 8;
-                if (str::Len(val) > 0 && str::Len(val) < 16) {
-                    str::BufSet(gClaudeSettings.bgColor, dimof(gClaudeSettings.bgColor), val);
-                }
-            } else if (str::StartsWith(line, "claudeDx=")) {
-                gClaudeSettings.claudeDx = atoi(line + 9);
-            }
-        }
-        s = lineEnd;
-        while (s < end && (*s == '\n' || *s == '\r')) {
-            s++;
-        }
-    }
-    data.Free();
+    res->data = (char*)data->data;
+    res->dataLen = data->dataSize;
+    res->contentType = str::Dup("text/javascript");
+    res->ownsData = false;
+    return res->dataLen > 0;
 }
 
-static void SaveClaudeSettings() {
-    TempStr path = GetClaudeSettingsPathTemp();
-    if (!path) {
-        return;
-    }
-    TempStr content =
-        str::FormatTemp("model=%d\neffort=%d\nskipPerms=%d\nbgColor=%s\nclaudeDx=%d\n", gClaudeSettings.modelIdx,
-                        gClaudeSettings.effortIdx, gClaudeSettings.skipPerms ? 1 : 0, gClaudeSettings.bgColor,
-                        gClaudeSettings.claudeDx);
-    ByteSlice d = {(u8*)content, str::Len(content)};
-    file::WriteFile(path, d);
-}
-
-// Apply saved settings to the UI controls
+// Apply persisted settings to the UI controls
 static void ApplyClaudeSettingsToUI(MainWindow* win) {
+    int modelIdx = gGlobalPrefs->claudeCode.model;
+    int effortIdx = gGlobalPrefs->claudeCode.effort;
+    if (modelIdx < 0 || modelIdx > 2) {
+        modelIdx = 0;
+    }
+    if (effortIdx < 0 || effortIdx > 3) {
+        effortIdx = 1;
+    }
     if (win->hwndClaudeModelCombo) {
-        SendMessageW(win->hwndClaudeModelCombo, CB_SETCURSEL, gClaudeSettings.modelIdx, 0);
+        SendMessageW(win->hwndClaudeModelCombo, CB_SETCURSEL, modelIdx, 0);
     }
     if (win->hwndClaudeEffortCombo) {
-        SendMessageW(win->hwndClaudeEffortCombo, CB_SETCURSEL, gClaudeSettings.effortIdx, 0);
+        SendMessageW(win->hwndClaudeEffortCombo, CB_SETCURSEL, effortIdx, 0);
     }
     if (win->hwndClaudeSkipPermsCheck) {
         SendMessageW(win->hwndClaudeSkipPermsCheck, BM_SETCHECK,
-                     gClaudeSettings.skipPerms ? BST_CHECKED : BST_UNCHECKED, 0);
+                     gGlobalPrefs->claudeCode.skipPermissions ? BST_CHECKED : BST_UNCHECKED, 0);
     }
 }
 
 // Read current settings from UI controls and save
 static void SyncClaudeSettingsFromUI(MainWindow* win) {
     if (win->hwndClaudeModelCombo) {
-        gClaudeSettings.modelIdx = (int)SendMessageW(win->hwndClaudeModelCombo, CB_GETCURSEL, 0, 0);
+        gGlobalPrefs->claudeCode.model = (int)SendMessageW(win->hwndClaudeModelCombo, CB_GETCURSEL, 0, 0);
     }
     if (win->hwndClaudeEffortCombo) {
-        gClaudeSettings.effortIdx = (int)SendMessageW(win->hwndClaudeEffortCombo, CB_GETCURSEL, 0, 0);
+        gGlobalPrefs->claudeCode.effort = (int)SendMessageW(win->hwndClaudeEffortCombo, CB_GETCURSEL, 0, 0);
     }
     if (win->hwndClaudeSkipPermsCheck) {
-        gClaudeSettings.skipPerms = (SendMessageW(win->hwndClaudeSkipPermsCheck, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        gGlobalPrefs->claudeCode.skipPermissions =
+            (SendMessageW(win->hwndClaudeSkipPermsCheck, BM_GETCHECK, 0, 0) == BST_CHECKED);
     }
     if (win->claudeDx > 0) {
-        gClaudeSettings.claudeDx = win->claudeDx;
+        gGlobalPrefs->claudeCode.sidebarDx = win->claudeDx;
     }
-    SaveClaudeSettings();
+    SaveSettings();
 }
-
-// Claude sidebar background color is set via CSS in kClaudeChatHtml
 
 static char* GenerateSessionId() {
     GUID guid;
@@ -149,7 +116,7 @@ static char* GenerateSessionId() {
 // clang-format off
 static const char* kClaudeChatHtmlFmt =
     "<!DOCTYPE html><html><head><meta charset='utf-8'>"
-    "<script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>"
+    "<script src='https://sumatrapdf.claude/marked.min.js'></script>"
     "<style>"
     "* { margin: 0; padding: 0; box-sizing: border-box; }"
     "body { font-family: 'Segoe UI', sans-serif; font-size: 13px; margin: 0; padding: 6px; "
@@ -944,15 +911,15 @@ static void SendClaudeMessage(MainWindow* win) {
 
     const char* models[] = {"sonnet", "opus", "haiku"};
     const char* efforts[] = {"low", "medium", "high", "max"};
-    int modelIdx = gClaudeSettings.modelIdx;
-    int effortIdx = gClaudeSettings.effortIdx;
+    int modelIdx = gGlobalPrefs->claudeCode.model;
+    int effortIdx = gGlobalPrefs->claudeCode.effort;
     if (modelIdx < 0 || modelIdx > 2) {
         modelIdx = 0;
     }
     if (effortIdx < 0 || effortIdx > 3) {
         effortIdx = 1;
     }
-    const char* permsFlag = gClaudeSettings.skipPerms ? "--dangerously-skip-permissions" : "";
+    const char* permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? "--dangerously-skip-permissions" : "";
 
     // find claude executable
     TempStr claudePath = nullptr;
@@ -1086,8 +1053,8 @@ static void LayoutClaudeBox(MainWindow* win) {
 
     if (win->claudeWebView) {
         MoveWindow(win->claudeWebView->hwnd, 0, y, rc.dx, webViewDy, TRUE);
-        // defer UpdateWebviewSize to avoid WebView2 put_Bounds freeze
-        // use timer ID 43 with short delay
+        // defer UpdateWebviewSize during rapid WM_SIZE to avoid WebView2 put_Bounds freeze
+        KillTimer(win->hwndClaudeBox, 43);
         SetTimer(win->hwndClaudeBox, 43, 50, nullptr);
     }
     y += webViewDy;
@@ -1146,6 +1113,13 @@ static LRESULT CALLBACK WndProcClaudeBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
     }
 
     switch (msg) {
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wp;
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            FillRect(hdc, &rc, win->brControlBgColor);
+            return TRUE;
+        }
         case WM_SIZE:
             LayoutClaudeBox(win);
             break;
@@ -1194,9 +1168,24 @@ static void OnClaudeSplitterMove(Splitter::MoveEvent* ev) {
     }
     win->claudeDx = claudeDx;
     if (ev->finishedDragging) {
-        gClaudeSettings.claudeDx = claudeDx;
-        SaveClaudeSettings();
+        gGlobalPrefs->claudeCode.sidebarDx = claudeDx;
+        SaveSettings();
         RelayoutForClaudeSplitter(win);
+    }
+}
+
+void RelayoutClaudePanel(MainWindow* win) {
+    if (!win || !win->hwndClaudeBox || !win->claudeVisible) {
+        return;
+    }
+    LayoutClaudeBox(win);
+    KillTimer(win->hwndClaudeBox, 43);
+    if (win->claudeWebView && win->claudeWebViewReady) {
+        win->claudeWebView->UpdateWebviewSize();
+    }
+    RedrawWindow(win->hwndClaudeBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+    if (win->claudeSplitter && win->claudeSplitter->hwnd) {
+        InvalidateRect(win->claudeSplitter->hwnd, nullptr, TRUE);
     }
 }
 
@@ -1212,6 +1201,14 @@ static void EnsureWebViewReady(MainWindow* win) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA);
     // use unique data dir per process to avoid locking conflicts
     webView->dataDir = str::Format("%s\\SumatraPDF\\ClaudeWebView_%d", userProfile, (int)GetCurrentProcessId());
+    if (!LockDataResource(IDR_CLAUDE_MARKED_JS, &gClaudeMarkedJs)) {
+        delete webView;
+        return;
+    }
+    str::Free(webView->resourceUriPrefix);
+    webView->resourceUriPrefix = str::Dup(kClaudeVirtualHostW);
+    webView->resourceProvider.ctx = &gClaudeMarkedJs;
+    webView->resourceProvider.getResource = ClaudeGetResource;
 
     Rect rc = ClientRect(win->hwndClaudeBox);
     CreateWebViewArgs wvArgs;
@@ -1220,11 +1217,11 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->Create(wvArgs);
 
     if (webView->hwnd) {
-        TempStr chatHtml = str::FormatTemp(kClaudeChatHtmlFmt, gClaudeSettings.bgColor);
+        TempStr chatHtml = str::FormatTemp(kClaudeChatHtmlFmt, ClaudeBgColor());
         webView->SetHtml(chatHtml);
         win->claudeWebView = webView;
         win->claudeWebViewReady = true;
-        LayoutClaudeBox(win);
+        RelayoutClaudePanel(win);
     } else {
         delete webView;
     }
@@ -1232,7 +1229,6 @@ static void EnsureWebViewReady(MainWindow* win) {
 
 // --- Public API ---
 void CreateClaudePanel(MainWindow* win) {
-    LoadClaudeSettings();
     HMODULE hmod = GetModuleHandle(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
     DWORD style = WS_CHILD | WS_CLIPCHILDREN;
@@ -1326,8 +1322,8 @@ void CreateClaudePanel(MainWindow* win) {
     SetWindowSubclass(win->hwndClaudeBox, WndProcClaudeBox, win->claudeBoxSubclassId, (DWORD_PTR)win);
 
     ApplyClaudeSettingsToUI(win);
-    if (gClaudeSettings.claudeDx > 0) {
-        win->claudeDx = gClaudeSettings.claudeDx;
+    if (gGlobalPrefs->claudeCode.sidebarDx > 0) {
+        win->claudeDx = gGlobalPrefs->claudeCode.sidebarDx;
     }
 }
 
@@ -1368,6 +1364,7 @@ void ToggleClaudePanel(MainWindow* win) {
         // defer auto-select so SetHtml has time to load the page
         SetTimer(win->hwndClaudeBox, 42, 500, nullptr);
     }
+    RelayoutWindow(win);
 }
 
 // call when switching tabs to update session context

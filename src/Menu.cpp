@@ -285,6 +285,14 @@ static MenuDef menuDefView[] = {
         CmdToggleToolbar,
     },
     {
+        kMenuSeparator,
+        0,
+    },
+    {
+        _TRN("Claude Code"),
+        CmdClaudeCode,
+    },
+    {
         nullptr,
         0,
     },

@@ -183,7 +183,6 @@ UIFontSize = 0
 DisableAntiAlias = false
 
 ; if true, disables auto-linking of URLs and email addresses found in PDF text
-; (see https://www.sumatrapdfreader.org/docs/Hyperlinks)
 DisableAutoLinks = false
 
 ; if true, we use Windows system colors for background/text color. Over-rides
@@ -301,6 +300,24 @@ ChmUI [
     ; if true, the UI used for PDF documents will be used for CHM documents as
     ; well
     UseFixedPageUI = false
+]
+
+; settings for the Claude Code chat sidebar (introduced in version 3.7)
+ClaudeCode [
+    ; Claude model: 0=Sonnet, 1=Opus, 2=Haiku
+    Model = 0
+
+    ; Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max
+    Effort = 1
+
+    ; if true, pass --dangerously-skip-permissions to Claude Code
+    SkipPermissions = false
+
+    ; background color of the Claude Code chat panel
+    BgColor = #ffffff
+
+    ; width of the Claude Code sidebar (0 = use default)
+    SidebarDx = 0
 ]
 
 ; default values for annotations in PDF documents (introduced in version 3.3)

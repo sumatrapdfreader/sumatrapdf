@@ -71,6 +71,8 @@ IDR_TRANSLATIONS        RCDATA "..\\translations\\translations.txt.lzsa"
 
 IDR_MANUAL_PAK          RCDATA               "..\\docs\\manual.dat"
 
+IDR_CLAUDE_MARKED_JS    RCDATA               "..\\ext\\marked\\marked.min.js"
+
 /////////////////////////////////////////////////////////////////////////////
 
 // Icon with lowest ID value placed first to ensure application icon

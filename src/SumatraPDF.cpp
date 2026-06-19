@@ -4596,6 +4596,9 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (favVisible) {
         RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
+    if (win->claudeVisible && win->hwndClaudeBox) {
+        RelayoutClaudePanel(win);
+    }
     if (tocVisible || favVisible) {
         InvalidateRect(win->sidebarSplitter->hwnd, nullptr, TRUE);
     }
@@ -6829,10 +6832,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdClaudeCode:
             ToggleClaudePanel(win);
-            RelayoutFrame(win, false);
-            if (win->claudeVisible) {
-                RedrawWindow(win->hwndClaudeBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-            }
             break;
 
         case CmdClearHistory:

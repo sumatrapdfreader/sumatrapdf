@@ -359,6 +359,19 @@ const chmUI: Field[] = [
   ),
 ];
 
+const claudeCode: Field[] = [
+  mkField("Model", Int, 0, "Claude model: 0=Sonnet, 1=Opus, 2=Haiku"),
+  mkField("Effort", Int, 1, "Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max"),
+  mkField(
+    "SkipPermissions",
+    Bool,
+    false,
+    "if true, pass --dangerously-skip-permissions to Claude Code",
+  ),
+  mkField("BgColor", Color, "#ffffff", "background color of the Claude Code chat panel"),
+  mkField("SidebarDx", Int, 0, "width of the Claude Code sidebar (0 = use default)"),
+];
+
 const fullscreen: Field[] = [
   mkField("ShowToolbar", Bool, false, "if true, show the toolbar in fullscreen mode"),
   mkField("ShowMenubar", Bool, false, "if true, show the menu bar in fullscreen mode"),
@@ -863,6 +876,11 @@ const globalPrefs: Field[] = [
       chmUI,
       "customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead",
     ),
+  ),
+  mkEmptyLine(),
+  setVersion(
+    setExpert(mkStruct("ClaudeCode", claudeCode, "settings for the Claude Code chat sidebar")),
+    "3.7",
   ),
   mkEmptyLine(),
   setVersion(setExpert(mkStruct("Annotations", annotations, "default values for annotations in PDF documents")), "3.3"),
