@@ -8,6 +8,7 @@
 #include "utils/WinUtil.h"
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
+#include "utils/Log.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -70,6 +71,48 @@ static TempStr FindClaudeExecutableTemp() {
 
 bool IsClaudeCodeInstalled() {
     return FindClaudeExecutableTemp() != nullptr;
+}
+
+static Mutex gClaudeCodeLogMutex;
+
+static TempStr ClaudeCodeLogPathTemp() {
+    TempStr dir = GetNotImportantDataDirTemp();
+    if (!dir) {
+        return nullptr;
+    }
+    return path::JoinTemp(dir, "claude-code-log.txt");
+}
+
+static void ClaudeCodeLog(const char* direction, const char* text) {
+    if (!text) {
+        text = "";
+    }
+
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    StrBuilder entry;
+    entry.AppendFmt("[%04d-%02d-%02d %02d:%02d:%02d] %s: ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
+                    st.wSecond, direction);
+    entry.Append(text);
+    if (entry.LastChar() != '\n') {
+        entry.AppendChar('\n');
+    }
+
+    logfa("claude-code %s: %s", direction, text);
+
+    TempStr path = ClaudeCodeLogPathTemp();
+    if (!path) {
+        return;
+    }
+
+    gClaudeCodeLogMutex.Lock();
+    FILE* f = fopen(path, "a");
+    if (f) {
+        fwrite(entry.Get(), 1, entry.Size(), f);
+        fflush(f);
+        fclose(f);
+    }
+    gClaudeCodeLogMutex.Unlock();
 }
 
 constexpr int kBtnIdClaudeLearnMore = 100;
@@ -494,6 +537,7 @@ static void CloseClaudeProcess(WindowTab* tab, bool terminateIfRunning) {
 static void StopClaude(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     if (tab && tab->claudeProcess) {
+        ClaudeCodeLog("stop", tab->claudeSessionId ? tab->claudeSessionId : "(no session)");
         CloseClaudeProcess(tab, true);
         WebViewAddError(win, "Stopped by user.");
         SetClaudeWorking(win, false);
@@ -1057,6 +1101,9 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
                 const char* line = lineBuf.LendData();
+                if (line && *line) {
+                    ClaudeCodeLog("<<<", line);
+                }
                 TempStr eventType = JsonStrTemp(line, "type");
 
                 if (eventType && str::Eq(eventType, "assistant")) {
@@ -1184,12 +1231,17 @@ static void SendClaudeMessage(MainWindow* win) {
 
     TempStr claudePath = FindClaudeExecutableTemp();
     if (!claudePath) {
+        ClaudeCodeLog("error", "Cannot find claude executable");
         WebViewAddError(win, "Cannot find claude. Is Claude Code installed?");
         SetClaudeWorking(win, false);
         return;
     }
 
     TempStr sessionName = str::FormatTemp("%s", fileName);
+
+    ClaudeCodeLog(">>> user", input);
+    ClaudeCodeLog(">>> session", str::FormatTemp("%s (%s)", tab->claudeSessionId, isNewSession ? "new" : "resume"));
+    ClaudeCodeLog(">>> cwd", dir);
 
     TempStr cmdLine;
     if (isNewSession) {
@@ -1208,6 +1260,8 @@ static void SendClaudeMessage(MainWindow* win) {
             claudePath, model, efforts[effortIdx], permsFlag, tab->claudeSessionId, filePath, escapedInput);
     }
 
+    ClaudeCodeLog(">>> cmd", cmdLine);
+
     SECURITY_ATTRIBUTES sa;
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = nullptr;
@@ -1215,6 +1269,7 @@ static void SendClaudeMessage(MainWindow* win) {
 
     HANDLE hReadPipe, hWritePipe;
     if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
+        ClaudeCodeLog("error", "Failed to create pipe");
         WebViewAddError(win, "Failed to create pipe");
         SetClaudeWorking(win, false);
         return;
@@ -1236,6 +1291,7 @@ static void SendClaudeMessage(MainWindow* win) {
 
     if (!ok) {
         CloseHandle(hReadPipe);
+        ClaudeCodeLog("error", "Failed to launch claude process");
         WebViewAddError(win, "Failed to launch claude. Is it installed and in PATH?");
         SetClaudeWorking(win, false);
         return;
