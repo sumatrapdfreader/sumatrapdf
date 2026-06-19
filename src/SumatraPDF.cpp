@@ -1607,9 +1607,11 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             if (IsRunningOnWine()) {
                 Rect wr = WindowRect(win->hwndFrame);
                 Rect cr = ClientRect(win->hwndFrame);
-                logf("LoadDocument: showWin windowRect=(%d,%d,%d,%d) clientRect=(%d,%d,%d,%d) captionRect=(%d,%d,%d,%d)\n",
-                     wr.x, wr.y, wr.dx, wr.dy, cr.x, cr.y, cr.dx, cr.dy, win->captionRect.x, win->captionRect.y,
-                     win->captionRect.dx, win->captionRect.dy);
+                logf(
+                    "LoadDocument: showWin windowRect=(%d,%d,%d,%d) clientRect=(%d,%d,%d,%d) "
+                    "captionRect=(%d,%d,%d,%d)\n",
+                    wr.x, wr.y, wr.dx, wr.dy, cr.x, cr.y, cr.dx, cr.dy, win->captionRect.x, win->captionRect.y,
+                    win->captionRect.dx, win->captionRect.dy);
             }
         }
 
@@ -4047,6 +4049,21 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM l
 }
 #endif
 
+static TabState* NewTabStateFromTab(WindowTab* tab) {
+    if (!tab || !tab->ctrl || !tab->filePath) {
+        return nullptr;
+    }
+
+    FileState* fs = NewFileState(tab->filePath);
+    tab->ctrl->GetDisplayState(fs);
+    fs->showToc = tab->showToc;
+    *fs->tocState = tab->tocState;
+
+    TabState* state = NewTabState(fs);
+    DeleteFileState(fs);
+    return state;
+}
+
 void DuplicateTabInNewWindow(WindowTab* tab) {
     if (!tab || tab->IsAboutTab()) {
         return;
@@ -4059,16 +4076,23 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     if (!path) {
         return;
     }
+    TabState* state = NewTabStateFromTab(tab);
+
     MainWindow* newWin = CreateAndShowMainWindow(nullptr);
     if (!newWin) {
+        DeleteTabState(state);
         return;
     }
 
-    // TODO: should copy the display state from current file
     LoadArgs args(path, newWin);
     args.showWin = true;
     args.noPlaceWindow = true;
     LoadDocument(&args);
+
+    if (state) {
+        SetTabState(newWin->CurrentTab(), state);
+        DeleteTabState(state);
+    }
 }
 
 // create a new window and load currently shown document into it
@@ -4105,14 +4129,19 @@ static void DuplicateInNewTab(MainWindow* win) {
     }
 
     // Save current window/tab state before loading new tab
+    TabState* state = NewTabStateFromTab(currentTab);
     SaveSettings();
 
-    // TODO: should copy the display state from current file
     LoadArgs args(path, win);
     args.showWin = true;
     args.noPlaceWindow = true;
     args.forceReuse = false; // Force creation of new tab instead of reusing current
     LoadDocument(&args);
+
+    if (state) {
+        SetTabState(win->CurrentTab(), state);
+        DeleteTabState(state);
+    }
 }
 
 static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
@@ -4426,10 +4455,11 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             }
             win->captionRect = {rc.x, rc.y, rc.dx, captionHeight};
             if (IsRunningOnWine()) {
-                logf("RelayoutFrame: tabsInTitlebar tabHeight=%d captionHeight=%d captionRect=(%d,%d,%d,%d) "
-                     "showingMenuBar=%d\n",
-                     tabHeight, captionHeight, win->captionRect.x, win->captionRect.y, win->captionRect.dx,
-                     win->captionRect.dy, (int)showingMenuBar);
+                logf(
+                    "RelayoutFrame: tabsInTitlebar tabHeight=%d captionHeight=%d captionRect=(%d,%d,%d,%d) "
+                    "showingMenuBar=%d\n",
+                    tabHeight, captionHeight, win->captionRect.x, win->captionRect.y, win->captionRect.dx,
+                    win->captionRect.dy, (int)showingMenuBar);
             }
             if (updateToolbars) {
                 RelayoutCaption(win);

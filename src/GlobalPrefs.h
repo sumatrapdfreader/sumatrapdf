@@ -16,6 +16,7 @@ void DeleteGlobalPrefs(GlobalPrefs*);
 
 SessionData* NewSessionData();
 TabState* NewTabState(FileState*);
+void DeleteTabState(TabState*);
 void FreeSessionData(SessionData*);
 void FreeSessionDataVec(Vec<SessionData*>*);
 ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed);

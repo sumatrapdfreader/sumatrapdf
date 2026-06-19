@@ -106,6 +106,10 @@ TabState* NewTabState(FileState* fs) {
     return state;
 }
 
+void DeleteTabState(TabState* state) {
+    FreeStruct(&gTabStateInfo, state);
+}
+
 void FreeSessionData(SessionData* data) {
     FreeStruct(&gSessionDataInfo, data);
 }
