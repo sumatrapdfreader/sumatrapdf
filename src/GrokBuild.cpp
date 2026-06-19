@@ -867,14 +867,17 @@ static TempStr StripGrokUserQueryWrapperTemp(const char* text) {
         return nullptr;
     }
     const char* start = str::Find(text, "<user_query>");
-    if (start) {
-        start += str::Len("<user_query>");
-        const char* end = str::Find(start, "</user_query>");
-        if (end && end > start) {
-            return str::DupTemp(start, (int)(end - start));
-        }
+    if (!start) {
+        return nullptr; // skip injected context (user_info, rules, skills, etc.)
     }
-    return str::DupTemp(text);
+    start += str::Len("<user_query>");
+    const char* end = str::Find(start, "</user_query>");
+    if (!end || end <= start) {
+        return nullptr;
+    }
+    TempStr result = str::DupTemp(start, (int)(end - start));
+    str::TrimWSInPlace(result, str::TrimOpt::Both);
+    return str::Len(result) > 0 ? result : nullptr;
 }
 
 static TempStr ExtractGrokChatUserTextTemp(const char* line) {
@@ -887,6 +890,46 @@ static TempStr ExtractGrokChatUserTextTemp(const char* line) {
     }
     TempStr content = JsonStrTemp(line, "content");
     return StripGrokUserQueryWrapperTemp(content);
+}
+
+static void AppendGrokHistoryTools(MainWindow* win, const char* line) {
+    const char* tc = str::Find(line, "\"tool_calls\":[");
+    if (!tc) {
+        return;
+    }
+    const char* p = tc;
+    while (true) {
+        p = str::Find(p, "\"name\":\"");
+        if (!p) {
+            break;
+        }
+        p += str::Len("\"name\":\"");
+        StrBuilder nameBuf;
+        while (*p && *p != '"') {
+            if (*p == '\\' && *(p + 1)) {
+                p++;
+                if (*p == 'n') {
+                    nameBuf.AppendChar('\n');
+                } else if (*p == 't') {
+                    nameBuf.AppendChar('\t');
+                } else if (*p == '\\') {
+                    nameBuf.AppendChar('\\');
+                } else if (*p == '"') {
+                    nameBuf.AppendChar('"');
+                } else {
+                    nameBuf.AppendChar(*p);
+                }
+            } else {
+                nameBuf.AppendChar(*p);
+            }
+            p++;
+        }
+        if (nameBuf.Size() > 0) {
+            StrBuilder desc;
+            desc.AppendFmt("Tool: %s", nameBuf.Get());
+            WebViewAddTool(win, desc.Get());
+        }
+    }
 }
 
 // Load conversation history from Grok's chat_history.jsonl
@@ -916,14 +959,15 @@ static void LoadSessionHistory(MainWindow* win, const char* sessionId, const cha
         if (lineEnd > s) {
             TempStr line = str::DupTemp(s, (int)(lineEnd - s));
             TempStr userText = ExtractGrokChatUserTextTemp(line);
-            if (userText && str::Len(userText) > 0) {
+            if (userText) {
                 WebViewAddUser(win, userText);
             } else if (str::Find(line, "\"type\":\"assistant\"")) {
                 TempStr text = JsonStrTemp(line, "content");
                 if (text && str::Len(text) > 0) {
                     WebViewAppendText(win, text);
-                    WebViewFlushBlock(win);
                 }
+                AppendGrokHistoryTools(win, line);
+                WebViewFlushBlock(win);
             }
         }
         s = lineEnd;
