@@ -87,6 +87,21 @@ void RemovePendingWebview(WebviewWnd* wv) {
     }
 }
 
+static bool ShouldWebviewBeVisible(HWND hwnd) {
+    if (!hwnd) {
+        return false;
+    }
+    HWND parent = GetParent(hwnd);
+    if (parent && !IsWindowVisible(parent)) {
+        return false;
+    }
+    HWND root = GetAncestor(hwnd, GA_ROOT);
+    if (root && IsIconic(root)) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
@@ -773,8 +788,10 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
     auto style = GetWindowLong(hwnd, GWL_STYLE);
     style &= ~(WS_OVERLAPPEDWINDOW);
     SetWindowLong(hwnd, GWL_STYLE, style);
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-    controller->put_IsVisible(isVisible ? TRUE : FALSE);
+    isVisible = false;
+    controller->put_IsVisible(FALSE);
 
     ICoreWebView2Controller2* controller2 = nullptr;
     HRESULT bgHr = controller->QueryInterface(IID_PPV_ARGS(&controller2));
@@ -865,6 +882,12 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
     Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
     initStarted = true;
     FlushPendingOps();
+
+    bool wantVisible = ShouldWebviewBeVisible(hwnd);
+    if (wantVisible) {
+        ::ShowWindow(hwnd, SW_SHOW);
+    }
+    SetControllerVisible(wantVisible);
 }
 
 void WebviewWnd::UpdateWebviewSize() {
@@ -1137,6 +1160,11 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     CreateCustomArgs cargs;
     cargs.parent = args.parent;
     cargs.pos = args.pos;
+    // Child-only style: default CreateCustom uses overlapped-window chrome
+    // (caption, sysmenu, etc.) which flashes briefly before the controller embeds.
+    cargs.style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+    cargs.visible = false;
+    isVisible = false;
     CreateCustom(cargs);
     if (!hwnd) {
         return nullptr;
