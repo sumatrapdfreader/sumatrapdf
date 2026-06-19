@@ -30,6 +30,7 @@
 #include "Commands.h"
 #include "Menu.h"
 #include "TableOfContents.h"
+#include "ClaudeCode.h"
 #include "Tabs.h"
 #include "SumatraDialogs.h"
 #include "FileHistory.h"
@@ -74,9 +75,10 @@ int GetTabbarHeight(HWND hwnd, float factor) {
     if (IsRunningOnWine()) {
         int dpi = DpiGet(hwnd);
         int desktopDpi = DpiGet(HWND_DESKTOP);
-        logf("GetTabbarHeight: hwnd=%p factor=%g dpi=%d desktopDpi=%d tabDyScaled=%d fontDy=%d "
-             "minDy=%d result=%d\n",
-             hwnd, factor, dpi, desktopDpi, DpiScale(hwnd, kTabBarDy), fontDyWithPadding, minDy, res);
+        logf(
+            "GetTabbarHeight: hwnd=%p factor=%g dpi=%d desktopDpi=%d tabDyScaled=%d fontDy=%d "
+            "minDy=%d result=%d\n",
+            hwnd, factor, dpi, desktopDpi, DpiScale(hwnd, kTabBarDy), fontDyWithPadding, minDy, res);
     }
     return res;
 }
@@ -533,6 +535,7 @@ static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionCh
     if (isShowingPageInfo) {
         PostMessageW(win->hwndFrame, WM_COMMAND, CmdTogglePageInfo, 0);
     }
+    OnClaudeTabChanged(win);
 }
 
 static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev) {

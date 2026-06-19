@@ -111,6 +111,9 @@
     <ClInclude Include="..\src\ChmModel.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ClaudeCode.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\CommandPalette.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -432,6 +435,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChmModel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ClaudeCode.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CommandPalette.cpp">

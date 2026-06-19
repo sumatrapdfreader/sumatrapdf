@@ -1,0 +1,13 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+struct MainWindow;
+
+void CreateClaudePanel(MainWindow* win);
+void ToggleClaudePanel(MainWindow* win);
+void ShutdownClaudeForMainWindow(MainWindow* win);
+void DestroyClaudePanel(MainWindow* win);
+void OnClaudeTabChanged(MainWindow* win);
+
+// called from SumatraPDF.cpp for width change relayout
+void RelayoutForClaudeSplitter(MainWindow* win);

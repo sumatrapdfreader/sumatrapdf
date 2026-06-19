@@ -32,6 +32,7 @@
 #include "Annotation.h"
 #include "OverlayScrollbar.h"
 #include "SumatraPDF.h"
+#include "ClaudeCode.h"
 #include "MainWindow.h"
 #include "RefHover.h"
 #include "WindowTab.h"
@@ -139,6 +140,7 @@ MainWindow::~MainWindow() {
     delete buffer;
     delete tabSelectionHistory;
     DeleteVecMembers(staticLinks);
+    ShutdownClaudeForMainWindow(this);
     auto tabs = Tabs();
     DeleteVecMembers(tabs);
     {
@@ -166,6 +168,8 @@ MainWindow::~MainWindow() {
         delete favTreeView->treeModel;
         delete favTreeView;
     }
+
+    DestroyClaudePanel(this);
 
     delete sidebarSplitter;
     delete favSplitter;

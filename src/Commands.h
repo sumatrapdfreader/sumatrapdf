@@ -243,7 +243,8 @@ enum {
     CmdConvertImageToPdf = 432,
     CmdExpandToCurrentPage = 433,
     CmdStartAutoScroll = 434,
-    CmdNone = 435,
+    CmdClaudeCode = 435,
+    CmdNone = 436,
 
     /* range for file history */
     CmdFileHistoryFirst,

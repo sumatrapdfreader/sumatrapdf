@@ -688,8 +688,10 @@ void WebviewWnd::FlushPendingOps() {
     if (!webview || initFailed) {
         return;
     }
+    // Vec copies PendingWebViewOp by value (shallow copy of text pointers), so only
+    // free op.text once -- in the loop below.
     Vec<PendingWebViewOp> ops = pendingOps;
-    FreePendingOps(pendingOps);
+    pendingOps.Reset();
     for (PendingWebViewOp& op : ops) {
         switch (op.kind) {
             case PendingWebViewOp::Init:
@@ -982,7 +984,15 @@ void WebviewWnd::Focus() {
     }
 }
 
-static void ComHandlerCb(WebviewWnd* self, ICoreWebView2Controller* ctrl) {
+static void ComHandlerCbHwnd(void* hwndVoid, ICoreWebView2Controller* ctrl) {
+    HWND hwnd = (HWND)hwndVoid;
+    auto* self = (WebviewWnd*)WndListFindByHwnd(hwnd);
+    if (!self) {
+        if (ctrl) {
+            ctrl->Release();
+        }
+        return;
+    }
     if (!ctrl) {
         self->FailInit();
         return;
@@ -990,7 +1000,7 @@ static void ComHandlerCb(WebviewWnd* self, ICoreWebView2Controller* ctrl) {
     self->OnControllerReady(ctrl);
 }
 
-static void OnBrowserMessageCb(WebviewWnd* self, const char* msg);
+static void OnBrowserMessageCbHwnd(void* hwndVoid, const char* msg);
 
 static void FailPendingWebviews() {
     Vec<WebviewWnd*> pending = gPendingWebviews;
@@ -1009,8 +1019,9 @@ static void CreateControllerWithSharedEnvironment(WebviewWnd* self, WebViewMsgCb
         }
         return;
     }
-    auto fn = MkFunc1(ComHandlerCb, self);
-    auto* handler = new webview2_com_handler(self->hwnd, cb, fn);
+    HWND hwnd = self->hwnd;
+    auto fn = MkFunc1<void, ICoreWebView2Controller*>(ComHandlerCbHwnd, (void*)hwnd);
+    auto* handler = new webview2_com_handler(hwnd, cb, fn);
     HRESULT hr = gSharedEnvironment->CreateCoreWebView2Controller(self->hwnd, handler);
     handler->Release();
     if (FAILED(hr)) {
@@ -1035,7 +1046,8 @@ static void OnSharedEnvironmentReady(HRESULT res, ICoreWebView2Environment* env)
         if (!wv || wv->initFailed) {
             continue;
         }
-        auto fn = MkFunc1(OnBrowserMessageCb, wv);
+        HWND hwnd = wv->hwnd;
+        auto fn = MkFunc1<void, const char*>(OnBrowserMessageCbHwnd, (void*)hwnd);
         CreateControllerWithSharedEnvironment(wv, fn);
     }
 }
@@ -1112,8 +1124,12 @@ void WebviewWnd::OnBrowserMessage(const char* msg) {
     log(msg);
 }
 
-static void OnBrowserMessageCb(WebviewWnd* self, const char* msg) {
-    self->OnBrowserMessage(msg);
+static void OnBrowserMessageCbHwnd(void* hwndVoid, const char* msg) {
+    HWND hwnd = (HWND)hwndVoid;
+    auto* self = (WebviewWnd*)WndListFindByHwnd(hwnd);
+    if (self) {
+        self->OnBrowserMessage(msg);
+    }
 }
 
 HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
@@ -1126,7 +1142,7 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
         return nullptr;
     }
 
-    auto fn = MkFunc1(OnBrowserMessageCb, this);
+    auto fn = MkFunc1<void, const char*>(OnBrowserMessageCbHwnd, (void*)hwnd);
     if (!Embed(fn)) {
         HwndDestroyWindowSafe(&hwnd);
         return nullptr;

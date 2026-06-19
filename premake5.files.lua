@@ -739,6 +739,7 @@ function sumatrapdf_files()
     "Canvas.*",
     "CanvasAboutUI.*",
     "ChmModel.*",
+    "ClaudeCode.*",
     "CommandPalette.*",
     "Commands.*",
     "CrashHandler.*",

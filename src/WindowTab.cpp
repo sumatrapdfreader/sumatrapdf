@@ -68,6 +68,12 @@ WindowTab::~WindowTab() {
     str::FreePtr(&displayName);
     str::FreePtr(&frameTitle);
     str::FreePtr(&readAloudText);
+    str::Free(claudeSessionId);
+    delete claudeChatLog;
+    if (claudeProcess) {
+        TerminateProcess(claudeProcess, 0);
+        CloseHandle(claudeProcess);
+    }
 }
 
 bool WindowTab::IsDocLoaded() const {

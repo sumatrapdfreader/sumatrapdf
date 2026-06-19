@@ -5,6 +5,7 @@ struct SelectionOnPage;
 struct WatchedFile;
 struct EditAnnotationsWindow;
 struct MainWindow;
+struct StrBuilder;
 
 /* Data related to a single document loaded into a tab/window */
 /* (none of these depend on MainWindow, so that a WindowTab could
@@ -65,6 +66,11 @@ struct WindowTab {
 
     // TODO: arguably a hack
     bool ignoreNextAutoReload = false;
+
+    // Claude Code session for this tab
+    char* claudeSessionId = nullptr;
+    StrBuilder* claudeChatLog = nullptr;
+    HANDLE claudeProcess = nullptr;
 
     // read aloud: cleaned text that was being read and the utf8 offset
     // within it where the user stopped reading; enables "Continue reading"

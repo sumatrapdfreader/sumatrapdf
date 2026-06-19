@@ -91,6 +91,7 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "EditAnnotations.h"
+#include "ClaudeCode.h"
 #include "CommandPalette.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -1825,6 +1826,8 @@ static void CreateSidebar(MainWindow* win) {
     }
 
     CreateFavorites(win);
+
+    CreateClaudePanel(win);
 
     if (win->tocVisible) {
         HwndRepaintNow(win->hwndTocBox);
@@ -4362,7 +4365,8 @@ static bool IsLayoutStateEq(LayoutState* s1, LayoutState* s2) {
     return s1->rc == s2->rc && s1->presentation == s2->presentation && s1->tabsInTitlebar == s2->tabsInTitlebar &&
            s1->isFullScreen == s2->isFullScreen && s1->tabsVisible == s2->tabsVisible &&
            s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
-           s1->showFavorites == s2->showFavorites && s1->showMenuBarRebar == s2->showMenuBarRebar;
+           s1->showFavorites == s2->showFavorites && s1->showMenuBarRebar == s2->showMenuBarRebar &&
+           s1->claudeVisible == s2->claudeVisible && s1->claudeDx == s2->claudeDx;
 }
 
 static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
@@ -4382,6 +4386,8 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.tocVisible = win->tocVisible;
     curState.showFavorites = gGlobalPrefs->showFavorites;
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
+    curState.claudeVisible = win->claudeVisible;
+    curState.claudeDx = win->claudeDx;
 
     // skip redundant relayouts when all layout-affecting state is unchanged
     if (IsLayoutStateEq(&curState, &win->lastLayoutState) && updateToolbars && sidebarDx == -1) {
@@ -4555,6 +4561,22 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
         rc.x += toc.dx + kSplitterDx;
         rc.dx -= toc.dx + kSplitterDx;
+    }
+
+    if (win->claudeVisible && win->hwndClaudeBox) {
+        int claudeDx = win->claudeDx;
+        if (claudeDx <= 0) {
+            claudeDx = rc.dx * 3 / 8;
+        }
+        claudeDx = limitValue(claudeDx, kSidebarMinDx, rc.dx / 2);
+        win->claudeDx = claudeDx;
+
+        Rect rSplitter(rc.x + rc.dx - claudeDx - kSplitterDx, rc.y, kSplitterDx, rc.dy);
+        dh.MoveWindow(win->claudeSplitter->hwnd, rSplitter);
+
+        Rect rClaude(rc.x + rc.dx - claudeDx, rc.y, claudeDx, rc.dy);
+        dh.MoveWindow(win->hwndClaudeBox, rClaude);
+        rc.dx -= claudeDx + kSplitterDx;
     }
 
     dh.MoveWindow(win->hwndCanvas, rc);
@@ -5780,6 +5802,10 @@ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
     RelayoutFrame(win, false, rToc.dx);
 }
 
+void RelayoutForClaudeSplitter(MainWindow* win) {
+    RelayoutFrame(win, false);
+}
+
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout) {
     if (gPluginMode || !CanAccessDisk()) {
         showFavorites = false;
@@ -6799,6 +6825,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCommandPaletteTOC:
             // alias for `CmdCommandPalette *`: open the palette in TOC mode
             RunCommandPalette(win, kPalettePrefixTOC, 0);
+            break;
+
+        case CmdClaudeCode:
+            ToggleClaudePanel(win);
+            RelayoutFrame(win, false);
+            if (win->claudeVisible) {
+                RedrawWindow(win->hwndClaudeBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            }
             break;
 
         case CmdClearHistory:

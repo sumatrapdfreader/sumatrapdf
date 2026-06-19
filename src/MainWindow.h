@@ -3,6 +3,7 @@
 
 struct DoubleBuffer;
 struct Edit;
+struct WebviewWnd;
 struct LinkHandler;
 struct StressTest;
 class SumatraUIAutomationProvider;
@@ -154,6 +155,22 @@ struct MainWindow {
     TreeView* favTreeView = nullptr;
     Vec<FileState*> expandedFavorites;
 
+    // Claude Code chat sidebar (right side)
+    HWND hwndClaudeBox = nullptr;
+    UINT_PTR claudeBoxSubclassId = 0;
+    LabelWithCloseWnd* claudeLabelWithClose = nullptr;
+    HWND hwndClaudeSessionCombo = nullptr;
+    WebviewWnd* claudeWebView = nullptr;
+    bool claudeWebViewReady = false;
+    HWND hwndClaudeModelCombo = nullptr;
+    HWND hwndClaudeEffortCombo = nullptr;
+    HWND hwndClaudeSkipPermsCheck = nullptr;
+    Edit* claudeInput = nullptr;
+    HWND hwndClaudeStopBtn = nullptr;
+    Splitter* claudeSplitter = nullptr;
+    bool claudeVisible = false;
+    int claudeDx = 0;
+
     // vertical splitter for resizing left side panel
     Splitter* sidebarSplitter = nullptr;
 
@@ -253,6 +270,8 @@ struct MainWindow {
         bool tocVisible = false;
         bool showFavorites = false;
         bool showMenuBarRebar = false;
+        bool claudeVisible = false;
+        int claudeDx = 0;
     };
     LayoutState lastLayoutState;
 
