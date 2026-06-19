@@ -126,6 +126,7 @@ bool CanAccessDisk();
 bool AnnotationsAreDisabled();
 bool IsUIRtl();
 bool SumatraLaunchBrowser(const char* url);
+void LaunchDocumentation(const char* docURI);
 bool OpenFileExternally(const char* path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);

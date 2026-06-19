@@ -6389,8 +6389,7 @@ void DebugCorruptMemory() {
     free(s);
 }
 
-constexpr const char* kManualIndex = "SumatraPDF-documentation.html";
-constexpr const char* kManualKeyboard = "Keyboard-shortcuts.html";
+constexpr const char* kManualDefaultDocURI = "/SumatraPDF-documentation";
 constexpr const char* kManualVirtualHost = "https://sumatrapdf.manual/";
 constexpr const WCHAR* kManualVirtualHostW = L"https://sumatrapdf.manual/";
 
@@ -6481,23 +6480,59 @@ static bool EnsureManualArchiveLoaded() {
     return gManualArchive.filesCount > 0;
 }
 
-static void OpenManualAtFile(const char* htmlFileName) {
-    if (!EnsureManualArchiveLoaded()) {
-        return;
+static TempStr DocURIToLocalManualUrlTemp(const char* docURI) {
+    if (str::IsEmpty(docURI)) {
+        docURI = kManualDefaultDocURI;
     }
 
-    TempStr url = str::JoinTemp(kManualVirtualHost, htmlFileName);
+    const char* fragment = str::FindChar(docURI, '#');
+    const char* pathStart = docURI;
+    if (*pathStart == '/') {
+        pathStart++;
+    }
+    int pathLen = fragment ? (int)(fragment - pathStart) : str::Len(pathStart);
+    if (pathLen <= 0) {
+        pathStart = kManualDefaultDocURI + 1;
+        pathLen = str::Len(pathStart);
+        fragment = nullptr;
+    }
 
-    if (HasWebView()) {
+    TempStr htmlFile = str::DupTemp(pathStart, pathLen);
+    if (!str::EndsWithI(htmlFile, ".html")) {
+        htmlFile = str::JoinTemp(htmlFile, ".html");
+    }
+
+    TempStr url = str::JoinTemp(kManualVirtualHost, htmlFile);
+    if (fragment) {
+        url = str::JoinTemp(url, fragment);
+    }
+    return url;
+}
+
+static TempStr DocURIToWebUrlTemp(const char* docURI) {
+    if (str::IsEmpty(docURI)) {
+        docURI = kManualDefaultDocURI;
+    }
+    if (*docURI == '/') {
+        return str::FormatTemp("https://www.sumatrapdfreader.org/docs%s", docURI);
+    }
+    return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", docURI);
+}
+
+void LaunchDocumentation(const char* docURI) {
+    TempStr localUrl = DocURIToLocalManualUrlTemp(docURI);
+    TempStr webUrl = DocURIToWebUrlTemp(docURI);
+
+    if (HasWebView() && EnsureManualArchiveLoaded()) {
         if (gManualBrowserWindow) {
             gManualBrowserWindow->webView->resourceProvider = ManualResourceProvider();
-            gManualBrowserWindow->webView->Navigate(url);
+            gManualBrowserWindow->webView->Navigate(localUrl);
             return;
         }
 
         SimpleBrowserCreateArgs args;
         args.title = "SumatraPDF Documentation";
-        args.url = url;
+        args.url = localUrl;
         args.resourceProvider = ManualResourceProvider();
         args.resourceUriPrefix = kManualVirtualHostW;
         gManualBrowserWindow = SimpleBrowserWindowCreate(args);
@@ -6508,7 +6543,7 @@ static void OpenManualAtFile(const char* htmlFileName) {
         }
     }
 
-    SumatraLaunchBrowser(kManualURL);
+    SumatraLaunchBrowser(webUrl);
 }
 
 static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* cmd) {
@@ -7374,11 +7409,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdHelpOpenManual:
-            OpenManualAtFile(kManualIndex);
+            LaunchDocumentation("/SumatraPDF-documentation");
             break;
 
         case CmdHelpOpenKeyboardShortcuts:
-            OpenManualAtFile(kManualKeyboard);
+            LaunchDocumentation("/Keyboard-shortcuts");
             break;
 
         case CmdHelpOpenManualOnWebsite:
