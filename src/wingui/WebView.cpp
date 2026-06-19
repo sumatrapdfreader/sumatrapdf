@@ -16,6 +16,7 @@
 // #include "Theme.h"
 
 #ifdef _MSC_VER
+#include <objidl.h>
 #include <wrl.h>
 #include "webview2.h"
 #include "WebView2EnvironmentOptions.h"
@@ -289,6 +290,145 @@ class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
     ULONG m_refCount = 1;
 };
 
+static TempWStr MimeHeaderFromContentType(const char* contentType) {
+    if (str::IsEmpty(contentType)) {
+        contentType = "text/html";
+    }
+    TempWStr contentTypeW = ToWStrTemp(contentType);
+    return str::JoinTemp(L"Content-Type: ", contentTypeW);
+}
+
+static TempWStr UriPathFromPrefix(const WCHAR* uri, const WCHAR* prefix) {
+    if (!uri || !prefix || !str::StartsWith(uri, prefix)) {
+        return nullptr;
+    }
+    const WCHAR* path = uri + str::Len(prefix);
+    while (*path == L'/') {
+        path++;
+    }
+    if (str::IsEmpty(path)) {
+        return nullptr;
+    }
+    TempWStr pathCopy = str::Dup(path);
+    WCHAR* q = (WCHAR*)str::FindChar(pathCopy, '?');
+    if (q) {
+        *q = 0;
+    }
+    WCHAR* h = (WCHAR*)str::FindChar(pathCopy, '#');
+    if (h) {
+        *h = 0;
+    }
+    return pathCopy;
+}
+
+static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedEventArgs* args, const char* data,
+                                              size_t dataLen, const char* contentType, int statusCode) {
+    if (!args || !gSharedEnvironment) {
+        return false;
+    }
+
+    IStream* stream = nullptr;
+    if (data && dataLen > 0) {
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, dataLen);
+        if (!hMem) {
+            return false;
+        }
+        void* mem = GlobalLock(hMem);
+        if (!mem) {
+            GlobalFree(hMem);
+            return false;
+        }
+        memcpy(mem, data, dataLen);
+        GlobalUnlock(hMem);
+        HRESULT hr = CreateStreamOnHGlobal(hMem, TRUE, &stream);
+        if (FAILED(hr)) {
+            return false;
+        }
+    }
+
+    TempWStr headers = MimeHeaderFromContentType(contentType);
+    ICoreWebView2WebResourceResponse* response = nullptr;
+    HRESULT hr = gSharedEnvironment->CreateWebResourceResponse(
+        stream, statusCode, statusCode == 200 ? L"OK" : L"Not Found", headers, &response);
+    if (stream) {
+        stream->Release();
+    }
+    if (FAILED(hr) || !response) {
+        return false;
+    }
+    args->put_Response(response);
+    response->Release();
+    return true;
+}
+
+class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventHandler {
+  public:
+    explicit webview2_resource_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
+
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2WebResourceRequestedEventHandler)) {
+            *ppv = static_cast<ICoreWebView2WebResourceRequestedEventHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+
+    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2WebResourceRequestedEventArgs* args) {
+        if (!args || !m_wnd || !m_wnd->resourceProvider.getResource || !m_wnd->resourceUriPrefix) {
+            return S_OK;
+        }
+
+        ICoreWebView2WebResourceRequest* request = nullptr;
+        HRESULT hr = args->get_Request(&request);
+        if (FAILED(hr) || !request) {
+            return S_OK;
+        }
+
+        WCHAR* uri = nullptr;
+        hr = request->get_Uri(&uri);
+        request->Release();
+        if (FAILED(hr) || !uri) {
+            return S_OK;
+        }
+
+        TempWStr pathW = UriPathFromPrefix(uri, m_wnd->resourceUriPrefix);
+        CoTaskMemFree(uri);
+        if (!pathW) {
+            return S_OK;
+        }
+
+        TempStr path = ToUtf8Temp(pathW);
+        str::Free(pathW);
+        WebViewResourceResult res;
+        if (!m_wnd->resourceProvider.getResource(m_wnd->resourceProvider.ctx, path, &res)) {
+            CreateWebResourceResponseFromData(args, nullptr, 0, "text/plain", 404);
+            return S_OK;
+        }
+
+        CreateWebResourceResponseFromData(args, res.data, res.dataLen, res.contentType, 200);
+        free(res.data);
+        str::Free(res.contentType);
+        return S_OK;
+    }
+
+  private:
+    WebviewWnd* m_wnd = nullptr;
+    ULONG m_refCount = 1;
+};
+
 class webview2_try_suspend_handler : public ICoreWebView2TrySuspendCompletedHandler {
   public:
     ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
@@ -461,6 +601,18 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
             accelHandler->Release();
         } else {
             accelHandler->Release();
+        }
+    }
+
+    if (resourceProvider.getResource && resourceUriPrefix) {
+        TempWStr filter = str::JoinTemp(resourceUriPrefix, L"*");
+        webview->AddWebResourceRequestedFilter(filter, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
+        auto* resourceHandler = new webview2_resource_handler(this);
+        ::EventRegistrationToken resourceToken = {};
+        if (SUCCEEDED(webview->add_WebResourceRequested(resourceHandler, &resourceToken))) {
+            resourceHandler->Release();
+        } else {
+            resourceHandler->Release();
         }
     }
 
@@ -733,6 +885,7 @@ WebviewWnd::~WebviewWnd() {
     }
     str::Free(dataDir);
     str::Free(userDataFolder);
+    str::Free(resourceUriPrefix);
 }
 
 #endif // _MSC_VER
@@ -743,6 +896,7 @@ WebviewWnd::WebviewWnd() = default;
 WebviewWnd::~WebviewWnd() {
     str::Free(dataDir);
     str::Free(userDataFolder);
+    str::Free(resourceUriPrefix);
 }
 HWND WebviewWnd::Create(const CreateWebViewArgs&) {
     return nullptr;

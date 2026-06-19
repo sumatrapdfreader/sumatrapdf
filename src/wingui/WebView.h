@@ -10,6 +10,17 @@ typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 
 using WebViewMsgCb = Func1<const char*>;
 
+struct WebViewResourceResult {
+    char* data = nullptr;
+    size_t dataLen = 0;
+    char* contentType = nullptr;
+};
+
+struct WebViewResourceProvider {
+    void* ctx = nullptr;
+    bool (*getResource)(void* ctx, const char* path, WebViewResourceResult* res) = nullptr;
+};
+
 struct PendingWebViewOp {
     enum Kind {
         Init,
@@ -68,5 +79,7 @@ struct WebviewWnd : Wnd {
     RECT lastBounds = {};
     bool hasLastBounds = false;
     WCHAR* userDataFolder = nullptr;
+    WCHAR* resourceUriPrefix = nullptr;
+    WebViewResourceProvider resourceProvider;
     Vec<PendingWebViewOp> pendingOps;
 };

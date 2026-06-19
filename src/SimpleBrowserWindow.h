@@ -6,6 +6,8 @@ struct SimpleBrowserCreateArgs {
     Rect pos{}; // if empty, will use CW_USEDEFAULT
     const char* url = nullptr;
     const char* dataDir = nullptr;
+    WebViewResourceProvider resourceProvider;
+    const WCHAR* resourceUriPrefix = nullptr;
 };
 
 struct SimpleBrowserWindow : Wnd {

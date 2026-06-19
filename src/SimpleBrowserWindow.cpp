@@ -60,6 +60,11 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
             dataDir = GetPathInAppDataDirTemp("webViewData");
         }
         webView->dataDir = str::Dup(dataDir);
+        webView->resourceProvider = args.resourceProvider;
+        str::Free(webView->resourceUriPrefix);
+        if (args.resourceUriPrefix) {
+            webView->resourceUriPrefix = str::Dup(args.resourceUriPrefix);
+        }
         CreateWebViewArgs cargs;
         cargs.parent = hwnd;
         cargs.pos = {10, 10, rc.dx - 20, rc.dy - 20};

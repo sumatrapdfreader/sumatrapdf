@@ -6356,50 +6356,14 @@ void DebugCorruptMemory() {
     free(s);
 }
 
-static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
-    logf("ExtractFiles(): dir '%s'\n", destDir);
-    lzma::FileInfo* fi;
-    u8* uncompressed;
-    bool ok;
-
-    int nFiles = archive->filesCount;
-
-    for (int i = 0; i < nFiles; i++) {
-        fi = &archive->files[i];
-        uncompressed = lzma::GetFileDataByIdx(archive, i, nullptr);
-
-        if (!uncompressed) {
-            logf("ExtractFiles: lzma::GetFileDataByIdx() failed\n");
-            return false;
-        }
-        TempStr filePath = path::JoinTemp(destDir, fi->name);
-        ok = dir::CreateForFile(filePath);
-        if (!ok) {
-            logf("ExtractFiles: dir::CreateForFile(%s) failed\n", filePath);
-            free(uncompressed);
-            return false;
-        }
-
-        ByteSlice d = {uncompressed, fi->uncompressedSize};
-        ok = file::WriteFile(filePath, d);
-        free(uncompressed);
-        if (!ok) {
-            logf("ExtractFiles: lzma::Write(%s) failed\n", filePath);
-            return false;
-        }
-        logf("  extracted '%s'\n", filePath);
-    }
-
-    return true;
-}
-
 constexpr const char* kManualIndex = "SumatraPDF-documentation.html";
 constexpr const char* kManualKeyboard = "Keyboard-shortcuts.html";
+constexpr const char* kManualVirtualHost = "https://sumatrapdf.manual/";
+constexpr const WCHAR* kManualVirtualHostW = L"https://sumatrapdf.manual/";
 
 static LoadedDataResource gManualArchiveData;
 static lzma::SimpleArchive gManualArchive{};
 static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
-static bool gUseOurWindowForManual = false;
 
 static void OnDestroyManualBrowserWindow(Wnd::DestroyEvent*) {
     gManualBrowserWindow = nullptr;
@@ -6409,69 +6373,108 @@ void DeleteManualBrowserWindow() {
     delete gManualBrowserWindow;
 }
 
-static void OpenManualAtFile(const char* htmlFileName) {
-    TempStr dataDir = GetNotImportantDataDirTemp();
-    TempStr dirName = GetVerDirNameTemp("crashinfo-");
-    TempStr dir = path::JoinTemp(dataDir, dirName);
-    TempStr htmlFilePath = path::JoinTemp(dir, htmlFileName);
-    // in debug build we force extraction because those could be stale files
-    bool ok = !gIsDebugBuild && file::Exists(htmlFilePath);
-    if (ok) {
-        logf("OpenManualAtFile: '%s' already exists\n", htmlFilePath);
-        goto OpenFileInBrowser;
+static char* ManualMimeFromPath(const char* path) {
+    const char* ext = str::FindCharLast(path, '.');
+    if (!ext) {
+        return str::Dup("text/html");
     }
 
-    ok = gManualArchive.filesCount > 0;
-    if (!ok) {
-        ok = LockDataResource(IDR_MANUAL_PAK, &gManualArchiveData);
-        if (!ok) {
-            logf("OpenManualAtFile(): LockDataResource() failed\n");
-            return;
-        }
-        auto data = gManualArchiveData.data;
-        auto size = gManualArchiveData.dataSize;
-        ok = lzma::ParseSimpleArchive(data, (size_t)size, &gManualArchive);
-        if (!ok) {
-            logf("OpenManualAtFile: lzma:ParseSimpleArchive() failed\n");
-            return;
-        }
-        logf("OpenManualAtFile(): opened manual.dat, %d files\n", gManualArchive.filesCount);
-        ok = gManualArchive.filesCount > 0;
-        if (!ok) {
-            return;
+    static const struct {
+        const char* ext;
+        const char* mimetype;
+    } mimeTypes[] = {
+        {".html", "text/html"},     {".htm", "text/html"},     {".gif", "image/gif"},  {".png", "image/png"},
+        {".jpg", "image/jpeg"},     {".jpeg", "image/jpeg"},   {".bmp", "image/bmp"},  {".css", "text/css"},
+        {".js", "text/javascript"}, {".svg", "image/svg+xml"}, {".txt", "text/plain"},
+    };
+
+    for (int i = 0; i < dimof(mimeTypes); i++) {
+        if (str::EqI(ext, mimeTypes[i].ext)) {
+            return str::Dup(mimeTypes[i].mimetype);
         }
     }
-    dir::CreateAll(dir);
-    // on error, ExtractFiles() shows error message itself
-    ok = ExtractFiles(&gManualArchive, dir);
+    return str::Dup("text/html");
+}
+
+static bool ManualGetResource(void* ctx, const char* path, WebViewResourceResult* res) {
+    auto* archive = (lzma::SimpleArchive*)ctx;
+    if (!archive || !res || str::IsEmpty(path)) {
+        return false;
+    }
+
+    int idx = lzma::GetIdxFromName(archive, path);
+    if (idx < 0) {
+        return false;
+    }
+
+    u8* data = lzma::GetFileDataByIdx(archive, idx, nullptr);
+    if (!data) {
+        return false;
+    }
+
+    lzma::FileInfo* fi = &archive->files[idx];
+    res->data = (char*)data;
+    res->dataLen = fi->uncompressedSize;
+    res->contentType = ManualMimeFromPath(path);
+    return true;
+}
+
+static WebViewResourceProvider ManualResourceProvider() {
+    WebViewResourceProvider provider;
+    provider.ctx = &gManualArchive;
+    provider.getResource = ManualGetResource;
+    return provider;
+}
+
+static bool EnsureManualArchiveLoaded() {
+    if (gManualArchive.filesCount > 0) {
+        return true;
+    }
+
+    bool ok = LockDataResource(IDR_MANUAL_PAK, &gManualArchiveData);
     if (!ok) {
+        logf("EnsureManualArchiveLoaded(): LockDataResource() failed\n");
+        return false;
+    }
+    auto data = gManualArchiveData.data;
+    auto size = gManualArchiveData.dataSize;
+    ok = lzma::ParseSimpleArchive(data, (size_t)size, &gManualArchive);
+    if (!ok) {
+        logf("EnsureManualArchiveLoaded: lzma::ParseSimpleArchive() failed\n");
+        return false;
+    }
+    logf("EnsureManualArchiveLoaded(): opened manual.dat, %d files\n", gManualArchive.filesCount);
+    return gManualArchive.filesCount > 0;
+}
+
+static void OpenManualAtFile(const char* htmlFileName) {
+    if (!EnsureManualArchiveLoaded()) {
         return;
     }
-OpenFileInBrowser:
-    TempStr url = str::JoinTemp("file://", htmlFilePath);
 
-    if (gUseOurWindowForManual) {
+    TempStr url = str::JoinTemp(kManualVirtualHost, htmlFileName);
+
+    if (HasWebView()) {
         if (gManualBrowserWindow) {
-            // re-use existing manual window
+            gManualBrowserWindow->webView->resourceProvider = ManualResourceProvider();
             gManualBrowserWindow->webView->Navigate(url);
             return;
         }
-        if (!gManualBrowserWindow) {
-            // try to launch in our window
-            SimpleBrowserCreateArgs args;
-            args.title = "SumatraPDF Documentation";
-            args.url = url;
-            // TODO: dataDir
-            gManualBrowserWindow = SimpleBrowserWindowCreate(args);
-            if (gManualBrowserWindow != nullptr) {
-                auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroyManualBrowserWindow);
-                gManualBrowserWindow->onDestroy = fn;
-                return;
-            }
+
+        SimpleBrowserCreateArgs args;
+        args.title = "SumatraPDF Documentation";
+        args.url = url;
+        args.resourceProvider = ManualResourceProvider();
+        args.resourceUriPrefix = kManualVirtualHostW;
+        gManualBrowserWindow = SimpleBrowserWindowCreate(args);
+        if (gManualBrowserWindow != nullptr) {
+            auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroyManualBrowserWindow);
+            gManualBrowserWindow->onDestroy = fn;
+            return;
         }
     }
-    // couldn't create WebView2 window so fallback to default web browser
-    SumatraLaunchBrowser(url);
+
+    SumatraLaunchBrowser(kManualURL);
 }
 
 static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* cmd) {
