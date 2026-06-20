@@ -46,6 +46,10 @@ const Comment: Type = { name: "Comment", ctype: "" };
 
 function toCName(name: string): string {
   if (name === "URL") return "url";
+  // "AIChat..." -> "aiChat..." (not "aIChat...")
+  if (name.startsWith("AI") && name.length > 2) {
+    return "ai" + name.slice(2);
+  }
   return name[0].toLowerCase() + name.slice(1);
 }
 
@@ -384,7 +388,6 @@ const codexBuild: Field[] = [
     "if true, pass --dangerously-bypass-approvals-and-sandbox to Codex",
   ),
   mkField("BgColor", Color, "#ffffff", "background color of the OpenAI Codex chat panel"),
-  mkField("SidebarDx", Int, 0, "width of the OpenAI Codex sidebar (0 = use default)"),
 ];
 
 const grokBuild: Field[] = [
@@ -408,7 +411,6 @@ const grokBuild: Field[] = [
     "if true, pass --always-approve to Grok Build (auto-approve tool executions)",
   ),
   mkField("BgColor", Color, "#ffffff", "background color of the Grok Build chat panel"),
-  mkField("SidebarDx", Int, 0, "width of the Grok Build sidebar (0 = use default)"),
 ];
 
 const claudeCode: Field[] = [
@@ -432,7 +434,6 @@ const claudeCode: Field[] = [
     "if true, pass --dangerously-skip-permissions to Claude Code",
   ),
   mkField("BgColor", Color, "#ffffff", "background color of the Claude Code chat panel"),
-  mkField("SidebarDx", Int, 0, "width of the Claude Code sidebar (0 = use default)"),
 ];
 
 const fullscreen: Field[] = [
@@ -953,6 +954,18 @@ const globalPrefs: Field[] = [
   mkEmptyLine(),
   setVersion(
     setExpert(mkStruct("CodexBuild", codexBuild, "settings for the OpenAI Codex chat sidebar")),
+    "3.7",
+  ),
+  mkEmptyLine(),
+  setVersion(
+    setExpert(
+      mkField(
+        "AIChatSidebarDx",
+        Int,
+        0,
+        "width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)",
+      ),
+    ),
     "3.7",
   ),
   mkEmptyLine(),

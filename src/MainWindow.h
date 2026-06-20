@@ -169,7 +169,6 @@ struct MainWindow {
     HWND hwndClaudeStopBtn = nullptr;
     Splitter* claudeSplitter = nullptr;
     bool claudeVisible = false;
-    int claudeDx = 0;
 
     HWND hwndGrokBox = nullptr;
     UINT_PTR grokBoxSubclassId = 0;
@@ -184,7 +183,6 @@ struct MainWindow {
     HWND hwndGrokStopBtn = nullptr;
     Splitter* grokSplitter = nullptr;
     bool grokVisible = false;
-    int grokDx = 0;
 
     HWND hwndCodexBox = nullptr;
     UINT_PTR codexBoxSubclassId = 0;
@@ -199,7 +197,9 @@ struct MainWindow {
     HWND hwndCodexStopBtn = nullptr;
     Splitter* codexSplitter = nullptr;
     bool codexVisible = false;
-    int codexDx = 0;
+
+    // width of the active AI chat sidebar (shared by Claude Code, Grok Build, and OpenAI Codex)
+    int aiChatDx = 0;
 
     // vertical splitter for resizing left side panel
     Splitter* sidebarSplitter = nullptr;
@@ -301,11 +301,9 @@ struct MainWindow {
         bool showFavorites = false;
         bool showMenuBarRebar = false;
         bool claudeVisible = false;
-        int claudeDx = 0;
         bool grokVisible = false;
-        int grokDx = 0;
         bool codexVisible = false;
-        int codexDx = 0;
+        int aiChatDx = 0;
     };
     LayoutState lastLayoutState;
 

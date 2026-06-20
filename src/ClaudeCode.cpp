@@ -187,9 +187,7 @@ static void SyncClaudeSettingsFromUI(MainWindow* win) {
         gGlobalPrefs->claudeCode.skipPermissions =
             (SendMessageW(win->hwndClaudeSkipPermsCheck, BM_GETCHECK, 0, 0) == BST_CHECKED);
     }
-    if (win->claudeDx > 0) {
-        gGlobalPrefs->claudeCode.sidebarDx = win->claudeDx;
-    }
+    AIChatUpdateSidebarDx(win, win->aiChatDx, false);
     SaveSettings();
 }
 
@@ -1109,15 +1107,13 @@ static void OnClaudeSplitterMove(Splitter::MoveEvent* ev) {
     }
     Point pcur = HwndGetCursorPos(win->hwndFrame);
     Rect rFrame = ClientRect(win->hwndFrame);
-    int claudeDx = rFrame.dx - pcur.x;
-    if (claudeDx < kClaudeMinDx || claudeDx > rFrame.dx / 2) {
+    int dx = rFrame.dx - pcur.x;
+    if (dx < kClaudeMinDx || dx > rFrame.dx / 2) {
         ev->resizeAllowed = false;
         return;
     }
-    win->claudeDx = claudeDx;
+    AIChatUpdateSidebarDx(win, dx, ev->finishedDragging);
     if (ev->finishedDragging) {
-        gGlobalPrefs->claudeCode.sidebarDx = claudeDx;
-        SaveSettings();
         RelayoutForClaudeSplitter(win);
     }
 }
@@ -1270,9 +1266,7 @@ void CreateClaudePanel(MainWindow* win) {
     SetWindowSubclass(win->hwndClaudeBox, WndProcClaudeBox, win->claudeBoxSubclassId, (DWORD_PTR)win);
 
     ApplyClaudeSettingsToUI(win);
-    if (gGlobalPrefs->claudeCode.sidebarDx > 0) {
-        win->claudeDx = gGlobalPrefs->claudeCode.sidebarDx;
-    }
+    AIChatApplySavedSidebarDx(win);
 }
 
 // Auto-select the most recent session for the current tab if none is set

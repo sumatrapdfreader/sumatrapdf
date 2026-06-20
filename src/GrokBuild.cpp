@@ -182,9 +182,7 @@ static void SyncGrokSettingsFromUI(MainWindow* win) {
         gGlobalPrefs->grokBuild.alwaysApprove =
             (SendMessageW(win->hwndGrokAlwaysApproveCheck, BM_GETCHECK, 0, 0) == BST_CHECKED);
     }
-    if (win->grokDx > 0) {
-        gGlobalPrefs->grokBuild.sidebarDx = win->grokDx;
-    }
+    AIChatUpdateSidebarDx(win, win->aiChatDx, false);
     SaveSettings();
 }
 
@@ -1150,15 +1148,13 @@ static void OnGrokSplitterMove(Splitter::MoveEvent* ev) {
     }
     Point pcur = HwndGetCursorPos(win->hwndFrame);
     Rect rFrame = ClientRect(win->hwndFrame);
-    int grokDx = rFrame.dx - pcur.x;
-    if (grokDx < kGrokMinDx || grokDx > rFrame.dx / 2) {
+    int dx = rFrame.dx - pcur.x;
+    if (dx < kGrokMinDx || dx > rFrame.dx / 2) {
         ev->resizeAllowed = false;
         return;
     }
-    win->grokDx = grokDx;
+    AIChatUpdateSidebarDx(win, dx, ev->finishedDragging);
     if (ev->finishedDragging) {
-        gGlobalPrefs->grokBuild.sidebarDx = grokDx;
-        SaveSettings();
         RelayoutForGrokSplitter(win);
     }
 }
@@ -1312,9 +1308,7 @@ void CreateGrokPanel(MainWindow* win) {
     SetWindowSubclass(win->hwndGrokBox, WndProcGrokBox, win->grokBoxSubclassId, (DWORD_PTR)win);
 
     ApplyGrokSettingsToUI(win);
-    if (gGlobalPrefs->grokBuild.sidebarDx > 0) {
-        win->grokDx = gGlobalPrefs->grokBuild.sidebarDx;
-    }
+    AIChatApplySavedSidebarDx(win);
 }
 
 // Auto-select the most recent session for the current tab if none is set

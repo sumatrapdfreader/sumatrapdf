@@ -186,9 +186,7 @@ static void SyncCodexSettingsFromUI(MainWindow* win) {
         gGlobalPrefs->codexBuild.skipSandbox =
             (SendMessageW(win->hwndCodexSkipSandboxCheck, BM_GETCHECK, 0, 0) == BST_CHECKED);
     }
-    if (win->codexDx > 0) {
-        gGlobalPrefs->codexBuild.sidebarDx = win->codexDx;
-    }
+    AIChatUpdateSidebarDx(win, win->aiChatDx, false);
     SaveSettings();
 }
 
@@ -1282,15 +1280,13 @@ static void OnCodexSplitterMove(Splitter::MoveEvent* ev) {
     }
     Point pcur = HwndGetCursorPos(win->hwndFrame);
     Rect rFrame = ClientRect(win->hwndFrame);
-    int codexDx = rFrame.dx - pcur.x;
-    if (codexDx < kCodexMinDx || codexDx > rFrame.dx / 2) {
+    int dx = rFrame.dx - pcur.x;
+    if (dx < kCodexMinDx || dx > rFrame.dx / 2) {
         ev->resizeAllowed = false;
         return;
     }
-    win->codexDx = codexDx;
+    AIChatUpdateSidebarDx(win, dx, ev->finishedDragging);
     if (ev->finishedDragging) {
-        gGlobalPrefs->codexBuild.sidebarDx = codexDx;
-        SaveSettings();
         RelayoutForCodexSplitter(win);
     }
 }
@@ -1442,9 +1438,7 @@ void CreateCodexPanel(MainWindow* win) {
     SetWindowSubclass(win->hwndCodexBox, WndProcCodexBox, win->codexBoxSubclassId, (DWORD_PTR)win);
 
     ApplyCodexSettingsToUI(win);
-    if (gGlobalPrefs->codexBuild.sidebarDx > 0) {
-        win->codexDx = gGlobalPrefs->codexBuild.sidebarDx;
-    }
+    AIChatApplySavedSidebarDx(win);
 }
 
 // Auto-select the most recent session for the current tab if none is set

@@ -320,9 +320,6 @@ ClaudeCode [
 
     ; background color of the Claude Code chat panel
     BgColor = #ffffff
-
-    ; width of the Claude Code sidebar (0 = use default)
-    SidebarDx = 0
 ]
 
 ; settings for the Grok Build chat sidebar (introduced in version 3.7)
@@ -343,9 +340,6 @@ GrokBuild [
 
     ; background color of the Grok Build chat panel
     BgColor = #ffffff
-
-    ; width of the Grok Build sidebar (0 = use default)
-    SidebarDx = 0
 ]
 
 ; settings for the OpenAI Codex chat sidebar (introduced in version 3.7)
@@ -365,10 +359,11 @@ CodexBuild [
 
     ; background color of the OpenAI Codex chat panel
     BgColor = #ffffff
-
-    ; width of the OpenAI Codex sidebar (0 = use default)
-    SidebarDx = 0
 ]
+
+; width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok
+; Build, and OpenAI Codex (internal) (introduced in version 3.7)
+AIChatSidebarDx = 0
 
 ; remembered destination language for selection translation; empty uses OS UI
 ; language (introduced in version 3.7)

@@ -4385,9 +4385,8 @@ static bool IsLayoutStateEq(LayoutState* s1, LayoutState* s2) {
            s1->isFullScreen == s2->isFullScreen && s1->tabsVisible == s2->tabsVisible &&
            s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
            s1->showFavorites == s2->showFavorites && s1->showMenuBarRebar == s2->showMenuBarRebar &&
-           s1->claudeVisible == s2->claudeVisible && s1->claudeDx == s2->claudeDx &&
-           s1->grokVisible == s2->grokVisible && s1->grokDx == s2->grokDx && s1->codexVisible == s2->codexVisible &&
-           s1->codexDx == s2->codexDx;
+           s1->claudeVisible == s2->claudeVisible && s1->grokVisible == s2->grokVisible &&
+           s1->codexVisible == s2->codexVisible && s1->aiChatDx == s2->aiChatDx;
 }
 
 static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
@@ -4408,11 +4407,9 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.showFavorites = gGlobalPrefs->showFavorites;
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
     curState.claudeVisible = win->claudeVisible;
-    curState.claudeDx = win->claudeDx;
     curState.grokVisible = win->grokVisible;
-    curState.grokDx = win->grokDx;
     curState.codexVisible = win->codexVisible;
-    curState.codexDx = win->codexDx;
+    curState.aiChatDx = win->aiChatDx;
 
     // skip redundant relayouts when all layout-affecting state is unchanged
     if (IsLayoutStateEq(&curState, &win->lastLayoutState) && updateToolbars && sidebarDx == -1) {
@@ -4588,48 +4585,32 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         rc.dx -= toc.dx + kSplitterDx;
     }
 
+    HWND hwndAIChatBox = nullptr;
+    Splitter* aiChatSplitter = nullptr;
     if (win->codexVisible && win->hwndCodexBox) {
-        int codexDx = win->codexDx;
-        if (codexDx <= 0) {
-            codexDx = rc.dx * 3 / 8;
-        }
-        codexDx = limitValue(codexDx, kSidebarMinDx, rc.dx / 2);
-        win->codexDx = codexDx;
-
-        Rect rSplitter(rc.x + rc.dx - codexDx - kSplitterDx, rc.y, kSplitterDx, rc.dy);
-        dh.MoveWindow(win->codexSplitter->hwnd, rSplitter);
-
-        Rect rCodex(rc.x + rc.dx - codexDx, rc.y, codexDx, rc.dy);
-        dh.MoveWindow(win->hwndCodexBox, rCodex);
-        rc.dx -= codexDx + kSplitterDx;
+        hwndAIChatBox = win->hwndCodexBox;
+        aiChatSplitter = win->codexSplitter;
     } else if (win->grokVisible && win->hwndGrokBox) {
-        int grokDx = win->grokDx;
-        if (grokDx <= 0) {
-            grokDx = rc.dx * 3 / 8;
-        }
-        grokDx = limitValue(grokDx, kSidebarMinDx, rc.dx / 2);
-        win->grokDx = grokDx;
-
-        Rect rSplitter(rc.x + rc.dx - grokDx - kSplitterDx, rc.y, kSplitterDx, rc.dy);
-        dh.MoveWindow(win->grokSplitter->hwnd, rSplitter);
-
-        Rect rGrok(rc.x + rc.dx - grokDx, rc.y, grokDx, rc.dy);
-        dh.MoveWindow(win->hwndGrokBox, rGrok);
-        rc.dx -= grokDx + kSplitterDx;
+        hwndAIChatBox = win->hwndGrokBox;
+        aiChatSplitter = win->grokSplitter;
     } else if (win->claudeVisible && win->hwndClaudeBox) {
-        int claudeDx = win->claudeDx;
-        if (claudeDx <= 0) {
-            claudeDx = rc.dx * 3 / 8;
+        hwndAIChatBox = win->hwndClaudeBox;
+        aiChatSplitter = win->claudeSplitter;
+    }
+    if (hwndAIChatBox && aiChatSplitter) {
+        int aiChatDx = win->aiChatDx;
+        if (aiChatDx <= 0) {
+            aiChatDx = rc.dx * 3 / 8;
         }
-        claudeDx = limitValue(claudeDx, kSidebarMinDx, rc.dx / 2);
-        win->claudeDx = claudeDx;
+        aiChatDx = limitValue(aiChatDx, kSidebarMinDx, rc.dx / 2);
+        win->aiChatDx = aiChatDx;
 
-        Rect rSplitter(rc.x + rc.dx - claudeDx - kSplitterDx, rc.y, kSplitterDx, rc.dy);
-        dh.MoveWindow(win->claudeSplitter->hwnd, rSplitter);
+        Rect rSplitter(rc.x + rc.dx - aiChatDx - kSplitterDx, rc.y, kSplitterDx, rc.dy);
+        dh.MoveWindow(aiChatSplitter->hwnd, rSplitter);
 
-        Rect rClaude(rc.x + rc.dx - claudeDx, rc.y, claudeDx, rc.dy);
-        dh.MoveWindow(win->hwndClaudeBox, rClaude);
-        rc.dx -= claudeDx + kSplitterDx;
+        Rect rAIChat(rc.x + rc.dx - aiChatDx, rc.y, aiChatDx, rc.dy);
+        dh.MoveWindow(hwndAIChatBox, rAIChat);
+        rc.dx -= aiChatDx + kSplitterDx;
     }
 
     dh.MoveWindow(win->hwndCanvas, rc);

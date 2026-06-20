@@ -74,4 +74,6 @@ char* AIChatGenerateSessionId();
 AIChatBackend AIChatGetTabPanelOpen(WindowTab* tab);
 void AIChatSetTabPanelOpen(WindowTab* tab, AIChatBackend backend);
 void AIChatSyncPanelsToCurrentTab(MainWindow* win);
+void AIChatApplySavedSidebarDx(MainWindow* win);
+void AIChatUpdateSidebarDx(MainWindow* win, int dx, bool persist);
 void AIChatWaitForTabProcessesToFinish(MainWindow* win, bool (*tabHasRunningProcess)(WindowTab*));

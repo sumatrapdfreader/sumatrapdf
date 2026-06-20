@@ -583,6 +583,28 @@ void AIChatSyncPanelsToCurrentTab(MainWindow* win) {
     ApplyPanelHwndVisibility(win);
 }
 
+void AIChatApplySavedSidebarDx(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    if (gGlobalPrefs->aiChatSidebarDx > 0) {
+        win->aiChatDx = gGlobalPrefs->aiChatSidebarDx;
+    }
+}
+
+void AIChatUpdateSidebarDx(MainWindow* win, int dx, bool persist) {
+    if (!win) {
+        return;
+    }
+    win->aiChatDx = dx;
+    if (dx > 0) {
+        gGlobalPrefs->aiChatSidebarDx = dx;
+    }
+    if (persist) {
+        SaveSettings();
+    }
+}
+
 void AIChatWaitForTabProcessesToFinish(MainWindow* win, bool (*tabHasRunningProcess)(WindowTab*)) {
     if (!win || !tabHasRunningProcess) {
         return;

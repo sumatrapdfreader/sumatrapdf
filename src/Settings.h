@@ -144,8 +144,6 @@ struct ClaudeCode {
     // background color of the Claude Code chat panel
     char* bgColor;
     ParsedColor bgColorParsed;
-    // width of the Claude Code sidebar (0 = use default)
-    int sidebarDx;
 };
 
 // settings for the Grok Build chat sidebar
@@ -163,8 +161,6 @@ struct GrokBuild {
     // background color of the Grok Build chat panel
     char* bgColor;
     ParsedColor bgColorParsed;
-    // width of the Grok Build sidebar (0 = use default)
-    int sidebarDx;
 };
 
 // settings for the OpenAI Codex chat sidebar
@@ -182,8 +178,6 @@ struct CodexBuild {
     // background color of the OpenAI Codex chat panel
     char* bgColor;
     ParsedColor bgColorParsed;
-    // width of the OpenAI Codex sidebar (0 = use default)
-    int sidebarDx;
 };
 
 // default values for annotations in PDF documents
@@ -615,6 +609,9 @@ struct GlobalPrefs {
     GrokBuild grokBuild;
     // settings for the OpenAI Codex chat sidebar
     CodexBuild codexBuild;
+    // width of the AI chat sidebar (0 = use default); shared by Claude
+    // Code, Grok Build, and OpenAI Codex (internal)
+    int aiChatSidebarDx;
     // remembered destination language for selection translation; empty
     // uses OS UI language
     char* translateToLang;
@@ -761,10 +758,9 @@ static const FieldInfo gClaudeCodeFields[] = {
     {offsetof(ClaudeCode, effort), SettingType::Int, 1},
     {offsetof(ClaudeCode, skipPermissions), SettingType::Bool, false},
     {offsetof(ClaudeCode, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
-    {offsetof(ClaudeCode, sidebarDx), SettingType::Int, 0},
 };
-static const StructInfo gClaudeCodeInfo = {sizeof(ClaudeCode), 6, gClaudeCodeFields,
-                                           "Model\0Models\0Effort\0SkipPermissions\0BgColor\0SidebarDx"};
+static const StructInfo gClaudeCodeInfo = {sizeof(ClaudeCode), 5, gClaudeCodeFields,
+                                           "Model\0Models\0Effort\0SkipPermissions\0BgColor"};
 
 static const FieldInfo gGrokBuildFields[] = {
     {offsetof(GrokBuild, model), SettingType::String, (intptr_t)"grok-composer-2.5-fast"},
@@ -772,10 +768,9 @@ static const FieldInfo gGrokBuildFields[] = {
     {offsetof(GrokBuild, effort), SettingType::Int, 1},
     {offsetof(GrokBuild, alwaysApprove), SettingType::Bool, false},
     {offsetof(GrokBuild, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
-    {offsetof(GrokBuild, sidebarDx), SettingType::Int, 0},
 };
-static const StructInfo gGrokBuildInfo = {sizeof(GrokBuild), 6, gGrokBuildFields,
-                                          "Model\0Models\0Effort\0AlwaysApprove\0BgColor\0SidebarDx"};
+static const StructInfo gGrokBuildInfo = {sizeof(GrokBuild), 5, gGrokBuildFields,
+                                          "Model\0Models\0Effort\0AlwaysApprove\0BgColor"};
 
 static const FieldInfo gCodexBuildFields[] = {
     {offsetof(CodexBuild, model), SettingType::String, (intptr_t)"gpt-5.5"},
@@ -783,10 +778,9 @@ static const FieldInfo gCodexBuildFields[] = {
     {offsetof(CodexBuild, sandbox), SettingType::Int, 1},
     {offsetof(CodexBuild, skipSandbox), SettingType::Bool, false},
     {offsetof(CodexBuild, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
-    {offsetof(CodexBuild, sidebarDx), SettingType::Int, 0},
 };
-static const StructInfo gCodexBuildInfo = {sizeof(CodexBuild), 6, gCodexBuildFields,
-                                           "Model\0Models\0Sandbox\0SkipSandbox\0BgColor\0SidebarDx"};
+static const StructInfo gCodexBuildInfo = {sizeof(CodexBuild), 5, gCodexBuildFields,
+                                           "Model\0Models\0Sandbox\0SkipSandbox\0BgColor"};
 
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t)"#ffff00"},
@@ -1054,6 +1048,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, codexBuild), SettingType::Struct, (intptr_t)&gCodexBuildInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, aiChatSidebarDx), SettingType::Int, 0},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, translateToLang), SettingType::String, (intptr_t)""},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, annotations), SettingType::Struct, (intptr_t)&gAnnotationsInfo},
@@ -1090,7 +1086,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 100, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 102, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0EnableTeXEnhancements\0EscToExit\0FullPathI"
     "nTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0ReloadMo"
     "difiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowMe"
@@ -1098,10 +1094,10 @@ static const StructInfo gGlobalPrefsInfo = {
     "crollbars\0ScrollbarInSinglePage\0SmoothScroll\0CitationHoverDelay\0FastScrollOverScrollbar\0PreventSleepInFullscr"
     "een\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0DisableAutoLin"
     "ks\0UseSysColors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI"
-    "\0\0ChmUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0TranslateToLang\0\0Annotations\0\0ExternalViewers\0\0Forward"
-    "Search\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0DefaultPassw"
-    "ords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateChec"
-    "k\0OpenCountWeek\0PropWinPos\0\0"};
+    "\0\0ChmUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annotations\0\0Externa"
+    "lViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroup"
+    "s\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0T"
+    "imeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},
