@@ -36,7 +36,7 @@ Press `Shift + I` again (`CmdInvertColors`), or set `FixedPageUI.InvertColors = 
 
 **How do I get a dark background without inverting images in EPUBs?**
 
-There is no perfect one-click solution: `Shift + I` inverts the whole rendered page including images. For EPUBs you can tune `EBookUI` (custom CSS, `WindowBgCol`) or use themes — see [Customizing eBook UI](Customizing-eBook-UI.md).
+There is no perfect one-click solution: `Shift + I` inverts the whole rendered page including images. For EPUBs you can tune `EBookUI` (custom CSS, `WindowBgCol`) or use themes — see [Customize eBook UI](Customize-eBook-UI.md).
 
 ## Links and navigation
 

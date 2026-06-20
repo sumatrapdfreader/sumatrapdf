@@ -17,7 +17,7 @@ Documentation for all settings is at [https://www.sumatrapdfreader.org/settings/
 
 Here are some things you can customize:
 
-- [keyboard shortcuts](Customizing-keyboard-shortcuts.md)
+- [keyboard shortcuts](Customize-keyboard-shortcuts.md)
 - width of tab with `Tab Width`
 - window background color with `FixedPageUI.BackgroundColor`
 - color used to highlight text with `FixedPageUI.SelectionColor`

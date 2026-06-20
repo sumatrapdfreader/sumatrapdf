@@ -45,7 +45,7 @@ Explanation:
 
 If you provide `Name`, it'll be available in [Command Palette](Command-Palette.md).
 
-See [customizing shortcuts](Customizing-keyboard-shortcuts.md) for more complete docs on `Shortcuts` [advanced setting](Advanced-options-settings.md).
+See [customize shortcuts](Customize-keyboard-shortcuts.md) for more complete docs on `Shortcuts` [advanced setting](Advanced-options-settings.md).
 
 ## Using icons
 

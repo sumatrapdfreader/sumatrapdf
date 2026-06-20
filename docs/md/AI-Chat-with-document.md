@@ -56,7 +56,7 @@ It is **not** available for comic archives (`.cbr`, `.cbz`, etc.), folders of im
 
 Sidebar width, default model, effort level, background color, and related options are in the `ClaudeCode` section of [advanced settings](Advanced-options-settings.md) (`SumatraPDF-settings.txt`).
 
-You can assign your own keyboard shortcut to `CmdAIChatWithClaudeCode` — there is no default key binding. See [Customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md).
+You can assign your own keyboard shortcut to `CmdAIChatWithClaudeCode` — there is no default key binding. See [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md).
 
 ## Requirements and limitations
 

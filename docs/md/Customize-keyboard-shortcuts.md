@@ -1,4 +1,4 @@
-# Customizing keyboard shortcuts
+# Customize keyboard shortcuts
 
 **Available in version 3.4 or later.**
 

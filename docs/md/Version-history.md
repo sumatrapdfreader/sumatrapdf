@@ -179,7 +179,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - bug fix: Del should not delete an annotation if editing content
 - bug fix: re-enable tree view full row select
 - change: `CmdCreateAnnotHighlight` etc. no longer copies selection to clipboard by default. To get that behavior back, you can use `copytoclipboard` argument [instead](Commands.md#cmdcreateannothighlight-and-other-cmdcreateannot).
-- change: `Ctrl + Tab` is now `CmdNextTabSmart`, was `CmdNextTab`. `Ctrl + Shift + Tab` is now `CmdPrevTabSmart`, was `CmdPrevTab`. You can [re-bind it](Customizing-keyboard-shortcuts.md) if you prefer old behavior
+- change: `Ctrl + Tab` is now `CmdNextTabSmart`, was `CmdNextTab`. `Ctrl + Shift + Tab` is now `CmdPrevTabSmart`, was `CmdPrevTab`. You can [re-bind it](Customize-keyboard-shortcuts.md) if you prefer old behavior
 - `CmdCommandPalette` takes optional `mode` argument: `@` for tab selection, `#` for selecting from file history and `>` for commands.
 - command palette no longer shows combined tabs/file history/commands. `CmdCommandPalette` only shows commands. Because of that removed `CmdCommandPaletteNoFiles` because now `CmdCommandPalette` behaves like it
 - removed `CmdCommandPaletteOnlyTabs`, replaced by `CmdCommandPaletteNoFiles @`
@@ -309,7 +309,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 ## 3.4 (2022-05-24)
 
 - [Command Palette](Command-Palette.md) (`Ctrl + K`)
-- [customizable keyboard shortcuts](Customizing-keyboard-shortcuts.md)
+- [customizable keyboard shortcuts](Customize-keyboard-shortcuts.md)
 - better support for epub files using mupdf's epub engine. Adds text selection and search in ebook files. Better rendering fidelity. On the downside, might be slower.
 - [search / translate selected text](Customize-search-translation-services.md) with web services
   - we have few built-in and you can [add your own](https://www.sumatrapdfreader.org/settings/settings3-4#SelectionHandlers)

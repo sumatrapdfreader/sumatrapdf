@@ -13,7 +13,7 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [Keyboard shortcuts](Keyboard-shortcuts.md)
 
-[Customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md)
+[Customize keyboard shortcuts](Customize-keyboard-shortcuts.md)
 
 [Tabs and windows](Tabs-and-windows.md)
 
@@ -39,9 +39,9 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [AI Chat with document](AI-Chat-with-document.md)
 
-[Customizing toolbar](Customize-toolbar.md)
+[Customize toolbar](Customize-toolbar.md)
 
-[Customizing UI colors / theme](Customize-theme-colors.md)
+[Customize UI colors / theme](Customize-theme-colors.md)
 
 [Customize external viewers](Customize-external-viewers.md)
 
@@ -59,7 +59,7 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [Supported document formats](Supported-document-formats.md)
 
-[Customizing eBook UI](Customizing-eBook-UI.md)
+[Customize eBook UI](Customize-eBook-UI.md)
 
 [Supported File Formats](Supported-document-formats.md)
 

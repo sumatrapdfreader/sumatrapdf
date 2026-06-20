@@ -3,7 +3,7 @@
 You can control SumatraPDF with commands:
 
 - use [command palette](Command-Palette.md) (`Ctrl + K`) to invoke a command by its description
-- [customize a keyboard shortcut](Customizing-keyboard-shortcuts.md) to invoke a command by its id
+- [customize a keyboard shortcut](Customize-keyboard-shortcuts.md) to invoke a command by its id
 - **ver 3.5+:** [send a command via DDE](DDE-Commands.md) e.g. `[CmdClose]` to invoke `Close Document` command
 - **ver 3.6+:** some commands [accept arguments](Commands.md#commands-with-arguments)
 
@@ -346,7 +346,7 @@ CmdFindMatch,,since 3.6 it's called CmdFindToggleMatchCase,
 
 # Commands with arguments
 
-**Ver 3.6+:** some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customizing-keyboard-shortcuts.md).
+**Ver 3.6+:** some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customize-keyboard-shortcuts.md).
 
 For example:
 

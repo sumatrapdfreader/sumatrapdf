@@ -80,7 +80,7 @@ Actions that add navigation point:
 
 # Related commands
 
-You can [assign your own keyboard shortcuts](Customizing-keyboard-shortcuts.md). Here are related commands:
+You can [assign your own keyboard shortcuts](Customize-keyboard-shortcuts.md). Here are related commands:
 
 * `CmdScrollUp`, `CmdScrollDown`
 * `CmdScrollLeft`, `CmdScrollRight`

@@ -42,4 +42,4 @@ Shortcuts [
 
 After saving, pressing `b` opens the command palette directly in favorites mode.
 
-See [customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md) for details.
+See [customize keyboard shortcuts](Customize-keyboard-shortcuts.md) for details.

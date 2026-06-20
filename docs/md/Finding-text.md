@@ -33,7 +33,7 @@ If `Ctrl + F` behaves oddly (for example replacing the search term with selected
 
 ### Laptop keyboards
 
-On many laptops the `F1`–`F12` keys control volume and brightness unless you hold **Fn**. If `F3` changes volume instead of finding the next match, use **Fn + F3**, or rebind `CmdFindNext` in [custom keyboard shortcuts](Customizing-keyboard-shortcuts.md).
+On many laptops the `F1`–`F12` keys control volume and brightness unless you hold **Fn**. If `F3` changes volume instead of finding the next match, use **Fn + F3**, or rebind `CmdFindNext` in [custom keyboard shortcuts](Customize-keyboard-shortcuts.md).
 
 ## How search works
 

@@ -103,7 +103,7 @@ See [Advanced options / settings](Advanced-options-settings.md) for the full lis
 
 ### Keyboard shortcuts with custom colors
 
-**Ver 3.6+:** `CmdCreateAnnotHighlight` accepts a color argument. You can bind e.g. green highlights to a key — see [Customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md).
+**Ver 3.6+:** `CmdCreateAnnotHighlight` accepts a color argument. You can bind e.g. green highlights to a key — see [Customize keyboard shortcuts](Customize-keyboard-shortcuts.md).
 
 ### Toolbar buttons
 

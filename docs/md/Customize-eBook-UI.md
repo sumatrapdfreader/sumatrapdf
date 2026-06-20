@@ -1,4 +1,4 @@
-# Customizing eBook UI
+# Customize eBook UI
 
 EPUB, MOBI, FB2, and similar formats use SumatraPDF's **eBook UI** (HTML-based layout). Since **version 3.4** the engine is MuPDF-based: text selection, in-document search, and bookmarks work much like PDF.
 

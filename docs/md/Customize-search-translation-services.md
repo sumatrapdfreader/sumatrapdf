@@ -48,4 +48,4 @@ SelectionHandlers [
 
 `Name` is what shows in the menu. You can use `&` characters to add Windows hot-key for keyboard-only invocation.
 
-**Ver3.6+**: `Key` is a keyboard shortcut in the same format as in [Shortcuts](Customizing-keyboard-shortcuts.md) advanced setting.
+**Ver3.6+**: `Key` is a keyboard shortcut in the same format as in [Shortcuts](Customize-keyboard-shortcuts.md) advanced setting.

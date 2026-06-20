@@ -26,7 +26,7 @@ Mode                LastWriteTime         Length Name
 -a----          5/4/2020  7:51 PM          23565 premake5.lua
 ```
 
-## Customizing build
+## Customize build
 
 Sometimes we want to customize the build with `#ifdef`. We could do it by adding additional configurations, but that can spiral out of control quickly.
 
