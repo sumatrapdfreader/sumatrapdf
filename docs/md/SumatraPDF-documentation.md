@@ -35,7 +35,7 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [How we store settings](How-we-store-settings.md)
 
-[Accessibility and Text-to-Speech](Accessibility-and-Text-to-Speech.md)
+[Read Aloud (TTS)](Read-Aloud-TTS.md)
 
 [AI Chat with document](AI-Chat-with-document.md)
 
@@ -62,6 +62,8 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 [Customize eBook UI](Customize-eBook-UI.md)
 
 [Supported File Formats](Supported-document-formats.md)
+
+[Accessibility](Accessibility.md)
 
 [Installer cmd-line arguments](Installer-cmd-line-arguments.md)
 

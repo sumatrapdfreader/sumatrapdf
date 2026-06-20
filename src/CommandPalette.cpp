@@ -535,6 +535,9 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (cmdId == CmdContinueReadAloud) {
         return ctx.canContinueReadAloud && !ctx.isSpeaking;
     }
+    if (cmdId == CmdStopReadAloud) {
+        return ctx.isSpeaking || ctx.canContinueReadAloud;
+    }
     if (cmdId == CmdReadAloudSelection) {
         return ctx.hasSelection;
     }
