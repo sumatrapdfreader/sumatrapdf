@@ -2,7 +2,7 @@
 
 UX-focused analysis of the Read Aloud feature (pre-release 3.7+) and proposals for improving discoverability, controls, and listening workflows. No implementation details.
 
-*Last updated after playback bar, Stop Reading, auto-scroll, and menu polish (master, June 2026).*
+*Last updated after playback bar, Stop Reading, auto-scroll, toolbar pause icon, and tab-switch behavior review (master, June 2026).*
 
 ## Current experience (as implemented today)
 
@@ -34,13 +34,27 @@ While a read-aloud session is active (speaking or paused):
 
 The bar is the primary **session control** surface. Menus and palette duplicate transport actions for keyboard-first users.
 
+### Tab and window lifecycle (as implemented)
+
+Switching away from a tab **stops speech and clears the read-aloud session** on the tab being left (`LoadModelIntoTab` → `CloseDocumentInCurrentTab` → `ResetReadAloudStateForTab`): TTS stops, resume text is freed, highlight and playback bar are torn down. There is no cross-tab “still reading in the background” state within one window.
+
+| Event | Behavior today |
+|-------|----------------|
+| **Switch to another tab** (same window) | Stop speaking; clear session on previous tab; playback bar hidden |
+| **Pause, then stay on same tab** | Session persists; Continue Reading works |
+| **Close tab that was reading** | `StopReadAloudIfSourceTab` + tab removal |
+| **Close window** | `StopReadAloudIfSourceWindow` stops TTS for that window’s source tab |
+
+Implication: toolbar and menus always target the **current tab**, which is also the only tab that can have an active or paused session. Cross-tab orphan sessions and “bar shows tab A while canvas shows tab B” do **not** occur.
+
 ### What works well
 
 - **Multiple explicit start scopes** — selection, first visible text in viewport (“From Top”), cursor position (context menu), plus smart default on toolbar / `CmdReadAloud` (selection if present, else viewport).
 - **Continuous listening** — viewport / cursor / smart builds read from the start point through the **end of the document**; selection reads selection only. 1 KB TTS chunks chain automatically.
 - **Word follow-along** — current spoken word highlighted on the canvas (selection color; timer-driven repaint).
 - **Auto-scroll** — viewport follows the spoken word while reading; **stops permanently** if the user scrolls the highlight fully off-screen (respects manual navigation).
-- **Resume** — pause remembers position; Continue Reading picks up in the same tab.
+- **Resume** — pause remembers position; Continue Reading picks up in the same tab (until you switch tabs).
+- **Predictable tab policy** — switching tabs ends listening and clears state; no hidden audio from another tab in the same window.
 - **Stop** — explicit end-of-session in playback bar, all three menus, and command palette (`CmdStopReadAloud`).
 - **Session chrome** — playback bar answers “what is playing, from where, how far” at a glance.
 - **Discoverability** — menubar, context menu, toolbar dropdown, palette, and playback bar.
@@ -55,13 +69,11 @@ The bar is the primary **session control** surface. Menus and palette duplicate 
 
 | Issue | Why it hurts |
 |-------|----------------|
-| **Toolbar button still triple-duty** | One click = start *or* pause *or* continue. Tooltip helps but users must read it; no Stop on main click. Icon switches to “stop speaking” glyph while the action is still **Pause** — visual mismatch. |
-| **Toolbar vs session tab** | `CmdReadAloud` uses **current tab** for continue/smart start; audio and highlight follow **source tab**. Paused on tab A, switch to tab B → toolbar offers “Read Aloud” (new start) while the bar still shows tab A — easy to orphan a paused session or start conflicting audio. |
+| **Toolbar button still triple-duty** | One click = start *or* pause *or* continue. Tooltip helps but users must read it; no Stop on main click. |
 | **Two mental models for “start”** | Smart (`CmdReadAloud`) vs explicit menu items (viewport-only, selection-only, cursor). Power users benefit; casual users may not know which to pick. Scope label on the bar helps *after* start, not before. |
 | **“From Top” wording** | Menu says **Start Reading From Top**; bar says **From top**. Same behavior (first visible text → end) but labels differ slightly. |
-| **Global audio, per-window bar** | TTS is app-global; playback bar only appears on the session window. Another window has no bar — only a changing toolbar tooltip if that window is focused. |
-| **Tab switch within one window** | Bar stays visible at the bottom while the canvas shows another tab’s pages. Filename on the bar clarifies the source, but highlight is on the source tab’s page (not visible) — listening without follow-along until user returns to that tab. |
-| **Starting a new scope while paused** | Explicit start commands stop active TTS but may not fully replace an existing paused session on another tab — edge case feels ambiguous without a confirm dialog. |
+| **Global audio, second window** | TTS is app-global. If one window is reading and the user focuses another SumatraPDF window, the focused window has no playback bar (only toolbar tooltip reflects global speaking state). Rare with single-window use; tab switch within a window is not affected (speech stops). |
+| **Tab switch ends session** | Intentional and coherent, but users who pause and switch tabs lose resume position without warning — a one-line toast (“Reading stopped”) on tab change could set expectations. |
 | **Silent permission failure** | Copy-restricted PDFs block read aloud with **no user message** when `Perm::CopySelection` is denied. |
 | **Highlight not configurable** | Follow-along always uses selection color; no toggle, dedicated read-aloud color, or disable. |
 | **No speech rate control** | Windows voices speak at system rate only; no in-app slow/normal/fast. |
@@ -89,37 +101,37 @@ The bar is the primary **session control** surface. Menus and palette duplicate 
 | “From Here” label unclear | **Improved** — renamed **Start Reading From Top**; help table updated |
 | User docs lag code | **Fixed** — Accessibility page brought current |
 | Cursor start disabled wrongly | **Fixed** — same text-hit logic as I-beam cursor |
+| Toolbar stop icon while pausing | **Fixed** — pause bars icon while speaking |
+| Cross-tab session confusion | **Not an issue** — tab switch stops speech and clears session |
 
 ## Design principle (unchanged)
 
 Treat Read Aloud as **listening mode** layered on normal reading — not a hidden palette command. Users should see: *what* is reading, *how* to control it, and *how far* through the content they are.
 
-The playback bar delivers this with minimal chrome. Next polish should reduce **toolbar ambiguity** and **cross-tab confusion**, not add modals or permanent toolbar widgets.
+The playback bar delivers this with minimal chrome. Next polish should reduce **toolbar ambiguity** and improve **first-run clarity**, not add modals or permanent toolbar widgets.
 
 ## Recommended improvements (by priority)
 
-### 1. Align toolbar with session model (highest impact remaining)
+### 1. Toolbar transport clarity (highest impact remaining)
 
-The playback bar fixed visibility; the toolbar is now the main source of confusion.
+Playback bar and tab policy are solid; the toolbar main button is the main leftover friction.
 
 | Proposal | Rationale |
 |----------|-----------|
-| **Main click = pause/resume only when a session exists** on current or global session tab; otherwise smart start | Avoid surprise “new start” over a paused session on another tab |
-| **Separate Stop** on toolbar (split button, long-press, or right-click) **or** rely on bar/menus only but fix the icon | Today’s stop-speaking icon implies Stop; action is Pause |
-| **Toolbar tooltip shows source** when session tab ≠ current tab | e.g. “Continue Reading · Report.pdf” |
-| **Disable smart start** while any session is paused, with “Stop or Continue first” toast | Prevents orphaned `readAloudText` on inactive tabs |
+| **Optional Stop on toolbar** | Split button, long-press, or right-click — today Stop is only on bar, menus, palette |
+| **Consider simpler main-click rule** | e.g. click = smart start only when idle; when speaking/paused on current tab, rely on bar for pause/stop (toolbar becomes “start” only) — reduces triple-duty |
+| ~~Fix pause vs stop icon~~ | **Done** — pause bars while speaking |
 
-### 2. Cross-tab and multi-document policy
+### 2. Multi-window polish (low priority)
 
-Define rules users can predict; reflect them in bar + toolbar:
+Tab switch within a window is already handled. Remaining edge case: **two SumatraPDF windows**, one reading:
 
-| Event | Suggested behavior |
-|-------|-------------------|
-| Switch tab while reading | Keep playing; bar shows source filename; optional “Switch to reading tab” link/button on bar |
-| Switch tab while paused | Bar stays; Continue in menu operates on session tab, not current tab (or switch tab automatically on Continue) |
-| Start read on tab B while A paused/playing | Confirm: “Stop reading *A* and start *B*?” — today partial/overlapping state is possible |
-| Close tab that’s reading | Stop + confirm if mid-document |
-| Second SumatraPDF window | Show compact bar or notification in focused window: “Reading in other window · Report.pdf” |
+| Proposal | Rationale |
+|----------|-----------|
+| Compact notice in focused window | “Reading in other window · Report.pdf” when `TtsIsSpeaking()` and source tab is elsewhere |
+| Or stop on focus change | Heavier-handed; only if users report confusion |
+
+Optional: toast when tab switch ends a paused session (“Reading stopped”) so users know Continue is no longer available.
 
 ### 3. Playback bar polish (incremental)
 
@@ -170,7 +182,7 @@ In **Advanced Options** (or playback-bar ⚙):
 | No extractable text | “No text on this page.” → **[Find text on next page]** if feasible |
 | Copy permission denied | “This document doesn’t allow copying text.” (today: silent) |
 | No voices installed | Link to Windows **Settings → Speech** |
-| Session conflict | “Already reading *X.pdf* — Stop or Continue first.” |
+| Tab switch while paused | “Reading stopped” (session cleared on tab change; optional toast) |
 
 Keep toasts short; one primary action each.
 
@@ -179,7 +191,7 @@ Keep toasts short; one primary action each.
 | Command | Show when |
 |---------|-----------|
 | Pause Reading | `TtsIsSpeaking()` |
-| Continue Reading | paused session on current or global session tab |
+| Continue Reading | paused session on **current tab** (only tab that can have a session) |
 | Stop Reading | any active session (speaking or paused) |
 | Start commands | document loaded; not redundant with transport when speaking |
 
@@ -214,16 +226,17 @@ Call out the difference in help and first-run tip.
 
 | Quick wins | Larger lifts |
 |------------|----------------|
-| Fix toolbar icon (speak vs pause vs stop semantics) | Cross-tab session policy + confirm on conflict |
-| Palette gating for Stop / Continue | “Reading in other tab” bar action |
-| Toast when copy permission blocks TTS | Voice ⚙ on playback bar |
-| Unify bar scope label with menu wording | Speech rate in Advanced Options |
-| “Paused ·” prefix on bar status line | Highlight on/off + color setting |
-| Menu tooltips for start scopes | Inline **Start Reading Selection** under Copy |
-| Default keyboard shortcut | OCR / next-page path on no-text |
-| Bar button contrast / optional icons | **Read selection then continue** scope |
+| Palette gating for Stop / Continue | Voice ⚙ on playback bar |
+| Toast when copy permission blocks TTS | Speech rate in Advanced Options |
+| Toast when tab switch ends reading | Highlight on/off + color setting |
+| Unify bar scope label with menu wording | Inline **Start Reading Selection** under Copy |
+| “Paused ·” prefix on bar status line | OCR / next-page path on no-text |
+| Menu tooltips for start scopes | **Read selection then continue** scope |
+| Default keyboard shortcut | Multi-window “reading elsewhere” notice |
+| Bar button contrast / optional icons | Optional toolbar Stop affordance |
+| ~~Fix toolbar pause icon~~ | ~~Cross-tab session policy~~ (not needed — tab switch clears session) |
 
-The largest **remaining** gap is **session coherence across tabs and toolbar**: users can see *what* is playing (playback bar), but the toolbar and smart-start path can still act on the wrong tab or leave orphaned pause state.
+The largest **remaining** gap is **toolbar triple-duty** (start / pause / continue on one button) and **discoverability of start scopes** for first-time users — not cross-tab state, which is already coherent.
 
 ## Related implementation map (for developers)
 
@@ -240,6 +253,7 @@ The largest **remaining** gap is **session coherence across tabs and toolbar**: 
 - **Chunking:** `kReadAloudMaxChunkLen = 1024`, `ReadAloudSpeakChunk`, `WM_TTS_EVENT` chaining
 - **Highlight:** `PaintReadAloudHighlight`, highlight timer in `ReadAloudHighlight.cpp`
 - **Resume:** `readAloudText`, `readAloudResumePos`, chunk fields on `WindowTab`
+- **Tab switch:** `LoadModelIntoTab` → `CloseDocumentInCurrentTab` → `ResetReadAloudStateForTab` (stops TTS, clears session)
 - **Copy permission:** silent return in read-aloud entry paths when `Perm::CopySelection` denied
 - **TTS:** `TextToSpeech.cpp` — WinRT + SAPI; `ReadAloudVoiceId` in settings
 - **User docs:** `docs/md/Accessibility-and-Text-to-Speech.md`, `docs/md/Commands.md`, version-history 3.7 entry
