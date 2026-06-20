@@ -1161,34 +1161,113 @@ static void DeleteStaleCbxCacheFiles() {
     }
 }
 
-// delete symbols and manual from possibly previous versions
+static i64 FileTimeAgeSec(FILETIME ft, const ULARGE_INTEGER& now) {
+    ULARGE_INTEGER t;
+    t.LowPart = ft.dwLowDateTime;
+    t.HighPart = ft.dwHighDateTime;
+    if (t.QuadPart == 0) {
+        return -1;
+    }
+    return (i64)((now.QuadPart - t.QuadPart) / 10000000ULL);
+}
+
+static bool IsBuildDirName(const char* name) {
+    if (str::Len(name) != 6) {
+        return false;
+    }
+    for (const char* s = name; *s; s++) {
+        char c = *s;
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// returns age in seconds of the dir's last activity, or -1 if unknown.
+// prefers the directory mtime; falls back to the newest file mtime inside.
+static i64 GetDirLastActivityAgeSec(const char* dirPath, const ULARGE_INTEGER& now) {
+    WIN32_FILE_ATTRIBUTE_DATA fileInfo{};
+    WCHAR* dirPathW = ToWStrTemp(dirPath);
+    if (GetFileAttributesExW(dirPathW, GetFileExInfoStandard, &fileInfo)) {
+        i64 age = FileTimeAgeSec(fileInfo.ftLastWriteTime, now);
+        if (age >= 0) {
+            return age;
+        }
+    }
+
+    i64 newestAge = -1;
+    DirIter di{dirPath};
+    di.includeFiles = true;
+    di.includeDirs = false;
+    di.recurse = true;
+    for (DirIterEntry* de : di) {
+        i64 age = FileTimeAgeSec(de->fd->ftLastWriteTime, now);
+        if (age < 0) {
+            continue;
+        }
+        if (newestAge < 0 || age < newestAge) {
+            newestAge = age;
+        }
+    }
+    return newestAge;
+}
+
+// delete stale build dirs and legacy top-level dirs from previous layouts
 static void DeleteStaleFilesAsync() {
     DeleteStaleCbxCacheFiles();
 
     if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
         return;
     }
-    TempStr dir = GetNotImportantDataDirTemp();
-    TempStr ver = GetBuildDirNameTemp("");
-    logf("DeleteStaleFilesAsync: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
+    TempStr dataDir = GetNotImportantDataDirTemp();
+    if (!dataDir) {
+        return;
+    }
+    logf("DeleteStaleFilesAsync: dataDir: '%s'\n", dataDir);
 
-    DirIter di{dir};
+    FILETIME nowFt;
+    GetSystemTimeAsFileTime(&nowFt);
+    ULARGE_INTEGER now;
+    now.LowPart = nowFt.dwLowDateTime;
+    now.HighPart = nowFt.dwHighDateTime;
+    constexpr i64 kMaxAgeSec = 14LL * 24 * 60 * 60;
+
+    DirIter di{dataDir};
     di.includeFiles = false;
     di.includeDirs = true;
     for (DirIterEntry* de : di) {
         const char* name = de->name;
-        bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
-        if (!maybeDelete) {
-            logf("DeleteStaleFilesAsync: skipping '%s' because not manual-* or crsahinfo-*\n", name);
+        if (str::Eq(name, "cbx-cache")) {
             continue;
         }
-        TempStr currVer = GetBuildDirNameTemp("");
-        if (str::Contains(name, currVer)) {
-            logf("DeleteStaleFilesAsync: skipping '%s' because our ver '%s'\n", name, currVer);
+
+        bool isLegacy = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
+        bool isBuildDir = IsBuildDirName(name);
+        if (!isLegacy && !isBuildDir) {
+            logf("DeleteStaleFilesAsync: skipping '%s'\n", name);
             continue;
         }
-        bool ok = dir::RemoveAll(dir);
-        logf("DeleteStaleFilesAsync: dir::RemoveAll('%s') returned %d\n", dir, ok);
+
+        if (isBuildDir) {
+            i64 ageSec = GetDirLastActivityAgeSec(de->filePath, now);
+            if (ageSec < 0) {
+                logf("DeleteStaleFilesAsync: skipping '%s', couldn't determine age\n", de->filePath);
+                continue;
+            }
+            if (ageSec < kMaxAgeSec) {
+                logf("DeleteStaleFilesAsync: skipping '%s' (age %lld days)\n", de->filePath,
+                     (long long)(ageSec / (24 * 60 * 60)));
+                continue;
+            }
+            logf("DeleteStaleFilesAsync: deleting stale build dir '%s' (age %lld days)\n", de->filePath,
+                 (long long)(ageSec / (24 * 60 * 60)));
+        } else {
+            logf("DeleteStaleFilesAsync: deleting legacy dir '%s'\n", de->filePath);
+        }
+
+        bool ok = dir::RemoveAll(de->filePath);
+        logf("DeleteStaleFilesAsync: dir::RemoveAll('%s') returned %d\n", de->filePath, ok);
     }
 }
 

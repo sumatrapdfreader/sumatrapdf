@@ -6068,29 +6068,34 @@ TempStr GetNotImportantDataDirTemp() {
     return path::JoinTemp(dir, "SumatraPDF-data");
 }
 
-TempStr GetLogFilePathTemp() {
-    TempStr dir = GetNotImportantDataDirTemp();
-    if (!dir) {
+TempStr GetBuildDirNameTemp() {
+    TempStr dataDir = GetNotImportantDataDirTemp();
+    if (!dataDir) {
         return nullptr;
     }
-    // TODO: maybe use unique name
-    return path::JoinTemp(dir, "sumatra-log.txt");
-}
-
-// separate directory for each build (first 6 chars of exe sha1)
-TempStr GetBuildDirNameTemp(const char* prefix) {
     char id[7] = "000000";
     char* sha1 = Sha1OfAppExe();
     if (sha1) {
         str::BufSet(id, dimof(id), sha1);
     }
-    return str::FormatTemp("%s%s", prefix, id);
+    return path::JoinTemp(dataDir, id);
+}
+
+TempStr GetLogFilePathTemp() {
+    TempStr buildDir = GetBuildDirNameTemp();
+    if (!buildDir) {
+        return nullptr;
+    }
+    // TODO: maybe use unique name
+    return path::JoinTemp(buildDir, "sumatra-log.txt");
 }
 
 TempStr GetCrashInfoDirTemp() {
-    TempStr dataDir = GetNotImportantDataDirTemp();
-    TempStr dirName = GetBuildDirNameTemp("crashinfo-");
-    return path::JoinTemp(dataDir, dirName);
+    TempStr buildDir = GetBuildDirNameTemp();
+    if (!buildDir) {
+        return nullptr;
+    }
+    return path::JoinTemp(buildDir, "crashinfo");
 }
 
 void ShowLogFileSmart() {

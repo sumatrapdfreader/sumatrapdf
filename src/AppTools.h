@@ -45,6 +45,7 @@ Rect GetDefaultWindowPos();
 void SaveCallstackLogs();
 
 char* Sha1OfAppExe();
+TempStr GetWebViewDataDirTemp();
 
 TempStr FormatFileSizeTransTemp(i64);
 

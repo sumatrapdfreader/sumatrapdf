@@ -150,7 +150,7 @@ LRESULT ChmDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UIN
 
 bool ChmDocView::CreateWebView2() {
     wv = new WebviewWnd();
-    wv->dataDir = str::Dup(GetPathInAppDataDirTemp("chmWebViewData"));
+    wv->dataDir = str::Dup(GetWebViewDataDirTemp());
     wv->resourceUriPrefix = str::Dup(kChmVirtualHostW);
     wv->resourceProvider.ctx = this;
     wv->resourceProvider.getResource = ResourceGet;

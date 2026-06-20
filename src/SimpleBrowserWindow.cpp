@@ -233,7 +233,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         webView = new WebviewWnd();
         const char* dataDir = args.dataDir;
         if (!dataDir) {
-            dataDir = GetPathInAppDataDirTemp("webViewData");
+            dataDir = GetWebViewDataDirTemp();
         }
         webView->dataDir = str::Dup(dataDir);
         webView->resourceProvider = args.resourceProvider;

@@ -589,6 +589,21 @@ char* Sha1OfAppExe() {
     return gAppSha1;
 }
 
+TempStr GetWebViewDataDirTemp() {
+    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
+    if (!dir) {
+        return nullptr;
+    }
+    dir = path::JoinTemp(dir, "SumatraPDF-data");
+    char id[7] = "000000";
+    char* sha1 = Sha1OfAppExe();
+    if (sha1) {
+        str::BufSet(id, dimof(id), sha1);
+    }
+    dir = path::JoinTemp(dir, id);
+    return path::JoinTemp(dir, "webview");
+}
+
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 TempStr FormatSizeShortTransTemp(i64 size) {
