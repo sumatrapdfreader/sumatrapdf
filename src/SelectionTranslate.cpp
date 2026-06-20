@@ -31,6 +31,8 @@ constexpr int kIdResultText = 103;
 constexpr int kIdTranslateBtn = 104;
 constexpr int kIdCloseBtn = 105;
 
+static const char* kSrcLangAuto = "Auto";
+
 static const char* gPopularLanguages[] = {
     "English",
     "Chinese (Simplified)",
@@ -182,8 +184,11 @@ static const char* DefaultDestinationLanguageTemp() {
     return "English";
 }
 
-static void PopulateLanguageCombo(HWND hwnd, const char* initial) {
+static void PopulateLanguageCombo(HWND hwnd, const char* initial, bool includeAuto) {
     SendMessageW(hwnd, CB_RESETCONTENT, 0, 0);
+    if (includeAuto) {
+        CbAddString(hwnd, kSrcLangAuto);
+    }
     for (const char* lang : gPopularLanguages) {
         CbAddString(hwnd, lang);
     }
@@ -194,6 +199,15 @@ static void PopulateLanguageCombo(HWND hwnd, const char* initial) {
             SendMessageW(hwnd, CB_SETCURSEL, (WPARAM)idx, 0);
         }
     }
+}
+
+static bool IsSrcLangAutoTemp(const char* srcLang) {
+    if (str::IsEmptyOrWhiteSpace(srcLang)) {
+        return false;
+    }
+    TempStr lang = str::DupTemp(srcLang);
+    str::TrimWSInPlace(lang, str::TrimOpt::Both);
+    return str::EqI(lang, kSrcLangAuto);
 }
 
 static char* GetWindowTextUtf8Temp(HWND hwnd) {
@@ -207,6 +221,9 @@ static char* GetWindowTextUtf8Temp(HWND hwnd) {
 }
 
 static bool LanguagesAreSameTemp(const char* a, const char* b) {
+    if (IsSrcLangAutoTemp(a) || IsSrcLangAutoTemp(b)) {
+        return false;
+    }
     if (str::IsEmptyOrWhiteSpace(a) || str::IsEmptyOrWhiteSpace(b)) {
         return false;
     }
@@ -316,6 +333,12 @@ static TempStr NormalizeTextForPromptTemp(const char* text) {
 
 static TempStr BuildTranslationPromptTemp(const char* srcLang, const char* dstLang, const char* text) {
     TempStr normalized = NormalizeTextForPromptTemp(text);
+    if (IsSrcLangAutoTemp(srcLang)) {
+        return str::FormatTemp(
+            "Detect the language of the following text and translate it to %s. Return only the "
+            "translation with no explanation, commentary, or quotation marks. Text: %s",
+            dstLang, normalized);
+    }
     return str::FormatTemp(
         "Translate the following text from %s to %s. Return only the translation with no "
         "explanation, commentary, or quotation marks. Text: %s",
@@ -898,7 +921,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     SetWindowFont(dlg->hwndSrcLang, dlg->hFont, TRUE);
     int comboRowDy = ComboVisibleDy(dlg->hwndSrcLang);
     MoveWindow(dlg->hwndSrcLang, srcComboX, langRowY, srcComboDx, comboRowDy + DpiScale(hwnd, 200), TRUE);
-    PopulateLanguageCombo(dlg->hwndSrcLang, "English");
+    PopulateLanguageCombo(dlg->hwndSrcLang, kSrcLangAuto, true);
     int labelYOffset = ComboLabelYOffset(dlg->hwndSrcLang, hwnd, dlg->hFont);
     createLabel(_TRA("From:"), fromLabelX, langRowY + labelYOffset, fromLabelSize.dx);
 
@@ -910,7 +933,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
                                        (HMENU)(INT_PTR)kIdDstLang, GetModuleHandleW(nullptr), nullptr);
     SetWindowFont(dlg->hwndDstLang, dlg->hFont, TRUE);
     MoveWindow(dlg->hwndDstLang, dstComboX, langRowY, dstComboDx, comboRowDy + DpiScale(hwnd, 200), TRUE);
-    PopulateLanguageCombo(dlg->hwndDstLang, DefaultDestinationLanguageTemp());
+    PopulateLanguageCombo(dlg->hwndDstLang, DefaultDestinationLanguageTemp(), false);
     createLabel(_TRA("To:"), toLabelX, langRowY + labelYOffset, toLabelSize.dx);
     y += comboRowDy + dlg->gap;
     dlg->yAfterLangs = y;
