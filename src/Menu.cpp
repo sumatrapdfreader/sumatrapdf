@@ -741,6 +741,22 @@ static MenuDef menuDefMainSelection[] = {
 };
 //] ACCESSKEY_GROUP Menu (Selection)
 
+//[ ACCESSKEY_GROUP Read Aloud Menu
+// Placeholder only: real items are built in RebuildReadAloudMenu().
+// idOrSubmenu must be a normal Cmd* id (not a Tts menu id above CmdLast), or
+// BuildMenuFromDef mis-identifies it as a submenu pointer and crashes.
+static MenuDef menuDefReadAloud[] = {
+    {
+        _TRN("Start Reading From Top Page"),
+        CmdReadAloud,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Read Aloud Menu
+
 //[ ACCESSKEY_GROUP Menubar
 static MenuDef menuDefMenubar[] = {
     {
@@ -762,6 +778,10 @@ static MenuDef menuDefMenubar[] = {
     {
         _TRN("S&election"),
         (UINT_PTR)menuDefMainSelection,
+    },
+    {
+        _TRN("Read Aloud (TTS)"),
+        (UINT_PTR)menuDefReadAloud,
     },
     {
         _TRN("F&avorites"),
@@ -1736,6 +1756,9 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             UINT flags = MF_POPUP | (disableMenu ? MF_DISABLED : MF_ENABLED);
             if (subMenuDef == menuDefFile) {
                 DynamicPartOfFileMenu(subMenu, ctx);
+            }
+            if (subMenuDef == menuDefReadAloud) {
+                SetReadAloudAppSubmenu(subMenu);
             }
             TempWStr ws = ToWStrTemp(title);
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, ws);
@@ -2712,6 +2735,8 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
         RebuildFavMenu(win, m);
     } else if (id == menuDefZoom[0].idOrSubmenu) {
         BuildMenuZoom(m);
+    } else if (IsReadAloudAppSubmenu(m)) {
+        RebuildReadAloudMenu(win, m);
     }
     MenuUpdateStateForWindow(win);
     MarkMenuOwnerDraw(win->menu, true);

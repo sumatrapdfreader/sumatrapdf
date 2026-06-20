@@ -136,6 +136,19 @@ void CloseTab(WindowTab* tab, bool quitIfLast);
 // true if read aloud was paused and can be resumed in this tab
 bool CanContinueReadAloud(WindowTab* tab);
 WindowTab* GetReadAloudSourceTab();
+
+constexpr UINT CmdTtsVoiceDefault = 0x7100;
+constexpr UINT CmdTtsVoiceFirst = 0x7101;
+constexpr UINT CmdTtsVoiceLast = 0x71ff;
+constexpr UINT CmdTtsMenuReadCurrentPage = 0x7200;
+constexpr UINT CmdTtsMenuContinueReading = 0x7201;
+constexpr UINT CmdTtsMenuReadSelection = 0x7202;
+constexpr UINT CmdTtsMenuPauseReading = 0x7203;
+
+void RebuildReadAloudMenu(MainWindow* win, HMENU menu);
+bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);
+void SetReadAloudAppSubmenu(HMENU menu);
+bool IsReadAloudAppSubmenu(HMENU menu);
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout = true);

@@ -6780,6 +6780,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return 0;
     }
 
+    if (win && HandleReadAloudMenuCommand(win, cmdId)) {
+        return 0;
+    }
+
     if (CanAccessDisk()) {
         // check if the menuId belongs to an entry in the list of
         // recently opened files and load the referenced file if it does
@@ -9011,15 +9015,17 @@ HWND gLastActiveFrameHwnd = nullptr;
 
 // Text-to-speech/read-aloud integration
 static constexpr UINT WM_TTS_EVENT = WM_APP + 0x421;
-static constexpr UINT CmdTtsVoiceDefault = 0x7100;
-static constexpr UINT CmdTtsVoiceFirst = 0x7101;
-static constexpr UINT CmdTtsVoiceLast = 0x71ff;
-static constexpr UINT CmdTtsMenuReadCurrentPage = 0x7200;
-static constexpr UINT CmdTtsMenuContinueReading = 0x7201;
-static constexpr UINT CmdTtsMenuReadSelection = 0x7202;
-static constexpr UINT CmdTtsMenuPauseReading = 0x7203;
 
 static WindowTab* gReadAloudSourceTab = nullptr;
+static HMENU gReadAloudAppSubmenu = nullptr;
+
+void SetReadAloudAppSubmenu(HMENU menu) {
+    gReadAloudAppSubmenu = menu;
+}
+
+bool IsReadAloudAppSubmenu(HMENU menu) {
+    return menu && menu == gReadAloudAppSubmenu;
+}
 
 static void ReadAloudShowNotif(WindowTab* tab, const char* msg);
 
@@ -9537,20 +9543,7 @@ static TempStr TtsLangIdToLocaleNameTemp(const char* lang) {
     return ToUtf8Temp(localeName);
 }
 
-static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
-    if (!win || !nmtb || nmtb->iItem != CmdReadAloud) {
-        return;
-    }
-
-    RECT rc{};
-    SendMessageW(nmtb->hdr.hwndFrom, TB_GETRECT, CmdReadAloud, (LPARAM)&rc);
-    MapWindowPoints(nmtb->hdr.hwndFrom, HWND_DESKTOP, (POINT*)&rc, 2);
-
-    HMENU menu = CreatePopupMenu();
-    if (!menu) {
-        return;
-    }
-
+static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win) {
     const char* currentVoiceId = TtsGetVoiceId();
 
     UINT defaultFlags = MF_STRING;
@@ -9558,7 +9551,7 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
         defaultFlags |= MF_CHECKED;
     }
 
-    WindowTab* currTab = win->CurrentTab();
+    WindowTab* currTab = win ? win->CurrentTab() : nullptr;
     bool isSpeaking = TtsIsSpeaking();
     bool canContinue = CanContinueReadAloud(currTab);
     bool hasSelection =
@@ -9608,8 +9601,24 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
         cmd++;
     }
 
-    UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rc.left, rc.bottom, 0,
-                                         win->hwndFrame, nullptr);
+    TtsFreeVoices(voices);
+}
+
+void RebuildReadAloudMenu(MainWindow* win, HMENU menu) {
+    if (!menu || !win) {
+        return;
+    }
+    MenuEmpty(menu);
+    BuildReadAloudMenuItems(menu, win);
+    RemoveBadMenuSeparators(menu);
+}
+
+static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
+    if (!win || selected == 0) {
+        return;
+    }
+
+    WindowTab* currTab = win->CurrentTab();
 
     if (selected == CmdTtsMenuPauseReading) {
         ReadAloudStopRememberPos();
@@ -9633,15 +9642,45 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
         ReadAloudSelectionInTab(currTab);
     } else if (selected == CmdTtsVoiceDefault) {
         TtsSetVoiceById("");
-    } else if (selected >= CmdTtsVoiceFirst && selected < cmd) {
+    } else if (selected >= CmdTtsVoiceFirst && selected <= CmdTtsVoiceLast) {
+        Vec<TtsVoiceInfo> voices = TtsGetVoices();
         int voiceIndex = (int)(selected - CmdTtsVoiceFirst);
-
         if (voiceIndex >= 0 && voiceIndex < voices.Size()) {
             TtsSetVoiceById(voices[voiceIndex].id);
         }
+        TtsFreeVoices(voices);
+    }
+}
+
+bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId) {
+    if (cmdId == CmdTtsVoiceDefault || (cmdId >= CmdTtsMenuReadCurrentPage && cmdId <= CmdTtsMenuPauseReading) ||
+        (cmdId >= CmdTtsVoiceFirst && cmdId <= CmdTtsVoiceLast)) {
+        HandleReadAloudMenuSelection(win, (UINT)cmdId);
+        return true;
+    }
+    return false;
+}
+
+static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
+    if (!win || !nmtb || nmtb->iItem != CmdReadAloud) {
+        return;
     }
 
-    TtsFreeVoices(voices);
+    RECT rc{};
+    SendMessageW(nmtb->hdr.hwndFrom, TB_GETRECT, CmdReadAloud, (LPARAM)&rc);
+    MapWindowPoints(nmtb->hdr.hwndFrom, HWND_DESKTOP, (POINT*)&rc, 2);
+
+    HMENU menu = CreatePopupMenu();
+    if (!menu) {
+        return;
+    }
+
+    BuildReadAloudMenuItems(menu, win);
+
+    UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rc.left, rc.bottom, 0,
+                                         win->hwndFrame, nullptr);
+
+    HandleReadAloudMenuSelection(win, selected);
     DestroyMenu(menu);
 }
 
