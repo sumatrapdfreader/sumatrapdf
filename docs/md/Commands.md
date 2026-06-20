@@ -314,7 +314,7 @@ CmdToggleHoverPreview,,Toggle Hover Preview,"Toggle the citation / reference hov
 CmdReadAloud,,Read Aloud,"Read selected text (or from the viewport if no selection) through the end of the document using Windows text-to-speech. Invoking again pauses reading. Voice is chosen in the Read Aloud Voice submenu and remembered in ReadAloudVoiceId, ver 3.7+"
 CmdPauseReadAloud,,Pause Reading,"Pause reading text aloud; resume with CmdContinueReadAloud, ver 3.7+"
 CmdContinueReadAloud,,Continue Reading,"Continue reading text aloud from where it was paused, ver 3.7+"
-CmdReadAloudFromTopPage,,Start Reading From Here,"Read from the first visible text in the viewport through the end of the document, ver 3.7+"
+CmdReadAloudFromTopPage,,Start Reading From Top,"Read from the first visible text in the viewport through the end of the document, ver 3.7+"
 CmdReadAloudSelection,,Start Reading Selection,"Read the current text selection aloud, ver 3.7+"
 ```
 

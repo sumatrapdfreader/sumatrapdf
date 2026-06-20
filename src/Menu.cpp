@@ -748,7 +748,7 @@ static MenuDef menuDefMainSelection[] = {
 // BuildMenuFromDef mis-identifies it as a submenu pointer and crashes.
 static MenuDef menuDefReadAloud[] = {
     {
-        _TRN("Start Reading From Here"),
+        _TRN("Start Reading From Top"),
         CmdReadAloud,
     },
     {
@@ -761,7 +761,7 @@ static MenuDef menuDefReadAloud[] = {
 //[ ACCESSKEY_GROUP Context Menu (Read Aloud)
 static MenuDef menuDefContextReadAloud[] = {
     {
-        _TRN("Start Reading From Here"),
+        _TRN("Start Reading From Top"),
         CmdReadAloud,
     },
     {
