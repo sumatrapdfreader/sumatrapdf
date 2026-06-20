@@ -1485,15 +1485,19 @@ void ToggleCodexPanel(MainWindow* win) {
     if (!IsCodexBuildAvailable() || !win->hwndCodexBox) {
         return;
     }
-    if (!win->codexVisible && !IsCodexBuildSupportedForTab(win->CurrentTab())) {
+    WindowTab* tab = win->CurrentTab();
+    if (!tab) {
         return;
     }
-    win->codexVisible = !win->codexVisible;
-    if (win->codexVisible) {
-        AIChatHideOtherPanels(win, AIChatBackend::Codex);
+    if (AIChatGetTabPanelOpen(tab) == AIChatBackend::Codex) {
+        AIChatSetTabPanelOpen(tab, AIChatBackend::None);
+    } else {
+        if (!IsCodexBuildSupportedForTab(tab)) {
+            return;
+        }
+        AIChatSetTabPanelOpen(tab, AIChatBackend::Codex);
     }
-    HwndSetVisibility(win->hwndCodexBox, win->codexVisible);
-    HwndSetVisibility(win->codexSplitter->hwnd, win->codexVisible);
+    AIChatSyncPanelsToCurrentTab(win);
 
     if (win->codexVisible) {
         UpdateCodexPanelTitle(win, 0);

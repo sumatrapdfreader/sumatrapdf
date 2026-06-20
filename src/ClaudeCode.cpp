@@ -1313,15 +1313,19 @@ void ToggleClaudePanel(MainWindow* win) {
     if (!IsClaudeCodeAvailable() || !win->hwndClaudeBox) {
         return;
     }
-    if (!win->claudeVisible && !IsClaudeCodeSupportedForTab(win->CurrentTab())) {
+    WindowTab* tab = win->CurrentTab();
+    if (!tab) {
         return;
     }
-    win->claudeVisible = !win->claudeVisible;
-    if (win->claudeVisible) {
-        AIChatHideOtherPanels(win, AIChatBackend::Claude);
+    if (AIChatGetTabPanelOpen(tab) == AIChatBackend::Claude) {
+        AIChatSetTabPanelOpen(tab, AIChatBackend::None);
+    } else {
+        if (!IsClaudeCodeSupportedForTab(tab)) {
+            return;
+        }
+        AIChatSetTabPanelOpen(tab, AIChatBackend::Claude);
     }
-    HwndSetVisibility(win->hwndClaudeBox, win->claudeVisible);
-    HwndSetVisibility(win->claudeSplitter->hwnd, win->claudeVisible);
+    AIChatSyncPanelsToCurrentTab(win);
 
     if (win->claudeVisible) {
         UpdateClaudePanelTitle(win, 0);

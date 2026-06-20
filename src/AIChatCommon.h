@@ -1,8 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-
 struct MainWindow;
 struct WindowTab;
 struct WebViewResourceResult;
@@ -11,6 +9,7 @@ enum class AIChatBackend {
     Claude,
     Grok,
     Codex,
+    None,
 };
 
 struct AIChatSessionInfo {
@@ -72,5 +71,7 @@ int AIChatLabelMaxTextDx(HWND labelHwnd, int labelDx);
 TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, const char* prefix, const char* docName, int maxDx);
 char* AIChatGenerateSessionId();
 
-void AIChatHideOtherPanels(MainWindow* win, AIChatBackend keepVisible);
+AIChatBackend AIChatGetTabPanelOpen(WindowTab* tab);
+void AIChatSetTabPanelOpen(WindowTab* tab, AIChatBackend backend);
+void AIChatSyncPanelsToCurrentTab(MainWindow* win);
 void AIChatWaitForTabProcessesToFinish(MainWindow* win, bool (*tabHasRunningProcess)(WindowTab*));

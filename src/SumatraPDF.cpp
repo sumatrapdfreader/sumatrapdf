@@ -91,6 +91,7 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "EditAnnotations.h"
+#include "AIChatCommon.h"
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
 #include "SelectionTranslate.h"
@@ -2818,6 +2819,13 @@ void LoadModelIntoTab(WindowTab* tab) {
     UpdateWindow(win->hwndCanvas);
 
     if (IsMainWindowValid(win)) {
+        bool claudeWas = win->claudeVisible;
+        bool grokWas = win->grokVisible;
+        bool codexWas = win->codexVisible;
+        AIChatSyncPanelsToCurrentTab(win);
+        if (claudeWas != win->claudeVisible || grokWas != win->grokVisible || codexWas != win->codexVisible) {
+            RelayoutWindow(win);
+        }
         OnClaudeTabChanged(win);
         OnGrokTabChanged(win);
         OnCodexTabChanged(win);

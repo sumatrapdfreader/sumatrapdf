@@ -520,49 +520,67 @@ char* AIChatGenerateSessionId() {
                        guid.Data4[6], guid.Data4[7]);
 }
 
-static void HideClaudePanel(MainWindow* win) {
-    win->claudeVisible = false;
-    if (win->hwndClaudeBox) {
-        HwndSetVisibility(win->hwndClaudeBox, false);
+static AIChatBackend BackendFromTabStorage(int v) {
+    if (v < 0 || v > 2) {
+        return AIChatBackend::None;
     }
-    if (win->claudeSplitter && win->claudeSplitter->hwnd) {
-        HwndSetVisibility(win->claudeSplitter->hwnd, false);
-    }
+    return (AIChatBackend)v;
 }
 
-static void HideGrokPanel(MainWindow* win) {
-    win->grokVisible = false;
-    if (win->hwndGrokBox) {
-        HwndSetVisibility(win->hwndGrokBox, false);
+static int BackendToTabStorage(AIChatBackend backend) {
+    if (backend == AIChatBackend::None) {
+        return -1;
     }
-    if (win->grokSplitter && win->grokSplitter->hwnd) {
-        HwndSetVisibility(win->grokSplitter->hwnd, false);
-    }
+    return (int)backend;
 }
 
-static void HideCodexPanel(MainWindow* win) {
-    win->codexVisible = false;
-    if (win->hwndCodexBox) {
-        HwndSetVisibility(win->hwndCodexBox, false);
+AIChatBackend AIChatGetTabPanelOpen(WindowTab* tab) {
+    if (!tab || tab->IsAboutTab()) {
+        return AIChatBackend::None;
     }
-    if (win->codexSplitter && win->codexSplitter->hwnd) {
-        HwndSetVisibility(win->codexSplitter->hwnd, false);
-    }
+    return BackendFromTabStorage(tab->aiChatPanelOpen);
 }
 
-void AIChatHideOtherPanels(MainWindow* win, AIChatBackend keepVisible) {
+void AIChatSetTabPanelOpen(WindowTab* tab, AIChatBackend backend) {
+    if (!tab || tab->IsAboutTab()) {
+        return;
+    }
+    tab->aiChatPanelOpen = BackendToTabStorage(backend);
+}
+
+static void ApplyPanelHwndVisibility(MainWindow* win) {
     if (!win) {
         return;
     }
-    if (keepVisible != AIChatBackend::Claude) {
-        HideClaudePanel(win);
+    if (win->hwndClaudeBox) {
+        HwndSetVisibility(win->hwndClaudeBox, win->claudeVisible);
     }
-    if (keepVisible != AIChatBackend::Grok) {
-        HideGrokPanel(win);
+    if (win->claudeSplitter && win->claudeSplitter->hwnd) {
+        HwndSetVisibility(win->claudeSplitter->hwnd, win->claudeVisible);
     }
-    if (keepVisible != AIChatBackend::Codex) {
-        HideCodexPanel(win);
+    if (win->hwndGrokBox) {
+        HwndSetVisibility(win->hwndGrokBox, win->grokVisible);
     }
+    if (win->grokSplitter && win->grokSplitter->hwnd) {
+        HwndSetVisibility(win->grokSplitter->hwnd, win->grokVisible);
+    }
+    if (win->hwndCodexBox) {
+        HwndSetVisibility(win->hwndCodexBox, win->codexVisible);
+    }
+    if (win->codexSplitter && win->codexSplitter->hwnd) {
+        HwndSetVisibility(win->codexSplitter->hwnd, win->codexVisible);
+    }
+}
+
+void AIChatSyncPanelsToCurrentTab(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    AIChatBackend open = AIChatGetTabPanelOpen(win->CurrentTab());
+    win->claudeVisible = open == AIChatBackend::Claude;
+    win->grokVisible = open == AIChatBackend::Grok;
+    win->codexVisible = open == AIChatBackend::Codex;
+    ApplyPanelHwndVisibility(win);
 }
 
 void AIChatWaitForTabProcessesToFinish(MainWindow* win, bool (*tabHasRunningProcess)(WindowTab*)) {

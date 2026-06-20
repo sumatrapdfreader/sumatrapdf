@@ -1355,15 +1355,19 @@ void ToggleGrokPanel(MainWindow* win) {
     if (!IsGrokBuildAvailable() || !win->hwndGrokBox) {
         return;
     }
-    if (!win->grokVisible && !IsGrokBuildSupportedForTab(win->CurrentTab())) {
+    WindowTab* tab = win->CurrentTab();
+    if (!tab) {
         return;
     }
-    win->grokVisible = !win->grokVisible;
-    if (win->grokVisible) {
-        AIChatHideOtherPanels(win, AIChatBackend::Grok);
+    if (AIChatGetTabPanelOpen(tab) == AIChatBackend::Grok) {
+        AIChatSetTabPanelOpen(tab, AIChatBackend::None);
+    } else {
+        if (!IsGrokBuildSupportedForTab(tab)) {
+            return;
+        }
+        AIChatSetTabPanelOpen(tab, AIChatBackend::Grok);
     }
-    HwndSetVisibility(win->hwndGrokBox, win->grokVisible);
-    HwndSetVisibility(win->grokSplitter->hwnd, win->grokVisible);
+    AIChatSyncPanelsToCurrentTab(win);
 
     if (win->grokVisible) {
         UpdateGrokPanelTitle(win, 0);

@@ -82,6 +82,9 @@ struct WindowTab {
     StrBuilder* codexChatLog = nullptr;
     HANDLE codexProcess = nullptr;
 
+    // which AI chat sidebar is open for this tab (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex)
+    int aiChatPanelOpen = -1;
+
     // read aloud: cleaned text that was being read and the utf8 offset
     // within it where the user stopped reading; enables "Continue reading"
     // (reset when the document is closed or reloaded)
