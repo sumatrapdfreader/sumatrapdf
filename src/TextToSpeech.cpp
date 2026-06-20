@@ -1077,9 +1077,13 @@ static void WinTtsProcessEvents() {
     }
 }
 
-// position (in WCHARs) in the spoken text of the word being played
+// position (in WCHARs) in the spoken text of the word being played;
+// -1 if playback has not started yet (still synthesizing)
 static int WinTtsLastWordPosWide() {
-    if (!gWinWaveOut || gWinCues.Size() == 0) {
+    if (!gWinWaveOut) {
+        return -1;
+    }
+    if (gWinCues.Size() == 0) {
         return 0;
     }
 
@@ -1187,8 +1191,14 @@ int TtsGetSpokenPosUtf8() {
         wpos = (int)gSapiLastWordPos;
     }
 
-    if (!gTtsSpokenText || wpos <= 0) {
+    if (!gTtsSpokenText || wpos < 0) {
         return -1;
+    }
+    if (wpos == 0) {
+        if (!gTtsActive) {
+            return -1;
+        }
+        return 0;
     }
     int n = WideCharToMultiByte(CP_UTF8, 0, gTtsSpokenText, wpos, nullptr, 0, nullptr, nullptr);
     return n > 0 ? n : -1;

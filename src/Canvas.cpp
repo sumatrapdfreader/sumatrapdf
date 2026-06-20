@@ -3210,7 +3210,8 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             break;
 
         case READ_ALOUD_HIGHLIGHT_TIMER_ID:
-            if (TtsIsSpeaking() && GetReadAloudSourceTab()) {
+            if (GetReadAloudSourceTab()) {
+                TtsProcessEvents();
                 InvalidateRect(hwnd, nullptr, FALSE);
             } else {
                 ReadAloudHighlightTimerStop(win);

@@ -20,6 +20,8 @@
 #include "SumatraPDF.h"
 #include "ReadAloudHighlight.h"
 
+#include "utils/Log.h"
+
 struct ReadAloudRawByte {
     char c = 0;
     ReadAloudByteLoc loc{};
@@ -89,6 +91,11 @@ static bool IsLineBreakGlyph(const WCHAR* text, const Rect* coords, int idx, int
 }
 
 static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map, StrBuilder& cleanedOut) {
+    if (!map) {
+        logf("ReadAloud: CleanRawBytes: null map\n");
+        return false;
+    }
+
     cleanedOut.Reset();
     map->len = 0;
 
@@ -130,6 +137,7 @@ static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map
             if (!lastWasSpace && map->len > 0) {
                 ReadAloudByteLoc spaceLoc;
                 if (!ReadAloudHighlightAppend(map, spaceLoc) || !cleanedOut.AppendChar(' ')) {
+                    logf("ReadAloud: CleanRawBytes: failed appending line-break space\n");
                     return false;
                 }
                 lastWasSpace = true;
@@ -137,6 +145,7 @@ static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map
             if (lineBreaks >= 2) {
                 ReadAloudByteLoc spaceLoc;
                 if (!ReadAloudHighlightAppend(map, spaceLoc) || !cleanedOut.AppendChar(' ')) {
+                    logf("ReadAloud: CleanRawBytes: failed appending paragraph space\n");
                     return false;
                 }
             }
@@ -147,6 +156,7 @@ static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map
             if (!lastWasSpace && map->len > 0) {
                 ReadAloudByteLoc spaceLoc;
                 if (!ReadAloudHighlightAppend(map, spaceLoc) || !cleanedOut.AppendChar(' ')) {
+                    logf("ReadAloud: CleanRawBytes: failed appending horizontal space\n");
                     return false;
                 }
                 lastWasSpace = true;
@@ -156,6 +166,7 @@ static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map
         }
 
         if (!ReadAloudHighlightAppend(map, loc) || !cleanedOut.AppendChar(c)) {
+            logf("ReadAloud: CleanRawBytes: failed appending char 0x%02x\n", (unsigned char)c);
             return false;
         }
         lastWasSpace = false;
@@ -201,6 +212,48 @@ bool ReadAloudHighlightBuildFromPage(EngineBase* engine, int pageNo, ReadAloudHi
     return CleanRawBytes(raw, map, cleanedOut);
 }
 
+static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* engine, int pageNo, int startGlyph,
+                                      int endGlyph) {
+    int textLen = 0;
+    Rect* coords = nullptr;
+    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen, &coords);
+    if (!text || textLen <= 0) {
+        logf("ReadAloud: AppendPageGlyphs: page %d has no text (textLen=%d)\n", pageNo, textLen);
+        return;
+    }
+
+    if (startGlyph < 0) {
+        startGlyph = 0;
+    }
+    if (endGlyph < 0 || endGlyph > textLen) {
+        endGlyph = textLen;
+    }
+
+    ReadAloudByteLoc noLoc;
+    for (int g = startGlyph; g < endGlyph; g++) {
+        if (IsLineBreakGlyph(text, coords, g, textLen)) {
+            ReadAloudHighlightAppendRaw(raw, '\r', noLoc);
+            ReadAloudHighlightAppendRaw(raw, '\n', noLoc);
+            continue;
+        }
+
+        ReadAloudByteLoc loc;
+        Rect r = coords[g];
+        if (r.x || r.dx) {
+            ReadAloudByteLocSetFromRect(loc, pageNo, r);
+        }
+
+        WCHAR wc[2] = {text[g], 0};
+        TempStr utf8 = ToUtf8Temp(wc);
+        if (str::IsEmpty(utf8)) {
+            continue;
+        }
+        for (const char* p = utf8; *p; p++) {
+            ReadAloudHighlightAppendRaw(raw, *p, loc);
+        }
+    }
+}
+
 bool ReadAloudHighlightBuildFromTextSelection(TextSelection* ts, ReadAloudHighlightMap* map, StrBuilder& cleanedOut) {
     if (!ts || !ts->engine || !map) {
         return false;
@@ -210,40 +263,130 @@ bool ReadAloudHighlightBuildFromTextSelection(TextSelection* ts, ReadAloudHighli
     ts->GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);
 
     Vec<ReadAloudRawByte> raw;
-    ReadAloudByteLoc noLoc;
-
     for (int page = fromPage; page <= toPage; page++) {
+        int glyph = page == fromPage ? fromGlyph : 0;
+        int endGlyph = page == toPage ? toGlyph : -1;
+        ReadAloudAppendPageGlyphs(raw, ts->engine, page, glyph, endGlyph);
+    }
+
+    return CleanRawBytes(raw, map, cleanedOut);
+}
+
+bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGlyphOut) {
+    if (!dm || !startPageOut || !startGlyphOut) {
+        logf("ReadAloud: GetViewportStart: null args (dm=%p)\n", dm);
+        return false;
+    }
+
+    *startPageOut = 0;
+    *startGlyphOut = 0;
+
+    int pageCount = dm->PageCount();
+    Rect viewArea = dm->GetViewPort();
+    viewArea.x = 0;
+    viewArea.y = 0;
+    logf("ReadAloud: GetViewportStart: viewArea=(%d,%d %dx%d)\n", viewArea.x, viewArea.y, viewArea.dx, viewArea.dy);
+
+    int firstVisiblePage = 0;
+    EngineBase* engine = dm->GetEngine();
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
+        PageInfo* pageInfo = dm->GetPageInfo(pageNo);
+        if (!pageInfo || pageInfo->visibleRatio <= 0.0) {
+            continue;
+        }
+        if (firstVisiblePage == 0) {
+            firstVisiblePage = pageNo;
+        }
+
         int textLen = 0;
         Rect* coords = nullptr;
-        const WCHAR* text = ts->engine->GetTextForPage(page, &textLen, &coords);
-        int glyph = page == fromPage ? fromGlyph : 0;
-        int endGlyph = page == toPage ? toGlyph : textLen;
+        const WCHAR* text = engine->GetTextForPage(pageNo, &textLen, &coords);
+        if (!text || textLen <= 0) {
+            continue;
+        }
 
-        for (int g = glyph; g < endGlyph; g++) {
-            if (IsLineBreakGlyph(text, coords, g, textLen)) {
-                ReadAloudHighlightAppendRaw(raw, '\r', noLoc);
-                ReadAloudHighlightAppendRaw(raw, '\n', noLoc);
+        int g = 0;
+        while (g < textLen) {
+            while (g < textLen && IsLineBreakGlyph(text, coords, g, textLen)) {
+                g++;
+            }
+            if (g >= textLen) {
+                break;
+            }
+
+            int lineStart = g;
+            while (g < textLen && !IsLineBreakGlyph(text, coords, g, textLen)) {
+                g++;
+            }
+
+            Rect lineBbox;
+            for (int i = lineStart; i < g; i++) {
+                Rect r = coords[i];
+                if (r.x || r.dx) {
+                    lineBbox = lineBbox.IsEmpty() ? r : lineBbox.Union(r);
+                }
+            }
+            if (lineBbox.IsEmpty()) {
                 continue;
             }
 
-            ReadAloudByteLoc loc;
-            Rect r = coords[g];
-            if (r.x || r.dx) {
-                ReadAloudByteLocSetFromRect(loc, page, r);
-            }
-
-            WCHAR wc[2] = {text[g], 0};
-            TempStr utf8 = ToUtf8Temp(wc);
-            if (str::IsEmpty(utf8)) {
-                continue;
-            }
-            for (const char* p = utf8; *p; p++) {
-                ReadAloudHighlightAppendRaw(raw, *p, loc);
+            Rect screenLine = dm->CvtToScreen(pageNo, ToRectF(lineBbox));
+            if (!screenLine.Intersect(viewArea).IsEmpty()) {
+                logf("ReadAloud: GetViewportStart: found visible line at page %d glyph %d (screenLine=%d,%d %dx%d)\n",
+                     pageNo, lineStart, screenLine.x, screenLine.y, screenLine.dx, screenLine.dy);
+                *startPageOut = pageNo;
+                *startGlyphOut = lineStart;
+                return true;
             }
         }
     }
 
-    return CleanRawBytes(raw, map, cleanedOut);
+    if (firstVisiblePage == 0) {
+        logf("ReadAloud: GetViewportStart: no visible pages (pageCount=%d)\n", pageCount);
+        return false;
+    }
+
+    logf("ReadAloud: GetViewportStart: no visible line in viewport, falling back to page %d glyph 0\n",
+         firstVisiblePage);
+    *startPageOut = firstVisiblePage;
+    *startGlyphOut = 0;
+    return true;
+}
+
+bool ReadAloudHighlightBuildFromDocument(DisplayModel* dm, int startPage, int startGlyph, ReadAloudHighlightMap* map,
+                                         StrBuilder& cleanedOut) {
+    if (!dm || !map || !dm->ValidPageNo(startPage)) {
+        logf("ReadAloud: BuildFromDocument: invalid args (dm=%p map=%p startPage=%d)\n", dm, map, startPage);
+        return false;
+    }
+
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        logf("ReadAloud: BuildFromDocument: no engine\n");
+        return false;
+    }
+
+    Vec<ReadAloudRawByte> raw;
+    int pageCount = dm->PageCount();
+    logf("ReadAloud: BuildFromDocument: startPage=%d startGlyph=%d pageCount=%d\n", startPage, startGlyph, pageCount);
+    for (int page = startPage; page <= pageCount; page++) {
+        int glyph = page == startPage ? startGlyph : 0;
+        ReadAloudAppendPageGlyphs(raw, engine, page, glyph, -1);
+    }
+
+    if (raw.size() == 0) {
+        logf("ReadAloud: BuildFromDocument: no raw bytes extracted\n");
+        return false;
+    }
+
+    if (!CleanRawBytes(raw, map, cleanedOut)) {
+        logf("ReadAloud: BuildFromDocument: CleanRawBytes failed (raw.size=%zu)\n", raw.size());
+        return false;
+    }
+
+    logf("ReadAloud: BuildFromDocument: ok raw=%zu cleanedLen=%d mapLen=%d\n", raw.size(), (int)cleanedOut.len,
+         map->len);
+    return true;
 }
 
 void ReadAloudHighlightTimerStart(MainWindow* win) {
@@ -258,6 +401,16 @@ void ReadAloudHighlightTimerStop(MainWindow* win) {
         return;
     }
     KillTimer(win->hwndCanvas, READ_ALOUD_HIGHLIGHT_TIMER_ID);
+}
+
+static int gReadAloudPaintLogState = 0;
+
+static void ReadAloudPaintLogOnce(int code, const char* fmt, ...) {
+    if (gReadAloudPaintLogState == code) {
+        return;
+    }
+    gReadAloudPaintLogState = code;
+    logf(fmt);
 }
 
 static int ReadAloudWordEndUtf8(const char* text, int pos) {
@@ -279,39 +432,55 @@ static int ReadAloudWordEndUtf8(const char* text, int pos) {
 }
 
 void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
-    if (!TtsIsSpeaking() || !win) {
+    if (!TtsIsSpeaking()) {
+        gReadAloudPaintLogState = 0;
+        return;
+    }
+    if (!win) {
         return;
     }
 
     WindowTab* tab = GetReadAloudSourceTab();
     if (!tab || tab->win != win) {
+        ReadAloudPaintLogOnce(1, "ReadAloud: PaintHighlight: no matching source tab");
         return;
     }
 
     ReadAloudHighlightMap* map = tab->readAloudHighlight;
     if (!map || !map->locs || map->len <= 0) {
+        ReadAloudPaintLogOnce(2, "ReadAloud: PaintHighlight: no highlight map");
         return;
     }
 
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
+        ReadAloudPaintLogOnce(3, "ReadAloud: PaintHighlight: tab is not a fixed-layout document");
         return;
     }
 
     int spokenPos = TtsGetSpokenPosUtf8();
     if (spokenPos < 0 || str::IsEmpty(tab->readAloudText)) {
+        if (gReadAloudPaintLogState != 4) {
+            gReadAloudPaintLogState = 4;
+            logf("ReadAloud: PaintHighlight: no spoken position (pos=%d, textLen=%d)\n", spokenPos,
+                 str::Leni(tab->readAloudText));
+        }
         return;
     }
 
-    int wordStartAbs = tab->readAloudHighlightBase + spokenPos;
-    int wordEndAbs = tab->readAloudHighlightBase + ReadAloudWordEndUtf8(tab->readAloudText, spokenPos);
+    const char* chunkText = tab->readAloudText + tab->readAloudChunkStart;
+    int wordStartAbs = tab->readAloudHighlightBase + tab->readAloudChunkStart + spokenPos;
+    int wordEndAbs =
+        tab->readAloudHighlightBase + tab->readAloudChunkStart + ReadAloudWordEndUtf8(chunkText, spokenPos);
     if (wordStartAbs < 0 || wordStartAbs >= map->len) {
+        ReadAloudPaintLogOnce(5, "ReadAloud: PaintHighlight: wordStartAbs out of range");
         return;
     }
     if (wordEndAbs > map->len) {
         wordEndAbs = map->len;
     }
     if (wordEndAbs <= wordStartAbs) {
+        ReadAloudPaintLogOnce(6, "ReadAloud: PaintHighlight: empty word range");
         return;
     }
 
@@ -347,6 +516,7 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
     }
 
     if (screenRects.size() == 0) {
+        ReadAloudPaintLogOnce(7, "ReadAloud: PaintHighlight: no screen rects for current word");
         return;
     }
 

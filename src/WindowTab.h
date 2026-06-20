@@ -92,7 +92,11 @@ struct WindowTab {
     char* readAloudText = nullptr;
     int readAloudResumePos = -1;
     ReadAloudHighlightMap* readAloudHighlight = nullptr;
+    // utf8 offset in the highlight map where readAloudText[0] maps to
     int readAloudHighlightBase = 0;
+    // current chunk within readAloudText (for WinRT-sized TTS segments)
+    int readAloudChunkStart = 0;
+    int readAloudChunkEnd = 0;
 
     WindowTab(MainWindow* win);
     ~WindowTab();

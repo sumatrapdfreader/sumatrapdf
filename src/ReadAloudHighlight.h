@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 class EngineBase;
+struct DisplayModel;
 struct MainWindow;
 struct StrBuilder;
 struct TextSelection;
@@ -22,9 +23,15 @@ struct ReadAloudHighlightMap {
 
 void ReadAloudHighlightFree(ReadAloudHighlightMap* map);
 
-bool ReadAloudHighlightBuildFromPage(EngineBase* engine, int pageNo, ReadAloudHighlightMap* map, StrBuilder& cleanedOut);
+bool ReadAloudHighlightBuildFromPage(EngineBase* engine, int pageNo, ReadAloudHighlightMap* map,
+                                     StrBuilder& cleanedOut);
 
 bool ReadAloudHighlightBuildFromTextSelection(TextSelection* ts, ReadAloudHighlightMap* map, StrBuilder& cleanedOut);
+
+bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGlyphOut);
+
+bool ReadAloudHighlightBuildFromDocument(DisplayModel* dm, int startPage, int startGlyph, ReadAloudHighlightMap* map,
+                                         StrBuilder& cleanedOut);
 
 void ReadAloudHighlightTimerStart(MainWindow* win);
 void ReadAloudHighlightTimerStop(MainWindow* win);
