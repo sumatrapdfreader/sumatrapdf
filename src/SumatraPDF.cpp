@@ -9760,9 +9760,11 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
 
     if (isSpeaking) {
         AppendMenuW(menu, MF_STRING, CmdTtsMenuPauseReading, ToWStrTemp(_TRA("Pause Reading")));
+        AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, ToWStrTemp(_TRA("Stop Reading")));
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     } else if (canContinue) {
         AppendMenuW(menu, MF_STRING, CmdTtsMenuContinueReading, ToWStrTemp(_TRA("Continue Reading")));
+        AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, ToWStrTemp(_TRA("Stop Reading")));
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     }
     AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, ToWStrTemp(_TRA("Start Reading From Top")));
@@ -9800,6 +9802,8 @@ static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
     if (selected == CmdTtsMenuPauseReading) {
         ReadAloudStopRememberPos();
         ToolbarUpdateStateForWindow(win, true);
+    } else if (selected == CmdTtsMenuStopReading) {
+        ReadAloudPlaybackStop();
     } else if (selected == CmdTtsMenuReadCurrentPage) {
         if (currTab) {
             if (TtsIsSpeaking()) {
@@ -9841,7 +9845,7 @@ static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
 }
 
 bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId) {
-    if (cmdId == CmdTtsVoiceDefault || (cmdId >= CmdTtsMenuReadCurrentPage && cmdId <= CmdTtsMenuReadFromCursor) ||
+    if (cmdId == CmdTtsVoiceDefault || (cmdId >= CmdTtsMenuReadCurrentPage && cmdId <= CmdTtsMenuStopReading) ||
         (cmdId >= CmdTtsVoiceFirst && cmdId <= CmdTtsVoiceLast)) {
         HandleReadAloudMenuSelection(win, (UINT)cmdId);
         return true;
