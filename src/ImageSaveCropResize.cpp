@@ -1795,8 +1795,12 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             ew = FindImageEditWindowByHwnd(hwnd);
             if (ew) {
+                HWND hwndParent = ew->hwndParent;
                 gImageEditWindows.Remove(ew);
                 delete ew;
+                if (hwndParent) {
+                    HwndToForeground(hwndParent);
+                }
             }
             break;
 
