@@ -303,6 +303,9 @@ struct Shortcut {
     char* name;
     // if given, shows in toolbar
     char* toolbarText;
+    // optional SVG icon for toolbar button; if both ToolbarSvgIcon and
+    // ToolbarText are set, the icon is used
+    char* toolbarSvgIcon;
     // command id
     int cmdId;
 };
@@ -846,8 +849,10 @@ static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, key), SettingType::String, (intptr_t)""},
     {offsetof(Shortcut, name), SettingType::String, 0},
     {offsetof(Shortcut, toolbarText), SettingType::String, 0},
+    {offsetof(Shortcut, toolbarSvgIcon), SettingType::String, 0},
 };
-static const StructInfo gShortcutInfo = {sizeof(Shortcut), 4, gShortcutFields, "Cmd\0Key\0Name\0ToolbarText"};
+static const StructInfo gShortcutInfo = {sizeof(Shortcut), 5, gShortcutFields,
+                                         "Cmd\0Key\0Name\0ToolbarText\0ToolbarSvgIcon"};
 
 static const FieldInfo gThemeFields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},

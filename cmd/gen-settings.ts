@@ -198,6 +198,15 @@ const keyboardShortcut: Field[] = [
   mkField("Key", Str, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
   setVersion(mkField("Name", Str, null, "name shown in command palette"), "3.6"),
   setVersion(mkField("ToolbarText", Str, null, "if given, shows in toolbar"), "3.6"),
+  setVersion(
+    mkField(
+      "ToolbarSvgIcon",
+      Str,
+      null,
+      "optional SVG icon for toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
+    ),
+    "3.7",
+  ),
   notSaved(setVersion(mkField("CmdId", Int, null, "command id"), "3.6")),
 ];
 

@@ -58,6 +58,7 @@ struct ToolbarButtonInfo {
     TbIcon bmpIndex;
     int cmdId;
     const char* toolTip;
+    const char* svgIcon = nullptr;
 };
 
 // thos are not real commands but we have to refer to toolbar buttons
@@ -1046,6 +1047,82 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
+static const char* ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
+    if (!str::IsEmptyOrWhiteSpace(shortcut->name)) {
+        return shortcut->name;
+    }
+    CustomCommand* cmd = FindCustomCommand(shortcut->cmdId);
+    if (cmd && cmd->name) {
+        return cmd->name;
+    }
+    int origId = cmd ? cmd->origId : shortcut->cmdId;
+    if (origId > 0 && origId < CmdLast) {
+        const char* desc = seqstrings::IdxToStr(gCommandDescriptions, origId);
+        if (desc) {
+            return desc;
+        }
+    }
+    return shortcut->cmd;
+}
+
+static void PopulateCustomToolbarButtons() {
+    gCustomButtonsCount = 0;
+    for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
+        if (gCustomButtonsCount >= kMaxCustomButtons) {
+            break;
+        }
+        if (!str::IsEmptyOrWhiteSpace(shortcut->toolbarSvgIcon)) {
+            ToolbarButtonInfo tbi;
+            tbi.bmpIndex = TbIcon::None;
+            tbi.cmdId = shortcut->cmdId;
+            tbi.svgIcon = shortcut->toolbarSvgIcon;
+            tbi.toolTip = ShortcutToolbarToolTipTemp(shortcut);
+            gCustomButtons[gCustomButtonsCount++] = tbi;
+            continue;
+        }
+        if (!str::IsEmptyOrWhiteSpace(shortcut->toolbarText)) {
+            ToolbarButtonInfo tbi;
+            tbi.bmpIndex = TbIcon::Text;
+            tbi.cmdId = shortcut->cmdId;
+            tbi.toolTip = shortcut->toolbarText;
+            gCustomButtons[gCustomButtonsCount++] = tbi;
+        }
+    }
+
+    // add toolbar buttons from custom commands with ToolbarText (e.g. ExternalViewers)
+    for (auto cc = gFirstCustomCommand; cc; cc = cc->next) {
+        if (gCustomButtonsCount >= kMaxCustomButtons) {
+            break;
+        }
+        const char* tbText = GetCommandStringArg(cc, kCmdArgToolbarText, nullptr);
+        if (str::IsEmptyOrWhiteSpace(tbText)) {
+            continue;
+        }
+        ToolbarButtonInfo tbi;
+        tbi.bmpIndex = TbIcon::Text;
+        tbi.cmdId = cc->id;
+        tbi.toolTip = tbText;
+        gCustomButtons[gCustomButtonsCount++] = tbi;
+    }
+}
+
+static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, const char* svgData, int dx, int dy, COLORREF fgCol,
+                                      COLORREF bgCol) {
+    TempStr strokeCol = SerializeColorTemp(fgCol);
+    TempStr fillCol = SerializeColorTemp(bgCol);
+    TempStr fillColRepl = str::JoinTemp("fill=\"", fillCol, "\"");
+    svgData = str::ReplaceTemp(svgData, "currentColor", strokeCol);
+    svgData = str::ReplaceTemp(svgData, R"(fill="none")", fillColRepl);
+    fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svgData, str::Len(svgData));
+    fz_image* image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
+    image->w = dx;
+    image->h = dy;
+    fz_pixmap* pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+    fz_drop_image(ctx, image);
+    fz_drop_buffer(ctx, buf);
+    return pixmap;
+}
+
 static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int dstX, int dstY, COLORREF bgCol) {
     int dx = src->w;
     int dy = src->h;
@@ -1076,9 +1153,10 @@ static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int 
     }
 }
 
-static HBITMAP BuildIconsBitmap(int dx, int dy) {
+static HBITMAP BuildIconsBitmap(int dx, int dy, const char** customSvgs, int customCount) {
     fz_context* ctx = fz_new_context_windows();
-    int nIcons = (int)TbIcon::kMax;
+    int nBuiltIn = (int)TbIcon::kMax;
+    int nIcons = nBuiltIn + customCount;
     int destDx = dx * nIcons;
     ptrdiff_t dstStride;
 
@@ -1115,22 +1193,16 @@ static HBITMAP BuildIconsBitmap(int dx, int dy) {
 
     COLORREF fgCol = ThemeWindowTextColor();
     COLORREF bgCol = ThemeControlBackgroundColor();
-    for (int i = 0; i < nIcons; i++) {
+    for (int i = 0; i < nBuiltIn; i++) {
         const char* svgData = GetSvgIcon((TbIcon)i);
-        TempStr strokeCol = SerializeColorTemp(fgCol);
-        TempStr fillCol = SerializeColorTemp(bgCol);
-        TempStr fillColRepl = str::JoinTemp("fill=\"", fillCol, "\""); // fill="${col}"
-        svgData = str::ReplaceTemp(svgData, "currentColor", strokeCol);
-        svgData = str::ReplaceTemp(svgData, R"(fill="none")", fillColRepl);
-        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svgData, str::Len(svgData));
-        fz_image* image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
-        image->w = dx;
-        image->h = dy;
-        fz_pixmap* pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+        fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
         BlitPixmap(hbmpData, dstStride, pixmap, dx * i, 0, bgCol);
         fz_drop_pixmap(ctx, pixmap);
-        fz_drop_image(ctx, image);
-        fz_drop_buffer(ctx, buf);
+    }
+    for (int i = 0; i < customCount; i++) {
+        fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, customSvgs[i], dx, dy, fgCol, bgCol);
+        BlitPixmap(hbmpData, dstStride, pixmap, dx * (nBuiltIn + i), 0, bgCol);
+        fz_drop_pixmap(ctx, pixmap);
     }
 
     fz_drop_context_windows(ctx);
@@ -1159,9 +1231,21 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     // but the docs say to do it
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(dx, dx));
 
+    const char* customSvgs[kMaxCustomButtons];
+    int customCount = 0;
+    int nBuiltIn = (int)TbIcon::kMax;
+    for (int i = 0; i < gCustomButtonsCount; i++) {
+        const char* svg = gCustomButtons[i].svgIcon;
+        if (str::IsEmptyOrWhiteSpace(svg)) {
+            continue;
+        }
+        gCustomButtons[i].bmpIndex = (TbIcon)(nBuiltIn + customCount);
+        customSvgs[customCount++] = svg;
+    }
+
     // assume square icons
-    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR32, kButtonsCount, 0);
-    HBITMAP hbmp = BuildIconsBitmap(dx, dx);
+    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR32, nBuiltIn + customCount, 0);
+    HBITMAP hbmp = BuildIconsBitmap(dx, dx, customSvgs, customCount);
     ImageList_Add(himl, hbmp, nullptr);
     DeleteObject(hbmp);
     SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
@@ -1223,6 +1307,7 @@ void CreateToolbar(MainWindow* win) {
         DarkMode::setWindowNotifyCustomDrawSubclass(win->hwndReBar);
     }
 
+    PopulateCustomToolbarButtons();
     int iconSize = SetToolbarIconsImageList(win);
 
     TBMETRICS tbMetrics{};
@@ -1248,40 +1333,6 @@ void CreateToolbar(MainWindow* win) {
         tbButtons[i] = TbButtonFromButtonInfo(bi);
     }
     SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
-
-    gCustomButtonsCount = 0;
-
-    char* text;
-    for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
-        if (gCustomButtonsCount >= kMaxCustomButtons) {
-            break;
-        }
-        text = shortcut->toolbarText;
-        if (str::IsEmptyOrWhiteSpace(text)) {
-            continue;
-        }
-        ToolbarButtonInfo tbi;
-        tbi.bmpIndex = TbIcon::Text;
-        tbi.cmdId = shortcut->cmdId;
-        tbi.toolTip = text;
-        gCustomButtons[gCustomButtonsCount++] = tbi;
-    }
-
-    // add toolbar buttons from custom commands with ToolbarText (e.g. ExternalViewers)
-    for (auto cc = gFirstCustomCommand; cc; cc = cc->next) {
-        if (gCustomButtonsCount >= kMaxCustomButtons) {
-            break;
-        }
-        const char* tbText = GetCommandStringArg(cc, kCmdArgToolbarText, nullptr);
-        if (str::IsEmptyOrWhiteSpace(tbText)) {
-            continue;
-        }
-        ToolbarButtonInfo tbi;
-        tbi.bmpIndex = TbIcon::Text;
-        tbi.cmdId = cc->id;
-        tbi.toolTip = tbText;
-        gCustomButtons[gCustomButtonsCount++] = tbi;
-    }
 
     TBBUTTON* buttons = AllocArrayTemp<TBBUTTON>(gCustomButtonsCount);
     for (int i = 0; i < gCustomButtonsCount; i++) {
@@ -1373,8 +1424,7 @@ int GetMenuBarRebarHeight(MainWindow* win) {
     }
     int ideal = MenuBarToolbarIdealDy(win);
     if (IsRunningOnWine()) {
-        logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d fallbackIdeal=%d\n", win->hwndMenuReBar, dy,
-             ideal);
+        logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d fallbackIdeal=%d\n", win->hwndMenuReBar, dy, ideal);
     }
     return ideal;
 }

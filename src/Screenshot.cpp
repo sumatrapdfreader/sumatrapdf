@@ -1250,6 +1250,7 @@ static void SetHotkeyDoSet(SetHotkeyDialog* dlg) {
         sc->key = str::Dup(dlg->newHotkey);
         sc->name = nullptr;
         sc->toolbarText = nullptr;
+        sc->toolbarSvgIcon = nullptr;
         sc->cmdId = 0;
         gGlobalPrefs->shortcuts->Append(sc);
     }

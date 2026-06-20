@@ -507,6 +507,10 @@ Shortcuts [
 
     ; if given, shows in toolbar (introduced in version 3.6)
     ToolbarText =
+
+    ; optional SVG icon for toolbar button; if both ToolbarSvgIcon and
+    ; ToolbarText are set, the icon is used (introduced in version 3.7)
+    ToolbarSvgIcon =
   ]
 ]
 
