@@ -178,8 +178,12 @@
         items.push("<a" + cls + ' href="' + href + '">' + title + "</a>");
       }
     }
+    const searchHint =
+      '<div onclick="window.openSearchDialog()" class="search-trigger-2"><kbd>Ctrl + K</kbd> to search...</div>\n';
     return (
-      '<nav class="sidebar-toc">\n<div class="toc-title"></div>\n' +
+      '<nav class="sidebar-toc">\n' +
+      searchHint +
+      '<div class="toc-title"></div>\n' +
       items.join("\n") +
       "\n</nav>"
     );

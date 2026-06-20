@@ -471,6 +471,37 @@ a.hlink:hover {
 
 /* table of contents */
 
+kbd {
+  font-size: 10pt;
+  padding: 2px 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f7f7f7;
+}
+
+.search-trigger,
+.search-trigger-2 {
+  font-size: 10pt;
+  color: gray;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background-color: #f7f7f7;
+}
+
+.search-trigger:hover,
+.search-trigger-2:hover {
+  cursor: pointer;
+  background-color: #f3f3f3;
+}
+
+.sidebar-toc .search-trigger-2 {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-size: 9pt;
+  margin-bottom: 0.5rem;
+}
+
 h1,
 h2,
 h3,
