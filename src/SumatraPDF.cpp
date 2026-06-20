@@ -6450,8 +6450,23 @@ static void OnDestroyManualBrowserWindow(Wnd::DestroyEvent*) {
     gManualBrowserWindow = nullptr;
 }
 
+static bool IsManualBrowserWindowOpen() {
+    return gManualBrowserWindow && gManualBrowserWindow->hwnd && IsWindow(gManualBrowserWindow->hwnd);
+}
+
+static void DiscardManualBrowserWindowIfClosed() {
+    if (!gManualBrowserWindow) {
+        return;
+    }
+    if (!IsManualBrowserWindowOpen()) {
+        delete gManualBrowserWindow;
+        gManualBrowserWindow = nullptr;
+    }
+}
+
 void DeleteManualBrowserWindow() {
     delete gManualBrowserWindow;
+    gManualBrowserWindow = nullptr;
 }
 
 static char* ManualMimeFromPath(const char* path) {
@@ -6600,9 +6615,16 @@ void LaunchDocumentation(const char* docURI) {
     TempStr webUrl = DocURIToWebUrlTemp(docURI);
 
     if (HasWebView() && EnsureManualArchiveLoaded()) {
-        if (gManualBrowserWindow) {
+        DiscardManualBrowserWindowIfClosed();
+        if (IsManualBrowserWindowOpen()) {
             gManualBrowserWindow->webView->resourceProvider = ManualResourceProvider();
             gManualBrowserWindow->webView->Navigate(localUrl);
+            HWND hwnd = gManualBrowserWindow->hwnd;
+            ShowWindow(hwnd, SW_SHOW);
+            if (IsIconic(hwnd)) {
+                ShowWindow(hwnd, SW_RESTORE);
+            }
+            SetForegroundWindow(hwnd);
             return;
         }
 
