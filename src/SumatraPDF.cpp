@@ -9016,6 +9016,7 @@ static constexpr UINT CmdTtsVoiceLast = 0x71ff;
 static constexpr UINT CmdTtsMenuReadCurrentPage = 0x7200;
 static constexpr UINT CmdTtsMenuContinueReading = 0x7201;
 static constexpr UINT CmdTtsMenuReadSelection = 0x7202;
+static constexpr UINT CmdTtsMenuPauseReading = 0x7203;
 
 static WindowTab* gReadAloudSourceTab = nullptr;
 
@@ -9388,9 +9389,15 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
     }
 
     WindowTab* currTab = win->CurrentTab();
+    bool isSpeaking = TtsIsSpeaking();
     bool canContinue = CanContinueReadAloud(currTab);
     bool hasSelection =
         currTab && win->showSelection && currTab->selectionOnPage && currTab->selectionOnPage->size() > 0;
+
+    if (isSpeaking) {
+        AppendMenuW(menu, MF_STRING, CmdTtsMenuPauseReading, ToWStrTemp(_TRA("Pause Reading")));
+        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+    }
 
     AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, L"Read current page");
     AppendMenuW(menu, canContinue ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuContinueReading, L"Continue reading");
@@ -9432,7 +9439,10 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
     UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rc.left, rc.bottom, 0,
                                          win->hwndFrame, nullptr);
 
-    if (selected == CmdTtsMenuReadCurrentPage) {
+    if (selected == CmdTtsMenuPauseReading) {
+        ReadAloudStopRememberPos();
+        ToolbarUpdateStateForWindow(win, true);
+    } else if (selected == CmdTtsMenuReadCurrentPage) {
         if (currTab) {
             if (TtsIsSpeaking()) {
                 TtsStop();
