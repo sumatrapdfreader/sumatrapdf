@@ -1382,7 +1382,13 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
 
     WindowTab* tab = data->tab;
     if (tab != nullptr) {
-        MainWindow* mainWin = tab->win;
+        // tab snapshot was taken when palette opened; tab may have been
+        // closed since then (e.g. file watcher reload, DDE), so validate
+        MainWindow* mainWin = FindMainWindowByTab(tab);
+        if (!mainWin) {
+            ScheduleDeleteAndExecCommand();
+            return;
+        }
         gTabToSelectOnClose = tab;
         gHwndToActivateOnClose = mainWin->hwndFrame;
         ScheduleDeleteAndExecCommand();
