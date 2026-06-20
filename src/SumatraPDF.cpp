@@ -9397,10 +9397,11 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
     if (isSpeaking) {
         AppendMenuW(menu, MF_STRING, CmdTtsMenuPauseReading, ToWStrTemp(_TRA("Pause Reading")));
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+    } else if (canContinue) {
+        AppendMenuW(menu, MF_STRING, CmdTtsMenuContinueReading, ToWStrTemp(_TRA("Continue Reading")));
+        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     }
-
     AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, L"Read current page");
-    AppendMenuW(menu, canContinue ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuContinueReading, L"Continue reading");
     AppendMenuW(menu, hasSelection ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadSelection, L"Read selection");
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
 
