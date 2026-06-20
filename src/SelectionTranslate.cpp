@@ -813,12 +813,17 @@ static LRESULT CALLBACK SelectionTranslateDlgProc(HWND hwnd, UINT msg, WPARAM wp
         case WM_CLOSE:
             DestroyWindow(hwnd);
             return 0;
-        case WM_DESTROY:
-            if (dlg->hwndOwner) {
-                EnableWindow(dlg->hwndOwner, TRUE);
+        case WM_DESTROY: {
+            HWND hwndOwner = dlg->hwndOwner;
+            if (hwndOwner) {
+                EnableWindow(hwndOwner, TRUE);
             }
             delete dlg;
+            if (hwndOwner) {
+                HwndToForeground(hwndOwner);
+            }
             return 0;
+        }
     }
     return DefWindowProc(hwnd, msg, wp, lp);
 }
