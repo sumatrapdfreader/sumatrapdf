@@ -44,6 +44,8 @@ void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();
 void SaveCallstackLogs();
 
+char* Sha1OfAppExe();
+
 TempStr FormatFileSizeTransTemp(i64);
 
 bool LaunchFileIfExists(const char* path);

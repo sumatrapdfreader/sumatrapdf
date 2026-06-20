@@ -559,123 +559,35 @@ void SaveCallstackLogs() {
 }
 
 // TODO: this can be used for extracting other data
-#if 0
-// cache because calculating md5 of the whole executable
+// cache because calculating sha1 of the whole executable
 // might be relatively expensive
-static AutoFreeWStr gAppMd5;
+static char gAppSha1[21];
 
-// return hex version of md5 of app's executable
+// return hex version of sha1 of app's executable (pointer to cached value)
 // nullptr if there was an error
-// caller needs to free the result
-static const WCHAR* Md5OfAppExe() {
-    if (gAppMd5.Get()) {
-        return str::Dup(gAppMd5.Get());
+char* Sha1OfAppExe() {
+    if (gAppSha1[0]) {
+        return gAppSha1;
     }
 
-    auto appPath = GetSelfExePathTemp();
-    if (appPath.empty()) {
-        return {};
+    TempStr appPath = GetSelfExePathTemp();
+    if (!appPath) {
+        return nullptr;
     }
-    ByteSlice d = file::ReadFile(appPath.data);
+    ByteSlice d = file::ReadFile(appPath);
     if (d.empty()) {
         return nullptr;
     }
 
-    u8 md5[16]{};
-    CalcMD5Digest(d.data, d.size(), md5);
-
-    AutoFree md5HexA(_MemToHex(&md5));
-    AutoFreeWStr md5Hex = strconv::Utf8ToWchar(md5HexA.AsView());
+    u8 sha1[20]{};
+    CalcSHA1Digest(d.data(), d.Size(), sha1);
     d.Free();
-    return md5Hex.StealData();
+
+    for (size_t i = 0; i < 20; i++) {
+        sprintf_s(&gAppSha1[2 * i], 3, "%02x", sha1[i]);
+    }
+    return gAppSha1;
 }
-
-// remove all directories except for ours
-//. need to avoid acuumulating the directories when testing
-// locally or using pre-release builds (both cases where
-// exe and its md5 changes frequently)
-void RemoveMd5AppDataDirectories() {
-    AutoFreeWStr extractedDir = PathForFileInAppDataDir(L"extracted");
-    if (extractedDir.empty()) {
-        return;
-    }
-
-    auto dirs = CollectDirsFromDirectory(extractedDir.data);
-    if (dirs.empty()) {
-        return;
-    }
-
-    AutoFreeWStr md5App = Md5OfAppExe();
-    if (md5App.empty()) {
-        return;
-    }
-
-    AutoFreeWStr md5Dir = path::Join(extractedDir.data, md5App.data);
-
-    for (auto& dir : dirs) {
-        const WCHAR* s = dir.data();
-        if (str::Eq(s, md5Dir.data)) {
-            continue;
-        }
-        dir::RemoveAll(s);
-    }
-}
-
-// return a path on disk to extracted unrar.dll or nullptr if couldn't extract
-// memory has to be freed by the caller
-const WCHAR* ExractUnrarDll() {
-    RemoveMd5AppDataDirectories();
-
-    AutoFreeWStr extractedDir = PathForFileInAppDataDir(L"extracted");
-    if (extractedDir.empty()) {
-        return nullptr;
-    }
-
-    AutoFreeWStr md5App = Md5OfAppExe();
-    if (md5App.empty()) {
-        return nullptr;
-    }
-
-    AutoFreeWStr md5Dir = path::Join(extractedDir.data, md5App.data);
-    AutoFreeWStr dllPath = path::Join(md5Dir.data, unrarFileName);
-
-    if (file::Exists(dllPath.data)) {
-        const WCHAR* ret = dllPath.data;
-        dllPath = nullptr; // don't free
-        return ret;
-    }
-
-    bool ok = dir::CreateAll(md5Dir.data);
-    if (!ok) {
-        return nullptr;
-    }
-
-    HGLOBAL res = 0;
-    auto h = GetModuleHandle(nullptr);
-    WCHAR* resName = MAKEINTRESOURCEW(1);
-    HRSRC resSrc = FindResourceW(h, resName, RT_RCDATA);
-    if (!resSrc) {
-        return nullptr;
-    }
-    res = LoadResource(nullptr, resSrc);
-    if (!res) {
-        return nullptr;
-    }
-    const char* data = (const char*)LockResource(res);
-    defer {
-        UnlockResource(res);
-    };
-    DWORD dataSize = SizeofResource(nullptr, resSrc);
-    ok = file::WriteFile(dllPath, data, dataSize);
-    if (!ok) {
-        return nullptr;
-    }
-
-    const WCHAR* ret = dllPath;
-    dllPath = nullptr; // don't free
-    return ret;
-}
-#endif
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
