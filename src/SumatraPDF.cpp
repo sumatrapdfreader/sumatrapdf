@@ -9622,7 +9622,11 @@ static TempStr TtsLangIdToLocaleNameTemp(const char* lang) {
     return ToUtf8Temp(localeName);
 }
 
-static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCursorItem, bool canReadFromCursor) {
+static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
+    if (!voiceMenu) {
+        return;
+    }
+
     const char* currentVoiceId = TtsGetVoiceId();
 
     UINT defaultFlags = MF_STRING;
@@ -9630,6 +9634,43 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
         defaultFlags |= MF_CHECKED;
     }
 
+    AppendMenuW(voiceMenu, defaultFlags, CmdTtsVoiceDefault, L"System default");
+    AppendMenuW(voiceMenu, MF_SEPARATOR, 0, nullptr);
+
+    Vec<TtsVoiceInfo> voices = TtsGetVoices();
+
+    const char* lastLang = nullptr;
+
+    UINT cmd = CmdTtsVoiceFirst;
+    for (TtsVoiceInfo& voice : voices) {
+        if (cmd > CmdTtsVoiceLast) {
+            break;
+        }
+
+        const char* lang = str::IsEmpty(voice.lang) ? "" : voice.lang;
+
+        if (lastLang && !str::EqI(lastLang, lang)) {
+            AppendMenuW(voiceMenu, MF_SEPARATOR, 0, nullptr);
+        }
+
+        UINT flags = MF_STRING;
+        if (str::Eq(voice.id, currentVoiceId)) {
+            flags |= MF_CHECKED;
+        }
+
+        TempStr localeName = TtsLangIdToLocaleNameTemp(voice.lang);
+        TempStr label = str::FormatTemp("%s - %s", voice.name, localeName);
+        AppendMenuW(voiceMenu, flags, cmd, ToWStrTemp(label));
+
+        lastLang = lang;
+        cmd++;
+    }
+
+    TtsFreeVoices(voices);
+    RemoveBadMenuSeparators(voiceMenu);
+}
+
+static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCursorItem, bool canReadFromCursor) {
     WindowTab* currTab = win ? win->CurrentTab() : nullptr;
     bool isSpeaking = TtsIsSpeaking();
     bool canContinue = CanContinueReadAloud(currTab);
@@ -9652,39 +9693,11 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
                 ToWStrTemp(_TRA("Start Reading Selection")));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
 
-    AppendMenuW(menu, defaultFlags, CmdTtsVoiceDefault, L"System default");
-    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
-
-    Vec<TtsVoiceInfo> voices = TtsGetVoices();
-
-    const char* lastLang = nullptr;
-
-    UINT cmd = CmdTtsVoiceFirst;
-    for (TtsVoiceInfo& voice : voices) {
-        if (cmd > CmdTtsVoiceLast) {
-            break;
-        }
-
-        const char* lang = str::IsEmpty(voice.lang) ? "" : voice.lang;
-
-        if (lastLang && !str::EqI(lastLang, lang)) {
-            AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
-        }
-
-        UINT flags = MF_STRING;
-        if (str::Eq(voice.id, currentVoiceId)) {
-            flags |= MF_CHECKED;
-        }
-
-        TempStr localeName = TtsLangIdToLocaleNameTemp(voice.lang);
-        TempStr label = str::FormatTemp("%s - %s", voice.name, localeName);
-        AppendMenuW(menu, flags, cmd, ToWStrTemp(label));
-
-        lastLang = lang;
-        cmd++;
+    HMENU voiceMenu = CreatePopupMenu();
+    if (voiceMenu) {
+        BuildReadAloudVoiceMenuItems(voiceMenu);
+        AppendMenuW(menu, MF_POPUP | MF_STRING, (UINT_PTR)voiceMenu, ToWStrTemp(_TRA("Voice")));
     }
-
-    TtsFreeVoices(voices);
 }
 
 void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem, bool canReadFromCursor) {
