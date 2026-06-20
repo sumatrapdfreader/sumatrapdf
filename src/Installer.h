@@ -62,6 +62,8 @@ int KillProcessesWithModule(const char* modulePath, bool waitUntilTerminated);
 TempStr GetShortcutPathTemp(int csidl);
 
 bool ExtractInstallerFiles(char* dir);
+u32 GetLibmupdfDllSize();
+bool ExtractLibmupdfDll(const char* destDir);
 
 char* GetExistingInstallationDir();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
