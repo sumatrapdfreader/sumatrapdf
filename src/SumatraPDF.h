@@ -144,11 +144,15 @@ constexpr UINT CmdTtsMenuReadCurrentPage = 0x7200;
 constexpr UINT CmdTtsMenuContinueReading = 0x7201;
 constexpr UINT CmdTtsMenuReadSelection = 0x7202;
 constexpr UINT CmdTtsMenuPauseReading = 0x7203;
+constexpr UINT CmdTtsMenuReadFromCursor = 0x7204;
 
-void RebuildReadAloudMenu(MainWindow* win, HMENU menu);
+void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem = false, bool canReadFromCursor = false);
 bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);
 void SetReadAloudAppSubmenu(HMENU menu);
 bool IsReadAloudAppSubmenu(HMENU menu);
+void SetReadAloudContextSubmenu(HMENU menu);
+bool IsReadAloudContextSubmenu(HMENU menu);
+HMENU GetReadAloudContextSubmenu();
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout = true);

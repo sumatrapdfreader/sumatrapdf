@@ -331,6 +331,8 @@ struct MainWindow {
     // highlight rectangle for element under cursor during context menu (in page coordinates)
     RectF contextMenuHighlightRect{};
     int contextMenuHighlightPageNo = 0;
+    Point contextMenuPt{};
+    bool contextMenuPtValid = false;
     HBRUSH brControlBgColor = nullptr;
 
     DocControllerCallback* cbHandler = nullptr;

@@ -9018,6 +9018,7 @@ static constexpr UINT WM_TTS_EVENT = WM_APP + 0x421;
 
 static WindowTab* gReadAloudSourceTab = nullptr;
 static HMENU gReadAloudAppSubmenu = nullptr;
+static HMENU gReadAloudContextSubmenu = nullptr;
 
 void SetReadAloudAppSubmenu(HMENU menu) {
     gReadAloudAppSubmenu = menu;
@@ -9025,6 +9026,18 @@ void SetReadAloudAppSubmenu(HMENU menu) {
 
 bool IsReadAloudAppSubmenu(HMENU menu) {
     return menu && menu == gReadAloudAppSubmenu;
+}
+
+void SetReadAloudContextSubmenu(HMENU menu) {
+    gReadAloudContextSubmenu = menu;
+}
+
+bool IsReadAloudContextSubmenu(HMENU menu) {
+    return menu && menu == gReadAloudContextSubmenu;
+}
+
+HMENU GetReadAloudContextSubmenu() {
+    return gReadAloudContextSubmenu;
 }
 
 static void ReadAloudShowNotif(WindowTab* tab, const char* msg);
@@ -9460,6 +9473,48 @@ static void ReadAloudInTab(WindowTab* tab) {
     }
 }
 
+static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, const char* errMsg) {
+    logf("ReadAloud: StartFromCursor\n");
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        logf("ReadAloud: StartFromCursor: not a fixed-layout document\n");
+        ReadAloudShowNotif(tab, errMsg);
+        return;
+    }
+
+    int startPage = 0;
+    int startGlyph = 0;
+    if (!ReadAloudGetCursorStart(dm, screenPt, &startPage, &startGlyph)) {
+        logf("ReadAloud: StartFromCursor: GetCursorStart failed\n");
+        ReadAloudShowNotif(tab, errMsg);
+        return;
+    }
+
+    StrBuilder cleaned;
+    ReadAloudHighlightMap map{};
+    if (!ReadAloudHighlightBuildFromDocument(dm, startPage, startGlyph, &map, cleaned)) {
+        logf("ReadAloud: StartFromCursor: BuildFromDocument failed (page=%d glyph=%d)\n", startPage, startGlyph);
+        ReadAloudShowNotif(tab, errMsg);
+        return;
+    }
+
+    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
+}
+
+static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
+    if (!tab || !tab->win) {
+        logf("ReadAloud: FromCursorInTab: null tab or window\n");
+        return;
+    }
+
+    if (!HasPermission(Perm::CopySelection)) {
+        logf("ReadAloud: FromCursorInTab: CopySelection permission denied\n");
+        return;
+    }
+
+    ReadAloudStartFromCursor(tab, screenPt, _TRA("No text available to read aloud"));
+}
+
 static void ReadAloudFromViewportTopInTab(WindowTab* tab) {
     if (!tab || !tab->win) {
         logf("ReadAloud: FromViewportTopInTab: null tab or window\n");
@@ -9543,7 +9598,7 @@ static TempStr TtsLangIdToLocaleNameTemp(const char* lang) {
     return ToUtf8Temp(localeName);
 }
 
-static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win) {
+static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCursorItem, bool canReadFromCursor) {
     const char* currentVoiceId = TtsGetVoiceId();
 
     UINT defaultFlags = MF_STRING;
@@ -9565,6 +9620,10 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win) {
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     }
     AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, ToWStrTemp(_TRA("Start Reading From Top Page")));
+    if (includeCursorItem) {
+        AppendMenuW(menu, canReadFromCursor ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadFromCursor,
+                    ToWStrTemp(_TRA("Start Reading From Cursor Position")));
+    }
     AppendMenuW(menu, hasSelection ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadSelection,
                 ToWStrTemp(_TRA("Start Reading Selection")));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
@@ -9604,12 +9663,12 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win) {
     TtsFreeVoices(voices);
 }
 
-void RebuildReadAloudMenu(MainWindow* win, HMENU menu) {
+void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem, bool canReadFromCursor) {
     if (!menu || !win) {
         return;
     }
     MenuEmpty(menu);
-    BuildReadAloudMenuItems(menu, win);
+    BuildReadAloudMenuItems(menu, win, includeCursorItem, canReadFromCursor);
     RemoveBadMenuSeparators(menu);
 }
 
@@ -9629,6 +9688,13 @@ static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
                 TtsStop();
             }
             ReadAloudFromViewportTopInTab(currTab);
+        }
+    } else if (selected == CmdTtsMenuReadFromCursor) {
+        if (currTab && win->contextMenuPtValid) {
+            if (TtsIsSpeaking()) {
+                TtsStop();
+            }
+            ReadAloudFromCursorInTab(currTab, win->contextMenuPt);
         }
     } else if (selected == CmdTtsMenuContinueReading) {
         if (TtsIsSpeaking()) {
@@ -9653,7 +9719,7 @@ static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
 }
 
 bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId) {
-    if (cmdId == CmdTtsVoiceDefault || (cmdId >= CmdTtsMenuReadCurrentPage && cmdId <= CmdTtsMenuPauseReading) ||
+    if (cmdId == CmdTtsVoiceDefault || (cmdId >= CmdTtsMenuReadCurrentPage && cmdId <= CmdTtsMenuReadFromCursor) ||
         (cmdId >= CmdTtsVoiceFirst && cmdId <= CmdTtsVoiceLast)) {
         HandleReadAloudMenuSelection(win, (UINT)cmdId);
         return true;
@@ -9675,7 +9741,7 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
         return;
     }
 
-    BuildReadAloudMenuItems(menu, win);
+    BuildReadAloudMenuItems(menu, win, false, false);
 
     UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rc.left, rc.bottom, 0,
                                          win->hwndFrame, nullptr);

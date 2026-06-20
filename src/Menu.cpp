@@ -47,6 +47,7 @@
 #include "CodexBuild.h"
 #include "ImageSaveCropResize.h"
 #include "Menu.h"
+#include "ReadAloudHighlight.h"
 
 #include "utils/Log.h"
 
@@ -757,6 +758,19 @@ static MenuDef menuDefReadAloud[] = {
 };
 //] ACCESSKEY_GROUP Read Aloud Menu
 
+//[ ACCESSKEY_GROUP Context Menu (Read Aloud)
+static MenuDef menuDefContextReadAloud[] = {
+    {
+        _TRN("Start Reading From Top Page"),
+        CmdReadAloud,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Context Menu (Read Aloud)
+
 //[ ACCESSKEY_GROUP Menubar
 static MenuDef menuDefMenubar[] = {
     {
@@ -1048,6 +1062,10 @@ static MenuDef menuDefContext[] = {
     {
         _TRN("Document"),
         (UINT_PTR)menuDefDocumentOperations,
+    },
+    {
+        _TRN("Read Aloud (TTS)"),
+        (UINT_PTR)menuDefContextReadAloud,
     },
     {
         _TRN("Edit Annotations"),
@@ -1760,6 +1778,9 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             if (subMenuDef == menuDefReadAloud) {
                 SetReadAloudAppSubmenu(subMenu);
             }
+            if (subMenuDef == menuDefContextReadAloud) {
+                SetReadAloudContextSubmenu(subMenu);
+            }
             TempWStr ws = ToWStrTemp(title);
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, ws);
         } else {
@@ -2141,6 +2162,13 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
     PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
     EngineBase* engine = dm->GetEngine();
+
+    win->contextMenuPt = cursorPos;
+    win->contextMenuPtValid = ReadAloudCanReadFromCursor(dm, cursorPos);
+    HMENU readAloudCtxMenu = GetReadAloudContextSubmenu();
+    if (readAloudCtxMenu) {
+        RebuildReadAloudMenu(win, readAloudCtxMenu, true, win->contextMenuPtValid);
+    }
 
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
         MenuRemove(popup, CmdCopyLinkTarget);
@@ -2736,7 +2764,9 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
     } else if (id == menuDefZoom[0].idOrSubmenu) {
         BuildMenuZoom(m);
     } else if (IsReadAloudAppSubmenu(m)) {
-        RebuildReadAloudMenu(win, m);
+        RebuildReadAloudMenu(win, m, false, false);
+    } else if (IsReadAloudContextSubmenu(m)) {
+        RebuildReadAloudMenu(win, m, true, win->contextMenuPtValid);
     }
     MenuUpdateStateForWindow(win);
     MarkMenuOwnerDraw(win->menu, true);

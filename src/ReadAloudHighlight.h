@@ -30,6 +30,10 @@ bool ReadAloudHighlightBuildFromTextSelection(TextSelection* ts, ReadAloudHighli
 
 bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGlyphOut);
 
+bool ReadAloudCanReadFromCursor(DisplayModel* dm, Point screenPt);
+
+bool ReadAloudGetCursorStart(DisplayModel* dm, Point screenPt, int* startPageOut, int* startGlyphOut);
+
 bool ReadAloudHighlightBuildFromDocument(DisplayModel* dm, int startPage, int startGlyph, ReadAloudHighlightMap* map,
                                          StrBuilder& cleanedOut);
 

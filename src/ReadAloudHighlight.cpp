@@ -13,14 +13,14 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
+
+#include "utils/Log.h"
 #include "TextToSpeech.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "Selection.h"
 #include "SumatraPDF.h"
 #include "ReadAloudHighlight.h"
-
-#include "utils/Log.h"
 
 struct ReadAloudRawByte {
     char c = 0;
@@ -350,6 +350,116 @@ bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGl
          firstVisiblePage);
     *startPageOut = firstVisiblePage;
     *startGlyphOut = 0;
+    return true;
+}
+
+static bool ReadAloudFindGlyphAtCursor(EngineBase* engine, int pageNo, double x, double y, int* glyphOut) {
+    if (!engine || !glyphOut) {
+        return false;
+    }
+
+    int textLen;
+    Rect* coords;
+    engine->GetTextForPage(pageNo, &textLen, &coords);
+    if (textLen <= 0) {
+        return false;
+    }
+
+    // Find the nearest glyph with a real bbox (same idea as TextSelection::FindClosestGlyph).
+    unsigned int maxDist = UINT_MAX;
+    int nearest = -1;
+    int nearestDy = 0;
+    Point pti = ToPoint(PointF(x, y));
+    bool overGlyph = false;
+    for (int i = 0; i < textLen; i++) {
+        Rect& coord = coords[i];
+        if (!coord.x && !coord.dx) {
+            continue;
+        }
+        if (overGlyph && !coord.Contains(pti)) {
+            continue;
+        }
+        uint dist = distSq((int)x - coord.x - coord.dx / 2, (int)y - coord.y - coord.dy / 2);
+        if (dist < maxDist) {
+            nearest = i;
+            maxDist = dist;
+            nearestDy = coord.dy;
+        }
+        if (!overGlyph && coord.Contains(pti)) {
+            overGlyph = true;
+            nearest = i;
+            maxDist = dist;
+            nearestDy = coord.dy;
+        }
+    }
+    if (nearest < 0) {
+        return false;
+    }
+
+    // Reject clicks far from any text (e.g. margin or image-only area).
+    int threshold = nearestDy > 0 ? nearestDy * 3 : 48;
+    if ((int)maxDist > threshold * threshold) {
+        return false;
+    }
+
+    TextSelection ts(engine);
+    ts.StartAt(pageNo, x, y);
+    if (ts.startGlyph < 0 || ts.startGlyph >= textLen) {
+        return false;
+    }
+
+    *glyphOut = ts.startGlyph;
+    return true;
+}
+
+bool ReadAloudCanReadFromCursor(DisplayModel* dm, Point screenPt) {
+    if (!dm) {
+        return false;
+    }
+    int pageNo = dm->GetPageNoByPoint(screenPt);
+    if (!dm->ValidPageNo(pageNo)) {
+        return false;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        return false;
+    }
+    PointF pt = dm->CvtFromScreen(screenPt, pageNo);
+    int glyph = 0;
+    return ReadAloudFindGlyphAtCursor(engine, pageNo, pt.x, pt.y, &glyph);
+}
+
+bool ReadAloudGetCursorStart(DisplayModel* dm, Point screenPt, int* startPageOut, int* startGlyphOut) {
+    if (!dm || !startPageOut || !startGlyphOut) {
+        logf("ReadAloud: GetCursorStart: null args (dm=%p)\n", dm);
+        return false;
+    }
+
+    *startPageOut = 0;
+    *startGlyphOut = 0;
+
+    int pageNo = dm->GetPageNoByPoint(screenPt);
+    if (!dm->ValidPageNo(pageNo)) {
+        logf("ReadAloud: GetCursorStart: no page at cursor (%d,%d)\n", screenPt.x, screenPt.y);
+        return false;
+    }
+
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        logf("ReadAloud: GetCursorStart: no engine\n");
+        return false;
+    }
+
+    PointF pt = dm->CvtFromScreen(screenPt, pageNo);
+    int glyph = 0;
+    if (!ReadAloudFindGlyphAtCursor(engine, pageNo, pt.x, pt.y, &glyph)) {
+        logf("ReadAloud: GetCursorStart: no text at cursor on page %d\n", pageNo);
+        return false;
+    }
+
+    logf("ReadAloud: GetCursorStart: page %d glyph %d\n", pageNo, glyph);
+    *startPageOut = pageNo;
+    *startGlyphOut = glyph;
     return true;
 }
 
