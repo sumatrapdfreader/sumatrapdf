@@ -11,6 +11,7 @@
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
@@ -172,7 +173,7 @@ static const char* PrimaryLangIdToEnglishName(WORD primary) {
     }
 }
 
-static const char* DefaultDestinationLanguageTemp() {
+static const char* OsDefaultDestinationLanguageTemp() {
     LANGID langId = GetUserDefaultUILanguage();
     const char* name = PrimaryLangIdToEnglishName(PRIMARYLANGID(langId));
     if (name) {
@@ -182,6 +183,38 @@ static const char* DefaultDestinationLanguageTemp() {
         return "Chinese (Traditional)";
     }
     return "English";
+}
+
+static const char* DefaultDestinationLanguageTemp() {
+    if (gGlobalPrefs && !str::IsEmptyOrWhiteSpace(gGlobalPrefs->translateToLang)) {
+        return gGlobalPrefs->translateToLang;
+    }
+    return OsDefaultDestinationLanguageTemp();
+}
+
+static TempStr NormalizeLangNameTemp(const char* lang) {
+    if (str::IsEmptyOrWhiteSpace(lang)) {
+        return nullptr;
+    }
+    TempStr normalized = str::DupTemp(lang);
+    str::TrimWSInPlace(normalized, str::TrimOpt::Both);
+    return normalized;
+}
+
+static void MaybeSaveTranslateToLang(const char* dstLang) {
+    if (!gGlobalPrefs || str::IsEmptyOrWhiteSpace(dstLang)) {
+        return;
+    }
+    TempStr normalized = NormalizeLangNameTemp(dstLang);
+    if (!normalized) {
+        return;
+    }
+    const char* saved = gGlobalPrefs->translateToLang;
+    if (saved && str::EqI(saved, normalized)) {
+        return;
+    }
+    str::ReplaceWithCopy(&gGlobalPrefs->translateToLang, normalized);
+    SaveSettings();
 }
 
 static void PopulateLanguageCombo(HWND hwnd, const char* initial, bool includeAuto) {
@@ -728,6 +761,9 @@ static void OnTranslateDone(SelectionTranslateDoneData* data) {
     SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translate"));
     TempStr display = data->ok ? data->msg.Get() : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg.Get());
     ShowTranslationResult(dlg, display, !data->ok);
+    if (data->ok) {
+        MaybeSaveTranslateToLang(GetWindowTextUtf8Temp(dlg->hwndDstLang));
+    }
     UpdateTranslateButtonState(dlg);
 }
 

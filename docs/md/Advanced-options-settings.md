@@ -370,6 +370,10 @@ CodexBuild [
     SidebarDx = 0
 ]
 
+; remembered destination language for selection translation; empty uses OS UI
+; language (introduced in version 3.7)
+TranslateToLang = 
+
 ; default values for annotations in PDF documents (introduced in version 3.3)
 Annotations [
     ; highlight annotation color

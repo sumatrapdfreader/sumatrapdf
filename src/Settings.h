@@ -615,6 +615,9 @@ struct GlobalPrefs {
     GrokBuild grokBuild;
     // settings for the OpenAI Codex chat sidebar
     CodexBuild codexBuild;
+    // remembered destination language for selection translation; empty
+    // uses OS UI language
+    char* translateToLang;
     // default values for annotations in PDF documents
     Annotations annotations;
     // list of additional external viewers for various file types. See
@@ -1051,6 +1054,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, codexBuild), SettingType::Struct, (intptr_t)&gCodexBuildInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, translateToLang), SettingType::String, (intptr_t)""},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, annotations), SettingType::Struct, (intptr_t)&gAnnotationsInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, externalViewers), SettingType::Array, (intptr_t)&gExternalViewerInfo},
@@ -1085,7 +1090,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 98, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 100, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0EnableTeXEnhancements\0EscToExit\0FullPathI"
     "nTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0ReloadMo"
     "difiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowMe"
@@ -1093,10 +1098,10 @@ static const StructInfo gGlobalPrefsInfo = {
     "crollbars\0ScrollbarInSinglePage\0SmoothScroll\0CitationHoverDelay\0FastScrollOverScrollbar\0PreventSleepInFullscr"
     "een\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0DisableAutoLin"
     "ks\0UseSysColors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI"
-    "\0\0ChmUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDe"
-    "faults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0DefaultPasswords\0UiLanguage\0V"
-    "ersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0P"
-    "ropWinPos\0\0"};
+    "\0\0ChmUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0TranslateToLang\0\0Annotations\0\0ExternalViewers\0\0Forward"
+    "Search\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0DefaultPassw"
+    "ords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateChec"
+    "k\0OpenCountWeek\0PropWinPos\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

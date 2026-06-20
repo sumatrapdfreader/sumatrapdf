@@ -956,6 +956,18 @@ const globalPrefs: Field[] = [
     "3.7",
   ),
   mkEmptyLine(),
+  setVersion(
+    setExpert(
+      mkField(
+        "TranslateToLang",
+        Str,
+        "",
+        "remembered destination language for selection translation; empty uses OS UI language",
+      ),
+    ),
+    "3.7",
+  ),
+  mkEmptyLine(),
   setVersion(setExpert(mkStruct("Annotations", annotations, "default values for annotations in PDF documents")), "3.3"),
   mkEmptyLine(),
   setExpert(
