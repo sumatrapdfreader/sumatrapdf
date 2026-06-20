@@ -129,6 +129,10 @@ static void NavigationCompleted(void* ctx, const char* url, bool success) {
     }
     SetCurrentUrl(w, url);
     UpdateNavButtons(w);
+    if (!w->webViewFocusSet && w->webView) {
+        w->webView->Focus();
+        w->webViewFocusSet = true;
+    }
 }
 
 static void HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
@@ -151,6 +155,12 @@ SimpleBrowserWindow::~SimpleBrowserWindow() {
 }
 
 LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_SETFOCUS) {
+        if (webView) {
+            webView->Focus();
+        }
+        return 0;
+    }
     if (msg == WM_SIZE) {
         LayoutControls(this);
         return 0;
@@ -253,6 +263,9 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
     // first layout is triggered
     webView->Navigate(args.url);
     SetIsVisible(true);
+    if (webView) {
+        webView->Focus();
+    }
     return frameHwnd;
 }
 
