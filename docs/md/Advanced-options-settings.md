@@ -145,6 +145,11 @@ SmoothScroll = false
 ; to disable the popup (introduced in version 3.7)
 CitationHoverDelay = 300
 
+; voice id for Read Aloud text-to-speech; empty or unset means system default.
+; Voice ids match those used internally by the Read Aloud Voice menu (WinRT
+; voice id or SAPI token id) (introduced in version 3.7)
+ReadAloudVoiceId =
+
 ; if true, mouse wheel scrolling is faster when mouse is over a scrollbar
 ; (introduced in version 3.6)
 FastScrollOverScrollbar = false

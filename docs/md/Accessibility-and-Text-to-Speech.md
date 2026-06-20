@@ -4,25 +4,36 @@ SumatraPDF provides several accessibility-related features. Maturity varies by f
 
 ## Read Aloud (pre-release 3.7+)
 
-Read selected text — or the current page when nothing is selected — using Windows text-to-speech.
+Read document text using Windows text-to-speech. You can start from a text selection, from the first visible text in the viewport, or (from the context menu) from the position where you right-clicked.
 
 ### How to use
 
 1. Open a document with selectable text (PDF, EPUB, etc.).
-2. Optionally select text to limit what is read.
-3. `Ctrl + K` → type `read aloud` → **Read Aloud** (`CmdReadAloud`).
+2. Start reading from one of these places:
+   - **Toolbar** — Read Aloud button (click to start / pause / continue; dropdown for scope and voice)
+   - **Main menu** — **Read Aloud (TTS)** (after Selection)
+   - **Context menu** — **Read Aloud (TTS)** (after Document)
+   - **Command palette** (`Ctrl + K`) — e.g. **Start Reading From Here**, **Start Reading Selection**, **Read Aloud**
+3. While speaking, the current word is highlighted on the page. **Pause Reading** and **Continue Reading** are in the Read Aloud menus and palette.
 
-Invoking Read Aloud again while speaking **pauses**. Use:
+### Start scopes
 
-- **Pause Read Aloud** (`CmdPauseReadAloud`)
-- **Continue Read Aloud** (`CmdContinueReadAloud`)
+| Command | Behavior |
+|---------|----------|
+| **Read Aloud** (toolbar / palette) | Selection if present, otherwise first visible text in the viewport; continues through the rest of the document |
+| **Start Reading From Here** | First visible text in the viewport → end of document |
+| **Start Reading From Cursor Position** | Context menu only — right-click position → end of document |
+| **Start Reading Selection** | Selected text only |
 
-**Ver 3.7+:** the Read Aloud toolbar button has a dropdown to pick the Windows voice.
+### Voice
+
+Open **Voice** in any Read Aloud menu to pick **System default** or an installed Windows voice. Your choice is remembered in `ReadAloudVoiceId` in [Advanced options](Advanced-options-settings.md) (`SumatraPDF-settings.txt`). Leave it empty for the system default.
 
 ### Limitations
 
-- Uses the Windows SAPI voices installed on your system.
+- Uses Windows speech voices installed on your system (WinRT Speech Synthesis with SAPI fallback).
 - EPUB/complex layouts may read in an order that does not match visual layout.
+- Copy-restricted documents cannot be read aloud.
 - Does not replace a full screen-reader experience for blind users.
 
 ## Screen readers (UI Automation)
@@ -54,7 +65,8 @@ Many actions are available without a mouse — see [Keyboard shortcuts](Keyboard
 ## See also
 
 - [FAQ](FAQ.md)
-- [Commands](Commands.md) — `CmdReadAloud`, `CmdPauseReadAloud`, `CmdContinueReadAloud`
+- [Commands](Commands.md) — Read Aloud commands
+- [Advanced options](Advanced-options-settings.md) — `ReadAloudVoiceId`
 - [Version history](Version-history.md) — 3.7 Read Aloud entry
 
 # Technical documentation

@@ -9066,6 +9066,14 @@ HMENU GetReadAloudContextSubmenu() {
 
 static void ReadAloudShowNotif(WindowTab* tab, const char* msg);
 
+static void ReadAloudSaveVoicePref(const char* voiceId) {
+    if (!gGlobalPrefs) {
+        return;
+    }
+    str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, voiceId ? voiceId : "");
+    SaveSettings();
+}
+
 // WinRT speech synthesis is too slow for whole-document requests; speak in chunks.
 static constexpr int kReadAloudMaxChunkLen = 1024;
 
@@ -9744,12 +9752,16 @@ static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
         }
         ReadAloudSelectionInTab(currTab);
     } else if (selected == CmdTtsVoiceDefault) {
-        TtsSetVoiceById("");
+        if (TtsSetVoiceById("")) {
+            ReadAloudSaveVoicePref("");
+        }
     } else if (selected >= CmdTtsVoiceFirst && selected <= CmdTtsVoiceLast) {
         Vec<TtsVoiceInfo> voices = TtsGetVoices();
         int voiceIndex = (int)(selected - CmdTtsVoiceFirst);
         if (voiceIndex >= 0 && voiceIndex < voices.Size()) {
-            TtsSetVoiceById(voices[voiceIndex].id);
+            if (TtsSetVoiceById(voices[voiceIndex].id)) {
+                ReadAloudSaveVoicePref(voices[voiceIndex].id);
+            }
         }
         TtsFreeVoices(voices);
     }

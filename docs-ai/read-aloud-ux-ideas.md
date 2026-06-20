@@ -40,7 +40,7 @@ All three menus share one builder: transport items, explicit start commands, and
 | **No Stop, only Pause** | Pause retains resume state; there is no explicit **Stop** that ends the session and clears position. Starting a new scope while paused can feel ambiguous. |
 | **Global audio, local UI** | TTS is app-global; toolbar on any window shows Pause while audio may be from another tab. `gReadAloudSourceTab` exists internally but is not surfaced. |
 | **Silent permission failure** | Copy-restricted PDFs block read aloud with **no user message** when `Perm::CopySelection` is denied. |
-| **Voice not remembered** | Voice choice is session-only (`gTtsVoiceId`), not in Advanced Options. |
+| ~~**Voice not remembered**~~ | **Fixed** — `ReadAloudVoiceId` advanced setting persists the Voice submenu choice. |
 | **Highlight not configurable** | Follow-along always uses selection color; no toggle, no dedicated read-aloud color, no setting to disable. |
 | **No auto-scroll** | Long-document listening does not scroll the viewport to keep the spoken word in view. |
 | **Scanned PDF dead-end** | “No text available to read aloud” toast with no OCR / next-step affordance. |
@@ -122,7 +122,7 @@ In **Advanced Options**:
 
 | Setting | Purpose |
 |---------|---------|
-| Read aloud voice | Persist choice across sessions |
+| ~~Read aloud voice~~ | **Done** — `ReadAloudVoiceId` |
 | Speech rate | Slow / Normal / Fast if backend exposes it |
 | Highlight while reading | On/off (default on) |
 | Highlight color | Separate from selection color |
@@ -180,7 +180,7 @@ Bring these in line with behavior:
 |------------|----------------|
 | Refresh Accessibility help for “From Here” | Playback bar |
 | Notification when copy permission blocks TTS | Auto-scroll while reading |
-| Persist voice in Advanced Options | Tab-switch / multi-tab policy UI |
+| Speech rate in Advanced Options | Tab-switch / multi-tab policy UI |
 | Highlight on/off + color setting | OCR integration on no-text path |
 | Default keyboard shortcut | Stop vs Pause in all surfaces |
 | Refresh Accessibility help page | Progress indicator (page X of Y) |
@@ -200,5 +200,5 @@ The biggest **remaining** gap versus user expectations is **visibility and sessi
 - **Resume:** `readAloudText`, `readAloudResumePos`, chunk fields on `WindowTab`
 - **Source tab:** `gReadAloudSourceTab` / `GetReadAloudSourceTab()`
 - **Copy permission:** silent return in read-aloud entry paths when `Perm::CopySelection` denied
-- **TTS:** `TextToSpeech.cpp` — WinRT + SAPI; voice id session-only
+- **TTS:** `TextToSpeech.cpp` — WinRT + SAPI; runtime voice in `gTtsVoiceId`, persisted in `GlobalPrefs.readAloudVoiceId`
 - **Docs to update:** `docs/md/Accessibility-and-Text-to-Speech.md`, `docs/md/Commands.md`

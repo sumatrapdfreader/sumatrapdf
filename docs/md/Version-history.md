@@ -29,7 +29,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - set a custom color for a document's tab from the tab right-click context menu
 - compress, decompress, encrypt, decrypt, bake, delete pages from, and extract pages from PDF files (via `Ctrl + k` [command palette](Command-Palette.md))
 - extract text from document pages to a .txt file (via `Ctrl + k` [command palette](Command-Palette.md))
-- read selected text (or current page) aloud using Windows text-to-speech, with pause / continue and voice selection from the toolbar button dropdown
+- read text aloud using Windows text-to-speech: toolbar, main menu, and context menu **Read Aloud (TTS)** submenus with **Start Reading From Here** (viewport through end of document), **Start Reading Selection**, **Start Reading From Cursor Position** (context menu), pause / continue, word highlight while speaking, and a **Voice** submenu; chosen voice is remembered via the `ReadAloudVoiceId` advanced setting
 - add `ToolbarText` parameter for `ExternalViewers` advanced setting to show external viewer as a toolbar button
 - move `Scrollbars` advanced setting from `FixedPageUI` to top-level
 - add `EBookUI.BackgroundColor` advanced setting to override background color for ebook documents (epub, mobi etc.)
@@ -90,14 +90,16 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdChangeScrollbar` : "Change Scrollbar"
 - `CmdCommandPalette *` : command palette table-of-contents mode (`CmdCommandPaletteTOC`, `Shift + F12`)
 - `CmdCommandPalette $` : command palette favorites mode
-- `CmdContinueReadAloud` : "Continue Read Aloud"
+- `CmdContinueReadAloud` : "Continue Reading"
+- `CmdReadAloudFromTopPage` : "Start Reading From Here"
+- `CmdReadAloudSelection` : "Start Reading Selection"
 - `CmdConvertImageToPdf` : "Convert Image To PDF"
 - `CmdCropImage` : "Crop Image"
 - `CmdDocumentExtractText` : "Extract Text From Document"
 - `CmdDocumentShowOutline` : "Show Document Outline"
 - `CmdExpandToCurrentPage` : "Expand TOC to Current Page"
 - `CmdListPrinters` : "List Printers"
-- `CmdPauseReadAloud` : "Pause Read Aloud"
+- `CmdPauseReadAloud` : "Pause Reading"
 - `CmdPdfBake` : "Bake PDF File"
 - `CmdPdfCompress` : "Compress PDF"
 - `CmdPdfDecrypt` : "Decrypt PDF"

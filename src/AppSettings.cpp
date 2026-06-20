@@ -34,6 +34,7 @@
 #include "Translations.h"
 #include "Accelerators.h"
 #include "Theme.h"
+#include "TextToSpeech.h"
 
 #include "utils/Log.h"
 #include <Notifications.h>
@@ -41,6 +42,26 @@
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.
 bool gDontSaveSettings = false;
+
+static bool ApplyReadAloudVoiceFromSettings() {
+    if (!gGlobalPrefs) {
+        return false;
+    }
+
+    const char* voiceId = gGlobalPrefs->readAloudVoiceId;
+    if (str::IsEmpty(voiceId)) {
+        TtsSetVoiceById("");
+        return false;
+    }
+
+    if (!TtsSetVoiceById(voiceId)) {
+        logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId);
+        str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, nullptr);
+        TtsSetVoiceById("");
+        return true;
+    }
+    return false;
+}
 
 // SumatraPDF.cpp
 extern void RememberDefaultWindowPosition(MainWindow* win);
@@ -336,8 +357,11 @@ bool LoadSettings() {
 
     SetCurrentThemeFromSettings();
     ApplySettingsToOpenWindows();
+    bool readAloudVoiceCleared = ApplyReadAloudVoiceFromSettings();
 
     if (!file::Exists(settingsPath)) {
+        SaveSettings();
+    } else if (readAloudVoiceCleared) {
         SaveSettings();
     }
 

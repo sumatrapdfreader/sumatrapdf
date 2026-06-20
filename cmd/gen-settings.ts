@@ -836,6 +836,17 @@ const globalPrefs: Field[] = [
     "3.7",
   ),
   setVersion(
+    setExpert(
+      mkField(
+        "ReadAloudVoiceId",
+        Str,
+        null,
+        "voice id for Read Aloud text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token id)",
+      ),
+    ),
+    "3.7",
+  ),
+  setVersion(
     mkField(
       "FastScrollOverScrollbar",
       Bool,
