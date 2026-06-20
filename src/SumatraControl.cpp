@@ -27,6 +27,7 @@ enum class ControlCmd : u16 {
     TestNamedDest = 13,
     TestChm = 14,
     TestSelectionTranslate = 15,
+    TestTripleClickLineSelect = 16,
 };
 
 enum class ControlArgType : u16 {
@@ -351,6 +352,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestSelectionTranslateResult(backend, srcLang, dstLang, text, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestTripleClickLineSelect: {
+            const char* pdf = StringArg(req, 0);
+            const char* clickWord = StringArg(req, 1);
+            const char* expectedLine = StringArg(req, 2);
+            if (!pdf || !clickWord || !expectedLine) {
+                AppendError(req, "TestTripleClickLineSelect expects string pdf, string clickWord, string expectedLine");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestTripleClickLineSelectResult(pdf, clickWord, expectedLine, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

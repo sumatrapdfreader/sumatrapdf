@@ -306,3 +306,118 @@ char* TestChmResult(const char* chmPath, int* exitCodeOut) {
     }
     return out.StealData();
 }
+
+static bool FindWordCenter(EngineBase* engine, int pageNo, const char* word, double* xOut, double* yOut) {
+    if (!engine || !word || !xOut || !yOut) {
+        return false;
+    }
+    int textLen = 0;
+    Rect* coords = nullptr;
+    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen, &coords);
+    if (!text || textLen <= 0) {
+        return false;
+    }
+    AutoFreeWStr wordW = ToWStr(word);
+    int wordLen = (int)str::Len(wordW);
+    if (wordLen <= 0) {
+        return false;
+    }
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (memcmp(text + i, wordW, (size_t)wordLen * sizeof(WCHAR)) != 0) {
+            continue;
+        }
+        int mid = i + wordLen / 2;
+        for (; mid < textLen && !coords[mid].x && !coords[mid].dx; mid++) {
+            if (text[mid] == '\n') {
+                return false;
+            }
+        }
+        if (mid >= textLen) {
+            return false;
+        }
+        *xOut = coords[mid].x + coords[mid].dx / 2.0;
+        *yOut = coords[mid].y + coords[mid].dy / 2.0;
+        return true;
+    }
+    return false;
+}
+
+static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
+    WCHAR* ws = ts.ExtractText(" ");
+    TempStr res = ToUtf8Temp(ws);
+    str::Free(ws);
+    return res;
+}
+
+// Headless triple-click line-selection test (issue #5712). Loads the pdf, clicks
+// the middle of <clickWord>, runs the same TextSelection steps as a double-click
+// followed by a triple-click (without the mouse-up trim), and checks the result.
+char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord, const char* expectedLine,
+                                      int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    StrBuilder out;
+    if (str::IsEmptyOrWhiteSpace(pdfPath) || str::IsEmptyOrWhiteSpace(clickWord) ||
+        str::IsEmptyOrWhiteSpace(expectedLine)) {
+        out.Append("ERROR missing pdf, clickWord, or expectedLine\n");
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    }
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    }
+
+    const int pageNo = 1;
+    double x = 0;
+    double y = 0;
+    if (!FindWordCenter(engine, pageNo, clickWord, &x, &y)) {
+        out.AppendFmt("ERROR word-not-found word=%s\n", clickWord);
+        SafeEngineRelease(&engine);
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    }
+
+    TextSelection ts(engine);
+    ts.SelectWordAt(pageNo, x, y);
+    ts.SelectLineAt(pageNo, x, y);
+    TempStr selected = ExtractSelectionTextTemp(ts);
+
+    // simulate the old mouse-up bug: re-selecting to the click point trims the line
+    TextSelection trimmed(engine);
+    trimmed.SelectWordAt(pageNo, x, y);
+    trimmed.SelectLineAt(pageNo, x, y);
+    trimmed.SelectUpTo(pageNo, x, y);
+    TempStr trimmedText = ExtractSelectionTextTemp(trimmed);
+    if (str::Eq(trimmedText, expectedLine)) {
+        out.AppendFmt("ERROR trim-check-failed trimmed=%s\n", trimmedText);
+        SafeEngineRelease(&engine);
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    }
+
+    bool ok = str::Eq(selected, expectedLine);
+    if (ok) {
+        out.AppendFmt("OK selected=%s\n", selected);
+    } else {
+        out.AppendFmt("FAIL selected=%s expected=%s\n", selected, expectedLine);
+    }
+
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}

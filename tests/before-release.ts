@@ -9,11 +9,13 @@ import { buildApp, formatDuration, runTest } from "./util.ts";
 import { testit as allTests } from "./all.ts";
 import { testit as adHocExif } from "./ad-hoc-exif.ts";
 import { testit as adHocSelectionTranslate } from "./ad-hoc-selection-translate.ts";
+import { testit as adHocTripleClickLine } from "./ad-hoc-triple-click-line.ts";
 import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const adHocTests: [string, () => void | Promise<void>][] = [
   ["ad-hoc-exif", adHocExif],
   ["ad-hoc-selection-translate", adHocSelectionTranslate],
+  ["ad-hoc-triple-click-line", adHocTripleClickLine],
   ["issue-chm-lzx", issueChmLzx],
 ];
 

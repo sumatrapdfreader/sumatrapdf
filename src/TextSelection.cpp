@@ -348,6 +348,10 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     SelectUpTo(pageNo, wordEnd);
 }
 
+static bool IsLineBreakGlyph(const WCHAR* text, const Rect* coords, int idx, int textLen) {
+    return idx >= 0 && idx < textLen && text[idx] == '\n' && !coords[idx].x && !coords[idx].dx;
+}
+
 void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     int i = FindClosestGlyph(this, pageNo, x, y);
     if (i < 0) {
@@ -355,16 +359,16 @@ void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     }
     int textLen;
     Rect* coords;
-    engine->GetTextForPage(pageNo, &textLen, &coords);
-    // line breaks are represented by zero-size coords (x == 0 && dx == 0), the
-    // same way FillResultRects segments lines; select the run of real glyphs
-    // containing i
+    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen, &coords);
+    // line breaks are newline glyphs with zero-size coords. Some whitespace (e.g.
+    // spaces with FZ_STEXT_ACCURATE_BBOXES) can also have empty boxes and must not
+    // be treated as line ends (issue #5712).
     int lineStart = i;
-    while (lineStart > 0 && (coords[lineStart - 1].x || coords[lineStart - 1].dx)) {
+    while (lineStart > 0 && !IsLineBreakGlyph(text, coords, lineStart - 1, textLen)) {
         lineStart--;
     }
     int lineEnd = i;
-    while (lineEnd < textLen && (coords[lineEnd].x || coords[lineEnd].dx)) {
+    while (lineEnd < textLen && !IsLineBreakGlyph(text, coords, lineEnd, textLen)) {
         lineEnd++;
     }
     StartAt(pageNo, lineStart);

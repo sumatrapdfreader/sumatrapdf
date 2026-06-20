@@ -6,3 +6,5 @@ char* TestSearchResult(const char* pdfPath, const char* needle, const char* pass
 char* TestDestResult(const char* pdfPath, int destNo);
 char* TestNamedDestResult(const char* pdfPath, const char* destName);
 char* TestChmResult(const char* chmPath, int* exitCodeOut = nullptr);
+char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord, const char* expectedLine,
+                                      int* exitCodeOut = nullptr);

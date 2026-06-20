@@ -9,6 +9,7 @@ export enum ControlCommand {
   TestNamedDest = 13,
   TestChm = 14,
   TestSelectionTranslate = 15,
+  TestTripleClickLineSelect = 16,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

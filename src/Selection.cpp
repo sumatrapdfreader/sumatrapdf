@@ -24,6 +24,7 @@
 #include "Notifications.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
+#include "Canvas.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Selection.h"
@@ -156,7 +157,12 @@ void PaintSelection(MainWindow* win, HDC hdc) {
     } else {
         // during text selection or after selection is done
         if (MouseAction::SelectingText == win->mouseAction) {
-            UpdateTextSelection(win);
+            // double/triple-click set the glyph range immediately; only extend
+            // on repaint when the pointer has actually moved (issue #5712).
+            int endX = win->selectionRect.x + win->selectionRect.dx;
+            int endY = win->selectionRect.y + win->selectionRect.dy;
+            bool dragged = IsDragDistance(win->selectionRect.x, endX, win->selectionRect.y, endY);
+            UpdateTextSelection(win, dragged);
             if (!win->CurrentTab()->selectionOnPage) {
                 // prevent the selection from disappearing while the
                 // user is still at it (OnSelectionStop removes it
@@ -428,7 +434,11 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
 
     // update the text selection before changing the selectionRect
     if (MouseAction::SelectingText == win->mouseAction) {
-        UpdateTextSelection(win);
+        // double/triple-click set the glyph range immediately; a tiny mouse jitter
+        // while the button is held still updates selectionRect.dx/dy. Only extend
+        // the selection on mouse-up when the pointer actually moved (issue #5712).
+        bool dragged = IsDragDistance(win->selectionRect.x, x, win->selectionRect.y, y);
+        UpdateTextSelection(win, dragged);
     }
 
     win->selectionRect = Rect::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
