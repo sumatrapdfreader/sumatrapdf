@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Dpi.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
@@ -353,107 +354,69 @@ bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGl
     return true;
 }
 
-static bool ReadAloudFindGlyphAtCursor(EngineBase* engine, int pageNo, double x, double y, int* glyphOut) {
-    if (!engine || !glyphOut) {
+static bool ReadAloudGetGlyphAtCursor(DisplayModel* dm, Point screenPt, int* pageOut, int* glyphOut) {
+    if (!dm || !pageOut || !glyphOut || !dm->textSelection) {
+        return false;
+    }
+    if (!dm->IsOverText(screenPt)) {
         return false;
     }
 
-    int textLen;
-    Rect* coords;
+    int pageNo = dm->GetPageNoByPoint(screenPt);
+    if (!dm->ValidPageNo(pageNo)) {
+        return false;
+    }
+
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        return false;
+    }
+
+    PointF pt = dm->CvtFromScreen(screenPt, pageNo);
+    dm->textSelection->StartAt(pageNo, pt.x, pt.y);
+
+    int textLen = 0;
+    Rect* coords = nullptr;
     engine->GetTextForPage(pageNo, &textLen, &coords);
     if (textLen <= 0) {
         return false;
     }
 
-    // Find the nearest glyph with a real bbox (same idea as TextSelection::FindClosestGlyph).
-    unsigned int maxDist = UINT_MAX;
-    int nearest = -1;
-    int nearestDy = 0;
-    Point pti = ToPoint(PointF(x, y));
-    bool overGlyph = false;
-    for (int i = 0; i < textLen; i++) {
-        Rect& coord = coords[i];
-        if (!coord.x && !coord.dx) {
-            continue;
-        }
-        if (overGlyph && !coord.Contains(pti)) {
-            continue;
-        }
-        uint dist = distSq((int)x - coord.x - coord.dx / 2, (int)y - coord.y - coord.dy / 2);
-        if (dist < maxDist) {
-            nearest = i;
-            maxDist = dist;
-            nearestDy = coord.dy;
-        }
-        if (!overGlyph && coord.Contains(pti)) {
-            overGlyph = true;
-            nearest = i;
-            maxDist = dist;
-            nearestDy = coord.dy;
-        }
+    // Same adjustment as TextSelection::IsOverGlyph: FindClosestGlyph can return
+    // the index after the glyph under the cursor when clicking its right half.
+    int glyph = dm->textSelection->startGlyph;
+    Point pti = ToPoint(pt);
+    if (glyph == textLen || (glyph >= 0 && glyph < textLen && !coords[glyph].Contains(pti))) {
+        glyph--;
     }
-    if (nearest < 0) {
+    if (glyph < 0 || glyph >= textLen) {
         return false;
     }
 
-    // Reject clicks far from any text (e.g. margin or image-only area).
-    int threshold = nearestDy > 0 ? nearestDy * 3 : 48;
-    if ((int)maxDist > threshold * threshold) {
-        return false;
-    }
-
-    TextSelection ts(engine);
-    ts.StartAt(pageNo, x, y);
-    if (ts.startGlyph < 0 || ts.startGlyph >= textLen) {
-        return false;
-    }
-
-    *glyphOut = ts.startGlyph;
+    *pageOut = pageNo;
+    *glyphOut = glyph;
     return true;
 }
 
 bool ReadAloudCanReadFromCursor(DisplayModel* dm, Point screenPt) {
-    if (!dm) {
-        return false;
-    }
-    int pageNo = dm->GetPageNoByPoint(screenPt);
-    if (!dm->ValidPageNo(pageNo)) {
-        return false;
-    }
-    EngineBase* engine = dm->GetEngine();
-    if (!engine) {
-        return false;
-    }
-    PointF pt = dm->CvtFromScreen(screenPt, pageNo);
+    int pageNo = 0;
     int glyph = 0;
-    return ReadAloudFindGlyphAtCursor(engine, pageNo, pt.x, pt.y, &glyph);
+    return ReadAloudGetGlyphAtCursor(dm, screenPt, &pageNo, &glyph);
 }
 
 bool ReadAloudGetCursorStart(DisplayModel* dm, Point screenPt, int* startPageOut, int* startGlyphOut) {
-    if (!dm || !startPageOut || !startGlyphOut) {
-        logf("ReadAloud: GetCursorStart: null args (dm=%p)\n", dm);
+    if (!startPageOut || !startGlyphOut) {
+        logf("ReadAloud: GetCursorStart: null args\n");
         return false;
     }
 
     *startPageOut = 0;
     *startGlyphOut = 0;
 
-    int pageNo = dm->GetPageNoByPoint(screenPt);
-    if (!dm->ValidPageNo(pageNo)) {
-        logf("ReadAloud: GetCursorStart: no page at cursor (%d,%d)\n", screenPt.x, screenPt.y);
-        return false;
-    }
-
-    EngineBase* engine = dm->GetEngine();
-    if (!engine) {
-        logf("ReadAloud: GetCursorStart: no engine\n");
-        return false;
-    }
-
-    PointF pt = dm->CvtFromScreen(screenPt, pageNo);
+    int pageNo = 0;
     int glyph = 0;
-    if (!ReadAloudFindGlyphAtCursor(engine, pageNo, pt.x, pt.y, &glyph)) {
-        logf("ReadAloud: GetCursorStart: no text at cursor on page %d\n", pageNo);
+    if (!ReadAloudGetGlyphAtCursor(dm, screenPt, &pageNo, &glyph)) {
+        logf("ReadAloud: GetCursorStart: no text at cursor (%d,%d)\n", screenPt.x, screenPt.y);
         return false;
     }
 
@@ -541,6 +504,188 @@ static int ReadAloudWordEndUtf8(const char* text, int pos) {
     return end;
 }
 
+static bool ReadAloudGetCurrentWordAbsRange(WindowTab* tab, int* startAbsOut, int* endAbsOut) {
+    if (!tab || !startAbsOut || !endAbsOut) {
+        return false;
+    }
+
+    *startAbsOut = 0;
+    *endAbsOut = 0;
+
+    ReadAloudHighlightMap* map = tab->readAloudHighlight;
+    if (!map || !map->locs || map->len <= 0 || str::IsEmpty(tab->readAloudText)) {
+        return false;
+    }
+
+    int spokenPos = TtsGetSpokenPosUtf8();
+    if (spokenPos < 0) {
+        return false;
+    }
+
+    const char* chunkText = tab->readAloudText + tab->readAloudChunkStart;
+    int wordStartAbs = tab->readAloudHighlightBase + tab->readAloudChunkStart + spokenPos;
+    int wordEndAbs =
+        tab->readAloudHighlightBase + tab->readAloudChunkStart + ReadAloudWordEndUtf8(chunkText, spokenPos);
+    if (wordStartAbs < 0 || wordStartAbs >= map->len) {
+        return false;
+    }
+    if (wordEndAbs > map->len) {
+        wordEndAbs = map->len;
+    }
+    if (wordEndAbs <= wordStartAbs) {
+        return false;
+    }
+
+    *startAbsOut = wordStartAbs;
+    *endAbsOut = wordEndAbs;
+    return true;
+}
+
+static bool ReadAloudGetCurrentWordScreenRect(MainWindow* win, Rect* rectOut) {
+    if (!rectOut || !win) {
+        return false;
+    }
+
+    *rectOut = Rect();
+
+    WindowTab* tab = GetReadAloudSourceTab();
+    if (!tab || tab->win != win) {
+        return false;
+    }
+
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return false;
+    }
+
+    int wordStartAbs = 0;
+    int wordEndAbs = 0;
+    if (!ReadAloudGetCurrentWordAbsRange(tab, &wordStartAbs, &wordEndAbs)) {
+        return false;
+    }
+
+    ReadAloudHighlightMap* map = tab->readAloudHighlight;
+    Rect unionRect;
+    bool hasRect = false;
+    for (int i = wordStartAbs; i < wordEndAbs; i++) {
+        ReadAloudByteLoc& loc = map->locs[i];
+        if (!ReadAloudByteLocHasRect(loc)) {
+            continue;
+        }
+        Rect sr = dm->CvtToScreen(loc.pageNo, ToRectF(ReadAloudByteLocToRect(loc)));
+        if (!hasRect) {
+            unionRect = sr;
+            hasRect = true;
+        } else {
+            unionRect = unionRect.Union(sr);
+        }
+    }
+
+    if (!hasRect) {
+        return false;
+    }
+
+    *rectOut = unionRect;
+    return true;
+}
+
+static bool ReadAloudIsWordRectVisibleInViewport(MainWindow* win, const Rect& wordRect) {
+    if (!win) {
+        return false;
+    }
+    return !wordRect.Intersect(win->canvasRc).IsEmpty();
+}
+
+static bool ReadAloudIsWordRectFullyVisibleInViewport(MainWindow* win, const Rect& wordRect, int margin) {
+    if (!win) {
+        return false;
+    }
+    Rect canvas = win->canvasRc;
+    if (wordRect.x < margin || wordRect.y < margin) {
+        return false;
+    }
+    if (wordRect.x + wordRect.dx > canvas.dx - margin) {
+        return false;
+    }
+    if (wordRect.y + wordRect.dy > canvas.dy - margin) {
+        return false;
+    }
+    return true;
+}
+
+void ReadAloudOnUserViewChanged(MainWindow* win) {
+    if (!win || win->readAloudScrollFromCode || !TtsIsSpeaking()) {
+        return;
+    }
+
+    WindowTab* tab = GetReadAloudSourceTab();
+    if (!tab || tab->win != win || !tab->readAloudAutoScroll) {
+        return;
+    }
+
+    Rect wordRect;
+    if (!ReadAloudGetCurrentWordScreenRect(win, &wordRect) || !ReadAloudIsWordRectVisibleInViewport(win, wordRect)) {
+        tab->readAloudAutoScroll = false;
+        logf("ReadAloud: auto-scroll disabled (user scrolled away from highlight)\n");
+    }
+}
+
+void ReadAloudUpdateAutoScroll(MainWindow* win) {
+    if (!win || !TtsIsSpeaking()) {
+        return;
+    }
+
+    WindowTab* tab = GetReadAloudSourceTab();
+    if (!tab || tab->win != win || !tab->readAloudAutoScroll) {
+        return;
+    }
+
+    Rect wordRect;
+    if (!ReadAloudGetCurrentWordScreenRect(win, &wordRect)) {
+        return;
+    }
+
+    int margin = DpiScale(win->hwndCanvas, 48);
+    if (ReadAloudIsWordRectFullyVisibleInViewport(win, wordRect, margin)) {
+        return;
+    }
+
+    Rect canvas = win->canvasRc;
+
+    int dx = 0;
+    int dy = 0;
+    if (wordRect.y < margin) {
+        dy = wordRect.y - margin;
+    } else if (wordRect.y + wordRect.dy > canvas.dy - margin) {
+        dy = wordRect.y + wordRect.dy - (canvas.dy - margin);
+    }
+    if (wordRect.x < margin) {
+        dx = wordRect.x - margin;
+    } else if (wordRect.x + wordRect.dx > canvas.dx - margin) {
+        dx = wordRect.x + wordRect.dx - (canvas.dx - margin);
+    }
+
+    if (dx == 0 && dy == 0) {
+        return;
+    }
+
+    int maxStep = std::max(canvas.dy / 4, DpiScale(win->hwndCanvas, 120));
+    if (dx > maxStep) {
+        dx = maxStep;
+    } else if (dx < -maxStep) {
+        dx = -maxStep;
+    }
+    if (dy > maxStep) {
+        dy = maxStep;
+    } else if (dy < -maxStep) {
+        dy = -maxStep;
+    }
+
+    win->readAloudScrollFromCode = true;
+    win->MoveDocBy(dx, dy);
+    win->readAloudScrollFromCode = false;
+}
+
 void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
     if (!TtsIsSpeaking()) {
         gReadAloudPaintLogState = 0;
@@ -568,20 +713,16 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
         return;
     }
 
-    int spokenPos = TtsGetSpokenPosUtf8();
-    if (spokenPos < 0 || str::IsEmpty(tab->readAloudText)) {
+    int wordStartAbs = 0;
+    int wordEndAbs = 0;
+    if (!ReadAloudGetCurrentWordAbsRange(tab, &wordStartAbs, &wordEndAbs)) {
         if (gReadAloudPaintLogState != 4) {
             gReadAloudPaintLogState = 4;
-            logf("ReadAloud: PaintHighlight: no spoken position (pos=%d, textLen=%d)\n", spokenPos,
-                 str::Leni(tab->readAloudText));
+            logf("ReadAloud: PaintHighlight: no spoken position (textLen=%d)\n", str::Leni(tab->readAloudText));
         }
         return;
     }
 
-    const char* chunkText = tab->readAloudText + tab->readAloudChunkStart;
-    int wordStartAbs = tab->readAloudHighlightBase + tab->readAloudChunkStart + spokenPos;
-    int wordEndAbs =
-        tab->readAloudHighlightBase + tab->readAloudChunkStart + ReadAloudWordEndUtf8(chunkText, spokenPos);
     if (wordStartAbs < 0 || wordStartAbs >= map->len) {
         ReadAloudPaintLogOnce(5, "ReadAloud: PaintHighlight: wordStartAbs out of range");
         return;

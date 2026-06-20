@@ -158,6 +158,10 @@ void WindowTab::MoveDocBy(int dx, int dy) const {
     if (0 != dy) {
         dm->ScrollYBy(dy, false);
     }
+
+    if (win && !win->readAloudScrollFromCode) {
+        ReadAloudOnUserViewChanged(win);
+    }
 }
 
 void WindowTab::ToggleZoom() const {

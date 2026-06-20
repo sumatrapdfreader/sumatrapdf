@@ -97,6 +97,8 @@ struct WindowTab {
     // current chunk within readAloudText (for WinRT-sized TTS segments)
     int readAloudChunkStart = 0;
     int readAloudChunkEnd = 0;
+    // follow the spoken word while reading; disabled when the user scrolls away
+    bool readAloudAutoScroll = false;
 
     WindowTab(MainWindow* win);
     ~WindowTab();

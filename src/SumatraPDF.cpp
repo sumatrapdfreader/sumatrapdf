@@ -7308,6 +7308,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (isCont && GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToPrevPage(true);
             }
+            ReadAloudOnUserViewChanged(win);
         } break;
 
         // TODO: do I need both CmdScrollUpPage and CmdGoToPrevPage
@@ -7326,6 +7327,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToPrevPage(true);
             }
+            ReadAloudOnUserViewChanged(win);
         } break;
 
         case CmdScrollDown:
@@ -7351,6 +7353,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     win->ctrl->GoToNextPage();
                 }
             }
+            ReadAloudOnUserViewChanged(win);
         } break;
 
         case CmdGoToPrevPage:
@@ -7366,6 +7369,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     ctrl->GoToNextPage();
                 }
             }
+            ReadAloudOnUserViewChanged(win);
             break;
         }
 
@@ -7383,6 +7387,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (isCont && GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToNextPage();
             }
+            ReadAloudOnUserViewChanged(win);
         } break;
 
         case CmdScrollDownPage: {
@@ -7400,6 +7405,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToNextPage();
             }
+            ReadAloudOnUserViewChanged(win);
         } break;
 
         // TODO: rename CmdScrollLeftOrPrevPage
@@ -7412,6 +7418,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             } else {
                 win->ctrl->GoToPrevPage();
             }
+            ReadAloudOnUserViewChanged(win);
         } break;
 
         case CmdScrollLeftPage: {
@@ -7427,6 +7434,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             } else {
                 win->ctrl->GoToNextPage();
             }
+            ReadAloudOnUserViewChanged(win);
         } break;
 
         case CmdScrollRightPage: {
@@ -7442,6 +7450,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             ctrl->GoToFirstPage();
+            ReadAloudOnUserViewChanged(win);
             break;
 
         case CmdGoToLastPage:
@@ -7455,6 +7464,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!ctrl->GoToLastPage()) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
             }
+            ReadAloudOnUserViewChanged(win);
             break;
 
         case CmdGoToPage:
@@ -9127,6 +9137,7 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
         tab->readAloudHighlight = nullptr;
     }
     tab->readAloudHighlightBase = 0;
+    tab->readAloudAutoScroll = false;
     ReadAloudClearSourceTab();
     if (win) {
         ToolbarUpdateStateForWindow(win, true);
@@ -9352,6 +9363,7 @@ static void ResetReadAloudStateForTab(WindowTab* tab) {
     tab->readAloudHighlightBase = 0;
     tab->readAloudChunkStart = 0;
     tab->readAloudChunkEnd = 0;
+    tab->readAloudAutoScroll = false;
 }
 
 // stop reading and remember where we stopped so that "Continue reading"
@@ -9423,6 +9435,7 @@ static void ReadAloudStartText(WindowTab* tab, const char* cleaned, ReadAloudHig
     tab->readAloudChunkStart = 0;
     tab->readAloudChunkEnd = 0;
     tab->readAloudResumePos = -1;
+    tab->readAloudAutoScroll = true;
     ReadAloudSetSourceTab(tab);
     ReadAloudHighlightTimerStart(tab->win);
 
@@ -9591,6 +9604,7 @@ static void ReadAloudContinueInTab(WindowTab* tab) {
     tab->readAloudChunkEnd = resumeInText;
     tab->readAloudChunkStart = resumeInText;
     tab->readAloudResumePos = -1;
+    tab->readAloudAutoScroll = true;
     ReadAloudSetSourceTab(tab);
     ReadAloudHighlightTimerStart(tab->win);
 

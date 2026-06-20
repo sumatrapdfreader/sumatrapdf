@@ -630,6 +630,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
         // Navigate to the target page
         if (targetPage != ctrl->CurrentPageNo()) {
             ctrl->GoToPage(targetPage, true);
+            ReadAloudOnUserViewChanged(win);
         }
         return;
     }
@@ -688,6 +689,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
             SetTimer(win->hwndCanvas, kSmoothScrollTimerID, USER_TIMER_MINIMUM, nullptr);
         } else {
             win->AsFixed()->ScrollYTo(si.nPos);
+            ReadAloudOnUserViewChanged(win);
         }
     }
 }
@@ -744,6 +746,7 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
         win->AsFixed()->ScrollXTo(si.nPos);
+        ReadAloudOnUserViewChanged(win);
     }
 }
 
@@ -1548,6 +1551,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         } else {
             tab->ctrl->GoToNextPage();
         }
+        ReadAloudOnUserViewChanged(win);
         return;
     }
 }
@@ -1715,6 +1719,7 @@ static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         } else {
             win->ctrl->GoToPrevPage();
         }
+        ReadAloudOnUserViewChanged(win);
     }
     /* return from white/black screens in presentation mode */
     else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
@@ -2431,9 +2436,11 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         if (win->wheelAccumDelta >= WHEEL_DELTA) {
             win->ctrl->GoToPrevPage();
             win->wheelAccumDelta -= WHEEL_DELTA;
+            ReadAloudOnUserViewChanged(win);
         } else if (win->wheelAccumDelta <= -WHEEL_DELTA) {
             win->ctrl->GoToNextPage();
             win->wheelAccumDelta += WHEEL_DELTA;
+            ReadAloudOnUserViewChanged(win);
         }
         return 0;
     }
@@ -2454,11 +2461,13 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             if (win->wheelAccumDelta >= pageFlipDelta) {
                 win->ctrl->GoToPrevPage();
                 win->wheelAccumDelta -= pageFlipDelta;
+                ReadAloudOnUserViewChanged(win);
                 return 0;
             }
             if (win->wheelAccumDelta <= -pageFlipDelta) {
                 win->ctrl->GoToNextPage();
                 win->wheelAccumDelta += pageFlipDelta;
+                ReadAloudOnUserViewChanged(win);
                 return 0;
             }
             return 0;
@@ -2485,11 +2494,13 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             if (win->wheelAccumDelta >= pageFlipDelta) {
                 win->ctrl->GoToPrevPage();
                 win->wheelAccumDelta -= pageFlipDelta;
+                ReadAloudOnUserViewChanged(win);
                 return 0;
             }
             if (win->wheelAccumDelta <= -pageFlipDelta) {
                 win->ctrl->GoToNextPage();
                 win->wheelAccumDelta += pageFlipDelta;
+                ReadAloudOnUserViewChanged(win);
                 return 0;
             }
             return 0;
@@ -2516,6 +2527,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             } else {
                 dm->ScrollYBy(scrollBy, true);
             }
+            ReadAloudOnUserViewChanged(win);
             return 0;
         }
     }
@@ -2534,6 +2546,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         } else {
             dm->ScrollYBy(scrollBy, true);
         }
+        ReadAloudOnUserViewChanged(win);
         return 0;
     }
 
@@ -2600,6 +2613,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     } else {
         win->ctrl->GoToNextPage();
     }
+    ReadAloudOnUserViewChanged(win);
 
     return 0;
 }
@@ -2729,6 +2743,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                         win->ctrl->GoToNextPage();
                         dm->ScrollXTo(0);
                     }
+                    ReadAloudOnUserViewChanged(win);
                     // When we switch pages prevent further pan movement
                     // caused by the inertia
                     touchState.panStarted = false;
@@ -3212,6 +3227,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case READ_ALOUD_HIGHLIGHT_TIMER_ID:
             if (GetReadAloudSourceTab()) {
                 TtsProcessEvents();
+                ReadAloudUpdateAutoScroll(win);
                 InvalidateRect(hwnd, nullptr, FALSE);
             } else {
                 ReadAloudHighlightTimerStop(win);
@@ -3252,6 +3268,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                 // Round away from zero
                 int dy = step < 0 ? (int)floor(step) : (int)ceil(step);
                 dm->ScrollYTo(current + dy);
+                ReadAloudOnUserViewChanged(win);
             }
             break;
     }

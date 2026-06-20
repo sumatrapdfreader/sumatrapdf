@@ -341,6 +341,9 @@ struct MainWindow {
     // We use a timer to gradually scroll there.
     int scrollTargetY = 0;
 
+    // suppress Read Aloud user-scroll detection during programmatic follow scrolling
+    mutable bool readAloudScrollFromCode = false;
+
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */

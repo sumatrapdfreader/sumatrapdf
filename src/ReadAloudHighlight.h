@@ -40,4 +40,7 @@ bool ReadAloudHighlightBuildFromDocument(DisplayModel* dm, int startPage, int st
 void ReadAloudHighlightTimerStart(MainWindow* win);
 void ReadAloudHighlightTimerStop(MainWindow* win);
 
+void ReadAloudOnUserViewChanged(MainWindow* win);
+void ReadAloudUpdateAutoScroll(MainWindow* win);
+
 void PaintReadAloudHighlight(MainWindow* win, HDC hdc);
