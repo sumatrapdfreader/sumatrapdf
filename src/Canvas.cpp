@@ -52,6 +52,8 @@
 #include "uia/Provider.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
+#include "ReadAloudHighlight.h"
+#include "TextToSpeech.h"
 #include "HomePage.h"
 #include "Tabs.h"
 #include "Toolbar.h"
@@ -2144,6 +2146,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         PaintSelection(win, hdc);
     }
 
+    PaintReadAloudHighlight(win, hdc);
+
     if (win->fwdSearchMark.show) {
         PaintForwardSearchMark(win, hdc);
     }
@@ -3202,6 +3206,14 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                 ScheduleRepaint(win, 0);
             } else {
                 ScheduleRepaint(win, 0);
+            }
+            break;
+
+        case READ_ALOUD_HIGHLIGHT_TIMER_ID:
+            if (TtsIsSpeaking() && GetReadAloudSourceTab()) {
+                InvalidateRect(hwnd, nullptr, FALSE);
+            } else {
+                ReadAloudHighlightTimerStop(win);
             }
             break;
 

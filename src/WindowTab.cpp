@@ -20,6 +20,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Selection.h"
+#include "ReadAloudHighlight.h"
 #include "Translations.h"
 #include "EditAnnotations.h"
 
@@ -68,6 +69,10 @@ WindowTab::~WindowTab() {
     str::FreePtr(&displayName);
     str::FreePtr(&frameTitle);
     str::FreePtr(&readAloudText);
+    if (readAloudHighlight) {
+        ReadAloudHighlightFree(readAloudHighlight);
+        delete readAloudHighlight;
+    }
     str::Free(claudeSessionId);
     delete claudeChatLog;
     if (claudeProcess) {

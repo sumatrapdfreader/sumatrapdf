@@ -1165,6 +1165,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\TextSearch.h" />
     <ClInclude Include="..\src\TextSelection.h" />
     <ClInclude Include="..\src\TextToSpeech.h" />
+    <ClInclude Include="..\src\ReadAloudHighlight.h" />
     <ClInclude Include="..\src\Theme.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\Translations.h" />
@@ -1317,6 +1318,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\TextSearch.cpp" />
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\TextToSpeech.cpp" />
+    <ClCompile Include="..\src\ReadAloudHighlight.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\TranslationLangs.cpp" />

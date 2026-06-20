@@ -31,6 +31,9 @@ constexpr int kHideCursorDelayInMs = 3000;
 #define REPAINT_MESSAGE_DELAY_IN_MS 1000
 
 #define AUTO_RELOAD_TIMER_ID 5
+
+#define READ_ALOUD_HIGHLIGHT_TIMER_ID 8
+#define READ_ALOUD_HIGHLIGHT_DELAY_IN_MS 80
 // debounce: coalesce bursts of file-change notifications (a single save can
 // fire several) into one reload. SetTimer() with the same id resets it, so the
 // reload only happens once the file has been quiet for this long (#5690)
@@ -132,6 +135,7 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
 // true if read aloud was paused and can be resumed in this tab
 bool CanContinueReadAloud(WindowTab* tab);
+WindowTab* GetReadAloudSourceTab();
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout = true);

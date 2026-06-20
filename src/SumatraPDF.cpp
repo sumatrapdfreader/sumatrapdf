@@ -103,6 +103,7 @@
 #include "Theme.h"
 #include "DarkModeSubclass.h"
 #include "TextToSpeech.h"
+#include "ReadAloudHighlight.h"
 
 #include "utils/Log.h"
 
@@ -9203,6 +9204,10 @@ static void StopReadAloudIfSourceTab(WindowTab* tab) {
         TtsStop();
     }
 
+    if (tab->win) {
+        ReadAloudHighlightTimerStop(tab->win);
+        InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+    }
     ReadAloudClearSourceTab();
 }
 
@@ -9226,6 +9231,15 @@ static void ResetReadAloudStateForTab(WindowTab* tab) {
     StopReadAloudIfSourceTab(tab);
     str::FreePtr(&tab->readAloudText);
     tab->readAloudResumePos = -1;
+    if (tab->win) {
+        ReadAloudHighlightTimerStop(tab->win);
+    }
+    if (tab->readAloudHighlight) {
+        ReadAloudHighlightFree(tab->readAloudHighlight);
+        delete tab->readAloudHighlight;
+        tab->readAloudHighlight = nullptr;
+    }
+    tab->readAloudHighlightBase = 0;
 }
 
 // stop reading and remember where we stopped so that "Continue reading"
@@ -9242,6 +9256,10 @@ static void ReadAloudStopRememberPos() {
     }
     TtsStop();
     ReadAloudClearSourceTab();
+    if (tab && tab->win) {
+        ReadAloudHighlightTimerStop(tab->win);
+        InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+    }
 }
 
 static void ReadAloudShowNotif(WindowTab* tab, const char* msg) {
@@ -9254,7 +9272,8 @@ static void ReadAloudShowNotif(WindowTab* tab, const char* msg) {
 
 // speaks already cleaned text and remembers it on the tab so that
 // reading can be resumed after stopping
-static void ReadAloudStartText(WindowTab* tab, const char* cleaned, const char* errMsg) {
+static void ReadAloudStartText(WindowTab* tab, const char* cleaned, ReadAloudHighlightMap* newMap, int highlightBase,
+                               const char* errMsg) {
     if (str::IsEmpty(cleaned)) {
         ReadAloudShowNotif(tab, errMsg);
         return;
@@ -9265,10 +9284,52 @@ static void ReadAloudStartText(WindowTab* tab, const char* cleaned, const char* 
         return;
     }
 
+    if (newMap) {
+        if (!tab->readAloudHighlight) {
+            tab->readAloudHighlight = new ReadAloudHighlightMap{};
+        }
+        ReadAloudHighlightFree(tab->readAloudHighlight);
+        if (newMap->len > 0 && newMap->locs) {
+            *tab->readAloudHighlight = *newMap;
+            newMap->locs = nullptr;
+            newMap->len = 0;
+            newMap->cap = 0;
+        }
+    } else if (highlightBase == 0 && tab->readAloudHighlight) {
+        ReadAloudHighlightFree(tab->readAloudHighlight);
+        delete tab->readAloudHighlight;
+        tab->readAloudHighlight = nullptr;
+    }
+    tab->readAloudHighlightBase = highlightBase;
+
     str::ReplaceWithCopy(&tab->readAloudText, cleaned);
     tab->readAloudResumePos = -1;
     ReadAloudSetSourceTab(tab);
+    ReadAloudHighlightTimerStart(tab->win);
     ToolbarUpdateStateForWindow(tab->win, true);
+    InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+}
+
+static void ReadAloudStartFromSource(WindowTab* tab, TempStr text, bool isTextOnlySelection, int pageNo,
+                                     const char* errMsg) {
+    StrBuilder cleaned;
+    ReadAloudHighlightMap map{};
+    bool hasMap = false;
+
+    DisplayModel* dm = tab->AsFixed();
+    if (isTextOnlySelection && dm && dm->textSelection->result.len > 0) {
+        hasMap = ReadAloudHighlightBuildFromTextSelection(dm->textSelection, &map, cleaned);
+    } else if (pageNo > 0 && tab->GetEngine()) {
+        hasMap = ReadAloudHighlightBuildFromPage(tab->GetEngine(), pageNo, &map, cleaned);
+    }
+
+    if (hasMap) {
+        ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
+        return;
+    }
+
+    TempStr cleanedStr = CleanReadAloudTextTemp(text);
+    ReadAloudStartText(tab, cleanedStr, nullptr, 0, errMsg);
 }
 
 static void ReadAloudInTab(WindowTab* tab) {
@@ -9283,12 +9344,13 @@ static void ReadAloudInTab(WindowTab* tab) {
     bool isTextOnlySelection = false;
     TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
 
-    if (str::IsEmpty(text)) {
+    int pageNo = 0;
+    if (str::IsEmpty(text) && tab->ctrl && tab->ctrl->ValidPageNo(tab->ctrl->CurrentPageNo())) {
+        pageNo = tab->ctrl->CurrentPageNo();
         text = GetReadAloudCurrentPageTextTemp(tab);
     }
 
-    TempStr cleaned = CleanReadAloudTextTemp(text);
-    ReadAloudStartText(tab, cleaned, _TRA("No text available to read aloud"));
+    ReadAloudStartFromSource(tab, text, isTextOnlySelection, pageNo, _TRA("No text available to read aloud"));
 }
 
 static void ReadAloudCurrentPageInTab(WindowTab* tab) {
@@ -9300,9 +9362,12 @@ static void ReadAloudCurrentPageInTab(WindowTab* tab) {
         return;
     }
 
+    if (!tab->ctrl || !tab->ctrl->ValidPageNo(tab->ctrl->CurrentPageNo())) {
+        return;
+    }
+
     TempStr text = GetReadAloudCurrentPageTextTemp(tab);
-    TempStr cleaned = CleanReadAloudTextTemp(text);
-    ReadAloudStartText(tab, cleaned, _TRA("No text available on this page"));
+    ReadAloudStartFromSource(tab, text, false, tab->ctrl->CurrentPageNo(), _TRA("No text available on this page"));
 }
 
 static void ReadAloudSelectionInTab(WindowTab* tab) {
@@ -9316,8 +9381,7 @@ static void ReadAloudSelectionInTab(WindowTab* tab) {
 
     bool isTextOnlySelection = false;
     TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
-    TempStr cleaned = CleanReadAloudTextTemp(text);
-    ReadAloudStartText(tab, cleaned, _TRA("No text available to read aloud"));
+    ReadAloudStartFromSource(tab, text, isTextOnlySelection, 0, _TRA("No text available to read aloud"));
 }
 
 bool CanContinueReadAloud(WindowTab* tab) {
@@ -9336,8 +9400,13 @@ static void ReadAloudContinueInTab(WindowTab* tab) {
     // speak the remaining text; ReadAloudStartText() remembers it as the
     // new spoken text so that a position reported on a subsequent stop
     // stays relative to what is being spoken
-    TempStr rest = str::DupTemp(tab->readAloudText + tab->readAloudResumePos);
-    ReadAloudStartText(tab, rest, _TRA("No text available to read aloud"));
+    int highlightBase = tab->readAloudResumePos;
+    TempStr rest = str::DupTemp(tab->readAloudText + highlightBase);
+    ReadAloudStartText(tab, rest, nullptr, highlightBase, _TRA("No text available to read aloud"));
+}
+
+WindowTab* GetReadAloudSourceTab() {
+    return gReadAloudSourceTab;
 }
 
 // Voice selection menu
@@ -9774,12 +9843,26 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_TTS_EVENT:
             TtsProcessEvents();
 
+            if (TtsIsSpeaking() && gReadAloudSourceTab && gReadAloudSourceTab->win) {
+                InvalidateRect(gReadAloudSourceTab->win->hwndCanvas, nullptr, FALSE);
+            }
+
             // also gets here for word boundary events while still speaking;
             // only the end of speech needs handling
             if (!TtsIsSpeaking() && gReadAloudSourceTab) {
                 // reading finished: there's nothing left to continue
+                if (gReadAloudSourceTab->win) {
+                    ReadAloudHighlightTimerStop(gReadAloudSourceTab->win);
+                    InvalidateRect(gReadAloudSourceTab->win->hwndCanvas, nullptr, FALSE);
+                }
                 str::FreePtr(&gReadAloudSourceTab->readAloudText);
                 gReadAloudSourceTab->readAloudResumePos = -1;
+                if (gReadAloudSourceTab->readAloudHighlight) {
+                    ReadAloudHighlightFree(gReadAloudSourceTab->readAloudHighlight);
+                    delete gReadAloudSourceTab->readAloudHighlight;
+                    gReadAloudSourceTab->readAloudHighlight = nullptr;
+                }
+                gReadAloudSourceTab->readAloudHighlightBase = 0;
                 ReadAloudClearSourceTab();
                 if (win) {
                     ToolbarUpdateStateForWindow(win, true);

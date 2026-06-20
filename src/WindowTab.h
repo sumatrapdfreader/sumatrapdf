@@ -6,6 +6,7 @@ struct WatchedFile;
 struct EditAnnotationsWindow;
 struct MainWindow;
 struct StrBuilder;
+struct ReadAloudHighlightMap;
 
 /* Data related to a single document loaded into a tab/window */
 /* (none of these depend on MainWindow, so that a WindowTab could
@@ -90,6 +91,8 @@ struct WindowTab {
     // (reset when the document is closed or reloaded)
     char* readAloudText = nullptr;
     int readAloudResumePos = -1;
+    ReadAloudHighlightMap* readAloudHighlight = nullptr;
+    int readAloudHighlightBase = 0;
 
     WindowTab(MainWindow* win);
     ~WindowTab();
