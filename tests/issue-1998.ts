@@ -18,7 +18,7 @@
 
 import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, tmpPath } from "./util";
+import { cmdId, EXE, tmpPath } from "./util";
 import {
   collapseTreeRoots,
   countVisibleTreeRows,
@@ -33,9 +33,10 @@ import {
 // a PDF with a nested (multi-level) table of contents
 const TOC_PDF = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\bug-1352-merged_manuals-1.4.2.pdf";
 
-// command ids (see src/Commands.h)
-const CmdGoToLastPage = 264;
-const CmdExpandToCurrentPage = 433;
+// command ids, looked up by name from src/Commands.h (the numeric values shift
+// whenever commands are added/removed, so never hardcode them)
+const CmdGoToLastPage = cmdId("CmdGoToLastPage");
+const CmdExpandToCurrentPage = cmdId("CmdExpandToCurrentPage");
 
 const SETTINGS = [
   `ShowToc = true`,

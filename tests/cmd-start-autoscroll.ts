@@ -11,7 +11,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, tmpPath } from "./util";
+import { cmdId, EXE, tmpPath } from "./util";
 import {
   clientToScreen,
   getClientRect,
@@ -29,8 +29,9 @@ import {
   WM_MOUSEMOVE,
 } from "./winapi";
 
-// command id (see src/Commands.h)
-const CmdStartAutoScroll = 434;
+// command id, looked up by name from src/Commands.h (the numeric value shifts
+// whenever commands are added/removed, so never hardcode it)
+const CmdStartAutoScroll = cmdId("CmdStartAutoScroll");
 
 function makePdf(nPages: number): string {
   const objs: string[] = [];

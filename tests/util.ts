@@ -4,11 +4,33 @@
 // and THROWS on failure (returns normally on success). It does NOT build the app
 // or call process.exit -- that's the runner's job, so tests compose in all.ts.
 
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const ROOT = join(import.meta.dir, "..");
 export const EXE = join(ROOT, "out", "dbg64", "SumatraPDF-dll.exe");
+
+// Command ids (sent with WM_COMMAND) live in src/Commands.h, but they're
+// generated and renumber whenever a command is added or removed -- so tests must
+// never hardcode the integer. Look it up by name at runtime instead, so a test
+// keeps targeting the right command after the enum shifts.
+let cmdIdCache: Map<string, number> | null = null;
+export function cmdId(name: string): number {
+  if (!cmdIdCache) {
+    cmdIdCache = new Map();
+    const src = readFileSync(join(ROOT, "src", "Commands.h"), "utf8");
+    const re = /\b(Cmd\w+)\s*=\s*(\d+)\b/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(src)) !== null) {
+      cmdIdCache.set(m[1], parseInt(m[2], 10));
+    }
+  }
+  const id = cmdIdCache.get(name);
+  if (id === undefined) {
+    throw new Error(`cmdId: '${name}' not found in src/Commands.h`);
+  }
+  return id;
+}
 
 // directory for temporary / scratch files produced by tests. It's gitignored
 // (tests/tmp/), so tests must write their runtime output here, never directly
