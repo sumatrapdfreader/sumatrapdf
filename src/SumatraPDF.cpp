@@ -9024,7 +9024,7 @@ static WindowTab* gReadAloudSourceTab = nullptr;
 static void ReadAloudShowNotif(WindowTab* tab, const char* msg);
 
 // WinRT speech synthesis is too slow for whole-document requests; speak in chunks.
-static constexpr int kReadAloudMaxChunkLen = 8192;
+static constexpr int kReadAloudMaxChunkLen = 1024;
 
 static int ReadAloudFindChunkEnd(const char* text, int start, int maxLen) {
     int textLen = str::Leni(text);
@@ -9572,7 +9572,8 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     }
     AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, ToWStrTemp(_TRA("Start Reading From Top Page")));
-    AppendMenuW(menu, hasSelection ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadSelection, L"Read selection");
+    AppendMenuW(menu, hasSelection ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadSelection,
+                ToWStrTemp(_TRA("Start Reading Selection")));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
 
     AppendMenuW(menu, defaultFlags, CmdTtsVoiceDefault, L"System default");
