@@ -8,6 +8,7 @@ struct LinkHandler;
 struct StressTest;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
+struct ReadAloudPlaybackBar;
 struct LabelWithCloseWnd;
 struct Splitter;
 struct Tooltip;
@@ -359,6 +360,8 @@ struct MainWindow {
     TouchState touchState;
 
     FrameRateWnd* frameRateWnd = nullptr;
+
+    ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
 
     // set at the beginning of CloseWindow() to prevent
     // processing commands while closing (e.g. reentrancy

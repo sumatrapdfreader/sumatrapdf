@@ -504,6 +504,51 @@ static int ReadAloudWordEndUtf8(const char* text, int pos) {
     return end;
 }
 
+bool ReadAloudGetProgressPage(WindowTab* tab, int* pageOut, int* pageCountOut) {
+    if (!tab || !pageOut || !pageCountOut) {
+        return false;
+    }
+
+    *pageOut = 0;
+    *pageCountOut = 0;
+
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return false;
+    }
+    *pageCountOut = dm->PageCount();
+
+    ReadAloudHighlightMap* map = tab->readAloudHighlight;
+    if (!map || !map->locs || map->len <= 0) {
+        return false;
+    }
+
+    int absPos = -1;
+    WindowTab* sourceTab = GetReadAloudSourceTab();
+    if (sourceTab == tab && TtsIsSpeaking()) {
+        int spokenPos = TtsGetSpokenPosUtf8();
+        if (spokenPos >= 0) {
+            absPos = tab->readAloudHighlightBase + tab->readAloudChunkStart + spokenPos;
+        }
+    } else if (tab->readAloudResumePos > 0) {
+        absPos = tab->readAloudResumePos;
+    } else if (tab->readAloudChunkEnd > 0) {
+        absPos = tab->readAloudHighlightBase + tab->readAloudChunkStart;
+    }
+
+    if (absPos < 0 || absPos >= map->len) {
+        return false;
+    }
+
+    int pageNo = map->locs[absPos].pageNo;
+    if (pageNo <= 0) {
+        return false;
+    }
+
+    *pageOut = pageNo;
+    return true;
+}
+
 static bool ReadAloudGetCurrentWordAbsRange(WindowTab* tab, int* startAbsOut, int* endAbsOut) {
     if (!tab || !startAbsOut || !endAbsOut) {
         return false;

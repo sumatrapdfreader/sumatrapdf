@@ -27,6 +27,7 @@
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
+#include "ReadAloudPlaybackBar.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "Annotation.h"
@@ -164,6 +165,7 @@ MainWindow::~MainWindow() {
     delete cbHandler;
 
     delete frameRateWnd;
+    ReadAloudPlaybackBarDestroy(this);
     delete infotip;
     delete tocTreeView;
     delete tocFilterEdit;
@@ -311,6 +313,7 @@ void MainWindow::UpdateCanvasSize() {
     }
 
     RelayoutNotifications(hwndCanvas);
+    ReadAloudPlaybackBarRelayout(hwndCanvas);
 }
 
 Size MainWindow::GetViewPortSize() const {

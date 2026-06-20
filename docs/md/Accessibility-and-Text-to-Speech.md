@@ -14,7 +14,7 @@ Read document text using Windows text-to-speech. You can start from a text selec
    - **Main menu** — **Read Aloud (TTS)** (after Selection)
    - **Context menu** — **Read Aloud (TTS)** (after Document)
    - **Command palette** (`Ctrl + K`) — e.g. **Start Reading From Top**, **Start Reading Selection**, **Read Aloud**
-3. While speaking, the current word is highlighted on the page. **Pause Reading** and **Continue Reading** are in the Read Aloud menus and palette.
+3. While speaking, a **playback bar** at the bottom of the canvas shows the document name, current page, and start scope, with **Pause** / **Resume** and **Stop** buttons. The current word is also highlighted on the page. **Pause Reading**, **Continue Reading**, and **Stop Reading** are in the Read Aloud menus and palette.
 
 ### Start scopes
 

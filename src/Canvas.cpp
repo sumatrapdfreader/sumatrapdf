@@ -53,6 +53,7 @@
 #include "SearchAndDDE.h"
 #include "Selection.h"
 #include "ReadAloudHighlight.h"
+#include "ReadAloudPlaybackBar.h"
 #include "TextToSpeech.h"
 #include "HomePage.h"
 #include "Tabs.h"
@@ -3228,6 +3229,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             if (GetReadAloudSourceTab()) {
                 TtsProcessEvents();
                 ReadAloudUpdateAutoScroll(win);
+                ReadAloudPlaybackBarUpdateSession(GetReadAloudSourceTab());
                 InvalidateRect(hwnd, nullptr, FALSE);
             } else {
                 ReadAloudHighlightTimerStop(win);

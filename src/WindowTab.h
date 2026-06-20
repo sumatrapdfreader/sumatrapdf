@@ -100,6 +100,15 @@ struct WindowTab {
     // follow the spoken word while reading; disabled when the user scrolls away
     bool readAloudAutoScroll = false;
 
+    enum ReadAloudScope {
+        ReadAloudScopeSmart = 1,
+        ReadAloudScopeViewport = 2,
+        ReadAloudScopeSelection = 3,
+        ReadAloudScopeCursor = 4,
+    };
+    // how the current read-aloud session was started (for the playback bar label)
+    int readAloudScope = 0;
+
     WindowTab(MainWindow* win);
     ~WindowTab();
 

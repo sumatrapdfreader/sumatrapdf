@@ -104,6 +104,7 @@
 #include "DarkModeSubclass.h"
 #include "TextToSpeech.h"
 #include "ReadAloudHighlight.h"
+#include "ReadAloudPlaybackBar.h"
 
 #include "utils/Log.h"
 
@@ -7203,6 +7204,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdStopReadAloud:
+            ReadAloudPlaybackStop();
+            break;
+
         case CmdReadAloudFromTopPage: {
             if (!tab) {
                 break;
@@ -9051,6 +9056,7 @@ HWND gLastActiveFrameHwnd = nullptr;
 static constexpr UINT WM_TTS_EVENT = WM_APP + 0x421;
 
 static WindowTab* gReadAloudSourceTab = nullptr;
+static WindowTab* gReadAloudSessionTab = nullptr;
 static HMENU gReadAloudAppSubmenu = nullptr;
 static HMENU gReadAloudContextSubmenu = nullptr;
 
@@ -9126,6 +9132,7 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
     if (tab->win) {
         ReadAloudHighlightTimerStop(tab->win);
         InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+        ReadAloudPlaybackBarHide(tab->win);
     }
     str::FreePtr(&tab->readAloudText);
     tab->readAloudResumePos = -1;
@@ -9138,7 +9145,11 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
     }
     tab->readAloudHighlightBase = 0;
     tab->readAloudAutoScroll = false;
+    tab->readAloudScope = 0;
     ReadAloudClearSourceTab();
+    if (gReadAloudSessionTab == tab) {
+        gReadAloudSessionTab = nullptr;
+    }
     if (win) {
         ToolbarUpdateStateForWindow(win, true);
     }
@@ -9364,6 +9375,13 @@ static void ResetReadAloudStateForTab(WindowTab* tab) {
     tab->readAloudChunkStart = 0;
     tab->readAloudChunkEnd = 0;
     tab->readAloudAutoScroll = false;
+    tab->readAloudScope = 0;
+    if (gReadAloudSessionTab == tab) {
+        gReadAloudSessionTab = nullptr;
+    }
+    if (tab->win) {
+        ReadAloudPlaybackBarHide(tab->win);
+    }
 }
 
 // stop reading and remember where we stopped so that "Continue reading"
@@ -9387,7 +9405,39 @@ static void ReadAloudStopRememberPos() {
     if (tab && tab->win) {
         ReadAloudHighlightTimerStop(tab->win);
         InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
+        ReadAloudPlaybackBarUpdateSession(tab);
     }
+}
+
+void ReadAloudPlaybackPauseOrResume() {
+    WindowTab* tab = gReadAloudSessionTab;
+    if (!tab) {
+        tab = GetReadAloudSourceTab();
+    }
+    if (!tab || !tab->win) {
+        return;
+    }
+
+    if (TtsIsSpeaking() && GetReadAloudSourceTab() == tab) {
+        ReadAloudStopRememberPos();
+        ToolbarUpdateStateForWindow(tab->win, true);
+    } else if (CanContinueReadAloud(tab)) {
+        ReadAloudContinueInTab(tab);
+    }
+}
+
+void ReadAloudPlaybackStop() {
+    WindowTab* tab = gReadAloudSessionTab;
+    if (!tab) {
+        tab = GetReadAloudSourceTab();
+    }
+    if (!tab) {
+        return;
+    }
+    if (TtsIsSpeaking()) {
+        TtsStop();
+    }
+    ReadAloudFinishSession(tab, tab->win);
 }
 
 static void ReadAloudShowNotif(WindowTab* tab, const char* msg) {
@@ -9436,6 +9486,7 @@ static void ReadAloudStartText(WindowTab* tab, const char* cleaned, ReadAloudHig
     tab->readAloudChunkEnd = 0;
     tab->readAloudResumePos = -1;
     tab->readAloudAutoScroll = true;
+    gReadAloudSessionTab = tab;
     ReadAloudSetSourceTab(tab);
     ReadAloudHighlightTimerStart(tab->win);
 
@@ -9443,6 +9494,7 @@ static void ReadAloudStartText(WindowTab* tab, const char* cleaned, ReadAloudHig
         ReadAloudFinishSession(tab, tab->win);
         return;
     }
+    ReadAloudPlaybackBarUpdateSession(tab);
     logf("ReadAloud: StartText: started speaking\n");
 }
 
@@ -9510,10 +9562,12 @@ static void ReadAloudInTab(WindowTab* tab) {
 
     if (!str::IsEmpty(text) && isTextOnlySelection) {
         logf("ReadAloud: InTab: using selection path (len=%d)\n", str::Leni(text));
+        tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromSelection(tab, _TRA("No text available to read aloud"));
     } else {
         logf("ReadAloud: InTab: using viewport-top path (hasSelection=%d isTextOnly=%d)\n", !str::IsEmpty(text),
              isTextOnlySelection);
+        tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromViewportTop(tab, _TRA("No text available to read aloud"));
     }
 }
@@ -9557,6 +9611,7 @@ static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
         return;
     }
 
+    tab->readAloudScope = WindowTab::ReadAloudScopeCursor;
     ReadAloudStartFromCursor(tab, screenPt, _TRA("No text available to read aloud"));
 }
 
@@ -9571,6 +9626,7 @@ static void ReadAloudFromViewportTopInTab(WindowTab* tab) {
         return;
     }
 
+    tab->readAloudScope = WindowTab::ReadAloudScopeViewport;
     ReadAloudStartFromViewportTop(tab, _TRA("No text available to read aloud"));
 }
 
@@ -9583,6 +9639,7 @@ static void ReadAloudSelectionInTab(WindowTab* tab) {
         return;
     }
 
+    tab->readAloudScope = WindowTab::ReadAloudScopeSelection;
     ReadAloudStartFromSelection(tab, _TRA("No text available to read aloud"));
 }
 
@@ -9610,7 +9667,9 @@ static void ReadAloudContinueInTab(WindowTab* tab) {
 
     if (!ReadAloudSpeakChunk(tab, _TRA("No text available to read aloud"))) {
         ReadAloudFinishSession(tab, tab->win);
+        return;
     }
+    ReadAloudPlaybackBarUpdateSession(tab);
 }
 
 WindowTab* GetReadAloudSourceTab() {
@@ -10115,6 +10174,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
             if (TtsIsSpeaking() && gReadAloudSourceTab && gReadAloudSourceTab->win) {
                 InvalidateRect(gReadAloudSourceTab->win->hwndCanvas, nullptr, FALSE);
+                ReadAloudPlaybackBarUpdateSession(gReadAloudSourceTab);
             }
 
             // also gets here for word boundary events while still speaking;

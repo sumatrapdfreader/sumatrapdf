@@ -43,4 +43,6 @@ void ReadAloudHighlightTimerStop(MainWindow* win);
 void ReadAloudOnUserViewChanged(MainWindow* win);
 void ReadAloudUpdateAutoScroll(MainWindow* win);
 
+bool ReadAloudGetProgressPage(WindowTab* tab, int* pageOut, int* pageCountOut);
+
 void PaintReadAloudHighlight(MainWindow* win, HDC hdc);
