@@ -733,7 +733,7 @@ SeqStrings gCommandDescriptions =
     "Read Aloud\0"
     "Pause Reading\0"
     "Continue Reading\0"
-    "Start Reading From Top Page\0"
+    "Start Reading From Here\0"
     "Start Reading Selection\0"
     "Toggle Hover Preview\0"
     "Remove Deleted Files From History\0"

@@ -9684,7 +9684,7 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
         AppendMenuW(menu, MF_STRING, CmdTtsMenuContinueReading, ToWStrTemp(_TRA("Continue Reading")));
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     }
-    AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, ToWStrTemp(_TRA("Start Reading From Top Page")));
+    AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, ToWStrTemp(_TRA("Start Reading From Here")));
     if (includeCursorItem) {
         AppendMenuW(menu, canReadFromCursor ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadFromCursor,
                     ToWStrTemp(_TRA("Start Reading From Cursor Position")));
