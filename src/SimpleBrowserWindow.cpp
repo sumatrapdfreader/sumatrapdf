@@ -235,6 +235,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         webView->events.navigationStarting = NavigationStarting;
         webView->events.navigationCompleted = NavigationCompleted;
         webView->events.historyChanged = HistoryChanged;
+        webView->forwardAppAccelerators = false;
 
         CreateWebViewArgs cargs;
         cargs.parent = frameHwnd;

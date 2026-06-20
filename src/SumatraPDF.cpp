@@ -4377,8 +4377,8 @@ static bool IsLayoutStateEq(LayoutState* s1, LayoutState* s2) {
            s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
            s1->showFavorites == s2->showFavorites && s1->showMenuBarRebar == s2->showMenuBarRebar &&
            s1->claudeVisible == s2->claudeVisible && s1->claudeDx == s2->claudeDx &&
-           s1->grokVisible == s2->grokVisible && s1->grokDx == s2->grokDx &&
-           s1->codexVisible == s2->codexVisible && s1->codexDx == s2->codexDx;
+           s1->grokVisible == s2->grokVisible && s1->grokDx == s2->grokDx && s1->codexVisible == s2->codexVisible &&
+           s1->codexDx == s2->codexDx;
 }
 
 static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
@@ -6469,7 +6469,7 @@ static char* ManualMimeFromPath(const char* path) {
     } mimeTypes[] = {
         {".html", "text/html"},     {".htm", "text/html"},     {".gif", "image/gif"},  {".png", "image/png"},
         {".jpg", "image/jpeg"},     {".jpeg", "image/jpeg"},   {".bmp", "image/bmp"},  {".css", "text/css"},
-        {".js", "text/javascript"}, {".svg", "image/svg+xml"}, {".txt", "text/plain"},
+        {".js", "text/javascript"}, {".svg", "image/svg+xml"}, {".txt", "text/plain"}, {".md", "text/plain"},
     };
 
     for (int i = 0; i < dimof(mimeTypes); i++) {

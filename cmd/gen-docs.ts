@@ -29,6 +29,9 @@ const searchJS = `<script>${readFileSync(join(docsDir, "gen_docs.search.js"), "u
 const searchHTML = readFileSync(join(docsDir, "gen_docs.search.html"), "utf-8");
 const tmplManual = readFileSync(join(docsDir, "manual.tmpl.html"), "utf-8");
 
+const kAllDocsFile = "all-docs.md";
+const kExcludeFromAllDocs = new Set(["SumatraPDF-all-docs-for-llm-ai.md"]);
+
 hljs.registerLanguage("javascript", javascript);
 
 function highlightJsCode(code: string): string {
@@ -404,6 +407,50 @@ function copyDirRecursive(dst: string, src: string): void {
   }
 }
 
+function extractMdLinksInOrder(content: string): string[] {
+  const linkRe = /\[([^\]]+)\]\(([^)]+\.md)\)/g;
+  const seen = new Set<string>();
+  const links: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = linkRe.exec(content)) !== null) {
+    let fileName = m[2].replace(/^\.\//, "");
+    const hashIdx = fileName.indexOf("#");
+    if (hashIdx >= 0) {
+      fileName = fileName.slice(0, hashIdx);
+    }
+    if (kExcludeFromAllDocs.has(fileName) || seen.has(fileName)) {
+      continue;
+    }
+    seen.add(fileName);
+    links.push(fileName);
+  }
+  return links;
+}
+
+function genAllDocsMd(): void {
+  const mainFile = "SumatraPDF-documentation.md";
+  const src = readFileSync(join(mdDir, mainFile), "utf-8");
+  const links = extractMdLinksInOrder(src);
+  const files = [mainFile];
+  for (const f of links) {
+    if (f !== mainFile) {
+      files.push(f);
+    }
+  }
+  const parts: string[] = [];
+  for (const fileName of files) {
+    const path = join(mdDir, fileName);
+    if (!existsSync(path)) {
+      throw new Error(`all-docs: '${fileName}' not found`);
+    }
+    const content = readFileSync(path, "utf-8");
+    parts.push(`::${fileName}\n${content}`);
+  }
+  const outPath = join(wwwOutDir, kAllDocsFile);
+  writeFileSync(outPath, parts.join("\n"));
+  console.log(`wrote '${outPath}' (${files.length} files)`);
+}
+
 function writeDocsHtmlFiles(): void {
   const imgOutDir = join(wwwOutDir, "img");
   rmSync(imgOutDir, { recursive: true, force: true });
@@ -418,7 +465,14 @@ function writeDocsHtmlFiles(): void {
   }
 
   copyDirRecursive(join(wwwOutDir, "img"), join(mdDir, "img"));
-  const htmlFiles = ["sumatra.css", "gen_toc.js", "gen_code_copy.js", "favicon.ico"];
+  genAllDocsMd();
+  const htmlFiles = [
+    "sumatra.css",
+    "gen_toc.js",
+    "gen_code_copy.js",
+    "gen_docs.fulltext_search.js",
+    "favicon.ico",
+  ];
   for (const name of htmlFiles) {
     const srcPath = join("docs", name);
     const dstPath = join(wwwOutDir, name);
