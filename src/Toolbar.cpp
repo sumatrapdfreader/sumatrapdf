@@ -385,7 +385,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
 
         if (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud) {
             bool speaking = TtsIsSpeaking();
-            SetToolbarButtonImageByIdx(hwnd, i, speaking ? TbIcon::StopSpeaking : TbIcon::Speak);
+            SetToolbarButtonImageByIdx(hwnd, i, speaking ? TbIcon::PauseSpeaking : TbIcon::Speak);
             // tooltip reflects what clicking the button will do
             const char* tip = _TRA("Read Aloud");
             if (speaking) {

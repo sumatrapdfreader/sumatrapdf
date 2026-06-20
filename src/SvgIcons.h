@@ -21,7 +21,7 @@ enum class TbIcon {
     RotateLeft,
     RotateRight,
     Speak,
-    StopSpeaking,
+    PauseSpeaking,
     NavigateBack,
     NavigateForward,
     kMax

@@ -137,10 +137,12 @@ static const char* gIconSpeak =
   <path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5" />
 </svg>)";
 
-static const char* gIconStopSpeaking =
+// tabler player-pause
+static const char* gIconPauseSpeaking =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-  <path d="M5 7a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2l0 -10" />
+  <path d="M6 5v14" />
+  <path d="M18 5v14" />
 </svg>)";
 
 // https://github.com/tabler/tabler-icons/blob/master/icons/circle-arrow-left.svg
@@ -182,7 +184,7 @@ static const char* gIcons[] = {
     gIconRotateLeft,
     gIconRotateRight,
     gIconSpeak,
-    gIconStopSpeaking,
+    gIconPauseSpeaking,
     gIconNavigateBack,
     gIconNavigateForward,
 };
