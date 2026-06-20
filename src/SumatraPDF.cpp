@@ -6077,24 +6077,19 @@ TempStr GetLogFilePathTemp() {
     return path::JoinTemp(dir, "sumatra-log.txt");
 }
 
-// separate directory for each build number / type
-TempStr GetVerDirNameTemp(const char* prefix) {
-    auto variant = gIsPreReleaseBuild ? "prerel" : "rel";
-    if (gIsDebugBuild) {
-        variant = "dbg";
+// separate directory for each build (first 6 chars of exe sha1)
+TempStr GetBuildDirNameTemp(const char* prefix) {
+    char id[7] = "000000";
+    char* sha1 = Sha1OfAppExe();
+    if (sha1) {
+        str::BufSet(id, dimof(id), sha1);
     }
-    auto bits = IsProcess64() ? "64" : "32";
-    if (IsArmBuild()) {
-        bits = "arm64";
-    }
-    auto ver = CURR_VERSION_STRA; // 3.6.16105 for pre-release,  3.5.2 for release
-    // TODO: something different for store build?
-    return str::FormatTemp("%s%s-%s-%s", prefix, variant, ver, bits);
+    return str::FormatTemp("%s%s", prefix, id);
 }
 
 TempStr GetCrashInfoDirTemp() {
     TempStr dataDir = GetNotImportantDataDirTemp();
-    TempStr dirName = GetVerDirNameTemp("crashinfo-");
+    TempStr dirName = GetBuildDirNameTemp("crashinfo-");
     return path::JoinTemp(dataDir, dirName);
 }
 

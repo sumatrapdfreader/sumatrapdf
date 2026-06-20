@@ -242,4 +242,4 @@ void SumatraOpenPathInDefaultFileManager(const char* path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetNotImportantDataDirTemp();
 TempStr GetCrashInfoDirTemp();
-TempStr GetVerDirNameTemp(const char* prefix);
+TempStr GetBuildDirNameTemp(const char* prefix);

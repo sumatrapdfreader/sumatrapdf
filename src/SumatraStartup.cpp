@@ -1169,7 +1169,7 @@ static void DeleteStaleFilesAsync() {
         return;
     }
     TempStr dir = GetNotImportantDataDirTemp();
-    TempStr ver = GetVerDirNameTemp("");
+    TempStr ver = GetBuildDirNameTemp("");
     logf("DeleteStaleFilesAsync: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
 
     DirIter di{dir};
@@ -1182,7 +1182,7 @@ static void DeleteStaleFilesAsync() {
             logf("DeleteStaleFilesAsync: skipping '%s' because not manual-* or crsahinfo-*\n", name);
             continue;
         }
-        TempStr currVer = GetVerDirNameTemp("");
+        TempStr currVer = GetBuildDirNameTemp("");
         if (str::Contains(name, currVer)) {
             logf("DeleteStaleFilesAsync: skipping '%s' because our ver '%s'\n", name, currVer);
             continue;
