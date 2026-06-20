@@ -81,6 +81,7 @@ struct SelectionTranslateDialog {
     bool translating = false;
     bool resultVisible = false;
     int contentDx = 0;
+    int labelShift = 0;
     int yAfterLangs = 0;
     int pad = 0;
     int gap = 0;
@@ -612,6 +613,27 @@ static void SetDialogClientSize(HWND hwnd, int clientW, int clientH) {
     SetWindowPos(hwnd, nullptr, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
 }
 
+static int ComboVisibleDy(HWND hwndCombo) {
+    int itemH = (int)SendMessageW(hwndCombo, CB_GETITEMHEIGHT, (WPARAM)-1, 0);
+    return itemH + 8;
+}
+
+static int ComboLabelYOffset(HWND hwndCombo, HWND hwnd, HFONT font) {
+    COMBOBOXINFO cbi{};
+    cbi.cbSize = sizeof(COMBOBOXINFO);
+    if (!GetComboBoxInfo(hwndCombo, &cbi)) {
+        return DpiScale(hwnd, 4);
+    }
+    int editDy = cbi.rcItem.bottom - cbi.rcItem.top;
+    AutoReleaseDC dc(hwnd);
+    ScopedSelectFont selectFont(dc, font);
+    TEXTMETRIC tm{};
+    int textDy = GetTextMetrics(dc, &tm) ? tm.tmHeight : FontDyPx(hwnd, font);
+    // static text draws flush to the top of its rect; nudge up to match combo text visually
+    constexpr int kComboLabelAdjust = 2;
+    return cbi.rcItem.top + (editDy - textDy) / 2 - DpiScale(hwnd, kComboLabelAdjust);
+}
+
 static void LayoutButtons(SelectionTranslateDialog* dlg, int y) {
     int x = dlg->pad;
     int innerDx = dlg->contentDx;
@@ -632,9 +654,9 @@ static void ShowTranslationResult(SelectionTranslateDialog* dlg, const char* tex
     const char* label = isError ? _TRA("Error:") : _TRA("Translation:");
 
     if (!dlg->resultVisible) {
-        dlg->hwndResultLabel =
-            CreateWindowExW(0, L"STATIC", ToWStrTemp(label), WS_CHILD | WS_VISIBLE, x, y, dlg->contentDx, labelDy, hwnd,
-                            nullptr, GetModuleHandleW(nullptr), nullptr);
+        dlg->hwndResultLabel = CreateWindowExW(0, L"STATIC", ToWStrTemp(label), WS_CHILD | WS_VISIBLE,
+                                               x + dlg->labelShift, y, dlg->contentDx - dlg->labelShift, labelDy, hwnd,
+                                               nullptr, GetModuleHandleW(nullptr), nullptr);
         SetWindowFont(dlg->hwndResultLabel, dlg->hFont, TRUE);
         y += labelDy + dlg->gap;
         dlg->hwndResultText = CreateWindowExW(
@@ -833,16 +855,13 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     dlg->pad = DpiScale(hwnd, 12);
     dlg->gap = DpiScale(hwnd, 8);
     int labelDy = DpiScale(hwnd, 16);
-    int comboDy = DpiScale(hwnd, 24);
     dlg->btnDy = DpiScale(hwnd, 28);
     dlg->btnW = DpiScale(hwnd, 96);
-    int langLabelDx = DpiScale(hwnd, 44);
     int clientW = DpiScale(hwndOwner, 500);
     int x = dlg->pad;
     int y = dlg->pad;
     dlg->contentDx = clientW - 2 * dlg->pad;
     int colDx = (dlg->contentDx - dlg->gap) / 2;
-    int comboDx = colDx - langLabelDx;
 
     auto createLabel = [&](const char* text, int lx, int ly, int ldx) {
         HWND h = CreateWindowExW(0, L"STATIC", ToWStrTemp(text), WS_CHILD | WS_VISIBLE, lx, ly, ldx, labelDy, hwnd,
@@ -851,7 +870,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
         return h;
     };
 
-    createLabel(_TRA("Translate:"), x, y, dlg->contentDx);
+    int translateLabelY = y;
     y += labelDy + dlg->gap;
     int srcTextDy = DpiScale(hwnd, 140);
     dlg->hwndSrcText =
@@ -859,23 +878,41 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
                         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL, x, y, dlg->contentDx,
                         srcTextDy, hwnd, (HMENU)(INT_PTR)kIdSrcText, GetModuleHandleW(nullptr), nullptr);
     SetWindowFont(dlg->hwndSrcText, dlg->hFont, TRUE);
+    int editBorder = GetSystemMetrics(SM_CXEDGE);
+    LRESULT margins = SendMessageW(dlg->hwndSrcText, EM_GETMARGINS, 0, 0);
+    dlg->labelShift = editBorder + LOWORD(margins);
+    createLabel(_TRA("Translate:"), x + dlg->labelShift, translateLabelY, dlg->contentDx - dlg->labelShift);
     y += srcTextDy + dlg->gap;
 
+    int charDx = HwndMeasureText(hwnd, " ", dlg->hFont).dx;
+    Size fromLabelSize = HwndMeasureText(hwnd, _TRA("From:"), dlg->hFont);
+    Size toLabelSize = HwndMeasureText(hwnd, _TRA("To:"), dlg->hFont);
     int col2X = x + colDx + dlg->gap;
-    createLabel(_TRA("From:"), x, y, langLabelDx);
+    int langRowY = y;
+    int fromLabelX = x + dlg->labelShift;
+    int srcComboX = fromLabelX + fromLabelSize.dx + charDx;
+    int srcComboDx = x + colDx - srcComboX;
     dlg->hwndSrcLang = CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL,
-                                       x + langLabelDx, y - DpiScale(hwnd, 2), comboDx, DpiScale(hwnd, 200), hwnd,
+                                       srcComboX, langRowY, srcComboDx, DpiScale(hwnd, 200), hwnd,
                                        (HMENU)(INT_PTR)kIdSrcLang, GetModuleHandleW(nullptr), nullptr);
     SetWindowFont(dlg->hwndSrcLang, dlg->hFont, TRUE);
+    int comboRowDy = ComboVisibleDy(dlg->hwndSrcLang);
+    MoveWindow(dlg->hwndSrcLang, srcComboX, langRowY, srcComboDx, comboRowDy + DpiScale(hwnd, 200), TRUE);
     PopulateLanguageCombo(dlg->hwndSrcLang, "English");
+    int labelYOffset = ComboLabelYOffset(dlg->hwndSrcLang, hwnd, dlg->hFont);
+    createLabel(_TRA("From:"), fromLabelX, langRowY + labelYOffset, fromLabelSize.dx);
 
-    createLabel(_TRA("To:"), col2X, y, langLabelDx);
+    int toLabelX = col2X + dlg->labelShift;
+    int dstComboX = toLabelX + toLabelSize.dx + charDx;
+    int dstComboDx = x + dlg->contentDx - dstComboX;
     dlg->hwndDstLang = CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL,
-                                       col2X + langLabelDx, y - DpiScale(hwnd, 2), comboDx, DpiScale(hwnd, 200), hwnd,
+                                       dstComboX, langRowY, dstComboDx, DpiScale(hwnd, 200), hwnd,
                                        (HMENU)(INT_PTR)kIdDstLang, GetModuleHandleW(nullptr), nullptr);
     SetWindowFont(dlg->hwndDstLang, dlg->hFont, TRUE);
+    MoveWindow(dlg->hwndDstLang, dstComboX, langRowY, dstComboDx, comboRowDy + DpiScale(hwnd, 200), TRUE);
     PopulateLanguageCombo(dlg->hwndDstLang, DefaultDestinationLanguageTemp());
-    y += comboDy + dlg->gap;
+    createLabel(_TRA("To:"), toLabelX, langRowY + labelYOffset, toLabelSize.dx);
+    y += comboRowDy + dlg->gap;
     dlg->yAfterLangs = y;
 
     dlg->hwndTranslateBtn = CreateWindowExW(0, L"BUTTON", ToWStrTemp(_TRA("Translate")),
