@@ -6492,18 +6492,29 @@ static bool IsManualDocHtmlPage(const char* path) {
     return true;
 }
 
+static TempStr ManualArchiveLookupPathTemp(const char* path) {
+    TempStr lookupPath = str::DupTemp(path);
+    // manual.dat stores names with backslashes (MakeLZSA convention) but WebView
+    // requests use URL-style forward slashes.
+    str::TransCharsInPlace(lookupPath, "/", "\\");
+    return lookupPath;
+}
+
 static bool ManualGetResource(void* ctx, const char* path, WebViewResourceResult* res) {
     auto* archive = (lzma::SimpleArchive*)ctx;
     if (!archive || !res || str::IsEmpty(path)) {
         return false;
     }
 
+    const char* mimePath = path;
     // Doc pages are rendered on demand from .md sources in WebView2.
     if (IsManualDocHtmlPage(path)) {
         path = "manual.shell.html";
+        mimePath = path;
     }
 
-    int idx = lzma::GetIdxFromName(archive, path);
+    TempStr lookupPath = ManualArchiveLookupPathTemp(path);
+    int idx = lzma::GetIdxFromName(archive, lookupPath);
     if (idx < 0) {
         return false;
     }
@@ -6516,7 +6527,7 @@ static bool ManualGetResource(void* ctx, const char* path, WebViewResourceResult
     lzma::FileInfo* fi = &archive->files[idx];
     res->data = (char*)data;
     res->dataLen = fi->uncompressedSize;
-    res->contentType = ManualMimeFromPath(path);
+    res->contentType = ManualMimeFromPath(mimePath);
     res->ownsData = true;
     return true;
 }

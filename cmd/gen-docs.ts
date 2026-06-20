@@ -519,6 +519,36 @@ function writeManualPakFiles(): void {
     join(manualOutDir, "markdown-it.min.js"),
     join("cmd", "markdown-it.min.js"),
   );
+  verifyManualImages();
+}
+
+function verifyManualImages(): void {
+  const imgRe = /!\[[^\]]*\]\(([^)]+)\)/g;
+  const missing: string[] = [];
+  let refCount = 0;
+  for (const name of mdProcessed.keys()) {
+    const text = readFileSync(join(mdDir, name), "utf-8");
+    let m: RegExpExecArray | null;
+    while ((m = imgRe.exec(text)) !== null) {
+      const src = m[1].replace(/%20/g, " ");
+      if (src.startsWith("http://") || src.startsWith("https://")) {
+        continue;
+      }
+      refCount++;
+      const packedPath = join(manualOutDir, ...src.split("/"));
+      if (!existsSync(packedPath)) {
+        missing.push(`${name}: ${src}`);
+      }
+    }
+  }
+  const imgDir = join(manualOutDir, "img");
+  const packedCount = existsSync(imgDir) ? readdirSync(imgDir).length : 0;
+  console.log(
+    `packed ${packedCount} manual images (${refCount} local image refs in docs)`,
+  );
+  if (missing.length > 0) {
+    throw new Error(`missing manual images:\n${missing.join("\n")}`);
+  }
 }
 
 function extractCommandsFromMarkdown(): string[] {
