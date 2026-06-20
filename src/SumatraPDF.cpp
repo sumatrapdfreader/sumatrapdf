@@ -6468,9 +6468,10 @@ static char* ManualMimeFromPath(const char* path) {
         const char* ext;
         const char* mimetype;
     } mimeTypes[] = {
-        {".html", "text/html"},     {".htm", "text/html"},     {".gif", "image/gif"},  {".png", "image/png"},
-        {".jpg", "image/jpeg"},     {".jpeg", "image/jpeg"},   {".bmp", "image/bmp"},  {".css", "text/css"},
-        {".js", "text/javascript"}, {".svg", "image/svg+xml"}, {".txt", "text/plain"}, {".md", "text/plain"},
+        {".html", "text/html"},        {".htm", "text/html"},     {".gif", "image/gif"},  {".png", "image/png"},
+        {".jpg", "image/jpeg"},        {".jpeg", "image/jpeg"},   {".bmp", "image/bmp"},  {".css", "text/css"},
+        {".js", "text/javascript"},    {".svg", "image/svg+xml"}, {".txt", "text/plain"}, {".md", "text/plain"},
+        {".json", "application/json"},
     };
 
     for (int i = 0; i < dimof(mimeTypes); i++) {
@@ -6481,10 +6482,25 @@ static char* ManualMimeFromPath(const char* path) {
     return str::Dup("text/html");
 }
 
+static bool IsManualDocHtmlPage(const char* path) {
+    if (str::IsEmpty(path) || !str::EndsWithI(path, ".html")) {
+        return false;
+    }
+    if (str::EqI(path, "manual.shell.html")) {
+        return false;
+    }
+    return true;
+}
+
 static bool ManualGetResource(void* ctx, const char* path, WebViewResourceResult* res) {
     auto* archive = (lzma::SimpleArchive*)ctx;
     if (!archive || !res || str::IsEmpty(path)) {
         return false;
+    }
+
+    // Doc pages are rendered on demand from .md sources in WebView2.
+    if (IsManualDocHtmlPage(path)) {
+        path = "manual.shell.html";
     }
 
     int idx = lzma::GetIdxFromName(archive, path);

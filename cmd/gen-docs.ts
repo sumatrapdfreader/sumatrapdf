@@ -20,7 +20,8 @@ import { copyFileNormalized } from "./util.js";
 
 const docsDir = "docs";
 const mdDir = join(docsDir, "md");
-const wwwOutDir = "docs-www";
+const manualOutDir = "docs-manual";
+const previewOutDir = "docs-www";
 
 const mdProcessed = new Map<string, string>();
 const mdToProcess: string[] = [];
@@ -31,6 +32,19 @@ const tmplManual = readFileSync(join(docsDir, "manual.tmpl.html"), "utf-8");
 
 const kAllDocsFile = "all-docs.md";
 const kExcludeFromAllDocs = new Set(["SumatraPDF-all-docs-for-llm-ai.md"]);
+
+const kManualStaticFiles = [
+  "sumatra.css",
+  "gen_toc.js",
+  "gen_code_copy.js",
+  "gen_docs.fulltext_search.js",
+  "gen_docs.render.js",
+  "gen_docs.search.html",
+  "gen_docs.search.js",
+  "manual.shell.html",
+  "manual.tmpl.html",
+  "favicon.ico",
+];
 
 hljs.registerLanguage("javascript", javascript);
 
@@ -427,7 +441,7 @@ function extractMdLinksInOrder(content: string): string[] {
   return links;
 }
 
-function genAllDocsMd(): void {
+function genAllDocsMd(outDir: string): void {
   const mainFile = "SumatraPDF-documentation.md";
   const src = readFileSync(join(mdDir, mainFile), "utf-8");
   const links = extractMdLinksInOrder(src);
@@ -446,38 +460,63 @@ function genAllDocsMd(): void {
     const content = readFileSync(path, "utf-8");
     parts.push(`::${fileName}\n${content}`);
   }
-  const outPath = join(wwwOutDir, kAllDocsFile);
+  const outPath = join(outDir, kAllDocsFile);
   writeFileSync(outPath, parts.join("\n"));
   console.log(`wrote '${outPath}' (${files.length} files)`);
 }
 
-function writeDocsHtmlFiles(): void {
-  const imgOutDir = join(wwwOutDir, "img");
+function writePreviewHtmlFiles(): void {
+  const imgOutDir = join(previewOutDir, "img");
   rmSync(imgOutDir, { recursive: true, force: true });
   mkdirSync(imgOutDir, { recursive: true });
-  removeHTMLFiles(wwwOutDir);
+  removeHTMLFiles(previewOutDir);
 
   for (const [name, html] of mdProcessed) {
-    const htmlName = name.replace(".md", ".html");
-    const path = join(wwwOutDir, htmlName);
+    const htmlName = getHTMLFileName(name);
+    const path = join(previewOutDir, htmlName);
     writeFileSync(path, html);
-    //console.log(`wrote '${path}'`);
   }
 
-  copyDirRecursive(join(wwwOutDir, "img"), join(mdDir, "img"));
-  genAllDocsMd();
-  const htmlFiles = [
-    "sumatra.css",
-    "gen_toc.js",
-    "gen_code_copy.js",
-    "gen_docs.fulltext_search.js",
-    "favicon.ico",
-  ];
-  for (const name of htmlFiles) {
-    const srcPath = join("docs", name);
-    const dstPath = join(wwwOutDir, name);
+  copyDirRecursive(join(previewOutDir, "img"), join(mdDir, "img"));
+  genAllDocsMd(previewOutDir);
+  for (const name of kManualStaticFiles) {
+    const srcPath = join(docsDir, name);
+    const dstPath = join(previewOutDir, name);
     copyFileNormalized(dstPath, srcPath);
   }
+  copyFileNormalized(
+    join(previewOutDir, "markdown-it.min.js"),
+    join("cmd", "markdown-it.min.js"),
+  );
+}
+
+function writeManualPakFiles(): void {
+  rmSync(manualOutDir, { recursive: true, force: true });
+  mkdirSync(manualOutDir, { recursive: true });
+
+  const manifest: Record<string, string> = {};
+  for (const name of mdProcessed.keys()) {
+    copyFileNormalized(join(manualOutDir, name), join(mdDir, name));
+    manifest[getHTMLFileName(name)] = name;
+  }
+  writeFileSync(
+    join(manualOutDir, "manifest.json"),
+    JSON.stringify(manifest, null, 2),
+  );
+  console.log(
+    `wrote manifest.json (${Object.keys(manifest).length} pages)`,
+  );
+
+  copyDirRecursive(join(manualOutDir, "img"), join(mdDir, "img"));
+  genAllDocsMd(manualOutDir);
+
+  for (const name of kManualStaticFiles) {
+    copyFileNormalized(join(manualOutDir, name), join(docsDir, name));
+  }
+  copyFileNormalized(
+    join(manualOutDir, "markdown-it.min.js"),
+    join("cmd", "markdown-it.min.js"),
+  );
 }
 
 function extractCommandsFromMarkdown(): string[] {
@@ -540,24 +579,29 @@ function formatSize(bytes: number): string {
 
 export async function main() {
   const timeStart = performance.now();
-  console.log("genHTMLDocsFromMarkdown starting");
+  const previewHtml = process.argv.includes("--preview");
+  console.log("gen-docs starting");
 
-  // process starting from the main page, following links
+  // validate links by walking the doc graph from the main page
   mdToHTML("SumatraPDF-documentation.md");
   while (mdToProcess.length > 0) {
     const name = mdToProcess.shift()!;
     mdToHTML(name);
   }
-  writeDocsHtmlFiles();
 
-  // create lzsa archive
+  writeManualPakFiles();
+  if (previewHtml) {
+    writePreviewHtmlFiles();
+  }
+
+  // create lzsa archive for the in-app manual
   const makeLzsa = resolve(join("bin", "MakeLZSA.exe"));
   if (!existsSync(makeLzsa)) {
     throw new Error(`'${makeLzsa}' doesn't exist`);
   }
   const archive = join("docs", "manual.dat");
   rmSync(archive, { force: true });
-  const proc = Bun.spawn([makeLzsa, archive, wwwOutDir], {
+  const proc = Bun.spawn([makeLzsa, archive, manualOutDir], {
     stdout: "inherit",
     stderr: "inherit",
   });
@@ -568,15 +612,21 @@ export async function main() {
   const size = statSync(archive).size;
   console.log(`size of '${archive}': ${formatSize(size)}`);
 
-  const absDir = resolve(wwwOutDir);
-  console.log(
-    `To view, open: file://${join(absDir, "SumatraPDF-documentation.html")}`,
-  );
+  if (previewHtml) {
+    const absDir = resolve(previewOutDir);
+    console.log(
+      `To preview pre-rendered HTML, open: file://${join(absDir, "SumatraPDF-documentation.html")}`,
+    );
+  } else {
+    console.log(
+      `To preview on-demand rendering, open: file://${resolve(join(manualOutDir, "manual.shell.html"))} (needs a local server or in-app help)`,
+    );
+  }
 
   checkCommandsAreDocumented();
 
   const elapsed = ((performance.now() - timeStart) / 1000).toFixed(1);
-  console.log(`genHTMLDocsFromMarkdown finished in ${elapsed}s`);
+  console.log(`gen-docs finished in ${elapsed}s`);
 }
 
 if (import.meta.main) {
