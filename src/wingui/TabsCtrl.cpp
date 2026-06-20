@@ -43,6 +43,7 @@ using Gdiplus::SolidBrush;
 using Gdiplus::Status;
 using Gdiplus::StringAlignmentCenter;
 using Gdiplus::StringFormat;
+using Gdiplus::TextRenderingHintAntiAlias;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 
@@ -180,6 +181,14 @@ Gdiplus::Color GdipCol(COLORREF c) {
     return GdiRgbFromCOLORREF(c);
 }
 
+static COLORREF TabTextColorForBackground(COLORREF tabBg) {
+    COLORREF text = ThemeWindowTextColor();
+    if (abs((int)GetLightness(text) - (int)GetLightness(tabBg)) >= 80) {
+        return text;
+    }
+    return IsLightColor(tabBg) ? RGB(0, 0, 0) : RGB(255, 255, 255);
+}
+
 bool TabsCtrl::IsValidIdx(int idx) {
     return idx >= 0 && idx < TabCount();
 }
@@ -207,7 +216,8 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
     gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
     gfx.SetCompositingQuality(CompositingQualityHighQuality);
     gfx.SetSmoothingMode(Gdiplus::SmoothingModeNone);
-    gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    // ClearType does not render reliably on our double-buffer bitmap (for #5699).
+    gfx.SetTextRenderingHint(TextRenderingHintAntiAlias);
     gfx.SetPageUnit(UnitPixel);
 
     SolidBrush br(GdipCol(ThemeControlBackgroundColor()));
@@ -229,8 +239,6 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
     int n = TabCount();
     Rect r;
     Gdiplus::RectF rTxt;
-
-    COLORREF textColor = ThemeWindowTextColor();
     COLORREF tabBgSelected = ThemeControlBackgroundColor();
     COLORREF tabBgHighlight;
     COLORREF tabBgBackground;
@@ -252,13 +260,14 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
         ti = GetTab(i);
 
         // use per-tab color if explicitly set
-        constexpr COLORREF kUnset = (COLORREF)(0xfeffffff);
-        if (ti->tabColor != kUnset) {
+        if (!IsSpecialColor(ti->tabColor)) {
             tabBgCol = ti->tabColor;
             if (!isSelected) {
                 tabBgCol = AccentColor(ti->tabColor, isUnderMouse ? 35 : 25);
             }
         }
+
+        COLORREF textColor = TabTextColorForBackground(tabBgCol);
 
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
 
@@ -735,10 +744,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0; // remove non-client area so no edge is reserved
 
         case WM_PAINT: {
-            RECT rc;
-            if (!GetUpdateRect(hwnd, &rc, FALSE)) {
-                return 0;
-            }
             // TabCtrl_SetCurSel invalidates native (LTR) item rects; we lay out tabs
             // manually (RTL tabs start from the right). Avoid BeginPaint's clip region.
             RECT clientRc = ClientRECT(hwnd);

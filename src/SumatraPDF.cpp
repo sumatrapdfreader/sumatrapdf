@@ -2128,6 +2128,9 @@ void UpdateAfterThemeChange() {
         if (UseDarkModeLib()) {
             DarkMode::setDarkTitleBarEx(win->hwndFrame, true);
             DarkMode::setChildCtrlsTheme(win->hwndFrame);
+            if (win->tabsCtrl) {
+                DarkMode::removeTabCtrlSubclass(win->tabsCtrl->hwnd);
+            }
             DarkMode::setDarkScrollBar(win->hwndCanvas);
             DarkMode::setWindowMenuBarSubclass(win->hwndFrame);
             // DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
