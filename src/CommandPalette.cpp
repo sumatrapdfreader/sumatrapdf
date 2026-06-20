@@ -27,6 +27,7 @@
 #include "CommandPalette.h"
 #include "Accelerators.h"
 #include "SumatraPDF.h"
+#include "TextToSpeech.h"
 #include "TableOfContents.h"
 #include "Favorites.h"
 #include "Tabs.h"
@@ -300,6 +301,8 @@ struct CommandPaletteBuildCtx {
     bool isSinglePage = false;
     bool hasDocTabs = false;
     Kind engineKind = nullptr;
+    bool isSpeaking = false;
+    bool canContinueReadAloud = false;
 
     ~CommandPaletteBuildCtx() = default;
 };
@@ -525,6 +528,17 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if ((cmdId == CmdToggleBookmarks) || (cmdId == CmdToggleTableOfContents)) {
         return ctx.hasToc;
     }
+
+    if (cmdId == CmdPauseReadAloud) {
+        return ctx.isSpeaking;
+    }
+    if (cmdId == CmdContinueReadAloud) {
+        return ctx.canContinueReadAloud && !ctx.isSpeaking;
+    }
+    if (cmdId == CmdReadAloudSelection) {
+        return ctx.hasSelection;
+    }
+
     return true;
 }
 
@@ -934,6 +948,10 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 
     ctx.hasToc = mainWin->ctrl && mainWin->ctrl->HasToc();
+    ctx.isSpeaking = TtsIsSpeaking();
+    if (currTab) {
+        ctx.canContinueReadAloud = CanContinueReadAloud(currTab);
+    }
 
     if (smartTabMode && gGlobalPrefs->tabsMru) {
         CollectTabsMru(mainWin, currTab);

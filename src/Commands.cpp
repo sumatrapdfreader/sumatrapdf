@@ -241,6 +241,8 @@ static SeqStrings gCommandNames =
     "CmdReadAloud\0"
     "CmdPauseReadAloud\0"
     "CmdContinueReadAloud\0"
+    "CmdReadAloudFromTopPage\0"
+    "CmdReadAloudSelection\0"
     "CmdToggleHoverPreview\0"
     "CmdRemoveDeletedFilesFromHistory\0"
     "CmdCommandPaletteTOC\0"
@@ -485,6 +487,8 @@ static i32 gCommandIds[] = {
     CmdReadAloud,
     CmdPauseReadAloud,
     CmdContinueReadAloud,
+    CmdReadAloudFromTopPage,
+    CmdReadAloudSelection,
     CmdToggleHoverPreview,
     CmdRemoveDeletedFilesFromHistory,
     CmdCommandPaletteTOC,
@@ -727,8 +731,10 @@ SeqStrings gCommandDescriptions =
     "Toggle Reuse Instance\0"
     "Toggle CHM UI\0"
     "Read Aloud\0"
-    "Pause Read Aloud\0"
-    "Continue Read Aloud\0"
+    "Pause Reading\0"
+    "Continue Reading\0"
+    "Start Reading From Top Page\0"
+    "Start Reading Selection\0"
     "Toggle Hover Preview\0"
     "Remove Deleted Files From History\0"
     "Command Palette: Table Of Contents\0"

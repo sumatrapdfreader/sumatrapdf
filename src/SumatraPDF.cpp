@@ -120,7 +120,9 @@ constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
 // Text-to-speech/read-aloud helpers are implemented together near the end of this file.
 static void ReadAloudClearSourceTab();
 static void ReadAloudContinueInTab(WindowTab* tab);
+static void ReadAloudFromViewportTopInTab(WindowTab* tab);
 static void ReadAloudInTab(WindowTab* tab);
+static void ReadAloudSelectionInTab(WindowTab* tab);
 static void ReadAloudStopRememberPos();
 static void ResetReadAloudStateForTab(WindowTab* tab);
 static void StopReadAloudIfSourceTab(WindowTab* tab);
@@ -7198,6 +7200,28 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!TtsIsSpeaking()) {
                 ReadAloudContinueInTab(tab);
             }
+            break;
+        }
+
+        case CmdReadAloudFromTopPage: {
+            if (!tab) {
+                break;
+            }
+            if (TtsIsSpeaking()) {
+                TtsStop();
+            }
+            ReadAloudFromViewportTopInTab(tab);
+            break;
+        }
+
+        case CmdReadAloudSelection: {
+            if (!tab) {
+                break;
+            }
+            if (TtsIsSpeaking()) {
+                TtsStop();
+            }
+            ReadAloudSelectionInTab(tab);
             break;
         }
 
