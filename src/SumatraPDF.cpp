@@ -93,6 +93,7 @@
 #include "EditAnnotations.h"
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
+#include "SelectionTranslate.h"
 #include "CodexBuild.h"
 #include "CommandPalette.h"
 #include "Installer.h"
@@ -7612,6 +7613,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             LaunchBrowserWithSelection(tab, uri);
         } break;
+
+        case CmdTranslateSelectionWithGrokBuild:
+            ShowSelectionTranslateDialog(tab, AIChatBackend::Grok);
+            break;
+
+        case CmdTranslateSelectionWithClaudeCode:
+            ShowSelectionTranslateDialog(tab, AIChatBackend::Claude);
+            break;
+
+        case CmdTranslateSelectionWithOpenAICodex:
+            ShowSelectionTranslateDialog(tab, AIChatBackend::Codex);
+            break;
 
         case CmdSearchSelectionWithGoogle:
             LaunchBrowserWithSelection(tab, "https://www.google.com/search?q=${selection}");

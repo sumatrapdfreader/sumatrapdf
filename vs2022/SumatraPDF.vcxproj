@@ -1261,6 +1261,7 @@
     <ClCompile Include="..\src\Screenshot.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
+    <ClCompile Include="..\src\SelectionTranslate.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />

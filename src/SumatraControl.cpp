@@ -12,6 +12,7 @@
 #include "Flags.h"
 #include "SumatraTest.h"
 #include "SumatraControl.h"
+#include "SelectionTranslate.h"
 
 #include "utils/Log.h"
 
@@ -25,6 +26,7 @@ enum class ControlCmd : u16 {
     TestDest = 12,
     TestNamedDest = 13,
     TestChm = 14,
+    TestSelectionTranslate = 15,
 };
 
 enum class ControlArgType : u16 {
@@ -333,6 +335,22 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestChmResult(chm, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectionTranslate: {
+            i32 backend = 0;
+            const char* srcLang = StringArg(req, 1);
+            const char* dstLang = StringArg(req, 2);
+            const char* text = StringArg(req, 3);
+            if (!IntArg(req, 0, backend) || !srcLang || !dstLang || !text) {
+                AppendError(req,
+                            "TestSelectionTranslate expects int backend, string srcLang, string dstLang, string text");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestSelectionTranslateResult(backend, srcLang, dstLang, text, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

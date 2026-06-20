@@ -251,6 +251,9 @@ static SeqStrings gCommandNames =
     "CmdAIChatWithClaudeCode\0"
     "CmdAIChatWithGrokBuild\0"
     "CmdAIChatWithOpenAICodex\0"
+    "CmdTranslateSelectionWithGrokBuild\0"
+    "CmdTranslateSelectionWithClaudeCode\0"
+    "CmdTranslateSelectionWithOpenAICodex\0"
     "CmdNone\0"
     "\0";
 
@@ -492,6 +495,9 @@ static i32 gCommandIds[] = {
     CmdAIChatWithClaudeCode,
     CmdAIChatWithGrokBuild,
     CmdAIChatWithOpenAICodex,
+    CmdTranslateSelectionWithGrokBuild,
+    CmdTranslateSelectionWithClaudeCode,
+    CmdTranslateSelectionWithOpenAICodex,
     CmdNone,
 };
 
@@ -733,6 +739,9 @@ SeqStrings gCommandDescriptions =
     "Claude chat\0"
     "Grok chat\0"
     "Codex chat\0"
+    "Translate Selection with Grok Build\0"
+    "Translate Selection with Claude Code\0"
+    "Translate Selection with OpenAI Codex\0"
     "Do nothing\0"
     "\0";
 // clang-format on

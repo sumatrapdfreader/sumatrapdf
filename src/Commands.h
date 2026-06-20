@@ -246,7 +246,10 @@ enum {
     CmdAIChatWithClaudeCode = 435,
     CmdAIChatWithGrokBuild = 436,
     CmdAIChatWithOpenAICodex = 437,
-    CmdNone = 438,
+    CmdTranslateSelectionWithGrokBuild = 438,
+    CmdTranslateSelectionWithClaudeCode = 439,
+    CmdTranslateSelectionWithOpenAICodex = 440,
+    CmdNone = 441,
 
     /* range for file history */
     CmdFileHistoryFirst,

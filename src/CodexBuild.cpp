@@ -53,6 +53,10 @@ bool IsCodexBuildInstalled() {
     return FindCodexExecutableTemp() != nullptr;
 }
 
+TempStr CodexBuildExecutablePathTemp() {
+    return FindCodexExecutableTemp();
+}
+
 static Mutex gCodexBuildLogMutex;
 static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, "gpt-5.5-log.txt", "gpt-5.5"};
 

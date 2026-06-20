@@ -8,6 +8,7 @@ export enum ControlCommand {
   TestDest = 12,
   TestNamedDest = 13,
   TestChm = 14,
+  TestSelectionTranslate = 15,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

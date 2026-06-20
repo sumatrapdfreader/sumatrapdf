@@ -650,6 +650,18 @@ static MenuDef menuDefSelection[] = {
         CmdTranslateSelectionWithDeepL,
     },
     {
+        _TRN("Translate with &Grok Build"),
+        CmdTranslateSelectionWithGrokBuild,
+    },
+    {
+        _TRN("Translate with &Claude Code"),
+        CmdTranslateSelectionWithClaudeCode,
+    },
+    {
+        _TRN("Translate with OpenAI &Codex"),
+        CmdTranslateSelectionWithOpenAICodex,
+    },
+    {
         _TRN("Search With &Google"),
         CmdSearchSelectionWithGoogle,
     },
@@ -689,6 +701,18 @@ static MenuDef menuDefMainSelection[] = {
     {
         _TRN("Translate with &DeepL"),
         CmdTranslateSelectionWithDeepL,
+    },
+    {
+        _TRN("Translate with &Grok Build"),
+        CmdTranslateSelectionWithGrokBuild,
+    },
+    {
+        _TRN("Translate with &Claude Code"),
+        CmdTranslateSelectionWithClaudeCode,
+    },
+    {
+        _TRN("Translate with OpenAI &Codex"),
+        CmdTranslateSelectionWithOpenAICodex,
     },
     {
         _TRN("&Search With Google"),
@@ -1116,6 +1140,9 @@ UINT_PTR disableIfNoSelection[] = {
     CmdCopySelection,
     CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGoogle,
+    CmdTranslateSelectionWithGrokBuild,
+    CmdTranslateSelectionWithClaudeCode,
+    CmdTranslateSelectionWithOpenAICodex,
     CmdSearchSelectionWithWikipedia,
     CmdSearchSelectionWithGoogleScholar,
     CmdSearchSelectionWithBing,
@@ -1566,6 +1593,15 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
         } else if (ctx && ctx->tab && !IsCodexBuildSupportedForTab(ctx->tab)) {
             disable = true;
         }
+    }
+    if (cmdId == CmdTranslateSelectionWithGrokBuild && !IsGrokBuildInstalled()) {
+        remove = true;
+    }
+    if (cmdId == CmdTranslateSelectionWithClaudeCode && !IsClaudeCodeInstalled()) {
+        remove = true;
+    }
+    if (cmdId == CmdTranslateSelectionWithOpenAICodex && !IsCodexBuildInstalled()) {
+        remove = true;
     }
 
     if (!ctx) {

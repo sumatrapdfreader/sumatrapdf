@@ -50,6 +50,10 @@ bool IsGrokBuildInstalled() {
     return FindGrokExecutableTemp() != nullptr;
 }
 
+TempStr GrokBuildExecutablePathTemp() {
+    return FindGrokExecutableTemp();
+}
+
 static Mutex gGrokBuildLogMutex;
 static AIChatLogger gGrokBuildLogger = {&gGrokBuildLogMutex, "grok-build-log.txt", "grok-build"};
 

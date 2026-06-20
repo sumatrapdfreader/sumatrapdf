@@ -6,6 +6,7 @@ struct WindowTab;
 
 bool IsClaudeCodeAvailable();
 bool IsClaudeCodeInstalled();
+TempStr ClaudeCodeExecutablePathTemp();
 bool IsClaudeCodeSupportedForFile(const char* filePath, Kind engineKind = nullptr);
 bool IsClaudeCodeSupportedForTab(WindowTab* tab);
 

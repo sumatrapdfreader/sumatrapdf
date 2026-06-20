@@ -241,6 +241,9 @@ export const commands = [
     "CmdAIChatWithClaudeCode", "Claude chat",
     "CmdAIChatWithGrokBuild", "Grok chat",
     "CmdAIChatWithOpenAICodex", "Codex chat",
+    "CmdTranslateSelectionWithGrokBuild", "Translate Selection with Grok Build",
+    "CmdTranslateSelectionWithClaudeCode", "Translate Selection with Claude Code",
+    "CmdTranslateSelectionWithOpenAICodex", "Translate Selection with OpenAI Codex",
     "CmdNone", "Do nothing",
 ];
 

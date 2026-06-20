@@ -54,6 +54,10 @@ bool IsClaudeCodeInstalled() {
     return FindClaudeExecutableTemp() != nullptr;
 }
 
+TempStr ClaudeCodeExecutablePathTemp() {
+    return FindClaudeExecutableTemp();
+}
+
 static Mutex gClaudeCodeLogMutex;
 static AIChatLogger gClaudeCodeLogger = {&gClaudeCodeLogMutex, "claude-code-log.txt", "claude-code"};
 

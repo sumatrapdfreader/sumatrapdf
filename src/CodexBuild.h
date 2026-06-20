@@ -6,6 +6,7 @@ struct WindowTab;
 
 bool IsCodexBuildAvailable();
 bool IsCodexBuildInstalled();
+TempStr CodexBuildExecutablePathTemp();
 bool IsCodexBuildSupportedForFile(const char* filePath, Kind engineKind = nullptr);
 bool IsCodexBuildSupportedForTab(WindowTab* tab);
 
