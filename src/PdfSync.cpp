@@ -762,6 +762,38 @@ int SyncTex::RebuildIndexIfNeeded() {
     return MarkIndexWasRebuilt();
 }
 
+// Converts a WSL UNC path to its equivalent Unix path by stripping the
+// \\wsl.localhost\<distro>\ or \\wsl$\<distro>\ prefix.
+// e.g. "\\wsl.localhost\Ubuntu\home\user\file.tex" -> "/home/user/file.tex"
+static TempStr WslUncPathToUnixPathTemp(const char* srcfilepath) {
+    if (!srcfilepath) {
+        return nullptr;
+    }
+
+    const char* p = nullptr;
+
+    // Strip the WSL UNC prefix
+    if (str::StartsWithI(srcfilepath, "\\\\wsl.localhost\\")) {
+        p = srcfilepath + str::Len("\\\\wsl.localhost\\");
+    } else if (str::StartsWithI(srcfilepath, "\\\\wsl$\\")) {
+        p = srcfilepath + str::Len("\\\\wsl$\\");
+    } else {
+        return nullptr;
+    }
+
+    // Skip the distribution name, e.g. "Ubuntu" in "\\wsl.localhost\Ubuntu\home\..."
+    while (*p && !path::IsSep(*p)) {
+        p++;
+    }
+    if (!path::IsSep(*p) || !p[1]) {
+        return nullptr;
+    }
+
+    TempStr unixPath = str::JoinTemp("/", p + 1);
+    str::TransCharsInPlace(unixPath, "\\", "/");
+    return unixPath;
+}
+
 int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
     logfa("SyncTex::DocToSource: '%s', pageNo: %d\n", syncFilePath.Get(), pageNo);
     int res = RebuildIndexIfNeeded();
@@ -827,6 +859,10 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
     }
     if (!srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
+    }
+
+    if (TempStr unixSrcFilePath = WslUncPathToUnixPathTemp(srcfilepath)) {
+        srcfilepath = unixSrcFilePath;
     }
 
     // dealed in SyncTex::RebuildIndexIfNeeded()
