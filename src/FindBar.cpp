@@ -11,6 +11,8 @@
 #include "wingui/WinGui.h"
 
 #include "Settings.h"
+#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "ProgressUpdateUI.h"
@@ -24,13 +26,15 @@
 #include "Toolbar.h"
 #include "SearchAndDDE.h"
 #include "FindBar.h"
+#include "FindWindow.h"
 #include "Translations.h"
 #include "Theme.h"
 
 #include "utils/Log.h"
 
-// command id for the bar's close (x) button; must not collide with real commands
+// command ids for the bar's toolbar buttons; must not collide with real commands
 constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
+constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 
 struct FindBarWnd : Wnd {
     MainWindow* win = nullptr;
@@ -68,6 +72,8 @@ static const char* FindBarButtonTooltip(int cmd) {
             return _TRA("Find Next");
         case CmdFindToggleMatchCase:
             return _TRA("Match Case");
+        case kFindBarPinCmdId:
+            return _TRA("Open in a window");
         case kFindBarCloseCmdId:
             return _TRA("Close");
     }
@@ -151,7 +157,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         SendMessageW(hwndBtns, TB_SETIMAGELIST, 0, (LPARAM)himl);
         SendMessageW(hwndBtns, TB_SETBUTTONSIZE, 0, MAKELONG(isz, isz));
 
-        TBBUTTON b[4]{};
+        TBBUTTON b[5]{};
         b[0].iBitmap = (int)TbIcon::ChevronUp;
         b[0].idCommand = CmdFindPrev;
         b[0].fsState = TBSTATE_ENABLED;
@@ -164,11 +170,15 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         b[2].idCommand = CmdFindToggleMatchCase;
         b[2].fsState = TBSTATE_ENABLED;
         b[2].fsStyle = BTNS_CHECK;
-        b[3].iBitmap = (int)TbIcon::Close;
-        b[3].idCommand = kFindBarCloseCmdId;
+        b[3].iBitmap = (int)TbIcon::Pin;
+        b[3].idCommand = kFindBarPinCmdId;
         b[3].fsState = TBSTATE_ENABLED;
         b[3].fsStyle = BTNS_BUTTON;
-        SendMessageW(hwndBtns, TB_ADDBUTTONS, 4, (LPARAM)&b);
+        b[4].iBitmap = (int)TbIcon::Close;
+        b[4].idCommand = kFindBarCloseCmdId;
+        b[4].fsState = TBSTATE_ENABLED;
+        b[4].fsStyle = BTNS_BUTTON;
+        SendMessageW(hwndBtns, TB_ADDBUTTONS, 5, (LPARAM)&b);
         SendMessageW(hwndBtns, TB_AUTOSIZE, 0, 0);
     }
 
@@ -269,6 +279,9 @@ bool FindBarWnd::OnCommand(WPARAM wparam, LPARAM) {
         case CmdFindToggleMatchCase:
             FindToggleMatchCase(win);
             return true;
+        case kFindBarPinCmdId:
+            ToggleFloatingFindUI(win); // pop out into the floating window
+            return true;
         case kFindBarCloseCmdId:
             HideFindBar(win);
             return true;
@@ -337,7 +350,7 @@ static void PositionFindBar(FindBarWnd* bar) {
     SetWindowPos(bar->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_NOACTIVATE);
 }
 
-void ShowFindBar(MainWindow* win) {
+static void ShowCompactBar(MainWindow* win) {
     if (!win->findBar) {
         win->findBar = CreateFindBar(win);
     }
@@ -345,6 +358,7 @@ void ShowFindBar(MainWindow* win) {
         return;
     }
     FindBarWnd* bar = win->findBar;
+    win->hwndFindEdit = bar->edit->hwnd; // make this the active find edit
     // reflect the current match-case state on the toggle button
     FindBarSetMatchCaseChecked(win, win->findMatchCase);
     PositionFindBar(bar);
@@ -353,7 +367,21 @@ void ShowFindBar(MainWindow* win) {
     Edit_SetSel(win->hwndFindEdit, 0, -1);
 }
 
+// "ShowFindBar" is the entry point used by FindFirst/Ctrl+F; it shows whichever
+// find UI the user has chosen (compact overlay or floating window)
+void ShowFindBar(MainWindow* win) {
+    if (gGlobalPrefs->searchUIFloating) {
+        ShowFindWindow(win);
+        return;
+    }
+    ShowCompactBar(win);
+}
+
 void HideFindBar(MainWindow* win) {
+    if (IsFindWindowVisible(win)) {
+        HideFindWindow(win);
+        return;
+    }
     if (!win->findBar) {
         return;
     }
@@ -362,8 +390,29 @@ void HideFindBar(MainWindow* win) {
     HwndSetFocus(win->hwndFrame);
 }
 
+// note: the floating window is not anchored to the search icon, so "visible"
+// here means specifically the compact bar (used to reposition it on move)
 bool IsFindBarVisible(MainWindow* win) {
     return win->findBar && IsWindowVisible(win->findBar->hwnd);
+}
+
+void ToggleFloatingFindUI(MainWindow* win) {
+    TempStr text = win->hwndFindEdit ? str::DupTemp(HwndGetTextTemp(win->hwndFindEdit)) : nullptr;
+    bool wasShowing = IsFindBarVisible(win) || IsFindWindowVisible(win);
+
+    HideFindBar(win); // dispatches: hides whichever find UI is currently visible
+
+    gGlobalPrefs->searchUIFloating = !gGlobalPrefs->searchUIFloating;
+    SaveSettings();
+
+    if (!wasShowing) {
+        return; // just persist the preference; nothing was open
+    }
+    ShowFindBar(win); // shows the now-active UI and repoints win->hwndFindEdit
+    if (!str::IsEmpty(text)) {
+        HwndSetText(win->hwndFindEdit, text); // restore text (re-runs the search)
+    }
+    HwndSetFocus(win->hwndFindEdit);
 }
 
 void FindBarReposition(MainWindow* win) {
@@ -380,12 +429,20 @@ void FindBarReposition(MainWindow* win) {
 }
 
 void FindBarSetStatus(MainWindow* win, const char* s) {
+    if (gGlobalPrefs->searchUIFloating) {
+        FindWindowSetStatus(win, s);
+        return;
+    }
     if (win->findBar && win->findBar->status) {
         HwndSetText(win->findBar->status->hwnd, s ? s : "");
     }
 }
 
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked) {
+    if (gGlobalPrefs->searchUIFloating) {
+        FindWindowSetMatchCaseChecked(win, checked);
+        return;
+    }
     if (win->findBar && win->findBar->hwndBtns) {
         SendMessageW(win->findBar->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchCase, MAKELONG(checked ? 1 : 0, 0));
     }

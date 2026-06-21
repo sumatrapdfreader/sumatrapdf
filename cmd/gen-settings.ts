@@ -800,6 +800,18 @@ const globalPrefs: Field[] = [
   setVersion(mkField("ShowTips", Bool, true, "if true, we show tips on the home page"), "3.7"),
   setVersion(mkField("CustomColors", Str, null, "up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 #0000ff')"), "3.7"),
   mkField("ShowToolbar", Bool, true, "if true, we show the toolbar at the top of the window"),
+  setVersion(
+    setExpert(
+      mkField(
+        "SearchUIFloating",
+        Bool,
+        false,
+        "if true, the find UI is a floating, movable window with a results list " +
+          "instead of the compact toolbar overlay",
+      ),
+    ),
+    "3.7",
+  ),
   mkField("ShowFavorites", Bool, false, "if true, we show the Favorites sidebar"),
   mkField(
     "ShowToc",
@@ -1051,6 +1063,10 @@ const globalPrefs: Field[] = [
   setDoc(
     setStructName(mkCompactStruct("WindowPos", windowPos, "default position (can be on any monitor)"), "Rect"),
     "default position (x, y) and size (width, height) of the window",
+  ),
+  setStructName(
+    mkCompactStruct("SearchUIWindowPos", windowPos, "position/size of the floating find window (see SearchUIFloating)"),
+    "Rect",
   ),
 
   mkArray("FileStates", fileSettings, "information about opened files (in most recently used order)"),

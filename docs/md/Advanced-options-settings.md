@@ -111,6 +111,10 @@ CustomColors =
 ; if true, we show the toolbar at the top of the window
 ShowToolbar = true
 
+; if true, the find UI is a floating, movable window with a results list instead
+; of the compact toolbar overlay (introduced in version 3.7)
+SearchUIFloating = false
+
 ; if true, we show the Favorites sidebar
 ShowFavorites = false
 
@@ -574,6 +578,9 @@ WindowState = 1
 
 ; default position (x, y) and size (width, height) of the window
 WindowPos = 0 0 0 0
+
+; position/size of the floating find window (see SearchUIFloating)
+SearchUIWindowPos = 0 0 0 0
 
 ; information about opened files (in most recently used order)
 FileStates [

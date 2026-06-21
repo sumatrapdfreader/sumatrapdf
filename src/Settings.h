@@ -524,6 +524,9 @@ struct GlobalPrefs {
     char* customColors;
     // if true, we show the toolbar at the top of the window
     bool showToolbar;
+    // if true, the find UI is a floating, movable window with a results
+    // list instead of the compact toolbar overlay
+    bool searchUIFloating;
     // if true, we show the Favorites sidebar
     bool showFavorites;
     // if true, we show table of contents (Bookmarks) sidebar if it's
@@ -652,6 +655,8 @@ struct GlobalPrefs {
     int windowState;
     // default position (can be on any monitor)
     Rect windowPos;
+    // position/size of the floating find window (see SearchUIFloating)
+    Rect searchUIWindowPos;
     // information about opened files (in most recently used order)
     Vec<FileState*>* fileStates;
     // state of the last session, usage depends on RestoreSession
@@ -886,6 +891,14 @@ static const FieldInfo gRectFields[] = {
 };
 static const StructInfo gRectInfo = {sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy"};
 
+static const FieldInfo gRect_1_Fields[] = {
+    {offsetof(Rect, x), SettingType::Int, 0},
+    {offsetof(Rect, y), SettingType::Int, 0},
+    {offsetof(Rect, dx), SettingType::Int, 0},
+    {offsetof(Rect, dy), SettingType::Int, 0},
+};
+static const StructInfo gRect_1_Info = {sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0Dx\0Dy"};
+
 static const FieldInfo gFavoriteFields[] = {
     {offsetof(Favorite, name), SettingType::String, 0},
     {offsetof(Favorite, pageNo), SettingType::Int, 0},
@@ -899,13 +912,13 @@ static const FieldInfo gPointFFields[] = {
 };
 static const StructInfo gPointFInfo = {sizeof(PointF), 2, gPointFFields, "X\0Y"};
 
-static const FieldInfo gRect_1_Fields[] = {
+static const FieldInfo gRect_2_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
     {offsetof(Rect, y), SettingType::Int, 0},
     {offsetof(Rect, dx), SettingType::Int, 0},
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
-static const StructInfo gRect_1_Info = {sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0Dx\0Dy"};
+static const StructInfo gRect_2_Info = {sizeof(Rect), 4, gRect_2_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, filePath), SettingType::String, 0},
@@ -921,7 +934,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(FileState, rotation), SettingType::Int, 0},
     {offsetof(FileState, windowState), SettingType::Int, 0},
-    {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_1_Info},
+    {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_2_Info},
     {offsetof(FileState, showToc), SettingType::Bool, true},
     {offsetof(FileState, sidebarDx), SettingType::Int, 0},
     {offsetof(FileState, displayR2L), SettingType::Bool, false},
@@ -954,19 +967,19 @@ static const FieldInfo gTabStateFields[] = {
 static const StructInfo gTabStateInfo = {sizeof(TabState), 8, gTabStateFields,
                                          "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState"};
 
-static const FieldInfo gRect_2_Fields[] = {
+static const FieldInfo gRect_3_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
     {offsetof(Rect, y), SettingType::Int, 0},
     {offsetof(Rect, dx), SettingType::Int, 0},
     {offsetof(Rect, dy), SettingType::Int, 0},
 };
-static const StructInfo gRect_2_Info = {sizeof(Rect), 4, gRect_2_Fields, "X\0Y\0Dx\0Dy"};
+static const StructInfo gRect_3_Info = {sizeof(Rect), 4, gRect_3_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gSessionDataFields[] = {
     {offsetof(SessionData, tabStates), SettingType::Array, (intptr_t)&gTabStateInfo},
     {offsetof(SessionData, tabIndex), SettingType::Int, 1},
     {offsetof(SessionData, windowState), SettingType::Int, 0},
-    {offsetof(SessionData, windowPos), SettingType::Compact, (intptr_t)&gRect_2_Info},
+    {offsetof(SessionData, windowPos), SettingType::Compact, (intptr_t)&gRect_3_Info},
     {offsetof(SessionData, sidebarDx), SettingType::Int, 0},
 };
 static const StructInfo gSessionDataInfo = {sizeof(SessionData), 5, gSessionDataFields,
@@ -1010,6 +1023,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showTips), SettingType::Bool, true},
     {offsetof(GlobalPrefs, customColors), SettingType::String, 0},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, searchUIFloating), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showLinks), SettingType::Bool, false},
@@ -1081,6 +1095,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, versionToSkip), SettingType::String, 0},
     {offsetof(GlobalPrefs, windowState), SettingType::Int, 1},
     {offsetof(GlobalPrefs, windowPos), SettingType::Compact, (intptr_t)&gRectInfo},
+    {offsetof(GlobalPrefs, searchUIWindowPos), SettingType::Compact, (intptr_t)&gRect_1_Info},
     {offsetof(GlobalPrefs, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo},
     {offsetof(GlobalPrefs, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo},
     {offsetof(GlobalPrefs, reopenOnce), SettingType::StringArray, 0},
@@ -1091,18 +1106,18 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 103, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 105, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0EnableTeXEnhancements\0EscToExit\0FullPathI"
     "nTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0ReloadMo"
     "difiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowMe"
-    "nubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0S"
-    "crollbars\0ScrollbarInSinglePage\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0FastScrollOverScrollbar\0Pre"
-    "ventSleepInFullscreen\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAli"
-    "as\0DisableAutoLinks\0UseSysColors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0Comic"
-    "BookUI\0\0ImageUI\0\0ChmUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annot"
-    "ations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0T"
-    "hemes\0\0TabGroups\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionDa"
-    "ta\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
+    "nubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0SearchUIFloating\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStart"
+    "Page\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0FastScroll"
+    "OverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSi"
+    "ze\0DisableAntiAlias\0DisableAutoLinks\0UseSysColors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0"
+    "\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0Transl"
+    "ateToLang\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers"
+    "\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0Sea"
+    "rchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

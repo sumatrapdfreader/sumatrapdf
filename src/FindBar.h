@@ -18,3 +18,7 @@ void FindBarReposition(MainWindow* win);
 void FindBarSetStatus(MainWindow* win, const char* s);
 // reflect match-case toggle state on the bar's button
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked);
+
+// switch the find UI between the compact toolbar overlay and the floating
+// window (persists the choice in gGlobalPrefs->searchUIFloating)
+void ToggleFloatingFindUI(MainWindow* win);

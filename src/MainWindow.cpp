@@ -38,6 +38,7 @@
 #include "CodexBuild.h"
 #include "MainWindow.h"
 #include "FindBar.h"
+#include "FindWindow.h"
 #include "RefHover.h"
 #include "WindowTab.h"
 #include "TableOfContents.h"
@@ -141,6 +142,7 @@ MainWindow::~MainWindow() {
     }
 
     DeleteFindBar(this);
+    DeleteFindWindow(this);
 
     // stop the find-bar match-count background thread before we're freed
     // (it reads our fields; a pending CountEndTask closes the handle later)

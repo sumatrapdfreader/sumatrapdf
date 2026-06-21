@@ -449,6 +449,9 @@
     <ClCompile Include="..\src\FindBar.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\FindWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Commands.cpp">
       <Filter>src</Filter>
     </ClCompile>

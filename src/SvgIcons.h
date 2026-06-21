@@ -28,6 +28,7 @@ enum class TbIcon {
     ChevronUp,
     ChevronDown,
     Close,
+    Pin,
     kMax
 };
 
