@@ -166,6 +166,8 @@ Order doesn't matter. Available tokens:
 | `bin=<num or name>` | select the input tray (by number or name) |
 | `bin=auto` | let the printer pick the tray whose paper matches the page size |
 
+Use `SumatraPDF.exe -list-printers` to list installed printers, paper names, `paperkind=` IDs and tray names.
+
 **Copies, sides and color**
 
 | Option | Meaning |

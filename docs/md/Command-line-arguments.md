@@ -14,7 +14,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 - `-fullscreen` : start in full screen view
 - `-new-window` : when opening a file, always open it in a new window, as opposed to in a tab (**ver 3.2+**)
 - `-appdata <directory>` : set custom directory where we'll store `SumatraPDF-settings.txt` file and thumbnail cache
-- `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. Read more detailed documentation.
+- `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. See [Configure for restricted use](Configure-for-restricted-use.md).
 - `-for-testing` : for ad-hoc testing by humans or agents. Always starts a new instance, doesn't restore a session (only loads files given on the command line) and doesn't save settings (**ver 3.7+**)
 - `-dbg-control <named-pipe>` : starts a test control server on a named pipe. Used by automated tests through `cmd/control.ts`; combine with `-for-testing`. (**ver 3.7+**)
 - `-pwd <password>` : use the given password to open password-protected documents. If the password is wrong, SumatraPDF falls back to default passwords and then asks interactively.
@@ -63,7 +63,7 @@ For a detailed printing guide with examples for common tasks, see [Printing](Pri
     - `duplex`, `duplexshort`, `duplexlong` and `simplex`
     - `bin=<num or name>` : select tray to print to. Use `bin=auto` to let the printer pick the input tray whose paper matches the document page size (like Adobe's "Choose paper source by PDF page size")
     - `paper=<page size>` : page size is `A2`, `A3`, `A4`, `A5`, `A6`, `letter`, `legal`, `tabloid`, `statement`, or a name reported by the printer (e.g. `A3 297 x 420 mm`). Custom dimensions: `paper=76mm x 130mm`. Use `paper=auto` to set the paper size from each page's own size, for documents with mixed page sizes (combine with `bin=auto` to also pick the matching tray)
-    - `paperkind=<num>` : paper size by Windows `DMPAPER_*` id (from `PrinterInformation.exe --ListPapers` or similar); use when `paper=A3` does not match the driver's paper name
+    - `paperkind=<num>` : paper size by Windows `DMPAPER_*` id (from `SumatraPDF.exe -list-printers`); use when `paper=A3` does not match the driver's paper name
     - `ignore-pdf-print-settings` : don't apply the print defaults embedded in a PDF's `ViewerPreferences` (see below)
   - e.g. `-print-settings "1-3,5,10-8,odd,fit,bin=2"` prints pages 1, 3, 5, 9 (i.e. the odd pages from the ranges 1-3, 5-5 and 10-8) and scales them so that they fit into the printable area of the paper.
   - `-print-settings "3x"` : prints the document 3 times
@@ -101,6 +101,7 @@ With multiple files, the exit code is `0` only if all printed; otherwise it's th
 ## Developer options
 
 - `-console` : Opens a console window alongside SumatraPDF for accessing (MuPDF) debug output.
+- `-list-printers` : prints installed printers, default settings, paper sizes and input trays, then exits. This is useful when choosing `-print-to`, `paper=`, `paperkind=` or `bin=` values for command-line printing.
 - `-stress-test <path> [file-filter] [range] [cycle-count]`
   : Renders all pages of the indicated file/directory for stability and performance testing. E.g.:
 
@@ -118,9 +119,9 @@ With multiple files, the exit code is `0` only if all printed; otherwise it's th
 
 The following options just set values in the settings file and may be removed in any future version:
 
-- `-bg-color <hexcolor>` : changes the yellow background color to a different color. See e.g. [html-color-codes.info](https://html-color-codes.info/) for a way to generate the hexcode for a color. E.g. `-bg-color #999999` changes the color to gray. [Deprecated]: Use [MainWindowBackground](https://www.sumatrapdfreader.org/settings/settings.html#MainWindowBackground) setting instead.
-- `-esc-to-exit` : enables the Escape key to quit SumatraPDF. Deprecated: Use the [EscToExit](https://www.sumatrapdfreader.org/settings.html#EscToExit) setting instead.
-- `-set-color-range <text-hexcolor> <background-hexcolor>` : Uses the given two colors for foreground and background and maps all other colors used in a document in between these two. E.g. `-set-color-range #dddddd #333333` displays soft white text on a dark gray background. [Deprecated]: Use the TextColor and BackgroundColor settings for FixedPageUI instead.
-- `-lang <language-code>` : sets the UI language. See [/scripts/trans_langs.py] (https://github.com/sumatrapdfreader/sumatrapdf/blob/master/scripts/trans_langs.py) for the list of available language codes. E.g. `-lang de`. [Deprecated]: Use the `UiLanguage` setting instead.
-- `-manga-mode <mode>` : enables or disables "Manga mode" for reading (mainly Japanese) comic books from right to left. Mode must be "true" or 1 for enabling and "false" or 0 for disabling this feature. Deprecated: Use the [CbxMangaMode](https://www.sumatrapdfreader.org/settings.html#ComicBookUI_CbxMangaMode) setting for ComicBookUI instead.
-- `-invert-colors`
+- `-bg-color <hexcolor>` : changes the yellow background color to a different color. See e.g. [html-color-codes.info](https://html-color-codes.info/) for a way to generate the hexcode for a color. E.g. `-bg-color #999999` changes the color to gray. Deprecated: use the `MainWindowBackground` setting instead.
+- `-esc-to-exit` : enables the Escape key to quit SumatraPDF. Deprecated: use the `EscToExit` setting instead.
+- `-set-color-range <text-hexcolor> <background-hexcolor>` : uses the given two colors for foreground and background and maps all other colors used in a document in between these two. E.g. `-set-color-range #dddddd #333333` displays soft white text on a dark gray background. Deprecated: use the `FixedPageUI.TextColor` and `FixedPageUI.BackgroundColor` settings instead.
+- `-lang <language-code>` : sets the UI language. See [Translation languages](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/TranslationLangs.cpp) for the list of available language codes. E.g. `-lang de`. Deprecated: use the `UiLanguage` setting instead.
+- `-manga-mode <mode>` : enables or disables "Manga mode" for reading (mainly Japanese) comic books from right to left. Mode must be "true" or 1 for enabling and "false" or 0 for disabling this feature. Deprecated: use the `ComicBookUI.CbxMangaMode` setting instead.
+- `-invert-colors` : temporarily swaps fixed-page document text and background colors for the current run. The older alias `-invertcolors` is also accepted.

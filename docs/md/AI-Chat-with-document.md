@@ -16,7 +16,7 @@ Install and set up Claude Code using Anthropic's official guide:
 
 - [Set up Claude Code](https://code.claude.com/docs/en/setup)
 
-After installation, make sure `claude` (or `claude.exe`) is on your `PATH`, or in one of the usual install locations under your user profile.
+After installation, make sure `claude` (or `claude.exe`) is on your `PATH`. SumatraPDF also looks in `%USERPROFILE%\.local\bin\`, `%USERPROFILE%\AppData\Local\Programs\claude-code\`, and `%USERPROFILE%\AppData\Roaming\npm\`.
 
 ## Grok Build
 
@@ -24,7 +24,7 @@ This feature can also use **[Grok Build](https://x.ai/news/grok-build-cli)** (th
 
 If Grok Build is missing, the chat panel shows an error such as *Cannot find grok. Is Grok Build installed?*
 
-Install Grok Build and sign in using xAI's instructions. SumatraPDF looks for `grok.exe` in `%USERPROFILE%\.grok\bin\` and on `PATH`.
+Install Grok Build and sign in using xAI's instructions. SumatraPDF looks for `grok.exe` on `PATH`, in `%USERPROFILE%\.grok\bin\`, and in `%USERPROFILE%\.local\bin\`.
 
 Open the panel with **View → Grok chat** (`CmdAIChatWithGrokBuild`), or search for `Grok` in the command palette.
 
