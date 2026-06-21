@@ -515,7 +515,7 @@ h6 {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  right: 1rem;
+  left: 1rem;
   z-index: 50;
 
   max-height: calc(100vh - 2rem);
@@ -623,8 +623,14 @@ h6 {
 }
 
 .notion-page {
-  margin-left: 1rem;
+  margin-left: 2rem;
   margin-right: 1rem;
+}
+
+@media (min-width: 950px) {
+  .toc-wrapper {
+    left: calc(240px + 0.75rem);
+  }
 }
 
 .notion-page > img {

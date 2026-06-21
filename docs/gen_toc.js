@@ -115,8 +115,15 @@ function tocGoTo(n) {
   }, 100);
 }
 
-function genToc() {
+function rebuildPageToc() {
+  const existing = document.querySelector(".toc-wrapper");
+  if (existing) {
+    existing.remove();
+  }
   tocItems = buildTocItems();
+  if (tocItems.length === 0) {
+    return;
+  }
   fixNesting(tocItems);
   const container = document.createElement("div");
   container.className = "toc-wrapper";
@@ -124,6 +131,7 @@ function genToc() {
   let s2 = genTocList(tocItems);
   container.innerHTML = s + s2;
   document.body.appendChild(container);
+  updateClosestToc();
 }
 
 function showSelectedTocItem(elIdx) {
@@ -176,5 +184,10 @@ function updateClosestToc() {
 
 window.addEventListener("scroll", updateClosestToc);
 
-genToc();
-updateClosestToc();
+window.rebuildPageToc = rebuildPageToc;
+
+// In-app help renders markdown after this script loads; the website serves
+// pre-rendered HTML, so build immediately when headings are already present.
+if (document.querySelector("h1, h2, h3, h4, h5, h6, .breadcrumbs")) {
+  rebuildPageToc();
+}

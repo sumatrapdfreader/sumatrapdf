@@ -345,6 +345,9 @@
         if (innerSlot) {
           innerSlot.innerHTML = rendered.innerHTML;
         }
+        if (typeof window.rebuildPageToc === "function") {
+          window.rebuildPageToc();
+        }
         if (titleEl) {
           const title = currentHtml.replace(".html", "").replace(/-/g, " ");
           titleEl.textContent = title;
