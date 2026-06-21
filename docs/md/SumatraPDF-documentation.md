@@ -25,19 +25,17 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [Managing favorites](Managing-favorites.md)
 
-[Commands](Commands.md)
+[Editing annotations](Editing-annotations.md)
 
-[Command-line arguments](Command-line-arguments.md)
+[AI Chat with document](AI-Chat-with-document.md)
 
 [Printing](Printing.md)
 
-[Advanced options / settings](Advanced-options-settings.md)
-
-[How we store settings](How-we-store-settings.md)
-
 [Read Aloud (TTS)](Read-Aloud-TTS.md)
 
-[AI Chat with document](AI-Chat-with-document.md)
+[Commands](Commands.md)
+
+[Command-line arguments](Command-line-arguments.md)
 
 [Customize toolbar](Customize-toolbar.md)
 
@@ -47,9 +45,9 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [Customize search / translation services](Customize-search-translation-services.md)
 
-[Editing annotations](Editing-annotations.md)
-
 [LaTeX integration](LaTeX-integration.md)
+
+[Advanced options / settings](Advanced-options-settings.md)
 
 [DDE Commands](DDE-Commands.md)
 
@@ -61,9 +59,9 @@ Using ai agents (Grok, ChatGPT, Claude etc.) to ask questions about SumatraPDF? 
 
 [Customize eBook UI](Customize-eBook-UI.md)
 
-[Supported File Formats](Supported-document-formats.md)
-
 [Accessibility](Accessibility.md)
+
+[How we store settings](How-we-store-settings.md)
 
 [Installer cmd-line arguments](Installer-cmd-line-arguments.md)
 
