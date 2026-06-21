@@ -210,6 +210,7 @@ struct UpdateFindStatusData {
     MainWindow* win;
     int current;
     int total;
+    bool showProgress;
 };
 
 static void UpdateFindStatus(UpdateFindStatusData* d) {
@@ -219,25 +220,22 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
     if (!IsMainWindowValid(win) || win->findCancelled) {
         return;
     }
-    auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
-    if (!wnd) {
-        logf("UpdateFindStatus: no wnd, setting win->findCancelled to true\n");
-        win->findCancelled = true;
-        return;
-    }
-    TempStr msg = str::FormatTemp(_TRA("Searching %d of %d..."), d->current, d->total);
-    int perc = CalcPerc(d->current, d->total);
-    if (!UpdateNotificationProgress(wnd, msg, perc)) {
-        // the search has been canceled by closing the notification
-        logf("UpdateFindStatus: UpdateNotificationProgress() returned false, setting win->findCancelled to true\n");
+    if (!d->showProgress) {
+        // find-as-you-type: don't let the incremental find scan the whole
+        // document. The n/m counter and the floating results list are built by
+        // the count thread (which does its own full scan), so bail out early and
+        // leave the heavy lifting to it.
         win->findCancelled = true;
     }
+    // explicit Find Next/Prev (showProgress): keep going to completion. There's
+    // no progress notification now -- the n/m counter is the only feedback.
 }
 
 struct FindThreadData {
     MainWindow* win = nullptr;
     TextSearch::Direction direction = TextSearch::Direction::Forward;
     bool wasModified = false;
+    bool showProgress = false;
     AutoFreeWStr text;
     HANDLE thread = nullptr;
 
@@ -250,18 +248,11 @@ struct FindThreadData {
     ~FindThreadData() { CloseHandle(thread); }
 
     void ShowUI(bool showProgress) {
-        const LPARAM disable = (LPARAM)MAKELONG(0, 0);
-
-        auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
-
-        if (showProgress && wnd == nullptr) {
-            NotificationCreateArgs args;
-            args.hwndParent = win->hwndCanvas;
-            args.timeoutMs = 0;
-            args.onRemoved = MkFunc1Void(RemoveNotification);
-            args.groupId = kNotifFindProgress;
-            ShowNotification(args);
-        }
+        // no "Searching n of m..." notification anymore: the find UI's own n/m
+        // counter (and the floating window's results list) is the feedback. We
+        // still remember showProgress to decide whether the incremental find may
+        // bail early (see UpdateFindStatus).
+        this->showProgress = showProgress;
 
         SetToolbarButtonEnableState(win, CmdFindPrev, false);
         SetToolbarButtonEnableState(win, CmdFindNext, false);
@@ -306,6 +297,7 @@ struct FindThreadData {
         data->win = this->win;
         data->current = current;
         data->total = total;
+        data->showProgress = this->showProgress;
         auto fn = MkFunc0<UpdateFindStatusData>(UpdateFindStatus, data);
         uitask::Post(fn, nullptr);
     }
