@@ -135,6 +135,10 @@ int GetWidgetFieldFlags(Annotation*);
 TempStr GetWidgetValue(Annotation*);
 // set a text field's value (runs validation); returns true if accepted.
 bool SetWidgetTextValue(Annotation*, const char* value);
+// options of a combobox/listbox field (display strings), appended to `out`.
+void GetWidgetChoiceOptions(Annotation*, StrVec& out);
+// set a choice field's value to one of its options; returns true if applied.
+bool SetWidgetChoiceValue(Annotation*, const char* value);
 // Toggle a checkbox / radio-button form field in place. Returns true if it was
 // a (non-read-only) checkbox/radio and got toggled.
 bool ToggleFormButton(Annotation*);

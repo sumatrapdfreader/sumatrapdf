@@ -305,6 +305,19 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
     MarkNotificationAsModified(e, annot);
 }
 
+// Regenerate appearance streams for the whole page after a form mutation.
+// A field change can affect *other* widgets (radio-group siblings sharing the
+// field value, or JS-calculated fields); each caches its resolved appearance
+// until pdf_update_annot runs for it, so updating only the touched widget
+// leaves siblings showing a stale appearance. Call inside the caller's fz_try,
+// holding docLock.
+static void UpdateFormFieldPage(fz_context* ctx, pdf_annot* a) {
+    pdf_page* page = pdf_annot_page(ctx, a);
+    if (page) {
+        pdf_update_page(ctx, page);
+    }
+}
+
 int GetWidgetType(Annotation* annot) {
     if (!annot || annot->type != AnnotationType::Widget) {
         return PDF_WIDGET_TYPE_UNKNOWN;
@@ -335,11 +348,33 @@ bool ToggleFormButton(Annotation* annot) {
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
             int wt = pdf_widget_type(ctx, a);
-            bool isButton = (wt == PDF_WIDGET_TYPE_CHECKBOX) || (wt == PDF_WIDGET_TYPE_RADIOBUTTON);
             int flags = pdf_annot_field_flags(ctx, a);
-            if (isButton && !(flags & PDF_FIELD_IS_READ_ONLY)) {
+            bool readOnly = (flags & PDF_FIELD_IS_READ_ONLY) != 0;
+            if (wt == PDF_WIDGET_TYPE_RADIOBUTTON && !readOnly) {
+                // pdf_toggle_widget mishandles radio groups whose buttons have
+                // distinct on-state names: it sets every sibling's /AS to the
+                // selected state, leaving them all "on". Instead set the group's
+                // value via pdf_set_field_value, which routes through
+                // update_checkbox_selector and sets each kid's /AS correctly.
+                pdf_obj* kid = pdf_annot_obj(ctx, a);
+                pdf_obj* grp = kid;
+                for (pdf_obj* p = pdf_dict_get(ctx, grp, PDF_NAME(Parent)); p;
+                     p = pdf_dict_get(ctx, grp, PDF_NAME(Parent))) {
+                    grp = p;
+                }
+                pdf_obj* curAS = pdf_dict_get(ctx, kid, PDF_NAME(AS));
+                bool isOn = curAS && !pdf_name_eq(ctx, curAS, PDF_NAME(Off));
+                bool noToggleOff = (flags & PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF) != 0;
+                const char* onName = pdf_to_name(ctx, pdf_button_field_on_state(ctx, kid));
+                const char* newVal = (isOn && !noToggleOff) ? "Off" : onName;
+                pdf_set_field_value(ctx, e->pdfdoc, grp, newVal, 0);
+                pdf_update_annot(ctx, a);
+                UpdateFormFieldPage(ctx, a); // refresh all radio-group siblings
+                changed = true;
+            } else if (wt == PDF_WIDGET_TYPE_CHECKBOX && !readOnly) {
                 pdf_toggle_widget(ctx, a);
                 pdf_update_annot(ctx, a);
+                UpdateFormFieldPage(ctx, a);
                 changed = true;
             }
         }
@@ -405,10 +440,62 @@ bool SetWidgetTextValue(Annotation* annot, const char* value) {
         fz_try(ctx) {
             ok = pdf_set_text_field_value(ctx, a, value ? value : "") != 0;
             pdf_update_annot(ctx, a);
+            UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
             logf("SetWidgetTextValue(): mupdf calls failed\n");
+        }
+    }
+    if (ok) {
+        MarkNotificationAsModified(e, annot);
+    }
+    return ok;
+}
+
+void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    auto ctx = e->Ctx();
+    ScopedCritSec cs(&e->docLock);
+    fz_try(ctx) {
+        int n = pdf_choice_widget_options(ctx, a, 0, nullptr);
+        if (n > 0) {
+            const char** opts = (const char**)fz_malloc(ctx, n * sizeof(char*));
+            pdf_choice_widget_options(ctx, a, 0, opts);
+            for (int i = 0; i < n; i++) {
+                out.Append(opts[i] ? opts[i] : "");
+            }
+            fz_free(ctx, opts);
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+}
+
+bool SetWidgetChoiceValue(Annotation* annot, const char* value) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return false;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    bool ok = false;
+    {
+        auto ctx = e->Ctx();
+        ScopedCritSec cs(&e->docLock);
+        fz_try(ctx) {
+            pdf_set_choice_field_value(ctx, a, value ? value : "");
+            pdf_update_annot(ctx, a);
+            UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
+            ok = true;
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("SetWidgetChoiceValue(): mupdf calls failed\n");
         }
     }
     if (ok) {

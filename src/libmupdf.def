@@ -932,6 +932,10 @@ EXPORTS
 	pdf_next_widget
 	pdf_widget_type
 	pdf_toggle_widget
+	pdf_update_page
+	pdf_button_field_on_state
+	pdf_set_field_value
+	pdf_name_eq
 	pdf_bound_widget
 	pdf_annot_field_value
 	pdf_set_annot_field_value
