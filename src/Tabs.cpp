@@ -28,6 +28,7 @@
 #include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
+#include "FindBar.h"
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
@@ -605,6 +606,9 @@ void SaveCurrentWindowTab(MainWindow* win) {
     if (!win->tabsCtrl) {
         return;
     }
+    // the find UI (compact bar or floating window) belongs to the previous tab's
+    // search; close it when leaving the tab
+    HideFindBar(win);
 
     int current = win->tabsCtrl->GetSelected();
     if (-1 == current) {
