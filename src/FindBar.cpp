@@ -133,6 +133,9 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         status = new Static();
         status->SetColors(colTxt, colBg);
         status->Create(args);
+        // vertically center the single line of text so it lines up with the
+        // (taller, bordered) edit box's text instead of sitting at the top
+        SetWindowStyle(status->hwnd, SS_CENTERIMAGE, true);
     }
 
     {
