@@ -22,6 +22,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Commands.h"
+#include "Accelerators.h"
 #include "SvgIcons.h"
 #include "Toolbar.h"
 #include "SearchAndDDE.h"
@@ -91,14 +92,23 @@ struct FindWindowWnd : Wnd {
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
 
+// append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
+static const char* AppendCmdAccel(const char* base, int cmd) {
+    const char* accel = AppendAccelKeyToMenuStringTemp(nullptr, cmd);
+    if (!accel) {
+        return base;
+    }
+    return str::JoinTemp(base, str::FormatTemp(" (%s)", accel + 1)); // +1 skips the leading \t
+}
+
 static const char* FindWindowButtonTooltip(int cmd) {
     switch (cmd) {
         case CmdFindPrev:
-            return _TRA("Find Previous");
+            return AppendCmdAccel(_TRA("Find Previous"), cmd);
         case CmdFindNext:
-            return _TRA("Find Next");
+            return AppendCmdAccel(_TRA("Find Next"), cmd);
         case CmdFindToggleMatchCase:
-            return _TRA("Match Case");
+            return AppendCmdAccel(_TRA("Match Case"), cmd);
         case kFindWinPinCmdId:
             return _TRA("Dock to toolbar");
     }
