@@ -762,13 +762,20 @@ int SyncTex::RebuildIndexIfNeeded() {
     return MarkIndexWasRebuilt();
 }
 
-// Returns true if the sync file itself lives on WSL
-static bool IsUnixSourcePath(const char* syncFilePath) {
-    if (!syncFilePath) {
+// Decides whether `resolvedSrcPath` should be treated as a Unix path rather than
+// a Windows path. Returns true if the sync file itself lives on WSL, or if the
+// resolved path is a WSl mount path (e.g. /mnt/c/...), which happens when the PDF
+// lives on a Windows drive but was compiled from inside WSL.
+static bool IsUnixSourcePath(const char* syncFilePath, const char* resolvedSrcPath) {
+    if (!syncFilePath || !resolvedSrcPath) {
         return false;
     }
 
     if (str::StartsWithI(syncFilePath, "\\\\wsl.localhost\\") || str::StartsWithI(syncFilePath, "\\\\wsl$\\")) {
+        return true;
+    }
+
+    if (str::StartsWithI(resolvedSrcPath, "/mnt/")) {
         return true;
     }
 
@@ -840,7 +847,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     // Unescape SyncTeX's space encoding: * represents a space in filenames
     str::TransCharsInPlace(filename, "*", " ");
 
-    if (IsUnixSourcePath(syncFilePath.Get())) {
+    if (IsUnixSourcePath(syncFilePath.Get(), filename)) {
         // Treat filename as unix path
 
         // Resolve relative Unix paths relative to the sync file's directory
