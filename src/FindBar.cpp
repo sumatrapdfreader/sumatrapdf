@@ -78,15 +78,18 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         CreateCustomArgs args;
         args.visible = false;
         args.style = WS_POPUP | WS_BORDER;
-        // WS_EX_TOPMOST keeps the bar above the frame while it's open (it's
-        // hidden when not in use); WS_EX_TOOLWINDOW keeps it off the taskbar
-        args.exStyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
+        // WS_EX_TOOLWINDOW keeps it off the taskbar. Not topmost: we make the
+        // frame our owner instead (below) so the bar floats above the frame but
+        // not above other apps.
+        args.exStyle = WS_EX_TOOLWINDOW;
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    // make the frame our owner so the bar is grouped with it
+    // make the frame our owner: an owned window always renders above its owner
+    // (so it stays visible when the user clicks into the document) yet drops
+    // behind when another application is activated.
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)win->hwndFrame);
     SetColors(colTxt, colBg);
 
@@ -269,7 +272,7 @@ static void PositionFindBar(FindBarWnd* bar) {
     }
     Rect r{cx, cy, bar->barDx, bar->barDy};
     r = ShiftRectToWorkArea(r, win->hwndFrame, true);
-    SetWindowPos(bar->hwnd, HWND_TOPMOST, r.x, r.y, r.dx, r.dy, SWP_NOACTIVATE);
+    SetWindowPos(bar->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_NOACTIVATE);
 }
 
 void ShowFindBar(MainWindow* win) {
