@@ -56,7 +56,45 @@ char* TestSynctexResult(const char* pdfPath, const char* srcPath, int line) {
             int page = 0;
             Vec<Rect> rects;
             int ret = sync->SourceToDoc(srcPath, line, 0, &page, rects);
-            out.AppendFmt("ret=%d page=%d nrects=%d src=%s line=%d\n", ret, page, rects.Size(), srcPath, line);
+            out.AppendFmt("ret=%d page=%d nrects=%d src=%s line=%d", ret, page, rects.Size(), srcPath, line);
+            if (rects.Size() > 0) {
+                Rect r = rects.at(0);
+                out.AppendFmt(" rect_x=%d rect_y=%d rect_dx=%d rect_dy=%d\n", r.x, r.y, r.dx, r.dy);
+            }
+            delete sync;
+        }
+        SafeEngineRelease(&engine);
+    }
+
+    return out.StealData();
+}
+
+// Headless inverse-search test for issue #5702. Loads the pdf, creates a
+// Synchronizer, and resolves (page, point) -> (srcfile, line, col) via
+// DocToSource, returning a machine-readable result line.
+char* TestInverseSearchResult(const char* pdfPath, int pageNo, int x, int y) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    StrBuilder out;
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+    } else {
+        Synchronizer* sync = nullptr;
+        int err = Synchronizer::Create(pdfPath, engine, &sync);
+        if (err != PDFSYNCERR_SUCCESS || !sync) {
+            out.AppendFmt("ERROR sync-create-failed err=%d\n", err);
+        } else {
+            AutoFreeStr srcfilepath;
+            int line = 0, col = 0;
+            Point pt(x, y);
+            int ret = sync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
+            if (ret != PDFSYNCERR_SUCCESS) {
+                out.AppendFmt("ERROR doctosource-failed err=%d\n", ret);
+            } else {
+                out.AppendFmt("ret=%d srcfile=%s line=%d col=%d\n", ret, srcfilepath.Get(), line, col);
+            }
             delete sync;
         }
         SafeEngineRelease(&engine);

@@ -27,6 +27,7 @@ enum class ControlCmd : u16 {
     TestTripleClickLineSelect = 16,
     TestContextMenuSelection = 17,
     TestGoToFindMatch = 18,
+    TestInverseSearch = 22,
 };
 
 enum class ControlArgType : u16 {
@@ -287,6 +288,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, TestSynctexResult(pdf, src, line));
+            break;
+        }
+
+        case ControlCmd::TestInverseSearch: {
+            i32 page = 0, x = 0, y = 0;
+            const char* pdf = StringArg(req, 0);
+            if (!pdf || !IntArg(req, 1, page) || !IntArg(req, 2, x) || !IntArg(req, 3, y)) {
+                AppendError(req, "TestInverseSearch expects string pdf, int page, int x, int y");
+                break;
+            }
+            AppendTestResult(req, 0, TestInverseSearchResult(pdf, page, x, y));
             break;
         }
 
