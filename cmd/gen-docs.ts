@@ -434,7 +434,12 @@ function extractMdLinksInOrder(content: string): string[] {
     if (hashIdx >= 0) {
       fileName = fileName.slice(0, hashIdx);
     }
-    if (kExcludeFromAllDocs.has(fileName) || seen.has(fileName)) {
+    if (
+      fileName.startsWith("https://") ||
+      fileName.startsWith("http://") ||
+      kExcludeFromAllDocs.has(fileName) ||
+      seen.has(fileName)
+    ) {
       continue;
     }
     seen.add(fileName);
