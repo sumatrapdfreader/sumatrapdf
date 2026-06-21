@@ -64,7 +64,7 @@ static void CodexBuildLog(const char* direction, const char* text) {
     AIChatLog(&gCodexBuildLogger, direction, text);
 }
 
-constexpr const char* kCodexBuildDocURI = "/AI-Chat-with-document#gpt-5.5";
+constexpr const char* kCodexBuildDocURI = "/AI-Chat-with-document#openai-codex";
 
 static void ShowCodexBuildNotInstalledDialog() {
     AIChatNotInstalledDialogArgs args;
