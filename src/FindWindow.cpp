@@ -179,7 +179,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         b[2].idCommand = CmdFindToggleMatchCase;
         b[2].fsState = TBSTATE_ENABLED;
         b[2].fsStyle = BTNS_CHECK;
-        b[3].iBitmap = (int)TbIcon::Pin;
+        b[3].iBitmap = (int)TbIcon::ArrowsDiagonalMinimize;
         b[3].idCommand = kFindWinPinCmdId;
         b[3].fsState = TBSTATE_ENABLED;
         b[3].fsStyle = BTNS_BUTTON;
