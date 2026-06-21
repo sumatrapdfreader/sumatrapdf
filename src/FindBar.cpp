@@ -51,9 +51,25 @@ struct FindBarWnd : Wnd {
     void OnTextChanged();
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
+    LRESULT OnNotify(int controlId, NMHDR* nmh) override;
     bool PreTranslateMessage(MSG& msg) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
+
+// tooltip text for the bar's toolbar buttons
+static const char* FindBarButtonTooltip(int cmd) {
+    switch (cmd) {
+        case CmdFindPrev:
+            return _TRA("Find Previous");
+        case CmdFindNext:
+            return _TRA("Find Next");
+        case CmdFindToggleMatchCase:
+            return _TRA("Match Case");
+        case kFindBarCloseCmdId:
+            return _TRA("Close");
+    }
+    return nullptr;
+}
 
 FindBarWnd::~FindBarWnd() {
     delete edit;
@@ -82,6 +98,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         // frame our owner instead (below) so the bar floats above the frame but
         // not above other apps.
         args.exStyle = WS_EX_TOOLWINDOW;
+        args.isRtl = IsUIRtl();
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -119,10 +136,11 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     }
 
     {
-        DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NODIVIDER | CCS_NORESIZE |
-                      CCS_NOPARENTALIGN;
+        DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | TBSTYLE_TOOLTIPS | CCS_NODIVIDER |
+                      CCS_NORESIZE | CCS_NOPARENTALIGN;
+        DWORD exStyle = IsUIRtl() ? WS_EX_LAYOUTRTL : 0;
         HINSTANCE hinst = GetModuleHandleW(nullptr);
-        hwndBtns = CreateWindowExW(0, TOOLBARCLASSNAMEW, nullptr, style, 0, 0, 0, 0, hwnd, (HMENU) nullptr, hinst,
+        hwndBtns = CreateWindowExW(exStyle, TOOLBARCLASSNAMEW, nullptr, style, 0, 0, 0, 0, hwnd, (HMENU) nullptr, hinst,
                                    nullptr);
         SendMessageW(hwndBtns, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
@@ -199,6 +217,18 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(h, msg, wp, lp);
 }
 
+LRESULT FindBarWnd::OnNotify(int, NMHDR* nmh) {
+    if (nmh->code == TTN_GETDISPINFOW) {
+        auto di = (NMTTDISPINFOW*)nmh;
+        const char* s = FindBarButtonTooltip((int)nmh->idFrom);
+        if (s) {
+            lstrcpynW(di->szText, ToWStrTemp(s), dimof(di->szText));
+            di->lpszText = di->szText;
+        }
+    }
+    return 0;
+}
+
 bool FindBarWnd::PreTranslateMessage(MSG& msg) {
     if (msg.message != WM_KEYDOWN) {
         return false;
@@ -257,6 +287,23 @@ void DeleteFindBar(MainWindow* win) {
     win->hwndFindEdit = nullptr;
 }
 
+// rebuild the bar so it picks up new theme colors / icons (called on theme change)
+void RecreateFindBar(MainWindow* win) {
+    if (!win->findBar) {
+        return;
+    }
+    bool wasVisible = IsWindowVisible(win->findBar->hwnd);
+    TempStr text = wasVisible ? str::DupTemp(HwndGetTextTemp(win->hwndFindEdit)) : nullptr;
+    DeleteFindBar(win);
+    win->findBar = CreateFindBar(win);
+    if (win->findBar && wasVisible) {
+        ShowFindBar(win);
+        if (!str::IsEmpty(text)) {
+            HwndSetText(win->hwndFindEdit, text);
+        }
+    }
+}
+
 // center the bar over the search toolbar icon, both horizontally and vertically
 static void PositionFindBar(FindBarWnd* bar) {
     MainWindow* win = bar->win;
@@ -283,6 +330,8 @@ void ShowFindBar(MainWindow* win) {
         return;
     }
     FindBarWnd* bar = win->findBar;
+    // reflect the current match-case state on the toggle button
+    FindBarSetMatchCaseChecked(win, win->findMatchCase);
     PositionFindBar(bar);
     ShowWindow(bar->hwnd, SW_SHOW);
     HwndSetFocus(win->hwndFindEdit);

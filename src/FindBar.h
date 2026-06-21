@@ -8,6 +8,7 @@ struct FindBarWnd;
 // owns win->hwndFindEdit. Shown via Ctrl+F or the toolbar search icon.
 FindBarWnd* CreateFindBar(MainWindow* win);
 void DeleteFindBar(MainWindow* win);
+void RecreateFindBar(MainWindow* win);
 void ShowFindBar(MainWindow* win);
 void HideFindBar(MainWindow* win);
 bool IsFindBarVisible(MainWindow* win);
