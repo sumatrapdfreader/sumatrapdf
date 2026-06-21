@@ -72,7 +72,8 @@ struct FindWindowWnd : Wnd {
     void DrawResultItem(ListBox::DrawItemEvent* ev);
     void OnResultSelected();
     bool MoveResultSelection(WPARAM vkey);
-    int CurrentMatchIndex(); // list index of the document's current match, or -1
+    int CurrentMatchIndex();        // list index of the document's current match, or -1
+    int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotify(int controlId, NMHDR* nmh) override;
@@ -251,10 +252,22 @@ void FindWindowWnd::RefreshResults() {
         filterWords.Append(term);
     }
     FillWithItems(results->hwnd, results->model);
-    // keep the selection on the document's current match so it stays visible as
-    // you type and Next/Prev have a sensible starting point (programmatic, so it
-    // doesn't re-trigger navigation)
-    results->SetCurrentSelection(CurrentMatchIndex());
+    // keep a result selected so it's visible as you type and Next/Prev have a
+    // sensible starting point.
+    int sel = CurrentMatchIndex();
+    if (sel >= 0) {
+        // the document already sits on a match (find-as-you-type found it): just
+        // mirror it in the list, no navigation
+        results->SetCurrentSelection(sel);
+    } else if (win->findMatches.size() > 0) {
+        // find-as-you-type gave up (it self-cancels for matches on far pages),
+        // so the document isn't on a match. Drive selection + navigation off the
+        // full count instead: go to the first match at/after the current page,
+        // like find-as-you-type would have.
+        sel = FirstMatchFromCurrentPage();
+        results->SetCurrentSelection(sel);
+        OnResultSelected();
+    }
 }
 
 void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
@@ -334,6 +347,22 @@ int FindWindowWnd::CurrentMatchIndex() {
         }
     }
     return -1;
+}
+
+// first match at/after the current page (matches are in page order); wraps to
+// the first match if none follow. Mirrors find-as-you-type's FindFirst(curPage).
+int FindWindowWnd::FirstMatchFromCurrentPage() {
+    int n = (int)win->findMatches.size();
+    if (n == 0) {
+        return -1;
+    }
+    int curPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
+    for (int i = 0; i < n; i++) {
+        if (win->findMatches[i].startPage >= curPage) {
+            return i;
+        }
+    }
+    return 0;
 }
 
 // move the results-list selection (keyboard arrows or the Next/Prev buttons)
