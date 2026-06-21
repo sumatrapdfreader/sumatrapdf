@@ -490,9 +490,9 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
                 auto cd = (NMTBCUSTOMDRAW*)nmh;
                 auto stage = cd->nmcd.dwDrawStage;
                 if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
-                    HBRUSH br = CreateSolidBrush(ThemeWindowControlBackgroundColor());
-                    FillRect(cd->nmcd.hdc, &cd->nmcd.rc, br);
-                    DeleteObject(br);
+                    // reuse the window's cached background brush (rebuilt on theme
+                    // change via SetColors) instead of allocating one per paint
+                    FillRect(cd->nmcd.hdc, &cd->nmcd.rc, BackgroundBrush());
                     return stage == CDDS_PREPAINT ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
                 }
             }

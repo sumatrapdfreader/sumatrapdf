@@ -243,9 +243,9 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             auto cd = (NMTBCUSTOMDRAW*)nmh;
             auto stage = cd->nmcd.dwDrawStage;
             if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
-                HBRUSH br = CreateSolidBrush(ThemeWindowControlBackgroundColor());
-                FillRect(cd->nmcd.hdc, &cd->nmcd.rc, br);
-                DeleteObject(br);
+                // reuse the bar's cached background brush (rebuilt on theme change
+                // via SetColors) instead of allocating one per paint
+                FillRect(cd->nmcd.hdc, &cd->nmcd.rc, BackgroundBrush());
                 return stage == CDDS_PREPAINT ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
             }
         }
@@ -399,6 +399,10 @@ void ShowFindBar(MainWindow* win) {
 }
 
 void HideFindBar(MainWindow* win) {
+    // drop the cached results: they belong to this search/document and must not
+    // be shown or navigated into after the find UI is reopened (e.g. on another
+    // tab, which would carry the previous document's page/glyph coordinates)
+    ClearFindMatches(win);
     if (IsFindWindowVisible(win)) {
         HideFindWindow(win);
         return;

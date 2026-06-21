@@ -607,7 +607,9 @@ void SaveCurrentWindowTab(MainWindow* win) {
         return;
     }
     // the find UI (compact bar or floating window) belongs to the previous tab's
-    // search; close it when leaving the tab
+    // search; close it when leaving the tab (HideFindBar also drops the cached
+    // results so the next tab can't show or navigate into the old document's
+    // matches)
     HideFindBar(win);
 
     int current = win->tabsCtrl->GetSelected();

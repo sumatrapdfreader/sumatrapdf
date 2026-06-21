@@ -264,13 +264,6 @@ struct FindThreadData {
         SetToolbarButtonEnableState(win, CmdFindNext, true);
         SetToolbarButtonEnableState(win, CmdFindToggleMatchCase, true);
 
-        // search status is shown in the floating find bar, not via a
-        // notification; dismiss any leftover find-progress notification
-        auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
-        if (wnd) {
-            RemoveNotification(wnd);
-        }
-
         if (!success && !loopedAround) {
             // i.e. canceled
             FindBarSetStatus(win, "");
@@ -504,7 +497,9 @@ static void CountThread(CountThreadData* d) {
         ts.SetDirection(TextSearch::Direction::Forward);
         ts.progressCb = MkFunc1<CountThreadData, ProgressUpdateData*>(CountProgress, d);
         TextSel* m = ts.FindFirst(1, d->text);
-        while (m) {
+        // check the epoch at the top so a cancel (AbortCount, which joins us on
+        // the UI thread) bails before the expensive snippet build / next scan
+        while (m && win->findCountEpoch == d->epoch) {
             positions->Append(MatchKey(ts.startPage, ts.startGlyph));
             if (matches && (int)matches->size() < kMaxFindResults) {
                 FindMatch fm;
@@ -514,9 +509,6 @@ static void CountThread(CountThreadData* d) {
                 fm.endGlyph = ts.endGlyph;
                 fm.snippet = BuildSnippet(engine, fm);
                 matches->Append(fm);
-            }
-            if (win->findCountEpoch != d->epoch) {
-                break;
             }
             m = ts.FindNext();
         }
@@ -615,21 +607,23 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     if (!win->IsDocLoaded() || !win->AsFixed()) {
         return;
     }
+    // join any in-flight find/count worker first: we're about to mutate
+    // dm->textSearch and read engine page text on the UI thread, which must not
+    // race a background thread doing the same (mupdf text extraction isn't
+    // reentrant, and textSearch is shared state)
+    AbortFinding(win, true);
     DisplayModel* dm = win->AsFixed();
-    EngineBase* engine = dm->GetEngine();
     TextSearch* ts = dm->textSearch;
-    ts->Reset(); // clears ts->pageText
+    ts->Reset();
     ts->StartAt(startPage, startGlyph);
     ts->SelectUpTo(endPage, endGlyph);
     if (ts->result.len == 0) {
         return;
     }
-    ts->searchHitStartAt = startPage;
-    ts->findPage = endPage;
-    ts->findIndex = endGlyph;
-    // restore pageText for findPage: FindNext/FindPrev call FindTextInPage,
-    // which dereferences ts->pageText (null right now after Reset) -> crash
-    ts->pageText = engine ? engine->GetTextForPage(ts->findPage) : nullptr;
+    // hand the selection to TextSearch as its "last result" so Find Next/Prev
+    // continue from here; SetLastResult owns the findPage/findIndex/pageText
+    // bookkeeping (so we don't poke internals or leave pageText null)
+    ts->SetLastResult(ts);
     ShowSearchResult(win, &ts->result, true);
     ShowMatchCount(win);
 }
