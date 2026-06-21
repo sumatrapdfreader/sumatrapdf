@@ -115,6 +115,9 @@ void OnFindBarTextChanged(MainWindow* win) {
         FindWindowRefreshResults(win); // empty the results list
         return;
     }
+    // the full-document count (n/m + results list) is kicked from FindEndTask,
+    // after this find thread exits, so the two never touch the engine's text
+    // extraction concurrently (mupdf isn't safe for that)
     FindTextOnThread(win, TextSearch::Direction::Forward, false);
 }
 
@@ -543,12 +546,19 @@ static void CountThread(CountThreadData* d) {
     DestroyTempAllocator();
 }
 
-// cancel any running/pending count without blocking; the worker observes the
-// epoch bump and exits on its own (its CountEndTask closes its handle). The UI
-// thread is only ever blocked joining the worker in ~MainWindow.
+// cancel any running/pending count and wait for the worker to exit. The find
+// thread and the count thread must never use the engine's text extraction at
+// the same time (mupdf isn't safe for concurrent page access), so a find must
+// not start while a count is running. The wait is bounded: the worker checks
+// the epoch after every match, so it exits within one page's work.
 static void AbortCount(MainWindow* win) {
     InterlockedIncrement(&win->findCountEpoch);
     str::FreePtr(&win->findCountPendingText);
+    HANDLE th = win->findCountThread;
+    if (th) {
+        WaitForSingleObject(th, INFINITE);
+        win->findCountThread = nullptr;
+    }
 }
 
 // (re)build the match-position cache on a background thread. Coalesces: if a
@@ -652,9 +662,14 @@ static void FindEndTask(FindEndTaskData* d) {
         ftd->HideUI(true, loopedAround);
         UpdateMatchCount(win, ftd->text);
     } else {
-        // nothing found or search canceled
+        // nothing found, or find-as-you-type self-canceled before reaching a
+        // far match. Still kick the full-document count: it does its own
+        // complete scan, so the n/m counter and the results list reflect every
+        // match even when the incremental find gave up. (Runs only now that the
+        // find thread has exited, so the two never scan the engine at once.)
         ClearSearchResult(win);
         ftd->HideUI(false, !wasModifiedCanceled);
+        UpdateMatchCount(win, ftd->text);
     }
     win->findThread = nullptr;
 }
