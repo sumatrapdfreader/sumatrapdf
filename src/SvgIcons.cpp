@@ -206,10 +206,10 @@ static const char* gIconArrowsDiagonal =
 static const char* gIconArrowsDiagonalMinimize =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
-  <path d="M16 20l0 -4l4 0" />
-  <path d="M14 14l6 6" />
-  <path d="M8 4l0 4l-4 0" />
-  <path d="M4 4l6 6" />
+  <path d="M18 10l-4 0l0 -4" />
+  <path d="M20 4l-6 6" />
+  <path d="M6 14l4 0l0 4" />
+  <path d="M10 14l-6 6" />
 </svg>)";
 
 // must match order in enum class TbIcon
