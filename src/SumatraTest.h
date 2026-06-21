@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 char* TestSynctexResult(const char* pdfPath, const char* srcPath, int line);
+char* TestInverseSearchResult(const char* pdfPath, int pageNo, int x, int y);
 char* TestSearchResult(const char* pdfPath, const char* needle, const char* password = nullptr);
 char* TestDestResult(const char* pdfPath, int destNo);
 char* TestNamedDestResult(const char* pdfPath, const char* destName);
