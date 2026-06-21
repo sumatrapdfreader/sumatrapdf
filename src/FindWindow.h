@@ -13,3 +13,5 @@ void HideFindWindow(MainWindow* win);
 bool IsFindWindowVisible(MainWindow* win);
 void FindWindowSetStatus(MainWindow* win, const char* s);
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked);
+// repopulate the results list from win->findMatches (no-op if not visible)
+void FindWindowRefreshResults(MainWindow* win);

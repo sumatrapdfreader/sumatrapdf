@@ -44,6 +44,10 @@ void FindFirst(MainWindow* win);
 void FindToggleMatchCase(MainWindow* win);
 // called when the user edits the find bar's text (find-as-you-type)
 void OnFindBarTextChanged(MainWindow* win);
+// navigate to and select a match chosen from the floating results list
+void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph);
+// free the cached per-match snippets (win->findMatches)
+void ClearFindMatches(MainWindow* win);
 void FindSelection(MainWindow* win, TextSearch::Direction direction);
 bool AbortFinding(MainWindow* win, bool hideMessage);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress);

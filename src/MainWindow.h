@@ -18,6 +18,15 @@ struct TocTree;
 struct FindBarWnd;
 struct FindWindowWnd;
 
+// one search match with a text snippet around it, for the floating results list
+struct FindMatch {
+    int startPage = 0;
+    int startGlyph = 0;
+    int endPage = 0;
+    int endGlyph = 0;
+    char* snippet = nullptr; // UTF-8, owned (freed when findMatches is rebuilt)
+};
+
 // factor by how large the non-maximized caption should be in relation to the tabbar
 #define kCaptionTabBarDyFactor 1.0f
 
@@ -342,6 +351,10 @@ struct MainWindow {
     // worker picks it up when it finishes (coalesces rapid typing to one scan)
     WCHAR* findCountPendingText = nullptr;
     bool findCountPendingMatchCase = false;
+    // per-match snippets for the floating results list; only built when the
+    // floating find window is visible (see SearchAndDDE.cpp)
+    Vec<FindMatch> findMatches;
+    bool findCountHasSnippets = false;
 
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;

@@ -26,6 +26,7 @@
 #include "SearchAndDDE.h"
 #include "FindBar.h"
 #include "FindWindow.h"
+#include "CommandPalette.h" // DrawMaybeHighlightedText
 #include "Translations.h"
 #include "Theme.h"
 
@@ -34,12 +35,30 @@
 // command ids for the window's toolbar buttons (handled in OnCommand)
 constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
 
+// list model backed live by win->findMatches (the snippet for each match)
+struct FindResultsModel : ListBoxModel {
+    MainWindow* win = nullptr;
+    explicit FindResultsModel(MainWindow* win) {
+        this->win = win;
+    }
+    int ItemsCount() override {
+        return (int)win->findMatches.size();
+    }
+    const char* Item(int i) override {
+        const char* s = win->findMatches[i].snippet;
+        return s ? s : "";
+    }
+};
+
 struct FindWindowWnd : Wnd {
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
     Static* status = nullptr;
     HWND hwndBtns = nullptr; // prev / next / match-case / unpin(dock)
     HIMAGELIST himl = nullptr;
+    ListBox* results = nullptr;
+    StrVec filterWords;  // search term(s) to highlight in snippets
+    Vec<u8> hlScratch;   // reused highlight mask for DrawMaybeHighlightedText
 
     FindWindowWnd() = default;
     ~FindWindowWnd() override;
@@ -47,8 +66,11 @@ struct FindWindowWnd : Wnd {
     bool Create(MainWindow* win);
     void Layout();
     void SavePos();
+    void RefreshResults();
 
     void OnTextChanged();
+    void DrawResultItem(ListBox::DrawItemEvent* ev);
+    void OnResultSelected();
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotify(int controlId, NMHDR* nmh) override;
@@ -73,6 +95,7 @@ static const char* FindWindowButtonTooltip(int cmd) {
 FindWindowWnd::~FindWindowWnd() {
     delete edit;
     delete status;
+    delete results; // also deletes its FindResultsModel
     HwndDestroyWindowSafe(&hwndBtns);
     if (himl) {
         ImageList_Destroy(himl);
@@ -161,13 +184,27 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         SendMessageW(hwndBtns, TB_AUTOSIZE, 0, 0);
     }
 
+    {
+        ListBox::CreateArgs args;
+        args.parent = hwnd;
+        args.font = GetDefaultGuiFont();
+        results = new ListBox();
+        results->onDrawItem =
+            MkMethod1<FindWindowWnd, ListBox::DrawItemEvent*, &FindWindowWnd::DrawResultItem>(this);
+        results->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
+        results->onDoubleClick = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
+        results->SetColors(colTxt, colBg);
+        results->Create(args);
+        results->SetModel(new FindResultsModel(win));
+    }
+
     return true;
 }
 
 void FindWindowWnd::Layout() {
     // a WS_CAPTION/WS_THICKFRAME window gets WM_SIZE during CreateCustom, before
     // the child controls exist; ignore layout until they're created
-    if (!edit || !status || !hwndBtns) {
+    if (!edit || !status || !hwndBtns || !results) {
         return;
     }
     Rect rc = ClientRect(hwnd);
@@ -191,8 +228,87 @@ void FindWindowWnd::Layout() {
         editDx = DpiScale(hwnd, 40);
     }
     MoveWindow(edit->hwnd, editX, y + (rowDy - editDy) / 2, editDx, editDy, TRUE);
-    // the area below (rc from y+rowDy+pad to bottom) is reserved for the
-    // results list, added in a later phase
+
+    // the results list fills the rest of the window below the search row
+    int listTop = y + rowDy + pad;
+    int listDy = std::max(0, rc.dy - listTop - pad);
+    MoveWindow(results->hwnd, pad, listTop, std::max(0, rc.dx - 2 * pad), listDy, TRUE);
+}
+
+void FindWindowWnd::RefreshResults() {
+    if (!results) {
+        return;
+    }
+    // rebuild the highlight terms from the current search text
+    filterWords.Reset();
+    TempStr term = win->findCountText ? ToUtf8Temp(win->findCountText) : nullptr;
+    if (str::IsEmpty(term)) {
+        term = win->hwndFindEdit ? HwndGetTextTemp(win->hwndFindEdit) : nullptr;
+    }
+    if (!str::IsEmpty(term)) {
+        filterWords.Append(term);
+    }
+    FillWithItems(results->hwnd, results->model);
+}
+
+void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
+    ListBox* lb = ev->listBox;
+    if (ev->itemIndex < 0 || ev->itemIndex >= (int)win->findMatches.size()) {
+        return;
+    }
+    HDC hdc = ev->hdc;
+    RECT rc = ev->itemRect;
+
+    COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
+    COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    if (ev->selected) {
+        colBg = AccentColor(colBg, 30);
+    }
+    SetBkColor(hdc, colBg);
+    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+    SetBkMode(hdc, TRANSPARENT);
+
+    HFONT oldFont = lb->font ? SelectFont(hdc, lb->font) : nullptr;
+    int pad = DpiScale(lb->hwnd, 6);
+    RECT rcText = rc;
+    rcText.left += pad;
+    rcText.right -= pad;
+
+    // page number, right-aligned and muted
+    const FindMatch& fm = win->findMatches[ev->itemIndex];
+    TempStr pageStr = str::FormatTemp("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
+    WCHAR* pageW = ToWStrTemp(pageStr);
+    SIZE pSz{};
+    GetTextExtentPoint32W(hdc, pageW, str::Leni(pageW), &pSz);
+    RECT rcPage = rcText;
+    rcPage.left = rcText.right - pSz.cx;
+    SetTextColor(hdc, AccentColor(colText, 80));
+    DrawTextW(hdc, pageW, -1, &rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT);
+
+    // snippet on the left, with the matched term highlighted
+    SetTextColor(hdc, colText);
+    rcText.right = rcPage.left - DpiScale(lb->hwnd, 10);
+    DrawMaybeHighlightedTextArgs args(filterWords, hlScratch);
+    args.hdc = hdc;
+    args.rc = rcText;
+    args.text = fm.snippet ? fm.snippet : "";
+    args.colBg = colBg;
+    args.isRtl = false;
+    args.drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
+    DrawMaybeHighlightedText(args);
+
+    if (oldFont) {
+        SelectFont(hdc, oldFont);
+    }
+}
+
+void FindWindowWnd::OnResultSelected() {
+    int idx = results ? results->GetCurrentSelection() : -1;
+    if (idx < 0 || idx >= (int)win->findMatches.size()) {
+        return;
+    }
+    const FindMatch& fm = win->findMatches[idx];
+    GoToFindMatch(win, fm.startPage, fm.startGlyph, fm.endPage, fm.endGlyph);
 }
 
 void FindWindowWnd::SavePos() {
@@ -328,6 +444,12 @@ void ShowFindWindow(MainWindow* win) {
     ShowWindow(w->hwnd, SW_SHOW);
     HwndSetFocus(win->hwndFindEdit);
     Edit_SetSel(win->hwndFindEdit, 0, -1);
+    // populate the results list: show what's cached, and (re)run the search for
+    // the current term so snippets get built now that the window is visible
+    w->RefreshResults();
+    if (win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0) {
+        OnFindBarTextChanged(win);
+    }
 }
 
 void HideFindWindow(MainWindow* win) {
@@ -353,5 +475,11 @@ void FindWindowSetStatus(MainWindow* win, const char* s) {
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked) {
     if (win->findWindow && win->findWindow->hwndBtns) {
         SendMessageW(win->findWindow->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchCase, MAKELONG(checked ? 1 : 0, 0));
+    }
+}
+
+void FindWindowRefreshResults(MainWindow* win) {
+    if (IsFindWindowVisible(win)) {
+        win->findWindow->RefreshResults();
     }
 }

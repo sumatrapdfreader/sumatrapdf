@@ -33,6 +33,7 @@
 #include "Selection.h"
 #include "Toolbar.h"
 #include "FindBar.h"
+#include "FindWindow.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Version.h"
@@ -110,6 +111,8 @@ void OnFindBarTextChanged(MainWindow* win) {
         AbortFinding(win, true);
         ClearSearchResult(win);
         FindBarSetStatus(win, "");
+        ClearFindMatches(win);
+        FindWindowRefreshResults(win); // empty the results list
         return;
     }
     FindTextOnThread(win, TextSearch::Direction::Forward, false);
@@ -365,19 +368,56 @@ static void ShowMatchCount(MainWindow* win) {
     FindBarSetStatus(win, s);
 }
 
+// cap on how many per-match snippets we build for the floating results list
+// (matches beyond this still count toward "n / m", just aren't listed)
+constexpr int kMaxFindResults = 5000;
+
+void ClearFindMatches(MainWindow* win) {
+    int n = (int)win->findMatches.size();
+    for (int i = 0; i < n; i++) {
+        str::Free(win->findMatches[i].snippet);
+    }
+    win->findMatches.Reset();
+    win->findCountHasSnippets = false;
+}
+
+// build a one-line "...context match context..." snippet (UTF-8) around a match
+static char* BuildSnippet(EngineBase* engine, const FindMatch& m) {
+    const WCHAR* pageText = engine->GetTextForPage(m.startPage);
+    if (!pageText) {
+        return nullptr;
+    }
+    int textLen = str::Leni(pageText);
+    int mStart = limitValue(m.startGlyph, 0, textLen);
+    int mEnd = (m.endPage == m.startPage) ? m.endGlyph : textLen;
+    mEnd = limitValue(mEnd, mStart, textLen);
+    const int kCtx = 40;
+    int from = std::max(0, mStart - kCtx);
+    int to = std::min(textLen, mEnd + kCtx);
+    WCHAR* sub = str::Dup(pageText + from, (size_t)(to - from));
+    str::NormalizeWSInPlace(sub);
+    TempStr u = ToUtf8Temp(sub);
+    str::Free(sub);
+    TempStr full = str::FormatTemp("%s%s%s", from > 0 ? "..." : "", u, to < textLen ? "..." : "");
+    return str::Dup(full);
+}
+
 struct CountThreadData {
     MainWindow* win = nullptr;
     EngineBase* engine = nullptr; // AddRef'd by the caller, released by the thread
     WCHAR* text = nullptr;
     bool matchCase = false;
+    bool wantSnippets = false; // build per-match snippets for the results list
     LONG epoch = 0;
     HANDLE thread = nullptr;
 
-    CountThreadData(MainWindow* win, EngineBase* engine, const WCHAR* text, bool matchCase, LONG epoch) {
+    CountThreadData(MainWindow* win, EngineBase* engine, const WCHAR* text, bool matchCase, bool wantSnippets,
+                    LONG epoch) {
         this->win = win;
         this->engine = engine;
         this->text = str::Dup(text);
         this->matchCase = matchCase;
+        this->wantSnippets = wantSnippets;
         this->epoch = epoch;
     }
     ~CountThreadData() {
@@ -386,13 +426,25 @@ struct CountThreadData {
     }
 };
 
+static void FreeMatchSnippets(Vec<FindMatch>* matches) {
+    if (!matches) {
+        return;
+    }
+    for (int i = 0; i < (int)matches->size(); i++) {
+        str::Free((*matches)[i].snippet);
+    }
+}
+
 struct CountEndTaskData {
     MainWindow* win = nullptr;
     CountThreadData* ctd = nullptr;
     Vec<u64>* positions = nullptr;
+    Vec<FindMatch>* matches = nullptr; // nullptr unless snippets were requested
     ~CountEndTaskData() {
         delete ctd;
         delete positions;
+        FreeMatchSnippets(matches); // frees any snippets not transferred to win
+        delete matches;
     }
 };
 
@@ -418,6 +470,16 @@ static void CountEndTask(CountEndTaskData* d) {
         win->findCountEngine = ctd->engine;
         win->findCountPositions = *d->positions;
         win->findCountValid = true;
+        if (d->matches) {
+            // install the snippet list (steal ownership of the snippet strings)
+            ClearFindMatches(win);
+            win->findMatches = *d->matches;
+            for (int i = 0; i < (int)d->matches->size(); i++) {
+                (*d->matches)[i].snippet = nullptr; // transferred to win->findMatches
+            }
+            win->findCountHasSnippets = true;
+            FindWindowRefreshResults(win);
+        }
         ShowMatchCount(win);
     }
     // a newer term arrived while we were scanning: run it now (no worker running)
@@ -440,6 +502,7 @@ static void CountThread(CountThreadData* d) {
     EngineBase* engine = d->engine;
 
     auto positions = new Vec<u64>();
+    Vec<FindMatch>* matches = d->wantSnippets ? new Vec<FindMatch>() : nullptr;
     {
         TextSearch ts(engine);
         ts.SetMatchCase(d->matchCase);
@@ -448,6 +511,15 @@ static void CountThread(CountThreadData* d) {
         TextSel* m = ts.FindFirst(1, d->text);
         while (m) {
             positions->Append(MatchKey(ts.startPage, ts.startGlyph));
+            if (matches && (int)matches->size() < kMaxFindResults) {
+                FindMatch fm;
+                fm.startPage = ts.startPage;
+                fm.startGlyph = ts.startGlyph;
+                fm.endPage = ts.endPage;
+                fm.endGlyph = ts.endGlyph;
+                fm.snippet = BuildSnippet(engine, fm);
+                matches->Append(fm);
+            }
             if (win->findCountEpoch != d->epoch) {
                 break;
             }
@@ -465,6 +537,7 @@ static void CountThread(CountThreadData* d) {
     data->win = win;
     data->ctd = d;
     data->positions = positions;
+    data->matches = matches;
     auto fn = MkFunc0<CountEndTaskData>(CountEndTask, data);
     uitask::Post(fn, "TaskFindCount");
     DestroyTempAllocator();
@@ -505,8 +578,10 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase) {
     }
 
     engine->AddRef(); // released in CountThread
+    // build per-match snippets only when the floating results list is showing
+    bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     LONG epoch = InterlockedIncrement(&win->findCountEpoch);
-    auto d = new CountThreadData(win, engine, text, matchCase, epoch);
+    auto d = new CountThreadData(win, engine, text, matchCase, wantSnippets, epoch);
     win->findCountThread = nullptr;
     auto fn = MkFunc0<CountThreadData>(CountThread, d);
     win->findCountThread = StartThread(fn, "FindCountThread");
@@ -518,13 +593,39 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase) {
 static void UpdateMatchCount(MainWindow* win, const WCHAR* text) {
     DisplayModel* dm = win->AsFixed();
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
+    bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
-                    win->findCountMatchCase == win->findMatchCase && win->findCountEngine == engine;
+                    win->findCountMatchCase == win->findMatchCase && win->findCountEngine == engine &&
+                    (!wantSnippets || win->findCountHasSnippets);
     if (cacheHit) {
         ShowMatchCount(win);
+        if (wantSnippets) {
+            FindWindowRefreshResults(win);
+        }
     } else {
         StartFindCount(win, text, win->findMatchCase);
     }
+}
+
+// navigate to a match chosen from the floating results list and select it, so
+// Find Next/Prev and the n/m counter continue from there
+void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph) {
+    if (!win->IsDocLoaded() || !win->AsFixed()) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    TextSearch* ts = dm->textSearch;
+    ts->Reset();
+    ts->StartAt(startPage, startGlyph);
+    ts->SelectUpTo(endPage, endGlyph);
+    if (ts->result.len == 0) {
+        return;
+    }
+    ts->searchHitStartAt = startPage;
+    ts->findPage = endPage;
+    ts->findIndex = endGlyph;
+    ShowSearchResult(win, &ts->result, true);
+    ShowMatchCount(win);
 }
 
 static void FindEndTask(FindEndTaskData* d) {

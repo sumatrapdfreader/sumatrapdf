@@ -39,6 +39,7 @@
 #include "MainWindow.h"
 #include "FindBar.h"
 #include "FindWindow.h"
+#include "SearchAndDDE.h"
 #include "RefHover.h"
 #include "WindowTab.h"
 #include "TableOfContents.h"
@@ -153,6 +154,7 @@ MainWindow::~MainWindow() {
     }
     str::FreePtr(&findCountText);
     str::FreePtr(&findCountPendingText);
+    ClearFindMatches(this);
 
     delete linkHandler;
     delete buffer;
