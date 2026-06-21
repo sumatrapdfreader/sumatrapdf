@@ -15,3 +15,5 @@ void FindWindowSetStatus(MainWindow* win, const char* s);
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked);
 // repopulate the results list from win->findMatches (no-op if not visible)
 void FindWindowRefreshResults(MainWindow* win);
+// re-apply theme colors/icons to the floating window after a theme change
+void UpdateFindWindowTheme(MainWindow* win);

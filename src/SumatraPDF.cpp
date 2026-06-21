@@ -87,6 +87,7 @@
 #include "Tabs.h"
 #include "Toolbar.h"
 #include "FindBar.h"
+#include "FindWindow.h"
 #include "Translations.h"
 #include "uia/Provider.h"
 #include "Version.h"
@@ -2133,6 +2134,7 @@ void UpdateAfterThemeChange() {
         // TODO: probably leaking toolbar image list
         UpdateToolbarAfterThemeChange(win);
         RecreateFindBar(win);
+        UpdateFindWindowTheme(win);
         if (UseDarkModeLib()) {
             DarkMode::setDarkTitleBarEx(win->hwndFrame, true);
             DarkMode::setChildCtrlsTheme(win->hwndFrame);

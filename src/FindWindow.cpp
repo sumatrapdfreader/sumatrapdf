@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
@@ -29,8 +30,16 @@
 #include "CommandPalette.h" // DrawMaybeHighlightedText
 #include "Translations.h"
 #include "Theme.h"
+#include "DarkModeSubclass.h"
 
 #include "utils/Log.h"
+
+// match the frame's title bar to the current theme (dark caption in dark mode)
+static void ApplyTitleBarTheme(HWND hwnd) {
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkTitleBarEx(hwnd, true);
+    }
+}
 
 // command ids for the window's toolbar buttons (handled in OnCommand)
 constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
@@ -67,6 +76,7 @@ struct FindWindowWnd : Wnd {
     void Layout();
     void SavePos();
     void RefreshResults();
+    void UpdateTheme();
 
     void OnTextChanged();
     void DrawResultItem(ListBox::DrawItemEvent* ev);
@@ -126,6 +136,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
     // owned by the frame so it groups/minimizes with it but isn't a child
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)win->hwndFrame);
     SetColors(colTxt, colBg);
+    ApplyTitleBarTheme(hwnd);
 
     {
         Edit::CreateArgs args;
@@ -159,6 +170,9 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         HINSTANCE hinst = GetModuleHandleW(nullptr);
         hwndBtns = CreateWindowExW(exStyle, TOOLBARCLASSNAMEW, nullptr, style, 0, 0, 0, 0, hwnd, (HMENU) nullptr, hinst,
                                    nullptr);
+        // drop the visual-style button background so the flat toolbar shows the
+        // window's themed background instead of a light box in dark themes
+        SetWindowTheme(hwndBtns, L"", L"");
         SendMessageW(hwndBtns, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
         int isz = RoundUp(DpiScale(hwnd, 16), 4);
@@ -416,6 +430,35 @@ void FindWindowWnd::SavePos() {
     gGlobalPrefs->searchUIWindowPos = r;
 }
 
+// re-apply theme colors after the user switches themes. The toolbar icons are
+// baked into an image list at the current text color, so rebuild it; the
+// controls and caption also need recoloring.
+void FindWindowWnd::UpdateTheme() {
+    auto colBg = ThemeWindowControlBackgroundColor();
+    auto colTxt = ThemeWindowTextColor();
+    SetColors(colTxt, colBg);
+    if (edit) {
+        edit->SetColors(colTxt, colBg);
+    }
+    if (status) {
+        status->SetColors(colTxt, colBg);
+    }
+    if (results) {
+        results->SetColors(colTxt, colBg);
+    }
+    if (hwndBtns) {
+        int isz = RoundUp(DpiScale(hwnd, 16), 4);
+        HIMAGELIST oldHiml = himl;
+        himl = BuildStdToolbarImageList(isz);
+        SendMessageW(hwndBtns, TB_SETIMAGELIST, 0, (LPARAM)himl);
+        if (oldHiml) {
+            ImageList_Destroy(oldHiml);
+        }
+    }
+    ApplyTitleBarTheme(hwnd);
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+}
+
 void FindWindowWnd::OnTextChanged() {
     OnFindBarTextChanged(win);
 }
@@ -438,6 +481,23 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             // the caption close button hides the bar instead of destroying it
             HideFindWindow(win);
             return 0;
+        case WM_NOTIFY: {
+            // the embedded toolbar paints a light button background in dark
+            // themes; repaint it with the window's theme background so the icons
+            // sit on the same color as the rest of the window
+            auto nmh = (NMHDR*)lp;
+            if (nmh->hwndFrom == hwndBtns && nmh->code == NM_CUSTOMDRAW) {
+                auto cd = (NMTBCUSTOMDRAW*)nmh;
+                auto stage = cd->nmcd.dwDrawStage;
+                if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
+                    HBRUSH br = CreateSolidBrush(ThemeWindowControlBackgroundColor());
+                    FillRect(cd->nmcd.hdc, &cd->nmcd.rc, br);
+                    DeleteObject(br);
+                    return stage == CDDS_PREPAINT ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
+                }
+            }
+            break;
+        }
     }
     return WndProcDefault(h, msg, wp, lp);
 }
@@ -590,5 +650,11 @@ void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked) {
 void FindWindowRefreshResults(MainWindow* win) {
     if (IsFindWindowVisible(win)) {
         win->findWindow->RefreshResults();
+    }
+}
+
+void UpdateFindWindowTheme(MainWindow* win) {
+    if (win->findWindow) {
+        win->findWindow->UpdateTheme();
     }
 }
