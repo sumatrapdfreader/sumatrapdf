@@ -43,7 +43,8 @@ struct PdfsyncPoint {
 // Synchronizer based on .pdfsync file generated with the pdfsync tex package
 class Pdfsync : public Synchronizer {
   public:
-    Pdfsync(const char* syncfilename, EngineBase* engine) : Synchronizer(syncfilename), engine(engine) {
+    Pdfsync(const char* syncfilename, const char* pdffilename, EngineBase* engine)
+        : Synchronizer(syncfilename, pdffilename), engine(engine) {
         ReportIf(!str::EndsWithI(syncfilename, ".pdfsync"));
     }
 
@@ -65,7 +66,8 @@ class Pdfsync : public Synchronizer {
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer {
   public:
-    SyncTex(const char* syncfilename, EngineBase* engineIn) : Synchronizer(syncfilename) {
+    SyncTex(const char* syncfilename, const char* pdffilename, EngineBase* engineIn)
+        : Synchronizer(syncfilename, pdffilename) {
         engine = engineIn;
         scanner = nullptr;
         ReportIf(!str::EndsWithI(syncfilename, ".synctex"));
@@ -83,8 +85,9 @@ class SyncTex : public Synchronizer {
     synctex_scanner_p scanner;
 };
 
-Synchronizer::Synchronizer(const char* syncFilePathIn) {
+Synchronizer::Synchronizer(const char* syncFilePathIn, const char* pdfPathIn) {
     syncFilePath = str::Dup(syncFilePathIn);
+    pdfPath = str::Dup(pdfPathIn);
     WCHAR* path = ToWStrTemp(syncFilePathIn);
     _wstat(path, &syncfileTimestamp);
 }
@@ -136,7 +139,7 @@ int Synchronizer::Create(const char* path, EngineBase* engine, Synchronizer** sy
     // Check if a PDFSYNC file is present
     char* syncFile = str::JoinTemp(basePath, ".pdfsync");
     if (file::Exists(syncFile)) {
-        *sync = new Pdfsync(syncFile, engine);
+        *sync = new Pdfsync(syncFile, path, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
@@ -147,7 +150,7 @@ int Synchronizer::Create(const char* path, EngineBase* engine, Synchronizer** sy
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be
         // the path to the .synctex file (even if a .synctex.gz file is used instead)
-        *sync = new SyncTex(texFile, engine);
+        *sync = new SyncTex(texFile, path, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
@@ -307,6 +310,19 @@ static int cmpLineRecords(const void* a, const void* b) {
     return ((PdfsyncLine*)a)->record - ((PdfsyncLine*)b)->record;
 }
 
+// If `srcfilepath` doesn't exist on disk, checks whether it's been moved to sit
+// next to the PDF document (which happens if all files are moved together)
+static void TryRecoverMovedSourceFile(AutoFreeStr& srcfilepath, const char* pdfPath) {
+    if (file::Exists(srcfilepath)) {
+        return;
+    }
+    TempStr altsrcpath = path::GetDirTemp(pdfPath);
+    altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(srcfilepath));
+    if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath)) {
+        srcfilepath.SetCopy(altsrcpath);
+    }
+}
+
 int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
@@ -368,7 +384,9 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     }
 
     char* path = srcfiles[found->file];
-    filename.SetCopy(path);
+    filename.SetCopy(path::NormalizeTemp(path));
+    TryRecoverMovedSourceFile(filename, pdfPath);
+
     *line = (int)found->line;
     *col = (int)found->column;
     if (*col < 0) {
@@ -780,6 +798,8 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     if (!path::IsAbsolute(filename)) {
         filename.Set(PrependDir(filename));
     }
+    filename.SetCopy(path::NormalizeTemp(filename.Get()));
+    TryRecoverMovedSourceFile(filename, pdfPath);
 
     *line = synctex_node_line(node);
     *col = synctex_node_column(node);

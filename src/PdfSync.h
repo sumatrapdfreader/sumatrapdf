@@ -22,7 +22,7 @@ class EngineBase;
 
 class Synchronizer {
   public:
-    explicit Synchronizer(const char* syncfilepath);
+    explicit Synchronizer(const char* syncfilepath, const char* pdffilename);
     virtual ~Synchronizer() = default;
 
     // Inverse-search:
@@ -51,6 +51,7 @@ class Synchronizer {
     char* PrependDir(const char* filename) const;
 
     AutoFreeStr syncFilePath; // path to the synchronization file
+    AutoFreeStr pdfPath;
 
   public:
     static int Create(const char* pdffilename, EngineBase* engine, Synchronizer** sync);

@@ -419,8 +419,7 @@ char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col)
         perc++;
 
         if (*perc == 'f') {
-            char* fname = path::NormalizeTemp(path);
-            cmdline.Append(fname);
+            cmdline.Append(path);
         } else if (*perc == 'l') {
             cmdline.AppendFmt("%d", line);
         } else if (*perc == 'c') {
