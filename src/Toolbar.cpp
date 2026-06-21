@@ -399,9 +399,9 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         }
     }
 
-    // Find labels may have to be repositioned if some
-    // toolbar buttons were shown/hidden
-    if (setButtonsVisibility && NeedsFindUI(win)) {
+    // reposition the floating find bar over the search icon (and hide it if the
+    // current document doesn't support find) when toolbar buttons change
+    if (setButtonsVisibility) {
         UpdateToolbarFindText(win);
     }
 
@@ -1095,10 +1095,12 @@ HIMAGELIST BuildStdToolbarImageList(int dx) {
     return himl;
 }
 
-// screen-coordinates rect of a toolbar button, used to position the FindBar
+// screen-coordinates rect of a toolbar button, used to position the FindBar.
+// returns an empty rect when the toolbar isn't visible (e.g. fullscreen /
+// presentation) so the caller can fall back to a different anchor.
 Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
     RECT r{};
-    if (!win->hwndToolbar) {
+    if (!win->hwndToolbar || !IsWindowVisible(win->hwndToolbar)) {
         return {};
     }
     TbGetRectById(win->hwndToolbar, cmdId, &r);

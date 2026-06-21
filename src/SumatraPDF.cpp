@@ -4721,6 +4721,8 @@ static void UpdateOverlayScrollbarPositions(MainWindow* win) {
 
 static void FrameOnSize(MainWindow* win, int, int) {
     RelayoutFrame(win);
+    // re-anchor the floating find bar over the (possibly moved) search icon
+    FindBarReposition(win);
 
     if (win->presentation || win->isFullScreen) {
         Rect fullscreen = GetFullscreenRect(win->hwndFrame);
@@ -9954,6 +9956,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             if (win) {
                 RememberDefaultWindowPosition(win);
                 UpdateOverlayScrollbarPositions(win);
+                // keep the floating find bar anchored over the search icon
+                FindBarReposition(win);
             }
             break;
 

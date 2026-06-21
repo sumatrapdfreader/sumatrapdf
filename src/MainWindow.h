@@ -336,6 +336,10 @@ struct MainWindow {
     bool findCountValid = false;
     void* findCountEngine = nullptr; // engine the cache was built for (compared, never deref'd)
     Vec<u64> findCountPositions;     // sorted (page<<32 | startOffset) of each match
+    // a newer count request that arrived while a scan was running; the running
+    // worker picks it up when it finishes (coalesces rapid typing to one scan)
+    WCHAR* findCountPendingText = nullptr;
+    bool findCountPendingMatchCase = false;
 
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;

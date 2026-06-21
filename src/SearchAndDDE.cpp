@@ -393,44 +393,44 @@ struct CountThreadData {
 struct CountEndTaskData {
     MainWindow* win = nullptr;
     CountThreadData* ctd = nullptr;
-    WCHAR* text = nullptr;
-    bool matchCase = false;
-    LONG epoch = 0;
-    void* engine = nullptr;
     Vec<u64>* positions = nullptr;
     ~CountEndTaskData() {
         delete ctd;
-        str::Free(text);
         delete positions;
     }
 };
 
+static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase);
+
 static void CountEndTask(CountEndTaskData* d) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
+    CountThreadData* ctd = d->ctd;
     if (!IsMainWindowValid(win)) {
         return;
     }
-    if (win->findCountThread != d->ctd->thread) {
-        return; // superseded by a newer count
+    if (win->findCountThread != ctd->thread) {
+        return; // superseded (shouldn't happen with the single-worker model)
     }
     win->findCountThread = nullptr;
-    if (win->findCountEpoch != d->epoch) {
-        return; // canceled
+    if (win->findCountEpoch == ctd->epoch) {
+        // not canceled: install the freshly built cache (steal text from ctd)
+        str::FreePtr(&win->findCountText);
+        win->findCountText = ctd->text;
+        ctd->text = nullptr;
+        win->findCountMatchCase = ctd->matchCase;
+        win->findCountEngine = ctd->engine;
+        win->findCountPositions = *d->positions;
+        win->findCountValid = true;
+        ShowMatchCount(win);
     }
-    // install the freshly built cache (steal the text from the task)
-    str::FreePtr(&win->findCountText);
-    win->findCountText = d->text;
-    d->text = nullptr;
-    win->findCountMatchCase = d->matchCase;
-    win->findCountEngine = d->engine;
-    win->findCountPositions.Reset();
-    int np = (int)d->positions->size();
-    for (int i = 0; i < np; i++) {
-        win->findCountPositions.Append((*d->positions)[i]);
+    // a newer term arrived while we were scanning: run it now (no worker running)
+    if (win->findCountPendingText) {
+        WCHAR* pending = win->findCountPendingText;
+        win->findCountPendingText = nullptr;
+        StartFindCount(win, pending, win->findCountPendingMatchCase);
+        str::Free(pending);
     }
-    win->findCountValid = true;
-    ShowMatchCount(win);
 }
 
 static void CountProgress(CountThreadData* d, ProgressUpdateData* data) {
@@ -468,27 +468,25 @@ static void CountThread(CountThreadData* d) {
     auto data = new CountEndTaskData;
     data->win = win;
     data->ctd = d;
-    data->text = str::Dup(d->text);
-    data->matchCase = d->matchCase;
-    data->epoch = d->epoch;
-    data->engine = d->engine;
     data->positions = positions;
     auto fn = MkFunc0<CountEndTaskData>(CountEndTask, data);
     uitask::Post(fn, "TaskFindCount");
     DestroyTempAllocator();
 }
 
+// cancel any running/pending count without blocking; the worker observes the
+// epoch bump and exits on its own (its CountEndTask closes its handle). The UI
+// thread is only ever blocked joining the worker in ~MainWindow.
 static void AbortCount(MainWindow* win) {
-    if (win->findCountThread) {
-        InterlockedIncrement(&win->findCountEpoch); // signal cancel
-        WaitForSingleObject(win->findCountThread, INFINITE);
-        win->findCountThread = nullptr;
-    }
+    InterlockedIncrement(&win->findCountEpoch);
+    str::FreePtr(&win->findCountPendingText);
 }
 
-// kick off a background scan to (re)build the match-position cache
+// (re)build the match-position cache on a background thread. Coalesces: if a
+// scan is already running, remember only the latest request and let the running
+// worker start it when it finishes, so rapid typing never piles up scans and
+// the UI thread never blocks waiting on a scan.
 static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase) {
-    AbortCount(win);
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -497,9 +495,20 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase) {
     if (!engine) {
         return;
     }
-    engine->AddRef(); // released in CountThread
     win->findCountValid = false;
     FindBarSetStatus(win, "..."); // counting; replaced with "n / m" when done
+
+    if (win->findCountThread) {
+        // a scan is in flight: cancel it and queue this request; the running
+        // worker's CountEndTask will start it once it exits
+        InterlockedIncrement(&win->findCountEpoch);
+        str::FreePtr(&win->findCountPendingText);
+        win->findCountPendingText = str::Dup(text);
+        win->findCountPendingMatchCase = matchCase;
+        return;
+    }
+
+    engine->AddRef(); // released in CountThread
     LONG epoch = InterlockedIncrement(&win->findCountEpoch);
     auto d = new CountThreadData(win, engine, text, matchCase, epoch);
     win->findCountThread = nullptr;

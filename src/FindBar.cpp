@@ -41,6 +41,9 @@ struct FindBarWnd : Wnd {
 
     int barDx = 0;
     int barDy = 0;
+    // when set, programmatic edits to the text don't kick off a search
+    // (used while restoring text during a theme-change recreate)
+    bool suppressTextChanged = false;
 
     FindBarWnd() = default;
     ~FindBarWnd() override;
@@ -78,10 +81,6 @@ FindBarWnd::~FindBarWnd() {
     if (himl) {
         ImageList_Destroy(himl);
     }
-}
-
-static int RoundUp4(int n) {
-    return (n + 3) & ~3;
 }
 
 bool FindBarWnd::Create(MainWindow* mainWin) {
@@ -147,7 +146,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
                                    nullptr);
         SendMessageW(hwndBtns, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-        int isz = RoundUp4(DpiScale(hwnd, 16));
+        int isz = RoundUp(DpiScale(hwnd, 16), 4);
         himl = BuildStdToolbarImageList(isz);
         SendMessageW(hwndBtns, TB_SETIMAGELIST, 0, (LPARAM)himl);
         SendMessageW(hwndBtns, TB_SETBUTTONSIZE, 0, MAKELONG(isz, isz));
@@ -203,6 +202,9 @@ void FindBarWnd::Layout() {
 }
 
 void FindBarWnd::OnTextChanged() {
+    if (suppressTextChanged) {
+        return;
+    }
     OnFindBarTextChanged(win);
 }
 
@@ -236,17 +238,21 @@ bool FindBarWnd::PreTranslateMessage(MSG& msg) {
     if (msg.message != WM_KEYDOWN) {
         return false;
     }
-    if (msg.wParam == VK_ESCAPE) {
-        HideFindBar(win);
-        return true;
-    }
-    if (msg.wParam == VK_RETURN) {
-        if (IsShiftPressed()) {
-            FindPrev(win);
-        } else {
-            FindNext(win);
-        }
-        return true;
+    // the find edit lives in this owned popup, not as a child of the frame, so
+    // the frame's edit accelerator table doesn't reach it; handle the find keys
+    // here (Esc, Enter/Shift+Enter, F3/Shift+F3)
+    switch (msg.wParam) {
+        case VK_ESCAPE:
+            HideFindBar(win);
+            return true;
+        case VK_RETURN:
+        case VK_F3:
+            if (IsShiftPressed()) {
+                FindPrev(win);
+            } else {
+                FindNext(win);
+            }
+            return true;
     }
     return false;
 }
@@ -295,6 +301,8 @@ void RecreateFindBar(MainWindow* win) {
     if (!win->findBar) {
         return;
     }
+    // stop any in-flight find/count that captured the old bar's state
+    AbortFinding(win, true);
     bool wasVisible = IsWindowVisible(win->findBar->hwnd);
     TempStr text = wasVisible ? str::DupTemp(HwndGetTextTemp(win->hwndFindEdit)) : nullptr;
     DeleteFindBar(win);
@@ -302,7 +310,11 @@ void RecreateFindBar(MainWindow* win) {
     if (win->findBar && wasVisible) {
         ShowFindBar(win);
         if (!str::IsEmpty(text)) {
+            // restore the text without re-running the search (the existing
+            // document highlight is preserved across the recreate)
+            win->findBar->suppressTextChanged = true;
             HwndSetText(win->hwndFindEdit, text);
+            win->findBar->suppressTextChanged = false;
         }
     }
 }
@@ -355,9 +367,16 @@ bool IsFindBarVisible(MainWindow* win) {
 }
 
 void FindBarReposition(MainWindow* win) {
-    if (IsFindBarVisible(win)) {
-        PositionFindBar(win->findBar);
+    if (!IsFindBarVisible(win)) {
+        return;
     }
+    // the current document may not support find (e.g. switched to an
+    // image-only doc / CHM); don't leave an orphaned, inert bar floating
+    if (!NeedsFindUI(win)) {
+        HideFindBar(win);
+        return;
+    }
+    PositionFindBar(win->findBar);
 }
 
 void FindBarSetStatus(MainWindow* win, const char* s) {

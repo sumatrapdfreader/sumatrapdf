@@ -150,6 +150,7 @@ MainWindow::~MainWindow() {
         findCountThread = nullptr;
     }
     str::FreePtr(&findCountText);
+    str::FreePtr(&findCountPendingText);
 
     delete linkHandler;
     delete buffer;
