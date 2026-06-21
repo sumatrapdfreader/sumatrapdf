@@ -168,7 +168,7 @@ function verifyCompileOutput(
   compile: { ok: boolean; stdout: string; stderr: string },
   pdfPath: string,
   synctexPath: string,
-  label: string,
+  label: "Windows file" | "WSL file",
 ): void {
   if (!compile.ok || !existsSync(pdfPath) || !existsSync(synctexPath)) {
     console.error(compile.stdout);
@@ -195,7 +195,7 @@ function compileWinFiles(): { pdfPath: string; srcPath: string } {
 
   const pdfPath = join(WORK, PDF_NAME);
   const synctexPath = join(WORK, SYNCTEX_NAME);
-  verifyCompileOutput(compile, pdfPath, synctexPath, "win files");
+  verifyCompileOutput(compile, pdfPath, synctexPath, "Windows file");
 
   return { pdfPath, srcPath: TEX_SRC };
 }
@@ -219,62 +219,39 @@ function compileWslFiles(): { pdfPath: string; srcPath: string } {
 
   const pdfPath = join(WSL_TEST_DIR_UNC, PDF_NAME);
   const synctexPath = join(WSL_TEST_DIR_UNC, SYNCTEX_NAME);
-  verifyCompileOutput(compile, pdfPath, synctexPath, "wsl files");
+  verifyCompileOutput(compile, pdfPath, synctexPath, "WSL file");
 
   return { pdfPath, srcPath };
 }
 
-// forward search resolves for a .tex file on the Windows filesystem,
-// compiled via wsl.exe -d Ubuntu -- tectonic against its /mnt/c/... path.
-async function testForwardSearchWinFiles(
-  client: ControlClient, pdfPath: string, srcPath: string): Promise<{ ok: boolean, result: FwdSearchResult }> {
-  const res = await forwardSearch(client, pdfPath, srcPath);
-  const pass = res.ret === 0 && res.page >= 1 && res.nrects >= 1;
-  console.log(`${pass ? "PASS" : "FAIL"} forward search (Windows file) -> ${res.raw}`);
-  return { ok: pass, result: res };
+async function testForwardSearch(
+  client: ControlClient,
+  pdfPath: string,
+  srcPath: string,
+  label: "Windows file" | "WSL file",
+): Promise<{ ok: boolean, result: FwdSearchResult }> {
+    const res = await forwardSearch(client, pdfPath, srcPath);
+    const pass = res.ret === 0 && res.page >= 1 && res.nrects >= 1;
+    console.log(`${pass ? "PASS" : "FAIL"} forward search (${label}) -> ${res.raw}`);
+    return { ok: pass, result: res };
 }
 
-// forward search resolves for a .tex file living entirely on the WSL
-// filesystem, compiled from inside WSL.
-async function testForwardSearchWslFiles(
-  client: ControlClient, pdfPath: string, srcPath: string): Promise<{ ok: boolean, result: FwdSearchResult }> {
-  const res = await forwardSearch(client, pdfPath, srcPath);
-  const pass = res.ret === 0 && res.page >= 1 && res.nrects >= 1;
-  console.log(`${pass ? "PASS" : "FAIL"} forward search (WSL file) -> ${res.raw}`);
-  return { ok: pass, result: res };
-}
-
-// inverse search resolves for a .tex file on the Windows filesystem,
-// compiled via WSL, DocToSource should return the /mnt/c/... path
-// recorded in the synctex file.
-async function testInverseSearchWinFiles(
-  client: ControlClient, pdfPath: string, srcPath: string, fwdResult: FwdSearchResult): Promise<{ ok: boolean }> {
+async function testInverseSearch(
+  client: ControlClient,
+  pdfPath: string,
+  srcPath: string,
+  fwdResult: FwdSearchResult,
+  label: "Windows file" | "WSL file",
+): Promise<{ ok: boolean }> {
   const pt = pointFromFwdSearchResult(fwdResult);
   if (!pt) {
-    console.log(`FAIL inverse search (Windows file) -> could not discover point: ${fwdResult.raw}`);
+    console.log(`FAIL inverse search (${label}) -> could not discover point: ${fwdResult.raw}`);
     return { ok: false };
   }
-  const expectedSrcFile = windowsPathToWslMountPath(srcPath);
+  const expectedSrcFile = label === "Windows file" ? windowsPathToWslMountPath(srcPath) : `${WSL_TEST_DIR_UNIX}/${TEX_NAME}`;
   const res = await inverseSearch(client, pdfPath, pt.page, pt.x, pt.y);
   const pass = res.ret === 0 && res.srcfile === expectedSrcFile && res.line === TARGET_LINE;
-  console.log(`${pass ? "PASS" : "FAIL"} inverse search (Windows file) -> ${res.raw}`);
-  return { ok: pass };
-}
-
-// inverse search resolves for a .tex file living entirely on the WSL
-// filesystem, DocToSource should return the plain Unix path recorded in
-// the synctex file.
-async function testInverseSearchWslFiles(
-  client: ControlClient, pdfPath: string, srcPath: string, fwdResult: FwdSearchResult): Promise<{ ok: boolean }> {
-  const pt = pointFromFwdSearchResult(fwdResult);
-  if (!pt) {
-    console.log(`FAIL inverse search (WSL file) -> could not discover point: ${fwdResult.raw}`);
-    return { ok: false };
-  }
-  const expectedSrcFile = `${WSL_TEST_DIR_UNIX}/${TEX_NAME}`;
-  const res = await inverseSearch(client, pdfPath, pt.page, pt.x, pt.y);
-  const pass = res.ret === 0 && res.srcfile === expectedSrcFile && res.line === TARGET_LINE;
-  console.log(`${pass ? "PASS" : "FAIL"} inverse search (WSL file) -> ${res.raw}`);
+  console.log(`${pass ? "PASS" : "FAIL"} inverse search (${label}) -> ${res.raw}`);
   return { ok: pass };
 }
 
@@ -296,10 +273,10 @@ export async function testit(): Promise<void> {
   const wslFiles = compileWslFiles();
 
   const results = await withControlledSumatra(EXE, async (client) => {
-    const fwdWin = await testForwardSearchWinFiles(client, winFiles.pdfPath, winFiles.srcPath);
-    const fwdWsl = await testForwardSearchWslFiles(client, wslFiles.pdfPath, wslFiles.srcPath);
-    const invWin = await testInverseSearchWinFiles(client, winFiles.pdfPath, winFiles.srcPath, fwdWin.result);
-    const invWsl = await testInverseSearchWslFiles(client, wslFiles.pdfPath, wslFiles.srcPath, fwdWsl.result);
+    const fwdWin = await testForwardSearch(client, winFiles.pdfPath, winFiles.srcPath, "Windows file");
+    const fwdWsl = await testForwardSearch(client, wslFiles.pdfPath, wslFiles.srcPath, "WSL file");
+    const invWin = await testInverseSearch(client, winFiles.pdfPath, winFiles.srcPath, fwdWin.result, "Windows file");
+    const invWsl = await testInverseSearch(client, wslFiles.pdfPath, wslFiles.srcPath, fwdWsl.result, "WSL file");
     return [
       { name: "forward search(win files)", ok: fwdWin.ok },
       { name: "forward search(wsl files)", ok: fwdWsl.ok },
@@ -311,7 +288,7 @@ export async function testit(): Promise<void> {
   const failed = results.filter((r) => !r.ok);
   console.log("");
   if (failed.length > 0) {
-    throw new Error(`${failed.length}/${results.length} scenarios failed: ${failed.map((f) => f.name).join(", ")}`);
+    throw new Error(`${failed.length}/${results.length} tests failed: ${failed.map((f) => f.name).join(", ")}`);
   }
 
   console.log(`PASS issue-5702: all ${results.length} WSL synctex scenarios resolved correctly`);
