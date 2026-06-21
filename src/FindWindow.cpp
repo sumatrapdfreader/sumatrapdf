@@ -72,6 +72,7 @@ struct FindWindowWnd : Wnd {
     void DrawResultItem(ListBox::DrawItemEvent* ev);
     void OnResultSelected();
     bool MoveResultSelection(WPARAM vkey);
+    int CurrentMatchIndex(); // list index of the document's current match, or -1
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotify(int controlId, NMHDR* nmh) override;
@@ -250,6 +251,10 @@ void FindWindowWnd::RefreshResults() {
         filterWords.Append(term);
     }
     FillWithItems(results->hwnd, results->model);
+    // keep the selection on the document's current match so it stays visible as
+    // you type and Next/Prev have a sensible starting point (programmatic, so it
+    // doesn't re-trigger navigation)
+    results->SetCurrentSelection(CurrentMatchIndex());
 }
 
 void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
@@ -312,9 +317,29 @@ void FindWindowWnd::OnResultSelected() {
     GoToFindMatch(win, fm.startPage, fm.startGlyph, fm.endPage, fm.endGlyph);
 }
 
-// move the results-list selection with the keyboard while focus stays in the
-// search edit, navigating to the newly selected match. Returns false (key not
-// handled) when there are no results, so the edit keeps its normal behavior.
+// list index of the match the document is currently on (so the selection can
+// track the current match), or -1 if it isn't in the list
+int FindWindowWnd::CurrentMatchIndex() {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSearch) {
+        return -1;
+    }
+    int page = dm->textSearch->startPage;
+    int glyph = dm->textSearch->startGlyph;
+    int n = (int)win->findMatches.size();
+    for (int i = 0; i < n; i++) {
+        const FindMatch& fm = win->findMatches[i];
+        if (fm.startPage == page && fm.startGlyph == glyph) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// move the results-list selection (keyboard arrows or the Next/Prev buttons)
+// while focus stays in the search edit, navigating to the newly selected match.
+// Returns false (not handled) when there are no results, so the caller can fall
+// back to a normal document search.
 bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
     if (!results) {
         return false;
@@ -324,7 +349,10 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
         return false;
     }
     constexpr int kPage = 10;
-    int cur = results->GetCurrentSelection(); // -1 if nothing selected yet
+    int cur = results->GetCurrentSelection();
+    if (cur < 0) {
+        cur = CurrentMatchIndex(); // start from where the document already is
+    }
     int idx;
     switch (vkey) {
         case VK_DOWN:
@@ -406,13 +434,15 @@ bool FindWindowWnd::PreTranslateMessage(MSG& msg) {
             HideFindWindow(win);
             return true;
         case VK_RETURN:
-        case VK_F3:
-            if (IsShiftPressed()) {
-                FindPrev(win);
-            } else {
-                FindNext(win);
+        case VK_F3: {
+            // step through the results list; fall back to a document search when
+            // there's no list (e.g. count not ready)
+            WPARAM dir = IsShiftPressed() ? VK_UP : VK_DOWN;
+            if (!MoveResultSelection(dir)) {
+                IsShiftPressed() ? FindPrev(win) : FindNext(win);
             }
             return true;
+        }
         case VK_DOWN:
         case VK_UP:
         case VK_NEXT:
@@ -427,10 +457,14 @@ bool FindWindowWnd::OnCommand(WPARAM wparam, LPARAM) {
     int cmd = LOWORD(wparam);
     switch (cmd) {
         case CmdFindPrev:
-            FindPrev(win);
+            if (!MoveResultSelection(VK_UP)) {
+                FindPrev(win);
+            }
             return true;
         case CmdFindNext:
-            FindNext(win);
+            if (!MoveResultSelection(VK_DOWN)) {
+                FindNext(win);
+            }
             return true;
         case CmdFindToggleMatchCase:
             FindToggleMatchCase(win);

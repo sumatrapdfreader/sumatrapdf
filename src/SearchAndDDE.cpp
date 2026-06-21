@@ -608,10 +608,10 @@ static void UpdateMatchCount(MainWindow* win, const WCHAR* text) {
                     win->findCountMatchCase == win->findMatchCase && win->findCountEngine == engine &&
                     (!wantSnippets || win->findCountHasSnippets);
     if (cacheHit) {
+        // matches are unchanged: just refresh n/m. Don't rebuild the results
+        // list here -- it's already populated and rebuilding clears the user's
+        // selection (the list is rebuilt only when a new count installs matches).
         ShowMatchCount(win);
-        if (wantSnippets) {
-            FindWindowRefreshResults(win);
-        }
     } else {
         StartFindCount(win, text, win->findMatchCase);
     }
