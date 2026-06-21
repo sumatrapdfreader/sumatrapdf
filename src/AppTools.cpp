@@ -561,7 +561,8 @@ void SaveCallstackLogs() {
 // TODO: this can be used for extracting other data
 // cache because calculating sha1 of the whole executable
 // might be relatively expensive
-static char gAppSha1[21];
+// sha1 is 20 bytes => 40 hex chars + null terminator
+static char gAppSha1[41];
 
 // return hex version of sha1 of app's executable (pointer to cached value)
 // nullptr if there was an error
