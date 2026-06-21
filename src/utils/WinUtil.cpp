@@ -2887,8 +2887,17 @@ void HwndSetText(HWND hwnd, const char* sv) {
     if (!hwnd) {
         return;
     }
-    if (str::IsEmpty(sv)) {
-        SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)L"");
+    if (!sv) {
+        sv = "";
+    }
+    // WM_SETTEXT unconditionally invalidates and repaints the control (and, for
+    // edit controls, fires EN_CHANGE and resets the caret/selection). Skip it
+    // when the text is unchanged so callers don't cause needless repaints /
+    // flicker (e.g. the toolbar page box on Back when the page doesn't change).
+    // Every caller is fine with this: those that need a re-search/notification on
+    // unchanged text trigger it explicitly, not via the EN_CHANGE side effect.
+    TempStr current = HwndGetTextTemp(hwnd);
+    if (current && str::Eq(current, sv)) {
         return;
     }
     TempWStr ws = ToWStrTemp(sv);

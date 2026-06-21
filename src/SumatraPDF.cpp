@@ -1234,6 +1234,8 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
 
     if (kInvalidPageNo != pageNo) {
         TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
+        // HwndSetText is a no-op when the text is unchanged, so this no longer
+        // repaints (flickers) the page box on e.g. Back without a page change
         HwndSetText(win->hwndPageEdit, label);
         ToolbarUpdateStateForWindow(win, false);
         if (win->ctrl->HasPageLabels()) {
