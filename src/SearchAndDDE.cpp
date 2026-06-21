@@ -280,13 +280,9 @@ struct FindThreadData {
         } else if (!success && loopedAround) {
             // keep it compact and consistent with the "n / m" counter
             FindBarSetStatus(win, "0 / 0");
-        } else {
-            // the "n / m" match counter (set by UpdateMatchCount after this)
-            // replaces the textual status; just beep when the search wrapped
-            if (loopedAround) {
-                MessageBeep(MB_ICONINFORMATION);
-            }
         }
+        // else: a match was found; the "n / m" counter (set by UpdateMatchCount
+        // after this) is the only feedback - no beep on wrap-around
     }
 
     bool WasCanceled() {
