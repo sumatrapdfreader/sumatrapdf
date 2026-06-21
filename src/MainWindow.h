@@ -326,6 +326,17 @@ struct MainWindow {
     bool findCancelled = false;
     bool findMatchCase = false;
 
+    // find bar "n / m" match counter (see SearchAndDDE.cpp). The positions of all
+    // matches for findCountText are cached so prev/next is instant; a background
+    // thread (re)builds the cache when the search term or match-case changes.
+    HANDLE findCountThread = nullptr;
+    LONG findCountEpoch = 0;
+    WCHAR* findCountText = nullptr;
+    bool findCountMatchCase = false;
+    bool findCountValid = false;
+    void* findCountEngine = nullptr; // engine the cache was built for (compared, never deref'd)
+    Vec<u64> findCountPositions;     // sorted (page<<32 | startOffset) of each match
+
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;
     AutoFreeStr urlOnLastButtonDown;

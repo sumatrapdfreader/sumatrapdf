@@ -278,16 +278,14 @@ struct FindThreadData {
             // i.e. canceled
             FindBarSetStatus(win, "");
         } else if (!success && loopedAround) {
-            FindBarSetStatus(win, _TRA("No matches were found"));
+            // keep it compact and consistent with the "n / m" counter
+            FindBarSetStatus(win, "0 / 0");
         } else {
-            auto pageNo = win->AsFixed()->textSearch->GetSearchHitStartPageNo();
-            TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
-            TempStr buf = str::FormatTemp(_TRA("Found on page %s"), label);
+            // the "n / m" match counter (set by UpdateMatchCount after this)
+            // replaces the textual status; just beep when the search wrapped
             if (loopedAround) {
-                buf = str::FormatTemp(_TRA("Found on page %s (again)"), label);
                 MessageBeep(MB_ICONINFORMATION);
             }
-            FindBarSetStatus(win, buf);
         }
     }
 
@@ -324,6 +322,206 @@ struct FindEndTaskData {
     }
 };
 
+// ---- find bar "n / m" match counter ----------------------------------------
+//
+// We show the position of the current match among all matches in the document.
+// Counting all matches requires a full-document scan, so it runs on a background
+// thread and the per-match positions are cached: prev/next (which don't change
+// the term) recompute the index instantly from the cache, and a new scan only
+// runs when the search term or match-case option changes.
+
+static u64 MatchKey(int page, int offset) {
+    return ((u64)(u32)page << 32) | (u32)offset;
+}
+
+// 1-based index of `key` within the sorted positions cache, or 0 if not found
+static int MatchIndexInCache(MainWindow* win, u64 key) {
+    Vec<u64>& pos = win->findCountPositions;
+    int n = (int)pos.size();
+    int lo = 0, hi = n;
+    while (lo < hi) {
+        int mid = (lo + hi) / 2;
+        if (pos[mid] < key) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    if (lo < n && pos[lo] == key) {
+        return lo + 1;
+    }
+    return 0;
+}
+
+// update the find bar with "n / m" from the (valid) cache and the current match
+static void ShowMatchCount(MainWindow* win) {
+    if (!win->findCountValid) {
+        return; // count not ready yet; leave whatever status is showing
+    }
+    int total = (int)win->findCountPositions.size();
+    int n = 0;
+    DisplayModel* dm = win->AsFixed();
+    if (dm && dm->textSearch) {
+        u64 key = MatchKey(dm->textSearch->startPage, dm->textSearch->startGlyph);
+        n = MatchIndexInCache(win, key);
+    }
+    TempStr s = str::FormatTemp("%d / %d", n, total);
+    FindBarSetStatus(win, s);
+}
+
+struct CountThreadData {
+    MainWindow* win = nullptr;
+    EngineBase* engine = nullptr; // AddRef'd by the caller, released by the thread
+    WCHAR* text = nullptr;
+    bool matchCase = false;
+    LONG epoch = 0;
+    HANDLE thread = nullptr;
+
+    CountThreadData(MainWindow* win, EngineBase* engine, const WCHAR* text, bool matchCase, LONG epoch) {
+        this->win = win;
+        this->engine = engine;
+        this->text = str::Dup(text);
+        this->matchCase = matchCase;
+        this->epoch = epoch;
+    }
+    ~CountThreadData() {
+        str::Free(text);
+        CloseHandle(thread);
+    }
+};
+
+struct CountEndTaskData {
+    MainWindow* win = nullptr;
+    CountThreadData* ctd = nullptr;
+    WCHAR* text = nullptr;
+    bool matchCase = false;
+    LONG epoch = 0;
+    void* engine = nullptr;
+    Vec<u64>* positions = nullptr;
+    ~CountEndTaskData() {
+        delete ctd;
+        str::Free(text);
+        delete positions;
+    }
+};
+
+static void CountEndTask(CountEndTaskData* d) {
+    AutoDelete delData(d);
+    MainWindow* win = d->win;
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
+    if (win->findCountThread != d->ctd->thread) {
+        return; // superseded by a newer count
+    }
+    win->findCountThread = nullptr;
+    if (win->findCountEpoch != d->epoch) {
+        return; // canceled
+    }
+    // install the freshly built cache (steal the text from the task)
+    str::FreePtr(&win->findCountText);
+    win->findCountText = d->text;
+    d->text = nullptr;
+    win->findCountMatchCase = d->matchCase;
+    win->findCountEngine = d->engine;
+    win->findCountPositions.Reset();
+    int np = (int)d->positions->size();
+    for (int i = 0; i < np; i++) {
+        win->findCountPositions.Append((*d->positions)[i]);
+    }
+    win->findCountValid = true;
+    ShowMatchCount(win);
+}
+
+static void CountProgress(CountThreadData* d, ProgressUpdateData* data) {
+    if (data->wasCancelled) {
+        *data->wasCancelled = (d->win->findCountEpoch != d->epoch);
+    }
+}
+
+static void CountThread(CountThreadData* d) {
+    MainWindow* win = d->win;
+    EngineBase* engine = d->engine;
+
+    auto positions = new Vec<u64>();
+    {
+        TextSearch ts(engine);
+        ts.SetMatchCase(d->matchCase);
+        ts.SetDirection(TextSearch::Direction::Forward);
+        ts.progressCb = MkFunc1<CountThreadData, ProgressUpdateData*>(CountProgress, d);
+        TextSel* m = ts.FindFirst(1, d->text);
+        while (m) {
+            positions->Append(MatchKey(ts.startPage, ts.startGlyph));
+            if (win->findCountEpoch != d->epoch) {
+                break;
+            }
+            m = ts.FindNext();
+        }
+    }
+    SafeEngineRelease(&engine);
+
+    // wait for StartFindCount to record the thread handle (mirrors FindThread)
+    while (!win->findCountThread) {
+        Sleep(1);
+    }
+
+    auto data = new CountEndTaskData;
+    data->win = win;
+    data->ctd = d;
+    data->text = str::Dup(d->text);
+    data->matchCase = d->matchCase;
+    data->epoch = d->epoch;
+    data->engine = d->engine;
+    data->positions = positions;
+    auto fn = MkFunc0<CountEndTaskData>(CountEndTask, data);
+    uitask::Post(fn, "TaskFindCount");
+    DestroyTempAllocator();
+}
+
+static void AbortCount(MainWindow* win) {
+    if (win->findCountThread) {
+        InterlockedIncrement(&win->findCountEpoch); // signal cancel
+        WaitForSingleObject(win->findCountThread, INFINITE);
+        win->findCountThread = nullptr;
+    }
+}
+
+// kick off a background scan to (re)build the match-position cache
+static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase) {
+    AbortCount(win);
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        return;
+    }
+    engine->AddRef(); // released in CountThread
+    win->findCountValid = false;
+    FindBarSetStatus(win, "..."); // counting; replaced with "n / m" when done
+    LONG epoch = InterlockedIncrement(&win->findCountEpoch);
+    auto d = new CountThreadData(win, engine, text, matchCase, epoch);
+    win->findCountThread = nullptr;
+    auto fn = MkFunc0<CountThreadData>(CountThread, d);
+    win->findCountThread = StartThread(fn, "FindCountThread");
+    d->thread = win->findCountThread;
+}
+
+// update the n/m counter after a search settles on a match: instant from cache
+// when the term/match-case/document are unchanged, otherwise rebuild it
+static void UpdateMatchCount(MainWindow* win, const WCHAR* text) {
+    DisplayModel* dm = win->AsFixed();
+    void* engine = dm ? (void*)dm->GetEngine() : nullptr;
+    bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
+                    win->findCountMatchCase == win->findMatchCase && win->findCountEngine == engine;
+    if (cacheHit) {
+        ShowMatchCount(win);
+    } else {
+        StartFindCount(win, text, win->findMatchCase);
+    }
+}
+
 static void FindEndTask(FindEndTaskData* d) {
     auto win = d->win;
     auto ftd = d->ftd;
@@ -346,6 +544,7 @@ static void FindEndTask(FindEndTaskData* d) {
     } else if (textSel) {
         ShowSearchResult(win, textSel, wasModifiedCanceled);
         ftd->HideUI(true, loopedAround);
+        UpdateMatchCount(win, ftd->text);
     } else {
         // nothing found or search canceled
         ClearSearchResult(win);
@@ -425,6 +624,7 @@ static void FindThread(FindThreadData* ftd) {
 // returns true if did abort a thread or hidden the notification
 bool AbortFinding(MainWindow* win, bool hideMessage) {
     bool res = false;
+    AbortCount(win);
     if (win->findThread) {
         res = true;
         logf("AboftFinding: setting win->findCancelled to true\n");
