@@ -870,6 +870,24 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     return PDFSYNCERR_SUCCESS;
 }
 
+// Converts a Windows absolute path to its WSL mount-path equivalent.
+// e.g. "C:\project\file.tex" -> "/mnt/c/project/file.tex"
+static TempStr WindowsPathToWslMountPathTemp(const char* path) {
+    if (!path) {
+        return nullptr;
+    }
+
+    // Require an absolute Windows path (e.g. "C:\")
+    if (!(std::isalpha((unsigned char)path[0]) && path[1] == ':' && path[2] == '\\')) {
+        return nullptr;
+    }
+
+    char drive = (char)tolower((unsigned char)path[0]);
+    TempStr rest = str::DupTemp(path + 3); // Skip "[drive]:\"
+    str::TransCharsInPlace(rest, "\\", "/");
+    return str::FormatTemp("/mnt/%c/%s", drive, rest);
+}
+
 int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
     logfa("SyncTex::SourceToDoc: '%s', line: %d, col: %d\n", srcfilename, line, col);
     int res = RebuildIndexIfNeeded();
@@ -896,6 +914,16 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
     // dealed in SyncTex::RebuildIndexIfNeeded()
     int ret = synctex_display_query(this->scanner, srcfilepath, line, col, 0);
 
+    if (ret <= 0) {
+        if (TempStr wslMountSrcFilePath = WindowsPathToWslMountPathTemp(srcfilepath)) {
+            srcfilepath = wslMountSrcFilePath;
+            logfa("SyncTex::SourceToDoc: retrying with WSL mount path '%s'\n", srcfilepath);
+            int ret2 = synctex_display_query(this->scanner, srcfilepath, line, col, 0);
+            if (ret2 > 0) {
+                ret = ret2;
+            }
+        }
+    }
     if (-1 == ret) {
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
