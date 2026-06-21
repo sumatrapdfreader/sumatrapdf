@@ -9,7 +9,44 @@ SumatraPDF can search for text in PDF, EPUB, MOBI, and other formats that suppor
 | Find | `Ctrl + F` |
 | Find (alternate) | `/` |
 
-The find toolbar appears at the bottom of the window.
+A small find bar appears near the **Find** button in the toolbar. Type your text
+and matches are found as you type; a `n / m` counter shows the current match and
+the total number of matches.
+
+## Compact bar vs. floating window
+
+There are two find UIs:
+
+- **Compact bar** (default) — the small overlay near the toolbar.
+- **Floating window** — a separate, movable and resizable window that also shows
+  a **results list** (see below). It floats over the document so it doesn't cover
+  the page.
+
+Switch between them with the diagonal-arrows button on the right of the find UI
+(hover it for a tooltip):
+
+| Button | Tooltip | Action |
+| --- | --- | --- |
+| arrows pointing **out**, on the compact bar | *Open in a window* | Pop the find UI out into a floating window |
+| arrows pointing **in**, on the floating window | *Dock to toolbar* | Dock it back to the compact bar |
+
+The choice is remembered across launches via the `SearchUIFloating` advanced
+setting (`true` = floating window). The floating window's position and size are
+remembered via `SearchUIWindowPos`. See [Advanced options / settings](Advanced-options-settings.md).
+
+## Results list (floating window)
+
+When the find UI is a floating window, it lists every match below the search box:
+
+- each row shows a **snippet** of the surrounding text with the match
+  **highlighted**, plus the **page number** on the right.
+- click a result, or use **Up / Down** (and **Page Up / Page Down**) while the
+  cursor stays in the search box, to jump to that match. **Find Next / Previous**
+  (the buttons, `F3` / `Shift + F3`, or `Enter` / `Shift + Enter`) step through
+  the list the same way.
+- typing selects and jumps to the first match automatically.
+
+The list reflects matches across the whole document, even on large files.
 
 ## Find next / previous
 
@@ -27,9 +64,11 @@ All shortcuts are also listed in [Keyboard shortcuts](Keyboard-shortcuts.md) and
 Shortcuts behave differently depending on where keyboard focus is:
 
 - **Focus in the document** — `F3` / `Shift + F3` jump to the next / previous match.
-- **Focus in the find box** — `Enter` usually finds the next match; `Shift + Enter` the previous. `F3` may not work until you click back in the document.
+- **Focus in the find box** — `Enter` finds the next match; `Shift + Enter` the previous. In the **floating window** these (and the arrow keys) step through the results list with the cursor left in the box; with the **compact bar**, `F3` may not work until you click back in the document.
 
 If `Ctrl + F` behaves oddly (for example replacing the search term with selected text), you may have focus split between the find box and the page. Click the document pane, then press `F3`.
+
+The find UI **closes when you switch tabs** — each tab gets its own fresh search.
 
 ### Laptop keyboards
 
