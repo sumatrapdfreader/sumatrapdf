@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
@@ -150,6 +151,10 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         HINSTANCE hinst = GetModuleHandleW(nullptr);
         hwndBtns = CreateWindowExW(exStyle, TOOLBARCLASSNAMEW, nullptr, style, 0, 0, 0, 0, hwnd, (HMENU) nullptr, hinst,
                                    nullptr);
+        // drop the visual-style button background so the flat toolbar shows the
+        // bar's themed background instead of a light box in dark themes (the
+        // background is painted from NM_CUSTOMDRAW in WndProc)
+        SetWindowTheme(hwndBtns, L"", L"");
         SendMessageW(hwndBtns, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
         int isz = RoundUp(DpiScale(hwnd, 16), 4);
@@ -227,6 +232,22 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             GetClientRect(h, &rc);
             FillRect(hdc, &rc, br);
             return 1;
+        }
+    }
+    if (msg == WM_NOTIFY) {
+        // the embedded toolbar paints a light button background in dark themes;
+        // repaint it with the bar's theme background so the icons sit on the
+        // same color as the rest of the bar
+        auto nmh = (NMHDR*)lp;
+        if (nmh->hwndFrom == hwndBtns && nmh->code == NM_CUSTOMDRAW) {
+            auto cd = (NMTBCUSTOMDRAW*)nmh;
+            auto stage = cd->nmcd.dwDrawStage;
+            if (stage == CDDS_PREPAINT || stage == CDDS_ITEMPREPAINT) {
+                HBRUSH br = CreateSolidBrush(ThemeWindowControlBackgroundColor());
+                FillRect(cd->nmcd.hdc, &cd->nmcd.rc, br);
+                DeleteObject(br);
+                return stage == CDDS_PREPAINT ? CDRF_NOTIFYITEMDRAW : CDRF_DODEFAULT;
+            }
         }
     }
     return WndProcDefault(h, msg, wp, lp);
