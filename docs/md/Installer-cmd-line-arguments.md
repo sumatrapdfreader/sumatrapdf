@@ -26,4 +26,4 @@ installs to `%PROGRAMFILES%\SumatraPDF` and writes to `HKLM` registry
 
 **Ver 3.6+**
 
-- `-fast-install` : automatically starts installation with default options, starts the app when installation is finished
+- `-fast-install` : internal for auto-update, automatically starts installation with default options, starts the app when installation is finished
