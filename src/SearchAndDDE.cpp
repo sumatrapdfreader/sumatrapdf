@@ -624,8 +624,9 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
         return;
     }
     DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm->GetEngine();
     TextSearch* ts = dm->textSearch;
-    ts->Reset();
+    ts->Reset(); // clears ts->pageText
     ts->StartAt(startPage, startGlyph);
     ts->SelectUpTo(endPage, endGlyph);
     if (ts->result.len == 0) {
@@ -634,6 +635,9 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     ts->searchHitStartAt = startPage;
     ts->findPage = endPage;
     ts->findIndex = endGlyph;
+    // restore pageText for findPage: FindNext/FindPrev call FindTextInPage,
+    // which dereferences ts->pageText (null right now after Reset) -> crash
+    ts->pageText = engine ? engine->GetTextForPage(ts->findPage) : nullptr;
     ShowSearchResult(win, &ts->result, true);
     ShowMatchCount(win);
 }
