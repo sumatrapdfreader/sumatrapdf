@@ -762,6 +762,19 @@ int SyncTex::RebuildIndexIfNeeded() {
     return MarkIndexWasRebuilt();
 }
 
+// Returns true if the sync file itself lives on WSL
+static bool IsUnixSourcePath(const char* syncFilePath) {
+    if (!syncFilePath) {
+        return false;
+    }
+
+    if (str::StartsWithI(syncFilePath, "\\\\wsl.localhost\\") || str::StartsWithI(syncFilePath, "\\\\wsl$\\")) {
+        return true;
+    }
+
+    return false;
+}
+
 // Converts a WSL UNC path to its equivalent Unix path by stripping the
 // \\wsl.localhost\<distro>\ or \\wsl$\<distro>\ prefix.
 // e.g. "\\wsl.localhost\Ubuntu\home\user\file.tex" -> "/home/user/file.tex"
@@ -824,14 +837,29 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
-    // undecorate the filepath: replace * by space and / by \ (backslash)
-    str::TransCharsInPlace(filename, "*/", " \\");
-    // Convert the source filepath to an absolute path
-    if (!path::IsAbsolute(filename)) {
-        filename.Set(PrependDir(filename));
+    // Unescape SyncTeX's space encoding: * represents a space in filenames
+    str::TransCharsInPlace(filename, "*", " ");
+
+    if (IsUnixSourcePath(syncFilePath.Get())) {
+        // Treat filename as unix path
+
+        // Resolve relative Unix paths relative to the sync file's directory
+        if (filename[0] != '/') {
+            TempStr unixSyncFilePath = WslUncPathToUnixPathTemp(syncFilePath.Get());
+            TempStr dir = path::GetDirTemp(unixSyncFilePath);
+            filename.Set(path::Join(dir, filename));
+        }
+    } else {
+        // Treat filename as Windows path
+
+        str::TransCharsInPlace(filename, "/", "\\");
+        // Convert the source filepath to an absolute path
+        if (!path::IsAbsolute(filename)) {
+            filename.Set(PrependDir(filename));
+        }
+        filename.SetCopy(path::NormalizeTemp(filename.Get()));
+        TryRecoverMovedSourceFile(filename, pdfPath);
     }
-    filename.SetCopy(path::NormalizeTemp(filename.Get()));
-    TryRecoverMovedSourceFile(filename, pdfPath);
 
     *line = synctex_node_line(node);
     *col = synctex_node_column(node);
