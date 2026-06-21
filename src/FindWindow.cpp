@@ -71,6 +71,7 @@ struct FindWindowWnd : Wnd {
     void OnTextChanged();
     void DrawResultItem(ListBox::DrawItemEvent* ev);
     void OnResultSelected();
+    bool MoveResultSelection(WPARAM vkey);
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotify(int controlId, NMHDR* nmh) override;
@@ -311,6 +312,45 @@ void FindWindowWnd::OnResultSelected() {
     GoToFindMatch(win, fm.startPage, fm.startGlyph, fm.endPage, fm.endGlyph);
 }
 
+// move the results-list selection with the keyboard while focus stays in the
+// search edit, navigating to the newly selected match. Returns false (key not
+// handled) when there are no results, so the edit keeps its normal behavior.
+bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
+    if (!results) {
+        return false;
+    }
+    int n = (int)win->findMatches.size();
+    if (n == 0) {
+        return false;
+    }
+    constexpr int kPage = 10;
+    int cur = results->GetCurrentSelection(); // -1 if nothing selected yet
+    int idx;
+    switch (vkey) {
+        case VK_DOWN:
+            idx = (cur < 0) ? 0 : cur + 1;
+            break;
+        case VK_UP:
+            idx = (cur < 0) ? 0 : cur - 1;
+            break;
+        case VK_NEXT: // Page Down
+            idx = (cur < 0 ? 0 : cur) + kPage;
+            break;
+        case VK_PRIOR: // Page Up
+            idx = (cur < 0 ? 0 : cur) - kPage;
+            break;
+        default:
+            return false;
+    }
+    idx = limitValue(idx, 0, n - 1);
+    if (idx == cur) {
+        return true; // already at the end/start; swallow the key
+    }
+    results->SetCurrentSelection(idx);
+    OnResultSelected();
+    return true;
+}
+
 void FindWindowWnd::SavePos() {
     if (!IsWindowVisible(hwnd)) {
         return;
@@ -373,6 +413,12 @@ bool FindWindowWnd::PreTranslateMessage(MSG& msg) {
                 FindNext(win);
             }
             return true;
+        case VK_DOWN:
+        case VK_UP:
+        case VK_NEXT:
+        case VK_PRIOR:
+            // walk the results list from the search edit
+            return MoveResultSelection(msg.wParam);
     }
     return false;
 }
