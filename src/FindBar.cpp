@@ -419,6 +419,8 @@ bool IsFindBarVisible(MainWindow* win) {
 
 void ToggleFloatingFindUI(MainWindow* win) {
     TempStr text = win->hwndFindEdit ? str::DupTemp(HwndGetTextTemp(win->hwndFindEdit)) : nullptr;
+    // remember the caret/selection (LOWORD start, HIWORD end) so it survives the switch
+    DWORD sel = win->hwndFindEdit ? (DWORD)Edit_GetSel(win->hwndFindEdit) : 0;
     bool wasShowing = IsFindBarVisible(win) || IsFindWindowVisible(win);
 
     HideFindBar(win); // dispatches: hides whichever find UI is currently visible
@@ -434,6 +436,8 @@ void ToggleFloatingFindUI(MainWindow* win) {
         HwndSetText(win->hwndFindEdit, text); // restore text (re-runs the search)
     }
     HwndSetFocus(win->hwndFindEdit);
+    // restore the caret/selection last, after Show/SetText reset it
+    Edit_SetSel(win->hwndFindEdit, LOWORD(sel), HIWORD(sel));
 }
 
 void FindBarReposition(MainWindow* win) {
