@@ -37,6 +37,7 @@
 #include "GrokBuild.h"
 #include "CodexBuild.h"
 #include "MainWindow.h"
+#include "FindBar.h"
 #include "RefHover.h"
 #include "WindowTab.h"
 #include "TableOfContents.h"
@@ -138,6 +139,8 @@ MainWindow::~MainWindow() {
         }
         uiaProvider->Release();
     }
+
+    DeleteFindBar(this);
 
     delete linkHandler;
     delete buffer;

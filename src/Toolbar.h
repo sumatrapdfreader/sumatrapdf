@@ -16,6 +16,8 @@ bool ShouldShowToolbar(MainWindow*);
 void ShowOrHideToolbar(MainWindow*);
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
+HIMAGELIST BuildStdToolbarImageList(int dx);
+Rect GetToolbarButtonScreenRect(MainWindow*, int cmdId);
 
 int GetMenuBarRebarHeight(MainWindow*);
 void CreateMenuBarRebar(MainWindow*);

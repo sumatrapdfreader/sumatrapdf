@@ -42,6 +42,8 @@ void FindPrev(MainWindow* win);
 void FindNext(MainWindow* win);
 void FindFirst(MainWindow* win);
 void FindToggleMatchCase(MainWindow* win);
+// called when the user edits the find bar's text (find-as-you-type)
+void OnFindBarTextChanged(MainWindow* win);
 void FindSelection(MainWindow* win, TextSearch::Direction direction);
 bool AbortFinding(MainWindow* win, bool hideMessage);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress);

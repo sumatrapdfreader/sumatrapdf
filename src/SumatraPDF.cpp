@@ -86,6 +86,7 @@
 #include "TableOfContents.h"
 #include "Tabs.h"
 #include "Toolbar.h"
+#include "FindBar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
 #include "Version.h"
@@ -1942,6 +1943,8 @@ static MainWindow* CreateMainWindow() {
 
     CreateTabbar(win);
     CreateToolbar(win);
+    // create the floating find bar hidden; it owns win->hwndFindEdit
+    win->findBar = CreateFindBar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
     if (CanAccessDisk() && !gPluginMode) {
@@ -5405,9 +5408,8 @@ void AdvanceFocus(MainWindow* win) {
     if (hasToolbar) {
         tabOrder[nWindows++] = win->hwndPageEdit;
     }
-    if (hasToolbar && NeedsFindUI(win)) {
-        tabOrder[nWindows++] = win->hwndFindEdit;
-    }
+    // note: the find edit is no longer in the toolbar tab order; it lives in the
+    // floating findBar and is reached via Ctrl+F / the search toolbar icon
     if (win->tocLoaded && win->tocVisible) {
         tabOrder[nWindows++] = win->tocTreeView->hwnd;
     }

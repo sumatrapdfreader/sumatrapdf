@@ -24,6 +24,10 @@ enum class TbIcon {
     PauseSpeaking,
     NavigateBack,
     NavigateForward,
+    Search,
+    ChevronUp,
+    ChevronDown,
+    Close,
     kMax
 };
 

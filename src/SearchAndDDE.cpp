@@ -32,6 +32,7 @@
 #include "SearchAndDDE.h"
 #include "Selection.h"
 #include "Toolbar.h"
+#include "FindBar.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Version.h"
@@ -73,8 +74,12 @@ void FindFirst(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     bool hadFindFocus = HwndIsFocused(win->hwndFindEdit);
 
+    // show the floating Chrome-style find bar (creates it lazily if needed)
+    ShowFindBar(win);
+
     // If focus was in the document (not find bar), copy selected text
-    // to find edit only if it's different from current text
+    // to find edit only if it's different from current text. Setting the text
+    // triggers find-as-you-type via the bar's onTextChanged handler.
     if (!hadFindFocus && dm->textSelection->result.len > 0) {
         AutoFreeWStr selection(dm->textSelection->ExtractText(" "));
         str::NormalizeWSInPlace(selection);
@@ -84,46 +89,41 @@ void FindFirst(MainWindow* win) {
             if (!str::EqI(s, current)) {
                 AbortFinding(win, false);
                 dm->textSearch->SetLastResult(dm->textSelection);
-                Edit_SetModify(win->hwndFindEdit, FALSE);
                 HwndSetText(win->hwndFindEdit, s);
-                Edit_SetModify(win->hwndFindEdit, FALSE);
             }
         }
     }
 
-    // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        if (!HwndIsFocused(win->hwndFindEdit)) {
-            HwndSetFocus(win->hwndFindEdit);
-        }
+    if (win->hwndFindEdit) {
+        HwndSetFocus(win->hwndFindEdit);
+        Edit_SetSel(win->hwndFindEdit, 0, -1);
+    }
+}
+
+// find-as-you-type: called when the find bar's edit text changes
+void OnFindBarTextChanged(MainWindow* win) {
+    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-
-    TempStr previousFind = HwndGetTextTemp(win->hwndFindEdit);
-    bool newMatchCase = win->findMatchCase;
-
-    AutoFreeStr findString(Dialog_Find(win->hwndFrame, previousFind, &newMatchCase));
-    if (!findString) {
+    char* s = HwndGetTextTemp(win->hwndFindEdit);
+    if (str::IsEmpty(s)) {
+        AbortFinding(win, true);
+        ClearSearchResult(win);
+        FindBarSetStatus(win, "");
         return;
     }
+    FindTextOnThread(win, TextSearch::Direction::Forward, false);
+}
 
-    HwndSetText(win->hwndFindEdit, findString);
-    Edit_SetModify(win->hwndFindEdit, TRUE);
-
-    if (newMatchCase != win->findMatchCase) {
-        win->findMatchCase = newMatchCase;
-        dm->textSearch->SetMatchCase(newMatchCase);
-        SetToolbarButtonCheckedState(win, CmdFindToggleMatchCase, win->findMatchCase);
-    }
-
-    FindTextOnThread(win, TextSearch::Direction::Forward, true);
+static bool HasFindText(MainWindow* win) {
+    return win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0;
 }
 
 void FindNext(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, CmdFindNext, 0)) {
+    if (HasFindText(win)) {
         FindTextOnThread(win, TextSearch::Direction::Forward, true);
     }
 }
@@ -132,7 +132,7 @@ void FindPrev(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, CmdFindPrev, 0)) {
+    if (HasFindText(win)) {
         FindTextOnThread(win, TextSearch::Direction::Backward, true);
     }
 }
@@ -143,8 +143,14 @@ void FindToggleMatchCase(MainWindow* win) {
     }
     win->findMatchCase = !win->findMatchCase;
     win->AsFixed()->textSearch->SetMatchCase(win->findMatchCase);
-    SetToolbarButtonCheckedState(win, CmdFindToggleMatchCase, win->findMatchCase);
-    Edit_SetModify(win->hwndFindEdit, TRUE);
+    FindBarSetMatchCaseChecked(win, win->findMatchCase);
+    if (win->hwndFindEdit) {
+        Edit_SetModify(win->hwndFindEdit, TRUE);
+    }
+    // re-run the search with the new match-case setting
+    if (HasFindText(win)) {
+        FindTextOnThread(win, TextSearch::Direction::Forward, true);
+    }
 }
 
 void FindSelection(MainWindow* win, TextSearch::Direction direction) {
@@ -261,26 +267,27 @@ struct FindThreadData {
         SetToolbarButtonEnableState(win, CmdFindNext, true);
         SetToolbarButtonEnableState(win, CmdFindToggleMatchCase, true);
 
+        // search status is shown in the floating find bar, not via a
+        // notification; dismiss any leftover find-progress notification
         auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
-
-        if (!wnd) {
-            /* our notification has been replaced or closed (or never created) */;
-        } else if (!success && !loopedAround) {
-            // i.e. canceled
+        if (wnd) {
             RemoveNotification(wnd);
+        }
+
+        if (!success && !loopedAround) {
+            // i.e. canceled
+            FindBarSetStatus(win, "");
         } else if (!success && loopedAround) {
-            // auto-dismiss the result notification (the find-progress
-            // notification it reuses has no timeout) (fixes #4473)
-            NotificationUpdateMessage(wnd, _TRA("No matches were found"), kNotifDefaultTimeOut);
+            FindBarSetStatus(win, _TRA("No matches were found"));
         } else {
             auto pageNo = win->AsFixed()->textSearch->GetSearchHitStartPageNo();
             TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
-            TempStr buf = str::FormatTemp(_TRA("Found text at page %s"), label);
+            TempStr buf = str::FormatTemp(_TRA("Found on page %s"), label);
             if (loopedAround) {
-                buf = str::FormatTemp(_TRA("Found text at page %s (again)"), label);
+                buf = str::FormatTemp(_TRA("Found on page %s (again)"), label);
                 MessageBeep(MB_ICONINFORMATION);
             }
-            NotificationUpdateMessage(wnd, buf, kNotifDefaultTimeOut, loopedAround);
+            FindBarSetStatus(win, buf);
         }
     }
 

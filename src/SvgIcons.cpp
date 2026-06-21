@@ -161,6 +161,36 @@ static const char* gIconNavigateForward =
   <path d="M19 10h-11a4 4 0 1 0 0 8h1" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/master/icons/search.svg
+static const char* gIconSearch =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>)";
+
+// https://github.com/tabler/tabler-icons/blob/master/icons/chevron-up.svg
+static const char* gIconChevronUp =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <polyline points="6 15 12 9 18 15" />
+</svg>)";
+
+// https://github.com/tabler/tabler-icons/blob/master/icons/chevron-down.svg
+static const char* gIconChevronDown =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <polyline points="6 9 12 15 18 9" />
+</svg>)";
+
+// https://github.com/tabler/tabler-icons/blob/master/icons/x.svg
+static const char* gIconClose =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
+  <line x1="18" y1="6" x2="6" y2="18" />
+  <line x1="6" y1="6" x2="18" y2="18" />
+</svg>)";
+
 // must match order in enum class TbIcon
 // clang-format off
 static const char* gIcons[] = {
@@ -183,6 +213,10 @@ static const char* gIcons[] = {
     gIconPauseSpeaking,
     gIconNavigateBack,
     gIconNavigateForward,
+    gIconSearch,
+    gIconChevronUp,
+    gIconChevronDown,
+    gIconClose,
 };
 // clang-format on
 

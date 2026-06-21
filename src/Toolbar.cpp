@@ -35,6 +35,7 @@ extern "C" {
 #include "Menu.h"
 #include "SearchAndDDE.h"
 #include "Toolbar.h"
+#include "FindBar.h"
 #include "Translations.h"
 #include "SvgIcons.h"
 #include "SumatraConfig.h"
@@ -85,10 +86,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right")},
     {TbIcon::ZoomOut, CmdZoomOut, _TRN("Zoom Out")},
     {TbIcon::ZoomIn, CmdZoomIn, _TRN("Zoom In")},
-    {TbIcon::None, CmdFindFirst, nullptr},
-    {TbIcon::SearchPrev, CmdFindPrev, _TRN("Find Previous")},
-    {TbIcon::SearchNext, CmdFindNext, _TRN("Find Next")},
-    {TbIcon::MatchCase, CmdFindToggleMatchCase, _TRN("Toggle Match Case")},
+    {TbIcon::None, 0, nullptr}, // separator
+    {TbIcon::Search, CmdFindFirst, _TRN("Find")},
 };
 // unicode chars: https://www.compart.com/en/unicode/U+25BC
 
@@ -247,10 +246,13 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
             return !win->AsFixed() || win->AsFixed()->GetEngine()->AllowsPrinting();
 #endif
 
+        case CmdFindFirst:
+            return NeedsFindUI(win);
+
         case CmdFindNext:
         case CmdFindPrev:
             // TODO: Update on whether there's more to find, not just on whether there is text.
-            return HwndGetTextLen(win->hwndFindEdit) > 0;
+            return win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0;
 
         case CmdGoToNextPage:
             return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
@@ -471,7 +473,6 @@ void ShowOrHideToolbar(MainWindow* win) {
 
 void UpdateFindbox(MainWindow* win) {
     // remove SS_WHITERECT so WM_CTLCOLORSTATIC controls the background color
-    SetWindowStyle(win->hwndFindBg, SS_WHITERECT, false);
     SetWindowStyle(win->hwndPageBg, SS_WHITERECT, false);
 
     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
@@ -480,12 +481,8 @@ void UpdateFindbox(MainWindow* win) {
     }
 
     auto cursorId = win->IsDocLoaded() ? IDC_IBEAM : IDC_ARROW;
-    SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(cursorId));
-    if (!win->IsDocLoaded()) {
-        // avoid focus on Find box
-        HideCaret(nullptr);
-    } else {
-        ShowCaret(nullptr);
+    if (win->hwndFindEdit) {
+        SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(cursorId));
     }
 }
 
@@ -590,8 +587,8 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
         }
         {
-            bool isBgCtrl = (win->hwndFindBg == hwndCtrl || win->hwndPageBg == hwndCtrl);
-            bool isEditCtrl = (win->hwndFindEdit == hwndCtrl || win->hwndPageEdit == hwndCtrl);
+            bool isBgCtrl = (win->hwndPageBg == hwndCtrl);
+            bool isEditCtrl = (win->hwndPageEdit == hwndCtrl);
             SetTextColor(hdc, ThemeWindowTextColor());
             SetBkMode(hdc, TRANSPARENT);
             if ((isBgCtrl || isEditCtrl) && !ThemeColorizeControls()) {
@@ -599,18 +596,6 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
                 return (LRESULT)GetStockObject(WHITE_BRUSH);
             }
             return (LRESULT)win->brControlBgColor;
-        }
-    }
-
-    if (WM_COMMAND == msg) {
-        HWND hEdit = (HWND)lp;
-        MainWindow* win = FindMainWindowByHwnd(hEdit);
-        // "find as you type" - skip if edit was not modified by user (e.g. programmatic text set)
-        if (EN_UPDATE == HIWORD(wp) && hEdit == win->hwndFindEdit && gGlobalPrefs->showToolbar) {
-            bool wasModified = Edit_GetModify(win->hwndFindEdit);
-            if (wasModified) {
-                FindTextOnThread(win, TextSearch::Direction::Forward, false);
-            }
         }
     }
 
@@ -643,135 +628,10 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
 }
 
-static WNDPROC DefWndProcEditSearch = nullptr;
-static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    MainWindow* win = FindMainWindowByHwnd(hwnd);
-    if (!win || !win->IsDocLoaded()) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if (ExtendedEditWndProc(hwnd, msg, wp, lp)) {
-        // select the whole find box on a non-selecting click
-    } else if (WM_CHAR == msg) {
-        switch (wp) {
-            case VK_ESCAPE:
-                if (win->findThread) {
-                    AbortFinding(win, true);
-                } else {
-                    HwndSetFocus(win->hwndFrame);
-                }
-                return 1;
-
-            case VK_RETURN: {
-                if (IsShiftPressed()) {
-                    FindPrev(win);
-                } else {
-                    FindNext(win);
-                }
-                return 1;
-            }
-
-            case VK_TAB:
-                AdvanceFocus(win);
-                return 1;
-        }
-    } else if (WM_ERASEBKGND == msg) {
-        RECT r;
-        Edit_GetRect(hwnd, &r);
-        if (r.left == 0 && r.top == 0) { // virgin box
-            r.left += 4;
-            r.top += 3;
-            r.bottom += 3;
-            r.right -= 2;
-            Edit_SetRectNoPaint(hwnd, &r);
-        }
-    } else if (WM_KEYDOWN == msg) {
-        // TODO: if user re-binds F3 it'll not be picked up
-        // we would have to either run accelerators after
-        if (wp == VK_F3) {
-            auto searchDir = IsShiftPressed() ? TextSearch::Direction::Backward : TextSearch::Direction::Forward;
-            FindTextOnThread(win, searchDir, true);
-            // Note: we don't return but let default processing take place
-        }
-        // TODO: here we used to call FrameOnKeydown() to make keys
-        // like pageup etc. work even when focus is in text field
-        // that no longer works because we moved most keys handling
-        // to accelerators and we don't want to process acceleratos
-        // while in edit control.
-        // We could try to manually run accelerators but only if they
-        // are virtual and don't prevent edit control from working
-        // or maybe explicitly forword built-in accelerator for
-        // white-listed shortucts but only if they were not modified by the user
-    }
-
-    LRESULT ret = CallWindowProc(DefWndProcEditSearch, hwnd, msg, wp, lp);
-
-    // TOOD: why do we do it? re-eneable when we notice what breaks
-    // the intent seems to be "after content of edit box changed"
-    // but how does that afect state of the toolbar?
-
-#if 0
-    switch (msg) {
-        case WM_CHAR:
-        case WM_PASTE:
-        case WM_CUT:
-        case WM_CLEAR:
-        case WM_UNDO:
-        case WM_KEYUP:
-            ToolbarUpdateStateForWindow(win, false);
-            break;
-    }
-#endif
-
-    return ret;
-}
-
+// the find UI is now a floating Chrome-style bar (see FindBar.cpp). When the
+// toolbar moves/resizes we keep the bar centered over the search icon.
 void UpdateToolbarFindText(MainWindow* win) {
-    if (!win->hwndToolbar) {
-        return;
-    }
-    if (!IsWindowVisible(win->hwndFrame)) {
-        HwndSetVisibility(win->hwndFindLabel, false);
-        HwndSetVisibility(win->hwndFindBg, false);
-        HwndSetVisibility(win->hwndFindEdit, false);
-        return;
-    }
-    bool showUI = NeedsFindUI(win);
-    HwndSetVisibility(win->hwndFindLabel, showUI);
-    HwndSetVisibility(win->hwndFindBg, showUI);
-    HwndSetVisibility(win->hwndFindEdit, showUI);
-    if (!showUI) {
-        return;
-    }
-
-    const char* text = _TRA("Find:");
-    HwndSetText(win->hwndFindLabel, text);
-
-    Rect findWndRect = WindowRect(win->hwndFindBg);
-
-    RECT r{};
-    TbGetRectById(win->hwndToolbar, CmdZoomIn, &r);
-    int currX = r.right + DpiScale(win->hwndToolbar, 10);
-    int currY = (r.bottom - findWndRect.dy) / 2;
-
-    Size size = HwndMeasureText(win->hwndFindLabel, text);
-    size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
-    size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
-
-    int padding = GetSystemMetrics(SM_CXEDGE);
-    int x = currX;
-    int y = (findWndRect.dy - size.dy + 1) / 2 + currY;
-    MoveWindow(win->hwndFindLabel, x, y, size.dx, size.dy, TRUE);
-    x = currX + size.dx;
-    y = currY;
-    MoveWindow(win->hwndFindBg, x, y, findWndRect.dx, findWndRect.dy, FALSE);
-    x = currX + size.dx + padding;
-    y = (findWndRect.dy - size.dy + 1) / 2 + currY;
-    int dx = findWndRect.dx - 2 * padding;
-    MoveWindow(win->hwndFindEdit, x, y, dx, size.dy, FALSE);
-
-    dx = size.dx + findWndRect.dx + 12;
-    TbSetButtonDx(win->hwndToolbar, CmdFindFirst, dx);
+    FindBarReposition(win);
 }
 
 void UpdateToolbarState(MainWindow* win) {
@@ -794,52 +654,13 @@ void UpdateToolbarState(MainWindow* win) {
     }
 }
 
-static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
-    bool isRtl = IsUIRtl();
-    int findBoxDx = HwndMeasureText(win->hwndFrame, "this is a story of my", hfont).dx;
-    HMODULE hmod = GetModuleHandleW(nullptr);
-    HWND p = win->hwndToolbar;
-    DWORD style = WS_VISIBLE | WS_CHILD;
-    DWORD exStyle = 0;
-    if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
-    int dy = iconDy + 2;
-    // Size textSize = HwndMeasureText(win->hwndFrame, L"M", hfont);
-    HWND findBg =
-        CreateWindowEx(exStyle, WC_STATIC, L"", style, 0, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
-
-    if (!DefWndProcEditBg) {
-        DefWndProcEditBg = (WNDPROC)GetWindowLongPtr(findBg, GWLP_WNDPROC);
-    }
-    SetWindowLongPtr(findBg, GWLP_WNDPROC, (LONG_PTR)WndProcEditBg);
-
-    style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL;
-    // dy = iconDy + DpiScale(win->hwndFrame, 2);
-    dy = iconDy;
-    exStyle = 0;
-    if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
-    HWND find = CreateWindowExW(exStyle, WC_EDIT, L"", style, 0, 1, findBoxDx, dy, p, (HMENU) nullptr, hmod, nullptr);
-
-    style = WS_VISIBLE | WS_CHILD;
-    exStyle = 0;
-    if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
-    HWND label = CreateWindowExW(exStyle, WC_STATIC, L"", style, 0, 1, 0, 0, p, (HMENU) nullptr, hmod, nullptr);
-
-    SetWindowFont(label, hfont, FALSE);
-    SetWindowFont(find, hfont, FALSE);
-
+// subclass the toolbar so we can handle WM_CTLCOLOR* for the page box and
+// allow dragging the window from empty toolbar areas
+static void SubclassToolbar(MainWindow* win) {
     if (!DefWndProcToolbar) {
         DefWndProcToolbar = (WNDPROC)GetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC);
     }
     SetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC, (LONG_PTR)WndProcToolbar);
-
-    if (!DefWndProcEditSearch) {
-        DefWndProcEditSearch = (WNDPROC)GetWindowLongPtr(find, GWLP_WNDPROC);
-    }
-    SetWindowLongPtr(find, GWLP_WNDPROC, (LONG_PTR)WndProcEditSearch);
-
-    win->hwndFindLabel = label;
-    win->hwndFindEdit = find;
-    win->hwndFindBg = findBg;
 }
 
 static WNDPROC DefWndProcPageBox = nullptr;
@@ -1008,6 +829,12 @@ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
 
     HWND pageBg =
         CreateWindowExW(exStyle, WC_STATICW, L"", style, 0, 1, dx, dy, hwndToolbar, (HMENU) nullptr, h, nullptr);
+    // capture the original static wndproc so WndProcEditBg can chain to it (it
+    // does the actual WM_PAINT BeginPaint/EndPaint that validates the window).
+    // This used to be captured in CreateFindBox; that box is gone, so do it here.
+    if (!DefWndProcEditBg) {
+        DefWndProcEditBg = (WNDPROC)GetWindowLongPtr(pageBg, GWLP_WNDPROC);
+    }
     SetWindowLongPtr(pageBg, GWLP_WNDPROC, (LONG_PTR)WndProcEditBg);
     HWND label = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
     HWND total = CreateWindowExW(0, WC_STATICW, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU) nullptr, h, nullptr);
@@ -1257,6 +1084,28 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
     HwndScheduleRepaint(win->hwndToolbar);
 }
 
+// build an image list with all the standard toolbar icons; the FindBar uses
+// this for its own small toolbar (chevrons, match-case, close). Caller owns
+// the returned HIMAGELIST.
+HIMAGELIST BuildStdToolbarImageList(int dx) {
+    HIMAGELIST himl = ImageList_Create(dx, dx, ILC_COLOR32, (int)TbIcon::kMax, 0);
+    HBITMAP hbmp = BuildIconsBitmap(dx, dx, nullptr, 0);
+    ImageList_Add(himl, hbmp, nullptr);
+    DeleteObject(hbmp);
+    return himl;
+}
+
+// screen-coordinates rect of a toolbar button, used to position the FindBar
+Rect GetToolbarButtonScreenRect(MainWindow* win, int cmdId) {
+    RECT r{};
+    if (!win->hwndToolbar) {
+        return {};
+    }
+    TbGetRectById(win->hwndToolbar, cmdId, &r);
+    MapWindowPoints(win->hwndToolbar, HWND_DESKTOP, (POINT*)&r, 2);
+    return Rect{r.left, r.top, r.right - r.left, r.bottom - r.top};
+}
+
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 void CreateToolbar(MainWindow* win) {
     bool isRtl = IsUIRtl();
@@ -1382,7 +1231,7 @@ void CreateToolbar(MainWindow* win) {
     HwndSetFont(hwndToolbar, font);
 
     CreatePageBox(win, font, iconSize);
-    CreateFindBox(win, font, iconSize);
+    SubclassToolbar(win);
 
     UpdateToolbarPageText(win, -1);
     UpdateToolbarFindText(win);
@@ -1394,9 +1243,6 @@ void ReCreateToolbar(MainWindow* win) {
         HwndDestroyWindowSafe(&win->hwndPageEdit);
         HwndDestroyWindowSafe(&win->hwndPageBg);
         HwndDestroyWindowSafe(&win->hwndPageTotal);
-        HwndDestroyWindowSafe(&win->hwndFindLabel);
-        HwndDestroyWindowSafe(&win->hwndFindEdit);
-        HwndDestroyWindowSafe(&win->hwndFindBg);
         HwndDestroyWindowSafe(&win->hwndToolbar);
         HwndDestroyWindowSafe(&win->hwndReBar);
     }

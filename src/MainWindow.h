@@ -15,6 +15,7 @@ struct Tooltip;
 struct TreeView;
 struct TabsCtrl;
 struct TocTree;
+struct FindBarWnd;
 
 // factor by how large the non-maximized caption should be in relation to the tabbar
 #define kCaptionTabBarDyFactor 1.0f
@@ -126,9 +127,10 @@ struct MainWindow {
     HWND hwndToolbar = nullptr;
     HWND hwndMenuReBar = nullptr;
     HWND hwndMenuToolbar = nullptr;
-    HWND hwndFindLabel = nullptr;
+    // hwndFindEdit is the search input; it lives inside the floating findBar
+    // (Chrome-style), not in the toolbar
     HWND hwndFindEdit = nullptr;
-    HWND hwndFindBg = nullptr;
+    FindBarWnd* findBar = nullptr;
     HWND hwndPageLabel = nullptr;
     HWND hwndPageEdit = nullptr;
     HWND hwndPageBg = nullptr;
