@@ -305,6 +305,56 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
     MarkNotificationAsModified(e, annot);
 }
 
+int GetWidgetType(Annotation* annot) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return PDF_WIDGET_TYPE_UNKNOWN;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    auto ctx = e->Ctx();
+    ScopedCritSec cs(&e->docLock);
+    int wt = PDF_WIDGET_TYPE_UNKNOWN;
+    fz_try(ctx) {
+        wt = (int)pdf_widget_type(ctx, a);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return wt;
+}
+
+bool ToggleFormButton(Annotation* annot) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return false;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    bool changed = false;
+    {
+        auto ctx = e->Ctx();
+        ScopedCritSec cs(&e->docLock);
+        fz_try(ctx) {
+            int wt = pdf_widget_type(ctx, a);
+            bool isButton = (wt == PDF_WIDGET_TYPE_CHECKBOX) || (wt == PDF_WIDGET_TYPE_RADIOBUTTON);
+            int flags = pdf_annot_field_flags(ctx, a);
+            if (isButton && !(flags & PDF_FIELD_IS_READ_ONLY)) {
+                pdf_toggle_widget(ctx, a);
+                pdf_update_annot(ctx, a);
+                changed = true;
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("ToggleFormButton(): mupdf calls failed\n");
+        }
+    }
+    if (changed) {
+        // must be called outside docLock (it takes pagesLock then docLock/renderLock)
+        MarkNotificationAsModified(e, annot);
+    }
+    return changed;
+}
+
 /*
 Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
     EngineMupdf* e = annot->engine;

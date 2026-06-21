@@ -126,6 +126,13 @@ void SetIconName(Annotation*, const char*);
 void SetLineEndStyles(Annotation*, int end);
 void SetLineStartStyles(Annotation*, int start);
 
+// PDF form (widget) fields. GetWidgetType returns a pdf_widget_type value
+// (PDF_WIDGET_TYPE_*), or 0 (UNKNOWN) when annot isn't a form widget.
+int GetWidgetType(Annotation*);
+// Toggle a checkbox / radio-button form field in place. Returns true if it was
+// a (non-read-only) checkbox/radio and got toggled.
+bool ToggleFormButton(Annotation*);
+
 void DeleteAnnotation(Annotation*);
 bool AnnotationCanBeMoved(AnnotationType);
 bool AnnotationCanBeResized(AnnotationType);

@@ -3269,6 +3269,16 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
                 }
                 annot = pdf_next_annot(ctx, annot);
             }
+            // form fields (widgets) are a separate list in mupdf; add them too so
+            // they are hit-testable (needed for interactive form filling)
+            pdf_annot* widget = pdf_first_widget(ctx, pdfpage);
+            while (widget) {
+                Annotation* a = MakeAnnotationWrapper(this, widget, pageNo);
+                if (a) {
+                    pageInfo->annotations.Append(a);
+                }
+                widget = pdf_next_widget(ctx, widget);
+            }
         }
         fz_catch(ctx) {
             fz_report_error(ctx);

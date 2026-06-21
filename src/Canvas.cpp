@@ -1309,6 +1309,13 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
 
     WindowTab* tab = win->CurrentTab();
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
+    // PDF form filling (phase 0): clicking a checkbox / radio-button field toggles
+    // it in place; consume the click so it doesn't start a drag/selection
+    if (ToggleFormButton(annot)) {
+        MainWindowRerender(win);
+        win->mouseAction = MouseAction::None;
+        return;
+    }
     bool isMoveableAnnot = annot && AnnotationCanBeMoved(annot->type);
     if (isMoveableAnnot) {
         if (annot == tab->selectedAnnotation) {

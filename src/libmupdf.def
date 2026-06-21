@@ -931,6 +931,18 @@ EXPORTS
 	pdf_first_widget
 	pdf_next_widget
 	pdf_widget_type
+	pdf_toggle_widget
+	pdf_bound_widget
+	pdf_annot_field_value
+	pdf_set_annot_field_value
+	pdf_set_text_field_value
+	pdf_edit_text_field_value
+	pdf_set_choice_field_value
+	pdf_choice_widget_options
+	pdf_choice_widget_value
+	pdf_choice_widget_is_multiselect
+	pdf_text_widget_max_len
+	pdf_text_widget_format
 	pdf_check_widget_certificate
 	pdf_check_widget_digest
 	pdf_signature_get_widget_signatory
