@@ -1105,6 +1105,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\FindBar.h" />
     <ClInclude Include="..\src\FindWindow.h" />
+    <ClInclude Include="..\src\FormFields.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
@@ -1222,6 +1223,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\FindBar.cpp" />
     <ClCompile Include="..\src\FindWindow.cpp" />
+    <ClCompile Include="..\src\FormFields.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />

@@ -355,6 +355,68 @@ bool ToggleFormButton(Annotation* annot) {
     return changed;
 }
 
+int GetWidgetFieldFlags(Annotation* annot) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return 0;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    auto ctx = e->Ctx();
+    ScopedCritSec cs(&e->docLock);
+    int flags = 0;
+    fz_try(ctx) {
+        flags = pdf_annot_field_flags(ctx, a);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return flags;
+}
+
+TempStr GetWidgetValue(Annotation* annot) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return (TempStr) "";
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    auto ctx = e->Ctx();
+    ScopedCritSec cs(&e->docLock);
+    TempStr res = (TempStr) "";
+    fz_try(ctx) {
+        const char* s = pdf_annot_field_value(ctx, a);
+        res = s ? str::DupTemp(s) : (TempStr) "";
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return res;
+}
+
+bool SetWidgetTextValue(Annotation* annot, const char* value) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return false;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    bool ok = false;
+    {
+        auto ctx = e->Ctx();
+        ScopedCritSec cs(&e->docLock);
+        fz_try(ctx) {
+            ok = pdf_set_text_field_value(ctx, a, value ? value : "") != 0;
+            pdf_update_annot(ctx, a);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("SetWidgetTextValue(): mupdf calls failed\n");
+        }
+    }
+    if (ok) {
+        MarkNotificationAsModified(e, annot);
+    }
+    return ok;
+}
+
 /*
 Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
     EngineMupdf* e = annot->engine;
