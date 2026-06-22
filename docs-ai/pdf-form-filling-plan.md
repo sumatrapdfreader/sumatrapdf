@@ -26,22 +26,24 @@ fills fine) plus a synthetic `formtest.pdf` for the field types the 1040 lacks.
 | 4a | `222e45dab` | Save round-trip verified (reuses the annotation `pdf_save_document` pipeline — field values + checkbox state persist across save/reopen); generalized the close-time prompt wording from "Unsaved annotations" to "Unsaved changes"; hover cursors (I-beam over text/choice, hand over buttons). |
 | 4b | `f7fd4f998` | Scroll the next field into view on Tab when it's past the fold (`ScrollScreenToRect`). |
 
-### JavaScript form calc — enabled, but cross-field calc not working yet (`2f9fb05f5`)
+### JavaScript form calc — WORKING (`2f9fb05f5` enable + `24603fc57` mupdf fix)
 
 mupdf JS is compiled in (`FZ_ENABLE_JS=1`, mujs `one.c`, `pdf-js.c`).
 `FinishLoading` now calls `pdf_enable_js(ctx, pdfdoc)` (replacing the old
 `// TODO: support javascript` assertion), so `doc->js` is live and edits run
 `pdf_update_page` → `pdf_calculate_form`.
 
-- **Works:** JS executes and updates the target field + regenerates its
-  appearance — verified with a constant `event.value = 77` calculate (the field
-  updates on every edit).
-- **Doesn't work yet:** `getField('<name>')` returns **null** inside a calc, so
-  cross-field math (sums/totals — the common case) doesn't compute. The JS
-  engine's `Root/AcroForm/Fields` lookup comes back empty even though those
-  fields render and fill. Ruled out: `this.getField` vs bare `getField`, inline
-  vs indirect `/AcroForm`. Suspected cause: the per-thread cloned
-  context/document vs mupdf's JS engine; needs root-causing.
+Cross-field calc works: verified on a JS form `total = a + b` — the total
+recomputes on every edit (`10 + 20` → `30`, then `a = 7` → `27`).
+
+Getting there needed an upstream **mupdf bug fix** (`24603fc57`): `doc_getField`
+and `doc_resetForm` in `pdf-js.c` called the NULL-terminated variadic
+`pdf_dict_getl(ctx, trailer, Root, AcroForm, Fields)` **without** the trailing
+`NULL`, so the `va_arg` loop read stack garbage as an extra dict key and
+`getField()` returned null non-deterministically (it surfaced in our build's
+stack layout). Adding the `NULL` — which every other call site already has —
+makes `getField` reliable, so sums/totals compute.
+
 - **Security note:** enabling JS runs document-level / open scripts and
   broadens the mujs attack surface vs the previous JS-off default. mujs itself
   is sandboxed to the PDF/form API (no file/network).
