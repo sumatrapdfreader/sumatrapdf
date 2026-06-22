@@ -67,7 +67,8 @@ void js_RegExp_prototype_exec(js_State *J, js_Regexp *re, const char *text)
 		}
 		if (re->last > 0) {
 			haystack = text + re->last;
-			opts |= REG_NOTBOL;
+			if (!(re->flags & JS_REGEXP_M) || haystack[-1] != '\n')
+				opts |= REG_NOTBOL;
 		}
 	}
 
@@ -115,7 +116,8 @@ static void Rp_test(js_State *J)
 		}
 		if (re->last > 0) {
 			text += re->last;
-			opts |= REG_NOTBOL;
+			if (!(re->flags & JS_REGEXP_M) || text[-1] != '\n')
+				opts |= REG_NOTBOL;
 		}
 	}
 

@@ -280,51 +280,59 @@ static void O_defineProperty(js_State *J)
 	js_copy(J, 1);
 }
 
-static void O_defineProperties_walk(js_State *J, js_Property *ref)
+static int O_defineProperties_walk(js_State *J, js_Property *ref, int i)
 {
 	if (ref->left->level)
-		O_defineProperties_walk(J, ref->left);
+		i = O_defineProperties_walk(J, ref->left, i);
 	if (!(ref->atts & JS_DONTENUM)) {
-		js_pushvalue(J, ref->value);
-		ToPropertyDescriptor(J, js_toobject(J, 1), ref->name, js_toobject(J, -1));
-		js_pop(J, 1);
+		if (ref->value.t.type != JS_TOBJECT)
+			js_typeerror(J, "not an object");
+		js_pushstring(J, ref->name);
+		js_setindex(J, -2, i++);
 	}
 	if (ref->right->level)
-		O_defineProperties_walk(J, ref->right);
+		i = O_defineProperties_walk(J, ref->right, i);
+	return i;
+}
+
+static void O_defineProperties_imp(js_State *J, js_Object *obj)
+{
+	js_Object *props;
+	const char *name;
+	int i, n;
+
+	if (!js_isobject(J, 2)) js_typeerror(J, "not an object");
+
+	props = js_toobject(J, 2);
+	if (props->properties->level) {
+		js_newarray(J);
+		n = O_defineProperties_walk(J, props->properties, 0);
+		for (i = 0; i < n; ++i) {
+			js_getindex(J, -1, i);
+			name = js_tostring(J, -1);
+			if (js_hasproperty(J, 2, name)) {
+				ToPropertyDescriptor(J, obj, name, js_toobject(J, -1));
+				js_pop(J, 1);
+			}
+			js_pop(J, 1);
+		}
+		js_pop(J, 1);
+	}
 }
 
 static void O_defineProperties(js_State *J)
 {
-	js_Object *props;
-
+	js_Object *obj;
 	if (!js_isobject(J, 1)) js_typeerror(J, "not an object");
-	if (!js_isobject(J, 2)) js_typeerror(J, "not an object");
-
-	props = js_toobject(J, 2);
-	if (props->properties->level)
-		O_defineProperties_walk(J, props->properties);
-
+	obj = js_toobject(J, 1);
+	O_defineProperties_imp(J, obj);
 	js_copy(J, 1);
-}
-
-static void O_create_walk(js_State *J, js_Object *obj, js_Property *ref)
-{
-	if (ref->left->level)
-		O_create_walk(J, obj, ref->left);
-	if (!(ref->atts & JS_DONTENUM)) {
-		if (ref->value.t.type != JS_TOBJECT)
-			js_typeerror(J, "not an object");
-		ToPropertyDescriptor(J, obj, ref->name, ref->value.u.object);
-	}
-	if (ref->right->level)
-		O_create_walk(J, obj, ref->right);
 }
 
 static void O_create(js_State *J)
 {
 	js_Object *obj;
 	js_Object *proto;
-	js_Object *props;
 
 	if (js_isobject(J, 1))
 		proto = js_toobject(J, 1);
@@ -337,11 +345,7 @@ static void O_create(js_State *J)
 	js_pushobject(J, obj);
 
 	if (js_isdefined(J, 2)) {
-		if (!js_isobject(J, 2))
-			js_typeerror(J, "not an object");
-		props = js_toobject(J, 2);
-		if (props->properties->level)
-			O_create_walk(J, obj, props->properties);
+		O_defineProperties_imp(J, obj);
 	}
 }
 

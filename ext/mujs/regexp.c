@@ -18,7 +18,7 @@
 #define REG_MAXPROG (32 << 10)
 #endif
 #ifndef REG_MAXREC
-#define REG_MAXREC 1024
+#define REG_MAXREC 4096
 #endif
 #ifndef REG_MAXSPAN
 #define REG_MAXSPAN 64

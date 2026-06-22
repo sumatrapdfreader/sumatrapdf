@@ -53,6 +53,13 @@ static void Ep_toString(js_State *J)
 	}
 }
 
+static void Ep_get_stack(js_State *J)
+{
+	Ep_toString(J);
+	js_getproperty(J, 0, "stackTrace");
+	js_concat(J);
+}
+
 static int jsB_ErrorX(js_State *J, js_Object *prototype)
 {
 	js_pushobject(J, jsV_newobject(J, JS_CERROR, prototype));
@@ -61,7 +68,7 @@ static int jsB_ErrorX(js_State *J, js_Object *prototype)
 		js_defproperty(J, -2, "message", JS_DONTENUM);
 	}
 	if (jsB_stacktrace(J, 1))
-		js_defproperty(J, -2, "stack", JS_DONTENUM);
+		js_defproperty(J, -2, "stackTrace", JS_DONTENUM);
 	return 1;
 }
 
@@ -71,7 +78,7 @@ static void js_newerrorx(js_State *J, const char *message, js_Object *prototype)
 	js_pushstring(J, message);
 	js_setproperty(J, -2, "message");
 	if (jsB_stacktrace(J, 0))
-		js_setproperty(J, -2, "stack");
+		js_setproperty(J, -2, "stackTrace");
 }
 
 #define DERROR(name, Name) \
@@ -105,8 +112,13 @@ void jsB_initerror(js_State *J)
 {
 	js_pushobject(J, J->Error_prototype);
 	{
-			jsB_props(J, "name", "Error");
-			jsB_propf(J, "Error.prototype.toString", Ep_toString, 0);
+		jsB_props(J, "name", "Error");
+		jsB_propf(J, "Error.prototype.toString", Ep_toString, 0);
+		jsB_props(J, "message", "");
+
+		js_newcfunction(J, Ep_get_stack, "stack", 0);
+		js_pushnull(J);
+		js_defaccessor(J, -3, "stack", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
 	}
 	js_newcconstructor(J, jsB_Error, jsB_Error, "Error", 1);
 	js_defglobal(J, "Error", JS_DONTENUM);

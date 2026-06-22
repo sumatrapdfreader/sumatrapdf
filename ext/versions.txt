@@ -6,9 +6,9 @@ Project         Version    Date
 libarchive     3.8.7
   https://github.com/libarchive/libarchive
 
-mujs           git         Oct 29, 2025
+mujs           1.3.9
   https://mujs.com/
-  https://github.com/ArtifexSoftware/mujs/commit/33c83d8553048fd7710a518821cdefa5818e1559
+  https://github.com/ArtifexSoftware/mujs/commit/e892c9fdbbddba94e52f656ccb378ed4885e30cc
 
 bzip2           1.0.8      2019-07-21
   https://www.sourceware.org/bzip2/

@@ -63,6 +63,38 @@ static void Ap_concat(js_State *J)
 	}
 }
 
+/* ugly cycle detection for Array.prototype.join */
+static void Ap_join(js_State *J);
+static void Ap_toString(js_State *J);
+static int Ap_join_cycle(js_State *J)
+{
+	js_Object *needle = js_toobject(J, 0);
+	int top = J->tracetop - 1;
+	while (top > 0) {
+		int stk = J->trace[top].stack;
+		js_Value *fun = &J->stack[stk-1];
+		if (fun->t.type != JS_TOBJECT) return 0;
+		if (fun->u.object->type != JS_CCFUNCTION) return 0;
+		if (fun->u.object->u.c.function == Ap_join)
+		{
+			js_Value *obj = &J->stack[stk];
+			if (obj->t.type != JS_TOBJECT) return 0;
+			if (obj->u.object == needle)
+				return 1;
+		}
+		else if (fun->u.object->u.c.function == Ap_toString)
+		{
+			/* join calls toString which calls join which calls toString, etc */
+		}
+		else
+		{
+			return 0;
+		}
+		--top;
+	}
+	return 0;
+}
+
 static void Ap_join(js_State *J)
 {
 	char * volatile out = NULL;
@@ -70,6 +102,11 @@ static void Ap_join(js_State *J)
 	const char *sep;
 	int seplen;
 	int k, n, len, rlen;
+
+	if (Ap_join_cycle(J)) {
+		js_pushliteral(J, "");
+		return;
+	}
 
 	len = js_getlength(J, 0);
 
@@ -240,7 +277,7 @@ static void Ap_slice(js_State *J)
 static int Ap_sort_cmp(js_State *J, int idx_a, int idx_b)
 {
 	js_Object *obj = js_tovalue(J, 0)->u.object;
-	if (obj->u.a.simple) {
+	if (obj->u.a.simple && idx_b < obj->u.a.flat_length) {
 		js_Value *val_a = &obj->u.a.array[idx_a];
 		js_Value *val_b = &obj->u.a.array[idx_b];
 		int und_a = val_a->t.type == JS_TUNDEFINED;
@@ -248,7 +285,7 @@ static int Ap_sort_cmp(js_State *J, int idx_a, int idx_b)
 		if (und_a) return und_b;
 		if (und_b) return -1;
 		if (js_iscallable(J, 1)) {
-	double v;
+			double v;
 			js_copy(J, 1); /* copy function */
 			js_pushundefined(J); /* no 'this' binding */
 			js_pushvalue(J, *val_a);
@@ -263,7 +300,7 @@ static int Ap_sort_cmp(js_State *J, int idx_a, int idx_b)
 			return v < 0 ? -1 : 1;
 		} else {
 			const char *str_a, *str_b;
-	int c;
+			int c;
 			js_pushvalue(J, *val_a);
 			js_pushvalue(J, *val_b);
 			str_a = js_tostring(J, -2);
@@ -299,25 +336,25 @@ static int Ap_sort_cmp(js_State *J, int idx_a, int idx_b)
 			return -1;
 		}
 
-	if (js_iscallable(J, 1)) {
+		if (js_iscallable(J, 1)) {
 			double v;
-		js_copy(J, 1); /* copy function */
+			js_copy(J, 1); /* copy function */
 			js_pushundefined(J); /* no 'this' binding */
 			js_copy(J, -4);
 			js_copy(J, -4);
-		js_call(J, 2);
-		v = js_tonumber(J, -1);
+			js_call(J, 2);
+			v = js_tonumber(J, -1);
 			js_pop(J, 3);
 			if (isnan(v))
 				return 0;
 			if (v == 0)
 				return 0;
 			return v < 0 ? -1 : 1;
-	} else {
+		} else {
 			const char *str_a = js_tostring(J, -2);
 			const char *str_b = js_tostring(J, -1);
 			int c = strcmp(str_a, str_b);
-		js_pop(J, 2);
+			js_pop(J, 2);
 			return c;
 		}
 	}
@@ -326,7 +363,7 @@ static int Ap_sort_cmp(js_State *J, int idx_a, int idx_b)
 static void Ap_sort_swap(js_State *J, int idx_a, int idx_b)
 {
 	js_Object *obj = js_tovalue(J, 0)->u.object;
-	if (obj->u.a.simple) {
+	if (obj->u.a.simple && idx_b < obj->u.a.flat_length) {
 		js_Value tmp = obj->u.a.array[idx_a];
 		obj->u.a.array[idx_a] = obj->u.a.array[idx_b];
 		obj->u.a.array[idx_b] = tmp;
@@ -354,7 +391,7 @@ static int Ap_sort_leaf(js_State *J, int i, int end)
 	int lc = (j << 1) + 1; /* left child */
 	int rc = (j << 1) + 2; /* right child */
 	while (rc < end) {
-		if (Ap_sort_cmp(J, rc, lc) > 0)
+		if (Ap_sort_cmp(J, lc, rc) <= 0)
 			j = rc;
 		else
 			j = lc;
@@ -364,13 +401,14 @@ static int Ap_sort_leaf(js_State *J, int i, int end)
 	if (lc < end)
 		j = lc;
 	return j;
-	}
+}
 
 static void Ap_sort_sift(js_State *J, int i, int end)
 {
 	int j = Ap_sort_leaf(J, i, end);
-	while (Ap_sort_cmp(J, i, j) > 0)
+	while (j > i && Ap_sort_cmp(J, i, j) > 0) {
 		j = (j - 1) >> 1; /* parent */
+	}
 	while (j > i) {
 		Ap_sort_swap(J, i, j);
 		j = (j - 1) >> 1; /* parent */
@@ -385,8 +423,8 @@ static void Ap_sort_heapsort(js_State *J, int n)
 	for (i = n - 1; i > 0; --i) {
 		Ap_sort_swap(J, 0, i);
 		Ap_sort_sift(J, 0, i);
-		}
 	}
+}
 
 static void Ap_sort(js_State *J)
 {

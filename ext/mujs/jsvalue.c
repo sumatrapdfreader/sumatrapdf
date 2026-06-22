@@ -170,7 +170,7 @@ const char *js_itoa(char *out, int v)
 	unsigned int a;
 	int i = 0;
 	if (v < 0) {
-		a = -v;
+		a = -(unsigned)v; /* cast to avoid -INT_MIN signed overflow UB */
 		*s++ = '-';
 	} else {
 		a = v;

@@ -45,7 +45,6 @@ static void jsonexpect(js_State *J, int t)
 static void jsonvalue(js_State *J)
 {
 	int i;
-	const char *name;
 
 	switch (J->lookahead) {
 	case TK_STRING:
@@ -66,11 +65,12 @@ static void jsonvalue(js_State *J)
 		do {
 			if (J->lookahead != TK_STRING)
 				js_syntaxerror(J, "JSON: unexpected token: %s (expected string)", jsY_tokenstring(J->lookahead));
-			name = J->text;
+			js_pushstring(J, J->text);
 			jsonnext(J);
 			jsonexpect(J, ':');
 			jsonvalue(J);
-			js_setproperty(J, -2, name);
+			js_setproperty(J, -3, js_tostring(J, -2));
+			js_pop(J, 1);
 		} while (jsonaccept(J, ','));
 		jsonexpect(J, '}');
 		break;

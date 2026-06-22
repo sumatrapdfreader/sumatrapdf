@@ -166,6 +166,7 @@ struct js_StackTrace
 	const char *name;
 	const char *file;
 	int line;
+	int stack;
 };
 
 /* Exception handling */

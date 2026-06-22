@@ -102,7 +102,7 @@ static int jsY_findkeyword(js_State *J, const char *s)
 		J->text = keywords[i];
 		return TK_BREAK + i; /* first keyword + i */
 	}
-	J->text = js_intern(J, s);
+	J->text = s;
 	return TK_IDENTIFIER;
 }
 
@@ -204,14 +204,15 @@ static void textinit(js_State *J)
 
 static void textpush(js_State *J, Rune c)
 {
-	int n;
+	int n, newcap;
 	if (c == EOF)
 		n = 1;
 	else
 		n = runelen(c);
 	if (J->lexbuf.len + n > J->lexbuf.cap) {
-		J->lexbuf.cap = J->lexbuf.cap * 2;
-		J->lexbuf.text = js_realloc(J, J->lexbuf.text, J->lexbuf.cap);
+		newcap = J->lexbuf.cap * 2;
+		J->lexbuf.text = js_realloc(J, J->lexbuf.text, newcap);
+		J->lexbuf.cap = newcap;
 	}
 	if (c == EOF)
 		J->lexbuf.text[J->lexbuf.len++] = 0;
@@ -449,7 +450,7 @@ static int lexstring(js_State *J)
 
 	s = textend(J);
 
-	J->text = js_intern(J, s);
+	J->text = s;
 	return TK_STRING;
 }
 
@@ -476,7 +477,7 @@ static int isregexpcontext(int last)
 static int lexregexp(js_State *J)
 {
 	const char *s;
-	int g, m, i;
+	int g, m, i, flags;
 	int inclass = 0;
 
 	/* already consumed initial '/' */
@@ -523,11 +524,13 @@ static int lexregexp(js_State *J)
 	if (g > 1 || i > 1 || m > 1)
 		jsY_error(J, "duplicated flag in regular expression");
 
-	J->text = js_intern(J, s);
-	J->number = 0;
-	if (g) J->number += JS_REGEXP_G;
-	if (i) J->number += JS_REGEXP_I;
-	if (m) J->number += JS_REGEXP_M;
+	J->text = s;
+
+	flags = 0;
+	if (g) flags |= JS_REGEXP_G;
+	if (i) flags |= JS_REGEXP_I;
+	if (m) flags |= JS_REGEXP_M;
+	J->number = flags;
 	return TK_REGEXP;
 }
 
@@ -828,7 +831,7 @@ static int lexjsonstring(js_State *J)
 
 	s = textend(J);
 
-	J->text = js_intern(J, s);
+	J->text = s;
 	return TK_STRING;
 }
 

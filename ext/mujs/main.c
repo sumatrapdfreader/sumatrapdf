@@ -222,12 +222,7 @@ static const char *require_js =
 
 
 static const char *stacktrace_js =
-	"Error.prototype.toString = function() {\n"
-	"var s = this.name;\n"
-	"if ('message' in this) s += ': ' + this.message;\n"
-	"if ('stack' in this) s += this.stack;\n"
-	"return s;\n"
-	"};\n"
+	"Error.prototype.toString = function() { return this.stack }\n"
 ;
 
 static const char *console_js =

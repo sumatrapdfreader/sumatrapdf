@@ -99,7 +99,7 @@ static js_Ast *jsP_list(js_Ast *head)
 static js_Ast *jsP_newstrnode(js_State *J, enum js_AstType type, const char *s)
 {
 	js_Ast *node = jsP_newnode(J, type, J->lexline, 0, 0, 0, 0);
-	node->string = s;
+	node->string = js_intern(J, s);
 	return node;
 }
 
