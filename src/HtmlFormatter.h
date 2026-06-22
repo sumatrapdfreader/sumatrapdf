@@ -194,6 +194,8 @@ class HtmlFormatter {
     bool EmitImage(const ByteSlice* img);
     void EmitHr();
     void EmitTextRun(const char* s, const char* end);
+    // emits a synthetic, persistent string (e.g. a list bullet/number)
+    void EmitTextMarker(const char* s);
     void EmitElasticSpace();
     void EmitParagraph(float indent);
     void EmitEmptyLine(float lineDy);
@@ -242,6 +244,13 @@ class HtmlFormatter {
     float currLineTopPadding = 0;
     // number of nested lists for indenting whole paragraphs
     int listDepth = 0;
+    // per-open-list marker state, for <ul> bullets and <ol> numbering
+    // (incl. honoring the <ol start="N"> attribute)
+    struct ListInfo {
+        bool ordered = false;
+        int nextNum = 1;
+    };
+    Vec<ListInfo> listInfos;
     // set if newlines are not to be ignored
     bool preFormatted = false;
     // set if the reading direction is RTL
