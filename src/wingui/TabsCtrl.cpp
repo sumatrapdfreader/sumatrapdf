@@ -869,6 +869,15 @@ void TabsCtrl::RemoveAllTabs() {
 }
 
 TabInfo* TabsCtrl::GetTab(int idx) {
+    // defensive: a bad index (e.g. -1 from TabCtrl_GetCurSel when nothing is
+    // selected, or tabUnderMouse/tabHighlighted == -1 during a DDE-triggered
+    // reload) would otherwise read tabs[idx] out of bounds. Report and bail so
+    // call sites fail safe instead of indexing the Vec with a negative index.
+    bool badIdx = idx < 0 || idx >= TabCount();
+    ReportIf(badIdx);
+    if (badIdx) {
+        return nullptr;
+    }
     return tabs[idx];
 }
 
