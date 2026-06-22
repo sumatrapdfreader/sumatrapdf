@@ -16,8 +16,9 @@ bzip2           1.0.8      2019-07-21
 CHMLib          0.40a      2009-07-02
   https://github.com/jedwing/CHMLib
 
-freetype        2.13.3     2025-07-15
+freetype        2.14.3
   https://github.com/ArtifexSoftware/thirdparty-freetype2/tree/artifex
+  mupdf thirdparty submodule, commit 0a0221a1347e2f1e07c395263540026e9a0aa7c7
 
 gumbo           ???
   https://github.com/ArtifexSoftware/thirdparty-gumbo-parser/tree/artifex

@@ -104,7 +104,7 @@ index 6c38f5c04..27487dcc2 100644
 +
 +#endif  /* !Z_FREETYPE */
 diff --git b/src/gzip/gzguts.h a/src/gzip/gzguts.h
-index f9375047e..f9a250b85 100644
+index eba72085b..d7d733bda 100644
 --- b/src/gzip/gzguts.h
 +++ a/src/gzip/gzguts.h
 @@ -162,7 +162,7 @@
@@ -127,7 +127,7 @@ index 49c6d156c..a38c5be45 100644
 -void ZLIB_INTERNAL inflate_fast(z_streamp strm, unsigned start);
 +static void ZLIB_INTERNAL inflate_fast(z_streamp strm, unsigned start);
 diff --git b/src/gzip/inflate.c a/src/gzip/inflate.c
-index b0757a9b2..f7ed5d181 100644
+index 94ecff015..c8125680b 100644
 --- b/src/gzip/inflate.c
 +++ a/src/gzip/inflate.c
 @@ -215,6 +215,8 @@ int ZEXPORT inflateInit2_(z_streamp strm, int windowBits,
@@ -184,7 +184,7 @@ index f127b6b1f..8a0e437ae 100644
 +
 +#endif  /* !INFLATE_H */
 diff --git b/src/gzip/inftrees.c a/src/gzip/inftrees.c
-index 8a208c2da..1fd655593 100644
+index 468eea879..98cfe1644 100644
 --- b/src/gzip/inftrees.c
 +++ a/src/gzip/inftrees.c
 @@ -8,7 +8,7 @@
@@ -193,11 +193,11 @@ index 8a208c2da..1fd655593 100644
  
 -const char inflate_copyright[] =
 +static const char inflate_copyright[] =
-    " inflate 1.3 Copyright 1995-2023 Mark Adler ";
+    " inflate 1.3.1 Copyright 1995-2024 Mark Adler ";
  /*
    If you use the zlib library in a product, an acknowledgment is welcome
 diff --git b/src/gzip/inftrees.h a/src/gzip/inftrees.h
-index a10712d8c..47f726c36 100644
+index 396f74b5d..d735b0a51 100644
 --- b/src/gzip/inftrees.h
 +++ a/src/gzip/inftrees.h
 @@ -3,6 +3,9 @@
@@ -221,7 +221,7 @@ index a10712d8c..47f726c36 100644
 +
 +#endif  /* !INFTREES_H */
 diff --git b/src/gzip/zlib.h a/src/gzip/zlib.h
-index 6b7244f99..5c7a884c9 100644
+index 8d4b932ea..8c3c42a32 100644
 --- b/src/gzip/zlib.h
 +++ a/src/gzip/zlib.h
 @@ -31,7 +31,7 @@
@@ -305,7 +305,7 @@ index 6b7244f99..5c7a884c9 100644
  
                          /* utility functions */
 @@ -1768,6 +1783,8 @@ ZEXTERN uLong ZEXPORT crc32_combine_gen(z_off_t len2);
-    crc32_combine_op().
+    crc32_combine_op(). len2 must be non-negative.
  */
  
 +#ifndef Z_FREETYPE
@@ -404,7 +404,7 @@ index b1c5d2d3c..f76def425 100644
  
  #ifndef Z_SOLO
 diff --git b/src/gzip/zutil.h a/src/gzip/zutil.h
-index 902a304cc..a2c046a1f 100644
+index 48dd7feba..2c96797e3 100644
 --- b/src/gzip/zutil.h
 +++ a/src/gzip/zutil.h
 @@ -53,8 +53,10 @@ typedef unsigned long  ulg;
@@ -416,9 +416,9 @@ index 902a304cc..a2c046a1f 100644
  /* (size given to avoid silly warnings with Visual C++) */
 +#endif
  
- #define ERR_MSG(err) z_errmsg[Z_NEED_DICT-(err)]
+ #define ERR_MSG(err) z_errmsg[(err) < -6 || (err) > 2 ? 9 : 2 - (err)]
  
-@@ -188,6 +190,8 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
+@@ -167,6 +169,8 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
    #pragma warn -8066
  #endif
  
@@ -427,7 +427,7 @@ index 902a304cc..a2c046a1f 100644
  /* provide prototypes for these when building zlib without LFS */
  #if !defined(_WIN32) && \
      (!defined(_LARGEFILE64_SOURCE) || _LFS64_LARGEFILE-0 == 0)
-@@ -196,6 +200,8 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
+@@ -175,6 +179,8 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
      ZEXTERN uLong ZEXPORT crc32_combine_gen64(z_off_t);
  #endif
  
@@ -436,7 +436,7 @@ index 902a304cc..a2c046a1f 100644
          /* common defaults */
  
  #ifndef OS_CODE
-@@ -227,9 +233,9 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
+@@ -206,9 +212,9 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
  #    define zmemcmp _fmemcmp
  #    define zmemzero(dest, len) _fmemset(dest, 0, len)
  #  else

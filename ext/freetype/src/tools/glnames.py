@@ -3,7 +3,7 @@
 #
 # FreeType 2 glyph name builder
 #
-# Copyright (C) 1996-2024 by
+# Copyright (C) 1996-2026 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,

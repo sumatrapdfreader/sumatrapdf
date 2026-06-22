@@ -42,6 +42,7 @@ typedef enum  OutputFormat_
 
 } OutputFormat;
 
+#define SUFFIX_VMS_64ADDR "64__"
 
 static void
 panic( const char*  fmt,
@@ -76,11 +77,12 @@ static int   max_names;
 
 
 static void
-names_add( const char*  name,
-           const char*  end )
+names_add( const char*   name,
+           const char*   end,
+           OutputFormat  format )
 {
   unsigned int  h;
-  int           nn, len;
+  int           nn, len, len_suffix;
   Name          nm;
 
 
@@ -99,7 +101,7 @@ names_add( const char*  name,
   {
     nm = the_names + nn;
 
-    if ( (int)nm->hash                 == h &&
+    if ( nm->hash                      == h &&
          memcmp( name, nm->name, len ) == 0 &&
          nm->name[len]                 == 0 )
       return;
@@ -116,8 +118,18 @@ names_add( const char*  name,
   }
   nm = &the_names[num_names++];
 
+  switch ( format )
+  {
+  case OUTPUT_VMS_OPT:
+    /* VMS mode would join the symbol name with a suffix */
+    len_suffix = sizeof ( SUFFIX_VMS_64ADDR );
+    break;
+  default:
+    len_suffix = 0;
+  }
+
   nm->hash = h;
-  nm->name = (char*)malloc( len + 1 );
+  nm->name = (char*)malloc( len + len_suffix + 1 );
   if ( !nm->name )
     panic( "not enough memory" );
 
@@ -181,6 +193,7 @@ names_dump( FILE*         out,
 
   case OUTPUT_WATCOM_LBC:
     {
+      char         temp[512];
       const char*  dot;
 
 
@@ -195,7 +208,6 @@ names_dump( FILE*         out,
       dot = strchr( dll_name, '.' );
       if ( dot )
       {
-        char  temp[512];
         int   len = dot - dll_name;
 
 
@@ -229,7 +241,7 @@ names_dump( FILE*         out,
 
       /* Also emit a 64-bit symbol, as created by the `vms_auto64` tool. */
       /* It has the string '64__' appended to its name.                  */
-      strcat( the_names[nn].name , "64__" );
+      strcat( the_names[nn].name , SUFFIX_VMS_64ADDR );
       if ( vms_shorten_symbol( the_names[nn].name, short_symbol, 1 ) == -1 )
         panic( "could not shorten name '%s'", the_names[nn].name );
       fprintf( out, "symbol_vector = ( %s = PROCEDURE)\n", short_symbol );
@@ -277,8 +289,9 @@ typedef enum  State_
 
 
 static int
-read_header_file( FILE*  file,
-                  int    verbose )
+read_header_file( FILE*         file,
+                  int           verbose,
+                  OutputFormat  format )
 {
   static char  buff[LINEBUFF_SIZE + 1];
   State        state = STATE_START;
@@ -350,7 +363,7 @@ read_header_file( FILE*  file,
           if ( verbose )
             fprintf( stderr, ">>> %.*s\n", (int)( p - name ), name );
 
-          names_add( name, p );
+          names_add( name, p, format );
         }
 
         state = STATE_START;
@@ -380,7 +393,7 @@ usage( void )
     "It receives a list of header files as an argument and\n"
     "generates a sorted list of unique identifiers in various formats.\n"
     "\n"
-    "usage: %s header1 [options] [header2 ...]\n"
+    "usage: %s [options] header1 [header2 ...]\n"
     "\n"
     "options:   -       parse the contents of stdin, ignore arguments\n"
     "           -v      verbose mode, output sent to standard error\n"
@@ -519,7 +532,7 @@ main( int                 argc,
   } /* end of while loop */
 
   if ( from_stdin )
-    read_header_file( stdin, verbose );
+    read_header_file( stdin, verbose, format );
   else
   {
     for ( --argc, argv++; argc > 0; argc--, argv++ )
@@ -534,7 +547,7 @@ main( int                 argc,
         if ( verbose )
           fprintf( stderr, "opening '%s'\n", argv[0] );
 
-        read_header_file( file, verbose );
+        read_header_file( file, verbose, format );
         fclose( file );
       }
     }
