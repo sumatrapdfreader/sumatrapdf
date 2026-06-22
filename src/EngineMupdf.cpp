@@ -2393,6 +2393,11 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         lfontDy = 8.f;
     }
 
+    // mupdf 1.28 replaced the global fz_set_user_css / fz_set_use_document_css
+    // with per-document styling via fz_style_document (applied after the
+    // document is opened, before fz_layout_document)
+    const char* userCss = nullptr;
+    int usePublisherCss = 1; // use the document's own (publisher) CSS by default
     auto eBookUI = GetEBookUI();
     if (eBookUI) {
         // accept any reasonable font size; the old upper bound of 30 made
@@ -2408,10 +2413,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
             ldy = eBookUI->layoutDy;
         }
         if (eBookUI->customCSS) {
-            fz_set_user_css(ctx, eBookUI->customCSS);
+            userCss = eBookUI->customCSS;
         }
-        bool useDocCss = !eBookUI->ignoreDocumentCSS;
-        fz_set_use_document_css(ctx, useDocCss);
+        usePublisherCss = eBookUI->ignoreDocumentCSS ? 0 : 1;
     }
 
     float dx, dy, fontDy;
@@ -2421,6 +2425,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
     fz_var(fontDy);
     fz_try(ctx) {
         _doc = fz_open_document_with_stream(ctx, nameHint, stm);
+        // per-document CSS styling (replaces the global fz_set_user_css /
+        // fz_set_use_document_css); must be set before fz_layout_document
+        fz_style_document(ctx, _doc, usePublisherCss, userCss);
         pdfdoc = pdf_specifics(ctx, _doc);
         dx = DpiScale(ldx, displayDPI);
         dy = DpiScale(ldy, displayDPI);

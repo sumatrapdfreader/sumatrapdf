@@ -33,8 +33,7 @@ EXPORTS
 	fz_argv_from_wargv
 	fz_free_argv
 	minilisp_gc
-	fz_set_user_css
-	fz_set_use_document_css
+	fz_style_document
 	fz_urldecode
 	fz_open_document_with_stream
 	fz_authenticate_password
