@@ -277,11 +277,17 @@ export async function testit(): Promise<void> {
     const fwdWsl = await testForwardSearch(client, wslFiles.pdfPath, wslFiles.srcPath, "WSL file");
     const invWin = await testInverseSearch(client, winFiles.pdfPath, winFiles.srcPath, fwdWin.result, "Windows file");
     const invWsl = await testInverseSearch(client, wslFiles.pdfPath, wslFiles.srcPath, fwdWsl.result, "WSL file");
+
+    // forward search on forward-slash Windows path
+    const fwdWin_fwdslash = await testForwardSearch(
+      client, winFiles.pdfPath, winFiles.srcPath.replace(/\\/g, "/"), "Windows file");
+
     return [
       { name: "forward search(win files)", ok: fwdWin.ok },
       { name: "forward search(wsl files)", ok: fwdWsl.ok },
       { name: "inverse search(win files)", ok: invWin.ok },
       { name: "inverse search(wsl files)", ok: invWsl.ok },
+      { name: "forward search(forward-slash win path)", ok: fwdWin_fwdslash.ok },
     ];
   });
 
