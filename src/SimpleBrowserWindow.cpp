@@ -10,8 +10,10 @@
 #include "wingui/WinGui.h"
 #include "wingui/WebView.h"
 
+#include "Settings.h"
 #include "AppTools.h"
 #include "SumatraConfig.h"
+#include "SumatraPDF.h"
 #include "Translations.h"
 
 #include "SimpleBrowserWindow.h"
@@ -107,10 +109,27 @@ static void OnForward(SimpleBrowserWindow* w) {
     }
 }
 
+// an absolute http(s)/mailto URL is "non-internal": it points outside the
+// content we serve from our virtual host (UrlForWebViewEvent strips the host
+// prefix off internal pages, so those arrive as a bare path without a scheme)
+static bool IsExternalUrl(const char* url) {
+    return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
+}
+
 static bool NavigationStarting(void* ctx, const char* url, bool newWindow) {
     auto* w = (SimpleBrowserWindow*)ctx;
-    if (!w || newWindow) {
+    if (!w) {
         return true;
+    }
+    // When we host internal content (the manual) from a virtual host, its
+    // non-internal links are rendered with target="_blank", which arrives here as
+    // a new-window request. Open those (and any external in-window navigation) in
+    // the user's default browser instead of the in-app webview. A plain browser
+    // window (no virtual host) keeps normal in-window navigation.
+    bool servesInternalContent = w->webView && !str::IsEmpty(w->webView->resourceUriPrefix);
+    if (newWindow || (servesInternalContent && IsExternalUrl(url))) {
+        SumatraLaunchBrowser(url);
+        return false;
     }
     SetCurrentUrl(w, url);
     return true;

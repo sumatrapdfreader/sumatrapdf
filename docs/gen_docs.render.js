@@ -222,18 +222,12 @@
       const tok = tokens[idx];
       let href = tok.attrGet("href") || "";
 
-      const isExternal =
-        (href.startsWith("https://") || href.startsWith("http://")) &&
-        href.indexOf("sumatrapdfreader.org") < 0;
-      if (isExternal) {
-        tok.attrSet("target", "_blank");
-      }
+      const isAbsolute =
+        href.startsWith("https://") ||
+        href.startsWith("http://") ||
+        href.startsWith("mailto:");
 
-      if (
-        !href.startsWith("https://") &&
-        !href.startsWith("http://") &&
-        !href.startsWith("mailto:")
-      ) {
+      if (!isAbsolute) {
         const decoded = href.replace(/%20/g, " ");
         const hashIdx = decoded.indexOf("#");
         const fileName = hashIdx >= 0 ? decoded.slice(0, hashIdx) : decoded;
@@ -251,6 +245,20 @@
             tok.attrSet("href", dest);
           }
         }
+      }
+
+      // Open non-internal links (any absolute http/https/mailto URL, including
+      // ones we just rewrote to a sumatrapdfreader.org URL) in a new tab. The
+      // in-app webview turns these into new-window requests and hands them to
+      // the default OS browser instead of navigating the manual.
+      const finalHref = tok.attrGet("href") || "";
+      const isNonInternal =
+        finalHref.startsWith("https://") ||
+        finalHref.startsWith("http://") ||
+        finalHref.startsWith("mailto:");
+      if (isNonInternal) {
+        tok.attrSet("target", "_blank");
+        tok.attrSet("rel", "noopener noreferrer");
       }
       return self.renderToken(tokens, idx, options);
     };
