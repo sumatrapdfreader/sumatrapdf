@@ -3262,9 +3262,9 @@ enum class SaveChoice {
 
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
     TempStr fileName = (TempStr)path::GetBaseNameTemp(filePath);
-    TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved annotations in '%s'"), fileName);
+    TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'"), fileName);
     TempWStr mainInstr = ToWStrTemp(mainInstrA);
-    auto content = _TRA("Save annotations?");
+    auto content = _TRA("Save changes?");
 
     constexpr int kBtnIdDiscard = 100;
     constexpr int kBtnIdSaveToExisting = 101;
@@ -3292,7 +3292,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    s = _TRA("Unsaved annotations");
+    s = _TRA("Unsaved changes");
     dialogConfig.pszWindowTitle = ToWStrTemp(s);
     dialogConfig.pszMainInstruction = mainInstr;
     dialogConfig.pszContent = ToWStrTemp(content);

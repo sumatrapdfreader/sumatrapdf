@@ -129,6 +129,11 @@ void SetLineStartStyles(Annotation*, int start);
 // PDF form (widget) fields. GetWidgetType returns a pdf_widget_type value
 // (PDF_WIDGET_TYPE_*), or 0 (UNKNOWN) when annot isn't a form widget.
 int GetWidgetType(Annotation*);
+// which mouse cursor a form field warrants on hover. None for non-widgets and
+// read-only fields, Text (I-beam) for text/combo/listbox, Button (hand) for
+// checkbox/radio.
+enum class WidgetCursorKind { None, Text, Button };
+WidgetCursorKind GetWidgetCursorKind(Annotation*);
 // pdf_annot_field_flags (PDF_FIELD_IS_*, PDF_TX_FIELD_IS_* bits), or 0.
 int GetWidgetFieldFlags(Annotation*);
 // current text value of a form field (owned temp copy), or "" .

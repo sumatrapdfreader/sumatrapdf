@@ -336,6 +336,32 @@ int GetWidgetType(Annotation* annot) {
     return wt;
 }
 
+WidgetCursorKind GetWidgetCursorKind(Annotation* annot) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return WidgetCursorKind::None;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    auto ctx = e->Ctx();
+    ScopedCritSec cs(&e->docLock);
+    WidgetCursorKind kind = WidgetCursorKind::None;
+    fz_try(ctx) {
+        int flags = pdf_annot_field_flags(ctx, a);
+        if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
+            int wt = pdf_widget_type(ctx, a);
+            if (wt == PDF_WIDGET_TYPE_TEXT || wt == PDF_WIDGET_TYPE_COMBOBOX || wt == PDF_WIDGET_TYPE_LISTBOX) {
+                kind = WidgetCursorKind::Text;
+            } else if (wt == PDF_WIDGET_TYPE_CHECKBOX || wt == PDF_WIDGET_TYPE_RADIOBUTTON) {
+                kind = WidgetCursorKind::Button;
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return kind;
+}
+
 bool ToggleFormButton(Annotation* annot) {
     if (!annot || annot->type != AnnotationType::Widget) {
         return false;

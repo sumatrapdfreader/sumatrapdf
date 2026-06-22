@@ -2238,6 +2238,18 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         }
     }
 
+    // PDF form fields: I-beam over text/choice, hand over checkbox/radio
+    switch (GetWidgetCursorKind(dm->GetWidgetAtPos(pt))) {
+        case WidgetCursorKind::Text:
+            SetCursorCached(IDC_IBEAM);
+            return TRUE;
+        case WidgetCursorKind::Button:
+            SetCursorCached(IDC_HAND);
+            return TRUE;
+        case WidgetCursorKind::None:
+            break;
+    }
+
     Annotation* annot = dm->GetAnnotationAtPos(pt, selected);
     if (annot && (selected || tab->editAnnotsWindow)) {
         SetCursorCached(IDC_HAND);
