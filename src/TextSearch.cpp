@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
 
