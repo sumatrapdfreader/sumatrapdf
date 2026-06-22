@@ -2827,8 +2827,16 @@ bool EngineMupdf::FinishLoading() {
         hasPageLabels = true;
     }
 
-    // TODO: support javascript
-    ReportIf(pdf_js_supported(ctx, pdfdoc));
+    // enable mupdf's JavaScript engine so form-field calculate / validate /
+    // format actions run (e.g. auto-summed totals on a fillable form). mujs is
+    // sandboxed to the PDF/form API -- it has no file or network access.
+    fz_try(ctx) {
+        pdf_enable_js(ctx, pdfdoc);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        fz_warn(ctx, "Couldn't enable form JavaScript");
+    }
 
     return true;
 }
