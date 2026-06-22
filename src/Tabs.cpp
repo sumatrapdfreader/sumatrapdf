@@ -419,7 +419,6 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
         return;
     }
 
-    int nTabs = tabsCtrl->TabCount();
     WindowTab* tabUnderMouse = win->Tabs()[tabIdx];
     if (tabUnderMouse->IsAboutTab()) {
         return;

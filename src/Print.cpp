@@ -1228,7 +1228,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     if (!engine) {
         return;
     }
-    int rotation = dm->GetRotation();
+    int rotation;
     int nPages = dm->PageCount();
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS

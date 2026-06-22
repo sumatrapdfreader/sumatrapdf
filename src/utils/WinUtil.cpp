@@ -1671,7 +1671,6 @@ static CreatedFontInfo* FindCreatedFont(const char* name, int size, u16 flags, u
     while (curr) {
         if (curr->size == (u16)size && curr->flags == flags && curr->weightOffset == weightOffset &&
             str::Eq(curr->name, name)) {
-            name = name ? name : "";
             /* logf("FindCreatedFont: found font '%s', size: %d, flags: %x, weightOffset: %d\n", name, (int)size,
                  (int)flags, (int)weightOffset); */
             return curr;
@@ -1704,8 +1703,6 @@ static HFONT RememberCreatedFont(HFONT font, const char* name, int size, u16 fla
     cf->flags = flags;
     cf->weightOffset = weightOffset;
     ListInsertFront(&gFonts, cf);
-    int n = ListLen(gFonts);
-    name = name ? name : "";
     /* logf("RememberCreatedFont: added font '%s', size: %d, flags: %x, weightOffset: %d\n", name, size, (int)flags,
          (int)weightOffset);  */
     return font;

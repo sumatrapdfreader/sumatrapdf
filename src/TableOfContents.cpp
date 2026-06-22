@@ -625,7 +625,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     POINT pt{};
 
     TreeView* treeView = (TreeView*)ev->w;
-    TreeModel* tm = treeView->treeModel;
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (ti == TreeModel::kNullItem) {
         pt = {ev->mouseScreen.x, ev->mouseScreen.y};
@@ -1162,8 +1161,6 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     if (res) {
         return res;
     }
-
-    TreeView* treeView = win->tocTreeView;
 
     switch (msg) {
         case WM_SIZE:

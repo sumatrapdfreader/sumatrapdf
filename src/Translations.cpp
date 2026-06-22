@@ -121,8 +121,7 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
         unescaped = UnescapeTemp(trans);
         c->Append(unescaped);
     }
-    int nTrans = c->Size();
-    ReportDebugIf(nTrans != nStrings * 2);
+    ReportDebugIf(c->Size() != nStrings * 2);
     if (nUntranslated > 0 && !str::Eq(langCode, "en:")) {
         logf("Untranslated strings: %d for lang '%s'\n", nUntranslated, langCode);
     }

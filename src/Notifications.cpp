@@ -383,11 +383,9 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     ScopedSelectObject fontPrev(hdc, font);
 
     COLORREF colBg = ThemeNotificationsBackgroundColor();
-    COLORREF colBorder = MkGray(0xdd);
     COLORREF colTxt = ThemeNotificationsTextColor();
     if (highlight) {
         colBg = ThemeNotificationsHighlightColor();
-        colBorder = colBg;
         colTxt = ThemeNotificationsHighlightTextColor();
     }
     // COLORREF colBg = MkRgb(0xff, 0xff, 0x5c);
@@ -397,13 +395,6 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     SolidBrush br(GdiRgbFromCOLORREF(colBg));
     auto grc = Gdiplus::Rect(0, 0, rc.dx, rc.dy);
     graphics.FillRectangle(&br, grc);
-
-    if (false) {
-        Pen pen(GdiRgbFromCOLORREF(colBorder));
-        pen.SetWidth(4);
-        grc = {rc.x, rc.y, rc.dx, rc.dy};
-        graphics.DrawRectangle(&pen, grc);
-    }
 
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, colTxt);

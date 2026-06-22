@@ -1038,7 +1038,6 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
         dy = CW_USEDEFAULT;
     }
 
-    DWORD tmpStyle = style & ~WS_VISIBLE;
     DWORD exStyle = args.exStyle;
     if (args.isRtl) {
         exStyle |= WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;

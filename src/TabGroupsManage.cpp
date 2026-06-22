@@ -126,7 +126,6 @@ static void LayoutControls(TabGroupsDialog* d) {
     if (d->listBox) {
         MoveWindow(d->listBox->hwnd, x, y, dx, lbDy, TRUE);
     }
-    y += lbDy;
 
     // buttons at the bottom right: [Save/Open] [Delete] [Cancel]
     Size okSize = d->btnOk->GetIdealSize();
