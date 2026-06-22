@@ -4,14 +4,12 @@
 #include "utils/BaseUtil.h"
 #include "utils/ByteReader.h"
 #include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/WebpReader.h"
 #include "utils/WinUtil.h"
 
 #include "Settings.h"
 #include "Flags.h"
-#include "ExifDump.h"
 
 using namespace Gdiplus;
 

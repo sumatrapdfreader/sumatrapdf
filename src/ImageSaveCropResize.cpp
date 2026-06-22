@@ -5,8 +5,6 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/GuessFileType.h"
 #include "FzImgReader.h"
 
 #include "wingui/UIModels.h"
@@ -18,20 +16,15 @@
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
 #include "PdfCreator.h"
-#include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
-#include "Commands.h"
 #include "SumatraConfig.h"
 #include "Theme.h"
 #include "DarkModeSubclass.h"
 #include "Translations.h"
 #include "ImageSaveCropResize.h"
-
-#include "utils/Log.h"
 
 #include <wincodec.h>
 

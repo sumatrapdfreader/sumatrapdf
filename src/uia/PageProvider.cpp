@@ -2,25 +2,19 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/ScopedWin.h"
 
 #include <uiautomationcore.h>
-#include <uiautomationcoreapi.h>
-#include <oleacc.h>
 
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
 #include "DisplayModel.h"
 #include "uia/PageProvider.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"
 #include "uia/Provider.h"
-#include "TextSelection.h"
 
 SumatraUIAutomationPageProvider::SumatraUIAutomationPageProvider(int pageNum, HWND canvasHwnd, DisplayModel* dm,
                                                                  SumatraUIAutomationDocumentProvider* root)

@@ -13,11 +13,8 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
-#include "Annotation.h"
 #include "SumatraPdf.h"
-#include "AppTools.h"
 
-#include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "Theme.h"
 

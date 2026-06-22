@@ -19,7 +19,6 @@
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "ProgressUpdateUI.h"
-#include "TextSearch.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
@@ -27,7 +26,6 @@
 #include "Print.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
-#include "SumatraProperties.h"
 #include "Translations.h"
 
 #include "utils/Log.h"

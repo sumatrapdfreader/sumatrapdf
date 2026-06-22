@@ -10,7 +10,6 @@
 
 #include "GumboHelpers.h"
 
-#include "DocController.h"
 #include "DocProperties.h"
 #include "EbookBase.h"
 #include "ChmFile.h"

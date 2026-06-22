@@ -3,11 +3,8 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/GdiPlusUtil.h"
-#include "utils/WinUtil.h"
 
 #include "Mui.h"
-
-#include "utils/Log.h"
 
 /*
 MUI is a simple UI library for win32.

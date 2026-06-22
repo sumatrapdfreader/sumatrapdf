@@ -2,12 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/BuildConfig.h"
 
 #include "resource.h"
-#include "Commands.h"
 #include "Version.h"
-#include "SumatraConfig.h"
 
 #if defined(DEBUG)
 bool gIsDebugBuild = true;

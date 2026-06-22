@@ -4,8 +4,6 @@
 #include "utils/BaseUtil.h"
 #include "utils/BitReader.h"
 #include "utils/ByteOrderDecoder.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/GdiPlusUtil.h"
 
@@ -15,7 +13,6 @@
 
 #include "DocProperties.h"
 #include "DocController.h"
-#include "EngineBase.h"
 #include "EbookBase.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"

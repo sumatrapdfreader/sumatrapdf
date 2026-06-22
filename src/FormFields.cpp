@@ -2,11 +2,9 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
-#include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 
 #include "wingui/UIModels.h"
@@ -17,12 +15,9 @@
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
-#include "WindowTab.h"
 #include "Annotation.h"
 #include "SumatraPDF.h"
 #include "FormFields.h"
-
-#include "utils/Log.h"
 
 // One field is edited at a time: either a text edit box or a choice list box
 // floats over the page.
@@ -169,8 +164,8 @@ static bool StartTextEdit(MainWindow* win, Annotation* widget, Rect rc, int flag
         style |= ES_PASSWORD;
     }
     HMODULE hmod = GetModuleHandleW(nullptr);
-    HWND hEdit = CreateWindowExW(0, WC_EDITW, L"", style, rc.x, rc.y, rc.dx, rc.dy, win->hwndCanvas, nullptr, hmod,
-                                 nullptr);
+    HWND hEdit =
+        CreateWindowExW(0, WC_EDITW, L"", style, rc.x, rc.y, rc.dx, rc.dy, win->hwndCanvas, nullptr, hmod, nullptr);
     if (!hEdit) {
         return false;
     }
@@ -220,7 +215,8 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     }
     DWORD style = WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_HASSTRINGS;
     HMODULE hmod = GetModuleHandleW(nullptr);
-    HWND hLb = CreateWindowExW(0, L"LISTBOX", L"", style, x, y, listDx, listDy, win->hwndCanvas, nullptr, hmod, nullptr);
+    HWND hLb =
+        CreateWindowExW(0, L"LISTBOX", L"", style, x, y, listDx, listDy, win->hwndCanvas, nullptr, hmod, nullptr);
     if (!hLb) {
         return false;
     }

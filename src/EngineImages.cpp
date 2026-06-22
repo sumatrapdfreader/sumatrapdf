@@ -23,8 +23,6 @@ extern "C" {
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
-#include "PdfCreator.h"
 
 #include "utils/Log.h"
 

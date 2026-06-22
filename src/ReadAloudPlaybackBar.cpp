@@ -24,8 +24,6 @@
 #include "Theme.h"
 #include "ReadAloudPlaybackBar.h"
 
-#include "utils/Log.h"
-
 using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;

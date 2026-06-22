@@ -2,14 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/Archive.h"
-#include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/Timer.h"
-#include "utils/ZipUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"

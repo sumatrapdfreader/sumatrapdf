@@ -6,7 +6,6 @@
 #include "utils/Archive.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "utils/TrivialHtmlParser.h"
@@ -16,7 +15,6 @@
 
 #include "DocProperties.h"
 #include "DocController.h"
-#include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "PalmDbReader.h"

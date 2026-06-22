@@ -2,13 +2,10 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
-#include "utils/Log.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -19,7 +16,6 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
@@ -28,12 +24,8 @@
 #include "Translations.h"
 #include "resource.h"
 
-#include "utils/GuessFileType.h"
-
-#include "AppTools.h"
 #include "AIChatCommon.h"
 #include "ClaudeCode.h"
-#include "EngineAll.h"
 
 bool IsClaudeCodeAvailable() {
     return IsAIChatAvailable();

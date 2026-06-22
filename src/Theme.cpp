@@ -2,19 +2,14 @@
 License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
 #include "Commands.h"
-#include "DisplayMode.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
 #include "Translations.h"
-#include "Toolbar.h"
 #include "DarkModeSubclass.h"
-
-#include "utils/Log.h"
 
 // allow only x64 and arm64 for compatibility for older OS
 #if !defined(_DARKMODELIB_NOT_USED) && \

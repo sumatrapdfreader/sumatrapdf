@@ -3,18 +3,12 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/BitManip.h"
 #include "utils/WinUtil.h"
-#include "utils/Dpi.h"
-#include "utils/WinDynCalls.h"
 
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
-#include "wingui/WinGui.h"
 #include "wingui/VirtWnd.h"
-
-#include "utils/Log.h"
 
 Kind kindVirtWnd = "kindVirtWnd";
 

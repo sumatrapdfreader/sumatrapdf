@@ -2,10 +2,8 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/ScopedWin.h"
 
 #include "wingui/UIModels.h"
 
@@ -13,11 +11,9 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
-#include "ExternalViewers.h"
 #include "Commands.h"
 #include "Translations.h"
 

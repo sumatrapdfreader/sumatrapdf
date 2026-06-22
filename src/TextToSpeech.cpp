@@ -1,15 +1,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 
-#include <mmsystem.h>
 #include <roapi.h>
-#include <winstring.h>
-#include <activation.h>
-#include <asyncinfo.h>
-#include <windows.foundation.h>
-#include <windows.media.core.h>
 #include <windows.media.speechsynthesis.h>
-#include <shcore.h>
 // must come after the windows.media headers: both define SpeechRecognizerState
 // and this order compiles in both msvc and clang
 #include <sapi.h>

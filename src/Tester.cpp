@@ -6,29 +6,19 @@
    driver which dispatches desired test based on cmd-line arguments. */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/CmdLineArgsIter.h"
-#include "utils/CryptoUtil.h"
-#include "utils/DirIter.h"
 #include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
 #include "utils/GdiPlusUtil.h"
-#include "utils/HtmlParserLookup.h"
-#include "utils/HtmlPrettyPrint.h"
 #include "mui/Mui.h"
-#include "utils/Timer.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
 
 #include "wingui/UIModels.h"
 
-#include "Settings.h"
 #include "DocProperties.h"
 #include "DocController.h"
-#include "EngineBase.h"
 #include "EbookBase.h"
 #include "PalmDbReader.h"
-#include "MobiDoc.h"
 
 // if true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to kMobiSaveDir. The name will be

@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/UtAssert.h"
 
 static int g_nTotal = 0;
 static int g_nFailed = 0;

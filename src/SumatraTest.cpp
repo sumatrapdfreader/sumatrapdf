@@ -4,10 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
 
 #include "Settings.h"
-#include "DisplayMode.h"
 #include "GlobalPrefs.h"
 #include "wingui/UIModels.h"
 #include "DocController.h"
@@ -28,8 +26,6 @@
 #include "lzx.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
-
-#include "SumatraTest.h"
 
 const char* CleanRemoteDestName(const char* destName);
 

@@ -16,9 +16,7 @@
 
 #include "Settings.h"
 #include "SumatraConfig.h"
-#include "GlobalPrefs.h"
 #include "Flags.h"
-#include "resource.h"
 #include "Version.h"
 #include "Installer.h"
 

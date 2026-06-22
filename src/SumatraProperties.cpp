@@ -3,7 +3,6 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/StrFormat.h"
-#include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
@@ -25,10 +24,7 @@
 #include "AppTools.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "resource.h"
 #include "Commands.h"
-#include "HomePage.h"
-#include "SumatraProperties.h"
 #include "Translations.h"
 #include "SumatraConfig.h"
 #include "Print.h"

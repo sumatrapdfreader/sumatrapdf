@@ -45,7 +45,6 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/Timer.h"
 
 #include "wingui/UIModels.h"

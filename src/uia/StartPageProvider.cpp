@@ -3,7 +3,6 @@
 
 #include "utils/BaseUtil.h"
 #include <uiautomationcore.h>
-#include <uiautomationcoreapi.h>
 #include "uia/StartPageProvider.h"
 #include "uia/Constants.h"
 #include "uia/Provider.h"

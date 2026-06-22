@@ -2,23 +2,18 @@
    License: GPLv3 */
 
 extern "C" {
-#include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 }
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
 
-#include "Settings.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "Annotation.h"
-#include "EngineMupdf.h"
 #include "FzImgReader.h"
 #include "PdfCreator.h"
 

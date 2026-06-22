@@ -4,14 +4,11 @@
 #include "utils/BaseUtil.h"
 #include "utils/CryptoUtil.h"
 #include "utils/FileUtil.h"
-#include "utils/DirIter.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 
 #include "Settings.h"
-#include "DocController.h"
 #include "FzImgReader.h"
-#include "FileHistory.h"
 
 #include "AppTools.h"
 #include "FileThumbnails.h"

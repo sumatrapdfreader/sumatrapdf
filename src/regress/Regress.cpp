@@ -29,7 +29,6 @@ To write new regression test:
 
 #include "wingui/UIModels.h"
 
-#include "Settings.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -93,8 +92,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
 static DWORD WINAPI CrashDumpThread(void*) {
     WaitForSingleObject(gDumpEvent, INFINITE);
-    if (!gCrashed)
-        return 0;
+    if (!gCrashed) return 0;
 
     printflush("Captain, we've got a crash!\n");
     if (!dbghelp::Initialize(L"", false)) {
@@ -120,8 +118,7 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
         return EXCEPTION_CONTINUE_SEARCH;
 
     static bool wasHere = false;
-    if (wasHere)
-        return EXCEPTION_CONTINUE_SEARCH;
+    if (wasHere) return EXCEPTION_CONTINUE_SEARCH;
     wasHere = true;
     gCrashed = true;
 
@@ -152,11 +149,9 @@ static void InstallCrashHandler() {
 }
 
 static void UninstallCrashHandler() {
-    if (!gDumpEvent || !gDumpThread)
-        return;
+    if (!gDumpEvent || !gDumpThread) return;
 
-    if (gPrevExceptionFilter)
-        SetUnhandledExceptionFilter(gPrevExceptionFilter);
+    if (gPrevExceptionFilter) SetUnhandledExceptionFilter(gPrevExceptionFilter);
 
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, 1000); // 1 sec

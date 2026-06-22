@@ -6,7 +6,6 @@
 #include "utils/WinDynCalls.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/Dpi.h"
 #include "utils/Log.h"
 

@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 extern "C" {
-#include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 #include <mupdf/helpers/pkcs7-windows.h>
 #include "../mupdf/source/fitz/color-imp.h"
@@ -12,10 +11,8 @@ extern "C" {
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/WinUtil.h"
-#include "utils/ZipUtil.h"
 #include "utils/Timer.h"
 
 #include "wingui/UIModels.h"
@@ -28,7 +25,6 @@ extern "C" {
 #include "EngineAll.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
-#include "SumatraConfig.h"
 #include "Settings.h"
 
 #include "utils/Log.h"

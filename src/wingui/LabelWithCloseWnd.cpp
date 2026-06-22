@@ -3,19 +3,13 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/Dpi.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "AppTools.h"
-
 #include "wingui/LabelWithCloseWnd.h"
-
-#include "utils/Log.h"
 
 #define kCloseBtnDx 16
 #define kCloseBtnDy 16

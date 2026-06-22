@@ -2,13 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 extern "C" {
-#include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 }
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
 

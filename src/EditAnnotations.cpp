@@ -2,16 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 extern "C" {
-#include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 }
 
 #include "utils/BaseUtil.h"
-#include "utils/BitManip.h"
 #include "utils/FileUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/Dpi.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -26,17 +22,12 @@ extern "C" {
 #include "EngineMupdf.h"
 #include "Translations.h"
 #include "SumatraConfig.h"
-#include "GlobalPrefs.h"
 #include "DisplayModel.h"
-#include "ProgressUpdateUI.h"
-#include "Notifications.h"
 #include "MainWindow.h"
 #include "Toolbar.h"
 #include "WindowTab.h"
 #include "EditAnnotations.h"
 #include "SumatraPDF.h"
-#include "Canvas.h"
-#include "Commands.h"
 #include "DarkModeSubclass.h"
 
 #include "utils/Log.h"

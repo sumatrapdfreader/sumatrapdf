@@ -3,11 +3,8 @@
 
 #include "utils/BaseUtil.h"
 #include <uiautomationcore.h>
-#include <uiautomationcoreapi.h>
-#include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/Dpi.h"
 #include "utils/GuessFileType.h"
 #include "utils/UITask.h"
 
@@ -22,7 +19,6 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
@@ -30,8 +26,6 @@
 #include "ReadAloudPlaybackBar.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "Annotation.h"
-#include "OverlayScrollbar.h"
 #include "SumatraPDF.h"
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
@@ -43,12 +37,7 @@
 #include "RefHover.h"
 #include "WindowTab.h"
 #include "TableOfContents.h"
-#include "resource.h"
-#include "Commands.h"
-#include "Selection.h"
-#include "Flags.h"
 #include "StressTesting.h"
-#include "Translations.h"
 #include "uia/Provider.h"
 
 #include "utils/Log.h"
@@ -59,8 +48,6 @@ static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
 }
 #include "Theme.h"
 #include "Canvas.h"
-
-#include "utils/Log.h"
 
 struct LinkHandler : ILinkHandler {
     MainWindow* win = nullptr;

@@ -5,7 +5,6 @@
 
 #pragma warning(disable : 4668)
 #include <signal.h>
-#include <eh.h>
 
 #include "utils/WinDynCalls.h"
 #include "utils/DbgHelpDyn.h"
@@ -22,7 +21,6 @@
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppTools.h"
-#include "CrashHandler.h"
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "AppSettings.h"
@@ -889,7 +887,6 @@ void UninstallCrashHandler() {
 // Commented-out because they are ad-hoc. Left in code because
 // I don't want to write them again if I ever need to test crash reporting
 #if 0
-#include <signal.h>
 static void TestCrashAbort()
 {
     raise(SIGABRT);

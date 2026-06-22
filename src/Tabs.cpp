@@ -2,12 +2,8 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -26,7 +22,6 @@
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
-#include "resource.h"
 #include "Commands.h"
 #include "FindBar.h"
 #include "Menu.h"

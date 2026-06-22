@@ -4,8 +4,6 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/Dpi.h"
-#include "utils/WinDynCalls.h"
 
 #include "wingui/UIModels.h"
 
@@ -13,8 +11,6 @@
 #include "wingui/WinGui.h"
 
 #include "Theme.h"
-
-#include "utils/Log.h"
 
 //- Splitter
 

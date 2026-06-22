@@ -8,17 +8,11 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/CmdLineArgsIter.h"
-#include "utils/WinUtil.h"
 #include "utils/GdiPlusUtil.h"
 
 #include "RegistryPreview.h"
 
-#include "utils/Log.h"
-
-#include <objbase.h>
-#include <shlwapi.h>
 #include <thumbcache.h>
-#include <unknwn.h>
 
 typedef HRESULT DllGetClassObjectFn(REFCLSID rclsid, REFIID riid, void** ppv);
 

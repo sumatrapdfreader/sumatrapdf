@@ -8,30 +8,16 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/Archive.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/Timer.h"
-#include "utils/ZipUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 #include "wingui/WebView.h"
 
-#include "Settings.h"
 #include "DocProperties.h"
 #include "SimpleBrowserWindow.h"
-#include "DocController.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"
-#include "EbookDoc.h"
-#include "MobiDoc.h"
-#include "AppTools.h"
-#include "Scratch.h"
-
-#include "utils/Log.h"
 
 // ----------------
 

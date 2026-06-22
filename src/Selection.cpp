@@ -3,24 +3,18 @@
 
 #include "utils/BaseUtil.h"
 #include <uiautomationcore.h>
-#include <uiautomationcoreapi.h>
-#include "utils/ScopedWin.h"
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
-
-#include "utils/Log.h"
 
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
-#include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"

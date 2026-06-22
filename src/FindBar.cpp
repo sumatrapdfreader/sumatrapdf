@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
@@ -19,7 +18,6 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Commands.h"
@@ -31,8 +29,6 @@
 #include "FindWindow.h"
 #include "Translations.h"
 #include "Theme.h"
-
-#include "utils/Log.h"
 
 // command ids for the bar's toolbar buttons; must not collide with real commands
 constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;

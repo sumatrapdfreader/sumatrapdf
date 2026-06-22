@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
@@ -10,14 +9,11 @@
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
-#include "wingui/WinGui.h"
 
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "DisplayMode.h"
-#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"

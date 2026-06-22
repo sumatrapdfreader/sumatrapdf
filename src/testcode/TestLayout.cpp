@@ -1,13 +1,8 @@
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
 
 #if 0
-#include "wingui/Layout.h"
 
-#include "test-app.h"
 
-#include "utils/Log.h"
 
 static HINSTANCE hInst;
 static const WCHAR* gWindowTitle = L"Test layout";

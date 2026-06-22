@@ -2,16 +2,13 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
 #include "Settings.h"
-#include "DisplayMode.h"
 #include "Flags.h"
 #include "SumatraTest.h"
-#include "SumatraControl.h"
 #include "SelectionTranslate.h"
 
 #include "utils/Log.h"

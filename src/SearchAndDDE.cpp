@@ -14,7 +14,6 @@
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
@@ -26,7 +25,6 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
-#include "resource.h"
 #include "Commands.h"
 #include "AppTools.h"
 #include "SearchAndDDE.h"
@@ -34,7 +32,6 @@
 #include "Toolbar.h"
 #include "FindBar.h"
 #include "FindWindow.h"
-#include "SumatraDialogs.h"
 #include "Translations.h"
 #include "Version.h"
 

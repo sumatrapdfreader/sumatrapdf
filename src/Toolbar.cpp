@@ -6,7 +6,6 @@ extern "C" {
 }
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
@@ -38,7 +37,6 @@ extern "C" {
 #include "FindBar.h"
 #include "Translations.h"
 #include "SvgIcons.h"
-#include "SumatraConfig.h"
 #include "Theme.h"
 #include "DarkModeSubclass.h"
 #include "wingui/Layout.h"

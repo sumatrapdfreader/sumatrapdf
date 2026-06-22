@@ -5,7 +5,6 @@
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
-#include "utils/HtmlParserLookup.h"
 #include "utils/Timer.h"
 #include "utils/WinUtil.h"
 #include "utils/StrQueue.h"
@@ -30,7 +29,6 @@
 #include "WindowTab.h"
 #include "Flags.h"
 #include "SearchAndDDE.h"
-#include "StressTesting.h"
 
 #include "utils/Log.h"
 

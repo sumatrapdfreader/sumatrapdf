@@ -2,9 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
-#include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
 
@@ -12,12 +10,9 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "uia/TextRange.h"
-#include "EngineAll.h"
 #include "DisplayModel.h"
 #include "uia/DocumentProvider.h"
-#include "uia/Constants.h"
 #include "uia/PageProvider.h"
-#include "uia/Provider.h"
 #include "TextSelection.h"
 
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document)

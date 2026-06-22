@@ -9,7 +9,6 @@
 
 #include <mshtml.h>
 #include <mshtmhst.h>
-#include <oaidl.h>
 #include <exdispid.h>
 
 #include "HtmlWindow.h"

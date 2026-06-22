@@ -3,11 +3,8 @@
 
 #include "utils/BaseUtil.h"
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "Translations.h"
 #include "Commands.h"
-
-#include "Accelerators.h"
 
 #include "utils/Log.h"
 

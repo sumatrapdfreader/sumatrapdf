@@ -10,10 +10,8 @@
 
 #include "GlobalPrefs.h"
 
-#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "resource.h"
-#include "Commands.h"
 #include "AppTools.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"

@@ -5,7 +5,6 @@
 
 #include "Commands.h"
 #include "Settings.h"
-#include "GlobalPrefs.h"
 #include "DisplayMode.h"
 #include "Notifications.h"
 

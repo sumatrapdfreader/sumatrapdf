@@ -3,7 +3,6 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/Dpi.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
 #include "Layout.h"

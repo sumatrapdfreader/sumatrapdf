@@ -4,8 +4,6 @@
 #include "utils/BaseUtil.h"
 #include "utils/CryptoUtil.h"
 #include "utils/FileUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/Dpi.h"
 #include "utils/Log.h"
@@ -13,15 +11,12 @@
 
 #include "wingui/UIModels.h"
 
-#include "SumatraConfig.h"
-#include "Annotation.h"
 #include "Settings.h"
 #include "SumatraPDF.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
-#include "Flags.h"
 #include "StressTesting.h"
 
 static bool gEnableEpubWithPdfEngine = true;

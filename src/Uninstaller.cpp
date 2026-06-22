@@ -7,7 +7,6 @@
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/ThreadUtil.h"
 
 #include "wingui/UIModels.h"
@@ -17,7 +16,6 @@
 #include "Settings.h"
 #include "SumatraConfig.h"
 #include "Flags.h"
-#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "Installer.h"
 #include "AppTools.h"

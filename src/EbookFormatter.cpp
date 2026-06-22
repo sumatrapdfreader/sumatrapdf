@@ -2,9 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/GdiPlusUtil.h"
-#include "utils/WinUtil.h"
 #include "utils/Archive.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
@@ -14,7 +12,6 @@
 
 #include "DocProperties.h"
 #include "DocController.h"
-#include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "PalmDbReader.h"

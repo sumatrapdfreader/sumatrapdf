@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
@@ -18,18 +17,15 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "resource.h"
 
 #include "utils/GuessFileType.h"
 
-#include "AppTools.h"
 #include "AIChatCommon.h"
 #include "EngineAll.h"
 

@@ -2,11 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/BitManip.h"
 #include "utils/WinUtil.h"
-#include "utils/Dpi.h"
-#include "utils/WinDynCalls.h"
 
 #include "wingui/UIModels.h"
 
@@ -16,9 +12,6 @@
 // #include "Theme.h"
 
 #ifdef _MSC_VER
-#include <objidl.h>
-#include <wrl.h>
-#include "webview2.h"
 #include "WebView2EnvironmentOptions.h"
 #endif
 #include "wingui/WebView.h"

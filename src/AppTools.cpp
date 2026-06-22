@@ -4,12 +4,10 @@
 #include "utils/BaseUtil.h"
 #include "utils/StrFormat.h"
 #include "utils/WinDynCalls.h"
-#include "utils/CmdLineArgsIter.h"
 #include "utils/DbgHelpDyn.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/CryptoUtil.h"
-#include "utils/ScopedWin.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"

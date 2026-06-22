@@ -2,17 +2,13 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/FileUtil.h"
 #include "utils/SettingsUtil.h"
 
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"
 
 #include "GlobalPrefs.h"
-
-#include "utils/Log.h"
 
 GlobalPrefs* gGlobalPrefs = nullptr;
 

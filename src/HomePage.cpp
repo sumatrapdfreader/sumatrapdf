@@ -6,7 +6,6 @@
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
-#include "utils/SquareTreeParser.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -15,14 +14,11 @@
 
 #include "Settings.h"
 #include "DocController.h"
-#include "EngineBase.h"
 #include "SumatraConfig.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
-#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "resource.h"
 #include "Commands.h"
 #include "Accelerators.h"
 #include "CommandPalette.h"
@@ -33,9 +29,7 @@
 #include "Version.h"
 #include "Theme.h"
 #include "AppSettings.h"
-#include "OverlayScrollbar.h"
 #include "DarkModeSubclass.h"
-#include "utils/Log.h"
 
 #ifndef ABOUT_USE_LESS_COLORS
 #define ABOUT_LINE_OUTER_SIZE 2

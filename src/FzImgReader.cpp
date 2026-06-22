@@ -4,8 +4,6 @@
 #pragma warning(disable : 4611) // interaction between '_setjmp' and C++ object destruction is non-portable
 
 extern "C" {
-#include <mupdf/fitz.h>
-#include <mupdf/pdf.h>
 #include "../mupdf/source/fitz/color-imp.h"
 #include "../mupdf/source/fitz/image-imp.h"
 }

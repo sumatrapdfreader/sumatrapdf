@@ -2,11 +2,8 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/Dpi.h"
 #include "utils/BitManip.h"
 #include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
@@ -21,9 +18,7 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
-#include "SumatraConfig.h"
 #include "GlobalPrefs.h"
-#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "DisplayModel.h"
@@ -31,15 +26,11 @@
 #include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
-#include "AppTools.h"
-#include "TableOfContents.h"
 #include "Translations.h"
 #include "Tabs.h"
 #include "Menu.h"
 #include "Accelerators.h"
 #include "Theme.h"
-
-#include "utils/Log.h"
 
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS

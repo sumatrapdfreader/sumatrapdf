@@ -8,7 +8,6 @@
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
 #include "utils/GdiPlusUtil.h"
-#include "mui/Mui.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -22,7 +21,6 @@
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "Theme.h"
-#include "DarkModeSubclass.h"
 #include "GlobalPrefs.h"
 #include "Annotation.h"
 #include "SumatraConfig.h"
@@ -30,17 +28,13 @@
 #include "SumatraDialogs.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
-#include "resource.h"
 #include "Commands.h"
 #include "ExternalViewers.h"
 #include "Favorites.h"
 #include "FileThumbnails.h"
-#include "Selection.h"
-#include "Tabs.h"
 #include "HomePage.h"
 #include "Translations.h"
 #include "Toolbar.h"
-#include "EditAnnotations.h"
 #include "Accelerators.h"
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
@@ -48,8 +42,6 @@
 #include "ImageSaveCropResize.h"
 #include "Menu.h"
 #include "ReadAloudHighlight.h"
-
-#include "utils/Log.h"
 
 struct BuildMenuCtx {
     WindowTab* tab = nullptr;

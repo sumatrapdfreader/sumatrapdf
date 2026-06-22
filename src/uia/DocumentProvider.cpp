@@ -3,21 +3,16 @@
 
 #include "utils/BaseUtil.h"
 #include <uiautomationcore.h>
-#include <uiautomationcoreapi.h>
-#include <oleacc.h>
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IAccIdentity
 __CRT_UUID_DECL(IAccIdentity, 0x7852B78D, 0x1CFD, 0x41C1, 0xA6, 0x15, 0x9C, 0x0C, 0x85, 0x96, 0x0B, 0x5F)
 #endif
-#include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
 #include "DisplayModel.h"
 #include "utils/FileUtil.h"
 #include "uia/DocumentProvider.h"

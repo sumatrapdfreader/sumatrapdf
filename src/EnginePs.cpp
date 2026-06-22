@@ -3,7 +3,6 @@
 
 #include "utils/BaseUtil.h"
 #include <zlib.h>
-#include "utils/ByteReader.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"

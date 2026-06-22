@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
@@ -33,8 +32,6 @@
 #include "Theme.h"
 #include "DarkModeSubclass.h"
 
-#include "utils/Log.h"
-
 // match the frame's title bar to the current theme (dark caption in dark mode)
 static void ApplyTitleBarTheme(HWND hwnd) {
     if (UseDarkModeLib()) {
@@ -48,12 +45,8 @@ constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
 // list model backed live by win->findMatches (the snippet for each match)
 struct FindResultsModel : ListBoxModel {
     MainWindow* win = nullptr;
-    explicit FindResultsModel(MainWindow* win) {
-        this->win = win;
-    }
-    int ItemsCount() override {
-        return (int)win->findMatches.size();
-    }
+    explicit FindResultsModel(MainWindow* win) { this->win = win; }
+    int ItemsCount() override { return (int)win->findMatches.size(); }
     const char* Item(int i) override {
         const char* s = win->findMatches[i].snippet;
         return s ? s : "";
@@ -67,8 +60,8 @@ struct FindWindowWnd : Wnd {
     HWND hwndBtns = nullptr; // prev / next / match-case / unpin(dock)
     HIMAGELIST himl = nullptr;
     ListBox* results = nullptr;
-    StrVec filterWords;  // search term(s) to highlight in snippets
-    Vec<u8> hlScratch;   // reused highlight mask for DrawMaybeHighlightedText
+    StrVec filterWords; // search term(s) to highlight in snippets
+    Vec<u8> hlScratch;  // reused highlight mask for DrawMaybeHighlightedText
 
     FindWindowWnd() = default;
     ~FindWindowWnd() override;
@@ -83,7 +76,7 @@ struct FindWindowWnd : Wnd {
     void DrawResultItem(ListBox::DrawItemEvent* ev);
     void OnResultSelected();
     bool MoveResultSelection(WPARAM vkey);
-    int CurrentMatchIndex();        // list index of the document's current match, or -1
+    int CurrentMatchIndex();         // list index of the document's current match, or -1
     int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
@@ -216,8 +209,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         args.parent = hwnd;
         args.font = GetDefaultGuiFont();
         results = new ListBox();
-        results->onDrawItem =
-            MkMethod1<FindWindowWnd, ListBox::DrawItemEvent*, &FindWindowWnd::DrawResultItem>(this);
+        results->onDrawItem = MkMethod1<FindWindowWnd, ListBox::DrawItemEvent*, &FindWindowWnd::DrawResultItem>(this);
         results->onSelectionChanged = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
         results->onDoubleClick = MkMethod0<FindWindowWnd, &FindWindowWnd::OnResultSelected>(this);
         results->SetColors(colTxt, colBg);

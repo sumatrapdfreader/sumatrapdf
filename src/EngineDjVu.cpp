@@ -17,7 +17,6 @@
 
 #include "wingui/UIModels.h"
 
-#include "SumatraConfig.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -419,8 +418,6 @@ struct DjVuInfoChunk {
     BYTE dpiLo, dpiHi;
     BYTE gamma, flags;
 };
-
-#include <poppack.h>
 
 static_assert(sizeof(DjVuInfoChunk) == 10, "wrong size of DjVuInfoChunk structure");
 

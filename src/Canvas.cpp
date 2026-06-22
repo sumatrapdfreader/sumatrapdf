@@ -14,8 +14,6 @@
 #include "utils/HttpUtil.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/GuessFileType.h"
-#include <algorithm>
-#include <shlobj.h>
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -24,7 +22,6 @@
 #include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
-#include "AppSettings.h"
 #include "DisplayMode.h"
 #include "Annotation.h"
 #include "FormFields.h"
@@ -44,10 +41,7 @@
 #include "SumatraPDF.h"
 #include "EditAnnotations.h"
 #include "Notifications.h"
-#include "OverlayScrollbar.h"
 #include "MainWindow.h"
-#include "resource.h"
-#include "Commands.h"
 #include "Canvas.h"
 #include "Menu.h"
 #include "uia/Provider.h"
@@ -57,7 +51,6 @@
 #include "ReadAloudPlaybackBar.h"
 #include "TextToSpeech.h"
 #include "HomePage.h"
-#include "Tabs.h"
 #include "Toolbar.h"
 #include "Translations.h"
 

@@ -2,29 +2,19 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/Dpi.h"
 #include "utils/Timer.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/UIModels.h"
-
-#include "wingui/Layout.h"
 #include "wingui/FrameRateWnd.h"
 
 #include "Settings.h"
-#include "DocController.h"
 #include "GlobalPrefs.h"
-#include "SumatraConfig.h"
-#include "FileHistory.h"
-#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#include "resource.h"
 #include "Commands.h"
 #include "Canvas.h"
 #include "Menu.h"
 #include "HomePage.h"
-#include "Translations.h"
 #include "Theme.h"
 
 #include "utils/Log.h"

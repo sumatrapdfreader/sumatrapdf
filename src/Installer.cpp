@@ -2,16 +2,11 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
 #include "utils/FileUtil.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/ThreadUtil.h"
 
@@ -24,7 +19,6 @@
 #include "AppSettings.h"
 #include "Flags.h"
 #include "Version.h"
-#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "RegistryPreview.h"
@@ -229,7 +223,8 @@ static void RemoveShortcutFile(int csidl) {
 static int shortcutDirsPre34[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
 
 // those are shortcuts created by versions 3.4 through 3.6
-static int shortcutDirs34To36[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP, CSIDL_STARTMENU};
+static int shortcutDirs34To36[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP,
+                                   CSIDL_STARTMENU};
 
 void RemoveAppShortcuts() {
     for (int csidl : shortcutDirs) {

@@ -1,13 +1,9 @@
-#include "test-app.h"
 #include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
-
-#include "utils/Log.h"
 
 // in TestTab.cpp
 extern int TestTab(int nCmdShow);
@@ -44,8 +40,7 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     return padding;
 }
 
-struct TestWnd : Wnd {
-};
+struct TestWnd : Wnd {};
 
 static void OnDestroy(Wnd::DestroyEvent*) {
     ::PostQuitMessage(0);

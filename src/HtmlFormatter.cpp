@@ -7,14 +7,10 @@
 #include "utils/CssParser.h"
 #include "utils/HtmlPullParser.h"
 #include "mui/Mui.h"
-#include "utils/Timer.h"
 
-#include "EbookBase.h"
 #include "FzImgReader.h"
 
 #include "HtmlFormatter.h"
-
-#include "utils/Log.h"
 
 /*
 Given size of a page, we format html into a set of pages. We handle only a small

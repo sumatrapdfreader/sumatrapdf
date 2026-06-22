@@ -9,7 +9,6 @@
 
 #include "wingui/UIModels.h"
 
-#include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 

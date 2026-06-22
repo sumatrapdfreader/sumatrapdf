@@ -2,11 +2,8 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
 #include "utils/GdiPlusUtil.h"
-#include "mui/Mui.h"
 #include "utils/TgaReader.h"
 #include "utils/WinUtil.h"
 
@@ -17,8 +14,6 @@
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
-#include "PdfCreator.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 

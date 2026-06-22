@@ -17,7 +17,6 @@
 #include "WindowTab.h"
 #include "TextSelection.h"
 #include "Selection.h"
-#include "SelectionTranslate.h"
 #include "AIChatCommon.h"
 #include "GrokBuild.h"
 #include "ClaudeCode.h"

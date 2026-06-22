@@ -2,8 +2,6 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
 
@@ -16,16 +14,12 @@
 #include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
-#include "resource.h"
-#include "Commands.h"
 #include "Translations.h"
 #include "SumatraConfig.h"
 #include "Theme.h"
-#include "TabGroupsManage.h"
 
 constexpr const WCHAR* kTabGroupsWinClassName = L"SUMATRA_PDF_TAB_GROUPS";
 

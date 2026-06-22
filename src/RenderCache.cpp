@@ -13,11 +13,8 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
 #include "DisplayModel.h"
-#include "GlobalPrefs.h"
 #include "RenderCache.h"
-#include "TextSelection.h"
 
 #include "utils/Log.h"
 

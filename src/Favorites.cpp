@@ -2,10 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/Dpi.h"
 #include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
@@ -17,8 +14,6 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "EngineAll.h"
-#include "SumatraConfig.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
@@ -26,12 +21,9 @@
 #include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"
-#include "Flags.h"
 #include "AppSettings.h"
-#include "Favorites.h"
 #include "Menu.h"
 #include "SumatraDialogs.h"
-#include "Tabs.h"
 #include "Translations.h"
 #include "Accelerators.h"
 

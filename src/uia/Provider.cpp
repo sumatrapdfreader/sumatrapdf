@@ -3,8 +3,6 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinDynCalls.h"
-#include "utils/DbgHelpDyn.h"
-#include "utils/WinUtil.h"
 #include "uia/Provider.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"

@@ -7,11 +7,8 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
-#include "GlobalPrefs.h"
 #include "Flags.h"
-#include "MainWindow.h"
 #include "Print.h"
-#include "StressTesting.h"
 
 #include "utils/Log.h"
 
