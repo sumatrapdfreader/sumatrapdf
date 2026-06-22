@@ -628,6 +628,13 @@ workspace "SumatraPDF"
     includedirs { "ext/brotli/c/include" }
     brotli_files()
 
+    -- cmark-gfm (markdown parser for mupdf's source/html/md.c, FZ_ENABLE_MD).
+    -- generated config headers live in mupdf/scripts/cmark-gfm.
+    includedirs { "ext/cmark-gfm/src", "ext/cmark-gfm/extensions", "mupdf/scripts/cmark-gfm" }
+    defines { "CMARK_GFM_STATIC_DEFINE" }
+    disablewarnings { "4100", "4127", "4232", "4244", "4245", "4267", "4456", "4457", "4701", "4702", "4706" }
+    cmark_gfm_files()
+
     -- libheif
     defines { "LIBHEIF_STATIC_BUILD" }
 
@@ -735,7 +742,7 @@ workspace "SumatraPDF"
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
     defines { "TOFU_NOTO", "TOFU_CJK_LANG", "TOFU_NOTO_SUMATRA" }
-    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=0" }
+    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
 
     filter { "platforms:arm64" }
@@ -760,6 +767,9 @@ workspace "SumatraPDF"
       "ext/freetype/include",
       "ext/mujs",
       "ext/brotli/c/include",
+      "ext/cmark-gfm/src",
+      "ext/cmark-gfm/extensions",
+      "mupdf/scripts/cmark-gfm",
       "ext/harfbuzz/src",
       "ext/lcms2/include",
       "ext/gumbo-parser/src",
@@ -775,17 +785,17 @@ workspace "SumatraPDF"
     -- mupdf
     -- this fixes "NAN" is not a constant in some version of msvc
     -- without this it's #define _UCRT_NAN (__ucrt_int_to_float(0x7FC00000))
-    -- FZ_ENABLE_MD=0: mupdf 1.28 markdown support (source/html/md.c) needs the
-    -- cmark-gfm thirdparty lib, which we don't vendor; disable it (md.c is not
-    -- compiled and md_document_handler is not registered in document-all.c)
-    defines { "_UCRT_NOISY_NAN", "FZ_ENABLE_MD=0" }
+    -- CMARK_GFM_STATIC_DEFINE: md.c includes cmark-gfm headers; we link the
+    -- cmark-gfm static lib (built in mupdf-libs). FZ_ENABLE_MD defaults to 1
+    -- in mupdf's config.h, enabling markdown support.
+    defines { "_UCRT_NOISY_NAN", "CMARK_GFM_STATIC_DEFINE" }
 
   project "libmupdf"
     kind "SharedLib"
     language "C"
     optimized_conf()
     disablewarnings { "4206", "4702" }
-    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=0" }
+    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
 
     filter { "platforms:arm64" }
     defines { "ARCH_HAS_NEON=1" }

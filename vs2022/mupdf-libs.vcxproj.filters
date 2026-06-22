@@ -16,6 +16,15 @@
     <Filter Include="brotli\c\enc">
       <UniqueIdentifier>{E88733B5-D4EA-C259-7D70-FB0F69B28EDC}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cmark-gfm">
+      <UniqueIdentifier>{5AADABD2-C617-6049-0F56-11EF7BFF3D9E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cmark-gfm\extensions">
+      <UniqueIdentifier>{59427CC1-45D1-058B-EEEF-1986DA5D1631}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cmark-gfm\src">
+      <UniqueIdentifier>{71883271-DD48-AEA7-A683-F7241203F383}</UniqueIdentifier>
+    </Filter>
     <Filter Include="extract">
       <UniqueIdentifier>{80E8D782-ECC7-561E-F5DF-E1F4613EBD7F}</UniqueIdentifier>
     </Filter>
@@ -631,6 +640,93 @@
     </ClCompile>
     <ClCompile Include="..\ext\brotli\c\enc\utf8_util.c">
       <Filter>brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\autoheaderid.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\autolink.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\core-extensions.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\ext_scanners.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\strikethrough.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\table.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\tagfilter.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\tasklist.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\arena.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\blocks.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\buffer.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\cmark.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\cmark_ctype.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\footnotes.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\houdini_href_e.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\houdini_html_e.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\houdini_html_u.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\html.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\inlines.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\iterator.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\linked_list.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\map.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\node.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\plugin.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\references.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\registry.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\scanners.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\syntax_extension.c">
+      <Filter>cmark-gfm\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\src\utf8.c">
+      <Filter>cmark-gfm\src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\extract\src\alloc.c">
       <Filter>extract\src</Filter>

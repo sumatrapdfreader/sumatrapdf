@@ -902,6 +902,9 @@
     <ClCompile Include="..\mupdf\source\html\html-parse.c">
       <Filter>mupdf\source\html</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\html\md.c">
+      <Filter>mupdf\source\html</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\html\mobi.c">
       <Filter>mupdf\source\html</Filter>
     </ClCompile>

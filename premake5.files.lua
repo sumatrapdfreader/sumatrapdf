@@ -1014,6 +1014,25 @@ function chm_files()
   })
 end
 
+-- cmark-gfm: markdown parser used by mupdf's source/html/md.c (FZ_ENABLE_MD).
+-- Parser-only subset matching mupdf's Makelists CMARKGFM_SRC (no CLI main.c,
+-- no commonmark/latex/man/xml/plaintext renderers). Generated config headers
+-- (config.h, cmark-gfm_export.h, cmark-gfm_version.h) come from
+-- mupdf/scripts/cmark-gfm. Build with -DCMARK_GFM_STATIC_DEFINE.
+function cmark_gfm_files()
+  files_in_dir("ext/cmark-gfm/src", {
+    "arena.c", "blocks.c", "buffer.c", "cmark.c", "cmark_ctype.c",
+    "footnotes.c", "houdini_href_e.c", "houdini_html_e.c", "houdini_html_u.c",
+    "html.c", "inlines.c", "iterator.c", "linked_list.c", "map.c", "node.c",
+    "plugin.c", "references.c", "registry.c", "scanners.c",
+    "syntax_extension.c", "utf8.c",
+  })
+  files_in_dir("ext/cmark-gfm/extensions", {
+    "autolink.c", "core-extensions.c", "ext_scanners.c", "strikethrough.c",
+    "table.c", "tagfilter.c", "tasklist.c", "autoheaderid.c",
+  })
+end
+
 function mupdf_files()
   files { "ext/mupdf_load_system_font.c" }
 
@@ -1184,6 +1203,7 @@ function mupdf_files()
     "html-layout.c",
     "html-outline.c",
     "html-parse.c",
+    "md.c",
     "mobi.c",
     "office.c",
     "story-writer.c",
