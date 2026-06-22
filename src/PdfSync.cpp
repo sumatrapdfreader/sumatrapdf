@@ -775,7 +775,8 @@ static bool IsUnixSourcePath(const char* syncFilePath, const char* resolvedSrcPa
         return true;
     }
 
-    if (str::StartsWithI(resolvedSrcPath, "/mnt/")) {
+    if (str::StartsWithI(resolvedSrcPath, "/mnt/") && std::isalpha((unsigned char)resolvedSrcPath[5]) &&
+        (resolvedSrcPath[6] == '/' || resolvedSrcPath[6] == '\0')) {
         return true;
     }
 
