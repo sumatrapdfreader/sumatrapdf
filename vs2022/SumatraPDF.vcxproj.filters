@@ -90,6 +90,9 @@
     <ClInclude Include="..\ext\darkmodelib\src\Version.h">
       <Filter>ext\darkmodelib\src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\AIChatCommon.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Accelerators.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -112,6 +115,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ClaudeCode.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\CodexBuild.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\CommandPalette.h">
@@ -168,7 +174,16 @@
     <ClInclude Include="..\src\FileThumbnails.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\FindBar.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\FindWindow.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Flags.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\FormFields.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\FzImgReader.h">
@@ -228,6 +243,12 @@
     <ClInclude Include="..\src\ProgressUpdateUI.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ReadAloudHighlight.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ReadAloudPlaybackBar.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\RefHover.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -253,6 +274,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Selection.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SelectionTranslate.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Settings.h">
@@ -416,6 +440,9 @@
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c">
       <Filter>ext\synctex</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\AIChatCommon.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Accelerators.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -443,16 +470,10 @@
     <ClCompile Include="..\src\ClaudeCode.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\CodexBuild.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\CommandPalette.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\FindBar.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\FindWindow.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\FormFields.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Commands.cpp">
@@ -518,7 +539,16 @@
     <ClCompile Include="..\src\FileThumbnails.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\FindBar.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\FindWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Flags.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\FormFields.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\FzImgReader.cpp">
@@ -576,6 +606,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Print.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ReadAloudHighlight.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ReadAloudPlaybackBar.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RefHover.cpp">

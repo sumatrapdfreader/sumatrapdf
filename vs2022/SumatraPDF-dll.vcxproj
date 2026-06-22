@@ -1094,6 +1094,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h" />
     <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h" />
     <ClInclude Include="..\ext\darkmodelib\src\Version.h" />
+    <ClInclude Include="..\src\AIChatCommon.h" />
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppSettings.h" />
@@ -1102,10 +1103,8 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\ChmFile.h" />
     <ClInclude Include="..\src\ChmModel.h" />
     <ClInclude Include="..\src\ClaudeCode.h" />
+    <ClInclude Include="..\src\CodexBuild.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
-    <ClInclude Include="..\src\FindBar.h" />
-    <ClInclude Include="..\src\FindWindow.h" />
-    <ClInclude Include="..\src\FormFields.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
@@ -1123,11 +1122,13 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FileHistory.h" />
     <ClInclude Include="..\src\FileThumbnails.h" />
+    <ClInclude Include="..\src\FindBar.h" />
+    <ClInclude Include="..\src\FindWindow.h" />
     <ClInclude Include="..\src\Flags.h" />
+    <ClInclude Include="..\src\FormFields.h" />
     <ClInclude Include="..\src\FzImgReader.h" />
     <ClInclude Include="..\src\GlobalPrefs.h" />
     <ClInclude Include="..\src\GrokBuild.h" />
-    <ClInclude Include="..\src\CodexBuild.h" />
     <ClInclude Include="..\src\GumboHelpers.h" />
     <ClInclude Include="..\src\HomePage.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
@@ -1144,6 +1145,8 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\PdfTools.h" />
     <ClInclude Include="..\src\Print.h" />
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
+    <ClInclude Include="..\src\ReadAloudHighlight.h" />
+    <ClInclude Include="..\src\ReadAloudPlaybackBar.h" />
     <ClInclude Include="..\src\RefHover.h" />
     <ClInclude Include="..\src\RefHoverDetect.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
@@ -1153,6 +1156,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\Screenshot.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
     <ClInclude Include="..\src\Selection.h" />
+    <ClInclude Include="..\src\SelectionTranslate.h" />
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\SimpleBrowserWindow.h" />
     <ClInclude Include="..\src\StressTesting.h" />
@@ -1168,8 +1172,6 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\TextSearch.h" />
     <ClInclude Include="..\src\TextSelection.h" />
     <ClInclude Include="..\src\TextToSpeech.h" />
-    <ClInclude Include="..\src\ReadAloudHighlight.h" />
-    <ClInclude Include="..\src\ReadAloudPlaybackBar.h" />
     <ClInclude Include="..\src\Theme.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\Translations.h" />
@@ -1210,6 +1212,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\ext\darkmodelib\src\DmlibWinApi.cpp" />
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c" />
+    <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\AppSettings.cpp" />
@@ -1218,12 +1221,9 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\ChmFile.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
-    <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\ClaudeCode.cpp" />
+    <ClCompile Include="..\src\CodexBuild.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
-    <ClCompile Include="..\src\FindBar.cpp" />
-    <ClCompile Include="..\src\FindWindow.cpp" />
-    <ClCompile Include="..\src\FormFields.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
@@ -1245,11 +1245,13 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileHistory.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
+    <ClCompile Include="..\src\FindBar.cpp" />
+    <ClCompile Include="..\src\FindWindow.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
+    <ClCompile Include="..\src\FormFields.cpp" />
     <ClCompile Include="..\src\FzImgReader.cpp" />
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
     <ClCompile Include="..\src\GrokBuild.cpp" />
-    <ClCompile Include="..\src\CodexBuild.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\HomePage.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
@@ -1267,6 +1269,8 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\PdfTools.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
+    <ClCompile Include="..\src\ReadAloudHighlight.cpp" />
+    <ClCompile Include="..\src\ReadAloudPlaybackBar.cpp" />
     <ClCompile Include="..\src\RefHover.cpp" />
     <ClCompile Include="..\src\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\RegistryInstaller.cpp" />
@@ -1325,8 +1329,6 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\TextSearch.cpp" />
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\TextToSpeech.cpp" />
-    <ClCompile Include="..\src\ReadAloudHighlight.cpp" />
-    <ClCompile Include="..\src\ReadAloudPlaybackBar.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\TranslationLangs.cpp" />
