@@ -29,6 +29,7 @@ enum class ControlCmd : u16 {
     TestSelectionTranslate = 15,
     TestTripleClickLineSelect = 16,
     TestContextMenuSelection = 17,
+    TestGoToFindMatch = 18,
 };
 
 enum class ControlArgType : u16 {
@@ -381,6 +382,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestContextMenuSelectionResult(word1, word2, cursorWord, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestGoToFindMatch: {
+            const char* word = StringArg(req, 0);
+            const char* typed = StringArg(req, 1);
+            if (!word || !typed) {
+                AppendError(req, "TestGoToFindMatch expects string word, string typed");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestGoToFindMatchResult(word, typed, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

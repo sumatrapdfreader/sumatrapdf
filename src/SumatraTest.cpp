@@ -21,6 +21,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Selection.h"
+#include "SearchAndDDE.h"
 #include "ReadAloudHighlight.h"
 
 #include <chm_lib.h>
@@ -381,6 +382,93 @@ char* TestContextMenuSelectionResult(const char* word1, const char* word2, const
         out.AppendFmt("OK selected=%s\n", original);
     } else {
         out.AppendFmt("FAIL original=%s after=%s\n", original, after);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
+
+// find the [start, end) glyph range of the first occurrence of `word` on a page
+static bool FindWordGlyphRange(EngineBase* engine, int pageNo, const char* word, int* startOut, int* endOut) {
+    if (!engine || !word || !startOut || !endOut) {
+        return false;
+    }
+    int textLen = 0;
+    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen);
+    if (!text || textLen <= 0) {
+        return false;
+    }
+    AutoFreeWStr wordW = ToWStr(word);
+    int wordLen = (int)str::Len(wordW);
+    if (wordLen <= 0) {
+        return false;
+    }
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (memcmp(text + i, wordW, (size_t)wordLen * sizeof(WCHAR)) == 0) {
+            *startOut = i;
+            *endOut = i + wordLen;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Regression test for the find-results crash/assert: picking a match from the
+// floating results list (GoToFindMatch) used to call SetLastResult() before
+// ShowSearchResult(). SetLastResult()->SetText() clears textSearch->result
+// whenever the matched text differs from the typed search text (e.g. a
+// case-insensitive find where "the" matches "The"), so ShowSearchResult() then
+// got an empty result (result->len == 0), tripped a ReportIf, and failed to
+// navigate/select the match. Operates on the document loaded into the first
+// window. `word` is the (case-different) matched text in the document and
+// `typed` is the lowercase search text the user typed.
+char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word) || str::IsEmptyOrWhiteSpace(typed)) {
+        return fail("ERROR missing word or typed");
+    }
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail("NOTREADY no-doc");
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    int startGlyph = 0, endGlyph = 0;
+    if (!FindWordGlyphRange(engine, pageNo, word, &startGlyph, &endGlyph)) {
+        return fail("ERROR word-not-found");
+    }
+
+    // mimic a prior find: the typed (lowercase) text becomes textSearch's
+    // lastText, so SetLastResult() inside GoToFindMatch() sees a text change
+    AutoFreeWStr typedW = ToWStr(typed);
+    dm->textSearch->SetText(typedW);
+
+    // start with no selection so we can tell whether GoToFindMatch selected the match
+    DeleteOldSelectionInfo(win, true);
+
+    GoToFindMatch(win, pageNo, startGlyph, pageNo, endGlyph);
+
+    bool isTextOnly = false;
+    TempStr selected = GetSelectedTextTemp(win->CurrentTab(), " ", isTextOnly);
+    bool ok = str::Eq(selected, word);
+    if (ok) {
+        out.AppendFmt("OK selected=%s\n", selected);
+    } else {
+        out.AppendFmt("FAIL expected=%s selected=%s\n", word, selected ? selected : "(none)");
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;

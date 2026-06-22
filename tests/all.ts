@@ -25,6 +25,7 @@ import { testit as issue5665 } from "./issue-5665.ts";
 import { testit as issue5677 } from "./issue-5677.ts";
 import { testit as issue5681 } from "./issue-5681.ts";
 import { testit as issue5718 } from "./issue-5718.ts";
+import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
   ["cmd-start-autoscroll", cmdStartAutoScroll],
@@ -42,6 +43,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-5677", issue5677],
   ["issue-5681", issue5681],
   ["issue-5718", issue5718],
+  ["issue-find-match-select", findMatchSelect],
 ];
 
 export type AllTestOptions = {

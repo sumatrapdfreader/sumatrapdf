@@ -10,3 +10,4 @@ char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord
                                       int* exitCodeOut = nullptr);
 char* TestContextMenuSelectionResult(const char* word1, const char* word2, const char* cursorWord,
                                      int* exitCodeOut = nullptr);
+char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCodeOut = nullptr);

@@ -620,11 +620,16 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     if (ts->result.len == 0) {
         return;
     }
+    // navigate to and select the match while ts->result is still populated.
+    // SetLastResult() below calls SetText(), which clears ts->result whenever
+    // the matched text differs from the last search text (e.g. a case-insensitive
+    // find where "the" matched "The"), so ShowSearchResult() must run first
+    ShowSearchResult(win, &ts->result, true);
     // hand the selection to TextSearch as its "last result" so Find Next/Prev
     // continue from here; SetLastResult owns the findPage/findIndex/pageText
-    // bookkeeping (so we don't poke internals or leave pageText null)
+    // bookkeeping (so we don't poke internals or leave pageText null). The match's
+    // glyph range (start/end) survives this, so the bookkeeping stays correct.
     ts->SetLastResult(ts);
-    ShowSearchResult(win, &ts->result, true);
     ShowMatchCount(win);
 }
 
