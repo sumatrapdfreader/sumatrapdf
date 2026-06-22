@@ -370,11 +370,6 @@ void opj_mqc_erterm_enc(opj_mqc_t *mqc)
     }
 }
 
-static INLINE void opj_mqc_renorme(opj_mqc_t *mqc)
-{
-    opj_mqc_renorme_macro(mqc, mqc->a, mqc->c, mqc->ct);
-}
-
 /**
 Encode the most probable symbol
 @param mqc MQC handle

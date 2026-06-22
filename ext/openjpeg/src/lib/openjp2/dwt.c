@@ -55,6 +55,9 @@
 #if (defined(__AVX2__) || defined(__AVX512F__))
 #include <immintrin.h>
 #endif
+#ifdef __ARM_NEON
+#include <arm_neon.h>
+#endif
 
 #if defined(__GNUC__)
 #pragma GCC poison malloc calloc realloc free
@@ -73,7 +76,7 @@
 /** Number of int32 values in a AVX2 register */
 #define VREG_INT_COUNT       8
 #else
-/** Number of int32 values in a SSE2 register */
+/** Number of int32 values in a SSE2 or NEON register */
 #define VREG_INT_COUNT       4
 #endif
 
@@ -699,7 +702,7 @@ static void opj_idwt53_h(const opj_dwt_t *dwt,
 #endif
 }
 
-#if (defined(__SSE2__) || defined(__AVX2__) || defined(__AVX512F__)) && !defined(STANDARD_SLOW_VERSION)
+#if (defined(__ARM_NEON) || defined(__SSE2__) || defined(__AVX2__) || defined(__AVX512F__)) && !defined(STANDARD_SLOW_VERSION)
 
 /* Conveniency macros to improve the readability of the formulas */
 #if defined(__AVX512F__)
@@ -722,6 +725,16 @@ static void opj_idwt53_h(const opj_dwt_t *dwt,
 #define ADD(x,y)    _mm256_add_epi32((x),(y))
 #define SUB(x,y)    _mm256_sub_epi32((x),(y))
 #define SAR(x,y)    _mm256_srai_epi32((x),(y))
+#elif defined(__ARM_NEON)
+#define VREG        int32x4_t
+#define LOAD_CST(x) vdupq_n_s32(x)
+#define LOAD(x)     vld1q_s32((const int32_t*)(x))
+#define LOADU(x)    vld1q_s32((const int32_t*)(x))
+#define STORE(x,y)  vst1q_s32((int32_t*)(x),(y))
+#define STOREU(x,y) vst1q_s32((int32_t*)(x),(y))
+#define ADD(x,y)    vaddq_s32((x),(y))
+#define SUB(x,y)    vsubq_s32((x),(y))
+#define SAR(x,y)    vshrq_n_s32((x),(y))
 #else
 #define VREG        __m128i
 #define LOAD_CST(x) _mm_set1_epi32(x)
@@ -755,9 +768,9 @@ void opj_idwt53_v_final_memcpy(OPJ_INT32* tiledp_col,
     }
 }
 
-/** Vertical inverse 5x3 wavelet transform for 8 columns in SSE2, or
- * 16 in AVX2, when top-most pixel is on even coordinate */
-static void opj_idwt53_v_cas0_mcols_SSE2_OR_AVX2(
+/** Vertical inverse 5x3 wavelet transform for 8 columns in SSE2 and NEON,
+ * or 16 in AVX2, when top-most pixel is on even coordinate */
+static void opj_idwt53_v_cas0_mcols_SIMD(
     OPJ_INT32* tmp,
     const OPJ_INT32 sn,
     const OPJ_INT32 len,
@@ -862,9 +875,9 @@ static void opj_idwt53_v_cas0_mcols_SSE2_OR_AVX2(
 }
 
 
-/** Vertical inverse 5x3 wavelet transform for 8 columns in SSE2, or
- * 16 in AVX2, when top-most pixel is on odd coordinate */
-static void opj_idwt53_v_cas1_mcols_SSE2_OR_AVX2(
+/** Vertical inverse 5x3 wavelet transform for 8 columns in SSE2 and NEON,
+ * or 16 in AVX2, when top-most pixel is on odd coordinate */
+static void opj_idwt53_v_cas1_mcols_SIMD(
     OPJ_INT32* tmp,
     const OPJ_INT32 sn,
     const OPJ_INT32 len,
@@ -1104,11 +1117,11 @@ static void opj_idwt53_v(const opj_dwt_t *dwt,
     if (dwt->cas == 0) {
         /* If len == 1, unmodified value */
 
-#if (defined(__SSE2__) || defined(__AVX2__))
+#if (defined(__ARM_NEON) || defined(__SSE2__) || defined(__AVX2__))
         if (len > 1 && nb_cols == PARALLEL_COLS_53) {
-            /* Same as below general case, except that thanks to SSE2/AVX2 */
+            /* Same as below general case, except that thanks to SIMD */
             /* we can efficiently process 8/16 columns in parallel */
-            opj_idwt53_v_cas0_mcols_SSE2_OR_AVX2(dwt->mem, sn, len, tiledp_col, stride);
+            opj_idwt53_v_cas0_mcols_SIMD(dwt->mem, sn, len, tiledp_col, stride);
             return;
         }
 #endif
@@ -1147,11 +1160,11 @@ static void opj_idwt53_v(const opj_dwt_t *dwt,
             return;
         }
 
-#if (defined(__SSE2__) || defined(__AVX2__))
+#if (defined(__ARM_NEON) || defined(__SSE2__) || defined(__AVX2__))
         if (len > 2 && nb_cols == PARALLEL_COLS_53) {
-            /* Same as below general case, except that thanks to SSE2/AVX2 */
+            /* Same as below general case, except that thanks to SIMD */
             /* we can efficiently process 8/16 columns in parallel */
-            opj_idwt53_v_cas1_mcols_SSE2_OR_AVX2(dwt->mem, sn, len, tiledp_col, stride);
+            opj_idwt53_v_cas1_mcols_SIMD(dwt->mem, sn, len, tiledp_col, stride);
             return;
         }
 #endif
@@ -3282,6 +3295,72 @@ static void opj_v8dwt_decode_step2_sse(opj_v8_t* l, opj_v8_t* w,
     }
 }
 
+#elif defined(__ARM_NEON)
+
+static void opj_v8dwt_decode_step1_neon(opj_v8_t* w,
+                                        OPJ_UINT32 start,
+                                        OPJ_UINT32 end,
+                                        const OPJ_FLOAT32 c)
+{
+    OPJ_FLOAT32* OPJ_RESTRICT fw = (OPJ_FLOAT32*) w;
+    OPJ_UINT32 i;
+    float32x4_t vc = vdupq_n_f32(c);
+    /* To be adapted if NB_ELTS_V8 changes */
+    fw += 2 * NB_ELTS_V8 * start;
+    for (i = start; i < end; ++i, fw += 2 * NB_ELTS_V8) {
+        float32x4_t v0 = vld1q_f32(fw);
+        float32x4_t v1 = vld1q_f32(fw + 4);
+        vst1q_f32(fw,     vmulq_f32(v0, vc));
+        vst1q_f32(fw + 4, vmulq_f32(v1, vc));
+    }
+}
+
+static void opj_v8dwt_decode_step2_neon(opj_v8_t* l, opj_v8_t* w,
+                                        OPJ_UINT32 start,
+                                        OPJ_UINT32 end,
+                                        OPJ_UINT32 m,
+                                        OPJ_FLOAT32 c)
+{
+    OPJ_FLOAT32* fl = (OPJ_FLOAT32*) l;
+    OPJ_FLOAT32* fw = (OPJ_FLOAT32*) w;
+    OPJ_UINT32 i;
+    OPJ_UINT32 imax = opj_uint_min(end, m);
+    float32x4_t vc;
+    if (start > 0) {
+        fw += 2 * NB_ELTS_V8 * start;
+        fl = fw - 2 * NB_ELTS_V8;
+    }
+    /* To be adapted if NB_ELTS_V8 changes */
+    vc = vdupq_n_f32(c);
+    for (i = start; i < imax; ++i) {
+        float32x4_t fl0  = vld1q_f32(fl);
+        float32x4_t fl1  = vld1q_f32(fl + 4);
+        float32x4_t fw0  = vld1q_f32(fw);
+        float32x4_t fw1  = vld1q_f32(fw + 4);
+        float32x4_t fwm8 = vld1q_f32(fw - 8);
+        float32x4_t fwm4 = vld1q_f32(fw - 4);
+        fwm8 = vmlaq_f32(fwm8, vaddq_f32(fl0, fw0), vc);
+        fwm4 = vmlaq_f32(fwm4, vaddq_f32(fl1, fw1), vc);
+        vst1q_f32(fw - 8, fwm8);
+        vst1q_f32(fw - 4, fwm4);
+        fl = fw;
+        fw += 2 * NB_ELTS_V8;
+    }
+    if (m < end) {
+        float32x4_t vc2, fl0, fl1, fwm8, fwm4;
+        assert(m + 1 == end);
+        vc2  = vaddq_f32(vc, vc);
+        fl0  = vld1q_f32(fl);
+        fl1  = vld1q_f32(fl + 4);
+        fwm8 = vld1q_f32(fw - 8);
+        fwm4 = vld1q_f32(fw - 4);
+        fwm8 = vmlaq_f32(fwm8, fl0, vc2);
+        fwm4 = vmlaq_f32(fwm4, fl1, vc2);
+        vst1q_f32(fw - 8, fwm8);
+        vst1q_f32(fw - 4, fwm4);
+    }
+}
+
 #else
 
 static void opj_v8dwt_decode_step1(opj_v8_t* w,
@@ -3395,6 +3474,27 @@ static void opj_v8dwt_decode(opj_v8dwt_t* OPJ_RESTRICT dwt)
                                dwt->win_h_x0, dwt->win_h_x1,
                                (OPJ_UINT32)opj_int_min(dwt->dn, dwt->sn - b),
                                _mm_set1_ps(-opj_dwt_alpha));
+#elif defined(__ARM_NEON)
+    opj_v8dwt_decode_step1_neon(dwt->wavelet + a, dwt->win_l_x0, dwt->win_l_x1,
+                                opj_K);
+    opj_v8dwt_decode_step1_neon(dwt->wavelet + b, dwt->win_h_x0, dwt->win_h_x1,
+                                two_invK);
+    opj_v8dwt_decode_step2_neon(dwt->wavelet + b, dwt->wavelet + a + 1,
+                                dwt->win_l_x0, dwt->win_l_x1,
+                                (OPJ_UINT32)opj_int_min(dwt->sn, dwt->dn - a),
+                                -opj_dwt_delta);
+    opj_v8dwt_decode_step2_neon(dwt->wavelet + a, dwt->wavelet + b + 1,
+                                dwt->win_h_x0, dwt->win_h_x1,
+                                (OPJ_UINT32)opj_int_min(dwt->dn, dwt->sn - b),
+                                -opj_dwt_gamma);
+    opj_v8dwt_decode_step2_neon(dwt->wavelet + b, dwt->wavelet + a + 1,
+                                dwt->win_l_x0, dwt->win_l_x1,
+                                (OPJ_UINT32)opj_int_min(dwt->sn, dwt->dn - a),
+                                -opj_dwt_beta);
+    opj_v8dwt_decode_step2_neon(dwt->wavelet + a, dwt->wavelet + b + 1,
+                                dwt->win_h_x0, dwt->win_h_x1,
+                                (OPJ_UINT32)opj_int_min(dwt->dn, dwt->sn - b),
+                                -opj_dwt_alpha);
 #else
     opj_v8dwt_decode_step1(dwt->wavelet + a, dwt->win_l_x0, dwt->win_l_x1,
                            opj_K);

@@ -48,7 +48,8 @@ lcms2           2.19.1     (lcms2mt fork)
 MinHook         master     20201-01-1
   https://github.com/TsudaKageyu/minhook
 
-openjpeg        2.5.4
+openjpeg        2.5.4      (post-release dev snapshot)
+  mupdf thirdparty submodule, commit 957029eb875eee1118743f200cb86da9d8289de2
 
 brotli          1.2.0
   https://github.com/google/brotli
