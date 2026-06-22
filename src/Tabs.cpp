@@ -289,7 +289,28 @@ void TabsSelect(MainWindow* win, int tabIndex) {
 }
 
 // clang-format off
+extern bool SaveAnnotationsToExistingFile(WindowTab*);
+extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
+
 static MenuDef menuDefContextTab[] = {
+    // these top items are removed unless the document has unsaved changes;
+    // text matches the "Unsaved changes" close dialog
+    {
+        _TRN("&Save to existing PDF"),
+        CmdSaveAnnotations,
+    },
+    {
+        _TRN("Save to &new PDF"),
+        CmdSaveAnnotationsNewFile,
+    },
+    {
+        _TRN("&Discard changes"),
+        CmdDiscardAnnotations,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
     {
         _TRN("Properties..."),
         CmdProperties,
@@ -429,6 +450,17 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     if (!HasOpenedDocuments(win)) {
         MenuSetEnabled(popup, CmdTabGroupSave, false);
     }
+    // the save/discard items only make sense when the document has unsaved
+    // changes (e.g. filled form fields, added annotations); otherwise remove
+    // them along with their trailing separator
+    DisplayModel* dmTab = tabUnderMouse->AsFixed();
+    EngineBase* tabEngine = dmTab ? dmTab->GetEngine() : nullptr;
+    if (!EngineHasUnsavedAnnotations(tabEngine)) {
+        DeleteMenu(popup, CmdSaveAnnotations, MF_BYCOMMAND);
+        DeleteMenu(popup, CmdSaveAnnotationsNewFile, MF_BYCOMMAND);
+        DeleteMenu(popup, CmdDiscardAnnotations, MF_BYCOMMAND);
+        DeleteMenu(popup, 0, MF_BYPOSITION); // the now-leading separator
+    }
     MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmdId = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
@@ -508,6 +540,20 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
             }
             SaveSettings();
             tabsCtrl->ScheduleRepaint();
+            return;
+        }
+        case CmdSaveAnnotations: {
+            SaveAnnotationsToExistingFile(tabUnderMouse);
+            return;
+        }
+        case CmdSaveAnnotationsNewFile: {
+            SaveAnnotationsToMaybeNewPdfFile(tabUnderMouse);
+            return;
+        }
+        case CmdDiscardAnnotations: {
+            // revert to the on-disk version, discarding unsaved changes
+            TabsSelect(win, tabIdx);
+            ReloadDocument(win, false);
             return;
         }
     }
