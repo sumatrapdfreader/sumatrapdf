@@ -91,7 +91,9 @@ static void ShowTabBar(MainWindow* win, bool show) {
         return;
     }
     win->tabsVisible = show;
-    win->tabsCtrl->SetIsVisible(show);
+    if (win->tabsCtrl) {
+        win->tabsCtrl->SetIsVisible(show);
+    }
     RelayoutWindow(win);
 }
 

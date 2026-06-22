@@ -2597,6 +2597,12 @@ static unsigned int ExtractNextNumber(const char** txt) {
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 //   1.2.0 is the same as 1.2
 int CompareProgramVersion(const char* txt1, const char* txt2) {
+    if (!txt1) {
+        txt1 = "";
+    }
+    if (!txt2) {
+        txt2 = "";
+    }
     while (*txt1 || *txt2) {
         unsigned int v1 = ExtractNextNumber(&txt1);
         unsigned int v2 = ExtractNextNumber(&txt2);

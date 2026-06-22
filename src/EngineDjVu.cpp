@@ -1224,6 +1224,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
         if (!el || el->GetKind() == kindDestinationNone) {
             logf("invalid link '%s', pages in document: %d\n", link ? link : "", PageCount());
             ReportIf(true);
+            delete el; // not appended to els, so we own it
             continue;
         }
         els.Append(el);

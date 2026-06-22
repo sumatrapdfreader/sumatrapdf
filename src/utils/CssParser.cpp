@@ -161,7 +161,7 @@ const CssSelector* CssPullParser::NextSelector() {
     for (; c > sel.s && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
         ;
     }
-    if (sel.clazz - 1 == sel.s) {
+    if (sel.clazz && sel.clazz - 1 == sel.s) {
         sel.tag = Tag_Any;
     } else if (c == (sel.clazz ? sel.clazz - 1 : sEnd) && c == sel.s + 1 && *sel.s == '*') {
         sel.tag = Tag_Any;

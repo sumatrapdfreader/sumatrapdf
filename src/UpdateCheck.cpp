@@ -488,6 +488,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     MainWindow* win = FindMainWindowByHwnd(hwndParent);
     if (!win) {
         // could be destroyed since we issued update check
+        delete updateInfo;
         return 0;
     }
     HWND hwndForNotif = win->hwndCanvas;
