@@ -15,6 +15,14 @@
 //
 // Returned RectF is in PDF user space, clipped to mediabox.
 
+// Flatten per-glyph ink boxes to uniform top-aligned line rows. mupdf reports
+// tight per-glyph boxes whose tops vary within a line; the detectors below key
+// off coords[i].y as a line coordinate, so callers must pass coords through
+// this first (grouping by baseline = y+dy). `out` needs textLen rects and must
+// not alias `coords`. Synthetic top-aligned input is left effectively
+// unchanged (each line already has a single top).
+void NormalizeGlyphLines(const Rect* coords, Rect* out, int textLen);
+
 // Landscape view: full page width strip anchored at destY, extending downward
 // to the last text glyph or a recognised caption block. Fallback when no
 // recognisable entry or equation is found.

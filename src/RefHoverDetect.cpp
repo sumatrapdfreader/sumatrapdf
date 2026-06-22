@@ -153,6 +153,75 @@ static void ClipToMediabox(RectF& box, RectF mediabox) {
     }
 }
 
+// Snap glyphs to text lines and rewrite each glyph's y/dy to its line's
+// top/height. mupdf returns tight per-glyph ink boxes, so glyphs on one
+// visual line have *different* tops (a period or comma sits well below a
+// capital, an ascender above it). Every line heuristic below treats
+// coords[i].y as the line's position (grouping by y±tol), which a stray
+// low-topped glyph from an adjacent line defeats — e.g. the trailing "."
+// of the previous bibliography entry landing inside the destination band and
+// hijacking the entry-start search. The glyph *baseline* (y + dy) is stable
+// across a line (a digit and a period share it), so cluster by baseline and
+// flatten each line to a uniform top-aligned row — the shape the detectors
+// assume. `out` must have room for textLen rects; aliasing `coords` is not
+// allowed.
+void NormalizeGlyphLines(const Rect* coords, Rect* out, int textLen) {
+    if (!coords || !out || textLen <= 0) {
+        return;
+    }
+    constexpr int kBaselineTolPt = 4;
+    constexpr int kMaxLines = 4096;
+    int* lineBaseline = AllocArray<int>(kMaxLines);
+    int* lineTop = AllocArray<int>(kMaxLines);
+    int* lineBottom = AllocArray<int>(kMaxLines);
+    int* lineId = AllocArray<int>((size_t)textLen);
+    int nLines = 0;
+    for (int i = 0; i < textLen; i++) {
+        int bl = coords[i].y + coords[i].dy;
+        int best = -1;
+        int bestDist = kBaselineTolPt + 1;
+        for (int L = 0; L < nLines; L++) {
+            int dist = bl - lineBaseline[L];
+            if (dist < 0) {
+                dist = -dist;
+            }
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = L;
+            }
+        }
+        if (best < 0) {
+            // new line (or, on the unlikely line overflow, fold into line 0)
+            if (nLines < kMaxLines) {
+                best = nLines++;
+                lineBaseline[best] = bl;
+                lineTop[best] = coords[i].y;
+                lineBottom[best] = bl;
+            } else {
+                best = 0;
+            }
+        } else {
+            if (coords[i].y < lineTop[best]) {
+                lineTop[best] = coords[i].y;
+            }
+            if (bl > lineBottom[best]) {
+                lineBottom[best] = bl;
+            }
+        }
+        lineId[i] = best;
+    }
+    for (int i = 0; i < textLen; i++) {
+        out[i] = coords[i];
+        int L = lineId[i];
+        out[i].y = lineTop[L];
+        out[i].dy = lineBottom[L] - lineTop[L];
+    }
+    free(lineBaseline);
+    free(lineTop);
+    free(lineBottom);
+    free(lineId);
+}
+
 // Used when the link doesn't resolve to a recognizable bibliography entry —
 // TOC targets, topbar/section links, table or figure captions, image-only
 // PDFs. Returns a region that spans the full page width and goes from the
@@ -617,6 +686,48 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         firstLineDy = 12;
     }
 
+    // Hanging-indent bracket entry: biblatex sizes the label column for the
+    // widest label, so a narrow label ("[TA05]") is separated from its body
+    // by a labelsep gap wider than LineRunExtent's within-line gap threshold.
+    // The label-anchored run above then stops at the label, collapsing
+    // lineRunRightX (and columnRightX) to the label width — that clips the
+    // body horizontally and lets the box latch onto neighbouring labels.
+    // Bridge the single labelsep gap: find the first glyph on the first line
+    // right of the label run and extend a fresh run from there. The body run
+    // is dense and stops at a real column gutter, so this stays 2-column-safe;
+    // the bridge itself is capped at kMaxLabelSepPt, well under a gutter, so
+    // it can't jump into an adjacent column.
+    if (text[startIdx] == L'[') {
+        constexpr int kMaxLabelSepPt = 50;
+        int bandBot = firstLineY + (firstLineDy > 10 ? firstLineDy : 10);
+        int bodyIdx = -1;
+        int bodyX = INT_MAX;
+        for (int i = 0; i < textLen; i++) {
+            WCHAR c = text[i];
+            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                continue;
+            }
+            Rect r = coords[i];
+            if (r.y < firstLineY - 3 || r.y > bandBot) {
+                continue;
+            }
+            if (r.x <= lineRunRightX + 3 || r.x > lineRunRightX + kMaxLabelSepPt) {
+                continue;
+            }
+            if (r.x < bodyX) {
+                bodyX = r.x;
+                bodyIdx = i;
+            }
+        }
+        if (bodyIdx >= 0) {
+            int bLeftIdx, bLeftX, bRightX;
+            LineRunExtent(text, coords, textLen, bodyIdx, &bLeftIdx, &bLeftX, &bRightX);
+            if (bRightX + 40 > columnRightX) {
+                columnRightX = bRightX + 40;
+            }
+        }
+    }
+
     // Bracket-style entry ("[ZM12]", "[1]", …): build the bounding box from
     // a y-range whose upper bound is the next "[" at firstLineLeftX. The
     // iterative scan below depends on text-array order, but some PDFs draw
@@ -659,6 +770,53 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         // first line — whose glyph tops can round to within 1–2 pt of the
         // "[" we picked — is reliably excluded.
         entryYBoundary -= 6;
+        // Trailing-gap trim: a last-on-page entry has no sibling "[" below to
+        // bound it, so entryYBoundary runs to the kMaxBracketEntryPt cap and
+        // the box would swallow the page footer / page number (or a long
+        // blank margin). Walk the entry's lines down from the first line and
+        // stop at the first vertical gap wider than ~1.5 line heights — that
+        // gap separates the entry from the footer. Inter-entry leading in a
+        // dense bibliography is far smaller, so a real next entry (bounded by
+        // its "[" above) is never trimmed: blockBottom keeps growing past
+        // entryYBoundary and the trim is a no-op.
+        {
+            int lineH = firstLineDy > 0 ? firstLineDy : 12;
+            int gapThresh = lineH * 3 / 2;
+            if (gapThresh < 15) {
+                gapThresh = 15;
+            }
+            int prevBottom = firstLineY + firstLineDy;
+            int blockBottom = prevBottom;
+            for (;;) {
+                int nextBottom = -1;
+                for (int i = 0; i < textLen; i++) {
+                    WCHAR c = text[i];
+                    if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                        continue;
+                    }
+                    Rect r = coords[i];
+                    if (r.x < firstLineLeftX - 20 || r.x > columnRightX) {
+                        continue;
+                    }
+                    // a glyph on a line strictly below the current block but
+                    // within one gap of it (line tops cluster near the top y)
+                    if (r.y <= prevBottom - 2 || r.y > prevBottom + gapThresh) {
+                        continue;
+                    }
+                    if (r.y + r.dy > nextBottom) {
+                        nextBottom = r.y + r.dy;
+                    }
+                }
+                if (nextBottom < 0) {
+                    break;
+                }
+                blockBottom = nextBottom;
+                prevBottom = nextBottom;
+            }
+            if (blockBottom + 1 < entryYBoundary) {
+                entryYBoundary = blockBottom + 1;
+            }
+        }
         int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
         for (int i = 0; i < textLen; i++) {
             WCHAR c = text[i];

@@ -361,8 +361,152 @@ static void LandscapeBoxBasicShape() {
     utassert(box.y + box.dy <= kPageH);
 }
 
+// (3g) Hanging-indent bracket bibliography with a narrow label ("[TA05]"):
+// biblatex sizes the label column for the widest label, so a narrow label is
+// separated from its body by a labelsep gap wider than the within-line gap
+// threshold. The detected box must still span the full body width (the body
+// is bridged), not collapse to the label width and clip the entry.
+static void HangingIndentNarrowLabelFullWidth() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Narrow label "[TA05]" ends at x=72+6*6=108; body starts at x=130 — a
+    // 22pt labelsep gap, wider than LineRunExtent's 20pt within-line gap.
+    AddText(text, coords, len, 1024, L"[TA05]", 72, 200);
+    AddText(text, coords, len, 1024, L"J. Tyree and A. Akerman. Architecture decisions.", 130, 200);
+    AddText(text, coords, len, 1024, L"continuation line two of the same entry.", 130, 215);
+    AddText(text, coords, len, 1024, L"[Vai20]", 72, 240);
+    AddText(text, coords, len, 1024, L"Thomas Vaillant. Log4brains. 2020.", 130, 240);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    // box must reach across the body (without the labelsep bridge it would
+    // collapse to ~the label width, near x=150)
+    utassert(box.x + box.dx >= 300.f);
+    // still bounded to the first entry
+    utassert(box.y + box.dy < 240.f);
+    utassert(box.x <= 72.f + 6.f);
+}
+
+// (3h) 2-column layout where the left-column entry has a wide labelsep gap:
+// the body bridge must reach the body without jumping the (much wider) column
+// gutter into the right column.
+static void TwoColumnHangingIndentStaysInColumn() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Left column: narrow label at x=72 (ends ~108), body at x=130 (22pt
+    // labelsep), body line ends ~246.
+    AddText(text, coords, len, 1024, L"[TA05]", 72, 200);
+    AddText(text, coords, len, 1024, L"Smith J. 2010. Some title.", 130, 200);
+    AddText(text, coords, len, 1024, L"continuation of the entry.", 130, 215);
+    AddText(text, coords, len, 1024, L"[Vai20]", 72, 240);
+    // Right column body at x=340 (gutter ~286..340), same y range. The body
+    // bridge (capped at 50pt) cannot reach x=340 from the label run, and the
+    // dense left-column body run stops at the gutter.
+    for (int i = 0; i < 4; i++) {
+        AddText(text, coords, len, 1024, L"right column body text line..", 340, 200 + i * 15);
+    }
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    // box must not reach into the right column at x=340
+    utassert(box.x + box.dx < 340.f);
+    utassert(box.y + box.dy < 240.f);
+}
+
+// (3i) Last entry on a bibliography page (no sibling "[" below) followed by a
+// page-number footer far below: the trailing-gap trim ends the box at the
+// entry's last line, not at the footer.
+static void LastEntryTrailingFooterTrimmed() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    AddText(text, coords, len, 1024, L"[Zim25]", 72, 600);
+    AddText(text, coords, len, 1024, L"Olaf Zimmermann. ADG: A Light Tool.", 130, 600);
+    AddText(text, coords, len, 1024, L"continuation of the last entry.", 130, 615);
+    // page-number footer far below (73pt gap), centered in the text column
+    AddText(text, coords, len, 1024, L"13", 300, 700);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 600.f);
+    utassert(!IsEmpty(box));
+    // footer at y=700 must be excluded (box ends just below the 2nd line)
+    utassert(box.y + box.dy < 650.f);
+}
+
+// (12) NormalizeGlyphLines flattens a line whose glyphs have varying tops
+// (mupdf's tight ink boxes) to a single top-aligned row, keyed by baseline,
+// while keeping distinct lines separate.
+static void NormalizeGlyphLinesFlattensLine() {
+    // Line 1 at baseline 110: a tall glyph (top 100, h 10) and a low one
+    // (a period: top 105, h 5) — same baseline. Line 2 at baseline 130.
+    Rect in[3] = {Rect{72, 100, 6, 10}, Rect{78, 105, 4, 5}, Rect{72, 120, 6, 10}};
+    Rect out[3];
+    NormalizeGlyphLines(in, out, 3);
+    // line 1 glyphs flattened to the same top (100) and height (110-100=10)
+    utassert(out[0].y == 100 && out[0].dy == 10);
+    utassert(out[1].y == 100 && out[1].dy == 10);
+    // line 2 stays distinct
+    utassert(out[2].y == 120 && out[2].dy == 10);
+}
+
+// (13) mupdf-style variable glyph tops: the previous entry's trailing line
+// ends with a period whose tight ink box top sits below the digits on the
+// same line and inside the destination band. Without baseline normalization
+// that period hijacks the entry-start search (narrow strip / wrong entry);
+// after NormalizeGlyphLines the detector locks onto the real "[Buc+23]" entry.
+static void VariableGlyphTopsEntryNotHijacked() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Previous entry's trailing line "1622292." at baseline 313: digits top
+    // 305 (h 8), final period top 310 (h 3) — same baseline, body column x.
+    const WCHAR* tail = L"1622292";
+    for (int i = 0; tail[i]; i++) {
+        text[len] = tail[i];
+        coords[len] = Rect{130 + i * 6, 305, 6, 8};
+        len++;
+    }
+    text[len] = L'.';
+    coords[len] = Rect{130 + 7 * 6, 310, 4, 3};
+    len++;
+    // Entry "[Buc+23]" label (x=72) + body (x=130) at baseline ~327 (top 316).
+    const WCHAR* label = L"[Buc+23]";
+    for (int i = 0; label[i]; i++) {
+        text[len] = label[i];
+        coords[len] = Rect{72 + i * 6, 316, 6, 11};
+        len++;
+    }
+    const WCHAR* body = L"Georg Buchgeher et al. Using ADRs in Open Source.";
+    for (int i = 0; body[i]; i++) {
+        text[len] = body[i];
+        coords[len] = Rect{130 + i * 6, 316, 6, 9};
+        len++;
+    }
+    // Next entry "[JB05]" below at top 352.
+    const WCHAR* nb = L"[JB05] A. Jansen and J. Bosch.";
+    for (int i = 0; nb[i]; i++) {
+        text[len] = nb[i];
+        coords[len] = Rect{72 + i * 6, 352, 6, 10};
+        len++;
+    }
+    Rect norm[1024];
+    NormalizeGlyphLines(coords, norm, len);
+    RectF box = DetectEntryBox(text, norm, len, Mediabox(), 72.f, 312.f);
+    utassert(!IsEmpty(box));
+    // entry start, not the previous line (normalized top 305)
+    utassert(box.y > 305.f);
+    // label included and full body width captured (not a narrow strip)
+    utassert(box.x <= 72.f + 6.f);
+    utassert(box.x + box.dx >= 300.f);
+    // ends before the next entry
+    utassert(box.y + box.dy < 352.f);
+}
+
 void RefHoverTest() {
     AccentedAllCapsHeadingDetected();
+    HangingIndentNarrowLabelFullWidth();
+    TwoColumnHangingIndentStaysInColumn();
+    LastEntryTrailingFooterTrimmed();
+    NormalizeGlyphLinesFlattensLine();
+    VariableGlyphTopsEntryNotHijacked();
     AuthorYearEntryFitsToOneEntry();
     BodyTextParenRejected();
     BracketEntryFitsToOneEntry();
