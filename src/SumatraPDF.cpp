@@ -4743,6 +4743,35 @@ void RelayoutWindow(MainWindow* win) {
     RelayoutFrame(win);
 }
 
+// WM_DPICHANGED: the frame moved to a monitor with a different DPI (or the
+// monitor's scaling changed). Resize to the rectangle Windows suggests for the
+// new DPI and rebuild the DPI-scaled chrome (menu bar fonts, toolbar icons,
+// find bar) so the UI re-scales instead of staying at the old monitor's size
+// (issue #1832). DpiScale() reads the live per-window DPI, so relaying out is
+// enough for everything else.
+static void OnDpiChanged(MainWindow* win, RECT* suggested) {
+    if (!win || !win->hwndFrame) {
+        return;
+    }
+    // rebuild the DPI-dependent controls first so the resize below lays them out
+    // at the new DPI (GetDpiForWindow already reports the new value here)
+    RebuildMenuBarForWindow(win);
+    ReCreateToolbar(win);
+    RecreateFindBar(win);
+
+    if (suggested) {
+        int dx = suggested->right - suggested->left;
+        int dy = suggested->bottom - suggested->top;
+        SetWindowPos(win->hwndFrame, nullptr, suggested->left, suggested->top, dx, dy, SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    win->lastLayoutState = {};
+    RelayoutWindow(win);
+    MainWindowRerender(win, true);
+    uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
+    RedrawWindow(win->hwndFrame, nullptr, nullptr, flags);
+}
+
 void SetCurrentLanguageAndRefreshUI(const char* langCode) {
     if (!langCode || str::Eq(langCode, trans::GetCurrentLangCode())) {
         return;
@@ -9965,6 +9994,13 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_GETMINMAXINFO:
             return OnFrameGetMinMaxInfo((MINMAXINFO*)lp);
+
+        case WM_DPICHANGED:
+            if (win) {
+                OnDpiChanged(win, (RECT*)lp);
+                return 0;
+            }
+            break;
 
         case WM_MOVE:
             if (win) {
