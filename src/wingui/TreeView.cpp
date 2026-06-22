@@ -382,6 +382,9 @@ static void PopulateTree(TreeView* treeView, TreeModel* tm) {
 
 void TreeView::SetTreeModel(TreeModel* tm) {
     ReportIf(!tm);
+    if (!tm) {
+        return;
+    }
 
     SuspendRedraw();
 
