@@ -68,6 +68,9 @@ Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);
 // disable mupdf's JavaScript engine for PDFs loaded after this call
 void EngineMupdfSetDisableJavaScript(bool disable);
+// allow PDFs to load images from an external sibling file (#3731), for PDFs
+// loaded after this call; set from gGlobalPrefs->allowExternalImages
+void EngineMupdfSetAllowExternalImages(bool allow);
 ByteSlice EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 ByteSlice EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 TempStr EngineMupdfGetPdfInfo(const char* path);

@@ -56,6 +56,14 @@ void EngineMupdfSetDisableJavaScript(bool disable) {
     gDisableFormJavaScript = disable;
 }
 
+// Whether a PDF may load an image from an external sibling file (issue #3731).
+// Set by the app from the AllowExternalImages pref; off by default (and in the
+// PdfPreview/PdfFilter DLLs, which don't link GlobalPrefs).
+static bool gAllowExternalImages = false;
+void EngineMupdfSetAllowExternalImages(bool allow) {
+    gAllowExternalImages = allow;
+}
+
 EngineMupdf* AsEngineMupdf(EngineBase* engine) {
     if (!engine || !IsOfKind(engine, kindEngineMupdf)) {
         return nullptr;
@@ -2695,9 +2703,50 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
     }
 }
 
+// Resolve an external-file image stream (issue #3731): the PDF's /F entry
+// names a file that must sit next to the PDF. Gated by the AllowExternalImages
+// setting and restricted to sibling files (no path separators / drive specs)
+// for security -- Acrobat denies these by default too.
+static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* filespec, void* opaque) {
+    if (!gAllowExternalImages) {
+        return nullptr;
+    }
+    EngineMupdf* e = (EngineMupdf*)opaque;
+    const char* pdfPath = e ? e->FilePath() : nullptr;
+    if (!pdfPath || !filespec || !*filespec) {
+        return nullptr;
+    }
+    // sibling-only: reject anything with a path separator or drive spec so the
+    // PDF can only pull a file from its own directory
+    if (str::FindChar(filespec, '/') || str::FindChar(filespec, '\\') || str::FindChar(filespec, ':')) {
+        return nullptr;
+    }
+    TempStr full = path::JoinTemp(path::GetDirTemp(pdfPath), filespec);
+    if (!file::Exists(full)) {
+        return nullptr;
+    }
+    ByteSlice data = file::ReadFile(full);
+    if (data.empty()) {
+        return nullptr;
+    }
+    fz_buffer* buf = nullptr;
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_copied_data(ctx, data.data(), data.size());
+    }
+    fz_catch(ctx) {
+        buf = nullptr;
+    }
+    data.Free();
+    return buf;
+}
+
 bool EngineMupdf::FinishLoading() {
     auto ctx = Ctx();
     pdfdoc = pdf_specifics(ctx, _doc);
+    if (pdfdoc) {
+        // allow loading external-file image streams from next to the PDF (#3731)
+        pdf_set_load_external_stream_fn(ctx, pdfdoc, EngineMupdfLoadExternalStream, this);
+    }
 
     pageCount = 0;
     fz_var(pageCount);

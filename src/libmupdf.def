@@ -755,6 +755,7 @@ EXPORTS
 	pdf_load_stream
 	pdf_open_raw_stream
 	pdf_open_stream
+	pdf_set_load_external_stream_fn
 	pdf_open_inline_stream
 	pdf_load_compressed_stream
 	pdf_load_compressed_inline_image
