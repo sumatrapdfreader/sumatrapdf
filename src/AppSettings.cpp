@@ -243,6 +243,7 @@ bool LoadSettings() {
 
     // takes effect for PDFs loaded after this (startup, and on settings reload)
     EngineMupdfSetDisableJavaScript(gGlobalPrefs->disableJavaScript);
+    EngineMupdfSetAllowExternalImages(gGlobalPrefs->allowExternalImages);
 
     if (trans::ValidateLangCode(gprefs->uiLanguage)) {
         SetCurrentLang(gprefs->uiLanguage);

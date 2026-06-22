@@ -51,6 +51,11 @@ DefaultZoom = fit page
 ; won't run) (introduced in version 3.7)
 DisableJavaScript = false
 
+; if true, a PDF may load an image stored in a separate file referenced by name
+; (an external image stream); the file must sit next to the PDF. Off by default
+; for security (matches Acrobat) (introduced in version 3.7)
+AllowExternalImages = false
+
 ; if true, we expose the SyncTeX inverse search command line in Settings ->
 ; Options
 EnableTeXEnhancements = false

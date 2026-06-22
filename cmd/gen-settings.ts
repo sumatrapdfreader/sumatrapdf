@@ -728,6 +728,18 @@ const globalPrefs: Field[] = [
     ),
     "3.7",
   ),
+  setVersion(
+    setExpert(
+      mkField(
+        "AllowExternalImages",
+        Bool,
+        false,
+        "if true, a PDF may load an image stored in a separate file referenced by name (an external " +
+          "image stream); the file must sit next to the PDF. Off by default for security (matches Acrobat)",
+      ),
+    ),
+    "3.7",
+  ),
   mkField(
     "EnableTeXEnhancements",
     Bool,
