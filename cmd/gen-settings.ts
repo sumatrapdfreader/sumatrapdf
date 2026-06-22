@@ -853,8 +853,8 @@ const globalPrefs: Field[] = [
     mkField(
       "CitationHoverDelay",
       Int,
-      300,
-      "how long to hover an internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, footnote). Set to -1 to disable the popup",
+      -1,
+      "how long to hover an internal-document link (in ms) before we show a popup rendering the destination region (citation entry, figure, footnote). -1 (the default) disables the popup; set a positive value like 300 to enable it",
     ),
     "3.7",
   ),

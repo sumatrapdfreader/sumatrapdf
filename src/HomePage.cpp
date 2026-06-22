@@ -53,6 +53,7 @@ You can [extract text from PDF file](Help/Tool-x-extract-text-from-pdf).
 You can [toggle menu bar](CmdToggleMenuBar) with (Key/CmdToggleMenuBar).
 You can [toggle toolbar](CmdToggleToolbar) with (Key/CmdToggleToolbar).
 You can [edit PDF annotations](Help/Editing-annotations).
+You can preview where a citation, figure or footnote link points by hovering it - enable in [advanced settings](CmdAdvancedSettings) via CitationHoverDelay.
 )";
 
 constexpr const char* sumatraPromos = R"(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.

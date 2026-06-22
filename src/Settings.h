@@ -552,7 +552,8 @@ struct GlobalPrefs {
     bool smoothScroll;
     // how long to hover an internal-document link (in ms) before we show a
     // popup rendering the destination region (citation entry, figure,
-    // footnote). Set to -1 to disable the popup
+    // footnote). -1 (the default) disables the popup; set a positive value
+    // like 300 to enable it
     int citationHoverDelay;
     // voice id for Read Aloud text-to-speech; empty or unset means system
     // default. Voice ids match those used internally by the Read Aloud
@@ -1036,7 +1037,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, scrollbars), SettingType::String, (intptr_t)"windows"},
     {offsetof(GlobalPrefs, scrollbarInSinglePage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, citationHoverDelay), SettingType::Int, 300},
+    {offsetof(GlobalPrefs, citationHoverDelay), SettingType::Int, -1},
     {offsetof(GlobalPrefs, readAloudVoiceId), SettingType::String, 0},
     {offsetof(GlobalPrefs, fastScrollOverScrollbar), SettingType::Bool, false},
     {offsetof(GlobalPrefs, preventSleepInFullscreen), SettingType::Bool, true},

@@ -149,9 +149,10 @@ ScrollbarInSinglePage = false
 SmoothScroll = false
 
 ; how long to hover an internal-document link (in ms) before we show a popup
-; rendering the destination region (citation entry, figure, footnote). Set to -1
-; to disable the popup (introduced in version 3.7)
-CitationHoverDelay = 300
+; rendering the destination region (citation entry, figure, footnote). -1 (the
+; default) disables the popup; set a positive value like 300 to enable it
+; (introduced in version 3.7)
+CitationHoverDelay = -1
 
 ; voice id for Read Aloud text-to-speech; empty or unset means system default.
 ; Voice ids match those used internally by the Read Aloud Voice menu (WinRT
