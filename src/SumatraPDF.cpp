@@ -7924,6 +7924,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleFavorites(win);
             break;
 
+        case CmdGoToNextFavorite:
+            GoToNextFavorite(win, true);
+            break;
+
+        case CmdGoToPrevFavorite:
+            GoToNextFavorite(win, false);
+            break;
+
         case CmdTogglePageInfo: {
             // "page info" tip: make figuring out current page and
             // total pages count a one-key action (unless they're already visible)

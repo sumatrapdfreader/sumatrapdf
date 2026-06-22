@@ -32,6 +32,10 @@ void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();
 bool IsPageInFavorites(const char* filePath, int pageNo);
 
+// navigate to the nearest favorite (bookmark) page after / before the current
+// page in the open document (issue #3744)
+void GoToNextFavorite(MainWindow* win, bool forward);
+
 // shared with CommandPalette.cpp (favorites mode)
 TempStr FavReadableNameTemp(Favorite* fn);
 void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav);

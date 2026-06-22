@@ -254,7 +254,9 @@ enum {
     CmdTranslateSelectionWithClaudeCode = 443,
     CmdTranslateSelectionWithOpenAICodex = 444,
     CmdFindToggleMatchWholeWord = 445,
-    CmdNone = 446,
+    CmdGoToNextFavorite = 446,
+    CmdGoToPrevFavorite = 447,
+    CmdNone = 448,
 
     /* range for file history */
     CmdFileHistoryFirst,

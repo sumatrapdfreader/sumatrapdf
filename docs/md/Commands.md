@@ -143,6 +143,8 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdFavoriteAdd,Ctrl + B,Add Favorite,
 CmdFavoriteDel,,Delete Favorite,
 CmdFavoriteToggle,,Toggle Favorites,
+CmdGoToNextFavorite,,Go to Next Favorite,
+CmdGoToPrevFavorite,,Go to Previous Favorite,
 ```
 
 ## Presentation

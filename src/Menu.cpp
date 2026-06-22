@@ -1229,6 +1229,8 @@ UINT_PTR removeIfNoPrefsPerms[] = {
     CmdFavoriteAdd,
     CmdFavoriteDel,
     CmdFavoriteToggle,
+    CmdGoToNextFavorite,
+    CmdGoToPrevFavorite,
     0,
 };
 

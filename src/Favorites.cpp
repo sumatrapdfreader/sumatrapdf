@@ -178,6 +178,36 @@ bool IsPageInFavorites(const char* filePath, int pageNo) {
     return false;
 }
 
+void GoToNextFavorite(MainWindow* win, bool forward) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    FileState* fs = GetFavByFilePath(win->ctrl->GetFilePath());
+    if (!fs || fs->favorites->size() == 0) {
+        return;
+    }
+    int cur = win->currPageNo;
+    // pick the favorite page closest to the current page in the requested
+    // direction (no wrap-around)
+    int best = -1;
+    for (size_t i = 0; i < fs->favorites->size(); i++) {
+        int p = fs->favorites->at(i)->pageNo;
+        if (forward) {
+            if (p > cur && (best == -1 || p < best)) {
+                best = p;
+            }
+        } else {
+            if (p < cur && (best == -1 || p > best)) {
+                best = p;
+            }
+        }
+    }
+    if (best != -1 && win->ctrl->ValidPageNo(best)) {
+        win->ctrl->GoToPage(best, true);
+        win->Focus();
+    }
+}
+
 static Favorite* FindByPage(FileState* ds, int pageNo, const char* pageLabel = nullptr) {
     if (!ds || !ds->favorites) {
         return nullptr;

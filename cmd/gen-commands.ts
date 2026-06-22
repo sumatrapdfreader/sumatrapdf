@@ -249,6 +249,8 @@ export const commands = [
     "CmdTranslateSelectionWithClaudeCode", "Translate Selection with Claude Code",
     "CmdTranslateSelectionWithOpenAICodex", "Translate Selection with OpenAI Codex",
     "CmdFindToggleMatchWholeWord", "Find: Toggle Match Whole Word",
+    "CmdGoToNextFavorite", "Go to Next Favorite",
+    "CmdGoToPrevFavorite", "Go to Previous Favorite",
     "CmdNone", "Do nothing",
 ];
 
