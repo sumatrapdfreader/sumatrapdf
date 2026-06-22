@@ -26,18 +26,25 @@ fills fine) plus a synthetic `formtest.pdf` for the field types the 1040 lacks.
 | 4a | `222e45dab` | Save round-trip verified (reuses the annotation `pdf_save_document` pipeline — field values + checkbox state persist across save/reopen); generalized the close-time prompt wording from "Unsaved annotations" to "Unsaved changes"; hover cursors (I-beam over text/choice, hand over buttons). |
 | 4b | `f7fd4f998` | Scroll the next field into view on Tab when it's past the fold (`ScrollScreenToRect`). |
 
-### Known limitation — JavaScript-calculated fields NOT supported
+### JavaScript form calc — enabled, but cross-field calc not working yet (`2f9fb05f5`)
 
-Verified: our mupdf build *does* compile JS (`FZ_ENABLE_JS=1`, mujs `one.c`
-built, `pdf-js.c` in the build), but SumatraPDF deliberately never calls
-`pdf_enable_js` — `EngineMupdf.cpp:2830` has `// TODO: support javascript` and
-asserts `pdf_js_supported()` is false. So `doc->js` is null and
-`pdf_calculate_form` is a no-op: fields whose value is computed by form
-JavaScript (e.g. auto-summed totals) will not recompute. The non-JS appearance
-regeneration via `pdf_update_page` still runs (that's what keeps radio-group
-siblings correct). Enabling JS calc would mean calling `pdf_enable_js` and
-removing that assertion — a separate, security-sensitive decision (PDF
-JavaScript execution), out of scope here.
+mupdf JS is compiled in (`FZ_ENABLE_JS=1`, mujs `one.c`, `pdf-js.c`).
+`FinishLoading` now calls `pdf_enable_js(ctx, pdfdoc)` (replacing the old
+`// TODO: support javascript` assertion), so `doc->js` is live and edits run
+`pdf_update_page` → `pdf_calculate_form`.
+
+- **Works:** JS executes and updates the target field + regenerates its
+  appearance — verified with a constant `event.value = 77` calculate (the field
+  updates on every edit).
+- **Doesn't work yet:** `getField('<name>')` returns **null** inside a calc, so
+  cross-field math (sums/totals — the common case) doesn't compute. The JS
+  engine's `Root/AcroForm/Fields` lookup comes back empty even though those
+  fields render and fill. Ruled out: `this.getField` vs bare `getField`, inline
+  vs indirect `/AcroForm`. Suspected cause: the per-thread cloned
+  context/document vs mupdf's JS engine; needs root-causing.
+- **Security note:** enabling JS runs document-level / open scripts and
+  broadens the mujs attack surface vs the previous JS-off default. mujs itself
+  is sandboxed to the PDF/form API (no file/network).
 
 Other still-open polish: cross-page Tab (navigation is currently same-page),
 comb cells aren't drawn in the edit overlay (plain edit + max-length only),
