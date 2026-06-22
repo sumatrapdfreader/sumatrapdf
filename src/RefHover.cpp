@@ -858,11 +858,22 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         int textLen = 0;
         Rect* coords = nullptr;
         const WCHAR* text = engine->GetTextForPage(destPage, &textLen, &coords);
+        // mupdf's per-glyph ink boxes have varying tops within a line; the
+        // detectors key off coords[i].y as a line coordinate, so flatten each
+        // line to a uniform top-aligned row first (see NormalizeGlyphLines).
+        Rect* normCoords = coords;
+        if (coords && textLen > 0) {
+            normCoords = AllocArray<Rect>((size_t)textLen);
+            NormalizeGlyphLines(coords, normCoords, textLen);
+        }
         // Equation cross-reference: tight box around the labelled line.
         // Falls through to DetectEntryBox when no eq label is found.
-        region = DetectEquationBox(text, coords, textLen, mediabox, destX, destY);
+        region = DetectEquationBox(text, normCoords, textLen, mediabox, destX, destY);
         if (region.dx <= 0.f || region.dy <= 0.f) {
-            region = DetectEntryBox(text, coords, textLen, mediabox, destX, destY);
+            region = DetectEntryBox(text, normCoords, textLen, mediabox, destX, destY);
+        }
+        if (normCoords != coords) {
+            free(normCoords);
         }
     }
     // New destination — reset user-driven zoom. baseZoom matches the
