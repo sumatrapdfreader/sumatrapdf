@@ -31,11 +31,11 @@
 
 #include "hb-ot.h"
 
-#include "hb-ot-color-cbdt-table.hh"
-#include "hb-ot-color-colr-table.hh"
-#include "hb-ot-color-cpal-table.hh"
-#include "hb-ot-color-sbix-table.hh"
-#include "hb-ot-color-svg-table.hh"
+#include "OT/Color/CBDT/CBDT.hh"
+#include "OT/Color/COLR/COLR.hh"
+#include "OT/Color/CPAL/CPAL.hh"
+#include "OT/Color/sbix/sbix.hh"
+#include "OT/Color/svg/svg.hh"
 
 
 /**
@@ -167,6 +167,10 @@ hb_ot_color_palette_get_flags (hb_face_t *face,
  * for allocating a buffer of suitable size before calling
  * hb_ot_color_palette_get_colors() a second time.
  *
+ * The RGBA values in the palette are unpremultiplied. See the
+ * OpenType spec [CPAL](https://learn.microsoft.com/en-us/typography/opentype/spec/cpal)
+ * section for details.
+ *
  * Return value: the total number of colors in the palette
  *
  * Since: 2.1.0
@@ -190,7 +194,8 @@ hb_ot_color_palette_get_colors (hb_face_t     *face,
  * hb_ot_color_has_layers:
  * @face: #hb_face_t to work upon
  *
- * Tests whether a face includes any `COLR` color layers.
+ * Tests whether a face includes a `COLR` table
+ * with data according to COLRv0.
  *
  * Return value: `true` if data found, `false` otherwise
  *
@@ -199,7 +204,43 @@ hb_ot_color_palette_get_colors (hb_face_t     *face,
 hb_bool_t
 hb_ot_color_has_layers (hb_face_t *face)
 {
-  return face->table.COLR->has_data ();
+  return face->table.COLR->colr->has_v0_data ();
+}
+
+/**
+ * hb_ot_color_has_paint:
+ * @face: #hb_face_t to work upon
+ *
+ * Tests where a face includes a `COLR` table
+ * with data according to COLRv1.
+ *
+ * Return value: `true` if data found, `false` otherwise
+ *
+ * Since: 7.0.0
+ */
+hb_bool_t
+hb_ot_color_has_paint (hb_face_t *face)
+{
+  return face->table.COLR->colr->has_v1_data ();
+}
+
+/**
+ * hb_ot_color_glyph_has_paint:
+ * @face: #hb_face_t to work upon
+ * @glyph: The glyph index to query
+ *
+ * Tests where a face includes COLRv1 paint
+ * data for @glyph.
+ *
+ * Return value: `true` if data found, `false` otherwise
+ *
+ * Since: 7.0.0
+ */
+hb_bool_t
+hb_ot_color_glyph_has_paint (hb_face_t      *face,
+                             hb_codepoint_t  glyph)
+{
+  return face->table.COLR->colr->has_paint_for_glyph (glyph);
 }
 
 /**
@@ -225,7 +266,7 @@ hb_ot_color_glyph_get_layers (hb_face_t           *face,
 			      unsigned int        *layer_count, /* IN/OUT.  May be NULL. */
 			      hb_ot_color_layer_t *layers /* OUT.     May be NULL. */)
 {
-  return face->table.COLR->get_glyph_layers (glyph, start_offset, layer_count, layers);
+  return face->table.COLR->colr->get_glyph_layers (glyph, start_offset, layer_count, layers);
 }
 
 
@@ -247,6 +288,70 @@ hb_bool_t
 hb_ot_color_has_svg (hb_face_t *face)
 {
   return face->table.SVG->has_data ();
+}
+
+/**
+ * hb_ot_color_get_svg_document_count:
+ * @face: #hb_face_t to work upon.
+ *
+ * Gets the number of SVG documents in the face `SVG` table.
+ *
+ * Return value: number of SVG documents in the face.
+ *
+ * Since: 12.1.0
+ */
+unsigned int
+hb_ot_color_get_svg_document_count (hb_face_t *face)
+{
+  return face->table.SVG->get_document_count ();
+}
+
+/**
+ * hb_ot_color_glyph_get_svg_document_index:
+ * @face: #hb_face_t to work upon.
+ * @glyph: glyph ID to query.
+ * @svg_document_index: (out) (nullable): output SVG document index.
+ *
+ * Gets the `SVG`-table document index associated with a glyph.
+ *
+ * Return value: `true` if @glyph maps to an SVG document, `false` otherwise.
+ *
+ * Since: 12.1.0
+ */
+hb_bool_t
+hb_ot_color_glyph_get_svg_document_index (hb_face_t      *face,
+                                          hb_codepoint_t  glyph,
+                                          unsigned int   *svg_document_index)
+{
+  unsigned doc_index = 0;
+  hb_bool_t ret = face->table.SVG->get_glyph_document_index (glyph, &doc_index);
+  if (ret && svg_document_index)
+    *svg_document_index = doc_index;
+  return ret;
+}
+
+/**
+ * hb_ot_color_get_svg_document_glyph_range:
+ * @face: #hb_face_t to work upon.
+ * @svg_document_index: SVG document index.
+ * @start_glyph_id: (out) (nullable): output start glyph ID.
+ * @end_glyph_id: (out) (nullable): output end glyph ID.
+ *
+ * Gets the glyph range covered by an `SVG`-table document index.
+ *
+ * Return value: `true` if @svg_document_index is valid, `false` otherwise.
+ *
+ * Since: 13.0.0
+ */
+hb_bool_t
+hb_ot_color_get_svg_document_glyph_range (hb_face_t      *face,
+                                          unsigned int    svg_document_index,
+                                          hb_codepoint_t *start_glyph_id,
+                                          hb_codepoint_t *end_glyph_id)
+{
+  return face->table.SVG->get_document_glyph_range (svg_document_index,
+                                                    start_glyph_id,
+                                                    end_glyph_id);
 }
 
 /**

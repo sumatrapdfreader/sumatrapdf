@@ -17,17 +17,19 @@ print ()
 print ("#ifndef HB_OT_SHAPER_ARABIC_PUA_HH")
 print ("#define HB_OT_SHAPER_ARABIC_PUA_HH")
 print ()
+print ('#include "hb.hh"')
+print ()
 
-code = packTab.Code('_hb_arabic')
+code = packTab.Code('_hb_arabic_pua')
 
 for p in ("ArabicPUASimplified.txt", "ArabicPUATraditional.txt"):
     with open (p, encoding='utf-8') as f:
         fields = [l.split('\t') for l in f if l[:1] != '#']
     data = {int(fs[1], 16):int(fs[0], 16) for fs in fields}
     sol = packTab.pack_table(data, compression=9)
-    sol.genCode(code, f'pua_{p[9:13].lower()}_map')
+    sol.genCode(code, f'{p[9:13].lower()}_map')
 
-code.print_c(linkage='static inline')
+code.print_c()
 
 print ()
 print ("#endif /* HB_OT_SHAPER_ARABIC_PUA_HH */")

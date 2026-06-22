@@ -11,11 +11,11 @@ namespace GSUB_impl {
 template <typename Types>
 struct LigatureSet
 {
-  protected:
+  public:
   Array16OfOffset16To<Ligature<Types>>
                 ligature;               /* Array LigatureSet tables
                                          * ordered by preference */
-  public:
+  
   DEFINE_SIZE_ARRAY (2, ligature);
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -30,6 +30,18 @@ struct LigatureSet
     + hb_iter (ligature)
     | hb_map (hb_add (this))
     | hb_map ([glyphs] (const Ligature<Types> &_) { return _.intersects (glyphs); })
+    | hb_any
+    ;
+  }
+
+  bool intersects_lig_glyph (const hb_set_t *glyphs) const
+  {
+    return
+    + hb_iter (ligature)
+    | hb_map (hb_add (this))
+    | hb_map ([glyphs] (const Ligature<Types> &_) { 
+      return _.intersects_lig_glyph (glyphs) && _.intersects (glyphs);
+    })
     | hb_any
     ;
   }
@@ -50,6 +62,15 @@ struct LigatureSet
     ;
   }
 
+  template <typename set_t>
+  void collect_seconds (set_t &s) const
+  {
+    + hb_iter (ligature)
+    | hb_map (hb_add (this))
+    | hb_apply ([&s] (const Ligature<Types> &_) { _.collect_second (s); })
+    ;
+  }
+
   bool would_apply (hb_would_apply_context_t *c) const
   {
     return
@@ -60,15 +81,73 @@ struct LigatureSet
     ;
   }
 
-  bool apply (hb_ot_apply_context_t *c) const
+  bool apply (hb_ot_apply_context_t *c, const hb_set_digest_t *seconds = nullptr) const
   {
     TRACE_APPLY (this);
+
     unsigned int num_ligs = ligature.len;
+
+#ifndef HB_NO_OT_RULESETS_FAST_PATH
+    if (HB_OPTIMIZE_SIZE_VAL || num_ligs <= 1)
+#endif
+    {
+    slow:
+      for (unsigned int i = 0; i < num_ligs; i++)
+      {
+	const auto &lig = this+ligature.arrayZ[i];
+	if (lig.apply (c)) return_trace (true);
+      }
+      return_trace (false);
+    }
+
+    /* This version is optimized for speed by matching the second component
+     * of the ligature here, instead of calling into the ligation code.
+     *
+     * This is replicated in ChainRuleSet and RuleSet. */
+
+    auto &skippy_iter = c->iter_context;
+    skippy_iter.reset (c->buffer->idx);
+    skippy_iter.set_match_func (match_always, nullptr);
+    skippy_iter.set_glyph_data ((HBUINT16 *) nullptr);
+    unsigned unsafe_to;
+    hb_codepoint_t second = (unsigned) -1;
+    bool matched = skippy_iter.next (&unsafe_to);
+    if (likely (matched))
+    {
+      second = c->buffer->info[skippy_iter.idx].codepoint;
+      unsafe_to = skippy_iter.idx + 1;
+
+      if (skippy_iter.may_skip (c->buffer->info[skippy_iter.idx]))
+      {
+	/* Can't use the fast path if eg. the next char is a default-ignorable
+	 * or other skippable. */
+        goto slow;
+      }
+    }
+    else
+      goto slow;
+
+    if (seconds && !seconds->may_have (second))
+      return_trace (false);
+    bool unsafe_to_concat = false;
     for (unsigned int i = 0; i < num_ligs; i++)
     {
-      const auto &lig = this+ligature[i];
-      if (lig.apply (c)) return_trace (true);
+      const auto &lig = this+ligature.arrayZ[i];
+      if (unlikely (lig.component.lenP1 <= 1) ||
+	  lig.component.arrayZ[0] == second)
+      {
+	if (lig.apply (c))
+	{
+	  if (unsafe_to_concat)
+	    c->buffer->unsafe_to_concat (c->buffer->idx, unsafe_to);
+	  return_trace (true);
+	}
+      }
+      else if (likely (lig.component.lenP1 > 1))
+        unsafe_to_concat = true;
     }
+    if (likely (unsafe_to_concat))
+      c->buffer->unsafe_to_concat (c->buffer->idx, unsafe_to);
 
     return_trace (false);
   }

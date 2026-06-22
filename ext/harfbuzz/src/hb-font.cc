@@ -30,12 +30,29 @@
 
 #include "hb-font.hh"
 #include "hb-draw.hh"
+#include "hb-paint.hh"
 #include "hb-machinery.hh"
 
 #include "hb-ot.h"
 
 #include "hb-ot-var-avar-table.hh"
 #include "hb-ot-var-fvar-table.hh"
+
+#ifndef HB_NO_OT_FONT
+#include "hb-ot.h"
+#endif
+#ifdef HAVE_FREETYPE
+#include "hb-ft.h"
+#endif
+#ifdef HAVE_FONTATIONS
+#include "hb-fontations.h"
+#endif
+#ifdef HAVE_CORETEXT
+#include "hb-coretext.h"
+#endif
+#ifdef HAVE_DIRECTWRITE
+#include "hb-directwrite.h"
+#endif
 
 
 /**
@@ -58,6 +75,11 @@
  *
  * HarfBuzz provides a built-in set of lightweight default
  * functions for each method in #hb_font_funcs_t.
+ *
+ * The default font functions are implemented in terms of the
+ * #hb_font_funcs_t methods of the parent font object.  This allows
+ * client programs to override only the methods they need to, and
+ * otherwise inherit the parent font's implementation, if any.
  **/
 
 
@@ -81,7 +103,7 @@ hb_font_get_font_h_extents_default (hb_font_t         *font,
 				    hb_font_extents_t *extents,
 				    void              *user_data HB_UNUSED)
 {
-  hb_bool_t ret = font->parent->get_font_h_extents (extents);
+  hb_bool_t ret = font->parent->get_font_h_extents (extents, false);
   if (ret) {
     extents->ascender = font->parent_scale_y_distance (extents->ascender);
     extents->descender = font->parent_scale_y_distance (extents->descender);
@@ -106,7 +128,7 @@ hb_font_get_font_v_extents_default (hb_font_t         *font,
 				    hb_font_extents_t *extents,
 				    void              *user_data HB_UNUSED)
 {
-  hb_bool_t ret = font->parent->get_font_v_extents (extents);
+  hb_bool_t ret = font->parent->get_font_v_extents (extents, false);
   if (ret) {
     extents->ascender = font->parent_scale_x_distance (extents->ascender);
     extents->descender = font->parent_scale_x_distance (extents->descender);
@@ -212,10 +234,10 @@ hb_font_get_glyph_h_advance_default (hb_font_t      *font,
   if (font->has_glyph_h_advances_func_set ())
   {
     hb_position_t ret;
-    font->get_glyph_h_advances (1, &glyph, 0, &ret, 0);
+    font->get_glyph_h_advances (1, &glyph, 0, &ret, 0, false);
     return ret;
   }
-  return font->parent_scale_x_distance (font->parent->get_glyph_h_advance (glyph));
+  return font->parent_scale_x_distance (font->parent->get_glyph_h_advance (glyph, false));
 }
 
 static hb_position_t
@@ -224,8 +246,7 @@ hb_font_get_glyph_v_advance_nil (hb_font_t      *font,
 				 hb_codepoint_t  glyph HB_UNUSED,
 				 void           *user_data HB_UNUSED)
 {
-  /* TODO use font_extents.ascender+descender */
-  return font->y_scale;
+  return -font->y_scale;
 }
 
 static hb_position_t
@@ -237,10 +258,10 @@ hb_font_get_glyph_v_advance_default (hb_font_t      *font,
   if (font->has_glyph_v_advances_func_set ())
   {
     hb_position_t ret;
-    font->get_glyph_v_advances (1, &glyph, 0, &ret, 0);
+    font->get_glyph_v_advances (1, &glyph, 0, &ret, 0, false);
     return ret;
   }
-  return font->parent_scale_y_distance (font->parent->get_glyph_v_advance (glyph));
+  return font->parent_scale_y_distance (font->parent->get_glyph_v_advance (glyph, false));
 }
 
 #define hb_font_get_glyph_h_advances_nil hb_font_get_glyph_h_advances_default
@@ -259,7 +280,7 @@ hb_font_get_glyph_h_advances_default (hb_font_t*            font,
   {
     for (unsigned int i = 0; i < count; i++)
     {
-      *first_advance = font->get_glyph_h_advance (*first_glyph);
+      *first_advance = font->get_glyph_h_advance (*first_glyph, false);
       first_glyph = &StructAtOffsetUnaligned<hb_codepoint_t> (first_glyph, glyph_stride);
       first_advance = &StructAtOffsetUnaligned<hb_position_t> (first_advance, advance_stride);
     }
@@ -268,7 +289,8 @@ hb_font_get_glyph_h_advances_default (hb_font_t*            font,
 
   font->parent->get_glyph_h_advances (count,
 				      first_glyph, glyph_stride,
-				      first_advance, advance_stride);
+				      first_advance, advance_stride,
+				      false);
   for (unsigned int i = 0; i < count; i++)
   {
     *first_advance = font->parent_scale_x_distance (*first_advance);
@@ -291,7 +313,7 @@ hb_font_get_glyph_v_advances_default (hb_font_t*            font,
   {
     for (unsigned int i = 0; i < count; i++)
     {
-      *first_advance = font->get_glyph_v_advance (*first_glyph);
+      *first_advance = font->get_glyph_v_advance (*first_glyph, false);
       first_glyph = &StructAtOffsetUnaligned<hb_codepoint_t> (first_glyph, glyph_stride);
       first_advance = &StructAtOffsetUnaligned<hb_position_t> (first_advance, advance_stride);
     }
@@ -300,7 +322,8 @@ hb_font_get_glyph_v_advances_default (hb_font_t*            font,
 
   font->parent->get_glyph_v_advances (count,
 				      first_glyph, glyph_stride,
-				      first_advance, advance_stride);
+				      first_advance, advance_stride,
+				      false);
   for (unsigned int i = 0; i < count; i++)
   {
     *first_advance = font->parent_scale_y_distance (*first_advance);
@@ -328,6 +351,10 @@ hb_font_get_glyph_h_origin_default (hb_font_t      *font,
 				    hb_position_t  *y,
 				    void           *user_data HB_UNUSED)
 {
+  if (font->has_glyph_h_origins_func_set ())
+  {
+    return font->get_glyph_h_origins (1, &glyph, 0, x, 0, y, 0, false);
+  }
   hb_bool_t ret = font->parent->get_glyph_h_origin (glyph, x, y);
   if (ret)
     font->parent_scale_position (x, y);
@@ -342,7 +369,6 @@ hb_font_get_glyph_v_origin_nil (hb_font_t      *font HB_UNUSED,
 				hb_position_t  *y,
 				void           *user_data HB_UNUSED)
 {
-  *x = *y = 0;
   return false;
 }
 
@@ -354,9 +380,97 @@ hb_font_get_glyph_v_origin_default (hb_font_t      *font,
 				    hb_position_t  *y,
 				    void           *user_data HB_UNUSED)
 {
+  if (font->has_glyph_v_origins_func_set ())
+  {
+    return font->get_glyph_v_origins (1, &glyph, 0, x, 0, y, 0, false);
+  }
   hb_bool_t ret = font->parent->get_glyph_v_origin (glyph, x, y);
   if (ret)
     font->parent_scale_position (x, y);
+  return ret;
+}
+
+#define hb_font_get_glyph_h_origins_nil hb_font_get_glyph_h_origins_default
+
+static hb_bool_t
+hb_font_get_glyph_h_origins_default (hb_font_t *font HB_UNUSED,
+				     void *font_data HB_UNUSED,
+				     unsigned int count,
+				     const hb_codepoint_t *first_glyph HB_UNUSED,
+				     unsigned glyph_stride HB_UNUSED,
+				     hb_position_t *first_x,
+				     unsigned x_stride,
+				     hb_position_t *first_y,
+				     unsigned y_stride,
+				     void *user_data HB_UNUSED)
+{
+  if (font->has_glyph_h_origin_func_set ())
+  {
+    for (unsigned int i = 0; i < count; i++)
+    {
+      font->get_glyph_h_origin (*first_glyph, first_x, first_y, false);
+      first_glyph = &StructAtOffsetUnaligned<hb_codepoint_t> (first_glyph, glyph_stride);
+      first_x = &StructAtOffsetUnaligned<hb_position_t> (first_x, x_stride);
+      first_y = &StructAtOffsetUnaligned<hb_position_t> (first_y, y_stride);
+    }
+    return true;
+  }
+
+  hb_bool_t ret = font->parent->get_glyph_h_origins (count,
+						     first_glyph, glyph_stride,
+						     first_x, x_stride,
+						     first_y, y_stride);
+  if (ret)
+  {
+    for (unsigned i = 0; i < count; i++)
+    {
+      font->parent_scale_position (first_x, first_y);
+      first_x = &StructAtOffsetUnaligned<hb_position_t> (first_x, x_stride);
+      first_y = &StructAtOffsetUnaligned<hb_position_t> (first_y, y_stride);
+    }
+  }
+  return ret;
+}
+
+#define hb_font_get_glyph_v_origins_nil hb_font_get_glyph_v_origins_default
+
+static hb_bool_t
+hb_font_get_glyph_v_origins_default (hb_font_t *font HB_UNUSED,
+				     void *font_data HB_UNUSED,
+				     unsigned int count,
+				     const hb_codepoint_t *first_glyph HB_UNUSED,
+				     unsigned glyph_stride HB_UNUSED,
+				     hb_position_t *first_x,
+				     unsigned x_stride,
+				     hb_position_t *first_y,
+				     unsigned y_stride,
+				     void *user_data HB_UNUSED)
+{
+  if (font->has_glyph_v_origin_func_set ())
+  {
+    for (unsigned int i = 0; i < count; i++)
+    {
+      font->get_glyph_v_origin (*first_glyph, first_x, first_y, false);
+      first_glyph = &StructAtOffsetUnaligned<hb_codepoint_t> (first_glyph, glyph_stride);
+      first_x = &StructAtOffsetUnaligned<hb_position_t> (first_x, x_stride);
+      first_y = &StructAtOffsetUnaligned<hb_position_t> (first_y, y_stride);
+    }
+    return true;
+  }
+
+  hb_bool_t ret = font->parent->get_glyph_v_origins (count,
+						     first_glyph, glyph_stride,
+						     first_x, x_stride,
+						     first_y, y_stride);
+  if (ret)
+  {
+    for (unsigned i = 0; i < count; i++)
+    {
+      font->parent_scale_position (first_x, first_y);
+      first_x = &StructAtOffsetUnaligned<hb_position_t> (first_x, x_stride);
+      first_y = &StructAtOffsetUnaligned<hb_position_t> (first_y, y_stride);
+    }
+  }
   return ret;
 }
 
@@ -420,7 +534,7 @@ hb_font_get_glyph_extents_default (hb_font_t          *font,
 				   hb_glyph_extents_t *extents,
 				   void               *user_data HB_UNUSED)
 {
-  hb_bool_t ret = font->parent->get_glyph_extents (glyph, extents);
+  hb_bool_t ret = font->parent->get_glyph_extents (glyph, extents, false);
   if (ret) {
     font->parent_scale_position (&extents->x_bearing, &extents->y_bearing);
     font->parent_scale_distance (&extents->width, &extents->height);
@@ -450,7 +564,7 @@ hb_font_get_glyph_contour_point_default (hb_font_t      *font,
 					 hb_position_t  *y,
 					 void           *user_data HB_UNUSED)
 {
-  hb_bool_t ret = font->parent->get_glyph_contour_point (glyph, point_index, x, y);
+  hb_bool_t ret = font->parent->get_glyph_contour_point (glyph, point_index, x, y, false);
   if (ret)
     font->parent_scale_position (x, y);
   return ret;
@@ -502,24 +616,36 @@ hb_font_get_glyph_from_name_default (hb_font_t      *font,
   return font->parent->get_glyph_from_name (name, len, glyph);
 }
 
-static void
-hb_font_get_glyph_shape_nil (hb_font_t       *font HB_UNUSED,
-			     void            *font_data HB_UNUSED,
-			     hb_codepoint_t   glyph,
-			     hb_draw_funcs_t *draw_funcs,
-			     void            *draw_data,
-			     void            *user_data HB_UNUSED)
+static hb_bool_t
+hb_font_draw_glyph_or_fail_nil (hb_font_t       *font HB_UNUSED,
+				void            *font_data HB_UNUSED,
+				hb_codepoint_t   glyph,
+				hb_draw_funcs_t *draw_funcs,
+				void            *draw_data,
+				void            *user_data HB_UNUSED)
 {
+  return false;
 }
 
+static hb_bool_t
+hb_font_paint_glyph_or_fail_nil (hb_font_t *font HB_UNUSED,
+				 void *font_data HB_UNUSED,
+				 hb_codepoint_t glyph HB_UNUSED,
+				 hb_paint_funcs_t *paint_funcs HB_UNUSED,
+				 void *paint_data HB_UNUSED,
+				 unsigned int palette HB_UNUSED,
+				 hb_color_t foreground HB_UNUSED,
+				 void *user_data HB_UNUSED)
+{
+  return false;
+}
 
-typedef struct hb_font_get_glyph_shape_default_adaptor_t {
+typedef struct hb_font_draw_glyph_default_adaptor_t {
   hb_draw_funcs_t *draw_funcs;
   void		  *draw_data;
   float		   x_scale;
   float		   y_scale;
-  float		   slant;
-} hb_font_get_glyph_shape_default_adaptor_t;
+} hb_font_draw_glyph_default_adaptor_t;
 
 static void
 hb_draw_move_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED,
@@ -528,13 +654,12 @@ hb_draw_move_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED,
 			 float to_x, float to_y,
 			 void *user_data HB_UNUSED)
 {
-  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  hb_font_draw_glyph_default_adaptor_t *adaptor = (hb_font_draw_glyph_default_adaptor_t *) draw_data;
   float x_scale = adaptor->x_scale;
   float y_scale = adaptor->y_scale;
-  float slant   = adaptor->slant;
 
   adaptor->draw_funcs->emit_move_to (adaptor->draw_data, *st,
-				     x_scale * to_x + slant * to_y, y_scale * to_y);
+				     x_scale * to_x, y_scale * to_y);
 }
 
 static void
@@ -543,16 +668,15 @@ hb_draw_line_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED, void *draw_data,
 			 float to_x, float to_y,
 			 void *user_data HB_UNUSED)
 {
-  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  hb_font_draw_glyph_default_adaptor_t *adaptor = (hb_font_draw_glyph_default_adaptor_t *) draw_data;
   float x_scale = adaptor->x_scale;
   float y_scale = adaptor->y_scale;
-  float slant   = adaptor->slant;
 
-  st->current_x = st->current_x * x_scale + st->current_y * slant;
+  st->current_x = st->current_x * x_scale;
   st->current_y = st->current_y * y_scale;
 
   adaptor->draw_funcs->emit_line_to (adaptor->draw_data, *st,
-				     x_scale * to_x + slant * to_y, y_scale * to_y);
+				     x_scale * to_x, y_scale * to_y);
 }
 
 static void
@@ -562,17 +686,16 @@ hb_draw_quadratic_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED, void *draw_data
 			      float to_x, float to_y,
 			      void *user_data HB_UNUSED)
 {
-  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  hb_font_draw_glyph_default_adaptor_t *adaptor = (hb_font_draw_glyph_default_adaptor_t *) draw_data;
   float x_scale = adaptor->x_scale;
   float y_scale = adaptor->y_scale;
-  float slant   = adaptor->slant;
 
-  st->current_x = st->current_x * x_scale + st->current_y * slant;
+  st->current_x = st->current_x * x_scale;
   st->current_y = st->current_y * y_scale;
 
   adaptor->draw_funcs->emit_quadratic_to (adaptor->draw_data, *st,
-					  x_scale * control_x + slant * control_y, y_scale * control_y,
-					  x_scale * to_x + slant * to_y, y_scale * to_y);
+					  x_scale * control_x, y_scale * control_y,
+					  x_scale * to_x, y_scale * to_y);
 }
 
 static void
@@ -583,18 +706,17 @@ hb_draw_cubic_to_default (hb_draw_funcs_t *dfuncs HB_UNUSED, void *draw_data,
 			  float to_x, float to_y,
 			  void *user_data HB_UNUSED)
 {
-  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  hb_font_draw_glyph_default_adaptor_t *adaptor = (hb_font_draw_glyph_default_adaptor_t *) draw_data;
   float x_scale = adaptor->x_scale;
   float y_scale = adaptor->y_scale;
-  float slant   = adaptor->slant;
 
-  st->current_x = st->current_x * x_scale + st->current_y * slant;
+  st->current_x = st->current_x * x_scale;
   st->current_y = st->current_y * y_scale;
 
   adaptor->draw_funcs->emit_cubic_to (adaptor->draw_data, *st,
-				      x_scale * control1_x + slant * control1_y, y_scale * control1_y,
-				      x_scale * control2_x + slant * control2_y, y_scale * control2_y,
-				      x_scale * to_x + slant * to_y, y_scale * to_y);
+				      x_scale * control1_x, y_scale * control1_y,
+				      x_scale * control2_x, y_scale * control2_y,
+				      x_scale * to_x, y_scale * to_y);
 }
 
 static void
@@ -602,7 +724,7 @@ hb_draw_close_path_default (hb_draw_funcs_t *dfuncs HB_UNUSED, void *draw_data,
 			    hb_draw_state_t *st,
 			    void *user_data HB_UNUSED)
 {
-  hb_font_get_glyph_shape_default_adaptor_t *adaptor = (hb_font_get_glyph_shape_default_adaptor_t *) draw_data;
+  hb_font_draw_glyph_default_adaptor_t *adaptor = (hb_font_draw_glyph_default_adaptor_t *) draw_data;
 
   adaptor->draw_funcs->emit_close_path (adaptor->draw_data, *st);
 }
@@ -617,26 +739,47 @@ static const hb_draw_funcs_t _hb_draw_funcs_default = {
   }
 };
 
-static void
-hb_font_get_glyph_shape_default (hb_font_t       *font,
-				 void            *font_data HB_UNUSED,
-				 hb_codepoint_t   glyph,
-				 hb_draw_funcs_t *draw_funcs,
-				 void            *draw_data,
-				 void            *user_data HB_UNUSED)
+static hb_bool_t
+hb_font_draw_glyph_or_fail_default (hb_font_t       *font,
+				    void            *font_data HB_UNUSED,
+				    hb_codepoint_t   glyph,
+				    hb_draw_funcs_t *draw_funcs,
+				    void            *draw_data,
+				    void            *user_data HB_UNUSED)
 {
-  hb_font_get_glyph_shape_default_adaptor_t adaptor = {
+  hb_font_draw_glyph_default_adaptor_t adaptor = {
     draw_funcs,
     draw_data,
     font->parent->x_scale ? (float) font->x_scale / (float) font->parent->x_scale : 0.f,
-    font->parent->y_scale ? (float) font->y_scale / (float) font->parent->y_scale : 0.f,
-    font->parent->y_scale ? (font->slant - font->parent->slant) *
-			    (float) font->x_scale / (float) font->parent->y_scale : 0.f
+    font->parent->y_scale ? (float) font->y_scale / (float) font->parent->y_scale : 0.f
   };
 
-  font->parent->get_glyph_shape (glyph,
-				 const_cast<hb_draw_funcs_t *> (&_hb_draw_funcs_default),
-				 &adaptor);
+  return font->parent->draw_glyph_or_fail (glyph,
+					   const_cast<hb_draw_funcs_t *> (&_hb_draw_funcs_default),
+					   &adaptor,
+					   false);
+}
+
+static hb_bool_t
+hb_font_paint_glyph_or_fail_default (hb_font_t *font,
+				     void *font_data,
+				     hb_codepoint_t glyph,
+				     hb_paint_funcs_t *paint_funcs,
+				     void *paint_data,
+				     unsigned int palette,
+				     hb_color_t foreground,
+				     void *user_data)
+{
+  paint_funcs->push_transform (paint_data,
+    font->parent->x_scale ? (float) font->x_scale / (float) font->parent->x_scale : 0, 0,
+    0, font->parent->y_scale ? (float) font->y_scale / (float) font->parent->y_scale : 0,
+    0, 0);
+
+  bool ret = font->parent->paint_glyph_or_fail (glyph, paint_funcs, paint_data, palette, foreground);
+
+  paint_funcs->pop_transform (paint_data);
+
+  return ret;
 }
 
 DEFINE_NULL_INSTANCE (hb_font_funcs_t) =
@@ -647,7 +790,7 @@ DEFINE_NULL_INSTANCE (hb_font_funcs_t) =
   nullptr,
   {
     {
-#define HB_FONT_FUNC_IMPLEMENT(name) hb_font_get_##name##_nil,
+#define HB_FONT_FUNC_IMPLEMENT(get_,name) hb_font_##get_##name##_nil,
       HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
     }
@@ -661,7 +804,7 @@ static const hb_font_funcs_t _hb_font_funcs_default = {
   nullptr,
   {
     {
-#define HB_FONT_FUNC_IMPLEMENT(name) hb_font_get_##name##_default,
+#define HB_FONT_FUNC_IMPLEMENT(get_,name) hb_font_##get_##name##_default,
       HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
     }
@@ -739,7 +882,7 @@ hb_font_funcs_destroy (hb_font_funcs_t *ffuncs)
 
   if (ffuncs->destroy)
   {
-#define HB_FONT_FUNC_IMPLEMENT(name) if (ffuncs->destroy->name) \
+#define HB_FONT_FUNC_IMPLEMENT(get_,name) if (ffuncs->destroy->name) \
     ffuncs->destroy->name (!ffuncs->user_data ? nullptr : ffuncs->user_data->name);
     HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
@@ -879,11 +1022,11 @@ fail:
   return false;
 }
 
-#define HB_FONT_FUNC_IMPLEMENT(name) \
+#define HB_FONT_FUNC_IMPLEMENT(get_,name) \
 									 \
 void                                                                     \
 hb_font_funcs_set_##name##_func (hb_font_funcs_t             *ffuncs,    \
-				 hb_font_get_##name##_func_t  func,      \
+				 hb_font_##get_##name##_func_t func,     \
 				 void                        *user_data, \
 				 hb_destroy_func_t            destroy)   \
 {                                                                        \
@@ -899,7 +1042,7 @@ hb_font_funcs_set_##name##_func (hb_font_funcs_t             *ffuncs,    \
   if (func)                                                              \
     ffuncs->get.f.name = func;                                           \
   else                                                                   \
-    ffuncs->get.f.name = hb_font_get_##name##_default;                   \
+    ffuncs->get.f.name = hb_font_##get_##name##_default;                   \
 									 \
   if (ffuncs->user_data)                                                 \
     ffuncs->user_data->name = user_data;                                 \
@@ -1026,7 +1169,8 @@ hb_font_get_nominal_glyph (hb_font_t      *font,
  * @glyph_stride: The stride between successive glyph IDs
  *
  * Fetches the nominal glyph IDs for a sequence of Unicode code points. Glyph
- * IDs must be returned in a #hb_codepoint_t output parameter.
+ * IDs must be returned in a #hb_codepoint_t output parameter. Stops at the
+ * first unsupported glyph ID.
  *
  * Return value: the number of code points processed
  *
@@ -1203,6 +1347,77 @@ hb_font_get_glyph_v_origin (hb_font_t      *font,
 }
 
 /**
+ * hb_font_get_glyph_h_origins:
+ * @font: #hb_font_t to work upon
+ * @count: The number of glyph IDs in the sequence queried
+ * @first_glyph: The first glyph ID to query
+ * @glyph_stride: The stride between successive glyph IDs
+ * @first_x: (out): The first X coordinate of the origin retrieved
+ * @x_stride: The stride between successive X coordinates
+ * @first_y: (out): The first Y coordinate of the origin retrieved
+ * @y_stride: The stride between successive Y coordinates
+ *
+ * Fetches the (X,Y) coordinates of the origin for requested glyph IDs
+ * in the specified font, for horizontal text segments.
+ *
+ * Return value: `true` if data found, `false` otherwise
+ *
+ * Since: 11.3.0
+ **/
+hb_bool_t
+hb_font_get_glyph_h_origins (hb_font_t      *font,
+			     unsigned int    count,
+			     const hb_codepoint_t *first_glyph,
+			     unsigned int    glyph_stride,
+			     hb_position_t  *first_x,
+			     unsigned int    x_stride,
+			     hb_position_t  *first_y,
+			     unsigned int    y_stride)
+
+{
+  return font->get_glyph_h_origins (count,
+				    first_glyph, glyph_stride,
+				    first_x, x_stride,
+				    first_y, y_stride);
+}
+
+/**
+ * hb_font_get_glyph_v_origins:
+ * @font: #hb_font_t to work upon
+ * @count: The number of glyph IDs in the sequence queried
+ * @first_glyph: The first glyph ID to query
+ * @glyph_stride: The stride between successive glyph IDs
+ * @first_x: (out): The first X coordinate of the origin retrieved
+ * @x_stride: The stride between successive X coordinates
+ * @first_y: (out): The first Y coordinate of the origin retrieved
+ * @y_stride: The stride between successive Y coordinates
+ *
+ * Fetches the (X,Y) coordinates of the origin for requested glyph IDs
+ * in the specified font, for vertical text segments.
+ *
+ * Return value: `true` if data found, `false` otherwise
+ *
+ * Since: 11.3.0
+ **/
+hb_bool_t
+hb_font_get_glyph_v_origins (hb_font_t      *font,
+			     unsigned int    count,
+			     const hb_codepoint_t *first_glyph,
+			     unsigned int    glyph_stride,
+			     hb_position_t  *first_x,
+			     unsigned int    x_stride,
+			     hb_position_t  *first_y,
+			     unsigned int    y_stride)
+
+{
+  return font->get_glyph_v_origins (count,
+				    first_glyph, glyph_stride,
+				    first_x, x_stride,
+				    first_y, y_stride);
+}
+
+
+/**
  * hb_font_get_glyph_h_kerning:
  * @font: #hb_font_t to work upon
  * @left_glyph: The glyph ID of the left glyph in the glyph pair
@@ -1308,6 +1523,9 @@ hb_font_get_glyph_contour_point (hb_font_t      *font,
  *
  * Fetches the glyph-name string for a glyph ID in the specified @font.
  *
+ * According to the OpenType specification, glyph names are limited to 63
+ * characters and can only contain (a subset of) ASCII.
+ *
  * Return value: `true` if data found, `false` otherwise
  *
  * Since: 0.9.2
@@ -1345,10 +1563,11 @@ hb_font_get_glyph_from_name (hb_font_t      *font,
   return font->get_glyph_from_name (name, len, glyph);
 }
 
+#ifndef HB_DISABLE_DEPRECATED
 /**
  * hb_font_get_glyph_shape:
  * @font: #hb_font_t to work upon
- * @glyph: : The glyph ID
+ * @glyph: The glyph ID
  * @dfuncs: #hb_draw_funcs_t to draw to
  * @draw_data: User data to pass to draw callbacks
  *
@@ -1357,16 +1576,161 @@ hb_font_get_glyph_from_name (hb_font_t      *font,
  * objects, with @draw_data passed to them.
  *
  * Since: 4.0.0
- **/
+ * Deprecated: 7.0.0: Use hb_font_draw_glyph() instead
+ */
 void
 hb_font_get_glyph_shape (hb_font_t *font,
-			 hb_codepoint_t glyph,
-			 hb_draw_funcs_t *dfuncs, void *draw_data)
+		         hb_codepoint_t glyph,
+		         hb_draw_funcs_t *dfuncs, void *draw_data)
 {
-  font->get_glyph_shape (glyph, dfuncs, draw_data);
+  hb_font_draw_glyph (font, glyph, dfuncs, draw_data);
+}
+#endif
+
+/**
+ * hb_font_draw_glyph_or_fail:
+ * @font: #hb_font_t to work upon
+ * @glyph: The glyph ID
+ * @dfuncs: #hb_draw_funcs_t to draw to
+ * @draw_data: User data to pass to draw callbacks
+ *
+ * Draws the outline that corresponds to a glyph in the specified @font.
+ *
+ * This is a newer name for hb_font_draw_glyph(), that returns `false`
+ * if the font has no outlines for the glyph.
+ *
+ * The outline is returned by way of calls to the callbacks of the @dfuncs
+ * objects, with @draw_data passed to them.
+ *
+ * Return value: `true` if glyph was drawn, `false` otherwise
+ *
+ * Since: 11.2.0
+ **/
+hb_bool_t
+hb_font_draw_glyph_or_fail (hb_font_t *font,
+			    hb_codepoint_t glyph,
+			    hb_draw_funcs_t *dfuncs, void *draw_data)
+{
+  return font->draw_glyph_or_fail (glyph, dfuncs, draw_data);
+}
+
+/**
+ * hb_font_paint_glyph_or_fail:
+ * @font: #hb_font_t to work upon
+ * @glyph: The glyph ID
+ * @pfuncs: #hb_paint_funcs_t to paint with
+ * @paint_data: User data to pass to paint callbacks
+ * @palette_index: The index of the font's color palette to use
+ * @foreground: The foreground color, unpremultipled
+ *
+ * Paints a color glyph.
+ *
+ * This function is similar to, but lower-level than,
+ * hb_font_paint_glyph(). It is suitable for clients that
+ * need more control.  If there are no color glyphs available,
+ * it will return `false`. The client can then fall back to
+ * hb_font_draw_glyph_or_fail() for the monochrome outline glyph.
+ *
+ * The painting instructions are returned by way of calls to
+ * the callbacks of the @funcs object, with @paint_data passed
+ * to them.
+ *
+ * If the font has color palettes (see hb_ot_color_has_palettes()),
+ * then @palette_index selects the palette to use. If the font only
+ * has one palette, this will be 0.
+ *
+ * Return value: `true` if glyph was painted, `false` otherwise
+ *
+ * Since: 11.2.0
+ */
+hb_bool_t
+hb_font_paint_glyph_or_fail (hb_font_t *font,
+			     hb_codepoint_t glyph,
+			     hb_paint_funcs_t *pfuncs, void *paint_data,
+			     unsigned int palette_index,
+			     hb_color_t foreground)
+{
+  return font->paint_glyph_or_fail (glyph, pfuncs, paint_data, palette_index, foreground);
 }
 
 /* A bit higher-level, and with fallback */
+
+void
+hb_font_t::paint_glyph (hb_codepoint_t glyph,
+			hb_paint_funcs_t *paint_funcs, void *paint_data,
+			unsigned int palette,
+			hb_color_t foreground)
+{
+  if (paint_glyph_or_fail (glyph,
+			   paint_funcs, paint_data,
+			   palette, foreground))
+    return;
+
+  /* Fallback for outline glyph. */
+  paint_funcs->push_clip_glyph (paint_data, glyph, this);
+  paint_funcs->color (paint_data, true, foreground);
+  paint_funcs->pop_clip (paint_data);
+}
+
+
+/**
+ * hb_font_draw_glyph:
+ * @font: #hb_font_t to work upon
+ * @glyph: The glyph ID
+ * @dfuncs: #hb_draw_funcs_t to draw to
+ * @draw_data: User data to pass to draw callbacks
+ *
+ * Draws the outline that corresponds to a glyph in the specified @font.
+ *
+ * This is an older name for hb_font_draw_glyph_or_fail(), with no
+ * return value.
+ *
+ * The outline is returned by way of calls to the callbacks of the @dfuncs
+ * objects, with @draw_data passed to them.
+ *
+ * Since: 7.0.0
+ **/
+void
+hb_font_draw_glyph (hb_font_t *font,
+		    hb_codepoint_t glyph,
+		    hb_draw_funcs_t *dfuncs, void *draw_data)
+{
+  (void) hb_font_draw_glyph_or_fail (font, glyph, dfuncs, draw_data);
+}
+
+/**
+ * hb_font_paint_glyph:
+ * @font: #hb_font_t to work upon
+ * @glyph: The glyph ID
+ * @pfuncs: #hb_paint_funcs_t to paint with
+ * @paint_data: User data to pass to paint callbacks
+ * @palette_index: The index of the font's color palette to use
+ * @foreground: The foreground color, unpremultipled
+ *
+ * Paints the glyph. This function is similar to
+ * hb_font_paint_glyph_or_fail(), but if painting a color glyph
+ * failed, it will fall back to painting an outline monochrome
+ * glyph.
+ *
+ * The painting instructions are returned by way of calls to
+ * the callbacks of the @funcs object, with @paint_data passed
+ * to them.
+ *
+ * If the font has color palettes (see hb_ot_color_has_palettes()),
+ * then @palette_index selects the palette to use. If the font only
+ * has one palette, this will be 0.
+ *
+ * Since: 7.0.0
+ */
+void
+hb_font_paint_glyph (hb_font_t *font,
+                     hb_codepoint_t glyph,
+                     hb_paint_funcs_t *pfuncs, void *paint_data,
+                     unsigned int palette_index,
+                     hb_color_t foreground)
+{
+  font->paint_glyph (glyph, pfuncs, paint_data, palette_index, foreground);
+}
 
 /**
  * hb_font_get_extents_for_direction:
@@ -1624,6 +1988,9 @@ hb_font_get_glyph_contour_point_for_origin (hb_font_t      *font,
  * If the glyph ID has no name in @font, a string of the form `gidDDD` is
  * generated, with `DDD` being the glyph ID.
  *
+ * According to the OpenType specification, glyph names are limited to 63
+ * characters and can only contain (a subset of) ASCII.
+ *
  * Since: 0.9.2
  **/
 void
@@ -1677,8 +2044,14 @@ DEFINE_NULL_INSTANCE (hb_font_t) =
 
   1000, /* x_scale */
   1000, /* y_scale */
-  0., /* slant */
-  0., /* slant_xy; */
+  false, /* is_synthetic */
+  0.f, /* x_embolden */
+  0.f, /* y_embolden */
+  true, /* embolden_in_place */
+  0, /* x_strength */
+  0, /* y_strength */
+  0.f, /* slant */
+  0.f, /* slant_xy; */
   1.f, /* x_multf */
   1.f, /* y_multf */
   1<<16, /* x_mult */
@@ -1688,6 +2061,8 @@ DEFINE_NULL_INSTANCE (hb_font_t) =
   0, /* y_ppem */
   0, /* ptem */
 
+  HB_FONT_NO_VAR_NAMED_INSTANCE, /* instance_index */
+  false, /* has_nonzero_coords */
   0, /* num_coords */
   nullptr, /* coords */
   nullptr, /* design_coords */
@@ -1715,8 +2090,10 @@ _hb_font_create (hb_face_t *face)
   font->klass = hb_font_funcs_get_empty ();
   font->data.init0 (font);
   font->x_scale = font->y_scale = face->get_upem ();
+  font->embolden_in_place = true;
   font->x_multf = font->y_multf = 1.f;
   font->x_mult = font->y_mult = 1 << 16;
+  font->instance_index = HB_FONT_NO_VAR_NAMED_INSTANCE;
 
   return font;
 }
@@ -1743,14 +2120,17 @@ hb_font_create (hb_face_t *face)
 {
   hb_font_t *font = _hb_font_create (face);
 
-#ifndef HB_NO_OT_FONT
-  /* Install our in-house, very lightweight, funcs. */
-  hb_ot_font_set_funcs (font);
-#endif
+  hb_font_set_funcs_using (font, nullptr);
 
 #ifndef HB_NO_VAR
-  if (face && face->index >> 16)
-    hb_font_set_var_named_instance (font, (face->index >> 16) - 1);
+  // Initialize variations.
+  if (likely (face))
+  {
+    if (face->index >> 16)
+      hb_font_set_var_named_instance (font, (face->index >> 16) - 1);
+    else
+      hb_font_set_variations (font, nullptr, 0);
+  }
 #endif
 
   return font;
@@ -1768,8 +2148,10 @@ _hb_font_adopt_var_coords (hb_font_t *font,
   font->coords = coords;
   font->design_coords = design_coords;
   font->num_coords = coords_length;
+  font->has_nonzero_coords = hb_any (hb_array (coords, coords_length));
 
-  font->mults_changed (); // Easiest to call this to drop cached data
+  font->changed ();
+  font->serial_coords = font->serial;
 }
 
 /**
@@ -1798,6 +2180,9 @@ hb_font_create_sub_font (hb_font_t *parent)
 
   font->x_scale = parent->x_scale;
   font->y_scale = parent->y_scale;
+  font->x_embolden = parent->x_embolden;
+  font->y_embolden = parent->y_embolden;
+  font->embolden_in_place = parent->embolden_in_place;
   font->slant = parent->slant;
   font->x_ppem = parent->x_ppem;
   font->y_ppem = parent->y_ppem;
@@ -1821,7 +2206,8 @@ hb_font_create_sub_font (hb_font_t *parent)
     }
   }
 
-  font->mults_changed ();
+  font->changed ();
+  font->serial_coords = font->serial;
 
   return font;
 }
@@ -1909,7 +2295,7 @@ hb_font_set_user_data (hb_font_t          *font,
 		       hb_bool_t           replace)
 {
   if (!hb_object_is_immutable (font))
-    font->serial++;
+    font->changed ();
 
   return hb_object_set_user_data (font, key, data, destroy, replace);
 }
@@ -1984,7 +2370,7 @@ hb_font_is_immutable (hb_font_t *font)
 unsigned int
 hb_font_get_serial (hb_font_t *font)
 {
-  return font->serial;
+  return font->serial.get_acquire ();
 }
 
 /**
@@ -2003,9 +2389,7 @@ hb_font_changed (hb_font_t *font)
   if (hb_object_is_immutable (font))
     return;
 
-  font->serial++;
-
-  font->mults_changed ();
+  font->changed ();
 }
 
 /**
@@ -2027,8 +2411,6 @@ hb_font_set_parent (hb_font_t *font,
   if (parent == font->parent)
     return;
 
-  font->serial++;
-
   if (!parent)
     parent = hb_font_get_empty ();
 
@@ -2037,6 +2419,8 @@ hb_font_set_parent (hb_font_t *font,
   font->parent = hb_font_reference (parent);
 
   hb_font_destroy (old);
+
+  font->changed ();
 }
 
 /**
@@ -2074,8 +2458,6 @@ hb_font_set_face (hb_font_t *font,
   if (face == font->face)
     return;
 
-  font->serial++;
-
   if (unlikely (!face))
     face = hb_face_get_empty ();
 
@@ -2083,9 +2465,12 @@ hb_font_set_face (hb_font_t *font,
 
   hb_face_make_immutable (face);
   font->face = hb_face_reference (face);
-  font->mults_changed ();
+  font->changed ();
 
   hb_face_destroy (old);
+
+  font->changed ();
+  font->serial_coords = font->serial;
 }
 
 /**
@@ -2130,8 +2515,6 @@ hb_font_set_funcs (hb_font_t         *font,
     return;
   }
 
-  font->serial++;
-
   if (font->destroy)
     font->destroy (font->user_data);
 
@@ -2143,6 +2526,8 @@ hb_font_set_funcs (hb_font_t         *font,
   font->klass = klass;
   font->user_data = font_data;
   font->destroy = destroy;
+
+  font->changed ();
 }
 
 /**
@@ -2169,15 +2554,154 @@ hb_font_set_funcs_data (hb_font_t         *font,
     return;
   }
 
-  font->serial++;
-
   if (font->destroy)
     font->destroy (font->user_data);
 
   font->user_data = font_data;
   font->destroy = destroy;
+
+  font->changed ();
 }
 
+static const struct supported_font_funcs_t {
+	char name[16];
+	void (*func) (hb_font_t *);
+} supported_font_funcs[] =
+{
+#ifndef HB_NO_OT_FONT
+  {"ot",	hb_ot_font_set_funcs},
+#endif
+#ifdef HAVE_FREETYPE
+  {"ft",	hb_ft_font_set_funcs},
+#endif
+#ifdef HAVE_FONTATIONS
+  {"fontations",hb_fontations_font_set_funcs},
+#endif
+#ifdef HAVE_CORETEXT
+  {"coretext",	hb_coretext_font_set_funcs},
+#endif
+#ifdef HAVE_DIRECTWRITE
+  {"directwrite",hb_directwrite_font_set_funcs},
+#endif
+};
+
+static const char *get_default_funcs_name ()
+{
+  static hb_atomic_t<const char *> static_funcs_name;
+  const char *name = static_funcs_name.get_acquire ();
+  if (!name)
+  {
+    name = getenv ("HB_FONT_FUNCS");
+    if (!name)
+      name = "";
+    if (!static_funcs_name.cmpexch (nullptr, name))
+      name = static_funcs_name.get_acquire ();
+  }
+  return name;
+}
+
+/**
+ * hb_font_set_funcs_using:
+ * @font: #hb_font_t to work upon
+ * @name: The name of the font-functions structure to use, or `NULL`
+ *
+ * Sets the font-functions structure to use for a font, based on the
+ * specified name.
+ *
+ * If @name is `NULL` or the empty string, the default (first) functioning font-functions
+ * are used.  This default can be changed by setting the `HB_FONT_FUNCS` environment
+ * variable to the name of the desired font-functions.
+ *
+ * Return value: `true` if the font-functions was found and set, `false` otherwise
+ *
+ * Since: 11.0.0
+ **/
+hb_bool_t
+hb_font_set_funcs_using (hb_font_t  *font,
+			 const char *name)
+{
+  if (unlikely (hb_object_is_immutable (font)))
+    return false;
+
+  bool retry = false;
+
+  if (!name || !*name)
+  {
+    name = get_default_funcs_name ();
+    retry = true;
+  }
+  if (name && !*name) name = nullptr;
+
+retry:
+  for (unsigned i = 0; i < ARRAY_LENGTH (supported_font_funcs); i++)
+    if (!name || strcmp (supported_font_funcs[i].name, name) == 0)
+    {
+      supported_font_funcs[i].func (font);
+      if (name || font->klass != hb_font_funcs_get_empty ())
+	return true;
+    }
+
+  if (retry)
+  {
+    retry = false;
+    name = nullptr;
+    goto retry;
+  }
+
+  return false;
+}
+
+static inline void free_static_font_funcs_list ();
+
+static const char * const nil_font_funcs_list[] = {nullptr};
+
+static struct hb_font_funcs_list_lazy_loader_t : hb_lazy_loader_t<const char *,
+								  hb_font_funcs_list_lazy_loader_t>
+{
+  static const char ** create ()
+  {
+    const char **font_funcs_list = (const char **) hb_calloc (1 + ARRAY_LENGTH (supported_font_funcs), sizeof (const char *));
+    if (unlikely (!font_funcs_list))
+      return nullptr;
+
+    unsigned i;
+    for (i = 0; i < ARRAY_LENGTH (supported_font_funcs); i++)
+      font_funcs_list[i] = supported_font_funcs[i].name;
+    font_funcs_list[i] = nullptr;
+
+    hb_atexit (free_static_font_funcs_list);
+
+    return font_funcs_list;
+  }
+  static void destroy (const char **l)
+  { hb_free (l); }
+  static const char * const * get_null ()
+  { return nil_font_funcs_list; }
+} static_font_funcs_list;
+
+static inline
+void free_static_font_funcs_list ()
+{
+  static_font_funcs_list.free_instance ();
+}
+
+/**
+ * hb_font_list_funcs:
+ *
+ * Retrieves the list of font functions supported by HarfBuzz.
+ *
+ * Return value: (transfer none) (array zero-terminated=1): a
+ *    `NULL`-terminated array of supported font functions
+ *    constant strings. The returned array is owned by HarfBuzz
+ *    and should not be modified or freed.
+ *
+ * Since: 11.0.0
+ **/
+const char **
+hb_font_list_funcs ()
+{
+  return static_font_funcs_list.get_unconst ();
+}
 
 /**
  * hb_font_set_scale:
@@ -2186,6 +2710,31 @@ hb_font_set_funcs_data (hb_font_t         *font,
  * @y_scale: Vertical scale value to assign
  *
  * Sets the horizontal and vertical scale of a font.
+ *
+ * The font scale is a number related to, but not the same as,
+ * font size. Typically the client establishes a scale factor
+ * to be used between the two. For example, 64, or 256, which
+ * would be the fractional-precision part of the font scale.
+ * This is necessary because #hb_position_t values are integer
+ * types and you need to leave room for fractional values
+ * in there.
+ *
+ * For example, to set the font size to 20, with 64
+ * levels of fractional precision you would call
+ * `hb_font_set_scale(font, 20 * 64, 20 * 64)`.
+ *
+ * In the example above, even what font size 20 means is up to
+ * you. It might be 20 pixels, or 20 points, or 20 millimeters.
+ * HarfBuzz does not care about that.  You can set the point
+ * size of the font using hb_font_set_ptem(), and the pixel
+ * size using hb_font_set_ppem().
+ *
+ * The choice of scale is yours but needs to be consistent between
+ * what you set here, and what you expect out of #hb_position_t
+ * as well has draw / paint API output values.
+ *
+ * Fonts default to a scale equal to the UPEM value of their face.
+ * A font with this setting is sometimes called an "unscaled" font.
  *
  * Since: 0.9.2
  **/
@@ -2200,11 +2749,10 @@ hb_font_set_scale (hb_font_t *font,
   if (font->x_scale == x_scale && font->y_scale == y_scale)
     return;
 
-  font->serial++;
-
   font->x_scale = x_scale;
   font->y_scale = y_scale;
-  font->mults_changed ();
+
+  font->changed ();
 }
 
 /**
@@ -2232,7 +2780,11 @@ hb_font_get_scale (hb_font_t *font,
  * @x_ppem: Horizontal ppem value to assign
  * @y_ppem: Vertical ppem value to assign
  *
- * Sets the horizontal and vertical pixels-per-em (ppem) of a font.
+ * Sets the horizontal and vertical pixels-per-em (PPEM) of a font.
+ *
+ * These values are used for pixel-size-specific adjustment to
+ * shaping and draw results, though for the most part they are
+ * unused and can be left unset.
  *
  * Since: 0.9.2
  **/
@@ -2247,10 +2799,10 @@ hb_font_set_ppem (hb_font_t    *font,
   if (font->x_ppem == x_ppem && font->y_ppem == y_ppem)
     return;
 
-  font->serial++;
-
   font->x_ppem = x_ppem;
   font->y_ppem = y_ppem;
+
+  font->changed ();
 }
 
 /**
@@ -2294,9 +2846,9 @@ hb_font_set_ptem (hb_font_t *font,
   if (font->ptem == ptem)
     return;
 
-  font->serial++;
-
   font->ptem = ptem;
+
+  font->changed ();
 }
 
 /**
@@ -2317,6 +2869,92 @@ hb_font_get_ptem (hb_font_t *font)
 }
 
 /**
+ * hb_font_is_synthetic:
+ * @font: #hb_font_t to work upon
+ *
+ * Tests whether a font is synthetic. A synthetic font is one
+ * that has either synthetic slant or synthetic bold set on it.
+ *
+ * Return value: `true` if the font is synthetic, `false` otherwise.
+ *
+ * Since: 11.2.0
+ */
+hb_bool_t
+hb_font_is_synthetic (hb_font_t *font)
+{
+  return font->is_synthetic;
+}
+
+/**
+ * hb_font_set_synthetic_bold:
+ * @font: #hb_font_t to work upon
+ * @x_embolden: the amount to embolden horizontally
+ * @y_embolden: the amount to embolden vertically
+ * @in_place: whether to embolden glyphs in-place
+ *
+ * Sets the "synthetic boldness" of a font.
+ *
+ * Positive values for @x_embolden / @y_embolden make a font
+ * bolder, negative values thinner. Typical values are in the
+ * 0.01 to 0.05 range. The default value is zero.
+ *
+ * Synthetic boldness is applied by offsetting the contour
+ * points of the glyph shape.
+ *
+ * Synthetic boldness is applied when rendering a glyph via
+ * hb_font_draw_glyph_or_fail().
+ *
+ * If @in_place is `false`, then glyph advance-widths are also
+ * adjusted, otherwise they are not.  The in-place mode is
+ * useful for simulating [font grading](https://fonts.google.com/knowledge/glossary/grade).
+ *
+ *
+ * Since: 7.0.0
+ **/
+void
+hb_font_set_synthetic_bold (hb_font_t *font,
+			    float x_embolden,
+			    float y_embolden,
+			    hb_bool_t in_place)
+{
+  if (hb_object_is_immutable (font))
+    return;
+
+  if (font->x_embolden == x_embolden &&
+      font->y_embolden == y_embolden &&
+      font->embolden_in_place == (bool) in_place)
+    return;
+
+  font->x_embolden = x_embolden;
+  font->y_embolden = y_embolden;
+  font->embolden_in_place = in_place;
+
+  font->changed ();
+}
+
+/**
+ * hb_font_get_synthetic_bold:
+ * @font: #hb_font_t to work upon
+ * @x_embolden: (out): return location for horizontal value
+ * @y_embolden: (out): return location for vertical value
+ * @in_place: (out): return location for in-place value
+ *
+ * Fetches the "synthetic boldness" parameters of a font.
+ *
+ * Since: 7.0.0
+ **/
+void
+hb_font_get_synthetic_bold (hb_font_t *font,
+			    float *x_embolden,
+			    float *y_embolden,
+			    hb_bool_t *in_place)
+{
+  if (x_embolden) *x_embolden = font->x_embolden;
+  if (y_embolden) *y_embolden = font->y_embolden;
+  if (in_place) *in_place = font->embolden_in_place;
+}
+
+/**
  * hb_font_set_synthetic_slant:
  * @font: #hb_font_t to work upon
  * @slant: synthetic slant value.
@@ -2328,9 +2966,8 @@ hb_font_get_ptem (hb_font_t *font)
  * HarfBuzz needs to know this value to adjust shaping results,
  * metrics, and style values to match the slanted rendering.
  *
- * <note>Note: The glyph shape fetched via the
- * hb_font_get_glyph_shape() is slanted to reflect this value
- * as well.</note>
+ * <note>Note: The glyph shape fetched via the hb_font_draw_glyph_or_fail()
+ * function is slanted to reflect this value as well.</note>
  *
  * <note>Note: The slant value is a ratio.  For example, a
  * 20% slant would be represented as a 0.2 value.</note>
@@ -2346,10 +2983,9 @@ hb_font_set_synthetic_slant (hb_font_t *font, float slant)
   if (font->slant == slant)
     return;
 
-  font->serial++;
-
   font->slant = slant;
-  font->mults_changed ();
+
+  font->changed ();
 }
 
 /**
@@ -2395,13 +3031,69 @@ hb_font_set_variations (hb_font_t            *font,
   if (hb_object_is_immutable (font))
     return;
 
-  font->serial_coords = ++font->serial;
+  const OT::fvar &fvar = *font->face->table.fvar;
+  auto axes = fvar.get_axes ();
+  const unsigned coords_length = axes.length;
 
-  if (!variations_length)
+  int *normalized = coords_length ? (int *) hb_calloc (coords_length, sizeof (int)) : nullptr;
+  float *design_coords = coords_length ? (float *) hb_calloc (coords_length, sizeof (float)) : nullptr;
+
+  if (unlikely (coords_length && !(normalized && design_coords)))
   {
-    hb_font_set_var_coords_normalized (font, nullptr, 0);
+    hb_free (normalized);
+    hb_free (design_coords);
     return;
   }
+
+  /* Initialize design coords. */
+  for (unsigned int i = 0; i < coords_length; i++)
+    design_coords[i] = axes[i].get_default ();
+  if (font->instance_index != HB_FONT_NO_VAR_NAMED_INSTANCE)
+  {
+    unsigned count = coords_length;
+    /* This may fail if index is out-of-range;
+     * That's why we initialize design_coords from fvar above
+     * unconditionally. */
+    hb_ot_var_named_instance_get_design_coords (font->face, font->instance_index,
+						&count, design_coords);
+  }
+
+  for (unsigned int i = 0; i < variations_length; i++)
+  {
+    const auto tag = variations[i].tag;
+    const auto v = variations[i].value;
+    for (unsigned axis_index = 0; axis_index < coords_length; axis_index++)
+      if (axes[axis_index].axisTag == tag)
+	design_coords[axis_index] = v;
+  }
+
+  hb_ot_var_normalize_coords (font->face, coords_length, design_coords, normalized);
+  _hb_font_adopt_var_coords (font, normalized, design_coords, coords_length);
+}
+
+/**
+ * hb_font_set_variation:
+ * @font: #hb_font_t to work upon
+ * @tag: The #hb_tag_t tag of the variation-axis name
+ * @value: The value of the variation axis
+ *
+ * Change the value of one variation axis on the font.
+ *
+ * Note: This function is expensive to be called repeatedly.
+ *   If you want to set multiple variation axes at the same time,
+ *   use hb_font_set_variations() instead.
+ *
+ * Since: 7.1.0
+ */
+void
+hb_font_set_variation (hb_font_t *font,
+		       hb_tag_t tag,
+		       float    value)
+{
+  if (hb_object_is_immutable (font))
+    return;
+
+  // TODO Share some of this code with set_variations()
 
   const OT::fvar &fvar = *font->face->table.fvar;
   auto axes = fvar.get_axes ();
@@ -2417,23 +3109,33 @@ hb_font_set_variations (hb_font_t            *font,
     return;
   }
 
-  /* Initialize design coords to default from fvar. */
-  for (unsigned int i = 0; i < coords_length; i++)
-    design_coords[i] = axes[i].get_default ();
-
-  for (unsigned int i = 0; i < variations_length; i++)
+  /* Initialize design coords. */
+  if (font->design_coords)
   {
-    const auto tag = variations[i].tag;
-    const auto v = variations[i].value;
-    for (unsigned axis_index = 0; axis_index < coords_length; axis_index++)
-      if (axes[axis_index].axisTag == tag)
-      {
-	design_coords[axis_index] = v;
-	normalized[axis_index] = fvar.normalize_axis_value (axis_index, v);
-      }
+    assert (coords_length == font->num_coords);
+    for (unsigned int i = 0; i < coords_length; i++)
+      design_coords[i] = font->design_coords[i];
   }
-  font->face->table.avar->map_coords (normalized, coords_length);
+  else
+  {
+    for (unsigned int i = 0; i < coords_length; i++)
+      design_coords[i] = axes[i].get_default ();
+    if (font->instance_index != HB_FONT_NO_VAR_NAMED_INSTANCE)
+    {
+      unsigned count = coords_length;
+      /* This may fail if index is out-of-range;
+       * That's why we initialize design_coords from fvar above
+       * unconditionally. */
+      hb_ot_var_named_instance_get_design_coords (font->face, font->instance_index,
+						  &count, design_coords);
+    }
+  }
 
+  for (unsigned axis_index = 0; axis_index < coords_length; axis_index++)
+    if (axes[axis_index].axisTag == tag)
+      design_coords[axis_index] = value;
+
+  hb_ot_var_normalize_coords (font->face, coords_length, design_coords, normalized);
   _hb_font_adopt_var_coords (font, normalized, design_coords, coords_length);
 }
 
@@ -2455,13 +3157,16 @@ hb_font_set_variations (hb_font_t            *font,
 void
 hb_font_set_var_coords_design (hb_font_t    *font,
 			       const float  *coords,
-			       unsigned int  coords_length)
+			       unsigned int  input_coords_length)
 {
   if (hb_object_is_immutable (font))
     return;
 
-  font->serial_coords = ++font->serial;
+  const OT::fvar &fvar = *font->face->table.fvar;
+  auto axes = fvar.get_axes ();
+  const unsigned coords_length = axes.length;
 
+  input_coords_length = hb_min (input_coords_length, coords_length);
   int *normalized = coords_length ? (int *) hb_calloc (coords_length, sizeof (int)) : nullptr;
   float *design_coords = coords_length ? (float *) hb_calloc (coords_length, sizeof (float)) : nullptr;
 
@@ -2472,8 +3177,11 @@ hb_font_set_var_coords_design (hb_font_t    *font,
     return;
   }
 
-  if (coords_length)
-    hb_memcpy (design_coords, coords, coords_length * sizeof (font->design_coords[0]));
+  if (input_coords_length)
+    hb_memcpy (design_coords, coords, input_coords_length * sizeof (font->design_coords[0]));
+  // Fill in the rest with default values
+  for (unsigned int i = input_coords_length; i < coords_length; i++)
+    design_coords[i] = axes[i].get_default ();
 
   hb_ot_var_normalize_coords (font->face, coords_length, coords, normalized);
   _hb_font_adopt_var_coords (font, normalized, design_coords, coords_length);
@@ -2484,28 +3192,38 @@ hb_font_set_var_coords_design (hb_font_t    *font,
  * @font: a font.
  * @instance_index: named instance index.
  *
- * Sets design coords of a font from a named instance index.
+ * Sets design coords of a font from a named-instance index.
  *
  * Since: 2.6.0
  */
 void
 hb_font_set_var_named_instance (hb_font_t *font,
-				unsigned instance_index)
+				unsigned int instance_index)
 {
   if (hb_object_is_immutable (font))
     return;
 
-  font->serial_coords = ++font->serial;
-
-  unsigned int coords_length = hb_ot_var_named_instance_get_design_coords (font->face, instance_index, nullptr, nullptr);
-
-  float *coords = coords_length ? (float *) hb_calloc (coords_length, sizeof (float)) : nullptr;
-  if (unlikely (coords_length && !coords))
+  if (font->instance_index == instance_index)
     return;
 
-  hb_ot_var_named_instance_get_design_coords (font->face, instance_index, &coords_length, coords);
-  hb_font_set_var_coords_design (font, coords, coords_length);
-  hb_free (coords);
+  font->instance_index = instance_index;
+  hb_font_set_variations (font, nullptr, 0);
+}
+
+/**
+ * hb_font_get_var_named_instance:
+ * @font: a font.
+ *
+ * Returns the currently-set named-instance index of the font.
+ *
+ * Return value: Named-instance index or %HB_FONT_NO_VAR_NAMED_INSTANCE.
+ *
+ * Since: 7.0.0
+ **/
+unsigned int
+hb_font_get_var_named_instance (hb_font_t *font)
+{
+  return font->instance_index;
 }
 
 /**
@@ -2528,36 +3246,31 @@ hb_font_set_var_named_instance (hb_font_t *font,
 void
 hb_font_set_var_coords_normalized (hb_font_t    *font,
 				   const int    *coords, /* 2.14 normalized */
-				   unsigned int  coords_length)
+				   unsigned int  input_coords_length)
 {
   if (hb_object_is_immutable (font))
     return;
 
-  font->serial_coords = ++font->serial;
+  const OT::fvar &fvar = *font->face->table.fvar;
+  auto axes = fvar.get_axes ();
+  unsigned coords_length = axes.length;
 
+  input_coords_length = hb_min (input_coords_length, coords_length);
   int *copy = coords_length ? (int *) hb_calloc (coords_length, sizeof (coords[0])) : nullptr;
-  int *unmapped = coords_length ? (int *) hb_calloc (coords_length, sizeof (coords[0])) : nullptr;
   float *design_coords = coords_length ? (float *) hb_calloc (coords_length, sizeof (design_coords[0])) : nullptr;
 
-  if (unlikely (coords_length && !(copy && unmapped && design_coords)))
+  if (unlikely (coords_length && !(copy && design_coords)))
   {
     hb_free (copy);
-    hb_free (unmapped);
     hb_free (design_coords);
     return;
   }
 
-  if (coords_length)
-  {
-    hb_memcpy (copy, coords, coords_length * sizeof (coords[0]));
-    hb_memcpy (unmapped, coords, coords_length * sizeof (coords[0]));
-  }
+  if (input_coords_length)
+    hb_memcpy (copy, coords, input_coords_length * sizeof (coords[0]));
 
-  /* Best effort design coords simulation */
-  font->face->table.avar->unmap_coords (unmapped, coords_length);
   for (unsigned int i = 0; i < coords_length; ++i)
-    design_coords[i] = font->face->table.fvar->unnormalize_axis_value (i, unmapped[i]);
-  hb_free (unmapped);
+    design_coords[i] = NAN;
 
   _hb_font_adopt_var_coords (font, copy, design_coords, coords_length);
 }
@@ -2570,8 +3283,8 @@ hb_font_set_var_coords_normalized (hb_font_t    *font,
  * Fetches the list of normalized variation coordinates currently
  * set on a font.
  *
- * Note that this returned array may only contain values for some
- * (or none) of the axes; omitted axes effectively have zero values.
+ * <note>Note that if no variation coordinates are set, this function may
+ * return %NULL.</note>
  *
  * Return value is valid as long as variation coordinates of the font
  * are not modified.
@@ -2598,9 +3311,12 @@ hb_font_get_var_coords_normalized (hb_font_t    *font,
  * Fetches the list of variation coordinates (in design-space units) currently
  * set on a font.
  *
- * Note that this returned array may only contain values for some
- * (or none) of the axes; omitted axes effectively have their default
- * values.
+ * <note>Note that if no variation coordinates are set, this function may
+ * return %NULL.</note>
+ *
+ * <note>If variations have been set on the font using normalized coordinates
+ * (i.e. via hb_font_set_var_coords_normalized()), the design coordinates will
+ * have NaN (Not a Number) values.</note>
  *
  * Return value is valid as long as variation coordinates of the font
  * are not modified.
@@ -2752,5 +3468,139 @@ hb_font_funcs_set_glyph_func (hb_font_funcs_t          *ffuncs,
 					  hb_font_get_variation_glyph_trampoline,
 					  trampoline,
 					  trampoline_destroy);
+}
+#endif
+
+
+#ifndef HB_DISABLE_DEPRECATED
+
+struct hb_draw_glyph_closure_t
+{
+  hb_font_draw_glyph_func_t func;
+  void *user_data;
+  hb_destroy_func_t destroy;
+};
+static hb_bool_t
+hb_font_draw_glyph_trampoline (hb_font_t       *font,
+			       void            *font_data,
+			       hb_codepoint_t   glyph,
+			       hb_draw_funcs_t *draw_funcs,
+			       void            *draw_data,
+			       void            *user_data)
+{
+  hb_draw_glyph_closure_t *closure = (hb_draw_glyph_closure_t *) user_data;
+  closure->func (font, font_data, glyph, draw_funcs, draw_data, closure->user_data);
+  return true;
+}
+static void
+hb_font_draw_glyph_closure_destroy (void *user_data)
+{
+  hb_draw_glyph_closure_t *closure = (hb_draw_glyph_closure_t *) user_data;
+
+  if (closure->destroy)
+    closure->destroy (closure->user_data);
+  hb_free (closure);
+}
+static void
+_hb_font_funcs_set_draw_glyph_func (hb_font_funcs_t           *ffuncs,
+				    hb_font_draw_glyph_func_t  func,
+				    void                      *user_data,
+				    hb_destroy_func_t          destroy /* May be NULL. */)
+{
+  if (hb_object_is_immutable (ffuncs))
+  {
+    if (destroy)
+      destroy (user_data);
+    return;
+  }
+  hb_draw_glyph_closure_t *closure = (hb_draw_glyph_closure_t *) hb_calloc (1, sizeof (hb_draw_glyph_closure_t));
+  if (unlikely (!closure))
+  {
+    if (destroy)
+      destroy (user_data);
+    return;
+  }
+  closure->func = func;
+  closure->user_data = user_data;
+  closure->destroy = destroy;
+
+  hb_font_funcs_set_draw_glyph_or_fail_func (ffuncs,
+					     hb_font_draw_glyph_trampoline,
+					     closure,
+					     hb_font_draw_glyph_closure_destroy);
+}
+void
+hb_font_funcs_set_draw_glyph_func (hb_font_funcs_t           *ffuncs,
+                                   hb_font_draw_glyph_func_t  func,
+                                   void                      *user_data,
+                                   hb_destroy_func_t          destroy /* May be NULL. */)
+{
+  _hb_font_funcs_set_draw_glyph_func (ffuncs, func, user_data, destroy);
+}
+void
+hb_font_funcs_set_glyph_shape_func (hb_font_funcs_t               *ffuncs,
+                                   hb_font_get_glyph_shape_func_t  func,
+                                   void                           *user_data,
+                                   hb_destroy_func_t               destroy /* May be NULL. */)
+{
+  _hb_font_funcs_set_draw_glyph_func (ffuncs, func, user_data, destroy);
+}
+
+struct hb_paint_glyph_closure_t
+{
+  hb_font_paint_glyph_func_t func;
+  void *user_data;
+  hb_destroy_func_t destroy;
+};
+static hb_bool_t
+hb_font_paint_glyph_trampoline (hb_font_t        *font,
+				void *font_data,
+				hb_codepoint_t glyph,
+				hb_paint_funcs_t *paint_funcs,
+				void *paint_data,
+				unsigned int palette,
+				hb_color_t foreground,
+				void *user_data)
+{
+  hb_paint_glyph_closure_t *closure = (hb_paint_glyph_closure_t *) user_data;
+  closure->func (font, font_data, glyph, paint_funcs, paint_data, palette, foreground, closure->user_data);
+  return true;
+}
+static void
+hb_font_paint_glyph_closure_destroy (void *user_data)
+{
+  hb_paint_glyph_closure_t *closure = (hb_paint_glyph_closure_t *) user_data;
+
+  if (closure->destroy)
+    closure->destroy (closure->user_data);
+  hb_free (closure);
+}
+void
+hb_font_funcs_set_paint_glyph_func (hb_font_funcs_t           *ffuncs,
+				    hb_font_paint_glyph_func_t  func,
+				    void                      *user_data,
+				    hb_destroy_func_t          destroy /* May be NULL. */)
+{
+  if (hb_object_is_immutable (ffuncs))
+  {
+    if (destroy)
+      destroy (user_data);
+    return;
+  }
+  hb_paint_glyph_closure_t *closure = (hb_paint_glyph_closure_t *) hb_calloc (1, sizeof (hb_paint_glyph_closure_t));
+  if (unlikely (!closure))
+  {
+    if (destroy)
+      destroy (user_data);
+    return;
+  }
+  closure->func = func;
+  closure->user_data = user_data;
+  closure->destroy = destroy;
+
+  hb_font_funcs_set_paint_glyph_or_fail_func (ffuncs,
+					      hb_font_paint_glyph_trampoline,
+					      closure,
+					      hb_font_paint_glyph_closure_destroy);
 }
 #endif

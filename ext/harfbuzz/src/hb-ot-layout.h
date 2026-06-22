@@ -255,6 +255,15 @@ hb_ot_layout_script_select_language (hb_face_t      *face,
 				     unsigned int   *language_index /* OUT */);
 
 HB_EXTERN hb_bool_t
+hb_ot_layout_script_select_language2 (hb_face_t      *face,
+				     hb_tag_t        table_tag,
+				     unsigned int    script_index,
+				     unsigned int    language_count,
+				     const hb_tag_t *language_tags,
+				     unsigned int   *language_index /* OUT */,
+				     hb_tag_t       *chosen_language /* OUT */);
+
+HB_EXTERN hb_bool_t
 hb_ot_layout_language_get_required_feature_index (hb_face_t    *face,
 						  hb_tag_t      table_tag,
 						  unsigned int  script_index,
@@ -316,6 +325,13 @@ hb_ot_layout_collect_features (hb_face_t      *face,
 			       hb_set_t       *feature_indexes /* OUT */);
 
 HB_EXTERN void
+hb_ot_layout_collect_features_map (hb_face_t      *face,
+				   hb_tag_t        table_tag,
+				   unsigned        script_index,
+				   unsigned        language_index,
+				   hb_map_t       *feature_map /* OUT */);
+
+HB_EXTERN void
 hb_ot_layout_collect_lookups (hb_face_t      *face,
 			      hb_tag_t        table_tag,
 			      const hb_tag_t *scripts,
@@ -366,6 +382,12 @@ hb_ot_layout_lookup_get_glyph_alternates (hb_face_t      *face,
 					  unsigned        start_offset,
 					  unsigned       *alternate_count /* IN/OUT */,
 					  hb_codepoint_t *alternate_glyphs /* OUT */);
+
+HB_EXTERN hb_bool_t
+hb_ot_layout_lookup_collect_glyph_alternates (hb_face_t *face,
+					      unsigned   lookup_index,
+					      hb_map_t  *alternate_count /* IN/OUT */,
+					      hb_map_t  *alternate_glyphs /* IN/OUT */);
 
 HB_EXTERN hb_bool_t
 hb_ot_layout_lookup_would_substitute (hb_face_t            *face,
@@ -438,6 +460,20 @@ hb_ot_layout_feature_get_characters (hb_face_t      *face,
  * BASE
  */
 
+HB_EXTERN hb_bool_t
+hb_ot_layout_get_font_extents (hb_font_t         *font,
+			       hb_direction_t     direction,
+			       hb_tag_t           script_tag,
+			       hb_tag_t           language_tag,
+			       hb_font_extents_t *extents);
+
+HB_EXTERN hb_bool_t
+hb_ot_layout_get_font_extents2 (hb_font_t         *font,
+				hb_direction_t     direction,
+				hb_script_t        script,
+				hb_language_t      language,
+				hb_font_extents_t *extents);
+
 /**
  * hb_ot_layout_baseline_tag_t:
  * @HB_OT_LAYOUT_BASELINE_TAG_ROMAN: The baseline used by alphabetic scripts such as Latin, Cyrillic and Greek.
@@ -490,6 +526,14 @@ hb_ot_layout_get_baseline (hb_font_t                   *font,
 			   hb_tag_t                     language_tag,
 			   hb_position_t               *coord        /* OUT.  May be NULL. */);
 
+HB_EXTERN hb_bool_t
+hb_ot_layout_get_baseline2 (hb_font_t                   *font,
+			    hb_ot_layout_baseline_tag_t  baseline_tag,
+			    hb_direction_t               direction,
+			    hb_script_t                  script,
+			    hb_language_t                language,
+			    hb_position_t               *coord        /* OUT.  May be NULL. */);
+
 HB_EXTERN void
 hb_ot_layout_get_baseline_with_fallback (hb_font_t                   *font,
 					 hb_ot_layout_baseline_tag_t  baseline_tag,
@@ -497,6 +541,14 @@ hb_ot_layout_get_baseline_with_fallback (hb_font_t                   *font,
 					 hb_tag_t                     script_tag,
 					 hb_tag_t                     language_tag,
 					 hb_position_t               *coord        /* OUT */);
+
+HB_EXTERN void
+hb_ot_layout_get_baseline_with_fallback2 (hb_font_t                   *font,
+					  hb_ot_layout_baseline_tag_t  baseline_tag,
+					  hb_direction_t               direction,
+					  hb_script_t                  script,
+					  hb_language_t                language,
+					  hb_position_t               *coord        /* OUT */);
 
 HB_END_DECLS
 

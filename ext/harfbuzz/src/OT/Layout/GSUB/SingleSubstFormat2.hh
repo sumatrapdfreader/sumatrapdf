@@ -75,11 +75,47 @@ struct SingleSubstFormat2_4
   bool would_apply (hb_would_apply_context_t *c) const
   { return c->len == 1 && (this+coverage).get_coverage (c->glyphs[0]) != NOT_COVERED; }
 
+  unsigned
+  get_glyph_alternates (hb_codepoint_t  glyph_id,
+                        unsigned        start_offset,
+                        unsigned       *alternate_count  /* IN/OUT.  May be NULL. */,
+                        hb_codepoint_t *alternate_glyphs /* OUT.     May be NULL. */) const
+  {
+    unsigned int index = (this+coverage).get_coverage (glyph_id);
+    if (likely (index == NOT_COVERED))
+    {
+      if (alternate_count)
+        *alternate_count = 0;
+      return 0;
+    }
+
+    if (alternate_count && *alternate_count)
+    {
+      glyph_id = substitute[index];
+
+      *alternate_glyphs = glyph_id;
+      *alternate_count = 1;
+    }
+
+    return 1;
+  }
+
+  void
+  collect_glyph_alternates (hb_map_t  *alternate_count /* IN/OUT */,
+			    hb_map_t  *alternate_glyphs /* IN/OUT */) const
+  {
+    + hb_zip (this+coverage, substitute)
+    | hb_apply ([&] (const hb_pair_t<hb_codepoint_t, hb_codepoint_t> &p) -> void
+		{ _hb_collect_glyph_alternates_add (p.first, p.second,
+						    alternate_count, alternate_glyphs); })
+    ;
+  }
+
   bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     unsigned int index = (this+coverage).get_coverage (c->buffer->cur().codepoint);
-    if (likely (index == NOT_COVERED)) return_trace (false);
+    if (index == NOT_COVERED) return_trace (false);
 
     if (unlikely (index >= substitute.len)) return_trace (false);
 
@@ -87,7 +123,7 @@ struct SingleSubstFormat2_4
     {
       c->buffer->sync_so_far ();
       c->buffer->message (c->font,
-			  "replacing glyph at %d (single substitution)",
+			  "replacing glyph at %u (single substitution)",
 			  c->buffer->idx);
     }
 
@@ -96,8 +132,8 @@ struct SingleSubstFormat2_4
     if (HB_BUFFER_MESSAGE_MORE && c->buffer->messaging ())
     {
       c->buffer->message (c->font,
-			  "replaced glyph at %d (single substitution)",
-			  c->buffer->idx - 1);
+			  "replaced glyph at %u (single substitution)",
+			  c->buffer->idx - 1u);
     }
 
     return_trace (true);

@@ -22,17 +22,40 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
-#if !defined(HB_H_IN) && !defined(HB_NO_SINGLE_HEADER_ERROR)
-#error "Include <hb.h> instead."
-#endif
-
 #ifndef HB_FEATURES_H
 #define HB_FEATURES_H
 
-#include "hb-common.h"
-
 HB_BEGIN_DECLS
 
+/**
+ * SECTION: hb-features
+ * @title: hb-features
+ * @short_description: Feature detection
+ * @include: hb-features.h
+ *
+ * Macros for detecting optional HarfBuzz features at build time.
+ **/
+
+/**
+ * HB_HAS_CAIRO:
+ *
+ * Defined if Harfbuzz has been built with cairo support.
+ */
+#mesondefine HB_HAS_CAIRO
+
+/**
+ * HB_HAS_CORETEXT:
+ *
+ * Defined if Harfbuzz has been built with CoreText support.
+ */
+#mesondefine HB_HAS_CORETEXT
+
+/**
+ * HB_HAS_DIRECTWRITE:
+ *
+ * Defined if Harfbuzz has been built with DirectWrite support.
+ */
+#mesondefine HB_HAS_DIRECTWRITE
 
 /**
  * HB_HAS_FREETYPE:
@@ -49,6 +72,20 @@ HB_BEGIN_DECLS
 #mesondefine HB_HAS_GDI
 
 /**
+ * HB_HAS_GLIB:
+ *
+ * Defined if Harfbuzz has been built with GLib support.
+ */
+#mesondefine HB_HAS_GLIB
+
+/**
+ * HB_HAS_GOBJECT:
+ *
+ * Defined if Harfbuzz has been built with GObject support.
+ */
+#mesondefine HB_HAS_GOBJECT
+
+/**
  * HB_HAS_GRAPHITE:
  *
  * Defined if Harfbuzz has been built with Graphite support.
@@ -56,11 +93,11 @@ HB_BEGIN_DECLS
 #mesondefine HB_HAS_GRAPHITE
 
 /**
- * HB_HAS_GLIB:
+ * HB_HAS_ICU:
  *
- * Defined if Harfbuzz has been built with GLib support.
+ * Defined if Harfbuzz has been built with ICU support.
  */
-#mesondefine HB_HAS_GLIB
+#mesondefine HB_HAS_ICU
 
 /**
  * HB_HAS_UNISCRIBE:
@@ -70,25 +107,11 @@ HB_BEGIN_DECLS
 #mesondefine HB_HAS_UNISCRIBE
 
 /**
- * HB_HAS_DIRECTWRITE:
+ * HB_HAS_WASM:
  *
- * Defined if Harfbuzz has been built with DirectWrite support.
+ * Defined if Harfbuzz has been built with WebAssembly support.
  */
-#mesondefine HB_HAS_DIRECTWRITE
-
-/**
- * HB_HAS_CORETEXT:
- *
- * Defined if Harfbuzz has been built with CoreText support.
- */
-#mesondefine HB_HAS_CORETEXT
-
-/**
- * HB_HAS_ICU:
- *
- * Defined if Harfbuzz has been built with ICU support.
- */
-#mesondefine HB_HAS_ICU
+#mesondefine HB_HAS_WASM
 
 
 HB_END_DECLS

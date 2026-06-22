@@ -78,8 +78,9 @@
 
 
 /*
- * Big-endian integers.
+ * Fixed-endian integers / floats.
  */
+
 
 /* Endian swap, used in Windows related backends */
 static inline constexpr uint16_t hb_uint16_swap (uint16_t v)
@@ -87,100 +88,274 @@ static inline constexpr uint16_t hb_uint16_swap (uint16_t v)
 static inline constexpr uint32_t hb_uint32_swap (uint32_t v)
 { return (hb_uint16_swap (v) << 16) | hb_uint16_swap (v >> 16); }
 
-template <typename Type, int Bytes = sizeof (Type)>
-struct BEInt;
 template <typename Type>
-struct BEInt<Type, 1>
+struct __attribute__((packed)) hb_packed_t
+{
+  hb_packed_t () = default;
+  constexpr hb_packed_t (Type V) : v (V) {}
+  operator Type () const { return v; }
+  hb_packed_t & operator = (Type V) { v = V; return *this; }
+
+  private:
+  Type v;
+};
+
+#ifndef HB_FAST_NUM_ACCESS
+
+#if defined(__OPTIMIZE__) && \
+    defined(__BYTE_ORDER) && \
+    (__BYTE_ORDER == __BIG_ENDIAN || \
+     (__BYTE_ORDER == __LITTLE_ENDIAN && \
+      hb_has_builtin(__builtin_bswap16) && \
+      hb_has_builtin(__builtin_bswap32) && \
+      hb_has_builtin(__builtin_bswap64)))
+#define HB_FAST_NUM_ACCESS 1
+#else
+#define HB_FAST_NUM_ACCESS 0
+#endif
+
+// https://github.com/harfbuzz/harfbuzz/issues/5456
+#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ <= 12)
+#undef HB_FAST_NUM_ACCESS
+#define HB_FAST_NUM_ACCESS 0
+#endif
+
+#endif
+
+template <bool BE, typename Type, int Bytes = sizeof (Type)>
+struct HBInt;
+template <bool BE, typename Type>
+struct HBInt<BE, Type, 1>
 {
   public:
-  BEInt () = default;
-  constexpr BEInt (Type V) : v {uint8_t (V)} {}
+  HBInt () = default;
+  constexpr HBInt (Type V) : v {uint8_t (V)} {}
   constexpr operator Type () const { return v; }
   private: uint8_t v;
 };
-template <typename Type>
-struct BEInt<Type, 2>
+template <bool BE, typename Type>
+struct HBInt<BE, Type, 2>
 {
   public:
-  BEInt () = default;
-  constexpr BEInt (Type V) : v {uint8_t ((V >>  8) & 0xFF),
-			        uint8_t ((V      ) & 0xFF)} {}
+  HBInt () = default;
 
-  struct __attribute__((packed)) packed_uint16_t { uint16_t v; };
+  HBInt (Type V)
+#if HB_FAST_NUM_ACCESS
+  {
+    if (BE == (__BYTE_ORDER == __BIG_ENDIAN))
+      *((hb_packed_t<uint16_t> *) v) = V;
+    else
+      *((hb_packed_t<uint16_t> *) v) = __builtin_bswap16 (V);
+  }
+#else
+    : v {BE ? uint8_t ((V >>  8) & 0xFF) : uint8_t ((V      ) & 0xFF),
+	 BE ? uint8_t ((V      ) & 0xFF) : uint8_t ((V >>  8) & 0xFF)} {}
+#endif
+
   constexpr operator Type () const
   {
-#if defined(__OPTIMIZE__) && !defined(HB_NO_PACKED) && \
-    ((defined(__GNUC__) && __GNUC__ >= 5) || defined(__clang__)) && \
-    defined(__BYTE_ORDER) && \
-    (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN)
-    /* Spoon-feed the compiler a big-endian integer with alignment 1.
-     * https://github.com/harfbuzz/harfbuzz/pull/1398 */
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-    return __builtin_bswap16 (((packed_uint16_t *) v)->v);
-#else /* __BYTE_ORDER == __BIG_ENDIAN */
-    return ((packed_uint16_t *) v)->v;
-#endif
+#if HB_FAST_NUM_ACCESS
+    return (BE == (__BYTE_ORDER == __BIG_ENDIAN)) ?
+      (uint16_t) *((const hb_packed_t<uint16_t> *) v)
+    :
+      __builtin_bswap16 ((uint16_t) *((const hb_packed_t<uint16_t> *) v))
+    ;
 #else
-    return (v[0] <<  8)
-	 + (v[1]      );
+    return (BE ? (v[0] <<  8) : (v[0]      ))
+	 + (BE ? (v[1]      ) : (v[1] <<  8));
 #endif
   }
   private: uint8_t v[2];
 };
-template <typename Type>
-struct BEInt<Type, 3>
+template <bool BE, typename Type>
+struct HBInt<BE, Type, 3>
 {
   static_assert (!std::is_signed<Type>::value, "");
   public:
-  BEInt () = default;
-  constexpr BEInt (Type V) : v {uint8_t ((V >> 16) & 0xFF),
-				uint8_t ((V >>  8) & 0xFF),
-				uint8_t ((V      ) & 0xFF)} {}
+  HBInt () = default;
+  constexpr HBInt (Type V) : v {BE ? uint8_t ((V >> 16) & 0xFF) : uint8_t ((V >> 16) & 0xFF),
+				BE ? uint8_t ((V >>  8) & 0xFF) : uint8_t ((V >>  8) & 0xFF),
+				BE ? uint8_t ((V      ) & 0xFF) : uint8_t ((V      ) & 0xFF)} {}
 
-  constexpr operator Type () const { return (v[0] << 16)
-					  + (v[1] <<  8)
-					  + (v[2]      ); }
+  constexpr operator Type () const { return (BE ? (v[0] << 16) : (v[0]      ))
+					  + (BE ? (v[1] <<  8) : (v[1] <<  8))
+					  + (BE ? (v[2]      ) : (v[2] << 16)); }
   private: uint8_t v[3];
 };
-template <typename Type>
-struct BEInt<Type, 4>
+template <bool BE, typename Type>
+struct HBInt<BE, Type, 4>
 {
-  public:
-  BEInt () = default;
-  constexpr BEInt (Type V) : v {uint8_t ((V >> 24) & 0xFF),
-			        uint8_t ((V >> 16) & 0xFF),
-			        uint8_t ((V >>  8) & 0xFF),
-			        uint8_t ((V      ) & 0xFF)} {}
+  template <bool, typename, int>
+  friend struct HBFloat;
 
-  struct __attribute__((packed)) packed_uint32_t { uint32_t v; };
-  constexpr operator Type () const {
-#if defined(__OPTIMIZE__) && !defined(HB_NO_PACKED) && \
-    ((defined(__GNUC__) && __GNUC__ >= 5) || defined(__clang__)) && \
-    defined(__BYTE_ORDER) && \
-    (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN)
-    /* Spoon-feed the compiler a big-endian integer with alignment 1.
-     * https://github.com/harfbuzz/harfbuzz/pull/1398 */
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-    return __builtin_bswap32 (((packed_uint32_t *) v)->v);
-#else /* __BYTE_ORDER == __BIG_ENDIAN */
-    return ((packed_uint32_t *) v)->v;
-#endif
+  public:
+  HBInt () = default;
+
+  HBInt (Type V)
+#if HB_FAST_NUM_ACCESS
+  {
+    if (BE == (__BYTE_ORDER == __BIG_ENDIAN))
+      *((hb_packed_t<uint32_t> *) v) = V;
+    else
+      *((hb_packed_t<uint32_t> *) v) = __builtin_bswap32 (V);
+  }
 #else
-    return (v[0] << 24)
-	 + (v[1] << 16)
-	 + (v[2] <<  8)
-	 + (v[3]      );
+    : v {BE ? uint8_t ((V >> 24) & 0xFF) : uint8_t ((V      ) & 0xFF),
+	 BE ? uint8_t ((V >> 16) & 0xFF) : uint8_t ((V >>  8) & 0xFF),
+	 BE ? uint8_t ((V >>  8) & 0xFF) : uint8_t ((V >> 16) & 0xFF),
+	 BE ? uint8_t ((V      ) & 0xFF) : uint8_t ((V >> 24) & 0xFF)} {}
+#endif
+
+  constexpr operator Type () const {
+#if HB_FAST_NUM_ACCESS
+    return (BE == (__BYTE_ORDER == __BIG_ENDIAN)) ?
+      (uint32_t) *((const hb_packed_t<uint32_t> *) v)
+    :
+      __builtin_bswap32 ((uint32_t) *((const hb_packed_t<uint32_t> *) v))
+    ;
+#else
+    return (BE ? (v[0] << 24) : (v[0]      ))
+	 + (BE ? (v[1] << 16) : (v[1] <<  8))
+	 + (BE ? (v[2] <<  8) : (v[2] << 16))
+	 + (BE ? (v[3]      ) : (v[3] << 24));
 #endif
   }
   private: uint8_t v[4];
 };
+template <bool BE, typename Type>
+struct HBInt<BE, Type, 8>
+{
+  template <bool, typename, int>
+  friend struct HBFloat;
+
+  public:
+  HBInt () = default;
+
+  HBInt (Type V)
+#if HB_FAST_NUM_ACCESS
+  {
+    if (BE == (__BYTE_ORDER == __BIG_ENDIAN))
+      *((hb_packed_t<uint64_t> *) v) = V;
+    else
+      *((hb_packed_t<uint64_t> *) v) = __builtin_bswap64 (V);
+  }
+#else
+    : v {BE ? uint8_t ((V >> 56) & 0xFF) : uint8_t ((V      ) & 0xFF),
+	 BE ? uint8_t ((V >> 48) & 0xFF) : uint8_t ((V >>  8) & 0xFF),
+	 BE ? uint8_t ((V >> 40) & 0xFF) : uint8_t ((V >> 16) & 0xFF),
+	 BE ? uint8_t ((V >> 32) & 0xFF) : uint8_t ((V >> 24) & 0xFF),
+	 BE ? uint8_t ((V >> 24) & 0xFF) : uint8_t ((V >> 32) & 0xFF),
+	 BE ? uint8_t ((V >> 16) & 0xFF) : uint8_t ((V >> 40) & 0xFF),
+	 BE ? uint8_t ((V >>  8) & 0xFF) : uint8_t ((V >> 48) & 0xFF),
+	 BE ? uint8_t ((V      ) & 0xFF) : uint8_t ((V >> 56) & 0xFF)} {}
+#endif
+
+  constexpr operator Type () const {
+#if HB_FAST_NUM_ACCESS
+    return (BE == (__BYTE_ORDER == __BIG_ENDIAN)) ?
+      (uint64_t) *((const hb_packed_t<uint64_t> *) v)
+    :
+      __builtin_bswap64 ((uint64_t) *((const hb_packed_t<uint64_t> *) v))
+    ;
+#else
+    return (BE ? (uint64_t (v[0]) << 56) : (uint64_t (v[0])      ))
+	 + (BE ? (uint64_t (v[1]) << 48) : (uint64_t (v[1]) <<  8))
+	 + (BE ? (uint64_t (v[2]) << 40) : (uint64_t (v[2]) << 16))
+	 + (BE ? (uint64_t (v[3]) << 32) : (uint64_t (v[3]) << 24))
+	 + (BE ? (uint64_t (v[4]) << 24) : (uint64_t (v[4]) << 32))
+	 + (BE ? (uint64_t (v[5]) << 16) : (uint64_t (v[5]) << 40))
+	 + (BE ? (uint64_t (v[6]) <<  8) : (uint64_t (v[6]) << 48))
+	 + (BE ? (uint64_t (v[7])      ) : (uint64_t (v[7]) << 56));
+#endif
+  }
+  private: uint8_t v[8];
+};
 
 /* Floats. */
 
+template <bool BE, typename Type, int Bytes>
+struct HBFloat
+{
+  using IntType = typename std::conditional<Bytes == 4, uint32_t, uint64_t>::type;
+
+  public:
+  HBFloat () = default;
+
+  HBFloat (Type V)
+  {
+#if HB_FAST_NUM_ACCESS
+    {
+	      if (BE == (__BYTE_ORDER == __BIG_ENDIAN))
+	      {
+	        *((hb_packed_t<Type> *) v) = V;
+	        return;
+	      }
+	    }
+#endif
+
+    union {
+      hb_packed_t<Type> f;
+      hb_packed_t<IntType> i;
+    } u = {{V}};
+
+    const HBInt<BE, IntType> I = (IntType) u.i;
+    for (unsigned i = 0; i < Bytes; i++)
+      v[i] = I.v[i];
+  }
+
+  /* c++14 constexpr */ operator Type () const
+  {
+#if HB_FAST_NUM_ACCESS
+	    {
+	      if (BE == (__BYTE_ORDER == __BIG_ENDIAN))
+		return (Type) *((const hb_packed_t<Type> *) v);
+	    }
+#endif
+
+    HBInt<BE, IntType> I;
+    for (unsigned i = 0; i < Bytes; i++)
+      I.v[i] = v[i];
+
+    union {
+      hb_packed_t<IntType> i;
+      hb_packed_t<Type> f;
+    } u = {{I}};
+
+    return (Type) u.f;
+  }
+  private: uint8_t v[Bytes];
+};
+
+
 /* We want our rounding towards +infinity. */
+static inline double
+_hb_roundf (double x) { return floor (x + .5); }
+
 static inline float
 _hb_roundf (float x) { return floorf (x + .5f); }
+
 #define roundf(x) _hb_roundf(x)
+
+static inline void
+hb_sincos (float rotation, float &s, float &c)
+{
+#ifdef HAVE_SINCOSF
+  sincosf (rotation, &s, &c);
+#else
+  c = cosf (rotation);
+  s = sinf (rotation);
+#endif
+}
+static inline void
+hb_sincos (double rotation, double &s, double &c)
+{
+#ifdef HAVE_SINCOS
+  sincos (rotation, &s, &c);
+#else
+  c = cos (rotation);
+  s = sin (rotation);
+#endif
+}
 
 
 /* Encodes three unsigned integers in one 64-bit number.  If the inputs have more than 21 bits,
@@ -229,12 +404,123 @@ struct
 }
 HB_FUNCOBJ (hb_bool);
 
+
+/* The MIT License
+
+   Copyright (C) 2012 Zilong Tan (eric.zltan@gmail.com)
+
+   Permission is hereby granted, free of charge, to any person
+   obtaining a copy of this software and associated documentation
+   files (the "Software"), to deal in the Software without
+   restriction, including without limitation the rights to use, copy,
+   modify, merge, publish, distribute, sublicense, and/or sell copies
+   of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+*/
+
+
+// Compression function for Merkle-Damgard construction.
+// This function is generated using the framework provided.
+#define fasthash_mix(h) (					\
+			(void) ((h) ^= (h) >> 23),		\
+			(void) ((h) *= 0x2127599bf4325c37ULL),	\
+			(h) ^= (h) >> 47)
+
+static inline uint64_t fasthash64(const void *buf, size_t len, uint64_t seed)
+{
+	struct __attribute__((packed)) packed_uint64_t { uint64_t v; };
+	const uint64_t    m = 0x880355f21e6d1965ULL;
+	const packed_uint64_t *pos = (const packed_uint64_t *)buf;
+	const packed_uint64_t *end = pos + (len / 8);
+	const unsigned char *pos2;
+	uint64_t h = seed ^ (len * m);
+	uint64_t v;
+
+#ifndef HB_OPTIMIZE_SIZE
+	if (((uintptr_t) pos & 7) == 0)
+	{
+	  while (pos != end)
+	  {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+	    v  = * (const uint64_t *) (pos++);
+#pragma GCC diagnostic pop
+	    h ^= fasthash_mix(v);
+	    h *= m;
+	  }
+	}
+	else
+#endif
+	{
+	  while (pos != end)
+	  {
+	    v  = pos++->v;
+	    h ^= fasthash_mix(v);
+	    h *= m;
+	  }
+	}
+
+	pos2 = (const unsigned char*)pos;
+	v = 0;
+
+	switch (len & 7) {
+	case 7: v ^= (uint64_t)pos2[6] << 48; HB_FALLTHROUGH;
+	case 6: v ^= (uint64_t)pos2[5] << 40; HB_FALLTHROUGH;
+	case 5: v ^= (uint64_t)pos2[4] << 32; HB_FALLTHROUGH;
+	case 4: v ^= (uint64_t)pos2[3] << 24; HB_FALLTHROUGH;
+	case 3: v ^= (uint64_t)pos2[2] << 16; HB_FALLTHROUGH;
+	case 2: v ^= (uint64_t)pos2[1] <<  8; HB_FALLTHROUGH;
+	case 1: v ^= (uint64_t)pos2[0];
+		h ^= fasthash_mix(v);
+		h *= m;
+	}
+
+	return fasthash_mix(h);
+}
+
+static inline uint32_t fasthash32(const void *buf, size_t len, uint32_t seed)
+{
+	// the following trick converts the 64-bit hashcode to Fermat
+	// residue, which shall retain information from both the higher
+	// and lower parts of hashcode.
+        uint64_t h = fasthash64(buf, len, seed);
+	return h - (h >> 32);
+}
+
 struct
 {
   private:
 
   template <typename T> constexpr auto
-  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, hb_deref (v).hash ())
+  impl (const T& v, hb_priority<2>) const HB_RETURN (uint32_t, hb_deref (v).hash ())
+
+  // Horrible: std:hash() of integers seems to be identity in gcc / clang?!
+  // https://github.com/harfbuzz/harfbuzz/pull/4228
+  //
+  // For performance characteristics see:
+  // https://github.com/harfbuzz/harfbuzz/pull/4228#issuecomment-1565079537
+  template <typename T,
+	    hb_enable_if (std::is_integral<T>::value && sizeof (T) <= sizeof (uint32_t))> constexpr auto
+  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, (uint32_t) v * 2654435761u /* Knuh's multiplicative hash */)
+  template <typename T,
+	    hb_enable_if (std::is_integral<T>::value && sizeof (T) > sizeof (uint32_t))> constexpr auto
+  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, (uint32_t) (v ^ (v >> 32)) * 2654435761u /* Knuth's multiplicative hash */)
+
+  template <typename T,
+	    hb_enable_if (std::is_floating_point<T>::value)> constexpr auto
+  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, fasthash32 (std::addressof (v), sizeof (T), 0xf437ffe6))
 
   template <typename T> constexpr auto
   impl (const T& v, hb_priority<0>) const HB_RETURN (uint32_t, std::hash<hb_decay<decltype (hb_deref (v))>>{} (hb_deref (v)))
@@ -536,7 +822,7 @@ struct hb_pair_t
     return 0;
   }
 
-  friend void swap (hb_pair_t& a, hb_pair_t& b)
+  friend void swap (hb_pair_t& a, hb_pair_t& b) noexcept
   {
     hb_swap (a.first, b.first);
     hb_swap (a.second, b.second);
@@ -548,6 +834,8 @@ struct hb_pair_t
 };
 template <typename T1, typename T2> static inline hb_pair_t<T1, T2>
 hb_pair (T1&& a, T2&& b) { return hb_pair_t<T1, T2> (a, b); }
+
+typedef hb_pair_t<hb_codepoint_t, hb_codepoint_t> hb_codepoint_pair_t;
 
 struct
 {
@@ -593,18 +881,33 @@ HB_FUNCOBJ (hb_clamp);
  * Bithacks.
  */
 
+/* Return the number of 1 bits in a uint8_t; faster than hb_popcount() */
+static inline unsigned
+hb_popcount8 (uint8_t v)
+{
+  static const uint8_t popcount4[16] = {
+    0, 1, 1, 2, 1, 2, 2, 3,
+    1, 2, 2, 3, 2, 3, 3, 4
+  };
+  return popcount4[v & 0xF] + popcount4[v >> 4];
+}
+
 /* Return the number of 1 bits in v. */
 template <typename T>
 static inline unsigned int
 hb_popcount (T v)
 {
-#if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)
+#if hb_has_builtin(__builtin_popcount)
   if (sizeof (T) <= sizeof (unsigned int))
     return __builtin_popcount (v);
+#endif
 
+#if hb_has_builtin(__builtin_popcountl)
   if (sizeof (T) <= sizeof (unsigned long))
     return __builtin_popcountl (v);
+#endif
 
+#if hb_has_builtin(__builtin_popcountll)
   if (sizeof (T) <= sizeof (unsigned long long))
     return __builtin_popcountll (v);
 #endif
@@ -620,8 +923,10 @@ hb_popcount (T v)
 
   if (sizeof (T) == 8)
   {
-    unsigned int shift = 32;
-    return hb_popcount<uint32_t> ((uint32_t) v) + hb_popcount ((uint32_t) (v >> shift));
+    uint64_t y = (uint64_t) v;
+    y -= ((y >> 1) & 0x5555555555555555ull);
+    y = (y & 0x3333333333333333ull) + (y >> 2 & 0x3333333333333333ull);
+    return ((y + (y >> 4)) & 0xf0f0f0f0f0f0f0full) * 0x101010101010101ull >> 56;
   }
 
   if (sizeof (T) == 16)
@@ -641,13 +946,17 @@ hb_bit_storage (T v)
 {
   if (unlikely (!v)) return 0;
 
-#if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)
+#if hb_has_builtin(__builtin_clz)
   if (sizeof (T) <= sizeof (unsigned int))
     return sizeof (unsigned int) * 8 - __builtin_clz (v);
+#endif
 
+#if hb_has_builtin(__builtin_clzl)
   if (sizeof (T) <= sizeof (unsigned long))
     return sizeof (unsigned long) * 8 - __builtin_clzl (v);
+#endif
 
+#if hb_has_builtin(__builtin_clzll)
   if (sizeof (T) <= sizeof (unsigned long long))
     return sizeof (unsigned long long) * 8 - __builtin_clzll (v);
 #endif
@@ -715,13 +1024,17 @@ hb_ctz (T v)
 {
   if (unlikely (!v)) return 8 * sizeof (T);
 
-#if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)
+#if hb_has_builtin(__builtin_ctz)
   if (sizeof (T) <= sizeof (unsigned int))
     return __builtin_ctz (v);
+#endif
 
+#if hb_has_builtin(__builtin_ctzl)
   if (sizeof (T) <= sizeof (unsigned long))
     return __builtin_ctzl (v);
+#endif
 
+#if hb_has_builtin(__builtin_ctzll)
   if (sizeof (T) <= sizeof (unsigned long long))
     return __builtin_ctzll (v);
 #endif
@@ -837,7 +1150,7 @@ static inline void *
 hb_memset (void *s, int c, unsigned int n)
 {
   /* It's illegal to pass NULL to memset(), even if n is zero. */
-  if (unlikely (!n)) return 0;
+  if (unlikely (!n)) return s;
   return memset (s, c, n);
 }
 
@@ -875,7 +1188,7 @@ hb_in_ranges (T u, T lo1, T hi1, Ts... ds)
 static inline bool
 hb_unsigned_mul_overflows (unsigned int count, unsigned int size, unsigned *result = nullptr)
 {
-#if (defined(__GNUC__) && (__GNUC__ >= 4)) || defined(__clang__)
+#if hb_has_builtin(__builtin_mul_overflow)
   unsigned stack_result;
   if (!result)
     result = &stack_result;
@@ -902,7 +1215,20 @@ _hb_cmp_method (const void *pkey, const void *pval, Ts... ds)
   return val.cmp (key, ds...);
 }
 
+template <typename K, typename V>
+static int
+_hb_cmp_operator (const void *pkey, const void *pval)
+{
+  const K& key = * (const K*) pkey;
+  const V& val = * (const V*) pval;
+
+  if (key < val) return -1;
+  if (key > val) return  1;
+  return 0;
+}
+
 template <typename V, typename K, typename ...Ts>
+HB_HOT
 static inline bool
 hb_bsearch_impl (unsigned *pos, /* Out */
 		 const K& key,
@@ -1328,6 +1654,72 @@ struct
   operator () (T &a) const HB_AUTO_RETURN (--a)
 }
 HB_FUNCOBJ (hb_dec);
+
+
+/* Adapted from kurbo implementation with extra parameters added,
+ * and finding for a particular range instead of 0.
+ *
+ * For documentation and implementation see:
+ *
+ * [ITP method]: https://en.wikipedia.org/wiki/ITP_Method
+ * [An Enhancement of the Bisection Method Average Performance Preserving Minmax Optimality]: https://dl.acm.org/doi/10.1145/3423597
+ * https://docs.rs/kurbo/0.8.1/kurbo/common/fn.solve_itp.html
+ * https://github.com/linebender/kurbo/blob/fd839c25ea0c98576c7ce5789305822675a89938/src/common.rs#L162-L248
+ */
+template <typename func_t>
+double solve_itp (func_t f,
+		  double a, double b,
+		  double epsilon,
+		  double min_y, double max_y,
+		  double &ya, double &yb, double &y)
+{
+  // Guard against degenerate interval
+  if (b - a <= 0.0)
+  {
+    y = ya;
+    return a;
+  }
+
+  unsigned n1_2 = (unsigned) (hb_max (ceil (log2 ((b - a) / epsilon)) - 1.0, 0.0));
+  const unsigned n0 = 1; // Hardwired
+  const double k1 = 0.2 / (b - a); // Hardwired.
+  unsigned nmax = n0 + n1_2;
+  double scaled_epsilon = epsilon * double (1llu << nmax);
+  double _2_epsilon = 2.0 * epsilon;
+  while (b - a > _2_epsilon)
+  {
+    double x1_2 = 0.5 * (a + b);
+    double r = scaled_epsilon - 0.5 * (b - a);
+    // Guard against yb == ya to prevent division by zero
+    double xf = (yb != ya) ? (yb * a - ya * b) / (yb - ya) : x1_2;
+    double sigma = x1_2 - xf;
+    double b_a = b - a;
+    // This has k2 = 2 hardwired for efficiency.
+    double b_a_k2 = b_a * b_a;
+    double delta = k1 * b_a_k2;
+    int sigma_sign = sigma >= 0 ? +1 : -1;
+    double xt = delta <= fabs (x1_2 - xf) ? xf + delta * sigma_sign : x1_2;
+    double xitp = fabs (xt - x1_2) <= r ? xt : x1_2 - r * sigma_sign;
+    double yitp = f (xitp);
+    if (yitp > max_y)
+    {
+      b = xitp;
+      yb = yitp;
+    }
+    else if (yitp < min_y)
+    {
+      a = xitp;
+      ya = yitp;
+    }
+    else
+    {
+      y = yitp;
+      return xitp;
+    }
+    scaled_epsilon *= 0.5;
+  }
+  return 0.5 * (a + b);
+}
 
 
 #endif /* HB_ALGS_HH */

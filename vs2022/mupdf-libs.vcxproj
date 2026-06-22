@@ -367,7 +367,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -398,7 +398,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -429,7 +429,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -460,7 +460,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -491,7 +491,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -521,7 +521,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -551,7 +551,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -581,7 +581,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;HAVE_ATEXIT;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -611,7 +611,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -642,7 +642,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -673,7 +673,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -704,7 +704,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -734,7 +734,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -766,7 +766,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -798,7 +798,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -830,7 +830,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4013;4819;4101;4312;4996;4805;4146;4457;4459;4505;4090;4310;4702;4706;4018;4100;4132;4204;4244;4245;4267;4305;4306;4389;4456;4701;4005;4201;4130;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_CRT_SECURE_NO_WARNINGS;USE_JPIP;OPJ_STATIC;OPJ_EXPORTS;FT2_BUILD_LIBRARY;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";FT_CONFIG_OPTION_USE_BROTLI;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HAVE_FREETYPE;hb_malloc_impl=sumatra_hb_malloc;hb_calloc_impl=sumatra_hb_calloc;hb_realloc_impl=sumatra_hb_realloc;hb_free_impl=sumatra_hb_free;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;..\ext\libjpeg-turbo\simd;..\ext\jbig2dec;..\ext\lcms2\include;..\ext\harfbuzz\src\hb-ucdn;..\mupdf\scripts\freetype;..\ext\freetype\include;..\ext\mujs;..\ext\gumbo-parser\include;..\ext\gumbo-parser\visualc\include;..\ext\extract\include;..\ext\zlib;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1089,6 +1089,8 @@
     <ClCompile Include="..\ext\gumbo-parser\src\utf8.c" />
     <ClCompile Include="..\ext\gumbo-parser\src\util.c" />
     <ClCompile Include="..\ext\gumbo-parser\src\vector.c" />
+    <ClCompile Include="..\ext\harfbuzz\src\OT\Var\VARC\VARC.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\graph\gsubgpos-context.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-aat-layout.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-aat-map.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-blob.cc" />
@@ -1096,6 +1098,8 @@
     <ClCompile Include="..\ext\harfbuzz\src\hb-buffer-verify.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-buffer.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-common.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-draw.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-face-builder.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-face.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-fallback-shape.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-font.cc" />
@@ -1130,16 +1134,32 @@
     <ClCompile Include="..\ext\harfbuzz\src\hb-ot-shaper-vowel-constraints.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-ot-tag.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-ot-var.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-outline.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-paint-bounded.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-paint-extents.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-paint.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-set.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-shape-plan.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-shape.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-shaper.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-static.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-style.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff-common.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff1.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff2-to-cff1.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-subset-cff2.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-subset-input.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-instancer-iup.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-instancer-solver.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-plan-layout.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-plan-var.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-subset-plan.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-serialize.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-table-cff.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-table-color.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-table-layout.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-table-other.cc" />
+    <ClCompile Include="..\ext\harfbuzz\src\hb-subset-table-var.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-subset.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-ucd.cc" />
     <ClCompile Include="..\ext\harfbuzz\src\hb-unicode.cc" />

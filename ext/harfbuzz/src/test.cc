@@ -75,7 +75,7 @@ main (int argc, char **argv)
     hb_glyph_info_t *info = &infos[i];
     hb_glyph_position_t *pos = &positions[i];
 
-    printf ("cluster %d	glyph 0x%x at	(%d,%d)+(%d,%d)\n",
+    printf ("cluster %u	glyph 0x%x at	(%d,%d)+(%d,%d)\n",
 	    info->cluster,
 	    info->codepoint,
 	    pos->x_offset,

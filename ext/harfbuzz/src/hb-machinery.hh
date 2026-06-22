@@ -34,7 +34,6 @@
 
 #include "hb-dispatch.hh"
 #include "hb-sanitize.hh"
-#include "hb-serialize.hh"
 
 
 /*
@@ -67,13 +66,22 @@ static inline Type& StructAtOffsetUnaligned(void *P, unsigned int offset)
 }
 
 /* StructAfter<T>(X) returns the struct T& that is placed after X.
- * Works with X of variable size also.  X must implement get_size() */
-template<typename Type, typename TObject>
-static inline const Type& StructAfter(const TObject &X)
-{ return StructAtOffset<Type>(&X, X.get_size()); }
-template<typename Type, typename TObject>
-static inline Type& StructAfter(TObject &X)
-{ return StructAtOffset<Type>(&X, X.get_size()); }
+ * Works with X of variable size also.  X must implement get_size().
+ * Any extra arguments are forwarded to get_size, so for example
+ * it can work with UnsizedArrayOf<> as well. */
+template <typename Type, typename TObject, typename ...Ts>
+static inline auto StructAfter(const TObject &X, Ts... args) HB_AUTO_RETURN((
+  StructAtOffset<Type>(&X, X.get_size(std::forward<Ts> (args)...))
+))
+/* The is_const shenanigans is to avoid ambiguous overload with gcc-8.
+ * It disables this path when TObject is const.
+ * See: https://github.com/harfbuzz/harfbuzz/issues/5429 */
+template <typename Type, typename TObject, typename ...Ts>
+static inline auto StructAfter(TObject &X, Ts... args) HB_AUTO_RETURN((
+  sizeof(int[std::is_const<TObject>::value ? -1 : +1]) > 0 ?
+  StructAtOffset<Type>(&X, X.get_size(std::forward<Ts> (args)...))
+  : *reinterpret_cast<Type*> (0)
+))
 
 
 /*
@@ -133,7 +141,6 @@ static inline Type& StructAfter(TObject &X)
   DEFINE_SIZE_ARRAY(size, array)
 
 
-
 /*
  * Lazy loaders.
  *
@@ -180,6 +187,9 @@ struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
   typedef typename hb_non_void_t<Subclass,
 				 hb_lazy_loader_t<Returned,Subclass,Data,WheresData,Stored>
 				>::value Funcs;
+
+  hb_lazy_loader_t () = default;
+  hb_lazy_loader_t (const hb_lazy_loader_t &other) = delete;
 
   void init0 () {} /* Init, when memory is already set to 0. No-op for us. */
   void init ()  { instance.set_relaxed (nullptr); }
@@ -271,7 +281,7 @@ struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
 
   private:
   /* Must only have one pointer. */
-  hb_atomic_ptr_t<Stored *> instance;
+  mutable hb_atomic_t<Stored *> instance;
 };
 
 /* Specializations. */
@@ -279,7 +289,11 @@ struct hb_lazy_loader_t : hb_data_wrapper_t<Data, WheresData>
 template <typename T, unsigned int WheresFace>
 struct hb_face_lazy_loader_t : hb_lazy_loader_t<T,
 						hb_face_lazy_loader_t<T, WheresFace>,
-						hb_face_t, WheresFace> {};
+						hb_face_t, WheresFace>
+{
+  // Hack; have them here for API parity with hb_table_lazy_loader_t
+  hb_blob_t *get_blob () { return this->get ()->get_blob (); }
+};
 
 template <typename T, unsigned int WheresFace, bool core=false>
 struct hb_table_lazy_loader_t : hb_lazy_loader_t<T,
@@ -289,7 +303,7 @@ struct hb_table_lazy_loader_t : hb_lazy_loader_t<T,
 {
   static hb_blob_t *create (hb_face_t *face)
   {
-    auto c = hb_sanitize_context_t ();
+    hb_sanitize_context_t c;
     if (core)
       c.set_num_glyphs (0); // So we don't recurse ad infinitum, or doesn't need num_glyphs
     return c.reference_table<T> (face);
@@ -305,22 +319,22 @@ struct hb_table_lazy_loader_t : hb_lazy_loader_t<T,
   hb_blob_t* get_blob () const { return this->get_stored (); }
 };
 
-template <typename Subclass>
-struct hb_font_funcs_lazy_loader_t : hb_lazy_loader_t<hb_font_funcs_t, Subclass>
-{
-  static void destroy (hb_font_funcs_t *p)
-  { hb_font_funcs_destroy (p); }
-  static const hb_font_funcs_t *get_null ()
-  { return hb_font_funcs_get_empty (); }
-};
-template <typename Subclass>
-struct hb_unicode_funcs_lazy_loader_t : hb_lazy_loader_t<hb_unicode_funcs_t, Subclass>
-{
-  static void destroy (hb_unicode_funcs_t *p)
-  { hb_unicode_funcs_destroy (p); }
-  static const hb_unicode_funcs_t *get_null ()
-  { return hb_unicode_funcs_get_empty (); }
-};
+#define HB_DEFINE_TYPE_FUNCS_LAZY_LOADER_T(Type) \
+  template <typename Subclass> \
+  struct hb_##Type##_funcs_lazy_loader_t : hb_lazy_loader_t<hb_##Type##_funcs_t, Subclass> \
+  { \
+    static void destroy (hb_##Type##_funcs_t *p) \
+    { hb_##Type##_funcs_destroy (p); } \
+    static const hb_##Type##_funcs_t *get_null () \
+    { return hb_##Type##_funcs_get_empty (); } \
+  }
+
+HB_DEFINE_TYPE_FUNCS_LAZY_LOADER_T (font);
+HB_DEFINE_TYPE_FUNCS_LAZY_LOADER_T (unicode);
+HB_DEFINE_TYPE_FUNCS_LAZY_LOADER_T (draw);
+HB_DEFINE_TYPE_FUNCS_LAZY_LOADER_T (paint);
+
+#undef HB_DEFINE_TYPE_FUNCS_LAZY_LOADER_T
 
 
 #endif /* HB_MACHINERY_HH */

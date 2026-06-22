@@ -19,7 +19,9 @@ outdir = os.path.dirname (OUTPUT)
 shutil.copy (INPUT, outdir)
 rl = os.path.basename (INPUT)
 hh = rl.replace ('.rl', '.hh')
-subprocess.Popen (ragel.split() + ['-e', '-F1', '-o', hh, rl], cwd=outdir).wait ()
+ret = subprocess.Popen (ragel.split() + ['-e', '-F1', '-o', hh, rl], cwd=outdir).wait ()
+if ret:
+    sys.exit (ret)
 
 # copy it also to src/
 shutil.copyfile (os.path.join (outdir, hh), os.path.join (CURRENT_SOURCE_DIR, hh))

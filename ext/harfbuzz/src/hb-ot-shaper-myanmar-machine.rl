@@ -72,6 +72,7 @@ export DOTTEDCIRCLE = 11;
 export A    = 9;
 export Ra   = 15;
 export CS   = 18;
+export SMPst= 57;
 
 export VAbv = 20;
 export VBlw = 21;
@@ -91,15 +92,15 @@ export ML   = 41;	# Medial Mon La
 
 j = ZWJ|ZWNJ;			# Joiners
 k = (Ra As H);			# Kinzi
-
+sm = SM | SMPst;
 c = C|Ra;			# is_consonant
 
 medial_group = MY? As? MR? ((MW MH? ML? | MH ML? | ML) As?)?;
 main_vowel_group = (VPre.VS?)* VAbv* VBlw* A* (DB As?)?;
 post_vowel_group = VPst MH? ML? As* VAbv* A* (DB As?)?;
-pwo_tone_group = PT A* DB? As?;
+tone_group = sm | PT A* DB? As?;
 
-complex_syllable_tail = As* medial_group main_vowel_group post_vowel_group* pwo_tone_group* SM* j?;
+complex_syllable_tail = As* medial_group main_vowel_group post_vowel_group* tone_group* j?;
 syllable_tail = (H (c|IV).VS?)* (H | complex_syllable_tail);
 
 consonant_syllable =	(k|CS)? (c|IV|GB|DOTTEDCIRCLE).VS? syllable_tail;
@@ -108,7 +109,7 @@ other =			any;
 
 main := |*
 	consonant_syllable	=> { found_syllable (myanmar_consonant_syllable); };
-	j			=> { found_syllable (myanmar_non_myanmar_cluster); };
+	j | SMPst		=> { found_syllable (myanmar_non_myanmar_cluster); };
 	broken_cluster		=> { found_syllable (myanmar_broken_cluster); buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE; };
 	other			=> { found_syllable (myanmar_non_myanmar_cluster); };
 *|;
@@ -118,7 +119,7 @@ main := |*
 
 #define found_syllable(syllable_type) \
   HB_STMT_START { \
-    if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
+    if (0) fprintf (stderr, "syllable %u..%u %s\n", ts, te, #syllable_type); \
     for (unsigned int i = ts; i < te; i++) \
       info[i].syllable() = (syllable_serial << 4) | syllable_type; \
     syllable_serial++; \

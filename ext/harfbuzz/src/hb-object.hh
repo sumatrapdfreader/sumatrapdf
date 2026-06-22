@@ -69,7 +69,7 @@ struct hb_lockable_set_t
       item = items.push (v);
       l.unlock ();
     }
-    return item;
+    return items.in_error () ? nullptr : item;
   }
 
   template <typename T>
@@ -142,7 +142,7 @@ struct hb_lockable_set_t
 
 struct hb_reference_count_t
 {
-  mutable hb_atomic_int_t ref_count;
+  mutable hb_atomic_t<int> ref_count;
 
   void init (int v = 1) { ref_count = v; }
   int get_relaxed () const { return ref_count; }
@@ -175,14 +175,34 @@ struct hb_user_data_array_t
 
   void init () { lock.init (); items.init (); }
 
-  HB_INTERNAL bool set (hb_user_data_key_t *key,
-			void *              data,
-			hb_destroy_func_t   destroy,
-			hb_bool_t           replace);
-
-  HB_INTERNAL void *get (hb_user_data_key_t *key);
-
   void fini () { items.fini (lock); lock.fini (); }
+
+  bool set (hb_user_data_key_t *key,
+	    void *              data,
+	    hb_destroy_func_t   destroy,
+	    hb_bool_t           replace)
+  {
+    if (!key)
+      return false;
+
+    if (replace) {
+      if (!data && !destroy) {
+	items.remove (key, lock);
+	return true;
+      }
+    }
+    hb_user_data_item_t item = {key, data, destroy};
+    bool ret = !!items.replace_or_insert (item, lock, (bool) replace);
+
+    return ret;
+  }
+
+  void *get (hb_user_data_key_t *key)
+  {
+    hb_user_data_item_t item = {nullptr, nullptr, nullptr};
+
+    return items.find (key, &item, lock) ? item.data : nullptr;
+  }
 };
 
 
@@ -193,8 +213,8 @@ struct hb_user_data_array_t
 struct hb_object_header_t
 {
   hb_reference_count_t ref_count;
-  mutable hb_atomic_int_t writable = 0;
-  hb_atomic_ptr_t<hb_user_data_array_t> user_data;
+  mutable hb_atomic_t<bool> writable = false;
+  hb_atomic_t<hb_user_data_array_t *> user_data;
 
   bool is_inert () const { return !ref_count.get_relaxed (); }
 };
@@ -305,7 +325,7 @@ retry:
   hb_user_data_array_t *user_data = obj->header.user_data.get_acquire ();
   if (unlikely (!user_data))
   {
-    user_data = (hb_user_data_array_t *) hb_calloc (sizeof (hb_user_data_array_t), 1);
+    user_data = (hb_user_data_array_t *) hb_calloc (1, sizeof (hb_user_data_array_t));
     if (unlikely (!user_data))
       return false;
     user_data->init ();

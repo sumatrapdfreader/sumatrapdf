@@ -10,10 +10,10 @@ namespace GSUB_impl {
 template <typename Types>
 struct Ligature
 {
-  protected:
+  public:
   typename Types::HBGlyphID
 		ligGlyph;               /* GlyphID of ligature to substitute */
-  HeadlessArrayOf<typename Types::HBGlyphID>
+  HeadlessArray16Of<typename Types::HBGlyphID>
 		component;              /* Array of component GlyphIDs--start
                                          * with the second  component--ordered
                                          * in writing direction */
@@ -29,6 +29,9 @@ struct Ligature
   bool intersects (const hb_set_t *glyphs) const
   { return hb_all (component, glyphs); }
 
+  bool intersects_lig_glyph (const hb_set_t *glyphs) const
+  { return glyphs->has(ligGlyph); }
+
   void closure (hb_closure_context_t *c) const
   {
     if (!intersects (c->glyphs)) return;
@@ -39,6 +42,18 @@ struct Ligature
   {
     c->input->add_array (component.arrayZ, component.get_length ());
     c->output->add (ligGlyph);
+  }
+
+  template <typename set_t>
+  void collect_second (set_t &s) const
+  {
+    if (unlikely (!component.get_length ()))
+    {
+      // A ligature without any components. Anything matches.
+      s = set_t::full ();
+      return;
+    }
+    s.add (component.arrayZ[0]);
   }
 
   bool would_apply (hb_would_apply_context_t *c) const
@@ -69,7 +84,7 @@ struct Ligature
       {
 	c->buffer->sync_so_far ();
 	c->buffer->message (c->font,
-			    "replacing glyph at %d (ligature substitution)",
+			    "replacing glyph at %u (ligature substitution)",
 			    c->buffer->idx);
       }
 
@@ -78,8 +93,8 @@ struct Ligature
       if (HB_BUFFER_MESSAGE_MORE && c->buffer->messaging ())
       {
 	c->buffer->message (c->font,
-			    "replaced glyph at %d (ligature substitution)",
-			    c->buffer->idx - 1);
+			    "replaced glyph at %u (ligature substitution)",
+			    c->buffer->idx - 1u);
       }
 
       return_trace (true);
@@ -87,15 +102,14 @@ struct Ligature
 
     unsigned int total_component_count = 0;
 
+    if (unlikely (count > HB_MAX_CONTEXT_LENGTH)) return false;
     unsigned int match_end = 0;
-    unsigned int match_positions[HB_MAX_CONTEXT_LENGTH];
 
     if (likely (!match_input (c, count,
                               &component[1],
                               match_glyph,
                               nullptr,
                               &match_end,
-                              match_positions,
                               &total_component_count)))
     {
       c->buffer->unsafe_to_concat (c->buffer->idx, match_end);
@@ -115,10 +129,10 @@ struct Ligature
       match_end += delta;
       for (unsigned i = 0; i < count; i++)
       {
-	match_positions[i] += delta;
+	c->match_positions[i] += delta;
 	if (i)
 	  *p++ = ',';
-	snprintf (p, sizeof(buf) - (p - buf), "%u", match_positions[i]);
+	snprintf (p, sizeof(buf) - (p - buf), "%u", c->match_positions[i]);
 	p += strlen(p);
       }
 
@@ -129,7 +143,6 @@ struct Ligature
 
     ligate_input (c,
                   count,
-                  match_positions,
                   match_end,
                   ligGlyph,
                   total_component_count);
@@ -138,7 +151,7 @@ struct Ligature
     {
       c->buffer->sync_so_far ();
       c->buffer->message (c->font,
-			  "ligated glyph at %d",
+			  "ligated glyph at %u",
 			  pos);
     }
 

@@ -1,58 +1,34 @@
-set(_harfbuzz_libdir "@libdir@")
-set(_harfbuzz_includedir "@includedir@")
+@PACKAGE_INIT@
 
-# Extract version information from libtool.
-set(_harfbuzz_version_info "@HB_LIBTOOL_VERSION_INFO@")
-string(REPLACE ":" ";" _harfbuzz_version_info "${_harfbuzz_version_info}")
-list(GET _harfbuzz_version_info 0
-  _harfbuzz_current)
-list(GET _harfbuzz_version_info 1
-  _harfbuzz_revision)
-list(GET _harfbuzz_version_info 2
-  _harfbuzz_age)
-unset(_harfbuzz_version_info)
+set_and_check(HARFBUZZ_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
 
-if (APPLE)
-  set(_harfbuzz_lib_suffix ".0${CMAKE_SHARED_LIBRARY_SUFFIX}")
-elseif (UNIX)
-  set(_harfbuzz_lib_suffix "${CMAKE_SHARED_LIBRARY_SUFFIX}.0.${_harfbuzz_current}.${_harfbuzz_revision}")
-else ()
-  # Unsupported.
-  set(harfbuzz_FOUND 0)
-endif ()
+set(HARFBUZZ_VERSION "@HARFBUZZ_VERSION@")
 
 # Add the libraries.
-add_library(harfbuzz::harfbuzz SHARED IMPORTED)
+add_library(harfbuzz::harfbuzz @HB_LIBRARY_TYPE@ IMPORTED)
 set_target_properties(harfbuzz::harfbuzz PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_harfbuzz_includedir}/harfbuzz"
-  IMPORTED_LOCATION "${_harfbuzz_libdir}/libharfbuzz${_harfbuzz_lib_suffix}")
+  INTERFACE_INCLUDE_DIRECTORIES "@PACKAGE_INCLUDE_INSTALL_DIR@"
+  IMPORTED_LOCATION "@PACKAGE_CMAKE_INSTALL_LIBDIR@/@HB_LIB_PREFIX@harfbuzz@HB_LIB_SUFFIX@")
 
-add_library(harfbuzz::icu SHARED IMPORTED)
+add_library(harfbuzz::icu @HB_LIBRARY_TYPE@ IMPORTED)
 set_target_properties(harfbuzz::icu PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_harfbuzz_includedir}/harfbuzz"
+  INTERFACE_INCLUDE_DIRECTORIES "@PACKAGE_INCLUDE_INSTALL_DIR@"
   INTERFACE_LINK_LIBRARIES "harfbuzz::harfbuzz"
-  IMPORTED_LOCATION "${_harfbuzz_libdir}/libharfbuzz-icu${_harfbuzz_lib_suffix}")
+  IMPORTED_LOCATION "@PACKAGE_CMAKE_INSTALL_LIBDIR@/@HB_LIB_PREFIX@harfbuzz-icu@HB_LIB_SUFFIX@")
 
-add_library(harfbuzz::subset SHARED IMPORTED)
+add_library(harfbuzz::subset @HB_LIBRARY_TYPE@ IMPORTED)
 set_target_properties(harfbuzz::subset PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_harfbuzz_includedir}/harfbuzz"
+  INTERFACE_INCLUDE_DIRECTORIES "@PACKAGE_INCLUDE_INSTALL_DIR@"
   INTERFACE_LINK_LIBRARIES "harfbuzz::harfbuzz"
-  IMPORTED_LOCATION "${_harfbuzz_libdir}/libharfbuzz-subset${_harfbuzz_lib_suffix}")
+  IMPORTED_LOCATION "@PACKAGE_CMAKE_INSTALL_LIBDIR@/@HB_LIB_PREFIX@harfbuzz-subset@HB_LIB_SUFFIX@")
 
 # Only add the gobject library if it was built.
-set(_harfbuzz_have_gobject "@have_gobject@")
-if (_harfbuzz_have_gobject)
-  add_library(harfbuzz::gobject SHARED IMPORTED)
+if (@HB_HAVE_GOBJECT@)
+  add_library(harfbuzz::gobject @HB_LIBRARY_TYPE@ IMPORTED)
   set_target_properties(harfbuzz::gobject PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${_harfbuzz_includedir}/harfbuzz"
+    INTERFACE_INCLUDE_DIRECTORIES "@PACKAGE_INCLUDE_INSTALL_DIR@"
     INTERFACE_LINK_LIBRARIES "harfbuzz::harfbuzz"
-    IMPORTED_LOCATION "${_harfbuzz_libdir}/libharfbuzz-gobject${_harfbuzz_lib_suffix}")
+    IMPORTED_LOCATION "@PACKAGE_CMAKE_INSTALL_LIBDIR@/@HB_LIB_PREFIX@harfbuzz-gobject@HB_LIB_SUFFIX@")
 endif ()
 
-# Clean out variables we used in our scope.
-unset(_harfbuzz_lib_suffix)
-unset(_harfbuzz_current)
-unset(_harfbuzz_revision)
-unset(_harfbuzz_age)
-unset(_harfbuzz_includedir)
-unset(_harfbuzz_libdir)
+check_required_components(harfbuzz)

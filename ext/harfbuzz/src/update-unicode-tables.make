@@ -1,16 +1,29 @@
 #!/usr/bin/env -S make -f
 
-all: packtab \
+GENERATED = \
 	hb-ot-shaper-arabic-joining-list.hh \
-	hb-ot-shaper-arabic-table.hh hb-unicode-emoji-table.hh \
-	hb-ot-shaper-indic-table.cc hb-ot-tag-table.hh \
-	hb-ucd-table.hh hb-ot-shaper-use-table.hh \
+	hb-ot-shaper-arabic-pua.hh \
+	hb-ot-shaper-arabic-table.hh \
+	hb-unicode-emoji-table.hh \
+	hb-ot-shaper-indic-table.cc \
+	hb-ot-tag-table.hh \
+	hb-ucd-table.hh \
+	hb-ot-shaper-use-table.hh \
 	hb-ot-shaper-vowel-constraints.cc
 
-.PHONY: all clean packtab
+all: packtab $(GENERATED)
+
+SOURCES = \
+		ArabicShaping.txt UnicodeData.txt Blocks.txt emoji-data.txt \
+		IndicSyllabicCategory.txt IndicPositionalCategory.txt \
+		languagetags language-subtag-registry ucd.nounihan.grouped.zip Scripts.txt
+
+.PHONY: all touch clean clean-sources packtab
 
 hb-ot-shaper-arabic-joining-list.hh: gen-arabic-joining-list.py ArabicShaping.txt Scripts.txt
 	./$^ > $@ || ($(RM) $@; false)
+hb-ot-shaper-arabic-pua.hh: gen-arabic-pua.py ArabicPUASimplified.txt ArabicPUATraditional.txt
+	./$< > $@ || ($(RM) $@; false)
 hb-ot-shaper-arabic-table.hh: gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt
 	./$^ > $@ || ($(RM) $@; false)
 hb-unicode-emoji-table.hh: gen-emoji-table.py emoji-data.txt emoji-test.txt
@@ -19,7 +32,7 @@ hb-ot-shaper-indic-table.cc: gen-indic-table.py IndicSyllabicCategory.txt IndicP
 	./$^ > $@ || ($(RM) $@; false)
 hb-ot-tag-table.hh: gen-tag-table.py languagetags language-subtag-registry
 	./$^ > $@ || ($(RM) $@; false)
-hb-ucd-table.hh: gen-ucd-table.py ucd.nounihan.grouped.zip hb-common.h
+hb-ucd-table.hh: gen-ucd-table.py ucd.nounihan.grouped.zip hb-script-list.h
 	./$^ > $@ || ($(RM) $@; false)
 hb-ot-shaper-use-table.hh: gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt ArabicShaping.txt DerivedCoreProperties.txt UnicodeData.txt Blocks.txt Scripts.txt ms-use/IndicSyllabicCategory-Additional.txt ms-use/IndicPositionalCategory-Additional.txt
 	./$^ > $@ || ($(RM) $@; false)
@@ -43,7 +56,10 @@ ucd.nounihan.grouped.zip:
 	curl -O https://unicode.org/Public/UCD/latest/ucdxml/ucd.nounihan.grouped.zip
 
 clean:
-	$(RM) \
-		ArabicShaping.txt UnicodeData.txt Blocks.txt emoji-data.txt \
-		IndicSyllabicCategory.txt IndicPositionalCategory.txt \
-		languagetags language-subtag-registry ucd.nounihan.grouped.zip Scripts.txt
+	$(RM) $(GENERATED)
+
+clean-sources:
+	$(RM) $(SOURCES)
+
+touch:
+	@for f in $(SOURCES); do test ! -e $$f || touch $$f; done

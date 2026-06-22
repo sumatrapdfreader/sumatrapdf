@@ -38,48 +38,6 @@
 
 
 /*
- * Global runtime options.
- */
-
-struct hb_options_t
-{
-  bool unused : 1; /* In-case sign bit is here. */
-  bool initialized : 1;
-  bool uniscribe_bug_compatible : 1;
-};
-
-union hb_options_union_t {
-  int i;
-  hb_options_t opts;
-};
-static_assert ((sizeof (hb_atomic_int_t) >= sizeof (hb_options_union_t)), "");
-
-HB_INTERNAL void
-_hb_options_init ();
-
-extern HB_INTERNAL hb_atomic_int_t _hb_options;
-
-static inline hb_options_t
-hb_options ()
-{
-#ifdef HB_NO_GETENV
-  return hb_options_t ();
-#endif
-  /* Make a local copy, so we can access bitfield threadsafely. */
-  hb_options_union_t u;
-  u.i = _hb_options;
-
-  if (unlikely (!u.i))
-  {
-    _hb_options_init ();
-    u.i = _hb_options;
-  }
-
-  return u.opts;
-}
-
-
-/*
  * Debug output (needs enabling at compile time.)
  */
 
@@ -113,7 +71,7 @@ _hb_print_func (const char *func)
     const char *paren = strchr (func, '(');
     if (paren)
       func_len = paren - func;
-    fprintf (stderr, "%.*s", func_len, func);
+    fprintf (stderr, "%.*s", (int) func_len, func);
   }
 }
 
@@ -142,9 +100,9 @@ _hb_debug_msg_va (const char *what,
   fprintf (stderr, "%-10s", what ? what : "");
 
   if (obj)
-    fprintf (stderr, "(%*p) ", (unsigned int) (2 * sizeof (void *)), obj);
+    fprintf (stderr, "(%*p) ", (int) (2 * sizeof (void *)), obj);
   else
-    fprintf (stderr, " %*s  ", (unsigned int) (2 * sizeof (void *)), "");
+    fprintf (stderr, " %*s  ", (int) (2 * sizeof (void *)), "");
 
   if (indented) {
 #define VBAR	"\342\224\202"	/* U+2502 BOX DRAWINGS LIGHT VERTICAL */
@@ -265,8 +223,9 @@ static inline void _hb_warn_no_return (bool returned)
   }
 }
 template <>
-/*static*/ inline void _hb_warn_no_return<hb_empty_t> (bool returned HB_UNUSED)
-{}
+/*static*/ inline void _hb_warn_no_return<hb_empty_t> (bool returned HB_UNUSED) {}
+template <>
+/*static*/ inline void _hb_warn_no_return<void> (bool returned HB_UNUSED) {}
 
 template <int max_level, typename ret_t>
 struct hb_auto_trace_t
@@ -306,7 +265,7 @@ struct hb_auto_trace_t
     }
 
     _hb_debug_msg<max_level> (what, obj, func, true, plevel ? *plevel : 1, -1,
-			      "return %s (line %d)",
+			      "return %s (line %u)",
 			      hb_printer_t<hb_decay<decltype (v)>>().print (v), line);
     if (plevel) --*plevel;
     plevel = nullptr;
@@ -373,6 +332,10 @@ struct hb_no_trace_t {
 #define HB_DEBUG_FT (HB_DEBUG+0)
 #endif
 
+#ifndef HB_DEBUG_JUSTIFY
+#define HB_DEBUG_JUSTIFY (HB_DEBUG+0)
+#endif
+
 #ifndef HB_DEBUG_OBJECT
 #define HB_DEBUG_OBJECT (HB_DEBUG+0)
 #endif
@@ -383,6 +346,14 @@ struct hb_no_trace_t {
 
 #ifndef HB_DEBUG_UNISCRIBE
 #define HB_DEBUG_UNISCRIBE (HB_DEBUG+0)
+#endif
+
+#ifndef HB_DEBUG_WASM
+#define HB_DEBUG_WASM (HB_DEBUG+0)
+#endif
+
+#ifndef HB_DEBUG_KBTS
+#define HB_DEBUG_KBTS (HB_DEBUG+0)
 #endif
 
 /*
@@ -396,7 +367,7 @@ struct hb_no_trace_t {
 #define TRACE_APPLY(this) \
 	hb_auto_trace_t<HB_DEBUG_APPLY, bool> trace \
 	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "idx %d gid %u lookup %d", \
+	 "idx %u gid %u lookup %d", \
 	 c->buffer->idx, c->buffer->cur().codepoint, (int) c->lookup_index)
 #else
 #define TRACE_APPLY(this) hb_no_trace_t<bool> trace
@@ -442,26 +413,40 @@ struct hb_no_trace_t {
 #define HB_DEBUG_SUBSET_REPACK (HB_DEBUG+0)
 #endif
 
+#ifndef HB_DEBUG_PAINT
+#define HB_DEBUG_PAINT (HB_DEBUG+0)
+#endif
+#if HB_DEBUG_PAINT
+#define TRACE_PAINT(this) \
+  HB_UNUSED hb_auto_trace_t<HB_DEBUG_PAINT, void> trace \
+  (&c->debug_depth, c->get_name (), this, HB_FUNC, \
+   " ")
+#else
+#define TRACE_PAINT(this) HB_UNUSED hb_no_trace_t<void> trace
+#endif
+
+
 #ifndef HB_DEBUG_DISPATCH
 #define HB_DEBUG_DISPATCH ( \
 	HB_DEBUG_APPLY + \
 	HB_DEBUG_SANITIZE + \
 	HB_DEBUG_SERIALIZE + \
 	HB_DEBUG_SUBSET + \
+	HB_DEBUG_PAINT + \
 	0)
 #endif
 #if HB_DEBUG_DISPATCH
 #define TRACE_DISPATCH(this, format) \
 	hb_auto_trace_t<context_t::max_debug_depth, typename context_t::return_t> trace \
 	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "format %d", (int) format)
+	 "format %u", (unsigned) format)
 #else
 #define TRACE_DISPATCH(this, format) hb_no_trace_t<typename context_t::return_t> trace
 #endif
 
 
 #ifndef HB_BUFFER_MESSAGE_MORE
-#define HB_BUFFER_MESSAGE_MORE (HB_DEBUG+1)
+#define HB_BUFFER_MESSAGE_MORE (HB_DEBUG+0)
 #endif
 
 

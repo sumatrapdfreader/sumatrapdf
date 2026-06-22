@@ -56,14 +56,27 @@ PosLookup::dispatch_recurse_func<hb_closure_lookups_context_t> (hb_closure_looku
 template <>
 inline bool PosLookup::dispatch_recurse_func<hb_ot_apply_context_t> (hb_ot_apply_context_t *c, unsigned int lookup_index)
 {
-  const PosLookup &l = c->face->table.GPOS.get_relaxed ()->table->get_lookup (lookup_index);
+  auto *gpos = c->face->table.GPOS.get_relaxed ();
+  const PosLookup &l = gpos->table->get_lookup (lookup_index);
   unsigned int saved_lookup_props = c->lookup_props;
   unsigned int saved_lookup_index = c->lookup_index;
   c->set_lookup_index (lookup_index);
   c->set_lookup_props (l.get_props ());
-  bool ret = l.dispatch (c);
+
+  uint32_t stack_match_positions[8];
+  hb_vector_t<uint32_t> saved_match_positions;
+  saved_match_positions.set_storage (stack_match_positions);
+  hb_swap (c->match_positions, saved_match_positions);
+
+  bool ret = false;
+  auto *accel = gpos->get_accel (lookup_index);
+  ret = accel && accel->apply (c, false);
+
   c->set_lookup_index (saved_lookup_index);
   c->set_lookup_props (saved_lookup_props);
+
+  hb_swap (c->match_positions, saved_match_positions);
+
   return ret;
 }
 #endif

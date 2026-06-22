@@ -23,8 +23,9 @@ freetype        2.14.3
 gumbo           ???
   https://github.com/ArtifexSoftware/thirdparty-gumbo-parser/tree/artifex
 
-harfbuzz        6.0.0 with patches
+harfbuzz        13.0.1
   https://harfbuzz.org
+  mupdf thirdparty submodule, commit c28ba35a1e6dc4b6b32e2b1d11fd2a408f6c86bb
 
 jbig2dec        0.20
   https://github.com/ArtifexSoftware/jbig2dec/commits/artifex

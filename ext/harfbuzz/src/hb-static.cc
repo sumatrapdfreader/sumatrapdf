@@ -31,14 +31,17 @@
 
 #include "hb-aat-layout-common.hh"
 #include "hb-aat-layout-feat-table.hh"
+#include "hb-cff-interp-common.hh"
 #include "hb-ot-layout-common.hh"
 #include "hb-ot-cmap-table.hh"
-#include "hb-ot-color-colr-table.hh"
+#include "OT/Color/COLR/COLR.hh"
 #include "hb-ot-glyf-table.hh"
 #include "hb-ot-head-table.hh"
+#include "hb-ot-hmtx-table.hh"
 #include "hb-ot-maxp-table.hh"
 
 #ifndef HB_NO_VISIBILITY
+
 #include "hb-ot-name-language-static.hh"
 
 uint64_t const _hb_NullPool[(HB_NULL_POOL_SIZE + sizeof (uint64_t) - 1) / sizeof (uint64_t)] = {};
@@ -57,6 +60,8 @@ DEFINE_NULL_NAMESPACE_BYTES (AAT, Lookup) = {0xFF,0xFF};
 /* hb_map_t */
 
 const hb_codepoint_t minus_1 = -1;
+static const unsigned char static_endchar_str[] = {OpCode_endchar};
+const unsigned char *endchar_str = static_endchar_str;
 
 /* hb_face_t */
 
@@ -107,38 +112,5 @@ hb_face_t::load_upem () const
   upem = ret;
   return ret;
 }
-
-
-/* hb_user_data_array_t */
-
-bool
-hb_user_data_array_t::set (hb_user_data_key_t *key,
-			   void *              data,
-			   hb_destroy_func_t   destroy,
-			   hb_bool_t           replace)
-{
-  if (!key)
-    return false;
-
-  if (replace) {
-    if (!data && !destroy) {
-      items.remove (key, lock);
-      return true;
-    }
-  }
-  hb_user_data_item_t item = {key, data, destroy};
-  bool ret = !!items.replace_or_insert (item, lock, (bool) replace);
-
-  return ret;
-}
-
-void *
-hb_user_data_array_t::get (hb_user_data_key_t *key)
-{
-  hb_user_data_item_t item = {nullptr, nullptr, nullptr};
-
-  return items.find (key, &item, lock) ? item.data : nullptr;
-}
-
 
 #endif

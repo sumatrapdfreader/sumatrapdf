@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""usage: ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt
+"""usage: ./gen-arabic-table.py [--rust] ArabicShaping.txt UnicodeData.txt Blocks.txt
 
 Input files:
 * https://unicode.org/Public/UCD/latest/ucd/ArabicShaping.txt
@@ -9,6 +9,14 @@ Input files:
 """
 
 import os.path, sys
+
+import packTab
+
+if len(sys.argv) > 1 and sys.argv[1] == "--rust":
+	del sys.argv[1]
+	language = packTab.languages["rust"]
+else:
+	language = packTab.languages["c"]
 
 if len (sys.argv) != 4:
 	sys.exit (__doc__)
@@ -21,6 +29,19 @@ while files[0].readline ().find ('##################') < 0:
 	pass
 
 blocks = {}
+# Keep this in sync with hb_arabic_joiner_type_t in hb-ot-shaper-arabic.cc.
+JOINING_CODE = {
+	"JOINING_TYPE_U": 0,
+	"JOINING_TYPE_L": 1,
+	"JOINING_TYPE_R": 2,
+	"JOINING_TYPE_D": 3,
+	"JOINING_TYPE_C": 3,
+	"JOINING_GROUP_ALAPH": 4,
+	"JOINING_GROUP_DALATH_RISH": 5,
+	"JOINING_TYPE_T": 6,
+	"JOINING_TYPE_X": 7,
+}
+
 def read_blocks(f):
 	global blocks
 	for line in f:
@@ -65,93 +86,55 @@ def print_joining_table(f):
 			value = "JOINING_TYPE_" + fields[2]
 		values[u] = value
 
-	short_value = {}
-	for value in sorted (set ([v for v in values.values ()] + ['JOINING_TYPE_X'])):
-		short = ''.join(x[0] for x in value.split('_')[2:])
-		assert short not in short_value.values()
-		short_value[value] = short
+	code = packTab.Code ('_hb_arabic_joining')
+	data = {u: JOINING_CODE[v] for u, v in values.items ()}
+	sol = packTab.pack_table (data, default=JOINING_CODE['JOINING_TYPE_X'], compression=9)
+	if language.name == "c":
+		sol.genCode (code, 'joining_type', language=language, private=True)
 
-	print ()
-	for value,short in short_value.items():
-		print ("#define %s	%s" % (short, value))
-
-	uu = sorted(values.keys())
-	num = len(values)
-	all_blocks = set([blocks[u] for u in uu])
-
-	last = -100000
-	ranges = []
-	for u in uu:
-		if u - last <= 1+16*5:
-			ranges[-1][-1] = u
-		else:
-			ranges.append([u,u])
-		last = u
-
-	print ()
-	print ("static const uint8_t joining_table[] =")
-	print ("{")
-	last_block = None
-	offset = 0
-	for start,end in ranges:
-
+		print ("#include \"hb.hh\"")
 		print ()
-		print ("#define joining_offset_0x%04xu %d" % (start, offset))
-
-		for u in range(start, end+1):
-
-			block = blocks.get(u, last_block)
-			value = values.get(u, "JOINING_TYPE_X")
-
-			if block != last_block or u == start:
-				if u != start:
-					print ()
-				if block in all_blocks:
-					print ("\n  /* %s */" % block)
-				else:
-					print ("\n  /* FILLER */")
-				last_block = block
-				if u % 32 != 0:
-					print ()
-					print ("  /* %04X */" % (u//32*32), "  " * (u % 32), end="")
-
-			if u % 32 == 0:
-				print ()
-				print ("  /* %04X */ " % u, end="")
-			print ("%s," % short_value[value], end="")
+		code.print_code (file=sys.stdout, language=language, private=True)
 		print ()
+		print ("static unsigned int")
+		print ("joining_type (hb_codepoint_t u)")
+		print ("{")
+		print ("  return _hb_arabic_joining_joining_type (u);")
+		print ("}")
+		print ()
+	elif language.name == "rust":
+		sol.genCode (code, 'joining_type_u8', language=language, private=False)
 
-		offset += end - start + 1
-	print ()
-	occupancy = num * 100. / offset
-	print ("}; /* Table items: %d; occupancy: %d%% */" % (offset, occupancy))
-	print ()
-
-	page_bits = 12
-	print ()
-	print ("static unsigned int")
-	print ("joining_type (hb_codepoint_t u)")
-	print ("{")
-	print ("  switch (u >> %d)" % page_bits)
-	print ("  {")
-	pages = set([u>>page_bits for u in [s for s,e in ranges]+[e for s,e in ranges]])
-	for p in sorted(pages):
-		print ("    case 0x%0Xu:" % p)
-		for (start,end) in ranges:
-			if p not in [start>>page_bits, end>>page_bits]: continue
-			offset = "joining_offset_0x%04xu" % start
-			print ("      if (hb_in_range<hb_codepoint_t> (u, 0x%04Xu, 0x%04Xu)) return joining_table[u - 0x%04Xu + %s];" % (start, end, start, offset))
-		print ("      break;")
-		print ("")
-	print ("    default:")
-	print ("      break;")
-	print ("  }")
-	print ("  return X;")
-	print ("}")
-	print ()
-	for value,short in short_value.items():
-		print ("#undef %s" % (short))
-	print ()
+		print ("#![allow(unused_parens)]")
+		print ("#![allow(clippy::unnecessary_cast, clippy::unreadable_literal, clippy::double_parens)]")
+		print ()
+		print ("use crate::hb::unicode::Codepoint;")
+		print ()
+		print (
+			"use super::ot_shaper_arabic::hb_arabic_joining_type_t::{"
+			"self, D, GroupAlaph, GroupDalathRish, L, R, T, U, X};"
+		)
+		print ()
+		code.print_code (file=sys.stdout, language=language, private=False)
+		print ()
+		print ("#[inline]")
+		print ("pub(crate) fn joining_type (u: Codepoint) -> hb_arabic_joining_type_t")
+		print ("{")
+		print ("  match _hb_arabic_joining_joining_type_u8 (u as usize) {")
+		print ("    0 => U,")
+		print ("    1 => L,")
+		print ("    2 => R,")
+		print ("    3 => D,")
+		print ("    4 => GroupAlaph,")
+		print ("    5 => GroupDalathRish,")
+		print ("    6 => T,")
+		print ("    7 => X,")
+		print ("    _ => unreachable! (),")
+		print ("  }")
+		print ("}")
+		print ()
+	else:
+		assert False, "Unknown language: %s" % language.name
 
 LIGATURES = (
 	0xF2EE, 0xFC08, 0xFC0E, 0xFC12, 0xFC32, 0xFC3F, 0xFC40, 0xFC41, 0xFC42,
@@ -335,7 +318,8 @@ print ("/* == Start of generated table == */")
 print ("/*")
 print (" * The following table is generated by running:")
 print (" *")
-print (" *   ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt")
+print (" *   ./gen-arabic-table.py %sArabicShaping.txt UnicodeData.txt Blocks.txt" %
+		("--rust " if language.name == "rust" else ""))
 print (" *")
 print (" * on files with these headers:")
 print (" *")
@@ -344,15 +328,20 @@ for h in headers:
 		print (" * %s" % (l.strip()))
 print (" */")
 print ()
-print ("#ifndef HB_OT_SHAPER_ARABIC_TABLE_HH")
-print ("#define HB_OT_SHAPER_ARABIC_TABLE_HH")
-print ()
-
 read_blocks (files[2])
-print_joining_table (files[0])
-print_shaping_table (files[1])
+if language.name == "c":
+	print ("#ifndef HB_OT_SHAPER_ARABIC_TABLE_HH")
+	print ("#define HB_OT_SHAPER_ARABIC_TABLE_HH")
+	print ()
 
-print ()
-print ("#endif /* HB_OT_SHAPER_ARABIC_TABLE_HH */")
+	print_joining_table (files[0])
+	print_shaping_table (files[1])
+
+	print ()
+	print ("#endif /* HB_OT_SHAPER_ARABIC_TABLE_HH */")
+elif language.name == "rust":
+	print_joining_table (files[0])
+else:
+	assert False, "Unknown language: %s" % language.name
 print ()
 print ("/* == End of generated table == */")

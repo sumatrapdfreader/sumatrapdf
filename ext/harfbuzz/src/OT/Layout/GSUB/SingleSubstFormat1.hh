@@ -25,7 +25,15 @@ struct SingleSubstFormat1_3
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (coverage.sanitize (c, this) && deltaGlyphID.sanitize (c));
+    return_trace (c->check_struct (this) &&
+                  coverage.sanitize (c, this) &&
+                  /* The coverage  table may use a range to represent a set
+                   * of glyphs, which means a small number of bytes can
+                   * generate a large glyph set. Manually modify the
+                   * sanitizer max ops to take this into account.
+                   *
+                   * Note: This check *must* be right after coverage sanitize. */
+                  c->check_ops ((this + coverage).get_population () >> 1));
   }
 
   hb_codepoint_t get_mask () const
@@ -87,12 +95,55 @@ struct SingleSubstFormat1_3
   bool would_apply (hb_would_apply_context_t *c) const
   { return c->len == 1 && (this+coverage).get_coverage (c->glyphs[0]) != NOT_COVERED; }
 
+  unsigned
+  get_glyph_alternates (hb_codepoint_t  glyph_id,
+                        unsigned        start_offset,
+                        unsigned       *alternate_count  /* IN/OUT.  May be NULL. */,
+                        hb_codepoint_t *alternate_glyphs /* OUT.     May be NULL. */) const
+  {
+    unsigned int index = (this+coverage).get_coverage (glyph_id);
+    if (likely (index == NOT_COVERED))
+    {
+      if (alternate_count)
+        *alternate_count = 0;
+      return 0;
+    }
+
+    if (alternate_count && *alternate_count)
+    {
+      hb_codepoint_t d = deltaGlyphID;
+      hb_codepoint_t mask = get_mask ();
+
+      glyph_id = (glyph_id + d) & mask;
+
+      *alternate_glyphs = glyph_id;
+      *alternate_count = 1;
+    }
+
+    return 1;
+  }
+
+  void
+  collect_glyph_alternates (hb_map_t  *alternate_count /* IN/OUT */,
+			    hb_map_t  *alternate_glyphs /* IN/OUT */) const
+  {
+    hb_codepoint_t d = deltaGlyphID;
+    hb_codepoint_t mask = get_mask ();
+
+    + hb_iter (this+coverage)
+    | hb_map ([d, mask] (hb_codepoint_t g) { return hb_pair (g, (g + d) & mask); })
+    | hb_apply ([&] (const hb_pair_t<hb_codepoint_t, hb_codepoint_t> &p) -> void
+		{ _hb_collect_glyph_alternates_add (p.first, p.second,
+						    alternate_count, alternate_glyphs); })
+    ;
+  }
+
   bool apply (hb_ot_apply_context_t *c) const
   {
     TRACE_APPLY (this);
     hb_codepoint_t glyph_id = c->buffer->cur().codepoint;
     unsigned int index = (this+coverage).get_coverage (glyph_id);
-    if (likely (index == NOT_COVERED)) return_trace (false);
+    if (index == NOT_COVERED) return_trace (false);
 
     hb_codepoint_t d = deltaGlyphID;
     hb_codepoint_t mask = get_mask ();
@@ -103,7 +154,7 @@ struct SingleSubstFormat1_3
     {
       c->buffer->sync_so_far ();
       c->buffer->message (c->font,
-			  "replacing glyph at %d (single substitution)",
+			  "replacing glyph at %u (single substitution)",
 			  c->buffer->idx);
     }
 
@@ -112,8 +163,8 @@ struct SingleSubstFormat1_3
     if (HB_BUFFER_MESSAGE_MORE && c->buffer->messaging ())
     {
       c->buffer->message (c->font,
-			  "replaced glyph at %d (single substitution)",
-			  c->buffer->idx - 1);
+			  "replaced glyph at %u (single substitution)",
+			  c->buffer->idx - 1u);
     }
 
     return_trace (true);

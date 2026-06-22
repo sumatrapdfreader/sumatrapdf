@@ -636,7 +636,12 @@ function lcms2_files()
 end
 
 function harfbuzz_files()
+  -- canonical hb_base_sources + hb_subset_sources + hb-ft.cc from
+  -- harfbuzz src/meson.build (13.0.1); compiled subset only (no cairo,
+  -- coretext, directwrite, wasm, raster, graphite, icu, tests).
   files_in_dir("ext/harfbuzz/src", {
+    -- base (hb_base_sources)
+    "OT/Var/VARC/VARC.cc",
     "hb-aat-layout.cc",
     "hb-aat-map.cc",
     "hb-blob.cc",
@@ -644,10 +649,11 @@ function harfbuzz_files()
     "hb-buffer-verify.cc",
     "hb-buffer.cc",
     "hb-common.cc",
+    "hb-draw.cc",
+    "hb-face-builder.cc",
     "hb-face.cc",
     "hb-fallback-shape.cc",
     "hb-font.cc",
-    "hb-ft.cc",
     "hb-map.cc",
     "hb-number.cc",
     "hb-ot-cff1-table.cc",
@@ -678,19 +684,39 @@ function harfbuzz_files()
     "hb-ot-shaper-vowel-constraints.cc",
     "hb-ot-tag.cc",
     "hb-ot-var.cc",
+    "hb-outline.cc",
+    "hb-paint-bounded.cc",
+    "hb-paint-extents.cc",
+    "hb-paint.cc",
     "hb-set.cc",
     "hb-shape-plan.cc",
     "hb-shape.cc",
     "hb-shaper.cc",
     "hb-static.cc",
-    "hb-subset-cff-common.cc",
-    "hb-subset-cff1.cc",
-    "hb-subset-cff2.cc",
-    "hb-subset-input.cc",
-    "hb-subset-plan.cc",
-    "hb-subset.cc",
+    "hb-style.cc",
     "hb-ucd.cc",
     "hb-unicode.cc",
+    -- subset (hb_subset_sources)
+    "graph/gsubgpos-context.cc",
+    "hb-subset-cff-common.cc",
+    "hb-subset-cff1.cc",
+    "hb-subset-cff2-to-cff1.cc",
+    "hb-subset-cff2.cc",
+    "hb-subset-input.cc",
+    "hb-subset-instancer-iup.cc",
+    "hb-subset-instancer-solver.cc",
+    "hb-subset-plan-layout.cc",
+    "hb-subset-plan-var.cc",
+    "hb-subset-plan.cc",
+    "hb-subset-serialize.cc",
+    "hb-subset-table-cff.cc",
+    "hb-subset-table-color.cc",
+    "hb-subset-table-layout.cc",
+    "hb-subset-table-other.cc",
+    "hb-subset-table-var.cc",
+    "hb-subset.cc",
+    -- freetype integration (hb_ft_sources)
+    "hb-ft.cc",
   })
 end
 
