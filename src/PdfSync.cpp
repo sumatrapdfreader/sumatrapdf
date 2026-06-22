@@ -884,8 +884,8 @@ static TempStr WindowsPathToWslMountPathTemp(const char* path) {
         return nullptr;
     }
 
-    // Require an absolute Windows path (e.g. "C:\")
-    if (!(std::isalpha((unsigned char)path[0]) && path[1] == ':' && path[2] == '\\')) {
+    // Require an absolute Windows path (e.g. "C:\", or ""C:/"")
+    if (!(std::isalpha((unsigned char)path[0]) && path[1] == ':' && path::IsSep(path[2]))) {
         return nullptr;
     }
 
