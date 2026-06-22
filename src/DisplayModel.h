@@ -175,6 +175,7 @@ struct DisplayModel : DocController {
     bool IsOverText(Point pt);
     IPageElement* GetElementAtPos(Point pt, int* pageNoOut);
     Annotation* GetAnnotationAtPos(Point pt, Annotation*);
+    Annotation* GetWidgetAtPos(Point pt);
 
     int GetPageNoByPoint(Point pt) const;
     Point CvtToScreen(int pageNo, PointF pt);

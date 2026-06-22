@@ -20,6 +20,13 @@ struct FzPageInfo {
     fz_link* retainedLinks = nullptr;
 
     Vec<Annotation*> annotations;
+    // form fields (widgets). kept separate from annotations so they are
+    // hit-testable for form filling without polluting the annotation list
+    // (comments, edit-annotations panel) with form fields.
+    Vec<Annotation*> widgets;
+    // annotations + widgets are loaded together on first access; this guards
+    // that (annotations.Size()==0 can't, since a page may have only widgets).
+    bool annotsLoaded = false;
     // auto-detected links
     Vec<IPageElement*> autoLinks;
     // comments are made out of annotations

@@ -3257,8 +3257,9 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
         return nullptr;
     }
 
-    // build annotations info on first access
-    if (pdfdoc && pageInfo->annotations.Size() == 0) {
+    // build annotations + widgets info on first access
+    if (pdfdoc && !pageInfo->annotsLoaded) {
+        pageInfo->annotsLoaded = true;
         fz_try(ctx) {
             pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pageInfo->page);
             pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
@@ -3269,13 +3270,14 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
                 }
                 annot = pdf_next_annot(ctx, annot);
             }
-            // form fields (widgets) are a separate list in mupdf; add them too so
-            // they are hit-testable (needed for interactive form filling)
+            // form fields (widgets) are a separate mupdf list; keep them in their
+            // own list so they're hit-testable for form filling but don't show up
+            // as annotations (comments, edit-annotations panel)
             pdf_annot* widget = pdf_first_widget(ctx, pdfpage);
             while (widget) {
                 Annotation* a = MakeAnnotationWrapper(this, widget, pageNo);
                 if (a) {
-                    pageInfo->annotations.Append(a);
+                    pageInfo->widgets.Append(a);
                 }
                 widget = pdf_next_widget(ctx, widget);
             }
@@ -4707,6 +4709,34 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
         float area = r.dx * r.dy;
         if (area < bestArea) {
             best = els[i];
+            bestArea = area;
+        }
+    }
+    return best;
+}
+
+// Like EngineMupdfGetAnnotationAtPos but for form fields (widgets), which live
+// in their own list. Returns the smallest widget containing pos, or null.
+Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf->pdfdoc) {
+        return nullptr;
+    }
+    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    if (!pi) {
+        return nullptr;
+    }
+    ScopedCritSec cs(&epdf->docLock);
+    Annotation* best = nullptr;
+    float bestArea = 0;
+    for (auto& w : pi->widgets) {
+        RectF bounds = w->bounds;
+        if (!bounds.Contains(pos)) {
+            continue;
+        }
+        float area = bounds.dx * bounds.dy;
+        if (!best || area < bestArea) {
+            best = w;
             bestArea = area;
         }
     }

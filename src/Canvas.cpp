@@ -1309,19 +1309,22 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     Point pt{x, y};
 
     WindowTab* tab = win->CurrentTab();
-    Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
     // PDF form filling: clicking a checkbox / radio-button toggles it; clicking a
-    // text field starts in-place editing. Consume the click in either case so it
-    // doesn't start a drag/selection.
-    if (ToggleFormButton(annot)) {
+    // text or choice field starts in-place editing. Widgets are hit-tested on
+    // their own list (GetWidgetAtPos), separate from markup annotations. Consume
+    // the click in either case so it doesn't start a drag/selection.
+    Annotation* widget = dm->GetWidgetAtPos(pt);
+    if (ToggleFormButton(widget)) {
         MainWindowRerender(win);
         win->mouseAction = MouseAction::None;
         return;
     }
-    if (StartFormFieldEdit(win, annot)) {
+    if (StartFormFieldEdit(win, widget)) {
         win->mouseAction = MouseAction::None;
         return;
     }
+
+    Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
     bool isMoveableAnnot = annot && AnnotationCanBeMoved(annot->type);
     if (isMoveableAnnot) {
         if (annot == tab->selectedAnnotation) {

@@ -1259,6 +1259,22 @@ Annotation* DisplayModel::GetAnnotationAtPos(Point pt, Annotation* annot) {
     return EngineGetAnnotationAtPos(engine, pageNo, pos, annot);
 }
 
+// form fields (widgets) are hit-tested separately from annotations
+Annotation* DisplayModel::GetWidgetAtPos(Point pt) {
+    if (AnnotationsAreDisabled()) {
+        return nullptr;
+    }
+    int pageNo = GetPageNoByPoint(pt);
+    if (!ValidPageNo(pageNo)) {
+        return nullptr;
+    }
+    if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
+        return nullptr;
+    }
+    PointF pos = CvtFromScreen(pt, pageNo);
+    return EngineGetWidgetAtPos(engine, pageNo, pos);
+}
+
 // note: returns false for pages that haven't been rendered yet
 bool DisplayModel::IsOverText(Point pt) {
     int pageNo = GetPageNoByPoint(pt);

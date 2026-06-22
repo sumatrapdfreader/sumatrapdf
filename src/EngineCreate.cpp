@@ -345,3 +345,10 @@ Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos,
     }
     return EngineMupdfGetAnnotationAtPos(engine, pageNo, pos, annot);
 }
+
+Annotation* EngineGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos) {
+    if (!IsEngineMupdf(engine)) {
+        return nullptr;
+    }
+    return EngineMupdfGetWidgetAtPos(engine, pageNo, pos);
+}
