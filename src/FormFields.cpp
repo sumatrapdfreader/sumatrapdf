@@ -14,6 +14,7 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "EngineAll.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
@@ -102,8 +103,18 @@ static LRESULT CALLBACK WndProcFormCtrl(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
                 return 0;
             }
             if (wp == VK_TAB) {
-                // TODO(phase 3): move to the next/prev field
+                // commit, then move to the next/prev editable field on the page
+                bool back = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+                Annotation* cur = gEdit.widget;
+                MainWindow* win = gEdit.win;
                 CommitFormFieldEdit(true);
+                DisplayModel* dm = win ? win->AsFixed() : nullptr;
+                if (dm && cur) {
+                    Annotation* next = EngineMupdfGetAdjacentWidget(dm->GetEngine(), cur, !back);
+                    if (next) {
+                        StartFormFieldEdit(win, next);
+                    }
+                }
                 return 0;
             }
             if (wp == VK_RETURN && (isChoice || !gEdit.multiline)) {
@@ -127,12 +138,24 @@ static LRESULT CALLBACK WndProcFormCtrl(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     return CallWindowProcW(gDefCtrlProc, hwnd, msg, wp, lp);
 }
 
-static HFONT MakeFieldFont(int fieldDy) {
-    // a font sized to roughly fill the field height (negative => pixel height).
-    // TODO(phase 3): use the field's /DA font size.
-    int fontPx = std::max(8, (int)((float)fieldDy * 0.7f));
+static HFONT MakeFieldFont(int fontPx) {
+    fontPx = std::max(8, fontPx);
+    // negative height => character height in pixels
     return CreateFontW(-fontPx, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
                        CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
+}
+
+// the field's on-screen font height in pixels: the /DA font size (PDF points)
+// scaled to the page's current zoom, or a height-derived fallback for
+// auto-sized (/DA size 0) fields.
+static int FieldFontPx(Annotation* widget, Rect rc) {
+    float daSize = GetWidgetFontSize(widget);
+    float pageDy = widget->bounds.dy; // field height in page (PDF) units
+    if (daSize > 0 && pageDy > 0) {
+        float scale = (float)rc.dy / pageDy; // screen px per PDF unit
+        return std::max(8, (int)(daSize * scale));
+    }
+    return std::max(8, (int)((float)rc.dy * 0.7f));
 }
 
 static bool StartTextEdit(MainWindow* win, Annotation* widget, Rect rc, int flags) {
@@ -151,10 +174,14 @@ static bool StartTextEdit(MainWindow* win, Annotation* widget, Rect rc, int flag
     if (!hEdit) {
         return false;
     }
-    HFONT font = MakeFieldFont(rc.dy);
+    HFONT font = MakeFieldFont(FieldFontPx(widget, rc));
     SetWindowFont(hEdit, font, TRUE);
     int margin = DpiScale(win->hwndCanvas, 2);
     SendMessageW(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(margin, margin));
+    int maxLen = GetWidgetMaxLen(widget); // comb / limited fields (e.g. SSN)
+    if (maxLen > 0) {
+        SendMessageW(hEdit, EM_SETLIMITTEXT, (WPARAM)maxLen, 0);
+    }
     HwndSetText(hEdit, GetWidgetValue(widget));
 
     gDefCtrlProc = (WNDPROC)GetWindowLongPtrW(hEdit, GWLP_WNDPROC);
@@ -179,7 +206,7 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     if (n == 0) {
         return false;
     }
-    int fontPx = std::max(10, (int)((float)rc.dy * 0.7f));
+    int fontPx = FieldFontPx(widget, rc);
     int itemDy = fontPx + DpiScale(win->hwndCanvas, 6);
     int visN = std::min(n, 8);
     int listDy = visN * itemDy + DpiScale(win->hwndCanvas, 4);
@@ -197,7 +224,7 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     if (!hLb) {
         return false;
     }
-    HFONT font = MakeFieldFont(rc.dy);
+    HFONT font = MakeFieldFont(fontPx);
     SetWindowFont(hLb, font, TRUE);
     SendMessageW(hLb, LB_SETITEMHEIGHT, 0, (LPARAM)itemDy);
 

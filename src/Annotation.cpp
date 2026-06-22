@@ -427,6 +427,47 @@ TempStr GetWidgetValue(Annotation* annot) {
     return res;
 }
 
+float GetWidgetFontSize(Annotation* annot) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return 0;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    auto ctx = e->Ctx();
+    ScopedCritSec cs(&e->docLock);
+    float size = 0;
+    fz_try(ctx) {
+        const char* font = nullptr;
+        int nColor = 0;
+        float color[4] = {0};
+        pdf_annot_default_appearance(ctx, a, &font, &size, &nColor, color);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        size = 0;
+    }
+    return size;
+}
+
+int GetWidgetMaxLen(Annotation* annot) {
+    if (!annot || annot->type != AnnotationType::Widget) {
+        return 0;
+    }
+    EngineMupdf* e = annot->engine;
+    auto a = annot->pdfannot;
+    auto ctx = e->Ctx();
+    ScopedCritSec cs(&e->docLock);
+    int maxLen = 0;
+    fz_try(ctx) {
+        maxLen = pdf_text_widget_max_len(ctx, a);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        maxLen = 0;
+    }
+    return maxLen;
+}
+
 bool SetWidgetTextValue(Annotation* annot, const char* value) {
     if (!annot || annot->type != AnnotationType::Widget) {
         return false;

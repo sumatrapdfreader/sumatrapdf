@@ -133,6 +133,10 @@ int GetWidgetType(Annotation*);
 int GetWidgetFieldFlags(Annotation*);
 // current text value of a form field (owned temp copy), or "" .
 TempStr GetWidgetValue(Annotation*);
+// font size from the field's /DA (in PDF points), or 0 for auto-size.
+float GetWidgetFontSize(Annotation*);
+// max length of a text field (chars), or 0 for unlimited.
+int GetWidgetMaxLen(Annotation*);
 // set a text field's value (runs validation); returns true if accepted.
 bool SetWidgetTextValue(Annotation*, const char* value);
 // options of a combobox/listbox field (display strings), appended to `out`.

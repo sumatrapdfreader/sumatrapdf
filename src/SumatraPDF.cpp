@@ -40,6 +40,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "Annotation.h"
+#include "FormFields.h"
 #include "PdfCreator.h"
 #include "PdfTools.h"
 #include "GlobalPrefs.h"
@@ -1707,6 +1708,10 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
 
+    // tear down any in-place form-field edit before the engine is deleted below,
+    // so the overlay's widget pointer can't dangle into freed memory
+    CommitFormFieldEdit(false);
+
     tab->selectedAnnotation = nullptr;
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
@@ -3010,6 +3015,10 @@ static void OnMenuExit() {
 // into the tab right afterwards and ReplaceDocumentInCurrentTab would revert
 // the UI disabling afterwards anyway)
 static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool deleteModel) {
+    // tear down any in-place form-field edit before the model/engine goes away,
+    // so the overlay's widget pointer can't dangle (cancel: don't write/re-render
+    // a document that's being closed or reloaded)
+    CommitFormFieldEdit(false);
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm()) {
         win->AsChm()->RemoveParentHwnd();

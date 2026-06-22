@@ -4743,6 +4743,53 @@ Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos
     return best;
 }
 
+// Next/previous editable (text/choice, non-read-only) widget on the same page
+// as `cur`, wrapping around. Used for Tab / Shift+Tab navigation. Returns null
+// if there's no other editable field. Does not hold docLock (calls helpers that
+// take it), so it must not be called while docLock is held.
+Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bool forward) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf->pdfdoc || !cur) {
+        return nullptr;
+    }
+    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(cur->pageNo);
+    if (!pi) {
+        return nullptr;
+    }
+    Vec<Annotation*>& ws = pi->widgets;
+    int n = ws.Size();
+    int idx = ws.Find(cur);
+    if (n == 0 || idx < 0) {
+        return nullptr;
+    }
+    // read type/flags via mupdf directly (this file is also compiled into
+    // PdfPreview/PdfFilter, which don't link Annotation.cpp's GetWidget*)
+    auto ctx = epdf->Ctx();
+    ScopedCritSec cs(&epdf->docLock);
+    for (int step = 1; step <= n; step++) {
+        int j = forward ? (idx + step) % n : (idx - step + n) % n;
+        Annotation* w = ws[j];
+        if (w == cur) {
+            break;
+        }
+        int wt = PDF_WIDGET_TYPE_UNKNOWN;
+        int flags = 0;
+        fz_try(ctx) {
+            wt = pdf_widget_type(ctx, w->pdfannot);
+            flags = pdf_annot_field_flags(ctx, w->pdfannot);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
+        bool editable =
+            (wt == PDF_WIDGET_TYPE_TEXT) || (wt == PDF_WIDGET_TYPE_COMBOBOX) || (wt == PDF_WIDGET_TYPE_LISTBOX);
+        if (editable && !(flags & PDF_FIELD_IS_READ_ONLY)) {
+            return w;
+        }
+    }
+    return nullptr;
+}
+
 // Note: this code is compiled in release mode even if debug build so
 // DEBUG is not defined so we can't do #if defined(DEBUG) here
 // so we use this runtime boolean instead
