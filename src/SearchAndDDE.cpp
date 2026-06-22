@@ -98,28 +98,72 @@ void FindFirst(MainWindow* win) {
     }
 }
 
-// find-as-you-type: called when the find bar's edit text changes
-void OnFindBarTextChanged(MainWindow* win) {
-    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
-        return;
-    }
-    char* s = HwndGetTextTemp(win->hwndFindEdit);
-    if (str::IsEmpty(s)) {
-        AbortFinding(win, true);
-        ClearSearchResult(win);
-        FindBarSetStatus(win, "");
-        ClearFindMatches(win);
-        FindWindowRefreshResults(win); // empty the results list
-        return;
-    }
+// debounce delays (ms) for find-as-you-type. Short terms (1-2 chars) match a
+// lot of text and the search is expensive, so wait longer before starting them
+// (issue #4626). Enter bypasses the wait (see FindFlushPendingSearch).
+constexpr UINT kFindDebounceDelayMs = 500;
+constexpr UINT kFindDebounceShortDelayMs = 1000;
+
+// run the actual incremental search; assumes there is non-empty find text
+static void StartIncrementalFind(MainWindow* win) {
     // the full-document count (n/m + results list) is kicked from FindEndTask,
     // after this find thread exits, so the two never touch the engine's text
     // extraction concurrently (mupdf isn't safe for that)
     FindTextOnThread(win, TextSearch::Direction::Forward, false);
 }
 
+// find-as-you-type: called when the find bar's edit text changes. Instead of
+// searching on every keystroke, (re)arm a debounce timer; the search starts a
+// short while after the user stops typing (issue #4626).
+void OnFindBarTextChanged(MainWindow* win) {
+    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
+        return;
+    }
+    char* s = HwndGetTextTemp(win->hwndFindEdit);
+    if (str::IsEmpty(s)) {
+        AbortFinding(win, true); // also cancels a pending debounce timer
+        ClearSearchResult(win);
+        FindBarSetStatus(win, "");
+        ClearFindMatches(win);
+        FindWindowRefreshResults(win); // empty the results list
+        return;
+    }
+    size_t nChars = HwndGetTextLen(win->hwndFindEdit);
+    UINT delay = (nChars <= 2) ? kFindDebounceShortDelayMs : kFindDebounceDelayMs;
+    // SetTimer with the same id replaces the previous timer, so each keystroke
+    // restarts the countdown
+    SetTimer(win->hwndFrame, kFindDebounceTimerId, delay, nullptr);
+    win->findDebouncePending = true;
+}
+
+void FindDebounceTimerFired(MainWindow* win) {
+    KillTimer(win->hwndFrame, kFindDebounceTimerId);
+    if (!win->findDebouncePending) {
+        return;
+    }
+    win->findDebouncePending = false;
+    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
+        return;
+    }
+    if (win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0) {
+        StartIncrementalFind(win);
+    }
+}
+
 static bool HasFindText(MainWindow* win) {
     return win->hwndFindEdit && HwndGetTextLen(win->hwndFindEdit) > 0;
+}
+
+bool FindFlushPendingSearch(MainWindow* win) {
+    if (!win->findDebouncePending) {
+        return false;
+    }
+    win->findDebouncePending = false;
+    KillTimer(win->hwndFrame, kFindDebounceTimerId);
+    if (HasFindText(win)) {
+        StartIncrementalFind(win);
+    }
+    return true;
 }
 
 void FindNext(MainWindow* win) {
@@ -761,6 +805,13 @@ static void FindThread(FindThreadData* ftd) {
 // returns true if did abort a thread or hidden the notification
 bool AbortFinding(MainWindow* win, bool hideMessage) {
     bool res = false;
+    // cancel any pending debounced find-as-you-type search
+    if (win->findDebouncePending) {
+        win->findDebouncePending = false;
+        if (win->hwndFrame) {
+            KillTimer(win->hwndFrame, kFindDebounceTimerId);
+        }
+    }
     AbortCount(win);
     if (win->findThread) {
         res = true;

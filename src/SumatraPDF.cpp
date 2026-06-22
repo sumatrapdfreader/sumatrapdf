@@ -8812,6 +8812,11 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 *callDef = false;
                 return 0;
             }
+            if (wp == kFindDebounceTimerId) {
+                FindDebounceTimerFired(win);
+                *callDef = false;
+                return 0;
+            }
             break;
 
         case WM_THEMECHANGED:

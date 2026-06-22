@@ -32,6 +32,9 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp);
 #define HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS 100
 #define HIDE_FWDSRCHMARK_STEPS 5
 
+// find-as-you-type debounce timer (lives on hwndFrame); see SearchAndDDE.cpp
+#define kFindDebounceTimerId 0x100
+
 bool NeedsFindUI(MainWindow* win);
 void ClearSearchResult(MainWindow* win);
 bool OnInverseSearch(MainWindow* win, int x, int y);
@@ -45,6 +48,11 @@ void FindToggleMatchCase(MainWindow* win);
 void FindToggleMatchWholeWord(MainWindow* win);
 // called when the user edits the find bar's text (find-as-you-type)
 void OnFindBarTextChanged(MainWindow* win);
+// fired by the debounce WM_TIMER on hwndFrame: runs the deferred search
+void FindDebounceTimerFired(MainWindow* win);
+// if a debounced search is pending, cancel the timer and start it now (so Enter
+// forces the search to start immediately). Returns true if one was pending.
+bool FindFlushPendingSearch(MainWindow* win);
 // navigate to and select a match chosen from the floating results list
 void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph);
 // free the cached per-match snippets (win->findMatches)

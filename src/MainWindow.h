@@ -337,6 +337,10 @@ struct MainWindow {
     bool findCancelled = false;
     bool findMatchCase = false;
     bool findMatchWholeWord = false;
+    // find-as-you-type is debounced: a WM_TIMER on hwndFrame fires the actual
+    // search a short while after the last keystroke (see SearchAndDDE.cpp).
+    // true while that timer is armed and hasn't fired yet.
+    bool findDebouncePending = false;
 
     // find bar "n / m" match counter (see SearchAndDDE.cpp). The positions of all
     // matches for findCountText are cached so prev/next is instant; a background

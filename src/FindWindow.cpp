@@ -533,6 +533,11 @@ bool FindWindowWnd::PreTranslateMessage(MSG& msg) {
             return true;
         case VK_RETURN:
         case VK_F3: {
+            // Enter forces a pending debounced search to start now (find the
+            // first match) instead of stepping the (stale) results list (#4626)
+            if (msg.wParam == VK_RETURN && FindFlushPendingSearch(win)) {
+                return true;
+            }
             // step through the results list; fall back to a document search when
             // there's no list (e.g. count not ready)
             WPARAM dir = IsShiftPressed() ? VK_UP : VK_DOWN;
