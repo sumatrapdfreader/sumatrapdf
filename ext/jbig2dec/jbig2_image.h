@@ -34,9 +34,9 @@ Jbig2Image *jbig2_image_reference(Jbig2Ctx *ctx, Jbig2Image *image);
 void jbig2_image_free(Jbig2Ctx *ctx, Jbig2Image *image);
 void jbig2_image_clear(Jbig2Ctx *ctx, Jbig2Image *image, int value);
 Jbig2Image *jbig2_image_resize(Jbig2Ctx *ctx, Jbig2Image *image, uint32_t width, uint32_t height, int value);
-int jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src, int x, int y, Jbig2ComposeOp op);
+int jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src, int64_t x, int64_t y, Jbig2ComposeOp op);
 
-int jbig2_image_get_pixel(Jbig2Image *image, int x, int y);
-void jbig2_image_set_pixel(Jbig2Image *image, int x, int y, bool value);
+int jbig2_image_get_pixel(Jbig2Image *image, int64_t x, int64_t y);
+void jbig2_image_set_pixel(Jbig2Image *image, int64_t x, int64_t y, bool value);
 
 #endif /* _JBIG2_IMAGE_H */

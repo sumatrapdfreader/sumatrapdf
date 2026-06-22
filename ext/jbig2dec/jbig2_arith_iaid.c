@@ -47,7 +47,7 @@ jbig2_arith_iaid_ctx_new(Jbig2Ctx *ctx, uint8_t SBSYMCODELEN)
     Jbig2ArithIaidCtx *result;
     size_t ctx_size;
 
-    if (sizeof(ctx_size) * 8 <= SBSYMCODELEN)
+    if (SBSYMCODELEN > 31 || sizeof(ctx_size) * 8 <= SBSYMCODELEN)
     {
         jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "requested IAID arithmetic coding state size too large");
         return NULL;
@@ -82,7 +82,7 @@ jbig2_arith_iaid_decode(Jbig2Ctx *ctx, Jbig2ArithIaidCtx *actx, Jbig2ArithState 
     Jbig2ArithCx *IAIDx = actx->IAIDx;
     uint8_t SBSYMCODELEN = actx->SBSYMCODELEN;
     /* A.3 (1) */
-    int PREV = 1;
+    uint32_t PREV = 1;
     int D;
     int i;
 
@@ -94,14 +94,14 @@ jbig2_arith_iaid_decode(Jbig2Ctx *ctx, Jbig2ArithIaidCtx *actx, Jbig2ArithState 
 #ifdef VERBOSE
         fprintf(stderr, "IAID%x: D = %d\n", PREV, D);
 #endif
-        PREV = (PREV << 1) | D;
+        PREV = (PREV << 1) | (uint32_t)D;
     }
     /* A.3 (3) */
-    PREV -= 1 << SBSYMCODELEN;
+    PREV -= (1U << SBSYMCODELEN);
 #ifdef VERBOSE
     fprintf(stderr, "IAID result: %d\n", PREV);
 #endif
-    *p_result = PREV;
+    *p_result = (int)PREV;
     return 0;
 }
 

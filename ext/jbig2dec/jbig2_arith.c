@@ -391,6 +391,8 @@ test_get_word(Jbig2Ctx *ctx, Jbig2WordStream *self, size_t offset, uint32_t *wor
     uint32_t val = 0;
     int ret = 0;
 
+    (void) ctx;
+
     if (self == NULL || word == NULL)
         return -1;
     if (offset >= sizeof (test_stream))
@@ -424,6 +426,9 @@ main(int argc, char **argv)
     Jbig2ArithState *as;
     int i;
     Jbig2ArithCx cx = 0;
+
+    (void) argc;
+    (void) argv;
 
     ctx = jbig2_ctx_new(NULL, 0, NULL, NULL, NULL);
 

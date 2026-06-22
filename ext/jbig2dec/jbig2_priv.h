@@ -70,6 +70,17 @@ typedef uint8_t byte;
 #define UINT32_MAX 0xffffffffu
 #endif
 
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define FMTZ "%zu"
+#define FMTZ_CAST size_t
+#elif defined(_MSC_VER)
+#define FMTZ "%llu"
+#define FMTZ_CAST _int64
+#else
+#define FMTZ "%lu"
+#define FMTZ_CAST unsigned long
+#endif
+
 typedef struct _Jbig2Page Jbig2Page;
 typedef struct _Jbig2Segment Jbig2Segment;
 
@@ -79,7 +90,8 @@ typedef enum {
     JBIG2_FILE_SEQUENTIAL_BODY,
     JBIG2_FILE_RANDOM_HEADERS,
     JBIG2_FILE_RANDOM_BODIES,
-    JBIG2_FILE_EOF
+    JBIG2_FILE_EOF,
+    JBIG2_FILE_HEADER_MAYBE
 } Jbig2FileState;
 
 struct _Jbig2Ctx {
@@ -126,9 +138,9 @@ void jbig2_free(Jbig2Allocator *allocator, void *p);
 
 void *jbig2_realloc(Jbig2Allocator *allocator, void *p, size_t size, size_t num);
 
-#define jbig2_new(ctx, t, size) ((t *)jbig2_alloc(ctx->allocator, size, sizeof(t)))
+#define jbig2_new(ctx, t, num) ((t *)jbig2_alloc(ctx->allocator, sizeof(t), num))
 
-#define jbig2_renew(ctx, p, t, size) ((t *)jbig2_realloc(ctx->allocator, (p), size, sizeof(t)))
+#define jbig2_renew(ctx, p, t, num) ((t *)jbig2_realloc(ctx->allocator, (p), sizeof(t), num))
 
 int jbig2_error(Jbig2Ctx *ctx, Jbig2Severity severity, uint32_t seg_idx, const char *fmt, ...)
 #ifdef __GNUC__

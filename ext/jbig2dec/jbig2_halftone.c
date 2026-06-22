@@ -83,7 +83,7 @@ jbig2_hd_new(Jbig2Ctx *ctx, const Jbig2PatternDictParams *params, Jbig2Image *im
             /* compose with the REPLACE operator; the source
                will be clipped to the destination, selecting the
                proper sub image */
-            code = jbig2_image_compose(ctx, new->patterns[i], image, -i * (int32_t) HPW, 0, JBIG2_COMPOSE_REPLACE);
+            code = jbig2_image_compose(ctx, new->patterns[i], image, -((int64_t) i) * HPW, 0, JBIG2_COMPOSE_REPLACE);
             if (code < 0) {
                 jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to compose image into collective bitmap dictionary");
                 /* new->patterns[i] above succeeded, so release all patterns 0..i */
@@ -275,7 +275,8 @@ jbig2_decode_gray_scale_image(Jbig2Ctx *ctx, Jbig2Segment *segment,
 {
     uint16_t **GSVALS = NULL;
     size_t consumed_bytes = 0;
-    uint32_t i, j, stride, x, y;
+    uint32_t i, j, stride;
+    int64_t x, y;
     int code;
     Jbig2Image **GSPLANES;
     Jbig2GenericRegionParams rparams;
@@ -467,7 +468,7 @@ jbig2_decode_halftone_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     Jbig2Image *HSKIP = NULL;
     Jbig2PatternDict *HPATS;
     uint32_t i;
-    uint32_t mg, ng;
+    int64_t mg, ng;
     uint16_t gray_val;
     int code = 0;
 

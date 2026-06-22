@@ -197,6 +197,7 @@ SHA1_Init(SHA1_CTX *context)
 void
 SHA1_Update(SHA1_CTX *context, const uint8_t *data, const size_t len)
 {
+    uint32_t bits_lo, bits_hi, old_count0;
     size_t i, j;
 
 #ifdef VERBOSE
@@ -204,9 +205,18 @@ SHA1_Update(SHA1_CTX *context, const uint8_t *data, const size_t len)
 #endif
 
     j = (context->count[0] >> 3) & 63;
-    if ((context->count[0] += len << 3) < (len << 3))
+
+    bits_lo = (uint32_t) (len << 3);
+    bits_hi = (uint32_t) (len >> 29);
+
+    old_count0 = context->count[0];
+
+    context->count[0] += bits_lo;
+    context->count[1] += bits_hi;
+
+    if (context->count[0] < old_count0)
         context->count[1]++;
-    context->count[1] += (len >> 29);
+
     if ((j + len) > 63) {
         memcpy(&context->buffer[j], data, (i = 64 - j));
         SHA1_Transform(context->state, context->buffer);
@@ -338,6 +348,9 @@ main(int argc, char **argv)
     SHA1_CTX context;
     uint8_t digest[20];
     char output[80];
+
+    (void) argc;
+    (void) argv;
 
     fprintf(stdout, "verifying SHA-1 implementation... ");
 

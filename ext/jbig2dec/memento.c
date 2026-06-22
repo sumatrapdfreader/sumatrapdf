@@ -60,13 +60,17 @@ int atexit(void (*)(void));
 #endif
 
 /* Hacks to portably print large sizes */
-#ifdef _MSC_VER
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define FMTZ "%zu"
+#define FMTZ_CAST size_t
+#define FMTP "%p"
+#elif defined(_MSC_VER)
 #define FMTZ "%llu"
 #define FMTZ_CAST _int64
 #define FMTP "0x%p"
 #else
-#define FMTZ "%zu"
-#define FMTZ_CAST size_t
+#define FMTZ "%lu"
+#define FMTZ_CAST unsigned long
 #define FMTP "%p"
 #endif
 
@@ -553,7 +557,7 @@ static void print_stack_libbt_failed(void *addr)
     if (gdb_invocation_failed == 0)
     {
         snprintf(command, sizeof(command),
-                 //"gdb -q --batch -p=%i -ex 'info line *%p' -ex quit 2>/dev/null",
+                 /*"gdb -q --batch -p=%i -ex 'info line *%p' -ex quit 2>/dev/null", */
                  "gdb -q --batch -p=%i -ex 'info line *%p' -ex quit 2>/dev/null| egrep -v '(Thread debugging using)|(Using host libthread_db library)|(A debugging session is active)|(will be detached)|(Quit anyway)|(No such file or directory)|(^0x)|(^$)'",
                  getpid(), addr);
     printf("%s\n", command);
@@ -723,20 +727,20 @@ typedef BOOL (__stdcall *My_SymGetLineFromAddrType)(HANDLE hProcess, DWORD_NATIV
 
 typedef struct MY_SYMBOL_INFO {
     ULONG       SizeOfStruct;
-    ULONG       TypeIndex;        // Type Index of symbol
+    ULONG       TypeIndex;        /* Type Index of symbol */
     ULONG64     Reserved[2];
     ULONG       info;
     ULONG       Size;
-    ULONG64     ModBase;          // Base Address of module containing this symbol
+    ULONG64     ModBase;          /* Base Address of module containing this symbol */
     ULONG       Flags;
-    ULONG64     Value;            // Value of symbol, ValuePresent should be 1
-    ULONG64     Address;          // Address of symbol including base address of module
-    ULONG       Register;         // register holding value or pointer to value
-    ULONG       Scope;            // scope of the symbol
-    ULONG       Tag;              // pdb classification
-    ULONG       NameLen;          // Actual length of name
+    ULONG64     Value;            /* Value of symbol, ValuePresent should be 1 */
+    ULONG64     Address;          /* Address of symbol including base address of module */
+    ULONG       Register;         /* register holding value or pointer to value */
+    ULONG       Scope;            /* scope of the symbol */
+    ULONG       Tag;              /* pdb classification */
+    ULONG       NameLen;          /* Actual length of name */
     ULONG       MaxNameLen;
-    CHAR        Name[1];          // Name of symbol
+    CHAR        Name[1];          /* Name of symbol */
 } MY_SYMBOL_INFO, *MY_PSYMBOL_INFO;
 
 typedef BOOL (__stdcall *My_SymFromAddrType)(HANDLE hProcess, DWORD64 Address, PDWORD64 Displacement, MY_PSYMBOL_INFO Symbol);
@@ -1284,6 +1288,7 @@ static int Memento_appBlock(Memento_Blocks    *blks,
                             Memento_BlkHeader *b)
 {
     int result;
+    (void) blks;
     VALGRIND_MAKE_MEM_DEFINED(b, sizeof(Memento_BlkHeader));
     VALGRIND_MAKE_MEM_DEFINED(MEMBLK_TOBLK(b),
                               b->rawsize + Memento_PostSize);
@@ -1543,6 +1548,8 @@ void Memento_stats(void)
 static int showInfo(Memento_BlkHeader *b, void *arg)
 {
     Memento_BlkDetails *details;
+
+    (void) arg;
 
     fprintf(stderr, FMTP":(size="FMTZ",num=%d)",
             MEMBLK_TOBLK(b), (FMTZ_CAST)b->rawsize, b->sequence);
@@ -2024,6 +2031,8 @@ static void *do_malloc(size_t s, int eventType)
     Memento_BlkHeader *memblk;
     size_t             smem = MEMBLK_SIZE(s);
 
+    (void) eventType;
+
     if (Memento_failThisEventLocked())
         return NULL;
 
@@ -2473,6 +2482,8 @@ static void do_free(void *blk, int eventType)
 {
     Memento_BlkHeader *memblk;
 
+    (void) eventType;
+
     if (Memento_event()) Memento_breakpointLocked();
 
     if (blk == NULL)
@@ -2678,7 +2689,7 @@ static int Memento_Internal_checkAllFreed(Memento_BlkHeader *memblk, void *arg)
         showBlock(memblk, ' ');
         if (data->freeCorrupt) {
             fprintf(stderr, " index %d (address "FMTP") onwards", (int)data->index,
-                    &((char *)MEMBLK_TOBLK(memblk))[data->index]);
+                    (void *) &((char *)MEMBLK_TOBLK(memblk))[data->index]);
             if (data->preCorrupt) {
                 fprintf(stderr, "+ preguard");
             }
@@ -2989,6 +3000,7 @@ void (Memento_breakpoint)(void)
 
 int (Memento_checkBlock)(void *b)
 {
+    (void) b;
     return 0;
 }
 
@@ -3004,40 +3016,48 @@ int (Memento_check)(void)
 
 int (Memento_setParanoia)(int i)
 {
+    (void) i;
     return 0;
 }
 
 int (Memento_paranoidAt)(int i)
 {
+    (void) i;
     return 0;
 }
 
 int (Memento_breakAt)(int i)
 {
+    (void) i;
     return 0;
 }
 
 int  (Memento_getBlockNum)(void *i)
 {
+    (void) i;
     return 0;
 }
 
 int (Memento_find)(void *a)
 {
+    (void) a;
     return 0;
 }
 
 int (Memento_failAt)(int i)
 {
+    (void) i;
     return 0;
 }
 
 void (Memento_breakOnFree)(void *a)
 {
+    (void) a;
 }
 
 void (Memento_breakOnRealloc)(void *a)
 {
+    (void) a;
 }
 
 void *(Memento_takeRef)(void *a)
@@ -3052,6 +3072,7 @@ void *(Memento_dropRef)(void *a)
 
 void *(Memento_adjustRef)(void *a, int adjust)
 {
+    (void) adjust;
     return a;
 }
 
@@ -3095,6 +3116,7 @@ void (Memento_listNewBlocks)(void)
 
 size_t (Memento_setMax)(size_t max)
 {
+    (void) max;
     return 0;
 }
 
@@ -3104,11 +3126,13 @@ void (Memento_stats)(void)
 
 void *(Memento_label)(void *ptr, const char *label)
 {
+    (void) label;
     return ptr;
 }
 
 void (Memento_info)(void *addr)
 {
+    (void) addr;
 }
 
 void (Memento_listBlockInfo)(void)

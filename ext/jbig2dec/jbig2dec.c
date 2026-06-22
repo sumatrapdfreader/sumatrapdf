@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <limits.h>
 
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>
@@ -53,10 +54,10 @@ typedef enum {
 typedef enum {
     jbig2dec_format_none,
     jbig2dec_format_jbig2,
-    jbig2dec_format_pbm,
 #ifdef HAVE_LIBPNG
     jbig2dec_format_png,
 #endif
+    jbig2dec_format_pbm
 } jbig2dec_format;
 
 typedef struct {
@@ -99,12 +100,20 @@ static void *jbig2dec_reached_limit(jbig2dec_allocator_t *allocator, size_t olds
     size_t size_mb = size / MBYTE;
 
     if (oldsize == 0)
-        jbig2_error(allocator->ctx, JBIG2_SEVERITY_FATAL, -1, "memory: limit reached: limit: %zu (%zu Mbyte) used: %zu (%zu Mbyte) allocation: %zu (%zu Mbyte)",
+        jbig2_error(allocator->ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER,
+            "memory: limit reached: "
+            "limit: "FMTZ" ("FMTZ" Mbyte) "
+            "used: "FMTZ" ("FMTZ" Mbyte) "
+            "allocation: "FMTZ" ("FMTZ" Mbyte)",
             allocator->memory_limit, limit_mb,
             allocator->memory_used, used_mb,
             size, size_mb);
     else
-        jbig2_error(allocator->ctx, JBIG2_SEVERITY_FATAL, -1, "memory: limit reached: limit: %zu (%zu Mbyte) used: %zu (%zu Mbyte) reallocation: %zu (%zu Mbyte) -> %zu (%zu Mbyte)",
+        jbig2_error(allocator->ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER,
+            "memory: limit reached: "
+            "limit: "FMTZ" ("FMTZ" Mbyte) "
+            "used: "FMTZ" ("FMTZ" Mbyte) "
+            "reallocation: "FMTZ" ("FMTZ" Mbyte) -> "FMTZ" ("FMTZ" Mbyte)",
             allocator->memory_limit, limit_mb,
             allocator->memory_used, used_mb,
             oldsize, oldsize_mb,
@@ -126,7 +135,11 @@ static void jbig2dec_peak(jbig2dec_allocator_t *allocator)
 
     allocator->memory_peak = allocator->memory_used;
 
-    jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "memory: limit: %lu %sbyte used: %lu %sbyte, peak: %lu %sbyte",
+    jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER,
+        "memory: "
+        "limit: "FMTZ" %sbyte "
+        "used: "FMTZ" %sbyte "
+        "peak: "FMTZ" %sbyte",
         limit_mb > 0 ? limit_mb : allocator->memory_limit, limit_mb > 0 ? "M" : "",
         used_mb > 0 ? used_mb : allocator->memory_used, used_mb > 0 ? "M" : "",
         peak_mb > 0 ? peak_mb : allocator->memory_peak, peak_mb > 0 ? "M" : "");
@@ -259,6 +272,8 @@ set_output_format(jbig2dec_params_t *params, const char *format)
         params->output_format = jbig2dec_format_png;
         return 0;
     }
+#else
+    (void) format;
 #endif
     /* default to pbm */
     params->output_format = jbig2dec_format_pbm;
@@ -283,7 +298,6 @@ parse_options(int argc, char *argv[], jbig2dec_params_t *params)
     };
     int option_idx = 1;
     int option;
-    int ret;
 
     while (1) {
         option = getopt_long(argc, argv, "Vh?qv:do:t:eM:", long_options, &option_idx);
@@ -321,6 +335,11 @@ parse_options(int argc, char *argv[], jbig2dec_params_t *params)
             params->hash = 1;
             break;
         case 'o':
+            if (params->output_filename)
+            {
+                    free(params->output_filename);
+                    params->output_filename = NULL;
+            }
             params->output_filename = strdup(optarg);
             break;
         case 't':
@@ -330,9 +349,14 @@ parse_options(int argc, char *argv[], jbig2dec_params_t *params)
             params->embedded = 1;
             break;
         case 'M':
-            ret = sscanf(optarg, "%zu", &params->memory_limit);
-            if (ret != 1)
-                fprintf(stderr, "could not parse memory limit argument\n");
+            {
+                char *end = NULL;
+                unsigned long parsed_limit = strtoul(optarg, &end, 10);
+                if (parsed_limit == ULONG_MAX || *end != '\0')
+                    fprintf(stderr, "could not parse memory limit\n");
+                else
+                    params->memory_limit = parsed_limit;
+            }
             break;
         default:
             if (!params->verbose)
@@ -356,28 +380,33 @@ print_usage(void)
     fprintf(stderr,
             "Usage: jbig2dec [options] <file.jbig2>\n"
             "   or  jbig2dec [options] <global_stream> <page_stream>\n"
-            "\n"
+            "\n");
+    fprintf(stderr,
             "  When invoked with a single file, it attempts to parse it as\n"
             "  a normal jbig2 file. Invoked with two files, it treats the\n"
             "  first as the global segments, and the second as the segment\n"
             "  stream for a particular page. This is useful for examining\n"
             "  embedded streams.\n"
-            "\n"
+            "\n");
+    fprintf(stderr,
             "  available options:\n"
             "    -h --help       this usage summary\n"
             "    -q --quiet      suppress diagnostic output\n"
             "    -v --verbose    set the verbosity level\n"
             "    -d --dump       print the structure of the jbig2 file\n"
-            "                    rather than explicitly decoding\n"
+            "                    rather than explicitly decoding\n");
+    fprintf(stderr,
             "    -V --version    program name and version information\n"
             "    -m --hash       print a hash of the decoded document\n"
             "    -e --embedded   expect embedded bit stream without file header\n"
-            "    -M <limit>      memory limit expressed in bytes\n"
+            "    -M <limit>      memory limit expressed in bytes\n");
+    fprintf(stderr,
             "    -o <file>\n"
             "    --output <file> send decoded output to <file>\n"
             "                    Defaults to the the input with a different\n"
             "                    extension. Pass '-' for stdout.\n"
-            "    -t <type>\n"
+            "    -t <type>\n");
+    fprintf(stderr,
             "    --format <type> force a particular output file format\n"
 #ifdef HAVE_LIBPNG
             "                    supported options are 'png' and 'pbm'\n"
@@ -664,8 +693,8 @@ main(int argc, char **argv)
 
         /* pull the whole file/global stream into memory */
         for (;;) {
-            int n_bytes = fread(buf, 1, sizeof(buf), f);
-            if (n_bytes < 0) {
+            size_t n_bytes = fread(buf, 1, sizeof(buf), f);
+            if (n_bytes < sizeof(buf) && ferror(f)) {
                 if (f_page != NULL)
                     jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to read jbig2 global stream");
                 else
@@ -674,7 +703,7 @@ main(int argc, char **argv)
             if (n_bytes <= 0)
                 break;
 
-            if (jbig2_data_in(ctx, buf, (size_t) n_bytes) < 0)
+            if (jbig2_data_in(ctx, buf, n_bytes) < 0)
             {
                 if (f_page != NULL)
                     jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to process jbig2 global stream");
@@ -695,13 +724,13 @@ main(int argc, char **argv)
                     allocator->ctx = ctx;
 
                 for (;;) {
-                    int n_bytes = fread(buf, 1, sizeof(buf), f_page);
-                    if (n_bytes < 0)
+                    size_t n_bytes = fread(buf, 1, sizeof(buf), f_page);
+                    if (n_bytes < sizeof(buf) && ferror(f_page))
                         jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to read jbig2 page stream");
                     if (n_bytes <= 0)
                         break;
 
-                    if (jbig2_data_in(ctx, buf, (size_t) n_bytes) < 0)
+                    if (jbig2_data_in(ctx, buf, n_bytes) < 0)
                     {
                         jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to process jbig2 page stream");
                         break;
@@ -741,7 +770,7 @@ main(int argc, char **argv)
                     goto cleanup;
                 }
             } else {
-                int len = strlen(params.output_filename);
+                size_t len = strlen(params.output_filename);
 
                 if ((len >= 3) && (params.output_format == jbig2dec_format_none))
                     /* try to set the output type by the given extension */
@@ -778,7 +807,12 @@ main(int argc, char **argv)
     if (allocator != NULL && allocator->ctx != NULL) {
         size_t limit_mb = allocator->memory_limit / MBYTE;
         size_t peak_mb = allocator->memory_peak / MBYTE;
-        jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "memory: limit: %lu Mbyte peak usage: %lu Mbyte", limit_mb, peak_mb);
+        jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER,
+            "memory: "
+            "limit: "FMTZ" %sbyte "
+            "peak: "FMTZ" %sbyte",
+            limit_mb > 0 ? limit_mb : allocator->memory_limit, limit_mb > 0 ? "M" : "",
+            peak_mb > 0 ? peak_mb : allocator->memory_peak, peak_mb > 0 ? "M" : "");
     }
 
     /* fin */

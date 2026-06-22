@@ -37,18 +37,21 @@
 static void *
 jbig2_default_alloc(Jbig2Allocator *allocator, size_t size)
 {
+    (void) allocator;
     return malloc(size);
 }
 
 static void
 jbig2_default_free(Jbig2Allocator *allocator, void *p)
 {
+    (void) allocator;
     free(p);
 }
 
 static void *
 jbig2_default_realloc(Jbig2Allocator *allocator, void *p, size_t size)
 {
+    (void) allocator;
     return realloc(p, size);
 }
 
@@ -73,6 +76,8 @@ jbig2_alloc(Jbig2Allocator *allocator, size_t size, size_t num)
 static void
 jbig2_default_error(void *data, const char *msg, Jbig2Severity severity, uint32_t seg_idx)
 {
+    (void) data;
+
     /* report only fatal errors by default */
     if (severity == JBIG2_SEVERITY_FATAL) {
         fprintf(stderr, "jbig2 decoder FATAL ERROR: %s", msg);
@@ -94,8 +99,9 @@ jbig2_error(Jbig2Ctx *ctx, Jbig2Severity severity, uint32_t segment_number, cons
     n = vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
     if (n < 0 || n == sizeof(buf))
-        strncpy(buf, "failed to generate error string", sizeof(buf));
-    ctx->error_callback(ctx->error_callback_data, buf, severity, segment_number);
+        ctx->error_callback(ctx->error_callback_data, "failed to generate error string", severity, segment_number);
+    else
+        ctx->error_callback(ctx->error_callback_data, buf, severity, segment_number);
     return -1;
 }
 
@@ -130,7 +136,7 @@ jbig2_ctx_new_imp(Jbig2Allocator *allocator, Jbig2Options options, Jbig2GlobalCt
     result->error_callback = error_callback;
     result->error_callback_data = error_callback_data;
 
-    result->state = (options & JBIG2_OPTIONS_EMBEDDED) ? JBIG2_FILE_SEQUENTIAL_HEADER : JBIG2_FILE_HEADER;
+    result->state = (options & JBIG2_OPTIONS_EMBEDDED) ? JBIG2_FILE_HEADER_MAYBE : JBIG2_FILE_HEADER;
 
     result->buf = NULL;
 
@@ -291,6 +297,18 @@ jbig2_data_in(Jbig2Ctx *ctx, const unsigned char *data, size_t size)
         int code;
 
         switch (ctx->state) {
+        case JBIG2_FILE_HEADER_MAYBE:
+            /* Accept either a file header, or an embedded file. */
+            if (ctx->buf_wr_ix - ctx->buf_rd_ix < 9)
+                return 0;
+            if (memcmp(ctx->buf + ctx->buf_rd_ix, jbig2_id_string, 8) == 0)
+            {
+                ctx->state = JBIG2_FILE_HEADER;
+                (void)jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "JBIG2 file header ignored in supposedly embedded stream");
+            }
+            else
+                ctx->state = JBIG2_FILE_SEQUENTIAL_HEADER;
+            break;
         case JBIG2_FILE_HEADER:
             /* D.4.1 */
             if (ctx->buf_wr_ix - ctx->buf_rd_ix < 9)

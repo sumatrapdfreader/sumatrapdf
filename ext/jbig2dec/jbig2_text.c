@@ -48,8 +48,6 @@
  * @dicts: an array of referenced symbol dictionaries
  * @n_dicts: the number of referenced symbol dictionaries
  * @image: image structure in which to store the decoded region bitmap
- * @data: pointer to text region data to be decoded
- * @size: length of text region data
  *
  * Implements the text region decoding procedure
  * described in section 6.4 of the JBIG2 spec.
@@ -60,7 +58,7 @@ int
 jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
                          const Jbig2TextRegionParams *params,
                          const Jbig2SymbolDict *const *dicts, const uint32_t n_dicts,
-                         Jbig2Image *image, const byte *data, const size_t size, Jbig2ArithCx *GR_stats, Jbig2ArithState *as, Jbig2WordStream *ws)
+                         Jbig2Image *image, Jbig2ArithCx *GR_stats, Jbig2ArithState *as, Jbig2WordStream *ws)
 {
     /* relevant bits of 6.4.4 */
     uint32_t NINSTANCES;
@@ -982,8 +980,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     }
 
     code = jbig2_decode_text_region(ctx, segment, &params,
-                                    (const Jbig2SymbolDict * const *)dicts, n_dicts, image,
-                                    segment_data + offset, segment->data_length - offset, GR_stats, as, ws);
+                                    (const Jbig2SymbolDict * const *)dicts, n_dicts, image, GR_stats, as, ws);
     if (code < 0) {
         jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to decode text region image data");
         goto cleanup5;

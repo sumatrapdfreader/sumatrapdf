@@ -44,6 +44,9 @@
 #include "jbig2_segment.h"
 #include "jbig2_symbol_dict.h"
 #include "jbig2_text.h"
+#ifdef OUTPUT_PBM
+#include "jbig2_image_rw.h"
+#endif
 
 /* Table 13 */
 typedef struct {
@@ -205,7 +208,14 @@ jbig2_sd_cat(Jbig2Ctx *ctx, uint32_t n_dicts, Jbig2SymbolDict **dicts)
     /* count the imported symbols and allocate a new array */
     symbols = 0;
     for (i = 0; i < n_dicts; i++)
+    {
+        if (dicts[i]->n_symbols > UINT32_MAX - symbols)
+        {
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "too many symbols in dicts to concat");
+            return NULL;
+        }
         symbols += dicts[i]->n_symbols;
+    }
 
     /* fill a new array with new references to glyph pointers */
     new_dict = jbig2_sd_new(ctx, symbols);
@@ -516,7 +526,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 
                         /* multiple symbols are handled as a text region */
                         code = jbig2_decode_text_region(ctx, segment, &tparams, (const Jbig2SymbolDict * const *)refagg_dicts,
-                                                        2, image, data, size, GR_stats, as, ws);
+                                                        2, image, GR_stats, as, ws);
                         if (code < 0) {
                             jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to decode text region");
                             goto cleanup;
@@ -530,7 +540,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
                         Jbig2RefinementRegionParams rparams;
                         uint32_t ID;
                         int32_t RDX, RDY;
-                        int BMSIZE = 0;
+                        size_t BMSIZE = 0;
                         uint32_t ninsyms = params->SDNUMINSYMS;
                         int code1 = 0;
                         int code2 = 0;

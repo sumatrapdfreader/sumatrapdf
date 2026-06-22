@@ -50,8 +50,8 @@ struct _Jbig2HuffmanState {
     uint32_t this_word;
     uint32_t next_word;
     uint32_t offset_bits;
-    uint32_t offset;
-    uint32_t offset_limit;
+    size_t offset;
+    size_t offset_limit;
 
     Jbig2WordStream *ws;
     Jbig2Ctx *ctx;
@@ -114,7 +114,9 @@ jbig2_huffman_free(Jbig2Ctx *ctx, Jbig2HuffmanState *hs)
 void
 jbig2_dump_huffman_state(Jbig2HuffmanState *hs)
 {
-    fprintf(stderr, "huffman state %08x %08x offset %d.%d\n", hs->this_word, hs->next_word, hs->offset, hs->offset_bits);
+    fprintf(stderr, "huffman state %08x %08x offset "FMTZ"."FMTZ"\n",
+            hs->this_word, hs->next_word,
+            (FMTZ_CAST) hs->offset, (FMTZ_CAST) hs->offset_bits);
 }
 
 /** print the binary string we're reading from */
@@ -137,11 +139,11 @@ jbig2_dump_huffman_table(const Jbig2HuffmanTable *table)
     int i;
     int table_size = (1 << table->log_table_size);
 
-    fprintf(stderr, "huffman table %p (log_table_size=%d, %d entries, entries=%p):\n", table, table->log_table_size, table_size, table->entries);
+    fprintf(stderr, "huffman table %p (log_table_size=%d, %d entries, entries=%p):\n", (void *) table, table->log_table_size, table_size, (void *) table->entries);
     for (i = 0; i < table_size; i++) {
         fprintf(stderr, "%6d: PREFLEN=%d, RANGELEN=%d, ", i, table->entries[i].PREFLEN, table->entries[i].RANGELEN);
         if (table->entries[i].flags & JBIG2_HUFFMAN_FLAGS_ISEXT) {
-            fprintf(stderr, "ext=%p", table->entries[i].u.ext_table);
+            fprintf(stderr, "ext=%p", (void *) table->entries[i].u.ext_table);
         } else {
             fprintf(stderr, "RANGELOW=%d", table->entries[i].u.RANGELOW);
         }
@@ -209,7 +211,7 @@ jbig2_huffman_advance(Jbig2HuffmanState *hs, size_t advance)
 {
     int code;
     hs->offset += advance & ~3;
-    hs->offset_bits += (advance & 3) << 3;
+    hs->offset_bits += ((uint32_t) (advance & 3)) << 3;
     if (hs->offset_bits >= 32) {
         hs->offset += 4;
         hs->offset_bits -= 32;
@@ -230,7 +232,7 @@ jbig2_huffman_advance(Jbig2HuffmanState *hs, size_t advance)
 /* return the offset of the huffman decode pointer (in bytes)
  * from the beginning of the WordStream
  */
-uint32_t
+size_t
 jbig2_huffman_offset(Jbig2HuffmanState *hs)
 {
     return hs->offset + (hs->offset_bits >> 3);
@@ -248,7 +250,7 @@ jbig2_huffman_get_bits(Jbig2HuffmanState *hs, const int bits, int *err)
 
     if (hs->offset_limit && hs->offset >= hs->offset_limit) {
         *err = -1;
-        return jbig2_error(hs->ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "end of jbig2 buffer reached at offset %d", hs->offset);
+        return jbig2_error(hs->ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "end of jbig2 buffer reached at offset "FMTZ, (FMTZ_CAST) hs->offset);
     }
 
     result = this_word >> (32 - bits);
@@ -287,7 +289,7 @@ jbig2_huffman_get(Jbig2HuffmanState *hs, const Jbig2HuffmanTable *table, bool *o
     if (hs->offset_limit && hs->offset >= hs->offset_limit) {
         if (oob)
             *oob = -1;
-        return jbig2_error(hs->ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "end of Jbig2WordStream reached at offset %d", hs->offset);
+        return jbig2_error(hs->ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "end of Jbig2WordStream reached at offset "FMTZ, (FMTZ_CAST) hs->offset);
     }
 
     for (;;) {
@@ -313,6 +315,10 @@ jbig2_huffman_get(Jbig2HuffmanState *hs, const Jbig2HuffmanTable *table, bool *o
             code = huff_get_next_word(hs, hs->offset + 4, &next_word);
             if (code < 0) {
                 return jbig2_error(hs->ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to get next huffman word");
+            }
+            else if (code < 4)
+            {
+                hs->offset_limit = hs->offset + 4 + code;
             }
             offset_bits -= 32;
             hs->next_word = next_word;
@@ -344,6 +350,10 @@ jbig2_huffman_get(Jbig2HuffmanState *hs, const Jbig2HuffmanTable *table, bool *o
             code = huff_get_next_word(hs, hs->offset + 4, &next_word);
             if (code < 0) {
                 return jbig2_error(hs->ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to get next huffman word");
+            }
+            else if (code < 4)
+            {
+                hs->offset_limit = hs->offset + 4 + code;
             }
             offset_bits -= 32;
             hs->next_word = next_word;
@@ -513,8 +523,8 @@ static uint32_t
 jbig2_table_read_bits(const byte *data, size_t *bitoffset, const int bitlen)
 {
     uint32_t result = 0;
-    uint32_t byte_offset = *bitoffset / 8;
-    const int endbit = (*bitoffset & 7) + bitlen;
+    size_t byte_offset = *bitoffset / 8;
+    const int endbit = ((int) (*bitoffset & 7)) + bitlen;
     const int n_proc_bytes = (endbit + 7) / 8;
     const int rshift = n_proc_bytes * 8 - endbit;
     int i;
@@ -529,7 +539,7 @@ jbig2_table_read_bits(const byte *data, size_t *bitoffset, const int bitlen)
             d >>= -nshift;
         result |= d;
     }
-    result &= ~(-1 << bitlen);
+    result &= ~(UINT32_MAX << bitlen);
     *bitoffset += bitlen;
     return result;
 }
@@ -544,6 +554,11 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
     segment->result = NULL;
     if (segment->data_length < 10)
         goto too_short;
+    if (segment->data_length > SIZE_MAX / 8)
+    {
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "segment data too large for Huffman Table");
+        goto error_exit;
+    }
 
     {
         /* B.2 1) (B.2.1) Code table flags */
@@ -583,6 +598,10 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
                     code_table_flags, HTOOB, HTPS, HTRS, HTLOW, HTHIGH);
 #endif
 
+        if (segment->data_length > SIZE_MAX / 8) {
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "Huffman Table size too large");
+            goto error_exit;
+        }
         if (HTLOW >= HTHIGH) {
             jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "invalid Huffman Table range");
             goto error_exit;
@@ -604,6 +623,10 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
             /* B.2 5) a) */
             if (boffset + HTPS >= lines_data_bitlen)
                 goto too_short;
+            if (NTEMP >= lines_max) {
+                jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "huffman table line count exceeded");
+                goto error_exit;
+            }
             line[NTEMP].PREFLEN = jbig2_table_read_bits(lines_data, &boffset, HTPS);
             /* B.2 5) b) */
             if (boffset + HTRS >= lines_data_bitlen)
@@ -617,6 +640,10 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
         /* B.2 6), B.2 7) lower range table line */
         if (boffset + HTPS >= lines_data_bitlen)
             goto too_short;
+        if (NTEMP >= lines_max) {
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "huffman table line count exceeded");
+            goto error_exit;
+        }
         line[NTEMP].PREFLEN = jbig2_table_read_bits(lines_data, &boffset, HTPS);
         line[NTEMP].RANGELEN = 32;
         line[NTEMP].RANGELOW = HTLOW - 1;
@@ -624,6 +651,10 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
         /* B.2 8), B.2 9) upper range table line */
         if (boffset + HTPS >= lines_data_bitlen)
             goto too_short;
+        if (NTEMP >= lines_max) {
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "huffman table line count exceeded");
+            goto error_exit;
+        }
         line[NTEMP].PREFLEN = jbig2_table_read_bits(lines_data, &boffset, HTPS);
         line[NTEMP].RANGELEN = 32;
         line[NTEMP].RANGELOW = HTHIGH;
@@ -633,6 +664,10 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
             /* B.2 10) a), B.2 10) b) out-of-bound table line */
             if (boffset + HTPS >= lines_data_bitlen)
                 goto too_short;
+            if (NTEMP >= lines_max) {
+                jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "huffman table line count exceeded");
+                goto error_exit;
+            }
             line[NTEMP].PREFLEN = jbig2_table_read_bits(lines_data, &boffset, HTPS);
             line[NTEMP].RANGELEN = 0;
             line[NTEMP].RANGELOW = 0;
@@ -649,18 +684,23 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
             line = new_line;
         }
         params->HTOOB = HTOOB;
-        params->n_lines = NTEMP;
+        /* Assuming int >= int32_t here. */
+        if (NTEMP > INT32_MAX) {
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "implausible number of huffman table lines");
+            goto error_exit;
+        }
+        params->n_lines = (int)NTEMP;
         params->lines = line;
         segment->result = params;
 
 #ifdef JBIG2_DEBUG
         {
-            int i;
+            size_t i;
 
             for (i = 0; i < NTEMP; i++) {
                 jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
-                            "Line: %d, PREFLEN: %d, RANGELEN: %d, RANGELOW: %d",
-                            i, params->lines[i].PREFLEN, params->lines[i].RANGELEN, params->lines[i].RANGELOW);
+                            "Line: "FMTZ", PREFLEN: %d, RANGELEN: %d, RANGELOW: %d",
+                            (FMTZ_CAST) i, params->lines[i].PREFLEN, params->lines[i].RANGELEN, params->lines[i].RANGELOW);
             }
         }
 #endif
@@ -723,6 +763,8 @@ test_get_word1(Jbig2Ctx *ctx, Jbig2WordStream *self, size_t offset, uint32_t *wo
     uint32_t val = 0;
     int ret = 0;
 
+    (void) ctx;
+
     if (self == NULL || word == NULL)
         return -1;
     if (offset >= sizeof (test_stream))
@@ -748,7 +790,7 @@ test_get_word1(Jbig2Ctx *ctx, Jbig2WordStream *self, size_t offset, uint32_t *wo
     return ret;
 }
 
-static int test1()
+static int test1(void)
 {
     Jbig2Ctx *ctx;
     Jbig2HuffmanTable *tables[5];
@@ -2035,6 +2077,8 @@ test_get_word2(Jbig2Ctx *ctx, Jbig2WordStream *self, size_t offset, uint32_t *wo
     uint32_t val = 0;
     int ret = 0;
 
+    (void) ctx;
+
     if (st == NULL || st->h == NULL || word == NULL)
         return -1;
     if (offset >= st->h->input_len)
@@ -2060,7 +2104,7 @@ test_get_word2(Jbig2Ctx *ctx, Jbig2WordStream *self, size_t offset, uint32_t *wo
     return ret;
 }
 
-static int test2()
+static int test2(void)
 {
     Jbig2Ctx *ctx;
     int success = 0;
@@ -2143,6 +2187,8 @@ static int test2()
 int
 main(int argc, char **argv)
 {
+    (void) argc;
+    (void) argv;
     return test1() && test2() ? 0 : 1;
 }
 #endif

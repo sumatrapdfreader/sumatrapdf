@@ -34,6 +34,10 @@
 #include "jbig2_page.h"
 #include "jbig2_segment.h"
 
+#ifdef OUTPUT_PBM
+#include "jbig2_image_rw.h"
+#endif
+
 /* dump the page struct info */
 static void
 dump_page_info(Jbig2Ctx *ctx, Jbig2Segment *segment, Jbig2Page *page)
@@ -72,7 +76,7 @@ jbig2_page_info(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_dat
 
     /* find a free page */
     {
-        size_t index, j;
+        uint32_t index, j;
 
         index = ctx->current_page;
         while (ctx->pages[index].state != JBIG2_PAGE_FREE) {
@@ -240,6 +244,8 @@ jbig2_end_of_page(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_d
 {
     uint32_t page_number = ctx->pages[ctx->current_page].number;
     int code;
+
+    (void) segment_data;
 
     if (segment->page_association != page_number) {
         jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,

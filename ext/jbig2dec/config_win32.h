@@ -59,6 +59,11 @@ typedef unsigned __int64 uint64_t;
 #  define snprintf _snprintf
 # endif
 
+/* VS 2005 and later complains about strdup */
+#if _MSC_VER >= 1400
+    #define strdup _strdup
+#endif
+
 #else /* _MSC_VER */
 
 /* Not VS -- it had best behave */

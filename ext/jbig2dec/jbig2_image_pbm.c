@@ -55,7 +55,7 @@ int
 jbig2_image_write_pbm(Jbig2Image *image, FILE *out)
 {
     /* pbm header */
-    fprintf(out, "P4\n%d %d\n", image->width, image->height);
+    fprintf(out, "P4\n%u %u\n", image->width, image->height);
 
     /* pbm format pads to a byte boundary, so we can
        just write out the whole data buffer

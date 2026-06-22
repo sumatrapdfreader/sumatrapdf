@@ -74,7 +74,7 @@ int
 jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
                          const Jbig2TextRegionParams *params,
                          const Jbig2SymbolDict *const *dicts, const uint32_t n_dicts,
-                         Jbig2Image *image, const byte *data, const size_t size, Jbig2ArithCx *GR_stats, Jbig2ArithState *as, Jbig2WordStream *ws);
+                         Jbig2Image *image, Jbig2ArithCx *GR_stats, Jbig2ArithState *as, Jbig2WordStream *ws);
 
 int jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
 

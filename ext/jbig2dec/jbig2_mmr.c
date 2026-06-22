@@ -1213,6 +1213,8 @@ jbig2_decode_generic_mmr(Jbig2Ctx *ctx, Jbig2Segment *segment, const Jbig2Generi
     int code = 0;
     int eofb = 0;
 
+    (void) params;
+
     jbig2_decode_mmr_init(&mmr, image->width, image->height, data, size);
 
     for (y = 0; !eofb && y < image->height; y++) {
@@ -1256,6 +1258,8 @@ jbig2_decode_halftone_mmr(Jbig2Ctx *ctx, const Jbig2GenericRegionParams *params,
     int code = 0;
     const uint32_t EOFB = 0x001001;
     int eofb = 0;
+
+    (void) params;
 
     jbig2_decode_mmr_init(&mmr, image->width, image->height, data, size);
 
