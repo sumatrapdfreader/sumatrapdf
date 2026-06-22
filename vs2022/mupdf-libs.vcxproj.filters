@@ -117,10 +117,16 @@
     <ClInclude Include="..\ext\brotli\c\common\dictionary.h">
       <Filter>brotli\c\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\dictionary_inc.h">
+      <Filter>brotli\c\common</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\brotli\c\common\platform.h">
       <Filter>brotli\c\common</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\brotli\c\common\shared_dictionary_internal.h">
+      <Filter>brotli\c\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\common\static_init.h">
       <Filter>brotli\c\common</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\brotli\c\common\transform.h">
@@ -138,7 +144,13 @@
     <ClInclude Include="..\ext\brotli\c\dec\prefix.h">
       <Filter>brotli\c\dec</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\dec\prefix_inc.h">
+      <Filter>brotli\c\dec</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\brotli\c\dec\state.h">
+      <Filter>brotli\c\dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\dec\static_init.h">
       <Filter>brotli\c\dec</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\brotli\c\enc\backward_references.h">
@@ -189,6 +201,9 @@
     <ClInclude Include="..\ext\brotli\c\enc\dictionary_hash.h">
       <Filter>brotli\c\enc</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\dictionary_hash_inc.h">
+      <Filter>brotli\c\enc</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\brotli\c\enc\encoder_dict.h">
       <Filter>brotli\c\enc</Filter>
     </ClInclude>
@@ -205,6 +220,9 @@
       <Filter>brotli\c\enc</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\brotli\c\enc\hash.h">
+      <Filter>brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\hash_base.h">
       <Filter>brotli\c\enc</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\brotli\c\enc\hash_composite_inc.h">
@@ -274,6 +292,12 @@
       <Filter>brotli\c\enc</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\brotli\c\enc\static_dict_lut.h">
+      <Filter>brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\static_dict_lut_inc.h">
+      <Filter>brotli\c\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\brotli\c\enc\static_init.h">
       <Filter>brotli\c\enc</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\brotli\c\enc\utf8_util.h">
@@ -518,7 +542,13 @@
     <ClCompile Include="..\ext\brotli\c\dec\huffman.c">
       <Filter>brotli\c\dec</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\dec\prefix.c">
+      <Filter>brotli\c\dec</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\brotli\c\dec\state.c">
+      <Filter>brotli\c\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\dec\static_init.c">
       <Filter>brotli\c\dec</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\brotli\c\enc\backward_references.c">
@@ -579,6 +609,12 @@
       <Filter>brotli\c\enc</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\brotli\c\enc\static_dict.c">
+      <Filter>brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\static_dict_lut.c">
+      <Filter>brotli\c\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\brotli\c\enc\static_init.c">
       <Filter>brotli\c\enc</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\brotli\c\enc\utf8_util.c">

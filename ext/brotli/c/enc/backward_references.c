@@ -8,17 +8,15 @@
 
 #include "backward_references.h"
 
-#include <brotli/types.h>
-
 #include "../common/constants.h"
-#include "../common/dictionary.h"
+#include "../common/context.h"
 #include "../common/platform.h"
 #include "command.h"
 #include "compound_dictionary.h"
-#include "dictionary_hash.h"
 #include "encoder_dict.h"
-#include "memory.h"
-#include "quality.h"
+#include "hash.h"
+#include "params.h"
+#include "quality.h"  /* IWYU pragma: keep for inc */
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -133,6 +131,14 @@ static BROTLI_INLINE size_t ComputeDistanceCode(size_t distance,
 #define PREFIX() D
 #define ENABLE_COMPOUND_DICTIONARY 1
 
+#define HASHER() H3
+/* NOLINTNEXTLINE(build/include) */
+#include "backward_references_inc.h"
+#undef HASHER
+#define HASHER() H4
+/* NOLINTNEXTLINE(build/include) */
+#include "backward_references_inc.h"
+#undef HASHER
 #define HASHER() H5
 /* NOLINTNEXTLINE(build/include) */
 #include "backward_references_inc.h"
@@ -194,6 +200,8 @@ void BrotliCreateBackwardReferences(size_t num_bytes,
             literal_context_lut, params, hasher, dist_cache,        \
             last_insert_len, commands, num_commands, num_literals); \
         return;
+      CASE_(3)
+      CASE_(4)
       CASE_(5)
       CASE_(6)
 #if defined(BROTLI_MAX_SIMD_QUALITY)
@@ -207,7 +215,7 @@ void BrotliCreateBackwardReferences(size_t num_bytes,
       CASE_(65)
 #undef CASE_
       default:
-        BROTLI_DCHECK(false);
+        BROTLI_DCHECK(BROTLI_FALSE);
         break;
     }
   }
@@ -223,7 +231,7 @@ void BrotliCreateBackwardReferences(size_t num_bytes,
     FOR_GENERIC_HASHERS(CASE_)
 #undef CASE_
     default:
-      BROTLI_DCHECK(false);
+      BROTLI_DCHECK(BROTLI_FALSE);
       break;
   }
 }

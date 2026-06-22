@@ -79,7 +79,7 @@ static size_t FN(FindBlocks)(const DataType* data, const size_t length,
   size_t j;
   BROTLI_DCHECK(num_histograms <= 256);
 
-  /* Trivial case: single historgram -> single block type. */
+  /* Trivial case: single histogram -> single block type. */
   if (num_histograms <= 1) {
     for (i = 0; i < length; ++i) {
       block_id[i] = 0;

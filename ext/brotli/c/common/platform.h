@@ -24,12 +24,12 @@
 #ifndef BROTLI_COMMON_PLATFORM_H_
 #define BROTLI_COMMON_PLATFORM_H_
 
-#include <string.h>  /* memcpy */
-
-#include <brotli/port.h>
-#include <brotli/types.h>
-
+#include <string.h>  /* IWYU pragma: export memcmp, memcpy, memset */
+#include <stdlib.h>  /* IWYU pragma: export exit, free, malloc */
 #include <sys/types.h>  /* should include endian.h for us */
+
+#include <brotli/port.h>  /* IWYU pragma: export */
+#include <brotli/types.h>  /* IWYU pragma: export */
 
 #if BROTLI_MSVC_VERSION_CHECK(18, 0, 0)
 #include <intrin.h>
@@ -203,9 +203,23 @@ OR:
 #define BROTLI_TARGET_LOONGARCH64
 #endif
 
+/* This does not seem to be an indicator of z/Architecture (64-bit); neither
+   that allows to use unaligned loads. */
+#if defined(__s390x__)
+#define BROTLI_TARGET_S390X
+#endif
+
+#if defined(__mips64)
+#define BROTLI_TARGET_MIPS64
+#endif
+
+#if defined(__ia64__) || defined(_M_IA64)
+#define BROTLI_TARGET_IA64
+#endif
+
 #if defined(BROTLI_TARGET_X64) || defined(BROTLI_TARGET_ARMV8_64) || \
     defined(BROTLI_TARGET_POWERPC64) || defined(BROTLI_TARGET_RISCV64) || \
-    defined(BROTLI_TARGET_LOONGARCH64)
+    defined(BROTLI_TARGET_LOONGARCH64) || defined(BROTLI_TARGET_MIPS64)
 #define BROTLI_TARGET_64_BITS 1
 #else
 #define BROTLI_TARGET_64_BITS 0
@@ -267,6 +281,46 @@ OR:
 #endif
 
 /* Portable unaligned memory access: read / write values via memcpy. */
+#if !defined(BROTLI_USE_PACKED_FOR_UNALIGNED)
+#if defined(__mips__) && (!defined(__mips_isa_rev) || __mips_isa_rev < 6)
+#define BROTLI_USE_PACKED_FOR_UNALIGNED 1
+#else
+#define BROTLI_USE_PACKED_FOR_UNALIGNED 0
+#endif
+#endif /* defined(BROTLI_USE_PACKED_FOR_UNALIGNED) */
+
+#if BROTLI_USE_PACKED_FOR_UNALIGNED
+
+typedef union BrotliPackedValue {
+  uint16_t u16;
+  uint32_t u32;
+  uint64_t u64;
+  size_t szt;
+} __attribute__ ((packed)) BrotliPackedValue;
+
+static BROTLI_INLINE uint16_t BrotliUnalignedRead16(const void* p) {
+  const BrotliPackedValue* address = (const BrotliPackedValue*)p;
+  return address->u16;
+}
+static BROTLI_INLINE uint32_t BrotliUnalignedRead32(const void* p) {
+  const BrotliPackedValue* address = (const BrotliPackedValue*)p;
+  return address->u32;
+}
+static BROTLI_INLINE uint64_t BrotliUnalignedRead64(const void* p) {
+  const BrotliPackedValue* address = (const BrotliPackedValue*)p;
+  return address->u64;
+}
+static BROTLI_INLINE size_t BrotliUnalignedReadSizeT(const void* p) {
+  const BrotliPackedValue* address = (const BrotliPackedValue*)p;
+  return address->szt;
+}
+static BROTLI_INLINE void BrotliUnalignedWrite64(void* p, uint64_t v) {
+  BrotliPackedValue* address = (BrotliPackedValue*)p;
+  address->u64 = v;
+}
+
+#else  /* not BROTLI_USE_PACKED_FOR_UNALIGNED */
+
 static BROTLI_INLINE uint16_t BrotliUnalignedRead16(const void* p) {
   uint16_t t;
   memcpy(&t, p, sizeof t);
@@ -291,6 +345,34 @@ static BROTLI_INLINE void BrotliUnalignedWrite64(void* p, uint64_t v) {
   memcpy(p, &v, sizeof v);
 }
 
+#endif  /* BROTLI_USE_PACKED_FOR_UNALIGNED */
+
+#if BROTLI_GNUC_HAS_BUILTIN(__builtin_bswap16, 4, 3, 0)
+#define BROTLI_BSWAP16(V) ((uint16_t)__builtin_bswap16(V))
+#else
+#define BROTLI_BSWAP16(V) ((uint16_t)( \
+  (((V) & 0xFFU) << 8) | \
+  (((V) >> 8) & 0xFFU)))
+#endif
+
+#if BROTLI_GNUC_HAS_BUILTIN(__builtin_bswap32, 4, 3, 0)
+#define BROTLI_BSWAP32(V) ((uint32_t)__builtin_bswap32(V))
+#else
+#define BROTLI_BSWAP32(V) ((uint32_t)( \
+  (((V) & 0xFFU) << 24) | (((V) & 0xFF00U) << 8) | \
+  (((V) >> 8) & 0xFF00U) | (((V) >> 24) & 0xFFU)))
+#endif
+
+#if BROTLI_GNUC_HAS_BUILTIN(__builtin_bswap64, 4, 3, 0)
+#define BROTLI_BSWAP64(V) ((uint64_t)__builtin_bswap64(V))
+#else
+#define BROTLI_BSWAP64(V) ((uint64_t)( \
+  (((V) & 0xFFU) << 56) | (((V) & 0xFF00U) << 40) | \
+  (((V) & 0xFF0000U) << 24) | (((V) & 0xFF000000U) << 8) | \
+  (((V) >> 8) & 0xFF000000U) | (((V) >> 24) & 0xFF0000U) | \
+  (((V) >> 40) & 0xFF00U) | (((V) >> 56) & 0xFFU)))
+#endif
+
 #if BROTLI_LITTLE_ENDIAN
 /* Straight endianness. Just read / write values. */
 #define BROTLI_UNALIGNED_LOAD16LE BrotliUnalignedRead16
@@ -298,32 +380,20 @@ static BROTLI_INLINE void BrotliUnalignedWrite64(void* p, uint64_t v) {
 #define BROTLI_UNALIGNED_LOAD64LE BrotliUnalignedRead64
 #define BROTLI_UNALIGNED_STORE64LE BrotliUnalignedWrite64
 #elif BROTLI_BIG_ENDIAN  /* BROTLI_LITTLE_ENDIAN */
-/* Explain compiler to byte-swap values. */
-#define BROTLI_BSWAP16_(V) ((uint16_t)( \
-  (((V) & 0xFFU) << 8) | \
-  (((V) >> 8) & 0xFFU)))
 static BROTLI_INLINE uint16_t BROTLI_UNALIGNED_LOAD16LE(const void* p) {
   uint16_t value = BrotliUnalignedRead16(p);
-  return BROTLI_BSWAP16_(value);
+  return BROTLI_BSWAP16(value);
 }
-#define BROTLI_BSWAP32_(V) ( \
-  (((V) & 0xFFU) << 24) | (((V) & 0xFF00U) << 8) | \
-  (((V) >> 8) & 0xFF00U) | (((V) >> 24) & 0xFFU))
 static BROTLI_INLINE uint32_t BROTLI_UNALIGNED_LOAD32LE(const void* p) {
   uint32_t value = BrotliUnalignedRead32(p);
-  return BROTLI_BSWAP32_(value);
+  return BROTLI_BSWAP32(value);
 }
-#define BROTLI_BSWAP64_(V) ( \
-  (((V) & 0xFFU) << 56) | (((V) & 0xFF00U) << 40) | \
-  (((V) & 0xFF0000U) << 24) | (((V) & 0xFF000000U) << 8) | \
-  (((V) >> 8) & 0xFF000000U) | (((V) >> 24) & 0xFF0000U) | \
-  (((V) >> 40) & 0xFF00U) | (((V) >> 56) & 0xFFU))
 static BROTLI_INLINE uint64_t BROTLI_UNALIGNED_LOAD64LE(const void* p) {
   uint64_t value = BrotliUnalignedRead64(p);
-  return BROTLI_BSWAP64_(value);
+  return BROTLI_BSWAP64(value);
 }
 static BROTLI_INLINE void BROTLI_UNALIGNED_STORE64LE(void* p, uint64_t v) {
-  uint64_t value = BROTLI_BSWAP64_(v);
+  uint64_t value = BROTLI_BSWAP64(v);
   BrotliUnalignedWrite64(p, value);
 }
 #else  /* BROTLI_LITTLE_ENDIAN */
@@ -546,19 +616,40 @@ BROTLI_UNUSED_FUNCTION void BrotliSuppressUnusedFunctions(void) {
   BROTLI_UNUSED(&BrotliDump);
 #endif
 
-#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_I86)) && !defined(_M_ARM64EC)  /* _mm_prefetch() is not defined outside of x86/x64 */
-#  include <mmintrin.h>   /* https://msdn.microsoft.com/fr-fr/library/84szxsww(v=vs.90).aspx */
-#  define PREFETCH_L1(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T0)
-#  define PREFETCH_L2(ptr)  _mm_prefetch((const char*)(ptr), _MM_HINT_T1)
-#elif BROTLI_GNUC_HAS_BUILTIN(__builtin_prefetch, 3, 1, 0)
-#  define PREFETCH_L1(ptr)  __builtin_prefetch((ptr), 0 /* rw==read */, 3 /* locality */)
-#  define PREFETCH_L2(ptr)  __builtin_prefetch((ptr), 0 /* rw==read */, 2 /* locality */)
-#elif defined(__aarch64__)
-#  define PREFETCH_L1(ptr)  do { __asm__ __volatile__("prfm pldl1keep, %0" ::"Q"(*(ptr))); } while (0)
-#  define PREFETCH_L2(ptr)  do { __asm__ __volatile__("prfm pldl2keep, %0" ::"Q"(*(ptr))); } while (0)
+#if defined(_MSC_VER) && (_MSC_VER >= 1800) &&(defined(_M_X64) || defined(_M_I86)) && \
+    !defined(_M_ARM64EC)
+/* _mm_prefetch() is not defined outside of x86/x64 */
+/* https://msdn.microsoft.com/fr-fr/library/84szxsww(v=vs.90).aspx */
+#if 0 && _MSC_VER >= 1800
+#include <mmintrin.h>
 #else
-#  define PREFETCH_L1(ptr) do { (void)(ptr); } while (0)  /* disabled */
-#  define PREFETCH_L2(ptr) do { (void)(ptr); } while (0)  /* disabled */
+#undef SUPPORTS_SSE2
+#endif
+#define PREFETCH_L1(ptr) _mm_prefetch((const char*)(ptr), _MM_HINT_T0)
+#define PREFETCH_L2(ptr) _mm_prefetch((const char*)(ptr), _MM_HINT_T1)
+#elif BROTLI_GNUC_HAS_BUILTIN(__builtin_prefetch, 3, 1, 0)
+#define PREFETCH_L1(ptr) \
+  __builtin_prefetch((ptr), 0 /* rw==read */, 3 /* locality */)
+#define PREFETCH_L2(ptr) \
+  __builtin_prefetch((ptr), 0 /* rw==read */, 2 /* locality */)
+#elif defined(__aarch64__)
+#define PREFETCH_L1(ptr)                                      \
+  do {                                                        \
+    __asm__ __volatile__("prfm pldl1keep, %0" ::"Q"(*(ptr))); \
+  } while (0)
+#define PREFETCH_L2(ptr)                                      \
+  do {                                                        \
+    __asm__ __volatile__("prfm pldl2keep, %0" ::"Q"(*(ptr))); \
+  } while (0)
+#else
+#define PREFETCH_L1(ptr) \
+  do {                   \
+    (void)(ptr);         \
+  } while (0) /* disabled */
+#define PREFETCH_L2(ptr) \
+  do {                   \
+    (void)(ptr);         \
+  } while (0) /* disabled */
 #endif
 
 /* The SIMD matchers are only faster at certain quality levels. */
@@ -568,5 +659,31 @@ BROTLI_UNUSED_FUNCTION void BrotliSuppressUnusedFunctions(void) {
 #define BROTLI_MAX_SIMD_QUALITY 6
 #endif
 }
+
+#if defined(_MSC_VER)
+#define BROTLI_CRASH() __debugbreak(), (void)abort()
+#elif BROTLI_GNUC_HAS_BUILTIN(__builtin_trap, 3, 0, 0)
+#define BROTLI_CRASH() (void)__builtin_trap()
+#else
+#define BROTLI_CRASH() (void)abort()
+#endif
+
+/* Make BROTLI_TEST=0 act same as undefined. */
+#if defined(BROTLI_TEST) && ((1-BROTLI_TEST-1) == 0)
+#undef BROTLI_TEST
+#endif
+
+#if !defined(BROTLI_MODEL) && BROTLI_GNUC_HAS_ATTRIBUTE(model, 3, 0, 3) && \
+    !defined(BROTLI_TARGET_IA64) && !defined(BROTLI_TARGET_LOONGARCH64)
+#define BROTLI_MODEL(M) __attribute__((model(M)))
+#else
+#define BROTLI_MODEL(M) /* M */
+#endif
+
+#if !defined(BROTLI_COLD) && BROTLI_GNUC_HAS_ATTRIBUTE(cold, 4, 3, 0)
+#define BROTLI_COLD __attribute__((cold))
+#else
+#define BROTLI_COLD /* cold */
+#endif
 
 #endif  /* BROTLI_COMMON_PLATFORM_H_ */

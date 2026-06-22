@@ -7,34 +7,32 @@
 /* Implementation of Brotli compressor. */
 
 #include <brotli/encode.h>
-#include <brotli/shared_dictionary.h>
-#include <brotli/types.h>
-
-#include <stdlib.h>  /* free, malloc */
-#include <string.h>  /* memcpy, memset */
 
 #include "../common/constants.h"
 #include "../common/context.h"
 #include "../common/platform.h"
+#include <brotli/shared_dictionary.h>
 #include "../common/version.h"
-#include "backward_references.h"
 #include "backward_references_hq.h"
+#include "backward_references.h"
 #include "bit_cost.h"
 #include "brotli_bit_stream.h"
-#include "compress_fragment.h"
+#include "command.h"
+#include "compound_dictionary.h"
 #include "compress_fragment_two_pass.h"
+#include "compress_fragment.h"
 #include "dictionary_hash.h"
 #include "encoder_dict.h"
-#include "entropy_encode.h"
 #include "fast_log.h"
 #include "hash.h"
 #include "histogram.h"
 #include "memory.h"
 #include "metablock.h"
-#include "prefix.h"
-#include "state.h"
+#include "params.h"
 #include "quality.h"
 #include "ringbuffer.h"
+#include "state.h"
+#include "static_init.h"
 #include "utf8_util.h"
 #include "write_bits.h"
 
@@ -202,7 +200,7 @@ static void EncodeWindowBits(int lgwin, BROTLI_BOOL large_window,
 /* TODO(eustas): move to compress_fragment.c? */
 /* Initializes the command and distance prefix codes for the first block. */
 static void InitCommandPrefixCodes(BrotliOnePassArena* s) {
-  static const uint8_t kDefaultCommandDepths[128] = {
+  static const BROTLI_MODEL("small") uint8_t kDefaultCommandDepths[128] = {
     0, 4, 4, 5, 6, 6, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8,
     0, 0, 0, 4, 4, 4, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7,
     7, 7, 10, 10, 10, 10, 10, 10, 0, 4, 4, 5, 5, 5, 6, 6,
@@ -212,7 +210,7 @@ static void InitCommandPrefixCodes(BrotliOnePassArena* s) {
     4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 7, 7, 7, 8, 10,
     12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
   };
-  static const uint16_t kDefaultCommandBits[128] = {
+  static const BROTLI_MODEL("small") uint16_t kDefaultCommandBits[128] = {
     0,   0,   8,   9,   3,  35,   7,   71,
     39, 103,  23,  47, 175, 111, 239,   31,
     0,   0,   0,   4,  12,   2,  10,    6,
@@ -226,7 +224,7 @@ static void InitCommandPrefixCodes(BrotliOnePassArena* s) {
     2, 10, 6, 21, 13, 29, 3, 19, 11, 15, 47, 31, 95, 63, 127, 255,
     767, 2815, 1791, 3839, 511, 2559, 1535, 3583, 1023, 3071, 2047, 4095,
   };
-  static const uint8_t kDefaultCommandCode[] = {
+  static const BROTLI_MODEL("small") uint8_t kDefaultCommandCode[] = {
     0xff, 0x77, 0xd5, 0xbf, 0xe7, 0xde, 0xea, 0x9e, 0x51, 0x5d, 0xde, 0xc6,
     0x70, 0x57, 0xbc, 0x58, 0x58, 0x58, 0xd8, 0xd8, 0x58, 0xd5, 0xcb, 0x8c,
     0xea, 0xe0, 0xc3, 0x87, 0x1f, 0x83, 0xc1, 0x60, 0x1c, 0x67, 0xb2, 0xaa,
@@ -243,24 +241,40 @@ static void InitCommandPrefixCodes(BrotliOnePassArena* s) {
   s->cmd_code_numbits = kDefaultCommandCodeNumBits;
 }
 
+/* TODO(eustas): avoid FP calculations. */
+static double EstimateEntropy(const uint32_t* population, size_t size) {
+  size_t total = 0;
+  double result = 0;
+  size_t i;
+  for (i = 0; i < size; ++i) {
+    uint32_t p = population[i];
+    total += p;
+    result += (double)p * FastLog2(p);
+  }
+  result = (double)total * FastLog2(total) - result;
+  return result;
+}
+
 /* Decide about the context map based on the ability of the prediction
    ability of the previous byte UTF8-prefix on the next byte. The
    prediction ability is calculated as Shannon entropy. Here we need
-   Shannon entropy instead of 'BitsEntropy' since the prefix will be
+   Shannon entropy instead of 'BrotliBitsEntropy' since the prefix will be
    encoded with the remaining 6 bits of the following byte, and
-   BitsEntropy will assume that symbol to be stored alone using Huffman
+   BrotliBitsEntropy will assume that symbol to be stored alone using Huffman
    coding. */
 static void ChooseContextMap(int quality,
                              uint32_t* bigram_histo,
                              size_t* num_literal_contexts,
                              const uint32_t** literal_context_map) {
-  static const uint32_t kStaticContextMapContinuation[64] = {
+  static const BROTLI_MODEL("small")
+  uint32_t kStaticContextMapContinuation[64] = {
     1, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   };
-  static const uint32_t kStaticContextMapSimpleUTF8[64] = {
+  static const BROTLI_MODEL("small")
+  uint32_t kStaticContextMapSimpleUTF8[64] = {
     0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -271,18 +285,17 @@ static void ChooseContextMap(int quality,
   uint32_t two_prefix_histo[6] = { 0 };
   size_t total;
   size_t i;
-  size_t sink;
   double entropy[4];
   for (i = 0; i < 9; ++i) {
     monogram_histo[i % 3] += bigram_histo[i];
     two_prefix_histo[i % 6] += bigram_histo[i];
   }
-  entropy[1] = ShannonEntropy(monogram_histo, 3, &sink);
-  entropy[2] = (ShannonEntropy(two_prefix_histo, 3, &sink) +
-                ShannonEntropy(two_prefix_histo + 3, 3, &sink));
+  entropy[1] = EstimateEntropy(monogram_histo, 3);
+  entropy[2] = (EstimateEntropy(two_prefix_histo, 3) +
+                EstimateEntropy(two_prefix_histo + 3, 3));
   entropy[3] = 0;
   for (i = 0; i < 3; ++i) {
-    entropy[3] += ShannonEntropy(bigram_histo + 3 * i, 3, &sink);
+    entropy[3] += EstimateEntropy(bigram_histo + 3 * i, 3);
   }
 
   total = monogram_histo[0] + monogram_histo[1] + monogram_histo[2];
@@ -317,7 +330,8 @@ static BROTLI_BOOL ShouldUseComplexStaticContextMap(const uint8_t* input,
     size_t start_pos, size_t length, size_t mask, int quality, size_t size_hint,
     size_t* num_literal_contexts, const uint32_t** literal_context_map,
     uint32_t* arena) {
-  static const uint32_t kStaticContextMapComplexUTF8[64] = {
+  static const BROTLI_MODEL("small")
+  uint32_t kStaticContextMapComplexUTF8[64] = {
     11, 11, 12, 12, /* 0 special */
     0, 0, 0, 0, /* 4 lf */
     1, 1, 9, 9, /* 8 space */
@@ -348,7 +362,6 @@ static BROTLI_BOOL ShouldUseComplexStaticContextMap(const uint8_t* input,
     uint32_t* BROTLI_RESTRICT const context_histo = arena + 32;
     uint32_t total = 0;
     double entropy[3];
-    size_t sink;
     size_t i;
     ContextLut utf8_lut = BROTLI_CONTEXT_LUT(CONTEXT_UTF8);
     memset(arena, 0, sizeof(arena[0]) * 32 * (BROTLI_MAX_STATIC_CONTEXTS + 1));
@@ -370,10 +383,10 @@ static BROTLI_BOOL ShouldUseComplexStaticContextMap(const uint8_t* input,
         prev1 = literal;
       }
     }
-    entropy[1] = ShannonEntropy(combined_histo, 32, &sink);
+    entropy[1] = EstimateEntropy(combined_histo, 32);
     entropy[2] = 0;
     for (i = 0; i < BROTLI_MAX_STATIC_CONTEXTS; ++i) {
-      entropy[2] += ShannonEntropy(context_histo + (i << 5), 32, &sink);
+      entropy[2] += EstimateEntropy(context_histo + (i << 5), 32);
     }
     entropy[0] = 1.0 / (double)total;
     entropy[1] *= entropy[0];
@@ -448,7 +461,7 @@ static BROTLI_BOOL ShouldCompress(
         ++literal_histo[data[pos & mask]];
         pos += kSampleRate;
       }
-      if (BitsEntropy(literal_histo, 256) > bit_cost_threshold) {
+      if (BrotliBitsEntropy(literal_histo, 256) > bit_cost_threshold) {
         return BROTLI_FALSE;
       }
     }
@@ -748,7 +761,12 @@ static void BrotliEncoderInitState(BrotliEncoderState* s) {
 
 BrotliEncoderState* BrotliEncoderCreateInstance(
     brotli_alloc_func alloc_func, brotli_free_func free_func, void* opaque) {
-  BrotliEncoderState* state = (BrotliEncoderState*)BrotliBootstrapAlloc(
+  BrotliEncoderState* state;
+  BROTLI_BOOL healthy = BrotliEncoderEnsureStaticInit();
+  if (!healthy) {
+    return 0;
+  }
+  state = (BrotliEncoderState*)BrotliBootstrapAlloc(
       sizeof(BrotliEncoderState), alloc_func, free_func, opaque);
   if (state == NULL) {
     /* BROTLI_DUMP(); */
@@ -1758,7 +1776,7 @@ BrotliEncoderPreparedDictionary* BrotliEncoderPrepareDictionary(
   return (BrotliEncoderPreparedDictionary*)managed_dictionary;
 }
 
-void BrotliEncoderDestroyPreparedDictionary(
+void BROTLI_COLD BrotliEncoderDestroyPreparedDictionary(
     BrotliEncoderPreparedDictionary* dictionary) {
   ManagedDictionary* dict = (ManagedDictionary*)dictionary;
   if (!dictionary) return;
@@ -1784,7 +1802,8 @@ void BrotliEncoderDestroyPreparedDictionary(
   BrotliDestroyManagedDictionary(dict);
 }
 
-BROTLI_BOOL BrotliEncoderAttachPreparedDictionary(BrotliEncoderState* state,
+BROTLI_BOOL BROTLI_COLD BrotliEncoderAttachPreparedDictionary(
+    BrotliEncoderState* state,
     const BrotliEncoderPreparedDictionary* dictionary) {
   /* First field of dictionary structs */
   const BrotliEncoderPreparedDictionary* dict = dictionary;
@@ -1841,8 +1860,8 @@ BROTLI_BOOL BrotliEncoderAttachPreparedDictionary(BrotliEncoderState* state,
   return BROTLI_TRUE;
 }
 
-size_t BrotliEncoderEstimatePeakMemoryUsage(int quality, int lgwin,
-                                            size_t input_size) {
+size_t BROTLI_COLD BrotliEncoderEstimatePeakMemoryUsage(int quality, int lgwin,
+                                                        size_t input_size) {
   BrotliEncoderParams params;
   size_t memory_manager_slots = BROTLI_ENCODER_MEMORY_MANAGER_SLOTS;
   size_t memory_manager_size = memory_manager_slots * sizeof(void*);
@@ -1909,7 +1928,7 @@ size_t BrotliEncoderEstimatePeakMemoryUsage(int quality, int lgwin,
             histogram_size);
   }
 }
-size_t BrotliEncoderGetPreparedDictionarySize(
+size_t BROTLI_COLD BrotliEncoderGetPreparedDictionarySize(
     const BrotliEncoderPreparedDictionary* prepared_dictionary) {
   /* First field of dictionary structs */
   const BrotliEncoderPreparedDictionary* prepared = prepared_dictionary;
@@ -1992,8 +2011,8 @@ size_t BrotliEncoderGetPreparedDictionarySize(
 }
 
 #if defined(BROTLI_TEST)
-size_t MakeUncompressedStreamForTest(const uint8_t*, size_t, uint8_t*);
-size_t MakeUncompressedStreamForTest(
+size_t BrotliMakeUncompressedStreamForTest(const uint8_t*, size_t, uint8_t*);
+size_t BrotliMakeUncompressedStreamForTest(
     const uint8_t* input, size_t input_size, uint8_t* output) {
   return MakeUncompressedStream(input, input_size, output);
 }

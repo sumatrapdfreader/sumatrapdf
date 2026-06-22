@@ -3,8 +3,12 @@
 
 #include "../common/platform.h"
 
-#if defined(__SSE2__) || defined(_M_AMD64) || (defined (_M_IX86) && defined(_M_IX86_FP) && (_M_IX86_FP >= 2))
-#define SUPPORTS_SSE_2
+#if defined(__SSE2__) || defined(_M_AMD64) || \
+    (defined(_M_IX86) && defined(_M_IX86_FP) && (_M_IX86_FP >= 2))
+  #if !defined(_MSC_VER) || (_MSC_VER >= 1800)
+    /* Disable SSE for VS versions < 2013, as mmintrin.h not available. */
+    #define SUPPORTS_SSE_2
+  #endif
 #endif
 
 #if defined(SUPPORTS_SSE_2)
@@ -34,6 +38,7 @@ static BROTLI_INLINE uint64_t GetMatchingTagMask(
   const size_t splat_char = tag * x01;
   int i = ((int)chunk_count * 16) - chunk_size;
   BROTLI_DCHECK((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
+  {
 #if BROTLI_LITTLE_ENDIAN
   const size_t extractMagic = (xFF / 0x7F) >> chunk_size;
   do {
@@ -56,6 +61,7 @@ static BROTLI_INLINE uint64_t GetMatchingTagMask(
       i -= chunk_size;
   } while (i >= 0);
 #endif
+  }
   matches = ~matches;
 #endif
   if (chunk_count == 1) return BrotliRotateRight16((uint16_t)matches, head);

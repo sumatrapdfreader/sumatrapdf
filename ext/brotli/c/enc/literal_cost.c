@@ -9,10 +9,6 @@
 
 #include "literal_cost.h"
 
-#include <string.h>  /* memset */
-
-#include <brotli/types.h>
-
 #include "../common/platform.h"
 #include "fast_log.h"
 #include "utf8_util.h"

@@ -6,11 +6,8 @@
 
 #include "state.h"
 
-#include <stdlib.h>  /* free, malloc */
-
-#include <brotli/types.h>
-
 #include "../common/dictionary.h"
+#include "../common/platform.h"
 #include "huffman.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)

@@ -10,11 +10,6 @@
 #ifndef BROTLI_ENC_HASH_H_
 #define BROTLI_ENC_HASH_H_
 
-#include <stdlib.h>  /* exit */
-#include <string.h>  /* memcmp, memset */
-
-#include <brotli/types.h>
-
 #include "../common/constants.h"
 #include "../common/dictionary.h"
 #include "../common/platform.h"
@@ -22,8 +17,10 @@
 #include "encoder_dict.h"
 #include "fast_log.h"
 #include "find_match_length.h"
+#include "hash_base.h"
 #include "matching_tag_mask.h"
 #include "memory.h"
+#include "params.h"
 #include "quality.h"
 #include "static_dict.h"
 
@@ -39,7 +36,7 @@ typedef struct {
   void* extra[4];
 
   /**
-   * False before the fisrt invocation of HasherSetup (where "extra" memory)
+   * False before the first invocation of HasherSetup (where "extra" memory)
    * is allocated.
    */
   BROTLI_BOOL is_setup_;
@@ -71,23 +68,6 @@ typedef struct HasherSearchResult {
   score_t score;
   int len_code_delta; /* == len_code - len */
 } HasherSearchResult;
-
-/* kHashMul32 multiplier has these properties:
-   * The multiplier must be odd. Otherwise we may lose the highest bit.
-   * No long streaks of ones or zeros.
-   * There is no effort to ensure that it is a prime, the oddity is enough
-     for this use.
-   * The number has been tuned heuristically against compression benchmarks. */
-static const uint32_t kHashMul32 = 0x1E35A7BD;
-static const uint64_t kHashMul64 =
-    BROTLI_MAKE_UINT64_T(0x1FE35A7Bu, 0xD3579BD3u);
-
-static BROTLI_INLINE uint32_t Hash14(const uint8_t* data) {
-  uint32_t h = BROTLI_UNALIGNED_LOAD32LE(data) * kHashMul32;
-  /* The higher bits contain more mixture from the multiplication,
-     so we take our results from there. */
-  return h >> (32 - 14);
-}
 
 static BROTLI_INLINE void PrepareDistanceCache(
     int* BROTLI_RESTRICT distance_cache, const int num_distances) {
@@ -565,7 +545,7 @@ static BROTLI_INLINE void FindCompoundDictionaryMatch(
     source = (const uint8_t*)BROTLI_UNALIGNED_LOAD_PTR((const uint8_t**)tail);
   }
 
-  BROTLI_DCHECK(cur_ix_masked + max_length <= ring_buffer_mask);
+  BROTLI_DCHECK(cur_ix_masked + max_length <= ring_buffer_mask + 1);
 
   for (i = 0; i < 4; ++i) {
     const size_t distance = (size_t)distance_cache[i];
@@ -676,7 +656,7 @@ static BROTLI_INLINE size_t FindAllCompoundDictionaryMatches(
     source = (const uint8_t*)BROTLI_UNALIGNED_LOAD_PTR((const uint8_t**)tail);
   }
 
-  BROTLI_DCHECK(cur_ix_masked + max_length <= ring_buffer_mask);
+  BROTLI_DCHECK(cur_ix_masked + max_length <= ring_buffer_mask + 1);
 
   while (item == 0) {
     size_t offset;
