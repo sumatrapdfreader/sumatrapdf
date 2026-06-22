@@ -41,19 +41,32 @@ if host_machine.system() == 'windows'
     endif  
 endif
 
-liblcms2_lib = library(
-  'lcms2',
-  lcms2_srcs,
-  include_directories: inc_dirs,
-  gnu_symbol_visibility: 'hidden',
-  dependencies: deps,
-  c_args: cargs,
-  version: library_version,
-  # vs_module_defs: 'lcms2.def',
-  install: true,
-)
+if get_option('versionedlibs')
+  liblcms2_lib = library(
+    'lcms2',
+    lcms2_srcs,
+    include_directories: inc_dirs,
+    gnu_symbol_visibility: 'hidden',
+    dependencies: deps,
+    c_args: cargs,
+    version: library_version,
+    # vs_module_defs: 'lcms2.def',
+    install: true,
+  )
+else
+  liblcms2_lib = library(
+    'lcms2',
+    lcms2_srcs,
+    include_directories: inc_dirs,
+    gnu_symbol_visibility: 'hidden',
+    dependencies: deps,
+    c_args: cargs,
+    install: true,
+  )
+endif
 
 liblcms2_dep = declare_dependency(
   link_with: liblcms2_lib,
   include_directories: [inc_dirs, include_directories('.')],
+  dependencies: deps,
 )

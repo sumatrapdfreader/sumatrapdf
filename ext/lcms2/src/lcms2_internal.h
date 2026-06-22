@@ -1,7 +1,7 @@
 
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -444,7 +444,7 @@ cmsBool  _cmsRegisterTransformPlugin(cmsContext ContextID, cmsPluginBase* Plugin
 // Mutex
 cmsBool _cmsRegisterMutexPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
 
-// Paralellization
+// Parallelization
 cmsBool _cmsRegisterParallelizationPlugin(cmsContext ContextID, cmsPluginBase* Plugin);
 
 // ---------------------------------------------------------------------------------------------------------
@@ -856,6 +856,7 @@ int                  _cmsSearchTag(cmsContext ContextID, _cmsICCPROFILE* Icc, cm
 cmsTagTypeHandler*   _cmsGetTagTypeHandler(cmsContext ContextID, cmsTagTypeSignature sig);
 cmsTagTypeSignature  _cmsGetTagTrueType(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig);
 cmsTagDescriptor*    _cmsGetTagDescriptor(cmsContext ContextID, cmsTagSignature sig);
+cmsBool              _cmsAvoidTypeCheckOnTags(cmsContext ContextID);
 
 // Error logging ---------------------------------------------------------------------------------------------------------
 
@@ -966,7 +967,7 @@ cmsBool           _cmsReadCHAD(cmsContext ContextID, cmsMAT3* Dest, cmsHPROFILE 
 
 // Link several profiles to obtain a single LUT modelling the whole color transform. Intents, Black point
 // compensation and Adaptation parameters may vary across profiles. BPC and Adaptation refers to the PCS
-// after the profile. I.e, BPC[0] refers to connexion between profile(0) and profile(1)
+// after the profile. I.e, BPC[0] refers to connetion between profile(0) and profile(1)
 cmsPipeline* _cmsLinkProfiles(cmsContext         ContextID,
                               cmsUInt32Number    nProfiles,
                               cmsUInt32Number    TheIntents[],

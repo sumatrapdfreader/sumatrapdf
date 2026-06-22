@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -85,8 +85,11 @@ cmsBool GrowMLUpool(cmsContext ContextID, cmsMLU* mlu)
     return TRUE;
 }
 
-
 // Grows a entry table for a MLU. Each time this function is called, table size is multiplied times two.
+// No need to check integer overflow since that is 2*16*count = 2^32-1 ; => count = 128 M entries, 
+// That would be 2Gb, which is over MAX_MEMORY_FOR_ALLOC, even for large file size. 
+// I added this check to silence the continuous spam reports of people using AI to catch what
+// they think are "vulnerabilities".
 static
 cmsBool GrowMLUtable(cmsContext ContextID, cmsMLU* mlu)
 {
@@ -98,8 +101,12 @@ cmsBool GrowMLUtable(cmsContext ContextID, cmsMLU* mlu)
 
     AllocatedEntries = mlu ->AllocatedEntries * 2;
 
-    // Check for overflow
-    if (AllocatedEntries / 2 != mlu ->AllocatedEntries) return FALSE;
+    // Check for overflow in count doubling: if wrapped, result < original
+    if (AllocatedEntries < mlu->AllocatedEntries) return FALSE;
+
+    // Check for overflow in byte-size multiplication:
+    // dividing back by sizeof must recover the original count
+    if ((AllocatedEntries * sizeof(_cmsMLUentry)) / sizeof(_cmsMLUentry) != AllocatedEntries) return FALSE;
 
     // Reallocate the memory
     NewPtr = (_cmsMLUentry*)_cmsRealloc(ContextID, mlu ->Entries, AllocatedEntries*sizeof(_cmsMLUentry));
@@ -272,7 +279,7 @@ cmsUInt32Number encodeUTF8(char* out, const wchar_t* in, cmsUInt32Number max_wch
     cmsUInt32Number size = 0;
     cmsUInt32Number len_w = 0;
         
-    while (*in && len_w < max_wchars)
+    while (len_w < max_wchars && *in)
     {
         if (*in >= 0xd800 && *in <= 0xdbff)
             codepoint = ((*in - 0xd800) << 10) + 0x10000;
@@ -568,7 +575,7 @@ cmsUInt32Number CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cmsMLU* mlu
     if (BufferSize < ASCIIlen + 1)
         ASCIIlen = BufferSize - 1;
 
-    // Precess each character
+    // Process each character
     for (i=0; i < ASCIIlen; i++) {
 
         wchar_t wc = Wide[i];
@@ -808,7 +815,8 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsDupNamedColorList(cmsContext ContextID, const cm
     memmove(NewNC ->Prefix, v ->Prefix, sizeof(v ->Prefix));
     memmove(NewNC ->Suffix, v ->Suffix, sizeof(v ->Suffix));
     NewNC ->ColorantCount = v ->ColorantCount;
-    memmove(NewNC->List, v ->List, v->nColors * sizeof(_cmsNAMEDCOLOR));
+    if (v->nColors > 0) 
+        memmove(NewNC->List, v ->List, v->nColors * sizeof(_cmsNAMEDCOLOR));
     NewNC ->nColors = v ->nColors;
     return NewNC;
 }
@@ -1045,16 +1053,15 @@ cmsSEQ* CMSEXPORT cmsDupProfileSequenceDescription(cmsContext ContextID, const c
     if (pseq == NULL)
         return NULL;
 
-    NewSeq = (cmsSEQ*) _cmsMalloc(ContextID, sizeof(cmsSEQ));
+    NewSeq = (cmsSEQ*)_cmsMallocZero(ContextID, sizeof(cmsSEQ));
     if (NewSeq == NULL) return NULL;
 
+    NewSeq->seq = (cmsPSEQDESC*)_cmsCalloc(ContextID, pseq->n, sizeof(cmsPSEQDESC));
+    if (NewSeq->seq == NULL) goto Error;
 
-    NewSeq -> seq      = (cmsPSEQDESC*) _cmsCalloc(ContextID, pseq ->n, sizeof(cmsPSEQDESC));
-    if (NewSeq ->seq == NULL) goto Error;
+    NewSeq->n = pseq->n;
 
-    NewSeq -> n        = pseq ->n;
-
-    for (i=0; i < pseq->n; i++) {
+    for (i = 0; i < pseq->n; i++) {
 
         memmove(&NewSeq ->seq[i].attributes, &pseq ->seq[i].attributes, sizeof(cmsUInt64Number));
 

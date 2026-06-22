@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -248,8 +248,8 @@ void CMSEXPORT cmsMD5finish(cmsContext ContextID, cmsProfileID* ProfileID,  cmsH
 
 
 // Assuming io points to an ICC profile, compute and store MD5 checksum
-// In the header, rendering intentent, attributes and ID should be set to zero
-// before computing MD5 checksum (per 6.1.13 in ICC spec)
+// In the header, rendering intentent, flags and ID should be set to zero
+// before computing MD5 checksum (per 7.2.18 of ICC spec 4.4)
 
 cmsBool CMSEXPORT cmsMD5computeID(cmsContext ContextID, cmsHPROFILE hProfile)
 {
@@ -264,8 +264,8 @@ cmsBool CMSEXPORT cmsMD5computeID(cmsContext ContextID, cmsHPROFILE hProfile)
     // Save a copy of the profile header
     memmove(&Keep, Icc, sizeof(_cmsICCPROFILE));
 
-    // Set RI, attributes and ID
-    memset(&Icc ->attributes, 0, sizeof(Icc ->attributes));
+    // Set RI, flags and ID
+    Icc ->flags = 0;
     Icc ->RenderingIntent = 0;
     memset(&Icc ->ProfileID, 0, sizeof(Icc ->ProfileID));
 

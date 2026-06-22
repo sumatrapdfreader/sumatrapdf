@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -459,25 +459,26 @@ void EvaluateCLUTfloatIn16(cmsContext ContextID, const cmsFloat32Number In[], cm
 static
 cmsUInt32Number CubeSize(const cmsUInt32Number Dims[], cmsUInt32Number b)
 {
-    cmsUInt32Number rv, dim;
+    cmsUInt32Number dim;
+    cmsUInt64Number rv;
 
     _cmsAssert(Dims != NULL);
 
     for (rv = 1; b > 0; b--) {
 
         dim = Dims[b-1];
-        if (dim <= 1) return 0;  // Error
-
-        rv *= dim;
+        if (dim <= 1) return 0;  
 
         // Check for overflow
         if (rv > UINT_MAX / dim) return 0;
+
+        rv *= dim;
     }
 
     // Again, prevent overflow
     if (rv > UINT_MAX / 15) return 0;
 
-    return rv;
+    return (cmsUInt32Number) rv;
 }
 
 static
@@ -1080,7 +1081,7 @@ cmsStage* _cmsStageNormalizeFromLabFloat(cmsContext ContextID)
     return mpe;
 }
 
-// Fom XYZ to floating point PCS
+// From XYZ to floating point PCS
 cmsStage* _cmsStageNormalizeFromXyzFloat(cmsContext ContextID)
 {
 #define n (32768.0/65535.0)
@@ -1502,7 +1503,7 @@ cmsPipeline* CMSEXPORT cmsPipelineDup(cmsContext ContextID, const cmsPipeline* l
 
     if (!BlessLUT(ContextID, NewLUT))
     {
-        _cmsFree(ContextID, NewLUT);
+        cmsPipelineFree(ContextID, NewLUT);
         return NULL;
     }
 

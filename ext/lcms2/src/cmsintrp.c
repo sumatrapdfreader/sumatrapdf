@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -504,7 +504,7 @@ void TrilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
     py = fclamp(Input[1]) * p->Domain[1];
     pz = fclamp(Input[2]) * p->Domain[2];
 
-    x0 = (int) floor(px); fx = px - (cmsFloat32Number) x0;  // We need full floor funcionality here
+    x0 = (int) floor(px); fx = px - (cmsFloat32Number) x0;  // We need full floor functionality here
     y0 = (int) floor(py); fy = py - (cmsFloat32Number) y0;
     z0 = (int) floor(pz); fz = pz - (cmsFloat32Number) z0;
 
@@ -971,9 +971,9 @@ void Eval4Inputs(cmsContext ContextID,
                                 c1 = c2 = c3 = 0;
                             }
 
-        Rest = c1 * rx + c2 * ry + c3 * rz;
+        Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
 
-        Tmp1[OutChan] = (cmsUInt16Number)(c0 + ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest)));
+        Tmp1[OutChan] = (cmsUInt16Number)c0 + ((Rest + (Rest >> 16)) >> 16);
     }
 
 
@@ -1035,9 +1035,9 @@ void Eval4Inputs(cmsContext ContextID,
                                 c1 = c2 = c3 = 0;
                             }
 
-        Rest = c1 * rx + c2 * ry + c3 * rz;
+        Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
 
-        Tmp2[OutChan] = (cmsUInt16Number) (c0 + ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest)));
+        Tmp2[OutChan] = (cmsUInt16Number) c0 + ((Rest + (Rest >> 16)) >> 16);
     }
 
 
@@ -1189,6 +1189,7 @@ EVAL_FNS(12, 11)
 EVAL_FNS(13, 12)
 EVAL_FNS(14, 13)
 EVAL_FNS(15, 14)
+
 
 // The default factory
 static

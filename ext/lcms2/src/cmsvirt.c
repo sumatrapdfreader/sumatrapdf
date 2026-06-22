@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -352,7 +352,7 @@ int InkLimitingSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number I
     SumCMY   = (cmsFloat64Number) In[0]  + In[1] + In[2];
     SumCMYK  = SumCMY + In[3];
 
-    if (SumCMYK > InkLimit) {
+    if (SumCMYK > InkLimit && SumCMY > 0) {
 
         Ratio = 1 - ((SumCMYK - InkLimit) / SumCMY);
         if (Ratio < 0)
@@ -364,7 +364,7 @@ int InkLimitingSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number I
     Out[1] = _cmsQuickSaturateWord(In[1] * Ratio);     // M
     Out[2] = _cmsQuickSaturateWord(In[2] * Ratio);     // Y
 
-    Out[3] = In[3];                                 // K (untouched)
+    Out[3] = In[3];                                    // K (untouched)
 
     return TRUE;
 }
@@ -385,7 +385,7 @@ cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLink(cmsContext ContextID,
         return NULL;
     }
 
-    if (Limit < 0.0 || Limit > 400) {
+    if (Limit < 1.0 || Limit > 400) {
 
         cmsSignalError(ContextID, cmsERROR_RANGE, "InkLimiting: Limit should be between 1..400");
         if (Limit < 1) Limit = 1;
@@ -460,16 +460,20 @@ cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY
     cmsSetColorSpace(ContextID, hProfile,  cmsSigLabData);
     cmsSetPCS(ContextID, hProfile,         cmsSigLabData);
 
-    if (!SetTextTags(ContextID, hProfile, L"Lab identity built-in")) goto Error;
+    if (!SetTextTags(ContextID, hProfile, L"Lab identity built-in"))
+        goto Error;
 
     // An identity LUT is all we need
     LUT = cmsPipelineAlloc(ContextID, 3, 3);
-    if (LUT == NULL) goto Error;
+    if (LUT == NULL) 
+        goto Error;
 
     if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_BEGIN, _cmsStageAllocIdentityCLut(ContextID, 3)))
         goto Error;
 
-    if (!cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, LUT)) goto Error;
+    if (!cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, LUT)) 
+        goto Error;
+
     cmsPipelineFree(ContextID, LUT);
 
     return hProfile;
@@ -492,8 +496,14 @@ cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY
 {
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
+    cmsCIEXYZ xyz;
+    
+    if (WhitePoint == NULL)
+        xyz = *cmsD50_XYZ(ContextID);
+    else
+        cmsxyY2XYZ(ContextID, &xyz, WhitePoint);
 
-    hProfile = cmsCreateRGBProfile(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
+    hProfile = cmsCreateRGBProfile(ContextID, NULL, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
     cmsSetProfileVersion(ContextID, hProfile, 4.4);
@@ -502,6 +512,7 @@ cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY
     cmsSetColorSpace(ContextID, hProfile,  cmsSigLabData);
     cmsSetPCS(ContextID, hProfile,         cmsSigLabData);
 
+    if (!cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, &xyz)) goto Error;
     if (!SetTextTags(ContextID, hProfile, L"Lab identity built-in")) goto Error;
 
     // An empty LUTs is all we need
@@ -632,7 +643,7 @@ cmsHPROFILE CMSEXPORT cmsCreate_sRGBProfile(cmsContext ContextID)
 * 
 * This virtual profile cannot be saved as an ICC file
 */
-cmsHPROFILE cmsCreate_OkLabProfile(cmsContext ctx)
+cmsHPROFILE CMSEXPORT cmsCreate_OkLabProfile(cmsContext ctx)
 {
     cmsStage* XYZPCS = _cmsStageNormalizeFromXyzFloat(ctx);
     cmsStage* PCSXYZ = _cmsStageNormalizeToXyzFloat(ctx);
@@ -701,6 +712,8 @@ cmsHPROFILE cmsCreate_OkLabProfile(cmsContext ctx)
     cmsPipeline* BToA = cmsPipelineAlloc(ctx, 3, 3);
 
     cmsHPROFILE hProfile = cmsCreateProfilePlaceholder(ctx);
+    if (!hProfile)            // can't allocate
+        goto error;
   
     cmsSetProfileVersion(ctx, hProfile, 4.4);
 
@@ -854,25 +867,24 @@ cmsHPROFILE CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext ContextID,
 
     for (i=0; i < MAX_INPUT_DIMENSIONS; i++) Dimensions[i] = nLUTPoints;
     CLUT = cmsStageAllocCLut16bitGranular(ContextID, Dimensions, 3, 3, NULL);
-    if (CLUT == NULL) goto Error;
-
-
-    if (!cmsStageSampleCLut16bit(ContextID, CLUT, bchswSampler, (void*) &bchsw, 0)) {
-
-        // Shouldn't reach here
+    if (CLUT == NULL) 
         goto Error;
-    }
 
-    if (!cmsPipelineInsertStage(ContextID, Pipeline, cmsAT_END, CLUT)) {
+    if (!cmsStageSampleCLut16bit(ContextID, CLUT, bchswSampler, (void*) &bchsw, 0)) 
         goto Error;
-    }
-
+    
+    if (!cmsPipelineInsertStage(ContextID, Pipeline, cmsAT_END, CLUT)) 
+        goto Error;
+    
     // Create tags
-    if (!SetTextTags(ContextID, hICC, L"BCHS built-in")) return NULL;
+    if (!SetTextTags(ContextID, hICC, L"BCHS built-in")) 
+        goto Error;
 
-    cmsWriteTag(ContextID, hICC, cmsSigMediaWhitePointTag, (void*) cmsD50_XYZ(ContextID));
+    if (!cmsWriteTag(ContextID, hICC, cmsSigMediaWhitePointTag, (void*)cmsD50_XYZ(ContextID)))
+        goto Error;
 
-    cmsWriteTag(ContextID, hICC, cmsSigAToB0Tag, (void*) Pipeline);
+    if (!cmsWriteTag(ContextID, hICC, cmsSigAToB0Tag, (void*)Pipeline))
+        goto Error;
 
     // Pipeline is already on virtual profile
     cmsPipelineFree(ContextID, Pipeline);
@@ -1269,12 +1281,23 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
     if (!cmsWriteTag(ContextID, hProfile, DestinationTag, LUT)) goto Error;
 
 
-    if (xform->core->InputColorant != NULL) {
+    // Colorant tables have special rules depening on deviceClass
+    if (xform->core->InputColorant != NULL && 
+       (deviceClass == cmsSigLinkClass || deviceClass == cmsSigInputClass)) {
+
            if (!cmsWriteTag(ContextID, hProfile, cmsSigColorantTableTag, xform->core->InputColorant)) goto Error;
     }
 
     if (xform->core->OutputColorant != NULL) {
-           if (!cmsWriteTag(ContextID, hProfile, cmsSigColorantTableOutTag, xform->core->OutputColorant)) goto Error;
+
+        if (deviceClass == cmsSigLinkClass) {
+
+            if (!cmsWriteTag(ContextID, hProfile, cmsSigColorantTableOutTag, xform->core->OutputColorant)) goto Error;
+        }
+        else
+        {
+            if (!cmsWriteTag(ContextID, hProfile, cmsSigColorantTableTag, xform->core->OutputColorant)) goto Error;
+        }
     }
 
     if ((deviceClass == cmsSigLinkClass) && (xform ->core->Sequence != NULL)) {

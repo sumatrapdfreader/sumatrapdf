@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -264,7 +264,7 @@ typedef struct {
         WRITEMODE as;      // How is supposed to be written
     } PROPERTY;
 
-static PROPERTY PredefinedProperties[] = {
+static const PROPERTY PredefinedProperties[] = {
 
         {"NUMBER_OF_FIELDS", WRITE_UNCOOKED},    // Required - NUMBER OF FIELDS
         {"NUMBER_OF_SETS",   WRITE_UNCOOKED},    // Required - NUMBER OF SETS
@@ -412,11 +412,12 @@ string* StringAlloc(cmsContext ContextID, cmsIT8* it8, int max)
 static
 void StringClear(string* s)
 {
-    s->len = 0;
+    s->len = 0;    
+    s->begin[0] = 0;
 }
 
 static
-void StringAppend(cmsContext ContextID, string* s, char c)
+cmsBool StringAppend(cmsContext ContextID, string* s, char c)
 {
     if (s->len + 1 >= s->max)
     {
@@ -424,7 +425,9 @@ void StringAppend(cmsContext ContextID, string* s, char c)
 
         s->max *= 10;
         new_ptr = (char*) AllocChunk(ContextID, s->it8, s->max);
-        if (new_ptr != NULL && s->begin != NULL)
+        if (new_ptr == NULL) return FALSE;
+
+        if (s->begin != NULL)
             memcpy(new_ptr, s->begin, s->len);
 
         s->begin = new_ptr;
@@ -435,6 +438,8 @@ void StringAppend(cmsContext ContextID, string* s, char c)
         s->begin[s->len++] = c;
         s->begin[s->len] = 0;
     }
+
+    return TRUE;
 }
 
 static
@@ -444,13 +449,15 @@ char* StringPtr(string* s)
 }
 
 static
-void StringCat(cmsContext ContextID, string* s, const char* c)
+cmsBool StringCat(cmsContext ContextID, string* s, const char* c)
 {
     while (*c)
     {
-        StringAppend(ContextID, s, *c);
+        if (!StringAppend(ContextID, s, *c)) return FALSE;
         c++;
     }
+
+    return TRUE;
 }
 
 
@@ -799,7 +806,12 @@ void InStringSymbol(cmsContext ContextID, cmsIT8* it8)
 
             if (it8->ch == '\n' || it8->ch == '\r' || it8->ch == 0) break;
             else {
-                StringAppend(ContextID, it8->str, (char)it8->ch);
+                if (!StringAppend(ContextID, it8->str, (char)it8->ch)) {
+
+                    SynError(ContextID, it8, "Out of memory");
+                    return;
+                }
+
                 NextCh(it8);
             }
         }
@@ -829,7 +841,11 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 
             do {
 
-                StringAppend(ContextID, it8->id, (char) it8->ch);
+                if (!StringAppend(ContextID, it8->id, (char)it8->ch)) {
+
+                    SynError(ContextID, it8, "Out of memory");
+                    return;
+                }
 
                 NextCh(it8);
 
@@ -852,6 +868,11 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                     sign = -1;
                     NextCh(it8);
                 }
+                else
+                    if (it8->ch == '+') {
+                        sign = +1;
+                        NextCh(it8);
+                    }
 
                 it8->inum = 0;
                 it8->sy   = SINUM;
@@ -873,7 +894,6 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                             if ((cmsFloat64Number) it8->inum * 16.0 + (cmsFloat64Number) j > (cmsFloat64Number)+2147483647.0)
                             {
                                 SynError(ContextID, it8, "Invalid hexadecimal number");
-                                it8->sy = SEOF;
                                 return;
                             }
 
@@ -895,7 +915,6 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                             if ((cmsFloat64Number) it8->inum * 2.0 + j > (cmsFloat64Number)+2147483647.0)
                             {
                                 SynError(ContextID, it8, "Invalid binary number");
-                                it8->sy = SEOF;
                                 return;
                             }
 
@@ -948,11 +967,19 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                     }
 
                     StringClear(it8->id);
-                    StringCat(ContextID, it8->id, buffer);
+                    if (!StringCat(ContextID, it8->id, buffer)) {
+
+                        SynError(ContextID, it8, "Out of memory");
+                        return;
+                    }
 
                     do {
 
-                        StringAppend(ContextID, it8->id, (char) it8->ch);
+                        if (!StringAppend(ContextID, it8->id, (char)it8->ch)) {
+
+                            SynError(ContextID, it8, "Out of memory");
+                            return;
+                        }
 
                         NextCh(it8);
 
@@ -1007,7 +1034,6 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 
         default:
             SynError(ContextID, it8, "Unrecognized character: 0x%x", it8 ->ch);
-            it8->sy = SEOF;
             return;
             }
 
@@ -1022,24 +1048,21 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                 if(it8 -> IncludeSP >= (MAXINCLUDE-1)) {
 
                     SynError(ContextID, it8, "Too many recursion levels");
-                    it8->sy = SEOF;
                     return;
                 }
 
                 InStringSymbol(ContextID, it8);
                 if (!Check(ContextID, it8, SSTRING, "Filename expected"))
-                {
-                    it8->sy = SEOF;
                     return;
-                }
+
 
                 FileNest = it8 -> FileStack[it8 -> IncludeSP + 1];
                 if(FileNest == NULL) {
 
                     FileNest = it8 ->FileStack[it8 -> IncludeSP + 1] = (FILECTX*)AllocChunk(ContextID, it8, sizeof(FILECTX));
                     if (FileNest == NULL) {
+
                         SynError(ContextID, it8, "Out of memory");
-                        it8->sy = SEOF;
                         return;
                     }
                 }
@@ -1047,8 +1070,8 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                 if (BuildAbsolutePath(StringPtr(it8->str),
                                       it8->FileStack[it8->IncludeSP]->FileName,
                                       FileNest->FileName, cmsMAX_PATH-1) == FALSE) {
+
                     SynError(ContextID, it8, "File path too long");
-                    it8->sy = SEOF;
                     return;
                 }
 
@@ -1056,7 +1079,6 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
                 if (FileNest->Stream == NULL) {
 
                         SynError(ContextID, it8, "File %s not found", FileNest->FileName);
-                        it8->sy = SEOF;
                         return;
                 }
                 it8->IncludeSP++;
@@ -1071,10 +1093,10 @@ void InSymbol(cmsContext ContextID, cmsIT8* it8)
 static
 cmsBool CheckEOLN(cmsContext ContextID, cmsIT8* it8)
 {
-        if (!Check(ContextID, it8, SEOLN, "Expected separator")) return FALSE;
-        while (it8 -> sy == SEOLN)
-                        InSymbol(ContextID, it8);
-        return TRUE;
+    if (!Check(ContextID, it8, SEOLN, "Expected separator")) return FALSE;
+    while (it8->sy == SEOLN)
+        InSymbol(ContextID, it8);
+    return TRUE;
 
 }
 
@@ -1083,8 +1105,8 @@ cmsBool CheckEOLN(cmsContext ContextID, cmsIT8* it8)
 static
 void Skip(cmsContext ContextID, cmsIT8* it8, SYMBOL sy)
 {
-        if (it8->sy == sy && it8->sy != SEOF)
-                        InSymbol(ContextID, it8);
+    if (it8->sy == sy && it8->sy != SEOF && it8->sy != SSYNERROR)
+        InSymbol(ContextID, it8);
 }
 
 
@@ -1093,7 +1115,7 @@ static
 void SkipEOLN(cmsContext ContextID, cmsIT8* it8)
 {
     while (it8->sy == SEOLN) {
-             InSymbol(ContextID, it8);
+        InSymbol(ContextID, it8);
     }
 }
 
@@ -1204,8 +1226,11 @@ void* AllocChunk(cmsContext ContextID, cmsIT8* it8, cmsUInt32Number size)
     cmsUInt8Number* ptr;
 
     size = _cmsALIGNMEM(size);
+    if (size == 0) return NULL;
 
     if (size > Free) {
+
+        cmsUInt8Number* new_block;
 
         if (it8 -> Allocator.BlockSize == 0)
 
@@ -1217,17 +1242,27 @@ void* AllocChunk(cmsContext ContextID, cmsIT8* it8, cmsUInt32Number size)
                 it8 ->Allocator.BlockSize = size;
 
         it8 ->Allocator.Used = 0;
-        it8 ->Allocator.Block = (cmsUInt8Number*)  AllocBigBlock(ContextID, it8, it8 ->Allocator.BlockSize);
+        new_block = (cmsUInt8Number*)AllocBigBlock(ContextID, it8, it8->Allocator.BlockSize);
+        if (new_block == NULL) goto Error;
+
+        it8->Allocator.Block = new_block;
     }
 
     if (it8->Allocator.Block == NULL)
-        return NULL;
+        goto Error;
 
     ptr = it8 ->Allocator.Block + it8 ->Allocator.Used;
     it8 ->Allocator.Used += size;
 
     return (void*) ptr;
 
+Error:
+
+    SynError(ContextID, it8, "Allocation error");
+    it8->Allocator.BlockSize = 0;
+    it8->Allocator.Used = 0;
+    it8->Allocator.Block = NULL;
+    return NULL;
 }
 
 
@@ -1235,9 +1270,12 @@ void* AllocChunk(cmsContext ContextID, cmsIT8* it8, cmsUInt32Number size)
 static
 char *AllocString(cmsContext ContextID, cmsIT8* it8, const char* str)
 {
-    cmsUInt32Number Size = (cmsUInt32Number) strlen(str)+1;
+    cmsUInt32Number Size;
     char *ptr;
 
+    if (str == NULL) return NULL;
+
+    Size = (cmsUInt32Number)strlen(str) + 1;
 
     ptr = (char *) AllocChunk(ContextID, it8, Size);
     if (ptr) memcpy(ptr, str, Size-1);
@@ -1374,10 +1412,13 @@ KEYVALUE* AddAvailableSampleID(cmsContext ContextID, cmsIT8* it8, const char* Ke
 
 
 static
-void AllocTable(cmsContext ContextID, cmsIT8* it8)
+cmsBool AllocTable(cmsContext ContextID, cmsIT8* it8)
 {
     TABLE* t;
     cmsUNUSED_PARAMETER(ContextID);
+
+    if (it8->TablesCount >= (MAXTABLES-1))
+        return FALSE;
 
     t = it8 ->Tab + it8 ->TablesCount;
 
@@ -1386,6 +1427,7 @@ void AllocTable(cmsContext ContextID, cmsIT8* it8)
     t->Data       = NULL;
 
     it8 ->TablesCount++;
+    return TRUE;
 }
 
 
@@ -1397,7 +1439,10 @@ cmsInt32Number CMSEXPORT cmsIT8SetTable(cmsContext ContextID, cmsHANDLE  IT8, cm
 
          if (nTable == it8 ->TablesCount) {
 
-             AllocTable(ContextID, it8);
+             if (!AllocTable(ContextID, it8)) {
+                 SynError(ContextID, it8, "Too many tables");
+                 return -1;
+             }
          }
          else {
              SynError(ContextID, it8, "Table %d is out of sequence", nTable);
@@ -1580,8 +1625,8 @@ cmsInt32Number satoi(const char* b)
     if (b == NULL) return 0;
 
     n = atoi(b);
-    if (n > 0x7fffffffL) return 0x7fffffffL;
-    if (n < -0x7ffffffeL) return -0x7ffffffeL;
+    if (n > 0x7ffffff0L) return 0x7ffffff0L;
+    if (n < -0x7ffffff0L) return -0x7ffffff0L;
 
     return (cmsInt32Number)n;
 }
@@ -1590,22 +1635,26 @@ cmsInt32Number satoi(const char* b)
 static
 cmsBool AllocateDataFormat(cmsContext ContextID, cmsIT8* it8)
 {
+    cmsUInt32Number size;
+
     TABLE* t = GetTable(ContextID, it8);
 
-    if (t -> DataFormat) return TRUE;    // Already allocated
+    if (t->DataFormat) return TRUE;    // Already allocated
 
-    t -> nSamples  = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
+    t->nSamples = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
 
-    if (t -> nSamples <= 0) {
+    if (t->nSamples <= 0 || t->nSamples > 0x7ffe) {
 
-        SynError(ContextID, it8, "AllocateDataFormat: Unknown NUMBER_OF_FIELDS");
+        SynError(ContextID, it8, "Wrong NUMBER_OF_FIELDS");
         return FALSE;
     }
 
-    t -> DataFormat = (char**) AllocChunk (ContextID, it8, ((cmsUInt32Number) t->nSamples + 1) * sizeof(char *));
+    size = ((cmsUInt32Number)t->nSamples + 1) * sizeof(char*);
+
+    t->DataFormat = (char**)AllocChunk(ContextID, it8, size);
     if (t->DataFormat == NULL) {
 
-        SynError(ContextID, it8, "AllocateDataFormat: Unable to allocate dataFormat array");
+        SynError(ContextID, it8, "Unable to allocate dataFormat array");
         return FALSE;
     }
 
@@ -1634,8 +1683,8 @@ cmsBool SetDataFormat(cmsContext ContextID, cmsIT8* it8, int n, const char *labe
             return FALSE;
     }
 
-    if (n > t -> nSamples) {
-        SynError(ContextID, it8, "More than NUMBER_OF_FIELDS fields.");
+    if (n < 0 || n >= t -> nSamples) {
+        SynError(ContextID, it8, "Invalid or more than NUMBER_OF_FIELDS fields.");
         return FALSE;
     }
 
@@ -1651,6 +1700,8 @@ cmsBool SetDataFormat(cmsContext ContextID, cmsIT8* it8, int n, const char *labe
 cmsBool CMSEXPORT cmsIT8SetDataFormat(cmsContext ContextID, cmsHANDLE  h, int n, const char *Sample)
 {
     cmsIT8* it8 = (cmsIT8*)h;
+
+    _cmsAssert(n >= 0);
     return SetDataFormat(ContextID, it8, n, Sample);
 }
 
@@ -1683,13 +1734,14 @@ cmsBool AllocateDataSet(cmsContext ContextID, cmsIT8* it8)
     t-> nSamples   = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
     t-> nPatches   = satoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_SETS"));
 
-    if (t -> nSamples < 0 || t->nSamples > 0x7ffe || t->nPatches < 0 || t->nPatches > 0x7ffe)
+    if (t -> nSamples < 0 || t->nSamples > 0x7ffe || t->nPatches < 0 || t->nPatches > 0x7ffe ||
+        (t->nPatches * t->nSamples) > 200000)
     {
         SynError(ContextID, it8, "AllocateDataSet: too much data");
         return FALSE;
     }
     else {
-        // Some dumb analizers warns of possible overflow here, just take a look couple of lines above.
+        // Some dumb analyzers warns of possible overflow here, just take a look couple of lines above.
         t->Data = (char**)AllocChunk(ContextID, it8, ((cmsUInt32Number)t->nSamples + 1) * ((cmsUInt32Number)t->nPatches + 1) * sizeof(char*));
         if (t->Data == NULL) {
 
@@ -1718,7 +1770,10 @@ char* GetData(cmsContext ContextID, cmsIT8* it8, int nSet, int nField)
 static
 cmsBool SetData(cmsContext ContextID, cmsIT8* it8, int nSet, int nField, const char *Val)
 {
+    char* ptr;
+
     TABLE* t = GetTable(ContextID, it8);
+
 
     if (!t->Data) {
         if (!AllocateDataSet(ContextID, it8)) return FALSE;
@@ -1736,7 +1791,11 @@ cmsBool SetData(cmsContext ContextID, cmsIT8* it8, int nSet, int nField, const c
 
     }
 
-    t->Data [nSet * t -> nSamples + nField] = AllocString(ContextID, it8, Val);
+    ptr = AllocString(ContextID, it8, Val);
+    if (ptr == NULL)
+        return FALSE;
+
+    t->Data [nSet * t -> nSamples + nField] = ptr;
     return TRUE;
 }
 
@@ -1970,7 +2029,7 @@ cmsBool CMSEXPORT cmsIT8SaveToFile(cmsContext ContextID, cmsHANDLE hIT8, const c
         TABLE* t;
 
         if (cmsIT8SetTable(ContextID, hIT8, i) < 0) goto Error;
-        
+
         /**
         * Check for wrong data
         */
@@ -2092,7 +2151,7 @@ cmsBool DataSection (cmsContext ContextID, cmsIT8* it8)
         if (!AllocateDataSet(ContextID, it8)) return FALSE;
     }
 
-    while (it8->sy != SEND_DATA && it8->sy != SEOF)
+    while (it8->sy != SEND_DATA && it8->sy != SEOF && it8->sy != SSYNERROR)
     {
         if (iField >= t -> nSamples) {
             iField = 0;
@@ -2100,7 +2159,7 @@ cmsBool DataSection (cmsContext ContextID, cmsIT8* it8)
 
         }
 
-        if (it8->sy != SEND_DATA && it8->sy != SEOF) {
+        if (it8->sy != SEND_DATA && it8->sy != SEOF && it8->sy != SSYNERROR) {
 
             switch (it8->sy)
             {
@@ -2196,8 +2255,8 @@ cmsBool HeaderSection(cmsContext ContextID, cmsIT8* it8)
             if (!GetVal(ContextID, it8, Buffer, MAXSTR - 1, "Property data expected")) return FALSE;
 
             if (Key->WriteAs != WRITE_PAIR) {
-                AddToList(ContextID, it8, &GetTable(ContextID, it8)->HeaderList, VarName, NULL, Buffer,
-                    (it8->sy == SSTRING) ? WRITE_STRINGIFY : WRITE_UNCOOKED);
+                if (AddToList(ContextID, it8, &GetTable(ContextID, it8)->HeaderList, VarName, NULL, Buffer,
+                    (it8->sy == SSTRING) ? WRITE_STRINGIFY : WRITE_UNCOOKED) == NULL) return FALSE;
             }
             else {
                 const char *Subkey;
@@ -2303,9 +2362,10 @@ cmsBool ParseIT8(cmsContext ContextID, cmsIT8* it8, cmsBool nosheet)
 
                     if (!DataSection(ContextID, it8)) return FALSE;
 
-                    if (it8 -> sy != SEOF) {
+                    if (it8 -> sy != SEOF && it8->sy != SSYNERROR) {
 
-                            AllocTable(ContextID, it8);
+                            if (!AllocTable(ContextID, it8)) return FALSE;
+
                             it8 ->nTable = it8 ->TablesCount - 1;
 
                             // Read sheet type if present. We only support identifier and string.
@@ -3038,7 +3098,8 @@ cmsBool ParseCube(cmsContext ContextID, cmsIT8* cube, cmsStage** Shaper, cmsStag
 
     InSymbol(ContextID, cube);
 
-    while (cube->sy != SEOF) {
+    while (cube->sy != SEOF && cube->sy != SSYNERROR) {
+
         switch (cube->sy)
         {
         // Set profile description
@@ -3066,9 +3127,11 @@ cmsBool ParseCube(cmsContext ContextID, cmsIT8* cube, cmsStage** Shaper, cmsStag
             InSymbol(ContextID, cube);
             if (!Check(ContextID, cube, SINUM, "Shaper size expected")) return FALSE;
             shaper_size = cube->inum;
+            if (shaper_size < 2 || shaper_size > 65536)
+                 return SynError(ContextID, cube, "LUT_1D_SIZE '%d' is out of bounds", shaper_size);
             InSymbol(ContextID, cube);
             break;
-        
+
         // Deefine CLUT
         case S_LUT3D_SIZE:
             InSymbol(ContextID, cube);
@@ -3131,9 +3194,19 @@ cmsBool ParseCube(cmsContext ContextID, cmsIT8* cube, cmsStage** Shaper, cmsStag
 
             if (lut_size > 0) {
 
-                int nodes = lut_size * lut_size * lut_size;
+                int nodes;
+                cmsFloat32Number* lut_table;
 
-                cmsFloat32Number* lut_table = _cmsMalloc(ContextID, nodes * 3 * sizeof(cmsFloat32Number));
+                /**
+                * Professional LUT generation tools (e.g., Nobe LutBake) list 65×65×65 as their highest supported size.
+                */
+                if (lut_size < 2 || lut_size > 65)
+                    return SynError(ContextID, cube, "LUT size '%d' is not allowed", lut_size);
+
+                nodes = lut_size * lut_size * lut_size;
+
+
+                lut_table = (cmsFloat32Number*) _cmsMalloc(ContextID, nodes * 3 * sizeof(cmsFloat32Number));
                 if (lut_table == NULL) return FALSE;
 
                 for (i = 0; i < nodes; i++) {
@@ -3149,7 +3222,7 @@ cmsBool ParseCube(cmsContext ContextID, cmsIT8* cube, cmsStage** Shaper, cmsStag
 
                 *CLUT = cmsStageAllocCLutFloat(ContextID, lut_size, 3, 3, lut_table);
                 _cmsFree(ContextID, lut_table);
-            }   
+            }
 
             if (!Check(ContextID, cube, SEOF, "Extra symbols found in file")) return FALSE;
         }
@@ -3160,18 +3233,18 @@ cmsBool ParseCube(cmsContext ContextID, cmsIT8* cube, cmsStage** Shaper, cmsStag
 
 // Share the parser to read .cube format and create RGB devicelink profiles
 cmsHPROFILE CMSEXPORT cmsCreateDeviceLinkFromCubeFile(cmsContext ContextID, const char* cFileName)
-{    
+{
     cmsHPROFILE hProfile = NULL;
     cmsIT8* cube = NULL;
-    cmsPipeline* Pipeline = NULL;   
+    cmsPipeline* Pipeline = NULL;
     cmsStage* CLUT = NULL;
     cmsStage* Shaper = NULL;
     cmsMLU* DescriptionMLU = NULL;
     char title[MAXSTR];
 
     _cmsAssert(cFileName != NULL);
-    
-    cube = (cmsIT8*) cmsIT8Alloc(ContextID);    
+
+    cube = (cmsIT8*) cmsIT8Alloc(ContextID);
     if (!cube) return NULL;
 
     cube->IsCUBE = TRUE;
@@ -3183,11 +3256,11 @@ cmsHPROFILE CMSEXPORT cmsCreateDeviceLinkFromCubeFile(cmsContext ContextID, cons
     cube->FileStack[0]->FileName[cmsMAX_PATH - 1] = 0;
 
     if (!ParseCube(ContextID, cube, &Shaper, &CLUT, title)) goto Done;
-        
+
     // Success on parsing, let's create the profile
     hProfile = cmsCreateProfilePlaceholder(ContextID);
     if (!hProfile) goto Done;
-        
+
     cmsSetProfileVersion(ContextID, hProfile, 4.4);
 
     cmsSetDeviceClass(ContextID, hProfile, cmsSigLinkClass);
@@ -3202,13 +3275,17 @@ cmsHPROFILE CMSEXPORT cmsCreateDeviceLinkFromCubeFile(cmsContext ContextID, cons
 
     // Populates the pipeline
     if (Shaper != NULL) {
-        if (!cmsPipelineInsertStage(ContextID, Pipeline, cmsAT_BEGIN, Shaper))
+        if (!cmsPipelineInsertStage(ContextID, Pipeline, cmsAT_BEGIN, Shaper)) {
+            cmsStageFree(ContextID, Shaper);
             goto Done;
+        }
     }
 
     if (CLUT != NULL) {
-        if (!cmsPipelineInsertStage(ContextID, Pipeline, cmsAT_END, CLUT))
+        if (!cmsPipelineInsertStage(ContextID, Pipeline, cmsAT_END, CLUT)) {
+            cmsStageFree(ContextID, CLUT);
             goto Done;
+        }
     }
 
     // Propagate the description. We put no copyright because we know

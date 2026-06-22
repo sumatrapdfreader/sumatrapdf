@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2021 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -298,8 +298,9 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
     cmsUInt32Number dwFormat;
     GAMUTCHAIN Chain;
     cmsUInt32Number nGridpoints;
-    cmsInt32Number nChannels;
+    cmsInt32Number nChannels, nInputChannels;
     cmsColorSpaceSignature ColorSpace;
+    cmsColorSpaceSignature InputColorSpace;
     cmsUInt32Number i;
     cmsHPROFILE ProfileList[256];
     cmsBool     BPCList[256];
@@ -345,11 +346,13 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
     AdaptationList[nGamutPCSposition] = 1.0;
     IntentList[nGamutPCSposition] = INTENT_RELATIVE_COLORIMETRIC;
 
-
     ColorSpace  = cmsGetColorSpace(ContextID, hGamut);
     nChannels   = cmsChannelsOfColorSpace(ContextID, ColorSpace);
     nGridpoints = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, cmsFLAGS_HIGHRESPRECALC);
-    dwFormat    = (CHANNELS_SH(nChannels)|BYTES_SH(2));
+    
+    InputColorSpace = cmsGetColorSpace(ContextID, ProfileList[0]);
+    nInputChannels  = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
+    dwFormat        = (CHANNELS_SH(nInputChannels)|BYTES_SH(2));
 
     // 16 bits to Lab double
     Chain.hInput = cmsCreateExtendedTransform(ContextID,
@@ -484,7 +487,7 @@ cmsFloat64Number CMSEXPORT cmsDetectTAC(cmsContext ContextID, cmsHPROFILE hProfi
     if (hLab == NULL) return 0;
     // Setup a roundtrip on perceptual intent in output profile for TAC estimation
     bp.hRoundTrip = cmsCreateTransform(ContextID, hLab, TYPE_Lab_16,
-                                          hProfile, dwFormatter, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
+                                       hProfile, dwFormatter, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
 
     cmsCloseProfile(ContextID, hLab);
     if (bp.hRoundTrip == NULL) return 0;
@@ -593,9 +596,9 @@ cmsBool CMSEXPORT cmsDesaturateLab(cmsContext ContextID, cmsCIELab* Lab,
 
 // Detect whatever a given ICC profile works in linear (gamma 1.0) space
 // Actually, doing that "well" is quite hard, since every component may behave completely different.
-// Since the true point of this function is to detect suitable optimizations, I am imposing some requirements
+// Since the true point of this function is to detect suitable optimizations, I am imposing some requirements 
 // that simplifies things: only RGB, and only profiles that can got in both directions.
-// The algorithm obtains Y from a synthetical gray R=G=B. Then least squares fitting is used to estimate gamma.
+// The algorithm obtains Y from a synthetical gray R=G=B. Then least squares fitting is used to estimate gamma. 
 // For gamma close to 1.0, RGB is linear. On profiles not supported, -1 is returned.
 
 cmsFloat64Number CMSEXPORT cmsDetectRGBProfileGamma(cmsContext ContextID, cmsHPROFILE hProfile, cmsFloat64Number threshold)

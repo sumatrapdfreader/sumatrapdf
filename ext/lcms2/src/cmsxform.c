@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -261,7 +261,7 @@ void FloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
     cmsUInt8Number* output;
     cmsFloat32Number fIn[cmsMAXCHANNELS], fOut[cmsMAXCHANNELS];
     cmsFloat32Number OutOfGamut;
-    cmsUInt32Number i, j, c, strideIn, strideOut;
+    size_t i, j, c, strideIn, strideOut;
     _cmsTRANSFORMCORE *core = p->core;
 
     _cmsHandleExtraChannels(ContextID, p, in, out, PixelsPerLine, LineCount, Stride);
@@ -289,9 +289,11 @@ void FloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
                 // Is current color out of gamut?
                 if (OutOfGamut > 0.0) {
 
+                    _cmsAlarmCodesChunkType* ContextAlarmCodes = (_cmsAlarmCodesChunkType*)_cmsContextGetClientChunk(ContextID, AlarmCodesContext);
+
                     // Certainly, out of gamut
                     for (c = 0; c < cmsMAXCHANNELS; c++)
-                        fOut[c] = -1.0;
+                        fOut[c] = ContextAlarmCodes->AlarmCodes[c] / 65535.0F;
 
                 }
                 else {
@@ -328,7 +330,7 @@ void NullFloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
     cmsUInt8Number* accum;
     cmsUInt8Number* output;
     cmsFloat32Number fIn[cmsMAXCHANNELS];
-    cmsUInt32Number i, j, strideIn, strideOut;
+    size_t i, j, strideIn, strideOut;
 
     _cmsHandleExtraChannels(ContextID, p, in, out, PixelsPerLine, LineCount, Stride);
 
@@ -352,7 +354,7 @@ void NullFloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
     }
 }
 
-static inline int mul255(cmsUInt32Number a, cmsUInt32Number b)
+cmsINLINE int mul255(cmsUInt32Number a, cmsUInt32Number b)
 {
 	/* see Jim Blinn's book "Dirty Pixels" for how this works */
 	cmsUInt32Number x = a * b + 128;
@@ -360,7 +362,7 @@ static inline int mul255(cmsUInt32Number a, cmsUInt32Number b)
 	return x >> 8;
 }
 
-static inline cmsUInt32Number mul65535(cmsUInt32Number a, cmsUInt32Number b)
+cmsINLINE cmsUInt32Number mul65535(cmsUInt32Number a, cmsUInt32Number b)
 {
 	/* see Jim Blinn's book "Dirty Pixels" for how this works */
 	cmsUInt32Number x = a * b + 0x8000;
@@ -383,7 +385,7 @@ void NullXFORM(cmsContext ContextID,
     cmsUInt8Number* accum;
     cmsUInt8Number* output;
     cmsUInt16Number wIn[cmsMAXCHANNELS];
-    cmsUInt32Number i, j, strideIn, strideOut;
+    size_t i, j, strideIn, strideOut;
 
     _cmsHandleExtraChannels(ContextID, p, in, out, PixelsPerLine, LineCount, Stride);
 
@@ -393,17 +395,17 @@ void NullXFORM(cmsContext ContextID,
 
     for (i = 0; i < LineCount; i++) {
 
-           accum = (cmsUInt8Number*)in + strideIn;
-           output = (cmsUInt8Number*)out + strideOut;
+        accum = (cmsUInt8Number*)in + strideIn;
+        output = (cmsUInt8Number*)out + strideOut;
 
-           for (j = 0; j < PixelsPerLine; j++) {
+        for (j = 0; j < PixelsPerLine; j++) {
 
-                  accum = p->FromInput(ContextID, p, wIn, accum, Stride->BytesPerPlaneIn);
-                  output = p->ToOutput(ContextID, p, wIn, output, Stride->BytesPerPlaneOut);
-    }
+            accum = p->FromInput(ContextID, p, wIn, accum, Stride->BytesPerPlaneIn);
+            output = p->ToOutput(ContextID, p, wIn, output, Stride->BytesPerPlaneOut);
+        }
 
-           strideIn += Stride->BytesPerLineIn;
-           strideOut += Stride->BytesPerLineOut;
+        strideIn += Stride->BytesPerLineIn;
+        strideOut += Stride->BytesPerLineOut;
     }
 
 }
@@ -1837,8 +1839,8 @@ void _cmsTransform2toTransformAdaptor(cmsContext ContextID, struct _cmstransform
                                       cmsUInt32Number LineCount,
                                       const cmsStride* Stride)
 {
-
-       cmsUInt32Number i, strideIn, strideOut;
+     
+       size_t i, strideIn, strideOut;
 
        _cmsHandleExtraChannels(ContextID, CMMcargo, InputBuffer, OutputBuffer, PixelsPerLine, LineCount, Stride);
 
@@ -2484,7 +2486,9 @@ cmsBool  IsProperColorSpace(cmsContext ContextID, cmsColorSpaceSignature Check, 
     int Space1 = (int) T_COLORSPACE(dwFormat);
     int Space2 = _cmsLCMScolorSpace(ContextID, Check);
 
-    if (Space1 == PT_ANY) return TRUE;
+    if (dwFormat == 0) return TRUE; // Bypass used by linkicc
+
+    if (Space1 == PT_ANY) return (T_CHANNELS(dwFormat) == cmsChannelsOf(ContextID, Check));
     if (Space1 == Space2) return TRUE;
 
     if (Space1 == PT_LabV2 && Space2 == PT_Lab) return TRUE;
@@ -2545,7 +2549,15 @@ cmsHTRANSFORM CMSEXPORT cmsCreateExtendedTransform(cmsContext ContextID,
     cmsColorSpaceSignature EntryColorSpace;
     cmsColorSpaceSignature ExitColorSpace;
     cmsPipeline* Lut;
-    cmsUInt32Number LastIntent = Intents[nProfiles-1];
+    cmsUInt32Number LastIntent;
+
+    // Safeguard
+    if (nProfiles <= 0 || nProfiles > 255) {
+        cmsSignalError(ContextID, cmsERROR_RANGE, "Wrong number of profiles. 1..255 expected, %d found.", nProfiles);
+        return NULL;
+    }
+
+    LastIntent = Intents[nProfiles - 1];
 
     // If it is a fake transform
     if (dwFlags & cmsFLAGS_NULLTRANSFORM)
@@ -2556,6 +2568,11 @@ cmsHTRANSFORM CMSEXPORT cmsCreateExtendedTransform(cmsContext ContextID,
     // If gamut check is requested, make sure we have a gamut profile
     if (dwFlags & cmsFLAGS_GAMUTCHECK) {
         if (hGamutProfile == NULL) dwFlags &= ~cmsFLAGS_GAMUTCHECK;
+    }
+
+    if ((dwFlags & cmsFLAGS_GAMUTCHECK) && (nGamutPCSposition <= 0 || nGamutPCSposition >= nProfiles - 1)) {
+        cmsSignalError(ContextID, cmsERROR_RANGE, "Wrong gamut PCS position '%d'", nGamutPCSposition);
+        return NULL;
     }
 
     // On floating point transforms, inhibit cache
@@ -2795,6 +2812,22 @@ cmsUInt32Number CMSEXPORT cmsGetTransformOutputFormat(cmsContext ContextID, cmsH
     return xform->OutputFormat;
 }
 
+// Returns the optimized pipeline (Lut) inside a transform. Read-only; do not free.
+cmsPipeline* CMSEXPORT cmsGetTransformPipeline(cmsHTRANSFORM hTransform)
+{
+    _cmsTRANSFORM* xform = (_cmsTRANSFORM*) hTransform;
+    if (xform == NULL) return NULL;
+    return xform->core->Lut;
+}
+
+// Returns the gamut-check pipeline inside a transform. Read-only; do not free.
+cmsPipeline* CMSEXPORT cmsGetTransformGamutCheckPipeline(cmsHTRANSFORM hTransform)
+{
+    _cmsTRANSFORM* xform = (_cmsTRANSFORM*) hTransform;
+    if (xform == NULL) return NULL;
+    return xform->core->GamutCheck;
+}
+
 cmsHTRANSFORM cmsCloneTransformChangingFormats(cmsContext ContextID,
                                                const cmsHTRANSFORM hTransform,
                                                cmsUInt32Number InputFormat,
@@ -2836,4 +2869,20 @@ cmsHTRANSFORM cmsCloneTransformChangingFormats(cmsContext ContextID,
     (void)_cmsAdjustReferenceCount(&xform->core->refs, 1);
 
     return xform;
+}
+
+cmsNAMEDCOLORLIST* CMSEXPORT cmsGetTransformInputColorants(cmsHTRANSFORM hTransform)
+{
+    _cmsTRANSFORM* xform = (_cmsTRANSFORM*)hTransform;
+
+    if (xform == NULL || xform->core == NULL) return NULL;
+    return xform->core->InputColorant;
+}
+
+cmsNAMEDCOLORLIST* CMSEXPORT cmsGetTransformOutputColorants(cmsHTRANSFORM hTransform)
+{
+    _cmsTRANSFORM* xform = (_cmsTRANSFORM*)hTransform;
+
+    if (xform == NULL || xform->core == NULL) return NULL;
+    return xform->core->OutputColorant;
 }
