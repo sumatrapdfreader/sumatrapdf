@@ -90,6 +90,38 @@ pdf_remap_cmap(fz_context *ctx, pdf_cmap *gid_from_cpt, pdf_cmap *ucs_from_cpt)
 	return ucs_from_gid;
 }
 
+/* Recover a unicode value from glyph names that don't map via the Adobe Glyph
+ * List, mirroring the heuristics pdf.js uses in _simpleFontToUnicode():
+ *   "G" + 2 hex digits   -> that code point   (e.g. "G45" -> 'E')
+ *   "g" + 4 hex digits   -> that code point
+ *   "C"/"c" + 2..3 digits -> that decimal code point
+ * Some embedded subset fonts (e.g. MSTT*) name glyphs this way and ship no
+ * ToUnicode CMap; without this, their text extracts as U+FFFD and isn't
+ * searchable. Returns 0 if no heuristic applies. (issue #3219)
+ */
+static int
+unicode_from_coded_glyph_name(const char *name)
+{
+	size_t n = strlen(name);
+	char *end;
+	long code = 0;
+
+	if (name[0] == 'G' && n == 3)
+		code = strtol(name + 1, &end, 16);
+	else if (name[0] == 'g' && n == 5)
+		code = strtol(name + 1, &end, 16);
+	else if ((name[0] == 'C' || name[0] == 'c') && n >= 3 && n <= 4)
+		code = strtol(name + 1, &end, 10);
+	else
+		return 0;
+
+	if (*end != 0)
+		return 0;
+	if (code > 0 && code <= 0xffff)
+		return (int)code;
+	return 0;
+}
+
 void
 pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
 	const char **strings, char *collection, pdf_obj *cmapstm)
@@ -143,7 +175,16 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
 		for (cpt = 0; cpt < 256; cpt++)
 		{
 			if (strings[cpt])
-				font->cid_to_ucs[cpt] = fz_unicode_from_glyph_name(strings[cpt]);
+			{
+				int ucs = fz_unicode_from_glyph_name(strings[cpt]);
+				if (ucs == FZ_REPLACEMENT_CHARACTER)
+				{
+					int u2 = unicode_from_coded_glyph_name(strings[cpt]);
+					if (u2)
+						ucs = u2;
+				}
+				font->cid_to_ucs[cpt] = ucs;
+			}
 			else
 				font->cid_to_ucs[cpt] = FZ_REPLACEMENT_CHARACTER;
 		}

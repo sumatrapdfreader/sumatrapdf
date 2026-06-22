@@ -88,6 +88,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - find-as-you-type now waits briefly after you stop typing before searching (500 ms, or 1 s for 1–2 character terms) instead of searching on every keystroke; pressing Enter searches immediately (fixes #4626)
 - add **Go to Next/Previous Favorite** commands (`Ctrl + k` command palette) that jump to the nearest favorite (bookmark) page after / before the current page (fixes #3744)
 - can paste an image from the clipboard into a PDF as an image stamp annotation: right-click → **Create Annotation Under Cursor** → **Image From Clipboard** (or the `Ctrl + k` command palette). The stamp is created at the click point, sized to the image, and immediately selected so it can be moved/resized
+- text in some PDFs that use embedded subset fonts naming glyphs like `G45` (with no `ToUnicode` map) is now extracted and searchable: previously such text came out as `�` and couldn't be found (e.g. searching "Emergency" failed). mupdf now recovers Unicode from those glyph names the way pdf.js does (fixes #3219)
 
 **New commands:**
 
