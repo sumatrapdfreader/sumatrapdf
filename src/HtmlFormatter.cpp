@@ -777,6 +777,26 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
     }
 }
 
+// Emits a synthetic string (e.g. a list bullet or number) at the current
+// position. Unlike EmitTextRun, s isn't part of the source HTML, so it must
+// stay valid for the lifetime of the page: pass a string literal or one
+// allocated in textAllocator.
+void HtmlFormatter::EmitTextMarker(const char* s) {
+    size_t sLen = str::Len(s);
+    if (sLen == 0) {
+        return;
+    }
+    WCHAR* buf = ToWStrTemp(s, sLen);
+    size_t strLen = str::Len(buf);
+    if (strLen == 0) {
+        return;
+    }
+    textMeasure->SetFont(CurrFont());
+    RectF bbox = textMeasure->Measure(buf, strLen);
+    AppendInstr(DrawInstr::Str(s, sLen, bbox, dirRtl));
+    currX += bbox.dx;
+}
+
 void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     if (t->IsEndTag()) {
         return;
@@ -1196,9 +1216,32 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         }
     } else if ((Tag_Ul == tag) || (Tag_Ol == tag)) {
         HandleTagList(t);
+        if (t->IsStartTag()) {
+            ListInfo li;
+            li.ordered = (Tag_Ol == tag);
+            if (li.ordered) {
+                // honor <ol start="N">
+                AttrInfo* attr = t->GetAttrByName("start");
+                if (attr) {
+                    li.nextNum = atoi(str::DupTemp(attr->val, attr->valLen));
+                }
+            }
+            listInfos.Append(li);
+        } else if (t->IsEndTag() && listInfos.size() > 0) {
+            listInfos.RemoveLast();
+        }
     } else if (Tag_Li == tag) {
-        // TODO: display bullet/number
         FlushCurrLine(true);
+        if (t->IsStartTag() && listInfos.size() > 0) {
+            ListInfo& li = listInfos.Last();
+            if (li.ordered) {
+                const char* marker = str::Dup(textAllocator, str::FormatTemp("%d. ", li.nextNum));
+                li.nextNum++;
+                EmitTextMarker(marker);
+            } else {
+                EmitTextMarker("\xe2\x80\xa2  "); // U+2022 bullet + 2 spaces
+            }
+        }
     } else if (Tag_Dt == tag) {
         FlushCurrLine(true);
         ChangeFontStyle(FontStyleBold, t->IsStartTag());
