@@ -1468,6 +1468,16 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+// approximate "is this UTF-8 byte part of a word character?": any byte >= 0x80
+// is part of a multi-byte rune (CJK / Cyrillic / accented Latin -> treat as a
+// word char); ASCII bytes use the same rule as the search engine's isWordChar()
+static bool IsWordByte(u8 b) {
+    if (b >= 0x80) {
+        return true;
+    }
+    return IsCharAlphaNumericW((WCHAR)b) || b == '_';
+}
+
 void DrawMaybeHighlightedText(DrawMaybeHighlightedTextArgs& args) {
     HDC hdc = args.hdc;
     RECT rc = args.rc;
@@ -1497,8 +1507,21 @@ void DrawMaybeHighlightedText(DrawMaybeHighlightedTextArgs& args) {
         const char* p = text;
         while ((p = str::FindI(p, word)) != nullptr) {
             int off = (int)(p - text);
-            for (int k = 0; k < wordLen && off + k < textLen; k++) {
-                hl[off + k] = 1;
+            int end = off + wordLen;
+            // with "match whole word", skip occurrences that sit inside a larger
+            // word so the snippet doesn't highlight non-matching substrings (e.g.
+            // "cat" inside "category"). Mirrors TextSearch::MatchEnd's boundary
+            // rule: a boundary is only required when both sides are word chars.
+            bool wholeWordOk = true;
+            if (args.matchWholeWord) {
+                bool leftViolation = off > 0 && IsWordByte((u8)text[off - 1]) && IsWordByte((u8)text[off]);
+                bool rightViolation = end < textLen && IsWordByte((u8)text[end - 1]) && IsWordByte((u8)text[end]);
+                wholeWordOk = !leftViolation && !rightViolation;
+            }
+            if (wholeWordOk) {
+                for (int k = 0; k < wordLen && off + k < textLen; k++) {
+                    hl[off + k] = 1;
+                }
             }
             p += wordLen;
         }

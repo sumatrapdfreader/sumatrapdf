@@ -22,6 +22,7 @@ struct DrawMaybeHighlightedTextArgs {
     Vec<u8>& highlighted;
     COLORREF colBg = 0;
     bool isRtl = false;
+    bool matchWholeWord = false; // only highlight whole-word occurrences (issue #4295)
     uint drawFmt = 0;
 
     DrawMaybeHighlightedTextArgs(const StrVec& fw, Vec<u8>& hl) : filterWords(fw), highlighted(hl) {}
