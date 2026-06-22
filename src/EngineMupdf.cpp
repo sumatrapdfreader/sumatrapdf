@@ -4526,6 +4526,9 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
     if (kind == kindFileEpub) {
         return true;
     }
+    if (kind == kindFileMarkdown) {
+        return true;
+    }
     if (kind == kindFileFb2) {
         return true;
     }

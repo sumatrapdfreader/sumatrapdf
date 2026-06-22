@@ -166,7 +166,9 @@ static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, const ch
     }
     int dpi = DpiGet(nullptr);
     EngineBase* engine = nullptr;
-    if (kind == kindFilePDF || kind == kindFileXps) {
+    // markdown has no native SumatraPDF engine; always use mupdf (cmark-gfm),
+    // regardless of gEnableEpubWithPdfEngine.
+    if (kind == kindFilePDF || kind == kindFileXps || kind == kindFileMarkdown) {
         engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
         return engine;
     }

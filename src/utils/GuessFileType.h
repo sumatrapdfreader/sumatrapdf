@@ -33,6 +33,7 @@ extern Kind kindFileJp2;
 extern Kind kindFileFb2;
 extern Kind kindFileFb2z;
 extern Kind kindFileEpub;
+extern Kind kindFileMarkdown;
 extern Kind kindFileMobi;
 extern Kind kindFilePalmDoc;
 extern Kind kindFileHTML;

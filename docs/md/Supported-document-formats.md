@@ -9,6 +9,7 @@ SumatraPDF reader supports the following document types:
   - FictionBook (.fb2, .fb2z, .zfb2)
   - .pdb (Palm DOC format)
   - .tcr
+- Markdown (.md, .markdown), rendered as GitHub Flavored Markdown
 - comic book files: .cbz, .cbr, .cbt, .cb7
 - archive files (.7z, .rar, .tar, .zip) with images
 - DjVu (.djv, .djvu)
