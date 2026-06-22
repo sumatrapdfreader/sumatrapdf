@@ -1505,8 +1505,6 @@ static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
-    WindowTab* tab = ctx->tab;
-
     int idFirst = CmdOpenWithKnownExternalViewerFirst + 1;
     int idLast = CmdOpenWithKnownExternalViewerLast;
     for (int cmdId = idFirst; cmdId < idLast; cmdId++) {
@@ -2159,7 +2157,6 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
-    PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
     EngineBase* engine = dm->GetEngine();
 
     win->contextMenuPt = cursorPos;

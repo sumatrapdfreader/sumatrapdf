@@ -785,7 +785,6 @@ static bool reachedMax(int nAdded, int max) {
     e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
     (resp. "a", "b", "c" if separators are collapsed) */
 int Split(StrVec* v, const char* s, const char* separator, bool collapse, int max) {
-    int startSize = v->Size();
     const char* next;
     int nAdded = 0;
     while (true) {
@@ -834,7 +833,6 @@ static int CalcCapForJoin(const StrVec* v, const char* joint) {
 }
 
 static char* JoinInner(const StrVec* v, const char* joint, StrBuilder& res) {
-    int len = v->Size();
     int jointLen = str::Leni(joint);
     // TODO: possibly not handling null values in the middle. need to add more tests and fix
     int firstForJoint = 0;

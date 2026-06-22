@@ -3406,7 +3406,6 @@ struct DownloadAndOpenUrlData {
 
 static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     TempStr url = data->url;
-    HWND hwndCanvas = data->hwndCanvas;
 
     TempStr downloadsDir = GetDownloadsDirTemp();
     if (!downloadsDir) {

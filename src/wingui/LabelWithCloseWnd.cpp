@@ -94,8 +94,6 @@ LRESULT LabelWithCloseWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 #endif
 
     if (WM_SIZE == msg) {
-        int dx = LOWORD(lp);
-        int dy = HIWORD(lp);
         Layout();
         return 0;
     }

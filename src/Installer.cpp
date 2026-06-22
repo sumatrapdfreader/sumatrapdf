@@ -606,7 +606,6 @@ static void SetInstallButtonElevationState() {
 static void ForAllUsersStateChanged() {
     Flags* cli = &gCliNew;
     bool forAllUsers = gWnd->checkboxForAllUsers->IsChecked();
-    bool mustElevate = forAllUsers || gPrevInstall.allUsers;
     logf("ForAllUsersStateChanged() to %d\n", (int)forAllUsers);
     SetInstallButtonElevationState();
     cli->allUsers = forAllUsers;
@@ -614,8 +613,7 @@ static void ForAllUsersStateChanged() {
     str::ReplacePtr(&cli->installDir, str::Dup(dir));
     gWnd->editInstallationDir->SetText(cli->installDir);
     logf("ForAllUsersStateChanged: cli->allUsers: %d, cli->installDir: '%s', forAllUsers: %d\n", (int)cli->allUsers,
-         cli->installDir),
-        (int)forAllUsers;
+         cli->installDir, (int)forAllUsers);
 }
 
 static void UpdateUIForOptionsState(InstallerWnd* wnd) {
@@ -858,15 +856,13 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     wnd->btnBrowseDir = CreateDefaultButton(hwnd, "&...", isRtl);
     wnd->btnBrowseDir->onClick = MkFunc0(OnButtonBrowse, wnd);
 
-    Size btnSize2 = wnd->btnBrowseDir->GetIdealSize();
-
     Edit::CreateArgs eargs;
     eargs.parent = hwnd;
     eargs.withBorder = true;
     eargs.isRtl = IsUIRtl();
 
     wnd->editInstallationDir = new Edit();
-    HWND ehwnd = wnd->editInstallationDir->Create(eargs);
+    wnd->editInstallationDir->Create(eargs);
     wnd->editInstallationDir->SetText(cli->installDir);
 
     int editDy = wnd->editInstallationDir->GetIdealSize().dy;

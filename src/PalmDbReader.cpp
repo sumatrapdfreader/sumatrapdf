@@ -79,7 +79,6 @@ bool PdbReader::ParseHeader() {
     }
 
     // validate offsets
-    u32 prevOff = recInfos[0].offset;
     for (size_t i = 0; i < nRecs - 1; i++) {
         if (recInfos[i].offset > recInfos[i + 1].offset) {
             return false;
