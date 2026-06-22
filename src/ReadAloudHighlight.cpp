@@ -373,7 +373,6 @@ static bool ReadAloudGetGlyphAtCursor(DisplayModel* dm, Point screenPt, int* pag
     }
 
     PointF pt = dm->CvtFromScreen(screenPt, pageNo);
-    dm->textSelection->StartAt(pageNo, pt.x, pt.y);
 
     int textLen = 0;
     Rect* coords = nullptr;
@@ -382,9 +381,12 @@ static bool ReadAloudGetGlyphAtCursor(DisplayModel* dm, Point screenPt, int* pag
         return false;
     }
 
+    // find the glyph under the cursor without mutating the live selection:
+    // StartAt() would overwrite startGlyph and corrupt an existing selection
+    // when this is called from the context menu (issue #5718)
     // Same adjustment as TextSelection::IsOverGlyph: FindClosestGlyph can return
     // the index after the glyph under the cursor when clicking its right half.
-    int glyph = dm->textSelection->startGlyph;
+    int glyph = dm->textSelection->FindClosestGlyphAt(pageNo, pt.x, pt.y);
     Point pti = ToPoint(pt);
     if (glyph == textLen || (glyph >= 0 && glyph < textLen && !coords[glyph].Contains(pti))) {
         glyph--;

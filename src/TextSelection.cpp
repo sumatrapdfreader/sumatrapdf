@@ -170,6 +170,10 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     return coords[glyphIx].Contains(pt);
 }
 
+int TextSelection::FindClosestGlyphAt(int pageNo, double x, double y) {
+    return FindClosestGlyph(this, pageNo, x, y);
+}
+
 void TextSelection::StartAt(int pageNo, int glyphIx) {
     startPage = pageNo;
     startGlyph = glyphIx;

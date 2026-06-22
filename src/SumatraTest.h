@@ -8,3 +8,5 @@ char* TestNamedDestResult(const char* pdfPath, const char* destName);
 char* TestChmResult(const char* chmPath, int* exitCodeOut = nullptr);
 char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord, const char* expectedLine,
                                       int* exitCodeOut = nullptr);
+char* TestContextMenuSelectionResult(const char* word1, const char* word2, const char* cursorWord,
+                                     int* exitCodeOut = nullptr);

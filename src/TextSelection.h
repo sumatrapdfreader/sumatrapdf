@@ -28,6 +28,9 @@ struct TextSelection {
     ~TextSelection();
 
     bool IsOverGlyph(int pageNo, double x, double y);
+    // index of the glyph closest to (x, y) on pageNo, without mutating the
+    // selection (unlike StartAt, which stores it in startGlyph)
+    int FindClosestGlyphAt(int pageNo, double x, double y);
     void StartAt(int pageNo, int glyphIx);
     void StartAt(int pageNo, double x, double y);
     void SelectUpTo(int pageNo, int glyphIx);

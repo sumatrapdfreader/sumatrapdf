@@ -13,10 +13,15 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
+#include "DisplayModel.h"
 #include "PdfSync.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "MainWindow.h"
+#include "WindowTab.h"
+#include "Selection.h"
+#include "ReadAloudHighlight.h"
 
 #include <chm_lib.h>
 #include "lzx.h"
@@ -301,6 +306,82 @@ char* TestChmResult(const char* chmPath, int* exitCodeOut) {
         out.Append("result=FAILED\n");
     }
 
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
+
+static bool FindWordCenter(EngineBase* engine, int pageNo, const char* word, double* xOut, double* yOut);
+
+// Regression test for issue #5718: opening the context menu over text used to
+// corrupt an existing selection because ReadAloudCanReadFromCursor() (called
+// while building the menu) mutated the live TextSelection's start glyph. As a
+// result "Copy Selection" copied from the old selection end to the cursor
+// instead of the selected text. Operates on the document loaded into the first
+// window (passed on the command line), so it exercises the real menu code path.
+char* TestContextMenuSelectionResult(const char* word1, const char* word2, const char* cursorWord, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word1) || str::IsEmptyOrWhiteSpace(word2) || str::IsEmptyOrWhiteSpace(cursorWord)) {
+        return fail("ERROR missing word1, word2 or cursorWord");
+    }
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail("NOTREADY no-doc");
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    double x1 = 0, y1 = 0, x2 = 0, y2 = 0, xc = 0, yc = 0;
+    if (!FindWordCenter(engine, pageNo, word1, &x1, &y1)) {
+        return fail("ERROR word1-not-found");
+    }
+    if (!FindWordCenter(engine, pageNo, word2, &x2, &y2)) {
+        return fail("ERROR word2-not-found");
+    }
+    if (!FindWordCenter(engine, pageNo, cursorWord, &xc, &yc)) {
+        return fail("ERROR cursorWord-not-found");
+    }
+
+    // build a text selection spanning word1..word2, like a left-drag would
+    dm->textSelection->StartAt(pageNo, x1, y1);
+    dm->textSelection->SelectUpTo(pageNo, x2, y2);
+    WindowTab* tab = win->CurrentTab();
+    DeleteOldSelectionInfo(win);
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = tab->selectionOnPage != nullptr;
+
+    bool isTextOnly = false;
+    TempStr original = GetSelectedTextTemp(tab, " ", isTextOnly);
+    if (str::IsEmpty(original)) {
+        return fail("ERROR empty-selection");
+    }
+    original = str::DupTemp(original);
+
+    // simulate opening the context menu over cursorWord: this is the read-only
+    // check the menu performs; it must not change the selection
+    Point screenPt = dm->CvtToScreen(pageNo, PointF(xc, yc));
+    ReadAloudCanReadFromCursor(dm, screenPt);
+
+    TempStr after = GetSelectedTextTemp(tab, " ", isTextOnly);
+    bool ok = str::Eq(original, after);
+    if (ok) {
+        out.AppendFmt("OK selected=%s\n", original);
+    } else {
+        out.AppendFmt("FAIL original=%s after=%s\n", original, after);
+    }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
