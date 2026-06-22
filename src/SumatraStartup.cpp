@@ -869,6 +869,12 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
     return S_OK;
 }
 
+// if true, this is a single self-contained exe: we extract libmupdf.dll to the
+// build data dir and load it from there (no installer). if false, we behave like
+// before: load libmupdf.dll from next to the exe and, if it's missing, launch
+// the installer (see ForceRunningAsInstaller).
+bool gSingleExe = false;
+
 static bool EnsureLibmupdfDll() {
     u32 expectedSize = GetLibmupdfDllSize();
     ReportIf(0 == expectedSize);
@@ -898,13 +904,23 @@ static bool LoadLibmupdf(bool showErrorDialog) {
     }
     DWORD err = 0;
     TempStr errStr = nullptr;
-    if (!EnsureLibmupdfDll()) {
-        logf("LoadLibmupdf: failed to ensure libmupdf.dll\n");
-        if (!showErrorDialog) {
-            return false;
-        }
+
+    // gSingleExe: extract libmupdf.dll to the build data dir and load from there.
+    // otherwise (installer build) load the libmupdf.dll the installer placed next
+    // to the exe.
+    bool haveDll;
+    TempStr path;
+    if (gSingleExe) {
+        haveDll = EnsureLibmupdfDll();
+        path = path::JoinTemp(GetBuildDirNameTemp(), "libmupdf.dll");
     } else {
-        TempStr path = path::JoinTemp(GetBuildDirNameTemp(), "libmupdf.dll");
+        haveDll = true;
+        path = GetPathInExeDirTemp("libmupdf.dll");
+    }
+
+    if (!haveDll) {
+        logf("LoadLibmupdf: failed to ensure libmupdf.dll\n");
+    } else {
         HMODULE hm = LoadLibraryW(ToWStrTemp(path));
         if (hm) {
             return true;
@@ -917,11 +933,11 @@ static bool LoadLibmupdf(bool showErrorDialog) {
             logf("error string: %s\n", errStr ? errStr : "(none)");
         }
         ReportIfFast(true);
-        if (!showErrorDialog) {
-            // e.g. -print-to ... -silent invoked by another program:
-            // a modal dialog would hang the caller
-            return false;
-        }
+    }
+    if (!showErrorDialog) {
+        // e.g. -print-to ... -silent invoked by another program:
+        // a modal dialog would hang the caller
+        return false;
     }
 
     TempStr msg = str::FormatTemp(R"(SumatraPDF.exe failed to load libmupdf.dll.
@@ -967,6 +983,72 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
             break;
     }
     return S_OK;
+}
+
+// !gSingleExe (installer build): a single exe is both an installer and the app
+// (once libmupdf.dll has been extracted next to it). If we don't find
+// libmupdf.dll alongside us, assume this is the installer. If it's present but a
+// different size than ours, it's a damaged installation.
+static bool ForceRunningAsInstaller() {
+    if (!ExeHasInstallerResources()) {
+        // this is not a version that needs libmupdf.dll
+        return false;
+    }
+
+    u32 expectedSize = GetLibmupdfDllSize();
+    ReportIf(0 == expectedSize);
+    if (0 == expectedSize) {
+        // shouldn't happen
+        return false;
+    }
+
+    TempStr dir = GetSelfExeDirTemp();
+    TempStr path = path::JoinTemp(dir, "libmupdf.dll");
+    auto realSize = file::GetSize(path);
+    if (realSize < 0) {
+        return true;
+    }
+    if (realSize == (i64)expectedSize) {
+        return false;
+    }
+
+    constexpr const char* corruptedInstallationConsole = R"(
+Looks like corrupted installation of SumatraPDF.
+
+Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
+)";
+    constexpr const char* corruptedInstallation =
+        R"(Looks like corrupted installation of SumatraPDF.
+)";
+    bool ok = RedirectIOToExistingConsole();
+    if (ok) {
+        // if we're launched from console, print help to consle window
+        printf("%s", corruptedInstallationConsole);
+    }
+
+    auto title = L"SumatraPDF installer";
+    TASKDIALOGCONFIG dialogConfig{};
+
+    DWORD flags =
+        TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.pszWindowTitle = title;
+    dialogConfig.pszMainInstruction = ToWStrTemp(corruptedInstallation);
+    dialogConfig.pszContent =
+        LR"(Learn more at <a href="https://www.sumatrapdfreader.org/docs/Corrupted-installation">www.sumatrapdfreader.org/docs/Corrupted-installation</a>.)";
+    dialogConfig.nDefaultButton = IDOK;
+    dialogConfig.dwFlags = flags;
+    dialogConfig.cxWidth = 0;
+    dialogConfig.pfCallback = TaskdialogHandleLinkscallback;
+    dialogConfig.dwCommonButtons = TDCBF_CLOSE_BUTTON;
+    dialogConfig.pszMainIcon = TD_ERROR_ICON;
+
+    auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+    HandleRedirectedConsoleOnShutdown();
+    ::ExitProcess(1);
 }
 
 constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
@@ -1826,6 +1908,16 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
             ShowNotValidInstallerError();
             return 1;
         }
+        exitCode = RunInstaller();
+        // exit immediately. for some reason exit handlers try to
+        // pull in libmupdf.dll which we don't have access to in the installer
+        ::ExitProcess(exitCode);
+    }
+
+    // when not a single self-contained exe, a missing sibling libmupdf.dll means
+    // we're really the installer; run it (matches pre-single-exe behavior)
+    if (!gSingleExe && ForceRunningAsInstaller() && !flags.dumpExif && !flags.engineDump) {
+        logf("forcing running as an installer\n");
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
         // pull in libmupdf.dll which we don't have access to in the installer
