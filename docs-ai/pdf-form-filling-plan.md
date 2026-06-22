@@ -9,6 +9,40 @@ Scope (v1): text fields (single + multiline), checkboxes, radio buttons,
 comboboxes, listboxes. **Defer:** digital signatures, XFA-only forms, push
 buttons that run arbitrary JS, barcode fields.
 
+---
+
+## Implementation status — DONE (phases 0–4, all on master)
+
+Built and validated against `f1040.pdf` (a hybrid-XFA form whose AcroForm layer
+fills fine) plus a synthetic `formtest.pdf` for the field types the 1040 lacks.
+
+| Phase | Commit | What shipped |
+|-------|--------|--------------|
+| 0 | `1949ffa8a` | Click a checkbox / radio to toggle it in place. Needed: export the mupdf form-mutation APIs from `libmupdf.def`; make widgets hit-testable (mupdf 1.27 keeps them in a separate `page->widgets` list, so walk `pdf_first_widget` in `GetFzPageInfo`). |
+| 1 | `082faf66d` | Click a text field → floating Win32 `Edit` over the field (positioned via `CvtToScreen`), commit on Enter/blur via `pdf_set_text_field_value`. New `src/FormFields.cpp`. |
+| 2 | `627848a9f` | Combobox/listbox dropdown (`pdf_choice_widget_*`); radio groups with proper mutual exclusion. Two mupdf gotchas: regenerate the whole page (`pdf_update_page`) so radio siblings / calc fields refresh; `pdf_toggle_widget` mishandles distinct-on-state radios, so radios go through `pdf_set_field_value` instead. |
+| cleanup | `053e23d46` | Move widgets out of the shared annotation list into `FzPageInfo::widgets` + `GetWidgetAtPos`, so form fields stop polluting comment hovers / the edit-annotations panel. |
+| 3 | `dbbf00f85` | Tab / Shift+Tab navigation (`EngineMupdfGetAdjacentWidget`); overlay font from the field's `/DA` size × zoom; max-length / comb enforcement (`EM_SETLIMITTEXT`); crash-safe teardown of the overlay on doc close + reload (no dangling widget pointer). |
+| 4a | `222e45dab` | Save round-trip verified (reuses the annotation `pdf_save_document` pipeline — field values + checkbox state persist across save/reopen); generalized the close-time prompt wording from "Unsaved annotations" to "Unsaved changes"; hover cursors (I-beam over text/choice, hand over buttons). |
+| 4b | `f7fd4f998` | Scroll the next field into view on Tab when it's past the fold (`ScrollScreenToRect`). |
+
+### Known limitation — JavaScript-calculated fields NOT supported
+
+Verified: our mupdf build *does* compile JS (`FZ_ENABLE_JS=1`, mujs `one.c`
+built, `pdf-js.c` in the build), but SumatraPDF deliberately never calls
+`pdf_enable_js` — `EngineMupdf.cpp:2830` has `// TODO: support javascript` and
+asserts `pdf_js_supported()` is false. So `doc->js` is null and
+`pdf_calculate_form` is a no-op: fields whose value is computed by form
+JavaScript (e.g. auto-summed totals) will not recompute. The non-JS appearance
+regeneration via `pdf_update_page` still runs (that's what keeps radio-group
+siblings correct). Enabling JS calc would mean calling `pdf_enable_js` and
+removing that assertion — a separate, security-sensitive decision (PDF
+JavaScript execution), out of scope here.
+
+Other still-open polish: cross-page Tab (navigation is currently same-page),
+comb cells aren't drawn in the edit overlay (plain edit + max-length only),
+XFA-only forms fall back to read-only.
+
 Reference implementation analyzed: `mupdf/platform/gl/gl-form.c`,
 `gl-input.c`, `gl-main.c` (the mupdf OpenGL viewer's form filling). It polls
 widgets each frame and edits text/choice in a **modal dialog**; we want
