@@ -19,14 +19,10 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#include "mupdf/fitz.h"
 
-#include "glyphbox.h"
 
 #include "mupdf/ucdn.h"
 
-#include <float.h>
-#include <string.h>
 
 /* Simple layout structure */
 

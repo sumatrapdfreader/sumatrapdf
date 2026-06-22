@@ -22,10 +22,7 @@
 
 #include "mupdf/fitz.h"
 
-#include "pixmap-imp.h"
 
-#include <string.h>
-#include <limits.h>
 
 enum
 {

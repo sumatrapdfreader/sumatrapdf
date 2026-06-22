@@ -22,9 +22,7 @@
 
 #include "mupdf/fitz.h"
 
-#include "pixmap-imp.h"
 
-#include <string.h>
 
 /* Define TIMINGS to get timing information dumped to stdout. */
 #undef TIMINGS
@@ -67,7 +65,6 @@ debug_printf(fz_context *ctx, const char *fmt, ...)
 
 #if defined(TIMINGS) && defined(_WIN32)
 
-#include "windows.h"
 
 #define MAX_TIMERS 256
 static struct {

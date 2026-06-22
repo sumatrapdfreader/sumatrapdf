@@ -26,10 +26,7 @@
 
 #ifdef _WIN32
 #include "libarchive/archive.h"
-#include "libarchive/archive_entry.h"
 #else
-#include <archive.h>
-#include <archive_entry.h>
 #endif
 
 typedef struct

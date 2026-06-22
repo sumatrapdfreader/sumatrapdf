@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
-#include <limits.h>
 
 #define TYPE_NORMAL_OLD '\0'
 #define TYPE_NORMAL '0'

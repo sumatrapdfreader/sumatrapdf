@@ -23,9 +23,6 @@
 #include "mupdf/fitz.h"
 
 #include <float.h>
-#include <math.h>
-#include <stdarg.h>
-#include <stdio.h>
 
 #ifdef _MSC_VER
 #if _MSC_VER < 1500 /* MSVC 2008 */

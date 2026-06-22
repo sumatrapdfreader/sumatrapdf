@@ -23,11 +23,6 @@
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
 
-#include <assert.h>
-#include <limits.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
 
 /*
  * Global Edge List -- list of straight path segments for scan conversion

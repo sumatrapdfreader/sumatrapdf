@@ -54,31 +54,18 @@
 
 #ifdef MEMENTO_GS_HACKS
 /* For GS we include malloc_.h. Anyone else would just include memento.h */
-#include "malloc_.h"
-#include "memory_.h"
 int atexit(void (*)(void));
 #else
 #ifdef MEMENTO_MUPDF_HACKS
-#include "mupdf/memento.h"
 #else
-#include "memento.h"
 #endif
-#include <stdio.h>
 #endif
 #ifndef _MSC_VER
-#include <stdint.h>
-#include <limits.h>
-#include <unistd.h>
 #endif
 
-#include <errno.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
 
 #ifdef __ANDROID__
 #define MEMENTO_ANDROID
-#include <stdio.h>
 #endif
 
 /* Workaround VS2012 (and earlier) missing va_copy. */
@@ -130,7 +117,6 @@ typedef long long mem_uint64_t;
 #ifdef MEMENTO
 
 #ifdef MEMENTO_ANDROID
-#include <android/log.h>
 
 static char log_buffer[4096];
 static int log_fill = 0;
@@ -193,7 +179,6 @@ android_fprintf(FILE *file, const char *fmt, ...)
 
 /* _WIN64 defined implies _WIN32 will be */
 #ifdef _WIN32
-#include <windows.h>
 
 static int
 windows_fprintf(FILE *file, const char *fmt, ...)
@@ -258,10 +243,8 @@ MEMENTO_CRT_SPEC char *getenv(const char *);
 #endif
 
 #ifdef MEMENTO_GS_HACKS
-#include "valgrind.h"
 #else
 #ifdef HAVE_VALGRIND
-#include "valgrind/memcheck.h"
 #else
 #define VALGRIND_MAKE_MEM_NOACCESS(p,s)  do { } while (0==1)
 #define VALGRIND_MAKE_MEM_UNDEFINED(p,s)  do { } while (0==1)
@@ -475,7 +458,6 @@ static void Memento_initMutex(Memento_mutex *m)
     LeaveCriticalSection(&memento.mutex)
 
 #else
-#include <pthread.h>
 typedef pthread_mutex_t Memento_mutex;
 
 static void Memento_initMutex(Memento_mutex *m)
@@ -575,7 +557,6 @@ static int (*print_stack_value)(void *address);
 
 /* Libbacktrace gubbins - relies on us having libdl to load the .so */
 #ifdef HAVE_LIBDL
-#include <dlfcn.h>
 
 typedef void (*backtrace_error_callback) (void *data, const char *msg, int errnum);
 
@@ -826,7 +807,6 @@ static void Memento_showStacktrace(void **stack, int numberOfFrames)
     }
 }
 #elif defined(MEMENTO_STACKTRACE_METHOD) && MEMENTO_STACKTRACE_METHOD == 2
-#include <Windows.h>
 
 /* We use DbgHelp.dll rather than DbgHelp.lib. This avoids us needing
  * extra link time complications, and enables us to fall back gracefully
@@ -965,8 +945,6 @@ static void Memento_showStacktrace(void **stack, int numberOfFrames)
 }
 #elif defined(MEMENTO_STACKTRACE_METHOD) && MEMENTO_STACKTRACE_METHOD == 3
 
-#include <unwind.h>
-#include <dlfcn.h>
 
 /* From cxxabi.h */
 extern char* __cxa_demangle(const char* mangled_name,
@@ -2691,12 +2669,8 @@ void Memento_info(void *addr)
 }
 
 #ifdef MEMENTO_HAS_FORK
-#include <unistd.h>
-#include <sys/wait.h>
-#include <time.h>
 #ifdef MEMENTO_STACKTRACE_METHOD
 #if MEMENTO_STACKTRACE_METHOD == 1
-#include <signal.h>
 #endif
 #endif
 
@@ -2819,7 +2793,6 @@ static int squeeze(void)
     return 0;
 }
 #else
-#include <signal.h>
 
 static void Memento_signal(int sig)
 {

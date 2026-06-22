@@ -22,23 +22,15 @@
 
 #include "mupdf/fitz.h"
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 
 #ifdef _WIN32
 #ifndef NDEBUG
 #define USE_OUTPUT_DEBUG_STRING
-#include <windows.h>
 #endif
 #endif
 
 #ifdef __ANDROID__
 #define USE_ANDROID_LOG
-#include <android/log.h>
 #endif
 
 void fz_default_error_callback(void *user, const char *message)

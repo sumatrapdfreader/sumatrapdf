@@ -22,7 +22,6 @@
  */
 
 #include "mupdf/fitz.h"
-#include <string.h>
 
 void
 fz_arc4_init(fz_arc4 *arc4, const unsigned char *key, size_t keylen)

@@ -22,10 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <limits.h>
 
 #include <jpeglib.h>
 
@@ -43,7 +39,6 @@ static void fz_jpg_mem_init(j_common_ptr cinfo, fz_context *ctx)
 #else /* SHARE_JPEG */
 
 typedef void * backing_store_ptr;
-#include "jmemcust.h"
 
 #define JZ_CTX_FROM_CINFO(c) (fz_context *)(GET_CUST_MEM_DATA(c)->priv)
 

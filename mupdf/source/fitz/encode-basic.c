@@ -24,7 +24,6 @@
 
 #include "z-imp.h"
 
-#include <limits.h>
 
 struct ahx
 {

@@ -23,14 +23,9 @@
 #include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"
 
-#include "draw-imp.h"
-#include "color-imp.h"
-#include "glyph-imp.h"
-#include "pixmap-imp.h"
 
 #include <ft2build.h>
 
-#include <assert.h>
 
 #include FT_FREETYPE_H
 #include FT_ADVANCES_H

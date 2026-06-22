@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
-#include <assert.h>
 
 /*
 	Simple hashtable with open addressing linear probe.

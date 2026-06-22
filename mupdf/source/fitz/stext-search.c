@@ -27,10 +27,6 @@
 
 #include "mupdf/ucdn.h"
 
-#include <string.h>
-#include <limits.h>
-#include <assert.h>
-#include <stdlib.h>
 
 const char *fz_search_options_usage =
 	"Search options:\n"

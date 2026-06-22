@@ -22,9 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
 
 /* Lifted from ghostscript gdevjlm.h */
 /*

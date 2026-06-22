@@ -34,13 +34,8 @@ intermediate results rather than ints.
 
 #include "mupdf/fitz.h"
 
-#include "draw-imp.h"
 #include "pixmap-imp.h"
 
-#include <math.h>
-#include <string.h>
-#include <assert.h>
-#include <limits.h>
 
 /* Do we special case handling of single pixel high/wide images? The
  * 'purest' handling is given by not special casing them, but certain

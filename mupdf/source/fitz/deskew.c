@@ -296,7 +296,6 @@ typedef void (zoom_x_fn)(uint8_t        * __restrict tmp,
 #include "deskew_sse.h"
 #endif
 #if ARCH_HAS_NEON
-#include "deskew_neon.h"
 #endif
 
 enum {

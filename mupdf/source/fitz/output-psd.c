@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
 
 void
 fz_save_pixmap_as_psd(fz_context *ctx, fz_pixmap *pixmap, const char *filename)

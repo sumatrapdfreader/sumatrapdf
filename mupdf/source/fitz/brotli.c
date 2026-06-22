@@ -26,7 +26,6 @@
 
 #include "brotli/encode.h"
 
-#include <limits.h>
 
 static void *
 my_brotli_alloc(void *opaque, size_t size)

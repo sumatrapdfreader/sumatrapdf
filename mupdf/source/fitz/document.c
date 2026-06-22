@@ -20,15 +20,10 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#include "mupdf/fitz.h"
 
-#include "context-imp.h"
 
-#include <string.h>
 #ifndef _WIN32
-#include <unistd.h> /* For unlink */
 #endif
-#include <errno.h>
 
 static void fz_reap_dead_pages(fz_context *ctx, fz_document *doc);
 

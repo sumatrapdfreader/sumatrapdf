@@ -22,10 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <assert.h>
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
 
 fz_output *fz_new_log_for_module(fz_context *ctx, const char *module)
 {

@@ -20,11 +20,7 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#include "mupdf/fitz.h"
 
-#include <assert.h>
-#include <string.h>
-#include <limits.h>
 
 #ifdef OCR_DISABLED
 
@@ -34,7 +30,6 @@ const char *fz_pdfocr_write_options_usage = "";
 
 #else
 
-#include "tessocr.h"
 
 const char *fz_pdfocr_write_options_usage =
 	"PDFOCR output options:\n"

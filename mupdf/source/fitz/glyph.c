@@ -23,9 +23,7 @@
 #include "mupdf/fitz.h"
 
 #include "glyph-imp.h"
-#include "pixmap-imp.h"
 
-#include <string.h>
 
 #define RLE_THRESHOLD 256
 
@@ -87,7 +85,6 @@ fz_glyph_height(fz_context *ctx, fz_glyph *glyph)
 }
 
 #ifndef NDEBUG
-#include <stdio.h>
 
 void
 fz_dump_glyph(fz_glyph *glyph)

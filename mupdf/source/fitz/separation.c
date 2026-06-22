@@ -20,13 +20,10 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#include "mupdf/fitz.h"
 
 #include "color-imp.h"
 #include "pixmap-imp.h"
 
-#include <assert.h>
-#include <string.h>
 
 enum
 {

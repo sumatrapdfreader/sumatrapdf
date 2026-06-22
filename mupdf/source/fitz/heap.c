@@ -28,4 +28,3 @@
 
 #define MUPDF_FITZ_HEAP_IMPLEMENT
 
-#include "mupdf/fitz/heap.h"

@@ -25,13 +25,10 @@
  * custom allocators.
  */
 
-#include "mupdf/fitz.h"
 
 #if FZ_ENABLE_HTML_ENGINE
 
-#include "hb.h"
 
-#include <assert.h>
 
 /* Harfbuzz has some major design flaws (for our usage
  * at least).

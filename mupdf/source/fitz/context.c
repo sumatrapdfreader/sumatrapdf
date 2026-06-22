@@ -20,14 +20,9 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#include "mupdf/fitz.h"
 
 #include "context-imp.h"
 
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
-#include <time.h>
 
 
 struct fz_style_context

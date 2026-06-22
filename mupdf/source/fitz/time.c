@@ -26,11 +26,7 @@
 
 #ifdef _WIN32
 
-#include <stdio.h>
-#include <errno.h>
-#include <time.h>
 #include <windows.h>
-#include <direct.h> /* for mkdir */
 
 #ifndef _WINRT
 

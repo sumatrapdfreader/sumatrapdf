@@ -25,7 +25,6 @@
 /* The pseudo-random number generator in this file is based on the MIT licensed
  * implementation in musl libc. */
 
-#include <string.h>
 
 /* The seed is initialized in context.c as follows:
  * static uint16_t __seed48[7] = { 0, 0, 0, 0xe66d, 0xdeec, 0x5, 0xb };

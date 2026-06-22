@@ -20,16 +20,11 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#include "mupdf/fitz.h"
 
-#include <assert.h>
-#include <string.h>
-#include <errno.h>
 
 #undef DEBUG_OCR
 
 #ifndef OCR_DISABLED
-#include "tessocr.h"
 
 /*
 

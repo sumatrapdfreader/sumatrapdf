@@ -23,7 +23,6 @@
 #include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"
 
-#include <string.h>
 
 /*
 	Base 14 PDF fonts from URW.
@@ -146,7 +145,6 @@ extern const unsigned int _binary_##NAME##_size;
 #define ALIAS(FORGE,NAME,NAME2,SCRIPT,LANG,SUBFONT,ATTR) { FONT_DATA(FORGE, NAME), FONT_SIZE(FORGE, NAME), NAME2, SCRIPT, LANG, SUBFONT, ATTR },
 static font_entry inbuilt_fonts[] =
 {
-#include "font-table.h"
 	{ NULL,
 #ifdef HAVE_OBJCOPY
 	NULL, NULL,

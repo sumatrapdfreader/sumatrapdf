@@ -26,8 +26,6 @@
 #include "glyph-imp.h"
 #include "pixmap-imp.h"
 
-#include <string.h>
-#include <assert.h>
 
 /*
 
@@ -2990,7 +2988,6 @@ intermediate_run:
 }
 
 #define N 1
-#include "paint-glyph.h"
 
 #define ALPHA
 #define N 1
@@ -2999,7 +2996,6 @@ intermediate_run:
 #if FZ_PLOTTERS_G
 #define DA
 #define N 1
-#include "paint-glyph.h"
 
 #define DA
 #define ALPHA
@@ -3010,15 +3006,12 @@ intermediate_run:
 #if FZ_PLOTTERS_RGB
 #define DA
 #define N 3
-#include "paint-glyph.h"
 
 #define DA
 #define ALPHA
 #define N 3
-#include "paint-glyph.h"
 
 #define N 3
-#include "paint-glyph.h"
 
 #define ALPHA
 #define N 3
@@ -3028,16 +3021,13 @@ intermediate_run:
 #if FZ_PLOTTERS_CMYK
 #define DA
 #define N 4
-#include "paint-glyph.h"
 
 #define DA
 #define ALPHA
 #define N 4
-#include "paint-glyph.h"
 
 #define ALPHA
 #define N 4
-#include "paint-glyph.h"
 
 #define N 4
 #include "paint-glyph.h"
@@ -3048,13 +3038,10 @@ intermediate_run:
 #include "paint-glyph.h"
 
 #define DA
-#include "paint-glyph.h"
 
 #define DA
 #define ALPHA
-#include "paint-glyph.h"
 
-#include "paint-glyph.h"
 #endif /* FZ_PLOTTERS_N */
 
 #if FZ_ENABLE_SPOT_RENDERING
@@ -3064,15 +3051,12 @@ intermediate_run:
 
 #define DA
 #define EOP
-#include "paint-glyph.h"
 
 #define DA
 #define ALPHA
 #define EOP
-#include "paint-glyph.h"
 
 #define EOP
-#include "paint-glyph.h"
 #endif /* FZ_ENABLE_SPOT_RENDERING */
 
 static void

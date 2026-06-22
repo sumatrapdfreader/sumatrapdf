@@ -21,9 +21,7 @@
 // CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
-#include "draw-imp.h"
 
-#include <string.h>
 
 /* Unpack image samples and optionally pad pixels with opaque alpha */
 

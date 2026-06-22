@@ -22,12 +22,8 @@
 
 #include "mupdf/fitz.h"
 
-#include "draw-imp.h"
 #include "pixmap-imp.h"
 
-#include <string.h>
-#include <math.h>
-#include <assert.h>
 
 /* PDF 1.4 blend modes. These are slow. */
 

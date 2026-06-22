@@ -5,11 +5,8 @@
  * This file is in the public domain.
  */
 
-#include <stdio.h>
-#include <string.h>
 
 #include "mupdf/fitz/getopt.h"
-#include "mupdf/fitz/string-util.h"
 
 char *fz_optarg; /* Global argument pointer. */
 int fz_optind = 0; /* Global argv index. */

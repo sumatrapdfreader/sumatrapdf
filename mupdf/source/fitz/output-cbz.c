@@ -22,9 +22,7 @@
 
 #include "mupdf/fitz.h"
 
-#include <zlib.h>
 
-#include <limits.h>
 
 typedef struct
 {

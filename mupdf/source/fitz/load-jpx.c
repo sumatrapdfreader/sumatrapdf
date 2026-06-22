@@ -22,10 +22,7 @@
 
 #include "mupdf/fitz.h"
 
-#include "pixmap-imp.h"
 
-#include <assert.h>
-#include <string.h>
 
 #if FZ_ENABLE_JPX
 

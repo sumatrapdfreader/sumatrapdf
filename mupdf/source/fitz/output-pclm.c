@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
-#include <limits.h>
 
 const char *fz_pclm_write_options_usage =
 	"PCLm output options:\n"

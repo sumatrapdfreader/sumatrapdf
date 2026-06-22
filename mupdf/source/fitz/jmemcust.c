@@ -16,11 +16,6 @@
 
 #if !defined(SHARE_JPEG) || SHARE_JPEG==0
 
-#include "jinclude.h"
-#include "jpeglib.h"
-#include "jmemsys.h"
-#include "jerror.h"
-#include "jmemcust.h"
 
 GLOBAL(void *)
 jpeg_get_small (j_common_ptr cinfo, size_t sizeofobject)

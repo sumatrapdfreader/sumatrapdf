@@ -24,13 +24,7 @@
 
 #if FZ_ENABLE_DOCX_OUTPUT
 
-#include "glyphbox.h"
-#include "extract/extract.h"
-#include "extract/buffer.h"
 
-#include <assert.h>
-#include <errno.h>
-#include <string.h>
 
 
 typedef struct

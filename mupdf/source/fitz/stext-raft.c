@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <assert.h>
 
 static int
 raftable(fz_stext_block *pos, fz_image_raft_options *options, fz_rect r)

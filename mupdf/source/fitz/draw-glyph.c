@@ -21,12 +21,8 @@
 // CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
-#include "draw-imp.h"
 #include "glyph-imp.h"
-#include "pixmap-imp.h"
 
-#include <string.h>
-#include <math.h>
 
 #define MAX_GLYPH_SIZE 256
 #define MAX_CACHE_SIZE (1024*1024)

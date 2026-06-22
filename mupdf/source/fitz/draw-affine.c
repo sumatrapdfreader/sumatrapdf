@@ -21,11 +21,8 @@
 // CA 94129, USA, for further information.
 
 #include "mupdf/fitz.h"
-#include "draw-imp.h"
 
-#include <math.h>
 #include <float.h>
-#include <assert.h>
 
 typedef int64_t affint;
 

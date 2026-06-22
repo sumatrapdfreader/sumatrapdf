@@ -37,7 +37,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
 
 /*
  * The basic MD5 functions.

@@ -25,7 +25,6 @@
 #include "draw-imp.h"
 #include "pixmap-imp.h"
 
-#include <string.h>
 
 void fz_init_aa_context(fz_context *ctx)
 {

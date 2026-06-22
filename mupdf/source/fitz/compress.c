@@ -24,7 +24,6 @@
 
 #include "z-imp.h"
 
-#include <limits.h>
 
 void fz_deflate(fz_context *ctx, unsigned char *dest, size_t *destLen, const unsigned char *source, size_t sourceLen, fz_deflate_level level)
 {

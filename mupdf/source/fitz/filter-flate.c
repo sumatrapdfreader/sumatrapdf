@@ -24,7 +24,6 @@
 
 #include <zlib.h>
 
-#include <string.h>
 
 typedef struct
 {

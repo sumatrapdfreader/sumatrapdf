@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
 
 /* null filter */
 

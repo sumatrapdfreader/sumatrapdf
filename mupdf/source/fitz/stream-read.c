@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
 
 #define MIN_BOMB (100 << 20)
 

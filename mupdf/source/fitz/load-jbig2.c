@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include "pixmap-imp.h"
 
 #include <jbig2.h>
 

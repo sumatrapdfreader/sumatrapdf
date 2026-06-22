@@ -22,9 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
-#include <float.h>
-#include <math.h>
 
 typedef struct
 {

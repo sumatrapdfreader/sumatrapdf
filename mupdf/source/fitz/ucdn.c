@@ -14,11 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 
 typedef struct {
 	unsigned char category;

@@ -24,7 +24,6 @@
 
 #include "z-imp.h"
 
-#include <string.h>
 
 static void putchunk(fz_context *ctx, fz_output *out, char *tag, unsigned char *data, size_t size)
 {

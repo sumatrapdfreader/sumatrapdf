@@ -23,10 +23,6 @@
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
 
 #undef DEBUG_SCAN_CONVERTER
 

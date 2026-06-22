@@ -22,11 +22,7 @@
 
 #include "mupdf/fitz.h"
 
-#include "pixmap-imp.h"
 
-#include <limits.h>
-#include <assert.h>
-#include <string.h>
 
 /*
  * TIFF image loader. Should be enough to support TIFF files in XPS.

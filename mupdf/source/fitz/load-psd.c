@@ -22,10 +22,7 @@
 
 #include "mupdf/fitz.h"
 
-#include "pixmap-imp.h"
 
-#include <limits.h>
-#include <string.h>
 
 struct info
 {

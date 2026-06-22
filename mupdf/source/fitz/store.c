@@ -22,10 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <assert.h>
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
 
 typedef struct fz_item
 {

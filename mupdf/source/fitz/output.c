@@ -27,16 +27,9 @@
 
 #include "mupdf/fitz.h"
 
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 #ifdef _WIN32
-#include <io.h>
-#include <windows.h>
 #include <fcntl.h>
 #else
-#include <unistd.h>
 #endif
 
 static void

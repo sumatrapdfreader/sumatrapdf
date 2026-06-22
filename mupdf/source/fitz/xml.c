@@ -22,9 +22,6 @@
 
 #include "xml-imp.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #if FZ_ENABLE_HTML_ENGINE
 #include <gumbo.h>

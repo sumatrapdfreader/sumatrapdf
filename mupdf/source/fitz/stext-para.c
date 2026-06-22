@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <assert.h>
 
 /* #define DEBUG_SPLITS */
 

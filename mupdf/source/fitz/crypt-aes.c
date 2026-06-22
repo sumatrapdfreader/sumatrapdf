@@ -38,7 +38,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
 
 #define aes_context fz_aes
 

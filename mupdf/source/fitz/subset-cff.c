@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <math.h>
 
 /*
 	For the purposes of this code, and to save my tiny brain from

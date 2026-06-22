@@ -6,7 +6,6 @@
 #include "mupdf/fitz.h"
 #include "bidi-imp.h"
 
-#include <assert.h>
 
 #ifndef TRUE
 #define TRUE (1)

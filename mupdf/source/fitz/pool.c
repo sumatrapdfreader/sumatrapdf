@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
-#include <stdio.h>
 
 typedef struct fz_pool_node
 {

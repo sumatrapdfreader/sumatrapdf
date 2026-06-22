@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <math.h>
 
 fz_link *
 fz_new_link_of_size(fz_context *ctx, int size, fz_rect rect, const char *uri)

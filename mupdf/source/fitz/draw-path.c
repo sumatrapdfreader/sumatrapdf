@@ -23,9 +23,7 @@
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
 
-#include <math.h>
 #include <float.h>
-#include <assert.h>
 
 #define MAX_DEPTH 8
 

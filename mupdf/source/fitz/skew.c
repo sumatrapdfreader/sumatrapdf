@@ -22,12 +22,8 @@
 
 #include "mupdf/fitz.h"
 
-#include <math.h>
-#include <assert.h>
-#include <limits.h>
 
 #if ARCH_HAS_SSE
-#include <emmintrin.h>
 #include <smmintrin.h>
 #endif
 

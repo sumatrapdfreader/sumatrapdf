@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
-#include <assert.h>
 
 // Thoughts for further optimisations:
 // All paths start with MoveTo. We could probably avoid most cases where

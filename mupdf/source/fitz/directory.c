@@ -22,16 +22,12 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
-#include <errno.h>
 #include <sys/stat.h>
 
 #ifdef _WIN32
 #include <windows.h>
-#include <errno.h>
 #define stat _stat
 #else
-#include <dirent.h>
 #endif
 
 typedef struct

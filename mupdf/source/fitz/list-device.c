@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <assert.h>
-#include <string.h>
 
 #define STACK_SIZE 96
 

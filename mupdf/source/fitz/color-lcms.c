@@ -20,11 +20,9 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#include "mupdf/fitz.h"
 
 #include "color-imp.h"
 
-#include <string.h>
 
 #if FZ_ENABLE_ICC
 
@@ -35,12 +33,10 @@
 #ifdef HAVE_LCMS2MT
 #define GLOINIT cmsContext glo = ctx->colorspace->icc_instance;
 #define GLO glo,
-#include "lcms2mt.h"
 #include "lcms2mt_plugin.h"
 #else
 #define GLOINIT
 #define GLO
-#include "lcms2.h"
 #endif
 
 static void fz_premultiply_row(fz_context *ctx, int n, int c, int w, unsigned char *s)

@@ -20,15 +20,10 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#include "mupdf/fitz.h"
 
 #include "context-imp.h"
-#include "image-imp.h"
 #include "pixmap-imp.h"
 
-#include <string.h>
-#include <math.h>
-#include <assert.h>
 
 /* TODO: here or public? */
 static int

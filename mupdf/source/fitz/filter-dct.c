@@ -22,12 +22,10 @@
 
 #include "mupdf/fitz.h"
 
-#include <stdio.h>
 #include <jpeglib.h>
 
 #ifndef SHARE_JPEG
 typedef void * backing_store_ptr;
-#include "jmemcust.h"
 #endif
 
 typedef struct

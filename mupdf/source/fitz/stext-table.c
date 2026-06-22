@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <assert.h>
-#include <stdlib.h>
 
 /* #define DEBUG_WRITE_AS_PS */
 

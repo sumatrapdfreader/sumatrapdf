@@ -22,7 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
 
 /*
 	FIXME: Currently transitions only work with alpha. Our app only

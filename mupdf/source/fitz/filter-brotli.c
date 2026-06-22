@@ -26,7 +26,6 @@
 
 #include "brotli/decode.h"
 
-#include <string.h>
 
 typedef struct
 {

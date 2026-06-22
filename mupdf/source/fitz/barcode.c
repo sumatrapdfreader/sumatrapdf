@@ -23,7 +23,6 @@
 #include "mupdf/fitz.h"
 
 #if FZ_ENABLE_BARCODE
-#include "zxingbarcode.h"
 #endif
 
 fz_pixmap *fz_new_barcode_pixmap(fz_context *ctx, fz_barcode_type type, const char *value, int size, int ec_level, int quiet, int hrt)

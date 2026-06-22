@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <math.h>
-#include <string.h>
 
 /* Table stolen from LibTiff */
 #define UV_SQSIZ	0.003500f

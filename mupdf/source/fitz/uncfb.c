@@ -22,8 +22,6 @@
 
 #include "mupdf/fitz.h"
 
-#include <string.h>
-#include <limits.h>
 
 #define MAXREGSID 0xfffffffa
 #define NOSTREAM 0xffffffff
