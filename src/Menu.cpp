@@ -853,6 +853,10 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
         CmdCreateAnnotStamp,
     },
     {
+        _TRN("&Image From Clipboard"),
+        CmdCreateAnnotImageFromClipboard,
+    },
+    {
         _TRN("&Caret"),
         CmdCreateAnnotCaret,
     },

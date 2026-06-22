@@ -256,7 +256,8 @@ enum {
     CmdFindToggleMatchWholeWord = 445,
     CmdGoToNextFavorite = 446,
     CmdGoToPrevFavorite = 447,
-    CmdNone = 448,
+    CmdCreateAnnotImageFromClipboard = 448,
+    CmdNone = 449,
 
     /* range for file history */
     CmdFileHistoryFirst,

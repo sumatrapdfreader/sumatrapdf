@@ -251,6 +251,7 @@ export const commands = [
     "CmdFindToggleMatchWholeWord", "Find: Toggle Match Whole Word",
     "CmdGoToNextFavorite", "Go to Next Favorite",
     "CmdGoToPrevFavorite", "Go to Previous Favorite",
+    "CmdCreateAnnotImageFromClipboard", "Create Image Annotation From Clipboard",
     "CmdNone", "Do nothing",
 ];
 

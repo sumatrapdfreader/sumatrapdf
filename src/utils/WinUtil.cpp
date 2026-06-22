@@ -2452,6 +2452,25 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     return {(u8*)bmpData, bmpBytes};
 }
 
+ByteSlice GetClipboardImageBmp() {
+    if (!IsClipboardFormatAvailable(CF_BITMAP)) {
+        return {};
+    }
+    if (!OpenClipboard(nullptr)) {
+        return {};
+    }
+    ByteSlice res;
+    // CF_BITMAP is synthesized by Windows from CF_DIB and vice versa, so it's
+    // available whenever any bitmap is on the clipboard. The returned HBITMAP is
+    // owned by the clipboard - don't delete it.
+    HBITMAP hbmp = (HBITMAP)GetClipboardData(CF_BITMAP);
+    if (hbmp) {
+        res = SerializeBitmap(hbmp);
+    }
+    CloseClipboard();
+    return res;
+}
+
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping) {
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);

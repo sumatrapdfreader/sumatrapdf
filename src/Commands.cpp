@@ -260,6 +260,7 @@ static SeqStrings gCommandNames =
     "CmdFindToggleMatchWholeWord\0"
     "CmdGoToNextFavorite\0"
     "CmdGoToPrevFavorite\0"
+    "CmdCreateAnnotImageFromClipboard\0"
     "CmdNone\0"
     "\0";
 
@@ -511,6 +512,7 @@ static i32 gCommandIds[] = {
     CmdFindToggleMatchWholeWord,
     CmdGoToNextFavorite,
     CmdGoToPrevFavorite,
+    CmdCreateAnnotImageFromClipboard,
     CmdNone,
 };
 
@@ -762,6 +764,7 @@ SeqStrings gCommandDescriptions =
     "Find: Toggle Match Whole Word\0"
     "Go to Next Favorite\0"
     "Go to Previous Favorite\0"
+    "Create Image Annotation From Clipboard\0"
     "Do nothing\0"
     "\0";
 // clang-format on

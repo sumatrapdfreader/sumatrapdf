@@ -292,6 +292,8 @@ void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 ByteSlice SerializeBitmap(HBITMAP hbmp);
+// returns the clipboard image (if any) serialized as BMP file bytes, or empty
+ByteSlice GetClipboardImageBmp();
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 double GetProcessRunningTime();

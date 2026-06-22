@@ -8165,6 +8165,48 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             openAnnotationEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
         } break;
 
+        case CmdCreateAnnotImageFromClipboard: {
+            if (!win || !tab || !dm) {
+                return 0;
+            }
+            EngineBase* engine = dm->GetEngine();
+            if (!engine || !EngineSupportsAnnotations(engine)) {
+                return 0;
+            }
+            ByteSlice img = GetClipboardImageBmp();
+            if (img.empty()) {
+                NotificationCreateArgs nargs;
+                nargs.hwndParent = win->hwndCanvas;
+                nargs.timeoutMs = 3000;
+                nargs.msg = _TRA("No image in the clipboard");
+                ShowNotification(nargs);
+                return 0;
+            }
+            Point pt = HwndGetCursorPos(win->hwndCanvas);
+            if (lp != 0) {
+                // when sent from the context menu, the click position is in LPARAM
+                pt.x = GET_X_LPARAM(lp);
+                pt.y = GET_Y_LPARAM(lp);
+            }
+            int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
+            if (pageNoUnderCursor < 0) {
+                // invoked without a position (palette / shortcut): place near top
+                auto r = WindowRect(win->hwndCanvas);
+                pt.x = r.dx / 2;
+                pt.y = 20;
+                pageNoUnderCursor = dm->GetPageNoByPoint(pt);
+            }
+            if (pageNoUnderCursor < 0) {
+                img.Free();
+                return 0;
+            }
+            PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
+            AnnotCreateArgs args{AnnotationType::Stamp};
+            args.stampImage = img;
+            lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
+            img.Free();
+        } break;
+
         case CmdSelectNextTheme:
             SelectNextTheme();
             break;

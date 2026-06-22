@@ -87,6 +87,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add a **Match whole word** toggle to the Find bar (next to **Match Case**) so a search only matches complete words, e.g. `cat` no longer matches `category` (fixes #4295)
 - find-as-you-type now waits briefly after you stop typing before searching (500 ms, or 1 s for 1–2 character terms) instead of searching on every keystroke; pressing Enter searches immediately (fixes #4626)
 - add **Go to Next/Previous Favorite** commands (`Ctrl + k` command palette) that jump to the nearest favorite (bookmark) page after / before the current page (fixes #3744)
+- can paste an image from the clipboard into a PDF as an image stamp annotation: right-click → **Create Annotation Under Cursor** → **Image From Clipboard** (or the `Ctrl + k` command palette). The stamp is created at the click point, sized to the image, and immediately selected so it can be moved/resized
 
 **New commands:**
 
@@ -99,6 +100,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdFindToggleMatchWholeWord` : "Find: Toggle Match Whole Word" — Find bar toggle button
 - `CmdGoToNextFavorite` : "Go to Next Favorite"
 - `CmdGoToPrevFavorite` : "Go to Previous Favorite"
+- `CmdCreateAnnotImageFromClipboard` : "Create Image Annotation From Clipboard"
 - `CmdStopReadAloud` : "Stop Reading"
 - `CmdReadAloudFromTopPage` : "Start Reading From Top"
 - `CmdReadAloudSelection` : "Start Reading Selection"

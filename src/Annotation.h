@@ -85,6 +85,9 @@ struct AnnotCreateArgs {
     int borderWidth = -1;
     bool setContentToSelection = false;
     TempStr content = nullptr;
+    // for Stamp annotations: encoded image bytes (e.g. BMP from the clipboard).
+    // when set, the Stamp is created as an image stamp sized to the image.
+    ByteSlice stampImage;
 };
 
 int PageNo(Annotation*);
@@ -132,7 +135,11 @@ int GetWidgetType(Annotation*);
 // which mouse cursor a form field warrants on hover. None for non-widgets and
 // read-only fields, Text (I-beam) for text/combo/listbox, Button (hand) for
 // checkbox/radio.
-enum class WidgetCursorKind { None, Text, Button };
+enum class WidgetCursorKind {
+    None,
+    Text,
+    Button
+};
 WidgetCursorKind GetWidgetCursorKind(Annotation*);
 // pdf_annot_field_flags (PDF_FIELD_IS_*, PDF_TX_FIELD_IS_* bits), or 0.
 int GetWidgetFieldFlags(Annotation*);

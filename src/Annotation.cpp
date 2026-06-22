@@ -1438,6 +1438,32 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     pdf_set_annot_line(ctx, annot, a, b);
                 } break;
             }
+            if (typ == AnnotationType::Stamp && !args->stampImage.empty()) {
+                // image stamp (e.g. pasted from the clipboard): embed the image
+                // and size the rect to the image's natural size, anchored at pos
+                fz_image* img = nullptr;
+                fz_buffer* buf = nullptr;
+                fz_var(img);
+                fz_var(buf);
+                fz_try(ctx) {
+                    buf = fz_new_buffer_from_copied_data(ctx, args->stampImage.data(), args->stampImage.size());
+                    img = fz_new_image_from_buffer(ctx, buf);
+                    pdf_set_annot_stamp_image(ctx, annot, img);
+                    int xres = img->xres > 0 ? img->xres : 96;
+                    int yres = img->yres > 0 ? img->yres : 96;
+                    float wPt = (float)img->w * 72.0f / (float)xres;
+                    float hPt = (float)img->h * 72.0f / (float)yres;
+                    fz_rect r = {pos.x, pos.y, pos.x + wPt, pos.y + hPt};
+                    pdf_set_annot_rect(ctx, annot, r);
+                }
+                fz_always(ctx) {
+                    fz_drop_image(ctx, img);
+                    fz_drop_buffer(ctx, buf);
+                }
+                fz_catch(ctx) {
+                    fz_rethrow(ctx);
+                }
+            }
             if (typ == AnnotationType::FreeText) {
                 if (args->borderWidth >= 0) {
                     pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);

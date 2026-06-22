@@ -13,6 +13,7 @@ import { testit as adHocTripleClickLine } from "./ad-hoc-triple-click-line.ts";
 import { testit as adHocTocPaletteSync } from "./ad-hoc-toc-palette-sync.ts";
 import { testit as adHocJpegDecode } from "./ad-hoc-jpeg-decode.ts";
 import { testit as adHocSynctexChinese } from "./ad-hoc-synctex-chinese.ts";
+import { testit as adHocPasteImageAnnot } from "./ad-hoc-paste-image-annot.ts";
 import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const adHocTests: [string, () => void | Promise<void>][] = [
@@ -22,6 +23,7 @@ const adHocTests: [string, () => void | Promise<void>][] = [
   ["ad-hoc-toc-palette-sync", adHocTocPaletteSync],
   ["ad-hoc-jpeg-decode", adHocJpegDecode],
   ["ad-hoc-synctex-chinese", adHocSynctexChinese],
+  ["ad-hoc-paste-image-annot", adHocPasteImageAnnot],
   ["issue-chm-lzx", issueChmLzx],
 ];
 
