@@ -283,8 +283,12 @@ EngineBase* CreateEngineFromFile(const char* path, PasswordUI* pwdUI, bool enabl
 
     EngineBase* engine = CreateEngineForKind(kind, contentHint, path, pwdUI, enableChmEngine);
     if (engine) {
-        engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
-        engine->disableAutoLinks = gGlobalPrefs->disableAutoLinks;
+        // gGlobalPrefs can be null in early/headless code paths (e.g. the
+        // -extract-text test harness runs before LoadSettings)
+        if (gGlobalPrefs) {
+            engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
+            engine->disableAutoLinks = gGlobalPrefs->disableAutoLinks;
+        }
         return engine;
     }
 
