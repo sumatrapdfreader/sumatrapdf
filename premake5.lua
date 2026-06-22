@@ -453,7 +453,7 @@ workspace "SumatraPDF"
     rtti "On"
     defines { "JPEGXL_ENABLE_SKCMS=1", "JPEGXL_ENABLE_TRANSCODE_JPEG=0", "JPEGXL_BUNDLING_LIBJXL=1", "_CRT_SECURE_NO_WARNINGS" }
     includedirs { "ext/libjxl", "ext/libjxl/lib/include", "ext/highway", "ext/skcms", "ext/brotli/c/include" }
-    disablewarnings { "4018", "4100", "4127", "4146", "4244", "4245", "4267", "4305", "4308", "4310", "4324", "4334", "4456", "4457", "4505", "4806", "4458", "4459", "4701", "4702", "4703", "4838", "4996", "5054" }
+    disablewarnings { "4018", "4100", "4127", "4146", "4201", "4244", "4245", "4267", "4305", "4308", "4310", "4324", "4334", "4456", "4457", "4505", "4806", "4458", "4459", "4701", "4702", "4703", "4838", "4996", "5054" }
     buildoptions { "/bigobj" }
     libjxl_files()
 
