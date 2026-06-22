@@ -52,6 +52,14 @@ static AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
 
 Kind kindEngineMupdf = "enginePdf";
 
+// Whether to enable mupdf's JavaScript engine for newly loaded PDFs (form-field
+// calculate/validate/format). Set by the app from the DisableJavaScript pref;
+// PdfPreview/PdfFilter don't link GlobalPrefs, so they keep the default.
+static bool gDisableFormJavaScript = false;
+void EngineMupdfSetDisableJavaScript(bool disable) {
+    gDisableFormJavaScript = disable;
+}
+
 EngineMupdf* AsEngineMupdf(EngineBase* engine) {
     if (!engine || !IsOfKind(engine, kindEngineMupdf)) {
         return nullptr;
@@ -2829,13 +2837,16 @@ bool EngineMupdf::FinishLoading() {
 
     // enable mupdf's JavaScript engine so form-field calculate / validate /
     // format actions run (e.g. auto-summed totals on a fillable form). mujs is
-    // sandboxed to the PDF/form API -- it has no file or network access.
-    fz_try(ctx) {
-        pdf_enable_js(ctx, pdfdoc);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        fz_warn(ctx, "Couldn't enable form JavaScript");
+    // sandboxed to the PDF/form API -- it has no file or network access. Can be
+    // turned off with the DisableJavaScript advanced setting.
+    if (!gDisableFormJavaScript) {
+        fz_try(ctx) {
+            pdf_enable_js(ctx, pdfdoc);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            fz_warn(ctx, "Couldn't enable form JavaScript");
+        }
     }
 
     return true;

@@ -47,6 +47,10 @@ DefaultDisplayMode = automatic
 ; 100%
 DefaultZoom = fit page
 
+; if true, JavaScript in PDF documents is disabled (e.g. form-field calculations
+; won't run) (introduced in version 3.7)
+DisableJavaScript = false
+
 ; if true, we expose the SyncTeX inverse search command line in Settings ->
 ; Options
 EnableTeXEnhancements = false

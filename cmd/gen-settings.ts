@@ -717,6 +717,17 @@ const globalPrefs: Field[] = [
     "fit page",
     "default zoom. valid values: fit page, fit width, fit content or percent like 100%",
   ),
+  setVersion(
+    setExpert(
+      mkField(
+        "DisableJavaScript",
+        Bool,
+        false,
+        "if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)",
+      ),
+    ),
+    "3.7",
+  ),
   mkField(
     "EnableTeXEnhancements",
     Bool,

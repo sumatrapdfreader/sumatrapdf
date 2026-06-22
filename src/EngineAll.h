@@ -66,6 +66,8 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, const ShowErro
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);
+// disable mupdf's JavaScript engine for PDFs loaded after this call
+void EngineMupdfSetDisableJavaScript(bool disable);
 ByteSlice EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 ByteSlice EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 TempStr EngineMupdfGetPdfInfo(const char* path);

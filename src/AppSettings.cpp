@@ -246,6 +246,9 @@ bool LoadSettings() {
         prefsData.Free();
     }
 
+    // takes effect for PDFs loaded after this (startup, and on settings reload)
+    EngineMupdfSetDisableJavaScript(gGlobalPrefs->disableJavaScript);
+
     if (trans::ValidateLangCode(gprefs->uiLanguage)) {
         SetCurrentLang(gprefs->uiLanguage);
     } else {
