@@ -87,10 +87,15 @@ zprefix=0
 zconst=0
 build64=0
 gcc=0
+clang=0
 warn=0
 debug=0
 address=0
 memory=0
+undefined=0
+insecure=0
+unknown=0
+enable_crcvx=1
 old_cc="$CC"
 old_cflags="$CFLAGS"
 OBJC='$(OBJZ) $(OBJG)'
@@ -116,40 +121,49 @@ case "$1" in
     -h* | --help)
       echo 'usage:' | tee -a configure.log
       echo '  configure [--const] [--zprefix] [--prefix=PREFIX]  [--eprefix=EXPREFIX]' | tee -a configure.log
-      echo '    [--static] [--64] [--libdir=LIBDIR] [--sharedlibdir=LIBDIR]' | tee -a configure.log
-      echo '    [--includedir=INCLUDEDIR] [--archs="-arch i386 -arch x86_64"]' | tee -a configure.log
+      echo '    [--insecure] [--static] [--64] [--libdir=LIBDIR] [--sharedlibdir=LIBDIR]' | tee -a configure.log
+      echo '    [--includedir=INCLUDEDIR] [--mandir=MANDIR]' | tee -a configure.log
+      echo '    [--archs="-arch i386 -arch x86_64"] [--disable-crcvx]' | tee -a configure.log
         exit 0 ;;
-    -p*=* | --prefix=*) prefix=`echo $1 | sed 's/.*=//'`; shift ;;
-    -e*=* | --eprefix=*) exec_prefix=`echo $1 | sed 's/.*=//'`; shift ;;
-    -l*=* | --libdir=*) libdir=`echo $1 | sed 's/.*=//'`; shift ;;
-    --sharedlibdir=*) sharedlibdir=`echo $1 | sed 's/.*=//'`; shift ;;
-    -i*=* | --includedir=*) includedir=`echo $1 | sed 's/.*=//'`;shift ;;
-    -u*=* | --uname=*) uname=`echo $1 | sed 's/.*=//'`;shift ;;
+    -p*=* | --prefix=*) prefix=`echo $1 | sed 's/[^=]*=//'`; shift ;;
+    -e*=* | --eprefix=*) exec_prefix=`echo $1 | sed 's/[^=]*=//'`; shift ;;
+    -l*=* | --libdir=*) libdir=`echo $1 | sed 's/[^=]*=//'`; shift ;;
+    --sharedlibdir=*) sharedlibdir=`echo $1 | sed 's/[^=]*=//'`; shift ;;
+    -i*=* | --includedir=*) includedir=`echo $1 | sed 's/[^=]*=//'`;shift ;;
+    -m*=* | --mandir=*) mandir=`echo $1 | sed 's/[^=]*=//'`;shift ;;
+    -u*=* | --uname=*) uname=`echo $1 | sed 's/[^=]*=//'`;shift ;;
     -p* | --prefix) prefix="$2"; shift; shift ;;
     -e* | --eprefix) exec_prefix="$2"; shift; shift ;;
     -l* | --libdir) libdir="$2"; shift; shift ;;
+    --sharedlibdir) sharedlibdir="$2"; shift; shift ;;
     -i* | --includedir) includedir="$2"; shift; shift ;;
+    -m* | --mandir) mandir="$2"; shift; shift ;;
+    -u* | --uname) uname="$2"; shift; shift ;;
     -s* | --shared | --enable-shared) shared=1; shift ;;
-    -t | --static) shared=0; shift ;;
+    -t | --static | --disable-shared) shared=0; shift ;;
     --solo) solo=1; shift ;;
     --cover) cover=1; shift ;;
     -z* | --zprefix) zprefix=1; shift ;;
     -6* | --64) build64=1; shift ;;
-    -a*=* | --archs=*) ARCHS=`echo $1 | sed 's/.*=//'`; shift ;;
+    -a*=* | --archs=*) ARCHS=`echo $1 | sed 's/[^=]*=//'`; shift ;;
+    -a* | --archs) ARCHS="$2"; shift; shift ;;
     --sysconfdir=*) echo "ignored option: --sysconfdir" | tee -a configure.log; shift ;;
     --localstatedir=*) echo "ignored option: --localstatedir" | tee -a configure.log; shift ;;
     -c* | --const) zconst=1; shift ;;
-    -w* | --warn) warn=1; shift ;;
+    -w* | --warn) warn=$((warn + 1)); shift ;;
     -d* | --debug) debug=1; shift ;;
     --sanitize) address=1; shift ;;
     --address) address=1; shift ;;
     --memory) memory=1; shift ;;
-    *)
-      echo "unknown option: $1" | tee -a configure.log
-      echo "$0 --help for help" | tee -a configure.log
-      leave 1;;
+    --undefined) undefined=1; shift ;;
+    --insecure) insecure=1; shift ;;
+    --disable-crcvx) enable_crcvx=0; shift ;;
+    *) unknown=1; echo "unknown option ignored: $1" | tee -a configure.log; shift;;
     esac
 done
+if test $unknown -eq 1; then
+  echo "$0 --help for help" | tee -a configure.log
+fi
 
 # temporary file name
 test=ztest$$
@@ -184,40 +198,88 @@ else
 fi
 
 case "$cc" in
-  *gcc*) gcc=1 ;;
-  *clang*) gcc=1 ;;
+  *gcc*) gcc=1
+    GCOV="gcov" ;;
+  *clang*) gcc=1
+    clang=1 ;;
 esac
 case `$cc -v 2>&1` in
-  *gcc*) gcc=1 ;;
-  *clang*) gcc=1 ;;
+  *gcc*) gcc=1
+    GCOV="gcov" ;;
+  *clang*) gcc=1
+    clang=1 ;;
 esac
+
+if test $cover -eq 1; then
+  if test "$clang" -eq 1; then
+    if test "$cc" = "clang"; then
+	  if command -v llvm-cov >/dev/null 2>&1; then
+	    GCOV="llvm-cov"
+	    LLVM_GCOV_FLAG="gcov"
+	    GCOV="llvm-cov"
+	    LLVM_GCOV_FLAG="gcov"
+	    echo "Using ${GCOV} for coverage"
+	  else
+	    cover=0
+	    GCOV=""
+	    LLVM_GCOV_FLAG=""
+	    echo "Deactivating cover as no suitable gcov can be found"
+	  fi
+    else
+	  clangV=`echo "$cc" | sed -e 's/^.*-//'`
+	  if command -v llvm-cov-${clangV} >/dev/null 2>&1; then
+	    GCOV="llvm-cov-${clangV}"
+	    LLVM_GCOV_FLAG="gcov"
+	    echo "Using ${GCOV} for coverage"
+	  else
+	    cover=0
+	    GCOV=""
+	    LLVM_GCOV_FLAG=""
+	    echo "Deactivating cover as no suitable gcov can be found"
+	  fi
+    fi
+  fi
+fi
 
 show $cc -c $test.c
 if test "$gcc" -eq 1 && ($cc -c $test.c) >> configure.log 2>&1; then
   echo ... using gcc >> configure.log
   CC="$cc"
-  CFLAGS="${CFLAGS--O3}"
-  SFLAGS="${CFLAGS--O3} -fPIC"
+  CFLAGS="${CFLAGS--O3} -fPIC"
+  SFLAGS="${CFLAGS--O3}"
   if test "$ARCHS"; then
     CFLAGS="${CFLAGS} ${ARCHS}"
+    SFLAGS="${SFLAGS} ${ARCHS}"
     LDFLAGS="${LDFLAGS} ${ARCHS}"
   fi
   if test $build64 -eq 1; then
     CFLAGS="${CFLAGS} -m64"
     SFLAGS="${SFLAGS} -m64"
   fi
-  if test "$warn" -eq 1; then
-    if test "$zconst" -eq 1; then
-      CFLAGS="${CFLAGS} -Wall -Wextra -Wcast-qual -DZLIB_CONST"
-    else
-      CFLAGS="${CFLAGS} -Wall -Wextra"
+  if test "$warn" -ge 1; then
+    CFLAGS="${CFLAGS} -Wall -Wextra"
+    if test "$warn" -ge 2; then
+      CFLAGS="${CFLAGS} -Wconversion -Wshadow -Wundef"
     fi
+  fi
+  if test "$zconst" -eq 1; then
+    if test "$warn" -ge 1; then
+      CFLAGS="${CFLAGS} -Wcast-qual"
+    fi
+    CFLAGS="${CFLAGS} -DZLIB_CONST"
   fi
   if test $address -eq 1; then
     CFLAGS="${CFLAGS} -g -fsanitize=address -fno-omit-frame-pointer"
   fi
   if test $memory -eq 1; then
     CFLAGS="${CFLAGS} -g -fsanitize=memory -fno-omit-frame-pointer"
+  fi
+  if test $undefined -eq 1; then
+    CFLAGS="${CFLAGS} -g -fsanitize=undefined -fno-omit-frame-pointer"
+  fi
+  if test $insecure -eq 1; then
+    CFLAGS="${CFLAGS} -DZLIB_INSECURE"
+    SFLAGS="${SFLAGS} -DZLIB_INSECURE"
   fi
   if test $debug -eq 1; then
     CFLAGS="${CFLAGS} -DZLIB_DEBUG"
@@ -227,7 +289,7 @@ if test "$gcc" -eq 1 && ($cc -c $test.c) >> configure.log 2>&1; then
     uname=`(uname -s || echo unknown) 2>/dev/null`
   fi
   case "$uname" in
-  Linux* | linux* | *-linux* | GNU | GNU/* | solaris*)
+  Linux* | linux* | *-linux* | GNU | GNU/* | solaris* | Haiku)
         case "$mname" in
         *sparc*)
             LDFLAGS="${LDFLAGS} -Wl,--no-warn-rwx-segments" ;;
@@ -258,6 +320,7 @@ if test "$gcc" -eq 1 && ($cc -c $test.c) >> configure.log 2>&1; then
             SHAREDLIB='libz.sl' ;;
         esac ;;
   AIX*)
+        LDSHARED=${LDSHARED-"$cc -shared"}
         LDFLAGS="${LDFLAGS} -Wl,-brtl" ;;
   Darwin* | darwin* | *-darwin*)
         shared_ext='.dylib'
@@ -363,7 +426,12 @@ else
   AIX*)  # Courtesy of dbakker@arrayasolutions.com
              SFLAGS=${CFLAGS-"-O -qmaxmem=8192"}
              CFLAGS=${CFLAGS-"-O -qmaxmem=8192"}
-             LDSHARED=${LDSHARED-"xlc -G"} ;;
+             LDSHARED=${LDSHARED-"xlc -G"}
+             if test $build64 -eq 1; then
+                 CFLAGS="${CFLAGS} -q64"
+                 SFLAGS="${SFLAGS} -q64"
+                 ARFLAGS="-X64 ${ARFLAGS}"
+             fi ;;
   # send working options for other systems to zlib@gzip.org
   *)         SFLAGS=${CFLAGS-"-O"}
              CFLAGS=${CFLAGS-"-O"}
@@ -424,6 +492,13 @@ tryboth()
 cat > $test.c << EOF
 int foo() { return 0; }
 EOF
+echo "Checking for compiler..." >> configure.log
+if try $CC -c $test.c; then
+  :
+else
+  echo "Missing or broken C compiler." | tee -a configure.log
+  leave 1
+fi
 echo "Checking for obsessive-compulsive compiler options..." >> configure.log
 if try $CC -c $CFLAGS $test.c; then
   :
@@ -443,7 +518,7 @@ if test $shared -eq 1; then
   echo Checking for shared library support... | tee -a configure.log
   # we must test in two steps (cc then ld), required at least on SunOS 4.x
   if try $CC -c $SFLAGS $test.c &&
-     try $LDSHARED $SFLAGS -o $test$shared_ext $test.o; then
+     try $LDSHARED $SFLAGS $LDFLAGS -o $test$shared_ext $test.o; then
     echo Building shared library $SHAREDLIBV with $CC. | tee -a configure.log
   elif test -z "$old_cc" -a -z "$old_cflags"; then
     echo No shared library support. | tee -a configure.log
@@ -505,7 +580,7 @@ int main(void) {
 }
 EOF
   fi
-  if try $CC $CFLAGS -o $test $test.c; then
+  if try $CC $CFLAGS $LDFLAGS -o $test $test.c; then
     sizet=`./$test`
     echo "Checking for a pointer-size integer type..." $sizet"." | tee -a configure.log
     CFLAGS="${CFLAGS} -DNO_SIZE_T=${sizet}"
@@ -539,7 +614,7 @@ int main(void) {
   return 0;
 }
 EOF
-  if try $CC $CFLAGS -o $test $test.c; then
+  if try $CC $CFLAGS $LDFLAGS -o $test $test.c; then
     echo "Checking for fseeko... Yes." | tee -a configure.log
   else
     CFLAGS="${CFLAGS} -DNO_FSEEKO"
@@ -556,7 +631,7 @@ cat > $test.c <<EOF
 #include <errno.h>
 int main() { return strlen(strerror(errno)); }
 EOF
-if try $CC $CFLAGS -o $test $test.c; then
+if try $CC $CFLAGS $LDFLAGS -o $test $test.c; then
   echo "Checking for strerror... Yes." | tee -a configure.log
 else
   CFLAGS="${CFLAGS} -DNO_STRERROR"
@@ -575,7 +650,7 @@ cat > $test.c <<EOF
 int main() { return 0; }
 EOF
 if try $CC -c $CFLAGS $test.c; then
-  sed < zconf.h "/^#ifdef HAVE_UNISTD_H.* may be/s/def HAVE_UNISTD_H\(.*\) may be/ 1\1 was/" > zconf.temp.h
+  sed < zconf.h "/^#if HAVE_UNISTD_H-0.* may be/s/ HAVE_UNISTD_H-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
   mv zconf.temp.h zconf.h
   echo "Checking for unistd.h... Yes." | tee -a configure.log
 else
@@ -590,7 +665,7 @@ cat > $test.c <<EOF
 int main() { return 0; }
 EOF
 if try $CC -c $CFLAGS $test.c; then
-  sed < zconf.h "/^#ifdef HAVE_STDARG_H.* may be/s/def HAVE_STDARG_H\(.*\) may be/ 1\1 was/" > zconf.temp.h
+  sed < zconf.h "/^#if HAVE_STDARG_H-0.* may be/s/ HAVE_STDARG_H-0\(.*\) may be/ 1\1 was/" > zconf.temp.h
   mv zconf.temp.h zconf.h
   echo "Checking for stdarg.h... Yes." | tee -a configure.log
 else
@@ -618,7 +693,6 @@ fi
 
 # if code coverage testing was requested, use older gcc if defined, e.g. "gcc-4.2" on Mac OS X
 if test $cover -eq 1; then
-  CFLAGS="${CFLAGS} -fprofile-arcs -ftest-coverage"
   if test -n "$GCC_CLASSIC"; then
     CC=$GCC_CLASSIC
   fi
@@ -663,7 +737,7 @@ int main()
   return (mytest("Hello%d\n", 1));
 }
 EOF
-  if try $CC $CFLAGS -o $test $test.c; then
+  if try $CC $CFLAGS $LDFLAGS -o $test $test.c; then
     echo "Checking for vsnprintf() in stdio.h... Yes." | tee -a configure.log
 
     echo >> configure.log
@@ -703,7 +777,10 @@ EOF
     echo "  WARNING: vsnprintf() not found, falling back to vsprintf(). zlib" | tee -a configure.log
     echo "  can build but will be open to possible buffer-overflow security" | tee -a configure.log
     echo "  vulnerabilities." | tee -a configure.log
-
+    if test $insecure -ne 1; then
+      echo "  The --insecure option must be provided to ./configure in order to" | tee -a configure.log
+      echo "  compile using the insecure vsprintf() function." | tee -a configure.log
+    fi
     echo >> configure.log
     cat >$test.c <<EOF
 #include <stdio.h>
@@ -753,7 +830,7 @@ int main()
 }
 EOF
 
-  if try $CC $CFLAGS -o $test $test.c; then
+  if try $CC $CFLAGS $LDFLAGS -o $test $test.c; then
     echo "Checking for snprintf() in stdio.h... Yes." | tee -a configure.log
 
     echo >> configure.log
@@ -787,7 +864,10 @@ EOF
     echo "  WARNING: snprintf() not found, falling back to sprintf(). zlib" | tee -a configure.log
     echo "  can build but will be open to possible buffer-overflow security" | tee -a configure.log
     echo "  vulnerabilities." | tee -a configure.log
-
+    if test $insecure -ne 1; then
+      echo "  The --insecure option must be provided to ./configure in order to" | tee -a configure.log
+      echo "  compile using the insecure sprintf() function." | tee -a configure.log
+    fi
     echo >> configure.log
     cat >$test.c <<EOF
 #include <stdio.h>
@@ -835,6 +915,70 @@ EOF
   fi
 fi
 
+# check for ibm s390x build
+HAVE_S390X=0
+cat > $test.c << EOF
+#ifndef __s390x__
+    #error
+#endif
+EOF
+if try $CC -c $CFLAGS $test.c; then 
+    echo "Checking for s390x build ... Yes." | tee -a configure.log
+    HAVE_S390X=1
+else
+    echo "Checking for s390x build ... No." | tee -a configure.log
+fi
+
+# check for ibm s390x vx vector extensions
+HAVE_S390X_VX=0
+if test $HAVE_S390X -eq 1 && test $enable_crcvx -eq 1 ; then
+    # preset the compiler specific flags
+    if test $clang -eq 1; then
+        VGFMAFLAG=-fzvector
+    else
+        VGFMAFLAG=-mzarch
+    fi
+
+    cat > $test.c <<EOF
+#ifndef __s390x__
+#error
+#endif
+#include <vecintrin.h>
+int main(void) {
+    unsigned long long a __attribute__((vector_size(16))) = { 0 };
+    unsigned long long b __attribute__((vector_size(16))) = { 0 };
+    unsigned char c __attribute__((vector_size(16))) = { 0 };
+    c = vec_gfmsum_accum_128(a, b, c);
+    return c[0];
+}
+EOF
+
+    # cflags already contains a valid march
+    if try $CC -c $CFLAGS $VGFMAFLAG $test.c; then
+        echo "Checking for s390x vx vector extension ... Yes." | tee -a configure.log
+        HAVE_S390X_VX=1
+    # or set march for our compile units
+    elif try $CC -c $CFLAGS $VGFMAFLAG -march=z13 $test.c; then
+        echo "Checking for s390x vx vector extension (march=z13) ... Yes." | tee -a configure.log
+        HAVE_S390X_VX=1
+        VGFMAFLAG="$VGFMAFLAG -march=z13"
+    # else we are not on s390x
+    else 
+        echo "Checking for s390x vx vector extension ... No." | tee -a configure.log
+    fi
+
+    # prepare compiling for s390x
+    if test $HAVE_S390X_VX -eq 1; then
+        CFLAGS="$CFLAGS -DHAVE_S390X_VX"
+        SFLAGS="$SFLAGS -DHAVE_S390X_VX"
+        OBJC="$OBJC crc32_vx.o"
+        PIC_OBJC="$PIC_OBJC crc32_vx.lo"
+    else
+        # target has no vx extension
+        VGFMAFLAG=""
+    fi
+fi
+
 # show the results in the log
 echo >> configure.log
 echo ALL = $ALL >> configure.log
@@ -866,10 +1010,15 @@ echo mandir = $mandir >> configure.log
 echo prefix = $prefix >> configure.log
 echo sharedlibdir = $sharedlibdir >> configure.log
 echo uname = $uname >> configure.log
+echo HAVE_S390X = $HAVE_S390X >> configure.log
+echo HAVE_S390X_VX = $HAVE_S390X_VX >> configure.log
+echo VGFMAFLAG = $VGFMAFLAG >> configure.log
 
 # update Makefile with the configure results
 sed < ${SRCDIR}Makefile.in "
 /^CC *=/s#=.*#=$CC#
+/^GCOV *=/s#=.*#=$GCOV#
+/^LLVM_GCOV_FLAG *=/s#=.*#=$LLVM_GCOV_FLAG#
 /^CFLAGS *=/s#=.*#=$CFLAGS#
 /^SFLAGS *=/s#=.*#=$SFLAGS#
 /^LDFLAGS *=/s#=.*#=$LDFLAGS#
