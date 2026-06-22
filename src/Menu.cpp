@@ -1564,6 +1564,7 @@ bool CmdRequiresDocument(int cmdId) {
         case CmdFindNextSel:
         case CmdFindPrevSel:
         case CmdFindToggleMatchCase:
+        case CmdFindToggleMatchWholeWord:
         case CmdZoomIn:
         case CmdZoomOut:
         case CmdZoomFitWidthAndContinuous:

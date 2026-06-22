@@ -102,6 +102,8 @@ static const char* FindWindowButtonTooltip(int cmd) {
             return AppendCmdAccel(_TRA("Find Next"), cmd);
         case CmdFindToggleMatchCase:
             return AppendCmdAccel(_TRA("Match Case"), cmd);
+        case CmdFindToggleMatchWholeWord:
+            return AppendCmdAccel(_TRA("Match Whole Word"), cmd);
         case kFindWinPinCmdId:
             return _TRA("Dock to toolbar");
     }
@@ -183,7 +185,7 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         SendMessageW(hwndBtns, TB_SETIMAGELIST, 0, (LPARAM)himl);
         SendMessageW(hwndBtns, TB_SETBUTTONSIZE, 0, MAKELONG(isz, isz));
 
-        TBBUTTON b[4]{};
+        TBBUTTON b[5]{};
         b[0].iBitmap = (int)TbIcon::ChevronUp;
         b[0].idCommand = CmdFindPrev;
         b[0].fsState = TBSTATE_ENABLED;
@@ -196,11 +198,15 @@ bool FindWindowWnd::Create(MainWindow* mainWin) {
         b[2].idCommand = CmdFindToggleMatchCase;
         b[2].fsState = TBSTATE_ENABLED;
         b[2].fsStyle = BTNS_CHECK;
-        b[3].iBitmap = (int)TbIcon::ArrowsDiagonalMinimize;
-        b[3].idCommand = kFindWinPinCmdId;
+        b[3].iBitmap = (int)TbIcon::MatchWholeWord;
+        b[3].idCommand = CmdFindToggleMatchWholeWord;
         b[3].fsState = TBSTATE_ENABLED;
-        b[3].fsStyle = BTNS_BUTTON;
-        SendMessageW(hwndBtns, TB_ADDBUTTONS, 4, (LPARAM)&b);
+        b[3].fsStyle = BTNS_CHECK;
+        b[4].iBitmap = (int)TbIcon::ArrowsDiagonalMinimize;
+        b[4].idCommand = kFindWinPinCmdId;
+        b[4].fsState = TBSTATE_ENABLED;
+        b[4].fsStyle = BTNS_BUTTON;
+        SendMessageW(hwndBtns, TB_ADDBUTTONS, 5, (LPARAM)&b);
         SendMessageW(hwndBtns, TB_AUTOSIZE, 0, 0);
     }
 
@@ -560,6 +566,9 @@ bool FindWindowWnd::OnCommand(WPARAM wparam, LPARAM) {
         case CmdFindToggleMatchCase:
             FindToggleMatchCase(win);
             return true;
+        case CmdFindToggleMatchWholeWord:
+            FindToggleMatchWholeWord(win);
+            return true;
         case kFindWinPinCmdId:
             ToggleFloatingFindUI(win); // dock back to the compact toolbar bar
             return true;
@@ -610,6 +619,7 @@ void ShowFindWindow(MainWindow* win) {
     FindWindowWnd* w = win->findWindow;
     win->hwndFindEdit = w->edit->hwnd; // make this the active find edit
     FindWindowSetMatchCaseChecked(win, win->findMatchCase);
+    FindWindowSetMatchWholeWordChecked(win, win->findMatchWholeWord);
     PositionFindWindow(w);
     w->Layout();
     ShowWindow(w->hwnd, SW_SHOW);
@@ -646,6 +656,13 @@ void FindWindowSetStatus(MainWindow* win, const char* s) {
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked) {
     if (win->findWindow && win->findWindow->hwndBtns) {
         SendMessageW(win->findWindow->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchCase, MAKELONG(checked ? 1 : 0, 0));
+    }
+}
+
+void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked) {
+    if (win->findWindow && win->findWindow->hwndBtns) {
+        SendMessageW(win->findWindow->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchWholeWord,
+                     MAKELONG(checked ? 1 : 0, 0));
     }
 }
 

@@ -248,6 +248,7 @@ export const commands = [
     "CmdTranslateSelectionWithGrokBuild", "Translate Selection with Grok Build",
     "CmdTranslateSelectionWithClaudeCode", "Translate Selection with Claude Code",
     "CmdTranslateSelectionWithOpenAICodex", "Translate Selection with OpenAI Codex",
+    "CmdFindToggleMatchWholeWord", "Find: Toggle Match Whole Word",
     "CmdNone", "Do nothing",
 ];
 

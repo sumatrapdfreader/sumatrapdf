@@ -77,6 +77,19 @@ static const char* gIconMatchCase =
   <line x1="5" y1="14" x2="11" y2="14" />
 </svg>)";
 
+// "match whole word": lowercase "ab" over an underline bracketed at both ends,
+// suggesting a complete word delimited by word boundaries (like VS Code's
+// whole-word toggle). Custom icon drawn in the tabler stroke style.
+static const char* gIconMatchWholeWord =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="7" cy="11" r="2.5" />
+  <line x1="9.5" y1="8.5" x2="9.5" y2="13.5" />
+  <line x1="14.5" y1="6" x2="14.5" y2="13.5" />
+  <circle cx="17" cy="11" r="2.5" />
+  <path d="M3 16v3h18v-3" />
+</svg>)";
+
 // https://github.com/tabler/tabler-icons/blob/master/icons/zoom-in.svg
 static const char* gIconZoomIn =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -240,6 +253,7 @@ static const char* gIcons[] = {
     gIconClose,
     gIconArrowsDiagonal,
     gIconArrowsDiagonalMinimize,
+    gIconMatchWholeWord,
 };
 // clang-format on
 

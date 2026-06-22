@@ -42,6 +42,7 @@ void FindPrev(MainWindow* win);
 void FindNext(MainWindow* win);
 void FindFirst(MainWindow* win);
 void FindToggleMatchCase(MainWindow* win);
+void FindToggleMatchWholeWord(MainWindow* win);
 // called when the user edits the find bar's text (find-as-you-type)
 void OnFindBarTextChanged(MainWindow* win);
 // navigate to and select a match chosen from the floating results list

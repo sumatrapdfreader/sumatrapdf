@@ -181,6 +181,7 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
         case CmdFindNext:
         case CmdFindPrev:
         case CmdFindToggleMatchCase:
+        case CmdFindToggleMatchWholeWord:
             return NeedsFindUI(win);
         case PageInfoId:
             return true;
@@ -282,7 +283,7 @@ static TBBUTTON TbButtonFromButtonInfo(const ToolbarButtonInfo& bi, bool noTrans
         b.fsStyle |= BTNS_DROPDOWN;
     }
 
-    if (bi.cmdId == CmdFindToggleMatchCase) {
+    if (bi.cmdId == CmdFindToggleMatchCase || bi.cmdId == CmdFindToggleMatchWholeWord) {
         b.fsStyle = BTNS_CHECK;
     }
     if (bi.bmpIndex == TbIcon::Text) {

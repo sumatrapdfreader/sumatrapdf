@@ -156,6 +156,22 @@ void FindToggleMatchCase(MainWindow* win) {
     }
 }
 
+void FindToggleMatchWholeWord(MainWindow* win) {
+    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
+        return;
+    }
+    win->findMatchWholeWord = !win->findMatchWholeWord;
+    win->AsFixed()->textSearch->SetMatchWholeWord(win->findMatchWholeWord);
+    FindBarSetMatchWholeWordChecked(win, win->findMatchWholeWord);
+    if (win->hwndFindEdit) {
+        Edit_SetModify(win->hwndFindEdit, TRUE);
+    }
+    // re-run the search with the new whole-word setting
+    if (HasFindText(win)) {
+        FindTextOnThread(win, TextSearch::Direction::Forward, true);
+    }
+}
+
 void FindSelection(MainWindow* win, TextSearch::Direction direction) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
@@ -254,12 +270,14 @@ struct FindThreadData {
         SetToolbarButtonEnableState(win, CmdFindPrev, false);
         SetToolbarButtonEnableState(win, CmdFindNext, false);
         SetToolbarButtonEnableState(win, CmdFindToggleMatchCase, false);
+        SetToolbarButtonEnableState(win, CmdFindToggleMatchWholeWord, false);
     }
 
     void HideUI(bool success, bool loopedAround) const {
         SetToolbarButtonEnableState(win, CmdFindPrev, true);
         SetToolbarButtonEnableState(win, CmdFindNext, true);
         SetToolbarButtonEnableState(win, CmdFindToggleMatchCase, true);
+        SetToolbarButtonEnableState(win, CmdFindToggleMatchWholeWord, true);
 
         if (!success && !loopedAround) {
             // i.e. canceled
@@ -392,16 +410,18 @@ struct CountThreadData {
     EngineBase* engine = nullptr; // AddRef'd by the caller, released by the thread
     WCHAR* text = nullptr;
     bool matchCase = false;
+    bool matchWholeWord = false;
     bool wantSnippets = false; // build per-match snippets for the results list
     LONG epoch = 0;
     HANDLE thread = nullptr;
 
-    CountThreadData(MainWindow* win, EngineBase* engine, const WCHAR* text, bool matchCase, bool wantSnippets,
-                    LONG epoch) {
+    CountThreadData(MainWindow* win, EngineBase* engine, const WCHAR* text, bool matchCase, bool matchWholeWord,
+                    bool wantSnippets, LONG epoch) {
         this->win = win;
         this->engine = engine;
         this->text = str::Dup(text);
         this->matchCase = matchCase;
+        this->matchWholeWord = matchWholeWord;
         this->wantSnippets = wantSnippets;
         this->epoch = epoch;
     }
@@ -433,7 +453,7 @@ struct CountEndTaskData {
     }
 };
 
-static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase);
+static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase, bool matchWholeWord);
 
 static void CountEndTask(CountEndTaskData* d) {
     AutoDelete delData(d);
@@ -452,6 +472,7 @@ static void CountEndTask(CountEndTaskData* d) {
         win->findCountText = ctd->text;
         ctd->text = nullptr;
         win->findCountMatchCase = ctd->matchCase;
+        win->findCountMatchWholeWord = ctd->matchWholeWord;
         win->findCountEngine = ctd->engine;
         win->findCountPositions = *d->positions;
         win->findCountValid = true;
@@ -471,7 +492,7 @@ static void CountEndTask(CountEndTaskData* d) {
     if (win->findCountPendingText) {
         WCHAR* pending = win->findCountPendingText;
         win->findCountPendingText = nullptr;
-        StartFindCount(win, pending, win->findCountPendingMatchCase);
+        StartFindCount(win, pending, win->findCountPendingMatchCase, win->findCountPendingMatchWholeWord);
         str::Free(pending);
     }
 }
@@ -491,6 +512,7 @@ static void CountThread(CountThreadData* d) {
     {
         TextSearch ts(engine);
         ts.SetMatchCase(d->matchCase);
+        ts.SetMatchWholeWord(d->matchWholeWord);
         ts.SetDirection(TextSearch::Direction::Forward);
         ts.progressCb = MkFunc1<CountThreadData, ProgressUpdateData*>(CountProgress, d);
         TextSel* m = ts.FindFirst(1, d->text);
@@ -546,7 +568,7 @@ static void AbortCount(MainWindow* win) {
 // scan is already running, remember only the latest request and let the running
 // worker start it when it finishes, so rapid typing never piles up scans and
 // the UI thread never blocks waiting on a scan.
-static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase) {
+static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase, bool matchWholeWord) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -565,6 +587,7 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase) {
         str::FreePtr(&win->findCountPendingText);
         win->findCountPendingText = str::Dup(text);
         win->findCountPendingMatchCase = matchCase;
+        win->findCountPendingMatchWholeWord = matchWholeWord;
         return;
     }
 
@@ -572,7 +595,7 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase) {
     // build per-match snippets only when the floating results list is showing
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     LONG epoch = InterlockedIncrement(&win->findCountEpoch);
-    auto d = new CountThreadData(win, engine, text, matchCase, wantSnippets, epoch);
+    auto d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantSnippets, epoch);
     win->findCountThread = nullptr;
     auto fn = MkFunc0<CountThreadData>(CountThread, d);
     win->findCountThread = StartThread(fn, "FindCountThread");
@@ -586,7 +609,8 @@ static void UpdateMatchCount(MainWindow* win, const WCHAR* text) {
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
-                    win->findCountMatchCase == win->findMatchCase && win->findCountEngine == engine &&
+                    win->findCountMatchCase == win->findMatchCase &&
+                    win->findCountMatchWholeWord == win->findMatchWholeWord && win->findCountEngine == engine &&
                     (!wantSnippets || win->findCountHasSnippets);
     if (cacheHit) {
         // matches are unchanged: just refresh n/m. Don't rebuild the results
@@ -594,7 +618,7 @@ static void UpdateMatchCount(MainWindow* win, const WCHAR* text) {
         // selection (the list is rebuilt only when a new count installs matches).
         ShowMatchCount(win);
     } else {
-        StartFindCount(win, text, win->findMatchCase);
+        StartFindCount(win, text, win->findMatchCase, win->findMatchWholeWord);
     }
 }
 

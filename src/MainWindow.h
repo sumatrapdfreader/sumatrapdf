@@ -336,6 +336,7 @@ struct MainWindow {
     HANDLE findThread = nullptr;
     bool findCancelled = false;
     bool findMatchCase = false;
+    bool findMatchWholeWord = false;
 
     // find bar "n / m" match counter (see SearchAndDDE.cpp). The positions of all
     // matches for findCountText are cached so prev/next is instant; a background
@@ -344,6 +345,7 @@ struct MainWindow {
     LONG findCountEpoch = 0;
     WCHAR* findCountText = nullptr;
     bool findCountMatchCase = false;
+    bool findCountMatchWholeWord = false;
     bool findCountValid = false;
     void* findCountEngine = nullptr; // engine the cache was built for (compared, never deref'd)
     Vec<u64> findCountPositions;     // sorted (page<<32 | startOffset) of each match
@@ -351,6 +353,7 @@ struct MainWindow {
     // worker picks it up when it finishes (coalesces rapid typing to one scan)
     WCHAR* findCountPendingText = nullptr;
     bool findCountPendingMatchCase = false;
+    bool findCountPendingMatchWholeWord = false;
     // per-match snippets for the floating results list; only built when the
     // floating find window is visible (see SearchAndDDE.cpp)
     Vec<FindMatch> findMatches;

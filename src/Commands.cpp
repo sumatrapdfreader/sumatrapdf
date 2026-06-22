@@ -257,6 +257,7 @@ static SeqStrings gCommandNames =
     "CmdTranslateSelectionWithGrokBuild\0"
     "CmdTranslateSelectionWithClaudeCode\0"
     "CmdTranslateSelectionWithOpenAICodex\0"
+    "CmdFindToggleMatchWholeWord\0"
     "CmdNone\0"
     "\0";
 
@@ -505,6 +506,7 @@ static i32 gCommandIds[] = {
     CmdTranslateSelectionWithGrokBuild,
     CmdTranslateSelectionWithClaudeCode,
     CmdTranslateSelectionWithOpenAICodex,
+    CmdFindToggleMatchWholeWord,
     CmdNone,
 };
 
@@ -753,6 +755,7 @@ SeqStrings gCommandDescriptions =
     "Translate Selection with Grok Build\0"
     "Translate Selection with Claude Code\0"
     "Translate Selection with OpenAI Codex\0"
+    "Find: Toggle Match Whole Word\0"
     "Do nothing\0"
     "\0";
 // clang-format on

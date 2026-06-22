@@ -253,7 +253,8 @@ enum {
     CmdTranslateSelectionWithGrokBuild = 442,
     CmdTranslateSelectionWithClaudeCode = 443,
     CmdTranslateSelectionWithOpenAICodex = 444,
-    CmdNone = 445,
+    CmdFindToggleMatchWholeWord = 445,
+    CmdNone = 446,
 
     /* range for file history */
     CmdFileHistoryFirst,

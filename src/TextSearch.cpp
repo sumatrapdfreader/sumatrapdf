@@ -58,8 +58,10 @@ void TextSearch::SetText(const WCHAR* text) {
     // and search text ending in a single space enables the 'Match word end' option
     // (that behavior already "kind of" exists without special treatment, but
     // usually is not quite what a user expects, so let's try to be cleverer)
-    this->matchWordStart = text[0] == ' ' && text[1] != ' ';
-    this->matchWordEnd = str::EndsWith(text, L" ") && !str::EndsWith(text, L"  ");
+    // "match whole word" forces both word-boundary checks on; otherwise they're
+    // driven by a leading / trailing single space in the search text
+    this->matchWordStart = matchWholeWord || (text[0] == ' ' && text[1] != ' ');
+    this->matchWordEnd = matchWholeWord || (str::EndsWith(text, L" ") && !str::EndsWith(text, L"  "));
 
     if (text[0] == ' ') {
         text++;
@@ -107,6 +109,17 @@ void TextSearch::SetMatchCase(bool newMatchCase) {
     }
     this->matchCase = newMatchCase;
 
+    markAllPagesNonSkip(pagesToSkip);
+}
+
+void TextSearch::SetMatchWholeWord(bool newMatchWholeWord) {
+    if (matchWholeWord == newMatchWholeWord) {
+        return;
+    }
+    this->matchWholeWord = newMatchWholeWord;
+    // matchWordStart/matchWordEnd are recomputed from matchWholeWord on the next
+    // SetText() (the re-search after a toggle always calls it), so we only need
+    // to invalidate the per-page skip cache here, like SetMatchCase().
     markAllPagesNonSkip(pagesToSkip);
 }
 

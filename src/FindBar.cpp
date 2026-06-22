@@ -79,6 +79,8 @@ static const char* FindBarButtonTooltip(int cmd) {
             return AppendCmdAccel(_TRA("Find Next"), cmd);
         case CmdFindToggleMatchCase:
             return AppendCmdAccel(_TRA("Match Case"), cmd);
+        case CmdFindToggleMatchWholeWord:
+            return AppendCmdAccel(_TRA("Match Whole Word"), cmd);
         case kFindBarPinCmdId:
             return _TRA("Open in a window");
         case kFindBarCloseCmdId:
@@ -168,7 +170,7 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         SendMessageW(hwndBtns, TB_SETIMAGELIST, 0, (LPARAM)himl);
         SendMessageW(hwndBtns, TB_SETBUTTONSIZE, 0, MAKELONG(isz, isz));
 
-        TBBUTTON b[5]{};
+        TBBUTTON b[6]{};
         b[0].iBitmap = (int)TbIcon::ChevronUp;
         b[0].idCommand = CmdFindPrev;
         b[0].fsState = TBSTATE_ENABLED;
@@ -181,15 +183,19 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
         b[2].idCommand = CmdFindToggleMatchCase;
         b[2].fsState = TBSTATE_ENABLED;
         b[2].fsStyle = BTNS_CHECK;
-        b[3].iBitmap = (int)TbIcon::ArrowsDiagonal;
-        b[3].idCommand = kFindBarPinCmdId;
+        b[3].iBitmap = (int)TbIcon::MatchWholeWord;
+        b[3].idCommand = CmdFindToggleMatchWholeWord;
         b[3].fsState = TBSTATE_ENABLED;
-        b[3].fsStyle = BTNS_BUTTON;
-        b[4].iBitmap = (int)TbIcon::Close;
-        b[4].idCommand = kFindBarCloseCmdId;
+        b[3].fsStyle = BTNS_CHECK;
+        b[4].iBitmap = (int)TbIcon::ArrowsDiagonal;
+        b[4].idCommand = kFindBarPinCmdId;
         b[4].fsState = TBSTATE_ENABLED;
         b[4].fsStyle = BTNS_BUTTON;
-        SendMessageW(hwndBtns, TB_ADDBUTTONS, 5, (LPARAM)&b);
+        b[5].iBitmap = (int)TbIcon::Close;
+        b[5].idCommand = kFindBarCloseCmdId;
+        b[5].fsState = TBSTATE_ENABLED;
+        b[5].fsStyle = BTNS_BUTTON;
+        SendMessageW(hwndBtns, TB_ADDBUTTONS, 6, (LPARAM)&b);
         SendMessageW(hwndBtns, TB_AUTOSIZE, 0, 0);
     }
 
@@ -306,6 +312,9 @@ bool FindBarWnd::OnCommand(WPARAM wparam, LPARAM) {
         case CmdFindToggleMatchCase:
             FindToggleMatchCase(win);
             return true;
+        case CmdFindToggleMatchWholeWord:
+            FindToggleMatchWholeWord(win);
+            return true;
         case kFindBarPinCmdId:
             ToggleFloatingFindUI(win); // pop out into the floating window
             return true;
@@ -386,8 +395,9 @@ static void ShowCompactBar(MainWindow* win) {
     }
     FindBarWnd* bar = win->findBar;
     win->hwndFindEdit = bar->edit->hwnd; // make this the active find edit
-    // reflect the current match-case state on the toggle button
+    // reflect the current match-case / whole-word state on the toggle buttons
     FindBarSetMatchCaseChecked(win, win->findMatchCase);
+    FindBarSetMatchWholeWordChecked(win, win->findMatchWholeWord);
     PositionFindBar(bar);
     ShowWindow(bar->hwnd, SW_SHOW);
     HwndSetFocus(win->hwndFindEdit);
@@ -480,5 +490,15 @@ void FindBarSetMatchCaseChecked(MainWindow* win, bool checked) {
     }
     if (win->findBar && win->findBar->hwndBtns) {
         SendMessageW(win->findBar->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchCase, MAKELONG(checked ? 1 : 0, 0));
+    }
+}
+
+void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked) {
+    if (gGlobalPrefs->searchUIFloating) {
+        FindWindowSetMatchWholeWordChecked(win, checked);
+        return;
+    }
+    if (win->findBar && win->findBar->hwndBtns) {
+        SendMessageW(win->findBar->hwndBtns, TB_CHECKBUTTON, CmdFindToggleMatchWholeWord, MAKELONG(checked ? 1 : 0, 0));
     }
 }

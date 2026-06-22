@@ -7552,6 +7552,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             FindToggleMatchCase(win);
             break;
 
+        case CmdFindToggleMatchWholeWord:
+            FindToggleMatchWholeWord(win);
+            break;
+
         case CmdFindNextSel:
             FindSelection(win, TextSearch::Direction::Forward);
             break;

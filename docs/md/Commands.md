@@ -58,6 +58,7 @@ CmdDeleteFile,,Delete Currently Opened File, ver 3.6+
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdFindFirst,Ctrl + F,Find,
 CmdFindToggleMatchCase,,Find: Toggle Match Case,
+CmdFindToggleMatchWholeWord,,Find: Toggle Match Whole Word,
 CmdFindNext,F3,Find Next,
 CmdFindNextSel,Ctrl + F3,Find Next Selection,
 CmdFindPrev,Shift + F3,Find Previous,

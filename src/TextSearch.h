@@ -11,6 +11,7 @@ struct TextSearch : public TextSelection {
     ~TextSearch();
 
     void SetMatchCase(bool sensitive);
+    void SetMatchWholeWord(bool wholeWord);
     void SetDirection(Direction direction);
     void SetLastResult(TextSelection* sel);
     TextSel* FindFirst(int page, const WCHAR* text);
@@ -35,6 +36,10 @@ struct TextSearch : public TextSelection {
     int searchHitStartAt = 0; // when text found spans several pages, searchHitStartAt < findPage
     bool forward = true;
     bool matchCase = false;
+    // when set, the search only matches complete words: it forces both
+    // matchWordStart and matchWordEnd on regardless of leading/trailing spaces
+    // (issue #4295)
+    bool matchWholeWord = false;
     // these two options are implicitly set when the search text begins
     // resp. ends in a single space (many users already search that way),
     // combining them yields a 'Whole words' search

@@ -614,6 +614,10 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
             isToggle = true;
             newIsOn = !win->findMatchCase;
         } break;
+        case CmdFindToggleMatchWholeWord: {
+            isToggle = true;
+            newIsOn = !win->findMatchWholeWord;
+        } break;
         case CmdFavoriteToggle: {
             isToggle = true;
             newIsOn = !gGlobalPrefs->showFavorites;
