@@ -38,6 +38,13 @@ typedef struct pdf_annot pdf_annot;
 typedef struct pdf_js pdf_js;
 typedef struct pdf_document pdf_document;
 
+/* SumatraPDF: callback that resolves an external-file stream specification
+ * (the /F entry of a stream, e.g. an image referencing a sibling .jpg) to its
+ * raw bytes. Return a buffer (caller takes ownership) to load it, or NULL to
+ * deny (the default when no callback is set). */
+typedef fz_buffer *(pdf_load_external_stream_fn)(fz_context *ctx, const char *filespec, void *opaque);
+void pdf_set_load_external_stream_fn(fz_context *ctx, pdf_document *doc, pdf_load_external_stream_fn *fn, void *opaque);
+
 enum
 {
 	PDF_LEXBUF_SMALL = 256,
@@ -572,6 +579,10 @@ struct pdf_document
 	pdf_journal *journal;
 
 	int throw_on_repair;
+
+	/* SumatraPDF: callback to load external-file streams (/F file spec). */
+	pdf_load_external_stream_fn *load_external_stream;
+	void *load_external_stream_opaque;
 };
 
 pdf_document *pdf_create_document(fz_context *ctx);

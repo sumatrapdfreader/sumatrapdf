@@ -376,6 +376,72 @@ pdf_open_raw_filter(fz_context *ctx, fz_stream *file_stm, pdf_document *doc, pdf
 	return null_stm;
 }
 
+/* SumatraPDF */
+void
+pdf_set_load_external_stream_fn(fz_context *ctx, pdf_document *doc, pdf_load_external_stream_fn *fn, void *opaque)
+{
+	if (!doc)
+		return;
+	doc->load_external_stream = fn;
+	doc->load_external_stream_opaque = opaque;
+}
+
+/* SumatraPDF: if a stream is an external-file stream (its /F entry is a file
+ * specification, e.g. an image referencing a sibling .jpg) and a callback is
+ * registered, load its bytes through the callback and decode them with the
+ * /FFilter / /FDecodeParms chain. Returns NULL when the stream isn't external
+ * or loading is denied, so the caller falls back to the embedded stream. */
+static fz_stream *
+pdf_open_external_stream(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, fz_compression_params *imparams, int might_be_image)
+{
+	pdf_obj *fobj, *filters, *params;
+	const char *filespec = NULL;
+	fz_buffer *buf;
+	fz_stream *rstm, *fstm = NULL;
+
+	if (!doc || !doc->load_external_stream)
+		return NULL;
+
+	fobj = pdf_dict_get(ctx, stmobj, PDF_NAME(F));
+	/* /F must be a file specification (string or filespec dict). When it's a
+	 * name or array it's the inline-image abbreviation for /Filter, not us. */
+	if (pdf_is_string(ctx, fobj))
+		filespec = pdf_to_text_string(ctx, fobj);
+	else if (pdf_is_dict(ctx, fobj))
+		filespec = pdf_to_text_string(ctx, pdf_dict_geta(ctx, fobj, PDF_NAME(UF), PDF_NAME(F)));
+	if (!filespec || !filespec[0])
+		return NULL;
+
+	buf = doc->load_external_stream(ctx, filespec, doc->load_external_stream_opaque);
+	if (!buf)
+		return NULL;
+
+	/* external streams use /FFilter and /FDecodeParms (not /Filter / /DecodeParms) */
+	filters = pdf_dict_gets(ctx, stmobj, "FFilter");
+	params = pdf_dict_gets(ctx, stmobj, "FDecodeParms");
+	rstm = fz_open_buffer(ctx, buf);
+	fz_drop_buffer(ctx, buf);
+	fz_try(ctx)
+	{
+		if (pdf_is_name(ctx, filters))
+			fstm = build_filter(ctx, rstm, doc, filters, params, 0, 0, imparams, might_be_image);
+		else if (pdf_array_len(ctx, filters) > 0)
+			fstm = build_filter_chain(ctx, rstm, doc, filters, params, 0, 0, imparams, might_be_image);
+		else
+		{
+			if (imparams)
+				imparams->type = FZ_IMAGE_RAW;
+			fstm = fz_keep_stream(ctx, rstm);
+		}
+	}
+	fz_always(ctx)
+		fz_drop_stream(ctx, rstm);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return fstm;
+}
+
 /*
  * Construct a filter to decode a stream, constraining
  * to stream length and decrypting.
@@ -383,10 +449,18 @@ pdf_open_raw_filter(fz_context *ctx, fz_stream *file_stm, pdf_document *doc, pdf
 static fz_stream *
 pdf_open_filter(fz_context *ctx, pdf_document *doc, fz_stream *file_stm, pdf_obj *stmobj, int num, int64_t offset, fz_compression_params *imparams, int might_be_image)
 {
-	pdf_obj *filters = pdf_dict_geta(ctx, stmobj, PDF_NAME(Filter), PDF_NAME(F));
-	pdf_obj *params = pdf_dict_geta(ctx, stmobj, PDF_NAME(DecodeParms), PDF_NAME(DP));
+	pdf_obj *filters;
+	pdf_obj *params;
 	int orig_num, orig_gen;
 	fz_stream *rstm, *fstm;
+
+	/* SumatraPDF: external-file streams (/F file specification) */
+	fstm = pdf_open_external_stream(ctx, doc, stmobj, imparams, might_be_image);
+	if (fstm)
+		return fstm;
+
+	filters = pdf_dict_geta(ctx, stmobj, PDF_NAME(Filter), PDF_NAME(F));
+	params = pdf_dict_geta(ctx, stmobj, PDF_NAME(DecodeParms), PDF_NAME(DP));
 
 	rstm = pdf_open_raw_filter(ctx, file_stm, doc, stmobj, num, &orig_num, &orig_gen, offset);
 	fz_try(ctx)
