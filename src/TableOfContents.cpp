@@ -176,6 +176,10 @@ struct GoToTocLinkData {
     TocItem* tocItem;
     WindowTab* tab;
     DocController* ctrl;
+    // true when the navigation was driven from outside the tree (e.g. the
+    // command palette), so afterwards we must move the tree's selection to the
+    // item ourselves. For tree-driven navigation the tree is already selected.
+    bool selectInTree = false;
 };
 
 static void GoToTocLink(GoToTocLinkData* d) {
@@ -207,6 +211,19 @@ static void GoToTocLink(GoToTocLinkData* d) {
         ctrl->GoToPage(pageNo, true);
     }
     win->tocKeepSelection = false;
+
+    // when driven from the command palette the tree wasn't the source of the
+    // navigation, so the page-based UpdateTocSelection was suppressed above and
+    // the tree still shows the old item. Move the selection to this item now
+    // (programmatic SelectItem doesn't re-navigate -- see TocTreeSelectionChanged).
+    if (d->selectInTree && win->tocLoaded && win->tocTreeView) {
+        TreeView* treeView = win->tocTreeView;
+        HTREEITEM hi = treeView->GetHandleByTreeItem((TreeItem)tocItem);
+        if (hi) {
+            TreeView_EnsureVisible(treeView->hwnd, hi);
+        }
+        treeView->SelectItem((TreeItem)tocItem);
+    }
 }
 
 // navigate to a TocItem regardless of whether it points to a page in this
@@ -220,6 +237,7 @@ void GoToTocItem(MainWindow* win, TocItem* tocItem) {
     data->ctrl = win->ctrl;
     data->tocItem = tocItem;
     data->tab = win->CurrentTab();
+    data->selectInTree = true; // palette-driven: sync the tree selection too
     auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
     uitask::Post(fn, "TaskGoToTocFromPalette");
 }
