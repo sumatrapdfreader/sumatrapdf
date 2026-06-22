@@ -11,6 +11,7 @@ import { testit as adHocExif } from "./ad-hoc-exif.ts";
 import { testit as adHocSelectionTranslate } from "./ad-hoc-selection-translate.ts";
 import { testit as adHocTripleClickLine } from "./ad-hoc-triple-click-line.ts";
 import { testit as adHocTocPaletteSync } from "./ad-hoc-toc-palette-sync.ts";
+import { testit as adHocJpegDecode } from "./ad-hoc-jpeg-decode.ts";
 import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const adHocTests: [string, () => void | Promise<void>][] = [
@@ -18,6 +19,7 @@ const adHocTests: [string, () => void | Promise<void>][] = [
   ["ad-hoc-selection-translate", adHocSelectionTranslate],
   ["ad-hoc-triple-click-line", adHocTripleClickLine],
   ["ad-hoc-toc-palette-sync", adHocTocPaletteSync],
+  ["ad-hoc-jpeg-decode", adHocJpegDecode],
   ["issue-chm-lzx", issueChmLzx],
 ];
 

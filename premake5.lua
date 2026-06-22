@@ -336,7 +336,7 @@ workspace "SumatraPDF"
     exceptionhandling "On"
     disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312", "4505" }
     disablewarnings { "4456", "4457", "4459", "4701", "4702", "4703", "4706" }
-    includedirs { "ext/libjpeg-turbo" }
+    includedirs { "ext/libjpeg-turbo/src" }
     libdjvu_files()
 
   project "chm"
@@ -529,23 +529,21 @@ workspace "SumatraPDF"
     -- libjpeg-turbo
     defines { "_CRT_SECURE_NO_WARNINGS" }
     disablewarnings { "4013", "4018", "4100", "4244", "4245", "4819" }
-    includedirs { "ext/libjpeg-turbo", "ext/libjpeg-turbo/simd" }
-    -- nasm.exe -I .\ext\libjpeg-turbo\simd\
-    -- -I .\ext\libjpeg-turbo\win\ -f win32
-    -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
-    -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
+    includedirs { "ext/libjpeg-turbo/src" }
+    -- libjpeg-turbo 3.x NASM SIMD: include dirs are simd/nasm (shared macros)
+    -- and the per-arch dir (simd/i386 or simd/x86_64).
     filter { 'files:**.asm', 'platforms:x86' }
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
-        '..\\bin\\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+        '..\\bin\\nasm.exe -f win32 -DWIN32 -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/i386/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
       }
     filter {}
     filter { 'files:**.asm', 'platforms:x64 or x64_asan' }
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
-        '..\\bin\\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+        '..\\bin\\nasm.exe -f win64 -DWIN64 -D__x86_64__ -I ../ext/libjpeg-turbo/simd/nasm/ -I ../ext/libjpeg-turbo/simd/x86_64/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
       }
     filter {}
     libjpeg_turbo_files()
@@ -761,7 +759,7 @@ workspace "SumatraPDF"
       "mupdf/include",
       "mupdf/generated",
       "ext/jbig2dec",
-      "ext/libjpeg-turbo",
+      "ext/libjpeg-turbo/src",
       "ext/openjpeg/src/lib/openjp2",
       "mupdf/scripts/freetype",
       "ext/freetype/include",

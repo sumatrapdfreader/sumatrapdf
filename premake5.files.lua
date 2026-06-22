@@ -586,44 +586,81 @@ function libwebp_files()
 end
 
 function libjpeg_turbo_files()
-  files_in_dir("ext/libjpeg-turbo", {
-    "jaricom.c", "jcapimin.c", "jcapistd.c", "jcarith.c", "jccoefct.c",
-    "jccolor.c", "jcdctmgr.c", "jchuff.c", "jcinit.c", "jcmainct.c",
-    "jcmarker.c", "jcmaster.c", "jcomapi.c", "jcparam.c", "jcphuff.c",
-    "jcprepct.c", "jcsample.c", "jdapimin.c", "jdapistd.c", "jdarith.c",
-    "jdatadst.c", "jdatasrc.c", "jdcoefct.c", "jdcolor.c", "jddctmgr.c",
-    "jdhuff.c", "jdinput.c", "jdmainct.c", "jdmarker.c", "jdmaster.c",
-    "jdmerge.c", "jdphuff.c", "jdpostct.c", "jdsample.c", "jdtrans.c",
-    "jerror.c", "jfdctflt.c", "jfdctfst.c", "jfdctint.c", "jidctflt.c",
-    "jidctfst.c", "jidctint.c", "jidctred.c", "jmemmgr.c", "jmemnobs.c",
-    "jquant1.c", "jquant2.c", "jutils.c",
+  -- libjpeg-turbo 3.x: core (precision-independent) sources
+  files_in_dir("ext/libjpeg-turbo/src", {
+    "jaricom.c", "jcapimin.c", "jcarith.c", "jchuff.c", "jcicc.c",
+    "jcinit.c", "jclhuff.c", "jcmarker.c", "jcmaster.c", "jcomapi.c",
+    "jcparam.c", "jcphuff.c", "jctrans.c", "jdapimin.c", "jdarith.c",
+    "jdatadst.c", "jdatasrc.c", "jdhuff.c", "jdicc.c", "jdinput.c",
+    "jdlhuff.c", "jdmarker.c", "jdmaster.c", "jdphuff.c", "jdtrans.c",
+    "jerror.c", "jfdctflt.c", "jmemmgr.c", "jmemnobs.c", "jpeg_nbits.c",
   })
 
-  filter { 'platforms:arm64' }
-  files { "ext/libjpeg-turbo/jsimd_none.c" }
+  -- libjpeg-turbo 3.x: per-precision wrappers (8/12/16-bit), each #includes
+  -- the matching ../<name>.c with BITS_IN_JSAMPLE set. These provide run-time
+  -- selectable data precision.
+  files_in_dir("ext/libjpeg-turbo/src/wrapper", {
+    "jcapistd-8.c", "jcapistd-12.c", "jcapistd-16.c",
+    "jccoefct-8.c", "jccoefct-12.c",
+    "jccolor-8.c", "jccolor-12.c", "jccolor-16.c",
+    "jcdctmgr-8.c", "jcdctmgr-12.c",
+    "jcdiffct-8.c", "jcdiffct-12.c", "jcdiffct-16.c",
+    "jclossls-8.c", "jclossls-12.c", "jclossls-16.c",
+    "jcmainct-8.c", "jcmainct-12.c", "jcmainct-16.c",
+    "jcprepct-8.c", "jcprepct-12.c", "jcprepct-16.c",
+    "jcsample-8.c", "jcsample-12.c", "jcsample-16.c",
+    "jdapistd-8.c", "jdapistd-12.c", "jdapistd-16.c",
+    "jdcoefct-8.c", "jdcoefct-12.c",
+    "jdcolor-8.c", "jdcolor-12.c", "jdcolor-16.c",
+    "jddctmgr-8.c", "jddctmgr-12.c",
+    "jddiffct-8.c", "jddiffct-12.c", "jddiffct-16.c",
+    "jdlossls-8.c", "jdlossls-12.c", "jdlossls-16.c",
+    "jdmainct-8.c", "jdmainct-12.c", "jdmainct-16.c",
+    "jdmerge-8.c", "jdmerge-12.c",
+    "jdpostct-8.c", "jdpostct-12.c", "jdpostct-16.c",
+    "jdsample-8.c", "jdsample-12.c", "jdsample-16.c",
+    "jfdctfst-8.c", "jfdctfst-12.c",
+    "jfdctint-8.c", "jfdctint-12.c",
+    "jidctflt-8.c", "jidctflt-12.c",
+    "jidctfst-8.c", "jidctfst-12.c",
+    "jidctint-8.c", "jidctint-12.c",
+    "jidctred-8.c", "jidctred-12.c",
+    "jquant1-8.c", "jquant1-12.c",
+    "jquant2-8.c", "jquant2-12.c",
+    "jutils-8.c", "jutils-12.c", "jutils-16.c",
+  })
+
+  -- arm64: no SIMD (WITH_SIMD is left undefined in jconfig.h/jconfigint.h).
 
   filter { 'platforms:x86' }
-  files_in_dir("ext/libjpeg-turbo/simd", {
-    "jccolmmx.asm", "jccolss2.asm", "jcgrammx.asm", "jcgrass2.asm",
-    "jcqnt3dn.asm", "jcqntmmx.asm", "jcqnts2f.asm", "jcqnts2i.asm",
-    "jcqntsse.asm", "jcsammmx.asm", "jcsamss2.asm", "jdcolmmx.asm",
-    "jdcolss2.asm", "jdmermmx.asm", "jdmerss2.asm", "jdsammmx.asm",
-    "jdsamss2.asm", "jf3dnflt.asm", "jfmmxfst.asm", "jfmmxint.asm",
-    "jfss2fst.asm", "jfss2int.asm", "jfsseflt.asm", "ji3dnflt.asm",
-    "jimmxfst.asm", "jimmxint.asm", "jimmxred.asm", "jiss2flt.asm",
-    "jiss2fst.asm", "jiss2int.asm", "jiss2red.asm", "jisseflt.asm",
-    "jsimdcpu.asm",
+  files_in_dir("ext/libjpeg-turbo/simd/i386", {
+    "jsimdcpu.asm", "jfdctflt-3dn.asm", "jidctflt-3dn.asm", "jquant-3dn.asm",
+    "jccolor-mmx.asm", "jcgray-mmx.asm", "jcsample-mmx.asm", "jdcolor-mmx.asm",
+    "jdmerge-mmx.asm", "jdsample-mmx.asm", "jfdctfst-mmx.asm", "jfdctint-mmx.asm",
+    "jidctfst-mmx.asm", "jidctint-mmx.asm", "jidctred-mmx.asm", "jquant-mmx.asm",
+    "jfdctflt-sse.asm", "jidctflt-sse.asm", "jquant-sse.asm",
+    "jccolor-sse2.asm", "jcgray-sse2.asm", "jchuff-sse2.asm", "jcphuff-sse2.asm",
+    "jcsample-sse2.asm", "jdcolor-sse2.asm", "jdmerge-sse2.asm", "jdsample-sse2.asm",
+    "jfdctfst-sse2.asm", "jfdctint-sse2.asm", "jidctflt-sse2.asm", "jidctfst-sse2.asm",
+    "jidctint-sse2.asm", "jidctred-sse2.asm", "jquantf-sse2.asm", "jquanti-sse2.asm",
+    "jccolor-avx2.asm", "jcgray-avx2.asm", "jcsample-avx2.asm", "jdcolor-avx2.asm",
+    "jdmerge-avx2.asm", "jdsample-avx2.asm", "jfdctint-avx2.asm", "jidctint-avx2.asm",
+    "jquanti-avx2.asm",
   })
-  files { "ext/libjpeg-turbo/simd/jsimd_i386.c" }
+  files { "ext/libjpeg-turbo/simd/i386/jsimd.c" }
 
   filter { 'platforms:x64 or x64_asan' }
-  files_in_dir("ext/libjpeg-turbo/simd", {
-    "jccolss2-64.asm", "jcgrass2-64.asm", "jcqnts2f-64.asm", "jcqnts2i-64.asm",
-    "jcsamss2-64.asm", "jdcolss2-64.asm", "jdmerss2-64.asm", "jdsamss2-64.asm",
-    "jfss2fst-64.asm", "jfss2int-64.asm", "jfsseflt-64.asm",
-    "jiss2flt-64.asm", "jiss2fst-64.asm", "jiss2int-64.asm", "jiss2red-64.asm",
+  files_in_dir("ext/libjpeg-turbo/simd/x86_64", {
+    "jsimdcpu.asm", "jfdctflt-sse.asm",
+    "jccolor-sse2.asm", "jcgray-sse2.asm", "jchuff-sse2.asm", "jcphuff-sse2.asm",
+    "jcsample-sse2.asm", "jdcolor-sse2.asm", "jdmerge-sse2.asm", "jdsample-sse2.asm",
+    "jfdctfst-sse2.asm", "jfdctint-sse2.asm", "jidctflt-sse2.asm", "jidctfst-sse2.asm",
+    "jidctint-sse2.asm", "jidctred-sse2.asm", "jquantf-sse2.asm", "jquanti-sse2.asm",
+    "jccolor-avx2.asm", "jcgray-avx2.asm", "jcsample-avx2.asm", "jdcolor-avx2.asm",
+    "jdmerge-avx2.asm", "jdsample-avx2.asm", "jfdctint-avx2.asm", "jidctint-avx2.asm",
+    "jquanti-avx2.asm",
   })
-  files { "ext/libjpeg-turbo/simd/jsimd_x86_64.c" }
+  files { "ext/libjpeg-turbo/simd/x86_64/jsimd.c" }
 
   filter {}
 end
