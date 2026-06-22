@@ -196,6 +196,17 @@ Instance methods
 
 		var isReflowable = document.isReflowable()
 
+.. method:: Document.prototype.style(publisherCSS, userCSS)
+
+	Control publisher styles and user stylesheet on a reflowable document.
+
+	:param boolean publisherCSS: Set to false to disable the publisher's styling.
+	:param string | null userCSS: User styles to apply.
+
+	.. code-block::
+
+		document.style(false, "p { margin: 0; text-indent: 1em; }")
+
 .. method:: Document.prototype.layout(pageWidth, pageHeight, fontSize)
 
 	Layout a reflowable document (EPUB, FictionBook2, HTML or XHTML) to fit

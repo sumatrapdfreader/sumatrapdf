@@ -193,7 +193,7 @@ static size_t on_curl_data(void *ptr, size_t size, size_t nmemb, void *state_)
 			 * and we'll run without progressive mode. */
 			size_t len = state->content_length;
 			state->map_length = (len+BLOCK_SIZE-1)>>BLOCK_SHIFT;
-			state->map = fz_malloc_no_throw(state->ctx, (state->map_length+7)>>3);
+			state->map = fz_malloc_no_throw(state->ctx, fz_bytes_from_bits(state->map_length));
 			state->buffer = fz_malloc_no_throw(state->ctx, len);
 			state->buffer_max = len;
 			if (state->map == NULL || state->buffer == NULL)
@@ -201,7 +201,7 @@ static size_t on_curl_data(void *ptr, size_t size, size_t nmemb, void *state_)
 				unlock(state);
 				return 0;
 			}
-			memset(state->map, 0, (state->map_length+7)>>3);
+			memset(state->map, 0, fz_bytes_from_bits(state->map_length));
 			DEBUG_MESSAGE(("have range header content_length=%zu!\n", state->content_length));
 		}
 		else

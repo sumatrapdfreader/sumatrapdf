@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Artifex Software, Inc.
+// Copyright (C) 2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -63,13 +63,13 @@ void fz_write_story(
 {
 	fz_rect filled = {0};
 	int rect_num = 0;
-	positionfn_state positionfn_state;
+	positionfn_state state;
 
-	positionfn_state.positionfn = positionfn;
-	positionfn_state.positionfn_ref = positionfn_ref;
-	positionfn_state.page_num = 0;
+	state.positionfn = positionfn;
+	state.positionfn_ref = positionfn_ref;
+	state.page_num = 0;
 
-	fz_var(positionfn_state);
+	fz_var(state);
 
 	fz_try(ctx)
 	{
@@ -85,13 +85,13 @@ void fz_write_story(
 			newpage = rectfn(ctx, rectfn_ref, rect_num, filled, &rect, &ctm, &mediabox);
 			rect_num += 1;
 			if (newpage)
-				positionfn_state.page_num += 1;
+				state.page_num += 1;
 
 			more = fz_place_story(ctx, story, rect, &filled);
 
 			if (positionfn)
 			{
-				fz_story_positions(ctx, story, positionfn_state_fn, &positionfn_state /*ref*/);
+				fz_story_positions(ctx, story, positionfn_state_fn, &state /*ref*/);
 			}
 
 			if (writer)
@@ -101,19 +101,19 @@ void fz_write_story(
 					if (dev)
 					{
 						if (pagefn)
-							pagefn(ctx, pagefn_ref, positionfn_state.page_num, mediabox, dev, 1 /*after*/);
+							pagefn(ctx, pagefn_ref, state.page_num, mediabox, dev, 1 /*after*/);
 						fz_end_page(ctx, writer);
 					}
 					dev = fz_begin_page(ctx, writer, mediabox);
 					if (pagefn)
-						pagefn(ctx, pagefn_ref, positionfn_state.page_num, mediabox, dev, 0 /*after*/);
+						pagefn(ctx, pagefn_ref, state.page_num, mediabox, dev, 0 /*after*/);
 				}
 				assert(dev);
 				fz_draw_story(ctx, story, dev, ctm);
 				if (!more)
 				{
 					if (pagefn)
-						pagefn(ctx, pagefn_ref, positionfn_state.page_num, mediabox, dev, 1 /*after*/);
+						pagefn(ctx, pagefn_ref, state.page_num, mediabox, dev, 1 /*after*/);
 					fz_end_page(ctx, writer);
 				}
 			}

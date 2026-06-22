@@ -63,10 +63,11 @@ struct info
 	int subimages;
 	fz_colorspace *cs;
 	int width, height;
-	int maxval, bitdepth;
+	int maxval;
 	int depth, alpha;
 	int tupletype;
 	int endian;
+	int bitmap;
 	float scale;
 };
 
@@ -86,17 +87,6 @@ static inline int iswhite(int a)
 		return 1;
 	}
 	return 0;
-}
-
-static inline int bitdepth_from_maxval(int maxval)
-{
-	int depth = 0;
-	while (maxval)
-	{
-		maxval >>= 1;
-		depth++;
-	}
-	return depth;
 }
 
 static const unsigned char *
@@ -233,7 +223,10 @@ pnm_read_int(fz_context *ctx, const unsigned char *p, const unsigned char *e, in
 	while (p < e && *p >= '0' && *p <= '9')
 	{
 		if (number)
-			*number = *number * 10 + *p - '0';
+		{
+			if (fz_ckd_mul_int(number, *number, 10) || fz_ckd_add_int(number, *number, *p - '0'))
+				fz_throw(ctx, FZ_ERROR_FORMAT, "integer overflow in pnm image");
+		}
 		p++;
 	}
 
@@ -359,6 +352,7 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 	p = pnm_read_int(ctx, p, e, &pnm->width);
 	p = pnm_read_whites_and_eols(ctx, p, e, 1);
 
+	pnm->bitmap = !!bitmap;
 	if (bitmap)
 	{
 		pnm->height = 0;
@@ -383,13 +377,11 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 	if (pnm->maxval <= 0 || pnm->maxval >= 65536)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "maximum sample value of out range in pnm image: %d", pnm->maxval);
 
-	pnm->bitdepth = bitdepth_from_maxval(pnm->maxval);
-
 	if (pnm->height <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
 	if (pnm->width <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image width must be > 0");
-	if ((unsigned int)pnm->height > UINT_MAX / pnm->width / fz_colorspace_n(ctx, pnm->cs) / (pnm->bitdepth / 8 + 1))
+	if ((unsigned int)pnm->height > UINT_MAX / pnm->width / fz_colorspace_n(ctx, pnm->cs))
 		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
 
 	if (onlymeta)
@@ -433,41 +425,41 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 
 		fz_try(ctx)
 		{
-		dp = img->samples;
+			dp = img->samples;
 
-		w = img->w;
-		h = img->h;
-		n = img->n;
+			w = img->w;
+			h = img->h;
+			n = img->n;
 
-		if (bitmap)
-		{
-			for (y = 0; y < h; y++)
+			if (bitmap)
 			{
-				for (x = 0; x < w; x++)
+				for (y = 0; y < h; y++)
 				{
-					int v = 0;
-					p = pnm_read_whites_and_eols(ctx, p, e, 0);
-					p = pnm_read_digit(ctx, p, e, &v);
-					p = pnm_read_whites_and_eols(ctx, p, e, 0);
-					*dp++ = v ? 0x00 : 0xff;
-				}
-			}
-		}
-		else
-		{
-			for (y = 0; y < h; y++)
-				for (x = 0; x < w; x++)
-					for (k = 0; k < n; k++)
+					for (x = 0; x < w; x++)
 					{
 						int v = 0;
 						p = pnm_read_whites_and_eols(ctx, p, e, 0);
-						p = pnm_read_int(ctx, p, e, &v);
+						p = pnm_read_digit(ctx, p, e, &v);
 						p = pnm_read_whites_and_eols(ctx, p, e, 0);
-						v = fz_clampi(v, 0, pnm->maxval);
-						*dp++ = map_color(ctx, v, pnm->maxval, 255);
+						*dp++ = v ? 0x00 : 0xff;
 					}
+				}
+			}
+			else
+			{
+				for (y = 0; y < h; y++)
+					for (x = 0; x < w; x++)
+						for (k = 0; k < n; k++)
+						{
+							int v = 0;
+							p = pnm_read_whites_and_eols(ctx, p, e, 0);
+							p = pnm_read_int(ctx, p, e, &v);
+							p = pnm_read_whites_and_eols(ctx, p, e, 0);
+							v = fz_clampi(v, 0, pnm->maxval);
+							*dp++ = map_color(ctx, v, pnm->maxval, 255);
+						}
+			}
 		}
-	}
 		fz_catch(ctx)
 		{
 			fz_drop_pixmap(ctx, img);
@@ -496,6 +488,7 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	p = pnm_read_int(ctx, p, e, &pnm->width);
 	p = pnm_read_whites_and_eols(ctx, p, e, 1);
 
+	pnm->bitmap = !!bitmap;
 	if (bitmap)
 	{
 		pnm->height = 0;
@@ -520,8 +513,6 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	if (pnm->maxval <= 0 || pnm->maxval >= 65536)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "maximum sample value of out range in pnm image: %d", pnm->maxval);
 
-	pnm->bitdepth = bitdepth_from_maxval(pnm->maxval);
-
 	if (pnm->height <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
 	if (pnm->width <= 0)
@@ -535,7 +526,7 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	}
 	else
 	{
-		size_t bytes_per_sample = (pnm->bitdepth-1)/8 + 1;
+		size_t bytes_per_sample = (pnm->maxval <= 255 ? 1 : 2);
 		span = (size_t)n * bytes_per_sample;
 		if ((size_t)pnm->width > SIZE_MAX / span)
 			fz_throw(ctx, FZ_ERROR_LIMIT, "image row too large");
@@ -560,47 +551,47 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 
 		fz_try(ctx)
 		{
-		dp = img->samples;
+			dp = img->samples;
 
-		w = img->w;
-		h = img->h;
-		n = img->n;
+			w = img->w;
+			h = img->h;
+			n = img->n;
 
-		if (pnm->maxval == 255)
-		{
-			memcpy(dp, p, (size_t)w * h * n);
-			p += n * w * h;
-		}
-		else if (bitmap)
-		{
-			for (y = 0; y < h; y++)
+			if (pnm->maxval == 255)
 			{
-				for (x = 0; x < w; x++)
+				memcpy(dp, p, (size_t)w * h * n);
+				p += n * w * h;
+			}
+			else if (bitmap)
+			{
+				for (y = 0; y < h; y++)
 				{
-					*dp++ = (*p & (1 << (7 - (x & 0x7)))) ? 0x00 : 0xff;
-					if ((x & 0x7) == 7)
+					for (x = 0; x < w; x++)
+					{
+						*dp++ = (*p & (1 << (7 - (x & 0x7)))) ? 0x00 : 0xff;
+						if ((x & 0x7) == 7)
+							p++;
+					}
+					if (w & 0x7)
 						p++;
 				}
-				if (w & 0x7)
-					p++;
 			}
-		}
-		else if (pnm->maxval < 255)
-		{
-			for (y = 0; y < h; y++)
-				for (x = 0; x < w; x++)
-					for (k = 0; k < n; k++)
-						*dp++ = map_color(ctx, *p++, pnm->maxval, 255);
-		}
-		else
-		{
-			for (y = 0; y < h; y++)
-				for (x = 0; x < w; x++)
-					for (k = 0; k < n; k++)
-					{
-						*dp++ = map_color(ctx, (p[0] << 8) | p[1], pnm->maxval, 255);
-						p += 2;
-					}
+			else if (pnm->maxval < 256)
+			{
+				for (y = 0; y < h; y++)
+					for (x = 0; x < w; x++)
+						for (k = 0; k < n; k++)
+							*dp++ = map_color(ctx, *p++, pnm->maxval, 255);
+			}
+			else
+			{
+				for (y = 0; y < h; y++)
+					for (x = 0; x < w; x++)
+						for (k = 0; k < n; k++)
+						{
+							*dp++ = map_color(ctx, (p[0] << 8) | p[1], pnm->maxval, 255);
+							p += 2;
+						}
 			}
 		}
 		fz_catch(ctx)
@@ -628,6 +619,7 @@ pam_binary_read_header(fz_context *ctx, struct info *pnm, const unsigned char *p
 	pnm->depth = 0;
 	pnm->maxval = 0;
 	pnm->tupletype = 0;
+	pnm->bitmap = 0;
 
 	while (p < e && token != TOKEN_ENDHDR)
 	{
@@ -683,8 +675,8 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	if (pnm->tupletype == PAM_UNKNOWN)
 		switch (pnm->depth)
 		{
-		case 1: pnm->tupletype = pnm->maxval == 1 ? PAM_BW : PAM_GRAY; break;
-		case 2: pnm->tupletype = pnm->maxval == 1 ? PAM_BWA : PAM_GRAYA; break;
+		case 1: pnm->tupletype = pnm->bitmap ? PAM_BW : PAM_GRAY; break;
+		case 2: pnm->tupletype = pnm->bitmap ? PAM_BWA : PAM_GRAYA; break;
 		case 3: pnm->tupletype = PAM_RGB; break;
 		case 4: pnm->tupletype = PAM_CMYK; break;
 		case 5: pnm->tupletype = PAM_CMYKA; break;
@@ -692,13 +684,13 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 			fz_throw(ctx, FZ_ERROR_FORMAT, "cannot guess tuple type based on depth in pnm image");
 		}
 
-	if (pnm->tupletype == PAM_BW && pnm->maxval > 1)
+	if (pnm->tupletype == PAM_BW && !pnm->bitmap)
 		pnm->tupletype = PAM_GRAY;
-	else if (pnm->tupletype == PAM_GRAY && pnm->maxval == 1)
+	else if (pnm->tupletype == PAM_GRAY && pnm->bitmap)
 		pnm->tupletype = PAM_BW;
-	else if (pnm->tupletype == PAM_BWA && pnm->maxval > 1)
+	else if (pnm->tupletype == PAM_BWA && !pnm->bitmap)
 		pnm->tupletype = PAM_GRAYA;
-	else if (pnm->tupletype == PAM_GRAYA && pnm->maxval == 1)
+	else if (pnm->tupletype == PAM_GRAYA && pnm->bitmap)
 		pnm->tupletype = PAM_BWA;
 
 	switch (pnm->tupletype)
@@ -739,13 +731,11 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	if (pnm->maxval < minval || pnm->maxval > maxval)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "maxval out of range");
 
-	pnm->bitdepth = bitdepth_from_maxval(pnm->maxval);
-
 	if (pnm->height <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
 	if (pnm->width <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image width must be > 0");
-	if ((unsigned int)pnm->height > UINT_MAX / pnm->width / fz_colorspace_n(ctx, pnm->cs) / (pnm->bitdepth / 8 + 1))
+	if ((unsigned int)pnm->height > UINT_MAX / pnm->width / (fz_colorspace_n(ctx, pnm->cs) + pnm->alpha))
 		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
 
 	if (onlymeta)
@@ -761,7 +751,7 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 		/* some encoders incorrectly pack bits into bytes and invert the image */
 		packed = 0;
 		size = (size_t)w * h * n;
-		if (pnm->maxval == 1)
+		if (pnm->bitmap)
 		{
 			const unsigned char *e_packed = p + size / 8;
 			if (e_packed < e - 1 && e_packed[0] == 'P' && e_packed[1] >= '0' && e_packed[1] <= '7')
@@ -777,10 +767,10 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 		if (pnm->maxval == 255)
 			p += size;
 		else if (bitmap && packed)
-			p += ((w + 7) / 8) * h;
+			p += ((n * w + 7) / 8) * h;
 		else if (bitmap)
 			p += size;
-		else if (pnm->maxval < 255)
+		else if (pnm->maxval < 256)
 			p += size;
 		else
 			p += 2 * size;
@@ -804,7 +794,7 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 			/* some encoders incorrectly pack bits into bytes and invert the image */
 			size = (size_t)w * h * n;
 			packed = 0;
-			if (pnm->maxval == 1)
+			if (pnm->bitmap)
 			{
 				const unsigned char *e_packed = p + size / 8;
 				if (e_packed < e - 1 && e_packed[0] == 'P' && e_packed[1] >= '0' && e_packed[1] <= '7')
@@ -822,6 +812,7 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 			else if (bitmap && packed)
 			{
 				for (y = 0; y < h; y++)
+				{
 					for (x = 0; x < w; x++)
 					{
 						for (k = 0; k < n; k++)
@@ -830,9 +821,10 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 							if ((x & 0x7) == 7)
 								p++;
 						}
-						if (w & 0x7)
-							p++;
 					}
+					if (w & 0x7)
+						p++;
+				}
 			}
 			else if (bitmap)
 			{
@@ -841,7 +833,7 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 						for (k = 0; k < n; k++)
 							*dp++ = *p++ ? 0xff : 0x00;
 			}
-			else if (pnm->maxval < 255)
+			else if (pnm->maxval < 256)
 			{
 				for (y = 0; y < h; y++)
 					for (x = 0; x < w; x++)
@@ -905,6 +897,7 @@ static fz_pixmap *
 pfm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, const unsigned char *e, int onlymeta, int rgb, const unsigned char **out)
 {
 	fz_pixmap *pix = NULL;
+	size_t w, h, n, size;
 
 	fz_var(pix);
 
@@ -915,33 +908,26 @@ pfm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
 	if (pnm->width <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image width must be > 0");
-	if ((unsigned int)pnm->height > UINT_MAX / pnm->width / fz_colorspace_n(ctx, pnm->cs) / (pnm->bitdepth / 8 + 1))
+
+	w = pnm->width;
+	h = pnm->height;
+	n = fz_colorspace_n(ctx, pnm->cs);
+
+	if (fz_ckd_mul_size(&size, w, h) || fz_ckd_mul_size(&size, size, n) || fz_ckd_mul_size(&size, size, sizeof (float)))
 		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
+
+	if (e < p || (size_t)(e - p) < size)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "truncated image");
 
 	if (onlymeta)
 	{
-		size_t w = pnm->width;
-		size_t h = pnm->height;
-		int n = fz_colorspace_n(ctx, pnm->cs);
-		size_t size = w * h * n * sizeof(float);
-
-		if (e < p || (size_t)(e - p) < size)
-			fz_throw(ctx, FZ_ERROR_FORMAT, "truncated image");
-
 		p += size;
 	}
 	else
 	{
 		float *samples = NULL;
 		float *sample;
-		int w = pnm->width;
-		int h = pnm->height;
-		int n = fz_colorspace_n(ctx, pnm->cs);
-		size_t size = (size_t) w * h * n * sizeof(float);
-		int x, y, k;
-
-		if (e < p || (size_t)(e - p) < size)
-			fz_throw(ctx, FZ_ERROR_FORMAT, "truncated image");
+		size_t x, y, k;
 
 		sample = samples = fz_malloc(ctx, size);
 		fz_try(ctx)
@@ -950,15 +936,11 @@ pfm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 				for (x = 0; x < w; x++)
 					for (k = 0; k < n; k++)
 					{
-						uint32_t u;
 						float f;
-
 						if (pnm->endian == ENDIAN_LITTLE)
-							u = p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
+							f = fz_unpack_float_le(p);
 						else
-							u = p[3] | (p[2] << 8) | (p[1] << 16) | (p[0] << 24);
-						memcpy(&f, &u, sizeof(float));
-
+							f = fz_unpack_float(p);
 						*sample++ = f / pnm->scale;
 						p += sizeof(float);
 					}

@@ -17,6 +17,6 @@ The ``pages`` command lists information about each page: MediaBox, CropBox, Rota
 	Input file name. Must be a PDF file.
 
 ``[pages]``
-	Comma separated list of page numbers and ranges. If no pages are
+	Comma-separated list of page numbers and ranges. If no pages are
 	supplied then all document pages will be considered for the output
 	file.

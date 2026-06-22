@@ -428,10 +428,16 @@ xps_draw_linear_gradient(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_r
 	if (end_point_att)
 		xps_parse_point(ctx, doc, end_point_att, &x1, &y1);
 
+	dx = x1 - x0; dy = y1 - y0;
 	p1.x = x0; p1.y = y0; p2.x = x1; p2.y = y1;
 	inv = fz_invert_matrix(ctm);
 	area = fz_transform_rect(area, inv);
+
+	if (fabs(dx) < 0.1f && fabs(dy) < 0.1f)
+		spread = SPREAD_PAD;
+
 	x = p2.x - p1.x; y = p2.y - p1.y;
+
 	k = ((area.x0 - p1.x) * x + (area.y0 - p1.y) * y) / (x * x + y * y);
 	mi = floorf(k); ma = ceilf(k);
 	k = ((area.x1 - p1.x) * x + (area.y0 - p1.y) * y) / (x * x + y * y);
@@ -440,7 +446,6 @@ xps_draw_linear_gradient(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_r
 	mi = fz_mini(mi, floorf(k)); ma = fz_maxi(ma, ceilf(k));
 	k = ((area.x1 - p1.x) * x + (area.y1 - p1.y) * y) / (x * x + y * y);
 	mi = fz_mini(mi, floorf(k)); ma = fz_maxi(ma, ceilf(k));
-	dx = x1 - x0; dy = y1 - y0;
 
 	if (spread == SPREAD_REPEAT)
 	{

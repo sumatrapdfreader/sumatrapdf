@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -98,15 +98,20 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 	pages = pdf_dict_get(ctx, oldroot, PDF_NAME(Pages));
 
 	root = pdf_new_dict(ctx, doc, 2);
-	pdf_dict_put(ctx, root, PDF_NAME(Type), pdf_dict_get(ctx, oldroot, PDF_NAME(Type)));
-	pdf_dict_put(ctx, root, PDF_NAME(Pages), pdf_dict_get(ctx, oldroot, PDF_NAME(Pages)));
+	fz_try(ctx)
+	{
+		pdf_dict_put(ctx, root, PDF_NAME(Type), pdf_dict_get(ctx, oldroot, PDF_NAME(Type)));
+		pdf_dict_put(ctx, root, PDF_NAME(Pages), pdf_dict_get(ctx, oldroot, PDF_NAME(Pages)));
 
-	pdf_update_object(ctx, doc, pdf_to_num(ctx, oldroot), root);
-
-	pdf_drop_obj(ctx, root);
+		pdf_update_object(ctx, doc, pdf_to_num(ctx, oldroot), root);
+	}
+	fz_always(ctx)
+		pdf_drop_obj(ctx, root);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	/* Create a new kids array with our new pages in */
-	kids = pdf_new_array(ctx, doc, 1);
+	kids = pdf_dict_put_array(ctx, pages, PDF_NAME(Kids), 1);
 
 	kidcount = 0;
 	for (page=0; page < num_pages; page++)
@@ -224,9 +229,8 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 		}
 	}
 
-	/* Update page count and kids array */
+	/* Update page count */
 	pdf_dict_put_int(ctx, pages, PDF_NAME(Count), kidcount);
-	pdf_dict_put_drop(ctx, pages, PDF_NAME(Kids), kids);
 }
 
 int pdfposter_main(int argc, char **argv)

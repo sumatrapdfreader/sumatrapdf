@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -615,10 +615,10 @@ pdf_color_Q(fz_context *ctx, pdf_processor *proc)
 		fz_rethrow(ctx);
 
 	if (!p->gstate)
-{
+	{
 		p->gstate = fz_malloc_struct(ctx, gstate_stack);
 		p->gstate->ctm = fz_identity;
-}
+	}
 }
 
 /* text showing */
@@ -974,12 +974,18 @@ pdf_color_BI(fz_context *ctx, pdf_processor *proc, fz_image *image, const char *
 	}
 
 	fz_keep_image(ctx, image);
-	if (p->options->image_rewrite)
-		p->options->image_rewrite(ctx, p->options->opaque, &image, p->gstate->ctm, NULL);
+	fz_try(ctx)
+	{
+		if (p->options->image_rewrite)
+			p->options->image_rewrite(ctx, p->options->opaque, &image, p->gstate->ctm, NULL);
 
-	if (p->super.chain->op_BI)
-		p->super.chain->op_BI(ctx, p->super.chain, image, colorspace);
-	fz_drop_image(ctx, image);
+		if (p->super.chain->op_BI)
+			p->super.chain->op_BI(ctx, p->super.chain, image, colorspace);
+	}
+	fz_always(ctx)
+		fz_drop_image(ctx, image);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void
@@ -1074,8 +1080,8 @@ pdf_color_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_im
 			if (p->gstate->unmarked & UNMARKED_FILL)
 				mark_fill(ctx, p);
 		}
-			if (p->options->image_rewrite)
-				p->options->image_rewrite(ctx, p->options->opaque, &image, p->gstate->ctm, im_obj);
+		if (p->options->image_rewrite)
+			p->options->image_rewrite(ctx, p->options->opaque, &image, p->gstate->ctm, im_obj);
 
 		/* If it's been rewritten add the new one, otherwise copy the old one across. */
 		if (image != orig)
@@ -1147,7 +1153,7 @@ pdf_color_Do_form(fz_context *ctx, pdf_processor *proc, const char *name, pdf_ob
 		make_resource_instance(ctx, p, PDF_NAME(XObject), "Xo", new_name, sizeof(new_name), xobj);
 		if (p->super.chain->op_Do_form)
 			p->super.chain->op_Do_form(ctx, p->super.chain, new_name, xobj);
-}
+	}
 }
 
 static void

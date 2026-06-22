@@ -53,11 +53,9 @@ Android currently has two different viewers with varying degrees of complexity:
 
 ### Web Browser
 
-There's a simple
-<a href="https://mupdf.com/wasm/demo/?file=/docs/mupdf_explored.pdf">WebAssembly demo</a>
-that runs MuPDF in the browser.
-
 There's also a commercial license only <a href="https://webviewer.mupdf.com/">MuPDF WebViewer</a> product.
+
+Here is a <a href="https://mupdf.com/wasm/demo/?file=/docs/mupdf_explored.pdf">demo</a> of it.
 
 ### Third party viewers
 

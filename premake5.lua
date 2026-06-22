@@ -735,7 +735,7 @@ workspace "SumatraPDF"
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
     defines { "TOFU_NOTO", "TOFU_CJK_LANG", "TOFU_NOTO_SUMATRA" }
-    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0" }
+    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=0" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
 
     filter { "platforms:arm64" }
@@ -743,7 +743,7 @@ workspace "SumatraPDF"
     filter {}
 
     disablewarnings {
-      "4005", "4013", "4018", "4057", "4100", "4115", "4130", "4132", "4200", "4204", "4206", "4210",
+      "4005", "4013", "4018", "4057", "4100", "4115", "4130", "4132", "4146", "4200", "4204", "4206", "4210",
       "4245", "4267", "4295", "4305", "4389", "4456", "4457", "4703", "4706", "4819", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
@@ -775,14 +775,17 @@ workspace "SumatraPDF"
     -- mupdf
     -- this fixes "NAN" is not a constant in some version of msvc
     -- without this it's #define _UCRT_NAN (__ucrt_int_to_float(0x7FC00000))
-    defines { "_UCRT_NOISY_NAN" }
+    -- FZ_ENABLE_MD=0: mupdf 1.28 markdown support (source/html/md.c) needs the
+    -- cmark-gfm thirdparty lib, which we don't vendor; disable it (md.c is not
+    -- compiled and md_document_handler is not registered in document-all.c)
+    defines { "_UCRT_NOISY_NAN", "FZ_ENABLE_MD=0" }
 
   project "libmupdf"
     kind "SharedLib"
     language "C"
     optimized_conf()
     disablewarnings { "4206", "4702" }
-    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0" }
+    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=0" }
 
     filter { "platforms:arm64" }
     defines { "ARCH_HAS_NEON=1" }

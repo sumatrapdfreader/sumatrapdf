@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -341,55 +341,149 @@ static void compactxref(fz_context *ctx, pdf_document *doc, pdf_write_state *opt
  * removing duplicate objects and compacting the xref.
  */
 
-static void renumberobj(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj *obj)
+/*
+	This routine takes a borrowed reference to obj, the object to renumber.
+	It passes recursively through this object, renumbering any references.
+
+	If obj is a "singleton" (i.e. has a refcount of 1), then this can be done
+	in place. This is by far the most common case.
+
+	If obj is NOT a singleton, then multiple parent objects have references to
+	this; we can't afford to rewrite the object in place, because we might well
+	get called again later in the process to rewrite it again - and renumbering
+	is not idempotent.
+
+	So, in that case, we duplicate just the bit of the object that we need to
+	renumber the contents of that duplicate, and return it.
+
+	The return value from this function is the rewritten object. Now for the
+	nasty bit; if we rewrite in place, we return obj (still as the original
+	borrowed reference). If we duplicate to rewrite, we return the new duplicate
+	(as a REAL reference that the caller needs to drop).
+
+	Thus the caller needs to react differently depending on whether the
+	return value is the same as what was passed in or not. In practise this
+	isn't too bad, but it's conceptually strange.
+*/
+static pdf_obj *renumberobj(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj *obj)
 {
 	int i;
 	int xref_len = pdf_xref_len(ctx, doc);
+	pdf_obj *dup = NULL;
 
 	if (pdf_is_dict(ctx, obj))
 	{
+		/* Pass through the dict checking whether we a) need to modify it
+		 * and b) need to recurse into it to check for subparts. */
+		int modify = 0;
+		int recurse = 0;
 		int n = pdf_dict_len(ctx, obj);
 		for (i = 0; i < n; i++)
 		{
-			pdf_obj *key = pdf_dict_get_key(ctx, obj, i);
 			pdf_obj *val = pdf_dict_get_val(ctx, obj, i);
 			if (pdf_is_indirect(ctx, val))
 			{
-				int o = pdf_to_num(ctx, val);
-				if (o >= xref_len || o <= 0 || opts->renumber_map[o] == 0)
-					val = PDF_NULL;
-				else
-					val = pdf_new_indirect(ctx, doc, opts->renumber_map[o], 0);
-				pdf_dict_put_drop(ctx, obj, key, val);
+				modify = 1;
+				break;
 			}
-			else
+			if (pdf_is_dict(ctx, val) || pdf_is_array(ctx, val))
+				recurse = 1;
+		}
+		if (!recurse && i == n)
+			return obj; /* Nothing to do */
+
+		/* Obj is a borrowed reference. */
+		if (modify && !pdf_obj_is_singleton(ctx, obj))
+			dup = obj = pdf_copy_dict(ctx, obj);
+		/* If obj is different to what it was on entry, it's an owned reference, otherwise it's borrowed. */
+
+		fz_try(ctx)
+		{
+			for (i = 0; i < n; i++)
 			{
-				renumberobj(ctx, doc, opts, val);
+				pdf_obj *key = pdf_dict_get_key(ctx, obj, i);
+				pdf_obj *val = pdf_dict_get_val(ctx, obj, i);
+				if (pdf_is_indirect(ctx, val))
+				{
+					int o = pdf_to_num(ctx, val);
+					if (o >= xref_len || o <= 0 || opts->renumber_map[o] == 0)
+						val = PDF_NULL;
+					else
+						val = pdf_new_indirect(ctx, doc, opts->renumber_map[o], 0);
+					pdf_dict_put_drop(ctx, obj, key, val);
+				}
+				else
+				{
+					pdf_obj *nval = renumberobj(ctx, doc, opts, val);
+					/* If nval comes back different, we need to drop it. */
+					if (nval != val)
+						pdf_dict_put_drop(ctx, obj, key, nval);
+				}
 			}
+		}
+		fz_catch(ctx)
+		{
+			pdf_drop_obj(ctx, dup);
+			fz_rethrow(ctx);
 		}
 	}
 
 	else if (pdf_is_array(ctx, obj))
 	{
+		/* Pass through the array checking whether we a) need to modify it
+		 * and b) need to recurse into it to check for subparts. */
+		int modify = 0;
+		int recurse = 0;
 		int n = pdf_array_len(ctx, obj);
 		for (i = 0; i < n; i++)
 		{
 			pdf_obj *val = pdf_array_get(ctx, obj, i);
 			if (pdf_is_indirect(ctx, val))
 			{
-				int o = pdf_to_num(ctx, val);
-				if (o >= xref_len || o <= 0 || opts->renumber_map[o] == 0)
-					val = PDF_NULL;
-				else
-					val = pdf_new_indirect(ctx, doc, opts->renumber_map[o], 0);
-				pdf_array_put_drop(ctx, obj, i, val);
+				modify = 1;
+				break;
 			}
-			else
+			if (pdf_is_dict(ctx, val) || pdf_is_array(ctx, val))
+				recurse = 1;
+		}
+		if (!recurse && i == n)
+			return obj; /* Nothing to do */
+
+		/* Obj is a borrowed reference. */
+		if (modify && !pdf_obj_is_singleton(ctx, obj))
+			dup = obj = pdf_copy_array(ctx, obj);
+		/* If obj is different to what it was on entry, it's an owned reference, otherwise it's borrowed. */
+
+		fz_try(ctx)
+		{
+			for (i = 0; i < n; i++)
 			{
-				renumberobj(ctx, doc, opts, val);
+				pdf_obj *val = pdf_array_get(ctx, obj, i);
+				if (pdf_is_indirect(ctx, val))
+				{
+					int o = pdf_to_num(ctx, val);
+					if (o >= xref_len || o <= 0 || opts->renumber_map[o] == 0)
+						val = PDF_NULL;
+					else
+						val = pdf_new_indirect(ctx, doc, opts->renumber_map[o], 0);
+					pdf_array_put_drop(ctx, obj, i, val);
+				}
+				else
+				{
+					pdf_obj *nval = renumberobj(ctx, doc, opts, val);
+					/* If nval comes back different, we need to drop it. */
+					if (nval != val)
+						pdf_array_put_drop(ctx, obj, i, nval);
+				}
 			}
 		}
+		fz_catch(ctx)
+		{
+			pdf_drop_obj(ctx, dup);
+			fz_rethrow(ctx);
+		}
 	}
+	return obj;
 }
 
 static void
@@ -412,20 +506,27 @@ renumber_stored_object_ref(fz_context *ctx, pdf_obj **objp, pdf_write_state *opt
 
 static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *opts)
 {
-	pdf_xref_entry *newxref = NULL;
+	pdf_xref_entry *newxref = NULL, *newxref_to_free = NULL;
 	int newlen;
 	int num;
 	int *new_use_list;
 	int xref_len = pdf_xref_len(ctx, doc);
+	pdf_obj *nval = NULL;
 
 	expand_lists(ctx, opts, xref_len);
 	new_use_list = fz_calloc(ctx, opts->list_len, sizeof(int));
 
 	fz_var(newxref);
+	fz_var(newxref_to_free);
+	fz_var(nval);
 	fz_try(ctx)
 	{
 		/* Apply renumber map to indirect references in all objects in xref */
-		renumberobj(ctx, doc, opts, pdf_trailer(ctx, doc));
+		pdf_obj *trailer = pdf_trailer(ctx, doc);
+		nval = renumberobj(ctx, doc, opts, trailer);
+		if (nval != trailer)
+			pdf_set_trailer(ctx, doc, nval);
+		nval = NULL;
 		for (num = 0; num < xref_len; num++)
 		{
 			pdf_obj *obj;
@@ -441,19 +542,18 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 			{
 				int o = pdf_to_num(ctx, obj);
 				if (o >= xref_len || o <= 0 || opts->renumber_map[o] == 0)
-					obj = PDF_NULL;
+					nval = PDF_NULL;
 				else
-					obj = pdf_new_indirect(ctx, doc, opts->renumber_map[o], 0);
-				fz_try(ctx)
-					pdf_update_object(ctx, doc, num, obj);
-				fz_always(ctx)
-					pdf_drop_obj(ctx, obj);
-				fz_catch(ctx)
-					fz_rethrow(ctx);
+					nval = pdf_new_indirect(ctx, doc, opts->renumber_map[o], 0);
+				pdf_update_object(ctx, doc, num, nval);
+				nval = NULL;
 			}
 			else
 			{
-				renumberobj(ctx, doc, opts, obj);
+				nval = renumberobj(ctx, doc, opts, obj);
+				if (nval != obj)
+					pdf_update_object(ctx, doc, num, nval);
+				nval = NULL;
 			}
 		}
 
@@ -474,8 +574,13 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 		doc->ocg = NULL;
 
 		/* Create new table for the reordered, compacted xref */
-		newxref = Memento_label(fz_malloc_array(ctx, xref_len + 3, pdf_xref_entry), "pdf_xref_entries");
+		newxref_to_free = newxref = Memento_label(fz_malloc_array(ctx, xref_len + 3, pdf_xref_entry), "pdf_xref_entries");
 		newxref[0] = *pdf_get_xref_entry_no_null(ctx, doc, 0);
+		for (num = 1; num < xref_len + 3; num++)
+		{
+			newxref[num].stm_buf = NULL;
+			newxref[num].obj = NULL;
+		}
 
 		/* Move used objects into the new compacted xref */
 		newlen = 0;
@@ -504,12 +609,22 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 			}
 		}
 
+		newxref_to_free = NULL;
 		pdf_replace_xref(ctx, doc, newxref, newlen + 1);
-		newxref = NULL;
 	}
+	fz_always(ctx)
+		pdf_drop_obj(ctx, nval);
 	fz_catch(ctx)
 	{
-		fz_free(ctx, newxref);
+		if (newxref_to_free)
+		{
+			for (num = 0; num < xref_len + 3; num++)
+			{
+				pdf_drop_obj(ctx, newxref_to_free[num].obj);
+				fz_drop_buffer(ctx, newxref_to_free[num].stm_buf);
+			}
+			fz_free(ctx, newxref_to_free);
+		}
 		fz_free(ctx, new_use_list);
 		fz_rethrow(ctx);
 	}
@@ -597,7 +712,7 @@ static int is_bitmap_stream(fz_context *ctx, pdf_obj *obj, size_t len, int *w, i
 		return 0;
 	*w = pdf_dict_get_int(ctx, obj, PDF_NAME(Width));
 	*h = pdf_dict_get_int(ctx, obj, PDF_NAME(Height));
-	stride = (*w + 7) >> 3;
+	stride = fz_bytes_from_bits(*w);
 	if ((size_t)stride * (*h) != len)
 		return 0;
 	if (pdf_dict_get_bool(ctx, obj, PDF_NAME(ImageMask)))
@@ -831,6 +946,7 @@ static void copystream(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 	fz_var(buf);
 	fz_var(tmp_comp);
 	fz_var(tmp_hex);
+	fz_var(tmp_unhex);
 	fz_var(obj);
 
 	fz_try(ctx)
@@ -850,7 +966,7 @@ static void copystream(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 		{
 			if (is_bitmap_stream(ctx, obj, len, &w, &h))
 			{
-				tmp_comp = fz_compress_ccitt_fax_g4(ctx, data, w, h, (w+7)>>3);
+				tmp_comp = fz_compress_ccitt_fax_g4(ctx, data, w, h, fz_bytes_from_bits(w));
 				pdf_dict_put(ctx, obj, PDF_NAME(Filter), PDF_NAME(CCITTFaxDecode));
 				dp = pdf_dict_put_dict(ctx, obj, PDF_NAME(DecodeParms), 1);
 				pdf_dict_put_int(ctx, dp, PDF_NAME(K), -1);
@@ -941,7 +1057,7 @@ static void expandstream(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 		{
 			if (is_bitmap_stream(ctx, obj, len, &w, &h))
 			{
-				tmp_comp = fz_compress_ccitt_fax_g4(ctx, data, w, h, (w+7)>>3);
+				tmp_comp = fz_compress_ccitt_fax_g4(ctx, data, w, h, fz_bytes_from_bits(w));
 				pdf_dict_put(ctx, obj, PDF_NAME(Filter), PDF_NAME(CCITTFaxDecode));
 				dp = pdf_dict_put_dict(ctx, obj, PDF_NAME(DecodeParms), 1);
 				pdf_dict_put_int(ctx, dp, PDF_NAME(K), -1);
@@ -1354,10 +1470,7 @@ static void writexrefstreamsubsect(fz_context *ctx, pdf_document *doc, pdf_write
 			f3 = opts->gen_list[num];
 		}
 		fz_append_byte(ctx, fzbuf, f1);
-		fz_append_byte(ctx, fzbuf, f2>>24);
-		fz_append_byte(ctx, fzbuf, f2>>16);
-		fz_append_byte(ctx, fzbuf, f2>>8);
-		fz_append_byte(ctx, fzbuf, f2);
+		fz_append_int32_be(ctx, fzbuf, f2);
 		fz_append_byte(ctx, fzbuf, f3);
 	}
 }
@@ -1894,94 +2007,125 @@ const char *fz_pdf_write_options_usage =
 	"\tregenerate-id: (default yes) regenerate document id\n"
 	"\n";
 
-pdf_write_options *
-pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *args)
+void
+pdf_init_write_options(fz_context *ctx, pdf_write_options *opts)
+{
+	memset(opts, 0, sizeof *opts);
+}
+
+static const fz_option_enums compressions[] =
+{
+	{ "brotli", 2 },
+	{ "flate", 1 },
+	{ NULL, -1 }
+};
+
+static const fz_option_enums encryptions[] =
+{
+	{ "none", PDF_ENCRYPT_NONE },
+	{ "keep", PDF_ENCRYPT_KEEP },
+	{ "rc4-40", PDF_ENCRYPT_RC4_40 },
+	{ "rc4-128", PDF_ENCRYPT_RC4_128 },
+	{ "aes-128", PDF_ENCRYPT_AES_128 },
+	{ "aes-256", PDF_ENCRYPT_AES_256 },
+	{ NULL, -1}
+};
+
+static const fz_option_enums garbage_opts[] =
+{
+	{ "compact", 2 },
+	{ "deduplicate", 3 },
+	{ NULL, -1 }
+};
+
+static const fz_option_enums appearance_opts[] =
+{
+	{ "all", 2 },
+	{ NULL, -1 }
+};
+
+void
+pdf_apply_write_options(fz_context *ctx, pdf_write_options *opts, fz_options *args)
 {
 	const char *val;
+	int bv;
 
-	memset(opts, 0, sizeof *opts);
+	fz_lookup_option_boolean(ctx, args, "decompress", &opts->do_decompress);
 
-	if (fz_has_option(ctx, args, "decompress", &val))
-		opts->do_decompress = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "compress", &val))
+	if (fz_lookup_option_boolean(ctx, args, "compress", &opts->do_compress))
+	{}
+	else if (fz_lookup_option_enum(ctx, args, "compress", &opts->do_compress, compressions) < 0)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown compression method in options");
+
+	fz_lookup_option_boolean(ctx, args, "compress-fonts", &opts->do_compress_fonts);
+	fz_lookup_option_boolean(ctx, args, "compress-images", &opts->do_compress_images);
+	fz_lookup_option_boolean(ctx, args, "labels", &opts->do_labels);
+	fz_lookup_option_boolean(ctx, args, "ascii", &opts->do_ascii);
+	fz_lookup_option_boolean(ctx, args, "pretty", &opts->do_pretty);
+	fz_lookup_option_boolean(ctx, args, "linearize", &opts->do_linear);
+	fz_lookup_option_boolean(ctx, args, "clean", &opts->do_clean);
+	fz_lookup_option_boolean(ctx, args, "sanitize", &opts->do_sanitize);
+	fz_lookup_option_boolean(ctx, args, "incremental", &opts->do_incremental);
+	fz_lookup_option_boolean(ctx, args, "objstms", &opts->do_use_objstms);
+
+	fz_lookup_option_integer(ctx, args, "compression-effort", &opts->compression_effort);
+
+	if (fz_lookup_option_boolean(ctx, args, "regenerate-id", &bv))
+		opts->dont_regenerate_id = !bv;
+
+	if (fz_lookup_option_boolean(ctx, args, "decrypt", &bv))
 	{
-		if (fz_option_eq(val, "brotli"))
-			opts->do_compress = 2;
-		else if (fz_option_eq(val, "flate"))
-			opts->do_compress = 1;
-		else
-			opts->do_compress = fz_option_eq(val, "yes");
+		fz_warn(ctx, "the decrypt write option is deprecated, use encrypt=none instead");
+		opts->do_encrypt = bv ? PDF_ENCRYPT_NONE : PDF_ENCRYPT_KEEP;
 	}
-	if (fz_has_option(ctx, args, "compress-fonts", &val))
-		opts->do_compress_fonts = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "compress-images", &val))
-		opts->do_compress_images = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "compression-effort", &val))
-		opts->compression_effort = fz_atoi(val);
-	if (fz_has_option(ctx, args, "labels", &val))
-		opts->do_labels = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "ascii", &val))
-		opts->do_ascii = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "pretty", &val))
-		opts->do_pretty = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "linearize", &val))
-		opts->do_linear = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "clean", &val))
-		opts->do_clean = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "sanitize", &val))
-		opts->do_sanitize = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "incremental", &val))
-		opts->do_incremental = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "objstms", &val))
-		opts->do_use_objstms = fz_option_eq(val, "yes");
-	if (fz_has_option(ctx, args, "regenerate-id", &val))
-		opts->dont_regenerate_id = fz_option_eq(val, "no");
-	if (fz_has_option(ctx, args, "decrypt", &val))
-		opts->do_encrypt = fz_option_eq(val, "yes") ? PDF_ENCRYPT_NONE : PDF_ENCRYPT_KEEP;
-	if (fz_has_option(ctx, args, "encrypt", &val))
+
+	if (fz_lookup_option_boolean(ctx, args, "encrypt", &opts->do_encrypt) > 0)
 	{
-		if (fz_option_eq(val, "none") || fz_option_eq(val, "no"))
+		if (opts->do_encrypt == 0)
 			opts->do_encrypt = PDF_ENCRYPT_NONE;
-		else if (fz_option_eq(val, "keep"))
-			opts->do_encrypt = PDF_ENCRYPT_KEEP;
-		else if (fz_option_eq(val, "rc4-40") || fz_option_eq(val, "yes"))
+		else
 			opts->do_encrypt = PDF_ENCRYPT_RC4_40;
-		else if (fz_option_eq(val, "rc4-128"))
-			opts->do_encrypt = PDF_ENCRYPT_RC4_128;
-		else if (fz_option_eq(val, "aes-128"))
-			opts->do_encrypt = PDF_ENCRYPT_AES_128;
-		else if (fz_option_eq(val, "aes-256"))
-			opts->do_encrypt = PDF_ENCRYPT_AES_256;
-		else
-			fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown encryption in options");
 	}
-	if (fz_has_option(ctx, args, "owner-password", &val))
-		fz_copy_option(ctx, val, opts->opwd_utf8, nelem(opts->opwd_utf8));
-	if (fz_has_option(ctx, args, "user-password", &val))
-		fz_copy_option(ctx, val, opts->upwd_utf8, nelem(opts->upwd_utf8));
-	if (fz_has_option(ctx, args, "permissions", &val))
-		opts->permissions = fz_atoi(val);
-	else
-		opts->permissions = ~0;
-	if (fz_has_option(ctx, args, "garbage", &val))
-	{
-		if (fz_option_eq(val, "yes"))
-			opts->do_garbage = 1;
-		else if (fz_option_eq(val, "compact"))
-			opts->do_garbage = 2;
-		else if (fz_option_eq(val, "deduplicate"))
-			opts->do_garbage = 3;
-		else
-			opts->do_garbage = fz_atoi(val);
-	}
-	if (fz_has_option(ctx, args, "appearance", &val))
-	{
-		if (fz_option_eq(val, "yes"))
-			opts->do_appearance = 1;
-		else if (fz_option_eq(val, "all"))
-			opts->do_appearance = 2;
-	}
+	else if (fz_lookup_option_enum(ctx, args, "encrypt", &opts->do_encrypt, encryptions) < 0)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown encryption in options");
 
+	if (fz_lookup_option(ctx, args, "owner-password", &val))
+		fz_strlcpy(opts->opwd_utf8, val, nelem(opts->opwd_utf8));
+	if (fz_lookup_option(ctx, args, "user-password", &val))
+		fz_strlcpy(opts->upwd_utf8, val, nelem(opts->upwd_utf8));
+
+	opts->permissions = ~0;
+	fz_lookup_option_integer(ctx, args, "permissions", &opts->permissions);
+
+	if (fz_lookup_option_boolean(ctx, args, "garbage", &opts->do_garbage) > 0)
+	{}
+	else if (fz_lookup_option_integer(ctx, args, "garbage", &opts->do_garbage) > 0)
+	{}
+	else if (fz_lookup_option_enum(ctx, args, "garbage", &opts->do_garbage, garbage_opts) < 0)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown garbage option in options");
+
+	if (fz_lookup_option_boolean(ctx, args, "appearance", &opts->do_appearance) > 0)
+	{}
+	else if (fz_lookup_option_enum(ctx, args, "appearance", &opts->do_appearance, appearance_opts) < 0)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown appearance option in options");
+
+	fz_validate_options(ctx, args, "pdf");
+}
+
+pdf_write_options *
+pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *args_string)
+{
+	fz_options *args = fz_new_options(ctx, args_string);
+	fz_try(ctx)
+	{
+		pdf_init_write_options(ctx, opts);
+		pdf_apply_write_options(ctx, opts, args);
+		fz_throw_on_unused_options(ctx, args, "pdf");
+	}
+	fz_always(ctx)
+		fz_drop_options(ctx, args);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 	return opts;
 }
 
@@ -2276,10 +2420,6 @@ flush_gathered(fz_context *ctx, pdf_document *doc, objstm_gather_data *data)
 	}
 	fz_always(ctx)
 	{
-		fz_drop_output(ctx, data->content_out);
-		data->content_out = NULL;
-		fz_drop_buffer(ctx, data->content_buf);
-		data->content_buf = NULL;
 		pdf_drop_obj(ctx, obj);
 		pdf_drop_obj(ctx, ref);
 		fz_drop_buffer(ctx, newbuf);
@@ -2287,6 +2427,15 @@ flush_gathered(fz_context *ctx, pdf_document *doc, objstm_gather_data *data)
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
+}
+
+static void
+drop_data_gathered(fz_context *ctx, objstm_gather_data *data)
+{
+	fz_drop_output(ctx, data->content_out);
+	data->content_out = NULL;
+	fz_drop_buffer(ctx, data->content_buf);
+	data->content_buf = NULL;
 }
 
 static void
@@ -2334,7 +2483,10 @@ objstm_gather(fz_context *ctx, pdf_xref_entry *x, int i, pdf_document *doc, objs
 	x->gen = data->n;
 	data->n++;
 	if (data->n == OBJSTM_MAXOBJS || len > OBJSTM_MAXLEN)
+	{
 		flush_gathered(ctx, doc, data);
+		drop_data_gathered(ctx, data);
+	}
 }
 
 static void
@@ -2347,15 +2499,23 @@ gather_to_objstms(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, int
 	data.root_num = pdf_to_num(ctx, pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)));
 	data.info_num = pdf_to_num(ctx, pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info)));
 
-	count = pdf_xref_len(ctx, doc);
-	for (num = 1; num < count; ++num)
+	fz_try(ctx)
 	{
-		pdf_xref_entry *x = pdf_get_xref_entry_no_change(ctx, doc, num);
-		if (x)
-			objstm_gather(ctx, x, num, doc, &data);
-	}
+		count = pdf_xref_len(ctx, doc);
+		for (num = 1; num < count; ++num)
+		{
+			pdf_xref_entry *x = pdf_get_xref_entry_no_change(ctx, doc, num);
+			if (x)
+				objstm_gather(ctx, x, num, doc, &data);
+		}
 
-	flush_gathered(ctx, doc, &data);
+		flush_gathered(ctx, doc, &data);
+	}
+	fz_always(ctx)
+		drop_data_gathered(ctx, &data);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
 }
 
 static void
@@ -2390,25 +2550,37 @@ unpack_objstm_objs(fz_context *ctx, pdf_document *doc, int xref_len)
 	}
 }
 
-void
+int
 pdf_check_document(fz_context *ctx, pdf_document *doc)
 {
 	int num;
+	int repaired_before;
+	int errored = 0;
 
 	if (doc->checked)
-		return;
-	doc->checked = 1;
+		return 0;
+
+	repaired_before = doc->repair_attempted;
 
 	for (num = 1; num < pdf_xref_len(ctx, doc); ++num)
 	{
 		if (pdf_object_exists(ctx, doc, num))
 		{
 			fz_try(ctx)
+			{
 				(void) pdf_cache_object(ctx, doc, num);
+			}
 			fz_catch(ctx)
+			{
+				fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+				errored = 1;
 				fz_report_error(ctx);
+			}
 		}
 	}
+	doc->checked = 1;
+
+	return repaired_before != doc->repair_attempted || errored;
 }
 
 static void
@@ -2457,8 +2629,13 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 		/* First, we do a prepass across the document to load all the objects
 		 * into memory. We'll end up doing this later on anyway, but by doing
 		 * it here, we force any repairs to happen before writing proper
-		 * starts. */
-		pdf_check_document(ctx, doc);
+		 * starts.
+		 *
+		 * Note that we can skip this step when saving incrementally, because in
+		 * that case we only touch new objects which we know cannot trigger a repair.
+		 */
+		if (!in_opts->do_incremental)
+			pdf_check_document(ctx, doc);
 
 		xref_len = pdf_xref_len(ctx, doc);
 
@@ -3034,7 +3211,7 @@ pdf_writer_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 fz_document_writer *
 fz_new_pdf_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
 {
-	pdf_writer *wri;
+	pdf_writer *wri = NULL;
 
 	fz_var(wri);
 
@@ -3048,7 +3225,8 @@ fz_new_pdf_writer_with_output(fz_context *ctx, fz_output *out, const char *optio
 	fz_catch(ctx)
 	{
 		fz_drop_output(ctx, out);
-		pdf_drop_document(ctx, wri->pdf);
+		if (wri)
+			pdf_drop_document(ctx, wri->pdf);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);
 	}

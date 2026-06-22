@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -43,8 +43,9 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, 
 	fz_colorspace *colorspace = NULL;
 	float decode[FZ_MAX_COLORS * 2];
 	int colorkey[FZ_MAX_COLORS * 2];
-	int stride;
+	int stride, size;
 	pdf_obj *intent;
+	size_t z;
 
 	int i;
 	fz_compressed_buffer *buffer;
@@ -82,9 +83,9 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, 
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "image depth is zero (or less)");
 	if (bpc > 16)
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "image depth is too large: %d", bpc);
-	if (SIZE_MAX / w < (size_t)(bpc+7)/8)
-		fz_throw(ctx, FZ_ERROR_SYNTAX, "image is too large");
-	if (SIZE_MAX / h < w * (size_t)((bpc+7)/8))
+	if (fz_ckd_add_size(&z, bpc, 7) ||
+		fz_ckd_mul_size(&z, z/8, w) ||
+		fz_ckd_mul_size(&z, z, h))
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "image is too large");
 
 	fz_var(mask);
@@ -114,7 +115,10 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, 
 			n = 1;
 		}
 
-		if (SIZE_MAX / n < h * ((size_t)w) * ((bpc+7)/8))
+		if (fz_ckd_add_size(&z, bpc, 7) ||
+			fz_ckd_mul_size(&z, z/8, w) ||
+			fz_ckd_mul_size(&z, z, h) ||
+			fz_ckd_mul_size(&z, z, n))
 			fz_throw(ctx, FZ_ERROR_SYNTAX, "image is too large");
 
 		obj = pdf_dict_geta(ctx, dict, PDF_NAME(Decode), PDF_NAME(D));
@@ -157,7 +161,7 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, 
 				{
 					use_colorkey = 1;
 					for (i = 0; i < n; i++)
-						colorkey[i] = fz_clamp(pdf_array_get_real(ctx, obj, i), 0, 1) * 255;
+						colorkey[i*2] = colorkey[i*2+1] = fz_clamp(pdf_array_get_real(ctx, obj, i), 0, 1) * 255;
 				}
 			}
 		}
@@ -189,9 +193,14 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, 
 		else
 		{
 			/* Inline stream */
-			stride = (w * n * bpc + 7) / 8;
+			if (fz_ckd_mul_int(&stride, w, n) || fz_ckd_mul_int(&stride, stride, bpc))
+				fz_throw(ctx, FZ_ERROR_SYNTAX, "integer overflow in inline image size");
+			stride = fz_bytes_from_bits(stride);
+			if (fz_ckd_mul_int(&size, stride, h))
+				fz_throw(ctx, FZ_ERROR_SYNTAX, "integer overflow in inline image size");
+
 			image = fz_new_image_from_compressed_buffer(ctx, w, h, bpc, colorspace, 96, 96, interpolate, imagemask, decode, use_colorkey ? colorkey : NULL, NULL, mask);
-			pdf_load_compressed_inline_image(ctx, doc, dict, stride * h, cstm, indexed, (fz_compressed_image *)image);
+			pdf_load_compressed_inline_image(ctx, doc, dict, size, cstm, indexed, (fz_compressed_image *)image);
 		}
 		if (pdf_name_eq(ctx, intent, PDF_NAME(Perceptual)))
 			image->has_intent = 1, image->intent = FZ_RI_PERCEPTUAL;
@@ -272,7 +281,6 @@ pdf_load_jpx_as_compressed_image(fz_context *ctx, pdf_document *doc, pdf_obj *di
 {
 	fz_buffer *buf = NULL;
 	fz_image *img = NULL;
-	fz_image *mask = NULL;
 	fz_colorspace *cs = NULL;
 	pdf_obj *obj;
 	int i, n;
@@ -283,7 +291,7 @@ pdf_load_jpx_as_compressed_image(fz_context *ctx, pdf_document *doc, pdf_obj *di
 
 	buf = pdf_load_stream(ctx, dict);
 	fz_try(ctx)
-		{
+	{
 		obj = pdf_dict_geta(ctx, dict, PDF_NAME(ColorSpace), PDF_NAME(CS));
 		if (obj)
 			cs = pdf_load_colorspace(ctx, obj);
@@ -302,11 +310,23 @@ pdf_load_jpx_as_compressed_image(fz_context *ctx, pdf_document *doc, pdf_obj *di
 		obj = pdf_dict_geta(ctx, dict, PDF_NAME(SMask), PDF_NAME(Mask));
 		if (pdf_is_dict(ctx, obj))
 			img->mask = pdf_load_image_imp(ctx, doc, NULL, obj, NULL, 1);
+		else if (pdf_is_array(ctx, obj))
+		{
+			img->use_colorkey = 1;
+			for (i = 0; i < fz_mini(n, FZ_MAX_COLORS) * 2; i++)
+			{
+				if (!pdf_is_int(ctx, pdf_array_get(ctx, obj, i)))
+				{
+					fz_warn(ctx, "invalid value in color key mask");
+					img->use_colorkey = 0;
+				}
+				img->colorkey[i] = pdf_array_get_int(ctx, obj, i);
+			}
+		}
 	}
 	fz_always(ctx)
 	{
 		fz_drop_colorspace(ctx, cs);
-		fz_drop_image(ctx, mask);
 		fz_drop_buffer(ctx, buf);
 	}
 	fz_catch(ctx)
@@ -344,7 +364,7 @@ struct jbig2_segment_header {
 /* coverity[-tainted_data_return] */
 static uint32_t getu32(const unsigned char *data)
 {
-	return ((uint32_t)data[0]<<24) | ((uint32_t)data[1]<<16) | ((uint32_t)data[2]<<8) | (uint32_t)data[3];
+	return fz_unpack_uint32(data);
 }
 
 static size_t
@@ -523,10 +543,12 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 	fz_pixmap *pixmap = NULL;
 	pdf_obj *imobj = NULL;
 	pdf_obj *dp;
+	pdf_obj *ref;
 	fz_buffer *buffer = NULL;
 	fz_compressed_buffer *cbuffer;
 	fz_pixmap *smask_pixmap = NULL;
 	fz_image *smask_image = NULL;
+	pdf_image_resource_key key;
 	int i, n;
 
 	fz_var(pixmap);
@@ -534,6 +556,10 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 	fz_var(imobj);
 	fz_var(smask_pixmap);
 	fz_var(smask_image);
+
+	imobj = pdf_find_image_resource(ctx, doc, image, &key);
+	if (imobj)
+		return imobj;
 
 	pdf_begin_operation(ctx, doc, "Add image");
 
@@ -804,6 +830,8 @@ unknown_compression:
 
 		pdf_update_stream(ctx, doc, imobj, buffer, 1);
 		pdf_end_operation(ctx, doc);
+
+		ref = pdf_insert_image_resource(ctx, doc, &key, imobj);
 	}
 	fz_always(ctx)
 	{
@@ -811,12 +839,12 @@ unknown_compression:
 		fz_drop_pixmap(ctx, smask_pixmap);
 		fz_drop_pixmap(ctx, pixmap);
 		fz_drop_buffer(ctx, buffer);
+		pdf_drop_obj(ctx, imobj);
 	}
 	fz_catch(ctx)
 	{
-		pdf_drop_obj(ctx, imobj);
 		pdf_abandon_operation(ctx, doc);
 		fz_rethrow(ctx);
 	}
-	return imobj;
+	return ref;
 }

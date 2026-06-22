@@ -197,15 +197,8 @@ fz_trace_fill_path(fz_context *ctx, fz_device *dev_, const fz_path *path, int ev
 }
 
 static void
-fz_trace_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm,
-	fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params)
+fz_trace_stroke_state(fz_context *ctx, fz_output *out, const fz_stroke_state *stroke)
 {
-	fz_trace_device *dev = (fz_trace_device*)dev_;
-	fz_output *out = dev->out;
-	int i;
-
-	fz_trace_indent(ctx, out, dev->depth);
-	fz_write_printf(ctx, out, "<stroke_path");
 	fz_write_printf(ctx, out, " linewidth=\"%g\"", stroke->linewidth);
 	fz_write_printf(ctx, out, " miterlimit=\"%g\"", stroke->miterlimit);
 	fz_write_printf(ctx, out, " linecap=\"%d,%d,%d\"", stroke->start_cap, stroke->dash_cap, stroke->end_cap);
@@ -213,11 +206,24 @@ fz_trace_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path, cons
 
 	if (stroke->dash_len)
 	{
+		int i;
+
 		fz_write_printf(ctx, out, " dash_phase=\"%g\" dash=\"", stroke->dash_phase);
 		for (i = 0; i < stroke->dash_len; i++)
 			fz_write_printf(ctx, out, "%s%g", i > 0 ? " " : "", stroke->dash_list[i]);
 		fz_write_printf(ctx, out, "\"");
 	}
+}
+static void
+fz_trace_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm,
+	fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params)
+{
+	fz_trace_device *dev = (fz_trace_device*)dev_;
+	fz_output *out = dev->out;
+
+	fz_trace_indent(ctx, out, dev->depth);
+	fz_write_printf(ctx, out, "<stroke_path");
+	fz_trace_stroke_state(ctx, out, stroke);
 
 	fz_trace_color(ctx, out, colorspace, color, alpha);
 	fz_trace_color_params(ctx, out, color_params);
@@ -254,21 +260,10 @@ fz_trace_clip_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path,
 {
 	fz_trace_device *dev = (fz_trace_device*)dev_;
 	fz_output *out = dev->out;
-	int i;
 
 	fz_trace_indent(ctx, out, dev->depth);
 	fz_write_printf(ctx, out, "<clip_stroke_path");
-	fz_write_printf(ctx, out, " linewidth=\"%g\"", stroke->linewidth);
-	fz_write_printf(ctx, out, " miterlimit=\"%g\"", stroke->miterlimit);
-	fz_write_printf(ctx, out, " linecap=\"%d,%d,%d\"", stroke->start_cap, stroke->dash_cap, stroke->end_cap);
-	fz_write_printf(ctx, out, " linejoin=\"%d\"", stroke->linejoin);
-	if (stroke->dash_len)
-	{
-		fz_write_printf(ctx, out, " dash_phase=\"%g\" dash=\"", stroke->dash_phase);
-		for (i = 0; i < stroke->dash_len; i++)
-			fz_write_printf(ctx, out, "%s%g", i > 0 ? " " : "", stroke->dash_list[i]);
-		fz_write_printf(ctx, out, "\"");
-	}
+	fz_trace_stroke_state(ctx, out, stroke);
 
 	fz_trace_matrix(ctx, out, ctm);
 	fz_write_printf(ctx, out, ">\n");
@@ -303,6 +298,7 @@ fz_trace_stroke_text(fz_context *ctx, fz_device *dev_, const fz_text *text, cons
 	fz_output *out = dev->out;
 	fz_trace_indent(ctx, out, dev->depth);
 	fz_write_printf(ctx, out, "<stroke_text");
+	fz_trace_stroke_state(ctx, out, stroke);
 	fz_trace_color(ctx, out, colorspace, color, alpha);
 	fz_trace_color_params(ctx, out, color_params);
 	fz_trace_matrix(ctx, out, ctm);
@@ -334,6 +330,7 @@ fz_trace_clip_stroke_text(fz_context *ctx, fz_device *dev_, const fz_text *text,
 	fz_output *out = dev->out;
 	fz_trace_indent(ctx, out, dev->depth);
 	fz_write_printf(ctx, out, "<clip_stroke_text");
+	fz_trace_stroke_state(ctx, out, stroke);
 	fz_trace_matrix(ctx, out, ctm);
 	fz_write_printf(ctx, out, ">\n");
 	fz_trace_text(ctx, out, text, dev->depth+1);

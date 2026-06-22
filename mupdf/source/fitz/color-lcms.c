@@ -280,7 +280,8 @@ void fz_drop_icc_link_imp(fz_context *ctx, fz_storable *storable)
 
 void fz_drop_icc_link(fz_context *ctx, fz_icc_link *link)
 {
-	fz_drop_storable(ctx, &link->storable);
+	if (link)
+		fz_drop_storable(ctx, &link->storable);
 }
 
 fz_icc_link *

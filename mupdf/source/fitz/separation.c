@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -779,6 +779,8 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 			temp->x = src->x;
 			temp->y = src->y;
 
+			fz_var(temp);
+
 			fz_try(ctx)
 			{
 				temp = fz_copy_pixmap_area_converting_seps(ctx, src, temp, prf, color_params, default_cs);
@@ -1117,7 +1119,7 @@ fz_convert_separation_colors(fz_context *ctx,
 				if (beh == FZ_SEPARATION_DISABLED)
 					goto found_disabled;
 				goto found_sep;
-		}
+			}
 			if (beh != FZ_SEPARATION_SPOT)
 				continue;
 			k++;

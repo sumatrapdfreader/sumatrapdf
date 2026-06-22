@@ -860,7 +860,7 @@ pdf_document_permissions(fz_context *ctx, pdf_document *doc)
 		return (int)0xFFFFFFFC; /* all permissions granted, reserved bits set appropriately */
 	if (doc->crypt->access & 4)
 		return (int)0xFFFFFFFC; /* owner password -- all permissions granted */
-		return doc->crypt->p;
+	return doc->crypt->p;
 }
 
 /*

@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2025 Artifex Software, Inc.
+.. Copyright (C) 2001-2026 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -821,9 +821,9 @@ Notes
   ``./scripts/mupdfwrap.py --swig-windows-auto ...`` on Windows.
 
 *
-  C# ommisions.
+  C# omissions.
 
-  Some functions are ommited from the C# API due to C# restrictions, for
+  Some functions are omitted from the C# API due to C# restrictions, for
   example functions that return void* and have out-params (because tuples
   cannot contain void* items). These will be marked with comments in the
   generated mupdf.cs file.

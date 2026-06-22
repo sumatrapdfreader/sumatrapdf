@@ -479,7 +479,11 @@ fz_mount_multi_archive(fz_context *ctx, fz_archive *arch_, fz_archive *sub, cons
 	/* If we have a path, then strip any trailing slashes, and add just one. */
 	if (path)
 	{
-		clean_path = fz_cleanname_strdup(ctx, path);
+		size_t n = strlen(path);
+		clean_path = fz_malloc(ctx, n + 2);
+		memcpy(clean_path, path, n);
+		clean_path[n] = 0;
+		fz_cleanname(clean_path);
 		if (clean_path[0] == '.' && clean_path[1] == 0)
 		{
 			fz_free(ctx, clean_path);
@@ -490,7 +494,7 @@ fz_mount_multi_archive(fz_context *ctx, fz_archive *arch_, fz_archive *sub, cons
 			/* Do a strcat without doing a strcat to avoid the compiler
 			 * complaining at us. We know that n here will be <= n above
 			 * so this is safe. */
-			size_t n = strlen(clean_path);
+			n = strlen(clean_path);
 			clean_path[n] = '/';
 			clean_path[n + 1] = 0;
 		}

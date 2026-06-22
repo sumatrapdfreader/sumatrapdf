@@ -31,7 +31,7 @@ The ``trace`` command prints a trace of all the device calls used to render a pa
 	Input file name. The file can be any of the supported input formats.
 
 ``[pages]``
-	Comma separated list of page ranges. The first page is "1", and the
+	Comma-separated list of page ranges. The first page is "1", and the
 	last page is "N". The default is "1-N".
 
 The trace takes the form of an XML document, with the root element being the

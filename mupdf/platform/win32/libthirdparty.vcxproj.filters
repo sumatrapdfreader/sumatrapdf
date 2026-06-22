@@ -58,6 +58,12 @@
     <Filter Include="brotli\include">
       <UniqueIdentifier>{be15cd4b-ff83-411d-87e5-bdd60a2f784a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cmark-gfm">
+      <UniqueIdentifier>{325063c1-893f-47cc-916a-1767f5b22569}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cmark-gfm\extensions">
+      <UniqueIdentifier>{1b7e5238-4a8f-4532-bae3-382c64a05443}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\thirdparty\libjpeg\jaricom.c">
@@ -690,6 +696,105 @@
     <ClCompile Include="..\..\thirdparty\brotli\c\common\transform.c">
       <Filter>brotli\common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\static_init.c">
+      <Filter>brotli\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\static_dict_lut.c">
+      <Filter>brotli\enc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\prefix.c">
+      <Filter>brotli\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\static_init.c">
+      <Filter>brotli\dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\arena.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\blocks.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\buffer.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\cmark.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\cmark_ctype.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\footnotes.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\houdini_href_e.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\houdini_html_e.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\houdini_html_u.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\html.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\inlines.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\iterator.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\linked_list.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\map.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\node.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\plugin.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\references.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\registry.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\scanners.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\syntax_extension.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\utf8.c">
+      <Filter>cmark-gfm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\autolink.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\core-extensions.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\ext_scanners.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\strikethrough.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\table.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\tagfilter.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\tasklist.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\autoheaderid.c">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\bio.h">
@@ -1265,6 +1370,96 @@
     <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\types.h">
       <Filter>brotli\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\static_init.h">
+      <Filter>brotli\enc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\brotli\c\dec\static_init.h">
+      <Filter>brotli\dec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\buffer.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\chunk.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\cmark_ctype.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\cmark-gfm.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\cmark-gfm-extension_api.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\footnotes.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\houdini.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\html.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\inlines.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\iterator.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\map.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\node.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\parser.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\plugin.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\references.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\registry.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\render.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\scanners.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\syntax_extension.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\utf8.h">
+      <Filter>cmark-gfm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\autolink.h">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\cmark-gfm-core-extensions.h">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\ext_scanners.h">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\strikethrough.h">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\table.h">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\tagfilter.h">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\tasklist.h">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\autoheaderid.h">
+      <Filter>cmark-gfm\extensions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\thirdparty\brotli\c\common\dictionary.bin">
@@ -1274,4 +1469,4 @@
       <Filter>brotli\common</Filter>
     </None>
   </ItemGroup>
-</Project>
+</Project>

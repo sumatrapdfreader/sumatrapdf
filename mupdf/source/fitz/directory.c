@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -124,7 +124,7 @@ count_dir_entries(fz_context *ctx, fz_archive *arch)
 	return dir->num_entries;
 }
 
-const char *
+static const char *
 list_dir_entry(fz_context *ctx, fz_archive *arch, int n)
 {
 	fz_directory *dir = (fz_directory *) arch;
@@ -148,7 +148,7 @@ fz_open_directory(fz_context *ctx, const char *path)
 	fz_var(wpath);
 	fz_var(h);
 #else
-	DIR *dp;
+	DIR *dp = NULL;
 	struct dirent *ep;
 
 	fz_var(dp);

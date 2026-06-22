@@ -794,15 +794,9 @@ pdf_repair_xref_base(fz_context *ctx, pdf_document *doc)
 		pdf_drop_obj(ctx, id);
 		pdf_drop_obj(ctx, obj);
 		pdf_drop_obj(ctx, info);
-		if (ctx->throw_on_repair)
+		if (doc->throw_on_repair)
 			fz_throw(ctx, FZ_ERROR_REPAIRED, "Error during repair attempt");
 		fz_rethrow(ctx);
-	}
-
-	if (ctx->throw_on_repair)
-	{
-		pdf_drop_root_list(ctx, roots);
-		fz_throw(ctx, FZ_ERROR_REPAIRED, "File repaired");
 	}
 
 	return roots;
@@ -984,4 +978,48 @@ void pdf_repair_xref_aux(fz_context *ctx, pdf_document *doc, void (*mid)(fz_cont
 		pdf_drop_root_list(ctx, roots);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
+
+	if (doc->throw_on_repair)
+		fz_throw(ctx, FZ_ERROR_REPAIRED, "File repaired");
+}
+
+static void
+walk_page_tree(fz_context *ctx, pdf_obj *pages, pdf_cycle_list *cycle_up, pdf_obj *parent)
+{
+	pdf_cycle_list cycle;
+	pdf_obj *kids;
+
+	if (pages == NULL || pdf_cycle(ctx, &cycle, cycle_up, pages))
+		return;
+
+	if (parent)
+	{
+		pdf_obj *p = pdf_dict_get(ctx, pages, PDF_NAME(Parent));
+		if (pdf_objcmp(ctx, parent, p))
+		{
+			fz_warn(ctx, "Fixing bad parent in pagetree");
+			pdf_dict_put(ctx, pages, PDF_NAME(Parent), pdf_ensure_indirect(ctx, parent));
+		}
+	}
+
+	kids = pdf_dict_get(ctx, pages, PDF_NAME(Kids));
+	if (pdf_is_array(ctx, kids))
+	{
+		int i, n = pdf_array_len(ctx, kids);
+		for (i = 0; i < n; i++)
+		{
+			walk_page_tree(ctx, pdf_array_get(ctx, kids, i), &cycle, pages);
+		}
+	}
+}
+
+
+void pdf_repair_page_tree_parents(fz_context *ctx, pdf_document *doc)
+{
+	pdf_obj *pages = pdf_dict_get(ctx, pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)), PDF_NAME(Pages));
+
+	if (!pages)
+		return;
+
+	walk_page_tree(ctx, pages, NULL, NULL);
 }

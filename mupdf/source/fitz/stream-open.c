@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -192,15 +192,17 @@ fz_open_file_ptr(fz_context *ctx, FILE *file, const char *name, int wide, int de
 {
 	fz_stream *stm;
 	fz_file_stream *state = NULL;
+	fz_file_stream *state_to_free = NULL;
 
 	fz_var(state);
+	fz_var(state_to_free);
 
 #ifndef _WIN32
 	assert(!wide);
 #endif
 	fz_try(ctx)
 	{
-		state = fz_malloc_struct(ctx, fz_file_stream);
+		state_to_free = state = fz_malloc_struct(ctx, fz_file_stream);
 		state->file = file;
 #ifdef _WIN32
 		if (wide)
@@ -215,6 +217,7 @@ fz_open_file_ptr(fz_context *ctx, FILE *file, const char *name, int wide, int de
 		state->filename = fz_strdup(ctx, name);
 		state->del_on_drop = del_on_drop;
 
+		state_to_free = NULL;
 		stm = fz_new_stream(ctx, state, next_file, close_and_drop_file);
 		stm->seek = seek_file;
 	}
@@ -230,8 +233,8 @@ fz_open_file_ptr(fz_context *ctx, FILE *file, const char *name, int wide, int de
 #endif
 				unlink(name);
 		}
-		else
-			close_and_drop_file(ctx, state);
+		if (state_to_free)
+			close_and_drop_file(ctx, state_to_free);
 		fz_rethrow(ctx);
 	}
 

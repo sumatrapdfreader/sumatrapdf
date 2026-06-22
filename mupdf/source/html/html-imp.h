@@ -147,6 +147,7 @@ enum
 	PRO_CLEAR,
 	PRO_COLOR,
 	PRO_COLUMNS,
+	PRO_CONTENT,
 	PRO_DIRECTION,
 	PRO_DISPLAY,
 	PRO_FLOAT,
@@ -226,7 +227,7 @@ struct fz_css_match_s
 enum { DIS_NONE, DIS_BLOCK, DIS_INLINE, DIS_LIST_ITEM, DIS_INLINE_BLOCK, DIS_TABLE, DIS_TABLE_GROUP, DIS_TABLE_ROW, DIS_TABLE_CELL, DIS_TABLE_COLGROUP, DIS_TABLE_COL };
 enum { POS_STATIC, POS_RELATIVE, POS_ABSOLUTE, POS_FIXED };
 enum { TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY };
-enum { VA_BASELINE, VA_SUB, VA_SUPER, VA_TOP, VA_BOTTOM, VA_TEXT_TOP, VA_TEXT_BOTTOM, VA_MIDDLE };
+enum { VA_BASELINE, VA_SUB, VA_SUPER, VA_TOP, VA_BOTTOM, VA_TEXT_TOP, VA_TEXT_BOTTOM, VA_MIDDLE, VA_PERCENT, VA_LENGTH };
 enum { BS_NONE, BS_SOLID, BS_DOTTED, BS_DASHED, BS_DOUBLE, BS_GROOVE, BS_RIDGE, BS_INSET, BS_OUTSET };
 enum { V_VISIBLE, V_HIDDEN, V_COLLAPSE };
 enum { PB_AUTO, PB_ALWAYS, PB_AVOID, PB_LEFT, PB_RIGHT };
@@ -263,6 +264,12 @@ enum {
 
 enum { N_NUMBER='u', N_LENGTH='p', N_SCALE='m', N_PERCENT='%', N_AUTO='a', N_UNDEFINED='x' };
 
+enum {
+	FZ_CSS_PSEUDO_NONE,
+	FZ_CSS_PSEUDO_BEFORE,
+	FZ_CSS_PSEUDO_AFTER,
+};
+
 struct fz_css_number_s
 {
 	float value;
@@ -293,16 +300,14 @@ struct fz_css_style_s
 	fz_css_color color;
 	fz_css_color text_fill_color;
 	fz_css_color text_stroke_color;
+	fz_css_number vertical_align_number;
 
-	/* First group of 32 */
 	unsigned int rowspan : 10; /* Needs to be able to represent 1-1000 */
 	unsigned int colspan : 10; /* Needs to be able to represent 1-1000 */
 	unsigned int white_space : 3;
-	unsigned int vertical_align : 3;
+	unsigned int vertical_align : 4;
 	unsigned int page_break_before : 3;
 	unsigned int page_break_after : 3;
-
-	/* Second group of 32 */
 	unsigned int visibility : 2;
 	unsigned int text_align : 2;
 	unsigned int direction : 2;
@@ -315,8 +320,6 @@ struct fz_css_style_s
 	unsigned int text_decoration: 2;
 	unsigned int overflow_wrap : 1;
 	unsigned int position : 2;
-
-	/* Third group of 32 */
 	unsigned int border_collapse : 1;
 	unsigned int hyphens : 2;
 };
@@ -352,6 +355,7 @@ struct fz_html_s
 	fz_html_tree tree;
 
 	float page_w, page_h;
+	float meta_w, meta_h;
 	float layout_w, layout_h, layout_em;
 	float page_margin[4];
 	char *title;
@@ -572,10 +576,11 @@ void fz_drop_css(fz_context *ctx, fz_css *css);
 void fz_debug_css(fz_context *ctx, fz_css *css);
 const char *fz_css_property_name(int name);
 
-void fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css, fz_xml *node);
+void fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css, fz_xml *node, int pseudo, int publisher_css);
 void fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css);
 
 int fz_get_css_match_display(fz_css_match *node);
+const char *fz_get_css_match_content(fz_css_match *match);
 void fz_default_css_style(fz_context *ctx, fz_css_style *style);
 void fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, fz_css_match *match);
 fz_css_color fz_css_color_from_string(const char *str);
@@ -598,7 +603,7 @@ void fz_add_html_font_face(fz_context *ctx, fz_html_font_set *set,
 fz_font *fz_load_html_font(fz_context *ctx, fz_html_font_set *set, const char *family, int is_bold, int is_italic, int is_small_caps);
 void fz_drop_html_font_set(fz_context *ctx, fz_html_font_set *htx);
 
-void fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *dir, const char *base_uri, fz_css *css);
+void fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *dir, const char *base_uri, fz_css *css, int tainted);
 
 void fz_layout_html(fz_context *ctx, fz_html *html, float w, float h, float em);
 void fz_draw_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html *html, int page);
@@ -626,7 +631,7 @@ fz_structure fz_html_tag_to_structure(const char *tag);
 
 fz_html *fz_parse_html(fz_context *ctx,
 	fz_html_font_set *set, fz_archive *dir, const char *base_uri, fz_buffer *buf, const char *user_css,
-	int try_xml, int try_html5, int patch_mobi);
+	int try_xml, int try_html5, fz_html_flavor flavor, int publisher_css);
 
 fz_buffer *fz_txt_buffer_to_html(fz_context *ctx, fz_buffer *in);
 

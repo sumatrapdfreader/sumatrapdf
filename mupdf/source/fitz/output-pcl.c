@@ -284,19 +284,40 @@ void fz_pcl_preset(fz_context *ctx, fz_pcl_options *opts, const char *preset)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unknown preset '%s'", preset);
 }
 
+void fz_init_pcl_options(fz_context *ctx, fz_pcl_options *opts)
+{
+	memset(opts, 0, sizeof *opts);
+
+	fz_pcl_preset(ctx, opts, "generic");
+}
+
 fz_pcl_options *
 fz_parse_pcl_options(fz_context *ctx, fz_pcl_options *opts, const char *args)
 {
+	fz_options *options = fz_new_options(ctx, args);
+	fz_try(ctx)
+	{
+		fz_init_pcl_options(ctx, opts);
+		fz_apply_pcl_options(ctx, opts, options);
+		fz_throw_on_unused_options(ctx, options, "pcl");
+	}
+	fz_always(ctx)
+		fz_drop_options(ctx, options);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return opts;
+}
+
+void
+fz_apply_pcl_options(fz_context *ctx, fz_pcl_options *opts, fz_options *args)
+{
 	const char *val;
 
-	memset(opts, 0, sizeof *opts);
-
-	if (fz_has_option(ctx, args, "preset", &val))
+	if (fz_lookup_option(ctx, args, "preset", &val))
 		fz_pcl_preset(ctx, opts, val);
-	else
-		fz_pcl_preset(ctx, opts, "generic");
 
-	if (fz_has_option(ctx, args, "spacing", &val))
+	if (fz_lookup_option(ctx, args, "spacing", &val))
 	{
 		switch (atoi(val))
 		{
@@ -307,80 +328,85 @@ fz_parse_pcl_options(fz_context *ctx, fz_pcl_options *opts, const char *args)
 		default: fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unsupported PCL spacing %d (0-3 only)", atoi(val));
 		}
 	}
-	if (fz_has_option(ctx, args, "mode2", &val))
+	if (fz_lookup_option(ctx, args, "mode2", &val))
 	{
-		if (fz_option_eq(val, "no"))
+		if (!strcmp(val, "no"))
 			opts->features &= ~PCL_MODE_2_COMPRESSION;
-		else if (fz_option_eq(val, "yes"))
+		else if (!strcmp(val, "yes"))
 			opts->features |= PCL_MODE_2_COMPRESSION;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Expected 'yes' or 'no' for mode2 value");
 	}
-	if (fz_has_option(ctx, args, "mode3", &val))
+	if (fz_lookup_option(ctx, args, "mode3", &val))
 	{
-		if (fz_option_eq(val, "no"))
+		if (!strcmp(val, "no"))
 			opts->features &= ~PCL_MODE_3_COMPRESSION;
-		else if (fz_option_eq(val, "yes"))
+		else if (!strcmp(val, "yes"))
 			opts->features |= PCL_MODE_3_COMPRESSION;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Expected 'yes' or 'no' for mode3 value");
 	}
-	if (fz_has_option(ctx, args, "eog_reset", &val))
+	if (fz_lookup_option(ctx, args, "eog_reset", &val))
 	{
-		if (fz_option_eq(val, "no"))
+		if (!strcmp(val, "no"))
 			opts->features &= ~PCL_END_GRAPHICS_DOES_RESET;
-		else if (fz_option_eq(val, "yes"))
+		else if (!strcmp(val, "yes"))
 			opts->features |= PCL_END_GRAPHICS_DOES_RESET;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Expected 'yes' or 'no' for eog_reset value");
 	}
-	if (fz_has_option(ctx, args, "has_duplex", &val))
+	if (fz_lookup_option(ctx, args, "has_duplex", &val))
 	{
-		if (fz_option_eq(val, "no"))
+		if (!strcmp(val, "no"))
 			opts->features &= ~PCL_HAS_DUPLEX;
-		else if (fz_option_eq(val, "yes"))
+		else if (!strcmp(val, "yes"))
 			opts->features |= PCL_HAS_DUPLEX;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Expected 'yes' or 'no' for has_duplex value");
 	}
-	if (fz_has_option(ctx, args, "has_papersize", &val))
+	if (fz_lookup_option(ctx, args, "has_papersize", &val))
 	{
-		if (fz_option_eq(val, "no"))
+		if (!strcmp(val, "no"))
 			opts->features &= ~PCL_CAN_SET_PAPER_SIZE;
-		else if (fz_option_eq(val, "yes"))
+		else if (!strcmp(val, "yes"))
 			opts->features |= PCL_CAN_SET_PAPER_SIZE;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Expected 'yes' or 'no' for has_papersize value");
 	}
-	if (fz_has_option(ctx, args, "has_copies", &val))
+	if (fz_lookup_option(ctx, args, "has_copies", &val))
 	{
-		if (fz_option_eq(val, "no"))
+		if (!strcmp(val, "no"))
 			opts->features &= ~PCL_CAN_PRINT_COPIES;
-		else if (fz_option_eq(val, "yes"))
+		else if (!strcmp(val, "yes"))
 			opts->features |= PCL_CAN_PRINT_COPIES;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Expected 'yes' or 'no' for has_papersize value");
 	}
-	if (fz_has_option(ctx, args, "is_ljet4pjl", &val))
+	if (fz_lookup_option(ctx, args, "is_ljet4pjl", &val))
 	{
-		if (fz_option_eq(val, "no"))
+		if (!strcmp(val, "no"))
 			opts->features &= ~HACK__IS_A_LJET4PJL;
-		else if (fz_option_eq(val, "yes"))
+		else if (!strcmp(val, "yes"))
 			opts->features |= HACK__IS_A_LJET4PJL;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Expected 'yes' or 'no' for is_ljet4pjl value");
 	}
-	if (fz_has_option(ctx, args, "is_oce9050", &val))
+	if (fz_lookup_option(ctx, args, "is_oce9050", &val))
 	{
-		if (fz_option_eq(val, "no"))
+		if (!strcmp(val, "no"))
 			opts->features &= ~HACK__IS_A_OCE9050;
-		else if (fz_option_eq(val, "yes"))
+		else if (!strcmp(val, "yes"))
 			opts->features |= HACK__IS_A_OCE9050;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Expected 'yes' or 'no' for is_oce9050 value");
 	}
+	if (fz_lookup_option(ctx, args, "media_position", &val))
+	{
+		opts->media_position = fz_atoi(val);
+		opts->media_position_set = 1;
+	}
 
-	return opts;
+	fz_validate_options(ctx, args, "pcl");
 }
 
 static void
@@ -487,10 +513,10 @@ pcl_header(fz_context *ctx, fz_output *out, fz_pcl_options *pcl, int num_copies,
 				fz_write_printf(ctx, out, "\033&l%dA", pcl->paper_size);
 			}
 			fz_write_string(ctx, out, "\033&l0o0l0E");
-			fz_write_string(ctx, out, pcl->odd_page_init);
+			fz_write_string(ctx, out, odd_page_init);
 		}
 		else
-			fz_write_string(ctx, out, pcl->even_page_init);
+			fz_write_string(ctx, out, even_page_init);
 	}
 	else
 	{
@@ -499,7 +525,7 @@ pcl_header(fz_context *ctx, fz_output *out, fz_pcl_options *pcl, int num_copies,
 			fz_write_printf(ctx, out, "\033&l%dA", pcl->paper_size);
 		}
 		fz_write_string(ctx, out, "\033&l0o0l0E");
-		fz_write_string(ctx, out, pcl->odd_page_init);
+		fz_write_string(ctx, out, odd_page_init);
 	}
 
 	fz_write_printf(ctx, out, "\033&l%dX", num_copies); /* # of copies */
@@ -511,7 +537,7 @@ pcl_header(fz_context *ctx, fz_output *out, fz_pcl_options *pcl, int num_copies,
 	/* receiving \033*rB, so we must reinitialize graphics mode. */
 	if (pcl->features & PCL_END_GRAPHICS_DOES_RESET)
 	{
-		fz_write_string(ctx, out, pcl->odd_page_init); /* Assume this does the right thing */
+		fz_write_string(ctx, out, odd_page_init); /* Assume this does the right thing */
 		fz_write_printf(ctx, out, "\033&l%dX", num_copies); /* # of copies */
 	}
 
@@ -1515,25 +1541,32 @@ pcl_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 }
 
 fz_document_writer *
-fz_new_pcl_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+fz_new_pcl_writer_with_output(fz_context *ctx, fz_output *out, const char *options_string)
 {
+	fz_options *options = NULL;
 	fz_pcl_writer *wri = NULL;
 	const char *val;
 
+	fz_var(options);
 	fz_var(wri);
 
 	fz_try(ctx)
 	{
+		options = fz_new_options(ctx, options_string);
 		wri = fz_new_derived_document_writer(ctx, fz_pcl_writer, pcl_begin_page, pcl_end_page, pcl_close_writer, pcl_drop_writer);
-		fz_parse_draw_options(ctx, &wri->draw, options);
-		fz_parse_pcl_options(ctx, &wri->pcl, options);
-		if (fz_has_option(ctx, options, "colorspace", &val))
-			if (fz_option_eq(val, "mono"))
+		fz_init_draw_options(ctx, &wri->draw);
+		fz_init_pcl_options(ctx, &wri->pcl);
+		fz_apply_draw_options(ctx, &wri->draw, options);
+		fz_apply_pcl_options(ctx, &wri->pcl, options);
+		if (fz_lookup_option(ctx, options, "colorspace", &val))
+			if (!strcmp(val, "mono"))
 				wri->mono = 1;
 		wri->out = out;
+		fz_throw_on_unused_options(ctx, options, "pcl");
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_options(ctx, options);
 		fz_drop_output(ctx, out);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);

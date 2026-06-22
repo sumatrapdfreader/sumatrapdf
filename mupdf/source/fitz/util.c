@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -645,42 +645,47 @@ do_flatten(fz_context *ctx, fz_buffer *buf, fz_stext_position **map, fz_stext_pa
 
 	#define EMIT(X,Y) \
 	{ \
-		if (map && *map) *(*map)++ = (fz_stext_position){ page, parent, block, line, ch }; \
+		if (map && *map) *(*map)++ = (fz_stext_position){ page, parent, block, line, X }; \
 		if (buf) fz_append_rune(ctx, buf, Y); \
 		++n; \
 	}
 
 	for (; block != NULL; block = block->next)
+	{
+		if (block->type == FZ_STEXT_BLOCK_TEXT)
 		{
-			if (block->type == FZ_STEXT_BLOCK_TEXT)
-			{
 			int join_line = 0;
-				for (line = block->u.t.first_line; line; line = line->next)
-				{
+			for (line = block->u.t.first_line; line; line = line->next)
+			{
 				join_line = 0;
-					for (ch = line->first_char; ch; ch = ch->next)
+				for (ch = line->first_char; ch; ch = ch->next)
 				{
-					/* Last character of a line where we aren't keeping hyphens; check for dehyphenation. */
-					if (ch == line->last_char && (flatten & FZ_TEXT_FLATTEN_KEEP_HYPHENS) == 0)
+					if ((flatten & FZ_TEXT_FLATTEN_KEEP_HYPHENS) == 0)
 					{
-						/* Soft hyphens are always removed. */
-						if (ch->c == 0xad)
+						/* Last character of a line... */
+						if (ch->next == NULL)
 						{
-							join_line = 1;
-							continue;
+							/* Soft hyphens are always removed. */
+							if (ch->c == 0xad)
+							{
+								join_line = 1;
+								continue;
+							}
+							/* Non-soft hyphens are only broken if we extracted with dehyphenation. */
+							if ((line->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0)
+							{
+								join_line = 1;
+								continue;
+							}
 						}
-						/* Non-soft hyphens are only broken if we extracted with dehyphenation. */
-						if ((line->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0 && fz_is_unicode_hyphen(ch->c))
+						else
 						{
-							join_line = 1;
-							continue;
+							/* Soft hyphens at the beginning or in the middle of a line are always removed. */
+							if (ch->c == 0xad)
+							{
+								continue;
+							}
 						}
-					}
-
-					/* Soft hyphens at the beginning or in the middle of a line are always removed. */
-					if (ch != line->last_char && ch->c == 0xad)
-					{
-						continue;
 					}
 
 					EMIT(ch, ch->c);
@@ -697,30 +702,37 @@ do_flatten(fz_context *ctx, fz_buffer *buf, fz_stext_position **map, fz_stext_pa
 					EMIT(NULL, '\n');
 					*ws = 1;
 				}
-				else
+				else if (line->next)
 				{
+					/* join lines in the same block with a space */
 					if (!*ws)
 						EMIT(NULL, ' ');
 					*ws = 1;
 				}
 			}
 
-			if (flatten & FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS)
+			if (join_line)
+			{
+				/* No whitespace, no linebreak. */
+			}
+			else if (flatten & FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS)
 			{
 				EMIT(NULL, '\n');
 				*ws = 1;
 			}
-			else if (!join_line)
+			else
 			{
-				EMIT(NULL, '\n');
+				/* terminate all paragraphs with a space */
+				if (!*ws)
+					EMIT(NULL, ' ');
 				*ws = 1;
 			}
 		}
 		else if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
 		{
 			n += do_flatten(ctx, buf, map, page, block->u.s.down, block->u.s.down->first_block, flatten, ws);
-				}
-			}
+		}
+	}
 
 	return n;
 }
@@ -739,7 +751,7 @@ fz_new_buffer_from_flattened_stext_page(fz_context *ctx, fz_stext_page *page, fz
 	{
 		ws = 0;
 		len = do_flatten(ctx, NULL, NULL, page, NULL, page->first_block, flatten, &ws);
-		}
+	}
 
 	fz_try(ctx)
 	{
@@ -866,111 +878,53 @@ fz_write_image_as_data_uri(fz_context *ctx, fz_output *out, fz_image *image)
 static uint32_t read16(const uint8_t *d, size_t *pos, size_t len, int order)
 {
 	size_t p = *pos;
-	uint32_t v;
-
 	if (p+1 >= len)
-	{
-		*pos = len;
-		return 0;
-	}
-
+		return *pos = len, 0;
 	if (order)
-	{
-		v = d[p++]<<8; /* BE */
-		v |= d[p++];
-	}
+		return *pos = p+2, fz_unpack_uint16(d+p);
 	else
-	{
-		v = d[p++]; /* LE */
-		v |= d[p++]<<8;
-	}
-
-	*pos = p;
-
-	return v;
+		return *pos = p+2, fz_unpack_uint16_le(d+p);
 }
 
 static uint32_t read32(const uint8_t *d, size_t *pos, size_t len, int order)
 {
 	size_t p = *pos;
-	uint32_t v;
-
 	if (p+3 >= len)
-	{
-		*pos = len;
-		return 0;
-	}
-
+		return *pos = len, 0;
 	if (order)
-	{
-		v = d[p++]<<24; /* BE */
-		v |= d[p++]<<16;
-		v |= d[p++]<<8;
-		v |= d[p++];
-	}
+		return *pos = p+4, fz_unpack_uint32(d+p);
 	else
-	{
-		v = d[p++];
-		v |= d[p++]<<8; /* LE */
-		v |= d[p++]<<16;
-		v |= d[p++]<<24;
-	}
-
-	*pos = p;
-
-	return v;
+		return *pos = p+4, fz_unpack_uint32_le(d+p);
 }
 
 static void write16(uint8_t *d, size_t *pos, size_t len, int order, uint32_t v)
 {
 	size_t p = *pos;
-
 	if (p+1 >= len)
 	{
 		*pos = len;
 		return;
 	}
-
 	if (order)
-	{
-		d[p++] = (v>>8);
-		d[p++] = v;
-	}
+		fz_pack_uint16(d+p, v);
 	else
-	{
-		d[p++] = v;
-		d[p++] = (v>>8);
-	}
-
-	*pos = p;
+		fz_pack_uint16_le(d+p, v);
+	*pos = p+2;
 }
 
-static void write32( uint8_t *d, size_t *pos, size_t len, int order, uint32_t v)
+static void write32(uint8_t *d, size_t *pos, size_t len, int order, uint32_t v)
 {
 	size_t p = *pos;
-
 	if (p+3 >= len)
 	{
 		*pos = len;
 		return;
 	}
-
 	if (order)
-	{
-		d[p++] = (v>>24);
-		d[p++] = (v>>16);
-		d[p++] = (v>>8);
-		d[p++] = v;
-	}
+		fz_pack_uint32(d+p, v);
 	else
-	{
-		d[p++] = v;
-		d[p++] = (v>>8);
-		d[p++] = (v>>16);
-		d[p++] = (v>>24);
-	}
-
-	*pos = p;
+		fz_pack_uint32_le(d+p, v);
+	*pos = p+4;
 }
 
 fz_buffer *
@@ -1112,7 +1066,7 @@ fz_append_image_as_data_uri(fz_context *ctx, fz_buffer *out, fz_image *image)
 	}
 	else
 	{
-	buf = fz_new_buffer_from_image_as_png(ctx, image, fz_default_color_params);
+		buf = fz_new_buffer_from_image_as_png(ctx, image, fz_default_color_params);
 		mime = "data:image/png;base64,";
 	}
 

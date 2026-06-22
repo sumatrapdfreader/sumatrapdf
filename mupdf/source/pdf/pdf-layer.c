@@ -341,7 +341,7 @@ pdf_select_layer_config(fz_context *ctx, pdf_document *doc, int config)
 	if (config == -1)
 	{
 		cobj = pdf_dict_get(ctx, ocprops, PDF_NAME(D));
-	if (!cobj)
+		if (!cobj)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "No default Layer config");
 	}
 	else
@@ -697,6 +697,7 @@ pdf_is_ocg_hidden_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rd
 		int len = desc->len;
 		int i;
 		pdf_obj *es;
+		int perform_intent_check;
 
 		/* by default an OCG is visible, unless it's explicitly hidden */
 		for (i = 0; i < len; i++)
@@ -709,33 +710,41 @@ pdf_is_ocg_hidden_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rd
 			}
 		}
 
+		/* OCG Intents are only used to determine visibility if there is a match with
+		 * the configuration dictionary's Intents.
+		 * Skip the check if configuration dictionary's Intent is missing or empty. */
+		perform_intent_check = desc->intent &&
+			!(pdf_is_array(ctx, desc->intent) && pdf_array_len(ctx, desc->intent) == 0);
+
 		/* Check Intents; if our intent is not part of the set given
 		 * by the current config, we should ignore it. */
 		obj = pdf_dict_get(ctx, ocg, PDF_NAME(Intent));
-		if (pdf_is_name(ctx, obj))
-		{
-			/* If it doesn't match, it's hidden */
-			if (ocg_intents_include(ctx, desc, pdf_to_name(ctx, obj)) == 0)
-				return 1;
-		}
-		else if (pdf_is_array(ctx, obj))
-		{
-			int match = 0;
-			len = pdf_array_len(ctx, obj);
-			for (i=0; i<len; i++) {
-				match |= ocg_intents_include(ctx, desc, pdf_array_get_name(ctx, obj, i));
-				if (match)
-					break;
+		if (perform_intent_check) {
+			if (pdf_is_name(ctx, obj))
+			{
+				/* If it doesn't match, it's hidden */
+				if (ocg_intents_include(ctx, desc, pdf_to_name(ctx, obj)) == 0)
+					return 1;
 			}
-			/* If we don't match any, it's hidden */
-			if (match == 0)
-				return 1;
-		}
-		else
-		{
-			/* If it doesn't match, it's hidden */
-			if (ocg_intents_include(ctx, desc, "View") == 0)
-				return 1;
+			else if (pdf_is_array(ctx, obj))
+			{
+				int match = 0;
+				len = pdf_array_len(ctx, obj);
+				for (i=0; i<len; i++) {
+					match |= ocg_intents_include(ctx, desc, pdf_array_get_name(ctx, obj, i));
+					if (match)
+						break;
+				}
+				/* If we don't match any, it's hidden */
+				if (match == 0)
+					return 1;
+			}
+			else
+			{
+				/* If it doesn't match, it's hidden */
+				if (ocg_intents_include(ctx, desc, "View") == 0)
+					return 1;
+			}
 		}
 
 		/* FIXME: Currently we do a very simple check whereby we look
@@ -823,7 +832,20 @@ pdf_is_ocg_hidden_imp(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rd
 int
 pdf_is_ocg_hidden(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, const char *usage, pdf_obj *ocg)
 {
-	return pdf_is_ocg_hidden_imp(ctx, doc, rdb, usage, ocg, NULL);
+	int ret;
+
+	/* OCG is a borrowed reference held for long periods here. If we
+	 * get a repair triggered, we can lose that object. */
+	pdf_keep_obj(ctx, ocg);
+
+	fz_try(ctx)
+		ret = pdf_is_ocg_hidden_imp(ctx, doc, rdb, usage, ocg, NULL);
+	fz_always(ctx)
+		pdf_drop_obj(ctx, ocg);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
 }
 
 pdf_ocg_descriptor *
@@ -845,18 +867,21 @@ pdf_read_ocg(fz_context *ctx, pdf_document *doc)
 		len = pdf_array_len(ctx, ocgs);
 
 		doc->ocg = fz_malloc_struct(ctx, pdf_ocg_descriptor);
-		doc->ocg->ocgs = fz_calloc(ctx, len, sizeof(*doc->ocg->ocgs));
 		doc->ocg->len = len;
 		doc->ocg->num_configs = num_configs;
 
-		for (i = 0; i < len; i++)
+		if (len > 0)
 		{
-			pdf_obj *o = pdf_array_get(ctx, ocgs, i);
-			doc->ocg->ocgs[i].obj = pdf_keep_obj(ctx, o);
-			doc->ocg->ocgs[i].n = pdf_to_num(ctx, o);
-			doc->ocg->ocgs[i].state = 1;
+			doc->ocg->ocgs = fz_calloc(ctx, len, sizeof(*doc->ocg->ocgs));
+			for (i = 0; i < len; i++)
+			{
+				pdf_obj *o = pdf_array_get(ctx, ocgs, i);
+				doc->ocg->ocgs[i].obj = pdf_keep_obj(ctx, o);
+				doc->ocg->ocgs[i].n = pdf_to_num(ctx, o);
+				doc->ocg->ocgs[i].state = 1;
+			}
+			qsort(doc->ocg->ocgs, len, sizeof(doc->ocg->ocgs[0]), ocgcmp);
 		}
-		qsort(doc->ocg->ocgs, len, sizeof(doc->ocg->ocgs[0]), ocgcmp);
 
 		pdf_select_layer_config(ctx, doc, -1);
 	}

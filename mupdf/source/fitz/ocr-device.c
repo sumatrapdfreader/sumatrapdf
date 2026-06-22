@@ -134,7 +134,7 @@ typedef struct fz_ocr_device_s
 
 	char *language;
 	char *datadir;
-	char *options;
+	fz_options *options;
 } fz_ocr_device;
 
 static void
@@ -391,7 +391,7 @@ drop_ocr_device(fz_context *ctx, fz_ocr_device *ocr)
 	fz_free(ctx, ocr->chars);
 	fz_free(ctx, ocr->language);
 	fz_free(ctx, ocr->datadir);
-	fz_free(ctx, ocr->options);
+	fz_drop_options(ctx, ocr->options);
 }
 
 static void
@@ -519,7 +519,6 @@ typedef struct
 {
 	fz_device super;
 
-	fz_device *target;
 	int words_len;
 	word_record **words;
 	int current;
@@ -706,45 +705,13 @@ rewrite_text(fz_context *ctx, fz_rewrite_device *dev, fz_matrix ctm, const fz_te
 }
 
 static void
-rewrite_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params params)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_fill_path(ctx, rewrite->target, path, even_odd, ctm, cs, color, alpha, params);
-}
-
-static void
-rewrite_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params params)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_stroke_path(ctx, rewrite->target, path, stroke, ctm, cs, color, alpha, params);
-}
-
-static void
-rewrite_clip_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_rect scissor)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_clip_path(ctx, rewrite->target, path, even_odd, ctm, scissor);
-}
-
-static void
-rewrite_clip_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, fz_rect scissor)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_clip_stroke_path(ctx, rewrite->target, path, stroke, ctm, scissor);
-}
-
-static void
 rewrite_fill_text(fz_context *ctx, fz_device *dev, const fz_text *text, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params params)
 {
 	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
 	fz_text *rtext = rewrite_text(ctx, rewrite, ctm, text);
 
 	fz_try(ctx)
-		fz_fill_text(ctx, rewrite->target, rtext, ctm, cs, color, alpha, params);
+		fz_fill_text(ctx, rewrite->super.passthrough, rtext, ctm, cs, color, alpha, params);
 	fz_always(ctx)
 		fz_drop_text(ctx, rtext);
 	fz_catch(ctx)
@@ -758,7 +725,7 @@ rewrite_stroke_text(fz_context *ctx, fz_device *dev, const fz_text *text, const 
 	fz_text *rtext = rewrite_text(ctx, rewrite, ctm, text);
 
 	fz_try(ctx)
-		fz_stroke_text(ctx, rewrite->target, rtext, stroke, ctm, cs, color, alpha, params);
+		fz_stroke_text(ctx, rewrite->super.passthrough, rtext, stroke, ctm, cs, color, alpha, params);
 	fz_always(ctx)
 		fz_drop_text(ctx, rtext);
 	fz_catch(ctx)
@@ -772,7 +739,7 @@ rewrite_clip_text(fz_context *ctx, fz_device *dev, const fz_text *text, fz_matri
 	fz_text *rtext = rewrite_text(ctx, rewrite, ctm, text);
 
 	fz_try(ctx)
-		fz_clip_text(ctx, rewrite->target, rtext, ctm, scissor);
+		fz_clip_text(ctx, rewrite->super.passthrough, rtext, ctm, scissor);
 	fz_always(ctx)
 		fz_drop_text(ctx, rtext);
 	fz_catch(ctx)
@@ -786,7 +753,7 @@ rewrite_clip_stroke_text(fz_context *ctx, fz_device *dev, const fz_text *text, c
 	fz_text *rtext = rewrite_text(ctx, rewrite, ctm, text);
 
 	fz_try(ctx)
-		fz_clip_stroke_text(ctx, rewrite->target, rtext, stroke, ctm, scissor);
+		fz_clip_stroke_text(ctx, rewrite->super.passthrough, rtext, stroke, ctm, scissor);
 	fz_always(ctx)
 		fz_drop_text(ctx, rtext);
 	fz_catch(ctx)
@@ -800,131 +767,11 @@ rewrite_ignore_text(fz_context *ctx, fz_device *dev, const fz_text *text, fz_mat
 	fz_text *rtext = rewrite_text(ctx, rewrite, ctm, text);
 
 	fz_try(ctx)
-		fz_ignore_text(ctx, rewrite->target, rtext, ctm);
+		fz_ignore_text(ctx, rewrite->super.passthrough, rtext, ctm);
 	fz_always(ctx)
 		fz_drop_text(ctx, rtext);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
-}
-
-static void
-rewrite_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shd, fz_matrix ctm, float alpha, fz_color_params color_params)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_fill_shade(ctx, rewrite->target, shd, ctm, alpha, color_params);
-}
-
-static void
-rewrite_fill_image(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ctm, float alpha, fz_color_params color_params)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_fill_image(ctx, rewrite->target, img, ctm, alpha, color_params);
-}
-
-static void
-rewrite_fill_image_mask(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params color_params)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_fill_image_mask(ctx, rewrite->target, img, ctm, cs, color, alpha, color_params);
-}
-
-static void
-rewrite_clip_image_mask(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ctm, fz_rect scissor)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_clip_image_mask(ctx, rewrite->target, img, ctm, scissor);
-}
-
-static void
-rewrite_pop_clip(fz_context *ctx, fz_device *dev)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_pop_clip(ctx, rewrite->target);
-}
-
-static void
-rewrite_begin_mask(fz_context *ctx, fz_device *dev, fz_rect area, int luminosity, fz_colorspace *cs, const float *bc, fz_color_params params)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_begin_mask(ctx, rewrite->target, area, luminosity, cs, bc, params);
-}
-
-static void
-rewrite_end_mask(fz_context *ctx, fz_device *dev, fz_function *tr)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_end_mask_tr(ctx, rewrite->target, tr);
-}
-
-static void
-rewrite_begin_group(fz_context *ctx, fz_device *dev, fz_rect area, fz_colorspace *cs, int isolated, int knockout, int blendmode, float alpha)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_begin_group(ctx, rewrite->target, area, cs, isolated, knockout, blendmode, alpha);
-}
-
-static void
-rewrite_end_group(fz_context *ctx, fz_device *dev)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_end_group(ctx, rewrite->target);
-}
-
-static int
-rewrite_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id, int doc_id)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	return fz_begin_tile_tid(ctx, rewrite->target, area, view, xstep, ystep, ctm, id, doc_id);
-}
-
-static void
-rewrite_end_tile(fz_context *ctx, fz_device *dev)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_end_tile(ctx, rewrite->target);
-}
-
-static void
-rewrite_render_flags(fz_context *ctx, fz_device *dev, int set, int clear)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_render_flags(ctx, rewrite->target, set, clear);
-}
-
-static void
-rewrite_set_default_colorspaces(fz_context *ctx, fz_device *dev, fz_default_colorspaces *cs)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_set_default_colorspaces(ctx, rewrite->target, cs);
-}
-
-static void
-rewrite_begin_layer(fz_context *ctx, fz_device *dev, const char *layer_name)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_begin_layer(ctx, rewrite->target, layer_name);
-}
-
-static void
-rewrite_end_layer(fz_context *ctx, fz_device *dev)
-{
-	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
-
-	fz_end_layer(ctx, rewrite->target);
 }
 
 static void
@@ -976,7 +823,7 @@ rewrite_close(fz_context *ctx, fz_device *dev)
 			}
 		}
 
-		fz_ignore_text(ctx, rewrite->target, text, fz_identity);
+		fz_ignore_text(ctx, rewrite->super.passthrough, text, fz_identity);
 	}
 	fz_always(ctx)
 	{
@@ -992,14 +839,9 @@ new_rewrite_device(fz_context *ctx, fz_device *target, word_record **words, int 
 {
 	fz_rewrite_device *rewrite;
 
-	rewrite = fz_new_derived_device(ctx, fz_rewrite_device);
+	rewrite = fz_new_derived_passthrough_device(ctx, target, fz_rewrite_device);
 
 	rewrite->super.close_device = rewrite_close;
-
-	rewrite->super.fill_path = rewrite_fill_path;
-	rewrite->super.stroke_path = rewrite_stroke_path;
-	rewrite->super.clip_path = rewrite_clip_path;
-	rewrite->super.clip_stroke_path = rewrite_clip_stroke_path;
 
 	rewrite->super.fill_text = rewrite_fill_text;
 	rewrite->super.stroke_text = rewrite_stroke_text;
@@ -1007,28 +849,6 @@ new_rewrite_device(fz_context *ctx, fz_device *target, word_record **words, int 
 	rewrite->super.clip_stroke_text = rewrite_clip_stroke_text;
 	rewrite->super.ignore_text = rewrite_ignore_text;
 
-	rewrite->super.fill_shade = rewrite_fill_shade;
-	rewrite->super.fill_image = rewrite_fill_image;
-	rewrite->super.fill_image_mask = rewrite_fill_image_mask;
-	rewrite->super.clip_image_mask = rewrite_clip_image_mask;
-
-	rewrite->super.pop_clip = rewrite_pop_clip;
-
-	rewrite->super.begin_mask = rewrite_begin_mask;
-	rewrite->super.end_mask = rewrite_end_mask;
-	rewrite->super.begin_group = rewrite_begin_group;
-	rewrite->super.end_group = rewrite_end_group;
-
-	rewrite->super.begin_tile = rewrite_begin_tile;
-	rewrite->super.end_tile = rewrite_end_tile;
-
-	rewrite->super.render_flags = rewrite_render_flags;
-	rewrite->super.set_default_colorspaces = rewrite_set_default_colorspaces;
-
-	rewrite->super.begin_layer = rewrite_begin_layer;
-	rewrite->super.end_layer = rewrite_end_layer;
-
-	rewrite->target = target;
 	rewrite->words = words;
 	rewrite->words_len = words_len;
 	rewrite->current = 0;
@@ -1123,7 +943,7 @@ fz_new_ocr_device_with_options(fz_context *ctx,
 		const char *datadir,
 		int (*progress)(fz_context *, void *, int),
 		void *progress_arg,
-		const char *options)
+		fz_options *options)
 {
 #ifdef OCR_DISABLED
 	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "OCR Disabled in this build");
@@ -1132,9 +952,6 @@ fz_new_ocr_device_with_options(fz_context *ctx,
 
 	if (target == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "OCR devices require a target");
-
-	if (options == NULL)
-		options = "";
 
 	dev = fz_new_derived_device(ctx, fz_ocr_device);
 
@@ -1181,7 +998,7 @@ fz_new_ocr_device_with_options(fz_context *ctx,
 		fz_irect ibox;
 		fz_point res;
 
-		dev->options = fz_strdup(ctx, options);
+		dev->options = fz_keep_options(ctx, options);
 
 		dev->target = target;
 		dev->mediabox = mediabox;

@@ -3,6 +3,17 @@
 import os
 import datetime
 import re
+import subprocess
+from pathlib import Path
+import sys
+
+# Build the C API docs with mupdfwrap.py and put them in _static/generated
+script_path = Path(__file__).parent.parent / "scripts/mupdfwrap.py"
+
+process = subprocess.run([sys.executable, str(script_path), "--venv", "-b", "02", "--doc", "c", "--sync-docs", "_static/generated"],
+        check=1, # raise exception if command fails.
+        )
+print("C Docs built with mupdfwrap.py, return code:", process.returncode)
 
 def get_mupdf_version_from_header():
 	major = minor = patch = None

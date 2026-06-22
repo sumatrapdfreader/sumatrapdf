@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -48,7 +48,7 @@ static int usage(void)
 
 static pdf_document *doc_des = NULL;
 static pdf_document *doc_src = NULL;
-int output_page_count = 0;
+static int output_page_count = 0;
 
 static void page_merge(fz_context *ctx, int page_from, pdf_graft_map *graft_map)
 {

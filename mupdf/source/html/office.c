@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Artifex Software, Inc.
+// Copyright (C) 2023-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1115,7 +1115,7 @@ process_office_document_properties(fz_context *ctx, fz_archive *arch, const char
 }
 
 static fz_buffer *
-fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_archive *dir, const char *user_css, fz_office_to_html_opts *opts)
+fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_archive *dir, fz_office_to_html_opts *opts)
 {
 	fz_stream *stream = NULL;
 	fz_archive *archive = NULL;
@@ -1209,6 +1209,7 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 			fz_free(ctx, info.footnotes[i]);
 		fz_free(ctx, info.footnotes);
 		fz_drop_output(ctx, info.out);
+		fz_free(ctx, info.label);
 		fz_drop_archive(ctx, archive);
 		fz_drop_stream(ctx, stream);
 	}
@@ -1233,18 +1234,19 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 /* Office document handler */
 
 static fz_buffer *
-office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, fz_archive *zip, const char *user_css)
+office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, fz_archive *zip)
 {
 	fz_office_to_html_opts opts = { 0 };
 
-	return fz_office_to_html(ctx, set, buf, zip, user_css, &opts);
+	return fz_office_to_html(ctx, set, buf, zip, &opts);
 }
 
 static const fz_htdoc_format_t fz_htdoc_office =
 {
 	"Office document",
 	office_to_html,
-	0, 1, 0
+	0, 1,
+	FZ_HTML_FLAVOR_DEFAULT
 };
 
 static fz_document *

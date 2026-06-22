@@ -503,6 +503,7 @@ typedef struct
 
 typedef struct
 {
+	fz_text *clip_text; /* accumulator for clip mode text */
 	fz_text *text;
 	fz_rect text_bbox;
 	fz_matrix tlm;
@@ -520,7 +521,9 @@ typedef struct
 void pdf_tos_save(fz_context *ctx, pdf_text_object_state *tos, fz_matrix save[2]);
 void pdf_tos_restore(fz_context *ctx, pdf_text_object_state *tos, fz_matrix save[2]);
 fz_text *pdf_tos_get_text(fz_context *ctx, pdf_text_object_state *tos);
+fz_text *pdf_tos_get_clip_text(fz_context *ctx, pdf_text_object_state *tos);
 void pdf_tos_reset(fz_context *ctx, pdf_text_object_state *tos, int render);
+void pdf_tos_accumulate_clip(fz_context *ctx, pdf_text_object_state *tos);
 int pdf_tos_make_trm(fz_context *ctx, pdf_text_object_state *tos, pdf_text_state *text, pdf_font_desc *fontdesc, int cid, fz_matrix *trm, float *adv);
 void pdf_tos_move_after_char(fz_context *ctx, pdf_text_object_state *tos);
 void pdf_tos_translate(pdf_text_object_state *tos, float tx, float ty);

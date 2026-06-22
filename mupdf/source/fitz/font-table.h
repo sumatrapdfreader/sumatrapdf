@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -235,6 +235,7 @@ DEFNOTO(NotoSansSogdian_Regular_otf,			"Noto Sans Sogdian",			UCDN_SCRIPT_SOGDIA
 DEFNOTO(NotoSansSoraSompeng_Regular_otf,		"Noto Sans SoraSompeng",		UCDN_SCRIPT_SORA_SOMPENG)
 DEFNOTO(NotoSansSoyombo_Regular_otf,			"Noto Sans Soyombo",			UCDN_SCRIPT_SOYOMBO)
 DEFNOTO(NotoSansSundanese_Regular_otf,			"Noto Sans Sundanese",			UCDN_SCRIPT_SUNDANESE)
+DEFNOTO(NotoSansSunuwar_Regular_otf,			"Noto Sans Sunuwar",			UCDN_SCRIPT_SUNUWAR)
 DEFNOTO(NotoSansSylotiNagri_Regular_otf,		"Noto Sans Syloti Nagri",		UCDN_SCRIPT_SYLOTI_NAGRI)
 DEFNOTO(NotoSansSyriac_Regular_otf,			"Noto Sans Syriac",			UCDN_SCRIPT_SYRIAC)
 DEFNOTO(NotoSansTagalog_Regular_otf,			"Noto Sans Tagalog",			UCDN_SCRIPT_TAGALOG)

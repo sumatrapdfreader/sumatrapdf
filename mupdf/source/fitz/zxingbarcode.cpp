@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -220,6 +220,11 @@ char *barcode_decode_from_samples(fz_barcode_type *type, int n, int w, int h, un
 		format = ImageFormat::Lum;
 	else if (n == 3)
 		format = ImageFormat::RGB;
+	else
+	{
+		fz_strlcpy(exception, "unhandled number of components for barcode creation", exception_len);
+		return NULL;
+	}
 
 	/* The following has been carefully constructed to ensure
 	 * that the mixture of C++ and fz error handling works OK.

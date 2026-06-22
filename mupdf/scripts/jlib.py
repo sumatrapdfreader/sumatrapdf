@@ -1805,8 +1805,9 @@ def git_get_id_raw( directory):
     if not os.path.isdir( '%s/.git' % directory):
         return
     text = system(
-            f'cd {directory} && (PAGER= git show --pretty=oneline|head -n 1 && git diff)',
+            f'cd {directory} && git show --pretty=oneline|head -n 1 && git diff',
             out='return',
+            env_extra=dict(PAGER=''),
             )
     return text
 

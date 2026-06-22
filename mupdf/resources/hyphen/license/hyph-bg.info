@@ -890,4 +890,4 @@
 % positions.  If a word-division position is permitted only by the
 % patterns of `hyph-bg.sh --permissible`, then this position is less
 % recommended.
-%
+%

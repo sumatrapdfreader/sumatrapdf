@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -493,30 +493,78 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
 		node->x = x;
 		x += w;
 
-		switch (node->box->style->vertical_align)
-		{
-		default:
-		case VA_BASELINE:
-		case VA_SUB:
-		case VA_SUPER:
-		case VA_MIDDLE:
-			va = node->box->s.layout.baseline;
-			break;
-
-		case VA_TOP:
-		case VA_TEXT_TOP:
-			va = -baseline + node->box->s.layout.em * 0.8f;
-			break;
-		case VA_BOTTOM:
-		case VA_TEXT_BOTTOM:
-			va = -baseline + line_h - node->box->s.layout.em * 0.2f;
-			break;
-		}
-
 		if (node->type == FLOW_IMAGE)
-			node->y = y + baseline - node->h;
+		{
+			switch (node->box->style->vertical_align)
+			{
+			default:
+			case VA_BASELINE:
+				node->y = y + baseline - node->h;
+				break;
+			case VA_SUB:
+				node->y = y + baseline - node->h + node->box->s.layout.em / 5;
+				break;
+			case VA_SUPER:
+				node->y = y + baseline - node->h - node->box->s.layout.em / 3;
+				break;
+			case VA_MIDDLE:
+				// middle of the element with the baseline plus half the x-height of the parent
+				node->y = y + baseline - node->box->s.layout.em * 0.25f - node->h * 0.5f;
+				break;
+			case VA_TOP:
+				node->y = y;
+				break;
+			case VA_TEXT_TOP:
+				node->y = y + baseline - node->box->s.layout.em * 0.8f;
+				break;
+			case VA_BOTTOM:
+				node->y = y + line_h - node->h;
+				break;
+			case VA_TEXT_BOTTOM:
+				node->y = y + baseline + node->box->s.layout.em * 0.2f - node->h;
+				break;
+			case VA_PERCENT:
+			case VA_LENGTH:
+				node->y = y + baseline - node->h -
+					fz_from_css_number(
+						node->box->style->vertical_align_number,
+						node->box->s.layout.em,
+						fz_from_css_number_scale(node->box->style->line_height, node->box->s.layout.em),
+						0
+					);
+				break;
+			}
+		}
 		else
 		{
+			switch (node->box->style->vertical_align)
+			{
+			default:
+			case VA_BASELINE:
+			case VA_SUB:
+			case VA_SUPER:
+			case VA_MIDDLE:
+				va = node->box->s.layout.baseline;
+				break;
+
+			case VA_TOP:
+			case VA_TEXT_TOP:
+				va = -baseline + node->box->s.layout.em * 0.8f;
+				break;
+			case VA_BOTTOM:
+			case VA_TEXT_BOTTOM:
+				va = -baseline + line_h - node->box->s.layout.em * 0.2f;
+				break;
+			case VA_PERCENT:
+			case VA_LENGTH:
+				va = -fz_from_css_number(
+					node->box->style->vertical_align_number,
+					node->box->s.layout.em,
+					fz_from_css_number_scale(node->box->style->line_height, node->box->s.layout.em),
+					0
+				);
+				break;
+			}
 			node->y = y + baseline + va;
 			node->h = node->box->s.layout.em;
 		}
@@ -1024,6 +1072,10 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 				break_at = desperate;
 				break_w = desperate_w;
 			}
+
+			/* text-indent on right side is already baked into break_w */
+			if (box->markup_dir == FZ_BIDI_RTL)
+				indent = 0;
 
 			if (flush_line(ctx, box, ld, break_w, line_align, indent, line, break_at, restart))
 				return;
@@ -2278,15 +2330,6 @@ cell_rowspan(fz_html_box *cell)
 	return r;
 }
 
-static inline int
-cell_colspan(fz_html_box *cell)
-{
-	int c = cell->style->colspan;
-	if (c < 1)
-		return 1;
-	return c;
-}
-
 static void
 fixup_collapsed_cell_bottoms_for_row(fz_context *ctx, table_grid *grid, int row, fz_html_box *box)
 {
@@ -3200,6 +3243,10 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 void
 fz_layout_html(fz_context *ctx, fz_html *html, float w, float h, float em)
 {
+	/* Override requested page size if the meta viewport defines a width or height */
+	w = fz_max(w, html->meta_w);
+	h = fz_max(h, html->meta_h);
+
 	/* If we're already laid out to the specifications we need,
 	 * nothing to do. */
 	if (html->layout_w == w && html->layout_h == h && html->layout_em == em)
@@ -3244,6 +3291,8 @@ fz_layout_html(fz_context *ctx, fz_html *html, float w, float h, float em)
 
 /* === DRAW === */
 
+static void draw_rect(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page_top, fz_css_color color, float x0, float y0, float x1, float y1);
+
 typedef struct
 {
 	float rgb[3];
@@ -3265,6 +3314,18 @@ static inline int
 color_eq(fz_css_color a, fz_css_color b)
 {
 	return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+}
+
+static fz_css_color
+find_inline_background_color(fz_context *ctx, fz_html_box *box)
+{
+	while (box && box->type == BOX_INLINE)
+	{
+		if (box->style->background_color.a > 0)
+			return box->style->background_color;
+		box = box->up;
+	}
+	return (fz_css_color){ 0, 0, 0, 0 };
 }
 
 static int draw_flow_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart)
@@ -3330,6 +3391,7 @@ static int draw_flow_box(fz_context *ctx, fz_html_box *box, float page_top, floa
 			if (node->type == FLOW_WORD || node->type == FLOW_SPACE || node->type == FLOW_SHYPHEN)
 			{
 				string_walker walker;
+				fz_css_color bg;
 				const char *s;
 				float x, y;
 				float em;
@@ -3342,6 +3404,11 @@ static int draw_flow_box(fz_context *ctx, fz_html_box *box, float page_top, floa
 					continue;
 
 				em = node->box->s.layout.em;
+
+				bg = find_inline_background_color(ctx, node->box);
+				if (bg.a > 0)
+					draw_rect(ctx, dev, ctm, page_top, bg,
+						node->x, node->y - 0.8f * node->h, node->x + node->w, node->y + 0.2f * node->h);
 
 				line_width = fz_from_css_number(style->text_stroke_width, em, em, 0);
 				filling = style->text_fill_color.a != 0;
@@ -3465,6 +3532,10 @@ static int draw_flow_box(fz_context *ctx, fz_html_box *box, float page_top, floa
 					while (walker.start + k < walker.end)
 					{
 						n = fz_chartorune(&c, walker.start + k);
+
+						/* render with hyphen-minus glyph, but encode unicode text as soft-hyphen */
+						if (node->type == FLOW_SHYPHEN)
+							c = 0xAD;
 
 						for (i = 0; i < walker.glyph_count; ++i)
 						{

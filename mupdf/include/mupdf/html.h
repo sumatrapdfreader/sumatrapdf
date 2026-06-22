@@ -36,13 +36,21 @@ typedef struct fz_html_s fz_html;
 typedef struct fz_html_font_set_s fz_html_font_set;
 typedef struct fz_html_hyph_set_s fz_html_hyph_set;
 
+typedef enum
+{
+	FZ_HTML_FLAVOR_DEFAULT = 0,
+	FZ_HTML_FLAVOR_MOBI = 1,
+	FZ_HTML_FLAVOR_MARKDOWN = 2,
+	FZ_HTML_FLAVOR_FICTIONBOOK2 = 3
+} fz_html_flavor;
+
 typedef struct
 {
 	const char *format_name;
-	fz_buffer *(*convert_to_html)(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, fz_archive *dir, const char *user_css);
+	fz_buffer *(*convert_to_html)(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, fz_archive *dir);
 	int try_xml;
 	int try_html5;
-	int patch_mobi;
+	fz_html_flavor flavor;
 } fz_htdoc_format_t;
 
 fz_document *fz_htdoc_open_document_with_buffer(fz_context *ctx, fz_archive *dir, fz_buffer *buf, const fz_htdoc_format_t *format);

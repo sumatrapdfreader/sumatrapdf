@@ -58,6 +58,7 @@ struct fz_tuning_context
 	void *image_decode_arg;
 	fz_tune_image_scale_fn *image_scale;
 	void *image_scale_arg;
+	int image_rendering;
 };
 
 void fz_default_image_decode(void *arg, int w, int h, int l2factor, fz_irect *subarea);

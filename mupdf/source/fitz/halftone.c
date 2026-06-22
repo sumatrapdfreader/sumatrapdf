@@ -541,7 +541,7 @@ fz_bitmap *fz_new_bitmap_from_image(fz_context *ctx, fz_image *img, fz_halftone 
 void fz_invert_bitmap(fz_context *ctx, fz_bitmap *bmp)
 {
 	unsigned char *s = bmp->samples;
-	int w, h, w2 = (bmp->w+7)>>3;
+	int w, h, w2 = fz_bytes_from_bits(bmp->w);
 
 	for (h = bmp->h; h > 0; h--)
 	{

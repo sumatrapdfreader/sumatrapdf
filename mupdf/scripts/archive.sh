@@ -24,6 +24,7 @@ function make_submodule_archive {
 # Remove test files from thirdparty source archives.
 
 make_submodule_archive brotli		tests
+make_submodule_archive cmark-gfm	test
 make_submodule_archive curl		tests
 make_submodule_archive extract		test
 make_submodule_archive freeglut

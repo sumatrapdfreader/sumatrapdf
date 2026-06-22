@@ -198,9 +198,15 @@ pdf_document *pdf_keep_document(fz_context *ctx, pdf_document *doc);
 	detect any errors.
 
 	The result of the check is saved, so calling this function again
-	after the initial check is a no-op.
+	after a successful completion is a no-op.
+
+	If this function throws (either because of out of memory (SYSTEM),
+	or other reasons) then the file should be considered suspect.
+
+	Returns non-zero if a repair was triggered during checking, and
+	hence changes to the file may have been lost.
 */
-void pdf_check_document(fz_context *ctx, pdf_document *doc);
+int pdf_check_document(fz_context *ctx, pdf_document *doc);
 
 /*
 	down-cast a fz_document to a pdf_document.
@@ -495,6 +501,8 @@ struct pdf_document
 	int repair_attempted;
 	int repair_in_progress;
 	int non_structural_change; /* True if we are modifying the document in a way that does not change the (page) structure */
+	int struct_tree_repaired;
+	int struct_tree_result;
 
 	/* State indicating which file parsing method we are using */
 	int file_reading_linearly;
@@ -552,6 +560,7 @@ struct pdf_document
 	struct {
 		fz_hash_table *fonts;
 		fz_hash_table *colorspaces;
+		fz_hash_table *images;
 	} resources;
 
 	int orphans_max;
@@ -561,6 +570,8 @@ struct pdf_document
 	fz_xml_doc *xfa;
 
 	pdf_journal *journal;
+
+	int throw_on_repair;
 };
 
 pdf_document *pdf_create_document(fz_context *ctx);
@@ -794,6 +805,9 @@ FZ_DATA extern const pdf_write_options pdf_default_write_options;
 */
 pdf_write_options *pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *args);
 
+void pdf_init_write_options(fz_context *ctx, pdf_write_options *opts);
+void pdf_apply_write_options(fz_context *ctx, pdf_write_options *opts, fz_options *args);
+
 /*
 	Returns true if there are digital signatures waiting to
 	to updated on save.
@@ -936,5 +950,114 @@ void pdf_drop_object_labels(fz_context *ctx, pdf_object_labels *g);
 */
 typedef void (pdf_label_object_fn)(fz_context *ctx, void *arg, const char *label);
 void pdf_label_object(fz_context *ctx, pdf_object_labels *g, int num, pdf_label_object_fn *callback, void *arg);
+
+typedef enum
+{
+	PDF_STRUCT_NOT_PRESENT = 0,
+
+	/* A struct tree is present in the file. */
+	PDF_STRUCT_PRESENT = 1,
+
+	/* The struct tree is unrepairably broken. */
+	PDF_STRUCT_BROKEN = 2,
+
+	/* A problem was found, but was fixed. */
+	PDF_STRUCT_FIXED = 4,
+
+	/* The Struct tree contains attributes. */
+	PDF_STRUCT_HAS_ATTRIBUTES = 8,
+
+	/* The Struct tree contains Table attributes. */
+	PDF_STRUCT_HAS_TABLE_ATTRIBUTES = 16,
+
+	/* The Struct tree contains Table cell spanning attributes. */
+	PDF_STRUCT_HAS_TABLE_SPAN_ATTRIBUTES = 32,
+
+	/* The Struct tree contains a cycle. */
+	PDF_STRUCT_HAS_CYCLE = 64
+} pdf_check_structure_result;
+
+/*
+	Run a validation pass over the structure tree, and attempt to repair
+	any problems found. Also returns information about the state of the
+	tree.
+
+	Returns a code with bits set as above.
+*/
+pdf_check_structure_result pdf_check_structure_tree(fz_context *ctx, pdf_document *doc);
+
+/*
+	Helper functions to modify what happens when a repair is kicked off.
+	Most of the time the transparent repair magic works fine, but if a repair
+	happens this can invalidate some pointers held to internal structures.
+
+	To cope with this, we allow the document to be put into a state whereby
+	any repair will trigger an exception (FZ_ERROR_REPAIRED) after any repair.
+
+	Code can therefore use this mechanism to safely catch and retry complete
+	operations if a repair occurs.
+
+	Because this mechanism is so frequently used when altering xref_base, we
+	build the xref_base store/restore into these functions.
+
+	The pattern of code is therefore as follows:
+
+	void pdf_do_some_operation(fz_context *ctx, pdf_document *doc, ...)
+	{
+		int xref_base; // Variable to store the initial xref_base value
+		int repaired = 0;
+
+	retry_on_repair:
+		pdf_start_throw_on_repair(ctx, doc, &xref_base);
+
+		fz_try(ctx)
+		{
+			// Actual operation goes here. This may involved changing
+			// doc->xref_base. e.g. doc->xref_base = initial
+		}
+		fz_always(ctx)
+			pdf_end_throw_on_repair(ctx, doc, xref_base);
+		fz_catch(ctx)
+		{
+			if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+			{
+				fz_report_error(ctx);
+				repaired = 1;
+				// doc->xref_base will always have been reset to be something legal
+				// here, but if you have been passed in an xref level to operate at
+				// you may want to check that that level is still valid here!
+				// e.g. if (initial >= doc->num_xref_sections) return;
+				goto retry_on_repair;
+			}
+			fz_rethrow(ctx);
+		}
+
+		// If we repaired, then we swallowed the exception. There may have been callers above
+		// us that were wanting to be informed. This call takes care of that if required.
+		if (repaired)
+			pdf_maybe_throw_after_repair(ctx, doc);
+	}
+*/
+
+/*
+	Prepare for an operation that can't easily be interrupted by a repair, and should
+	instead be retried.
+
+	See above for example code.
+*/
+void pdf_start_throw_on_repair(fz_context *ctx, pdf_document *doc, int *xref_base);
+
+/*
+	Mark the end of an operation that can't easily be interrupted by a repair, and
+	should instead be retried.
+
+	See above for example code.
+*/
+void pdf_end_throw_on_repair(fz_context *ctx, pdf_document *doc, int xref_base);
+
+/*
+	If a caller of ours is expecting an exception on a repair, give them one.
+*/
+void pdf_maybe_throw_after_repair(fz_context *ctx, pdf_document *doc);
 
 #endif

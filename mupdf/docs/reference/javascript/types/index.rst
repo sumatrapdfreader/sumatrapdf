@@ -32,6 +32,8 @@ Types
 	Point
 	Quad
 	Rect
+	Search
+	SearchResult
 	Shade
 	Story
 	StrokeState

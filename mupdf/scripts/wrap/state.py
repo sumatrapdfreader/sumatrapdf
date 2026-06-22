@@ -46,6 +46,12 @@ omit_fns = [
         'fz_stdods',
         ]
 
+omit_fns_prefixes = [
+        # These fns are not worth wrapping, and they break builds on
+        # macos-15-intel and pyodide. Possibly because `HAVE_STDCKDINT_H` has
+        # different values with libclang vs cc.
+        'fz_ckd_',
+        ]
 omit_methods = []
 
 
@@ -120,7 +126,12 @@ class State:
                 if fnname in omit_fns:
                     jlib.log1('{fnname=} is in omit_fns')
                 else:
-                    fns[ fnname] = cursor
+                    for omit_fn_prefix in omit_fns_prefixes:
+                        if fnname.startswith(omit_fn_prefix):
+                            jlib.log1('{fnname=} matches {omit_fn_prefix=}.')
+                            break
+                    else:
+                        fns[ fnname] = cursor
             if (cursor.kind == clang.cindex.CursorKind.VAR_DECL
                     and cursor.linkage == clang.cindex.LinkageKind.EXTERNAL
                     ):
@@ -351,8 +362,9 @@ class BuildDirs:
             self.cpu = Cpu(cpu_name())
             self.python_version = python_version()
 
-        # Set Py_LIMITED_API if it occurs in dir_so.
+        # Set self.Py_LIMITED_API and self.nogil.
         self.Py_LIMITED_API = None
+        self.nogil = False
         flags = os.path.basename(self.dir_so).split('-')
         for flag in flags:
             if flag in ('Py_LIMITED_API', 'PLA'):
@@ -363,13 +375,17 @@ class BuildDirs:
                 self.Py_LIMITED_API = flag[len('Py_LIMITED_API_'):]
             elif flag.startswith('PLA_'):
                 self.Py_LIMITED_API = flag[len('PLA_'):]
+            if flag == 'nogil':
+                self.nogil = True
+
         jlib.log(f'{self.Py_LIMITED_API=}')
 
-        # Set swig .i and .cpp paths, including Py_LIMITED_API so that
-        # different values of Py_LIMITED_API can be tested without rebuilding
-        # unnecessarily.
+        # Set swig .i and .cpp paths, including Py_LIMITED_API and nogil so
+        # that different values of Py_LIMITED_API and nogil can be tested
+        # without rebuilding unnecessarily.
         Py_LIMITED_API_infix = f'-Py_LIMITED_API_{self.Py_LIMITED_API}' if self.Py_LIMITED_API else ''
-        self.mupdfcpp_swig_i    = lambda language: f'{self.dir_mupdf}/platform/{language}/mupdfcpp_swig{Py_LIMITED_API_infix}.i'
+        nogil_infix = '-nogil' if self.nogil else ''
+        self.mupdfcpp_swig_i    = lambda language: f'{self.dir_mupdf}/platform/{language}/mupdfcpp_swig{Py_LIMITED_API_infix}{nogil_infix}.i'
         self.mupdfcpp_swig_cpp  = lambda language: self.mupdfcpp_swig_i(language) + '.cpp'
 
     def windows_build_type(self):

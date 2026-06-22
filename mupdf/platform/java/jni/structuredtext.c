@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -175,7 +175,7 @@ java_stext_walk(JNIEnv *env, fz_context *ctx, jobject walker, fz_stext_block *bl
 			jbbox = to_Rect_safe(ctx, env, block->bbox);
 			if (!jbbox) return;
 
-			(*env)->CallVoidMethod(env, walker, mid_StructuredTextWalker_beginTextBlock, jbbox);
+			(*env)->CallVoidMethod(env, walker, mid_StructuredTextWalker_beginTextBlock, jbbox, block->u.t.flags);
 			if ((*env)->ExceptionCheck(env)) return;
 
 			(*env)->DeleteLocalRef(env, jbbox);
@@ -206,7 +206,7 @@ java_stext_walk(JNIEnv *env, fz_context *ctx, jobject walker, fz_stext_block *bl
 					if (!jquad) return;
 
 					(*env)->CallVoidMethod(env, walker, mid_StructuredTextWalker_onChar,
-						ch->c, jorigin, jfont, ch->size, jquad, ch->argb, ch->flags);
+						ch->c, jorigin, jfont, ch->size, jquad, ch->argb, ch->flags, ch->bidi);
 					if ((*env)->ExceptionCheck(env)) return;
 
 					(*env)->DeleteLocalRef(env, jquad);

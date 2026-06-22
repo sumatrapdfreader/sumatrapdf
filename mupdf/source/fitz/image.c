@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -65,19 +65,24 @@ typedef struct
 fz_image *
 fz_keep_image(fz_context *ctx, fz_image *image)
 {
-	return fz_keep_key_storable(ctx, &image->key_storable);
+	if (image)
+		return fz_keep_key_storable(ctx, &image->key_storable);
+	return NULL;
 }
 
 fz_image *
 fz_keep_image_store_key(fz_context *ctx, fz_image *image)
 {
-	return fz_keep_key_storable_key(ctx, &image->key_storable);
+	if (image)
+		return fz_keep_key_storable_key(ctx, &image->key_storable);
+	return NULL;
 }
 
 void
 fz_drop_image_store_key(fz_context *ctx, fz_image *image)
 {
-	fz_drop_key_storable_key(ctx, &image->key_storable);
+	if (image)
+		fz_drop_key_storable_key(ctx, &image->key_storable);
 }
 
 static int
@@ -131,6 +136,14 @@ fz_needs_reap_image_key(fz_context *ctx, void *key_)
 	return fz_key_storable_needs_reaping(ctx, &key->image->key_storable);
 }
 
+void fz_image_digest(fz_context *ctx, fz_image *img, unsigned char digest[16])
+{
+	if (img->get_digest)
+		img->get_digest(ctx, img, digest);
+	else
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot checksum this type of image");
+}
+
 static const fz_store_type fz_image_store_type =
 {
 	"fz_image",
@@ -145,7 +158,8 @@ static const fz_store_type fz_image_store_type =
 void
 fz_drop_image(fz_context *ctx, fz_image *image)
 {
-	fz_drop_key_storable(ctx, &image->key_storable);
+	if (image)
+		fz_drop_key_storable(ctx, &image->key_storable);
 }
 
 static void
@@ -582,8 +596,13 @@ subsample_next(fz_context *ctx, fz_stream *stm, size_t len)
 static fz_stream *
 subsample_stream(fz_context *ctx, fz_stream *src, int w, int h, int n, int l2extra)
 {
-	l2sub_state *state = fz_malloc(ctx, sizeof(l2sub_state) + w*(size_t)(n<<l2extra));
+	int stride;
+	l2sub_state *state;
 
+	if (fz_ckd_mul_int(&stride, w, n << l2extra))
+		fz_throw(ctx, FZ_ERROR_LIMIT, "integer overflow in image");
+
+	state = fz_malloc(ctx, sizeof(l2sub_state) + stride);
 	state->src = src;
 	state->w = w;
 	state->h = h;
@@ -822,6 +841,44 @@ compressed_image_get_pixmap(fz_context *ctx, fz_image *image_, fz_irect *subarea
 		break;
 	case FZ_IMAGE_JPX:
 		tile = fz_load_jpx(ctx, image->buffer->buffer->data, image->buffer->buffer->len, image->super.colorspace);
+		if (image->super.use_colorkey)
+		{
+			size_t len;
+			fz_pixmap *keyed = NULL;
+			fz_stream *sample_stream = NULL;
+			fz_stream *unpstream = NULL;
+
+			fz_var(keyed);
+			fz_var(sample_stream);
+			fz_var(unpstream);
+
+			fz_try(ctx)
+			{
+				indexed = fz_colorspace_is_indexed(ctx, image->super.colorspace);
+				keyed = fz_new_pixmap(ctx, tile->colorspace, tile->w, tile->h, NULL, 1);
+				sample_stream = fz_open_memory(ctx, tile->samples, tile->stride * tile->h);
+				unpstream = fz_unpack_stream(ctx, sample_stream, 8, tile->w, tile->h, tile->n, indexed, 1, 0);
+
+				len = fz_read(ctx, unpstream, keyed->samples, keyed->stride * keyed->h);
+				assert(len == (size_t) keyed->stride * keyed->h);
+				(void) len; /* Silence warning in release builds */
+
+				fz_mask_color_key(ctx, keyed, tile->n, 8, image->super.colorkey, indexed);
+			}
+			fz_always(ctx)
+			{
+				fz_drop_stream(ctx, unpstream);
+				fz_drop_stream(ctx, sample_stream);
+			}
+			fz_catch(ctx)
+			{
+				fz_drop_pixmap(ctx, keyed);
+				fz_rethrow(ctx);
+			}
+
+			fz_drop_pixmap(ctx, tile);
+			tile = keyed;
+		}
 		if (image->super.use_decode &&
 			!fz_colorspace_is_indexed(ctx, image->super.colorspace) &&
 			!fz_colorspace_is_lab(ctx, image->super.colorspace)
@@ -925,13 +982,15 @@ void fz_default_image_decode(void *arg, int w, int h, int l2factor, fz_irect *su
 	else
 	{
 		/* Clip to the edges if they are within 1% */
-		if (subarea->x0 <= w/100)
+		int w_1pc = w / 100;
+		int h_1pc = h / 100;
+		if (subarea->x0 <= w_1pc)
 			subarea->x0 = 0;
-		if (subarea->y0 <= h/100)
+		if (subarea->y0 <= h_1pc)
 			subarea->y0 = 0;
-		if (subarea->x1 >= w*99/100)
+		if (subarea->x1 >= w - w_1pc)
 			subarea->x1 = w;
-		if (subarea->y1 >= h*99/100)
+		if (subarea->y1 >= h - h_1pc)
 			subarea->y1 = h;
 	}
 }
@@ -948,6 +1007,8 @@ fz_find_image_tile(fz_context *ctx, fz_image *image, fz_image_key *key, fz_matri
 			update_ctm_for_subarea(ctm, &key->rect, image->w, image->h);
 			return tile;
 		}
+		if (ctx->tuning->image_rendering != FZ_IMAGE_RENDERING_SPEED)
+			break;
 		key->l2factor--;
 	}
 	while (key->l2factor >= 0);
@@ -1014,7 +1075,7 @@ fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subar
 	 * a fudge factor of +2 here to allow for the possibility of
 	 * expansion due to grid fitting. */
 	l2factor = 0;
-	if (w > 0 && h > 0)
+	if (ctx->tuning->image_rendering != FZ_IMAGE_RENDERING_QUALITY && w > 0 && h > 0)
 	{
 		while (image->w>>(l2factor+1) >= w+2 && image->h>>(l2factor+1) >= h+2 && l2factor < 6)
 			l2factor++;
@@ -1087,6 +1148,8 @@ fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subar
 	fz_catch(ctx)
 	{
 		/* Do nothing */
+		if (fz_caught(ctx) == FZ_ERROR_SYSTEM)
+			fz_drop_pixmap(ctx, tile);
 		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
 		fz_report_error(ctx);
 	}
@@ -1163,6 +1226,13 @@ pixmap_image_get_size(fz_context *ctx, fz_image *image)
 	return sizeof(fz_pixmap_image) + fz_pixmap_size(ctx, im->tile);
 }
 
+static void
+pixmap_image_get_digest(fz_context *ctx, fz_image *image, unsigned char digest[16])
+{
+	fz_pixmap_image *im = (fz_pixmap_image *)image;
+	fz_md5_pixmap(ctx, im->tile, digest);
+}
+
 size_t fz_image_size(fz_context *ctx, fz_image *im)
 {
 	if (im == NULL)
@@ -1181,6 +1251,7 @@ fz_new_image_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, fz_image *mask)
 				NULL, NULL, mask, fz_pixmap_image,
 				pixmap_image_get_pixmap,
 				pixmap_image_get_size,
+				pixmap_image_get_digest,
 				drop_pixmap_image);
 	image->tile = fz_keep_pixmap(ctx, pixmap);
 	image->super.decoded = 1;
@@ -1194,6 +1265,7 @@ fz_new_image_of_size(fz_context *ctx, int w, int h, int bpc, fz_colorspace *colo
 		const int *colorkey, fz_image *mask, size_t size,
 		fz_image_get_pixmap_fn *get_pixmap,
 		fz_image_get_size_fn *get_size,
+		fz_image_get_digest_fn *get_digest,
 		fz_drop_image_fn *drop)
 {
 	fz_image *image;
@@ -1207,6 +1279,7 @@ fz_new_image_of_size(fz_context *ctx, int w, int h, int bpc, fz_colorspace *colo
 	image->drop_image = drop;
 	image->get_pixmap = get_pixmap;
 	image->get_size = get_size;
+	image->get_digest = get_digest;
 	image->w = w;
 	image->h = h;
 	image->xres = xres;
@@ -1274,6 +1347,13 @@ compressed_image_get_size(fz_context *ctx, fz_image *image)
 	return sizeof(fz_pixmap_image) + (im->buffer && im->buffer->buffer ? im->buffer->buffer->cap : 0);
 }
 
+static void
+compressed_image_get_digest(fz_context *ctx, fz_image *image, unsigned char digest[16])
+{
+	fz_compressed_image *im = (fz_compressed_image *)image;
+	fz_md5_buffer(ctx, im->buffer->buffer, digest);
+}
+
 fz_image *
 fz_new_image_from_compressed_buffer(fz_context *ctx, int w, int h,
 	int bpc, fz_colorspace *colorspace,
@@ -1290,6 +1370,7 @@ fz_new_image_from_compressed_buffer(fz_context *ctx, int w, int h,
 					colorkey, mask, fz_compressed_image,
 					compressed_image_get_pixmap,
 					compressed_image_get_size,
+					compressed_image_get_digest,
 					drop_compressed_image);
 		image->buffer = buffer;
 	}
@@ -1654,7 +1735,7 @@ display_list_image_get_pixmap(fz_context *ctx, fz_image *image_, fz_irect *subar
 {
 	fz_display_list_image *image = (fz_display_list_image *)image_;
 	fz_matrix ctm;
-	fz_device *dev;
+	fz_device *dev = NULL;
 	fz_pixmap *pix;
 
 	fz_var(dev);
@@ -1723,6 +1804,18 @@ display_list_image_get_size(fz_context *ctx, fz_image *image_)
 	return sizeof(fz_display_list_image) + 4096; /* FIXME */
 }
 
+static void
+display_list_image_get_digest(fz_context *ctx, fz_image *image_, unsigned char digest[16])
+{
+	/* ugly hack: checksum transform and display list pointer */
+	fz_display_list_image *image = (fz_display_list_image *)image_;
+	fz_md5 state;
+	fz_md5_init(&state);
+	fz_md5_update(&state, (unsigned char *) &image->transform, sizeof (image->transform));
+	fz_md5_update(&state, (unsigned char *) &image->list, sizeof (image->list));
+	fz_md5_final(&state, digest);
+}
+
 fz_image *fz_new_image_from_display_list(fz_context *ctx, float w, float h, fz_display_list *list)
 {
 	fz_display_list_image *image;
@@ -1736,6 +1829,7 @@ fz_image *fz_new_image_from_display_list(fz_context *ctx, float w, float h, fz_d
 				NULL, NULL, NULL, fz_display_list_image,
 				display_list_image_get_pixmap,
 				display_list_image_get_size,
+				display_list_image_get_digest,
 				drop_display_list_image);
 	image->super.scalable = 1;
 	image->transform = fz_scale(1 / w, 1 / h);

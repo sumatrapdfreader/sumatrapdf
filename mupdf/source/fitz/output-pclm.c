@@ -32,23 +32,44 @@ const char *fz_pclm_write_options_usage =
 	"\tstrip-height=N: Strip height (default 16)\n"
 	"\n";
 
+void
+fz_init_pclm_options(fz_context *ctx, fz_pclm_options *opts)
+{
+	memset(opts, 0, sizeof *opts);
+}
+
 fz_pclm_options *
 fz_parse_pclm_options(fz_context *ctx, fz_pclm_options *opts, const char *args)
 {
+	fz_options *options = fz_new_options(ctx, args);
+	fz_try(ctx)
+	{
+		fz_init_pclm_options(ctx, opts);
+		fz_apply_pclm_options(ctx, opts, options);
+		fz_throw_on_unused_options(ctx, options, "pclm");
+	}
+	fz_always(ctx)
+		fz_drop_options(ctx, options);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return opts;
+}
+
+void
+fz_apply_pclm_options(fz_context *ctx, fz_pclm_options *opts, fz_options *args)
+{
 	const char *val;
 
-	memset(opts, 0, sizeof *opts);
-
-	if (fz_has_option(ctx, args, "compression", &val))
+	if (fz_lookup_option(ctx, args, "compression", &val))
 	{
-		if (fz_option_eq(val, "none"))
+		if (!strcmp(val, "none"))
 			opts->compress = 0;
-		else if (fz_option_eq(val, "flate"))
+		else if (!strcmp(val, "flate"))
 			opts->compress = 1;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unsupported PCLm compression %s (none, or flate only)", val);
 	}
-	if (fz_has_option(ctx, args, "strip-height", &val))
+	if (fz_lookup_option(ctx, args, "strip-height", &val))
 	{
 		int i = fz_atoi(val);
 		if (i <= 0)
@@ -56,7 +77,7 @@ fz_parse_pclm_options(fz_context *ctx, fz_pclm_options *opts, const char *args)
 		opts->strip_height = i;
 	}
 
-	return opts;
+	fz_validate_options(ctx, args, "pclm");
 }
 
 void
@@ -403,22 +424,29 @@ pclm_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 }
 
 fz_document_writer *
-fz_new_pclm_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+fz_new_pclm_writer_with_output(fz_context *ctx, fz_output *out, const char *options_string)
 {
+	fz_options *options = NULL;
 	fz_pclm_writer *wri = NULL;
 
+	fz_var(options);
 	fz_var(wri);
 
 	fz_try(ctx)
 	{
+		options = fz_new_options(ctx, options_string);
 		wri = fz_new_derived_document_writer(ctx, fz_pclm_writer, pclm_begin_page, pclm_end_page, pclm_close_writer, pclm_drop_writer);
-		fz_parse_draw_options(ctx, &wri->draw, options);
-		fz_parse_pclm_options(ctx, &wri->pclm, options);
+		fz_init_draw_options(ctx, &wri->draw);
+		fz_init_pclm_options(ctx, &wri->pclm);
+		fz_apply_draw_options(ctx, &wri->draw, options);
+		fz_apply_pclm_options(ctx, &wri->pclm, options);
+		fz_throw_on_unused_options(ctx, options, "draw and ocr");
 		wri->out = out;
 		wri->bander = fz_new_pclm_band_writer(ctx, wri->out, &wri->pclm);
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_options(ctx, options);
 		fz_drop_output(ctx, out);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);

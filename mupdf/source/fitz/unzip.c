@@ -397,8 +397,10 @@ static void read_zip_dir_imp(fz_context *ctx, fz_zip_archive *zip, int64_t start
 						sizeleft -= 4;
 						fz_free(ctx, name);
 						name = NULL;
-						name = Memento_label(fz_malloc(ctx, sizeleft + 1), "zip_name");
-						fz_read(ctx, file, (unsigned char *)name, sizeleft);
+						name = Memento_label(fz_malloc(ctx, sizeleft + 1), "zip_unicode_name");
+						n = fz_read(ctx, file, (unsigned char *)name, sizeleft);
+						if (n < (size_t)sizeleft)
+							fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in zip unicode file name");
 						name[sizeleft] = 0;
 						sizeleft = 0;
 					}

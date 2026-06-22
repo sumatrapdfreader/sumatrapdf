@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -166,10 +166,10 @@ usage(void)
 {
 	fprintf(stderr, "Usage: SumatraPDF trim [options] <input filename>\n");
 	fprintf(stderr, "\t-b -\tWhich box to trim to (MediaBox(default), CropBox, BleedBox, TrimBox, ArtBox)\n");
+	fprintf(stderr, "\t-f\tFallback to mediabox if specified box not available\n");
 	fprintf(stderr, "\t-m -\tAdd margins to box (+ve for inwards, -ve outwards).\n");
 	fprintf(stderr, "\t\t\t<All> or <V>,<H> or <T>,<R>,<B>,<L>\n");
 	fprintf(stderr, "\t-e\tExclude contents of box, rather than include them\n");
-	fprintf(stderr, "\t-f\tFallback to mediabox if specified box not available\n");
 	fprintf(stderr, "\t-o -\tOutput file\n");
 	return 1;
 }

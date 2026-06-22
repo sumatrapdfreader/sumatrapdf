@@ -169,9 +169,6 @@ void fz_vlog_error_printf(fz_context *ctx, const char *fmt, va_list ap);
 */
 void fz_log_error(fz_context *ctx, const char *str);
 
-void fz_start_throw_on_repair(fz_context *ctx);
-void fz_end_throw_on_repair(fz_context *ctx);
-
 /**
 	Now, a debugging feature. If FZ_VERBOSE_EXCEPTIONS is 1 then
 	some of the above functions are replaced by versions that print
@@ -520,6 +517,37 @@ void fz_tune_image_decode(fz_context *ctx, fz_tune_image_decode_fn *image_decode
 void fz_tune_image_scale(fz_context *ctx, fz_tune_image_scale_fn *image_scale, void *arg);
 
 /**
+	Set the behavior for image rendering and resampling.
+*/
+enum {
+	// We may box filter images down by a power of 2, before scaling
+	// accurately to get the final results. Rendering will be stable.
+	// This may be faster and may use less memory than 'QUALITY'
+	// rendering, for a (probably imperceptible) degradation of quality.
+	FZ_IMAGE_RENDERING_BALANCE = 0,
+
+	// We will never box filter images, and instead will always scale
+	// accurately. Rendering will be stable. This may be slower and
+	// may use more memory than 'HYBRID' rendering, for a (probably
+	// imperceptible) improvement in quality.
+	FZ_IMAGE_RENDERING_QUALITY = 1,
+
+	// We will box filter images down by a power of 2, before scaling
+	// accurately to get the final results. We will accept image
+	// tiles that have previously been box scaled and cached at higher
+	// quality than we need, thus saving us the decode again, at the
+	// cost of "rendering instability". i.e. the exact results of
+	// rendering may differ according to the order of rendering
+	// operations that have happened in the past. The quality
+	// differences here are rarely spotted, and very minor, but
+	// genuinely exist. In an interactive application, these are
+	// well within acceptability, but in an system where results are
+	// being compared pixel-by-pixel, this is probably best avoided.
+	FZ_IMAGE_RENDERING_SPEED = 2,
+};
+void fz_tune_image_rendering(fz_context *ctx, int behavior);
+
+/**
 	Get the number of bits of antialiasing we are
 	using (for graphics). Between 0 and 8.
 */
@@ -659,9 +687,12 @@ void fz_disable_icc(fz_context *ctx);
 	Throws exception in the event of failure to allocate.
 */
 #define fz_malloc_array(CTX, COUNT, TYPE) \
-	((TYPE*)Memento_label(fz_malloc(CTX, (COUNT) * sizeof(TYPE)), #TYPE "[]"))
+	((TYPE*)Memento_label(fz_malloc_array_imp((CTX), (COUNT), sizeof(TYPE)), #TYPE "[]"))
 #define fz_realloc_array(CTX, OLD, COUNT, TYPE) \
-	((TYPE*)Memento_label(fz_realloc(CTX, OLD, (COUNT) * sizeof(TYPE)), #TYPE "[]"))
+	((TYPE*)Memento_label(fz_realloc_array_imp((CTX), (OLD), (COUNT), sizeof(TYPE)), #TYPE "[]"))
+
+void *fz_malloc_array_imp(fz_context *ctx, size_t nmemb, size_t size);
+void *fz_realloc_array_imp(fz_context *ctx, void *p, size_t nmemb, size_t size);
 
 /**
 	Allocate uninitialized memory of a given size.
@@ -707,11 +738,13 @@ void fz_free(fz_context *ctx, void *p);
 	Flexible array member allocation helpers.
 */
 #define fz_malloc_flexible(ctx, T, M, count) \
-	Memento_label(fz_calloc(ctx, 1, offsetof(T, M) + sizeof(*((T*)0)->M) * (count)), #T)
+	((T*)Memento_label(fz_calloc(ctx, 1, offsetof(T, M) + sizeof(*((T*)0)->M) * (count)), #T))
 #define fz_realloc_flexible(ctx, p, T, M, count) \
-	Memento_label(fz_realloc(ctx, p, offsetof(T, M) + sizeof(*((T*)0)->M) * (count)), #T)
+	((T*)Memento_label(fz_realloc(ctx, p, offsetof(T, M) + sizeof(*((T*)0)->M) * (count)), #T))
 #define fz_pool_alloc_flexible(ctx, pool, T, M, count) \
-	fz_pool_alloc(ctx, pool, offsetof(T, M) + sizeof(*((T*)0)->M) * (count))
+	((T*)fz_pool_alloc(ctx, pool, offsetof(T, M) + sizeof(*((T*)0)->M) * (count)))
+#define fz_sizeof_flexible(T, M, count) \
+	(offsetof(T, M) + sizeof(*((T*)0)->M) * (count))
 
 /**
 	fz_malloc equivalent that returns NULL rather than throwing
@@ -878,7 +911,6 @@ struct fz_context
 #if FZ_ENABLE_ICC
 	int icc_enabled;
 #endif
-	int throw_on_repair;
 
 	/* TODO: should these be unshared? */
 	fz_document_handler_context *handler;
@@ -919,8 +951,19 @@ fz_unlock(fz_context *ctx, int lock)
 
 /* Lock-safe reference counting functions */
 
+#define fz_keep_imp(C,P,R) fz_keep_imp_aux((C), (P), (P) ? (R) : NULL)
+#define fz_keep_imp8(C,P,R) fz_keep_imp8_aux((C), (P), (P) ? (R) : NULL)
+#define fz_keep_imp16(C,P,R) fz_keep_imp16_aux((C), (P), (P) ? (R) : NULL)
+
+#define fz_keep_imp_locked(C,P,R) fz_keep_imp_locked_aux((C), (P), (P) ? (R) : NULL)
+#define fz_keep_imp8_locked(C,P,R) fz_keep_imp8_locked_aux((C), (P), (P) ? (R) : NULL)
+
+#define fz_drop_imp(C,P,R) fz_drop_imp_aux((C), (P), (P) ? (R) : NULL)
+#define fz_drop_imp8(C,P,R) fz_drop_imp8_aux((C), (P), (P) ? (R) : NULL)
+#define fz_drop_imp16(C,P,R) fz_drop_imp16_aux((C), (P), (P) ? (R) : NULL)
+
 static inline void *
-fz_keep_imp(fz_context *ctx, void *p, int *refs)
+fz_keep_imp_aux(fz_context *ctx, void *p, int *refs)
 {
 	if (p)
 	{
@@ -937,7 +980,7 @@ fz_keep_imp(fz_context *ctx, void *p, int *refs)
 }
 
 static inline void *
-fz_keep_imp_locked(fz_context *ctx FZ_UNUSED, void *p, int *refs)
+fz_keep_imp_locked_aux(fz_context *ctx FZ_UNUSED, void *p, int *refs)
 {
 	if (p)
 	{
@@ -952,7 +995,7 @@ fz_keep_imp_locked(fz_context *ctx FZ_UNUSED, void *p, int *refs)
 }
 
 static inline void *
-fz_keep_imp8_locked(fz_context *ctx FZ_UNUSED, void *p, int8_t *refs)
+fz_keep_imp8_locked_aux(fz_context *ctx FZ_UNUSED, void *p, int8_t *refs)
 {
 	if (p)
 	{
@@ -967,7 +1010,7 @@ fz_keep_imp8_locked(fz_context *ctx FZ_UNUSED, void *p, int8_t *refs)
 }
 
 static inline void *
-fz_keep_imp8(fz_context *ctx, void *p, int8_t *refs)
+fz_keep_imp8_aux(fz_context *ctx, void *p, int8_t *refs)
 {
 	if (p)
 	{
@@ -984,7 +1027,7 @@ fz_keep_imp8(fz_context *ctx, void *p, int8_t *refs)
 }
 
 static inline void *
-fz_keep_imp16(fz_context *ctx, void *p, int16_t *refs)
+fz_keep_imp16_aux(fz_context *ctx, void *p, int16_t *refs)
 {
 	if (p)
 	{
@@ -1001,7 +1044,7 @@ fz_keep_imp16(fz_context *ctx, void *p, int16_t *refs)
 }
 
 static inline int
-fz_drop_imp(fz_context *ctx, void *p, int *refs)
+fz_drop_imp_aux(fz_context *ctx, void *p, int *refs)
 {
 	if (p)
 	{
@@ -1022,7 +1065,7 @@ fz_drop_imp(fz_context *ctx, void *p, int *refs)
 }
 
 static inline int
-fz_drop_imp8(fz_context *ctx, void *p, int8_t *refs)
+fz_drop_imp8_aux(fz_context *ctx, void *p, int8_t *refs)
 {
 	if (p)
 	{
@@ -1043,7 +1086,7 @@ fz_drop_imp8(fz_context *ctx, void *p, int8_t *refs)
 }
 
 static inline int
-fz_drop_imp16(fz_context *ctx, void *p, int16_t *refs)
+fz_drop_imp16_aux(fz_context *ctx, void *p, int16_t *refs)
 {
 	if (p)
 	{

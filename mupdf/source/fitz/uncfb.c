@@ -87,30 +87,9 @@ read(fz_context *ctx, fz_stream *stm, uint8_t *buf, size_t size)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Short read in CFB handling");
 }
 
-static uint16_t
-get16(const uint8_t *b)
-{
-	return b[0] + (b[1]<<8);
-}
-
-static uint32_t
-get32(const uint8_t *b)
-{
-	return b[0] + (b[1]<<8) + (b[2]<<16) + (b[3]<<24);
-}
-
-static uint64_t
-get64(const uint8_t *b)
-{
-	return b[0] +
-		(((uint64_t)b[1])<<8) +
-		(((uint64_t)b[2])<<16) +
-		(((uint64_t)b[3])<<24) +
-		(((uint64_t)b[4])<<32) +
-		(((uint64_t)b[5])<<40) +
-		(((uint64_t)b[6])<<48) +
-		(((uint64_t)b[7])<<56);
-}
+#define get16 fz_unpack_uint16_le
+#define get32 fz_unpack_uint32_le
+#define get64 fz_unpack_uint64_le
 
 static uint64_t
 get_len(fz_context *ctx, fz_cfb_archive *cfb, const uint8_t *b)

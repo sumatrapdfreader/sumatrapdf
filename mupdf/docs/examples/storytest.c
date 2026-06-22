@@ -321,21 +321,27 @@ static void toc_pagefn(fz_context *ctx, void *ref, int page_num, fz_rect mediabo
 static void test_write_stabilized_story(fz_context *ctx)
 {
 	fz_document_writer *writer = fz_new_pdf_writer(ctx, "out_toc.pdf", "");
-	fz_write_stabilized_story(
-			ctx,
-			writer,
-			"" /*user_css*/,
-			11 /*em*/,
-			toc_contentfn,
-			NULL /*contentfn_ref*/,
-			toc_rectfn,
-			NULL /*rectfn_ref*/,
-			toc_pagefn /*pagefn*/,
-			NULL /*pagefn_ref*/,
-			NULL /* archive */
-			);
-	fz_close_document_writer(ctx, writer);
-	fz_drop_document_writer(ctx, writer);
+	fz_try(ctx)
+	{
+		fz_write_stabilized_story(
+				ctx,
+				writer,
+				"" /*user_css*/,
+				11 /*em*/,
+				toc_contentfn,
+				NULL /*contentfn_ref*/,
+				toc_rectfn,
+				NULL /*rectfn_ref*/,
+				toc_pagefn /*pagefn*/,
+				NULL /*pagefn_ref*/,
+				NULL /* archive */
+				);
+		fz_close_document_writer(ctx, writer);
+	}
+	fz_always(ctx)
+		fz_drop_document_writer(ctx, writer);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void

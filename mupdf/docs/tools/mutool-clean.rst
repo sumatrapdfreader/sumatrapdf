@@ -52,6 +52,9 @@ The ``clean`` command pretty prints and rewrites the syntax of a PDF file. It ca
 	``-z``
 		 Deflate uncompressed streams.
 
+	``-e`` effort
+		 Effort spent compressing the output file. 0 is default amount, otherwise a percentage of the maximum effort, 1 for minimum and 100 for maximum effort.
+
 	``-f``
 		 Compress font streams.
 
@@ -73,6 +76,9 @@ The ``clean`` command pretty prints and rewrites the syntax of a PDF file. It ca
 	``-L``
 		 Print comments containing labels showing how each object can be reached from the Root.
 
+	``-v``
+		 Transform all text into vector graphics commands.
+
 	``-A``
 		 Create appearance streams for annotations that are missing appearance streams.
 
@@ -88,14 +94,17 @@ The ``clean`` command pretty prints and rewrites the syntax of a PDF file. It ca
 	``-Z``
 		 Use object streams cross reference streams for extra compression.
 
-	``--(color|gray|bitonal)-(|lossy-|lossless-)image-subsample-method method``
+	``--(color|gray|bitonal)-(|lossy-|lossless-)image-subsample-method=method``
 		 Set the subsampling method (``average``, or ``bicubic``) for the desired image types, for example color-lossy and bitonal-lossless.
 
-	``--(color|gray|bitonal)-(|lossy-|lossless-)image-subsample-dpi dpi``
+	``--(color|gray|bitonal)-(|lossy-|lossless-)image-subsample-dpi=dpi``
 		 Set the resolution at which to subsample.
 
-	``--(color|gray|bitonal)-(|lossy-|lossless-)image-recompress-method quality``
+	``--(color|gray|bitonal)-(|lossy-|lossless-)image-recompress-method=quality``
 		 Set the recompression quality to either of ``never``, ``same``, ``lossless``, ``jpeg``, ``j2k``, ``fax``, or ``jbig2``.
+
+	``--recompress-images-when=when``
+		 Recompress images when the rewritten images by the subsampling- or recompression methods above are ``smaller`` (default) or ``always`` recompress them.
 
 	``--structure=keep|drop``
 		 Keep or drop the structure tree.
@@ -109,6 +118,6 @@ The ``clean`` command pretty prints and rewrites the syntax of a PDF file. It ca
 	If no output file is specified, it will write the cleaned PDF to "out.pdf" in the current directory.
 
 ``[pages]``
-	Comma separated list of page numbers and ranges (for example:
+	Comma-separated list of page numbers and ranges (for example:
 	1,5,10-15,20-N), where the character N denotes the last page. If no
 	pages are specified, then all pages will be included.

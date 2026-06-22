@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -269,6 +269,7 @@ static jfieldID fid_Rect_y1;
 static jfieldID fid_Shade_pointer;
 static jfieldID fid_StrokeState_pointer;
 static jfieldID fid_StructuredText_pointer;
+static jfieldID fid_StructuredTextWalker_VectorInfo_continues;
 static jfieldID fid_StructuredTextWalker_VectorInfo_isRectangle;
 static jfieldID fid_StructuredTextWalker_VectorInfo_isStroked;
 static jfieldID fid_TextBlock_bbox;
@@ -775,6 +776,13 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_UNICODE_IS_CID == FZ_STEXT_UNICODE_IS_CID;
 	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_UNICODE_IS_GID == FZ_STEXT_UNICODE_IS_GID;
 	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_SYNTHETIC_LARGE == FZ_STEXT_SYNTHETIC_LARGE;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_HIGHLIGHT == FZ_STEXT_HIGHLIGHT;
+
+	valid &= com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_UNKNOWN == FZ_STEXT_TEXT_JUSTIFY_UNKNOWN;
+	valid &= com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_LEFT == FZ_STEXT_TEXT_JUSTIFY_LEFT;
+	valid &= com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_CENTER == FZ_STEXT_TEXT_JUSTIFY_CENTER;
+	valid &= com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_RIGHT == FZ_STEXT_TEXT_JUSTIFY_RIGHT;
+	valid &= com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_FULL == FZ_STEXT_TEXT_JUSTIFY_FULL;
 
 	valid &= com_artifex_mupdf_fitz_PDFWidget_TYPE_UNKNOWN == PDF_WIDGET_TYPE_UNKNOWN;
 	valid &= com_artifex_mupdf_fitz_PDFWidget_TYPE_BUTTON == PDF_WIDGET_TYPE_BUTTON;
@@ -848,6 +856,7 @@ static int check_enums()
 
 	valid &= com_artifex_mupdf_fitz_StructuredText_VECTOR_IS_STROKED == FZ_STEXT_VECTOR_IS_STROKED;
 	valid &= com_artifex_mupdf_fitz_StructuredText_VECTOR_IS_RECTANGLE == FZ_STEXT_VECTOR_IS_RECTANGLE;
+	valid &= com_artifex_mupdf_fitz_StructuredText_VECTOR_CONTINUES == FZ_STEXT_VECTOR_CONTINUES;
 
 	valid &= com_artifex_mupdf_fitz_ColorSpace_NONE == FZ_COLORSPACE_NONE;
 	valid &= com_artifex_mupdf_fitz_ColorSpace_GRAY == FZ_COLORSPACE_GRAY;
@@ -1508,15 +1517,16 @@ static int find_fids(JNIEnv *env)
 	cls_StructuredTextWalker = get_class(&err, env, PKG"StructuredTextWalker");
 	mid_StructuredTextWalker_onImageBlock = get_method(&err, env, "onImageBlock", "(L"PKG"Rect;L"PKG"Matrix;L"PKG"Image;)V");
 	mid_StructuredTextWalker_beginStruct = get_method(&err, env, "beginStruct", "(Ljava/lang/String;Ljava/lang/String;I)V");
-	mid_StructuredTextWalker_beginTextBlock = get_method(&err, env, "beginTextBlock", "(L"PKG"Rect;)V");
+	mid_StructuredTextWalker_beginTextBlock = get_method(&err, env, "beginTextBlock", "(L"PKG"Rect;I)V");
 	mid_StructuredTextWalker_endStruct = get_method(&err, env, "endStruct", "()V");
 	mid_StructuredTextWalker_endTextBlock = get_method(&err, env, "endTextBlock", "()V");
 	mid_StructuredTextWalker_beginLine = get_method(&err, env, "beginLine", "(L"PKG"Rect;IL"PKG"Point;)V");
 	mid_StructuredTextWalker_endLine = get_method(&err, env, "endLine", "()V");
-	mid_StructuredTextWalker_onChar = get_method(&err, env, "onChar", "(IL"PKG"Point;L"PKG"Font;FL"PKG"Quad;II)V");
+	mid_StructuredTextWalker_onChar = get_method(&err, env, "onChar", "(IL"PKG"Point;L"PKG"Font;FL"PKG"Quad;III)V");
 	mid_StructuredTextWalker_onVector = get_method(&err, env, "onVector", "(L"PKG"Rect;L"PKG"StructuredTextWalker$VectorInfo;I)V");
 
 	cls_StructuredTextWalker_VectorInfo = get_class(&err, env, PKG"StructuredTextWalker$VectorInfo");
+	fid_StructuredTextWalker_VectorInfo_continues = get_field(&err, env, "continues", "Z");
 	fid_StructuredTextWalker_VectorInfo_isRectangle = get_field(&err, env, "isRectangle", "Z");
 	fid_StructuredTextWalker_VectorInfo_isStroked = get_field(&err, env, "isStroked", "Z");
 	mid_StructuredTextWalker_VectorInfo_init = get_method(&err, env, "<init>", "()V");

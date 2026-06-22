@@ -1100,7 +1100,9 @@ fz_bound_mesh(fz_context *ctx, fz_shade *shade)
 fz_shade *
 fz_keep_shade(fz_context *ctx, fz_shade *shade)
 {
-	return fz_keep_storable(ctx, &shade->storable);
+	if (shade)
+		return fz_keep_storable(ctx, &shade->storable);
+	return NULL;
 }
 
 void
@@ -1119,7 +1121,8 @@ fz_drop_shade_imp(fz_context *ctx, fz_storable *shade_)
 void
 fz_drop_shade(fz_context *ctx, fz_shade *shade)
 {
-	fz_drop_storable(ctx, &shade->storable);
+	if (shade)
+		fz_drop_storable(ctx, &shade->storable);
 }
 
 fz_rect

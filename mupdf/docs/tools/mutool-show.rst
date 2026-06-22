@@ -65,8 +65,7 @@ by default.
 
 	``*``
 		You can use ``*`` as an element to iterate over all array
-		indices or dictionary properties in an object. Thus you can
-		have multiple keywords with for your ``mutool show`` query.
+		indices or dictionary properties in an object.
 
 Examples
 --------

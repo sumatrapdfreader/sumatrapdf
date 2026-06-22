@@ -108,6 +108,15 @@ char *fz_pool_strdup(fz_context *ctx, fz_pool *pool, const char *s)
 	return p;
 }
 
+char *fz_pool_strndup(fz_context *ctx, fz_pool *pool, const char *s, size_t n)
+{
+	size_t l = strnlen(s, n);
+	char *p = fz_pool_alloc(ctx, pool, l + 1);
+	memcpy(p, s, l);
+	p[l] = 0;
+	return p;
+}
+
 size_t fz_pool_size(fz_context *ctx, fz_pool *pool)
 {
 	return pool ? pool->size : 0;

@@ -1,5 +1,7 @@
 # Document Writer Options
 
+The options are specified using an <a href="option-strings.html">option string</a> of key-value pairs.
+
 ## Supported output formats
 
 Raster formats:

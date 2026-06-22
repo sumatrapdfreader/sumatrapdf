@@ -37,11 +37,14 @@ typedef struct
 {
 	int max_chapters;
 	int num_chapters;
+
 	float layout_w;
 	float layout_h;
 	float layout_em;
-	uint32_t css_sum;
-	int use_doc_css;
+
+	uint32_t user_css_sum;
+	int publisher_css;
+
 	int *pages_in_chapter;
 } epub_accelerator;
 
@@ -50,13 +53,12 @@ typedef struct
 	fz_document super;
 	fz_archive *zip;
 	fz_html_font_set *set;
-	int count;
-	epub_chapter *spine;
+	int spine_len;
+	epub_chapter **spine;
 	fz_outline *outline;
 	char *dc_title, *dc_creator;
-	float layout_w, layout_h, layout_em;
 	epub_accelerator *accel;
-	uint32_t css_sum;
+	uint32_t user_css_sum; /* cached checksum of current user_css */
 
 	/* A common pattern of use is for us to open a document,
 	 * load a page, draw it, drop it, load the next page,
@@ -68,9 +70,6 @@ typedef struct
 	 * ensuring that the stored copy won't be evicted. */
 	fz_html *most_recent_html;
 
-	/* cached array of chapter pointers for O(1) access by index */
-	epub_chapter **chapters_cached;
-	int chapters_cached_len;
 } epub_document;
 
 struct epub_chapter
@@ -78,7 +77,6 @@ struct epub_chapter
 	epub_document *doc;
 	char *path;
 	int number;
-	epub_chapter *next;
 };
 
 struct epub_page
@@ -90,10 +88,9 @@ struct epub_page
 };
 
 static uint32_t
-user_css_sum(fz_context *ctx)
+checksum_css(fz_context *ctx, const char *css)
 {
 	uint32_t sum = 0;
-	const char *css = fz_user_css(ctx);
 	sum = crc32(0, NULL, 0);
 	if (css)
 		sum = crc32(sum, (Byte*)css, (int)strlen(css));
@@ -190,22 +187,34 @@ static void
 invalidate_accelerator(fz_context *ctx, epub_accelerator *acc)
 {
 	int i;
-
 	for (i = 0; i < acc->max_chapters; i++)
 		acc->pages_in_chapter[i] = -1;
+}
+
+static void
+ensure_accelerator(fz_context *ctx, epub_document *doc)
+{
+	if (
+		(doc->accel->layout_w != doc->super.layout_w) ||
+		(doc->accel->layout_h != doc->super.layout_h) ||
+		(doc->accel->layout_em != doc->super.layout_em) ||
+		(doc->accel->publisher_css != doc->super.publisher_css) ||
+		(doc->accel->user_css_sum != doc->user_css_sum)
+	) {
+		doc->accel->publisher_css = doc->super.publisher_css;
+		doc->accel->user_css_sum = doc->user_css_sum;
+		doc->accel->layout_w = doc->super.layout_w;
+		doc->accel->layout_h = doc->super.layout_h;
+		doc->accel->layout_em = doc->super.layout_em;
+		invalidate_accelerator(ctx, doc->accel);
+	}
 }
 
 static int count_chapter_pages(fz_context *ctx, epub_document *doc, epub_chapter *ch)
 {
 	epub_accelerator *acc = doc->accel;
-	int use_doc_css = fz_use_document_css(ctx);
 
-	if (use_doc_css != acc->use_doc_css || doc->css_sum != acc->css_sum)
-	{
-		acc->use_doc_css = use_doc_css;
-		acc->css_sum = doc->css_sum;
-		invalidate_accelerator(ctx, acc);
-	}
+	ensure_accelerator(ctx, doc);
 
 	if (ch->number < acc->num_chapters && acc->pages_in_chapter[ch->number] != -1)
 		return acc->pages_in_chapter[ch->number];
@@ -226,9 +235,10 @@ epub_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest)
 	if (s && s[1] == 0)
 		s = NULL;
 
-	for (i = 0, ch = doc->spine; ch; ++i, ch = ch->next)
+	for (i = 0; i < doc->spine_len; ++i)
 	{
-		if (!strncmp(ch->path, dest, n) && ch->path[n] == 0)
+		ch = doc->spine[i];
+		if (!fz_strncasecmp(ch->path, dest, n) && ch->path[n] == 0)
 		{
 			if (s)
 			{
@@ -244,7 +254,6 @@ epub_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest)
 					int page = y / ph;
 					return fz_make_link_dest_xyz(i, page, 0, y - page * ph, 0);
 				}
-				return fz_make_link_dest_none();
 			}
 			return fz_make_link_dest_xyz(i, 0, 0, 0, 0);
 		}
@@ -254,76 +263,41 @@ epub_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest)
 }
 
 static void
-epub_layout(fz_context *ctx, fz_document *doc_, float w, float h, float em)
+epub_style(fz_context *ctx, fz_document *doc_)
 {
 	epub_document *doc = (epub_document*)doc_;
-	uint32_t css_sum = user_css_sum(ctx);
-	int use_doc_css = fz_use_document_css(ctx);
 
-	if (doc->layout_w == w && doc->layout_h == h && doc->layout_em == em && doc->css_sum == css_sum)
-		return;
-	doc->layout_w = w;
-	doc->layout_h = h;
-	doc->layout_em = em;
+	doc->user_css_sum = checksum_css(ctx, doc->super.user_css);
 
-	if (doc->accel == NULL)
-		return;
+	// new user style sheet applied, we need to reparse the html
+	fz_purge_stored_html(ctx, doc);
+	fz_drop_html(ctx, doc->most_recent_html);
+	doc->most_recent_html = NULL;
 
-	/* When we load the saved accelerator, doc->accel
-	 * can be populated with different values than doc.
-	 * This is really useful as doc starts out with the
-	 * values being 0. If we've got the right values
-	 * already, then don't bin the data! */
-	if (doc->accel->layout_w == w &&
-		doc->accel->layout_h == h &&
-		doc->accel->layout_em == em &&
-		doc->accel->use_doc_css == use_doc_css &&
-		doc->accel->css_sum == css_sum)
-		return;
-
-	doc->accel->layout_w = w;
-	doc->accel->layout_h = h;
-	doc->accel->layout_em = em;
-	doc->accel->use_doc_css = use_doc_css;
-	doc->accel->css_sum = css_sum;
-	invalidate_accelerator(ctx, doc->accel);
+	// Note: the accelerator will be checked in the layout call which always happens directly after style
 }
 
 static void
-epub_build_chapters_cached(epub_document *doc, fz_context *ctx)
+epub_layout(fz_context *ctx, fz_document *doc_)
 {
-	epub_chapter *ch;
-	int n = 0;
-	for (ch = doc->spine; ch; ch = ch->next)
-		n++;
-	fz_free(ctx, doc->chapters_cached);
-	doc->chapters_cached = fz_malloc_array(ctx, n, epub_chapter*);
-	doc->chapters_cached_len = n;
-	int i = 0;
-	for (ch = doc->spine; ch; ch = ch->next)
-		doc->chapters_cached[i++] = ch;
+	epub_document *doc = (epub_document*)doc_;
+	ensure_accelerator(ctx, doc);
 }
 
 static int
 epub_count_chapters(fz_context *ctx, fz_document *doc_)
 {
 	epub_document *doc = (epub_document*)doc_;
-	if (doc->chapters_cached_len == 0)
-		epub_build_chapters_cached(doc, ctx);
-	return doc->chapters_cached_len;
+	return doc->spine_len;
 }
 
 static int
 epub_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
 {
 	epub_document *doc = (epub_document*)doc_;
-	if (chapter < 0)
+	if (chapter < 0 || chapter >= doc->spine_len)
 		return 0;
-	if (chapter >= doc->chapters_cached_len)
-		epub_build_chapters_cached(doc, ctx);
-	if (chapter >= doc->chapters_cached_len)
-		return 0;
-	return count_chapter_pages(ctx, doc, doc->chapters_cached[chapter]);
+	return count_chapter_pages(ctx, doc, doc->spine[chapter]);
 }
 
 #define MAGIC_ACCELERATOR 0xacce1e7a
@@ -336,8 +310,8 @@ static void epub_load_accelerator(fz_context *ctx, epub_document *doc, fz_stream
 	float w, h, em;
 	int num_chapters;
 	epub_accelerator *acc = NULL;
-	uint32_t css_sum;
-	int use_doc_css;
+	uint32_t user_css_sum;
+	int publisher_css;
 	int make_new = (accel == NULL);
 
 	fz_var(acc);
@@ -371,8 +345,8 @@ static void epub_load_accelerator(fz_context *ctx, epub_document *doc, fz_stream
 			w = fz_read_float_le(ctx, accel);
 			h = fz_read_float_le(ctx, accel);
 			em = fz_read_float_le(ctx, accel);
-			css_sum = fz_read_uint32_le(ctx, accel);
-			use_doc_css = fz_read_int32_le(ctx, accel);
+			user_css_sum = fz_read_uint32_le(ctx, accel);
+			publisher_css = fz_read_int32_le(ctx, accel);
 
 			num_chapters = fz_read_int32_le(ctx, accel);
 			if (num_chapters <= 0)
@@ -387,8 +361,8 @@ static void epub_load_accelerator(fz_context *ctx, epub_document *doc, fz_stream
 			acc->layout_w = w;
 			acc->layout_h = h;
 			acc->layout_em = em;
-			acc->css_sum = css_sum;
-			acc->use_doc_css = use_doc_css;
+			acc->user_css_sum = user_css_sum;
+			acc->publisher_css = publisher_css;
 
 			for (v = 0; v < num_chapters; v++)
 				acc->pages_in_chapter[v] = fz_read_int32_le(ctx, accel);
@@ -410,8 +384,8 @@ static void epub_load_accelerator(fz_context *ctx, epub_document *doc, fz_stream
 	if (make_new)
 	{
 		acc = fz_malloc_struct(ctx, epub_accelerator);
-		acc->css_sum = doc->css_sum;
-		acc->use_doc_css = fz_use_document_css(ctx);
+		acc->user_css_sum = doc->user_css_sum;
+		acc->publisher_css = doc->super.publisher_css;
 	}
 
 	doc->accel = acc;
@@ -499,7 +473,7 @@ epub_parse_chapter(fz_context *ctx, epub_document *doc, epub_chapter *ch)
 	if (!buf)
 		buf = fz_new_buffer_from_printf(ctx, "<html><body><p><i>ERROR: cannot find chapter %<</i></p></body></html>", ch->path);
 	fz_try(ctx)
-		html = fz_parse_html(ctx, doc->set, zip, base_uri, buf, fz_user_css(ctx), 1, 1, 0);
+		html = fz_parse_html(ctx, doc->set, zip, base_uri, buf, doc->super.user_css, 1, 1, FZ_HTML_FLAVOR_DEFAULT, doc->super.publisher_css);
 	fz_always(ctx)
 		fz_drop_buffer(ctx, buf);
 	fz_catch(ctx)
@@ -514,7 +488,7 @@ epub_get_laid_out_html(fz_context *ctx, epub_document *doc, epub_chapter *ch)
 	fz_html *html = epub_parse_chapter(ctx, doc, ch);
 	fz_try(ctx)
 	{
-		fz_layout_html(ctx, html, doc->layout_w, doc->layout_h, doc->layout_em);
+		fz_layout_html(ctx, html, doc->super.layout_w, doc->super.layout_h, doc->super.layout_em);
 		accelerate_chapter(ctx, doc, ch, html);
 	}
 	fz_catch(ctx)
@@ -568,17 +542,16 @@ epub_make_bookmark(fz_context *ctx, fz_document *doc_, fz_location loc)
 {
 	epub_document *doc = (epub_document*)doc_;
 	epub_chapter *ch;
-	int i;
+	fz_html *html;
+	fz_bookmark mark;
 
-	for (i = 0, ch = doc->spine; ch; ++i, ch = ch->next)
+	if (loc.chapter >= 0 && loc.chapter < doc->spine_len)
 	{
-		if (i == loc.chapter)
-		{
-			fz_html *html = epub_get_laid_out_html(ctx, doc, ch);
-			fz_bookmark mark = fz_make_html_bookmark(ctx, html, loc.page);
-			fz_drop_html(ctx, html);
-			return mark;
-		}
+		ch = doc->spine[loc.chapter];
+		html = epub_get_laid_out_html(ctx, doc, ch);
+		mark = fz_make_html_bookmark(ctx, html, loc.page);
+		fz_drop_html(ctx, html);
+		return mark;
 	}
 
 	return 0;
@@ -589,12 +562,14 @@ epub_lookup_bookmark(fz_context *ctx, fz_document *doc_, fz_bookmark mark)
 {
 	epub_document *doc = (epub_document*)doc_;
 	epub_chapter *ch;
-	int i;
+	fz_html *html;
+	int i, p;
 
-	for (i = 0, ch = doc->spine; ch; ++i, ch = ch->next)
+	for (i = 0; i < doc->spine_len; ++i)
 	{
-		fz_html *html = epub_get_laid_out_html(ctx, doc, ch);
-		int p = fz_lookup_html_bookmark(ctx, html, mark);
+		ch = doc->spine[i];
+		html = epub_get_laid_out_html(ctx, doc, ch);
+		p = fz_lookup_html_bookmark(ctx, html, mark);
 		fz_drop_html(ctx, html);
 		if (p != -1)
 			return fz_make_location(i, p);
@@ -607,29 +582,33 @@ epub_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
 {
 	epub_document *doc = (epub_document*)doc_;
 	epub_chapter *ch;
-	int i;
+	epub_page *page;
 
-	if (chapter < 0)
+	if (chapter < 0 || chapter >= doc->spine_len)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "invalid chapter number: %d", chapter);
 	if (number < 0)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "invalid page number: %d", number);
 
-	for (i = 0, ch = doc->spine; ch; ++i, ch = ch->next)
+	ch = doc->spine[chapter];
+
+	page = fz_new_derived_page(ctx, epub_page, doc_);
+	fz_try(ctx)
 	{
-		if (i == chapter)
-		{
-			epub_page *page = fz_new_derived_page(ctx, epub_page, doc_);
-			page->super.bound_page = epub_bound_page;
-			page->super.run_page_contents = epub_run_page;
-			page->super.load_links = epub_load_links;
-			page->super.drop_page = epub_drop_page;
-			page->ch = ch;
-			page->number = number;
-			page->html = epub_get_laid_out_html(ctx, doc, ch);
-			return (fz_page*)page;
-		}
+		page->super.bound_page = epub_bound_page;
+		page->super.run_page_contents = epub_run_page;
+		page->super.load_links = epub_load_links;
+		page->super.drop_page = epub_drop_page;
+		page->ch = ch;
+		page->number = number;
+		page->html = epub_get_laid_out_html(ctx, doc, ch);
 	}
-	return NULL;
+	fz_catch(ctx)
+	{
+		fz_drop_page(ctx, &page->super);
+		fz_rethrow(ctx);
+	}
+
+	return (fz_page*)page;
 }
 
 static void
@@ -652,15 +631,15 @@ static void
 epub_drop_document(fz_context *ctx, fz_document *doc_)
 {
 	epub_document *doc = (epub_document*)doc_;
-	epub_chapter *ch, *next;
-	ch = doc->spine;
-	while (ch)
+	epub_chapter *ch;
+	int i;
+	for (i = 0; i < doc->spine_len; ++i)
 	{
-		next = ch->next;
+		ch = doc->spine[i];
 		fz_free(ctx, ch->path);
 		fz_free(ctx, ch);
-		ch = next;
 	}
+	fz_free(ctx, doc->spine);
 	epub_drop_accelerator(ctx, doc->accel);
 	fz_drop_archive(ctx, doc->zip);
 	fz_drop_html_font_set(ctx, doc->set);
@@ -668,7 +647,6 @@ epub_drop_document(fz_context *ctx, fz_document *doc_)
 	fz_free(ctx, doc->dc_title);
 	fz_free(ctx, doc->dc_creator);
 	fz_drop_html(ctx, doc->most_recent_html);
-	fz_free(ctx, doc->chapters_cached);
 	fz_purge_stored_html(ctx, doc);
 }
 
@@ -974,7 +952,6 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 	char ncx[2048], s[2048];
 	char *prefixed_full_path = NULL;
 	size_t prefix_len;
-	epub_chapter **tailp;
 	int i;
 
 	fz_var(buf);
@@ -1061,8 +1038,19 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 			epub_parse_nav(ctx, doc, ncx);
 		}
 
-		doc->spine = NULL;
-		tailp = &doc->spine;
+		// count number of chapters
+		itemref = fz_xml_find_down(spine, "itemref");
+		i = 0;
+		while (itemref)
+		{
+			if (path_from_idref(s, manifest, base_uri, fz_xml_att(itemref, "idref"), sizeof s))
+				++i;
+			itemref = fz_xml_find_next(itemref, "itemref");
+		}
+		doc->spine_len = i;
+
+		// load chapters
+		doc->spine = fz_malloc_array(ctx, doc->spine_len, epub_chapter*);
 		itemref = fz_xml_find_down(spine, "itemref");
 		i = 0;
 		while (itemref)
@@ -1071,8 +1059,7 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 			{
 				fz_try(ctx)
 				{
-					*tailp = epub_load_chapter(ctx, doc, s, i);
-					tailp = &(*tailp)->next;
+					doc->spine[i] = epub_load_chapter(ctx, doc, s, i);
 					i++;
 				}
 				fz_catch(ctx)
@@ -1085,6 +1072,7 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 			}
 			itemref = fz_xml_find_next(itemref, "itemref");
 		}
+		doc->spine_len = i;
 	}
 	fz_always(ctx)
 	{
@@ -1135,8 +1123,8 @@ epub_output_accelerator(fz_context *ctx, fz_document *doc_, fz_output *out)
 		fz_write_float_le(ctx, out, doc->accel->layout_w);
 		fz_write_float_le(ctx, out, doc->accel->layout_h);
 		fz_write_float_le(ctx, out, doc->accel->layout_em);
-		fz_write_uint32_le(ctx, out, doc->accel->css_sum);
-		fz_write_int32_le(ctx, out, doc->accel->use_doc_css);
+		fz_write_uint32_le(ctx, out, doc->accel->user_css_sum);
+		fz_write_int32_le(ctx, out, doc->accel->publisher_css);
 		fz_write_int32_le(ctx, out, doc->accel->num_chapters);
 		for (i = 0; i < doc->accel->num_chapters; i++)
 			fz_write_int32_le(ctx, out, doc->accel->pages_in_chapter[i]);
@@ -1166,6 +1154,7 @@ epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 		zip = NULL;
 
 		doc->super.drop_document = epub_drop_document;
+		doc->super.style = epub_style;
 		doc->super.layout = epub_layout;
 		doc->super.load_outline = epub_load_outline;
 		doc->super.resolve_link_dest = epub_resolve_link;
@@ -1180,7 +1169,6 @@ epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 		doc->super.is_reflowable = 1;
 
 		doc->set = fz_new_html_font_set(ctx);
-		doc->css_sum = user_css_sum(ctx);
 		epub_load_accelerator(ctx, doc, accel);
 		epub_parse_header(ctx, doc);
 	}

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -55,6 +55,9 @@ int xps_has_part(fz_context *ctx, xps_document *doc, char *partname);
 */
 xps_part *xps_read_part(fz_context *ctx, xps_document *doc, char *partname);
 void xps_drop_part(fz_context *ctx, xps_document *doc, xps_part *part);
+
+fz_buffer *xps_read_pieces(fz_context *ctx, fz_archive *zip, const char *name);
+
 
 typedef struct xps_fixdoc_s xps_fixdoc;
 typedef struct xps_fixpage_s xps_fixpage;

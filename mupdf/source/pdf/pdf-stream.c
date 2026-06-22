@@ -34,7 +34,11 @@ pdf_obj_num_is_stream(fz_context *ctx, pdf_document *doc, int num)
 		return 0;
 
 	fz_try(ctx)
-		entry = pdf_cache_object(ctx, doc, num);
+	{
+		entry = pdf_get_xref_entry(ctx, doc, num);
+		if (entry && entry->type == 'n')
+			entry = pdf_cache_object(ctx, doc, num);
+	}
 	fz_catch(ctx)
 	{
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
@@ -44,7 +48,7 @@ pdf_obj_num_is_stream(fz_context *ctx, pdf_document *doc, int num)
 	}
 
 	if (entry)
-	return entry->stm_ofs != 0 || entry->stm_buf;
+		return entry->type == 'n' && (entry->stm_ofs != 0 || entry->stm_buf);
 	return 0;
 }
 
@@ -55,6 +59,16 @@ pdf_is_stream(fz_context *ctx, pdf_obj *ref)
 	if (doc)
 		return pdf_obj_num_is_stream(ctx, doc, pdf_to_num(ctx, ref));
 	return 0;
+}
+
+static int64_t
+pdf_stream_length(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
+{
+	/* Return sanity-checked stream length: cannot be negative or larger than the file. */
+	int64_t len = pdf_dict_get_int64(ctx, dict, PDF_NAME(Length));
+	if (len < 0 || len > doc->file_size)
+		len = 0;
+	return len;
 }
 
 /*
@@ -347,9 +361,7 @@ pdf_open_raw_filter(fz_context *ctx, fz_stream *file_stm, pdf_document *doc, pdf
 	}
 
 	hascrypt = pdf_stream_has_crypt(ctx, stmobj);
-	len = pdf_dict_get_int64(ctx, stmobj, PDF_NAME(Length));
-	if (len < 0)
-		len = 0;
+	len = pdf_stream_length(ctx, doc, stmobj);
 	null_stm = fz_open_endstream_filter(ctx, file_stm, (uint64_t)len, offset);
 	if (doc->crypt && !hascrypt)
 	{
@@ -399,7 +411,7 @@ pdf_open_filter(fz_context *ctx, pdf_document *doc, fz_stream *file_stm, pdf_obj
 }
 
 fz_stream *
-pdf_open_inline_stream(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, int length, fz_stream *file_stm, fz_compression_params *imparams)
+pdf_open_inline_stream(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, size_t length, fz_stream *file_stm, fz_compression_params *imparams)
 {
 	pdf_obj *filters = pdf_dict_geta(ctx, stmobj, PDF_NAME(Filter), PDF_NAME(F));
 	pdf_obj *params = pdf_dict_geta(ctx, stmobj, PDF_NAME(DecodeParms), PDF_NAME(DP));
@@ -415,7 +427,7 @@ pdf_open_inline_stream(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, int 
 }
 
 void
-pdf_load_compressed_inline_image(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int length, fz_stream *file_stm, int indexed, fz_compressed_image *image)
+pdf_load_compressed_inline_image(fz_context *ctx, pdf_document *doc, pdf_obj *dict, size_t length, fz_stream *file_stm, int indexed, fz_compressed_image *image)
 {
 	fz_stream *istm = NULL, *leech = NULL, *decomp = NULL;
 	fz_pixmap *pixmap = NULL;
@@ -509,16 +521,13 @@ pdf_load_raw_stream_number(fz_context *ctx, pdf_document *doc, int num)
 	dict = pdf_load_object(ctx, doc, num);
 
 	fz_try(ctx)
-		len = pdf_dict_get_int64(ctx, dict, PDF_NAME(Length));
+		len = pdf_stream_length(ctx, doc, dict);
 	fz_always(ctx)
 		pdf_drop_obj(ctx, dict);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
 	stm = pdf_open_raw_stream_number(ctx, doc, num);
-
-	if (len < 0)
-		len = 1024;
 
 	fz_try(ctx)
 		buf = fz_read_all(ctx, stm, (size_t)len);
@@ -633,14 +642,13 @@ pdf_load_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compressio
 	dict = pdf_load_object(ctx, doc, num);
 	fz_try(ctx)
 	{
-		int64_t ilen = pdf_dict_get_int64(ctx, dict, PDF_NAME(Length));
-		if (ilen < 0)
-			ilen = 0;
+		int64_t ilen = pdf_stream_length(ctx, doc, dict);
+
+		/* In 32 bit builds, we might find a length being too large for a size_t. */
 		len = (size_t)ilen;
-		/* In 32 bit builds, we might find a length being too
-		 * large for a size_t. */
 		if ((int64_t)len != ilen)
-			fz_throw(ctx, FZ_ERROR_LIMIT, "Stream too large");
+			fz_throw(ctx, FZ_ERROR_LIMIT, "stream is too large for 32-bit systems");
+
 		obj = pdf_dict_get(ctx, dict, PDF_NAME(Filter));
 		len = pdf_guess_filter_length(len, pdf_to_name(ctx, obj));
 		n = pdf_array_len(ctx, obj);
@@ -723,7 +731,7 @@ pdf_open_object_array(fz_context *ctx, pdf_document *doc, pdf_obj *list)
 	{
 		pdf_obj *obj = pdf_array_get(ctx, list, i);
 		fz_try(ctx)
-			fz_concat_push_drop(ctx, stm, pdf_open_stream(ctx, obj));
+			fz_concat_push_drop(ctx, stm, pdf_open_image_stream(ctx, doc, pdf_to_num(ctx, obj), NULL, 0));
 		fz_catch(ctx)
 		{
 			if (fz_caught(ctx) == FZ_ERROR_TRYLATER || fz_caught(ctx) == FZ_ERROR_SYSTEM)

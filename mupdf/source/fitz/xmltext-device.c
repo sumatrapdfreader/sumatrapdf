@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -202,6 +202,7 @@ static void fz_xmltext_fill_image(fz_context *ctx, fz_device *dev_, fz_image *im
 {
 	fz_xmltext_device *dev = (fz_xmltext_device*) dev_;
 	fz_pixmap *pixmap = NULL;
+	fz_var(pixmap);
 	fz_try(ctx)
 	{
 		const char *type = NULL;

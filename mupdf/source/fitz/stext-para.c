@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Artifex Software, Inc.
+// Copyright (C) 2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -434,13 +434,10 @@ detect_underlined_titles(fz_context *ctx, stext_pos *pos, fz_stext_block *block)
 {
 	/* Let's do the title scanning, where our criteria is
 	 * "the entire line is underlined". */
-	underlined_data data[1];
+	underlined_data data[1] = { 0 };
 
 	data->pos = pos;
-	data->title_start = NULL;
-	data->title_end = NULL;
 	data->underlined = UNDERLINE_UNKNOWN;
-	data->changed = 0;
 
 	line_walker(ctx, block, underlined_newline, underlined_line, underlined_end, data);
 
@@ -572,13 +569,9 @@ font_end(fz_context *ctx, fz_stext_block *block, fz_stext_line *line, void *arg)
 static int
 detect_titles_by_font_usage(fz_context *ctx, stext_pos *pos, fz_stext_block *block)
 {
-	font_data data[1];
+	font_data data[1] = { 0 };
 
 	data->pos = pos;
-	data->title_start = NULL;
-	data->title_end = NULL;
-	data->font = NULL;
-	data->changed = 0;
 
 	line_walker(ctx, block, font_newline, font_line, font_end, data);
 
@@ -612,11 +605,10 @@ indent_newline(fz_context *ctx, fz_stext_block *block, fz_stext_line *line, void
 static int
 break_paragraphs_by_indent(fz_context *ctx, stext_pos *pos, fz_stext_block *block, fz_rect bbox)
 {
-	indent_data data[1];
+	indent_data data[1] = { 0 };
 
 	data->pos = pos;
 	data->bbox = bbox;
-	data->changed = 0;
 
 	line_walker(ctx, block, indent_newline, NULL, NULL, data);
 
@@ -671,13 +663,10 @@ linegap_newline(fz_context *ctx, fz_stext_block *block, fz_stext_line *line, voi
 static int
 break_paragraphs_by_line_gap(fz_context *ctx, stext_pos *pos, fz_stext_block *block, fz_rect bbox)
 {
-	linegap_data data[1];
+	linegap_data data[1] = { 0 };
 
 	data->pos = pos;
 	data->bbox = bbox;
-	data->changed = 0;
-	data->prev_line = NULL;
-	data->num_lines = 0;
 
 	line_walker(ctx, block, linegap_newline, NULL, NULL, data);
 
@@ -790,16 +779,11 @@ trailing_line(fz_context *ctx, fz_stext_block *block, fz_stext_line *line, void 
 static int
 break_paragraphs_by_analysing_trailing_gaps(fz_context *ctx, stext_pos *pos, fz_stext_block *block, fz_rect bbox)
 {
-	trailing_data data[1];
+	trailing_data data[1] = { 0 };
 
 	data->bbox = bbox;
 	data->pos = pos;
-	data->line_gap = 0;
-	data->prev_line_gap = 0;
-	data->looking_for_space = 0;
 	data->space_size = 99999;
-	data->maybe_ends_paragraph = 0;
-	data->changed = 0;
 
 	line_walker(ctx, block, trailing_newline, trailing_line, NULL, data);
 
@@ -1023,25 +1007,17 @@ text_block_marked_bbox(fz_context *ctx, fz_stext_block *block)
 static int
 break_paragraphs_within_justified_text(fz_context *ctx, stext_pos *pos, fz_stext_block *block, fz_rect bbox)
 {
-	justify_data data[1];
+	justify_data data[1] = { 0 };
 
 	if (block->u.t.flags != FZ_STEXT_TEXT_JUSTIFY_UNKNOWN)
 		return 0;
 
 	data->bbox = bbox;
-
 	data->pos = pos;
-	data->count_lines = 0;
-	data->count_justified = 0;
-	data->non_digits_exist_in_this_line = 0;
-	data->bad_gap = 0;
-	data->gap_size_this_line = 0;
-	data->gap_count_this_line = 0;
 	data->fragment_box = fz_empty_rect;
 	data->line_box = fz_empty_rect;
 	data->xmin = INFINITY;
 	data->xmax = -INFINITY;
-	data->changed = 0;
 
 	line_walker(ctx, block, justify_newline, justify_line, justify_end, data);
 
@@ -1461,19 +1437,16 @@ list_end(fz_context *ctx, fz_stext_block *block, fz_stext_line *line, void *arg)
 static int
 break_list_items(fz_context *ctx, stext_pos *pos, fz_stext_block *block)
 {
-	list_data data[1];
+	list_data data[1] = { 0 } ;
 
 	if (block->u.t.flags != FZ_STEXT_TEXT_JUSTIFY_UNKNOWN)
 		return 0;
 
 	data->pos = pos;
 	data->state = LOOKING_FOR_BULLET;
-	data->buffer_fill = 0;
 	data->l = block->bbox.x1;
-	data->bullet_line_start = NULL;
 	data->this_line_start = block->u.t.first_line;
 	data->bullet_r = block->bbox.x0;
-	data->changed = 0;
 
 	line_walker(ctx, block, list_newline, list_line, list_end, data);
 
@@ -1561,12 +1534,12 @@ do_para_break(fz_context *ctx, fz_stext_page *page, fz_stext_block **pfirst, fz_
 			/* First, underlined ones. */
 			if (!in_header)
 			{
-			if (detect_underlined_titles(ctx, &pos, block))
-				next_block = block->next; /* We split the block! */
-			if (block->type != FZ_STEXT_BLOCK_TEXT)
-			{
-				next_block = block;
-				break;
+				if (detect_underlined_titles(ctx, &pos, block))
+					next_block = block->next; /* We split the block! */
+				if (block->type != FZ_STEXT_BLOCK_TEXT)
+				{
+					next_block = block;
+					break;
 				}
 			}
 

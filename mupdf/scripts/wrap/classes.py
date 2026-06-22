@@ -1527,6 +1527,42 @@ classextras = ClassExtras(
                 copyable='default',
                 ),
 
+        fz_stext_grid_divider = ClassExtra(
+                pod = True,
+                ),
+
+        fz_stext_grid_positions = ClassExtra(
+                methods_extra = [
+                    ExtraMethod(
+                        'fz_stext_grid_divider',
+                        'list(int i)',
+                        textwrap.dedent(f'''
+                            {{
+                                assert(i >= 0);
+                                assert(i < m_internal->len);
+                                return m_internal->list[i];
+                            }}
+                            '''),
+                        comment = textwrap.dedent('''
+		        /*
+			    Returns a low-level struct fz_stext_grid_divider from the underlying fz_stext_grid_positions::list[] array.
+                            Asserts <i> is in range.
+			*/
+			'''),
+                        ),
+                    ExtraMethod(
+                        '',
+                        '~()',
+                        f'''
+                        {{
+                            fz_free(m_internal);
+                        }}
+                        ''',
+                        comment = '/* Destructor frees m_internal with fz_free(). */',
+                        ),
+                    ],
+                ),
+
         fz_stext_line = ClassExtra(
                 iterator_next = ('first_char', 'last_char'),
                 copyable='default',

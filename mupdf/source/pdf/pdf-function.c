@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -35,7 +35,8 @@ static pdf_function *pdf_load_function_imp(fz_context *ctx, pdf_obj *dict, int i
 enum
 {
 	MAX_N = FZ_MAX_COLORS,
-	MAX_M = FZ_MAX_COLORS
+	MAX_M = FZ_MAX_COLORS,
+	MAX_STITCHING = 256,
 };
 
 enum
@@ -115,7 +116,8 @@ pdf_keep_function(fz_context *ctx, pdf_function *func)
 void
 pdf_drop_function(fz_context *ctx, pdf_function *func)
 {
-	fz_drop_function(ctx, &func->super);
+	if (func)
+		fz_drop_function(ctx, &func->super);
 }
 
 size_t
@@ -310,11 +312,11 @@ ps_roll(ps_stack *st, int n, int j)
 	}
 	else
 	{
-	for (i = 0; i < j; i++)
-	{
-		tmp = st->stack[st->sp - 1];
+		for (i = 0; i < j; i++)
+		{
+			tmp = st->stack[st->sp - 1];
 			memmove(st->stack + st->sp - n + 1, st->stack + st->sp - n, (n-1) * sizeof(psobj));
-		st->stack[st->sp - n] = tmp;
+			st->stack[st->sp - n] = tmp;
 		}
 	}
 }
@@ -1277,6 +1279,10 @@ load_stitching_func(fz_context *ctx, pdf_function *func_, pdf_obj *dict, pdf_cyc
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "stitching function has no input functions");
 
 	k = pdf_array_len(ctx, obj);
+	if (k < 1)
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "no sub-functions in stitching function");
+	if (k > MAX_STITCHING)
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "too many sub-functions in stitching function");
 
 	func->funcs = Memento_label(fz_malloc_array(ctx, k, pdf_function*), "stitch_fns");
 	func->bounds = Memento_label(fz_malloc_array(ctx, k - 1, float), "stitch_bounds");

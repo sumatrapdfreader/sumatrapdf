@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -515,7 +515,7 @@ static int
 count_siblings_after(fz_xml *node)
 {
 	int count = 0;
-	for (; node; node = fz_xml_next(node))
+	for (node = fz_xml_next(node); node; node = fz_xml_next(node))
 		if (fz_xml_tag(node) != NULL)
 			++count;
 	return count;
@@ -538,7 +538,7 @@ count_siblings_of_type_after(fz_xml *node)
 {
 	const char *tag = fz_xml_tag(node);
 	int count = 0;
-	for (; node; node = fz_xml_next(node))
+	for (node = fz_xml_next(node); node; node = fz_xml_next(node))
 		if (fz_xml_is_tag(node, tag))
 			++count;
 	return count;
@@ -576,8 +576,8 @@ match_an_plus_b_microsyntax(fz_xml *node, const char *val, int (*callback)(fz_xm
 	// - A is 1 for nth-child(n+B) -- same as nth-child(1n+B)
 	// - A is -1 for nth-child(-n+B) -- same as nth-child(-1n+B)
 
-	int a, b, n;
-	int m = strlen(val);
+	int a, b, n = -1;
+	int m = (int)strlen(val);
 
 	if (sscanf(val, " even %n", &n) == 0 && n == m)
 		return callback(node, 2, 0);
@@ -610,7 +610,7 @@ match_an_plus_b_microsyntax(fz_xml *node, const char *val, int (*callback)(fz_xm
 }
 
 static int
-match_pseudo_condition(fz_xml *node, const char *key, const char *val)
+match_pseudo_condition(fz_xml *node, const char *key, const char *val, int pseudo)
 {
 	if (!strcmp(key, "link"))
 		return fz_xml_att(node, "href") != NULL;
@@ -642,18 +642,23 @@ match_pseudo_condition(fz_xml *node, const char *key, const char *val)
 	if (!strcmp(key, "nth-last-of-type") && val != NULL)
 		return match_an_plus_b_microsyntax(node, val, match_nth_last_of_type);
 
+	if (pseudo == FZ_CSS_PSEUDO_BEFORE && !strcmp(key, "before"))
+		return 1;
+	if (pseudo == FZ_CSS_PSEUDO_AFTER && !strcmp(key, "after"))
+		return 1;
+
 	return 0;
 }
 
 static int
-match_condition(fz_css_condition *cond, fz_xml *node)
+match_condition(fz_css_condition *cond, fz_xml *node, int pseudo)
 {
 	if (!cond)
 		return 1;
 
 	switch (cond->type) {
 	default: return 0;
-	case ':': if (!match_pseudo_condition(node, cond->key, cond->val)) return 0; break;
+	case ':': if (!match_pseudo_condition(node, cond->key, cond->val, pseudo)) return 0; break;
 	case '#': if (!match_att_is_condition(node, "id", cond->val)) return 0; break;
 	case '.': if (!match_att_has_condition(node, "class", cond->val)) return 0; break;
 	case '[': if (!match_att_exists_condition(node, cond->key)) return 0; break;
@@ -662,11 +667,11 @@ match_condition(fz_css_condition *cond, fz_xml *node)
 	case '|': if (!match_att_is_condition(node, cond->key, cond->val)) return 0; break;
 	}
 
-	return match_condition(cond->next, node);
+	return match_condition(cond->next, node, pseudo);
 }
 
 static int
-match_selector(fz_css_selector *sel, fz_xml *node)
+match_selector(fz_css_selector *sel, fz_xml *node, int pseudo)
 {
 	if (!node)
 		return 0;
@@ -677,12 +682,12 @@ match_selector(fz_css_selector *sel, fz_xml *node)
 		if (sel->combine == ' ')
 		{
 			fz_xml *parent = fz_xml_up(node);
-			if (!parent || !match_selector(sel->right, node))
+			if (!parent || !match_selector(sel->right, node, pseudo))
 				return 0;
 
 			while (parent)
 			{
-				if (match_selector(sel->left, parent))
+				if (match_selector(sel->left, parent, FZ_CSS_PSEUDO_NONE))
 					return 1;
 				parent = fz_xml_up(parent);
 			}
@@ -695,9 +700,9 @@ match_selector(fz_css_selector *sel, fz_xml *node)
 			fz_xml *parent = fz_xml_up(node);
 			if (!parent)
 				return 0;
-			if (!match_selector(sel->left, parent))
+			if (!match_selector(sel->left, parent, FZ_CSS_PSEUDO_NONE))
 				return 0;
-			if (!match_selector(sel->right, node))
+			if (!match_selector(sel->right, node, pseudo))
 				return 0;
 		}
 
@@ -711,9 +716,9 @@ match_selector(fz_css_selector *sel, fz_xml *node)
 				return 0;
 			if (!fz_xml_tag(prev))
 				return 0;
-			if (!match_selector(sel->left, prev))
+			if (!match_selector(sel->left, prev, FZ_CSS_PSEUDO_NONE))
 				return 0;
-			if (!match_selector(sel->right, node))
+			if (!match_selector(sel->right, node, pseudo))
 				return 0;
 		}
 	}
@@ -726,7 +731,7 @@ match_selector(fz_css_selector *sel, fz_xml *node)
 
 	if (sel->cond)
 	{
-		if (!match_condition(sel->cond, node))
+		if (!match_condition(sel->cond, node, pseudo))
 			return 0;
 	}
 
@@ -1060,7 +1065,7 @@ add_property(fz_css_match *match, int name, fz_css_value *value, int spec)
 }
 
 void
-fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css, fz_xml *node)
+fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css, fz_xml *node, int pseudo, int publisher_css)
 {
 	fz_css_rule *rule;
 	fz_css_selector *sel;
@@ -1080,7 +1085,7 @@ fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css
 		sel = rule->selector;
 		while (sel)
 		{
-			if (match_selector(sel, node))
+			if (match_selector(sel, node, pseudo))
 			{
 				for (prop = rule->declaration; prop; prop = prop->next)
 					add_property(match, prop->name, prop->value, selector_specificity(sel, prop->important));
@@ -1090,7 +1095,7 @@ fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css
 		}
 	}
 
-	if (fz_use_document_css(ctx))
+	if (publisher_css)
 	{
 		s = fz_xml_att(node, "style");
 		if (s)
@@ -1147,7 +1152,7 @@ fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css)
 }
 
 void
-fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_css_property *declaration)
+fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_css_property *declaration, int tainted)
 {
 	fz_html_font_face *custom;
 	fz_css_property *prop;
@@ -1198,13 +1203,19 @@ fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, co
 	fz_try(ctx)
 	{
 		if (fz_has_archive_entry(ctx, zip, path))
+		{
 			buf = fz_read_archive_entry(ctx, zip, path);
-		else
+		}
+		else if (!tainted)
 		{
 			stm = fz_try_open_file(ctx, src);
 			if (stm == NULL)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "cannot locate font '%s' specified by css", src);
 			buf = fz_read_all(ctx, stm, 0);
+		}
+		else
+		{
+			fz_throw(ctx, FZ_ERROR_FORMAT, "cannot locate font '%s' specified by css", src);
 		}
 		font = fz_new_font_from_buffer(ctx, NULL, buf, 0, 0);
 		fz_add_html_font_face(ctx, set, family, is_bold, is_italic, is_small_caps, path, font);
@@ -1225,7 +1236,7 @@ fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, co
 }
 
 void
-fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_css *css)
+fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_css *css, int tainted)
 {
 	fz_css_rule *rule;
 	fz_css_selector *sel;
@@ -1240,7 +1251,7 @@ fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, c
 			{
 				if (sel->name && !strcmp(sel->name, "@font-face"))
 				{
-					fz_add_css_font_face(ctx, set, zip, base_uri, rule->declaration);
+					fz_add_css_font_face(ctx, set, zip, base_uri, rule->declaration, tainted);
 					break;
 				}
 				sel = sel->next;
@@ -1287,7 +1298,7 @@ value_from_inheritable_property(fz_css_match *match, int name)
 {
 	while (match)
 	{
-	fz_css_value *value = match->value[name];
+		fz_css_value *value = match->value[name];
 		if (value && strcmp(value->data, "inherit") != 0)
 			return value;
 		match = match->up;
@@ -1461,7 +1472,7 @@ has_border_width_from_property(fz_css_match *match, int property, fz_css_number 
 		*num = make_number(2, N_LENGTH); /* initial: 'medium' */
 		return 0;
 	}
-		if (!strcmp(value->data, "thin"))
+	if (!strcmp(value->data, "thin"))
 		*num = make_number(1, N_LENGTH);
 	else if (!strcmp(value->data, "medium"))
 		*num = make_number(2, N_LENGTH);
@@ -1471,7 +1482,7 @@ has_border_width_from_property(fz_css_match *match, int property, fz_css_number 
 		*num = number_from_value(value, 0, N_LENGTH);
 
 	return 1;
-	}
+}
 
 static fz_css_number
 border_width_from_property(fz_css_match *match, int property)
@@ -1567,7 +1578,7 @@ hexlen(const char *data)
 	while ((*data >= '0' && *data <= '9') ||
 		(*data >= 'a' && *data <= 'f') ||
 		(*data >= 'A' && *data <= 'F'))
-{
+	{
 		data++, n++;
 	}
 
@@ -1576,45 +1587,45 @@ hexlen(const char *data)
 
 static fz_css_color
 hash_color(const char *data)
-	{
-		int r, g, b, a;
+{
+	int r, g, b, a;
 	size_t n = hexlen(data);
 
-		if (n == 3)
-		{
+	if (n == 3)
+	{
 		r = tohex(data[0]) * 17;
 		g = tohex(data[1]) * 17;
 		b = tohex(data[2]) * 17;
-			a = 255;
-		}
-		else if (n == 4)
-		{
+		a = 255;
+	}
+	else if (n == 4)
+	{
 		r = tohex(data[0]) * 17;
 		g = tohex(data[1]) * 17;
 		b = tohex(data[2]) * 17;
 		a = tohex(data[3]) * 17;
-		}
-		else if (n == 6)
-		{
+	}
+	else if (n == 6)
+	{
 		r = tohex(data[0]) * 16 + tohex(data[1]);
 		g = tohex(data[2]) * 16 + tohex(data[3]);
 		b = tohex(data[4]) * 16 + tohex(data[5]);
-			a = 255;
-		}
-		else if (n == 8)
-		{
+		a = 255;
+	}
+	else if (n == 8)
+	{
 		r = tohex(data[0]) * 16 + tohex(data[1]);
 		g = tohex(data[2]) * 16 + tohex(data[3]);
 		b = tohex(data[4]) * 16 + tohex(data[5]);
 		a = tohex(data[6]) * 16 + tohex(data[7]);
-		}
-		else
-		{
-			r = g = b = 0;
-			a = 255;
-		}
-		return make_color(r, g, b, a);
 	}
+	else
+	{
+		r = g = b = 0;
+		a = 255;
+	}
+	return make_color(r, g, b, a);
+}
 
 static fz_css_color
 color_from_value(fz_css_value *value, fz_css_color initial)
@@ -1880,6 +1891,17 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 		else if (!strcmp(value->data, "bottom")) style->vertical_align = VA_BOTTOM;
 		else if (!strcmp(value->data, "text-top")) style->vertical_align = VA_TEXT_TOP;
 		else if (!strcmp(value->data, "text-bottom")) style->vertical_align = VA_TEXT_BOTTOM;
+		else if (!strcmp(value->data, "middle")) style->vertical_align = VA_MIDDLE;
+		else if (value->type == CSS_PERCENT)
+		{
+			style->vertical_align = VA_PERCENT;
+			style->vertical_align_number = number_from_value(value, 0, N_PERCENT);
+		}
+		else if (value->type == CSS_LENGTH)
+		{
+			style->vertical_align = VA_LENGTH;
+			style->vertical_align_number = number_from_value(value, 0, N_LENGTH);
+		}
 	}
 
 	value = value_from_property(match, PRO_FONT_SIZE);
@@ -2024,6 +2046,12 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 		if (!style->font)
 			style->font = fz_load_html_font(ctx, set, "serif", is_bold, is_italic, style->small_caps);
 	}
+}
+
+const char *
+fz_get_css_match_content(fz_css_match *match)
+{
+	return string_from_property(match, PRO_CONTENT, NULL);
 }
 
 void

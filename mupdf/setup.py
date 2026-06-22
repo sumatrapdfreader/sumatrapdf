@@ -478,7 +478,7 @@ Here is some example code that shows all available information about document's 
 More information
 ----------------
 
-https://mupdf.com/r/C-and-Python-APIs
+https://mupdf.readthedocs.io/en/latest/reference/cxx-and-derived-bindings.html
 
 """
 
@@ -501,8 +501,8 @@ mupdf_package = pipcl.Package(
         author_email = 'support@artifex.com',
         home_page = 'https://mupdf.com/',
         project_url = [
-            ('Documentation, https://mupdf.com/r/C-and-Python-APIs/'),
-            ('Source, https://git.ghostscript.com/?p=mupdf.git'),
+            ('Documentation, https://mupdf.readthedocs.io/en/latest/reference/cxx-and-derived-bindings.html'),
+            ('Source, http://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/'),
             ('Tracker, https://bugs.ghostscript.com/'),
             ],
         keywords = 'PDF',

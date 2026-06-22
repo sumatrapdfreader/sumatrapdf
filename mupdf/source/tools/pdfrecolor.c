@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -35,8 +35,8 @@ usage(void)
 {
 	fprintf(stderr, "Usage: SumatraPDF recolor [options] <input filename>\n");
 	fprintf(stderr, "\t-c -\tOutput colorspace (gray(default), rgb, cmyk)\n");
-	fprintf(stderr, "\t-r\tRemove OutputIntent(s)\n");
 	fprintf(stderr, "\t-o -\tOutput file\n");
+	fprintf(stderr, "\t-r\tRemove OutputIntent(s)\n");
 	return 1;
 }
 

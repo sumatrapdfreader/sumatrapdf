@@ -1566,6 +1566,14 @@ JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_Document_isReflowable
 
 /*
  * Class:     com_artifex_mupdf_fitz_Document
+ * Method:    style
+ * Signature: (ZLjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Document_style
+  (JNIEnv *, jobject, jboolean, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Document
  * Method:    layout
  * Signature: (FFF)V
  */
@@ -1916,7 +1924,7 @@ extern "C" {
 #undef com_artifex_mupdf_fitz_FitzInputStream_MAX_SKIP_BUFFER_SIZE
 #define com_artifex_mupdf_fitz_FitzInputStream_MAX_SKIP_BUFFER_SIZE 2048L
 #undef com_artifex_mupdf_fitz_FitzInputStream_DEFAULT_BUFFER_SIZE
-#define com_artifex_mupdf_fitz_FitzInputStream_DEFAULT_BUFFER_SIZE 8192L
+#define com_artifex_mupdf_fitz_FitzInputStream_DEFAULT_BUFFER_SIZE 16384L
 #undef com_artifex_mupdf_fitz_FitzInputStream_MAX_BUFFER_SIZE
 #define com_artifex_mupdf_fitz_FitzInputStream_MAX_BUFFER_SIZE 2147483639L
 /*
@@ -3293,6 +3301,22 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setInteriorColo
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getName
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getName
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setName
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setName
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    hasAuthor
  * Signature: ()Z
  */
@@ -3313,6 +3337,30 @@ JNIEXPORT jstring JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getAuthor
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setAuthor
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    hasSubject
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasSubject
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getSubject
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getSubject
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setSubject
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setSubject
   (JNIEnv *, jobject, jstring);
 
 /*
@@ -5880,14 +5928,24 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_MULTILINE 4096L
 #undef com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_PASSWORD
 #define com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_PASSWORD 8192L
+#undef com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_FILE_SELECT
+#define com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_FILE_SELECT 1048576L
+#undef com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_DO_NOT_SPELL_CHECK
+#define com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_DO_NOT_SPELL_CHECK 4194304L
+#undef com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_DO_NOT_SCROLL
+#define com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_DO_NOT_SCROLL 8388608L
 #undef com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_COMB
 #define com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_COMB 16777216L
+#undef com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_RICH_TEXT
+#define com_artifex_mupdf_fitz_PDFWidget_TX_FIELD_IS_RICH_TEXT 33554432L
 #undef com_artifex_mupdf_fitz_PDFWidget_BTN_FIELD_IS_NO_TOGGLE_TO_OFF
 #define com_artifex_mupdf_fitz_PDFWidget_BTN_FIELD_IS_NO_TOGGLE_TO_OFF 16384L
 #undef com_artifex_mupdf_fitz_PDFWidget_BTN_FIELD_IS_RADIO
 #define com_artifex_mupdf_fitz_PDFWidget_BTN_FIELD_IS_RADIO 32768L
 #undef com_artifex_mupdf_fitz_PDFWidget_BTN_FIELD_IS_PUSHBUTTON
 #define com_artifex_mupdf_fitz_PDFWidget_BTN_FIELD_IS_PUSHBUTTON 65536L
+#undef com_artifex_mupdf_fitz_PDFWidget_BTN_FIELD_IS_RADIOS_IN_UNISON
+#define com_artifex_mupdf_fitz_PDFWidget_BTN_FIELD_IS_RADIOS_IN_UNISON 33554432L
 #undef com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_COMBO
 #define com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_COMBO 131072L
 #undef com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_EDIT
@@ -5896,6 +5954,10 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_SORT 524288L
 #undef com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_MULTI_SELECT
 #define com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_MULTI_SELECT 2097152L
+#undef com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_DO_NOT_SPELL_CHECK
+#define com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_DO_NOT_SPELL_CHECK 4194304L
+#undef com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE
+#define com_artifex_mupdf_fitz_PDFWidget_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE 33554432L
 #undef com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_SHOW_LABELS
 #define com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_SHOW_LABELS 1L
 #undef com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_SHOW_DN
@@ -7126,10 +7188,24 @@ extern "C" {
 #define com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_UNICODE_IS_GID 256L
 #undef com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_SYNTHETIC_LARGE
 #define com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_SYNTHETIC_LARGE 512L
+#undef com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_HIGHLIGHT
+#define com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_HIGHLIGHT 1024L
+#undef com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_UNKNOWN
+#define com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_UNKNOWN 0L
+#undef com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_LEFT
+#define com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_LEFT 1L
+#undef com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_CENTER
+#define com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_CENTER 2L
+#undef com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_RIGHT
+#define com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_RIGHT 3L
+#undef com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_FULL
+#define com_artifex_mupdf_fitz_StructuredText_TEXT_JUSTIFY_FULL 4L
 #undef com_artifex_mupdf_fitz_StructuredText_VECTOR_IS_STROKED
 #define com_artifex_mupdf_fitz_StructuredText_VECTOR_IS_STROKED 1L
 #undef com_artifex_mupdf_fitz_StructuredText_VECTOR_IS_RECTANGLE
 #define com_artifex_mupdf_fitz_StructuredText_VECTOR_IS_RECTANGLE 2L
+#undef com_artifex_mupdf_fitz_StructuredText_VECTOR_CONTINUES
+#define com_artifex_mupdf_fitz_StructuredText_VECTOR_CONTINUES 4L
 /*
  * Class:     com_artifex_mupdf_fitz_StructuredText
  * Method:    finalize

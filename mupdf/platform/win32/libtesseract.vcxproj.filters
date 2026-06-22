@@ -315,16 +315,7 @@
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\ccutil.h">
       <Filter>Header Files\tesseract\ccutil</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\clst.h">
-      <Filter>Header Files\tesseract\ccutil</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\doubleptr.h">
-      <Filter>Header Files\tesseract\ccutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\elst.h">
-      <Filter>Header Files\tesseract\ccutil</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\elst2.h">
       <Filter>Header Files\tesseract\ccutil</Filter>
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\errcode.h">
@@ -819,15 +810,6 @@
       <Filter>Source Files\tesseract\lstm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\ccutil.cpp">
-      <Filter>Source Files\tesseract\ccutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\clst.cpp">
-      <Filter>Source Files\tesseract\ccutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst.cpp">
-      <Filter>Source Files\tesseract\ccutil</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst2.cpp">
       <Filter>Source Files\tesseract\ccutil</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\errcode.cpp">

@@ -15,4 +15,4 @@
   <ItemGroup>
     <ClInclude Include="..\..\thirdparty\so\include\sodochandler.h" />
   </ItemGroup>
-</Project>
+</Project>

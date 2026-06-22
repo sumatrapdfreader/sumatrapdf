@@ -35,17 +35,12 @@
 typedef struct
 {
 	fz_document base;
-
 	fz_document *underdoc;
 	fz_stext_options opts;
-	float w;
-	float h;
-	float em;
 } reflow_document;
 
 typedef struct {
 	fz_page base;
-
 	fz_document *html_doc;
 	fz_page *html_page;
 } reflow_page;
@@ -199,7 +194,8 @@ reflow_load_page(fz_context *ctx, fz_document *doc_, int chapter, int pagenum)
 
 		stm = fz_open_buffer(ctx, buf);
 		page->html_doc = fz_open_document_with_stream(ctx, "application/xhtml+xml", stm);
-		fz_layout_document(ctx, page->html_doc, doc->w, 0, doc->em);
+		fz_style_document(ctx, page->html_doc, doc->base.publisher_css, doc->base.user_css);
+		fz_layout_document(ctx, page->html_doc, doc->base.layout_w, doc->base.layout_h, doc->base.layout_em);
 		page->html_page = fz_load_chapter_page(ctx, page->html_doc, 0, 0);
 	}
 	fz_always(ctx)
@@ -224,23 +220,31 @@ static int reflow_lookup_metadata(fz_context *ctx, fz_document *doc_, const char
 	return fz_lookup_metadata(ctx, doc->underdoc, key, buf, size);
 }
 
+static void *reflow_style_page(fz_context *ctx, fz_page *page_, void *state)
+{
+	reflow_page *page = (reflow_page *) page_;
+	reflow_document *doc = (reflow_document *) page->base.doc;
+	fz_style_document(ctx, page->html_doc, doc->base.publisher_css, doc->base.user_css);
+	return NULL;
+}
+
 static void *reflow_layout_page(fz_context *ctx, fz_page *page_, void *state)
 {
 	reflow_page *page = (reflow_page *) page_;
 	reflow_document *doc = (reflow_document *) page->base.doc;
-	fz_layout_document(ctx, page->html_doc, doc->w, 0, doc->em);
+	fz_layout_document(ctx, page->html_doc, doc->base.layout_w, doc->base.layout_h, doc->base.layout_em);
 	return NULL;
 }
 
-static void reflow_layout(fz_context *ctx, fz_document *doc_, float w, float h, float em)
+static void reflow_style(fz_context *ctx, fz_document *doc_)
 {
 	reflow_document *doc = (reflow_document*)doc_;
-	if (doc->w == w && doc->h == h && doc->em == em)
-		return;
-	doc->w = w;
-	doc->h = h;
-	doc->em = em;
+	(void) fz_process_opened_pages(ctx, (fz_document *) doc, reflow_style_page, NULL);
+}
 
+static void reflow_layout(fz_context *ctx, fz_document *doc_)
+{
+	reflow_document *doc = (reflow_document*)doc_;
 	(void) fz_process_opened_pages(ctx, (fz_document *) doc, reflow_layout_page, NULL);
 }
 
@@ -260,14 +264,11 @@ fz_open_reflowed_document(fz_context *ctx, fz_document *underdoc, const fz_stext
 	doc->base.count_pages = reflow_count_pages;
 	doc->base.load_page = reflow_load_page;
 	doc->base.lookup_metadata = reflow_lookup_metadata;
+	doc->base.style = reflow_style;
 	doc->base.layout = reflow_layout;
 
 	doc->underdoc = fz_keep_document(ctx, underdoc);
 	doc->opts = *opts;
-
-	doc->w = DEF_WIDTH;
-	doc->h = DEF_HEIGHT;
-	doc->em = DEF_FONTSIZE;
 
 	return &doc->base;
 }

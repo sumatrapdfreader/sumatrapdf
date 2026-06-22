@@ -377,6 +377,19 @@ Common
 
 		annotation.setFlags(4) // Clears all other flags and sets "NoZoom".
 
+.. method:: PDFAnnotation.prototype.getName()
+
+	Get the annotation name, a string uniquely identifying the annotation
+	among all annotations on its page.
+
+	:returns: string
+
+.. method:: PDFAnnotation.prototype.setName(name)
+
+	Set the annotation name.
+
+	:param string name:
+
 .. method:: PDFAnnotation.prototype.getContents()
 
 	Get the annotation contents.
@@ -693,6 +706,41 @@ Author
 	.. code-block::
 
 		annotation.setAuthor("Jane Doe")
+
+.. _subject-attribute:
+
+Subject
+-------
+
+.. method:: PDFAnnotation.prototype.hasSubject()
+
+	Returns whether the annotation may have a subject.
+
+	:returns: boolean
+
+	.. code-block::
+
+		var hasSubject = annotation.hasSubject()
+
+.. method:: PDFAnnotation.prototype.getSubject()
+
+	Get the annotation subject.
+
+	:returns: string
+
+	.. code-block::
+
+		var subject = annotation.getSubject()
+
+.. method:: PDFAnnotation.prototype.setSubject(subject)
+
+	Set the annotation subject.
+
+	:param string subject:
+
+	.. code-block::
+
+		annotation.setSubject("Re: Dinner on tuesday?")
 
 .. _border-attribute:
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -36,6 +36,7 @@ typedef struct
 	fz_html *html;
 	fz_outline *outline;
 	const fz_htdoc_format_t *format;
+	fz_buffer *buf;
 } html_document;
 
 typedef struct
@@ -53,6 +54,7 @@ htdoc_drop_document(fz_context *ctx, fz_document *doc_)
 	fz_drop_html(ctx, doc->html);
 	fz_drop_html_font_set(ctx, doc->set);
 	fz_drop_outline(ctx, doc->outline);
+	fz_drop_buffer(ctx, doc->buf);
 }
 
 static fz_link_dest
@@ -94,16 +96,6 @@ htdoc_update_outline(fz_context *ctx, fz_document *doc, fz_outline *node)
 		htdoc_update_outline(ctx, doc, node->down);
 		node = node->next;
 	}
-}
-
-static void
-htdoc_layout(fz_context *ctx, fz_document *doc_, float w, float h, float em)
-{
-	html_document *doc = (html_document*)doc_;
-
-	fz_layout_html(ctx, doc->html, w, h, em);
-
-	htdoc_update_outline(ctx, doc_, doc->outline);
 }
 
 static void
@@ -186,30 +178,27 @@ htdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char 
 	return -1;
 }
 
-static fz_html *
-generic_parse(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buffer_in, const char *user_css, const fz_htdoc_format_t *format)
+static void
+htdoc_style(fz_context *ctx, fz_document *doc_)
 {
-	fz_buffer *buffer_html = NULL;
-	fz_html *html = NULL;
+	html_document *doc = (html_document*)doc_;
+	fz_drop_html(ctx, doc->html);
+	doc->html = NULL;
+	fz_drop_outline(ctx, doc->outline);
+	doc->outline = NULL;
 
-	fz_try(ctx)
-	{
-		if (format->convert_to_html)
-			buffer_html = format->convert_to_html(ctx, set, buffer_in, zip, user_css);
-		else
-			buffer_html = fz_keep_buffer(ctx, buffer_in);
-		html = fz_parse_html(ctx, set, zip, base_uri, buffer_html, user_css, format->try_xml, format->try_html5, format->patch_mobi);
-	}
-	fz_always(ctx)
-	{
-		fz_drop_buffer(ctx, buffer_html);
-	}
-	fz_catch(ctx)
-	{
-		fz_drop_html(ctx, html);
-		fz_rethrow(ctx);
-	}
-	return html;
+	doc->html = fz_parse_html(ctx, doc->set, doc->zip, ".", doc->buf, doc->super.user_css, doc->format->try_xml, doc->format->try_html5, doc->format->flavor, doc->super.publisher_css);
+	doc->outline = fz_load_html_outline(ctx, doc->html);
+}
+
+static void
+htdoc_layout(fz_context *ctx, fz_document *doc_)
+{
+	html_document *doc = (html_document*)doc_;
+
+	fz_layout_html(ctx, doc->html, doc->super.layout_w, doc->super.layout_h, doc->super.layout_em);
+
+	htdoc_update_outline(ctx, doc_, doc->outline);
 }
 
 fz_document *
@@ -224,6 +213,7 @@ fz_htdoc_open_document_with_buffer(fz_context *ctx, fz_archive *dir, fz_buffer *
 	{
 		doc = fz_new_derived_document(ctx, html_document);
 		doc->super.drop_document = htdoc_drop_document;
+		doc->super.style = htdoc_style;
 		doc->super.layout = htdoc_layout;
 		doc->super.load_outline = htdoc_load_outline;
 		doc->super.resolve_link_dest = htdoc_resolve_link;
@@ -237,8 +227,12 @@ fz_htdoc_open_document_with_buffer(fz_context *ctx, fz_archive *dir, fz_buffer *
 		doc->zip = fz_keep_archive(ctx, dir);
 		doc->format = format;
 		doc->set = fz_new_html_font_set(ctx);
-		doc->html = generic_parse(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx), format);
-		doc->outline = fz_load_html_outline(ctx, doc->html);
+		doc->html = NULL;
+		if (format->convert_to_html)
+			doc->buf = format->convert_to_html(ctx, doc->set, buf, doc->zip);
+		else
+			doc->buf = fz_keep_buffer(ctx, buf);
+		doc->outline = NULL;
 	}
 	fz_always(ctx)
 		fz_drop_buffer(ctx, buf);
@@ -503,7 +497,7 @@ static int recognize_html_content(fz_context *ctx, const fz_document_handler *ha
 	return 0;
 }
 
-int htdoc_recognize_html_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **hstate, fz_document_recognize_state_free_fn **free_state)
+static int htdoc_recognize_html_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **hstate, fz_document_recognize_state_free_fn **free_state)
 {
 	return recognize_html_content(ctx, handler, stream, dir, hstate, free_state, 0);
 }
@@ -512,7 +506,8 @@ static const fz_htdoc_format_t fz_htdoc_html5 =
 {
 	"HTML5",
 	NULL,
-	0, 1, 0
+	0, 1,
+	FZ_HTML_FLAVOR_DEFAULT
 };
 
 static fz_document *
@@ -550,7 +545,8 @@ static const fz_htdoc_format_t fz_htdoc_xhtml =
 {
 	"XHTML",
 	NULL,
-	1, 1, 0
+	1, 1,
+	FZ_HTML_FLAVOR_DEFAULT
 };
 
 static fz_document *
@@ -559,7 +555,7 @@ xhtdoc_open_document(fz_context *ctx, const fz_document_handler *handler, fz_str
 	return fz_htdoc_open_document_with_stream_and_dir(ctx, file, dir, &fz_htdoc_xhtml);
 }
 
-int xhtdoc_recognize_xhtml_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **hstate, fz_document_recognize_state_free_fn **free_state)
+static int xhtdoc_recognize_xhtml_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **hstate, fz_document_recognize_state_free_fn **free_state)
 {
 	return recognize_html_content(ctx, handler, stream, dir, hstate, free_state, 1);
 }
@@ -592,7 +588,8 @@ static const fz_htdoc_format_t fz_htdoc_fb2 =
 {
 	"FictionBook2",
 	NULL,
-	1, 0, 0
+	1, 0,
+	FZ_HTML_FLAVOR_FICTIONBOOK2
 };
 
 static fz_document *
@@ -669,7 +666,8 @@ static const fz_htdoc_format_t fz_htdoc_mobi =
 {
 	"MOBI",
 	NULL,
-	1, 1, 1
+	1, 1,
+	FZ_HTML_FLAVOR_MOBI
 };
 
 static fz_document *

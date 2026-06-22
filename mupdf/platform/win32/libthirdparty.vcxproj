@@ -165,8 +165,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -182,8 +182,8 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -198,8 +198,8 @@
     <Midl />
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -213,8 +213,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -230,8 +230,8 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -249,8 +249,8 @@
     <Midl />
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -268,8 +268,8 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
@@ -285,8 +285,8 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN64;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
@@ -300,8 +300,8 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN64;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\scripts\cmark-gfm;..\..\thirdparty\cmark-gfm\src;..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CMARK_GFM_STATIC_DEFINE;WIN64;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
@@ -320,7 +320,19 @@
     <ClCompile Include="..\..\thirdparty\brotli\c\dec\bit_reader.c" />
     <ClCompile Include="..\..\thirdparty\brotli\c\dec\decode.c" />
     <ClCompile Include="..\..\thirdparty\brotli\c\dec\huffman.c" />
-    <ClCompile Include="..\..\thirdparty\brotli\c\dec\state.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\prefix.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\state.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)dec\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)dec\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)dec\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">$(IntDir)dec\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(IntDir)dec\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(IntDir)dec\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|ARM64'">$(IntDir)dec\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)dec\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|x64'">$(IntDir)dec\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\static_init.c" />
     <ClCompile Include="..\..\thirdparty\brotli\c\enc\backward_references.c" />
     <ClCompile Include="..\..\thirdparty\brotli\c\enc\backward_references_hq.c" />
     <ClCompile Include="..\..\thirdparty\brotli\c\enc\bit_cost.c" />
@@ -341,7 +353,58 @@
     <ClCompile Include="..\..\thirdparty\brotli\c\enc\memory.c" />
     <ClCompile Include="..\..\thirdparty\brotli\c\enc\metablock.c" />
     <ClCompile Include="..\..\thirdparty\brotli\c\enc\static_dict.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\static_dict_lut.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\static_init.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)enc\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)enc\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)enc\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">$(IntDir)enc\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(IntDir)enc\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(IntDir)enc\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|ARM64'">$(IntDir)enc\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)enc\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|x64'">$(IntDir)enc\</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\brotli\c\enc\utf8_util.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\autoheaderid.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\autolink.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\core-extensions.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\ext_scanners.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\strikethrough.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\table.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\tagfilter.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\extensions\tasklist.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\arena.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\blocks.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\buffer.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\cmark.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\cmark_ctype.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\footnotes.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\houdini_href_e.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\houdini_html_e.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\houdini_html_u.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\html.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\inlines.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\iterator.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\linked_list.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\map.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\node.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\plugin.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\references.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\registry.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\scanners.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\syntax_extension.c" />
+    <ClCompile Include="..\..\thirdparty\cmark-gfm\src\utf8.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)cmark\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)cmark\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)cmark\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">$(IntDir)cmark\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(IntDir)cmark\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(IntDir)cmark\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|ARM64'">$(IntDir)cmark\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)cmark\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Memento|x64'">$(IntDir)cmark\</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbase.c" />
     <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbbox.c" />
     <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbitmap.c" />
@@ -591,6 +654,7 @@
     <ClInclude Include="..\..\thirdparty\brotli\c\dec\huffman.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\dec\prefix.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\dec\state.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\dec\static_init.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\enc\backward_references.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\enc\backward_references_hq.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\enc\backward_references_inc.h" />
@@ -633,6 +697,7 @@
     <ClInclude Include="..\..\thirdparty\brotli\c\enc\state.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\enc\static_dict.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\enc\static_dict_lut.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\static_init.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\enc\utf8_util.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\enc\write_bits.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\decode.h" />
@@ -640,6 +705,34 @@
     <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\port.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\shared_dictionary.h" />
     <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\types.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\autoheaderid.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\autolink.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\cmark-gfm-core-extensions.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\ext_scanners.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\strikethrough.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\table.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\tagfilter.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\extensions\tasklist.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\buffer.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\chunk.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\cmark-gfm-extension_api.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\cmark-gfm.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\cmark_ctype.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\footnotes.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\houdini.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\html.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\inlines.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\iterator.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\map.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\node.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\parser.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\plugin.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\references.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\registry.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\render.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\scanners.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\syntax_extension.h" />
+    <ClInclude Include="..\..\thirdparty\cmark-gfm\src\utf8.h" />
     <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftconfig.h" />
     <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftheader.h" />
     <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftmodule.h" />
@@ -801,4 +894,4 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-</Project>
+</Project>

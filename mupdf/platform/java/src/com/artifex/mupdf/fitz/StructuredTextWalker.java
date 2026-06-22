@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -25,11 +25,11 @@ package com.artifex.mupdf.fitz;
 public interface StructuredTextWalker
 {
 	void onImageBlock(Rect bbox, Matrix transform, Image image);
-	void beginTextBlock(Rect bbox);
+	void beginTextBlock(Rect bbox, int flags);
 	void endTextBlock();
 	void beginLine(Rect bbox, int wmode, Point dir);
 	void endLine();
-	void onChar(int c, Point origin, Font font, float size, Quad q, int argb, int flags);
+	void onChar(int c, Point origin, Font font, float size, Quad q, int argb, int flags, int bidi);
 	void beginStruct(String standard, String raw, int index);
 	void endStruct();
 	void onVector(Rect bbox, VectorInfo info, int argb);
@@ -37,5 +37,6 @@ public interface StructuredTextWalker
 	public static class VectorInfo {
 		public boolean isStroked;
 		public boolean isRectangle;
+		public boolean continues;
 	}
 }

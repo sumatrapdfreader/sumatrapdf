@@ -732,23 +732,30 @@ Usage:
 
             Windows specifics:
 
-                * On Windows we support building for specific cpus and python
-                  versions.
+                On Windows we support building for specific cpus and python
+                versions:
 
-                * We use `py -0f' to find the matching installed Python along
-                  with its Python.h and python.lib.
+                    * We use `py -0f' to find the matching installed Python along
+                      with its Python.h and python.lib.
 
-                * We append -x32 or -x64 for current system if not already
-                  present.
+                    * We append -x32 or -x64 for current system if not already
+                      present.
 
-                * We append -py<current_python_version> if '-py...' is not
-                  already present.
+                    * We append -py<current_python_version> if '-py...' is not
+                      already present.
 
-                For example:
+                    For example:
 
-                    -d build/shared-release-x32
-                    -d build/shared-release-x32-py3.8
-                    -d build/shared-release-x64-py3.9
+                        -d build/shared-release-x32
+                        -d build/shared-release-x32-py3.8
+                        -d build/shared-release-x64-py3.9
+
+                Special handling of -TOFU_CJK_EXT:
+
+                    If <directory> contains `-TOFU_CJK_EXT`, we append `TofuCjkExt`
+                    to the build type passed to devenv, for example:
+
+                        devenv ... /Build "ReleaseTofuCjkExt|x64" ...
 
         --doc <languages>
             Generates documentation for the different APIs in
@@ -810,7 +817,11 @@ Usage:
             swig.exe and sets things up to use it subsequently.
 
         --sync-docs <destination>
-            Use rsync to copy contents of docs/generated/ to remote destination.
+            If <destination> contains ':' we use rsync to copy contents of
+            docs/generated/ to remote destination.
+
+            Otherwise we use shutil.copytree() to copy contents of
+            docs/generated/ into director <destination>.
 
         --sync-pretty <destination>
             Use rsync to copy generated C++ and Python files to <destination>. Also
@@ -1416,6 +1427,7 @@ def build_so_windows(
                 /nologo
                 /permissive-
                 {'/MDd /Od /RTC1 /D _DEBUG' if (debug or memento) else '/MD /D "NDEBUG"'}
+                {'/D Py_GIL_DISABLED' if sysconfig.get_config_var('Py_GIL_DISABLED')==1 else ''}
                 {'/D MEMENTO' if memento else ''}
             ''')
     if sys.maxsize != 2**31 - 1:
@@ -1576,6 +1588,9 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
     cflags = os.environ.get('XCXXFLAGS', '')
 
     windows_build_type = build_dirs.windows_build_type()
+    windows_build_type2 = windows_build_type
+    if '-TOFU_CJK_EXT' in build_dirs.dir_so:
+        windows_build_type2 += 'TofuCjkExt'
     so_version = get_so_version( build_dirs)
 
     if build_csharp:
@@ -1634,7 +1649,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                     #
                     win32_infix = _windows_vs_upgrade( vs_upgrade, build_dirs, devenv)
                     jlib.log(f'Building mupdfcpp.dll by running devenv ...')
-                    build = f'{windows_build_type}|{build_dirs.cpu.windows_config}'
+                    build = f'{windows_build_type2}|{build_dirs.cpu.windows_config}'
                     command = (
                             f'cd {build_dirs.dir_mupdf}&&'
                             f'"{devenv}"'
@@ -1714,7 +1729,29 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                         link_soname_arg = ''
                         if state.state_.linux and so_version:
                             link_soname_arg = f'-Wl,-soname,{os.path.basename(libmupdfcpp)}'
-                        command = ( textwrap.dedent(
+                        o_files = list()
+                        for cpp_file in cpp_files:
+                            o_file = f'{os.path.relpath(cpp_file)}.o'
+                            o_files.append(o_file)
+                            command = textwrap.dedent(
+                                    f'''
+                                    {compiler}
+                                        -c
+                                        -o {o_file}
+                                        {build_dirs.cpp_flags}
+                                        -fPIC
+                                        {cflags}
+                                        -I {include1}
+                                        -I {include2}
+                                        {cpp_file}
+                                    ''')
+                            jlib.build(
+                                    [include1, include2, cpp_file],
+                                    o_file,
+                                    command,
+                                    force_rebuild,
+                                    )
+                        command = textwrap.dedent(
                                 f'''
                                 {compiler}
                                     -o {os.path.relpath(libmupdfcpp)}
@@ -1724,12 +1761,11 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     {cflags}
                                     -I {include1}
                                     -I {include2}
-                                    {cpp_files_text}
+                                    {' '.join(o_files)}
                                     {link_l_flags(libmupdf)}
                                 ''')
-                                )
                         command_was_run = jlib.build(
-                                [include1, include2] + cpp_files,
+                                o_files,
                                 libmupdfcpp,
                                 command,
                                 force_rebuild,
@@ -2278,7 +2314,8 @@ def make_docs( build_dirs, languages_original):
         jlib.fs_ensure_empty_dir( outdir)
         dname = f'{name}.doxygen'
         dname2 = os.path.join( outdir, dname)
-        jlib.system( f'cd {outdir}; rm -f {dname}0; doxygen -g {dname}0', out='return')
+        assert not os.path.exists(f'{outdir}/{dname}0')
+        jlib.system( f'cd {outdir} && doxygen -g {dname}0', out='return')
         with open( dname2+'0') as f:
             dtext = f.read()
         dtext, n = re.subn( '\nPROJECT_NAME *=.*\n', f'\nPROJECT_NAME = {name}\n', dtext)
@@ -2291,7 +2328,7 @@ def make_docs( build_dirs, languages_original):
         with open( dname2, 'w') as f:
             f.write( dtext)
         #jlib.system( f'diff -u {dname2}0 {dname2}', raise_errors=False)
-        command = f'cd {outdir}; doxygen {dname}'
+        command = f'cd {outdir} && doxygen {dname}'
         jlib.system( command, out='return', verbose=1)
         jlib.log( 'have created: {outdir}/html/index.html')
 
@@ -2311,9 +2348,10 @@ def make_docs( build_dirs, languages_original):
             pythonpath = os.path.relpath( f'{build_dirs.dir_so}', f'{out_dir}/python')
             input_relpath = os.path.relpath( f'{build_dirs.dir_so}/mupdf.py', f'{out_dir}/python')
             jlib.system(
-                    f'cd {out_dir}/python && LD_LIBRARY_PATH={ld_library_path} PYTHONPATH={pythonpath} pydoc3 -w {input_relpath}',
+                    f'cd {out_dir}/python && python -m pydoc -w {input_relpath}',
                     out='log',
                     verbose=True,
+                    env_extra = dict(LD_LIBRARY_PATH=ld_library_path, PYTHONPATH=pythonpath),
                     )
             path = f'{out_dir}/python/mupdf.html'
             assert os.path.isfile( path)
@@ -2741,11 +2779,15 @@ def main2():
                 jlib.system( f'rsync -aiRz {" ".join( files)} {destination}', verbose=1, out='log')
 
             elif arg == '--sync-docs':
-                # We use extra './' so that -R uses remaining path on
-                # destination.
-                #
                 destination = args.next()
-                jlib.system( f'rsync -aiRz {build_dirs.dir_mupdf}/docs/generated/./ {destination}', verbose=1, out='log')
+                if not destination.endswith('/'):
+                    destination += '/'
+                from_ = f'{build_dirs.dir_mupdf}/docs/generated/'
+                if ':' in destination:
+                    jlib.system( f'rsync -aiz {from_} {destination}', verbose=1, out='log')
+                else:
+                    jlib.log(f'Copying {from_=} to {destination=}.')
+                    shutil.copytree(from_, destination, dirs_exist_ok=True)
 
             elif arg == '--test-cpp':
                 testfile = os.path.abspath( f'{__file__}/../../../thirdparty/zlib/zlib.3.pdf')

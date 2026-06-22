@@ -264,7 +264,7 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 
 				while (data_len > 0)
 				{
-					int C, M, Y, K;
+					uint32_t C, M, Y, K;
 					char text[32];
 
 					v = get16be(&source);

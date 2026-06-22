@@ -33,7 +33,7 @@ Decoding barcodes
 	Input file name. The input can be any of the supported document formats.
 
 ``[pages1]`` and ``pages2``, etc.
-	Comma separated list of page ranges. The first page is "1", and the last page is "N". The default is "1-N".
+	Comma-separated list of page ranges. The first page is "1", and the last page is "N". The default is "1-N".
 
 Encoding barcodes
 ~~~~~~~~~~~~~~~~~

@@ -21,6 +21,12 @@ The ``convert`` command converts an input file into another format.
 		- print-raster: ``pcl``, ``pclm``, ``ps``, ``pwg``.
 		- vector: ``pdf``, ``svg``.
 		- text: ``html``, ``xhtml``, ``text``, ``stext``.
+	``-O`` comma-separated list of options for output format.
+		See
+		:doc:`/reference/common/pdf-write-options`
+		and
+		:doc:`/reference/common/document-writer-options`.
+
 	``-b`` box
 		Use named page box (``MediaBox``, ``CropBox``, ``BleedBox``, ``TrimBox``, or ``ArtBox``).
 	``-A`` bits
@@ -31,22 +37,14 @@ The ``convert`` command converts an input file into another format.
 		Page height in points for EPUB layout.
 	``-S`` size
 		Font size in points for EPUB layout.
-
 	``-U`` filename
 		User CSS stylesheet for EPUB layout.
-
 	``-X``
 		Disable document styles for EPUB layout.
-
-	``-O`` comma separated list of options for output format.
-		See
-		:doc:`/reference/common/pdf-write-options`
-		and
-		:doc:`/reference/common/document-writer-options`.
 
 ``file``
 	Input file name. The file can be any of the supported input formats.
 
 ``[pages]``
-	Comma separated list of page ranges. The first page is "1", and the
+	Comma-separated list of page ranges. The first page is "1", and the
 	last page is "N". The default is "1-N".

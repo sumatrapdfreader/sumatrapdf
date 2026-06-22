@@ -952,8 +952,8 @@ int main(int argc, char **argv)
 		case 'W': gapp.layout_w = fz_atof(fz_optarg); break;
 		case 'H': gapp.layout_h = fz_atof(fz_optarg); break;
 		case 'S': gapp.layout_em = fz_atof(fz_optarg); break;
-		case 'U': gapp.layout_css = fz_optarg; break;
-		case 'X': gapp.layout_use_doc_css = 0; break;
+		case 'U': gapp.user_css = fz_optarg; break;
+		case 'X': gapp.publisher_css = 0; break;
 		case 'b': kbps = fz_atoi(fz_optarg); break;
 		case 'v': version(); break;
 		default: usage(argv[0]); break;
@@ -968,249 +968,259 @@ int main(int argc, char **argv)
 	if (argc - fz_optind == 1)
 		pageno = atoi(argv[fz_optind++]);
 
-	winopen();
-
-	if (resolution == -1)
-		resolution = winresolution();
-	if (resolution < MINRES)
-		resolution = MINRES;
-	if (resolution > MAXRES)
-		resolution = MAXRES;
-
-	gapp.transitions_enabled = 1;
-	gapp.scrw = DisplayWidth(xdpy, xscr);
-	gapp.scrh = DisplayHeight(xdpy, xscr);
-	gapp.default_resolution = resolution;
-	gapp.resolution = resolution;
-	gapp.pageno = pageno;
-
-	if (profile_name)
-		pdfapp_load_profile(&gapp, profile_name);
-
-	tmo_at.tv_sec = 0;
-	tmo_at.tv_usec = 0;
-	timeout = NULL;
-
-	if (kbps)
-		pdfapp_open_progressive(&gapp, filename, 0, kbps);
-	else
-		pdfapp_open(&gapp, filename, 0);
-
-	FD_ZERO(&fds);
-
-	signal(SIGHUP, signal_handler);
-
-	while (!closing)
+	fz_try(ctx)
 	{
-		while (!closing && XPending(xdpy) && !transition_dirty)
-		{
-			XNextEvent(xdpy, &xevt);
 
-			switch (xevt.type)
-			{
-			case Expose:
-				dirty = 1;
-				break;
+		winopen();
 
-			case ConfigureNotify:
-				if (gapp.image)
-				{
-					if (xevt.xconfigure.width != reqw ||
-						xevt.xconfigure.height != reqh)
-						gapp.shrinkwrap = 0;
-				}
-				width = xevt.xconfigure.width;
-				height = xevt.xconfigure.height;
+		if (resolution == -1)
+			resolution = winresolution();
+		if (resolution < MINRES)
+			resolution = MINRES;
+		if (resolution > MAXRES)
+			resolution = MAXRES;
 
-				break;
+		gapp.transitions_enabled = 1;
+		gapp.scrw = DisplayWidth(xdpy, xscr);
+		gapp.scrh = DisplayHeight(xdpy, xscr);
+		gapp.default_resolution = resolution;
+		gapp.resolution = resolution;
+		gapp.pageno = pageno;
 
-			case KeyPress:
-				len = XLookupString(&xevt.xkey, buf, sizeof buf, &keysym, NULL);
+		if (profile_name)
+			pdfapp_load_profile(&gapp, profile_name);
 
-				if (!gapp.issearching)
-					switch (keysym)
-					{
-					case XK_Escape:
-						len = 1; buf[0] = '\033';
-						break;
-
-					case XK_Up:
-					case XK_KP_Up:
-						len = 1; buf[0] = 'k';
-						break;
-					case XK_Down:
-					case XK_KP_Down:
-						len = 1; buf[0] = 'j';
-						break;
-
-					case XK_Left:
-					case XK_KP_Left:
-						len = 1; buf[0] = 'h';
-						break;
-					case XK_Right:
-					case XK_KP_Right:
-						len = 1; buf[0] = 'l';
-						break;
-
-					case XK_Page_Up:
-					case XK_KP_Page_Up:
-					case XF86XK_Back:
-						len = 1; buf[0] = ',';
-						break;
-					case XK_Page_Down:
-					case XK_KP_Page_Down:
-					case XF86XK_Forward:
-						len = 1; buf[0] = '.';
-						break;
-					}
-				if (xevt.xkey.state & ControlMask && keysym == XK_c)
-					docopy(&gapp, XA_CLIPBOARD);
-				else if (len)
-					onkey(buf[0], xevt.xkey.state);
-
-				onmouse(oldx, oldy, 0, 0, 0);
-
-				break;
-
-			case MotionNotify:
-				oldx = xevt.xmotion.x;
-				oldy = xevt.xmotion.y;
-				onmouse(xevt.xmotion.x, xevt.xmotion.y, 0, xevt.xmotion.state, 0);
-				break;
-
-			case ButtonPress:
-				onmouse(xevt.xbutton.x, xevt.xbutton.y, xevt.xbutton.button, xevt.xbutton.state, 1);
-				break;
-
-			case ButtonRelease:
-				copytime = xevt.xbutton.time;
-				onmouse(xevt.xbutton.x, xevt.xbutton.y, xevt.xbutton.button, xevt.xbutton.state, -1);
-				break;
-
-			case SelectionRequest:
-				onselreq(xevt.xselectionrequest.requestor,
-					xevt.xselectionrequest.selection,
-					xevt.xselectionrequest.target,
-					xevt.xselectionrequest.property,
-					xevt.xselectionrequest.time);
-				break;
-
-			case ClientMessage:
-				if (xevt.xclient.message_type == WM_RELOAD_PAGE)
-					pdfapp_reloadpage(&gapp);
-				else if (xevt.xclient.format == 32 && ((Atom) xevt.xclient.data.l[0]) == WM_DELETE_WINDOW)
-					closing = 1;
-				break;
-			}
-		}
-
-		if (closing)
-			continue;
-
-		if (width != -1 || height != -1)
-		{
-			pdfapp_onresize(&gapp, width, height);
-			width = -1;
-			height = -1;
-		}
-
-		if (dirty || dirtysearch)
-		{
-			if (dirty)
-				winblit(&gapp);
-			else if (dirtysearch)
-				winblitstatusbar(&gapp);
-			dirty = 0;
-			transition_dirty = 0;
-			dirtysearch = 0;
-			pdfapp_postblit(&gapp);
-		}
-
-		if (!showingpage && !showingmessage && (tmo_at.tv_sec || tmo_at.tv_usec))
-		{
-			tmo_at.tv_sec = 0;
-			tmo_at.tv_usec = 0;
-			timeout = NULL;
-		}
-
-		if (XPending(xdpy) || transition_dirty)
-			continue;
-
+		tmo_at.tv_sec = 0;
+		tmo_at.tv_usec = 0;
 		timeout = NULL;
 
-		if (tmo_at.tv_sec || tmo_at.tv_usec)
+		if (kbps)
+			pdfapp_open_progressive(&gapp, filename, 0, kbps);
+		else
+			pdfapp_open(&gapp, filename, 0);
+
+		FD_ZERO(&fds);
+
+		signal(SIGHUP, signal_handler);
+
+		while (!closing)
 		{
-			gettimeofday(&now, NULL);
-			timersub(&tmo_at, &now, &tmo);
-			if (tmo.tv_sec <= 0)
+			while (!closing && XPending(xdpy) && !transition_dirty)
+			{
+				XNextEvent(xdpy, &xevt);
+
+				switch (xevt.type)
+				{
+				case Expose:
+					dirty = 1;
+					break;
+
+				case ConfigureNotify:
+					if (gapp.image)
+					{
+						if (xevt.xconfigure.width != reqw ||
+							xevt.xconfigure.height != reqh)
+							gapp.shrinkwrap = 0;
+					}
+					width = xevt.xconfigure.width;
+					height = xevt.xconfigure.height;
+
+					break;
+
+				case KeyPress:
+					len = XLookupString(&xevt.xkey, buf, sizeof buf, &keysym, NULL);
+
+					if (!gapp.issearching)
+						switch (keysym)
+						{
+						case XK_Escape:
+							len = 1; buf[0] = '\033';
+							break;
+
+						case XK_Up:
+						case XK_KP_Up:
+							len = 1; buf[0] = 'k';
+							break;
+						case XK_Down:
+						case XK_KP_Down:
+							len = 1; buf[0] = 'j';
+							break;
+
+						case XK_Left:
+						case XK_KP_Left:
+							len = 1; buf[0] = 'h';
+							break;
+						case XK_Right:
+						case XK_KP_Right:
+							len = 1; buf[0] = 'l';
+							break;
+
+						case XK_Page_Up:
+						case XK_KP_Page_Up:
+						case XF86XK_Back:
+							len = 1; buf[0] = ',';
+							break;
+						case XK_Page_Down:
+						case XK_KP_Page_Down:
+						case XF86XK_Forward:
+							len = 1; buf[0] = '.';
+							break;
+						}
+					if (xevt.xkey.state & ControlMask && keysym == XK_c)
+						docopy(&gapp, XA_CLIPBOARD);
+					else if (len)
+						onkey(buf[0], xevt.xkey.state);
+
+					onmouse(oldx, oldy, 0, 0, 0);
+
+					break;
+
+				case MotionNotify:
+					oldx = xevt.xmotion.x;
+					oldy = xevt.xmotion.y;
+					onmouse(xevt.xmotion.x, xevt.xmotion.y, 0, xevt.xmotion.state, 0);
+					break;
+
+				case ButtonPress:
+					onmouse(xevt.xbutton.x, xevt.xbutton.y, xevt.xbutton.button, xevt.xbutton.state, 1);
+					break;
+
+				case ButtonRelease:
+					copytime = xevt.xbutton.time;
+					onmouse(xevt.xbutton.x, xevt.xbutton.y, xevt.xbutton.button, xevt.xbutton.state, -1);
+					break;
+
+				case SelectionRequest:
+					onselreq(xevt.xselectionrequest.requestor,
+						xevt.xselectionrequest.selection,
+						xevt.xselectionrequest.target,
+						xevt.xselectionrequest.property,
+						xevt.xselectionrequest.time);
+					break;
+
+				case ClientMessage:
+					if (xevt.xclient.message_type == WM_RELOAD_PAGE)
+						pdfapp_reloadpage(&gapp);
+					else if (xevt.xclient.format == 32 && ((Atom) xevt.xclient.data.l[0]) == WM_DELETE_WINDOW)
+						closing = 1;
+					break;
+				}
+			}
+
+			if (closing)
+				continue;
+
+			if (width != -1 || height != -1)
+			{
+				pdfapp_onresize(&gapp, width, height);
+				width = -1;
+				height = -1;
+			}
+
+			if (dirty || dirtysearch)
+			{
+				if (dirty)
+					winblit(&gapp);
+				else if (dirtysearch)
+					winblitstatusbar(&gapp);
+				dirty = 0;
+				transition_dirty = 0;
+				dirtysearch = 0;
+				pdfapp_postblit(&gapp);
+			}
+
+			if (!showingpage && !showingmessage && (tmo_at.tv_sec || tmo_at.tv_usec))
 			{
 				tmo_at.tv_sec = 0;
 				tmo_at.tv_usec = 0;
 				timeout = NULL;
-				showingpage = 0;
-				showingmessage = 0;
-				winrepaint(&gapp);
 			}
-			else
-				timeout = &tmo;
-		}
 
-		if (advance_scheduled)
-		{
-			gettimeofday(&now, NULL);
-			timersub(&tmo_advance, &now, &tmo_advance_delay);
-			if (tmo_advance_delay.tv_sec <= 0)
+			if (XPending(xdpy) || transition_dirty)
+				continue;
+
+			timeout = NULL;
+
+			if (tmo_at.tv_sec || tmo_at.tv_usec)
 			{
-				/* Too late already */
-				onkey(' ', 0);
-				onmouse(oldx, oldy, 0, 0, 0);
-				advance_scheduled = 0;
+				gettimeofday(&now, NULL);
+				timersub(&tmo_at, &now, &tmo);
+				if (tmo.tv_sec <= 0)
+				{
+					tmo_at.tv_sec = 0;
+					tmo_at.tv_usec = 0;
+					timeout = NULL;
+					showingpage = 0;
+					showingmessage = 0;
+					winrepaint(&gapp);
+				}
+				else
+					timeout = &tmo;
 			}
-			else if (timeout == NULL)
+
+			if (advance_scheduled)
 			{
-				timeout = &tmo_advance_delay;
-			}
-			else
-			{
-				struct timeval tmp;
-				timersub(&tmo_advance_delay, timeout, &tmp);
-				if (tmp.tv_sec < 0)
+				gettimeofday(&now, NULL);
+				timersub(&tmo_advance, &now, &tmo_advance_delay);
+				if (tmo_advance_delay.tv_sec <= 0)
+				{
+					/* Too late already */
+					onkey(' ', 0);
+					onmouse(oldx, oldy, 0, 0, 0);
+					advance_scheduled = 0;
+				}
+				else if (timeout == NULL)
 				{
 					timeout = &tmo_advance_delay;
 				}
+				else
+				{
+					struct timeval tmp;
+					timersub(&tmo_advance_delay, timeout, &tmp);
+					if (tmp.tv_sec < 0)
+					{
+						timeout = &tmo_advance_delay;
+					}
+				}
+			}
+
+			FD_SET(x11fd, &fds);
+			if (select(x11fd + 1, &fds, NULL, NULL, timeout) < 0)
+			{
+				if (reloading)
+				{
+					pdfapp_reloadfile(&gapp);
+					reloading = 0;
+				}
+			}
+			if (!FD_ISSET(x11fd, &fds))
+			{
+				if (timeout == &tmo_advance_delay)
+				{
+					onkey(' ', 0);
+					onmouse(oldx, oldy, 0, 0, 0);
+					advance_scheduled = 0;
+				}
+				else
+				{
+					tmo_at.tv_sec = 0;
+					tmo_at.tv_usec = 0;
+					timeout = NULL;
+					showingpage = 0;
+					showingmessage = 0;
+					winrepaint(&gapp);
+				}
 			}
 		}
 
-		FD_SET(x11fd, &fds);
-		if (select(x11fd + 1, &fds, NULL, NULL, timeout) < 0)
-		{
-			if (reloading)
-			{
-				pdfapp_reloadfile(&gapp);
-				reloading = 0;
-			}
-		}
-		if (!FD_ISSET(x11fd, &fds))
-		{
-			if (timeout == &tmo_advance_delay)
-			{
-				onkey(' ', 0);
-				onmouse(oldx, oldy, 0, 0, 0);
-				advance_scheduled = 0;
-			}
-			else
-			{
-				tmo_at.tv_sec = 0;
-				tmo_at.tv_usec = 0;
-				timeout = NULL;
-				showingpage = 0;
-				showingmessage = 0;
-				winrepaint(&gapp);
-			}
-		}
+		cleanup(&gapp);
+
 	}
-
-	cleanup(&gapp);
+	fz_catch(ctx)
+	{
+		fz_report_error(ctx);
+		return 1;
+	}
 
 	return 0;
 }

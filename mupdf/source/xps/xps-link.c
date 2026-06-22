@@ -105,6 +105,14 @@ xps_load_links_in_glyphs(fz_context *ctx, xps_document *doc, fz_matrix ctm,
 		fz_text *text = NULL;
 		fz_rect area;
 
+		if (!font_size_att || !font_uri_att || !origin_x_att || !origin_y_att) {
+			fz_warn(ctx, "missing attributes in glyphs element");
+			return;
+		}
+
+		if (!indices_att && !unicode_att)
+			return; /* nothing to draw */
+
 		xps_resolve_resource_reference(ctx, doc, dict, &transform_att, &transform_tag, NULL);
 
 		ctm = xps_parse_transform(ctx, doc, transform_att, transform_tag, ctm);

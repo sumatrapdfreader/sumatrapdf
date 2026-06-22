@@ -478,9 +478,19 @@ int pdf_annot_has_open(fz_context *ctx, pdf_annot *annot);
 int pdf_annot_has_popup(fz_context *ctx, pdf_annot *annot);
 
 /*
-	Check to see if an annotation has author data.
+	Check to see if an annotation has an author property.
 */
 int pdf_annot_has_author(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Check to see if an annotation has a subject property.
+*/
+int pdf_annot_has_subject(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Check to see if an annotation has an in-reply-to property.
+*/
+int pdf_annot_has_in_reply_to(fz_context *ctx, pdf_annot *annot);
 
 /*
 	Check to see if an annotation has rich content.
@@ -789,8 +799,14 @@ void pdf_set_annot_vertex(fz_context *ctx, pdf_annot *annot, int i, fz_point p);
 const char *pdf_annot_contents(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_contents(fz_context *ctx, pdf_annot *annot, const char *text);
 
+const char *pdf_annot_name(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_name(fz_context *ctx, pdf_annot *annot, const char *name);
+
 const char *pdf_annot_author(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_author(fz_context *ctx, pdf_annot *annot, const char *author);
+
+const char *pdf_annot_subject(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_subject(fz_context *ctx, pdf_annot *annot, const char *subject);
 
 int64_t pdf_annot_modification_date(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_modification_date(fz_context *ctx, pdf_annot *annot, int64_t time);

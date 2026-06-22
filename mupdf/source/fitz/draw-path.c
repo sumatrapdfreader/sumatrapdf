@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1118,6 +1118,12 @@ static float advance(float a, float b, float i, float n)
 	return target;
 }
 
+static int is_odd(float f)
+{
+	float intpart = truncf(f);
+	return isfinite(f) ? (intpart - 2.0f * truncf(intpart / 2.0f) != 0.0f) : 0;
+}
+
 static void
 fz_dash_lineto(fz_context *ctx, struct sctx *s, float bx, float by, int from_bezier)
 {
@@ -1126,7 +1132,7 @@ fz_dash_lineto(fz_context *ctx, struct sctx *s, float bx, float by, int from_bez
 	float ax, ay;
 	float mx, my;
 	float old_bx = 0, old_by = 0;
-	int n;
+	float n;
 	int dash_cap = s->stroke->dash_cap;
 
 	ax = s->dash_cur.x;
@@ -1221,9 +1227,9 @@ a_moved_vertically:	/* d and dy have the same sign */
 			fz_stroke_moveto(ctx, s, ax, ay);
 		}
 		used += s->phase;
-		n = used/s->dash_total;
+		n = trunc(used/s->dash_total);
 		used -= n*s->dash_total;
-		if (n & s->dash_len & 1)
+		if (is_odd(n) & s->dash_len & 1)
 			s->toggle = !s->toggle;
 		while (used >= s->dash_list[s->offset])
 		{
@@ -1356,9 +1362,9 @@ adjust_for_tail:
 			fz_stroke_moveto(ctx, s, old_bx, old_by);
 		}
 		tail += s->phase;
-		n = tail/s->dash_total;
+		n = trunc(tail/s->dash_total);
 		tail -= n*s->dash_total;
-		if (n & s->dash_len & 1)
+		if (is_odd(n) & s->dash_len & 1)
 			s->toggle = !s->toggle;
 		while (tail > s->dash_list[s->offset])
 		{

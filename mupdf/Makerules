@@ -5,7 +5,7 @@ ifeq ($(OS),)
   OS := $(shell uname)
 endif
 
-WARNING_CFLAGS := -Wall -Wsign-compare
+WARNING_CFLAGS := -Wall -Wsign-compare -Wshadow
 
 # Feature configuration options
 
@@ -28,16 +28,19 @@ endif
 ifeq ($(html),no)
   USE_HARFBUZZ := no
   USE_GUMBO := no
+  USE_CMARK_GFM := no
   CFLAGS += -DFZ_ENABLE_HTML_ENGINE=0
   CFLAGS += -DFZ_ENABLE_HTML=0
   CFLAGS += -DFZ_ENABLE_EPUB=0
   CFLAGS += -DFZ_ENABLE_FB2=0
+  CFLAGS += -DFZ_ENABLE_MD=0
   CFLAGS += -DFZ_ENABLE_MOBI=0
   CFLAGS += -DFZ_ENABLE_OFFICE=0
   CFLAGS += -DFZ_ENABLE_TXT=0
 else
   USE_HARFBUZZ := yes
   USE_GUMBO := yes
+  USE_CMARK_GFM := yes
 endif
 
 ifeq ($(xps),no)
@@ -113,6 +116,7 @@ else
   SO := so
 endif
 
+SANITIZE_FLAGS += -fsanitize=undefined
 SANITIZE_FLAGS += -fsanitize=address
 SANITIZE_FLAGS += -fsanitize=leak
 
@@ -174,9 +178,12 @@ else ifeq ($(build),coverage)
 else ifeq ($(build),native)
   CFLAGS += -pipe -O2 -DNDEBUG -march=native
   LDFLAGS += $(LDREMOVEUNREACH) -Wl,-s
-else ifeq ($(build),memento)
+else ifeq ($(findstring memento,$(build)),memento)
   CFLAGS += -pipe -g -DMEMENTO -DMEMENTO_MUPDF_HACKS
   LDFLAGS += -g -rdynamic
+  ifeq ($(build),memento-squeeze)
+    CFLAGS += -DMEMENTO_SQUEEZEBUILD
+  endif
   ifneq ($(HAVE_LIBDL),no)
     CFLAGS += -DHAVE_LIBDL
     ifeq ($(OS),OpenBSD)

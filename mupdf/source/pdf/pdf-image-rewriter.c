@@ -39,19 +39,11 @@ typedef struct
 {
 	int max;
 	int len;
-	int *uimg;
-} image_list;
-
-typedef struct
-{
-	int max;
-	int len;
 	image_details *img;
 } unique_image_list;
 
 typedef struct
 {
-	image_list list;
 	unique_image_list uilist;
 	pdf_image_rewriter_options *opts;
 	int which;
@@ -75,7 +67,6 @@ static void
 gather_image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm, pdf_obj *im_obj)
 {
 	image_info *info = (image_info *)opaque;
-	image_list *ilist = &info->list;
 	unique_image_list *uilist = &info->uilist;
 	int i, num, gen;
 	float dpi;
@@ -118,19 +109,6 @@ gather_image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix 
 		uilist->img[uilist->len].dpi = dpi;
 		uilist->len++;
 	}
-
-	/* Now we need to add an entry in the unique image list saying that entry n in
-	 * that list corresponds to the ith unique image. */
-	if (ilist->max == ilist->len)
-	{
-		int max2 = ilist->max * 2;
-		if (max2 == 0)
-			max2 = 32; /* Arbitrary */
-		ilist->uimg = fz_realloc(ctx, ilist->uimg, max2 * sizeof(*ilist->uimg));
-		ilist->max = max2;
-	}
-
-	ilist->uimg[ilist->len++] = i;
 }
 
 typedef enum
@@ -681,7 +659,7 @@ recompress_image(fz_context *ctx, fz_pixmap *pix, int type, int fmt, int method,
 		{
 			bpc = 1;
 			if (!oldimg->imagemask)
-			cs = fz_device_gray(ctx);
+				cs = fz_device_gray(ctx);
 		}
 	}
 	if (cbuf == NULL)
@@ -699,7 +677,6 @@ static void
 do_image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm, pdf_obj *im_obj)
 {
 	image_info *info = (image_info *)opaque;
-	image_list *ilist = &info->list;
 	unique_image_list *uilist = &info->uilist;
 	float dpi;
 	fz_pixmap *pix;
@@ -728,7 +705,21 @@ do_image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm,
 	if (im_obj == NULL)
 		dpi = dpi_from_ctm(ctm, (*image)->w, (*image)->h);
 	else
-		dpi = uilist->img[ilist->uimg[info->which++]].dpi;
+	{
+		int i;
+		int num = pdf_to_num(ctx, im_obj);
+		int gen = pdf_to_gen(ctx, im_obj);
+
+		for (i = 0; i < uilist->len; i++)
+			if (uilist->img[i].num == num && uilist->img[i].gen == gen)
+				break;
+		if (i == uilist->len)
+		{
+			assert("This should never happen" == NULL);
+			return;
+		}
+		dpi = uilist->img[i].dpi;
+	}
 
 	/* What sort of image is this? */
 	pix = fz_get_pixmap_from_image(ctx, *image, NULL, NULL, NULL, NULL);
@@ -956,6 +947,5 @@ void pdf_rewrite_images(fz_context *ctx, pdf_document *doc, pdf_image_rewriter_o
 		rewrite_image_info(ctx, doc, i, &info);
 	}
 
-	fz_free(ctx, info.list.uimg);
 	fz_free(ctx, info.uilist.img);
 }

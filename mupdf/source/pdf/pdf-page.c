@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -130,6 +130,10 @@ pdf_drop_page_tree_internal(fz_context *ctx, pdf_document *doc)
 static void
 pdf_load_page_tree_internal(fz_context *ctx, pdf_document *doc)
 {
+	int in_op = 0;
+
+	fz_var(in_op);
+
 	/* Check we're not already loaded. */
 	if (doc->fwd_page_map != NULL)
 		return;
@@ -151,16 +155,23 @@ pdf_load_page_tree_internal(fz_context *ctx, pdf_document *doc)
 				/* The document claims more pages that it has. Fix that. */
 				fz_warn(ctx, "Document claims to have %d pages, but only has %d.", doc->map_page_count, idx);
 				/* This put drops the page tree! */
+				pdf_begin_implicit_operation(ctx, doc);
+				in_op = 1;
 				pdf_dict_putp_drop(ctx, pdf_trailer(ctx, doc), "Root/Pages/Count", pdf_new_int(ctx, idx));
 				doc->map_page_count = idx;
+				pdf_end_operation(ctx, doc);
+				in_op = 0;
 				continue;
 			}
 			break;
 		}
-		qsort(doc->rev_page_map, doc->map_page_count, sizeof *doc->rev_page_map, cmp_rev_page_map);
+		if (doc->map_page_count > 0)
+			qsort(doc->rev_page_map, doc->map_page_count, sizeof *doc->rev_page_map, cmp_rev_page_map);
 	}
 	fz_catch(ctx)
 	{
+		if (in_op)
+			pdf_abandon_operation(ctx, doc);
 		pdf_drop_page_tree_internal(ctx, doc);
 		fz_rethrow(ctx);
 	}
@@ -445,7 +456,7 @@ pdf_extgstate_uses_blending(fz_context *ctx, pdf_obj *dict)
 	return 0;
 }
 
-static int
+int
 pdf_pattern_uses_blending(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cycle_up)
 {
 	pdf_obj *obj;
@@ -1960,11 +1971,16 @@ pdf_format_page_label(fz_context *ctx, int index, pdf_obj *dict, char *buf, size
 	pdf_obj *style = pdf_dict_get(ctx, dict, PDF_NAME(S));
 	const char *prefix = pdf_dict_get_text_string(ctx, dict, PDF_NAME(P));
 	int start = pdf_dict_get_int(ctx, dict, PDF_NAME(St));
+	int v;
 	size_t n;
 
 	// St must be >= 1; default is 1.
 	if (start < 1)
 		start = 1;
+
+	v = start + index;
+	if (v < 1)
+		v = 1;
 
 	// Add prefix (optional; may be empty)
 	fz_strlcpy(buf, prefix, size);
@@ -1974,15 +1990,15 @@ pdf_format_page_label(fz_context *ctx, int index, pdf_obj *dict, char *buf, size
 
 	// Append number using style (optional)
 	if (style == PDF_NAME(D))
-		fz_snprintf(buf, size, "%d", index + start);
+		fz_snprintf(buf, size, "%d", v);
 	else if (style == PDF_NAME(R))
-		pdf_format_roman_page_label(buf, (int)size, index + start, roman_uc, "M");
+		pdf_format_roman_page_label(buf, (int)size, v, roman_uc, "M");
 	else if (style == PDF_NAME(r))
-		pdf_format_roman_page_label(buf, (int)size, index + start, roman_lc, "m");
+		pdf_format_roman_page_label(buf, (int)size, v, roman_lc, "m");
 	else if (style == PDF_NAME(A))
-		pdf_format_alpha_page_label(buf, (int)size, index + start, 'A');
+		pdf_format_alpha_page_label(buf, (int)size, v, 'A');
 	else if (style == PDF_NAME(a))
-		pdf_format_alpha_page_label(buf, (int)size, index + start, 'a');
+		pdf_format_alpha_page_label(buf, (int)size, v, 'a');
 }
 
 void
@@ -1992,7 +2008,7 @@ pdf_page_label(fz_context *ctx, pdf_document *doc, int index, char *buf, size_t 
 	if (range.label)
 		pdf_format_page_label(ctx, index - range.offset, range.label, buf, size);
 	else
-		fz_snprintf(buf, size, "%z", index + 1);
+		fz_snprintf(buf, size, "%d", index + 1);
 }
 
 void

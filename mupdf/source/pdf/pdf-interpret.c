@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1310,15 +1310,15 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 {
 	float *s = csi->stack;
 	char csname[40];
-	int key;
+	uint32_t key;
 
 	key = word[0];
 	if (word[1])
 	{
-		key |= word[1] << 8;
+		key |= (uint32_t)word[1] << 8;
 		if (word[2])
 		{
-			key |= word[2] << 16;
+			key |= (uint32_t)word[2] << 16;
 			if (word[3])
 				key = 0;
 		}
@@ -1712,7 +1712,7 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 				{
 					fz_rethrow(ctx);
 				}
-				else if (caught == FZ_ERROR_SYNTAX)
+				else if (caught == FZ_ERROR_SYNTAX || caught == FZ_ERROR_FORMAT)
 				{
 					fz_report_error(ctx);
 					cookie->errors++;
@@ -1738,7 +1738,7 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 				{
 					fz_rethrow(ctx);
 				}
-				else if (caught == FZ_ERROR_SYNTAX)
+				else if (caught == FZ_ERROR_SYNTAX || caught == FZ_ERROR_FORMAT)
 				{
 					fz_report_error(ctx);
 					if (++syntax_errors >= MAX_SYNTAX_ERRORS)
@@ -1771,7 +1771,7 @@ void pdf_processor_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj 
 	stk->resources = pdf_keep_obj(ctx, res);
 
 	if (proc->push_resources)
-	proc->push_resources(ctx, proc, res);
+		proc->push_resources(ctx, proc, res);
 }
 
 pdf_obj *pdf_processor_pop_resources(fz_context *ctx, pdf_processor *proc)
@@ -1852,9 +1852,9 @@ pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pd
 		if (in_res)
 		{
 			pdf_obj *ret_res = pdf_processor_pop_resources(ctx, proc);
-		if (out_res)
+			if (out_res)
 				*out_res = ret_res;
-		else
+			else
 				pdf_drop_obj(ctx, ret_res);
 		}
 	}
@@ -1952,7 +1952,7 @@ pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_o
 	fz_always(ctx)
 	{
 		if (res)
-		pdf_drop_obj(ctx, pdf_processor_pop_resources(ctx, proc));
+			pdf_drop_obj(ctx, pdf_processor_pop_resources(ctx, proc));
 		fz_drop_stream(ctx, stm);
 		pdf_clear_stack(ctx, &csi);
 		pdf_lexbuf_fin(ctx, &buf);
@@ -1991,12 +1991,27 @@ pdf_tos_get_text(fz_context *ctx, pdf_text_object_state *tos)
 	return text;
 }
 
+fz_text *
+pdf_tos_get_clip_text(fz_context *ctx, pdf_text_object_state *tos)
+{
+	fz_text *text = tos->clip_text;
+	tos->clip_text = NULL;
+	return text;
+}
+
 void
 pdf_tos_reset(fz_context *ctx, pdf_text_object_state *tos, int render)
 {
 	tos->text = fz_new_text(ctx);
 	tos->text_mode = render;
 	tos->text_bbox = fz_empty_rect;
+}
+
+void
+pdf_tos_accumulate_clip(fz_context *ctx, pdf_text_object_state *tos)
+{
+	if (tos->clip_text == NULL)
+		tos->clip_text = fz_new_text(ctx);
 }
 
 int
@@ -2022,7 +2037,7 @@ pdf_tos_make_trm(fz_context *ctx, pdf_text_object_state *tos, pdf_text_state *te
 	{
 		pdf_vmtx v = pdf_lookup_vmtx(ctx, fontdesc, cid);
 		float w1 = *adv = v.w * 0.001f;
-		tsm.e -= v.x * fabsf(text->size) * 0.001f;
+		tsm.e -= v.x * text->size * text->scale * 0.001f;
 		tsm.f -= v.y * text->size * 0.001f;
 		tos->char_tx = 0;
 		tos->char_ty = w1 * text->size + text->char_space;

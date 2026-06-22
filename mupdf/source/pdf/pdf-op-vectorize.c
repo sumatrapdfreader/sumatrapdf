@@ -518,6 +518,7 @@ pdf_drop_vectorize_processor(fz_context *ctx, pdf_processor *proc)
 		gs = next;
 	}
 	fz_drop_text(ctx, p->tos.text);
+	fz_drop_text(ctx, p->tos.clip_text);
 	pdf_drop_document(ctx, p->doc);
 }
 

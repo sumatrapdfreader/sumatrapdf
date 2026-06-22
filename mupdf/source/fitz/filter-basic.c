@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -528,7 +528,7 @@ next_a85d(fz_context *ctx, fz_stream *stm, size_t max)
 	unsigned char *p = state->buffer;
 	unsigned char *ep;
 	int count = 0;
-	int word = 0;
+	uint32_t word = 0;
 	int c;
 
 	if (state->eod)

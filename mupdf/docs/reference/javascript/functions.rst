@@ -58,3 +58,26 @@ here.
 	:param string stylesheet: The CSS text to use.
 	:param boolean useDocumentStyles:
 		Whether to respect the document's own style sheet.
+
+.. function:: mupdf.setLog(logger)
+
+	Install a custom logging object to catch warnings and errors.
+
+	The logger should be an object with separate "warning" and "error" methods.
+
+	.. code-block::
+
+		mupdf.setLog({
+			error(msg) {
+				console.error("MuPDF ERROR: " + msg)
+			},
+			warning(msg) {
+				console.warn("MuPDF WARNING: " + msg)
+			},
+		})
+
+	You can also pass in a single function to be used to report both errors and warnings:
+
+	.. code-block::
+
+		mupdf.setLog(console.log)

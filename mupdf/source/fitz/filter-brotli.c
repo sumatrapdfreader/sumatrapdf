@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -35,12 +35,12 @@ typedef struct
 	unsigned char buffer[4096];
 } fz_brotli_state;
 
-void *my_brotlid_alloc(void *ctx, size_t size)
+static void *my_brotlid_alloc(void *ctx, size_t size)
 {
 	return Memento_label(fz_malloc_no_throw(ctx, size), "brotlid_alloc");
 }
 
-void my_brotlid_free(void *ctx, void *ptr)
+static void my_brotlid_free(void *ctx, void *ptr)
 {
 	fz_free(ctx, ptr);
 }

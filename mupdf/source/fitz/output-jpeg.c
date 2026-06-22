@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -141,8 +141,6 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 	struct jpeg_error_mgr err;
 	my_destination_mgr dest;
 	JSAMPROW row_pointer[1];
-	unsigned char *outbuffer = NULL;
-	size_t outsize = 0;
 	fz_colorspace *cs = pix->colorspace;
 	int n = pix->n;
 	int alpha = pix->alpha;
@@ -222,14 +220,11 @@ fz_write_pixmap_as_jpeg(fz_context *ctx, fz_output *out, fz_pixmap *pix, int qua
 			fz_invert_pixmap_raw(ctx, pix);
 
 		jpeg_finish_compress(&cinfo);
-
-		fz_write_data(ctx, out, outbuffer, outsize);
 	}
 	fz_always(ctx)
 	{
 		jpeg_destroy_compress(&cinfo);
 		fz_jpg_mem_term((j_common_ptr)&cinfo);
-		fz_free(ctx, outbuffer);
 	}
 	fz_catch(ctx)
 	{

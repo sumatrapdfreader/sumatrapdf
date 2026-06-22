@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -310,25 +310,25 @@ static void add_field_hierarchy_to_array(fz_context *ctx, pdf_obj *array, pdf_ob
 	if (fields)
 	{
 		char *needle = pdf_load_field_name(ctx, field);
-	fz_try(ctx)
-	{
-		n = pdf_array_len(ctx, fields);
-		for (i = 0; i < n; i++)
+		fz_try(ctx)
 		{
-			char *name = pdf_load_field_name(ctx, pdf_array_get(ctx, fields, i));
-			int found = !strcmp(needle, name);
-			fz_free(ctx, name);
-			if (found)
-				break;
+			n = pdf_array_len(ctx, fields);
+			for (i = 0; i < n; i++)
+			{
+				char *name = pdf_load_field_name(ctx, pdf_array_get(ctx, fields, i));
+				int found = !strcmp(needle, name);
+				fz_free(ctx, name);
+				if (found)
+					break;
+			}
 		}
-	}
-	fz_always(ctx)
-		fz_free(ctx, needle);
-	fz_catch(ctx)
-		fz_rethrow(ctx);
+		fz_always(ctx)
+			fz_free(ctx, needle);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
 
-	if ((exclude && i < n) || (!exclude && i == n))
-		return;
+		if ((exclude && i < n) || (!exclude && i == n))
+			return;
 	}
 
 	pdf_array_push(ctx, array, field);
@@ -360,16 +360,16 @@ static pdf_obj *specified_fields(fz_context *ctx, pdf_document *doc, pdf_obj *fi
 	{
 		if (fields)
 		{
-		n = pdf_array_len(ctx, fields);
-		for (i = 0; i < n; i++)
-		{
-			pdf_obj *field = pdf_array_get(ctx, fields, i);
-			if (pdf_is_string(ctx, field))
-				field = pdf_lookup_field(ctx, form, pdf_to_str_buf(ctx, field));
-			if (field)
-				add_field_hierarchy_to_array(ctx, result, field, fields, exclude);
+			n = pdf_array_len(ctx, fields);
+			for (i = 0; i < n; i++)
+			{
+				pdf_obj *field = pdf_array_get(ctx, fields, i);
+				if (pdf_is_string(ctx, field))
+					field = pdf_lookup_field(ctx, form, pdf_to_str_buf(ctx, field));
+				if (field)
+					add_field_hierarchy_to_array(ctx, result, field, fields, exclude);
+			}
 		}
-	}
 		else
 		{
 			n = pdf_array_len(ctx, form);
@@ -441,11 +441,20 @@ static pdf_annot *find_widget(fz_context *ctx, pdf_document *doc, pdf_obj *chk)
 
 static void set_check(fz_context *ctx, pdf_document *doc, pdf_obj *chk, pdf_obj *name)
 {
-	if (pdf_dict_get(ctx, chk, PDF_NAME(AS)) != name)
+	pdf_obj *val;
+
+	/* If name is the "On" value of this check
+	* box then use it, otherwise use "Off" */
+	if (pdf_name_eq(ctx, pdf_button_field_on_state(ctx, chk), name))
+		val = name;
+	else
+		val = PDF_NAME(Off);
+
+	if (!pdf_name_eq(ctx, pdf_dict_get(ctx, chk, PDF_NAME(AS)), val))
 	{
-		pdf_dict_put(ctx, chk, PDF_NAME(AS), name);
-	pdf_set_annot_has_changed(ctx, find_widget(ctx, doc, chk));
-}
+		pdf_dict_put(ctx, chk, PDF_NAME(AS), val);
+		pdf_set_annot_has_changed(ctx, find_widget(ctx, doc, chk));
+	}
 }
 
 /* Set the values of all fields in a group defined by a node
@@ -533,6 +542,7 @@ abandon_annot_op(fz_context *ctx, pdf_annot *annot)
 static void toggle_check_box(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_document *doc = annot->page->doc;
+	int changed = 1;
 
 	begin_annot_op(ctx, annot, "Toggle checkbox");
 
@@ -554,6 +564,7 @@ static void toggle_check_box(fz_context *ctx, pdf_annot *annot)
 		{
 			if (is_radio && is_no_toggle_to_off)
 			{
+				changed = 0;
 				end_annot_op(ctx, annot);
 				break;
 			}
@@ -575,7 +586,8 @@ static void toggle_check_box(fz_context *ctx, pdf_annot *annot)
 		fz_rethrow(ctx);
 	}
 
-	pdf_set_annot_has_changed(ctx, annot);
+	if (changed)
+		pdf_set_annot_has_changed(ctx, annot);
 }
 
 int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc)
@@ -2439,7 +2451,7 @@ static void pdf_bake_page(fz_context *ctx, pdf_document *doc, pdf_obj *page, int
 		if (res)
 			pdf_dict_put(ctx, page, PDF_NAME(Resources), res);
 		else
-		res = pdf_dict_put_dict(ctx, page, PDF_NAME(Resources), 4);
+			res = pdf_dict_put_dict(ctx, page, PDF_NAME(Resources), 4);
 	}
 
 	res_xobj = pdf_dict_get(ctx, res, PDF_NAME(XObject));

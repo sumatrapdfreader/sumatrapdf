@@ -369,12 +369,12 @@ boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, b
 			boxer->mediabox.x0, boxer->mediabox.y1,
 			boxer->mediabox.x1, boxer->mediabox.y1,
 			boxer->mediabox.x1, boxer->mediabox.y0);
-				}
+		}
 #endif
 		return 0;
-			}
+	}
 
-			r = boxer->mediabox;
+	r = boxer->mediabox;
 	if (horiz)
 	{
 		/* Divider runs horizontally. */
@@ -388,7 +388,7 @@ boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, b
 		}
 #endif
 		r.y1 = list->list[largest].y0;
-			analyse_subset(ctx, page, parent, boxer, r, depth);
+		analyse_subset(ctx, page, parent, boxer, r, depth);
 
 		r.y0 = list->list[largest].y1;
 		r.y1 = boxer->mediabox.y1;
@@ -404,18 +404,18 @@ boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, b
 			printf("%g %g moveto\n%g %g lineto\nstroke\n\n",
 			(list->list[largest].x0 + list->list[largest].x1) * 0.5f, list->list[largest].y0,
 			(list->list[largest].x0 + list->list[largest].x1) * 0.5f, list->list[largest].y1);
-					}
+		}
 #endif
 		r.x1 = list->list[largest].x0;
 		analyse_subset(ctx, page, parent, boxer, r, depth);
 
 		r.x0 = list->list[largest].x1;
 		r.x1 = boxer->mediabox.x1;
-			analyse_subset(ctx, page, parent, boxer, r, depth);
-		}
-
-		return 1;
+		analyse_subset(ctx, page, parent, boxer, r, depth);
 	}
+
+	return 1;
+}
 
 #ifdef DEBUG_STRUCT
 static void
@@ -704,7 +704,12 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, fz_re
 	target->prev = NULL;
 
 	for (block = target; block->next != NULL; block = block->next)
+	{
 		newblock->bbox = fz_union_rect(newblock->bbox, block->bbox);
+		if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
+			block->u.s.down->parent = newblock->u.s.down;
+	}
+
 	newblock->bbox = fz_union_rect(newblock->bbox, block->bbox);
 	newblock->u.s.down->last_block = block;
 
@@ -850,29 +855,29 @@ fz_collate_small_vector_run(fz_stext_block **blockp)
 
 static void
 recurse_and_feed(fz_context *ctx, boxer_t *boxer, fz_stext_block *block)
-	{
+{
 	for (; block != NULL; block = block->next)
+	{
+		fz_stext_line *line;
+		switch (block->type)
 		{
-			fz_stext_line *line;
-			switch (block->type)
-			{
-			case FZ_STEXT_BLOCK_TEXT:
-				for (line = block->u.t.first_line; line != NULL; line = line->next)
-					if (line_isnt_all_spaces(ctx, line))
-						feed_line(ctx, boxer, line);
-				break;
-			case FZ_STEXT_BLOCK_VECTOR:
-			{
-				/* Allow a 1 point margin around vectors to avoid hairline
-				 * cracks between supposedly abutting things. */
-				int VECTOR_MARGIN = 1;
-				fz_rect r = fz_collate_small_vector_run(&block);
+		case FZ_STEXT_BLOCK_TEXT:
+			for (line = block->u.t.first_line; line != NULL; line = line->next)
+				if (line_isnt_all_spaces(ctx, line))
+					feed_line(ctx, boxer, line);
+			break;
+		case FZ_STEXT_BLOCK_VECTOR:
+		{
+			/* Allow a 1 point margin around vectors to avoid hairline
+			 * cracks between supposedly abutting things. */
+			int VECTOR_MARGIN = 1;
+			fz_rect r = fz_collate_small_vector_run(&block);
 
-				r.x0 -= VECTOR_MARGIN;
-				r.y0 -= VECTOR_MARGIN;
-				r.x1 += VECTOR_MARGIN;
-				r.y1 += VECTOR_MARGIN;
-				boxer_feed(ctx, boxer, &r);
+			r.x0 -= VECTOR_MARGIN;
+			r.y0 -= VECTOR_MARGIN;
+			r.x1 += VECTOR_MARGIN;
+			r.y1 += VECTOR_MARGIN;
+			boxer_feed(ctx, boxer, &r);
 			break;
 		}
 		case FZ_STEXT_BLOCK_STRUCT:
@@ -882,9 +887,9 @@ recurse_and_feed(fz_context *ctx, boxer_t *boxer, fz_stext_block *block)
 		default:
 			boxer_feed(ctx, boxer, &block->bbox);
 			break;
-			}
-			}
 		}
+	}
+}
 
 static int
 segment_rect(fz_context *ctx, fz_rect box, fz_stext_page *page, fz_stext_struct *parent, int tight)

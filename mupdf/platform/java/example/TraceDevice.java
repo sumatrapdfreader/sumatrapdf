@@ -229,7 +229,7 @@ public class TraceDevice extends Device implements PathWalker, TextWalker
 			Page page = doc.loadPage(pagenbr);
 			System.out.println("");
 			System.out.println("Page " + pagenbr);
-		page.run(dev, new Matrix());
+			page.run(dev, new Matrix());
 		}
 
 

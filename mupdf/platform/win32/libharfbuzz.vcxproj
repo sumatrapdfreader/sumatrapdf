@@ -308,7 +308,9 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer-verify.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-common.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-draw.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-face.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-face-builder.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-fallback-shape.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-font.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ft.cc" />
@@ -342,6 +344,10 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-tag.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-var.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-outline.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-paint.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-paint-bounded.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-paint-extents.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-set.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-shape-plan.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-shape.cc" />
@@ -351,10 +357,20 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-cff1.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-cff2.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-input.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-instancer-iup.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-instancer-solver.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-plan.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-plan-layout.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-plan-var.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-table-cff.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-table-color.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-table-layout.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-table-other.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-table-var.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ucd.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-unicode.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\OT\Var\VARC\VARC.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-aat-layout.h" />
@@ -366,6 +382,7 @@
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-deprecated.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-directwrite.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-face.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-fontations.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-font.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ft.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-gdi.h" />
@@ -384,12 +401,17 @@
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-var.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-paint.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-raster.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-script-list.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-set.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-shape-plan.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-shape.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-subset.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-subset-serialize.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-unicode.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-uniscribe.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-vector.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-version.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb.h" />
   </ItemGroup>

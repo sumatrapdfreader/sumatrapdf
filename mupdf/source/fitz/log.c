@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -46,9 +46,10 @@ fz_output *fz_new_log_for_module(fz_context *ctx, const char *module)
 
 void fz_log(fz_context *ctx, const char *fmt, ...)
 {
-	fz_output *out;
+	fz_output *out = NULL;
 	va_list args;
 	va_start(args, fmt);
+	fz_var(out);
 	fz_try(ctx)
 	{
 		out = fz_new_log_for_module(ctx, NULL);
@@ -66,9 +67,10 @@ void fz_log(fz_context *ctx, const char *fmt, ...)
 
 void fz_log_module(fz_context *ctx, const char *module, const char *fmt, ...)
 {
-	fz_output *out;
+	fz_output *out = NULL;
 	va_list args;
 	va_start(args, fmt);
+	fz_var(out);
 	fz_try(ctx)
 	{
 		out = fz_new_log_for_module(ctx, module);

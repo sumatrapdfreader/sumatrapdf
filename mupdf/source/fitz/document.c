@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -36,10 +36,6 @@ enum
 {
 	FZ_DOCUMENT_HANDLER_MAX = 32
 };
-
-#define DEFW (450)
-#define DEFH (600)
-#define DEFEM (12)
 
 static fz_output *
 fz_new_output_to_tempfile(fz_context *ctx, char **namep)
@@ -223,7 +219,7 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 	return fz_recognize_document_stream_and_dir_content(ctx, stream, NULL, magic);
 }
 
-const fz_document_handler *
+static const fz_document_handler *
 do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **streamp, fz_archive *dir, const char *magic, void **handler_state, fz_document_recognize_state_free_fn **handler_free_state)
 {
 	fz_document_handler_context *dc;
@@ -541,6 +537,7 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 
 	fz_var(afile);
 	fz_var(file);
+	fz_var(dir);
 
 	fz_try(ctx)
 	{
@@ -612,6 +609,15 @@ fz_new_document_of_size(fz_context *ctx, int size)
 	doc->refs = 1;
 	doc->id = fz_new_document_id(ctx);
 
+	doc->publisher_css = 1;
+	doc->user_css = NULL;
+	doc->did_style = FZ_STYLE_NEEDS_DEFAULT; /* Note: deprecated use of global fz_use_document_css and fz_user_css */
+
+	doc->layout_w = FZ_DEFAULT_LAYOUT_W;
+	doc->layout_h = FZ_DEFAULT_LAYOUT_H;
+	doc->layout_em = FZ_DEFAULT_LAYOUT_EM;
+	doc->did_layout = FZ_LAYOUT_NEEDS_UPDATE;
+
 	fz_log_activity(ctx, FZ_ACTIVITY_NEW_DOC, NULL);
 
 	return doc;
@@ -633,6 +639,7 @@ fz_drop_document(fz_context *ctx, fz_document *doc)
 			fz_warn(ctx, "There are still open pages in the document!");
 		if (doc->drop_document)
 			doc->drop_document(ctx, doc);
+		fz_free(ctx, doc->user_css);
 		fz_free(ctx, doc);
 	}
 }
@@ -640,10 +647,22 @@ fz_drop_document(fz_context *ctx, fz_document *doc)
 static void
 fz_ensure_layout(fz_context *ctx, fz_document *doc)
 {
-	if (doc && doc->layout && !doc->did_layout)
+	/* Note: deprecated use of global fz_use_document_css and fz_user_css */
+	if (doc && doc->style && doc->did_style == FZ_STYLE_NEEDS_DEFAULT)
 	{
-		doc->layout(ctx, doc, DEFW, DEFH, DEFEM);
-		doc->did_layout = 1;
+		fz_style_document(ctx, doc, fz_use_document_css(ctx), fz_user_css(ctx));
+	}
+
+	if (doc && doc->style && doc->did_style == FZ_STYLE_NEEDS_UPDATE)
+	{
+		doc->style(ctx, doc);
+		doc->did_style = FZ_STYLE_APPLIED;
+	}
+
+	if (doc && doc->layout && doc->did_layout == FZ_LAYOUT_NEEDS_UPDATE)
+	{
+		doc->layout(ctx, doc);
+		doc->did_layout = FZ_LAYOUT_APPLIED;
 	}
 }
 
@@ -743,12 +762,65 @@ fz_resolve_link(fz_context *ctx, fz_document *doc, const char *uri, float *xp, f
 }
 
 void
+fz_style_document(fz_context *ctx, fz_document *doc, int publisher_css, const char *user_css)
+{
+	if (doc && doc->style)
+	{
+		/* Note: deprecated use of global fz_use_document_css and fz_user_css */
+		if  (doc->did_style == FZ_STYLE_NEEDS_DEFAULT)
+			doc->did_style = FZ_STYLE_NEEDS_UPDATE;
+
+		if (doc->publisher_css != publisher_css)
+		{
+			doc->did_style = FZ_STYLE_NEEDS_UPDATE;
+			doc->publisher_css = publisher_css;
+		}
+
+		if (user_css)
+		{
+			if (doc->user_css && !strcmp(doc->user_css, user_css))
+			{
+				// no change
+			}
+			else
+			{
+				doc->did_style = FZ_STYLE_NEEDS_UPDATE;
+				fz_free(ctx, doc->user_css);
+				doc->user_css = NULL;
+				doc->user_css = fz_strdup(ctx, user_css);
+			}
+		}
+		else
+		{
+			if (doc->user_css)
+			{
+				doc->did_style = FZ_STYLE_NEEDS_UPDATE;
+				fz_free(ctx, doc->user_css);
+				doc->user_css = NULL;
+			}
+		}
+
+		if (doc->did_style == FZ_STYLE_NEEDS_UPDATE)
+			doc->did_layout = FZ_LAYOUT_NEEDS_UPDATE;
+	}
+}
+
+void
 fz_layout_document(fz_context *ctx, fz_document *doc, float w, float h, float em)
 {
 	if (doc && doc->layout)
 	{
-		doc->layout(ctx, doc, w, h, em);
-		doc->did_layout = 1;
+		if (w <= 0) w = FZ_DEFAULT_LAYOUT_W;
+		if (h <= 0) h = FZ_DEFAULT_LAYOUT_H;
+		if (em <= 0) em = FZ_DEFAULT_LAYOUT_EM;
+
+		if (doc->layout_w != w || doc->layout_h != h || doc->layout_em != em)
+		{
+			doc->layout_w = w;
+			doc->layout_h = h;
+			doc->layout_em = em;
+			doc->did_layout = FZ_LAYOUT_NEEDS_UPDATE;
+		}
 	}
 }
 

@@ -7,4 +7,4 @@ C Library
 	overview
 	coding-style
 	fitz/index
-	pdf/index
+	api/index

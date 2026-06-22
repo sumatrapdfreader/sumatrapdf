@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -320,7 +320,7 @@ void ui_init_open_file(const char *dir, int (*filter)(const char *fn))
 	load_dir(dir);
 }
 
-int ui_open_file(char *filename, const char *label)
+int ui_open_file(char *filename_, const char *label)
 {
 	static int last_click_time = 0;
 	static int last_click_sel = -1;
@@ -341,7 +341,7 @@ int ui_open_file(char *filename, const char *label)
 			ui_layout(B, X, NW, ui.padsize, ui.padsize);
 			if (ui_button("Cancel") || (!ui.focus && ui.key == KEY_ESCAPE))
 			{
-				filename[0] = 0;
+				filename_[0] = 0;
 				rv = 1;
 			}
 		}
@@ -354,7 +354,7 @@ int ui_open_file(char *filename, const char *label)
 			ui_layout(R, NONE, CENTER, 0, 0);
 			if (ui_button_aux("Open", disabled) || (!disabled && !ui.focus && ui.key == KEY_ENTER))
 			{
-				fz_snprintf(filename, PATH_MAX, "%s/%s", fc.curdir, fc.files[fc.selected].name);
+				fz_snprintf(filename_, PATH_MAX, "%s/%s", fc.curdir, fc.files[fc.selected].name);
 				rv = 1;
 			}
 			ui_spacer();
@@ -389,7 +389,7 @@ int ui_open_file(char *filename, const char *label)
 					int click_time = glutGet(GLUT_ELAPSED_TIME);
 					if (i == last_click_sel && click_time < last_click_time + 250)
 					{
-						fz_snprintf(filename, PATH_MAX, "%s/%s", fc.curdir, name);
+						fz_snprintf(filename_, PATH_MAX, "%s/%s", fc.curdir, name);
 						rv = 1;
 					}
 					last_click_time = click_time;
@@ -451,12 +451,12 @@ static void bump_file_version(int dir)
 	}
 }
 
-static int ui_save_file_confirm(char *filename)
+static int ui_save_file_confirm(char *filename_)
 {
 	int rv = 0;
 	ui_dialog_begin(ui.gridsize*20, (ui.gridsize+7)*3);
 	ui_layout(T, NONE, NW, ui.padsize, ui.padsize);
-	ui_label("%C File %s already exists!", 0x26a0, filename); /* WARNING SIGN */
+	ui_label("%C File %s already exists!", 0x26a0, filename_); /* WARNING SIGN */
 	ui_label("Do you want to replace it?");
 	ui_layout(B, X, S, ui.padsize, ui.padsize);
 	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
@@ -474,13 +474,13 @@ static int ui_save_file_confirm(char *filename)
 	return rv;
 }
 
-int ui_save_file(char *filename, void (*extra_panel)(void), const char *label)
+int ui_save_file(char *filename_, void (*extra_panel)(void), const char *label)
 {
 	int i, rv = 0;
 
 	if (fc.confirm)
 	{
-		return ui_save_file_confirm(filename);
+		return ui_save_file_confirm(filename_);
 	}
 
 	ui_panel_begin(0, 0, ui.padsize*2, ui.padsize*2, 1);
@@ -503,7 +503,7 @@ int ui_save_file(char *filename, void (*extra_panel)(void), const char *label)
 			ui_layout(B, X, NW, ui.padsize, ui.padsize);
 			if (ui_button("Cancel") || (!ui.focus && ui.key == KEY_ESCAPE))
 			{
-				filename[0] = 0;
+				filename_[0] = 0;
 				rv = 1;
 			}
 		}
@@ -519,13 +519,13 @@ int ui_save_file(char *filename, void (*extra_panel)(void), const char *label)
 			ui_layout(R, NONE, CENTER, 0, 0);
 			if (ui_button("Save"))
 			{
-				fz_snprintf(filename, PATH_MAX, "%s/%s", fc.curdir, fc.input_file.text);
+				fz_snprintf(filename_, PATH_MAX, "%s/%s", fc.curdir, fc.input_file.text);
 				rv = 1;
 
 				/* Show confirmation dialog if we would overwrite another file. */
-				if (strcmp(filename, fc.original_file_name))
+				if (strcmp(filename_, fc.original_file_name))
 				{
-					if (fz_file_exists(ctx, filename))
+					if (fz_file_exists(ctx, filename_))
 					{
 						fc.confirm = 1;
 						rv = 0;

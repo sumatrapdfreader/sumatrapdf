@@ -176,9 +176,16 @@ public class PDFAnnotation
 	public native float[] getInteriorColor();
 	public native void setInteriorColor(float[] color);
 
+	public native String getName();
+	public native void setName(String name);
+
 	public native boolean hasAuthor();
 	public native String getAuthor();
 	public native void setAuthor(String author);
+
+	public native boolean hasSubject();
+	public native String getSubject();
+	public native void setSubject(String subject);
 
 	public native boolean hasLineEndingStyles();
 	public native int[] getLineEndingStyles();

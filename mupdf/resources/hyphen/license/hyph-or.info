@@ -63,4 +63,4 @@
 % Break after any dependent vowel, but not before.
 % Break before or after any consonant.
 % Do not break before anusvara, visarga and length mark.
-% Do not break either side of virama (may be within conjunct).
+% Do not break either side of virama (may be within conjunct).

@@ -155,9 +155,9 @@ pixmap_end_page(fz_context *ctx, fz_document_writer *wri_, fz_device *dev)
 		wri->count += 1;
 		if (wri->path && wri->save)
 		{
-		fz_format_output_path(ctx, path, sizeof path, wri->path, wri->count);
-		wri->save(ctx, wri->pixmap, path);
-	}
+			fz_format_output_path(ctx, path, sizeof path, wri->path, wri->count);
+			wri->save(ctx, wri->pixmap, path);
+		}
 		else
 		{
 			wri->write(ctx, wri->out, wri->pixmap);

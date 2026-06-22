@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -260,7 +260,7 @@ static int strip_outlines(fz_context *ctx, pdf_document *doc, pdf_obj *outlines,
 
 static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int count, const int *new_page_list, pdf_clean_options_structure structure)
 {
-	pdf_obj *oldroot, *pages, *kids, *olddests;
+	pdf_obj *oldroot, *pages, *kids = NULL, *olddests;
 	pdf_obj *root = NULL;
 	pdf_obj *names_list = NULL;
 	pdf_obj *outlines;

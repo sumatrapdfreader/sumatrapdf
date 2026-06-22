@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -64,7 +64,7 @@ static void add_font_res(pdf_obj *resources, char *name, char *path, char *encna
 	const unsigned char *data;
 	int size, enc;
 	fz_font *font;
-	pdf_obj *subres, *ref;
+	pdf_obj *subres;
 
 	data = fz_lookup_base14_font(ctx, path, &size);
 	if (data)
@@ -72,29 +72,32 @@ static void add_font_res(pdf_obj *resources, char *name, char *path, char *encna
 	else
 		font = fz_new_font_from_file(ctx, NULL, path, 0, 0);
 
-	subres = pdf_dict_get(ctx, resources, PDF_NAME(Font));
-	if (!subres)
+	fz_try(ctx)
 	{
-		subres = pdf_new_dict(ctx, doc, 10);
-		pdf_dict_put_drop(ctx, resources, PDF_NAME(Font), subres);
+		subres = pdf_dict_get(ctx, resources, PDF_NAME(Font));
+		if (!subres)
+		{
+			subres = pdf_new_dict(ctx, doc, 10);
+			pdf_dict_put_drop(ctx, resources, PDF_NAME(Font), subres);
+		}
+
+		enc = PDF_SIMPLE_ENCODING_LATIN;
+		if (encname)
+		{
+			if (!strcmp(encname, "Latin") || !strcmp(encname, "Latn"))
+				enc = PDF_SIMPLE_ENCODING_LATIN;
+			else if (!strcmp(encname, "Greek") || !strcmp(encname, "Grek"))
+				enc = PDF_SIMPLE_ENCODING_GREEK;
+			else if (!strcmp(encname, "Cyrillic") || !strcmp(encname, "Cyrl"))
+				enc = PDF_SIMPLE_ENCODING_CYRILLIC;
+		}
+
+		pdf_dict_puts_drop(ctx, subres, name, pdf_add_simple_font(ctx, doc, font, enc));
 	}
-
-	enc = PDF_SIMPLE_ENCODING_LATIN;
-	if (encname)
-	{
-		if (!strcmp(encname, "Latin") || !strcmp(encname, "Latn"))
-			enc = PDF_SIMPLE_ENCODING_LATIN;
-		else if (!strcmp(encname, "Greek") || !strcmp(encname, "Grek"))
-			enc = PDF_SIMPLE_ENCODING_GREEK;
-		else if (!strcmp(encname, "Cyrillic") || !strcmp(encname, "Cyrl"))
-			enc = PDF_SIMPLE_ENCODING_CYRILLIC;
-	}
-
-	ref = pdf_add_simple_font(ctx, doc, font, enc);
-	pdf_dict_puts(ctx, subres, name, ref);
-	pdf_drop_obj(ctx, ref);
-
-	fz_drop_font(ctx, font);
+	fz_always(ctx)
+		fz_drop_font(ctx, font);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void add_cjkfont_res(pdf_obj *resources, char *name, char *lang, char *wm, char *style)
@@ -102,7 +105,7 @@ static void add_cjkfont_res(pdf_obj *resources, char *name, char *lang, char *wm
 	const unsigned char *data;
 	int size, index, ordering, wmode, serif;
 	fz_font *font;
-	pdf_obj *subres, *ref;
+	pdf_obj *subres;
 
 	ordering = fz_lookup_cjk_ordering_by_language(lang);
 
@@ -119,39 +122,44 @@ static void add_cjkfont_res(pdf_obj *resources, char *name, char *lang, char *wm
 	data = fz_lookup_cjk_font(ctx, ordering, &size, &index);
 	font = fz_new_font_from_memory(ctx, NULL, data, size, index, 0);
 
-	subres = pdf_dict_get(ctx, resources, PDF_NAME(Font));
-	if (!subres)
+	fz_try(ctx)
 	{
-		subres = pdf_new_dict(ctx, doc, 10);
-		pdf_dict_put_drop(ctx, resources, PDF_NAME(Font), subres);
+		subres = pdf_dict_get(ctx, resources, PDF_NAME(Font));
+		if (!subres)
+		{
+			subres = pdf_new_dict(ctx, doc, 10);
+			pdf_dict_put_drop(ctx, resources, PDF_NAME(Font), subres);
+		}
+
+		pdf_dict_puts_drop(ctx, subres, name, pdf_add_cjk_font(ctx, doc, font, ordering, wmode, serif));
 	}
-
-	ref = pdf_add_cjk_font(ctx, doc, font, ordering, wmode, serif);
-	pdf_dict_puts(ctx, subres, name, ref);
-	pdf_drop_obj(ctx, ref);
-
-	fz_drop_font(ctx, font);
+	fz_always(ctx)
+		fz_drop_font(ctx, font);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void add_image_res(pdf_obj *resources, char *name, char *path)
 {
 	fz_image *image;
-	pdf_obj *subres, *ref;
+	pdf_obj *subres;
 
 	image = fz_new_image_from_file(ctx, path);
-
-	subres = pdf_dict_get(ctx, resources, PDF_NAME(XObject));
-	if (!subres)
+	fz_try(ctx)
 	{
-		subres = pdf_new_dict(ctx, doc, 10);
-		pdf_dict_put_drop(ctx, resources, PDF_NAME(XObject), subres);
+		subres = pdf_dict_get(ctx, resources, PDF_NAME(XObject));
+		if (!subres)
+		{
+			subres = pdf_new_dict(ctx, doc, 10);
+			pdf_dict_put_drop(ctx, resources, PDF_NAME(XObject), subres);
+		}
+
+		pdf_dict_puts_drop(ctx, subres, name, pdf_add_image(ctx, doc, image));
 	}
-
-	ref = pdf_add_image(ctx, doc, image);
-	pdf_dict_puts(ctx, subres, name, ref);
-	pdf_drop_obj(ctx, ref);
-
-	fz_drop_image(ctx, image);
+	fz_always(ctx)
+		fz_drop_image(ctx, image);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 /*
@@ -281,12 +289,12 @@ int pdfcreate_main(int argc, char **argv)
 		exit(1);
 	}
 
-	pdf_parse_write_options(ctx, &opts, flags);
-
 	fz_var(doc);
 
 	fz_try(ctx)
 	{
+		pdf_parse_write_options(ctx, &opts, flags);
+
 		doc = pdf_create_document(ctx);
 
 		for (i = fz_optind; i < argc; ++i)

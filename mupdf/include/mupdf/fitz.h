@@ -33,6 +33,7 @@ extern "C" {
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/output.h"
 #include "mupdf/fitz/log.h"
+#include "mupdf/fitz/options.h"
 
 #include "mupdf/fitz/crypt.h"
 #include "mupdf/fitz/getopt.h"

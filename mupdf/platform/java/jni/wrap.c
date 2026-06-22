@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -615,6 +615,7 @@ static inline jobject to_VectorInfo_safe(fz_context *ctx, JNIEnv *env, int flags
 	jvecinfo = (*env)->NewObject(env, cls_StructuredTextWalker_VectorInfo, mid_StructuredTextWalker_VectorInfo_init);
 	(*env)->SetBooleanField(env, jvecinfo, fid_StructuredTextWalker_VectorInfo_isStroked, flags & FZ_STEXT_VECTOR_IS_STROKED);
 	(*env)->SetBooleanField(env, jvecinfo, fid_StructuredTextWalker_VectorInfo_isRectangle, flags & FZ_STEXT_VECTOR_IS_RECTANGLE);
+	(*env)->SetBooleanField(env, jvecinfo, fid_StructuredTextWalker_VectorInfo_continues, flags & FZ_STEXT_VECTOR_CONTINUES);
 	return jvecinfo;
 }
 

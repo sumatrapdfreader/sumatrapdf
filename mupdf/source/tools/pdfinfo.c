@@ -716,7 +716,7 @@ printinfo(fz_context *ctx, globals *glo, char *filename, int show, int page)
 		fz_write_printf(ctx, out, "Fonts (%d):\n", glo->fonts);
 		for (i = 0; i < glo->fonts; i++)
 		{
-			fz_write_printf(ctx, out, PAGE_FMT_zu "%s '%s' %s%s(%d 0 R)\n",
+			fz_write_printf(ctx, out, PAGE_FMT_zu "%s %q %s%s(%d 0 R)\n",
 				glo->font[i].page,
 				pdf_to_num(ctx, glo->font[i].pageref),
 				pdf_to_name(ctx, glo->font[i].u.font.subtype),

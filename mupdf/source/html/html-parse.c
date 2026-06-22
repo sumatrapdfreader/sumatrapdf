@@ -33,7 +33,7 @@ enum { T, R, B, L };
 static const char *html_default_css =
 "@page{margin:3em 2em}"
 "a:link{color:blue;text-decoration:underline}"
-"address{display:block;font-style:italic}"
+"address{font-style:italic}"
 "b{font-weight:bold}"
 "bdo{direction:rtl;unicode-bidi:bidi-override}"
 "blockquote{display:block;margin:1em 40px}"
@@ -53,16 +53,20 @@ static const char *html_default_css =
 "h5{display:block;font-size:0.83em;font-weight:bold;margin:1.67em 0;page-break-after:avoid}"
 "h6{display:block;font-size:0.67em;font-weight:bold;margin:2.33em 0;page-break-after:avoid}"
 "head{display:none}"
-"hr{border-style:solid;border-width:1px;display:block;margin-bottom:0.5em;margin-top:0.5em;text-align:center}"
+"hr{border-bottom:1px solid;display:block;margin-bottom:0.5em;margin-top:0.5em;text-align:center}"
 "html{display:block}"
 "i{font-style:italic}"
 "ins{text-decoration:underline}"
 "kbd{font-family:monospace}"
 "li{display:list-item}"
+"mark{background-color:yellow}"
 "menu{display:block;list-style-type:disc;margin:1em 0;padding:0 0 0 30pt}"
 "ol{display:block;list-style-type:decimal;margin:1em 0;padding:0 0 0 30pt}"
 "p{display:block;margin:1em 0}"
 "pre{display:block;font-family:monospace;margin:1em 0;white-space:pre}"
+"q:before{content:'\xe2\x80\x9c'}"
+"q:after{content:'\xe2\x80\x9d'}"
+"s{text-decoration:line-through}"
 "samp{font-family:monospace}"
 "script{display:none}"
 "small{font-size:0.83em}"
@@ -77,6 +81,7 @@ static const char *html_default_css =
 "th{display:table-cell;font-weight:bold;padding:1px;text-align:center;background-color:inherit}"
 "thead{display:table-header-group}"
 "tr{display:table-row}"
+"u{text-decoration:underline}"
 "ul{display:block;list-style-type:disc;margin:1em 0;padding:0 0 0 30pt}"
 "ul ul{list-style-type:circle}"
 "ul ul ul{list-style-type:square}"
@@ -85,6 +90,11 @@ static const char *html_default_css =
 "col{display:table-column}"
 "figcaption,caption{display:block;text-align:center}"
 "address,article,aside,figure,footer,header,hgroup,main,nav,section,search{display:block}"
+"fieldset,legend{display:block}"
+"input[type=checkbox]:before{content:'\\2610  '}"
+"input[type=checkbox][checked]:before{content:'\\2612  '}"
+"input[type=radio]:before{content:'\\25cb  '}"
+"input[type=radio][checked]:before{content:'\\25c9  '}"
 ;
 
 static const char *mobi_default_css =
@@ -129,6 +139,26 @@ static const char *fb2_default_css =
 "p+p{margin-top:0;text-indent:1.5em}"
 "empty-line+p{margin-top:0}"
 "section>title{page-break-before:always}"
+;
+
+static const char *markdown_publisher_css =
+"body{font-family:sans-serif}"
+"p,ul,ol,pre,blockquote,table,hr,h1,h2,h3,h4,h5,h6{margin:1em 0}"
+"li>ul,li>ol{margin:0}"
+"h1,h2,h3,h4,h5,h6{page-break-after:avoid}"
+"table,pre{page-break-inside:avoid}"
+"pre{padding:0.5em 1em}"
+"h1,h2{padding-bottom:.2em;border-bottom:1px solid silver}"
+"hr{border-bottom:2px solid silver}"
+"pre,code{background-color:whitesmoke}"
+"blockquote{border-left:3px solid gainsboro;padding-left:.8em;color:#333}"
+"table{border-collapse:collapse}"
+"th,td{border:1px solid silver;padding:0.25em 0.5em}"
+"tr:nth-child(even){background-color:whitesmoke}"
+"section.footnotes{border-top:1px solid silver;padding-top:1em;font-size:0.8em}"
+"a.footnote-backref,sup.footnote-ref a{text-decoration:none}"
+"sup.footnote-ref a:before{content:'['}"
+"sup.footnote-ref a:after{content:']'}"
 ;
 
 static const char *known_html_tags[] = {
@@ -239,7 +269,10 @@ struct genstate
 
 	fz_css_style_splay *styles;
 
+	int publisher_css;
+
 	int depth;
+	int depth_warned;
 };
 
 static int iswhite(int c)
@@ -535,7 +568,7 @@ static void generate_text(fz_context *ctx, fz_html_box *box, const char *text, i
 	fz_hyphenator *hyph = NULL;
 	int c, n;
 
-	static const char *space = " ";
+	static const char *space = "        "; /* 8 spaces */
 
 	flow = find_flow_encloser(ctx, box);
 	if (flow == NULL)
@@ -576,11 +609,17 @@ static void generate_text(fz_context *ctx, fz_html_box *box, const char *text, i
 			}
 			else
 			{
-				// TODO: tabs
 				if (bsp)
+				{
 					add_flow_space(ctx, pool, flow, box);
+				}
 				else
-					add_flow_word(ctx, pool, flow, box, space, space+1, lang);
+				{
+					if (*text == '\t')
+						add_flow_word(ctx, pool, flow, box, space, space+4, lang);
+					else
+						add_flow_word(ctx, pool, flow, box, space, space+1, lang);
+				}
 				++text;
 			}
 			g->last_brk_cls = UCDN_LINEBREAK_CLASS_WJ; /* don't add sbreaks after a space */
@@ -771,14 +810,18 @@ static void fz_drop_story_imp(fz_context *ctx, fz_storable *stor)
 static void
 fz_drop_html_tree(fz_context *ctx, fz_html_tree *tree)
 {
-	fz_defer_reap_start(ctx);
-	fz_drop_storable(ctx, &tree->storable);
-	fz_defer_reap_end(ctx);
+	if (tree)
+	{
+		fz_defer_reap_start(ctx);
+		fz_drop_storable(ctx, &tree->storable);
+		fz_defer_reap_end(ctx);
+	}
 }
 
 void fz_drop_html(fz_context *ctx, fz_html *html)
 {
-	fz_drop_html_tree(ctx, &html->tree);
+	if (html)
+		fz_drop_html_tree(ctx, &html->tree);
 }
 
 void fz_drop_story(fz_context *ctx, fz_story *story)
@@ -791,7 +834,9 @@ void fz_drop_story(fz_context *ctx, fz_story *story)
 
 fz_html *fz_keep_html(fz_context *ctx, fz_html *html)
 {
-	return fz_keep_storable(ctx, &html->tree.storable);
+	if (html)
+		return fz_keep_storable(ctx, &html->tree.storable);
+	return NULL;
 }
 
 static fz_html_box *new_box(fz_context *ctx, struct genstate *g, fz_xml *node, int type, fz_css_style *style)
@@ -1079,6 +1124,22 @@ static void gen2_text(fz_context *ctx, struct genstate *g, fz_html_box *root_box
 	}
 }
 
+static void gen2_pseudo_content(fz_context *ctx, struct genstate *g, fz_html_box *root_box, const char *text, fz_css_style *style)
+{
+	if (root_box->type == BOX_INLINE)
+	{
+		generate_text(ctx, root_box, text, g->markup_lang, g);
+	}
+	else
+	{
+		fz_html_box *this_box;
+		root_box = find_inline_context(ctx, g, root_box);
+		this_box = new_box(ctx, g, NULL, BOX_INLINE, style);
+		append_box(ctx, root_box, this_box);
+		generate_text(ctx, this_box, text, g->markup_lang, g);
+	}
+}
+
 static fz_html_box *gen2_inline(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_css_style *style)
 {
 	fz_html_box *this_box;
@@ -1204,7 +1265,7 @@ static fz_html_box *gen2_table_cell(fz_context *ctx, struct genstate *g, fz_html
 	if (!row_box)
 		return gen2_block(ctx, g, root_box, node, style);
 
-	fz_match_css(ctx, &match, root_match, g->css, node);
+	fz_match_css(ctx, &match, root_match, g->css, node, FZ_CSS_PSEUDO_NONE, g->publisher_css);
 	fz_apply_css_style(ctx, g->set, style, &match);
 	if (g->col_num < g->tab_styles.ncols)
 	{
@@ -1359,6 +1420,17 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 	if (display == DIS_NONE)
 		goto end;
 
+	if (g->depth > 100)
+	{
+		if (g->depth_warned == 0)
+		{
+			fz_warn(ctx, "Tag depth limit exceeded. Output may be truncated.");
+			g->depth_warned = 1;
+		}
+		return;
+	}
+	g->depth++;
+
 	tag = fz_xml_tag(node);
 
 	if (style->direction == FZ_BIDI_UNSET)
@@ -1399,7 +1471,7 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 
 	case DIS_LIST_ITEM:
 		this_box = gen2_block(ctx, g, root_box, node, style);
-		this_box->list_item = ++g->list_counter;
+		this_box->list_item = g->list_counter++;
 		break;
 
 	// TODO: https://www.w3.org/TR/CSS2/tables.html#anonymous-boxes
@@ -1450,7 +1522,11 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 	if (tag && (!strcmp(tag, "ol") || !strcmp(tag, "ul") || !strcmp(tag, "dl")))
 	{
 		int save_list_counter = g->list_counter;
-		g->list_counter = 0;
+		const char *start_att = fz_xml_att(node, "start");
+		if (start_att)
+			g->list_counter = fz_atoi(start_att);
+		else
+			g->list_counter = 1;
 		gen2_children(ctx, g, this_box, node, match);
 		g->list_counter = save_list_counter;
 	}
@@ -1491,22 +1567,34 @@ end:
 	g->markup_dir = save_markup_dir;
 	g->markup_lang = save_markup_lang;
 	g->href = save_href;
+	g->depth--;
 }
 
 static void gen2_children(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *root_node, fz_css_match *root_match)
 {
 	fz_xml *node;
-	const char *tag;
+	const char *tag, *content;
 	fz_css_match match;
 	fz_css_style style;
 	int display;
+
+	if (fz_xml_tag(root_node))
+	{
+		fz_match_css(ctx, &match, root_match, g->css, root_node, FZ_CSS_PSEUDO_BEFORE, g->publisher_css);
+		content = fz_get_css_match_content(&match);
+		if (content)
+		{
+			fz_apply_css_style(ctx, g->set, &style, &match);
+			gen2_pseudo_content(ctx, g, root_box, content, &style);
+		}
+	}
 
 	for (node = fz_xml_down(root_node); node; node = fz_xml_next(node))
 	{
 		tag = fz_xml_tag(node);
 		if (tag)
 		{
-			fz_match_css(ctx, &match, root_match, g->css, node);
+			fz_match_css(ctx, &match, root_match, g->css, node, FZ_CSS_PSEUDO_NONE, g->publisher_css);
 			fz_apply_css_style(ctx, g->set, &style, &match);
 			apply_attributes_as_styles(ctx, &style, node);
 			display = fz_get_css_match_display(&match);
@@ -1540,6 +1628,17 @@ static void gen2_children(fz_context *ctx, struct genstate *g, fz_html_box *root
 			gen2_text(ctx, g, root_box, node);
 		}
 	}
+
+	if (fz_xml_tag(root_node))
+	{
+		fz_match_css(ctx, &match, root_match, g->css, root_node, FZ_CSS_PSEUDO_AFTER, g->publisher_css);
+		content = fz_get_css_match_content(&match);
+		if (content)
+		{
+			fz_apply_css_style(ctx, g->set, &style, &match);
+			gen2_pseudo_content(ctx, g, root_box, content, &style);
+		}
+	}
 }
 
 static void
@@ -1564,7 +1663,7 @@ html_load_css_link(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, cons
 	{
 		buf = fz_read_archive_entry(ctx, zip, path);
 		fz_parse_css(ctx, css, fz_string_from_buffer(ctx, buf), path);
-		fz_add_css_font_faces(ctx, set, zip, css_base_uri, css);
+		fz_add_css_font_faces(ctx, set, zip, css_base_uri, css, 1);
 	}
 	fz_always(ctx)
 		fz_drop_buffer(ctx, buf);
@@ -1607,7 +1706,7 @@ html_load_css(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const cha
 			fz_try(ctx)
 			{
 				fz_parse_css(ctx, css, s, "<style>");
-				fz_add_css_font_faces(ctx, set, zip, base_uri, css);
+				fz_add_css_font_faces(ctx, set, zip, base_uri, css, 1);
 			}
 			fz_always(ctx)
 				fz_free(ctx, s);
@@ -1634,7 +1733,7 @@ fb2_load_css(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 		fz_try(ctx)
 		{
 			fz_parse_css(ctx, css, s, "<stylesheet>");
-			fz_add_css_font_faces(ctx, set, zip, base_uri, css);
+			fz_add_css_font_faces(ctx, set, zip, base_uri, css, 1);
 		}
 		fz_catch(ctx)
 		{
@@ -1923,11 +2022,34 @@ static void move_background_color_up(fz_context *ctx, struct genstate *g, fz_htm
 	}
 }
 
-static void
-xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, const char *user_css,
-	fz_xml_doc *xml, fz_html_tree *tree, char **rtitle, int try_fictionbook, int is_mobi)
+static void parse_meta_viewport(fz_context *ctx, const char *viewport, float *meta_w, float *meta_h)
 {
-	fz_xml *root, *node;
+	const char *p;
+	p = strstr(viewport, "width=");
+	if (p)
+		*meta_w = fz_atoi(p + 6);
+	p = strstr(viewport, "height=");
+	if (p)
+		*meta_h = fz_atoi(p + 7);
+}
+
+static void
+xml_to_boxes(fz_context *ctx,
+	fz_html_font_set *set,
+	fz_archive *zip,
+	const char *base_uri,
+	const char *user_css,
+	fz_xml_doc *xml,
+	fz_html_tree *tree,
+	char **rtitle,
+	fz_html_flavor flavor,
+	int publisher_css,
+	float *meta_w,
+	float *meta_h
+)
+{
+	fz_xml *root, *node, *head;
+	char *viewport;
 	char *title;
 
 	fz_css_match root_match, match;
@@ -1944,12 +2066,14 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 	g.at_bol = 0;
 	g.emit_white = 0;
 	g.last_brk_cls = UCDN_LINEBREAK_CLASS_OP;
-	g.list_counter = 0;
+	g.list_counter = 1;
 	g.section_depth = 0;
 	g.markup_dir = FZ_BIDI_LTR;
 	g.markup_lang = FZ_LANG_UNSET;
 	g.href = NULL;
 	g.styles = NULL;
+	g.publisher_css = publisher_css;
+	g.depth = 0;
 
 	if (rtitle)
 		*rtitle = NULL;
@@ -1964,34 +2088,31 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 
 	fz_try(ctx)
 	{
-		if (try_fictionbook && fz_xml_find(root, "FictionBook"))
+		if (flavor == FZ_HTML_FLAVOR_FICTIONBOOK2 && fz_xml_find(fz_xml_root(xml), "FictionBook"))
 		{
 			g.is_fb2 = 1;
 			fz_parse_css(ctx, g.css, fb2_default_css, "<default:fb2>");
-			if (fz_use_document_css(ctx))
+			if (publisher_css)
 				fb2_load_css(ctx, g.set, g.zip, g.base_uri, g.css, root);
 			g.images = load_fb2_images(ctx, root);
-		}
-		else if (is_mobi)
-		{
-			g.is_fb2 = 0;
-			fz_parse_css(ctx, g.css, html_default_css, "<default:html>");
-			fz_parse_css(ctx, g.css, mobi_default_css, "<default:mobi>");
-			if (fz_use_document_css(ctx))
-				html_load_css(ctx, g.set, g.zip, g.base_uri, g.css, root);
 		}
 		else
 		{
 			g.is_fb2 = 0;
 			fz_parse_css(ctx, g.css, html_default_css, "<default:html>");
-			if (fz_use_document_css(ctx))
+			if (flavor == FZ_HTML_FLAVOR_MOBI)
+				fz_parse_css(ctx, g.css, mobi_default_css, "<default:mobi>");
+			/* Our markdown overrides count as the publisher_css for md files. */
+			if (flavor == FZ_HTML_FLAVOR_MARKDOWN && publisher_css)
+				fz_parse_css(ctx, g.css, markdown_publisher_css, "<default:markdown>");
+			if (publisher_css)
 				html_load_css(ctx, g.set, g.zip, g.base_uri, g.css, root);
 		}
 
 		if (user_css)
 		{
 			fz_parse_css(ctx, g.css, user_css, "<user>");
-			fz_add_css_font_faces(ctx, g.set, g.zip, ".", g.css);
+			fz_add_css_font_faces(ctx, g.set, g.zip, ".", g.css, 0);
 		}
 	}
 	fz_catch(ctx)
@@ -2037,7 +2158,7 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 		tree->root->s.layout.b = 0;
 
 		// Create document node (html).
-		fz_match_css(ctx, &match, &root_match, g.css, root);
+		fz_match_css(ctx, &match, &root_match, g.css, root, FZ_CSS_PSEUDO_NONE, publisher_css);
 		fz_apply_css_style(ctx, g.set, &style, &match);
 		display = fz_get_css_match_display(&match);
 		gen2_tag(ctx, &g, tree->root, root, &match, display, &style);
@@ -2059,9 +2180,9 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 		}
 		else
 		{
-			node = fz_xml_find(root, "html");
-			node = fz_xml_find_down(node, "head");
-			node = fz_xml_find_down(node, "title");
+			head = fz_xml_find(root, "html");
+			head = fz_xml_find_down(head, "head");
+			node = fz_xml_find_down(head, "title");
 			if (rtitle)
 			{
 				title = fz_xml_text(fz_xml_down(node));
@@ -2071,6 +2192,18 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 
 			// Move html or body background-color to :root.
 			move_background_color_up(ctx, &g, tree->root);
+
+			// Parse meta viewport size.
+			if (meta_w && meta_h)
+			{
+				node = fz_xml_find_down_match(head, "meta", "name", "viewport");
+				if (node)
+				{
+					viewport = fz_xml_att(node, "content");
+					if (viewport)
+						parse_meta_viewport(ctx, viewport, meta_w, meta_h);
+				}
+			}
 		}
 	}
 	fz_always(ctx)
@@ -2187,7 +2320,11 @@ patch_mobi_html(fz_context *ctx, fz_pool *pool, fz_xml *node)
 static void
 fz_parse_html_tree(fz_context *ctx,
 	fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css,
-	int try_xml, int try_html5, fz_html_tree *tree, char **rtitle, int try_fictionbook, int patch_mobi)
+	int try_xml, int try_html5, fz_html_tree *tree, char **rtitle, fz_html_flavor flavor,
+	int publisher_css,
+	float *meta_w,
+	float *meta_h
+)
 {
 	fz_xml_doc *xml;
 
@@ -2196,11 +2333,12 @@ fz_parse_html_tree(fz_context *ctx,
 
 	xml = parse_to_xml(ctx, buf, try_xml, try_html5);
 
-	if (patch_mobi)
+	if (flavor == FZ_HTML_FLAVOR_MOBI)
 		patch_mobi_html(ctx, xml->u.doc.pool, fz_xml_root(xml));
 
 	fz_try(ctx)
-		xml_to_boxes(ctx, set, zip, base_uri, user_css, xml, tree, rtitle, try_fictionbook, patch_mobi);
+		xml_to_boxes(ctx, set, zip, base_uri, user_css, xml, tree, rtitle, flavor, publisher_css,
+			meta_w, meta_h);
 	fz_always(ctx)
 		fz_drop_xml(ctx, xml);
 	fz_catch(ctx)
@@ -2234,16 +2372,20 @@ fz_new_html_tree_of_size(fz_context *ctx, size_t size, fz_store_drop_fn *drop)
 fz_html *
 fz_parse_html(fz_context *ctx,
 	fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css,
-	int try_xml, int try_html5, int patch_mobi)
+	int try_xml, int try_html5, fz_html_flavor flavor, int publisher_css)
 {
 	fz_html *html = fz_new_derived_html_tree(ctx, fz_html, fz_drop_html_imp);
+
+	html->meta_w = 0;
+	html->meta_h = 0;
 
 	html->layout_w = 0;
 	html->layout_h = 0;
 	html->layout_em = 0;
 
 	fz_try(ctx)
-		fz_parse_html_tree(ctx, set, zip, base_uri, buf, user_css, try_xml, try_html5, &html->tree, &html->title, 1, patch_mobi);
+		fz_parse_html_tree(ctx, set, zip, base_uri, buf, user_css, try_xml, try_html5, &html->tree, &html->title, flavor, publisher_css,
+			&html->meta_w, &html->meta_h);
 	fz_catch(ctx)
 	{
 		fz_drop_html(ctx, html);
@@ -2344,10 +2486,10 @@ fz_new_story(fz_context *ctx, fz_buffer *buf, const char *user_css, float em, fz
 }
 
 fz_html *
-fz_parse_xhtml(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css)
+fz_parse_xhtml(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char *base_uri, fz_buffer *buf, const char *user_css, int publisher_css)
 {
 	/* try as XML first, fall back to HTML5 */
-	return fz_parse_html(ctx, set, zip, base_uri, buf, user_css, 1, 1, 0);
+	return fz_parse_html(ctx, set, zip, base_uri, buf, user_css, 1, 1, 0, publisher_css);
 }
 
 static void indent(int level)
@@ -2677,7 +2819,7 @@ convert_to_boxes(fz_context *ctx, fz_story *story)
 	fz_try(ctx)
 	{
 		redirect_warnings_to_buffer(ctx, story->warnings, &saved);
-		xml_to_boxes(ctx, story->font_set, story->zip, ".", story->user_css, story->dom, &story->tree, NULL, 0, 0);
+		xml_to_boxes(ctx, story->font_set, story->zip, ".", story->user_css, story->dom, &story->tree, NULL, FZ_HTML_FLAVOR_DEFAULT, 1, NULL, NULL);
 	}
 	fz_always(ctx)
 	{

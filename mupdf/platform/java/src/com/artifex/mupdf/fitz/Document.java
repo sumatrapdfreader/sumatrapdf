@@ -241,6 +241,8 @@ public class Document
 	public native String getMetaData(String key);
 	public native void setMetaData(String key, String value);
 	public native boolean isReflowable();
+
+	public native void style(boolean publisher_css, String user_css);
 	public native void layout(float width, float height, float em);
 
 	public native Location findBookmark(long mark);

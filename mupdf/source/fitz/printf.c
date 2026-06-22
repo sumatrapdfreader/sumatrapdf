@@ -58,6 +58,20 @@ static inline void fmtputc(struct fmtbuf *out, int c)
 	out->emit(out->ctx, out->user, c);
 }
 
+static inline void fmtputrune(struct fmtbuf *out, int c)
+{
+	char buf[10];
+	int i, n;
+	if (c < 128)
+		fmtputc(out, c);
+	else
+	{
+		n = fz_runetochar(buf, c);
+		for (i = 0; i < n; ++i)
+			fmtputc(out, buf[i]);
+	}
+}
+
 /*
  * Convert float to shortest possible string that won't lose precision, except:
  * NaN to 0, +Inf to FLT_MAX, -Inf to -FLT_MAX.
@@ -472,11 +486,11 @@ void
 fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void *user, int c), const char *fmt, va_list args)
 {
 	struct fmtbuf out;
-	int c, s, z, p, ps, w, q;
-	int i, n;
+	int c, s, z, p, ps, w, q, i;
 	int32_t i32;
 	int64_t i64;
 	const char *str;
+	const wchar_t *wstr;
 	size_t bits;
 
 	out.ctx = ctx;
@@ -614,14 +628,7 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 
 			case 'C': /* unicode char */
 				c = va_arg(args, int);
-				if (c < 128)
-					fmtputc(&out, c);
-				else {
-					char buf[10];
-					n = fz_runetochar(buf, c);
-					for (i=0; i < n; ++i)
-						fmtputc(&out, buf[i]);
-				}
+				fmtputrune(&out, c);
 				break;
 			case 'c':
 				c = va_arg(args, int);
@@ -695,18 +702,37 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				break;
 
 			case 's':
-				str = va_arg(args, const char*);
-				if (!str)
-					str = "(null)";
-				if (ps >= 0)
+				if (bits > 0)
 				{
-					for (i=0; i < ps && ((c = *str++) != 0); ++i)
-						fmtputc(&out, c);
+					wstr = va_arg(args, const wchar_t*);
+					if (!wstr)
+						wstr = L"(null)";
+					if (ps >= 0)
+					{
+						for (i=0; i < ps && ((c = *wstr++) != 0); ++i)
+							fmtputrune(&out, c);
+					}
+					else
+					{
+						while ((c = *wstr++) != 0)
+							fmtputrune(&out, c);
+					}
 				}
 				else
 				{
-				while ((c = *str++) != 0)
-					fmtputc(&out, c);
+					str = va_arg(args, const char*);
+					if (!str)
+						str = "(null)";
+					if (ps >= 0)
+					{
+						for (i=0; i < ps && ((c = *str++) != 0); ++i)
+							fmtputc(&out, c);
+					}
+					else
+					{
+						while ((c = *str++) != 0)
+							fmtputc(&out, c);
+					}
 				}
 				break;
 			case 'Q': /* quoted string (with verbatim unicode) */

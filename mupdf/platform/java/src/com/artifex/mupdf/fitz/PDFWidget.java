@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -56,18 +56,25 @@ public class PDFWidget extends PDFAnnotation
 	/* Text fields */
 	public static final int TX_FIELD_IS_MULTILINE = 1 << 12;
 	public static final int TX_FIELD_IS_PASSWORD = 1 << 13;
+	public static final int TX_FIELD_IS_FILE_SELECT = 1 << 20;
+	public static final int TX_FIELD_IS_DO_NOT_SPELL_CHECK = 1 << 22;
+	public static final int TX_FIELD_IS_DO_NOT_SCROLL = 1 << 23;
 	public static final int TX_FIELD_IS_COMB = 1 << 24;
+	public static final int TX_FIELD_IS_RICH_TEXT = 1 << 25;
 
 	/* Button fields */
 	public static final int BTN_FIELD_IS_NO_TOGGLE_TO_OFF = 1 << 14;
 	public static final int BTN_FIELD_IS_RADIO = 1 << 15;
 	public static final int BTN_FIELD_IS_PUSHBUTTON = 1 << 16;
+	public static final int BTN_FIELD_IS_RADIOS_IN_UNISON = 1 << 25;
 
 	/* Choice fields */
 	public static final int CH_FIELD_IS_COMBO = 1 << 17;
 	public static final int CH_FIELD_IS_EDIT = 1 << 18;
 	public static final int CH_FIELD_IS_SORT = 1 << 19;
 	public static final int CH_FIELD_IS_MULTI_SELECT = 1 << 21;
+	public static final int CH_FIELD_IS_DO_NOT_SPELL_CHECK = 1 << 22;
+	public static final int CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = 1 << 25;
 
 	/* Signature appearance */
 	public static final int SIGNATURE_SHOW_LABELS = 1;

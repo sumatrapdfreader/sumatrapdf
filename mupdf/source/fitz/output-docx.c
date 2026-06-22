@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -303,7 +303,7 @@ static void s_walk_path(fz_context *ctx, fz_docx_device *dev, extract_t *extract
 	fz_walk_path(ctx, path, &walker, extract /*arg*/);
 }
 
-void dev_fill_path(fz_context *ctx, fz_device *dev_, const fz_path *path, int even_odd,
+static void dev_fill_path(fz_context *ctx, fz_device *dev_, const fz_path *path, int even_odd,
 		fz_matrix matrix, fz_colorspace * colorspace, const float *color, float alpha,
 		fz_color_params color_params)
 {
@@ -723,29 +723,22 @@ static void writer_drop(fz_context *ctx, fz_document_writer *writer_)
 }
 
 
-static int get_bool_option(fz_context *ctx, const char *options, const char *name, int default_)
+static int get_bool_option(fz_context *ctx, fz_options *options, const char *name, int dv)
 {
-	const char *value;
-	if (fz_has_option(ctx, options, name, &value))
-	{
-		if (fz_option_eq(value, "yes")) return 1;
-		if (fz_option_eq(value, "no")) return 0;
-		else fz_throw(ctx, FZ_ERROR_SYNTAX, "option '%s' should be yes or no in options='%s'", name, options);
-	}
+	int v;
+	if (fz_lookup_option_boolean(ctx, options, name, &v))
+		return v;
 	else
-		return default_;
+		return dv;
 }
 
-static double get_double_option(fz_context *ctx, const char *options, const char *name, double default_)
+static double get_double_option(fz_context *ctx, fz_options *options, const char *name, double dv)
 {
-	const char *value;
-	if (fz_has_option(ctx, options, name, &value))
-	{
-		double ret = atof(value);
-		return ret;
-	}
+	float v;
+	if (fz_lookup_option_float(ctx, options, name, &v))
+		return v;
 	else
-		return default_;
+		return dv;
 }
 
 static void *s_realloc_fn(void *state, void *prev, size_t size)
@@ -758,15 +751,19 @@ static void *s_realloc_fn(void *state, void *prev, size_t size)
 
 /* Will drop <out> if an error occurs. */
 static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_output *out,
-		const char *options, extract_format_t format)
+		const char *options_string, extract_format_t format)
 {
 	fz_docx_writer *writer = NULL;
+	fz_options *options = NULL;
+	double space_guess = 0;
 
 	fz_var(writer);
+	fz_var(options);
 
 	fz_try(ctx)
 	{
-		double space_guess = get_double_option(ctx, options, "space-guess", 0);
+		options = fz_new_options(ctx, options_string);
+		space_guess = get_double_option(ctx, options, "space-guess", 0);
 		writer = fz_new_derived_document_writer(
 				ctx,
 				fz_docx_writer,
@@ -794,24 +791,21 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 			fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_enable_analysis failed.");
 		{
 			const char* v;
-			if (fz_has_option(ctx, options, "tables-csv-format", &v))
+			if (fz_lookup_option(ctx, options, "tables-csv-format", &v))
 			{
-				size_t len = strlen(v) + 1; /* Might include trailing options. */
-				char* formatbuf = fz_malloc(ctx, len);
-				fz_copy_option(ctx, v, formatbuf, len);
-				fprintf(stderr, "tables-csv-format: %s\n", formatbuf);
-				if (extract_tables_csv_format(writer->extract, formatbuf))
+				fprintf(stderr, "tables-csv-format: %s\n", v);
+				if (extract_tables_csv_format(writer->extract, v))
 				{
-					fz_free(ctx, formatbuf);
 					fz_throw(ctx, FZ_ERROR_LIBRARY, "extract_tables_csv_format() failed.");
 				}
-				fz_free(ctx, formatbuf);
 			}
 		}
 		writer->ctx = NULL;
+		fz_validate_options(ctx, options, "docx");
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_options(ctx, options);
 		/* fz_drop_document_writer() drops its output so we only need to call
 		fz_drop_output() if we failed before creating the writer. */
 		if (writer)

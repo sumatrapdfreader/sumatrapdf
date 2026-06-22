@@ -115,10 +115,7 @@
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\bits16.h" />
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\bitvector.h" />
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\ccutil.h" />
-    <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\clst.h" />
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\doubleptr.h" />
-    <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\elst.h" />
-    <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\elst2.h" />
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\errcode.h" />
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\fileerr.h" />
     <ClInclude Include="..\..\thirdparty\tesseract\src\ccutil\genericheap.h" />
@@ -331,9 +328,6 @@
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\stepblob.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccstruct\werd.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\ccutil.cpp" />
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\clst.cpp" />
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst.cpp" />
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\elst2.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\errcode.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\params.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\scanutils.cpp" />

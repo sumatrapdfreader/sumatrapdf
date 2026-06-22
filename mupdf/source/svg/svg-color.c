@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -35,7 +35,7 @@
  * "red icc-color(profileName,255,0,0)" (not going to support for now)
  */
 
-struct
+static struct
 {
 	const char *name;
 	float red, green, blue;

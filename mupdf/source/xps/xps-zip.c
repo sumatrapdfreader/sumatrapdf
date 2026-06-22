@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -58,23 +58,17 @@ xps_drop_part(fz_context *ctx, xps_document *doc, xps_part *part)
 	fz_free(ctx, part);
 }
 
-xps_part *
-xps_read_part(fz_context *ctx, xps_document *doc, char *partname)
+fz_buffer *
+xps_read_pieces(fz_context *ctx, fz_archive *zip, const char *name)
 {
-	fz_archive *zip = doc->zip;
 	fz_buffer *buf = NULL;
 	fz_buffer *tmp = NULL;
-	char path[2048];
-	int count;
-	char *name;
 	int seen_last;
+	int count;
+	char path[2048];
 
 	fz_var(buf);
 	fz_var(tmp);
-
-	name = partname;
-	if (name[0] == '/')
-		name ++;
 
 	fz_try(ctx)
 	{
@@ -82,40 +76,48 @@ xps_read_part(fz_context *ctx, xps_document *doc, char *partname)
 		if (fz_has_archive_entry(ctx, zip, name))
 		{
 			buf = fz_read_archive_entry(ctx, zip, name);
+			break;
 		}
 
 		/* Assemble all the pieces */
-		else
+		seen_last = 0;
+		for (count = 0; !seen_last; ++count)
 		{
-			buf = fz_new_buffer(ctx, 512);
-			seen_last = 0;
-			for (count = 0; !seen_last; ++count)
+			fz_snprintf(path, sizeof path, "%s/[%d].piece", name, count);
+			if (fz_has_archive_entry(ctx, zip, path))
 			{
-				fz_snprintf(path, sizeof path, "%s/[%d].piece", name, count);
-				if (fz_has_archive_entry(ctx, zip, path))
-				{
-					tmp = fz_read_archive_entry(ctx, zip, path);
-					fz_append_buffer(ctx, buf, tmp);
-					fz_drop_buffer(ctx, tmp);
-					tmp = NULL;
-				}
-				else
-				{
-					fz_snprintf(path, sizeof path, "%s/[%d].last.piece", name, count);
-					if (fz_has_archive_entry(ctx, zip, path))
-					{
-						tmp = fz_read_archive_entry(ctx, zip, path);
-						fz_append_buffer(ctx, buf, tmp);
-						fz_drop_buffer(ctx, tmp);
-						tmp = NULL;
-						seen_last = 1;
-					}
-					else
-						fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find all pieces for part '%s'", partname);
-				}
+found:
+				tmp = fz_read_archive_entry(ctx, zip, path);
+				if (buf == NULL)
+					buf = fz_new_buffer(ctx, 512);
+				fz_append_buffer(ctx, buf, tmp);
+				fz_drop_buffer(ctx, tmp);
+				tmp = NULL;
+				continue;
 			}
+			fz_snprintf(path, sizeof path, "%s\\[%d].piece", name, count);
+			if (fz_has_archive_entry(ctx, zip, path))
+			{
+				goto found;
+			}
+			fz_snprintf(path, sizeof path, "%s/[%d].last.piece", name, count);
+			if (fz_has_archive_entry(ctx, zip, path))
+			{
+				seen_last = 1;
+				goto found;
+			}
+			fz_snprintf(path, sizeof path, "%s\\[%d].last.piece", name, count);
+			if (fz_has_archive_entry(ctx, zip, path))
+			{
+				seen_last = 1;
+				goto found;
+			}
+			/* If we've never found any pieces, just exit with buf = NULL. */
+			if (buf == NULL)
+				break;
+			/* Otherwise we've found some, but failed to find all of them. */
+			fz_throw(ctx, FZ_ERROR_FORMAT, "cannot find all pieces for part '%s'", name);
 		}
-
 	}
 	fz_catch(ctx)
 	{
@@ -123,6 +125,23 @@ xps_read_part(fz_context *ctx, xps_document *doc, char *partname)
 		fz_drop_buffer(ctx, buf);
 		fz_rethrow(ctx);
 	}
+
+	return buf;
+}
+
+xps_part *
+xps_read_part(fz_context *ctx, xps_document *doc, char *partname)
+{
+	fz_archive *zip = doc->zip;
+	char *name = partname;
+	fz_buffer *buf;
+
+	if (name[0] == '/')
+		name ++;
+
+	buf = xps_read_pieces(ctx, zip, name);
+	if (buf == NULL)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "failed to find any pieces for part '%s'", partname);
 
 	return xps_new_part(ctx, doc, partname, buf);
 }

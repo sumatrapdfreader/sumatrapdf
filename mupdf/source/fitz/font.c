@@ -1544,7 +1544,7 @@ fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 		cc.f = cc.trm.f;
 		FT_Outline_Decompose(&face->glyph->outline, &outline_funcs, &cc);
 		if (cc.pending_move == 0)
-		fz_closepath(ctx, cc.path);
+			fz_closepath(ctx, cc.path);
 	}
 	fz_always(ctx)
 	{
@@ -1802,6 +1802,9 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 	if (gid < 0 || gid > 255)
 		return;
 
+	if (font->t3loading)
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive type3 font");
+
 	if (font->t3flags[gid] & FZ_DEVFLAG_MASK)
 	{
 		if (font->t3flags[gid] & FZ_DEVFLAG_COLOR)
@@ -1813,7 +1816,14 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 	}
 
 	ctm = fz_concat(font->t3matrix, trm);
-	font->t3run(ctx, font->t3doc, font->t3resources, font->t3procs[gid], dev, ctm, gstate, def_cs, fill_gstate, stroke_gstate);
+
+	font->t3loading = 1;
+	fz_try(ctx)
+		font->t3run(ctx, font->t3doc, font->t3resources, font->t3procs[gid], dev, ctm, gstate, def_cs, fill_gstate, stroke_gstate);
+	fz_always(ctx)
+		font->t3loading = 0;
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 fz_rect
@@ -2403,16 +2413,12 @@ fz_extract_ttf_from_ttc(fz_context *ctx, fz_font *font)
 		/* Calculate the new sum. */
 		for (j = 0; j < len; j += 4)
 		{
-			uint32_t v = (data[j]<<24) | (data[j+1]<<16) | (data[j+2]<<8) | (data[j+3]);
-			sum += v;
+			sum += fz_unpack_uint32(data + j);
 		}
 		sum = 0xb1b0afba-sum;
 
 		/* Insert it. */
-		data[csumpos] = sum>>24;
-		data[csumpos+1] = sum>>16;
-		data[csumpos+2] = sum>>8;
-		data[csumpos+3] = sum;
+		fz_pack_uint32(data + csumpos, sum);
 	}
 
 	return buf;

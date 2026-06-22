@@ -101,23 +101,23 @@ checksum(fz_buffer *buf)
 
 	for (i = buf->len>>2; i > 0; i--)
 	{
-		cs += d[0]<<24;
-		cs += d[1]<<16;
-		cs += d[2]<<8;
-		cs += d[3];
+		cs += (uint32_t)d[0]<<24;
+		cs += (uint32_t)d[1]<<16;
+		cs += (uint32_t)d[2]<<8;
+		cs += (uint32_t)d[3];
 		d += 4;
 	}
 	i = buf->len - (buf->len & ~3);
 	switch (i)
 	{
 	case 3:
-		cs += d[2]<<8;
+		cs += (uint32_t)d[2]<<8;
 		/* fallthrough */
 	case 2:
-		cs += d[1]<<16;
+		cs += (uint32_t)d[1]<<16;
 		/* fallthrough */
 	case 1:
-		cs += d[0]<<24;
+		cs += (uint32_t)d[0]<<24;
 	default:
 		break;
 	}
@@ -180,11 +180,7 @@ read_table(fz_context *ctx, fz_stream *stm, uint32_t tag, int compulsory)
 	return buf;
 }
 
-#define TAG(s) \
-	(	(((uint8_t)s[0])<<24) | \
-		(((uint8_t)s[1])<<16) | \
-		(((uint8_t)s[2])<<8) | \
-		(((uint8_t)s[3])))
+#define TAG(s) fz_unpack_uint32((uint8_t*)s)
 
 static void
 add_table(fz_context *ctx, ttf_t *ttf, uint32_t tag, fz_buffer *tab)
@@ -314,10 +310,7 @@ fix_checksum(fz_context *ctx, fz_buffer *buf)
 	sum = 0xb1b0afba-sum;
 
 	/* Insert it. */
-	data[csumpos] = sum>>24;
-	data[csumpos+1] = sum>>16;
-	data[csumpos+2] = sum>>8;
-	data[csumpos+3] = sum;
+	fz_pack_uint32(data + csumpos, sum);
 }
 
 typedef struct
@@ -330,29 +323,10 @@ typedef struct
 	uint16_t offset;
 } name_record_t;
 
-static uint32_t get32(const uint8_t *d)
-{
-	return (d[0]<<24)|(d[1]<<16)|(d[2]<<8)|d[3];
-}
-
-static uint32_t get16(const uint8_t *d)
-{
-	return (d[0]<<8)|d[1];
-}
-
-static void put32(uint8_t *d, uint32_t v)
-{
-	d[0] = v>>24;
-	d[1] = v>>16;
-	d[2] = v>>8;
-	d[3] = v;
-}
-
-static void put16(uint8_t *d, uint32_t v)
-{
-	d[0] = v>>8;
-	d[1] = v;
-}
+#define get32 fz_unpack_uint32
+#define get16 fz_unpack_uint16
+#define put32 fz_pack_uint32
+#define put16 fz_pack_uint16
 
 typedef struct
 {
@@ -554,7 +528,7 @@ load_enc_tab0(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 	encoding_t *enc;
 	int i;
 
-	if (data_size < 262)
+	if (data_size < offset + 262)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated cmap 0 format table");
 
 	enc = fz_malloc_struct(ctx, encoding_t);
@@ -646,7 +620,7 @@ load_enc_tab6(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 	uint16_t length;
 	uint32_t i;
 
-	if (data_size < 10)
+	if (data_size + offset < 10)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "cmap6 too small");
 
 	length = get16(d+offset+2);
@@ -655,6 +629,8 @@ load_enc_tab6(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 
 	if (length < entry_count*2 + 10)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed cmap6 table");
+	if (data_size < (size_t)offset + 10 + (size_t)entry_count * 2)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "cmap6 too small");
 
 	enc = fz_calloc(ctx, 1, sizeof(encoding_t) + sizeof(uint16_t) * (first_code + entry_count - 256));
 	enc->max = first_code + entry_count;
@@ -1405,8 +1381,8 @@ subset_hmtx(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 static void
 shrink_loca_if_possible(fz_context *ctx, ttf_t *ttf)
 {
-	uint32_t len;
-	uint16_t i, n;
+	uint32_t len, i;
+	uint16_t n;
 	uint8_t *loca;
 
 	if (ttf->index_to_loc_format == 0)

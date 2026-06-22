@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -906,7 +906,7 @@ xml_write_char(fz_context *ctx, fz_output *out, int c)
 }
 
 static void
-as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
+as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out, fz_stext_xml_flags flags)
 {
 	fz_stext_line *line;
 	fz_stext_char *ch;
@@ -917,14 +917,17 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 		switch (block->type)
 		{
 		case FZ_STEXT_BLOCK_TEXT:
-			fz_write_printf(ctx, out, "<block bbox=\"%g %g %g %g\"",
+			fz_write_printf(ctx, out, "<block ");
+			if (flags & FZ_STEXT_XML_FLAGS_POINTERS)
+				fz_write_printf(ctx, out, "p=\"%p\" ", block);
+			fz_write_printf(ctx, out, "bbox=\"%g %g %g %g\"",
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
 			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_UNKNOWN)
 				fz_write_printf(ctx, out, " justify=\"unknown\"");
 			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_LEFT)
 				fz_write_printf(ctx, out, " justify=\"left\"");
-			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_CENTRE)
-				fz_write_printf(ctx, out, " justify=\"centre\"");
+			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_CENTER)
+				fz_write_printf(ctx, out, " justify=\"center\"");
 			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_RIGHT)
 				fz_write_printf(ctx, out, " justify=\"right\"");
 			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_FULL)
@@ -966,79 +969,99 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 					fz_write_printf(ctx, out, "\"");
 				}
 
-				fz_write_printf(ctx, out, ">\n");
-
-				for (ch = line->first_char; ch; ch = ch->next)
+				if ((flags & FZ_STEXT_XML_FLAGS_CHARS) == 0)
 				{
-					if (ch->font != font || ch->size != size)
-					{
-						const char *s;
-						if (font)
-							fz_write_string(ctx, out, "</font>\n");
-						font = ch->font;
-						size = ch->size;
-						s = name = font_full_name(ctx, font);
-						while (*s)
-						{
-							int c = *s++;
-							if (c < 32 || c >= 127)
-								break;
-						}
-						if (*s)
-							fz_write_printf(ctx, out, "<font hexname=%>", name);
-						else
-							fz_write_printf(ctx, out, "<font name=\"%s\"", name);
-						fz_write_printf(ctx, out, " size=\"%g\">\n", size);
-					}
-					fz_write_printf(ctx, out, "<char quad=\"%g %g %g %g %g %g %g %g\" x=\"%g\" y=\"%g\" bidi=\"%d\" color=\"#%06x\" alpha=\"#%02x\" flags=\"%d\" c=\"",
-							ch->quad.ul.x, ch->quad.ul.y,
-							ch->quad.ur.x, ch->quad.ur.y,
-							ch->quad.ll.x, ch->quad.ll.y,
-							ch->quad.lr.x, ch->quad.lr.y,
-							ch->origin.x, ch->origin.y,
-							ch->bidi,
-							ch->argb & 0xFFFFFF,
-							ch->argb>>24,
-							ch->flags);
-					xml_write_char(ctx, out, ch->c);
-					if (!fz_is_valid_xml_char(ch->c))
-					{
-						char text[8];
-						int n = fz_runetochar(text, ch->c);
-						fz_write_string(ctx, out, "\" hexc=\"");
-						for (i = 0; i < n; i++)
-							fz_write_printf(ctx, out, "%02x", text[i]);
-					}
-					fz_write_string(ctx, out, "\"/>\n");
+					fz_write_printf(ctx, out, "/>\n");
 				}
+				else
+				{
+					fz_write_printf(ctx, out, ">\n");
 
-				if (font)
-					fz_write_string(ctx, out, "</font>\n");
+					for (ch = line->first_char; ch; ch = ch->next)
+					{
+						if (ch->font != font || ch->size != size)
+						{
+							const char *s;
+							if (font)
+								fz_write_string(ctx, out, "</font>\n");
+							font = ch->font;
+							size = ch->size;
+							s = name = font_full_name(ctx, font);
+							while (*s)
+							{
+								int c = *s++;
+								if (c < 32 || c >= 127)
+									break;
+							}
+							if (*s)
+								fz_write_printf(ctx, out, "<font hexname=%>", name);
+							else
+								fz_write_printf(ctx, out, "<font name=\"%s\"", name);
+							fz_write_printf(ctx, out, " size=\"%g\">\n", size);
+						}
+						fz_write_printf(ctx, out, "<char c=\"");
+						xml_write_char(ctx, out, ch->c);
+						if (!fz_is_valid_xml_char(ch->c))
+						{
+							char text[8];
+							int n = fz_runetochar(text, ch->c);
+							fz_write_string(ctx, out, "\" hexc=\"");
+							for (i = 0; i < n; i++)
+								fz_write_printf(ctx, out, "%02x", text[i]);
+						}
+						fz_write_printf(ctx, out, "\" quad=\"%g %g %g %g %g %g %g %g\" x=\"%g\" y=\"%g\" bidi=\"%d\" color=\"#%06x\" alpha=\"#%02x\" flags=\"%d\"/>\n",
+								ch->quad.ul.x, ch->quad.ul.y,
+								ch->quad.ur.x, ch->quad.ur.y,
+								ch->quad.ll.x, ch->quad.ll.y,
+								ch->quad.lr.x, ch->quad.lr.y,
+								ch->origin.x, ch->origin.y,
+								ch->bidi,
+								ch->argb & 0xFFFFFF,
+								ch->argb>>24,
+								ch->flags);
+					}
 
-				fz_write_string(ctx, out, "</line>\n");
+					if (font)
+						fz_write_string(ctx, out, "</font>\n");
+
+					fz_write_string(ctx, out, "</line>\n");
+				}
 			}
 			fz_write_string(ctx, out, "</block>\n");
 			break;
 
 		case FZ_STEXT_BLOCK_IMAGE:
-			fz_write_printf(ctx, out, "<image bbox=\"%g %g %g %g\" />\n",
+			fz_write_printf(ctx, out, "<image ");
+			if (flags & FZ_STEXT_XML_FLAGS_POINTERS)
+				fz_write_printf(ctx, out, "p=\"%p\" ", block);
+			fz_write_printf(ctx, out, "bbox=\"%g %g %g %g\" />\n",
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
 			break;
 
 		case FZ_STEXT_BLOCK_STRUCT:
-			fz_write_printf(ctx, out, "<struct idx=\"%d\" bbox=\"%g %g %g %g\"", block->u.s.index,
+			fz_write_printf(ctx, out, "<struct ");
+			if (flags & FZ_STEXT_XML_FLAGS_POINTERS)
+			{
+				fz_write_printf(ctx, out, "p=\"%p\" d=\"%p\" ", block, block->u.s.down);
+				if (block->u.s.down)
+					fz_write_printf(ctx, out, "u=\"%p\" prt=\"%p\" ", block->u.s.down->up, block->u.s.down->parent);
+			}
+			fz_write_printf(ctx, out, "idx=\"%d\" bbox=\"%g %g %g %g\"", block->u.s.index,
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
 			if (block->u.s.down)
 				fz_write_printf(ctx, out, " raw=\"%s\" std=\"%s\"",
 						block->u.s.down->raw, fz_structure_to_string(block->u.s.down->standard));
 			fz_write_printf(ctx, out, ">\n");
 			if (block->u.s.down)
-				as_xml(ctx, block->u.s.down->first_block, out);
+				as_xml(ctx, block->u.s.down->first_block, out, flags);
 			fz_write_printf(ctx, out, "</struct>\n");
 			break;
 
 		case FZ_STEXT_BLOCK_VECTOR:
-			fz_write_printf(ctx, out, "<vector bbox=\"%g %g %g %g\" stroke=\"%d\" rectangle=\"%d\" continues=\"%d\" argb=\"%08x\"/>\n",
+			fz_write_printf(ctx, out, "<vector ");
+			if (flags & FZ_STEXT_XML_FLAGS_POINTERS)
+				fz_write_printf(ctx, out, "p=\"%p\" ", block);
+			fz_write_printf(ctx, out, "bbox=\"%g %g %g %g\" stroke=\"%d\" rectangle=\"%d\" continues=\"%d\" argb=\"%08x\"/>\n",
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1,
 					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_STROKED),
 					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE),
@@ -1047,7 +1070,10 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 			break;
 
 		case FZ_STEXT_BLOCK_GRID:
-			fz_write_printf(ctx, out, "<grid xpos=\"");
+			fz_write_printf(ctx, out, "<grid ");
+			if (flags & FZ_STEXT_XML_FLAGS_POINTERS)
+				fz_write_printf(ctx, out, "p=\"%p\" ", block);
+			fz_write_printf(ctx, out, "xpos=\"");
 			for (i = 0; i < block->u.b.xs->len; i++)
 				fz_write_printf(ctx, out, "%g ", block->u.b.xs->list[i].pos);
 			fz_write_printf(ctx, out, "\" xuncertainty=\"");
@@ -1069,11 +1095,23 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 void
 fz_print_stext_page_as_xml(fz_context *ctx, fz_output *out, fz_stext_page *page, int id)
 {
+	fz_print_stext_page_as_xml_with_flags(ctx, out, page, id, FZ_STEXT_XML_FLAGS_CHARS);
+}
+
+void
+fz_debug_stext_page(fz_context *ctx, fz_stext_page *page, int id)
+{
+	fz_print_stext_page_as_xml_with_flags(ctx, fz_stddbg(ctx), page, id, FZ_STEXT_XML_FLAGS_POINTERS);
+}
+
+void
+fz_print_stext_page_as_xml_with_flags(fz_context *ctx, fz_output *out, fz_stext_page *page, int id, fz_stext_xml_flags flags)
+{
 	fz_write_printf(ctx, out, "<page id=\"page%d\" width=\"%g\" height=\"%g\">\n", id,
 		page->mediabox.x1 - page->mediabox.x0,
 		page->mediabox.y1 - page->mediabox.y0);
 
-	as_xml(ctx, page->first_block, out);
+	as_xml(ctx, page->first_block, out, flags);
 
 	fz_write_string(ctx, out, "</page>\n");
 }
@@ -1162,8 +1200,8 @@ as_json(fz_context *ctx, fz_stext_block *block, fz_output *out, float scale)
 			break;
 
 		case FZ_STEXT_BLOCK_STRUCT:
-			fz_write_printf(ctx, out, "{%q:%q,", "type", "structure");
-			fz_write_printf(ctx, out, "%q:%d", "index", block->u.s.index);
+			fz_write_printf(ctx, out, "{%q:%q", "type", "structure");
+			fz_write_printf(ctx, out, ",%q:%d", "index", block->u.s.index);
 			if (block->u.s.down)
 			{
 				fz_write_printf(ctx, out, ",%q:%q", "raw", block->u.s.down->raw);
@@ -1171,6 +1209,67 @@ as_json(fz_context *ctx, fz_stext_block *block, fz_output *out, float scale)
 				fz_write_printf(ctx, out, ",%q:[", "contents");
 				as_json(ctx, block->u.s.down->first_block, out, scale);
 				fz_write_printf(ctx, out, "]");
+			}
+			fz_write_printf(ctx, out, "}");
+			break;
+
+		case FZ_STEXT_BLOCK_VECTOR:
+			fz_write_printf(ctx, out, "{%q:%q", "type", "vector");
+			fz_write_printf(ctx, out, ",%q:%d", "argb", block->u.v.argb);
+			fz_write_printf(ctx, out, ",%q:%d", "stroked", !!(block->u.v.flags & FZ_STEXT_VECTOR_IS_STROKED));
+			fz_write_printf(ctx, out, ",%q:%d", "rectangle", !!(block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE));
+			fz_write_printf(ctx, out, ",%q:%d", "continues", !!(block->u.v.flags & FZ_STEXT_VECTOR_CONTINUES));
+			fz_write_printf(ctx, out, "}");
+			break;
+
+		case FZ_STEXT_BLOCK_GRID:
+			fz_write_printf(ctx, out, "{%q:%q", "type", "grid");
+			if (block->u.b.xs)
+			{
+				int x;
+				fz_write_printf(ctx, out, ",\"xpos\":[");
+				for (x = 0; x < block->u.b.xs->len; x++)
+				{
+					if (x != 0)
+						fz_write_printf(ctx, out, ",");
+					fz_write_printf(ctx, out, "%g", block->u.b.xs->list[x].pos);
+				}
+				fz_write_printf(ctx, out, "]\n");
+			}
+			if (block->u.b.ys)
+			{
+				int x;
+				fz_write_printf(ctx, out, ",\"ypos\":[");
+				for (x = 0; x < block->u.b.ys->len; x++)
+				{
+					if (x != 0)
+						fz_write_printf(ctx, out, ",");
+					fz_write_printf(ctx, out, "%g", block->u.b.ys->list[x].pos);
+				}
+				fz_write_printf(ctx, out, "]\n");
+			}
+			if (block->u.b.info)
+			{
+				int i, x, y;
+				fz_write_printf(ctx, out, ",%q:%d", "w", block->u.b.info->w-1);
+				fz_write_printf(ctx, out, ",%q:%d", "h", block->u.b.info->h-1);
+				fz_write_printf(ctx, out, ",\"flags\":[");
+				i = 0;
+				for (y = 0; y < block->u.b.info->h; y++)
+				{
+					if (y != 0)
+						fz_write_printf(ctx, out, ",");
+					fz_write_printf(ctx, out, "[");
+					for (x = 0; x < block->u.b.info->w; x++)
+					{
+						if (x != 0)
+							fz_write_printf(ctx, out, ",");
+						fz_write_printf(ctx, out, "%d", block->u.b.info->info[i++]);
+					}
+					fz_write_printf(ctx, out, "]\n");
+				}
+				fz_write_printf(ctx, out, "]\n");
+
 			}
 			fz_write_printf(ctx, out, "}");
 			break;
@@ -1221,7 +1320,7 @@ do_as_text(fz_context *ctx, fz_output *out, fz_stext_block *first_block)
 						fz_write_byte(ctx, out, utf[i]);
 				}
 				if (break_line)
-				fz_write_string(ctx, out, "\n");
+					fz_write_string(ctx, out, "\n");
 			}
 			fz_write_string(ctx, out, "\n");
 			break;
@@ -1364,7 +1463,10 @@ fz_new_text_writer_with_output(fz_context *ctx, const char *format, fz_output *o
 
 		wri->format = FZ_FORMAT_TEXT;
 		if (!strcmp(format, "text"))
+		{
 			wri->format = FZ_FORMAT_TEXT;
+			wri->opts.flags &= ~FZ_STEXT_COLLECT_STYLES | FZ_STEXT_PRESERVE_IMAGES;
+		}
 		else if (!strcmp(format, "html"))
 			wri->format = FZ_FORMAT_HTML;
 		else if (!strcmp(format, "xhtml"))

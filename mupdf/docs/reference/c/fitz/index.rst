@@ -11,9 +11,6 @@ to this day.
 .. toctree::
 	:glob:
 
-	context
-	error
-	memory
 	*
 
 .. TODO

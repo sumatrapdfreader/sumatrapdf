@@ -211,13 +211,13 @@ int pdfclean_main(int argc, char **argv)
 				opts.image.gray_lossless_image_subsample_method = opts.image.gray_lossy_image_subsample_method;
 				break;
 			case 13: /* gray-lossy-image-subsample-dpi */
-				opts.image.gray_lossy_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.gray_lossless_image_subsample_threshold);
+				opts.image.gray_lossy_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.gray_lossy_image_subsample_threshold);
 				break;
 			case 14: /* gray-lossless-image-subsample-dpi */
 				opts.image.gray_lossless_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.gray_lossless_image_subsample_threshold);
 				break;
 			case 15: /* gray-image-subsample-dpi */
-				opts.image.gray_lossless_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.gray_lossy_image_subsample_threshold);
+				opts.image.gray_lossless_image_subsample_to = (fz_optarg ? fz_atoi(fz_optarg) : opts.image.gray_lossless_image_subsample_threshold);
 				opts.image.gray_lossy_image_subsample_threshold = opts.image.gray_lossless_image_subsample_threshold;
 				opts.image.gray_lossy_image_subsample_to = opts.image.gray_lossless_image_subsample_to;
 				break;

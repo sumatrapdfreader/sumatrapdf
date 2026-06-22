@@ -32,13 +32,16 @@
 fz_glyph *
 fz_keep_glyph(fz_context *ctx, fz_glyph *glyph)
 {
-	return fz_keep_storable(ctx, &glyph->storable);
+	if (glyph)
+		return fz_keep_storable(ctx, &glyph->storable);
+	return NULL;
 }
 
 void
 fz_drop_glyph(fz_context *ctx, fz_glyph *glyph)
 {
-	fz_drop_storable(ctx, &glyph->storable);
+	if (glyph)
+		fz_drop_storable(ctx, &glyph->storable);
 }
 
 static void

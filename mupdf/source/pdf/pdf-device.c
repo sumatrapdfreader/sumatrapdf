@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -112,6 +112,8 @@ struct pdf_device
 	int num_groups;
 	int max_groups;
 	group_entry *groups;
+
+	int num_shadings;
 };
 
 #define CURRENT_GSTATE(pdev) (&(pdev)->gstates[(pdev)->num_gstates-1])
@@ -149,9 +151,9 @@ pdf_dev_stroke_state(fz_context *ctx, pdf_device *pdev, const fz_stroke_state *s
 			join = FZ_LINEJOIN_MITER;
 		fz_append_printf(ctx, gs->buf, "%d j\n", join);
 	}
-	if (!gs->stroke_state || gs->stroke_state->miterlimit != stroke_state->miterlimit)
+	if (!gs->stroke_state || fz_max(1.0f, gs->stroke_state->miterlimit) != fz_max(1.0f, stroke_state->miterlimit))
 	{
-		fz_append_printf(ctx, gs->buf, "%g M\n", stroke_state->miterlimit);
+		fz_append_printf(ctx, gs->buf, "%g M\n", fz_max(1.0f, stroke_state->miterlimit));
 	}
 	if (gs->stroke_state == NULL && stroke_state->dash_len == 0)
 	{
@@ -247,6 +249,17 @@ pdf_dev_stroked_path(fz_context *ctx, pdf_device *pdev, const fz_path *path)
 }
 
 static void
+pdf_dev_end_text(fz_context *ctx, pdf_device *pdev)
+{
+	gstate *gs = CURRENT_GSTATE(pdev);
+
+	if (!pdev->in_text)
+		return;
+	pdev->in_text = 0;
+	fz_append_string(ctx, gs->buf, "ET\n");
+}
+
+static void
 pdf_dev_ctm(fz_context *ctx, pdf_device *pdev, fz_matrix ctm)
 {
 	fz_matrix inverse;
@@ -254,6 +267,7 @@ pdf_dev_ctm(fz_context *ctx, pdf_device *pdev, fz_matrix ctm)
 
 	if (memcmp(&gs->ctm, &ctm, sizeof(ctm)) == 0)
 		return;
+	pdf_dev_end_text(ctx, pdev);
 	inverse = fz_invert_matrix(gs->ctm);
 	inverse = fz_concat(ctm, inverse);
 	gs->ctm = ctm;
@@ -635,17 +649,6 @@ pdf_dev_begin_text(fz_context *ctx, pdf_device *pdev, int trm)
 	}
 }
 
-static void
-pdf_dev_end_text(fz_context *ctx, pdf_device *pdev)
-{
-	gstate *gs = CURRENT_GSTATE(pdev);
-
-	if (!pdev->in_text)
-		return;
-	pdev->in_text = 0;
-	fz_append_string(ctx, gs->buf, "ET\n");
-}
-
 static int
 pdf_dev_new_form(fz_context *ctx, pdf_obj **form_ref, pdf_device *pdev, fz_rect bbox, int isolated, int knockout, float alpha, fz_colorspace *colorspace)
 {
@@ -901,7 +904,7 @@ pdf_dev_ignore_text(fz_context *ctx, fz_device *dev, const fz_text *text, fz_mat
 
 	for (span = text->head; span; span = span->next)
 	{
-		pdf_dev_begin_text(ctx, pdev, 0);
+		pdf_dev_begin_text(ctx, pdev, 3);
 		pdf_dev_font(ctx, pdev, span->font, span->trm);
 		pdf_dev_text_span(ctx, pdev, span);
 	}
@@ -977,11 +980,172 @@ static void
 pdf_dev_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha, fz_color_params color_params)
 {
 	pdf_device *pdev = (pdf_device*)dev;
+	pdf_document *doc = pdev->doc;
+	gstate *gs = CURRENT_GSTATE(pdev);
+	pdf_obj *func_ref = NULL;
+	pdf_obj *shade_ref = NULL;
+	pdf_obj *func_dict = NULL;
+	pdf_obj *shade_dict = NULL;
+	fz_buffer *sample_buf = NULL;
+	fz_colorspace *src_cs;
+	fz_colorspace *dst_cs;
+	pdf_obj *shadings = NULL;
+	int src_n, dst_n;
+	int i, k;
+	int shading_type;
+	char name_buf[32];
+	float converted[FZ_MAX_COLORS];
 
-	fz_warn(ctx, "the pdf device does not support shadings; output may be incomplete");
+	fz_var(func_ref);
+	fz_var(shade_ref);
+	fz_var(func_dict);
+	fz_var(shade_dict);
+	fz_var(sample_buf);
 
-	/* FIXME */
+	if (shade == NULL || shade->function_stride <= 0 || shade->function == NULL)
+	{
+		fz_warn(ctx, "invalid shading passed to pdf device");
+		return;
+	}
+
+	if (shade->type == FZ_LINEAR)
+		shading_type = 2;
+	else if (shade->type == FZ_RADIAL)
+		shading_type = 3;
+	else
+	{
+		fz_warn(ctx, "pdf device only supports linear/radial shadings for fill_shade");
+		return;
+	}
+
+	src_cs = shade->colorspace ? shade->colorspace : fz_device_gray(ctx);
+	src_n = fz_colorspace_n(ctx, src_cs);
+	if (shade->function_stride < src_n)
+	{
+		fz_warn(ctx, "pdf device shading function stride too small");
+		return;
+	}
+
+	/* Restrict emitted PDF shading colorspace to device spaces,
+	 * and convert all other colorspaces to DeviceRGB. */
+	if (src_cs == fz_device_gray(ctx))
+	{
+		dst_cs = fz_device_gray(ctx);
+		dst_n = 1;
+	}
+	else if (src_cs == fz_device_cmyk(ctx))
+	{
+		dst_cs = fz_device_cmyk(ctx);
+		dst_n = 4;
+	}
+	else
+	{
+		dst_cs = fz_device_rgb(ctx);
+		dst_n = 3;
+	}
+
 	pdf_dev_end_text(ctx, pdev);
+	pdf_dev_alpha(ctx, pdev, alpha, 0);
+	pdf_dev_ctm(ctx, pdev, fz_concat(shade->matrix, ctm));
+
+	fz_try(ctx)
+	{
+		/* Build sampled function from MuPDF's canonical 256-entry function table. */
+		sample_buf = fz_new_buffer(ctx, 256 * dst_n);
+		for (i = 0; i < 256; ++i)
+		{
+			const float *src = &shade->function[i * shade->function_stride];
+			const float *out = src;
+
+			if (src_n != dst_n || src_cs != dst_cs)
+			{
+				fz_convert_color(ctx, src_cs, src, dst_cs, converted, NULL, fz_default_color_params);
+				out = converted;
+			}
+
+			for (k = 0; k < dst_n; ++k)
+			{
+				float v = out[k];
+				int b = fz_clampi((int)(v * 255.0f + 0.5f), 0, 255);
+				fz_append_byte(ctx, sample_buf, (unsigned char)b);
+			}
+		}
+
+		func_dict = pdf_new_dict(ctx, doc, 6);
+		pdf_dict_put_int(ctx, func_dict, PDF_NAME(FunctionType), 0);
+		pdf_dict_put_int(ctx, func_dict, PDF_NAME(BitsPerSample), 8);
+		{
+			pdf_obj *domain = pdf_dict_put_array(ctx, func_dict, PDF_NAME(Domain), 2);
+			pdf_array_push_int(ctx, domain, 0);
+			pdf_array_push_int(ctx, domain, 1);
+		}
+		{
+			pdf_obj *range = pdf_dict_put_array(ctx, func_dict, PDF_NAME(Range), dst_n * 2);
+			for (k = 0; k < dst_n; ++k)
+			{
+				pdf_array_push_int(ctx, range, 0);
+				pdf_array_push_int(ctx, range, 1);
+			}
+		}
+		{
+			pdf_obj *size = pdf_dict_put_array(ctx, func_dict, PDF_NAME(Size), 1);
+			pdf_array_push_int(ctx, size, 256);
+		}
+
+		func_ref = pdf_add_stream(ctx, doc, sample_buf, func_dict, 0);
+
+		shade_dict = pdf_new_dict(ctx, doc, 6);
+		pdf_dict_put_int(ctx, shade_dict, PDF_NAME(ShadingType), shading_type);
+		if (dst_cs == fz_device_gray(ctx))
+			pdf_dict_put(ctx, shade_dict, PDF_NAME(ColorSpace), PDF_NAME(DeviceGray));
+		else if (dst_cs == fz_device_cmyk(ctx))
+			pdf_dict_put(ctx, shade_dict, PDF_NAME(ColorSpace), PDF_NAME(DeviceCMYK));
+		else
+			pdf_dict_put(ctx, shade_dict, PDF_NAME(ColorSpace), PDF_NAME(DeviceRGB));
+		pdf_dict_put(ctx, shade_dict, PDF_NAME(Function), func_ref);
+		{
+			pdf_obj *coords = pdf_dict_put_array(ctx, shade_dict, PDF_NAME(Coords), (shading_type == 2) ? 4 : 6);
+			pdf_array_push_real(ctx, coords, shade->u.l_or_r.coords[0][0]);
+			pdf_array_push_real(ctx, coords, shade->u.l_or_r.coords[0][1]);
+			if (shading_type == 3)
+				pdf_array_push_real(ctx, coords, shade->u.l_or_r.coords[0][2]);
+			pdf_array_push_real(ctx, coords, shade->u.l_or_r.coords[1][0]);
+			pdf_array_push_real(ctx, coords, shade->u.l_or_r.coords[1][1]);
+			if (shading_type == 3)
+				pdf_array_push_real(ctx, coords, shade->u.l_or_r.coords[1][2]);
+		}
+		{
+			pdf_obj *extend = pdf_dict_put_array(ctx, shade_dict, PDF_NAME(Extend), 2);
+			pdf_array_push_bool(ctx, extend, shade->u.l_or_r.extend[0]);
+			pdf_array_push_bool(ctx, extend, shade->u.l_or_r.extend[1]);
+		}
+
+		shade_ref = pdf_add_object(ctx, doc, shade_dict);
+
+		fz_snprintf(name_buf, sizeof(name_buf), "Sh%d", pdev->num_shadings++);
+		shadings = pdf_dict_get(ctx, pdev->resources, PDF_NAME(Shading));
+		if (!pdf_is_dict(ctx, shadings))
+		{
+			shadings = pdf_new_dict(ctx, doc, 4);
+			pdf_dict_put_drop(ctx, pdev->resources, PDF_NAME(Shading), shadings);
+			shadings = pdf_dict_get(ctx, pdev->resources, PDF_NAME(Shading));
+		}
+		pdf_dict_puts(ctx, shadings, name_buf, shade_ref);
+
+		fz_append_printf(ctx, gs->buf, "/%s sh\n", name_buf);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, sample_buf);
+		pdf_drop_obj(ctx, func_dict);
+		pdf_drop_obj(ctx, shade_dict);
+		pdf_drop_obj(ctx, func_ref);
+		pdf_drop_obj(ctx, shade_ref);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 static void
@@ -1002,7 +1166,6 @@ pdf_dev_fill_image_mask(fz_context *ctx, fz_device *dev, fz_image *image, fz_mat
 
 	fz_try(ctx)
 	{
-		fz_append_string(ctx, gs->buf, "q\n");
 		pdf_dev_alpha(ctx, pdev, alpha, 0);
 		pdf_dev_color(ctx, pdev, colorspace, color, 0, color_params);
 
@@ -1010,7 +1173,7 @@ pdf_dev_fill_image_mask(fz_context *ctx, fz_device *dev, fz_image *image, fz_mat
 		ctm = fz_pre_scale(ctm, 1, -1);
 		ctm = fz_pre_translate(ctm, 0, -1);
 		pdf_dev_ctm(ctx, pdev, ctm);
-		fz_append_printf(ctx, gs->buf, "/Img%d Do Q\n", pdf_to_num(ctx, im_res));
+		fz_append_printf(ctx, gs->buf, "/Img%d Do\n", pdf_to_num(ctx, im_res));
 
 		/* Possibly add to page resources */
 		pdf_dev_add_image_res(ctx, dev, im_res);
@@ -1236,11 +1399,14 @@ pdf_dev_drop_device(fz_context *ctx, fz_device *dev)
 	fz_free(ctx, pdev->groups);
 	fz_free(ctx, pdev->alphas);
 	fz_free(ctx, pdev->gstates);
+	pdf_drop_document(ctx, pdev->doc);
 }
 
 fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topctm, pdf_obj *resources, fz_buffer *buf)
 {
 	pdf_device *dev = fz_new_derived_device(ctx, pdf_device);
+
+	dev->super.hints = FZ_NO_TILING;
 
 	dev->super.close_device = pdf_dev_close_device;
 	dev->super.drop_device = pdf_dev_drop_device;
@@ -1275,7 +1441,7 @@ fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topc
 
 	fz_try(ctx)
 	{
-		dev->doc = doc;
+		dev->doc = pdf_keep_document(ctx, doc);
 		dev->resources = pdf_keep_obj(ctx, resources);
 		dev->gstates = fz_malloc_struct(ctx, gstate);
 		if (buf)
@@ -1292,6 +1458,7 @@ fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topc
 		dev->gstates[0].font = -1;
 		dev->num_gstates = 1;
 		dev->max_gstates = 1;
+		dev->num_shadings = 0;
 
 		if (!fz_is_identity(topctm))
 			fz_append_printf(ctx, dev->gstates[0].buf, "%M cm\n", &topctm);

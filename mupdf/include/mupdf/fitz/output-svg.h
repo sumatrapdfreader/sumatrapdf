@@ -42,7 +42,9 @@ struct fz_svg_device_options {
 	int *id;
 };
 
+void fz_init_svg_device_options(fz_context *ctx, fz_svg_device_options *opts);
 void fz_parse_svg_device_options(fz_context *ctx, fz_svg_device_options *opts, const char *args);
+void fz_apply_svg_device_options(fz_context *ctx, fz_svg_device_options *opts, fz_options *options);
 
 fz_device *fz_new_svg_device_with_options(fz_context *ctx, fz_output *out, float page_width, float page_height, fz_svg_device_options *opts);
 

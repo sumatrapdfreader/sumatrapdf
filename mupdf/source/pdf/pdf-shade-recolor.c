@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -219,6 +219,7 @@ fz_recolor_shade_function(fz_context *ctx, pdf_obj *shade, float *samples, int s
 		q += n_out;
 	}
 
+	fz_var(buf);
 	fz_var(ref);
 	fz_var(output);
 
@@ -883,6 +884,7 @@ pdf_recolor_shade(fz_context *ctx, pdf_obj *shade, pdf_shade_recolorer *reshade,
 	src_cs = pdf_load_colorspace(ctx, pdf_dict_get(ctx, shade, PDF_NAME(ColorSpace)));
 
 	fz_var(rewritten);
+	fz_var(func);
 
 	rd.funcs = 0;
 

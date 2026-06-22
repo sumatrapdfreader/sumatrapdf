@@ -15,6 +15,9 @@ See :doc:`/tools/mutool-pages` for how to list out the boxes used on a page.
 	``-b`` box
 		Which :term:`page box` to trim to (``mediabox`` (default), ``cropbox``, ``bleedbox``, ``trimbox``, ``artbox``).
 
+	``-f``
+		Fallback to ``mediabox`` if specified box not available.
+
 	``-m`` margins
 		Add margins to box (positive for inwards, negative for outwards).
 
@@ -22,9 +25,6 @@ See :doc:`/tools/mutool-pages` for how to list out the boxes used on a page.
 
 	``-e``
 		Exclude contents of box, rather than include them.
-
-	``-f``
-		Fallback to ``mediabox`` if specified box not available.
 
 	``-o`` filename
 		Output file.

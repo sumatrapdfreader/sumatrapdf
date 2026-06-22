@@ -415,7 +415,7 @@ Page Tree
 
 	:param boolean enabled:
 
-.. method:: PDFDocument.protoype.findPage(number)
+.. method:: PDFDocument.prototype.findPage(number)
 
 	Return the `PDFObject` for a page number.
 
@@ -614,7 +614,7 @@ Resources
 Embedded/Associated files
 -------------------------
 
-.. method:: PDFDocument.protoype.addEmbeddedFile(filename, mimetype, contents, creationDate, modificationDate, addChecksum)
+.. method:: PDFDocument.prototype.addEmbeddedFile(filename, mimetype, contents, creationDate, modificationDate, addChecksum)
 
 	Embedded a file into the document. If a checksum is added then
 	the file contents can be verified later. An indirect reference

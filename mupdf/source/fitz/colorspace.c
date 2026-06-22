@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -325,25 +325,31 @@ fz_colorspace *fz_base_colorspace(fz_context *ctx, fz_colorspace *cs)
 fz_colorspace *
 fz_keep_colorspace(fz_context *ctx, fz_colorspace *cs)
 {
-	return fz_keep_key_storable(ctx, &cs->key_storable);
+	if (cs)
+		return fz_keep_key_storable(ctx, &cs->key_storable);
+	return NULL;
 }
 
 void
 fz_drop_colorspace(fz_context *ctx, fz_colorspace *cs)
 {
-	fz_drop_key_storable(ctx, &cs->key_storable);
+	if (cs)
+		fz_drop_key_storable(ctx, &cs->key_storable);
 }
 
 fz_colorspace *
 fz_keep_colorspace_store_key(fz_context *ctx, fz_colorspace *cs)
 {
-	return fz_keep_key_storable_key(ctx, &cs->key_storable);
+	if (cs)
+		return fz_keep_key_storable_key(ctx, &cs->key_storable);
+	return NULL;
 }
 
 void
 fz_drop_colorspace_store_key(fz_context *ctx, fz_colorspace *cs)
 {
-	fz_drop_key_storable_key(ctx, &cs->key_storable);
+	if (cs)
+		fz_drop_key_storable_key(ctx, &cs->key_storable);
 }
 
 void

@@ -30,7 +30,7 @@ The viewers require the X11 (and OpenGL for mupdf-gl) headers and libraries to b
 Install these packages (the exact package names may vary depending on your distro of choice):
 
 	sudo apt install xorg-dev libxcursor-dev libxrandr-dev libxinerama-dev
-	sudo apt install mesa-common-dev libgl1-mesa-dev packages libglu1-mesa-dev
+	sudo apt install mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev
 
 Alternatively, if you only want to build the MuPDF library command line tools:
 

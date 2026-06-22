@@ -770,7 +770,7 @@ typedef enum
 } fz_ascdesc_source;
 
 #define FZ_MAX_TRUSTWORTHY_ASCENT 8
-#define FZ_MAX_TRUSTWORTHY_DESCENT -2
+#define FZ_MAX_TRUSTWORTHY_DESCENT -3
 
 struct fz_font
 {
@@ -793,6 +793,7 @@ struct fz_font
 	void *t3doc; /* a pdf_document for the callback */
 	void (*t3run)(fz_context *ctx, void *doc, void *resources, fz_buffer *contents, struct fz_device *dev, fz_matrix ctm, void *gstate, fz_default_colorspaces *default_cs, void *fill_gstate, void *stroke_gstate);
 	void (*t3freeres)(fz_context *ctx, void *doc, void *resources);
+	int t3loading; /* to detect recursive type3 fonts */
 
 	fz_rect bbox;	/* font bbox is used only for t3 fonts */
 

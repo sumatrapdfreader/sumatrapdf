@@ -88,7 +88,9 @@ HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-buffer.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-buffer-verify.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-buffer-serialize.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-common.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-draw.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-face.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-face-builder.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-fallback-shape.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-font.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ft.cc
@@ -122,6 +124,10 @@ HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shaper-use.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-shaper-vowel-constraints.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-tag.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ot-var.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-outline.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-paint.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-paint-bounded.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-paint-extents.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-set.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-shape.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-shape-plan.cc
@@ -132,9 +138,19 @@ HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-cff1.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-cff2.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-cff-common.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-input.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-instancer-iup.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-instancer-solver.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-plan.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-plan-layout.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-plan-var.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-table-cff.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-table-color.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-table-layout.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-table-other.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-subset-table-var.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-ucd.cc
 HARFBUZZ_SRC += thirdparty/harfbuzz/src/hb-unicode.cc
+HARFBUZZ_SRC += thirdparty/harfbuzz/src/OT/Var/VARC/VARC.cc
 
 # --- JPEG-XR (optional, used by XPS) ---
 
@@ -271,6 +287,7 @@ JBIG2DEC_CFLAGS += -Ithirdparty/jbig2dec
 JBIG2DEC_BUILD_CFLAGS += -Iinclude
 JBIG2DEC_BUILD_CFLAGS += -DHAVE_STDINT_H
 JBIG2DEC_BUILD_CFLAGS += -DJBIG_EXTERNAL_MEMENTO_H=\"mupdf/memento.h\"
+JBIG2DEC_BUILD_CFLAGS += -Wno-shadow
 
 JBIG2DEC_SRC += thirdparty/jbig2dec/jbig2.c
 JBIG2DEC_SRC += thirdparty/jbig2dec/jbig2_arith.c
@@ -332,7 +349,9 @@ BROTLI_SRC += thirdparty/brotli/c/common/transform.c
 BROTLI_SRC += thirdparty/brotli/c/dec/bit_reader.c
 BROTLI_SRC += thirdparty/brotli/c/dec/decode.c
 BROTLI_SRC += thirdparty/brotli/c/dec/huffman.c
+BROTLI_SRC += thirdparty/brotli/c/dec/prefix.c
 BROTLI_SRC += thirdparty/brotli/c/dec/state.c
+BROTLI_SRC += thirdparty/brotli/c/dec/static_init.c
 BROTLI_SRC += thirdparty/brotli/c/enc/backward_references.c
 BROTLI_SRC += thirdparty/brotli/c/enc/backward_references_hq.c
 BROTLI_SRC += thirdparty/brotli/c/enc/bit_cost.c
@@ -353,7 +372,43 @@ BROTLI_SRC += thirdparty/brotli/c/enc/literal_cost.c
 BROTLI_SRC += thirdparty/brotli/c/enc/memory.c
 BROTLI_SRC += thirdparty/brotli/c/enc/metablock.c
 BROTLI_SRC += thirdparty/brotli/c/enc/static_dict.c
+BROTLI_SRC += thirdparty/brotli/c/enc/static_dict_lut.c
+BROTLI_SRC += thirdparty/brotli/c/enc/static_init.c
 BROTLI_SRC += thirdparty/brotli/c/enc/utf8_util.c
+
+# --- CMARKGFM ---
+
+CMARKGFM_CFLAGS += -Ithirdparty/cmark-gfm/src -Iscripts/cmark-gfm -Ithirdparty/cmark-gfm/extensions -DCMARK_GFM_STATIC_DEFINE
+
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/arena.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/blocks.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/buffer.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/cmark.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/cmark_ctype.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/footnotes.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/houdini_href_e.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/houdini_html_e.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/houdini_html_u.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/html.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/inlines.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/iterator.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/linked_list.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/map.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/node.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/plugin.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/references.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/registry.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/scanners.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/syntax_extension.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/src/utf8.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/extensions/autolink.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/extensions/core-extensions.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/extensions/ext_scanners.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/extensions/strikethrough.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/extensions/table.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/extensions/tagfilter.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/extensions/tasklist.c
+CMARKGFM_SRC += thirdparty/cmark-gfm/extensions/autoheaderid.c
 
 # --- FREEGLUT ---
 
@@ -363,6 +418,8 @@ GLUT_BUILD_CFLAGS += -Ithirdparty/freeglut/src
 GLUT_BUILD_CFLAGS += -DHAVE_UNISTD_H
 GLUT_BUILD_CFLAGS += -DHAVE_STDINT_H
 GLUT_BUILD_CFLAGS += -DHAVE_X11_EXTENSIONS_XRANDR_H
+GLUT_BUILD_CFLAGS += -DFREEGLUT_PRINT_ERRORS
+GLUT_BUILD_CFLAGS += -DFREEGLUT_PRINT_WARNINGS
 GLUT_BUILD_CFLAGS += $(SYS_GL_CFLAGS)
 
 GLUT_SRC += thirdparty/freeglut/src/fg_callbacks.c
@@ -682,9 +739,6 @@ TESSERACT_SRC += thirdparty/tesseract/src/ccstruct/statistc.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccstruct/stepblob.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccstruct/werd.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccutil/ccutil.cpp
-TESSERACT_SRC += thirdparty/tesseract/src/ccutil/clst.cpp
-TESSERACT_SRC += thirdparty/tesseract/src/ccutil/elst.cpp
-TESSERACT_SRC += thirdparty/tesseract/src/ccutil/elst2.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccutil/errcode.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccutil/params.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/ccutil/scanutils.cpp
@@ -980,6 +1034,8 @@ ZXINGCPP_SRC += thirdparty/zint/backend/vector.c
 # --- EXTRACT ---
 
 EXTRACT_CFLAGS += -Ithirdparty/extract/include -Ithirdparty/extract/src
+
+EXTRACT_BUILD_CFLAGS += -Wno-shadow
 
 EXTRACT_SRC += thirdparty/extract/src/alloc.c
 EXTRACT_SRC += thirdparty/extract/src/astring.c

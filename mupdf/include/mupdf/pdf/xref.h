@@ -85,6 +85,7 @@ typedef struct pdf_xref_subsec
 struct pdf_xref
 {
 	int num_objects;
+	int num_subsecs;
 	pdf_xref_subsec *subsec;
 	pdf_obj *trailer;
 	pdf_obj *pre_repair_trailer;
@@ -156,15 +157,16 @@ fz_stream *pdf_open_stream(fz_context *ctx, pdf_obj *ref);
 	Construct a filter to decode a stream, without
 	constraining to stream length, and without decryption.
 */
-fz_stream *pdf_open_inline_stream(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, int length, fz_stream *chain, fz_compression_params *params);
+fz_stream *pdf_open_inline_stream(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, size_t length, fz_stream *chain, fz_compression_params *params);
 fz_compressed_buffer *pdf_load_compressed_stream(fz_context *ctx, pdf_document *doc, int num, size_t worst_case);
-void pdf_load_compressed_inline_image(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int length, fz_stream *cstm, int indexed, fz_compressed_image *image);
+void pdf_load_compressed_inline_image(fz_context *ctx, pdf_document *doc, pdf_obj *dict, size_t length, fz_stream *cstm, int indexed, fz_compressed_image *image);
 fz_stream *pdf_open_stream_with_offset(fz_context *ctx, pdf_document *doc, int num, pdf_obj *dict, int64_t stm_ofs);
 fz_stream *pdf_open_contents_stream(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 fz_buffer *pdf_load_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compression_params *params, int *truncated, size_t worst_case);
 
 int pdf_version(fz_context *ctx, pdf_document *doc);
 pdf_obj *pdf_trailer(fz_context *ctx, pdf_document *doc);
+void pdf_set_trailer(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 void pdf_set_populating_xref_trailer(fz_context *ctx, pdf_document *doc, pdf_obj *trailer);
 int pdf_xref_len(fz_context *ctx, pdf_document *doc);
 

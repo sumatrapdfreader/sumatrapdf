@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -498,7 +498,6 @@ fz_load_jpeg_info(fz_context *ctx, const unsigned char *rbuf, size_t rlen, int *
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr err;
 	struct jpeg_source_mgr src;
-	fz_colorspace *icc = NULL;
 
 	*cspacep = NULL;
 	if (orientation)
@@ -573,8 +572,5 @@ fz_load_jpeg_info(fz_context *ctx, const unsigned char *rbuf, size_t rlen, int *
 		fz_jpg_mem_term((j_common_ptr)&cinfo);
 	}
 	fz_catch(ctx)
-	{
-		fz_drop_colorspace(ctx, icc);
 		fz_rethrow(ctx);
-	}
 }

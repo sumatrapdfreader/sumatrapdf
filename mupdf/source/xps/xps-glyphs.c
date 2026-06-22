@@ -442,6 +442,10 @@ xps_parse_glyphs_imp(fz_context *ctx, xps_document *doc, fz_matrix ctm,
 				code_count = 1;
 			if (glyph_count < 1)
 				glyph_count = 1;
+			if (code_count > 9)
+				code_count = 9;
+			if (glyph_count > 9)
+				glyph_count = 9;
 
 			/* TODO: add code chars with cluster mappings for text extraction */
 

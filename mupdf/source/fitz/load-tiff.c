@@ -102,8 +102,8 @@ struct tiff
 	fz_colorspace *colorspace;
 	unsigned char *samples;
 	unsigned char *data;
-	int tilestride;
-	int stride;
+	unsigned tilestride;
+	unsigned stride;
 };
 
 enum
@@ -267,6 +267,7 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 	unsigned int x, y;
 	unsigned int stride;
 	unsigned int srcstride;
+	unsigned int size;
 
 	/* colormap has first all red, then all green, then all blue values */
 	/* colormap values are 0..65535, bits is 4 or 8 */
@@ -281,18 +282,21 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 	if (tiff->colormaplen < (unsigned)maxval * 3)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "insufficient colormap data");
 
-	if (tiff->imagelength > UINT_MAX / tiff->imagewidth / (tiff->samplesperpixel + 2))
-		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
+	if (fz_ckd_mul_uint(&srcstride, tiff->imagewidth, tiff->bitspersample * (1 + tiff->extrasamples)))
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image too wide");
+	srcstride = (srcstride + 7) / 8;
 
-	srcstride = (tiff->imagewidth * (1 + tiff->extrasamples) * tiff->bitspersample + 7) / 8;
 	if (tiff->stride < 0 || srcstride > (unsigned int)tiff->stride)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "insufficient data for format");
 
-	/* Multiplying by two at the end because each component value in the
-	   colormap is 16 bits wide. */
-	stride = tiff->imagewidth * (3 + !!tiff->extrasamples) * 2;
+	/* Multiplying by two at the end because each component value in the colormap is 16 bits wide. */
+	if (fz_ckd_mul_uint(&stride, tiff->imagewidth, (3 + !!tiff->extrasamples) * 2))
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image too wide");
 
-	samples = Memento_label(fz_malloc(ctx, (size_t)stride * tiff->imagelength), "tiff_samples");
+	if (fz_ckd_mul_uint(&size, stride, tiff->imagelength))
+		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
+
+	samples = Memento_label(fz_malloc(ctx, size), "tiff_samples");
 
 	for (y = 0; y < tiff->imagelength; y++)
 	{
@@ -599,7 +603,7 @@ tiff_paste_subsampled_tile(fz_context *ctx, struct tiff *tiff, unsigned char *ti
 
 				x += sw;
 				if (x < w)
-				dst += sw * 3;
+					dst += sw * 3;
 
 				if (x >= col + tw)
 				{
@@ -632,9 +636,15 @@ tiff_decode_tiles(fz_context *ctx, struct tiff *tiff)
 	{
 		/* regardless of how this is subsampled, a tile is never larger */
 		if (tiff->tilelength >= tiff->ycbcrsubsamp[1])
-			wlen = tiff->tilestride * tiff->tilelength;
+		{
+			if (fz_ckd_mul_uint(&wlen, tiff->tilestride, tiff->tilelength))
+				fz_throw(ctx, FZ_ERROR_LIMIT, "tile buffer too large");
+		}
 		else
-			wlen = tiff->tilestride * tiff->ycbcrsubsamp[1];
+		{
+			if (fz_ckd_mul_uint(&wlen, tiff->tilestride, tiff->ycbcrsubsamp[1]))
+				fz_throw(ctx, FZ_ERROR_LIMIT, "tile buffer too large");
+		}
 
 		data = tiff->data = Memento_label(fz_malloc(ctx, wlen), "tiff_tile_jpg");
 
@@ -663,7 +673,8 @@ tiff_decode_tiles(fz_context *ctx, struct tiff *tiff)
 	}
 	else
 	{
-		wlen = tiff->tilelength * tiff->tilestride;
+		if (fz_ckd_mul_uint(&wlen, tiff->tilelength, tiff->tilestride))
+			fz_throw(ctx, FZ_ERROR_LIMIT, "tile buffer too large");
 		data = tiff->data = Memento_label(fz_malloc(ctx, wlen), "tiff_tile");
 
 		tile = 0;
@@ -792,13 +803,13 @@ static inline unsigned readshort(struct tiff *tiff)
 
 static inline unsigned tiff_readlong(struct tiff *tiff)
 {
-	int a = tiff_readbyte(tiff);
-	int b = tiff_readbyte(tiff);
-	int c = tiff_readbyte(tiff);
-	int d = tiff_readbyte(tiff);
+	unsigned int a = tiff_readbyte(tiff);
+	unsigned int b = tiff_readbyte(tiff);
+	unsigned int c = tiff_readbyte(tiff);
+	unsigned int d = tiff_readbyte(tiff);
 	if (tiff->order == TII)
-		return (unsigned)((d << 24) | (c << 16) | (b << 8) | a);
-	return (unsigned)((a << 24) | (b << 16) | (c << 8) | d);
+		return (d << 24) | (c << 16) | (b << 8) | a;
+	return (a << 24) | (b << 16) | (c << 8) | d;
 }
 
 static void
@@ -1367,6 +1378,23 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid subsampling factor");
 	}
 
+recalculate:
+	if (
+		fz_ckd_mul_uint(&tiff->stride, tiff->imagewidth, tiff->samplesperpixel) ||
+		fz_ckd_mul_uint(&tiff->stride, tiff->stride, tiff->bitspersample) ||
+		fz_ckd_add_uint(&tiff->stride, tiff->stride, 7)
+	)
+		fz_throw(ctx, FZ_ERROR_LIMIT, "invalid image size (integer overflow)");
+	tiff->stride >>= 3;
+
+	if (
+		fz_ckd_mul_uint(&tiff->tilestride, tiff->tilewidth, tiff->samplesperpixel) ||
+		fz_ckd_mul_uint(&tiff->tilestride, tiff->tilestride, tiff->bitspersample) ||
+		fz_ckd_add_uint(&tiff->tilestride, tiff->tilestride, 7)
+	)
+		fz_throw(ctx, FZ_ERROR_LIMIT, "invalid image size (integer overflow)");
+	tiff->tilestride >>= 3;
+
 	switch (tiff->photometric)
 	{
 	case 0: /* WhiteIsZero -- inverted */
@@ -1414,25 +1442,26 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 	case 32844: /* SGI CIE Log 2 L (16bpp Greyscale) */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 1)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for l tiff");
-		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		if (tiff->bitspersample != 8)
+		{
 			tiff->bitspersample = 8;
-		tiff->stride >>= 1;
+			goto recalculate;
+		}
+		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
 		break;
 	case 32845: /* SGI CIE Log 2 L, u, v (24bpp or 32bpp) */
 		if (tiff->samplesperpixel - !!tiff->extrasamples < 3)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid samples per pixel for luv tiff");
-		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		if (tiff->bitspersample != 8)
+		{
 			tiff->bitspersample = 8;
-		tiff->stride >>= 1;
+			goto recalculate;
+		}
+		tiff->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 		break;
 	default:
 		fz_throw(ctx, FZ_ERROR_FORMAT, "unknown photometric: %d", tiff->photometric);
 	}
-
-	tiff->stride = (tiff->imagewidth * tiff->samplesperpixel * tiff->bitspersample + 7) / 8;
-	tiff->tilestride = (tiff->tilewidth * tiff->samplesperpixel * tiff->bitspersample + 7) / 8;
 
 #if FZ_ENABLE_ICC
 	if (tiff->profile && tiff->profilesize > 0)
@@ -1508,8 +1537,13 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 			unsigned tilesacross = (tiff->imagewidth + tiff->tilewidth - 1) / tiff->tilewidth;
 			tiff->tilebytecountslen = tilesacross * tilesdown;
 			tiff->tilebytecounts = Memento_label(fz_malloc_array(ctx, tiff->tilebytecountslen, unsigned), "tiff_tilebytecounts");
-			for (i = 0; i < tiff->tilebytecountslen; i++)
-				tiff->tilebytecounts[i] = tiff->tilelength * tiff->tilestride;
+			{
+				unsigned tbc;
+				if (fz_ckd_mul_uint(&tbc, tiff->tilelength, tiff->tilestride))
+					fz_throw(ctx, FZ_ERROR_LIMIT, "tile buffer too large");
+				for (i = 0; i < tiff->tilebytecountslen; i++)
+					tiff->tilebytecounts[i] = tbc;
+			}
 		}
 	}
 
@@ -1580,10 +1614,7 @@ tiff_decode_samples(fz_context *ctx, struct tiff *tiff)
 {
 	unsigned i;
 
-	if (tiff->imagelength > UINT_MAX / tiff->stride)
-		fz_throw(ctx, FZ_ERROR_LIMIT, "image too large");
-	tiff->samples = Memento_label(fz_malloc(ctx, (size_t)tiff->imagelength * tiff->stride), "tiff_samples");
-	memset(tiff->samples, 0x00, (size_t)tiff->imagelength * tiff->stride);
+	tiff->samples = Memento_label(fz_calloc(ctx, tiff->stride, tiff->imagelength), "tiff_samples");
 
 	if (tiff->tilelength && tiff->tilewidth && tiff->tileoffsets && tiff->tilebytecounts)
 		tiff_decode_tiles(ctx, tiff);

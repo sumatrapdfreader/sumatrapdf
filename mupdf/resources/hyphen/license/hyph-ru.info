@@ -43,4 +43,4 @@
 % and the latest release of rus-ispell dictionaries
 % <ftp://scon155.phys.msu.su/pub/russian/ispell/>.
 %
-% Additional patterns with hyphen/dash: a hack to prevent breaking after hyphen, but not before.
+% Additional patterns with hyphen/dash: a hack to prevent breaking after hyphen, but not before.

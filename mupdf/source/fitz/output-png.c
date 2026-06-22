@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -25,14 +25,6 @@
 #include "z-imp.h"
 
 #include <string.h>
-
-static inline void big32(unsigned char *buf, unsigned int v)
-{
-	buf[0] = (v >> 24) & 0xff;
-	buf[1] = (v >> 16) & 0xff;
-	buf[2] = (v >> 8) & 0xff;
-	buf[3] = (v) & 0xff;
-}
 
 static void putchunk(fz_context *ctx, fz_output *out, char *tag, unsigned char *data, size_t size)
 {
@@ -135,6 +127,8 @@ png_write_icc(fz_context *ctx, png_band_writer *writer, fz_colorspace *cs)
 		name = cs->name;
 		size = csize + strlen(name) + 2;
 
+		fz_var(chunk);
+
 		fz_try(ctx)
 		{
 			chunk = fz_calloc(ctx, size, 1);
@@ -190,8 +184,8 @@ png_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "pixmap must be grayscale or rgb to write as png");
 	}
 
-	big32(head+0, w);
-	big32(head+4, h);
+	fz_pack_uint32(head+0, w);
+	fz_pack_uint32(head+4, h);
 	head[8] = 8; /* depth */
 	head[9] = color;
 	head[10] = 0; /* compression */
@@ -201,8 +195,8 @@ png_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	fz_write_data(ctx, out, pngsig, 8);
 	putchunk(ctx, out, "IHDR", head, 13);
 
-	big32(head+0, writer->super.xres * 100/2.54f + 0.5f);
-	big32(head+4, writer->super.yres * 100/2.54f + 0.5f);
+	fz_pack_uint32(head+0, writer->super.xres * 100/2.54f + 0.5f);
+	fz_pack_uint32(head+4, writer->super.yres * 100/2.54f + 0.5f);
 	head[8] = 1; /* metre */
 	putchunk(ctx, out, "pHYs", head, 9);
 

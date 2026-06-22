@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF WASM Library.
 //
@@ -317,6 +317,7 @@ GETP(stext_char, fz_quad, quad)
 GET(stext_char, float, size)
 GET(stext_char, fz_font*, font)
 GET(stext_char, int, argb)
+GET(stext_char, int, bidi)
 
 GET_ALIAS(link_dest, int, chapter, loc.chapter)
 GET_ALIAS(link_dest, int, page, loc.page)
@@ -1096,6 +1097,12 @@ int wasm_outline_get_page(fz_document *doc, fz_outline *outline)
 }
 
 EXPORT
+void wasm_style_document(fz_document *doc, boolean publisher_css, const char *user_css)
+{
+	VOID(fz_style_document, doc, publisher_css, user_css);
+}
+
+EXPORT
 void wasm_layout_document(fz_document *doc, float w, float h, float em)
 {
 	VOID(fz_layout_document, doc, w, h, em)
@@ -1819,7 +1826,9 @@ PDF_ANNOT_GET(int, INTEGER, type)
 
 PDF_ANNOT_GETSET(int, INTEGER, flags)
 PDF_ANNOT_GETSET(char*, POINTER, contents)
+PDF_ANNOT_GETSET(char*, POINTER, name)
 PDF_ANNOT_GETSET(char*, POINTER, author)
+PDF_ANNOT_GETSET(char*, POINTER, subject)
 PDF_ANNOT_GETSET(int, INTEGER, creation_date)
 PDF_ANNOT_GETSET(int, INTEGER, modification_date)
 PDF_ANNOT_GETSET(float, NUMBER, border_width)
@@ -1873,6 +1882,7 @@ PDF_ANNOT_HAS(border_effect)
 PDF_ANNOT_HAS(icon_name)
 PDF_ANNOT_HAS(open)
 PDF_ANNOT_HAS(author)
+PDF_ANNOT_HAS(subject)
 PDF_ANNOT_HAS(filespec)
 PDF_ANNOT_HAS(callout)
 PDF_ANNOT_HAS(rich_contents)
@@ -2580,6 +2590,32 @@ void wasm_walk_text(fz_text *text, int walk_id)
 			);
 		}
 		EM_ASM({ globalThis.$libmupdf_text_walk.end_span($0) }, walk_id);
+	}
+}
+
+// --- LOG CALLBACK ---
+
+static void
+log_error_callback(void *user, const char *message)
+{
+	EM_ASM({ globalThis.$libmupdf_log_error($0) }, message);
+}
+
+static void
+log_warning_callback(void *user, const char *message)
+{
+	EM_ASM({ globalThis.$libmupdf_log_warning($0) }, message);
+}
+
+EXPORT
+void wasm_enable_log_callback(boolean enable)
+{
+	if (enable) {
+		fz_set_error_callback(ctx, log_error_callback, NULL);
+		fz_set_warning_callback(ctx, log_warning_callback, NULL);
+	} else {
+		fz_set_error_callback(ctx, NULL, NULL);
+		fz_set_warning_callback(ctx, NULL, NULL);
 	}
 }
 

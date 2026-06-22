@@ -669,6 +669,13 @@ fz_rect fz_expand_rect(fz_rect b, float expand);
 fz_irect fz_expand_irect(fz_irect a, int expand);
 
 /**
+	Calculate the area of a rectangle.
+
+	Always non-negative. All invalid or empty rects return 0.
+*/
+float fz_rect_area(fz_rect r);
+
+/**
 	Expand a bbox to include a given point.
 	To create a rectangle that encompasses a sequence of points, the
 	rectangle must first be set to be the empty rectangle at one of
@@ -881,5 +888,74 @@ int fz_is_quad_inside_quad(fz_quad needle, fz_quad haystack);
 	This may break down if quads are not 'well formed'.
 */
 int fz_is_quad_intersecting_quad(fz_quad a, fz_quad b);
+
+/* Checked integer arithmetic helpers -- return whether operation succeeded without overflow or underflow. */
+/* Use builtin C23 ckd_mul, ckd_add, ckd_sub if available. */
+
+#ifdef HAVE_STDCKDINT_H
+
+#include <stdckdint.h>
+
+/* We add explicit casts here to ensure that these match the non-C23 cases below. */
+#define fz_ckd_mul_i32(O,A,B) ckd_mul(O,(int32_t)(A),(int32_t)(B))
+#define fz_ckd_mul_u32(O,A,B) ckd_mul(O,(uint32_t)(A),(uint32_t)(B))
+#define fz_ckd_mul_int(O,A,B) ckd_mul(O,(int)(A),(int)(B))
+#define fz_ckd_mul_uint(O,A,B) ckd_mul(O,(unsigned int)(A),(unsigned int)(B))
+#define fz_ckd_mul_size(O,A,B) ckd_mul(O,(size_t)(A),(size_t)(B))
+#define fz_ckd_mul_i64(O,A,B) ckd_mul(O,(int64_t)(A),(int64_t)(B))
+#define fz_ckd_mul_u64(O,A,B) ckd_mul(O,(uint64_t)(A),(uint64_t)(B))
+
+#define fz_ckd_add_i32(O,A,B) ckd_add(O,(int32_t)(A),(int32_t)(B))
+#define fz_ckd_add_u32(O,A,B) ckd_add(O,(uint32_t)(A),(uint32_t)(B))
+#define fz_ckd_add_int(O,A,B) ckd_add(O,(int)(A),(int)(B))
+#define fz_ckd_add_uint(O,A,B) ckd_add(O,(unsigned int)(A),(unsigned int)(B))
+#define fz_ckd_add_size(O,A,B) ckd_add(O,(size_t)(A),(size_t)(B))
+#define fz_ckd_add_i64(O,A,B) ckd_add(O,(int64_t)(A),(int64_t)(B))
+#define fz_ckd_add_u64(O,A,B) ckd_add(O,(uint64_t)(A),(uint64_t)(B))
+
+#define fz_ckd_sub_i32(O,A,B) ckd_sub(O,(int32_t)(A),(int32_t)(B))
+#define fz_ckd_sub_u32(O,A,B) ckd_sub(O,(uint32_t)(A),(uint32_t)(B))
+#define fz_ckd_sub_int(O,A,B) ckd_sub(O,(int)(A),(int)(B))
+#define fz_ckd_sub_uint(O,A,B) ckd_sub(O,(unsigned int)(A),(unsigned int)(B))
+#define fz_ckd_sub_size(O,A,B) ckd_sub(O,(size_t)(A),(size_t)(B))
+#define fz_ckd_sub_i64(O,A,B) ckd_sub(O,(int64_t)(A),(int64_t)(B))
+#define fz_ckd_sub_u64(O,A,B) ckd_sub(O,(uint64_t)(A),(uint64_t)(B))
+
+#else
+
+int fz_ckd_mul_i32(int32_t *out, int32_t a, int32_t b);
+int fz_ckd_add_i32(int32_t *out, int32_t a, int32_t b);
+int fz_ckd_sub_i32(int32_t *out, int32_t a, int32_t b);
+
+int fz_ckd_mul_u32(uint32_t *out, uint32_t a, uint32_t b);
+int fz_ckd_add_u32(uint32_t *out, uint32_t a, uint32_t b);
+int fz_ckd_sub_u32(uint32_t *out, uint32_t a, uint32_t b);
+
+int fz_ckd_mul_int(int *out, int a, int b);
+int fz_ckd_add_int(int *out, int a, int b);
+int fz_ckd_sub_int(int *out, int a, int b);
+
+int fz_ckd_mul_uint(unsigned int *out, unsigned int a, unsigned int b);
+int fz_ckd_add_uint(unsigned int *out, unsigned int a, unsigned int b);
+int fz_ckd_sub_uint(unsigned int *out, unsigned int a, unsigned int b);
+
+int fz_ckd_mul_size(size_t *out, size_t a, size_t b);
+int fz_ckd_add_size(size_t *out, size_t a, size_t b);
+int fz_ckd_sub_size(size_t *out, size_t a, size_t b);
+
+int fz_ckd_mul_i64(int64_t *out, int64_t a, int64_t b);
+int fz_ckd_add_i64(int64_t *out, int64_t a, int64_t b);
+int fz_ckd_sub_i64(int64_t *out, int64_t a, int64_t b);
+
+int fz_ckd_mul_u64(uint64_t *out, uint64_t a, uint64_t b);
+int fz_ckd_add_u64(uint64_t *out, uint64_t a, uint64_t b);
+int fz_ckd_sub_u64(uint64_t *out, uint64_t a, uint64_t b);
+
+#endif
+
+#define fz_bytes_from_bits(A)  (((A)>>3) + !!((A) & 7))
+
+int fz_ckd_size_from_i64(size_t *out, int64_t in);
+int fz_ckd_int_from_i64(int *out, int64_t in);
 
 #endif

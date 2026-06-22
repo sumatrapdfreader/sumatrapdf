@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -165,40 +165,45 @@ pdfpages_pages(fz_context *ctx, fz_output *out, char *filename, char *password, 
 	pdf_document *doc = NULL;
 	int ret = 0;
 
-	state = NO_FILE_OPENED;
-	while (argidx < argc)
+	fz_try(ctx)
 	{
-		if (state == NO_FILE_OPENED || !fz_is_page_range(ctx, argv[argidx]))
+		state = NO_FILE_OPENED;
+		while (argidx < argc)
 		{
-			if (state == NO_INFO_GATHERED)
+			if (state == NO_FILE_OPENED || !fz_is_page_range(ctx, argv[argidx]))
 			{
-				showpages(ctx, doc, out, "1-N");
+				if (state == NO_INFO_GATHERED)
+				{
+					showpages(ctx, doc, out, "1-N");
+				}
+
+				pdf_drop_document(ctx, doc);
+
+				filename = argv[argidx];
+				fz_write_printf(ctx, out, "%s:\n", filename);
+				doc = pdf_open_document(ctx, filename);
+				if (pdf_needs_password(ctx, doc))
+					if (!pdf_authenticate_password(ctx, doc, password))
+						fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot authenticate password: %s", filename);
+
+				state = NO_INFO_GATHERED;
+			}
+			else
+			{
+				ret |= showpages(ctx, doc, out, argv[argidx]);
+				state = INFO_SHOWN;
 			}
 
-			pdf_drop_document(ctx, doc);
-
-			filename = argv[argidx];
-			fz_write_printf(ctx, out, "%s:\n", filename);
-			doc = pdf_open_document(ctx, filename);
-			if (pdf_needs_password(ctx, doc))
-				if (!pdf_authenticate_password(ctx, doc, password))
-					fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot authenticate password: %s", filename);
-
-			state = NO_INFO_GATHERED;
-		}
-		else
-		{
-			ret |= showpages(ctx, doc, out, argv[argidx]);
-			state = INFO_SHOWN;
+			argidx++;
 		}
 
-		argidx++;
+		if (state == NO_INFO_GATHERED)
+			showpages(ctx, doc, out, "1-N");
 	}
-
-	if (state == NO_INFO_GATHERED)
-		showpages(ctx, doc, out, "1-N");
-
-	pdf_drop_document(ctx, doc);
+	fz_always(ctx)
+		pdf_drop_document(ctx, doc);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	return ret;
 }

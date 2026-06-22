@@ -271,8 +271,9 @@ void pdfapp_init(fz_context *ctx, pdfapp_t *app)
 	app->layout_w = FZ_DEFAULT_LAYOUT_W;
 	app->layout_h = FZ_DEFAULT_LAYOUT_H;
 	app->layout_em = FZ_DEFAULT_LAYOUT_EM;
-	app->layout_css = NULL;
-	app->layout_use_doc_css = 1;
+	app->user_css = NULL;
+	app->user_css_data = NULL;
+	app->publisher_css = 1;
 
 	app->transition.duration = 0.25f;
 	app->transition.type = FZ_TRANSITION_FADE;
@@ -433,10 +434,8 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int kbps
 	{
 		fz_register_document_handlers(ctx);
 
-		if (app->layout_css)
-			fz_load_user_css(ctx, app->layout_css);
-
-		fz_set_use_document_css(ctx, app->layout_use_doc_css);
+		if (app->user_css)
+			app->user_css_data = fz_read_text_file(ctx, app->user_css);
 
 #ifdef HAVE_CURL
 		if (!strncmp(filename, "http://", 7) || !strncmp(filename, "https://", 8))
@@ -566,6 +565,7 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int kbps
 		app->docpath = fz_strdup(ctx, filename);
 		app->doctitle = fz_strdup(ctx, fz_basename(filename));
 
+		fz_style_document(app->ctx, app->doc, app->publisher_css, app->user_css_data);
 		fz_layout_document(app->ctx, app->doc, app->layout_w, app->layout_h, app->layout_em);
 
 		while (1)

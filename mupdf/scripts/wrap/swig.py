@@ -896,6 +896,17 @@ def build_swig(
             %ignore fz_lock_debug_lock;
             %ignore fz_lock_debug_unlock;
 
+            // Ignore fz_ckd_*, ootherwise windows builds fail with link errors
+            // such as:
+            //
+            //  error LNK2019: unresolved external symbol fz_ckd_add_uint
+            //  referenced in function _wrap_fz_ckd_add_uint
+            //
+            // This seems to be because libclang and cl.exe give different
+            // results for `#ifdef HAVE_STDCKDINT_H`.
+            //
+            %rename("$ignore", regextarget=1) "^fz_ckd_";
+
             %ignore Memento_cpp_new;
             %ignore Memento_cpp_delete;
             %ignore Memento_cpp_new_array;
@@ -977,6 +988,8 @@ def build_swig(
                 %template(vector_search_page2_hit) vector<fz_search_page2_hit>;
                 %template(vector_fz_font_ucs_gid) vector<fz_font_ucs_gid>;
                 %template(vector_fz_point) vector<fz_point>;
+                %template(vector_fz_rect) vector<fz_rect>;
+                %template(vector_fz_stext_grid_divider) vector<fz_stext_grid_divider>;
             }};
 
             // Make sure that operator++() gets converted to __next__().
@@ -1809,6 +1822,7 @@ def build_swig(
                         {"-D_WIN32" if state_.windows else ""}
                         -c++
                         {"-doxygen" if swig_major >= 4 else ""}
+                        {'-nogil' if build_dirs.nogil else ''}
                         -python
                         -Wextra
                         {disable_swig_warnings}

@@ -1,4 +1,4 @@
-// Copyright (C) 2026 Artifex Software, Inc.
+// Copyright (C) 2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -401,8 +401,8 @@ add_plank_to_flotilla(fz_context *ctx, fz_flotilla *f, fz_rect rect)
 					if (i != f->len)
 					{
 						f->rafts[i] = f->rafts[f->len];
-						i = j;
 					}
+					i = j;
 					changed = 1;
 				}
 			}

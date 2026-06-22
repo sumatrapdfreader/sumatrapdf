@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -419,7 +419,32 @@ pdf_load_colorspace_imp(fz_context *ctx, pdf_obj *obj, pdf_cycle_list *cycle_up)
 
 			else
 			{
-				sub = pdf_array_get(ctx, obj, 1);
+				/* Bug 709424: Most references are of the form:
+				 *    /Colorspace 10 0 R
+				 * but some are of the form
+				 *    /Colorspace [ /ICCBased 12 0 R ]
+				 * i.e. obj is indirect vs obj is a direct object.
+				 * If we have lots of different references in the latter form then they
+				 * will end up cached differently each time. To avoid that, we read
+				 * array[1] as 'sub' (12 0 R in the example) and allow the complete
+				 * colorspace to be cached under that too.
+				 *
+				 * This works fine for ICCBased/CalGray/CalRGB/Pattern, where the entire
+				 * colorspace definition lives within the referred object, but will
+				 * cause problems when used with cases such as:
+				 *    /Colorspace [ /Indexed 12 0 R <hival> <lookup> ]
+				 * as that relies on information present outside that object (i.e. the
+				 * hival and lookup objects).
+				 *
+				 * Accordingly, take care to only read sub for these specific cases.
+				 */
+				if (pdf_name_eq(ctx, name, PDF_NAME(ICCBased)) ||
+					pdf_name_eq(ctx, name, PDF_NAME(CalGray)) ||
+					pdf_name_eq(ctx, name, PDF_NAME(CalRGB)) ||
+					pdf_name_eq(ctx, name, PDF_NAME(Pattern)))
+					sub = pdf_array_get(ctx, obj, 1);
+				else
+					sub = NULL;
 
 				if (pdf_is_indirect(ctx, obj))
 				{
@@ -433,8 +458,8 @@ pdf_load_colorspace_imp(fz_context *ctx, pdf_obj *obj, pdf_cycle_list *cycle_up)
 				}
 				else
 				{
-				if ((cs = pdf_find_item(ctx, fz_drop_colorspace_imp, obj)) != NULL)
-					return cs;
+					if ((cs = pdf_find_item(ctx, fz_drop_colorspace_imp, obj)) != NULL)
+						return cs;
 				}
 
 				if (pdf_name_eq(ctx, name, PDF_NAME(ICCBased)))
@@ -465,7 +490,7 @@ pdf_load_colorspace_imp(fz_context *ctx, pdf_obj *obj, pdf_cycle_list *cycle_up)
 					fz_throw(ctx, FZ_ERROR_SYNTAX, "unknown colorspace %s", pdf_to_name(ctx, name));
 
 				if (pdf_is_indirect(ctx, obj))
-				pdf_store_item(ctx, obj, cs, 1000);
+					pdf_store_item(ctx, obj, cs, 1000);
 				else if (pdf_is_indirect(ctx, sub))
 					pdf_store_item(ctx, sub, cs, 1000);
 				else
@@ -624,7 +649,7 @@ pdf_add_indexed_colorspace(fz_context *ctx, pdf_document *doc, fz_colorspace *cs
 	fz_try(ctx)
 	{
 		pdf_array_push(ctx, obj, PDF_NAME(Indexed));
-		pdf_array_push(ctx, obj, pdf_add_colorspace(ctx, doc, basecs));
+		pdf_array_push_drop(ctx, obj, pdf_add_colorspace(ctx, doc, basecs));
 		pdf_array_push_int(ctx, obj, high);
 		pdf_array_push_string(ctx, obj, (char *) lookup, (size_t)basen * (high + 1));
 	}

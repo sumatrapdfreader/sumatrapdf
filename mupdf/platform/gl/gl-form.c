@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -31,6 +31,7 @@ static pdf_annot *sig_widget;
 static char *sig_distinguished_name = NULL;
 static pdf_signature_error sig_cert_error;
 static pdf_signature_error sig_digest_error;
+static int sig_edits;
 static int sig_valid_until;
 static int sig_readonly;
 
@@ -465,14 +466,24 @@ static void sig_verify_dialog(void)
 
 		if (sig_digest_error)
 			ui_label("Digest error: %s", pdf_signature_error_description(sig_digest_error));
-		else if (sig_valid_until == 0)
-			ui_label("The fields signed by this signature are unchanged.");
-		else if (sig_valid_until == 1)
-			ui_label("This signature was invalidated in the last update by the signed fields being changed.");
-		else if (sig_valid_until == 2)
-			ui_label("This signature was invalidated in the penultimate update by the signed fields being changed.");
 		else
-			ui_label("This signature was invalidated %d updates ago by the signed fields being changed.", sig_valid_until);
+		{
+			if (sig_edits)
+				ui_label("The signature is valid, but there have been edits since signing.");
+			else
+				ui_label("The signature is valid, and there have been no edits since signing.");
+
+			if (sig_valid_until < 0)
+				ui_label("The fields signed by this signature have unsaved changes that will invalidate the signature.");
+			else if (sig_valid_until == 0)
+				ui_label("The fields signed by this signature are unchanged.");
+			else if (sig_valid_until == 1)
+				ui_label("This signature was invalidated in the last update by the signed fields being changed.");
+			else if (sig_valid_until == 2)
+				ui_label("This signature was invalidated in the penultimate update by the signed fields being changed.");
+			else
+				ui_label("This signature was invalidated %d updates ago by the signed fields being changed.", sig_valid_until);
+		}
 
 		ui_layout(B, X, NW, ui.padsize, ui.padsize);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
@@ -497,15 +508,18 @@ static void sig_verify_dialog(void)
 
 static void show_sig_dialog(pdf_annot *widget)
 {
+	pdf_pkcs7_verifier *verifier = NULL;
+	pdf_pkcs7_distinguished_name *dn = NULL;
+
+	fz_var(verifier);
+	fz_var(dn);
+
 	fz_try(ctx)
 	{
 		sig_widget = widget;
 
 		if (pdf_signature_is_signed(ctx, pdf, pdf_annot_obj(ctx, widget)))
 		{
-			pdf_pkcs7_verifier *verifier;
-			pdf_pkcs7_distinguished_name *dn;
-
 			sig_readonly = pdf_widget_is_readonly(ctx, widget);
 
 			sig_valid_until = pdf_validate_signature(ctx, widget);
@@ -514,6 +528,7 @@ static void show_sig_dialog(pdf_annot *widget)
 
 			sig_cert_error = pdf_check_widget_certificate(ctx, verifier, widget);
 			sig_digest_error = pdf_check_widget_digest(ctx, verifier, widget);
+			sig_edits = pdf_incremental_change_since_signing_widget(ctx, widget);
 
 			fz_free(ctx, sig_distinguished_name);
 			dn = pdf_signature_get_widget_signatory(ctx, verifier, widget);
@@ -521,9 +536,6 @@ static void show_sig_dialog(pdf_annot *widget)
 				sig_distinguished_name = pdf_signature_format_distinguished_name(ctx, dn);
 			else
 				sig_distinguished_name = fz_strdup(ctx, "Signature information missing.");
-			pdf_signature_drop_distinguished_name(ctx, dn);
-
-			pdf_drop_verifier(ctx, verifier);
 
 			ui.dialog = sig_verify_dialog;
 		}
@@ -531,6 +543,11 @@ static void show_sig_dialog(pdf_annot *widget)
 		{
 			ui.dialog = sig_sign_dialog;
 		}
+	}
+	fz_always(ctx)
+	{
+		pdf_signature_drop_distinguished_name(ctx, dn);
+		pdf_drop_verifier(ctx, verifier);
 	}
 	fz_catch(ctx)
 	{

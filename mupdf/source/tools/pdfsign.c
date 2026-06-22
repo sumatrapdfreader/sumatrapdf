@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -346,7 +346,7 @@ int pdfsign_main(int argc, char **argv)
 			if (!process_acro_form(ctx, doc))
 			{
 				fprintf(stderr, "No signatures found!\n");
-				exit(1);
+				break;
 			}
 		}
 		else

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -332,7 +332,7 @@ struct {
 
 static int step_high_security_save(int cancel)
 {
-	fz_page *page = NULL;
+	fz_page *nextpage = NULL;
 	fz_device *dev;
 
 	/* Called with i=0 for init. i=1...n for pages 1 to n inclusive.
@@ -372,19 +372,19 @@ static int step_high_security_save(int cancel)
 		return -1;
 	}
 	/* Otherwise, do the next page. */
-	page = fz_load_page(ctx, (fz_document *)pdf, hss_state.i-1);
+	nextpage = fz_load_page(ctx, (fz_document *)pdf, hss_state.i-1);
 
 	fz_try(ctx)
 	{
-		dev = fz_begin_page(ctx, hss_state.writer, fz_bound_page(ctx, page));
-		fz_run_page(ctx, page, dev, fz_identity, NULL);
-		fz_drop_page(ctx, page);
-		page = NULL;
+		dev = fz_begin_page(ctx, hss_state.writer, fz_bound_page(ctx, nextpage));
+		fz_run_page(ctx, nextpage, dev, fz_identity, NULL);
+		fz_drop_page(ctx, nextpage);
+		nextpage = NULL;
 		fz_end_page(ctx, hss_state.writer);
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_page(ctx, page);
+		fz_drop_page(ctx, nextpage);
 		fz_rethrow(ctx);
 	}
 
@@ -526,14 +526,14 @@ static void open_attachment_dialog(void)
 			{
 				int64_t created, modified;
 				fz_buffer *contents;
-				const char *filename;
+				const char *basename;
 
-				filename = fz_basename(attach_filename);
+				basename = fz_basename(attach_filename);
 				contents = fz_read_file(ctx, attach_filename);
 				created = fz_stat_ctime(attach_filename);
 				modified = fz_stat_mtime(attach_filename);
 
-				fs = pdf_add_embedded_file(ctx, pdf, filename, NULL, contents,
+				fs = pdf_add_embedded_file(ctx, pdf, basename, NULL, contents,
 					created, modified, 0);
 				pdf_set_annot_filespec(ctx, ui.selected_annot, fs);
 				fz_drop_buffer(ctx, contents);
@@ -1026,11 +1026,11 @@ static int
 document_has_redactions(void)
 {
 	int i, n;
-	pdf_page *page = NULL;
+	pdf_page *page_ = NULL;
 	pdf_annot *annot;
 	int has_redact = 0;
 
-	fz_var(page);
+	fz_var(page_);
 	fz_var(has_redact);
 
 	fz_try(ctx)
@@ -1038,8 +1038,8 @@ document_has_redactions(void)
 		n = pdf_count_pages(ctx, pdf);
 		for (i = 0; i < n && !has_redact; i++)
 		{
-			page = pdf_load_page(ctx, pdf, i);
-			for (annot = pdf_first_annot(ctx, page);
+			page_ = pdf_load_page(ctx, pdf, i);
+			for (annot = pdf_first_annot(ctx, page_);
 				annot != NULL;
 				annot = pdf_next_annot(ctx, annot))
 			{
@@ -1049,14 +1049,14 @@ document_has_redactions(void)
 					break;
 				}
 			}
-			fz_drop_page(ctx, (fz_page *)page);
-			page = NULL;
+			fz_drop_page(ctx, (fz_page *)page_);
+			page_ = NULL;
 		}
 	}
 	fz_catch(ctx)
 	{
 		/* Ignore the error, and assume no redactions */
-		fz_drop_page(ctx, (fz_page *)page);
+		fz_drop_page(ctx, (fz_page *)page_);
 	}
 	return has_redact;
 }
@@ -1205,7 +1205,7 @@ void do_annotate_panel(void)
 
 	if (ui.selected_annot && (subtype = pdf_annot_type(ctx, ui.selected_annot)) != PDF_ANNOT_WIDGET)
 	{
-		int n, choice, has_content;
+		int components, choice, has_content;
 		pdf_obj *obj;
 
 		/* common annotation properties */
@@ -1269,11 +1269,11 @@ void do_annotate_panel(void)
 				pdf_set_annot_quadding(ctx, ui.selected_annot, choice);
 			}
 
-			pdf_annot_default_appearance_unmapped(ctx, ui.selected_annot, text_font_buf, sizeof text_font_buf, &text_size_f, &n, text_color);
+			pdf_annot_default_appearance_unmapped(ctx, ui.selected_annot, text_font_buf, sizeof text_font_buf, &text_size_f, &components, text_color);
 			text_size = text_size_f;
 			font_choice = label_select("Text Font", "DA/Font", text_font_buf, font_names, nelem(font_names));
 			size_changed = label_slider("Text Size", &text_size, 8, 36);
-			color_choice = label_select("Text Color", "DA/Color", name_from_hex(hex_from_color(n, text_color)), color_names+1, nelem(color_names)-1);
+			color_choice = label_select("Text Color", "DA/Color", name_from_hex(hex_from_color(components, text_color)), color_names+1, nelem(color_names)-1);
 			if (font_choice != -1 || color_choice != -1 || size_changed)
 			{
 				if (font_choice != -1)
@@ -1282,27 +1282,27 @@ void do_annotate_panel(void)
 					text_font = text_font_buf;
 				if (color_choice != -1)
 				{
-					n = 3;
+					components = 3;
 					text_color[0] = ((color_values[color_choice+1]>>16) & 0xff) / 255.0f;
 					text_color[1] = ((color_values[color_choice+1]>>8) & 0xff) / 255.0f;
 					text_color[2] = ((color_values[color_choice+1]) & 0xff) / 255.0f;
 
 					if (text_color[0] == text_color[1] && text_color[1] == text_color[2])
-						n = 1;
+						components = 1;
 				}
-				if (n == 1)
+				if (components == 1)
 					trace_action("annot.setDefaultAppearance(%q, %d, [%g]);\n",
 						text_font, text_size, text_color[0]);
-				else if (n == 3)
+				else if (components == 3)
 					trace_action("annot.setDefaultAppearance(%q, %d, [%g, %g, %g]);\n",
 						text_font, text_size, text_color[0], text_color[1], text_color[2]);
-				else if (n == 4)
+				else if (components == 4)
 					trace_action("annot.setDefaultAppearance(%q, %d, [%g, %g, %g, %g]);\n",
 						text_font, text_size, text_color[0], text_color[1], text_color[2], text_color[3]);
 				else
 					trace_action("annot.setDefaultAppearance(%q, %d, []);\n",
 						text_font, text_size);
-				pdf_set_annot_default_appearance(ctx, ui.selected_annot, text_font, text_size, n, text_color);
+				pdf_set_annot_default_appearance(ctx, ui.selected_annot, text_font, text_size, components, text_color);
 			}
 		}
 
@@ -1443,8 +1443,8 @@ void do_annotate_panel(void)
 			ui_spacer();
 			if (is_draw_mode)
 			{
-				n = pdf_annot_quad_point_count(ctx, ui.selected_annot);
-				ui_label("QuadPoints: %d", n);
+				int qp_count = pdf_annot_quad_point_count(ctx, ui.selected_annot);
+				ui_label("QuadPoints: %d", qp_count);
 				if (ui_button("Clear"))
 				{
 					trace_action("annot.clearQuadPoints();\n");
@@ -1465,8 +1465,8 @@ void do_annotate_panel(void)
 			ui_spacer();
 			if (is_draw_mode)
 			{
-				n = pdf_annot_vertex_count(ctx, ui.selected_annot);
-				ui_label("Vertices: %d", n);
+				int vertex_count = pdf_annot_vertex_count(ctx, ui.selected_annot);
+				ui_label("Vertices: %d", vertex_count);
 				if (ui_button("Clear"))
 				{
 					trace_action("annot.clearVertices();\n");
@@ -1487,8 +1487,8 @@ void do_annotate_panel(void)
 			ui_spacer();
 			if (is_draw_mode)
 			{
-				n = pdf_annot_ink_list_count(ctx, ui.selected_annot);
-				ui_label("InkList: %d strokes", n);
+				int strokes = pdf_annot_ink_list_count(ctx, ui.selected_annot);
+				ui_label("InkList: %d strokes", strokes);
 				if (ui_button("Clear"))
 				{
 					trace_action("annot.clearInkList();\n");
@@ -1559,13 +1559,13 @@ void do_annotate_panel(void)
 		do_save_pdf_file();
 }
 
-static void new_redaction(pdf_page *page, fz_quad q)
+static void new_redaction(pdf_page *page_, fz_quad q)
 {
 	pdf_annot *annot;
 
 	pdf_begin_operation(ctx, pdf, "Create Redaction");
 
-	annot = pdf_create_annot(ctx, page, PDF_ANNOT_REDACT);
+	annot = pdf_create_annot(ctx, page_, PDF_ANNOT_REDACT);
 
 	fz_try(ctx)
 	{
@@ -1614,11 +1614,11 @@ static int mark_search_step(int cancel)
 	count = fz_search_page_number(ctx, (fz_document*)pdf, rds_state.i-1, search_needle, NULL, quads, nelem(quads));
 	if (count > 0)
 	{
-		pdf_page *page = pdf_load_page(ctx, pdf, rds_state.i-1);
+		pdf_page *page_ = pdf_load_page(ctx, pdf, rds_state.i-1);
 		trace_action("page = doc.loadPage(%d);\n", rds_state.i-1);
 		for (i = 0; i < count; i++)
-			new_redaction(page, quads[i]);
-		fz_drop_page(ctx, (fz_page*)page);
+			new_redaction(page_, quads[i]);
+		fz_drop_page(ctx, (fz_page*)page_);
 	}
 
 	return ++rds_state.i;
@@ -2038,9 +2038,9 @@ static void do_edit_polygon(fz_irect canvas_area, int close)
 		/* commit point on mouse-up */
 		if (!ui.down)
 		{
-			fz_point p = fz_transform_point_xy(ui.x, ui.y, view_page_inv_ctm);
-			trace_action("annot.addVertex(%g, %g);\n", p.x, p.y);
-			pdf_add_annot_vertex(ctx, ui.selected_annot, p);
+			fz_point transformed = fz_transform_point_xy(ui.x, ui.y, view_page_inv_ctm);
+			trace_action("annot.addVertex(%g, %g);\n", transformed.x, transformed.y);
+			pdf_add_annot_vertex(ctx, ui.selected_annot, transformed);
 			drawing = 0;
 		}
 	}

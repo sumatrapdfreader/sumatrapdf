@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -196,24 +196,9 @@ static const uint8_t standard_encoding[256] =
 
 /* Simple functions for bigendian fetching/putting */
 
-static uint32_t get16(const uint8_t *d)
-{
-	return (d[0]<<8)|d[1];
-}
-
-static void put32(uint8_t *d, uint32_t v)
-{
-	d[0] = v>>24;
-	d[1] = v>>16;
-	d[2] = v>>8;
-	d[3] = v;
-}
-
-static void put16(uint8_t *d, uint32_t v)
-{
-	d[0] = v>>8;
-	d[1] = v;
-}
+#define get16 fz_unpack_uint16
+#define put16 fz_pack_uint16
+#define put32 fz_pack_uint32
 
 static void put8(uint8_t *d, uint32_t v)
 {
@@ -258,7 +243,7 @@ offsize_for_offset(uint32_t offset)
 	return 4;
 }
 
-uint16_t
+static uint16_t
 subr_bias(fz_context *ctx, cff_t *cff, uint16_t count)
 {
 	if (cff->charstring_type == 1)
@@ -311,7 +296,7 @@ index_load(fz_context *ctx, index_t *index, const uint8_t *base, uint32_t len, u
 	data_offset = 3 + (index->count+1) * os - 1;
 	index->data_offset = data_offset + offset;
 
-	if (data_offset > len)
+	if (index->data_offset > len)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated index");
 
 	data += 3;
@@ -327,7 +312,7 @@ index_load(fz_context *ctx, index_t *index, const uint8_t *base, uint32_t len, u
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Index not monotonic");
 		prev = v;
 	}
-	if (v > len)
+	if (index->data_offset + v > len)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated index");
 
 	data += prev - 1;
@@ -462,7 +447,7 @@ dict_get_byte(fz_context *ctx, dict_iterator *di)
 static dict_arg
 dict_get_arg(fz_context *ctx, dict_iterator *di)
 {
-	uint8_t b0, b1, b2, b3, b4;
+	uint32_t b0, b1, b2, b3, b4;
 	dict_arg d;
 
 	b0 = dict_get_byte(ctx, di);
@@ -705,16 +690,12 @@ dict_write_arg(fz_context *ctx, fz_output *out, dict_arg d)
 	else if (-32768 <= si && si <= 32767)
 	{
 		fz_write_byte(ctx, out, 28);
-		fz_write_byte(ctx, out, si>>8);
-		fz_write_byte(ctx, out, si);
+		fz_write_uint16_be(ctx, out, si);
 	}
 	else
 	{
 		fz_write_byte(ctx, out, 29);
-		fz_write_byte(ctx, out, si>>24);
-		fz_write_byte(ctx, out, si>>16);
-		fz_write_byte(ctx, out, si>>8);
-		fz_write_byte(ctx, out, si);
+		fz_write_uint32_be(ctx, out, si);
 	}
 }
 
@@ -1006,7 +987,7 @@ execute_charstring(fz_context *ctx, cff_t *cff, const uint8_t *pc, const uint8_t
 		case 20: /* cntrmask */
 			if (start == 1)
 				stem_hints += (sp/2);
-			pc += (stem_hints+7)>>3;
+			pc += fz_bytes_from_bits(stem_hints);
 			if (pc > end)
 				goto overflow;
 			start = 2;
@@ -1111,14 +1092,14 @@ overflow:
 
 			case 20: /* put */
 				ATLEAST(2);
-				if ((int)stack[sp-1] < 0 || (unsigned int)stack[sp-1] > sizeof(trans)/sizeof(*trans))
+				if ((int)stack[sp-1] < 0 || (unsigned int)stack[sp-1] >= sizeof(trans)/sizeof(*trans))
 					fz_throw(ctx, FZ_ERROR_FORMAT, "Transient array over/underflow");
 				trans[(int)stack[sp-1]] = stack[sp-2];
 				sp -= 2;
 				break;
 			case 21: /* get */
 				ATLEAST(1);
-				if ((int)stack[sp-1] < 0 || (unsigned int)stack[sp-1] > sizeof(trans)/sizeof(*trans))
+				if ((int)stack[sp-1] < 0 || (unsigned int)stack[sp-1] >= sizeof(trans)/sizeof(*trans))
 					fz_throw(ctx, FZ_ERROR_FORMAT, "Transient array over/underflow");
 				stack[sp-1] = trans[(int)stack[sp-1]];
 				break;
@@ -1251,7 +1232,7 @@ overflow:
 				break;
 			}
 			PUSH(1);
-			stack[sp-1] = ((pc[0]<<24) | (pc[1]<<16) | (pc[2]<<8) | pc[3]) / 65536.0;
+			stack[sp-1] = fz_unpack_uint32(pc) / 65536.0;
 			pc += 4;
 			break;
 		case 247: case 248: case 249: case 250: /* number */
@@ -1281,7 +1262,7 @@ atleast_fail:
 }
 
 
-usage_list_t *
+static usage_list_t *
 get_font_locals(fz_context *ctx, cff_t *cff, int gid, int is_pdf_cidfont, uint16_t *subr_bias)
 {
 	usage_t *gids = cff->gids_to_keep.list;
@@ -1491,9 +1472,13 @@ get_charset_len(fz_context *ctx, cff_t *cff)
 
 	fmt = *d++;
 	n = cff->charstrings_index.count;
+	if (n == 0)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
 
 	if (fmt == 0)
 	{
+		if (charset_offset + 1 + (uint32_t)(n - 1) * 2 > cff->len)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
 		cff->unpacked_charset = fz_malloc(ctx, sizeof(uint16_t) * n);
 		cff->unpacked_charset_len = cff->unpacked_charset_max = n;
 		cff->unpacked_charset[0] = 0;
@@ -1643,7 +1628,7 @@ load_charset_for_cidfont(fz_context *ctx, cff_t *cff)
 	uint32_t n = cff->charstrings_index.count;
 	uint32_t i;
 
-	if (charset_offset + 1 > cff->len)
+	if (n == 0 || charset_offset + 1 > cff->len)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
 
 	fmt = *d++;
@@ -1653,6 +1638,8 @@ load_charset_for_cidfont(fz_context *ctx, cff_t *cff)
 
 	if (fmt == 0)
 	{
+		if (charset_offset + 1 + (uint32_t)(n - 1) * 2 > cff->len)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
 		for (i = 1; i < n; i++)
 		{
 			cff->gid_to_cid[i] = get16(d);
@@ -2047,18 +2034,14 @@ make_new_private_dict(fz_context *ctx, cff_t *cff)
 				/* We can code it with a 3 byte encoding */
 				len += 4;
 				fz_write_byte(ctx, out, 28);
-				fz_write_byte(ctx, out, len>>8);
-				fz_write_byte(ctx, out, len);
+				fz_write_uint16_be(ctx, out, len);
 			}
 			else
 			{
 				/* We can code it with a 5 byte encoding */
 				len += 5;
 				fz_write_byte(ctx, out, 29);
-				fz_write_byte(ctx, out, len>>24);
-				fz_write_byte(ctx, out, len>>16);
-				fz_write_byte(ctx, out, len>>8);
-				fz_write_byte(ctx, out, len);
+				fz_write_uint32_be(ctx, out, len);
 			}
 			fz_write_byte(ctx, out, DICT_OP_Subrs);
 		}
@@ -2185,10 +2168,7 @@ read_fdarray_and_privates(fz_context *ctx, cff_t *cff)
 					/* We can code it with a 5 byte encoding */
 					len += 5;
 					fz_write_byte(ctx, out, 29);
-					fz_write_byte(ctx, out, len>>24);
-					fz_write_byte(ctx, out, len>>16);
-					fz_write_byte(ctx, out, len>>8);
-					fz_write_byte(ctx, out, len);
+					fz_write_uint32_be(ctx, out, len);
 				}
 				fz_write_byte(ctx, out, DICT_OP_Subrs);
 			}

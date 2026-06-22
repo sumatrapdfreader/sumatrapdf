@@ -133,7 +133,7 @@ static void saveimage(pdf_obj *ref)
 			type = FZ_IMAGE_UNKNOWN;
 		if (image->use_decode)
 			type = FZ_IMAGE_UNKNOWN;
-		if (image->mask)
+		if (image->mask && doalpha)
 			type = FZ_IMAGE_UNKNOWN;
 		if (dorgb)
 		{

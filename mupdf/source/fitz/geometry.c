@@ -617,6 +617,19 @@ fz_expand_rect(fz_rect a, float expand)
 	return a;
 }
 
+float
+fz_rect_area(fz_rect r)
+{
+	if (fz_is_empty_rect(r))
+		return 0;
+	if (fz_is_infinite_rect(r))
+		return INFINITY;
+
+	return (r.x1 - r.x0) * (r.y1 - r.y0);
+}
+
+
+
 /* Adding a point to an invalid rectangle makes the zero area rectangle
  * that contains just that point. */
 fz_rect fz_include_point_in_rect(fz_rect r, fz_point p)
@@ -887,4 +900,187 @@ int fz_is_quad_intersecting_quad(fz_quad a, fz_quad b)
 	fz_rect ar = fz_rect_from_quad(a);
 	fz_rect br = fz_rect_from_quad(b);
 	return !fz_is_empty_rect(fz_intersect_rect(ar, br));
+}
+
+/* ckd_mul, ckd_add and ckd_sub on signed integers */
+
+#ifndef HAVE_STDCKDINT_H
+
+int fz_ckd_mul_i32(int32_t *out, int32_t a, int32_t b)
+{
+	int64_t big = (int64_t)a * (int64_t)b;
+	*out = (int32_t)big;
+	return (int64_t)*out != big;
+}
+
+int fz_ckd_add_i32(int32_t *out, int32_t a, int32_t b)
+{
+	*out = a + b;
+	// adding + to - will never overflow.
+	// if adding two +, expect + result.
+	// if adding two -, expect - result.
+	// overflow if inputs are same sign and output is not that sign.
+	return ((a < 0) == (b < 0) && (a < 0) != (*out < 0));
+}
+
+int fz_ckd_sub_i32(int32_t *out, int32_t a, int32_t b)
+{
+	*out = a - b;
+	// subtracting + from + will never overflow.
+	// subtracting - from - will never overflow.
+	// subtracting - from +, expect +.
+	// subtracting + from -, expect -.
+	// overflow if inputs vary in sign and output does not have same sign as first input.
+	return ((a < 0) != (b < 0) && (a < 0) != (*out < 0));
+}
+
+int fz_ckd_mul_int(int *out, int a, int b)
+{
+	int64_t big = (int64_t)a * (int64_t)b;
+	*out = (int)big;
+	return (int64_t)*out != big;
+}
+
+int fz_ckd_add_int(int *out, int a, int b)
+{
+	*out = a + b;
+	return ((a < 0) == (b < 0) && (a < 0) != (*out < 0));
+}
+
+int fz_ckd_sub_int(int *out, int a, int b)
+{
+	*out = a - b;
+	return ((a < 0) != (b < 0) && (a < 0) != (*out < 0));
+}
+
+/* ckd_mul, ckd_add and ckd_sub on unsigned integers */
+
+int fz_ckd_mul_u32(uint32_t *out, uint32_t a, uint32_t b)
+{
+	uint64_t big = (uint64_t)a * (uint64_t)b;
+	*out = (uint32_t)big;
+	return (uint64_t)*out != big;
+}
+
+int fz_ckd_add_u32(uint32_t *out, uint32_t a, uint32_t b)
+{
+	*out = a + b;
+	return *out < a;
+}
+
+int fz_ckd_sub_u32(uint32_t *out, uint32_t a, uint32_t b)
+{
+	*out = a - b;
+	return a < b;
+}
+
+int fz_ckd_mul_uint(unsigned int *out, unsigned int a, unsigned int b)
+{
+	uint64_t big = (uint64_t)a * (uint64_t)b;
+	*out = (unsigned int)big;
+	return (uint64_t)*out != big;
+}
+
+int fz_ckd_add_uint(unsigned int *out, unsigned int a, unsigned int b)
+{
+	*out = a + b;
+	return *out < a;
+}
+
+int fz_ckd_sub_uint(unsigned int *out, unsigned int a, unsigned int b)
+{
+	*out = a - b;
+	return a < b;
+}
+
+int fz_ckd_mul_size(size_t *out, size_t a, size_t b)
+{
+	/* Try and avoid the division if we can. */
+	if (sizeof(size_t) == sizeof(int64_t))
+	{
+		*out = a * b;
+		if (b != 0 && a != *out/b)
+			return 1;
+		return 0;
+	}
+	else if (a <= UINT32_MAX && b <= UINT32_MAX)
+	{
+		uint32_t x;
+		if (fz_ckd_mul_u32(&x, (uint32_t)a, (uint32_t)b))
+			return 1;
+		*out = x;
+		return 0;
+	}
+	return 1;
+}
+
+int fz_ckd_add_size(size_t *out, size_t a, size_t b)
+{
+	*out = a + b;
+	return *out < a;
+}
+
+int fz_ckd_sub_size(size_t *out, size_t a, size_t b)
+{
+	*out = a - b;
+	return a < b;
+}
+
+int fz_ckd_mul_i64(int64_t *out, int64_t a, int64_t b)
+{
+	*out = a * b;
+	if (b != 0 && a != *out/b)
+		return 1;
+	return 0;
+}
+
+int fz_ckd_add_i64(int64_t *out, int64_t a, int64_t b)
+{
+	*out = a + b;
+	return *out < a;
+}
+
+int fz_ckd_sub_i64(int64_t *out, int64_t a, int64_t b)
+{
+	*out = a - b;
+	return a < b;
+}
+
+
+int fz_ckd_mul_u64(uint64_t *out, uint64_t a, uint64_t b)
+{
+	*out = a * b;
+	if (b != 0 && a != *out/b)
+		return 1;
+	return 0;
+}
+
+int fz_ckd_add_u64(uint64_t *out, uint64_t a, uint64_t b)
+{
+	*out = a + b;
+	return *out < a;
+}
+
+int fz_ckd_sub_u64(uint64_t *out, uint64_t a, uint64_t b)
+{
+	*out = a - b;
+	return a < b;
+}
+
+#endif
+
+int fz_ckd_size_from_i64(size_t *out, int64_t in)
+{
+	if (in < 0 || (sizeof(int64_t) > sizeof(size_t) && in > (int64_t)SIZE_MAX))
+		return 1;
+	*out = (size_t)in;
+	return 0;
+}
+
+int fz_ckd_int_from_i64(int *out, int64_t in)
+{
+	if (in < 0 || (sizeof(int64_t) > sizeof(int) && in > (int64_t)INT_MAX))
+		return 1;
+	*out = (int)in;
+	return 0;
 }

@@ -44,7 +44,7 @@ fz_stext_page_block_iterator_next_or_up(fz_stext_page_block_iterator pos)
 	return pos;
 }
 
-fz_stext_block *
+static fz_stext_block *
 insert_new_struct(fz_context *ctx, fz_stext_page_block_iterator pos, fz_structure classification)
 {
 	fz_stext_block *newblock;

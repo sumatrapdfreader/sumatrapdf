@@ -144,6 +144,16 @@ typedef void (fz_drop_image_fn)(fz_context *ctx, fz_image *image);
 typedef fz_pixmap *(fz_image_get_pixmap_fn)(fz_context *ctx, fz_image *im, fz_irect *subarea, int w, int h, int *l2factor);
 
 /**
+	Function type to get a checksum for an image.
+*/
+typedef void (fz_image_get_digest_fn)(fz_context *ctx, fz_image *im, unsigned char digest[16]);
+
+/**
+	Compute a checksum for the image.
+*/
+void fz_image_digest(fz_context *ctx, fz_image *img, unsigned char digest[16]);
+
+/**
 	Function type to get the given storage
 	size for an image.
 
@@ -184,10 +194,12 @@ typedef size_t (fz_image_get_size_fn)(fz_context *, fz_image *);
 	size: The size of the required allocated structure (the size of
 	the derived structure).
 
-	get: The function to be called to obtain a decoded pixmap.
+	get_pixmap: The function to be called to obtain a decoded pixmap.
 
 	get_size: The function to be called to return the storage size
 	used by this image.
+
+	get_digest: The function to be called to compute a checksum from this image.
 
 	drop: The function to be called to dispose of this image once
 	the last reference is dropped.
@@ -211,10 +223,11 @@ fz_image *fz_new_image_of_size(fz_context *ctx,
 		size_t size,
 		fz_image_get_pixmap_fn *get_pixmap,
 		fz_image_get_size_fn *get_size,
+		fz_image_get_digest_fn *get_digest,
 		fz_drop_image_fn *drop);
 
-#define fz_new_derived_image(CTX,W,H,B,CS,X,Y,I,IM,D,C,M,T,G,S,Z) \
-	((T*)Memento_label(fz_new_image_of_size(CTX,W,H,B,CS,X,Y,I,IM,D,C,M,sizeof(T),G,S,Z),#T))
+#define fz_new_derived_image(CTX,W,H,B,CS,X,Y,I,IM,D,C,M,T,G,S,MD5,Z) \
+	((T*)Memento_label(fz_new_image_of_size(CTX,W,H,B,CS,X,Y,I,IM,D,C,M,sizeof(T),G,S,MD5,Z),#T))
 
 /**
 	Create an image based on
@@ -355,6 +368,7 @@ struct fz_image
 	fz_colorspace *colorspace;
 	fz_drop_image_fn *drop_image;
 	fz_image_get_pixmap_fn *get_pixmap;
+	fz_image_get_digest_fn *get_digest;
 	fz_image_get_size_fn *get_size;
 	int colorkey[FZ_MAX_COLORS * 2];
 	float decode[FZ_MAX_COLORS * 2];

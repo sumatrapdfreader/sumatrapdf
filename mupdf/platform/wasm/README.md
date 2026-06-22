@@ -14,7 +14,7 @@ MuPDF.js is available under Open Source
 agreements.
 
 > If you cannot meet the requirements of the AGPL, please contact
-> [Artifex](https://artifex.com/contact/mupdf-inquiry.php) regarding a
+> [Artifex](https://artifex.com/contact/mupdf-js) regarding a
 > commercial license.
 
 ## Installation
@@ -30,7 +30,10 @@ The module is only available as an ESM module!
 	var doc = mupdf.Document.openDocument("test.pdf")
 	console.log(doc.countPages())
 
-Check out the [example projects](examples/) to help you get started.
+Check out the example projects to help you get started:
+
+- [github.com/ArtifexSoftware/mupdf/tree/master/platform/wasm/examples](https://github.com/ArtifexSoftware/mupdf/tree/master/platform/wasm/examples)
+- [github.com/ArtifexSoftware/mupdf.js/tree/master/examples](https://github.com/ArtifexSoftware/mupdf.js/tree/master/examples)
 
 ## Documentation
 

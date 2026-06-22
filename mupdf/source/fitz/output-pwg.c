@@ -481,83 +481,78 @@ const char *fz_pwg_write_options_usage =
 static void
 warn_if_long(fz_context *ctx, const char *str, size_t ret)
 {
-	if (ret > 0)
+	if (ret > 63)
 		fz_warn(ctx, "Option %s is too long, truncated.", str);
+}
+
+void fz_init_pwg_options(fz_context *ctx, fz_pwg_options *opts)
+{
+	memset(opts, 0, sizeof *opts);
 }
 
 fz_pwg_options *
 fz_parse_pwg_options(fz_context *ctx, fz_pwg_options *opts, const char *args)
 {
+	fz_options *options = fz_new_options(ctx, args);
+	fz_try(ctx)
+	{
+		fz_init_pwg_options(ctx, opts);
+		fz_apply_pwg_options(ctx, opts, options);
+		fz_throw_on_unused_options(ctx, options, "pwg");
+	}
+	fz_always(ctx)
+		fz_drop_options(ctx, options);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return opts;
+}
+
+void fz_apply_pwg_options(fz_context *ctx, fz_pwg_options *opts, fz_options *args)
+{
 	const char *val;
 
-	memset(opts, 0, sizeof *opts);
 
-	if (fz_has_option(ctx, args, "media_class", &val))
-		warn_if_long(ctx, "media_class", fz_copy_option(ctx, val, opts->media_class, 64));
-	if (fz_has_option(ctx, args, "media_color", &val))
-		warn_if_long(ctx, "media_color", fz_copy_option(ctx, val, opts->media_color, 64));
-	if (fz_has_option(ctx, args, "media_type", &val))
-		warn_if_long(ctx, "media_type", fz_copy_option(ctx, val, opts->media_type, 64));
-	if (fz_has_option(ctx, args, "output_type", &val))
-		warn_if_long(ctx, "output_type", fz_copy_option(ctx, val, opts->output_type, 64));
-	if (fz_has_option(ctx, args, "rendering_intent", &val))
-		warn_if_long(ctx, "rendering_intent", fz_copy_option(ctx, val, opts->rendering_intent, 64));
-	if (fz_has_option(ctx, args, "page_size_name", &val))
-		warn_if_long(ctx, "page_size_name", fz_copy_option(ctx, val, opts->page_size_name, 64));
-	if (fz_has_option(ctx, args, "advance_distance", &val))
-		opts->advance_distance = fz_atoi(val);
-	if (fz_has_option(ctx, args, "advance_media", &val))
-		opts->advance_media = fz_atoi(val);
-	if (fz_has_option(ctx, args, "collate", &val))
-		opts->collate = fz_atoi(val);
-	if (fz_has_option(ctx, args, "cut_media", &val))
-		opts->cut_media = fz_atoi(val);
-	if (fz_has_option(ctx, args, "duplex", &val))
-		opts->duplex = fz_atoi(val);
-	if (fz_has_option(ctx, args, "insert_sheet", &val))
-		opts->insert_sheet = fz_atoi(val);
-	if (fz_has_option(ctx, args, "jog", &val))
-		opts->jog = fz_atoi(val);
-	if (fz_has_option(ctx, args, "leading_edge", &val))
-		opts->leading_edge = fz_atoi(val);
-	if (fz_has_option(ctx, args, "manual_feed", &val))
-		opts->manual_feed = fz_atoi(val);
-	if (fz_has_option(ctx, args, "media_position", &val))
-		opts->media_position = fz_atoi(val);
-	if (fz_has_option(ctx, args, "media_weight", &val))
-		opts->media_weight = fz_atoi(val);
-	if (fz_has_option(ctx, args, "mirror_print", &val))
-		opts->mirror_print = fz_atoi(val);
-	if (fz_has_option(ctx, args, "negative_print", &val))
-		opts->negative_print = fz_atoi(val);
-	if (fz_has_option(ctx, args, "num_copies", &val))
-		opts->num_copies = fz_atoi(val);
-	if (fz_has_option(ctx, args, "orientation", &val))
-		opts->orientation = fz_atoi(val);
-	if (fz_has_option(ctx, args, "output_face_up", &val))
-		opts->output_face_up = fz_atoi(val);
-	if (fz_has_option(ctx, args, "page_size_x", &val))
-		opts->PageSize[0] = fz_atoi(val);
-	if (fz_has_option(ctx, args, "page_size_y", &val))
-		opts->PageSize[1] = fz_atoi(val);
-	if (fz_has_option(ctx, args, "separations", &val))
-		opts->separations = fz_atoi(val);
-	if (fz_has_option(ctx, args, "tray_switch", &val))
-		opts->tray_switch = fz_atoi(val);
-	if (fz_has_option(ctx, args, "tumble", &val))
-		opts->tumble = fz_atoi(val);
-	if (fz_has_option(ctx, args, "media_type_num", &val))
-		opts->media_type_num = fz_atoi(val);
-	if (fz_has_option(ctx, args, "compression", &val))
-		opts->compression = fz_atoi(val);
-	if (fz_has_option(ctx, args, "row_count", &val))
-		opts->row_count = fz_atoi(val);
-	if (fz_has_option(ctx, args, "row_feed", &val))
-		opts->row_feed = fz_atoi(val);
-	if (fz_has_option(ctx, args, "row_step", &val))
-		opts->row_step = fz_atoi(val);
+	if (fz_lookup_option(ctx, args, "media_class", &val))
+		warn_if_long(ctx, "media_class", fz_strlcpy(opts->media_class, val, 64));
+	if (fz_lookup_option(ctx, args, "media_color", &val))
+		warn_if_long(ctx, "media_color", fz_strlcpy(opts->media_color, val, 64));
+	if (fz_lookup_option(ctx, args, "media_type", &val))
+		warn_if_long(ctx, "media_type", fz_strlcpy(opts->media_type, val, 64));
+	if (fz_lookup_option(ctx, args, "output_type", &val))
+		warn_if_long(ctx, "output_type", fz_strlcpy(opts->output_type, val, 64));
+	if (fz_lookup_option(ctx, args, "rendering_intent", &val))
+		warn_if_long(ctx, "rendering_intent", fz_strlcpy(opts->rendering_intent, val, 64));
+	if (fz_lookup_option(ctx, args, "page_size_name", &val))
+		warn_if_long(ctx, "page_size_name", fz_strlcpy(opts->page_size_name, val, 64));
 
-	return opts;
+	fz_lookup_option_unsigned(ctx, args, "advance_distance", &opts->advance_distance);
+	fz_lookup_option_integer(ctx, args, "advance_media", &opts->advance_media);
+	fz_lookup_option_integer(ctx, args, "collate", &opts->collate);
+	fz_lookup_option_integer(ctx, args, "cut_media", &opts->cut_media);
+	fz_lookup_option_integer(ctx, args, "duplex", &opts->duplex);
+	fz_lookup_option_integer(ctx, args, "insert_sheet", &opts->insert_sheet);
+	fz_lookup_option_integer(ctx, args, "jog", &opts->jog);
+	fz_lookup_option_integer(ctx, args, "leading_edge", &opts->leading_edge);
+	fz_lookup_option_integer(ctx, args, "manual_feed", &opts->manual_feed);
+	fz_lookup_option_unsigned(ctx, args, "media_position", &opts->media_position);
+	fz_lookup_option_unsigned(ctx, args, "media_weight", &opts->media_weight);
+	fz_lookup_option_integer(ctx, args, "mirror_print", &opts->mirror_print);
+	fz_lookup_option_integer(ctx, args, "negative_print", &opts->negative_print);
+	fz_lookup_option_unsigned(ctx, args, "num_copies", &opts->num_copies);
+	fz_lookup_option_integer(ctx, args, "orientation", &opts->orientation);
+	fz_lookup_option_integer(ctx, args, "output_face_up", &opts->output_face_up);
+	fz_lookup_option_unsigned(ctx, args, "page_size_x", &opts->PageSize[0]);
+	fz_lookup_option_unsigned(ctx, args, "page_size_y", &opts->PageSize[1]);
+	fz_lookup_option_integer(ctx, args, "separations", &opts->separations);
+	fz_lookup_option_integer(ctx, args, "tray_switch", &opts->tray_switch);
+	fz_lookup_option_integer(ctx, args, "tumble", &opts->tumble);
+	fz_lookup_option_integer(ctx, args, "media_type_num", &opts->media_type_num);
+	fz_lookup_option_integer(ctx, args, "compression", &opts->compression);
+	fz_lookup_option_unsigned(ctx, args, "row_count", &opts->row_count);
+	fz_lookup_option_unsigned(ctx, args, "row_feed", &opts->row_feed);
+	fz_lookup_option_unsigned(ctx, args, "row_step", &opts->row_step);
+
+	fz_validate_options(ctx, args, "pwg");
 }
 
 typedef struct
@@ -627,26 +622,33 @@ pwg_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 }
 
 fz_document_writer *
-fz_new_pwg_writer_with_output(fz_context *ctx, fz_output *out, const char *options)
+fz_new_pwg_writer_with_output(fz_context *ctx, fz_output *out, const char *options_string)
 {
+	fz_options *options = NULL;
 	fz_pwg_writer *wri = NULL;
 	const char *val;
 
+	fz_var(options);
 	fz_var(wri);
 
 	fz_try(ctx)
 	{
+		options = fz_new_options(ctx, options_string);
 		wri = fz_new_derived_document_writer(ctx, fz_pwg_writer, pwg_begin_page, pwg_end_page, pwg_close_writer, pwg_drop_writer);
-		fz_parse_draw_options(ctx, &wri->draw, options);
-		fz_parse_pwg_options(ctx, &wri->pwg, options);
-		if (fz_has_option(ctx, options, "colorspace", &val))
-			if (fz_option_eq(val, "mono"))
+		fz_init_draw_options(ctx, &wri->draw);
+		fz_init_pwg_options(ctx, &wri->pwg);
+		fz_apply_draw_options(ctx, &wri->draw, options);
+		fz_apply_pwg_options(ctx, &wri->pwg, options);
+		if (fz_lookup_option(ctx, options, "colorspace", &val))
+			if (!strcmp(val, "mono"))
 				wri->mono = 1;
+		fz_throw_on_unused_options(ctx, options, "pwg");
 		wri->out = out;
 		fz_write_pwg_file_header(ctx, wri->out);
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_options(ctx, options);
 		fz_drop_output(ctx, out);
 		fz_free(ctx, wri);
 		fz_rethrow(ctx);

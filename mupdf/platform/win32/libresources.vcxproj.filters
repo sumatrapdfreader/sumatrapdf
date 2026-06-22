@@ -396,6 +396,9 @@
     <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSundanese-Regular.otf">
       <Filter>fonts\noto</Filter>
     </bin2coff__otf_>
+    <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSunuwar-Regular.otf">
+      <Filter>fonts\noto</Filter>
+    </bin2coff__otf_>
     <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSylotiNagri-Regular.otf">
       <Filter>fonts\noto</Filter>
     </bin2coff__otf_>

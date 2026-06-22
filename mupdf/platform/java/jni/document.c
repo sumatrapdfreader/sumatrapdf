@@ -699,6 +699,29 @@ FUN(Document_isReflowable)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT void JNICALL
+FUN(Document_style)(JNIEnv *env, jobject self, jboolean publisher_css, jstring juser_css)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	const char *user_css = NULL;
+
+	if (!ctx || !doc) return;
+
+	if (juser_css)
+	{
+		user_css = (*env)->GetStringUTFChars(env, juser_css, NULL);
+		if (!user_css) return;
+	}
+
+	fz_try(ctx)
+		fz_style_document(ctx, doc, publisher_css, user_css);
+	fz_always(ctx)
+		if (user_css) (*env)->ReleaseStringUTFChars(env, juser_css, user_css);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
 FUN(Document_layout)(JNIEnv *env, jobject self, jfloat w, jfloat h, jfloat em)
 {
 	fz_context *ctx = get_context(env);

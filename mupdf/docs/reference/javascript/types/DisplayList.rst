@@ -106,7 +106,7 @@ Instance methods
 
 		var results = displayList.search("my search phrase")
 
-.. method:: DisplayList.protoype.decodeBarcode(subarea, rotate)
+.. method:: DisplayList.prototype.decodeBarcode(subarea, rotate)
 
 	|only_mutool|
 

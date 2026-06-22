@@ -370,7 +370,7 @@ fill_bits(fz_context *ctx, fz_faxd *fax)
 		if (c == EOF)
 			return EOF;
 		fax->bidx -= 8;
-		fax->word |= c << fax->bidx;
+		fax->word |= (unsigned)c << fax->bidx;
 	}
 	return 0;
 }

@@ -14,7 +14,7 @@ Constructors
 	DocumentWriter(buffer, format, options)
 	DocumentWriter(filename, format, options)
 
-	Create a new document writer to create a document with the specified format and output options. If ``format`` is ``null`` it is inferred from the filename. The ``options`` argument is a comma separated list of flags and key-value pairs.
+	Create a new document writer to create a document with the specified format and output options. If ``format`` is ``null`` it is inferred from the filename. The ``options`` argument is a comma-separated list of flags and key-value pairs.
 
 	For supported output ``format`` values and ``options`` see
 	:doc:`/reference/common/document-writer-options`.

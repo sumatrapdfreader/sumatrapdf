@@ -362,7 +362,7 @@ FZ_NORETURN void (fz_throw)(fz_context *ctx, int code, const char *fmt, ...)
 	va_list ap;
 	va_start(ap, fmt);
 	fz_vthrow(ctx, code, fmt, ap);
-	va_end(ap);
+	/* va_end(ap); // unreachable */
 }
 
 /* coverity[+kill] */
@@ -488,7 +488,7 @@ FZ_NORETURN void fz_throwFL(fz_context *ctx, const char *file, int line, int cod
 	va_list ap;
 	va_start(ap, fmt);
 	fz_vthrowFL(ctx, file, line, code, fmt, ap);
-	va_end(ap);
+	/* va_end(ap); // unreachable */
 }
 
 /* coverity[+kill] */
@@ -529,20 +529,6 @@ void fz_rethrow_ifFL(fz_context *ctx, const char *file, int line, int err)
 	}
 }
 #endif
-
-void fz_start_throw_on_repair(fz_context *ctx)
-{
-	fz_lock(ctx, FZ_LOCK_ALLOC);
-	ctx->throw_on_repair++;
-	fz_unlock(ctx, FZ_LOCK_ALLOC);
-}
-
-void fz_end_throw_on_repair(fz_context *ctx)
-{
-	fz_lock(ctx, FZ_LOCK_ALLOC);
-	ctx->throw_on_repair--;
-	fz_unlock(ctx, FZ_LOCK_ALLOC);
-}
 
 void fz_report_error(fz_context *ctx)
 {

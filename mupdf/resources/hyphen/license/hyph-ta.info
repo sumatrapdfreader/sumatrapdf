@@ -64,4 +64,4 @@
 % Break before or after any consonant.
 % Do not break before any consonant + virama.
 % Do not break before anusvara, visarga and length mark.
-% Do not break before virama but break after virama.
+% Do not break before virama but break after virama.

@@ -535,6 +535,18 @@ undelta_aa(fz_context *ctx, unsigned char * FZ_RESTRICT out, int * FZ_RESTRICT i
 	int d = 0;
 	(void)scale; /* Avoid warnings in some builds */
 
+#ifndef AA_BITS
+	if (scale == 256)
+	{
+		while (n--)
+		{
+			d += *in++;
+			*out++ = d;
+		}
+		return;
+	}
+#endif
+
 	while (n--)
 	{
 		d += *in++;

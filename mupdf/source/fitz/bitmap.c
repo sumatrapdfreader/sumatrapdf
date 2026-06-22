@@ -422,7 +422,7 @@ pbm_write_band(fz_context *ctx, fz_band_writer *writer, int stride, int band_sta
 		end = h;
 	end -= band_start;
 
-	bytestride = (w + 7) >> 3;
+	bytestride = fz_bytes_from_bits(w);
 	while (end--)
 	{
 		fz_write_data(ctx, out, p, bytestride);

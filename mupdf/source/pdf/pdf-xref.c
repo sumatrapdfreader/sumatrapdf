@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -35,6 +35,8 @@
 #else
 #define DEBUGMESS(A) do { } while (0)
 #endif
+
+#define MAX_SUBSEC_FRAGMENTS 128
 
 #define isdigit(c) (c >= '0' && c <= '9')
 
@@ -165,6 +167,7 @@ static void pdf_populate_next_xref_level(fz_context *ctx, pdf_document *doc)
 	xref = &doc->xref_sections[doc->num_xref_sections - 1];
 	xref->subsec = NULL;
 	xref->num_objects = 0;
+	xref->num_subsecs = 0;
 	xref->trailer = NULL;
 	xref->pre_repair_trailer = NULL;
 	xref->unsaved_sigs = NULL;
@@ -177,6 +180,20 @@ pdf_obj *pdf_trailer(fz_context *ctx, pdf_document *doc)
 	pdf_xref *xrefs = doc->xref_sections;
 
 	return xrefs ? xrefs[doc->xref_base].trailer : NULL;
+}
+
+void pdf_set_trailer(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
+{
+	/* Return the document's trailer (of the appropriate vintage) */
+	pdf_xref *xrefs = doc->xref_sections;
+	pdf_obj *old;
+
+	if (!xrefs)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Can't set trailer when no xrefs");
+
+	old = xrefs[doc->xref_base].trailer;
+	xrefs[doc->xref_base].trailer = pdf_keep_obj(ctx, obj);
+	pdf_drop_obj(ctx, old);
 }
 
 void pdf_set_populating_xref_trailer(fz_context *ctx, pdf_document *doc, pdf_obj *trailer)
@@ -252,6 +269,7 @@ ensure_solid_xref(fz_context *ctx, pdf_document *doc, int num, int which)
 	}
 	xref->num_objects = num;
 	xref->subsec = new_sub;
+	xref->num_subsecs = 1;
 	if (doc->max_xref_len < num)
 		extend_xref_index(ctx, doc, num);
 }
@@ -467,7 +485,11 @@ void pdf_xref_entry_map(fz_context *ctx, pdf_document *doc, void (*fn)(fz_contex
 {
 	int i, j;
 	pdf_xref_subsec *sub;
-	int xref_base = doc->xref_base;
+	int xref_base;
+	int repaired = 0;
+
+retry_after_repair:
+	pdf_start_throw_on_repair(ctx, doc, &xref_base);
 
 	fz_try(ctx)
 	{
@@ -504,11 +526,20 @@ void pdf_xref_entry_map(fz_context *ctx, pdf_document *doc, void (*fn)(fz_contex
 		}
 	}
 	fz_always(ctx)
-	{
-		doc->xref_base = xref_base;
-	}
+		pdf_end_throw_on_repair(ctx, doc, xref_base);
 	fz_catch(ctx)
+	{
+		if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+		{
+			fz_report_error(ctx);
+			repaired = 1;
+			goto retry_after_repair;
+		}
 		fz_rethrow(ctx);
+	}
+
+	if (repaired)
+		pdf_maybe_throw_after_repair(ctx, doc);
 }
 
 /*
@@ -543,6 +574,7 @@ static void ensure_incremental_xref(fz_context *ctx, pdf_document *doc)
 			memmove(pxref, xref, doc->num_xref_sections * sizeof(pdf_xref));
 			/* xref->num_objects is already correct */
 			xref->subsec = sub;
+			xref->num_subsecs++;
 			sub = NULL;
 			xref->trailer = trailer;
 			xref->pre_repair_trailer = NULL;
@@ -693,6 +725,9 @@ int pdf_xref_ensure_incremental_object(fz_context *ctx, pdf_document *doc, int n
 	int i;
 	pdf_obj *copy;
 
+	if (num < 0)
+		return 0; /* Invalid object */
+
 	/* Make sure we have created an xref section for incremental updates */
 	ensure_incremental_xref(ctx, doc);
 
@@ -701,7 +736,7 @@ int pdf_xref_ensure_incremental_object(fz_context *ctx, pdf_document *doc, int n
 	{
 		pdf_xref *xref = &doc->xref_sections[i];
 
-		if (num < 0 && num >= xref->num_objects)
+		if (num >= xref->num_objects)
 			break;
 		for (sub = xref->subsec; sub != NULL; sub = sub->next)
 		{
@@ -754,6 +789,9 @@ void pdf_xref_ensure_local_object(fz_context *ctx, pdf_document *doc, int num)
 	pdf_xref *xref;
 	pdf_obj *copy;
 
+	if (num < 0)
+		return; /* Invalid object */
+
 	/* Is it in the local section already? */
 	xref = doc->local_xref;
 	for (sub = xref->subsec; sub != NULL; sub = sub->next)
@@ -770,7 +808,7 @@ void pdf_xref_ensure_local_object(fz_context *ctx, pdf_document *doc, int num)
 	{
 		xref = &doc->xref_sections[i];
 
-		if (num < 0 && num >= xref->num_objects)
+		if (num >= xref->num_objects)
 			break;
 		for (sub = xref->subsec; sub != NULL; sub = sub->next)
 		{
@@ -820,6 +858,7 @@ void pdf_replace_xref(fz_context *ctx, pdf_document *doc, pdf_xref_entry *entrie
 	int *xref_index = NULL;
 	pdf_xref *xref = NULL;
 	pdf_xref_subsec *sub;
+	int num;
 
 	fz_var(xref_index);
 	fz_var(xref);
@@ -834,6 +873,15 @@ void pdf_replace_xref(fz_context *ctx, pdf_document *doc, pdf_xref_entry *entrie
 	{
 		fz_free(ctx, xref);
 		fz_free(ctx, xref_index);
+		if (entries)
+		{
+			for (num = 0; num < n; num++)
+			{
+				pdf_drop_obj(ctx, entries[num].obj);
+				fz_drop_buffer(ctx, entries[num].stm_buf);
+			}
+			fz_free(ctx, entries);
+		}
 		fz_rethrow(ctx);
 	}
 
@@ -842,6 +890,7 @@ void pdf_replace_xref(fz_context *ctx, pdf_document *doc, pdf_xref_entry *entrie
 	sub->len = n;
 
 	xref->subsec = sub;
+	xref->num_subsecs = 1;
 	xref->num_objects = n;
 	xref->trailer = pdf_keep_obj(ctx, pdf_trailer(ctx, doc));
 
@@ -1227,6 +1276,7 @@ pdf_xref_find_subsection(fz_context *ctx, pdf_document *doc, int start, int len)
 			sub->len = len;
 			sub->next = xref->subsec;
 			xref->subsec = sub;
+			xref->num_subsecs++;
 		}
 		fz_catch(ctx)
 		{
@@ -1625,10 +1675,13 @@ pdf_read_xref_sections(fz_context *ctx, pdf_document *doc, int64_t ofs, int read
 				break;
 		}
 
-		/* For pathological files, such as chinese-example.pdf, where the original
-		 * xref in the file is highly fragmented, we can safely solidify it here
-		 * with no ill effects. */
-		ensure_solid_xref(ctx, doc, 0, doc->num_xref_sections-1);
+		/* For pathological files, such as chinese-example.pdf and MCXNP184M150F70RM.pdf,
+		 * where the xrefs are highly fragmented, we choose to solidify them here
+		 * to avoid linear searching through long linked lists.
+		 */
+		for (i = 0; i < doc->num_xref_sections; ++i)
+			if (doc->xref_sections[i].num_subsecs > MAX_SUBSEC_FRAGMENTS)
+				ensure_solid_xref(ctx, doc, 0, i);
 
 		size = pdf_dict_get_int(ctx, pdf_trailer(ctx, doc), PDF_NAME(Size));
 		xref_len = pdf_xref_len(ctx, doc);
@@ -2054,6 +2107,7 @@ pdf_load_obj_stm(fz_context *ctx, pdf_document *doc, int num, pdf_lexbuf *buf, i
 	int i;
 	pdf_token tok;
 	pdf_xref_entry *ret_entry = NULL;
+	pdf_xref_entry *object_entry = NULL;
 	int ret_idx;
 	int xref_len;
 	int found;
@@ -2064,19 +2118,38 @@ pdf_load_obj_stm(fz_context *ctx, pdf_document *doc, int num, pdf_lexbuf *buf, i
 	fz_var(objstm);
 	fz_var(stm);
 	fz_var(sub);
+	fz_var(numbuf);
+	fz_var(object_entry);
 
 	fz_try(ctx)
 	{
-		objstm = pdf_load_object(ctx, doc, num);
+		/* Perform the same operations as pdf_load_object, but
+		 * open coded so we can retain object_entry. */
+		if (num <= 0 || num >= pdf_xref_len(ctx, doc))
+			break;
+		object_entry = pdf_cache_object(ctx, doc, num);
+		if (!object_entry)
+			break;
+		/* If object_entry is marked as being free then we've previously
+		 * tried to read the stream, and failed. Don't retry. */
+		if (object_entry->type == 'f')
+			break;
+
+		objstm = pdf_keep_obj(ctx, object_entry->obj);
 
 		if (pdf_obj_marked(ctx, objstm))
 			fz_throw(ctx, FZ_ERROR_FORMAT, "recursive object stream lookup");
 	}
 	fz_catch(ctx)
 	{
+		if (object_entry != NULL && fz_caught(ctx) != FZ_ERROR_TRYLATER && fz_caught(ctx) != FZ_ERROR_SYSTEM)
+			object_entry->type = 'f';
 		pdf_drop_obj(ctx, objstm);
 		fz_rethrow(ctx);
 	}
+
+	if (objstm == NULL)
+		fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt object stream %d", num);
 
 	fz_try(ctx)
 	{
@@ -2191,6 +2264,14 @@ pdf_load_obj_stm(fz_context *ctx, pdf_document *doc, int num, pdf_lexbuf *buf, i
 	}
 	fz_catch(ctx)
 	{
+		if (fz_caught(ctx) != FZ_ERROR_TRYLATER && fz_caught(ctx) != FZ_ERROR_SYSTEM)
+		{
+			/* This should never throw. It should also never be NULL, but
+			 * belt and braces. */
+			object_entry = pdf_get_xref_entry(ctx, doc, num);
+			if (object_entry)
+				object_entry->type = 'f';
+		}
 		fz_rethrow(ctx);
 	}
 	return ret_entry;
@@ -3927,6 +4008,7 @@ check_unchanged_between(fz_context *ctx, pdf_document *doc, pdf_changes *changes
 {
 	int marked = 0;
 	int changed = 0;
+	int repaired = 0;
 
 	/* Trivially identical => trivially unchanged. */
 	if (nobj == oobj)
@@ -3939,7 +4021,7 @@ check_unchanged_between(fz_context *ctx, pdf_document *doc, pdf_changes *changes
 
 	if (pdf_is_indirect(ctx, nobj))
 	{
-		int o_xref_base = doc->xref_base;
+		int o_xref_base;
 
 		/* Both must be indirect if one is. */
 		if (!pdf_is_indirect(ctx, oobj))
@@ -3963,9 +4045,14 @@ check_unchanged_between(fz_context *ctx, pdf_document *doc, pdf_changes *changes
 		}
 
 		nobj = pdf_resolve_indirect_chain(ctx, nobj);
-		doc->xref_base = o_xref_base+1;
+
+retry_after_repair:
+		pdf_start_throw_on_repair(ctx, doc, &o_xref_base);
+
 		fz_try(ctx)
 		{
+			doc->xref_base = o_xref_base+1;
+
 			oobj = pdf_resolve_indirect_chain(ctx, oobj);
 			if (oobj != nobj)
 			{
@@ -3979,9 +4066,26 @@ check_unchanged_between(fz_context *ctx, pdf_document *doc, pdf_changes *changes
 			}
 		}
 		fz_always(ctx)
-			doc->xref_base = o_xref_base;
+			pdf_end_throw_on_repair(ctx, doc, o_xref_base);
 		fz_catch(ctx)
-			fz_rethrow(ctx);
+		{
+			if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+			{
+				fz_report_error(ctx);
+				repaired = 1;
+				/* We can only loop safely if there is at least 1 section after
+				 * the current xref_base. */
+				if (doc->xref_base >= doc->num_xref_sections-1)
+					nobj = oobj; /* So we will return below */
+				else
+					goto retry_after_repair;
+			}
+			else
+				fz_rethrow(ctx);
+		}
+
+		if (repaired)
+			pdf_maybe_throw_after_repair(ctx, doc);
 
 		if (nobj == oobj)
 			return 0; /* Trivially identical */
@@ -4348,6 +4452,7 @@ check_field(fz_context *ctx, pdf_document *doc, pdf_changes *changes, pdf_obj *o
 	int o_xref_base;
 	int obj_num;
 	char *field_name = NULL;
+	int repaired = 0;
 
 	/* All fields MUST be indirections, either in the Fields array
 	 * or AcroForms, or in the Kids array of other Fields. */
@@ -4355,7 +4460,6 @@ check_field(fz_context *ctx, pdf_document *doc, pdf_changes *changes, pdf_obj *o
 		return;
 
 	obj_num = pdf_to_num(ctx, obj);
-	o_xref_base = doc->xref_base;
 	new_obj = pdf_resolve_indirect_chain(ctx, obj);
 
 	/* Similarly, all fields must be dicts */
@@ -4366,6 +4470,9 @@ check_field(fz_context *ctx, pdf_document *doc, pdf_changes *changes, pdf_obj *o
 		return;
 
 	fz_var(field_name);
+
+retry_on_repair:
+	pdf_start_throw_on_repair(ctx, doc, &o_xref_base);
 
 	fz_try(ctx)
 	{
@@ -4514,10 +4621,27 @@ change_found:
 	{
 		pdf_unmark_obj(ctx, obj);
 		fz_free(ctx, field_name);
-		doc->xref_base = o_xref_base;
+		field_name = NULL;
+		pdf_end_throw_on_repair(ctx, doc, o_xref_base);
 	}
 	fz_catch(ctx)
-		fz_rethrow(ctx);
+	{
+		if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+		{
+			fz_report_error(ctx);
+			repaired = 1;
+			/* We can only loop safely if there is at least 1 section after
+			 * the current xref_base. */
+			if (doc->xref_base < doc->num_xref_sections-1)
+				goto retry_on_repair;
+		}
+		else
+			fz_rethrow(ctx);
+	}
+
+	if (repaired)
+		pdf_maybe_throw_after_repair(ctx, doc);
+
 }
 
 static int
@@ -4725,11 +4849,15 @@ pdf_locked_fields *
 pdf_find_locked_fields(fz_context *ctx, pdf_document *doc, int version)
 {
 	pdf_locked_fields *fields = fz_malloc_struct(ctx, pdf_locked_fields);
-	int o_xref_base = doc->xref_base;
-	doc->xref_base = version;
+	int o_xref_base;
+	int repaired = 0;
 
 	fz_var(fields);
 
+retry_on_repair:
+	pdf_start_throw_on_repair(ctx, doc, &o_xref_base);
+
+	doc->xref_base = version;
 	fz_try(ctx)
 	{
 		pdf_obj *fobj = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm/Fields");
@@ -4745,12 +4873,24 @@ pdf_find_locked_fields(fz_context *ctx, pdf_document *doc, int version)
 		find_locked_fields_value(ctx, fields, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/Perms/DocMDP"));
 	}
 	fz_always(ctx)
-		doc->xref_base = o_xref_base;
+		pdf_end_throw_on_repair(ctx, doc, o_xref_base);
 	fz_catch(ctx)
 	{
 		pdf_drop_locked_fields(ctx, fields);
+		if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+		{
+			fz_report_error(ctx);
+			repaired = 1;
+			/* Ensure version is still valid */
+			if (version >= doc->num_xref_sections)
+				return NULL;
+			goto retry_on_repair;
+		}
 		fz_rethrow(ctx);
 	}
+
+	if (repaired)
+		pdf_maybe_throw_after_repair(ctx, doc);
 
 	return fields;
 }
@@ -4803,20 +4943,24 @@ pdf_find_locked_fields_for_sig(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 static int
 validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_locked_fields *locked)
 {
-	int o_xref_base = doc->xref_base;
+	int o_xref_base;
 	pdf_changes *changes;
 	int num_objs;
 	int i, n;
 	int all_indirects = 1;
+	int repaired = 0;
 
-	num_objs = doc->max_xref_len;
-	changes = fz_malloc_flexible(ctx, pdf_changes, obj_changes, num_objs);
-	changes->num_obj = num_objs;
+retry_on_repair:
+	pdf_start_throw_on_repair(ctx, doc, &o_xref_base);
 
 	fz_try(ctx)
 	{
 		pdf_obj *acroform, *new_acroform, *old_acroform;
 		int len, acroform_num;
+
+		num_objs = doc->max_xref_len;
+		changes = fz_malloc_flexible(ctx, pdf_changes, obj_changes, num_objs);
+		changes->num_obj = num_objs;
 
 		doc->xref_base = version;
 
@@ -4914,12 +5058,25 @@ validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_lock
 		}
 	}
 	fz_always(ctx)
-		doc->xref_base = o_xref_base;
+		pdf_end_throw_on_repair(ctx, doc, o_xref_base);
 	fz_catch(ctx)
 	{
 		fz_free(ctx, changes);
+		changes = NULL;
+		if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+		{
+			fz_report_error(ctx);
+			repaired = 1;
+			/* Only loop if version is still valid */
+			if (version >= doc->num_xref_sections-1)
+				return 0;
+			goto retry_on_repair;
+		}
 		fz_rethrow(ctx);
 	}
+
+	if (repaired)
+		pdf_maybe_throw_after_repair(ctx, doc);
 
 	for (i = 1; i < num_objs; i++)
 	{
@@ -5053,6 +5210,7 @@ int pdf_validate_signature(fz_context *ctx, pdf_annot *widget)
 	int unsaved_versions, num_versions, version, i;
 	pdf_locked_fields *locked = NULL;
 	int o_xref_base;
+	int repaired = 0;
 
 	if (!widget->page)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
@@ -5065,11 +5223,13 @@ int pdf_validate_signature(fz_context *ctx, pdf_annot *widget)
 	if (version > num_versions-1)
 		version = num_versions-1;
 
-	/* Get the locked definition from the object when it was signed. */
-	o_xref_base = doc->xref_base;
-	doc->xref_base = version;
-
 	fz_var(locked); /* Not really needed, but it stops warnings */
+
+retry_after_repair:
+	pdf_start_throw_on_repair(ctx, doc, &o_xref_base);
+
+	/* Get the locked definition from the object when it was signed. */
+	doc->xref_base = version;
 
 	fz_try(ctx)
 	{
@@ -5083,27 +5243,46 @@ int pdf_validate_signature(fz_context *ctx, pdf_annot *widget)
 	}
 	fz_always(ctx)
 	{
-		doc->xref_base = o_xref_base;
 		pdf_drop_locked_fields(ctx, locked);
+		locked = NULL;
+		pdf_end_throw_on_repair(ctx, doc, o_xref_base);
 	}
 	fz_catch(ctx)
+	{
+		if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+		{
+			fz_report_error(ctx);
+			repaired = 1;
+			if (version >= doc->num_xref_sections)
+				return -doc->num_xref_sections;
+			goto retry_after_repair;
+		}
 		fz_rethrow(ctx);
+	}
+
+	if (repaired)
+		pdf_maybe_throw_after_repair(ctx, doc);
 
 	return i+1-unsaved_versions;
 }
 
 int pdf_was_pure_xfa(fz_context *ctx, pdf_document *doc)
 {
-	int num_unsaved_versions = pdf_count_unsaved_versions(ctx, doc);
-	int num_versions = pdf_count_versions(ctx, doc);
 	int v;
-	int o_xref_base = doc->xref_base;
+	int o_xref_base;
 	int pure_xfa = 0;
+	int repaired = 0;
 
 	fz_var(pure_xfa);
 
+retry_after_repair:
+	pdf_start_throw_on_repair(ctx, doc, &o_xref_base);
+
 	fz_try(ctx)
 	{
+		int num_unsaved_versions = pdf_count_unsaved_versions(ctx, doc);
+		int num_versions = pdf_count_versions(ctx, doc);
+
 		for(v = num_versions + num_unsaved_versions; !pure_xfa && v >= num_unsaved_versions; v--)
 		{
 			pdf_obj *o;
@@ -5118,9 +5297,20 @@ int pdf_was_pure_xfa(fz_context *ctx, pdf_document *doc)
 		}
 	}
 	fz_always(ctx)
-		doc->xref_base = o_xref_base;
+		pdf_end_throw_on_repair(ctx, doc, o_xref_base);
 	fz_catch(ctx)
+	{
+		if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+		{
+			fz_report_error(ctx);
+			repaired = 1;
+			goto retry_after_repair;
+		}
 		fz_rethrow(ctx);
+	}
+
+	if (repaired)
+		pdf_maybe_throw_after_repair(ctx, doc);
 
 	return pure_xfa;
 }
@@ -5131,6 +5321,7 @@ pdf_xref *pdf_new_local_xref(fz_context *ctx, pdf_document *doc)
 	pdf_xref *xref = fz_malloc_struct(ctx, pdf_xref);
 
 	xref->subsec = NULL;
+	xref->num_subsecs = 1;
 	xref->num_objects = n;
 	xref->trailer = NULL;
 	xref->pre_repair_trailer = NULL;
@@ -5236,10 +5427,14 @@ pdf_debug_doc_changes(fz_context *ctx, pdf_document *doc)
 pdf_obj *
 pdf_metadata(fz_context *ctx, pdf_document *doc)
 {
-	int initial = doc->xref_base;
+	int initial;
 	pdf_obj *obj = NULL;
+	int repaired = 0;
 
 	fz_var(obj);
+
+retry_after_repair:
+	pdf_start_throw_on_repair(ctx, doc, &initial);
 
 	fz_try(ctx)
 	{
@@ -5254,9 +5449,20 @@ pdf_metadata(fz_context *ctx, pdf_document *doc)
 		while (doc->xref_base < doc->num_xref_sections);
 	}
 	fz_always(ctx)
-		doc->xref_base = initial;
+		pdf_end_throw_on_repair(ctx, doc, initial);
 	fz_catch(ctx)
+	{
+		if (fz_caught(ctx) == FZ_ERROR_REPAIRED)
+		{
+			fz_report_error(ctx);
+			repaired = 1;
+			goto retry_after_repair;
+		}
 		fz_rethrow(ctx);
+	}
+
+	if (repaired)
+		pdf_maybe_throw_after_repair(ctx, doc);
 
 	return obj;
 }
@@ -5307,4 +5513,24 @@ void pdf_minimize_document(fz_context *ctx, pdf_document *doc)
 void pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 {
 	pdf_repair_xref_aux(ctx, doc, pdf_prime_xref_index);
+}
+
+void pdf_start_throw_on_repair(fz_context *ctx, pdf_document *doc, int *xref_base)
+{
+	doc->throw_on_repair++;
+	*xref_base = doc->xref_base;
+}
+
+void pdf_end_throw_on_repair(fz_context *ctx, pdf_document *doc, int xref_base)
+{
+	doc->throw_on_repair--;
+	if (doc->num_xref_sections <= xref_base)
+		xref_base = doc->num_xref_sections-1;
+	doc->xref_base = xref_base;
+}
+
+void pdf_maybe_throw_after_repair(fz_context *ctx, pdf_document *doc)
+{
+	if (doc->throw_on_repair)
+		fz_throw(ctx, FZ_ERROR_REPAIRED, "File was repaired");
 }

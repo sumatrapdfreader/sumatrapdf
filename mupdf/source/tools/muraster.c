@@ -407,7 +407,8 @@ static float layout_w = FZ_DEFAULT_LAYOUT_W;
 static float layout_h = FZ_DEFAULT_LAYOUT_H;
 static float layout_em = FZ_DEFAULT_LAYOUT_EM;
 static char *layout_css = NULL;
-static int layout_use_doc_css = 1;
+static char *layout_css_data = NULL;
+static int layout_publisher_css = 1;
 
 static int showtime = 0;
 static int showmemory = 0;
@@ -1500,7 +1501,7 @@ int main(int argc, char **argv)
 		case 'H': layout_h = fz_atof(fz_optarg); break;
 		case 'S': layout_em = fz_atof(fz_optarg); break;
 		case 'U': layout_css = fz_optarg; break;
-		case 'X': layout_use_doc_css = 0; break;
+		case 'X': layout_publisher_css = 0; break;
 
 		case 's':
 			if (strchr(fz_optarg, 't')) ++showtime;
@@ -1609,9 +1610,7 @@ int main(int argc, char **argv)
 #endif /* DISABLE_MUTHREADS */
 
 	if (layout_css)
-		fz_load_user_css(ctx, layout_css);
-
-	fz_set_use_document_css(ctx, layout_use_doc_css);
+		layout_css_data = fz_read_text_file(ctx, layout_css);
 
 	output_format = suffix_table[0].format;
 	output_cs = suffix_table[0].cs;
@@ -1702,6 +1701,7 @@ int main(int argc, char **argv)
 						fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot authenticate password: %s", filename);
 				}
 
+				fz_style_document(ctx, doc, layout_publisher_css, layout_css_data);
 				fz_layout_document(ctx, doc, layout_w, layout_h, layout_em);
 
 				if (fz_optind == argc || !fz_is_page_range(ctx, argv[fz_optind]))
@@ -1769,6 +1769,7 @@ int main(int argc, char **argv)
 	}
 #endif /* DISABLE_MUTHREADS */
 
+	fz_free(ctx, layout_css_data);
 	fz_close_output(ctx, out);
 	fz_drop_output(ctx, out);
 	out = NULL;

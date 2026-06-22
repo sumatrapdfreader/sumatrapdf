@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -55,7 +55,13 @@ do_scavenging_malloc(fz_context *ctx, size_t size)
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
 			return p;
 		}
-	} while (fz_store_scavenge(ctx, size, &phase));
+	}
+#ifdef MEMENTO_SQUEEZEBUILD
+	while (0);
+	(void) phase;
+#else
+	while (fz_store_scavenge(ctx, size, &phase));
+#endif
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 
 	return NULL;
@@ -75,7 +81,13 @@ do_scavenging_realloc(fz_context *ctx, void *p, size_t size)
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
 			return q;
 		}
-	} while (fz_store_scavenge(ctx, size, &phase));
+	}
+#ifdef MEMENTO_SQUEEZEBUILD
+	while (0);
+	(void) phase;
+#else
+	while (fz_store_scavenge(ctx, size, &phase));
+#endif
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 
 	return NULL;
@@ -105,14 +117,33 @@ fz_malloc_no_throw(fz_context *ctx, size_t size)
 }
 
 void *
+fz_malloc_array_imp(fz_context *ctx, size_t nmemb, size_t size)
+{
+	size_t total;
+	if (fz_ckd_mul_size(&total, nmemb, size))
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "malloc array (%zu x %zu bytes) failed (overflow)", nmemb, size);
+	return fz_malloc(ctx, total);
+}
+
+void *
+fz_realloc_array_imp(fz_context *ctx, void *p, size_t nmemb, size_t size)
+{
+	size_t total;
+	if (fz_ckd_mul_size(&total, nmemb, size))
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "realloc array (%zu x %zu bytes) failed (overflow)", nmemb, size);
+	return fz_realloc(ctx, p, total);
+}
+
+void *
 fz_calloc(fz_context *ctx, size_t count, size_t size)
 {
 	void *p;
+	size_t total;
 	if (count == 0 || size == 0)
 		return NULL;
-	if (count > SIZE_MAX / size)
-		fz_throw(ctx, FZ_ERROR_LIMIT, "calloc (%zu x %zu bytes) failed (size_t overflow)", count, size);
-	p = do_scavenging_malloc(ctx, count * size);
+	if (fz_ckd_mul_size(&total, count, size))
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "calloc (%zu x %zu bytes) failed (overflow)", count, size);
+	p = do_scavenging_malloc(ctx, total);
 	if (!p)
 	{
 		errno = ENOMEM;
@@ -126,13 +157,14 @@ void *
 fz_calloc_no_throw(fz_context *ctx, size_t count, size_t size)
 {
 	void *p;
+	size_t total;
 	if (count == 0 || size == 0)
 		return NULL;
-	if (count > SIZE_MAX / size)
+	if (fz_ckd_mul_size(&total, count, size))
 		return NULL;
-	p = do_scavenging_malloc(ctx, count * size);
+	p = do_scavenging_malloc(ctx, total);
 	if (p)
-		memset(p, 0, count * size);
+		memset(p, 0, total);
 	return p;
 }
 

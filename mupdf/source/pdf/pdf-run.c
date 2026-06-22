@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -647,9 +647,10 @@ void pdf_run_document_structure(fz_context *ctx, pdf_document *doc, fz_device *d
 {
 	int nocache;
 	int marked = 0;
-	pdf_obj *st, *rm, *k;
+	pdf_obj *rm, *k, *st = NULL;
 
 	fz_var(marked);
+	fz_var(st);
 
 	nocache = !!(dev->hints & FZ_NO_CACHE);
 	if (nocache)

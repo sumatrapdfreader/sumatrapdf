@@ -1679,15 +1679,20 @@ fz_new_display_list(fz_context *ctx, fz_rect mediabox)
 fz_display_list *
 fz_keep_display_list(fz_context *ctx, fz_display_list *list)
 {
-	return fz_keep_storable(ctx, &list->storable);
+	if (list)
+		return fz_keep_storable(ctx, &list->storable);
+	return NULL;
 }
 
 void
 fz_drop_display_list(fz_context *ctx, fz_display_list *list)
 {
-	fz_defer_reap_start(ctx);
-	fz_drop_storable(ctx, &list->storable);
-	fz_defer_reap_end(ctx);
+	if (list)
+	{
+		fz_defer_reap_start(ctx);
+		fz_drop_storable(ctx, &list->storable);
+		fz_defer_reap_end(ctx);
+	}
 }
 
 fz_rect

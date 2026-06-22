@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -152,13 +152,14 @@ struct pdf_run_processor
 	begin_layer_stack *begin_layer;
 	begin_layer_stack **next_begin_layer;
 
-	int mc_depth;
 	/* The nest_mark array holds a record of the way in which clips and
 	 * marked content are nested to ensure we pop stuff in the same order
-	 * that we push it - i.e. to keep calls nested nicely. An entry x,
-	 * where x >= 0 represents that a push has happened for mc_depth == x.
-	 * An entry x, where x < 0 means that -x clips have happened at this
-	 * position. */
+	 * that we push it - i.e. to keep calls nested nicely.
+	 *
+	 * When we detect pop_clip and end_layer operations that are out of order,
+	 * we always give priority to the pop_clip position and move the end_layer
+	 * calls.
+	 */
 	int nest_depth;
 	int nest_mark[1024];
 
@@ -166,9 +167,148 @@ struct pdf_run_processor
 	int process_structure;
 };
 
+/* NONE: finished entry (remove when exposed)
+ * LIVE_CLIP: unclosed clip
+ * LIVE_LAYER: unclosed layer
+ * DEAD_LAYER: closed layer that is waiting for its EMC
+ * ZOMBIE_LAYER: unclosed layer that has passed its EMC (close when exposed)
+ */
+enum { NONE, LIVE_CLIP, LIVE_LAYER, DEAD_LAYER, ZOMBIE_LAYER };
+
 /* Forward definition */
 static void
 pop_any_pending_mcid_changes(fz_context *ctx, pdf_run_processor *pr);
+
+static void trim_nest_stack(fz_context *ctx, pdf_run_processor *proc)
+{
+	// reap exposed zombie layers and pop finished entries from the nesting stack
+	while (proc->nest_depth > 0)
+	{
+		int mark = proc->nest_mark[proc->nest_depth-1];
+		if (mark == NONE)
+		{
+			--proc->nest_depth;
+		}
+		else if (mark == ZOMBIE_LAYER)
+		{
+			fz_end_layer(ctx, proc->dev);
+			--proc->nest_depth;
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+static void push_nest(fz_context *ctx, pdf_run_processor *proc, int type)
+{
+	// Warn if there are any out-of-order tracking elements left on the stack.
+	if (proc->nest_depth > 0)
+	{
+		int mark = proc->nest_mark[proc->nest_depth-1];
+		if (mark != LIVE_CLIP && mark != LIVE_LAYER)
+			fz_warn(ctx, "invalid marked content sequence / clip nesting");
+	}
+
+	if (proc->nest_depth == nelem(proc->nest_mark))
+		fz_throw(ctx, FZ_ERROR_LIMIT, "layer/clip nesting too deep");
+	proc->nest_mark[proc->nest_depth++] = type;
+}
+
+static void push_nest_clip(fz_context *ctx, pdf_run_processor *proc)
+{
+	// NOTE: We do not call fz_clip_* here (that is caller's responsibility).
+	// We only record the fact a clip mask has begun.
+	push_nest(ctx, proc, LIVE_CLIP);
+}
+
+static void push_nest_layer(fz_context *ctx, pdf_run_processor *proc)
+{
+	// NOTE: We do not call fz_begin_layer here (that is caller's responsibility).
+	// We only record the fact a layer has begun.
+	push_nest(ctx, proc, LIVE_LAYER);
+}
+
+static void
+pop_nest_until_empty(fz_context *ctx, pdf_run_processor *proc)
+{
+	while (proc->nest_depth > 0)
+	{
+		int mark = proc->nest_mark[proc->nest_depth-1];
+		if (mark == LIVE_CLIP)
+			fz_pop_clip(ctx, proc->dev);
+		else if (mark == LIVE_LAYER || mark == ZOMBIE_LAYER)
+			fz_end_layer(ctx, proc->dev);
+		--proc->nest_depth;
+	}
+}
+
+static void pop_nest_clip(fz_context *ctx, pdf_run_processor *proc)
+{
+	int i, mark;
+	for (i = proc->nest_depth - 1; i >= 0; --i)
+	{
+		mark = proc->nest_mark[i];
+		if (mark == LIVE_CLIP)
+		{
+			proc->nest_mark[i] = NONE;
+			fz_pop_clip(ctx, proc->dev);
+			trim_nest_stack(ctx, proc);
+			return;
+		}
+		else if (mark == LIVE_LAYER)
+		{
+			proc->nest_mark[i] = DEAD_LAYER;
+			fz_end_layer(ctx, proc->dev);
+		}
+		else if (mark == DEAD_LAYER)
+		{
+			/* do nothing */
+		}
+		else if (mark == ZOMBIE_LAYER)
+		{
+			fz_warn(ctx, "zombie layer inside clip (should never happen)");
+			proc->nest_mark[i] = DEAD_LAYER;
+			fz_end_layer(ctx, proc->dev);
+		}
+	}
+	fz_warn(ctx, "popped too many clips!");
+}
+
+static void pop_nest_layer(fz_context *ctx, pdf_run_processor *proc)
+{
+	int i, mark;
+	for (i = proc->nest_depth - 1; i >= 0; --i)
+	{
+		mark = proc->nest_mark[i];
+		if (mark == LIVE_CLIP)
+		{
+			/* ignore clips */
+		}
+		else if (mark == LIVE_LAYER)
+		{
+			/* found the corresponding live layer */
+			/* mark it for reaping */
+			proc->nest_mark[i] = ZOMBIE_LAYER;
+			trim_nest_stack(ctx, proc);
+			return;
+		}
+		else if (mark == DEAD_LAYER)
+		{
+			/* found the corresponding dead layer */
+			/* mark it as finished */
+			proc->nest_mark[i] = NONE;
+			trim_nest_stack(ctx, proc);
+			return;
+		}
+		else if (mark == ZOMBIE_LAYER)
+		{
+			/* ignore other zombies */
+		}
+	}
+	fz_warn(ctx, "popped too many layers!");
+}
 
 static void
 push_begin_layer(fz_context *ctx, pdf_run_processor *proc, const char *str)
@@ -200,12 +340,9 @@ flush_begin_layer(fz_context *ctx, pdf_run_processor *proc)
 	{
 		s = proc->begin_layer;
 
-		if (proc->nest_depth == nelem(proc->nest_mark))
-			fz_throw(ctx, FZ_ERROR_LIMIT, "layer/clip nesting too deep");
-
-		proc->nest_mark[proc->nest_depth++] = ++proc->mc_depth;
-
+		push_nest_layer(ctx, proc);
 		fz_begin_layer(ctx, proc->dev, s->layer);
+
 		proc->begin_layer = s->next;
 		fz_free(ctx, s->layer);
 		fz_free(ctx, s);
@@ -213,43 +350,12 @@ flush_begin_layer(fz_context *ctx, pdf_run_processor *proc)
 	proc->next_begin_layer = &proc->begin_layer;
 }
 
-static void nest_layer_clip(fz_context *ctx, pdf_run_processor *proc)
-{
-	if (proc->nest_depth == nelem(proc->nest_mark))
-		fz_throw(ctx, FZ_ERROR_LIMIT, "layer/clip nesting too deep");
-	if (proc->nest_depth > 0 && proc->nest_mark[proc->nest_depth-1] < 0)
-	{
-		/* The last mark was a clip. Just increase that count. */
-		proc->nest_mark[proc->nest_depth-1]--;
-	}
-	else
-	{
-		/* Create a new entry for a single clip. */
-		proc->nest_mark[proc->nest_depth++] = -1;
-	}
-}
-
 static void
 do_end_layer(fz_context *ctx, pdf_run_processor *proc)
 {
 	if (!proc->process_layers)
 		return;
-
-	if (proc->nest_depth > 0 && proc->nest_mark[proc->nest_depth-1] == proc->mc_depth)
-	{
-		fz_end_layer(ctx, proc->dev);
-		proc->nest_depth--;
-	}
-	else
-	{
-		/* If EMC is unbalanced with q/Q, we will emit the end layer
-		 * device call before or after the Q operator instead of its true location
-		 */
-		 fz_warn(ctx, "invalid marked content and clip nesting");
-	}
-
-	if (proc->mc_depth > 0)
-		proc->mc_depth--;
+	pop_nest_layer(ctx, proc);
 }
 
 typedef struct
@@ -578,29 +684,7 @@ pdf_grestore(fz_context *ctx, pdf_run_processor *pr)
 	{
 		fz_try(ctx)
 		{
-			// End layer early (before Q) if unbalanced Q appears between BMC and EMC.
-			while (pr->nest_depth > 0 && pr->nest_mark[pr->nest_depth-1] >= 0)
-			{
-				fz_end_layer(ctx, pr->dev);
-				pr->nest_depth--;
-			}
-
-			if (pr->nest_depth > 0)
-			{
-				/* So this one must be a clip record. */
-				fz_pop_clip(ctx, pr->dev);
-				/* Pop a single clip record off. */
-				pr->nest_mark[pr->nest_depth-1]++;
-				if (pr->nest_mark[pr->nest_depth-1] == 0)
-					pr->nest_depth--;
-			}
-
-			// End layer late (after Q) if unbalanced EMC appears between q and Q.
-			while (pr->nest_depth > 0 && pr->nest_mark[pr->nest_depth-1] > pr->mc_depth)
-			{
-				fz_end_layer(ctx, pr->dev);
-				pr->nest_depth--;
-			}
+			pop_nest_clip(ctx, pr);
 		}
 		fz_catch(ctx)
 		{
@@ -703,7 +787,8 @@ pdf_show_pattern(fz_context *ctx, pdf_run_processor *pr, pdf_pattern *pat, int p
 	 * best we've found; only use it as a tile if a whole repeat is
 	 * required in at least one direction. Note, that this allows for
 	 * 'sections' of 4 tiles to be show, but all non-overlapping. */
-	if (fx1-fx0 > 1 || fy1-fy0 > 1)
+	/* If the pattern uses blending, we never use the tile cache. */
+	if ((fx1-fx0 > 1 || fy1-fy0 > 1) && !pat->uses_blending && !(pr->dev->hints & FZ_NO_TILING))
 #else
 	if (0)
 #endif
@@ -1004,7 +1089,7 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
 
 		if (pr->clip)
 		{
-			nest_layer_clip(ctx, pr);
+			push_nest_clip(ctx, pr);
 			gstate->clip_depth++;
 			fz_clip_path(ctx, pr->dev, path, pr->clip_even_odd, gstate->ctm, bbox);
 			pr->clip = 0;
@@ -1028,7 +1113,7 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
  */
 
 static pdf_gstate *
-pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
+pdf_flush_text_imp(fz_context *ctx, pdf_run_processor *pr, int flush_clip)
 {
 	pdf_gstate *gstate = pr->gstate + pr->gtop;
 	fz_text *text;
@@ -1039,11 +1124,15 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 	softmask_save softmask = { NULL };
 	int knockout_group = 0;
 
-	text = pdf_tos_get_text(ctx, &pr->tos);
+	if (flush_clip)
+		text = pdf_tos_get_clip_text(ctx, &pr->tos);
+	else
+		text = pdf_tos_get_text(ctx, &pr->tos);
 	if (!text)
 		return gstate;
 
 	pop_any_pending_mcid_changes(ctx, pr);
+
 	/* If we are going to output text, we need to have flushed any begin layers first. */
 	flush_begin_layer(ctx, pr);
 
@@ -1059,6 +1148,11 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 	case 6: dofill = dostroke = doclip = 1; break;
 	case 7: doclip = 1; break;
 	}
+
+	if (flush_clip)
+		dostroke = dofill = 0;
+	else
+		doclip = 0;
 
 	if (pr->super.hidden)
 		dostroke = dofill = 0;
@@ -1164,7 +1258,7 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 
 		if (doclip)
 		{
-			nest_layer_clip(ctx, pr);
+			push_nest_clip(ctx, pr);
 			gstate->clip_depth++;
 			fz_clip_text(ctx, pr->dev, text, gstate->ctm, tb);
 		}
@@ -1182,6 +1276,18 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 	}
 
 	return pr->gstate + pr->gtop;
+}
+
+static inline pdf_gstate *
+pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
+{
+	return pdf_flush_text_imp(ctx, pr, 0);
+}
+
+static inline pdf_gstate *
+pdf_flush_clip_text(fz_context *ctx, pdf_run_processor *pr)
+{
+	return pdf_flush_text_imp(ctx, pr, 1);
 }
 
 static int
@@ -1262,6 +1368,13 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 	if (fontdesc->font->t3procs && pr->tos.text_mode != 3)
 		pr->tos.text_mode = 0;
 
+	/* Colored Type3 glyphs shall not be rendered with pattern fills. */
+	if (fontdesc->font->t3procs && (fontdesc->font->t3flags[gid] & FZ_DEVFLAG_COLOR))
+	{
+		if (gstate->fill.kind != PDF_MAT_COLOR)
+			render_direct = 1;
+	}
+
 	if (render_direct && pr->tos.text_mode != 3 /* or 7, by type3_hitr */)
 	{
 		/* Render the glyph stream direct here (only happens for
@@ -1274,21 +1387,17 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 		pdf_gstate *fill_gstate = NULL;
 		pdf_gstate *stroke_gstate = NULL;
 		pdf_gsave(ctx, pr);
-		gstate = pr->gstate + pr->gtop;
-		if (gstate->fill.kind == PDF_MAT_PATTERN && gstate->fill.gstate_num >= 0)
-			fill_gstate = pr->gstate + gstate->fill.gstate_num;
-		if (gstate->stroke.kind == PDF_MAT_PATTERN && gstate->stroke.gstate_num >= 0)
-			stroke_gstate = pr->gstate + gstate->stroke.gstate_num;
-		pdf_drop_font(ctx, gstate->text.font);
-		gstate->text.font = NULL; /* don't inherit the current font... */
-		/* SumatraPDF: speculative fix for https://github.com/sumatrapdfreader/sumatrapdf/issues/5285 */
-#if 0   /* original code */
-		fz_render_t3_glyph_direct(ctx, pr->dev, fontdesc->font, gid, composed, gstate, pr->default_cs, fill_gstate, stroke_gstate);
-		pr->dev->flags = old_flags;
-		pdf_grestore(ctx, pr);
-#else   /* fix */
 		fz_try(ctx)
+		{
+			gstate = pr->gstate + pr->gtop;
+			if (gstate->fill.kind == PDF_MAT_PATTERN && gstate->fill.gstate_num >= 0)
+				fill_gstate = pr->gstate + gstate->fill.gstate_num;
+			if (gstate->stroke.kind == PDF_MAT_PATTERN && gstate->stroke.gstate_num >= 0)
+				stroke_gstate = pr->gstate + gstate->stroke.gstate_num;
+			pdf_drop_font(ctx, gstate->text.font);
+			gstate->text.font = NULL; /* don't inherit the current font... */
 			fz_render_t3_glyph_direct(ctx, pr->dev, fontdesc->font, gid, composed, gstate, pr->default_cs, fill_gstate, stroke_gstate);
+		}
 		fz_always(ctx)
 		{
 			pr->dev->flags = old_flags;
@@ -1296,7 +1405,6 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 		}
 		fz_catch(ctx)
 			fz_rethrow(ctx);
-#endif
 		/* Render text invisibly so that it can still be extracted. */
 		pr->tos.text_mode = 3;
 	}
@@ -1329,6 +1437,13 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 
 	/* add glyph to textobject */
 	fz_show_glyph_aux(ctx, pr->tos.text, fontdesc->font, trm, adv, gid, ucsbuf[0], cid, fontdesc->wmode, pr->bidi, FZ_BIDI_NEUTRAL, lang);
+
+	/* add glyph to clip accumulator */
+	if (pr->tos.text_mode & 4)
+	{
+		pdf_tos_accumulate_clip(ctx, &pr->tos);
+		fz_show_glyph_aux(ctx, pr->tos.clip_text, fontdesc->font, trm, adv, gid, ucsbuf[0], cid, fontdesc->wmode, pr->bidi, FZ_BIDI_NEUTRAL, lang);
+	}
 
 	/* add filler glyphs for one-to-many unicode mapping */
 	for (i = 1; i < ucslen; i++)
@@ -1804,6 +1919,7 @@ end_layer(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val)
 	pdf_obj *obj = pdf_dict_get(ctx, val, PDF_NAME(Title));
 	if (obj)
 	{
+		flush_begin_layer(ctx, proc);
 		do_end_layer(ctx, proc);
 	}
 }
@@ -1924,7 +2040,7 @@ get_lineage(fz_context *ctx, pdf_obj *a, int *lenp)
 	return line;
 }
 
-pdf_obj *
+static pdf_obj *
 find_most_recent_common_ancestor(fz_context *ctx, pdf_obj *a, pdf_obj *b)
 {
 	/* First ascend one lineage. */
@@ -1941,16 +2057,28 @@ find_most_recent_common_ancestor(fz_context *ctx, pdf_obj *a, pdf_obj *b)
 
 	fz_try(ctx)
 	{
+repaired:
 		line_a = get_lineage(ctx, a, &a_len);
 		line_b = get_lineage(ctx, b, &b_len);
 
 		assert(a_len > 0 && b_len > 0);
 
 		/* Once both lineages are know, traverse top-down to find most recent common ancestor. */
-		if (line_a[a_len-1] != line_b[b_len-1])
-			fz_throw(ctx, FZ_ERROR_FORMAT, "No common ancestor in structure tree");
+		if (pdf_objcmp_resolve(ctx, line_a[a_len-1], line_b[b_len-1]) != 0)
+		{
+			pdf_document *doc = pdf_get_bound_document(ctx, a);
 
-		while (a_len > 0 && b_len > 0 && line_a[a_len-1] == line_b[b_len-1])
+			if (!doc->struct_tree_repaired)
+			{
+				fz_free(ctx, line_a);
+				fz_free(ctx, line_b);
+				(void)pdf_check_structure_tree(ctx, doc);
+				goto repaired;
+			}
+			fz_throw(ctx, FZ_ERROR_FORMAT, "No common ancestor in structure tree");
+		}
+
+		while (a_len > 0 && b_len > 0 && pdf_objcmp_resolve(ctx, line_a[a_len-1], line_b[b_len-1]) == 0)
 			a_len--, b_len--;
 
 		common = line_a[a_len];
@@ -2252,17 +2380,15 @@ pop_marked_content(fz_context *ctx, pdf_run_processor *proc, int neat)
 static void
 clear_marked_content(fz_context *ctx, pdf_run_processor *pr)
 {
-	if (pr->marked_content == NULL)
-		return;
+	while (pr->marked_content)
+		pop_marked_content(ctx, pr, 1);
+}
 
-	fz_try(ctx)
-		while (pr->marked_content)
-			pop_marked_content(ctx, pr, 1);
-	fz_always(ctx)
-		while (pr->marked_content)
-			pop_marked_content(ctx, pr, 0);
-	fz_catch(ctx)
-		fz_rethrow(ctx);
+static void
+drop_marked_content(fz_context *ctx, pdf_run_processor *pr)
+{
+	while (pr->marked_content)
+		pop_marked_content(ctx, pr, 0);
 }
 
 static void
@@ -2435,10 +2561,11 @@ pdf_run_xobject(fz_context *ctx, pdf_run_processor *pr, pdf_obj *xobj, pdf_obj *
 		{
 			fz_set_default_colorspaces(ctx, pr->dev, save_default_cs);
 		}
+		clear_marked_content(ctx, pr);
 	}
 	fz_always(ctx)
 	{
-		clear_marked_content(ctx, pr);
+		drop_marked_content(ctx, pr);
 		pr->marked_content = save_marked_content;
 		pr->default_cs = save_default_cs;
 		fz_drop_default_colorspaces(ctx, xobj_default_cs);
@@ -2653,6 +2780,16 @@ static void pdf_run_cm(fz_context *ctx, pdf_processor *proc, float a, float b, f
 	pdf_gstate *gstate = pdf_flush_text(ctx, pr);
 	fz_matrix m;
 
+	if (pr->tos.clip_text)
+	{
+		// FIXME: We can't handle changing CTM while accumulating text clips!
+		// To do so we would need to retroactively change the TRM to apply the CTM change
+		// to glyphs in the current clip_text object. Fortunately we have never seen
+		// any files that would require this to happen.
+		fz_warn(ctx, "ignoring CTM change for accumulated glyph clip paths");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "CTM CHANGE IN CLIP TEXT!!!");
+	}
+
 	m.a = a;
 	m.b = b;
 	m.c = c;
@@ -2799,6 +2936,7 @@ static void pdf_run_ET(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
 	pdf_flush_text(ctx, pr);
+	pdf_flush_clip_text(ctx, pr);
 }
 
 /* text state */
@@ -3165,23 +3303,7 @@ pdf_close_run_processor(fz_context *ctx, pdf_processor *proc)
 	while (pr->gtop)
 		pdf_grestore(ctx, pr);
 
-	while (pr->nest_depth > 0)
-	{
-		if (pr->nest_mark[pr->nest_depth-1] < 0)
-		{
-			/* It's a clip. */
-			fz_pop_clip(ctx, pr->dev);
-			pr->nest_mark[pr->nest_depth-1]++;
-			if (pr->nest_mark[pr->nest_depth-1] == 0)
-				pr->nest_depth--;
-		}
-		else
-		{
-			/* It's a layer. */
-			fz_end_layer(ctx, pr->dev);
-			pr->nest_depth--;
-		}
-	}
+	pop_nest_until_empty(ctx, pr);
 
 	if (pr->process_structure)
 	pop_structure_to(ctx, pr, NULL);
@@ -3202,6 +3324,7 @@ pdf_drop_run_processor(fz_context *ctx, pdf_processor *proc)
 
 	fz_drop_path(ctx, pr->path);
 	fz_drop_text(ctx, pr->tos.text);
+	fz_drop_text(ctx, pr->tos.clip_text);
 
 	fz_drop_default_colorspaces(ctx, pr->default_cs);
 
@@ -3215,8 +3338,7 @@ pdf_drop_run_processor(fz_context *ctx, pdf_processor *proc)
 		fz_free(ctx, stk);
 	}
 
-	while (pr->marked_content)
-		pop_marked_content(ctx, pr, 0);
+	drop_marked_content(ctx, pr);
 
 	pdf_drop_obj(ctx, pr->mcid_sent);
 
@@ -3398,9 +3520,9 @@ pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_mat
 
 	if (dev->begin_layer || dev->end_layer)
 		proc->process_layers = 1;
+
 	if (dev->begin_structure || dev->end_structure)
 		proc->process_structure = 1;
-
 
 	fz_try(ctx)
 	{

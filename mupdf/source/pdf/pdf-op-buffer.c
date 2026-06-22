@@ -42,9 +42,14 @@ static void
 post_op(fz_context *ctx, pdf_output_processor *proc)
 {
 	if (proc->newlines)
-		proc->sep = '\n';
+	{
+		fz_write_byte(ctx, proc->out, '\n');
+		proc->sep = 0;
+	}
 	else
+	{
 		proc->sep = 1;
+	}
 }
 
 static inline void separate(fz_context *ctx, pdf_output_processor *proc)

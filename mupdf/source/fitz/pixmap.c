@@ -34,13 +34,16 @@
 fz_pixmap *
 fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
-	return fz_keep_storable(ctx, &pix->storable);
+	if (pix)
+		return fz_keep_storable(ctx, &pix->storable);
+	return NULL;
 }
 
 void
 fz_drop_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
-	fz_drop_storable(ctx, &pix->storable);
+	if (pix)
+		fz_drop_storable(ctx, &pix->storable);
 }
 
 void
@@ -105,6 +108,8 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 		fz_try(ctx)
 		{
 			if ((size_t)pix->stride > SIZE_MAX / (size_t)pix->h)
+				fz_throw(ctx, FZ_ERROR_LIMIT, "Overly large image");
+			if (pix->h * pix->stride > FZ_MAX_SAMPLES)
 				fz_throw(ctx, FZ_ERROR_LIMIT, "Overly large image");
 			pix->samples = Memento_label(fz_malloc(ctx, pix->h * pix->stride), "pixmap_data");
 		}
@@ -1105,19 +1110,19 @@ void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *pix, fz_irect rect)
 		}
 		else
 		{
-		for (y = y0; y < y1; y++)
-		{
-			unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
-			for (x = x0; x < x1; x++)
+			for (y = y0; y < y1; y++)
 			{
-				int a = d[n1];
-				int k;
-				for (k = 0; k < n1; k++)
-					d[k] = a - d[k];
-				d += n;
+				unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
+				for (x = x0; x < x1; x++)
+				{
+					int a = d[n1];
+					int k;
+					for (k = 0; k < n1; k++)
+						d[k] = a - d[k];
+					d += n;
+				}
 			}
 		}
-	}
 	}
 	else if (s)
 	{
@@ -1380,6 +1385,8 @@ fz_new_pixmap_from_float_data(fz_context *ctx, fz_colorspace *cs, int w, int h, 
 
 			mu /= nsamples;
 			d0 = maxsample - minsample;
+			if (d0 == 0)
+				d0 = 1;
 			k1 = (MAXLD - MINLD) / d0;
 			sigma = d0 / KIMKAUTZC1;
 			sigmasq2 = sigma * sigma * 2;
@@ -1706,12 +1713,12 @@ fz_subsample_pixblock_bresenham(unsigned char *s2, int w, int h, int n, int fact
 
 	/* In ((w+subx)/f) - 1 blocks, we want to repeat a line subx times. */
 	int bxd = ((w+subx)/f) - 1;
-	int bxf = bxd>>1;
+	int bxf = (bxd+1)>>1; /* Round up here, because we invert below. */
 	int byd = ((h+suby)/f) - 1;
-	int byf = byd>>1;
+	int byf = (byd+1)>>1; /* Round up here, because we invert below. */
 
-	assert(0 <= bxf && bxf < bxd);
-	assert(0 <= byf && byf < byd);
+	assert(0 <= bxf && bxf <= bxd);
+	assert(0 <= byf && byf <= byd);
 	/* And invert to make tests be against 0 */
 	bxf = bxd - bxf;
 	byf = byd - byf;
@@ -1799,7 +1806,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 		fz_subsample_pixblock_bresenham(tile->samples, tile->w, tile->h, tile->n, factor, tile->stride, subx, suby);
 	}
 	else
-	fz_subsample_pixblock(tile->samples, tile->w, tile->h, tile->n, factor, tile->stride);
+		fz_subsample_pixblock(tile->samples, tile->w, tile->h, tile->n, factor, tile->stride);
 
 	f = 1<<factor;
 	tile->w = (tile->w + f-1)>>factor;

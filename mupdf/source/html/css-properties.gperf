@@ -37,6 +37,7 @@ bottom,PRO_INSET_BOTTOM
 clear,PRO_CLEAR
 color,PRO_COLOR
 columns,PRO_COLUMNS
+content,PRO_CONTENT
 direction,PRO_DIRECTION
 display,PRO_DISPLAY
 float,PRO_FLOAT

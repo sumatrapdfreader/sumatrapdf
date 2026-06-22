@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -205,7 +205,7 @@ xps_parse_tiling_brush(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_rec
 		y1 = ceilf(area.y1 / ystep);
 
 #ifdef TILE
-		if ((x1 - x0) * (y1 - y0) > 1)
+		if (((x1 - x0) * (y1 - y0) > 1) && !(dev->hints & FZ_NO_TILING))
 #else
 		if (0)
 #endif
@@ -354,10 +354,12 @@ void
 xps_parse_fixed_page(fz_context *ctx, xps_document *doc, fz_matrix ctm, xps_page *page)
 {
 	fz_xml *root, *node;
-	xps_resource *dict;
+	xps_resource *dict = NULL;
 	char base_uri[1024];
 	fz_rect area;
 	char *s;
+
+	fz_var(dict);
 
 	fz_strlcpy(base_uri, page->fix->name, sizeof base_uri);
 	s = strrchr(base_uri, '/');

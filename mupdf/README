@@ -9,11 +9,11 @@ See the documentation in:
 
 Build instructions can be found in:
 
-	https://mupdf.readthedocs.io/en/latest/quick-start-guide.html
+	https://mupdf.readthedocs.io/en/latest/guide/install.html
 
 LICENSE
 
-MuPDF is Copyright (c) 2006-2023 Artifex Software, Inc.
+MuPDF is Copyright (c) 2006-2026 Artifex Software, Inc.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
@@ -34,11 +34,11 @@ REPORTING BUGS AND PROBLEMS
 
 The MuPDF developers hang out on Discord here:
 
-	https://discord.gg/taPnFQp5gb
+	https://artifex.com/discord/artifex
 
 Report bugs on the ghostscript bugzilla, with MuPDF as the selected component:
 
-	http://bugs.ghostscript.com/
+	https://bugs.ghostscript.com/
 
 If you are reporting a problem with a specific file, please include the file as
 an attachment.

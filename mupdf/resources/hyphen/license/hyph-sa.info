@@ -116,4 +116,4 @@
 % Do not break before a final consonant or conjunct.
 % Do not break before chandrabindu, anusvara, visarga,
 % length mark and ai length mark.
-% Do not break either side of virama (may be within conjunct).
+% Do not break either side of virama (may be within conjunct).

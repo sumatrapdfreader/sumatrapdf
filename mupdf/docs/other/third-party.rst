@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2025 Artifex Software, Inc.
+.. Copyright (C) 2001-2026 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -25,7 +25,7 @@ These are the third party libraries used by :title:`MuPDF`.
      -
      -
    * - freetype_
-     - 2.13.3
+     - 2.14.3
      - Font scaling and rendering
      - BSD-style
    * - harfbuzz_
@@ -33,7 +33,7 @@ These are the third party libraries used by :title:`MuPDF`.
      - Text shaping
      - MIT-style
    * - libjpeg_
-     - 9.0f with patches
+     - 10.0 with patches
      - JPEG decoding
      - BSD-style
    * - `Incompatible fork of lcms2`_
@@ -41,11 +41,11 @@ These are the third party libraries used by :title:`MuPDF`.
      - Color management
      - MIT-style
    * - openjpeg_
-     - 2.5.4
+     - 2.5.4 with upstream and local patches
      - JPEG 2000 decoding
      - BSD-style
    * - zlib_
-     - 1.3.1
+     - 1.3.2
      - Deflate compression
      - zlib License
    * - `gumbo-parser`_
@@ -55,6 +55,10 @@ These are the third party libraries used by :title:`MuPDF`.
    * - `brotli`_
      - 1.1.0 with upstream and local patches
      - Brotli compression
+     - MIT-style
+   * - `cmark-gfm`_
+     - 0.29.0.gfm.13 with patches
+     - Markdown conversion to HTML
      - MIT-style
    * - **Optional**
      -
@@ -73,11 +77,11 @@ These are the third party libraries used by :title:`MuPDF`.
      - JPEG-XR decoding
      - special
    * - Tesseract_
-     - 5.5.0 with patches
+     - 5.5.2 with patches
      - OCR
      - Apache 2.0
    * - Leptonica_
-     - 1.85.0 with patches
+     - 1.87.0 with patches
      - Tesseract dependency
      - BSD-style
    * - Zint_
@@ -119,3 +123,4 @@ These are the third party libraries used by :title:`MuPDF`.
 .. _MuJS: https://mujs.com/?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link
 .. _Zint: https://www.zint.org.uk/
 .. _Zxing-cpp: https://github.com/zxing-cpp/zxing-cpp
+.. _cmark-gfm: https://github.com/github/cmark-gfm

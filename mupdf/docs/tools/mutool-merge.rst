@@ -17,13 +17,13 @@ The ``merge`` command is used to pick out pages from two or more files and merge
 	The first document.
 
 ``[pages1]``
-	Comma separated list of page ranges for the first document (``input.pdf``). The first page is "1", and the last page is "N". The default is "1-N".
+	Comma-separated list of page ranges for the first document (``input.pdf``). The first page is "1", and the last page is "N". The default is "1-N".
 
 ``[input2.pdf]``
 	The second document.
 
 ``[pages2]``
-	Comma separated list of page ranges for the second document (``input2.pdf``). The first page is "1", and the last page is "N". The default is "1-N".
+	Comma-separated list of page ranges for the second document (``input2.pdf``). The first page is "1", and the last page is "N". The default is "1-N".
 
 ``...``
 	Indicates that we add as many additional ``[input]`` & ``[pages]`` pairs as required to merge multiple documents.

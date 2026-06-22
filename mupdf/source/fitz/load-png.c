@@ -42,11 +42,6 @@ struct info
 	fz_colorspace *cs;
 };
 
-static inline unsigned int getuint(const unsigned char *p)
-{
-	return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
-}
-
 static inline int getcomp(const unsigned char *line, int x, int bpc)
 {
 	switch (bpc)
@@ -245,8 +240,8 @@ png_read_ihdr(fz_context *ctx, struct info *info, const unsigned char *p, unsign
 	if (size != 13)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "IHDR chunk is the wrong size");
 
-	info->width = getuint(p + 0);
-	info->height = getuint(p + 4);
+	info->width = fz_unpack_uint32(p + 0);
+	info->height = fz_unpack_uint32(p + 4);
 	info->depth = p[8];
 
 	color = p[9];
@@ -254,9 +249,9 @@ png_read_ihdr(fz_context *ctx, struct info *info, const unsigned char *p, unsign
 	filter = p[11];
 	info->interlace = p[12];
 
-	if (info->width <= 0)
+	if ((int)info->width <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image width must be > 0");
-	if (info->height <= 0)
+	if ((int)info->height <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
 
 	if (info->depth != 1 && info->depth != 2 && info->depth != 4 &&
@@ -425,8 +420,8 @@ png_read_phys(fz_context *ctx, struct info *info, const unsigned char *p, unsign
 		fz_throw(ctx, FZ_ERROR_FORMAT, "pHYs chunk is the wrong size");
 	if (p[8] == 1)
 	{
-		info->xres = (getuint(p) * 254 + 5000) / 10000;
-		info->yres = (getuint(p + 4) * 254 + 5000) / 10000;
+		info->xres = (fz_unpack_uint32(p) * 254 + 5000) / 10000;
+		info->yres = (fz_unpack_uint32(p + 4) * 254 + 5000) / 10000;
 	}
 }
 
@@ -452,7 +447,7 @@ png_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 
 	/* Read IHDR chunk (must come first) */
 
-	size = getuint(p);
+	size = fz_unpack_uint32(p);
 	if (size > total - 12)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in png image");
 
@@ -496,7 +491,7 @@ png_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 		/* Read remaining chunks until IEND */
 		while (total > 8)
 		{
-			size = getuint(p);
+			size = fz_unpack_uint32(p);
 
 			if (total < 12 || size > total - 12)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "premature end of data in png image");

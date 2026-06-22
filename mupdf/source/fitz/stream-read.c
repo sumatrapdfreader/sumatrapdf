@@ -229,6 +229,25 @@ fz_read_file(fz_context *ctx, const char *filename)
 	return buf;
 }
 
+char *
+fz_read_text_file(fz_context *ctx, const char *filename)
+{
+	fz_buffer *buf;
+	unsigned char *data;
+
+	buf = fz_read_file(ctx, filename);
+	fz_try(ctx)
+	{
+		fz_terminate_buffer(ctx, buf);
+		(void) fz_buffer_extract(ctx, buf, &data);
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return (char*)data;
+}
+
 fz_buffer *
 fz_try_read_file(fz_context *ctx, const char *filename)
 {
@@ -359,19 +378,21 @@ int64_t fz_read_int64_le(fz_context *ctx, fz_stream *stm) { return (int64_t)fz_r
 float
 fz_read_float_le(fz_context *ctx, fz_stream *stm)
 {
-	union {float f;int32_t i;} u;
-
-	u.i = fz_read_int32_le(ctx, stm);
-	return u.f;
+	uint32_t u;
+	float x;
+	u = fz_read_uint32_le(ctx, stm);
+	memcpy(&x, &u, sizeof x);
+	return x;
 }
 
 float
 fz_read_float(fz_context *ctx, fz_stream *stm)
 {
-	union {float f;int32_t i;} u;
-
-	u.i = fz_read_int32(ctx, stm);
-	return u.f;
+	uint32_t u;
+	float x;
+	u = fz_read_uint32(ctx, stm);
+	memcpy(&x, &u, sizeof x);
+	return x;
 }
 
 void fz_read_string(fz_context *ctx, fz_stream *stm, char *buffer, int len)

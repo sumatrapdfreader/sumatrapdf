@@ -23,6 +23,8 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
+#include <zlib.h> /* for crc32 */
+
 #include <string.h>
 
 static void pdf_drop_obj_as_void(fz_context *ctx, void *obj)
@@ -76,6 +78,39 @@ pdf_find_colorspace_resource(fz_context *ctx, pdf_document *doc, fz_colorspace *
 }
 
 pdf_obj *
+pdf_find_image_resource(fz_context *ctx, pdf_document *doc, fz_image *item, pdf_image_resource_key *key)
+{
+	pdf_obj *res;
+
+	if (!doc->resources.images)
+		doc->resources.images = fz_new_hash_table(ctx, 4096, sizeof(*key), -1, pdf_drop_obj_as_void);
+
+	memset(key, 0, sizeof(*key));
+
+	key->w = item->w;
+	key->h = item->h;
+	key->n = item->n;
+	key->bpc = item->bpc;
+	key->imagemask = item->imagemask;
+	key->use_colorkey = item->use_colorkey;
+	key->use_decode = item->use_decode;
+	key->decode = crc32(0, (unsigned char *)item->decode, 2 * item->n * sizeof(float));
+	key->decode = crc32(key->decode, (unsigned char *)item->colorkey, 2 * item->n * sizeof(int));
+
+	if (item->mask)
+		fz_image_digest(ctx, item->mask, key->mask);
+
+	fz_image_digest(ctx, item, key->digest);
+
+	key->local_xref = doc->local_xref_nesting > 0;
+
+	res = fz_hash_find(ctx, doc->resources.images, (void *)key);
+	if (res)
+		pdf_keep_obj(ctx, res);
+	return res;
+}
+
+pdf_obj *
 pdf_insert_font_resource(fz_context *ctx, pdf_document *doc, pdf_font_resource_key *key, pdf_obj *obj)
 {
 	pdf_obj *res = fz_hash_insert(ctx, doc->resources.fonts, (void *)key, obj);
@@ -92,6 +127,17 @@ pdf_insert_colorspace_resource(fz_context *ctx, pdf_document *doc, pdf_colorspac
 	pdf_obj *res = fz_hash_insert(ctx, doc->resources.colorspaces, (void *)key, obj);
 	if (res)
 		fz_warn(ctx, "warning: colorspace resource already present");
+	else
+		res = pdf_keep_obj(ctx, obj);
+	return pdf_keep_obj(ctx, res);
+}
+
+pdf_obj *
+pdf_insert_image_resource(fz_context *ctx, pdf_document *doc, pdf_image_resource_key *key, pdf_obj *obj)
+{
+	pdf_obj *res = fz_hash_insert(ctx, doc->resources.images, (void *)key, obj);
+	if (res)
+		fz_warn(ctx, "warning: image resource already present");
 	else
 		res = pdf_keep_obj(ctx, obj);
 	return pdf_keep_obj(ctx, res);
@@ -119,6 +165,17 @@ static int purge_local_colorspace_resource(fz_context *ctx, void *state, void *k
 	return 0;
 }
 
+static int purge_local_image_resource(fz_context *ctx, void *state, void *key_, int keylen, void *val)
+{
+	pdf_image_resource_key *key = key_;
+	if (key->local_xref)
+	{
+		pdf_drop_obj(ctx, val);
+		return 1;
+	}
+	return 0;
+}
+
 void
 pdf_purge_local_resources(fz_context *ctx, pdf_document *doc)
 {
@@ -126,6 +183,8 @@ pdf_purge_local_resources(fz_context *ctx, pdf_document *doc)
 		fz_hash_filter(ctx, doc->resources.fonts, NULL, purge_local_font_resource);
 	if (doc->resources.colorspaces)
 		fz_hash_filter(ctx, doc->resources.colorspaces, NULL, purge_local_colorspace_resource);
+	if (doc->resources.images)
+		fz_hash_filter(ctx, doc->resources.images, NULL, purge_local_image_resource);
 }
 
 void
@@ -135,5 +194,6 @@ pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc)
 	{
 		fz_drop_hash_table(ctx, doc->resources.colorspaces);
 		fz_drop_hash_table(ctx, doc->resources.fonts);
+		fz_drop_hash_table(ctx, doc->resources.images);
 	}
 }

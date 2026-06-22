@@ -701,17 +701,22 @@ def make_python_class_method_outparam_override(
             continue
         if arg.alt:
             name = util.clip( arg.alt.type.spelling, ('struct ', 'const '))
+            # Assert that name starts with fz_ or pdf_.
             for prefix in ( 'fz_', 'pdf_'):
                 if name.startswith( prefix):
                     break
             else:
                 assert 0, f'Unexpected arg type: {name}'
-            if function_name_implies_kept_references( fnname):
-                out.write( f'{sep}{rename.class_(name)}( {arg.name_python})')
+            if parse.has_refs(tu, arg.alt.type):
+                if function_name_implies_kept_references( fnname):
+                    out.write( f'{sep}{rename.class_(name)}( {arg.name_python})')
+                else:
+                    keepfn = f'{prefix}keep_{name[ len(prefix):]}'
+                    keepfn = rename.ll_fn( keepfn)
+                    out.write( f'{sep}{rename.class_(name)}({keepfn}( {arg.name_python}))')
             else:
-                keepfn = f'{prefix}keep_{name[ len(prefix):]}'
-                keepfn = rename.ll_fn( keepfn)
-                out.write( f'{sep}{rename.class_(name)}({keepfn}( {arg.name_python}))')
+                # Non ref-counted out param.
+                out.write(f'{sep}{rename.class_(name)}( {arg.name_python})')
         else:
             out.write( f'{sep}{arg.name_python}')
         sep = ', '
@@ -1128,6 +1133,31 @@ g_extra_declarations = textwrap.dedent(f'''
         /** SWIG-friendly wrapper for fz_decode_barcode_from_page(), avoiding
         leak of the returned string. */
         std::string fz_decode_barcode_from_page2(fz_context *ctx, fz_barcode_type *type, fz_page *page, fz_rect subarea, int rotate);
+
+        /** Swig-friendly wrapper for fz_new_culling_device_with_rects(). */
+        fz_device *fz_new_culling_device_with_rects2(fz_context *ctx, fz_device *passthrough, const std::vector<fz_rect>& rects);
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_page_culling_text(). */
+        fz_pixmap *fz_new_pixmap_from_page_culling_text2(fz_context *ctx, fz_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects);
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_page_number_culling_text(). */
+        fz_pixmap *fz_new_pixmap_from_page_number_culling_text2(fz_context *ctx, fz_document *doc, int number, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects);
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_display_list_culling_text(). */
+        fz_pixmap *fz_new_pixmap_from_display_list_culling_text2(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects);
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_page_culling_text_etc(). */
+        fz_pixmap *fz_new_pixmap_from_page_culling_text_etc2(fz_context *ctx, fz_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders);
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_page_number_culling_text_etc(). */
+        fz_pixmap *fz_new_pixmap_from_page_number_culling_text_etc2(fz_context *ctx, fz_document *doc, int number, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders);
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_display_list_culling_text_etc(). */
+        fz_pixmap *fz_new_pixmap_from_display_list_culling_text_etc2(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders);
+
+        /** Swig-friendly wrapper for fz_find_table_within_grid(). */
+        fz_stext_block *fz_find_table_within_grid_floats(fz_context *ctx, fz_stext_page *page, const std::vector<float>& xs, const std::vector<float>& ys, float limit);
+        fz_stext_block *fz_find_table_within_grid_dividers(fz_context *ctx, fz_stext_page *page, const std::vector<fz_stext_grid_divider>& xs, const std::vector<fz_stext_grid_divider>& ys, float limit);
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
@@ -1268,10 +1298,15 @@ g_extra_definitions = textwrap.dedent(f'''
         FZ_FUNCTION std::vector<std::string> pdf_choice_widget_options2(fz_context* ctx, pdf_annot* tw, int exportval)
         {{
             int n = pdf_choice_widget_options(ctx, tw, exportval, nullptr);
+            std::vector<std::string> ret(n);
+            if (n==0)
+            {{
+                /* Evaluating &opts[0] causes assert failure on linx in debug builds. */
+                return ret;
+            }}
             std::vector<const char*> opts(n);
             int n2 = pdf_choice_widget_options(ctx, tw, exportval, &opts[0]);
             assert(n2 == n);
-            std::vector<std::string> ret(n);
             for (int i=0; i<n; ++i)
             {{
                 ret[i] = opts[i];
@@ -1392,6 +1427,149 @@ g_extra_definitions = textwrap.dedent(f'''
             fz_free(ctx, ret);
             return ret2;
         }}
+
+        /** Swig-friendly wrapper for fz_new_culling_device_with_rects(). */
+        fz_device *fz_new_culling_device_with_rects2(fz_context *ctx, fz_device *passthrough, const std::vector<fz_rect>& rects)
+        {{
+            return fz_new_culling_device_with_rects(ctx, passthrough, rects.size(), &rects[0]);
+        }}
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_page_culling_text(). */
+        fz_pixmap *fz_new_pixmap_from_page_culling_text2(fz_context *ctx, fz_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects)
+        {{
+            return fz_new_pixmap_from_page_culling_text(ctx, page, ctm, cs, alpha, rects.size(), &rects[0]);
+        }}
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_page_number_culling_text(). */
+        fz_pixmap *fz_new_pixmap_from_page_number_culling_text2(fz_context *ctx, fz_document *doc, int number, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects)
+        {{
+            return fz_new_pixmap_from_page_number_culling_text(ctx, doc, number, ctm, cs, alpha, rects.size(), &rects[0]);
+        }}
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_display_list_culling_text(). */
+        fz_pixmap *fz_new_pixmap_from_display_list_culling_text2(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects)
+        {{
+            return fz_new_pixmap_from_display_list_culling_text(ctx, list, ctm, cs, alpha, rects.size(), &rects[0]);
+        }}
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_page_culling_text_etc(). */
+        fz_pixmap *fz_new_pixmap_from_page_culling_text_etc2(fz_context *ctx, fz_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders)
+        {{
+            return fz_new_pixmap_from_page_culling_text_etc(ctx, page, ctm, cs, alpha, rects.size(), &rects[0], borders);
+        }}
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_page_number_culling_text_etc(). */
+        fz_pixmap *fz_new_pixmap_from_page_number_culling_text_etc2(fz_context *ctx, fz_document *doc, int number, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders)
+        {{
+            return fz_new_pixmap_from_page_number_culling_text_etc(ctx, doc, number, ctm, cs, alpha, rects.size(), &rects[0], borders);
+        }}
+
+        /** Swig-friendly wrapper for fz_new_pixmap_from_display_list_culling_text_etc(). */
+        fz_pixmap *fz_new_pixmap_from_display_list_culling_text_etc2(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_colorspace *cs, int alpha, const std::vector<fz_rect>& rects, float borders)
+        {{
+            return fz_new_pixmap_from_display_list_culling_text_etc(ctx, list, ctm, cs, alpha, rects.size(), &rects[0], borders);
+        }}
+
+        /** Swig-friendly wrapper for fz_find_table_within_grid(). */
+        fz_stext_block *fz_find_table_within_grid_floats(fz_context *ctx, fz_stext_page *page, const std::vector<float>& xs, const std::vector<float>& ys, float limit)
+	{{
+		fz_stext_grid_positions *xpos = NULL;
+		fz_stext_grid_positions *ypos = NULL;
+		fz_stext_block *ret = NULL;
+		size_t i, xn, yn;
+
+		fz_var(ret);
+		fz_var(xpos);
+		fz_var(ypos);
+
+		fz_try(ctx)
+		{{
+			xn = xs.size();
+			xpos = fz_malloc_flexible(ctx, fz_stext_grid_positions, list, xn);
+			xpos->len = xn;
+			for (i = 0; i != xn; i++)
+			{{
+				xpos->list[i].min = xs[i];
+				xpos->list[i].max = xs[i];
+				xpos->list[i].pos = xs[i];
+
+			}}
+			yn = ys.size();
+			ypos = fz_malloc_flexible(ctx, fz_stext_grid_positions, list, yn);
+			ypos->len = yn;
+			for (i = 0; i != yn; i++)
+			{{
+				ypos->list[i].min = ys[i];
+				ypos->list[i].max = ys[i];
+				ypos->list[i].pos = ys[i];
+			}}
+
+			ret = fz_find_table_within_grid(ctx, page, xpos, ypos, limit);
+		}}
+		fz_always(ctx)
+		{{
+			fz_free(ctx, xpos);
+			fz_free(ctx, ypos);
+		}}
+		fz_catch(ctx)
+		{{
+			fz_rethrow(ctx);
+		}}
+
+		return ret;
+	}}
+
+        fz_stext_block *fz_find_table_within_grid_dividers(fz_context *ctx, fz_stext_page *page, const std::vector<fz_stext_grid_divider>& xs, const std::vector<fz_stext_grid_divider>& ys, float limit)
+	{{
+		fz_stext_grid_positions *xpos = NULL;
+		fz_stext_grid_positions *ypos = NULL;
+		fz_stext_block *ret = NULL;
+		size_t i, xn, yn;
+		int max;
+
+		fz_var(ret);
+		fz_var(xpos);
+		fz_var(ypos);
+
+		fz_try(ctx)
+		{{
+			xn = xs.size();
+			xpos = fz_malloc_flexible(ctx, fz_stext_grid_positions, list, xn);
+			xpos->len = xn;
+			max = 0;
+			for (i = 0; i != xn; i++)
+			{{
+				xpos->list[i] = xs[i];
+				if (max < xs[i].uncertainty)
+					max = xs[i].uncertainty;
+			}}
+			xpos->max_uncertainty = max;
+			yn = ys.size();
+			ypos = fz_malloc_flexible(ctx, fz_stext_grid_positions, list, yn);
+			ypos->len = yn;
+			max = 0;
+			for (i = 0; i != yn; i++)
+			{{
+				ypos->list[i] = ys[i];
+				if (max < ys[i].uncertainty)
+					max = ys[i].uncertainty;
+			}}
+			ypos->max_uncertainty = max;
+
+			ret = fz_find_table_within_grid(ctx, page, xpos, ypos, limit);
+		}}
+		fz_always(ctx)
+		{{
+			fz_free(ctx, xpos);
+			fz_free(ctx, ypos);
+		}}
+		fz_catch(ctx)
+		{{
+			fz_rethrow(ctx);
+		}}
+
+		return ret;
+	}}
         ''')
 
 def make_extra( out_extra_h, out_extra_cpp):
@@ -2809,16 +2987,19 @@ def function_name_implies_kept_references( fnname):
     if fnname in (
             'pdf_page_write',
             'fz_decomp_image_from_stream',
-            'fz_get_pixmap_from_image',
             ):
         return True
     for i in (
             'add',
+            'clone',
             'convert',
             'copy',
             'create',
             'deep_copy',
+            'deskew',
             'find',
+            'get_pixmap',
+            'get_unscaled_pixmap',
             'graft',
             'keep',
             'load',
@@ -2931,6 +3112,9 @@ def function_wrapper_class_aware_body(
                     out_cpp.write( f'    /* Out-param {arg.name}.m_internal will be overwritten. */\n')
                     out_cpp.write( f'    {drop_fn}({arg.name}.m_internal);\n')
                     out_cpp.write( f'    {arg.name}.m_internal = nullptr;\n')
+                else:
+                    out_cpp.write( f'    /* {arg.name} is not ref-counted so we require it is null to avoid potential leaks. */\n')
+                    out_cpp.write( f'    assert(!{arg.name}.m_internal);\n')
 
         # Write function call.
         if class_constructor:
@@ -3005,8 +3189,8 @@ def function_wrapper_class_aware_body(
                 jlib.log('{=prefix}')
             if prefix:
                 if function_name_implies_kept_references( fnname):
-                    pass
                     #out_cpp.write( f'    /* We assume that {fnname} returns a kept reference. */\n')
+                    pass
                 else:
                     if state.state_.show_details(fnname):
                         jlib.log('{=classname fnname constructor} Assuming that {fnname=} returns a borrowed reference.')

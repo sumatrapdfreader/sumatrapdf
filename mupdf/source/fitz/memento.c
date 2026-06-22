@@ -385,41 +385,54 @@ struct Memento_BlkDetails
 
 typedef struct Memento_BlkHeader Memento_BlkHeader;
 
+#ifdef MEMENTO_DETAILS
+#define MEMENTO_DETAIL_FIELDS \
+    Memento_BlkDetails  *details;\
+    Memento_BlkDetails **details_tail;
+#else
+#define MEMENTO_DETAIL_FIELDS
+#endif
+
+#define MEMENTO_BLKHEADER_FIELDS \
+    size_t               rawsize;                       \
+    int                  sequence;                      \
+    int                  lastCheckedOK;                 \
+    int                  flags;                         \
+                                                        \
+    const char          *label;                         \
+                                                        \
+    /* Blocks are held in a linked list for LRU */      \
+    Memento_BlkHeader   *next;                          \
+    /* Reused as 'parent' when printing nested list */  \
+    Memento_BlkHeader   *prev;                          \
+                                                        \
+    /* Blocks are held in a splay tree for position. */ \
+    Memento_BlkHeader   *parent;                        \
+    Memento_BlkHeader   *left;                          \
+    Memento_BlkHeader   *right;                         \
+                                                        \
+    /* Entries for nesting display calculations. Set    \
+     * to magic values at all other time.  */           \
+    Memento_BlkHeader   *child;                         \
+    Memento_BlkHeader   *sibling;                       \
+                                                        \
+    MEMENTO_DETAIL_FIELDS
+
+typedef struct
+{
+    MEMENTO_BLKHEADER_FIELDS
+} Memento_BlkHeader_unpadded;
+
+#define MEMENTO_BLKHEADER_UNPADDED_SIZE (sizeof(Memento_BlkHeader_unpadded)+Memento_PreSize)
+
 struct Memento_BlkHeader
 {
-    size_t               rawsize;
-    int                  sequence;
-    int                  lastCheckedOK;
-    int                  flags;
+    MEMENTO_BLKHEADER_FIELDS
 
-    const char          *label;
-
-    /* Blocks are held in a linked list for LRU */
-    Memento_BlkHeader   *next;
-    Memento_BlkHeader   *prev; /* Reused as 'parent' when printing nested list */
-
-    /* Blocks are held in a splay tree for position. */
-    Memento_BlkHeader   *parent;
-    Memento_BlkHeader   *left;
-    Memento_BlkHeader   *right;
-
-    /* Entries for nesting display calculations. Set to magic
-     * values at all other time.  */
-    Memento_BlkHeader   *child;
-    Memento_BlkHeader   *sibling;
-
-#ifdef MEMENTO_DETAILS
-    Memento_BlkDetails  *details;
-    Memento_BlkDetails **details_tail;
-#endif
-
-    /* On 64bit versions of windows, we need blocks to be returned
-     * from malloc as 128bit aligned due to setjmp. Hence, add a
-     * dummy padding block to make the entire struct a multiple of
-     * 128bits. This has to go before the preblk. */
-#if defined(WIN64)
-    void *dummy;
-#endif
+    /* Ensure that Memento_BlkHeader is a multiple of 32. This is required
+     * for setjmp/longjmp etc on many platforms. We want to ensure that
+     * we preserve the relative 32byte alignment to the underlying malloc. */
+    char alignment_padding[32-(MEMENTO_BLKHEADER_UNPADDED_SIZE & 31)];
 
     char                 preblk[Memento_PreSize];
 };
@@ -2315,10 +2328,26 @@ static int Memento_nonLeakBlocksLeaked(void)
     return 0;
 }
 
+static int Memento_checkAllMemoryInternal(void)
+{
+#ifndef MEMENTO_LEAKONLY
+    int ret;
+
+    MEMENTO_LOCK();
+    ret = Memento_checkAllMemoryLocked();
+    MEMENTO_UNLOCK();
+    if (ret & 8) {
+        Memento_breakpoint();
+        return 1;
+    }
+#endif
+    return 0;
+}
+
 void Memento_fin(void)
 {
     int leaked = 0;
-    Memento_checkAllMemory();
+    Memento_checkAllMemoryInternal();
     if (!memento.segv)
     {
         Memento_endStats();
@@ -4208,7 +4237,6 @@ int Memento_checkAllMemory(void)
     ret = Memento_checkAllMemoryLocked();
     MEMENTO_UNLOCK();
     if (ret & 8) {
-        Memento_breakpoint();
         return 1;
     }
 #endif

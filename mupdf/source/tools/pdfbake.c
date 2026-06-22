@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -52,7 +52,7 @@ int pdfbake_main(int argc, char **argv)
 	char *output = "out.pdf";
 	char *flags = "garbage";
 	char *input;
-	int c;
+	int c, code = EXIT_SUCCESS;
 
 	fz_optind = 1;
 
@@ -100,11 +100,11 @@ int pdfbake_main(int argc, char **argv)
 	fz_catch(ctx)
 	{
 		fz_report_error(ctx);
-		return 1;
+		code = EXIT_FAILURE;
 	}
 
 	pdf_drop_document(ctx, doc);
 	fz_flush_warnings(ctx);
 	fz_drop_context(ctx);
-	return 0;
+	return code;
 }

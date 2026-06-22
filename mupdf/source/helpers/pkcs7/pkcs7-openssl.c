@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -403,11 +403,11 @@ static pdf_signature_error pk7_verify_cert(X509_STORE *cert_store, PKCS7 *p7)
 		 * not recognise those as self signed. We work around this by removing
 		 * the key usage parameters before the verification check */
 		{
-			int i = X509_get_ext_by_NID(cert, NID_key_usage, -1);
-			if (i >= 0)
+			int k = X509_get_ext_by_NID(cert, NID_key_usage, -1);
+			if (k >= 0)
 			{
-				X509_EXTENSION *ext = X509_get_ext(cert, i);
-				X509_delete_ext(cert, i);
+				X509_EXTENSION *ext = X509_get_ext(cert, k);
+				X509_delete_ext(cert, k);
 				X509_EXTENSION_free(ext);
 			}
 		}
@@ -813,9 +813,9 @@ static pdf_pkcs7_signer *pkcs7_openssl_read_pfx_imp(fz_context *ctx, const char 
 
 		if (pfile)
 		{
-		pfxbio = BIO_new_file(pfile, "rb");
-		if (pfxbio == NULL)
-			fz_throw(ctx, FZ_ERROR_LIBRARY, "Can't open pfx file: %s", pfile);
+			pfxbio = BIO_new_file(pfile, "rb");
+			if (pfxbio == NULL)
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "Can't open pfx file: %s", pfile);
 		}
 		else
 		{
@@ -830,7 +830,7 @@ static pdf_pkcs7_signer *pkcs7_openssl_read_pfx_imp(fz_context *ctx, const char 
 		if (p12 == NULL)
 		{
 			if (pfile)
-			fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file: %s", pfile);
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file: %s", pfile);
 			else
 				fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file");
 		}
@@ -839,7 +839,7 @@ static pdf_pkcs7_signer *pkcs7_openssl_read_pfx_imp(fz_context *ctx, const char 
 		if (asafes == NULL)
 		{
 			if (pfile)
-			fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file: %s", pfile);
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file: %s", pfile);
 			else
 				fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file");
 		}

@@ -1,3 +1,55 @@
+List of changes in MuPDF 1.28
+
+	Markdown document format support!
+
+	New internal options parsing API:
+		- Removed fz_has_option, fz_copy_option, and fz_option_eq.
+		- Added fz_options struct with constructors and accessors.
+		- Detect and warn for unknown and mis-spelled options.
+		- The mutool draw command now accepts device specific options with -O.
+		- Setting overprint simulation in mutool draw is now done with -M.
+
+	HTML and EPUB improvements:
+		- vertical-align for inline images
+		- vertical-align percentage based values
+		- support tags <u>, <s>, <mark>
+		- background-color on inline elements
+		- :before and :after pseudo-selectors with content
+		- input form elements now have an appearance (but non-interactive)
+		- respect meta viewport to set minimum page size
+
+	Per-document control of publisher and user CSS.
+		- context global fz_set_use_document_css and fz_set_user_css deprecated
+		- replaced with per-document fz_style_document
+
+	PDF write option "decrypt" is deprecated; use "encrypt=none" instead.
+
+	New mutool audit command to analyze PDF structure and generate report
+
+	Many improvements and fixes to incremental search API.
+		- customizable structured text to plain text flattening conversions
+		- mutool grep command uses regular expressions by default
+
+	Improved text extraction:
+		- improved ActualText replacement handling for non-text elements
+		- more robust behavior around ActualText replacements
+		- presentation form (ligature) decomposition for all scripts
+		- improved text-indent paragraph detection
+		- improved fake bold detection
+		- improved handling of soft and hard hyphens
+
+	Added fz_check_document to scan document and fix possible structural
+	errors. Use this to avoid the risk of encountering file errors that may
+	cause edits to be lost when the file structure is repaired.
+
+	Support linear and radial shadings when converting XPS (and other formats) to PDF.
+
+	Checked arithmetic functions like in C23 (fz_ckd_mul_int etc)
+
+	Many bug fixes, optimizations, security hardening fixes, and undefined
+	behavior code cleanups.
+
+
 List of changes in MuPDF 1.27
 
 	New and updated documentation! Build local HTML and Markdown versions from source with sphinx.

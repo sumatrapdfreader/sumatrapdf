@@ -237,6 +237,7 @@
     <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSoraSompeng-Regular.otf" />
     <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSoyombo-Regular.otf" />
     <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSundanese-Regular.otf" />
+    <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSunuwar-Regular.otf" />
     <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSylotiNagri-Regular.otf" />
     <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSymbols-Regular.otf" />
     <bin2coff__otf_ Include="..\..\resources\fonts\noto\NotoSansSymbols2-Regular.otf" />

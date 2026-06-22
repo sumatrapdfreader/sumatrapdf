@@ -98,7 +98,11 @@ void fz_pcl_preset(fz_context *ctx, fz_pcl_options *opts, const char *preset);
 		is_ljet4pjl	Disable/Enable HP 4PJL model-specific output
 		is_oce9050	Disable/Enable Oce 9050 model-specific output
 */
+void fz_init_pcl_options(fz_context *ctx, fz_pcl_options *opts);
+
 fz_pcl_options *fz_parse_pcl_options(fz_context *ctx, fz_pcl_options *opts, const char *args);
+
+void fz_apply_pcl_options(fz_context *ctx, fz_pcl_options *opts, fz_options *args);
 
 /**
 	Create a new band writer, outputting monochrome pcl.
@@ -151,7 +155,9 @@ typedef struct
 		compression=flate: Flate compression
 		strip-height=n: Strip height (default 16)
 */
+void fz_init_pclm_options(fz_context *ctx, fz_pclm_options *opts);
 fz_pclm_options *fz_parse_pclm_options(fz_context *ctx, fz_pclm_options *opts, const char *args);
+void fz_apply_pclm_options(fz_context *ctx, fz_pclm_options *opts, fz_options *args);
 
 /**
 	Create a new band writer, outputting pclm
@@ -185,7 +191,7 @@ typedef struct
 	/* Updated as we move through the job */
 	int page_count;
 
-	char *options;
+	fz_options *options;
 } fz_pdfocr_options;
 
 /**
@@ -199,7 +205,9 @@ typedef struct
 		ocr-language=<lang>: OCR Language (default eng)
 		ocr-datadir=<datadir>: OCR data path (default rely on TESSDATA_PREFIX)
 */
+void fz_init_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts);
 fz_pdfocr_options *fz_parse_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts, const char *args);
+void fz_apply_pdfocr_options(fz_context *ctx, fz_pdfocr_options *opts, fz_options *options);
 
 /**
 	Create a new band writer, outputting pdfocr.
@@ -454,6 +462,21 @@ typedef struct
 	char rendering_intent[64];
 	char page_size_name[64];
 } fz_pwg_options;
+
+/**
+	Init pwg options to a sensible default.
+*/
+void fz_init_pwg_options(fz_context *ctx, fz_pwg_options *opts);
+
+/**
+	Initialise a pwg options struct, and parse the given options string.
+*/
+fz_pwg_options *fz_parse_pwg_options(fz_context *ctx, fz_pwg_options *opts, const char *args);
+
+/**
+	Apply the given options to an initialised pwg options struct.
+*/
+void fz_apply_pwg_options(fz_context *ctx, fz_pwg_options *opts, fz_options *args);
 
 /**
 	Save a pixmap as a PWG.

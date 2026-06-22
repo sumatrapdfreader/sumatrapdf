@@ -433,9 +433,15 @@ unlock_and_return_val:
 	fz_catch(ctx)
 	{
 		if (caching)
+		{
+			fz_report_error(ctx);
 			fz_warn(ctx, "cannot encache glyph; continuing");
+		}
 		else
-			fz_rethrow(ctx);
+		{
+			fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+			fz_report_error(ctx);
+		}
 	}
 
 	return val;

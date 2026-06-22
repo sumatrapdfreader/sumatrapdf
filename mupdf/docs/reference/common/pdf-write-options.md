@@ -2,6 +2,8 @@
 
 These are the common options to functions that write PDF files.
 
+The options are specified using an <a href="option-strings.html">option string</a> of key-value pairs.
+
 decompress
 : Decompress all streams (except compress-fonts/images)
 
@@ -45,10 +47,10 @@ garbage
 : Garbage collect unused objects
 
 garbage=compact
-: Garbage collect unsued objects, and compact cross reference table
+: Garbage collect unused objects, and compact cross reference table
 
 garbage=deduplicate
-: Garbage collec unused objects, compact cross reference tables, and remove duplicate objects
+: Garbage collect unused objects, compact cross reference tables, and remove duplicate objects
 
 incremental
 : Write changes as incremental update
@@ -63,10 +65,10 @@ continue-on-error
 : Continue saving the document even if there is an error
 
 decrypt
-: Write unencrypted document
+: This option is deprecated: instead of decrypt use encrypt=none
 
-encrypt=rc4-40|rc4-128|aes-128|aes-256
-: Write encrypted document
+encrypt=none|keep|rc4-40|rc4-128|aes-128|aes-256
+: Write encrypted document (default keep)
 
 permissions=NUMBER
 : Document permissions to grant when encrypting

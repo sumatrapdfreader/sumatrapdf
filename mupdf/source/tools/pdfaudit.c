@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2025 Artifex Software, Inc.
+// Copyright (C) 2023-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -62,7 +62,7 @@ typedef enum
 	AUDIT__MAX
 } audit_type_t;
 
-const char *audit_type[] =
+static const char *audit_type[] =
 {
 	"UNKNOWN",
 	"THUMBNAILS",
@@ -191,7 +191,7 @@ enum
 	OP_END
 };
 
-const char *op_names[] =
+static const char *op_names[] =
 {
 	"w",
 	"j",
@@ -1455,6 +1455,7 @@ pdf_new_opcount_filter(
 	void *options_)
 {
 	pdf_opcount_processor *proc = pdf_new_processor(ctx, sizeof * proc);
+	proc->super.drop_processor = pdf_drop_opcount_processor;
 
 	fz_try(ctx)
 	{
@@ -1462,12 +1463,14 @@ pdf_new_opcount_filter(
 		proc->mine = pdf_new_buffer_processor(ctx, proc->buffer, 0, 0);
 	}
 	fz_catch(ctx)
+	{
+		pdf_drop_processor(ctx, &proc->super);
 		fz_rethrow(ctx);
+	}
 
 	proc->op_usage = (op_usage_t *)options_;
 
 	proc->super.close_processor = pdf_close_opcount_processor;
-	proc->super.drop_processor = pdf_drop_opcount_processor;
 
 	proc->super.push_resources = pdf_opcount_push_resources;
 	proc->super.pop_resources = pdf_opcount_pop_resources;
@@ -1737,8 +1740,6 @@ walk(fz_context *ctx, walk_stack_t *ws, int n, obj_info_t *oi, pdf_obj *obj, aud
 					type = AUDIT_COMMENTS;
 				else if (pdf_name_eq(ctx, subtype, PDF_NAME(3D)))
 					type = AUDIT_3DCONTENT;
-				else if (pdf_name_eq(ctx, subtype, PDF_NAME(PieceInfo)))
-					type = AUDIT_PIECE_INFORMATION;
 			}
 			else if (pdf_name_eq(ctx, otype, PDF_NAME(Font)))
 				type = AUDIT_FONTS;
@@ -1809,6 +1810,8 @@ step_next_dict_child:
 				type = AUDIT_EMBEDDED_FILES;
 			else if (pdf_name_eq(ctx, key, PDF_NAME(Metadata)))
 				type = AUDIT_METADATA;
+			else if (pdf_name_eq(ctx, key, PDF_NAME(PieceInfo)))
+				type = AUDIT_PIECE_INFORMATION;
 
 			/* OK. step onto the val. */
 			obj = pdf_dict_get_val(ctx, ws->stack[ws->len-1].obj, ws->stack[ws->len-1].pos-1);
@@ -1864,9 +1867,21 @@ classify_by_walking(fz_context *ctx, pdf_document *doc, int n, obj_info_t *oi)
 }
 
 static void
-output_size(fz_context *ctx, fz_output *out, uint64_t file_size, const char *str, uint64_t size, uint64_t size2)
+output_size1(fz_context *ctx, fz_output *out, uint64_t file_size, const char *str, uint64_t size, uint64_t size2)
 {
 	fz_write_printf(ctx, out, "<tr align=right><td align=left>%s<td>%,ld<td>%.2f%%<td>%,ld<td>%.2f%%</tr>\n", str, size, 100.0f * size/file_size, size2, 100.0f * size2/file_size);
+}
+
+static void
+output_size(fz_context *ctx, fz_output *out, uint64_t file_size, const char *str, int count, uint64_t size, int count2, uint64_t size2)
+{
+	fz_write_printf(ctx, out, "<tr align=right><td align=left>%s<td>%d<td>%,ld<td>%.2f%%<td>%d<td>%,ld<td>%.2f%%</tr>\n", str, count, size, 100.0f * size/file_size, count2, size2, 100.0f * size2/file_size);
+}
+
+static void
+output_size_foot(fz_context *ctx, fz_output *out, uint64_t file_size, const char *str, int count, uint64_t size, int count2, uint64_t size2)
+{
+	fz_write_printf(ctx, out, "<tfoot><tr align=right><th align=left>%s<th>%d<th>%,ld<th>%.2f%%<th>%d<th>%,ld<th>%.2f%%</tr></tfoot>\n", str, count, size, 100.0f * size/file_size, count2, size2, 100.0f * size2/file_size);
 }
 
 static void
@@ -1963,6 +1978,8 @@ filter_file(fz_context *ctx, fz_output *out, const char *filename)
 		/* Sum the results */
 		{
 			struct {
+				int obj_count;
+				int objstm_count;
 				size_t obj;
 				size_t objstm;
 			} counts[AUDIT__MAX] = { 0 };
@@ -1972,6 +1989,8 @@ filter_file(fz_context *ctx, fz_output *out, const char *filename)
 			size_t objstm_overhead = 0;
 			size_t total_stream_uncomp = 0;
 			size_t total_stream_comp = 0;
+			int total_obj_count = 0;
+			int total_objstm_count = 0;
 			for (i = 1; i < n; i++)
 			{
 				size_t z = oi[i].textsize + oi[i].overhead + oi[i].stream_len;
@@ -1981,28 +2000,40 @@ filter_file(fz_context *ctx, fz_output *out, const char *filename)
 				{
 					objstm_overhead += oi[i].overhead;
 					total_objstm += oi[i].textsize;
+					total_objstm_count++;
 					counts[oi[i].type].objstm += z;
+					counts[oi[i].type].objstm_count++;
 				}
 				else
 				{
 					overhead += oi[i].overhead;
 					total_obj += oi[i].textsize;
+					total_obj_count++;
 					counts[oi[i].type].obj += z;
+					counts[oi[i].type].obj_count++;
 				}
 			}
-			fz_write_printf(ctx, out, "<table border=1><thead><th><th colspan=2>not in objstms<th colspan=2>in objstms</thead>\n");
-			output_size(ctx, out, pdf->file_size, "object text", total_obj, total_objstm);
-			output_size(ctx, out, pdf->file_size, "object overhead", overhead, objstm_overhead);
-			fz_write_printf(ctx, out, "<thead><th><th colspan=2>uncompressed<th colspan=2>compressed</thead>\n");
-			output_size(ctx, out, pdf->file_size, "streams", total_stream_uncomp, total_stream_comp);
+			fz_write_printf(ctx, out, "<style>td, th { border: 1px solid black; } th.hide,td.hide { border:none;}</style>\n");
+			fz_write_printf(ctx, out, "<table><thead><tr><th class=\"hide\"><th colspan=2>not in objstms<th colspan=2>in objstms</tr></thead>\n");
+			output_size1(ctx, out, pdf->file_size, "object text", total_obj, total_objstm);
+			output_size1(ctx, out, pdf->file_size, "object overhead", overhead, objstm_overhead);
+			fz_write_printf(ctx, out, "<thead><tr><th class=\"hide\"><th colspan=2>uncompressed<th colspan=2>compressed</tr></thead>\n");
+			output_size1(ctx, out, pdf->file_size, "streams", total_stream_uncomp, total_stream_comp);
 			fz_write_printf(ctx, out, "</table>\n");
 			fz_write_printf(ctx, out, "<p>NOTE: The uncompressed streams percentage figure is misleading,"
 						" as it is the percentage of the complete file which typically includes compression.</p>\n");
-			fz_write_printf(ctx, out, "<table border=1><thead><th><th colspan=2>not in objstms<th colspan=2>in objstms</thead>\n");
+			fz_write_printf(ctx, out, "<table><thead><tr><th class=\"hide\"><th colspan=3>not in objstms<th colspan=3>in objstms</tr>\n");
+			fz_write_printf(ctx, out, "<tr><th class=\"hide\"><th>count<th colspan=2>size<th>count<th colspan=2>size</tr></thead>\n");
 			fz_write_printf(ctx, out, "<H3>Classified file usage</H3>\n");
-			for (i = 0; i < AUDIT__MAX; i++)
 			{
-				output_size(ctx, out, pdf->file_size, audit_type[i], counts[i].obj, counts[i].objstm);
+				size_t z = 0, z2 = 0;
+				for (i = 0; i < AUDIT__MAX; i++)
+				{
+					output_size(ctx, out, pdf->file_size, audit_type[i], counts[i].obj_count, counts[i].obj, counts[i].objstm_count, counts[i].objstm);
+					z += counts[i].obj;
+					z2 += counts[i].objstm;
+				}
+				output_size_foot(ctx, out, pdf->file_size, "TOTAL", total_obj_count, z, total_objstm_count, z2);
 			}
 			fz_write_printf(ctx, out, "</table>\n");
 			fz_write_printf(ctx, out, "<p>NOTE: The percentages are as percentages of the complete file. This again means that"
@@ -2036,11 +2067,12 @@ filter_file(fz_context *ctx, fz_output *out, const char *filename)
 			size_t total = 0;
 			for (i = 0; i < OP_END; i++)
 				total += ou.len[i];
-			fz_write_printf(ctx, out, "<table border=1><thead><th>Op<th>bytes<th></thead>\n");
+			fz_write_printf(ctx, out, "<table><thead><th>Op<th>bytes<th>%%</thead>\n");
 			for (i = 0; i < OP_END; i++)
 			{
 				fz_write_printf(ctx, out, "<tr align=right><td align=left>%s<td>%,zd<td>%.2f%%</tr>\n", op_names[i], ou.len[i], 100.f * ou.len[i] / total);
 			}
+			fz_write_printf(ctx, out, "<tfoot><tr align=right><th align=left>TOTAL<th>%,zd<th>%.2f%%</tr></tfoot>\n", total, 100.f);
 			fz_write_printf(ctx, out, "</table>\n");
 			fz_write_printf(ctx, out, "<p>NOTE: The percentages are of the operator stream content found.</p>\n");
 		}
@@ -2067,7 +2099,7 @@ static int usage(void)
 
 int pdfaudit_main(int argc, char **argv)
 {
-	char *outfile = "-";
+	char *outfile = "/dev/stdout";
 	int c;
 	int errors = 0;
 	int append = 0;

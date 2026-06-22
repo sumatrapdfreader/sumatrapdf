@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2026 Artifex Software, Inc.
 //
 // This file is part of MuPDF WASM Library.
 //
@@ -245,6 +245,37 @@ export function shrinkStore(percent: number): boolean {
 
 export function installLoadFontFunction(f: (name: string, script: string, bold: boolean, italic: boolean) => Font | null) {
 	$libmupdf_load_font_file_js = f
+}
+
+/* -------------------------------------------------------------------------- */
+
+interface Log {
+	error?(message: string): void
+	warning?(message: string): void
+}
+
+var $libmupdf_log: Log | null = null
+
+declare global {
+	function $libmupdf_log_error(message: Pointer<"char">): void
+	function $libmupdf_log_warning(message: Pointer<"char">): void
+}
+
+globalThis.$libmupdf_log_error = function (message) {
+	$libmupdf_log?.error?.(fromString(message))
+}
+
+globalThis.$libmupdf_log_warning = function (message) {
+	$libmupdf_log?.warning?.(fromString(message))
+}
+
+export function setLog(log: Log | ((message:string)=>void) | null) {
+	if (typeof log === "function") {
+		$libmupdf_log = { error: log, warning: log }
+	} else {
+		$libmupdf_log = log
+	}
+	libmupdf._wasm_enable_log_callback(log !== null)
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1474,7 +1505,7 @@ interface StructuredTextWalker {
 	onImageBlock?(bbox: Rect, transform: Matrix, image: Image): void
 	beginTextBlock?(bbox: Rect): void
 	beginLine?(bbox: Rect, wmode: number, direction: Point): void
-	onChar?(c: string, origin: Point, font: Font, size: number, quad: Quad, color: Color): void
+	onChar?(c: string, origin: Point, font: Font, size: number, quad: Quad, color: Color, bidi: number): void
 	endLine?(): void
 	endTextBlock?(): void
 	onVector?(bbox: Rect, flags: any, color: Color): void
@@ -1523,8 +1554,9 @@ export class StructuredText extends Userdata<"fz_stext_page"> {
 							let ch_size = libmupdf._wasm_stext_char_get_size(ch)
 							let ch_quad = fromQuad(libmupdf._wasm_stext_char_get_quad(ch))
 							let ch_color = colorFromNumber(libmupdf._wasm_stext_char_get_argb(ch))
+							let ch_bidi = libmupdf._wasm_stext_char_get_bidi(ch)
 
-							walker.onChar(ch_rune, ch_origin, ch_font, ch_size, ch_quad, ch_color)
+							walker.onChar(ch_rune, ch_origin, ch_font, ch_size, ch_quad, ch_color, ch_bidi)
 
 							ch = libmupdf._wasm_stext_char_get_next(ch)
 						}
@@ -2065,6 +2097,12 @@ export class Document extends Userdata<"any_document"> {
 
 	isReflowable() {
 		libmupdf._wasm_is_document_reflowable(this.pointer)
+	}
+
+	style(publisherCSS: boolean, userCSS: string) {
+		checkType(publisherCSS, "boolean")
+		checkType(userCSS, "string")
+		libmupdf._wasm_style_document(this.pointer, publisherCSS, STRING(userCSS))
 	}
 
 	layout(w: number, h: number, em: number) {
@@ -3440,12 +3478,28 @@ export class PDFAnnotation extends Userdata<"pdf_annot"> {
 		libmupdf._wasm_pdf_set_annot_contents(this.pointer, STRING(text))
 	}
 
+	getName() {
+		return fromString(libmupdf._wasm_pdf_annot_name(this.pointer))
+	}
+
+	setName(text: string) {
+		libmupdf._wasm_pdf_set_annot_name(this.pointer, STRING(text))
+	}
+
 	getAuthor() {
 		return fromString(libmupdf._wasm_pdf_annot_author(this.pointer))
 	}
 
 	setAuthor(text: string) {
 		libmupdf._wasm_pdf_set_annot_author(this.pointer, STRING(text))
+	}
+
+	getSubject() {
+		return fromString(libmupdf._wasm_pdf_annot_subject(this.pointer))
+	}
+
+	setSubject(text: string) {
+		libmupdf._wasm_pdf_set_annot_subject(this.pointer, STRING(text))
 	}
 
 	getCreationDate() {
@@ -3501,6 +3555,9 @@ export class PDFAnnotation extends Userdata<"pdf_annot"> {
 	}
 	hasAuthor() {
 		return !!libmupdf._wasm_pdf_annot_has_author(this.pointer)
+	}
+	hasSubject() {
+		return !!libmupdf._wasm_pdf_annot_has_subject(this.pointer)
 	}
 	hasFilespec() {
 		return !!libmupdf._wasm_pdf_annot_has_filespec(this.pointer)
@@ -3959,18 +4016,25 @@ export class PDFWidget extends PDFAnnotation {
 	/* Text fields */
 	static readonly TX_FIELD_IS_MULTILINE = 1 << 12
 	static readonly TX_FIELD_IS_PASSWORD = 1 << 13
+	static readonly TX_FIELD_IS_FILE_SELECT = 1 << 20
+	static readonly TX_FIELD_IS_DO_NOT_SPELL_CHECK = 1 << 22
+	static readonly TX_FIELD_IS_DO_NOT_SCROLL = 1 << 23
 	static readonly TX_FIELD_IS_COMB = 1 << 24
+	static readonly TX_FIELD_IS_RICH_TEXT = 1 << 25
 
 	/* Button fields */
 	static readonly BTN_FIELD_IS_NO_TOGGLE_TO_OFF = 1 << 14
 	static readonly BTN_FIELD_IS_RADIO = 1 << 15
 	static readonly BTN_FIELD_IS_PUSHBUTTON = 1 << 16
+	static readonly BTN_FIELD_IS_RADIOS_IN_UNISON = 1 << 25
 
 	/* Choice fields */
 	static readonly CH_FIELD_IS_COMBO = 1 << 17
 	static readonly CH_FIELD_IS_EDIT = 1 << 18
 	static readonly CH_FIELD_IS_SORT = 1 << 19
 	static readonly CH_FIELD_IS_MULTI_SELECT = 1 << 21
+	static readonly CH_FIELD_IS_DO_NOT_SPELL_CHECK = 1 << 22
+	static readonly CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = 1 << 25
 
 	getFieldType() {
 		return PDFWidget.WIDGET_TYPES[libmupdf._wasm_pdf_annot_field_type(this.pointer)] || "button"
@@ -4034,8 +4098,12 @@ export class PDFWidget extends PDFAnnotation {
 		return fromString(libmupdf._wasm_pdf_annot_field_label(this.pointer))
 	}
 
-	getName() {
+	override getName() {
 		return fromStringFree(libmupdf._wasm_pdf_load_field_name(this.pointer))
+	}
+
+	override setName() {
+		throw new Error("widget field name is read-only")
 	}
 
 	getValue() {
@@ -4593,6 +4661,7 @@ export default {
 	disableICC,
 	setUserCSS,
 	installLoadFontFunction,
+	setLog,
 
 	// class
 	Buffer,
