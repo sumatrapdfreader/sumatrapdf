@@ -274,6 +274,11 @@ bool StartFormFieldEdit(MainWindow* win, Annotation* widget) {
         return false;
     }
     Rect rc = dm->CvtToScreen(widget->pageNo, widget->bounds); // canvas-client coords
+    // scroll the field into view if it's off-screen (e.g. Tab moved past the
+    // fold), then recompute its on-screen rect
+    if (dm->ScrollScreenToRect(widget->pageNo, rc)) {
+        rc = dm->CvtToScreen(widget->pageNo, widget->bounds);
+    }
     if (rc.dx < 4 || rc.dy < 4) {
         return false;
     }
