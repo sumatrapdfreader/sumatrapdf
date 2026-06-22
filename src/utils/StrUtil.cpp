@@ -450,6 +450,24 @@ bool EqNIx(const char* s, size_t len, const char* s2) {
     return str::Len(s2) == len && str::StartsWithI(s, s2);
 }
 
+// Locale-independent Unicode lowercase folding for case-insensitive matching.
+// CharLowerBuffW folds accented / Cyrillic / Greek letters regardless of the
+// CRT locale (unlike towlower()), and U+0130 is special-cased to 'i' the same
+// way as our full-text search (see TextSearch.cpp's FoldCaseForSearch), so the
+// two stay consistent. Folding is 1:1 in WCHAR count, so it doesn't change
+// character offsets.
+static void FoldCaseForFindW(WCHAR* s, int n) {
+    if (n <= 0) {
+        return;
+    }
+    CharLowerBuffW(s, (DWORD)n);
+    for (int i = 0; i < n; i++) {
+        if (s[i] == 0x0130) {
+            s[i] = L'i';
+        }
+    }
+}
+
 const char* FindI(const char* s, const char* toFind) {
     if (!s || !toFind) {
         return nullptr;
@@ -459,16 +477,60 @@ const char* FindI(const char* s, const char* toFind) {
     if (!first) {
         return s;
     }
-    while (*s) {
-        char c = (char)tolower(*s);
-        if (c == first) {
-            if (str::StartsWithI(s, toFind)) {
-                return s;
-            }
+
+    // Fast path: an ASCII needle can be matched byte-wise against a UTF-8
+    // haystack (ASCII bytes never occur inside multi-byte UTF-8 sequences)
+    // without any allocation. The Unicode path below is only needed to
+    // case-fold a non-ASCII needle (e.g. Cyrillic), so that case-insensitive
+    // search works for non-Latin text too (issue #5717).
+    bool asciiNeedle = true;
+    for (const char* p = toFind; *p; p++) {
+        if ((u8)*p >= 0x80) {
+            asciiNeedle = false;
+            break;
         }
-        s++;
     }
-    return nullptr;
+    if (asciiNeedle) {
+        while (*s) {
+            char c = (char)tolower(*s);
+            if (c == first) {
+                if (str::StartsWithI(s, toFind)) {
+                    return s;
+                }
+            }
+            s++;
+        }
+        return nullptr;
+    }
+
+    // Unicode path: case-fold both strings (UTF-16) and search, then map the
+    // match position back to a byte offset in the original UTF-8 string so the
+    // returned pointer keeps FindI's contract (a pointer into s).
+    //
+    // Scratch buffers come from the temporary arena; we restore it to its entry
+    // position before returning so repeated calls (e.g. the command palette
+    // filtering every item) don't grow the arena unbounded. The result points
+    // into the caller's original string s, not the arena, so it stays valid.
+    ArenaSavepoint sp = ArenaGetSavepoint(GetTempAllocator());
+
+    TempWStr ws = ToWStrTemp(s); // unfolded, used to map the match back to bytes
+    TempWStr wsLo = str::DupTemp(ws);
+    TempWStr wfLo = ToWStrTemp(toFind);
+    FoldCaseForFindW(wsLo, str::Leni(wsLo));
+    FoldCaseForFindW(wfLo, str::Leni(wfLo));
+
+    const char* res = nullptr;
+    const WCHAR* m = wcsstr(wsLo, wfLo);
+    if (m) {
+        int idx = (int)(m - wsLo); // WCHAR index, 1:1 with the unfolded ws
+        int nbytes = 0;
+        if (idx > 0) {
+            nbytes = WideCharToMultiByte(CP_UTF8, 0, ws, idx, nullptr, 0, nullptr, nullptr);
+        }
+        res = s + nbytes;
+    }
+    ArenaRestoreSavepoint(sp);
+    return res;
 }
 
 void ReplacePtr(const char** s, const char* snew) {

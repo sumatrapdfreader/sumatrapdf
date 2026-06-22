@@ -123,9 +123,13 @@ static void StrUrlExtractTest() {
     fileName = url::GetFileNameTemp("http://example.net/%E2%82%AC");
     utassert(str::Eq(fileName, "\xE2\x82\xaC"));
     char wikiUrl[] =
-        "https://ru.wikipedia.org/wiki/%D0%AD%D0%BD%D0%B5%D1%80%D0%B3%D0%B8%D1%8F_%E2%80%94_%D0%91%D1%83%D1%80%D0%B0%D0%BD";
+        "https://ru.wikipedia.org/wiki/"
+        "%D0%AD%D0%BD%D0%B5%D1%80%D0%B3%D0%B8%D1%8F_%E2%80%94_%D0%91%D1%83%D1%80%D0%B0%D0%BD";
     url::DecodeInPlace(wikiUrl);
-    utassert(str::Eq(wikiUrl, "https://ru.wikipedia.org/wiki/\xD0\xAD\xD0\xBD\xD0\xB5\xD1\x80\xD0\xB3\xD0\xB8\xD1\x8F_\xE2\x80\x94_\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD"));
+    utassert(str::Eq(wikiUrl,
+                     "https://ru.wikipedia.org/wiki/"
+                     "\xD0\xAD\xD0\xBD\xD0\xB5\xD1\x80\xD0\xB3\xD0\xB8\xD1\x8F_\xE2\x80\x94_"
+                     "\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD"));
 }
 
 void strStrTest() {
@@ -181,6 +185,37 @@ void strStrTest() {
         char* buf2 = str.Get();
         utassert(buf == buf2);
     }
+}
+
+// case-insensitive Find/Contains must work for non-Latin scripts, not just
+// ASCII (issue #5717: TOC "*" palette search was case-sensitive for Cyrillic)
+static void StrFindITest() {
+    // ASCII still works (fast path, regression guard)
+    const char* hello = "Hello World";
+    utassert(str::ContainsI(hello, "hello"));
+    utassert(str::ContainsI(hello, "WORLD"));
+    utassert(!str::ContainsI(hello, "xyz"));
+    utassert(str::FindI(hello, "WORLD") == (hello + 6));
+
+    // Cyrillic: "Привет" (capitalized) vs "привет" (lowercase needle)
+    const char* privetCap = "\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
+    const char* privetLow = "\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
+    utassert(str::Contains(privetCap, privetCap));
+    utassert(!str::Contains(privetCap, privetLow)); // case-sensitive: no match
+    utassert(str::ContainsI(privetCap, privetLow)); // case-insensitive: matches
+    utassert(str::ContainsI(privetLow, privetCap)); // and the reverse
+    utassert(str::FindI(privetCap, privetLow) == privetCap);
+
+    // mixed ASCII + Cyrillic: the returned pointer must be the correct byte
+    // offset into the original UTF-8 string ("abc " is 4 bytes)
+    const char* mixed = "abc \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
+    utassert(str::FindI(mixed, privetLow) == (mixed + 4));
+    utassert(!str::FindI(mixed, "xyz"));
+
+    // Greek: "ΛΟΓΟΣ" vs "λογος"
+    const char* logosCap = "\xCE\x9B\xCE\x9F\xCE\x93\xCE\x9F\xCE\xA3";
+    const char* logosLow = "\xCE\xBB\xCE\xBF\xCE\xB3\xCE\xBF\xCF\x83";
+    utassert(str::ContainsI(logosCap, logosLow));
 }
 
 void StrTest() {
@@ -599,5 +634,6 @@ void StrTest() {
     StrSeqTest();
     StrConvTest();
     StrUrlExtractTest();
+    StrFindITest();
     // ParseUntilTest();
 }
