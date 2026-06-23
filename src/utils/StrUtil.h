@@ -12,20 +12,6 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);
 int utf8RuneLen(const u8* s);
 
-struct StrSpan {
-    char* d = nullptr;
-    int size = 0;
-
-    StrSpan() = default;
-    StrSpan(const char* s);
-    StrSpan(const char* s, int sLen);
-
-    int Len() const { return size; }
-    int Size() const { return size; }
-    char* CStr() const { return d; }
-    bool IsEmpty() const { return !d || size == 0; }
-};
-
 struct ByteSlice {
     u8* d = nullptr;
     size_t sz = 0;
@@ -100,7 +86,7 @@ int Leni(const char* s);
 
 void Free(const char*);
 void Free(const u8*);
-void Free(const StrSpan& s);
+void Free(const Str& s);
 
 void Free(const WCHAR* s);
 
@@ -289,7 +275,7 @@ struct StrBuilder {
     bool InsertAt(size_t idx, char el);
     bool AppendChar(char c);
     bool Append(const char* src, size_t count = -1);
-    bool Append(const StrSpan&);
+    bool Append(const Str&);
     bool Append(const StrBuilder& s);
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();

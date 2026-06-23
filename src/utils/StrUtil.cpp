@@ -194,32 +194,6 @@ bool IsEqual(const ByteSlice& d1, const ByteSlice& d2) {
     return res == 0;
 }
 
-StrSpan::StrSpan(const char* s) {
-    d = (char*)s;
-    size = str::Leni(s);
-}
-
-StrSpan::StrSpan(const char* s, int sLen) {
-    d = (char*)s;
-    if (sLen < 0) {
-        size = str::Leni(s);
-    } else {
-        size = sLen;
-    }
-}
-
-bool IsEqual(const StrSpan& d1, const StrSpan& d2) {
-    if (d1.Len() != d2.Len()) {
-        return false;
-    }
-    if (d1.Len() == 0) {
-        return true;
-    }
-    ReportIf(!d1.d || !d2.d);
-    int res = memcmp(d1.d, d2.d, d1.Len());
-    return res == 0;
-}
-
 namespace str {
 
 size_t Len(const char* s) {
@@ -250,8 +224,8 @@ void Free(const WCHAR* s) {
     free((void*)s);
 }
 
-void Free(const StrSpan& s) {
-    free(s.CStr());
+void Free(const Str& s) {
+    free(s.s);
 }
 
 void FreePtr(const char** s) {
@@ -1558,8 +1532,8 @@ bool StrBuilder::AppendChar(char c) {
     return InsertAt(len, c);
 }
 
-bool StrBuilder::Append(const StrSpan& s) {
-    return Append(s.CStr(), (size_t)s.Len());
+bool StrBuilder::Append(const Str& s) {
+    return Append(s.s, (size_t)s.len);
 }
 
 bool StrBuilder::Append(const char* src, size_t count) {

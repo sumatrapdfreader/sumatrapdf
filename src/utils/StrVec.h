@@ -31,7 +31,7 @@ struct StrVec {
     int Size() const;
     bool IsEmpty() const;
     char* At(int i) const;
-    StrSpan AtSpan(int i) const;
+    Str AtStr(int i) const;
     void* AtDataRaw(int i) const;
     char* operator[](int) const;
 
@@ -42,8 +42,10 @@ struct StrVec {
     char* RemoveAtFast(int);
     bool Remove(const char*);
 
-    int Find(const StrSpan&, int startAt = 0) const;
-    int FindI(const StrSpan&, int startAt = 0) const;
+    int Find(const Str&, int startAt = 0) const;
+    int Find(const char* s, int startAt = 0) const;
+    int FindI(const Str&, int startAt = 0) const;
+    int FindI(const char* s, int startAt = 0) const;
     bool Contains(const char*, int sLen = -1) const;
 
     struct iterator {
@@ -56,7 +58,7 @@ struct StrVec {
 
         iterator(const StrVec* v, int idx);
         char* operator*() const;
-        StrSpan Span() const;
+        Str AsStr() const;
         iterator& operator++();   // ++it
         iterator operator++(int); // it++
         iterator& operator+(int); // it += n
@@ -76,8 +78,8 @@ struct StrVecWithData : StrVec {
         return (T*)(res);
     }
 
-    int Append(const StrSpan& s, const T& data) {
-        StrVec::Append(s.CStr(), s.Size());
+    int Append(const Str& s, const T& data) {
+        StrVec::Append(s.s, s.len);
         int idx = Size() - 1;
         T* d = AtData(idx);
         *d = data;
@@ -85,13 +87,13 @@ struct StrVecWithData : StrVec {
     }
 
     int Append(const char* s, const T& data) {
-        StrSpan sp(s);
+        Str sp((char*)s);
         int idx = this->Append(sp, data);
         return idx;
     }
 
     int AppendFrom(StrVecWithData<T>* src, int srcIdx) {
-        StrSpan s = src->AtSpan(srcIdx);
+        Str s = src->AtStr(srcIdx);
         T* data = src->AtData(srcIdx);
         int idx = this->Append(s, *data);
         return idx;

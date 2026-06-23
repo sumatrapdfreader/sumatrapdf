@@ -306,25 +306,25 @@ Str SmartResolveDirectory(Str dir);
 // Works for any struct with int len member (Str, WStr, *Vec, etc.)
 template <typename T>
 inline bool IsEmpty(const T& v) {
-    return v.len <= 0;
+    return v.len == 0;
 }
 template <typename T>
 inline bool IsEmpty(const T* v) {
-    return !v || v->len <= 0;
+    return !v || v->len == 0;
 }
 
 // specialized for Str and WStr
 inline bool IsEmpty(const Str& v) {
-    return !v.s || v.len <= 0;
+    return v.len == 0 || !v.s;
 }
 inline bool IsEmpty(const Str* v) {
-    return !v || !v->s || v->len <= 0;
+    return !v || v->len == 0 || !v->s;
 }
 inline bool IsEmpty(const WStr& v) {
-    return !v.s || v.len <= 0;
+    return v.len == 0 || !v.s;
 }
 inline bool IsEmpty(const WStr* v) {
-    return !v || !v->s || v->len <= 0;
+    return !v || v->len == 0 || !v->s;
 }
 
 // dir_util.cpp
