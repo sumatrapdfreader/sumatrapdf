@@ -175,21 +175,13 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         return 1;
     }
     if (msg == WM_LBUTTONDOWN) {
-        // Map the click from popup pixels back to a point on the rendered
-        // destination page, then let the owner canvas hit-test the engine
-        // for a launch link (URL / file) there and open it — same behavior
-        // as clicking the link directly in the document.
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
-        if (s && s->hwndCanvas) {
+        if (s) {
             int cx = GET_X_LPARAM(lp);
             int cy = GET_Y_LPARAM(lp);
-            if (LaunchLinkAtPopupPt(s, hwnd, cx, cy)) {
-                int border = DpiScale(hwnd, kBorder);
-                float zoom = s->displayed.baseZoom * s->displayed.userZoom;
-                s->clickPage = s->displayed.destPage;
-                s->clickPagePt.x = s->displayed.region.x + (float)(cx - border) / zoom;
-                s->clickPagePt.y = s->displayed.region.y + (float)(cy - border) / zoom;
-                PostMessageW(s->hwndCanvas, kRefHoverClickMsg, 0, 0);
+            IPageDestination* dest = LaunchLinkAtPopupPt(s, hwnd, cx, cy);
+            if (dest) {
+                RefHoverHandlePopupClick(s, dest);
             }
         }
         return 0;
@@ -748,6 +740,17 @@ void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas) {
     }
     ShowWindow(s->hwndPopup, SW_HIDE);
     s->displayed.destPage = -1;
+}
+
+void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest) {
+    if (!s || !dest || !s->ctrl) {
+        return;
+    }
+    Kind k = dest->GetKind();
+    if (k == kindDestinationLaunchURL || k == kindDestinationLaunchFile) {
+        RefHoverHide(s, s->hwndCanvas);
+        s->ctrl->HandleLink(dest, s->linkHandler);
+    }
 }
 
 // When the link's destination is page-level (destY < 0), try to recover a

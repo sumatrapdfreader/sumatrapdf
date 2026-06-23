@@ -2,26 +2,23 @@
    License: GPLv3 */
 
 class EngineBase;
+class DocController;
+struct ILinkHandler;
+struct IPageDestination;
 struct RenderedBitmap;
 struct RefLookupCache;
 
 struct RefHoverState {
     HWND hwndPopup = nullptr;
-    // owner canvas; the popup posts kRefHoverClickMsg here when the user
-    // clicks a launch link (URL / file) rendered inside the popup
     HWND hwndCanvas = nullptr;
+    // kept current by Canvas on mouse-move so popup clicks can open links
+    DocController* ctrl = nullptr;
+    ILinkHandler* linkHandler = nullptr;
     // currently shown rendered destination strip (owned)
     RenderedBitmap* bmp = nullptr;
     // engine for the currently displayed page, AddRef'd while shown so the
     // popup can hit-test links under the cursor (hand cursor + click-to-open)
     EngineBase* hitEngine = nullptr;
-
-    // Set by the popup's WM_LBUTTONDOWN handler before posting
-    // kRefHoverClickMsg: the dest-page point under the click, mapped from
-    // popup pixels back to page coordinates via the displayed region/zoom.
-    // Canvas hit-tests links on this page/point and launches matching ones.
-    int clickPage = -1;
-    PointF clickPagePt{};
 
     // cache of plain-text citation lookups (lazy-init on first use)
     RefLookupCache* lookupCache = nullptr;
@@ -111,12 +108,6 @@ struct RefHoverState {
 constexpr UINT_PTR kRefHoverTimerID = 9;
 constexpr UINT_PTR kRefHoverHideTimerID = 10;
 
-// Posted by the popup window to its owner canvas when the user clicks a
-// launch link (external URL / file) inside the popup. The dest page/point
-// are stored in RefHoverState::clickPage / clickPagePt; the canvas hit-tests
-// the engine for a link there and launches it via DocController::HandleLink.
-#define kRefHoverClickMsg (WM_APP + 0x430)
-
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
 // delayMs: how long the cursor must hover before the popup shows
@@ -133,6 +124,8 @@ void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs);
 // Fired by kRefHoverHideTimerID: hides the popup unless the cursor is now
 // over it (in which case it re-arms and keeps the popup up).
 void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas);
+// Open a launch link (external URL / file) hit-tested inside the popup.
+void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest);
 // pageZoom is the destination page's current display zoom (px-per-pt) —
 // used as the initial render zoom so popup text height matches the page.
 void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom);

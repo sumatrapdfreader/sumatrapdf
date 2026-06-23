@@ -497,8 +497,7 @@ static void StartImageDragDrop(MainWindow* win) {
 }
 
 // Resize handle positions that used in resizing annotations
-enum class ResizeHandle
-{
+enum class ResizeHandle {
     None = 0,
     TopLeft,
     Top,
@@ -1064,6 +1063,10 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                 if (!win->refHover) {
                     win->refHover = RefHoverCreate(win->hwndCanvas);
                 }
+                if (win->refHover) {
+                    win->refHover->ctrl = win->ctrl;
+                    win->refHover->linkHandler = win->linkHandler;
+                }
                 bool scheduled = false;
                 if (win->refHover && hasInternalLink) {
                     // request WM_MOUSELEAVE so popup hides when cursor leaves canvas
@@ -1099,8 +1102,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     int destPage = -1;
                     float destX = -1.f, destY = -1.f;
                     RectF citationSrcRect{};
-                    if (RefHoverTryPlainText(win->refHover, dm->GetEngine(), srcPageNo, pagePt, destPage, destX,
-                                             destY, citationSrcRect)) {
+                    if (RefHoverTryPlainText(win->refHover, dm->GetEngine(), srcPageNo, pagePt, destPage, destX, destY,
+                                             citationSrcRect)) {
                         TrackMouseLeave(win->hwndCanvas);
                         Point screenPt = {x, y};
                         ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
@@ -3773,27 +3776,6 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_TIMER:
             OnTimer(win, hwnd, wp);
             return 0;
-
-        case kRefHoverClickMsg: {
-            // The hover popup was clicked; if a launch link (external URL /
-            // file) sits under the click on the rendered dest page, open it
-            // the same way a direct click in the document would.
-            DisplayModel* dm = win->AsFixed();
-            RefHoverState* rh = win->refHover;
-            if (dm && rh && dm->ValidPageNo(rh->clickPage)) {
-                EngineBase* engine = dm->GetEngine();
-                IPageElement* el = engine ? engine->GetElementAtPos(rh->clickPage, rh->clickPagePt) : nullptr;
-                if (el && el->Is(kindPageElementDest)) {
-                    IPageDestination* dest = el->AsLink();
-                    Kind k = dest ? dest->GetKind() : nullptr;
-                    if (k == kindDestinationLaunchURL || k == kindDestinationLaunchFile) {
-                        RefHoverHide(rh, hwnd);
-                        win->ctrl->HandleLink(dest, win->linkHandler);
-                    }
-                }
-            }
-            return 0;
-        }
 
         case WM_KILLFOCUS:
             // stop middle-button auto-scroll when the canvas loses focus, e.g.
