@@ -1,7 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "CommandAvailability.h"
+struct AppCommandCtx;
+using BuildMenuCtx = AppCommandCtx;
 
 struct MenuOwnerDrawInfo;
 

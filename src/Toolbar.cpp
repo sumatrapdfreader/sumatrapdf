@@ -31,6 +31,7 @@ extern "C" {
 #include "resource.h"
 #include "Commands.h"
 #include "AppTools.h"
+#include "CommandAvailability.h"
 #include "Menu.h"
 #include "SearchAndDDE.h"
 #include "Toolbar.h"
