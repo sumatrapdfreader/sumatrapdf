@@ -12,8 +12,8 @@ import { testit as adHocSelectionTranslate } from "./ad-hoc-selection-translate.
 import { testit as adHocTripleClickLine } from "./ad-hoc-triple-click-line.ts";
 import { testit as adHocTocPaletteSync } from "./ad-hoc-toc-palette-sync.ts";
 import { testit as adHocJpegDecode } from "./ad-hoc-jpeg-decode.ts";
-import { testit as adHocSynctexChinese } from "./ad-hoc-synctex-chinese.ts";
 import { testit as adHocPasteImageAnnot } from "./ad-hoc-paste-image-annot.ts";
+import { testit as latexTests } from "./latex.ts";
 import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const adHocTests: [string, () => void | Promise<void>][] = [
@@ -22,7 +22,6 @@ const adHocTests: [string, () => void | Promise<void>][] = [
   ["ad-hoc-triple-click-line", adHocTripleClickLine],
   ["ad-hoc-toc-palette-sync", adHocTocPaletteSync],
   ["ad-hoc-jpeg-decode", adHocJpegDecode],
-  ["ad-hoc-synctex-chinese", adHocSynctexChinese],
   ["ad-hoc-paste-image-annot", adHocPasteImageAnnot],
   ["issue-chm-lzx", issueChmLzx],
 ];
@@ -31,12 +30,15 @@ export async function testit(): Promise<void> {
   const t0 = performance.now();
   await allTests();
 
+  console.log("\n========== latex ==========");
+  await runTest("latex", latexTests);
+
   for (const [name, fn] of adHocTests) {
     console.log(`\n========== ${name} ==========`);
     await runTest(name, fn);
   }
   console.log(
-    `\n✅ before-release checks passed (all.ts + ${adHocTests.length} ad-hoc test(s)) in ${formatDuration(performance.now() - t0)}`,
+    `\n✅ before-release checks passed (all.ts + latex.ts + ${adHocTests.length} ad-hoc test(s)) in ${formatDuration(performance.now() - t0)}`,
   );
 }
 

@@ -11,7 +11,7 @@
 // commands, which query SourceToDoc/DocToSource directly and check the
 // results.
 //
-// Run:  bun tests/issue-5702.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/ad-hoc-synctex-wsl.ts [--no-build]   (or via tests/latex.ts)
 
 import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

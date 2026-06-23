@@ -14,7 +14,7 @@
 //     location* is Chinese (exercises CreateFileW-based reading). On a Chinese
 //     system (ACP 936) pdflatex round-trips CJK via ANSI too.
 //
-// Run:  bun tests/ad-hoc-synctex-chinese.ts [--no-build]
+// Run:  bun tests/ad-hoc-synctex-chinese.ts [--no-build]   (or via tests/latex.ts)
 
 import { gzipSync } from "node:zlib";
 import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";

@@ -10,7 +10,7 @@
 // real PDF + .synctex pair, derives the three layouts from it, and runs the
 // control pipe test command, which performs a SourceToDoc() forward-search query.
 //
-// Run:  bun tests/issue-5633.ts [--no-build]   (or via tests/all.ts)
+// Run:  bun tests/issue-5633.ts [--no-build]   (or via tests/latex.ts)
 //
 // FFI / Windows APIs are not needed here (the app reports results via a result
 // file), so there is no tests/winapi.ts. If a future test needs to read GUI
