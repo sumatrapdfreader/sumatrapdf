@@ -338,7 +338,7 @@ static bool gAddSymbolServer = false;
 static bool gAddExeDir = false;
 
 static TempStr BuildSymbolPathTemp(const char* symDir) {
-    StrBuilder path(2048, GetTempAllocator());
+    StrBuilder path(2048, GetTempArena());
 
     bool symDirExists = dir::Exists(symDir);
 
@@ -375,7 +375,7 @@ static TempStr BuildSymbolPathTemp(const char* symDir) {
 
     // remove ";" from the end
     path.RemoveLast();
-    return (TempStr)path.StealData(GetTempAllocator());
+    return (TempStr)path.StealData(GetTempArena());
 }
 
 bool InitializeDbgHelp(bool force) {

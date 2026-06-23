@@ -1434,7 +1434,7 @@ static TempStr DecompressTcrTextTemp(const char* data, size_t dataLen) {
         }
     }
 
-    return text.StealData(GetTempAllocator());
+    return text.StealData(GetTempArena());
 }
 
 static const char* TextFindLinkEnd(StrBuilder& htmlData, const char* curr, char prevChar, bool fromWww = false) {

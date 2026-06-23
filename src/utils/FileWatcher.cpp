@@ -326,7 +326,7 @@ static void FileWatcherThread() {
     BOOL alertable = TRUE;
 
     for (;;) {
-        ResetTempAllocator();
+        ResetTempArena();
         if (AtomicBoolGet(&gShouldExit)) {
             break;
         }
@@ -356,7 +356,7 @@ static void FileWatcherThread() {
         }
     }
     logf("FileWatcherThread: exiting\n");
-    DestroyTempAllocator();
+    DestroyTempArena();
 }
 
 static WatchedDir* FindExistingWatchedDir(const char* dirPath) {

@@ -61,7 +61,7 @@ static DWORD WINAPI ThreadFunc0(void* data) {
     auto* fn = (Func0*)(data);
     fn->Call();
     delete fn;
-    DestroyTempAllocator();
+    DestroyTempArena();
     return 0;
 }
 

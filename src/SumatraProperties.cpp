@@ -806,7 +806,7 @@ static void GetFontsThread(GetFontsData* data) {
     auto fn = MkFunc0<GetFontsResult>(OnGetFontsFinished, result);
     uitask::Post(fn, "GetFontsFinished");
     delete data;
-    DestroyTempAllocator();
+    DestroyTempArena();
 }
 
 void ShowProperties(HWND parent, DocController* ctrl) {

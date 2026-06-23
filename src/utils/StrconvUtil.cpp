@@ -119,7 +119,7 @@ TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
         return nullptr;
     }
     size_t tmpLen = str::Len(tmp);
-    Arena* a = GetTempAllocator();
+    Arena* a = GetTempArena();
     TempStr res = (TempStr)WStrToCodePage(codePageDest, tmp, tmpLen, a);
     return res;
 }

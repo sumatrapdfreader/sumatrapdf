@@ -185,7 +185,7 @@ class PageRenderer {
         PostMessageW(pr->hwnd, kUwmPaintAgain, 0, 0);
 
         CloseHandle(th);
-        DestroyTempAllocator();
+        DestroyTempArena();
         return 0;
     }
 };

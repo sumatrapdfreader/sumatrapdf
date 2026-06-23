@@ -3,9 +3,7 @@
 
 // note: include BaseUtil.h instead of including directly
 
-Arena* GetTempAllocator();
-void DestroyTempAllocator();
-void ResetTempAllocator();
+// GetTempArena()/ResetTempArena()/DestroyTempArena() are declared in common.h
 
 // arena for allocations that live until the program exits (see TempAllocator.cpp)
 extern Arena* gLifetimeArena;
@@ -17,7 +15,7 @@ FORCEINLINE T* AllocArrayTemp(size_t n) {
     if (!mulSafe<size_t>(&n, sizeof(T))) {
         return nullptr;
     }
-    auto a = GetTempAllocator();
+    auto a = GetTempArena();
     return (T*)AllocZero(a, n);
 }
 

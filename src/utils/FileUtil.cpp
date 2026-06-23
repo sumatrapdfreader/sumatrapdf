@@ -669,11 +669,11 @@ FILE* OpenFILE(const char* path) {
     return _wfopen(pathW, L"rb");
 }
 
-ByteSlice ReadFileWithAllocator(const char* filePath, Arena* allocator) {
+ByteSlice ReadFileWithArena(const char* filePath, Arena* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
     strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
-    return ReadFileWithAllocator(buf, fileSizeOut, allocator);
+    return ReadFileWithArena(buf, fileSizeOut, allocator);
 #else
     char* d = nullptr;
     int res;
@@ -706,7 +706,7 @@ ByteSlice ReadFileWithAllocator(const char* filePath, Arena* allocator) {
     if (nRead != size) {
         int err = ferror(fp);
         int isEof = feof(fp);
-        logf("ReadFileWithAllocator: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath,
+        logf("ReadFileWithArena: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath,
              (int)size, (int)nRead, err, isEof);
         // we should either get eof or err
         // either way shouldn't happen because we're reading the exact size of file
@@ -724,7 +724,7 @@ Error:
 }
 
 ByteSlice ReadFile(const char* path) {
-    return ReadFileWithAllocator(path, nullptr);
+    return ReadFileWithArena(path, nullptr);
 }
 
 bool WriteFile(const char* path, const ByteSlice& d) {

@@ -3617,7 +3617,7 @@ TempStr GetExecutableSignerTemp(const char* exePath) {
         return nullptr;
     }
 
-    auto signerInfo = (CMSG_SIGNER_INFO*)AllocZero(GetTempAllocator(), signerInfoSize);
+    auto signerInfo = (CMSG_SIGNER_INFO*)AllocZero(GetTempArena(), signerInfoSize);
     ok = CryptMsgGetParam(hMsg, CMSG_SIGNER_INFO_PARAM, 0, signerInfo, &signerInfoSize);
     if (!ok) {
         CryptMsgClose(hMsg);

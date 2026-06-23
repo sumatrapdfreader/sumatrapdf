@@ -120,6 +120,8 @@ void ArenaRestoreSavepoint(ArenaSavepoint temp);
 // Thread-local temporary arena, reset after each message loop iteration
 extern thread_local Arena* gTempArena;
 Arena* GetTempArena();
+void ResetTempArena();
+void DestroyTempArena();
 
 template <typename T>
 inline T* push_array_no_zero_aligned(Arena* arena, u64 count, u64 align) {

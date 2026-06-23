@@ -65,6 +65,6 @@ int main(int, char**) {
     SumatraPDF_UnitTests();
 
     int res = utassert_print_results();
-    DestroyTempAllocator();
+    DestroyTempArena();
     return res;
 }

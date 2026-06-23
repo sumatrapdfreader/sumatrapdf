@@ -282,7 +282,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
 }
 
 bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Arena* allocator) {
-    auto d = file::ReadFileWithAllocator(archivePath, allocator);
+    auto d = file::ReadFileWithArena(archivePath, allocator);
     if (d.empty()) {
         return false;
     }

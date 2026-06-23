@@ -476,7 +476,7 @@ static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size) {
     // by libmupdf so that it works across dll boundaries.
     // We can either use  fz_new_buffer_from_shared_data
     // and free the data on the side or create Allocator that
-    // uses fz_malloc_no_throw and pass it to ReadFileWithAllocator
+    // uses fz_malloc_no_throw and pass it to ReadFileWithArena
     void* dataCopy = FzMemdup(ctx, (void*)data, size);
     if (!dataCopy) {
         return nullptr;
@@ -2228,7 +2228,7 @@ ByteSlice LoadEmbeddedPDFFile(const char* filePath) {
 }
 
 static ByteSlice TxtFileToHTML(const char* path) {
-    ByteSlice fd = file::ReadFileWithAllocator(path, GetTempAllocator());
+    ByteSlice fd = file::ReadFileWithArena(path, GetTempArena());
     if (fd.empty()) {
         return {};
     }

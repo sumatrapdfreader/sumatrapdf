@@ -10,32 +10,12 @@ It's an alternative to using various AutoFree* classes.
 
 It's a very fast bump allocator.
 
-You must periodically call ResetTempAllocator()
+You must periodically call ResetTempArena()
 to free memory used by allocator.
 A good place to do it is at the beginning of window message loop.
 */
 
-thread_local static Arena* gTempAllocator = nullptr;
-
-// forbid inlinining to not blow out the size of callers
-NO_INLINE Arena* GetTempAllocator() {
-    if (gTempAllocator) {
-        return gTempAllocator;
-    }
-    gTempAllocator = ArenaNew();
-    return gTempAllocator;
-}
-
-void DestroyTempAllocator() {
-    ArenaDelete(gTempAllocator);
-    gTempAllocator = nullptr;
-}
-
-void ResetTempAllocator() {
-    if (gTempAllocator) {
-        gTempAllocator->Reset();
-    }
-}
+// GetTempArena()/ResetTempArena()/DestroyTempArena() live in common/arena.cpp
 
 // Arena for allocations that live for the whole lifetime of the program (i.e.
 // never freed until exit). Allocating them here avoids per-allocation frees and
@@ -56,33 +36,33 @@ void DestroyLifetimeArena() {
 
 namespace str {
 TempStr DupTemp(const char* s, size_t cb) {
-    return str::Dup(GetTempAllocator(), s, cb);
+    return str::Dup(GetTempArena(), s, cb);
 }
 
 TempWStr DupTemp(const WCHAR* s, size_t cch) {
-    return str::Dup(GetTempAllocator(), s, cch);
+    return str::Dup(GetTempArena(), s, cch);
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
-    return Join(GetTempAllocator(), s1, s2, s3);
+    return Join(GetTempArena(), s1, s2, s3);
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4) {
-    return Join(GetTempAllocator(), s1, s2, s3, s4, nullptr);
+    return Join(GetTempArena(), s1, s2, s3, s4, nullptr);
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4, const char* s5) {
-    return Join(GetTempAllocator(), s1, s2, s3, s4, s5);
+    return Join(GetTempArena(), s1, s2, s3, s4, s5);
 }
 
 TempWStr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
-    return Join(GetTempAllocator(), s1, s2, s3);
+    return Join(GetTempArena(), s1, s2, s3);
 }
 
 TempStr FormatTemp(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char* res = FmtVWithAllocator(GetTempAllocator(), fmt, args);
+    char* res = FmtVWithArena(GetTempArena(), fmt, args);
     va_end(args);
     return res;
 }
@@ -125,7 +105,7 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
     if (!ok) {
         return nullptr;
     }
-    return result.StealData(GetTempAllocator());
+    return result.StealData(GetTempArena());
 }
 
 TempStr ReplaceNoCaseTemp(const char* s, const char* toReplace, const char* replaceWith) {
@@ -148,7 +128,7 @@ TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
         ReportIf((int)cch > 0);
         return nullptr;
     }
-    return strconv::WStrToUtf8(s, cch, GetTempAllocator());
+    return strconv::WStrToUtf8(s, cch, GetTempArena());
 }
 
 TempWStr ToWStrTemp(const char* s, size_t cb) {
@@ -156,7 +136,7 @@ TempWStr ToWStrTemp(const char* s, size_t cb) {
         ReportIf((int)cb > 0);
         return nullptr;
     }
-    return strconv::Utf8ToWStr(s, cb, GetTempAllocator());
+    return strconv::Utf8ToWStr(s, cb, GetTempArena());
 }
 
 // handles embedded 0 in the string
@@ -166,5 +146,5 @@ TempWStr ToWStrTemp(const StrBuilder& str) {
     }
     char* s = str.CStr();
     size_t cb = str.Size();
-    return strconv::Utf8ToWStr(s, cb, GetTempAllocator());
+    return strconv::Utf8ToWStr(s, cb, GetTempArena());
 }

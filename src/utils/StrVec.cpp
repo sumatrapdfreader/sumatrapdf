@@ -879,6 +879,6 @@ char* Join(StrVec* v, const char* joint) {
 
 TempStr JoinTemp(StrVec* v, const char* joint) {
     int capHint = CalcCapForJoin(v, joint);
-    StrBuilder tmp(capHint, GetTempAllocator());
+    StrBuilder tmp(capHint, GetTempArena());
     return JoinInner(v, joint, tmp);
 }

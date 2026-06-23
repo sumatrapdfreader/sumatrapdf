@@ -485,6 +485,17 @@ Arena* GetTempArena() {
     return gTempArena;
 }
 
+void ResetTempArena() {
+    if (gTempArena) {
+        gTempArena->Reset();
+    }
+}
+
+void DestroyTempArena() {
+    ArenaDelete(gTempArena);
+    gTempArena = nullptr;
+}
+
 void* AllocTemp(int size, u64 align) {
     Arena* arena = GetTempArena();
     return arena->Push((u64)size, align, false);

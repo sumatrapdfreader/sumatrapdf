@@ -138,7 +138,7 @@ u32 MurmurHash2(const void* key, size_t len) {
 // mostly ASCII and should be treated case independently
 u32 MurmurHashWStrI(const WCHAR* str) {
     size_t len = str::Len(str);
-    auto a = GetTempAllocator();
+    auto a = GetTempArena();
     u8* data = (u8*)a->Alloc((int)len);
     WCHAR c;
     u8* dst = data;

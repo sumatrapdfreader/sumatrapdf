@@ -637,7 +637,7 @@ static void CountThread(CountThreadData* d) {
     data->matches = matches;
     auto fn = MkFunc0<CountEndTaskData>(CountEndTask, data);
     uitask::Post(fn, "TaskFindCount");
-    DestroyTempAllocator();
+    DestroyTempArena();
 }
 
 // cancel any running/pending count and wait for the worker to exit. The find
@@ -852,7 +852,7 @@ static void FindThread(FindThreadData* ftd) {
     }
     auto fn = MkFunc0<FindEndTaskData>(FindEndTask, data);
     uitask::Post(fn, "TaskFindEnd");
-    DestroyTempAllocator();
+    DestroyTempArena();
 }
 
 // returns true if did abort a thread or hidden the notification
@@ -2042,7 +2042,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     // sizeof(DDEDATA), whose trailing Value[1] + padding would push it too far
     // and the client would read zeros
     int cbDdeData = (int)offsetof(DDEDATA, Value);
-    u8* res = (u8*)AllocZero(GetTempAllocator(), cbDdeData + cbData);
+    u8* res = (u8*)AllocZero(GetTempArena(), cbDdeData + cbData);
     DDEDATA* ddeData = (DDEDATA*)res;
     ddeData->fResponse = 1; // this data answers a WM_DDE_REQUEST (not an advise)
     ddeData->fRelease = 1;  // tell client to free HGLOBAL

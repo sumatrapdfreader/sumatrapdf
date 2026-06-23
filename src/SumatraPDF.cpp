@@ -6354,7 +6354,7 @@ static void ClearHistoryAsync(ClearHistoryData* d) {
     dir::RemoveAll(symDir);
     auto fn = MkFunc0<ClearHistoryData>(ClearHistoryFinish, d);
     uitask::Post(fn, "TaksClearHistoryAsyncPart");
-    DestroyTempAllocator();
+    DestroyTempArena();
 }
 
 void ClearHistory(MainWindow* win) {

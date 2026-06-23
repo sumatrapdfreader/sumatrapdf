@@ -62,7 +62,7 @@ bool Exists(const char* path);
 
 FILE* OpenFILE(const char* path);
 HANDLE OpenReadOnly(const char*);
-ByteSlice ReadFileWithAllocator(const char* path, Arena*);
+ByteSlice ReadFileWithArena(const char* path, Arena*);
 ByteSlice ReadFile(const char* path);
 int ReadN(const char* path, char* buf, size_t toRead);
 bool WriteFile(const char* path, const ByteSlice&);

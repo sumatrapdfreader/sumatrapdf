@@ -67,7 +67,7 @@ int StrLastIndexOfChar(Str s, char c) {
 static wchar_t emptyWideStr[1] = {0};
 
 #if 0
-// Convert UTF-8 to UTF-16 (wide string), allocate with gTempAllocator
+// Convert UTF-8 to UTF-16 (wide string), allocate with gTempArena
 WStr ToWStrTemp(const char* utf8) {
     if (!utf8 || !utf8[0]) {
         return WStr(&emptyWideStr[0], 0);
@@ -374,7 +374,7 @@ void FormatSizeHumanIntoWBuf(u64 size, WStr wbuf) {
     wbuf.s[i] = 0;
 }
 
-// Join path components, returns Str allocated with gTempAllocator
+// Join path components, returns Str allocated with gTempArena
 Str PathJoinTemp(Str dir, Str name) {
     // Handle ".." - go up one directory
     if (StrEq(name, StrL(".."))) {

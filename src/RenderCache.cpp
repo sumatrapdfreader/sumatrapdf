@@ -909,10 +909,10 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
 
         ReportIf(!req.renderFinishedCb.IsValid());
         req.renderFinishedCb.Call(&req);
-        ResetTempAllocator();
+        ResetTempArena();
     }
     logf("RenderCacheThread: exiting\n");
-    DestroyTempAllocator();
+    DestroyTempArena();
     return 0;
 }
 

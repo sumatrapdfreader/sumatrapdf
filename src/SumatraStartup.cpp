@@ -676,8 +676,8 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
 // Resets the temp allocator (done once per message-loop iteration) and tracks a
 // global high-water mark of its per-iteration allocation count and peak bytes.
 // Whenever a new max is reached, logs both so we can size the temp allocator.
-static void ResetTempAllocatorWithLogging() {
-    Arena* a = GetTempAllocator();
+static void ResetTempArenaWithLogging() {
+    Arena* a = GetTempArena();
     static u64 gMaxAllocs = 0;
     static u64 gPeakBytes = 0;
     u64 nAllocs = a->nAllocsSinceReset;
@@ -698,7 +698,7 @@ static void ResetTempAllocatorWithLogging() {
              str::FormatNumWithThousandSepTemp((i64)gMaxAllocs), str::FormatNumWithThousandSepTemp((i64)gPeakBytes),
              human);
     }
-    ResetTempAllocator();
+    ResetTempArena();
 }
 
 // Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
@@ -731,7 +731,7 @@ static int RunMessageLoop() {
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        ResetTempAllocatorWithLogging();
+        ResetTempArenaWithLogging();
     }
 
     return (int)msg.wParam;
@@ -2318,7 +2318,7 @@ Exit:
     HandleRedirectedConsoleOnShutdown();
     DeleteManualBrowserWindow();
 
-    LogArenaLifetimeStats("temp allocator", GetTempAllocator());
+    LogArenaLifetimeStats("temp allocator", GetTempArena());
     LogArenaLifetimeStats("lifetime arena", gLifetimeArena);
 
     if (!logFileBecauseDebug) {
@@ -2392,7 +2392,7 @@ Exit:
     }
     DeleteAppTools();
     DestroyLogging();
-    DestroyTempAllocator();
+    DestroyTempArena();
     DestroyLifetimeArena();
 
     return exitCode;

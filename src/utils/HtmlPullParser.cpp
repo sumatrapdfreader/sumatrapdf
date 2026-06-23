@@ -189,7 +189,7 @@ char* ResolveHtmlEntities(const char* s, size_t len) {
 }
 
 TempStr ResolveHtmlEntitiesTemp(const char* s, size_t len) {
-    const char* res = ResolveHtmlEntities(s, s + len, GetTempAllocator());
+    const char* res = ResolveHtmlEntities(s, s + len, GetTempArena());
     if (res == s) {
         // ensure 0-terminated string is returned
         return str::DupTemp(s, len);

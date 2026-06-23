@@ -485,7 +485,7 @@ const char* FindI(const char* s, const char* toFind) {
     // position before returning so repeated calls (e.g. the command palette
     // filtering every item) don't grow the arena unbounded. The result points
     // into the caller's original string s, not the arena, so it stays valid.
-    ArenaSavepoint sp = ArenaGetSavepoint(GetTempAllocator());
+    ArenaSavepoint sp = ArenaGetSavepoint(GetTempArena());
 
     TempWStr ws = ToWStrTemp(s); // unfolded, used to map the match back to bytes
     TempWStr wsLo = str::DupTemp(ws);
@@ -721,7 +721,7 @@ bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
 }
 
 // TODO: need to finish StrFormat and use it instead.
-char* FmtVWithAllocator(Arena* a, const char* fmt, va_list args) {
+char* FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     char message[512]{};
     int bufCchSize = dimofi(message);
     char* buf = message;
@@ -758,7 +758,7 @@ char* FmtVWithAllocator(Arena* a, const char* fmt, va_list args) {
 }
 
 char* FmtV(const char* fmt, va_list args) {
-    return FmtVWithAllocator(nullptr, fmt, args);
+    return FmtVWithArena(nullptr, fmt, args);
 }
 
 // caller needs to str::Free()
@@ -2876,7 +2876,7 @@ bool IsTextRtl(const WCHAR* s) {
     len = len > 40 ? 40 : len;
     int nRtl = 0;
     int nLtr = 0;
-    WORD* charTypes = AllocArray<WORD>(GetTempAllocator(), len + 1);
+    WORD* charTypes = AllocArray<WORD>(GetTempArena(), len + 1);
     if (!GetStringTypeExW(LOCALE_INVARIANT, CT_CTYPE2, s, len, charTypes)) {
         return false; // API failure
     }
