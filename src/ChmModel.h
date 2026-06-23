@@ -77,9 +77,24 @@ struct ChmModel : DocController {
 
     StrVec pages;
     int currentPageNo = 1;
+    // url of the currently displayed page; may be a redirect/anchor url that
+    // isn't in `pages`, so it's tracked separately from currentPageNo
+    AutoFreeStr currentPageUrl;
     ChmDocView* docView = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
     float initZoom = kInvalidZoom;
+    // intended zoom level, re-applied after every document load because the
+    // hosted control resets to 100% when it's recreated (e.g. on tab switch)
+    float zoomVirtual = 100.0f;
+    // scroll position to restore once the current document finishes loading
+    PointF htmlScrollPos = PointF(-1, -1);
+    bool restoreHtmlScrollPos = false;
+    // set when we already saved scroll pos before a programmatic navigation,
+    // so the following OnBeforeNavigate doesn't save it again for the wrong page
+    bool skipNextBeforeNavigateScrollSave = false;
+    // per-url remembered scroll positions (parallel arrays)
+    StrVec htmlScrollUrls;
+    Vec<PointF> htmlScrollPositions;
 
     Vec<ChmCacheEntry*> urlDataCache;
     // arena for strings that aren't freed until this ChmModel is deleted
@@ -91,5 +106,11 @@ struct ChmModel : DocController {
 
     ChmCacheEntry* FindDataForUrl(const char* url) const;
 
+    void SaveHtmlScrollPos();
+    void SaveHtmlScrollPosForPage(int pageNo);
+    void SaveHtmlScrollPosForUrl(const char* url, PointF pos);
+    bool GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const;
+    bool GetSavedHtmlScrollPosForUrl(const char* url, PointF* pos) const;
+    void RestoreHtmlScrollPos();
     void ZoomTo(float zoomLevel) const;
 };

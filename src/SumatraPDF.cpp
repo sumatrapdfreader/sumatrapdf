@@ -1541,7 +1541,14 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             win->AsChm()->SetParentHwnd(win->hwndCanvas);
             win->ctrl->SetDisplayMode(displayMode);
             ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
-            win->ctrl->GoToPage(ss.page, false);
+            if (fs) {
+                // restore the scroll position saved from a previous session;
+                // ScrollTo() seeds it and navigates to the page
+                RectF r(fs->scrollPos.x, fs->scrollPos.y, 0, 0);
+                win->AsChm()->ScrollTo(ss.page, r, kInvalidZoom);
+            } else {
+                win->ctrl->GoToPage(ss.page, false);
+            }
         } else {
             ReportIf(true);
         }

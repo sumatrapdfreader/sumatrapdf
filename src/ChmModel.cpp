@@ -114,6 +114,12 @@ void ChmModel::GoToPage(int pageNo, bool) {
     if (!ValidPageNo(pageNo)) {
         return;
     }
+    // re-display the exact current url (which may be a redirect/anchor not in
+    // `pages`) so navigating to the same page preserves it
+    if (pageNo == currentPageNo && currentPageUrl && *currentPageUrl) {
+        DisplayPage(currentPageUrl);
+        return;
+    }
     DisplayPage(pages.At(pageNo - 1));
 }
 
@@ -137,6 +143,10 @@ void ChmModel::RemoveParentHwnd() {
     if (!docView && !htmlWindowCb) {
         return;
     }
+    // remember where we were so it can be restored when the view is recreated
+    // (e.g. when switching back to this tab)
+    SaveHtmlScrollPos();
+    restoreHtmlScrollPos = true;
     delete docView;
     docView = nullptr;
     delete htmlWindowCb;
@@ -196,9 +206,26 @@ bool ChmModel::DisplayPage(const char* pageUrl) {
     }
 
     TempStr url = url::GetFullPathTemp(pageUrl);
+    bool wasSameUrl = currentPageUrl && str::Eq(currentPageUrl, url);
     int pageNo = pages.Find(url) + 1;
+    // if we're reloading the same url to restore a scroll position, don't
+    // clobber that saved position by saving the current (pre-restore) one
+    bool restoreScrollAfterLoad = restoreHtmlScrollPos && wasSameUrl;
+    if (!restoreScrollAfterLoad) {
+        SaveHtmlScrollPos();
+        skipNextBeforeNavigateScrollSave = true;
+    }
+    currentPageUrl.SetCopy(url);
     if (pageNo > 0) {
         currentPageNo = pageNo;
+    }
+
+    PointF savedPos;
+    if (GetSavedHtmlScrollPosForUrl(url, &savedPos)) {
+        htmlScrollPos = savedPos;
+        restoreHtmlScrollPos = true;
+    } else if (!restoreScrollAfterLoad) {
+        restoreHtmlScrollPos = false;
     }
 
     // This is a hack that seems to be needed for some chm files where
@@ -219,11 +246,21 @@ bool ChmModel::DisplayPage(const char* pageUrl) {
         return false;
     }
     docView->NavigateToDataUrl(pageUrl);
-    return pageNo > 0;
+    return true;
 }
 
-void ChmModel::ScrollTo(int, RectF, float) {
-    ReportIf(true);
+void ChmModel::ScrollTo(int pageNo, RectF rect, float zoom) {
+    if (IsValidZoom(zoom)) {
+        SetZoomVirtual(zoom, nullptr);
+    }
+    if (rect.x >= 0 || rect.y >= 0) {
+        htmlScrollPos = PointF(rect.x, rect.y);
+        restoreHtmlScrollPos = true;
+        if (ValidPageNo(pageNo)) {
+            SaveHtmlScrollPosForUrl(pages.At(pageNo - 1), htmlScrollPos);
+        }
+    }
+    GoToPage(pageNo, false);
 }
 
 bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler*) {
@@ -295,7 +332,89 @@ void ChmModel::SetZoomVirtual(float zoom, Point*) {
         zoom = 100.0f;
     }
     ZoomTo(zoom);
+    zoomVirtual = zoom;
     initZoom = zoom;
+}
+
+// Save the current scroll position for the currently displayed url/page.
+void ChmModel::SaveHtmlScrollPos() {
+    if (!docView) {
+        return;
+    }
+    Point pos = docView->GetScrollPos();
+    if (pos.x < 0 && pos.y < 0) {
+        return;
+    }
+    htmlScrollPos = PointF((float)pos.x, (float)pos.y);
+    if (currentPageUrl && *currentPageUrl) {
+        SaveHtmlScrollPosForUrl(currentPageUrl, htmlScrollPos);
+        return;
+    }
+    SaveHtmlScrollPosForPage(currentPageNo);
+}
+
+void ChmModel::SaveHtmlScrollPosForPage(int pageNo) {
+    if (!ValidPageNo(pageNo)) {
+        return;
+    }
+    SaveHtmlScrollPosForUrl(pages.At(pageNo - 1), htmlScrollPos);
+}
+
+void ChmModel::SaveHtmlScrollPosForUrl(const char* url, PointF pos) {
+    if (!url || pos.x < 0 || pos.y < 0) {
+        return;
+    }
+
+    TempStr plainUrl = url::GetFullPathTemp(url);
+    int idx = htmlScrollUrls.Find(plainUrl);
+    if (idx >= 0) {
+        htmlScrollPositions.At(idx) = pos;
+        return;
+    }
+
+    htmlScrollUrls.Append(plainUrl);
+    htmlScrollPositions.Append(pos);
+}
+
+bool ChmModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
+    if (!pos || !ValidPageNo(pageNo)) {
+        return false;
+    }
+    return GetSavedHtmlScrollPosForUrl(pages.At(pageNo - 1), pos);
+}
+
+bool ChmModel::GetSavedHtmlScrollPosForUrl(const char* url, PointF* pos) const {
+    if (!url || !pos) {
+        return false;
+    }
+
+    TempStr plainUrl = url::GetFullPathTemp(url);
+    int idx = htmlScrollUrls.Find(plainUrl);
+    if (idx < 0) {
+        return false;
+    }
+
+    *pos = htmlScrollPositions.At(idx);
+    return pos->x >= 0 || pos->y >= 0;
+}
+
+void ChmModel::RestoreHtmlScrollPos() {
+    if (!docView || !restoreHtmlScrollPos) {
+        return;
+    }
+    restoreHtmlScrollPos = false;
+    if (htmlScrollPos.x < 0 && htmlScrollPos.y < 0) {
+        return;
+    }
+    int x = (int)htmlScrollPos.x;
+    int y = (int)htmlScrollPos.y;
+    if (x < 0) {
+        x = 0;
+    }
+    if (y < 0) {
+        y = 0;
+    }
+    docView->SetScrollPos(Point(x, y));
 }
 
 void ChmModel::ZoomTo(float zoomLevel) const {
@@ -418,18 +537,30 @@ void ChmModel::OnDocumentComplete(const char* url) {
         ++url;
     }
     TempStr toFind = url::GetFullPathTemp(url);
+    currentPageUrl.SetCopy(toFind);
     int pageNo = pages.Find(toFind) + 1;
-    if (!pageNo) {
-        return;
+    if (pageNo > 0) {
+        currentPageNo = pageNo;
     }
-    currentPageNo = pageNo;
+
+    PointF savedPos;
+    if (GetSavedHtmlScrollPosForUrl(toFind, &savedPos)) {
+        htmlScrollPos = savedPos;
+        restoreHtmlScrollPos = true;
+    }
+
     // TODO: setting zoom before the first page is loaded seems not to work
-    // (might be a regression from between r4593 and r4629)
+    // (might be a regression from between r4593 and r4629), so the intended
+    // zoom is applied here instead. Re-apply it after *every* load: the hosted
+    // control is recreated when switching tabs, which resets it to 100%.
     if (IsValidZoom(initZoom)) {
-        SetZoomVirtual(initZoom, nullptr);
+        zoomVirtual = initZoom;
         initZoom = kInvalidZoom;
     }
-    if (cb) {
+    ZoomTo(zoomVirtual);
+    RestoreHtmlScrollPos();
+
+    if (cb && pageNo > 0) {
         cb->PageNoChanged(this, pageNo);
     }
 }
@@ -437,6 +568,16 @@ void ChmModel::OnDocumentComplete(const char* url) {
 // Called before we start loading html for a given url. Will block
 // loading if returns false.
 bool ChmModel::OnBeforeNavigate(const char* url, bool newWindow) {
+    // save scroll pos of the page we're leaving, unless DisplayPage() already
+    // saved it before triggering this programmatic navigation
+    if (skipNextBeforeNavigateScrollSave) {
+        skipNextBeforeNavigateScrollSave = false;
+    } else {
+        // user-initiated navigation (e.g. clicking a link): currentPageUrl still
+        // refers to the page being left, so save its live scroll position
+        SaveHtmlScrollPos();
+    }
+
     // ensure that JavaScript doesn't keep the focus
     // in the HtmlWindow when a new page is loaded
     if (cb) {
@@ -617,7 +758,8 @@ void ChmModel::GetDisplayState(FileState* fs) {
     ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
 
     fs->pageNo = CurrentPageNo();
-    fs->scrollPos = PointF();
+    SaveHtmlScrollPos();
+    fs->scrollPos = htmlScrollPos;
 }
 
 struct ChmThumbnailTask : HtmlWindowCallback {

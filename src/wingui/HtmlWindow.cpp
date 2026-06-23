@@ -1562,6 +1562,125 @@ void HtmlWindow::SetScrollbarToAuto() {
     SysFreeString(s);
 }
 
+// Returns the current scroll position of the document, or (-1, -1) if it
+// couldn't be determined. Depending on the document's doctype the scroll
+// offset lives on documentElement or on body, so we query both and keep
+// the larger value.
+Point HtmlWindow::GetScrollPos() {
+    Point res(-1, -1);
+    if (!webBrowser) {
+        return res;
+    }
+
+    ScopedComPtr<IDispatch> docDispatch;
+    HRESULT hr = webBrowser->get_Document(&docDispatch);
+    if (FAILED(hr) || !docDispatch) {
+        return res;
+    }
+
+    long x = 0;
+    long y = 0;
+    bool got = false;
+
+    ScopedComQIPtr<IHTMLDocument3> doc3(docDispatch);
+    if (doc3) {
+        ScopedComPtr<IHTMLElement> documentElement;
+        hr = doc3->get_documentElement(&documentElement);
+        if (SUCCEEDED(hr) && documentElement) {
+            ScopedComQIPtr<IHTMLElement2> element2(documentElement);
+            if (element2) {
+                long sx = 0;
+                long sy = 0;
+                if (SUCCEEDED(element2->get_scrollLeft(&sx)) && SUCCEEDED(element2->get_scrollTop(&sy))) {
+                    x = sx;
+                    y = sy;
+                    got = true;
+                }
+            }
+        }
+    }
+
+    ScopedComQIPtr<IHTMLDocument2> doc2(docDispatch);
+    if (doc2) {
+        ScopedComPtr<IHTMLElement> bodyElement;
+        hr = doc2->get_body(&bodyElement);
+        if (SUCCEEDED(hr) && bodyElement) {
+            ScopedComQIPtr<IHTMLElement2> body2(bodyElement);
+            if (body2) {
+                long sx = 0;
+                long sy = 0;
+                if (SUCCEEDED(body2->get_scrollLeft(&sx)) && SUCCEEDED(body2->get_scrollTop(&sy))) {
+                    if (!got || sy > y || sx > x) {
+                        x = sx;
+                        y = sy;
+                    }
+                    got = true;
+                }
+            }
+        }
+    }
+
+    if (!got) {
+        return res;
+    }
+    return Point((int)x, (int)y);
+}
+
+void HtmlWindow::SetScrollPos(Point pos) {
+    if (!webBrowser) {
+        return;
+    }
+    if (pos.x < 0 && pos.y < 0) {
+        return;
+    }
+    if (pos.x < 0) {
+        pos.x = 0;
+    }
+    if (pos.y < 0) {
+        pos.y = 0;
+    }
+
+    ScopedComPtr<IDispatch> docDispatch;
+    HRESULT hr = webBrowser->get_Document(&docDispatch);
+    if (FAILED(hr) || !docDispatch) {
+        return;
+    }
+
+    ScopedComQIPtr<IHTMLDocument3> doc3(docDispatch);
+    if (doc3) {
+        ScopedComPtr<IHTMLElement> documentElement;
+        hr = doc3->get_documentElement(&documentElement);
+        if (SUCCEEDED(hr) && documentElement) {
+            ScopedComQIPtr<IHTMLElement2> element2(documentElement);
+            if (element2) {
+                element2->put_scrollLeft(pos.x);
+                element2->put_scrollTop(pos.y);
+            }
+        }
+    }
+
+    ScopedComQIPtr<IHTMLDocument2> doc2(docDispatch);
+    if (!doc2) {
+        return;
+    }
+
+    ScopedComPtr<IHTMLElement> bodyElement;
+    hr = doc2->get_body(&bodyElement);
+    if (SUCCEEDED(hr) && bodyElement) {
+        ScopedComQIPtr<IHTMLElement2> body2(bodyElement);
+        if (body2) {
+            body2->put_scrollLeft(pos.x);
+            body2->put_scrollTop(pos.y);
+        }
+    }
+
+    ScopedComPtr<IHTMLWindow2> window;
+    hr = doc2->get_parentWindow(&window);
+    if (SUCCEEDED(hr) && window) {
+        window->scrollTo(pos.x, pos.y);
+    }
+}
+
 // Take a screenshot of a given <area> inside an html window and resize
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)

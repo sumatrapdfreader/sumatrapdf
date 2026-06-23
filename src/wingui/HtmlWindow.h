@@ -77,6 +77,8 @@ class HtmlWindow {
     void PrintCurrentPage(bool showUI);
     void SetZoomPercent(int zoom);
     int GetZoomPercent();
+    Point GetScrollPos();
+    void SetScrollPos(Point pos);
     void FindInCurrentPage();
     void SelectAll();
     void CopySelection();

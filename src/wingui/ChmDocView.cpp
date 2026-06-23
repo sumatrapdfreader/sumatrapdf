@@ -17,6 +17,37 @@
 constexpr const char* kChmVirtualHost = "https://sumatrapdf.chm/";
 constexpr const WCHAR* kChmVirtualHostW = L"https://sumatrapdf.chm/";
 
+// Injected on every WebView2 navigation. Reports the document scroll position
+// back to the host on each scroll so ChmDocView can answer GetScrollPos()
+// synchronously (WebView2 script eval is async and can't return a value here).
+constexpr const char* kReportScrollJs =
+    "(function(){var post=function(){try{var x=Math.round(window.scrollX||window.pageXOffset||0);"
+    "var y=Math.round(window.scrollY||window.pageYOffset||0);"
+    "window.chrome.webview.postMessage('chmscroll '+x+' '+y);}catch(e){}};"
+    "window.addEventListener('scroll',post,true);})();";
+
+// WebView2 host that captures scroll-position messages posted by kReportScrollJs.
+struct ChmWebviewWnd : WebviewWnd {
+    ChmDocView* owner = nullptr;
+    void OnBrowserMessage(const char* msg) override;
+};
+
+void ChmWebviewWnd::OnBrowserMessage(const char* msg) {
+    int x = 0;
+    int y = 0;
+    if (owner && str::Parse(msg, "chmscroll %d %d", &x, &y)) {
+        if (x < 0) {
+            x = 0;
+        }
+        if (y < 0) {
+            y = 0;
+        }
+        owner->webviewScrollPos = Point(x, y);
+        return;
+    }
+    WebviewWnd::OnBrowserMessage(msg);
+}
+
 static char* ChmMimeFromPath(const char* path, const ByteSlice& data) {
     const char* ext = str::FindCharLast(path, '.');
     if (ext && str::FindChar(ext, ';')) {
@@ -148,7 +179,9 @@ LRESULT ChmDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UIN
 }
 
 bool ChmDocView::CreateWebView2() {
-    wv = new WebviewWnd();
+    auto* chmWv = new ChmWebviewWnd();
+    chmWv->owner = this;
+    wv = chmWv;
     wv->dataDir = str::Dup(GetWebViewDataDirTemp());
     wv->resourceUriPrefix = str::Dup(kChmVirtualHostW);
     wv->resourceProvider.ctx = this;
@@ -168,6 +201,8 @@ bool ChmDocView::CreateWebView2() {
         wv = nullptr;
         return false;
     }
+
+    wv->Init(kReportScrollJs);
 
     subclassId = NextSubclassId();
     BOOL ok = SetWindowSubclass(hwndParent, ParentWndProc, subclassId, (DWORD_PTR)this);
@@ -263,6 +298,38 @@ int ChmDocView::GetZoomPercent() const {
         return ie->GetZoomPercent();
     }
     return zoomPercent;
+}
+
+Point ChmDocView::GetScrollPos() const {
+    if (backend == Backend::WebView2 && wv) {
+        return webviewScrollPos;
+    }
+    if (backend == Backend::IE && ie) {
+        return ie->GetScrollPos();
+    }
+    return Point(-1, -1);
+}
+
+void ChmDocView::SetScrollPos(Point pos) {
+    if (pos.x < 0 && pos.y < 0) {
+        return;
+    }
+    if (pos.x < 0) {
+        pos.x = 0;
+    }
+    if (pos.y < 0) {
+        pos.y = 0;
+    }
+    if (backend == Backend::WebView2 && wv) {
+        char* js = str::Format("window.scrollTo(%d, %d);", pos.x, pos.y);
+        wv->Eval(js);
+        str::Free(js);
+        webviewScrollPos = pos;
+        return;
+    }
+    if (backend == Backend::IE && ie) {
+        ie->SetScrollPos(pos);
+    }
 }
 
 static void PostCtrlKey(HWND hwnd, int vk) {
