@@ -1,0 +1,157 @@
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+#include "utils/BaseUtil.h"
+#include "utils/Dpi.h"
+#include "utils/WinUtil.h"
+
+#include "wingui/UIModels.h"
+
+#include "EngineBase.h"
+#include "RefHoverDetect.h"
+#include "RefHoverInternal.h"
+#include "RefHoverText.h"
+
+void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom) {
+    KillTimer(hwndCanvas, kRefHoverTimerID);
+    if (!s || !engine || s->pending.destPage <= 0) {
+        return;
+    }
+    if (s->hitEngine != engine) {
+        if (s->hitEngine) {
+            s->hitEngine->Release();
+        }
+        s->hitEngine = engine;
+        engine->AddRef();
+    }
+    int destPage = s->pending.destPage;
+    float destX = s->pending.destX;
+    float destY = s->pending.destY;
+
+    RectF mediabox = engine->PageMediabox(destPage);
+    if (mediabox.dx <= 0.f || mediabox.dy <= 0.f) {
+        return;
+    }
+    if (destY <= 0.f || destY >= mediabox.dy - 1.f) {
+        destY = 0.f;
+        float resolved = RefHoverResolveDestYFromSourceText(engine, s->pending.srcPage, s->pending.srcRect, destPage);
+        if (resolved >= 0.f) {
+            destY = resolved;
+            if (destX < 0.f) {
+                destX = 0.f;
+            }
+        }
+    }
+
+    float linkZoom = s->pending.destZoom;
+    bool useLinkZoom = (linkZoom > 0.f);
+    if (useLinkZoom && pageZoom > linkZoom) {
+        linkZoom = pageZoom;
+    }
+
+    RectF region;
+    if (useLinkZoom) {
+        region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
+    } else {
+        int textLen = 0;
+        Rect* coords = nullptr;
+        const WCHAR* text = engine->GetTextForPage(destPage, &textLen, &coords);
+        Rect* normCoords = coords;
+        if (coords && textLen > 0) {
+            normCoords = AllocArray<Rect>((size_t)textLen);
+            NormalizeGlyphLines(coords, normCoords, textLen);
+        }
+        region = DetectEquationBox(text, normCoords, textLen, mediabox, destX, destY);
+        if (region.dx <= 0.f || region.dy <= 0.f) {
+            region = DetectEntryBox(text, normCoords, textLen, mediabox, destX, destY);
+        }
+        if (normCoords != coords) {
+            free(normCoords);
+        }
+    }
+    s->displayed.userZoom = 1.f;
+    float baseZoom = useLinkZoom ? linkZoom : ((pageZoom > 0.f) ? pageZoom : kRefHoverRenderZoom);
+
+    int popupWCap = DpiScale(s->hwndPopup, kRefHoverMaxPopupWidth);
+    {
+        POINT mp = {s->pending.screenPt.x, s->pending.screenPt.y};
+        HMONITOR hmon = MonitorFromPoint(mp, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi{};
+        mi.cbSize = sizeof(mi);
+        if (GetMonitorInfoW(hmon, &mi)) {
+            int monW = mi.rcWork.right - mi.rcWork.left;
+            int dyn = monW * 95 / 100;
+            if (dyn > popupWCap) {
+                popupWCap = dyn;
+            }
+        }
+    }
+    int popupHCap;
+    int cursorPad = DpiScale(s->hwndPopup, kRefHoverCursorPad);
+    if (region.dy > 250.f && s->pending.pageScreenRect.dy > 0) {
+        Rect pr = s->pending.pageScreenRect;
+        int curY = s->pending.screenPt.y;
+        int spaceAbove = curY - pr.y - cursorPad;
+        int spaceBelow = (pr.y + pr.dy) - curY - cursorPad;
+        int maxSpace = (spaceAbove > spaceBelow) ? spaceAbove : spaceBelow;
+        if (maxSpace < 0) {
+            maxSpace = 0;
+        }
+        int pageBased = pr.dy * 75 / 100;
+        popupHCap = (pageBased > maxSpace) ? pageBased : maxSpace;
+    } else {
+        popupHCap = DpiScale(s->hwndPopup, kRefHoverMaxPopupHeight);
+        if (s->pending.pageScreenRect.dy > 0) {
+            int pageBased = s->pending.pageScreenRect.dy * 45 / 100;
+            if (pageBased < popupHCap) {
+                popupHCap = pageBased;
+            }
+        }
+    }
+    int border = DpiScale(s->hwndPopup, kRefHoverBorder);
+    float availH = (float)(popupHCap - 2 * border);
+    float availW = (float)(popupWCap - 2 * border);
+    if (useLinkZoom) {
+        float wantW = availW / baseZoom;
+        float wantH = availH / baseZoom;
+        float maxW = mediabox.dx - region.x;
+        float maxH = mediabox.dy - region.y;
+        if (wantW > maxW) {
+            wantW = maxW;
+        }
+        if (wantH > maxH) {
+            wantH = maxH;
+        }
+        if (wantW < 1.f) {
+            wantW = 1.f;
+        }
+        if (wantH < 1.f) {
+            wantH = 1.f;
+        }
+        region.dx = wantW;
+        region.dy = wantH;
+    } else {
+        if (region.dy > 0.f && region.dy * baseZoom > availH) {
+            baseZoom = availH / region.dy;
+        }
+        if (region.dx > 0.f && region.dx * baseZoom > availW) {
+            baseZoom = availW / region.dx;
+        }
+    }
+    if (baseZoom < kRefHoverMinUserZoom) {
+        baseZoom = kRefHoverMinUserZoom;
+    }
+    s->displayed.baseZoom = baseZoom;
+
+    RefHoverState::RenderRequest req;
+    req.pageNo = destPage;
+    req.zoom = s->displayed.baseZoom * s->displayed.userZoom;
+    req.region = region;
+    req.showPopup = true;
+    req.screenPt = s->pending.screenPt;
+    req.destXRaw = s->pending.destX;
+    req.destYRaw = s->pending.destY;
+    req.srcPageRaw = s->pending.srcPage;
+    req.srcRectRaw = s->pending.srcRect;
+    RefHoverRequestRender(s, engine, req);
+}

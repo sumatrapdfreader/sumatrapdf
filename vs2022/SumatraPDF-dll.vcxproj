@@ -1276,6 +1276,10 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\RefHover.cpp" />
     <ClCompile Include="..\src\RefHoverCanvas.cpp" />
     <ClCompile Include="..\src\RefHoverDetect.cpp" />
+    <ClCompile Include="..\src\RefHoverInternal.cpp" />
+    <ClCompile Include="..\src\RefHoverPopup.cpp" />
+    <ClCompile Include="..\src\RefHoverRender.cpp" />
+    <ClCompile Include="..\src\RefHoverShow.cpp" />
     <ClCompile Include="..\src\RefHoverText.cpp" />
     <ClCompile Include="..\src\RefHoverTextDetect.cpp" />
     <ClCompile Include="..\src\RegistryInstaller.cpp" />

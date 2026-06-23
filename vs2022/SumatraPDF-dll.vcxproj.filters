@@ -632,6 +632,18 @@
     <ClCompile Include="..\src\RefHoverDetect.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\RefHoverInternal.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RefHoverPopup.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RefHoverRender.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RefHoverShow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\RefHoverText.cpp">
       <Filter>src</Filter>
     </ClCompile>

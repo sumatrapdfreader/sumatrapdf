@@ -313,3 +313,163 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     FreeDetectedCitation(&cite);
     return result;
 }
+
+float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF srcRect, int destPage) {
+    if (srcPage <= 0 || destPage <= 0 || srcRect.dx <= 0.f || srcRect.dy <= 0.f) {
+        return -1.f;
+    }
+    int srcLen = 0;
+    Rect* srcCoords = nullptr;
+    const WCHAR* srcText = engine->GetTextForPage(srcPage, &srcLen, &srcCoords);
+    if (!srcText || srcLen <= 0 || !srcCoords) {
+        return -1.f;
+    }
+    int srcL = (int)srcRect.x - 2;
+    int srcT = (int)srcRect.y - 2;
+    int srcR = (int)(srcRect.x + srcRect.dx) + 2;
+    int srcB = (int)(srcRect.y + srcRect.dy) + 2;
+
+    WCHAR rawText[512];
+    int rawLen = 0;
+    for (int i = 0; i < srcLen && rawLen < 511; i++) {
+        Rect r = srcCoords[i];
+        if (r.x + r.dx < srcL || r.x > srcR) {
+            continue;
+        }
+        if (r.y + r.dy < srcT || r.y > srcB) {
+            continue;
+        }
+        rawText[rawLen++] = srcText[i];
+    }
+
+    auto isAlnum = [](WCHAR c) {
+        return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
+    };
+
+    struct Cand {
+        int start;
+        int len;
+        bool flanked;
+    };
+    constexpr int kMaxCands = 16;
+    Cand cands[kMaxCands];
+    int ncands = 0;
+    int curStart = -1;
+    int curLen = 0;
+    for (int i = 0; i <= rawLen; i++) {
+        bool alnum = (i < rawLen) && isAlnum(rawText[i]);
+        if (alnum) {
+            if (curStart < 0) {
+                curStart = i;
+            }
+            curLen++;
+        } else {
+            if (curLen >= 2 && ncands < kMaxCands) {
+                bool flanked = (curStart > 0 && rawText[curStart - 1] == L'(' && i < rawLen && rawText[i] == L')');
+                cands[ncands++] = {curStart, curLen, flanked};
+            }
+            curStart = -1;
+            curLen = 0;
+        }
+    }
+    if (ncands == 0) {
+        return -1.f;
+    }
+    for (int i = 0; i < ncands - 1; i++) {
+        for (int j = i + 1; j < ncands; j++) {
+            bool swap = false;
+            if (cands[j].flanked && !cands[i].flanked) {
+                swap = true;
+            } else if (cands[j].flanked == cands[i].flanked && cands[j].len > cands[i].len) {
+                swap = true;
+            }
+            if (swap) {
+                Cand t = cands[i];
+                cands[i] = cands[j];
+                cands[j] = t;
+            }
+        }
+    }
+
+    int destLen = 0;
+    Rect* destCoords = nullptr;
+    const WCHAR* destText = engine->GetTextForPage(destPage, &destLen, &destCoords);
+    if (!destText || destLen <= 0 || !destCoords) {
+        return -1.f;
+    }
+    auto isLineStartMatch = [&](int idx) -> bool {
+        int sy = destCoords[idx].y;
+        int sx = destCoords[idx].x;
+        for (int i = 0; i < destLen; i++) {
+            if (i == idx) {
+                continue;
+            }
+            if (destCoords[i].y != sy) {
+                continue;
+            }
+            WCHAR c = destText[i];
+            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                continue;
+            }
+            if (destCoords[i].x < sx) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    for (int ci = 0; ci < ncands; ci++) {
+        int bestStart = cands[ci].start;
+        int bestLen = cands[ci].len;
+        auto matchAt = [&](int idx) -> bool {
+            if (idx + bestLen > destLen) {
+                return false;
+            }
+            for (int j = 0; j < bestLen; j++) {
+                WCHAR a = destText[idx + j];
+                WCHAR b = rawText[bestStart + j];
+                if (a >= L'A' && a <= L'Z') {
+                    a = (WCHAR)(a + 32);
+                }
+                if (b >= L'A' && b <= L'Z') {
+                    b = (WCHAR)(b + 32);
+                }
+                if (a != b) {
+                    return false;
+                }
+            }
+            if (idx > 0 && isAlnum(destText[idx - 1])) {
+                return false;
+            }
+            if (idx + bestLen < destLen && isAlnum(destText[idx + bestLen])) {
+                return false;
+            }
+            return true;
+        };
+
+        int bestX_lineStart = INT_MAX;
+        int bestY_lineStart = -1;
+        int bestX_any = INT_MAX;
+        int bestY_any = -1;
+        for (int i = 0; i < destLen; i++) {
+            if (!matchAt(i)) {
+                continue;
+            }
+            Rect r = destCoords[i];
+            if (isLineStartMatch(i)) {
+                if (r.x < bestX_lineStart) {
+                    bestX_lineStart = r.x;
+                    bestY_lineStart = r.y;
+                }
+            } else if (r.x < bestX_any) {
+                bestX_any = r.x;
+                bestY_any = r.y;
+            }
+        }
+        int bestY = (bestY_lineStart >= 0) ? bestY_lineStart : bestY_any;
+        if (bestY >= 0) {
+            return (float)bestY;
+        }
+    }
+    return -1.f;
+}

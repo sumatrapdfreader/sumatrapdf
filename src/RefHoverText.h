@@ -18,3 +18,8 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
 
 // Free the lazy-init plain-text lookup cache held on the hover state.
 void RefHoverFreeLookupCache(RefHoverState* s);
+
+// When a link destination is page-level (no specific destY), extract the
+// source link's text from srcRect on srcPage and search destPage for a
+// matching entry anchor. Returns -1 if no match.
+float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF srcRect, int destPage);
