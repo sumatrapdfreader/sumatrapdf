@@ -2,9 +2,11 @@
    License: GPLv3 */
 
 class EngineBase;
-class DocController;
+struct DocController;
+struct DisplayModel;
 struct ILinkHandler;
 struct IPageDestination;
+struct IPageElement;
 struct RenderedBitmap;
 struct RefLookupCache;
 
@@ -110,6 +112,13 @@ constexpr UINT_PTR kRefHoverHideTimerID = 10;
 
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
+// Canvas wiring entry points (RefHoverCanvas.cpp) — keep Canvas.cpp thin.
+bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm);
+void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
+                               DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs);
+void RefHoverOnCanvasMouseLeave(RefHoverState* s, HWND hwndCanvas, int hoverDelayMs);
+void RefHoverOnCanvasLeftButtonDown(RefHoverState* s, HWND hwndCanvas);
+bool RefHoverOnCanvasTimer(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, UINT_PTR timerId);
 // delayMs: how long the cursor must hover before the popup shows
 // (the CitationHoverDelay advanced setting)
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point screenPt, int destPage, float destX,

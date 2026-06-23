@@ -623,6 +623,9 @@
     <ClCompile Include="..\src\RefHover.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\RefHoverCanvas.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\RefHoverDetect.cpp">
       <Filter>src</Filter>
     </ClCompile>

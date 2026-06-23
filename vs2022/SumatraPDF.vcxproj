@@ -1257,6 +1257,7 @@
     <ClCompile Include="..\src\ReadAloudHighlight.cpp" />
     <ClCompile Include="..\src\ReadAloudPlaybackBar.cpp" />
     <ClCompile Include="..\src\RefHover.cpp" />
+    <ClCompile Include="..\src\RefHoverCanvas.cpp" />
     <ClCompile Include="..\src\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\RefHoverText.cpp" />
     <ClCompile Include="..\src\RefHoverTextDetect.cpp" />

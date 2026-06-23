@@ -55,7 +55,6 @@
 #include "Translations.h"
 
 #include "RefHover.h"
-#include "RefHoverText.h"
 
 #include "utils/Log.h"
 
@@ -917,25 +916,6 @@ static bool gShowAnnotationNotification = true;
 // Forward declaration
 static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 
-// Returns true when el is an internal-document link (not an external URL or
-// file launch). Such links are eligible for RefHover destination preview.
-static bool IsInternalLinkDest(IPageElement* el, DisplayModel* dm) {
-    if (!el || !el->Is(kindPageElementDest)) {
-        return false;
-    }
-    IPageDestination* dest = el->AsLink();
-    if (!dest) {
-        return false;
-    }
-    Kind k = dest->GetKind();
-    if (k == kindDestinationLaunchURL || k == kindDestinationLaunchFile) {
-        return false;
-    }
-    // a malformed document can have a link to a non-existent page
-    int destPage = PageDestGetPageNo(dest);
-    return dm && dm->ValidPageNo(destPage);
-}
-
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     DisplayModel* dm = win->AsFixed();
     // ReportIf(!dm); // can happen if reload fails, we delete DisplayModel
@@ -1026,8 +1006,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             IPageElement* el = dm->GetElementAtPos(pos, &srcPageNo);
             // the annotation notification below is suppressed in favor of
             // the citation hover popup, but only when that feature is on
-            bool citationHoverEnabled = gGlobalPrefs->citationHoverDelay >= 0;
-            bool hasInternalLink = citationHoverEnabled && IsInternalLinkDest(el, dm);
+            int hoverDelayMs = gGlobalPrefs->citationHoverDelay;
+            bool citationHoverEnabled = hoverDelayMs >= 0;
+            bool hasInternalLink = citationHoverEnabled && RefHoverIsInternalLink(el, dm);
             if (annot != prev) {
 #if 0
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
@@ -1057,79 +1038,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             }
             win->annotationUnderCursor = annot;
 
-            // RefHover: render the destination region of an internal link
-            // (bibliography entry, glossary, generic goto-link) into a popup.
-            if (citationHoverEnabled) {
-                if (!win->refHover) {
-                    win->refHover = RefHoverCreate(win->hwndCanvas);
-                }
-                if (win->refHover) {
-                    win->refHover->ctrl = win->ctrl;
-                    win->refHover->linkHandler = win->linkHandler;
-                }
-                bool scheduled = false;
-                if (win->refHover && hasInternalLink) {
-                    // request WM_MOUSELEAVE so popup hides when cursor leaves canvas
-                    TrackMouseLeave(win->hwndCanvas);
-                    IPageDestination* dest = el->AsLink();
-                    int destPage = PageDestGetPageNo(dest);
-                    RectF destPt = PageDestGetDestPoint(dest);
-                    float destZoom = PageDestGetZoom(dest);
-                    Point screenPt = {x, y};
-                    ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
-                    int srcPage = el->GetPageNo();
-                    RectF srcRect = el->GetRect();
-                    Rect pageScreenRect{};
-                    PageInfo* pi = (srcPage > 0) ? dm->GetPageInfo(srcPage) : nullptr;
-                    if (pi && !pi->pageOnScreen.IsEmpty()) {
-                        pageScreenRect = pi->pageOnScreen;
-                        POINT topLeft = {pageScreenRect.x, pageScreenRect.y};
-                        ClientToScreen(win->hwndCanvas, &topLeft);
-                        pageScreenRect.x = topLeft.x;
-                        pageScreenRect.y = topLeft.y;
-                    }
-                    int delayMs = gGlobalPrefs->citationHoverDelay;
-                    RefHoverSchedule(win->refHover, win->hwndCanvas, delayMs, screenPt, destPage, destPt.x, destPt.y,
-                                     destZoom, srcPage, srcRect, pageScreenRect);
-                    scheduled = true;
-                } else if (win->refHover && srcPageNo > 0) {
-                    // No link element under cursor — try plain-text citation
-                    // detection ("(Smith et al., 2020)" style references in
-                    // PDFs without hyperref). Convert cursor from screen
-                    // coords to page coords before searching the text cache.
-                    PointF pagePtF = dm->CvtFromScreen(pos, srcPageNo);
-                    Point pagePt{(int)pagePtF.x, (int)pagePtF.y};
-                    int destPage = -1;
-                    float destX = -1.f, destY = -1.f;
-                    RectF citationSrcRect{};
-                    if (RefHoverTryPlainText(win->refHover, dm->GetEngine(), srcPageNo, pagePt, destPage, destX, destY,
-                                             citationSrcRect)) {
-                        TrackMouseLeave(win->hwndCanvas);
-                        Point screenPt = {x, y};
-                        ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
-                        Rect pageScreenRect{};
-                        PageInfo* pi = dm->GetPageInfo(srcPageNo);
-                        if (pi && !pi->pageOnScreen.IsEmpty()) {
-                            pageScreenRect = pi->pageOnScreen;
-                            POINT topLeft = {pageScreenRect.x, pageScreenRect.y};
-                            ClientToScreen(win->hwndCanvas, &topLeft);
-                            pageScreenRect.x = topLeft.x;
-                            pageScreenRect.y = topLeft.y;
-                        }
-                        int delayMs = gGlobalPrefs->citationHoverDelay;
-                        RefHoverSchedule(win->refHover, win->hwndCanvas, delayMs, screenPt, destPage, destX, destY, 0.f,
-                                         srcPageNo, citationSrcRect, pageScreenRect);
-                        scheduled = true;
-                    }
-                }
-                if (!scheduled && win->refHover) {
-                    // grace hide: the cursor may be travelling toward the
-                    // popup to click a link inside it
-                    RefHoverScheduleHide(win->refHover, win->hwndCanvas, gGlobalPrefs->citationHoverDelay);
-                }
-            } else if (win->refHover) {
-                RefHoverHide(win->refHover, win->hwndCanvas);
-            }
+            RefHoverOnCanvasMouseMove(win->refHover, win->hwndCanvas, win->ctrl, win->linkHandler, dm, x, y, el,
+                                      srcPageNo, hoverDelayMs);
             break;
         }
 
@@ -1318,9 +1228,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    // hide the citation-hover popup: a click either follows the hovered link
-    // or starts a selection / drag, during which the popup would be stale
-    RefHoverHide(win->refHover, win->hwndCanvas);
+    RefHoverOnCanvasLeftButtonDown(win->refHover, win->hwndCanvas);
 
     if (MouseAction::Scrolling == win->mouseAction) {
         win->mouseAction = MouseAction::None;
@@ -2451,7 +2359,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             if (dmHover) {
                 Point pt = HwndGetCursorPos(win->hwndCanvas);
                 IPageElement* elHover = dmHover->GetElementAtPos(pt, nullptr);
-                if (IsInternalLinkDest(elHover, dmHover)) {
+                if (RefHoverIsInternalLink(elHover, dmHover)) {
                     short delta = GET_WHEEL_DELTA_WPARAM(wp);
                     if (isCtrl) {
                         RefHoverWheelZoom(win->refHover, dmHover->GetEngine(), delta);
@@ -2990,11 +2898,7 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             return 0;
 
         case WM_MOUSELEAVE:
-            if (win->refHover) {
-                // grace hide: the cursor leaving the canvas may mean it moved
-                // onto the popup window itself (to click a link inside it)
-                RefHoverScheduleHide(win->refHover, win->hwndCanvas, gGlobalPrefs->citationHoverDelay);
-            }
+            RefHoverOnCanvasMouseLeave(win->refHover, win->hwndCanvas, gGlobalPrefs->citationHoverDelay);
             return 0;
 
         case WM_LBUTTONDOWN:
@@ -3265,24 +3169,9 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             }
             break;
 
-        case kRefHoverTimerID: {
-            // the document might have changed (tab switch, reload, close)
-            // between scheduling the hover and the timer firing, making the
-            // pending page invalid for the current document
-            DisplayModel* dm = win->AsFixed();
-            int destPage = win->refHover ? win->refHover->pending.destPage : -1;
-            if (!dm || !dm->ValidPageNo(destPage)) {
-                KillTimer(hwnd, kRefHoverTimerID);
-                RefHoverHide(win->refHover, hwnd);
-                break;
-            }
-            float pageZoom = dm->GetZoomReal(destPage);
-            RefHoverOnTimer(win->refHover, hwnd, dm->GetEngine(), pageZoom);
-            break;
-        }
-
+        case kRefHoverTimerID:
         case kRefHoverHideTimerID:
-            RefHoverOnHideTimer(win->refHover, hwnd);
+            RefHoverOnCanvasTimer(win->refHover, hwnd, win->AsFixed(), timerId);
             break;
 
         case HIDE_FWDSRCHMARK_TIMER_ID:
