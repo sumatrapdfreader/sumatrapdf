@@ -654,9 +654,7 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point scre
     // cursor (same dest AND same source rect). A different occurrence of the
     // same reference shares the dest but has a different source rect — that
     // must reposition the popup to the new cursor location, not no-op.
-    bool sameSrc = s->displayed.srcPage == srcPage && s->displayed.srcRect.x == srcRect.x &&
-                   s->displayed.srcRect.y == srcRect.y && s->displayed.srcRect.dx == srcRect.dx &&
-                   s->displayed.srcRect.dy == srcRect.dy;
+    bool sameSrc = s->displayed.srcPage == srcPage && s->displayed.srcRect == srcRect;
     if (IsWindowVisible(s->hwndPopup) && s->displayed.destPage == destPage && s->displayed.destX == destX &&
         s->displayed.destY == destY && sameSrc) {
         return;
