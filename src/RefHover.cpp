@@ -8,6 +8,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 
+#include "wingui/UIModels.h"
+
 #include "DocController.h"
 #include "EngineBase.h"
 #include "RefHoverInternal.h"

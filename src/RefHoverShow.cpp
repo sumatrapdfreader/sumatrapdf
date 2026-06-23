@@ -7,6 +7,7 @@
 
 #include "wingui/UIModels.h"
 
+#include "DocController.h"
 #include "EngineBase.h"
 #include "RefHoverDetect.h"
 #include "RefHoverInternal.h"
