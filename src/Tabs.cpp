@@ -23,6 +23,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Commands.h"
+#include "CommandAvailability.h"
 #include "FindBar.h"
 #include "Menu.h"
 #include "TableOfContents.h"
@@ -424,38 +425,43 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
         return;
     }
     POINT pt = ToPOINT(ev->mouseScreen);
-    HMENU popup = BuildMenuFromDef(menuDefContextTab, CreatePopupMenu(), nullptr);
 
     Vec<WindowTab*> toCloseOther;
     Vec<WindowTab*> toCloseRight;
     Vec<WindowTab*> toCloseLeft;
     CollectTabsToClose(win, tabUnderMouse, toCloseOther, toCloseRight, toCloseLeft);
 
+    DisplayModel* dmTab = tabUnderMouse->AsFixed();
+    EngineBase* tabEngine = dmTab ? dmTab->GetEngine() : nullptr;
+
+    // Build the command context for the tab under the mouse, which may differ
+    // from the current tab that NewAppCommandCtx() keys off. Without a context
+    // command availability is evaluated against an empty (no-document) state,
+    // which removes almost every item (leaving only "Restore Tab Group").
+    BuildMenuCtx* ctx = NewBuildMenuCtx(tabUnderMouse, Point{0, 0});
+    ctx->tab = tabUnderMouse;
+    ctx->isDocLoaded = true; // tabUnderMouse is a real (non-about) document tab
+    ctx->filePath = tabUnderMouse->filePath;
+    ctx->supportsAnnots = EngineSupportsAnnotations(tabEngine) && !win->isFullScreen;
+    ctx->hasUnsavedAnnotations = EngineHasUnsavedAnnotations(tabEngine);
+    ctx->canCloseOtherTabs = !toCloseOther.IsEmpty();
+    ctx->canCloseTabsToRight = !toCloseRight.IsEmpty();
+    ctx->canCloseTabsToLeft = !toCloseLeft.IsEmpty();
+
+    HMENU popup = BuildMenuFromDef(menuDefContextTab, CreatePopupMenu(), ctx);
+    DeleteBuildMenuCtx(ctx);
+
     if (!tabUnderMouse->ctrl) {
         MenuSetEnabled(popup, CmdSetTabColor, false);
     }
-    if (toCloseOther.IsEmpty()) {
-        MenuSetEnabled(popup, CmdCloseOtherTabs, false);
-    }
-    if (toCloseRight.IsEmpty()) {
-        MenuSetEnabled(popup, CmdCloseTabsToTheRight, false);
-    }
-    if (toCloseLeft.IsEmpty()) {
-        MenuSetEnabled(popup, CmdCloseTabsToTheLeft, false);
-    }
-    if (!HasOpenedDocuments(win)) {
-        MenuSetEnabled(popup, CmdTabGroupSave, false);
-    }
     // the save/discard items only make sense when the document has unsaved
     // changes (e.g. filled form fields, added annotations); otherwise remove
-    // them along with their trailing separator
-    DisplayModel* dmTab = tabUnderMouse->AsFixed();
-    EngineBase* tabEngine = dmTab ? dmTab->GetEngine() : nullptr;
+    // them, then clean up the separator they leave behind
     if (!EngineHasUnsavedAnnotations(tabEngine)) {
         DeleteMenu(popup, CmdSaveAnnotations, MF_BYCOMMAND);
         DeleteMenu(popup, CmdSaveAnnotationsNewFile, MF_BYCOMMAND);
         DeleteMenu(popup, CmdDiscardAnnotations, MF_BYCOMMAND);
-        DeleteMenu(popup, 0, MF_BYPOSITION); // the now-leading separator
+        RemoveBadMenuSeparators(popup);
     }
     MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
