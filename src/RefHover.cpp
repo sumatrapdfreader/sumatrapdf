@@ -94,7 +94,49 @@ static constexpr float kUserZoomStep = 1.15f;
 // 0 = not tried, 1 = registered, -1 = failed
 static int gClassRegistered = 0;
 
+// Map a popup-client point back to a page point and return the launch link
+// (external URL / file) under it, or nullptr. Uses the stored engine for the
+// currently displayed page.
+static IPageDestination* LaunchLinkAtPopupPt(RefHoverState* s, HWND hwnd, int clientX, int clientY) {
+    if (!s || !s->hitEngine || s->displayed.destPage <= 0) {
+        return nullptr;
+    }
+    float zoom = s->displayed.baseZoom * s->displayed.userZoom;
+    if (zoom <= 0.f) {
+        return nullptr;
+    }
+    int border = DpiScale(hwnd, kBorder);
+    PointF pt;
+    pt.x = s->displayed.region.x + (float)(clientX - border) / zoom;
+    pt.y = s->displayed.region.y + (float)(clientY - border) / zoom;
+    IPageElement* el = s->hitEngine->GetElementAtPos(s->displayed.destPage, pt);
+    if (!el || !el->Is(kindPageElementDest)) {
+        return nullptr;
+    }
+    IPageDestination* dest = el->AsLink();
+    if (!dest) {
+        return nullptr;
+    }
+    Kind k = dest->GetKind();
+    if (k == kindDestinationLaunchURL || k == kindDestinationLaunchFile) {
+        return dest;
+    }
+    return nullptr;
+}
+
 static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_SETCURSOR) {
+        // hand cursor when hovering a launchable link inside the popup
+        RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+        POINT p;
+        if (s && GetCursorPos(&p)) {
+            ScreenToClient(hwnd, &p);
+            if (LaunchLinkAtPopupPt(s, hwnd, p.x, p.y)) {
+                SetCursor(LoadCursorW(nullptr, IDC_HAND));
+                return TRUE;
+            }
+        }
+    }
     if (msg == WM_PAINT) {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
@@ -131,6 +173,26 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     }
     if (msg == WM_ERASEBKGND) {
         return 1;
+    }
+    if (msg == WM_LBUTTONDOWN) {
+        // Map the click from popup pixels back to a point on the rendered
+        // destination page, then let the owner canvas hit-test the engine
+        // for a launch link (URL / file) there and open it — same behavior
+        // as clicking the link directly in the document.
+        RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+        if (s && s->hwndCanvas) {
+            int cx = GET_X_LPARAM(lp);
+            int cy = GET_Y_LPARAM(lp);
+            if (LaunchLinkAtPopupPt(s, hwnd, cx, cy)) {
+                int border = DpiScale(hwnd, kBorder);
+                float zoom = s->displayed.baseZoom * s->displayed.userZoom;
+                s->clickPage = s->displayed.destPage;
+                s->clickPagePt.x = s->displayed.region.x + (float)(cx - border) / zoom;
+                s->clickPagePt.y = s->displayed.region.y + (float)(cy - border) / zoom;
+                PostMessageW(s->hwndCanvas, kRefHoverClickMsg, 0, 0);
+            }
+        }
+        return 0;
     }
     return DefWindowProc(hwnd, msg, wp, lp);
 }
@@ -188,6 +250,7 @@ RefHoverState* RefHoverCreate(HWND hwndCanvas) {
     }
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)s);
     s->hwndPopup = hwnd;
+    s->hwndCanvas = hwndCanvas;
     for (RefHoverState*& slot : gLiveStates) {
         if (!slot) {
             slot = s;
@@ -214,6 +277,10 @@ void RefHoverDestroy(RefHoverState* s) {
     }
     delete s->bmp;
     s->bmp = nullptr;
+    if (s->hitEngine) {
+        s->hitEngine->Release();
+        s->hitEngine = nullptr;
+    }
     RefHoverFreeLookupCache(s);
     delete s;
 }
@@ -365,6 +432,8 @@ static void RefHoverRenderDone(RefHoverRenderJob* job) {
             // render and re-positioned the popup at the new cursor position.
             s->displayed.destX = job->req.destXRaw;
             s->displayed.destY = job->req.destYRaw;
+            s->displayed.srcPage = job->req.srcPageRaw;
+            s->displayed.srcRect = job->req.srcRectRaw;
             s->displayed.region = job->req.region;
             ShowPopup(s, job->req.screenPt);
         } else {
@@ -586,9 +655,18 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point scre
         return;
     }
     KillTimer(hwndCanvas, kRefHoverTimerID);
+    // a fresh hover cancels any pending grace-period hide
+    KillTimer(hwndCanvas, kRefHoverHideTimerID);
 
+    // Skip a re-render only when the SAME source link is still under the
+    // cursor (same dest AND same source rect). A different occurrence of the
+    // same reference shares the dest but has a different source rect — that
+    // must reposition the popup to the new cursor location, not no-op.
+    bool sameSrc = s->displayed.srcPage == srcPage && s->displayed.srcRect.x == srcRect.x &&
+                   s->displayed.srcRect.y == srcRect.y && s->displayed.srcRect.dx == srcRect.dx &&
+                   s->displayed.srcRect.dy == srcRect.dy;
     if (IsWindowVisible(s->hwndPopup) && s->displayed.destPage == destPage && s->displayed.destX == destX &&
-        s->displayed.destY == destY) {
+        s->displayed.destY == destY && sameSrc) {
         return;
     }
     s->pending.screenPt = screenPt;
@@ -599,6 +677,12 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point scre
     s->pending.srcPage = srcPage;
     s->pending.srcRect = srcRect;
     s->pending.pageScreenRect = pageScreenRect;
+    // A popup is already up (showing a different reference): swap to the new
+    // one immediately instead of waiting out the hover delay again. The delay
+    // only applies to the first popup (cursor resting on a reference).
+    if (IsWindowVisible(s->hwndPopup)) {
+        delayMs = 0;
+    }
     SetTimer(hwndCanvas, kRefHoverTimerID, (UINT)delayMs, nullptr);
 }
 
@@ -607,6 +691,7 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
         return;
     }
     KillTimer(hwndCanvas, kRefHoverTimerID);
+    KillTimer(hwndCanvas, kRefHoverHideTimerID);
     s->pending.destPage = -1;
     // invalidate any in-flight render result and drop a parked one — a slow
     // render finishing after hide must not pop the window back up
@@ -616,6 +701,53 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
         ShowWindow(s->hwndPopup, SW_HIDE);
         s->displayed.destPage = -1;
     }
+}
+
+// poll interval used while the cursor is parked over the popup
+static constexpr UINT kRefHoverHidePollMs = 150;
+// floor for the grace delay so a 0 / tiny CitationHoverDelay still leaves
+// enough time to move the cursor from the link onto the popup
+static constexpr int kRefHoverHideMinMs = 250;
+
+void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs) {
+    if (!s) {
+        return;
+    }
+    // Cancel any pending show: the cursor left the link, so don't pop a new
+    // popup. Invalidate in-flight / queued renders for the same reason.
+    KillTimer(hwndCanvas, kRefHoverTimerID);
+    s->pending.destPage = -1;
+    s->renderGen++;
+    DropQueuedRender(s);
+    if (!s->hwndPopup || !IsWindowVisible(s->hwndPopup)) {
+        s->displayed.destPage = -1;
+        return;
+    }
+    if (delayMs < kRefHoverHideMinMs) {
+        delayMs = kRefHoverHideMinMs;
+    }
+    SetTimer(hwndCanvas, kRefHoverHideTimerID, (UINT)delayMs, nullptr);
+}
+
+void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas) {
+    if (!s) {
+        return;
+    }
+    KillTimer(hwndCanvas, kRefHoverHideTimerID);
+    if (!s->hwndPopup || !IsWindowVisible(s->hwndPopup)) {
+        return;
+    }
+    POINT pt;
+    if (GetCursorPos(&pt)) {
+        // Cursor parked over the popup (reading it / about to click a link
+        // inside it): keep it up and re-check shortly instead of hiding.
+        if (WindowFromPoint(pt) == s->hwndPopup) {
+            SetTimer(hwndCanvas, kRefHoverHideTimerID, kRefHoverHidePollMs, nullptr);
+            return;
+        }
+    }
+    ShowWindow(s->hwndPopup, SW_HIDE);
+    s->displayed.destPage = -1;
 }
 
 // When the link's destination is page-level (destY < 0), try to recover a
@@ -816,6 +948,14 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     if (!s || !engine || s->pending.destPage <= 0) {
         return;
     }
+    // keep an AddRef'd handle so the popup can hit-test links under the cursor
+    if (s->hitEngine != engine) {
+        if (s->hitEngine) {
+            s->hitEngine->Release();
+        }
+        s->hitEngine = engine;
+        engine->AddRef();
+    }
     int destPage = s->pending.destPage;
     float destX = s->pending.destX;
     float destY = s->pending.destY;
@@ -996,5 +1136,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     req.screenPt = s->pending.screenPt;
     req.destXRaw = s->pending.destX;
     req.destYRaw = s->pending.destY;
+    req.srcPageRaw = s->pending.srcPage;
+    req.srcRectRaw = s->pending.srcRect;
     RefHoverRequestRender(s, engine, req);
 }

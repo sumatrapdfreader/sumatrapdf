@@ -13,8 +13,11 @@
 // Detect a "(Surname et al., 2020)" / "Surname (2020)" pattern at pagePos (page
 // coordinates). On success returns true and fills *surnameOut with a
 // freshly-allocated UTF-8 surname (caller frees) and *yearOut.
+// srcRectOut (optional): on success, set to a stable per-occurrence source
+// key — the cursor's text line (x/dx = 0, y/dy = the line). Lets callers tell
+// two occurrences of the same citation apart (different line → reposition).
 bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, char** surnameOut,
-                              int* yearOut);
+                              int* yearOut, Rect* srcRectOut = nullptr);
 
 // Search a page's glyph arrays for a bibliography entry whose line starts
 // with (or contains, near the line start) `surnameW` and whose entry text
@@ -27,7 +30,10 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
 // pagePos (page coordinates). Handles lists / ranges ("[1, 2]", "[3-5]") by
 // picking the number token nearest the cursor. On success returns true and
 // fills *numOut with the reference number.
-bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, int* numOut);
+// srcRectOut (optional): see DetectCitationInPageText — stable per-occurrence
+// source line key set on success.
+bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, int* numOut,
+                                     Rect* srcRectOut = nullptr);
 
 // Search a page's glyph arrays for a bibliography entry whose line starts with
 // "[num]" at the page's leftmost text column. Returns true on hit and fills

@@ -95,13 +95,14 @@ static void FreeDetectedCitation(DetectedCitation* c) {
 // Detect a citation pattern under the cursor on srcPage. On success, returns
 // true and fills *out with a freshly-allocated surname and year. The actual
 // pattern matching is the pure DetectCitationInPageText (RefHoverDetect.cpp).
-static bool DetectCitationAtCursor(EngineBase* engine, int srcPage, Point pagePos, DetectedCitation* out) {
+static bool DetectCitationAtCursor(EngineBase* engine, int srcPage, Point pagePos, DetectedCitation* out,
+                                   Rect* srcRectOut = nullptr) {
     out->surname = nullptr;
     out->year = 0;
     int textLen = 0;
     Rect* coords = nullptr;
     const WCHAR* text = engine->GetTextForPage(srcPage, &textLen, &coords);
-    return DetectCitationInPageText(text, coords, textLen, pagePos, &out->surname, &out->year);
+    return DetectCitationInPageText(text, coords, textLen, pagePos, &out->surname, &out->year, srcRectOut);
 }
 
 // Walk pages from pageCount → srcPage looking for a bibliography entry that
@@ -221,10 +222,11 @@ static bool LookupOrSearchNumeric(RefHoverState* s, EngineBase* engine, int srcP
 }
 
 bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Point pagePos, int& destPageOut,
-                          float& destXOut, float& destYOut) {
+                          float& destXOut, float& destYOut, RectF& srcRectOut) {
     if (!s || !engine || srcPage <= 0) {
         return false;
     }
+    Rect srcRect{};
 
     if (!s->lookupCache) {
         s->lookupCache = new RefLookupCache();
@@ -237,15 +239,16 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
         Rect* coords = nullptr;
         const WCHAR* text = engine->GetTextForPage(srcPage, &textLen, &coords);
         int num = 0;
-        if (DetectNumericCitationInPageText(text, coords, textLen, pagePos, &num)) {
+        if (DetectNumericCitationInPageText(text, coords, textLen, pagePos, &num, &srcRect)) {
             if (LookupOrSearchNumeric(s, engine, srcPage, num, destPageOut, destXOut, destYOut)) {
+                srcRectOut = RectF{(float)srcRect.x, (float)srcRect.y, (float)srcRect.dx, (float)srcRect.dy};
                 return true;
             }
         }
     }
 
     DetectedCitation cite{};
-    if (!DetectCitationAtCursor(engine, srcPage, pagePos, &cite)) {
+    if (!DetectCitationAtCursor(engine, srcPage, pagePos, &cite, &srcRect)) {
         return false;
     }
 
@@ -304,6 +307,9 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
         }
     }
 
+    if (result) {
+        srcRectOut = RectF{(float)srcRect.x, (float)srcRect.y, (float)srcRect.dx, (float)srcRect.dy};
+    }
     FreeDetectedCitation(&cite);
     return result;
 }

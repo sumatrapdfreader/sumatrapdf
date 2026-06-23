@@ -1098,8 +1098,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     Point pagePt{(int)pagePtF.x, (int)pagePtF.y};
                     int destPage = -1;
                     float destX = -1.f, destY = -1.f;
+                    RectF citationSrcRect{};
                     if (RefHoverTryPlainText(win->refHover, dm->GetEngine(), srcPageNo, pagePt, destPage, destX,
-                                             destY)) {
+                                             destY, citationSrcRect)) {
                         TrackMouseLeave(win->hwndCanvas);
                         Point screenPt = {x, y};
                         ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
@@ -1114,12 +1115,14 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         }
                         int delayMs = gGlobalPrefs->citationHoverDelay;
                         RefHoverSchedule(win->refHover, win->hwndCanvas, delayMs, screenPt, destPage, destX, destY, 0.f,
-                                         srcPageNo, RectF{}, pageScreenRect);
+                                         srcPageNo, citationSrcRect, pageScreenRect);
                         scheduled = true;
                     }
                 }
                 if (!scheduled && win->refHover) {
-                    RefHoverHide(win->refHover, win->hwndCanvas);
+                    // grace hide: the cursor may be travelling toward the
+                    // popup to click a link inside it
+                    RefHoverScheduleHide(win->refHover, win->hwndCanvas, gGlobalPrefs->citationHoverDelay);
                 }
             } else if (win->refHover) {
                 RefHoverHide(win->refHover, win->hwndCanvas);
@@ -2985,7 +2988,9 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
 
         case WM_MOUSELEAVE:
             if (win->refHover) {
-                RefHoverHide(win->refHover, win->hwndCanvas);
+                // grace hide: the cursor leaving the canvas may mean it moved
+                // onto the popup window itself (to click a link inside it)
+                RefHoverScheduleHide(win->refHover, win->hwndCanvas, gGlobalPrefs->citationHoverDelay);
             }
             return 0;
 
@@ -3272,6 +3277,10 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             RefHoverOnTimer(win->refHover, hwnd, dm->GetEngine(), pageZoom);
             break;
         }
+
+        case kRefHoverHideTimerID:
+            RefHoverOnHideTimer(win->refHover, hwnd);
+            break;
 
         case HIDE_FWDSRCHMARK_TIMER_ID:
             win->fwdSearchMark.hideStep++;
@@ -3764,6 +3773,27 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_TIMER:
             OnTimer(win, hwnd, wp);
             return 0;
+
+        case kRefHoverClickMsg: {
+            // The hover popup was clicked; if a launch link (external URL /
+            // file) sits under the click on the rendered dest page, open it
+            // the same way a direct click in the document would.
+            DisplayModel* dm = win->AsFixed();
+            RefHoverState* rh = win->refHover;
+            if (dm && rh && dm->ValidPageNo(rh->clickPage)) {
+                EngineBase* engine = dm->GetEngine();
+                IPageElement* el = engine ? engine->GetElementAtPos(rh->clickPage, rh->clickPagePt) : nullptr;
+                if (el && el->Is(kindPageElementDest)) {
+                    IPageDestination* dest = el->AsLink();
+                    Kind k = dest ? dest->GetKind() : nullptr;
+                    if (k == kindDestinationLaunchURL || k == kindDestinationLaunchFile) {
+                        RefHoverHide(rh, hwnd);
+                        win->ctrl->HandleLink(dest, win->linkHandler);
+                    }
+                }
+            }
+            return 0;
+        }
 
         case WM_KILLFOCUS:
             // stop middle-button auto-scroll when the canvas loses focus, e.g.
