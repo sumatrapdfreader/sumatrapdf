@@ -55,6 +55,7 @@
 #include "Translations.h"
 
 #include "RefHover.h"
+#include "RefHoverText.h"
 
 #include "utils/Log.h"
 
@@ -1021,7 +1022,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
         case MouseAction::None: {
             Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
-            IPageElement* el = dm->GetElementAtPos(pos, nullptr);
+            int srcPageNo = -1;
+            IPageElement* el = dm->GetElementAtPos(pos, &srcPageNo);
             // the annotation notification below is suppressed in favor of
             // the citation hover popup, but only when that feature is on
             bool citationHoverEnabled = gGlobalPrefs->citationHoverDelay >= 0;
@@ -1061,6 +1063,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                 if (!win->refHover) {
                     win->refHover = RefHoverCreate(win->hwndCanvas);
                 }
+                bool scheduled = false;
                 if (win->refHover && hasInternalLink) {
                     // request WM_MOUSELEAVE so popup hides when cursor leaves canvas
                     TrackMouseLeave(win->hwndCanvas);
@@ -1084,7 +1087,37 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     int delayMs = gGlobalPrefs->citationHoverDelay;
                     RefHoverSchedule(win->refHover, win->hwndCanvas, delayMs, screenPt, destPage, destPt.x, destPt.y,
                                      destZoom, srcPage, srcRect, pageScreenRect);
-                } else if (win->refHover) {
+                    scheduled = true;
+                } else if (win->refHover && srcPageNo > 0) {
+                    // No link element under cursor — try plain-text citation
+                    // detection ("(Smith et al., 2020)" style references in
+                    // PDFs without hyperref). Convert cursor from screen
+                    // coords to page coords before searching the text cache.
+                    PointF pagePtF = dm->CvtFromScreen(pos, srcPageNo);
+                    Point pagePt{(int)pagePtF.x, (int)pagePtF.y};
+                    int destPage = -1;
+                    float destX = -1.f, destY = -1.f;
+                    if (RefHoverTryPlainText(win->refHover, dm->GetEngine(), srcPageNo, pagePt, destPage, destX,
+                                             destY)) {
+                        TrackMouseLeave(win->hwndCanvas);
+                        Point screenPt = {x, y};
+                        ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
+                        Rect pageScreenRect{};
+                        PageInfo* pi = dm->GetPageInfo(srcPageNo);
+                        if (pi && !pi->pageOnScreen.IsEmpty()) {
+                            pageScreenRect = pi->pageOnScreen;
+                            POINT topLeft = {pageScreenRect.x, pageScreenRect.y};
+                            ClientToScreen(win->hwndCanvas, &topLeft);
+                            pageScreenRect.x = topLeft.x;
+                            pageScreenRect.y = topLeft.y;
+                        }
+                        int delayMs = gGlobalPrefs->citationHoverDelay;
+                        RefHoverSchedule(win->refHover, win->hwndCanvas, delayMs, screenPt, destPage, destX, destY, 0.f,
+                                         srcPageNo, RectF{}, pageScreenRect);
+                        scheduled = true;
+                    }
+                }
+                if (!scheduled && win->refHover) {
                     RefHoverHide(win->refHover, win->hwndCanvas);
                 }
             } else if (win->refHover) {

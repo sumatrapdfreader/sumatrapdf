@@ -19,6 +19,7 @@
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\RefHoverDetect.h" />
+    <ClInclude Include="..\src\RefHoverTextDetect.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h">
       <Filter>utils</Filter>
@@ -117,6 +118,7 @@
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\RefHoverDetect.cpp" />
+    <ClCompile Include="..\src\RefHoverTextDetect.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
     <ClCompile Include="..\src\common\arena.cpp">

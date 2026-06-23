@@ -8,6 +8,7 @@
 
 #include "utils/BaseUtil.h"
 #include "RefHoverDetect.h"
+#include "RefHoverTextDetect.h"
 
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
@@ -256,6 +257,26 @@ static void NonTrailingParenRejected() {
     utassert(IsEmpty(box));
 }
 
+// (6b) A line-trailing 4-digit "(2013)" in the right half is a citation year at
+// the end of a bibliography line, not a display-equation label: DetectEquationBox
+// must reject it (else hovering a reference would render the whole reference row
+// as if it were an equation strip). A 2-3 digit label is still detected.
+static void BibYearParenNotEquationLabel() {
+    WCHAR text[512];
+    Rect coords[512];
+    int len = 0;
+    // Reference line ending in "(2013)" at the right column (right half).
+    AddText(text, coords, len, 512, L"O. Zimmermann Decisions IGI Global (2013)", 320, 300);
+    RectF box = DetectEquationBox(text, coords, len, Mediabox(), 320.f, 300.f);
+    utassert(IsEmpty(box));
+    // sanity: a genuine 2-digit equation label is still detected
+    len = 0;
+    AddText(text, coords, len, 512, L"some eq body", 200, 300);
+    AddText(text, coords, len, 512, L"(14)", 540, 300);
+    box = DetectEquationBox(text, coords, len, Mediabox(), 200.f, 300.f);
+    utassert(!IsEmpty(box));
+}
+
 // (7) Empty / null inputs: DetectEquationBox returns empty rect, never crashes.
 static void EmptyInputsHandled() {
     RectF box1 = DetectEquationBox(nullptr, nullptr, 0, Mediabox(), 0.f, 100.f);
@@ -359,6 +380,104 @@ static void LandscapeBoxBasicShape() {
     utassert(box.y < 400.f);
     utassert(box.dy > 0.f);
     utassert(box.y + box.dy <= kPageH);
+}
+
+// (10) Plain-text citation "(Smith et al., 2020)": cursor on "Smith" yields
+// surname "Smith" and year 2020.
+static void PlainTextCitationDetected() {
+    WCHAR text[256];
+    Rect coords[256];
+    int len = 0;
+    AddText(text, coords, len, 256, L"as shown in (Smith et al., 2020) earlier", 72, 200);
+    char* surname = nullptr;
+    int year = 0;
+    // Cursor on the 'S' of "Smith" (glyph 13 → x = 72 + 13*6 = 150).
+    bool ok = DetectCitationInPageText(text, coords, len, Point{152, 206}, &surname, &year);
+    utassert(ok);
+    utassert(surname && str::Eq(surname, "Smith"));
+    utassert(year == 2020);
+    str::Free(surname);
+}
+
+// (11) No 4-digit year near the cursor: detection fails, no allocation.
+static void PlainTextCitationNoYear() {
+    WCHAR text[256];
+    Rect coords[256];
+    int len = 0;
+    AddText(text, coords, len, 256, L"plain body text without any citation", 72, 200);
+    char* surname = nullptr;
+    int year = 0;
+    bool ok = DetectCitationInPageText(text, coords, len, Point{100, 206}, &surname, &year);
+    utassert(!ok);
+    utassert(!surname);
+}
+
+// (12) Bibliography page lookup: a line starting with the surname and
+// containing the year anchors at the line's first glyph; a surname that is
+// not on the page returns false.
+static void SurnameFoundOnBibPage() {
+    WCHAR text[512];
+    Rect coords[512];
+    int len = 0;
+    AddText(text, coords, len, 512, L"References", 72, 100);
+    AddText(text, coords, len, 512, L"Smith, J. (2020). Some title.", 72, 130);
+    AddText(text, coords, len, 512, L"continuation of the entry.", 90, 145);
+    float x = 0.f, y = 0.f;
+    bool ok = FindSurnameInPageText(text, coords, len, L"Smith", 5, 2020, &x, &y);
+    utassert(ok);
+    utassert(x == 72.f);
+    utassert(y == 130.f);
+    ok = FindSurnameInPageText(text, coords, len, L"Jones", 5, 2021, &x, &y);
+    utassert(!ok);
+}
+
+// (13) Numeric "[N]" citation: cursor inside the brackets yields the number;
+// a list "[1, 2]" picks the token nearest the cursor; plain text fails.
+static void NumericCitationDetected() {
+    WCHAR text[256];
+    Rect coords[256];
+    int len = 0;
+    AddText(text, coords, len, 256, L"see [1] for details", 72, 200);
+    int num = 0;
+    // Cursor on the '1' (glyph 5 → x = 72 + 5*6 = 102).
+    bool ok = DetectNumericCitationInPageText(text, coords, len, Point{105, 206}, &num);
+    utassert(ok);
+    utassert(num == 1);
+
+    len = 0;
+    AddText(text, coords, len, 256, L"prior work [1, 2] showed", 72, 200);
+    num = 0;
+    // Cursor on the '2' (glyph 15 → x = 72 + 15*6 = 162).
+    ok = DetectNumericCitationInPageText(text, coords, len, Point{165, 206}, &num);
+    utassert(ok);
+    utassert(num == 2);
+
+    len = 0;
+    AddText(text, coords, len, 256, L"no brackets here at all", 72, 200);
+    num = 0;
+    ok = DetectNumericCitationInPageText(text, coords, len, Point{100, 206}, &num);
+    utassert(!ok);
+}
+
+// (14) Numeric reference list lookup: a line starting with "[num]" at the left
+// column anchors at its first glyph; a number not present returns false.
+static void NumericReferenceFoundOnBibPage() {
+    WCHAR text[512];
+    Rect coords[512];
+    int len = 0;
+    AddText(text, coords, len, 512, L"References", 72, 100);
+    AddText(text, coords, len, 512, L"[1] A. Trentin, Some title 2025.", 72, 130);
+    AddText(text, coords, len, 512, L"[2] B. Other, Another title 2024.", 72, 150);
+    float x = 0.f, y = 0.f;
+    bool ok = FindNumericReferenceInPageText(text, coords, len, 1, &x, &y);
+    utassert(ok);
+    utassert(x == 72.f);
+    utassert(y == 130.f);
+    ok = FindNumericReferenceInPageText(text, coords, len, 2, &x, &y);
+    utassert(ok);
+    utassert(y == 150.f);
+    ok = FindNumericReferenceInPageText(text, coords, len, 3, &x, &y);
+    utassert(!ok);
 }
 
 // (3g) Hanging-indent bracket bibliography with a narrow label ("[TA05]"):
@@ -500,7 +619,102 @@ static void VariableGlyphTopsEntryNotHijacked() {
     utassert(box.y + box.dy < 352.f);
 }
 
+// (14) 2-column numeric reference list, destination in the LEFT column whose
+// "[N] body" sits on a single line (no labelsep gap). The right column has a
+// line a few pt ABOVE the destination Y and starts just past a narrow gutter.
+// The box must anchor on the left entry (not the higher right-column line) and
+// must not bleed across the gutter into the right column. Regresses the
+// "hover [2] shows [26]" bug: the start-glyph pick latched onto the topmost
+// line in the Y-window (right column), and the labelsep bridge then jumped the
+// narrow gutter, widening the box across both columns.
+static void TwoColumnNumericLeftEntryNotHijacked() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Left column (x=72). The "[2]" entry spans one full line (~ends x=198).
+    AddText(text, coords, len, 1024, L"[1] First left column entry.", 72, 600);
+    AddText(text, coords, len, 1024, L"[2] Anvaari Zimmerman", 72, 628);
+    AddText(text, coords, len, 1024, L"second line of entry two", 72, 642);
+    // Right column (x=244 — a 46pt gutter from the left column's ~198 edge,
+    // narrower than the labelsep bridge's 50pt reach). Its first line at y=624
+    // sits 4pt above the [2] destination top (628).
+    AddText(text, coords, len, 1024, L"[26] Zimmermann Miksovic Decisions", 244, 624);
+    AddText(text, coords, len, 1024, L"connecting enterprise architects", 244, 638);
+    AddText(text, coords, len, 1024, L"[27] Zimmermann Zdun Combining", 244, 660);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 628.f);
+    utassert(!IsEmpty(box));
+    // anchored at the left-column entry, not the higher right-column line
+    utassert(box.x <= 72.f + 6.f);
+    // includes the [2] line
+    utassert(box.y <= 628.f + 2.f);
+    // must not cross the gutter into the right column (x=244)
+    utassert(box.x + box.dx < 244.f);
+    // bounded to the [2] entry's two lines (last line bottom ~654 + padding),
+    // not sweeping down into the right column's [27] row
+    utassert(box.y + box.dy < 672.f);
+}
+
+// (15) 2-column numeric reference list lookup: an entry in the RIGHT column
+// must be found. Regresses the bug where the single-leftmost-column test (and
+// the reading-order line-start test) made every right-column entry unreachable
+// — hovering "[4]"/"[5]" then did nothing because their entries sit in the
+// right column of the references page.
+static void TwoColumnNumericReferenceFound() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Left column refs at x=72, right column refs at x=320 (a wide gutter from
+    // the left column's text which ends near x=150).
+    AddText(text, coords, len, 1024, L"[1] Left column one.", 72, 100);
+    AddText(text, coords, len, 1024, L"[2] Left column two.", 72, 120);
+    AddText(text, coords, len, 1024, L"[3] Right column three.", 320, 100);
+    AddText(text, coords, len, 1024, L"[4] Right column four.", 320, 120);
+    float x = 0, y = 0;
+    // right-column entries must resolve
+    utassert(FindNumericReferenceInPageText(text, coords, len, 4, &x, &y));
+    utassert(x == 320.f && y == 120.f);
+    utassert(FindNumericReferenceInPageText(text, coords, len, 3, &x, &y));
+    utassert(x == 320.f && y == 100.f);
+    // left-column entries still resolve
+    utassert(FindNumericReferenceInPageText(text, coords, len, 1, &x, &y));
+    utassert(x == 72.f && y == 100.f);
+    // absent number fails
+    utassert(!FindNumericReferenceInPageText(text, coords, len, 9, &x, &y));
+    // a mid-line body citation "[2]" (text to its left) is not an entry start
+    len = 0;
+    AddText(text, coords, len, 1024, L"as reported in [2] by others", 72, 200);
+    utassert(!FindNumericReferenceInPageText(text, coords, len, 2, &x, &y));
+}
+
+// (16) 2-column entry whose second line is much wider than its first (e.g. a
+// short label line over a long URL). The box must cover the wide line's full
+// width yet stop at the column gutter. Regresses two failure modes: sizing the
+// box from line 1 clips the wide line; a gap-threshold walk crosses the narrow
+// gutter into the neighbouring column. The gutter-aware column scan handles
+// both (the gutter is empty on every row; the wide line keeps its column full).
+static void TwoColumnWideSecondLineStaysInColumn() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Left column entry at x=72: short first line (~ends x=168), long 2nd line
+    // (~ends x=276). Right column at x=300 — a ~24pt gutter.
+    AddText(text, coords, len, 1024, L"[5] Short label.", 72, 200);
+    AddText(text, coords, len, 1024, L"http://example.com/a/very/long/url", 72, 214);
+    AddText(text, coords, len, 1024, L"[9] Right one.", 300, 200);
+    AddText(text, coords, len, 1024, L"right two.", 300, 214);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    utassert(box.x <= 72.f + 6.f);
+    // covers the long 2nd line (well past the short first line's ~x=168)
+    utassert(box.x + box.dx >= 250.f);
+    // but does not cross the gutter into the right column (x=300)
+    utassert(box.x + box.dx < 300.f);
+}
+
 void RefHoverTest() {
+    TwoColumnNumericLeftEntryNotHijacked();
+    TwoColumnNumericReferenceFound();
+    TwoColumnWideSecondLineStaysInColumn();
     AccentedAllCapsHeadingDetected();
     HangingIndentNarrowLabelFullWidth();
     TwoColumnHangingIndentStaysInColumn();
@@ -515,6 +729,7 @@ void RefHoverTest() {
     SingleLineEntryList();
     EmptyInputsHandled();
     EquationLabelDetected();
+    BibYearParenNotEquationLabel();
     FrenchCaptionDetected();
     ItalianPortugueseCaptionDetected();
     LandscapeBoxBasicShape();
@@ -524,4 +739,9 @@ void RefHoverTest() {
     SparseTextReturnsWholePage();
     TwoColumnLeftEntryStaysInColumn();
     TwoColumnRightEntryStaysInColumn();
+    PlainTextCitationDetected();
+    PlainTextCitationNoYear();
+    SurnameFoundOnBibPage();
+    NumericCitationDetected();
+    NumericReferenceFoundOnBibPage();
 }
