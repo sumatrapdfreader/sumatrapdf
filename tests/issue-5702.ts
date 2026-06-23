@@ -87,6 +87,19 @@ function findWslTectonic(): boolean {
   return r.ok;
 }
 
+function findWindowsTectonic(): boolean {
+  const r = run(["tectonic", "--version"]);
+  if (!r.ok) {
+    console.log(
+      `\nSKIP issue-5702: tectonic not found on Windows, skipping.\n` +
+      `To install it, run this in PowerShell:\n` +
+      `    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072` +
+      `    iex ((New-Object System.Net.WebClient).DownloadString('https://drop-ps1.fullyjustified.net'))`,
+    );
+  }
+  return r.ok;
+}
+
 // converts a Windows absolute path (e.g. "C:\foo\bar.tex") to its WSL
 // mount-path equivalent (e.g. "/mnt/c/foo/bar.tex"), for invoking tectonic
 // from inside WSL and for computing expected DocToSource results.
@@ -188,6 +201,7 @@ function pointFromFwdSearchResult(res: FwdSearchResult): FwdSearchPoint | null {
 function compileFiles(
   workDir: string,
   srcPath: string,
+  { useWsl = true }: { useWsl?: boolean; } = {}
 ): { pdfPath: string; srcPath: string } {
   // clean up working directory
   rmSync(workDir, { recursive: true, force: true });
@@ -197,23 +211,32 @@ function compileFiles(
     writeFileSync(srcPath, readFileSync(WIN_TEX_SRC));
   }
 
-  // convert srcPath to a format that can be used by tectonic in wsl
-  const srcPathForTectonic = windowsPathToWslMountPath(srcPath) ?? wslUncPathToUnixPath(srcPath);
-  if (!srcPathForTectonic) {
-    throw new Error(`Source path is neither a Windows path nor a WSL UNC path: ${srcPath}`);
+  let srcPathForTectonic = srcPath;
+  if (useWsl) {
+    // convert srcPath to a format that can be used by tectonic in wsl
+    const WslCompatibleSrcPath = windowsPathToWslMountPath(srcPath) ?? wslUncPathToUnixPath(srcPath);
+    if (!WslCompatibleSrcPath) {
+      throw new Error(`Source path is neither a Windows path nor a WSL UNC path: ${srcPath}`);
+    }
+    srcPathForTectonic  = WslCompatibleSrcPath;
   }
 
-  // convert workDir to a format that can be used by tectonic in wsl
-  const workDirForTectonic = windowsPathToWslMountPath(workDir) ?? wslUncPathToUnixPath(workDir);
-  if (!workDirForTectonic) {
-    throw new Error(`Source path is neither a Windows path nor a WSL UNC path: ${srcPath}`);
+  let workDirForTectonic = workDir;
+  if (useWsl) {
+    // convert workDir to a format that can be used by tectonic in wsl
+    const WslCompatibleWorkDir = windowsPathToWslMountPath(workDir) ?? wslUncPathToUnixPath(workDir);
+    if (!WslCompatibleWorkDir) {
+      throw new Error(`Source path is neither a Windows path nor a WSL UNC path: ${srcPath}`);
+    }
+    workDirForTectonic = WslCompatibleWorkDir;
   }
 
-  console.log(`• compiling ${srcPathForTectonic} in WSL`);
-  const cmd = [
-    "wsl.exe", "-d", WSL_DISTRO, "--",
+  console.log(`• compiling ${srcPathForTectonic} in ${useWsl ? "WSL" : "Windows"}`);
+  const cmd = useWsl ? ["wsl.exe", "-d", WSL_DISTRO, "--"] : [];
+
+  cmd.push(
     "tectonic", "-X", "compile", srcPathForTectonic, "--synctex", "--outdir", workDirForTectonic,
-  ];
+  );
 
   const compile = run(cmd);
   if (!compile.ok) {
@@ -241,13 +264,14 @@ async function testInverseSearch(
   srcPath: string,
   fwdResult: FwdSearchResult,
   label: string,
+  { expectAsIs = false }: { expectAsIs?: boolean; } = {},
 ): Promise<{ ok: boolean }> {
   const pt = pointFromFwdSearchResult(fwdResult);
   if (!pt) {
     console.log(`FAIL inverse search (${label}) -> could not discover point: ${fwdResult.raw}`);
     return { ok: false };
   }
-  const expectedSrcFile = windowsPathToWslMountPath(srcPath) ?? wslUncPathToUnixPath(srcPath);
+  const expectedSrcFile = expectAsIs ? srcPath : windowsPathToWslMountPath(srcPath) ?? wslUncPathToUnixPath(srcPath);
   const res = await inverseSearch(pdfPath, pt.page, pt.x, pt.y);
   const pass = res.ret === 0 && res.srcfile === expectedSrcFile && res.line === TARGET_LINE;
   console.log(`${pass ? "PASS" : "FAIL"} inverse search (${label}) -> srcfile: ${res.srcfile}`);
@@ -264,24 +288,27 @@ export async function testit(): Promise<void> {
     throw new Error(`missing test fixture: ${WIN_TEX_SRC}`);
   }
   const haveWslTectonic = findWslTectonic();
-  if (!haveWslTectonic) {
+  const haveWinTectonic = findWindowsTectonic();
+  if (!haveWslTectonic && !haveWinTectonic) {
     return;
   }
 
   type Scenario = {
     name: string;
     fileLocation: "Windows" | "WSL";
-    toolchain: "wsl";
+    toolchain: "wsl" | "windows";
   };
 
   const scenarios: Scenario[] = [
     { name: "win files, wsl tectonic", fileLocation: "Windows", toolchain: "wsl" },
     { name: "wsl files, wsl tectonic", fileLocation: "WSL", toolchain: "wsl" },
+    { name: "win files, win tectonic", fileLocation: "Windows", toolchain: "windows" },
+    { name: "wsl files, win tectonic", fileLocation: "WSL", toolchain: "windows" },
   ];
 
   const results: { name: string; ok: boolean }[] = [];
   for (const scenario of scenarios) {
-    const haveToolchain = haveWslTectonic;
+    const haveToolchain = scenario.toolchain === "wsl" ? haveWslTectonic : haveWinTectonic;
     if (!haveToolchain) {
       console.log(`SKIP ${scenario.name}: ${scenario.toolchain} tectonic not available`);
       continue;
@@ -289,10 +316,15 @@ export async function testit(): Promise<void> {
 
     const workDir = scenario.fileLocation === "Windows" ? WIN_TEST_DIR : WSL_TEST_DIR;
     const srcPath = scenario.fileLocation === "Windows" ? WIN_TEX_SRC : WSL_TEX_SRC;
-    const files = compileFiles(workDir, srcPath);
+    const files = compileFiles(workDir, srcPath, { useWsl: scenario.toolchain === "wsl" });
 
     const fwd = await testForwardSearch(files.pdfPath, files.srcPath, scenario.name);
-    const inv = await testInverseSearch(files.pdfPath, files.srcPath, fwd.result, scenario.name);
+    const inv = await testInverseSearch(files.pdfPath, files.srcPath, fwd.result, scenario.name, {
+        // Windows-tectonic-compiled files: DocToSource returns the path
+        // as-is (it's already a normal Windows/WSL-UNC path the compiler
+        // itself recorded), not converted to /mnt/... or Unix form.
+        expectAsIs: scenario.toolchain === "windows",
+      });
 
     results.push({ name: `forward search (${scenario.name})`, ok: fwd.ok });
     results.push({ name: `inverse search (${scenario.name})`, ok: inv.ok });
@@ -300,9 +332,9 @@ export async function testit(): Promise<void> {
     if (scenario.fileLocation == "Windows") {
       // forward search on a Windows source path using forward slashes
       // (C:/foo/bar.tex), to make sure that variant is handled too
-      const label = `forward search (${scenario.name} + forward-slash win path)`
+      const label = `${scenario.name} with forward-slash win path`
       const fwdSlash = await testForwardSearch(files.pdfPath, files.srcPath.replace(/\\/g, "/"), label);
-      results.push({ name: label, ok: fwdSlash.ok });
+      results.push({ name: `forward search (${label})`, ok: fwdSlash.ok });
     }
   }
 
@@ -312,7 +344,7 @@ export async function testit(): Promise<void> {
     throw new Error(`${failed.length}/${results.length} tests failed: ${failed.map((f) => f.name).join(", ")}`);
   }
 
-  console.log(`PASS issue-5702: all ${results.length} WSL synctex scenarios resolved correctly`);
+  console.log(`PASS issue-5702: all ${results.length} scenarios resolved correctly`);
 }
 
 if (import.meta.main) {
