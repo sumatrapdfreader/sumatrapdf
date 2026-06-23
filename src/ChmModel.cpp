@@ -193,6 +193,10 @@ bool ChmModel::DisplayPage(const char* pageUrl) {
     if (!pageUrl) {
         return false;
     }
+    // pageUrl may alias currentPageUrl (e.g. via GoToPage), which we overwrite
+    // below with SetCopy(); take a stable copy so the later use of pageUrl
+    // (NavigateToDataUrl) doesn't read freed memory
+    pageUrl = str::DupTemp(pageUrl);
     if (IsExternalUrl(pageUrl)) {
         // open external links in an external browser
         // (same as for PDF, XPS, etc. documents)
