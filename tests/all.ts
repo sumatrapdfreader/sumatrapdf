@@ -10,6 +10,7 @@
 // and register it in the `tests` array below.
 
 import { buildApp, formatDuration, isSilentArg, runTest } from "./util.ts";
+import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
 import { testit as cmdStartAutoScroll } from "./cmd-start-autoscroll.ts";
 import { testit as issue1998 } from "./issue-1998.ts";
 import { testit as issue2693 } from "./issue-2693.ts";
@@ -31,6 +32,7 @@ import { testit as issue5718 } from "./issue-5718.ts";
 import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
+  ["combining-mark-first", combiningMarkFirst],
   ["cmd-start-autoscroll", cmdStartAutoScroll],
   ["issue-1998", issue1998],
   ["issue-2693", issue2693],
