@@ -358,29 +358,36 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     rcText.left += pad;
     rcText.right -= pad;
 
-    // page number, right-aligned and muted
+    // page number in a fixed right column so it can't overlap the snippet while
+    // the window is being resized (issue #5692)
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     TempStr pageStr = str::FormatTemp("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
     WCHAR* pageW = ToWStrTemp(pageStr);
     SIZE pSz{};
     GetTextExtentPoint32W(hdc, pageW, str::Leni(pageW), &pSz);
+    int pageGap = DpiScale(lb->hwnd, 10);
+    int pageColDx = std::max((int)pSz.cx, DpiScale(lb->hwnd, 32));
     RECT rcPage = rcText;
-    rcPage.left = rcText.right - pSz.cx;
-    SetTextColor(hdc, AccentColor(colText, 80));
-    DrawTextW(hdc, pageW, -1, &rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT);
+    rcPage.left = std::max(rcText.left, (LONG)(rcText.right - pageColDx));
 
     // snippet on the left, with the matched term highlighted
-    SetTextColor(hdc, colText);
-    rcText.right = rcPage.left - DpiScale(lb->hwnd, 10);
-    DrawMaybeHighlightedTextArgs args(filterWords, hlScratch);
-    args.hdc = hdc;
-    args.rc = rcText;
-    args.text = fm.snippet ? fm.snippet : "";
-    args.colBg = colBg;
-    args.isRtl = false;
-    args.matchWholeWord = win->findMatchWholeWord;
-    args.drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
-    DrawMaybeHighlightedText(args);
+    RECT rcSnippet = rcText;
+    rcSnippet.right = std::max(rcSnippet.left, rcPage.left - pageGap);
+    if (rcSnippet.right > rcSnippet.left) {
+        SetTextColor(hdc, colText);
+        DrawMaybeHighlightedTextArgs args(filterWords, hlScratch);
+        args.hdc = hdc;
+        args.rc = rcSnippet;
+        args.text = fm.snippet ? fm.snippet : "";
+        args.colBg = colBg;
+        args.isRtl = false;
+        args.matchWholeWord = win->findMatchWholeWord;
+        args.drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
+        DrawMaybeHighlightedText(args);
+    }
+
+    SetTextColor(hdc, AccentColor(colText, 80));
+    DrawTextW(hdc, pageW, -1, &rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
 
     if (oldFont) {
         SelectFont(hdc, oldFont);
@@ -547,10 +554,19 @@ void FindWindowWnd::OnTextChanged() {
 
 LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
+        case WM_ENTERSIZEMOVE:
+            if (results) {
+                SendMessageW(results->hwnd, WM_SETREDRAW, FALSE, 0);
+            }
+            break;
         case WM_SIZE:
             Layout();
             break;
         case WM_EXITSIZEMOVE:
+            if (results) {
+                SendMessageW(results->hwnd, WM_SETREDRAW, TRUE, 0);
+                InvalidateRect(results->hwnd, nullptr, TRUE);
+            }
             SavePos();
             break;
         case WM_GETMINMAXINFO: {
