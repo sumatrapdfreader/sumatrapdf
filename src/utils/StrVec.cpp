@@ -57,7 +57,7 @@ struct StrVecPage {
     // strings (allocated from the end)
 
     char* At(int) const;
-    StrSpan AtSpan(int i) const;
+    Str AtStr(int i) const;
     void* AtDataRaw(int) const;
 
     char* RemoveAt(int);
@@ -66,7 +66,7 @@ struct StrVecPage {
     char* AtHelper(int, int* sLen) const;
     int BytesLeft();
     char* Append(const char* s, int sLen);
-    char* Append(const StrSpan&);
+    char* Append(const Str&);
     char* SetAt(int idxSet, const char* s, int sLen);
     char* InsertAt(int idxSet, const char* s, int sLen);
 };
@@ -198,8 +198,8 @@ char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
     return (char*)s;
 }
 
-char* StrVecPage::Append(const StrSpan& s) {
-    return InsertAt(nStrings, s.CStr(), s.Len());
+char* StrVecPage::Append(const Str& s) {
+    return InsertAt(nStrings, s.s, s.len);
 }
 
 char* StrVecPage::Append(const char* s, int sLen) {
@@ -227,10 +227,10 @@ char* StrVecPage::At(int idx) const {
     return s;
 }
 
-StrSpan StrVecPage::AtSpan(int idx) const {
+Str StrVecPage::AtStr(int idx) const {
     int sLen = 0;
     char* s = AtHelper(idx, &sLen);
-    return {s, sLen};
+    return Str(s, sLen);
 }
 
 void* StrVecPage::AtDataRaw(int idx) const {
@@ -309,14 +309,14 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
     pageSize = RoundUp(pageSize, 64); // jic
     auto page = AllocStrVecPage(pageSize, dataSize);
     int n;
-    StrSpan s;
+    Str s;
     curr = first;
     int nStr = 0;
     while (curr) {
         n = curr->nStrings;
         // TODO(perf): could optimize slightly
         for (int i = 0; i < n; i++) {
-            s = curr->AtSpan(i);
+            s = curr->AtStr(i);
             page->Append(s);
             if (dataSize > 0) {
                 void* dst = page->AtDataRaw(nStr);
@@ -466,16 +466,18 @@ int AppendIfNotExists(StrVec* v, const char* s, int sLen) {
     return idx;
 }
 
-static std::pair<StrVecPage*, int> PageForIdx(const StrVec* v, int idx) {
+static StrVecPage* PageForIdx(const StrVec* v, int idx, int* idxInPageOut) {
     auto page = v->first;
     while (page) {
         if (page->nStrings > idx) {
-            return {page, idx};
+            *idxInPageOut = idx;
+            return page;
         }
         idx -= page->nStrings;
         page = page->next;
     }
-    return {page, 0};
+    *idxInPageOut = 0;
+    return page;
 }
 
 // returns a string
@@ -486,7 +488,8 @@ char* StrVec::SetAt(int idx, const char* s, int sLen) {
         sLen = str::Leni(s);
     }
     {
-        auto [page, idxInPage] = PageForIdx(this, idx);
+        int idxInPage;
+        auto page = PageForIdx(this, idx, &idxInPage);
         char* res = page->SetAt(idxInPage, s, sLen);
         if (res != kNoSpace) {
             InvalidateSortIndexes(this);
@@ -512,7 +515,8 @@ char* StrVec::InsertAt(int idx, const char* s, int sLen) {
     }
 
     {
-        auto [page, idxInPage] = PageForIdx(this, idx);
+        int idxInPage;
+        auto page = PageForIdx(this, idx, &idxInPage);
         if (sLen < 0) {
             sLen = str::Leni(s);
         }
@@ -538,7 +542,8 @@ char* StrVec::InsertAt(int idx, const char* s, int sLen) {
 // remove string at idx and return it
 // return value is valid as long as StrVec is valid
 char* StrVec::RemoveAt(int idx) {
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     auto res = page->RemoveAt(idxInPage);
     size--;
     InvalidateSortIndexes(this);
@@ -548,7 +553,8 @@ char* StrVec::RemoveAt(int idx) {
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec is valid
 char* StrVec::RemoveAtFast(int idx) {
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     auto res = page->RemoveAtFast(idxInPage);
     size--;
     InvalidateSortIndexes(this);
@@ -569,16 +575,18 @@ char* StrVec::At(int idx) const {
     if (sortIndexes) {
         idx = sortIndexes[idx];
     }
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     return page->At(idxInPage);
 }
 
-StrSpan StrVec::AtSpan(int idx) const {
+Str StrVec::AtStr(int idx) const {
     if (sortIndexes) {
         idx = sortIndexes[idx];
     }
-    auto [page, idxInPage] = PageForIdx(this, idx);
-    return page->AtSpan(idxInPage);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
+    return page->AtStr(idxInPage);
 }
 
 void* StrVec::AtDataRaw(int idx) const {
@@ -586,7 +594,8 @@ void* StrVec::AtDataRaw(int idx) const {
     if (sortIndexes) {
         idx = sortIndexes[idx];
     }
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     return page->AtDataRaw(idxInPage);
 }
 
@@ -595,24 +604,32 @@ char* StrVec::operator[](int idx) const {
     return At(idx);
 }
 
-int StrVec::Find(const StrSpan& s, int startAt) const {
-    int sLen = s.Len();
+int StrVec::Find(const char* s, int startAt) const {
+    return Find(Str((char*)s), startAt);
+}
+
+int StrVec::FindI(const char* s, int startAt) const {
+    return FindI(Str((char*)s), startAt);
+}
+
+int StrVec::Find(const Str& s, int startAt) const {
+    int sLen = s.len;
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
-        StrSpan s2 = it.Span();
-        if (s2.Len() == sLen && str::Eq(s.CStr(), s2.CStr())) {
+        Str s2 = it.AsStr();
+        if (s2.len == sLen && str::Eq(s.s, s2.s)) {
             return it.idx;
         }
     }
     return -1;
 }
 
-int StrVec::FindI(const StrSpan& s, int startAt) const {
-    int sLen = s.Len();
+int StrVec::FindI(const Str& s, int startAt) const {
+    int sLen = s.len;
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
-        StrSpan s2 = it.Span();
-        if (s2.Len() == sLen && str::EqI(s.CStr(), s2.CStr())) {
+        Str s2 = it.AsStr();
+        if (s2.len == sLen && str::EqI(s.s, s2.s)) {
             return it.idx;
         }
     }
@@ -620,7 +637,7 @@ int StrVec::FindI(const StrSpan& s, int startAt) const {
 }
 
 bool StrVec::Contains(const char* s, int sLen) const {
-    StrSpan span(s, sLen);
+    Str span((char*)s, sLen < 0 ? str::Leni(s) : sLen);
     int idx = Find(span);
     return idx != -1;
 }
@@ -631,7 +648,8 @@ StrVec::iterator::iterator(const StrVec* v, int idx) {
     if (this->v->sortIndexes) {
         return;
     }
-    auto [page, idxInPage] = PageForIdx(v, idx);
+    int idxInPage;
+    auto page = PageForIdx(v, idx, &idxInPage);
     this->page = page;
     this->idxInPage = idxInPage;
 }
@@ -651,11 +669,11 @@ char* StrVec::iterator::operator*() const {
     return page->At(idxInPage);
 }
 
-StrSpan StrVec::iterator::Span() const {
+Str StrVec::iterator::AsStr() const {
     if (this->v->sortIndexes) {
-        return v->AtSpan(idx);
+        return v->AtStr(idx);
     }
-    return page->AtSpan(idxInPage);
+    return page->AtStr(idxInPage);
 }
 
 static void AdvanceStrVecIter(StrVec::iterator& it, int n) {
@@ -826,8 +844,8 @@ static int CalcCapForJoin(const StrVec* v, const char* joint) {
     int cap = 0;
     int jointLen = str::Leni(joint);
     for (auto it = v->begin(); it != v->end(); it++) {
-        auto s = it.Span();
-        cap += s.Size() + 1 + jointLen;
+        Str s = it.AsStr();
+        cap += s.len + 1 + jointLen;
     }
     return cap + 32; // +32 arbitrary buffer
 }
@@ -838,8 +856,8 @@ static char* JoinInner(const StrVec* v, const char* joint, StrBuilder& res) {
     int firstForJoint = 0;
     int i = 0;
     for (auto it = v->begin(); it != v->end(); it++) {
-        auto s = it.Span();
-        if (!s.CStr()) {
+        Str s = it.AsStr();
+        if (!s.s) {
             firstForJoint++;
             i++;
             continue;
@@ -847,7 +865,7 @@ static char* JoinInner(const StrVec* v, const char* joint, StrBuilder& res) {
         if (i > firstForJoint && jointLen > 0) {
             res.Append(joint, jointLen);
         }
-        res.Append(s.CStr(), s.Len());
+        res.Append(s.s, s.len);
         i++;
     }
     return res.StealData();

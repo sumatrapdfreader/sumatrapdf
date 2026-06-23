@@ -29,7 +29,7 @@ int CmdIdFromVirtualZoom(float virtualZoom);
 void UpdateAppMenu(MainWindow* win, HMENU m);
 void ToggleMenuBar(MainWindow* win, bool showTemporarily);
 float ZoomMenuItemToZoom(int menuItemId);
-std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId);
+void GetCommandIdState(BuildMenuCtx* ctx, int cmdId, bool* removeOut, bool* disableOut);
 bool CmdWorksWithoutDocument(int cmdId);
 BuildMenuCtx* NewBuildMenuCtx(WindowTab* tab, Point pt);
 void DeleteBuildMenuCtx(BuildMenuCtx*);

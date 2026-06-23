@@ -2763,7 +2763,7 @@ static const char* GetCursorName(LPWSTR cursorId) {
     if (i == -1) {
         return "unknown";
     }
-    return seqstrings::IdxToStr(cursorNames, i);
+    return SeqStrByIndex(cursorNames, i);
 }
 
 static void LogCursor(LPWSTR cursorId) {

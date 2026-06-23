@@ -1538,7 +1538,7 @@ static int ToolIdxFromCmdLine() {
     int idx = -1;
     if (argc >= 2) {
         TempStr toolName = ToUtf8Temp(wargv[1]);
-        idx = seqstrings::StrToIdxIS(gToolNames, toolName);
+        idx = SeqStrIndexIS(gToolNames, toolName);
     }
     LocalFree(wargv);
     return idx;
@@ -1665,7 +1665,7 @@ static int MaybeRunMutool() {
     argv = fz_argv_from_wargv(argc, wargv);
     {
         const char* toolName = argv[0];
-        int idx = seqstrings::StrToIdxIS(gToolNames, toolName);
+        int idx = SeqStrIndexIS(gToolNames, toolName);
         if (idx >= 0) {
             // PowerShell pipes a GUI app's stdout through a pipe that the CRT
             // can't write to ("cannot fwrite: Invalid argument"), so the tool's

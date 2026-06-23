@@ -129,7 +129,7 @@ static bool IsCaptionLabelAt(const WCHAR* text, int textLen, int idx) {
         if (MatchWordAt(text, textLen, idx, w, /*requireTrailingDigit=*/true)) {
             return true;
         }
-        seqstrings::Next(words);
+        SeqStrNext(words);
     }
     return false;
 }
@@ -1260,7 +1260,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     while (!labelStart && words) {
         TempWStr w = ToWStrTemp(words);
         labelStart = MatchWordAt(text, textLen, startIdx, w, /*requireTrailingDigit=*/false);
-        seqstrings::Next(words);
+        SeqStrNext(words);
     }
     if (digitStart || labelStart) {
         return LandscapeBox(mediabox, destX, destY, text, coords, textLen);

@@ -369,7 +369,7 @@ function replaceBetweenMarkers(content: string, startMarker: string, endMarker: 
   return before + "\n" + generated + "\n" + after;
 }
 
-function main() {
+export function main() {
   const rootDir = join(import.meta.dir, "..");
   const headerPath = join(rootDir, "src", "Commands.h");
   const cppPath = join(rootDir, "src", "Commands.cpp");

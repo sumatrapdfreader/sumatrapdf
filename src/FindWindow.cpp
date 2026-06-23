@@ -630,6 +630,12 @@ bool FindWindowWnd::PreTranslateMessage(MSG& msg) {
         return false;
     }
     switch (msg.wParam) {
+        case 'F':
+            if (IsCtrlPressed() && !IsAltPressed()) {
+                FocusFindEditSelectAll(win);
+                return true;
+            }
+            break;
         case VK_ESCAPE:
             HideFindWindow(win);
             return true;

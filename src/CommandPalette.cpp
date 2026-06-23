@@ -935,7 +935,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     StrVecCP tempCommands;
     int cmdId = (int)CmdFirst + 1;
-    for (SeqStrings name = gCommandDescriptions; name; seqstrings::Next(name, &cmdId)) {
+    for (SeqStrings name = gCommandDescriptions; name; SeqStrNext(name, &cmdId)) {
         if (!AllowCommand(ctx, (i32)cmdId)) {
             continue;
         }
