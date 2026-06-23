@@ -63,6 +63,8 @@ struct WebviewWnd : Wnd {
     bool CanGoBack() const;
     bool CanGoForward() const;
     void Focus();
+    void RegisterForwardingDropTarget();
+    void RevokeForwardingDropTarget();
     bool Embed(WebViewMsgCb& cb);
     void OnControllerReady(ICoreWebView2Controller* controller);
     void FailInit();
@@ -84,6 +86,11 @@ struct WebviewWnd : Wnd {
     // DWORD m_main_thread = GetCurrentThreadId();
     ICoreWebView2* webview = nullptr;
     ICoreWebView2Controller* controller = nullptr;
+    // forwards file drops to the parent window when allowExternalDrop is false;
+    // registered on the host hwnd and every WebView2 child window (the Chrome_*
+    // composition windows that actually sit under the cursor)
+    struct IDropTarget* dropTarget = nullptr;
+    Vec<HWND> dropTargetHwnds;
 
     bool initStarted = false;
     bool initFailed = false;

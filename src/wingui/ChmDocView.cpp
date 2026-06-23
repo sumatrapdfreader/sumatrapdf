@@ -113,6 +113,11 @@ void ChmDocView::NavigationCompleted(void* ctx, const char* url, bool success) {
     if (!view || !view->cb || !success || str::IsEmpty(url)) {
         return;
     }
+    // the WebView2 child windows that receive drops are created lazily and can
+    // be recreated on navigation, so (re)install our forwarding drop target now
+    if (view->wv) {
+        view->wv->RegisterForwardingDropTarget();
+    }
     view->cb->OnDocumentComplete(url);
 }
 
@@ -170,11 +175,11 @@ LRESULT ChmDocView::ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UIN
                 view->cb->OnLButtonDown();
             }
             break;
-
-        case WM_DROPFILES:
-            return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    // note: WM_DROPFILES is intentionally not handled here so it passes through
+    // to the canvas WndProc, which opens dropped files (forwarded from the
+    // WebView2 via ForwardingDropTarget)
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 

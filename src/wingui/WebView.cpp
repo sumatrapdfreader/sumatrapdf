@@ -65,6 +65,76 @@ ICoreWebView2Controller4 : public ICoreWebView2Controller3 {
 };
 #endif // __ICoreWebView2Controller4_INTERFACE_DEFINED__
 
+// IDropTarget that forwards a file drop (CF_HDROP) to a target window as a
+// WM_DROPFILES message. Used so file drops over a WebView2 (with external drop
+// disabled) reach the host window's normal drop handling.
+class ForwardingDropTarget : public IDropTarget {
+    LONG refCount = 1;
+    HWND forwardTo = nullptr;
+
+  public:
+    explicit ForwardingDropTarget(HWND forwardTo) : forwardTo(forwardTo) {}
+
+    // IUnknown
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        if (riid == IID_IUnknown || riid == IID_IDropTarget) {
+            *ppv = static_cast<IDropTarget*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        LONG res = InterlockedDecrement(&refCount);
+        if (res == 0) {
+            delete this;
+        }
+        return res;
+    }
+
+    static bool HasFiles(IDataObject* dataObj) {
+        if (!dataObj) {
+            return false;
+        }
+        FORMATETC fe = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+        return dataObj->QueryGetData(&fe) == S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE DragEnter(IDataObject* dataObj, DWORD, POINTL, DWORD* pdwEffect) override {
+        *pdwEffect = HasFiles(dataObj) ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE DragOver(DWORD, POINTL, DWORD* pdwEffect) override {
+        *pdwEffect = DROPEFFECT_COPY;
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE DragLeave() override { return S_OK; }
+    HRESULT STDMETHODCALLTYPE Drop(IDataObject* dataObj, DWORD, POINTL, DWORD* pdwEffect) override {
+        *pdwEffect = DROPEFFECT_COPY;
+        if (!dataObj || !forwardTo) {
+            return S_OK;
+        }
+        FORMATETC fe = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+        STGMEDIUM stg{};
+        if (FAILED(dataObj->GetData(&fe, &stg))) {
+            return S_OK;
+        }
+        // The CF_HDROP medium's hGlobal is the HDROP handle; pass it directly
+        // (DragQueryFile locks it internally). lp=1 means dragFinish=false so the
+        // handler doesn't DragFinish() it - ReleaseStgMedium frees it instead.
+        if (stg.hGlobal) {
+            SendMessageW(forwardTo, WM_DROPFILES, (WPARAM)stg.hGlobal, 1);
+        }
+        ReleaseStgMedium(&stg);
+        return S_OK;
+    }
+};
+
 namespace {
 
 enum class SharedWebViewEnvState {
@@ -814,6 +884,10 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
             controller4->put_AllowExternalDrop(FALSE);
             controller4->Release();
         }
+        // With external drop disabled, WebView2 routes drops to the IDropTarget
+        // registered on its host hwnd. Register one that forwards dropped files to
+        // the parent window (the canvas), which opens them like a normal file drop.
+        RegisterForwardingDropTarget();
     }
 
     isSuspended = false;
@@ -1022,6 +1096,59 @@ void WebviewWnd::Focus() {
     }
 }
 
+static BOOL CALLBACK CollectChildHwnds(HWND hwnd, LPARAM lp) {
+    auto* hwnds = (Vec<HWND>*)lp;
+    hwnds->Append(hwnd);
+    return TRUE;
+}
+
+// Register `target` on `hwnd` (replacing any existing drop target). Records the
+// window in `registered` on success so it can be revoked later.
+static void RegisterDropOn(HWND hwnd, IDropTarget* target, Vec<HWND>& registered) {
+    if (registered.Contains(hwnd)) {
+        return;
+    }
+    RevokeDragDrop(hwnd);
+    if (SUCCEEDED(RegisterDragDrop(hwnd, target))) {
+        registered.Append(hwnd);
+    }
+}
+
+// Forward file drops over the WebView2 to the parent window. The drop is
+// actually received by the WebView2's Chrome_* child windows (which sit on top
+// of the host hwnd), so register on the host hwnd and all of its descendants.
+// Called again after each navigation because the child windows are created
+// lazily and can be recreated.
+void WebviewWnd::RegisterForwardingDropTarget() {
+    if (allowExternalDrop || !hwnd) {
+        return;
+    }
+    HWND parent = GetParent(hwnd);
+    if (!parent) {
+        return;
+    }
+    if (!dropTarget) {
+        dropTarget = new ForwardingDropTarget(parent);
+    }
+    Vec<HWND> wnds;
+    wnds.Append(hwnd);
+    EnumChildWindows(hwnd, CollectChildHwnds, (LPARAM)&wnds);
+    for (HWND h : wnds) {
+        RegisterDropOn(h, dropTarget, dropTargetHwnds);
+    }
+}
+
+void WebviewWnd::RevokeForwardingDropTarget() {
+    for (HWND h : dropTargetHwnds) {
+        RevokeDragDrop(h);
+    }
+    dropTargetHwnds.Reset();
+    if (dropTarget) {
+        dropTarget->Release();
+        dropTarget = nullptr;
+    }
+}
+
 static void ComHandlerCbHwnd(void* hwndVoid, ICoreWebView2Controller* ctrl) {
     HWND hwnd = (HWND)hwndVoid;
     auto* self = (WebviewWnd*)WndListFindByHwnd(hwnd);
@@ -1224,6 +1351,7 @@ LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 WebviewWnd::~WebviewWnd() {
     RemovePendingWebview(this);
     FreePendingOps(pendingOps);
+    RevokeForwardingDropTarget();
     if (webview) {
         webview->Release();
         webview = nullptr;
@@ -1254,6 +1382,8 @@ void WebviewWnd::Eval(const char*) {}
 void WebviewWnd::SetHtml(const char*) {}
 void WebviewWnd::Init(const char*) {}
 void WebviewWnd::Navigate(const char*) {}
+void WebviewWnd::RegisterForwardingDropTarget() {}
+void WebviewWnd::RevokeForwardingDropTarget() {}
 void WebviewWnd::GoBack() {}
 void WebviewWnd::GoForward() {}
 void WebviewWnd::SetZoomPercent(int) {}
