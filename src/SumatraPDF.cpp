@@ -1673,12 +1673,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 
     TempStr unsupported = win->ctrl->GetPropertyTemp(kPropUnsupportedFeatures);
     if (unsupported) {
-        const char* s = _TRA("This document uses unsupported features (%s) and might not render properly");
+        const char* s = _TRA("%s not supported");
         TempStr msg = str::FormatTemp(s, unsupported);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;
-        nargs.timeoutMs = 0;
+        nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifPersistentWarning;
         nargs.msg = msg;
         ShowNotification(nargs);
