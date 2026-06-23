@@ -970,6 +970,47 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
     return end;
 }
 
+// Detect a printed DOI ("10." + 4-9 digit registrant + "/" + non-empty suffix),
+// e.g. "10.1109/WICSA.2015.29". `start` must point at the leading '1'. Returns
+// the end ptr (exclusive) past the suffix, or nullptr if `start` is not a DOI.
+// The suffix runs to the first whitespace / delimiter; trailing sentence
+// punctuation is trimmed (a DOI printed inside a sentence or parentheses).
+static const WCHAR* LinkifyFindDoiEnd(const WCHAR* start) {
+    if (!str::StartsWith(start, L"10.")) {
+        return nullptr;
+    }
+    const WCHAR* p = start + 3;
+    const WCHAR* regStart = p;
+    while (iswdigit(*p)) {
+        p++;
+    }
+    int regLen = (int)(p - regStart);
+    if (regLen < 4 || regLen > 9 || *p != '/') {
+        return nullptr;
+    }
+    p++; // skip '/'
+    const WCHAR* suffixStart = p;
+    while (*p && !iswspace(*p) && *p != '"' && *p != '<' && *p != '>') {
+        p++;
+    }
+    if (p == suffixStart) {
+        return nullptr;
+    }
+    // trim trailing sentence punctuation (DOIs rarely end with these)
+    while (p > suffixStart) {
+        WCHAR c = p[-1];
+        if (c == '.' || c == ',' || c == ';' || c == ':' || c == ')' || c == ']' || c == '}' || c == '\'') {
+            p--;
+        } else {
+            break;
+        }
+    }
+    if (p == suffixStart) {
+        return nullptr;
+    }
+    return p;
+}
+
 // caller needs to delete the result
 // TODO: return Vec<IPageElement*> directly
 static LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
@@ -1004,6 +1045,9 @@ static LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
             }
         } else if ('m' == *start && str::StartsWith(start, L"mailto:")) {
             end = LinkifyEmailAddress(start + 7);
+        } else if ('1' == *start && (end = LinkifyFindDoiEnd(start)) != nullptr) {
+            // a plain-text DOI ("10.1109/...") -> https://doi.org/<doi>
+            protocol = L"https://doi.org/";
         }
         if (!end) {
             continue;
