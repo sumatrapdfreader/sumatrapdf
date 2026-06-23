@@ -191,6 +191,9 @@ bool ChmDocView::CreateWebView2() {
     wv->events.navigationCompleted = NavigationCompleted;
     wv->events.historyChanged = HistoryChanged;
     wv->forwardAppAccelerators = false;
+    // let file drops fall through to the canvas (to open the dropped file)
+    // instead of being swallowed by the WebView2 control
+    wv->allowExternalDrop = false;
 
     Rect rc = ClientRect(hwndParent);
     CreateWebViewArgs cargs;

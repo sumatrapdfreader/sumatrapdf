@@ -52,6 +52,19 @@ bool HasWebView() {
 
 #ifdef _MSC_VER
 
+// ICoreWebView2Controller4 (with AllowExternalDrop) was added in a WebView2 SDK
+// newer than the one we vendor, so declare it here. QueryInterface for it
+// succeeds on Edge runtime 102+ and fails gracefully on older runtimes.
+#ifndef __ICoreWebView2Controller4_INTERFACE_DEFINED__
+#define __ICoreWebView2Controller4_INTERFACE_DEFINED__
+MIDL_INTERFACE("97d418d5-a426-4e49-a151-e1a10f327d9e")
+ICoreWebView2Controller4 : public ICoreWebView2Controller3 {
+  public:
+    virtual HRESULT STDMETHODCALLTYPE get_AllowExternalDrop(BOOL * value) = 0;
+    virtual HRESULT STDMETHODCALLTYPE put_AllowExternalDrop(BOOL value) = 0;
+};
+#endif // __ICoreWebView2Controller4_INTERFACE_DEFINED__
+
 namespace {
 
 enum class SharedWebViewEnvState {
@@ -792,6 +805,15 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
         COREWEBVIEW2_COLOR bg = {0, 0, 0, 0};
         controller2->put_DefaultBackgroundColor(bg);
         controller2->Release();
+    }
+
+    if (!allowExternalDrop) {
+        ICoreWebView2Controller4* controller4 = nullptr;
+        HRESULT dropHr = controller->QueryInterface(IID_PPV_ARGS(&controller4));
+        if (SUCCEEDED(dropHr) && controller4) {
+            controller4->put_AllowExternalDrop(FALSE);
+            controller4->Release();
+        }
     }
 
     isSuspended = false;
