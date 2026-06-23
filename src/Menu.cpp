@@ -40,26 +40,9 @@
 #include "GrokBuild.h"
 #include "CodexBuild.h"
 #include "ImageSaveCropResize.h"
+#include "CommandAvailability.h"
 #include "Menu.h"
 #include "ReadAloudHighlight.h"
-
-struct BuildMenuCtx {
-    WindowTab* tab = nullptr;
-    bool isCbx = false;
-    bool isImageCollection = false;
-    bool hasSelection = false;
-    bool supportsAnnotations = false;
-    Annotation* annotationUnderCursor = nullptr;
-    bool hasUnsavedAnnotations = false;
-    bool isCursorOnPage = false;
-    bool canSendEmail = false;
-    bool isPdf = false;
-    bool isPdfEncrypted = false;
-    bool hasToc = false;
-    int pageCount = 0;
-    BuildMenuCtx() = default;
-    ~BuildMenuCtx() = default;
-};
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
@@ -1130,68 +1113,6 @@ static MenuDef menuDefContextStart[] = {
 // clang-format on
 
 // clang-format off
-// commands that work when no document is open (home page); everything else
-// requires a loaded document (menu, toolbar, command palette)
-UINT_PTR gNoDocWhitelist[] = {
-    CmdOpenFile,
-    CmdExit,
-    CmdNewWindow,
-    CmdContributeTranslation,
-    CmdOptions,
-    CmdSetInverseSearch,
-    CmdAdvancedOptions,
-    CmdAdvancedSettings,
-    CmdChangeLanguage,
-    CmdCheckUpdate,
-    CmdHelpOpenManual,
-    CmdHelpOpenManualOnWebsite,
-    CmdHelpOpenKeyboardShortcuts,
-    CmdHelpVisitWebsite,
-    CmdHelpAbout,
-    CmdDebugDownloadSymbols,
-    CmdDebugShowNotif,
-    CmdDebugStartStressTest,
-    CmdDebugTestApp,
-    CmdDebugTogglePredictiveRender,
-    CmdDebugToggleRenderInfo,
-    CmdDebugToggleRtl,
-    CmdChangeScrollbar,
-    CmdToggleAntiAlias,
-    CmdToggleSmoothScroll,
-    CmdToggleScrollbarInSinglePage,
-    CmdToggleLazyLoading,
-    CmdToggleEscToExit,
-    CmdToggleFullscreen,
-    CmdToggleMenuBar,
-    CmdToggleToolbar,
-    CmdToggleUseTabs,
-    CmdToggleTabsMru,
-    CmdToggleTips,
-    CmdToggleFrequentlyRead,
-    CmdToggleChmUI,
-    CmdToggleReuseInstance,
-    CmdToggleHoverPreview,
-    CmdToggleInverseSearch,
-    CmdToggleLinks,
-    CmdToggleWindowsPreviewer,
-    CmdToggleWindowsSearchFilter,
-    CmdInvertColors,
-    CmdFavoriteToggle,
-    CmdShowLog,
-    CmdClearHistory,
-    CmdRemoveDeletedFilesFromHistory,
-    CmdReopenLastClosedFile,
-    CmdSelectNextTheme,
-    CmdListPrinters,
-    CmdDebugCrashMe,
-    CmdDebugCorruptMemory,
-    CmdScreenshot,
-    CmdPasteClipboardImage,
-    CmdTabGroupRestore,
-    CmdSetScreenshotHotkey,
-    0,
-};
-
 static UINT_PTR disableIfDirectoryOrBrokenPDF[] = {
     CmdRenameFile,
     CmdDeleteFile,
@@ -1200,24 +1121,6 @@ static UINT_PTR disableIfDirectoryOrBrokenPDF[] = {
     CmdOpenWithFoxIt,
     CmdOpenWithPdfXchange,
     CmdShowInFolder, // TODO: why?
-};
-
-UINT_PTR disableIfNoSelection[] = {
-    CmdCopySelection,
-    CmdTranslateSelectionWithDeepL,
-    CmdTranslateSelectionWithGoogle,
-    CmdTranslateSelectionWithGrokBuild,
-    CmdTranslateSelectionWithClaudeCode,
-    CmdTranslateSelectionWithOpenAICodex,
-    CmdSearchSelectionWithWikipedia,
-    CmdSearchSelectionWithGoogleScholar,
-    CmdSearchSelectionWithBing,
-    CmdSearchSelectionWithGoogle,
-    CmdCreateAnnotHighlight,
-    CmdCreateAnnotSquiggly,
-    CmdCreateAnnotStrikeOut,
-    CmdCreateAnnotUnderline,
-    0,
 };
 
 static UINT_PTR menusNoTranslate[] = {
@@ -1234,128 +1137,6 @@ static UINT_PTR menusNoTranslate[] = {
     CmdZoom25,
     CmdZoom12_5,
     CmdZoom8_33,
-};
-
-UINT_PTR removeIfNoInternetPerms[] = {
-    CmdCheckUpdate,
-    CmdTranslateSelectionWithGoogle,
-    CmdTranslateSelectionWithDeepL,
-    CmdSearchSelectionWithGoogle,
-    CmdSearchSelectionWithBing,
-    CmdSearchSelectionWithWikipedia,
-    CmdSearchSelectionWithGoogleScholar,
-    CmdHelpVisitWebsite,
-    CmdHelpOpenManualOnWebsite,
-    CmdHelpOpenKeyboardShortcuts,
-    CmdContributeTranslation,
-    0,
-};
-
-UINT_PTR removeIfNoFullscreenPerms[] = {
-    CmdTogglePresentationMode,
-    CmdToggleFullscreen,
-    0,
-};
-
-UINT_PTR removeIfNoPrefsPerms[] = {
-    CmdOptions,
-    CmdSetInverseSearch,
-    CmdAdvancedOptions,
-    CmdPinSelectedDocument,
-    CmdForgetSelectedDocument,
-    CmdFavoriteAdd,
-    CmdFavoriteDel,
-    CmdFavoriteToggle,
-    CmdGoToNextFavorite,
-    CmdGoToPrevFavorite,
-    0,
-};
-
-UINT_PTR removeIfNoCopyPerms[] = {
-    // TODO: probably those are covered by menuDefSelection
-    CmdTranslateSelectionWithGoogle,
-    CmdTranslateSelectionWithDeepL,
-    CmdSearchSelectionWithGoogle,
-    CmdSearchSelectionWithBing,
-    CmdSearchSelectionWithWikipedia,
-    CmdSearchSelectionWithGoogleScholar,
-    CmdSelectAll,
-
-    CmdCopySelection,
-    CmdCopyLinkTarget,
-    CmdCopyComment,
-    CmdCopyImage,
-    (UINT_PTR)menuDefSelection,
-    (UINT_PTR)menuDefMainSelection,
-    0,
-};
-
-// TODO: all prefs params also fall under disk access
-// also CanViewExternally()
-UINT_PTR removeIfNoDiskAccessPerm[] = {
-    CmdNewWindow, // ???
-    CmdOpenFile,
-    CmdOpenNextFileInFolder,
-    CmdOpenPrevFileInFolder,
-    CmdClose, // ???
-    CmdShowInFolder,
-    CmdSaveAs,
-    CmdRenameFile,
-    CmdDeleteFile,
-    CmdSendByEmail, // ???
-    CmdContributeTranslation, // ???
-    CmdAdvancedOptions,
-    CmdAdvancedSettings,
-    CmdFavoriteAdd,
-    CmdFavoriteDel,
-    CmdFavoriteToggle,
-    CmdOpenSelectedDocument,
-    CmdPinSelectedDocument,
-    CmdForgetSelectedDocument,
-    CmdInvokeInverseSearch,
-    CmdSetInverseSearch,
-    CmdPasteClipboardImage,
-    CmdCreateShortcutToFile,
-    CmdSaveEmbeddedFile,
-    CmdShowLog,
-    0,
-};
-
-UINT_PTR removeIfAnnotsNotSupported[] = {
-    CmdSaveAnnotations,
-    CmdSaveAnnotationsNewFile,
-    CmdEditAnnotations,
-    CmdDeleteAnnotation,
-    CmdShowAnnotations,
-    CmdHideAnnotations,
-    CmdToggleShowAnnotations,
-    (UINT_PTR)menuDefCreateAnnotFromSelection,
-    (UINT_PTR)menuDefCreateAnnotUnderCursor,
-    0,
-};
-
-UINT_PTR removeIfChm[] = {
-    CmdSinglePageView,
-    CmdFacingView,
-    CmdBookView,
-    CmdToggleContinuousView,
-    CmdRotateLeft,
-    CmdRotateRight,
-    CmdTogglePresentationMode,
-    CmdZoomFitPage,
-    CmdZoomActualSize,
-    CmdZoomFitWidth,
-    CmdZoomFitContent,
-    CmdZoomShrinkToFit,
-    CmdZoom6400,
-    CmdZoom3200,
-    CmdZoom1600,
-    CmdZoom800,
-    CmdZoom12_5,
-    CmdZoom8_33,
-    CmdInvokeInverseSearch,
-    (UINT_PTR)menuDefContext,
-    0,
 };
 // clang-format on
 
@@ -1421,45 +1202,6 @@ static void AppendRecentFilesToMenu(HMENU m) {
     if (i > 0) {
         InsertMenuW(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     }
-}
-
-BuildMenuCtx* NewBuildMenuCtx(WindowTab* tab, Point pt) {
-    auto ctx = new BuildMenuCtx;
-    if (!tab) {
-        return ctx;
-    }
-    ctx->tab = tab;
-    EngineBase* engine = tab->GetEngine();
-    if (engine && (engine->kind == kindEngineComicBooks)) {
-        ctx->isCbx = true;
-    }
-    if (engine && engine->IsImageCollection()) {
-        ctx->isImageCollection = true;
-    }
-    ctx->supportsAnnotations = EngineSupportsAnnotations(engine) && !tab->win->isFullScreen;
-    ctx->hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
-    ctx->canSendEmail = CanSendAsEmailAttachment(tab);
-    ctx->isPdf = CouldBePDFDoc(tab);
-    if (ctx->isPdf) {
-        ctx->isPdfEncrypted = EngineMupdfIsEncrypted(engine);
-    }
-
-    DisplayModel* dm = tab->AsFixed();
-    if (dm && ctx->supportsAnnotations) {
-        int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
-        if (pageNoUnderCursor > 0) {
-            ctx->isCursorOnPage = true;
-        }
-        ctx->annotationUnderCursor = dm->GetAnnotationAtPos(pt, nullptr);
-    }
-    ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
-    ctx->hasToc = tab->ctrl && tab->ctrl->HasToc();
-    ctx->pageCount = tab->ctrl ? tab->ctrl->PageCount() : 0;
-    return ctx;
-}
-
-void DeleteBuildMenuCtx(BuildMenuCtx* ctx) {
-    delete ctx;
 }
 
 static void AppendCommandsToMenu(HMENU m, const Vec<CustomCommand*>& cmds, bool isEnabled) {
@@ -1588,144 +1330,12 @@ again3:
     }
 }
 
-static bool CmdIdInList(int cmdId, UINT_PTR* list) {
-    for (size_t i = 0; list[i]; i++) {
-        if (list[i] == (UINT_PTR)cmdId) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool CmdWorksWithoutDocument(int cmdId) {
-    return CmdIdInList(cmdId, gNoDocWhitelist);
-}
-
 static void MenuSetEnabledForDocumentCommands(HMENU menu, bool hasDocument) {
     for (int cmdId = (int)CmdFirst; cmdId <= (int)CmdLast; cmdId++) {
         if (!CmdWorksWithoutDocument(cmdId)) {
             MenuSetEnabled(menu, cmdId, hasDocument);
         }
     }
-}
-
-// sets [remove, disable] state of the command
-void GetCommandIdState(BuildMenuCtx* ctx, int cmdId, bool* removeOut, bool* disableOut) {
-    bool remove = false;
-    bool disable = false;
-    if (!HasPermission(Perm::InternetAccess)) {
-        remove |= cmdIdInList(removeIfNoInternetPerms);
-    }
-    if (!HasPermission(Perm::FullscreenAccess)) {
-        remove |= cmdIdInList(removeIfNoFullscreenPerms);
-    }
-    if (!HasPermission(Perm::SavePreferences)) {
-        remove |= cmdIdInList(removeIfNoPrefsPerms);
-    }
-    if (!HasPermission(Perm::PrinterAccess)) {
-        remove |= (cmdId == CmdPrint);
-    }
-    if (!CanAccessDisk()) {
-        remove |= cmdIdInList(removeIfNoDiskAccessPerm);
-        // editing annotations also requires disk access
-        remove |= cmdIdInList(removeIfAnnotsNotSupported);
-        if (cmdId >= CmdOpenWithKnownExternalViewerFirst && cmdId <= CmdOpenWithKnownExternalViewerLast) {
-            remove = true;
-        }
-    }
-    if (!HasPermission(Perm::CopySelection)) {
-        remove |= cmdIdInList(removeIfNoCopyPerms);
-    }
-    if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
-        remove = true;
-    }
-    if (cmdId == CmdAIChatWithClaudeCode) {
-        if (!IsClaudeCodeAvailable()) {
-            remove = true;
-        } else if (ctx && ctx->tab && !IsClaudeCodeSupportedForTab(ctx->tab)) {
-            disable = true;
-        }
-    }
-    if (cmdId == CmdAIChatWithGrokBuild) {
-        if (!IsGrokBuildAvailable()) {
-            remove = true;
-        } else if (ctx && ctx->tab && !IsGrokBuildSupportedForTab(ctx->tab)) {
-            disable = true;
-        }
-    }
-    if (cmdId == CmdAIChatWithOpenAICodex) {
-        if (!IsCodexBuildAvailable()) {
-            remove = true;
-        } else if (ctx && ctx->tab && !IsCodexBuildSupportedForTab(ctx->tab)) {
-            disable = true;
-        }
-    }
-    if (cmdId == CmdTranslateSelectionWithGrokBuild && !IsGrokBuildInstalled()) {
-        remove = true;
-    }
-    if (cmdId == CmdTranslateSelectionWithClaudeCode && !IsClaudeCodeInstalled()) {
-        remove = true;
-    }
-    if (cmdId == CmdTranslateSelectionWithOpenAICodex && !IsCodexBuildInstalled()) {
-        remove = true;
-    }
-
-    if (!ctx) {
-        *removeOut = remove;
-        *disableOut = disable;
-        return;
-    }
-
-    {
-        int idFirst = CmdOpenWithKnownExternalViewerFirst + 1;
-        int idLast = CmdOpenWithKnownExternalViewerLast;
-        if (cmdId >= idFirst && cmdId <= idLast) {
-            remove = !CanViewWithKnownExternalViewer(ctx->tab, cmdId);
-            *removeOut = remove;
-            *disableOut = disable;
-            return;
-        }
-    }
-
-    remove |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(removeIfChm));
-    remove |= (!ctx->isCbx && (cmdId == CmdToggleMangaMode));
-    remove |= (ctx->isImageCollection && (cmdId == CmdDocumentExtractText));
-    remove |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
-    remove |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
-
-    disable |= (!ctx->hasSelection && cmdIdInList(disableIfNoSelection));
-    disable |= (!ctx->annotationUnderCursor && (cmdId == CmdDeleteAnnotation));
-    disable |= !ctx->hasUnsavedAnnotations && (cmdId == CmdSaveAnnotations);
-
-    if (!ctx->isPdf) {
-        remove |= (cmdId == CmdPdfEncrypt);
-        remove |= (cmdId == CmdPdfDecrypt);
-        remove |= (cmdId == CmdPdfCompress);
-        remove |= (cmdId == CmdPdfDecompress);
-        remove |= (cmdId == CmdPdfDeletePages);
-        remove |= (cmdId == CmdPdfExtractPages);
-        remove |= (cmdId == CmdPdShowInfo);
-        remove |= (cmdId == CmdPdfBake);
-    }
-    if (ctx->pageCount < 2) {
-        remove |= (cmdId == CmdPdfDeletePages);
-        remove |= (cmdId == CmdPdfExtractPages);
-    }
-    if (ctx->isPdf && ctx->isPdfEncrypted) {
-        remove |= (cmdId == CmdPdfEncrypt);
-    }
-    if (ctx->isPdf && !ctx->isPdfEncrypted) {
-        remove |= (cmdId == CmdPdfDecrypt);
-    }
-
-    remove |= (!ctx->hasToc && cmdId == CmdDocumentShowOutline);
-
-    if (cmdId == CmdTabGroupSave) {
-        disable |= !ctx->tab || !ctx->tab->win || !HasOpenedDocuments(ctx->tab->win);
-    }
-
-    *removeOut = remove;
-    *disableOut = disable;
 }
 
 HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
@@ -1969,8 +1579,8 @@ static bool IsFileCloseMenuEnabled() {
 
 static void SetMenuStateForSelection(WindowTab* tab, HMENU menu) {
     bool isTextSelected = tab && tab->win && tab->win->showSelection && tab->selectionOnPage;
-    for (int id : disableIfNoSelection) {
-        MenuSetEnabled(menu, id, isTextSelected);
+    for (int i = 0; disableIfNoSelection[i]; i++) {
+        MenuSetEnabled(menu, (int)disableIfNoSelection[i], isTextSelected);
     }
     auto curr = gFirstCustomCommand;
     while (curr) {

@@ -41,46 +41,12 @@
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
 #include "CodexBuild.h"
+#include "CommandAvailability.h"
 #include "Menu.h"
 
 #include "utils/Log.h"
 
 // clang-format off
-// those commands never show up in command palette
-static i32 gBlacklistCommandsFromPalette[] = {
-    CmdNone,
-    CmdOpenWithKnownExternalViewerFirst,
-    CmdOpenWithKnownExternalViewerLast,
-    CmdCommandPalette,
-    CmdCommandPaletteTOC,
-    CmdNextTabSmart,
-    CmdPrevTabSmart,
-    CmdSetTheme,
-
-    // managing frequently list in home tab
-    CmdOpenSelectedDocument,
-    CmdPinSelectedDocument,
-    CmdForgetSelectedDocument,
-
-    CmdExpandAll,   // TODO: figure proper context for it
-    CmdCollapseAll, // TODO: figure proper context for it
-    CmdMoveFrameFocus,
-
-    //CmdFavoriteAdd,
-    CmdFavoriteDel,
-
-    CmdPresentationWhiteBackground,
-    CmdPresentationBlackBackground,
-
-    CmdSaveEmbeddedFile, // TODO: figure proper context for it
-    CmdOpenEmbeddedPDF,
-    CmdSaveAttachment,
-    CmdOpenAttachment,
-
-    CmdCreateShortcutToFile, // not sure I want this at all
-    0,
-};
-
 // for those commands do not activate main window
 // for example those that show dialogs (because the main window takes
 // focus away from them)
@@ -109,29 +75,7 @@ static i32 gCommandsNoActivate[] = {
     0,
 };
 
-static i32 gCommandsDebugOnly[] = {
-    CmdDebugCorruptMemory,
-    CmdDebugCrashMe,
-    CmdDebugDownloadSymbols,
-    CmdDebugTestApp,
-    CmdDebugShowNotif,
-    CmdDebugStartStressTest,
-    CmdDebugToggleRenderInfo,
-    0,
-};
-
 // clang-format on
-
-// those are shared with Menu.cpp
-extern UINT_PTR removeIfAnnotsNotSupported[];
-extern UINT_PTR disableIfNoSelection[];
-
-extern UINT_PTR removeIfNoInternetPerms[];
-extern UINT_PTR removeIfNoFullscreenPerms[];
-extern UINT_PTR removeIfNoPrefsPerms[];
-extern UINT_PTR removeIfNoDiskAccessPerm[];
-extern UINT_PTR removeIfNoCopyPerms[];
-extern UINT_PTR removeIfChm[];
 
 static bool IsCmdInList(i32 cmdId, i32* ids) {
     while (*ids) {
@@ -139,17 +83,6 @@ static bool IsCmdInList(i32 cmdId, i32* ids) {
             return true;
         }
         ids++;
-    }
-    return false;
-}
-
-// a must end with sentinel value of 0
-static bool IsCmdInMenuList(i32 cmdId, UINT_PTR* a) {
-    UINT_PTR id = (UINT_PTR)cmdId;
-    for (int i = 0; a[i]; i++) {
-        if (a[i] == id) {
-            return true;
-        }
     }
     return false;
 }
@@ -225,37 +158,6 @@ struct CommandPaletteWnd : Wnd {
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
 };
 
-struct CommandPaletteBuildCtx {
-    const char* filePath = nullptr;
-    bool isDocLoaded = false;
-    bool supportsAnnots = false;
-    bool hasSelection = false;
-    bool isChm = false;
-    bool canSendEmail = false;
-    Annotation* annotationUnderCursor = nullptr;
-    bool hasUnsavedAnnotations = false;
-    bool isCursorOnPage = false;
-    bool cursorOnLinkTarget = false;
-    bool cursorOnComment = false;
-    bool cursorOnImage = false;
-    bool hasToc = false;
-    bool allowToggleMenuBar = false;
-    bool canCloseOtherTabs = false;
-    bool canCloseTabsToRight = false;
-    bool canCloseTabsToLeft = false;
-    bool isPdf = false;
-    bool isPdfEncrypted = false;
-    int pageCount = 0;
-    bool isSinglePage = false;
-    bool hasDocTabs = false;
-    int nTabs = 0;
-    Kind engineKind = nullptr;
-    bool isSpeaking = false;
-    bool canContinueReadAloud = false;
-
-    ~CommandPaletteBuildCtx() = default;
-};
-
 static const char* SkipWS(const char* s) {
     while (str::IsWs(*s)) {
         s++;
@@ -263,238 +165,8 @@ static const char* SkipWS(const char* s) {
     return s;
 }
 
-static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
-    if (cmdId <= CmdFirst) {
-        return false;
-    }
-    if (cmdId == CmdAIChatWithClaudeCode) {
-        if (!IsClaudeCodeAvailable()) {
-            return false;
-        }
-        if (!ctx.isDocLoaded || !IsClaudeCodeSupportedForFile(ctx.filePath, ctx.engineKind)) {
-            return false;
-        }
-    }
-    if (cmdId == CmdAIChatWithGrokBuild) {
-        if (!IsGrokBuildAvailable()) {
-            return false;
-        }
-        if (!ctx.isDocLoaded || !IsGrokBuildSupportedForFile(ctx.filePath, ctx.engineKind)) {
-            return false;
-        }
-    }
-    if (cmdId == CmdAIChatWithOpenAICodex) {
-        if (!IsCodexBuildAvailable()) {
-            return false;
-        }
-        if (!ctx.isDocLoaded || !IsCodexBuildSupportedForFile(ctx.filePath, ctx.engineKind)) {
-            return false;
-        }
-    }
-    CustomCommand* cmd = FindCustomCommand(cmdId);
-    int origCmdId = cmd ? cmd->origId : 0;
-    if (origCmdId == CmdSetTheme) {
-        return true;
-    }
-
-    if (IsCmdInList(cmdId, gCommandsDebugOnly)) {
-        return gIsDebugBuild;
-    }
-
-    if (IsCmdInList(cmdId, gBlacklistCommandsFromPalette)) {
-        return false;
-    }
-
-    if (CmdCloseOtherTabs == cmdId) {
-        return ctx.canCloseOtherTabs;
-    }
-    if (CmdCloseTabsToTheRight == cmdId) {
-        return ctx.canCloseTabsToRight;
-    }
-    if (CmdCloseTabsToTheLeft == cmdId) {
-        return ctx.canCloseTabsToLeft;
-    }
-
-    if (CmdReopenLastClosedFile == cmdId) {
-        return RecentlyCloseDocumentsCount() > 0;
-    }
-
-    if (CmdTabGroupSave == cmdId) {
-        return ctx.hasDocTabs;
-    }
-
-    if (cmdId == CmdNextTab || cmdId == CmdPrevTab || cmdId == CmdNextTabSmart || cmdId == CmdPrevTabSmart ||
-        cmdId == CmdMoveTabLeft || cmdId == CmdMoveTabRight) {
-        return ctx.nTabs >= 2;
-    }
-
-    if ((cmdId == CmdToggleWindowsPreviewer || cmdId == CmdToggleWindowsSearchFilter) && !IsOurExeInstalled()) {
-        return false;
-    }
-
-    // when document is not loaded, most commands are not available
-    // except those white-listed (see gNoDocWhitelist in Menu.cpp)
-    if (CmdWorksWithoutDocument(cmdId)) {
-        return true;
-    }
-
-    if (!ctx.isDocLoaded) {
-        return false;
-    }
-
-    bool isKnownEV = (cmdId >= CmdOpenWithKnownExternalViewerFirst) && (cmdId <= CmdOpenWithKnownExternalViewerLast);
-    if (origCmdId == CmdViewWithExternalViewer || isKnownEV) {
-        if (!ctx.isDocLoaded) {
-            return false;
-        }
-        if (isKnownEV) {
-            // TODO: match file name
-            return HasKnownExternalViewerForCmd(cmdId);
-        }
-        const char* filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
-        return PathMatchFilter(ctx.filePath, filter);
-    }
-
-    if ((origCmdId == CmdSelectionHandler) || IsCmdInMenuList(cmdId, disableIfNoSelection)) {
-        return ctx.hasSelection;
-    }
-
-    if (cmdId == CmdToggleFrequentlyRead) {
-        return false;
-    }
-
-    if (cmdId == CmdToggleMenuBar) {
-        return ctx.allowToggleMenuBar;
-    }
-
-    if (!ctx.supportsAnnots) {
-        if ((cmdId >= (i32)CmdCreateAnnotFirst) && (cmdId <= (i32)CmdCreateAnnotLast)) {
-            return false;
-        }
-        if (IsCmdInMenuList(cmdId, removeIfAnnotsNotSupported)) {
-            return false;
-        }
-    }
-
-    if (ctx.isChm && IsCmdInMenuList(cmdId, removeIfChm)) {
-        return false;
-    }
-
-    if (!ctx.canSendEmail && (cmdId == CmdSendByEmail)) {
-        return false;
-    }
-
-    if (!ctx.isPdf && cmdId == CmdPdShowInfo) {
-        return false;
-    }
-
-    if (!ctx.hasToc && cmdId == CmdDocumentShowOutline) {
-        return false;
-    }
-
-    if (!ctx.isPdf && cmdId == CmdPdfBake) {
-        return false;
-    }
-
-    if (!ctx.isPdf && cmdId == CmdPdfCompress) {
-        return false;
-    }
-
-    if (!ctx.isPdf && cmdId == CmdPdfDecompress) {
-        return false;
-    }
-
-    if (cmdId == CmdPdfDeletePages && (!ctx.isPdf || ctx.pageCount < 2)) {
-        return false;
-    }
-
-    if (cmdId == CmdPdfExtractPages && (!ctx.isPdf || ctx.pageCount < 2)) {
-        return false;
-    }
-
-    if (cmdId == CmdPdfEncrypt && (!ctx.isPdf || ctx.isPdfEncrypted)) {
-        return false;
-    }
-
-    if (cmdId == CmdPdfDecrypt && (!ctx.isPdf || !ctx.isPdfEncrypted)) {
-        return false;
-    }
-
-    if (cmdId == CmdDocumentExtractText) {
-        bool canExtract = ctx.engineKind == kindEngineMupdf || ctx.engineKind == kindEngineDjVu;
-        if (!canExtract) {
-            return false;
-        }
-    }
-
-    if (ctx.isSinglePage && cmdId == CmdToggleMangaMode) {
-        return false;
-    }
-
-    if (!ctx.annotationUnderCursor) {
-        if (cmdId == CmdDeleteAnnotation) {
-            return false;
-        }
-    }
-
-    if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile)) {
-        return ctx.hasUnsavedAnnotations;
-    }
-
-    if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
-        return false;
-    }
-
-    bool remove = false;
-    if (!HasPermission(Perm::InternetAccess)) {
-        remove |= IsCmdInMenuList(cmdId, removeIfNoInternetPerms);
-    }
-    if (!HasPermission(Perm::FullscreenAccess)) {
-        remove |= IsCmdInMenuList(cmdId, removeIfNoFullscreenPerms);
-    }
-    if (!HasPermission(Perm::SavePreferences)) {
-        remove |= IsCmdInMenuList(cmdId, removeIfNoPrefsPerms);
-    }
-    if (!HasPermission(Perm::PrinterAccess)) {
-        remove |= (cmdId == CmdPrint);
-    }
-    if (!CanAccessDisk()) {
-        remove |= IsCmdInMenuList(cmdId, removeIfNoDiskAccessPerm);
-    }
-    if (!HasPermission(Perm::CopySelection)) {
-        remove |= IsCmdInMenuList(cmdId, removeIfNoCopyPerms);
-    }
-    if (remove) {
-        return false;
-    }
-
-    if (!ctx.cursorOnLinkTarget && (cmdId == CmdCopyLinkTarget)) {
-        return false;
-    }
-    if (!ctx.cursorOnComment && (cmdId == CmdCopyComment)) {
-        return false;
-    }
-    if (!ctx.cursorOnImage && (cmdId == CmdCopyImage)) {
-        return false;
-    }
-    if ((cmdId == CmdToggleBookmarks) || (cmdId == CmdToggleTableOfContents)) {
-        return ctx.hasToc;
-    }
-
-    if (cmdId == CmdPauseReadAloud) {
-        return ctx.isSpeaking;
-    }
-    if (cmdId == CmdContinueReadAloud) {
-        return ctx.canContinueReadAloud && !ctx.isSpeaking;
-    }
-    if (cmdId == CmdStopReadAloud) {
-        return ctx.isSpeaking || ctx.canContinueReadAloud;
-    }
-    if (cmdId == CmdReadAloudSelection) {
-        return ctx.hasSelection;
-    }
-
-    return true;
+static bool AllowCommand(const AppCommandCtx& ctx, i32 cmdId) {
+    return CommandShouldShow(GetCommandVisibility(cmdId, ctx, CommandSurface::Palette));
 }
 
 static TempStr ConvertPathForDisplayTemp(const char* s) {
@@ -828,95 +500,13 @@ void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
 }
 
 void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
-    CommandPaletteBuildCtx ctx;
-    ctx.isDocLoaded = mainWin->IsDocLoaded();
-    WindowTab* currTab = mainWin->CurrentTab();
-    ctx.filePath = currTab ? currTab->filePath : nullptr;
-    ctx.hasSelection = ctx.isDocLoaded && currTab && mainWin->showSelection && currTab->selectionOnPage;
-    ctx.canSendEmail = CanSendAsEmailAttachment(currTab);
-    ctx.isPdf = ctx.isDocLoaded && CouldBePDFDoc(currTab);
-    if (ctx.isPdf && currTab) {
-        ctx.isPdfEncrypted = EngineMupdfIsEncrypted(currTab->GetEngine());
-    }
-    if (ctx.isDocLoaded && currTab) {
-        ctx.engineKind = currTab->GetEngineType();
-    }
-    if (ctx.isDocLoaded && mainWin->ctrl) {
-        ctx.isSinglePage = IsSingle(mainWin->ctrl->GetDisplayMode());
-        ctx.pageCount = mainWin->ctrl->PageCount();
-    }
-    ctx.allowToggleMenuBar = true;
-
-    int nTabs = mainWin->TabCount();
-    ctx.nTabs = nTabs;
-    int tabIdx = mainWin->GetTabIdx(currTab);
-    ctx.canCloseTabsToRight = tabIdx < (nTabs - 1);
-    ctx.canCloseTabsToLeft = false;
-    int nFirstDocTab = 0;
-    for (int i = 0; i < nTabs; i++) {
-        WindowTab* t = mainWin->GetTab(i);
-        if (t->IsAboutTab()) {
-            if (i > 0) {
-                logf("CommandPaletteWnd::CollectStrings: unexpected about tab at idx: %d out of %d\n", i, nTabs);
-                for (int j = 0; j < nTabs; j++) {
-                    if (!t->IsAboutTab()) {
-                        logf("i: %d path: %s\n", j, t->filePath ? t->filePath : "");
-                    }
-                }
-                ReportIf(i > 0);
-            }
-            nFirstDocTab = 1;
-            continue;
-        }
-        ctx.hasDocTabs = true;
-        if (t == currTab) {
-            if (i > nFirstDocTab) {
-                ctx.canCloseTabsToLeft = true;
-            }
-            continue;
-        }
-        ctx.canCloseOtherTabs = true;
-    }
-
     Point cursorPos = HwndGetCursorPos(mainWin->hwndCanvas);
-
-    DisplayModel* dm = mainWin->AsFixed();
-    if (dm) {
-        auto engine = dm->GetEngine();
-        ctx.supportsAnnots = EngineSupportsAnnotations(engine);
-        ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
-        int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
-        if (pageNoUnderCursor > 0) {
-            ctx.isCursorOnPage = true;
-        }
-        ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos, nullptr);
-
-        // PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
-        //  TODO: should this be point on page?
-        IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
-        if (pageEl) {
-            char* value = pageEl->GetValue();
-            ctx.cursorOnLinkTarget = value && pageEl->Is(kindPageElementDest);
-            ctx.cursorOnComment = value && pageEl->Is(kindPageElementComment);
-            ctx.cursorOnImage = pageEl->Is(kindPageElementImage);
-        }
-    }
-
-    if (!CanAccessDisk()) {
-        ctx.supportsAnnots = false;
-        ctx.hasUnsavedAnnotations = false;
-    }
-
-    ctx.hasToc = mainWin->ctrl && mainWin->ctrl->HasToc();
-    ctx.isSpeaking = TtsIsSpeaking();
-    if (currTab) {
-        ctx.canContinueReadAloud = CanContinueReadAloud(currTab);
-    }
+    AppCommandCtx ctx = NewAppCommandCtx(mainWin, cursorPos);
 
     if (smartTabMode && gGlobalPrefs->tabsMru) {
-        CollectTabsMru(mainWin, currTab);
+        CollectTabsMru(mainWin, ctx.tab);
     } else {
-        CollectTabsRegular(mainWin, currTab);
+        CollectTabsRegular(mainWin, ctx.tab);
     }
 
     CollectToc(mainWin);

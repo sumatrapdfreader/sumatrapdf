@@ -1088,6 +1088,7 @@
     <ClInclude Include="..\src\ChmModel.h" />
     <ClInclude Include="..\src\ClaudeCode.h" />
     <ClInclude Include="..\src\CodexBuild.h" />
+    <ClInclude Include="..\src\CommandAvailability.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
@@ -1133,6 +1134,7 @@
     <ClInclude Include="..\src\ReadAloudPlaybackBar.h" />
     <ClInclude Include="..\src\RefHover.h" />
     <ClInclude Include="..\src\RefHoverDetect.h" />
+    <ClInclude Include="..\src\RefHoverInternal.h" />
     <ClInclude Include="..\src\RefHoverText.h" />
     <ClInclude Include="..\src\RefHoverTextDetect.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
@@ -1209,6 +1211,7 @@
     <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\ClaudeCode.cpp" />
     <ClCompile Include="..\src\CodexBuild.cpp" />
+    <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />

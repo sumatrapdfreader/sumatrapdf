@@ -120,6 +120,9 @@
     <ClInclude Include="..\src\CodexBuild.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\CommandAvailability.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\CommandPalette.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -253,6 +256,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\RefHoverDetect.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\RefHoverInternal.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\RefHoverText.h">
@@ -477,6 +483,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CodexBuild.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CommandAvailability.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CommandPalette.cpp">
