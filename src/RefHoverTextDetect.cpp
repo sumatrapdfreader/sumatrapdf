@@ -37,7 +37,7 @@ static bool IsNamePrefix(const WCHAR* word, int wordLen) {
 // *surnameOut with a freshly-allocated UTF-8 surname (caller frees) and
 // *yearOut with the 4-digit year.
 bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, char** surnameOut,
-                              int* yearOut) {
+                              int* yearOut, Rect* srcRectOut) {
     *surnameOut = nullptr;
     *yearOut = 0;
     if (!text || textLen <= 0 || !coords) {
@@ -298,6 +298,10 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
         return false;
     }
 
+    if (srcRectOut) {
+        // stable per-occurrence key: the cursor's text line
+        *srcRectOut = Rect{0, coords[cursorIdx].y, 0, coords[cursorIdx].dy};
+    }
     *surnameOut = ToUtf8(surnameW.Get());
     *yearOut = year;
     return true;
@@ -414,7 +418,8 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
 
 // === Numeric "[N]" citation detection ===
 
-bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, int* numOut) {
+bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, int* numOut,
+                                     Rect* srcRectOut) {
     *numOut = 0;
     if (!text || textLen <= 0 || !coords) {
         return false;
@@ -521,6 +526,10 @@ bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int 
     }
     if (bestNum <= 0) {
         return false;
+    }
+    if (srcRectOut) {
+        // stable per-occurrence key: the cursor's text line (the "[N]" marker)
+        *srcRectOut = Rect{0, coords[cursorIdx].y, 0, coords[cursorIdx].dy};
     }
     *numOut = bestNum;
     return true;
