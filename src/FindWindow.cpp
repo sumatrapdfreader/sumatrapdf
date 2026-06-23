@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinDynCalls.h"
+#include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
@@ -42,6 +43,18 @@ static void ApplyTitleBarTheme(HWND hwnd) {
 // command ids for the window's toolbar buttons (handled in OnCommand)
 constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
 
+struct FindWindowWnd;
+
+struct DeferredGoToFindMatchData {
+    MainWindow* win = nullptr;
+    FindWindowWnd* findWindow = nullptr;
+    int startPage = 0;
+    int startGlyph = 0;
+    int endPage = 0;
+    int endGlyph = 0;
+    LONG epoch = 0;
+};
+
 // list model backed live by win->findMatches (the snippet for each match)
 struct FindResultsModel : ListBoxModel {
     MainWindow* win = nullptr;
@@ -62,6 +75,8 @@ struct FindWindowWnd : Wnd {
     ListBox* results = nullptr;
     StrVec filterWords; // search term(s) to highlight in snippets
     Vec<u8> hlScratch;  // reused highlight mask for DrawMaybeHighlightedText
+    // coalesce rapid list selections: only the latest deferred navigation runs
+    LONG pendingNavEpoch = 0;
 
     FindWindowWnd() = default;
     ~FindWindowWnd() override;
@@ -84,6 +99,17 @@ struct FindWindowWnd : Wnd {
     bool PreTranslateMessage(MSG& msg) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
+
+static void DeferredGoToFindMatch(DeferredGoToFindMatchData* d) {
+    AutoDelete del(d);
+    if (!IsMainWindowValid(d->win) || !d->findWindow) {
+        return;
+    }
+    if (d->epoch != d->findWindow->pendingNavEpoch) {
+        return;
+    }
+    GoToFindMatch(d->win, d->startPage, d->startGlyph, d->endPage, d->endGlyph);
+}
 
 // append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
 static const char* AppendCmdAccel(const char* base, int cmd) {
@@ -367,7 +393,22 @@ void FindWindowWnd::OnResultSelected() {
         return;
     }
     const FindMatch& fm = win->findMatches[idx];
-    GoToFindMatch(win, fm.startPage, fm.startGlyph, fm.endPage, fm.endGlyph);
+    DisplayModel* dm = win->AsFixed();
+    if (dm && dm->textSearch && dm->textSearch->startPage == fm.startPage &&
+        dm->textSearch->startGlyph == fm.startGlyph) {
+        return; // already on this match
+    }
+    // defer document navigation so the results list can scroll/repaint first
+    // (issue #5692). Coalesce rapid F3 / arrow presses to the latest selection.
+    auto data = new DeferredGoToFindMatchData;
+    data->win = win;
+    data->findWindow = this;
+    data->startPage = fm.startPage;
+    data->startGlyph = fm.startGlyph;
+    data->endPage = fm.endPage;
+    data->endGlyph = fm.endGlyph;
+    data->epoch = InterlockedIncrement(&pendingNavEpoch);
+    uitask::Post(MkFunc0<DeferredGoToFindMatchData>(DeferredGoToFindMatch, data), "GoToFindMatch");
 }
 
 // list index of the match the document is currently on (so the selection can
@@ -458,6 +499,7 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
         return true; // e.g. a single match wrapping onto itself
     }
     results->SetCurrentSelection(idx);
+    // ListBox_SetCurSel does not send LBN_SELCHANGE; navigate explicitly
     OnResultSelected();
     return true;
 }

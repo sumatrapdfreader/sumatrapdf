@@ -675,8 +675,11 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     // join any in-flight find/count worker first: we're about to mutate
     // dm->textSearch and read engine page text on the UI thread, which must not
     // race a background thread doing the same (mupdf text extraction isn't
-    // reentrant, and textSearch is shared state)
-    AbortFinding(win, true);
+    // reentrant, and textSearch is shared state). skip the join when idle so
+    // stepping through the floating results list stays responsive.
+    if (win->findThread || win->findCountThread || win->findDebouncePending) {
+        AbortFinding(win, true);
+    }
     DisplayModel* dm = win->AsFixed();
     TextSearch* ts = dm->textSearch;
     ts->Reset();
