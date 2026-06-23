@@ -847,6 +847,29 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     return PDFSYNCERR_SUCCESS;
 }
 
+static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, const char* srcPath, int line, int col) {
+    int ret = synctex_display_query(scanner, srcPath, line, col, 0);
+    if (ret > 0) {
+        return ret;
+    }
+
+    TempStr variants[] = {
+        path::WslUncToUnixTemp(srcPath),
+        path::WindowsToWslMountTemp(srcPath),
+    };
+    for (TempStr variant : variants) {
+        if (!variant) {
+            continue;
+        }
+        logfa("SynctexDisplayQueryWithVariants: '%s' failed, retrying with '%s'\n", srcPath, variant);
+        int ret2 = synctex_display_query(scanner, variant, line, col, 0);
+        if (ret2 > 0) {
+            return ret2;
+        }
+    }
+    return ret;
+}
+
 int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
     logfa("SyncTex::SourceToDoc: '%s', line: %d, col: %d\n", srcfilename, line, col);
     int res = RebuildIndexIfNeeded();
@@ -866,30 +889,7 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
-    // dealed in SyncTex::RebuildIndexIfNeeded()
-    int ret = synctex_display_query(this->scanner, srcfilepath, line, col, 0);
-
-    if (ret <= 0) {
-        // try with unix path
-        if (TempStr unixSrcFilePath = path::WslUncToUnixTemp(srcfilepath)) {
-            logfa("SyncTex::SourceToDoc: retrying with unix path '%s'\n", unixSrcFilePath);
-            int ret2 = synctex_display_query(this->scanner, unixSrcFilePath, line, col, 0);
-            if (ret2 > 0) {
-                ret = ret2;
-            }
-        }
-    }
-
-    if (ret <= 0) {
-        // try with WSL mount path
-        if (TempStr wslMountSrcFilePath = path::WindowsToWslMountTemp(srcfilepath)) {
-            logfa("SyncTex::SourceToDoc: retrying with WSL mount path '%s'\n", wslMountSrcFilePath);
-            int ret2 = synctex_display_query(this->scanner, wslMountSrcFilePath, line, col, 0);
-            if (ret2 > 0) {
-                ret = ret2;
-            }
-        }
-    }
+    int ret = SynctexDisplayQueryWithVariants(this->scanner, srcfilepath, line, col);
 
     if (-1 == ret) {
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
