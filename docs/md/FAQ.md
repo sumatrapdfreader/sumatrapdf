@@ -40,9 +40,9 @@ There is no perfect one-click solution: `Shift + I` inverts the whole rendered p
 
 ## Links and navigation
 
-**SumatraPDF turns plain-text URLs into clickable links**
+**SumatraPDF turns plain-text URLs, email addresses, and DOIs into clickable links**
 
-SumatraPDF auto-detects URLs and email addresses in PDF text (a long-standing PDF viewer convention). Embedded hyperlinks in the file are separate. Set `DisableAutoLinks = true` in advanced settings to turn off auto-detection only. See [Hyperlinks](Hyperlinks.md).
+SumatraPDF auto-detects URLs, email addresses, and plain-text DOIs (e.g. `10.1109/WICSA.2015.29` → `https://doi.org/...`) in PDF text (a long-standing PDF viewer convention for URLs). Embedded hyperlinks in the file are separate. Set `DisableAutoLinks = true` in advanced settings to turn off auto-detection only. See [Hyperlinks](Hyperlinks.md).
 
 **I followed an internal link (footnote) — how do I go back?**
 

@@ -14,7 +14,7 @@ In [restricted mode](Configure-for-restricted-use.md), launching external URLs c
 
 ## Auto-detected links (plain text)
 
-SumatraPDF also turns **plain text** that *looks* like a URL or email address into a clickable link, even when the PDF contains no hyperlink annotation. For example, exporting `www.example.com` as plain text from a word processor creates a clickable link in SumatraPDF but not necessarily in every other viewer.
+SumatraPDF also turns **plain text** that *looks* like a URL, email address, or DOI into a clickable link, even when the PDF contains no hyperlink annotation. For example, exporting `www.example.com` as plain text from a word processor creates a clickable link in SumatraPDF but not necessarily in every other viewer. A printed DOI such as `10.1109/WICSA.2015.29` opens as `https://doi.org/10.1109/WICSA.2015.29`.
 
 This follows a long-standing PDF viewer convention (Adobe Reader does something similar). Users who treat unexpected links as a security concern often ask about disabling it — see [discussion #5703](https://github.com/sumatrapdfreader/sumatrapdf/discussions/5703).
 
@@ -26,7 +26,7 @@ In [advanced settings](Advanced-options-settings.md):
 DisableAutoLinks = true
 ```
 
-Save the settings file. Embedded hyperlinks that exist in the PDF file itself are **not** removed — only automatic detection of URL-like text is disabled.
+Save the settings file. Embedded hyperlinks that exist in the PDF file itself are **not** removed — only automatic detection of URL-like text, email addresses, and plain-text DOIs is disabled.
 
 ### Restricted mode: block following links
 

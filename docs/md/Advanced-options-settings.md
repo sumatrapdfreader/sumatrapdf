@@ -201,7 +201,8 @@ UIFontSize = 0
 ; version 3.6)
 DisableAntiAlias = false
 
-; if true, disables auto-linking of URLs and email addresses found in PDF text
+; if true, disables auto-linking of URLs, email addresses, and plain-text DOIs
+; found in PDF text
 DisableAutoLinks = false
 
 ; if true, we use Windows system colors for background/text color. Over-rides

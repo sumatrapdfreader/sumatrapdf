@@ -869,6 +869,36 @@ static bool EndsURL(WCHAR c) {
     return false;
 }
 
+// Trim trailing punctuation that likely belongs to surrounding sentence text, not
+// the link. `trimChars` lists chars to strip; when trimRepeat is false, at most
+// one char is removed. When trimCloseParen is true, a trailing ')' is also
+// stripped unless the span contains an opening '(' before it.
+static const WCHAR* LinkifyTrimTrailingPunct(const WCHAR* start, const WCHAR* end, const WCHAR* trimChars,
+                                             bool trimRepeat, bool trimCloseParen) {
+    for (;;) {
+        if (end <= start) {
+            break;
+        }
+        WCHAR c = end[-1];
+        if (str::FindChar(trimChars, c)) {
+            end--;
+            if (!trimRepeat) {
+                break;
+            }
+            continue;
+        }
+        if (trimCloseParen && ')' == c && (!str::FindChar(start, '(') || str::FindChar(start, '(') >= end)) {
+            end--;
+            if (!trimRepeat) {
+                break;
+            }
+            continue;
+        }
+        break;
+    }
+    return end;
+}
+
 static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
     const WCHAR* quote = nullptr;
 
@@ -877,22 +907,7 @@ static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
     while (!EndsURL(*end)) {
         end++;
     }
-    char prev = 0;
-    if (end > start) {
-        prev = end[-1];
-    }
-    if (',' == prev || '.' == prev || '?' == prev || '!' == prev) {
-        end--;
-    }
-
-    prev = 0;
-    if (end > start) {
-        prev = end[-1];
-    }
-    // also ignore a closing parenthesis, if the URL doesn't contain any opening one
-    if (')' == prev && (!str::FindChar(start, '(') || str::FindChar(start, '(') >= end)) {
-        end--;
-    }
+    end = LinkifyTrimTrailingPunct(start, end, L",.?!", false, true);
 
     // cut the link at the first quotation mark, if it's also preceded by one
     if (('"' == prevChar || '\'' == prevChar) && (quote = str::FindChar(start, prevChar)) != nullptr && quote < end) {
@@ -973,8 +988,8 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
 // Detect a printed DOI ("10." + 4-9 digit registrant + "/" + non-empty suffix),
 // e.g. "10.1109/WICSA.2015.29". `start` must point at the leading '1'. Returns
 // the end ptr (exclusive) past the suffix, or nullptr if `start` is not a DOI.
-// The suffix runs to the first whitespace / delimiter; trailing sentence
-// punctuation is trimmed (a DOI printed inside a sentence or parentheses).
+// The suffix runs to the first EndsURL() terminator (whitespace, fullwidth
+// comma) or quote/angle bracket; trailing sentence punctuation is trimmed.
 static const WCHAR* LinkifyFindDoiEnd(const WCHAR* start) {
     if (!str::StartsWith(start, L"10.")) {
         return nullptr;
@@ -990,21 +1005,13 @@ static const WCHAR* LinkifyFindDoiEnd(const WCHAR* start) {
     }
     p++; // skip '/'
     const WCHAR* suffixStart = p;
-    while (*p && !iswspace(*p) && *p != '"' && *p != '<' && *p != '>') {
+    while (!EndsURL(*p) && *p != '"' && *p != '<' && *p != '>') {
         p++;
     }
     if (p == suffixStart) {
         return nullptr;
     }
-    // trim trailing sentence punctuation (DOIs rarely end with these)
-    while (p > suffixStart) {
-        WCHAR c = p[-1];
-        if (c == '.' || c == ',' || c == ';' || c == ':' || c == ')' || c == ']' || c == '}' || c == '\'') {
-            p--;
-        } else {
-            break;
-        }
-    }
+    p = LinkifyTrimTrailingPunct(suffixStart, p, L".,;:!)]}'", true, false);
     if (p == suffixStart) {
         return nullptr;
     }
