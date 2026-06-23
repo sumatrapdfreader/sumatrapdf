@@ -21,6 +21,7 @@ per-file basis in FileHistory.
 
 bool HasFavorites();
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLabel, const char* nameIn);
+void AddFavoriteForPage(MainWindow* win, int pageNo);
 void AddFavoriteForCurrentPage(MainWindow* win);
 void DelFavorite(const char* filePath, int pageNo);
 void RebuildFavMenu(MainWindow* win, HMENU menu);
