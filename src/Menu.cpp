@@ -2417,6 +2417,12 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             }
             return;
         }
+        case CmdFavoriteAdd: {
+            if (pageNoUnderCursor > 0) {
+                AddFavoriteForPage(win, pageNoUnderCursor);
+            }
+            return;
+        }
         case CmdFavoriteDel: {
             DelFavorite(filePath, pageNoUnderCursor);
             return;
