@@ -1391,8 +1391,17 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             continue;
         }
 
-        bool removeMenu, disableMenu;
-        GetCommandIdState(ctx, cmdId, &removeMenu, &disableMenu);
+        // Only real commands have a command-state. For submenu entries cmdId is a
+        // truncated pointer (garbage), so don't run it through GetCommandIdState:
+        // the no-document gate (and negative truncations) would wrongly remove the
+        // whole submenu, leaving e.g. an empty menu bar on the home page. Submenu
+        // visibility is decided by the explicit checks below and the emptiness
+        // check after the submenu is built.
+        bool removeMenu = false;
+        bool disableMenu = false;
+        if (!isSubMenu) {
+            GetCommandIdState(ctx, cmdId, &removeMenu, &disableMenu);
+        }
         if (ctx) {
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
             removeMenu |= !ctx->hasSelection && (subMenuDef == menuDefCreateAnnotFromSelection);
