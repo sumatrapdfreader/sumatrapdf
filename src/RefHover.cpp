@@ -94,22 +94,27 @@ static constexpr float kUserZoomStep = 1.15f;
 // 0 = not tried, 1 = registered, -1 = failed
 static int gClassRegistered = 0;
 
-// Map a popup-client point back to a page point and return the launch link
-// (external URL / file) under it, or nullptr. Uses the stored engine for the
-// currently displayed page.
-static IPageDestination* LaunchLinkAtPopupPt(RefHoverState* s, HWND hwnd, int clientX, int clientY) {
+// Map popup client coords to a point in the displayed page region.
+static bool PopupClientToPagePt(RefHoverState* s, HWND hwnd, int clientX, int clientY, PointF& ptOut) {
     if (!s || !s->hitEngine || s->displayed.destPage <= 0) {
-        return nullptr;
+        return false;
     }
     float zoom = s->displayed.baseZoom * s->displayed.userZoom;
     if (zoom <= 0.f) {
-        return nullptr;
+        return false;
     }
     int border = DpiScale(hwnd, kBorder);
-    PointF pt;
-    pt.x = s->displayed.region.x + (float)(clientX - border) / zoom;
-    pt.y = s->displayed.region.y + (float)(clientY - border) / zoom;
-    IPageElement* el = s->hitEngine->GetElementAtPos(s->displayed.destPage, pt);
+    ptOut.x = s->displayed.region.x + (float)(clientX - border) / zoom;
+    ptOut.y = s->displayed.region.y + (float)(clientY - border) / zoom;
+    return true;
+}
+
+// Hit-test a page point for a launch link (external URL / file).
+static IPageDestination* LaunchLinkAtPagePt(RefHoverState* s, PointF pagePt) {
+    if (!s || !s->hitEngine || s->displayed.destPage <= 0) {
+        return nullptr;
+    }
+    IPageElement* el = s->hitEngine->GetElementAtPos(s->displayed.destPage, pagePt);
     if (!el || !el->Is(kindPageElementDest)) {
         return nullptr;
     }
@@ -122,6 +127,16 @@ static IPageDestination* LaunchLinkAtPopupPt(RefHoverState* s, HWND hwnd, int cl
         return dest;
     }
     return nullptr;
+}
+
+// Map a popup-client point back to a page point and return the launch link
+// under it, or nullptr.
+static IPageDestination* LaunchLinkAtPopupPt(RefHoverState* s, HWND hwnd, int clientX, int clientY) {
+    PointF pagePt;
+    if (!PopupClientToPagePt(s, hwnd, clientX, clientY, pagePt)) {
+        return nullptr;
+    }
+    return LaunchLinkAtPagePt(s, pagePt);
 }
 
 static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
