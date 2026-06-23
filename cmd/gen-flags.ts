@@ -125,7 +125,7 @@ function generateCode(): string {
     return lines.join("\n");
 }
 
-function main() {
+export function main() {
     const rootDir = join(import.meta.dir, "..");
     const flagsPath = join(rootDir, "src", "Flags.cpp");
     const content = readFileSync(flagsPath, "utf-8");
@@ -149,4 +149,6 @@ function main() {
     console.log("Generated flags code in src/Flags.cpp");
 }
 
-main();
+if (import.meta.main) {
+    main();
+}

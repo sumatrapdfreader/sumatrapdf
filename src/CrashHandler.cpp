@@ -77,9 +77,36 @@ static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
 static bool isDllBuild = false;
 static bool gCrashed = false;
+static volatile LONG gCrashHandlerStarted = 0;
+static DWORD gCrashThreadId = 0;
+static DWORD gDumpThreadId = 0;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
+
+static bool TryStartCrashHandling(const char* handlerName) {
+    if (InterlockedCompareExchange(&gCrashHandlerStarted, 1, 0) == 0) {
+        gCrashThreadId = GetCurrentThreadId();
+        gReducedLogging = true;
+        return true;
+    }
+
+    OutputDebugStringA(handlerName);
+    OutputDebugStringA(": ignoring nested crash\n");
+
+    DWORD threadId = GetCurrentThreadId();
+    if (threadId == gCrashThreadId || threadId == gDumpThreadId) {
+        TerminateProcess(GetCurrentProcess(), 1);
+    }
+
+    if (gDumpThread) {
+        WaitForSingleObject(gDumpThread, INFINITE);
+    }
+
+    // The first crash handler will show the crash message and terminate the process.
+    Sleep(INFINITE);
+    return false;
+}
 
 // returns true if running on wine (winex11.drv is present)
 // it's not a logical, but convenient place to do it
@@ -488,16 +515,11 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
-    //    gReducedLogging = true;
-    log("CrashDumpVectoredExceptionHandler\n");
-
-    static bool wasHere = false;
-    if (wasHere) {
-        log("CrashDumpVectoredExceptionHandler: wasHere set\n");
+    if (!TryStartCrashHandling("CrashDumpVectoredExceptionHandler")) {
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
-    wasHere = true;
+    log("CrashDumpVectoredExceptionHandler\n");
     gCrashed = true;
 
     gMei.ThreadId = GetCurrentThreadId();
@@ -521,16 +543,11 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
-    //    gReducedLogging = true;
-    log("CrashDumpExceptionHandler\n");
-
-    static bool wasHere = false;
-    if (wasHere) {
-        log("CrashDumpExceptionHandler: wasHere set\n");
+    if (!TryStartCrashHandling("CrashDumpExceptionHandler")) {
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
-    wasHere = true;
+    log("CrashDumpExceptionHandler\n");
     gCrashed = true;
 
     gMei.ThreadId = GetCurrentThreadId();
@@ -793,6 +810,9 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
 
     gCrashDumpPath = str::Dup(crashDumpPath);
     gCrashFilePath = str::Dup(crashFilePath);
+    gCrashThreadId = 0;
+    gDumpThreadId = 0;
+    InterlockedExchange(&gCrashHandlerStarted, 0);
 
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
@@ -838,7 +858,7 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
         log("InstallCrashHandler: skipping because !gDumpEvent\n");
         return;
     }
-    gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, nullptr);
+    gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, &gDumpThreadId);
     if (!gDumpThread) {
         log("InstallCrashHandler: skipping because !gDumpThread\n");
         return;
@@ -881,6 +901,9 @@ void UninstallCrashHandler() {
     str::FreePtr(&gModulesInfo);
     str::FreePtr(&gCrashFilePath);
     ArenaDelete(gCrashHandlerAllocator);
+    gCrashThreadId = 0;
+    gDumpThreadId = 0;
+    InterlockedExchange(&gCrashHandlerStarted, 0);
 }
 
 // Tests that various ways to crash will generate crash report.

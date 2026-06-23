@@ -285,6 +285,12 @@ bool FindBarWnd::PreTranslateMessage(MSG& msg) {
     // the frame's edit accelerator table doesn't reach it; handle the find keys
     // here (Esc, Enter/Shift+Enter, F3/Shift+F3)
     switch (msg.wParam) {
+        case 'F':
+            if (IsCtrlPressed() && !IsAltPressed()) {
+                FocusFindEditSelectAll(win);
+                return true;
+            }
+            break;
         case VK_ESCAPE:
             HideFindBar(win);
             return true;
@@ -440,6 +446,14 @@ void HideFindBar(MainWindow* win) {
 // here means specifically the compact bar (used to reposition it on move)
 bool IsFindBarVisible(MainWindow* win) {
     return win->findBar && IsWindowVisible(win->findBar->hwnd);
+}
+
+void FocusFindEditSelectAll(MainWindow* win) {
+    if (!win->hwndFindEdit) {
+        return;
+    }
+    HwndSetFocus(win->hwndFindEdit);
+    Edit_SetSel(win->hwndFindEdit, 0, -1);
 }
 
 void ToggleFloatingFindUI(MainWindow* win) {

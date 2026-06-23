@@ -64,7 +64,7 @@ static const char* displayModeNames =
 
 const char* DisplayModeToString(DisplayMode mode) {
     int idx = (int)mode;
-    const char* s = seqstrings::IdxToStr(displayModeNames, idx);
+    const char* s = SeqStrByIndex(displayModeNames, idx);
     if (!s) {
         ReportIf(true);
         return "unknown display mode";
@@ -77,7 +77,7 @@ DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal) {
     if (str::EqIS(s, "continuous single page")) {
         return DisplayMode::Continuous;
     }
-    int idx = seqstrings::StrToIdxIS(displayModeNames, s);
+    int idx = SeqStrIndexIS(displayModeNames, s);
     if (idx < 0) {
         return defVal;
     }

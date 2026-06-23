@@ -1160,14 +1160,22 @@ UINT_PTR gNoDocWhitelist[] = {
     CmdToggleSmoothScroll,
     CmdToggleScrollbarInSinglePage,
     CmdToggleLazyLoading,
+    CmdToggleEscToExit,
     CmdToggleFullscreen,
     CmdToggleMenuBar,
     CmdToggleToolbar,
     CmdToggleUseTabs,
+    CmdToggleTabsMru,
     CmdToggleTips,
     CmdToggleFrequentlyRead,
     CmdToggleChmUI,
     CmdToggleReuseInstance,
+    CmdToggleHoverPreview,
+    CmdToggleInverseSearch,
+    CmdToggleLinks,
+    CmdToggleWindowsPreviewer,
+    CmdToggleWindowsSearchFilter,
+    CmdInvertColors,
     CmdFavoriteToggle,
     CmdShowLog,
     CmdClearHistory,
@@ -1178,6 +1186,7 @@ UINT_PTR gNoDocWhitelist[] = {
     CmdDebugCrashMe,
     CmdDebugCorruptMemory,
     CmdScreenshot,
+    CmdPasteClipboardImage,
     CmdTabGroupRestore,
     CmdSetScreenshotHotkey,
     0,
@@ -1305,6 +1314,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdForgetSelectedDocument,
     CmdInvokeInverseSearch,
     CmdSetInverseSearch,
+    CmdPasteClipboardImage,
     CmdCreateShortcutToFile,
     CmdSaveEmbeddedFile,
     CmdShowLog,
@@ -1533,7 +1543,8 @@ static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
     int idFirst = CmdOpenWithKnownExternalViewerFirst + 1;
     int idLast = CmdOpenWithKnownExternalViewerLast;
     for (int cmdId = idFirst; cmdId < idLast; cmdId++) {
-        auto [remove, disable] = GetCommandIdState(ctx, cmdId);
+        bool remove, disable;
+        GetCommandIdState(ctx, cmdId, &remove, &disable);
         if (remove || disable) {
             MenuRemove(menu, cmdId);
         }
@@ -1598,8 +1609,8 @@ static void MenuSetEnabledForDocumentCommands(HMENU menu, bool hasDocument) {
     }
 }
 
-// returns [remove, disable] state of the command
-std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
+// sets [remove, disable] state of the command
+void GetCommandIdState(BuildMenuCtx* ctx, int cmdId, bool* removeOut, bool* disableOut) {
     bool remove = false;
     bool disable = false;
     if (!HasPermission(Perm::InternetAccess)) {
@@ -1660,7 +1671,9 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
     }
 
     if (!ctx) {
-        return {remove, disable};
+        *removeOut = remove;
+        *disableOut = disable;
+        return;
     }
 
     {
@@ -1668,7 +1681,9 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
         int idLast = CmdOpenWithKnownExternalViewerLast;
         if (cmdId >= idFirst && cmdId <= idLast) {
             remove = !CanViewWithKnownExternalViewer(ctx->tab, cmdId);
-            return {remove, disable};
+            *removeOut = remove;
+            *disableOut = disable;
+            return;
         }
     }
 
@@ -1709,7 +1724,8 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
         disable |= !ctx->tab || !ctx->tab->win || !HasOpenedDocuments(ctx->tab->win);
     }
 
-    return {remove, disable};
+    *removeOut = remove;
+    *disableOut = disable;
 }
 
 HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
@@ -1765,7 +1781,8 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             continue;
         }
 
-        auto [removeMenu, disableMenu] = GetCommandIdState(ctx, cmdId);
+        bool removeMenu, disableMenu;
+        GetCommandIdState(ctx, cmdId, &removeMenu, &disableMenu);
         if (ctx) {
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
             removeMenu |= !ctx->hasSelection && (subMenuDef == menuDefCreateAnnotFromSelection);

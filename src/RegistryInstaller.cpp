@@ -144,7 +144,7 @@ static bool RegisterForDefaultPrograms(HKEY hkey, const char* installedExePath) 
         // FileAssociations ProgID can't be resolved under HKCR
         char* progIDName = str::JoinTemp(kAppName, ext);
         ok &= LoggedWriteRegStr(hkey, keyAssoc, ext, progIDName);
-        seqstrings::Next(ext);
+        SeqStrNext(ext);
     }
 
     ok &= LoggedWriteRegStr(hkey, "SOFTWARE\\RegisteredApplications", kAppName, appCapabilityPath);
@@ -235,7 +235,7 @@ static bool RegisterForOpenWith(HKEY hkey, const char* installedExePath) {
         key = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
         ok &= LoggedWriteRegNone(hkey, key, progIDName);
 
-        seqstrings::Next(exts);
+        SeqStrNext(exts);
     }
     return ok;
 }
@@ -262,7 +262,7 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
         WCHAR* ext = ToWStrTemp(exts);
         WCHAR* name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
         ok &= CreateRegKey(hkey, name);
-        seqstrings::Next(exts);
+        SeqStrNext(exts);
     }
     return ok;
 }
@@ -629,7 +629,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
         *p = 0;
         DeleteEmptyRegKey(hkey, keyname);
     Next:
-        seqstrings::Next(exts);
+        SeqStrNext(exts);
     }
 
     // those were introduced in 3.4
@@ -643,7 +643,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
         key = str::JoinTemp("Software\\Classes\\", exts, "\\OpenWithProgids");
         LoggedDeleteRegValue(hkey, key, progIDName);
 
-        seqstrings::Next(exts);
+        SeqStrNext(exts);
     }
 
     // delete keys written in ListAsDefaultProgramWin10()

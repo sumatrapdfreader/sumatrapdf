@@ -24,3 +24,5 @@ void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked);
 // switch the find UI between the compact toolbar overlay and the floating
 // window (persists the choice in gGlobalPrefs->searchUIFloating)
 void ToggleFloatingFindUI(MainWindow* win);
+// focus the find edit and select all text (Ctrl+F when find UI is already open)
+void FocusFindEditSelectAll(MainWindow* win);

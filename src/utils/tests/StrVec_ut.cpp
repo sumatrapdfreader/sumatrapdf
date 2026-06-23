@@ -17,10 +17,10 @@ static void ValidateSize(StrVec* v) {
     utassert(size1 == size2);
 }
 
-static void ValidateAtSpan(StrVec* v, int idx, const char* s) {
-    StrSpan sp = v->AtSpan(idx);
-    ReportIf(!str::Eq(s, sp.d));
-    ReportIf(str::Leni(s) != sp.size);
+static void ValidateAtStr(StrVec* v, int idx, const char* s) {
+    Str sp = v->AtStr(idx);
+    ReportIf(!str::Eq(s, sp.s));
+    ReportIf(str::Leni(s) != sp.len);
 }
 
 static void strEq(const char* s1, const char* s2) {
@@ -585,22 +585,22 @@ static void InsertRandData(StrVecWithData<T>* v) {
 template <typename T>
 static void validateStringMatchesData(StrVecWithData<T>* v) {
     int nStrings = v->Size();
-    StrSpan got;
+    Str got;
     const char* exp;
     T* d;
     int n;
     for (int i = 0; i < nStrings; i++) {
         d = v->AtData(i);
         n = (int)d->n;
-        got = v->AtSpan(i);
+        got = v->AtStr(i);
         exp = StrForN(n);
-        utassert(str::Eq(got.CStr(), exp));
+        utassert(str::Eq(got.s, exp));
     }
 }
 
 template <typename T>
 static void InsertRandData2(StrVecWithData<T>* v) {
-    StrSpan got;
+    Str got;
     for (int i = 0; i < kMaxStringN; i++) {
         int op = rand() % 12;
         if (op <= 5) {
@@ -608,7 +608,7 @@ static void InsertRandData2(StrVecWithData<T>* v) {
             data.n = (decltype(data.n))i;
             const char* s = StrForN(i);
             int idx = v->Append(s, data);
-            ValidateAtSpan(v, idx, s);
+            ValidateAtStr(v, idx, s);
             T* d = v->AtData(idx);
             utassert(d->n == i);
         } else if (op <= 7) {
@@ -616,7 +616,7 @@ static void InsertRandData2(StrVecWithData<T>* v) {
                 int idx = randIdx(v);
                 const char* s = StrForN(idx);
                 v->InsertAt(idx, s);
-                ValidateAtSpan(v, idx, s);
+                ValidateAtStr(v, idx, s);
                 T* d = v->AtData(idx);
                 d->n = (decltype(d->n))idx;
             }
@@ -625,7 +625,7 @@ static void InsertRandData2(StrVecWithData<T>* v) {
                 int idx = randIdx(v);
                 const char* s = StrForN(idx);
                 v->SetAt(idx, s);
-                ValidateAtSpan(v, idx, s);
+                ValidateAtStr(v, idx, s);
                 T* d = v->AtData(idx);
                 d->n = (decltype(d->n))idx;
             }

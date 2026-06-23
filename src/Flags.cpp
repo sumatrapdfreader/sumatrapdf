@@ -135,7 +135,7 @@ static const char* zoomValues =
 static void ParseZoomValue(float* zoom, const char* txtOrig) {
     auto txtDup = str::DupTemp(txtOrig);
     char* txt = str::ToLowerInPlace(txtDup);
-    int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
+    int zoomVal = SeqStrIndex(zoomValues, txt);
     if (zoomVal >= 0) {
         // 0-2 : fit page
         // 3-5 : fit width
@@ -192,7 +192,7 @@ static Arg GetArg(const char* s) {
         return Arg::Unknown;
     }
     const char* arg = s + 1;
-    int idx = seqstrings::StrToIdxIS(gArgNames, arg);
+    int idx = SeqStrIndexIS(gArgNames, arg);
     if (idx < 0) {
         return Arg::Unknown;
     }
@@ -323,7 +323,7 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, const char* toolNames)
     // if the first argument is a tool name, skip parsing flags entirely
     if (toolNames && args.curr < args.nArgs) {
         const char* firstArg = args.at(args.curr);
-        if (firstArg && seqstrings::StrToIdxIS(toolNames, firstArg) >= 0) {
+        if (firstArg && SeqStrIndexIS(toolNames, firstArg) >= 0) {
             return;
         }
     }

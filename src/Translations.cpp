@@ -70,12 +70,12 @@ static void FreeTranslations() {
     gTranslationCache = nullptr;
 }
 
-static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
+static void ParseTranslationsTxt(Str d, const char* langCode) {
     langCode = str::JoinTemp(langCode, ":");
     int nLangCode = str::Len(langCode);
 
     StrVec lines;
-    Split(&lines, d.CStr(), "\n", true);
+    Split(&lines, d.s, "\n", true);
     int nStrings = 0;
     for (char* l : lines) {
         if (l[0] == ':') {
@@ -144,8 +144,8 @@ const char* GetTranslation(const char* s) {
     int sLen = str::Leni(s);
     for (int i = 0; i < n; i++) {
         int idx = i * 2;
-        StrSpan s2 = c->AtSpan(idx);
-        if (s2.Len() == sLen && str::Eq(s, s2.CStr())) {
+        Str s2 = c->AtStr(idx);
+        if (s2.len == sLen && str::Eq(s, s2.s)) {
             auto tr = c->At(idx + 1);
             if (!tr) {
                 logf("Didn't find translation for '%s'\n", s);
@@ -184,7 +184,7 @@ void SetCurrentLangByCode(const char* langCode) {
         return;
     }
 
-    int idx = seqstrings::StrToIdx(gLangCodes, langCode);
+    int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
         logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode);
         // set to English
@@ -225,14 +225,14 @@ void SetCurrentLangByCode(const char* langCode) {
         return;
     }
     int dataSize = (int)(archive.files[fileIdx].uncompressedSize);
-    StrSpan d = {(char*)data, dataSize};
+    Str d((char*)data, dataSize);
     ParseTranslationsTxt(d, langCode);
     free(data);
 }
 
 const char* ValidateLangCode(const char* langCode) {
     if (!langCode) return nullptr;
-    int idx = seqstrings::StrToIdx(gLangCodes, langCode);
+    int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
         return nullptr;
     }
@@ -240,11 +240,11 @@ const char* ValidateLangCode(const char* langCode) {
 }
 
 const char* GetLangCodeByIdx(int idx) {
-    return seqstrings::IdxToStr(gLangCodes, idx);
+    return SeqStrByIndex(gLangCodes, idx);
 }
 
 const char* GetLangNameByIdx(int idx) {
-    return seqstrings::IdxToStr(gLangNames, idx);
+    return SeqStrByIndex(gLangNames, idx);
 }
 
 bool IsCurrLangRtl() {

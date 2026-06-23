@@ -81,7 +81,7 @@ static bool PdfDateParse(const char* pdfDate, SYSTEMTIME* timeOut) {
 // Start, Author, Title, Date, Content, End
 
 static const char* PdfFilterStateToStr(PdfFilterState state) {
-    const char* res = seqstrings::IdxToStr(kPdfFilterStateStrs, (int)state);
+    const char* res = SeqStrByIndex(kPdfFilterStateStrs, (int)state);
     return res ? res : "unknown";
 }
 

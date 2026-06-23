@@ -221,7 +221,7 @@ void NoDllHijacking() {
     const char* dll = dllsToPreload;
     while (dll) {
         SafeLoadLibrary(dll);
-        seqstrings::Next(dll);
+        SeqStrNext(dll);
     }
 }
 

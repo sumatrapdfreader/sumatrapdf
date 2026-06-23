@@ -208,7 +208,7 @@ const char* GetFileActionName(int actionId) {
         return "(unknown)";
     }
     int n = actionId - 1;
-    return seqstrings::IdxToStr(gFileActionNames, n);
+    return SeqStrByIndex(gFileActionNames, n);
 }
 
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytesTransfered, LPOVERLAPPED overlapped) {

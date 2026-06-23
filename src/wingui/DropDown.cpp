@@ -94,7 +94,7 @@ void DropDown::SetItems(StrVec& newItems) {
 }
 
 static void DropDownItemsFromStringArray(StrVec& items, const char* strings) {
-    for (; strings; seqstrings::Next(strings)) {
+    for (; strings; SeqStrNext(strings)) {
         items.Append(strings);
     }
 }

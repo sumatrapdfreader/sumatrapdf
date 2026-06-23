@@ -135,7 +135,7 @@ static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
 
 static Kind GetKindByFileExt(const char* path) {
     char* ext = path::GetExtTemp(path);
-    int idx = seqstrings::StrToIdxIS(gFileExts, ext);
+    int idx = SeqStrIndexIS(gFileExts, ext);
     if (idx < 0) {
         return nullptr;
     }
@@ -149,7 +149,7 @@ static Kind GetKindByFileExt(const char* path) {
 const char* GetExtForKind(Kind kind) {
     int idx = KindIndexOf(gExtsKind, dimofi(gExtsKind), kind);
     if (idx >= 0) {
-        return seqstrings::IdxToStr(gFileExts, idx);
+        return SeqStrByIndex(gFileExts, idx);
     }
     return nullptr;
 }
@@ -558,7 +558,7 @@ static int FindImageKindIdx(Kind kind) {
 const char* GfxFileExtFromKind(Kind kind) {
     int idx = FindImageKindIdx(kind);
     if (idx >= 0) {
-        return seqstrings::IdxToStr(gImageFormatExts, idx);
+        return SeqStrByIndex(gImageFormatExts, idx);
     }
     return nullptr;
 }
