@@ -257,7 +257,8 @@ enum {
     CmdGoToNextFavorite = 446,
     CmdGoToPrevFavorite = 447,
     CmdCreateAnnotImageFromClipboard = 448,
-    CmdNone = 449,
+    CmdSetInverseSearch = 449,
+    CmdNone = 450,
 
     /* range for file history */
     CmdFileHistoryFirst,

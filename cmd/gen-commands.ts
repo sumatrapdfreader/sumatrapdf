@@ -252,6 +252,7 @@ export const commands = [
     "CmdGoToNextFavorite", "Go to Next Favorite",
     "CmdGoToPrevFavorite", "Go to Previous Favorite",
     "CmdCreateAnnotImageFromClipboard", "Create Image Annotation From Clipboard",
+    "CmdSetInverseSearch", "Set Inverse Search Command Line",
     "CmdNone", "Do nothing",
 ];
 

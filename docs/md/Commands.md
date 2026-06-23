@@ -272,6 +272,7 @@ CmdContributeTranslation,,Contribute Translation,
 CmdForgetSelectedDocument,,Remove Selected Document From History,
 CmdListPrinters,,List Printers,ver 3.7+
 CmdOptions,,Options...,
+CmdSetInverseSearch,,Set Inverse Search Command Line,"ver 3.7+, opens a dialog to set the SyncTeX inverse-search command and enables TeX enhancements"
 CmdScreenshot,,Take Screenshot,"ver 3.7+, requires Shortcuts entry (e.g. Key = PrtSc) to register global hotkey"
 CmdCropImage,,Crop Image,ver 3.7+
 CmdResizeImage,,Resize Image,ver 3.7+

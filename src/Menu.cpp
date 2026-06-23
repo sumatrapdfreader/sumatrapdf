@@ -1153,7 +1153,6 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdShowInFolder,
     CmdOpenNextFileInFolder,
     CmdOpenPrevFileInFolder,
-    CmdToggleInverseSearch,
     CmdInvokeInverseSearch,
     // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
     // are removed instead of disabled (and can remain enabled
@@ -1227,6 +1226,7 @@ UINT_PTR removeIfNoFullscreenPerms[] = {
 
 UINT_PTR removeIfNoPrefsPerms[] = {
     CmdOptions,
+    CmdSetInverseSearch,
     CmdAdvancedOptions,
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
@@ -1280,6 +1280,7 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
     CmdInvokeInverseSearch,
+    CmdSetInverseSearch,
     CmdCreateShortcutToFile,
     CmdSaveEmbeddedFile,
     CmdShowLog,

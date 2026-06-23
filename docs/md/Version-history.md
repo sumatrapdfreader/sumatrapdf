@@ -126,6 +126,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdResizeImage` : "Resize Image"
 - `CmdScreenshot` : "Take Screenshot"
 - `CmdSetScreenshotHotkey` : "Set Screenshot Hotkey"
+- `CmdSetInverseSearch` : "Set Inverse Search Command Line" — opens a dialog to configure the SyncTeX inverse-search command (`Ctrl + k` command palette)
 - `CmdSetTabColor` : "Set Tab Color"
 - `CmdStartAutoScroll` : "Start Auto-Scroll"
 - `CmdTabGroupRestore` : "Restore Tab Group"

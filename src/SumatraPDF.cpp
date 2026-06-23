@@ -4970,6 +4970,12 @@ static void ShowOptionsDialog(MainWindow* win) {
     MaybeRedrawHomePage();
 }
 
+static void SetInverseSearch(MainWindow* win) {
+    if (Dialog_SetInverseSearch(win->hwndFrame, gGlobalPrefs)) {
+        SaveSettings();
+    }
+}
+
 // toggles 'show pages continuously' state
 static void ToggleContinuousView(MainWindow* win) {
     if (!win->IsDocLoaded()) {
@@ -7301,6 +7307,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             InvokeInverseSearch(tab);
             break;
         }
+
+        case CmdSetInverseSearch:
+            SetInverseSearch(win);
+            break;
 
         case CmdSaveAnnotationsNewFile: {
             SaveAnnotationsToMaybeNewPdfFile(tab);

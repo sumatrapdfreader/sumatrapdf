@@ -88,6 +88,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdNewWindow,
     CmdContributeTranslation,
     CmdOptions,
+    CmdSetInverseSearch,
     CmdAdvancedOptions,
     CmdAdvancedSettings,
     CmdChangeLanguage,
@@ -137,6 +138,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
 // focus away from them)
 static i32 gCommandsNoActivate[] = {
     CmdOptions,
+    CmdSetInverseSearch,
     CmdChangeLanguage,
     CmdHelpAbout,
     CmdHelpOpenManual,
