@@ -236,28 +236,45 @@ void FindWindowWnd::Layout() {
     int pad = DpiScale(hwnd, 8);
     int gap = DpiScale(hwnd, 6);
     int statusDx = DpiScale(hwnd, 90);
+    int minEditDx = DpiScale(hwnd, 48);
 
     int editDy = edit->GetIdealSize().dy;
     SIZE tbSz{};
     SendMessageW(hwndBtns, TB_GETMAXSIZE, 0, (LPARAM)&tbSz);
-    int rowDy = std::max(editDy, (int)tbSz.cy);
+    int tbW = (int)tbSz.cx;
+    int tbH = (int)tbSz.cy;
+
+    int contentDx = std::max(0, rc.dx - 2 * pad);
+    // minimum width for [edit][status][toolbar] on one row without overlap
+    int singleRowDx = minEditDx + gap + statusDx + gap + tbW;
+
     int y = pad;
-
-    int tbX = rc.dx - pad - (int)tbSz.cx;
-    MoveWindow(hwndBtns, tbX, y + (rowDy - (int)tbSz.cy) / 2, (int)tbSz.cx, (int)tbSz.cy, TRUE);
-    int statusX = tbX - gap - statusDx;
-    MoveWindow(status->hwnd, statusX, y + (rowDy - editDy) / 2, statusDx, editDy, TRUE);
-    int editX = pad;
-    int editDx = statusX - gap - editX;
-    if (editDx < DpiScale(hwnd, 40)) {
-        editDx = DpiScale(hwnd, 40);
+    int headerDy;
+    if (contentDx >= singleRowDx) {
+        // wide: [edit][n/m][toolbar]
+        headerDy = std::max(editDy, tbH);
+        int tbX = pad + contentDx - tbW;
+        int statusX = tbX - gap - statusDx;
+        int editDx = statusX - gap - pad;
+        MoveWindow(hwndBtns, tbX, y + (headerDy - tbH) / 2, tbW, tbH, TRUE);
+        MoveWindow(status->hwnd, statusX, y + (headerDy - editDy) / 2, statusDx, editDy, TRUE);
+        MoveWindow(edit->hwnd, pad, y + (headerDy - editDy) / 2, editDx, editDy, TRUE);
+    } else {
+        // narrow: full-width edit, then [n/m][toolbar] (issue #5692)
+        MoveWindow(edit->hwnd, pad, y, contentDx, editDy, TRUE);
+        y += editDy + gap;
+        headerDy = editDy + gap + std::max(editDy, tbH);
+        int row2Dy = std::max(editDy, tbH);
+        int statusW = std::max(0, contentDx - gap - tbW);
+        MoveWindow(status->hwnd, pad, y + (row2Dy - editDy) / 2, statusW, editDy, TRUE);
+        int tbX = pad + contentDx - tbW;
+        MoveWindow(hwndBtns, tbX, y + (row2Dy - tbH) / 2, tbW, tbH, TRUE);
     }
-    MoveWindow(edit->hwnd, editX, y + (rowDy - editDy) / 2, editDx, editDy, TRUE);
 
-    // the results list fills the rest of the window below the search row
-    int listTop = y + rowDy + pad;
+    // the results list fills the rest of the window below the header
+    int listTop = pad + headerDy + pad;
     int listDy = std::max(0, rc.dy - listTop - pad);
-    MoveWindow(results->hwnd, pad, listTop, std::max(0, rc.dx - 2 * pad), listDy, TRUE);
+    MoveWindow(results->hwnd, pad, listTop, contentDx, listDy, TRUE);
 }
 
 void FindWindowWnd::RefreshResults() {
@@ -496,8 +513,21 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             break;
         case WM_GETMINMAXINFO: {
             auto mmi = (MINMAXINFO*)lp;
-            mmi->ptMinTrackSize.x = DpiScale(h, 280);
-            mmi->ptMinTrackSize.y = DpiScale(h, 120);
+            int pad = DpiScale(h, 8);
+            int gap = DpiScale(h, 6);
+            int editDy = edit ? edit->GetIdealSize().dy : DpiScale(h, 22);
+            int tbH = DpiScale(h, 24);
+            int tbW = DpiScale(h, 120);
+            if (hwndBtns) {
+                SIZE tbSz{};
+                SendMessageW(hwndBtns, TB_GETMAXSIZE, 0, (LPARAM)&tbSz);
+                tbW = (int)tbSz.cx;
+                tbH = (int)tbSz.cy;
+            }
+            int row2Dy = std::max(editDy, tbH);
+            // narrow two-row header: edit, then status+toolbar
+            mmi->ptMinTrackSize.x = 2 * pad + std::max(tbW, DpiScale(h, 160));
+            mmi->ptMinTrackSize.y = 2 * pad + editDy + gap + row2Dy + pad + DpiScale(h, 48);
             return 0;
         }
         case WM_CLOSE:
