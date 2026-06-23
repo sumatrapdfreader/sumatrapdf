@@ -15,6 +15,18 @@ constexpr const int kNotifDefaultTimeOut = 1000 * 3; // 3 seconds
 constexpr const int kNotif5SecsTimeOut = 1000 * 5;
 constexpr const int kNotifNoTimeout = 0;
 
+// which corner of the canvas the notification is anchored to (multiple
+// notifications in the same corner stack toward the opposite edge)
+enum class NotifCorner {
+    TopLeft, // default; how notifications were always positioned
+    TopRight,
+    BottomLeft,
+    BottomRight,
+};
+
+// default distance (in unscaled px) from the canvas edges
+constexpr const int kNotifDefaultMargin = 8;
+
 struct NotificationCreateArgs {
     HWND hwndParent = nullptr;
     HFONT font = nullptr;
@@ -24,6 +36,9 @@ struct NotificationCreateArgs {
     int timeoutMs = 0;    // if 0 => persists until closed manually
     int delayInMs = 0;    // if > 0 => create hidden, show after delay
     float shrinkLimit = 1.0f;
+    NotifCorner corner = NotifCorner::TopLeft;
+    int xMargin = kNotifDefaultMargin; // distance from the left/right edge
+    int yMargin = kNotifDefaultMargin; // distance from the top/bottom edge
     const char* msg = nullptr;
     // if set, the notification is only shown while this tab is the active tab
     // (hidden when switching to another tab in the same window)

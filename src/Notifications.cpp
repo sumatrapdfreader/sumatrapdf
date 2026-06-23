@@ -75,6 +75,11 @@ struct NotificationWnd : Wnd {
     // ShowNotificationsForActiveTab)
     WindowTab* tab = nullptr;
 
+    // which canvas corner to anchor to, and distance from the edges
+    NotifCorner corner = NotifCorner::TopLeft;
+    int xMargin = kNotifDefaultMargin;
+    int yMargin = kNotifDefaultMargin;
+
     // to reduce flicker, we might ask the window to shrink the size less often
     // (notifcation windows are only shrunken if by less than factor shrinkLimit)
     float shrinkLimit = 1.0f;
@@ -129,9 +134,11 @@ void RelayoutNotifications(HWND hwndCanvas) {
     }
 
     Rect frame = ClientRect(hwndCanvas);
-    int topLeftMargin = DpiScale(hwndCanvas, kTopLeftMargin);
     int dyPadding = DpiScale(hwndCanvas, kPadding);
-    int y = topLeftMargin;
+    bool isRtl = IsUIRtl();
+    // running vertical offset per corner so multiple notifications in the same
+    // corner stack toward the opposite edge
+    int yOffset[4] = {};
     for (int i = 0; i < nWnds; i++) {
         NotificationWnd* wnd = wnds[i];
         if (wnd->delayTimerId != 0) {
@@ -142,24 +149,29 @@ void RelayoutNotifications(HWND hwndCanvas) {
             // hidden because it's tied to a non-active tab; don't reserve space
             continue;
         }
+        int xMargin = DpiScale(hwndCanvas, wnd->xMargin);
+        int yMargin = DpiScale(hwndCanvas, wnd->yMargin);
         Rect rect = WindowRect(wnd->hwnd);
         // re-wrap the message if the notification no longer fits
         // (e.g. when the window was made smaller, issue #2916)
-        int maxDx = frame.dx - (2 * topLeftMargin);
+        int maxDx = frame.dx - (2 * xMargin);
         if (maxDx > 0 && rect.dx > maxDx) {
             wnd->Layout(HwndGetTextTemp(wnd->hwnd));
             rect = WindowRect(wnd->hwnd);
         }
-        rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
-        if (IsUIRtl()) {
-            int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
-            rect.x = frame.dx - rect.dx - topLeftMargin - cxVScroll;
-        } else {
-            rect.x = topLeftMargin;
+
+        NotifCorner corner = wnd->corner;
+        bool atRight = (corner == NotifCorner::TopRight) || (corner == NotifCorner::BottomRight);
+        bool atBottom = (corner == NotifCorner::BottomLeft) || (corner == NotifCorner::BottomRight);
+        if (isRtl) {
+            atRight = !atRight; // mirror horizontally for right-to-left UI
         }
+        int x = atRight ? (frame.dx - rect.dx - xMargin) : xMargin;
+        int idx = (int)corner;
+        int y = atBottom ? (frame.dy - rect.dy - yMargin - yOffset[idx]) : (yMargin + yOffset[idx]);
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
-        SetWindowPos(wnd->hwnd, nullptr, rect.x, y, 0, 0, flags);
-        y += rect.dy + dyPadding;
+        SetWindowPos(wnd->hwnd, nullptr, x, y, 0, 0, flags);
+        yOffset[idx] += rect.dy + dyPadding;
     }
 }
 
@@ -241,6 +253,9 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     }
     timeoutMs = args.timeoutMs;
     tab = args.tab;
+    corner = args.corner;
+    xMargin = args.xMargin;
+    yMargin = args.yMargin;
 
     CreateCustomArgs cargs;
     cargs.parent = args.hwndParent;

@@ -1682,6 +1682,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         nargs.groupId = kNotifPersistentWarning;
         nargs.msg = msg;
         nargs.tab = win->CurrentTab(); // only show while this tab is active
+        nargs.corner = NotifCorner::BottomRight;
+        nargs.xMargin = 2;
+        nargs.yMargin = 2;
         ShowNotification(nargs);
     }
 
