@@ -68,6 +68,7 @@
 #include "EngineBase.h"
 #include "RefHover.h"
 #include "RefHoverDetect.h"
+#include "RefHoverText.h"
 
 #define REF_HOVER_CLASS L"SumatraPDFRefHover"
 
@@ -212,6 +213,7 @@ void RefHoverDestroy(RefHoverState* s) {
     }
     delete s->bmp;
     s->bmp = nullptr;
+    RefHoverFreeLookupCache(s);
     delete s;
 }
 
@@ -257,13 +259,23 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
         popupH = boundH;
     }
 
-    // Horizontally: center the popup on the source page (not the canvas /
-    // monitor edge) so when the popup is wider than the page text column it
-    // expands symmetrically into the gray margins. The popup's X is
-    // independent of the cursor so consecutive hovers on the same page
-    // don't make the popup jump horizontally.
+    // Horizontal placement:
+    //  - Narrow popup (fits within a text column, ~half the page for a
+    //    2-column layout): center it on the column under the cursor, so a
+    //    reference-entry preview stays visually attached to the citation.
+    //  - Wider popup (figure / table / wide entry): center on the source page
+    //    so it expands symmetrically into the gray margins, independent of the
+    //    cursor (consecutive hovers don't make a wide popup jump).
     int pageCenterX = (pr.dx > 0) ? (pr.x + pr.dx / 2) : screenPt.x;
-    int x = pageCenterX - popupW / 2;
+    int anchorX = pageCenterX;
+    if (pr.dx > 0) {
+        int colWidth = pr.dx / 2;
+        if (popupW <= colWidth) {
+            // quarter / three-quarter point = center of the cursor's column
+            anchorX = (screenPt.x >= pageCenterX) ? (pr.x + pr.dx * 3 / 4) : (pr.x + pr.dx / 4);
+        }
+    }
+    int x = anchorX - popupW / 2;
     // Vertically: gap above/below the cursor so 1-2 lines of context around
     // the hovered word stay visible. Prefer below cursor; flip above if
     // overflow. If neither side fits the full popup, shrink popupH to

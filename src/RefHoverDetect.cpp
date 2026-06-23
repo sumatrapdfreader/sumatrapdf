@@ -8,6 +8,8 @@
 
 #include "utils/BaseUtil.h"
 
+#include <wctype.h>
+
 static constexpr float kAnchorTopMarginPt = 6.f;
 // pt of padding around the detected entry box.
 static constexpr float kEntryPadPt = 6.f;
@@ -456,7 +458,9 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
             continue;
         }
         // Optional ".M" form.
+        bool hadDot = false;
         if (p >= 0 && text[p] == L'.' && coords[p].y == ly) {
+            hadDot = true;
             p--;
             int d2 = 0;
             while (p >= 0 && str::IsDigit(text[p]) && coords[p].y == ly) {
@@ -468,6 +472,14 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
             }
         }
         if (p < 0 || text[p] != L'(' || coords[p].y != ly) {
+            continue;
+        }
+        // Reject a 4-digit "(YYYY)" — a citation year at the end of a
+        // bibliography line ("... IGI Global (2013).") is not a display-equation
+        // label. Real equation numbers are 1-3 digits or an "N.M" form; a plain
+        // 4-digit parenthesised number in a reference list is a year, and
+        // matching it would render the whole (full-width) reference row.
+        if (!hadDot && digits >= 4) {
             continue;
         }
         int labelLeftX = coords[p].x;
@@ -595,10 +607,16 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // a few pt left of destX still matches.
     int columnLeft = (destX >= 0.f) ? dX - 15 : INT_MIN;
 
-    // 1. Find the start glyph: top-left non-whitespace glyph with
-    //    y in [destY-5, destY+30] and x at-or-right-of columnLeft.
+    // 1. Find the start glyph: the non-whitespace glyph on the line nearest
+    //    destY (within [destY-5, destY+30]) and at-or-right-of columnLeft,
+    //    tie-broken by leftmost x. Selecting by nearness to destY (rather than
+    //    the globally-topmost line in the window) keeps the start on the
+    //    destination's own entry: in a 2-column reference list, a neighbouring
+    //    column's line a few pt above destY would otherwise win the topmost
+    //    pick (columnLeft only bounds the left side, so the other column's
+    //    larger x still passes) and the popup would render the wrong column.
     int startIdx = -1;
-    int bestY = INT_MAX;
+    int bestDistY = INT_MAX;
     int bestX = INT_MAX;
     for (int i = 0; i < textLen; i++) {
         WCHAR c = text[i];
@@ -612,8 +630,9 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         if (r.x < columnLeft) {
             continue;
         }
-        if (r.y < bestY || (r.y == bestY && r.x < bestX)) {
-            bestY = r.y;
+        int distY = (r.y >= dY) ? (r.y - dY) : (dY - r.y);
+        if (distY < bestDistY || (distY == bestDistY && r.x < bestX)) {
+            bestDistY = distY;
             bestX = r.x;
             startIdx = i;
         }
@@ -637,7 +656,15 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         int leftIdx = startIdx;
         int leftX = coords[startIdx].x;
         LineRunExtent(text, coords, textLen, startIdx, &leftIdx, &leftX, &lineRunRightX);
-        startIdx = leftIdx;
+        // Only adopt the walked-left line start when startIdx didn't already
+        // land on the entry's "[" label. The left walk exists for unreliable
+        // PDF-link destX that lands mid-line; when startIdx is already the
+        // bracket label, walking left can cross a narrow column gutter into a
+        // neighbouring column whose row text reaches close to the gutter,
+        // dragging the box into the wrong column.
+        if (text[startIdx] != L'[') {
+            startIdx = leftIdx;
+        }
     }
 
     // Tight-y walk above can miss a "[VB25]"-style label that sits on a
@@ -674,15 +701,48 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         }
     }
 
-    // glyphs right of this aren't part of the entry's column (2-column
-    // layouts); the slack covers ragged-right lines longer than line 1
+    // Right edge of the entry's column. Provisional value from the first
+    // line's run; replaced below (once the entry's vertical extent is known) by
+    // a gutter-aware scan of the page's column structure.
     int columnRightX = lineRunRightX + 40;
+    // Left x of the entry body when it sits past a labelsep gap from the label
+    // (hanging-indent "[TA05]  body"); -1 when label and body share one run.
+    // The column scan starts here so it doesn't mistake the labelsep gap for a
+    // gutter and clip the body.
+    int entryBodyLeftX = -1;
 
     int firstLineLeftX = coords[startIdx].x;
     int firstLineY = coords[startIdx].y;
     int firstLineDy = coords[startIdx].dy;
     if (firstLineDy <= 0) {
         firstLineDy = 12;
+    }
+
+    // For a bracket label ("[N]" / "[Foo+09]"), the body starts just after the
+    // closing "]". The gap between label and body (labelsep) is internal to the
+    // entry but looks like a column gutter to the column scan below; start that
+    // scan at the body so the labelsep isn't mistaken for a gutter (which would
+    // clip the body to the label width).
+    if (text[startIdx] == L'[') {
+        int yTol = firstLineDy > 6 ? firstLineDy : 8;
+        for (int i = startIdx + 1; i < textLen; i++) {
+            if (abs(coords[i].y - firstLineY) > yTol) {
+                continue;
+            }
+            if (text[i] == L']') {
+                for (int j = i + 1; j < textLen; j++) {
+                    WCHAR cj = text[j];
+                    if (cj == L' ' || cj == L'\t' || cj == L'\n' || cj == L'\r') {
+                        continue;
+                    }
+                    if (abs(coords[j].y - firstLineY) <= yTol && coords[j].x > coords[i].x) {
+                        entryBodyLeftX = coords[j].x;
+                    }
+                    break;
+                }
+                break;
+            }
+        }
     }
 
     // Hanging-indent bracket entry: biblatex sizes the label column for the
@@ -696,7 +756,15 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // is dense and stops at a real column gutter, so this stays 2-column-safe;
     // the bridge itself is capped at kMaxLabelSepPt, well under a gutter, so
     // it can't jump into an adjacent column.
-    if (text[startIdx] == L'[') {
+    //
+    // Only bridge when the first-line run is label-sized. When the label and
+    // body share one line with no labelsep gap (e.g. "[2] M. Anvaari, …"),
+    // LineRunExtent already spans the whole line and lineRunRightX sits at the
+    // column's right edge — bridging from there would reach across a narrow
+    // gutter (which can be < kMaxLabelSepPt) into the next column, blowing the
+    // box width into the neighbouring entry.
+    constexpr int kMaxLabelWidthPt = 70;
+    if (text[startIdx] == L'[' && (lineRunRightX - firstLineLeftX) < kMaxLabelWidthPt) {
         constexpr int kMaxLabelSepPt = 50;
         int bandBot = firstLineY + (firstLineDy > 10 ? firstLineDy : 10);
         int bodyIdx = -1;
@@ -721,8 +789,100 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         if (bodyIdx >= 0) {
             int bLeftIdx, bLeftX, bRightX;
             LineRunExtent(text, coords, textLen, bodyIdx, &bLeftIdx, &bLeftX, &bRightX);
+            entryBodyLeftX = bLeftX;
             if (bRightX + 40 > columnRightX) {
                 columnRightX = bRightX + 40;
+            }
+        }
+    }
+
+    // Entry line pitch (top-to-top of the first two lines): a stable measure of
+    // inter-line spacing, unlike the tall "[" label glyph (firstLineDy). The
+    // scan is bounded to roughly one column width right of the entry left so a
+    // neighbouring column's line isn't mistaken for the next line.
+    int linePitch = firstLineDy > 0 ? firstLineDy : 12;
+    {
+        constexpr int kColWidthMax = 250;
+        int nextTop = INT_MAX;
+        for (int i = 0; i < textLen; i++) {
+            WCHAR c = text[i];
+            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                continue;
+            }
+            Rect r = coords[i];
+            if (r.x < firstLineLeftX - 20 || r.x > firstLineLeftX + kColWidthMax) {
+                continue;
+            }
+            if (r.y > firstLineY + 2 && r.y < nextTop) {
+                nextTop = r.y;
+            }
+        }
+        if (nextTop != INT_MAX) {
+            int p = nextTop - firstLineY;
+            if (p >= 4 && p < linePitch * 2) {
+                linePitch = p;
+            }
+        }
+    }
+
+    // Gutter-bounded right edge of the entry's column, from the page's column
+    // structure. Scan rightward from the body (after any label), marking
+    // x-occupancy across a small band of lines around the entry, and stop at
+    // the first vertical strip empty on every row (a real column gutter). A
+    // long single line (URL) keeps its column occupied; a 2-column gutter is
+    // empty across rows so the box never crosses into the next column. Computed
+    // before the entry's vertical bounds so the trim/box below stay in-column.
+    // The band is kept near the entry (not the whole page) so a centered page
+    // number sitting in the gutter band lower down can't bridge the columns.
+    {
+        constexpr int kGutterW = 8;
+        int bandTop = firstLineY - 2 * linePitch;
+        int bandBot = firstLineY + 6 * linePitch;
+        int scanStartX = (entryBodyLeftX >= 0) ? entryBodyLeftX : firstLineLeftX;
+        int xLo = scanStartX - 5;
+        if (xLo < 0) {
+            xLo = 0;
+        }
+        int xHi = (int)mediabox.dx;
+        if (xHi > xLo + 2) {
+            int n = xHi - xLo;
+            char* occ = AllocArray<char>((size_t)n);
+            for (int i = 0; i < textLen; i++) {
+                WCHAR c = text[i];
+                if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                    continue;
+                }
+                Rect r = coords[i];
+                if (r.y < bandTop || r.y > bandBot) {
+                    continue;
+                }
+                int a = r.x - xLo;
+                int b = r.x + r.dx - xLo;
+                if (b <= 0 || a >= n) {
+                    continue;
+                }
+                if (a < 0) {
+                    a = 0;
+                }
+                if (b > n) {
+                    b = n;
+                }
+                for (int x = a; x < b; x++) {
+                    occ[x] = 1;
+                }
+            }
+            int lastOcc = scanStartX;
+            for (int x = scanStartX; x < xHi; x++) {
+                int idx = x - xLo;
+                if (idx >= 0 && idx < n && occ[idx]) {
+                    lastOcc = x + 1;
+                } else if (x - lastOcc >= kGutterW) {
+                    break;
+                }
+            }
+            free(occ);
+            if (lastOcc > firstLineLeftX) {
+                columnRightX = lastOcc;
             }
         }
     }
@@ -751,7 +911,13 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             if (r.x < firstLineLeftX - 5 || r.x > firstLineLeftX + 30) {
                 continue;
             }
-            if (r.y <= firstLineY + firstLineDy) {
+            // Half a line height below the first line's top is enough to be on a
+            // *lower* line: the next entry's "[" sits a full line-pitch down.
+            // Using the whole "[" glyph height fails when that height equals the
+            // inter-line pitch (tall bracket glyph) — the next entry then lands
+            // exactly at firstLineY+firstLineDy and is wrongly treated as the
+            // same line, so the box swallows the following entry.
+            if (r.y <= firstLineY + firstLineDy / 2) {
                 continue;
             }
             if (r.y < entryYBoundary) {
@@ -779,12 +945,15 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         // its "[" above) is never trimmed: blockBottom keeps growing past
         // entryYBoundary and the trim is a no-op.
         {
-            int lineH = firstLineDy > 0 ? firstLineDy : 12;
+            // Size the gap from the entry's line pitch (computed above), not
+            // the tall "[" glyph height, so the trim doesn't over-reach across
+            // a thin gap into a following block (e.g. a footnote past a rule).
+            int lineH = linePitch;
             int gapThresh = lineH * 3 / 2;
-            if (gapThresh < 15) {
-                gapThresh = 15;
+            if (gapThresh < 12) {
+                gapThresh = 12;
             }
-            int prevBottom = firstLineY + firstLineDy;
+            int prevBottom = firstLineY + lineH;
             int blockBottom = prevBottom;
             for (;;) {
                 int nextBottom = -1;
@@ -858,7 +1027,13 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
 
     // 2. Scan forward to find the end of the entry.
     int endIdx = textLen;
-    int prevY = firstLineY;
+    // Treat a glyph as "still on the current line" if its top y is above the
+    // line's current max-bottom (with a small overlap tolerance). This is
+    // robust to Word-style extraction quirks where glyphs on the same line
+    // have varying y values (uppercase vs lowercase top, accent marks,
+    // descenders) and may even be emitted in non-reading order.
+    int currentLineY = firstLineY;
+    int currentLineMaxBottom = firstLineY + firstLineDy;
     int prevBottom = firstLineY + firstLineDy;
     int lineHeight = firstLineDy;
 
@@ -892,10 +1067,21 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             continue;
         }
 
-        bool isNewLine = (r.y > prevY + 2);
+        // Only "major" glyphs (~letter-height) drive newline tracking.
+        // Commas, periods, apostrophes, and other punctuation have small dy
+        // and their r.y sits near the baseline, which can land at or past
+        // currentLineMaxBottom and spuriously fire newline — corrupting the
+        // measured line spacing.
+        bool isMajorGlyph = (r.dy * 2 >= firstLineDy);
+        bool isNewLine = isMajorGlyph && (r.y > currentLineMaxBottom - 2);
         if (isNewLine) {
             prevLineLeftX = currentLineLeftX;
             currentLineLeftX = r.x;
+            // Promote currentLineMaxBottom (the line we're leaving) to
+            // prevBottom *before* rule (c) checks, so the gap is measured
+            // against the immediately-previous line — not the line two
+            // transitions ago.
+            prevBottom = currentLineMaxBottom;
         } else if (r.x < currentLineLeftX) {
             currentLineLeftX = r.x;
         }
@@ -933,7 +1119,9 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         // glyph that triggered the gap is back at firstLineLeftX, the gap
         // is a blank line between description-list siblings (typical
         // abbreviation lists where each entry is separated by extra
-        // vertical space) — treat as a sibling entry boundary.
+        // vertical space) — treat as a sibling entry boundary. The
+        // major-glyph newline tracking above keeps normal line spacing from
+        // false-firing this rule, so it is safe to evaluate from line 1.
         if (r.y > prevBottom + lineHeight * 5 / 4) {
             if (atFirstLineLeftX) {
                 descListSibling = true;
@@ -951,15 +1139,42 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             endIdx = i;
             break;
         }
+        // (e) Line-count cap for author-year entries with no hanging indent —
+        // common in Word-generated PDFs where continuation lines also start at
+        // firstLineLeftX, so rule (d) would already have ended the entry. This
+        // is a last-resort bound: most author-year bib entries fit in 5-6
+        // lines, so cap at 6 to avoid bleeding into the following entry.
+        WCHAR entryFirstC = text[startIdx];
+        bool markedEntry = (entryFirstC == L'[' || entryFirstC == L'(' || (entryFirstC >= L'0' && entryFirstC <= L'9'));
+        if (!markedEntry && isNewLine && indentX < 0) {
+            int linesSinceStart = (lineHeight > 0) ? (r.y - firstLineY + lineHeight - 1) / lineHeight : 0;
+            if (linesSinceStart >= 6) {
+                endIdx = i;
+                break;
+            }
+        }
 
         // Track current line height as we go (catches changing leading).
         if (isNewLine) {
-            int dy = r.y - prevY;
+            int dy = r.y - currentLineY;
             if (dy > 4 && dy < 60) {
                 lineHeight = dy;
             }
-            prevY = r.y;
-            prevBottom = r.y + r.dy;
+            // prevBottom already promoted above (before rule checks).
+            currentLineY = r.y;
+            currentLineMaxBottom = r.y + r.dy;
+        } else {
+            // Only update line extents from major glyphs — punctuation
+            // baselines would otherwise inflate max-bottom and shrink
+            // currentLineY artificially.
+            if (isMajorGlyph) {
+                if (r.y < currentLineY) {
+                    currentLineY = r.y;
+                }
+                if (r.y + r.dy > currentLineMaxBottom) {
+                    currentLineMaxBottom = r.y + r.dy;
+                }
+            }
         }
     }
 

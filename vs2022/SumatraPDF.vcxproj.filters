@@ -255,6 +255,12 @@
     <ClInclude Include="..\src\RefHoverDetect.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\RefHoverText.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\RefHoverTextDetect.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\RegistryPreview.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -618,6 +624,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RefHoverDetect.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RefHoverText.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RefHoverTextDetect.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RegistryInstaller.cpp">

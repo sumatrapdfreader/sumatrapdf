@@ -3,11 +3,15 @@
 
 class EngineBase;
 struct RenderedBitmap;
+struct RefLookupCache;
 
 struct RefHoverState {
     HWND hwndPopup = nullptr;
     // currently shown rendered destination strip (owned)
     RenderedBitmap* bmp = nullptr;
+
+    // cache of plain-text citation lookups (lazy-init on first use)
+    RefLookupCache* lookupCache = nullptr;
 
     // Pending hover request: set by RefHoverSchedule, consumed by
     // RefHoverOnTimer when the hover-delay timer fires.
