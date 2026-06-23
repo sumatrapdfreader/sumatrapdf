@@ -59,8 +59,9 @@ char* TestSynctexResult(const char* pdfPath, const char* srcPath, int line) {
             out.AppendFmt("ret=%d page=%d nrects=%d src=%s line=%d", ret, page, rects.Size(), srcPath, line);
             if (rects.Size() > 0) {
                 Rect r = rects.at(0);
-                out.AppendFmt(" rect_x=%d rect_y=%d rect_dx=%d rect_dy=%d\n", r.x, r.y, r.dx, r.dy);
+                out.AppendFmt(" rect_x=%d rect_y=%d rect_dx=%d rect_dy=%d", r.x, r.y, r.dx, r.dy);
             }
+            out.Append("\n");
             delete sync;
         }
         SafeEngineRelease(&engine);

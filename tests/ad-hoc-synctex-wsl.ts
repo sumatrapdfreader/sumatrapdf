@@ -174,7 +174,7 @@ async function inverseSearch(
   const [, rawArg] = await runControlCommand(EXE, ControlCommand.TestInverseSearch, [pdfPath, page, x, y]);
   const raw = String(rawArg).trim();
 
-  const m = raw.match(/ret=(-?\d+)\s+srcfile=(.*)\s+line=(-?\d+)\s+col=(-?\d+)/);
+  const m = raw.match(/^ret=(-?\d+)\s+srcfile=(.*?)\s+line=(-?\d+)\s+col=(-?\d+)$/);
   if (!m) {
     throw Error(`(inverseSearch: parse error) raw: ${raw}`);
   }
@@ -226,7 +226,7 @@ function compileFiles(
     // convert workDir to a format that can be used by tectonic in wsl
     const WslCompatibleWorkDir = windowsPathToWslMountPath(workDir) ?? wslUncPathToUnixPath(workDir);
     if (!WslCompatibleWorkDir) {
-      throw new Error(`Source path is neither a Windows path nor a WSL UNC path: ${srcPath}`);
+      throw new Error(`Work dir is neither a Windows path nor a WSL UNC path: ${workDir}`);
     }
     workDirForTectonic = WslCompatibleWorkDir;
   }

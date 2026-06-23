@@ -12,6 +12,8 @@ export enum ControlCommand {
   TestTripleClickLineSelect = 16,
   TestContextMenuSelection = 17,
   TestGoToFindMatch = 18,
+  // IDs 19-21 unused (reserved on the -dbg-control wire protocol; do not renumber).
+  // Assign new test commands starting at 23.
   TestInverseSearch = 22,
 }
 
