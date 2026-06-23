@@ -188,7 +188,8 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
     }
     auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
     AutoRun delCtx(DeleteBuildMenuCtx, ctx);
-    auto [remove, disable] = GetCommandIdState(ctx, cmdId);
+    bool remove, disable;
+    GetCommandIdState(ctx, cmdId, &remove, &disable);
     return !remove;
 }
 
@@ -206,7 +207,8 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
             return true;
     }
 
-    auto [remove, disable] = GetCommandIdState(ctx, cmdId);
+    bool remove, disable;
+    GetCommandIdState(ctx, cmdId, &remove, &disable);
     if (remove || disable) {
         return false;
     }

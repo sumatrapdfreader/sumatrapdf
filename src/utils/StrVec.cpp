@@ -466,16 +466,18 @@ int AppendIfNotExists(StrVec* v, const char* s, int sLen) {
     return idx;
 }
 
-static std::pair<StrVecPage*, int> PageForIdx(const StrVec* v, int idx) {
+static StrVecPage* PageForIdx(const StrVec* v, int idx, int* idxInPageOut) {
     auto page = v->first;
     while (page) {
         if (page->nStrings > idx) {
-            return {page, idx};
+            *idxInPageOut = idx;
+            return page;
         }
         idx -= page->nStrings;
         page = page->next;
     }
-    return {page, 0};
+    *idxInPageOut = 0;
+    return page;
 }
 
 // returns a string
@@ -486,7 +488,8 @@ char* StrVec::SetAt(int idx, const char* s, int sLen) {
         sLen = str::Leni(s);
     }
     {
-        auto [page, idxInPage] = PageForIdx(this, idx);
+        int idxInPage;
+        auto page = PageForIdx(this, idx, &idxInPage);
         char* res = page->SetAt(idxInPage, s, sLen);
         if (res != kNoSpace) {
             InvalidateSortIndexes(this);
@@ -512,7 +515,8 @@ char* StrVec::InsertAt(int idx, const char* s, int sLen) {
     }
 
     {
-        auto [page, idxInPage] = PageForIdx(this, idx);
+        int idxInPage;
+        auto page = PageForIdx(this, idx, &idxInPage);
         if (sLen < 0) {
             sLen = str::Leni(s);
         }
@@ -538,7 +542,8 @@ char* StrVec::InsertAt(int idx, const char* s, int sLen) {
 // remove string at idx and return it
 // return value is valid as long as StrVec is valid
 char* StrVec::RemoveAt(int idx) {
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     auto res = page->RemoveAt(idxInPage);
     size--;
     InvalidateSortIndexes(this);
@@ -548,7 +553,8 @@ char* StrVec::RemoveAt(int idx) {
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec is valid
 char* StrVec::RemoveAtFast(int idx) {
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     auto res = page->RemoveAtFast(idxInPage);
     size--;
     InvalidateSortIndexes(this);
@@ -569,7 +575,8 @@ char* StrVec::At(int idx) const {
     if (sortIndexes) {
         idx = sortIndexes[idx];
     }
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     return page->At(idxInPage);
 }
 
@@ -577,7 +584,8 @@ StrSpan StrVec::AtSpan(int idx) const {
     if (sortIndexes) {
         idx = sortIndexes[idx];
     }
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     return page->AtSpan(idxInPage);
 }
 
@@ -586,7 +594,8 @@ void* StrVec::AtDataRaw(int idx) const {
     if (sortIndexes) {
         idx = sortIndexes[idx];
     }
-    auto [page, idxInPage] = PageForIdx(this, idx);
+    int idxInPage;
+    auto page = PageForIdx(this, idx, &idxInPage);
     return page->AtDataRaw(idxInPage);
 }
 
@@ -631,7 +640,8 @@ StrVec::iterator::iterator(const StrVec* v, int idx) {
     if (this->v->sortIndexes) {
         return;
     }
-    auto [page, idxInPage] = PageForIdx(v, idx);
+    int idxInPage;
+    auto page = PageForIdx(v, idx, &idxInPage);
     this->page = page;
     this->idxInPage = idxInPage;
 }
