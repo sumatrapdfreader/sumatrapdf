@@ -80,7 +80,7 @@ const char* GetKnownColorName(PdfColor c) {
     int n = (int)dimof(gColorsValues);
     for (int i = 0; i < n; i++) {
         if (c == gColorsValues[i]) {
-            const char* s = seqstrings::IdxToStr(gColors, i);
+            const char* s = SeqStrByIndex(gColors, i);
             return s;
         }
     }
@@ -272,7 +272,7 @@ static void HidePerAnnotControls(EditAnnotationsWindow* ew) {
 }
 
 static int FindStringInArray(const char* items, const char* toFind, int valIfNotFound = -1) {
-    int idx = seqstrings::StrToIdx(items, toFind);
+    int idx = SeqStrIndex(items, toFind);
     if (idx < 0) {
         idx = valIfNotFound;
     }
@@ -482,7 +482,7 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
 static void ItemsFromSeqstrings(StrVec& items, const char* strings) {
     while (strings) {
         items.Append(strings);
-        seqstrings::Next(strings);
+        SeqStrNext(strings);
     }
 }
 
@@ -490,7 +490,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, StrBuilder& customColo
     StrVec items;
     ItemsFromSeqstrings(items, gColors);
     const char* colorName = GetKnownColorName(col);
-    int idx = seqstrings::StrToIdx(gColors, colorName);
+    int idx = SeqStrIndex(gColors, colorName);
     if (idx < 0) {
         customColor.Reset();
         SerializePdfColor(col, customColor);
@@ -502,7 +502,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, StrBuilder& customColo
 }
 
 static PdfColor GetDropDownColor(const char* sv) {
-    int idx = seqstrings::StrToIdx(gColors, sv);
+    int idx = SeqStrIndex(gColors, sv);
     if (idx >= 0) {
         int nMaxColors = (int)dimof(gColorsValues);
         ReportIf(idx >= nMaxColors);
@@ -619,7 +619,7 @@ static void DoTextFont(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     const char* fontName = DefaultAppearanceTextFont(annot);
     // TODO: might have other fonts, like "Symb" and "ZaDb"
-    auto itemNo = seqstrings::StrToIdx(gFontNames, fontName);
+    auto itemNo = SeqStrIndex(gFontNames, fontName);
     if (itemNo < 0) {
         return;
     }
@@ -635,7 +635,7 @@ static void TextFontSelectionChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto idx = ew->dropDownTextFont->GetCurrentSelection();
-    const char* font = seqstrings::IdxToStr(gFontNames, idx);
+    const char* font = SeqStrByIndex(gFontNames, idx);
     SetDefaultAppearanceTextFont(annot, font);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);

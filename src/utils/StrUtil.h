@@ -228,14 +228,11 @@ TempStr GetFileNameTemp(const char* url);
 
 using SeqStrings = const char*;
 
-namespace seqstrings {
-
-void Next(const char*& s);
-void Next(const char*& s, int* idxInOut);
-int StrToIdx(SeqStrings strs, const char* toFind);
-int StrToIdxIS(SeqStrings strs, const char* toFind);
-const char* IdxToStr(SeqStrings strs, int idx);
-} // namespace seqstrings
+void SeqStrNext(const char*& s);
+void SeqStrNext(const char*& s, int* idxInOut);
+int SeqStrIndex(SeqStrings strs, const char* toFind);
+int SeqStrIndexIS(SeqStrings strs, const char* toFind);
+const char* SeqStrByIndex(SeqStrings strs, int idx);
 
 #define _MemToHex(ptr) str::MemToHex((const u8*)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (u8*)(ptr), sizeof(*ptr))

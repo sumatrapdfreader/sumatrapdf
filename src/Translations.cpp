@@ -184,7 +184,7 @@ void SetCurrentLangByCode(const char* langCode) {
         return;
     }
 
-    int idx = seqstrings::StrToIdx(gLangCodes, langCode);
+    int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
         logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode);
         // set to English
@@ -232,7 +232,7 @@ void SetCurrentLangByCode(const char* langCode) {
 
 const char* ValidateLangCode(const char* langCode) {
     if (!langCode) return nullptr;
-    int idx = seqstrings::StrToIdx(gLangCodes, langCode);
+    int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
         return nullptr;
     }
@@ -240,11 +240,11 @@ const char* ValidateLangCode(const char* langCode) {
 }
 
 const char* GetLangCodeByIdx(int idx) {
-    return seqstrings::IdxToStr(gLangCodes, idx);
+    return SeqStrByIndex(gLangCodes, idx);
 }
 
 const char* GetLangNameByIdx(int idx) {
-    return seqstrings::IdxToStr(gLangNames, idx);
+    return SeqStrByIndex(gLangNames, idx);
 }
 
 bool IsCurrLangRtl() {

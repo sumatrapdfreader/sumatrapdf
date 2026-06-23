@@ -149,7 +149,7 @@ TempStr WinMsgNameTemp(UINT msg) {
     for (int i = 0; i < n; i++) {
         UINT m = gWinMessageIDs[i];
         if (m == msg) {
-            return (TempStr)seqstrings::IdxToStr(gWinMessageNames, i);
+            return (TempStr)SeqStrByIndex(gWinMessageNames, i);
         }
     }
     return str::FormatTemp("0x%x", (int)msg);

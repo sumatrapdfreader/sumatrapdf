@@ -45,22 +45,22 @@ static void StrReplaceTest() {
 
 static void StrSeqTest() {
     const char* s = "foo\0a\0bar\0";
-    utassert(0 == seqstrings::StrToIdx(s, "foo"));
-    utassert(1 == seqstrings::StrToIdx(s, "a"));
-    utassert(2 == seqstrings::StrToIdx(s, "bar"));
+    utassert(0 == SeqStrIndex(s, "foo"));
+    utassert(1 == SeqStrIndex(s, "a"));
+    utassert(2 == SeqStrIndex(s, "bar"));
 
-    utassert(str::Eq("foo", seqstrings::IdxToStr(s, 0)));
-    utassert(str::Eq("a", seqstrings::IdxToStr(s, 1)));
-    utassert(str::Eq("bar", seqstrings::IdxToStr(s, 2)));
+    utassert(str::Eq("foo", SeqStrByIndex(s, 0)));
+    utassert(str::Eq("a", SeqStrByIndex(s, 1)));
+    utassert(str::Eq("bar", SeqStrByIndex(s, 2)));
 
-    utassert(0 == seqstrings::StrToIdx(s, "foo"));
-    utassert(1 == seqstrings::StrToIdx(s, "a"));
-    utassert(2 == seqstrings::StrToIdx(s, "bar"));
-    utassert(-1 == seqstrings::StrToIdx(s, "fo"));
-    utassert(-1 == seqstrings::StrToIdx(s, ""));
-    utassert(-1 == seqstrings::StrToIdx(s, "ab"));
-    utassert(-1 == seqstrings::StrToIdx(s, "baro"));
-    utassert(-1 == seqstrings::StrToIdx(s, "ba"));
+    utassert(0 == SeqStrIndex(s, "foo"));
+    utassert(1 == SeqStrIndex(s, "a"));
+    utassert(2 == SeqStrIndex(s, "bar"));
+    utassert(-1 == SeqStrIndex(s, "fo"));
+    utassert(-1 == SeqStrIndex(s, ""));
+    utassert(-1 == SeqStrIndex(s, "ab"));
+    utassert(-1 == SeqStrIndex(s, "baro"));
+    utassert(-1 == SeqStrIndex(s, "ba"));
 }
 
 static void StrIsDigitTest() {

@@ -313,7 +313,7 @@ struct CommandArg {
     Type type = Type::None;
 
     // TODO: we have a fixed number of argument names
-    // we could use seqstrings and use u16 for arg name id
+    // we could use SeqStrings and use u16 for arg name id
     const char* name = nullptr;
 
     // TODO: could be a union

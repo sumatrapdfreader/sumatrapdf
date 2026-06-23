@@ -306,7 +306,7 @@ void InitializePolicies(bool restrict) {
 
     // enable policies as indicated in sumatrapdfrestrict.ini
     for (int i = 0; i < dimofi(perms); i++) {
-        const char* name = seqstrings::IdxToStr(permNames, i);
+        const char* name = SeqStrByIndex(permNames, i);
         const char* val = polsec->GetValue(name);
         if (val && atoi(val) != 0) {
             gPolicyRestrictions = gPolicyRestrictions | perms[i];
@@ -1046,7 +1046,7 @@ static void makeFullScrollbar(SCROLLINFO& si) {
 SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
 
 int ScrollbarModeFromPrefs() {
-    int idx = seqstrings::StrToIdxIS(gScrollbarModeNames, gGlobalPrefs->scrollbars);
+    int idx = SeqStrIndexIS(gScrollbarModeNames, gGlobalPrefs->scrollbars);
     if (idx < 0) {
         idx = kScrollbarWindows;
     }
@@ -6026,11 +6026,11 @@ constexpr const char* kSelectionStr = "${selection}";
 // but not fully and it might be incorrect anyway wrt. to other translation websites
 static const char* gLangsMap = "am\0hy\0by\0be\0ca-xv\0ca\0cz\0cs\0kr\0ko\0vn\0vi\0cn\0zh-CN\0tw\0zh-TW\0";
 static const char* GetISO639LangCodeFromLang(const char* lang) {
-    int idx = seqstrings::StrToIdx(gLangsMap, lang);
+    int idx = SeqStrIndex(gLangsMap, lang);
     if (idx < 0 || idx % 2 != 0) {
         return lang;
     }
-    lang = seqstrings::IdxToStr(gLangsMap, idx + 1);
+    lang = SeqStrByIndex(gLangsMap, idx + 1);
     return lang;
 }
 

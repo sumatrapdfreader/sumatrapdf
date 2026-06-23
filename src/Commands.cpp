@@ -827,7 +827,7 @@ CustomCommand* gFirstCustomCommand = nullptr;
 
 // returns -1 if not found
 static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s) {
-    int idx = seqstrings::StrToIdxIS(commands, s);
+    int idx = SeqStrIndexIS(commands, s);
     if (idx < 0) {
         return -1;
     }
@@ -1278,7 +1278,7 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
         // validate mode
         const char* s = firstArg->strVal;
         static SeqStrings validModes = ">\0#\0@\0:\0*\0$\0"; // TODO: "@@\0" ?
-        if (seqstrings::StrToIdx(validModes, s) < 0) {
+        if (SeqStrIndex(validModes, s) < 0) {
             logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", definition);
             FreeCommandArgs(firstArg);
             firstArg = nullptr;

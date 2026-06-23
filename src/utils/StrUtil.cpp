@@ -1235,16 +1235,14 @@ void DecodeInPlace(char* url) {
 }
 } // namespace url
 
-// seqstrings is for size-efficient implementation of:
+// SeqStrings (SeqStr* helpers) is for size-efficient implementation of:
 // string -> int and int->string.
 // it's even more efficient than using char *[] array
 // it comes at the cost of speed, so it's not good for places
 // that are critial for performance. On the other hand, it's
 // not that bad: linear scanning of memory is fast due to the magic
 // of L1 cache
-namespace seqstrings {
-
-void Next(const char*& s, int* idxInOut) {
+void SeqStrNext(const char*& s, int* idxInOut) {
     int idx = *idxInOut;
     if (!s || !*s || idx < 0) {
         s = nullptr;
@@ -1263,9 +1261,9 @@ void Next(const char*& s, int* idxInOut) {
     *idxInOut = idx;
 }
 
-void Next(const char*& s) {
+void SeqStrNext(const char*& s) {
     int idxDummy = 0;
-    Next(s, &idxDummy);
+    SeqStrNext(s, &idxDummy);
 }
 
 // Returns nullptr if s is the same as toFind
@@ -1294,7 +1292,7 @@ static inline const char* StrEqWeird(const char* s, const char* toFind) {
 // out sequentially in memory, terminated with a 0-length string
 // Returns index of toFind string in strings
 // Returns -1 if string doesn't exist
-int StrToIdx(SeqStrings strs, const char* toFind) {
+int SeqStrIndex(SeqStrings strs, const char* toFind) {
     if (!toFind) {
         return -1;
     }
@@ -1310,8 +1308,8 @@ int StrToIdx(SeqStrings strs, const char* toFind) {
     return -1;
 }
 
-// like StrToIdx but ignores case and whitespace
-int StrToIdxIS(SeqStrings strs, const char* toFind) {
+// like SeqStrIndex but ignores case and whitespace
+int SeqStrIndexIS(SeqStrings strs, const char* toFind) {
     if (!toFind) {
         return -1;
     }
@@ -1329,11 +1327,11 @@ int StrToIdxIS(SeqStrings strs, const char* toFind) {
 
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
-const char* IdxToStr(SeqStrings strs, int idx) {
+const char* SeqStrByIndex(SeqStrings strs, int idx) {
     ReportIf(idx < 0);
     const char* s = strs;
     while (idx > 0) {
-        Next(s);
+        SeqStrNext(s);
         if (!s) {
             return nullptr;
         }
@@ -1341,8 +1339,6 @@ const char* IdxToStr(SeqStrings strs, int idx) {
     }
     return s;
 }
-
-} // namespace seqstrings
 
 // for compatibility with C string, the last character is always 0
 // kPadding is number of characters needed for terminating character

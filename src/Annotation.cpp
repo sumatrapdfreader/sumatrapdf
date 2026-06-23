@@ -110,7 +110,7 @@ const char* AnnotationName(AnnotationType tp) {
     if (n < 0) {
         return "Unknown";
     }
-    const char* s = seqstrings::IdxToStr(gAnnotNames, n);
+    const char* s = SeqStrByIndex(gAnnotNames, n);
     ReportIf(!s);
     return s;
 }
@@ -128,7 +128,7 @@ TempStr AnnotationReadableNameTemp(AnnotationType tp) {
     if (n < 0) {
         return (char*)"Unknown";
     }
-    char* s = (char*)seqstrings::IdxToStr(gAnnotReadableNames, n);
+    char* s = (char*)SeqStrByIndex(gAnnotReadableNames, n);
     ReportIf(!s);
     return s;
 }
@@ -1267,11 +1267,11 @@ static TempStr GetAnnotationTextIconTemp() {
     char* s = str::DupTemp(gGlobalPrefs->annotations.textIconType);
     // this way user can use "new paragraph" and we'll match "NewParagraph"
     str::RemoveCharsInPlace(s, " ");
-    int idx = seqstrings::StrToIdxIS(gAnnotationTextIcons, s);
+    int idx = SeqStrIndexIS(gAnnotationTextIcons, s);
     if (idx < 0) {
         return (char*)"Note";
     }
-    char* real = (char*)seqstrings::IdxToStr(gAnnotationTextIcons, idx);
+    char* real = (char*)SeqStrByIndex(gAnnotationTextIcons, idx);
     return real;
 }
 

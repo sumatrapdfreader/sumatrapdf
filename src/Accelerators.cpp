@@ -365,7 +365,7 @@ static const char* getVirt(BYTE key, bool isEng) {
     WORD w = key;
     for (int i = 0; i < n; i++) {
         if (gVirtKeysIds[i] == w) {
-            return seqstrings::IdxToStr(gVirtKeyNames, i);
+            return SeqStrByIndex(gVirtKeyNames, i);
         }
     }
     return nullptr;
@@ -407,7 +407,7 @@ again:
     }
 
     // check for keys like F1, Del, Backspace etc.
-    int idx = seqstrings::StrToIdxIS(gVirtKeyNames, toFind);
+    int idx = SeqStrIndexIS(gVirtKeyNames, toFind);
     if (idx >= 0) {
         ReportIf(idx >= dimofi(gVirtKeysIds));
         accel.key = gVirtKeysIds[idx];
