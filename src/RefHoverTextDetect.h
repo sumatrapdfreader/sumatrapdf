@@ -14,8 +14,9 @@
 // coordinates). On success returns true and fills *surnameOut with a
 // freshly-allocated UTF-8 surname (caller frees) and *yearOut.
 // srcRectOut (optional): on success, set to a stable per-occurrence source
-// key — the cursor's text line (x/dx = 0, y/dy = the line). Lets callers tell
-// two occurrences of the same citation apart (different line → reposition).
+// key — the matched citation's glyph span on the page (surname through year).
+// Lets callers tell two occurrences of the same citation apart, including
+// two markers on the same text line (different x/dx → reposition).
 bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, char** surnameOut,
                               int* yearOut, Rect* srcRectOut = nullptr);
 
@@ -31,7 +32,7 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
 // picking the number token nearest the cursor. On success returns true and
 // fills *numOut with the reference number.
 // srcRectOut (optional): see DetectCitationInPageText — stable per-occurrence
-// source line key set on success.
+// "[N]" bracket span set on success.
 bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, int* numOut,
                                      Rect* srcRectOut = nullptr);
 

@@ -19,6 +19,58 @@ static const WCHAR* kNamePrefixes[] = {L"van", L"von", L"de", L"der", L"den", L"
                                        L"da",  L"du",  L"di", L"do",  L"bin", L"ben", L"te", L"ten", L"ter",
                                        L"op",  L"'t",  L"af", L"av",  L"zu",  L"san", L"st", L"st.", nullptr};
 
+// Bounding box of glyphs [startIdx..endIdx] on one text line.
+static Rect GlyphSpanBounds(const Rect* coords, int textLen, int startIdx, int endIdx) {
+    int xMin = INT_MAX;
+    int xMax = INT_MIN;
+    int y = 0;
+    int dy = 0;
+    bool any = false;
+    for (int i = startIdx; i <= endIdx && i < textLen; i++) {
+        Rect r = coords[i];
+        if (r.dx <= 0 && r.dy <= 0) {
+            continue;
+        }
+        if (!any) {
+            y = r.y;
+            dy = r.dy;
+            any = true;
+        }
+        if (r.x < xMin) {
+            xMin = r.x;
+        }
+        if (r.x + r.dx > xMax) {
+            xMax = r.x + r.dx;
+        }
+    }
+    if (!any) {
+        return {};
+    }
+    return Rect{xMin, y, xMax - xMin, dy};
+}
+
+// Map a chunk-text span back to glyph indices (see DetectCitationInPageText)
+// and return the matched citation's horizontal extent on the page.
+static Rect CitationSpanBounds(const Rect* coords, int textLen, const Vec<int>& chunkGlyphs, int spanStart,
+                               int spanEnd) {
+    int gStart = -1;
+    int gEnd = -1;
+    for (int ci = spanStart; ci < spanEnd && ci < (int)chunkGlyphs.size(); ci++) {
+        int gi = chunkGlyphs[ci];
+        if (gi < 0 || gi >= textLen) {
+            continue;
+        }
+        if (gStart < 0) {
+            gStart = gi;
+        }
+        gEnd = gi;
+    }
+    if (gStart < 0) {
+        return {};
+    }
+    return GlyphSpanBounds(coords, textLen, gStart, gEnd);
+}
+
 static bool IsNamePrefix(const WCHAR* word, int wordLen) {
     if (wordLen == 0 || !iswlower(word[0])) {
         return false;
@@ -83,6 +135,7 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
     // checks (the "et al." literal, walk-back stop conditions) work against
     // normalized text. Line breaks also become a single space.
     WStrBuilder chunk;
+    Vec<int> chunkGlyphs;
     int cursorChunkPos = -1;
     int prevY = INT_MIN;
     bool lastWasSpace = true; // suppress leading whitespace
@@ -100,10 +153,12 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
         if (isSpace) {
             if (!lastWasSpace) {
                 chunk.AppendChar(L' ');
+                chunkGlyphs.Append(-1);
                 lastWasSpace = true;
             }
         } else {
             chunk.AppendChar(c);
+            chunkGlyphs.Append(i);
             lastWasSpace = false;
         }
         prevY = r.y;
@@ -299,8 +354,10 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
     }
 
     if (srcRectOut) {
-        // stable per-occurrence key: the cursor's text line
-        *srcRectOut = Rect{0, coords[cursorIdx].y, 0, coords[cursorIdx].dy};
+        // stable per-occurrence key: horizontal span of the matched citation
+        // (surname through year), so two same-reference markers on one line
+        // reposition the popup instead of sharing a line-only y/dy key.
+        *srcRectOut = CitationSpanBounds(coords, textLen, chunkGlyphs, surnameStart, bestYearPos + 4);
     }
     *surnameOut = ToUtf8(surnameW.Get());
     *yearOut = year;
@@ -528,8 +585,8 @@ bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int 
         return false;
     }
     if (srcRectOut) {
-        // stable per-occurrence key: the cursor's text line (the "[N]" marker)
-        *srcRectOut = Rect{0, coords[cursorIdx].y, 0, coords[cursorIdx].dy};
+        // stable per-occurrence key: the "[N]" bracket span on this line
+        *srcRectOut = GlyphSpanBounds(coords, textLen, open, close);
     }
     *numOut = bestNum;
     return true;

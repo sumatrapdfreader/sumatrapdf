@@ -459,6 +459,53 @@ static void NumericCitationDetected() {
     utassert(!ok);
 }
 
+// (13b) Two "[1]" markers on one line get distinct srcRect x spans.
+static void NumericCitationSrcRectDistinctOnLine() {
+    WCHAR text[256];
+    Rect coords[256];
+    int len = 0;
+    AddText(text, coords, len, 256, L"see [1] and again [1] end", 72, 200);
+    Rect first{}, second{};
+    int num = 0;
+    bool ok = DetectNumericCitationInPageText(text, coords, len, Point{105, 206}, &num, &first);
+    utassert(ok);
+    utassert(num == 1);
+    utassert(first.dx > 0);
+    ok = DetectNumericCitationInPageText(text, coords, len, Point{189, 206}, &num, &second);
+    utassert(ok);
+    utassert(num == 1);
+    utassert(second.dx > 0);
+    utassert(first.y == second.y);
+    utassert(first.x != second.x);
+}
+
+// (10b) Two author-year citations on one line get distinct srcRect x spans.
+static void PlainTextCitationSrcRectDistinctOnLine() {
+    WCHAR text[256];
+    Rect coords[256];
+    int len = 0;
+    AddText(text, coords, len, 256, L"per (Smith, 2020) and (Jones, 2021) here", 72, 200);
+    char* surname = nullptr;
+    int year = 0;
+    Rect first{}, second{};
+    // Cursor on 'S' of Smith (glyph 6 → x = 72 + 6*6 = 108).
+    bool ok = DetectCitationInPageText(text, coords, len, Point{110, 206}, &surname, &year, &first);
+    utassert(ok);
+    utassert(surname && str::Eq(surname, "Smith"));
+    utassert(year == 2020);
+    utassert(first.dx > 0);
+    str::Free(surname);
+    // Cursor on 'J' of Jones (glyph 25 → x = 72 + 25*6 = 222).
+    ok = DetectCitationInPageText(text, coords, len, Point{224, 206}, &surname, &year, &second);
+    utassert(ok);
+    utassert(surname && str::Eq(surname, "Jones"));
+    utassert(year == 2021);
+    utassert(second.dx > 0);
+    str::Free(surname);
+    utassert(first.y == second.y);
+    utassert(first.x != second.x);
+}
+
 // (14) Numeric reference list lookup: a line starting with "[num]" at the left
 // column anchors at its first glyph; a number not present returns false.
 static void NumericReferenceFoundOnBibPage() {
@@ -740,8 +787,10 @@ void RefHoverTest() {
     TwoColumnLeftEntryStaysInColumn();
     TwoColumnRightEntryStaysInColumn();
     PlainTextCitationDetected();
+    PlainTextCitationSrcRectDistinctOnLine();
     PlainTextCitationNoYear();
     SurnameFoundOnBibPage();
     NumericCitationDetected();
+    NumericCitationSrcRectDistinctOnLine();
     NumericReferenceFoundOnBibPage();
 }
