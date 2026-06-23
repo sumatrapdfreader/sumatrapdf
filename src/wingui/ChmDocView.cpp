@@ -195,7 +195,9 @@ bool ChmDocView::CreateWebView2() {
     wv->events.navigationStarting = NavigationStarting;
     wv->events.navigationCompleted = NavigationCompleted;
     wv->events.historyChanged = HistoryChanged;
-    wv->forwardAppAccelerators = false;
+    // forward app accelerators (Ctrl+W close tab, Ctrl+K command palette, etc.)
+    // to the main window so they work while the WebView2 has keyboard focus
+    wv->forwardAppAccelerators = true;
     // let file drops fall through to the canvas (to open the dropped file)
     // instead of being swallowed by the WebView2 control
     wv->allowExternalDrop = false;
