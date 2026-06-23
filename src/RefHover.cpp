@@ -36,9 +36,10 @@
 //       positions each render their own content (no stale popup on the
 //       second hover).
 //   [ ] Popup hides on mouse-out, re-appears on re-enter.
-//   [ ] Mouse-wheel over popup scrolls; rolls over to the prev / next page
-//       when the viewport reaches a page edge.
+//   [ ] Shift+mouse-wheel over popup scrolls; rolls over to the prev / next
+//       page when the viewport reaches a page edge.
 //   [ ] Ctrl+mouse-wheel over popup zooms in / out.
+//   [ ] Plain mouse-wheel scrolls the main document (popup not hijacking it).
 //   [ ] Popup height grows on bigger monitors (capped at ~90% of work
 //       area, max 1400px).
 //

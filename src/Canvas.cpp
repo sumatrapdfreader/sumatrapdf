@@ -380,7 +380,8 @@ static void StartImageDragDrop(MainWindow* win) {
 }
 
 // Resize handle positions that used in resizing annotations
-enum class ResizeHandle {
+enum class ResizeHandle
+{
     None = 0,
     TopLeft,
     Top,
@@ -2248,22 +2249,28 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     // Mouse-wheel on the citation-hover popup (cursor still on the citation
     // link that opened it). Avoids moving the cursor onto the popup itself,
     // which would dismiss the hover.
-    //   plain wheel → scroll popup content (rolls over to prev/next page)
+    //   shift+wheel → scroll popup content (rolls over to prev/next page)
     //   ctrl+wheel  → zoom popup content
+    //   plain wheel → falls through to scroll the main document, as if the
+    //                 popup weren't there (modifier-less wheel scrolling a
+    //                 document shouldn't get hijacked by the hover popup)
     if (win->refHover && win->refHover->hwndPopup && IsWindowVisible(win->refHover->hwndPopup)) {
-        DisplayModel* dmHover = win->AsFixed();
-        if (dmHover) {
-            Point pt = HwndGetCursorPos(win->hwndCanvas);
-            IPageElement* elHover = dmHover->GetElementAtPos(pt, nullptr);
-            if (IsInternalLinkDest(elHover, dmHover)) {
-                short delta = GET_WHEEL_DELTA_WPARAM(wp);
-                bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
-                if (isCtrl) {
-                    RefHoverWheelZoom(win->refHover, dmHover->GetEngine(), delta);
-                } else {
-                    RefHoverWheelScroll(win->refHover, dmHover->GetEngine(), delta);
+        bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
+        bool isShift = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
+        if (isCtrl || isShift) {
+            DisplayModel* dmHover = win->AsFixed();
+            if (dmHover) {
+                Point pt = HwndGetCursorPos(win->hwndCanvas);
+                IPageElement* elHover = dmHover->GetElementAtPos(pt, nullptr);
+                if (IsInternalLinkDest(elHover, dmHover)) {
+                    short delta = GET_WHEEL_DELTA_WPARAM(wp);
+                    if (isCtrl) {
+                        RefHoverWheelZoom(win->refHover, dmHover->GetEngine(), delta);
+                    } else {
+                        RefHoverWheelScroll(win->refHover, dmHover->GetEngine(), delta);
+                    }
+                    return 0;
                 }
-                return 0;
             }
         }
     }
