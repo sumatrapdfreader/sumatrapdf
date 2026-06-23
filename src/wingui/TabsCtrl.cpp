@@ -824,6 +824,9 @@ void TabsCtrl::SetTabDirty(int idx, bool dirty) {
     if (tab && tab->isDirty != dirty) {
         tab->isDirty = dirty;
         LayoutTabs(); // rebuilds tooltips from current ti->tooltip values
+        // LayoutTabs only schedules a repaint; force it so the dirty (red dot)
+        // indicator updates immediately (e.g. right after editing a form field)
+        HwndRepaintNow(hwnd);
     }
 }
 

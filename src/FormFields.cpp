@@ -17,6 +17,7 @@
 #include "MainWindow.h"
 #include "Annotation.h"
 #include "SumatraPDF.h"
+#include "Toolbar.h"
 #include "FormFields.h"
 
 // One field is edited at a time: either a text edit box or a choice list box
@@ -81,6 +82,10 @@ void CommitFormFieldEdit(bool save) {
         HwndSetFocus(win->hwndCanvas);
         if (changed) {
             MainWindowRerender(win);
+            // refresh the tab's unsaved-changes (red dot) indicator and toolbar
+            // state now, otherwise it only updates on the next repaint trigger
+            // (tab switch, resize)
+            ToolbarUpdateStateForWindow(win, false);
         }
     }
     gCommitting = false;
