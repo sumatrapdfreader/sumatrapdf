@@ -20,6 +20,8 @@ Never commit changes automatically. Always wait for explicit command to commit c
 
 When committing a fix for a GitHub issue, include `(fixes #<issue-no>)` at the end of the commit message.
 
+When committing work done with AI assistance, append the user prompt(s) that produced the change at the very end of the commit message as a single line: `prompt: ...`. If there were multiple prompts, squash them into one concise line.
+
 ## Adding a new advanced setting
 
 To add a new advanced setting:
