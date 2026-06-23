@@ -358,8 +358,8 @@ struct MainWindow {
     WCHAR* findCountPendingText = nullptr;
     bool findCountPendingMatchCase = false;
     bool findCountPendingMatchWholeWord = false;
-    // per-match snippets for the floating results list; only built when the
-    // floating find window is visible (see SearchAndDDE.cpp)
+    // per-match positions (and optional snippets for the floating results list);
+    // also built when gShowAllMatches paints all highlights (see SearchAndDDE.cpp)
     Vec<FindMatch> findMatches;
     bool findCountHasSnippets = false;
 

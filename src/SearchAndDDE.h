@@ -41,6 +41,11 @@ bool OnInverseSearch(MainWindow* win, int x, int y);
 void ShowForwardSearchResult(MainWindow* win, const char* fileName, int line, int col, int ret, int page,
                              Vec<Rect>& rects);
 void PaintForwardSearchMark(MainWindow* win, HDC hdc);
+void PaintAllFindMatches(MainWindow* win, HDC hdc);
+void InvalidateFindMatchPaintCache();
+
+// when true, paint every visible search match (current match in orange)
+extern bool gShowAllMatches;
 void FindPrev(MainWindow* win);
 void FindNext(MainWindow* win);
 void FindFirst(MainWindow* win);

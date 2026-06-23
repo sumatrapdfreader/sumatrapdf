@@ -40,6 +40,31 @@
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;
 
+// TODO: expose as a setting; default true for testing
+bool gShowAllMatches = true;
+
+// Chrome-style orange for the active find match
+constexpr COLORREF kFindCurrentMatchColor = RGB(0xff, 0x96, 0x32);
+
+struct FindMatchPaintRects {
+    u64 key = 0;
+    Vec<Rect> rects;
+};
+
+static struct {
+    int firstPage = 0;
+    int lastPage = 0;
+    LONG countEpoch = 0;
+    Vec<FindMatchPaintRects> entries;
+} gFindMatchPaintCache;
+
+void InvalidateFindMatchPaintCache() {
+    gFindMatchPaintCache.entries.Reset();
+    gFindMatchPaintCache.firstPage = 0;
+    gFindMatchPaintCache.lastPage = 0;
+    gFindMatchPaintCache.countEpoch = 0;
+}
+
 Kind kNotifFindProgress = "findProgress";
 
 // don't show the Search UI for document types that don't
@@ -253,13 +278,21 @@ static void ShowSearchResult(MainWindow* win, TextSel* result, bool addNavPt) {
     }
 
     dm->textSelection->CopySelection(dm->textSearch);
-    UpdateTextSelection(win, false);
+    if (gShowAllMatches) {
+        // all matches are painted by PaintAllFindMatches; don't duplicate as selection
+        DeleteOldSelectionInfo(win, true);
+        win->showSelection = false;
+    } else {
+        UpdateTextSelection(win, false);
+    }
     dm->ShowResultRectToScreen(result);
+    InvalidateFindMatchPaintCache();
     ScheduleRepaint(win, 0);
 }
 
 void ClearSearchResult(MainWindow* win) {
     DeleteOldSelectionInfo(win, true);
+    InvalidateFindMatchPaintCache();
     ScheduleRepaint(win, 0);
 }
 
@@ -426,6 +459,7 @@ void ClearFindMatches(MainWindow* win) {
     }
     win->findMatches.Reset();
     win->findCountHasSnippets = false;
+    InvalidateFindMatchPaintCache();
 }
 
 // build a one-line "...context match context..." snippet (UTF-8) around a match
@@ -455,17 +489,19 @@ struct CountThreadData {
     WCHAR* text = nullptr;
     bool matchCase = false;
     bool matchWholeWord = false;
-    bool wantSnippets = false; // build per-match snippets for the results list
+    bool wantMatchList = false; // build findMatches (for all-match painting or the results list)
+    bool wantSnippets = false;  // build per-match snippet strings for the results list
     LONG epoch = 0;
     HANDLE thread = nullptr;
 
     CountThreadData(MainWindow* win, EngineBase* engine, const WCHAR* text, bool matchCase, bool matchWholeWord,
-                    bool wantSnippets, LONG epoch) {
+                    bool wantMatchList, bool wantSnippets, LONG epoch) {
         this->win = win;
         this->engine = engine;
         this->text = str::Dup(text);
         this->matchCase = matchCase;
         this->matchWholeWord = matchWholeWord;
+        this->wantMatchList = wantMatchList;
         this->wantSnippets = wantSnippets;
         this->epoch = epoch;
     }
@@ -527,10 +563,14 @@ static void CountEndTask(CountEndTaskData* d) {
             for (int i = 0; i < (int)d->matches->size(); i++) {
                 (*d->matches)[i].snippet = nullptr; // transferred to win->findMatches
             }
-            win->findCountHasSnippets = true;
-            FindWindowRefreshResults(win);
+            win->findCountHasSnippets = ctd->wantSnippets;
+            if (ctd->wantSnippets) {
+                FindWindowRefreshResults(win);
+            }
         }
+        InvalidateFindMatchPaintCache();
         ShowMatchCount(win);
+        ScheduleRepaint(win, 0);
     }
     // a newer term arrived while we were scanning: run it now (no worker running)
     if (win->findCountPendingText) {
@@ -552,7 +592,7 @@ static void CountThread(CountThreadData* d) {
     EngineBase* engine = d->engine;
 
     auto positions = new Vec<u64>();
-    Vec<FindMatch>* matches = d->wantSnippets ? new Vec<FindMatch>() : nullptr;
+    Vec<FindMatch>* matches = d->wantMatchList ? new Vec<FindMatch>() : nullptr;
     {
         TextSearch ts(engine);
         ts.SetMatchCase(d->matchCase);
@@ -570,7 +610,9 @@ static void CountThread(CountThreadData* d) {
                 fm.startGlyph = ts.startGlyph;
                 fm.endPage = ts.endPage;
                 fm.endGlyph = ts.endGlyph;
-                fm.snippet = BuildSnippet(engine, fm);
+                if (d->wantSnippets) {
+                    fm.snippet = BuildSnippet(engine, fm);
+                }
                 matches->Append(fm);
             }
             m = ts.FindNext();
@@ -636,10 +678,12 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase, b
     }
 
     engine->AddRef(); // released in CountThread
-    // build per-match snippets only when the floating results list is showing
+    // build per-match snippets only when the floating results list is showing;
+    // also build the match list (without snippets) when painting all highlights
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
+    bool wantMatchList = wantSnippets || gShowAllMatches;
     LONG epoch = InterlockedIncrement(&win->findCountEpoch);
-    auto d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantSnippets, epoch);
+    auto d = new CountThreadData(win, engine, text, matchCase, matchWholeWord, wantMatchList, wantSnippets, epoch);
     win->findCountThread = nullptr;
     auto fn = MkFunc0<CountThreadData>(CountThread, d);
     win->findCountThread = StartThread(fn, "FindCountThread");
@@ -652,10 +696,11 @@ static void UpdateMatchCount(MainWindow* win, const WCHAR* text) {
     DisplayModel* dm = win->AsFixed();
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
+    bool wantMatchList = wantSnippets || gShowAllMatches;
     bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
                     win->findCountMatchCase == win->findMatchCase &&
                     win->findCountMatchWholeWord == win->findMatchWholeWord && win->findCountEngine == engine &&
-                    (!wantSnippets || win->findCountHasSnippets);
+                    (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : win->findMatches.size() > 0));
     if (cacheHit) {
         // matches are unchanged: just refresh n/m. Don't rebuild the results
         // list here -- it's already populated and rebuilding clears the user's
@@ -892,6 +937,160 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool sho
     }
     Edit_SetModify(win->hwndFindEdit, FALSE);
     FindTextOnThread(win, direction, s, wasModified, showProgress);
+}
+
+static bool FindMatchTouchesVisiblePages(const FindMatch& fm, int firstPage, int lastPage) {
+    return fm.endPage >= firstPage && fm.startPage <= lastPage;
+}
+
+static void GetVisiblePageRange(DisplayModel* dm, int& firstOut, int& lastOut) {
+    firstOut = dm->FirstVisiblePageNo();
+    lastOut = firstOut;
+    if (!dm->ValidPageNo(firstOut)) {
+        firstOut = lastOut = 0;
+        return;
+    }
+    int pageCount = dm->PageCount();
+    for (int pageNo = pageCount; pageNo >= firstOut; pageNo--) {
+        if (dm->PageVisible(pageNo)) {
+            lastOut = pageNo;
+            break;
+        }
+    }
+}
+
+static void AppendMatchScreenRects(DisplayModel* dm, const Rect& clipRc, EngineBase* engine, const FindMatch& fm,
+                                   Vec<Rect>& out) {
+    TextSelection ts(engine);
+    ts.StartAt(fm.startPage, fm.startGlyph);
+    ts.SelectUpTo(fm.endPage, fm.endGlyph);
+    for (int i = 0; i < ts.result.len; i++) {
+        int pageNo = ts.result.pages[i];
+        if (!dm->PageVisible(pageNo)) {
+            continue;
+        }
+        Rect rc = dm->CvtToScreen(pageNo, ToRectF(ts.result.rects[i]));
+        rc = rc.Intersect(clipRc);
+        if (!rc.IsEmpty()) {
+            out.Append(rc);
+        }
+    }
+}
+
+static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int firstPage, int lastPage) {
+    gFindMatchPaintCache.entries.Reset();
+    gFindMatchPaintCache.firstPage = firstPage;
+    gFindMatchPaintCache.lastPage = lastPage;
+    gFindMatchPaintCache.countEpoch = win->findCountEpoch;
+
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        return;
+    }
+    for (int i = 0; i < (int)win->findMatches.size(); i++) {
+        const FindMatch& fm = win->findMatches[i];
+        if (!FindMatchTouchesVisiblePages(fm, firstPage, lastPage)) {
+            continue;
+        }
+        FindMatchPaintRects entry;
+        entry.key = MatchKey(fm.startPage, fm.startGlyph);
+        AppendMatchScreenRects(dm, win->canvasRc, engine, fm, entry.rects);
+        if (entry.rects.size() > 0) {
+            gFindMatchPaintCache.entries.Append(entry);
+        }
+    }
+}
+
+static void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, TextSel* sel, Vec<Rect>& out) {
+    if (!sel || sel->len == 0 || !sel->pages || !sel->rects) {
+        return;
+    }
+    for (int i = 0; i < sel->len; i++) {
+        int pageNo = sel->pages[i];
+        if (!dm->PageVisible(pageNo)) {
+            continue;
+        }
+        Rect rc = dm->CvtToScreen(pageNo, ToRectF(sel->rects[i]));
+        rc = rc.Intersect(clipRc);
+        if (!rc.IsEmpty()) {
+            out.Append(rc);
+        }
+    }
+}
+
+void PaintAllFindMatches(MainWindow* win, HDC hdc) {
+    if (!gShowAllMatches || !win->IsDocLoaded() || !win->AsFixed()) {
+        return;
+    }
+    if (!win->hwndFindEdit || HwndGetTextLen(win->hwndFindEdit) == 0) {
+        return;
+    }
+
+    DisplayModel* dm = win->AsFixed();
+    TextSearch* ts = dm->textSearch;
+    if (!win->findCountValid && win->findMatches.size() == 0) {
+        // count still running: at least highlight the current match
+        if (!ts || ts->result.len == 0) {
+            return;
+        }
+        ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+        u8 alpha = GetAlpha(parsedCol->col);
+        if (alpha == 0) {
+            alpha = kSelectionDefaultAlpha;
+        }
+        Vec<Rect> currentRects;
+        AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
+        if (currentRects.size() > 0) {
+            PaintTransparentRectangles(hdc, win->canvasRc, currentRects, kFindCurrentMatchColor, alpha);
+        }
+        return;
+    }
+    if (win->findMatches.size() == 0) {
+        return;
+    }
+    int firstPage = 0;
+    int lastPage = 0;
+    GetVisiblePageRange(dm, firstPage, lastPage);
+    if (!dm->ValidPageNo(firstPage)) {
+        return;
+    }
+
+    if (gFindMatchPaintCache.countEpoch != win->findCountEpoch || gFindMatchPaintCache.firstPage != firstPage ||
+        gFindMatchPaintCache.lastPage != lastPage) {
+        RebuildFindMatchPaintCache(win, dm, firstPage, lastPage);
+    }
+
+    u64 currentKey = 0;
+    if (ts && ts->result.len > 0) {
+        currentKey = MatchKey(ts->startPage, ts->startGlyph);
+    }
+
+    ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
+    u8 alpha = GetAlpha(parsedCol->col);
+    if (alpha == 0) {
+        alpha = kSelectionDefaultAlpha;
+    }
+
+    Vec<Rect> otherRects;
+    Vec<Rect> currentRects;
+    for (int i = 0; i < (int)gFindMatchPaintCache.entries.size(); i++) {
+        const FindMatchPaintRects& entry = gFindMatchPaintCache.entries[i];
+        if (entry.key == currentKey) {
+            currentRects.Append(entry.rects);
+        } else {
+            otherRects.Append(entry.rects);
+        }
+    }
+
+    if (otherRects.size() > 0) {
+        PaintTransparentRectangles(hdc, win->canvasRc, otherRects, parsedCol->col, alpha);
+    }
+    if (currentRects.size() == 0 && ts && ts->result.len > 0) {
+        AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
+    }
+    if (currentRects.size() > 0) {
+        PaintTransparentRectangles(hdc, win->canvasRc, currentRects, kFindCurrentMatchColor, alpha);
+    }
 }
 
 void PaintForwardSearchMark(MainWindow* win, HDC hdc) {

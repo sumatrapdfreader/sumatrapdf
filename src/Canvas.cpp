@@ -2105,7 +2105,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         gs.DrawRectangle(&pen, rc.x, rc.y, rc.dx, rc.dy);
     }
 
-    if (win->showSelection) {
+    if (gShowAllMatches) {
+        PaintAllFindMatches(win, hdc);
+    } else if (win->showSelection) {
         PaintSelection(win, hdc);
     }
 
