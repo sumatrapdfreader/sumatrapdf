@@ -22,6 +22,7 @@
 #include "Commands.h"
 #include "Accelerators.h"
 #include "CommandPalette.h"
+#include "FilterHighlightDraw.h"
 #include "FileThumbnails.h"
 #include "Menu.h"
 #include "HomePage.h"
@@ -1608,14 +1609,8 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         SelectObject(hdc, fontText);
         {
             RECT rcText = {rect.x, rect.y, rect.x + rect.dx, rect.y + rect.dy};
-            DrawMaybeHighlightedTextArgs hlArgs(l.filterWords, l.highlighted);
-            hlArgs.hdc = hdc;
-            hlArgs.rc = rcText;
-            hlArgs.text = fileName;
-            hlArgs.colBg = backgroundColor;
-            hlArgs.isRtl = isRtl;
-            hlArgs.drawFmt = fmt;
-            DrawMaybeHighlightedText(hlArgs);
+            DrawMaybeHighlightedText(hdc, rcText, fileName, l.filterWords, l.highlighted, backgroundColor, isRtl, false,
+                                     fmt);
         }
 
         GetFileStateIcon(fs);

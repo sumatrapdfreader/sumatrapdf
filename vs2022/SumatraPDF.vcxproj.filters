@@ -177,6 +177,9 @@
     <ClInclude Include="..\src\FileThumbnails.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\FilterHighlightDraw.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\FindBar.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -491,6 +494,15 @@
     <ClCompile Include="..\src\CommandPalette.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\CommandPaletteCollect.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CommandPaletteDraw.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CommandPaletteFilter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Commands.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -552,6 +564,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\FileThumbnails.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\FilterHighlightDraw.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\FindBar.cpp">

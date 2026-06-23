@@ -28,7 +28,7 @@
 #include "SearchAndDDE.h"
 #include "FindBar.h"
 #include "FindWindow.h"
-#include "CommandPalette.h" // DrawMaybeHighlightedText
+#include "FilterHighlightDraw.h"
 #include "Translations.h"
 #include "Theme.h"
 #include "DarkModeSubclass.h"
@@ -375,15 +375,9 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     rcSnippet.right = std::max(rcSnippet.left, rcPage.left - pageGap);
     if (rcSnippet.right > rcSnippet.left) {
         SetTextColor(hdc, colText);
-        DrawMaybeHighlightedTextArgs args(filterWords, hlScratch);
-        args.hdc = hdc;
-        args.rc = rcSnippet;
-        args.text = fm.snippet ? fm.snippet : "";
-        args.colBg = colBg;
-        args.isRtl = false;
-        args.matchWholeWord = win->findMatchWholeWord;
-        args.drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
-        DrawMaybeHighlightedText(args);
+        uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
+        DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet ? fm.snippet : "", filterWords, hlScratch, colBg, false,
+                                 win->findMatchWholeWord, drawFmt);
     }
 
     SetTextColor(hdc, AccentColor(colText, 80));

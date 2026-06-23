@@ -1107,6 +1107,7 @@
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FileHistory.h" />
     <ClInclude Include="..\src\FileThumbnails.h" />
+    <ClInclude Include="..\src\FilterHighlightDraw.h" />
     <ClInclude Include="..\src\FindBar.h" />
     <ClInclude Include="..\src\FindWindow.h" />
     <ClInclude Include="..\src\Flags.h" />
@@ -1213,6 +1214,9 @@
     <ClCompile Include="..\src\CodexBuild.cpp" />
     <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
+    <ClCompile Include="..\src\CommandPaletteCollect.cpp" />
+    <ClCompile Include="..\src\CommandPaletteDraw.cpp" />
+    <ClCompile Include="..\src\CommandPaletteFilter.cpp" />
     <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
@@ -1234,6 +1238,7 @@
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileHistory.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
+    <ClCompile Include="..\src\FilterHighlightDraw.cpp" />
     <ClCompile Include="..\src\FindBar.cpp" />
     <ClCompile Include="..\src\FindWindow.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
