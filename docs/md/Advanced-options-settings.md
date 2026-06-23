@@ -234,9 +234,9 @@ FixedPageUI [
 
     ; color value for the text selection rectangle (also used to highlight found
     ; text). Use an #aarrggbb value to control opacity: a smaller alpha (e.g.
-    ; #40f5fc0c) makes the selection more transparent so the selected text stays
+    ; #40ffff00) makes the selection more transparent so the selected text stays
     ; crisp; #rrggbb uses the default opacity (introduced in version 2.4)
-    SelectionColor = #f5fc0c
+    SelectionColor = #ffff00
 
     ; top, right, bottom and left margin (in that order) between window and
     ; document

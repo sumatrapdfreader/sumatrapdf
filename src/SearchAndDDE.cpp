@@ -923,7 +923,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
 
     BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->forwardSearch.highlightColor);
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha, 0);
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha);
 }
 
 // returns true if inverse search was performed

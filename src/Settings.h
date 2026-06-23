@@ -50,7 +50,7 @@ struct FixedPageUI {
     ParsedColor backgroundColorParsed;
     // color value for the text selection rectangle (also used to highlight
     // found text). Use an #aarrggbb value to control opacity: a smaller
-    // alpha (e.g. #40f5fc0c) makes the selection more transparent so the
+    // alpha (e.g. #40ffff00) makes the selection more transparent so the
     // selected text stays crisp; #rrggbb uses the default opacity
     char* selectionColor;
     ParsedColor selectionColorParsed;
@@ -712,7 +712,7 @@ static const StructInfo gSizeInfo = {sizeof(Size), 2, gSizeFields, "Dx\0Dy"};
 static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, textColor), SettingType::Color, (intptr_t)"#000000"},
     {offsetof(FixedPageUI, backgroundColor), SettingType::Color, (intptr_t)"#ffffff"},
-    {offsetof(FixedPageUI, selectionColor), SettingType::Color, (intptr_t)"#f5fc0c"},
+    {offsetof(FixedPageUI, selectionColor), SettingType::Color, (intptr_t)"#ffff00"},
     {offsetof(FixedPageUI, windowMargin), SettingType::Compact, (intptr_t)&gWindowMarginInfo},
     {offsetof(FixedPageUI, pageSpacing), SettingType::Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), SettingType::ColorArray, 0},
