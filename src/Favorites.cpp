@@ -737,7 +737,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
     SaveSettings();
 }
 
-static void AddFavoriteForPage(MainWindow* win, int pageNo) {
+void AddFavoriteForPage(MainWindow* win, int pageNo) {
     char* name = nullptr;
     auto tab = win->CurrentTab();
     auto* ctrl = tab->ctrl;
