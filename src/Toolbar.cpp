@@ -232,7 +232,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
         if (cmd) {
             realCmdId = cmd->origId;
         }
-        return !CmdRequiresDocument(realCmdId);
+        return CmdWorksWithoutDocument(realCmdId);
     }
 
     switch (cmdId) {

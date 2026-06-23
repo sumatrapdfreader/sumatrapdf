@@ -41,6 +41,7 @@
 #include "ClaudeCode.h"
 #include "GrokBuild.h"
 #include "CodexBuild.h"
+#include "Menu.h"
 
 #include "utils/Log.h"
 
@@ -77,59 +78,6 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenAttachment,
 
     CmdCreateShortcutToFile, // not sure I want this at all
-    0,
-};
-
-// most commands are not valid when document is not opened
-// it's shorter to list the remaining commands
-static i32 gDocumentNotOpenWhitelist[] = {
-    CmdOpenFile,
-    CmdExit,
-    CmdNewWindow,
-    CmdContributeTranslation,
-    CmdOptions,
-    CmdSetInverseSearch,
-    CmdAdvancedOptions,
-    CmdAdvancedSettings,
-    CmdChangeLanguage,
-    CmdCheckUpdate,
-    CmdHelpOpenManual,
-    CmdHelpOpenManualOnWebsite,
-    CmdHelpOpenKeyboardShortcuts,
-    CmdHelpVisitWebsite,
-    CmdHelpAbout,
-    CmdDebugDownloadSymbols,
-    CmdDebugShowNotif,
-    CmdDebugStartStressTest,
-    CmdDebugTestApp,
-    CmdDebugTogglePredictiveRender,
-    CmdDebugToggleRenderInfo,
-    CmdDebugToggleRtl,
-    CmdChangeScrollbar,
-    CmdToggleAntiAlias,
-    CmdToggleSmoothScroll,
-    CmdToggleScrollbarInSinglePage,
-    CmdToggleLazyLoading,
-    CmdToggleFullscreen,
-    CmdToggleMenuBar,
-    CmdToggleToolbar,
-    CmdToggleUseTabs,
-    CmdToggleTips,
-    CmdToggleFrequentlyRead,
-    CmdToggleChmUI,
-    CmdToggleReuseInstance,
-    CmdFavoriteToggle,
-    CmdShowLog,
-    CmdClearHistory,
-    CmdRemoveDeletedFilesFromHistory,
-    CmdReopenLastClosedFile,
-    CmdSelectNextTheme,
-    CmdListPrinters,
-    CmdDebugCrashMe,
-    CmdDebugCorruptMemory,
-    CmdScreenshot,
-    CmdTabGroupRestore,
-    CmdSetScreenshotHotkey,
     0,
 };
 
@@ -380,8 +328,8 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     }
 
     // when document is not loaded, most commands are not available
-    // except those white-listed
-    if (IsCmdInList(cmdId, gDocumentNotOpenWhitelist)) {
+    // except those white-listed (see gNoDocWhitelist in Menu.cpp)
+    if (CmdWorksWithoutDocument(cmdId)) {
         return true;
     }
 

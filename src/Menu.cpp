@@ -1130,33 +1130,57 @@ static MenuDef menuDefContextStart[] = {
 // clang-format on
 
 // clang-format off
-// those menu items will be disabled if no document is opened, enabled otherwise
-static UINT_PTR disableIfNoDocument[] = {
-    CmdRotateLeft,
-    CmdRotateRight,
-    CmdGoToNextPage,
-    CmdGoToPrevPage,
-    CmdGoToFirstPage,
-    CmdGoToLastPage,
-    CmdNavigateBack,
-    CmdNavigateForward,
-    CmdGoToPage,
-    CmdFindFirst,
-    CmdSaveAs,
-    CmdCreateShortcutToFile,
-    CmdSendByEmail,
-    CmdSelectAll,
-    CmdProperties,
-    CmdTogglePresentationMode,
-    CmdRenameFile,
-    CmdDeleteFile,
-    CmdShowInFolder,
-    CmdOpenNextFileInFolder,
-    CmdOpenPrevFileInFolder,
-    CmdInvokeInverseSearch,
-    // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
-    // are removed instead of disabled (and can remain enabled
-    // for broken XPS/CHM documents)
+// commands that work when no document is open (home page); everything else
+// requires a loaded document (menu, toolbar, command palette)
+UINT_PTR gNoDocWhitelist[] = {
+    CmdOpenFile,
+    CmdExit,
+    CmdNewWindow,
+    CmdContributeTranslation,
+    CmdOptions,
+    CmdSetInverseSearch,
+    CmdAdvancedOptions,
+    CmdAdvancedSettings,
+    CmdChangeLanguage,
+    CmdCheckUpdate,
+    CmdHelpOpenManual,
+    CmdHelpOpenManualOnWebsite,
+    CmdHelpOpenKeyboardShortcuts,
+    CmdHelpVisitWebsite,
+    CmdHelpAbout,
+    CmdDebugDownloadSymbols,
+    CmdDebugShowNotif,
+    CmdDebugStartStressTest,
+    CmdDebugTestApp,
+    CmdDebugTogglePredictiveRender,
+    CmdDebugToggleRenderInfo,
+    CmdDebugToggleRtl,
+    CmdChangeScrollbar,
+    CmdToggleAntiAlias,
+    CmdToggleSmoothScroll,
+    CmdToggleScrollbarInSinglePage,
+    CmdToggleLazyLoading,
+    CmdToggleFullscreen,
+    CmdToggleMenuBar,
+    CmdToggleToolbar,
+    CmdToggleUseTabs,
+    CmdToggleTips,
+    CmdToggleFrequentlyRead,
+    CmdToggleChmUI,
+    CmdToggleReuseInstance,
+    CmdFavoriteToggle,
+    CmdShowLog,
+    CmdClearHistory,
+    CmdRemoveDeletedFilesFromHistory,
+    CmdReopenLastClosedFile,
+    CmdSelectNextTheme,
+    CmdListPrinters,
+    CmdDebugCrashMe,
+    CmdDebugCorruptMemory,
+    CmdScreenshot,
+    CmdTabGroupRestore,
+    CmdSetScreenshotHotkey,
+    0,
 };
 
 static UINT_PTR disableIfDirectoryOrBrokenPDF[] = {
@@ -1553,30 +1577,25 @@ again3:
     }
 }
 
-// returns true if the command only makes sense when a document is open
-// https://github.com/sumatrapdfreader/sumatrapdf/issues/5657
-bool CmdRequiresDocument(int cmdId) {
-    if (cmdIdInList(disableIfNoDocument)) {
-        return true;
-    }
-    if (cmdId >= CmdZoomFirst && cmdId <= CmdZoomLast) {
-        return true;
-    }
-    switch (cmdId) {
-        case CmdPrint:
-        case CmdFindNext:
-        case CmdFindPrev:
-        case CmdFindNextSel:
-        case CmdFindPrevSel:
-        case CmdFindToggleMatchCase:
-        case CmdFindToggleMatchWholeWord:
-        case CmdZoomIn:
-        case CmdZoomOut:
-        case CmdZoomFitWidthAndContinuous:
-        case CmdZoomFitPageAndSinglePage:
+static bool CmdIdInList(int cmdId, UINT_PTR* list) {
+    for (size_t i = 0; list[i]; i++) {
+        if (list[i] == (UINT_PTR)cmdId) {
             return true;
+        }
     }
     return false;
+}
+
+bool CmdWorksWithoutDocument(int cmdId) {
+    return CmdIdInList(cmdId, gNoDocWhitelist);
+}
+
+static void MenuSetEnabledForDocumentCommands(HMENU menu, bool hasDocument) {
+    for (int cmdId = (int)CmdFirst; cmdId <= (int)CmdLast; cmdId++) {
+        if (!CmdWorksWithoutDocument(cmdId)) {
+            MenuSetEnabled(menu, cmdId, hasDocument);
+        }
+    }
 }
 
 // returns [remove, disable] state of the command
@@ -1982,12 +2001,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
 
     bool hasDocument = tab && tab->IsDocLoaded();
-    for (UINT_PTR id = CmdOpenWithKnownExternalViewerFirst; id < CmdOpenWithKnownExternalViewerLast; id++) {
-        MenuSetEnabled(win->menu, id, hasDocument);
-    }
-    for (int id : disableIfNoDocument) {
-        MenuSetEnabled(win->menu, id, hasDocument);
-    }
+    MenuSetEnabledForDocumentCommands(win->menu, hasDocument);
 
     SetMenuStateForSelection(tab, win->menu);
     MenuSetEnabled(win->menu, CmdClose, IsFileCloseMenuEnabled());
