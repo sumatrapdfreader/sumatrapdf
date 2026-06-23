@@ -40,7 +40,6 @@ using Gdiplus::SolidBrush;
 using Gdiplus::Status;
 using Gdiplus::StringAlignmentCenter;
 using Gdiplus::StringFormat;
-using Gdiplus::TextRenderingHintAntiAlias;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 
@@ -213,8 +212,7 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
     gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
     gfx.SetCompositingQuality(CompositingQualityHighQuality);
     gfx.SetSmoothingMode(Gdiplus::SmoothingModeNone);
-    // ClearType does not render reliably on our double-buffer bitmap (for #5699).
-    gfx.SetTextRenderingHint(TextRenderingHintAntiAlias);
+    gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     gfx.SetPageUnit(UnitPixel);
 
     SolidBrush br(GdipCol(ThemeControlBackgroundColor()));
