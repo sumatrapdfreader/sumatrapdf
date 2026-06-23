@@ -16,6 +16,7 @@
 #include "SumatraPdf.h"
 
 #include "Notifications.h"
+#include "TipText.h"
 #include "Theme.h"
 
 #include "utils/Log.h"
@@ -87,6 +88,11 @@ struct NotificationWnd : Wnd {
     int progressPerc = -1;
     int delayInMs = 0;
     UINT_PTR delayTimerId = 0;
+
+    // message parsed for the extended tip syntax (links, Key/ shortcuts);
+    // drawRich is true when it contains clickable links
+    ParsedTip parsedMsg;
+    bool drawRich = false;
 
     Rect rTxt;
     Rect rClose;
@@ -169,7 +175,10 @@ void RelayoutNotifications(HWND hwndCanvas) {
         int x = atRight ? (frame.dx - rect.dx - xMargin) : xMargin;
         int idx = (int)corner;
         int y = atBottom ? (frame.dy - rect.dy - yMargin - yOffset[idx]) : (yMargin + yOffset[idx]);
-        uint flags = SWP_NOSIZE | SWP_NOZORDER;
+        // SWP_NOCOPYBITS: repaint from scratch instead of copying stale bits, so
+        // notifications that shift when another is dismissed draw correctly
+        // (OnPaint is double-buffered, so no flicker)
+        uint flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOCOPYBITS;
         SetWindowPos(wnd->hwnd, nullptr, x, y, 0, 0, flags);
         yOffset[idx] += rect.dy + dyPadding;
     }
@@ -311,6 +320,9 @@ static bool NotificationCloseHitTest(HWND hwnd, const Rect& rClose, Point pt) {
 }
 
 void NotificationWnd::Layout(const char* message) {
+    if (!message) {
+        message = "";
+    }
     int padX = DpiScale(hwnd, 12);
     int padY = DpiScale(hwnd, 8);
     int closeDx = DpiScale(hwnd, 16);
@@ -327,12 +339,35 @@ void NotificationWnd::Layout(const char* message) {
 
     bool isRtl = IsUIRtl();
 
+    // parse the message for the extended tip syntax (links, Key/ shortcuts)
+    parsedMsg.Reset();
+    ParseTip(parsedMsg, message);
+    drawRich = TipHasLinks(parsedMsg);
+
     Size szText;
-    txtFmt = DT_SINGLELINE | DT_NOPREFIX;
-    if (isRtl) {
-        txtFmt |= DT_RIGHT | DT_RTLREADING;
-    }
-    {
+    if (drawRich) {
+        // rich text: lay out words (links). Note: no RTL word reordering, same
+        // as the home page tips.
+        txtFmt = DT_LEFT | DT_NOPREFIX;
+        HDC hdc = GetDC(hwnd);
+        MeasureTipWords(parsedMsg, hdc, font);
+        int areaWidth = (maxTextDx > 0) ? maxTextDx : (1 << 20);
+        LayoutTip(parsedMsg, areaWidth, 0, 0);
+        ReleaseDC(hwnd, hdc);
+        szText.dx = parsedMsg.totalDx;
+        szText.dy = parsedMsg.totalDy;
+    } else {
+        // plain text: render exactly like before (RTL handling, wrapping). Only
+        // substitute the parsed text when there were (Key/...) shortcuts to
+        // expand, so ordinary messages keep their original whitespace/newlines.
+        if (str::Find(message, "(Key/")) {
+            message = TipPlainTextTemp(parsedMsg);
+            HwndSetText(hwnd, message);
+        }
+        txtFmt = DT_SINGLELINE | DT_NOPREFIX;
+        if (isRtl) {
+            txtFmt |= DT_RIGHT | DT_RTLREADING;
+        }
         HDC hdc = GetDC(hwnd);
         szText = HdcMeasureText(hdc, message, txtFmt, font);
         if (maxTextDx > 0 && szText.dx > maxTextDx) {
@@ -457,9 +492,17 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
 
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, colTxt);
-    char* text = HwndGetTextTemp(hwnd);
-    RECT rTmp = ToRECT(rTxt);
-    HdcDrawText(hdc, text, &rTmp, txtFmt);
+    if (drawRich) {
+        // words were laid out at (0,0); shift the origin to rTxt and draw
+        POINT oldOrg;
+        SetViewportOrgEx(hdc, rTxt.x, rTxt.y, &oldOrg);
+        DrawTipWords(hdc, parsedMsg, font, colTxt, ThemeWindowLinkColor());
+        SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
+    } else {
+        char* text = HwndGetTextTemp(hwnd);
+        RECT rTmp = ToRECT(rTxt);
+        HdcDrawText(hdc, text, &rTmp, txtFmt);
+    }
 
     if (!noClose) {
         Point curPos = HwndGetCursorPos(hwnd);
@@ -560,6 +603,27 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         if (!pt.IsEmpty() && NotificationCloseHitTest(hwnd, rClose, pt)) {
             SetCursorCached(IDC_HAND);
             return TRUE;
+        }
+    }
+
+    if (drawRich) {
+        if (WM_SETCURSOR == msg) {
+            Point pt = HwndGetCursorPos(hwnd);
+            if (!pt.IsEmpty() && HitTestTipLink(parsedMsg, pt.x - rTxt.x, pt.y - rTxt.y) >= 0) {
+                SetCursorCached(IDC_HAND);
+                return TRUE;
+            }
+        }
+        if (WM_LBUTTONUP == msg) {
+            int x = GET_X_LPARAM(lp);
+            int y = GET_Y_LPARAM(lp);
+            int linkIdx = HitTestTipLink(parsedMsg, x - rTxt.x, y - rTxt.y);
+            if (linkIdx >= 0) {
+                // send commands to the top-level window (the main frame)
+                HWND root = GetAncestor(hwnd, GA_ROOT);
+                ExecuteTipLink(root, parsedMsg.links[linkIdx].cmd);
+                return 0;
+            }
         }
     }
 

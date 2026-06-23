@@ -25,6 +25,7 @@
 #include "FilterHighlightDraw.h"
 #include "FileThumbnails.h"
 #include "Menu.h"
+#include "TipText.h"
 #include "HomePage.h"
 #include "Translations.h"
 #include "Version.h"
@@ -58,38 +59,6 @@ Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 // TODO: leaks if set
 const char* promoFromServer = nullptr;
 
-// a word in a parsed tip; can be part of a link
-struct TipWord {
-    char* text = nullptr; // owned
-    int dx = 0;
-    int dy = 0;
-    int x = 0;
-    int y = 0;
-    bool isLink = false;
-    int linkIdx = -1; // index into ParsedTip::links
-};
-
-struct TipLink {
-    char* cmd = nullptr; // owned, the link_command
-    int firstWord = 0;
-    int lastWord = 0; // inclusive
-};
-
-struct ParsedTip {
-    Vec<TipWord> words;
-    Vec<TipLink> links;
-    int totalDy = 0; // computed by layout
-
-    ~ParsedTip() {
-        for (auto& w : words) {
-            str::Free(w.text);
-        }
-        for (auto& l : links) {
-            str::Free(l.cmd);
-        }
-    }
-};
-
 // resolve (Key/CmdXxx) to keyboard shortcut string
 static TempStr ResolveKeyShortcutTemp(const char* cmdName) {
     int cmdId = GetCommandIdByName(cmdName);
@@ -119,7 +88,10 @@ static TempStr ResolveLinkCmdTemp(const char* cmd) {
     return str::DupTemp(cmd);
 }
 
-static void ParseTip(ParsedTip& tip, const char* s) {
+void ParseTip(ParsedTip& tip, const char* s) {
+    if (!s) {
+        return;
+    }
     StrBuilder expanded;
     // first pass: expand (Key/CmdXxx) to shortcut strings
     while (*s) {
@@ -206,7 +178,7 @@ static void ParseTip(ParsedTip& tip, const char* s) {
     }
 }
 
-static void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
+void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
     uint fmt = DT_LEFT | DT_NOCLIP;
     for (auto& w : tip.words) {
         Size sz = HdcMeasureText(hdc, w.text, fmt, font);
@@ -215,11 +187,12 @@ static void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
     }
 }
 
-static void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
+void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
     int x = startX;
     int y = startY;
     int lineHeight = 0;
     int spaceWidth = 4; // approximate space between words
+    int maxX = startX;
     for (auto& w : tip.words) {
         if (x > startX && x + w.dx > startX + areaWidth) {
             // wrap to next line
@@ -230,11 +203,81 @@ static void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
         w.x = x;
         w.y = y;
         x += w.dx + spaceWidth;
+        if (x - spaceWidth > maxX) {
+            maxX = x - spaceWidth;
+        }
         if (w.dy > lineHeight) {
             lineHeight = w.dy;
         }
     }
+    tip.totalDx = maxX - startX;
     tip.totalDy = (y - startY) + lineHeight;
+}
+
+void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol) {
+    uint fmt = DT_LEFT | DT_NOCLIP;
+    for (auto& w : tip.words) {
+        Point pt = {w.x, w.y};
+        SetTextColor(hdc, w.isLink ? linkCol : textCol);
+        HdcDrawText(hdc, w.text, pt, fmt, font);
+    }
+    // underline each link
+    HPEN pen = CreatePen(PS_SOLID, 1, linkCol);
+    HGDIOBJ prevPen = SelectObject(hdc, pen);
+    for (auto& link : tip.links) {
+        auto& first = tip.words[link.firstWord];
+        auto& last = tip.words[link.lastWord];
+        int underlineY = first.y + first.dy - 3;
+        int x1 = first.x;
+        int x2 = last.x + last.dx;
+        DrawLine(hdc, Rect(x1, underlineY, x2 - x1, 0));
+    }
+    SelectObject(hdc, prevPen);
+    DeleteObject(pen);
+}
+
+int HitTestTipLink(ParsedTip& tip, int x, int y) {
+    for (auto& w : tip.words) {
+        if (!w.isLink) {
+            continue;
+        }
+        Rect wr = {w.x, w.y, w.dx, w.dy};
+        if (wr.Contains(Point(x, y))) {
+            return w.linkIdx;
+        }
+    }
+    return -1;
+}
+
+void ExecuteTipLink(HWND hwnd, const char* cmd) {
+    if (str::IsEmpty(cmd)) {
+        return;
+    }
+    if (str::StartsWith(cmd, "Cmd")) {
+        int cmdId = GetCommandIdByName(cmd);
+        if (cmdId > 0) {
+            HwndSendCommand(hwnd, cmdId);
+        }
+        return;
+    }
+    if (str::StartsWith(cmd, "http://") || str::StartsWith(cmd, "https://")) {
+        SumatraLaunchBrowser(cmd);
+    }
+}
+
+bool TipHasLinks(ParsedTip& tip) {
+    return tip.links.Size() > 0;
+}
+
+TempStr TipPlainTextTemp(ParsedTip& tip) {
+    StrBuilder sb;
+    for (int i = 0; i < tip.words.Size(); i++) {
+        if (i > 0) {
+            sb.AppendChar(' ');
+        }
+        sb.Append(tip.words[i].text);
+    }
+    return str::DupTemp(sb.Get());
 }
 
 static ParsedTip* gParsedTips = nullptr;
@@ -1644,30 +1687,9 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         FillRect(hdc, l.rcTip, tipBgCol);
 
         HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
-        uint fmt = DT_LEFT | DT_NOCLIP;
         COLORREF textCol = ThemeWindowTextColor();
         COLORREF linkCol = ThemeWindowLinkColor();
-
-        for (auto& w : l.tip->words) {
-            Point pt = {w.x, w.y};
-            if (w.isLink) {
-                SetTextColor(hdc, linkCol);
-                HdcDrawText(hdc, w.text, pt, fmt, fontTip);
-            } else {
-                SetTextColor(hdc, textCol);
-                HdcDrawText(hdc, w.text, pt, fmt, fontTip);
-            }
-        }
-        // draw underlines spanning each link
-        SelectObject(hdc, penLinkLine);
-        for (auto& link : l.tip->links) {
-            auto& first = l.tip->words[link.firstWord];
-            auto& last = l.tip->words[link.lastWord];
-            int underlineY = first.y + first.dy - 3;
-            int x1 = first.x;
-            int x2 = last.x + last.dx;
-            DrawLine(hdc, Rect(x1, underlineY, x2 - x1, 0));
-        }
+        DrawTipWords(hdc, *l.tip, fontTip, textCol, linkCol);
     }
 }
 

@@ -840,6 +840,7 @@ function sumatrapdf_files()
     "Notifications.*",
     "PdfSync.*",
     "PdfTools.*",
+    "TipText.h",
     "Print.*",
     "ProgressUpdateUI.*",
     "ReadAloudHighlight.*",
