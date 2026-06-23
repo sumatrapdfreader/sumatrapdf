@@ -171,30 +171,30 @@ static bool NeedsRotateUI(MainWindow* win) {
 // some commands are only avialble in certain contexts
 // we remove toolbar buttons for un-availalbe commands
 static bool IsCmdAvailable(MainWindow* win, int cmdId) {
-    // these document-specific buttons (page box, rotate, find) only make sense
-    // with a document open; when none is loaded fall through to the general
-    // availability check, which hides commands requiring a document so the home
-    // page shows a minimal toolbar instead of disabled/empty controls
-    if (win->IsDocLoaded()) {
-        switch (cmdId) {
-            case CmdZoomFitWidthAndContinuous:
-            case CmdZoomFitPageAndSinglePage:
-                return !win->AsChm();
-            case CmdRotateLeft:
-            case CmdRotateRight:
-                return NeedsRotateUI(win);
-            case CmdFindFirst:
-            case CmdFindNext:
-            case CmdFindPrev:
-            case CmdFindToggleMatchCase:
-            case CmdFindToggleMatchWholeWord:
-                return NeedsFindUI(win);
-            case PageInfoId:
-                return true;
-        }
+    switch (cmdId) {
+        case CmdZoomFitWidthAndContinuous:
+        case CmdZoomFitPageAndSinglePage:
+            return !win->AsChm();
+        case CmdRotateLeft:
+        case CmdRotateRight:
+            return NeedsRotateUI(win);
+        case CmdFindFirst:
+        case CmdFindNext:
+        case CmdFindPrev:
+        case CmdFindToggleMatchCase:
+        case CmdFindToggleMatchWholeWord:
+            return NeedsFindUI(win);
+        case PageInfoId:
+            return true;
     }
     auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
     AutoRun delCtx(DeleteBuildMenuCtx, ctx);
+    // Toolbar buttons stay visible (but disabled) when no document is open, so
+    // decide visibility as if a document were loaded; otherwise the no-document
+    // gate in GetCommandVisibility would remove them. Document-type-specific
+    // removals (e.g. for CHM/image collections) still apply when a real document
+    // is loaded, and the enabled state is handled separately in IsCmdEnabled.
+    ctx->isDocLoaded = true;
     bool remove, disable;
     GetCommandIdState(ctx, cmdId, &remove, &disable);
     return !remove;
@@ -410,15 +410,6 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     // reposition the floating find bar over the search icon (and hide it if the
     // current document doesn't support find) when toolbar buttons change
     if (setButtonsVisibility) {
-        // the page box is a set of child controls overlaid on the toolbar, so
-        // its visibility isn't covered by hiding the PageInfoId button; toggle
-        // it explicitly so the home page (no document) doesn't show an empty box
-        int sw = IsCmdAvailable(win, PageInfoId) ? SW_SHOW : SW_HIDE;
-        ShowWindow(win->hwndPageLabel, sw);
-        ShowWindow(win->hwndPageEdit, sw);
-        ShowWindow(win->hwndPageBg, sw);
-        ShowWindow(win->hwndPageTotal, sw);
-
         UpdateToolbarFindText(win);
     }
 
