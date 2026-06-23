@@ -408,23 +408,37 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
     int idx;
     switch (vkey) {
         case VK_DOWN:
-            idx = (cur < 0) ? 0 : cur + 1;
+            // wrap like the compact bar's Find Next (issue #5692)
+            idx = (cur < 0) ? 0 : (cur + 1) % n;
             break;
         case VK_UP:
-            idx = (cur < 0) ? 0 : cur - 1;
+            idx = (cur < 0) ? n - 1 : (cur - 1 + n) % n;
             break;
         case VK_NEXT: // Page Down
-            idx = (cur < 0 ? 0 : cur) + kPage;
+            if (cur < 0) {
+                idx = 0;
+            } else {
+                idx = cur + kPage;
+                if (idx >= n) {
+                    idx %= n;
+                }
+            }
             break;
         case VK_PRIOR: // Page Up
-            idx = (cur < 0 ? 0 : cur) - kPage;
+            if (cur < 0) {
+                idx = n - 1;
+            } else {
+                idx = cur - kPage;
+                if (idx < 0) {
+                    idx = (idx % n + n) % n;
+                }
+            }
             break;
         default:
             return false;
     }
-    idx = limitValue(idx, 0, n - 1);
     if (idx == cur) {
-        return true; // already at the end/start; swallow the key
+        return true; // e.g. a single match wrapping onto itself
     }
     results->SetCurrentSelection(idx);
     OnResultSelected();
