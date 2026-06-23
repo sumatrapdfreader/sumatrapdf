@@ -762,10 +762,6 @@ int SyncTex::RebuildIndexIfNeeded() {
     return MarkIndexWasRebuilt();
 }
 
-static bool IsWslUncPath(const char* path) {
-    return str::StartsWithI(path, "\\\\wsl.localhost\\") || str::StartsWithI(path, "\\\\wsl$\\");
-}
-
 // Decides whether `resolvedSrcPath` should be treated as a Unix path rather
 // than a Windows path.
 //
@@ -781,48 +777,11 @@ static bool IsUnixSourcePath(const char* syncFilePath, const char* resolvedSrcPa
         return false;
     }
 
-    if (IsWslUncPath(syncFilePath) && !IsWslUncPath(resolvedSrcPath)) {
+    if (path::IsWslUnc(syncFilePath) && !path::IsWslUnc(resolvedSrcPath)) {
         return true;
     }
 
-    if (str::StartsWithI(resolvedSrcPath, "/mnt/") && std::isalpha((unsigned char)resolvedSrcPath[5]) &&
-        (resolvedSrcPath[6] == '/' || resolvedSrcPath[6] == '\0')) {
-        return true;
-    }
-
-    return false;
-}
-
-// Converts a WSL UNC path to its equivalent Unix path by stripping the
-// \\wsl.localhost\<distro>\ or \\wsl$\<distro>\ prefix.
-// e.g. "\\wsl.localhost\Ubuntu\home\user\file.tex" -> "/home/user/file.tex"
-static TempStr WslUncPathToUnixPathTemp(const char* srcfilepath) {
-    if (!srcfilepath) {
-        return nullptr;
-    }
-
-    const char* p = nullptr;
-
-    // Strip the WSL UNC prefix
-    if (str::StartsWithI(srcfilepath, "\\\\wsl.localhost\\")) {
-        p = srcfilepath + str::Len("\\\\wsl.localhost\\");
-    } else if (str::StartsWithI(srcfilepath, "\\\\wsl$\\")) {
-        p = srcfilepath + str::Len("\\\\wsl$\\");
-    } else {
-        return nullptr;
-    }
-
-    // Skip the distribution name, e.g. "Ubuntu" in "\\wsl.localhost\Ubuntu\home\..."
-    while (*p && !path::IsSep(*p)) {
-        p++;
-    }
-    if (!path::IsSep(*p) || !p[1]) {
-        return nullptr;
-    }
-
-    TempStr unixPath = str::JoinTemp("/", p + 1);
-    str::TransCharsInPlace(unixPath, "\\", "/");
-    return unixPath;
+    return path::IsWslMount(resolvedSrcPath);
 }
 
 int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
@@ -863,7 +822,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
 
         // Resolve relative Unix paths relative to the sync file's directory
         if (filename[0] != '/') {
-            TempStr unixSyncFilePath = WslUncPathToUnixPathTemp(syncFilePath.Get());
+            TempStr unixSyncFilePath = path::WslUncToUnixTemp(syncFilePath.Get());
             TempStr dir = path::GetDirTemp(unixSyncFilePath);
             filename.Set(path::Join(dir, filename));
         }
@@ -886,24 +845,6 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     }
 
     return PDFSYNCERR_SUCCESS;
-}
-
-// Converts a Windows absolute path to its WSL mount-path equivalent.
-// e.g. "C:\project\file.tex" -> "/mnt/c/project/file.tex"
-static TempStr WindowsPathToWslMountPathTemp(const char* path) {
-    if (!path) {
-        return nullptr;
-    }
-
-    // Require an absolute Windows path (e.g. "C:\", or ""C:/"")
-    if (!(std::isalpha((unsigned char)path[0]) && path[1] == ':' && path::IsSep(path[2]))) {
-        return nullptr;
-    }
-
-    char drive = (char)tolower((unsigned char)path[0]);
-    TempStr rest = str::DupTemp(path + 3); // Skip "[drive]:\"
-    str::TransCharsInPlace(rest, "\\", "/");
-    return str::FormatTemp("/mnt/%c/%s", drive, rest);
 }
 
 int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
@@ -930,8 +871,8 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
 
     if (ret <= 0) {
         // try with unix path
-        if (TempStr unixSrcFilePath = WslUncPathToUnixPathTemp(srcfilepath)) {
-            logfa("SyncTex::SourceToDoc: retrying with unix path '%s'\n", srcfilepath);
+        if (TempStr unixSrcFilePath = path::WslUncToUnixTemp(srcfilepath)) {
+            logfa("SyncTex::SourceToDoc: retrying with unix path '%s'\n", unixSrcFilePath);
             int ret2 = synctex_display_query(this->scanner, unixSrcFilePath, line, col, 0);
             if (ret2 > 0) {
                 ret = ret2;
@@ -941,7 +882,7 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
 
     if (ret <= 0) {
         // try with WSL mount path
-        if (TempStr wslMountSrcFilePath = WindowsPathToWslMountPathTemp(srcfilepath)) {
+        if (TempStr wslMountSrcFilePath = path::WindowsToWslMountTemp(srcfilepath)) {
             logfa("SyncTex::SourceToDoc: retrying with WSL mount path '%s'\n", wslMountSrcFilePath);
             int ret2 = synctex_display_query(this->scanner, wslMountSrcFilePath, line, col, 0);
             if (ret2 > 0) {

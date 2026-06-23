@@ -520,6 +520,66 @@ bool IsAbsolute(const char* path) {
     return !PathIsRelativeW(ws);
 }
 
+bool IsWslUnc(const char* path) {
+    return str::StartsWithI(path, "\\\\wsl.localhost\\") || str::StartsWithI(path, "\\\\wsl$\\");
+}
+
+bool IsWslMount(const char* path) {
+    if (!path || !str::StartsWithI(path, "/mnt/")) {
+        return false;
+    }
+    char drive = (char)tolower((unsigned char)path[5]);
+    return drive >= 'a' && drive <= 'z' && (path[6] == '/' || path[6] == '\0');
+}
+
+// Converts a WSL UNC path to its equivalent Unix path by stripping the
+// \\wsl.localhost\<distro>\ or \\wsl$\<distro>\ prefix.
+// e.g. "\\wsl.localhost\Ubuntu\home\user\file.tex" -> "/home/user/file.tex"
+TempStr WslUncToUnixTemp(const char* path) {
+    if (!path) {
+        return nullptr;
+    }
+
+    const char* p = nullptr;
+
+    if (str::StartsWithI(path, "\\\\wsl.localhost\\")) {
+        p = path + str::Len("\\\\wsl.localhost\\");
+    } else if (str::StartsWithI(path, "\\\\wsl$\\")) {
+        p = path + str::Len("\\\\wsl$\\");
+    } else {
+        return nullptr;
+    }
+
+    // Skip the distribution name, e.g. "Ubuntu" in "\\wsl.localhost\Ubuntu\home\..."
+    while (*p && !IsSep(*p)) {
+        p++;
+    }
+    if (!IsSep(*p) || !p[1]) {
+        return nullptr;
+    }
+
+    TempStr unixPath = str::JoinTemp("/", p + 1);
+    str::TransCharsInPlace(unixPath, "\\", "/");
+    return unixPath;
+}
+
+// Converts a Windows absolute path to its WSL mount-path equivalent.
+// e.g. "C:\project\file.tex" -> "/mnt/c/project/file.tex"
+TempStr WindowsToWslMountTemp(const char* path) {
+    if (!path) {
+        return nullptr;
+    }
+
+    char drive = (char)tolower((unsigned char)path[0]);
+    if (!(drive >= 'a' && drive <= 'z' && path[1] == ':' && IsSep(path[2]))) {
+        return nullptr;
+    }
+
+    TempStr rest = str::DupTemp(path + 3);
+    str::TransCharsInPlace(rest, "\\", "/");
+    return str::FormatTemp("/mnt/%c/%s", drive, rest);
+}
+
 // When running in App Store, Windows virtualizes %APPDATA% etc., so to get a real path
 // for settings etc., we need to un-virtualize
 TempStr GetNonVirtualTemp(const char* virtualPath) {

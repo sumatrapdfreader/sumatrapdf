@@ -36,6 +36,11 @@ bool IsCloudPlaceholder(const char* path);
 bool SupportsChangeNotifications(const char* path);
 bool IsAbsolute(const char* path);
 
+bool IsWslUnc(const char* path);
+bool IsWslMount(const char* path);
+TempStr WslUncToUnixTemp(const char* path);
+TempStr WindowsToWslMountTemp(const char* path);
+
 bool Match(const char* path, const char* filter);
 
 enum Type {
