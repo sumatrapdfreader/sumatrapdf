@@ -227,7 +227,7 @@ struct Str {
     int len;
 
     Str() : s(nullptr), len(0) {}
-    explicit Str(char* s_) : s(s_), len(0) { len = (int)strlen(s); }
+    explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }
     explicit Str(char* s_, int len_) : s(s_), len(len_) {}
 };
 
