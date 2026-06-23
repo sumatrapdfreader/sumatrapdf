@@ -1340,6 +1340,162 @@ const char* SeqStrByIndex(SeqStrings strs, int idx) {
     return s;
 }
 
+// unsigned LEB128 of zigzag-encoded i64
+static size_t VarIntEncode(u8* dst, i64 val) {
+    u64 n = ((u64)val << 1) ^ (u64)(val >> 63);
+    size_t i = 0;
+    for (;;) {
+        u8 b = (u8)(n & 0x7f);
+        n >>= 7;
+        if (n) {
+            b |= 0x80;
+        }
+        dst[i++] = b;
+        if (!n) {
+            return i;
+        }
+    }
+}
+
+static bool VarIntDecode(const u8*& p, i64* out) {
+    u64 n = 0;
+    int shift = 0;
+    for (;;) {
+        u8 b = *p++;
+        n |= (u64)(b & 0x7f) << shift;
+        if (!(b & 0x80)) {
+            *out = (i64)((n >> 1) ^ (~(n & 1) + 1));
+            return true;
+        }
+        shift += 7;
+        if (shift >= 64) {
+            return false;
+        }
+    }
+}
+
+static const char* SeqStrNumEntryEnd(const char* entry) {
+    if (!entry || !*entry) {
+        return entry;
+    }
+    entry += str::Len(entry) + 1;
+    const u8* p = (const u8*)entry;
+    while (*p & 0x80) {
+        p++;
+    }
+    return (const char*)(p + 1);
+}
+
+static void SeqStrNumEntryParts(const char* entry, const char** strOut, i64* numOut) {
+    *strOut = entry;
+    const u8* p = (const u8*)(entry + str::Len(entry) + 1);
+    VarIntDecode(p, numOut);
+}
+
+void SeqStrNumAppend(StrBuilder* b, const char* s, i64 num) {
+    b->Append(s);
+    b->AppendChar('\0');
+    u8 buf[12];
+    size_t n = VarIntEncode(buf, num);
+    b->Append((const char*)buf, n);
+}
+
+void SeqStrNumFinish(StrBuilder* b) {
+    b->AppendChar('\0');
+}
+
+void SeqStrNumNext(const char*& s, int* idxInOut) {
+    int idx = *idxInOut;
+    if (!s || !*s || idx < 0) {
+        s = nullptr;
+        *idxInOut = -1;
+        return;
+    }
+    s = SeqStrNumEntryEnd(s);
+    if (!s || !*s) {
+        s = nullptr;
+        return;
+    }
+    idx++;
+    *idxInOut = idx;
+}
+
+void SeqStrNumNext(const char*& s) {
+    int idxDummy = 0;
+    SeqStrNumNext(s, &idxDummy);
+}
+
+int SeqStrNumIndex(SeqStrNum strs, const char* toFind, i64* numOut) {
+    if (!toFind) {
+        return -1;
+    }
+    const char* s = strs;
+    int idx = 0;
+    while (*s) {
+        if (str::Eq(s, toFind)) {
+            if (numOut) {
+                SeqStrNumEntryParts(s, &s, numOut);
+            }
+            return idx;
+        }
+        s = SeqStrNumEntryEnd(s);
+        ++idx;
+    }
+    return -1;
+}
+
+int SeqStrNumIndexIS(SeqStrNum strs, const char* toFind, i64* numOut) {
+    if (!toFind) {
+        return -1;
+    }
+    const char* s = strs;
+    int idx = 0;
+    while (*s) {
+        if (str::EqIS(s, toFind)) {
+            if (numOut) {
+                SeqStrNumEntryParts(s, &s, numOut);
+            }
+            return idx;
+        }
+        s = SeqStrNumEntryEnd(s);
+        ++idx;
+    }
+    return -1;
+}
+
+const char* SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
+    ReportIf(idx < 0);
+    const char* s = strs;
+    while (idx > 0) {
+        s = SeqStrNumEntryEnd(s);
+        if (!s || !*s) {
+            return nullptr;
+        }
+        --idx;
+    }
+    if (!s || !*s) {
+        return nullptr;
+    }
+    if (numOut) {
+        SeqStrNumEntryParts(s, &s, numOut);
+    }
+    return s;
+}
+
+const char* SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
+    const char* s = strs;
+    while (s && *s) {
+        i64 n = 0;
+        const char* str = s;
+        SeqStrNumEntryParts(s, &str, &n);
+        if (n == num) {
+            return str;
+        }
+        s = SeqStrNumEntryEnd(s);
+    }
+    return nullptr;
+}
+
 // for compatibility with C string, the last character is always 0
 // kPadding is number of characters needed for terminating character
 static constexpr size_t kPadding = 1;

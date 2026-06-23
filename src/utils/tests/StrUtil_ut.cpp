@@ -43,6 +43,40 @@ static void StrReplaceTest() {
     }
 }
 
+static void StrSeqNumTest() {
+    StrBuilder b;
+    SeqStrNumAppend(&b, "foo", 10);
+    SeqStrNumAppend(&b, "bar", -3);
+    SeqStrNumAppend(&b, "baz", 0x1234);
+    SeqStrNumFinish(&b);
+    SeqStrNum seq = b.Get();
+
+    i64 num = 0;
+    utassert(0 == SeqStrNumIndex(seq, "foo", &num));
+    utassert(num == 10);
+    utassert(1 == SeqStrNumIndex(seq, "bar", &num));
+    utassert(num == -3);
+    utassert(2 == SeqStrNumIndex(seq, "baz", &num));
+    utassert(num == 0x1234);
+    utassert(-1 == SeqStrNumIndex(seq, "missing", &num));
+
+    const char* s = SeqStrNumByIndex(seq, 1, &num);
+    utassert(str::Eq(s, "bar"));
+    utassert(num == -3);
+
+    s = SeqStrNumStrByNumber(seq, 10);
+    utassert(str::Eq(s, "foo"));
+    s = SeqStrNumStrByNumber(seq, 0x1234);
+    utassert(str::Eq(s, "baz"));
+    utassert(nullptr == SeqStrNumStrByNumber(seq, 99));
+
+    const char* it = seq;
+    int idx = 0;
+    SeqStrNumNext(it, &idx);
+    utassert(idx == 1);
+    utassert(str::Eq(it, "bar"));
+}
+
 static void StrSeqTest() {
     const char* s = "foo\0a\0bar\0";
     utassert(0 == SeqStrIndex(s, "foo"));
@@ -632,6 +666,7 @@ void StrTest() {
     StrIsDigitTest();
     StrReplaceTest();
     StrSeqTest();
+    StrSeqNumTest();
     StrConvTest();
     StrUrlExtractTest();
     StrFindITest();

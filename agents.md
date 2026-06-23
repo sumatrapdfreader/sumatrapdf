@@ -26,13 +26,13 @@ When committing work done with AI assistance, append the user prompt(s) that pro
 
 To add a new advanced setting:
 - add definition in cmd/gen-settings.ts
-- run "bun cmd/gen-settings.ts" to regenerate src/Settings.h and src/Settings.cpp
+- run "bun cmd/gen-code.ts" (or "bun cmd/gen-settings.ts") to regenerate src/Settings.h and src/Settings.cpp
 
 ## Adding a new command
 
 To add a new command:
 - add to cmd/gen-commands.ts, always at the end of the list (before the "CmdNone" command)
-- run "bun cmd/gen-commands.ts" to regenerate src/Commands.h and src/Commands.cpp
+- run "bun cmd/gen-code.ts" (or "bun cmd/gen-commands.ts") to regenerate src/Commands.h and src/Commands.cpp
 - document in docs/md/Commands.md
 - add an entry to the **New commands** list at the end of the **next** section in docs/md/Version-history.md (see below)
 
@@ -40,7 +40,7 @@ To add a new command:
 
 To add a new cmd-line flag:
 - add to cmd/gen-flags.ts
-- run "bun cmd/gen-flags.ts" to regenerate src/Flags.h and src/Flags.cpp
+- run "bun cmd/gen-code.ts" (or "bun cmd/gen-flags.ts") to regenerate src/Flags.cpp
 - implement handling in Flags.cpp
 - document in docs/md/Command-line-arguments.md when appropriate
 - add an entry to the **New command-line arguments** list at the end of the **next** section in docs/md/Version-history.md (see below)

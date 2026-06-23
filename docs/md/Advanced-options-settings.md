@@ -57,8 +57,7 @@ DisableJavaScript = false
 AllowExternalImages = false
 
 ; if true, we expose the SyncTeX inverse search command line in Settings ->
-; Options. You can also enable this and set InverseSearchCmdLine from the
-; command palette: Ctrl + K -> "Set Inverse Search Command Line"
+; Options
 EnableTeXEnhancements = false
 
 ; if true, Esc key closes SumatraPDF
@@ -68,8 +67,7 @@ EscToExit = false
 ; version 3.0)
 FullPathInTitle = false
 
-; pattern used to launch the LaTeX editor when doing inverse search (can also be
-; set from Ctrl + K -> "Set Inverse Search Command Line")
+; pattern used to launch the LaTeX editor when doing inverse search
 InverseSearchCmdLine =
 
 ; when restoring session, delay loading of documents until their tab is selected

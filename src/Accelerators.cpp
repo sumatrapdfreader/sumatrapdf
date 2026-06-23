@@ -10,101 +10,107 @@
 
 // http://www.kbdedit.com/manual/low_level_vk_list.html
 // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-// if there are multiple declarations, the first one will be shown in menu
-#define VIRT_KEYS(V)                 \
-    V(VK_NUMPAD0, "numpad0")         \
-    V(VK_NUMPAD1, "numpad1")         \
-    V(VK_NUMPAD2, "numpad2")         \
-    V(VK_NUMPAD3, "numpad3")         \
-    V(VK_NUMPAD4, "numpad4")         \
-    V(VK_NUMPAD5, "numpad5")         \
-    V(VK_NUMPAD6, "numpad6")         \
-    V(VK_NUMPAD7, "numpad7")         \
-    V(VK_NUMPAD8, "numpad8")         \
-    V(VK_NUMPAD9, "numpad9")         \
-    V(VK_TAB, "Tab")                 \
-    V(VK_END, "End")                 \
-    V(VK_HOME, "Home")               \
-    V(VK_LEFT, "Left")               \
-    V(VK_RIGHT, "Right")             \
-    V(VK_UP, "Up")                   \
-    V(VK_DOWN, "Down")               \
-    V(VK_NEXT, "PageDown")           \
-    V(VK_NEXT, "PgDown")             \
-    V(VK_PRIOR, "PageUp")            \
-    V(VK_PRIOR, "PgUp")              \
-    V(VK_BACK, "Back")               \
-    V(VK_BACK, "Backspace")          \
-    V(VK_DELETE, "Del")              \
-    V(VK_DELETE, "Delete")           \
-    V(VK_INSERT, "Ins")              \
-    V(VK_INSERT, "Insert")           \
-    V(VK_ESCAPE, "Esc")              \
-    V(VK_ESCAPE, "Escape")           \
-    V(VK_RETURN, "Return")           \
-    V(VK_CONVERT, "Convert")         \
-    V(VK_NONCONVERT, "NoConvert")    \
-    V(VK_SPACE, "Space")             \
-    V(VK_MULTIPLY, "*")              \
-    V(VK_MULTIPLY, "Multiply")       \
-    V(VK_MULTIPLY, "Mult")           \
-    V(VK_ADD, "+")                   \
-    V(VK_OEM_PLUS, "+")              \
-    V(VK_ADD, "Add")                 \
-    V(VK_OEM_MINUS, "-")             \
-    V(VK_SUBTRACT, "-")              \
-    V(VK_SUBTRACT, "Subtract")       \
-    V(VK_SUBTRACT, "Sub")            \
-    V(VK_DIVIDE, "/")                \
-    V(VK_DIVIDE, "Divide")           \
-    V(VK_DIVIDE, "Div")              \
-    V(VK_HELP, "Help")               \
-    V(VK_SELECT, "Select")           \
-    V(VK_VOLUME_DOWN, "Volume Down") \
-    V(VK_VOLUME_DOWN, "VolumeDown")  \
-    V(VK_VOLUME_UP, "Volume Up")     \
-    V(VK_VOLUME_UP, "VolumeUp")      \
-    V(VK_XBUTTON1, "XButton1")       \
-    V(VK_XBUTTON2, "XButton2")       \
-    V(VK_F1, "F1")                   \
-    V(VK_F2, "F2")                   \
-    V(VK_F3, "F3")                   \
-    V(VK_F4, "F4")                   \
-    V(VK_F5, "F5")                   \
-    V(VK_F6, "F6")                   \
-    V(VK_F7, "F7")                   \
-    V(VK_F8, "F8")                   \
-    V(VK_F9, "F9")                   \
-    V(VK_F10, "F10")                 \
-    V(VK_F11, "F11")                 \
-    V(VK_F12, "F12")                 \
-    V(VK_F13, "F13")                 \
-    V(VK_F14, "F14")                 \
-    V(VK_F15, "F15")                 \
-    V(VK_F16, "F16")                 \
-    V(VK_F17, "F17")                 \
-    V(VK_F18, "F18")                 \
-    V(VK_F19, "F19")                 \
-    V(VK_F20, "F20")                 \
-    V(VK_F21, "F21")                 \
-    V(VK_F22, "F22")                 \
-    V(VK_F23, "F23")                 \
-    V(VK_F24, "F24")                 \
-    V(VK_CLEAR, "Clear")             \
-    V(VK_ACCEPT, "Accept")           \
-    V(VK_MODECHANGE, "ModeChange")   \
-    V(VK_PRINT, "Print")             \
-    V(VK_EXECUTE, "Execute")         \
-    V(VK_SNAPSHOT, "PrtSc")          \
-    V(VK_SNAPSHOT, "PrintScreen")    \
-    V(VK_SLEEP, "Sleep")             \
-    V(VK_SEPARATOR, "Separator")     \
-    V(VK_DECIMAL, "Decimal")         \
-    V(VK_SCROLL, "Scroll")           \
-    V(VK_OEM_1, ";")                 \
-    V(VK_OEM_3, "`")                 \
-    V(VK_OEM_4, "[")                 \
-    V(VK_OEM_6, "]")
+// virtual key names: see cmd/gen-code.ts virtKeys (regenerate with bun cmd/gen-code.ts)
+
+// @gen-start virt-keys-num
+// clang-format off
+static SeqStrNum gVirtKeysNum =
+    "numpad0\0" "\xc0\x01" \
+    "numpad1\0" "\xc2\x01" \
+    "numpad2\0" "\xc4\x01" \
+    "numpad3\0" "\xc6\x01" \
+    "numpad4\0" "\xc8\x01" \
+    "numpad5\0" "\xca\x01" \
+    "numpad6\0" "\xcc\x01" \
+    "numpad7\0" "\xce\x01" \
+    "numpad8\0" "\xd0\x01" \
+    "numpad9\0" "\xd2\x01" \
+    "Tab\0" "\x12" \
+    "End\0" "\x46" \
+    "Home\0" "\x48" \
+    "Left\0" "\x4a" \
+    "Right\0" "\x4c" \
+    "Up\0" "\x4e" \
+    "Down\0" "\x50" \
+    "PageDown\0" "\x44" \
+    "PgDown\0" "\x44" \
+    "PageUp\0" "\x42" \
+    "PgUp\0" "\x42" \
+    "Back\0" "\x10" \
+    "Backspace\0" "\x10" \
+    "Del\0" "\x5c" \
+    "Delete\0" "\x5c" \
+    "Ins\0" "\x5a" \
+    "Insert\0" "\x5a" \
+    "Esc\0" "\x36" \
+    "Escape\0" "\x36" \
+    "Return\0" "\x1a" \
+    "Convert\0" "\x38" \
+    "NoConvert\0" "\x3a" \
+    "Space\0" "\x40" \
+    "*\0" "\xd4\x01" \
+    "Multiply\0" "\xd4\x01" \
+    "Mult\0" "\xd4\x01" \
+    "+\0" "\xd6\x01" \
+    "+\0" "\xf6\x02" \
+    "Add\0" "\xd6\x01" \
+    "-\0" "\xfa\x02" \
+    "-\0" "\xda\x01" \
+    "Subtract\0" "\xda\x01" \
+    "Sub\0" "\xda\x01" \
+    "/\0" "\xde\x01" \
+    "Divide\0" "\xde\x01" \
+    "Div\0" "\xde\x01" \
+    "Help\0" "\x5e" \
+    "Select\0" "\x52" \
+    "Volume Down\0" "\xdc\x02" \
+    "VolumeDown\0" "\xdc\x02" \
+    "Volume Up\0" "\xde\x02" \
+    "VolumeUp\0" "\xde\x02" \
+    "XButton1\0" "\x0a" \
+    "XButton2\0" "\x0c" \
+    "F1\0" "\xe0\x01" \
+    "F2\0" "\xe2\x01" \
+    "F3\0" "\xe4\x01" \
+    "F4\0" "\xe6\x01" \
+    "F5\0" "\xe8\x01" \
+    "F6\0" "\xea\x01" \
+    "F7\0" "\xec\x01" \
+    "F8\0" "\xee\x01" \
+    "F9\0" "\xf0\x01" \
+    "F10\0" "\xf2\x01" \
+    "F11\0" "\xf4\x01" \
+    "F12\0" "\xf6\x01" \
+    "F13\0" "\xf8\x01" \
+    "F14\0" "\xfa\x01" \
+    "F15\0" "\xfc\x01" \
+    "F16\0" "\xfe\x01" \
+    "F17\0" "\x80\x02" \
+    "F18\0" "\x82\x02" \
+    "F19\0" "\x84\x02" \
+    "F20\0" "\x86\x02" \
+    "F21\0" "\x88\x02" \
+    "F22\0" "\x8a\x02" \
+    "F23\0" "\x8c\x02" \
+    "F24\0" "\x8e\x02" \
+    "Clear\0" "\x18" \
+    "Accept\0" "\x3c" \
+    "ModeChange\0" "\x3e" \
+    "Print\0" "\x54" \
+    "Execute\0" "\x56" \
+    "PrtSc\0" "\x58" \
+    "PrintScreen\0" "\x58" \
+    "Sleep\0" "\xbe\x01" \
+    "Separator\0" "\xd8\x01" \
+    "Decimal\0" "\xdc\x01" \
+    "Scroll\0" "\xa2\x02" \
+    ";\0" "\xf4\x02" \
+    "`\0" "\x80\x03" \
+    "[\0" "\xb6\x03" \
+    "]\0" "\xba\x03" \
+    "\0";
+// clang-format on
+// @gen-end virt-keys-num
 
 // TOOD: add those as well?
 // #define VK_OEM_5          0xDC  //  '\|' for US
@@ -342,14 +348,6 @@ static bool skipVirtKey(const char*& s, const char* key) {
     return true;
 }
 
-#define KEY_NAME(id, txt) txt "\0"
-SeqStrings gVirtKeyNames = VIRT_KEYS(KEY_NAME) "\0";
-#undef KEY_NAME
-
-#define KEY_ID(id, txt) id,
-WORD gVirtKeysIds[] = {VIRT_KEYS(KEY_ID)};
-#undef KEY_ID
-
 // used in menu shortcuts
 static const char* getVirt(BYTE key, bool isEng) {
     // over-rides for non-english languages
@@ -361,14 +359,7 @@ static const char* getVirt(BYTE key, bool isEng) {
                 return "->";
         }
     }
-    int n = dimofi(gVirtKeysIds);
-    WORD w = key;
-    for (int i = 0; i < n; i++) {
-        if (gVirtKeysIds[i] == w) {
-            return SeqStrByIndex(gVirtKeyNames, i);
-        }
-    }
-    return nullptr;
+    return SeqStrNumStrByNumber(gVirtKeysNum, key);
 }
 
 // Parses a string like Ctrl+Shift+A into ACCEL structure
@@ -407,10 +398,10 @@ again:
     }
 
     // check for keys like F1, Del, Backspace etc.
-    int idx = SeqStrIndexIS(gVirtKeyNames, toFind);
+    i64 vk = 0;
+    int idx = SeqStrNumIndexIS(gVirtKeysNum, toFind, &vk);
     if (idx >= 0) {
-        ReportIf(idx >= dimofi(gVirtKeysIds));
-        accel.key = gVirtKeysIds[idx];
+        accel.key = (BYTE)vk;
         accel.fVirt |= FVIRTKEY;
         return true;
     }
