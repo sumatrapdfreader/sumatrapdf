@@ -248,6 +248,7 @@ struct CommandPaletteBuildCtx {
     int pageCount = 0;
     bool isSinglePage = false;
     bool hasDocTabs = false;
+    int nTabs = 0;
     Kind engineKind = nullptr;
     bool isSpeaking = false;
     bool canContinueReadAloud = false;
@@ -322,9 +323,13 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return ctx.hasDocTabs;
     }
 
-    // must check before ctx.isDocLoaded
-    if (cmdId == CmdToggleWindowsPreviewer || cmdId == CmdToggleWindowsSearchFilter) {
-        return IsOurExeInstalled();
+    if (cmdId == CmdNextTab || cmdId == CmdPrevTab || cmdId == CmdNextTabSmart || cmdId == CmdPrevTabSmart ||
+        cmdId == CmdMoveTabLeft || cmdId == CmdMoveTabRight) {
+        return ctx.nTabs >= 2;
+    }
+
+    if ((cmdId == CmdToggleWindowsPreviewer || cmdId == CmdToggleWindowsSearchFilter) && !IsOurExeInstalled()) {
+        return false;
     }
 
     // when document is not loaded, most commands are not available
@@ -354,9 +359,8 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return ctx.hasSelection;
     }
 
-    // we only want to show this in home page
     if (cmdId == CmdToggleFrequentlyRead) {
-        return !ctx.isDocLoaded;
+        return false;
     }
 
     if (cmdId == CmdToggleMenuBar) {
@@ -844,6 +848,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     ctx.allowToggleMenuBar = true;
 
     int nTabs = mainWin->TabCount();
+    ctx.nTabs = nTabs;
     int tabIdx = mainWin->GetTabIdx(currTab);
     ctx.canCloseTabsToRight = tabIdx < (nTabs - 1);
     ctx.canCloseTabsToLeft = false;
