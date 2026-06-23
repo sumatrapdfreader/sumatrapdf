@@ -34,6 +34,9 @@ static void EnsureTestGlobalPrefs() {
     if (!gGlobalPrefs) {
         gGlobalPrefs = NewGlobalPrefs(nullptr);
     }
+    // Headless -dbg-control tests don't need form JavaScript. Force it off even
+    // when LoadSettings() already ran (the test harness overrides user prefs).
+    EngineMupdfSetDisableJavaScript(true);
 }
 
 // Headless synctex forward-search test for issue #5633. Loads the pdf, builds

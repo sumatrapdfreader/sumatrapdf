@@ -1882,6 +1882,11 @@ fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
     // with threads that hold fz_locks (e.g. docLock) and then call Ctx()
     // safe because only current thread can create a context for its own threadID
     auto newCtx = fz_clone_context(ctx);
+    if (!newCtx) {
+        // OOM or unexpected clone failure: fall back to the engine's main context
+        // rather than caching/returning nullptr (which would crash mupdf callers).
+        return ctx;
+    }
     {
         ScopedCritSec cs(&gPerThreadContextsCs);
         ContextThreadID el{engine, newCtx, threadID};
@@ -1971,7 +1976,6 @@ fz_context* EngineMupdf::Ctx() const {
 EngineMupdf::~EngineMupdf() {
     EnterCriticalSection(&pagesLock);
 
-    ReleaseAllPerThreadContexts(this);
     auto ctx = _ctx;
     for (FzPageInfo* pi : pages) {
         DeleteVecMembers(pi->links);
@@ -2005,6 +2009,8 @@ EngineMupdf::~EngineMupdf() {
     }
 
     fz_drop_document(ctx, _doc);
+    // Drop per-thread clones only after the document (and any JS tied to _ctx) is gone.
+    ReleaseAllPerThreadContexts(this);
     if (ctx) {
         fz_purge_glyph_cache(ctx);
     }
@@ -2891,13 +2897,16 @@ bool EngineMupdf::FinishLoading() {
     // format actions run (e.g. auto-summed totals on a fillable form). mujs is
     // sandboxed to the PDF/form API -- it has no file or network access. Can be
     // turned off with the DisableJavaScript advanced setting.
+    // Use the engine's main context (_ctx), not a per-thread clone: MuJS stores
+    // the fz_context passed here as its allocator and fz_drop_document() must
+    // tear it down with the same context (see ~EngineMupdf).
     if (!gDisableFormJavaScript) {
-        fz_try(ctx) {
-            pdf_enable_js(ctx, pdfdoc);
+        fz_try(_ctx) {
+            pdf_enable_js(_ctx, pdfdoc);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-            fz_warn(ctx, "Couldn't enable form JavaScript");
+        fz_catch(_ctx) {
+            fz_report_error(_ctx);
+            fz_warn(_ctx, "Couldn't enable form JavaScript");
         }
     }
 
