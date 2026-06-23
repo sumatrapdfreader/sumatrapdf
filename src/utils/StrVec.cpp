@@ -857,7 +857,7 @@ static char* JoinInner(const StrVec* v, const char* joint, StrBuilder& res) {
     int i = 0;
     for (auto it = v->begin(); it != v->end(); it++) {
         Str s = it.AsStr();
-        if (IsEmpty(s)) {
+        if (!s.s) {
             firstForJoint++;
             i++;
             continue;
