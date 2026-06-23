@@ -440,12 +440,17 @@ void HideFindBar(MainWindow* win) {
     AbortFinding(win, true);
     ShowWindow(win->findBar->hwnd, SW_HIDE);
     HwndSetFocus(win->hwndFrame);
+    ScheduleRepaint(win, 0);
 }
 
 // note: the floating window is not anchored to the search icon, so "visible"
 // here means specifically the compact bar (used to reposition it on move)
 bool IsFindBarVisible(MainWindow* win) {
     return win->findBar && IsWindowVisible(win->findBar->hwnd);
+}
+
+bool IsFindUIVisible(MainWindow* win) {
+    return IsFindBarVisible(win) || IsFindWindowVisible(win);
 }
 
 void FocusFindEditSelectAll(MainWindow* win) {

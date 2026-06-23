@@ -752,9 +752,11 @@ void HideFindWindow(MainWindow* win) {
         return;
     }
     win->findWindow->SavePos();
+    ClearFindMatches(win);
     AbortFinding(win, true);
     ShowWindow(win->findWindow->hwnd, SW_HIDE);
     HwndSetFocus(win->hwndFrame);
+    ScheduleRepaint(win, 0);
 }
 
 bool IsFindWindowVisible(MainWindow* win) {

@@ -12,6 +12,8 @@ void RecreateFindBar(MainWindow* win);
 void ShowFindBar(MainWindow* win);
 void HideFindBar(MainWindow* win);
 bool IsFindBarVisible(MainWindow* win);
+// true if either the compact bar or the floating find window is visible
+bool IsFindUIVisible(MainWindow* win);
 // reposition over the search toolbar icon (no-op if not visible)
 void FindBarReposition(MainWindow* win);
 // show n/m or "No matches" style status in the bar
