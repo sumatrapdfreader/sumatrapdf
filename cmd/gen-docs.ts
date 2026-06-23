@@ -503,6 +503,28 @@ function writePreviewHtmlFiles(): void {
   );
 }
 
+function writeBundledRenderJs(outDir: string): void {
+  const template = readFileSync(join(docsDir, "gen_docs.render.js"), "utf-8");
+  const searchHtml = readFileSync(
+    join(docsDir, "gen_docs.search.html"),
+    "utf-8",
+  );
+  const searchJs = readFileSync(join(docsDir, "gen_docs.search.js"), "utf-8");
+  const marker = "/*COMMANDS_SEARCH_BUNDLE*/";
+  if (!template.includes(marker)) {
+    throw new Error(
+      `${join(docsDir, "gen_docs.render.js")} missing ${marker}`,
+    );
+  }
+  const bundle =
+    "const kCommandsSearchHtml = " +
+    JSON.stringify(searchHtml) +
+    ";\nconst kCommandsSearchJs = " +
+    JSON.stringify(searchJs) +
+    ";\n";
+  writeFileSync(join(outDir, "gen_docs.render.js"), template.replace(marker, bundle));
+}
+
 function writeManualPakFiles(): void {
   rmSync(manualOutDir, { recursive: true, force: true });
   mkdirSync(manualOutDir, { recursive: true });
@@ -524,12 +546,23 @@ function writeManualPakFiles(): void {
   genAllDocsMd(manualOutDir);
 
   for (const name of kManualStaticFiles) {
+    if (name === "gen_docs.render.js") {
+      continue;
+    }
     copyFileNormalized(join(manualOutDir, name), join(docsDir, name));
   }
+  writeBundledRenderJs(manualOutDir);
   copyFileNormalized(
     join(manualOutDir, "markdown-it.min.js"),
     join("cmd", "markdown-it.min.js"),
   );
+  const bundledRender = readFileSync(
+    join(manualOutDir, "gen_docs.render.js"),
+    "utf-8",
+  );
+  if (!bundledRender.includes("cmd_ids") || !bundledRender.includes("driver();")) {
+    throw new Error("bundled gen_docs.render.js missing Commands search UI");
+  }
   verifyManualImages();
 }
 

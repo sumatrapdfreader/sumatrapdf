@@ -2,6 +2,8 @@
 (function (global) {
   "use strict";
 
+  /*COMMANDS_SEARCH_BUNDLE*/
+
   const h1BreadcrumbsStart =
     '<div class="breadcrumbs"><div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div><div>/</div><div>';
   const h1BreadcrumbsEnd = "</div></div>";
@@ -289,7 +291,28 @@
     }
 
     innerHTML = '<div class="notion-page">' + innerHTML + "</div>";
+    if (mdName === "Commands.md") {
+      innerHTML = replaceCommandsSearchPlaceholder(innerHTML);
+    }
     return { innerHTML: innerHTML, h1Text: h1Text, isMainPage: isMainPage };
+  }
+
+  function getCommandsSearchHtml() {
+    if (typeof kCommandsSearchHtml === "string" && kCommandsSearchHtml) {
+      return kCommandsSearchHtml;
+    }
+    return null;
+  }
+
+  function replaceCommandsSearchPlaceholder(html) {
+    const searchHtml = getCommandsSearchHtml();
+    if (!searchHtml) {
+      return html;
+    }
+    if (html.indexOf("<div>:search:</div>") >= 0) {
+      return html.replace("<div>:search:</div>", searchHtml);
+    }
+    return html;
   }
 
   function fetchText(url) {
@@ -315,26 +338,36 @@
     });
   }
 
+  function runCommandsSearchScript(searchJs) {
+    const script = document.createElement("script");
+    script.textContent = searchJs;
+    document.body.appendChild(script);
+  }
+
   function injectCommandsSearch(innerSlot) {
-    return Promise.all([
-      fetchText("gen_docs.search.html"),
-      fetchText("gen_docs.search.js"),
-    ]).then(function (parts) {
-      const searchHtml = parts[0];
-      const searchJs = parts[1];
-      const placeholder = innerSlot.querySelector("div");
-      if (placeholder && placeholder.textContent === ":search:") {
-        placeholder.outerHTML = searchHtml;
-      } else {
+    function runJs() {
+      const js =
+        typeof kCommandsSearchJs === "string" && kCommandsSearchJs
+          ? kCommandsSearchJs
+          : null;
+      if (js) {
+        runCommandsSearchScript(js);
+        return Promise.resolve();
+      }
+      return fetchText("gen_docs.search.js").then(runCommandsSearchScript);
+    }
+
+    if (getCommandsSearchHtml() || !innerSlot) {
+      return runJs();
+    }
+    return fetchText("gen_docs.search.html")
+      .then(function (searchHtml) {
         innerSlot.innerHTML = innerSlot.innerHTML.replace(
           "<div>:search:</div>",
           searchHtml,
         );
-      }
-      const script = document.createElement("script");
-      script.textContent = searchJs;
-      document.body.appendChild(script);
-    });
+      })
+      .then(runJs);
   }
 
   function renderPage(mdName, currentHtml) {
