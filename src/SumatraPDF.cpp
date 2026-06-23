@@ -1681,6 +1681,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifPersistentWarning;
         nargs.msg = msg;
+        nargs.tab = win->CurrentTab(); // only show while this tab is active
         ShowNotification(nargs);
     }
 
@@ -2837,6 +2838,9 @@ void LoadModelIntoTab(WindowTab* tab) {
     InvalidateRect(win->hwndCanvas, nullptr, FALSE);
     UpdateWindow(win->hwndCanvas);
 
+    // show/hide notifications that are tied to a specific tab
+    ShowNotificationsForActiveTab(win->hwndCanvas, tab);
+
     if (IsMainWindowValid(win)) {
         bool claudeWas = win->claudeVisible;
         bool grokWas = win->grokVisible;
@@ -3409,6 +3413,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoomOrView);
+    RemoveNotificationsForTab(tab);
 
     RememberRecentlyClosedDocument(tab->filePath);
 

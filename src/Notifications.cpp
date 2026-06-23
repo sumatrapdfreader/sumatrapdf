@@ -71,6 +71,10 @@ struct NotificationWnd : Wnd {
     // there can only be a single notification of a given group
     Kind groupId = nullptr;
 
+    // if set, only shown while this is the active tab (see
+    // ShowNotificationsForActiveTab)
+    WindowTab* tab = nullptr;
+
     // to reduce flicker, we might ask the window to shrink the size less often
     // (notifcation windows are only shrunken if by less than factor shrinkLimit)
     float shrinkLimit = 1.0f;
@@ -134,6 +138,10 @@ void RelayoutNotifications(HWND hwndCanvas) {
             // still in delay period, not yet visible
             continue;
         }
+        if (!IsWindowVisible(wnd->hwnd)) {
+            // hidden because it's tied to a non-active tab; don't reserve space
+            continue;
+        }
         Rect rect = WindowRect(wnd->hwnd);
         // re-wrap the message if the notification no longer fits
         // (e.g. when the window was made smaller, issue #2916)
@@ -152,6 +160,41 @@ void RelayoutNotifications(HWND hwndCanvas) {
         uint flags = SWP_NOSIZE | SWP_NOZORDER;
         SetWindowPos(wnd->hwnd, nullptr, rect.x, y, 0, 0, flags);
         y += rect.dy + dyPadding;
+    }
+}
+
+void ShowNotificationsForActiveTab(HWND hwndCanvas, WindowTab* activeTab) {
+    NotificationWnd* wnds[kMaxNotifs];
+    int nWnds = GetForHwnd(hwndCanvas, wnds);
+    for (int i = 0; i < nWnds; i++) {
+        NotificationWnd* wnd = wnds[i];
+        if (wnd->tab == nullptr) {
+            continue; // not tied to a tab, always visible
+        }
+        if (wnd->delayTimerId != 0) {
+            continue; // not yet shown; its delay timer controls visibility
+        }
+        bool show = (wnd->tab == activeTab);
+        ShowWindow(wnd->hwnd, show ? SW_SHOW : SW_HIDE);
+    }
+    RelayoutNotifications(hwndCanvas);
+}
+
+static void NotifsRemoveNotification(NotificationWnd* wnd);
+
+void RemoveNotificationsForTab(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    NotificationWnd* toRemove[kMaxNotifs];
+    int nRemove = 0;
+    for (int i = 0; i < gNotifsCount; i++) {
+        if (gNotifs[i]->tab == tab) {
+            toRemove[nRemove++] = gNotifs[i];
+        }
+    }
+    for (int i = 0; i < nRemove; i++) {
+        NotifsRemoveNotification(toRemove[i]);
     }
 }
 
@@ -197,6 +240,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
         wndRemovedCb = MkFunc1Void(NotifsRemoveNotification);
     }
     timeoutMs = args.timeoutMs;
+    tab = args.tab;
 
     CreateCustomArgs cargs;
     cargs.parent = args.hwndParent;

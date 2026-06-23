@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct NotificationWnd;
+struct WindowTab;
 
 extern Kind kNotifCursorPos;
 extern Kind kNotifActionResponse;
@@ -24,6 +25,9 @@ struct NotificationCreateArgs {
     int delayInMs = 0;    // if > 0 => create hidden, show after delay
     float shrinkLimit = 1.0f;
     const char* msg = nullptr;
+    // if set, the notification is only shown while this tab is the active tab
+    // (hidden when switching to another tab in the same window)
+    WindowTab* tab = nullptr;
     NotificationWndRemoved onRemoved;
 };
 
@@ -33,6 +37,11 @@ bool RemoveNotificationsForGroup(HWND, Kind);
 NotificationWnd* GetNotificationForGroup(HWND, Kind);
 bool UpdateNotificationProgress(NotificationWnd*, const char* msg, int perc);
 void RelayoutNotifications(HWND hwnd);
+// show notifications tied to activeTab (and untied ones), hide those tied to
+// other tabs; call when the active tab changes
+void ShowNotificationsForActiveTab(HWND hwndCanvas, WindowTab* activeTab);
+// remove notifications tied to a tab (call when the tab is closed)
+void RemoveNotificationsForTab(WindowTab* tab);
 
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
 NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs = kNotifDefaultTimeOut);
