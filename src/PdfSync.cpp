@@ -762,16 +762,26 @@ int SyncTex::RebuildIndexIfNeeded() {
     return MarkIndexWasRebuilt();
 }
 
-// Decides whether `resolvedSrcPath` should be treated as a Unix path rather than
-// a Windows path. Returns true if the sync file itself lives on WSL, or if the
-// resolved path is a WSl mount path (e.g. /mnt/c/...), which happens when the PDF
-// lives on a Windows drive but was compiled from inside WSL.
+static bool IsWslUncPath(const char* path) {
+    return str::StartsWithI(path, "\\\\wsl.localhost\\") || str::StartsWithI(path, "\\\\wsl$\\");
+}
+
+// Decides whether `resolvedSrcPath` should be treated as a Unix path rather
+// than a Windows path.
+//
+// True if the sync file lives on WSL AND the resolved path is not itself a
+// WSL UNC path -- i.e. the project was compiled by a Linux/WSL toolchain
+// (which records plain Unix paths).
+//
+// Also true if the resolved path is a WSL mount path (e.g. /mnt/c/...),
+// which happens when the PDF lives on a Windows drive but was compiled from
+// inside WSL
 static bool IsUnixSourcePath(const char* syncFilePath, const char* resolvedSrcPath) {
     if (!syncFilePath || !resolvedSrcPath) {
         return false;
     }
 
-    if (str::StartsWithI(syncFilePath, "\\\\wsl.localhost\\") || str::StartsWithI(syncFilePath, "\\\\wsl$\\")) {
+    if (IsWslUncPath(syncFilePath) && !IsWslUncPath(resolvedSrcPath)) {
         return true;
     }
 
@@ -915,23 +925,31 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
-    if (TempStr unixSrcFilePath = WslUncPathToUnixPathTemp(srcfilepath)) {
-        srcfilepath = unixSrcFilePath;
-    }
-
     // dealed in SyncTex::RebuildIndexIfNeeded()
     int ret = synctex_display_query(this->scanner, srcfilepath, line, col, 0);
 
     if (ret <= 0) {
-        if (TempStr wslMountSrcFilePath = WindowsPathToWslMountPathTemp(srcfilepath)) {
-            srcfilepath = wslMountSrcFilePath;
-            logfa("SyncTex::SourceToDoc: retrying with WSL mount path '%s'\n", srcfilepath);
-            int ret2 = synctex_display_query(this->scanner, srcfilepath, line, col, 0);
+        // try with unix path
+        if (TempStr unixSrcFilePath = WslUncPathToUnixPathTemp(srcfilepath)) {
+            logfa("SyncTex::SourceToDoc: retrying with unix path '%s'\n", srcfilepath);
+            int ret2 = synctex_display_query(this->scanner, unixSrcFilePath, line, col, 0);
             if (ret2 > 0) {
                 ret = ret2;
             }
         }
     }
+
+    if (ret <= 0) {
+        // try with WSL mount path
+        if (TempStr wslMountSrcFilePath = WindowsPathToWslMountPathTemp(srcfilepath)) {
+            logfa("SyncTex::SourceToDoc: retrying with WSL mount path '%s'\n", wslMountSrcFilePath);
+            int ret2 = synctex_display_query(this->scanner, wslMountSrcFilePath, line, col, 0);
+            if (ret2 > 0) {
+                ret = ret2;
+            }
+        }
+    }
+
     if (-1 == ret) {
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
