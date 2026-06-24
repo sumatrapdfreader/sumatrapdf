@@ -313,23 +313,24 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
             return S_OK;
         }
 
-        if (!m_wnd || m_wnd->forwardAppAccelerators) {
+        if (m_wnd && m_wnd->forwardAppAccelerators && m_wnd->events.resolveAccelCmd) {
             bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-            bool isAppAccel = false;
-            if (ctrl && (vk == 'O' || vk == 'P' || vk == 'S' || vk == 'F' || vk == 'G' || vk == 'C' || vk == 'V' ||
-                         vk == 'W' || vk == 'N' || vk == 'K')) {
-                isAppAccel = true;
-            }
-            if (vk == VK_F3) {
-                isAppAccel = true;
-            }
-
-            if (isAppAccel) {
+            bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+            bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+            int cmd = m_wnd->events.resolveAccelCmd(m_wnd->events.ctx, (u16)vk, ctrl, shift, alt);
+            if (cmd != 0) {
                 args->put_Handled(TRUE);
                 HWND root = GetAncestor(m_hwnd, GA_ROOT);
                 if (root && ::IsWindow(root)) {
-                    PostMessageW(root, WM_KEYDOWN, (WPARAM)vk, 0);
-                    PostMessageW(root, WM_KEYUP, (WPARAM)vk, 0);
+                    if (cmd == kWebViewForwardKey) {
+                        // let the frame's key handler process it (e.g. Esc)
+                        PostMessageW(root, WM_KEYDOWN, (WPARAM)vk, 0);
+                        PostMessageW(root, WM_KEYUP, (WPARAM)vk, 0);
+                    } else {
+                        // invoke the command directly (avoids relying on the
+                        // posted key still carrying its modifier state)
+                        PostMessageW(root, WM_COMMAND, (WPARAM)cmd, 0);
+                    }
                 }
                 return S_OK;
             }

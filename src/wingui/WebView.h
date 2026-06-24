@@ -17,11 +17,21 @@ struct WebViewResourceResult {
     bool ownsData = true;
 };
 
+// resolveAccelCmd return value asking the webview to forward the key press
+// itself (WM_KEYDOWN/UP) to the top-level window, rather than a command. For
+// keys handled by the frame's key handler instead of an accelerator (e.g. Esc).
+constexpr int kWebViewForwardKey = -1;
+
 struct WebViewEvents {
     void* ctx = nullptr;
     bool (*navigationStarting)(void* ctx, const char* url, bool newWindow) = nullptr;
     void (*navigationCompleted)(void* ctx, const char* url, bool success) = nullptr;
     void (*historyChanged)(void* ctx, bool canGoBack, bool canGoForward) = nullptr;
+    // maps an accelerator key press inside the webview to an app command id to
+    // post (WM_COMMAND) to the top-level window, or 0 to leave it to the
+    // webview, or kWebViewForwardKey to re-post the key itself. Lets the host
+    // forward its keyboard shortcuts that the webview would otherwise swallow.
+    int (*resolveAccelCmd)(void* ctx, u16 vk, bool ctrl, bool shift, bool alt) = nullptr;
 };
 
 struct WebViewResourceProvider {

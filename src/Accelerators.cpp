@@ -654,6 +654,29 @@ static bool isSafeAccel(const ACCEL& a) {
     return true;
 }
 
+// Command bound to vk + modifiers among the "safe" accelerators (those allowed
+// while a custom control has focus). 0 if none. Lets custom controls (e.g. the
+// WebView2-hosted CHM) forward app shortcuts they'd otherwise swallow.
+int SafeAcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt) {
+    BYTE fVirt = FVIRTKEY;
+    if (ctrl) {
+        fVirt |= FCONTROL;
+    }
+    if (shift) {
+        fVirt |= FSHIFT;
+    }
+    if (alt) {
+        fVirt |= FALT;
+    }
+    for (int i = 0; i < gAccelsCount; i++) {
+        const ACCEL& a = gAccels[i];
+        if (a.key == vk && a.fVirt == fVirt && isSafeAccel(a)) {
+            return a.cmd;
+        }
+    }
+    return 0;
+}
+
 static HACCEL gAccelTables[3] = {
     nullptr, // for all but edit and tree view
     nullptr, // for edit

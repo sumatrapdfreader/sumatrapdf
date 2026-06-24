@@ -13,6 +13,7 @@
 #include "wingui/ChmDocView.h"
 
 #include "AppTools.h"
+#include "Accelerators.h"
 
 constexpr const char* kChmVirtualHost = "https://sumatrapdf.chm/";
 constexpr const WCHAR* kChmVirtualHostW = L"https://sumatrapdf.chm/";
@@ -130,6 +131,17 @@ void ChmDocView::HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
     view->canGoForward = canGoForward;
 }
 
+// Maps a key pressed while the WebView2-hosted CHM has focus to the app command
+// to run, so app keyboard shortcuts (Ctrl+F, F1, F2, F3, F5, ...) keep working
+// when focus is in the document (issue #5735). Esc isn't an accelerator -- it's
+// handled by the frame's key handler -- so forward the key itself.
+static int ChmResolveAccelCmd(void*, u16 vk, bool ctrl, bool shift, bool alt) {
+    if (vk == VK_ESCAPE) {
+        return kWebViewForwardKey;
+    }
+    return SafeAcceleratorCmd(vk, ctrl, shift, alt);
+}
+
 void ChmDocView::UnsubclassParent() {
     if (!subclassId || !hwndParent) {
         return;
@@ -195,6 +207,7 @@ bool ChmDocView::CreateWebView2() {
     wv->events.navigationStarting = NavigationStarting;
     wv->events.navigationCompleted = NavigationCompleted;
     wv->events.historyChanged = HistoryChanged;
+    wv->events.resolveAccelCmd = ChmResolveAccelCmd;
     // forward app accelerators (Ctrl+W close tab, Ctrl+K command palette, etc.)
     // to the main window so they work while the WebView2 has keyboard focus
     wv->forwardAppAccelerators = true;
