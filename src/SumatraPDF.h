@@ -257,6 +257,8 @@ void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepCont
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
+
+char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePage, int* exitCodeOut = nullptr);
 bool DocIsSupportedFileType(Kind);
 TempStr GetLogFilePathTemp();
 void ShowErrorLoadingNotification(MainWindow* win, const char* path, bool noSavePrefs);

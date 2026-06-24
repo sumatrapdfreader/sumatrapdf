@@ -765,6 +765,13 @@ void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeou
     wnd->UpdateMessage(msg, timeoutMs, highlight);
 }
 
+TempStr NotificationGetMessageTemp(NotificationWnd* wnd) {
+    if (!wnd) {
+        return nullptr;
+    }
+    return HwndGetTextTemp(wnd->hwnd);
+}
+
 void RemoveNotification(NotificationWnd* wnd) {
     NotifsRemoveNotification(wnd);
 }

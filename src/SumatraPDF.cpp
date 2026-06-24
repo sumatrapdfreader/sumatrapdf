@@ -10502,6 +10502,82 @@ void ShowCrashHandlerMessage() {
     LaunchFileShell(url, nullptr, "open");
 }
 
+char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePage, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (str::IsEmpty(pathTwoPages) || str::IsEmpty(pathOnePage)) {
+        return fail("ERROR missing-paths");
+    }
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    if (!win) {
+        return fail("NOTREADY no-window");
+    }
+
+    LoadArgs args2(pathTwoPages, win);
+    args2.forceReuse = true;
+    args2.noSavePrefs = true;
+    LoadDocument(&args2);
+    if (!win->IsDocLoaded() || win->ctrl->PageCount() != 2) {
+        return fail("ERROR two-page-load");
+    }
+
+    TogglePageInfoHelper(win);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    if (!wnd) {
+        return fail("ERROR no-overlay");
+    }
+    TempStr msg = NotificationGetMessageTemp(wnd);
+    if (!str::Find(msg, "/ 2")) {
+        out.AppendFmt("FAIL before-reload msg=%s\n", msg);
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    }
+
+    EngineBase* engine = CreateEngineFromFile(pathOnePage, nullptr, true);
+    if (!engine || engine->PageCount() != 1) {
+        SafeEngineRelease(&engine);
+        return fail("ERROR one-page-engine");
+    }
+    DocController* ctrl = CreateControllerForEngineOrFile(engine, pathOnePage, nullptr, win);
+    if (!ctrl) {
+        return fail("ERROR one-page-ctrl");
+    }
+    LoadArgs args1(pathOnePage, win);
+    args1.noSavePrefs = true;
+    ReplaceDocumentInCurrentTab(&args1, ctrl, nullptr);
+    if (!win->IsDocLoaded() || win->ctrl->PageCount() != 1) {
+        return fail("ERROR one-page-load");
+    }
+    wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    if (!wnd) {
+        return fail("ERROR overlay-gone");
+    }
+    msg = NotificationGetMessageTemp(wnd);
+    bool ok = str::Find(msg, "/ 1") != nullptr && !str::Find(msg, "/ 2");
+    if (ok) {
+        out.AppendFmt("OK msg=%s\n", msg);
+    } else {
+        out.AppendFmt("FAIL after-reload msg=%s\n", msg);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
+
 void ShutdownCleanup() {
     TtsRelease();
 

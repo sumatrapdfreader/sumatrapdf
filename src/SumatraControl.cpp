@@ -9,6 +9,7 @@
 #include "Settings.h"
 #include "Flags.h"
 #include "SumatraTest.h"
+#include "SumatraPDF.h"
 #include "SelectionTranslate.h"
 #include "ImageSaveCropResize.h"
 #include "utils/GuessFileType.h"
@@ -36,6 +37,7 @@ enum class ControlCmd : u16 {
     TestImageResizeArrowKey = 23,
     TestFindResultPageColumnClip = 24,
     TestFileKind = 25,
+    TestPageInfoOverlay = 28,
 };
 
 enum class ControlArgType : u16 {
@@ -444,6 +446,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestFileKindResult(path, expectedKind, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageInfoOverlay: {
+            const char* pathTwo = StringArg(req, 0);
+            const char* pathOne = StringArg(req, 1);
+            if (!pathTwo || !pathOne) {
+                AppendError(req, "TestPageInfoOverlay expects string pathTwoPages, string pathOnePage");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestPageInfoOverlayResult(pathTwo, pathOne, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
