@@ -516,7 +516,6 @@ static PdfColor GetDropDownColor(const char* sv) {
     return col.pdfCol;
 }
 
-// TODO: mupdf shows it in 1.6 but not 1.7. Why?
 bool gShowRect = true;
 
 // TODO: only limit to widgets that have rect?

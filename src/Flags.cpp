@@ -687,8 +687,7 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, const char* toolNames)
             continue;
         }
         if (arg == Arg::Lang) {
-            // TODO: remove the following deprecated options within
-            // a release or two
+            // deprecated: prefer the UiLanguage setting
             i.lang = str::Dup(a, param);
             continue;
         }

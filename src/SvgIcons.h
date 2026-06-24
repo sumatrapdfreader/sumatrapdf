@@ -16,7 +16,6 @@ enum class TbIcon {
     SearchPrev,
     SearchNext,
     MatchCase,
-    MatchCase2,
     Save,
     RotateLeft,
     RotateRight,

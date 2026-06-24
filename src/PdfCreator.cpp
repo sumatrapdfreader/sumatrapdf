@@ -27,7 +27,6 @@ void PdfCreator::SetProducerName(const char* name) {
     }
 }
 
-// TODO: in 3.1.2 we had grayscale optimization, not sure if worth it
 // TODO: the resulting pdf is big, even though we tell it to compress images
 // maybe encode bitmaps to *.png or .jp2 and use AddPageFromImageData
 static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
@@ -57,9 +56,7 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "GetDIBits failed");
     }
 
-    // convert BGR to RGB without padding
-    // Note: in 3.1.2 it was also moving data but maybe not necessary because
-    // fz_new_pixmap_with_data() understands stride?
+    // convert BGR to RGB without padding (fz_new_pixmap_with_data handles stride)
     u8 r, b;
     for (int y = 0; y < h; y++) {
         u8* d = data + y * stride;

@@ -107,20 +107,19 @@ float ZoomFromString(const char* s, float defVal) {
     return defVal;
 }
 
-void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
+void ZoomToString(char** dst, float zoom, FileState* fileState) {
     float prevZoom = *dst ? ZoomFromString(*dst, kInvalidZoom) : kInvalidZoom;
     if (prevZoom == zoom) {
         return;
     }
-    if (!IsValidZoom(zoom) && stateForIssue2140) {
-        // TODO: does issue 2140 still occur?
+    if (!IsValidZoom(zoom) && fileState) {
         logf("Invalid ds->zoom: %g\n", zoom);
-        TempStr ext = path::GetExtTemp(stateForIssue2140->filePath);
+        TempStr ext = path::GetExtTemp(fileState->filePath);
         if (!str::IsEmpty(ext)) {
             logf("File type: %s\n", ext);
         }
-        logf("DisplayMode: %s\n", stateForIssue2140->displayMode);
-        logf("PageNo: %d\n", stateForIssue2140->pageNo);
+        logf("DisplayMode: %s\n", fileState->displayMode);
+        logf("PageNo: %d\n", fileState->pageNo);
     }
     ReportIf(!IsValidZoom(zoom));
     str::FreePtr(dst);

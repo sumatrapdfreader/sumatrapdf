@@ -156,9 +156,7 @@ static bool CopySelfToDir(const char* destDir) {
 
 static void CopySettingsFile() {
     log("CopySettingsFile()\n");
-    // up to 3.1.2 we stored settings in %APPDATA%
-    // after that we use %LOCALAPPDATA%
-    // copy the settings from old directory
+    // Settings moved from %APPDATA% to %LOCALAPPDATA% in 3.2; copy from the old location on upgrade.
 
     // seen a crash when running elevated
     TempStr srcDir = GetSpecialFolderTemp(CSIDL_APPDATA, false);

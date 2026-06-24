@@ -345,11 +345,9 @@ TempStr ChmFile::GetPropertyTemp(const char* name) const {
     } else if (str::Eq(kPropCreatorApp, name) && creator.CStr()) {
         result = SmartToUtf8Temp(creator.CStr(), codepage);
     }
-    // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (!result) {
         return nullptr;
     }
-    // TODO: original code called str::RemoveCharsInPlace(result, "\n\r\t")
     str::NormalizeWSInPlace(result);
     return result;
 }

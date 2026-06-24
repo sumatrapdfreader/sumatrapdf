@@ -239,7 +239,6 @@ static const char* gIcons[] = {
     gIconSearchPrev,
     gIconSearchNext,
     gIconMatchCase,
-    gIconMatchCase,  // TODO: remove this, is for compatiblity with bitmap icons
     gIconSave,
     gIconRotateLeft,
     gIconRotateRight,

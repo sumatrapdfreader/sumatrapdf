@@ -148,15 +148,8 @@ static EngineBase* ps2pdf(const char* path) {
         return nullptr;
     }
 
-    // TODO: before gs 9.54 we would call:
-    // Rect page = ExtractDSCPageSize(path);
-    // and use that to add "-c ".setpdfwrite << /PageSize [$dx $dy] >> setpagedevice"
-    // to cmd-line. In 9.54 .setpdfwrite was removed and using it causes
-    // conversion to fail
-    // So we removed use of -c .setpdfwrite completely. Not sure if there's an alternative
-    // way to do it
-    // https://github.com/GravityMedia/Ghostscript/issues/6
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1923
+    // Ghostscript 9.54+ removed .setpdfwrite, so we no longer pass PageSize via
+    // -c ".setpdfwrite << /PageSize ... >> setpagedevice" (see issues #1923).
     TempStr cmdLine = str::FormatTemp(
         "\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
         "-f \"%s\"",
