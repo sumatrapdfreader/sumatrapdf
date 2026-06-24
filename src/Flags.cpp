@@ -9,6 +9,9 @@
 #include "DisplayMode.h"
 #include "Flags.h"
 #include "Print.h"
+#ifndef SUMATRA_TEST_UTIL
+#include "Translations.h"
+#endif
 
 #include "utils/Log.h"
 
@@ -64,7 +67,7 @@ static const char* gArgNames =
 // clang-format on
 // @gen-end flags
 
-static void EnumeratePrinters() {
+void ShowPrintersDialog() {
     StrBuilder out;
 
     gLogToConsole = true;
@@ -74,7 +77,11 @@ static void EnumeratePrinters() {
     log(out.CStr());
 
     gLogToConsole = false;
+#ifndef SUMATRA_TEST_UTIL
+    ShowTextInWindowDialog(_TRA("SumatraPDF - Show Printers"), out.CStr());
+#else
     ShowTextInWindowDialog("SumatraPDF - Show Printers", out.CStr());
+#endif
 }
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
@@ -510,8 +517,8 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, const char* toolNames)
             continue;
         }
         if ((arg == Arg::ArgEnumPrinters) || (arg == Arg::ListPrinters)) {
-            EnumeratePrinters();
-            /* this is for testing only, exit immediately */
+            // defer UI until after SetCurrentLang() so _TRA resolves (issue #5697)
+            i.showPrintersDialog = true;
             i.exitImmediately = true;
             return;
         }

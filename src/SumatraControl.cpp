@@ -36,6 +36,7 @@ enum class ControlCmd : u16 {
     TestImageResizeArrowKey = 23,
     TestFindResultPageColumnClip = 24,
     TestFileKind = 25,
+    TestI18nErrorString = 27,
 };
 
 enum class ControlArgType : u16 {
@@ -444,6 +445,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestFileKindResult(path, expectedKind, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestI18nErrorString: {
+            int exitCode = 0;
+            char* res = TestI18nErrorStringResult(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

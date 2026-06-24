@@ -18,6 +18,7 @@ export enum ControlCommand {
   TestImageResizeArrowKey = 23,
   TestFindResultPageColumnClip = 24,
   TestFileKind = 25,
+  TestI18nErrorString = 27,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
