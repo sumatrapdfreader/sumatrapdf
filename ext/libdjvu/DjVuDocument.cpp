@@ -806,8 +806,8 @@ DjVuDocument::id_to_url(const GUTF8String & id) const
 	      GP<DjVmDir::File> file=djvm_dir->id_to_file(id);
 	      if (!file)
                 file=djvm_dir->name_to_file(id);
-	        if (!file)
-                  file=djvm_dir->title_to_file(id);
+	      if (!file)
+                file=djvm_dir->title_to_file(id);
 	      if (file)
 	        return GURL::UTF8(file->get_load_name(),init_url);
 	    }
@@ -818,8 +818,8 @@ DjVuDocument::id_to_url(const GUTF8String & id) const
 	       GP<DjVmDir::File> file=djvm_dir->id_to_file(id);
 	       if (!file)
                  file=djvm_dir->name_to_file(id);
-	         if (!file)
-                   file=djvm_dir->title_to_file(id);
+	      if (!file)
+                file=djvm_dir->title_to_file(id);
 	       if (file)
 	         return GURL::UTF8(file->get_load_name(),init_url.base());
 	    }

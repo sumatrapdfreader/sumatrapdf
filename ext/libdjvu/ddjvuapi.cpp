@@ -3167,7 +3167,7 @@ ddjvu_savejob_s::notify_file_flags_changed(const DjVuFile *file,
                                            long mask, long)
 {
   if (mask & (DjVuFile::ALL_DATA_PRESENT | DjVuFile::DATA_PRESENT |
-              DjVuFile::DECODE_FAILED | DjVuFile::DECODE_STOPPED |
+              DjVuFile::DECODE_FAILED | DjVuFile::DECODE_STOPPED | 
               DjVuFile::STOPPED ))
     {
       GMonitorLock lock(&monitor);
@@ -3500,9 +3500,9 @@ static void
 miniexp_protect(ddjvu_document_t *document, miniexp_t expr)
 {
   GMonitorLock lock(&document->myctx->monitor);
-    for(miniexp_t p=document->protect; miniexp_consp(p); p=miniexp_cdr(p))
-      if (miniexp_car(p) == expr)
-        return;
+  for(miniexp_t p=document->protect; miniexp_consp(p); p=miniexp_cdr(p))
+    if (miniexp_car(p) == expr)
+      return;
   if (miniexp_consp(expr) || miniexp_objectp(expr))
     document->protect = miniexp_cons(expr, document->protect);
 }
@@ -3798,7 +3798,7 @@ anno_fgetc(miniexp_io_t *io)
 #if HAVE_SNPRINTF
               snprintf(anno_dat.buf, sizeof(anno_dat.buf), "\\%03o", c);
 #else
-              sprintf(anno_dat.buf,"\\%03o", c);
+              sprintf(anno_dat.buf, "\\%03o", c);
 #endif
               anno_dat.blen = strlen(anno_dat.buf);
               c = '\\';
@@ -4095,8 +4095,8 @@ ddjvu_anno_get_metadata_keys(miniexp_t p)
   miniexp_t *k = (miniexp_t*)malloc((1+i)*sizeof(miniexp_t));
   if (! k) return 0;
   i = 0;
-    for (GPosition p=m; p; ++p)
-      k[i++] = m.key(p);
+  for (GPosition p=m; p; ++p)
+    k[i++] = m.key(p);
   k[i] = 0;
   return k;
 }
@@ -4152,3 +4152,5 @@ void ddjvu_free(void *ptr)
 {
   free(ptr);
 }
+
+

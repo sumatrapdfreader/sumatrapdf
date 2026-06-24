@@ -267,7 +267,7 @@ static GUTF8String make_c_string(GUTF8String string)
 #if HAVE_SNPRINTF
           snprintf(buf, sizeof(buf), "\\%03o", (int)(((unsigned char*)data)[span]));
 #else
-          sprintf(buf,"\\%03o", (int)(((unsigned char*)data)[span]));
+          sprintf(buf, "\\%03o", (int)(((unsigned char*)data)[span]));
 #endif
           for (int i=0; tr2[i]; i++)
             if (data[span] == tr2[i])

@@ -501,16 +501,16 @@ GLParser::get_token(const char * & start)
          return GLToken(GLToken::OBJECT, new GLObject(val));
      }
    
-       GUTF8String str;
+   GUTF8String str;
    while(c != 0 && c != ')' && c != '(' && c != '"' && !isspace((unsigned char)c))
-	 {
+     {
        str += c;
        c = *++start;
-	 }
+     }
    if (c == 0)
      G_THROW(ByteStream::EndOfFile);
    else
-       return GLToken(GLToken::OBJECT, new GLObject(GLObject::SYMBOL, str));
+     return GLToken(GLToken::OBJECT, new GLObject(GLObject::SYMBOL, str));
 } 
 
 void

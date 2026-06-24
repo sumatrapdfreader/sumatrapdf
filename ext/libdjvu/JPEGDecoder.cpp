@@ -133,7 +133,7 @@ GP<GPixmap>
 JPEGDecoder::decode(ByteStream & bs )
 {
   GP<GPixmap> retval=GPixmap::create();
-    decode(bs,*retval);
+  decode(bs,*retval);
   return retval;
 }
 

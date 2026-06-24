@@ -1321,16 +1321,16 @@ GURL::UTF8Filename(void) const
     else if ( !GStringRep::cmp(localhostspec2, url_ptr, sizeof(localhostspec2)-1 ) )
       // RFC 1738 local host form
       url_ptr += sizeof(localhostspec2)-1;
-    else if ( (strlen(url_ptr) > 4)   // "file://<letter>:/<path>"
-        && (url_ptr[0] == slash)      // "file://<letter>|/<path>"
-        && (url_ptr[1] == slash)
+    else if ( (strlen(url_ptr) > 4)         // "file://<letter>:/<path>"
+              && (url_ptr[0] == slash)      // "file://<letter>|/<path>"
+              && (url_ptr[1] == slash)
               && isalpha((unsigned char)(url_ptr[2]))
-        && ( url_ptr[3] == colon || url_ptr[3] == '|' )
-        && (url_ptr[4] == slash) )
+              && ( url_ptr[3] == colon || url_ptr[3] == '|' )
+              && (url_ptr[4] == slash) )
       url_ptr += 2;
     else if ( (strlen(url_ptr)) > 2 // "file:/<path>"
-        && (url_ptr[0] == slash)
-        && (url_ptr[1] != slash) )
+              && (url_ptr[0] == slash)
+              && (url_ptr[1] != slash) )
       url_ptr++;
 #endif
 
@@ -1846,7 +1846,7 @@ GURL::expand_name(const GUTF8String &xfname, const char *from)
       char* s2=s;//MBCS DBCS
       for(;*s;s++) 
         EMPTY_LOOP;
-	  if (s > string_buffer && s[-1] != slash && s[-1] != backslash)
+      if (s > string_buffer && s[-1] != slash && s[-1] != backslash)
         *s++ = backslash;
       while (*fname && (*fname!= slash) && (*fname!=backslash))
       {

@@ -360,44 +360,44 @@ ByteStream::seek(long offset, int whence, bool nothrow)
     case SEEK_CUR:
       nwhere=ncurrent; break;
     case SEEK_END: 
-    {
-      if(offset)
       {
-        if (nothrow)
-          return -1;
-        G_THROW( ERR_MSG("ByteStream.backward") );
+        if(offset)
+          {
+            if (nothrow)
+              return -1;
+            G_THROW( ERR_MSG("ByteStream.backward") );
+          }
+        char buffer[1024];
+        int bytes;
+        while((bytes=read(buffer, sizeof(buffer))))
+          EMPTY_LOOP;
+        return 0;
       }
-      char buffer[1024];
-      int bytes;
-      while((bytes=read(buffer, sizeof(buffer))))
-        EMPTY_LOOP;
-      return 0;
-    }
     default:
       G_THROW( ERR_MSG("ByteStream.bad_arg") );       //  Illegal argument in seek
     }
   nwhere += offset;
   if (nwhere < ncurrent) 
-  {
-    //  Seeking backwards is not supported by this ByteStream
-    if (nothrow)
-      return -1;
-    G_THROW( ERR_MSG("ByteStream.backward") );
-  }
+    {
+      //  Seeking backwards is not supported by this ByteStream
+      if (nothrow)
+        return -1;
+      G_THROW( ERR_MSG("ByteStream.backward") );
+    }
   while (nwhere > ncurrent)
-  {
-    char buffer[1024];
+    {
+      char buffer[1024];
       long xbytes = nwhere - ncurrent;
       if (xbytes > (long)sizeof(buffer))
         xbytes = sizeof(buffer);
       long bytes = (long)read(buffer, xbytes);
-    ncurrent += bytes;
-    if (!bytes)
-      G_THROW( ByteStream::EndOfFile );
-    //  Seeking works funny on this ByteStream (ftell() acts strange)
+      ncurrent += bytes;
+      if (!bytes)
+        G_THROW( ByteStream::EndOfFile );
+      //  Seeking works funny on this ByteStream (ftell() acts strange)
       if (ncurrent != tell())
-      G_THROW( ERR_MSG("ByteStream.seek") );
-  }
+        G_THROW( ERR_MSG("ByteStream.seek") );
+    }
   return 0;
 }
 
@@ -405,7 +405,7 @@ size_t
 ByteStream::readall(void *buffer, size_t size)
 {
   size_t total = 0;
-    while (size > 0)
+  while (size > 0)
     {
       int nitems = read(buffer, size);
       // Replaced perror() below with G_THROW(). It still makes little sense
@@ -898,17 +898,17 @@ ByteStream::Memory::write(const void *buffer, size_t sz)
           gblocks.resize(nblocks);
           char const ** eblocks=(char const **)(blocks+old_nblocks);
           for(char const * const * const new_eblocks=blocks+nblocks;
-            eblocks <new_eblocks; eblocks++) 
-          {
-            *eblocks = 0;
-          }
+              eblocks <new_eblocks; eblocks++) 
+            {
+              *eblocks = 0;
+            }
         }
       // allocate blocks
       for (long b=(where>>12); (b<<12)<(where+nsz); b++)
-      {
-        if (! blocks[b])
-          blocks[b] = new char[0x1000];
-      }
+        {
+          if (! blocks[b])
+            blocks[b] = new char[0x1000];
+        }
     }
   // write data to buffer
   while (nsz > 0)

@@ -148,7 +148,7 @@ DjVuPort::operator new (size_t sz)
       DjVuPortCorpse * corpse;
       for(corpse=corpse_head;corpse;corpse=corpse->next)
         if (test_addr==corpse->port) break;
-        if (!corpse)
+      if (!corpse)
         {
           addr=test_addr;
           addr_num--;

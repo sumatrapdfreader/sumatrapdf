@@ -182,7 +182,7 @@ public:
    GP<File> id_to_file(const GUTF8String &id) const;
       /** Translates file shortcuts to file records. */
    GP<File> title_to_file(const GUTF8String &title, GPosition spos) const;
-   GP<File> title_to_file(const GUTF8String &title) const;
+   GP<File> title_to_file(const GUTF8String &title) const; 
       /** Access file record by position. */
    GP<File> pos_to_file(int fileno, int *ppageno=0) const;
       /** Returns position of the file in the directory. */

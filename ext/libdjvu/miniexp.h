@@ -504,7 +504,7 @@ MINILISPAPI void minilisp_finish(void);
      to start with a digit or with a sign character
      followed by another character.
 
-   - Strings are delimited by double quotes.
+   - Strings are delimited by double quotes. 
      All non printable ASCII characters must be escaped. 
      Besides all the usual C string escape sequences,
      UTF8-encoded Unicode characters in range 0..0x10ffff
@@ -645,7 +645,7 @@ MINILISPAPI miniexp_t miniexp_print(miniexp_t p);
 MINILISPAPI miniexp_t miniexp_pprin(miniexp_t p, int width);
 MINILISPAPI miniexp_t miniexp_pprint(miniexp_t p, int width);
 
- 
+
 /* Backward compatibility (will eventually disappear) */
 extern MINILISPAPI int (*minilisp_puts)(const char *);
 extern MINILISPAPI int (*minilisp_getc)(void);

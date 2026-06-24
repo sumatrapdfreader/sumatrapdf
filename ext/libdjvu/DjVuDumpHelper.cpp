@@ -336,12 +336,12 @@ display_chunks(ByteStream & out_str, IFFByteStream &iff,
                                 size, djvminfo, counters[id]);
         break;
       }
-      // Default display of composite chunk
-      out_str.format( "\n");
-      if (iff.composite())
-        display_chunks(out_str, iff, head2, djvminfo);
-      // Terminate
-      iff.close_chunk();
+    // Default display of composite chunk
+    out_str.format( "\n");
+    if (iff.composite())
+      display_chunks(out_str, iff, head2, djvminfo);
+    // Terminate
+    iff.close_chunk();
   }
 }
 

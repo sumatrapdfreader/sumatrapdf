@@ -73,13 +73,13 @@ static QMutex qtm;
 
 /* atomic primitive emulation */
 
-int 
+int
 atomicIncrement(int volatile *var)
 {
   int res;
-      MUTEX_ENTER;
+  MUTEX_ENTER;
   res = ++(*var);
-      MUTEX_LEAVE;
+  MUTEX_LEAVE;
   return res;
 }
 
@@ -93,7 +93,7 @@ atomicDecrement(int volatile *var)
   return res;
 }
 
-int
+int 
 atomicCompareAndSwap(int volatile *var, int oldval, int newval)
 {
   int ret;
@@ -122,7 +122,7 @@ atomicExchangePointer(void* volatile *var, void* newval)
   void *ret;
   MUTEX_ENTER;
   ret = *var;
-    *var = newval;
+  *var = newval;
   MUTEX_LEAVE;
   return ret;
 }

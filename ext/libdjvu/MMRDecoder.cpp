@@ -590,7 +590,7 @@ MMRDecoder::scanruns(const unsigned short **endptr)
   for(a0=0,rle=0,b1=*pr++;a0 < width;)
     {
       // Check for buffer overflow
-      if (xr > lineruns+width+2 || pr > prevruns+width+2)
+      if (xr > lineruns+width+2 || pr > prevruns+width+2 || pr < prevruns)
 	G_THROW(invalid_mmr_data);
       // Process MMR codes
       const int c=mrtable->decode(src);

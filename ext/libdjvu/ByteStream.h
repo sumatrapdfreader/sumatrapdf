@@ -358,10 +358,10 @@ ByteStream::size(void) const
   long bsize = -1;
   long pos = tell();
   if(bs->seek(0,SEEK_END,true))
-  {
+    {
       bsize = tell();
-    (void)(bs->seek(pos,SEEK_SET,false));
-  }
+      (void)(bs->seek(pos,SEEK_SET,false));
+    }
   return bsize;
 }
 

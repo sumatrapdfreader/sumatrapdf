@@ -82,9 +82,9 @@ DjVuFileCache::Item::qsort_func(const void *el1, const void *el2)
 {
   const Item *item1 = *(Item**)el1;
   const Item *item2 = *(Item**)el2;
-   time_t time1=item1->get_time();
-   time_t time2=item2->get_time();
-   return time1<time2 ? -1 : time1>time2 ? 1 : 0;
+  time_t time1=item1->get_time();
+  time_t time2=item2->get_time();
+  return time1<time2 ? -1 : time1>time2 ? 1 : 0;
 }
 
 void
@@ -153,23 +153,23 @@ DjVuFileCache::clear_to_size(int size)
    GCriticalSectionLock lock(&class_lock);
    
    if (size==0)
-   {
-      list.empty();
-      cur_size=0;
+     {
+       list.empty();
+       cur_size=0;
      } 
    if (list.size() > 20)
-      {
-	    // More than 20 elements in the cache: use qsort to
-	    // sort them before picking up the oldest
+     {
+       // More than 20 elements in the cache: use qsort to
+       // sort them before picking up the oldest
        GPArray<Item> item_arr(list.size()-1);
-	 GPosition pos;
-	 int i;
-	 for(pos=list, i=0;pos;++pos, i++)
+       GPosition pos;
+       int i;
+       for(pos=list, i=0;pos;++pos, i++)
          item_arr[i] = list[pos];
        list.empty();
        qsort(&item_arr[0], item_arr.size(), sizeof(item_arr[0]), Item::qsort_func);
        for(i=0;i<item_arr.size() && cur_size > (int)size;i++)
-	 {
+         {
            Item *item = item_arr[i];
            cur_size -= item->get_size();
            file_cleared(item->file);
@@ -179,26 +179,26 @@ DjVuFileCache::clear_to_size(int size)
          list.append(item_arr[i]);
        if (cur_size <= 0) 
          cur_size = calculate_size();
-	 }
+     } 
 
-	    // Less than 20 elements: no reason to presort
+   // Less than 20 elements: no reason to presort
    while(cur_size > (int)size && list.size() > 0)
-	 {
-	       // Remove the oldest cache item
-	    GPosition oldest_pos=list;
-	    GPosition pos=list;
-	    for(++pos;pos;++pos)
-	       if (list[pos]->get_time()<list[oldest_pos]->get_time())
-		  oldest_pos=pos;
+     {
+       // Remove the oldest cache item
+       GPosition oldest_pos=list;
+       GPosition pos=list;
+       for(++pos;pos;++pos)
+         if (list[pos]->get_time()<list[oldest_pos]->get_time())
+           oldest_pos=pos;
        cur_size -= list[oldest_pos]->get_size();
-	    GP<DjVuFile> file=list[oldest_pos]->file;
-	    list.del(oldest_pos);
-	    file_cleared(file);
-	       // cur_size *may* become negative because items may change their
-	       // size after they've been added to the cache
+       GP<DjVuFile> file=list[oldest_pos]->file;
+       list.del(oldest_pos);
+       file_cleared(file);
+       // cur_size *may* become negative because items may change their
+       // size after they've been added to the cache
        if (cur_size <= 0) 
          cur_size = calculate_size();
-      }
+     }
    if (cur_size <= 0) 
      cur_size = calculate_size();
    

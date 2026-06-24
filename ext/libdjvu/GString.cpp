@@ -1872,7 +1872,7 @@ GStringRep::UTF8::toNative(const EscapeMode escape) const
 #if HAVE_SNPRINTF
                     snprintf((char *)r, 14, "&#%lu;", (unsigned long)w0);
 #else
-                    sprintf((char *)r,"&#%lu;",(unsigned long)w0);
+                    sprintf((char *)r,"&#%lu;", (unsigned long)w0);
 #endif
                     r += strlen((char *)r);
                   }

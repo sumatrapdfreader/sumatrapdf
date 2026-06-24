@@ -402,7 +402,7 @@ GThread::start(void *arg)
     }
   catch(...)
     {
-          DjVuMessageLite::perror( ERR_MSG("GThreads.unrecognized") );
+      DjVuMessageLite::perror( ERR_MSG("GThreads.unrecognized") );
       abort();
     }
 #endif

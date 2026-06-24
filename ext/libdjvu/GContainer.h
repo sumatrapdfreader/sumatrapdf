@@ -553,48 +553,48 @@ GArrayTemplate<TYPE>::sort(int lo, int hi)
   TYPE *data = (TYPE*)(*this);
   while(true)
     {
-  if (hi <= lo)
-    return;
-  if (hi > hibound || lo<lobound)
-    G_THROW( ERR_MSG("GContainer.illegal_subscript") );
-  // Test for insertion sort
-  if (hi <= lo + 50)
-    {
-      for (int i=lo+1; i<=hi; i++)
+      if (hi <= lo)
+        return;
+      if (hi > hibound || lo<lobound)
+        G_THROW( ERR_MSG("GContainer.illegal_subscript") );
+      // Test for insertion sort
+      if (hi <= lo + 50)
         {
-          int j = i;
-          TYPE tmp = data[i];
-          while ((--j>=lo) && !(data[j]<=tmp))
-            data[j+1] = data[j];
-          data[j+1] = tmp;
+          for (int i=lo+1; i<=hi; i++)
+            {
+              int j = i;
+              TYPE tmp = data[i];
+              while ((--j>=lo) && !(data[j]<=tmp))
+                data[j+1] = data[j];
+              data[j+1] = tmp;
+            }
+          return;
         }
-      return;
-    }
       // -- determine median-of-three pivot
-  TYPE tmp = data[lo];
-  TYPE pivot = data[(lo+hi)/2];
-  if (pivot <= tmp)
-    { tmp = pivot; pivot=data[lo]; }
-  if (data[hi] <= tmp)
-    { pivot = tmp; }
-  else if (data[hi] <= pivot)
-    { pivot = data[hi]; }
-  // -- partition set
-  int h = hi;
-  int l = lo;
-  while (l < h)
-    {
-      while (! (pivot <= data[l])) l++;
-      while (! (data[h] <= pivot)) h--;
-      if (l < h)
+      TYPE tmp = data[lo];
+      TYPE pivot = data[(lo+hi)/2];
+      if (pivot <= tmp)
+        { tmp = pivot; pivot=data[lo]; }
+      if (data[hi] <= tmp)
+        { pivot = tmp; }
+      else if (data[hi] <= pivot)
+        { pivot = data[hi]; }
+      // -- partition set
+      int h = hi;
+      int l = lo;
+      while (l < h)
         {
-          tmp = data[l];
-          data[l] = data[h];
-          data[h] = tmp;
-          l = l+1;
-          h = h-1;
-      }
-    }
+          while (! (pivot <= data[l])) l++;
+          while (! (data[h] <= pivot)) h--;
+          if (l < h)
+            {
+              tmp = data[l];
+              data[l] = data[h];
+              data[h] = tmp;
+              l = l+1;
+              h = h-1;
+            }
+        }
       // -- recurse, small partition first
       //    tail-recursion elimination
       if (h - lo <= hi - l) {

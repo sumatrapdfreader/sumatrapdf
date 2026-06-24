@@ -220,8 +220,8 @@ static void (*old_handler)() = std::set_new_handler(throw_memory_error);
 static void (*old_handler)() = std::set_new_handler(throw_memory_error);
 #   else
 static void (*old_handler)() = set_new_handler(throw_memory_error);
-#   endif // HAVE_STDINCLUDES
-#  endif // ! WIN32
+#  endif // HAVE_STDINCLUDES
+# endif // ! WIN32
 #endif // !NEED_DJVU_MEMORY
 #endif
 

@@ -33,19 +33,19 @@
 
 /* This file defines macros or functions performing
 // the following atomic operations with a full memory barrier. 
-//  
+//
 //   int atomicIncrement(int volatile *var) 
 //   { *var += 1; return *var; } 
-//
+//   
 //   int atomicDecrement(int volatile *var);
 //   { *var -= 1; return *var; } 
-//
+//   
 //   int atomicCompareAndSwap(int volatile *var, int oldval, int newval);
 //   { int val = *var; if (val == oldval) { *var = newval };  returl val; }
-//
+//   
 //   int atomicExchange(int volatile *var, int val);
 //   { int tmp = *var; *var = val; return tmp; }
-//
+//   
 //   void* atomicExchangePointer(void* volatile *var, int val);
 //   { void* tmp = *var; *var = val; return tmp; }
 */
@@ -53,7 +53,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
 #if !defined(ATOMIC_MACROS) && defined(_WIN64)
 # define ATOMIC_MACROS "WIN64"
 # include <windows.h>
@@ -68,7 +68,7 @@ extern "C" {
 # define atomicExchangePointer(var,nv) \
   (void*)(InterlockedExchangePointer((PVOID volatile*)(var),(PVOID)(nv)))
 #endif
-  
+
 #if !defined(ATOMIC_MACROS) && defined(_WIN32)
 # define ATOMIC_MACROS "WIN32"
 # include <windows.h>
@@ -157,7 +157,7 @@ extern "C" {
   extern void* atomicExchangePointer(void* volatile *var, void* nv);
 #endif
 
-
+  
 # ifdef __cplusplus
 }
 # endif

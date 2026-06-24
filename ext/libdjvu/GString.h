@@ -114,14 +114,14 @@
 #ifdef _WIN32
 # include <windows.h>
 # ifndef AUTOCONF
-# define HAS_WCHAR 1
-# define HAS_WCTYPE 1
-# define HAS_MBSTATE 1
+#  define HAS_WCHAR 1
+#  define HAS_WCTYPE 1
+#  define HAS_MBSTATE 1
 # endif
 #endif
 
 #if HAS_WCHAR
-#  include <wchar.h>
+# include <wchar.h>
 #elif HAVE_WCHAR_H
 # include <wchar.h>
 #endif

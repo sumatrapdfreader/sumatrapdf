@@ -70,7 +70,7 @@
 # include <new> // try standard c++ anyway!
 #endif
 
-// SumatraPDF: allow to build as a static library (built-in)            
+// SumatraPDF: allow to build as a static library (built-in)
 #ifdef WIN32_AND_NOT_STATIC
 #ifndef DJVUAPI
 # ifdef _WIN32
@@ -82,7 +82,6 @@
 # endif
 #endif
 #endif
-
 #ifndef DJVUAPI
 # define DJVUAPI
 #endif

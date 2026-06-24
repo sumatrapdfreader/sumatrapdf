@@ -230,11 +230,11 @@ miniexp_t
 miniexp_symbol(const char *name)
 {
   struct symtable_t::sym *r;
-  if (! symbols) 
+  if (! symbols)
     {
       CSLOCK(lock);
       if (! symbols)
-    symbols = new symtable_t;
+        symbols = new symtable_t;
     }
   r = symbols->lookup(name, true);
   return r->v;
@@ -636,11 +636,11 @@ minilisp_release_gc_lock(miniexp_t x)
   minivar_t v = x;
   {
     CSLOCK(locker);
-  if (gc.lock > 0)
-    if (--gc.lock == 0)
-      if (gc.request > 0)
+    if (gc.lock > 0)
+      if (--gc.lock == 0)
+        if (gc.request > 0)
           gc_run();
-        }
+  }
   return x;
 }
 
@@ -1152,7 +1152,7 @@ miniexp_to_lstr(miniexp_t p, const char **sp)
   return l;
 }
 
-miniexp_t 
+miniexp_t
 miniexp_string(const char *s)
 {
   return miniexp_lstring(strlen(s), s);
@@ -1452,7 +1452,7 @@ printer_t::must_quote_symbol(const char *s, int flags)
   int c;
   const char *r = s;
   while ((c = *r++))
-    if (c=='(' || c==')' || c=='\"' || c=='|' || 
+    if (c=='(' || c==')' || c=='\"' || c=='|' ||
         !isascii(c) || isspace(c) || !isprint(c) ||
         (c >= 0 && c < 128 && io->p_macrochar && io->p_macrochar[c]) )
       return true;
@@ -1503,7 +1503,7 @@ printer_t::print(miniexp_t p)
       if (must_quote_symbol(s, flags))
         mlput_quoted_symbol(s);
       else
-      mlput(s);
+        mlput(s);
     }
   else if (miniexp_stringp(p))
     {
@@ -1734,17 +1734,18 @@ miniexp_pname(miniexp_t p, int width)
 }
 #endif
 
+
 /* ---- INPUT */
 
 static void
 grow(char* &s, size_t &l, size_t &m)
 {
-      int nm = ((m<256)?256:m) + ((m>32000)?32000:m);
-      char *ns = new char[nm+1];
-      memcpy(ns, s, l);
-      delete [] s;
-      m = nm;
-      s = ns;
+  int nm = ((m<256)?256:m) + ((m>32000)?32000:m);
+  char *ns = new char[nm+1];
+  memcpy(ns, s, l);
+  delete [] s;
+  m = nm;
+  s = ns;
 }
 
 static void
@@ -1777,8 +1778,8 @@ append_utf8(int x, char *&s, size_t &l, size_t &m)
         s[l++] = (char)(((x>>12)|0x80)&0xbf);
         s[l++] = (char)(((x>>6)|0x80)&0xbf);
         s[l++] = (char)((x|0x80)&0xbf);
-    }
-  s[l] = 0;
+      }
+      s[l] = 0;
     }
 }
 
@@ -1867,11 +1868,11 @@ read_c_string(miniexp_io_t *io, int &c)
               int d = c;
               c = io->fgetc(io);
               if (isxdigit(c))
-                    {
+                {
                   int x = skip_hexadecimal(io, c, 2);
-              append((char)x, s, l, m);
-              continue;
-            }
+                  append((char)x, s, l, m);
+                  continue;
+                }
               io->ungetc(io, c);
               c = d;
             }
@@ -1903,15 +1904,15 @@ read_c_string(miniexp_io_t *io, int &c)
                     }
                   append_utf8(x, s, l, m);
                   x = z;
-                    }
+                }
               if (x >= 0)
                 {
                   append_utf8(x, s, l, m);
                   continue;
                 }
-                  io->ungetc(io, c);
-                  c = d;
-                }
+              io->ungetc(io, c);
+              c = d;
+            }
           static const char *tr1 = "tnrbfvae?";
           static const char *tr2 = "\t\n\r\b\f\013\007\033?";
           for (int i=0; tr1[i]; i++)
@@ -1942,7 +1943,7 @@ read_quoted_symbol(miniexp_io_t *io, int &c)
         return read_error(io, c);
       if (c=='|')
         if ((c = io->fgetc(io)) != '|')
-        break;
+          break;
       append(c,s,l,m);
     }
   r = miniexp_symbol(s ? s : "");
@@ -2087,7 +2088,7 @@ miniexp_read_r(miniexp_io_t *io)
   int c = io->fgetc(io);
   miniexp_t p = read_miniexp(io, c);
   if (c != EOF)
-  io->ungetc(io, c);
+    io->ungetc(io, c);
   return p;
 }
 
@@ -2155,7 +2156,7 @@ minilisp_finish(void)
   // clear minivars
   minivar_t::mark(gc_clear);
   for (gctls_t *tls = gc.tls; tls; tls=tls->next)
-  for (int i=0; i<recentsize; i++)
+    for (int i=0; i<recentsize; i++)
       tls->recent[i] = 0;
   // collect everything
   gc_run();

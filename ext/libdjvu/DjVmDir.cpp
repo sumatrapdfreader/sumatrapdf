@@ -302,8 +302,8 @@ DjVmDir::decode(const GP<ByteStream> &gstr)
       int strings_size=strings.size();
       strings.resize(strings_size+3);
       memset((char*) strings+strings_size, 0, 4);
-   
-         // Copy names into the files
+      
+      // Copy names into the files
       const char * ptr=strings;
       for(pos=files_list;pos;++pos)
       {
@@ -314,8 +314,8 @@ DjVmDir::decode(const GP<ByteStream> &gstr)
          ptr+=file->id.length()+1;
          if (file->flags & File::HAS_NAME)
          {
-            file->name=ptr;
-            ptr+=file->name.length()+1;
+           file->name=ptr;
+           ptr+=file->name.length()+1;
          }
          else
          {
@@ -323,20 +323,20 @@ DjVmDir::decode(const GP<ByteStream> &gstr)
          }
          if (file->flags & File::HAS_TITLE)
          {
-            file->title=ptr;
-       ptr+=file->title.length()+1;
+           file->title=ptr;
+           ptr+=file->title.length()+1;
          }
          else
          {
-       file->title=file->id;
+           file->title=file->id;
          }
-   /* msr debug:  multipage file, file->title is null.  
+         /* msr debug:  multipage file, file->title is null.  
          DEBUG_MSG(file->name << ", " << file->id << ", " << file->title << ", " <<
                    file->offset << ", " << file->size << ", " <<
                    file->is_page() << "\n"); */
       }
 
-         // Check that there is only one file with SHARED_ANNO flag on
+      // Check that there is only one file with SHARED_ANNO flag on
       int shared_anno_cnt=0;
       for(pos=files_list;pos;++pos)
       {
@@ -555,7 +555,7 @@ DjVmDir::title_to_file(const GUTF8String &title, GPosition spos) const
 {
   if (! title)
     return 0;
-   GCriticalSectionLock lock((GCriticalSection *) &class_lock);
+  GCriticalSectionLock lock((GCriticalSection *) &class_lock);
   if (! spos)
     for (GPosition pos = spos; pos; ++pos)
       if (files_list[pos]->is_page() && files_list[pos]->title == title)
@@ -664,7 +664,7 @@ DjVmDir::insert_file(const GP<File> & file, int pos_num)
      G_THROW( ERR_MSG("DjVmDir.dupl_name2") "\t" + file->name);
    name2file[file->name]=file;
    id2file[file->id]=file;
-
+   
       // Make sure that there is no more than one file with shared annotations
    if (file->is_shared_anno())
    {
