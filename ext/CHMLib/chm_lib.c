@@ -1001,7 +1001,11 @@ static int32_t _chm_find_in_PMGI(uint8_t* page_buf, uint32_t block_len, const ch
 }
 
 static void _chm_set_entry_flags(struct chmUnitInfo* ui) {
-    uint64_t ui_path_len = strlen(ui->path) - 1;
+    size_t path_len = strlen(ui->path);
+    uint64_t ui_path_len;
+
+    if (path_len == 0) return;
+    ui_path_len = path_len - 1;
 
     if (ui->path[ui_path_len] == '/') ui->flags |= CHM_ENUMERATE_DIRS;
     if (ui->path[ui_path_len] != '/') ui->flags |= CHM_ENUMERATE_FILES;
