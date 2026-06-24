@@ -131,6 +131,7 @@ export const commands = [
     "CmdAdvancedSettings", "Advanced Settings...",
     "CmdChangeLanguage", "Change Language...",
     "CmdCheckUpdate", "Check For Updates",
+    "CmdInstallPrereleaseUpdate", "Install Pre-release Update",
     "CmdHelpOpenManual", "Help: Manual",
     "CmdHelpOpenManualOnWebsite", "Help: Manual On Website",
     "CmdHelpOpenKeyboardShortcuts", "Help: Keyboard Shortcuts",

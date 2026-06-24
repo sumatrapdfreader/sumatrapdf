@@ -7668,6 +7668,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             StartAsyncUpdateCheck(win, UpdateCheck::UserInitiated);
             break;
 
+        case CmdInstallPrereleaseUpdate:
+            DownloadAndInstallPendingUpdate(win);
+            break;
+
         case CmdOptions:
             ShowOptionsDialog(win);
             break;

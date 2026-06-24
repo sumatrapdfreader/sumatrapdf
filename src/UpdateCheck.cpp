@@ -59,6 +59,14 @@ constexpr const char* kUpdateInfoURL2 = "https://www.sumatrapdfreader.org/update
 // (this might e.g. happen if a user checks manually very quickly after startup)
 bool gUpdateCheckInProgress = false;
 
+// when true, NotifyUserOfUpdate skips the install-confirmation dialog and just
+// installs (set when the user clicks "Download and update" in the pre-release
+// update notification)
+static bool gUpdateAutoInstall = false;
+
+// the bottom-left "update available" notification (with the download link)
+static const char* kNotifUpdateAvailable = "notifUpdateAvailable";
+
 struct UpdateInfo {
     HWND hwndParent = nullptr;
     const char* latestVer = nullptr;
@@ -88,6 +96,10 @@ struct UpdateInfo {
         str::Free(installerPath);
     }
 };
+
+// an available update surfaced by the pre-release startup notification; the
+// "Download and update" link downloads & installs it (owned here until then)
+static UpdateInfo* gPendingUpdate = nullptr;
 
 /*
 The format of update information downloaded from the server:
@@ -208,6 +220,12 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
         return false;
     }
 
+    // pre-release builds check on every startup (testers want the newest build);
+    // skip the daily/weekly throttle below
+    if (gIsPreReleaseBuild) {
+        return true;
+    }
+
     // only check if at least a day passed since last check
     FILETIME currentTimeFt;
     GetSystemTimeAsFileTime(&currentTimeFt);
@@ -244,6 +262,22 @@ void StartInstallerAutoUpgrade(const char* installerPath) {
 }
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
+    auto installerPathAuto = updateInfo->installerPath;
+    // auto-install path: the user already opted in via the "Download and update"
+    // link, so skip the confirmation dialog and just install (issue: pre-release
+    // one-click update)
+    if (gUpdateAutoInstall) {
+        gUpdateAutoInstall = false;
+        SaveSettings(); // persist timeOfLastUpdateCheck
+        if (installerPathAuto && file::Exists(installerPathAuto)) {
+            StartInstallerAutoUpgrade(installerPathAuto);
+            PostQuitMessage(0);
+        } else {
+            logf("NotifyUserOfUpdate: auto-install requested but installer not downloaded\n");
+        }
+        return;
+    }
+
     auto mainInstr = _TRA("New version available");
     auto ver = updateInfo->latestVer;
     auto fmt = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install new version?");
@@ -378,6 +412,62 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     // process the rest on ui thread to avoid threading issues
     auto fn = MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateFinish, data);
     uitask::Post(fn, "TaskShowAutoUpdateDialog");
+}
+
+// pre-release builds surface an available update with a bottom-left notification
+// whose "Download and update" link triggers a one-click download + install
+static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateInfo) {
+    if (!win || !updateInfo) {
+        return;
+    }
+    TempStr link = str::FormatTemp("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update"));
+    TempStr msg =
+        str::FormatTemp(_TRA("Update %s (you have %s) available. %s"), updateInfo->latestVer, CURR_VERSION_STRA, link);
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = msg;
+    args.warning = true; // yellowish background so it stands out
+    args.groupId = kNotifUpdateAvailable;
+    args.timeoutMs = 0; // persist until the user clicks the link or closes it
+    args.corner = NotifCorner::BottomLeft;
+    args.xMargin = 2;
+    args.yMargin = 2;
+    ShowNotification(args);
+}
+
+// called when the user clicks "Download and update" in the pre-release update
+// notification: download the pending update and (via gUpdateAutoInstall) install
+// it without the confirmation dialog
+void DownloadAndInstallPendingUpdate(MainWindow* win) {
+    if (!win || !gPendingUpdate) {
+        return;
+    }
+    UpdateInfo* updateInfo = gPendingUpdate;
+    gPendingUpdate = nullptr;
+    gUpdateAutoInstall = true;
+
+    HWND hwndForNotif = win->hwndCanvas;
+    updateInfo->hwndParent = win->hwndFrame;
+    RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateAvailable);
+
+    // progress notification updated by UpdateDownloadProgressNotif (same group)
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = hwndForNotif;
+    nargs.msg = _TRA("Downloading update...");
+    nargs.warning = true;
+    nargs.groupId = kNotifUpdateCheckInProgress;
+    nargs.timeoutMs = 0;
+    nargs.corner = NotifCorner::BottomLeft;
+    nargs.xMargin = 2;
+    nargs.yMargin = 2;
+    ShowNotification(nargs);
+
+    gUpdateCheckInProgress = true;
+    auto fnData = new DownloadUpdateAsyncData;
+    fnData->hwndForNotif = hwndForNotif;
+    fnData->updateInfo = updateInfo;
+    auto fn = MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateAsync, fnData);
+    RunAsync(fn, "DownloadUpdateAsync");
 }
 
 static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheckType) {
@@ -519,6 +609,16 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         NotifySuspiciousUpdate(hwndParent, updateInfo->dlURL);
         delete updateInfo;
+        return 0;
+    }
+
+    // pre-release automatic check: don't download yet. Show a bottom-left
+    // notification whose "Download and update" link does the download + install.
+    if (updateCheckType == UpdateCheck::Automatic && gIsPreReleaseBuild) {
+        RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
+        delete gPendingUpdate;       // drop any update from a previous check
+        gPendingUpdate = updateInfo; // take ownership (freed when installed/replaced)
+        ShowUpdateAvailableNotification(win, updateInfo);
         return 0;
     }
 

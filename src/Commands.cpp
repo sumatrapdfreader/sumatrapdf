@@ -141,6 +141,7 @@ static SeqStrings gCommandNames =
     "CmdAdvancedSettings\0"
     "CmdChangeLanguage\0"
     "CmdCheckUpdate\0"
+    "CmdInstallPrereleaseUpdate\0"
     "CmdHelpOpenManual\0"
     "CmdHelpOpenManualOnWebsite\0"
     "CmdHelpOpenKeyboardShortcuts\0"
@@ -394,6 +395,7 @@ static i32 gCommandIds[] = {
     CmdAdvancedSettings,
     CmdChangeLanguage,
     CmdCheckUpdate,
+    CmdInstallPrereleaseUpdate,
     CmdHelpOpenManual,
     CmdHelpOpenManualOnWebsite,
     CmdHelpOpenKeyboardShortcuts,
@@ -647,6 +649,7 @@ SeqStrings gCommandDescriptions =
     "Advanced Settings...\0"
     "Change Language...\0"
     "Check For Updates\0"
+    "Install Pre-release Update\0"
     "Help: Manual\0"
     "Help: Manual On Website\0"
     "Help: Keyboard Shortcuts\0"
