@@ -259,6 +259,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
 
 char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePage, int* exitCodeOut = nullptr);
+char* TestFailedLoadTabResult(const char* path, int* exitCodeOut = nullptr);
 bool DocIsSupportedFileType(Kind);
 TempStr GetLogFilePathTemp();
 void ShowErrorLoadingNotification(MainWindow* win, const char* path, bool noSavePrefs);

@@ -40,6 +40,7 @@ enum class ControlCmd : u16 {
     TestScrollToLink = 26,
     TestI18nErrorString = 27,
     TestPageInfoOverlay = 28,
+    TestFailedLoadTab = 31,
 };
 
 enum class ControlArgType : u16 {
@@ -477,6 +478,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestPageInfoOverlayResult(pathTwo, pathOne, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFailedLoadTab: {
+            const char* path = StringArg(req, 0);
+            if (!path) {
+                AppendError(req, "TestFailedLoadTab expects string path");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestFailedLoadTabResult(path, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

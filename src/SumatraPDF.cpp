@@ -67,6 +67,7 @@
 #include "Favorites.h"
 #include "FileThumbnails.h"
 #include "Menu.h"
+#include "CommandAvailability.h"
 #include "Print.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
@@ -2263,6 +2264,41 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
     return false;
 }
 
+// keep a tab for files that failed to load so Open in … / Show in Folder still work
+static void EnsureTabForFailedLoad(MainWindow* win, const char* path) {
+    if (!win || str::IsEmpty(path)) {
+        return;
+    }
+    WindowTab* tab = FindTabByFile(path);
+    if (!tab) {
+        TempStr displayName = path::GetBaseNameTemp(path);
+        WindowTab* currTab = win->CurrentTab();
+        if (currTab && currTab->IsAboutTab()) {
+            tab = currTab;
+            tab->SetFilePath(path);
+            tab->SetDisplayName(displayName);
+        } else if (SettingsUseTabs() || !currTab) {
+            tab = new WindowTab(win);
+            tab->SetFilePath(path);
+            tab->SetDisplayName(displayName);
+            AddTabToWindow(win, tab);
+        } else {
+            tab = currTab;
+            tab->SetFilePath(path);
+            tab->SetDisplayName(displayName);
+        }
+    }
+    if (tab) {
+        win->currentTabTemp = tab;
+        int idx = win->GetTabIdx(tab);
+        if (idx >= 0) {
+            TabsSelect(win, idx);
+        }
+        SetFrameTitleForTab(tab, false);
+        UpdateUiForCurrentTab(win);
+    }
+}
+
 static void LoadDocumentMarkNotExist(MainWindow* win, const char* path, bool noSavePrefs) {
     ShowWindow(win->hwndFrame, SW_SHOW);
 
@@ -2292,6 +2328,7 @@ static void ShowFileNotFound(MainWindow* win, const char* path, bool noSavePrefs
 }
 
 void ShowErrorLoadingNotification(MainWindow* win, const char* path, bool noSavePrefs) {
+    EnsureTabForFailedLoad(win, path);
     // TODO: same message as in Canvas.cpp to not introduce
     // new translation. Find a better message e.g. why failed.
     NotificationCreateArgs nargs;
@@ -10588,6 +10625,56 @@ char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePag
         out.AppendFmt("OK msg=%s\n", msg);
     } else {
         out.AppendFmt("FAIL after-reload msg=%s\n", msg);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
+
+// Verifies a failed document load keeps a tab and enables show-in-folder (fixes #3595).
+char* TestFailedLoadTabResult(const char* path, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg, int code = 1) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return out.StealData();
+    };
+
+    if (str::IsEmpty(path) || !file::Exists(path)) {
+        return fail("ERROR missing-path");
+    }
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window", 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !IsWindowVisible(win->hwndFrame)) {
+        return fail("NOTREADY no-window", 2);
+    }
+
+    WindowTab* tab = FindTabByFile(path);
+    if (!tab) {
+        ShowErrorLoadingNotification(win, path, true);
+        tab = FindTabByFile(path);
+        if (!tab) {
+            return fail("NOTREADY no-tab", 2);
+        }
+    }
+
+    bool hasPath = tab->filePath && str::Eq(tab->filePath, path);
+    bool noCtrl = tab->ctrl == nullptr;
+    AppCommandCtx ctx = NewAppCommandCtx(win);
+    CommandVisibility showFolder = GetCommandVisibility(CmdShowInFolder, ctx, CommandSurface::Menu);
+
+    bool ok = hasPath && noCtrl && showFolder == CommandVisibility::Show;
+    if (ok) {
+        out.AppendFmt("OK tab=%s showFolder=%d\n", tab->filePath, (int)showFolder);
+    } else {
+        out.AppendFmt("FAIL hasPath=%d noCtrl=%d showFolder=%d path=%s\n", (int)hasPath, (int)noCtrl, (int)showFolder,
+                      tab->filePath ? tab->filePath : "(null)");
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;

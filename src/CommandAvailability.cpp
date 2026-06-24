@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -291,6 +292,19 @@ bool CmdWorksWithoutDocument(int cmdId) {
     return CmdIdInList(cmdId, gNoDocWhitelist);
 }
 
+static bool CmdWorksForFailedLoad(int cmdId, int origCmdId, const AppCommandCtx& ctx) {
+    if (str::IsEmpty(ctx.filePath) || !file::Exists(ctx.filePath)) {
+        return false;
+    }
+    if (cmdId == CmdShowInFolder || origCmdId == CmdViewWithExternalViewer) {
+        return true;
+    }
+    if (cmdId >= CmdOpenWithKnownExternalViewerFirst && cmdId <= CmdOpenWithKnownExternalViewerLast) {
+        return HasKnownExternalViewerForCmd(cmdId);
+    }
+    return false;
+}
+
 static void PopulateTabCloseFlags(AppCommandCtx& ctx) {
     if (!ctx.win) {
         return;
@@ -494,6 +508,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (!ctx.isDocLoaded) {
+        if (CmdWorksForFailedLoad(cmdId, origCmdId, ctx)) {
+            return MapForSurface(CommandVisibility::Show, surface);
+        }
         return CommandVisibility::Hide;
     }
 
