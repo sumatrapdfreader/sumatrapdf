@@ -105,13 +105,13 @@ end
 -- WebView2 (manual viewer, SimpleBrowserWindow, ChmDocView). wingui/*.cpp is
 -- included via wingui_files() in premake5.files.lua.
 function webview_conf()
-  includedirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include" }
+  includedirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/include" }
   filter "platforms:x86"
-  libdirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/x86" }
+  libdirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/x86" }
   filter "platforms:x64 or x64_asan"
-  libdirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/x64" }
+  libdirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/x64" }
   filter "platforms:arm64"
-  libdirs { "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/arm64" }
+  libdirs { "packages/Microsoft.Web.WebView2.1.0.4022.49/build/native/arm64" }
   filter {}
   links { "WebView2LoaderStatic.lib" }
 end

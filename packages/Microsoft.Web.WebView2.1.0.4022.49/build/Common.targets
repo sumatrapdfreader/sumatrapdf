@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+***********************************************************************************************
+-->
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- Only do this for MSBuild versions below 16.0
+      as it is since done automatically, see https://github.com/microsoft/msbuild/pull/3605
+    -->
+    <MSBuildAllProjects Condition="'$(MSBuildToolsVersion)' &lt;= '15'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <WebView2EnablePropertyPage Condition="'$(WebView2EnablePropertyPage)' == '' and '$(WebView2ProjectKind)' == 'native'">true</WebView2EnablePropertyPage>
+    <WebView2EnablePropertyPage Condition="'$(WebView2EnablePropertyPage)' == '' and '$(VisualStudioVersion)' &gt;= '17.0' and '$(Language)' != 'VB'">true</WebView2EnablePropertyPage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)\WebView2Rules.Project.xml" Condition="'$(WebView2EnablePropertyPage)' == 'true'">
+      <Context>Project</Context>
+    </PropertyPageSchema>
+  </ItemGroup>
+
+  <!-- The Platform property is Win32 or x64 for C++ projects. Convert from Win32 to x86 to match our directory structure.
+    If PlatformTarget property is set, then use that to determine EffectivePlatform for .NET projects.
+    See conditions: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-conditions?view=vs-2019
+    and PropertyGroup: https://docs.microsoft.com/en-us/visualstudio/msbuild/propertygroup-element-msbuild?view=vs-2019
+  -->
+  <PropertyGroup>
+    <EffectivePlatform>$(Platform)</EffectivePlatform>
+    <!-- For projects building arm64ec, fall back to x64 binaries. Arm64ec is an optimization for running x64 processes on arm64 devices. Arm64ec and x64 binaries are interoperable, but both are incompatible with arm64.-->
+    <EffectivePlatform Condition="'$(EffectivePlatform)' == 'arm64ec'">x64</EffectivePlatform>    
+    <EffectivePlatform Condition="'$(EffectivePlatform)' == 'Win32'">x86</EffectivePlatform>
+    <EffectivePlatform Condition="'$(EffectivePlatform)' == 'Any CPU'">x86</EffectivePlatform>
+    <EffectivePlatform Condition="'$(EffectivePlatform)' == 'AnyCPU'">x86</EffectivePlatform>
+    <EffectivePlatform Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'win-x86'">x86</EffectivePlatform>
+    <EffectivePlatform Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'win-x64'">x64</EffectivePlatform>
+    <EffectivePlatform Condition="'$(PlatformTarget)' == 'x64'">x64</EffectivePlatform>
+    <EffectivePlatform Condition="'$(PlatformTarget)' == 'x86'">x86</EffectivePlatform>
+    <!-- This is required for .NET Core targeting ARM64. Without this line EffectivePlatform is set to x64 because in C#
+      $(NETCoreSdkRuntimeIdentifier) is always set to the .NET SDK you're using, not the target platform the project is compiling for.
+    -->
+    <EffectivePlatform Condition="'$(PlatformTarget)' == 'arm64'">arm64</EffectivePlatform>
+    <EffectivePlatform Condition="'$(PlatformTarget)' == 'Any CPU' And '$(WebView2ProjectKind)' == 'managed'">x86</EffectivePlatform>
+    <IsManagedPlatformAnyCpu Condition="'$(PlatformTarget)' == 'Any CPU' And '$(WebView2ProjectKind)' == 'managed'">true</IsManagedPlatformAnyCpu>
+    <EffectivePlatform Condition="'$(PlatformTarget)' == 'AnyCPU' And '$(WebView2ProjectKind)' == 'managed'">x86</EffectivePlatform>
+    <IsManagedPlatformAnyCpu Condition="'$(PlatformTarget)' == 'AnyCPU' And '$(WebView2ProjectKind)' == 'managed'">true</IsManagedPlatformAnyCpu>
+
+    <!-- Some .NET projects created from Visual Studio's New Project templates don't always specify PlatformTarget (mostly library projects).
+      When PlatformTarget isn't specified, the C# compiler (and presumably other .NET compilers) targets AnyCPU by default.
+      However, without the line below we would end up with an EffectivePlatform of x86.
+      The result was that the project's output contained an exe targeting AnyCPU, but only an x86 WebView2Loader.dll.
+      Therefore, trying to run the built project on x64 or ARM64 would fail due to lack of matching WebView2Loader.dll.
+      The below line fixes that problem by setting EffectivePlatform to AnyCPU if PlatformTarget isn't defined.
+      I had expected that solution to break C++ projects, however, because I thought that PlatformTarget was only ever used in .NET projects.
+      That prompted me to add the extra check for WebView2ProjectKind being 'managed', to limit the scope to .NET projects.
+      Interestingly, testing has determined that the extra check isn't actually necessary.
+      C++ projects will build successfully without that extra check, so apparently they also define/use PlatformTarget.
+      I still felt safer leaving the extra check in, though, because it never makes sense for a native project to attempt to target AnyCPU.
+      For the same reason, I also added the extra check to existing lines above this one which target AnyCPU.
+    -->
+    <EffectivePlatform Condition="'$(PlatformTarget)' == '' And '$(WebView2ProjectKind)' == 'managed'">x86</EffectivePlatform>
+    <IsManagedPlatformAnyCpu Condition="'$(PlatformTarget)' == '' And '$(WebView2ProjectKind)' == 'managed'">true</IsManagedPlatformAnyCpu>
+  </PropertyGroup>
+
+  <!-- Define custom properties to provide the ability to change default WebView2 build behaviors.
+    See MSBuild properties: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-properties?view=vs-2019
+  -->
+  <PropertyGroup>
+    <!-- For cases where it's non-obvious that we need to expose the WinMD (such as in a C++ non-UAP app) the dev can
+      set the WebView2UseWinRT property to 'true'.
+      We set this to true for two cases:
+        * A UWP app project
+        * WinAppSDK (non-.NET) projects
+
+      WinAppSDK uses WinRT so we turn this on for WinAppSDK projects except for .NET WinAppSDK.
+      .NET WinAppSDK uses C#/WinRT to wrap WinRT and we have a build of that for WebView2 in lib_manual\net6.0-windows10.0.17763.0
+
+      For UWP apps on modern .NET, we set this property to 'false', as the WinMD files should not be referenced.
+      However, they can still be copied to the output folder to support MBM, but that is handled separately. We
+      can detect this scenario with the 'UseUwpTools' property, which is recognized by VS 17.12 and enables all
+      necessary tooling to support UWP (XAML) apps using modern .NET (eg. importing the XAML compiler).
+    -->
+    <WebView2UseWinRT Condition="'$(WebView2UseWinRT)' == '' And '$(UseUwpTools)' == 'true'">false</WebView2UseWinRT>
+    <WebView2UseWinRT Condition="'$(WebView2UseWinRT)' == '' And ('$(TargetPlatformIdentifier)' == 'UAP' Or ('$(MicrosoftWindowsAppSDKPackageDir)'!='' And '$(TargetFramework)'==''))" >true</WebView2UseWinRT>
+    
+    <!-- Switch between using a static library or a dll for the WebView2Loader.
+      'Dynamic' value to use the WebView2Loader.dll, 'Static' value to static lib.
+      For WinRT, use 'None' and skip copy/link of the loader as it's already linked
+      to the WebView2 WinRT component. We do the same for UWP on modern .NET too.
+      For wv2winrt, if the project is running the tool, it's either:
+        1. Using WebView2 WinRT, and does not need the loader
+        2. Using WebView2 Win32, and needs the loader. Defaulting to include will break case below.
+        3. Not using WebView2 APIs at all, and doesn't need the loader.
+      We're choosing the most common scenario from (2), (3) above and defaulting to not including the loader.
+    -->
+    <WebView2LoaderPreference Condition="'$(WebView2LoaderPreference)' == '' And '$(UseUwpTools)' == 'true'">None</WebView2LoaderPreference>
+    <WebView2LoaderPreference Condition="'$(WebView2LoaderPreference)' == '' And ('$(WebView2UseWinRT)' == 'true' Or '$(WebView2UseDispatchAdapter)' == 'true')">None</WebView2LoaderPreference>
+    <WebView2LoaderPreference Condition="'$(WebView2LoaderPreference)' == ''">Dynamic</WebView2LoaderPreference>
+
+    <!-- The CsWinRT projections are enabled for both WinAppSDK and UWP apps using modern .NET -->
+    <WebView2EnableCsWinRTProjection Condition="'$(WebView2EnableCsWinRTProjection)'=='' And '$(UseUwpTools)' == 'true'">true</WebView2EnableCsWinRTProjection>
+    <WebView2EnableCsWinRTProjection Condition="'$(WebView2EnableCsWinRTProjection)'=='' And '$(MicrosoftWindowsAppSDKPackageDir)'!='' And '$(TargetFramework)'!=''">true</WebView2EnableCsWinRTProjection>
+
+    <!-- Don't copy the loader .dll for WinRT C# Apps -->
+    <WebView2NeverCopyLoaderDllToOutputDirectory Condition="'$(WebView2NeverCopyLoaderDllToOutputDirectory)' == '' And '$(WebView2EnableCsWinRTProjection)' == 'true'">true</WebView2NeverCopyLoaderDllToOutputDirectory>
+  </PropertyGroup>
+
+  <Import Project="$(NugetRoot)\build\wv2winrt.targets"/>
+
+  <!-- Choose the managed assemblies to reference depending on different scenarios and frameworks. -->
+  <!-- When evaluating the <When> conditions, only the first one that evaluates to 'true' is used. -->
+  <Choose>
+    <!-- Non-winrt .NET WinAppSDK apps should point to $(NugetRoot)\lib_manual\net6.0-windows10.0.17763.0\ (or .NET 8)  -->
+    <When Condition="'$(WebView2EnableCsWinRTProjection)'=='true'">
+      <ItemGroup>
+        <Reference Condition="$([MSBuild]::IsTargetFrameworkCompatible($(TargetFramework), 'net8.0-windows'))" Include="$(NugetRoot)\lib_manual\net8.0-windows10.0.17763.0\Microsoft.Web.WebView2.Core.Projection.dll" />
+        <Reference Condition="!$([MSBuild]::IsTargetFrameworkCompatible($(TargetFramework), 'net8.0-windows'))" Include="$(NugetRoot)\lib_manual\net6.0-windows10.0.17763.0\Microsoft.Web.WebView2.Core.Projection.dll" />
+        <ReferenceCopyLocalPaths Include="$(NugetRoot)\runtimes\win-$(EffectivePlatform)\native_uap\Microsoft.Web.WebView2.Core.dll" Condition="'$(WebView2EnableCsWinRTProjectionExcludeCoreRef)'!='true'"/>
+        <CsWinRTInputs Include="$(MSBuildThisFileDirectory)..\lib\Microsoft.Web.WebView2.Core.winmd" />
+      </ItemGroup>
+    </When>
+
+    <!-- Regular .NET 5+ apps should point to $(NugetRoot)\lib_manual\net5.0-windows10.0.17763.0\ for WPF.dll, and regular .NET Core 3.0 for Core.dll and Winforms.dll. -->
+    <When Condition="'$(WebView2UseWinRT)'!='true' And '$(TargetFramework)'!='' And $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net5.0'))">
+      <ItemGroup>
+        <Reference Include="$(NugetRoot)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Core.dll" />
+        <Reference Include="$(NugetRoot)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.WinForms.dll" />
+        <Reference Include="$(NugetRoot)\lib_manual\net5.0-windows10.0.17763.0\Microsoft.Web.WebView2.Wpf.dll" />
+      </ItemGroup>
+    </When>
+
+    <!-- Regular .NET apps should point to $(NugetRoot)\lib_manual\netcoreapp3.0\ -->
+    <When Condition="'$(WebView2UseWinRT)'!='true' And '$(TargetFramework)'!='' And $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.0'))">
+      <ItemGroup>
+        <Reference Include="$(NugetRoot)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Core.dll" />
+        <Reference Include="$(NugetRoot)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Wpf.dll" />
+        <Reference Include="$(NugetRoot)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.WinForms.dll" />
+      </ItemGroup>
+    </When>
+    <!-- <Otherwise, we either get the .NET Framework 4.6.2 assemblies automatically from \lib folder, or we don't need managed assemblies. -->
+  </Choose>
+
+  <!-- Make our header path available in the include path.
+    See CL task: https://docs.microsoft.com/en-us/visualstudio/msbuild/cl-task?view=vs-2019
+  -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+  <!-- MSBuildThisFileDirectory is the path containing this targets file.
+    See well-known properties: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-reserved-and-well-known-properties?view=vs-2019
+  -->
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)native\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <!-- Update link path to include appropriate arch directory and link against our lib.
+    See Link task: https://docs.microsoft.com/en-us/visualstudio/msbuild/link-task?view=vs-2019
+  -->
+  <ItemDefinitionGroup>
+    <Link Condition="'$(EffectivePlatform)' != 'ARM'">
+      <WebView2LoaderLib Condition="'$(WebView2LoaderPreference)' == 'Static'">WebView2LoaderStatic.lib;version.lib</WebView2LoaderLib>
+      <AdditionalDependencies>%(WebView2LoaderLib);WebView2Loader.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MSBuildThisFileDirectory)native\$(EffectivePlatform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!--
+    Don't copy the loader .dll to the output folder for UWP apps on modern .NET, unless the user explicitly opts-in.
+    For all other configurations that expect the loader to be copied to the output directory, keep the existing behavior.
+  -->
+  <PropertyGroup>
+    <WebView2NeverCopyLoaderDllToOutputDirectory Condition="'$(WebView2NeverCopyLoaderDllToOutputDirectory)' == '' And '$(UseUwpTools)' == 'true'">true</WebView2NeverCopyLoaderDllToOutputDirectory>
+  </PropertyGroup>
+
+  <!-- Copy DLL to the output path.
+    Only Copy DLL to the output path when project is C++ and WebView2LoaderPreference is set to Dynamic.
+    .NET will pick DLL at runtime from runtime folder or processor bit folder base on Core or Framework.
+    See Content: https://docs.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items?view=vs-2019
+    See Architecture-specific folders for .NET:
+    https://docs.microsoft.com/en-us/nuget/create-packages/supporting-multiple-target-frameworks#architecture-specific-folders
+  -->
+  <ItemGroup Condition="'$(WebView2LoaderPreference)' == 'Dynamic' And '$(WebView2ProjectKind)' == 'native' And '$(EffectivePlatform)' != 'ARM' And '$(WebView2NeverCopyLoaderDllToOutputDirectory)' != 'true'">
+    <Content Include="$(MSBuildThisFileDirectory)native\$(EffectivePlatform)\WebView2Loader.dll">
+      <Link>%(Filename)%(Extension)</Link>
+      <PublishState>Included</PublishState>
+      <Visible>False</Visible>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Pack>false</Pack>
+    </Content>
+  </ItemGroup>
+
+  <!-- Copy x64, x86 and arm64 WebView2Loader.dlls to sub folders in the output path. For .NET Framework we match
+    the folder convention used by .NET Core for consistency.
+    Microsoft.Web.WebView2.Core.dll handles loading the right DLL at runtime for Any CPU under those sub folders.
+    For SDK style project, check for TargetFramework. For msbuild style, check to make sure project is not C++ and TargetFrameworkVersion equal to v after trimming all numbers and dots.
+    When using WinRT, the loader is statically linked into the Microsoft.Web.WebView2.Core.dll.
+    https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-target-framework-and-target-platform?view=vs-2019#target-framework-and-profile
+  -->
+  <ItemGroup Condition="'$(WebView2ProjectKind)' == 'managed' And '$(WebView2UseWinRT)' != 'true' And '$(WebView2NeverCopyLoaderDllToOutputDirectory)' != 'true'">
+    <Content Include="$(MSBuildThisFileDirectory)\..\runtimes\win-x86\native\WebView2Loader.dll" Condition="'$(EffectivePlatform)' == 'x86' Or '$(IsManagedPlatformAnyCpu)' == 'true'">
+      <Link>runtimes\win-x86\native\WebView2Loader.dll</Link>
+      <PublishState>Included</PublishState>
+      <Visible>False</Visible>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+      <Pack>false</Pack>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)\..\runtimes\win-x64\native\WebView2Loader.dll" Condition="'$(EffectivePlatform)' == 'x64' Or '$(IsManagedPlatformAnyCpu)' == 'true'">
+      <Link>runtimes\win-x64\native\WebView2Loader.dll</Link>
+      <PublishState>Included</PublishState>
+      <Visible>False</Visible>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+      <Pack>false</Pack>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)\..\runtimes\win-arm64\native\WebView2Loader.dll" Condition="'$(EffectivePlatform)' == 'arm64' Or '$(IsManagedPlatformAnyCpu)' == 'true'">
+      <Link>runtimes\win-arm64\native\WebView2Loader.dll</Link>
+      <PublishState>Included</PublishState>
+      <Visible>False</Visible>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+      <Pack>false</Pack>
+    </Content>
+  </ItemGroup>
+
+  <!-- Setup WinRT DLLs.
+    See: https://docs.microsoft.com/en-us/nuget/guides/create-uwp-packages
+  -->
+  <ItemDefinitionGroup Condition="'$(WebView2UseWinRT)' == 'true'">
+    <ClCompile>
+      <!-- MSBuildThisFileDirectory is the path containing this targets file.
+        See well-known properties: https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild-reserved-and-well-known-properties?view=vs-2019
+      -->
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)native\include-winrt\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Choose>
+    <!-- We are using a Choose/When here instead of a condition directly on the ItemGroup to workaround a VS file inclusion issue that was causing false warnings. -->
+    <When Condition="'$(WebView2UseWinRT)' == 'true'">
+      <ItemGroup>
+        <Reference Include="$(MSBuildThisFileDirectory)..\lib\Microsoft.Web.WebView2.Core.winmd" Condition="'$(EffectivePlatform)' != 'ARM'">
+          <Implementation>Microsoft.Web.WebView2.Core.dll</Implementation>
+        </Reference>
+        <Reference Include="$(MSBuildThisFileDirectory)..\lib\Microsoft.Web.WebView2.Core.winmd" Condition="'$(EffectivePlatform)' == 'ARM'">
+          <!-- We don't support ARM, but to support builds we allow access to the winmd without specifying the implementing dll -->
+        </Reference>
+        <ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\runtimes\win-$(EffectivePlatform)\native_uap\Microsoft.Web.WebView2.Core.dll" Condition="'$(EffectivePlatform)' != 'ARM' And '$(WebView2EnableCsWinRTProjectionExcludeCoreRef)'!='true' "/>
+        <!-- We limit the SDKReference to 'UAP' because it targets 'UAP' as well, and would conflict if used in an app targeting 'Windows' -->
+        <SDKReference Include="Microsoft.VCLibs.Desktop, Version=14.0" Condition="'$(TargetPlatformIdentifier)' == 'UAP'"/>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(WebView2UseWinRT)' == 'false' and '$(WebView2UseDispatchAdapter)' == 'true'">
+      <ItemGroup>
+        <Reference Include="$(MSBuildThisFileDirectory)..\lib\Microsoft.Web.WebView2.Core.winmd">
+          <!-- wv2winrt needs Dispatch Adapter metadata to generate code -->
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+
+  <!-- Automatic .winmd registration for the APPX manifest (only needed when not referencing the .winmd file) -->
+  <ItemGroup Condition="'$(WebView2EnableCsWinRTProjection)'=='true' and '$(WebView2EnableCsWinRTProjectionExcludeCoreRef)' != 'true'">
+    <WindowsMetadataReference Include="$(MSBuildThisFileDirectory)..\lib\Microsoft.Web.WebView2.Core.winmd" Implementation="Microsoft.Web.WebView2.Core.dll" />
+  </ItemGroup>
+
+  <!-- Cleanup our copied files when cleaning.
+    See Delete: https://docs.microsoft.com/en-us/visualstudio/msbuild/delete-task?view=vs-2019
+    See AfterTargets: https://docs.microsoft.com/en-us/visualstudio/msbuild/target-build-order?view=vs-2019
+  -->
+  <Target Name="CleanDownloadContentFiles" AfterTargets="Clean">
+    <Delete Files="$(OutputPath)\WebView2Loader.dll"/>
+  </Target>
+</Project>

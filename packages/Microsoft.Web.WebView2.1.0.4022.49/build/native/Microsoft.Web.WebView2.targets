@@ -1,0 +1,22 @@
+﻿<?xml version="1.0"?>
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- This build\native\.targets file is used by native (C++) VS projects including win32 and UWP. -->
+
+  <PropertyGroup>
+    <WebView2ProjectKind>native</WebView2ProjectKind>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- The native targets file is under build\native
+      so the root is two path segments up. -->
+    <NugetRoot>$(MSBuildThisFileDirectory)..\..\</NugetRoot>
+  </PropertyGroup>
+
+  <!-- Example logging
+  <Target Name="WebView2NativeEntryLog" BeforeTargets="Build">
+    <Message Text="WebView2 native .targets file. $(NugetRoot)" Importance="high"/>
+  </Target>
+  -->
+
+  <Import Project="$(NugetRoot)\build\Common.targets"/>
+</Project>

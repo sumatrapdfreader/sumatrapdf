@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+***********************************************************************************************
+-->
+<!-- This file contains the targets properties and such related to the wv2winrt tool.
+  It depends on the following from the importer:
+    * To guarantee that the wv2winrt tool is available at path ..\tools\wv2winrt\ (overridable via WV2WinRTPath, which must end with a single trailing slash `\`); or that WV2WinRTExe is defined with a valid path.
+    * To guarantee that Microsoft.Web.WebView2.winmd is referenced by the project when the tool is enabled (as defined by WebView2UseDispatchAdapter).
+    * To guarantee that, if defined, GeneratedFilesDir ends with a single trailing slash `\`; or to define WebView2DispatchAdapterOutputDir ending with a single trailing slash '\'.
+-->
+<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- Only do this for MSBuild versions below 16.0
+      as it is since done automatically, see https://github.com/microsoft/msbuild/pull/3605
+    -->
+    <MSBuildAllProjects Condition="'$(MSBuildToolsVersion)' &lt;= '15'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <WebView2GeneratedFilesDir Condition="'$(GeneratedFilesDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</WebView2GeneratedFilesDir>
+    <WebView2GeneratedFilesDir Condition="'$(GeneratedFilesDir)' != ''">$(GeneratedFilesDir)</WebView2GeneratedFilesDir>
+    <WV2WinRTVerbosity Condition="'$(WV2WinRTVerbosity)' == ''">normal</WV2WinRTVerbosity>
+    <WV2WinRTPath Condition="'$(WV2WinRTPath)' == ''">$(MSBuildThisFileDirectory)..\tools\wv2winrt\</WV2WinRTPath>
+    <WV2WinRTExe Condition="'$(WV2WinRTExe)' == ''">$(WV2WinRTPath)wv2winrt.exe</WV2WinRTExe>
+    <WV2WinRTWinMDInputsResponseFile Condition="'$(WV2WinRTWinMDInputsResponseFile)' == ''">$(IntDir)wv2winrt_inputs.rsp</WV2WinRTWinMDInputsResponseFile>
+    <WV2WinRTParametersResponseFile Condition="'$(WV2WinRTParametersResponseFile)' == ''">$(IntDir)wv2winrt_params.rsp</WV2WinRTParametersResponseFile>
+    <WV2WinRTSkipMakeProjections Condition="'$(WV2WinRTSkipMakeProjections)' == ''">false</WV2WinRTSkipMakeProjections>
+    <WV2WinRTRequireAllowForWebAttribute Condition="'$(WV2WinRTRequireAllowForWebAttribute)' == ''">false</WV2WinRTRequireAllowForWebAttribute>
+    <WV2WinRTIgnoreWebHostHiddenAttribute Condition="'$(WV2WinRTIgnoreWebHostHiddenAttribute)' == ''">false</WV2WinRTIgnoreWebHostHiddenAttribute>
+    <!-- If WebView2UseWinRT is enabled, we assume the generated classes are being used in this project and put them under wv2winrt default namespace. -->
+    <WebView2DispatchAdapterNamespace Condition="'$(WebView2DispatchAdapterNamespace)' == '' and '$(WebView2UseWinRT)' == 'true'">WinRTAdapter</WebView2DispatchAdapterNamespace>
+    <!-- Otherwise, we assume the project will be consumed from a separate project. We put generated code under RootNamespace in this case as that's the namespace that will be automatically available when the project is referenced. -->
+    <WebView2DispatchAdapterNamespace Condition="'$(WebView2DispatchAdapterNamespace)' == ''">$(RootNamespace)</WebView2DispatchAdapterNamespace>
+    <WebView2DispatchAdapterOutputDir Condition="'$(WebView2DispatchAdapterOutputDir)' == ''">$(WebView2GeneratedFilesDir)</WebView2DispatchAdapterOutputDir>
+    <WV2WinRTDisallowEmptyAdapter Condition="'$(WV2WinRTDisallowEmptyAdapter)' == ''">true</WV2WinRTDisallowEmptyAdapter>
+    <WebView2WinRTWrapSystemTypes Condition="'$(WebView2WinRTWrapSystemTypes)' == ''">true</WebView2WinRTWrapSystemTypes>
+    <WV2WinRTPlatformReferencesLevel Condition="'$(WV2WinRTPlatformReferencesLevel)' == ''">match</WV2WinRTPlatformReferencesLevel>
+
+    <!-- Note: Before* targets run before Compute* targets. -->
+    <BeforeMidlCompileTargets Condition="'$(WebView2UseDispatchAdapter)' == 'true'">
+        $(BeforeMidlCompileTargets);WV2WinRTAddDispatchAdapterIdl;
+    </BeforeMidlCompileTargets>
+    <BeforeClCompileTargets Condition="'$(WebView2UseDispatchAdapter)' == 'true'">
+      $(BeforeClCompileTargets);WV2WinRTAddGeneratedFiles;
+    </BeforeClCompileTargets>
+  </PropertyGroup>
+
+  <Target Name="GetWV2WinRTPlatformWinMDReferences"
+      DependsOnTargets="ResolveAssemblyReferences;CppWinRTImplicitlyExpandTargetPlatform;GetCppWinRTPlatformWinMDReferences;$(GetWV2WinRTPlatformWinMDReferencesDependsOn)"
+      Returns="@(WV2WinRTPlatformWinMDReferences)">
+    <ItemGroup>
+      <_WV2WinRTPlatformWinMDReferences Remove="@(_WV2WinRTPlatformWinMDReferences)"/>
+      <!-- Project platform references -->
+      <_WV2WinRTPlatformWinMDReferences Include="@(ReferencePath)" Condition="('$(WV2WinRTPlatformReferencesLevel)' == 'explicit' or '$(WV2WinRTPlatformReferencesLevel)' == 'foundation') and '%(ReferencePath.IsSystemReference)' == 'true' and '%(ReferencePath.WinMDFile)' == 'true' and '%(ReferencePath.ReferenceSourceTarget)' == 'ResolveAssemblyReference'"/>
+      <!-- Foundation contracts -->
+      <_WV2WinRTPlatformWinMDReferences Include="$(WindowsSDK_MetadataPathVersioned)\**\Windows.Foundation.FoundationContract.winmd" Condition="'$(WV2WinRTPlatformReferencesLevel)' == 'foundation'"/>
+      <_WV2WinRTPlatformWinMDReferences Include="$(WindowsSDK_MetadataPathVersioned)\**\Windows.Foundation.UniversalApiContract.winmd" Condition="'$(WV2WinRTPlatformReferencesLevel)' == 'foundation'"/>
+      <_WV2WinRTPlatformWinMDReferences Include="$(WindowsSDK_MetadataPathVersioned)\**\Windows.Networking.Connectivity.WwanContract.winmd" Condition="'$(WV2WinRTPlatformReferencesLevel)' == 'foundation'"/>
+      <!-- C++/WinRT -->
+      <_WV2WinRTPlatformWinMDReferences Include="@(CppWinRTPlatformWinMDReferences)" Condition="'$(WV2WinRTPlatformReferencesLevel)' == 'match'"/>
+
+      <WV2WinRTPlatformWinMDReferences Remove="@(WV2WinRTPlatformWinMDReferences)"/>
+      <WV2WinRTPlatformWinMDReferences Include="@(_WV2WinRTPlatformWinMDReferences->'%(FullPath)'->Distinct())"/>
+    </ItemGroup>
+    <Message Text="WV2WinRTPlatformWinMDReferences: &#xA;@(WV2WinRTPlatformWinMDReferences->'%(FullPath)', '&#xA;')" Importance="$(WV2WinRTVerbosity)"/>
+  </Target>
+
+  <Target Name="GetWV2WinRTDirectWinMDReferences"
+      DependsOnTargets="ResolveAssemblyReferences;GetCppWinRTDirectWinMDReferences;$(GetWV2WinRTDirectWinMDReferencesDependsOn)"
+      Returns="@(WV2WinRTDirectWinMDReferences)">
+    <ItemGroup>
+      <_WV2WinRTDirectWinMDReferences Remove="@(_WV2WinRTDirectWinMDReferences)"/>
+      <_WV2WinRTDirectWinMDReferences Include="@(CppWinRTDirectWinMDReferences)" Condition="'%(Filename)' != 'Microsoft.Web.WebView2.Core'"/>
+      <_WV2WinRTDirectWinMDReferences Include="@(CppWinRTDirectWinMDReferences)" Condition="'%(Filename)' == 'Microsoft.Web.WebView2.Core' And '$(WV2WinRTWrapWebViewTypes)' == 'true'"/>
+      <WV2WinRTDirectWinMDReferences Remove="@(WV2WinRTDirectWinMDReferences)"/>
+      <WV2WinRTDirectWinMDReferences Include="@(_WV2WinRTDirectWinMDReferences)"/>
+    </ItemGroup>
+    <Message Text="WV2WinRTDirectWinMDReferences: &#xA;@(WV2WinRTDirectWinMDReferences->'%(FullPath)', '&#xA;')" Importance="$(WV2WinRTVerbosity)"/>
+  </Target>
+
+  <Target Name="GetWV2WinRTProjectWinMDReferences"
+      DependsOnTargets="GetCppWinRTProjectWinMDReferences;$(GetWV2WinRTProjectWinMDReferencesDependsOn)"
+      Returns="@(WV2WinRTProjectWinMDReferences)">
+    <ItemGroup>
+      <_WV2WinRTStaticProjectWinMDReferences Remove="@(_WV2WinRTStaticProjectWinMDReferences)"/>
+      <_WV2WinRTStaticProjectWinMDReferences Include="@(CppWinRTStaticProjectWinMDReferences)"/>
+      <WV2WinRTStaticProjectWinMDReferences Remove="@(WV2WinRTStaticProjectWinMDReferences)"/>
+      <WV2WinRTStaticProjectWinMDReferences Include="@(_WV2WinRTStaticProjectWinMDReferences)"/>
+    </ItemGroup>
+    <ItemGroup>
+      <_WV2WinRTDynamicProjectWinMDReferences Remove="@(_WV2WinRTDynamicProjectWinMDReferences)"/>
+      <_WV2WinRTDynamicProjectWinMDReferences Include="@(CppWinRTDynamicProjectWinMDReferences)"/>
+      <WV2WinRTDynamicProjectWinMDReferences Remove="@(WV2WinRTDynamicProjectWinMDReferences)"/>
+      <WV2WinRTDynamicProjectWinMDReferences Include="@(_WV2WinRTDynamicProjectWinMDReferences)"/>
+    </ItemGroup>
+    <ItemGroup>
+      <WV2WinRTProjectWinMDReferences Remove="@(WV2WinRTProjectWinMDReferences)"/>
+      <WV2WinRTProjectWinMDReferences Include="@(WV2WinRTStaticProjectWinMDReferences)"/>
+      <WV2WinRTProjectWinMDReferences Include="@(WV2WinRTDynamicProjectWinMDReferences)"/>
+    </ItemGroup>
+    <Message Text="WV2WinRTStaticProjectWinMDReferences: &#xA;@(WV2WinRTStaticProjectWinMDReferences->'%(FullPath)', '&#xA;')" Condition="'$(WV2WinRTLogIntermediateWinMDReferences)' == 'true'" Importance="$(WV2WinRTVerbosity)"/>
+    <Message Text="WV2WinRTDynamicProjectWinMDReferences: &#xA;@(WV2WinRTDynamicProjectWinMDReferences->'%(FullPath)', '&#xA;')" Condition="'$(WV2WinRTLogIntermediateWinMDReferences)' == 'true'" Importance="$(WV2WinRTVerbosity)"/>
+    <Message Text="WV2WinRTProjectWinMDReferences: &#xA;@(WV2WinRTProjectWinMDReferences->'%(FullPath)', '&#xA;')" Importance="$(WV2WinRTVerbosity)"/>
+  </Target>
+
+  <Target Name="GetWV2WinRTAdditionalWinMDReferences"
+      DependsOnTargets="$(GetWV2WinRTAdditionalWinMDReferencesDependsOn)"
+      Returns="@(WV2WinRTAdditionalWinMDReferences)">
+    <ItemGroup>
+      <WebView2WinRTAdditionalWinMDReferences Include="$(WebView2WinRTAdditionalWinMDReferences)"/>
+    </ItemGroup>
+    <ItemGroup>
+      <_WV2WinRTAdditionalWinMDReferences Remove="@(_WV2WinRTAdditionalWinMDReferences)"/>
+      <_WV2WinRTAdditionalWinMDReferences Include="@(WebView2WinRTAdditionalWinMDReferences)"/>
+      <WV2WinRTAdditionalWinMDReferences Remove="@(WV2WinRTAdditionalWinMDReferences)"/>
+      <WV2WinRTAdditionalWinMDReferences Include="@(_WV2WinRTAdditionalWinMDReferences)"/>
+    </ItemGroup>
+    <Message Text="WV2WinRTAdditionalWinMDReferences: &#xA;@(WV2WinRTAdditionalWinMDReferences->'%(FullPath)', '&#xA;')" Importance="$(WV2WinRTVerbosity)"/>
+  </Target>
+
+  <Target Name="GetWV2WinRTInputs"
+      DependsOnTargets="GetWV2WinRTPlatformWinMDReferences;GetWV2WinRTDirectWinMDReferences;GetWV2WinRTProjectWinMDReferences;GetWV2WinRTAdditionalWinMDReferences;CppWinRTMakeComponentProjection"
+      Outputs="$(WV2WinRTWinMDInputsResponseFile)">
+    <ItemGroup>
+      <_WV2WinRTInputs Remove="@(_WV2WinRTInputs)"/>
+      <_WV2WinRTInputs Include="@(WV2WinRTDirectWinMDReferences)"/>
+      <_WV2WinRTInputs Include="@(WV2WinRTPlatformWinMDReferences)" Condition="'$(WebView2WinRTWrapSystemTypes)' == 'true'"/>
+      <_WV2WinRTInputs Include="@(WV2WinRTProjectWinMDReferences)"/>
+      <_WV2WinRTInputs Include="@(WV2WinRTAdditionalWinMDReferences)"/>
+      <_WV2WinRTInputs Include="@(_CppwinrtCompInputs)"/>
+      <WV2WinRTInputs Remove="@(WV2WinRTInputs)"/>
+      <WV2WinRTInputs Include="@(_WV2WinRTInputs->'%(FullPath)'->Distinct())" Condition="'%(_WV2WinRTInputs.WinMDFile)' == 'true' or ('%(_WV2WinRTInputs.WinMDFile)' == '' and '%(_WV2WinRTInputs.Extension)' == '.winmd')">
+        <WinMDPath>%(FullPath)</WinMDPath>
+      </WV2WinRTInputs>
+    </ItemGroup>
+    <Error Condition="'@(_WV2WinRTInputs)' == '' And '$(WV2WinRTDisallowEmptyAdapter)' == 'true'" Text="No winmd inputs for WebView2 WinRT Projection"/>
+    <!-- Always write the wv2winrt_inputs.rsp file when the target runs, because the file is used as the output of this target. -->
+    <WriteLinesToFile
+        File="$(WV2WinRTWinMDInputsResponseFile)" Lines="@(WV2WinRTInputs)"
+        ContinueOnError="true" Overwrite="true" />
+    <Message Text="WV2WinRTInputs: &#xA;@(WV2WinRTInputs->'%(WinMDPath)', '&#xA;')" Importance="$(WV2WinRTVerbosity)"/>
+  </Target>
+
+  <Target Name="WV2WinRTComputeIdlParameters">
+    <PropertyGroup>
+      <WV2WinRTIdlParameters>--idl</WV2WinRTIdlParameters>
+      <WV2WinRTIdlParameters Condition="'$(WebView2DispatchAdapterOutputDir)' != ''">$(WV2WinRTIdlParameters) --output-path &quot;$(WebView2DispatchAdapterOutputDir.TrimEnd('\'))&quot;</WV2WinRTIdlParameters>
+      <WV2WinRTIdlParameters Condition="'$(WebView2DispatchAdapterNamespace)' != ''">$(WV2WinRTIdlParameters) --output-namespace $(WebView2DispatchAdapterNamespace)</WV2WinRTIdlParameters>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="WV2WinRTGenerateDispatchAdapterIdl"
+      DependsOnTargets="WV2WinRTComputeIdlParameters"
+      Inputs="$(WV2WinRTExe)"
+      Outputs="$(WebView2DispatchAdapterOutputDir)wv2winrt\DispatchAdapter.idl">
+    <PropertyGroup>
+      <WV2WinRTIdlCommand Condition="'$(WV2WinRTCommandPrefix)' != ''">$(WV2WinRTCommandPrefix) </WV2WinRTIdlCommand>
+      <WV2WinRTIdlCommand>$(WV2WinRTIdlCommand)&quot;$(WV2WinRTExe)&quot; $(WV2WinRTIdlParameters)</WV2WinRTIdlCommand>
+    </PropertyGroup>
+
+    <Message Text="$(WV2WinRTIdlCommand)" Importance="$(WV2WinRTVerbosity)"/>
+    <Exec Command="$(WV2WinRTIdlCommand)"/>
+  </Target>
+
+  <Target Name="WV2WinRTAddDispatchAdapterIdl"
+      DependsOnTargets="WV2WinRTGenerateDispatchAdapterIdl">
+    <ItemGroup>
+      <Midl Include="$(WebView2DispatchAdapterOutputDir)wv2winrt\DispatchAdapter.idl" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="WV2WinRTComputeParameters"
+      DependsOnTargets="GetWV2WinRTInputs"
+      Inputs="$(WV2WinRTWinMDInputsResponseFile)"
+      Outputs="$(IntDir)wv2winrt.rsp">
+    <ItemGroup>
+      <WV2WinRTIncludeFilters Remove="@(WV2WinRTIncludeFilters)"/>
+      <WV2WinRTIncludeFilters Include="$(WebView2DispatchAdapterIncludeFilters)"/>
+      <WV2WinRTIncludeFilters Include="@(WebView2DispatchAdapterIncludeFilters)"/>
+
+      <WV2WinRTExcludeFilters Remove="@(WV2WinRTExcludeFilters)"/>
+      <WV2WinRTExcludeFilters Include="$(WebView2DispatchAdapterExcludeFilters)"/>
+      <WV2WinRTExcludeFilters Include="@(WebView2DispatchAdapterExcludeFilters)"/>
+    </ItemGroup>
+    <ItemGroup>
+      <_PCH Include="@(ClCompile->Metadata('PrecompiledHeaderFile')->Distinct())"/>
+    </ItemGroup>
+    <Error Condition="'@(_PCH->Count())' &gt; '1'" Text="wv2winrt only supports a single PCH."/>
+    <PropertyGroup>
+      <_PCH>@(_PCH->Distinct())</_PCH>
+    </PropertyGroup>
+    <PropertyGroup>
+      <WV2WinRTParameters Condition="'$(WebView2DispatchAdapterOutputDir)' != ''">--output-path &quot;$(WebView2DispatchAdapterOutputDir.TrimEnd('\'))&quot;</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(WebView2DispatchAdapterNamespace)' != ''">$(WV2WinRTParameters) --output-namespace $(WebView2DispatchAdapterNamespace)</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(WebView2DispatchAdapterNamespace)' != '$(RootNamespace)'">$(WV2WinRTParameters) --use-full-namespace</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(WebView2DispatchAdapterUseJavaScriptCase)' == 'true'">$(WV2WinRTParameters) --use-javascript-case</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(WV2WinRTExplicitIncludesOnly)' == 'true'">$(WV2WinRTParameters) --explicit-includes-only</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(WV2WinRTRequireAllowForWebAttribute)' == 'true'">$(WV2WinRTParameters) --require-allow-for-web-attribute</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(WV2WinRTIgnoreWebHostHiddenAttribute)' == 'true'">$(WV2WinRTParameters) --ignore-web-host-hidden-attribute</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'@(WV2WinRTIncludeFilters)' != ''">$(WV2WinRTParameters) --include @(WV2WinRTIncludeFilters, ' ')</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'@(WV2WinRTExcludeFilters)' != ''">$(WV2WinRTParameters) --exclude @(WV2WinRTExcludeFilters, ' ')</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'@(WV2WinRTInputs)' != ''">$(WV2WinRTParameters) --winmd-paths @(WV2WinRTInputs->'&quot;%(WinMDPath)&quot;', ' ')</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(WV2WinRTVerbosity)' == 'high'">$(WV2WinRTParameters) --verbose</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(_PCH)' != ''">$(WV2WinRTParameters) --pch &quot;$(_PCH)&quot;</WV2WinRTParameters>
+      <WV2WinRTParameters Condition="'$(WV2WinRTAdditionalParameters)' != ''">$(WV2WinRTParameters) $(WV2WinRTAdditionalParameters)</WV2WinRTParameters>
+    </PropertyGroup>
+    <!-- Always write the wv2winrt.rsp file when the target runs, because the file is used as the output of this target. -->
+    <WriteLinesToFile
+        File="$(IntDir)wv2winrt.rsp" Lines="$(WV2WinRTParameters)"
+        ContinueOnError="true" Overwrite="true" />
+  </Target>
+
+  <Target Name="WV2WinRTMakeProjections"
+      Condition="'$(WV2WinRTSkipMakeProjections)' != 'true'"
+      DependsOnTargets="WV2WinRTComputeParameters"
+      Inputs="$(IntDir)wv2winrt.rsp"
+      Outputs="$(WebView2DispatchAdapterOutputDir)wv2winrt\**">
+    <PropertyGroup>
+      <WV2WinRTCommand Condition="'$(WV2WinRTCommandPrefix)' != ''">$(WV2WinRTCommandPrefix) </WV2WinRTCommand>
+      <WV2WinRTCommand>$(WV2WinRTCommand)&quot;$(WV2WinRTExe)&quot; $(WV2WinRTParameters)</WV2WinRTCommand>
+    </PropertyGroup>
+
+    <Message Text="$(WV2WinRTCommand)" Importance="$(WV2WinRTVerbosity)"/>
+    <Exec Command="$(WV2WinRTCommand)" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="WV2WinRTOutput"/>
+    </Exec>
+  </Target>
+
+  <Target Name="WV2WinRTAddGeneratedFiles"
+      DependsOnTargets="WV2WinRTMakeProjections">
+    <ItemGroup>
+      <_WV2WinRTFilesToBuild Remove="@(_WV2WinRTFilesToBuild)"/>
+      <_WV2WinRTFilesToBuild Include="$(WebView2DispatchAdapterOutputDir)wv2winrt\*.cpp"/>
+      <_WV2WinRTFilesToClean Include="$(WebView2DispatchAdapterOutputDir)wv2winrt\*.*"/>
+    </ItemGroup>
+    <ItemGroup>
+      <ClCompile Include="@(_WV2WinRTFilesToBuild)">
+        <ObjectFileName>$(IntDir)wv2winrt\</ObjectFileName>
+      </ClCompile>
+      <FileWrites Include="@(_WV2WinRTFilesToClean)" Condition="'$(WV2WinRTSkipMakeProjections)' != 'true'"/>
+    </ItemGroup>
+    <Message Text="GeneratedCppFiles: &#xA;@(_WV2WinRTFilesToBuild, '&#xA;')" Importance="$(WV2WinRTVerbosity)" />
+  </Target>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+        <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(WebView2DispatchAdapterOutputDir)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>
