@@ -606,6 +606,18 @@ void RememberDefaultWindowPosition(MainWindow* win) {
         return;
     }
 
+    // while a document is still loading, a transient normal-sized frame must not
+    // overwrite a maximized/fullscreen WindowState preference (fixes #5529)
+    if (!win->IsDocLoaded()) {
+        int intended = gGlobalPrefs->windowState;
+        if (intended == WIN_STATE_MAXIMIZED && !IsZoomed(win->hwndFrame)) {
+            return;
+        }
+        if (intended == WIN_STATE_FULLSCREEN && !win->isFullScreen) {
+            return;
+        }
+    }
+
     if (win->presentation) {
         gGlobalPrefs->windowState = win->windowStateBeforePresentation;
     } else if (win->isFullScreen) {
@@ -2264,7 +2276,7 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
 }
 
 static void LoadDocumentMarkNotExist(MainWindow* win, const char* path, bool noSavePrefs) {
-    ShowWindow(win->hwndFrame, SW_SHOW);
+    ShowMainWindow(win, gGlobalPrefs->windowState);
 
     // display the notification ASAP (SaveSettings() can introduce a notable delay)
     win->RedrawAll(true);
@@ -2801,7 +2813,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         args.msg = str::FormatTemp(_TRA("Please wait - loading..."));
         args.warning = true;
         ShowNotification(args);
-        ShowWindow(win->hwndFrame, SW_SHOW);
+        ShowMainWindow(win, gGlobalPrefs->windowState);
         // display the notification ASAP
         win->RedrawAll(true);
     }
@@ -10588,6 +10600,43 @@ char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePag
         out.AppendFmt("OK msg=%s\n", msg);
     } else {
         out.AppendFmt("FAIL after-reload msg=%s\n", msg);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
+
+// Verifies maximized WindowState is not downgraded while a document is still loading (fixes #5529).
+char* TestWindowStateDuringLoadResult(int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg, int code = 1) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return out.StealData();
+    };
+
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window", 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !IsWindowVisible(win->hwndFrame)) {
+        return fail("NOTREADY window-not-visible", 2);
+    }
+    if (win->IsDocLoaded()) {
+        return fail("NOTREADY doc-already-loaded", 2);
+    }
+
+    gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
+    RememberDefaultWindowPosition(win);
+    bool ok = gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED;
+    if (ok) {
+        out.AppendFmt("OK windowState=%d\n", gGlobalPrefs->windowState);
+    } else {
+        out.AppendFmt("FAIL windowState=%d expected=%d\n", gGlobalPrefs->windowState, WIN_STATE_MAXIMIZED);
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
