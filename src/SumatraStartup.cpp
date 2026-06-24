@@ -1127,7 +1127,7 @@ static void supressThrowFromNew() {
 }
 
 static void ShowNotValidInstallerError() {
-    MsgBox(nullptr, "Not a valid installer", "Error", MB_OK | MB_ICONERROR);
+    MsgBox(nullptr, _TRA("Not a valid installer"), _TRA("Error"), MB_OK | MB_ICONERROR);
 }
 
 static void ShowNoAdminErrorMessage() {
@@ -2020,6 +2020,10 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         str::ReplaceWithCopy(&gGlobalPrefs->scrollbars, "windows");
     }
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
+    if (flags.showPrintersDialog) {
+        ShowPrintersDialog();
+        goto Exit;
+    }
     FileWatcherInit();
 
     if (flags.testRenderPage) {

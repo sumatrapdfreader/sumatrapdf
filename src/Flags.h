@@ -97,6 +97,7 @@ struct Flags {
     char* dde = nullptr;
     bool engineDump = false; // -engine-dump
     bool dumpExif = false;   // -dump-exif
+    bool showPrintersDialog = false;
 
     bool crashOnOpen = false;
 
@@ -131,6 +132,7 @@ struct Flags {
 };
 
 void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags&, const char* toolNames = nullptr);
+void ShowPrintersDialog();
 
 bool IsValidPageRange(const char* ranges);
 bool IsBenchPagesInfo(const char* s);

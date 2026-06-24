@@ -2016,7 +2016,7 @@ PrintResult PrintFile(const char* fileName, char* printerName, bool displayError
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
         TempStr msg = str::FormatTemp("Couldn't open file '%s' for printing", fileName);
-        MessageBoxWarningCond(displayErrors, msg, "Error");
+        MessageBoxWarningCond(displayErrors, msg, _TRA("Error"));
         return PrintResult::CannotLoadFile;
     }
     PrintResult res = PrintFile2(engine, printerName, displayErrors, settings);

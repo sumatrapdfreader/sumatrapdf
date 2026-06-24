@@ -1072,7 +1072,7 @@ static void ShowNoEmbeddedFiles(const char* msg) {
         log(msg);
         return;
     }
-    MsgBox(nullptr, msg, "Error", MB_OK);
+    MsgBox(nullptr, msg, _TRA("Error"), MB_OK);
 }
 
 static LoadedDataResource gLoadedArchive;

@@ -1021,7 +1021,7 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
 static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
     ReportIf(!ew->tab->selectedAnnotation);
     // TODO: implement me
-    MessageBoxNYI(ew->hwnd);
+    MsgBox(ew->hwnd, _TRA("Not Yet Implemented!"), _TRA("NYI"), MB_OK | MB_ICONEXCLAMATION);
 }
 
 void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAnnotFocus focus) {

@@ -21,6 +21,7 @@
 #include "Selection.h"
 #include "SearchAndDDE.h"
 #include "ReadAloudHighlight.h"
+#include "Translations.h"
 
 #include <chm_lib.h>
 #include "lzx.h"
@@ -623,6 +624,28 @@ char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord
     }
 
     SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
+
+// Verifies _TRA resolves error-path strings through the translation table.
+char* TestI18nErrorStringResult(int* exitCodeOut) {
+    StrBuilder out;
+    const char* err = _TRA("Error");
+    const char* crash = _TRA("SumatraPDF crashed");
+    const char* printers = _TRA("SumatraPDF - Show Printers");
+    bool ok = !str::IsEmpty(err) && !str::IsEmpty(crash) && !str::IsEmpty(printers) &&
+              str::Eq(err, trans::GetTranslation("Error")) &&
+              str::Eq(crash, trans::GetTranslation("SumatraPDF crashed")) &&
+              str::Eq(printers, trans::GetTranslation("SumatraPDF - Show Printers"));
+    if (ok) {
+        out.AppendFmt("OK error=%s crash=%s printers=%s\n", err, crash, printers);
+    } else {
+        out.AppendFmt("FAIL error=%s crash=%s printers=%s\n", err ? err : "(null)", crash ? crash : "(null)",
+                      printers ? printers : "(null)");
+    }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
