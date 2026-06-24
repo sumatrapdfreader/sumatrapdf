@@ -40,6 +40,8 @@ COLORREF AdjustLightness(COLORREF c, float factor);
 COLORREF AdjustLightness2(COLORREF c, float units);
 float GetLightness(COLORREF c);
 bool IsLightColor(COLORREF c);
+// photographic negative: inverts r, g, b and preserves alpha
+COLORREF InvertColor(COLORREF c);
 
 // TODO: use AdjustLightness instead to compensate for the alpha?
 Gdiplus::Color Unblend(COLORREF c, u8 alpha);

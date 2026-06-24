@@ -225,6 +225,14 @@ bool IsLightColor(COLORREF c) {
     return y > 127.5f; // mid 256
 }
 
+// photographic negative of c: inverts r, g, b and preserves alpha.
+// used to give "other" find matches a color distinct from the current match (#5740).
+COLORREF InvertColor(COLORREF c) {
+    u8 r, g, b, a;
+    UnpackColor(c, r, g, b, a);
+    return MkColor((u8)(255 - r), (u8)(255 - g), (u8)(255 - b), a);
+}
+
 u8 GetRed(COLORREF rgb) {
     rgb = rgb & 0xff;
     return (u8)rgb;
