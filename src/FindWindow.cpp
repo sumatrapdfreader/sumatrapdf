@@ -494,22 +494,25 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
             idx = (cur < 0) ? n - 1 : (cur - 1 + n) % n;
             break;
         case VK_NEXT: // Page Down
+            // unlike the arrow keys, paging doesn't wrap around; it clamps to the
+            // last match (issue #5742)
             if (cur < 0) {
                 idx = 0;
             } else {
                 idx = cur + kPage;
                 if (idx >= n) {
-                    idx %= n;
+                    idx = n - 1;
                 }
             }
             break;
         case VK_PRIOR: // Page Up
+            // clamp to the first match instead of wrapping (issue #5742)
             if (cur < 0) {
                 idx = n - 1;
             } else {
                 idx = cur - kPage;
                 if (idx < 0) {
-                    idx = (idx % n + n) % n;
+                    idx = 0;
                 }
             }
             break;
