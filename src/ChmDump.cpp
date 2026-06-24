@@ -3,7 +3,9 @@
 
 #include "utils/BaseUtil.h"
 #include <chm_lib.h>
+#include <wincrypt.h>
 
+#include "utils/CryptoUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/WinUtil.h"
@@ -76,26 +78,69 @@ static const char* ChmEntryClass(const chmUnitInfo* ui) {
     return "unknown";
 }
 
-static bool ReadChmObject(struct chmFile* h, chmUnitInfo* ui, uint64_t* readOut) {
+static void FormatSha1Hex(const u8 digest[20], char out[41]) {
+    for (int i = 0; i < 20; i++) {
+        sprintf_s(&out[i * 2], 3, "%02x", digest[i]);
+    }
+    out[40] = '\0';
+}
+
+struct ChmObjectReadResult {
+    uint64_t bytesRead = 0;
+    u8 sha1[20]{};
+    bool sha1Valid = false;
+};
+
+static bool ReadChmObject(struct chmFile* h, chmUnitInfo* ui, ChmObjectReadResult* result) {
+    if (ui->length == 0) {
+        CalcSHA1Digest(nullptr, 0, result->sha1);
+        result->bytesRead = 0;
+        result->sha1Valid = true;
+        return true;
+    }
+
     const int64_t kBufSize = 64 * 1024;
     uint8_t* buf = (uint8_t*)malloc(kBufSize);
     if (!buf) {
         return false;
     }
+
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    bool hashOk = CryptAcquireContextW(&hProv, nullptr, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT) &&
+                  CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash);
+
     uint64_t pos = 0;
     while (pos < ui->length) {
         uint64_t remain = ui->length - pos;
         int64_t toRead = remain > (uint64_t)kBufSize ? kBufSize : (int64_t)remain;
         int64_t got = chm_retrieve_object(h, ui, buf, pos, toRead);
         if (got != toRead) {
+            if (hashOk) {
+                CryptDestroyHash(hHash);
+                CryptReleaseContext(hProv, 0);
+            }
             free(buf);
-            *readOut = pos + (got > 0 ? (uint64_t)got : 0);
+            result->bytesRead = pos + (got > 0 ? (uint64_t)got : 0);
+            result->sha1Valid = false;
             return false;
+        }
+        if (hashOk) {
+            CryptHashData(hHash, buf, (DWORD)got, 0);
         }
         pos += (uint64_t)got;
     }
+
+    if (hashOk) {
+        DWORD hashLen = 20;
+        CryptGetHashParam(hHash, HP_HASHVAL, result->sha1, &hashLen, 0);
+        result->sha1Valid = true;
+        CryptDestroyHash(hHash);
+        CryptReleaseContext(hProv, 0);
+    }
+
     free(buf);
-    *readOut = pos;
+    result->bytesRead = pos;
     return true;
 }
 
@@ -122,18 +167,25 @@ static int ChmDumpEntry(struct chmFile* h, struct chmUnitInfo* ui, void* data) {
         ctx->dirs++;
     }
 
-    uint64_t bytesRead = 0;
+    ChmObjectReadResult readResult;
     bool unpacked = true;
-    if ((ui->flags & CHM_ENUMERATE_FILES) && ui->length > 0) {
-        unpacked = ReadChmObject(h, ui, &bytesRead);
+    if (ui->flags & CHM_ENUMERATE_FILES) {
+        unpacked = ReadChmObject(h, ui, &readResult);
         if (!unpacked) {
             ctx->unpackFailures++;
         }
     }
 
-    CliPrintf("%s class=%s space=%s size=%llu read=%llu status=%s path=%s", ChmEntryKind(ui), ChmEntryClass(ui),
-              ChmSpaceName(ui->space), (unsigned long long)ui->length, (unsigned long long)bytesRead,
-              unpacked ? "ok" : "failed", ui->path);
+    char sha1Hex[41]{};
+    const char* sha1Str = "-";
+    if (readResult.sha1Valid) {
+        FormatSha1Hex(readResult.sha1, sha1Hex);
+        sha1Str = sha1Hex;
+    }
+
+    CliPrintf("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(ui), ChmEntryClass(ui),
+              ChmSpaceName(ui->space), (unsigned long long)ui->length, (unsigned long long)readResult.bytesRead,
+              sha1Str, unpacked ? "ok" : "failed", ui->path);
     return CHM_ENUMERATOR_CONTINUE;
 }
 
