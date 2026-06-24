@@ -1622,6 +1622,7 @@ const sumatraFiles: FileGroup[] = [
       "Caption.*",
       "Canvas.*",
       "CanvasAboutUI.*",
+      "ChmDump.*",
       "ChmModel.*",
       "ClaudeCode.*",
       "GrokBuild.*",

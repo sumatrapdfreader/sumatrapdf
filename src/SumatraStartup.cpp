@@ -42,6 +42,7 @@
 #include "resource.h"
 #include "Commands.h"
 #include "Flags.h"
+#include "ChmDump.h"
 #include "ExifDump.h"
 #include "AppSettings.h"
 #include "Canvas.h"
@@ -1590,7 +1591,24 @@ static int ToolIdxFromCmdLine() {
 // true if the command line invokes a command-line tool. Used early to suppress
 // console logging so it doesn't contaminate the tool's stdout (issue #5677).
 static bool IsRunningTool() {
-    return ToolIdxFromCmdLine() >= 0;
+    if (ToolIdxFromCmdLine() >= 0) {
+        return true;
+    }
+
+    int argc = 0;
+    WCHAR** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    if (!wargv) {
+        return false;
+    }
+    bool isTool = false;
+    for (int i = 1; i < argc; i++) {
+        if (str::EqI(wargv[i], L"-dump-chm") || str::EqI(wargv[i], L"-dump-exif")) {
+            isTool = true;
+            break;
+        }
+    }
+    LocalFree(wargv);
+    return isTool;
 }
 
 // returns the pointer into the command line just past the first argument
@@ -1939,6 +1957,11 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         }
     }
 
+    if (flags.dumpChm) {
+        gLogToConsole = false;
+        return DumpChm(flags);
+    }
+
     // must check before isInstaller becase isInstaller can be auto-deduced
     // from -installer.exe pattern in the name, so it would ignore explit -uninstall flag
     if (isUninstaller) {
@@ -1959,7 +1982,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
     // when not a single self-contained exe, a missing sibling libmupdf.dll means
     // we're really the installer; run it (matches pre-single-exe behavior)
-    if (!gSingleExe && ForceRunningAsInstaller() && !flags.dumpExif && !flags.engineDump) {
+    if (!gSingleExe && ForceRunningAsInstaller() && !flags.dumpExif && !flags.dumpChm && !flags.engineDump) {
         logf("forcing running as an installer\n");
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to

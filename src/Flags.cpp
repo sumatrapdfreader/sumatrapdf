@@ -39,7 +39,8 @@ enum class Arg {
     FwdSearchColor = 68, FwdSearchPermanent = 69, MangaMode = 70, Search = 71,
     AllUsers = 72, AllUsers2 = 73, RunInstallNow = 74, Adobe = 75,
     DDE = 76, Pwd = 77, EngineDump = 78, SetColorRange = 79,
-    UpgradeFrom = 80, ForTesting = 81, DumpExif = 82, Control = 83,
+    UpgradeFrom = 80, ForTesting = 81, DumpExif = 82, DumpChm = 83,
+    Control = 84,
 };
 
 static const char* gArgNames =
@@ -63,7 +64,8 @@ static const char* gArgNames =
     "fwdsearch-color\0" "fwdsearch-permanent\0" "manga-mode\0" "search\0"
     "all-users\0" "allusers\0" "run-install-now\0" "a\0"
     "dde\0" "pwd\0" "engine-dump\0" "set-color-range\0"
-    "upgrade-from\0" "for-testing\0" "dump-exif\0" "dbg-control\0";
+    "upgrade-from\0" "for-testing\0" "dump-exif\0" "dump-chm\0"
+    "dbg-control\0";
 // clang-format on
 // @gen-end flags
 
@@ -690,6 +692,12 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, const char* toolNames)
         if (arg == Arg::DumpExif) {
             i.fileNames.Append(str::Dup(a, param));
             i.dumpExif = true;
+            i.exitImmediately = true;
+            continue;
+        }
+        if (arg == Arg::DumpChm) {
+            i.fileNames.Append(str::Dup(a, param));
+            i.dumpChm = true;
             i.exitImmediately = true;
             continue;
         }

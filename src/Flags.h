@@ -97,6 +97,7 @@ struct Flags {
     char* dde = nullptr;
     bool engineDump = false; // -engine-dump
     bool dumpExif = false;   // -dump-exif
+    bool dumpChm = false;    // -dump-chm
     bool showPrintersDialog = false;
 
     bool crashOnOpen = false;

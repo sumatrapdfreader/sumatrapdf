@@ -802,6 +802,7 @@ function sumatrapdf_files()
     "AppTools.*",
     "Canvas.*",
     "CanvasAboutUI.*",
+    "ChmDump.*",
     "ChmModel.*",
     "AIChatCommon.*",
     "ClaudeCode.*",

@@ -111,6 +111,9 @@
     <ClInclude Include="..\src\ChmFile.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ChmDump.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ChmModel.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -480,6 +483,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChmFile.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ChmDump.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChmModel.cpp">

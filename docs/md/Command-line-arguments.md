@@ -17,6 +17,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 - `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. See [Configure for restricted use](Configure-for-restricted-use.md).
 - `-for-testing` : for ad-hoc testing by humans or agents. Always starts a new instance, doesn't restore a session (only loads files given on the command line) and doesn't save settings (**ver 3.7+**)
 - `-dbg-control <named-pipe>` : starts a test control server on a named pipe. Used by automated tests through `cmd/control.ts`; combine with `-for-testing`. (**ver 3.7+**)
+- `-dump-chm <file>` : headlessly opens a CHM file, lists contained files with sizes, unpacks each file to memory to validate retrieval, and prints TOC/index metadata to stdout. Exits with a non-zero code if the CHM can't be opened, enumerated, or unpacked.
 - `-pwd <password>` : use the given password to open password-protected documents. If the password is wrong, SumatraPDF falls back to default passwords and then asks interactively.
 
 ## Navigation options

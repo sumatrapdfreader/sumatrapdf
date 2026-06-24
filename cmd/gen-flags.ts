@@ -86,6 +86,7 @@ const args = [
     "UpgradeFrom", "upgrade-from",
     "ForTesting", "for-testing",
     "DumpExif", "dump-exif",
+    "DumpChm", "dump-chm",
     "Control", "dbg-control",
 ];
 
