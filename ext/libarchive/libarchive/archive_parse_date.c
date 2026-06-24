@@ -36,6 +36,7 @@
 #include <time.h>
 
 #include "archive.h"
+#include "archive_integer.h"
 
 /* Basic time units. */
 #define	EPOCH		1970
@@ -49,7 +50,7 @@ enum DSTMODE { DSTon, DSToff, DSTmaybe };
 enum { tAM, tPM };
 /* Token types returned by nexttoken() */
 enum { tAGO = 260, tDAY, tDAYZONE, tAMPM, tMONTH, tMONTH_UNIT, tSEC_UNIT,
-       tUNUMBER, tZONE, tDST };
+       tUNUMBER, tZONE, tDST, tERROR };
 struct token { int token; time_t value; };
 
 /*
@@ -818,20 +819,33 @@ RelativeMonth(time_t Start, time_t Timezone, time_t RelMonth)
 }
 
 /*
- * Parses and consumes an unsigned number.
- * Returns 1 if any number is parsed. Otherwise, *value is unchanged.
+ * Parses and consumes an unsigned 64-bit number.
+ * Returns UINT64_MAX if the number overflows.
  */
-static char
-consume_unsigned_number(const char **in, time_t *value)
-{
-	char c;
-	if (isdigit((unsigned char)(c = **in))) {
-		for (*value = 0; isdigit((unsigned char)(c = *(*in)++)); )
-			*value = 10 * *value + c - '0';
-		(*in)--;
-		return 1;
+static uint64_t
+consume_unsigned_number(const char **in) {
+	uint64_t value = 0;
+	unsigned char c;
+
+	/* Get the first character, abort if it's not a digit */
+	c = (unsigned char)(**in);
+	if (c < '0' || c > '9') {
+		return UINT64_MAX;
 	}
-	return 0;
+
+	/* Fold digits into the value, abort on overflow */
+	while (c >= '0' && c <= '9') {
+		unsigned char digit = c - '0';
+
+		/* Return error if the result would overflow UINT64_MAX */
+		if (archive_ckd_mul_u64(&value, value, 10) ||
+		    archive_ckd_add_u64(&value, value, digit)) {
+			return UINT64_MAX;
+		}
+		(*in)++;
+		c = (unsigned char)(**in);
+	}
+	return value;
 }
 
 /*
@@ -906,12 +920,19 @@ nexttoken(const char **in, time_t *value)
 		}
 
 		/*
-		 * Not in the word table, maybe it's a number.  Note:
-		 * Because '-' and '+' have other special meanings, I
-		 * don't deal with signed numbers here.
+		 * Not in the word table. If it starts with a digit,
+		 * it must be a number. Note: Because '-' and '+' have
+		 * other special meanings, I don't deal with signed
+		 * numbers here.
 		 */
-		if (consume_unsigned_number(in, value)) {
-			return (tUNUMBER);
+		if (isdigit((unsigned char)(**in))) {
+			uint64_t val = consume_unsigned_number(in);
+			if (val > 9999) {
+				return (tERROR);
+			} else {
+				*value = val;
+				return (tUNUMBER);
+			}
 		}
 
 		return *(*in)++;
@@ -949,6 +970,7 @@ difftm (struct tm *a, struct tm *b)
 static time_t
 parse_unix_epoch(const char *p)
 {
+	uint64_t val;
 	time_t epoch;
 
 	/* may begin with + */
@@ -957,12 +979,18 @@ parse_unix_epoch(const char *p)
 	}
 
 	/* followed by some number */
-	if (!consume_unsigned_number(&p, &epoch))
+	val = consume_unsigned_number(&p);
+	/* Truncate to time_t */
+	epoch = (time_t)val;
+	/* If truncated value is different, then
+	 * the value is too large for `time_t`. */
+	if (epoch < 0 || (uint64_t)epoch != val) {
 		return (time_t)-1;
-
-	/* ...and nothing else */
-	if (*p != '\0')
+	}
+	/* If there's any more characters, fail. */
+	if (*p != '\0') {
 		return (time_t)-1;
+	}
 
 	return epoch;
 }

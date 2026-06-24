@@ -45,6 +45,7 @@
 
 #include "archive.h"
 #include "archive_entry.h"
+#include "archive_integer.h"
 #include "archive_private.h"
 #include "archive_read_private.h"
 
@@ -588,24 +589,22 @@ bad_string_table:
 static uint64_t
 ar_atol8(const char *p, unsigned char_cnt)
 {
-	uint64_t l, limit, last_digit_limit;
+	uint64_t l;
 	unsigned int digit, base;
 
 	base = 8;
-	limit = UINT64_MAX / base;
-	last_digit_limit = UINT64_MAX % base;
 
 	while ((*p == ' ' || *p == '\t') && char_cnt-- > 0)
 		p++;
 
 	l = 0;
 	digit = *p - '0';
-	while (*p >= '0' && digit < base  && char_cnt-- > 0) {
-		if (l>limit || (l == limit && digit > last_digit_limit)) {
+	while (*p >= '0' && digit < base && char_cnt-- > 0) {
+		if (archive_ckd_mul_u64(&l, l, base) ||
+		    archive_ckd_add_u64(&l, l, digit)) {
 			l = UINT64_MAX; /* Truncate on overflow. */
 			break;
 		}
-		l = (l * base) + digit;
 		digit = *++p - '0';
 	}
 	return (l);
@@ -614,23 +613,21 @@ ar_atol8(const char *p, unsigned char_cnt)
 static uint64_t
 ar_atol10(const char *p, unsigned char_cnt)
 {
-	uint64_t l, limit, last_digit_limit;
+	uint64_t l;
 	unsigned int base, digit;
 
 	base = 10;
-	limit = UINT64_MAX / base;
-	last_digit_limit = UINT64_MAX % base;
 
 	while ((*p == ' ' || *p == '\t') && char_cnt-- > 0)
 		p++;
 	l = 0;
 	digit = *p - '0';
 	while (*p >= '0' && digit < base  && char_cnt-- > 0) {
-		if (l > limit || (l == limit && digit > last_digit_limit)) {
+		if (archive_ckd_mul_u64(&l, l, base) ||
+		    archive_ckd_add_u64(&l, l, digit)) {
 			l = UINT64_MAX; /* Truncate on overflow. */
 			break;
 		}
-		l = (l * base) + digit;
 		digit = *++p - '0';
 	}
 	return (l);

@@ -361,6 +361,8 @@ static
 void* XXH32_init (U32 seed)
 {
     void* state = XXH_malloc (sizeof(struct XXH_state32_t));
+    if (state == NULL)
+        return NULL;
     XXH32_resetState(state, seed);
     return state;
 }

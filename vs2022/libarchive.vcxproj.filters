@@ -81,6 +81,9 @@
     <ClInclude Include="..\ext\libarchive\libarchive\archive_hmac_private.h">
       <Filter>libarchive\libarchive</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\libarchive\libarchive\archive_integer.h">
+      <Filter>libarchive\libarchive</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\libarchive\libarchive\archive_openssl_evp_private.h">
       <Filter>libarchive\libarchive</Filter>
     </ClInclude>

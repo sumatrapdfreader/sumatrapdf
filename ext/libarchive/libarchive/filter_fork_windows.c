@@ -31,43 +31,68 @@
 
 #include "filter_fork.h"
 
-#if !defined(WINAPI_FAMILY_PARTITION) || WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 /* There are some editions of Windows ("nano server," for example) that
  * do not host user32.dll. If we want to keep running on those editions,
  * we need to delay-load WaitForInputIdle. */
-static void *
-la_GetFunctionUser32(const char *name)
+
+static int
+failing_wait(HANDLE hProcess, DWORD dwMilliseconds) {
+	/* An inability to wait for input idle is
+	 * not _good_, but it is not catastrophic. */
+	(void)hProcess; /* UNUSED */
+	(void)dwMilliseconds; /* UNUSED */
+	return WAIT_FAILED;
+}
+
+# if _WIN32_WINNT < _WIN32_WINNT_VISTA
+static int
+la_WaitForInputIdle(HANDLE hProcess, DWORD dwMilliseconds)
 {
-	static HINSTANCE lib;
-	static int set;
-	if (!set) {
-		set = 1;
+	static DWORD (WINAPI * volatile f)(HANDLE, DWORD);
+
+	if (f == NULL) {
+		HINSTANCE lib;
+		void *old;
+		DWORD (WINAPI *tmp)(HANDLE, DWORD);
+
 		lib = LoadLibrary(TEXT("user32.dll"));
+		tmp = (lib != NULL) ?
+		    (PVOID)GetProcAddress(lib, "WaitForInputIdle") :
+		    failing_wait;
+		old = InterlockedCompareExchangePointer((volatile PVOID *)&f,
+		    tmp, NULL);
+		if (old != NULL && lib != NULL)
+			FreeLibrary(lib);
 	}
-	if (lib == NULL) {
-		return NULL;
-	}
-	return (void *)GetProcAddress(lib, name);
+
+	return (*f)(hProcess, dwMilliseconds);
+}
+# else
+static BOOL CALLBACK
+load_WaitForInputIdle(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *Context) {
+	HMODULE user32 = LoadLibrary(TEXT("user32.dll"));
+
+	(void)InitOnce; /* UNUSED */
+	(void)Parameter; /* UNUSED */
+
+	*Context = (user32 != NULL) ?
+	    (PVOID)GetProcAddress(user32, "WaitForInputIdle") : failing_wait;
+
+	return TRUE;
 }
 
 static int
 la_WaitForInputIdle(HANDLE hProcess, DWORD dwMilliseconds)
 {
 	static DWORD (WINAPI *f)(HANDLE, DWORD);
-	static int set;
+	static INIT_ONCE once = INIT_ONCE_STATIC_INIT;
 
-	if (!set) {
-		set = 1;
-		f = la_GetFunctionUser32("WaitForInputIdle");
-	}
+	InitOnceExecuteOnce(&once, load_WaitForInputIdle, NULL, (PVOID)&f);
 
-	if (!f) {
-		/* An inability to wait for input idle is
-		 * not _good_, but it is not catastrophic. */
-		return WAIT_FAILED;
-	}
 	return (*f)(hProcess, dwMilliseconds);
 }
+# endif
 
 int
 __archive_create_child(const char *cmd, int *child_stdin, int *child_stdout,

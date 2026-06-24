@@ -79,15 +79,15 @@ lrzip_bidder_bid(struct archive_read_filter_bidder *self,
     struct archive_read_filter *filter)
 {
 	const unsigned char *p;
-	ssize_t avail, len;
+	ssize_t len;
 	int i;
 
 	(void)self; /* UNUSED */
 	/* Start by looking at the first six bytes of the header, which
 	 * is all fixed layout. */
 	len = 6;
-	p = __archive_read_filter_ahead(filter, len, &avail);
-	if (p == NULL || avail == 0)
+	p = __archive_read_filter_ahead(filter, len, NULL);
+	if (p == NULL)
 		return (0);
 
 	if (memcmp(p, LRZIP_HEADER_MAGIC, LRZIP_HEADER_MAGIC_LEN))

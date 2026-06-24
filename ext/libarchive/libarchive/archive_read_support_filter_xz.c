@@ -54,7 +54,6 @@ struct private_data {
 	lzma_stream	 stream;
 	unsigned char	*out_block;
 	size_t		 out_block_size;
-	int64_t		 total_out;
 	char		 eof; /* True = found end of compressed data. */
 	char		 in_stream;
 
@@ -83,8 +82,7 @@ static int	xz_lzma_bidder_init(struct archive_read_filter *);
 /*
  * Note that we can detect xz and lzma compressed files even if we
  * can't decompress them.  (In fact, we like detecting them because we
- * can give better error messages.)  So the bid framework here gets
- * compiled even if no lzma library is available.
+ * can give better error messages.)
  */
 static int	xz_bidder_bid(struct archive_read_filter_bidder *,
 		    struct archive_read_filter *);
@@ -203,11 +201,10 @@ xz_bidder_bid(struct archive_read_filter_bidder *self,
     struct archive_read_filter *filter)
 {
 	const unsigned char *buffer;
-	ssize_t avail;
 
 	(void)self; /* UNUSED */
 
-	buffer = __archive_read_filter_ahead(filter, 6, &avail);
+	buffer = __archive_read_filter_ahead(filter, 6, NULL);
 	if (buffer == NULL)
 		return (0);
 
@@ -237,14 +234,13 @@ lzma_bidder_bid(struct archive_read_filter_bidder *self,
     struct archive_read_filter *filter)
 {
 	const unsigned char *buffer;
-	ssize_t avail;
 	uint32_t dicsize;
 	uint64_t uncompressed_size;
 	int bits_checked;
 
 	(void)self; /* UNUSED */
 
-	buffer = __archive_read_filter_ahead(filter, 14, &avail);
+	buffer = __archive_read_filter_ahead(filter, 14, NULL);
 	if (buffer == NULL)
 		return (0);
 
@@ -343,11 +339,10 @@ static int
 lzip_has_member(struct archive_read_filter *filter)
 {
 	const unsigned char *buffer;
-	ssize_t avail;
 	int bits_checked;
 	int log2dic;
 
-	buffer = __archive_read_filter_ahead(filter, 6, &avail);
+	buffer = __archive_read_filter_ahead(filter, 6, NULL);
 	if (buffer == NULL)
 		return (0);
 
@@ -526,6 +521,7 @@ xz_lzma_bidder_init(struct archive_read_filter *self)
 	free(state->out_block);
 	free(state);
 	self->data = NULL;
+	self->vtable = NULL;
 	return (ARCHIVE_FATAL);
 }
 
@@ -536,12 +532,11 @@ lzip_init(struct archive_read_filter *self)
 	const unsigned char *h;
 	lzma_filter filters[2];
 	unsigned char props[5];
-	ssize_t avail_in;
 	uint32_t dicsize;
 	int log2dic, ret;
 
 	state = (struct private_data *)self->data;
-	h = __archive_read_filter_ahead(self->upstream, 6, &avail_in);
+	h = __archive_read_filter_ahead(self->upstream, 6, NULL);
 	if (h == NULL)
 		return (ARCHIVE_FATAL);
 
@@ -706,7 +701,6 @@ xz_filter_read(struct archive_read_filter *self, const void **p)
 	}
 
 	decompressed = state->stream.next_out - state->out_block;
-	state->total_out += decompressed;
 	state->member_out += decompressed;
 	if (decompressed == 0) {
 		if (member_in != state->member_in &&

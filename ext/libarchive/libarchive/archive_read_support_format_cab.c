@@ -112,8 +112,8 @@ struct lzx_dec {
 		unsigned char	*bitlen;
 
 		/*
-		 * Use a index table. It's faster than searching a huffman
-		 * coding tree, which is a binary tree. But a use of a large
+		 * Use an index table. It's faster than searching a huffman
+		 * coding tree, which is a binary tree. But usage of a large
 		 * index table causes L1 cache read miss many times.
 		 */
 		int		 max_bits;
@@ -264,7 +264,7 @@ struct cfheader {
 };
 
 struct cab {
-	/* entry_bytes_remaining is the number of bytes we expect.	    */
+	/* entry_bytes_remaining is the number of bytes we expect. */
 	int64_t			 entry_offset;
 	int64_t			 entry_bytes_remaining;
 	int64_t			 entry_unconsumed;
@@ -279,7 +279,7 @@ struct cab {
 	struct cfheader		 cfheader;
 	struct archive_wstring	 ws;
 
-	/* Flag to mark progress that an archive was read their first header.*/
+	/* Flag to mark progress that first header of an archive was read.*/
 	char			 found_header;
 	char			 end_of_archive;
 	char			 end_of_entry;
@@ -433,7 +433,7 @@ archive_read_format_cab_bid(struct archive_read *a, int best_bid)
 	/*
 	 * Attempt to handle self-extracting archives
 	 * by noting a PE header and searching forward
-	 * up to 128k for a 'MSCF' marker.
+	 * up to 128k for an 'MSCF' marker.
 	 */
 	if (p[0] == 'M' && p[1] == 'Z') {
 		offset = 0;
@@ -501,7 +501,7 @@ cab_skip_sfx(struct archive_read *a)
 	for (;;) {
 		const char *h = __archive_read_ahead(a, window, &bytes);
 		if (h == NULL) {
-			/* Remaining size are less than window. */
+			/* Remaining size is less than window. */
 			window >>= 1;
 			if (window < 128) {
 				archive_set_error(&a->archive,
@@ -554,19 +554,18 @@ cab_strnlen(const unsigned char *p, size_t maxlen)
 	return ((ssize_t)i);
 }
 
-/* Read bytes as much as remaining. */
+/* Read up to max remaining bytes. */
 static const void *
-cab_read_ahead_remaining(struct archive_read *a, size_t min, ssize_t *avail)
+cab_read_ahead_remaining(struct archive_read *a, size_t max, ssize_t *avail)
 {
-	const void *p;
+	const void *p = __archive_read_ahead(a, max, avail);
 
-	while (min > 0) {
-		p = __archive_read_ahead(a, min, avail);
-		if (p != NULL)
-			return (p);
-		min--;
-	}
-	return (NULL);
+	if (p == NULL && *avail > 0)
+		p = __archive_read_ahead(a, *avail, avail);
+	if (p != NULL && (size_t)*avail > max)
+		*avail = max;
+
+	return (p);
 }
 
 /* Convert a path separator '\' -> '/' */
@@ -627,7 +626,7 @@ cab_read_header(struct archive_read *a)
 	struct cab *cab;
 	struct cfheader *hd;
 	size_t bytes, used;
-	ssize_t len;
+	ssize_t avail, len;
 	int64_t skip;
 	int err, i;
 	int cur_folder, prev_folder;
@@ -691,29 +690,34 @@ cab_read_header(struct archive_read *a)
 		hd->cffolder = 0;/* Avoid compiling warning. */
 	if (hd->flags & PREV_CABINET) {
 		/* How many bytes are used for szCabinetPrev. */
-		if ((p = __archive_read_ahead(a, used+256, NULL)) == NULL)
+		if ((p = cab_read_ahead_remaining(a, used + 256,
+		    &avail)) == NULL || (size_t)avail <= used)
 			return (truncated_error(a));
-		if ((len = cab_strnlen(p + used, 255)) <= 0)
+		if ((len = cab_strnlen(p + used, avail - used - 1)) <= 0) {
 			goto invalid;
+		}
 		used += len + 1;
 		/* How many bytes are used for szDiskPrev. */
-		if ((p = __archive_read_ahead(a, used+256, NULL)) == NULL)
+		if ((p = cab_read_ahead_remaining(a, used + 256,
+		    &avail)) == NULL || (size_t)avail <= used)
 			return (truncated_error(a));
-		if ((len = cab_strnlen(p + used, 255)) <= 0)
+		if ((len = cab_strnlen(p + used, avail - used - 1)) < 0)
 			goto invalid;
 		used += len + 1;
 	}
 	if (hd->flags & NEXT_CABINET) {
 		/* How many bytes are used for szCabinetNext. */
-		if ((p = __archive_read_ahead(a, used+256, NULL)) == NULL)
+		if ((p = cab_read_ahead_remaining(a, used + 256,
+		    &avail)) == NULL || (size_t)avail <= used)
 			return (truncated_error(a));
-		if ((len = cab_strnlen(p + used, 255)) <= 0)
+		if ((len = cab_strnlen(p + used, avail - used - 1)) <= 0)
 			goto invalid;
 		used += len + 1;
 		/* How many bytes are used for szDiskNext. */
-		if ((p = __archive_read_ahead(a, used+256, NULL)) == NULL)
+		if ((p = cab_read_ahead_remaining(a, used + 256,
+		    &avail)) == NULL || (size_t)avail <= used)
 			return (truncated_error(a));
-		if ((len = cab_strnlen(p + used, 255)) <= 0)
+		if ((len = cab_strnlen(p + used, avail - used - 1)) < 0)
 			goto invalid;
 		used += len + 1;
 	}
@@ -776,7 +780,7 @@ cab_read_header(struct archive_read *a)
 	 */
 	/* Seek read pointer to the offset of CFFILE if needed. */
 	skip = (int64_t)hd->files_offset - cab->cab_offset;
-	if (skip <  0) {
+	if (skip < 0) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
 		    "Invalid offset of CFFILE %jd < %jd",
 		    (intmax_t)hd->files_offset, (intmax_t)cab->cab_offset);
@@ -795,7 +799,6 @@ cab_read_header(struct archive_read *a)
 	prev_folder = -1;
 	for (i = 0; i < hd->file_count; i++) {
 		struct cffile *file = &(hd->file_array[i]);
-		ssize_t avail;
 
 		if ((p = __archive_read_ahead(a, 16, NULL)) == NULL)
 			return (truncated_error(a));
@@ -1336,6 +1339,10 @@ cab_next_cfdata(struct archive_read *a)
 	}
 	return (ARCHIVE_OK);
 invalid:
+	cfdata->compressed_size = 0;
+	cfdata->compressed_bytes_remaining = 0;
+	cfdata->uncompressed_size = 0;
+	cfdata->uncompressed_bytes_remaining = 0;
 	archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
 	    "Invalid CFDATA");
 	return (ARCHIVE_FATAL);
@@ -1478,6 +1485,14 @@ cab_read_ahead_cfdata_deflate(struct archive_read *a, ssize_t *avail)
 		    cab->uncompressed_buffer + cab->stream.total_out;
 		cab->stream.avail_out =
 		    cfdata->uncompressed_size - cab->stream.total_out;
+		if ((size_t)cfdata->uncompressed_size >
+		    cab->uncompressed_buffer_size) {
+			archive_set_error(&a->archive,
+			    ARCHIVE_ERRNO_FILE_FORMAT,
+			    "Invalid CFDATA uncompressed size");
+			*avail = ARCHIVE_FATAL;
+			return (NULL);
+		}
 
 		d = __archive_read_ahead(a, 1, &bytes_avail);
 		if (bytes_avail <= 0) {
@@ -1565,11 +1580,9 @@ cab_read_ahead_cfdata_deflate(struct archive_read *a, ssize_t *avail)
 	 * correctly compute the sum of CFDATA accordingly.
 	 */
 	if (cfdata->compressed_bytes_remaining > 0) {
-		ssize_t bytes_avail;
-
 		d = __archive_read_ahead(a, cfdata->compressed_bytes_remaining,
-		    &bytes_avail);
-		if (bytes_avail <= 0) {
+		    NULL);
+		if (d == NULL) {
 			*avail = truncated_error(a);
 			return (NULL);
 		}
@@ -1737,11 +1750,9 @@ cab_read_ahead_cfdata_lzx(struct archive_read *a, ssize_t *avail)
 	 * Make sure a read pointer advances to next CFDATA.
 	 */
 	if (cfdata->compressed_bytes_remaining > 0) {
-		ssize_t bytes_avail;
-
 		d = __archive_read_ahead(a, cfdata->compressed_bytes_remaining,
-		    &bytes_avail);
-		if (bytes_avail <= 0) {
+		    NULL);
+		if (d == NULL) {
 			*avail = truncated_error(a);
 			return (NULL);
 		}
@@ -3211,6 +3222,10 @@ lzx_make_huffman_table(struct huffman *hf)
 	bitlen = hf->bitlen;
 	len_avail = hf->len_size;
 	hf->tree_used = 0;
+	/* Initialize table to invalid values */
+	for (i = 0; i < tbl_size; i++) {
+		tbl[i] = (uint16_t)hf->len_size;
+	}
 	for (i = 0; i < len_avail; i++) {
 		uint16_t *p;
 		int len, cnt;

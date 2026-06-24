@@ -35,6 +35,8 @@
 
 #include "archive_pathmatch.h"
 
+#define MAX_RECURSION	100
+
 /*
  * Check whether a character 'c' is matched by a list specification [...]:
  *    * Leading '!' or '^' negates the class.
@@ -167,9 +169,13 @@ pm_slashskip_w(const wchar_t *s) {
 }
 
 static int
-pm(const char *p, const char *s, int flags)
+pm(const char *p, const char *s, int flags, int depth)
 {
 	const char *end;
+	int r;
+
+	if (depth > MAX_RECURSION)
+		return (-1);
 
 	/*
 	 * Ignore leading './', './/', '././', etc.
@@ -202,8 +208,9 @@ pm(const char *p, const char *s, int flags)
 			if (*p == '\0')
 				return (1);
 			while (*s) {
-				if (pm(p, s, flags))
-					return (1);
+				r = pm(p, s, flags, depth + 1);
+				if (r)
+					return (r);
 				++s;
 			}
 			return (0);
@@ -220,7 +227,7 @@ pm(const char *p, const char *s, int flags)
 			}
 			if (*end == ']') {
 				/* We found [...], try to match it. */
-				if (!pm_list(p + 1, end, *s, flags))
+				if (*s == '\0' || !pm_list(p + 1, end, *s, flags))
 					return (0);
 				p = end; /* Jump to trailing ']' char. */
 				break;
@@ -272,9 +279,13 @@ pm(const char *p, const char *s, int flags)
 }
 
 static int
-pm_w(const wchar_t *p, const wchar_t *s, int flags)
+pm_w(const wchar_t *p, const wchar_t *s, int flags, int depth)
 {
 	const wchar_t *end;
+	int r;
+
+	if (depth > MAX_RECURSION)
+		return (-1);
 
 	/*
 	 * Ignore leading './', './/', '././', etc.
@@ -307,8 +318,9 @@ pm_w(const wchar_t *p, const wchar_t *s, int flags)
 			if (*p == L'\0')
 				return (1);
 			while (*s) {
-				if (pm_w(p, s, flags))
-					return (1);
+				r = pm_w(p, s, flags, depth + 1);
+				if (r)
+					return (r);
 				++s;
 			}
 			return (0);
@@ -387,7 +399,7 @@ __archive_pathmatch(const char *p, const char *s, int flags)
 		return (0);
 
 	/* Leading '^' anchors the start of the pattern. */
-	if (*p == '^') {
+	if ((flags & PATHMATCH_NO_ANCHOR_START) && *p == '^') {
 		++p;
 		flags &= ~PATHMATCH_NO_ANCHOR_START;
 	}
@@ -401,22 +413,25 @@ __archive_pathmatch(const char *p, const char *s, int flags)
 			++p;
 		while (*s == '/')
 			++s;
-		return (pm(p, s, flags));
+		return (pm(p, s, flags, 0));
 	}
 
 	/* If start is unanchored, try to match start of each path element. */
 	if (flags & PATHMATCH_NO_ANCHOR_START) {
 		for ( ; s != NULL; s = strchr(s, '/')) {
+			int r;
+
 			if (*s == '/')
 				s++;
-			if (pm(p, s, flags))
-				return (1);
+			r = pm(p, s, flags, 0);
+			if (r)
+				return (r);
 		}
 		return (0);
 	}
 
 	/* Default: Match from beginning. */
-	return (pm(p, s, flags));
+	return (pm(p, s, flags, 0));
 }
 
 int
@@ -429,7 +444,7 @@ __archive_pathmatch_w(const wchar_t *p, const wchar_t *s, int flags)
 		return (0);
 
 	/* Leading '^' anchors the start of the pattern. */
-	if (*p == L'^') {
+	if ((flags & PATHMATCH_NO_ANCHOR_START) && *p == L'^') {
 		++p;
 		flags &= ~PATHMATCH_NO_ANCHOR_START;
 	}
@@ -443,20 +458,23 @@ __archive_pathmatch_w(const wchar_t *p, const wchar_t *s, int flags)
 			++p;
 		while (*s == L'/')
 			++s;
-		return (pm_w(p, s, flags));
+		return (pm_w(p, s, flags, 0));
 	}
 
 	/* If start is unanchored, try to match start of each path element. */
 	if (flags & PATHMATCH_NO_ANCHOR_START) {
 		for ( ; s != NULL; s = wcschr(s, L'/')) {
+			int r;
+
 			if (*s == L'/')
 				s++;
-			if (pm_w(p, s, flags))
-				return (1);
+			r = pm_w(p, s, flags, 0);
+			if (r)
+				return (r);
 		}
 		return (0);
 	}
 
 	/* Default: Match from beginning. */
-	return (pm_w(p, s, flags));
+	return (pm_w(p, s, flags, 0));
 }

@@ -58,17 +58,11 @@ static void la_arc4random_buf(void *, size_t);
 #include "archive_random_private.h"
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
-#if defined(HAVE_BCRYPT_H) && _WIN32_WINNT >= _WIN32_WINNT_VISTA
-/* don't use bcrypt when XP needs to be supported */
 #include <bcrypt.h>
 
 /* Common in other bcrypt implementations, but missing from VS2008. */
 #ifndef BCRYPT_SUCCESS
 #define BCRYPT_SUCCESS(r) ((NTSTATUS)(r) == STATUS_SUCCESS)
-#endif
-
-#elif defined(HAVE_WINCRYPT_H)
-#include <wincrypt.h>
 #endif
 #endif
 
@@ -85,7 +79,6 @@ int
 archive_random(void *buf, size_t nbytes)
 {
 #if defined(_WIN32) && !defined(__CYGWIN__)
-# if defined(HAVE_BCRYPT_H) && _WIN32_WINNT >= _WIN32_WINNT_VISTA
 	NTSTATUS status;
 	BCRYPT_ALG_HANDLE hAlg;
 
@@ -98,25 +91,6 @@ archive_random(void *buf, size_t nbytes)
 		return ARCHIVE_FAILED;
 
 	return ARCHIVE_OK;
-# else
-	HCRYPTPROV hProv;
-	BOOL success;
-
-	success = CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL,
-	    CRYPT_VERIFYCONTEXT);
-	if (!success && GetLastError() == (DWORD)NTE_BAD_KEYSET) {
-		success = CryptAcquireContext(&hProv, NULL, NULL,
-		    PROV_RSA_FULL, CRYPT_NEWKEYSET);
-	}
-	if (success) {
-		success = CryptGenRandom(hProv, (DWORD)nbytes, (BYTE*)buf);
-		CryptReleaseContext(hProv, 0);
-		if (success)
-			return ARCHIVE_OK;
-	}
-	/* TODO: Does this case really happen? */
-	return ARCHIVE_FAILED;
-# endif
 #elif !defined(HAVE_ARC4RANDOM_BUF) && (!defined(_WIN32) || defined(__CYGWIN__))
 	la_arc4random_buf(buf, nbytes);
 	return ARCHIVE_OK;

@@ -31,9 +31,9 @@
 
 #include "archive_options_private.h"
 
-static const char *
-parse_option(const char **str,
-    const char **mod, const char **opt, const char **val);
+static char *
+parse_option(char **str,
+    char **mod, char **opt, char **val);
 
 int
 _archive_set_option(struct archive *a,
@@ -103,7 +103,7 @@ _archive_set_options(struct archive *a, const char *options,
 {
 	int allok = 1, anyok = 0, ignore_mod_err = 0, r;
 	char *data;
-	const char *s, *mod, *opt, *val;
+	char *s, *mod, *opt, *val;
 
 	archive_check_magic(a, magic, ARCHIVE_STATE_NEW, fn);
 
@@ -115,7 +115,7 @@ _archive_set_options(struct archive *a, const char *options,
 		    ENOMEM, "Out of memory adding file to list");
 		return (ARCHIVE_FATAL);
 	}
-	s = (const char *)data;
+	s = data;
 
 	do {
 		mod = opt = val = NULL;
@@ -167,10 +167,10 @@ _archive_set_options(struct archive *a, const char *options,
 	return allok ? ARCHIVE_OK : anyok ? ARCHIVE_WARN : ARCHIVE_FAILED;
 }
 
-static const char *
-parse_option(const char **s, const char **m, const char **o, const char **v)
+static char *
+parse_option(char **s, char **m, char **o, char **v)
 {
-	const char *end, *mod, *opt, *val;
+	char *end, *mod, *opt, *val;
 	char *p;
 
 	end = NULL;
@@ -182,7 +182,7 @@ parse_option(const char **s, const char **m, const char **o, const char **v)
 
 	if (p != NULL) {
 		*p = '\0';
-		end = ((const char *)p) + 1;
+		end = p + 1;
 	}
 
 	if (0 == strlen(opt)) {

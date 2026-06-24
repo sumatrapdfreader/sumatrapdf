@@ -48,6 +48,7 @@
 
 #include "archive.h"
 #include "archive_endian.h"
+#include "archive_integer.h"
 #include "archive_private.h"
 #include "archive_read_private.h"
 
@@ -57,7 +58,6 @@ struct private_data {
 	ZSTD_DStream	*dstream;
 	unsigned char	*out_block;
 	size_t		 out_block_size;
-	int64_t		 total_out;
 	char		 in_frame; /* True = in the middle of a zstd frame. */
 	char		 eof; /* True = found end of compressed data. */
 };
@@ -70,8 +70,7 @@ static int	zstd_filter_close(struct archive_read_filter *);
 /*
  * Note that we can detect zstd compressed files even if we can't decompress
  * them.  (In fact, we like detecting them because we can give better error
- * messages.)  So the bid framework here gets compiled even if no zstd library
- * is available.
+ * messages.)
  */
 static int	zstd_bidder_bid(struct archive_read_filter_bidder *,
 		    struct archive_read_filter *);
@@ -110,55 +109,77 @@ zstd_bidder_bid(struct archive_read_filter_bidder *self,
 {
 	const unsigned char *buffer;
 	ssize_t avail;
+	/*
+	 * Zstandard skippable frames contain a 4 byte magic number followed
+	 * by a 4 byte frame data size, then that number of bytes of data.
+	 * Regular frames contain a 4 byte magic number followed by a 2-14
+	 * byte frame header, some data, and a 3 byte end marker.
+	 */
+	const size_t min_zstd_frame_size = 8;
 
-	// Zstandard skippable frames contain a 4 byte magic number followed by
-	// a 4 byte frame data size, then that number of bytes of data. Regular
-	// frames contain a 4 byte magic number followed by a 2-14 byte frame
-	// header, some data, and a 3 byte end marker.
-	ssize_t min_zstd_frame_size = 8;
+	size_t offset_in_buffer = 0;
+	const size_t max_lookahead = 64 * 1024;
+	uint32_t magic_number;
 
-	ssize_t offset_in_buffer = 0;
-	ssize_t max_lookahead = 64 * 1024;
+	/* Zstd regular frame magic number. */
+	const uint32_t zstd_magic = 0xFD2FB528U;
 
-	// Zstd regular frame magic number.
-	uint32_t zstd_magic = 0xFD2FB528U;
+	/*
+	 * Note: Zstd and LZ4 skippable frame magic numbers are identical.
+	 * To differentiate these two, we need to look for a non-skippable
+	 * frame.
+	 */
+	const uint32_t zstd_magic_skippable_start = 0x184D2A50;
+	const uint32_t zstd_magic_skippable_mask  = 0xFFFFFFF0;
 
-	// Note: Zstd and LZ4 skippable frame magic numbers are identical.
-	// To differentiate these two, we need to look for a non-skippable
-	// frame.
-	uint32_t zstd_magic_skippable_start = 0x184D2A50;
-	uint32_t zstd_magic_skippable_mask  = 0xFFFFFFF0;
+	(void) self; /* UNUSED */
 
-	(void) self; // UNUSED
-
-	buffer = __archive_read_filter_ahead(filter, min_zstd_frame_size, &avail);
+	buffer = __archive_read_filter_ahead(filter, min_zstd_frame_size,
+	    &avail);
 	if (buffer == NULL)
 		return (0);
 
-	uint32_t magic_number = archive_le32dec(buffer);
+	magic_number = archive_le32dec(buffer);
 
-	while ((magic_number & zstd_magic_skippable_mask) == zstd_magic_skippable_start) {
+	while ((magic_number & zstd_magic_skippable_mask) ==
+	    zstd_magic_skippable_start) {
+		size_t min;
+		uint32_t frame_data_size;
 
-		offset_in_buffer += 4; // Skip over the magic number
+		/* Skip over the magic number */
+		offset_in_buffer += 4;
 
-		// Ensure that we can read another 4 bytes.
-		if (offset_in_buffer + 4 > avail) {
-			buffer = __archive_read_filter_ahead(filter, offset_in_buffer + 4, &avail);
+		/* Ensure that we can read another 4 bytes. */
+		if (offset_in_buffer + 4 > (size_t)avail) {
+			buffer = __archive_read_filter_ahead(filter,
+			    offset_in_buffer + 4, &avail);
 			if (buffer == NULL)
 				return (0);
 		}
 
-		uint32_t frame_data_size = archive_le32dec(buffer + offset_in_buffer);
+		frame_data_size = archive_le32dec(buffer + offset_in_buffer);
 
-		// Skip over the 4 frame data size bytes, plus the value stored there.
-		offset_in_buffer += 4 + frame_data_size;
+		/* Skip over the 4 frame data size bytes */
+		offset_in_buffer += 4;
 
-		// There should be at least one more frame if this is zstd data.
-		if (offset_in_buffer + min_zstd_frame_size > avail) {
-			if (offset_in_buffer + min_zstd_frame_size > max_lookahead)
+		/* Skip over the value stored there. */
+		if (archive_ckd_add_size(&offset_in_buffer,
+		    offset_in_buffer, frame_data_size))
+			return (0);
+
+		/*
+		 * There should be at least one more frame
+		 * if this is zstd data.
+		 */
+		if (archive_ckd_add_size(&min,
+		    offset_in_buffer, min_zstd_frame_size))
+			return (0);
+		if (min > (size_t)avail) {
+			if (min > max_lookahead)
 				return (0);
 
-			buffer = __archive_read_filter_ahead(filter, offset_in_buffer + min_zstd_frame_size, &avail);
+			buffer = __archive_read_filter_ahead(filter,
+			    min, &avail);
 			if (buffer == NULL)
 				return (0);
 		}
@@ -166,8 +187,10 @@ zstd_bidder_bid(struct archive_read_filter_bidder *self,
 		magic_number = archive_le32dec(buffer + offset_in_buffer);
 	}
 
-	// We have skipped over any skippable frames. Either a regular zstd frame
-	// follows, or this isn't zstd data.
+	/*
+	 * We have skipped over any skippable frames. Either a regular zstd
+	 * frame follows, or this isn't zstd data.
+	 */
 
 	if (magic_number == zstd_magic)
 		return (offset_in_buffer + 4);
@@ -179,7 +202,7 @@ zstd_bidder_bid(struct archive_read_filter_bidder *self,
 
 /*
  * If we don't have the library on this system, we can't do the
- * decompression directly.  We can, however, try to run "zstd -d"
+ * decompression directly.  We can, however, try to run "zstd -d -qq"
  * in case that's available.
  */
 static int
@@ -310,7 +333,6 @@ zstd_filter_read(struct archive_read_filter *self, const void **p)
 	}
 
 	decompressed = out.pos;
-	state->total_out += decompressed;
 	if (decompressed == 0)
 		*p = NULL;
 	else

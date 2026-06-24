@@ -299,6 +299,26 @@ typedef int mbstate_t;
 size_t wcrtomb(char *, wchar_t, mbstate_t *);
 #endif
 
+#ifndef WINAPI_FAMILY_PARTITION
+#define WINAPI_FAMILY_PARTITION(x) (x)
+#endif
+
+#ifndef WINAPI_PARTITION_DESKTOP
+#define WINAPI_PARTITION_DESKTOP 1
+#endif
+
+#ifndef WINAPI_PARTITION_SYSTEM
+#define WINAPI_PARTITION_SYSTEM 1
+#endif
+
+#ifndef NTDDI_VERSION
+#define NTDDI_VERSION  0x05020000
+#endif
+
+#ifndef NTDDI_WIN10_VB
+#define NTDDI_WIN10_VB 0x0A000008
+#endif
+
 #if !WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP) && NTDDI_VERSION < NTDDI_WIN10_VB
 // not supported in UWP SDK before 20H1
 #define GetVolumePathNameW(f, v, c)   (0)
@@ -309,17 +329,4 @@ WINBASEAPI BOOL WINAPI GetVolumePathNameW(
        DWORD cchBufferLength
        );
 #endif
-#if defined(_MSC_VER) && _MSC_VER < 1300
-# if _WIN32_WINNT < 0x0500 /* windows.h not providing 0x500 API */
-typedef struct _FILE_ALLOCATED_RANGE_BUFFER {
-       LARGE_INTEGER FileOffset;
-       LARGE_INTEGER Length;
-} FILE_ALLOCATED_RANGE_BUFFER, *PFILE_ALLOCATED_RANGE_BUFFER;
-#  define FSCTL_SET_SPARSE \
-     CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 49, METHOD_BUFFERED, FILE_WRITE_DATA)
-#  define FSCTL_QUERY_ALLOCATED_RANGES \
-     CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 51,  METHOD_NEITHER, FILE_READ_DATA)
-# endif
-#endif
-
 #endif /* !LIBARCHIVE_ARCHIVE_WINDOWS_H_INCLUDED */

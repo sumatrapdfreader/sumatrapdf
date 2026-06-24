@@ -24,11 +24,20 @@
  */
 
 #include "archive_platform.h"
+
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+
+#include "archive_integer.h"
 #include "archive_private.h"
 #include "archive_time_private.h"
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define NTFS_EPOC_TIME ARCHIVE_LITERAL_ULL(11644473600)
 #define NTFS_TICKS ARCHIVE_LITERAL_ULL(10000000)
@@ -149,15 +158,11 @@ unix_to_ntfs(int64_t secs, uint32_t nsecs)
 	if (secs < -(int64_t)NTFS_EPOC_TIME)
 		return 0;
 
-	ntfs = secs + NTFS_EPOC_TIME;
-
-	if (ntfs > UINT64_MAX / NTFS_TICKS)
+	/* (secs + NTFS_EPOC_TIME) * NTFS_TICKS + nsecs / 100 */
+	if (archive_ckd_add_u64(&ntfs, secs, NTFS_EPOC_TIME) ||
+	    archive_ckd_mul_u64(&ntfs, ntfs, NTFS_TICKS) ||
+	    archive_ckd_add_u64(&ntfs, ntfs, nsecs / 100))
 		return UINT64_MAX;
 
-	ntfs *= NTFS_TICKS;
-
-	if (ntfs > UINT64_MAX - nsecs/100)
-		return UINT64_MAX;
-
-	return ntfs + nsecs/100;
+	return ntfs;
 }

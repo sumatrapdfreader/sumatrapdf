@@ -40,6 +40,7 @@
 #endif
 
 #include "archive.h"
+#include "archive_integer.h"
 #include "archive_private.h"
 #include "archive_entry.h"
 #include "archive_pathmatch.h"
@@ -216,6 +217,14 @@ error_nomem(struct archive_match *a)
 	return (ARCHIVE_FATAL);
 }
 
+static int
+error_pattern(struct archive_match *a)
+{
+	archive_set_error(&(a->archive), EINVAL, "Failed to apply pattern");
+	a->archive.state = ARCHIVE_STATE_FATAL;
+	return (ARCHIVE_FATAL);
+}
+
 /*
  * Create an ARCHIVE_MATCH object.
  */
@@ -269,7 +278,7 @@ archive_match_free(struct archive *_a)
  *
  * Returns 1 if archive entry is excluded.
  * Returns 0 if archive entry is not excluded.
- * Returns <0 if something error happened.
+ * Returns <0 if some error happened.
  */
 int
 archive_match_excluded(struct archive *_a, struct archive_entry *entry)
@@ -293,6 +302,8 @@ archive_match_excluded(struct archive *_a, struct archive_entry *entry)
 #else
 		r = path_excluded(a, 1, archive_entry_pathname(entry));
 #endif
+		if (r < 0)
+			return (error_pattern(a));
 		if (r != 0)
 			return (r);
 	}
@@ -449,13 +460,14 @@ archive_match_include_pattern_from_file_w(struct archive *_a,
  *
  * Returns 1 if archive entry is excluded.
  * Returns 0 if archive entry is not excluded.
- * Returns <0 if something error happened.
+ * Returns <0 if some error happened.
  */
 int
 archive_match_path_excluded(struct archive *_a,
     struct archive_entry *entry)
 {
 	struct archive_match *a;
+	int r;
 
 	archive_check_magic(_a, ARCHIVE_MATCH_MAGIC,
 	    ARCHIVE_STATE_NEW, "archive_match_path_excluded");
@@ -471,10 +483,13 @@ archive_match_path_excluded(struct archive *_a,
 	if ((a->setflag & PATTERN_IS_SET) == 0)
 		return (0);
 #if defined(_WIN32) && !defined(__CYGWIN__)
-	return (path_excluded(a, 0, archive_entry_pathname_w(entry)));
+	r = path_excluded(a, 0, archive_entry_pathname_w(entry));
 #else
-	return (path_excluded(a, 1, archive_entry_pathname(entry)));
+	r = path_excluded(a, 1, archive_entry_pathname(entry));
 #endif
+	if (r < 0)
+		return (error_pattern(a));
+	return (r);
 }
 
 /*
@@ -629,11 +644,12 @@ add_pattern_from_file(struct archive_match *a, struct match_list *mlist,
 	}
 	r = archive_read_next_header(ar, &ae);
 	if (r != ARCHIVE_OK) {
-		archive_read_free(ar);
 		if (r == ARCHIVE_EOF) {
+			archive_read_free(ar);
 			return (ARCHIVE_OK);
 		} else {
 			archive_copy_error(&(a->archive), ar);
+			archive_read_free(ar);
 			return (r);
 		}
 	}
@@ -1007,7 +1023,7 @@ archive_match_exclude_entry(struct archive *_a, int flag,
  *
  * Returns 1 if archive entry is excluded.
  * Returns 0 if archive entry is not excluded.
- * Returns <0 if something error happened.
+ * Returns <0 if some error happened.
  */
 int
 archive_match_time_excluded(struct archive *_a,
@@ -1653,7 +1669,7 @@ archive_match_include_gname_w(struct archive *_a, const wchar_t *gname)
  *
  * Returns 1 if archive entry is excluded.
  * Returns 0 if archive entry is not excluded.
- * Returns <0 if something error happened.
+ * Returns <0 if some error happened.
  */
 int
 archive_match_owner_excluded(struct archive *_a,
@@ -1684,15 +1700,22 @@ add_owner_id(struct archive_match *a, struct id_array *ids, int64_t id)
 
 	if (ids->count + 1 >= ids->size) {
 		void *p;
+		size_t alloc_size, new_size;
 
 		if (ids->size == 0)
-			ids->size = 8;
-		else
-			ids->size *= 2;
-		p = realloc(ids->ids, sizeof(*ids->ids) * ids->size);
+			new_size = 8;
+		else {
+			if (archive_ckd_mul_size(&new_size, ids->size, 2))
+				return (error_nomem(a));
+		}
+		if (archive_ckd_mul_size(&alloc_size,
+		    new_size, sizeof(*ids->ids)))
+			return (error_nomem(a));
+		p = realloc(ids->ids, alloc_size);
 		if (p == NULL)
 			return (error_nomem(a));
 		ids->ids = (int64_t *)p;
+		ids->size = new_size;
 	}
 
 	/* Find an insert point. */

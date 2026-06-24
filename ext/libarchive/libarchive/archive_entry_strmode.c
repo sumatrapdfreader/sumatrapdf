@@ -28,9 +28,6 @@
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 
 #include "archive_entry.h"
 #include "archive_entry_private.h"
@@ -38,16 +35,10 @@
 const char *
 archive_entry_strmode(struct archive_entry *entry)
 {
-	static const mode_t permbits[] =
-	    { 0400, 0200, 0100, 0040, 0020, 0010, 0004, 0002, 0001 };
 	char *bp = entry->strmode;
-	mode_t mode;
+	mode_t mask, mode;
 	int i;
 
-	/* Fill in a default string, then selectively override. */
-	strcpy(bp, "?rwxrwxrwx ");
-
-	mode = archive_entry_mode(entry);
 	switch (archive_entry_filetype(entry)) {
 	case AE_IFREG:  bp[0] = '-'; break;
 	case AE_IFBLK:  bp[0] = 'b'; break;
@@ -57,30 +48,22 @@ archive_entry_strmode(struct archive_entry *entry)
 	case AE_IFSOCK: bp[0] = 's'; break;
 	case AE_IFIFO:  bp[0] = 'p'; break;
 	default:
-		if (archive_entry_hardlink(entry) != NULL) {
-			bp[0] = 'h';
-			break;
-		}
+		bp[0] = (archive_entry_hardlink(entry) != NULL) ? 'h' : '?';
+		break;
 	}
 
-	for (i = 0; i < 9; i++)
-		if (!(mode & permbits[i]))
-			bp[i+1] = '-';
+	mode = archive_entry_mode(entry);
+	for (i = 0, mask = 0400; i < 9; i++, mask >>= 1)
+		bp[i + 1] = (mode & mask) ? "rwx"[i % 3] : '-';
 
-	if (mode & S_ISUID) {
-		if (mode & 0100) bp[3] = 's';
-		else bp[3] = 'S';
-	}
-	if (mode & S_ISGID) {
-		if (mode & 0010) bp[6] = 's';
-		else bp[6] = 'S';
-	}
-	if (mode & S_ISVTX) {
-		if (mode & 0001) bp[9] = 't';
-		else bp[9] = 'T';
-	}
-	if (archive_entry_acl_types(entry) != 0)
-		bp[10] = '+';
+	if (mode & S_ISUID)
+		bp[3] = (mode & 0100) ? 's' : 'S';
+	if (mode & S_ISGID)
+		bp[6] = (mode & 0010) ? 's' : 'S';
+	if (mode & S_ISVTX)
+		bp[9] = (mode & 0001) ? 't' : 'T';
+	bp[10] = (archive_entry_acl_types(entry) != 0) ? '+' : ' ';
+	bp[11] = '\0';
 
 	return (bp);
 }

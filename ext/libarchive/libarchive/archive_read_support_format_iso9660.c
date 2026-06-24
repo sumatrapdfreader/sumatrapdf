@@ -268,6 +268,7 @@ struct file_info {
 	uint64_t	 size;		/* File size in bytes.		*/
 	uint32_t	 ce_offset;	/* Offset of CE.		*/
 	uint32_t	 ce_size;	/* Size of CE.			*/
+	uint64_t	 ce_processed_end;/* End offset of processed CE.	*/
 	char		 rr_moved;	/* Flag to rr_moved.		*/
 	char		 rr_moved_has_re_only;
 	char		 re;		/* Having RRIP "RE" extension.	*/
@@ -436,7 +437,6 @@ static void	parse_rockridge_ZF1(struct file_info *,
 		    const unsigned char *, int);
 static void	register_file(struct iso9660 *, struct file_info *);
 static void	release_files(struct iso9660 *);
-static unsigned	toi(const void *p, int n);
 static inline void re_add_entry(struct iso9660 *, struct file_info *);
 static inline struct file_info * re_get_entry(struct iso9660 *);
 static inline int rede_add_entry(struct file_info *);
@@ -1865,7 +1865,7 @@ parse_file_info(struct archive_read *a, struct file_info *parent,
 	}
 	name_len = (size_t)isodirrec[DR_name_len_offset];
 	location = archive_le32dec(isodirrec + DR_extent_offset);
-	fsize = toi(isodirrec + DR_size_offset, DR_size_size);
+	fsize = archive_le32dec(isodirrec + DR_size_offset);
 	/* Sanity check that name_len doesn't exceed dr_len. */
 	if (dr_len - 33 < name_len || name_len == 0) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
@@ -2162,7 +2162,7 @@ parse_file_info(struct archive_read *a, struct file_info *parent,
 		fprintf(stderr, "\n ** Unrecognized flag: ");
 		dump_isodirrec(stderr, isodirrec);
 		fprintf(stderr, "\n");
-	} else if (toi(isodirrec + DR_volume_sequence_number_offset, 2) != 1) {
+	} else if (archive_le16dec(isodirrec + DR_volume_sequence_number_offset) != 1) {
 		fprintf(stderr, "\n ** Unrecognized sequence number: ");
 		dump_isodirrec(stderr, isodirrec);
 		fprintf(stderr, "\n");
@@ -2255,9 +2255,10 @@ parse_rockridge(struct archive_read *a, struct file_info *file,
 			 */
 			if (p[1] == 'N') {
 				if (version == 1 && data_length == 16) {
-					file->rdev = toi(data,4);
+					file->rdev = archive_le32dec(data);
 					file->rdev <<= 32;
-					file->rdev |= toi(data + 8, 4);
+					file->rdev |=
+					    archive_le32dec(data + 8);
 					iso9660->seenRockridge = 1;
 				}
 			}
@@ -2272,20 +2273,20 @@ parse_rockridge(struct archive_read *a, struct file_info *file,
 				 */
 				if (version == 1) {
 					if (data_length >= 8)
-						file->mode
-						    = (__LA_MODE_T)toi(data, 4);
+						file->mode = (__LA_MODE_T)
+						    archive_le32dec(data);
 					if (data_length >= 16)
-						file->nlinks
-						    = toi(data + 8, 4);
+						file->nlinks =
+						    archive_le32dec(data + 8);
 					if (data_length >= 24)
-						file->uid
-						    = toi(data + 16, 4);
+						file->uid =
+						    archive_le32dec(data + 16);
 					if (data_length >= 32)
-						file->gid
-						    = toi(data + 24, 4);
+						file->gid =
+						    archive_le32dec(data + 24);
 					if (data_length >= 40)
-						file->number
-						    = toi(data + 32, 4);
+						file->number =
+						    archive_le32dec(data + 32);
 					iso9660->seenRockridge = 1;
 				}
 			}
@@ -2483,6 +2484,7 @@ read_CE(struct archive_read *a, struct iso9660 *iso9660)
 	const unsigned char *b, *p, *end;
 	struct file_info *file;
 	size_t step;
+	uint64_t ce_start, ce_end;
 	int r;
 
 	/* Read data which RRIP "CE" extension points. */
@@ -2506,8 +2508,16 @@ read_CE(struct archive_read *a, struct iso9660 *iso9660)
 				    "Malformed CE information");
 				return (ARCHIVE_FATAL);
 			}
+			ce_start = heap->reqs[0].offset + file->ce_offset;
+			ce_end = ce_start + file->ce_size;
+			if (ce_start < file->ce_processed_end) {
+				archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+				    "Invalid parameter in SUSP \"CE\" extension");
+				return (ARCHIVE_FATAL);
+			}
 			p = b + file->ce_offset;
 			end = p + file->ce_size;
+			file->ce_processed_end = ce_end;
 			next_CE(heap);
 			r = parse_rockridge(a, file, p, end);
 			if (r != ARCHIVE_OK)
@@ -3238,17 +3248,6 @@ heap_get_entry(struct heap_queue *heap)
 	}
 }
 
-static unsigned int
-toi(const void *p, int n)
-{
-	const unsigned char *v = (const unsigned char *)p;
-	if (n > 1)
-		return v[0] + 256 * toi(v + 1, n - 1);
-	if (n == 1)
-		return v[0];
-	return (0);
-}
-
 /*
  * ECMA119/ISO9660 stores multi-byte integers in one of
  * three different formats:
@@ -3493,6 +3492,8 @@ build_pathname_utf16be(unsigned char *p, size_t max, size_t *len,
 	if (file->parent != NULL && file->parent->utf16be_bytes > 0) {
 		if (build_pathname_utf16be(p, max, len, file->parent) != 0)
 			return (-1);
+		if (*len + 2 > max)
+			return (-1);/* Path is too long! */
 		p[*len] = 0;
 		p[*len + 1] = '/';
 		*len += 2;
@@ -3517,26 +3518,24 @@ static void
 dump_isodirrec(FILE *out, const unsigned char *isodirrec)
 {
 	fprintf(out, " l %d,",
-	    toi(isodirrec + DR_length_offset, DR_length_size));
+	    isodirrec[DR_length_offset]);
 	fprintf(out, " a %d,",
-	    toi(isodirrec + DR_ext_attr_length_offset, DR_ext_attr_length_size));
+	    isodirrec[DR_ext_attr_length_offset]);
 	fprintf(out, " ext 0x%x,",
-	    toi(isodirrec + DR_extent_offset, DR_extent_size));
+	    archive_le32dec(isodirrec + DR_extent_offset));
 	fprintf(out, " s %d,",
-	    toi(isodirrec + DR_size_offset, DR_extent_size));
+	    archive_le32dec(isodirrec + DR_size_offset));
 	fprintf(out, " f 0x%x,",
-	    toi(isodirrec + DR_flags_offset, DR_flags_size));
+	    isodirrec[DR_flags_offset]);
 	fprintf(out, " u %d,",
-	    toi(isodirrec + DR_file_unit_size_offset, DR_file_unit_size_size));
+	    isodirrec[DR_file_unit_size_offset]);
 	fprintf(out, " ilv %d,",
-	    toi(isodirrec + DR_interleave_offset, DR_interleave_size));
+	    isodirrec[DR_interleave_offset]);
 	fprintf(out, " seq %d,",
-	    toi(isodirrec + DR_volume_sequence_number_offset,
-		DR_volume_sequence_number_size));
+	    archive_le16dec(isodirrec + DR_volume_sequence_number_offset));
 	fprintf(out, " nl %d:",
-	    toi(isodirrec + DR_name_len_offset, DR_name_len_size));
+	    isodirrec[DR_name_len_offset]);
 	fprintf(out, " `%.*s'",
-	    toi(isodirrec + DR_name_len_offset, DR_name_len_size),
-		isodirrec + DR_name_offset);
+	    isodirrec[DR_name_len_offset], isodirrec + DR_name_offset);
 }
 #endif

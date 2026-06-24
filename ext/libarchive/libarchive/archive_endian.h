@@ -71,6 +71,22 @@ archive_be16dec(const void *pp)
 }
 
 static inline uint32_t
+archive_be24dec(const void *pp)
+{
+	unsigned char const *p = (unsigned char const *)pp;
+
+	/* Store into unsigned temporaries before left shifting, to avoid
+	promotion to signed int and then left shifting into the sign bit,
+	which is undefined behaviour. */
+	unsigned int p2 = p[2];
+	unsigned int p1 = p[1];
+	unsigned int p0 = p[0];
+
+	return ((p0 << 16) | (p1 << 8) | p2);
+}
+
+
+static inline uint32_t
 archive_be32dec(const void *pp)
 {
 	unsigned char const *p = (unsigned char const *)pp;
@@ -106,6 +122,21 @@ archive_le16dec(const void *pp)
 	unsigned int p0 = p[0];
 
 	return ((p1 << 8) | p0);
+}
+
+static inline uint32_t
+archive_le24dec(const void *pp)
+{
+	unsigned char const *p = (unsigned char const *)pp;
+
+	/* Store into unsigned temporaries before left shifting, to avoid
+	promotion to signed int and then left shifting into the sign bit,
+	which is undefined behaviour. */
+	unsigned int p2 = p[2];
+	unsigned int p1 = p[1];
+	unsigned int p0 = p[0];
+
+	return ((p2 << 16) | (p1 << 8) | p0);
 }
 
 static inline uint32_t
@@ -168,6 +199,16 @@ archive_le16enc(void *pp, uint16_t u)
 
 	p[0] = u & 0xff;
 	p[1] = (u >> 8) & 0xff;
+}
+
+static inline void
+archive_le24enc(void *pp, uint32_t u)
+{
+	unsigned char *p = (unsigned char *)pp;
+
+	p[0] = u & 0xff;
+	p[1] = (u >> 8) & 0xff;
+	p[2] = (u >> 16) & 0xff;
 }
 
 static inline void

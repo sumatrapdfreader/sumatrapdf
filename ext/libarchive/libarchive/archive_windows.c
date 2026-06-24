@@ -63,23 +63,6 @@
 #include <windows.h>
 #include <share.h>
 
-#if defined(__LA_LSEEK_NEEDED)
-static BOOL SetFilePointerEx_perso(HANDLE hFile,
-				   LARGE_INTEGER liDistanceToMove,
-				   PLARGE_INTEGER lpNewFilePointer,
-				   DWORD dwMoveMethod)
-{
-	LARGE_INTEGER li;
-	li.QuadPart = liDistanceToMove.QuadPart;
-	li.LowPart = SetFilePointer(
-		hFile, li.LowPart, &li.HighPart, dwMoveMethod);
-	if(lpNewFilePointer) {
-		lpNewFilePointer->QuadPart = li.QuadPart;
-	}
-	return li.LowPart != -1 || GetLastError() == NO_ERROR;
-}
-#endif
-
 struct ustat {
 	int64_t		st_atime;
 	uint32_t	st_atime_nsec;
@@ -236,7 +219,7 @@ la_CreateFile(const char *path, DWORD dwDesiredAccess, DWORD dwShareMode,
 	CREATEFILE2_EXTENDED_PARAMETERS createExParams;
 #endif
 
-#if !defined(WINAPI_FAMILY_PARTITION) || WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
+#if WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
 	handle = CreateFileA(path, dwDesiredAccess, dwShareMode,
 	    lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes,
 	    hTemplateFile);
@@ -285,7 +268,7 @@ __la_lseek(int fd, __int64 offset, int whence)
 		return (-1);
 	}
 	distance.QuadPart = offset;
-	if (!SetFilePointerEx_perso(handle, distance, &newpointer, whence)) {
+	if (!SetFilePointerEx(handle, distance, &newpointer, whence)) {
 		DWORD lasterr;
 
 		lasterr = GetLastError();
@@ -324,7 +307,7 @@ __la_open(const char *path, int flags, ...)
 		 * "Permission denied" error.
 		 */
 		attr = GetFileAttributesA(path);
-#if !defined(WINAPI_FAMILY_PARTITION) || WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
+#if WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
 		if (attr == (DWORD)-1 && GetLastError() == ERROR_PATH_NOT_FOUND)
 #endif
 		{
@@ -342,7 +325,7 @@ __la_open(const char *path, int flags, ...)
 		}
 		if (attr & FILE_ATTRIBUTE_DIRECTORY) {
 			HANDLE handle;
-#if !defined(WINAPI_FAMILY_PARTITION) || WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
+#if WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
 			if (ws != NULL)
 				handle = CreateFileW(ws, 0, 0, NULL,
 				    OPEN_EXISTING,
@@ -437,7 +420,7 @@ __la_wopen(const wchar_t *path, int flags, ...)
 		 * "Permission denied" error.
 		 */
 		attr = GetFileAttributesW(path);
-#if !defined(WINAPI_FAMILY_PARTITION) || WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
+#if WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
 		if (attr == (DWORD)-1 && GetLastError() == ERROR_PATH_NOT_FOUND)
 #endif
 		{
@@ -456,7 +439,7 @@ __la_wopen(const wchar_t *path, int flags, ...)
 		}
 		if (attr & FILE_ATTRIBUTE_DIRECTORY) {
 			HANDLE handle;
-#if !defined(WINAPI_FAMILY_PARTITION) || WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
+#if WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_DESKTOP)
 			if (fullpath != NULL)
 				handle = CreateFileW(fullpath, 0, 0, NULL,
 				    OPEN_EXISTING,

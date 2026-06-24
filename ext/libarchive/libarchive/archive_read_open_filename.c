@@ -40,6 +40,9 @@
 #ifdef HAVE_IO_H
 #include <io.h>
 #endif
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -181,7 +184,7 @@ archive_read_open_filenames_w(struct archive *a, const wchar_t **wfilenames,
 		if (wfilename == NULL)
 			wfilename = L"";
 		mine = calloc(1,
-			sizeof(*mine) + wcslen(wfilename) * sizeof(wchar_t));
+			sizeof(*mine) + wcslen(wfilename) * MB_LEN_MAX);
 		if (mine == NULL)
 			goto no_memory;
 		mine->block_size = block_size;
@@ -315,7 +318,7 @@ file_open(struct archive *a, void *client_data)
 		}
 #else
 		archive_set_error(a, ARCHIVE_ERRNO_MISC,
-		    "Unexpedted operation in archive_read_open_filename");
+		    "Unexpected operation in archive_read_open_filename");
 		goto fail;
 #endif
 	}

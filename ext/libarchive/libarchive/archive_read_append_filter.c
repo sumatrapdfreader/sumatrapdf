@@ -37,7 +37,7 @@ int
 archive_read_append_filter(struct archive *_a, int code)
 {
   int r1, r2, number_bidders, i;
-  char str[20];
+  const char *str;
   struct archive_read_filter_bidder *bidder;
   struct archive_read_filter *filter;
   struct archive_read *a = (struct archive_read *)_a;
@@ -53,15 +53,15 @@ archive_read_append_filter(struct archive *_a, int code)
       r1 = (ARCHIVE_OK);
       break;
     case ARCHIVE_FILTER_GZIP:
-      strcpy(str, "gzip");
+      str = "gzip";
       r1 = archive_read_support_filter_gzip(_a);
       break;
     case ARCHIVE_FILTER_BZIP2:
-      strcpy(str, "bzip2");
+      str = "bzip2";
       r1 = archive_read_support_filter_bzip2(_a);
       break;
     case ARCHIVE_FILTER_COMPRESS:
-      strcpy(str, "compress (.Z)");
+      str = "compress (.Z)";
       r1 = archive_read_support_filter_compress(_a);
       break;
     case ARCHIVE_FILTER_PROGRAM:
@@ -69,43 +69,43 @@ archive_read_append_filter(struct archive *_a, int code)
           "Cannot append program filter using archive_read_append_filter");
       return (ARCHIVE_FATAL);
     case ARCHIVE_FILTER_LZMA:
-      strcpy(str, "lzma");
+      str = "lzma";
       r1 = archive_read_support_filter_lzma(_a);
       break;
     case ARCHIVE_FILTER_XZ:
-      strcpy(str, "xz");
+      str = "xz";
       r1 = archive_read_support_filter_xz(_a);
       break;
     case ARCHIVE_FILTER_UU:
-      strcpy(str, "uu");
+      str = "uu";
       r1 = archive_read_support_filter_uu(_a);
       break;
     case ARCHIVE_FILTER_RPM:
-      strcpy(str, "rpm");
+      str = "rpm";
       r1 = archive_read_support_filter_rpm(_a);
       break;
     case ARCHIVE_FILTER_LZ4:
-      strcpy(str, "lz4");
+      str = "lz4";
       r1 = archive_read_support_filter_lz4(_a);
       break;
     case ARCHIVE_FILTER_ZSTD:
-      strcpy(str, "zstd");
+      str = "zstd";
       r1 = archive_read_support_filter_zstd(_a);
       break;
     case ARCHIVE_FILTER_LZIP:
-      strcpy(str, "lzip");
+      str = "lzip";
       r1 = archive_read_support_filter_lzip(_a);
       break;
     case ARCHIVE_FILTER_LZOP:
-      strcpy(str, "lzop");
+      str = "lzop";
       r1 = archive_read_support_filter_lzop(_a);
       break;
     case ARCHIVE_FILTER_LRZIP:
-      strcpy(str, "lrzip");
+      str = "lrzip";
       r1 = archive_read_support_filter_lrzip(_a);
       break;
     case ARCHIVE_FILTER_GRZIP:
-      strcpy(str, "grzip");
+      str = "grzip";
       r1 = archive_read_support_filter_grzip(_a);
       break;
     default:

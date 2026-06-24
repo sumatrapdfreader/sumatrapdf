@@ -62,7 +62,7 @@ typedef struct {
 	size_t		encr_pos;
 } archive_crypto_ctx;
 
-#elif defined(_WIN32) && !defined(__CYGWIN__) && defined(HAVE_BCRYPT_H) && _WIN32_WINNT >= _WIN32_WINNT_VISTA
+#elif defined(_WIN32) && !defined(__CYGWIN__) && defined(HAVE_BCRYPT_H)
 #include <bcrypt.h>
 #define	ARCHIVE_CRYPTOR_USE_CNG 1
 
@@ -147,16 +147,6 @@ typedef struct {
 } archive_crypto_ctx;
 
 #else
-
-#if defined(ARCHIVE_CRYPTO_MD5_WIN)    ||\
-	defined(ARCHIVE_CRYPTO_SHA1_WIN)   ||\
-	defined(ARCHIVE_CRYPTO_SHA256_WIN) ||\
-	defined(ARCHIVE_CRYPTO_SHA384_WIN) ||\
-	defined(ARCHIVE_CRYPTO_SHA512_WIN)
-#if defined(_WIN32) && !defined(__CYGWIN__) && !(defined(HAVE_BCRYPT_H) && _WIN32_WINNT >= _WIN32_WINNT_VISTA)
-#define ARCHIVE_CRYPTOR_USE_WINCRYPT 1
-#endif
-#endif
 
 #define AES_BLOCK_SIZE	16
 #define AES_MAX_KEY_SIZE 32

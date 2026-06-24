@@ -80,12 +80,11 @@ grzip_bidder_bid(struct archive_read_filter_bidder *self,
     struct archive_read_filter *filter)
 {
 	const unsigned char *p;
-	ssize_t avail;
 
 	(void)self; /* UNUSED */
 
-	p = __archive_read_filter_ahead(filter, sizeof(grzip_magic), &avail);
-	if (p == NULL || avail == 0)
+	p = __archive_read_filter_ahead(filter, sizeof(grzip_magic), NULL);
+	if (p == NULL)
 		return (0);
 
 	if (memcmp(p, grzip_magic, sizeof(grzip_magic)))

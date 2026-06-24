@@ -34,7 +34,7 @@
  * assert that ARCHIVE_VERSION_NUMBER >= 2012108.
  */
 /* Note: Compiler will complain if this does not match archive_entry.h! */
-#define	ARCHIVE_VERSION_NUMBER 3008007
+#define	ARCHIVE_VERSION_NUMBER 3008008
 
 #include <sys/stat.h>
 #include <stddef.h>  /* for wchar_t */
@@ -177,7 +177,7 @@ __LA_DECL int		archive_version_number(void);
 /*
  * Textual name/version of the library, useful for version displays.
  */
-#define	ARCHIVE_VERSION_ONLY_STRING "3.8.7"
+#define	ARCHIVE_VERSION_ONLY_STRING "3.8.8"
 #define	ARCHIVE_VERSION_STRING "libarchive " ARCHIVE_VERSION_ONLY_STRING
 __LA_DECL const char *	archive_version_string(void);
 
@@ -210,7 +210,9 @@ __LA_DECL const char *  archive_openssl_version(void);
 __LA_DECL const char *  archive_libmd_version(void);
 __LA_DECL const char *  archive_commoncrypto_version(void);
 __LA_DECL const char *  archive_cng_version(void);
+#if ARCHIVE_VERSION_NUMBER < 4000000
 __LA_DECL const char *  archive_wincrypt_version(void);
+#endif
 __LA_DECL const char *  archive_librichacl_version(void);
 __LA_DECL const char *  archive_libacl_version(void);
 __LA_DECL const char *  archive_libattr_version(void);
@@ -653,7 +655,6 @@ __LA_DECL int archive_read_data_block(struct archive *a,
 /*-
  * Some convenience functions that are built on archive_read_data:
  *  'skip': skips entire entry
- *  'into_buffer': writes data into memory buffer that you provide
  *  'into_fd': writes data to specified filedes
  */
 __LA_DECL int archive_read_data_skip(struct archive *);
@@ -1234,7 +1235,7 @@ __LA_DECL int	archive_match_exclude_entry(struct archive *,
 		    int _flag, struct archive_entry *);
 
 /*
- * Test if a file is excluded by its uid ,gid, uname or gname.
+ * Test if a file is excluded by its uid, gid, uname or gname.
  * The conditions are set by following functions.
  */
 __LA_DECL int	archive_match_owner_excluded(struct archive *,

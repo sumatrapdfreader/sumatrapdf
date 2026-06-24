@@ -104,6 +104,7 @@ struct private_data {
 	void			*out_block;
 
 	/* Decompression status variables. */
+	int			 initialized;
 	int			 use_reset_code;
 	int			 end_of_stream;	/* EOF status. */
 	int			 maxcode;	/* Largest code. */
@@ -172,13 +173,12 @@ compress_bidder_bid(struct archive_read_filter_bidder *self,
     struct archive_read_filter *filter)
 {
 	const unsigned char *buffer;
-	ssize_t avail;
 	int bits_checked;
 
 	(void)self; /* UNUSED */
 
 	/* Shortest valid compress file is 3 bytes. */
-	buffer = __archive_read_filter_ahead(filter, 3, &avail);
+	buffer = __archive_read_filter_ahead(filter, 3, NULL);
 
 	if (buffer == NULL)
 		return (0);
@@ -212,7 +212,6 @@ compress_bidder_init(struct archive_read_filter *self)
 	struct private_data *state;
 	static const size_t out_block_size = 64 * 1024;
 	void *out_block;
-	int code;
 
 	self->code = ARCHIVE_FILTER_COMPRESS;
 	self->name = "compress (.Z)";
@@ -233,14 +232,23 @@ compress_bidder_init(struct archive_read_filter *self)
 	state->out_block = out_block;
 	self->vtable = &compress_reader_vtable;
 
-	/* XXX MOVE THE FOLLOWING OUT OF INIT() XXX */
+	return (ARCHIVE_OK);
+}
+
+static int
+compress_filter_init(struct archive_read_filter *self)
+{
+	struct private_data *state = (struct private_data *)self->data;
+	int code;
+
+	state->initialized = 1;
 
 	(void)getbits(self, 8); /* Skip first signature byte. */
 	(void)getbits(self, 8); /* Skip second signature byte. */
 
 	/* Get compression parameters. */
 	code = getbits(self, 8);
-	if ((code & 0x1f) > 16) {
+	if (code < 0 || (code & 0x1f) > 16) {
 		archive_set_error(&self->archive->archive, -1,
 		    "Invalid compressed data");
 		return (ARCHIVE_FATAL);
@@ -278,6 +286,11 @@ compress_filter_read(struct archive_read_filter *self, const void **pblock)
 	int ret;
 
 	state = (struct private_data *)self->data;
+	if (!state->initialized) {
+		ret = compress_filter_init(self);
+		if (ret != ARCHIVE_OK)
+			return (ret);
+	}
 	if (state->end_of_stream) {
 		*pblock = NULL;
 		return (0);
@@ -325,17 +338,10 @@ next_code(struct archive_read_filter *self)
 	struct private_data *state = (struct private_data *)self->data;
 	int code, newcode;
 
-	static int debug_buff[1024];
-	static unsigned debug_index;
-
 again:
 	code = newcode = getbits(self, state->bits);
 	if (code < 0)
 		return (code);
-
-	debug_buff[debug_index++] = code;
-	if (debug_index >= sizeof(debug_buff)/sizeof(debug_buff[0]))
-		debug_index = 0;
 
 	/* If it's a reset code, reset the dictionary. */
 	if ((code == 256) && state->use_reset_code) {
@@ -434,7 +440,7 @@ getbits(struct archive_read_filter *self, int n)
 				1, &ret);
 			if (ret == 0)
 				return (-1);
-			if (ret < 0 || state->next_in == NULL)
+			if (state->next_in == NULL)
 				return (ARCHIVE_FATAL);
 			state->consume_unnotified = state->avail_in = ret;
 		}

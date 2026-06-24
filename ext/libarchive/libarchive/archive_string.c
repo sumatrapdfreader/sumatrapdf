@@ -1314,7 +1314,17 @@ create_sconv_object(const char *fc, const char *tc,
 			else if (strcmp(fc, "CP932") == 0)
 				sc->cd = iconv_open(tc, "SJIS");
 		}
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(__FreeBSD__) && !defined(HAVE_LIBICONV)
+		/*
+		 * FreeBSD's native iconv() by default returns the number of
+		 * invalid characters in the input string, as specified by
+		 * POSIX, but iconv_strncat_in_locale() assumes GNU iconv
+		 * semantics.
+		 */
+		int v = 1;
+
+		(void)iconvctl(sc->cd, ICONV_SET_ILSEQ_INVALID, &v);
+#elif defined(_WIN32) && !defined(__CYGWIN__)
 		/*
 		 * archive_mstring on Windows directly convert multi-bytes
 		 * into archive_wstring in order not to depend on locale
@@ -1362,7 +1372,7 @@ free_sconv_object(struct archive_string_conv *sc)
 }
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
-# if defined(WINAPI_FAMILY_PARTITION) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+# if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #  define GetOEMCP() CP_OEMCP
 # endif
 

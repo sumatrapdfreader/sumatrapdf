@@ -3,8 +3,9 @@ Project         Version    Date
 ../mupdf        1.28.0-rc2
   https://github.com/ArtifexSoftware/mupdf/releases/tag/1.28.0-rc2
 
-libarchive     3.8.7
+libarchive     3.8.8      2026-06-23
   https://github.com/libarchive/libarchive
+  https://github.com/libarchive/libarchive/releases/tag/v3.8.8
 
 mujs           1.3.9
   https://mujs.com/

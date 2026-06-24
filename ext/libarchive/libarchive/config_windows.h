@@ -111,19 +111,16 @@ typedef unsigned short mode_t;
 #define HAVE_LIBZ 1
 #define HAVE_ZLIB_H 1
 
-/*
- * Use legacy CryptoAPI for Win7 compatibility.
- * archive_windows.h defines NOCRYPT before including <windows.h>,
- * so we must include <wincrypt.h> explicitly here.
- */
-#include <windows.h>
-#include <wincrypt.h>
-
 /* bzip2 support */
 #define HAVE_BZLIB_H 1
 
-/* BCrypt support for archive encryption/decryption (Windows Vista+) */
+/* BCrypt/CNG digest support (libarchive 3.8.8 dropped legacy WinCrypt) */
 #define HAVE_BCRYPT_H 1
+#define ARCHIVE_CRYPTO_MD5_WIN 1
+#define ARCHIVE_CRYPTO_SHA1_WIN 1
+#define ARCHIVE_CRYPTO_SHA256_WIN 1
+#define ARCHIVE_CRYPTO_SHA384_WIN 1
+#define ARCHIVE_CRYPTO_SHA512_WIN 1
 
 /* liblzma support for LZMA/LZMA2/XZ decompression (needed for 7zip) */
 #define HAVE_LZMA_H 1

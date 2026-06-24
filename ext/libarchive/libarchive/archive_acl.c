@@ -56,9 +56,7 @@ static int	archive_acl_add_entry_len_l(struct archive_acl *acl,
 		    int type, int permset, int tag, int id, const char *name,
 		    size_t len, struct archive_string_conv *sc);
 static int	archive_acl_text_want_type(struct archive_acl *acl, int flags);
-static size_t	archive_acl_text_len(struct archive_acl *acl, int want_type,
-		    int flags, int wide, struct archive *a,
-		    struct archive_string_conv *sc);
+static size_t	archive_acl_text_empty(struct archive_acl *acl, int want_type);
 static int	isint_w(const wchar_t *start, const wchar_t *end, int *result);
 static int	ismode_w(const wchar_t *start, const wchar_t *end, int *result);
 static int	is_nfs4_flags_w(const wchar_t *start, const wchar_t *end,
@@ -67,9 +65,9 @@ static int	is_nfs4_perms_w(const wchar_t *start, const wchar_t *end,
 		    int *result);
 static void	next_field_w(const wchar_t **wp, const wchar_t **start,
 		    const wchar_t **end, wchar_t *sep);
-static void	append_entry_w(wchar_t **wp, const wchar_t *prefix, int type,
+static void	append_entry_w(struct archive_wstring *ws, const wchar_t *prefix, int type,
 		    int tag, int flags, const wchar_t *wname, int perm, int id);
-static void	append_id_w(wchar_t **wp, int id);
+static void	append_id_w(struct archive_wstring *ws, int id);
 static int	isint(const char *start, const char *end, int *result);
 static int	ismode(const char *start, const char *end, int *result);
 static int	is_nfs4_flags(const char *start, const char *end,
@@ -78,9 +76,9 @@ static int	is_nfs4_perms(const char *start, const char *end,
 		    int *result);
 static void	next_field(const char **p, size_t *l, const char **start,
 		    const char **end, char *sep);
-static void	append_entry(char **p, const char *prefix, int type,
+static void	append_entry(struct archive_string *s, const char *prefix, int type,
 		    int tag, int flags, const char *name, int perm, int id);
-static void	append_id(char **p, int id);
+static void	append_id(struct archive_string *s, int id);
 
 static const struct {
 	const int perm;
@@ -539,20 +537,12 @@ archive_acl_text_want_type(struct archive_acl *acl, int flags)
 }
 
 /*
- * Calculate ACL text string length
+ * Check if ACL text would be empty
  */
 static size_t
-archive_acl_text_len(struct archive_acl *acl, int want_type, int flags,
-    int wide, struct archive *a, struct archive_string_conv *sc) {
+archive_acl_text_empty(struct archive_acl *acl, int want_type) {
 	struct archive_acl_entry *ap;
-	const char *name;
-	const wchar_t *wname;
-	int count, idlen, tmp, r;
-	size_t length;
-	size_t len;
 
-	count = 0;
-	length = 0;
 	for (ap = acl->acl_head; ap != NULL; ap = ap->next) {
 		if ((ap->type & want_type) == 0)
 			continue;
@@ -565,107 +555,11 @@ archive_acl_text_len(struct archive_acl *acl, int want_type, int flags,
 		    || ap->tag == ARCHIVE_ENTRY_ACL_GROUP_OBJ
 		    || ap->tag == ARCHIVE_ENTRY_ACL_OTHER))
 			continue;
-		count++;
-		if ((want_type & ARCHIVE_ENTRY_ACL_TYPE_DEFAULT) != 0
-		    && (ap->type & ARCHIVE_ENTRY_ACL_TYPE_DEFAULT) != 0)
-			length += 8; /* "default:" */
-		switch (ap->tag) {
-		case ARCHIVE_ENTRY_ACL_USER_OBJ:
-			if (want_type == ARCHIVE_ENTRY_ACL_TYPE_NFS4) {
-				length += 6; /* "owner@" */
-				break;
-			}
-			/* FALLTHROUGH */
-		case ARCHIVE_ENTRY_ACL_USER:
-		case ARCHIVE_ENTRY_ACL_MASK:
-			length += 4; /* "user", "mask" */
-			break;
-		case ARCHIVE_ENTRY_ACL_GROUP_OBJ:
-			if (want_type == ARCHIVE_ENTRY_ACL_TYPE_NFS4) {
-				length += 6; /* "group@" */
-				break;
-			}
-			/* FALLTHROUGH */
-		case ARCHIVE_ENTRY_ACL_GROUP:
-		case ARCHIVE_ENTRY_ACL_OTHER:
-			length += 5; /* "group", "other" */
-			break;
-		case ARCHIVE_ENTRY_ACL_EVERYONE:
-			length += 9; /* "everyone@" */
-			break;
-		}
-		length += 1; /* colon after tag */
-		if (ap->tag == ARCHIVE_ENTRY_ACL_USER ||
-		    ap->tag == ARCHIVE_ENTRY_ACL_GROUP) {
-			if (wide) {
-				r = archive_mstring_get_wcs(a, &ap->name,
-				    &wname);
-				if (r == 0 && wname != NULL)
-					length += wcslen(wname);
-				else if (r < 0 && errno == ENOMEM)
-					return (0);
-				else
-					length += sizeof(uid_t) * 3 + 1;
-			} else {
-				r = archive_mstring_get_mbs_l(a, &ap->name, &name,
-				    &len, sc);
-				if (r != 0)
-					return (0);
-				if (len > 0 && name != NULL)
-					length += len;
-				else
-					length += sizeof(uid_t) * 3 + 1;
-			}
-			length += 1; /* colon after user or group name */
-		} else if (want_type != ARCHIVE_ENTRY_ACL_TYPE_NFS4)
-			length += 1; /* 2nd colon empty user,group or other */
 
-		if (((flags & ARCHIVE_ENTRY_ACL_STYLE_SOLARIS) != 0)
-		    && ((want_type & ARCHIVE_ENTRY_ACL_TYPE_POSIX1E) != 0)
-		    && (ap->tag == ARCHIVE_ENTRY_ACL_OTHER
-		    || ap->tag == ARCHIVE_ENTRY_ACL_MASK)) {
-			/* Solaris has no colon after other: and mask: */
-			length = length - 1;
-		}
-
-		if (want_type == ARCHIVE_ENTRY_ACL_TYPE_NFS4) {
-			/* rwxpdDaARWcCos:fdinSFI:deny */
-			length += 27;
-			if ((ap->type & ARCHIVE_ENTRY_ACL_TYPE_DENY) == 0)
-				length += 1; /* allow, alarm, audit */
-		} else
-			length += 3; /* rwx */
-
-		if ((ap->tag == ARCHIVE_ENTRY_ACL_USER ||
-		    ap->tag == ARCHIVE_ENTRY_ACL_GROUP) &&
-		    (flags & ARCHIVE_ENTRY_ACL_STYLE_EXTRA_ID) != 0) {
-			length += 1; /* colon */
-			/* ID digit count */
-			idlen = 1;
-			tmp = ap->id;
-			while (tmp > 9) {
-				tmp = tmp / 10;
-				idlen++;
-			}
-			length += idlen;
-		}
-		length ++; /* entry separator */
+		return (0);
 	}
 
-	/* Add filemode-mapping access entries to the length */
-	if ((want_type & ARCHIVE_ENTRY_ACL_TYPE_ACCESS) != 0) {
-		if ((flags & ARCHIVE_ENTRY_ACL_STYLE_SOLARIS) != 0) {
-			/* "user::rwx\ngroup::rwx\nother:rwx\n" */
-			length += 31;
-		} else {
-			/* "user::rwx\ngroup::rwx\nother::rwx\n" */
-			length += 32;
-		}
-	} else if (count == 0)
-		return (0);
-
-	/* The terminating character is included in count */
-	return (length);
+	return (1);
 }
 
 /*
@@ -676,15 +570,12 @@ wchar_t *
 archive_acl_to_text_w(struct archive_acl *acl, ssize_t *text_len, int flags,
     struct archive *a)
 {
-	int count;
-	size_t length;
-	size_t len;
 	const wchar_t *wname;
 	const wchar_t *prefix;
 	wchar_t separator;
 	struct archive_acl_entry *ap;
+	struct archive_wstring ws;
 	int id, r, want_type;
-	wchar_t *wp, *ws;
 
 	want_type = archive_acl_text_want_type(acl, flags);
 
@@ -695,9 +586,7 @@ archive_acl_to_text_w(struct archive_acl *acl, ssize_t *text_len, int flags,
 	if (want_type == ARCHIVE_ENTRY_ACL_TYPE_POSIX1E)
 		flags |= ARCHIVE_ENTRY_ACL_STYLE_MARK_DEFAULT;
 
-	length = archive_acl_text_len(acl, want_type, flags, 1, a, NULL);
-
-	if (length == 0)
+	if (archive_acl_text_empty(acl, want_type))
 		return (NULL);
 
 	if (flags & ARCHIVE_ENTRY_ACL_STYLE_SEPARATOR_COMMA)
@@ -705,28 +594,20 @@ archive_acl_to_text_w(struct archive_acl *acl, ssize_t *text_len, int flags,
 	else
 		separator = L'\n';
 
-	/* Now, allocate the string and actually populate it. */
-	wp = ws = malloc(length * sizeof(*wp));
-	if (wp == NULL) {
-		if (errno == ENOMEM)
-			__archive_errx(1, "No memory");
-		return (NULL);
-	}
-	count = 0;
+	archive_string_init(&ws);
 
 	if ((want_type & ARCHIVE_ENTRY_ACL_TYPE_ACCESS) != 0) {
-		append_entry_w(&wp, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
+		append_entry_w(&ws, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
 		    ARCHIVE_ENTRY_ACL_USER_OBJ, flags, NULL,
 		    acl->mode & 0700, -1);
-		*wp++ = separator;
-		append_entry_w(&wp, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
+		archive_wstrappend_wchar(&ws, separator);
+		append_entry_w(&ws, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
 		    ARCHIVE_ENTRY_ACL_GROUP_OBJ, flags, NULL,
 		    acl->mode & 0070, -1);
-		*wp++ = separator;
-		append_entry_w(&wp, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
+		archive_wstrappend_wchar(&ws, separator);
+		append_entry_w(&ws, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
 		    ARCHIVE_ENTRY_ACL_OTHER, flags, NULL,
 		    acl->mode & 0007, -1);
-		count += 3;
 	}
 
 	for (ap = acl->acl_head; ap != NULL; ap = ap->next) {
@@ -748,108 +629,95 @@ archive_acl_to_text_w(struct archive_acl *acl, ssize_t *text_len, int flags,
 			prefix = NULL;
 		r = archive_mstring_get_wcs(a, &ap->name, &wname);
 		if (r == 0) {
-			if (count > 0)
-				*wp++ = separator;
-			if (flags & ARCHIVE_ENTRY_ACL_STYLE_EXTRA_ID)
+			if (ws.length > 0)
+				archive_wstrappend_wchar(&ws, separator);
+			if ((flags & ARCHIVE_ENTRY_ACL_STYLE_EXTRA_ID) ||
+			    wname == NULL)
 				id = ap->id;
 			else
 				id = -1;
-			append_entry_w(&wp, prefix, ap->type, ap->tag, flags,
+			append_entry_w(&ws, prefix, ap->type, ap->tag, flags,
 			    wname, ap->permset, id);
-			count++;
 		} else if (r < 0 && errno == ENOMEM) {
-			free(ws);
+			archive_wstring_free(&ws);
 			return (NULL);
 		}
 	}
 
-	/* Add terminating character */
-	*wp++ = L'\0';
-
-	len = wcslen(ws);
-
-	if (len > length - 1)
-		__archive_errx(1, "Buffer overrun");
-
 	if (text_len != NULL)
-		*text_len = len;
+		*text_len = ws.length;
 
-	return (ws);
+	return (ws.s);
 }
 
 static void
-append_id_w(wchar_t **wp, int id)
+append_id_w(struct archive_wstring *ws, int id)
 {
 	if (id < 0)
 		id = 0;
 	if (id > 9)
-		append_id_w(wp, id / 10);
-	*(*wp)++ = L"0123456789"[id % 10];
+		append_id_w(ws, id / 10);
+	archive_wstrappend_wchar(ws, L"0123456789"[id % 10]);
 }
 
 static void
-append_entry_w(wchar_t **wp, const wchar_t *prefix, int type,
+append_entry_w(struct archive_wstring *ws, const wchar_t *prefix, int type,
     int tag, int flags, const wchar_t *wname, int perm, int id)
 {
 	int i;
 
-	if (prefix != NULL) {
-		wcscpy(*wp, prefix);
-		*wp += wcslen(*wp);
-	}
+	if (prefix != NULL)
+		archive_wstrcat(ws, prefix);
 	switch (tag) {
 	case ARCHIVE_ENTRY_ACL_USER_OBJ:
 		wname = NULL;
 		id = -1;
 		if ((type & ARCHIVE_ENTRY_ACL_TYPE_NFS4) != 0) {
-			wcscpy(*wp, L"owner@");
+			archive_wstrcat(ws, L"owner@");
 			break;
 		}
 		/* FALLTHROUGH */
 	case ARCHIVE_ENTRY_ACL_USER:
-		wcscpy(*wp, L"user");
+		archive_wstrcat(ws, L"user");
 		break;
 	case ARCHIVE_ENTRY_ACL_GROUP_OBJ:
 		wname = NULL;
 		id = -1;
 		if ((type & ARCHIVE_ENTRY_ACL_TYPE_NFS4) != 0) {
-			wcscpy(*wp, L"group@");
+			archive_wstrcat(ws, L"group@");
 			break;
 		}
 		/* FALLTHROUGH */
 	case ARCHIVE_ENTRY_ACL_GROUP:
-		wcscpy(*wp, L"group");
+		archive_wstrcat(ws, L"group");
 		break;
 	case ARCHIVE_ENTRY_ACL_MASK:
-		wcscpy(*wp, L"mask");
+		archive_wstrcat(ws, L"mask");
 		wname = NULL;
 		id = -1;
 		break;
 	case ARCHIVE_ENTRY_ACL_OTHER:
-		wcscpy(*wp, L"other");
+		archive_wstrcat(ws, L"other");
 		wname = NULL;
 		id = -1;
 		break;
 	case ARCHIVE_ENTRY_ACL_EVERYONE:
-		wcscpy(*wp, L"everyone@");
+		archive_wstrcat(ws, L"everyone@");
 		wname = NULL;
 		id = -1;
 		break;
 	default:
-		**wp = '\0';
 		break;
 	}
-	*wp += wcslen(*wp);
-	*(*wp)++ = L':';
+	archive_wstrappend_wchar(ws, L':');
 	if (((type & ARCHIVE_ENTRY_ACL_TYPE_POSIX1E) != 0) ||
 	    tag == ARCHIVE_ENTRY_ACL_USER ||
 	    tag == ARCHIVE_ENTRY_ACL_GROUP) {
 		if (wname != NULL) {
-			wcscpy(*wp, wname);
-			*wp += wcslen(*wp);
+			archive_wstrcat(ws, wname);
 		} else if (tag == ARCHIVE_ENTRY_ACL_USER
 		    || tag == ARCHIVE_ENTRY_ACL_GROUP) {
-			append_id_w(wp, id);
+			append_id_w(ws, id);
 			if ((type & ARCHIVE_ENTRY_ACL_TYPE_NFS4) == 0)
 				id = -1;
 		}
@@ -857,51 +725,49 @@ append_entry_w(wchar_t **wp, const wchar_t *prefix, int type,
 		if (((flags & ARCHIVE_ENTRY_ACL_STYLE_SOLARIS) == 0)
 		    || (tag != ARCHIVE_ENTRY_ACL_OTHER
 		    && tag != ARCHIVE_ENTRY_ACL_MASK))
-			*(*wp)++ = L':';
+			archive_wstrappend_wchar(ws, L':');
 	}
 	if ((type & ARCHIVE_ENTRY_ACL_TYPE_POSIX1E) != 0) {
 		/* POSIX.1e ACL perms */
-		*(*wp)++ = (perm & 0444) ? L'r' : L'-';
-		*(*wp)++ = (perm & 0222) ? L'w' : L'-';
-		*(*wp)++ = (perm & 0111) ? L'x' : L'-';
+		archive_wstrappend_wchar(ws, (perm & 0444) ? L'r' : L'-');
+		archive_wstrappend_wchar(ws, (perm & 0222) ? L'w' : L'-');
+		archive_wstrappend_wchar(ws, (perm & 0111) ? L'x' : L'-');
 	} else {
 		/* NFSv4 ACL perms */
 		for (i = 0; i < nfsv4_acl_perm_map_size; i++) {
 			if (perm & nfsv4_acl_perm_map[i].perm)
-				*(*wp)++ = nfsv4_acl_perm_map[i].wc;
+				archive_wstrappend_wchar(ws, nfsv4_acl_perm_map[i].wc);
 			else if ((flags & ARCHIVE_ENTRY_ACL_STYLE_COMPACT) == 0)
-				*(*wp)++ = L'-';
+				archive_wstrappend_wchar(ws, L'-');
 		}
-		*(*wp)++ = L':';
+		archive_wstrappend_wchar(ws, L':');
 		for (i = 0; i < nfsv4_acl_flag_map_size; i++) {
 			if (perm & nfsv4_acl_flag_map[i].perm)
-				*(*wp)++ = nfsv4_acl_flag_map[i].wc;
+				archive_wstrappend_wchar(ws, nfsv4_acl_flag_map[i].wc);
 			else if ((flags & ARCHIVE_ENTRY_ACL_STYLE_COMPACT) == 0)
-				*(*wp)++ = L'-';
+				archive_wstrappend_wchar(ws, L'-');
 		}
-		*(*wp)++ = L':';
+		archive_wstrappend_wchar(ws, L':');
 		switch (type) {
 		case ARCHIVE_ENTRY_ACL_TYPE_ALLOW:
-			wcscpy(*wp, L"allow");
+			archive_wstrcat(ws, L"allow");
 			break;
 		case ARCHIVE_ENTRY_ACL_TYPE_DENY:
-			wcscpy(*wp, L"deny");
+			archive_wstrcat(ws, L"deny");
 			break;
 		case ARCHIVE_ENTRY_ACL_TYPE_AUDIT:
-			wcscpy(*wp, L"audit");
+			archive_wstrcat(ws, L"audit");
 			break;
 		case ARCHIVE_ENTRY_ACL_TYPE_ALARM:
-			wcscpy(*wp, L"alarm");
+			archive_wstrcat(ws, L"alarm");
 			break;
 		default:
-			*(*wp) = L'\0';
 			break;
 		}
-		*wp += wcslen(*wp);
 	}
 	if (id != -1) {
-		*(*wp)++ = L':';
-		append_id_w(wp, id);
+		archive_wstrappend_wchar(ws, L':');
+		append_id_w(ws, id);
 	}
 }
 
@@ -913,15 +779,13 @@ char *
 archive_acl_to_text_l(struct archive_acl *acl, ssize_t *text_len, int flags,
     struct archive_string_conv *sc)
 {
-	int count;
-	size_t length;
 	size_t len;
 	const char *name;
 	const char *prefix;
 	char separator;
 	struct archive_acl_entry *ap;
+	struct archive_string s;
 	int id, r, want_type;
-	char *p, *s;
 
 	want_type = archive_acl_text_want_type(acl, flags);
 
@@ -932,9 +796,7 @@ archive_acl_to_text_l(struct archive_acl *acl, ssize_t *text_len, int flags,
 	if (want_type == ARCHIVE_ENTRY_ACL_TYPE_POSIX1E)
 		flags |= ARCHIVE_ENTRY_ACL_STYLE_MARK_DEFAULT;
 
-	length = archive_acl_text_len(acl, want_type, flags, 0, NULL, sc);
-
-	if (length == 0)
+	if (archive_acl_text_empty(acl, want_type))
 		return (NULL);
 
 	if (flags & ARCHIVE_ENTRY_ACL_STYLE_SEPARATOR_COMMA)
@@ -942,28 +804,20 @@ archive_acl_to_text_l(struct archive_acl *acl, ssize_t *text_len, int flags,
 	else
 		separator = '\n';
 
-	/* Now, allocate the string and actually populate it. */
-	p = s = malloc(length * sizeof(*p));
-	if (p == NULL) {
-		if (errno == ENOMEM)
-			__archive_errx(1, "No memory");
-		return (NULL);
-	}
-	count = 0;
+	archive_string_init(&s);
 
 	if ((want_type & ARCHIVE_ENTRY_ACL_TYPE_ACCESS) != 0) {
-		append_entry(&p, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
+		append_entry(&s, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
 		    ARCHIVE_ENTRY_ACL_USER_OBJ, flags, NULL,
 		    acl->mode & 0700, -1);
-		*p++ = separator;
-		append_entry(&p, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
+		archive_strappend_char(&s, separator);
+		append_entry(&s, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
 		    ARCHIVE_ENTRY_ACL_GROUP_OBJ, flags, NULL,
 		    acl->mode & 0070, -1);
-		*p++ = separator;
-		append_entry(&p, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
+		archive_strappend_char(&s, separator);
+		append_entry(&s, NULL, ARCHIVE_ENTRY_ACL_TYPE_ACCESS,
 		    ARCHIVE_ENTRY_ACL_OTHER, flags, NULL,
 		    acl->mode & 0007, -1);
-		count += 3;
 	}
 
 	for (ap = acl->acl_head; ap != NULL; ap = ap->next) {
@@ -986,109 +840,95 @@ archive_acl_to_text_l(struct archive_acl *acl, ssize_t *text_len, int flags,
 		r = archive_mstring_get_mbs_l(
 		    NULL, &ap->name, &name, &len, sc);
 		if (r != 0) {
-			free(s);
+			archive_string_free(&s);
 			return (NULL);
 		}
-		if (count > 0)
-			*p++ = separator;
+		if (s.length > 0)
+			archive_strappend_char(&s, separator);
 		if (name == NULL ||
 		    (flags & ARCHIVE_ENTRY_ACL_STYLE_EXTRA_ID)) {
 			id = ap->id;
 		} else {
 			id = -1;
 		}
-		append_entry(&p, prefix, ap->type, ap->tag, flags, name,
+		append_entry(&s, prefix, ap->type, ap->tag, flags, name,
 		    ap->permset, id);
-		count++;
 	}
 
-	/* Add terminating character */
-	*p++ = '\0';
-
-	len = strlen(s);
-
-	if (len > length - 1)
-		__archive_errx(1, "Buffer overrun");
-
 	if (text_len != NULL)
-		*text_len = len;
+		*text_len = s.length;
 
-	return (s);
+	return (s.s);
 }
 
 static void
-append_id(char **p, int id)
+append_id(struct archive_string *s, int id)
 {
 	if (id < 0)
 		id = 0;
 	if (id > 9)
-		append_id(p, id / 10);
-	*(*p)++ = "0123456789"[id % 10];
+		append_id(s, id / 10);
+	archive_strappend_char(s, "0123456789"[id % 10]);
 }
 
 static void
-append_entry(char **p, const char *prefix, int type,
+append_entry(struct archive_string *s, const char *prefix, int type,
     int tag, int flags, const char *name, int perm, int id)
 {
 	int i;
 
-	if (prefix != NULL) {
-		strcpy(*p, prefix);
-		*p += strlen(*p);
-	}
+	if (prefix != NULL)
+		archive_strcat(s, prefix);
 	switch (tag) {
 	case ARCHIVE_ENTRY_ACL_USER_OBJ:
 		name = NULL;
 		id = -1;
 		if ((type & ARCHIVE_ENTRY_ACL_TYPE_NFS4) != 0) {
-			strcpy(*p, "owner@");
+			archive_strcat(s, "owner@");
 			break;
 		}
 		/* FALLTHROUGH */
 	case ARCHIVE_ENTRY_ACL_USER:
-		strcpy(*p, "user");
+		archive_strcat(s, "user");
 		break;
 	case ARCHIVE_ENTRY_ACL_GROUP_OBJ:
 		name = NULL;
 		id = -1;
 		if ((type & ARCHIVE_ENTRY_ACL_TYPE_NFS4) != 0) {
-			strcpy(*p, "group@");
+			archive_strcat(s, "group@");
 			break;
 		}
 		/* FALLTHROUGH */
 	case ARCHIVE_ENTRY_ACL_GROUP:
-		strcpy(*p, "group");
+		archive_strcat(s, "group");
 		break;
 	case ARCHIVE_ENTRY_ACL_MASK:
-		strcpy(*p, "mask");
+		archive_strcat(s, "mask");
 		name = NULL;
 		id = -1;
 		break;
 	case ARCHIVE_ENTRY_ACL_OTHER:
-		strcpy(*p, "other");
+		archive_strcat(s, "other");
 		name = NULL;
 		id = -1;
 		break;
 	case ARCHIVE_ENTRY_ACL_EVERYONE:
-		strcpy(*p, "everyone@");
+		archive_strcat(s, "everyone@");
 		name = NULL;
 		id = -1;
 		break;
 	default:
-		**p = '\0';
 		break;
 	}
-	*p += strlen(*p);
-	*(*p)++ = ':';
+	archive_strappend_char(s, ':');
 	if (((type & ARCHIVE_ENTRY_ACL_TYPE_POSIX1E) != 0) ||
 	    tag == ARCHIVE_ENTRY_ACL_USER ||
 	    tag == ARCHIVE_ENTRY_ACL_GROUP) {
 		if (name != NULL) {
-			strcpy(*p, name);
-			*p += strlen(*p);
+			archive_strcat(s, name);
 		} else if (tag == ARCHIVE_ENTRY_ACL_USER
 		    || tag == ARCHIVE_ENTRY_ACL_GROUP) {
-			append_id(p, id);
+			append_id(s, id);
 			if ((type & ARCHIVE_ENTRY_ACL_TYPE_NFS4) == 0)
 				id = -1;
 		}
@@ -1096,51 +936,49 @@ append_entry(char **p, const char *prefix, int type,
 		if (((flags & ARCHIVE_ENTRY_ACL_STYLE_SOLARIS) == 0)
 		    || (tag != ARCHIVE_ENTRY_ACL_OTHER
 		    && tag != ARCHIVE_ENTRY_ACL_MASK))
-			*(*p)++ = ':';
+			archive_strappend_char(s, ':');
 	}
 	if ((type & ARCHIVE_ENTRY_ACL_TYPE_POSIX1E) != 0) {
 		/* POSIX.1e ACL perms */
-		*(*p)++ = (perm & 0444) ? 'r' : '-';
-		*(*p)++ = (perm & 0222) ? 'w' : '-';
-		*(*p)++ = (perm & 0111) ? 'x' : '-';
+		archive_strappend_char(s, (perm & 0444) ? 'r' : '-');
+		archive_strappend_char(s, (perm & 0222) ? 'w' : '-');
+		archive_strappend_char(s, (perm & 0111) ? 'x' : '-');
 	} else {
 		/* NFSv4 ACL perms */
 		for (i = 0; i < nfsv4_acl_perm_map_size; i++) {
 			if (perm & nfsv4_acl_perm_map[i].perm)
-				*(*p)++ = nfsv4_acl_perm_map[i].c;
+				archive_strappend_char(s, nfsv4_acl_perm_map[i].c);
 			else if ((flags & ARCHIVE_ENTRY_ACL_STYLE_COMPACT) == 0)
-				*(*p)++ = '-';
+				archive_strappend_char(s, '-');
 		}
-		*(*p)++ = ':';
+		archive_strappend_char(s, ':');
 		for (i = 0; i < nfsv4_acl_flag_map_size; i++) {
 			if (perm & nfsv4_acl_flag_map[i].perm)
-				*(*p)++ = nfsv4_acl_flag_map[i].c;
+				archive_strappend_char(s, nfsv4_acl_flag_map[i].c);
 			else if ((flags & ARCHIVE_ENTRY_ACL_STYLE_COMPACT) == 0)
-				*(*p)++ = '-';
+				archive_strappend_char(s, '-');
 		}
-		*(*p)++ = ':';
+		archive_strappend_char(s, ':');
 		switch (type) {
 		case ARCHIVE_ENTRY_ACL_TYPE_ALLOW:
-			strcpy(*p, "allow");
+			archive_strcat(s, "allow");
 			break;
 		case ARCHIVE_ENTRY_ACL_TYPE_DENY:
-			strcpy(*p, "deny");
+			archive_strcat(s, "deny");
 			break;
 		case ARCHIVE_ENTRY_ACL_TYPE_AUDIT:
-			strcpy(*p, "audit");
+			archive_strcat(s, "audit");
 			break;
 		case ARCHIVE_ENTRY_ACL_TYPE_ALARM:
-			strcpy(*p, "alarm");
+			archive_strcat(s, "alarm");
 			break;
 		default:
-			*(*p) = '\0';
 			break;
 		}
-		*p += strlen(*p);
 	}
 	if (id != -1) {
-		*(*p)++ = ':';
-		append_id(p, id);
+		archive_strappend_char(s, ':');
+		append_id(s, id);
 	}
 }
 
@@ -1248,11 +1086,18 @@ archive_acl_from_text_w(struct archive_acl *acl, const wchar_t *text,
 				type = want_type;
 
 			/* Check for a numeric ID in field n+1 or n+3. */
-			isint_w(field[n + 1].start, field[n + 1].end, &id);
+			if (isint_w(field[n + 1].start, field[n + 1].end,
+			    &id) < 0) {
+				ret = ARCHIVE_WARN;
+				continue;
+			}
 			/* Field n+3 is optional. */
-			if (id == -1 && fields > n+3)
-				isint_w(field[n + 3].start, field[n + 3].end,
-				    &id);
+			if (id == -1 && fields > n+3 &&
+			    isint_w(field[n + 3].start, field[n + 3].end,
+			    &id) < 0) {
+				ret = ARCHIVE_WARN;
+				continue;
+			}
 
 			tag = 0;
 			s = field[n].start;
@@ -1367,7 +1212,10 @@ archive_acl_from_text_w(struct archive_acl *acl, const wchar_t *text,
 			    tag == ARCHIVE_ENTRY_ACL_GROUP) {
 				n = 1;
 				name = field[1];
-				isint_w(name.start, name.end, &id);
+				if (isint_w(name.start, name.end, &id) < 0) {
+					ret = ARCHIVE_WARN;
+					continue;
+				}
 			} else
 				n = 0;
 
@@ -1402,7 +1250,11 @@ archive_acl_from_text_w(struct archive_acl *acl, const wchar_t *text,
 				ret = ARCHIVE_WARN;
 				continue;
 			}
-			isint_w(field[4 + n].start, field[4 + n].end, &id);
+			if (isint_w(field[4 + n].start, field[4 + n].end,
+			    &id) < 0) {
+				ret = ARCHIVE_WARN;
+				continue;
+			}
 		}
 
 		/* Add entry to the internal list. */
@@ -1436,8 +1288,8 @@ isint_w(const wchar_t *start, const wchar_t *end, int *result)
 		if (*start < L'0' || *start > L'9')
 			return (0);
 		if (n > (INT_MAX / 10) ||
-		    (n == INT_MAX / 10 && (*start - L'0') > INT_MAX % 10)) {
-			n = INT_MAX;
+		    (n == INT_MAX / 10 && (*start - L'0') >= INT_MAX % 10)) {
+			return (-1);
 		} else {
 			n *= 10;
 			n += *start - L'0';
@@ -1747,21 +1599,29 @@ archive_acl_from_text_nl(struct archive_acl *acl, const char *text,
 				type = want_type;
 
 			/* Check for a numeric ID in field n+1 or n+3. */
-			isint(field[n + 1].start, field[n + 1].end, &id);
+			if (isint(field[n + 1].start, field[n + 1].end,
+			    &id) < 0) {
+				ret = ARCHIVE_WARN;
+				continue;
+			}
 			/* Field n+3 is optional. */
-			if (id == -1 && fields > (n + 3))
-				isint(field[n + 3].start, field[n + 3].end,
-				    &id);
+			if (id == -1 && fields > (n + 3) &&
+			    isint(field[n + 3].start, field[n + 3].end,
+			    &id) < 0) {
+				ret = ARCHIVE_WARN;
+				continue;
+			}
 
 			tag = 0;
 			s = field[n].start;
-			st = field[n].start + 1;
 			len = field[n].end - field[n].start;
 
 			if (len == 0) {
 				ret = ARCHIVE_WARN;
 				continue;
 			}
+
+			st = s + 1; 
 
 			switch (*s) {
 			case 'u':
@@ -1868,7 +1728,10 @@ archive_acl_from_text_nl(struct archive_acl *acl, const char *text,
 			    tag == ARCHIVE_ENTRY_ACL_GROUP) {
 				n = 1;
 				name = field[1];
-				isint(name.start, name.end, &id);
+				if (isint(name.start, name.end, &id) < 0) {
+					ret = ARCHIVE_WARN;
+					continue;
+				}
 			} else
 				n = 0;
 
@@ -1903,8 +1766,11 @@ archive_acl_from_text_nl(struct archive_acl *acl, const char *text,
 				ret = ARCHIVE_WARN;
 				continue;
 			}
-			isint(field[4 + n].start, field[4 + n].end,
-			    &id);
+			if (isint(field[4 + n].start, field[4 + n].end,
+			    &id) < 0) {
+				ret = ARCHIVE_WARN;
+				continue;
+			}
 		}
 
 		/* Add entry to the internal list. */
@@ -1938,8 +1804,8 @@ isint(const char *start, const char *end, int *result)
 		if (*start < '0' || *start > '9')
 			return (0);
 		if (n > (INT_MAX / 10) ||
-		    (n == INT_MAX / 10 && (*start - '0') > INT_MAX % 10)) {
-			n = INT_MAX;
+		    (n == INT_MAX / 10 && (*start - '0') >= INT_MAX % 10)) {
+			return (-1);
 		} else {
 			n *= 10;
 			n += *start - '0';
@@ -2121,7 +1987,10 @@ next_field(const char **p, size_t *l, const char **start,
 		(*p)++;
 		(*l)--;
 	}
-	*sep = **p;
+	if (*l > 0)
+		*sep = **p;
+	else
+		*sep = '\0';
 
 	/* Handle in-field comments */
 	if (*sep == '#') {
@@ -2129,7 +1998,10 @@ next_field(const char **p, size_t *l, const char **start,
 			(*p)++;
 			(*l)--;
 		}
-		*sep = **p;
+		if (*l > 0)
+			*sep = **p;
+		else
+			*sep = '\0';
 	}
 
 	/* Skip separator. */

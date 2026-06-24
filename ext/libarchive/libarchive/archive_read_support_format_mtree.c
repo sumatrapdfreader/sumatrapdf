@@ -51,6 +51,7 @@
 #include "archive.h"
 #include "archive_entry.h"
 #include "archive_entry_private.h"
+#include "archive_integer.h"
 #include "archive_platform_stat.h"
 #include "archive_private.h"
 #include "archive_rb.h"
@@ -1790,12 +1791,16 @@ parse_keyword(struct archive_read *a, struct mtree *mtree,
 			 * 123456789.1 represents 123456789
 			 * seconds and 1 nanosecond. */
 			if (*val == '.') {
+				int64_t v;
+
 				++val;
-				ns = (long)mtree_atol(&val, 10);
-				if (ns < 0)
+				v = mtree_atol(&val, 10);
+				if (v < 0)
 					ns = 0;
-				else if (ns > 999999999)
+				else if (v > 999999999)
 					ns = 999999999;
+				else
+					ns = (long)v;
 			}
 			if (m > my_time_t_max)
 				m = my_time_t_max;
@@ -2029,9 +2034,9 @@ parsedigit(char c)
 	if (c >= '0' && c <= '9')
 		return c - '0';
 	else if (c >= 'a' && c <= 'f')
-		return c - 'a';
+		return 10 + c - 'a';
 	else if (c >= 'A' && c <= 'F')
-		return c - 'A';
+		return 10 + c - 'A';
 	else
 		return -1;
 }
@@ -2044,8 +2049,8 @@ parsedigit(char c)
 static int64_t
 mtree_atol(char **p, int base)
 {
-	int64_t l, limit;
-	int digit, last_digit_limit;
+	int64_t l;
+	int digit;
 
 	if (base == 0) {
 		if (**p != '0')
@@ -2059,29 +2064,24 @@ mtree_atol(char **p, int base)
 	}
 
 	if (**p == '-') {
-		limit = INT64_MIN / base;
-		last_digit_limit = -(INT64_MIN % base);
 		++(*p);
 
 		l = 0;
 		digit = parsedigit(**p);
 		while (digit >= 0 && digit < base) {
-			if (l < limit || (l == limit && digit >= last_digit_limit))
+			if (archive_ckd_mul_i64(&l, l, base) ||
+			    archive_ckd_sub_i64(&l, l, digit))
 				return INT64_MIN;
-			l = (l * base) - digit;
 			digit = parsedigit(*++(*p));
 		}
 		return l;
 	} else {
-		limit = INT64_MAX / base;
-		last_digit_limit = INT64_MAX % base;
-
 		l = 0;
 		digit = parsedigit(**p);
 		while (digit >= 0 && digit < base) {
-			if (l > limit || (l == limit && digit > last_digit_limit))
+			if (archive_ckd_mul_i64(&l, l, base) ||
+			    archive_ckd_add_i64(&l, l, digit))
 				return INT64_MAX;
-			l = (l * base) + digit;
 			digit = parsedigit(*++(*p));
 		}
 		return l;
@@ -2100,8 +2100,7 @@ readline(struct archive_read *a, struct mtree *mtree, char **start,
 	ssize_t bytes_read;
 	ssize_t total_size = 0;
 	ssize_t find_off = 0;
-	const void *t;
-	void *nl;
+	const void *nl, *t;
 	char *u;
 
 	/* Accumulate line in a line buffer. */
