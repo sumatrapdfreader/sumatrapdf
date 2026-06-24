@@ -1,3 +1,203 @@
+370aa581 webp_js/README.md: add some more code formatting (``)
+f83c6b32 CMakeLists: add warning for incorrect emscripten config
+6a3e656b update ChangeLog (tag: v1.6.0-rc1)
+bf0bf1e7 api.md: add WebPValidateDecoderConfig to pseudocode
+e8ae210d update NEWS
+ce53efd7 bump version to 1.6.0
+1c333170 update AUTHORS
+85e098e5 webpmux: fix heap overflow w/-get/-set
+418340d8 Merge "Make histogram allocation and access more readable and type-safe." into main
+23ce76fa Merge "VP8BitReaderSetBuffer: move NULL check to call site" into main
+bbf3cbb1 VP8BitReaderSetBuffer: move NULL check to call site
+f6b87e03 Fix const style guide
+8852f89a Have lossless return the same results with/without -mt
+e015dcc0 Make histogram allocation and access more readable and type-safe.
+753ed11e enc_neon.c: fix aarch64 compilation w/gcc < 8.5.0
+0cd0b7a7 enc_fuzzer.cc: remove duplicate <cstdlib> include
+2209ffba swig,cosmetics: normalize includes
+15e2e1ee analysis_enc.c: remove unused include
+98c27801 IWYU: Include all headers for symbols used in files.
+eb3ff781 Only use valid histograms in VP8LHistogramSet
+57e324e2 Refactor VP8LHistogram histogram_enc.cc
+7191a602 Merge "Generalize trivial histograms" into main
+19696e0a Merge "alpha_processing_sse2: quiet signed conv warning" into main
+89b01ecc Merge "cwebp: add `-resize_mode`" into main
+52a430a7 Generalize trivial histograms
+e53e2130 Cache all costs in the histograms
+f8b360c4 alpha_processing_sse2: quiet signed conv warning
+eb4f8137 cwebp: add `-resize_mode`
+ad52d5fc dec/dsp/enc/utils,cosmetics: rm struct member '_' suffix
+ed7cd6a7 utils.c,cosmetics: rm struct member '_' suffix
+3a23b0f0 random_utils.[hc],cosmetics: rm struct member '_' suffix
+a99d0e6f quant_levels_dec_utils.c,cosmetics: rm struct member '_' suffix
+1ed4654d huffman_encode_utils.[hc],cosmetics: rm struct member '_' suffix
+f0689e48 config_enc.c,cosmetics: rm struct member '_' suffix
+24262266 mux,cosmetics: rm struct member '_' suffix
+3f54b1aa demux,cosmetics: rm struct member '_' suffix
+295804e4 examples,cosmetics: rm struct member '_' suffix
+5225592f Refactor VP8LHistogram to hide initializations from the user.
+00338240 Remove some computations in histogram clustering
+44f91b0d Speed DispatchAlpha_SSE2 up
+ee8e8c62 Fix member naming for VP8LHistogram
+a1ad3f1e Merge "Remove now unused ExtraCostCombined" into main
+321561b4 Remove now unused ExtraCostCombined
+e0ae21d2 WebPMemoryWriterClear: use WebPMemoryWriterInit
+a4183d94 Remove the computation of ExtraCost when comparing histograms
+f2b3f527 Get AVX2 into WebP lossless
+7c70ff7a Clean dsp/lossless includes
+9dd5ae81 Use the full register in PredictorSub13_SSE2
+613be8fc Makefile.vc: add /MP to CFLAGS
+1d86819f Merge changes I1437390a,I10a20de5,I1ac777d1 into main
+743a5f09 enc_neon: enable vld1q_u8_x4 for clang & msvc
+565da148 pngdec.c: add support for 'eXIf' tag
+319860e9 pngdec.c: support ImageMagick app1 exif text data
+815fc1e1 pngdec.c: add missing #ifdef for png_get_iCCP
+980b708e enc_neon: fix build w/aarch64 gcc < 9.4.0
+73b728cb cmake: bump minimum version to 3.16
+6a22b670 Add a function to validate a WebPDecoderConfig
+7ed2b10e Use consistently signed stride types.
+654bfb04 Avoid nullptr arithmetic in VP8BitReaderSetBuffer
+f8f24107 Fix potential "divide by zero" in examples found by coverity
+2af6c034 Merge tag 'v1.5.0'
+a4d7a715 update ChangeLog (tag: v1.5.0, origin/1.5.0)
+c3d85ce4 update NEWS
+ad14e811 tests/fuzzer/*: add missing <string_view> include
+74cd026e fuzz_utils.cc: fix build error w/WEBP_REDUCE_SIZE
+a027aa93 mux_demux_api_fuzzer.cc: fix -Wshadow warning
+25e17c68 update ChangeLog (tag: v1.5.0-rc1)
+aa2684fc update NEWS
+36923846 bump version to 1.5.0
+ceea8ff6 update AUTHORS
+e4f7a9f0 img2webp: add a warning for unused options
+1b4c967f Merge "Properly check the data size against the end of the RIFF chunk" into main
+9e5ecfaf Properly check the data size against the end of the RIFF chunk
+da0d9c7d examples: exit w/failure w/no args
+fcff86c7 {gif,img}2webp: sync -m help w/cwebp
+b76c4a84 man/img2webp.1: sync -m text w/cwebp.1 & gif2webp.1
+30633519 muxread: fix reading of buffers > riff size
+4c85d860 yuv.h: update RGB<->YUV coefficients in comment
+0ab789e0 Merge changes I6dfedfd5,I2376e2dc into main
+03236450 {ios,xcframework}build.sh: fix compilation w/Xcode 16
+61e2cfda rework AddVectorEq_SSE2
+7bda3deb rework AddVector_SSE2
+2ddaaf0a Fix variable names in SharpYuvComputeConversionMatrix
+a3ba6f19 Makefile.vc: fix gif2webp link error
+f999d94f gif2webp: add -sharp_yuv/-near_lossless
+dfdcb7f9 Merge "lossless.h: fix function declaration mismatches" into main (tag: webp-rfc9649)
+78ed6839 fix overread in Intra4Preds_NEON
+d516a68e lossless.h: fix function declaration mismatches
+87406904 Merge "Improve documentation of SharpYuvConversionMatrix." into main
+fdb229ea Merge changes I07a7e36a,Ib29980f7,I2316122d,I2356e314,I32b53dd3, ... into main
+0c3cd9cc Improve documentation of SharpYuvConversionMatrix.
+169dfbf9 disable Intra4Preds_NEON
+2dd5eb98 dsp/yuv*: use WEBP_RESTRICT qualifier
+23bbafbe dsp/upsampling*: use WEBP_RESTRICT qualifier
+35915b38 dsp/rescaler*: use WEBP_RESTRICT qualifier
+a32b436b dsp/lossless*: use WEBP_RESTRICT qualifier
+04d4b4f3 dsp/filters*: use WEBP_RESTRICT qualifier
+b1cb37e6 dsp/enc*: use WEBP_RESTRICT qualifier
+201894ef dsp/dec*: use WEBP_RESTRICT qualifier
+02eac8a7 dsp/cost*: use WEBP_RESTRICT qualifier
+84b118c9 Merge "webp-container-spec: normalize notes & unknown chunk link" into main
+052cf42f webp-container-spec: normalize notes & unknown chunk link
+220ee529 Search for best predictor transform bits
+78619478 Try to reduce the sampling for the entropy image
+14f09ab7 webp-container-spec: reorder chunk size - N text
+a78c5356 Remove a useless malloc for entropy image
+bc491763 Merge "Refactor predictor finding" into main
+34f92238 man/{cwebp,img2webp}.1: rm 'if needed' from -sharp_yuv
+367ca938 Refactor predictor finding
+a582b53b webp-lossless-bitstream-spec: clarify some text
+0fd25d84 Merge "anim_encode.c: fix function ref in comment" into main
+f8882913 anim_encode.c: fix function ref in comment
+40e4ca60 specs_generation.md: update kramdown command line
+57883c78 img2webp: add -exact/-noexact per-frame options
+1c8eba97 img2webp,cosmetics: add missing '.' spacers to help
+2e81017c Convert predictor_enc.c to fixed point
+94de6c7f Merge "Fix fuzztest link errors w/-DBUILD_SHARED_LIBS=1" into main
+51d9832a Fix fuzztest link errors w/-DBUILD_SHARED_LIBS=1
+7bcb36b8 Merge "Fix static overflow warning." into main
+8e0cc14c Fix static overflow warning.
+cea68462 README.md: add security report note
+615e5874 Merge "make VP8LPredictor[01]_C() static" into main
+233e86b9 Merge changes Ie43dc5ef,I94cd8bab into main
+1a29fd2f make VP8LPredictor[01]_C() static
+dd9d3770 Do*Filter_*: remove row & num_rows parameters
+ab451a49 Do*Filter_C: remove dead 'inverse' code paths
+f9a480f7 {TrueMotion,TM16}_NEON: remove zero extension
+04834aca Merge changes I25c30a9e,I0a192fc6,I4cf89575 into main
+39a602af webp-lossless-bitstream-spec: normalize predictor transform ref
+f28c837d Merge "webp-container-spec: align anim pseudocode w/prose" into main
+74be8e22 Fix implicit conversion issues
+0c01db7c Merge "Increase the transform bits if possible." into main
+f2d6dc1e Increase the transform bits if possible.
+caa19e5b update link to issue tracker
+c9dd9bd4 webp-container-spec: align anim pseudocode w/prose
+8a7c8dc6 WASM: Enable VP8L_USE_FAST_LOAD
+f0c53cd9 WASM: don't use USE_GENERIC_TREE
+eef903d0 WASM: Enable 64-bit BITS caching
+6296cc8d iterator_enc: make VP8IteratorReset() static
+fbd93896 histogram_enc: make VP8LGetHistogramSize static
+cc7ff545 cost_enc: make VP8CalculateLevelCosts[] static
+4e2828ba vp8l_dec: make VP8LClear() static
+d742b24a Intra16Preds_NEON: fix truemotion saturation
+c7bb4cb5 Intra4Preds_NEON: fix truemotion saturation
+952a989b Merge "Remove TODO now that log is using fixed point." into main
+dde11574 Remove TODO now that log is using fixed point.
+a1ca153d Fix hidden myerr in my_error_exit
+3bd94202 Merge changes Iff6e47ed,I24c67cd5,Id781e761 into main
+d27d246e Merge "Convert VP8LFastSLog2 to fixed point" into main
+4838611f Disable msg_code use in fuzzing mode
+314a142a Use QuantizeBlock_NEON for VP8EncQuantizeBlockWHT on Arm
+3bfb05e3 Add AArch64 Neon implementation of Intra16Preds
+baa93808 Add AArch64 Neon implementation of Intra4Preds
+41a5e582 Fix errors when compiling code as C++
+fb444b69 Convert VP8LFastSLog2 to fixed point
+c1c89f51 Fix WEBP_NODISCARD comment and C++ version
+66408c2c Switch the histogram_enc.h API to fixed point
+ac1e410d Remove leftover tiff dep
+b78d3957 Disable TIFF on fuzztest.
+cff21a7d Do not build statically on oss-fuzz.
+6853a8e5 Merge "Move more internal fuzzers to public." into main
+9bc09db4 Merge "Convert VP8LFastLog2 to fixed point" into main
+0a9f1c19 Convert VP8LFastLog2 to fixed point
+db0cb9c2 Move more internal fuzzers to public.
+ff2b5b15 Merge "advanced_api_fuzzer.cc: use crop dims in OOM check" into main
+c4af79d0 Put 0 at the end of a palette and do not store it.
+0ec80aef Delete last references to delta palettization
+96d79f84 advanced_api_fuzzer.cc: use crop dims in OOM check
+c35c7e02 Fix huffman fuzzer to not leak.
+f2fe8dec Bump fuzztest dependency.
+9ce982fd Fix fuzz tests to work on oss-fuzz
+3ba8af1a Do not escape quotes anymore in build.sh
+ea0e121b Allow centipede to be used as a fuzzing engine.
+27731afd make VP8I4ModeOffsets & VP8MakeIntra4Preds static
+ddd6245e oss-fuzz/build.sh: use heredoc for script creation
+50074930 oss-fuzz/build.sh,cosmetics: fix indent
+20e92f7d Limit the possible fuzz engines.
+4f200de5 Switch public fuzz tests to fuzztest.
+64186bb3 Add huffman_fuzzer to .gitignore
+0905f61c Move build script from oss-fuzz repo to here.
+e8678758 Fix link to Javascript documentation
+5e5b8f0c Fix SSE2 Transform_AC3 function name
+45129ee0 Revert "Check all the rows."
+ee26766a Check all the rows.
+7ec51c59 Increase the transform bits if possible.
+3cd16fd3 Revert "Increase the transform bits if possible."
+971a03d8 Increase the transform bits if possible.
+1bf198a2 Allow transform_bits to be different during encoding.
+1e462ca8 Define MAX_TRANSFORM_BITS according to the specification.
+64d1ec23 Use (MIN/NUM)_(TRANSFORM/HUFFMAN)_BITS where appropriate
+a90160e1 Refactor histograms in predictors.
+a7aa7525 Fix some function declarations
+68ff4e1e Merge "jpegdec: add a hint for EOF/READ errors" into main
+79e7968a jpegdec: add a hint for EOF/READ errors
+d33455cd man/*: s/BUGS/REPORTING BUGS/
+a67ff735 normalize example exit status
+edc28909 upsampling_{neon,sse41}: fix int sanitizer warning
+3cada4ce ImgIoUtilReadFile: check ftell() return
+dc950585 Merge tag 'v1.4.0'
+845d5476 update ChangeLog (tag: v1.4.0, origin/1.4.0)
 8a6a55bb update NEWS
 cf7c5a5d provide a way to opt-out/override WEBP_NODISCARD
 cc34288a update ChangeLog (tag: v1.4.0-rc1)

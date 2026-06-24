@@ -6,8 +6,8 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,4,0
- PRODUCTVERSION 1,0,4,0
+ FILEVERSION 1,0,6,0
+ PRODUCTVERSION 1,0,6,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -24,12 +24,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Google, Inc."
             VALUE "FileDescription", "libwebpdecoder DLL"
-            VALUE "FileVersion", "1.4.0"
+            VALUE "FileVersion", "1.6.0"
             VALUE "InternalName", "libwebpdecoder.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2024"
+            VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "libwebpdecoder.dll"
             VALUE "ProductName", "WebP Image Decoder"
-            VALUE "ProductVersion", "1.4.0"
+            VALUE "ProductVersion", "1.6.0"
         END
     END
     BLOCK "VarFileInfo"

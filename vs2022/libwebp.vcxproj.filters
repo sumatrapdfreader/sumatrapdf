@@ -87,6 +87,9 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless.c">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\lossless_avx2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless_neon.c">
       <Filter>dsp</Filter>
     </ClCompile>

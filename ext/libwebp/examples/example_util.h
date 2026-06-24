@@ -45,10 +45,10 @@ int ExUtilReadFileToWebPData(const char* const filename,
 // Command-line arguments
 
 typedef struct {
-  int argc_;
-  const char** argv_;
-  WebPData argv_data_;
-  int own_argv_;
+  int argc;
+  const char** argv;
+  WebPData argv_data;
+  int own_argv;
 } CommandLineArguments;
 
 // Initializes the structure from the command-line parameters. If there is

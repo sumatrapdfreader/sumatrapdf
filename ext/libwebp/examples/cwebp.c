@@ -27,8 +27,10 @@
 #include "../imageio/webpdec.h"
 #include "./stopwatch.h"
 #include "./unicode.h"
+#include "imageio/metadata.h"
 #include "sharpyuv/sharpyuv.h"
 #include "webp/encode.h"
+#include "webp/types.h"
 
 #ifndef WEBP_DLL
 #ifdef __cplusplus
@@ -178,8 +180,14 @@ static void PrintFullLosslessInfo(const WebPAuxStats* const stats,
     if (stats->lossless_features & 8) fprintf(stderr, " PALETTE");
     fprintf(stderr, "\n");
   }
-  fprintf(stderr, "  * Precision Bits: histogram=%d transform=%d cache=%d\n",
-          stats->histogram_bits, stats->transform_bits, stats->cache_bits);
+  fprintf(stderr, "  * Precision Bits: histogram=%d", stats->histogram_bits);
+  if (stats->lossless_features & 1) {
+    fprintf(stderr, " prediction=%d", stats->transform_bits);
+  }
+  if (stats->lossless_features & 2) {
+    fprintf(stderr, " cross-color=%d", stats->cross_color_transform_bits);
+  }
+  fprintf(stderr, " cache=%d\n", stats->cache_bits);
   if (stats->palette_size > 0) {
     fprintf(stderr, "  * Palette size:   %d\n", stats->palette_size);
   }
@@ -510,6 +518,37 @@ static int WriteWebPWithMetadata(FILE* const out,
 }
 
 //------------------------------------------------------------------------------
+// Resize
+
+enum {
+  RESIZE_MODE_DOWN_ONLY,
+  RESIZE_MODE_UP_ONLY,
+  RESIZE_MODE_ALWAYS,
+  RESIZE_MODE_DEFAULT = RESIZE_MODE_ALWAYS
+};
+
+static void ApplyResizeMode(const int resize_mode,
+                            const WebPPicture* const pic,
+                            int* const resize_w, int* const resize_h) {
+  const int src_w = pic->width;
+  const int src_h = pic->height;
+  const int dst_w = *resize_w;
+  const int dst_h = *resize_h;
+
+  if (resize_mode == RESIZE_MODE_DOWN_ONLY) {
+    if ((dst_w == 0 && src_h <= dst_h) ||
+        (dst_h == 0 && src_w <= dst_w) ||
+        (src_w <= dst_w && src_h <= dst_h)) {
+      *resize_w = *resize_h = 0;
+    }
+  } else if (resize_mode == RESIZE_MODE_UP_ONLY) {
+    if (src_w >= dst_w && src_h >= dst_h) {
+      *resize_w = *resize_h = 0;
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
 
 static int ProgressReport(int percent, const WebPPicture* const picture) {
   fprintf(stderr, "[%s]: %3d %%      \r",
@@ -577,6 +616,8 @@ static void HelpLong(void) {
          "                           (default: 0 100)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
   printf("  -resize <w> <h> ........ resize picture (*after* any cropping)\n");
+  printf("  -resize_mode <string> .. one of: up_only, down_only,"
+         " always (default)\n");
   printf("  -mt .................... use multi-threading if available\n");
   printf("  -low_memory ............ reduce memory usage (slower encoding)\n");
   printf("  -map <int> ............. print map of extra info\n");
@@ -651,8 +692,9 @@ static const char* const kErrorMessages[VP8_ENC_ERROR_LAST] = {
 
 //------------------------------------------------------------------------------
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
-  int return_value = -1;
+  int return_value = EXIT_FAILURE;
   const char* in_file = NULL, *out_file = NULL, *dump_file = NULL;
   FILE* out = NULL;
   int c;
@@ -663,6 +705,7 @@ int main(int argc, const char* argv[]) {
   uint32_t background_color = 0xffffffu;
   int crop = 0, crop_x = 0, crop_y = 0, crop_w = 0, crop_h = 0;
   int resize_w = 0, resize_h = 0;
+  int resize_mode = RESIZE_MODE_DEFAULT;
   int lossless_preset = 6;
   int use_lossless_preset = -1;  // -1=unset, 0=don't use, 1=use it
   int show_progress = 0;
@@ -686,22 +729,22 @@ int main(int argc, const char* argv[]) {
       !WebPPictureInit(&original_picture) ||
       !WebPConfigInit(&config)) {
     fprintf(stderr, "Error! Version mismatch!\n");
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   if (argc == 1) {
     HelpShort();
-    FREE_WARGV_AND_RETURN(0);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       HelpShort();
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-H") || !strcmp(argv[c], "-longhelp")) {
       HelpLong();
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-o") && c + 1 < argc) {
       out_file = (const char*)GET_WARGV(argv, ++c);
     } else if (!strcmp(argv[c], "-d") && c + 1 < argc) {
@@ -830,6 +873,18 @@ int main(int argc, const char* argv[]) {
     } else if (!strcmp(argv[c], "-resize") && c + 2 < argc) {
       resize_w = ExUtilGetInt(argv[++c], 0, &parse_error);
       resize_h = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!strcmp(argv[c], "-resize_mode") && c + 1 < argc) {
+      ++c;
+      if (!strcmp(argv[c], "down_only")) {
+        resize_mode = RESIZE_MODE_DOWN_ONLY;
+      } else if (!strcmp(argv[c], "up_only")) {
+        resize_mode = RESIZE_MODE_UP_ONLY;
+      } else if (!strcmp(argv[c], "always")) {
+        resize_mode = RESIZE_MODE_ALWAYS;
+      } else {
+        fprintf(stderr, "Error! Unrecognized resize mode: %s\n", argv[c]);
+        goto Error;
+      }
 #ifndef WEBP_DLL
     } else if (!strcmp(argv[c], "-noasm")) {
       VP8GetCPUInfo = NULL;
@@ -842,7 +897,7 @@ int main(int argc, const char* argv[]) {
       printf("libsharpyuv: %d.%d.%d\n",
              (sharpyuv_version >> 24) & 0xff, (sharpyuv_version >> 16) & 0xffff,
              sharpyuv_version & 0xff);
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-progress")) {
       show_progress = 1;
     } else if (!strcmp(argv[c], "-quiet")) {
@@ -904,7 +959,7 @@ int main(int argc, const char* argv[]) {
         if (i == kNumTokens) {
           fprintf(stderr, "Error! Unknown metadata type '%.*s'\n",
                   (int)(token - start), start);
-          FREE_WARGV_AND_RETURN(-1);
+          FREE_WARGV_AND_RETURN(EXIT_FAILURE);
         }
         start = token + 1;
       }
@@ -923,14 +978,14 @@ int main(int argc, const char* argv[]) {
     } else if (argv[c][0] == '-') {
       fprintf(stderr, "Error! Unknown option '%s'\n", argv[c]);
       HelpLong();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     } else {
       in_file = (const char*)GET_WARGV(argv, c);
     }
 
     if (parse_error) {
       HelpLong();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     }
   }
   if (in_file == NULL) {
@@ -1050,6 +1105,7 @@ int main(int argc, const char* argv[]) {
       goto Error;
     }
   }
+  ApplyResizeMode(resize_mode, &picture, &resize_w, &resize_h);
   if ((resize_w | resize_h) > 0) {
     WebPPicture picture_no_alpha;
     if (config.exact) {
@@ -1231,7 +1287,7 @@ int main(int argc, const char* argv[]) {
       PrintMetadataInfo(&metadata, metadata_written);
     }
   }
-  return_value = 0;
+  return_value = EXIT_SUCCESS;
 
  Error:
   WebPMemoryWriterClear(&memory_writer);

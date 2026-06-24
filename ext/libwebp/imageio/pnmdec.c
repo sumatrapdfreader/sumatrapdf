@@ -17,8 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "webp/encode.h"
 #include "./imageio_util.h"
+#include "webp/encode.h"
+#include "webp/types.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf

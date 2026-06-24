@@ -53,7 +53,7 @@ DEMUXLIBLIST=''
 if [[ -z "${SDK}" ]]; then
   echo "iOS SDK not available"
   exit 1
-elif [[ ${SDK%%.*} -gt 8 ]]; then
+elif [[ ${SDK%%.*} -gt 8 && "${XCODE%%.*}" -lt 16 ]]; then
   EXTRA_CFLAGS="-fembed-bitcode"
 elif [[ ${SDK%%.*} -le 6 ]]; then
   echo "You need iOS SDK version 6.0 or above"

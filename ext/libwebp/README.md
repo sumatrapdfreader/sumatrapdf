@@ -7,7 +7,7 @@
       \__\__/\____/\_____/__/ ____  ___
             / _/ /    \    \ /  _ \/ _/
            /  \_/   / /   \ \   __/  \__
-           \____/____/\_____/_____/____/v1.4.0
+           \____/____/\_____/_____/____/v1.6.0
 ```
 
 WebP codec is a library to encode and decode images in WebP format. This package
@@ -42,7 +42,8 @@ See the [APIs documentation](doc/api.md), and API usage examples in the
 
 ## Bugs
 
-Please report all bugs to the issue tracker: https://bugs.chromium.org/p/webp
+Please report all bugs to the [issue tracker](https://issues.webmproject.org).
+For security reports, select 'Security report' from the Template dropdown.
 
 Patches welcome! See [how to contribute](CONTRIBUTING.md).
 

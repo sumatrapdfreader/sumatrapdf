@@ -172,7 +172,9 @@ for (( i = 0; i < $NUM_PLATFORMS; ++i )); do
     CFLAGS="-pipe -isysroot ${SDKROOT} -O3 -DNDEBUG"
     case "${PLATFORM}" in
       iPhone*)
-        CFLAGS+=" -fembed-bitcode"
+        if [[ "${XCODE%%.*}" -lt 16 ]]; then
+          CFLAGS+=" -fembed-bitcode"
+        fi
         CFLAGS+=" -target ${ARCH}-apple-ios${IOS_MIN_VERSION}"
         [[ "${PLATFORM}" == *Simulator* ]] && CFLAGS+="-simulator"
         ;;

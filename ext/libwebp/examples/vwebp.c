@@ -506,7 +506,7 @@ int main(int argc, char* argv[]) {
 
   if (!WebPInitDecoderConfig(config)) {
     fprintf(stderr, "Library version mismatch!\n");
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
   config->options.dithering_strength = 50;
   config->options.alpha_dithering_strength = 100;
@@ -518,7 +518,7 @@ int main(int argc, char* argv[]) {
     int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-noicc")) {
       kParams.use_color_profile = 0;
     } else if (!strcmp(argv[c], "-nofancy")) {
@@ -541,7 +541,7 @@ int main(int argc, char* argv[]) {
              (dec_version >> 16) & 0xff, (dec_version >> 8) & 0xff,
              dec_version & 0xff, (dmux_version >> 16) & 0xff,
              (dmux_version >> 8) & 0xff, dmux_version & 0xff);
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-mt")) {
       config->options.use_threads = 1;
     } else if (!strcmp(argv[c], "--")) {
@@ -553,7 +553,7 @@ int main(int argc, char* argv[]) {
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     } else {
       kParams.file_name = (const char*)GET_WARGV(argv, c);
       file_name_argv_index = c;
@@ -561,14 +561,14 @@ int main(int argc, char* argv[]) {
 
     if (parse_error) {
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     }
   }
 
   if (kParams.file_name == NULL) {
     printf("missing input file!!\n");
     Help();
-    FREE_WARGV_AND_RETURN(0);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   if (!ImgIoUtilReadFile(kParams.file_name,
@@ -643,11 +643,11 @@ int main(int argc, char* argv[]) {
 
   // Should only be reached when using FREEGLUT:
   ClearParams();
-  FREE_WARGV_AND_RETURN(0);
+  FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
 
  Error:
   ClearParams();
-  FREE_WARGV_AND_RETURN(-1);
+  FREE_WARGV_AND_RETURN(EXIT_FAILURE);
 }
 
 #else   // !WEBP_HAVE_GL
@@ -655,7 +655,7 @@ int main(int argc, char* argv[]) {
 int main(int argc, const char* argv[]) {
   fprintf(stderr, "OpenGL support not enabled in %s.\n", argv[0]);
   (void)argc;
-  return 0;
+  return EXIT_FAILURE;
 }
 
 #endif

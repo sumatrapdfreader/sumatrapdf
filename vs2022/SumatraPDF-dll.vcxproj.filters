@@ -342,6 +342,9 @@
     <ClInclude Include="..\src\Theme.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TipText.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Toolbar.h">
       <Filter>src</Filter>
     </ClInclude>

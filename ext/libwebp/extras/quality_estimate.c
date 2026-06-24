@@ -11,10 +11,12 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "extras/extras.h"
-#include "webp/decode.h"
-
 #include <math.h>
+#include <stddef.h>
+
+#include "extras/extras.h"
+#include "src/webp/types.h"
+#include "webp/decode.h"
 
 //------------------------------------------------------------------------------
 
@@ -76,7 +78,7 @@ int VP8EstimateQuality(const uint8_t* const data, size_t size) {
   GET_BIT(2);  // colorspace + clamp type
 
   // Segment header
-  if (GET_BIT(1)) {       // use_segment_
+  if (GET_BIT(1)) {       // use_segment
     int s;
     const int update_map = GET_BIT(1);
     if (GET_BIT(1)) {     // update data

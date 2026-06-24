@@ -19,13 +19,16 @@
 #if defined(WEBP_HAVE_GIF)
 #include <gif_lib.h>
 #endif
-#include "webp/format_constants.h"
-#include "webp/decode.h"
-#include "webp/demux.h"
+
 #include "../imageio/imageio_util.h"
 #include "./gifdec.h"
 #include "./unicode.h"
 #include "./unicode_gif.h"
+#include "webp/decode.h"
+#include "webp/demux.h"
+#include "webp/format_constants.h"
+#include "webp/mux_types.h"
+#include "webp/types.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -771,6 +774,7 @@ void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
     *psnr = 99.;  // PSNR when images are identical.
   } else {
     sse /= stride * height;
+    assert(sse != 0.0);
     *psnr = 4.3429448 * log(255. * 255. / sse);
   }
 }

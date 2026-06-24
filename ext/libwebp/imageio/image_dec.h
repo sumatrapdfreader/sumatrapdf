@@ -14,6 +14,8 @@
 #ifndef WEBP_IMAGEIO_IMAGE_DEC_H_
 #define WEBP_IMAGEIO_IMAGE_DEC_H_
 
+#include <stddef.h>
+
 #include "webp/types.h"
 
 #ifdef HAVE_CONFIG_H

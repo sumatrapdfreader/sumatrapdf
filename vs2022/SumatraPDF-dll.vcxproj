@@ -1178,6 +1178,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\TextSelection.h" />
     <ClInclude Include="..\src\TextToSpeech.h" />
     <ClInclude Include="..\src\Theme.h" />
+    <ClInclude Include="..\src\TipText.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\UpdateCheck.h" />

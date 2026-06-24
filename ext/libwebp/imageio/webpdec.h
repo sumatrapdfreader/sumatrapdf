@@ -12,7 +12,10 @@
 #ifndef WEBP_IMAGEIO_WEBPDEC_H_
 #define WEBP_IMAGEIO_WEBPDEC_H_
 
+#include <stddef.h>
+
 #include "webp/decode.h"
+#include "webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {

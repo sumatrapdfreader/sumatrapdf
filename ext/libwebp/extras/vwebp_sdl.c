@@ -15,6 +15,7 @@
 // Author: James Zern (jzern@google.com)
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef HAVE_CONFIG_H
 #include "webp/config.h"
@@ -49,11 +50,18 @@ static void ProcessEvents(void) {
   }
 }
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, char* argv[]) {
   int c;
   int ok = 0;
 
   INIT_WARGV(argc, argv);
+
+  if (argc == 1) {
+    fprintf(stderr, "Usage: %s [-h] image.webp [more_files.webp...]\n",
+            argv[0]);
+    goto Error;
+  }
 
   for (c = 1; c < argc; ++c) {
     const char* file = NULL;
@@ -61,7 +69,7 @@ int main(int argc, char* argv[]) {
     size_t webp_size = 0;
     if (!strcmp(argv[c], "-h")) {
       printf("Usage: %s [-h] image.webp [more_files.webp...]\n", argv[0]);
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else {
       file = (const char*)GET_WARGV(argv, c);
     }
@@ -87,7 +95,7 @@ int main(int argc, char* argv[]) {
 
  Error:
   SDL_Quit();
-  FREE_WARGV_AND_RETURN(ok ? 0 : 1);
+  FREE_WARGV_AND_RETURN(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 #else  // !WEBP_HAVE_SDL

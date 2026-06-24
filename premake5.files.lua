@@ -565,6 +565,7 @@ function libwebp_files()
     "lossless_neon.c",
     "lossless_sse2.c",
     "lossless_sse41.c",
+    "lossless_avx2.c",
     "rescaler.c",
     "rescaler_neon.c",
     "rescaler_sse2.c",

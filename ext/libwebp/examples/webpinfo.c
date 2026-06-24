@@ -14,6 +14,8 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_CONFIG_H
 #include "webp/config.h"
@@ -24,6 +26,7 @@
 #include "webp/decode.h"
 #include "webp/format_constants.h"
 #include "webp/mux_types.h"
+#include "webp/types.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -31,17 +34,17 @@
 
 #define LOG_ERROR(MESSAGE)                     \
   do {                                         \
-    if (webp_info->show_diagnosis_) {          \
+    if (webp_info->show_diagnosis) {           \
       fprintf(stderr, "Error: %s\n", MESSAGE); \
     }                                          \
   } while (0)
 
 #define LOG_WARN(MESSAGE)                        \
   do {                                           \
-    if (webp_info->show_diagnosis_) {            \
+    if (webp_info->show_diagnosis) {             \
       fprintf(stderr, "Warning: %s\n", MESSAGE); \
     }                                            \
-    ++webp_info->num_warnings_;                  \
+    ++webp_info->num_warnings;                   \
   } while (0)
 
 static const char* const kFormats[3] = {
@@ -89,36 +92,36 @@ typedef enum ChunkID {
 } ChunkID;
 
 typedef struct {
-  size_t start_;
-  size_t end_;
-  const uint8_t* buf_;
+  size_t start;
+  size_t end;
+  const uint8_t* buf;
 } MemBuffer;
 
 typedef struct {
-  size_t offset_;
-  size_t size_;
-  const uint8_t* payload_;
-  ChunkID id_;
+  size_t offset;
+  size_t size;
+  const uint8_t* payload;
+  ChunkID id;
 } ChunkData;
 
 typedef struct WebPInfo {
-  int canvas_width_;
-  int canvas_height_;
-  int loop_count_;
-  int num_frames_;
-  int chunk_counts_[CHUNK_TYPES];
-  int anmf_subchunk_counts_[3];  // 0 VP8; 1 VP8L; 2 ALPH.
-  uint32_t bgcolor_;
-  int feature_flags_;
-  int has_alpha_;
+  int canvas_width;
+  int canvas_height;
+  int loop_count;
+  int num_frames;
+  int chunk_counts[CHUNK_TYPES];
+  int anmf_subchunk_counts[3];  // 0 VP8; 1 VP8L; 2 ALPH.
+  uint32_t bgcolor;
+  int feature_flags;
+  int has_alpha;
   // Used for parsing ANMF chunks.
-  int frame_width_, frame_height_;
-  size_t anim_frame_data_size_;
-  int is_processing_anim_frame_, seen_alpha_subchunk_, seen_image_subchunk_;
+  int frame_width, frame_height;
+  size_t anim_frame_data_size;
+  int is_processing_anim_frame, seen_alpha_subchunk, seen_image_subchunk;
   // Print output control.
-  int quiet_, show_diagnosis_, show_summary_;
-  int num_warnings_;
-  int parse_bitstream_;
+  int quiet, show_diagnosis, show_summary;
+  int num_warnings;
+  int parse_bitstream;
 } WebPInfo;
 
 static void WebPInfoInit(WebPInfo* const webp_info) {
@@ -184,25 +187,25 @@ static int ReadFileToWebPData(const char* const filename,
 // MemBuffer object.
 
 static void InitMemBuffer(MemBuffer* const mem, const WebPData* webp_data) {
-  mem->buf_ = webp_data->bytes;
-  mem->start_ = 0;
-  mem->end_ = webp_data->size;
+  mem->buf = webp_data->bytes;
+  mem->start = 0;
+  mem->end = webp_data->size;
 }
 
 static size_t MemDataSize(const MemBuffer* const mem) {
-  return (mem->end_ - mem->start_);
+  return (mem->end - mem->start);
 }
 
 static const uint8_t* GetBuffer(MemBuffer* const mem) {
-  return mem->buf_ + mem->start_;
+  return mem->buf + mem->start;
 }
 
 static void Skip(MemBuffer* const mem, size_t size) {
-  mem->start_ += size;
+  mem->start += size;
 }
 
 static uint32_t ReadMemBufLE32(MemBuffer* const mem) {
-  const uint8_t* const data = mem->buf_ + mem->start_;
+  const uint8_t* const data = mem->buf + mem->start;
   const uint32_t val = GetLE32(data);
   assert(MemDataSize(mem) >= 4);
   Skip(mem, 4);
@@ -333,8 +336,8 @@ static WebPInfoStatus ParseLossyFilterHeader(const WebPInfo* const webp_info,
 
 static WebPInfoStatus ParseLossyHeader(const ChunkData* const chunk_data,
                                        const WebPInfo* const webp_info) {
-  const uint8_t* data = chunk_data->payload_;
-  size_t data_size = chunk_data->size_ - CHUNK_HEADER_SIZE;
+  const uint8_t* data = chunk_data->payload;
+  size_t data_size = chunk_data->size - CHUNK_HEADER_SIZE;
   const uint32_t bits = (uint32_t)data[0] | (data[1] << 8) | (data[2] << 16);
   const int key_frame = !(bits & 1);
   const int profile = (bits >> 1) & 7;
@@ -346,7 +349,7 @@ static WebPInfoStatus ParseLossyHeader(const ChunkData* const chunk_data,
   int colorspace, clamp_type;
   printf("  Parsing lossy bitstream...\n");
   // Calling WebPGetFeatures() in ProcessImageChunk() should ensure this.
-  assert(chunk_data->size_ >= CHUNK_HEADER_SIZE + 10);
+  assert(chunk_data->size >= CHUNK_HEADER_SIZE + 10);
   if (profile > 3) {
     LOG_ERROR("Unknown profile.");
     return WEBP_INFO_BITSTREAM_ERROR;
@@ -504,8 +507,8 @@ static WebPInfoStatus ParseLosslessTransform(WebPInfo* const webp_info,
 
 static WebPInfoStatus ParseLosslessHeader(const ChunkData* const chunk_data,
                                           WebPInfo* const webp_info) {
-  const uint8_t* data = chunk_data->payload_;
-  size_t data_size = chunk_data->size_ - CHUNK_HEADER_SIZE;
+  const uint8_t* data = chunk_data->payload;
+  size_t data_size = chunk_data->size - CHUNK_HEADER_SIZE;
   uint64_t bit_position = 0;
   uint64_t* const bit_pos = &bit_position;
   WebPInfoStatus status;
@@ -540,8 +543,8 @@ static WebPInfoStatus ParseLosslessHeader(const ChunkData* const chunk_data,
 
 static WebPInfoStatus ParseAlphaHeader(const ChunkData* const chunk_data,
                                        WebPInfo* const webp_info) {
-  const uint8_t* data = chunk_data->payload_;
-  size_t data_size = chunk_data->size_ - CHUNK_HEADER_SIZE;
+  const uint8_t* data = chunk_data->payload;
+  size_t data_size = chunk_data->size - CHUNK_HEADER_SIZE;
   if (data_size <= ALPHA_HEADER_LEN) {
     LOG_ERROR("Truncated ALPH chunk.");
     return WEBP_INFO_TRUNCATED_DATA;
@@ -606,14 +609,14 @@ static WebPInfoStatus ParseRIFFHeader(WebPInfo* const webp_info,
     return WEBP_INFO_PARSE_ERROR;
   }
   riff_size += CHUNK_HEADER_SIZE;
-  if (!webp_info->quiet_) {
+  if (!webp_info->quiet) {
     printf("RIFF HEADER:\n");
     printf("  File size: %6d\n", (int)riff_size);
   }
-  if (riff_size < mem->end_) {
+  if (riff_size < mem->end) {
     LOG_WARN("RIFF size is smaller than the file size.");
-    mem->end_ = riff_size;
-  } else if (riff_size > mem->end_) {
+    mem->end = riff_size;
+  } else if (riff_size > mem->end) {
     LOG_ERROR("Truncated data detected when parsing RIFF payload.");
     return WEBP_INFO_TRUNCATED_DATA;
   }
@@ -629,7 +632,7 @@ static WebPInfoStatus ParseChunk(const WebPInfo* const webp_info,
     LOG_ERROR("Truncated data detected when parsing chunk header.");
     return WEBP_INFO_TRUNCATED_DATA;
   } else {
-    const size_t chunk_start_offset = mem->start_;
+    const size_t chunk_start_offset = mem->start;
     const uint32_t fourcc = ReadMemBufLE32(mem);
     const uint32_t payload_size = ReadMemBufLE32(mem);
     const uint32_t payload_size_padded = payload_size + (payload_size & 1);
@@ -646,11 +649,11 @@ static WebPInfoStatus ParseChunk(const WebPInfo* const webp_info,
     for (i = 0; i < CHUNK_TYPES; ++i) {
       if (kWebPChunkTags[i] == fourcc) break;
     }
-    chunk_data->offset_ = chunk_start_offset;
-    chunk_data->size_ = chunk_size;
-    chunk_data->id_ = (ChunkID)i;
-    chunk_data->payload_ = GetBuffer(mem);
-    if (chunk_data->id_ == CHUNK_ANMF) {
+    chunk_data->offset = chunk_start_offset;
+    chunk_data->size = chunk_size;
+    chunk_data->id = (ChunkID)i;
+    chunk_data->payload = GetBuffer(mem);
+    if (chunk_data->id == CHUNK_ANMF) {
       if (payload_size != payload_size_padded) {
         LOG_ERROR("ANMF chunk size should always be even.");
         return WEBP_INFO_PARSE_ERROR;
@@ -669,39 +672,39 @@ static WebPInfoStatus ParseChunk(const WebPInfo* const webp_info,
 
 static WebPInfoStatus ProcessVP8XChunk(const ChunkData* const chunk_data,
                                        WebPInfo* const webp_info) {
-  const uint8_t* data = chunk_data->payload_;
-  if (webp_info->chunk_counts_[CHUNK_VP8] ||
-      webp_info->chunk_counts_[CHUNK_VP8L] ||
-      webp_info->chunk_counts_[CHUNK_VP8X]) {
+  const uint8_t* data = chunk_data->payload;
+  if (webp_info->chunk_counts[CHUNK_VP8] ||
+      webp_info->chunk_counts[CHUNK_VP8L] ||
+      webp_info->chunk_counts[CHUNK_VP8X]) {
     LOG_ERROR("Already seen a VP8/VP8L/VP8X chunk when parsing VP8X chunk.");
     return WEBP_INFO_PARSE_ERROR;
   }
-  if (chunk_data->size_ != VP8X_CHUNK_SIZE + CHUNK_HEADER_SIZE) {
+  if (chunk_data->size != VP8X_CHUNK_SIZE + CHUNK_HEADER_SIZE) {
     LOG_ERROR("Corrupted VP8X chunk.");
     return WEBP_INFO_PARSE_ERROR;
   }
-  ++webp_info->chunk_counts_[CHUNK_VP8X];
-  webp_info->feature_flags_ = *data;
+  ++webp_info->chunk_counts[CHUNK_VP8X];
+  webp_info->feature_flags = *data;
   data += 4;
-  webp_info->canvas_width_ = 1 + ReadLE24(&data);
-  webp_info->canvas_height_ = 1 + ReadLE24(&data);
-  if (!webp_info->quiet_) {
+  webp_info->canvas_width = 1 + ReadLE24(&data);
+  webp_info->canvas_height = 1 + ReadLE24(&data);
+  if (!webp_info->quiet) {
     printf("  ICCP: %d\n  Alpha: %d\n  EXIF: %d\n  XMP: %d\n  Animation: %d\n",
-           (webp_info->feature_flags_ & ICCP_FLAG) != 0,
-           (webp_info->feature_flags_ & ALPHA_FLAG) != 0,
-           (webp_info->feature_flags_ & EXIF_FLAG) != 0,
-           (webp_info->feature_flags_ & XMP_FLAG) != 0,
-           (webp_info->feature_flags_ & ANIMATION_FLAG) != 0);
+           (webp_info->feature_flags & ICCP_FLAG) != 0,
+           (webp_info->feature_flags & ALPHA_FLAG) != 0,
+           (webp_info->feature_flags & EXIF_FLAG) != 0,
+           (webp_info->feature_flags & XMP_FLAG) != 0,
+           (webp_info->feature_flags & ANIMATION_FLAG) != 0);
     printf("  Canvas size %d x %d\n",
-           webp_info->canvas_width_, webp_info->canvas_height_);
+           webp_info->canvas_width, webp_info->canvas_height);
   }
-  if (webp_info->canvas_width_ > MAX_CANVAS_SIZE) {
+  if (webp_info->canvas_width > MAX_CANVAS_SIZE) {
     LOG_WARN("Canvas width is out of range in VP8X chunk.");
   }
-  if (webp_info->canvas_height_ > MAX_CANVAS_SIZE) {
+  if (webp_info->canvas_height > MAX_CANVAS_SIZE) {
     LOG_WARN("Canvas height is out of range in VP8X chunk.");
   }
-  if ((uint64_t)webp_info->canvas_width_ * webp_info->canvas_height_ >
+  if ((uint64_t)webp_info->canvas_width * webp_info->canvas_height >
       MAX_IMAGE_AREA) {
     LOG_WARN("Canvas area is out of range in VP8X chunk.");
   }
@@ -710,27 +713,27 @@ static WebPInfoStatus ProcessVP8XChunk(const ChunkData* const chunk_data,
 
 static WebPInfoStatus ProcessANIMChunk(const ChunkData* const chunk_data,
                                        WebPInfo* const webp_info) {
-  const uint8_t* data = chunk_data->payload_;
-  if (!webp_info->chunk_counts_[CHUNK_VP8X]) {
+  const uint8_t* data = chunk_data->payload;
+  if (!webp_info->chunk_counts[CHUNK_VP8X]) {
     LOG_ERROR("ANIM chunk detected before VP8X chunk.");
     return WEBP_INFO_PARSE_ERROR;
   }
-  if (chunk_data->size_ != ANIM_CHUNK_SIZE + CHUNK_HEADER_SIZE) {
+  if (chunk_data->size != ANIM_CHUNK_SIZE + CHUNK_HEADER_SIZE) {
     LOG_ERROR("Corrupted ANIM chunk.");
     return WEBP_INFO_PARSE_ERROR;
   }
-  webp_info->bgcolor_ = ReadLE32(&data);
-  webp_info->loop_count_ = ReadLE16(&data);
-  ++webp_info->chunk_counts_[CHUNK_ANIM];
-  if (!webp_info->quiet_) {
+  webp_info->bgcolor = ReadLE32(&data);
+  webp_info->loop_count = ReadLE16(&data);
+  ++webp_info->chunk_counts[CHUNK_ANIM];
+  if (!webp_info->quiet) {
     printf("  Background color:(ARGB) %02x %02x %02x %02x\n",
-           (webp_info->bgcolor_ >> 24) & 0xff,
-           (webp_info->bgcolor_ >> 16) & 0xff,
-           (webp_info->bgcolor_ >> 8) & 0xff,
-           webp_info->bgcolor_ & 0xff);
-    printf("  Loop count      : %d\n", webp_info->loop_count_);
+           (webp_info->bgcolor >> 24) & 0xff,
+           (webp_info->bgcolor >> 16) & 0xff,
+           (webp_info->bgcolor >> 8) & 0xff,
+           webp_info->bgcolor & 0xff);
+    printf("  Loop count      : %d\n", webp_info->loop_count);
   }
-  if (webp_info->loop_count_ > MAX_LOOP_COUNT) {
+  if (webp_info->loop_count > MAX_LOOP_COUNT) {
     LOG_WARN("Loop count is out of range in ANIM chunk.");
   }
   return WEBP_INFO_OK;
@@ -738,17 +741,17 @@ static WebPInfoStatus ProcessANIMChunk(const ChunkData* const chunk_data,
 
 static WebPInfoStatus ProcessANMFChunk(const ChunkData* const chunk_data,
                                        WebPInfo* const webp_info) {
-  const uint8_t* data = chunk_data->payload_;
+  const uint8_t* data = chunk_data->payload;
   int offset_x, offset_y, width, height, duration, blend, dispose, temp;
-  if (webp_info->is_processing_anim_frame_) {
+  if (webp_info->is_processing_anim_frame) {
     LOG_ERROR("ANMF chunk detected within another ANMF chunk.");
     return WEBP_INFO_PARSE_ERROR;
   }
-  if (!webp_info->chunk_counts_[CHUNK_ANIM]) {
+  if (!webp_info->chunk_counts[CHUNK_ANIM]) {
     LOG_ERROR("ANMF chunk detected before ANIM chunk.");
     return WEBP_INFO_PARSE_ERROR;
   }
-  if (chunk_data->size_ <= CHUNK_HEADER_SIZE + ANMF_CHUNK_SIZE) {
+  if (chunk_data->size <= CHUNK_HEADER_SIZE + ANMF_CHUNK_SIZE) {
     LOG_ERROR("Truncated data detected when parsing ANMF chunk.");
     return WEBP_INFO_TRUNCATED_DATA;
   }
@@ -760,8 +763,8 @@ static WebPInfoStatus ProcessANMFChunk(const ChunkData* const chunk_data,
   temp = *data;
   dispose = temp & 1;
   blend = (temp >> 1) & 1;
-  ++webp_info->chunk_counts_[CHUNK_ANMF];
-  if (!webp_info->quiet_) {
+  ++webp_info->chunk_counts[CHUNK_ANMF];
+  if (!webp_info->quiet) {
     printf("  Offset_X: %d\n  Offset_Y: %d\n  Width: %d\n  Height: %d\n"
            "  Duration: %d\n  Dispose: %d\n  Blend: %d\n",
            offset_x, offset_y, width, height, duration, dispose, blend);
@@ -774,92 +777,92 @@ static WebPInfoStatus ProcessANMFChunk(const ChunkData* const chunk_data,
     LOG_ERROR("Invalid offset parameters in ANMF chunk.");
     return WEBP_INFO_INVALID_PARAM;
   }
-  if ((uint64_t)offset_x + width > (uint64_t)webp_info->canvas_width_ ||
-      (uint64_t)offset_y + height > (uint64_t)webp_info->canvas_height_) {
+  if ((uint64_t)offset_x + width > (uint64_t)webp_info->canvas_width ||
+      (uint64_t)offset_y + height > (uint64_t)webp_info->canvas_height) {
     LOG_ERROR("Frame exceeds canvas in ANMF chunk.");
     return WEBP_INFO_INVALID_PARAM;
   }
-  webp_info->is_processing_anim_frame_ = 1;
-  webp_info->seen_alpha_subchunk_ = 0;
-  webp_info->seen_image_subchunk_ = 0;
-  webp_info->frame_width_ = width;
-  webp_info->frame_height_ = height;
-  webp_info->anim_frame_data_size_ =
-      chunk_data->size_ - CHUNK_HEADER_SIZE - ANMF_CHUNK_SIZE;
+  webp_info->is_processing_anim_frame = 1;
+  webp_info->seen_alpha_subchunk = 0;
+  webp_info->seen_image_subchunk = 0;
+  webp_info->frame_width = width;
+  webp_info->frame_height = height;
+  webp_info->anim_frame_data_size =
+      chunk_data->size - CHUNK_HEADER_SIZE - ANMF_CHUNK_SIZE;
   return WEBP_INFO_OK;
 }
 
 static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
                                         WebPInfo* const webp_info) {
-  const uint8_t* data = chunk_data->payload_ - CHUNK_HEADER_SIZE;
+  const uint8_t* data = chunk_data->payload - CHUNK_HEADER_SIZE;
   WebPBitstreamFeatures features;
   const VP8StatusCode vp8_status =
-      WebPGetFeatures(data, chunk_data->size_, &features);
+      WebPGetFeatures(data, chunk_data->size, &features);
   if (vp8_status != VP8_STATUS_OK) {
     LOG_ERROR("VP8/VP8L bitstream error.");
     return WEBP_INFO_BITSTREAM_ERROR;
   }
-  if (!webp_info->quiet_) {
+  if (!webp_info->quiet) {
     assert(features.format >= 0 && features.format <= 2);
     printf("  Width: %d\n  Height: %d\n  Alpha: %d\n  Animation: %d\n"
            "  Format: %s (%d)\n",
            features.width, features.height, features.has_alpha,
            features.has_animation, kFormats[features.format], features.format);
   }
-  if (webp_info->is_processing_anim_frame_) {
-    ++webp_info->anmf_subchunk_counts_[chunk_data->id_ == CHUNK_VP8 ? 0 : 1];
-    if (chunk_data->id_ == CHUNK_VP8L && webp_info->seen_alpha_subchunk_) {
+  if (webp_info->is_processing_anim_frame) {
+    ++webp_info->anmf_subchunk_counts[chunk_data->id == CHUNK_VP8 ? 0 : 1];
+    if (chunk_data->id == CHUNK_VP8L && webp_info->seen_alpha_subchunk) {
       LOG_ERROR("Both VP8L and ALPH sub-chunks are present in an ANMF chunk.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (webp_info->frame_width_ != features.width ||
-        webp_info->frame_height_ != features.height) {
+    if (webp_info->frame_width != features.width ||
+        webp_info->frame_height != features.height) {
       LOG_ERROR("Frame size in VP8/VP8L sub-chunk differs from ANMF header.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (webp_info->seen_image_subchunk_) {
+    if (webp_info->seen_image_subchunk) {
       LOG_ERROR("Consecutive VP8/VP8L sub-chunks in an ANMF chunk.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    webp_info->seen_image_subchunk_ = 1;
+    webp_info->seen_image_subchunk = 1;
   } else {
-    if (webp_info->chunk_counts_[CHUNK_VP8] ||
-        webp_info->chunk_counts_[CHUNK_VP8L]) {
+    if (webp_info->chunk_counts[CHUNK_VP8] ||
+        webp_info->chunk_counts[CHUNK_VP8L]) {
       LOG_ERROR("Multiple VP8/VP8L chunks detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (chunk_data->id_ == CHUNK_VP8L &&
-        webp_info->chunk_counts_[CHUNK_ALPHA]) {
+    if (chunk_data->id == CHUNK_VP8L &&
+        webp_info->chunk_counts[CHUNK_ALPHA]) {
       LOG_WARN("Both VP8L and ALPH chunks are detected.");
     }
-    if (webp_info->chunk_counts_[CHUNK_ANIM] ||
-        webp_info->chunk_counts_[CHUNK_ANMF]) {
+    if (webp_info->chunk_counts[CHUNK_ANIM] ||
+        webp_info->chunk_counts[CHUNK_ANMF]) {
       LOG_ERROR("VP8/VP8L chunk and ANIM/ANMF chunk are both detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (webp_info->chunk_counts_[CHUNK_VP8X]) {
-      if (webp_info->canvas_width_ != features.width ||
-          webp_info->canvas_height_ != features.height) {
+    if (webp_info->chunk_counts[CHUNK_VP8X]) {
+      if (webp_info->canvas_width != features.width ||
+          webp_info->canvas_height != features.height) {
         LOG_ERROR("Image size in VP8/VP8L chunk differs from VP8X chunk.");
         return WEBP_INFO_PARSE_ERROR;
       }
     } else {
-      webp_info->canvas_width_ = features.width;
-      webp_info->canvas_height_ = features.height;
-      if (webp_info->canvas_width_ < 1 || webp_info->canvas_height_ < 1 ||
-          webp_info->canvas_width_ > MAX_CANVAS_SIZE ||
-          webp_info->canvas_height_ > MAX_CANVAS_SIZE ||
-          (uint64_t)webp_info->canvas_width_ * webp_info->canvas_height_ >
+      webp_info->canvas_width = features.width;
+      webp_info->canvas_height = features.height;
+      if (webp_info->canvas_width < 1 || webp_info->canvas_height < 1 ||
+          webp_info->canvas_width > MAX_CANVAS_SIZE ||
+          webp_info->canvas_height > MAX_CANVAS_SIZE ||
+          (uint64_t)webp_info->canvas_width * webp_info->canvas_height >
               MAX_IMAGE_AREA) {
         LOG_WARN("Invalid parameters in VP8/VP8L chunk.");
       }
     }
-    ++webp_info->chunk_counts_[chunk_data->id_];
+    ++webp_info->chunk_counts[chunk_data->id];
   }
-  ++webp_info->num_frames_;
-  webp_info->has_alpha_ |= features.has_alpha;
-  if (webp_info->parse_bitstream_) {
-    const int is_lossy = (chunk_data->id_ == CHUNK_VP8);
+  ++webp_info->num_frames;
+  webp_info->has_alpha |= features.has_alpha;
+  if (webp_info->parse_bitstream) {
+    const int is_lossy = (chunk_data->id == CHUNK_VP8);
     const WebPInfoStatus status =
         is_lossy ? ParseLossyHeader(chunk_data, webp_info)
                  : ParseLosslessHeader(chunk_data, webp_info);
@@ -870,41 +873,41 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
 
 static WebPInfoStatus ProcessALPHChunk(const ChunkData* const chunk_data,
                                        WebPInfo* const webp_info) {
-  if (webp_info->is_processing_anim_frame_) {
-    ++webp_info->anmf_subchunk_counts_[2];
-    if (webp_info->seen_alpha_subchunk_) {
+  if (webp_info->is_processing_anim_frame) {
+    ++webp_info->anmf_subchunk_counts[2];
+    if (webp_info->seen_alpha_subchunk) {
       LOG_ERROR("Consecutive ALPH sub-chunks in an ANMF chunk.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    webp_info->seen_alpha_subchunk_ = 1;
+    webp_info->seen_alpha_subchunk = 1;
 
-    if (webp_info->seen_image_subchunk_) {
+    if (webp_info->seen_image_subchunk) {
       LOG_ERROR("ALPHA sub-chunk detected after VP8 sub-chunk "
                 "in an ANMF chunk.");
       return WEBP_INFO_PARSE_ERROR;
     }
   } else {
-    if (webp_info->chunk_counts_[CHUNK_ANIM] ||
-        webp_info->chunk_counts_[CHUNK_ANMF]) {
+    if (webp_info->chunk_counts[CHUNK_ANIM] ||
+        webp_info->chunk_counts[CHUNK_ANMF]) {
       LOG_ERROR("ALPHA chunk and ANIM/ANMF chunk are both detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (!webp_info->chunk_counts_[CHUNK_VP8X]) {
+    if (!webp_info->chunk_counts[CHUNK_VP8X]) {
       LOG_ERROR("ALPHA chunk detected before VP8X chunk.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (webp_info->chunk_counts_[CHUNK_VP8]) {
+    if (webp_info->chunk_counts[CHUNK_VP8]) {
       LOG_ERROR("ALPHA chunk detected after VP8 chunk.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (webp_info->chunk_counts_[CHUNK_ALPHA]) {
+    if (webp_info->chunk_counts[CHUNK_ALPHA]) {
       LOG_ERROR("Multiple ALPHA chunks detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    ++webp_info->chunk_counts_[CHUNK_ALPHA];
+    ++webp_info->chunk_counts[CHUNK_ALPHA];
   }
-  webp_info->has_alpha_ = 1;
-  if (webp_info->parse_bitstream_) {
+  webp_info->has_alpha = 1;
+  if (webp_info->parse_bitstream) {
     const WebPInfoStatus status = ParseAlphaHeader(chunk_data, webp_info);
     if (status != WEBP_INFO_OK) return status;
   }
@@ -914,41 +917,41 @@ static WebPInfoStatus ProcessALPHChunk(const ChunkData* const chunk_data,
 static WebPInfoStatus ProcessICCPChunk(const ChunkData* const chunk_data,
                                        WebPInfo* const webp_info) {
   (void)chunk_data;
-  if (!webp_info->chunk_counts_[CHUNK_VP8X]) {
+  if (!webp_info->chunk_counts[CHUNK_VP8X]) {
     LOG_ERROR("ICCP chunk detected before VP8X chunk.");
     return WEBP_INFO_PARSE_ERROR;
   }
-  if (webp_info->chunk_counts_[CHUNK_VP8] ||
-      webp_info->chunk_counts_[CHUNK_VP8L] ||
-      webp_info->chunk_counts_[CHUNK_ANIM]) {
+  if (webp_info->chunk_counts[CHUNK_VP8] ||
+      webp_info->chunk_counts[CHUNK_VP8L] ||
+      webp_info->chunk_counts[CHUNK_ANIM]) {
     LOG_ERROR("ICCP chunk detected after image data.");
     return WEBP_INFO_PARSE_ERROR;
   }
-  ++webp_info->chunk_counts_[CHUNK_ICCP];
+  ++webp_info->chunk_counts[CHUNK_ICCP];
   return WEBP_INFO_OK;
 }
 
 static WebPInfoStatus ProcessChunk(const ChunkData* const chunk_data,
                                    WebPInfo* const webp_info) {
   WebPInfoStatus status = WEBP_INFO_OK;
-  ChunkID id = chunk_data->id_;
-  if (chunk_data->id_ == CHUNK_UNKNOWN) {
+  ChunkID id = chunk_data->id;
+  if (chunk_data->id == CHUNK_UNKNOWN) {
     char error_message[50];
     snprintf(error_message, 50, "Unknown chunk at offset %6d, length %6d",
-            (int)chunk_data->offset_, (int)chunk_data->size_);
+            (int)chunk_data->offset, (int)chunk_data->size);
     LOG_WARN(error_message);
   } else {
-    if (!webp_info->quiet_) {
+    if (!webp_info->quiet) {
       char tag[4];
-      uint32_t fourcc = kWebPChunkTags[chunk_data->id_];
+      uint32_t fourcc = kWebPChunkTags[chunk_data->id];
 #ifdef WORDS_BIGENDIAN
       fourcc = (fourcc >> 24) | ((fourcc >> 8) & 0xff00) |
                ((fourcc << 8) & 0xff0000) | (fourcc << 24);
 #endif
       memcpy(tag, &fourcc, sizeof(tag));
       printf("Chunk %c%c%c%c at offset %6d, length %6d\n",
-             tag[0], tag[1], tag[2], tag[3], (int)chunk_data->offset_,
-             (int)chunk_data->size_);
+             tag[0], tag[1], tag[2], tag[3], (int)chunk_data->offset,
+             (int)chunk_data->size);
     }
   }
   switch (id) {
@@ -973,21 +976,21 @@ static WebPInfoStatus ProcessChunk(const ChunkData* const chunk_data,
       break;
     case CHUNK_EXIF:
     case CHUNK_XMP:
-      ++webp_info->chunk_counts_[id];
+      ++webp_info->chunk_counts[id];
       break;
     case CHUNK_UNKNOWN:
     default:
       break;
   }
-  if (webp_info->is_processing_anim_frame_ && id != CHUNK_ANMF) {
-    if (webp_info->anim_frame_data_size_ == chunk_data->size_) {
-      if (!webp_info->seen_image_subchunk_) {
+  if (webp_info->is_processing_anim_frame && id != CHUNK_ANMF) {
+    if (webp_info->anim_frame_data_size == chunk_data->size) {
+      if (!webp_info->seen_image_subchunk) {
         LOG_ERROR("No VP8/VP8L chunk detected in an ANMF chunk.");
         return WEBP_INFO_PARSE_ERROR;
       }
-      webp_info->is_processing_anim_frame_ = 0;
-    } else if (webp_info->anim_frame_data_size_ > chunk_data->size_) {
-      webp_info->anim_frame_data_size_ -= chunk_data->size_;
+      webp_info->is_processing_anim_frame = 0;
+    } else if (webp_info->anim_frame_data_size > chunk_data->size) {
+      webp_info->anim_frame_data_size -= chunk_data->size;
     } else {
       LOG_ERROR("Truncated data detected when parsing ANMF chunk.");
       return WEBP_INFO_TRUNCATED_DATA;
@@ -997,55 +1000,55 @@ static WebPInfoStatus ProcessChunk(const ChunkData* const chunk_data,
 }
 
 static WebPInfoStatus Validate(WebPInfo* const webp_info) {
-  if (webp_info->num_frames_ < 1) {
+  if (webp_info->num_frames < 1) {
     LOG_ERROR("No image/frame detected.");
     return WEBP_INFO_MISSING_DATA;
   }
-  if (webp_info->chunk_counts_[CHUNK_VP8X]) {
-    const int iccp = !!(webp_info->feature_flags_ & ICCP_FLAG);
-    const int exif = !!(webp_info->feature_flags_ & EXIF_FLAG);
-    const int xmp = !!(webp_info->feature_flags_ & XMP_FLAG);
-    const int animation = !!(webp_info->feature_flags_ & ANIMATION_FLAG);
-    const int alpha = !!(webp_info->feature_flags_ & ALPHA_FLAG);
-    if (!alpha && webp_info->has_alpha_) {
+  if (webp_info->chunk_counts[CHUNK_VP8X]) {
+    const int iccp = !!(webp_info->feature_flags & ICCP_FLAG);
+    const int exif = !!(webp_info->feature_flags & EXIF_FLAG);
+    const int xmp = !!(webp_info->feature_flags & XMP_FLAG);
+    const int animation = !!(webp_info->feature_flags & ANIMATION_FLAG);
+    const int alpha = !!(webp_info->feature_flags & ALPHA_FLAG);
+    if (!alpha && webp_info->has_alpha) {
       LOG_ERROR("Unexpected alpha data detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (alpha && !webp_info->has_alpha_) {
+    if (alpha && !webp_info->has_alpha) {
       LOG_WARN("Alpha flag is set with no alpha data present.");
     }
-    if (iccp && !webp_info->chunk_counts_[CHUNK_ICCP]) {
+    if (iccp && !webp_info->chunk_counts[CHUNK_ICCP]) {
       LOG_ERROR("Missing ICCP chunk.");
       return WEBP_INFO_MISSING_DATA;
     }
-    if (exif && !webp_info->chunk_counts_[CHUNK_EXIF]) {
+    if (exif && !webp_info->chunk_counts[CHUNK_EXIF]) {
       LOG_ERROR("Missing EXIF chunk.");
       return WEBP_INFO_MISSING_DATA;
     }
-    if (xmp && !webp_info->chunk_counts_[CHUNK_XMP]) {
+    if (xmp && !webp_info->chunk_counts[CHUNK_XMP]) {
       LOG_ERROR("Missing XMP chunk.");
       return WEBP_INFO_MISSING_DATA;
     }
-    if (!iccp && webp_info->chunk_counts_[CHUNK_ICCP]) {
+    if (!iccp && webp_info->chunk_counts[CHUNK_ICCP]) {
       LOG_ERROR("Unexpected ICCP chunk detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (!exif && webp_info->chunk_counts_[CHUNK_EXIF]) {
+    if (!exif && webp_info->chunk_counts[CHUNK_EXIF]) {
       LOG_ERROR("Unexpected EXIF chunk detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (!xmp && webp_info->chunk_counts_[CHUNK_XMP]) {
+    if (!xmp && webp_info->chunk_counts[CHUNK_XMP]) {
       LOG_ERROR("Unexpected XMP chunk detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
     // Incomplete animation frame.
-    if (webp_info->is_processing_anim_frame_) return WEBP_INFO_MISSING_DATA;
-    if (!animation && webp_info->num_frames_ > 1) {
+    if (webp_info->is_processing_anim_frame) return WEBP_INFO_MISSING_DATA;
+    if (!animation && webp_info->num_frames > 1) {
       LOG_ERROR("More than 1 frame detected in non-animation file.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (animation && (!webp_info->chunk_counts_[CHUNK_ANIM] ||
-        !webp_info->chunk_counts_[CHUNK_ANMF])) {
+    if (animation && (!webp_info->chunk_counts[CHUNK_ANIM] ||
+        !webp_info->chunk_counts[CHUNK_ANMF])) {
       LOG_ERROR("No ANIM/ANMF chunk detected in animation file.");
       return WEBP_INFO_PARSE_ERROR;
     }
@@ -1056,17 +1059,17 @@ static WebPInfoStatus Validate(WebPInfo* const webp_info) {
 static void ShowSummary(const WebPInfo* const webp_info) {
   int i;
   printf("Summary:\n");
-  printf("Number of frames: %d\n", webp_info->num_frames_);
+  printf("Number of frames: %d\n", webp_info->num_frames);
   printf("Chunk type  :  VP8 VP8L VP8X ALPH ANIM ANMF(VP8 /VP8L/ALPH) ICCP "
       "EXIF  XMP\n");
   printf("Chunk counts: ");
   for (i = 0; i < CHUNK_TYPES; ++i) {
-    printf("%4d ", webp_info->chunk_counts_[i]);
+    printf("%4d ", webp_info->chunk_counts[i]);
     if (i == CHUNK_ANMF) {
       printf("%4d %4d %4d  ",
-             webp_info->anmf_subchunk_counts_[0],
-             webp_info->anmf_subchunk_counts_[1],
-             webp_info->anmf_subchunk_counts_[2]);
+             webp_info->anmf_subchunk_counts[0],
+             webp_info->anmf_subchunk_counts[1],
+             webp_info->anmf_subchunk_counts[2]);
     }
   }
   printf("\n");
@@ -1089,20 +1092,20 @@ static WebPInfoStatus AnalyzeWebP(WebPInfo* const webp_info,
     webp_info_status = ProcessChunk(&chunk_data, webp_info);
   }
   if (webp_info_status != WEBP_INFO_OK) goto Error;
-  if (webp_info->show_summary_) ShowSummary(webp_info);
+  if (webp_info->show_summary) ShowSummary(webp_info);
 
   //  Final check.
   webp_info_status = Validate(webp_info);
 
  Error:
-  if (!webp_info->quiet_) {
+  if (!webp_info->quiet) {
     if (webp_info_status == WEBP_INFO_OK) {
       printf("No error detected.\n");
     } else {
       printf("Errors detected.\n");
     }
-    if (webp_info->num_warnings_ > 0) {
-      printf("There were %d warning(s).\n", webp_info->num_warnings_);
+    if (webp_info->num_warnings > 0) {
+      printf("There were %d warning(s).\n", webp_info->num_warnings);
     }
   }
   return webp_info_status;
@@ -1120,6 +1123,7 @@ static void Help(void) {
          "  -bitstream_info .... Parse bitstream header.\n");
 }
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
   int c, quiet = 0, show_diag = 0, show_summary = 0;
   int parse_bitstream = 0;
@@ -1130,7 +1134,7 @@ int main(int argc, const char* argv[]) {
 
   if (argc == 1) {
     Help();
-    FREE_WARGV_AND_RETURN(WEBP_INFO_OK);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   // Parse command-line input.
@@ -1138,7 +1142,7 @@ int main(int argc, const char* argv[]) {
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help") ||
         !strcmp(argv[c], "-H") || !strcmp(argv[c], "-longhelp")) {
       Help();
-      FREE_WARGV_AND_RETURN(WEBP_INFO_OK);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;
     } else if (!strcmp(argv[c], "-diag")) {
@@ -1151,7 +1155,7 @@ int main(int argc, const char* argv[]) {
       const int version = WebPGetDecoderVersion();
       printf("WebP Decoder version: %d.%d.%d\n",
              (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else {  // Assume the remaining are all input files.
       break;
     }
@@ -1159,7 +1163,7 @@ int main(int argc, const char* argv[]) {
 
   if (c == argc) {
     Help();
-    FREE_WARGV_AND_RETURN(WEBP_INFO_INVALID_COMMAND);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   // Process input files one by one.
@@ -1167,10 +1171,10 @@ int main(int argc, const char* argv[]) {
     WebPData webp_data;
     const W_CHAR* in_file = NULL;
     WebPInfoInit(&webp_info);
-    webp_info.quiet_ = quiet;
-    webp_info.show_diagnosis_ = show_diag;
-    webp_info.show_summary_ = show_summary;
-    webp_info.parse_bitstream_ = parse_bitstream;
+    webp_info.quiet = quiet;
+    webp_info.show_diagnosis = show_diag;
+    webp_info.show_summary = show_summary;
+    webp_info.parse_bitstream = parse_bitstream;
     in_file = GET_WARGV(argv, c);
     if (in_file == NULL ||
         !ReadFileToWebPData((const char*)in_file, &webp_data)) {
@@ -1178,9 +1182,10 @@ int main(int argc, const char* argv[]) {
       WFPRINTF(stderr, "Failed to open input file %s.\n", in_file);
       continue;
     }
-    if (!webp_info.quiet_) WPRINTF("File: %s\n", in_file);
+    if (!webp_info.quiet) WPRINTF("File: %s\n", in_file);
     webp_info_status = AnalyzeWebP(&webp_info, &webp_data);
     WebPDataClear(&webp_data);
   }
-  FREE_WARGV_AND_RETURN(webp_info_status);
+  FREE_WARGV_AND_RETURN((webp_info_status == WEBP_INFO_OK) ? EXIT_SUCCESS
+                                                           : EXIT_FAILURE);
 }

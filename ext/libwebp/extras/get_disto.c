@@ -23,10 +23,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "webp/encode.h"
+#include "../examples/unicode.h"
 #include "imageio/image_dec.h"
 #include "imageio/imageio_util.h"
-#include "../examples/unicode.h"
+#include "src/webp/types.h"
+#include "webp/encode.h"
 
 static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
                           int keep_alpha) {
@@ -227,10 +228,11 @@ static void Help(void) {
           WebPGetEnabledInputFileFormats());
 }
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
   WebPPicture pic1, pic2;
   size_t size1 = 0, size2 = 0;
-  int ret = 1;
+  int ret = EXIT_FAILURE;
   float disto[5];
   int type = 0;
   int c;
@@ -246,7 +248,7 @@ int main(int argc, const char* argv[]) {
 
   if (!WebPPictureInit(&pic1) || !WebPPictureInit(&pic2)) {
     fprintf(stderr, "Can't init pictures\n");
-    FREE_WARGV_AND_RETURN(1);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   for (c = 1; c < argc; ++c) {
@@ -262,7 +264,7 @@ int main(int argc, const char* argv[]) {
       use_gray = 1;
     } else if (!strcmp(argv[c], "-h")) {
       help = 1;
-      ret = 0;
+      ret = EXIT_SUCCESS;
     } else if (!strcmp(argv[c], "-o")) {
       if (++c == argc) {
         fprintf(stderr, "missing file name after %s option.\n", argv[c - 1]);
@@ -337,7 +339,8 @@ int main(int argc, const char* argv[]) {
       fprintf(stderr, "Error during lossless encoding.\n");
       goto End;
     }
-    ret = ImgIoUtilWriteFile(output, data, data_size) ? 0 : 1;
+    ret = ImgIoUtilWriteFile(output, data, data_size) ? EXIT_SUCCESS
+                                                      : EXIT_FAILURE;
     WebPFree(data);
     if (ret) goto End;
 #else
@@ -345,9 +348,10 @@ int main(int argc, const char* argv[]) {
     (void)data_size;
     fprintf(stderr, "Cannot save the difference map. Please recompile "
                     "without the WEBP_REDUCE_CSP flag.\n");
+    goto End;
 #endif  // WEBP_REDUCE_CSP
   }
-  ret = 0;
+  ret = EXIT_SUCCESS;
 
  End:
   WebPPictureFree(&pic1);

@@ -1,3 +1,38 @@
+- 6/30/2025 version 1.6.0
+  This is a binary compatible release.
+  API changes:
+    - libwebp: WebPValidateDecoderConfig
+  * additional x86 (AVX2, SSE2), general optimizations and compression
+    improvements for lossless
+  * `-mt` returns same results as single-threaded lossless (regressed in
+    1.5.0, #426506716)
+  * miscellaneous warning, bug & build fixes (#393104377, #397130631,
+    #398288323, #398066379, #427503509)
+  Tool updates:
+    * cwebp can restrict the use of `-resize` with `-resize_mode` (#405437935)
+
+- 12/19/2024 version 1.5.0
+  This is a binary compatible release.
+  API changes:
+    - `cross_color_transform_bits` added to WebPAuxStats
+  * minor lossless encoder speed and compression improvements
+  * lossless encoding does not use floats anymore
+  * additional Arm optimizations for lossy & lossless + general code generation
+    improvements
+  * improvements to WASM performance (#643)
+  * improvements and corrections in webp-container-spec.txt and
+    webp-lossless-bitstream-spec.txt (#646, #355607636)
+  * further security related hardening and increased fuzzing coverage w/fuzztest
+    (oss-fuzz: #382816119, #70112, #70102, #69873, #69825, #69508, #69208)
+  * miscellaneous warning, bug & build fixes (#499, #562, #381372617,
+    #381109771, #42340561, #375011696, #372109644, chromium: #334120888)
+  Tool updates:
+    * gif2webp: add -sharp_yuv & -near_lossless
+    * img2webp: add -exact & -noexact
+    * exit codes normalized; running an example program with no
+      arguments will output its help and exit with an error (#42340557,
+      #381372617)
+
 - 4/12/2024: version 1.4.0
   This is a binary compatible release.
   * API changes:

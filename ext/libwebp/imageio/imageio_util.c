@@ -16,8 +16,11 @@
 #include <fcntl.h>   // for _O_BINARY
 #include <io.h>      // for _setmode()
 #endif
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "webp/types.h"
 #include "../examples/unicode.h"
 
 // -----------------------------------------------------------------------------
@@ -89,6 +92,11 @@ int ImgIoUtilReadFile(const char* const file_name,
   }
   fseek(in, 0, SEEK_END);
   file_size = ftell(in);
+  if (file_size == (size_t)-1) {
+    fclose(in);
+    WFPRINTF(stderr, "error getting size of '%s'\n", (const W_CHAR*)file_name);
+    return 0;
+  }
   fseek(in, 0, SEEK_SET);
   // we allocate one extra byte for the \0 terminator
   file_data = (uint8_t*)WebPMalloc(file_size + 1);

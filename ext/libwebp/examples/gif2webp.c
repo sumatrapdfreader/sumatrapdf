@@ -28,6 +28,7 @@
 #endif
 
 #include <gif_lib.h>
+#include "sharpyuv/sharpyuv.h"
 #include "webp/encode.h"
 #include "webp/mux.h"
 #include "../examples/example_util.h"
@@ -70,8 +71,14 @@ static void Help(void) {
   printf("  -lossy ................. encode image using lossy compression\n");
   printf("  -mixed ................. for each frame in the image, pick lossy\n"
          "                           or lossless compression heuristically\n");
+  printf("  -near_lossless <int> ... use near-lossless image preprocessing\n"
+         "                           (0..100=off), default=100\n");
+  printf("  -sharp_yuv ............. use sharper (and slower) RGB->YUV "
+                                    "conversion\n"
+         "                           (lossy only)\n");
   printf("  -q <float> ............. quality factor (0:small..100:big)\n");
-  printf("  -m <int> ............... compression method (0=fast, 6=slowest)\n");
+  printf("  -m <int> ............... compression method (0=fast, 6=slowest), "
+         "default=4\n");
   printf("  -min_size .............. minimize output size (default:off)\n"
          "                           lossless compression by default; can be\n"
          "                           combined with -q, -m, -lossy or -mixed\n"
@@ -96,6 +103,7 @@ static void Help(void) {
 
 //------------------------------------------------------------------------------
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
   int verbose = 0;
   int gif_error = GIF_ERROR;
@@ -140,7 +148,7 @@ int main(int argc, const char* argv[]) {
       !WebPPictureInit(&frame) || !WebPPictureInit(&curr_canvas) ||
       !WebPPictureInit(&prev_canvas)) {
     fprintf(stderr, "Error! Version mismatch!\n");
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
   config.lossless = 1;  // Use lossless compression by default.
 
@@ -150,14 +158,14 @@ int main(int argc, const char* argv[]) {
 
   if (argc == 1) {
     Help();
-    FREE_WARGV_AND_RETURN(0);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
       out_file = GET_WARGV(argv, ++c);
     } else if (!strcmp(argv[c], "-lossy")) {
@@ -165,6 +173,10 @@ int main(int argc, const char* argv[]) {
     } else if (!strcmp(argv[c], "-mixed")) {
       enc_options.allow_mixed = 1;
       config.lossless = 0;
+    } else if (!strcmp(argv[c], "-near_lossless") && c < argc - 1) {
+      config.near_lossless = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!strcmp(argv[c], "-sharp_yuv")) {
+      config.use_sharp_yuv = 1;
     } else if (!strcmp(argv[c], "-loop_compatibility")) {
       loop_compatibility = 1;
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
@@ -216,7 +228,7 @@ int main(int argc, const char* argv[]) {
           fprintf(stderr, "Error! Unknown metadata type '%.*s'\n",
                   (int)(token - start), start);
           Help();
-          FREE_WARGV_AND_RETURN(-1);
+          FREE_WARGV_AND_RETURN(EXIT_FAILURE);
         }
         start = token + 1;
       }
@@ -225,11 +237,14 @@ int main(int argc, const char* argv[]) {
     } else if (!strcmp(argv[c], "-version")) {
       const int enc_version = WebPGetEncoderVersion();
       const int mux_version = WebPGetMuxVersion();
+      const int sharpyuv_version = SharpYuvGetVersion();
       printf("WebP Encoder version: %d.%d.%d\nWebP Mux version: %d.%d.%d\n",
              (enc_version >> 16) & 0xff, (enc_version >> 8) & 0xff,
              enc_version & 0xff, (mux_version >> 16) & 0xff,
              (mux_version >> 8) & 0xff, mux_version & 0xff);
-      FREE_WARGV_AND_RETURN(0);
+      printf("libsharpyuv: %d.%d.%d\n", (sharpyuv_version >> 24) & 0xff,
+             (sharpyuv_version >> 16) & 0xffff, sharpyuv_version & 0xff);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;
       enc_options.verbose = 0;
@@ -242,14 +257,14 @@ int main(int argc, const char* argv[]) {
     } else if (argv[c][0] == '-') {
       fprintf(stderr, "Error! Unknown option '%s'\n", argv[c]);
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     } else {
       in_file = GET_WARGV(argv, c);
     }
 
     if (parse_error) {
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     }
   }
 
@@ -593,7 +608,7 @@ int main(int argc, const char* argv[]) {
 #endif
   }
 
-  FREE_WARGV_AND_RETURN(!ok);
+  FREE_WARGV_AND_RETURN(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 #else  // !WEBP_HAVE_GIF
@@ -601,7 +616,7 @@ int main(int argc, const char* argv[]) {
 int main(int argc, const char* argv[]) {
   fprintf(stderr, "GIF support not enabled in %s.\n", argv[0]);
   (void)argc;
-  return 0;
+  return EXIT_FAILURE;
 }
 
 #endif

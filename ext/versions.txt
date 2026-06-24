@@ -42,8 +42,10 @@ libdjvu         master     2026-05-05
   https://github.com/barak/djvulibre
   commit 03e6abd7295c74f795ed70a7118294b25351e0f4
 
-libwebp         1.4.0   2024-04-12
-  https://github.com/webmproject/libwebp/releases/tag/v1.4.0
+libwebp         1.6.0      2025-06-30
+  https://github.com/webmproject/libwebp
+  https://github.com/webmproject/libwebp/releases/tag/v1.6.0
+  commit 4fa21912338357f89e4fd51cf2368325b59e9bd9
 
 lzma            9.22b      2011-04-19
   https://www.7-zip.org/sdk.html

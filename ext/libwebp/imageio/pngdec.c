@@ -22,13 +22,15 @@
 #define PNG_USER_MEM_SUPPORTED  // for png_create_read_struct_2
 #endif
 #include <png.h>
+
 #include <setjmp.h>   // note: this must be included *after* png.h
 #include <stdlib.h>
 #include <string.h>
 
-#include "webp/encode.h"
 #include "./imageio_util.h"
 #include "./metadata.h"
+#include "webp/encode.h"
+#include "webp/types.h"
 
 #define LOCAL_PNG_VERSION ((PNG_LIBPNG_VER_MAJOR << 8) | PNG_LIBPNG_VER_MINOR)
 #define LOCAL_PNG_PREREQ(maj, min) \
@@ -139,6 +141,8 @@ static const struct {
   { "Raw profile type xmp",  ProcessRawProfile, METADATA_OFFSET(xmp) },
   // Exiftool puts exif data in APP1 chunk, too.
   { "Raw profile type APP1", ProcessRawProfile, METADATA_OFFSET(exif) },
+  // ImageMagick uses lowercase app1.
+  { "Raw profile type app1", ProcessRawProfile, METADATA_OFFSET(exif) },
   // XMP Specification Part 3, Section 3 #PNG
   { "XML:com.adobe.xmp",     MetadataCopy,      METADATA_OFFSET(xmp) },
   { NULL, NULL, 0 },
@@ -159,6 +163,20 @@ static int ExtractMetadataFromPNG(png_structp png,
     png_textp text = NULL;
     const png_uint_32 num = png_get_text(png, info, &text, NULL);
     png_uint_32 i;
+
+#ifdef PNG_eXIf_SUPPORTED
+    // Look for an 'eXIf' tag. Preference is given to this tag as it's newer
+    // than the TextualData tags.
+    {
+      png_bytep exif;
+      png_uint_32 len;
+
+      if (png_get_eXIf_1(png, info, &len, &exif) == PNG_INFO_eXIf) {
+        if (!MetadataCopy((const char*)exif, len, &metadata->exif)) return 0;
+      }
+    }
+#endif  // PNG_eXIf_SUPPORTED
+
     // Look for EXIF / XMP metadata.
     for (i = 0; i < num; ++i, ++text) {
       int j;
@@ -192,6 +210,7 @@ static int ExtractMetadataFromPNG(png_structp png,
         }
       }
     }
+#ifdef PNG_iCCP_SUPPORTED
     // Look for an ICC profile.
     {
       png_charp name;
@@ -208,6 +227,7 @@ static int ExtractMetadataFromPNG(png_structp png,
         if (!MetadataCopy((const char*)profile, len, &metadata->iccp)) return 0;
       }
     }
+#endif  // PNG_iCCP_SUPPORTED
   }
   return 1;
 }

@@ -25,6 +25,8 @@
 #include "../imageio/webpdec.h"
 #include "./stopwatch.h"
 #include "./unicode.h"
+#include "webp/decode.h"
+#include "webp/types.h"
 
 static int verbose = 0;
 static int quiet = 0;
@@ -177,6 +179,7 @@ static uint8_t* AllocateExternalBuffer(WebPDecoderConfig* config,
   return external_buffer;
 }
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
   int ok = 0;
   const char* in_file = NULL;
@@ -197,14 +200,14 @@ int main(int argc, const char* argv[]) {
 
   if (!WebPInitDecoderConfig(&config)) {
     fprintf(stderr, "Library version mismatch!\n");
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
       out_file = (const char*)GET_WARGV(argv, ++c);
     } else if (!strcmp(argv[c], "-alpha")) {
@@ -227,7 +230,7 @@ int main(int argc, const char* argv[]) {
       const int version = WebPGetDecoderVersion();
       printf("%d.%d.%d\n",
              (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-pgm")) {
       format = PGM;
     } else if (!strcmp(argv[c], "-yuv")) {
@@ -293,21 +296,21 @@ int main(int argc, const char* argv[]) {
     } else if (argv[c][0] == '-') {
       fprintf(stderr, "Unknown option '%s'\n", argv[c]);
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     } else {
       in_file = (const char*)GET_WARGV(argv, c);
     }
 
     if (parse_error) {
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     }
   }
 
   if (in_file == NULL) {
     fprintf(stderr, "missing input file!!\n");
     Help();
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   if (quiet) verbose = 0;
@@ -316,7 +319,7 @@ int main(int argc, const char* argv[]) {
     VP8StatusCode status = VP8_STATUS_OK;
     size_t data_size = 0;
     if (!LoadWebP(in_file, &data, &data_size, bitstream)) {
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     }
 
     switch (format) {
@@ -415,7 +418,7 @@ int main(int argc, const char* argv[]) {
   WebPFreeDecBuffer(output_buffer);
   WebPFree((void*)external_buffer);
   WebPFree((void*)data);
-  FREE_WARGV_AND_RETURN(ok ? 0 : -1);
+  FREE_WARGV_AND_RETURN(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 //------------------------------------------------------------------------------

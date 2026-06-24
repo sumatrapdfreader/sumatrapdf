@@ -31,6 +31,8 @@
 #include "sharpyuv/sharpyuv.h"
 #include "webp/encode.h"
 #include "webp/mux.h"
+#include "webp/mux_types.h"
+#include "webp/types.h"
 
 //------------------------------------------------------------------------------
 
@@ -59,10 +61,15 @@ static void Help(void) {
 
   printf("Per-frame options (only used for subsequent images input):\n");
   printf(" -d <int> ............. frame duration in ms (default: 100)\n");
-  printf(" -lossless  ........... use lossless mode (default)\n");
-  printf(" -lossy ... ........... use lossy mode\n");
+  printf(" -lossless ............ use lossless mode (default)\n");
+  printf(" -lossy ............... use lossy mode\n");
   printf(" -q <float> ........... quality\n");
-  printf(" -m <int> ............. method to use\n");
+  printf(" -m <int> ............. compression method (0=fast, 6=slowest), "
+         "default=4\n");
+  printf(" -exact, -noexact ..... preserve or alter RGB values in transparent "
+                                  "area\n"
+         "                        (default: -noexact, may cause artifacts\n"
+         "                                  with lossy animations)\n");
 
   printf("\n");
   printf("example: img2webp -loop 2 in0.png -lossy in1.jpg\n"
@@ -130,6 +137,7 @@ static int SetLoopCount(int loop_count, WebPData* const webp_data) {
 
 //------------------------------------------------------------------------------
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
   const char* output = NULL;
   WebPAnimEncoder* enc = NULL;
@@ -145,16 +153,17 @@ int main(int argc, const char* argv[]) {
   WebPData webp_data;
   int c;
   int have_input = 0;
+  int last_input_index = 0;
   CommandLineArguments cmd_args;
   int ok;
 
   INIT_WARGV(argc, argv);
 
   ok = ExUtilInitCommandLineArguments(argc - 1, argv + 1, &cmd_args);
-  if (!ok) FREE_WARGV_AND_RETURN(1);
+  if (!ok) FREE_WARGV_AND_RETURN(EXIT_FAILURE);
 
-  argc = cmd_args.argc_;
-  argv = cmd_args.argv_;
+  argc = cmd_args.argc;
+  argv = cmd_args.argv;
 
   WebPDataInit(&webp_data);
   if (!WebPAnimEncoderOptionsInit(&anim_config) ||
@@ -199,7 +208,7 @@ int main(int argc, const char* argv[]) {
         verbose = 1;
       } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
         Help();
-        FREE_WARGV_AND_RETURN(0);
+        FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
       } else if (!strcmp(argv[c], "-version")) {
         const int enc_version = WebPGetEncoderVersion();
         const int mux_version = WebPGetMuxVersion();
@@ -223,6 +232,8 @@ int main(int argc, const char* argv[]) {
   }
   if (!have_input) {
     fprintf(stderr, "No input file(s) for generating animation!\n");
+    ok = 0;
+    Help();
     goto End;
   }
 
@@ -247,6 +258,10 @@ int main(int argc, const char* argv[]) {
           fprintf(stderr, "Invalid negative duration (%d)\n", duration);
           parse_error = 1;
         }
+      } else if (!strcmp(argv[c], "-exact")) {
+        config.exact = 1;
+      } else if (!strcmp(argv[c], "-noexact")) {
+        config.exact = 0;
       } else {
         parse_error = 1;   // shouldn't be here.
         fprintf(stderr, "Unknown option [%s]\n", argv[c]);
@@ -267,6 +282,7 @@ int main(int argc, const char* argv[]) {
     // read next input image
     pic.use_argb = 1;
     ok = ReadImage((const char*)GET_WARGV_SHIFTED(argv, c), &pic);
+    last_input_index = c;
     if (!ok) goto End;
 
     if (enc == NULL) {
@@ -305,6 +321,13 @@ int main(int argc, const char* argv[]) {
     ++pic_num;
   }
 
+  for (c = last_input_index + 1; c < argc; ++c) {
+    if (argv[c] != NULL) {
+      fprintf(stderr, "Warning: unused option [%s]!"
+                      " Frame options go before the input frame.\n", argv[c]);
+    }
+  }
+
   // add a last fake frame to signal the last duration
   ok = ok && WebPAnimEncoderAdd(enc, NULL, timestamp_ms, NULL);
   ok = ok && WebPAnimEncoderAssemble(enc, &webp_data);
@@ -335,5 +358,5 @@ int main(int argc, const char* argv[]) {
   }
   WebPDataClear(&webp_data);
   ExUtilDeleteCommandLineArguments(&cmd_args);
-  FREE_WARGV_AND_RETURN(ok ? 0 : 1);
+  FREE_WARGV_AND_RETURN(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }

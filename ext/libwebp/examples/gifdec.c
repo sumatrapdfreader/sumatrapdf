@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "webp/encode.h"
+#include "webp/types.h"
 #include "webp/mux_types.h"
 
 #define GIF_TRANSPARENT_COLOR 0x00000000u

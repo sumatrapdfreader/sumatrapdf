@@ -11,6 +11,8 @@
 #ifndef WEBP_EXTRAS_EXTRAS_H_
 #define WEBP_EXTRAS_EXTRAS_H_
 
+#include <stddef.h>
+
 #include "webp/types.h"
 
 #ifdef __cplusplus

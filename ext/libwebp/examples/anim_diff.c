@@ -16,12 +16,13 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdio.h>
-#include <stdlib.h>  // for 'strtod'.
+#include <stdlib.h>
 #include <string.h>  // for 'strcmp'.
 
 #include "./anim_util.h"
 #include "./example_util.h"
 #include "./unicode.h"
+#include "webp/types.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -206,8 +207,9 @@ static void Help(void) {
   printf("  -version ............ print version number and exit\n");
 }
 
+// Returns 0 on success, 1 if animation files differ, and 2 for any error.
 int main(int argc, const char* argv[]) {
-  int return_code = -1;
+  int return_code = 2;
   int dump_frames = 0;
   const char* dump_folder = NULL;
   double min_psnr = 0.;
@@ -269,18 +271,18 @@ int main(int argc, const char* argv[]) {
     }
     if (parse_error) {
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(return_code);
     }
   }
   if (argc < 3) {
     Help();
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(return_code);
   }
 
 
   if (!got_input2) {
     Help();
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(return_code);
   }
 
   if (dump_frames) {
@@ -293,7 +295,7 @@ int main(int argc, const char* argv[]) {
     if (!ReadAnimatedImage(files[i], &images[i], dump_frames, dump_folder)) {
       WFPRINTF(stderr, "Error decoding file: %s\n Aborting.\n",
                (const W_CHAR*)files[i]);
-      return_code = -2;
+      return_code = 2;
       goto End;
     } else {
       MinimizeAnimationFrames(&images[i], max_diff);
@@ -304,7 +306,7 @@ int main(int argc, const char* argv[]) {
                                 premultiply, min_psnr)) {
     WFPRINTF(stderr, "\nFiles %s and %s differ.\n", (const W_CHAR*)files[0],
              (const W_CHAR*)files[1]);
-    return_code = -3;
+    return_code = 1;
   } else {
     WPRINTF("\nFiles %s and %s are identical.\n", (const W_CHAR*)files[0],
             (const W_CHAR*)files[1]);

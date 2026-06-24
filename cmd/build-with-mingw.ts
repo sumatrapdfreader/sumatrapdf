@@ -600,6 +600,7 @@ const libwebp: LibDef = {
         "lossless.c",
         "lossless_sse2.c",
         "lossless_sse41.c",
+        "lossless_avx2.c",
         "lossless_neon.c",
         "rescaler.c",
         "rescaler_sse2.c",

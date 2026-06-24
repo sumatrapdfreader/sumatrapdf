@@ -94,6 +94,9 @@
 /* Set to 1 if SSE4.1 is supported */
 #cmakedefine WEBP_HAVE_SSE41 1
 
+/* Set to 1 if AVX2 is supported */
+#cmakedefine WEBP_HAVE_AVX2 1
+
 /* Set to 1 if TIFF library is installed */
 #cmakedefine WEBP_HAVE_TIFF 1
 
