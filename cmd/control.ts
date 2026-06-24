@@ -15,6 +15,7 @@ export enum ControlCommand {
   // IDs 19-21 unused (reserved on the -dbg-control wire protocol; do not renumber).
   // Assign new test commands starting at 23.
   TestInverseSearch = 22,
+  TestImageResizeArrowKey = 23,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

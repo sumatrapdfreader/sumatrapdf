@@ -26,6 +26,7 @@
 #include "Translations.h"
 #include "ImageSaveCropResize.h"
 
+#include <commctrl.h>
 #include <wincodec.h>
 
 using Gdiplus::Bitmap;
@@ -183,6 +184,20 @@ struct ImageEditWindow {
 };
 
 static Vec<ImageEditWindow*> gImageEditWindows;
+static UINT_PTR gDestEditSubclassId = 0;
+
+static void UpdateInfoLabel(ImageEditWindow* ew);
+static void UpdateModeButtons(ImageEditWindow* ew);
+static void InvalidateImageArea(ImageEditWindow* ew);
+static bool HandleImageEditArrowKey(ImageEditWindow* ew, WPARAM wp);
+
+static LRESULT CALLBACK WndProcDestEditSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR data) {
+    ImageEditWindow* ew = (ImageEditWindow*)data;
+    if (msg == WM_KEYDOWN && ew && HandleImageEditArrowKey(ew, wp)) {
+        return 0;
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
 
 static ImageEditWindow* FindImageEditWindowByHwnd(HWND hwnd) {
     for (auto* ew : gImageEditWindows) {
@@ -202,6 +217,109 @@ static WCHAR UpperW(WCHAR c) {
 
 static void HideKeyboardCues(HWND hwnd) {
     SendMessageW(hwnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_SET, UISF_HIDEACCEL), 0);
+}
+
+static bool HandleImageEditArrowKey(ImageEditWindow* ew, WPARAM wp) {
+    if (!ew) {
+        return false;
+    }
+    if (ew->mode == ImageEditMode::Resize) {
+        if (wp == VK_LEFT) {
+            ew->newW -= 1;
+        } else if (wp == VK_RIGHT) {
+            ew->newW += 1;
+        } else if (wp == VK_UP) {
+            ew->newH += 1;
+        } else if (wp == VK_DOWN) {
+            ew->newH -= 1;
+        } else {
+            return false;
+        }
+        if (ew->newW < 1) {
+            ew->newW = 1;
+        }
+        if (ew->newH < 1) {
+            ew->newH = 1;
+        }
+        UpdateInfoLabel(ew);
+        UpdateModeButtons(ew);
+        InvalidateImageArea(ew);
+        return true;
+    }
+    if (ew->mode != ImageEditMode::Crop) {
+        return false;
+    }
+    auto edge = ew->hoverEdge;
+    if (edge == DragEdge::None) {
+        return false;
+    }
+    int dx = 0, dy = 0;
+    if (wp == VK_LEFT) {
+        dx = -1;
+    } else if (wp == VK_RIGHT) {
+        dx = 1;
+    } else if (wp == VK_UP) {
+        dy = -1;
+    } else if (wp == VK_DOWN) {
+        dy = 1;
+    } else {
+        return false;
+    }
+    if (edge == DragEdge::Move) {
+        ew->cropX += dx;
+        ew->cropY += dy;
+        if (ew->cropX < 0) {
+            ew->cropX = 0;
+        }
+        if (ew->cropY < 0) {
+            ew->cropY = 0;
+        }
+        if (ew->cropX + ew->cropW > ew->imgW) {
+            ew->cropX = ew->imgW - ew->cropW;
+        }
+        if (ew->cropY + ew->cropH > ew->imgH) {
+            ew->cropY = ew->imgH - ew->cropH;
+        }
+    } else {
+        if (dx != 0 && (edge == DragEdge::Left || edge == DragEdge::TopLeft || edge == DragEdge::BottomLeft)) {
+            ew->cropX += dx;
+            ew->cropW -= dx;
+        }
+        if (dx != 0 && (edge == DragEdge::Right || edge == DragEdge::TopRight || edge == DragEdge::BottomRight)) {
+            ew->cropW += dx;
+        }
+        if (dy != 0 && (edge == DragEdge::Top || edge == DragEdge::TopLeft || edge == DragEdge::TopRight)) {
+            ew->cropY += dy;
+            ew->cropH -= dy;
+        }
+        if (dy != 0 && (edge == DragEdge::Bottom || edge == DragEdge::BottomLeft || edge == DragEdge::BottomRight)) {
+            ew->cropH += dy;
+        }
+        if (ew->cropX < 0) {
+            ew->cropW += ew->cropX;
+            ew->cropX = 0;
+        }
+        if (ew->cropY < 0) {
+            ew->cropH += ew->cropY;
+            ew->cropY = 0;
+        }
+        if (ew->cropW < 1) {
+            ew->cropW = 1;
+        }
+        if (ew->cropH < 1) {
+            ew->cropH = 1;
+        }
+        if (ew->cropX + ew->cropW > ew->imgW) {
+            ew->cropW = ew->imgW - ew->cropX;
+        }
+        if (ew->cropY + ew->cropH > ew->imgH) {
+            ew->cropH = ew->imgH - ew->cropY;
+        }
+    }
+    UpdateInfoLabel(ew);
+    UpdateModeButtons(ew);
+    InvalidateImageArea(ew);
+    return true;
 }
 
 static void RestoreImageEditFocus(ImageEditWindow* ew) {
@@ -1136,9 +1254,6 @@ static void OnSave(ImageEditWindow* ew) {
     free(savedPath);
 }
 
-static void UpdateInfoLabel(ImageEditWindow* ew);
-static void UpdateModeButtons(ImageEditWindow* ew);
-
 static void SwitchToSaveMode(ImageEditWindow* ew) {
     ew->mode = ImageEditMode::Save;
     ew->isDragging = false;
@@ -1643,107 +1758,10 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
                 return 0;
             }
-            if (ew->mode == ImageEditMode::Resize) {
-                // left/right change width, up/down change height
-                if (wp == VK_LEFT) {
-                    ew->newW -= 1;
-                } else if (wp == VK_RIGHT) {
-                    ew->newW += 1;
-                } else if (wp == VK_UP) {
-                    ew->newH += 1;
-                } else if (wp == VK_DOWN) {
-                    ew->newH -= 1;
-                } else {
-                    break;
-                }
-                if (ew->newW < 1) {
-                    ew->newW = 1;
-                }
-                if (ew->newH < 1) {
-                    ew->newH = 1;
-                }
-                UpdateInfoLabel(ew);
-                UpdateModeButtons(ew);
-                InvalidateImageArea(ew);
+            if (HandleImageEditArrowKey(ew, wp)) {
                 return 0;
             }
-            // crop mode: need hoverEdge and directional deltas
-            {
-                auto edge = ew->hoverEdge;
-                if (edge == DragEdge::None) {
-                    break;
-                }
-                int dx = 0, dy = 0;
-                if (wp == VK_LEFT) {
-                    dx = -1;
-                } else if (wp == VK_RIGHT) {
-                    dx = 1;
-                } else if (wp == VK_UP) {
-                    dy = -1;
-                } else if (wp == VK_DOWN) {
-                    dy = 1;
-                }
-                if (edge == DragEdge::Move) {
-                    ew->cropX += dx;
-                    ew->cropY += dy;
-                    if (ew->cropX < 0) {
-                        ew->cropX = 0;
-                    }
-                    if (ew->cropY < 0) {
-                        ew->cropY = 0;
-                    }
-                    if (ew->cropX + ew->cropW > ew->imgW) {
-                        ew->cropX = ew->imgW - ew->cropW;
-                    }
-                    if (ew->cropY + ew->cropH > ew->imgH) {
-                        ew->cropY = ew->imgH - ew->cropH;
-                    }
-                } else {
-                    // nudge individual edge
-                    if (dx != 0 &&
-                        (edge == DragEdge::Left || edge == DragEdge::TopLeft || edge == DragEdge::BottomLeft)) {
-                        ew->cropX += dx;
-                        ew->cropW -= dx;
-                    }
-                    if (dx != 0 &&
-                        (edge == DragEdge::Right || edge == DragEdge::TopRight || edge == DragEdge::BottomRight)) {
-                        ew->cropW += dx;
-                    }
-                    if (dy != 0 && (edge == DragEdge::Top || edge == DragEdge::TopLeft || edge == DragEdge::TopRight)) {
-                        ew->cropY += dy;
-                        ew->cropH -= dy;
-                    }
-                    if (dy != 0 &&
-                        (edge == DragEdge::Bottom || edge == DragEdge::BottomLeft || edge == DragEdge::BottomRight)) {
-                        ew->cropH += dy;
-                    }
-                    // clamp
-                    if (ew->cropX < 0) {
-                        ew->cropW += ew->cropX;
-                        ew->cropX = 0;
-                    }
-                    if (ew->cropY < 0) {
-                        ew->cropH += ew->cropY;
-                        ew->cropY = 0;
-                    }
-                    if (ew->cropW < 1) {
-                        ew->cropW = 1;
-                    }
-                    if (ew->cropH < 1) {
-                        ew->cropH = 1;
-                    }
-                    if (ew->cropX + ew->cropW > ew->imgW) {
-                        ew->cropW = ew->imgW - ew->cropX;
-                    }
-                    if (ew->cropY + ew->cropH > ew->imgH) {
-                        ew->cropH = ew->imgH - ew->cropY;
-                    }
-                }
-            } // end crop mode block
-            UpdateInfoLabel(ew);
-            UpdateModeButtons(ew);
-            InvalidateImageArea(ew);
-            return 0;
+            break;
         }
 
         case WM_COMMAND: {
@@ -1789,6 +1807,9 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             ew = FindImageEditWindowByHwnd(hwnd);
             if (ew) {
                 HWND hwndParent = ew->hwndParent;
+                if (ew->hwndDestEdit && gDestEditSubclassId) {
+                    RemoveWindowSubclass(ew->hwndDestEdit, WndProcDestEditSubclass, gDestEditSubclassId);
+                }
                 gImageEditWindows.Remove(ew);
                 delete ew;
                 if (hwndParent) {
@@ -1946,6 +1967,10 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
     ew->hwndDestEdit = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(destPath),
                                        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 0, 0, 0, hwnd, nullptr, h, nullptr);
     SendMessageW(ew->hwndDestEdit, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
+    if (!gDestEditSubclassId) {
+        gDestEditSubclassId = 1;
+    }
+    SetWindowSubclass(ew->hwndDestEdit, WndProcDestEditSubclass, gDestEditSubclassId, (DWORD_PTR)ew);
 
     ew->hwndBrowseBtn = CreateWindowExW(0, L"BUTTON", L"...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd,
                                         nullptr, h, nullptr);
@@ -2038,4 +2063,52 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
     SetCurrentModelessDialog(hwnd);
     HwndToForeground(hwnd);
     RestoreImageEditFocus(ew);
+}
+
+char* TestImageResizeArrowKeyResult(const char* imagePath, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (str::IsEmpty(imagePath) || !file::Exists(imagePath)) {
+        return fail("ERROR missing-image");
+    }
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows.at(0);
+    if (!win) {
+        return fail("NOTREADY no-window");
+    }
+
+    int beforeCount = gImageEditWindows.Size();
+    ShowImageEditWindow(win, ImageEditMode::Resize, imagePath);
+    if (gImageEditWindows.Size() != beforeCount + 1) {
+        return fail("ERROR dialog-not-opened");
+    }
+    ImageEditWindow* ew = gImageEditWindows.at(gImageEditWindows.Size() - 1);
+    int wBefore = ew->newW;
+    SetFocus(ew->hwndDestEdit);
+    SendMessageW(ew->hwndDestEdit, WM_KEYDOWN, VK_RIGHT, 0);
+    int wAfter = ew->newW;
+    if (wAfter != wBefore + 1) {
+        out.AppendFmt("FAIL before=%d after=%d\n", wBefore, wAfter);
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        DestroyWindow(ew->hwnd);
+        return out.StealData();
+    }
+    out.AppendFmt("OK newW=%d\n", wAfter);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    DestroyWindow(ew->hwnd);
+    return out.StealData();
 }

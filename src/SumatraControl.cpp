@@ -10,6 +10,7 @@
 #include "Flags.h"
 #include "SumatraTest.h"
 #include "SelectionTranslate.h"
+#include "ImageSaveCropResize.h"
 
 #include "utils/Log.h"
 
@@ -30,6 +31,7 @@ enum class ControlCmd : u16 {
     // IDs 19-21 unused (reserved on the -dbg-control wire protocol; do not renumber).
     // Assign new test commands starting at 23.
     TestInverseSearch = 22,
+    TestImageResizeArrowKey = 23,
 };
 
 enum class ControlArgType : u16 {
@@ -406,6 +408,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestGoToFindMatchResult(word, typed, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestImageResizeArrowKey: {
+            const char* imagePath = StringArg(req, 0);
+            if (!imagePath) {
+                AppendError(req, "TestImageResizeArrowKey expects string imagePath");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestImageResizeArrowKeyResult(imagePath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
