@@ -3864,7 +3864,9 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
 
     RenderedBitmap* bmp = nullptr;
     fz_pixmap* pixmap = nullptr;
+    fz_pixmap* mask = nullptr;
     fz_var(pixmap);
+    fz_var(mask);
     fz_var(bmp);
 
     fz_try(ctx) {
@@ -3878,9 +3880,35 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
             fz_drop_pixmap(ctx, pixmap);
             pixmap = rgb;
         }
+        // The image's visible content can live entirely in its soft mask: the
+        // base color image is then solid black and the copy is a black box
+        // (issue #1682). The /SMask isn't baked into the color pixmap (it's
+        // applied by the interpreter at draw time), so composite it here -- over
+        // a white background, matching how the image looks on the (white) page.
+        if (image->mask && pixmap && fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
+            mask = fz_get_pixmap_from_image(ctx, image->mask, nullptr, nullptr, nullptr, nullptr);
+            if (mask && mask->n == 1) {
+                int bw = pixmap->w, bh = pixmap->h, bn = pixmap->n;
+                int mw = mask->w, mh = mask->h, mn = mask->n;
+                u8* bp = pixmap->samples;
+                u8* mp = mask->samples;
+                for (int y = 0; y < bh; y++) {
+                    int my = (mh == bh) ? y : (int)((i64)y * mh / bh);
+                    for (int x = 0; x < bw; x++) {
+                        int mx = (mw == bw) ? x : (int)((i64)x * mw / bw);
+                        int a = mp[(size_t)my * mask->stride + (size_t)mx * mn]; // smask = alpha
+                        u8* px = bp + (size_t)y * pixmap->stride + (size_t)x * bn;
+                        for (int k = 0; k < 3; k++) {
+                            px[k] = (u8)((px[k] * a + 255 * (255 - a)) / 255);
+                        }
+                    }
+                }
+            }
+        }
         bmp = NewRenderedFzPixmap(ctx, pixmap);
     }
     fz_always(ctx) {
+        fz_drop_pixmap(ctx, mask);
         fz_drop_pixmap(ctx, pixmap);
     }
     fz_catch(ctx) {
