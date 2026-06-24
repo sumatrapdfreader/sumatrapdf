@@ -576,6 +576,34 @@ static int _chm_dir_visit_page(struct chmFile* h, int32_t page) {
     return 1;
 }
 
+struct chmDirSession {
+    struct chmFile* h;
+    uint8_t* page_buf;
+    uint8_t* page_buf_end;
+};
+
+static int _chm_dir_session_begin(struct chmFile* h, struct chmDirSession* s) {
+    s->h = h;
+    s->page_buf = NULL;
+    s->page_buf_end = NULL;
+    if (!_chm_dir_visit_begin(h)) return 0;
+    s->page_buf = (uint8_t*)malloc((unsigned int)h->block_len);
+    if (s->page_buf == NULL) return 0;
+    s->page_buf_end = s->page_buf + h->block_len;
+    return 1;
+}
+
+static void _chm_dir_session_end(struct chmDirSession* s) {
+    free(s->page_buf);
+    s->page_buf = NULL;
+    s->page_buf_end = NULL;
+}
+
+static int _chm_dir_session_fetch(struct chmDirSession* s, int32_t page) {
+    if (!_chm_dir_visit_page(s->h, page)) return 0;
+    return _chm_dir_fetch_page(s->h, page, s->page_buf);
+}
+
 /* open an ITS archive */
 struct chmFile* chm_open(const char* d, size_t len) {
     uint8_t sbuffer[256];
@@ -995,16 +1023,11 @@ typedef enum {
 
 static ChmPmglWalkResult _chm_walk_pmgl_pages(struct chmFile* h, int32_t start_page, ChmPmglEntryFn entry_fn,
                                               void* ctx) {
-    uint8_t* page_buf = NULL;
+    struct chmDirSession session;
     int32_t curPage;
     ChmPmglWalkResult result = CHM_PMGL_WALK_DONE;
 
-    if (!_chm_dir_visit_begin(h)) return CHM_PMGL_WALK_FAILURE;
-
-    page_buf = (uint8_t*)malloc((unsigned int)h->block_len);
-    if (page_buf == NULL) {
-        return CHM_PMGL_WALK_FAILURE;
-    }
+    if (!_chm_dir_session_begin(h, &session)) return CHM_PMGL_WALK_FAILURE;
 
     curPage = start_page;
     while (curPage != -1) {
@@ -1013,22 +1036,18 @@ static ChmPmglWalkResult _chm_walk_pmgl_pages(struct chmFile* h, int32_t start_p
         uint8_t* end;
         unsigned int lenRemain;
 
-        if (!_chm_dir_visit_page(h, curPage)) {
-            result = CHM_PMGL_WALK_FAILURE;
-            goto cleanup;
-        }
-        if (!_chm_dir_fetch_page(h, curPage, page_buf)) {
+        if (!_chm_dir_session_fetch(&session, curPage)) {
             result = CHM_PMGL_WALK_FAILURE;
             goto cleanup;
         }
 
-        cur = page_buf;
+        cur = session.page_buf;
         lenRemain = _CHM_PMGL_LEN;
         if (!_unmarshal_pmgl_header(&cur, &lenRemain, h->block_len, &header)) {
             result = CHM_PMGL_WALK_FAILURE;
             goto cleanup;
         }
-        end = page_buf + h->block_len - (header.free_space);
+        end = session.page_buf + h->block_len - (header.free_space);
 
         while (cur < end) {
             struct chmUnitInfo ui;
@@ -1052,7 +1071,7 @@ static ChmPmglWalkResult _chm_walk_pmgl_pages(struct chmFile* h, int32_t start_p
     }
 
 cleanup:
-    free(page_buf);
+    _chm_dir_session_end(&session);
     return result;
 }
 
@@ -1062,38 +1081,29 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
      * XXX: implement caching scheme for dir pages
      */
 
-    uint8_t* page_buf = NULL;
-    uint8_t* page_buf_end;
+    struct chmDirSession session;
     int32_t curPage;
     int result = CHM_RESOLVE_FAILURE;
 
-    if (!_chm_dir_visit_begin(h)) return CHM_RESOLVE_FAILURE;
-
-    page_buf = (uint8_t*)malloc(h->block_len);
-    if (page_buf == NULL) {
-        return CHM_RESOLVE_FAILURE;
-    }
-    page_buf_end = page_buf + h->block_len;
+    if (!_chm_dir_session_begin(h, &session)) return CHM_RESOLVE_FAILURE;
 
     curPage = h->index_root;
     while (curPage != -1) {
         int32_t new_page;
         uint8_t* pEntry;
 
-        if (!_chm_dir_visit_page(h, curPage)) goto cleanup;
-
-        if (!_chm_dir_fetch_page(h, curPage, page_buf)) goto cleanup;
+        if (!_chm_dir_session_fetch(&session, curPage)) goto cleanup;
 
         if (h->block_len < 4) goto cleanup;
 
-        if (memcmp(page_buf, _chm_pmgl_marker, 4) == 0) {
-            pEntry = _chm_find_in_PMGL(page_buf, h->block_len, objPath);
+        if (memcmp(session.page_buf, _chm_pmgl_marker, 4) == 0) {
+            pEntry = _chm_find_in_PMGL(session.page_buf, h->block_len, objPath);
             if (pEntry == NULL) goto cleanup;
-            if (!_chm_parse_PMGL_entry(&pEntry, page_buf_end, ui)) goto cleanup;
+            if (!_chm_parse_PMGL_entry(&pEntry, session.page_buf_end, ui)) goto cleanup;
             result = CHM_RESOLVE_SUCCESS;
             goto cleanup;
-        } else if (memcmp(page_buf, _chm_pmgi_marker, 4) == 0) {
-            new_page = _chm_find_in_PMGI(page_buf, h->block_len, objPath);
+        } else if (memcmp(session.page_buf, _chm_pmgi_marker, 4) == 0) {
+            new_page = _chm_find_in_PMGI(session.page_buf, h->block_len, objPath);
             curPage = new_page;
         } else {
             goto cleanup;
@@ -1101,7 +1111,7 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
     }
 
 cleanup:
-    free(page_buf);
+    _chm_dir_session_end(&session);
     return result;
 }
 
