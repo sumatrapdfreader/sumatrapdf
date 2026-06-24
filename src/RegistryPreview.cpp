@@ -3,6 +3,8 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/FileUtil.h"
+#include "utils/CryptoUtil.h"
 
 #include "RegistryPreview.h"
 
@@ -153,4 +155,84 @@ bool IsPreviewInstalled() {
     bool isInstalled = str::EqI(iid, kPdfPreviewClsid);
     logf("IsPreviewInstalled() isInstalled=%d\n", (int)isInstalled);
     return isInstalled;
+}
+
+// --- opt-in PdfPreview.dll file logging ---------------------------------------
+
+#define kRegKeySumatra "Software\\SumatraPDF"
+#define kRegValLogPdfPreview "LogPdfPreview"
+
+bool IsPdfPreviewLoggingEnabled() {
+    DWORD val = 0;
+    if (!ReadRegDWORD(HKEY_CURRENT_USER, kRegKeySumatra, kRegValLogPdfPreview, val)) {
+        return false;
+    }
+    return val != 0;
+}
+
+void SetPdfPreviewLoggingEnabled(bool enable) {
+    WriteRegDWORD(HKEY_CURRENT_USER, kRegKeySumatra, kRegValLogPdfPreview, enable ? 1 : 0);
+    logf("SetPdfPreviewLoggingEnabled: %d\n", (int)enable);
+}
+
+// Per-build data dir, keyed on the sha1 of the SumatraPDF.exe sitting next to
+// this module: in SumatraPDF.exe that's the running exe, in PdfPreview.dll it's
+// the sibling exe -- either way it resolves to the same directory SumatraPDF.exe
+// uses (see GetBuildDirNameTemp), so logs land next to its crashinfo/logs.
+TempStr GetPdfPreviewLogDirTemp() {
+    TempStr exeDir = GetSelfExeDirTemp();
+    if (!exeDir) {
+        return nullptr;
+    }
+    TempStr exePath = path::JoinTemp(exeDir, "SumatraPDF.exe");
+    ByteSlice d = file::ReadFile(exePath);
+    if (d.empty()) {
+        return nullptr;
+    }
+    u8 sha1[20]{};
+    CalcSHA1Digest(d.data(), d.Size(), sha1);
+    d.Free();
+    char id[7];
+    for (int i = 0; i < 3; i++) { // first 6 hex chars (3 bytes), matches GetBuildDirNameTemp
+        sprintf_s(&id[2 * i], 3, "%02x", sha1[i]);
+    }
+    TempStr local = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
+    if (!local) {
+        return nullptr;
+    }
+    TempStr dir = path::JoinTemp(local, "SumatraPDF-data");
+    return path::JoinTemp(dir, id);
+}
+
+// pdfpreview.log.<month>-<day>.<hour>-<minute>.<unique>.txt
+static TempStr GetNewPdfPreviewLogFilePathTemp() {
+    TempStr dir = GetPdfPreviewLogDirTemp();
+    if (!dir) {
+        return nullptr;
+    }
+    SYSTEMTIME st{};
+    GetLocalTime(&st);
+    // unique part: pid plus low bits of tick, so concurrent preview hosts that
+    // start in the same minute don't collide
+    DWORD uniq = (GetCurrentProcessId() << 16) ^ (GetTickCount() & 0xffff);
+    TempStr name = str::FormatTemp("%s%02d-%02d.%02d-%02d.%08x.txt", kPdfPreviewLogPrefix, (int)st.wMonth,
+                                   (int)st.wDay, (int)st.wHour, (int)st.wMinute, uniq);
+    return path::JoinTemp(dir, name);
+}
+
+void StartPdfPreviewLoggingIfEnabled() {
+    static bool started = false;
+    if (started || !IsPdfPreviewLoggingEnabled()) {
+        return;
+    }
+    started = true;
+    TempStr path = GetNewPdfPreviewLogFilePathTemp();
+    if (!path) {
+        return;
+    }
+    // WriteCurrentLogToFile creates the directory and flushes whatever we've
+    // already buffered (e.g. DllMain); StartLogToFile appends subsequent lines.
+    WriteCurrentLogToFile(path);
+    StartLogToFile(path, false);
+    logf("PdfPreview: logging to '%s'\n", path);
 }

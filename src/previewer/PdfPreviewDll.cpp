@@ -127,6 +127,9 @@ STDAPI DllCanUnloadNow(VOID) {
 }
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
+    // route our log to a file if the user enabled it (no-op otherwise). Done
+    // here rather than in DllMain to avoid file/registry I/O under loader lock.
+    StartPdfPreviewLoggingIfEnabled();
     *ppv = nullptr;
     ScopedComPtr<PreviewClassFactory> pClassFactory(new PreviewClassFactory(rclsid));
     if (!pClassFactory) {

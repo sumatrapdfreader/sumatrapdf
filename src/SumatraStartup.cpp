@@ -57,6 +57,7 @@
 #include "Menu.h"
 #include "AppTools.h"
 #include "Installer.h"
+#include "RegistryPreview.h"
 #include "ExternalViewers.h"
 #include "Theme.h"
 #include "DarkModeSubclass.h"
@@ -1248,8 +1249,50 @@ static i64 GetDirLastActivityAgeSec(const char* dirPath, const ULARGE_INTEGER& n
 }
 
 // delete stale build dirs and legacy top-level dirs from previous layouts
+// PdfPreview.dll writes one log per preview-host session when logging is enabled
+// but, being a restricted shell host, doesn't prune them -- so SumatraPDF.exe
+// keeps only the newest `keep` here (the logs live in our per-build data dir).
+struct PreviewLogFile {
+    char* path;
+    FILETIME ft;
+};
+static int CmpPreviewLogNewestFirst(const void* a, const void* b) {
+    auto la = (const PreviewLogFile*)a;
+    auto lb = (const PreviewLogFile*)b;
+    return -CompareFileTime(&la->ft, &lb->ft); // newest (largest time) first
+}
+static void DeleteOldPdfPreviewLogs(int keep) {
+    TempStr dir = GetPdfPreviewLogDirTemp();
+    if (!dir || !dir::Exists(dir)) {
+        return;
+    }
+    Vec<PreviewLogFile> files;
+    DirIter di{dir};
+    di.includeFiles = true;
+    di.includeDirs = false;
+    for (DirIterEntry* de : di) {
+        if (!str::StartsWith(de->name, kPdfPreviewLogPrefix)) {
+            continue;
+        }
+        PreviewLogFile lf{str::Dup(de->filePath), de->fd->ftLastWriteTime};
+        files.Append(lf);
+    }
+    int n = files.Size();
+    if (n > keep) {
+        files.Sort(CmpPreviewLogNewestFirst);
+        for (int i = keep; i < n; i++) {
+            logf("DeleteOldPdfPreviewLogs: deleting '%s'\n", files[i].path);
+            file::Delete(files[i].path);
+        }
+    }
+    for (PreviewLogFile& lf : files) {
+        str::Free(lf.path);
+    }
+}
+
 static void DeleteStaleFilesAsync() {
     DeleteStaleCbxCacheFiles();
+    DeleteOldPdfPreviewLogs(32);
 
     if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
         return;

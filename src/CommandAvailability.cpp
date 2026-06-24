@@ -483,6 +483,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if ((cmdId == CmdToggleWindowsPreviewer || cmdId == CmdToggleWindowsSearchFilter) && !IsOurExeInstalled()) {
         return CommandVisibility::Hide;
     }
+    if (cmdId == CmdTogglePdfPreviewLogging) {
+        // toggles a registry flag the installed PdfPreview.dll reads; pointless
+        // for a portable build that has no registered preview handler
+        return IsOurExeInstalled() ? CommandVisibility::Show : CommandVisibility::Hide;
+    }
 
     if (CmdWorksWithoutDocument(cmdId)) {
         return MapForSurface(CommandVisibility::Show, surface);

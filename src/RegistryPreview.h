@@ -14,3 +14,16 @@ bool InstallPreviewDll(const char* dllPath, bool allUsers);
 bool UninstallPreviewDll();
 void DisablePreviewInstallExts(const char* cmdLine);
 bool IsPreviewInstalled();
+
+// opt-in file logging for the preview handler (PdfPreview.dll), controlled by a
+// registry value so it can be toggled (via CmdTogglePdfPreviewLogging) without a
+// rebuild. Files are written to the per-build data dir (keyed on the sibling
+// SumatraPDF.exe's sha1) so they land next to the app's other logs/crash info.
+#define kPdfPreviewLogPrefix "pdfpreview.log."
+
+bool IsPdfPreviewLoggingEnabled();
+void SetPdfPreviewLoggingEnabled(bool enable);
+// per-build data dir, same one SumatraPDF.exe uses (...\SumatraPDF-data\<sha1>)
+TempStr GetPdfPreviewLogDirTemp();
+// if logging is enabled, route this module's log to a fresh unique file
+void StartPdfPreviewLoggingIfEnabled();

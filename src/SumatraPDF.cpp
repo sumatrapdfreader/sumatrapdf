@@ -7677,6 +7677,23 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             DownloadAndInstallPendingUpdate(win);
             break;
 
+        case CmdTogglePdfPreviewLogging: {
+            bool enabled = !IsPdfPreviewLoggingEnabled();
+            SetPdfPreviewLoggingEnabled(enabled);
+            TempStr notifMsg = nullptr;
+            if (enabled) {
+                TempStr dir = GetPdfPreviewLogDirTemp();
+                notifMsg = str::FormatTemp("PDF preview logging enabled.\nLogs: %s", dir ? dir : "(unknown)");
+            } else {
+                notifMsg = str::DupTemp("PDF preview logging disabled.");
+            }
+            NotificationCreateArgs nargs;
+            nargs.hwndParent = win->hwndCanvas;
+            nargs.msg = notifMsg;
+            nargs.timeoutMs = 8000;
+            ShowNotification(nargs);
+        } break;
+
         case CmdOptions:
             ShowOptionsDialog(win);
             break;
