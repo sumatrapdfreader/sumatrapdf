@@ -2242,5 +2242,13 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
     if (scroll.y < 0) {
         scroll.y = 0; // Adobe Reader never shows the previous page
     }
-    GoToPage(pageNo, scroll.y, true, scroll.x);
+    GoToPage(pageNo, scroll.y, true, -1);
+    if (rect.x != DEST_USE_DEFAULT) {
+        float docY = (rect.y != DEST_USE_DEFAULT) ? rect.y : 0.f;
+        Rect destScreen = CvtToScreen(pageNo, RectF(rect.x, docY, 1, 1));
+        ScrollScreenToRect(pageNo, destScreen);
+    } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
+        Rect destScreen = CvtToScreen(pageNo, rect);
+        ScrollScreenToRect(pageNo, destScreen);
+    }
 }

@@ -36,6 +36,7 @@ enum class ControlCmd : u16 {
     TestImageResizeArrowKey = 23,
     TestFindResultPageColumnClip = 24,
     TestFileKind = 25,
+    TestScrollToLink = 26,
 };
 
 enum class ControlArgType : u16 {
@@ -444,6 +445,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestFileKindResult(path, expectedKind, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestScrollToLink: {
+            i32 minDelta = 50;
+            IntArg(req, 0, minDelta);
+            int exitCode = 0;
+            char* res = TestScrollToLinkResult(minDelta, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

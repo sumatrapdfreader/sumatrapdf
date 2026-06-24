@@ -628,3 +628,71 @@ char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord
     }
     return out.StealData();
 }
+
+static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
+    if (!engine) {
+        return nullptr;
+    }
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (!el || !el->Is(kindPageElementDest)) {
+            continue;
+        }
+        IPageDestination* dest = el->AsLink();
+        if (dest) {
+            return dest;
+        }
+    }
+    return nullptr;
+}
+
+// Follow the first internal link on page 1 after pinning the viewport to the
+// left; used by tests/issue-5064.ts (issue #5064).
+char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail("NOTREADY no-doc");
+    }
+
+    dm->SetZoomVirtual(200, nullptr);
+    dm->Relayout(200, dm->rotation);
+    dm->viewPort.x = 0;
+    dm->RecalcVisibleParts();
+    dm->RenderVisibleParts();
+
+    int before = dm->viewPort.x;
+    IPageDestination* dest = FirstLinkDestOnPage(dm->GetEngine(), 1);
+    if (!dest) {
+        return fail("ERROR no-link");
+    }
+
+    win->ctrl->HandleLink(dest, win->linkHandler);
+
+    int after = dm->viewPort.x;
+    int delta = after - before;
+    bool ok = delta >= minViewportDelta;
+    if (ok) {
+        out.AppendFmt("OK viewport_before=%d viewport_after=%d delta=%d\n", before, after, delta);
+    } else {
+        out.AppendFmt("FAIL viewport_before=%d viewport_after=%d delta=%d min=%d\n", before, after, delta,
+                      minViewportDelta);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
