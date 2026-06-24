@@ -73,7 +73,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
     return true;
 }
 
-static bool AppendEntry(str::Str& data, str::Str& content, const char* filePath, const char* inArchiveName,
+static bool AppendEntry(StrBuilder& data, StrBuilder& content, const char* filePath, const char* inArchiveName,
                         lzma::FileInfo* fi = nullptr) {
     size_t nameLen = str::Len(inArchiveName);
     ReportIf(nameLen > UINT32_MAX - 25);
@@ -139,8 +139,8 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
         prevArchive.filesCount = 0;
     }
 
-    str::Str data;
-    str::Str content;
+    StrBuilder data;
+    StrBuilder content;
 
     constexpr size_t kBufSize = 8;
     ByteWriterLE lzsaHeader(kBufSize);
@@ -150,7 +150,7 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
     data.AppendSlice(lzsaHeader.AsByteSlice());
 
     for (int i = skipFiles; i < files.Size(); i++) {
-        AutoFreeStr filePath(str::Dup(files.at(i)));
+        AutoFreeStr filePath(str::Dup(files.At(i)));
         char* sep = str::FindCharLast(filePath, ':');
         AutoFreeStr utf8Name;
         if (sep) {
@@ -186,16 +186,17 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
 bool CreateArchiveFromDir(const char* archivePath, const char* dir) {
     StrVec files;
     int n = str::Len(dir);
-    bool ok = DirTraverse(dir, true, [&files, n](const char* path) -> bool {
+    DirIter di{dir};
+    di.recurse = true;
+    di.includeFiles = true;
+    di.includeDirs = false;
+    for (DirIterEntry* de : di) {
+        const char* path = de->filePath;
         const char* archiveName = path + n;
         if ('\\' == *archiveName) archiveName++;
         if ('/' == *archiveName) archiveName++;
         TempStr s = str::JoinTemp(path, ":", archiveName);
         files.Append(s);
-        return true;
-    });
-    if (!ok) {
-        return false;
     }
     return CreateArchive(archivePath, files, 0);
 }
@@ -264,7 +265,7 @@ int main(__unused int argc, __unused char** argv) {
     MyParseCmdLine(GetCommandLine(), args);
     int errorStep = 1;
 
-    auto exeName = path::GetBaseNameTemp(args.at(0));
+    auto exeName = path::GetBaseNameTemp(args.At(0));
 
     int nArgs = args.Size();
     // first arg is exe path, the rest is
@@ -272,13 +273,13 @@ int main(__unused int argc, __unused char** argv) {
         return printUsage(exeName);
     }
 
-    char* archiveName = args.at(1);
+    char* archiveName = args.At(1);
     if (nArgs == 2 && file::Exists(archiveName)) {
         return mainVerify(archiveName);
     }
 
     if (nArgs == 3) {
-        auto dir = args.at(2);
+        auto dir = args.At(2);
         if (dir::Exists(dir)) {
             bool ok = lzsa::CreateArchiveFromDir(archiveName, dir);
             if (!ok) {
@@ -294,7 +295,7 @@ int main(__unused int argc, __unused char** argv) {
     errorStep++;
 
     bool ok = lzsa::CreateArchive(archiveName, args, 2);
-    FailIf(!ok, "Failed to create \"%s\"", args.at(1));
+    FailIf(!ok, "Failed to create \"%s\"", args.At(1));
 
     return 0;
 }
