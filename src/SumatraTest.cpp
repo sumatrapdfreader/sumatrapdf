@@ -459,9 +459,12 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, const char* word,
 // whenever the matched text differs from the typed search text (e.g. a
 // case-insensitive find where "the" matches "The"), so ShowSearchResult() then
 // got an empty result (result->len == 0), tripped a ReportIf, and failed to
-// navigate/select the match. Operates on the document loaded into the first
-// window. `word` is the (case-different) matched text in the document and
-// `typed` is the lowercase search text the user typed.
+// navigate to the match. Operates on the document loaded into the first window.
+// `word` is the (case-different) matched text in the document and `typed` is
+// the lowercase search text the user typed. Since issue #5737 find no longer
+// sets a text selection (matches are highlighted by PaintAllFindMatches), so we
+// verify navigation: the picked match becomes textSearch's current position and
+// is scrolled into view.
 char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCodeOut) {
     StrBuilder out;
     auto fail = [&](const char* msg) -> char* {
@@ -485,9 +488,18 @@ char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCode
         return fail("NOTREADY no-doc");
     }
     EngineBase* engine = dm->GetEngine();
-    const int pageNo = 1;
+    // locate `word` on whichever page holds it (the test PDF puts it on a later
+    // page so the initial view doesn't already show it -- navigating to it is
+    // then observable)
+    int pageNo = 0;
     int startGlyph = 0, endGlyph = 0;
-    if (!FindWordGlyphRange(engine, pageNo, word, &startGlyph, &endGlyph)) {
+    for (int p = 1; p <= engine->PageCount(); p++) {
+        if (FindWordGlyphRange(engine, p, word, &startGlyph, &endGlyph)) {
+            pageNo = p;
+            break;
+        }
+    }
+    if (pageNo == 0) {
         return fail("ERROR word-not-found");
     }
 
@@ -496,18 +508,55 @@ char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCode
     AutoFreeWStr typedW = ToWStr(typed);
     dm->textSearch->SetText(typedW);
 
-    // start with no selection so we can tell whether GoToFindMatch selected the match
+    // make sure the match isn't already on screen, so navigating to it is
+    // observable: scroll back to the first page and clear any selection
+    win->ctrl->GoToPage(1, false);
     DeleteOldSelectionInfo(win, true);
 
     GoToFindMatch(win, pageNo, startGlyph, pageNo, endGlyph);
 
-    bool isTextOnly = false;
-    TempStr selected = GetSelectedTextTemp(win->CurrentTab(), " ", isTextOnly);
-    bool ok = str::Eq(selected, word);
+    // Find no longer creates a text selection (issue #5737): all matches,
+    // including the active one, are highlighted by PaintAllFindMatches instead.
+    // The regression we guard is that GoToFindMatch *navigates* to the picked
+    // match and records it as textSearch's current result position (which Find
+    // Next/Prev and the n/m counter continue from). The old bug cleared the
+    // result before ShowSearchResult ran, so it never scrolled to the match.
+    // Verify both: the match was recorded as the current position (start/end
+    // glyph range maps back to `word`), and it was scrolled into the viewport.
+    TextSearch* ts = dm->textSearch;
+    int curPage = ts->startPage;
+    int curStart = ts->startGlyph;
+    int curEnd = ts->endGlyph;
+
+    TempStr matched = nullptr;
+    int textLen = 0;
+    Rect* coords = nullptr;
+    const WCHAR* pageTxt = engine->GetTextForPage(pageNo, &textLen, &coords);
+    if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= textLen && curStart < curEnd) {
+        AutoFreeWStr w = str::Dup(pageTxt + curStart, (size_t)(curEnd - curStart));
+        matched = ToUtf8Temp(w);
+    }
+
+    // is the match rect actually within the visible viewport now? (mirrors
+    // DisplayModel::ScrollScreenToRect's own visibility test)
+    bool visible = false;
+    if (coords && curPage == pageNo && curStart >= 0 && curEnd <= textLen && curStart < curEnd) {
+        Rect pr = coords[curStart];
+        for (int i = curStart + 1; i < curEnd; i++) {
+            pr = pr.Union(coords[i]);
+        }
+        Rect sr = dm->CvtToScreen(pageNo, ToRectF(pr));
+        Rect vp = Rect(Point(), dm->viewPort.Size());
+        visible = !vp.Intersect(sr).IsEmpty();
+    }
+
+    bool matchOk = (curPage == pageNo) && (curStart == startGlyph) && (curEnd == endGlyph) && str::Eq(matched, word);
+    bool ok = matchOk && visible;
     if (ok) {
-        out.AppendFmt("OK selected=%s\n", selected);
+        out.AppendFmt("OK match=%s page=%d visible=1\n", matched, pageNo);
     } else {
-        out.AppendFmt("FAIL expected=%s selected=%s\n", word, selected ? selected : "(none)");
+        out.AppendFmt("FAIL expected=%s match=%s page=%d visible=%d\n", word, matched ? matched : "(none)", pageNo,
+                      visible ? 1 : 0);
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
