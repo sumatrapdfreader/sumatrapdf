@@ -17,6 +17,7 @@ extern "C" {
 #include "EngineMupdf.h"
 #include "GlobalPrefs.h"
 #include "Commands.h"
+#include "Translations.h"
 
 #include "utils/Log.h"
 
@@ -130,7 +131,7 @@ TempStr AnnotationReadableNameTemp(AnnotationType tp) {
     }
     char* s = (char*)SeqStrByIndex(gAnnotReadableNames, n);
     ReportIf(!s);
-    return s;
+    return (TempStr)_TRA(s);
 }
 
 AnnotationType Type(Annotation* annot) {

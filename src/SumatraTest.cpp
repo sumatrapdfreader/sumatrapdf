@@ -22,6 +22,7 @@
 #include "SearchAndDDE.h"
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
+#include "Annotation.h"
 
 #include <chm_lib.h>
 #include "lzx.h"
@@ -691,6 +692,28 @@ char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
     } else {
         out.AppendFmt("FAIL viewport_before=%d viewport_after=%d delta=%d min=%d\n", before, after, delta,
                       minViewportDelta);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
+
+// Verifies annotation readable names and command descriptions resolve in German.
+char* TestAnnotReadableNamesResult(int* exitCodeOut) {
+    StrBuilder out;
+    trans::SetCurrentLangByCode("de");
+    TempStr freeText = AnnotationReadableNameTemp(AnnotationType::FreeText);
+    TempStr stamp = AnnotationReadableNameTemp(AnnotationType::Stamp);
+    TempStr caret = AnnotationReadableNameTemp(AnnotationType::Caret);
+    TempStr toggleBm = (TempStr)_TRA("Toggle Bookmarks");
+    bool ok = str::Eq(freeText, "Freitext") && str::Eq(stamp, "Stempel") && str::Eq(caret, "Cursor") &&
+              str::Eq(toggleBm, "Lesezeichen umschalten");
+    if (ok) {
+        out.AppendFmt("OK freeText=%s stamp=%s caret=%s toggleBm=%s\n", freeText, stamp, caret, toggleBm);
+    } else {
+        out.AppendFmt("FAIL freeText=%s stamp=%s caret=%s toggleBm=%s\n", freeText ? freeText : "(null)",
+                      stamp ? stamp : "(null)", caret ? caret : "(null)", toggleBm ? toggleBm : "(null)");
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;

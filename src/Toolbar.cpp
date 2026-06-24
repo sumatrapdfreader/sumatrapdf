@@ -897,7 +897,7 @@ static const char* ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
     if (origId > 0 && origId < CmdLast) {
         const char* desc = SeqStrByIndex(gCommandDescriptions, origId);
         if (desc) {
-            return desc;
+            return (const char*)_TRA(desc);
         }
     }
     return shortcut->cmd;

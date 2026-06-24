@@ -11883,6 +11883,21 @@ tw:檔案附件
 uk:Вкладений файл
 uz:Fayl ilovasi
 vn:Tệp đính kèm
+:Caret
+de:Cursor
+fr:Cursor
+it:Caret
+pl:Kursor
+:Free Text
+de:Freitext
+fr:Texte libre
+it:Testo libero
+pl:Swobodny tekst
+:Stamp
+de:Stempel
+fr:Tampon
+it:Timbro
+pl:Stempel
 :File Size:
 am:Ֆայլի չափը՝
 ar:حجم الملف:
