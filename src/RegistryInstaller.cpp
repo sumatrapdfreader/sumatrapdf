@@ -42,6 +42,33 @@ static bool HasRegistryValue(HKEY hkey, const char* keyName, const char* valName
     return (res == ERROR_SUCCESS || res == ERROR_MORE_DATA);
 }
 
+static bool IsImageFileExt(const char* ext) {
+    return str::Eq(ext, ".tif") || str::Eq(ext, ".tiff") || str::Eq(ext, ".jp2") || str::Eq(ext, ".png") ||
+           str::Eq(ext, ".jpg") || str::Eq(ext, ".jpeg") || str::Eq(ext, ".tga") || str::Eq(ext, ".gif") ||
+           str::Eq(ext, ".avif") || str::Eq(ext, ".heic") || str::Eq(ext, ".heif") || str::Eq(ext, ".jfif") ||
+           str::Eq(ext, ".webp");
+}
+
+static TempStr IconPathForExtTemp(const char* ext, const char* exePathQuoted) {
+    if (str::Eq(ext, ".epub")) {
+        return str::JoinTemp(exePathQuoted, ",-3");
+    }
+    if (str::Eq(ext, ".cbr") || str::Eq(ext, ".cbz") || str::Eq(ext, ".cbt") || str::Eq(ext, ".cb7")) {
+        return str::JoinTemp(exePathQuoted, ",-4");
+    }
+    if (str::Eq(ext, ".chm")) {
+        return str::JoinTemp(exePathQuoted, ",-5");
+    }
+    if (str::Eq(ext, ".djvu")) {
+        return str::JoinTemp(exePathQuoted, ",-6");
+    }
+    if (IsImageFileExt(ext)) {
+        // use the Windows photo icon so image types are not shown as PDF (issue #5274)
+        return str::DupTemp(R"("%SystemRoot%\System32\imageres.dll",-102)");
+    }
+    return str::JoinTemp(exePathQuoted, ",-2");
+}
+
 static bool HasOurOpenWithEntry(HKEY hkey, const char* ext) {
     TempStr key = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
     TempStr progID = str::JoinTemp(kAppName, ext);
@@ -197,18 +224,7 @@ static bool RegisterForOpenWith(HKEY hkey, const char* installedExePath) {
         // Per https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
         // ",${n}" => n is 0-based index of the icon
         // ",-${n}" => n is icon with resource id
-        char* iconPath;
-        if (str::Eq(ext, ".epub")) {
-            iconPath = str::JoinTemp(exePathQuoted, ",-3");
-        } else if (str::Eq(ext, ".cbr") || str::Eq(ext, ".cbz") || str::Eq(ext, ".cbt") || str::Eq(ext, ".cb7")) {
-            iconPath = str::JoinTemp(exePathQuoted, ",-4");
-        } else if (str::Eq(ext, ".chm")) {
-            iconPath = str::JoinTemp(exePathQuoted, ",-5");
-        } else if (str::Eq(ext, ".djvu")) {
-            iconPath = str::JoinTemp(exePathQuoted, ",-6");
-        } else {
-            iconPath = str::JoinTemp(exePathQuoted, ",-2");
-        }
+        TempStr iconPath = IconPathForExtTemp(ext, exePathQuoted);
 
         key = str::JoinTemp(progIDKey, "\\Application");
         ok &= LoggedWriteRegStr(hkey, key, "ApplicationCompany", "Krzysztof Kowalczyk");
@@ -553,4 +569,38 @@ void ReRegisterFileAssociations() {
     if (didRegister) {
         ShellNotifyAssociationsChanged();
     }
+}
+
+char* TestIconPathForExtResult(const char* ext, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (str::IsEmpty(ext)) {
+        return fail("ERROR missing-ext");
+    }
+    TempStr iconPath = IconPathForExtTemp(ext, R"("C:\fake\SumatraPDF.exe")");
+    bool isImage = IsImageFileExt(ext);
+    bool usesPdfIcon = str::EndsWith(iconPath, ",-2");
+    if (isImage && usesPdfIcon) {
+        out.AppendFmt("FAIL ext=%s icon=%s\n", ext, iconPath);
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    }
+    if (!isImage && str::Eq(ext, ".pdf") && !usesPdfIcon) {
+        return fail("ERROR pdf-missing-pdf-icon");
+    }
+    out.AppendFmt("OK ext=%s icon=%s\n", ext, iconPath);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return out.StealData();
 }

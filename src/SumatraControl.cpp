@@ -13,6 +13,7 @@
 #include "ImageSaveCropResize.h"
 #include "utils/GuessFileType.h"
 #include "FindWindow.h"
+#include "Installer.h"
 
 #include "utils/Log.h"
 
@@ -36,6 +37,7 @@ enum class ControlCmd : u16 {
     TestImageResizeArrowKey = 23,
     TestFindResultPageColumnClip = 24,
     TestFileKind = 25,
+    TestIconPathForExt = 26,
 };
 
 enum class ControlArgType : u16 {
@@ -444,6 +446,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestFileKindResult(path, expectedKind, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestIconPathForExt: {
+            const char* ext = StringArg(req, 0);
+            if (!ext) {
+                AppendError(req, "TestIconPathForExt expects string ext");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestIconPathForExtResult(ext, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

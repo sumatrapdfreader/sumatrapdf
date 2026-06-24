@@ -96,3 +96,6 @@ void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();
 
 void ReRegisterFileAssociations();
+
+// Headless test helper for issue #5274: image extensions must not use the PDF icon.
+char* TestIconPathForExtResult(const char* ext, int* exitCodeOut = nullptr);
