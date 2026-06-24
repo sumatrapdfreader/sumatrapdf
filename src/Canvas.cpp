@@ -2105,9 +2105,15 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         gs.DrawRectangle(&pen, rc.x, rc.y, rc.dx, rc.dy);
     }
 
+    // find-match highlighting and text selection are independent: paint both.
+    // (when a find match is the current selection it's cleared in GoToFindMatch
+    // so it isn't drawn twice; PaintAllFindMatches no-ops unless actively
+    // searching). Using "else if" here hid the normal selection highlight
+    // because gShowAllMatches defaults to true (issue #5737).
     if (gShowAllMatches) {
         PaintAllFindMatches(win, hdc);
-    } else if (win->showSelection) {
+    }
+    if (win->showSelection) {
         PaintSelection(win, hdc);
     }
 
