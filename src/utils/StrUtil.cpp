@@ -12,6 +12,37 @@
 #define sscanf_s sscanf
 #endif
 
+#if defined(_MSC_VER)
+static _locale_t GetUtf8FormatLocale() {
+    static _locale_t loc = _create_locale(LC_ALL, ".UTF-8");
+    return loc;
+}
+#endif
+
+static int VsnprintfUtf8(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
+#if defined(_MSC_VER)
+    _locale_t loc = GetUtf8FormatLocale();
+    if (loc) {
+        return _vsnprintf_l(buf, bufCchSize, fmt, loc, args);
+    }
+#endif
+    return vsnprintf(buf, bufCchSize, fmt, args);
+}
+
+static int VscprintfUtf8(const char* fmt, va_list args) {
+#if defined(_MSC_VER)
+    _locale_t loc = GetUtf8FormatLocale();
+    if (loc) {
+        return _vscprintf_l(fmt, loc, args);
+    }
+#endif
+    va_list argsCopy;
+    va_copy(argsCopy, args);
+    int res = vsnprintf(nullptr, 0, fmt, argsCopy);
+    va_end(argsCopy);
+    return res;
+}
+
 // --- copyright for utf8 code below
 
 /*
@@ -707,7 +738,7 @@ int BufFind(const char* buf, int bufSize, const char* toFind) {
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
-    int count = vsnprintf(buf, bufCchSize, fmt, args);
+    int count = VsnprintfUtf8(buf, bufCchSize, fmt, args);
     buf[bufCchSize - 1] = 0;
     return (count >= 0) && ((size_t)count < bufCchSize);
 }
@@ -723,37 +754,37 @@ bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
 // TODO: need to finish StrFormat and use it instead.
 char* FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     char message[512]{};
-    int bufCchSize = dimofi(message);
-    char* buf = message;
-    for (;;) {
-        int count = vsnprintf(buf, (size_t)bufCchSize, fmt, args);
-        // happened in https://github.com/sumatrapdfreader/sumatrapdf/issues/878
-        // when %S string had certain Unicode characters
-        ReportIf(count == -1);
-        if (count < 0) {
-            str::BufSet(buf, bufCchSize, "vsnprintf() returned -1");
-            break;
-        }
-
-        if ((count >= 0) && (count < bufCchSize)) {
-            break;
-        }
-        /* we have to make the buffer bigger. The algorithm used to calculate
-           the new size is arbitrary (aka. educated guess) */
-        if (buf != message) {
-            Free(a, buf);
-        }
-        bufCchSize = count + 2; // +2 just in case
-        buf = AllocArray<char>(a, bufCchSize);
-        if (!buf) {
-            break;
-        }
+    va_list argsCopy;
+    va_copy(argsCopy, args);
+    int count = VsnprintfUtf8(message, dimof(message), fmt, argsCopy);
+    va_end(argsCopy);
+    if ((count >= 0) && (count < dimofi(message))) {
+        return str::Dup(a, message);
     }
 
-    if (buf == message) {
-        buf = str::Dup(a, message);
+    va_copy(argsCopy, args);
+    count = VscprintfUtf8(fmt, argsCopy);
+    va_end(argsCopy);
+    // happened in https://github.com/sumatrapdfreader/sumatrapdf/issues/878
+    // when %S string had certain Unicode characters
+    ReportIf(count == -1);
+    if (count < 0) {
+        return str::Dup(a, "vsnprintf() returned -1");
     }
 
+    char* buf = AllocArray<char>(a, count + 1);
+    if (!buf) {
+        return nullptr;
+    }
+
+    va_copy(argsCopy, args);
+    int count2 = VsnprintfUtf8(buf, (size_t)count + 1, fmt, argsCopy);
+    va_end(argsCopy);
+    ReportIf(count2 != count);
+    if (count2 < 0) {
+        Free(a, buf);
+        return str::Dup(a, "vsnprintf() returned -1");
+    }
     return buf;
 }
 

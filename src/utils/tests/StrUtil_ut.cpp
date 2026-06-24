@@ -281,6 +281,21 @@ void StrTest() {
     str = str::Format("%s", buf);
     utassert(str::Eq(str, buf));
     str::Free(str);
+    str = str::Format("%S",
+                      L"a"
+                      L"\x2019"
+                      L"a.pdf");
+    utassert(str::Eq(str,
+                     "a\xE2\x80\x99"
+                     "a.pdf"));
+    str::Free(str);
+    utassert(str::BufFmt(buf, dimof(buf), "%S",
+                         L"a"
+                         L"\x2019"
+                         L"a.pdf"));
+    utassert(str::Eq(buf,
+                     "a\xE2\x80\x99"
+                     "a.pdf"));
     {
         char* str2;
         AutoFreeStr large(AllocArray<char>(2000));
