@@ -1514,9 +1514,6 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     ClearTocBox(win);
     ClearMouseState(win);
 
-    // TODO: this crashes with new tabs
-    // ReportIf(win->IsAboutWindow() || win->IsDocLoaded() != (win->ctrl != nullptr));
-    // TODO: https://code.google.com/p/sumatrapdf/issues/detail?id=1570
     if (win->ctrl) {
         DisplayModel* dm = win->AsFixed();
         if (dm) {

@@ -950,8 +950,6 @@ void CreateFavorites(MainWindow* win) {
     treeView->onSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
     treeView->onKeyDown = MkFunc1Void(FavTreeKeyDown);
     treeView->onClick = MkFunc1Void(FavTreeItemClicked);
-    // treeView->onChar = TocTreeCharHandler;
-    // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
     treeView->Create(args);
     ReportIf(!treeView->hwnd);

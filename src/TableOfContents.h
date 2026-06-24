@@ -17,6 +17,3 @@ void GoToTocItem(MainWindow*, TocItem*);
 // shared with Favorites.cpp
 // void TocCustomizeTooltip(TreeItem::GetTooltipEvent*);
 // LRESULT TocTreeKeyDown2(TreeKeyDownEvent*);
-
-// void TocTreeCharHandler(CharEvent* ev);
-// void TocTreeMouseWheelHandler(MouseWheelEvent* ev);

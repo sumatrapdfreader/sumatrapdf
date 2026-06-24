@@ -95,7 +95,6 @@ RectF GetBounds(Annotation*);
 RectF GetRect(Annotation*);
 void SetRect(Annotation*, RectF);
 void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
-// Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
 
 // EditAnnotations.cpp
 const char* Author(Annotation*);

@@ -1193,45 +1193,6 @@ void UnsubclassToc(MainWindow* win) {
     }
 }
 
-// TODO: restore
-#if 0
-void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
-    MainWindow* win = FindMainWindowByHwnd(ev->hwnd);
-    ReportIf(!win);
-    if (!win) {
-        return;
-    }
-    // scroll the canvas if the cursor isn't over the ToC tree
-    if (!IsCursorOverWindow(ev->hwnd)) {
-        ev->didHandle = true;
-        ev->result = SendMessageW(win->hwndCanvas, ev->msg, ev->wp, ev->lp);
-    }
-}
-#endif
-
-// TODO: restore
-#if 0
-void TocTreeCharHandler(CharEvent* ev) {
-    MainWindow* win = FindMainWindowByHwnd(ev->hwnd);
-    ReportIf(!win);
-    if (!win) {
-        return;
-    }
-    if (VK_ESCAPE != ev->keyCode) {
-        return;
-    }
-    if (!gGlobalPrefs->escToExit) {
-        return;
-    }
-    if (!CanCloseWindow(win)) {
-        return;
-    }
-
-    CloseWindow(win, true, false);
-    ev->didHandle = true;
-}
-#endif
-
 // Recursively build a filtered copy of the TocItem tree.
 // Includes items whose title matches the filter, plus ancestors needed to reach them.
 // Returns nullptr if nothing matches.
@@ -1387,8 +1348,6 @@ void CreateToc(MainWindow* win) {
     treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
     treeView->onGetTooltip = MkFunc1Void(TocCustomizeTooltip);
     treeView->onClick = MkFunc1Void(TocTreeClick);
-    // treeView->onChar = TocTreeCharHandler;
-    // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
     treeView->Create(args);
     ReportIf(!treeView->hwnd);

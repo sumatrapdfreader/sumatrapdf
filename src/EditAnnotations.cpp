@@ -1519,9 +1519,6 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
 
-        // TODO: doesn't work
-        // w->SetTextColor(MkColor(0xff, 0, 0));
-
         w->onClick = MkFunc0(ButtonDeleteHandler, ew);
         ew->buttonDelete = w;
         vbox->AddChild(w);

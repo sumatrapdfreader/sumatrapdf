@@ -1223,34 +1223,6 @@ void SetOpacity(Annotation* annot, int newOpacity) {
     MarkNotificationAsModified(e, annot);
 }
 
-// TODO: unused, remove
-#if 0
-Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) {
-    Vec<Annotation*> result;
-    if (!annots) {
-        return result;
-    }
-    for (auto& annot : *annots) {
-        if (annot->isDeleted) {
-            continue;
-        }
-        if (PageNo(annot) != pageNo) {
-            continue;
-        }
-        // include all annotations for pageNo that can be rendered by fz_run_user_annots
-        switch (Type(annot)) {
-            case AnnotationType::Highlight:
-            case AnnotationType::Underline:
-            case AnnotationType::StrikeOut:
-            case AnnotationType::Squiggly:
-                result.Append(annot);
-                break;
-        }
-    }
-    return result;
-}
-#endif
-
 static const char* getuser(void) {
     const char* u;
     u = getenv("USER");

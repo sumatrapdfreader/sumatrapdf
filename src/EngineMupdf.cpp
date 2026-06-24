@@ -1760,39 +1760,6 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
     }
 }
 
-// TODO: maybe remove the code completely
-// bugs: 3225 and 353
-// not sure if we should do it, it's unexpected behavior
-static bool gEnsureUniqueLabels = false;
-
-static void EnsureLabelsUnique(StrVec* labels) {
-    if (!gEnsureUniqueLabels) {
-        return;
-    }
-    // ensure that all page labels are unique (by appending a number to duplicates)
-    StrVec dups(*labels);
-    Sort(&dups);
-    int nDups = dups.Size();
-    for (int i = 1; i < nDups; i++) {
-        char* s = dups.At(i);
-        if (!str::Eq(s, dups.At(i - 1))) {
-            continue;
-        }
-        int idx = labels->Find(s), counter = 0;
-        while ((idx = labels->Find(s, idx + 1)) != -1) {
-            TempStr unique = nullptr;
-            do {
-                unique = str::FormatTemp("%s.%d", s, ++counter);
-            } while (labels->Contains(unique));
-            labels->SetAt(idx, unique);
-        }
-        nDups = dups.Size();
-        for (; i + 1 < nDups && str::Eq(dups.At(i), dups.At(i + 1)); i++) {
-            // no-op
-        }
-    }
-}
-
 static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(ctx, root, pageCount, data);
@@ -1835,7 +1802,6 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         labels->SetAt(idx, "");
     }
 
-    EnsureLabelsUnique(labels);
     return labels;
 }
 struct PageTreeStackItem {
@@ -4786,19 +4752,6 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     if (!epdf || !epdf->pdfdoc) {
         return false;
     }
-#if 0
-    // TODO: this fails in https://github.com/sumatrapdfreader/sumatrapdf/issues/3448
-    // because pdf_has_unsaved_changes() returns true even though pdf_was_repaired()
-    // returns false (even though the doc was modified in pdf_test_outline() becasue
-    // "Bad or missing last pointer in outline tree, repairing"
-
-    // pdf_has_unsaved_changes() also returns true if the file was auto-repaired
-    // at loading time, which is not something we want, so only rely on it
-    // when we know it wasn't repaired.
-    if (!pdf_was_repaired(epdf->Ctx(), epdf->pdfdoc)) {
-        return pdf_has_unsaved_changes(epdf->Ctx(), epdf->pdfdoc);
-    }
-#endif
     return epdf->modifiedAnnotations;
 }
 

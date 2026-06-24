@@ -1280,9 +1280,6 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         HandleTagLink(t);
     } else if (Tag_Style == tag) {
         HandleTagStyle(t);
-    } else {
-        // TODO: temporary debugging
-        // lf("unhandled tag: %d", tag);
     }
 
     // any tag could contain anchor information
