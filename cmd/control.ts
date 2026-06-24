@@ -18,6 +18,7 @@ export enum ControlCommand {
   TestImageResizeArrowKey = 23,
   TestFindResultPageColumnClip = 24,
   TestFileKind = 25,
+  TestScrollToLink = 26,
   TestI18nErrorString = 27,
   TestPageInfoOverlay = 28,
 }

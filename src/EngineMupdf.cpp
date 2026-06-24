@@ -3745,8 +3745,8 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     }
 
     // TODO: handle ldest.type like FZ_LINK_DEST_FIT_H ?
-    float x = isnan(ldest.x) ? 0.f : ldest.x;
-    float y = isnan(ldest.y) ? 0.f : ldest.y;
+    float x = isnan(ldest.x) ? DEST_USE_DEFAULT : ldest.x;
+    float y = isnan(ldest.y) ? DEST_USE_DEFAULT : ldest.y;
     float zoom = isnan(ldest.zoom) ? 0.f : ldest.zoom;
     zoom = zoom / 100; // mupdf uses 100 as 100% zoom, we use 1
     float w = isnan(ldest.w) ? DEST_USE_DEFAULT : ldest.w;
