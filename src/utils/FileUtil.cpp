@@ -506,6 +506,9 @@ static bool MatchWildcardsRec(const char* fileName, const char* filter) {
    having any extension) */
 bool Match(const char* path, const char* filter) {
     path = GetBaseNameTemp(path);
+    if (!path) {
+        return false;
+    }
     while (str::FindChar(filter, L';')) {
         if (MatchWildcardsRec(path, filter)) {
             return true;
