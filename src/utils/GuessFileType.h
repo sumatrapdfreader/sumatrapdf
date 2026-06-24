@@ -55,3 +55,6 @@ const char* GfxFileExtFromKind(Kind);
 const char* GetExtForKind(Kind kind);
 
 int KindIndexOf(Kind* kinds, int nKinds, Kind kind);
+
+// Headless test helper: compare GuessFileTypeFromName to an expected kind name.
+char* TestFileKindResult(const char* path, const char* expectedKindName, int* exitCodeOut = nullptr);

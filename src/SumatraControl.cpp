@@ -11,6 +11,7 @@
 #include "SumatraTest.h"
 #include "SelectionTranslate.h"
 #include "ImageSaveCropResize.h"
+#include "utils/GuessFileType.h"
 
 #include "utils/Log.h"
 
@@ -32,6 +33,7 @@ enum class ControlCmd : u16 {
     // Assign new test commands starting at 23.
     TestInverseSearch = 22,
     TestImageResizeArrowKey = 23,
+    TestFileKind = 25,
 };
 
 enum class ControlArgType : u16 {
@@ -420,6 +422,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestImageResizeArrowKeyResult(imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFileKind: {
+            const char* path = StringArg(req, 0);
+            const char* expectedKind = StringArg(req, 1);
+            if (!path || !expectedKind) {
+                AppendError(req, "TestFileKind expects string path, string expectedKind");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestFileKindResult(path, expectedKind, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

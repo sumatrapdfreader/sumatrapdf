@@ -76,12 +76,16 @@ Kind kindFileAvif = "fileAvif";
     V(".zfb2", kindFileFb2z)         \
     V(".fb2.zip", kindFileFb2z)      \
     V(".cbz", kindFileCbz)           \
+    V(".ora", kindFileCbz)           \
     V(".cbr", kindFileCbr)           \
     V(".cb7", kindFileCb7)           \
     V(".cbt", kindFileCbt)           \
     V(".pdf", kindFilePDF)           \
+    V(".ai", kindFilePDF)            \
     V(".xps", kindFileXps)           \
     V(".oxps", kindFileXps)          \
+    V(".xod", kindFileXps)           \
+    V(".dwfx", kindFileXps)          \
     V(".chm", kindFileChm)           \
     V(".png", kindFilePng)           \
     V(".jpg", kindFileJpeg)          \
@@ -110,6 +114,7 @@ Kind kindFileAvif = "fileAvif";
     V(".xhtml", kindFileHTML)        \
     V(".svg", kindFileSvg)           \
     V(".djvu", kindFileDjVu)         \
+    V(".djv", kindFileDjVu)          \
     V(".jp2", kindFileJp2)           \
     V(".j2k", kindFileJp2)           \
     V(".jpx", kindFileJp2)           \
@@ -566,4 +571,36 @@ const char* GfxFileExtFromKind(Kind kind) {
 const char* GfxFileExtFromData(const ByteSlice& d) {
     Kind kind = GuessFileTypeFromContent(d);
     return GfxFileExtFromKind(kind);
+}
+
+char* TestFileKindResult(const char* path, const char* expectedKindName, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (str::IsEmpty(path) || str::IsEmpty(expectedKindName)) {
+        return fail("ERROR missing path or expectedKind");
+    }
+    Kind kind = GuessFileTypeFromName(path);
+    if (!kind) {
+        return fail("ERROR unknown-kind");
+    }
+    if (!str::Eq(kind, expectedKindName)) {
+        out.AppendFmt("FAIL path=%s got=%s expected=%s\n", path, kind, expectedKindName);
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    }
+    out.AppendFmt("OK path=%s kind=%s\n", path, kind);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return out.StealData();
 }
