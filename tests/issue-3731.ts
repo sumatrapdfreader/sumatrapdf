@@ -59,11 +59,19 @@ function makeExternalImagePdf(imgName: string, w: number, h: number): Buffer {
 // count distinct quantized colors in the canvas capture. The loaded image is
 // colorful (many colors); a denied external image renders as a solid black
 // rectangle (so just black + the gray window background => very few colors).
+//
+// Only sample the central 50% of the canvas: the page (and thus the image)
+// fills the middle, while transient overlays such as the "Errors in PDF"
+// notification toast (which appears in the OFF case because the denied stream
+// makes mupdf report a PDF error) sit in the bottom-right corner. Counting the
+// whole canvas would fold that yellow/red toast into the color count and
+// spuriously push the denied case over the threshold.
 function distinctColors(png: string): number {
   const p = png.split("\\").join("\\\\");
   const ps =
     `Add-Type -AssemblyName System.Drawing; $b=[System.Drawing.Bitmap]::FromFile('${p}'); ` +
-    `$h=@{}; for($y=0;$y -lt $b.Height;$y+=4){for($x=0;$x -lt $b.Width;$x+=4){` +
+    `$x0=[int]($b.Width*0.25); $x1=[int]($b.Width*0.75); $y0=[int]($b.Height*0.25); $y1=[int]($b.Height*0.75); ` +
+    `$h=@{}; for($y=$y0;$y -lt $y1;$y+=4){for($x=$x0;$x -lt $x1;$x+=4){` +
     `$c=$b.GetPixel($x,$y); $k=[int]($c.R/32)*64+[int]($c.G/32)*8+[int]($c.B/32); $h[$k]=1}}; ` +
     `$b.Dispose(); Write-Output $h.Count`;
   const r = Bun.spawnSync(["powershell", "-NoProfile", "-Command", ps]);
@@ -76,16 +84,37 @@ async function renderDistinctColors(pdf: string, appdata: string, label: string)
   const proc = launchSumatra(["-appdata", appdata, pdf]);
   try {
     const frame = await waitForFrame(proc.pid!);
-    await sleep(2000); // external decode + paint
-    const canvas = findCanvas(frame);
-    if (!canvas) {
-      throw new Error("no canvas");
-    }
     const png = tmpPath(`issue-3731-${label}.png`);
-    if (!captureWindowToPng(canvas, png)) {
-      throw new Error("capture failed");
+    // Capture once external decode + paint has *settled* rather than at a fixed
+    // delay: under full-suite load 2s wasn't enough and we'd catch an
+    // intermediate paint state (a count between the denied ~2 and rendered ~450),
+    // failing spuriously. Poll until the color count is stable across two
+    // consecutive captures (the canvas is static once rendering finishes).
+    let prev = -1;
+    let val = 0;
+    let stable = 0;
+    const deadline = Date.now() + 15000;
+    while (Date.now() < deadline) {
+      await sleep(500);
+      const canvas = findCanvas(frame);
+      if (!canvas) {
+        continue;
+      }
+      if (!captureWindowToPng(canvas, png)) {
+        throw new Error("capture failed");
+      }
+      val = distinctColors(png);
+      if (val === prev) {
+        stable++;
+        if (stable >= 2) {
+          break;
+        }
+      } else {
+        stable = 0;
+        prev = val;
+      }
     }
-    return distinctColors(png);
+    return val;
   } finally {
     proc.kill();
     await sleep(300);
