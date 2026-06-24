@@ -59,6 +59,8 @@
 #define CHM_MAX_BLOCKS_CACHED 5
 #endif
 #define CHM_MAX_DIR_PAGES 65536
+#define CHM_DIR_SEEN_BITMAP_BITS CHM_MAX_DIR_PAGES
+#define CHM_DIR_SEEN_BITMAP_WORDS (CHM_DIR_SEEN_BITMAP_BITS / 32)
 
 #if defined(WIN32)
 static int ffs(unsigned int val) {
@@ -477,6 +479,11 @@ struct chmFile {
     uint8_t** cache_blocks;
     uint64_t* cache_block_indices;
     int32_t cache_num_blocks;
+
+    /* directory traversal visit state (one bit per page, 8 KiB) */
+    uint64_t dir_page_count;
+    uint64_t dir_pages_seen;
+    uint32_t dir_seen_bitmap[CHM_DIR_SEEN_BITMAP_WORDS];
 };
 
 static int64_t _chm_fetch_bytes(struct chmFile* h, uint8_t* buf, uint64_t offset, int64_t len) {
@@ -541,32 +548,31 @@ static int _chm_dir_fetch_page(struct chmFile* h, int32_t page, uint8_t* page_bu
     return _chm_fetch_bytes(h, page_buf, offset, h->block_len) == h->block_len;
 }
 
-struct chmDirVisitCtx {
-    uint8_t* seen_pages;
-    uint64_t page_count;
-    uint64_t pages_seen;
-};
-
-static int _chm_dir_visit_init(struct chmFile* h, struct chmDirVisitCtx* ctx) {
-    memset(ctx, 0, sizeof(*ctx));
-    ctx->page_count = _chm_dir_page_count(h);
-    if (ctx->page_count == 0) return 0;
-    ctx->seen_pages = (uint8_t*)calloc((size_t)ctx->page_count, 1);
-    return ctx->seen_pages != NULL;
+static void _chm_dir_visit_reset(struct chmFile* h) {
+    h->dir_pages_seen = 0;
+    memset(h->dir_seen_bitmap, 0, sizeof(h->dir_seen_bitmap));
 }
 
-static void _chm_dir_visit_free(struct chmDirVisitCtx* ctx) {
-    free(ctx->seen_pages);
-    ctx->seen_pages = NULL;
+static int _chm_dir_visit_begin(struct chmFile* h) {
+    if (h->dir_page_count == 0) return 0;
+    _chm_dir_visit_reset(h);
+    return 1;
 }
 
-static int _chm_dir_visit_page(struct chmDirVisitCtx* ctx, int32_t page) {
+static int _chm_dir_visit_page(struct chmFile* h, int32_t page) {
+    uint32_t word_idx;
+    uint32_t bit_mask;
+
     if (page < 0) return 0;
-    if ((uint64_t)page >= ctx->page_count) return 0;
-    if (ctx->pages_seen >= ctx->page_count) return 0;
-    if (ctx->seen_pages[page]) return 0;
-    ctx->seen_pages[page] = 1;
-    ctx->pages_seen++;
+    if ((uint64_t)page >= h->dir_page_count) return 0;
+    if (h->dir_pages_seen >= h->dir_page_count) return 0;
+    if ((uint32_t)page >= CHM_DIR_SEEN_BITMAP_BITS) return 0;
+
+    word_idx = (uint32_t)page >> 5;
+    bit_mask = 1u << (page & 31);
+    if (h->dir_seen_bitmap[word_idx] & bit_mask) return 0;
+    h->dir_seen_bitmap[word_idx] |= bit_mask;
+    h->dir_pages_seen++;
     return 1;
 }
 
@@ -638,6 +644,7 @@ struct chmFile* chm_open(const char* d, size_t len) {
         chm_close(newHandle);
         return NULL;
     }
+    newHandle->dir_page_count = _chm_dir_page_count(newHandle);
 
     /* if the index root is -1, this means we don't have any PMGI blocks.
      * as a result, we must use the sole PMGL block as the index root
@@ -988,16 +995,14 @@ typedef enum {
 
 static ChmPmglWalkResult _chm_walk_pmgl_pages(struct chmFile* h, int32_t start_page, ChmPmglEntryFn entry_fn,
                                               void* ctx) {
-    struct chmDirVisitCtx visit;
     uint8_t* page_buf = NULL;
     int32_t curPage;
     ChmPmglWalkResult result = CHM_PMGL_WALK_DONE;
 
-    if (!_chm_dir_visit_init(h, &visit)) return CHM_PMGL_WALK_FAILURE;
+    if (!_chm_dir_visit_begin(h)) return CHM_PMGL_WALK_FAILURE;
 
     page_buf = (uint8_t*)malloc((unsigned int)h->block_len);
     if (page_buf == NULL) {
-        _chm_dir_visit_free(&visit);
         return CHM_PMGL_WALK_FAILURE;
     }
 
@@ -1008,7 +1013,7 @@ static ChmPmglWalkResult _chm_walk_pmgl_pages(struct chmFile* h, int32_t start_p
         uint8_t* end;
         unsigned int lenRemain;
 
-        if (!_chm_dir_visit_page(&visit, curPage)) {
+        if (!_chm_dir_visit_page(h, curPage)) {
             result = CHM_PMGL_WALK_FAILURE;
             goto cleanup;
         }
@@ -1048,7 +1053,6 @@ static ChmPmglWalkResult _chm_walk_pmgl_pages(struct chmFile* h, int32_t start_p
 
 cleanup:
     free(page_buf);
-    _chm_dir_visit_free(&visit);
     return result;
 }
 
@@ -1058,17 +1062,15 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
      * XXX: implement caching scheme for dir pages
      */
 
-    struct chmDirVisitCtx visit;
     uint8_t* page_buf = NULL;
     uint8_t* page_buf_end;
     int32_t curPage;
     int result = CHM_RESOLVE_FAILURE;
 
-    if (!_chm_dir_visit_init(h, &visit)) return CHM_RESOLVE_FAILURE;
+    if (!_chm_dir_visit_begin(h)) return CHM_RESOLVE_FAILURE;
 
     page_buf = (uint8_t*)malloc(h->block_len);
     if (page_buf == NULL) {
-        _chm_dir_visit_free(&visit);
         return CHM_RESOLVE_FAILURE;
     }
     page_buf_end = page_buf + h->block_len;
@@ -1078,7 +1080,7 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
         int32_t new_page;
         uint8_t* pEntry;
 
-        if (!_chm_dir_visit_page(&visit, curPage)) goto cleanup;
+        if (!_chm_dir_visit_page(h, curPage)) goto cleanup;
 
         if (!_chm_dir_fetch_page(h, curPage, page_buf)) goto cleanup;
 
@@ -1100,7 +1102,6 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
 
 cleanup:
     free(page_buf);
-    _chm_dir_visit_free(&visit);
     return result;
 }
 
