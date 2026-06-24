@@ -174,6 +174,7 @@ struct LZXstate* LZXinit(int window) {
         free(pState);
         return NULL;
     }
+    memset(pState->window, 0, wndsize);
     pState->actual_size = wndsize;
     pState->window_size = wndsize;
 
@@ -224,6 +225,7 @@ int LZXreset(struct LZXstate* pState) {
     pState->intel_curpos = 0;
     pState->intel_started = 0;
     pState->window_posn = 0;
+    memset(pState->window, 0, pState->window_size);
 
     for (i = 0; i < LZX_MAINTREE_MAXSYMBOLS + LZX_LENTABLE_SAFETY; i++) pState->MAINTREE_len[i] = 0;
     for (i = 0; i < LZX_LENGTH_MAXSYMBOLS + LZX_LENTABLE_SAFETY; i++) pState->LENGTH_len[i] = 0;
@@ -262,7 +264,11 @@ int LZXreset(struct LZXstate* pState) {
 
 #define ENSURE_BITS(n)                                                          \
     while (bitsleft < (n)) {                                                    \
-        bitbuf |= ((inpos[1] << 8) | inpos[0]) << (ULONG_BITS - 16 - bitsleft); \
+        ULONG next_bits = 0;                                                    \
+        if ((UBYTE*)inpos < (UBYTE*)endinp) next_bits = inpos[0];             \
+        if ((UBYTE*)inpos + 1 < (UBYTE*)endinp) next_bits |= (ULONG)inpos[1] << 8; \
+        if ((UBYTE*)inpos > (UBYTE*)endinp + 2) return DECR_ILLEGALDATA;        \
+        bitbuf |= next_bits << (ULONG_BITS - 16 - bitsleft);                    \
         bitsleft += 16;                                                         \
         inpos += 2;                                                             \
     }
@@ -325,6 +331,7 @@ int LZXreset(struct LZXstate* pState) {
         lb.bb = bitbuf;                                                   \
         lb.bl = bitsleft;                                                 \
         lb.ip = inpos;                                                    \
+        lb.end = endinp;                                                  \
         if (lzx_read_lens(pState, LENTABLE(tbl), (first), (last), &lb)) { \
             return DECR_ILLEGALDATA;                                      \
         }                                                                 \
@@ -450,6 +457,7 @@ struct lzx_bits {
     ULONG bb;
     int bl;
     UBYTE* ip;
+    UBYTE* end;
 };
 
 static int lzx_read_lens(struct LZXstate* pState, UBYTE* lens, ULONG first, ULONG last, struct lzx_bits* lb) {
@@ -459,6 +467,7 @@ static int lzx_read_lens(struct LZXstate* pState, UBYTE* lens, ULONG first, ULON
     register ULONG bitbuf = lb->bb;
     register int bitsleft = lb->bl;
     UBYTE* inpos = lb->ip;
+    UBYTE* endinp = lb->end;
     UWORD* hufftbl;
 
     for (x = 0; x < 20; x++) {
@@ -472,14 +481,17 @@ static int lzx_read_lens(struct LZXstate* pState, UBYTE* lens, ULONG first, ULON
         if (z == 17) {
             READ_BITS(y, 4);
             y += 4;
+            if ((uint64_t)y > last - x) return 1;
             while (y--) lens[x++] = 0;
         } else if (z == 18) {
             READ_BITS(y, 5);
             y += 20;
+            if ((uint64_t)y > last - x) return 1;
             while (y--) lens[x++] = 0;
         } else if (z == 19) {
             READ_BITS(y, 1);
             y += 4;
+            if ((uint64_t)y > last - x) return 1;
             READ_HUFFSYM(PRETREE, z);
             z = lens[x] - z;
             if (z < 0) z += 17;
@@ -606,6 +618,7 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
 
             switch (pState->block_type) {
                 case LZX_BLOCKTYPE_VERBATIM:
+                case LZX_BLOCKTYPE_ALIGNED:
                     while (this_run > 0) {
                         READ_HUFFSYM(MAINTREE, main_element);
 
@@ -628,7 +641,29 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
 
                             if (match_offset > 2) {
                                 /* not repeated offset */
-                                if (match_offset != 3) {
+                                if (pState->block_type == LZX_BLOCKTYPE_ALIGNED) {
+                                    extra = extra_bits[match_offset];
+                                    match_offset = position_base[match_offset] - 2;
+                                    if (extra > 3) {
+                                        /* verbatim and aligned bits */
+                                        extra -= 3;
+                                        READ_BITS(verbatim_bits, extra);
+                                        match_offset += (verbatim_bits << 3);
+                                        READ_HUFFSYM(ALIGNED, aligned_bits);
+                                        match_offset += aligned_bits;
+                                    } else if (extra == 3) {
+                                        /* aligned bits only */
+                                        READ_HUFFSYM(ALIGNED, aligned_bits);
+                                        match_offset += aligned_bits;
+                                    } else if (extra > 0) { /* extra==1, extra==2 */
+                                        /* verbatim bits only */
+                                        READ_BITS(verbatim_bits, extra);
+                                        match_offset += verbatim_bits;
+                                    } else /* extra == 0 */ {
+                                        /* ??? */
+                                        match_offset = 1;
+                                    }
+                                } else if (match_offset != 3) {
                                     extra = extra_bits[match_offset];
                                     READ_BITS(verbatim_bits, extra);
                                     match_offset = position_base[match_offset] - 2 + verbatim_bits;
@@ -660,85 +695,7 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
 
                             /* copy any wrapped around source data */
                             while ((runsrc < window) && (match_length-- > 0)) {
-                                *rundest++ = *(runsrc + window_size);
-                                runsrc++;
-                            }
-                            /* copy match data - no worries about destination wraps */
-                            while (match_length-- > 0) *rundest++ = *runsrc++;
-                        }
-                    }
-                    break;
-
-                case LZX_BLOCKTYPE_ALIGNED:
-                    while (this_run > 0) {
-                        READ_HUFFSYM(MAINTREE, main_element);
-
-                        if (main_element < LZX_NUM_CHARS) {
-                            /* literal: 0 to LZX_NUM_CHARS-1 */
-                            window[window_posn++] = main_element;
-                            this_run--;
-                        } else {
-                            /* match: LZX_NUM_CHARS + ((slot<<3) | length_header (3 bits)) */
-                            main_element -= LZX_NUM_CHARS;
-
-                            match_length = main_element & LZX_NUM_PRIMARY_LENGTHS;
-                            if (match_length == LZX_NUM_PRIMARY_LENGTHS) {
-                                READ_HUFFSYM(LENGTH, length_footer);
-                                match_length += length_footer;
-                            }
-                            match_length += LZX_MIN_MATCH;
-
-                            match_offset = main_element >> 3;
-
-                            if (match_offset > 2) {
-                                /* not repeated offset */
-                                extra = extra_bits[match_offset];
-                                match_offset = position_base[match_offset] - 2;
-                                if (extra > 3) {
-                                    /* verbatim and aligned bits */
-                                    extra -= 3;
-                                    READ_BITS(verbatim_bits, extra);
-                                    match_offset += (verbatim_bits << 3);
-                                    READ_HUFFSYM(ALIGNED, aligned_bits);
-                                    match_offset += aligned_bits;
-                                } else if (extra == 3) {
-                                    /* aligned bits only */
-                                    READ_HUFFSYM(ALIGNED, aligned_bits);
-                                    match_offset += aligned_bits;
-                                } else if (extra > 0) { /* extra==1, extra==2 */
-                                    /* verbatim bits only */
-                                    READ_BITS(verbatim_bits, extra);
-                                    match_offset += verbatim_bits;
-                                } else /* extra == 0 */ {
-                                    /* ??? */
-                                    match_offset = 1;
-                                }
-
-                                /* update repeated offset LRU queue */
-                                R2 = R1;
-                                R1 = R0;
-                                R0 = match_offset;
-                            } else if (match_offset == 0) {
-                                match_offset = R0;
-                            } else if (match_offset == 1) {
-                                match_offset = R1;
-                                R1 = R0;
-                                R0 = match_offset;
-                            } else /* match_offset == 2 */ {
-                                match_offset = R2;
-                                R2 = R0;
-                                R0 = match_offset;
-                            }
-
-                            rundest = window + window_posn;
-                            runsrc = rundest - match_offset;
-                            window_posn += match_length;
-                            if (window_posn > window_size) return DECR_ILLEGALDATA;
-                            this_run -= match_length;
-
-                            /* copy any wrapped around source data */
-                            while ((runsrc < window) && (match_length-- > 0)) {
-                                *rundest++ = *(runsrc + window_size);
+                                *rundest++ = window[window_size - (size_t)(window - runsrc)];
                                 runsrc++;
                             }
                             /* copy match data - no worries about destination wraps */
