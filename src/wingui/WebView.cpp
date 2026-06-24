@@ -762,6 +762,35 @@ class webview2_try_suspend_handler : public ICoreWebView2TrySuspendCompletedHand
     ULONG m_refCount = 1;
 };
 
+// trivial completion handler for ICoreWebView2Find::Start (we don't need the result)
+class webview2_find_start_handler : public ICoreWebView2FindStartCompletedHandler {
+  public:
+    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE Release() {
+        ULONG n = --m_refCount;
+        if (n == 0) {
+            delete this;
+        }
+        return n;
+    }
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2FindStartCompletedHandler)) {
+            *ppv = static_cast<ICoreWebView2FindStartCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT /*errorCode*/) { return S_OK; }
+
+  private:
+    ULONG m_refCount = 1;
+};
+
 WebviewWnd::WebviewWnd() {
     kind = kindWebView;
 }
@@ -1097,6 +1126,43 @@ void WebviewWnd::Focus() {
     }
 }
 
+void WebviewWnd::ShowFindUI() {
+    if (!webview || !gSharedEnvironment) {
+        return;
+    }
+    Focus();
+    // The find API (ICoreWebView2_28::get_Find) needs a recent enough WebView2
+    // runtime; QueryInterface fails gracefully on older ones.
+    ICoreWebView2_28* wv28 = nullptr;
+    if (FAILED(webview->QueryInterface(IID_PPV_ARGS(&wv28))) || !wv28) {
+        return;
+    }
+    ICoreWebView2Environment15* env15 = nullptr;
+    ICoreWebView2Find* find = nullptr;
+    ICoreWebView2FindOptions* opts = nullptr;
+    if (SUCCEEDED(gSharedEnvironment->QueryInterface(IID_PPV_ARGS(&env15))) && env15) {
+        env15->CreateFindOptions(&opts);
+        env15->Release();
+    }
+    wv28->get_Find(&find);
+    wv28->Release();
+    if (find && opts) {
+        // show the browser's own find bar (don't suppress it); empty term opens
+        // the bar without a query, like pressing Ctrl+F in a browser
+        opts->put_SuppressDefaultFindDialog(FALSE);
+        opts->put_FindTerm(L"");
+        auto* handler = new webview2_find_start_handler();
+        find->Start(opts, handler);
+        handler->Release();
+    }
+    if (opts) {
+        opts->Release();
+    }
+    if (find) {
+        find->Release();
+    }
+}
+
 static BOOL CALLBACK CollectChildHwnds(HWND hwnd, LPARAM lp) {
     auto* hwnds = (Vec<HWND>*)lp;
     hwnds->Append(hwnd);
@@ -1398,6 +1464,7 @@ bool WebviewWnd::CanGoForward() const {
     return false;
 }
 void WebviewWnd::Focus() {}
+void WebviewWnd::ShowFindUI() {}
 bool WebviewWnd::Embed(WebViewMsgCb&) {
     return false;
 }

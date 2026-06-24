@@ -355,18 +355,6 @@ void ChmDocView::SetScrollPos(Point pos) {
     }
 }
 
-static void PostCtrlKey(HWND hwnd, int vk) {
-    if (!hwnd) {
-        return;
-    }
-    LPARAM lpDown = 1 | (MapVirtualKeyW(vk, MAPVK_VK_TO_VSC) << 16);
-    LPARAM lpUp = lpDown | (1 << 30) | (1 << 31);
-    PostMessageW(hwnd, WM_KEYDOWN, VK_CONTROL, lpDown);
-    PostMessageW(hwnd, WM_KEYDOWN, (WPARAM)vk, lpDown);
-    PostMessageW(hwnd, WM_KEYUP, (WPARAM)vk, lpUp);
-    PostMessageW(hwnd, WM_KEYUP, VK_CONTROL, lpUp);
-}
-
 void ChmDocView::PrintCurrentPage(bool showUI) {
     if (backend == Backend::WebView2 && wv) {
         if (showUI) {
@@ -383,8 +371,8 @@ void ChmDocView::PrintCurrentPage(bool showUI) {
 
 void ChmDocView::FindInCurrentPage() {
     if (backend == Backend::WebView2 && wv) {
-        wv->Focus();
-        PostCtrlKey(wv->hwnd, 'F');
+        // trigger the WebView2 (Chromium) find-on-page bar, like IE's own find
+        wv->ShowFindUI();
         return;
     }
     if (backend == Backend::IE && ie) {

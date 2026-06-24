@@ -73,6 +73,8 @@ struct WebviewWnd : Wnd {
     bool CanGoBack() const;
     bool CanGoForward() const;
     void Focus();
+    // open the WebView2 (Chromium) find-on-page bar, like a browser's Ctrl+F
+    void ShowFindUI();
     void RegisterForwardingDropTarget();
     void RevokeForwardingDropTarget();
     bool Embed(WebViewMsgCb& cb);

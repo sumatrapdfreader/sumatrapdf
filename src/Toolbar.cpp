@@ -179,6 +179,9 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
         case CmdRotateRight:
             return NeedsRotateUI(win);
         case CmdFindFirst:
+            // CHM has its own (WebView2/IE) find bar even though NeedsFindUI()
+            // is false for it; show the Search button so it's reachable
+            return NeedsFindUI(win) || (win->AsChm() != nullptr);
         case CmdFindNext:
         case CmdFindPrev:
         case CmdFindToggleMatchCase:
@@ -255,7 +258,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
 #endif
 
         case CmdFindFirst:
-            return NeedsFindUI(win);
+            return NeedsFindUI(win) || (win->AsChm() != nullptr);
 
         case CmdFindNext:
         case CmdFindPrev:
