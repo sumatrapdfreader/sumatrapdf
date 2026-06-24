@@ -523,6 +523,53 @@ static int _chm_is_valid_dir_page(struct chmFile* h, int32_t page) {
     return (uint64_t)page < page_count;
 }
 
+static int _chm_dir_page_offset(struct chmFile* h, int32_t page, uint64_t* offset) {
+    uint64_t page_off;
+
+    if (!_chm_is_valid_dir_page(h, page)) return 0;
+    if ((uint64_t)page > UINT64_MAX / h->block_len) return 0;
+    page_off = (uint64_t)page * h->block_len;
+    if (!_chm_add_u64(h->dir_offset, page_off, offset)) return 0;
+    if (*offset > h->data_len || (uint64_t)h->block_len > h->data_len - *offset) return 0;
+    return 1;
+}
+
+static int _chm_dir_fetch_page(struct chmFile* h, int32_t page, uint8_t* page_buf) {
+    uint64_t offset;
+
+    if (!_chm_dir_page_offset(h, page, &offset)) return 0;
+    return _chm_fetch_bytes(h, page_buf, offset, h->block_len) == h->block_len;
+}
+
+struct chmDirVisitCtx {
+    uint8_t* seen_pages;
+    uint64_t page_count;
+    uint64_t pages_seen;
+};
+
+static int _chm_dir_visit_init(struct chmFile* h, struct chmDirVisitCtx* ctx) {
+    memset(ctx, 0, sizeof(*ctx));
+    ctx->page_count = _chm_dir_page_count(h);
+    if (ctx->page_count == 0) return 0;
+    ctx->seen_pages = (uint8_t*)calloc((size_t)ctx->page_count, 1);
+    return ctx->seen_pages != NULL;
+}
+
+static void _chm_dir_visit_free(struct chmDirVisitCtx* ctx) {
+    free(ctx->seen_pages);
+    ctx->seen_pages = NULL;
+}
+
+static int _chm_dir_visit_page(struct chmDirVisitCtx* ctx, int32_t page) {
+    if (page < 0) return 0;
+    if ((uint64_t)page >= ctx->page_count) return 0;
+    if (ctx->pages_seen >= ctx->page_count) return 0;
+    if (ctx->seen_pages[page]) return 0;
+    ctx->seen_pages[page] = 1;
+    ctx->pages_seen++;
+    return 1;
+}
+
 /* open an ITS archive */
 struct chmFile* chm_open(const char* d, size_t len) {
     uint8_t sbuffer[256];
@@ -587,6 +634,10 @@ struct chmFile* chm_open(const char* d, size_t len) {
     newHandle->index_root = itspHeader.index_root;
     newHandle->index_head = itspHeader.index_head;
     newHandle->block_len = itspHeader.block_len;
+    if (_chm_dir_page_count(newHandle) > CHM_MAX_DIR_PAGES) {
+        chm_close(newHandle);
+        return NULL;
+    }
 
     /* if the index root is -1, this means we don't have any PMGI blocks.
      * as a result, we must use the sole PMGL block as the index root
@@ -914,81 +965,143 @@ static int32_t _chm_find_in_PMGI(uint8_t* page_buf, uint32_t block_len, const ch
     return page;
 }
 
+static void _chm_set_entry_flags(struct chmUnitInfo* ui) {
+    uint64_t ui_path_len = strlen(ui->path) - 1;
+
+    if (ui->path[ui_path_len] == '/') ui->flags |= CHM_ENUMERATE_DIRS;
+    if (ui->path[ui_path_len] != '/') ui->flags |= CHM_ENUMERATE_FILES;
+    if (ui->path[0] == '/') {
+        if (ui->path[1] == '#' || ui->path[1] == '$')
+            ui->flags |= CHM_ENUMERATE_SPECIAL;
+        else
+            ui->flags |= CHM_ENUMERATE_NORMAL;
+    } else
+        ui->flags |= CHM_ENUMERATE_META;
+}
+
+typedef int (*ChmPmglEntryFn)(struct chmFile* h, struct chmUnitInfo* ui, void* ctx);
+
+typedef enum {
+    CHM_PMGL_WALK_FAILURE = 0,
+    CHM_PMGL_WALK_DONE = 1,
+} ChmPmglWalkResult;
+
+static ChmPmglWalkResult _chm_walk_pmgl_pages(struct chmFile* h, int32_t start_page, ChmPmglEntryFn entry_fn,
+                                              void* ctx) {
+    struct chmDirVisitCtx visit;
+    uint8_t* page_buf = NULL;
+    int32_t curPage;
+    ChmPmglWalkResult result = CHM_PMGL_WALK_DONE;
+
+    if (!_chm_dir_visit_init(h, &visit)) return CHM_PMGL_WALK_FAILURE;
+
+    page_buf = (uint8_t*)malloc((unsigned int)h->block_len);
+    if (page_buf == NULL) {
+        _chm_dir_visit_free(&visit);
+        return CHM_PMGL_WALK_FAILURE;
+    }
+
+    curPage = start_page;
+    while (curPage != -1) {
+        struct chmPmglHeader header;
+        uint8_t* cur;
+        uint8_t* end;
+        unsigned int lenRemain;
+
+        if (!_chm_dir_visit_page(&visit, curPage)) {
+            result = CHM_PMGL_WALK_FAILURE;
+            goto cleanup;
+        }
+        if (!_chm_dir_fetch_page(h, curPage, page_buf)) {
+            result = CHM_PMGL_WALK_FAILURE;
+            goto cleanup;
+        }
+
+        cur = page_buf;
+        lenRemain = _CHM_PMGL_LEN;
+        if (!_unmarshal_pmgl_header(&cur, &lenRemain, h->block_len, &header)) {
+            result = CHM_PMGL_WALK_FAILURE;
+            goto cleanup;
+        }
+        end = page_buf + h->block_len - (header.free_space);
+
+        while (cur < end) {
+            struct chmUnitInfo ui;
+            int status;
+
+            ui.flags = 0;
+            if (!_chm_parse_PMGL_entry(&cur, end, &ui)) {
+                result = CHM_PMGL_WALK_FAILURE;
+                goto cleanup;
+            }
+
+            status = entry_fn(h, &ui, ctx);
+            if (status == CHM_ENUMERATOR_FAILURE) {
+                result = CHM_PMGL_WALK_FAILURE;
+                goto cleanup;
+            }
+            if (status == CHM_ENUMERATOR_SUCCESS) goto cleanup;
+        }
+
+        curPage = header.block_next < 0 ? -1 : header.block_next;
+    }
+
+cleanup:
+    free(page_buf);
+    _chm_dir_visit_free(&visit);
+    return result;
+}
+
 /* resolve a particular object from the archive */
 int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInfo* ui) {
     /*
      * XXX: implement caching scheme for dir pages
      */
 
-    int ok;
-    int32_t new_page;
-    int32_t curPage;
+    struct chmDirVisitCtx visit;
+    uint8_t* page_buf = NULL;
     uint8_t* page_buf_end;
-    int max_pages = 2048; /* prevent infinite loops */
-    /* buffer to hold whatever page we're looking at */
-    /* RWE 6/12/2003 */
-    uint8_t* page_buf = malloc(h->block_len);
-    if (page_buf == NULL) return CHM_RESOLVE_FAILURE;
+    int32_t curPage;
+    int result = CHM_RESOLVE_FAILURE;
+
+    if (!_chm_dir_visit_init(h, &visit)) return CHM_RESOLVE_FAILURE;
+
+    page_buf = (uint8_t*)malloc(h->block_len);
+    if (page_buf == NULL) {
+        _chm_dir_visit_free(&visit);
+        return CHM_RESOLVE_FAILURE;
+    }
     page_buf_end = page_buf + h->block_len;
 
-    /* starting page */
     curPage = h->index_root;
+    while (curPage != -1) {
+        int32_t new_page;
+        uint8_t* pEntry;
 
-    /* until we have either returned or given up */
-    while (curPage != -1 && max_pages > 0) {
-        max_pages--;
-        if (!_chm_is_valid_dir_page(h, curPage)) {
-            free(page_buf);
-            return CHM_RESOLVE_FAILURE;
-        }
-        /* try to fetch the index page */
-        ok = _chm_fetch_bytes(h, page_buf, (uint64_t)h->dir_offset + (uint64_t)curPage * h->block_len, h->block_len) ==
-             h->block_len;
-        if (!ok) {
-            free(page_buf);
-            return CHM_RESOLVE_FAILURE;
-        }
+        if (!_chm_dir_visit_page(&visit, curPage)) goto cleanup;
 
-        if (h->block_len < 4) {
-            free(page_buf);
-            return CHM_RESOLVE_FAILURE;
-        }
+        if (!_chm_dir_fetch_page(h, curPage, page_buf)) goto cleanup;
 
-        /* now, if it is a leaf node: */
+        if (h->block_len < 4) goto cleanup;
+
         if (memcmp(page_buf, _chm_pmgl_marker, 4) == 0) {
-            /* scan block */
-            uint8_t* pEntry = _chm_find_in_PMGL(page_buf, h->block_len, objPath);
-            if (pEntry == NULL) {
-                free(page_buf);
-                return CHM_RESOLVE_FAILURE;
-            }
-
-            /* parse entry and return */
-            if (!_chm_parse_PMGL_entry(&pEntry, page_buf_end, ui)) {
-                free(page_buf);
-                return CHM_RESOLVE_FAILURE;
-            }
-            free(page_buf);
-            return CHM_RESOLVE_SUCCESS;
+            pEntry = _chm_find_in_PMGL(page_buf, h->block_len, objPath);
+            if (pEntry == NULL) goto cleanup;
+            if (!_chm_parse_PMGL_entry(&pEntry, page_buf_end, ui)) goto cleanup;
+            result = CHM_RESOLVE_SUCCESS;
+            goto cleanup;
         } else if (memcmp(page_buf, _chm_pmgi_marker, 4) == 0) {
-            /* else, if it is a branch node: */
             new_page = _chm_find_in_PMGI(page_buf, h->block_len, objPath);
-            if (new_page == curPage) {
-                /* we are stuck in an infinite loop.  give up. */
-                free(page_buf);
-                return CHM_RESOLVE_FAILURE;
-            }
             curPage = new_page;
         } else {
-            /* else, we are confused.  give up. */
-            free(page_buf);
-            return CHM_RESOLVE_FAILURE;
+            goto cleanup;
         }
     }
 
-    /* didn't find anything.  fail. */
+cleanup:
     free(page_buf);
-    return CHM_RESOLVE_FAILURE;
+    _chm_dir_visit_free(&visit);
+    return result;
 }
 
 /*
@@ -1014,8 +1127,7 @@ static int _chm_get_cmpblock_bounds(struct chmFile* h, uint64_t block, uint64_t*
         remain = 8;
         if (!_chm_add_u64((uint64_t)h->reset_table.table_offset, block_entry_offset, &table_addr)) return 0;
         if (!_chm_get_object_offset(h, &h->rt_unit, table_addr, remain, &table_offset) ||
-            _chm_fetch_bytes(h, buffer, table_offset, remain) != remain ||
-            !_unmarshal_uint64(&dummy, &remain, start))
+            _chm_fetch_bytes(h, buffer, table_offset, remain) != remain || !_unmarshal_uint64(&dummy, &remain, start))
             return 0;
 
         /* unpack the end address */
@@ -1023,8 +1135,7 @@ static int _chm_get_cmpblock_bounds(struct chmFile* h, uint64_t block, uint64_t*
         remain = 8;
         if (!_chm_add_u64(table_addr, 8, &table_addr)) return 0;
         if (!_chm_get_object_offset(h, &h->rt_unit, table_addr, remain, &table_offset) ||
-            _chm_fetch_bytes(h, buffer, table_offset, remain) != remain ||
-            !_unmarshal_int64(&dummy, &remain, len))
+            _chm_fetch_bytes(h, buffer, table_offset, remain) != remain || !_unmarshal_int64(&dummy, &remain, len))
             return 0;
     }
 
@@ -1035,8 +1146,7 @@ static int _chm_get_cmpblock_bounds(struct chmFile* h, uint64_t block, uint64_t*
         remain = 8;
         if (!_chm_add_u64((uint64_t)h->reset_table.table_offset, block_entry_offset, &table_addr)) return 0;
         if (!_chm_get_object_offset(h, &h->rt_unit, table_addr, remain, &table_offset) ||
-            _chm_fetch_bytes(h, buffer, table_offset, remain) != remain ||
-            !_unmarshal_uint64(&dummy, &remain, start))
+            _chm_fetch_bytes(h, buffer, table_offset, remain) != remain || !_unmarshal_uint64(&dummy, &remain, start))
             return 0;
 
         *len = h->reset_table.compressed_len;
@@ -1253,139 +1363,70 @@ int64_t chm_retrieve_object(struct chmFile* h, struct chmUnitInfo* ui, uint8_t* 
     }
 }
 
+struct chmEnumerateState {
+    CHM_ENUMERATOR e;
+    void* context;
+    int type_bits;
+    int filter_bits;
+};
+
+static int _chm_enumerate_page_entry(struct chmFile* h, struct chmUnitInfo* ui, void* data) {
+    struct chmEnumerateState* state = (struct chmEnumerateState*)data;
+
+    _chm_set_entry_flags(ui);
+    if (!(state->type_bits & ui->flags)) return CHM_ENUMERATOR_CONTINUE;
+    if (state->filter_bits && !(state->filter_bits & ui->flags)) return CHM_ENUMERATOR_CONTINUE;
+    return (*state->e)(h, ui, state->context);
+}
+
 /* enumerate the objects in the .chm archive */
 int chm_enumerate(struct chmFile* h, int what, CHM_ENUMERATOR e, void* context) {
-    int32_t curPage;
-    uint64_t page_count;
-    uint64_t pages_seen = 0;
-    uint8_t* seen_pages = NULL;
+    struct chmEnumerateState state;
 
-    /* buffer to hold whatever page we're looking at */
-    uint8_t* page_buf = malloc((unsigned int)h->block_len);
-    struct chmPmglHeader header;
-    uint8_t* end;
-    uint8_t* cur;
-    unsigned int lenRemain;
-    uint64_t ui_path_len;
+    state.e = e;
+    state.context = context;
+    state.type_bits = (what & 0x7);
+    state.filter_bits = (what & 0xF8);
+    return _chm_walk_pmgl_pages(h, h->index_head, _chm_enumerate_page_entry, &state);
+}
 
-    /* the current ui */
-    struct chmUnitInfo ui;
-    int type_bits = (what & 0x7);
-    int filter_bits = (what & 0xF8);
+struct chmEnumerateDirState {
+    CHM_ENUMERATOR e;
+    void* context;
+    int type_bits;
+    int filter_bits;
+    int it_has_begun;
+    char prefixRectified[CHM_MAX_PATHLEN + 1];
+    int prefixLen;
+    char lastPath[CHM_MAX_PATHLEN + 1];
+    int lastPathLen;
+};
 
-    if (page_buf == NULL) return 0;
+static int _chm_enumerate_dir_page_entry(struct chmFile* h, struct chmUnitInfo* ui, void* data) {
+    struct chmEnumerateDirState* state = (struct chmEnumerateDirState*)data;
 
-    page_count = _chm_dir_page_count(h);
-    if (page_count == 0) {
-        free(page_buf);
-        return 0;
-    }
-    if (page_count <= CHM_MAX_DIR_PAGES) {
-        seen_pages = (uint8_t*)calloc((size_t)page_count, 1);
-        if (seen_pages == NULL) {
-            free(page_buf);
-            return 0;
-        }
-    }
+    if (!state->it_has_begun) {
+        if (ui->length == 0 && strncasecmp(ui->path, state->prefixRectified, state->prefixLen) == 0)
+            state->it_has_begun = 1;
+        else
+            return CHM_ENUMERATOR_CONTINUE;
 
-    /* starting page */
-    curPage = h->index_head;
-
-    /* until we have either returned or given up */
-    while (curPage != -1) {
-        if (!_chm_is_valid_dir_page(h, curPage) || pages_seen >= page_count || pages_seen >= CHM_MAX_DIR_PAGES) {
-            free(seen_pages);
-            free(page_buf);
-            return 0;
-        }
-        if (seen_pages != NULL) {
-            if (seen_pages[curPage]) {
-                free(seen_pages);
-                free(page_buf);
-                return 0;
-            }
-            seen_pages[curPage] = 1;
-        }
-        pages_seen++;
-
-        /* try to fetch the index page */
-        if (_chm_fetch_bytes(h, page_buf, (uint64_t)h->dir_offset + (uint64_t)curPage * h->block_len, h->block_len) !=
-            h->block_len) {
-            free(seen_pages);
-            free(page_buf);
-            return 0;
-        }
-
-        /* figure out start and end for this page */
-        cur = page_buf;
-        lenRemain = _CHM_PMGL_LEN;
-        if (!_unmarshal_pmgl_header(&cur, &lenRemain, h->block_len, &header)) {
-            free(seen_pages);
-            free(page_buf);
-            return 0;
-        }
-        end = page_buf + h->block_len - (header.free_space);
-
-        /* loop over this page */
-        while (cur < end) {
-            ui.flags = 0;
-
-            if (!_chm_parse_PMGL_entry(&cur, end, &ui)) {
-                free(seen_pages);
-                free(page_buf);
-                return 0;
-            }
-
-            /* get the length of the path */
-            ui_path_len = strlen(ui.path) - 1;
-
-            /* check for DIRS */
-            if (ui.path[ui_path_len] == '/') ui.flags |= CHM_ENUMERATE_DIRS;
-
-            /* check for FILES */
-            if (ui.path[ui_path_len] != '/') ui.flags |= CHM_ENUMERATE_FILES;
-
-            /* check for NORMAL vs. META */
-            if (ui.path[0] == '/') {
-                /* check for NORMAL vs. SPECIAL */
-                if (ui.path[1] == '#' || ui.path[1] == '$')
-                    ui.flags |= CHM_ENUMERATE_SPECIAL;
-                else
-                    ui.flags |= CHM_ENUMERATE_NORMAL;
-            } else
-                ui.flags |= CHM_ENUMERATE_META;
-
-            if (!(type_bits & ui.flags)) continue;
-
-            if (filter_bits && !(filter_bits & ui.flags)) continue;
-
-            /* call the enumerator */
-            {
-                int status = (*e)(h, &ui, context);
-                switch (status) {
-                    case CHM_ENUMERATOR_FAILURE:
-                        free(seen_pages);
-                        free(page_buf);
-                        return 0;
-                    case CHM_ENUMERATOR_CONTINUE:
-                        break;
-                    case CHM_ENUMERATOR_SUCCESS:
-                        free(seen_pages);
-                        free(page_buf);
-                        return 1;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        /* advance to next page */
-        curPage = header.block_next < 0 ? -1 : header.block_next;
+        if (ui->path[state->prefixLen] == '\0') return CHM_ENUMERATOR_CONTINUE;
+    } else {
+        if (strncasecmp(ui->path, state->prefixRectified, state->prefixLen) != 0) return CHM_ENUMERATOR_SUCCESS;
     }
 
-    free(seen_pages);
-    free(page_buf);
-    return 1;
+    if (state->lastPathLen != -1) {
+        if (strncasecmp(ui->path, state->lastPath, state->lastPathLen) == 0) return CHM_ENUMERATOR_CONTINUE;
+    }
+    strncpy(state->lastPath, ui->path, CHM_MAX_PATHLEN);
+    state->lastPath[CHM_MAX_PATHLEN] = '\0';
+    state->lastPathLen = strlen(state->lastPath);
+
+    _chm_set_entry_flags(ui);
+    if (!(state->type_bits & ui->flags)) return CHM_ENUMERATOR_CONTINUE;
+    if (state->filter_bits && !(state->filter_bits & ui->flags)) return CHM_ENUMERATOR_CONTINUE;
+    return (*state->e)(h, ui, state->context);
 }
 
 int chm_enumerate_dir(struct chmFile* h, const char* prefix, int what, CHM_ENUMERATOR e, void* context) {
@@ -1393,186 +1434,26 @@ int chm_enumerate_dir(struct chmFile* h, const char* prefix, int what, CHM_ENUME
      * XXX: do this efficiently (i.e. using the tree index)
      */
 
-    int32_t curPage;
-    uint64_t page_count;
-    uint64_t pages_seen = 0;
-    uint8_t* seen_pages = NULL;
+    struct chmEnumerateDirState state;
 
-    /* buffer to hold whatever page we're looking at */
-    /* RWE 6/12/2003 */
-    uint8_t* page_buf = malloc((unsigned int)h->block_len);
-    struct chmPmglHeader header;
-    uint8_t* end;
-    uint8_t* cur;
-    unsigned int lenRemain;
+    state.e = e;
+    state.context = context;
+    state.type_bits = (what & 0x7);
+    state.filter_bits = (what & 0xF8);
+    state.it_has_begun = 0;
+    state.lastPathLen = -1;
 
-    /* set to 1 once we've started */
-    int it_has_begun = 0;
-
-    /* the current ui */
-    struct chmUnitInfo ui;
-    int type_bits = (what & 0x7);
-    int filter_bits = (what & 0xF8);
-    uint64_t ui_path_len;
-
-    /* the length of the prefix */
-    char prefixRectified[CHM_MAX_PATHLEN + 1];
-    int prefixLen;
-    char lastPath[CHM_MAX_PATHLEN + 1];
-    int lastPathLen;
-
-    if (page_buf == NULL) return 0;
-
-    page_count = _chm_dir_page_count(h);
-    if (page_count == 0) {
-        free(page_buf);
-        return 0;
-    }
-    if (page_count <= CHM_MAX_DIR_PAGES) {
-        seen_pages = (uint8_t*)calloc((size_t)page_count, 1);
-        if (seen_pages == NULL) {
-            free(page_buf);
-            return 0;
+    strncpy(state.prefixRectified, prefix, CHM_MAX_PATHLEN);
+    state.prefixRectified[CHM_MAX_PATHLEN] = '\0';
+    state.prefixLen = strlen(state.prefixRectified);
+    if (state.prefixLen != 0) {
+        if (state.prefixRectified[state.prefixLen - 1] != '/') {
+            state.prefixRectified[state.prefixLen] = '/';
+            state.prefixRectified[state.prefixLen + 1] = '\0';
+            ++state.prefixLen;
         }
     }
+    state.lastPath[0] = '\0';
 
-    /* starting page */
-    curPage = h->index_head;
-
-    /* initialize pathname state */
-    strncpy(prefixRectified, prefix, CHM_MAX_PATHLEN);
-    prefixRectified[CHM_MAX_PATHLEN] = '\0';
-    prefixLen = strlen(prefixRectified);
-    if (prefixLen != 0) {
-        if (prefixRectified[prefixLen - 1] != '/') {
-            prefixRectified[prefixLen] = '/';
-            prefixRectified[prefixLen + 1] = '\0';
-            ++prefixLen;
-        }
-    }
-    lastPath[0] = '\0';
-    lastPathLen = -1;
-
-    /* until we have either returned or given up */
-    while (curPage != -1) {
-        if (!_chm_is_valid_dir_page(h, curPage) || pages_seen >= page_count || pages_seen >= CHM_MAX_DIR_PAGES) {
-            free(seen_pages);
-            free(page_buf);
-            return 0;
-        }
-        if (seen_pages != NULL) {
-            if (seen_pages[curPage]) {
-                free(seen_pages);
-                free(page_buf);
-                return 0;
-            }
-            seen_pages[curPage] = 1;
-        }
-        pages_seen++;
-
-        /* try to fetch the index page */
-        if (_chm_fetch_bytes(h, page_buf, (uint64_t)h->dir_offset + (uint64_t)curPage * h->block_len, h->block_len) !=
-            h->block_len) {
-            free(seen_pages);
-            free(page_buf);
-            return 0;
-        }
-
-        /* figure out start and end for this page */
-        cur = page_buf;
-        lenRemain = _CHM_PMGL_LEN;
-        if (!_unmarshal_pmgl_header(&cur, &lenRemain, h->block_len, &header)) {
-            free(seen_pages);
-            free(page_buf);
-            return 0;
-        }
-        end = page_buf + h->block_len - (header.free_space);
-
-        /* loop over this page */
-        while (cur < end) {
-            ui.flags = 0;
-
-            if (!_chm_parse_PMGL_entry(&cur, end, &ui)) {
-                free(seen_pages);
-                free(page_buf);
-                return 0;
-            }
-
-            /* check if we should start */
-            if (!it_has_begun) {
-                if (ui.length == 0 && strncasecmp(ui.path, prefixRectified, prefixLen) == 0)
-                    it_has_begun = 1;
-                else
-                    continue;
-
-                if (ui.path[prefixLen] == '\0') continue;
-            }
-
-            /* check if we should stop */
-            else {
-                if (strncasecmp(ui.path, prefixRectified, prefixLen) != 0) {
-                    free(seen_pages);
-                    free(page_buf);
-                    return 1;
-                }
-            }
-
-            /* check if we should include this path */
-            if (lastPathLen != -1) {
-                if (strncasecmp(ui.path, lastPath, lastPathLen) == 0) continue;
-            }
-            strncpy(lastPath, ui.path, CHM_MAX_PATHLEN);
-            lastPath[CHM_MAX_PATHLEN] = '\0';
-            lastPathLen = strlen(lastPath);
-
-            /* get the length of the path */
-            ui_path_len = strlen(ui.path) - 1;
-
-            /* check for DIRS */
-            if (ui.path[ui_path_len] == '/') ui.flags |= CHM_ENUMERATE_DIRS;
-
-            /* check for FILES */
-            if (ui.path[ui_path_len] != '/') ui.flags |= CHM_ENUMERATE_FILES;
-
-            /* check for NORMAL vs. META */
-            if (ui.path[0] == '/') {
-                /* check for NORMAL vs. SPECIAL */
-                if (ui.path[1] == '#' || ui.path[1] == '$')
-                    ui.flags |= CHM_ENUMERATE_SPECIAL;
-                else
-                    ui.flags |= CHM_ENUMERATE_NORMAL;
-            } else
-                ui.flags |= CHM_ENUMERATE_META;
-
-            if (!(type_bits & ui.flags)) continue;
-
-            if (filter_bits && !(filter_bits & ui.flags)) continue;
-
-            /* call the enumerator */
-            {
-                int status = (*e)(h, &ui, context);
-                switch (status) {
-                    case CHM_ENUMERATOR_FAILURE:
-                        free(seen_pages);
-                        free(page_buf);
-                        return 0;
-                    case CHM_ENUMERATOR_CONTINUE:
-                        break;
-                    case CHM_ENUMERATOR_SUCCESS:
-                        free(seen_pages);
-                        free(page_buf);
-                        return 1;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        /* advance to next page */
-        curPage = header.block_next < 0 ? -1 : header.block_next;
-    }
-
-    free(seen_pages);
-    free(page_buf);
-    return 1;
+    return _chm_walk_pmgl_pages(h, h->index_head, _chm_enumerate_dir_page_entry, &state);
 }
