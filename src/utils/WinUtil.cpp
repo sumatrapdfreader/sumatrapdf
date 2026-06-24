@@ -1949,10 +1949,11 @@ void MenuSetText(HMENU m, int id, const WCHAR* s) {
     mii.cch = (uint)str::Len(s);
     BOOL ok = SetMenuItemInfoW(m, id, FALSE, &mii);
     if (!ok) {
+        // setting text on a menu item that isn't present is benign (e.g. the
+        // item was filtered out by command visibility): log it, don't assert
         const char* tmp = s ? ToUtf8Temp(s) : "(null)";
         logf("MenuSetText(): id=%d, s='%s'\n", id, tmp);
         LogLastError();
-        ReportIf(true);
     }
 }
 

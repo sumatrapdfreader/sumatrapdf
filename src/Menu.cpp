@@ -2412,7 +2412,13 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
         RebuildFileMenu(win->CurrentTab(), m);
     } else if (id == menuDefFavorites[0].idOrSubmenu) {
         MenuEmpty(m);
-        BuildMenuFromDef(menuDefFavorites, m, nullptr);
+        // build with a real ctx (not nullptr): command-visibility now hides
+        // document-dependent commands when no document is loaded, and a null ctx
+        // looks like "no document" -- which dropped CmdFavoriteAdd/CmdFavoriteDel
+        // from the rebuilt menu, so RebuildFavMenu's MenuSetText then failed
+        auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+        AutoDelete delCtx(ctx);
+        BuildMenuFromDef(menuDefFavorites, m, ctx);
         RebuildFavMenu(win, m);
     } else if (id == menuDefZoom[0].idOrSubmenu) {
         BuildMenuZoom(m);
