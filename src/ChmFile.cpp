@@ -146,8 +146,34 @@ static uint LcidToCodepage(DWORD lcid) {
         DWORD lcid;
         uint codepage;
     } lcidToCodepage[] = {
-        {1025, 1256}, {2052, 936},  {1028, 950},  {1029, 1250}, {1032, 1253}, {1037, 1255}, {1038, 1250}, {1041, 932},
-        {1042, 949},  {1045, 1250}, {1049, 1251}, {1051, 1250}, {1060, 1250}, {1055, 1254}, {1026, 1251}, {4, 936},
+        {1025, 1256},
+        {2052, 936},
+        {1028, 950},
+        {1029, 1250},
+        {1032, 1253},
+        {1037, 1255},
+        {1038, 1250},
+        {1041, 932},
+        {1042, 949},
+        {1045, 1250},
+        {1049, 1251},
+        {1051, 1250},
+        {1060, 1250},
+        {1055, 1254},
+        {1026, 1251},
+        {4, 936},
+        // more Cyrillic (1251) locales: Ukrainian, Belarusian, Serbian (Cyrillic),
+        // Macedonian, Kazakh, Kyrgyz, Tatar, Mongolian, Azeri (Cyrillic)
+        {1058, 1251},
+        {1059, 1251},
+        {3098, 1251},
+        {2074, 1251},
+        {1071, 1251},
+        {1087, 1251},
+        {1088, 1251},
+        {1092, 1251},
+        {1104, 1251},
+        {2092, 1251},
     };
 
     for (int i = 0; i < dimofi(lcidToCodepage); i++) {
@@ -564,6 +590,97 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
     return *hadOneInOut;
 }
 
+// True for the non-Latin1 single-byte codepages where a ToC label made up
+// entirely of Latin-1 characters is almost certainly mis-encoded (see
+// FixChmTocEntitiesTemp). Excludes 1252 (Latin-1 is correct there) and the
+// multi-byte CJK codepages (single Latin-1 bytes don't reconstruct a DBCS
+// stream).
+static bool ChmTocNeedsEntityRemap(uint cp) {
+    switch (cp) {
+        case 874:  // Thai
+        case 1250: // Central European
+        case 1251: // Cyrillic
+        case 1253: // Greek
+        case 1254: // Turkish
+        case 1255: // Hebrew
+        case 1256: // Arabic
+        case 1257: // Baltic
+        case 1258: // Vietnamese
+            return true;
+    }
+    return false;
+}
+
+// Map a codepoint (decoded by gumbo from a mis-authored Latin entity) back to
+// the single source-codepage byte it stands for. Returns -1 if it can't be a
+// single byte (then the label is left untouched).
+static int ChmEntityByte(WCHAR c) {
+    if (c <= 0xFF) {
+        return (int)c; // Latin-1: codepoint == byte value
+    }
+    // Đ/đ: some HTML Help Workshop versions emit &Dstrok;/&dstrok; (U+0110/0111)
+    // for the Latin-1 bytes 0xD0/0xF0 (Ð/ð)
+    if (c == 0x0110) {
+        return 0xD0;
+    }
+    if (c == 0x0111) {
+        return 0xF0;
+    }
+    // CP-1252 places a few chars (€ ‚ ƒ … Š Œ Ž ' ' " " – — Ÿ ...) above U+00FF
+    // at bytes 0x80-0x9F; recover those too
+    char b = 0;
+    BOOL defUsed = FALSE;
+    int n = WideCharToMultiByte(1252, WC_NO_BEST_FIT_CHARS, &c, 1, &b, 1, nullptr, &defUsed);
+    if (n == 1 && !defUsed) {
+        return (u8)b;
+    }
+    return -1;
+}
+
+// `s` is utf8 with HTML entities already decoded by gumbo. Some .hhc ToCs
+// authored by HTML Help Workshop store non-Latin labels as Latin-1 named
+// entities -- e.g. the Cyrillic CP-1251 byte 0xCF ("П") written as &Iuml; (Ï,
+// U+00CF). After decoding we get Latin-1 codepoints whose low byte is the
+// original codepage byte. When the whole label is in the Latin-1 range and the
+// document's codepage isn't Latin (1252), reinterpret those bytes in the
+// codepage. Labels that decoded to real Unicode (codepoints > 0xFF, i.e. raw
+// non-Latin bytes already converted by SmartToUtf8Temp) are left untouched, as
+// are pure-ASCII labels (issue #842).
+static const char* FixChmTocEntitiesTemp(const char* s, uint codepage) {
+    uint cp = (codepage == CP_ACP) ? GetACP() : codepage;
+    if (!s || !ChmTocNeedsEntityRemap(cp)) {
+        return s;
+    }
+    TempWStr ws = ToWStrTemp(s);
+    StrBuilder bytes;
+    bool hasHigh = false;
+    for (const WCHAR* p = ws; *p; p++) {
+        int b = ChmEntityByte(*p);
+        if (b < 0) {
+            return s; // real Unicode we can't trace to a byte -> leave as-is
+        }
+        if (b > 0x7F) {
+            hasHigh = true;
+        }
+        bytes.AppendChar((char)(u8)b);
+    }
+    if (!hasHigh) {
+        return s; // pure ASCII -> nothing to remap
+    }
+    return SmartToUtf8Temp(bytes.LendData(), cp);
+}
+
+// Wraps the caller's visitor to repair Latin-1-entity-encoded ToC labels (see
+// FixChmTocEntitiesTemp) before forwarding them; urls/levels pass through.
+struct ChmTocEntityFixer : EbookTocVisitor {
+    EbookTocVisitor* inner;
+    uint codepage;
+    ChmTocEntityFixer(EbookTocVisitor* v, uint cp) : inner(v), codepage(cp) {}
+    void Visit(const char* name, const char* url, int level) override {
+        inner->Visit(FixChmTocEntitiesTemp(name, codepage), url, level);
+    }
+};
+
 bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) const {
     if (!path) {
         return false;
@@ -588,16 +705,20 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool i
         return false;
     }
 
+    // repair Latin-1-entity-encoded labels (e.g. Cyrillic written as &Iuml;...)
+    // for non-Latin codepages, before they reach the caller's visitor (issue #842)
+    ChmTocEntityFixer fixer(visitor, codepage);
+
     // Find <body>, then the first <ul> under it (DFS). <body> is optional.
     const GumboNode* body = GumboFindDescendantByTag(output->document, "body");
     const GumboNode* firstUl = GumboFindDescendantByTag(body ? body : output->document, "ul");
     bool result;
     if (firstUl) {
-        WalkChmTocOrIndex(visitor, firstUl, isIndex);
+        WalkChmTocOrIndex(&fixer, firstUl, isIndex);
         result = true;
     } else {
         bool hadOne = false;
-        WalkBrokenChmTocOrIndex(visitor, output->document, isIndex, &hadOne);
+        WalkBrokenChmTocOrIndex(&fixer, output->document, isIndex, &hadOne);
         result = hadOne;
     }
 
