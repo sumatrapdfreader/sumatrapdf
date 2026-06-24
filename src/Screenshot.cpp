@@ -67,6 +67,23 @@ struct ScreenshotOverlayData {
     int winH = 0;
 };
 
+// true if hwnd is a floating window of ours owned by one of our frames (e.g. the
+// floating find bar, a WS_POPUP | WS_EX_TOOLWINDOW window owned by hwndFrame).
+// Such windows are part of our UI and worth capturing even though the generic
+// filters below would normally drop tool / owned-caption-less windows.
+static bool IsOwnedByAppFrame(HWND hwnd) {
+    HWND owner = GetWindow(hwnd, GW_OWNER);
+    if (!owner) {
+        return false;
+    }
+    for (MainWindow* win : gWindows) {
+        if (win->hwndFrame == owner) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
     if (hwnd == overlayHwnd) {
         return false;
@@ -86,12 +103,15 @@ static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
         // #32768 is the Win32 menu window class (context menus, popups etc.)
         isMenu = str::Eq(className, L"#32768");
     }
+    // our own floating UI (e.g. the find bar) is a tool window owned by a frame;
+    // capture it even though the tool/owned-window filters below would drop it
+    bool ownedByApp = IsOwnedByAppFrame(hwnd);
     LONG_PTR exStyle = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-    if (!isMenu && (exStyle & WS_EX_TOOLWINDOW)) {
+    if (!isMenu && !ownedByApp && (exStyle & WS_EX_TOOLWINDOW)) {
         return false;
     }
     HWND hwndOwner = GetWindow(hwnd, GW_OWNER);
-    if (!isMenu && hwndOwner != nullptr && !(exStyle & WS_EX_APPWINDOW)) {
+    if (!isMenu && !ownedByApp && hwndOwner != nullptr && !(exStyle & WS_EX_APPWINDOW)) {
         // owned window without WS_EX_APPWINDOW: accept if it has a caption
         // (modal dialogs like config windows), reject otherwise
         LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
@@ -115,6 +135,11 @@ static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
         return false;
     }
     if (w * h < 100) {
+        return false;
+    }
+    // skip thin slivers of our own floating UI (e.g. the overlay scrollbar) -
+    // require at least 20x20px for owned-by-app windows
+    if (ownedByApp && (w < 20 || h < 20)) {
         return false;
     }
     WCHAR title[256];
