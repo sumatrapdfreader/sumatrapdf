@@ -493,25 +493,11 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
         case VK_UP:
             idx = (cur < 0) ? n - 1 : (cur - 1 + n) % n;
             break;
-        case VK_NEXT: // Page Down
-            if (cur < 0) {
-                idx = 0;
-            } else {
-                idx = cur + kPage;
-                if (idx >= n) {
-                    idx %= n;
-                }
-            }
+        case VK_NEXT: // Page Down: jump a page forward, clamp at the last match (#5742)
+            idx = (cur < 0) ? 0 : std::min(cur + kPage, n - 1);
             break;
-        case VK_PRIOR: // Page Up
-            if (cur < 0) {
-                idx = n - 1;
-            } else {
-                idx = cur - kPage;
-                if (idx < 0) {
-                    idx = (idx % n + n) % n;
-                }
-            }
+        case VK_PRIOR: // Page Up: jump a page back, clamp at the first match (#5742)
+            idx = (cur < 0) ? n - 1 : std::max(cur - kPage, 0);
             break;
         default:
             return false;
