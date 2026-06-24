@@ -18,3 +18,6 @@ void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked);
 void FindWindowRefreshResults(MainWindow* win);
 // re-apply theme colors/icons to the floating window after a theme change
 void UpdateFindWindowTheme(MainWindow* win);
+
+// Headless draw test for issue #5736: match highlights must not bleed into the page column.
+char* TestFindResultPageColumnClipResult(int* exitCodeOut = nullptr);

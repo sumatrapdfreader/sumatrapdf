@@ -381,10 +381,25 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     if (rcSnippet.right > rcSnippet.left) {
         SetTextColor(hdc, colText);
         uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT | DT_END_ELLIPSIS;
-        DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet ? fm.snippet : "", filterWords, hlScratch, colBg, false,
-                                 win->findMatchWholeWord, drawFmt);
+        // clip snippet drawing so match highlights cannot bleed into the page
+        // number column when the floating window is narrow (issue #5736)
+        HRGN clipRgn = CreateRectRgnIndirect(&rcSnippet);
+        if (clipRgn) {
+            SelectClipRgn(hdc, clipRgn);
+            DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet ? fm.snippet : "", filterWords, hlScratch, colBg, false,
+                                     win->findMatchWholeWord, drawFmt);
+            SelectClipRgn(hdc, nullptr);
+            DeleteObject(clipRgn);
+        } else {
+            DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet ? fm.snippet : "", filterWords, hlScratch, colBg, false,
+                                     win->findMatchWholeWord, drawFmt);
+        }
     }
 
+    // repaint the page column on top in case a prior draw left stray pixels
+    SetBkColor(hdc, colBg);
+    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rcPage, nullptr, 0, nullptr);
+    SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, AccentColor(colText, 80));
     DrawTextW(hdc, pageW, -1, &rcPage, DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
 
@@ -799,4 +814,84 @@ void UpdateFindWindowTheme(MainWindow* win) {
     if (win->findWindow) {
         win->findWindow->UpdateTheme();
     }
+}
+
+char* TestFindResultPageColumnClipResult(int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows.at(0);
+    if (!win || !win->ctrl) {
+        return fail("NOTREADY no-doc");
+    }
+    if (!win->findWindow) {
+        win->findWindow = CreateFindWindow(win);
+    }
+    FindWindowWnd* fw = win->findWindow;
+    if (!fw || !fw->results) {
+        return fail("ERROR no-find-window");
+    }
+
+    ClearFindMatches(win);
+    FindMatch fm;
+    fm.startPage = 1;
+    fm.snippet = str::Dup("longprefix testword suffix");
+    win->findMatches.Append(fm);
+    fw->filterWords.Reset();
+    fw->filterWords.Append("testword");
+
+    HDC hdcScreen = GetDC(nullptr);
+    if (!hdcScreen) {
+        return fail("ERROR no-screen-dc");
+    }
+    const int w = 110;
+    const int h = DpiScale(fw->hwnd, 20);
+    HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    HBITMAP hbmp = CreateCompatibleBitmap(hdcScreen, w, h);
+    if (!hdcMem || !hbmp) {
+        ReleaseDC(nullptr, hdcScreen);
+        DeleteDC(hdcMem);
+        DeleteObject(hbmp);
+        return fail("ERROR no-mem-dc");
+    }
+    HGDIOBJ oldBmp = SelectObject(hdcMem, hbmp);
+
+    ListBox::DrawItemEvent ev;
+    ev.listBox = fw->results;
+    ev.hdc = hdcMem;
+    ev.itemRect = {0, 0, w, h};
+    ev.itemIndex = 0;
+    ev.selected = false;
+    fw->DrawResultItem(&ev);
+
+    COLORREF px = GetPixel(hdcMem, w - 3, h / 2);
+    SelectObject(hdcMem, oldBmp);
+    DeleteObject(hbmp);
+    DeleteDC(hdcMem);
+    ReleaseDC(nullptr, hdcScreen);
+    ClearFindMatches(win);
+
+    bool isYellow = GetRValue(px) > 200 && GetGValue(px) > 200 && GetBValue(px) < 100;
+    if (isYellow) {
+        out.AppendFmt("FAIL pixel=0x%06x\n", (unsigned)px);
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    }
+    out.AppendFmt("OK pixel=0x%06x\n", (unsigned)px);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return out.StealData();
 }

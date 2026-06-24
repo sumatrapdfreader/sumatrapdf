@@ -12,6 +12,7 @@
 #include "SelectionTranslate.h"
 #include "ImageSaveCropResize.h"
 #include "utils/GuessFileType.h"
+#include "FindWindow.h"
 
 #include "utils/Log.h"
 
@@ -33,6 +34,7 @@ enum class ControlCmd : u16 {
     // Assign new test commands starting at 23.
     TestInverseSearch = 22,
     TestImageResizeArrowKey = 23,
+    TestFindResultPageColumnClip = 24,
     TestFileKind = 25,
 };
 
@@ -422,6 +424,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestImageResizeArrowKeyResult(imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFindResultPageColumnClip: {
+            int exitCode = 0;
+            char* res = TestFindResultPageColumnClipResult(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -16,6 +16,7 @@ export enum ControlCommand {
   // Assign new test commands starting at 23.
   TestInverseSearch = 22,
   TestImageResizeArrowKey = 23,
+  TestFindResultPageColumnClip = 24,
   TestFileKind = 25,
 }
 
