@@ -78,7 +78,7 @@ On many laptops the `F1`–`F12` keys control volume and brightness unless you h
 
 - Search is **case-insensitive** by default (German `ß` matches `ss` since 3.7).
 - Matching continues onto following pages and **wraps** around to the start of the document.
-- Matches are highlighted with `FixedPageUI.SelectionColor` (configurable in advanced settings).
+- The **current** match is highlighted with `FixedPageUI.SelectionColor` (configurable in advanced settings); all other matches use a secondary orange highlight so the active match stands out.
 
 ## Command Palette
 

@@ -43,8 +43,10 @@ StrVec gDdeOpenOnStartup;
 // TODO: expose as a setting; default true for testing
 bool gShowAllMatches = true;
 
-// Chrome-style orange for the active find match
-constexpr COLORREF kFindCurrentMatchColor = RGB(0xff, 0x96, 0x32);
+// Chrome-style orange for the non-active find matches. The active (current)
+// match uses the user-customizable FixedPageUI.SelectionColor instead, so it
+// stands out with the color the user finds most noticeable (issue #5740).
+constexpr COLORREF kFindOtherMatchColor = RGB(0xff, 0x96, 0x32);
 
 struct FindMatchPaintPageRect {
     int pageNo = 0;
@@ -1060,7 +1062,7 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
         Vec<Rect> currentRects;
         AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
         if (currentRects.size() > 0) {
-            PaintTransparentRectangles(hdc, win->canvasRc, currentRects, kFindCurrentMatchColor, alpha);
+            PaintTransparentRectangles(hdc, win->canvasRc, currentRects, parsedCol->col, alpha);
         }
         return;
     }
@@ -1102,13 +1104,13 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
     }
 
     if (otherRects.size() > 0) {
-        PaintTransparentRectangles(hdc, win->canvasRc, otherRects, parsedCol->col, alpha);
+        PaintTransparentRectangles(hdc, win->canvasRc, otherRects, kFindOtherMatchColor, alpha);
     }
     if (currentRects.size() == 0 && ts && ts->result.len > 0) {
         AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
     }
     if (currentRects.size() > 0) {
-        PaintTransparentRectangles(hdc, win->canvasRc, currentRects, kFindCurrentMatchColor, alpha);
+        PaintTransparentRectangles(hdc, win->canvasRc, currentRects, parsedCol->col, alpha);
     }
 }
 
