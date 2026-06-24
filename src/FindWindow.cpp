@@ -77,6 +77,11 @@ struct FindWindowWnd : Wnd {
     Vec<u8> hlScratch;  // reused highlight mask for DrawMaybeHighlightedText
     // coalesce rapid list selections: only the latest deferred navigation runs
     LONG pendingNavEpoch = 0;
+    // in an interactive size/move loop (between WM_ENTERSIZEMOVE/EXITSIZEMOVE)
+    bool inSizeMove = false;
+    // list redraw is paused only while interactively *resizing* (a WM_SIZE
+    // arrived during the size/move loop), not while merely moving the window
+    bool listRedrawPaused = false;
 
     FindWindowWnd() = default;
     ~FindWindowWnd() override;
@@ -549,17 +554,25 @@ void FindWindowWnd::OnTextChanged() {
 LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_ENTERSIZEMOVE:
-            if (results) {
-                SendMessageW(results->hwnd, WM_SETREDRAW, FALSE, 0);
-            }
+            inSizeMove = true;
             break;
         case WM_SIZE:
             Layout();
+            // Pause list redraws only on an actual resize (a WM_SIZE arrived
+            // during the interactive size/move loop), to avoid the page-number
+            // glitch (#5692). Don't pause for a plain move -- doing so left the
+            // results list blank/white while dragging the window (#5737 follow-up).
+            if (inSizeMove && results && !listRedrawPaused && wp != SIZE_MINIMIZED) {
+                SendMessageW(results->hwnd, WM_SETREDRAW, FALSE, 0);
+                listRedrawPaused = true;
+            }
             break;
         case WM_EXITSIZEMOVE:
-            if (results) {
+            inSizeMove = false;
+            if (results && listRedrawPaused) {
                 SendMessageW(results->hwnd, WM_SETREDRAW, TRUE, 0);
                 InvalidateRect(results->hwnd, nullptr, TRUE);
+                listRedrawPaused = false;
             }
             SavePos();
             break;
