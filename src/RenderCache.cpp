@@ -20,10 +20,9 @@
 
 #pragma warning(disable : 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'
 
-// TODO: remove this and always conserve memory?
-/* Define if you want to conserve memory by always freeing cached bitmaps
-   for pages not visible. Disabling this might lead to pages not rendering
-   due to insufficient (GDI) memory. */
+// CONSERVE_MEMORY sets the compile-time default for gConserveMemory. When defined,
+// cached page bitmaps for non-visible pages are freed aggressively. Undefining it
+// keeps more pages resident (higher GDI memory use, fewer re-renders).
 #define CONSERVE_MEMORY
 
 #if defined(CONSERVE_MEMORY)

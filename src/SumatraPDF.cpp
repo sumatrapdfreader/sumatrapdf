@@ -1250,7 +1250,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
 }
 
-// TODO: remove when we figure out why this ctrl->GetFilePath() is not always same as path
+// Debug check: ctrl->GetFilePath() should match path; logs and ReportIf on mismatch.
 static NO_INLINE void VerifyController(DocController* ctrl, const char* path) {
     if (!ctrl) {
         return;

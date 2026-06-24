@@ -380,7 +380,7 @@ int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
     return totalFlex;
 }
 
-// TODO: remove calculateVGap() and calculateHGap()
+// Inter-child gap for VBox/HBox; margin support not implemented yet (always 0).
 static int CalculateVGap(ILayout*, ILayout*) {
     return 0;
 }
@@ -1135,7 +1135,7 @@ TableLayout::~TableLayout() {
 }
 
 Size TableLayout::Layout(Constraints bc) {
-    // TODO: implement me
+    // Not implemented: no caller should reach this yet.
     CrashMe();
     return {};
 }
@@ -1150,10 +1150,7 @@ int TableLayout::MinIntrinsicHeight(int width) {
             if (!el || IsCollapsed(el)) {
                 continue;
             }
-            // TODO: width should probably be different for each cell
-            // i.e. if it's non-infinite then use width / cols or some
-            // more complicated scheme for non-uniformly sized columns
-            // or maybe not
+            // Uses full table width per cell; column widths are not modeled yet.
             int h = el->MinIntrinsicHeight(width);
             if (h > maxRowHeight) {
                 maxRowHeight = h;
@@ -1174,10 +1171,7 @@ int TableLayout::MinIntrinsicWidth(int height) {
             if (!el || IsCollapsed(el)) {
                 continue;
             }
-            // TODO: height should probably be different for each cell
-            // i.e. if it's non-infinite then use height / rows or some
-            // more complicated scheme for non-uniformly sized rows
-            // or maybe not
+            // Uses full table height per cell; row heights are not modeled yet.
             int h = el->MinIntrinsicWidth(height);
             if (h > maxColWidth) {
                 maxColWidth = h;
@@ -1189,7 +1183,7 @@ int TableLayout::MinIntrinsicWidth(int height) {
 }
 
 void TableLayout::SetBounds(Rect) {
-    // TODO: implement me
+    // Not implemented: no caller should reach this yet.
     CrashMe();
 }
 
