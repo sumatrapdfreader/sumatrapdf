@@ -379,17 +379,19 @@ void RecreateFindBar(MainWindow* win) {
     }
 }
 
-// center the bar over the search toolbar icon, both horizontally and vertically
+// Position the bar at the right edge of the window so it doesn't cover the
+// toolbar (issue #5739). The x is always the same as if the toolbar were hidden;
+// only the y follows the toolbar: centered on the search icon when the toolbar
+// is shown, else just below the frame top.
 static void PositionFindBar(FindBarWnd* bar) {
     MainWindow* win = bar->win;
     Rect btn = GetToolbarButtonScreenRect(win, CmdFindFirst);
-    int cx, cy;
+    Rect fr = WindowRect(win->hwndFrame);
+    int cx = fr.x + fr.dx - bar->barDx;
+    int cy;
     if (btn.IsEmpty()) {
-        Rect fr = WindowRect(win->hwndFrame);
-        cx = fr.x + fr.dx - bar->barDx;
         cy = fr.y + bar->barDy;
     } else {
-        cx = btn.x + btn.dx / 2 - bar->barDx / 2;
         cy = btn.y + btn.dy / 2 - bar->barDy / 2;
     }
     Rect r{cx, cy, bar->barDx, bar->barDy};
