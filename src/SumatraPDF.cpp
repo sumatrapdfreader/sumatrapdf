@@ -1236,14 +1236,17 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
         }
     }
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (pageNo == win->currPageNo) {
+        if (wnd) {
+            UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
+        }
         return;
     }
 
     UpdateTocSelection(win, pageNo);
     win->currPageNo = pageNo;
 
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (!wnd) {
         return;
     }
@@ -1400,6 +1403,11 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
     UpdateToolbarPageText(win, pageCount);
     UpdateToolbarFindText(win);
+
+    NotificationWnd* pageInfoWnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    if (pageInfoWnd) {
+        UpdatePageInfoHelper(win->ctrl, pageInfoWnd, -1);
+    }
 
     UpdateFindbox(win);
 
@@ -6496,7 +6504,7 @@ static void DownloadDebugSymbols() {
         ReportIfFast(!didInitializeDbgHelp);
     }
 ShowMessage:
-    MessageBoxWarning(nullptr, msg, "Downloading symbols");
+    MessageBoxWarning(nullptr, msg, _TRA("Downloading symbols"));
 }
 
 // try to trigger a crash due to corrupting allocator
@@ -10476,11 +10484,11 @@ void ShowCrashHandlerMessage() {
     }
 #endif
 
-    const char* msg = "We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.";
+    const char* msg = _TRA("We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.");
     uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
     flags |= MB_SETFOREGROUND | MB_TOPMOST;
 
-    int res = MsgBox(nullptr, msg, "SumatraPDF crashed", flags);
+    int res = MsgBox(nullptr, msg, _TRA("SumatraPDF crashed"), flags);
     if (IDCANCEL != res) {
         log("ShowCrashHandlerMessage: res != IDCANCEL\n");
         return;
