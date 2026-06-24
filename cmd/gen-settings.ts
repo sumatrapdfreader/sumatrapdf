@@ -459,6 +459,15 @@ const externalViewer: Field[] = [
   ),
   setVersion(mkField("Key", Str, null, "optional: keyboard shortcut e.g. Alt + 7"), "3.6"),
   setVersion(mkField("ToolbarText", Str, null, "if given, shows in toolbar"), "3.7"),
+  setVersion(
+    mkField(
+      "ToolbarSvgIcon",
+      Str,
+      null,
+      "optional SVG icon for toolbar button; if both ToolbarSvgIcon and ToolbarText are set, the icon is used",
+    ),
+    "3.7",
+  ),
 ];
 
 const selectionHandler: Field[] = [

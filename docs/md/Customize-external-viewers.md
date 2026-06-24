@@ -22,6 +22,10 @@ ExternalViewers [
 
     // ver 3.6+:
     Key = 
+
+    // ver 3.7+:
+    ToolbarText =
+    ToolbarSvgIcon =
   ]
 ]
 ```
@@ -35,6 +39,7 @@ ExternalViewers [
     Name = Foxit &Reader
     Filter = *.pdf
     Key = Ctrl + m
+    ToolbarText = Foxit
   ]
 ]
 ```
@@ -59,3 +64,5 @@ Please make sure to use quotes around file / directory special values (i.e. `"%1
 - to allow all files, use `*` (useful for file managers)
 
 `Key` is optional and is a keyboard shortcut to invoke that viewer. Available in **3.6** and later.
+
+`ToolbarText` is optional and adds a toolbar button for that viewer. `ToolbarSvgIcon` is optional and sets an SVG icon for that toolbar button. If both are set, the SVG icon is used. Available in **3.7** and later.

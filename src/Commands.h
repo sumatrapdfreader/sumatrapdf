@@ -399,6 +399,7 @@ constexpr const char* kCmdArgMode = "mode";
 constexpr const char* kCmdArgTheme = "theme";
 constexpr const char* kCmdArgCommandLine = "cmdline";
 constexpr const char* kCmdArgToolbarText = "toolbartext";
+constexpr const char* kCmdArgToolbarSvgIcon = "toolbarsvgicon";
 constexpr const char* kCmdArgFocusEdit = "focusedit";
 constexpr const char* kCmdArgFocusList = "focuslist";
 // optional bool to force a state on a toggle command instead of flipping it (#5067)

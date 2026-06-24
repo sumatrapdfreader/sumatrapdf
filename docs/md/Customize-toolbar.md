@@ -2,7 +2,7 @@
 
 **Available in version 3.6 or later.**
 
-You can add buttons to a toolbar using `Shortcuts` [advanced setting](Advanced-options-settings.md).
+You can add buttons to a toolbar using `Shortcuts` [advanced setting](Advanced-options-settings.md). You can also add toolbar buttons for custom external viewers using `ExternalViewers`.
 
 To customize toolbar:
 
@@ -46,6 +46,8 @@ Explanation:
 If you provide `Name`, it'll be available in [Command Palette](Command-Palette.md).
 
 See [customize shortcuts](Customize-keyboard-shortcuts.md) for more complete docs on `Shortcuts` [advanced setting](Advanced-options-settings.md).
+
+See [customize external viewers](Customize-external-viewers.md) for adding external-viewer toolbar buttons.
 
 ## Using SVG icons
 

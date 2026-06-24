@@ -169,6 +169,10 @@ static void CreateExternalViewersCommands() {
             auto arg = NewStringArg(kCmdArgToolbarText, ev->toolbarText);
             InsertArg(&args, arg);
         }
+        if (!str::IsEmptyOrWhiteSpace(ev->toolbarSvgIcon)) {
+            auto arg = NewStringArg(kCmdArgToolbarSvgIcon, ev->toolbarSvgIcon);
+            InsertArg(&args, arg);
+        }
         auto cmd = CreateCustomCommand("", CmdViewWithExternalViewer, args);
         SetCommandNameAndShortcut(cmd, ev->name, ev->key);
     }

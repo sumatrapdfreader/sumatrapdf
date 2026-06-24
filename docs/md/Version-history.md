@@ -33,7 +33,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - compress, decompress, encrypt, decrypt, bake, delete pages from, and extract pages from PDF files (via `Ctrl + k` [command palette](Command-Palette.md))
 - extract text from document pages to a .txt file (via `Ctrl + k` [command palette](Command-Palette.md))
 - read text aloud using Windows text-to-speech: toolbar, main menu, and context menu **Read Aloud (TTS)** submenus with **Start Reading From Top** (viewport through end of document), **Start Reading Selection**, **Start Reading From Cursor Position** (context menu), pause / continue / stop, a playback bar on the canvas showing the document name, current page, and scope, word highlight while speaking, and a **Voice** submenu; chosen voice is remembered via the `ReadAloudVoiceId` advanced setting
-- add `ToolbarText` parameter for `ExternalViewers` advanced setting to show external viewer as a toolbar button
+- add `ToolbarText` and `ToolbarSvgIcon` parameters for `ExternalViewers` advanced setting to show external viewer as a toolbar button with text or an SVG icon (fixes #5741)
 - move `Scrollbars` advanced setting from `FixedPageUI` to top-level
 - add `EBookUI.BackgroundColor` advanced setting to override background color for ebook documents (epub, mobi etc.)
 - add `ComicBookUI.BackgroundColor` advanced setting to override the default black background for comic book files

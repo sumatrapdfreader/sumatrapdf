@@ -903,6 +903,16 @@ static const char* ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
     return shortcut->cmd;
 }
 
+static const char* CustomCommandToolbarToolTipTemp(CustomCommand* cmd, const char* fallback) {
+    if (cmd && !str::IsEmptyOrWhiteSpace(cmd->name)) {
+        return cmd->name;
+    }
+    if (!str::IsEmptyOrWhiteSpace(fallback)) {
+        return fallback;
+    }
+    return "External Viewer";
+}
+
 static void PopulateCustomToolbarButtons() {
     gCustomButtonsCount = 0;
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
@@ -927,12 +937,22 @@ static void PopulateCustomToolbarButtons() {
         }
     }
 
-    // add toolbar buttons from custom commands with ToolbarText (e.g. ExternalViewers)
+    // add toolbar buttons from custom commands with toolbar settings (e.g. ExternalViewers)
     for (auto cc = gFirstCustomCommand; cc; cc = cc->next) {
         if (gCustomButtonsCount >= kMaxCustomButtons) {
             break;
         }
+        const char* svgIcon = GetCommandStringArg(cc, kCmdArgToolbarSvgIcon, nullptr);
         const char* tbText = GetCommandStringArg(cc, kCmdArgToolbarText, nullptr);
+        if (!str::IsEmptyOrWhiteSpace(svgIcon)) {
+            ToolbarButtonInfo tbi;
+            tbi.bmpIndex = TbIcon::None;
+            tbi.cmdId = cc->id;
+            tbi.svgIcon = svgIcon;
+            tbi.toolTip = CustomCommandToolbarToolTipTemp(cc, tbText);
+            gCustomButtons[gCustomButtonsCount++] = tbi;
+            continue;
+        }
         if (str::IsEmptyOrWhiteSpace(tbText)) {
             continue;
         }

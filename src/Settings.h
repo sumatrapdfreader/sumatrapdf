@@ -237,6 +237,9 @@ struct ExternalViewer {
     char* key;
     // if given, shows in toolbar
     char* toolbarText;
+    // optional SVG icon for toolbar button; if both ToolbarSvgIcon and
+    // ToolbarText are set, the icon is used
+    char* toolbarSvgIcon;
 };
 
 // customization options for how we show forward search results (used
@@ -824,9 +827,10 @@ static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, filter), SettingType::String, 0},
     {offsetof(ExternalViewer, key), SettingType::String, 0},
     {offsetof(ExternalViewer, toolbarText), SettingType::String, 0},
+    {offsetof(ExternalViewer, toolbarSvgIcon), SettingType::String, 0},
 };
-static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 5, gExternalViewerFields,
-                                               "CommandLine\0Name\0Filter\0Key\0ToolbarText"};
+static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 6, gExternalViewerFields,
+                                               "CommandLine\0Name\0Filter\0Key\0ToolbarText\0ToolbarSvgIcon"};
 
 static const FieldInfo gForwardSearchFields[] = {
     {offsetof(ForwardSearch, highlightOffset), SettingType::Int, 0},
