@@ -12,6 +12,6 @@ class IDiaDataSource;
 
 IDiaDataSource *LoadDia();
 
-void BStrToString(str::Str& strInOut, BSTR str, const char *defString = "", bool stripWhitespace = false);
+void BStrToString(StrBuilder& strInOut, BSTR str, const char *defString = "", bool stripWhitespace = false);
 
 #endif

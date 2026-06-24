@@ -96,7 +96,7 @@ IDiaDataSource *LoadDia()
     return NULL;
 }
 
-void BStrToString(str::Str& strInOut, BSTR str, const char *defString, bool stripWhitespace)
+void BStrToString(StrBuilder& strInOut, BSTR str, const char *defString, bool stripWhitespace)
 {
     strInOut.Reset();
     if (!str) {
@@ -113,6 +113,6 @@ void BStrToString(str::Str& strInOut, BSTR str, const char *defString, bool stri
             continue;
         if (c < 32 || c >= 128)
             c = '?';
-        strInOut.Append((char)c);
+        strInOut.AppendChar((char)c);
     }
 }

@@ -115,7 +115,46 @@ const char *GetThunkTypeName(DWORD thunkType)
     return g_thunkTypeNames[thunkType];
 }
 
-static str::Str g_report;
+// StringInterner: assigns a stable index to each unique string (used to compact
+// the report). It used to live in utils/Dict.* but was removed there as unused
+// (efi was its only user), so efi carries its own copy now.
+class StringInterner {
+    dict::MapStrToInt strToInt;
+    Vec<const char*> intToStr;
+
+  public:
+    StringInterner() = default;
+
+    int Intern(const char* s, bool* alreadyPresent = nullptr);
+    size_t StringsCount() const {
+        return intToStr.size();
+    }
+    const char* GetByIndex(size_t n) const {
+        return intToStr.at(n);
+    }
+
+    int nInternCalls = 0; // so we know how effective interning is
+};
+
+int StringInterner::Intern(const char* s, bool* alreadyPresent) {
+    nInternCalls++;
+    int idx = (int)intToStr.size();
+    const char* internedString;
+    bool inserted = strToInt.Insert(s, idx, &idx, &internedString);
+    if (!inserted) {
+        if (alreadyPresent) {
+            *alreadyPresent = true;
+        }
+        return idx;
+    }
+    intToStr.Append(internedString);
+    if (alreadyPresent) {
+        *alreadyPresent = false;
+    }
+    return idx;
+}
+
+static StrBuilder g_report;
 static StringInterner g_strInterner;
 static StringInterner g_typesSeen;
 
@@ -142,7 +181,7 @@ static int InternString(const char *s)
     return g_strInterner.Intern(s);
 }
 
-static void GetInternedStringsReport(str::Str& resOut)
+static void GetInternedStringsReport(StrBuilder& resOut)
 {
     resOut.Append("Strings:\n");
     size_t n = g_strInterner.StringsCount();
@@ -212,7 +251,7 @@ static const char *GetUdtType(IDiaSymbol *symbol)
 // the result doesn't have to be free()d but is only valid until the next call to this function
 static const char *GetObjFileName(IDiaSectionContrib *item)
 {
-    static str::Str strTmp;
+    static StrBuilder strTmp;
     BSTR            name = 0;
 
     IDiaSymbol *    compiland = 0;
@@ -230,7 +269,7 @@ static const char *GetObjFileName(IDiaSectionContrib *item)
 #if 0
 static const char *GetLibraryName(IDiaSymbol *symbol)
 {
-    static str::Str strTmp;
+    static StrBuilder strTmp;
     BSTR   name = 0;
     symbol->get_libraryName(&name);
     BStrToString(strTmp, name, "<nolibfile>");
@@ -243,7 +282,7 @@ static const char *GetLibraryName(IDiaSymbol *symbol)
 #if 0
 static const char *GetSourceFileName(IDiaSymbol *symbol)
 {
-    static str::Str strTmp;
+    static StrBuilder strTmp;
     BSTR   name = 0;
     symbol->get_sourceFileName(&name);
     BStrToString(strTmp, name, "<nosrcfile>");
@@ -255,7 +294,7 @@ static const char *GetSourceFileName(IDiaSymbol *symbol)
 // the result doesn't have to be free()d but is only valid until the next call to this function
 static const char *GetTypeName(IDiaSymbol *symbol)
 {
-    static str::Str strTmp;
+    static StrBuilder strTmp;
     BSTR name = NULL;
     symbol->get_name(&name);
     BStrToString(strTmp, name, "<noname>", true);
@@ -266,7 +305,7 @@ static const char *GetTypeName(IDiaSymbol *symbol)
 // the result doesn't have to be free()d but is only valid until the next call to this function
 static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol, const char *defName = "<noname>")
 {
-    static str::Str strTmp;
+    static StrBuilder strTmp;
 
     BSTR name = NULL;
 
@@ -289,7 +328,7 @@ static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol, const char *defN
         BStrToString(strTmp, name, "", true);
         if (str::Eq(strTmp.Get(), "`string'"))
             return "*str";
-        strTmp.Replace("(void)", "()");
+        strTmp.Set(str::ReplaceTemp(strTmp.Get(), "(void)", "()"));
         // more ideas for undecoration:
         // http://google-breakpad.googlecode.com/svn/trunk/src/common/windows/pdb_source_line_writer.cc
     } else {
@@ -404,11 +443,11 @@ static void DumpTypes(IDiaSession *session)
     g_report.Append("Types:\n");
 
     DWORD flags = nsfCaseInsensitive|nsfUndecoratedName; // nsNone ?
+    ULONG celt = 0;
     hr = globalScope->findChildren(SymTagUDT, 0, flags, &enumSymbols);
     if (FAILED(hr))
         goto Exit;
 
-    ULONG celt = 0;
     for (;;)
     {
         hr = enumSymbols->Next(1, &symbol, &celt);
@@ -464,7 +503,7 @@ static void DumpSymbol(IDiaSymbol *symbol)
     const char *nameStr = GetUndecoratedSymbolName(symbol);
     if (SymTagData == tag) {
         // type | section | length | offset | rva | name | dataTypeName
-        char *tmp = dataTypeName ? dataTypeName : "";
+        const char *tmp = dataTypeName ? dataTypeName : "";
         g_report.AppendFmt("%s|%d|%d|%d|%d|%s|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr, tmp);
         free(dataTypeName);
     } else if (SymTagThunk == tag) {
@@ -573,13 +612,13 @@ static void ProcessPdbFile(const char *fileNameA)
     HRESULT             hr;
     IDiaDataSource *    dia = NULL;
     IDiaSession *       session = NULL;
-    str::Str      report;
+    StrBuilder      report;
 
     dia = LoadDia();
     if (!dia)
         return;
 
-    AutoFreeWstr fileName(strconv::AnsiToWstr(fileNameA));
+    TempWStr fileName = strconv::AnsiToWStrTemp(fileNameA);
     hr = dia->loadDataForExe(fileName, 0, 0);
     if (FAILED(hr)) {
         logf("  failed to load %s or its debug symbols from .pdb file\n", fileNameA);
@@ -603,7 +642,7 @@ static void ProcessPdbFile(const char *fileNameA)
 
     fputs("Format: 1\n", stdout);
     if (g_compact) {
-        str::Str res;
+        StrBuilder res;
         GetInternedStringsReport(res);
         fputs(res.Get(), stdout);
     }
