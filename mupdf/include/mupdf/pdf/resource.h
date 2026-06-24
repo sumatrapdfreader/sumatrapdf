@@ -47,7 +47,8 @@ int pdf_pattern_uses_blending(fz_context *ctx, pdf_obj *dict, pdf_cycle_list *cy
  */
 
 enum { PDF_SIMPLE_FONT_RESOURCE=1, PDF_CID_FONT_RESOURCE=2, PDF_CJK_FONT_RESOURCE=3 };
-enum { PDF_SIMPLE_ENCODING_LATIN, PDF_SIMPLE_ENCODING_GREEK, PDF_SIMPLE_ENCODING_CYRILLIC };
+/* SumatraPDF: added PDF_SIMPLE_ENCODING_LATIN2 (CP-1250) for #5404 */
+enum { PDF_SIMPLE_ENCODING_LATIN, PDF_SIMPLE_ENCODING_GREEK, PDF_SIMPLE_ENCODING_CYRILLIC, PDF_SIMPLE_ENCODING_LATIN2 };
 
 /* The contents of this structure are defined publicly just so we can
  * define this on the stack. */

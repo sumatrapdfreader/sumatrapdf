@@ -651,6 +651,10 @@ pdf_add_simple_font_encoding(fz_context *ctx, pdf_document *doc, pdf_obj *fobj, 
 	case PDF_SIMPLE_ENCODING_CYRILLIC:
 		pdf_add_simple_font_encoding_imp(ctx, doc, fobj, fz_glyph_name_from_koi8u);
 		break;
+	/* SumatraPDF: CP-1250 (Central European Latin) fallback font, #5404 */
+	case PDF_SIMPLE_ENCODING_LATIN2:
+		pdf_add_simple_font_encoding_imp(ctx, doc, fobj, fz_glyph_name_from_windows_1250);
+		break;
 	}
 }
 
@@ -673,6 +677,7 @@ pdf_add_simple_font(fz_context *ctx, pdf_document *doc, fz_font *font, int encod
 	case PDF_SIMPLE_ENCODING_LATIN: enc = fz_glyph_name_from_windows_1252; break;
 	case PDF_SIMPLE_ENCODING_GREEK: enc = fz_glyph_name_from_iso8859_7; break;
 	case PDF_SIMPLE_ENCODING_CYRILLIC: enc = fz_glyph_name_from_koi8u; break;
+	case PDF_SIMPLE_ENCODING_LATIN2: enc = fz_glyph_name_from_windows_1250; break; /* SumatraPDF: #5404 */
 	}
 
 	fobj = pdf_add_new_dict(ctx, doc, 10);
