@@ -151,6 +151,7 @@ bool SettingsRememberOpenedFiles() {
 }
 
 static Kind kNotifPersistentWarning = "persistentWarning";
+static Kind kNotifDocErrors = "docErrors";
 static Kind kNotifZoomOrView = "zoomOrView";
 
 HBITMAP gBitmapReloadingCue;
@@ -1680,6 +1681,27 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         nargs.warning = true;
         nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifPersistentWarning;
+        nargs.msg = msg;
+        nargs.tab = win->CurrentTab(); // only show while this tab is active
+        nargs.corner = NotifCorner::BottomRight;
+        nargs.xMargin = 2;
+        nargs.yMargin = 2;
+        ShowNotification(nargs);
+    }
+
+    // if the document had parsing errors (the same condition that adds "Show
+    // Errors" to the context menu), surface it with a notification whose
+    // "Errors" link opens the Show Errors dialog (matching the unsupported-
+    // features notification: bottom-right, small margins, 16s timeout)
+    DisplayModel* dmErr = win->AsFixed();
+    EngineBase* engineErr = dmErr ? dmErr->GetEngine() : nullptr;
+    if (engineErr && engineErr->errors.Size() > 0) {
+        TempStr msg = str::FormatTemp("[%s](CmdShowErrors) %s", _TRA("Errors"), _TRA("in PDF"));
+        NotificationCreateArgs nargs;
+        nargs.hwndParent = win->hwndCanvas;
+        nargs.warning = true;
+        nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
+        nargs.groupId = kNotifDocErrors;
         nargs.msg = msg;
         nargs.tab = win->CurrentTab(); // only show while this tab is active
         nargs.corner = NotifCorner::BottomRight;
