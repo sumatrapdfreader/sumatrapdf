@@ -17,7 +17,7 @@
 // IE's built-in support form CHM documents (using its: protocol
 // http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx).
 // However, that doesn't work for CHM documents from network drives
-// (http://code.google.com/p/sumatrapdf/issues/detail?id=1706)
+// (https://code.google.com/archive/p/sumatrapdf/issues/1706)
 // To solve that we ended up the following solution:
 // * an app can provide html as data in memory. We write the data using custom
 //   IMoniker implementation with IE's IPersistentMoniker::Load() function.
@@ -74,18 +74,8 @@
 // http://geekswithblogs.net/dotnetnomad/archive/2008/01/29/119065.aspx
 
 // Other code that does advanced things with embedding IE or providing it with non-trivial
-// interfaces:
-// http://osh.codeplex.com/
-// http://code.google.com/p/atc32/source/browse/trunk/WorldWindProject/lib-external/webview/windows/
-// http://code.google.com/p/fidolook/source/browse/trunk/Qm/ui/messageviewwindow.cpp
-// http://code.google.com/p/csexwb2/
-// chrome frame: http://codesearch.google.com/#wZuuyuB8jKQ/chromium/src/chrome_frame/chrome_protocol.h
-// gears: http://code.google.com/p/gears/
-// http://code.google.com/p/fictionbookeditor/
-// http://code.google.com/p/easymule/
-// http://code.google.com/p/svnprotocolhandler/ (IInternetProtocolInfo implementation)
-// https://github.com/facebook/ie-toolbar (also IInternetProtocolInfo implementation)
-// http://code.google.com/p/veryie/
+// interfaces (several older Google Code / CodePlex samples are defunct; live refs below):
+// https://github.com/facebook/ie-toolbar (IInternetProtocolInfo implementation)
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla
 // http://www.codeproject.com/Articles/642/Processing-HTML-Forms-From-a-CHtmlView
 // https://github.com/salsita/ProtocolLibrary

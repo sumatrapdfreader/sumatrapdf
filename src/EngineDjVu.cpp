@@ -198,7 +198,7 @@ struct DjVuContext {
     ddjvu_document_t* OpenFile(const char* fileName) {
         ScopedCritSec scope(&lock);
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
-        //       http://code.google.com/p/sumatrapdf/issues/detail?id=1434
+        //       https://code.google.com/archive/p/sumatrapdf/issues/1434
         return ddjvu_document_create_by_filename_utf8(ctx, fileName, /* cache */ FALSE);
     }
 

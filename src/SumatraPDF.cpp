@@ -1650,7 +1650,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 
     // if the window isn't shown and win.canvasRc is still empty, zoom
     // has not been determined yet
-    // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
+    // cf. https://code.google.com/archive/p/sumatrapdf/issues/2541
     // ReportIf(win->IsDocLoaded() && args->showWin && win->canvasRc.IsEmpty() && !win->AsChm());
 
     if (!IsMainWindowValid(win) || win->isBeingClosed) {
@@ -3120,7 +3120,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         ReportIf(win->TabCount() != 0 || win->CurrentTab());
     }
 
-    // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
+    // Note: this causes https://code.google.com/archive/p/sumatrapdf/issues/2702. For whatever reason
     // edit ctrl doesn't receive WM_KILLFOCUS if we do SetFocus() here, even if we call SetFocus() later on
     // HwndSetFocus(win->hwndFrame);
 }

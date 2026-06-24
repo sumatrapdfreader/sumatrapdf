@@ -1999,7 +1999,7 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
 }
 
 // extract ComicBookInfo metadata
-// http://code.google.com/p/comicbookinfo/
+// https://code.google.com/archive/p/comicbookinfo/
 bool ComicInfoParser::Visit(const char* path, const char* value, json::Type type) {
     if (json::Type::String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
         propTitle.Set(str::Dup(value));

@@ -4,52 +4,47 @@
 // must be #included from Regress.cpp
 
 // test that a given epub file loads correctly. crash otherwise
-static void RegressTestEpubLoading(const char *fileName)
-{
-    char *filePath = path::Join(TestFilesDir(), fileName);
+static void RegressTestEpubLoading(const char* fileName) {
+    char* filePath = path::Join(TestFilesDir(), fileName);
     VerifyFileExists(filePath);
     Kind kind = GuessFileType(fileName, true);
     ReportIf(!EpubDoc::IsSupportedFileType(kind));
-    EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
+    EpubDoc* doc = EpubDoc::CreateFromFile(filePath);
     ReportIf(!doc);
     delete doc;
 }
 
-// http://code.google.com/p/sumatrapdf/issues/detail?id=2102
-static void Regress02()
-{
+// https://code.google.com/archive/p/sumatrapdf/issues/2102
+static void Regress02() {
     RegressTestEpubLoading("epub\\sumatra-crash-nov-23-2012.epub");
 }
 
-// http://code.google.com/p/sumatrapdf/issues/detail?id=2091
-static void Regress01()
-{
+// https://code.google.com/archive/p/sumatrapdf/issues/2091
+static void Regress01() {
     RegressTestEpubLoading("epub\\sumatra-crash-nov-12-2012.epub");
 }
 
-// http://code.google.com/p/sumatrapdf/issues/detail?id=1926
-static void Regress00()
-{
-    char *filePath = path::Join(TestFilesDir(), "epub\\widget-figure-gallery-20120405.epub");
+// https://code.google.com/archive/p/sumatrapdf/issues/1926
+static void Regress00() {
+    char* filePath = path::Join(TestFilesDir(), "epub\\widget-figure-gallery-20120405.epub");
     VerifyFileExists(filePath);
     Kind kind = GuessFileType(filePath, true);
     ReportIf(!EpubDoc::IsSupportedFileType(kind));
-    EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
+    EpubDoc* doc = EpubDoc::CreateFromFile(filePath);
     ReportIf(!doc);
 
     Arena* textAllocator = ArenaNew();
-    HtmlFormatterArgs *args = CreateFormatterDefaultArgs(820, 920, textAllocator);
+    HtmlFormatterArgs* args = CreateFormatterDefaultArgs(820, 920, textAllocator);
     if (!args) {
         return;
     }
     args->htmlStr = doc->GetHtmlData();
-    HtmlPage *pages[3];
-    HtmlFormatter *formatter = new EpubFormatter(args, doc);
+    HtmlPage* pages[3];
+    HtmlFormatter* formatter = new EpubFormatter(args, doc);
     int page = 0;
-    for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
+    for (HtmlPage* pd = formatter->Next(); pd; pd = formatter->Next()) {
         pages[page++] = pd;
-        if (page == dimof(pages))
-            break;
+        if (page == dimof(pages)) break;
     }
     delete formatter;
     delete args;
@@ -60,7 +55,7 @@ static void Regress00()
     args->reparseIdx = pages[2]->reparseIdx;
     formatter = new EpubFormatter(args, doc);
     // if bug is present, this will crash in formatter->Next()
-    for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
+    for (HtmlPage* pd = formatter->Next(); pd; pd = formatter->Next()) {
         delete pd;
     }
     delete formatter;

@@ -14,7 +14,7 @@
 
 #define SkipWhitespace(c) for (; str::IsWs(*(c)); (c)++)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
-// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
+// cf. https://code.google.com/archive/p/sumatrapdf/issues/959
 #define isnoncjkwordchar(c) (isWordChar(c) && (unsigned short)(c) < 0x2E80)
 
 static void markAllPagesNonSkip(Vec<bool>& pagesToSkip) {
@@ -360,7 +360,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
         }
         // treat "??" and "? ?" differently, since '?' could have been a word
         // character that's just missing an encoding (and '?' is the replacement
-        // character); cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1574
+        // character); cf. https://code.google.com/archive/p/sumatrapdf/issues/1574
         if (*match && !isnoncjkwordchar(*(match - 1)) && (*(match - 1) != '?' || *match != '?') ||
             lookingAtWs && str::IsWs(*(match - 1))) {
             SkipWhitespace(match);

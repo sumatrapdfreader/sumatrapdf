@@ -1539,7 +1539,7 @@ static fz_link* FixupPageLinks(fz_link* root) {
     // i.e. links that appear later in the list should be preferred
     // to links appearing before. Since we search from the start of
     // the (single-linked) list, we have to reverse the order of links
-    // (http://code.google.com/p/sumatrapdf/issues/detail?id=1303 )
+    // (https://code.google.com/archive/p/sumatrapdf/issues/1303)
     fz_link* new_root = nullptr;
     while (root) {
         fz_link* tmp = root->next;

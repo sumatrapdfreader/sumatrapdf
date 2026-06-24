@@ -506,12 +506,12 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
 
     // try to prevent non-Arial fonts from accidentally substituting Arial
     if (streq(szPSName, "ArialMT")) {
-        // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2471
+        // cf. https://code.google.com/archive/p/sumatrapdf/issues/2471
         if (!streq(szTTName, "Arial")) {
             szPSName[0] = '\0';
         } else if (strstr(path, "caps") || strstr(path, "Caps")) {
             // TODO: is there a better way to distinguish Arial Caps from Arial proper?
-            // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=1290
+            // cf. https://code.google.com/archive/p/sumatrapdf/issues/1290
             fz_throw(ctx, FZ_ERROR_GENERIC, "ignore %s, as it can't be distinguished from Arial,Regular", path);
         }
     }
@@ -521,7 +521,7 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
     }
     if (szTTName[0]) {
         // derive a PostScript-like name and add it, if it's different from the font's
-        // included PostScript name; cf. https://code.google.com/p/sumatrapdf/issues/detail?id=376
+        // included PostScript name; cf. https://code.google.com/archive/p/sumatrapdf/issues/376
         // compare the two names before adding this one
         if (!font_name_eq(szTTName, szPSName)) {
             append_mapping(ctx, szTTName, path, index);
@@ -861,7 +861,7 @@ static fz_font* load_windows_font(fz_context* ctx, const char* fontname, int bol
     int is_base_14 = clean_name != fontname;
 
     /* metrics for Times-Roman don't match those of Windows' Times-Roman */
-    /* https://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
+    /* https://code.google.com/archive/p/sumatrapdf/issues/2173 */
     /* https://github.com/sumatrapdfreader/sumatrapdf/issues/2108 */
     /* https://github.com/sumatrapdfreader/sumatrapdf/issues/2028 */
     /* TODO: should this always return NULL if is_base_14 is true? */
