@@ -270,7 +270,7 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
     FindTextOnThread(win, direction, true);
 }
 
-static void ShowSearchResult(MainWindow* win, TextSel* result, bool addNavPt, bool keepSelection = false) {
+static void ShowSearchResult(MainWindow* win, TextSel* result, bool addNavPt) {
     ReportIf(0 == result->len || !result->pages || !result->rects);
     if (0 == result->len || !result->pages || !result->rects) {
         return;
@@ -282,22 +282,18 @@ static void ShowSearchResult(MainWindow* win, TextSel* result, bool addNavPt, bo
         win->ctrl->GoToPage(result->pages[0], addNavPt);
     }
 
-    dm->textSelection->CopySelection(dm->textSearch);
-    if (gShowAllMatches && !keepSelection) {
-        // all matches are painted by PaintAllFindMatches; don't duplicate as selection
-        DeleteOldSelectionInfo(win, true);
-        win->showSelection = false;
-    } else {
-        UpdateTextSelection(win, false);
-    }
+    // Find never changes the text selection: all matches (including the active
+    // one) are highlighted independently by PaintAllFindMatches, so the user's
+    // selection highlight is separate and survives searching (issue #5737).
     dm->ShowResultRectToScreen(result);
     InvalidateFindMatchPaintCache();
     ScheduleRepaint(win, 0);
 }
 
 void ClearSearchResult(MainWindow* win) {
-    DeleteOldSelectionInfo(win, true);
-    InvalidateFindMatchPaintCache();
+    // clear only the find-match highlights, never the user's text selection:
+    // find and selection highlights are tracked independently (issue #5737)
+    ClearFindMatches(win); // also invalidates the find-match paint cache
     ScheduleRepaint(win, 0);
 }
 
@@ -738,11 +734,11 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     if (ts->result.len == 0) {
         return;
     }
-    // navigate to and select the match while ts->result is still populated.
-    // SetLastResult() below calls SetText(), which clears ts->result whenever
-    // the matched text differs from the last search text (e.g. a case-insensitive
-    // find where "the" matched "The"), so ShowSearchResult() must run first
-    ShowSearchResult(win, &ts->result, true, true);
+    // navigate to the match while ts->result is still populated. SetLastResult()
+    // below calls SetText(), which clears ts->result whenever the matched text
+    // differs from the last search text (e.g. a case-insensitive find where
+    // "the" matched "The"), so ShowSearchResult() must run first
+    ShowSearchResult(win, &ts->result, true);
     // hand the selection to TextSearch as its "last result" so Find Next/Prev
     // continue from here; SetLastResult owns the findPage/findIndex/pageText
     // bookkeeping (so we don't poke internals or leave pageText null). The match's
