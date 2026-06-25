@@ -31,40 +31,8 @@ extern "C" int pdfclean_main(int argc, char** argv);
 extern "C" int muconvert_main(int argc, char** argv);
 extern "C" void fz_set_optind(int val);
 
-// offset to align static label text with text inside an edit control
-// accounts for WS_EX_CLIENTEDGE border (2px) + edit internal left margin (~2px)
-constexpr int kEditTextXOffset = 4;
-
-// DPI-scaled dialog layout metrics
-struct DlgMetrics {
-    int padding;
-    int rowH;    // row height for edit controls and labels
-    int rowGap;  // vertical gap between rows
-    int btnW;    // button width
-    int btnH;    // button height
-    int btnGap;  // gap between buttons
-    int browseW; // width of "..." browse button
-    int editXOff;
-};
-
-static DlgMetrics GetDlgMetrics(HWND hwnd, HFONT hFont) {
-    DlgMetrics m;
-    m.padding = DpiScale(hwnd, 10);
-    m.rowGap = DpiScale(hwnd, 6);
-    m.editXOff = DpiScale(hwnd, kEditTextXOffset);
-
-    // measure row height from the font
-    Size textSize = HwndMeasureText(hwnd, "Xg", hFont);
-    m.rowH = textSize.dy + DpiScale(hwnd, 8); // text height + border/padding
-
-    // measure button size from a representative label
-    m.btnW = DpiScale(hwnd, 75);
-    m.btnH = m.rowH;
-    m.btnGap = DpiScale(hwnd, 4);
-    m.browseW = DpiScale(hwnd, 30);
-    return m;
-}
-
+// compute a dialog client width that fits the source path text, clamped to a
+// minimum and to 80% of the screen width (long paths get ellipsized instead)
 static int CalcDlgWidth(HWND hwndParent, HFONT font, const char* path, int minW, int padding) {
     HDC hdc = GetDC(nullptr);
     HFONT oldFont = (HFONT)SelectObject(hdc, font);
@@ -78,12 +46,6 @@ static int CalcDlgWidth(HWND hwndParent, HFONT font, const char* path, int minW,
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     dlgW = std::min(dlgW, screenW * 80 / 100);
     return dlgW;
-}
-
-// calculate dialog height from number of rows
-// extra 32 accounts for non-client area (title bar etc.)
-static int CalcDlgHeight(HWND hwnd, const DlgMetrics& m, int nRows) {
-    return 2 * m.padding + nRows * m.rowH + (nRows - 1) * m.rowGap + DpiScale(hwnd, 32);
 }
 
 // shared "Save As" browse used by the layout-based PDF tool dialogs below.
@@ -985,22 +947,41 @@ void ShowPdfDecompressDialog(MainWindow* win) {
 
 // --- Delete Pages From PDF dialog ---
 
-struct PdfDeletePageDialog {
-    HWND hwnd = nullptr;
-    HWND hwndPathLabel = nullptr;
-    HWND hwndDestEdit = nullptr;
-    HWND hwndBrowseBtn = nullptr;
-    HWND hwndPagesLabel = nullptr;
-    HWND hwndPagesEdit = nullptr;
-    HWND hwndTotalLabel = nullptr;
-    HWND hwndDeleteBtn = nullptr; // also used as "Extract Pages" button
-    HWND hwndCancelBtn = nullptr;
+struct PdfDeletePageDialog : Wnd {
     HFONT hFont = nullptr;
     char* srcPath = nullptr;
     bool isExtract = false;
     MainWindow* win = nullptr;
     int pageCount = 0;
+
+    ILayout* mainLayout = nullptr;
+    Static* pathLabel = nullptr;
+    Edit* destEdit = nullptr;
+    Button* browseBtn = nullptr;
+    Static* pagesLabel = nullptr;
+    Edit* pagesEdit = nullptr;
+    Static* totalLabel = nullptr;
+    Static* syntaxLabel = nullptr;
+    Button* actionBtn = nullptr; // "Delete Pages" or "Extract Pages"
+    Button* cancelBtn = nullptr;
+
+    ~PdfDeletePageDialog() override;
+
+    bool Create(MainWindow* win, WindowTab* tab, bool isExtract);
+    void OnBrowse();
+    void DoIt();
+    void OnCancel();
+    void UpdateButton();
 };
+
+PdfDeletePageDialog::~PdfDeletePageDialog() {
+    str::Free(srcPath);
+    delete mainLayout;
+}
+
+void PdfDeletePageDialog::OnCancel() {
+    Close();
+}
 
 // Parse delete page ranges like "1,3-8,13-N" where N means last page.
 // Returns a sorted list of unique 1-based page numbers to delete.
@@ -1145,136 +1126,241 @@ static TempStr FormatPageRange(const Vec<int>& pages) {
     return str::DupTemp(s.Get());
 }
 
-static void PdfDeletePageUpdateButton(PdfDeletePageDialog* dlg) {
-    char pages[256]{};
-    GetWindowTextA(dlg->hwndPagesEdit, pages, dimof(pages) - 1);
+void PdfDeletePageDialog::UpdateButton() {
+    TempStr pages = pagesEdit->GetTextTemp();
     Vec<int> parsedPages;
-    bool valid = ParseDeletePages(pages, dlg->pageCount, parsedPages);
+    bool valid = ParseDeletePages(pages, pageCount, parsedPages);
     // for delete mode, can't delete all pages
-    if (valid && !dlg->isExtract && parsedPages.Size() >= dlg->pageCount) {
+    if (valid && !isExtract && parsedPages.Size() >= pageCount) {
         valid = false;
     }
-    EnableWindow(dlg->hwndDeleteBtn, valid);
+    actionBtn->SetIsEnabled(valid);
 }
 
-static void PdfDeletePageOnBrowse(PdfDeletePageDialog* dlg) {
-    WCHAR dstFileName[MAX_PATH + 1]{};
-    GetWindowTextW(dlg->hwndDestEdit, dstFileName, MAX_PATH);
-
-    OPENFILENAME ofn{};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = dlg->hwnd;
-    ofn.lpstrFile = dstFileName;
-    ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L"PDF Files\0*.pdf\0All Files\0*.*\0";
-    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = L"pdf";
-
-    if (GetSaveFileNameW(&ofn)) {
-        SetWindowTextW(dlg->hwndDestEdit, dstFileName);
-    }
+void PdfDeletePageDialog::OnBrowse() {
+    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
 }
 
-static void PdfDeletePageDoIt(PdfDeletePageDialog* dlg) {
-    char destPath[MAX_PATH + 1]{};
-    GetWindowTextA(dlg->hwndDestEdit, destPath, MAX_PATH);
+void PdfDeletePageDialog::DoIt() {
+    TempStr destPath = destEdit->GetTextTemp();
     if (str::IsEmpty(destPath)) {
         return;
     }
 
-    char pages[256]{};
-    GetWindowTextA(dlg->hwndPagesEdit, pages, dimof(pages) - 1);
+    TempStr pages = pagesEdit->GetTextTemp();
 
     Vec<int> parsedPages;
-    if (!ParseDeletePages(pages, dlg->pageCount, parsedPages)) {
+    if (!ParseDeletePages(pages, pageCount, parsedPages)) {
         return;
     }
-    if (!dlg->isExtract && parsedPages.Size() >= dlg->pageCount) {
+    if (!isExtract && parsedPages.Size() >= pageCount) {
         return;
     }
 
     TempStr pageRange;
-    if (dlg->isExtract) {
+    if (isExtract) {
         // for extract: pass the specified pages directly to pdfclean
         pageRange = FormatPageRange(parsedPages);
     } else {
         // for delete: pass the complement (pages to keep) to pdfclean
-        pageRange = BuildKeepPagesRange(dlg->pageCount, parsedPages);
+        pageRange = BuildKeepPagesRange(pageCount, parsedPages);
     }
 
-    const char* op = dlg->isExtract ? "extract" : "delete";
-    logf("PdfDeletePageDoIt: %s pages '%s' from '%s' to '%s', range for pdfclean: %s\n", op, pages, dlg->srcPath,
-         destPath, pageRange);
+    const char* op = isExtract ? "extract" : "delete";
+    logf("PdfDeletePageDoIt: %s pages '%s' from '%s' to '%s', range for pdfclean: %s\n", op, pages, srcPath, destPath,
+         pageRange);
 
     // equivalent of: clean input.pdf output.pdf <page-range>
-    char* argv[] = {(char*)"clean", dlg->srcPath, destPath, pageRange};
+    char* argv[] = {(char*)"clean", srcPath, destPath, pageRange};
     int argc = 4;
 
     fz_set_optind(0);
     int res = pdfclean_main(argc, argv);
     if (res == 0) {
         logf("PdfDeletePageDoIt: %s pages successfully\n", op);
-        MainWindow* win = dlg->win;
+        MainWindow* w = win;
         TempStr path = str::DupTemp(destPath);
-        DestroyWindow(dlg->hwnd);
-        LoadArgs args(path, win);
+        Close();
+        LoadArgs args(path, w);
         StartLoadDocument(&args);
     } else {
         logf("PdfDeletePageDoIt: pdfclean_main failed with %d for %s\n", res, op);
         const char* msg =
-            dlg->isExtract ? "Failed to extract pages from PDF file." : "Failed to delete pages from PDF file.";
-        const char* title = dlg->isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
-        MessageBoxWarning(dlg->hwnd, msg, title);
+            isExtract ? "Failed to extract pages from PDF file." : "Failed to delete pages from PDF file.";
+        const char* title = isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
+        MessageBoxWarning(hwnd, msg, title);
     }
 }
 
-static LRESULT CALLBACK PdfDeletePageDlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    PdfDeletePageDialog* dlg = nullptr;
-    if (msg == WM_CREATE) {
-        CREATESTRUCTW* cs = (CREATESTRUCTW*)lp;
-        dlg = (PdfDeletePageDialog*)cs->lpCreateParams;
-        dlg->hwnd = hwnd;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)dlg);
-        return 0;
-    }
-    dlg = (PdfDeletePageDialog*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
-    if (!dlg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    switch (msg) {
-        case WM_COMMAND: {
-            int code = HIWORD(wp);
-            HWND ctl = (HWND)lp;
-            if (ctl == dlg->hwndBrowseBtn && code == BN_CLICKED) {
-                PdfDeletePageOnBrowse(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndDeleteBtn && code == BN_CLICKED) {
-                PdfDeletePageDoIt(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndCancelBtn && code == BN_CLICKED) {
-                DestroyWindow(hwnd);
-                return 0;
-            }
-            if (ctl == dlg->hwndPagesEdit && code == EN_CHANGE) {
-                PdfDeletePageUpdateButton(dlg);
-                return 0;
-            }
-            break;
-        }
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-        case WM_DESTROY:
-            return 0;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
+static void PdfDeletePageOnClose(Wnd::CloseEvent* ev) {
+    auto dlg = (PdfDeletePageDialog*)ev->e->self;
+    delete dlg;
 }
 
-static constexpr const WCHAR* kPdfDeletePageWinClassName = L"SUMATRA_PDF_DELETE_PAGE";
-static bool gPdfDeletePageWinClassRegistered = false;
+bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractArg) {
+    win = w;
+    srcPath = str::Dup(tab->filePath);
+    hFont = GetDefaultGuiFont();
+    isExtract = isExtractArg;
+    pageCount = w->ctrl ? w->ctrl->PageCount() : 0;
+    onClose = MkFunc1Void(PdfDeletePageOnClose);
+
+    CreateCustomArgs cargs;
+    cargs.title = isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
+    cargs.font = hFont;
+    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    cargs.visible = false;
+    if (UseDarkModeLib() && DarkMode::isEnabled()) {
+        cargs.bgColor = ThemeWindowControlBackgroundColor();
+    } else {
+        cargs.bgColor = MkGray(0xee);
+    }
+    CreateCustom(cargs);
+    if (!hwnd) {
+        return false;
+    }
+    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+
+    bool isRtl = IsUIRtl();
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    // row 1: source path label
+    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
+    vbox->AddChild(pathLabel);
+
+    // row 2: dest edit (flex) + browse button
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.withBorder = true;
+        args.font = hFont;
+        args.text = MakeUniqueFilePathTemp(srcPath);
+        args.isRtl = isRtl;
+        destEdit = new Edit();
+        destEdit->Create(args);
+        hbox->AddChild(destEdit, 1);
+
+        browseBtn = new Button();
+        browseBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::OnBrowse>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = "...";
+        bargs.isRtl = isRtl;
+        browseBtn->Create(bargs);
+        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    // row 3: pages label + pages edit (flex) + total pages label
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Static::CreateArgs largs;
+        largs.parent = hwnd;
+        largs.font = hFont;
+        largs.text = isExtract ? _TRA("Pages To Extract:") : _TRA("Pages To Delete:");
+        largs.isRtl = isRtl;
+        pagesLabel = new Static();
+        pagesLabel->Create(largs);
+        hbox->AddChild(new Padding(pagesLabel, DpiScaledInsets(hwnd, 0, 8, 0, 0)));
+
+        int currentPage = w->ctrl ? w->ctrl->CurrentPageNo() : 1;
+        Edit::CreateArgs eargs;
+        eargs.parent = hwnd;
+        eargs.withBorder = true;
+        eargs.font = hFont;
+        eargs.text = str::FormatTemp("%d", currentPage);
+        eargs.isRtl = isRtl;
+        pagesEdit = new Edit();
+        pagesEdit->onTextChanged = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::UpdateButton>(this);
+        pagesEdit->Create(eargs);
+        hbox->AddChild(pagesEdit, 1);
+
+        Static::CreateArgs targs;
+        targs.parent = hwnd;
+        targs.font = hFont;
+        targs.text = str::FormatTemp("of %d", pageCount);
+        targs.isRtl = isRtl;
+        totalLabel = new Static();
+        totalLabel->Create(targs);
+        hbox->AddChild(new Padding(totalLabel, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    // row 4: syntax hint (left) + action + Cancel buttons (right)
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Static::CreateArgs sargs;
+        sargs.parent = hwnd;
+        sargs.font = hFont;
+        sargs.text = "Syntax: 2,5-7,13-";
+        sargs.isRtl = isRtl;
+        syntaxLabel = new Static();
+        syntaxLabel->Create(sargs);
+        hbox->AddChild(syntaxLabel);
+
+        // flexible spacer pushes the buttons to the right
+        hbox->AddChild(new Spacer(0, 0), 1);
+
+        actionBtn = new Button();
+        actionBtn->isDefault = true;
+        actionBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::DoIt>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = isExtract ? _TRA("Extract Pages") : _TRA("Delete Pages");
+        bargs.isRtl = isRtl;
+        actionBtn->Create(bargs);
+        hbox->AddChild(actionBtn);
+
+        cancelBtn = new Button();
+        cancelBtn->onClick = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::OnCancel>(this);
+        Button::CreateArgs cargs2;
+        cargs2.parent = hwnd;
+        cargs2.font = hFont;
+        cargs2.text = _TRA("Cancel");
+        cargs2.isRtl = isRtl;
+        cancelBtn->Create(cargs2);
+        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
+
+    int minClientW = DpiScale(hwnd, 480);
+    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
+    Size size = mainLayout->Layout(ExpandHeight(clientW));
+    Rect bounds{0, 0, size.dx, size.dy};
+    mainLayout->SetBounds(bounds);
+    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+
+    // validate initial state
+    UpdateButton();
+
+    CenterDialog(hwnd, w->hwndFrame);
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    SetIsVisible(true);
+    HwndSetFocus(pagesEdit->hwnd);
+    return true;
+}
 
 static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     if (!win || !win->IsDocLoaded()) {
@@ -1295,119 +1381,10 @@ static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     logf("ShowPdfPageRangeDialog: opening %s dialog for '%s', %d pages\n", isExtract ? "extract" : "delete",
          tab->filePath, pageCount);
 
-    if (!gPdfDeletePageWinClassRegistered) {
-        WNDCLASSEXW wc{};
-        wc.cbSize = sizeof(wc);
-        wc.style = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc = PdfDeletePageDlgProc;
-        wc.hInstance = GetModuleHandleW(nullptr);
-        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-        wc.lpszClassName = kPdfDeletePageWinClassName;
-        RegisterClassExW(&wc);
-        gPdfDeletePageWinClassRegistered = true;
-    }
-
-    PdfDeletePageDialog* dlg = new PdfDeletePageDialog();
-    dlg->srcPath = str::Dup(tab->filePath);
-    dlg->win = win;
-    dlg->hFont = GetDefaultGuiFont();
-    dlg->pageCount = pageCount;
-    dlg->isExtract = isExtract;
-
-    DlgMetrics m = GetDlgMetrics(win->hwndFrame, dlg->hFont);
-    int minW = DpiScale(win->hwndFrame, 500);
-    int dlgW = CalcDlgWidth(win->hwndFrame, dlg->hFont, tab->filePath, minW, m.padding);
-    int dlgH = CalcDlgHeight(win->hwndFrame, m, 4);
-
-    HINSTANCE h = GetModuleHandleW(nullptr);
-    WCHAR* dlgTitle = isExtract ? _TRW("Extract Pages From PDF") : _TRW("Delete Pages From PDF");
-    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kPdfDeletePageWinClassName, dlgTitle,
-                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
-                                dlgW, dlgH, win->hwndFrame, nullptr, h, dlg);
-    if (!hwnd) {
-        str::Free(dlg->srcPath);
+    auto dlg = new PdfDeletePageDialog();
+    if (!dlg->Create(win, tab, isExtract)) {
         delete dlg;
-        return;
     }
-
-    int x = m.padding;
-    int y = m.padding;
-    int w = dlgW - 2 * m.padding - DpiScale(hwnd, 16);
-
-    // row 1: source path label (offset to align with text inside edit control)
-    dlg->hwndPathLabel =
-        CreateWindowExW(0, L"STATIC", ToWStrTemp(tab->filePath), WS_CHILD | WS_VISIBLE | SS_LEFT | SS_PATHELLIPSIS,
-                        x + m.editXOff, y, w - m.editXOff, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPathLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 2: dest edit + browse button
-    TempStr destPath = MakeUniqueFilePathTemp(tab->filePath);
-    dlg->hwndDestEdit =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(destPath), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, x, y,
-                        w - m.browseW - m.btnGap, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndDestEdit, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    dlg->hwndBrowseBtn = CreateWindowExW(0, L"BUTTON", L"...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, x + w - m.browseW,
-                                         y, m.browseW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndBrowseBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 3: pages label + pages edit + total pages label
-    // offset static labels to align with text inside edit control (same as input path label)
-    int labelX = x + m.editXOff;
-    WCHAR* pagesLabelText = isExtract ? _TRW("Pages To Extract:") : _TRW("Pages To Delete:");
-    Size labelSize = HwndMeasureText(hwnd, ToUtf8Temp(pagesLabelText), dlg->hFont);
-    int labelW = labelSize.dx + DpiScale(hwnd, 4);
-    dlg->hwndPagesLabel = CreateWindowExW(0, L"STATIC", pagesLabelText, WS_CHILD | WS_VISIBLE | SS_LEFT, labelX,
-                                          y + m.editXOff, labelW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPagesLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    TempStr totalStr = str::FormatTemp("of %d", pageCount);
-    Size totalSize = HwndMeasureText(hwnd, totalStr, dlg->hFont);
-    int totalW = totalSize.dx + DpiScale(hwnd, 4);
-    int editX = labelX + labelW + DpiScale(hwnd, 8);
-    int editW = x + w - editX - totalW - m.btnGap;
-    int currentPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
-    TempStr pagesStr = str::FormatTemp("%d", currentPage);
-    dlg->hwndPagesEdit =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(pagesStr), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, editX,
-                        y, editW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPagesEdit, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    dlg->hwndTotalLabel =
-        CreateWindowExW(0, L"STATIC", ToWStrTemp(totalStr), WS_CHILD | WS_VISIBLE | SS_LEFT, editX + editW + m.btnGap,
-                        y + m.editXOff, totalW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndTotalLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 4: syntax hint (left) + action + Cancel buttons (right)
-
-    // syntax hint label, x-aligned with pages label and baseline-aligned with button text
-    HWND hwndSyntax = CreateWindowExW(0, L"STATIC", L"Syntax: 2,5-7,13-", WS_CHILD | WS_VISIBLE | SS_LEFT, labelX,
-                                      y + m.editXOff, w / 2, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(hwndSyntax, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    int bx = x + w - m.btnW;
-    dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
-                                         m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndCancelBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    bx -= m.btnW + m.btnGap;
-    WCHAR* actionBtnText = isExtract ? _TRW("Extract Pages") : _TRW("Delete Pages");
-    dlg->hwndDeleteBtn = CreateWindowExW(0, L"BUTTON", actionBtnText, WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, bx, y,
-                                         m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndDeleteBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    // validate initial state
-    PdfDeletePageUpdateButton(dlg);
-
-    CenterDialog(hwnd, win->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    ShowWindow(hwnd, SW_SHOW);
 }
 
 void ShowPdfDeletePageDialog(MainWindow* win) {
