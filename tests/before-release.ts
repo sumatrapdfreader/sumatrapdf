@@ -14,6 +14,7 @@ import { testit as adHocTocPaletteSync } from "./ad-hoc-toc-palette-sync.ts";
 import { testit as adHocJpegDecode } from "./ad-hoc-jpeg-decode.ts";
 import { testit as adHocPasteImageAnnot } from "./ad-hoc-paste-image-annot.ts";
 import { testit as adHocXfa } from "./ad-hoc-xfa.ts";
+import { testit as adHocXfaCorpus } from "./ad-hoc-xfa-corpus.ts";
 import { testit as latexTests } from "./latex.ts";
 import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
@@ -25,6 +26,7 @@ const adHocTests: [string, () => void | Promise<void>][] = [
   ["ad-hoc-jpeg-decode", adHocJpegDecode],
   ["ad-hoc-paste-image-annot", adHocPasteImageAnnot],
   ["ad-hoc-xfa", adHocXfa],
+  ["ad-hoc-xfa-corpus", adHocXfaCorpus],
   ["issue-chm-lzx", issueChmLzx],
 ];
 
