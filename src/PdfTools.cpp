@@ -1170,9 +1170,15 @@ void PdfDeletePageDialog::DoIt() {
     logf("PdfDeletePageDoIt: %s pages '%s' from '%s' to '%s', range for pdfclean: %s\n", op, pages, srcPath, destPath,
          pageRange);
 
-    // equivalent of: clean input.pdf output.pdf <page-range>
-    char* argv[] = {(char*)"clean", srcPath, destPath, pageRange};
-    int argc = 4;
+    // equivalent of: clean -gggg -e 100 -f -i -t -Z input.pdf output.pdf <page-range>
+    // use the same compression flags as Compress PDF so the result is re-written
+    // compactly; otherwise the kept pages drag along the original's full content
+    // and the output is nearly as big as the source
+    char* argv[] = {
+        (char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f", (char*)"-i",
+        (char*)"-t",    (char*)"-Z",    srcPath,     destPath,     pageRange,
+    };
+    int argc = 11;
 
     fz_set_optind(0);
     int res = pdfclean_main(argc, argv);
