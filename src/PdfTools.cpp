@@ -1666,51 +1666,53 @@ void ShowPdfEncryptDialog(MainWindow* win) {
 
 // --- Decrypt PDF dialog ---
 
-struct PdfDecryptDialog {
-    HWND hwnd = nullptr;
-    HWND hwndPathLabel = nullptr;
-    HWND hwndDestEdit = nullptr;
-    HWND hwndBrowseBtn = nullptr;
-    HWND hwndDecryptBtn = nullptr;
-    HWND hwndCancelBtn = nullptr;
+struct PdfDecryptDialog : Wnd {
     HFONT hFont = nullptr;
     char* srcPath = nullptr;
     char* password = nullptr;
     MainWindow* win = nullptr;
+
+    ILayout* mainLayout = nullptr;
+    Static* pathLabel = nullptr;
+    Edit* destEdit = nullptr;
+    Button* browseBtn = nullptr;
+    Button* decryptBtn = nullptr;
+    Button* cancelBtn = nullptr;
+
+    ~PdfDecryptDialog() override;
+
+    bool Create(MainWindow* win, WindowTab* tab, const char* pwd);
+    void OnBrowse();
+    void DoDecrypt();
+    void OnCancel();
 };
 
-static void PdfDecryptOnBrowse(PdfDecryptDialog* dlg) {
-    WCHAR dstFileName[MAX_PATH + 1]{};
-    GetWindowTextW(dlg->hwndDestEdit, dstFileName, MAX_PATH);
-
-    OPENFILENAME ofn{};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = dlg->hwnd;
-    ofn.lpstrFile = dstFileName;
-    ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L"PDF Files\0*.pdf\0All Files\0*.*\0";
-    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = L"pdf";
-
-    if (GetSaveFileNameW(&ofn)) {
-        SetWindowTextW(dlg->hwndDestEdit, dstFileName);
-    }
+PdfDecryptDialog::~PdfDecryptDialog() {
+    str::Free(srcPath);
+    str::Free(password);
+    delete mainLayout;
 }
 
-static void PdfDecryptDoIt(PdfDecryptDialog* dlg) {
-    char destPath[MAX_PATH + 1]{};
-    GetWindowTextA(dlg->hwndDestEdit, destPath, MAX_PATH);
+void PdfDecryptDialog::OnCancel() {
+    Close();
+}
+
+void PdfDecryptDialog::OnBrowse() {
+    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+}
+
+void PdfDecryptDialog::DoDecrypt() {
+    TempStr destPath = destEdit->GetTextTemp();
     if (str::IsEmpty(destPath)) {
         return;
     }
 
-    logf("PdfDecryptDoIt: decrypting '%s' to '%s', password len: %d\n", dlg->srcPath, destPath,
-         (int)str::Len(dlg->password));
+    logf("PdfDecryptDoIt: decrypting '%s' to '%s', password len: %d\n", srcPath, destPath, (int)str::Len(password));
 
     // equivalent of: clean -p <pwd> -D input output
     // -p provides the password to open the encrypted input, -D removes encryption from output
     char* argv[] = {
-        (char*)"clean", (char*)"-p", dlg->password, (char*)"-D", dlg->srcPath, destPath,
+        (char*)"clean", (char*)"-p", password, (char*)"-D", srcPath, destPath,
     };
     int argc = 6;
 
@@ -1718,61 +1720,132 @@ static void PdfDecryptDoIt(PdfDecryptDialog* dlg) {
     int res = pdfclean_main(argc, argv);
     if (res == 0) {
         logf("PdfDecryptDoIt: decrypted successfully\n");
-        MainWindow* win = dlg->win;
+        MainWindow* w = win;
         TempStr path = str::DupTemp(destPath);
-        DestroyWindow(dlg->hwnd);
-        LoadArgs args(path, win);
+        Close();
+        LoadArgs args(path, w);
         StartLoadDocument(&args);
     } else {
-        logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, dlg->srcPath,
-             (int)str::Len(dlg->password));
-        MessageBoxWarning(dlg->hwnd, "Failed to decrypt PDF file.", _TRA("Decrypt PDF"));
+        logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, srcPath,
+             (int)str::Len(password));
+        MessageBoxWarning(hwnd, "Failed to decrypt PDF file.", _TRA("Decrypt PDF"));
     }
 }
 
-static LRESULT CALLBACK PdfDecryptDlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    PdfDecryptDialog* dlg = nullptr;
-    if (msg == WM_CREATE) {
-        CREATESTRUCTW* cs = (CREATESTRUCTW*)lp;
-        dlg = (PdfDecryptDialog*)cs->lpCreateParams;
-        dlg->hwnd = hwnd;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)dlg);
-        return 0;
-    }
-    dlg = (PdfDecryptDialog*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
-    if (!dlg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    switch (msg) {
-        case WM_COMMAND: {
-            int code = HIWORD(wp);
-            HWND ctl = (HWND)lp;
-            if (ctl == dlg->hwndBrowseBtn && code == BN_CLICKED) {
-                PdfDecryptOnBrowse(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndDecryptBtn && code == BN_CLICKED) {
-                PdfDecryptDoIt(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndCancelBtn && code == BN_CLICKED) {
-                DestroyWindow(hwnd);
-                return 0;
-            }
-            break;
-        }
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-        case WM_DESTROY:
-            return 0;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
+static void PdfDecryptOnClose(Wnd::CloseEvent* ev) {
+    auto dlg = (PdfDecryptDialog*)ev->e->self;
+    delete dlg;
 }
 
-static constexpr const WCHAR* kPdfDecryptWinClassName = L"SUMATRA_PDF_DECRYPT";
-static bool gPdfDecryptWinClassRegistered = false;
+bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, const char* pwd) {
+    win = w;
+    srcPath = str::Dup(tab->filePath);
+    password = str::Dup(pwd);
+    hFont = GetDefaultGuiFont();
+    onClose = MkFunc1Void(PdfDecryptOnClose);
+
+    CreateCustomArgs cargs;
+    cargs.title = _TRA("Decrypt PDF");
+    cargs.font = hFont;
+    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    cargs.visible = false;
+    if (UseDarkModeLib() && DarkMode::isEnabled()) {
+        cargs.bgColor = ThemeWindowControlBackgroundColor();
+    } else {
+        cargs.bgColor = MkGray(0xee);
+    }
+    CreateCustom(cargs);
+    if (!hwnd) {
+        return false;
+    }
+    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+
+    bool isRtl = IsUIRtl();
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    // row 1: source path label
+    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
+    vbox->AddChild(pathLabel);
+
+    // row 2: dest edit (flex) + browse button
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.withBorder = true;
+        args.font = hFont;
+        args.text = MakeUniqueFilePathTemp(srcPath);
+        args.isRtl = isRtl;
+        destEdit = new Edit();
+        destEdit->Create(args);
+        hbox->AddChild(destEdit, 1);
+
+        browseBtn = new Button();
+        browseBtn->onClick = MkMethod0<PdfDecryptDialog, &PdfDecryptDialog::OnBrowse>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = "...";
+        bargs.isRtl = isRtl;
+        browseBtn->Create(bargs);
+        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    // row 3: Decrypt + Cancel buttons (right-aligned), each sized to its label
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainEnd;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        decryptBtn = new Button();
+        decryptBtn->isDefault = true;
+        decryptBtn->onClick = MkMethod0<PdfDecryptDialog, &PdfDecryptDialog::DoDecrypt>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = _TRA("Decrypt PDF");
+        bargs.isRtl = isRtl;
+        decryptBtn->Create(bargs);
+        hbox->AddChild(decryptBtn);
+
+        cancelBtn = new Button();
+        cancelBtn->onClick = MkMethod0<PdfDecryptDialog, &PdfDecryptDialog::OnCancel>(this);
+        Button::CreateArgs cargs2;
+        cargs2.parent = hwnd;
+        cargs2.font = hFont;
+        cargs2.text = _TRA("Cancel");
+        cargs2.isRtl = isRtl;
+        cancelBtn->Create(cargs2);
+        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
+
+    int minClientW = DpiScale(hwnd, 480);
+    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
+    Size size = mainLayout->Layout(ExpandHeight(clientW));
+    Rect bounds{0, 0, size.dx, size.dy};
+    mainLayout->SetBounds(bounds);
+    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+
+    CenterDialog(hwnd, w->hwndFrame);
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    SetIsVisible(true);
+    HwndSetFocus(destEdit->hwnd);
+    return true;
+}
 
 void ShowPdfDecryptDialog(MainWindow* win) {
     if (!win || !win->IsDocLoaded()) {
@@ -1797,78 +1870,8 @@ void ShowPdfDecryptDialog(MainWindow* win) {
     }
     logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath, (int)str::Len(pwd));
 
-    if (!gPdfDecryptWinClassRegistered) {
-        WNDCLASSEXW wc{};
-        wc.cbSize = sizeof(wc);
-        wc.style = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc = PdfDecryptDlgProc;
-        wc.hInstance = GetModuleHandleW(nullptr);
-        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-        wc.lpszClassName = kPdfDecryptWinClassName;
-        RegisterClassExW(&wc);
-        gPdfDecryptWinClassRegistered = true;
-    }
-
-    PdfDecryptDialog* dlg = new PdfDecryptDialog();
-    dlg->srcPath = str::Dup(tab->filePath);
-    dlg->password = str::Dup(pwd);
-    dlg->win = win;
-    dlg->hFont = GetDefaultGuiFont();
-
-    DlgMetrics m = GetDlgMetrics(win->hwndFrame, dlg->hFont);
-    int minW = DpiScale(win->hwndFrame, 500);
-    int dlgW = CalcDlgWidth(win->hwndFrame, dlg->hFont, tab->filePath, minW, m.padding);
-    int dlgH = CalcDlgHeight(win->hwndFrame, m, 3);
-
-    HINSTANCE h = GetModuleHandleW(nullptr);
-    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kPdfDecryptWinClassName, _TRW("Decrypt PDF"),
-                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
-                                dlgW, dlgH, win->hwndFrame, nullptr, h, dlg);
-    if (!hwnd) {
-        str::Free(dlg->srcPath);
-        str::Free(dlg->password);
+    auto dlg = new PdfDecryptDialog();
+    if (!dlg->Create(win, tab, pwd)) {
         delete dlg;
-        return;
     }
-
-    int x = m.padding;
-    int y = m.padding;
-    int w = dlgW - 2 * m.padding - DpiScale(hwnd, 16);
-
-    // row 1: source path label (offset to align with text inside edit control)
-    dlg->hwndPathLabel =
-        CreateWindowExW(0, L"STATIC", ToWStrTemp(tab->filePath), WS_CHILD | WS_VISIBLE | SS_LEFT | SS_PATHELLIPSIS,
-                        x + m.editXOff, y, w - m.editXOff, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPathLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 2: dest edit + browse button
-    TempStr destPath = MakeUniqueFilePathTemp(tab->filePath);
-    dlg->hwndDestEdit =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(destPath), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, x, y,
-                        w - m.browseW - m.btnGap, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndDestEdit, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    dlg->hwndBrowseBtn = CreateWindowExW(0, L"BUTTON", L"...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, x + w - m.browseW,
-                                         y, m.browseW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndBrowseBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 3: Decrypt PDF + Cancel buttons (right-aligned)
-    int bx = x + w - m.btnW;
-    dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
-                                         m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndCancelBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    bx -= m.btnW + m.btnGap;
-    dlg->hwndDecryptBtn = CreateWindowExW(0, L"BUTTON", _TRW("Decrypt PDF"), WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-                                          bx, y, m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndDecryptBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    CenterDialog(hwnd, win->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    ShowWindow(hwnd, SW_SHOW);
 }
