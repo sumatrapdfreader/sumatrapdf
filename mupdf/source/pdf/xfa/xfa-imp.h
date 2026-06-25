@@ -202,6 +202,7 @@ pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_pa
 float pdf_xfa_parse_measurement(const char* text, float default_pt);
 void pdf_xfa_count_field_stats(pdf_xfa_object* root, int* in_pageset, int* outside_pageset, int* with_pagearea);
 void pdf_xfa_count_form_field_stats(fz_context* ctx, pdf_xfa_object* form, int* bound, int* with_page_subform);
+void pdf_xfa_form_unbound_field_names(fz_context* ctx, pdf_xfa_object* form, fz_buffer* out);
 int pdf_xfa_page_subform_index(fz_context* ctx, pdf_xfa_object* subform);
 
 /* factory.c */

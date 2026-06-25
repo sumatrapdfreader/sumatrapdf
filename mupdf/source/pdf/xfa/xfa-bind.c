@@ -73,6 +73,24 @@ static int pdf_xfa_bind_is_field_node(pdf_xfa_object* node) {
     return node && node->name && strcmp(node->name, "field") == 0;
 }
 
+static pdf_xfa_object* pdf_xfa_find_bind_child(pdf_xfa_object* node) {
+    pdf_xfa_object* child;
+
+    for (child = node ? node->first_child : NULL; child; child = child->next_sibling)
+        if (child->name && strcmp(child->name, "bind") == 0) return child;
+    return NULL;
+}
+
+static int pdf_xfa_bind_match_is(pdf_xfa_object* node, const char* match) {
+    pdf_xfa_object* bind;
+    char* value;
+
+    bind = pdf_xfa_find_bind_child(node);
+    if (!bind) return 0;
+    value = pdf_xfa_object_get_attr(NULL, bind, "match");
+    return value && strcmp(value, match) == 0;
+}
+
 static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, pdf_xfa_object* form,
                                  pdf_xfa_object* data, int merge_mode) {
     pdf_xfa_object *child, *match, *next;
@@ -91,12 +109,24 @@ static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, p
             continue;
         }
 
+        if (pdf_xfa_bind_match_is(child, "none")) {
+            pdf_xfa_bind_element(ctx, pool, xfa, child, data, merge_mode);
+            continue;
+        }
+
         ref = pdf_xfa_object_get_attr(ctx, child, "ref");
+        if (!ref || !ref[0]) {
+            pdf_xfa_object* bind = pdf_xfa_find_bind_child(child);
+            if (bind && pdf_xfa_bind_match_is(child, "dataRef")) ref = pdf_xfa_object_get_attr(ctx, bind, "ref");
+        }
         if (ref && ref[0]) {
             pdf_xfa_object* hits[8];
             n = pdf_xfa_som_search(ctx, xfa->root, data, ref, 1, hits, 8);
             if (n > 0) {
-                pdf_xfa_bind_element(ctx, pool, xfa, child, hits[0], merge_mode);
+                if (pdf_xfa_bind_is_field_node(child))
+                    pdf_xfa_bind_value(ctx, pool, child, hits[0]);
+                else
+                    pdf_xfa_bind_element(ctx, pool, xfa, child, hits[0], merge_mode);
                 continue;
             }
         }
@@ -105,15 +135,30 @@ static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, p
         /* Radio/checkbox siblings (same field name) share one datasets leaf. */
         if (!match && consume_siblings && pdf_xfa_bind_is_field_node(child))
             match = pdf_xfa_find_data_child(data, name, 0);
-        /* Exclusive-group widgets often bind to a datasets leaf outside the parent subform. */
+        /* Walk up the data tree (pdf.js: parent and grand-parent of current data scope). */
+        if (!match && pdf_xfa_bind_is_field_node(child)) {
+            pdf_xfa_object* scope = data ? data->parent : NULL;
+            int up;
+            for (up = 0; !match && scope && up < 2; up++) {
+                if (scope->name && strcmp(scope->name, "data") == 0) break;
+                match = pdf_xfa_find_data_child(scope, name, 0);
+                scope = scope->parent;
+            }
+        }
+        /* <bind match="global"/> and exclusive-group widgets: search whole datasets tree. */
         if (!match && pdf_xfa_bind_is_field_node(child) && xfa->data_node) {
-            pdf_xfa_object* data_root = xfa->data_node->first_child ? xfa->data_node->first_child : xfa->data_node;
-            match = pdf_xfa_find_data_named_tree(data_root, name);
+            match = pdf_xfa_find_data_named_tree(xfa->data_node, name);
+            if (!match) {
+                pdf_xfa_object* data_root =
+                    xfa->data_node->first_child ? xfa->data_node->first_child : xfa->data_node;
+                match = pdf_xfa_find_data_named_tree(data_root, name);
+            }
         }
         if (match) {
             /* Only consume group nodes so identically named data leaves stay shared. */
             if (consume_siblings && !pdf_xfa_object_is_data_value(match)) match->consumed = 1;
-            if (pdf_xfa_object_is_data_value(match))
+            /* Subforms must recurse even when the matched data node is an empty leaf. */
+            if (pdf_xfa_bind_is_field_node(child))
                 pdf_xfa_bind_value(ctx, pool, child, match);
             else
                 pdf_xfa_bind_element(ctx, pool, xfa, child, match, merge_mode);

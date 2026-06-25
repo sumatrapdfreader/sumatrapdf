@@ -65,7 +65,7 @@ const corpus: CorpusEntry[] = [
       max_font_missing: 0,
       serialize_ok: 1,
       min_serialize_bytes: 2000,
-      min_fields_bound: 115,
+      min_fields_bound: 116,
       min_fields_with_page_subform: 110,
     },
   },

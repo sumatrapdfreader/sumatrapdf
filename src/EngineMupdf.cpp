@@ -5291,14 +5291,21 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             const char* area0 = "";
             const char* area1 = "";
             char font_missing_names[256] = "";
+            char unbound_field_names[512] = "";
             if (xfa && valid) {
                 fz_buffer* missing_names = nullptr;
+                fz_buffer* unbound_names = nullptr;
                 unsigned char* missing_data = nullptr;
+                unsigned char* unbound_data = nullptr;
                 fz_var(missing_names);
+                fz_var(unbound_names);
                 fz_var(missing_data);
+                fz_var(unbound_data);
                 fz_try(ctx) {
                     missing_names = fz_new_buffer(ctx, 64);
+                    unbound_names = fz_new_buffer(ctx, 64);
                     pdf_xfa_font_stats(ctx, xfa, &font_families, &font_held, &font_missing, missing_names);
+                    pdf_xfa_unbound_field_names(ctx, xfa, unbound_names);
                     if (missing_names) {
                         size_t n = fz_buffer_storage(ctx, missing_names, &missing_data);
                         if (n >= sizeof(font_missing_names)) {
@@ -5309,8 +5316,21 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
                         }
                         font_missing_names[n] = 0;
                     }
+                    if (unbound_names) {
+                        size_t n = fz_buffer_storage(ctx, unbound_names, &unbound_data);
+                        if (n >= sizeof(unbound_field_names)) {
+                            n = sizeof(unbound_field_names) - 1;
+                        }
+                        if (unbound_data && n > 0) {
+                            memcpy(unbound_field_names, unbound_data, n);
+                        }
+                        unbound_field_names[n] = 0;
+                    }
                 }
-                fz_always(ctx) fz_drop_buffer(ctx, missing_names);
+                fz_always(ctx) {
+                    fz_drop_buffer(ctx, missing_names);
+                    fz_drop_buffer(ctx, unbound_names);
+                }
                 fz_catch(ctx) {
                     fz_report_error(ctx);
                 }
@@ -5337,11 +5357,13 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
                 "render_borders=%d p1_fields=%d p1_draws=%d p1_borders=%d p1_lines=%d serialize_ok=%d "
                 "serialize_bytes=%d fields_in_ps=%d fields_out_ps=%d fields_with_pa=%d fields_with_pa_tpl=%d "
                 "fields_bound=%d fields_with_page_subform=%d area0=%s "
-                "area1=%s font_families=%d font_held=%d font_missing=%d font_missing_names=%s load_error=%s\n",
+                "area1=%s font_families=%d font_held=%d font_missing=%d font_missing_names=%s "
+                "unbound_field_names=%s load_error=%s\n",
                 has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws, render_borders,
                 p1_fields, p1_draws, p1_borders, p1_lines, serialize_ok, serialize_bytes, fields_in_ps, fields_out_ps,
                 fields_with_pa, fields_with_pa_tpl, fields_bound, fields_with_page_subform, area0, area1, font_families,
-                font_held, font_missing, font_missing_names[0] ? font_missing_names : "-", load_error);
+                font_held, font_missing, font_missing_names[0] ? font_missing_names : "-",
+                unbound_field_names[0] ? unbound_field_names : "-", load_error);
             exitCode = 0;
         }
         SafeEngineRelease(&engine);

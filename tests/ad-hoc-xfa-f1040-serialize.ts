@@ -25,8 +25,8 @@ export async function testit(): Promise<void> {
   if (xfa.serialize_ok !== 1) {
     throw new Error(`expected serialize_ok=1, got ${xfa.serialize_ok}`);
   }
-  if (xfa.fields_bound < 115) {
-    throw new Error(`expected fields_bound>=115, got ${xfa.fields_bound}`);
+  if (xfa.fields_bound < 116) {
+    throw new Error(`expected fields_bound>=116, got ${xfa.fields_bound}`);
   }
 
   const xml = await queryXfaSerializeData(PDF);

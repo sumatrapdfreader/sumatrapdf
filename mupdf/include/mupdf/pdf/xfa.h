@@ -108,6 +108,7 @@ int pdf_xfa_fields_with_pagearea(fz_context* ctx, pdf_xfa* xfa);
 int pdf_xfa_fields_with_pagearea_template(fz_context* ctx, pdf_xfa* xfa);
 int pdf_xfa_fields_bound(fz_context* ctx, pdf_xfa* xfa);
 int pdf_xfa_fields_with_page_subform(fz_context* ctx, pdf_xfa* xfa);
+void pdf_xfa_unbound_field_names(fz_context* ctx, pdf_xfa* xfa, fz_buffer* names_out);
 
 /*
         Return the pageArea name attribute for a laid-out page (empty string if none).

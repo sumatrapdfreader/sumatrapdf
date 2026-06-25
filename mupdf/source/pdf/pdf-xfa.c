@@ -238,6 +238,11 @@ int pdf_xfa_fields_with_page_subform(fz_context* ctx, pdf_xfa* xfa) {
     return xfa ? xfa->fields_with_page_subform : 0;
 }
 
+void pdf_xfa_unbound_field_names(fz_context* ctx, pdf_xfa* xfa, fz_buffer* names_out) {
+    if (!xfa || !xfa->form || !names_out) return;
+    pdf_xfa_form_unbound_field_names(ctx, xfa->form, names_out);
+}
+
 const char* pdf_xfa_page_area_name(fz_context* ctx, pdf_xfa* xfa, int page_index) {
     char* name;
 

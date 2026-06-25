@@ -359,6 +359,39 @@ void pdf_xfa_count_form_field_stats(fz_context* ctx, pdf_xfa_object* form, int* 
     if (with_page_subform) *with_page_subform = n_page_subform;
 }
 
+static void pdf_xfa_append_unbound_fields_imp(fz_context* ctx, pdf_xfa_object* node, fz_buffer* out, const char* path) {
+    pdf_xfa_object* child;
+    char* name;
+    char child_path[512];
+    size_t prev;
+
+    if (!node) return;
+
+    if (node->name && strcmp(node->name, "field") == 0 && !node->data_node) {
+        name = pdf_xfa_object_get_attr(ctx, node, "name");
+        prev = fz_buffer_storage(ctx, out, NULL);
+        fz_append_printf(ctx, out, "%s%s:%s", prev ? ";" : "", path ? path : "", name ? name : "?");
+    }
+
+    for (child = node->first_child; child; child = child->next_sibling) {
+        name = pdf_xfa_object_get_attr(ctx, child, "name");
+        if (name && name[0] && child->name && strcmp(child->name, "subform") == 0) {
+            if (path && path[0])
+                snprintf(child_path, sizeof child_path, "%s/%s", path, name);
+            else
+                snprintf(child_path, sizeof child_path, "%s", name);
+            pdf_xfa_append_unbound_fields_imp(ctx, child, out, child_path);
+        } else {
+            pdf_xfa_append_unbound_fields_imp(ctx, child, out, path);
+        }
+    }
+}
+
+void pdf_xfa_form_unbound_field_names(fz_context* ctx, pdf_xfa_object* form, fz_buffer* out) {
+    if (!out) return;
+    pdf_xfa_append_unbound_fields_imp(ctx, form, out, "");
+}
+
 int pdf_xfa_page_subform_index(fz_context* ctx, pdf_xfa_object* subform) {
     char* name;
     char* end;
