@@ -322,36 +322,39 @@ void ShowPdfBakeDialog(MainWindow* win) {
 
 // --- Extract PDF Text dialog ---
 
-struct PdfExtractTextDialog {
-    HWND hwnd = nullptr;
-    HWND hwndPathLabel = nullptr;
-    HWND hwndDestEdit = nullptr;
-    HWND hwndBrowseBtn = nullptr;
-    HWND hwndPagesLabel = nullptr;
-    HWND hwndPagesEdit = nullptr;
-    HWND hwndExtractBtn = nullptr;
-    HWND hwndCancelBtn = nullptr;
+struct PdfExtractTextDialog : Wnd {
     HFONT hFont = nullptr;
     char* srcPath = nullptr;
     MainWindow* win = nullptr;
+
+    ILayout* mainLayout = nullptr;
+    Static* pathLabel = nullptr;
+    Edit* destEdit = nullptr;
+    Button* browseBtn = nullptr;
+    Static* pagesLabel = nullptr;
+    Edit* pagesEdit = nullptr;
+    Button* extractBtn = nullptr;
+    Button* cancelBtn = nullptr;
+
+    ~PdfExtractTextDialog() override;
+
+    bool Create(MainWindow* win, WindowTab* tab);
+    void OnBrowse();
+    void DoExtract();
+    void OnCancel();
 };
 
-static void PdfExtractTextOnBrowse(PdfExtractTextDialog* dlg) {
-    WCHAR dstFileName[MAX_PATH + 1]{};
-    GetWindowTextW(dlg->hwndDestEdit, dstFileName, MAX_PATH);
+PdfExtractTextDialog::~PdfExtractTextDialog() {
+    str::Free(srcPath);
+    delete mainLayout;
+}
 
-    OPENFILENAME ofn{};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = dlg->hwnd;
-    ofn.lpstrFile = dstFileName;
-    ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L"Text Files\0*.txt\0All Files\0*.*\0";
-    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = L"txt";
+void PdfExtractTextDialog::OnCancel() {
+    Close();
+}
 
-    if (GetSaveFileNameW(&ofn)) {
-        SetWindowTextW(dlg->hwndDestEdit, dstFileName);
-    }
+void PdfExtractTextDialog::OnBrowse() {
+    BrowseForDest(hwnd, destEdit, L"Text Files\0*.txt\0All Files\0*.*\0", L"txt");
 }
 
 static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, const char* destPath, const char* pages) {
@@ -388,88 +391,188 @@ static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, const char* destPath
     return file::WriteFile(destPath, text.AsByteSlice());
 }
 
-static void PdfExtractTextDoIt(PdfExtractTextDialog* dlg) {
-    char destPath[MAX_PATH + 1]{};
-    GetWindowTextA(dlg->hwndDestEdit, destPath, MAX_PATH);
+void PdfExtractTextDialog::DoExtract() {
+    TempStr destPath = destEdit->GetTextTemp();
     if (str::IsEmpty(destPath)) {
         return;
     }
 
-    char pages[256]{};
-    GetWindowTextA(dlg->hwndPagesEdit, pages, dimof(pages) - 1);
+    TempStr pages = pagesEdit->GetTextTemp();
     if (str::IsEmpty(pages)) {
         return;
     }
 
-    logf("PdfExtractTextDoIt: extracting text from '%s' to '%s', pages: %s\n", dlg->srcPath, destPath, pages);
+    logf("PdfExtractTextDoIt: extracting text from '%s' to '%s', pages: %s\n", srcPath, destPath, pages);
 
     bool ok = false;
-    WindowTab* tab = dlg->win ? dlg->win->CurrentTab() : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
     bool isPdf = tab && CouldBePDFDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
-        char* argv[] = {(char*)"convert", (char*)"-o", destPath, dlg->srcPath, pages};
+        char* argv[] = {(char*)"convert", (char*)"-o", destPath, srcPath, pages};
         int argc = 5;
         fz_set_optind(0);
         ok = muconvert_main(argc, argv) == 0;
     } else {
         // use engine text extraction for other formats (DjVu, etc.)
-        ok = ExtractTextViaEngine(dlg, destPath, pages);
+        ok = ExtractTextViaEngine(this, destPath, pages);
     }
 
     if (ok) {
         logf("PdfExtractTextDoIt: extracted successfully\n");
-        DestroyWindow(dlg->hwnd);
-        OpenPathInDefaultFileManager(destPath);
+        TempStr path = str::DupTemp(destPath);
+        Close();
+        OpenPathInDefaultFileManager(path);
     } else {
         logf("PdfExtractTextDoIt: failed to extract text, isPdf: %d\n", (int)isPdf);
-        MessageBoxWarning(dlg->hwnd, "Failed to extract text.", _TRA("Extract Text"));
+        MessageBoxWarning(hwnd, "Failed to extract text.", _TRA("Extract Text"));
     }
 }
 
-static LRESULT CALLBACK PdfExtractTextDlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    PdfExtractTextDialog* dlg = nullptr;
-    if (msg == WM_CREATE) {
-        CREATESTRUCTW* cs = (CREATESTRUCTW*)lp;
-        dlg = (PdfExtractTextDialog*)cs->lpCreateParams;
-        dlg->hwnd = hwnd;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)dlg);
-        return 0;
-    }
-    dlg = (PdfExtractTextDialog*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
-    if (!dlg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    switch (msg) {
-        case WM_COMMAND: {
-            int code = HIWORD(wp);
-            HWND ctl = (HWND)lp;
-            if (ctl == dlg->hwndBrowseBtn && code == BN_CLICKED) {
-                PdfExtractTextOnBrowse(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndExtractBtn && code == BN_CLICKED) {
-                PdfExtractTextDoIt(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndCancelBtn && code == BN_CLICKED) {
-                DestroyWindow(hwnd);
-                return 0;
-            }
-            break;
-        }
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-        case WM_DESTROY:
-            return 0;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
+static void PdfExtractTextOnClose(Wnd::CloseEvent* ev) {
+    auto dlg = (PdfExtractTextDialog*)ev->e->self;
+    delete dlg;
 }
 
-static constexpr const WCHAR* kPdfExtractTextWinClassName = L"SUMATRA_PDF_EXTRACT_TEXT";
-static bool gPdfExtractTextWinClassRegistered = false;
+bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
+    win = w;
+    srcPath = str::Dup(tab->filePath);
+    hFont = GetDefaultGuiFont();
+    onClose = MkFunc1Void(PdfExtractTextOnClose);
+
+    CreateCustomArgs cargs;
+    cargs.title = _TRA("Extract Text");
+    cargs.font = hFont;
+    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    cargs.visible = false;
+    if (UseDarkModeLib() && DarkMode::isEnabled()) {
+        cargs.bgColor = ThemeWindowControlBackgroundColor();
+    } else {
+        cargs.bgColor = MkGray(0xee);
+    }
+    CreateCustom(cargs);
+    if (!hwnd) {
+        return false;
+    }
+    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+
+    bool isRtl = IsUIRtl();
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    // row 1: source path label
+    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
+    vbox->AddChild(pathLabel);
+
+    // row 2: dest edit (flex) + browse button
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        TempStr noExt = path::GetPathNoExtTemp(srcPath);
+        TempStr txtPath = str::JoinTemp(noExt, ".txt");
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.withBorder = true;
+        args.font = hFont;
+        args.text = MakeUniqueFilePathTemp(txtPath);
+        args.isRtl = isRtl;
+        destEdit = new Edit();
+        destEdit->Create(args);
+        hbox->AddChild(destEdit, 1);
+
+        browseBtn = new Button();
+        browseBtn->onClick = MkMethod0<PdfExtractTextDialog, &PdfExtractTextDialog::OnBrowse>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = "...";
+        bargs.isRtl = isRtl;
+        browseBtn->Create(bargs);
+        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    // row 3: "Pages:" label + pages edit (flex)
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Static::CreateArgs largs;
+        largs.parent = hwnd;
+        largs.font = hFont;
+        largs.text = _TRA("Pages:");
+        largs.isRtl = isRtl;
+        pagesLabel = new Static();
+        pagesLabel->Create(largs);
+        hbox->AddChild(new Padding(pagesLabel, DpiScaledInsets(hwnd, 0, 4, 0, 0)));
+
+        int pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
+        Edit::CreateArgs eargs;
+        eargs.parent = hwnd;
+        eargs.withBorder = true;
+        eargs.font = hFont;
+        eargs.text = str::FormatTemp("1-%d", pageCount);
+        eargs.isRtl = isRtl;
+        pagesEdit = new Edit();
+        pagesEdit->Create(eargs);
+        hbox->AddChild(pagesEdit, 1);
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    // row 4: Extract Text + Cancel buttons (right-aligned), each sized to its label
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainEnd;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        extractBtn = new Button();
+        extractBtn->isDefault = true;
+        extractBtn->onClick = MkMethod0<PdfExtractTextDialog, &PdfExtractTextDialog::DoExtract>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = _TRA("Extract Text");
+        bargs.isRtl = isRtl;
+        extractBtn->Create(bargs);
+        hbox->AddChild(extractBtn);
+
+        cancelBtn = new Button();
+        cancelBtn->onClick = MkMethod0<PdfExtractTextDialog, &PdfExtractTextDialog::OnCancel>(this);
+        Button::CreateArgs cargs2;
+        cargs2.parent = hwnd;
+        cargs2.font = hFont;
+        cargs2.text = _TRA("Cancel");
+        cargs2.isRtl = isRtl;
+        cancelBtn->Create(cargs2);
+        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
+
+    int minClientW = DpiScale(hwnd, 480);
+    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
+    Size size = mainLayout->Layout(ExpandHeight(clientW));
+    Rect bounds{0, 0, size.dx, size.dy};
+    mainLayout->SetBounds(bounds);
+    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+
+    CenterDialog(hwnd, w->hwndFrame);
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    SetIsVisible(true);
+    HwndSetFocus(destEdit->hwnd);
+    return true;
+}
 
 void ShowPdfExtractTextDialog(MainWindow* win) {
     if (!win || !win->IsDocLoaded()) {
@@ -481,97 +584,10 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
     }
     logf("ShowPdfExtractTextDialog: opening for '%s'\n", tab->filePath);
 
-    if (!gPdfExtractTextWinClassRegistered) {
-        WNDCLASSEXW wc{};
-        wc.cbSize = sizeof(wc);
-        wc.style = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc = PdfExtractTextDlgProc;
-        wc.hInstance = GetModuleHandleW(nullptr);
-        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-        wc.lpszClassName = kPdfExtractTextWinClassName;
-        RegisterClassExW(&wc);
-        gPdfExtractTextWinClassRegistered = true;
-    }
-
-    PdfExtractTextDialog* dlg = new PdfExtractTextDialog();
-    dlg->srcPath = str::Dup(tab->filePath);
-    dlg->win = win;
-    dlg->hFont = GetDefaultGuiFont();
-
-    DlgMetrics m = GetDlgMetrics(win->hwndFrame, dlg->hFont);
-    int minW = DpiScale(win->hwndFrame, 500);
-    int dlgW = CalcDlgWidth(win->hwndFrame, dlg->hFont, tab->filePath, minW, m.padding);
-    int dlgH = CalcDlgHeight(win->hwndFrame, m, 4);
-
-    HINSTANCE h = GetModuleHandleW(nullptr);
-    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kPdfExtractTextWinClassName, _TRW("Extract Text"),
-                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
-                                dlgW, dlgH, win->hwndFrame, nullptr, h, dlg);
-    if (!hwnd) {
-        str::Free(dlg->srcPath);
+    auto dlg = new PdfExtractTextDialog();
+    if (!dlg->Create(win, tab)) {
         delete dlg;
-        return;
     }
-
-    int x = m.padding;
-    int y = m.padding;
-    int w = dlgW - 2 * m.padding - DpiScale(hwnd, 16);
-
-    // row 1: source path label (offset to align with text inside edit control)
-    dlg->hwndPathLabel =
-        CreateWindowExW(0, L"STATIC", ToWStrTemp(tab->filePath), WS_CHILD | WS_VISIBLE | SS_LEFT | SS_PATHELLIPSIS,
-                        x + m.editXOff, y, w - m.editXOff, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPathLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 2: dest edit + browse button
-    TempStr noExt = path::GetPathNoExtTemp(tab->filePath);
-    TempStr txtPath = str::JoinTemp(noExt, ".txt");
-    TempStr destPath = MakeUniqueFilePathTemp(txtPath);
-    dlg->hwndDestEdit =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(destPath), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, x, y,
-                        w - m.browseW - m.btnGap, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndDestEdit, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    dlg->hwndBrowseBtn = CreateWindowExW(0, L"BUTTON", L"...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, x + w - m.browseW,
-                                         y, m.browseW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndBrowseBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 3: "Pages:" label + pages edit
-    WCHAR* pagesLabelText = _TRW("Pages:");
-    Size labelSize = HwndMeasureText(hwnd, ToUtf8Temp(pagesLabelText), dlg->hFont);
-    int labelW = labelSize.dx + DpiScale(hwnd, 4);
-    dlg->hwndPagesLabel = CreateWindowExW(0, L"STATIC", pagesLabelText, WS_CHILD | WS_VISIBLE | SS_LEFT, x + m.editXOff,
-                                          y + m.editXOff, labelW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPagesLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    int pageCount = win->ctrl ? win->ctrl->PageCount() : 1;
-    TempStr pagesStr = str::FormatTemp("1-%d", pageCount);
-    int editX = x + m.editXOff + labelW + DpiScale(hwnd, 4);
-    dlg->hwndPagesEdit =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(pagesStr), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, editX,
-                        y, x + w - editX, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPagesEdit, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 4: Extract Text + Cancel buttons (right-aligned)
-    int bx = x + w - m.btnW;
-    dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
-                                         m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndCancelBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    bx -= m.btnW + m.btnGap;
-    dlg->hwndExtractBtn = CreateWindowExW(0, L"BUTTON", _TRW("Extract Text"), WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-                                          bx, y, m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndExtractBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    CenterDialog(hwnd, win->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    ShowWindow(hwnd, SW_SHOW);
 }
 
 // --- Compress PDF dialog ---
