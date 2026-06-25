@@ -23,6 +23,8 @@ export type XfaInfo = {
   fields_out_ps: number;
   fields_with_pa: number;
   fields_with_pa_tpl: number;
+  fields_bound: number;
+  fields_with_page_subform: number;
   area0: string;
   area1: string;
   font_families: number;
@@ -32,7 +34,7 @@ export type XfaInfo = {
 
 export function parseXfaLine(raw: string): XfaInfo {
   const m = raw.match(
-    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) render_borders=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+) fields_in_ps=(\d+) fields_out_ps=(\d+) fields_with_pa=(\d+) fields_with_pa_tpl=(\d+) area0=(\S*) area1=(\S*) font_families=(\d+) font_held=(\d+) font_missing=(\d+)(?: font_missing_names=\S*)? load_error=(.*)/,
+    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) render_borders=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+) fields_in_ps=(\d+) fields_out_ps=(\d+) fields_with_pa=(\d+) fields_with_pa_tpl=(\d+) fields_bound=(\d+) fields_with_page_subform=(\d+) area0=(\S*) area1=(\S*) font_families=(\d+) font_held=(\d+) font_missing=(\d+)(?: font_missing_names=\S*)? load_error=(.*)/,
   );
   if (!m) {
     throw new Error(`unexpected TestXfa output: ${raw.trim()}`);
@@ -52,22 +54,24 @@ export function parseXfaLine(raw: string): XfaInfo {
     p1_lines: Number(m[12]),
     serialize_ok: Number(m[13]),
     serialize_bytes: Number(m[14]),
-    load_error: m[24].trim(),
+    load_error: m[26].trim(),
     fields_in_ps: Number(m[15]),
     fields_out_ps: Number(m[16]),
     fields_with_pa: Number(m[17]),
     fields_with_pa_tpl: Number(m[18]),
-    area0: m[19],
-    area1: m[20],
-    font_families: Number(m[21]),
-    font_held: Number(m[22]),
-    font_missing: Number(m[23]),
+    fields_bound: Number(m[19]),
+    fields_with_page_subform: Number(m[20]),
+    area0: m[21],
+    area1: m[22],
+    font_families: Number(m[23]),
+    font_held: Number(m[24]),
+    font_missing: Number(m[25]),
   };
 }
 
 export function formatXfaInfo(label: string, xfa: XfaInfo): string {
   const err = xfa.load_error ? ` load_error=${xfa.load_error}` : "";
-  return `${label}: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty} render_fields=${xfa.render_fields} render_draws=${xfa.render_draws} render_borders=${xfa.render_borders} p1_fields=${xfa.p1_fields} p1_draws=${xfa.p1_draws} p1_borders=${xfa.p1_borders} p1_lines=${xfa.p1_lines} serialize_ok=${xfa.serialize_ok} serialize_bytes=${xfa.serialize_bytes}${err}`;
+  return `${label}: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty} render_fields=${xfa.render_fields} render_draws=${xfa.render_draws} render_borders=${xfa.render_borders} p1_fields=${xfa.p1_fields} p1_draws=${xfa.p1_draws} p1_borders=${xfa.p1_borders} p1_lines=${xfa.p1_lines} serialize_ok=${xfa.serialize_ok} serialize_bytes=${xfa.serialize_bytes} fields_bound=${xfa.fields_bound} fields_with_page_subform=${xfa.fields_with_page_subform}${err}`;
 }
 
 export async function queryXfa(pdfPath: string): Promise<XfaInfo> {

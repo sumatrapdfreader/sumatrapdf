@@ -17,12 +17,18 @@ import { runStandalone } from "./util.ts";
 const here = dirname(fileURLToPath(import.meta.url));
 const dataDir = join(here, "ad-hoc-xfa-data");
 
-type CorpusExpect = Pick<XfaInfo, "has_xfa" | "pure_xfa" | "valid"> & {
+type CorpusExpect = Pick<
+  XfaInfo,
+  "has_xfa" | "pure_xfa" | "valid" | "serialize_ok"
+> & {
   min_page_count?: number;
   min_render_fields?: number;
   min_p1_fields?: number;
   min_font_families?: number;
   max_font_missing?: number;
+  min_serialize_bytes?: number;
+  min_fields_bound?: number;
+  min_fields_with_page_subform?: number;
 };
 
 type CorpusEntry = {
@@ -57,6 +63,10 @@ const corpus: CorpusEntry[] = [
       min_p1_fields: 47,
       min_font_families: 12,
       max_font_missing: 0,
+      serialize_ok: 1,
+      min_serialize_bytes: 2000,
+      min_fields_bound: 90,
+      min_fields_with_page_subform: 110,
     },
   },
   {
@@ -100,6 +110,24 @@ function assertCorpus(name: string, xfa: XfaInfo, expect: CorpusExpect): void {
   if (expect.max_font_missing !== undefined && xfa.font_missing > expect.max_font_missing) {
     throw new Error(
       `${name}: expected font_missing<=${expect.max_font_missing}, got font_missing=${xfa.font_missing}`,
+    );
+  }
+  if (expect.serialize_ok !== undefined && xfa.serialize_ok !== expect.serialize_ok) {
+    throw new Error(`${name}: expected serialize_ok=${expect.serialize_ok}, got serialize_ok=${xfa.serialize_ok}`);
+  }
+  if (expect.min_serialize_bytes !== undefined && xfa.serialize_bytes < expect.min_serialize_bytes) {
+    throw new Error(
+      `${name}: expected serialize_bytes>=${expect.min_serialize_bytes}, got serialize_bytes=${xfa.serialize_bytes}`,
+    );
+  }
+  if (expect.min_fields_bound !== undefined && xfa.fields_bound < expect.min_fields_bound) {
+    throw new Error(
+      `${name}: expected fields_bound>=${expect.min_fields_bound}, got fields_bound=${xfa.fields_bound}`,
+    );
+  }
+  if (expect.min_fields_with_page_subform !== undefined && xfa.fields_with_page_subform < expect.min_fields_with_page_subform) {
+    throw new Error(
+      `${name}: expected fields_with_page_subform>=${expect.min_fields_with_page_subform}, got fields_with_page_subform=${xfa.fields_with_page_subform}`,
     );
   }
 }

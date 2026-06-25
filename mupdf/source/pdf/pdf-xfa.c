@@ -228,6 +228,16 @@ int pdf_xfa_fields_with_pagearea_template(fz_context* ctx, pdf_xfa* xfa) {
     return xfa ? xfa->fields_with_pagearea_template : 0;
 }
 
+int pdf_xfa_fields_bound(fz_context* ctx, pdf_xfa* xfa) {
+    (void)ctx;
+    return xfa ? xfa->fields_bound : 0;
+}
+
+int pdf_xfa_fields_with_page_subform(fz_context* ctx, pdf_xfa* xfa) {
+    (void)ctx;
+    return xfa ? xfa->fields_with_page_subform : 0;
+}
+
 const char* pdf_xfa_page_area_name(fz_context* ctx, pdf_xfa* xfa, int page_index) {
     char* name;
 

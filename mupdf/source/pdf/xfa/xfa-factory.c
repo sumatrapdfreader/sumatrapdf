@@ -47,6 +47,7 @@ pdf_xfa* pdf_xfa_new_from_packets(fz_context* ctx, pdf_document* doc, pdf_xfa_pa
 
         xfa->form = pdf_xfa_bind(ctx, xfa->pool, xfa);
         if (xfa->form) {
+            pdf_xfa_count_form_field_stats(ctx, xfa->form, &xfa->fields_bound, &xfa->fields_with_page_subform);
             xfa->global.template_root = xfa->form;
             xfa->fonts = pdf_xfa_fonts_load(ctx, doc, xfa->pool, xfa->packets);
             pdf_xfa_fonts_check_used(ctx, xfa->fonts, xfa->form);

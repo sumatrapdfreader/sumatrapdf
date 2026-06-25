@@ -319,6 +319,46 @@ static int pdf_xfa_is_page_subform_name(const char* name) {
     return 1;
 }
 
+static pdf_xfa_object* pdf_xfa_find_page_subform_ancestor(fz_context* ctx, pdf_xfa_object* node) {
+    (void)ctx;
+    while (node) {
+        char* name;
+        if (node->name && strcmp(node->name, "subform") == 0) {
+            name = pdf_xfa_object_get_attr(ctx, node, "name");
+            if (pdf_xfa_is_page_subform_name(name)) return node;
+        }
+        node = node->parent;
+    }
+    return NULL;
+}
+
+static void pdf_xfa_count_form_fields_imp(fz_context* ctx, pdf_xfa_object* node, int* bound, int* with_page_subform) {
+    pdf_xfa_object* child;
+
+    if (!node) return;
+
+    if (node->name && strcmp(node->name, "field") == 0) {
+        if (node->data_node) (*bound)++;
+        if (pdf_xfa_find_page_subform_ancestor(ctx, node)) (*with_page_subform)++;
+    }
+
+    for (child = node->first_child; child; child = child->next_sibling)
+        pdf_xfa_count_form_fields_imp(ctx, child, bound, with_page_subform);
+}
+
+void pdf_xfa_count_form_field_stats(fz_context* ctx, pdf_xfa_object* form, int* bound, int* with_page_subform) {
+    int n_bound = 0;
+    int n_page_subform = 0;
+
+    if (bound) *bound = 0;
+    if (with_page_subform) *with_page_subform = 0;
+
+    pdf_xfa_count_form_fields_imp(ctx, form, &n_bound, &n_page_subform);
+
+    if (bound) *bound = n_bound;
+    if (with_page_subform) *with_page_subform = n_page_subform;
+}
+
 int pdf_xfa_page_subform_index(fz_context* ctx, pdf_xfa_object* subform) {
     char* name;
     char* end;

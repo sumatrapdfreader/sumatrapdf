@@ -131,6 +131,8 @@ struct pdf_xfa {
     int fields_outside_pageset;
     int fields_with_pagearea;
     int fields_with_pagearea_template;
+    int fields_bound;
+    int fields_with_page_subform;
     int render_flags;
     pdf_xfa_field_probe field_probes[PDF_XFA_FIELD_PROBE_MAX];
     int field_probe_count;
@@ -199,6 +201,7 @@ pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_pa
 /* layout.c */
 float pdf_xfa_parse_measurement(const char* text, float default_pt);
 void pdf_xfa_count_field_stats(pdf_xfa_object* root, int* in_pageset, int* outside_pageset, int* with_pagearea);
+void pdf_xfa_count_form_field_stats(fz_context* ctx, pdf_xfa_object* form, int* bound, int* with_page_subform);
 int pdf_xfa_page_subform_index(fz_context* ctx, pdf_xfa_object* subform);
 
 /* factory.c */
