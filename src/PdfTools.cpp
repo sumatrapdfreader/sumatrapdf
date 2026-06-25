@@ -85,6 +85,14 @@ static int CalcDlgHeight(HWND hwnd, const DlgMetrics& m, int nRows) {
     return 2 * m.padding + nRows * m.rowH + (nRows - 1) * m.rowGap + DpiScale(hwnd, 32);
 }
 
+// width of a push button sized to fit its label at its natural size,
+// but never narrower than minW
+static int CalcButtonWidth(HWND hwnd, HFONT font, const WCHAR* text, int minW) {
+    Size sz = HwndMeasureText(hwnd, ToUtf8Temp(text), font);
+    int w = sz.dx + DpiScale(hwnd, 20); // horizontal padding inside the button
+    return std::max(w, minW);
+}
+
 struct PdfBakeDialog {
     HWND hwnd = nullptr;
     HWND hwndPathLabel = nullptr;
@@ -705,14 +713,16 @@ void ShowPdfCompressDialog(MainWindow* win) {
     SendMessageW(dlg->hwndBrowseBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
     y += m.rowH + m.rowGap;
 
-    // row 3: Compress + Cancel buttons (right-aligned)
-    int bx = x + w - m.btnW;
+    // row 3: Compress + Cancel buttons (right-aligned), each sized to its label
+    int cancelW = CalcButtonWidth(hwnd, dlg->hFont, _TRW("Cancel"), m.btnW);
+    int compressW = CalcButtonWidth(hwnd, dlg->hFont, _TRW("Compress PDF"), m.btnW);
+    int bx = x + w - cancelW;
     dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
-                                         m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
+                                         cancelW, m.btnH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndCancelBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    bx -= m.btnW + m.btnGap;
+    bx -= compressW + m.btnGap;
     dlg->hwndCompressBtn = CreateWindowExW(0, L"BUTTON", _TRW("Compress PDF"), WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-                                           bx, y, m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
+                                           bx, y, compressW, m.btnH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndCompressBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
 
     CenterDialog(hwnd, win->hwndFrame);
@@ -895,14 +905,17 @@ void ShowPdfDecompressDialog(MainWindow* win) {
     SendMessageW(dlg->hwndBrowseBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
     y += m.rowH + m.rowGap;
 
-    int bx = x + w - m.btnW;
+    // Decompress + Cancel buttons (right-aligned), each sized to its label
+    int cancelW = CalcButtonWidth(hwnd, dlg->hFont, _TRW("Cancel"), m.btnW);
+    int decompressW = CalcButtonWidth(hwnd, dlg->hFont, _TRW("Decompress PDF"), m.btnW);
+    int bx = x + w - cancelW;
     dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
-                                         m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
+                                         cancelW, m.btnH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndCancelBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    bx -= m.btnW + m.btnGap;
+    bx -= decompressW + m.btnGap;
     dlg->hwndDecompressBtn =
-        CreateWindowExW(0, L"BUTTON", _TRW("Decompress PDF"), WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, bx, y, m.btnW,
-                        m.btnH, hwnd, nullptr, h, nullptr);
+        CreateWindowExW(0, L"BUTTON", _TRW("Decompress PDF"), WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, bx, y,
+                        decompressW, m.btnH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndDecompressBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
 
     CenterDialog(hwnd, win->hwndFrame);
