@@ -38,7 +38,15 @@ typedef struct {
 typedef struct {
     int page_index;
     pdf_xfa_object* target_page_area;
+    fz_font* font_bold;
 } pdf_xfa_render_ctx;
+
+typedef struct {
+    float size_pt;
+    int bold;
+    float rgb[3];
+    int has_color;
+} pdf_xfa_text_style;
 
 typedef struct {
     float widths[PDF_XFA_MAX_COLUMNS];
@@ -374,6 +382,51 @@ static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float 
     return rect;
 }
 
+static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_text_style* style) {
+    pdf_xfa_object* font;
+    pdf_xfa_object* fill;
+    pdf_xfa_object* color;
+    char* size;
+    char* weight;
+
+    if (!style) return;
+
+    memset(style, 0, sizeof(*style));
+    style->rgb[0] = style->rgb[1] = style->rgb[2] = 0.0f;
+
+    font = pdf_xfa_find_descendant(node, "font");
+    if (font) {
+        size = pdf_xfa_object_get_attr(ctx, font, "size");
+        style->size_pt = pdf_xfa_parse_measurement(size, 0);
+        weight = pdf_xfa_object_get_attr(ctx, font, "weight");
+        if (weight && strcmp(weight, "bold") == 0) style->bold = 1;
+        fill = pdf_xfa_object_find_child(font, "fill");
+        if (!fill) fill = pdf_xfa_find_descendant(font, "fill");
+        if (fill) {
+            color = pdf_xfa_object_find_child(fill, "color");
+            if (!color) color = pdf_xfa_find_descendant(fill, "color");
+            if (color && pdf_xfa_parse_rgb_color(pdf_xfa_object_get_attr(ctx, color, "value"), style->rgb))
+                style->has_color = 1;
+        }
+    }
+
+    if (!style->has_color) {
+        fill = pdf_xfa_object_find_child(node, "fill");
+        if (!fill) fill = pdf_xfa_find_descendant(node, "fill");
+        if (fill) {
+            color = pdf_xfa_object_find_child(fill, "color");
+            if (!color) color = pdf_xfa_find_descendant(fill, "color");
+            if (color && pdf_xfa_parse_rgb_color(pdf_xfa_object_get_attr(ctx, color, "value"), style->rgb))
+                style->has_color = 1;
+        }
+    }
+}
+
+static fz_font* pdf_xfa_font_for_style(fz_font* regular, fz_font* bold, pdf_xfa_text_style* style) {
+    if (style && style->bold && bold) return bold;
+    return regular;
+}
+
 static const char* pdf_xfa_node_text(fz_context* ctx, pdf_xfa_object* node) {
     pdf_xfa_object* value;
 
@@ -389,7 +442,7 @@ static const char* pdf_xfa_node_text(fz_context* ctx, pdf_xfa_object* node) {
 }
 
 static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_font* font, const char* text,
-                                        fz_rect rect, float pad, float rgb[3]) {
+                                        fz_rect rect, float pad, float rgb[3], float size_pt) {
     fz_text* fztext = NULL;
     float fontsize;
     fz_matrix trm;
@@ -402,9 +455,13 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
     rect.y1 -= pad;
     if (rect.x1 <= rect.x0 || rect.y1 <= rect.y0) return;
 
-    fontsize = rect.y1 - rect.y0 - pad;
-    if (fontsize > 12.0f) fontsize = 12.0f;
-    if (fontsize < 6.0f) fontsize = 6.0f;
+    if (size_pt > 0)
+        fontsize = size_pt;
+    else {
+        fontsize = rect.y1 - rect.y0 - pad;
+        if (fontsize > 12.0f) fontsize = 12.0f;
+        if (fontsize < 6.0f) fontsize = 6.0f;
+    }
 
     fz_var(fztext);
     fz_try(ctx) {
@@ -419,16 +476,24 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
     fz_catch(ctx) fz_rethrow(ctx);
 }
 
-static pdf_xfa_object* pdf_xfa_find_check_button(fz_context* ctx, pdf_xfa_object* field) {
+static pdf_xfa_object* pdf_xfa_find_ui_widget(fz_context* ctx, pdf_xfa_object* field, const char* widget_name) {
     pdf_xfa_object* ui;
     pdf_xfa_object* child;
 
     ui = pdf_xfa_object_find_child(field, "ui");
     if (!ui) return NULL;
     for (child = ui->first_child; child; child = child->next_sibling) {
-        if (child->name && strcmp(child->name, "checkButton") == 0) return child;
+        if (child->name && strcmp(child->name, widget_name) == 0) return child;
     }
     return NULL;
+}
+
+static pdf_xfa_object* pdf_xfa_find_check_button(fz_context* ctx, pdf_xfa_object* field) {
+    return pdf_xfa_find_ui_widget(ctx, field, "checkButton");
+}
+
+static pdf_xfa_object* pdf_xfa_find_radio_button(fz_context* ctx, pdf_xfa_object* field) {
+    return pdf_xfa_find_ui_widget(ctx, field, "radioButton");
 }
 
 static int pdf_xfa_value_is_checked(const char* text) {
@@ -449,6 +514,40 @@ static fz_rect pdf_xfa_checkbox_rect(fz_rect cell, float size) {
     cx = (cell.x0 + cell.x1) * 0.5f;
     cy = (cell.y0 + cell.y1) * 0.5f;
     return fz_make_rect(cx - box * 0.5f, cy - box * 0.5f, cx + box * 0.5f, cy + box * 0.5f);
+}
+
+#define PDF_XFA_CIRCLE_K 0.552284f
+
+static void pdf_xfa_path_circle(fz_context* ctx, fz_path* path, float cx, float cy, float r) {
+    float k = r * PDF_XFA_CIRCLE_K;
+
+    fz_moveto(ctx, path, cx + r, cy);
+    fz_curveto(ctx, path, cx + r, cy + k, cx + k, cy + r, cx, cy + r);
+    fz_curveto(ctx, path, cx - k, cy + r, cx - r, cy + k, cx - r, cy);
+    fz_curveto(ctx, path, cx - r, cy - k, cx - k, cy - r, cx, cy - r);
+    fz_curveto(ctx, path, cx + k, cy - r, cx + r, cy - k, cx + r, cy);
+    fz_closepath(ctx, path);
+}
+
+static void pdf_xfa_render_circle(fz_context* ctx, fz_device* dev, fz_matrix ctm, float cx, float cy, float r,
+                                  float fill_rgb[3], float stroke_rgb[3], float line_width, int fill) {
+    fz_path* path = NULL;
+
+    fz_var(path);
+    fz_try(ctx) {
+        path = fz_new_path(ctx);
+        pdf_xfa_path_circle(ctx, path, cx, cy, r);
+        if (fill)
+            fz_fill_path(ctx, dev, path, 0, ctm, fz_device_rgb(ctx), fill_rgb, 1.0f, fz_default_color_params);
+        if (stroke_rgb && line_width > 0) {
+            fz_stroke_state* stroke = fz_new_stroke_state(ctx);
+            stroke->linewidth = line_width;
+            fz_stroke_path(ctx, dev, path, stroke, ctm, fz_device_rgb(ctx), stroke_rgb, 1.0f, fz_default_color_params);
+            fz_drop_stroke_state(ctx, stroke);
+        }
+    }
+    fz_always(ctx) fz_drop_path(ctx, path);
+    fz_catch(ctx) fz_rethrow(ctx);
 }
 
 static void pdf_xfa_render_check_mark(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_rect box, float rgb[3]) {
@@ -486,21 +585,52 @@ static int pdf_xfa_render_border(fz_context* ctx, fz_device* dev, fz_matrix ctm,
     return 1;
 }
 
+static void pdf_xfa_render_radio_button(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa,
+                                        pdf_xfa_object* field, pdf_xfa_object* radio_btn, fz_rect rect,
+                                        const char* text) {
+    fz_rect box;
+    float white[3] = {1.0f, 1.0f, 1.0f};
+    float black[3] = {0.0f, 0.0f, 0.0f};
+    float size, cx, cy, r;
+
+    size = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, radio_btn, "size"), 10.0f);
+    box = pdf_xfa_checkbox_rect(rect, size);
+    if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, radio_btn, box)) {
+        if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, field, box)) {
+            cx = (box.x0 + box.x1) * 0.5f;
+            cy = (box.y0 + box.y1) * 0.5f;
+            r = (box.x1 - box.x0) * 0.5f;
+            pdf_xfa_render_circle(ctx, dev, ctm, cx, cy, r, white, black, 1.0f, 1);
+        }
+    }
+    if (pdf_xfa_value_is_checked(text)) {
+        cx = (box.x0 + box.x1) * 0.5f;
+        cy = (box.y0 + box.y1) * 0.5f;
+        r = (box.x1 - box.x0) * 0.2f;
+        pdf_xfa_render_circle(ctx, dev, ctm, cx, cy, r, black, NULL, 0, 1);
+    }
+}
+
 static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* field,
                                  float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy,
-                                 float layout_w) {
+                                 float layout_w, pdf_xfa_render_ctx* rctx) {
     fz_rect rect, box;
     float white[3] = {1.0f, 1.0f, 1.0f};
     float gray[3] = {0.75f, 0.75f, 0.75f};
     float black[3] = {0.0f, 0.0f, 0.0f};
+    float text_rgb[3];
     const char* text;
     pdf_xfa_object* check_btn;
+    pdf_xfa_object* radio_btn;
+    pdf_xfa_text_style style;
+    fz_font* text_font;
     float check_size;
 
     rect = pdf_xfa_object_rect(ctx, field, page_h, pos, layout_w, PDF_XFA_DEFAULT_FIELD_H, ignore_node_xy);
     if (fz_is_empty_rect(rect)) return;
 
     xfa->render_fields++;
+    text = pdf_xfa_node_text(ctx, field);
 
     check_btn = pdf_xfa_find_check_button(ctx, field);
     if (check_btn) {
@@ -512,8 +642,13 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
                 pdf_xfa_render_stroke_rect(ctx, dev, ctm, box, black, 1.0f);
             }
         }
-        text = pdf_xfa_node_text(ctx, field);
         if (pdf_xfa_value_is_checked(text)) pdf_xfa_render_check_mark(ctx, dev, ctm, box, black);
+        return;
+    }
+
+    radio_btn = pdf_xfa_find_radio_button(ctx, field);
+    if (radio_btn) {
+        pdf_xfa_render_radio_button(ctx, dev, ctm, xfa, field, radio_btn, rect, text);
         return;
     }
 
@@ -522,8 +657,12 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
         pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, gray, 1.0f);
     }
 
-    text = pdf_xfa_node_text(ctx, field);
-    pdf_xfa_render_text_in_rect(ctx, dev, ctm, font, text, rect, PDF_XFA_FIELD_PAD, black);
+    pdf_xfa_parse_text_style(ctx, field, &style);
+    text_rgb[0] = style.has_color ? style.rgb[0] : black[0];
+    text_rgb[1] = style.has_color ? style.rgb[1] : black[1];
+    text_rgb[2] = style.has_color ? style.rgb[2] : black[2];
+    text_font = pdf_xfa_font_for_style(font, rctx ? rctx->font_bold : NULL, &style);
+    pdf_xfa_render_text_in_rect(ctx, dev, ctm, text_font, text, rect, PDF_XFA_FIELD_PAD, text_rgb, style.size_pt);
 }
 
 static int pdf_xfa_render_draw_line(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
@@ -563,10 +702,13 @@ static int pdf_xfa_render_draw_line(fz_context* ctx, fz_device* dev, fz_matrix c
 
 static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy,
-                                float layout_w) {
+                                float layout_w, pdf_xfa_render_ctx* rctx) {
     fz_rect rect;
     float black[3] = {0.0f, 0.0f, 0.0f};
+    float text_rgb[3];
     const char* text;
+    pdf_xfa_text_style style;
+    fz_font* text_font;
     int drew_line;
 
     drew_line = pdf_xfa_render_draw_line(ctx, dev, ctm, xfa, draw, page_h, pos, ignore_node_xy);
@@ -583,7 +725,12 @@ static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
     pdf_xfa_render_border(ctx, dev, ctm, xfa, draw, rect);
 
     text = pdf_xfa_node_text(ctx, draw);
-    pdf_xfa_render_text_in_rect(ctx, dev, ctm, font, text, rect, 0, black);
+    pdf_xfa_parse_text_style(ctx, draw, &style);
+    text_rgb[0] = style.has_color ? style.rgb[0] : black[0];
+    text_rgb[1] = style.has_color ? style.rgb[1] : black[1];
+    text_rgb[2] = style.has_color ? style.rgb[2] : black[2];
+    text_font = pdf_xfa_font_for_style(font, rctx ? rctx->font_bold : NULL, &style);
+    pdf_xfa_render_text_in_rect(ctx, dev, ctm, text_font, text, rect, 0, text_rgb, style.size_pt);
 }
 
 static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* node,
@@ -679,9 +826,9 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
         }
 
         if (node->name && strcmp(node->name, "field") == 0)
-            pdf_xfa_render_field(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy, layout_w);
+            pdf_xfa_render_field(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy, layout_w, rctx);
         else if (node->name && strcmp(node->name, "draw") == 0)
-            pdf_xfa_render_draw(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy, layout_w);
+            pdf_xfa_render_draw(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy, layout_w, rctx);
 
         if (active_col_ctx && active_col_ctx->in_row && pdf_xfa_parent_is_row(ctx, node))
             pdf_xfa_row_advance(ctx, node, active_col_ctx, layout_w);
@@ -716,11 +863,12 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
     fz_display_list* list = NULL;
     fz_device* dev = NULL;
     fz_font* font = NULL;
+    fz_font* font_bold = NULL;
     fz_rect page_bbox;
     float page_h;
     float white[3] = {1.0f, 1.0f, 1.0f};
     pdf_xfa_render_pos pos = {0, 0};
-    pdf_xfa_render_ctx rctx = {0, NULL};
+    pdf_xfa_render_ctx rctx = {0, NULL, NULL};
 
     if (!xfa || !xfa->valid || !xfa->form) return NULL;
     if (page_index < 0 || page_index >= pdf_xfa_factory_layout(ctx, xfa)) return NULL;
@@ -738,8 +886,11 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
     fz_var(list);
     fz_var(dev);
     fz_var(font);
+    fz_var(font_bold);
     fz_try(ctx) {
         font = fz_new_base14_font(ctx, "Helvetica");
+        font_bold = fz_new_base14_font(ctx, "Helvetica-Bold");
+        rctx.font_bold = font_bold;
 
         list = fz_new_display_list(ctx, page_bbox);
         dev = fz_new_list_device(ctx, list);
@@ -751,6 +902,7 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
     }
     fz_always(ctx) {
         fz_drop_device(ctx, dev);
+        fz_drop_font(ctx, font_bold);
         fz_drop_font(ctx, font);
     }
     fz_catch(ctx) {
