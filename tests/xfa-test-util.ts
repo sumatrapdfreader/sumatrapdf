@@ -32,7 +32,7 @@ export type XfaInfo = {
 
 export function parseXfaLine(raw: string): XfaInfo {
   const m = raw.match(
-    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) render_borders=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+) fields_in_ps=(\d+) fields_out_ps=(\d+) fields_with_pa=(\d+) fields_with_pa_tpl=(\d+) area0=(\S*) area1=(\S*) font_families=(\d+) font_held=(\d+) font_missing=(\d+) load_error=(.*)/,
+    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) render_borders=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+) fields_in_ps=(\d+) fields_out_ps=(\d+) fields_with_pa=(\d+) fields_with_pa_tpl=(\d+) area0=(\S*) area1=(\S*) font_families=(\d+) font_held=(\d+) font_missing=(\d+)(?: font_missing_names=\S*)? load_error=(.*)/,
   );
   if (!m) {
     throw new Error(`unexpected TestXfa output: ${raw.trim()}`);

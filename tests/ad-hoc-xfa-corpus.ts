@@ -56,7 +56,7 @@ const corpus: CorpusEntry[] = [
       min_render_fields: 69,
       min_p1_fields: 47,
       min_font_families: 12,
-      max_font_missing: 1,
+      max_font_missing: 0,
     },
   },
   {

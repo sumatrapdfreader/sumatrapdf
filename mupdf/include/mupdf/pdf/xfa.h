@@ -115,7 +115,8 @@ const char* pdf_xfa_page_area_name(fz_context* ctx, pdf_xfa* xfa, int page_index
 /*
         Count loaded font family slots and held fz_font references after XFA init.
 */
-void pdf_xfa_font_stats(fz_context* ctx, pdf_xfa* xfa, int* families_out, int* held_out, int* missing_out);
+void pdf_xfa_font_stats(fz_context* ctx, pdf_xfa* xfa, int* families_out, int* held_out, int* missing_out,
+                        fz_buffer* missing_names);
 
 /*
         Render flags for pdf_xfa_run_page (reset to 0 after hybrid overlay use).

@@ -48,6 +48,7 @@ struct pdf_xfa_font_slot {
 struct pdf_xfa_fonts {
     fz_hash_table* families;
     fz_hash_table* equates;
+    fz_hash_table* embedded;
     pdf_xfa_psmap_entry* psmap;
     int psmap_n;
     int psmap_cap;
@@ -92,6 +93,17 @@ static void pdf_xfa_strip_typeface_quotes(const char* src, char* dst, size_t dst
     dst[dstsz - 1] = 0;
 }
 
+static void pdf_xfa_normalize_news_with_key(char* key) {
+    char* p;
+
+    if (!key || !key[0]) return;
+    p = strstr(key, "newswcomm");
+    if (!p) return;
+    memmove(p + 10, p + 7, strlen(p + 7) + 1);
+    memcpy(p, "newswith", 8);
+    memcpy(p + 8, "comm", 4);
+}
+
 static void pdf_xfa_family_key(const char* family, char* key, size_t keysz) {
     const char* p;
     size_t n = 0;
@@ -107,6 +119,7 @@ static void pdf_xfa_family_key(const char* family, char* key, size_t keysz) {
         key[n++] = (char)c;
     }
     key[n] = 0;
+    pdf_xfa_normalize_news_with_key(key);
 }
 
 static int pdf_xfa_font_attr_bold(const char* weight) {
@@ -376,6 +389,7 @@ static int pdf_xfa_font_name_has_suffix(const char* name, const char* suffix) {
 static int pdf_xfa_font_name_is_bold(const char* name) {
     if (!name || !name[0]) return 0;
     if (strstr(name, "Bold") || strstr(name, "bold")) return 1;
+    if (strstr(name, "-Bd") || strstr(name, "-Blk") || strstr(name, "-Demi")) return 1;
     if (pdf_xfa_font_name_has_suffix(name, "Bd") || pdf_xfa_font_name_has_suffix(name, "Blk") ||
         pdf_xfa_font_name_has_suffix(name, "Demi") || pdf_xfa_font_name_has_suffix(name, "Heavy") ||
         pdf_xfa_font_name_has_suffix(name, "Black"))
@@ -482,6 +496,84 @@ static char* pdf_xfa_font_family_name(fz_context* ctx, fz_pool* pool, pdf_obj* f
     return NULL;
 }
 
+static void pdf_xfa_fonts_variant_key(const char* family, int bold, int italic, char* variant_key, size_t keysz) {
+    char key[FZ_HASH_TABLE_KEY_LENGTH];
+
+    memset(variant_key, 0, keysz);
+    memset(key, 0, sizeof key);
+    pdf_xfa_family_key(family, key, sizeof key);
+    if (!key[0]) {
+        variant_key[0] = 0;
+        return;
+    }
+    snprintf(variant_key, keysz, "%s:%d:%d", key, bold, italic);
+}
+
+static void pdf_xfa_fonts_mark_embedded_variant(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold,
+                                                int italic) {
+    char clean[FZ_HASH_TABLE_KEY_LENGTH];
+    char variant_key[FZ_HASH_TABLE_KEY_LENGTH];
+
+    if (!fonts || !fonts->embedded || !typeface || !typeface[0]) return;
+
+    pdf_xfa_strip_typeface_quotes(typeface, clean, sizeof clean);
+    pdf_xfa_fonts_variant_key(clean, bold, italic, variant_key, sizeof variant_key);
+    if (!variant_key[0]) return;
+    fz_hash_insert(ctx, fonts->embedded, variant_key, (void*)1);
+}
+
+static int pdf_xfa_fonts_psname_match(const char* a, const char* b) {
+    char clean_a[FZ_HASH_TABLE_KEY_LENGTH];
+    char clean_b[FZ_HASH_TABLE_KEY_LENGTH];
+
+    if (!a || !a[0] || !b || !b[0]) return 0;
+    pdf_xfa_strip_typeface_quotes(a, clean_a, sizeof clean_a);
+    pdf_xfa_strip_typeface_quotes(b, clean_b, sizeof clean_b);
+    if (strcmp(clean_a, clean_b) == 0) return 1;
+    return pdf_xfa_typeface_keys_match(clean_a, clean_b);
+}
+
+static void pdf_xfa_fonts_mark_psmap_embedded(fz_context* ctx, pdf_xfa_fonts* fonts, const char* stripped) {
+    int i;
+
+    if (!fonts || !stripped || !stripped[0]) return;
+    for (i = 0; i < fonts->psmap_n; i++) {
+        pdf_xfa_psmap_entry* entry = &fonts->psmap[i];
+        if (pdf_xfa_fonts_psname_match(entry->psname, stripped))
+            pdf_xfa_fonts_mark_embedded_variant(ctx, fonts, entry->typeface, entry->bold, entry->italic);
+    }
+}
+
+static void pdf_xfa_fonts_note_pdf_fontobj(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_obj* fontobj) {
+    char stripped[FZ_HASH_TABLE_KEY_LENGTH];
+    const char* basefont_name;
+    pdf_obj* basefontobj;
+    pdf_obj* dfonts;
+    int bold, italic;
+
+    if (!fonts || !fontobj) return;
+
+    fontobj = pdf_resolve_indirect(ctx, fontobj);
+    basefontobj = pdf_dict_get(ctx, fontobj, PDF_NAME(BaseFont));
+    if (!basefontobj) {
+        dfonts = pdf_dict_get(ctx, fontobj, PDF_NAME(DescendantFonts));
+        if (dfonts && pdf_array_len(ctx, dfonts) > 0)
+            basefontobj = pdf_dict_get(ctx, pdf_array_get(ctx, dfonts, 0), PDF_NAME(BaseFont));
+    }
+    if (!basefontobj) return;
+
+    basefont_name = pdf_to_name(ctx, basefontobj);
+    if (!basefont_name || !basefont_name[0]) return;
+
+    bold = pdf_xfa_font_is_bold(ctx, fontobj, NULL);
+    italic = pdf_xfa_font_is_italic(ctx, fontobj, NULL);
+    pdf_xfa_fonts_strip_subset_prefix(basefont_name, stripped, sizeof stripped);
+    if (stripped[0]) {
+        pdf_xfa_fonts_mark_embedded_variant(ctx, fonts, stripped, bold, italic);
+        pdf_xfa_fonts_mark_psmap_embedded(ctx, fonts, stripped);
+    }
+}
+
 static void pdf_xfa_fonts_register_psmap_aliases(fz_context* ctx, pdf_xfa_fonts* fonts, const char* stripped, int bold,
                                                  int italic, fz_font* font) {
     int i;
@@ -489,9 +581,8 @@ static void pdf_xfa_fonts_register_psmap_aliases(fz_context* ctx, pdf_xfa_fonts*
     if (!fonts || !stripped || !stripped[0] || !font) return;
     for (i = 0; i < fonts->psmap_n; i++) {
         pdf_xfa_psmap_entry* entry = &fonts->psmap[i];
-        if (entry->bold != bold || entry->italic != italic) continue;
         if (pdf_xfa_typeface_keys_match(entry->psname, stripped))
-            pdf_xfa_fonts_add_variant(ctx, fonts, entry->typeface, bold, italic, font);
+            pdf_xfa_fonts_add_variant(ctx, fonts, entry->typeface, entry->bold, entry->italic, font);
     }
 }
 
@@ -549,6 +640,7 @@ static void pdf_xfa_fonts_load_font_dict(fz_context* ctx, pdf_document* doc, fz_
         pdf_obj* fontobj = pdf_dict_get_val(ctx, fontdict, i);
         pdf_font_desc* fontdesc = NULL;
 
+        pdf_xfa_fonts_note_pdf_fontobj(ctx, fonts, fontobj);
         fz_try(ctx) {
             fontdesc = pdf_load_font(ctx, doc, NULL, fontobj);
             pdf_xfa_fonts_register_loaded(ctx, pool, fonts, fontobj, fontdesc);
@@ -596,6 +688,150 @@ static void pdf_xfa_fonts_load_page_node(fz_context* ctx, pdf_document* doc, fz_
         fontdict = pdf_dict_get(ctx, resources, PDF_NAME(Font));
         pdf_xfa_fonts_load_font_dict(ctx, doc, pool, fonts, fontdict, "XFA: could not load page resource font");
     }
+}
+
+static void pdf_xfa_fonts_scan_embedded_font_dict(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_obj* fontdict) {
+    int i, n;
+
+    if (!fontdict) return;
+
+    n = pdf_dict_len(ctx, fontdict);
+    for (i = 0; i < n; i++) pdf_xfa_fonts_note_pdf_fontobj(ctx, fonts, pdf_dict_get_val(ctx, fontdict, i));
+}
+
+static void pdf_xfa_fonts_scan_embedded_page_node(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_obj* node) {
+    pdf_obj* type;
+    pdf_obj* kids;
+    pdf_obj* resources;
+    pdf_obj* fontdict;
+    int i, n;
+
+    if (!node) return;
+
+    type = pdf_dict_get(ctx, node, PDF_NAME(Type));
+    if (pdf_name_eq(ctx, type, PDF_NAME(Pages))) {
+        kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
+        n = pdf_array_len(ctx, kids);
+        for (i = 0; i < n; i++) pdf_xfa_fonts_scan_embedded_page_node(ctx, fonts, pdf_array_get(ctx, kids, i));
+        return;
+    }
+
+    if (pdf_name_eq(ctx, type, PDF_NAME(Page))) {
+        resources = pdf_dict_get_inheritable(ctx, node, PDF_NAME(Resources));
+        fontdict = pdf_dict_get(ctx, resources, PDF_NAME(Font));
+        pdf_xfa_fonts_scan_embedded_font_dict(ctx, fonts, fontdict);
+    }
+}
+
+static void pdf_xfa_fonts_scan_embedded_dr(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_document* doc) {
+    pdf_obj* root;
+    pdf_obj* acro;
+    pdf_obj* dr;
+    pdf_obj* fontdict;
+
+    root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+    acro = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
+    dr = pdf_dict_get(ctx, acro, PDF_NAME(DR));
+    fontdict = pdf_dict_get(ctx, dr, PDF_NAME(Font));
+    pdf_xfa_fonts_scan_embedded_font_dict(ctx, fonts, fontdict);
+}
+
+static int pdf_xfa_fonts_fontdict_has_psname(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_obj* fontdict,
+                                             const char* psname) {
+    char stripped[FZ_HASH_TABLE_KEY_LENGTH];
+    const char* basefont_name;
+    pdf_obj* basefontobj;
+    pdf_obj* dfonts;
+    int i, n;
+
+    if (!fontdict || !psname || !psname[0]) return 0;
+
+    n = pdf_dict_len(ctx, fontdict);
+    for (i = 0; i < n; i++) {
+        pdf_obj* fontobj = pdf_resolve_indirect(ctx, pdf_dict_get_val(ctx, fontdict, i));
+        basefontobj = pdf_dict_get(ctx, fontobj, PDF_NAME(BaseFont));
+        if (!basefontobj) {
+            dfonts = pdf_dict_get(ctx, fontobj, PDF_NAME(DescendantFonts));
+            if (dfonts && pdf_array_len(ctx, dfonts) > 0)
+                basefontobj = pdf_dict_get(ctx, pdf_array_get(ctx, dfonts, 0), PDF_NAME(BaseFont));
+        }
+        if (!basefontobj) continue;
+        basefont_name = pdf_to_name(ctx, basefontobj);
+        pdf_xfa_fonts_strip_subset_prefix(basefont_name, stripped, sizeof stripped);
+        if (pdf_xfa_fonts_psname_match(psname, stripped)) return 1;
+        if (strstr(basefont_name, psname) || (stripped[0] && strstr(stripped, psname))) return 1;
+    }
+    return 0;
+}
+
+static int pdf_xfa_fonts_page_node_has_psname(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_obj* node,
+                                              const char* psname) {
+    pdf_obj* type;
+    pdf_obj* kids;
+    pdf_obj* resources;
+    pdf_obj* fontdict;
+    int i, n;
+
+    if (!node) return 0;
+
+    type = pdf_dict_get(ctx, node, PDF_NAME(Type));
+    if (pdf_name_eq(ctx, type, PDF_NAME(Pages))) {
+        kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
+        n = pdf_array_len(ctx, kids);
+        for (i = 0; i < n; i++)
+            if (pdf_xfa_fonts_page_node_has_psname(ctx, fonts, pdf_array_get(ctx, kids, i), psname)) return 1;
+        return 0;
+    }
+
+    if (pdf_name_eq(ctx, type, PDF_NAME(Page))) {
+        resources = pdf_dict_get_inheritable(ctx, node, PDF_NAME(Resources));
+        fontdict = pdf_dict_get(ctx, resources, PDF_NAME(Font));
+        if (pdf_xfa_fonts_fontdict_has_psname(ctx, fonts, fontdict, psname)) return 1;
+    }
+    return 0;
+}
+
+static void pdf_xfa_fonts_ensure_psmap_embedded(fz_context* ctx, pdf_document* doc, pdf_xfa_fonts* fonts) {
+    pdf_obj* root;
+    pdf_obj* acro;
+    pdf_obj* dr;
+    pdf_obj* fontdict;
+    pdf_obj* pages;
+    int i;
+
+    if (!fonts || !fonts->embedded) return;
+
+    root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+    acro = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
+    dr = pdf_dict_get(ctx, acro, PDF_NAME(DR));
+    fontdict = pdf_dict_get(ctx, dr, PDF_NAME(Font));
+    pages = pdf_dict_get(ctx, root, PDF_NAME(Pages));
+
+    for (i = 0; i < fonts->psmap_n; i++) {
+        pdf_xfa_psmap_entry* entry = &fonts->psmap[i];
+        char variant_key[FZ_HASH_TABLE_KEY_LENGTH];
+        int found;
+
+        pdf_xfa_fonts_variant_key(entry->typeface, entry->bold, entry->italic, variant_key, sizeof variant_key);
+        if (variant_key[0] && fz_hash_find(ctx, fonts->embedded, variant_key)) continue;
+
+        found = pdf_xfa_fonts_fontdict_has_psname(ctx, fonts, fontdict, entry->psname);
+        if (!found && pages) found = pdf_xfa_fonts_page_node_has_psname(ctx, fonts, pages, entry->psname);
+        if (found) pdf_xfa_fonts_mark_embedded_variant(ctx, fonts, entry->typeface, entry->bold, entry->italic);
+    }
+}
+
+static void pdf_xfa_fonts_scan_embedded_resources(fz_context* ctx, pdf_document* doc, pdf_xfa_fonts* fonts) {
+    pdf_obj* root;
+    pdf_obj* pages;
+
+    pdf_xfa_fonts_scan_embedded_dr(ctx, fonts, doc);
+    root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+    pages = pdf_dict_get(ctx, root, PDF_NAME(Pages));
+    if (!pages) return;
+
+    fz_try(ctx) pdf_xfa_fonts_scan_embedded_page_node(ctx, fonts, pages);
+    fz_catch(ctx) fz_warn(ctx, "XFA: could not scan embedded fonts from page tree");
 }
 
 static void pdf_xfa_fonts_load_page_resources(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_fonts* fonts) {
@@ -675,9 +911,13 @@ pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* p
     fz_try(ctx) {
         fonts->families = fz_new_hash_table(ctx, 64, FZ_HASH_TABLE_KEY_LENGTH, -1, pdf_xfa_fonts_drop_slot);
         fonts->equates = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
+        fonts->embedded = fz_new_hash_table(ctx, 64, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
         pdf_xfa_fonts_parse_config_packet(ctx, pool, fonts, packets);
         pdf_xfa_fonts_load_dr(ctx, doc, pool, fonts);
         pdf_xfa_fonts_load_page_resources(ctx, doc, pool, fonts);
+        pdf_xfa_fonts_scan_embedded_resources(ctx, doc, fonts);
+        fz_try(ctx) pdf_xfa_fonts_ensure_psmap_embedded(ctx, doc, fonts);
+        fz_catch(ctx) fz_warn(ctx, "XFA: could not finalize psMap embedded fonts");
     }
     fz_catch(ctx) {
         pdf_xfa_fonts_drop(ctx, fonts);
@@ -692,6 +932,7 @@ void pdf_xfa_fonts_drop(fz_context* ctx, pdf_xfa_fonts* fonts) {
 
     if (!fonts) return;
     for (i = 0; i < fonts->held_n; i++) fz_drop_font(ctx, fonts->held[i]);
+    fz_drop_hash_table(ctx, fonts->embedded);
     fz_drop_hash_table(ctx, fonts->equates);
     fz_drop_hash_table(ctx, fonts->families);
     fz_free(ctx, fonts->psmap);
@@ -748,10 +989,10 @@ static void pdf_xfa_fonts_count_cb(fz_context* ctx, void* state, void* key, int 
 }
 
 static void pdf_xfa_fonts_check_used_walk(fz_context* ctx, pdf_xfa_fonts* fonts, fz_hash_table* warned,
-                                          pdf_xfa_object* node, int* missing_out);
+                                          pdf_xfa_object* node, int* missing_out, fz_buffer* missing_names);
 
-void pdf_xfa_fonts_stats(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* form, int* families_out,
-                         int* held_out, int* missing_out) {
+void pdf_xfa_fonts_stats(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* form, int* families_out, int* held_out,
+                         int* missing_out, fz_buffer* missing_names) {
     pdf_xfa_font_count_state state = {0};
     int missing = 0;
     fz_hash_table* warned = NULL;
@@ -772,7 +1013,7 @@ void pdf_xfa_fonts_stats(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* 
     fz_var(warned);
     fz_try(ctx) {
         warned = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
-        pdf_xfa_fonts_check_used_walk(ctx, fonts, warned, form, &missing);
+        pdf_xfa_fonts_check_used_walk(ctx, fonts, warned, form, &missing, missing_names);
         *missing_out = missing;
     }
     fz_always(ctx) fz_drop_hash_table(ctx, warned);
@@ -824,6 +1065,16 @@ static int pdf_xfa_fonts_has_embedded(fz_context* ctx, pdf_xfa_fonts* fonts, con
         font = pdf_xfa_fonts_pick_variant(slot, bold, italic);
         if (font) return 1;
     }
+
+    if (fonts->embedded) {
+        char variant_key[FZ_HASH_TABLE_KEY_LENGTH];
+        pdf_xfa_fonts_variant_key(mapped, bold, italic, variant_key, sizeof variant_key);
+        if (variant_key[0] && fz_hash_find(ctx, fonts->embedded, variant_key)) return 1;
+        if (psname) {
+            pdf_xfa_fonts_variant_key(psname, bold, italic, variant_key, sizeof variant_key);
+            if (variant_key[0] && fz_hash_find(ctx, fonts->embedded, variant_key)) return 1;
+        }
+    }
     return 0;
 }
 
@@ -859,7 +1110,7 @@ const char* pdf_xfa_fonts_default_typeface(pdf_xfa_fonts* fonts) {
 }
 
 static void pdf_xfa_fonts_check_used_walk(fz_context* ctx, pdf_xfa_fonts* fonts, fz_hash_table* warned,
-                                          pdf_xfa_object* node, int* missing_out) {
+                                          pdf_xfa_object* node, int* missing_out, fz_buffer* missing_names) {
     pdf_xfa_object* child;
     char* typeface;
     char clean[FZ_HASH_TABLE_KEY_LENGTH];
@@ -883,11 +1134,16 @@ static void pdf_xfa_fonts_check_used_walk(fz_context* ctx, pdf_xfa_fonts* fonts,
             pdf_xfa_strip_typeface_quotes(typeface, clean, sizeof clean);
             pdf_xfa_family_key(clean, key, sizeof key);
             if (!key[0]) return;
-            snprintf(variant_key, sizeof variant_key, "%s:%d:%d", key, bold, italic);
+            pdf_xfa_fonts_variant_key(clean, bold, italic, variant_key, sizeof variant_key);
+            if (!variant_key[0]) return;
             if (!fz_hash_find(ctx, warned, variant_key)) {
                 fz_hash_insert(ctx, warned, variant_key, (void*)1);
                 if (!pdf_xfa_fonts_has_embedded(ctx, fonts, typeface, bold, italic)) {
                     if (missing_out) (*missing_out)++;
+                    if (missing_names) {
+                        size_t prev = fz_buffer_storage(ctx, missing_names, NULL);
+                        fz_append_printf(ctx, missing_names, "%s%s:%d:%d", prev ? ";" : "", clean, bold, italic);
+                    }
                     if (!pdf_xfa_fonts_resolve(ctx, fonts, typeface, bold, italic))
                         fz_warn(ctx, "XFA: cannot find the font: %s", clean);
                 }
@@ -896,7 +1152,7 @@ static void pdf_xfa_fonts_check_used_walk(fz_context* ctx, pdf_xfa_fonts* fonts,
     }
 
     for (child = node->first_child; child; child = child->next_sibling)
-        pdf_xfa_fonts_check_used_walk(ctx, fonts, warned, child, missing_out);
+        pdf_xfa_fonts_check_used_walk(ctx, fonts, warned, child, missing_out, missing_names);
 }
 
 void pdf_xfa_fonts_check_used(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* form) {
@@ -907,7 +1163,7 @@ void pdf_xfa_fonts_check_used(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_obj
     fz_var(warned);
     fz_try(ctx) {
         warned = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
-        pdf_xfa_fonts_check_used_walk(ctx, fonts, warned, form, NULL);
+        pdf_xfa_fonts_check_used_walk(ctx, fonts, warned, form, NULL, NULL);
     }
     fz_always(ctx) fz_drop_hash_table(ctx, warned);
     fz_catch(ctx) fz_rethrow(ctx);
