@@ -5139,6 +5139,8 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             int render_nonempty = 0;
             int render_fields = 0;
             int render_draws = 0;
+            int p1_fields = 0;
+            int p1_draws = 0;
             pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
             if (xfa) {
                 valid = pdf_xfa_is_valid(ctx, xfa) ? 1 : 0;
@@ -5164,6 +5166,14 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
                             render_fields = pdf_xfa_last_render_fields(ctx, xfa);
                             render_draws = pdf_xfa_last_render_draws(ctx, xfa);
                         }
+                        if (page_count > 1) {
+                            fz_drop_display_list(ctx, list);
+                            list = pdf_xfa_run_page(ctx, xfa, 1, fz_identity);
+                            if (list) {
+                                p1_fields = pdf_xfa_last_render_fields(ctx, xfa);
+                                p1_draws = pdf_xfa_last_render_draws(ctx, xfa);
+                            }
+                        }
                     }
                     fz_always(ctx) {
                         fz_drop_device(ctx, bbox_dev);
@@ -5176,8 +5186,10 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             }
 
             out.AppendFmt(
-                "has_xfa=%d pure_xfa=%d valid=%d page_count=%d render_nonempty=%d render_fields=%d render_draws=%d\n",
-                has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws);
+                "has_xfa=%d pure_xfa=%d valid=%d page_count=%d render_nonempty=%d render_fields=%d render_draws=%d "
+                "p1_fields=%d p1_draws=%d\n",
+                has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws, p1_fields,
+                p1_draws);
             exitCode = 0;
         }
         SafeEngineRelease(&engine);

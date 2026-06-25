@@ -118,16 +118,23 @@ int pdf_xfa_factory_layout(fz_context* ctx, pdf_xfa* xfa) {
         if (n == 0) {
             xfa->page_count = 1;
             xfa->page_bboxes = fz_malloc_array(ctx, 1, fz_rect);
+            xfa->page_areas = NULL;
             xfa->page_bboxes[0] = fz_make_rect(0, 0, PDF_XFA_DEFAULT_PAGE_W, PDF_XFA_DEFAULT_PAGE_H);
         } else {
             xfa->page_count = n;
             xfa->page_bboxes = fz_malloc_array(ctx, n, fz_rect);
-            for (i = 0; i < n; i++) xfa->page_bboxes[i] = pdf_xfa_pagearea_bbox(ctx, page_areas[i]);
+            xfa->page_areas = fz_malloc_array(ctx, n, pdf_xfa_object*);
+            for (i = 0; i < n; i++) {
+                xfa->page_areas[i] = page_areas[i];
+                xfa->page_bboxes[i] = pdf_xfa_pagearea_bbox(ctx, page_areas[i]);
+            }
         }
     }
     fz_catch(ctx) {
         fz_free(ctx, xfa->page_bboxes);
+        fz_free(ctx, xfa->page_areas);
         xfa->page_bboxes = NULL;
+        xfa->page_areas = NULL;
         xfa->page_count = 0;
         fz_rethrow(ctx);
     }
