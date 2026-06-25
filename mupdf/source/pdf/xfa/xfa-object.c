@@ -106,10 +106,29 @@ pdf_xfa_object_append_child(fz_context *ctx, fz_pool *pool, pdf_xfa_object *pare
 }
 
 void
+pdf_xfa_ids_make_key(char *buf, const char *id)
+{
+	size_t len;
+
+	memset(buf, 0, FZ_HASH_TABLE_KEY_LENGTH);
+	if (!id)
+		return;
+	len = strlen(id);
+	if (len >= FZ_HASH_TABLE_KEY_LENGTH)
+		len = FZ_HASH_TABLE_KEY_LENGTH - 1;
+	memcpy(buf, id, len);
+}
+
+void
 pdf_xfa_object_set_id(fz_context *ctx, fz_hash_table *ids, pdf_xfa_object *node)
 {
+	char key[FZ_HASH_TABLE_KEY_LENGTH];
+
 	if (node->template_id && node->ns == PDF_XFA_NS_TEMPLATE && ids)
-		fz_hash_insert(ctx, ids, node->template_id, node);
+	{
+		pdf_xfa_ids_make_key(key, node->template_id);
+		fz_hash_insert(ctx, ids, key, node);
+	}
 }
 
 void

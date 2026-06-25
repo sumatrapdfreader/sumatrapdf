@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Generate tests/ad-hoc-xfa.pdf: pure-XFA fixture for ad-hoc-xfa.ts.
 
-Two pageAreas with per-page contentArea content (firstName on page 1,
-lastName on page 2). Regenerate:
+Two pageAreas with per-page content instantiated via usehref prototypes.
+Regenerate:
 
   python tests/ad-hoc-xfa.gen.py
 """
 
 from pathlib import Path
 
-# Pure-XFA form: two pageAreas, each with its own label + bound field.
+# Pure-XFA form: prototypes + usehref instances on two pages.
 XDP = """<?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
 <template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
@@ -18,40 +18,39 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
       <pageArea name="Page1" id="Page1">
         <medium short="8.5in" long="11in"/>
         <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in">
-          <draw x="0.75in" y="0.75in" w="2in" h="0.2in">
+          <draw usehref="#labelProto" x="0.75in" y="0.75in">
             <value>
               <text>First name:</text>
             </value>
           </draw>
-          <field name="firstName" x="0.75in" y="1in" w="3in" h="0.25in">
-            <ui>
-              <textEdit/>
-            </ui>
-            <value>
-              <text>placeholder</text>
-            </value>
-          </field>
+          <field usehref="#fieldProto" name="firstName" x="0.75in" y="1in"/>
         </contentArea>
       </pageArea>
       <pageArea name="Page2" id="Page2">
         <medium short="8.5in" long="11in"/>
         <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in">
-          <draw x="0.75in" y="0.75in" w="2in" h="0.2in">
+          <draw usehref="#labelProto" x="0.75in" y="0.75in">
             <value>
               <text>Last name:</text>
             </value>
           </draw>
-          <field name="lastName" x="0.75in" y="1in" w="3in" h="0.25in">
-            <ui>
-              <textEdit/>
-            </ui>
-            <value>
-              <text>placeholder</text>
-            </value>
-          </field>
+          <field usehref="#fieldProto" name="lastName" x="0.75in" y="1in"/>
         </contentArea>
       </pageArea>
     </pageSet>
+    <draw id="labelProto" w="2in" h="0.2in">
+      <value>
+        <text>Label:</text>
+      </value>
+    </draw>
+    <field id="fieldProto" w="3in" h="0.25in">
+      <ui>
+        <textEdit/>
+      </ui>
+      <value>
+        <text>placeholder</text>
+      </value>
+    </field>
   </subform>
 </template>
 <datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">

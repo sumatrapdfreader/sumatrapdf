@@ -98,6 +98,14 @@ static int pdf_xfa_node_is_field_or_draw(const char* name) {
     return strcmp(name, "field") == 0 || strcmp(name, "draw") == 0;
 }
 
+static int pdf_xfa_is_prototype_def(fz_context* ctx, pdf_xfa_object* node) {
+    char* name;
+
+    if (!node || !node->template_id || !node->template_id[0]) return 0;
+    name = pdf_xfa_object_get_attr(ctx, node, "name");
+    return !name || !name[0];
+}
+
 static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float page_h, pdf_xfa_render_pos* pos,
                                    float default_w, float default_h) {
     char *x, *y, *w, *h;
@@ -222,7 +230,10 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
         node != rctx->target_page_area)
         return;
 
-    if (!under_pageset && pdf_xfa_node_is_field_or_draw(node->name)) render_node = (rctx->page_index == 0);
+    if (!under_pageset && pdf_xfa_node_is_field_or_draw(node->name)) {
+        if (pdf_xfa_is_prototype_def(ctx, node)) render_node = 0;
+        else render_node = (rctx->page_index == 0);
+    }
 
     if (render_node) {
         if (node->name && strcmp(node->name, "field") == 0)

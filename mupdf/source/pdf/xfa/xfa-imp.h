@@ -141,6 +141,7 @@ pdf_xfa_object* pdf_xfa_new_object(fz_context* ctx, fz_pool* pool, pdf_xfa_ns_id
                                    int has_children);
 void pdf_xfa_object_append_child(fz_context* ctx, fz_pool* pool, pdf_xfa_object* parent, pdf_xfa_object* child);
 void pdf_xfa_object_add_attr(fz_context* ctx, fz_pool* pool, pdf_xfa_object* node, const char* name, const char* value);
+void pdf_xfa_ids_make_key(char* buf, const char* id);
 void pdf_xfa_object_set_id(fz_context* ctx, fz_hash_table* ids, pdf_xfa_object* node);
 void pdf_xfa_object_finalize(fz_context* ctx, fz_pool* pool, pdf_xfa_object* node);
 char* pdf_xfa_object_get_attr(fz_context* ctx, pdf_xfa_object* node, const char* name);
@@ -157,6 +158,9 @@ int pdf_xfa_som_search(fz_context* ctx, pdf_xfa_object* root, pdf_xfa_object* co
 /* bind.c */
 pdf_xfa_object* pdf_xfa_bind(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa);
 
+/* prototype.c */
+void pdf_xfa_resolve_prototypes(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, pdf_xfa_object* node);
+
 /* builder.c */
 pdf_xfa_builder* pdf_xfa_builder_new(fz_context* ctx, fz_pool* pool);
 void pdf_xfa_builder_drop(fz_context* ctx, pdf_xfa_builder* builder);
@@ -169,8 +173,9 @@ void pdf_xfa_builder_clean(fz_context* ctx, pdf_xfa_builder* builder, int has_na
 int pdf_xfa_builder_is_ns_agnostic(fz_context* ctx, pdf_xfa_builder* builder);
 
 /* parser.c */
-pdf_xfa_object* pdf_xfa_parse_xml(fz_context* ctx, fz_pool* pool, fz_buffer* buf, pdf_xfa_ns_id root_ns, int rich_text);
-pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_packet* packets);
+pdf_xfa_object* pdf_xfa_parse_xml(fz_context* ctx, fz_pool* pool, fz_buffer* buf, pdf_xfa_ns_id root_ns, int rich_text,
+                                  fz_hash_table* ids);
+pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_packet* packets, fz_hash_table* ids);
 
 /* layout.c */
 float pdf_xfa_parse_measurement(const char* text, float default_pt);

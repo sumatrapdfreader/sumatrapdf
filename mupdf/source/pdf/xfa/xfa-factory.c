@@ -41,7 +41,7 @@ pdf_xfa* pdf_xfa_new_from_packets(fz_context* ctx, pdf_document* doc, pdf_xfa_pa
     xfa->packets = packets;
 
     fz_try(ctx) {
-        xfa->root = pdf_xfa_parse_packets(ctx, xfa->pool, packets);
+        xfa->root = pdf_xfa_parse_packets(ctx, xfa->pool, packets, xfa->ids);
         if (!xfa->root) fz_throw(ctx, FZ_ERROR_FORMAT, "XFA: parse failed");
 
         xfa->form = pdf_xfa_bind(ctx, xfa->pool, xfa);

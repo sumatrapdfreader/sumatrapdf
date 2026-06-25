@@ -12,7 +12,7 @@ endobj
 << /Fields [] /XFA [(xdp:xdp) 5 0 R] >>
 endobj
 5 0 obj
-<< /Length 1543 >>
+<< /Length 1518 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
@@ -22,40 +22,39 @@ stream
       <pageArea name="Page1" id="Page1">
         <medium short="8.5in" long="11in"/>
         <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in">
-          <draw x="0.75in" y="0.75in" w="2in" h="0.2in">
+          <draw usehref="#labelProto" x="0.75in" y="0.75in">
             <value>
               <text>First name:</text>
             </value>
           </draw>
-          <field name="firstName" x="0.75in" y="1in" w="3in" h="0.25in">
-            <ui>
-              <textEdit/>
-            </ui>
-            <value>
-              <text>placeholder</text>
-            </value>
-          </field>
+          <field usehref="#fieldProto" name="firstName" x="0.75in" y="1in"/>
         </contentArea>
       </pageArea>
       <pageArea name="Page2" id="Page2">
         <medium short="8.5in" long="11in"/>
         <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in">
-          <draw x="0.75in" y="0.75in" w="2in" h="0.2in">
+          <draw usehref="#labelProto" x="0.75in" y="0.75in">
             <value>
               <text>Last name:</text>
             </value>
           </draw>
-          <field name="lastName" x="0.75in" y="1in" w="3in" h="0.25in">
-            <ui>
-              <textEdit/>
-            </ui>
-            <value>
-              <text>placeholder</text>
-            </value>
-          </field>
+          <field usehref="#fieldProto" name="lastName" x="0.75in" y="1in"/>
         </contentArea>
       </pageArea>
     </pageSet>
+    <draw id="labelProto" w="2in" h="0.2in">
+      <value>
+        <text>Label:</text>
+      </value>
+    </draw>
+    <field id="fieldProto" w="3in" h="0.25in">
+      <ui>
+        <textEdit/>
+      </ui>
+      <value>
+        <text>placeholder</text>
+      </value>
+    </field>
   </subform>
 </template>
 <datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">
@@ -79,5 +78,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-1852
+1827
 %%EOF
