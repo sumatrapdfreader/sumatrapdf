@@ -220,6 +220,10 @@ static int pdf_xfa_layout_is_tb(const char* layout) {
     return layout && strcmp(layout, "tb") == 0;
 }
 
+static int pdf_xfa_layout_is_lr_tb(const char* layout) {
+    return layout && (strcmp(layout, "lr-tb") == 0 || strcmp(layout, "rl-tb") == 0);
+}
+
 static int pdf_xfa_subform_has_layout(fz_context* ctx, pdf_xfa_object* subform, int (*match)(const char*)) {
     char* layout;
 
@@ -295,6 +299,39 @@ static float pdf_xfa_tb_stack_advance(fz_context* ctx, pdf_xfa_object* child) {
 
         for (row = child->first_child; row; row = row->next_sibling) h += pdf_xfa_tb_stack_advance(ctx, row);
         return h + y;
+    }
+
+    return 0;
+}
+
+static float pdf_xfa_subform_layout_width(fz_context* ctx, pdf_xfa_object* subform) {
+    if (!subform) return 0;
+    return pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, subform, "w"), 0);
+}
+
+static float pdf_xfa_lr_tb_child_width(fz_context* ctx, pdf_xfa_object* child, pdf_xfa_column_ctx* col) {
+    float w;
+
+    if (!pdf_xfa_tb_should_stack_child(ctx, child)) return 0;
+
+    w = pdf_xfa_node_layout_width(ctx, child, col);
+    return w > 0 ? w : 0;
+}
+
+static float pdf_xfa_lr_tb_child_height(fz_context* ctx, pdf_xfa_object* child) {
+    float y;
+
+    if (!child || !child->name) return 0;
+
+    y = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, child, "y"), 0);
+
+    if (strcmp(child->name, "field") == 0 || strcmp(child->name, "draw") == 0)
+        return pdf_xfa_node_content_height(ctx, child) + y;
+
+    if (strcmp(child->name, "subform") == 0) {
+        if (pdf_xfa_subform_has_layout(ctx, child, pdf_xfa_layout_is_row))
+            return pdf_xfa_row_content_height(ctx, child) + y;
+        return pdf_xfa_tb_stack_advance(ctx, child) + y;
     }
 
     return 0;
@@ -1302,6 +1339,43 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
                                     active_col_ctx);
                 tb_y += pdf_xfa_tb_stack_advance(ctx, child);
             }
+        }
+    } else if (pdf_xfa_subform_has_layout(ctx, node, pdf_xfa_layout_is_lr_tb)) {
+        float lr_x = 0;
+        float lr_y = 0;
+        float line_max_h = 0;
+        float avail_w = pdf_xfa_subform_layout_width(ctx, node);
+
+        for (child = node->first_child; child; child = child->next_sibling) {
+            float child_w;
+            float child_h;
+
+            if (!pdf_xfa_tb_should_stack_child(ctx, child)) {
+                pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &child_pos, rctx, under_pageset,
+                                    active_col_ctx);
+                continue;
+            }
+
+            child_w = pdf_xfa_lr_tb_child_width(ctx, child, active_col_ctx);
+            child_h = pdf_xfa_lr_tb_child_height(ctx, child);
+
+            if (avail_w > 0 && child_w > 0 && lr_x > 0 && lr_x + child_w > avail_w) {
+                lr_y += line_max_h;
+                lr_x = 0;
+                line_max_h = 0;
+            }
+
+            {
+                pdf_xfa_render_pos stack_pos = child_pos;
+
+                stack_pos.ox += lr_x;
+                stack_pos.oy += lr_y;
+                pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &stack_pos, rctx, under_pageset,
+                                    active_col_ctx);
+            }
+
+            if (child_w > 0) lr_x += child_w;
+            if (child_h > line_max_h) line_max_h = child_h;
         }
     } else {
         for (child = node->first_child; child; child = child->next_sibling)

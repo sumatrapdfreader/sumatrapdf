@@ -86,6 +86,65 @@ static float pdf_xfa_flow_node_width(fz_context* ctx, pdf_xfa_object* node) {
     return pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, node, "w"), 0);
 }
 
+static int pdf_xfa_layout_is_lr_tb(const char* layout) {
+    return layout && (strcmp(layout, "lr-tb") == 0 || strcmp(layout, "rl-tb") == 0);
+}
+
+static void pdf_xfa_layout_flowed_lr_tb(fz_context* ctx, pdf_xfa* xfa, pdf_xfa_object* subform) {
+    pdf_xfa_object* child;
+    char* layout;
+    int page_idx;
+    float flow_x;
+    float flow_y;
+    float line_max_h;
+    pdf_xfa_content_metrics area;
+
+    layout = pdf_xfa_object_get_attr(ctx, subform, "layout");
+    if (!pdf_xfa_layout_is_lr_tb(layout)) return;
+    if (!xfa->page_areas || xfa->page_count <= 0) return;
+
+    page_idx = 0;
+    flow_x = 0;
+    flow_y = 0;
+    line_max_h = 0;
+    area = pdf_xfa_get_content_metrics(ctx, pdf_xfa_find_content_area(xfa->page_areas[0]), xfa->page_bboxes[0].x1,
+                                       xfa->page_bboxes[0].y1);
+
+    for (child = subform->first_child; child; child = child->next_sibling) {
+        float xf, yf, hf, wf;
+
+        if (!pdf_xfa_is_flow_body_child(ctx, child)) continue;
+
+        hf = pdf_xfa_flow_node_height(ctx, child);
+        wf = pdf_xfa_flow_node_width(ctx, child);
+        if (hf <= 0 || wf <= 0) continue;
+
+        xf = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, child, "x"), 0);
+        yf = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, child, "y"), 0);
+
+        if (area.w > 0 && flow_x > 0 && flow_x + wf > area.w) {
+            flow_y += line_max_h;
+            flow_x = 0;
+            line_max_h = 0;
+        }
+
+        if (flow_y > 0 && flow_y + hf > area.h && page_idx + 1 < xfa->page_count) {
+            page_idx++;
+            flow_x = 0;
+            flow_y = 0;
+            line_max_h = 0;
+            area = pdf_xfa_get_content_metrics(ctx, pdf_xfa_find_content_area(xfa->page_areas[page_idx]),
+                                               xfa->page_bboxes[page_idx].x1, xfa->page_bboxes[page_idx].y1);
+        }
+
+        child->flow_page = page_idx;
+        child->flow_x = flow_x + xf;
+        child->flow_y = flow_y + yf;
+        flow_x += wf;
+        if (hf + yf > line_max_h) line_max_h = hf + yf;
+    }
+}
+
 static void pdf_xfa_layout_flowed_tb(fz_context* ctx, pdf_xfa* xfa, pdf_xfa_object* subform) {
     pdf_xfa_object* child;
     char* layout;
@@ -133,7 +192,14 @@ static void pdf_xfa_layout_flow_subforms(fz_context* ctx, pdf_xfa* xfa, pdf_xfa_
 
     if (!node) return;
 
-    if (node->name && strcmp(node->name, "subform") == 0) pdf_xfa_layout_flowed_tb(ctx, xfa, node);
+    if (node->name && strcmp(node->name, "subform") == 0) {
+        char* layout = pdf_xfa_object_get_attr(ctx, node, "layout");
+
+        if (pdf_xfa_layout_is_lr_tb(layout))
+            pdf_xfa_layout_flowed_lr_tb(ctx, xfa, node);
+        else
+            pdf_xfa_layout_flowed_tb(ctx, xfa, node);
+    }
 
     for (child = node->first_child; child; child = child->next_sibling) pdf_xfa_layout_flow_subforms(ctx, xfa, child);
 }

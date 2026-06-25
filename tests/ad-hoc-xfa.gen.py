@@ -78,6 +78,23 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
               <text>Pack my box with five dozen liquor jugs today</text>
             </value>
           </draw>
+          <subform name="lrSection" layout="lr-tb" x="3.25in" y="3.85in" w="3in" h="0.5in">
+            <draw w="1.2in" h="0.2in">
+              <value>
+                <text>Lr A</text>
+              </value>
+            </draw>
+            <draw w="1.2in" h="0.2in">
+              <value>
+                <text>Lr B</text>
+              </value>
+            </draw>
+            <draw w="1.2in" h="0.2in">
+              <value>
+                <text>Lr C</text>
+              </value>
+            </draw>
+          </subform>
           <subform name="stackedSection" layout="tb" x="0.75in" y="3.85in">
             <draw w="2in" h="0.2in">
               <value>
