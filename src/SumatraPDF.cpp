@@ -1100,6 +1100,26 @@ void SetToolbarMode(int mode) {
     gGlobalPrefs->showToolbar = (mode != kToolbarHide);
 }
 
+SeqStrings gToolbarPositionNames = "top\0bottom\0";
+
+int ToolbarPositionFromPrefs() {
+    int idx = SeqStrIndexIS(gToolbarPositionNames, gGlobalPrefs->toolbarPosition);
+    if (idx < 0) {
+        idx = kToolbarTop;
+    }
+    return idx;
+}
+
+bool ToolbarAtBottom() {
+    return ToolbarPositionFromPrefs() == kToolbarBottom;
+}
+
+void ToggleToolbarPosition() {
+    int pos = ToolbarPositionFromPrefs() == kToolbarBottom ? kToolbarTop : kToolbarBottom;
+    const char* name = SeqStrByIndex(gToolbarPositionNames, pos);
+    str::ReplaceWithCopy(&gGlobalPrefs->toolbarPosition, name);
+}
+
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -4608,13 +4628,19 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         rc.dy -= menuBarDy;
     }
     if (win->isToolbarVisible) {
-        if (updateToolbars) {
-            Rect rcRebar = WindowRect(win->hwndReBar);
-            dh.SetWindowPos(win->hwndReBar, nullptr, rc.x, rc.y, rc.dx, rcRebar.dy, SWP_NOZORDER);
-        }
         Rect rcRebar = WindowRect(win->hwndReBar);
-        rc.y += rcRebar.dy;
-        rc.dy -= rcRebar.dy;
+        int rebarDy = rcRebar.dy;
+        bool atBottom = ToolbarAtBottom();
+        int rebarY = atBottom ? (rc.y + rc.dy - rebarDy) : rc.y;
+        if (updateToolbars) {
+            dh.SetWindowPos(win->hwndReBar, nullptr, rc.x, rebarY, rc.dx, rebarDy, SWP_NOZORDER);
+        }
+        // reserve the toolbar's space; from the bottom of the content area when
+        // placed at the bottom, otherwise from the top
+        rc.dy -= rebarDy;
+        if (!atBottom) {
+            rc.y += rebarDy;
+        }
     }
     // in overlay mode the toolbar floats over the canvas and is positioned
     // separately (see PositionOverlayToolbar below); don't touch its visibility
@@ -7335,6 +7361,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 }
             } else {
                 OnMenuViewShowHideToolbar(win);
+            }
+            break;
+
+        case CmdToggleToolbarPosition:
+            ToggleToolbarPosition();
+            for (MainWindow* w : gWindows) {
+                RelayoutWindow(w);
             }
             break;
 

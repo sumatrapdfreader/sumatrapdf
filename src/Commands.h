@@ -260,7 +260,8 @@ enum {
     CmdGoToPrevFavorite = 449,
     CmdCreateAnnotImageFromClipboard = 450,
     CmdSetInverseSearch = 451,
-    CmdNone = 452,
+    CmdToggleToolbarPosition = 452,
+    CmdNone = 453,
 
     /* range for file history */
     CmdFileHistoryFirst,

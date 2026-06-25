@@ -517,6 +517,21 @@ static Rect CanvasRectInFrame(MainWindow* win) {
     return Rect(tl.x, tl.y, rc.right - rc.left, rc.bottom - rc.top);
 }
 
+// when the overlay toolbar sits at the bottom, lift it above the horizontal
+// scrollbar so it doesn't cover it. The height is reserved even when the
+// scrollbar isn't currently visible, so the toolbar's position is stable.
+static int OverlayToolbarBottomScrollbarOffset(MainWindow* win) {
+    if (ScrollbarsAreHidden()) {
+        return 0;
+    }
+    if (ScrollbarsUseOverlay()) {
+        // smart/overlay: the thick overlay scrollbar height (see OverlayScrollbarCreate)
+        return DpiScale(win->hwndFrame, 16);
+    }
+    // windows native horizontal scrollbar
+    return GetSystemMetrics(SM_CYHSCROLL);
+}
+
 // rectangle (frame-client coords) the overlay toolbar occupies when shown
 static Rect OverlayToolbarRect(MainWindow* win) {
     Rect canvas = CanvasRectInFrame(win);
@@ -527,6 +542,9 @@ static Rect OverlayToolbarRect(MainWindow* win) {
     int h = WindowRect(win->hwndReBar).dy;
     int x = canvas.x + (canvas.dx - natW) / 2;
     int y = canvas.y;
+    if (ToolbarAtBottom()) {
+        y = canvas.y + canvas.dy - h - OverlayToolbarBottomScrollbarOffset(win);
+    }
     return Rect(x, y, natW, h);
 }
 
@@ -554,12 +572,13 @@ static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
     ScreenToClient(win->hwndFrame, &ptFrame);
 
     Rect tb = OverlayToolbarRect(win);
-    // reveal band: spans the full canvas width at the top so the toolbar also
-    // appears when the mouse is to the left or right of it, and extends a bit
-    // below the toolbar so it shows before the cursor reaches it
+    // reveal band: spans the full canvas width so the toolbar also appears when
+    // the mouse is to the left or right of it, and extends a bit past the
+    // toolbar (toward the page) so it shows before the cursor reaches it
     Rect canvas = CanvasRectInFrame(win);
     int my = DpiScale(win->hwndFrame, 16);
-    Rect band(canvas.x, tb.y, canvas.dx, tb.dy + my);
+    int bandY = ToolbarAtBottom() ? (tb.y - my) : tb.y;
+    Rect band(canvas.x, bandY, canvas.dx, tb.dy + my);
     bool inBand = band.Contains(Point(ptFrame.x, ptFrame.y));
 
     // also keep shown while the cursor is over the toolbar window itself

@@ -264,6 +264,7 @@ static SeqStrings gCommandNames =
     "CmdGoToPrevFavorite\0"
     "CmdCreateAnnotImageFromClipboard\0"
     "CmdSetInverseSearch\0"
+    "CmdToggleToolbarPosition\0"
     "CmdNone\0"
     "\0";
 
@@ -519,6 +520,7 @@ static i32 gCommandIds[] = {
     CmdGoToPrevFavorite,
     CmdCreateAnnotImageFromClipboard,
     CmdSetInverseSearch,
+    CmdToggleToolbarPosition,
     CmdNone,
 };
 
@@ -774,6 +776,7 @@ SeqStrings gCommandDescriptions =
     "Go to Previous Favorite\0"
     "Create Image Annotation From Clipboard\0"
     "Set Inverse Search Command Line\0"
+    "Toggle Toolbar Position (Top / Bottom)\0"
     "Do nothing\0"
     "\0";
 // clang-format on

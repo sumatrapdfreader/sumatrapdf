@@ -843,9 +843,18 @@ const globalPrefs: Field[] = [
       "Toolbar",
       Str,
       null,
-      "toolbar mode: show (pinned at the top), hide (no toolbar), overlay (toolbar floats over " +
-        "the page, sized to its natural width and centered, only shown when the mouse is near the top). " +
+      "toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over " +
+        "the page, sized to its natural width and centered, only shown when the mouse is near it). " +
         "if empty, derived from ShowToolbar",
+    ),
+    "3.7",
+  ),
+  setVersion(
+    mkField(
+      "ToolbarPosition",
+      Str,
+      "top",
+      "where the toolbar is placed: top or bottom (applies to both show and overlay modes)",
     ),
     "3.7",
   ),

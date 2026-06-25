@@ -331,6 +331,10 @@ bool LoadSettings() {
         gprefs->showToolbar = !str::EqI(gprefs->toolbar, "hide");
     }
 
+    if (SeqStrIndexIS(gToolbarPositionNames, gprefs->toolbarPosition) < 0) {
+        str::ReplaceWithCopy(&gprefs->toolbarPosition, "top");
+    }
+
     if (!gprefs->treeFontName) {
         gprefs->treeFontName = const_cast<char*>("automatic");
     }

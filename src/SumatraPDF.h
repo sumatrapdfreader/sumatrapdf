@@ -185,6 +185,14 @@ int ToolbarModeFromPrefs();
 bool ToolbarModeIsOverlay();
 bool ToolbarModeIsHidden();
 void SetToolbarMode(int mode);
+
+// toolbar position values: "top\0bottom\0"
+constexpr int kToolbarTop = 0;
+constexpr int kToolbarBottom = 1;
+extern SeqStrings gToolbarPositionNames;
+int ToolbarPositionFromPrefs();
+bool ToolbarAtBottom();
+void ToggleToolbarPosition();
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 void ToggleFullScreen(MainWindow* win, bool presentation = false);

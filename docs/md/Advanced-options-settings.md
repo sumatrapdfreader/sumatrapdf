@@ -123,11 +123,14 @@ CustomColors =
 ; if true, we show the toolbar at the top of the window
 ShowToolbar = true
 
-; toolbar mode: show (pinned at the top), hide (no toolbar), overlay (toolbar
-; floats over the page, sized to its natural width and centered, only shown when
-; the mouse is near the top). if empty, derived from ShowToolbar (introduced in
-; version 3.7)
+; toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over
+; the page, sized to its natural width and centered, only shown when the mouse
+; is near it). if empty, derived from ShowToolbar (introduced in version 3.7)
 Toolbar =
+
+; where the toolbar is placed: top or bottom (applies to both show and overlay
+; modes) (introduced in version 3.7)
+ToolbarPosition = top
 
 ; if true, the find UI is a floating, movable window with a results list instead
 ; of the compact toolbar overlay (introduced in version 3.7)
