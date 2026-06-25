@@ -39,6 +39,7 @@ typedef struct {
 
 typedef struct {
     int page_index;
+    int fields_only;
     pdf_xfa_object* target_page_area;
     fz_font* font_bold;
     fz_font* default_font;
@@ -228,6 +229,26 @@ static int pdf_xfa_layout_is_lr_tb(const char* layout) {
     return layout && (strcmp(layout, "lr-tb") == 0 || strcmp(layout, "rl-tb") == 0);
 }
 
+static int pdf_xfa_layout_is_position(fz_context* ctx, pdf_xfa_object* subform) {
+    char* layout;
+
+    if (!subform || !subform->name || strcmp(subform->name, "subform") != 0) return 0;
+    layout = pdf_xfa_object_get_attr(ctx, subform, "layout");
+    if (!layout || !layout[0]) return 1;
+    return strcmp(layout, "position") == 0;
+}
+
+static int pdf_xfa_presence_visible(fz_context* ctx, pdf_xfa_object* node) {
+    char* presence;
+
+    if (!node) return 0;
+    presence = pdf_xfa_object_get_attr(ctx, node, "presence");
+    if (!presence || !presence[0]) return 1;
+    if (strcmp(presence, "hidden") == 0 || strcmp(presence, "inactive") == 0) return 0;
+    if (strcmp(presence, "invisible") == 0) return 0;
+    return 1;
+}
+
 static int pdf_xfa_subform_has_layout(fz_context* ctx, pdf_xfa_object* subform, int (*match)(const char*)) {
     char* layout;
 
@@ -242,9 +263,12 @@ static float pdf_xfa_node_content_height(fz_context* ctx, pdf_xfa_object* node) 
 
     if (!node || !node->name) return 0;
     h_attr = pdf_xfa_object_get_attr(ctx, node, "h");
-    if (strcmp(node->name, "field") == 0) h = pdf_xfa_parse_measurement(h_attr, PDF_XFA_DEFAULT_FIELD_H);
-    else if (strcmp(node->name, "draw") == 0) h = pdf_xfa_parse_measurement(h_attr, PDF_XFA_DEFAULT_DRAW_H);
-    else return 0;
+    if (strcmp(node->name, "field") == 0)
+        h = pdf_xfa_parse_measurement(h_attr, PDF_XFA_DEFAULT_FIELD_H);
+    else if (strcmp(node->name, "draw") == 0)
+        h = pdf_xfa_parse_measurement(h_attr, PDF_XFA_DEFAULT_DRAW_H);
+    else
+        return 0;
     return h > 0 ? h : 0;
 }
 
@@ -267,8 +291,7 @@ static int pdf_xfa_tb_should_stack_child(fz_context* ctx, pdf_xfa_object* child)
     if (strcmp(child->name, "pageSet") == 0) return 0;
     if (child->flow_page >= 0) return 0;
     if (strcmp(child->name, "subform") == 0 && pdf_xfa_page_subform_index(ctx, child) >= 0) return 0;
-    return strcmp(child->name, "field") == 0 || strcmp(child->name, "draw") == 0 ||
-           strcmp(child->name, "subform") == 0;
+    return strcmp(child->name, "field") == 0 || strcmp(child->name, "draw") == 0 || strcmp(child->name, "subform") == 0;
 }
 
 static float pdf_xfa_tb_stack_advance(fz_context* ctx, pdf_xfa_object* child) {
@@ -670,8 +693,7 @@ static float pdf_xfa_measure_character(pdf_xfa_font_info* info, int c) {
     return fz_advance_glyph(info->ctx, font, gid, 0) * info->fontsize;
 }
 
-static float pdf_xfa_measure_text_substring(fz_context* ctx, fz_font* font, float fontsize, const char* text,
-                                            int len) {
+static float pdf_xfa_measure_text_substring(fz_context* ctx, fz_font* font, float fontsize, const char* text, int len) {
     pdf_xfa_font_info info;
     const char* end;
     float x = 0;
@@ -885,8 +907,7 @@ static float pdf_xfa_line_start_y(fz_context* ctx, fz_font* font, fz_rect rect, 
     pdf_xfa_font_vertical_metrics(ctx, font, fontsize, &asc_pt, &desc_pt);
 
     if (style && style->v_align[0]) {
-        if (strcmp(style->v_align, "bottom") == 0)
-            return rect.y0 - desc_pt + (line_count - 1) * line_height;
+        if (strcmp(style->v_align, "bottom") == 0) return rect.y0 - desc_pt + (line_count - 1) * line_height;
         if (strcmp(style->v_align, "middle") == 0) {
             block_h = (line_count - 1) * line_height + asc_pt - desc_pt;
             return (rect.y0 + rect.y1) * 0.5f + block_h * 0.5f - asc_pt;
@@ -901,8 +922,7 @@ static float pdf_xfa_line_start_x(fz_rect rect, float line_width, int line_index
     if (line_index == 0 && style && style->text_indent > 0) x0 += style->text_indent;
 
     if (style && style->h_align[0]) {
-        if (strcmp(style->h_align, "center") == 0)
-            return x0 + (rect.x1 - x0 - line_width) * 0.5f;
+        if (strcmp(style->h_align, "center") == 0) return x0 + (rect.x1 - x0 - line_width) * 0.5f;
         if (strcmp(style->h_align, "right") == 0) return rect.x1 - line_width;
     }
     return x0;
@@ -1085,8 +1105,7 @@ static void pdf_xfa_render_circle(fz_context* ctx, fz_device* dev, fz_matrix ctm
     fz_try(ctx) {
         path = fz_new_path(ctx);
         pdf_xfa_path_circle(ctx, path, cx, cy, r);
-        if (fill)
-            fz_fill_path(ctx, dev, path, 0, ctm, fz_device_rgb(ctx), fill_rgb, 1.0f, fz_default_color_params);
+        if (fill) fz_fill_path(ctx, dev, path, 0, ctm, fz_device_rgb(ctx), fill_rgb, 1.0f, fz_default_color_params);
         if (stroke_rgb && line_width > 0) {
             fz_stroke_state* stroke = fz_new_stroke_state(ctx);
             stroke->linewidth = line_width;
@@ -1286,6 +1305,8 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
 
     if (!node) return;
 
+    if (!pdf_xfa_presence_visible(ctx, node)) return;
+
     if (node->name && strcmp(node->name, "subform") == 0) {
         char* layout = pdf_xfa_object_get_attr(ctx, node, "layout");
 
@@ -1369,7 +1390,7 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
 
         if (node->name && strcmp(node->name, "field") == 0)
             pdf_xfa_render_field(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy, layout_w, rctx);
-        else if (node->name && strcmp(node->name, "draw") == 0)
+        else if (!rctx->fields_only && node->name && strcmp(node->name, "draw") == 0)
             pdf_xfa_render_draw(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy, layout_w, rctx);
 
         if (active_col_ctx && active_col_ctx->in_row && pdf_xfa_parent_is_row(ctx, node))
@@ -1414,6 +1435,10 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
                 tb_y += pdf_xfa_tb_stack_advance(ctx, child);
             }
         }
+    } else if (pdf_xfa_layout_is_position(ctx, node)) {
+        for (child = node->first_child; child; child = child->next_sibling)
+            pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &child_pos, rctx, under_pageset,
+                                active_col_ctx);
     } else if (pdf_xfa_subform_has_layout(ctx, node, pdf_xfa_layout_is_lr_tb)) {
         float lr_x = 0;
         float lr_y = 0;
@@ -1467,7 +1492,9 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
     float page_h;
     float white[3] = {1.0f, 1.0f, 1.0f};
     pdf_xfa_render_pos pos = {0, 0};
-    pdf_xfa_render_ctx rctx = {0, NULL, NULL};
+    pdf_xfa_render_ctx rctx;
+
+    memset(&rctx, 0, sizeof(rctx));
 
     if (!xfa || !xfa->valid || !xfa->form) return NULL;
     if (page_index < 0 || page_index >= pdf_xfa_factory_layout(ctx, xfa)) return NULL;
@@ -1480,6 +1507,7 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
     xfa->render_lines = 0;
 
     rctx.page_index = page_index;
+    rctx.fields_only = (xfa->render_flags & PDF_XFA_RENDER_FIELDS_ONLY) != 0;
     if (xfa->page_areas && page_index < xfa->page_count) rctx.target_page_area = xfa->page_areas[page_index];
 
     fz_var(list);
@@ -1496,7 +1524,8 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
         list = fz_new_display_list(ctx, page_bbox);
         dev = fz_new_list_device(ctx, list);
 
-        pdf_xfa_render_fill_rect(ctx, dev, ctm, page_bbox, white);
+        if (!(xfa->render_flags & PDF_XFA_RENDER_NO_BACKGROUND))
+            pdf_xfa_render_fill_rect(ctx, dev, ctm, page_bbox, white);
         pdf_xfa_render_tree(ctx, dev, ctm, xfa, xfa->form, page_h, font, &pos, &rctx, 0, NULL);
 
         fz_close_device(ctx, dev);

@@ -126,6 +126,8 @@ class EngineMupdf : public EngineBase {
     pdf_document* pdfdoc = nullptr;
     // pure/dynamic XFA forms: page count and rendering come from pdf_xfa
     bool useXfaPages = false;
+    // hybrid AcroForm+XFA: composite PDF page background with XFA field overlay
+    bool hybridXfa = false;
     Vec<FzPageInfo*> pages;
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;

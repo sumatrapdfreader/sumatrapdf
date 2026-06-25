@@ -131,6 +131,7 @@ struct pdf_xfa {
     int fields_outside_pageset;
     int fields_with_pagearea;
     int fields_with_pagearea_template;
+    int render_flags;
 };
 
 struct pdf_xfa_builder {

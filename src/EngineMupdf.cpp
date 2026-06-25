@@ -2774,6 +2774,7 @@ bool EngineMupdf::FinishLoading() {
 
     pageCount = 0;
     useXfaPages = false;
+    hybridXfa = false;
     fz_var(pageCount);
     fz_try(ctx) {
         // this call might throw the first time
@@ -2791,6 +2792,7 @@ bool EngineMupdf::FinishLoading() {
             if (xfaPageCount > 0) {
                 pageCount = xfaPageCount;
                 useXfaPages = true;
+                hybridXfa = !pdf_document_is_pure_xfa(ctx, pdfdoc);
             }
         }
     }
@@ -3356,7 +3358,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     // page-running operations on this specific page run under per-page lock.
     // pagesLock (held above) serializes concurrent fz_load_page on _doc.
     ScopedCritSec ctxScope(&renderLock);
-    if (!pageInfo->page && !useXfaPages) {
+    if (!pageInfo->page && (!useXfaPages || hybridXfa)) {
         fz_try(ctx) {
             pageInfo->page = fz_load_page(ctx, _doc, pageIdx);
         }
@@ -3451,17 +3453,63 @@ RectF EngineMupdf::PageMediabox(int pageNo) {
     return pi->mediabox;
 }
 
+// Hybrid AcroForm+XFA: paint the static PDF page, then XFA fields on top (no XFA
+// draws/background — those duplicate or misalign vs the PDF layer).
+static fz_display_list* BuildHybridXfaPageDisplayList(fz_context* ctx, fz_page* page, pdf_xfa* xfa, int page_index,
+                                                      fz_rect bounds) {
+    fz_display_list* list = nullptr;
+    fz_device* dev = nullptr;
+    fz_display_list* xfa_list = nullptr;
+    const int xfa_flags = PDF_XFA_RENDER_FIELDS_ONLY | PDF_XFA_RENDER_NO_BACKGROUND;
+
+    fz_var(list);
+    fz_var(dev);
+    fz_var(xfa_list);
+    fz_try(ctx) {
+        list = fz_new_display_list(ctx, bounds);
+        dev = fz_new_list_device(ctx, list);
+        fz_run_page_contents(ctx, page, dev, fz_identity, nullptr);
+        fz_close_device(ctx, dev);
+        fz_drop_device(ctx, dev);
+        dev = nullptr;
+
+        pdf_xfa_set_render_flags(ctx, xfa, xfa_flags);
+        xfa_list = pdf_xfa_run_page(ctx, xfa, page_index, fz_identity);
+        pdf_xfa_set_render_flags(ctx, xfa, 0);
+        if (xfa_list) {
+            dev = fz_new_list_device(ctx, list);
+            fz_run_display_list(ctx, xfa_list, dev, fz_identity, bounds, nullptr);
+            fz_close_device(ctx, dev);
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+        fz_drop_display_list(ctx, xfa_list);
+        pdf_xfa_set_render_flags(ctx, xfa, 0);
+    }
+    fz_catch(ctx) {
+        fz_drop_display_list(ctx, list);
+        fz_rethrow(ctx);
+    }
+    return list;
+}
+
 // returns a kept reference to the cached "View" display list for the page,
 // building+caching it on first call. Caller must fz_drop_display_list when done.
 // must be called with pi->renderLock held (this both protects pi->displayList
 // and serializes the page-running done by fz_new_display_list_from_page).
 static fz_display_list* GetOrBuildPageDisplayList(FzPageInfo* pi, fz_context* ctx, pdf_document* pdfdoc,
-                                                  bool useXfaPages) {
+                                                  bool useXfaPages, bool hybridXfa) {
     if (!pi->displayList) {
         fz_display_list* list = nullptr;
         fz_try(ctx) {
             if (useXfaPages && pdfdoc && pdfdoc->xfa_ctx) {
-                list = pdf_xfa_run_page(ctx, pdfdoc->xfa_ctx, pi->pageNo - 1, fz_identity);
+                if (hybridXfa && pi->page) {
+                    fz_rect bounds = pdf_xfa_page_bbox(ctx, pdfdoc->xfa_ctx, pi->pageNo - 1);
+                    list = BuildHybridXfaPageDisplayList(ctx, pi->page, pdfdoc->xfa_ctx, pi->pageNo - 1, bounds);
+                } else {
+                    list = pdf_xfa_run_page(ctx, pdfdoc->xfa_ctx, pi->pageNo - 1, fz_identity);
+                }
             } else if (pi->page) {
                 list = fz_new_display_list_from_page(ctx, pi->page);
             }
@@ -3501,7 +3549,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
         } else {
             pagerect = fz_bound_page(ctx, pageInfo->page);
         }
-        keptList = GetOrBuildPageDisplayList(pageInfo, ctx, pdfdoc, useXfaPages);
+        keptList = GetOrBuildPageDisplayList(pageInfo, ctx, pdfdoc, useXfaPages, hybridXfa);
     }
     if (!keptList) {
         return mediabox;
@@ -3613,7 +3661,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         ibounds = fz_round_rect(fz_transform_rect(pRect, ctm));
 
         if (useCache) {
-            keptList = GetOrBuildPageDisplayList(pageInfo, ctx, pdfdoc, useXfaPages);
+            keptList = GetOrBuildPageDisplayList(pageInfo, ctx, pdfdoc, useXfaPages, hybridXfa);
         }
     }
 

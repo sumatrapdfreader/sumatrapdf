@@ -118,6 +118,16 @@ const char* pdf_xfa_page_area_name(fz_context* ctx, pdf_xfa* xfa, int page_index
 void pdf_xfa_font_stats(fz_context* ctx, pdf_xfa* xfa, int* families_out, int* held_out, int* missing_out);
 
 /*
+        Render flags for pdf_xfa_run_page (reset to 0 after hybrid overlay use).
+*/
+enum {
+    PDF_XFA_RENDER_FIELDS_ONLY = 1,
+    PDF_XFA_RENDER_NO_BACKGROUND = 2,
+};
+
+void pdf_xfa_set_render_flags(fz_context* ctx, pdf_xfa* xfa, int flags);
+
+/*
         Render a laid-out XFA page into a display list (replaces pdf.js htmlForXfa
         + XfaLayer for MuPDF consumers).
 */

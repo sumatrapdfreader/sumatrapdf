@@ -34,8 +34,9 @@ const PAGES: PageBaseline[] = [
 ];
 
 const MIN_METRICS: Record<number, Pick<PngMetrics, "dark" | "distinct">> = {
-  1: { dark: 9000, distinct: 15 },
-  2: { dark: 9000, distinct: 15 },
+  // Hybrid f1040: PDF background + XFA field overlay (much richer than XFA-only).
+  1: { dark: 30000, distinct: 40 },
+  2: { dark: 30000, distinct: 40 },
 };
 
 const RENDER_ATTEMPTS = 6;

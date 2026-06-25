@@ -161,6 +161,11 @@ fz_rect pdf_xfa_page_bbox(fz_context* ctx, pdf_xfa* xfa, int page_index) {
     return xfa->page_bboxes[page_index];
 }
 
+void pdf_xfa_set_render_flags(fz_context* ctx, pdf_xfa* xfa, int flags) {
+    (void)ctx;
+    if (xfa) xfa->render_flags = flags;
+}
+
 fz_display_list* pdf_xfa_run_page(fz_context* ctx, pdf_xfa* xfa, int page_index, fz_matrix ctm) {
     if (!xfa || !xfa->valid) return NULL;
     return pdf_xfa_factory_render_page(ctx, xfa, page_index, ctm);
