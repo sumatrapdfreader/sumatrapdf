@@ -419,6 +419,55 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
     fz_catch(ctx) fz_rethrow(ctx);
 }
 
+static pdf_xfa_object* pdf_xfa_find_check_button(fz_context* ctx, pdf_xfa_object* field) {
+    pdf_xfa_object* ui;
+    pdf_xfa_object* child;
+
+    ui = pdf_xfa_object_find_child(field, "ui");
+    if (!ui) return NULL;
+    for (child = ui->first_child; child; child = child->next_sibling) {
+        if (child->name && strcmp(child->name, "checkButton") == 0) return child;
+    }
+    return NULL;
+}
+
+static int pdf_xfa_value_is_checked(const char* text) {
+    if (!text || !text[0]) return 0;
+    if (strcmp(text, "1") == 0) return 1;
+    if (strcmp(text, "true") == 0 || strcmp(text, "on") == 0 || strcmp(text, "yes") == 0) return 1;
+    return 0;
+}
+
+static fz_rect pdf_xfa_checkbox_rect(fz_rect cell, float size) {
+    float w, h, box, cx, cy;
+
+    w = cell.x1 - cell.x0;
+    h = cell.y1 - cell.y0;
+    box = size;
+    if (box > w) box = w;
+    if (box > h) box = h;
+    cx = (cell.x0 + cell.x1) * 0.5f;
+    cy = (cell.y0 + cell.y1) * 0.5f;
+    return fz_make_rect(cx - box * 0.5f, cy - box * 0.5f, cx + box * 0.5f, cy + box * 0.5f);
+}
+
+static void pdf_xfa_render_check_mark(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_rect box, float rgb[3]) {
+    float s, x1, y1, x2, y2, x3, y3;
+
+    s = box.x1 - box.x0;
+    if (s <= 0) return;
+
+    x1 = box.x0 + s * 0.22f;
+    y1 = box.y0 + s * 0.45f;
+    x2 = box.x0 + s * 0.42f;
+    y2 = box.y0 + s * 0.28f;
+    x3 = box.x1 - s * 0.18f;
+    y3 = box.y1 - s * 0.22f;
+
+    pdf_xfa_render_stroke_line(ctx, dev, ctm, x1, y1, x2, y2, rgb, 1.2f);
+    pdf_xfa_render_stroke_line(ctx, dev, ctm, x2, y2, x3, y3, rgb, 1.2f);
+}
+
 static int pdf_xfa_render_border(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* node,
                                  fz_rect rect) {
     pdf_xfa_object* border;
@@ -440,16 +489,33 @@ static int pdf_xfa_render_border(fz_context* ctx, fz_device* dev, fz_matrix ctm,
 static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* field,
                                  float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy,
                                  float layout_w) {
-    fz_rect rect;
+    fz_rect rect, box;
     float white[3] = {1.0f, 1.0f, 1.0f};
     float gray[3] = {0.75f, 0.75f, 0.75f};
     float black[3] = {0.0f, 0.0f, 0.0f};
     const char* text;
+    pdf_xfa_object* check_btn;
+    float check_size;
 
     rect = pdf_xfa_object_rect(ctx, field, page_h, pos, layout_w, PDF_XFA_DEFAULT_FIELD_H, ignore_node_xy);
     if (fz_is_empty_rect(rect)) return;
 
     xfa->render_fields++;
+
+    check_btn = pdf_xfa_find_check_button(ctx, field);
+    if (check_btn) {
+        check_size = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, check_btn, "size"), 10.0f);
+        box = pdf_xfa_checkbox_rect(rect, check_size);
+        if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, check_btn, box)) {
+            if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, field, box)) {
+                pdf_xfa_render_fill_rect(ctx, dev, ctm, box, white);
+                pdf_xfa_render_stroke_rect(ctx, dev, ctm, box, black, 1.0f);
+            }
+        }
+        text = pdf_xfa_node_text(ctx, field);
+        if (pdf_xfa_value_is_checked(text)) pdf_xfa_render_check_mark(ctx, dev, ctm, box, black);
+        return;
+    }
 
     if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, field, rect)) {
         pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, white);
