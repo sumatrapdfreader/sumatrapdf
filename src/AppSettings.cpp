@@ -335,6 +335,10 @@ bool LoadSettings() {
         str::ReplaceWithCopy(&gprefs->toolbarPosition, "top");
     }
 
+    if (!str::EqI(gprefs->djvuEngine, "djvudec") && !str::EqI(gprefs->djvuEngine, "libdjvu")) {
+        str::ReplaceWithCopy(&gprefs->djvuEngine, "djvudec");
+    }
+
     if (!gprefs->treeFontName) {
         gprefs->treeFontName = const_cast<char*>("automatic");
     }

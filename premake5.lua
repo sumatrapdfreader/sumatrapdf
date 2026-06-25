@@ -347,6 +347,14 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4267", "4996" }
     files { "ext/CHMLib/*.c", "ext/CHMLib/*.h" }
 
+  project "djvudec"
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4018", "4101", "4244", "4267", "4996" }
+    files { "ext/djvudec/djvu.c", "ext/djvudec/djvu.h" }
+
   project "libarchive"
     kind "StaticLib"
     language "C"
@@ -807,7 +815,7 @@ workspace "SumatraPDF"
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4702" }
     links_zlib()
-    links { "mupdf", "libdjvu", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
+    links { "mupdf", "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -844,6 +852,7 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     mixed_dbg_rel_conf()
     disablewarnings { "4838" }
+    defines { "SUMATRA_TEST_UTIL=1" }
     includedirs { "src" }
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet", "shcore", "wintrust", "crypt32" }
@@ -920,13 +929,13 @@ workspace "SumatraPDF"
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
-      "ext/libdjvu", "ext/CHMLib",
+      "ext/libdjvu", "ext/djvudec", "ext/CHMLib",
       "ext/libarchive",
     }
     pdf_preview_files()
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "utils", "unrar", "libmupdf", "libarchive", "chm" }
+    links { "utils", "unrar", "libmupdf", "libarchive", "chm", "djvudec" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -940,7 +949,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib", "ext/libarchive" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive" }
 
     includedirs { "ext/darkmodelib/include" }
     defines { "_DARKMODELIB_NO_INI_CONFIG" }
@@ -977,7 +986,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "libdjvu", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "utils", "unrar", "chm"
+      "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "utils", "unrar", "chm"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1010,7 +1019,7 @@ workspace "SumatraPDF"
     manifest("Off")
     defines { "LIBARCHIVE_STATIC" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib", "ext/libarchive" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/djvudec", "ext/CHMLib", "ext/libarchive" }
     includedirs { "ext/darkmodelib/include" }
 
     includedirs { "ext/darkmodelib/include" }

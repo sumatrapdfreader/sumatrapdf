@@ -37,6 +37,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - move `Scrollbars` advanced setting from `FixedPageUI` to top-level
 - toolbar has a new `overlay` mode: the toolbar floats over the page (sized to its natural width and centered) and is only revealed when the mouse moves near it. Set it with the new top-level `Toolbar = show | hide | overlay` advanced setting; `F8` (Toggle Toolbar) now cycles show → overlay → hide instead of just toggling show/hide
 - the toolbar can be placed at the top or bottom of the window via the new `ToolbarPosition = top | bottom` advanced setting (works in both show and overlay modes); toggle it with the `CmdToggleToolbarPosition` command (`Ctrl + k` command palette)
+- DjVu documents can be rendered with a new built-in plain-C decoder (`ext/djvudec`) instead of libdjvu. Choose it with the new `DjvuEngine = djvudec | libdjvu` advanced setting (defaults to `djvudec`); toggle and reload the current document with the `CmdToggleDjvuEngine` command (`Ctrl + k` command palette)
 - add `EBookUI.BackgroundColor` advanced setting to override background color for ebook documents (epub, mobi etc.)
 - add `ComicBookUI.BackgroundColor` advanced setting to override the default black background for comic book files
 - add `ImageUI.BackgroundColor` advanced setting to override the default black background for image files
@@ -143,6 +144,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdToggleScrollbarInSinglePage` : "Toggle Scrollbar In Single Page"
 - `CmdToggleSmoothScroll` : "Toggle Smooth Scroll"
 - `CmdToggleToolbarPosition` : "Toggle Toolbar Position (Top / Bottom)"
+- `CmdToggleDjvuEngine` : "Toggle DjVu Engine (djvudec / libdjvu)"
 - `CmdToggleTabsMru` : "Toggle Tabs MRU"
 - `CmdToggleTips` : "Toggle Tips"
 - `CmdToggleWindowsPreviewer` : "Toggle Windows Previewer"

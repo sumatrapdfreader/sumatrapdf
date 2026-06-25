@@ -265,6 +265,7 @@ static SeqStrings gCommandNames =
     "CmdCreateAnnotImageFromClipboard\0"
     "CmdSetInverseSearch\0"
     "CmdToggleToolbarPosition\0"
+    "CmdToggleDjvuEngine\0"
     "CmdNone\0"
     "\0";
 
@@ -521,6 +522,7 @@ static i32 gCommandIds[] = {
     CmdCreateAnnotImageFromClipboard,
     CmdSetInverseSearch,
     CmdToggleToolbarPosition,
+    CmdToggleDjvuEngine,
     CmdNone,
 };
 
@@ -777,6 +779,7 @@ SeqStrings gCommandDescriptions =
     "Create Image Annotation From Clipboard\0"
     "Set Inverse Search Command Line\0"
     "Toggle Toolbar Position (Top / Bottom)\0"
+    "Toggle DjVu Engine (djvudec / libdjvu)\0"
     "Do nothing\0"
     "\0";
 // clang-format on

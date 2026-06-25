@@ -108,10 +108,10 @@
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ChmFile.h">
+    <ClInclude Include="..\src\ChmDump.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ChmDump.h">
+    <ClInclude Include="..\src\ChmFile.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ChmModel.h">
@@ -482,10 +482,10 @@
     <ClCompile Include="..\src\CanvasAboutUI.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ChmFile.cpp">
+    <ClCompile Include="..\src\ChmDump.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ChmDump.cpp">
+    <ClCompile Include="..\src\ChmFile.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChmModel.cpp">
@@ -543,6 +543,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EngineDjVu.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EngineDjvuDec.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EngineDump.cpp">

@@ -7371,6 +7371,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdToggleDjvuEngine: {
+            bool useDjvuDec = !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
+            const char* next = useDjvuDec ? "libdjvu" : "djvudec";
+            str::ReplaceWithCopy(&gGlobalPrefs->djvuEngine, next);
+            logf("CmdToggleDjvuEngine: DjvuEngine = %s\n", next);
+            // reload the current document so the new engine takes effect
+            if (win->IsDocLoaded()) {
+                ReloadDocument(win, false);
+            }
+            break;
+        }
+
         case CmdChangeScrollbar:
             OnMenuChangeScrollbar(win->hwndFrame);
             break;

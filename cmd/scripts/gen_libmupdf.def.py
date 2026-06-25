@@ -83,6 +83,26 @@ EXPORTS
 	miniexp_to_str
 	minilisp_finish
 
+; djvudec exports (required for EngineDjvuDec, ext/djvudec)
+
+	djvu_ctx_new
+	djvu_ctx_free
+	djvu_doc_open
+	djvu_doc_close
+	djvu_doc_page_count
+	djvu_doc_page_info
+	djvu_page_render
+	djvu_image_destroy
+	djvu_doc_page_id
+	djvu_doc_page_title
+	djvu_doc_page_by_name
+	djvu_page_text_get_zones
+	djvu_text_zones_destroy
+	djvu_doc_outline
+	djvu_outline_destroy
+	djvu_page_get_links
+	djvu_page_links_destroy
+
 ; zlib exports (required for ZipUtil, PsEngine, PdfCreator, LzmaSimpleArchive)
 
 	crc32

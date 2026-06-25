@@ -84,6 +84,7 @@ CmdChangeScrollbar,,Change Scrollbar,"Opens dialog to choose scrollbar mode (win
 CmdChangeBackgroundColor,,Change Background Color,"Opens color picker to change document background color"
 CmdToggleToolbar,F8,Toggle Toolbar,
 CmdToggleToolbarPosition,,Toggle Toolbar Position (Top / Bottom),"ver 3.7+, moves the toolbar between the top and bottom of the window (works in both show and overlay modes)"
+CmdToggleDjvuEngine,,Toggle DjVu Engine (djvudec / libdjvu),"ver 3.7+, switches the engine used for DjVu documents between the built-in djvudec decoder and libdjvu, then reloads the current document"
 CmdToggleChmUI,,Toggle CHM UI,"Toggle dedicated CHM UI for CHM documents, reloading the current CHM document, ver 3.7+"
 CmdAIChatWithClaudeCode,,AI Chat with document using Claude Code,"Toggle Claude Code chat sidebar, ver 3.7+. See AI-Chat-with-document.md"
 CmdAIChatWithGrokBuild,,AI Chat with document using Grok Build,"Toggle Grok Build chat sidebar, ver 3.7+. See AI-Chat-with-document.md#grok-build"

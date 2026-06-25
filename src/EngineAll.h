@@ -13,6 +13,14 @@ bool IsEngineDjVuSupportedFileType(Kind kind);
 EngineBase* CreateEngineDjVuFromFile(const char* path);
 EngineBase* CreateEngineDjVuFromStream(IStream* stream);
 
+/* EngineDjvuDec.cpp: alternative DjVu engine built on ext/djvudec */
+EngineBase* CreateEngineDjvuDecFromFile(const char* path);
+EngineBase* CreateEngineDjvuDecFromStream(IStream* stream);
+
+/* EngineCreate.cpp: dispatch to libdjvu or djvudec per the DjvuEngine setting */
+EngineBase* CreateEngineDjVuFromFileDispatch(const char* path);
+EngineBase* CreateEngineDjVuFromStreamDispatch(IStream* stream);
+
 /* EngineEbook.cpp */
 EngineBase* CreateEngineEpubFromFile(const char* fileName);
 EngineBase* CreateEngineEpubFromStream(IStream* stream);
