@@ -450,10 +450,9 @@ void SetToolbarButtonEnableState(MainWindow* win, int cmdId, bool isEnabled) {
         UpdateToolbarButtonStateByIdx(win->hwndToolbar, idx, isEnabled, TBSTATE_ENABLED);
     }
 }
-bool ShouldShowToolbar(MainWindow* win) {
-    if (!gGlobalPrefs->showToolbar) {
-        return false;
-    }
+// whether the current window context (presentation, fullscreen, about page)
+// permits showing the toolbar at all, independent of the show/hide/overlay mode
+static bool ToolbarContextAllows(MainWindow* win) {
     if (win->presentation) {
         return false;
     }
@@ -467,13 +466,128 @@ bool ShouldShowToolbar(MainWindow* win) {
     return true;
 }
 
+bool ShouldShowToolbar(MainWindow* win) {
+    if (win->isFullScreen) {
+        // fullscreen has its own pinned toggle (fullscreen.showToolbar)
+        return ToolbarContextAllows(win);
+    }
+    if (ToolbarModeIsHidden() || ToolbarModeIsOverlay()) {
+        return false;
+    }
+    return ToolbarContextAllows(win);
+}
+
+bool ShouldOverlayToolbar(MainWindow* win) {
+    if (win->isFullScreen) {
+        return false;
+    }
+    if (!ToolbarModeIsOverlay()) {
+        return false;
+    }
+    return ToolbarContextAllows(win);
+}
+
+// natural width of the toolbar content (buttons + page box); the find bar
+// floats separately so the page-total label is the rightmost element
+static int ToolbarNaturalWidth(MainWindow* win) {
+    if (!win->hwndReBar || !win->hwndToolbar) {
+        return 0;
+    }
+    Rect rRebar = WindowRect(win->hwndReBar);
+    Rect rTb = WindowRect(win->hwndToolbar);
+    int contentRight = rTb.x; // screen x of the rightmost content edge
+    SIZE tbSz{};
+    SendMessageW(win->hwndToolbar, TB_GETMAXSIZE, 0, (LPARAM)&tbSz);
+    contentRight = std::max(contentRight, rTb.x + (int)tbSz.cx);
+    if (win->hwndPageTotal && IsWindowVisible(win->hwndPageTotal)) {
+        Rect rpt = WindowRect(win->hwndPageTotal);
+        contentRight = std::max(contentRight, rpt.x + rpt.dx);
+    }
+    int natW = (contentRight - rRebar.x) + DpiScale(win->hwndFrame, 12);
+    return natW;
+}
+
+// canvas rectangle in frame-client coordinates
+static Rect CanvasRectInFrame(MainWindow* win) {
+    RECT rc{};
+    GetWindowRect(win->hwndCanvas, &rc);
+    POINT tl{rc.left, rc.top};
+    ScreenToClient(win->hwndFrame, &tl);
+    return Rect(tl.x, tl.y, rc.right - rc.left, rc.bottom - rc.top);
+}
+
+// rectangle (frame-client coords) the overlay toolbar occupies when shown
+static Rect OverlayToolbarRect(MainWindow* win) {
+    Rect canvas = CanvasRectInFrame(win);
+    int natW = ToolbarNaturalWidth(win);
+    if (natW <= 0 || natW > canvas.dx) {
+        natW = canvas.dx;
+    }
+    int h = WindowRect(win->hwndReBar).dy;
+    int x = canvas.x + (canvas.dx - natW) / 2;
+    int y = canvas.y;
+    return Rect(x, y, natW, h);
+}
+
+void PositionOverlayToolbar(MainWindow* win) {
+    if (!win->isToolbarOverlay || !win->hwndReBar) {
+        return;
+    }
+    Rect r = OverlayToolbarRect(win);
+    UINT flags = SWP_NOACTIVATE;
+    flags |= win->toolbarOverlayShown ? SWP_SHOWWINDOW : SWP_HIDEWINDOW;
+    SetWindowPos(win->hwndReBar, HWND_TOP, r.x, r.y, r.dx, r.dy, flags);
+    if (!win->toolbarOverlayShown) {
+        // repaint the canvas area the toolbar was covering
+        RECT rc = ToRECT(r);
+        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+        InvalidateRect(win->hwndFrame, &rc, FALSE);
+    }
+}
+
+void UpdateOverlayToolbarForMouse(MainWindow* win) {
+    if (!win->isToolbarOverlay || !win->hwndReBar) {
+        return;
+    }
+    POINT pt{};
+    GetCursorPos(&pt);
+    POINT ptFrame = pt;
+    ScreenToClient(win->hwndFrame, &ptFrame);
+
+    Rect tb = OverlayToolbarRect(win);
+    // reveal band: spans the full canvas width at the top so the toolbar also
+    // appears when the mouse is to the left or right of it, and extends a bit
+    // below the toolbar so it shows before the cursor reaches it
+    Rect canvas = CanvasRectInFrame(win);
+    int my = DpiScale(win->hwndFrame, 16);
+    Rect band(canvas.x, tb.y, canvas.dx, tb.dy + my);
+    bool inBand = band.Contains(Point(ptFrame.x, ptFrame.y));
+
+    // also keep shown while the cursor is over the toolbar window itself
+    HWND hwndUnder = WindowFromPoint(pt);
+    bool overToolbar = hwndUnder && (hwndUnder == win->hwndReBar || hwndUnder == win->hwndToolbar ||
+                                     IsChild(win->hwndReBar, hwndUnder));
+
+    bool show = inBand || overToolbar;
+    if (show == win->toolbarOverlayShown) {
+        return;
+    }
+    win->toolbarOverlayShown = show;
+    PositionOverlayToolbar(win);
+}
+
 void ShowOrHideToolbar(MainWindow* win) {
     bool show = ShouldShowToolbar(win);
-    if (show == win->isToolbarVisible) {
+    bool overlay = ShouldOverlayToolbar(win);
+    if (show == win->isToolbarVisible && overlay == win->isToolbarOverlay) {
         return;
     }
     win->isToolbarVisible = show;
-    if (!show) {
+    win->isToolbarOverlay = overlay;
+    if (!overlay) {
+        win->toolbarOverlayShown = false;
+    }
+    if (!show && !overlay) {
         // Move the focus out of the toolbar
         if (HwndIsFocused(win->hwndFindEdit) || HwndIsFocused(win->hwndPageEdit)) {
             HwndSetFocus(win->hwndFrame);
@@ -563,6 +677,18 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             WPARAM cmd = IsZoomed(hwndFrame) ? SC_RESTORE : SC_MAXIMIZE;
             PostMessageW(hwndFrame, WM_SYSCOMMAND, cmd, 0);
             return 0;
+        }
+    }
+    // keep the overlay toolbar visible while the mouse is over it, and re-evaluate
+    // (likely hiding it) once the mouse leaves
+    if (WM_MOUSEMOVE == uMsg || WM_MOUSELEAVE == uMsg) {
+        auto win = FindMainWindowByHwnd(hWnd);
+        if (win && win->isToolbarOverlay) {
+            if (WM_MOUSEMOVE == uMsg) {
+                TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT), TME_LEAVE, hWnd, 0};
+                TrackMouseEvent(&tme);
+            }
+            UpdateOverlayToolbarForMouse(win);
         }
     }
     if (WM_NCDESTROY == uMsg) {

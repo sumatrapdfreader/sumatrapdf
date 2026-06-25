@@ -175,6 +175,16 @@ int ScrollbarModeFromPrefs();
 bool ScrollbarsAreHidden();
 bool ScrollbarsUseOverlay();
 OverlayScrollbar::Mode ScrollbarsOverlayMode();
+
+// toolbar mode values: "show\0hide\0overlay\0"
+constexpr int kToolbarShow = 0;
+constexpr int kToolbarHide = 1;
+constexpr int kToolbarOverlay = 2;
+extern SeqStrings gToolbarModeNames;
+int ToolbarModeFromPrefs();
+bool ToolbarModeIsOverlay();
+bool ToolbarModeIsHidden();
+void SetToolbarMode(int mode);
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 void ToggleFullScreen(MainWindow* win, bool presentation = false);

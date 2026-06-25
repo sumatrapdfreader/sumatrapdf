@@ -322,6 +322,15 @@ bool LoadSettings() {
         str::ReplaceWithCopy(&gprefs->scrollbars, "windows");
     }
 
+    // toolbar mode: if unset/invalid, derive from the legacy showToolbar bool
+    // so existing settings (ShowToolbar = false) keep working
+    if (SeqStrIndexIS(gToolbarModeNames, gprefs->toolbar) < 0) {
+        str::ReplaceWithCopy(&gprefs->toolbar, gprefs->showToolbar ? "show" : "hide");
+    } else {
+        // keep the legacy bool consistent with the mode
+        gprefs->showToolbar = !str::EqI(gprefs->toolbar, "hide");
+    }
+
     if (!gprefs->treeFontName) {
         gprefs->treeFontName = const_cast<char*>("automatic");
     }

@@ -1070,6 +1070,36 @@ OverlayScrollbar::Mode ScrollbarsOverlayMode() {
     return OverlayScrollbar::Mode::Smart;
 }
 
+SeqStrings gToolbarModeNames = "show\0hide\0overlay\0";
+
+int ToolbarModeFromPrefs() {
+    int idx = SeqStrIndexIS(gToolbarModeNames, gGlobalPrefs->toolbar);
+    if (idx < 0) {
+        // not set / invalid: derive from the legacy showToolbar bool
+        idx = gGlobalPrefs->showToolbar ? kToolbarShow : kToolbarHide;
+    }
+    return idx;
+}
+
+bool ToolbarModeIsOverlay() {
+    return ToolbarModeFromPrefs() == kToolbarOverlay;
+}
+
+bool ToolbarModeIsHidden() {
+    return ToolbarModeFromPrefs() == kToolbarHide;
+}
+
+void SetToolbarMode(int mode) {
+    const char* name = SeqStrByIndex(gToolbarModeNames, mode);
+    if (!name) {
+        name = "show";
+        mode = kToolbarShow;
+    }
+    str::ReplaceWithCopy(&gGlobalPrefs->toolbar, name);
+    // keep the legacy bool in sync so old versions and fullscreen logic stay sane
+    gGlobalPrefs->showToolbar = (mode != kToolbarHide);
+}
+
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -4584,7 +4614,10 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         rc.y += rcRebar.dy;
         rc.dy -= rcRebar.dy;
     }
-    if (updateToolbars) {
+    // in overlay mode the toolbar floats over the canvas and is positioned
+    // separately (see PositionOverlayToolbar below); don't touch its visibility
+    // here so a relayout doesn't flash it on/off
+    if (updateToolbars && !win->isToolbarOverlay) {
         ShowWindow(win->hwndReBar, win->isToolbarVisible ? SW_SHOW : SW_HIDE);
     }
 
@@ -4674,6 +4707,12 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     dh.MoveWindow(win->hwndCanvas, rc);
 
     dh.End();
+
+    if (win->isToolbarOverlay && updateToolbars) {
+        // float the toolbar over the canvas (centered, natural width); its
+        // visibility is driven by mouse proximity, not by relayout
+        PositionOverlayToolbar(win);
+    }
 
     if (suppressIntermediateRedraws) {
         // re-enable redraw and invalidate once
@@ -4834,12 +4873,28 @@ static void OnMenuChangeLanguage(HWND hwnd) {
     SetCurrentLanguageAndRefreshUI(newLangCode);
 }
 
+// cycle the toolbar mode show -> overlay -> hide -> show
+// (in fullscreen, toggle the separate pinned-toolbar setting instead)
 static void OnMenuViewShowHideToolbar(MainWindow* win) {
     if (win->isFullScreen) {
         gGlobalPrefs->fullscreen.showToolbar = !gGlobalPrefs->fullscreen.showToolbar;
     } else {
-        gGlobalPrefs->showToolbar = !gGlobalPrefs->showToolbar;
+        int mode = ToolbarModeFromPrefs();
+        int next = kToolbarShow;
+        if (mode == kToolbarShow) {
+            next = kToolbarOverlay;
+        } else if (mode == kToolbarOverlay) {
+            next = kToolbarHide;
+        }
+        SetToolbarMode(next);
     }
+    for (MainWindow* w : gWindows) {
+        ShowOrHideToolbar(w);
+    }
+}
+
+static void SetToolbarModeAndApply(int mode) {
+    SetToolbarMode(mode);
     for (MainWindow* w : gWindows) {
         ShowOrHideToolbar(w);
     }
@@ -5334,6 +5389,9 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     bool showToolbarInFS = !presentation && gGlobalPrefs->fullscreen.showToolbar && gGlobalPrefs->showToolbar;
     bool showMenubarInFS = !presentation && gGlobalPrefs->fullscreen.showMenubar;
     win->isToolbarVisible = showToolbarInFS;
+    // no floating overlay toolbar in fullscreen / presentation
+    win->isToolbarOverlay = false;
+    win->toolbarOverlayShown = false;
     win->tabsCtrl->SetIsVisible(false);
 
     // suppress redraws before any operations that trigger WM_SIZE
@@ -5417,8 +5475,12 @@ void ExitFullScreen(MainWindow* win) {
         win->tabsCtrl->SetIsVisible(true);
     }
     win->isToolbarVisible = ShouldShowToolbar(win);
+    win->isToolbarOverlay = ShouldOverlayToolbar(win);
+    win->toolbarOverlayShown = false;
     if (win->isToolbarVisible) {
         ShowWindow(win->hwndReBar, SW_SHOW);
+    } else if (!win->isToolbarOverlay) {
+        ShowWindow(win->hwndReBar, SW_HIDE);
     }
     // destroy any fullscreen menu rebar before restoring normal menu
     DestroyMenuBarRebar(win);
@@ -7253,7 +7315,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdToggleToolbar:
-            if (ShouldToggle(cmd, gGlobalPrefs->showToolbar)) {
+            if (!win->isFullScreen && GetCommandArg(cmd, kCmdArgState)) {
+                // explicit state: on -> show (pinned), off -> hide
+                bool on = GetCommandBoolArg(cmd, kCmdArgState, true);
+                SetToolbarModeAndApply(on ? kToolbarShow : kToolbarHide);
+            } else if (win->isFullScreen) {
+                if (ShouldToggle(cmd, gGlobalPrefs->fullscreen.showToolbar)) {
+                    OnMenuViewShowHideToolbar(win);
+                }
+            } else {
                 OnMenuViewShowHideToolbar(win);
             }
             break;

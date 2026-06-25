@@ -537,6 +537,11 @@ struct GlobalPrefs {
     char* customColors;
     // if true, we show the toolbar at the top of the window
     bool showToolbar;
+    // toolbar mode: show (pinned at the top), hide (no toolbar), overlay
+    // (toolbar floats over the page, sized to its natural width and
+    // centered, only shown when the mouse is near the top). if empty,
+    // derived from ShowToolbar
+    char* toolbar;
     // if true, the find UI is a floating, movable window with a results
     // list instead of the compact toolbar overlay
     bool searchUIFloating;
@@ -1041,6 +1046,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showTips), SettingType::Bool, true},
     {offsetof(GlobalPrefs, customColors), SettingType::String, 0},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, toolbar), SettingType::String, 0},
     {offsetof(GlobalPrefs, searchUIFloating), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
@@ -1124,19 +1130,19 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 108, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 109, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0Ena"
     "bleTeXEnhancements\0EscToExit\0FullPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab"
     "\0HomePageSortByFrequentlyRead\0HomePageShowList\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDo"
-    "cument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Sear"
-    "chUIFloating\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0Smoo"
-    "thScroll\0CitationHoverDelay\0ReadAloudVoiceId\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme"
-    "\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0DisableAutoLinks\0UseSysColors\0Us"
-    "eTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0ClaudeCo"
-    "de\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annotations\0\0ExternalViewers\0\0ForwardSe"
-    "arch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0DefaultPasswor"
-    "ds\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0Tim"
-    "eOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
+    "cument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Tool"
+    "bar\0SearchUIFloating\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSingleP"
+    "age\0SmoothScroll\0CitationHoverDelay\0ReadAloudVoiceId\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWid"
+    "th\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0DisableAutoLinks\0UseSysC"
+    "olors\0UseTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0"
+    "\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annotations\0\0ExternalViewers\0"
+    "\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0Def"
+    "aultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0Reop"
+    "enOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

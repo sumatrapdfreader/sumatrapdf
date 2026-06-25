@@ -4,6 +4,20 @@
 
 You can add buttons to a toolbar using `Shortcuts` [advanced setting](Advanced-options-settings.md). You can also add toolbar buttons for custom external viewers using `ExternalViewers`.
 
+## Show, hide or overlay the toolbar
+
+**Ver 3.7+:** the `Toolbar` [advanced setting](Advanced-options-settings.md) controls how the toolbar is shown:
+
+- `show` : toolbar is pinned at the top of the window (the default)
+- `hide` : no toolbar
+- `overlay` : the toolbar floats over the page, sized to its natural width and horizontally centered. It's hidden by default and only revealed when the mouse moves near the top of the page
+
+Press `F8` (the **Toggle Toolbar** command) to cycle through the modes: show → overlay → hide.
+
+```
+Toolbar = overlay
+```
+
 To customize toolbar:
 
 - use `Settings` / `Advanced Options...` menu (or `Ctrl + K` Command Palette, type `adv` to narrow down and select `Advanced Options...` command)

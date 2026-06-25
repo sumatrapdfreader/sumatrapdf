@@ -35,6 +35,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - read text aloud using Windows text-to-speech: toolbar, main menu, and context menu **Read Aloud (TTS)** submenus with **Start Reading From Top** (viewport through end of document), **Start Reading Selection**, **Start Reading From Cursor Position** (context menu), pause / continue / stop, a playback bar on the canvas showing the document name, current page, and scope, word highlight while speaking, and a **Voice** submenu; chosen voice is remembered via the `ReadAloudVoiceId` advanced setting
 - add `ToolbarText` and `ToolbarSvgIcon` parameters for `ExternalViewers` advanced setting to show external viewer as a toolbar button with text or an SVG icon (fixes #5741)
 - move `Scrollbars` advanced setting from `FixedPageUI` to top-level
+- toolbar has a new `overlay` mode: the toolbar floats over the page (sized to its natural width and centered) and is only revealed when the mouse moves near the top. Set it with the new top-level `Toolbar = show | hide | overlay` advanced setting; `F8` (Toggle Toolbar) now cycles show → overlay → hide instead of just toggling show/hide
 - add `EBookUI.BackgroundColor` advanced setting to override background color for ebook documents (epub, mobi etc.)
 - add `ComicBookUI.BackgroundColor` advanced setting to override the default black background for comic book files
 - add `ImageUI.BackgroundColor` advanced setting to override the default black background for image files

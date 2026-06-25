@@ -839,6 +839,17 @@ const globalPrefs: Field[] = [
   setVersion(mkField("CustomColors", Str, null, "up to 13 custom colors for the background color picker, separated by space (e.g. '#ff0000 #00ff00 #0000ff')"), "3.7"),
   mkField("ShowToolbar", Bool, true, "if true, we show the toolbar at the top of the window"),
   setVersion(
+    mkField(
+      "Toolbar",
+      Str,
+      null,
+      "toolbar mode: show (pinned at the top), hide (no toolbar), overlay (toolbar floats over " +
+        "the page, sized to its natural width and centered, only shown when the mouse is near the top). " +
+        "if empty, derived from ShowToolbar",
+    ),
+    "3.7",
+  ),
+  setVersion(
     setExpert(
       mkField(
         "SearchUIFloating",

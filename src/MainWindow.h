@@ -293,6 +293,10 @@ struct MainWindow {
     HWND hwndHomeSearch = nullptr;
 
     bool isToolbarVisible = false;
+    // overlay toolbar mode: the toolbar floats over the page (doesn't reserve
+    // space) and is only revealed when the mouse is near the top
+    bool isToolbarOverlay = false;
+    bool toolbarOverlayShown = false;
     bool isFullScreen = false;
     PresentationMode presentation = PM_DISABLED;
     int windowStateBeforePresentation = 0;

@@ -13,7 +13,12 @@ void UpdateFindbox(MainWindow*);
 void SetToolbarButtonEnableState(MainWindow*, int cmdId, bool isEnabled);
 void SetToolbarButtonCheckedState(MainWindow*, int cmdId, bool isChecked);
 bool ShouldShowToolbar(MainWindow*);
+bool ShouldOverlayToolbar(MainWindow*);
 void ShowOrHideToolbar(MainWindow*);
+// position/show the floating overlay toolbar; called on relayout and mouse move
+void PositionOverlayToolbar(MainWindow*);
+// re-evaluate overlay toolbar visibility based on the cursor's screen position
+void UpdateOverlayToolbarForMouse(MainWindow*);
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
 HIMAGELIST BuildStdToolbarImageList(int dx);

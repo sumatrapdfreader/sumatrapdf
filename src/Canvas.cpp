@@ -3668,6 +3668,12 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    // reveal/hide the floating overlay toolbar as the mouse approaches the top;
+    // don't consume the message, just observe it
+    if (msg == WM_MOUSEMOVE && win->isToolbarOverlay) {
+        UpdateOverlayToolbarForMouse(win);
+    }
+
     // messages that require win
     switch (msg) {
         case WM_TIMER:
