@@ -288,6 +288,17 @@ int pdf_xfa_get_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_n
     return pdf_xfa_factory_get_field_content(ctx, xfa, field_name, buf, buflen);
 }
 
+int pdf_xfa_get_field_choice_count(fz_context* ctx, pdf_xfa* xfa, const char* field_name) {
+    if (!xfa || !xfa->valid) return 0;
+    return pdf_xfa_factory_get_field_choice_count(ctx, xfa, field_name);
+}
+
+int pdf_xfa_get_field_choice_option(fz_context* ctx, pdf_xfa* xfa, const char* field_name, int index, char* buf,
+                                    int buflen) {
+    if (!xfa || !xfa->valid) return 0;
+    return pdf_xfa_factory_get_field_choice_option(ctx, xfa, field_name, index, buf, buflen);
+}
+
 int pdf_xfa_write_datasets_to_document(fz_context* ctx, pdf_xfa* xfa) {
     if (!xfa || !xfa->valid) return 0;
     return pdf_xfa_factory_write_datasets(ctx, xfa);

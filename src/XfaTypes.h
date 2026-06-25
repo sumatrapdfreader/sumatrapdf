@@ -8,6 +8,7 @@ enum class XfaFieldKind {
     Text = 1,
     Checkbox = 2,
     Radio = 3,
+    Choice = 4,
 };
 
 struct XfaFieldHit {

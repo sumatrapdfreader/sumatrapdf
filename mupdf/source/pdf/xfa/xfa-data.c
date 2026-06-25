@@ -33,6 +33,16 @@ static int pdf_xfa_value_is_checked(const char* text) {
     return 0;
 }
 
+static const char* pdf_xfa_value_node_text(fz_context* ctx, pdf_xfa_object* value) {
+    pdf_xfa_object* text;
+
+    if (!value) return "";
+    if (value->content && value->content[0]) return value->content;
+    text = pdf_xfa_object_find_child(value, "text");
+    if (text && text->content && text->content[0]) return text->content;
+    return pdf_xfa_object_text(ctx, value);
+}
+
 static const char* pdf_xfa_form_value(fz_context* ctx, pdf_xfa_object* form) {
     pdf_xfa_object* value;
 
@@ -42,7 +52,7 @@ static const char* pdf_xfa_form_value(fz_context* ctx, pdf_xfa_object* form) {
 
     value = pdf_xfa_object_find_child(form, "value");
     if (value) {
-        const char* text = pdf_xfa_object_text(ctx, value);
+        const char* text = pdf_xfa_value_node_text(ctx, value);
         if (text && text[0]) return text;
     }
 
@@ -85,6 +95,66 @@ static int pdf_xfa_field_is_radio(pdf_xfa_object* field) {
 
 static int pdf_xfa_field_is_exclusive_widget(pdf_xfa_object* field) {
     return pdf_xfa_field_is_radio(field) || (field && pdf_xfa_find_ui_widget(field, "checkButton") != NULL);
+}
+
+static int pdf_xfa_field_is_choice(pdf_xfa_object* field) {
+    pdf_xfa_object* items;
+    pdf_xfa_object* child;
+
+    if (!field) return 0;
+    /* Static <items> lists mark choice/drop-down fields; avoid walking ui widgets (fragile on some templates). */
+    items = pdf_xfa_object_find_child(field, "items");
+    if (!items) return 0;
+    for (child = items->first_child; child; child = child->next_sibling) {
+        if (child->name && strcmp(child->name, "text") == 0) return 1;
+    }
+    return 0;
+}
+
+static const char* pdf_xfa_field_item_text(fz_context* ctx, pdf_xfa_object* item) {
+    pdf_xfa_object* text;
+
+    (void)ctx;
+    if (!item) return NULL;
+    if (item->name && strcmp(item->name, "text") == 0) {
+        if (item->content && item->content[0]) return item->content;
+        text = pdf_xfa_object_find_child(item, "text");
+        if (text && text->content && text->content[0]) return text->content;
+        return NULL;
+    }
+    text = pdf_xfa_object_find_child(item, "text");
+    if (text) return pdf_xfa_field_item_text(ctx, text);
+    return NULL;
+}
+
+static int pdf_xfa_field_choice_count_imp(fz_context* ctx, pdf_xfa_object* field) {
+    pdf_xfa_object* items;
+    pdf_xfa_object* child;
+    int n = 0;
+
+    if (!field) return 0;
+    items = pdf_xfa_object_find_child(field, "items");
+    if (!items) return 0;
+    for (child = items->first_child; child; child = child->next_sibling) {
+        if (pdf_xfa_field_item_text(ctx, child)) n++;
+    }
+    return n;
+}
+
+static const char* pdf_xfa_field_choice_option_imp(fz_context* ctx, pdf_xfa_object* field, int index) {
+    pdf_xfa_object* items;
+    pdf_xfa_object* child;
+    int i = 0;
+
+    if (!field || index < 0) return NULL;
+    items = pdf_xfa_object_find_child(field, "items");
+    if (!items) return NULL;
+    for (child = items->first_child; child; child = child->next_sibling) {
+        const char* text = pdf_xfa_field_item_text(ctx, child);
+        if (!text) continue;
+        if (i++ == index) return text;
+    }
+    return NULL;
 }
 
 static void pdf_xfa_sync_form_to_data_imp(fz_context* ctx, fz_pool* pool, pdf_xfa_object* form) {
@@ -264,9 +334,44 @@ int pdf_xfa_factory_get_field_kind(fz_context* ctx, pdf_xfa* xfa, const char* fi
 
     field = pdf_xfa_find_named_field(xfa->form, field_name);
     if (!field) return PDF_XFA_FIELD_UNKNOWN;
+    if (pdf_xfa_field_is_choice(field)) return PDF_XFA_FIELD_CHOICE;
     if (pdf_xfa_find_ui_widget(field, "checkButton")) return PDF_XFA_FIELD_CHECKBOX;
     if (pdf_xfa_find_ui_widget(field, "radioButton")) return PDF_XFA_FIELD_RADIO;
     return PDF_XFA_FIELD_TEXT;
+}
+
+int pdf_xfa_factory_get_field_choice_count(fz_context* ctx, pdf_xfa* xfa, const char* field_name) {
+    pdf_xfa_object* field;
+
+    (void)ctx;
+    if (!xfa || !xfa->form || !field_name || !field_name[0]) return 0;
+
+    field = pdf_xfa_find_named_field(xfa->form, field_name);
+    if (!field || !pdf_xfa_field_is_choice(field)) return 0;
+    return pdf_xfa_field_choice_count_imp(ctx, field);
+}
+
+int pdf_xfa_factory_get_field_choice_option(fz_context* ctx, pdf_xfa* xfa, const char* field_name, int index,
+                                            char* buf, int buflen) {
+    pdf_xfa_object* field;
+    const char* text;
+    size_t len;
+
+    if (!buf || buflen <= 0) return 0;
+    buf[0] = 0;
+    if (!xfa || !xfa->form || !field_name || !field_name[0] || index < 0) return 0;
+
+    field = pdf_xfa_find_named_field(xfa->form, field_name);
+    if (!field || !pdf_xfa_field_is_choice(field)) return 0;
+
+    text = pdf_xfa_field_choice_option_imp(ctx, field, index);
+    if (!text) return 0;
+
+    len = strlen(text);
+    if ((int)len >= buflen) len = (size_t)buflen - 1;
+    memcpy(buf, text, len);
+    buf[len] = 0;
+    return 1;
 }
 
 int pdf_xfa_factory_get_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, char* buf, int buflen) {

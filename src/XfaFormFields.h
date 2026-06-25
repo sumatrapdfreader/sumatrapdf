@@ -10,6 +10,7 @@ class EngineBase;
 enum class WidgetCursorKind;
 
 bool StartXfaFieldEdit(MainWindow* win, const XfaFieldHit& field);
+bool StartXfaFieldInteraction(MainWindow* win, const XfaFieldHit& field);
 void CommitXfaFieldEdit(bool save);
 bool IsXfaFieldEditActive();
 bool AdvanceXfaFieldTabStop(MainWindow* win, const XfaFieldHit& cur, bool forward);

@@ -5098,7 +5098,7 @@ static bool XfaFieldHitMatches(const XfaFieldHit& a, const XfaFieldHit& b) {
 }
 
 static bool XfaFieldIsTabStop(const XfaFieldHit& hit) {
-    return hit.kind == XfaFieldKind::Text;
+    return hit.kind == XfaFieldKind::Text || hit.kind == XfaFieldKind::Choice;
 }
 
 XfaFieldHit EngineMupdfGetAdjacentXfaField(EngineBase* engine, const XfaFieldHit& cur, bool forward) {
@@ -5141,6 +5141,46 @@ XfaFieldHit EngineMupdfGetAdjacentXfaField(EngineBase* engine, const XfaFieldHit
         }
     }
     return next;
+}
+
+int EngineMupdfGetXfaFieldChoiceCount(EngineBase* engine, const char* fieldName) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    int n = 0;
+
+    if (!epdf || !epdf->pdfdoc || !epdf->pdfdoc->xfa_ctx || !fieldName || !fieldName[0]) {
+        return 0;
+    }
+    fz_context* ctx = epdf->Ctx();
+    ScopedCritSec cs(&epdf->docLock);
+    fz_try(ctx) {
+        n = pdf_xfa_get_field_choice_count(ctx, epdf->pdfdoc->xfa_ctx, fieldName);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        n = 0;
+    }
+    return n;
+}
+
+TempStr EngineMupdfGetXfaFieldChoiceOptionTemp(EngineBase* engine, const char* fieldName, int index) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    char buf[512] = {};
+
+    if (!epdf || !epdf->pdfdoc || !epdf->pdfdoc->xfa_ctx || !fieldName || !fieldName[0] || index < 0) {
+        return nullptr;
+    }
+    fz_context* ctx = epdf->Ctx();
+    ScopedCritSec cs(&epdf->docLock);
+    fz_try(ctx) {
+        if (!pdf_xfa_get_field_choice_option(ctx, epdf->pdfdoc->xfa_ctx, fieldName, index, buf, (int)sizeof buf)) {
+            return nullptr;
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return nullptr;
+    }
+    return str::DupTemp(buf);
 }
 
 bool EngineMupdfSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value) {
@@ -6040,6 +6080,50 @@ char* TestXfaSaveFieldRoundTripResult(const char* pdfPath, const char* fieldName
                     }
                 }
             }
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = exitCode;
+    }
+    return out.StealData();
+}
+
+// Return XFA field kind and choice option count for a named field.
+char* TestXfaFieldKindResult(const char* pdfPath, const char* fieldName, int* exitCodeOut) {
+    StrBuilder out;
+    int exitCode = 1;
+
+    if (!pdfPath || !fieldName || !fieldName[0]) {
+        out.AppendFmt("ERROR invalid-args pdf=%s field=%s\n", pdfPath ? pdfPath : "(null)",
+                      fieldName ? fieldName : "(null)");
+    } else {
+        EngineBase* engine = CreateEngineMupdfFromFile(pdfPath, kindFilePDF, 96, nullptr);
+        if (!engine) {
+            out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+        } else {
+            EngineMupdf* epdf = AsEngineMupdf(engine);
+            if (!epdf || !epdf->pdfdoc) {
+                out.AppendFmt("ERROR not-pdf pdf=%s\n", pdfPath);
+            } else {
+                fz_context* ctx = epdf->Ctx();
+                pdf_xfa* xfa = pdf_load_xfa(ctx, epdf->pdfdoc);
+                int kind = PDF_XFA_FIELD_UNKNOWN;
+                int choiceCount = 0;
+
+                if (!xfa || !pdf_xfa_is_valid(ctx, xfa)) {
+                    out.AppendFmt("ERROR xfa-invalid pdf=%s\n", pdfPath);
+                } else {
+                    kind = pdf_xfa_get_field_kind(ctx, xfa, fieldName);
+                    choiceCount = pdf_xfa_get_field_choice_count(ctx, xfa, fieldName);
+                    if (kind == PDF_XFA_FIELD_UNKNOWN) {
+                        out.AppendFmt("ERROR field-not-found pdf=%s field=%s\n", pdfPath, fieldName);
+                    } else {
+                        out.AppendFmt("kind=%d choice_count=%d\n", kind, choiceCount);
+                        exitCode = 0;
+                    }
+                }
+            }
+            SafeEngineRelease(&engine);
         }
     }
     if (exitCodeOut) {

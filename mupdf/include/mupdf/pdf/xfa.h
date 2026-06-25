@@ -171,10 +171,14 @@ enum {
     PDF_XFA_FIELD_TEXT = 1,
     PDF_XFA_FIELD_CHECKBOX = 2,
     PDF_XFA_FIELD_RADIO = 3,
+    PDF_XFA_FIELD_CHOICE = 4,
 };
 
 int pdf_xfa_get_field_kind(fz_context* ctx, pdf_xfa* xfa, const char* field_name);
 int pdf_xfa_get_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, char* buf, int buflen);
+int pdf_xfa_get_field_choice_count(fz_context* ctx, pdf_xfa* xfa, const char* field_name);
+int pdf_xfa_get_field_choice_option(fz_context* ctx, pdf_xfa* xfa, const char* field_name, int index, char* buf,
+                                    int buflen);
 
 /*
         Write bound datasets XML back into the document's AcroForm/XFA packet

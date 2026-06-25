@@ -400,6 +400,20 @@ TempStr EngineGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName) 
     return EngineMupdfGetXfaFieldContentTemp(engine, fieldName);
 }
 
+int EngineGetXfaFieldChoiceCount(EngineBase* engine, const char* fieldName) {
+    if (!IsEngineMupdf(engine)) {
+        return 0;
+    }
+    return EngineMupdfGetXfaFieldChoiceCount(engine, fieldName);
+}
+
+TempStr EngineGetXfaFieldChoiceOptionTemp(EngineBase* engine, const char* fieldName, int index) {
+    if (!IsEngineMupdf(engine)) {
+        return nullptr;
+    }
+    return EngineMupdfGetXfaFieldChoiceOptionTemp(engine, fieldName, index);
+}
+
 void EngineMarkXfaPageModified(EngineBase* engine, int pageNo) {
     if (!IsEngineMupdf(engine)) {
         return;

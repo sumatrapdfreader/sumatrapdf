@@ -48,6 +48,7 @@ enum class ControlCmd : u16 {
     TestXfaSaveFieldRoundTrip = 34,
     TestXfaSelectRadioSerializeData = 35,
     TestXfaSelectRadioSaveRoundTrip = 36,
+    TestXfaFieldKind = 37,
 };
 
 enum class ControlArgType : u16 {
@@ -606,6 +607,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestXfaSaveFieldRoundTripResult(pdf, fieldName, value, outPath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestXfaFieldKind: {
+            const char* pdf = StringArg(req, 0);
+            const char* fieldName = StringArg(req, 1);
+            if (!pdf || !fieldName) {
+                AppendError(req, "TestXfaFieldKind expects string pdfPath, string fieldName");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestXfaFieldKindResult(pdf, fieldName, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

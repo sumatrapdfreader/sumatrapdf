@@ -1270,7 +1270,8 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
                 win->mouseAction = MouseAction::None;
                 return;
             }
-            if (xfaField.kind == XfaFieldKind::Text && StartXfaFieldEdit(win, xfaField)) {
+            if ((xfaField.kind == XfaFieldKind::Text || xfaField.kind == XfaFieldKind::Choice) &&
+                StartXfaFieldInteraction(win, xfaField)) {
                 win->mouseAction = MouseAction::None;
                 return;
             }

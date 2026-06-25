@@ -692,14 +692,25 @@ static fz_font* pdf_xfa_font_for_style(fz_context* ctx, pdf_xfa_render_ctx* rctx
     return NULL;
 }
 
+static const char* pdf_xfa_value_node_text(fz_context* ctx, pdf_xfa_object* value) {
+    pdf_xfa_object* text;
+
+    if (!value) return NULL;
+    if (value->content && value->content[0]) return value->content;
+    text = pdf_xfa_object_find_child(value, "text");
+    if (text && text->content && text->content[0]) return text->content;
+    return pdf_xfa_object_text(ctx, value);
+}
+
 static const char* pdf_xfa_node_text(fz_context* ctx, pdf_xfa_object* node) {
     pdf_xfa_object* value;
 
+    if (!node) return NULL;
     if (node->content && node->content[0]) return node->content;
 
     value = pdf_xfa_object_find_child(node, "value");
     if (value) {
-        const char* text = pdf_xfa_object_text(ctx, value);
+        const char* text = pdf_xfa_value_node_text(ctx, value);
         if (text && text[0]) return text;
     }
 

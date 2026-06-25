@@ -230,6 +230,9 @@ int pdf_xfa_factory_select_radio(fz_context* ctx, pdf_xfa* xfa, const char* fiel
 int pdf_xfa_factory_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, const char* value);
 int pdf_xfa_factory_get_field_kind(fz_context* ctx, pdf_xfa* xfa, const char* field_name);
 int pdf_xfa_factory_get_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, char* buf, int buflen);
+int pdf_xfa_factory_get_field_choice_count(fz_context* ctx, pdf_xfa* xfa, const char* field_name);
+int pdf_xfa_factory_get_field_choice_option(fz_context* ctx, pdf_xfa* xfa, const char* field_name, int index, char* buf,
+                                            int buflen);
 
 /* pdf-xfa.c helpers used by factory */
 pdf_xfa_packet* pdf_xfa_load_packets(fz_context* ctx, pdf_document* doc);

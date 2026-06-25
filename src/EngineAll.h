@@ -76,6 +76,8 @@ bool EngineMupdfSetXfaFieldContent(EngineBase* engine, const char* fieldName, co
 bool EngineMupdfSelectXfaRadio(EngineBase* engine, int pageNo, const char* fieldName, RectF bounds);
 bool EngineMupdfToggleXfaCheckbox(EngineBase* engine, const char* fieldName);
 TempStr EngineMupdfGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName);
+int EngineMupdfGetXfaFieldChoiceCount(EngineBase* engine, const char* fieldName);
+TempStr EngineMupdfGetXfaFieldChoiceOptionTemp(EngineBase* engine, const char* fieldName, int index);
 void EngineMupdfMarkXfaPageModified(EngineBase* engine, int pageNo);
 // disable mupdf's JavaScript engine for PDFs loaded after this call
 void EngineMupdfSetDisableJavaScript(bool disable);
@@ -111,4 +113,6 @@ bool EngineSetXfaFieldContent(EngineBase* engine, const char* fieldName, const c
 bool EngineSelectXfaRadio(EngineBase* engine, int pageNo, const char* fieldName, RectF bounds);
 bool EngineToggleXfaCheckbox(EngineBase* engine, const char* fieldName);
 TempStr EngineGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName);
+int EngineGetXfaFieldChoiceCount(EngineBase* engine, const char* fieldName);
+TempStr EngineGetXfaFieldChoiceOptionTemp(EngineBase* engine, const char* fieldName, int index);
 void EngineMarkXfaPageModified(EngineBase* engine, int pageNo);

@@ -129,6 +129,8 @@ EXPORTS
 	pdf_xfa_write_datasets_to_document
 	pdf_xfa_get_field_kind
 	pdf_xfa_get_field_content
+	pdf_xfa_get_field_choice_count
+	pdf_xfa_get_field_choice_option
 	pdf_keep_xfa
 	pdf_drop_xfa
 	pdf_page_resources
