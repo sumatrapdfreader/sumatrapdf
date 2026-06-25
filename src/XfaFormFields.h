@@ -12,6 +12,7 @@ enum class WidgetCursorKind;
 bool StartXfaFieldEdit(MainWindow* win, const XfaFieldHit& field);
 void CommitXfaFieldEdit(bool save);
 bool IsXfaFieldEditActive();
+bool AdvanceXfaFieldTabStop(MainWindow* win, const XfaFieldHit& cur, bool forward);
 bool ToggleXfaFieldButton(EngineBase* engine, const XfaFieldHit& field);
 bool SelectXfaFieldRadio(EngineBase* engine, const XfaFieldHit& field);
 WidgetCursorKind GetXfaFieldCursorKind(const XfaFieldHit& field);

@@ -198,13 +198,24 @@ function pointFromFwdSearchResult(res: FwdSearchResult): FwdSearchPoint | null {
 // compiles srcPath (a Windows path or a WSL UNC path) into workDir
 // using tectonic run inside WSL.
 // Returns back srcpath along with the path of the generated pdf
+function safeRm(dir: string): void {
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    const unix = wslUncPathToUnixPath(dir);
+    if (unix) {
+      run(["wsl.exe", "-d", WSL_DISTRO, "--", "rm", "-rf", unix]);
+    }
+  }
+}
+
 function compileFiles(
   workDir: string,
   srcPath: string,
   { useWsl = true }: { useWsl?: boolean; } = {}
 ): { pdfPath: string; srcPath: string } {
   // clean up working directory
-  rmSync(workDir, { recursive: true, force: true });
+  safeRm(workDir);
   mkdirSync(workDir, { recursive: true });
 
   if (!existsSync(srcPath)) {

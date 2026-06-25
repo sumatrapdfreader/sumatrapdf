@@ -87,6 +87,16 @@ static LRESULT CALLBACK WndProcXfaFormCtrl(HWND hwnd, UINT msg, WPARAM wp, LPARA
                 CommitXfaFieldEdit(true);
                 return 0;
             }
+            if (wp == VK_TAB) {
+                bool back = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+                XfaFieldHit cur = gXfaEdit.field;
+                MainWindow* win = gXfaEdit.win;
+                CommitXfaFieldEdit(true);
+                if (win && cur.IsValid()) {
+                    AdvanceXfaFieldTabStop(win, cur, !back);
+                }
+                return 0;
+            }
             break;
         case WM_KILLFOCUS:
             CommitXfaFieldEdit(true);
@@ -108,6 +118,21 @@ static int XfaFieldFontPx(const XfaFieldHit& field, Rect rc) {
         return std::max(8, (int)(10.0f * scale));
     }
     return std::max(8, (int)((float)rc.dy * 0.7f));
+}
+
+bool AdvanceXfaFieldTabStop(MainWindow* win, const XfaFieldHit& cur, bool forward) {
+    if (!win || !cur.IsValid()) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return false;
+    }
+    XfaFieldHit next = EngineGetAdjacentXfaField(dm->GetEngine(), cur, forward);
+    if (!next.IsValid()) {
+        return false;
+    }
+    return StartXfaFieldEdit(win, next);
 }
 
 bool StartXfaFieldEdit(MainWindow* win, const XfaFieldHit& field) {

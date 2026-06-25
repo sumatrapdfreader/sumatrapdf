@@ -17,6 +17,7 @@ const C1_01_MFJ = ["136.80", "714.00", "148.80", "726.00"] as const;
 export async function testit(): Promise<void> {
   const outPdf = tmpPath("ad-hoc-f1040-save-roundtrip.pdf");
   const outPdfC101 = tmpPath("ad-hoc-f1040-save-c1_01-roundtrip.pdf");
+  let outPdfText = "";
   try {
     const [exitCode, raw] = await runControlCommand(EXE, ControlCommand.TestXfaSaveFieldRoundTrip, [
       PDF,
@@ -56,9 +57,24 @@ export async function testit(): Promise<void> {
       throw new Error(`expected reloaded c1_01=1, got ${valueC101}`);
     }
 
-    console.log("ad-hoc-f1040-save: OK field=c1_11 values=1,0 field=c1_01 value=1");
+    outPdfText = tmpPath("ad-hoc-f1040-save-f1_01-roundtrip.pdf");
+    const [exitCodeText, rawText] = await runControlCommand(EXE, ControlCommand.TestXfaSaveFieldRoundTrip, [
+      PDF,
+      "f1_01",
+      "Jane Q Taxpayer",
+      outPdfText,
+    ]);
+    const valueText = String(rawText ?? "").trim();
+    if (exitCodeText !== 0) {
+      throw new Error(`TestXfaSaveFieldRoundTrip f1_01 failed: ${valueText}`);
+    }
+    if (valueText !== "Jane Q Taxpayer") {
+      throw new Error(`expected reloaded f1_01='Jane Q Taxpayer', got ${valueText}`);
+    }
+
+    console.log("ad-hoc-f1040-save: OK field=c1_11 values=1,0 field=c1_01 value=1 field=f1_01 text");
   } finally {
-    for (const path of [outPdf, outPdfC101]) {
+    for (const path of [outPdf, outPdfC101, outPdfText]) {
       try {
         unlinkSync(path);
       } catch {

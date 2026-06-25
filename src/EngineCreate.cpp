@@ -365,6 +365,13 @@ XfaFieldHit EngineGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos) {
     return EngineMupdfGetXfaFieldAtPos(engine, pageNo, pos);
 }
 
+XfaFieldHit EngineGetAdjacentXfaField(EngineBase* engine, const XfaFieldHit& cur, bool forward) {
+    if (!IsEngineMupdf(engine)) {
+        return {};
+    }
+    return EngineMupdfGetAdjacentXfaField(engine, cur, forward);
+}
+
 bool EngineSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value) {
     if (!IsEngineMupdf(engine)) {
         return false;

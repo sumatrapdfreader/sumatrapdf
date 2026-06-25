@@ -5085,6 +5085,64 @@ XfaFieldHit EngineMupdfGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF p
     return best;
 }
 
+static bool XfaFieldBoundsMatch(RectF a, RectF b) {
+    const float eps = 0.01f;
+    return fabsf(a.x - b.x) < eps && fabsf(a.y - b.y) < eps && fabsf(a.dx - b.dx) < eps && fabsf(a.dy - b.dy) < eps;
+}
+
+static bool XfaFieldHitMatches(const XfaFieldHit& a, const XfaFieldHit& b) {
+    if (a.pageNo != b.pageNo || !str::Eq(a.name, b.name)) {
+        return false;
+    }
+    return XfaFieldBoundsMatch(a.bounds, b.bounds);
+}
+
+static bool XfaFieldIsTabStop(const XfaFieldHit& hit) {
+    return hit.kind == XfaFieldKind::Text;
+}
+
+XfaFieldHit EngineMupdfGetAdjacentXfaField(EngineBase* engine, const XfaFieldHit& cur, bool forward) {
+    XfaFieldHit next;
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+
+    if (!epdf || !epdf->hybridXfa || !cur.IsValid()) {
+        return next;
+    }
+    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(cur.pageNo);
+    if (!pi) {
+        return next;
+    }
+    EnsureXfaFieldCache(epdf, pi);
+    if (!pi->xfaFields) {
+        return next;
+    }
+
+    Vec<XfaFieldHit>& fields = pi->xfaFields->fields;
+    int n = (int)fields.Size();
+    int idx = -1;
+    for (int i = 0; i < n; i++) {
+        if (XfaFieldHitMatches(fields[i], cur)) {
+            idx = i;
+            break;
+        }
+    }
+    if (idx < 0) {
+        return next;
+    }
+
+    for (int step = 1; step <= n; step++) {
+        int j = forward ? (idx + step) % n : (idx - step + n) % n;
+        const XfaFieldHit& hit = fields[j];
+        if (XfaFieldHitMatches(hit, cur)) {
+            break;
+        }
+        if (XfaFieldIsTabStop(hit)) {
+            return hit;
+        }
+    }
+    return next;
+}
+
 bool EngineMupdfSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     bool ok = false;
