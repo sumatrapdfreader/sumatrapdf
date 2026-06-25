@@ -20,6 +20,8 @@ char* TestXfaSetFieldSerializeDataResult(const char* pdfPath, const char* fieldN
                                          int* exitCodeOut = nullptr);
 char* TestXfaSelectRadioSerializeDataResult(const char* pdfPath, const char* fieldName, int pageNo, float x0, float y0,
                                             float x1, float y1, int* exitCodeOut = nullptr);
+char* TestXfaSelectRadioSaveRoundTripResult(const char* pdfPath, const char* fieldName, int pageNo, float x0, float y0,
+                                            float x1, float y1, const char* outPath, int* exitCodeOut = nullptr);
 char* TestXfaSaveFieldRoundTripResult(const char* pdfPath, const char* fieldName, const char* value,
                                       const char* outPath, int* exitCodeOut = nullptr);
 char* TestXfaFieldRectsResult(const char* pdfPath, int pageNo, int* exitCodeOut = nullptr);

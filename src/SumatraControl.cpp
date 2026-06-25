@@ -47,6 +47,7 @@ enum class ControlCmd : u16 {
     TestXfaSetFieldSerializeData = 33,
     TestXfaSaveFieldRoundTrip = 34,
     TestXfaSelectRadioSerializeData = 35,
+    TestXfaSelectRadioSaveRoundTrip = 36,
 };
 
 enum class ControlArgType : u16 {
@@ -568,6 +569,26 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestXfaSelectRadioSerializeDataResult(pdf, fieldName, pageNo, x0, y0, x1, y1, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestXfaSelectRadioSaveRoundTrip: {
+            const char* pdf = StringArg(req, 0);
+            const char* fieldName = StringArg(req, 1);
+            i32 pageNo = 0;
+            float x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+            const char* outPath = StringArg(req, 7);
+            if (!pdf || !fieldName || !outPath || !IntArg(req, 2, pageNo) || !FloatArg(req, 3, x0) ||
+                !FloatArg(req, 4, y0) || !FloatArg(req, 5, x1) || !FloatArg(req, 6, y1)) {
+                AppendError(req,
+                            "TestXfaSelectRadioSaveRoundTrip expects string pdfPath, string fieldName, int pageNo, "
+                            "float x0, float y0, float x1, float y1, string outPath");
+                break;
+            }
+            int exitCode = 0;
+            char* res =
+                TestXfaSelectRadioSaveRoundTripResult(pdf, fieldName, pageNo, x0, y0, x1, y1, outPath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

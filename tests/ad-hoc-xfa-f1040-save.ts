@@ -11,8 +11,12 @@ import { EXE, runStandalone, tmpPath } from "./util.ts";
 const here = dirname(fileURLToPath(import.meta.url));
 const PDF = join(here, "ad-hoc-xfa-data", "ad-hoc-f1040.pdf");
 
+// Second filing-status widget on page 1 (from TestXfaFieldRects).
+const C1_01_MFJ = ["136.80", "714.00", "148.80", "726.00"] as const;
+
 export async function testit(): Promise<void> {
   const outPdf = tmpPath("ad-hoc-f1040-save-roundtrip.pdf");
+  const outPdfC101 = tmpPath("ad-hoc-f1040-save-c1_01-roundtrip.pdf");
   try {
     const [exitCode, raw] = await runControlCommand(EXE, ControlCommand.TestXfaSaveFieldRoundTrip, [
       PDF,
@@ -39,12 +43,27 @@ export async function testit(): Promise<void> {
       throw new Error(`expected c1_11 round-trip back to 0, got exit=${exitCode0} value=${value0}`);
     }
 
-    console.log("ad-hoc-f1040-save: OK field=c1_11 values=1,0");
+    const [exitCodeC101, rawC101] = await runControlCommand(
+      EXE,
+      ControlCommand.TestXfaSelectRadioSaveRoundTrip,
+      [PDF, "c1_01", 1, ...C1_01_MFJ, outPdfC101],
+    );
+    const valueC101 = String(rawC101 ?? "").trim();
+    if (exitCodeC101 !== 0) {
+      throw new Error(`TestXfaSelectRadioSaveRoundTrip failed: ${valueC101}`);
+    }
+    if (valueC101 !== "1") {
+      throw new Error(`expected reloaded c1_01=1, got ${valueC101}`);
+    }
+
+    console.log("ad-hoc-f1040-save: OK field=c1_11 values=1,0 field=c1_01 value=1");
   } finally {
-    try {
-      unlinkSync(outPdf);
-    } catch {
-      /* ignore */
+    for (const path of [outPdf, outPdfC101]) {
+      try {
+        unlinkSync(path);
+      } catch {
+        /* ignore */
+      }
     }
   }
 }
