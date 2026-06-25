@@ -29,6 +29,8 @@
 #define PDF_XFA_DEFAULT_DRAW_H 14.0f
 #define PDF_XFA_DEFAULT_FIELD_H 18.0f
 #define PDF_XFA_MAX_COLUMNS 32
+#define PDF_XFA_LINE_LIMIT 64
+#define PDF_XFA_DEFAULT_LINE_HEIGHT_MUL 1.2f
 
 typedef struct {
     float ox;
@@ -53,7 +55,19 @@ typedef struct {
     float space_above;
     float space_below;
     float text_indent;
+    float line_height;
 } pdf_xfa_text_style;
+
+typedef struct {
+    const char* a;
+    const char* b;
+} pdf_xfa_text_line;
+
+typedef struct {
+    fz_context* ctx;
+    fz_font* font;
+    float fontsize;
+} pdf_xfa_font_info;
 
 typedef struct {
     float widths[PDF_XFA_MAX_COLUMNS];
@@ -472,6 +486,7 @@ static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_
             style->margin_left -= style->text_indent;
             style->text_indent = 0;
         }
+        style->line_height = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, para, "lineHeight"), 0);
     }
 
     pdf_xfa_add_ui_textedit_margins(ctx, node, style);
@@ -505,13 +520,159 @@ static float pdf_xfa_measure_text_width(fz_context* ctx, fz_font* font, float fo
     return adv.e - trm.e;
 }
 
+static float pdf_xfa_measure_character(pdf_xfa_font_info* info, int c) {
+    fz_font* font;
+    int gid = fz_encode_character_with_fallback(info->ctx, info->font, c, 0, 0, &font);
+    return fz_advance_glyph(info->ctx, font, gid, 0) * info->fontsize;
+}
+
+static float pdf_xfa_measure_text_substring(fz_context* ctx, fz_font* font, float fontsize, const char* text,
+                                            int len) {
+    pdf_xfa_font_info info;
+    const char* end;
+    float x = 0;
+    int c;
+
+    if (!text || len <= 0) return 0;
+
+    info.ctx = ctx;
+    info.font = font;
+    info.fontsize = fontsize;
+
+    end = text + len;
+    while (text < end) {
+        text += fz_chartorune(&c, text);
+        if (c == '\r' || c == '\n') continue;
+        x += pdf_xfa_measure_character(&info, c);
+    }
+    return x;
+}
+
+static int pdf_xfa_break_text_lines(pdf_xfa_font_info* info, const char* text, pdf_xfa_text_line* lines, int maxlines,
+                                    float width) {
+    const char* next;
+    const char* space = NULL;
+    const char* a = text;
+    const char* b = text;
+    int c, n = 0;
+    float space_x, x = 0, w = 0;
+
+    if (!text) return 0;
+
+    while (*b) {
+        next = b + fz_chartorune(&c, b);
+        if (c == '\r' || c == '\n') {
+            if (lines && n < maxlines) {
+                lines[n].a = a;
+                lines[n].b = b;
+            }
+            ++n;
+            if (c == '\r' && *next == '\n') next++;
+            a = next;
+            x = 0;
+            space = NULL;
+        } else {
+            if (c == ' ') {
+                space = b;
+                space_x = x;
+            }
+
+            w = pdf_xfa_measure_character(info, c);
+            if (width > 0 && x + w > width) {
+                if (space) {
+                    if (lines && n < maxlines) {
+                        lines[n].a = a;
+                        lines[n].b = space;
+                    }
+                    ++n;
+                    a = next = space + 1;
+                    x = 0;
+                    space = NULL;
+                } else {
+                    if (lines && n < maxlines) {
+                        lines[n].a = a;
+                        lines[n].b = b;
+                    }
+                    ++n;
+                    a = b;
+                    x = w;
+                    space = NULL;
+                }
+            } else
+                x += w;
+        }
+        b = next;
+    }
+
+    if (lines && n < maxlines) {
+        lines[n].a = a;
+        lines[n].b = b;
+    }
+    ++n;
+    return n < maxlines ? n : maxlines;
+}
+
+static fz_matrix pdf_xfa_show_substring(fz_context* ctx, fz_text* fztext, fz_font* font, fz_matrix trm, const char* s,
+                                        int len) {
+    fz_font* glyph_font;
+    int gid, ucs;
+    float adv;
+    int i = 0;
+
+    while (i < len) {
+        i += fz_chartorune(&ucs, s + i);
+        gid = fz_encode_character_with_fallback(ctx, font, ucs, 0, FZ_LANG_UNSET, &glyph_font);
+        fz_show_glyph(ctx, fztext, glyph_font, trm, gid, ucs, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
+        adv = fz_advance_glyph(ctx, glyph_font, gid, 0);
+        trm = fz_pre_translate(trm, adv, 0);
+    }
+
+    return trm;
+}
+
+static float pdf_xfa_line_start_y(fz_rect rect, float fontsize, float line_height, int line_count,
+                                  pdf_xfa_text_style* style) {
+    float start_y;
+
+    if (style && style->v_align[0]) {
+        if (strcmp(style->v_align, "bottom") == 0)
+            start_y = rect.y0 + fontsize * 0.85f + (line_count - 1) * line_height;
+        else if (strcmp(style->v_align, "middle") == 0)
+            start_y = (rect.y0 + rect.y1) * 0.5f + fontsize * 0.35f + (line_count - 1) * line_height * 0.5f;
+        else
+            start_y = rect.y1 - fontsize * 0.1f;
+    } else
+        start_y = rect.y1 - fontsize * 0.1f;
+
+    return start_y;
+}
+
+static float pdf_xfa_line_start_x(fz_rect rect, float line_width, int line_index, pdf_xfa_text_style* style) {
+    float x0 = rect.x0;
+
+    if (line_index == 0 && style && style->text_indent > 0) x0 += style->text_indent;
+
+    if (style && style->h_align[0]) {
+        if (strcmp(style->h_align, "center") == 0)
+            return x0 + (rect.x1 - x0 - line_width) * 0.5f;
+        if (strcmp(style->h_align, "right") == 0) return rect.x1 - line_width;
+    }
+    return x0;
+}
+
 static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_font* font, const char* text,
                                         fz_rect rect, float pad, pdf_xfa_text_style* style) {
     fz_text* fztext = NULL;
+    pdf_xfa_text_line lines[PDF_XFA_LINE_LIMIT];
+    pdf_xfa_font_info info;
     float fontsize;
+    float line_height;
     float rgb[3];
     float text_width;
+    float max_width;
     fz_matrix trm;
+    int line_count;
+    int l;
 
     if (!text || !text[0] || fz_is_empty_rect(rect)) return;
 
@@ -520,7 +681,7 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
     rect.y0 += pad;
     rect.y1 -= pad;
     if (style) {
-        rect.x0 += style->margin_left + style->text_indent;
+        rect.x0 += style->margin_left;
         rect.x1 -= style->margin_right;
         rect.y0 += style->space_below;
         rect.y1 -= style->space_above;
@@ -535,6 +696,11 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
         if (fontsize < 6.0f) fontsize = 6.0f;
     }
 
+    if (style && style->line_height > 0)
+        line_height = style->line_height;
+    else
+        line_height = fontsize * PDF_XFA_DEFAULT_LINE_HEIGHT_MUL;
+
     if (style && style->has_color) {
         rgb[0] = style->rgb[0];
         rgb[1] = style->rgb[1];
@@ -543,32 +709,29 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
         rgb[0] = rgb[1] = rgb[2] = 0.0f;
     }
 
-    trm = fz_scale(fontsize, -fontsize);
-    if (style && style->h_align[0]) {
-        text_width = pdf_xfa_measure_text_width(ctx, font, fontsize, text);
-        if (strcmp(style->h_align, "center") == 0)
-            trm.e = rect.x0 + (rect.x1 - rect.x0 - text_width) * 0.5f;
-        else if (strcmp(style->h_align, "right") == 0)
-            trm.e = rect.x1 - text_width;
-        else
-            trm.e = rect.x0;
-    } else
-        trm.e = rect.x0;
-
-    if (style && style->v_align[0]) {
-        if (strcmp(style->v_align, "bottom") == 0)
-            trm.f = rect.y0 + fontsize * 0.85f;
-        else if (strcmp(style->v_align, "middle") == 0)
-            trm.f = (rect.y0 + rect.y1) * 0.5f + fontsize * 0.35f;
-        else
-            trm.f = rect.y1 - fontsize * 0.1f;
-    } else
-        trm.f = rect.y1 - fontsize * 0.1f;
+    info.ctx = ctx;
+    info.font = font;
+    info.fontsize = fontsize;
+    max_width = rect.x1 - rect.x0;
+    line_count = pdf_xfa_break_text_lines(&info, text, lines, PDF_XFA_LINE_LIMIT, max_width);
+    if (line_count <= 0) return;
 
     fz_var(fztext);
     fz_try(ctx) {
         fztext = fz_new_text(ctx);
-        fz_show_string(ctx, fztext, font, trm, text, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
+        trm = fz_scale(fontsize, -fontsize);
+        trm.f = pdf_xfa_line_start_y(rect, fontsize, line_height, line_count, style);
+
+        for (l = 0; l < line_count; l++) {
+            int len = (int)(lines[l].b - lines[l].a);
+            if (len > 0) {
+                text_width = pdf_xfa_measure_text_substring(ctx, font, fontsize, lines[l].a, len);
+                trm.e = pdf_xfa_line_start_x(rect, text_width, l, style);
+                pdf_xfa_show_substring(ctx, fztext, font, trm, lines[l].a, len);
+            }
+            if (l + 1 < line_count) trm.f -= line_height;
+        }
+
         fz_fill_text(ctx, dev, fztext, ctm, fz_device_rgb(ctx), rgb, 1.0f, fz_default_color_params);
     }
     fz_always(ctx) fz_drop_text(ctx, fztext);

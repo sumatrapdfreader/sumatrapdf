@@ -50,6 +50,20 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
           <draw x="0.75in" y="1.85in" w="3in" h="0pt">
             <line x1="0in" y1="0in" x2="3in" y2="0in"/>
           </draw>
+          <draw x="0.75in" y="2.2in" w="2in" h="0.8in">
+            <font size="10pt"/>
+            <para lineHeight="14pt" vAlign="top"/>
+            <value>
+              <text>Line one&#xA;Line two</text>
+            </value>
+          </draw>
+          <draw x="3in" y="2.2in" w="1.5in" h="0.6in">
+            <font size="9pt"/>
+            <para lineHeight="12pt" hAlign="center"/>
+            <value>
+              <text>This is a long text that should wrap</text>
+            </value>
+          </draw>
         </contentArea>
       </pageArea>
     </pageSet>
