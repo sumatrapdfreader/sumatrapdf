@@ -41,6 +41,7 @@ enum class ControlCmd : u16 {
     TestI18nErrorString = 27,
     TestPageInfoOverlay = 28,
     TestXfa = 29,
+    TestRenderPagePng = 30,
 };
 
 enum class ControlArgType : u16 {
@@ -490,6 +491,32 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestXfaResult(pdf, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRenderPagePng: {
+            i32 pageNo = 0;
+            i32 zoomPct = 100;
+            const char* pdf = StringArg(req, 0);
+            const char* outPath = nullptr;
+            if (!pdf || !IntArg(req, 1, pageNo)) {
+                AppendError(
+                    req, "TestRenderPagePng expects string pdfPath, int pageNo, optional int zoomPct, string outPath");
+                break;
+            }
+            if (req->args.size() >= 4) {
+                IntArg(req, 2, zoomPct);
+                outPath = StringArg(req, 3);
+            } else {
+                outPath = StringArg(req, 2);
+            }
+            if (!outPath) {
+                AppendError(req, "TestRenderPagePng expects string outPath");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestRenderPagePngResult(pdf, pageNo, zoomPct, outPath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

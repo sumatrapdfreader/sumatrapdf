@@ -11,6 +11,7 @@ extern "C" {
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
@@ -5263,6 +5264,88 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             exitCode = 0;
         }
         SafeEngineRelease(&engine);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = exitCode;
+    }
+    return out.StealData();
+}
+
+static void PrimeXfaPageRender(EngineMupdf* epdf, int pageNo) {
+    if (!epdf || !epdf->useXfaPages || pageNo < 1 || pageNo > epdf->pageCount) {
+        return;
+    }
+    fz_context* ctx = epdf->Ctx();
+    pdf_document* pdfdoc = epdf->pdfdoc;
+    if (!pdfdoc || !pdf_document_has_xfa(ctx, pdfdoc)) {
+        return;
+    }
+    FzPageInfo* pi = epdf->pages[pageNo - 1];
+    {
+        ScopedCritSec cs(&epdf->renderLock);
+        if (pi && pi->displayList) {
+            fz_drop_display_list(ctx, pi->displayList);
+            pi->displayList = nullptr;
+        }
+    }
+    pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
+    if (!xfa || !pdf_xfa_is_valid(ctx, xfa)) {
+        return;
+    }
+    fz_display_list* list = nullptr;
+    fz_var(list);
+    fz_try(ctx) {
+        list = pdf_xfa_run_page(ctx, xfa, pageNo - 1, fz_identity);
+    }
+    fz_always(ctx) {
+        fz_drop_display_list(ctx, list);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+}
+
+// Headless page render for visual-regression tests. Renders one page at the given
+// zoom percent and writes a PNG to outPath.
+char* TestRenderPagePngResult(const char* pdfPath, int pageNo, int zoomPct, const char* outPath, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+
+    StrBuilder out;
+    int exitCode = 1;
+    if (!pdfPath || !outPath || pageNo < 1) {
+        out.AppendFmt("ERROR invalid-args pdf=%s page=%d out=%s\n", pdfPath ? pdfPath : "(null)", pageNo,
+                      outPath ? outPath : "(null)");
+    } else {
+        EngineBase* engine = CreateEngineMupdfFromFile(pdfPath, kindFilePDF, 96, nullptr);
+        if (!engine) {
+            out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+        } else if (pageNo > engine->PageCount()) {
+            out.AppendFmt("ERROR invalid-page pdf=%s page=%d page_count=%d\n", pdfPath, pageNo, engine->PageCount());
+            SafeEngineRelease(&engine);
+        } else {
+            EngineMupdf* epdf = AsEngineMupdf(engine);
+            PrimeXfaPageRender(epdf, pageNo);
+            float zoom = (zoomPct > 0 ? zoomPct : 100) / 100.f;
+            RenderPageArgs args(pageNo, zoom, 0);
+            RenderedBitmap* bmp = engine->RenderPage(args);
+            if (!bmp) {
+                out.AppendFmt("ERROR render-failed pdf=%s page=%d zoom=%d\n", pdfPath, pageNo, zoomPct);
+            } else {
+                Gdiplus::Bitmap gbmp(bmp->GetBitmap(), nullptr);
+                CLSID pngEncId = GetGdiPlusEncoderClsid(L"image/png");
+                WCHAR* outPathW = ToWStrTemp(outPath);
+                Gdiplus::Status st = gbmp.Save(outPathW, &pngEncId, nullptr);
+                delete bmp;
+                if (st != Gdiplus::Ok) {
+                    out.AppendFmt("ERROR png-save-failed pdf=%s page=%d path=%s status=%d\n", pdfPath, pageNo, outPath,
+                                  (int)st);
+                } else {
+                    out.AppendFmt("OK page=%d zoom=%d path=%s\n", pageNo, zoomPct, outPath);
+                    exitCode = 0;
+                }
+            }
+            SafeEngineRelease(&engine);
+        }
     }
     if (exitCodeOut) {
         *exitCodeOut = exitCode;
