@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate tests/ad-hoc-xfa.pdf: pure-XFA fixture for ad-hoc-xfa.ts.
 
-Two pageAreas with per-page content instantiated via usehref prototypes.
+Two pageAreas with usehref prototypes plus tb-flowed body draws (overflow to page 2).
 Regenerate:
 
   python tests/ad-hoc-xfa.gen.py
@@ -51,6 +51,16 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
         <text>placeholder</text>
       </value>
     </field>
+    <draw name="flowSpacer" w="8in" h="10.4in">
+      <value>
+        <text> </text>
+      </value>
+    </draw>
+    <draw name="flowPage2" w="4in" h="0.2in">
+      <value>
+        <text>Flowed on page 2</text>
+      </value>
+    </draw>
   </subform>
 </template>
 <datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">

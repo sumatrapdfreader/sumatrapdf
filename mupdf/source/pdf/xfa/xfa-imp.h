@@ -83,6 +83,9 @@ struct pdf_xfa_object {
     int is_data_value;         /* -1 unknown, 0 group, 1 value */
     int has_children;
     int consumed;
+    int flow_page; /* -1: not flowed; else target page index */
+    float flow_x;
+    float flow_y;
 };
 
 struct pdf_xfa_global_data {
@@ -145,6 +148,7 @@ void pdf_xfa_ids_make_key(char* buf, const char* id);
 void pdf_xfa_object_set_id(fz_context* ctx, fz_hash_table* ids, pdf_xfa_object* node);
 void pdf_xfa_object_finalize(fz_context* ctx, fz_pool* pool, pdf_xfa_object* node);
 char* pdf_xfa_object_get_attr(fz_context* ctx, pdf_xfa_object* node, const char* name);
+int pdf_xfa_object_is_prototype_def(fz_context* ctx, pdf_xfa_object* node);
 int pdf_xfa_object_is_data_value(pdf_xfa_object* node);
 const char* pdf_xfa_object_get_data_value(fz_context* ctx, pdf_xfa_object* node);
 const char* pdf_xfa_object_text(fz_context* ctx, pdf_xfa_object* node);

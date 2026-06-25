@@ -37,6 +37,7 @@ pdf_xfa_new_object(fz_context *ctx, fz_pool *pool, pdf_xfa_ns_id ns, const char 
 	node->name = fz_pool_strdup(ctx, pool, name);
 	node->has_children = has_children;
 	node->is_data_value = -1;
+	node->flow_page = -1;
 
 	fz_snprintf(uidbuf, sizeof uidbuf, "%s%d", name, pdf_xfa_uid++);
 	node->uid = fz_pool_strdup(ctx, pool, uidbuf);
@@ -145,6 +146,17 @@ pdf_xfa_object_finalize(fz_context *ctx, fz_pool *pool, pdf_xfa_object *node)
 	text_child->content = node->content;
 	node->content = NULL;
 	pdf_xfa_object_append_child(ctx, pool, node, text_child);
+}
+
+int
+pdf_xfa_object_is_prototype_def(fz_context *ctx, pdf_xfa_object *node)
+{
+	char *name;
+
+	if (!node || !node->template_id || !node->template_id[0])
+		return 0;
+	name = pdf_xfa_object_get_attr(ctx, node, "name");
+	return !name || !name[0];
 }
 
 char *
@@ -258,6 +270,9 @@ pdf_xfa_object_clone(fz_context *ctx, fz_pool *pool, pdf_xfa_object *node)
 	clone = pdf_xfa_new_object(ctx, pool, node->ns, node->name, node->has_children);
 	clone->content = node->content ? fz_pool_strdup(ctx, pool, node->content) : NULL;
 	clone->is_data_value = node->is_data_value;
+	clone->flow_page = node->flow_page;
+	clone->flow_x = node->flow_x;
+	clone->flow_y = node->flow_y;
 	clone->global = node->global;
 	pdf_xfa_object_clone_attrs(ctx, pool, clone, node);
 

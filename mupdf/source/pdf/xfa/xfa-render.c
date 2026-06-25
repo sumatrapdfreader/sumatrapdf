@@ -98,16 +98,17 @@ static int pdf_xfa_node_is_field_or_draw(const char* name) {
     return strcmp(name, "field") == 0 || strcmp(name, "draw") == 0;
 }
 
-static int pdf_xfa_is_prototype_def(fz_context* ctx, pdf_xfa_object* node) {
-    char* name;
+static pdf_xfa_object* pdf_xfa_find_content_area(pdf_xfa_object* page_area) {
+    pdf_xfa_object* child;
 
-    if (!node || !node->template_id || !node->template_id[0]) return 0;
-    name = pdf_xfa_object_get_attr(ctx, node, "name");
-    return !name || !name[0];
+    for (child = page_area ? page_area->first_child : NULL; child; child = child->next_sibling) {
+        if (child->name && strcmp(child->name, "contentArea") == 0) return child;
+    }
+    return NULL;
 }
 
 static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float page_h, pdf_xfa_render_pos* pos,
-                                   float default_w, float default_h) {
+                                   float default_w, float default_h, int ignore_node_xy) {
     char *x, *y, *w, *h;
     float xf, yf, wf, hf;
     fz_rect rect = fz_empty_rect;
@@ -117,8 +118,8 @@ static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float 
     w = pdf_xfa_object_get_attr(ctx, node, "w");
     h = pdf_xfa_object_get_attr(ctx, node, "h");
 
-    xf = pos->ox + pdf_xfa_parse_measurement(x, 0);
-    yf = pos->oy + pdf_xfa_parse_measurement(y, 0);
+    xf = pos->ox + (ignore_node_xy ? 0 : pdf_xfa_parse_measurement(x, 0));
+    yf = pos->oy + (ignore_node_xy ? 0 : pdf_xfa_parse_measurement(y, 0));
     wf = pdf_xfa_parse_measurement(w, default_w);
     hf = pdf_xfa_parse_measurement(h, default_h);
 
@@ -177,14 +178,14 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
 }
 
 static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* field,
-                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos) {
+                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy) {
     fz_rect rect;
     float white[3] = {1.0f, 1.0f, 1.0f};
     float gray[3] = {0.75f, 0.75f, 0.75f};
     float black[3] = {0.0f, 0.0f, 0.0f};
     const char* text;
 
-    rect = pdf_xfa_object_rect(ctx, field, page_h, pos, 0, 0);
+    rect = pdf_xfa_object_rect(ctx, field, page_h, pos, 0, 0, ignore_node_xy);
     if (fz_is_empty_rect(rect)) return;
 
     xfa->render_fields++;
@@ -197,12 +198,12 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
 }
 
 static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
-                                float page_h, fz_font* font, pdf_xfa_render_pos* pos) {
+                                float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy) {
     fz_rect rect;
     float black[3] = {0.0f, 0.0f, 0.0f};
     const char* text;
 
-    rect = pdf_xfa_object_rect(ctx, draw, page_h, pos, 0, PDF_XFA_DEFAULT_DRAW_H);
+    rect = pdf_xfa_object_rect(ctx, draw, page_h, pos, 0, PDF_XFA_DEFAULT_DRAW_H, ignore_node_xy);
     if (fz_is_empty_rect(rect)) return;
 
     xfa->render_draws++;
@@ -231,15 +232,30 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
         return;
 
     if (!under_pageset && pdf_xfa_node_is_field_or_draw(node->name)) {
-        if (pdf_xfa_is_prototype_def(ctx, node)) render_node = 0;
-        else render_node = (rctx->page_index == 0);
+        if (pdf_xfa_object_is_prototype_def(ctx, node))
+            render_node = 0;
+        else if (node->flow_page >= 0)
+            render_node = (node->flow_page == rctx->page_index);
+        else
+            render_node = (rctx->page_index == 0);
     }
 
     if (render_node) {
+        pdf_xfa_render_pos node_pos = *pos;
+        int ignore_node_xy = 0;
+
+        if (!under_pageset && node->flow_page >= 0 && rctx->target_page_area) {
+            pdf_xfa_object* content_area = pdf_xfa_find_content_area(rctx->target_page_area);
+            if (content_area) pdf_xfa_render_pos_add_attrs(ctx, content_area, &node_pos);
+            node_pos.ox += node->flow_x;
+            node_pos.oy += node->flow_y;
+            ignore_node_xy = 1;
+        }
+
         if (node->name && strcmp(node->name, "field") == 0)
-            pdf_xfa_render_field(ctx, dev, ctm, xfa, node, page_h, font, pos);
+            pdf_xfa_render_field(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy);
         else if (node->name && strcmp(node->name, "draw") == 0)
-            pdf_xfa_render_draw(ctx, dev, ctm, xfa, node, page_h, font, pos);
+            pdf_xfa_render_draw(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy);
     }
 
     child_pos = *pos;

@@ -12,7 +12,7 @@ endobj
 << /Fields [] /XFA [(xdp:xdp) 5 0 R] >>
 endobj
 5 0 obj
-<< /Length 1518 >>
+<< /Length 1755 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
@@ -55,6 +55,16 @@ stream
         <text>placeholder</text>
       </value>
     </field>
+    <draw name="flowSpacer" w="8in" h="10.4in">
+      <value>
+        <text> </text>
+      </value>
+    </draw>
+    <draw name="flowPage2" w="4in" h="0.2in">
+      <value>
+        <text>Flowed on page 2</text>
+      </value>
+    </draw>
   </subform>
 </template>
 <datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">
@@ -78,5 +88,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-1827
+2064
 %%EOF
