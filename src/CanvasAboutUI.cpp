@@ -77,9 +77,12 @@ static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
 }
 
 static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
-    // clicking the canvas dismisses the floating ✕ button (its own clicks are
-    // handled by the button window, not here)
-    HomePageHideCloseButton();
+    // a click on the thumbnail's ✕ close button removes the file instead of
+    // opening it
+    if (HomePageOnCloseButtonClick(win, x, y)) {
+        win->urlOnLastButtonDown.Set(nullptr);
+        return;
+    }
     char* url = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
     char* prevUrl = win->urlOnLastButtonDown;
     bool clickedURL = url && str::Eq(url, prevUrl);

@@ -34,7 +34,8 @@ void HomePageOnMouseWheel(MainWindow* win, int delta);
 void HomePageFocusSearch(MainWindow* win);
 void HomePageDestroySearch(MainWindow* win);
 
-// per-thumbnail floating ✕ close button (issue #283)
+// per-thumbnail ✕ close button (issue #283)
 void HomePageUpdateCloseButton(MainWindow* win, int x, int y);
 void HomePageHideCloseButton();
+bool HomePageOnCloseButtonClick(MainWindow* win, int x, int y);
 void HomePageOnCanvasMouseLeave();
