@@ -49,8 +49,29 @@ static pdf_xfa_object* pdf_xfa_find_data_child(pdf_xfa_object* data, const char*
     return NULL;
 }
 
+static pdf_xfa_object* pdf_xfa_find_data_named_tree(pdf_xfa_object* node, const char* name) {
+    pdf_xfa_object* child;
+    char* named;
+    pdf_xfa_object* hit;
+
+    if (!node || !name || !name[0]) return NULL;
+
+    named = pdf_xfa_object_get_attr(NULL, node, "name");
+    if ((node->name && strcmp(node->name, name) == 0) || (named && strcmp(named, name) == 0)) return node;
+
+    for (child = node->first_child; child; child = child->next_sibling) {
+        hit = pdf_xfa_find_data_named_tree(child, name);
+        if (hit) return hit;
+    }
+    return NULL;
+}
+
 static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, pdf_xfa_object* form,
                                  pdf_xfa_object* data, int merge_mode);
+
+static int pdf_xfa_bind_is_field_node(pdf_xfa_object* node) {
+    return node && node->name && strcmp(node->name, "field") == 0;
+}
 
 static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, pdf_xfa_object* form,
                                  pdf_xfa_object* data, int merge_mode) {
@@ -81,8 +102,17 @@ static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, p
         }
 
         match = pdf_xfa_find_data_child(data, name, consume_siblings);
+        /* Radio/checkbox siblings (same field name) share one datasets leaf. */
+        if (!match && consume_siblings && pdf_xfa_bind_is_field_node(child))
+            match = pdf_xfa_find_data_child(data, name, 0);
+        /* Exclusive-group widgets often bind to a datasets leaf outside the parent subform. */
+        if (!match && pdf_xfa_bind_is_field_node(child) && xfa->data_node) {
+            pdf_xfa_object* data_root = xfa->data_node->first_child ? xfa->data_node->first_child : xfa->data_node;
+            match = pdf_xfa_find_data_named_tree(data_root, name);
+        }
         if (match) {
-            if (consume_siblings) match->consumed = 1;
+            /* Only consume group nodes so identically named data leaves stay shared. */
+            if (consume_siblings && !pdf_xfa_object_is_data_value(match)) match->consumed = 1;
             if (pdf_xfa_object_is_data_value(match))
                 pdf_xfa_bind_value(ctx, pool, child, match);
             else

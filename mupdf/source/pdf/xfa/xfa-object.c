@@ -189,6 +189,8 @@ pdf_xfa_object_is_data_value(pdf_xfa_object *node)
 	child = node->first_child;
 	if (!child->next_sibling && child->ns == PDF_XFA_NS_XHTML)
 		return 1;
+	if (!child->next_sibling && child->name && strcmp(child->name, "#text") == 0)
+		return 1;
 	return 0;
 }
 
