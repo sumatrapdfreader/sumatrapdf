@@ -5117,6 +5117,23 @@ TempStr EngineMupdfGetPdfInfo(const char* path) {
     return res;
 }
 
+static bool BufferContains(fz_context* ctx, fz_buffer* buf, const char* needle) {
+    unsigned char* data = nullptr;
+    size_t len = fz_buffer_storage(ctx, buf, &data);
+    size_t nlen = needle ? strlen(needle) : 0;
+    size_t i;
+
+    if (!needle || !data || nlen == 0 || nlen > len) {
+        return false;
+    }
+    for (i = 0; i + nlen <= len; i++) {
+        if (memcmp(data + i, needle, nlen) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Headless XFA detection test. Reports has_xfa, pure_xfa, valid, page_count.
 // Used by tests/ad-hoc-xfa.ts.
 char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
@@ -5143,6 +5160,8 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             int p1_draws = 0;
             int p1_borders = 0;
             int p1_lines = 0;
+            int serialize_ok = 0;
+            int serialize_bytes = 0;
             pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
             if (xfa) {
                 valid = pdf_xfa_is_valid(ctx, xfa) ? 1 : 0;
@@ -5186,14 +5205,33 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
                     fz_catch(ctx) {
                         fz_report_error(ctx);
                     }
+                    if (valid) {
+                        fz_buffer* data_xml = nullptr;
+                        fz_var(data_xml);
+                        fz_try(ctx) {
+                            data_xml = pdf_xfa_serialize_data(ctx, xfa);
+                            if (data_xml) {
+                                serialize_bytes = (int)fz_buffer_storage(ctx, data_xml, nullptr);
+                                if (BufferContains(ctx, data_xml, "<firstName>Alice</firstName>") &&
+                                    BufferContains(ctx, data_xml, "<lastName>Bob</lastName>") &&
+                                    BufferContains(ctx, data_xml, "<datasets")) {
+                                    serialize_ok = 1;
+                                }
+                            }
+                        }
+                        fz_always(ctx) fz_drop_buffer(ctx, data_xml);
+                        fz_catch(ctx) {
+                            fz_report_error(ctx);
+                        }
+                    }
                 }
             }
 
             out.AppendFmt(
                 "has_xfa=%d pure_xfa=%d valid=%d page_count=%d render_nonempty=%d render_fields=%d render_draws=%d "
-                "p1_fields=%d p1_draws=%d p1_borders=%d p1_lines=%d\n",
+                "p1_fields=%d p1_draws=%d p1_borders=%d p1_lines=%d serialize_ok=%d serialize_bytes=%d\n",
                 has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws, p1_fields,
-                p1_draws, p1_borders, p1_lines);
+                p1_draws, p1_borders, p1_lines, serialize_ok, serialize_bytes);
             exitCode = 0;
         }
         SafeEngineRelease(&engine);

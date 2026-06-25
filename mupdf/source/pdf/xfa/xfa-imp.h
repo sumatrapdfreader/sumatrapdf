@@ -193,6 +193,10 @@ int pdf_xfa_factory_layout(fz_context* ctx, pdf_xfa* xfa);
 /* render.c */
 fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int page_index, fz_matrix ctm);
 
+/* data.c */
+void pdf_xfa_sync_form_to_data(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa);
+fz_buffer* pdf_xfa_factory_serialize_data(fz_context* ctx, pdf_xfa* xfa);
+
 /* pdf-xfa.c helpers used by factory */
 pdf_xfa_packet* pdf_xfa_load_packets(fz_context* ctx, pdf_document* doc);
 void pdf_xfa_drop_packets(fz_context* ctx, pdf_xfa_packet* packets);

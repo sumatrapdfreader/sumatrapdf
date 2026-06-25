@@ -24,11 +24,13 @@ type XfaInfo = {
   p1_draws: number;
   p1_borders: number;
   p1_lines: number;
+  serialize_ok: number;
+  serialize_bytes: number;
 };
 
 function parseXfaLine(raw: string): XfaInfo {
   const m = raw.match(
-    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+)/,
+    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+)/,
   );
   if (!m) {
     throw new Error(`unexpected TestXfa output: ${raw.trim()}`);
@@ -45,6 +47,8 @@ function parseXfaLine(raw: string): XfaInfo {
     p1_draws: Number(m[9]),
     p1_borders: Number(m[10]),
     p1_lines: Number(m[11]),
+    serialize_ok: Number(m[12]),
+    serialize_bytes: Number(m[13]),
   };
 }
 
@@ -62,7 +66,7 @@ export async function testit(): Promise<void> {
 
   const xfa = await queryXfa(xfaPdf);
   console.log(
-    `ad-hoc-xfa.pdf: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty} render_fields=${xfa.render_fields} render_draws=${xfa.render_draws} p1_fields=${xfa.p1_fields} p1_draws=${xfa.p1_draws} p1_borders=${xfa.p1_borders} p1_lines=${xfa.p1_lines}`,
+    `ad-hoc-xfa.pdf: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty} render_fields=${xfa.render_fields} render_draws=${xfa.render_draws} p1_fields=${xfa.p1_fields} p1_draws=${xfa.p1_draws} p1_borders=${xfa.p1_borders} p1_lines=${xfa.p1_lines} serialize_ok=${xfa.serialize_ok} serialize_bytes=${xfa.serialize_bytes}`,
   );
   if (xfa.has_xfa !== 1) {
     throw new Error("ad-hoc-xfa.pdf: expected has_xfa=1");
@@ -100,6 +104,12 @@ export async function testit(): Promise<void> {
   }
   if (xfa.p1_lines !== 1) {
     throw new Error(`ad-hoc-xfa.pdf: expected p1_lines=1 on page 1, got p1_lines=${xfa.p1_lines}`);
+  }
+  if (xfa.serialize_ok !== 1) {
+    throw new Error(`ad-hoc-xfa.pdf: expected serialize_ok=1, got serialize_ok=${xfa.serialize_ok}`);
+  }
+  if (xfa.serialize_bytes <= 0) {
+    throw new Error(`ad-hoc-xfa.pdf: expected serialize_bytes>0, got serialize_bytes=${xfa.serialize_bytes}`);
   }
 
   const plain = await queryXfa(plainPdf);

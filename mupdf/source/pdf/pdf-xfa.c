@@ -201,7 +201,6 @@ int pdf_xfa_last_render_lines(fz_context* ctx, pdf_xfa* xfa) {
 }
 
 fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa) {
-    /* TODO: DataHandler.serialize */
-    (void)xfa;
-    return fz_new_buffer(ctx, 0);
+    if (!xfa || !xfa->valid) return fz_new_buffer(ctx, 0);
+    return pdf_xfa_factory_serialize_data(ctx, xfa);
 }
