@@ -4,7 +4,11 @@
 
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { queryXfa, queryXfaSerializeData } from "./xfa-test-util.ts";
+import {
+  queryXfa,
+  queryXfaSerializeData,
+  queryXfaSetFieldSerializeData,
+} from "./xfa-test-util.ts";
 import { runStandalone } from "./util.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -14,6 +18,7 @@ const MARKERS = [
   "<datasets",
   "<topmostSubform",
   "<c1_01>0</c1_01>",
+  "<c1_11>0</c1_11>",
   "<c2_07>0</c2_07>",
   "<FilingStatus>",
   "<f1_01",
@@ -28,6 +33,9 @@ export async function testit(): Promise<void> {
   if (xfa.fields_bound < 116) {
     throw new Error(`expected fields_bound>=116, got ${xfa.fields_bound}`);
   }
+  if (xfa.unbound_field_names !== "-") {
+    throw new Error(`expected unbound_field_names=-, got ${xfa.unbound_field_names}`);
+  }
 
   const xml = await queryXfaSerializeData(PDF);
   if (xml.length < 2000) {
@@ -40,8 +48,16 @@ export async function testit(): Promise<void> {
     }
   }
 
+  const changed = await queryXfaSetFieldSerializeData(PDF, "c1_11", "1");
+  if (!changed.includes("<c1_11>1</c1_11>")) {
+    throw new Error("serialized datasets missing updated marker: <c1_11>1</c1_11>");
+  }
+  if (changed.includes("<c1_11>0</c1_11>")) {
+    throw new Error("serialized datasets still contains stale marker: <c1_11>0</c1_11>");
+  }
+
   console.log(
-    `ad-hoc-f1040-serialize: OK bytes=${xml.length} fields_bound=${xfa.fields_bound} markers=${MARKERS.length}`,
+    `ad-hoc-f1040-serialize: OK bytes=${xml.length} fields_bound=${xfa.fields_bound} markers=${MARKERS.length} round_trip=c1_11`,
   );
 }
 

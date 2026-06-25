@@ -16,6 +16,8 @@ char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut = nullptr);
 char* TestI18nErrorStringResult(int* exitCodeOut = nullptr);
 char* TestXfaResult(const char* pdfPath, int* exitCodeOut = nullptr);
 char* TestXfaSerializeDataResult(const char* pdfPath, int* exitCodeOut = nullptr);
+char* TestXfaSetFieldSerializeDataResult(const char* pdfPath, const char* fieldName, const char* value,
+                                         int* exitCodeOut = nullptr);
 char* TestXfaFieldRectsResult(const char* pdfPath, int pageNo, int* exitCodeOut = nullptr);
 char* TestRenderPagePngResult(const char* pdfPath, int pageNo, int zoomPct, const char* outPath,
                               int* exitCodeOut = nullptr);

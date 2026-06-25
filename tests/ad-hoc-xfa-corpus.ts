@@ -29,6 +29,7 @@ type CorpusExpect = Pick<
   min_serialize_bytes?: number;
   min_fields_bound?: number;
   min_fields_with_page_subform?: number;
+  unbound_field_names?: string;
 };
 
 type CorpusEntry = {
@@ -67,6 +68,7 @@ const corpus: CorpusEntry[] = [
       min_serialize_bytes: 2000,
       min_fields_bound: 116,
       min_fields_with_page_subform: 110,
+      unbound_field_names: "-",
     },
   },
   {
@@ -128,6 +130,11 @@ function assertCorpus(name: string, xfa: XfaInfo, expect: CorpusExpect): void {
   if (expect.min_fields_with_page_subform !== undefined && xfa.fields_with_page_subform < expect.min_fields_with_page_subform) {
     throw new Error(
       `${name}: expected fields_with_page_subform>=${expect.min_fields_with_page_subform}, got fields_with_page_subform=${xfa.fields_with_page_subform}`,
+    );
+  }
+  if (expect.unbound_field_names !== undefined && xfa.unbound_field_names !== expect.unbound_field_names) {
+    throw new Error(
+      `${name}: expected unbound_field_names=${expect.unbound_field_names}, got unbound_field_names=${xfa.unbound_field_names}`,
     );
   }
 }

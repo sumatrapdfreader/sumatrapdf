@@ -154,6 +154,12 @@ fz_display_list* pdf_xfa_run_page(fz_context* ctx, pdf_xfa* xfa, int page_index,
 fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa);
 
 /*
+        Set a bound field's content by template name attribute (for form fill / tests).
+        Returns 1 if the field was found, 0 otherwise.
+*/
+int pdf_xfa_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, const char* value);
+
+/*
         Drop a reference obtained via pdf_keep_xfa.  Document-owned instances are
         freed by pdf_invalidate_xfa / pdf_drop_document.
 */

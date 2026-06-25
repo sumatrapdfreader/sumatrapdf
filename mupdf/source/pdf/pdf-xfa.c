@@ -267,3 +267,8 @@ fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa) {
     if (!xfa || !xfa->valid) return fz_new_buffer(ctx, 0);
     return pdf_xfa_factory_serialize_data(ctx, xfa);
 }
+
+int pdf_xfa_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, const char* value) {
+    if (!xfa || !xfa->valid) return 0;
+    return pdf_xfa_factory_set_field_content(ctx, xfa, field_name, value);
+}

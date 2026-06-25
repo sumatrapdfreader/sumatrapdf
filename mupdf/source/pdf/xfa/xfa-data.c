@@ -83,6 +83,37 @@ void pdf_xfa_sync_form_to_data(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa) {
     pdf_xfa_sync_form_to_data_imp(ctx, pool, xfa->form);
 }
 
+static pdf_xfa_object* pdf_xfa_find_named_field(pdf_xfa_object* node, const char* field_name) {
+    pdf_xfa_object* child;
+    char* name;
+    pdf_xfa_object* hit;
+
+    if (!node || !field_name || !field_name[0]) return NULL;
+
+    if (node->name && strcmp(node->name, "field") == 0) {
+        name = pdf_xfa_object_get_attr(NULL, node, "name");
+        if (name && strcmp(name, field_name) == 0) return node;
+    }
+
+    for (child = node->first_child; child; child = child->next_sibling) {
+        hit = pdf_xfa_find_named_field(child, field_name);
+        if (hit) return hit;
+    }
+    return NULL;
+}
+
+int pdf_xfa_factory_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, const char* value) {
+    pdf_xfa_object* field;
+
+    if (!xfa || !xfa->form || !field_name || !field_name[0]) return 0;
+
+    field = pdf_xfa_find_named_field(xfa->form, field_name);
+    if (!field) return 0;
+
+    field->content = fz_pool_strdup(ctx, xfa->pool, value ? value : "");
+    return 1;
+}
+
 static void pdf_xfa_append_xml_escaped(fz_context* ctx, fz_buffer* buf, const char* text) {
     const char* p;
 

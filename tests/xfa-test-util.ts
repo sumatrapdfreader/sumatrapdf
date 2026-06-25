@@ -30,11 +30,12 @@ export type XfaInfo = {
   font_families: number;
   font_held: number;
   font_missing: number;
+  unbound_field_names: string;
 };
 
 export function parseXfaLine(raw: string): XfaInfo {
   const m = raw.match(
-    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) render_borders=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+) fields_in_ps=(\d+) fields_out_ps=(\d+) fields_with_pa=(\d+) fields_with_pa_tpl=(\d+) fields_bound=(\d+) fields_with_page_subform=(\d+) area0=(\S*) area1=(\S*) font_families=(\d+) font_held=(\d+) font_missing=(\d+)(?: font_missing_names=\S*)?(?: unbound_field_names=\S*)? load_error=(.*)/,
+    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) render_borders=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+) fields_in_ps=(\d+) fields_out_ps=(\d+) fields_with_pa=(\d+) fields_with_pa_tpl=(\d+) fields_bound=(\d+) fields_with_page_subform=(\d+) area0=(\S*) area1=(\S*) font_families=(\d+) font_held=(\d+) font_missing=(\d+)(?: font_missing_names=\S*)?(?: unbound_field_names=(\S*))? load_error=(.*)/,
   );
   if (!m) {
     throw new Error(`unexpected TestXfa output: ${raw.trim()}`);
@@ -54,7 +55,7 @@ export function parseXfaLine(raw: string): XfaInfo {
     p1_lines: Number(m[12]),
     serialize_ok: Number(m[13]),
     serialize_bytes: Number(m[14]),
-    load_error: m[26].trim(),
+    load_error: m[27].trim(),
     fields_in_ps: Number(m[15]),
     fields_out_ps: Number(m[16]),
     fields_with_pa: Number(m[17]),
@@ -66,6 +67,7 @@ export function parseXfaLine(raw: string): XfaInfo {
     font_families: Number(m[23]),
     font_held: Number(m[24]),
     font_missing: Number(m[25]),
+    unbound_field_names: m[26] ?? "-",
   };
 }
 
@@ -88,6 +90,26 @@ export async function queryXfaSerializeData(pdfPath: string): Promise<string> {
   const xml = String(res[1] ?? "");
   if (exitCode !== 0) {
     throw new Error(`TestXfaSerializeData failed for ${pdfPath}: ${xml.trim()}`);
+  }
+  return xml;
+}
+
+export async function queryXfaSetFieldSerializeData(
+  pdfPath: string,
+  fieldName: string,
+  value: string,
+): Promise<string> {
+  const res = await runControlCommand(EXE, ControlCommand.TestXfaSetFieldSerializeData, [
+    pdfPath,
+    fieldName,
+    value,
+  ]);
+  const exitCode = res[0] as number;
+  const xml = String(res[1] ?? "");
+  if (exitCode !== 0) {
+    throw new Error(
+      `TestXfaSetFieldSerializeData failed for ${pdfPath} field=${fieldName}: ${xml.trim()}`,
+    );
   }
   return xml;
 }

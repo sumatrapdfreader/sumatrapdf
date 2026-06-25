@@ -25,6 +25,7 @@ export enum ControlCommand {
   TestRenderPagePng = 30,
   TestXfaFieldRects = 31,
   TestXfaSerializeData = 32,
+  TestXfaSetFieldSerializeData = 33,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

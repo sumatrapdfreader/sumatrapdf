@@ -124,6 +124,7 @@ EXPORTS
 	pdf_xfa_page_area_name
 	pdf_xfa_font_stats
 	pdf_xfa_serialize_data
+	pdf_xfa_set_field_content
 	pdf_keep_xfa
 	pdf_drop_xfa
 	pdf_page_resources
