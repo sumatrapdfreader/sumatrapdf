@@ -1282,7 +1282,6 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
         eargs.text = str::FormatTemp("%d", currentPage);
         eargs.isRtl = isRtl;
         pagesEdit = new Edit();
-        pagesEdit->onTextChanged = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::UpdateButton>(this);
         pagesEdit->Create(eargs);
         hbox->AddChild(pagesEdit, 1);
 
@@ -1349,7 +1348,9 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     mainLayout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
 
-    // validate initial state
+    // attach the change handler only now that actionBtn exists, then set the
+    // initial validation state (Edit::Create fires onTextChanged on initial text)
+    pagesEdit->onTextChanged = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::UpdateButton>(this);
     UpdateButton();
 
     CenterDialog(hwnd, w->hwndFrame);
@@ -1558,7 +1559,6 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
         eargs.font = hFont;
         eargs.isRtl = isRtl;
         passwordEdit = new Edit();
-        passwordEdit->onTextChanged = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::UpdateButton>(this);
         passwordEdit->Create(eargs);
         hbox->AddChild(passwordEdit, 1);
 
@@ -1604,7 +1604,9 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
     mainLayout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
 
-    // disable encrypt button until a password is entered
+    // attach the change handler only now that encryptBtn exists, then disable
+    // the button until a password is entered
+    passwordEdit->onTextChanged = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::UpdateButton>(this);
     encryptBtn->SetIsEnabled(false);
 
     CenterDialog(hwnd, w->hwndFrame);
