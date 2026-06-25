@@ -21,6 +21,7 @@ type CorpusExpect = Pick<XfaInfo, "has_xfa" | "pure_xfa" | "valid"> & {
   min_page_count?: number;
   min_render_fields?: number;
   min_p1_fields?: number;
+  min_font_families?: number;
 };
 
 type CorpusEntry = {
@@ -53,6 +54,7 @@ const corpus: CorpusEntry[] = [
       min_page_count: 2,
       min_render_fields: 69,
       min_p1_fields: 47,
+      min_font_families: 12,
     },
   },
   {
@@ -86,6 +88,11 @@ function assertCorpus(name: string, xfa: XfaInfo, expect: CorpusExpect): void {
   if (expect.min_p1_fields !== undefined && xfa.p1_fields < expect.min_p1_fields) {
     throw new Error(
       `${name}: expected p1_fields>=${expect.min_p1_fields}, got p1_fields=${xfa.p1_fields}`,
+    );
+  }
+  if (expect.min_font_families !== undefined && xfa.font_families < expect.min_font_families) {
+    throw new Error(
+      `${name}: expected font_families>=${expect.min_font_families}, got font_families=${xfa.font_families}`,
     );
   }
 }

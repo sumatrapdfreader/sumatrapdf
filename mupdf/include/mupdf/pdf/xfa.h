@@ -113,6 +113,11 @@ int pdf_xfa_fields_with_pagearea_template(fz_context* ctx, pdf_xfa* xfa);
 const char* pdf_xfa_page_area_name(fz_context* ctx, pdf_xfa* xfa, int page_index);
 
 /*
+        Count loaded font family slots and held fz_font references after XFA init.
+*/
+void pdf_xfa_font_stats(fz_context* ctx, pdf_xfa* xfa, int* families_out, int* held_out);
+
+/*
         Render a laid-out XFA page into a display list (replaces pdf.js htmlForXfa
         + XfaLayer for MuPDF consumers).
 */

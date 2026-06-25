@@ -218,6 +218,15 @@ const char* pdf_xfa_page_area_name(fz_context* ctx, pdf_xfa* xfa, int page_index
     return name ? name : "";
 }
 
+void pdf_xfa_font_stats(fz_context* ctx, pdf_xfa* xfa, int* families_out, int* held_out) {
+    if (!xfa || !xfa->fonts) {
+        if (families_out) *families_out = 0;
+        if (held_out) *held_out = 0;
+        return;
+    }
+    pdf_xfa_fonts_stats(ctx, xfa->fonts, families_out, held_out);
+}
+
 fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa) {
     if (!xfa || !xfa->valid) return fz_new_buffer(ctx, 0);
     return pdf_xfa_factory_serialize_data(ctx, xfa);

@@ -246,8 +246,8 @@ static void pdf_xfa_fonts_parse_psmap(fz_context* ctx, pdf_xfa_fonts* fonts, pdf
         if (!typeface || !typeface[0] || !psname || !psname[0]) continue;
         weight = pdf_xfa_object_get_attr(ctx, child, "weight");
         posture = pdf_xfa_object_get_attr(ctx, child, "posture");
-        pdf_xfa_fonts_add_psmap(ctx, fonts, typeface, pdf_xfa_font_attr_bold(weight),
-                                pdf_xfa_font_attr_italic(posture), psname);
+        pdf_xfa_fonts_add_psmap(ctx, fonts, typeface, pdf_xfa_font_attr_bold(weight), pdf_xfa_font_attr_italic(posture),
+                                psname);
     }
 }
 
@@ -359,6 +359,36 @@ static void pdf_xfa_fonts_add_variant(fz_context* ctx, pdf_xfa_fonts* fonts, con
     }
 }
 
+static int pdf_xfa_font_name_has_suffix(const char* name, const char* suffix) {
+    size_t nlen, slen;
+    const char* p;
+
+    if (!name || !suffix) return 0;
+    nlen = strlen(name);
+    slen = strlen(suffix);
+    if (nlen < slen) return 0;
+    p = name + nlen - slen;
+    if (strcmp(p, suffix) != 0) return 0;
+    return p == name || *(p - 1) == '-';
+}
+
+static int pdf_xfa_font_name_is_bold(const char* name) {
+    if (!name || !name[0]) return 0;
+    if (strstr(name, "Bold") || strstr(name, "bold")) return 1;
+    if (pdf_xfa_font_name_has_suffix(name, "Bd") || pdf_xfa_font_name_has_suffix(name, "Blk") ||
+        pdf_xfa_font_name_has_suffix(name, "Demi") || pdf_xfa_font_name_has_suffix(name, "Heavy") ||
+        pdf_xfa_font_name_has_suffix(name, "Black"))
+        return 1;
+    return 0;
+}
+
+static int pdf_xfa_font_name_is_italic(const char* name) {
+    if (!name || !name[0]) return 0;
+    if (strstr(name, "Italic") || strstr(name, "Oblique")) return 1;
+    if (pdf_xfa_font_name_has_suffix(name, "It")) return 1;
+    return 0;
+}
+
 static int pdf_xfa_font_is_bold(fz_context* ctx, pdf_obj* fontdict, pdf_font_desc* fontdesc) {
     pdf_obj* descriptor;
     int weight;
@@ -374,7 +404,15 @@ static int pdf_xfa_font_is_bold(fz_context* ctx, pdf_obj* fontdict, pdf_font_des
     }
 
     name = fontdesc && fontdesc->font && fontdesc->font->name ? fontdesc->font->name : NULL;
-    if (name && (strstr(name, "Bold") || strstr(name, "bold"))) return 1;
+    if (pdf_xfa_font_name_is_bold(name)) return 1;
+
+    if (fontdict) {
+        pdf_obj* basefontobj = pdf_dict_get(ctx, fontdict, PDF_NAME(BaseFont));
+        if (basefontobj) {
+            name = pdf_to_name(ctx, basefontobj);
+            if (pdf_xfa_font_name_is_bold(name)) return 1;
+        }
+    }
     return 0;
 }
 
@@ -390,8 +428,31 @@ static int pdf_xfa_font_is_italic(fz_context* ctx, pdf_obj* fontdict, pdf_font_d
     }
 
     name = fontdesc && fontdesc->font && fontdesc->font->name ? fontdesc->font->name : NULL;
-    if (name && (strstr(name, "Italic") || strstr(name, "Oblique") || strstr(name, "It"))) return 1;
+    if (pdf_xfa_font_name_is_italic(name)) return 1;
+
+    if (fontdict) {
+        pdf_obj* basefontobj = pdf_dict_get(ctx, fontdict, PDF_NAME(BaseFont));
+        if (basefontobj) {
+            name = pdf_to_name(ctx, basefontobj);
+            if (pdf_xfa_font_name_is_italic(name)) return 1;
+        }
+    }
     return 0;
+}
+
+static void pdf_xfa_fonts_strip_subset_prefix(const char* name, char* out, size_t outsz) {
+    const char* plus;
+
+    if (!out || outsz == 0) return;
+    out[0] = 0;
+    if (!name || !name[0]) return;
+
+    plus = strchr(name, '+');
+    if (plus && plus[1])
+        strncpy(out, plus + 1, outsz - 1);
+    else
+        strncpy(out, name, outsz - 1);
+    out[outsz - 1] = 0;
 }
 
 static char* pdf_xfa_font_family_name(fz_context* ctx, fz_pool* pool, pdf_obj* fontdict, pdf_font_desc* fontdesc) {
@@ -420,53 +481,121 @@ static char* pdf_xfa_font_family_name(fz_context* ctx, fz_pool* pool, pdf_obj* f
     return NULL;
 }
 
-static void pdf_xfa_fonts_load_dr(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_fonts* fonts) {
-    pdf_obj* root;
-    pdf_obj* acro;
-    pdf_obj* dr;
-    pdf_obj* fontdict;
+static void pdf_xfa_fonts_register_loaded(fz_context* ctx, fz_pool* pool, pdf_xfa_fonts* fonts, pdf_obj* fontobj,
+                                          pdf_font_desc* fontdesc) {
+    char* family;
+    char stripped[FZ_HASH_TABLE_KEY_LENGTH];
+    const char* basefont_name;
+    pdf_obj* basefontobj;
+    pdf_obj* descriptor;
+    int bold, italic;
+
+    if (!fonts || !fontobj || !fontdesc || !fontdesc->font) return;
+
+    family = pdf_xfa_font_family_name(ctx, pool, fontobj, fontdesc);
+    bold = pdf_xfa_font_is_bold(ctx, fontobj, fontdesc);
+    italic = pdf_xfa_font_is_italic(ctx, fontobj, fontdesc);
+
+    if (family && family[0]) pdf_xfa_fonts_add_variant(ctx, fonts, family, bold, italic, fontdesc->font);
+
+    basefontobj = pdf_dict_get(ctx, fontobj, PDF_NAME(BaseFont));
+    if (basefontobj) {
+        basefont_name = pdf_to_name(ctx, basefontobj);
+        if (basefont_name && basefont_name[0]) {
+            pdf_xfa_fonts_add_variant(ctx, fonts, basefont_name, bold, italic, fontdesc->font);
+            pdf_xfa_fonts_strip_subset_prefix(basefont_name, stripped, sizeof stripped);
+            if (stripped[0] && !pdf_xfa_typeface_keys_match(stripped, basefont_name))
+                pdf_xfa_fonts_add_variant(ctx, fonts, stripped, bold, italic, fontdesc->font);
+        }
+    }
+
+    descriptor = pdf_dict_get(ctx, fontobj, PDF_NAME(FontDescriptor));
+    if (descriptor) {
+        pdf_obj* fontnameobj = pdf_dict_get(ctx, descriptor, PDF_NAME(FontName));
+        if (fontnameobj) {
+            const char* fontname = pdf_to_name(ctx, fontnameobj);
+            if (fontname && fontname[0]) {
+                pdf_xfa_fonts_strip_subset_prefix(fontname, stripped, sizeof stripped);
+                pdf_xfa_fonts_add_variant(ctx, fonts, stripped, bold, italic, fontdesc->font);
+            }
+        }
+    }
+}
+
+static void pdf_xfa_fonts_load_font_dict(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_fonts* fonts,
+                                         pdf_obj* fontdict, const char* warn) {
     int i, n;
 
-    root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
-    acro = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
-    dr = pdf_dict_get(ctx, acro, PDF_NAME(DR));
-    fontdict = pdf_dict_get(ctx, dr, PDF_NAME(Font));
     if (!fontdict) return;
 
     n = pdf_dict_len(ctx, fontdict);
     for (i = 0; i < n; i++) {
         pdf_obj* fontobj = pdf_dict_get_val(ctx, fontdict, i);
         pdf_font_desc* fontdesc = NULL;
-        char* family = NULL;
-        int bold, italic;
 
         fz_try(ctx) {
             fontdesc = pdf_load_font(ctx, doc, NULL, fontobj);
-            family = pdf_xfa_font_family_name(ctx, pool, fontobj, fontdesc);
-            if (family && family[0]) {
-                const char* basefont_name = NULL;
-                pdf_obj* basefontobj;
-
-                bold = pdf_xfa_font_is_bold(ctx, fontobj, fontdesc);
-                italic = pdf_xfa_font_is_italic(ctx, fontobj, fontdesc);
-                pdf_xfa_fonts_add_variant(ctx, fonts, family, bold, italic, fontdesc->font);
-                basefontobj = pdf_dict_get(ctx, fontobj, PDF_NAME(BaseFont));
-                if (basefontobj) {
-                    basefont_name = pdf_to_name(ctx, basefontobj);
-                    if (basefont_name && basefont_name[0] &&
-                        !pdf_xfa_typeface_keys_match(basefont_name, family))
-                        pdf_xfa_fonts_add_variant(ctx, fonts, basefont_name, bold, italic, fontdesc->font);
-                }
-            }
+            pdf_xfa_fonts_register_loaded(ctx, pool, fonts, fontobj, fontdesc);
         }
         fz_always(ctx) pdf_drop_font(ctx, fontdesc);
         fz_catch(ctx) {
-            fz_warn(ctx, "XFA: could not load AcroForm DR font");
+            if (warn) fz_warn(ctx, "%s", warn);
         }
     }
 }
 
-static fz_font* pdf_xfa_fonts_base14(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold, int italic) {
+static void pdf_xfa_fonts_load_dr(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_fonts* fonts) {
+    pdf_obj* root;
+    pdf_obj* acro;
+    pdf_obj* dr;
+    pdf_obj* fontdict;
+
+    root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+    acro = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
+    dr = pdf_dict_get(ctx, acro, PDF_NAME(DR));
+    fontdict = pdf_dict_get(ctx, dr, PDF_NAME(Font));
+    pdf_xfa_fonts_load_font_dict(ctx, doc, pool, fonts, fontdict, "XFA: could not load AcroForm DR font");
+}
+
+static void pdf_xfa_fonts_load_page_node(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_fonts* fonts,
+                                         pdf_obj* node) {
+    pdf_obj* type;
+    pdf_obj* kids;
+    pdf_obj* resources;
+    pdf_obj* fontdict;
+    int i, n;
+
+    if (!node) return;
+
+    type = pdf_dict_get(ctx, node, PDF_NAME(Type));
+    if (pdf_name_eq(ctx, type, PDF_NAME(Pages))) {
+        kids = pdf_dict_get(ctx, node, PDF_NAME(Kids));
+        n = pdf_array_len(ctx, kids);
+        for (i = 0; i < n; i++) pdf_xfa_fonts_load_page_node(ctx, doc, pool, fonts, pdf_array_get(ctx, kids, i));
+        return;
+    }
+
+    if (pdf_name_eq(ctx, type, PDF_NAME(Page))) {
+        resources = pdf_dict_get_inheritable(ctx, node, PDF_NAME(Resources));
+        fontdict = pdf_dict_get(ctx, resources, PDF_NAME(Font));
+        pdf_xfa_fonts_load_font_dict(ctx, doc, pool, fonts, fontdict, "XFA: could not load page resource font");
+    }
+}
+
+static void pdf_xfa_fonts_load_page_resources(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_fonts* fonts) {
+    pdf_obj* root;
+    pdf_obj* pages;
+
+    root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+    pages = pdf_dict_get(ctx, root, PDF_NAME(Pages));
+    if (!pages) return;
+
+    fz_try(ctx) pdf_xfa_fonts_load_page_node(ctx, doc, pool, fonts, pages);
+    fz_catch(ctx) fz_warn(ctx, "XFA: could not load fonts from page tree");
+}
+
+static fz_font* pdf_xfa_fonts_base14(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold,
+                                     int italic) {
     char clean[FZ_HASH_TABLE_KEY_LENGTH];
     const char* face;
 
@@ -474,7 +603,8 @@ static fz_font* pdf_xfa_fonts_base14(fz_context* ctx, pdf_xfa_fonts* fonts, cons
     pdf_xfa_family_key(clean, clean, sizeof clean);
 
     if (strstr(clean, "courier") == clean) {
-        if (bold && italic) face = "Courier-BoldOblique";
+        if (bold && italic)
+            face = "Courier-BoldOblique";
         else if (bold)
             face = "Courier-Bold";
         else if (italic)
@@ -482,7 +612,8 @@ static fz_font* pdf_xfa_fonts_base14(fz_context* ctx, pdf_xfa_fonts* fonts, cons
         else
             face = "Courier";
     } else if (strstr(clean, "times") == clean) {
-        if (bold && italic) face = "Times-BoldItalic";
+        if (bold && italic)
+            face = "Times-BoldItalic";
         else if (bold)
             face = "Times-Bold";
         else if (italic)
@@ -492,7 +623,8 @@ static fz_font* pdf_xfa_fonts_base14(fz_context* ctx, pdf_xfa_fonts* fonts, cons
     } else if (strstr(clean, "helvetica") == clean || strstr(clean, "arial") == clean ||
                strstr(clean, "myriad") == clean || strstr(clean, "segoe") == clean ||
                strstr(clean, "calibri") == clean) {
-        if (bold && italic) face = "Helvetica-BoldOblique";
+        if (bold && italic)
+            face = "Helvetica-BoldOblique";
         else if (bold)
             face = "Helvetica-Bold";
         else if (italic)
@@ -525,11 +657,11 @@ pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* p
     pdf_xfa_fonts* fonts = fz_malloc_struct(ctx, pdf_xfa_fonts);
 
     fz_try(ctx) {
-        fonts->families =
-            fz_new_hash_table(ctx, 64, FZ_HASH_TABLE_KEY_LENGTH, -1, pdf_xfa_fonts_drop_slot);
+        fonts->families = fz_new_hash_table(ctx, 64, FZ_HASH_TABLE_KEY_LENGTH, -1, pdf_xfa_fonts_drop_slot);
         fonts->equates = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
         pdf_xfa_fonts_parse_config_packet(ctx, pool, fonts, packets);
         pdf_xfa_fonts_load_dr(ctx, doc, pool, fonts);
+        pdf_xfa_fonts_load_page_resources(ctx, doc, pool, fonts);
     }
     fz_catch(ctx) {
         pdf_xfa_fonts_drop(ctx, fonts);
@@ -586,6 +718,40 @@ static pdf_xfa_font_slot* pdf_xfa_fonts_find_slot(fz_context* ctx, pdf_xfa_fonts
     return state.slot;
 }
 
+static int pdf_xfa_font_usable(fz_context* ctx, fz_font* font) {
+    if (!font) return 0;
+    if (fz_encode_character(ctx, font, ' ') <= 0) return 0;
+    if (fz_encode_character(ctx, font, 'A') <= 0) return 0;
+    return 1;
+}
+
+typedef struct {
+    int count;
+} pdf_xfa_font_count_state;
+
+static void pdf_xfa_fonts_count_cb(fz_context* ctx, void* state, void* key, int keylen, void* val) {
+    pdf_xfa_font_count_state* st = (pdf_xfa_font_count_state*)state;
+    (void)ctx;
+    (void)key;
+    (void)keylen;
+    (void)val;
+    st->count++;
+}
+
+void pdf_xfa_fonts_stats(fz_context* ctx, pdf_xfa_fonts* fonts, int* families_out, int* held_out) {
+    pdf_xfa_font_count_state state = {0};
+
+    if (families_out) *families_out = 0;
+    if (held_out) *held_out = 0;
+    if (!fonts) return;
+
+    if (families_out && fonts->families && ctx) {
+        fz_hash_for_each(ctx, fonts->families, &state, pdf_xfa_fonts_count_cb);
+        *families_out = state.count;
+    }
+    if (held_out) *held_out = fonts->held_n;
+}
+
 static fz_font* pdf_xfa_fonts_pick_variant(pdf_xfa_font_slot* slot, int bold, int italic) {
     fz_font* font = NULL;
 
@@ -620,15 +786,16 @@ fz_font* pdf_xfa_fonts_resolve(fz_context* ctx, pdf_xfa_fonts* fonts, const char
     if (psname) {
         slot = pdf_xfa_fonts_find_slot(ctx, fonts, psname);
         font = pdf_xfa_fonts_pick_variant(slot, bold, italic);
-        if (font) return font;
+        if (font && pdf_xfa_font_usable(ctx, font)) return font;
+        font = NULL;
     }
 
     slot = pdf_xfa_fonts_find_slot(ctx, fonts, mapped);
     if (slot) {
         font = pdf_xfa_fonts_pick_variant(slot, bold, italic);
+        if (font && pdf_xfa_font_usable(ctx, font)) return font;
+        font = NULL;
     }
-
-    if (font) return font;
     return pdf_xfa_fonts_base14(ctx, fonts, mapped, bold, italic);
 }
 

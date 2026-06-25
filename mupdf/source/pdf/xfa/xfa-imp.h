@@ -208,6 +208,7 @@ pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* p
 void pdf_xfa_fonts_drop(fz_context* ctx, pdf_xfa_fonts* fonts);
 const char* pdf_xfa_fonts_default_typeface(pdf_xfa_fonts* fonts);
 void pdf_xfa_fonts_check_used(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* form);
+void pdf_xfa_fonts_stats(fz_context* ctx, pdf_xfa_fonts* fonts, int* families_out, int* held_out);
 fz_font* pdf_xfa_fonts_resolve(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold, int italic);
 
 /* render.c */
