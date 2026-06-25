@@ -1709,7 +1709,10 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
-    HMENU popup = BuildMenuFromDef(menuDefContextStart, CreatePopupMenu(), nullptr);
+    BuildMenuCtx ctx;
+    ctx.isDocLoaded = true;
+    ctx.filePath = path;
+    HMENU popup = BuildMenuFromDef(menuDefContextStart, CreatePopupMenu(), &ctx);
     MenuSetChecked(popup, CmdPinSelectedDocument, fs->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
