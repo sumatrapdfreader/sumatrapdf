@@ -1044,6 +1044,15 @@ void PickAnotherRandomPromotion() {
     PickAnotherRandomTip();
 }
 
+// thumbnail tooltip: the file path, then two spaces and a human-readable size
+static TempStr HomeThumbTooltipTemp(const char* path) {
+    i64 size = file::GetSize(path);
+    if (size < 0) {
+        return str::DupTemp(path);
+    }
+    return str::FormatTemp("%s  %s", path, str::FormatSizeShortTemp(size, nullptr));
+}
+
 void LayoutHomePage(HomePageLayout& l) {
     EnsureTipsParsed();
 
@@ -1311,7 +1320,7 @@ void LayoutHomePage(HomePageLayout& l) {
                 win->staticLinks.Append(new StaticLink(rcRemove.Intersect(l.rcThumbsArea), removeTarget,
                                                        _TRA("Remove from Frequently Read")));
                 win->staticLinks.Append(new StaticLink(rcPin.Intersect(l.rcThumbsArea), pinTarget, pinTip));
-                thumb.sl = new StaticLink(slRect, path, path);
+                thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
                 win->staticLinks.Append(thumb.sl);
             }
         }
@@ -1351,7 +1360,7 @@ void LayoutHomePage(HomePageLayout& l) {
                 char* path = fs->filePath;
                 Rect slRect = rcText.Union(rcPage).Intersect(l.rcThumbsArea);
                 if (!slRect.IsEmpty()) {
-                    thumb.sl = new StaticLink(slRect, path, path);
+                    thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
                     win->staticLinks.Append(thumb.sl);
                 }
             }
