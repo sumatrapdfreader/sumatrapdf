@@ -5156,6 +5156,7 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             int render_nonempty = 0;
             int render_fields = 0;
             int render_draws = 0;
+            int render_borders = 0;
             int p1_fields = 0;
             int p1_draws = 0;
             int p1_borders = 0;
@@ -5186,6 +5187,7 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
                             }
                             render_fields = pdf_xfa_last_render_fields(ctx, xfa);
                             render_draws = pdf_xfa_last_render_draws(ctx, xfa);
+                            render_borders = pdf_xfa_last_render_borders(ctx, xfa);
                         }
                         if (page_count > 1) {
                             fz_drop_display_list(ctx, list);
@@ -5229,8 +5231,10 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
 
             out.AppendFmt(
                 "has_xfa=%d pure_xfa=%d valid=%d page_count=%d render_nonempty=%d render_fields=%d render_draws=%d "
-                "p1_fields=%d p1_draws=%d p1_borders=%d p1_lines=%d serialize_ok=%d serialize_bytes=%d\n",
-                has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws, p1_fields,
+                "render_borders=%d p1_fields=%d p1_draws=%d p1_borders=%d p1_lines=%d serialize_ok=%d "
+                "serialize_bytes=%d\n",
+                has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws, render_borders,
+                p1_fields,
                 p1_draws, p1_borders, p1_lines, serialize_ok, serialize_bytes);
             exitCode = 0;
         }

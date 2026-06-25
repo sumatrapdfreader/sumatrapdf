@@ -244,6 +244,24 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
     fz_catch(ctx) fz_rethrow(ctx);
 }
 
+static int pdf_xfa_render_border(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* node,
+                                 fz_rect rect) {
+    pdf_xfa_object* border;
+    float fill[3] = {1.0f, 1.0f, 1.0f};
+    float stroke[3] = {0.5f, 0.5f, 0.5f};
+
+    border = pdf_xfa_object_find_child(node, "border");
+    if (!border) return 0;
+
+    pdf_xfa_object_fill_color(ctx, border, fill);
+    pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, fill);
+
+    if (pdf_xfa_find_descendant(border, "edge")) pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, stroke, 1.0f);
+
+    xfa->render_borders++;
+    return 1;
+}
+
 static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* field,
                                  float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy) {
     fz_rect rect;
@@ -257,8 +275,10 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
 
     xfa->render_fields++;
 
-    pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, white);
-    pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, gray, 1.0f);
+    if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, field, rect)) {
+        pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, white);
+        pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, gray, 1.0f);
+    }
 
     text = pdf_xfa_node_text(ctx, field);
     pdf_xfa_render_text_in_rect(ctx, dev, ctm, font, text, rect, PDF_XFA_FIELD_PAD, black);
@@ -299,22 +319,6 @@ static int pdf_xfa_render_draw_line(fz_context* ctx, fz_device* dev, fz_matrix c
     return 1;
 }
 
-static void pdf_xfa_render_draw_border(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa,
-                                       pdf_xfa_object* draw, fz_rect rect) {
-    pdf_xfa_object* border;
-    float fill[3] = {0.9f, 0.9f, 0.9f};
-    float stroke[3] = {0.5f, 0.5f, 0.5f};
-
-    border = pdf_xfa_object_find_child(draw, "border");
-    if (!border) return;
-
-    if (pdf_xfa_object_fill_color(ctx, border, fill)) pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, fill);
-
-    if (pdf_xfa_find_descendant(border, "edge")) pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, stroke, 1.0f);
-
-    xfa->render_borders++;
-}
-
 static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy) {
     fz_rect rect;
@@ -333,7 +337,7 @@ static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
 
     xfa->render_draws++;
 
-    pdf_xfa_render_draw_border(ctx, dev, ctm, xfa, draw, rect);
+    pdf_xfa_render_border(ctx, dev, ctm, xfa, draw, rect);
 
     text = pdf_xfa_node_text(ctx, draw);
     pdf_xfa_render_text_in_rect(ctx, dev, ctm, font, text, rect, 0, black);

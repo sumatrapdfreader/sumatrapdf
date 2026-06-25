@@ -57,6 +57,12 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
       </value>
     </draw>
     <field id="fieldProto" w="3in" h="0.25in">
+      <border>
+        <fill>
+          <color value="255,255,220"/>
+        </fill>
+        <edge stroke="lowered"/>
+      </border>
       <ui>
         <textEdit/>
       </ui>

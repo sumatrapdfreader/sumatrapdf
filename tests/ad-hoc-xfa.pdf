@@ -12,7 +12,7 @@ endobj
 << /Fields [] /XFA [(xdp:xdp) 5 0 R] >>
 endobj
 5 0 obj
-<< /Length 2165 >>
+<< /Length 2299 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
@@ -61,6 +61,12 @@ stream
       </value>
     </draw>
     <field id="fieldProto" w="3in" h="0.25in">
+      <border>
+        <fill>
+          <color value="255,255,220"/>
+        </fill>
+        <edge stroke="lowered"/>
+      </border>
       <ui>
         <textEdit/>
       </ui>
@@ -101,5 +107,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-2474
+2608
 %%EOF
