@@ -227,6 +227,22 @@ function connectSocket(path: string): Promise<Socket> {
   });
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
+
 function cleanEnv(env: Record<string, string | undefined> | undefined): Record<string, string> | undefined {
   if (!env) {
     return undefined;
@@ -261,7 +277,11 @@ export class ControlClient {
     throw new Error(`failed to connect to Sumatra control pipe ${path}: ${lastErr}`);
   }
 
-  async request(cmd: ControlCommand, args: ControlArg[] = []): Promise<ControlArg[]> {
+  async request(cmd: ControlCommand, args: ControlArg[] = [], timeoutMs = 120_000): Promise<ControlArg[]> {
+    return withTimeout(this.requestUnchecked(cmd, args), timeoutMs, `control command ${cmd}`);
+  }
+
+  private async requestUnchecked(cmd: ControlCommand, args: ControlArg[] = []): Promise<ControlArg[]> {
     const id = this.nextId++ & 0xffff;
     this.socket.write(encodeRequest(cmd, id, args));
 
@@ -285,7 +305,11 @@ export class ControlClient {
   }
 
   async quit(): Promise<void> {
-    await this.request(ControlCommand.Quit);
+    try {
+      await withTimeout(this.requestUnchecked(ControlCommand.Quit), 5000, "control quit");
+    } catch {
+      // process may already be gone after a timed-out request
+    }
   }
 
   close(): void {
@@ -299,9 +323,14 @@ export function uniquePipeName(prefix = "sumatra-control"): string {
 
 export async function withControlledSumatra<T>(
   exe: string,
-  fn: (client: ControlClient) => Promise<T>,
+  fn: (client: ControlClient, requestTimeoutMs: number) => Promise<T>,
   extraArgs: string[] = [],
-  options: { cwd?: string; env?: Record<string, string | undefined>; connectTimeoutMs?: number } = {},
+  options: {
+    cwd?: string;
+    env?: Record<string, string | undefined>;
+    connectTimeoutMs?: number;
+    requestTimeoutMs?: number;
+  } = {},
 ): Promise<T> {
   const pipeName = uniquePipeName();
   const proc = Bun.spawn([exe, "-for-testing", "-dbg-control", pipeName, ...extraArgs], {
@@ -313,7 +342,8 @@ export async function withControlledSumatra<T>(
   let client: ControlClient | undefined;
   try {
     client = await ControlClient.connect(pipeName, options.connectTimeoutMs ?? 10000);
-    return await fn(client);
+    const requestTimeoutMs = options.requestTimeoutMs ?? 120_000;
+    return await fn(client, requestTimeoutMs);
   } finally {
     if (client) {
       try {
@@ -325,7 +355,9 @@ export async function withControlledSumatra<T>(
     } else {
       proc.kill();
     }
-    await proc.exited;
+    await withTimeout(proc.exited, 10_000, "SumatraPDF exit").catch(() => {
+      proc.kill();
+    });
   }
 }
 
@@ -335,7 +367,11 @@ export async function runControlCommand(
   args: ControlArg[] = [],
   extraArgs: string[] = [],
 ): Promise<ControlArg[]> {
-  return await withControlledSumatra(exe, (client) => client.request(cmd, args), extraArgs);
+  return await withControlledSumatra(
+    exe,
+    (client, requestTimeoutMs) => client.request(cmd, args, requestTimeoutMs),
+    extraArgs,
+  );
 }
 
 if (import.meta.main) {
