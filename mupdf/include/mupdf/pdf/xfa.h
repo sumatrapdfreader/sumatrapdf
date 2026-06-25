@@ -95,6 +95,8 @@ int pdf_xfa_layout(fz_context* ctx, pdf_xfa* xfa);
 */
 int pdf_xfa_last_render_fields(fz_context* ctx, pdf_xfa* xfa);
 int pdf_xfa_last_render_draws(fz_context* ctx, pdf_xfa* xfa);
+int pdf_xfa_last_render_borders(fz_context* ctx, pdf_xfa* xfa);
+int pdf_xfa_last_render_lines(fz_context* ctx, pdf_xfa* xfa);
 
 /*
         Render a laid-out XFA page into a display list (replaces pdf.js htmlForXfa

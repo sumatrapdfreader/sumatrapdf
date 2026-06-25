@@ -22,11 +22,13 @@ type XfaInfo = {
   render_draws: number;
   p1_fields: number;
   p1_draws: number;
+  p1_borders: number;
+  p1_lines: number;
 };
 
 function parseXfaLine(raw: string): XfaInfo {
   const m = raw.match(
-    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) p1_fields=(\d+) p1_draws=(\d+)/,
+    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+)/,
   );
   if (!m) {
     throw new Error(`unexpected TestXfa output: ${raw.trim()}`);
@@ -41,6 +43,8 @@ function parseXfaLine(raw: string): XfaInfo {
     render_draws: Number(m[7]),
     p1_fields: Number(m[8]),
     p1_draws: Number(m[9]),
+    p1_borders: Number(m[10]),
+    p1_lines: Number(m[11]),
   };
 }
 
@@ -58,7 +62,7 @@ export async function testit(): Promise<void> {
 
   const xfa = await queryXfa(xfaPdf);
   console.log(
-    `ad-hoc-xfa.pdf: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty} render_fields=${xfa.render_fields} render_draws=${xfa.render_draws} p1_fields=${xfa.p1_fields} p1_draws=${xfa.p1_draws}`,
+    `ad-hoc-xfa.pdf: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty} render_fields=${xfa.render_fields} render_draws=${xfa.render_draws} p1_fields=${xfa.p1_fields} p1_draws=${xfa.p1_draws} p1_borders=${xfa.p1_borders} p1_lines=${xfa.p1_lines}`,
   );
   if (xfa.has_xfa !== 1) {
     throw new Error("ad-hoc-xfa.pdf: expected has_xfa=1");
@@ -86,10 +90,16 @@ export async function testit(): Promise<void> {
   if (xfa.p1_fields !== 1) {
     throw new Error(`ad-hoc-xfa.pdf: expected p1_fields=1 on page 1, got p1_fields=${xfa.p1_fields}`);
   }
-  if (xfa.p1_draws !== 2) {
+  if (xfa.p1_draws !== 4) {
     throw new Error(
-      `ad-hoc-xfa.pdf: expected p1_draws=2 on page 1 (pageArea + flowed), got p1_draws=${xfa.p1_draws}`,
+      `ad-hoc-xfa.pdf: expected p1_draws=4 on page 1 (pageArea + flowed + border + line), got p1_draws=${xfa.p1_draws}`,
     );
+  }
+  if (xfa.p1_borders !== 1) {
+    throw new Error(`ad-hoc-xfa.pdf: expected p1_borders=1 on page 1, got p1_borders=${xfa.p1_borders}`);
+  }
+  if (xfa.p1_lines !== 1) {
+    throw new Error(`ad-hoc-xfa.pdf: expected p1_lines=1 on page 1, got p1_lines=${xfa.p1_lines}`);
   }
 
   const plain = await queryXfa(plainPdf);

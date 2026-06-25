@@ -35,6 +35,19 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
             </value>
           </draw>
           <field usehref="#fieldProto" name="lastName" x="0.75in" y="1in"/>
+          <draw x="0.75in" y="1.5in" w="3in" h="0.3in">
+            <border>
+              <fill>
+                <color value="220,220,255"/>
+              </fill>
+            </border>
+            <value>
+              <text>Section</text>
+            </value>
+          </draw>
+          <draw x="0.75in" y="1.85in" w="3in" h="0pt">
+            <line x1="0in" y1="0in" x2="3in" y2="0in"/>
+          </draw>
         </contentArea>
       </pageArea>
     </pageSet>

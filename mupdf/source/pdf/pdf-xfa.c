@@ -190,6 +190,16 @@ int pdf_xfa_last_render_draws(fz_context* ctx, pdf_xfa* xfa) {
     return xfa ? xfa->render_draws : 0;
 }
 
+int pdf_xfa_last_render_borders(fz_context* ctx, pdf_xfa* xfa) {
+    (void)ctx;
+    return xfa ? xfa->render_borders : 0;
+}
+
+int pdf_xfa_last_render_lines(fz_context* ctx, pdf_xfa* xfa) {
+    (void)ctx;
+    return xfa ? xfa->render_lines : 0;
+}
+
 fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa) {
     /* TODO: DataHandler.serialize */
     (void)xfa;

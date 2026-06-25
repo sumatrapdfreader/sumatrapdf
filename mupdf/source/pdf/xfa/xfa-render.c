@@ -26,7 +26,6 @@
 
 #define PDF_XFA_FIELD_PAD 2.0f
 #define PDF_XFA_DEFAULT_DRAW_H 14.0f
-
 typedef struct {
     float ox;
     float oy;
@@ -50,6 +49,74 @@ static void pdf_xfa_render_fill_rect(fz_context* ctx, fz_device* dev, fz_matrix 
     }
     fz_always(ctx) fz_drop_path(ctx, path);
     fz_catch(ctx) fz_rethrow(ctx);
+}
+
+static void pdf_xfa_render_stroke_line(fz_context* ctx, fz_device* dev, fz_matrix ctm, float x0, float y0, float x1,
+                                       float y1, float rgb[3], float line_width) {
+    fz_path* path = NULL;
+    fz_stroke_state* stroke = NULL;
+
+    fz_var(path);
+    fz_var(stroke);
+    fz_try(ctx) {
+        path = fz_new_path(ctx);
+        stroke = fz_new_stroke_state(ctx);
+        stroke->linewidth = line_width;
+
+        fz_moveto(ctx, path, x0, y0);
+        fz_lineto(ctx, path, x1, y1);
+        fz_stroke_path(ctx, dev, path, stroke, ctm, fz_device_rgb(ctx), rgb, 1.0f, fz_default_color_params);
+    }
+    fz_always(ctx) {
+        fz_drop_stroke_state(ctx, stroke);
+        fz_drop_path(ctx, path);
+    }
+    fz_catch(ctx) fz_rethrow(ctx);
+}
+
+static int pdf_xfa_parse_rgb_color(const char* text, float rgb[3]) {
+    const char* p;
+    int i;
+
+    if (!text || !text[0]) return 0;
+
+    p = text;
+    for (i = 0; i < 3; i++) {
+        char* end;
+        double v = strtod(p, &end);
+        if (end == p) return 0;
+        rgb[i] = (float)(v / 255.0);
+        p = end;
+        while (*p == ' ' || *p == '\t') p++;
+        if (i < 2) {
+            if (*p != ',') return 0;
+            p++;
+        }
+    }
+    return 1;
+}
+
+static pdf_xfa_object* pdf_xfa_find_descendant(pdf_xfa_object* node, const char* name) {
+    pdf_xfa_object* child;
+    pdf_xfa_object* hit;
+
+    if (!node || !name) return NULL;
+
+    for (child = node->first_child; child; child = child->next_sibling) {
+        if (child->name && strcmp(child->name, name) == 0) return child;
+        hit = pdf_xfa_find_descendant(child, name);
+        if (hit) return hit;
+    }
+    return NULL;
+}
+
+static int pdf_xfa_object_fill_color(fz_context* ctx, pdf_xfa_object* node, float rgb[3]) {
+    pdf_xfa_object* color;
+
+    color = pdf_xfa_find_descendant(node, "color");
+    if (!color) return 0;
+    if (!pdf_xfa_parse_rgb_color(pdf_xfa_object_get_attr(ctx, color, "value"), rgb)) return 0;
+    return 1;
 }
 
 static void pdf_xfa_render_stroke_rect(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_rect rect, float rgb[3],
@@ -197,16 +264,76 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
     pdf_xfa_render_text_in_rect(ctx, dev, ctm, font, text, rect, PDF_XFA_FIELD_PAD, black);
 }
 
+static int pdf_xfa_render_draw_line(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
+                                    float page_h, pdf_xfa_render_pos* pos, int ignore_node_xy) {
+    pdf_xfa_object* line;
+    char *x1, *y1, *x2, *y2, *dx, *dy;
+    float ox, oy, lx0, ly0, lx1, ly1, px0, py0, px1, py1;
+    float black[3] = {0.0f, 0.0f, 0.0f};
+
+    line = pdf_xfa_object_find_child(draw, "line");
+    if (!line) return 0;
+
+    dx = pdf_xfa_object_get_attr(ctx, draw, "x");
+    dy = pdf_xfa_object_get_attr(ctx, draw, "y");
+    ox = pos->ox + (ignore_node_xy ? 0 : pdf_xfa_parse_measurement(dx, 0));
+    oy = pos->oy + (ignore_node_xy ? 0 : pdf_xfa_parse_measurement(dy, 0));
+
+    x1 = pdf_xfa_object_get_attr(ctx, line, "x1");
+    y1 = pdf_xfa_object_get_attr(ctx, line, "y1");
+    x2 = pdf_xfa_object_get_attr(ctx, line, "x2");
+    y2 = pdf_xfa_object_get_attr(ctx, line, "y2");
+
+    lx0 = ox + pdf_xfa_parse_measurement(x1, 0);
+    ly0 = oy + pdf_xfa_parse_measurement(y1, 0);
+    lx1 = ox + pdf_xfa_parse_measurement(x2, 0);
+    ly1 = oy + pdf_xfa_parse_measurement(y2, 0);
+
+    px0 = lx0;
+    px1 = lx1;
+    py0 = page_h - ly0;
+    py1 = page_h - ly1;
+
+    pdf_xfa_render_stroke_line(ctx, dev, ctm, px0, py0, px1, py1, black, 1.0f);
+    xfa->render_lines++;
+    return 1;
+}
+
+static void pdf_xfa_render_draw_border(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa,
+                                       pdf_xfa_object* draw, fz_rect rect) {
+    pdf_xfa_object* border;
+    float fill[3] = {0.9f, 0.9f, 0.9f};
+    float stroke[3] = {0.5f, 0.5f, 0.5f};
+
+    border = pdf_xfa_object_find_child(draw, "border");
+    if (!border) return;
+
+    if (pdf_xfa_object_fill_color(ctx, border, fill)) pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, fill);
+
+    if (pdf_xfa_find_descendant(border, "edge")) pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, stroke, 1.0f);
+
+    xfa->render_borders++;
+}
+
 static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy) {
     fz_rect rect;
     float black[3] = {0.0f, 0.0f, 0.0f};
     const char* text;
+    int drew_line;
+
+    drew_line = pdf_xfa_render_draw_line(ctx, dev, ctm, xfa, draw, page_h, pos, ignore_node_xy);
+    if (drew_line) {
+        xfa->render_draws++;
+        return;
+    }
 
     rect = pdf_xfa_object_rect(ctx, draw, page_h, pos, 0, PDF_XFA_DEFAULT_DRAW_H, ignore_node_xy);
     if (fz_is_empty_rect(rect)) return;
 
     xfa->render_draws++;
+
+    pdf_xfa_render_draw_border(ctx, dev, ctm, xfa, draw, rect);
 
     text = pdf_xfa_node_text(ctx, draw);
     pdf_xfa_render_text_in_rect(ctx, dev, ctm, font, text, rect, 0, black);
@@ -282,6 +409,8 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
     page_h = page_bbox.y1 - page_bbox.y0;
     xfa->render_fields = 0;
     xfa->render_draws = 0;
+    xfa->render_borders = 0;
+    xfa->render_lines = 0;
 
     rctx.page_index = page_index;
     if (xfa->page_areas && page_index < xfa->page_count) rctx.target_page_area = xfa->page_areas[page_index];

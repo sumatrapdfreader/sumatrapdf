@@ -5141,6 +5141,8 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             int render_draws = 0;
             int p1_fields = 0;
             int p1_draws = 0;
+            int p1_borders = 0;
+            int p1_lines = 0;
             pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
             if (xfa) {
                 valid = pdf_xfa_is_valid(ctx, xfa) ? 1 : 0;
@@ -5172,6 +5174,8 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
                             if (list) {
                                 p1_fields = pdf_xfa_last_render_fields(ctx, xfa);
                                 p1_draws = pdf_xfa_last_render_draws(ctx, xfa);
+                                p1_borders = pdf_xfa_last_render_borders(ctx, xfa);
+                                p1_lines = pdf_xfa_last_render_lines(ctx, xfa);
                             }
                         }
                     }
@@ -5187,9 +5191,9 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
 
             out.AppendFmt(
                 "has_xfa=%d pure_xfa=%d valid=%d page_count=%d render_nonempty=%d render_fields=%d render_draws=%d "
-                "p1_fields=%d p1_draws=%d\n",
+                "p1_fields=%d p1_draws=%d p1_borders=%d p1_lines=%d\n",
                 has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws, p1_fields,
-                p1_draws);
+                p1_draws, p1_borders, p1_lines);
             exitCode = 0;
         }
         SafeEngineRelease(&engine);

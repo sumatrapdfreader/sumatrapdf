@@ -120,6 +120,8 @@ struct pdf_xfa {
     pdf_xfa_html_node* pages;    /* laid-out page tree roots */
     int render_fields;
     int render_draws;
+    int render_borders;
+    int render_lines;
 };
 
 struct pdf_xfa_builder {

@@ -109,6 +109,8 @@ EXPORTS
 	pdf_xfa_run_page
 	pdf_xfa_last_render_fields
 	pdf_xfa_last_render_draws
+	pdf_xfa_last_render_borders
+	pdf_xfa_last_render_lines
 	pdf_xfa_serialize_data
 	pdf_keep_xfa
 	pdf_drop_xfa
