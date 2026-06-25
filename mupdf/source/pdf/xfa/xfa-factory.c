@@ -24,87 +24,53 @@
 
 #include <string.h>
 
-static void pdf_xfa_drop_imp(fz_context *ctx, pdf_xfa *xfa);
+static void pdf_xfa_drop_imp(fz_context* ctx, pdf_xfa* xfa);
 
-static void
-pdf_xfa_ids_drop(fz_context *ctx, void *val)
-{
-	(void)ctx;
-	(void)val;
+static void pdf_xfa_ids_drop(fz_context* ctx, void* val) {
+    (void)ctx;
+    (void)val;
 }
 
-pdf_xfa *
-pdf_xfa_new_from_packets(fz_context *ctx, pdf_document *doc, pdf_xfa_packet *packets)
-{
-	pdf_xfa *xfa = fz_malloc_struct(ctx, pdf_xfa);
+pdf_xfa* pdf_xfa_new_from_packets(fz_context* ctx, pdf_document* doc, pdf_xfa_packet* packets) {
+    pdf_xfa* xfa = fz_malloc_struct(ctx, pdf_xfa);
 
-	xfa->refs = 1;
-	xfa->doc = doc;
-	xfa->pool = fz_new_pool(ctx);
-	xfa->ids = fz_new_hash_table(ctx, 256, FZ_HASH_TABLE_KEY_LENGTH, -1, pdf_xfa_ids_drop);
-	xfa->packets = packets;
+    xfa->refs = 1;
+    xfa->doc = doc;
+    xfa->pool = fz_new_pool(ctx);
+    xfa->ids = fz_new_hash_table(ctx, 256, FZ_HASH_TABLE_KEY_LENGTH, -1, pdf_xfa_ids_drop);
+    xfa->packets = packets;
 
-	fz_try(ctx)
-	{
-		xfa->root = pdf_xfa_parse_packets(ctx, xfa->pool, packets);
-		if (!xfa->root)
-			fz_throw(ctx, FZ_ERROR_FORMAT, "XFA: parse failed");
+    fz_try(ctx) {
+        xfa->root = pdf_xfa_parse_packets(ctx, xfa->pool, packets);
+        if (!xfa->root) fz_throw(ctx, FZ_ERROR_FORMAT, "XFA: parse failed");
 
-		xfa->form = pdf_xfa_bind(ctx, xfa->pool, xfa);
-		if (xfa->form)
-		{
-			xfa->global.template_root = xfa->form;
-			xfa->valid = 1;
-		}
-	}
-	fz_catch(ctx)
-	{
-		pdf_xfa_drop_imp(ctx, xfa);
-		fz_rethrow(ctx);
-	}
+        xfa->form = pdf_xfa_bind(ctx, xfa->pool, xfa);
+        if (xfa->form) {
+            xfa->global.template_root = xfa->form;
+            xfa->valid = 1;
+        }
+    }
+    fz_catch(ctx) {
+        pdf_xfa_drop_imp(ctx, xfa);
+        fz_rethrow(ctx);
+    }
 
-	return xfa;
+    return xfa;
 }
 
-int
-pdf_xfa_factory_layout(fz_context *ctx, pdf_xfa *xfa)
-{
-	/* TODO: template[$toPages] + layout.js */
-	if (!xfa || !xfa->valid)
-		return 0;
-
-	if (xfa->layout_done)
-		return xfa->page_count;
-
-	xfa->layout_done = 1;
-	xfa->page_count = 0;
-	xfa->page_bboxes = NULL;
-	xfa->pages = NULL;
-
-	return xfa->page_count;
+static void pdf_xfa_drop_imp(fz_context* ctx, pdf_xfa* xfa) {
+    if (!xfa) return;
+    pdf_xfa_drop_packets(ctx, xfa->packets);
+    fz_free(ctx, xfa->page_bboxes);
+    fz_drop_hash_table(ctx, xfa->ids);
+    fz_drop_pool(ctx, xfa->pool);
+    fz_free(ctx, xfa);
 }
 
-static void
-pdf_xfa_drop_imp(fz_context *ctx, pdf_xfa *xfa)
-{
-	if (!xfa)
-		return;
-	pdf_xfa_drop_packets(ctx, xfa->packets);
-	fz_free(ctx, xfa->page_bboxes);
-	fz_drop_hash_table(ctx, xfa->ids);
-	fz_drop_pool(ctx, xfa->pool);
-	fz_free(ctx, xfa);
+pdf_xfa* pdf_keep_xfa(fz_context* ctx, pdf_xfa* xfa) {
+    return fz_keep_imp(ctx, xfa, &xfa->refs);
 }
 
-pdf_xfa *
-pdf_keep_xfa(fz_context *ctx, pdf_xfa *xfa)
-{
-	return fz_keep_imp(ctx, xfa, &xfa->refs);
-}
-
-void
-pdf_drop_xfa(fz_context *ctx, pdf_xfa *xfa)
-{
-	if (fz_drop_imp(ctx, xfa, &xfa->refs))
-		pdf_xfa_drop_imp(ctx, xfa);
+void pdf_drop_xfa(fz_context* ctx, pdf_xfa* xfa) {
+    if (fz_drop_imp(ctx, xfa, &xfa->refs)) pdf_xfa_drop_imp(ctx, xfa);
 }

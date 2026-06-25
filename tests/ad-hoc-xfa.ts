@@ -55,8 +55,8 @@ export async function testit(): Promise<void> {
   if (xfa.valid !== 1) {
     throw new Error(`ad-hoc-xfa.pdf: expected valid=1, got valid=${xfa.valid}`);
   }
-  if (xfa.page_count !== 0) {
-    throw new Error(`ad-hoc-xfa.pdf: unexpected page_count=${xfa.page_count} (layout stub should yield 0)`);
+  if (xfa.page_count !== 1) {
+    throw new Error(`ad-hoc-xfa.pdf: expected page_count=1, got page_count=${xfa.page_count}`);
   }
 
   const plain = await queryXfa(plainPdf);
