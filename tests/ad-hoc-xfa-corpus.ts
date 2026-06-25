@@ -22,6 +22,7 @@ type CorpusExpect = Pick<XfaInfo, "has_xfa" | "pure_xfa" | "valid"> & {
   min_render_fields?: number;
   min_p1_fields?: number;
   min_font_families?: number;
+  max_font_missing?: number;
 };
 
 type CorpusEntry = {
@@ -55,6 +56,7 @@ const corpus: CorpusEntry[] = [
       min_render_fields: 69,
       min_p1_fields: 47,
       min_font_families: 12,
+      max_font_missing: 1,
     },
   },
   {
@@ -93,6 +95,11 @@ function assertCorpus(name: string, xfa: XfaInfo, expect: CorpusExpect): void {
   if (expect.min_font_families !== undefined && xfa.font_families < expect.min_font_families) {
     throw new Error(
       `${name}: expected font_families>=${expect.min_font_families}, got font_families=${xfa.font_families}`,
+    );
+  }
+  if (expect.max_font_missing !== undefined && xfa.font_missing > expect.max_font_missing) {
+    throw new Error(
+      `${name}: expected font_missing<=${expect.max_font_missing}, got font_missing=${xfa.font_missing}`,
     );
   }
 }

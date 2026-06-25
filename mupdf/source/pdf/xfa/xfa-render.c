@@ -861,21 +861,38 @@ static int pdf_xfa_h_align_mode(pdf_xfa_text_style* style) {
     return 0;
 }
 
-static float pdf_xfa_line_start_y(fz_rect rect, float fontsize, float line_height, int line_count,
-                                  pdf_xfa_text_style* style) {
-    float start_y;
+static void pdf_xfa_font_vertical_metrics(fz_context* ctx, fz_font* font, float fontsize, float* asc_pt,
+                                          float* desc_pt) {
+    float asc = 0.8f;
+    float desc = -0.2f;
+
+    if (font) {
+        fz_calculate_font_ascender_descender(ctx, font);
+        asc = fz_font_ascender(ctx, font);
+        desc = fz_font_descender(ctx, font);
+        if (asc <= 0) asc = 0.8f;
+        if (desc >= 0) desc = -0.2f;
+    }
+    *asc_pt = fontsize * asc;
+    *desc_pt = fontsize * desc;
+}
+
+static float pdf_xfa_line_start_y(fz_context* ctx, fz_font* font, fz_rect rect, float fontsize, float line_height,
+                                  int line_count, pdf_xfa_text_style* style) {
+    float asc_pt, desc_pt;
+    float block_h;
+
+    pdf_xfa_font_vertical_metrics(ctx, font, fontsize, &asc_pt, &desc_pt);
 
     if (style && style->v_align[0]) {
         if (strcmp(style->v_align, "bottom") == 0)
-            start_y = rect.y0 + fontsize * 0.85f + (line_count - 1) * line_height;
-        else if (strcmp(style->v_align, "middle") == 0)
-            start_y = (rect.y0 + rect.y1) * 0.5f + fontsize * 0.35f + (line_count - 1) * line_height * 0.5f;
-        else
-            start_y = rect.y1 - fontsize * 0.1f;
-    } else
-        start_y = rect.y1 - fontsize * 0.1f;
-
-    return start_y;
+            return rect.y0 - desc_pt + (line_count - 1) * line_height;
+        if (strcmp(style->v_align, "middle") == 0) {
+            block_h = (line_count - 1) * line_height + asc_pt - desc_pt;
+            return (rect.y0 + rect.y1) * 0.5f + block_h * 0.5f - asc_pt;
+        }
+    }
+    return rect.y1 - asc_pt;
 }
 
 static float pdf_xfa_line_start_x(fz_rect rect, float line_width, int line_index, pdf_xfa_text_style* style) {
@@ -951,7 +968,7 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
     fz_try(ctx) {
         fztext = fz_new_text(ctx);
         trm = fz_scale(fontsize, -fontsize);
-        trm.f = pdf_xfa_line_start_y(rect, fontsize, line_height, line_count, style);
+        trm.f = pdf_xfa_line_start_y(ctx, font, rect, fontsize, line_height, line_count, style);
 
         for (l = 0; l < line_count; l++) {
             int len = (int)(lines[l].b - lines[l].a);
