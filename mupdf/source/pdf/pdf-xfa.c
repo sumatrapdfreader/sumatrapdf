@@ -186,6 +186,33 @@ int pdf_xfa_last_render_lines(fz_context* ctx, pdf_xfa* xfa) {
     return xfa ? xfa->render_lines : 0;
 }
 
+int pdf_xfa_fields_in_pageset(fz_context* ctx, pdf_xfa* xfa) {
+    if (!xfa) return 0;
+    pdf_xfa_layout(ctx, xfa);
+    return xfa->fields_in_pageset;
+}
+
+int pdf_xfa_fields_outside_pageset(fz_context* ctx, pdf_xfa* xfa) {
+    if (!xfa) return 0;
+    pdf_xfa_layout(ctx, xfa);
+    return xfa->fields_outside_pageset;
+}
+
+int pdf_xfa_fields_with_pagearea(fz_context* ctx, pdf_xfa* xfa) {
+    if (!xfa) return 0;
+    pdf_xfa_layout(ctx, xfa);
+    return xfa->fields_with_pagearea;
+}
+
+const char* pdf_xfa_page_area_name(fz_context* ctx, pdf_xfa* xfa, int page_index) {
+    char* name;
+
+    if (!xfa || page_index < 0 || page_index >= pdf_xfa_page_count(ctx, xfa)) return "";
+    if (!xfa->page_areas) return "";
+    name = pdf_xfa_object_get_attr(ctx, xfa->page_areas[page_index], "name");
+    return name ? name : "";
+}
+
 fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa) {
     if (!xfa || !xfa->valid) return fz_new_buffer(ctx, 0);
     return pdf_xfa_factory_serialize_data(ctx, xfa);

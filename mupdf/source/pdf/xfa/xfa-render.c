@@ -174,6 +174,14 @@ static pdf_xfa_object* pdf_xfa_find_content_area(pdf_xfa_object* page_area) {
     return NULL;
 }
 
+static pdf_xfa_object* pdf_xfa_find_pagearea_ancestor(pdf_xfa_object* node) {
+    while (node) {
+        if (node->name && strcmp(node->name, "pageArea") == 0) return node;
+        node = node->parent;
+    }
+    return NULL;
+}
+
 static int pdf_xfa_pagearea_is_target(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_object* target) {
     char* node_name;
     char* target_name;
@@ -380,11 +388,19 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
         return;
 
     if (!under_pageset && pdf_xfa_node_is_field_or_draw(node->name)) {
+        pdf_xfa_object* area;
+
         if (pdf_xfa_object_is_prototype_def(ctx, node))
             render_node = 0;
         else if (node->flow_page >= 0)
             render_node = (node->flow_page == rctx->page_index);
-        else
+        else if (node->name && strcmp(node->name, "field") == 0) {
+            area = pdf_xfa_find_pagearea_ancestor(node);
+            if (area && xfa->page_areas && xfa->page_count > 1 && rctx->target_page_area)
+                render_node = pdf_xfa_pagearea_is_target(ctx, area, rctx->target_page_area);
+            else
+                render_node = (rctx->page_index == 0);
+        } else
             render_node = (rctx->page_index == 0);
     }
 

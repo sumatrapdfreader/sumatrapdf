@@ -122,6 +122,9 @@ struct pdf_xfa {
     int render_draws;
     int render_borders;
     int render_lines;
+    int fields_in_pageset;
+    int fields_outside_pageset;
+    int fields_with_pagearea;
 };
 
 struct pdf_xfa_builder {

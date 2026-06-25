@@ -201,6 +201,32 @@ static pdf_xfa_object* pdf_xfa_find_pageset(pdf_xfa_object* node) {
     return NULL;
 }
 
+static pdf_xfa_object* pdf_xfa_count_find_pagearea(pdf_xfa_object* node) {
+    while (node) {
+        if (node->name && strcmp(node->name, "pageArea") == 0) return node;
+        node = node->parent;
+    }
+    return NULL;
+}
+
+static void pdf_xfa_count_fields(pdf_xfa_object* node, int under_pageset, int* in_pageset, int* outside_pageset,
+                                 int* with_pagearea) {
+    pdf_xfa_object* child;
+
+    if (!node) return;
+
+    if (node->name && strcmp(node->name, "pageSet") == 0) under_pageset = 1;
+
+    if (node->name && strcmp(node->name, "field") == 0) {
+        if (under_pageset) (*in_pageset)++;
+        else (*outside_pageset)++;
+        if (pdf_xfa_count_find_pagearea(node)) (*with_pagearea)++;
+    }
+
+    for (child = node->first_child; child; child = child->next_sibling)
+        pdf_xfa_count_fields(child, under_pageset, in_pageset, outside_pageset, with_pagearea);
+}
+
 static int pdf_xfa_collect_pageareas(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_object** page_areas, int max_pages,
                                      int n) {
     pdf_xfa_object* pageset;
@@ -260,6 +286,9 @@ int pdf_xfa_factory_layout(fz_context* ctx, pdf_xfa* xfa) {
                 xfa->page_bboxes[i] = pdf_xfa_pagearea_bbox(ctx, page_areas[i]);
             }
             pdf_xfa_layout_flow_subforms(ctx, xfa, xfa->form);
+            xfa->fields_with_pagearea = 0;
+            pdf_xfa_count_fields(xfa->form, 0, &xfa->fields_in_pageset, &xfa->fields_outside_pageset,
+                                 &xfa->fields_with_pagearea);
         }
     }
     fz_catch(ctx) {
