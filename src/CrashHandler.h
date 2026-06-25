@@ -4,7 +4,7 @@
 extern char* gCrashFilePath;
 extern char* gSymbolsDir;
 
-void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir);
+void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir, bool localOnly);
 void UninstallCrashHandler();
 bool CrashHandlerDownloadSymbols();
 bool AreSymbolsDownloaded(const char* symDir);

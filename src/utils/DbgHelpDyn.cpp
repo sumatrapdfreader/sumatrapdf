@@ -513,7 +513,7 @@ void LogCallstack() {
     }
 }
 
-void GetAllThreadsCallstacks(StrBuilder& s) {
+void GetAllThreadsCallstacksExcept(StrBuilder& s, DWORD skipThreadId) {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (threadSnap == INVALID_HANDLE_VALUE) {
         return;
@@ -525,13 +525,17 @@ void GetAllThreadsCallstacks(StrBuilder& s) {
     DWORD pid = GetCurrentProcessId();
     BOOL ok = Thread32First(threadSnap, &te32);
     while (ok) {
-        if (te32.th32OwnerProcessID == pid) {
+        if (te32.th32OwnerProcessID == pid && te32.th32ThreadID != skipThreadId) {
             GetThreadCallstack(s, te32.th32ThreadID);
         }
         ok = Thread32Next(threadSnap, &te32);
     }
 
     CloseHandle(threadSnap);
+}
+
+void GetAllThreadsCallstacks(StrBuilder& s) {
+    GetAllThreadsCallstacksExcept(s, 0);
 }
 #pragma warning(pop)
 

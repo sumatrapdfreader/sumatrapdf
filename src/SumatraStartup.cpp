@@ -1774,6 +1774,18 @@ static void LogCommandLine() {
     logf("'%s'\n  ver %s\n", s, UPDATE_CHECK_VERA);
 }
 
+static void InstallSumatraCrashHandler(bool localOnly) {
+    if (gIsAsanBuild) {
+        return;
+    }
+
+    TempStr crashInfoDir = GetCrashInfoDirTemp();
+    TempStr crashDumpPath = path::JoinTemp(crashInfoDir, "sumatrapdfcrash.dmp");
+    TempStr crashFilePath = path::JoinTemp(crashInfoDir, "sumatrapdfcrash.txt");
+    TempStr symDir = localOnly ? GetSelfExeDirTemp() : crashInfoDir;
+    InstallCrashHandler(crashDumpPath, crashFilePath, symDir, localOnly);
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -1806,12 +1818,21 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
     LogCommandLine();
 
-    if (!gIsAsanBuild) {
-        TempStr symDir = GetCrashInfoDirTemp();
-        TempStr crashDumpPath = path::JoinTemp(symDir, "sumatrapdfcrash.dmp");
-        TempStr crashFilePath = path::JoinTemp(symDir, "sumatrapdfcrash.txt");
-        InstallCrashHandler(crashDumpPath, crashFilePath, symDir);
+    Flags flags;
+    if (ExeHasNameOfStoreInstaller()) {
+        InstallSumatraCrashHandler(false);
+        logf("Running store installer\n");
+        flags.install = true;
+        flags.silent = true;
+        flags.storeInstaller = true;
+        gCli = &flags;
+        return RunInstaller();
     }
+
+    ParseFlags(GetLifetimeArena(), GetCommandLineW(), flags, gToolNames);
+    gCli = &flags;
+    gForTesting = flags.forTesting;
+    InstallSumatraCrashHandler(flags.forTesting || flags.controlPipeName);
 
     ScopedOle ole;
     InitAllCommonControls();
@@ -1830,19 +1851,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     logf("wine: %s\n", IsRunningOnWine() ? "true" : "false");
     LogWineDpiInfo();
 
-    Flags flags;
-    if (ExeHasNameOfStoreInstaller()) {
-        logf("Running store installer\n");
-        flags.install = true;
-        flags.silent = true;
-        flags.storeInstaller = true;
-        gCli = &flags;
-        return RunInstaller();
-    }
-
-    ParseFlags(GetLifetimeArena(), GetCommandLineW(), flags, gToolNames);
-    gCli = &flags;
-    gForTesting = flags.forTesting;
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
     if (flags.justExtractFiles) {
         isInstaller = false;

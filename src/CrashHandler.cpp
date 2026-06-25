@@ -76,6 +76,7 @@ static char* gModulesInfo = nullptr;
 static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
 static bool isDllBuild = false;
+static bool gLocalOnlyCrashHandler = false;
 static bool gCrashed = false;
 static volatile LONG gCrashHandlerStarted = 0;
 static DWORD gCrashThreadId = 0;
@@ -196,6 +197,38 @@ static char* BuildCrashInfoText(const char* condStr, const char* fileLine, bool 
     return s.StealData();
 }
 
+static char* BuildLocalCrashInfoText(const char* condStr, const char* fileLine, bool isCrash, bool captureCallstack) {
+    StrBuilder s(16 * 1024, gCrashHandlerAllocator);
+    if (!isCrash) {
+        captureCallstack = true;
+        s.Append("Type: debug report (not crash)\n");
+    }
+    if (condStr) {
+        s.AppendFmt("Cond: %s @ %s\n", condStr, fileLine);
+    }
+    if (gSystemInfo) {
+        s.Append(gSystemInfo);
+        s.Append("\n");
+    }
+
+    DWORD crashedThreadId = gMei.ThreadId;
+    if (gMei.ExceptionPointers) {
+        dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
+    } else if (captureCallstack) {
+        crashedThreadId = GetCurrentThreadId();
+        s.Append("\nCrashed thread:\n");
+        dbghelp::GetCurrentThreadCallstack(s);
+    }
+
+    if (captureCallstack) {
+        s.Append("\nOther threads:\n");
+        dbghelp::GetAllThreadsCallstacksExcept(s, crashedThreadId);
+        s.Append("\n");
+    }
+
+    return s.StealData();
+}
+
 void SaveCrashInfo(const ByteSlice& d) {
     if (!gCrashFilePath) {
         logf("SaveCrashInfo: skipping because !gCrashFilePath");
@@ -204,6 +237,18 @@ void SaveCrashInfo(const ByteSlice& d) {
     logf("SaveCrashInfo: gCrashFilePath='%s'\n", gCrashFilePath);
     dir::CreateForFile(gCrashFilePath);
     file::WriteFile(gCrashFilePath, d);
+}
+
+static void WriteCrashInfoToStdErr(const ByteSlice& d) {
+    if (d.empty()) {
+        return;
+    }
+    HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+    if (!h || h == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    DWORD written = 0;
+    WriteFile(h, d.data(), (DWORD)d.size(), &written, nullptr);
 }
 
 void UploadCrashReport(const ByteSlice& d) {
@@ -301,6 +346,10 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
 }
 
 bool CrashHandlerDownloadSymbols() {
+    if (gLocalOnlyCrashHandler) {
+        log("CrashHandlerDownloadSymbols: skipping in local-only crash handler\n");
+        return false;
+    }
     return DownloadAndUnzipSymbols(gSymbolsDir);
 }
 
@@ -427,6 +476,21 @@ void _uploadDebugReport(const char* condStr, const char* fileLine, bool isCrash,
         shouldUpload = gIsPreReleaseBuild;
     }
 
+    if (gLocalOnlyCrashHandler) {
+        InitializeDbgHelp(false);
+        auto s = BuildLocalCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
+        if (str::IsEmpty(s)) {
+            loga("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n");
+            return;
+        }
+        ByteSlice d(s);
+        SaveCrashInfo(d);
+        WriteCrashInfoToStdErr(d);
+        loga(s);
+        loga("_uploadDebugReport() finished local-only\n");
+        return;
+    }
+
     if (!shouldUpload) {
         if (IsDebuggerPresent()) {
             DebugBreak();
@@ -530,7 +594,9 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, INFINITE);
 
-    ShowCrashHandlerMessage();
+    if (!gLocalOnlyCrashHandler) {
+        ShowCrashHandlerMessage();
+    }
     TerminateProcess(GetCurrentProcess(), 1);
 
     return EXCEPTION_CONTINUE_SEARCH;
@@ -558,7 +624,9 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, INFINITE);
 
-    ShowCrashHandlerMessage();
+    if (!gLocalOnlyCrashHandler) {
+        ShowCrashHandlerMessage();
+    }
     TerminateProcess(GetCurrentProcess(), 1);
 
     return EXCEPTION_CONTINUE_SEARCH;
@@ -792,7 +860,7 @@ static char* BuildSymbolsUrl() {
     return str::Join(urlBase, suff);
 }
 
-void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir) {
+void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir, bool localOnly) {
     ReportIf(gDumpEvent || gDumpThread);
 
     if (!crashDumpPath) {
@@ -810,6 +878,7 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
 
     gCrashDumpPath = str::Dup(crashDumpPath);
     gCrashFilePath = str::Dup(crashFilePath);
+    gLocalOnlyCrashHandler = localOnly;
     gCrashThreadId = 0;
     gDumpThreadId = 0;
     InterlockedExchange(&gCrashHandlerStarted, 0);
@@ -901,6 +970,7 @@ void UninstallCrashHandler() {
     ArenaDelete(gCrashHandlerAllocator);
     gCrashThreadId = 0;
     gDumpThreadId = 0;
+    gLocalOnlyCrashHandler = false;
     InterlockedExchange(&gCrashHandlerStarted, 0);
 }
 

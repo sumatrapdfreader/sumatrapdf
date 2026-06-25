@@ -15,6 +15,7 @@ TempStr GetCurrentThreadCallstackTemp();
 void FreeCallstackLogs();
 ByteSlice GetCallstacks();
 void GetAllThreadsCallstacks(StrBuilder& s);
+void GetAllThreadsCallstacksExcept(StrBuilder& s, DWORD skipThreadId);
 void GetExceptionInfo(StrBuilder& s, EXCEPTION_POINTERS* excPointers);
 
 } // namespace dbghelp
