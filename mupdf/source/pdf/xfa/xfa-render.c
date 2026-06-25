@@ -182,6 +182,23 @@ static pdf_xfa_object* pdf_xfa_find_pagearea_ancestor(pdf_xfa_object* node) {
     return NULL;
 }
 
+static pdf_xfa_object* pdf_xfa_find_page_subform_ancestor(fz_context* ctx, pdf_xfa_object* node) {
+    while (node) {
+        if (node->name && strcmp(node->name, "subform") == 0 && pdf_xfa_page_subform_index(ctx, node) >= 0) return node;
+        node = node->parent;
+    }
+    return NULL;
+}
+
+static int pdf_xfa_page_subform_is_target(fz_context* ctx, pdf_xfa* xfa, pdf_xfa_object* subform, int page_index) {
+    int idx;
+
+    if (!subform || !xfa->page_subforms || page_index < 0 || page_index >= xfa->page_subform_count) return 0;
+    if (subform == xfa->page_subforms[page_index]) return 1;
+    idx = pdf_xfa_page_subform_index(ctx, subform);
+    return idx >= 0 && idx == page_index;
+}
+
 static int pdf_xfa_pagearea_is_target(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_object* target) {
     char* node_name;
     char* target_name;
@@ -389,19 +406,25 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
 
     if (!under_pageset && pdf_xfa_node_is_field_or_draw(node->name)) {
         pdf_xfa_object* area;
+        pdf_xfa_object* page_subform;
 
         if (pdf_xfa_object_is_prototype_def(ctx, node))
             render_node = 0;
         else if (node->flow_page >= 0)
             render_node = (node->flow_page == rctx->page_index);
-        else if (node->name && strcmp(node->name, "field") == 0) {
+        else {
             area = pdf_xfa_find_pagearea_ancestor(node);
             if (area && xfa->page_areas && xfa->page_count > 1 && rctx->target_page_area)
                 render_node = pdf_xfa_pagearea_is_target(ctx, area, rctx->target_page_area);
-            else
+            else if (xfa->page_subforms && xfa->page_subform_count > 1) {
+                page_subform = pdf_xfa_find_page_subform_ancestor(ctx, node);
+                if (page_subform)
+                    render_node = pdf_xfa_page_subform_is_target(ctx, xfa, page_subform, rctx->page_index);
+                else
+                    render_node = (rctx->page_index == 0);
+            } else
                 render_node = (rctx->page_index == 0);
-        } else
-            render_node = (rctx->page_index == 0);
+        }
     }
 
     if (render_node) {

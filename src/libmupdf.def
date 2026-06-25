@@ -114,6 +114,7 @@ EXPORTS
 	pdf_xfa_fields_in_pageset
 	pdf_xfa_fields_outside_pageset
 	pdf_xfa_fields_with_pagearea
+	pdf_xfa_fields_with_pagearea_template
 	pdf_xfa_page_area_name
 	pdf_xfa_serialize_data
 	pdf_keep_xfa

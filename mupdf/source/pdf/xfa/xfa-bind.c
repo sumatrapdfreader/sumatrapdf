@@ -126,6 +126,7 @@ pdf_xfa_object* pdf_xfa_bind(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa) {
 
     empty_merge = !data->first_child;
     pdf_xfa_resolve_prototypes(ctx, pool, xfa, template_node);
+    pdf_xfa_count_field_stats(template_node, NULL, NULL, &xfa->fields_with_pagearea_template);
 
     form = pdf_xfa_object_clone(ctx, pool, template_node);
     if (!form) fz_throw(ctx, FZ_ERROR_GENERIC, "XFA: failed to clone template");

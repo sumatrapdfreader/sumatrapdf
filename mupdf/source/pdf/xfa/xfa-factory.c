@@ -63,6 +63,7 @@ static void pdf_xfa_drop_imp(fz_context* ctx, pdf_xfa* xfa) {
     pdf_xfa_drop_packets(ctx, xfa->packets);
     fz_free(ctx, xfa->page_bboxes);
     fz_free(ctx, xfa->page_areas);
+    fz_free(ctx, xfa->page_subforms);
     fz_drop_hash_table(ctx, xfa->ids);
     fz_drop_pool(ctx, xfa->pool);
     fz_free(ctx, xfa);

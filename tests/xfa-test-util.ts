@@ -22,13 +22,14 @@ export type XfaInfo = {
   fields_in_ps: number;
   fields_out_ps: number;
   fields_with_pa: number;
+  fields_with_pa_tpl: number;
   area0: string;
   area1: string;
 };
 
 export function parseXfaLine(raw: string): XfaInfo {
   const m = raw.match(
-    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) render_borders=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+) fields_in_ps=(\d+) fields_out_ps=(\d+) fields_with_pa=(\d+) area0=(\S*) area1=(\S*) load_error=(.*)/,
+    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+) render_borders=(\d+) p1_fields=(\d+) p1_draws=(\d+) p1_borders=(\d+) p1_lines=(\d+) serialize_ok=(\d+) serialize_bytes=(\d+) fields_in_ps=(\d+) fields_out_ps=(\d+) fields_with_pa=(\d+) fields_with_pa_tpl=(\d+) area0=(\S*) area1=(\S*) load_error=(.*)/,
   );
   if (!m) {
     throw new Error(`unexpected TestXfa output: ${raw.trim()}`);
@@ -48,12 +49,13 @@ export function parseXfaLine(raw: string): XfaInfo {
     p1_lines: Number(m[12]),
     serialize_ok: Number(m[13]),
     serialize_bytes: Number(m[14]),
-    load_error: m[20].trim(),
+    load_error: m[21].trim(),
     fields_in_ps: Number(m[15]),
     fields_out_ps: Number(m[16]),
     fields_with_pa: Number(m[17]),
-    area0: m[18],
-    area1: m[19],
+    fields_with_pa_tpl: Number(m[18]),
+    area0: m[19],
+    area1: m[20],
   };
 }
 

@@ -105,6 +105,7 @@ int pdf_xfa_last_render_lines(fz_context* ctx, pdf_xfa* xfa);
 int pdf_xfa_fields_in_pageset(fz_context* ctx, pdf_xfa* xfa);
 int pdf_xfa_fields_outside_pageset(fz_context* ctx, pdf_xfa* xfa);
 int pdf_xfa_fields_with_pagearea(fz_context* ctx, pdf_xfa* xfa);
+int pdf_xfa_fields_with_pagearea_template(fz_context* ctx, pdf_xfa* xfa);
 
 /*
         Return the pageArea name attribute for a laid-out page (empty string if none).

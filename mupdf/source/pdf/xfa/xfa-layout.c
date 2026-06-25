@@ -201,7 +201,7 @@ static pdf_xfa_object* pdf_xfa_find_pageset(pdf_xfa_object* node) {
     return NULL;
 }
 
-static pdf_xfa_object* pdf_xfa_count_find_pagearea(pdf_xfa_object* node) {
+static pdf_xfa_object* pdf_xfa_find_pagearea_ancestor(pdf_xfa_object* node) {
     while (node) {
         if (node->name && strcmp(node->name, "pageArea") == 0) return node;
         node = node->parent;
@@ -209,8 +209,8 @@ static pdf_xfa_object* pdf_xfa_count_find_pagearea(pdf_xfa_object* node) {
     return NULL;
 }
 
-static void pdf_xfa_count_fields(pdf_xfa_object* node, int under_pageset, int* in_pageset, int* outside_pageset,
-                                 int* with_pagearea) {
+static void pdf_xfa_count_fields_imp(pdf_xfa_object* node, int under_pageset, int* in_pageset, int* outside_pageset,
+                                     int* with_pagearea) {
     pdf_xfa_object* child;
 
     if (!node) return;
@@ -220,11 +220,98 @@ static void pdf_xfa_count_fields(pdf_xfa_object* node, int under_pageset, int* i
     if (node->name && strcmp(node->name, "field") == 0) {
         if (under_pageset) (*in_pageset)++;
         else (*outside_pageset)++;
-        if (pdf_xfa_count_find_pagearea(node)) (*with_pagearea)++;
+        if (pdf_xfa_find_pagearea_ancestor(node)) (*with_pagearea)++;
     }
 
     for (child = node->first_child; child; child = child->next_sibling)
-        pdf_xfa_count_fields(child, under_pageset, in_pageset, outside_pageset, with_pagearea);
+        pdf_xfa_count_fields_imp(child, under_pageset, in_pageset, outside_pageset, with_pagearea);
+}
+
+void pdf_xfa_count_field_stats(pdf_xfa_object* root, int* in_pageset, int* outside_pageset, int* with_pagearea) {
+    int in_ps = 0;
+    int out_ps = 0;
+    int with_pa = 0;
+
+    if (in_pageset) *in_pageset = 0;
+    if (outside_pageset) *outside_pageset = 0;
+    if (with_pagearea) *with_pagearea = 0;
+
+    pdf_xfa_count_fields_imp(root, 0, &in_ps, &out_ps, &with_pa);
+
+    if (in_pageset) *in_pageset = in_ps;
+    if (outside_pageset) *outside_pageset = out_ps;
+    if (with_pagearea) *with_pagearea = with_pa;
+}
+
+static int pdf_xfa_is_page_subform_name(const char* name) {
+    int i;
+
+    if (!name || strncmp(name, "Page", 4) != 0) return 0;
+    if (!name[4]) return 0;
+    for (i = 4; name[i]; i++)
+        if (name[i] < '0' || name[i] > '9') return 0;
+    return 1;
+}
+
+int pdf_xfa_page_subform_index(fz_context* ctx, pdf_xfa_object* subform) {
+    char* name;
+    char* end;
+    long n;
+
+    (void)ctx;
+
+    if (!subform || !subform->name || strcmp(subform->name, "subform") != 0) return -1;
+    name = pdf_xfa_object_get_attr(ctx, subform, "name");
+    if (!pdf_xfa_is_page_subform_name(name)) return -1;
+    n = strtol(name + 4, &end, 10);
+    if (end == name + 4 || n <= 0) return -1;
+    return (int)(n - 1);
+}
+
+static pdf_xfa_object* pdf_xfa_layout_body(pdf_xfa_object* form) {
+    if (!form) return NULL;
+    if (form->name && strcmp(form->name, "subform") == 0) return form;
+    return pdf_xfa_object_find_child(form, "subform");
+}
+
+static int pdf_xfa_collect_page_subforms(fz_context* ctx, pdf_xfa_object* form, pdf_xfa_object** subs, int max_subforms) {
+    pdf_xfa_object* body;
+    pdf_xfa_object* child;
+    pdf_xfa_object* found[64];
+    int found_n = 0;
+    int i, j, n;
+
+    (void)ctx;
+
+    body = pdf_xfa_layout_body(form);
+    if (!body) return 0;
+
+    for (child = body->first_child; child; child = child->next_sibling) {
+        char* name;
+
+        if (!child->name || strcmp(child->name, "subform") != 0) continue;
+        name = pdf_xfa_object_get_attr(ctx, child, "name");
+        if (!pdf_xfa_is_page_subform_name(name)) continue;
+        if (found_n < 64) found[found_n++] = child;
+    }
+
+    for (i = 0; i < found_n; i++) {
+        for (j = i + 1; j < found_n; j++) {
+            int ai = pdf_xfa_page_subform_index(ctx, found[i]);
+            int aj = pdf_xfa_page_subform_index(ctx, found[j]);
+            pdf_xfa_object* tmp;
+
+            if (aj < ai) {
+                tmp = found[i];
+                found[i] = found[j];
+                found[j] = tmp;
+            }
+        }
+    }
+
+    n = 0;
+    for (i = 0; i < found_n && n < max_subforms; i++) subs[n++] = found[i];
+    return n;
 }
 
 static int pdf_xfa_collect_pageareas(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_object** page_areas, int max_pages,
@@ -254,7 +341,8 @@ static int pdf_xfa_collect_pageareas(fz_context* ctx, pdf_xfa_object* node, pdf_
 
 int pdf_xfa_factory_layout(fz_context* ctx, pdf_xfa* xfa) {
     pdf_xfa_object* page_areas[256];
-    int n, i;
+    pdf_xfa_object* page_subforms[64];
+    int n, sn, i;
 
     if (!xfa || !xfa->valid) return 0;
 
@@ -285,17 +373,28 @@ int pdf_xfa_factory_layout(fz_context* ctx, pdf_xfa* xfa) {
                 xfa->page_areas[i] = page_areas[i];
                 xfa->page_bboxes[i] = pdf_xfa_pagearea_bbox(ctx, page_areas[i]);
             }
+            sn = pdf_xfa_collect_page_subforms(ctx, xfa->form, page_subforms, 64);
+            if (sn > 0) {
+                xfa->page_subform_count = sn;
+                xfa->page_subforms = fz_malloc_array(ctx, sn, pdf_xfa_object*);
+                for (i = 0; i < sn; i++) xfa->page_subforms[i] = page_subforms[i];
+            } else {
+                xfa->page_subform_count = 0;
+                xfa->page_subforms = NULL;
+            }
             pdf_xfa_layout_flow_subforms(ctx, xfa, xfa->form);
-            xfa->fields_with_pagearea = 0;
-            pdf_xfa_count_fields(xfa->form, 0, &xfa->fields_in_pageset, &xfa->fields_outside_pageset,
-                                 &xfa->fields_with_pagearea);
+            pdf_xfa_count_field_stats(xfa->form, &xfa->fields_in_pageset, &xfa->fields_outside_pageset,
+                                      &xfa->fields_with_pagearea);
         }
     }
     fz_catch(ctx) {
         fz_free(ctx, xfa->page_bboxes);
         fz_free(ctx, xfa->page_areas);
+        fz_free(ctx, xfa->page_subforms);
         xfa->page_bboxes = NULL;
         xfa->page_areas = NULL;
+        xfa->page_subforms = NULL;
+        xfa->page_subform_count = 0;
         xfa->page_count = 0;
         fz_rethrow(ctx);
     }

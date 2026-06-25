@@ -117,6 +117,8 @@ struct pdf_xfa {
     int page_count;
     fz_rect* page_bboxes;
     pdf_xfa_object** page_areas; /* parallel to page_bboxes */
+    pdf_xfa_object** page_subforms; /* Page1/Page2 content subforms (IRS-style forms) */
+    int page_subform_count;
     pdf_xfa_html_node* pages;    /* laid-out page tree roots */
     int render_fields;
     int render_draws;
@@ -125,6 +127,7 @@ struct pdf_xfa {
     int fields_in_pageset;
     int fields_outside_pageset;
     int fields_with_pagearea;
+    int fields_with_pagearea_template;
 };
 
 struct pdf_xfa_builder {
@@ -188,6 +191,8 @@ pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_pa
 
 /* layout.c */
 float pdf_xfa_parse_measurement(const char* text, float default_pt);
+void pdf_xfa_count_field_stats(pdf_xfa_object* root, int* in_pageset, int* outside_pageset, int* with_pagearea);
+int pdf_xfa_page_subform_index(fz_context* ctx, pdf_xfa_object* subform);
 
 /* factory.c */
 pdf_xfa* pdf_xfa_new_from_packets(fz_context* ctx, pdf_document* doc, pdf_xfa_packet* packets);

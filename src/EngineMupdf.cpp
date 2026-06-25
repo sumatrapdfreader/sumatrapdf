@@ -5232,12 +5232,14 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             int fields_in_ps = 0;
             int fields_out_ps = 0;
             int fields_with_pa = 0;
+            int fields_with_pa_tpl = 0;
             const char* area0 = "";
             const char* area1 = "";
             if (xfa && valid) {
                 fields_in_ps = pdf_xfa_fields_in_pageset(ctx, xfa);
                 fields_out_ps = pdf_xfa_fields_outside_pageset(ctx, xfa);
                 fields_with_pa = pdf_xfa_fields_with_pagearea(ctx, xfa);
+                fields_with_pa_tpl = pdf_xfa_fields_with_pagearea_template(ctx, xfa);
                 if (page_count > 0) {
                     area0 = pdf_xfa_page_area_name(ctx, xfa, 0);
                 }
@@ -5253,10 +5255,11 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             out.AppendFmt(
                 "has_xfa=%d pure_xfa=%d valid=%d page_count=%d render_nonempty=%d render_fields=%d render_draws=%d "
                 "render_borders=%d p1_fields=%d p1_draws=%d p1_borders=%d p1_lines=%d serialize_ok=%d "
-                "serialize_bytes=%d fields_in_ps=%d fields_out_ps=%d fields_with_pa=%d area0=%s area1=%s load_error=%s\n",
+                "serialize_bytes=%d fields_in_ps=%d fields_out_ps=%d fields_with_pa=%d fields_with_pa_tpl=%d area0=%s "
+                "area1=%s load_error=%s\n",
                 has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws, render_borders,
                 p1_fields, p1_draws, p1_borders, p1_lines, serialize_ok, serialize_bytes, fields_in_ps, fields_out_ps,
-                fields_with_pa, area0, area1, load_error);
+                fields_with_pa, fields_with_pa_tpl, area0, area1, load_error);
             exitCode = 0;
         }
         SafeEngineRelease(&engine);

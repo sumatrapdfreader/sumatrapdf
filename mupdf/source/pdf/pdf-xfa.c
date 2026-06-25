@@ -204,6 +204,11 @@ int pdf_xfa_fields_with_pagearea(fz_context* ctx, pdf_xfa* xfa) {
     return xfa->fields_with_pagearea;
 }
 
+int pdf_xfa_fields_with_pagearea_template(fz_context* ctx, pdf_xfa* xfa) {
+    (void)ctx;
+    return xfa ? xfa->fields_with_pagearea_template : 0;
+}
+
 const char* pdf_xfa_page_area_name(fz_context* ctx, pdf_xfa* xfa, int page_index) {
     char* name;
 
