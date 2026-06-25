@@ -189,13 +189,34 @@ static fz_rect pdf_xfa_pagearea_bbox(fz_context* ctx, pdf_xfa_object* page_area)
     return fz_make_rect(0, 0, width, height);
 }
 
+static pdf_xfa_object* pdf_xfa_find_pageset(pdf_xfa_object* node) {
+    pdf_xfa_object* child;
+
+    if (!node) return NULL;
+    if (node->name && strcmp(node->name, "pageSet") == 0) return node;
+    for (child = node->first_child; child; child = child->next_sibling) {
+        pdf_xfa_object* hit = pdf_xfa_find_pageset(child);
+        if (hit) return hit;
+    }
+    return NULL;
+}
+
 static int pdf_xfa_collect_pageareas(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_object** page_areas, int max_pages,
                                      int n) {
+    pdf_xfa_object* pageset;
     pdf_xfa_object* child;
 
     (void)ctx;
 
     if (!node || n >= max_pages) return n;
+
+    pageset = pdf_xfa_find_pageset(node);
+    if (pageset) {
+        for (child = pageset->first_child; child && n < max_pages; child = child->next_sibling) {
+            if (child->name && strcmp(child->name, "pageArea") == 0) page_areas[n++] = child;
+        }
+        return n;
+    }
 
     if (node->name && strcmp(node->name, "pageArea") == 0) page_areas[n++] = node;
 

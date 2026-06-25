@@ -174,6 +174,18 @@ static pdf_xfa_object* pdf_xfa_find_content_area(pdf_xfa_object* page_area) {
     return NULL;
 }
 
+static int pdf_xfa_pagearea_is_target(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_object* target) {
+    char* node_name;
+    char* target_name;
+
+    if (!node || !target) return 0;
+    if (node == target) return 1;
+    node_name = pdf_xfa_object_get_attr(ctx, node, "name");
+    target_name = pdf_xfa_object_get_attr(ctx, target, "name");
+    if (node_name && target_name && node_name[0] && target_name[0] && strcmp(node_name, target_name) == 0) return 1;
+    return 0;
+}
+
 static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float page_h, pdf_xfa_render_pos* pos,
                                    float default_w, float default_h, int ignore_node_xy) {
     char *x, *y, *w, *h;
@@ -353,13 +365,18 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
     if (!node) return;
 
     if (node->name && strcmp(node->name, "pageSet") == 0) {
-        for (child = node->first_child; child; child = child->next_sibling)
+        for (child = node->first_child; child; child = child->next_sibling) {
+            if (rctx->target_page_area) {
+                if (!child->name || strcmp(child->name, "pageArea") != 0) continue;
+                if (!pdf_xfa_pagearea_is_target(ctx, child, rctx->target_page_area)) continue;
+            }
             pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, pos, rctx, 1);
+        }
         return;
     }
 
     if (under_pageset && rctx->target_page_area && node->name && strcmp(node->name, "pageArea") == 0 &&
-        node != rctx->target_page_area)
+        !pdf_xfa_pagearea_is_target(ctx, node, rctx->target_page_area))
         return;
 
     if (!under_pageset && pdf_xfa_node_is_field_or_draw(node->name)) {
