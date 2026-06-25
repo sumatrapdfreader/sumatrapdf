@@ -64,6 +64,20 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
               <text>This is a long text that should wrap</text>
             </value>
           </draw>
+          <draw x="0.75in" y="3in" w="1.8in" h="0.7in">
+            <font size="9pt"/>
+            <para lineHeight="11pt" hAlign="justify"/>
+            <value>
+              <text>The quick brown fox jumps over the lazy dog</text>
+            </value>
+          </draw>
+          <draw x="3in" y="3in" w="1.8in" h="0.7in">
+            <font size="9pt"/>
+            <para lineHeight="11pt" hAlign="justifyAll"/>
+            <value>
+              <text>Pack my box with five dozen liquor jugs today</text>
+            </value>
+          </draw>
         </contentArea>
       </pageArea>
     </pageSet>

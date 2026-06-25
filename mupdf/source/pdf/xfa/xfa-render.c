@@ -61,6 +61,7 @@ typedef struct {
 typedef struct {
     const char* a;
     const char* b;
+    int paragraph_end;
 } pdf_xfa_text_line;
 
 typedef struct {
@@ -548,6 +549,13 @@ static float pdf_xfa_measure_text_substring(fz_context* ctx, fz_font* font, floa
     return x;
 }
 
+static void pdf_xfa_set_text_line(pdf_xfa_text_line* line, const char* a, const char* b, int paragraph_end) {
+    if (!line) return;
+    line->a = a;
+    line->b = b;
+    line->paragraph_end = paragraph_end;
+}
+
 static int pdf_xfa_break_text_lines(pdf_xfa_font_info* info, const char* text, pdf_xfa_text_line* lines, int maxlines,
                                     float width) {
     const char* next;
@@ -555,44 +563,32 @@ static int pdf_xfa_break_text_lines(pdf_xfa_font_info* info, const char* text, p
     const char* a = text;
     const char* b = text;
     int c, n = 0;
-    float space_x, x = 0, w = 0;
+    float x = 0, w = 0;
 
     if (!text) return 0;
 
     while (*b) {
         next = b + fz_chartorune(&c, b);
         if (c == '\r' || c == '\n') {
-            if (lines && n < maxlines) {
-                lines[n].a = a;
-                lines[n].b = b;
-            }
+            if (lines && n < maxlines) pdf_xfa_set_text_line(&lines[n], a, b, 1);
             ++n;
             if (c == '\r' && *next == '\n') next++;
             a = next;
             x = 0;
             space = NULL;
         } else {
-            if (c == ' ') {
-                space = b;
-                space_x = x;
-            }
+            if (c == ' ') space = b;
 
             w = pdf_xfa_measure_character(info, c);
             if (width > 0 && x + w > width) {
                 if (space) {
-                    if (lines && n < maxlines) {
-                        lines[n].a = a;
-                        lines[n].b = space;
-                    }
+                    if (lines && n < maxlines) pdf_xfa_set_text_line(&lines[n], a, space, 0);
                     ++n;
                     a = next = space + 1;
                     x = 0;
                     space = NULL;
                 } else {
-                    if (lines && n < maxlines) {
-                        lines[n].a = a;
-                        lines[n].b = b;
-                    }
+                    if (lines && n < maxlines) pdf_xfa_set_text_line(&lines[n], a, b, 0);
                     ++n;
                     a = b;
                     x = w;
@@ -604,30 +600,122 @@ static int pdf_xfa_break_text_lines(pdf_xfa_font_info* info, const char* text, p
         b = next;
     }
 
-    if (lines && n < maxlines) {
-        lines[n].a = a;
-        lines[n].b = b;
-    }
+    if (lines && n < maxlines) pdf_xfa_set_text_line(&lines[n], a, b, 1);
     ++n;
     return n < maxlines ? n : maxlines;
 }
 
+static int pdf_xfa_trim_line_end(const char* text, int len) {
+    while (len > 0) {
+        const char* p = text;
+        const char* end = text + len;
+        const char* last_start = text;
+        int last_rune = 0;
+        int rune_len;
+
+        while (p < end) {
+            last_start = p;
+            rune_len = fz_chartorune(&last_rune, p);
+            p += rune_len;
+        }
+        if (last_rune != ' ' && last_rune != '\t') break;
+        len = (int)(last_start - text);
+    }
+    return len;
+}
+
+static int pdf_xfa_count_interior_spaces(const char* text, int len) {
+    const char* end = text + len;
+    const char* p = text;
+    int count = 0;
+
+    while (p < end) {
+        int c;
+        const char* next = p + fz_chartorune(&c, p);
+        if (c == ' ') {
+            const char* q = next;
+            int has_more = 0;
+            while (q < end) {
+                int c2;
+                q += fz_chartorune(&c2, q);
+                if (c2 != ' ' && c2 != '\t' && c2 != '\r' && c2 != '\n') {
+                    has_more = 1;
+                    break;
+                }
+            }
+            if (has_more) count++;
+        }
+        p = next;
+    }
+    return count;
+}
+
+static int pdf_xfa_is_interior_space(const char* text, int len, const char* space) {
+    const char* end = text + len;
+    const char* q = space + 1;
+    while (q < end) {
+        int c;
+        q += fz_chartorune(&c, q);
+        if (c != ' ' && c != '\t' && c != '\r' && c != '\n') return 1;
+    }
+    return 0;
+}
+
+static fz_matrix pdf_xfa_show_glyph_at(fz_context* ctx, fz_text* fztext, fz_font* font, fz_matrix trm, int ucs) {
+    fz_font* glyph_font;
+    int gid;
+    float adv;
+
+    gid = fz_encode_character_with_fallback(ctx, font, ucs, 0, FZ_LANG_UNSET, &glyph_font);
+    fz_show_glyph(ctx, fztext, glyph_font, trm, gid, ucs, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
+    adv = fz_advance_glyph(ctx, glyph_font, gid, 0);
+    return fz_pre_translate(trm, adv, 0);
+}
+
 static fz_matrix pdf_xfa_show_substring(fz_context* ctx, fz_text* fztext, fz_font* font, fz_matrix trm, const char* s,
                                         int len) {
-    fz_font* glyph_font;
-    int gid, ucs;
-    float adv;
+    int ucs;
     int i = 0;
 
     while (i < len) {
         i += fz_chartorune(&ucs, s + i);
-        gid = fz_encode_character_with_fallback(ctx, font, ucs, 0, FZ_LANG_UNSET, &glyph_font);
-        fz_show_glyph(ctx, fztext, glyph_font, trm, gid, ucs, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
-        adv = fz_advance_glyph(ctx, glyph_font, gid, 0);
-        trm = fz_pre_translate(trm, adv, 0);
+        if (ucs == '\r' || ucs == '\n') continue;
+        trm = pdf_xfa_show_glyph_at(ctx, fztext, font, trm, ucs);
     }
 
     return trm;
+}
+
+static fz_matrix pdf_xfa_show_substring_justified(fz_context* ctx, fz_text* fztext, fz_font* font, fz_matrix trm,
+                                                  const char* s, int len, float extra_space) {
+    const char* end = s + len;
+    const char* p = s;
+    int ucs;
+
+    while (p < end) {
+        const char* next = p + fz_chartorune(&ucs, p);
+        if (ucs == '\r' || ucs == '\n') {
+            p = next;
+            continue;
+        }
+        if (ucs == ' ' && pdf_xfa_is_interior_space(s, len, p)) {
+            trm = pdf_xfa_show_glyph_at(ctx, fztext, font, trm, ucs);
+            trm = fz_pre_translate(trm, extra_space, 0);
+        } else
+            trm = pdf_xfa_show_glyph_at(ctx, fztext, font, trm, ucs);
+        p = next;
+    }
+
+    return trm;
+}
+
+static int pdf_xfa_h_align_mode(pdf_xfa_text_style* style) {
+    if (!style || !style->h_align[0]) return 0;
+    if (strcmp(style->h_align, "center") == 0) return 1;
+    if (strcmp(style->h_align, "right") == 0) return 2;
+    if (strcmp(style->h_align, "justify") == 0) return 3;
+    if (strcmp(style->h_align, "justifyAll") == 0) return 4;
+    return 0;
 }
 
 static float pdf_xfa_line_start_y(fz_rect rect, float fontsize, float line_height, int line_count,
@@ -724,11 +812,49 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
 
         for (l = 0; l < line_count; l++) {
             int len = (int)(lines[l].b - lines[l].a);
-            if (len > 0) {
-                text_width = pdf_xfa_measure_text_substring(ctx, font, fontsize, lines[l].a, len);
-                trm.e = pdf_xfa_line_start_x(rect, text_width, l, style);
-                pdf_xfa_show_substring(ctx, fztext, font, trm, lines[l].a, len);
+            int h_align = pdf_xfa_h_align_mode(style);
+            int justify_line = 0;
+            float line_x0;
+            float avail_width;
+            int space_count;
+            int draw_len;
+
+            if (len <= 0) {
+                if (l + 1 < line_count) trm.f -= line_height;
+                continue;
             }
+
+            draw_len = pdf_xfa_trim_line_end(lines[l].a, len);
+            if (draw_len <= 0) {
+                if (l + 1 < line_count) trm.f -= line_height;
+                continue;
+            }
+
+            line_x0 = rect.x0;
+            if (l == 0 && style && style->text_indent > 0) line_x0 += style->text_indent;
+            avail_width = rect.x1 - line_x0;
+
+            if (h_align == 3 || h_align == 4) {
+                if (h_align == 4 || !lines[l].paragraph_end) justify_line = 1;
+            }
+
+            if (justify_line) {
+                space_count = pdf_xfa_count_interior_spaces(lines[l].a, draw_len);
+                text_width = pdf_xfa_measure_text_substring(ctx, font, fontsize, lines[l].a, draw_len);
+                if (space_count > 0 && text_width < avail_width) {
+                    float extra_space = (avail_width - text_width) / space_count;
+                    trm.e = line_x0;
+                    pdf_xfa_show_substring_justified(ctx, fztext, font, trm, lines[l].a, draw_len, extra_space);
+                } else {
+                    trm.e = line_x0;
+                    pdf_xfa_show_substring(ctx, fztext, font, trm, lines[l].a, draw_len);
+                }
+            } else {
+                text_width = pdf_xfa_measure_text_substring(ctx, font, fontsize, lines[l].a, draw_len);
+                trm.e = pdf_xfa_line_start_x(rect, text_width, l, style);
+                pdf_xfa_show_substring(ctx, fztext, font, trm, lines[l].a, draw_len);
+            }
+
             if (l + 1 < line_count) trm.f -= line_height;
         }
 

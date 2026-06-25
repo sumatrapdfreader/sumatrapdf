@@ -12,7 +12,7 @@ endobj
 << /Fields [] /XFA [(xdp:xdp) 5 0 R] >>
 endobj
 5 0 obj
-<< /Length 3062 >>
+<< /Length 3608 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
@@ -66,6 +66,20 @@ stream
             <para lineHeight="12pt" hAlign="center"/>
             <value>
               <text>This is a long text that should wrap</text>
+            </value>
+          </draw>
+          <draw x="0.75in" y="3in" w="1.8in" h="0.7in">
+            <font size="9pt"/>
+            <para lineHeight="11pt" hAlign="justify"/>
+            <value>
+              <text>The quick brown fox jumps over the lazy dog</text>
+            </value>
+          </draw>
+          <draw x="3in" y="3in" w="1.8in" h="0.7in">
+            <font size="9pt"/>
+            <para lineHeight="11pt" hAlign="justifyAll"/>
+            <value>
+              <text>Pack my box with five dozen liquor jugs today</text>
             </value>
           </draw>
         </contentArea>
@@ -126,5 +140,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-3371
+3917
 %%EOF
