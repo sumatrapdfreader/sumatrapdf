@@ -37,20 +37,20 @@ const corpus: CorpusEntry[] = [
   {
     name: "issue-1294-xfa",
     path: join(dataDir, "issue-1294-xfa.pdf"),
-    // Pure-XFA regression sample (GitHub #1294). Parse detects XFA; bind not yet.
-    expect: { has_xfa: 1, pure_xfa: 1, valid: 0 },
+    // Pure-XFA regression sample (GitHub #1294).
+    expect: { has_xfa: 1, pure_xfa: 1, valid: 1, min_page_count: 1 },
   },
   {
     name: "ad-hoc-f1040",
     path: join(dataDir, "ad-hoc-f1040.pdf"),
     // Hybrid IRS 1040: AcroForm + XFA packet.
-    expect: { has_xfa: 1, pure_xfa: 0, valid: 0 },
+    expect: { has_xfa: 1, pure_xfa: 0, valid: 1, min_page_count: 1 },
   },
   {
     name: "transfer-auth-form",
     path: sumtestPath("formats", "pdf", "Transfer_Authorization_Form.pdf"),
     optional: true,
-    expect: { has_xfa: 1, pure_xfa: 0, valid: 0 },
+    expect: { has_xfa: 1, pure_xfa: 0, valid: 1, min_page_count: 1 },
   },
 ];
 

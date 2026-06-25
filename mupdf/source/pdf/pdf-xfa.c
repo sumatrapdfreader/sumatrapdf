@@ -95,34 +95,20 @@ pdf_xfa_packet* pdf_xfa_load_packets(fz_context* ctx, pdf_document* doc) {
     return head;
 }
 
+static int pdf_xfa_skip_packet(const char* name) {
+    /* Metadata packets are not used for bind/layout; xmpmeta may contain tag names
+     * with characters our XML parser rejects (see ad-hoc-f1040.pdf). */
+    return name && (strcmp(name, "xmpmeta") == 0 || strcmp(name, "xfdf") == 0);
+}
+
 fz_buffer* pdf_xfa_packets_to_xdp(fz_context* ctx, pdf_xfa_packet* packets) {
     fz_buffer* buf = fz_new_buffer(ctx, 1024);
     pdf_xfa_packet* p;
-    int have_xdp = 0;
 
+    /* Concatenate packet streams in array order (pdf.js XFAFactory._createDocument). */
     for (p = packets; p; p = p->next) {
-        if (p->name && strcmp(p->name, "xdp:xdp") == 0) have_xdp = 1;
+        if (p->data && !pdf_xfa_skip_packet(p->name)) fz_append_buffer(ctx, buf, p->data);
     }
-
-    if (have_xdp) {
-        for (p = packets; p; p = p->next) {
-            if (p->name && strcmp(p->name, "xdp:xdp") == 0 && p->data) {
-                fz_append_buffer(ctx, buf, p->data);
-                return buf;
-            }
-        }
-    }
-
-    /* Build synthetic xdp wrapper from separate packets (pdf.js _createDocument). */
-    fz_append_string(ctx, buf, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    fz_append_string(ctx, buf, "<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\">\n");
-    for (p = packets; p; p = p->next) {
-        if (!p->data || !p->name || strcmp(p->name, "xdp:xdp") == 0) continue;
-        fz_append_printf(ctx, buf, "<%s>\n", p->name);
-        fz_append_buffer(ctx, buf, p->data);
-        fz_append_printf(ctx, buf, "\n</%s>\n", p->name);
-    }
-    fz_append_string(ctx, buf, "</xdp:xdp>\n");
 
     return buf;
 }

@@ -5229,13 +5229,16 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
                 }
             }
 
+            const char* load_error = pdf_xfa_last_load_error(ctx);
+            if (!load_error) {
+                load_error = "";
+            }
             out.AppendFmt(
                 "has_xfa=%d pure_xfa=%d valid=%d page_count=%d render_nonempty=%d render_fields=%d render_draws=%d "
                 "render_borders=%d p1_fields=%d p1_draws=%d p1_borders=%d p1_lines=%d serialize_ok=%d "
-                "serialize_bytes=%d\n",
+                "serialize_bytes=%d load_error=%s\n",
                 has_xfa, pure_xfa, valid, page_count, render_nonempty, render_fields, render_draws, render_borders,
-                p1_fields,
-                p1_draws, p1_borders, p1_lines, serialize_ok, serialize_bytes);
+                p1_fields, p1_draws, p1_borders, p1_lines, serialize_ok, serialize_bytes, load_error);
             exitCode = 0;
         }
         SafeEngineRelease(&engine);
