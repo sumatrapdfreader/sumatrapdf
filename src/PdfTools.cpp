@@ -1420,63 +1420,63 @@ void ShowPdfExtractPagesDialog(MainWindow* win) {
 
 // --- Encrypt PDF dialog ---
 
-struct PdfEncryptDialog {
-    HWND hwnd = nullptr;
-    HWND hwndPathLabel = nullptr;
-    HWND hwndDestEdit = nullptr;
-    HWND hwndBrowseBtn = nullptr;
-    HWND hwndPasswordLabel = nullptr;
-    HWND hwndPasswordEdit = nullptr;
-    HWND hwndEncryptBtn = nullptr;
-    HWND hwndCancelBtn = nullptr;
+struct PdfEncryptDialog : Wnd {
     HFONT hFont = nullptr;
     char* srcPath = nullptr;
     MainWindow* win = nullptr;
+
+    ILayout* mainLayout = nullptr;
+    Static* pathLabel = nullptr;
+    Edit* destEdit = nullptr;
+    Button* browseBtn = nullptr;
+    Static* passwordLabel = nullptr;
+    Edit* passwordEdit = nullptr;
+    Button* encryptBtn = nullptr;
+    Button* cancelBtn = nullptr;
+
+    ~PdfEncryptDialog() override;
+
+    bool Create(MainWindow* win, WindowTab* tab);
+    void OnBrowse();
+    void DoEncrypt();
+    void OnCancel();
+    void UpdateButton();
 };
 
-static void PdfEncryptUpdateButton(PdfEncryptDialog* dlg) {
-    char pwd[256]{};
-    GetWindowTextA(dlg->hwndPasswordEdit, pwd, dimof(pwd));
-    BOOL enable = !str::IsEmpty(pwd);
-    EnableWindow(dlg->hwndEncryptBtn, enable);
+PdfEncryptDialog::~PdfEncryptDialog() {
+    str::Free(srcPath);
+    delete mainLayout;
 }
 
-static void PdfEncryptOnBrowse(PdfEncryptDialog* dlg) {
-    WCHAR dstFileName[MAX_PATH + 1]{};
-    GetWindowTextW(dlg->hwndDestEdit, dstFileName, MAX_PATH);
-
-    OPENFILENAME ofn{};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = dlg->hwnd;
-    ofn.lpstrFile = dstFileName;
-    ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L"PDF Files\0*.pdf\0All Files\0*.*\0";
-    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = L"pdf";
-
-    if (GetSaveFileNameW(&ofn)) {
-        SetWindowTextW(dlg->hwndDestEdit, dstFileName);
-    }
+void PdfEncryptDialog::OnCancel() {
+    Close();
 }
 
-static void PdfEncryptDoIt(PdfEncryptDialog* dlg) {
-    char destPath[MAX_PATH + 1]{};
-    GetWindowTextA(dlg->hwndDestEdit, destPath, MAX_PATH);
+void PdfEncryptDialog::UpdateButton() {
+    TempStr pwd = passwordEdit->GetTextTemp();
+    encryptBtn->SetIsEnabled(!str::IsEmpty(pwd));
+}
+
+void PdfEncryptDialog::OnBrowse() {
+    BrowseForDest(hwnd, destEdit, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+}
+
+void PdfEncryptDialog::DoEncrypt() {
+    TempStr destPath = destEdit->GetTextTemp();
     if (str::IsEmpty(destPath)) {
         return;
     }
 
-    char pwd[256]{};
-    GetWindowTextA(dlg->hwndPasswordEdit, pwd, dimof(pwd));
+    TempStr pwd = passwordEdit->GetTextTemp();
     if (str::IsEmpty(pwd)) {
         return;
     }
 
-    logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", dlg->srcPath, destPath);
+    logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", srcPath, destPath);
 
     // equivalent of: clean -E aes-256 -U <pwd> -O <pwd> input output
     char* argv[] = {
-        (char*)"clean", (char*)"-E", (char*)"aes-256", (char*)"-U", pwd, (char*)"-O", pwd, dlg->srcPath, destPath,
+        (char*)"clean", (char*)"-E", (char*)"aes-256", (char*)"-U", pwd, (char*)"-O", pwd, srcPath, destPath,
     };
     int argc = 9;
 
@@ -1484,64 +1484,161 @@ static void PdfEncryptDoIt(PdfEncryptDialog* dlg) {
     int res = pdfclean_main(argc, argv);
     if (res == 0) {
         logf("PdfEncryptDoIt: encrypted successfully\n");
-        MainWindow* win = dlg->win;
+        MainWindow* w = win;
         TempStr path = str::DupTemp(destPath);
-        DestroyWindow(dlg->hwnd);
-        LoadArgs args(path, win);
+        Close();
+        LoadArgs args(path, w);
         StartLoadDocument(&args);
     } else {
         logf("PdfEncryptDoIt: pdfclean_main failed with %d\n", res);
-        MessageBoxWarning(dlg->hwnd, "Failed to encrypt PDF file.", _TRA("Encrypt PDF"));
+        MessageBoxWarning(hwnd, "Failed to encrypt PDF file.", _TRA("Encrypt PDF"));
     }
 }
 
-static LRESULT CALLBACK PdfEncryptDlgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    PdfEncryptDialog* dlg = nullptr;
-    if (msg == WM_CREATE) {
-        CREATESTRUCTW* cs = (CREATESTRUCTW*)lp;
-        dlg = (PdfEncryptDialog*)cs->lpCreateParams;
-        dlg->hwnd = hwnd;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)dlg);
-        return 0;
-    }
-    dlg = (PdfEncryptDialog*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
-    if (!dlg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    switch (msg) {
-        case WM_COMMAND: {
-            int code = HIWORD(wp);
-            HWND ctl = (HWND)lp;
-            if (ctl == dlg->hwndBrowseBtn && code == BN_CLICKED) {
-                PdfEncryptOnBrowse(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndEncryptBtn && code == BN_CLICKED) {
-                PdfEncryptDoIt(dlg);
-                return 0;
-            }
-            if (ctl == dlg->hwndCancelBtn && code == BN_CLICKED) {
-                DestroyWindow(hwnd);
-                return 0;
-            }
-            if (ctl == dlg->hwndPasswordEdit && code == EN_CHANGE) {
-                PdfEncryptUpdateButton(dlg);
-                return 0;
-            }
-            break;
-        }
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-        case WM_DESTROY:
-            return 0;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
+static void PdfEncryptOnClose(Wnd::CloseEvent* ev) {
+    auto dlg = (PdfEncryptDialog*)ev->e->self;
+    delete dlg;
 }
 
-static constexpr const WCHAR* kPdfEncryptWinClassName = L"SUMATRA_PDF_ENCRYPT";
-static bool gPdfEncryptWinClassRegistered = false;
+bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
+    win = w;
+    srcPath = str::Dup(tab->filePath);
+    hFont = GetDefaultGuiFont();
+    onClose = MkFunc1Void(PdfEncryptOnClose);
+
+    CreateCustomArgs cargs;
+    cargs.title = _TRA("Encrypt PDF");
+    cargs.font = hFont;
+    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    cargs.visible = false;
+    if (UseDarkModeLib() && DarkMode::isEnabled()) {
+        cargs.bgColor = ThemeWindowControlBackgroundColor();
+    } else {
+        cargs.bgColor = MkGray(0xee);
+    }
+    CreateCustom(cargs);
+    if (!hwnd) {
+        return false;
+    }
+    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+
+    bool isRtl = IsUIRtl();
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+
+    // row 1: source path label
+    pathLabel = CreatePathLabel(hwnd, hFont, srcPath, isRtl);
+    vbox->AddChild(pathLabel);
+
+    // row 2: dest edit (flex) + browse button
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Edit::CreateArgs args;
+        args.parent = hwnd;
+        args.withBorder = true;
+        args.font = hFont;
+        args.text = MakeUniqueFilePathTemp(srcPath);
+        args.isRtl = isRtl;
+        destEdit = new Edit();
+        destEdit->Create(args);
+        hbox->AddChild(destEdit, 1);
+
+        browseBtn = new Button();
+        browseBtn->onClick = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::OnBrowse>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = "...";
+        bargs.isRtl = isRtl;
+        browseBtn->Create(bargs);
+        hbox->AddChild(new Padding(browseBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    // row 3: "Password:" label + password edit (flex)
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainStart;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        Static::CreateArgs largs;
+        largs.parent = hwnd;
+        largs.font = hFont;
+        largs.text = _TRA("Password:");
+        largs.isRtl = isRtl;
+        passwordLabel = new Static();
+        passwordLabel->Create(largs);
+        hbox->AddChild(new Padding(passwordLabel, DpiScaledInsets(hwnd, 0, 4, 0, 0)));
+
+        Edit::CreateArgs eargs;
+        eargs.parent = hwnd;
+        eargs.withBorder = true;
+        eargs.font = hFont;
+        eargs.isRtl = isRtl;
+        passwordEdit = new Edit();
+        passwordEdit->onTextChanged = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::UpdateButton>(this);
+        passwordEdit->Create(eargs);
+        hbox->AddChild(passwordEdit, 1);
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    // row 4: Encrypt PDF + Cancel buttons (right-aligned), each sized to its label
+    {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainEnd;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+
+        encryptBtn = new Button();
+        encryptBtn->isDefault = true;
+        encryptBtn->onClick = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::DoEncrypt>(this);
+        Button::CreateArgs bargs;
+        bargs.parent = hwnd;
+        bargs.font = hFont;
+        bargs.text = _TRA("Encrypt PDF");
+        bargs.isRtl = isRtl;
+        encryptBtn->Create(bargs);
+        hbox->AddChild(encryptBtn);
+
+        cancelBtn = new Button();
+        cancelBtn->onClick = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::OnCancel>(this);
+        Button::CreateArgs cargs2;
+        cargs2.parent = hwnd;
+        cargs2.font = hFont;
+        cargs2.text = _TRA("Cancel");
+        cargs2.isRtl = isRtl;
+        cancelBtn->Create(cargs2);
+        hbox->AddChild(new Padding(cancelBtn, DpiScaledInsets(hwnd, 0, 0, 0, 4)));
+
+        vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
+    }
+
+    mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
+
+    int minClientW = DpiScale(hwnd, 480);
+    int clientW = CalcDlgWidth(hwnd, hFont, srcPath, minClientW, DpiScale(hwnd, 10));
+    Size size = mainLayout->Layout(ExpandHeight(clientW));
+    Rect bounds{0, 0, size.dx, size.dy};
+    mainLayout->SetBounds(bounds);
+    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+
+    // disable encrypt button until a password is entered
+    encryptBtn->SetIsEnabled(false);
+
+    CenterDialog(hwnd, w->hwndFrame);
+    if (UseDarkModeLib()) {
+        DarkMode::setDarkWndSafe(hwnd);
+        DarkMode::setWindowEraseBgSubclass(hwnd);
+    }
+    SetIsVisible(true);
+    HwndSetFocus(passwordEdit->hwnd);
+    return true;
+}
 
 void ShowPdfEncryptDialog(MainWindow* win) {
     if (!win || !win->IsDocLoaded()) {
@@ -1561,96 +1658,10 @@ void ShowPdfEncryptDialog(MainWindow* win) {
     }
     logf("ShowPdfEncryptDialog: opening for '%s'\n", tab->filePath);
 
-    if (!gPdfEncryptWinClassRegistered) {
-        WNDCLASSEXW wc{};
-        wc.cbSize = sizeof(wc);
-        wc.style = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc = PdfEncryptDlgProc;
-        wc.hInstance = GetModuleHandleW(nullptr);
-        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-        wc.lpszClassName = kPdfEncryptWinClassName;
-        RegisterClassExW(&wc);
-        gPdfEncryptWinClassRegistered = true;
-    }
-
-    PdfEncryptDialog* dlg = new PdfEncryptDialog();
-    dlg->srcPath = str::Dup(tab->filePath);
-    dlg->win = win;
-    dlg->hFont = GetDefaultGuiFont();
-
-    DlgMetrics m = GetDlgMetrics(win->hwndFrame, dlg->hFont);
-    int minW = DpiScale(win->hwndFrame, 500);
-    int dlgW = CalcDlgWidth(win->hwndFrame, dlg->hFont, tab->filePath, minW, m.padding);
-    int dlgH = CalcDlgHeight(win->hwndFrame, m, 4);
-
-    HINSTANCE h = GetModuleHandleW(nullptr);
-    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kPdfEncryptWinClassName, _TRW("Encrypt PDF"),
-                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
-                                dlgW, dlgH, win->hwndFrame, nullptr, h, dlg);
-    if (!hwnd) {
-        str::Free(dlg->srcPath);
+    auto dlg = new PdfEncryptDialog();
+    if (!dlg->Create(win, tab)) {
         delete dlg;
-        return;
     }
-
-    int x = m.padding;
-    int y = m.padding;
-    int w = dlgW - 2 * m.padding - DpiScale(hwnd, 16);
-
-    // row 1: source path label (offset to align with text inside edit control)
-    dlg->hwndPathLabel =
-        CreateWindowExW(0, L"STATIC", ToWStrTemp(tab->filePath), WS_CHILD | WS_VISIBLE | SS_LEFT | SS_PATHELLIPSIS,
-                        x + m.editXOff, y, w - m.editXOff, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPathLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 2: dest edit + browse button
-    TempStr destPath = MakeUniqueFilePathTemp(tab->filePath);
-    dlg->hwndDestEdit =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(destPath), WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, x, y,
-                        w - m.browseW - m.btnGap, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndDestEdit, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    dlg->hwndBrowseBtn = CreateWindowExW(0, L"BUTTON", L"...", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, x + w - m.browseW,
-                                         y, m.browseW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndBrowseBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 3: password label + password edit
-    const WCHAR* pwdLabel = _TRW("Password:");
-    Size labelSize = HwndMeasureText(hwnd, ToUtf8Temp(pwdLabel), dlg->hFont);
-    int labelW = labelSize.dx + DpiScale(hwnd, 4);
-
-    dlg->hwndPasswordLabel = CreateWindowExW(0, L"STATIC", pwdLabel, WS_CHILD | WS_VISIBLE | SS_LEFT, x + m.editXOff,
-                                             y + m.editXOff, labelW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPasswordLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    dlg->hwndPasswordEdit = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, L"", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                                            x + labelW, y, w - labelW, m.rowH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndPasswordEdit, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    y += m.rowH + m.rowGap;
-
-    // row 4: Encrypt PDF + Cancel buttons (right-aligned)
-    int bx = x + w - m.btnW;
-    dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
-                                         m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndCancelBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-    bx -= m.btnW + m.btnGap;
-    dlg->hwndEncryptBtn = CreateWindowExW(0, L"BUTTON", _TRW("Encrypt PDF"), WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
-                                          bx, y, m.btnW, m.btnH, hwnd, nullptr, h, nullptr);
-    SendMessageW(dlg->hwndEncryptBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
-
-    // disable encrypt button until password is entered
-    EnableWindow(dlg->hwndEncryptBtn, FALSE);
-
-    CenterDialog(hwnd, win->hwndFrame);
-    if (UseDarkModeLib()) {
-        DarkMode::setDarkWndSafe(hwnd);
-        DarkMode::setWindowEraseBgSubclass(hwnd);
-    }
-    ShowWindow(hwnd, SW_SHOW);
-    SetFocus(dlg->hwndPasswordEdit);
 }
 
 // --- Decrypt PDF dialog ---
