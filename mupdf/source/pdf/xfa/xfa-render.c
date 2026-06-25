@@ -1195,17 +1195,21 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
     rect = pdf_xfa_object_rect(ctx, field, page_h, pos, layout_w, PDF_XFA_DEFAULT_FIELD_H, ignore_node_xy);
     if (fz_is_empty_rect(rect)) return;
 
-    xfa->render_fields++;
     text = pdf_xfa_node_text(ctx, field);
 
     check_btn = pdf_xfa_find_check_button(ctx, field);
     if (check_btn) {
+        if (rctx->fields_only && !pdf_xfa_value_is_checked(text)) return;
+
+        xfa->render_fields++;
         check_size = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, check_btn, "size"), 10.0f);
         box = pdf_xfa_checkbox_rect(rect, check_size);
-        if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, check_btn, box)) {
-            if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, field, box)) {
-                pdf_xfa_render_fill_rect(ctx, dev, ctm, box, white);
-                pdf_xfa_render_stroke_rect(ctx, dev, ctm, box, black, 1.0f);
+        if (!rctx->fields_only) {
+            if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, check_btn, box)) {
+                if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, field, box)) {
+                    pdf_xfa_render_fill_rect(ctx, dev, ctm, box, white);
+                    pdf_xfa_render_stroke_rect(ctx, dev, ctm, box, black, 1.0f);
+                }
             }
         }
         if (pdf_xfa_value_is_checked(text)) pdf_xfa_render_check_mark(ctx, dev, ctm, box, black);
@@ -1214,11 +1218,29 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
 
     radio_btn = pdf_xfa_find_radio_button(ctx, field);
     if (radio_btn) {
-        pdf_xfa_render_radio_button(ctx, dev, ctm, xfa, field, radio_btn, rect, text);
+        float size;
+        float cx, cy, r;
+
+        if (rctx->fields_only && !pdf_xfa_value_is_checked(text)) return;
+
+        xfa->render_fields++;
+        if (rctx->fields_only && pdf_xfa_value_is_checked(text)) {
+            size = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, radio_btn, "size"), 10.0f);
+            box = pdf_xfa_checkbox_rect(rect, size);
+            cx = (box.x0 + box.x1) * 0.5f;
+            cy = (box.y0 + box.y1) * 0.5f;
+            r = (box.x1 - box.x0) * 0.2f;
+            pdf_xfa_render_circle(ctx, dev, ctm, cx, cy, r, black, NULL, 0, 1);
+        } else if (!rctx->fields_only)
+            pdf_xfa_render_radio_button(ctx, dev, ctm, xfa, field, radio_btn, rect, text);
         return;
     }
 
-    if (!pdf_xfa_render_border(ctx, dev, ctm, xfa, field, rect)) {
+    if (rctx->fields_only && (!text || !text[0])) return;
+
+    xfa->render_fields++;
+
+    if (!rctx->fields_only && !pdf_xfa_render_border(ctx, dev, ctm, xfa, field, rect)) {
         pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, white);
         pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, gray, 1.0f);
     }
