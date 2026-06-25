@@ -17,10 +17,13 @@ type XfaInfo = {
   pure_xfa: number;
   valid: number;
   page_count: number;
+  render_nonempty: number;
 };
 
 function parseXfaLine(raw: string): XfaInfo {
-  const m = raw.match(/has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+)/);
+  const m = raw.match(
+    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+)/,
+  );
   if (!m) {
     throw new Error(`unexpected TestXfa output: ${raw.trim()}`);
   }
@@ -29,6 +32,7 @@ function parseXfaLine(raw: string): XfaInfo {
     pure_xfa: Number(m[2]),
     valid: Number(m[3]),
     page_count: Number(m[4]),
+    render_nonempty: Number(m[5]),
   };
 }
 
@@ -45,7 +49,9 @@ export async function testit(): Promise<void> {
   const plainPdf = join(here, "issue-3219.pdf");
 
   const xfa = await queryXfa(xfaPdf);
-  console.log(`ad-hoc-xfa.pdf: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count}`);
+  console.log(
+    `ad-hoc-xfa.pdf: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty}`,
+  );
   if (xfa.has_xfa !== 1) {
     throw new Error("ad-hoc-xfa.pdf: expected has_xfa=1");
   }
@@ -57,6 +63,9 @@ export async function testit(): Promise<void> {
   }
   if (xfa.page_count !== 1) {
     throw new Error(`ad-hoc-xfa.pdf: expected page_count=1, got page_count=${xfa.page_count}`);
+  }
+  if (xfa.render_nonempty !== 1) {
+    throw new Error(`ad-hoc-xfa.pdf: expected render_nonempty=1, got render_nonempty=${xfa.render_nonempty}`);
   }
 
   const plain = await queryXfa(plainPdf);

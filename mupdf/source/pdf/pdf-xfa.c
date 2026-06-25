@@ -176,27 +176,8 @@ fz_rect pdf_xfa_page_bbox(fz_context* ctx, pdf_xfa* xfa, int page_index) {
 }
 
 fz_display_list* pdf_xfa_run_page(fz_context* ctx, pdf_xfa* xfa, int page_index, fz_matrix ctm) {
-    fz_display_list* list;
-    fz_device* dev;
-
-    (void)page_index;
-    (void)ctm;
-
     if (!xfa || !xfa->valid) return NULL;
-
-    pdf_xfa_layout(ctx, xfa);
-
-    /* TODO: walk pdf_xfa_html_node tree and emit via fz_device */
-    list = fz_new_display_list(ctx, fz_infinite_rect);
-    dev = fz_new_list_device(ctx, list);
-    fz_try(ctx) fz_close_device(ctx, dev);
-    fz_always(ctx) fz_drop_device(ctx, dev);
-    fz_catch(ctx) {
-        fz_drop_display_list(ctx, list);
-        fz_rethrow(ctx);
-    }
-
-    return list;
+    return pdf_xfa_factory_render_page(ctx, xfa, page_index, ctm);
 }
 
 fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa) {

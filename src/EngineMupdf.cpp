@@ -5136,13 +5136,42 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             int pure_xfa = pdf_document_is_pure_xfa(ctx, pdfdoc);
             int valid = 0;
             int page_count = 0;
+            int render_nonempty = 0;
             pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
             if (xfa) {
                 valid = pdf_xfa_is_valid(ctx, xfa) ? 1 : 0;
                 page_count = pdf_xfa_page_count(ctx, xfa);
+                if (valid && page_count > 0) {
+                    fz_display_list* list = nullptr;
+                    fz_device* bbox_dev = nullptr;
+                    fz_rect render_bbox = fz_empty_rect;
+                    fz_cookie cookie = {};
+                    fz_var(list);
+                    fz_var(bbox_dev);
+                    fz_try(ctx) {
+                        list = pdf_xfa_run_page(ctx, xfa, 0, fz_identity);
+                        if (list) {
+                            fz_rect page_bbox = pdf_xfa_page_bbox(ctx, xfa, 0);
+                            bbox_dev = fz_new_bbox_device(ctx, &render_bbox);
+                            fz_run_display_list(ctx, list, bbox_dev, fz_identity, page_bbox, &cookie);
+                            fz_close_device(ctx, bbox_dev);
+                            if (!fz_is_empty_rect(render_bbox) && !fz_is_infinite_rect(render_bbox)) {
+                                render_nonempty = 1;
+                            }
+                        }
+                    }
+                    fz_always(ctx) {
+                        fz_drop_device(ctx, bbox_dev);
+                        fz_drop_display_list(ctx, list);
+                    }
+                    fz_catch(ctx) {
+                        fz_report_error(ctx);
+                    }
+                }
             }
 
-            out.AppendFmt("has_xfa=%d pure_xfa=%d valid=%d page_count=%d\n", has_xfa, pure_xfa, valid, page_count);
+            out.AppendFmt("has_xfa=%d pure_xfa=%d valid=%d page_count=%d render_nonempty=%d\n", has_xfa, pure_xfa,
+                          valid, page_count, render_nonempty);
             exitCode = 0;
         }
         SafeEngineRelease(&engine);

@@ -28,7 +28,7 @@
 #define PDF_XFA_DEFAULT_PAGE_W 612.0f
 #define PDF_XFA_DEFAULT_PAGE_H 792.0f
 
-static float pdf_xfa_parse_measurement(const char* text, float default_pt) {
+float pdf_xfa_parse_measurement(const char* text, float default_pt) {
     char* end;
     double v;
 

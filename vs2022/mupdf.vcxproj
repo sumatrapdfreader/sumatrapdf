@@ -1151,6 +1151,7 @@
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-som.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-factory.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-layout.c" />
+    <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-render.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-namespaces.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-object.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-parser.c" />
