@@ -47,11 +47,10 @@ pdf_xfa_new_from_packets(fz_context *ctx, pdf_document *doc, pdf_xfa_packet *pac
 	fz_try(ctx)
 	{
 		xfa->root = pdf_xfa_parse_packets(ctx, xfa->pool, packets);
+		if (!xfa->root)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "XFA: parse failed");
 
-		/* TODO: Binder (bind.js) — prototype resolution + data merge */
-		xfa->form = xfa->root;
-
-		/* TODO: DataHandler (data.js) */
+		xfa->form = pdf_xfa_bind(ctx, xfa->pool, xfa);
 		if (xfa->form)
 		{
 			xfa->global.template_root = xfa->form;

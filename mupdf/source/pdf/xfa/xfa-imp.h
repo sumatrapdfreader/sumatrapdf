@@ -82,8 +82,10 @@ struct pdf_xfa_object
 	pdf_xfa_object *next_sibling;
 	pdf_xfa_attr *first_attr;
 	pdf_xfa_global_data *global;
+	pdf_xfa_object *data_node; /* bound datasets node (bind.js: $data) */
 	int is_data_value; /* -1 unknown, 0 group, 1 value */
 	int has_children;
+	int consumed;
 };
 
 struct pdf_xfa_global_data
@@ -107,8 +109,11 @@ struct pdf_xfa
 	fz_pool *pool;
 	fz_hash_table *ids;
 	pdf_xfa_global_data global;
-	pdf_xfa_object *root;
-	pdf_xfa_object *form;
+	pdf_xfa_object *root; /* parsed xdp */
+	pdf_xfa_object *template_node;
+	pdf_xfa_object *datasets_node;
+	pdf_xfa_object *data_node;
+	pdf_xfa_object *form; /* bound template clone */
 	pdf_xfa_packet *packets;
 	int valid;
 	int layout_done;
@@ -141,6 +146,19 @@ void pdf_xfa_object_append_child(fz_context *ctx, fz_pool *pool, pdf_xfa_object 
 void pdf_xfa_object_add_attr(fz_context *ctx, fz_pool *pool, pdf_xfa_object *node, const char *name, const char *value);
 void pdf_xfa_object_set_id(fz_context *ctx, fz_hash_table *ids, pdf_xfa_object *node);
 void pdf_xfa_object_finalize(fz_context *ctx, fz_pool *pool, pdf_xfa_object *node);
+char *pdf_xfa_object_get_attr(fz_context *ctx, pdf_xfa_object *node, const char *name);
+int pdf_xfa_object_is_data_value(pdf_xfa_object *node);
+const char *pdf_xfa_object_get_data_value(fz_context *ctx, pdf_xfa_object *node);
+const char *pdf_xfa_object_text(fz_context *ctx, pdf_xfa_object *node);
+pdf_xfa_object *pdf_xfa_object_find_child(pdf_xfa_object *node, const char *name);
+pdf_xfa_object *pdf_xfa_object_clone(fz_context *ctx, fz_pool *pool, pdf_xfa_object *node);
+
+/* som.c */
+int pdf_xfa_som_search(fz_context *ctx, pdf_xfa_object *root, pdf_xfa_object *container,
+		const char *expr, int dot_dot_allowed, pdf_xfa_object **out, int out_max);
+
+/* bind.c */
+pdf_xfa_object *pdf_xfa_bind(fz_context *ctx, fz_pool *pool, pdf_xfa *xfa);
 
 /* builder.c */
 pdf_xfa_builder *pdf_xfa_builder_new(fz_context *ctx, fz_pool *pool);

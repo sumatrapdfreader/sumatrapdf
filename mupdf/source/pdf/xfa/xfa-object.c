@@ -127,3 +127,132 @@ pdf_xfa_object_finalize(fz_context *ctx, fz_pool *pool, pdf_xfa_object *node)
 	node->content = NULL;
 	pdf_xfa_object_append_child(ctx, pool, node, text_child);
 }
+
+char *
+pdf_xfa_object_get_attr(fz_context *ctx, pdf_xfa_object *node, const char *name)
+{
+	pdf_xfa_attr *attr;
+
+	(void)ctx;
+	if (!node || !name)
+		return NULL;
+	for (attr = node->first_attr; attr; attr = attr->next)
+		if (strcmp(attr->name, name) == 0)
+			return attr->value;
+	return NULL;
+}
+
+int
+pdf_xfa_object_is_data_value(pdf_xfa_object *node)
+{
+	pdf_xfa_object *child;
+
+	if (!node)
+		return 0;
+	if (node->is_data_value == 1)
+		return 1;
+	if (node->is_data_value == 0)
+		return 0;
+	if (!node->first_child)
+		return 1;
+	child = node->first_child;
+	if (!child->next_sibling && child->ns == PDF_XFA_NS_XHTML)
+		return 1;
+	return 0;
+}
+
+const char *
+pdf_xfa_object_get_data_value(fz_context *ctx, pdf_xfa_object *node)
+{
+	if (!node)
+		return "";
+	if (!pdf_xfa_object_is_data_value(node))
+		return NULL;
+	if (!node->first_child)
+		return node->content ? node->content : "";
+	return pdf_xfa_object_text(ctx, node);
+}
+
+const char *
+pdf_xfa_object_text(fz_context *ctx, pdf_xfa_object *node)
+{
+	pdf_xfa_object *child;
+	fz_buffer *buf = NULL;
+	const char *res = "";
+
+	if (!node)
+		return "";
+	if (!node->first_child)
+		return node->content ? node->content : "";
+
+	fz_var(buf);
+	fz_try(ctx)
+	{
+		buf = fz_new_buffer(ctx, 64);
+		for (child = node->first_child; child; child = child->next_sibling)
+		{
+			const char *t = pdf_xfa_object_text(ctx, child);
+			if (t && *t)
+				fz_append_string(ctx, buf, t);
+		}
+		fz_terminate_buffer(ctx, buf);
+		res = fz_string_from_buffer(ctx, buf);
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return res;
+}
+
+pdf_xfa_object *
+pdf_xfa_object_find_child(pdf_xfa_object *node, const char *name)
+{
+	pdf_xfa_object *child;
+
+	if (!node || !name)
+		return NULL;
+	for (child = node->first_child; child; child = child->next_sibling)
+		if (child->name && strcmp(child->name, name) == 0)
+			return child;
+	return NULL;
+}
+
+static void
+pdf_xfa_object_clone_attrs(fz_context *ctx, fz_pool *pool, pdf_xfa_object *dst, pdf_xfa_object *src)
+{
+	pdf_xfa_attr *attr;
+
+	for (attr = src->first_attr; attr; attr = attr->next)
+		pdf_xfa_object_add_attr(ctx, pool, dst, attr->name, attr->value);
+}
+
+pdf_xfa_object *
+pdf_xfa_object_clone(fz_context *ctx, fz_pool *pool, pdf_xfa_object *node)
+{
+	pdf_xfa_object *clone, *child, *cchild, *last;
+
+	if (!node)
+		return NULL;
+
+	clone = pdf_xfa_new_object(ctx, pool, node->ns, node->name, node->has_children);
+	clone->content = node->content ? fz_pool_strdup(ctx, pool, node->content) : NULL;
+	clone->is_data_value = node->is_data_value;
+	clone->global = node->global;
+	pdf_xfa_object_clone_attrs(ctx, pool, clone, node);
+
+	last = NULL;
+	for (child = node->first_child; child; child = child->next_sibling)
+	{
+		cchild = pdf_xfa_object_clone(ctx, pool, child);
+		cchild->parent = clone;
+		if (!clone->first_child)
+			clone->first_child = cchild;
+		else
+			last->next_sibling = cchild;
+		last = cchild;
+	}
+
+	return clone;
+}

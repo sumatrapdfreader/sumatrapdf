@@ -1146,7 +1146,9 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-xref.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xfa.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-zugferd.c" />
+    <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-bind.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-builder.c" />
+    <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-som.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-factory.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-namespaces.c" />
     <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-object.c" />
