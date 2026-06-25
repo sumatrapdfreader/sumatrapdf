@@ -9,10 +9,13 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>
 endobj
 4 0 obj
-<< /Fields [] /XFA [(xdp:xdp) 5 0 R] >>
+<< /Fields [] /DR << /Font << /F1 5 0 R >> >> /XFA [(xdp:xdp) 6 0 R] >>
 endobj
 5 0 obj
-<< /Length 4783 >>
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Length 5009 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
@@ -119,6 +122,12 @@ stream
               </value>
             </field>
           </subform>
+          <draw x="3.25in" y="4.5in" w="2in" h="0.25in">
+            <font typeface="Courier" posture="italic" size="10pt"/>
+            <value>
+              <text>Courier italic</text>
+            </value>
+          </draw>
         </contentArea>
       </pageArea>
     </pageSet>
@@ -168,15 +177,16 @@ stream
 endstream
 endobj
 xref
-0 6
+0 7
 0000000000 65535 f 
 0000000009 00000 n 
 0000000074 00000 n 
 0000000131 00000 n 
 0000000202 00000 n 
-0000000257 00000 n 
+0000000289 00000 n 
+0000000384 00000 n 
 trailer
-<< /Size 6 /Root 1 0 R >>
+<< /Size 7 /Root 1 0 R >>
 startxref
-5092
+5445
 %%EOF

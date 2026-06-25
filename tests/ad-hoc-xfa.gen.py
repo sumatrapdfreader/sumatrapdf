@@ -115,6 +115,12 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
               </value>
             </field>
           </subform>
+          <draw x="3.25in" y="4.5in" w="2in" h="0.25in">
+            <font typeface="Courier" posture="italic" size="10pt"/>
+            <value>
+              <text>Courier italic</text>
+            </value>
+          </draw>
         </contentArea>
       </pageArea>
     </pageSet>
@@ -174,7 +180,8 @@ def build_pdf(xdp: str) -> bytes:
     add("<< /Type /Catalog /Pages 2 0 R /AcroForm 4 0 R >>")
     add("<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
     add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>")
-    add("<< /Fields [] /XFA [(xdp:xdp) 5 0 R] >>")
+    add("<< /Fields [] /DR << /Font << /F1 5 0 R >> >> /XFA [(xdp:xdp) 6 0 R] >>")
+    add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
     add(
         f"<< /Length {len(xdp_bytes)} >>\nstream\n".encode("latin-1").decode("latin-1")
         + xdp

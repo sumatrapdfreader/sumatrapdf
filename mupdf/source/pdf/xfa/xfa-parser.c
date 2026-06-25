@@ -211,6 +211,9 @@ static void pdf_xfa_walk_xml(fz_context* ctx, pdf_xfa_parser* parser, fz_xml* it
         for (child = fz_xml_down(item); child; child = fz_xml_next(child)) pdf_xfa_walk_xml(ctx, parser, child);
 
         pdf_xfa_object_finalize(ctx, parser->pool, node);
+        if (node->name && strcmp(node->name, "font") == 0)
+            pdf_xfa_fonts_register_typeface(ctx, parser->global,
+                                            pdf_xfa_object_get_attr(ctx, node, "typeface"));
         pdf_xfa_object_set_id(ctx, parser->ids, node);
         pdf_xfa_parser_pop(parser);
         pdf_xfa_builder_clean(ctx, parser->builder, xmlns != NULL, prefixes, 0);

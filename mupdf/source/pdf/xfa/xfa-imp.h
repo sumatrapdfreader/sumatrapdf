@@ -100,12 +100,15 @@ struct pdf_xfa_packet {
     pdf_xfa_packet* next;
 };
 
+typedef struct pdf_xfa_fonts pdf_xfa_fonts;
+
 struct pdf_xfa {
     int refs;
     pdf_document* doc;
     fz_pool* pool;
     fz_hash_table* ids;
     pdf_xfa_global_data global;
+    pdf_xfa_fonts* fonts;
     pdf_xfa_object* root; /* parsed xdp */
     pdf_xfa_object* template_node;
     pdf_xfa_object* datasets_node;
@@ -197,6 +200,12 @@ int pdf_xfa_page_subform_index(fz_context* ctx, pdf_xfa_object* subform);
 /* factory.c */
 pdf_xfa* pdf_xfa_new_from_packets(fz_context* ctx, pdf_document* doc, pdf_xfa_packet* packets);
 int pdf_xfa_factory_layout(fz_context* ctx, pdf_xfa* xfa);
+
+/* fonts.c */
+void pdf_xfa_fonts_register_typeface(fz_context* ctx, pdf_xfa_global_data* global, const char* typeface);
+pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* pool);
+void pdf_xfa_fonts_drop(fz_context* ctx, pdf_xfa_fonts* fonts);
+fz_font* pdf_xfa_fonts_resolve(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold, int italic);
 
 /* render.c */
 fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int page_index, fz_matrix ctm);

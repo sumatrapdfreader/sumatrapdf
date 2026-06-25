@@ -41,6 +41,8 @@ typedef struct {
     int page_index;
     pdf_xfa_object* target_page_area;
     fz_font* font_bold;
+    fz_font* default_font;
+    pdf_xfa_fonts* fonts;
 } pdf_xfa_render_ctx;
 
 typedef struct {
@@ -56,6 +58,8 @@ typedef struct {
     float space_below;
     float text_indent;
     float line_height;
+    char typeface[128];
+    int italic;
 } pdf_xfa_text_style;
 
 typedef struct {
@@ -512,6 +516,31 @@ static void pdf_xfa_add_ui_textedit_margins(fz_context* ctx, pdf_xfa_object* nod
     style->space_below += pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, margin, "bottomInset"), 0);
 }
 
+static void pdf_xfa_strip_typeface_attr(const char* src, char* dst, size_t dstsz) {
+    const char* p;
+    size_t len;
+
+    if (!dst || dstsz == 0) return;
+    dst[0] = 0;
+    if (!src) return;
+
+    p = src;
+    while (*p == ' ' || *p == '\t') p++;
+    if ((*p == '\'' && strchr(p + 1, '\'')) || (*p == '"' && strchr(p + 1, '"'))) {
+        char quote = *p++;
+        const char* end = strchr(p, quote);
+        if (!end) return;
+        len = (size_t)(end - p);
+        if (len >= dstsz) len = dstsz - 1;
+        memcpy(dst, p, len);
+        dst[len] = 0;
+        return;
+    }
+
+    strncpy(dst, p, dstsz - 1);
+    dst[dstsz - 1] = 0;
+}
+
 static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_text_style* style) {
     pdf_xfa_object* font;
     pdf_xfa_object* fill;
@@ -519,6 +548,8 @@ static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_
     pdf_xfa_object* para;
     char* size;
     char* weight;
+    char* posture;
+    char* typeface;
     char* align;
 
     if (!style) return;
@@ -532,6 +563,10 @@ static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_
         style->size_pt = pdf_xfa_parse_measurement(size, 0);
         weight = pdf_xfa_object_get_attr(ctx, font, "weight");
         if (weight && strcmp(weight, "bold") == 0) style->bold = 1;
+        posture = pdf_xfa_object_get_attr(ctx, font, "posture");
+        if (posture && strcmp(posture, "italic") == 0) style->italic = 1;
+        typeface = pdf_xfa_object_get_attr(ctx, font, "typeface");
+        if (typeface && typeface[0]) pdf_xfa_strip_typeface_attr(typeface, style->typeface, sizeof(style->typeface));
         fill = pdf_xfa_object_find_child(font, "fill");
         if (!fill) fill = pdf_xfa_find_descendant(font, "fill");
         if (fill) {
@@ -581,9 +616,17 @@ static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_
     pdf_xfa_add_ui_textedit_margins(ctx, node, style);
 }
 
-static fz_font* pdf_xfa_font_for_style(fz_font* regular, fz_font* bold, pdf_xfa_text_style* style) {
-    if (style && style->bold && bold) return bold;
-    return regular;
+static fz_font* pdf_xfa_font_for_style(fz_context* ctx, pdf_xfa_render_ctx* rctx, pdf_xfa_text_style* style) {
+    fz_font* font;
+
+    if (rctx && rctx->fonts && style && style->typeface[0]) {
+        font = pdf_xfa_fonts_resolve(ctx, rctx->fonts, style->typeface, style->bold, style->italic);
+        if (font) return font;
+    }
+
+    if (style && style->bold && rctx && rctx->font_bold) return rctx->font_bold;
+    if (rctx && rctx->default_font) return rctx->default_font;
+    return NULL;
 }
 
 static const char* pdf_xfa_node_text(fz_context* ctx, pdf_xfa_object* node) {
@@ -1133,7 +1176,8 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
     }
 
     pdf_xfa_parse_text_style(ctx, field, &style);
-    text_font = pdf_xfa_font_for_style(font, rctx ? rctx->font_bold : NULL, &style);
+    text_font = pdf_xfa_font_for_style(ctx, rctx, &style);
+    if (!text_font) text_font = font;
     pdf_xfa_render_text_in_rect(ctx, dev, ctm, text_font, text, rect, PDF_XFA_FIELD_PAD, &style);
 }
 
@@ -1197,7 +1241,8 @@ static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
 
     text = pdf_xfa_node_text(ctx, draw);
     pdf_xfa_parse_text_style(ctx, draw, &style);
-    text_font = pdf_xfa_font_for_style(font, rctx ? rctx->font_bold : NULL, &style);
+    text_font = pdf_xfa_font_for_style(ctx, rctx, &style);
+    if (!text_font) text_font = font;
     pdf_xfa_render_text_in_rect(ctx, dev, ctm, text_font, text, rect, 0, &style);
 }
 
@@ -1415,7 +1460,9 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
     fz_try(ctx) {
         font = fz_new_base14_font(ctx, "Helvetica");
         font_bold = fz_new_base14_font(ctx, "Helvetica-Bold");
+        rctx.default_font = font;
         rctx.font_bold = font_bold;
+        rctx.fonts = xfa->fonts;
 
         list = fz_new_display_list(ctx, page_bbox);
         dev = fz_new_list_device(ctx, list);

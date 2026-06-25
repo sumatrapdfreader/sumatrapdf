@@ -1422,6 +1422,7 @@ const mupdf: LibDef = {
         "xfa/xfa-builder.c",
         "xfa/xfa-som.c",
         "xfa/xfa-factory.c",
+        "xfa/xfa-fonts.c",
         "xfa/xfa-namespaces.c",
         "xfa/xfa-object.c",
         "xfa/xfa-parser.c",
