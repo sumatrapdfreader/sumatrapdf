@@ -143,8 +143,8 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdToggleReuseInstance` : "Toggle Reuse Instance"
 - `CmdToggleScrollbarInSinglePage` : "Toggle Scrollbar In Single Page"
 - `CmdToggleSmoothScroll` : "Toggle Smooth Scroll"
-- `CmdToggleToolbarPosition` : "Toggle Toolbar Position (Top / Bottom)"
-- `CmdToggleDjvuEngine` : "Toggle DjVu Engine (djvudec / libdjvu)"
+- `CmdToggleToolbarPosition` : "Toggle Toolbar Position" (command palette shows the target, e.g. "set to bottom")
+- `CmdToggleDjvuEngine` : "Toggle DjVu Engine" (command palette shows the target, e.g. "set to libdjvu")
 - `CmdToggleTabsMru` : "Toggle Tabs MRU"
 - `CmdToggleTips` : "Toggle Tips"
 - `CmdToggleWindowsPreviewer` : "Toggle Windows Previewer"

@@ -148,14 +148,31 @@ class EngineDjvuDec : public EngineBase {
 
   protected:
     IStream* stream = nullptr;
-    ByteSlice fileData; // must outlive doc
+    ByteSlice fileData; // must outlive all docs
 
+    // a djvu_doc isn't thread-safe, so we keep one doc for metadata queries
+    // (TOC, links, text) used by the UI thread under `lock`, and a separate
+    // pool of docs for rendering used by the background render threads. This
+    // way a slow render never blocks UI-thread metadata calls, and multiple
+    // render threads can decode different pages concurrently.
     djvu_ctx* ctx = nullptr;
     djvu_doc* doc = nullptr;
-    CRITICAL_SECTION lock; // djvudec isn't thread-safe for concurrent renders
+    CRITICAL_SECTION lock; // protects `doc` (metadata)
+
+    // render-doc pool, each entry an independent (ctx, doc) over fileData
+    struct RenderDoc {
+        djvu_ctx* ctx = nullptr;
+        djvu_doc* doc = nullptr;
+        bool inUse = false;
+    };
+    Vec<RenderDoc*> renderDocs;
+    CRITICAL_SECTION poolLock; // protects renderDocs bookkeeping
 
     Vec<DjvuDecPageInfo*> pages;
     TocTree* tocTree = nullptr;
+
+    RenderDoc* AcquireRenderDoc();
+    void ReleaseRenderDoc(RenderDoc*);
 
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool FinishLoading();
@@ -167,11 +184,21 @@ EngineDjvuDec::EngineDjvuDec() {
     str::ReplaceWithCopy(&defaultExt, ".djvu");
     fileDPI = 300.0f;
     InitializeCriticalSection(&lock);
+    InitializeCriticalSection(&poolLock);
 }
 
 EngineDjvuDec::~EngineDjvuDec() {
     delete tocTree;
     DeleteVecMembers(pages);
+    for (RenderDoc* rd : renderDocs) {
+        if (rd->doc) {
+            djvu_doc_close(rd->doc);
+        }
+        if (rd->ctx) {
+            djvu_ctx_free(rd->ctx);
+        }
+        delete rd;
+    }
     if (doc) {
         djvu_doc_close(doc);
     }
@@ -183,6 +210,48 @@ EngineDjvuDec::~EngineDjvuDec() {
         stream->Release();
     }
     DeleteCriticalSection(&lock);
+    DeleteCriticalSection(&poolLock);
+}
+
+// get a free render doc from the pool (creating one if needed). Each render
+// doc is an independent djvudec document over the same in-memory file, so
+// renders run without contending with metadata queries or each other.
+EngineDjvuDec::RenderDoc* EngineDjvuDec::AcquireRenderDoc() {
+    {
+        ScopedCritSec scope(&poolLock);
+        for (RenderDoc* rd : renderDocs) {
+            if (!rd->inUse) {
+                rd->inUse = true;
+                return rd;
+            }
+        }
+    }
+    // none free: open a new independent doc (djvu_doc_open over a read-only
+    // shared buffer is safe to call concurrently)
+    auto rd = new RenderDoc();
+    rd->ctx = djvu_ctx_new(nullptr, nullptr, nullptr, nullptr);
+    if (rd->ctx) {
+        rd->doc = djvu_doc_open(rd->ctx, fileData.data(), fileData.size());
+    }
+    if (!rd->doc) {
+        if (rd->ctx) {
+            djvu_ctx_free(rd->ctx);
+        }
+        delete rd;
+        return nullptr;
+    }
+    rd->inUse = true;
+    ScopedCritSec scope(&poolLock);
+    renderDocs.Append(rd);
+    return rd;
+}
+
+void EngineDjvuDec::ReleaseRenderDoc(RenderDoc* rd) {
+    if (!rd) {
+        return;
+    }
+    ScopedCritSec scope(&poolLock);
+    rd->inUse = false;
 }
 
 EngineBase* EngineDjvuDec::Clone() {
@@ -436,16 +505,22 @@ RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-    ScopedCritSec scope(&lock);
-    // render the whole page upright at full resolution (subsample=1 applies the
-    // page's intrinsic rotation), then scale/rotate into the requested rect
-    djvu_image* img = djvu_page_render(doc, pageNo - 1, 1);
-    if (!img) {
+    // render on a dedicated pool doc so we don't block (or get blocked by)
+    // UI-thread metadata queries on the main doc, and so multiple render
+    // threads can decode concurrently
+    RenderDoc* rd = AcquireRenderDoc();
+    if (!rd) {
         return nullptr;
     }
+    // render the whole page upright at full resolution (subsample=1 applies the
+    // page's intrinsic rotation), then scale/rotate into the requested rect
+    djvu_image* img = djvu_page_render(rd->doc, pageNo - 1, 1);
     int sdx = 0, sdy = 0;
-    u8* bgr = DjvuImageToBgr(img, sdx, sdy);
-    djvu_image_destroy(ctx, img);
+    u8* bgr = img ? DjvuImageToBgr(img, sdx, sdy) : nullptr;
+    if (img) {
+        djvu_image_destroy(rd->ctx, img);
+    }
+    ReleaseRenderDoc(rd);
     if (!bgr) {
         return nullptr;
     }

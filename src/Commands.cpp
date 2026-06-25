@@ -778,8 +778,8 @@ SeqStrings gCommandDescriptions =
     "Go to Previous Favorite\0"
     "Create Image Annotation From Clipboard\0"
     "Set Inverse Search Command Line\0"
-    "Toggle Toolbar Position (Top / Bottom)\0"
-    "Toggle DjVu Engine (djvudec / libdjvu)\0"
+    "Toggle Toolbar Position\0"
+    "Toggle DjVu Engine\0"
     "Do nothing\0"
     "\0";
 // clang-format on

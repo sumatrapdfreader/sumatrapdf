@@ -184,6 +184,17 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
         return s;
     }
 
+    if (cmdId == CmdToggleToolbarPosition) {
+        const char* next = ToolbarAtBottom() ? "top" : "bottom";
+        return (const char*)str::JoinTemp(s, ": set to ", next);
+    }
+
+    if (cmdId == CmdToggleDjvuEngine) {
+        bool useDjvuDec = !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
+        const char* next = useDjvuDec ? "libdjvu" : "djvudec";
+        return (const char*)str::JoinTemp(s, ": set to ", next);
+    }
+
     if (cmdId == CmdToggleWindowsPreviewer) {
         if (IsPreviewInstalled()) {
             s = _TRA("Un-register Windows Previewer");
