@@ -8,6 +8,7 @@ constexpr int kInvalidPageNo = -1;
 
 struct Annotation;
 struct PageRenderRequest;
+struct XfaFieldHit;
 enum class AnnotationType;
 
 /* Describes many attributes of one page in one, convenient place */
@@ -176,6 +177,7 @@ struct DisplayModel : DocController {
     IPageElement* GetElementAtPos(Point pt, int* pageNoOut);
     Annotation* GetAnnotationAtPos(Point pt, Annotation*);
     Annotation* GetWidgetAtPos(Point pt);
+    XfaFieldHit GetXfaFieldAtPos(Point pt);
 
     int GetPageNoByPoint(Point pt) const;
     Point CvtToScreen(int pageNo, PointF pt);

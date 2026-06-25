@@ -7,6 +7,9 @@ struct PasswordUI;
 struct FileArgs;
 struct AnnotCreateArgs;
 
+struct XfaFieldHit;
+enum class XfaFieldKind;
+
 /* EngineDjVu.cpp */
 void CleanupEngineDjVu();
 bool IsEngineDjVuSupportedFileType(Kind kind);
@@ -66,6 +69,12 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, const ShowErro
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);
+bool EngineMupdfIsHybridXfa(EngineBase* engine);
+XfaFieldHit EngineMupdfGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos);
+bool EngineMupdfSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value);
+bool EngineMupdfToggleXfaCheckbox(EngineBase* engine, const char* fieldName);
+TempStr EngineMupdfGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName);
+void EngineMupdfMarkXfaPageModified(EngineBase* engine, int pageNo);
 // disable mupdf's JavaScript engine for PDFs loaded after this call
 void EngineMupdfSetDisableJavaScript(bool disable);
 // allow PDFs to load images from an external sibling file (#3731), for PDFs
@@ -93,3 +102,9 @@ bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineHasUnsavedAnnotations(EngineBase*);
 Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
+bool EngineIsHybridXfa(EngineBase* engine);
+XfaFieldHit EngineGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos);
+bool EngineSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value);
+bool EngineToggleXfaCheckbox(EngineBase* engine, const char* fieldName);
+TempStr EngineGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName);
+void EngineMarkXfaPageModified(EngineBase* engine, int pageNo);

@@ -36,6 +36,7 @@
 #include "EngineAll.h"
 #include "Annotation.h"
 #include "FormFields.h"
+#include "XfaFormFields.h"
 #include "PdfTools.h"
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
@@ -1741,6 +1742,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     // tear down any in-place form-field edit before the engine is deleted below,
     // so the overlay's widget pointer can't dangle into freed memory
     CommitFormFieldEdit(false);
+    CommitXfaFieldEdit(false);
 
     tab->selectedAnnotation = nullptr;
     win->annotationBeingDragged = nullptr;
@@ -3052,6 +3054,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // so the overlay's widget pointer can't dangle (cancel: don't write/re-render
     // a document that's being closed or reloaded)
     CommitFormFieldEdit(false);
+    CommitXfaFieldEdit(false);
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm()) {
         win->AsChm()->RemoveParentHwnd();

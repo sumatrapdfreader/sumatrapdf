@@ -25,6 +25,7 @@
 #include "DisplayMode.h"
 #include "Annotation.h"
 #include "FormFields.h"
+#include "XfaFormFields.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -1254,15 +1255,31 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // text or choice field starts in-place editing. Widgets are hit-tested on
     // their own list (GetWidgetAtPos), separate from markup annotations. Consume
     // the click in either case so it doesn't start a drag/selection.
-    Annotation* widget = dm->GetWidgetAtPos(pt);
-    if (ToggleFormButton(widget)) {
-        MainWindowRerender(win);
-        win->mouseAction = MouseAction::None;
-        return;
-    }
-    if (StartFormFieldEdit(win, widget)) {
-        win->mouseAction = MouseAction::None;
-        return;
+    if (EngineIsHybridXfa(dm->GetEngine())) {
+        XfaFieldHit xfaField = dm->GetXfaFieldAtPos(pt);
+        if (xfaField.IsValid()) {
+            if (xfaField.kind == XfaFieldKind::Checkbox && ToggleXfaFieldButton(dm->GetEngine(), xfaField)) {
+                MainWindowRerender(win);
+                ToolbarUpdateStateForWindow(win, false);
+                win->mouseAction = MouseAction::None;
+                return;
+            }
+            if (xfaField.kind == XfaFieldKind::Text && StartXfaFieldEdit(win, xfaField)) {
+                win->mouseAction = MouseAction::None;
+                return;
+            }
+        }
+    } else {
+        Annotation* widget = dm->GetWidgetAtPos(pt);
+        if (ToggleFormButton(widget)) {
+            MainWindowRerender(win);
+            win->mouseAction = MouseAction::None;
+            return;
+        }
+        if (StartFormFieldEdit(win, widget)) {
+            win->mouseAction = MouseAction::None;
+            return;
+        }
     }
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
@@ -2188,15 +2205,28 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     }
 
     // PDF form fields: I-beam over text/choice, hand over checkbox/radio
-    switch (GetWidgetCursorKind(dm->GetWidgetAtPos(pt))) {
-        case WidgetCursorKind::Text:
-            SetCursorCached(IDC_IBEAM);
-            return TRUE;
-        case WidgetCursorKind::Button:
-            SetCursorCached(IDC_HAND);
-            return TRUE;
-        case WidgetCursorKind::None:
-            break;
+    if (EngineIsHybridXfa(dm->GetEngine())) {
+        switch (GetXfaFieldCursorKind(dm->GetXfaFieldAtPos(pt))) {
+            case WidgetCursorKind::Text:
+                SetCursorCached(IDC_IBEAM);
+                return TRUE;
+            case WidgetCursorKind::Button:
+                SetCursorCached(IDC_HAND);
+                return TRUE;
+            case WidgetCursorKind::None:
+                break;
+        }
+    } else {
+        switch (GetWidgetCursorKind(dm->GetWidgetAtPos(pt))) {
+            case WidgetCursorKind::Text:
+                SetCursorCached(IDC_IBEAM);
+                return TRUE;
+            case WidgetCursorKind::Button:
+                SetCursorCached(IDC_HAND);
+                return TRUE;
+            case WidgetCursorKind::None:
+                break;
+        }
     }
 
     Annotation* annot = dm->GetAnnotationAtPos(pt, selected);

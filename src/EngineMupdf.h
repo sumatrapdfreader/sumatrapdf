@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct Annotation;
+struct XfaPageFieldCache;
 
 struct FitzPageImageInfo {
     fz_rect rect = fz_unit_rect;
@@ -41,6 +42,9 @@ struct FzPageInfo {
     // if false, only loaded page (fast)
     // if true, loaded expensive info (extracted text etc.)
     bool fullyLoaded = false;
+
+    // hybrid XFA field hit-test rects (from render probes), page coords
+    XfaPageFieldCache* xfaFields = nullptr;
 
     // cached "View" rendering of the page; built lazily under
     // EngineMupdf::renderLock. fz_display_list is safe to *replay* across
@@ -167,4 +171,5 @@ EngineMupdf* AsEngineMupdf(EngineBase* engine);
 fz_rect ToFzRect(RectF rect);
 RectF ToRectF(fz_rect rect);
 void MarkNotificationAsModified(EngineMupdf*, Annotation*, AnnotationChange = AnnotationChange::Modify);
+void MarkXfaPageModified(EngineMupdf*, int pageNo);
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo);

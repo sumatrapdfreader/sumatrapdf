@@ -53,6 +53,7 @@
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "XfaTypes.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
@@ -1272,6 +1273,25 @@ Annotation* DisplayModel::GetWidgetAtPos(Point pt) {
     }
     PointF pos = CvtFromScreen(pt, pageNo);
     return EngineGetWidgetAtPos(engine, pageNo, pos);
+}
+
+XfaFieldHit DisplayModel::GetXfaFieldAtPos(Point pt) {
+    if (AnnotationsAreDisabled()) {
+        return {};
+    }
+    int pageNo = GetPageNoByPoint(pt);
+    if (!ValidPageNo(pageNo)) {
+        return {};
+    }
+    if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
+        return {};
+    }
+    PointF pos = CvtFromScreen(pt, pageNo);
+    XfaFieldHit hit = EngineGetXfaFieldAtPos(engine, pageNo, pos);
+    if (hit.IsValid()) {
+        hit.pageNo = pageNo;
+    }
+    return hit;
 }
 
 // note: returns false for pages that haven't been rendered yet

@@ -15,6 +15,7 @@
 #include "SumatraPDF.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "XfaTypes.h"
 #include "EngineAll.h"
 #include "GlobalPrefs.h"
 #include "StressTesting.h"
@@ -348,4 +349,46 @@ Annotation* EngineGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos) {
         return nullptr;
     }
     return EngineMupdfGetWidgetAtPos(engine, pageNo, pos);
+}
+
+bool EngineIsHybridXfa(EngineBase* engine) {
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfIsHybridXfa(engine);
+}
+
+XfaFieldHit EngineGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos) {
+    if (!IsEngineMupdf(engine)) {
+        return {};
+    }
+    return EngineMupdfGetXfaFieldAtPos(engine, pageNo, pos);
+}
+
+bool EngineSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value) {
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfSetXfaFieldContent(engine, fieldName, value);
+}
+
+bool EngineToggleXfaCheckbox(EngineBase* engine, const char* fieldName) {
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfToggleXfaCheckbox(engine, fieldName);
+}
+
+TempStr EngineGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName) {
+    if (!IsEngineMupdf(engine)) {
+        return nullptr;
+    }
+    return EngineMupdfGetXfaFieldContentTemp(engine, fieldName);
+}
+
+void EngineMarkXfaPageModified(EngineBase* engine, int pageNo) {
+    if (!IsEngineMupdf(engine)) {
+        return;
+    }
+    EngineMupdfMarkXfaPageModified(engine, pageNo);
 }

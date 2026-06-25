@@ -159,6 +159,16 @@ fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa);
 */
 int pdf_xfa_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, const char* value);
 
+enum {
+    PDF_XFA_FIELD_UNKNOWN = 0,
+    PDF_XFA_FIELD_TEXT = 1,
+    PDF_XFA_FIELD_CHECKBOX = 2,
+    PDF_XFA_FIELD_RADIO = 3,
+};
+
+int pdf_xfa_get_field_kind(fz_context* ctx, pdf_xfa* xfa, const char* field_name);
+int pdf_xfa_get_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, char* buf, int buflen);
+
 /*
         Drop a reference obtained via pdf_keep_xfa.  Document-owned instances are
         freed by pdf_invalidate_xfa / pdf_drop_document.

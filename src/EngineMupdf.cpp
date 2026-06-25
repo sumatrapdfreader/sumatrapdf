@@ -22,6 +22,7 @@ extern "C" {
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "XfaTypes.h"
 #include "EngineMupdf.h"
 #include "EngineAll.h"
 #include "EbookBase.h"
@@ -48,6 +49,10 @@ static AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
 }
 
 Kind kindEngineMupdf = "enginePdf";
+
+struct XfaPageFieldCache {
+    Vec<XfaFieldHit> fields;
+};
 
 // Whether to enable mupdf's JavaScript engine for newly loaded PDFs (form-field
 // calculate/validate/format). Set by the app from the DisableJavaScript pref;
@@ -2009,6 +2014,8 @@ EngineMupdf::~EngineMupdf() {
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
         }
+        delete pi->xfaFields;
+        pi->xfaFields = nullptr;
         // storage is arena-owned; run the destructor in place so the inner
         // Vec<>s free their heap-allocated els buffers, then leave the
         // memory to the arena.
@@ -3453,14 +3460,54 @@ RectF EngineMupdf::PageMediabox(int pageNo) {
     return pi->mediabox;
 }
 
+static XfaPageFieldCache* GetXfaPageFieldCache(FzPageInfo* pi) {
+    if (!pi) {
+        return nullptr;
+    }
+    if (!pi->xfaFields) {
+        pi->xfaFields = new XfaPageFieldCache();
+    }
+    return pi->xfaFields;
+}
+
+static void CaptureXfaFieldProbes(fz_context* ctx, pdf_xfa* xfa, FzPageInfo* pi) {
+    XfaPageFieldCache* cache;
+    int i, n;
+
+    if (!pi) {
+        return;
+    }
+    cache = GetXfaPageFieldCache(pi);
+    if (!cache) {
+        return;
+    }
+    cache->fields.Clear();
+    n = pdf_xfa_field_probe_count(ctx, xfa);
+    for (i = 0; i < n; i++) {
+        const pdf_xfa_field_probe* probe = pdf_xfa_field_probe_entry(ctx, xfa, i);
+        XfaFieldHit hit;
+        int kind;
+
+        if (!probe || !probe->name[0]) {
+            continue;
+        }
+        hit.pageNo = pi->pageNo;
+        snprintf(hit.name, sizeof hit.name, "%s", probe->name);
+        hit.bounds = ToRectF(probe->rect);
+        kind = pdf_xfa_get_field_kind(ctx, xfa, probe->name);
+        hit.kind = (XfaFieldKind)kind;
+        cache->fields.Append(hit);
+    }
+}
+
 // Hybrid AcroForm+XFA: paint the static PDF page, then XFA fields on top (no XFA
 // draws/background — those duplicate or misalign vs the PDF layer).
 static fz_display_list* BuildHybridXfaPageDisplayList(fz_context* ctx, fz_page* page, pdf_xfa* xfa, int page_index,
-                                                      fz_rect bounds) {
+                                                      fz_rect bounds, FzPageInfo* pi) {
     fz_display_list* list = nullptr;
     fz_device* dev = nullptr;
     fz_display_list* xfa_list = nullptr;
-    const int xfa_flags = PDF_XFA_RENDER_FIELDS_ONLY | PDF_XFA_RENDER_NO_BACKGROUND;
+    const int xfa_flags = PDF_XFA_RENDER_FIELDS_ONLY | PDF_XFA_RENDER_NO_BACKGROUND | PDF_XFA_RENDER_PROBE_FIELDS;
 
     fz_var(list);
     fz_var(dev);
@@ -3475,6 +3522,7 @@ static fz_display_list* BuildHybridXfaPageDisplayList(fz_context* ctx, fz_page* 
 
         pdf_xfa_set_render_flags(ctx, xfa, xfa_flags);
         xfa_list = pdf_xfa_run_page(ctx, xfa, page_index, fz_identity);
+        CaptureXfaFieldProbes(ctx, xfa, pi);
         pdf_xfa_set_render_flags(ctx, xfa, 0);
         if (xfa_list) {
             dev = fz_new_list_device(ctx, list);
@@ -3506,7 +3554,7 @@ static fz_display_list* GetOrBuildPageDisplayList(FzPageInfo* pi, fz_context* ct
             if (useXfaPages && pdfdoc && pdfdoc->xfa_ctx) {
                 if (hybridXfa && pi->page) {
                     fz_rect bounds = pdf_xfa_page_bbox(ctx, pdfdoc->xfa_ctx, pi->pageNo - 1);
-                    list = BuildHybridXfaPageDisplayList(ctx, pi->page, pdfdoc->xfa_ctx, pi->pageNo - 1, bounds);
+                    list = BuildHybridXfaPageDisplayList(ctx, pi->page, pdfdoc->xfa_ctx, pi->pageNo - 1, bounds, pi);
                 } else {
                     list = pdf_xfa_run_page(ctx, pdfdoc->xfa_ctx, pi->pageNo - 1, fz_identity);
                 }
@@ -4938,6 +4986,151 @@ Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos
         }
     }
     return best;
+}
+
+bool EngineMupdfIsHybridXfa(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    return epdf && epdf->hybridXfa;
+}
+
+static void EnsureXfaFieldCache(EngineMupdf* epdf, FzPageInfo* pi) {
+    fz_context* ctx = epdf->Ctx();
+
+    if (!epdf->hybridXfa || !epdf->pdfdoc || !pi) {
+        return;
+    }
+    if (pi->xfaFields && pi->xfaFields->fields.Size() > 0) {
+        return;
+    }
+    ScopedCritSec scope(&epdf->renderLock);
+    if (pi->displayList) {
+        fz_drop_display_list(ctx, pi->displayList);
+        pi->displayList = nullptr;
+    }
+    GetOrBuildPageDisplayList(pi, ctx, epdf->pdfdoc, epdf->useXfaPages, epdf->hybridXfa);
+}
+
+XfaFieldHit EngineMupdfGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos) {
+    XfaFieldHit best;
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    float bestArea = 0;
+
+    if (!epdf || !epdf->hybridXfa || !epdf->pdfdoc) {
+        return best;
+    }
+    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    if (!pi) {
+        return best;
+    }
+    EnsureXfaFieldCache(epdf, pi);
+    if (!pi->xfaFields) {
+        return best;
+    }
+    for (auto& hit : pi->xfaFields->fields) {
+        if (!hit.bounds.Contains(pos)) {
+            continue;
+        }
+        float area = hit.bounds.dx * hit.bounds.dy;
+        if (!best.IsValid() || area < bestArea) {
+            best = hit;
+            bestArea = area;
+        }
+    }
+    return best;
+}
+
+bool EngineMupdfSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    bool ok = false;
+
+    if (!epdf || !epdf->pdfdoc || !epdf->pdfdoc->xfa_ctx || !fieldName || !fieldName[0]) {
+        return false;
+    }
+    fz_context* ctx = epdf->Ctx();
+    ScopedCritSec cs(&epdf->docLock);
+    fz_try(ctx) {
+        ok = pdf_xfa_set_field_content(ctx, epdf->pdfdoc->xfa_ctx, fieldName, value ? value : "") != 0;
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        ok = false;
+    }
+    return ok;
+}
+
+static bool XfaValueIsChecked(const char* text) {
+    if (!text || !text[0]) {
+        return false;
+    }
+    return str::EqI(text, "1") || str::EqI(text, "true") || str::EqI(text, "on") || str::EqI(text, "yes");
+}
+
+bool EngineMupdfToggleXfaCheckbox(EngineBase* engine, const char* fieldName) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    char buf[64] = {};
+    bool ok = false;
+
+    if (!epdf || !epdf->pdfdoc || !epdf->pdfdoc->xfa_ctx || !fieldName || !fieldName[0]) {
+        return false;
+    }
+    fz_context* ctx = epdf->Ctx();
+    ScopedCritSec cs(&epdf->docLock);
+    fz_try(ctx) {
+        if (!pdf_xfa_get_field_content(ctx, epdf->pdfdoc->xfa_ctx, fieldName, buf, (int)sizeof buf)) {
+            fz_throw(ctx, FZ_ERROR_ARGUMENT, "XFA checkbox field not found");
+        }
+        const char* newVal = XfaValueIsChecked(buf) ? "0" : "1";
+        ok = pdf_xfa_set_field_content(ctx, epdf->pdfdoc->xfa_ctx, fieldName, newVal) != 0;
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        ok = false;
+    }
+    return ok;
+}
+
+TempStr EngineMupdfGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    char buf[512] = {};
+
+    if (!epdf || !epdf->pdfdoc || !epdf->pdfdoc->xfa_ctx || !fieldName || !fieldName[0]) {
+        return nullptr;
+    }
+    fz_context* ctx = epdf->Ctx();
+    ScopedCritSec cs(&epdf->docLock);
+    fz_try(ctx) {
+        if (!pdf_xfa_get_field_content(ctx, epdf->pdfdoc->xfa_ctx, fieldName, buf, (int)sizeof buf)) {
+            return nullptr;
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return nullptr;
+    }
+    return str::DupTemp(buf);
+}
+
+void EngineMupdfMarkXfaPageModified(EngineBase* engine, int pageNo) {
+    MarkXfaPageModified(AsEngineMupdf(engine), pageNo);
+}
+
+void MarkXfaPageModified(EngineMupdf* e, int pageNo) {
+    if (!e || !e->pdfdoc || pageNo < 1 || pageNo > e->pageCount) {
+        return;
+    }
+    e->modifiedAnnotations = true;
+    int pageIdx = pageNo - 1;
+    ScopedCritSec scope(&e->pagesLock);
+    FzPageInfo* pageInfo = e->pages[pageIdx];
+    pageInfo->elementsNeedRebuilding = true;
+    {
+        fz_context* ctx = e->Ctx();
+        ScopedCritSec rl(&e->renderLock);
+        if (pageInfo->displayList) {
+            fz_drop_display_list(ctx, pageInfo->displayList);
+            pageInfo->displayList = nullptr;
+        }
+    }
 }
 
 // Next/previous editable (text/choice, non-read-only) widget on the same page
