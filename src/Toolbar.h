@@ -19,6 +19,12 @@ void ShowOrHideToolbar(MainWindow*);
 void PositionOverlayToolbar(MainWindow*);
 // re-evaluate overlay toolbar visibility based on the cursor's screen position
 void UpdateOverlayToolbarForMouse(MainWindow*);
+// handle the delayed-hide timer firing (kHideOverlayToolbarTimerId)
+void OverlayToolbarHideTimerFired(MainWindow*);
+
+// delay before the overlay toolbar hides after the mouse moves away
+constexpr int kDelayToolbarHide = 500;
+#define kHideOverlayToolbarTimerId 0x101
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
 HIMAGELIST BuildStdToolbarImageList(int dx);

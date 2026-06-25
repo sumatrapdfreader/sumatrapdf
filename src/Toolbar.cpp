@@ -459,10 +459,6 @@ static bool ToolbarContextAllows(MainWindow* win) {
     if (win->isFullScreen) {
         return gGlobalPrefs->fullscreen.showToolbar;
     }
-    // hide toolbar on about/home page when not using tabs
-    if (!SettingsUseTabs() && win->IsCurrentTabAbout()) {
-        return false;
-    }
     return true;
 }
 
@@ -482,6 +478,11 @@ bool ShouldOverlayToolbar(MainWindow* win) {
         return false;
     }
     if (!ToolbarModeIsOverlay()) {
+        return false;
+    }
+    // don't float the overlay toolbar over the home / about page (only the
+    // pinned "show" mode shows a toolbar there)
+    if (win->IsCurrentTabAbout()) {
         return false;
     }
     return ToolbarContextAllows(win);
@@ -545,10 +546,8 @@ void PositionOverlayToolbar(MainWindow* win) {
     }
 }
 
-void UpdateOverlayToolbarForMouse(MainWindow* win) {
-    if (!win->isToolbarOverlay || !win->hwndReBar) {
-        return;
-    }
+// whether the cursor is currently in the reveal band or over the toolbar
+static bool OverlayToolbarShouldShowForCursor(MainWindow* win) {
     POINT pt{};
     GetCursorPos(&pt);
     POINT ptFrame = pt;
@@ -567,13 +566,59 @@ void UpdateOverlayToolbarForMouse(MainWindow* win) {
     HWND hwndUnder = WindowFromPoint(pt);
     bool overToolbar = hwndUnder && (hwndUnder == win->hwndReBar || hwndUnder == win->hwndToolbar ||
                                      IsChild(win->hwndReBar, hwndUnder));
+    return inBand || overToolbar;
+}
 
-    bool show = inBand || overToolbar;
-    if (show == win->toolbarOverlayShown) {
+static void CancelOverlayHide(MainWindow* win) {
+    if (win->toolbarOverlayHidePending) {
+        KillTimer(win->hwndFrame, kHideOverlayToolbarTimerId);
+        win->toolbarOverlayHidePending = false;
+    }
+}
+
+static void ScheduleOverlayHide(MainWindow* win) {
+    if (win->toolbarOverlayHidePending) {
+        return; // already scheduled; don't keep pushing it out on every move
+    }
+    win->toolbarOverlayHidePending = true;
+    SetTimer(win->hwndFrame, kHideOverlayToolbarTimerId, kDelayToolbarHide, nullptr);
+}
+
+static void SetOverlayShown(MainWindow* win, bool shown) {
+    if (shown == win->toolbarOverlayShown) {
         return;
     }
-    win->toolbarOverlayShown = show;
+    win->toolbarOverlayShown = shown;
     PositionOverlayToolbar(win);
+}
+
+void UpdateOverlayToolbarForMouse(MainWindow* win) {
+    if (!win->isToolbarOverlay || !win->hwndReBar) {
+        return;
+    }
+    bool show = OverlayToolbarShouldShowForCursor(win);
+    if (show) {
+        CancelOverlayHide(win);
+        SetOverlayShown(win, true);
+    } else if (win->toolbarOverlayShown) {
+        // don't hide immediately; give the user kDelayToolbarHide to come back
+        ScheduleOverlayHide(win);
+    }
+}
+
+void OverlayToolbarHideTimerFired(MainWindow* win) {
+    win->toolbarOverlayHidePending = false;
+    KillTimer(win->hwndFrame, kHideOverlayToolbarTimerId);
+    if (!win->isToolbarOverlay) {
+        return;
+    }
+    // if the cursor came back near the top while the timer was pending, keep
+    // the toolbar shown; otherwise hide it now
+    if (OverlayToolbarShouldShowForCursor(win)) {
+        SetOverlayShown(win, true);
+    } else {
+        SetOverlayShown(win, false);
+    }
 }
 
 void ShowOrHideToolbar(MainWindow* win) {
@@ -582,10 +627,17 @@ void ShowOrHideToolbar(MainWindow* win) {
     if (show == win->isToolbarVisible && overlay == win->isToolbarOverlay) {
         return;
     }
+    bool enteredOverlay = overlay && !win->isToolbarOverlay;
     win->isToolbarVisible = show;
     win->isToolbarOverlay = overlay;
     if (!overlay) {
+        CancelOverlayHide(win);
         win->toolbarOverlayShown = false;
+    }
+    if (enteredOverlay) {
+        // reveal immediately on entering overlay mode (e.g. via F8) so the
+        // change is visible; it auto-hides after kDelayToolbarHide
+        win->toolbarOverlayShown = true;
     }
     if (!show && !overlay) {
         // Move the focus out of the toolbar
@@ -594,6 +646,9 @@ void ShowOrHideToolbar(MainWindow* win) {
         }
     }
     RelayoutWindow(win);
+    if (enteredOverlay) {
+        ScheduleOverlayHide(win);
+    }
 }
 
 void UpdateFindbox(MainWindow* win) {
@@ -1273,7 +1328,9 @@ void CreateToolbar(MainWindow* win) {
     HINSTANCE hinst = GetModuleHandle(nullptr);
     HWND hwndParent = win->hwndFrame;
 
-    DWORD style = WS_CHILD | WS_CLIPCHILDREN | RBS_VARHEIGHT;
+    // WS_CLIPSIBLINGS so that in overlay mode the canvas (a lower-Z sibling)
+    // doesn't paint over the floating toolbar
+    DWORD style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | RBS_VARHEIGHT;
     if (IsCurrentThemeDefault()) {
         style |= WS_BORDER | RBS_BANDBORDERS;
     }

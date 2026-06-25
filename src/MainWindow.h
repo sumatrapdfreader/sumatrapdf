@@ -297,6 +297,8 @@ struct MainWindow {
     // space) and is only revealed when the mouse is near the top
     bool isToolbarOverlay = false;
     bool toolbarOverlayShown = false;
+    // a hide of the overlay toolbar is scheduled (after kDelayToolbarHide)
+    bool toolbarOverlayHidePending = false;
     bool isFullScreen = false;
     PresentationMode presentation = PM_DISABLED;
     int windowStateBeforePresentation = 0;

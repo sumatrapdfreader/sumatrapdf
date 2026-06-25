@@ -1966,7 +1966,9 @@ static MainWindow* CreateMainWindow() {
     // screen's edge when maximized (cf. Fitts' law) and there are
     // no additional adjustments needed when (un)maximizing
     clsName = CANVAS_CLASS_NAME;
-    style = WS_CHILD | WS_CLIPCHILDREN;
+    // WS_CLIPSIBLINGS so the canvas doesn't paint over the floating overlay
+    // toolbar (a higher-Z sibling) in overlay mode
+    style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     if (!ScrollbarsAreHidden() && !ScrollbarsUseOverlay()) {
         style |= WS_HSCROLL | WS_VSCROLL;
     }
@@ -4708,12 +4710,6 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     dh.End();
 
-    if (win->isToolbarOverlay && updateToolbars) {
-        // float the toolbar over the canvas (centered, natural width); its
-        // visibility is driven by mouse proximity, not by relayout
-        PositionOverlayToolbar(win);
-    }
-
     if (suppressIntermediateRedraws) {
         // re-enable redraw and invalidate once
         SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
@@ -4775,6 +4771,16 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // where EndFrameRedrawSuppression handles this
     if (!win->suppressFrameRedraw) {
         UpdateOverlayScrollbarPositions(win);
+    }
+
+    // float the toolbar over the canvas last, after the canvas/frame repaints
+    // above, so they don't paint over it; visibility is driven by mouse
+    // proximity, not by relayout
+    if (win->isToolbarOverlay && updateToolbars) {
+        PositionOverlayToolbar(win);
+        if (win->toolbarOverlayShown) {
+            RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+        }
     }
 }
 
@@ -4874,10 +4880,14 @@ static void OnMenuChangeLanguage(HWND hwnd) {
 }
 
 // cycle the toolbar mode show -> overlay -> hide -> show
-// (in fullscreen, toggle the separate pinned-toolbar setting instead)
+// (in fullscreen, toggle the separate pinned-toolbar setting instead; on the
+// home page overlay has no effect, so only toggle show <-> hide there)
 static void OnMenuViewShowHideToolbar(MainWindow* win) {
     if (win->isFullScreen) {
         gGlobalPrefs->fullscreen.showToolbar = !gGlobalPrefs->fullscreen.showToolbar;
+    } else if (win->IsCurrentTabAbout()) {
+        int mode = ToolbarModeFromPrefs();
+        SetToolbarMode(mode == kToolbarHide ? kToolbarShow : kToolbarHide);
     } else {
         int mode = ToolbarModeFromPrefs();
         int next = kToolbarShow;
@@ -9036,6 +9046,11 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             if (wp == kFindDebounceTimerId) {
                 FindDebounceTimerFired(win);
+                *callDef = false;
+                return 0;
+            }
+            if (wp == kHideOverlayToolbarTimerId) {
+                OverlayToolbarHideTimerFired(win);
                 *callDef = false;
                 return 0;
             }
