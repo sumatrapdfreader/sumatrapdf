@@ -52,9 +52,8 @@ export async function testit(): Promise<void> {
   if (xfa.pure_xfa !== 1) {
     throw new Error("ad-hoc-xfa.pdf: expected pure_xfa=1");
   }
-  // TestXfa skips pdf_load_xfa until the parser is reliable; valid stays 0 for now.
-  if (xfa.valid !== 0) {
-    throw new Error(`ad-hoc-xfa.pdf: unexpected valid=${xfa.valid}`);
+  if (xfa.valid !== 1) {
+    throw new Error(`ad-hoc-xfa.pdf: expected valid=1, got valid=${xfa.valid}`);
   }
   if (xfa.page_count !== 0) {
     throw new Error(`ad-hoc-xfa.pdf: unexpected page_count=${xfa.page_count} (layout stub should yield 0)`);

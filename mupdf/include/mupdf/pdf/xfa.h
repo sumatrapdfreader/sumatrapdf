@@ -68,6 +68,12 @@ int pdf_document_is_pure_xfa(fz_context *ctx, pdf_document *doc);
 pdf_xfa *pdf_load_xfa(fz_context *ctx, pdf_document *doc);
 
 /*
+	After a failed pdf_load_xfa, returns the last error message (empty string if none).
+	Valid until the next pdf_load_xfa call on any context in this thread.
+*/
+const char *pdf_xfa_last_load_error(fz_context *ctx);
+
+/*
 	Return non-zero when parse + bind succeeded (pdf.js: XFAFactory.isValid).
 */
 int pdf_xfa_is_valid(fz_context *ctx, pdf_xfa *xfa);

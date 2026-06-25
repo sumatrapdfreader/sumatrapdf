@@ -64,10 +64,6 @@ void EngineMupdfSetAllowExternalImages(bool allow) {
     gAllowExternalImages = allow;
 }
 
-// Set by TestXfaResult so FinishLoading() can open XFA PDFs for detection tests
-// without running pdf_load_xfa() (parser can hang on current fixtures).
-static bool gSkipXfaLoadForTest = false;
-
 EngineMupdf* AsEngineMupdf(EngineBase* engine) {
     if (!engine || !IsOfKind(engine, kindEngineMupdf)) {
         return nullptr;
@@ -2787,7 +2783,7 @@ bool EngineMupdf::FinishLoading() {
         pageCount = 0;
     }
 
-    if (pdfdoc && pdf_document_has_xfa(ctx, pdfdoc) && !gSkipXfaLoadForTest) {
+    if (pdfdoc && pdf_document_has_xfa(ctx, pdfdoc)) {
         pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
         if (pdf_xfa_is_valid(ctx, xfa)) {
             int xfaPageCount = pdf_xfa_page_count(ctx, xfa);
@@ -5122,14 +5118,11 @@ TempStr EngineMupdfGetPdfInfo(const char* path) {
 }
 
 // Headless XFA detection test. Reports has_xfa, pure_xfa, valid, page_count.
-// valid/page_count stay 0 until pdf_load_xfa is safe to call from tests.
 // Used by tests/ad-hoc-xfa.ts.
 char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
     StrBuilder out;
     int exitCode = 1;
-    gSkipXfaLoadForTest = true;
     EngineBase* engine = CreateEngineMupdfFromFile(pdfPath, kindFilePDF, 96, nullptr);
-    gSkipXfaLoadForTest = false;
     if (!engine) {
         out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
     } else {
@@ -5143,6 +5136,12 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
             int pure_xfa = pdf_document_is_pure_xfa(ctx, pdfdoc);
             int valid = 0;
             int page_count = 0;
+            pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
+            if (xfa) {
+                valid = pdf_xfa_is_valid(ctx, xfa) ? 1 : 0;
+                page_count = pdf_xfa_page_count(ctx, xfa);
+            }
+
             out.AppendFmt("has_xfa=%d pure_xfa=%d valid=%d page_count=%d\n", has_xfa, pure_xfa, valid, page_count);
             exitCode = 0;
         }

@@ -101,6 +101,7 @@ EXPORTS
 	pdf_document_has_xfa
 	pdf_document_is_pure_xfa
 	pdf_load_xfa
+	pdf_xfa_last_load_error
 	pdf_xfa_is_valid
 	pdf_xfa_page_count
 	pdf_xfa_page_bbox
