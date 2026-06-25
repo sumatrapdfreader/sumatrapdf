@@ -1,19 +1,39 @@
 #!/usr/bin/env python3
-"""Generate tests/ad-hoc-xfa.pdf: minimal pure-XFA fixture for ad-hoc-xfa.ts.
+"""Generate tests/ad-hoc-xfa.pdf: pure-XFA fixture for ad-hoc-xfa.ts.
 
-Regenerate:
+Includes pageSet/pageArea (US Letter), a bound text field, and matching
+datasets data. Regenerate:
+
   python tests/ad-hoc-xfa.gen.py
 """
 
 from pathlib import Path
 
+# Minimal but realistic pure-XFA form: one pageArea + one bound field.
 XDP = """<?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
 <template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
-  <subform name="form1"/>
+  <subform name="form1" layout="tb">
+    <pageSet>
+      <pageArea name="Page1" id="Page1">
+        <medium short="8.5in" long="11in"/>
+        <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in"/>
+      </pageArea>
+    </pageSet>
+    <field name="firstName" x="1in" y="1in" w="3in" h="0.25in">
+      <ui>
+        <textEdit/>
+      </ui>
+      <value>
+        <text>placeholder</text>
+      </value>
+    </field>
+  </subform>
 </template>
 <datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">
-  <data/>
+  <data>
+    <firstName>Alice</firstName>
+  </data>
 </datasets>
 </xdp>
 """
