@@ -12,7 +12,7 @@ endobj
 << /Fields [] /XFA [(xdp:xdp) 5 0 R] >>
 endobj
 5 0 obj
-<< /Length 2299 >>
+<< /Length 2552 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
@@ -45,6 +45,8 @@ stream
                 <color value="220,220,255"/>
               </fill>
             </border>
+            <font size="10pt"/>
+            <para vAlign="bottom" hAlign="center" marginLeft="4pt"/>
             <value>
               <text>Section</text>
             </value>
@@ -68,8 +70,11 @@ stream
         <edge stroke="lowered"/>
       </border>
       <ui>
-        <textEdit/>
+        <textEdit>
+          <margin leftInset="2pt" rightInset="2pt" topInset="1pt" bottomInset="1pt"/>
+        </textEdit>
       </ui>
+      <para vAlign="middle" marginLeft="3pt"/>
       <value>
         <text>placeholder</text>
       </value>
@@ -107,5 +112,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-2608
+2861
 %%EOF

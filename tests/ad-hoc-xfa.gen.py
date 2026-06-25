@@ -41,6 +41,8 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
                 <color value="220,220,255"/>
               </fill>
             </border>
+            <font size="10pt"/>
+            <para vAlign="bottom" hAlign="center" marginLeft="4pt"/>
             <value>
               <text>Section</text>
             </value>
@@ -64,8 +66,11 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
         <edge stroke="lowered"/>
       </border>
       <ui>
-        <textEdit/>
+        <textEdit>
+          <margin leftInset="2pt" rightInset="2pt" topInset="1pt" bottomInset="1pt"/>
+        </textEdit>
       </ui>
+      <para vAlign="middle" marginLeft="3pt"/>
       <value>
         <text>placeholder</text>
       </value>

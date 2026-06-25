@@ -46,6 +46,13 @@ typedef struct {
     int bold;
     float rgb[3];
     int has_color;
+    char v_align[16];
+    char h_align[16];
+    float margin_left;
+    float margin_right;
+    float space_above;
+    float space_below;
+    float text_indent;
 } pdf_xfa_text_style;
 
 typedef struct {
@@ -382,12 +389,34 @@ static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float 
     return rect;
 }
 
+static void pdf_xfa_add_ui_textedit_margins(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_text_style* style) {
+    pdf_xfa_object* ui;
+    pdf_xfa_object* text_edit;
+    pdf_xfa_object* margin;
+
+    if (!style) return;
+
+    ui = pdf_xfa_object_find_child(node, "ui");
+    if (!ui) return;
+    text_edit = pdf_xfa_object_find_child(ui, "textEdit");
+    if (!text_edit) return;
+    margin = pdf_xfa_object_find_child(text_edit, "margin");
+    if (!margin) return;
+
+    style->margin_left += pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, margin, "leftInset"), 0);
+    style->margin_right += pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, margin, "rightInset"), 0);
+    style->space_above += pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, margin, "topInset"), 0);
+    style->space_below += pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, margin, "bottomInset"), 0);
+}
+
 static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_text_style* style) {
     pdf_xfa_object* font;
     pdf_xfa_object* fill;
     pdf_xfa_object* color;
+    pdf_xfa_object* para;
     char* size;
     char* weight;
+    char* align;
 
     if (!style) return;
 
@@ -420,6 +449,32 @@ static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_
                 style->has_color = 1;
         }
     }
+
+    para = pdf_xfa_object_find_child(node, "para");
+    if (!para) para = pdf_xfa_find_descendant(node, "para");
+    if (para) {
+        align = pdf_xfa_object_get_attr(ctx, para, "vAlign");
+        if (align && align[0]) {
+            strncpy(style->v_align, align, sizeof(style->v_align) - 1);
+            style->v_align[sizeof(style->v_align) - 1] = 0;
+        }
+        align = pdf_xfa_object_get_attr(ctx, para, "hAlign");
+        if (align && align[0]) {
+            strncpy(style->h_align, align, sizeof(style->h_align) - 1);
+            style->h_align[sizeof(style->h_align) - 1] = 0;
+        }
+        style->margin_left = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, para, "marginLeft"), 0);
+        style->margin_right = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, para, "marginRight"), 0);
+        style->space_above = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, para, "spaceAbove"), 0);
+        style->space_below = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, para, "spaceBelow"), 0);
+        style->text_indent = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, para, "textIndent"), 0);
+        if (style->text_indent < 0) {
+            style->margin_left -= style->text_indent;
+            style->text_indent = 0;
+        }
+    }
+
+    pdf_xfa_add_ui_textedit_margins(ctx, node, style);
 }
 
 static fz_font* pdf_xfa_font_for_style(fz_font* regular, fz_font* bold, pdf_xfa_text_style* style) {
@@ -441,10 +496,21 @@ static const char* pdf_xfa_node_text(fz_context* ctx, pdf_xfa_object* node) {
     return NULL;
 }
 
+static float pdf_xfa_measure_text_width(fz_context* ctx, fz_font* font, float fontsize, const char* text) {
+    fz_matrix trm;
+    fz_matrix adv;
+
+    trm = fz_scale(fontsize, -fontsize);
+    adv = fz_measure_string(ctx, font, trm, text, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
+    return adv.e - trm.e;
+}
+
 static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_font* font, const char* text,
-                                        fz_rect rect, float pad, float rgb[3], float size_pt) {
+                                        fz_rect rect, float pad, pdf_xfa_text_style* style) {
     fz_text* fztext = NULL;
     float fontsize;
+    float rgb[3];
+    float text_width;
     fz_matrix trm;
 
     if (!text || !text[0] || fz_is_empty_rect(rect)) return;
@@ -453,22 +519,55 @@ static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matr
     rect.x1 -= pad;
     rect.y0 += pad;
     rect.y1 -= pad;
+    if (style) {
+        rect.x0 += style->margin_left + style->text_indent;
+        rect.x1 -= style->margin_right;
+        rect.y0 += style->space_below;
+        rect.y1 -= style->space_above;
+    }
     if (rect.x1 <= rect.x0 || rect.y1 <= rect.y0) return;
 
-    if (size_pt > 0)
-        fontsize = size_pt;
+    if (style && style->size_pt > 0)
+        fontsize = style->size_pt;
     else {
-        fontsize = rect.y1 - rect.y0 - pad;
+        fontsize = rect.y1 - rect.y0;
         if (fontsize > 12.0f) fontsize = 12.0f;
         if (fontsize < 6.0f) fontsize = 6.0f;
     }
 
+    if (style && style->has_color) {
+        rgb[0] = style->rgb[0];
+        rgb[1] = style->rgb[1];
+        rgb[2] = style->rgb[2];
+    } else {
+        rgb[0] = rgb[1] = rgb[2] = 0.0f;
+    }
+
+    trm = fz_scale(fontsize, -fontsize);
+    if (style && style->h_align[0]) {
+        text_width = pdf_xfa_measure_text_width(ctx, font, fontsize, text);
+        if (strcmp(style->h_align, "center") == 0)
+            trm.e = rect.x0 + (rect.x1 - rect.x0 - text_width) * 0.5f;
+        else if (strcmp(style->h_align, "right") == 0)
+            trm.e = rect.x1 - text_width;
+        else
+            trm.e = rect.x0;
+    } else
+        trm.e = rect.x0;
+
+    if (style && style->v_align[0]) {
+        if (strcmp(style->v_align, "bottom") == 0)
+            trm.f = rect.y0 + fontsize * 0.85f;
+        else if (strcmp(style->v_align, "middle") == 0)
+            trm.f = (rect.y0 + rect.y1) * 0.5f + fontsize * 0.35f;
+        else
+            trm.f = rect.y1 - fontsize * 0.1f;
+    } else
+        trm.f = rect.y1 - fontsize * 0.1f;
+
     fz_var(fztext);
     fz_try(ctx) {
         fztext = fz_new_text(ctx);
-        trm = fz_scale(fontsize, -fontsize);
-        trm.e = rect.x0;
-        trm.f = rect.y1 - pad;
         fz_show_string(ctx, fztext, font, trm, text, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
         fz_fill_text(ctx, dev, fztext, ctm, fz_device_rgb(ctx), rgb, 1.0f, fz_default_color_params);
     }
@@ -618,7 +717,6 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
     float white[3] = {1.0f, 1.0f, 1.0f};
     float gray[3] = {0.75f, 0.75f, 0.75f};
     float black[3] = {0.0f, 0.0f, 0.0f};
-    float text_rgb[3];
     const char* text;
     pdf_xfa_object* check_btn;
     pdf_xfa_object* radio_btn;
@@ -658,11 +756,8 @@ static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm,
     }
 
     pdf_xfa_parse_text_style(ctx, field, &style);
-    text_rgb[0] = style.has_color ? style.rgb[0] : black[0];
-    text_rgb[1] = style.has_color ? style.rgb[1] : black[1];
-    text_rgb[2] = style.has_color ? style.rgb[2] : black[2];
     text_font = pdf_xfa_font_for_style(font, rctx ? rctx->font_bold : NULL, &style);
-    pdf_xfa_render_text_in_rect(ctx, dev, ctm, text_font, text, rect, PDF_XFA_FIELD_PAD, text_rgb, style.size_pt);
+    pdf_xfa_render_text_in_rect(ctx, dev, ctm, text_font, text, rect, PDF_XFA_FIELD_PAD, &style);
 }
 
 static int pdf_xfa_render_draw_line(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
@@ -705,7 +800,6 @@ static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
                                 float layout_w, pdf_xfa_render_ctx* rctx) {
     fz_rect rect;
     float black[3] = {0.0f, 0.0f, 0.0f};
-    float text_rgb[3];
     const char* text;
     pdf_xfa_text_style style;
     fz_font* text_font;
@@ -726,11 +820,8 @@ static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
 
     text = pdf_xfa_node_text(ctx, draw);
     pdf_xfa_parse_text_style(ctx, draw, &style);
-    text_rgb[0] = style.has_color ? style.rgb[0] : black[0];
-    text_rgb[1] = style.has_color ? style.rgb[1] : black[1];
-    text_rgb[2] = style.has_color ? style.rgb[2] : black[2];
     text_font = pdf_xfa_font_for_style(font, rctx ? rctx->font_bold : NULL, &style);
-    pdf_xfa_render_text_in_rect(ctx, dev, ctm, text_font, text, rect, 0, text_rgb, style.size_pt);
+    pdf_xfa_render_text_in_rect(ctx, dev, ctm, text_font, text, rect, 0, &style);
 }
 
 static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* node,
