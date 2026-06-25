@@ -471,6 +471,7 @@ static void pdf_xfa_record_field_probe(fz_context* ctx, pdf_xfa* xfa, pdf_xfa_ob
     strncpy(probe->name, name, sizeof(probe->name) - 1);
     probe->name[sizeof(probe->name) - 1] = 0;
     probe->rect = rect;
+    probe->field_inst = (intptr_t)field;
 }
 
 static pdf_xfa_object* pdf_xfa_find_content_area(pdf_xfa_object* page_area) {

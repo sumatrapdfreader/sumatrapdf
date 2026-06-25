@@ -226,6 +226,7 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
 void pdf_xfa_sync_form_to_data(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa);
 fz_buffer* pdf_xfa_factory_serialize_data(fz_context* ctx, pdf_xfa* xfa);
 int pdf_xfa_factory_write_datasets(fz_context* ctx, pdf_xfa* xfa);
+int pdf_xfa_factory_select_radio(fz_context* ctx, pdf_xfa* xfa, const char* field_name, fz_rect hit_rect);
 int pdf_xfa_factory_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, const char* value);
 int pdf_xfa_factory_get_field_kind(fz_context* ctx, pdf_xfa* xfa, const char* field_name);
 int pdf_xfa_factory_get_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, char* buf, int buflen);

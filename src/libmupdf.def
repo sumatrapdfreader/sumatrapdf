@@ -125,6 +125,7 @@ EXPORTS
 	pdf_xfa_font_stats
 	pdf_xfa_serialize_data
 	pdf_xfa_set_field_content
+	pdf_xfa_select_radio
 	pdf_xfa_write_datasets_to_document
 	pdf_xfa_get_field_kind
 	pdf_xfa_get_field_content

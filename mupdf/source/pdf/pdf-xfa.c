@@ -273,6 +273,11 @@ int pdf_xfa_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_n
     return pdf_xfa_factory_set_field_content(ctx, xfa, field_name, value);
 }
 
+int pdf_xfa_select_radio(fz_context* ctx, pdf_xfa* xfa, const char* field_name, fz_rect hit_rect) {
+    if (!xfa || !xfa->valid) return 0;
+    return pdf_xfa_factory_select_radio(ctx, xfa, field_name, hit_rect);
+}
+
 int pdf_xfa_get_field_kind(fz_context* ctx, pdf_xfa* xfa, const char* field_name) {
     if (!xfa || !xfa->valid) return PDF_XFA_FIELD_UNKNOWN;
     return pdf_xfa_factory_get_field_kind(ctx, xfa, field_name);

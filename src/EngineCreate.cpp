@@ -372,6 +372,13 @@ bool EngineSetXfaFieldContent(EngineBase* engine, const char* fieldName, const c
     return EngineMupdfSetXfaFieldContent(engine, fieldName, value);
 }
 
+bool EngineSelectXfaRadio(EngineBase* engine, int pageNo, const char* fieldName, RectF bounds) {
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfSelectXfaRadio(engine, pageNo, fieldName, bounds);
+}
+
 bool EngineToggleXfaCheckbox(EngineBase* engine, const char* fieldName) {
     if (!IsEngineMupdf(engine)) {
         return false;

@@ -3498,6 +3498,21 @@ static void CaptureXfaFieldProbes(fz_context* ctx, pdf_xfa* xfa, FzPageInfo* pi)
         hit.kind = (XfaFieldKind)kind;
         cache->fields.Append(hit);
     }
+    // IRS f1040 filing status uses same-named checkButton widgets as an exclusive group.
+    for (size_t fi = 0; fi < cache->fields.Size(); fi++) {
+        if (cache->fields[fi].kind != XfaFieldKind::Checkbox) {
+            continue;
+        }
+        int count = 0;
+        for (size_t fj = 0; fj < cache->fields.Size(); fj++) {
+            if (str::Eq(cache->fields[fi].name, cache->fields[fj].name)) {
+                count++;
+            }
+        }
+        if (count > 1) {
+            cache->fields[fi].kind = XfaFieldKind::Radio;
+        }
+    }
 }
 
 // Hybrid AcroForm+XFA: paint the static PDF page, then XFA fields on top (no XFA
@@ -5015,6 +5030,32 @@ static void EnsureXfaFieldCache(EngineMupdf* epdf, FzPageInfo* pi) {
     GetOrBuildPageDisplayList(pi, ctx, epdf->pdfdoc, epdf->useXfaPages, epdf->hybridXfa);
 }
 
+static void EnsureXfaFieldProbesForPage(EngineMupdf* epdf, int pageNo) {
+    fz_context* ctx;
+    pdf_xfa* xfa;
+    fz_display_list* list = nullptr;
+
+    if (!epdf || !epdf->pdfdoc || !epdf->pdfdoc->xfa_ctx || pageNo < 1 || pageNo > epdf->pageCount) {
+        return;
+    }
+    ctx = epdf->Ctx();
+    xfa = epdf->pdfdoc->xfa_ctx;
+    fz_var(list);
+    ScopedCritSec scope(&epdf->renderLock);
+    fz_try(ctx) {
+        pdf_xfa_set_render_flags(ctx, xfa, PDF_XFA_RENDER_PROBE_FIELDS);
+        list = pdf_xfa_run_page(ctx, xfa, pageNo - 1, fz_identity);
+        pdf_xfa_set_render_flags(ctx, xfa, 0);
+    }
+    fz_always(ctx) {
+        fz_drop_display_list(ctx, list);
+        pdf_xfa_set_render_flags(ctx, xfa, 0);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+}
+
 XfaFieldHit EngineMupdfGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos) {
     XfaFieldHit best;
     EngineMupdf* epdf = AsEngineMupdf(engine);
@@ -5068,6 +5109,33 @@ static bool XfaValueIsChecked(const char* text) {
         return false;
     }
     return str::EqI(text, "1") || str::EqI(text, "true") || str::EqI(text, "on") || str::EqI(text, "yes");
+}
+
+bool EngineMupdfSelectXfaRadio(EngineBase* engine, int pageNo, const char* fieldName, RectF bounds) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    bool ok = false;
+
+    if (!epdf || !epdf->pdfdoc || !epdf->pdfdoc->xfa_ctx || !fieldName || !fieldName[0]) {
+        return false;
+    }
+    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    if (!pi) {
+        return false;
+    }
+    EnsureXfaFieldCache(epdf, pi);
+    EnsureXfaFieldProbesForPage(epdf, pageNo);
+
+    fz_context* ctx = epdf->Ctx();
+    fz_rect hit = ToFzRect(bounds);
+    ScopedCritSec cs(&epdf->docLock);
+    fz_try(ctx) {
+        ok = pdf_xfa_select_radio(ctx, epdf->pdfdoc->xfa_ctx, fieldName, hit) == 1;
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        ok = false;
+    }
+    return ok;
 }
 
 bool EngineMupdfToggleXfaCheckbox(EngineBase* engine, const char* fieldName) {
@@ -5667,6 +5735,67 @@ char* TestXfaSetFieldSerializeDataResult(const char* pdfPath, const char* fieldN
                             }
                             exitCode = 0;
                         }
+                    }
+                    fz_always(ctx) fz_drop_buffer(ctx, data_xml);
+                    fz_catch(ctx) {
+                        fz_report_error(ctx);
+                        out.AppendFmt("ERROR serialize-failed pdf=%s field=%s\n", pdfPath, fieldName);
+                    }
+                }
+            }
+            SafeEngineRelease(&engine);
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = exitCode;
+    }
+    return out.StealData();
+}
+
+// Select a same-named XFA radio by bounds (after probing), return serialized datasets XML.
+char* TestXfaSelectRadioSerializeDataResult(const char* pdfPath, const char* fieldName, int pageNo, float x0, float y0,
+                                            float x1, float y1, int* exitCodeOut) {
+    StrBuilder out;
+    int exitCode = 1;
+
+    if (!pdfPath || !fieldName || !fieldName[0] || pageNo < 1) {
+        out.AppendFmt("ERROR invalid-args pdf=%s field=%s page=%d\n", pdfPath ? pdfPath : "(null)",
+                      fieldName ? fieldName : "(null)", pageNo);
+    } else {
+        EngineBase* engine = CreateEngineMupdfFromFile(pdfPath, kindFilePDF, 96, nullptr);
+        if (!engine) {
+            out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+        } else {
+            EngineMupdf* epdf = AsEngineMupdf(engine);
+            if (!epdf || !epdf->pdfdoc) {
+                out.AppendFmt("ERROR not-pdf pdf=%s\n", pdfPath);
+            } else {
+                RectF bounds = RectF::FromXY(x0, y0, x1, y1);
+                int selected = 0;
+                fz_context* ctx = epdf->Ctx();
+                pdf_xfa* xfa = pdf_load_xfa(ctx, epdf->pdfdoc);
+                fz_buffer* data_xml = nullptr;
+                unsigned char* data = nullptr;
+                size_t n = 0;
+                fz_var(data_xml);
+                fz_var(data);
+
+                if (!xfa || !pdf_xfa_is_valid(ctx, xfa)) {
+                    out.AppendFmt("ERROR xfa-invalid pdf=%s\n", pdfPath);
+                } else if (!EngineMupdfSelectXfaRadio(engine, pageNo, fieldName, bounds)) {
+                    out.AppendFmt("ERROR radio-select-failed pdf=%s field=%s page=%d\n", pdfPath, fieldName, pageNo);
+                } else {
+                    selected = 1;
+                }
+
+                if (selected) {
+                    fz_try(ctx) {
+                        data_xml = pdf_xfa_serialize_data(ctx, xfa);
+                        n = fz_buffer_storage(ctx, data_xml, &data);
+                        if (data && n > 0) {
+                            out.Append(data, n);
+                        }
+                        exitCode = 0;
                     }
                     fz_always(ctx) fz_drop_buffer(ctx, data_xml);
                     fz_catch(ctx) {

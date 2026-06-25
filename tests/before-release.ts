@@ -17,6 +17,7 @@ import { testit as adHocXfa } from "./ad-hoc-xfa.ts";
 import { testit as adHocXfaCorpus } from "./ad-hoc-xfa-corpus.ts";
 import { testit as adHocXfaF1040Visual } from "./ad-hoc-xfa-f1040-visual.ts";
 import { testit as adHocXfaF1040Serialize } from "./ad-hoc-xfa-f1040-serialize.ts";
+import { testit as adHocXfaF1040Radio } from "./ad-hoc-xfa-f1040-radio.ts";
 import { testit as adHocXfaF1040Save } from "./ad-hoc-xfa-f1040-save.ts";
 import { testit as adHocXfaLayout } from "./ad-hoc-xfa-layout.ts";
 import { testit as latexTests } from "./latex.ts";
@@ -34,6 +35,7 @@ const adHocTests: [string, () => void | Promise<void>][] = [
   ["ad-hoc-xfa-f1040-visual", adHocXfaF1040Visual],
   ["ad-hoc-xfa-f1040-serialize", adHocXfaF1040Serialize],
   ["ad-hoc-xfa-f1040-save", adHocXfaF1040Save],
+  ["ad-hoc-xfa-f1040-radio", adHocXfaF1040Radio],
   ["ad-hoc-xfa-layout", adHocXfaLayout],
   ["issue-chm-lzx", issueChmLzx],
 ];

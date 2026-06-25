@@ -135,6 +135,7 @@ enum {
 typedef struct {
     char name[64];
     fz_rect rect;
+    intptr_t field_inst; /* pdf_xfa_object* for the laid-out field instance */
 } pdf_xfa_field_probe;
 
 void pdf_xfa_set_render_flags(fz_context* ctx, pdf_xfa* xfa, int flags);
@@ -158,6 +159,12 @@ fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa);
         Returns 1 if the field was found, 0 otherwise.
 */
 int pdf_xfa_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, const char* value);
+
+/*
+        Select one radio in a same-named group by hit-test rect (PDF points).
+        Clears sibling radios and sets the shared datasets value. Returns 1 on success.
+*/
+int pdf_xfa_select_radio(fz_context* ctx, pdf_xfa* xfa, const char* field_name, fz_rect hit_rect);
 
 enum {
     PDF_XFA_FIELD_UNKNOWN = 0,

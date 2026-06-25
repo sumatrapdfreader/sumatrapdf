@@ -166,6 +166,17 @@ bool ToggleXfaFieldButton(EngineBase* engine, const XfaFieldHit& field) {
     return true;
 }
 
+bool SelectXfaFieldRadio(EngineBase* engine, const XfaFieldHit& field) {
+    if (!engine || !field.IsValid() || field.kind != XfaFieldKind::Radio) {
+        return false;
+    }
+    if (!EngineSelectXfaRadio(engine, field.pageNo, field.name, field.bounds)) {
+        return false;
+    }
+    EngineMarkXfaPageModified(engine, field.pageNo);
+    return true;
+}
+
 WidgetCursorKind GetXfaFieldCursorKind(const XfaFieldHit& field) {
     if (!field.IsValid()) {
         return WidgetCursorKind::None;

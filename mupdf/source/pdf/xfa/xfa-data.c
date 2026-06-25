@@ -26,6 +26,13 @@
 
 #define PDF_XFA_DATASETS_NS "http://www.xfa.org/schema/xfa-data/1.0/"
 
+static int pdf_xfa_value_is_checked(const char* text) {
+    if (!text || !text[0]) return 0;
+    if (strcmp(text, "1") == 0) return 1;
+    if (strcmp(text, "true") == 0 || strcmp(text, "on") == 0 || strcmp(text, "yes") == 0) return 1;
+    return 0;
+}
+
 static const char* pdf_xfa_form_value(fz_context* ctx, pdf_xfa_object* form) {
     pdf_xfa_object* value;
 
@@ -64,6 +71,22 @@ static void pdf_xfa_set_data_value(fz_context* ctx, fz_pool* pool, pdf_xfa_objec
     data->is_data_value = 1;
 }
 
+static pdf_xfa_object* pdf_xfa_find_ui_widget(pdf_xfa_object* field, const char* widget_name) {
+    pdf_xfa_object* ui;
+
+    ui = pdf_xfa_object_find_child(field, "ui");
+    if (!ui) return NULL;
+    return pdf_xfa_object_find_child(ui, widget_name);
+}
+
+static int pdf_xfa_field_is_radio(pdf_xfa_object* field) {
+    return field && pdf_xfa_find_ui_widget(field, "radioButton") != NULL;
+}
+
+static int pdf_xfa_field_is_exclusive_widget(pdf_xfa_object* field) {
+    return pdf_xfa_field_is_radio(field) || (field && pdf_xfa_find_ui_widget(field, "checkButton") != NULL);
+}
+
 static void pdf_xfa_sync_form_to_data_imp(fz_context* ctx, fz_pool* pool, pdf_xfa_object* form) {
     pdf_xfa_object* child;
     const char* value;
@@ -72,7 +95,12 @@ static void pdf_xfa_sync_form_to_data_imp(fz_context* ctx, fz_pool* pool, pdf_xf
 
     if (form->data_node && pdf_xfa_object_is_data_value(form->data_node)) {
         value = pdf_xfa_form_value(ctx, form);
-        pdf_xfa_set_data_value(ctx, pool, form->data_node, value);
+        /* Same-named radio/checkbox widgets share one datasets leaf; don't let unselected siblings clear it. */
+        if (pdf_xfa_field_is_exclusive_widget(form)) {
+            if (pdf_xfa_value_is_checked(value))
+                pdf_xfa_set_data_value(ctx, pool, form->data_node, value);
+        } else
+            pdf_xfa_set_data_value(ctx, pool, form->data_node, value);
     }
 
     for (child = form->first_child; child; child = child->next_sibling) pdf_xfa_sync_form_to_data_imp(ctx, pool, child);
@@ -81,6 +109,120 @@ static void pdf_xfa_sync_form_to_data_imp(fz_context* ctx, fz_pool* pool, pdf_xf
 void pdf_xfa_sync_form_to_data(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa) {
     if (!xfa || !xfa->form) return;
     pdf_xfa_sync_form_to_data_imp(ctx, pool, xfa->form);
+}
+
+static void pdf_xfa_collect_radio_group(pdf_xfa* xfa, pdf_xfa_object* seed, pdf_xfa_object** out, int* count, int max) {
+    int i;
+    const char* seed_name;
+    char* name;
+
+    if (!xfa || !seed || !out || !count || !seed->name || strcmp(seed->name, "field") != 0) return;
+    if (!pdf_xfa_field_is_exclusive_widget(seed)) return;
+
+    seed_name = pdf_xfa_object_get_attr(NULL, seed, "name");
+    if (!seed_name || !seed_name[0]) return;
+
+    for (i = 0; i < xfa->field_probe_count; i++) {
+        pdf_xfa_object* field = (pdf_xfa_object*)xfa->field_probes[i].field_inst;
+        if (!field) continue;
+        name = pdf_xfa_object_get_attr(NULL, field, "name");
+        if (!name || strcmp(name, seed_name) != 0) continue;
+        if (!pdf_xfa_field_is_exclusive_widget(field)) continue;
+        if (*count < max) out[(*count)++] = field;
+    }
+}
+
+static pdf_xfa_object* pdf_xfa_find_probed_field(fz_context* ctx, pdf_xfa* xfa, const char* field_name,
+                                                 fz_rect hit_rect) {
+    pdf_xfa_object* best = NULL;
+    float best_area = 0;
+    int i;
+
+    (void)ctx;
+    if (!xfa || !field_name || !field_name[0]) return NULL;
+
+    fz_point pt;
+    pt.x = (hit_rect.x0 + hit_rect.x1) * 0.5f;
+    pt.y = (hit_rect.y0 + hit_rect.y1) * 0.5f;
+
+    for (i = 0; i < xfa->field_probe_count; i++) {
+        pdf_xfa_field_probe* probe = &xfa->field_probes[i];
+        float area;
+
+        if (strcmp(probe->name, field_name) != 0) continue;
+        if (pt.x < probe->rect.x0 || pt.x > probe->rect.x1 || pt.y < probe->rect.y0 || pt.y > probe->rect.y1) continue;
+
+        area = (probe->rect.x1 - probe->rect.x0) * (probe->rect.y1 - probe->rect.y0);
+        if (!best || area < best_area) {
+            best = (pdf_xfa_object*)probe->field_inst;
+            best_area = area;
+        }
+    }
+
+    return best;
+}
+
+static pdf_xfa_object* pdf_xfa_find_data_named_tree(pdf_xfa_object* node, const char* name) {
+    pdf_xfa_object* child;
+    char* named;
+    pdf_xfa_object* hit;
+
+    if (!node || !name || !name[0]) return NULL;
+
+    named = pdf_xfa_object_get_attr(NULL, node, "name");
+    if ((node->name && strcmp(node->name, name) == 0) || (named && strcmp(named, name) == 0)) return node;
+
+    for (child = node->first_child; child; child = child->next_sibling) {
+        hit = pdf_xfa_find_data_named_tree(child, name);
+        if (hit) return hit;
+    }
+    return NULL;
+}
+
+static pdf_xfa_object* pdf_xfa_find_shared_data_leaf(pdf_xfa* xfa, const char* field_name) {
+    pdf_xfa_object* data_leaf = NULL;
+    pdf_xfa_object* data_root;
+
+    if (!xfa || !xfa->data_node || !field_name || !field_name[0]) return NULL;
+
+    data_leaf = pdf_xfa_find_data_named_tree(xfa->data_node, field_name);
+    if (!data_leaf) {
+        data_root = xfa->data_node->first_child ? xfa->data_node->first_child : xfa->data_node;
+        data_leaf = pdf_xfa_find_data_named_tree(data_root, field_name);
+    }
+    if (data_leaf && !pdf_xfa_object_is_data_value(data_leaf)) data_leaf = NULL;
+    return data_leaf;
+}
+
+int pdf_xfa_factory_select_radio(fz_context* ctx, pdf_xfa* xfa, const char* field_name, fz_rect hit_rect) {
+    pdf_xfa_object* selected;
+    pdf_xfa_object* group[32];
+    int n = 0;
+    int i;
+    const char* on_value = "1";
+
+    if (!xfa || !xfa->form || !field_name || !field_name[0]) return 0;
+
+    selected = pdf_xfa_find_probed_field(ctx, xfa, field_name, hit_rect);
+    if (!selected) return -1;
+
+    pdf_xfa_collect_radio_group(xfa, selected, group, &n, (int)(sizeof group / sizeof group[0]));
+    if (n == 0) return -2;
+
+    for (i = 0; i < n; i++) {
+        const char* value = (group[i] == selected) ? on_value : "0";
+        group[i]->content = fz_pool_strdup(ctx, xfa->pool, value);
+    }
+
+    {
+        pdf_xfa_object* data_leaf = pdf_xfa_find_shared_data_leaf(xfa, field_name);
+        if (data_leaf)
+            pdf_xfa_set_data_value(ctx, xfa->pool, data_leaf, on_value);
+        else if (selected->data_node && pdf_xfa_object_is_data_value(selected->data_node))
+            pdf_xfa_set_data_value(ctx, xfa->pool, selected->data_node, on_value);
+    }
+
+    return 1;
 }
 
 static pdf_xfa_object* pdf_xfa_find_named_field(pdf_xfa_object* node, const char* field_name) {
@@ -100,14 +242,6 @@ static pdf_xfa_object* pdf_xfa_find_named_field(pdf_xfa_object* node, const char
         if (hit) return hit;
     }
     return NULL;
-}
-
-static pdf_xfa_object* pdf_xfa_find_ui_widget(pdf_xfa_object* field, const char* widget_name) {
-    pdf_xfa_object* ui;
-
-    ui = pdf_xfa_object_find_child(field, "ui");
-    if (!ui) return NULL;
-    return pdf_xfa_object_find_child(ui, widget_name);
 }
 
 int pdf_xfa_factory_set_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, const char* value) {

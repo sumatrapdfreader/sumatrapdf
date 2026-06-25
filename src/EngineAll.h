@@ -72,6 +72,7 @@ Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forw
 bool EngineMupdfIsHybridXfa(EngineBase* engine);
 XfaFieldHit EngineMupdfGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos);
 bool EngineMupdfSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value);
+bool EngineMupdfSelectXfaRadio(EngineBase* engine, int pageNo, const char* fieldName, RectF bounds);
 bool EngineMupdfToggleXfaCheckbox(EngineBase* engine, const char* fieldName);
 TempStr EngineMupdfGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName);
 void EngineMupdfMarkXfaPageModified(EngineBase* engine, int pageNo);
@@ -105,6 +106,7 @@ Annotation* EngineGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 bool EngineIsHybridXfa(EngineBase* engine);
 XfaFieldHit EngineGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos);
 bool EngineSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value);
+bool EngineSelectXfaRadio(EngineBase* engine, int pageNo, const char* fieldName, RectF bounds);
 bool EngineToggleXfaCheckbox(EngineBase* engine, const char* fieldName);
 TempStr EngineGetXfaFieldContentTemp(EngineBase* engine, const char* fieldName);
 void EngineMarkXfaPageModified(EngineBase* engine, int pageNo);

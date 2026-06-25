@@ -1264,6 +1264,12 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
                 win->mouseAction = MouseAction::None;
                 return;
             }
+            if (xfaField.kind == XfaFieldKind::Radio && SelectXfaFieldRadio(dm->GetEngine(), xfaField)) {
+                MainWindowRerender(win);
+                ToolbarUpdateStateForWindow(win, false);
+                win->mouseAction = MouseAction::None;
+                return;
+            }
             if (xfaField.kind == XfaFieldKind::Text && StartXfaFieldEdit(win, xfaField)) {
                 win->mouseAction = MouseAction::None;
                 return;
