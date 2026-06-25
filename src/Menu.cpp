@@ -929,15 +929,11 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdProperties,
     },
     {
-        _TRN("AI chat using"),
-        (UINT_PTR)menuDefDocumentAIChat,
-    },
-    {
         _TRN("Show PDF Info"),
         CmdPdShowInfo,
     },
     {
-        _TRN("Show Document Outline"),
+        _TRN("Show Document Table Of Contents"),
         CmdDocumentShowOutline,
     },
     {
@@ -945,12 +941,12 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdPdfExtractPages,
     },
     {
-        _TRN("Encrypt PDF"),
-        CmdPdfEncrypt,
+        _TRN("Delete Pages From PDF"),
+        CmdPdfDeletePages,
     },
     {
-        _TRN("Decrypt PDF"),
-        CmdPdfDecrypt,
+        _TRN("Extract Text From Document"),
+        CmdDocumentExtractText,
     },
     {
         _TRN("Compress PDF"),
@@ -961,16 +957,16 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdPdfDecompress,
     },
     {
-        _TRN("Delete Pages From PDF"),
-        CmdPdfDeletePages,
+        _TRN("Encrypt PDF"),
+        CmdPdfEncrypt,
+    },
+    {
+        _TRN("Decrypt PDF"),
+        CmdPdfDecrypt,
     },
     {
         _TRN("Bake PDF"),
         CmdPdfBake,
-    },
-    {
-        _TRN("Extract Text From Document"),
-        CmdDocumentExtractText,
     },
     {
         _TRN("Show in &folder"),
@@ -1037,6 +1033,10 @@ static MenuDef menuDefContext[] = {
     {
         kMenuSeparator,
         kMenuSeparatorID,
+    },
+    {
+        _TRN("AI chat with document using"),
+        (UINT_PTR)menuDefDocumentAIChat,
     },
     {
         _TRN("Document"),
