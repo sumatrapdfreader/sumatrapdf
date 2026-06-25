@@ -22,6 +22,7 @@
 #include "SearchAndDDE.h"
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
+#include "XfaFormFields.h"
 
 #include <chm_lib.h>
 #include "lzx.h"
@@ -743,6 +744,54 @@ char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
+    }
+    return out.StealData();
+}
+
+// GUI probe: with a document already open in the first window, hit-test an XFA field at
+// PDF coordinates (y-up) and optionally start choice/text editing.
+char* TestXfaGuiFieldInteractResult(float pdfX, float pdfY, int startEdit, int* exitCodeOut) {
+    StrBuilder out;
+    auto fail = [&](const char* msg) -> char* {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return out.StealData();
+    };
+
+    if (gWindows.IsEmpty()) {
+        return fail("NOTREADY no-window");
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail("NOTREADY no-doc");
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    if (!EngineIsXfaForm(engine)) {
+        return fail("ERROR not-xfa-form");
+    }
+
+    dm->RenderVisibleParts();
+    Point screenPt = dm->CvtToScreen(pageNo, PointF(pdfX, pdfY));
+    XfaFieldHit hit = dm->GetXfaFieldAtPos(screenPt);
+    Rect screenRc = hit.IsValid() ? dm->CvtToScreen(pageNo, hit.bounds) : Rect();
+    int choiceCount = hit.IsValid() ? EngineGetXfaFieldChoiceCount(engine, hit.name) : 0;
+    int started = 0;
+    if (startEdit && hit.IsValid()) {
+        started = StartXfaFieldInteraction(win, hit) ? 1 : 0;
+    }
+    HWND canvas = win ? win->hwndCanvas : nullptr;
+    out.AppendFmt(
+        "screen=%d,%d hit_valid=%d kind=%d name=%s choice_count=%d screen_rc=%d,%d,%d,%d canvas=%p started=%d "
+        "edit_active=%d\n",
+        screenPt.x, screenPt.y, hit.IsValid() ? 1 : 0, (int)hit.kind, hit.IsValid() ? hit.name : "", choiceCount,
+        screenRc.x, screenRc.y, screenRc.dx, screenRc.dy, canvas, started, IsXfaFieldEditActive() ? 1 : 0);
+    if (exitCodeOut) {
+        *exitCodeOut = hit.IsValid() ? 0 : 1;
     }
     return out.StealData();
 }

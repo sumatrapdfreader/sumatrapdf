@@ -358,6 +358,13 @@ bool EngineIsHybridXfa(EngineBase* engine) {
     return EngineMupdfIsHybridXfa(engine);
 }
 
+bool EngineIsXfaForm(EngineBase* engine) {
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfIsXfaForm(engine);
+}
+
 XfaFieldHit EngineGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos) {
     if (!IsEngineMupdf(engine)) {
         return {};

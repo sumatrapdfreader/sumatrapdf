@@ -1255,7 +1255,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // text or choice field starts in-place editing. Widgets are hit-tested on
     // their own list (GetWidgetAtPos), separate from markup annotations. Consume
     // the click in either case so it doesn't start a drag/selection.
-    if (EngineIsHybridXfa(dm->GetEngine())) {
+    if (EngineIsXfaForm(dm->GetEngine())) {
         XfaFieldHit xfaField = dm->GetXfaFieldAtPos(pt);
         if (xfaField.IsValid()) {
             if (xfaField.kind == XfaFieldKind::Checkbox && ToggleXfaFieldButton(dm->GetEngine(), xfaField)) {
@@ -2212,7 +2212,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     }
 
     // PDF form fields: I-beam over text/choice, hand over checkbox/radio
-    if (EngineIsHybridXfa(dm->GetEngine())) {
+    if (EngineIsXfaForm(dm->GetEngine())) {
         switch (GetXfaFieldCursorKind(dm->GetXfaFieldAtPos(pt))) {
             case WidgetCursorKind::Text:
                 SetCursorCached(IDC_IBEAM);

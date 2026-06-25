@@ -26,5 +26,6 @@ char* TestXfaSaveFieldRoundTripResult(const char* pdfPath, const char* fieldName
                                       const char* outPath, int* exitCodeOut = nullptr);
 char* TestXfaFieldRectsResult(const char* pdfPath, int pageNo, int* exitCodeOut = nullptr);
 char* TestXfaFieldKindResult(const char* pdfPath, const char* fieldName, int* exitCodeOut = nullptr);
+char* TestXfaGuiFieldInteractResult(float pdfX, float pdfY, int startEdit, int* exitCodeOut = nullptr);
 char* TestRenderPagePngResult(const char* pdfPath, int pageNo, int zoomPct, const char* outPath,
                               int* exitCodeOut = nullptr);

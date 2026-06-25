@@ -70,6 +70,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, A
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);
 bool EngineMupdfIsHybridXfa(EngineBase* engine);
+bool EngineMupdfIsXfaForm(EngineBase* engine);
 XfaFieldHit EngineMupdfGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos);
 XfaFieldHit EngineMupdfGetAdjacentXfaField(EngineBase* engine, const XfaFieldHit& cur, bool forward);
 bool EngineMupdfSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value);
@@ -107,6 +108,7 @@ bool EngineHasUnsavedAnnotations(EngineBase*);
 Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 bool EngineIsHybridXfa(EngineBase* engine);
+bool EngineIsXfaForm(EngineBase* engine);
 XfaFieldHit EngineGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF pos);
 XfaFieldHit EngineGetAdjacentXfaField(EngineBase* engine, const XfaFieldHit& cur, bool forward);
 bool EngineSetXfaFieldContent(EngineBase* engine, const char* fieldName, const char* value);

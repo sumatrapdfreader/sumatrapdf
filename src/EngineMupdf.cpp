@@ -5013,21 +5013,37 @@ bool EngineMupdfIsHybridXfa(EngineBase* engine) {
     return epdf && epdf->hybridXfa;
 }
 
+bool EngineMupdfIsXfaForm(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    return epdf && epdf->useXfaPages;
+}
+
+static void EnsureXfaFieldProbesForPage(EngineMupdf* epdf, int pageNo);
+
 static void EnsureXfaFieldCache(EngineMupdf* epdf, FzPageInfo* pi) {
     fz_context* ctx = epdf->Ctx();
 
-    if (!epdf->hybridXfa || !epdf->pdfdoc || !pi) {
+    if (!epdf->useXfaPages || !epdf->pdfdoc || !pi) {
         return;
     }
     if (pi->xfaFields && pi->xfaFields->fields.Size() > 0) {
         return;
     }
     ScopedCritSec scope(&epdf->renderLock);
-    if (pi->displayList) {
+    if (!pi->displayList) {
+        GetOrBuildPageDisplayList(pi, ctx, epdf->pdfdoc, epdf->useXfaPages, epdf->hybridXfa);
+        return;
+    }
+    if (epdf->hybridXfa) {
         fz_drop_display_list(ctx, pi->displayList);
         pi->displayList = nullptr;
+        GetOrBuildPageDisplayList(pi, ctx, epdf->pdfdoc, epdf->useXfaPages, epdf->hybridXfa);
+        return;
     }
-    GetOrBuildPageDisplayList(pi, ctx, epdf->pdfdoc, epdf->useXfaPages, epdf->hybridXfa);
+    EnsureXfaFieldProbesForPage(epdf, pi->pageNo);
+    if (epdf->pdfdoc->xfa_ctx) {
+        CaptureXfaFieldProbes(ctx, epdf->pdfdoc->xfa_ctx, pi);
+    }
 }
 
 static void EnsureXfaFieldProbesForPage(EngineMupdf* epdf, int pageNo) {
@@ -5061,7 +5077,7 @@ XfaFieldHit EngineMupdfGetXfaFieldAtPos(EngineBase* engine, int pageNo, PointF p
     EngineMupdf* epdf = AsEngineMupdf(engine);
     float bestArea = 0;
 
-    if (!epdf || !epdf->hybridXfa || !epdf->pdfdoc) {
+    if (!epdf || !epdf->useXfaPages || !epdf->pdfdoc) {
         return best;
     }
     FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
@@ -5105,7 +5121,7 @@ XfaFieldHit EngineMupdfGetAdjacentXfaField(EngineBase* engine, const XfaFieldHit
     XfaFieldHit next;
     EngineMupdf* epdf = AsEngineMupdf(engine);
 
-    if (!epdf || !epdf->hybridXfa || !cur.IsValid()) {
+    if (!epdf || !epdf->useXfaPages || !cur.IsValid()) {
         return next;
     }
     FzPageInfo* pi = epdf->GetFzPageInfoCanFail(cur.pageNo);

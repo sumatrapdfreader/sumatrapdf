@@ -49,6 +49,7 @@ enum class ControlCmd : u16 {
     TestXfaSelectRadioSerializeData = 35,
     TestXfaSelectRadioSaveRoundTrip = 36,
     TestXfaFieldKind = 37,
+    TestXfaGuiFieldInteract = 38,
 };
 
 enum class ControlArgType : u16 {
@@ -620,6 +621,23 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestXfaFieldKindResult(pdf, fieldName, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestXfaGuiFieldInteract: {
+            float pdfX = 0;
+            float pdfY = 0;
+            i32 startEdit = 0;
+            if (!FloatArg(req, 0, pdfX) || !FloatArg(req, 1, pdfY)) {
+                AppendError(req, "TestXfaGuiFieldInteract expects float pdfX, float pdfY, optional int startEdit");
+                break;
+            }
+            if (req->args.size() >= 3) {
+                IntArg(req, 2, startEdit);
+            }
+            int exitCode = 0;
+            char* res = TestXfaGuiFieldInteractResult(pdfX, pdfY, startEdit, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
