@@ -22,10 +22,14 @@
 
 #include "xfa-imp.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #define PDF_XFA_FIELD_PAD 2.0f
 #define PDF_XFA_DEFAULT_DRAW_H 14.0f
+#define PDF_XFA_DEFAULT_FIELD_H 18.0f
+#define PDF_XFA_MAX_COLUMNS 32
+
 typedef struct {
     float ox;
     float oy;
@@ -35,6 +39,14 @@ typedef struct {
     int page_index;
     pdf_xfa_object* target_page_area;
 } pdf_xfa_render_ctx;
+
+typedef struct {
+    float widths[PDF_XFA_MAX_COLUMNS];
+    int count;
+    int current_column;
+    float row_x;
+    int in_row;
+} pdf_xfa_column_ctx;
 
 static void pdf_xfa_render_fill_rect(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_rect rect, float rgb[3]) {
     fz_path* path = fz_new_path(ctx);
@@ -165,6 +177,92 @@ static int pdf_xfa_node_is_field_or_draw(const char* name) {
     return strcmp(name, "field") == 0 || strcmp(name, "draw") == 0;
 }
 
+static int pdf_xfa_layout_is_row(const char* layout) {
+    return layout && (strcmp(layout, "row") == 0 || strcmp(layout, "rl-row") == 0);
+}
+
+static int pdf_xfa_parent_is_row(fz_context* ctx, pdf_xfa_object* node) {
+    pdf_xfa_object* parent = node ? node->parent : NULL;
+    char* layout;
+
+    if (!parent || !parent->name || strcmp(parent->name, "subform") != 0) return 0;
+    layout = pdf_xfa_object_get_attr(ctx, parent, "layout");
+    return pdf_xfa_layout_is_row(layout);
+}
+
+static int pdf_xfa_parse_column_widths(fz_context* ctx, pdf_xfa_object* node, float* widths, int max) {
+    char* text;
+    char* p;
+    int n = 0;
+
+    text = pdf_xfa_object_get_attr(ctx, node, "columnWidths");
+    if (!text || !text[0]) return 0;
+
+    p = text;
+    while (n < max) {
+        while (*p == ' ' || *p == '\t') p++;
+        if (!*p) break;
+        widths[n++] = pdf_xfa_parse_measurement(p, 0);
+        while (*p && *p != ' ' && *p != '\t') p++;
+    }
+    return n;
+}
+
+static int pdf_xfa_parse_col_span(fz_context* ctx, pdf_xfa_object* node) {
+    char* col_span;
+    int span;
+
+    col_span = pdf_xfa_object_get_attr(ctx, node, "colSpan");
+    if (!col_span || !col_span[0]) return 1;
+    span = atoi(col_span);
+    if (span == 0) return 1;
+    return span;
+}
+
+static float pdf_xfa_column_span_width(pdf_xfa_column_ctx* col, int col_span, int start_col) {
+    int i, end;
+    float w = 0;
+
+    if (!col || col->count <= 0 || start_col < 0 || start_col >= col->count) return 0;
+
+    if (col_span < 0) {
+        for (i = start_col; i < col->count; i++) w += col->widths[i];
+        return w;
+    }
+
+    end = start_col + col_span;
+    if (end > col->count) end = col->count;
+    for (i = start_col; i < end; i++) w += col->widths[i];
+    return w;
+}
+
+static float pdf_xfa_node_layout_width(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_column_ctx* col) {
+    char* w;
+    float wf;
+    int col_span;
+
+    w = pdf_xfa_object_get_attr(ctx, node, "w");
+    wf = pdf_xfa_parse_measurement(w, 0);
+    if (wf > 0) return wf;
+    if (!col || col->count <= 0) return 0;
+
+    col_span = pdf_xfa_parse_col_span(ctx, node);
+    return pdf_xfa_column_span_width(col, col_span, col->current_column);
+}
+
+static void pdf_xfa_row_advance(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_column_ctx* col, float width) {
+    int col_span;
+
+    if (!col || width <= 0) return;
+
+    col->row_x += width;
+    col_span = pdf_xfa_parse_col_span(ctx, node);
+    if (col_span < 0)
+        col->current_column = 0;
+    else if (col->count > 0)
+        col->current_column = (col->current_column + col_span) % col->count;
+}
+
 static pdf_xfa_object* pdf_xfa_find_content_area(pdf_xfa_object* page_area) {
     pdf_xfa_object* child;
 
@@ -226,6 +324,8 @@ static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float 
     yf = pos->oy + (ignore_node_xy ? 0 : pdf_xfa_parse_measurement(y, 0));
     wf = pdf_xfa_parse_measurement(w, default_w);
     hf = pdf_xfa_parse_measurement(h, default_h);
+    if (wf <= 0 && default_w > 0) wf = default_w;
+    if (hf <= 0 && default_h > 0) hf = default_h;
 
     if (wf <= 0 || hf <= 0) return rect;
 
@@ -300,14 +400,15 @@ static int pdf_xfa_render_border(fz_context* ctx, fz_device* dev, fz_matrix ctm,
 }
 
 static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* field,
-                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy) {
+                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy,
+                                 float layout_w) {
     fz_rect rect;
     float white[3] = {1.0f, 1.0f, 1.0f};
     float gray[3] = {0.75f, 0.75f, 0.75f};
     float black[3] = {0.0f, 0.0f, 0.0f};
     const char* text;
 
-    rect = pdf_xfa_object_rect(ctx, field, page_h, pos, 0, 0, ignore_node_xy);
+    rect = pdf_xfa_object_rect(ctx, field, page_h, pos, layout_w, PDF_XFA_DEFAULT_FIELD_H, ignore_node_xy);
     if (fz_is_empty_rect(rect)) return;
 
     xfa->render_fields++;
@@ -357,7 +458,8 @@ static int pdf_xfa_render_draw_line(fz_context* ctx, fz_device* dev, fz_matrix c
 }
 
 static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
-                                float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy) {
+                                float page_h, fz_font* font, pdf_xfa_render_pos* pos, int ignore_node_xy,
+                                float layout_w) {
     fz_rect rect;
     float black[3] = {0.0f, 0.0f, 0.0f};
     const char* text;
@@ -369,7 +471,7 @@ static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
         return;
     }
 
-    rect = pdf_xfa_object_rect(ctx, draw, page_h, pos, 0, PDF_XFA_DEFAULT_DRAW_H, ignore_node_xy);
+    rect = pdf_xfa_object_rect(ctx, draw, page_h, pos, layout_w, PDF_XFA_DEFAULT_DRAW_H, ignore_node_xy);
     if (fz_is_empty_rect(rect)) return;
 
     xfa->render_draws++;
@@ -382,12 +484,36 @@ static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
 
 static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* node,
                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos, pdf_xfa_render_ctx* rctx,
-                                int under_pageset) {
+                                int under_pageset, pdf_xfa_column_ctx* col_ctx) {
     pdf_xfa_object* child;
     pdf_xfa_render_pos child_pos;
+    pdf_xfa_column_ctx subform_col_ctx;
+    pdf_xfa_column_ctx* active_col_ctx = col_ctx;
     int render_node = 1;
 
     if (!node) return;
+
+    if (node->name && strcmp(node->name, "subform") == 0) {
+        char* layout = pdf_xfa_object_get_attr(ctx, node, "layout");
+
+        if ((layout && strcmp(layout, "table") == 0) || pdf_xfa_layout_is_row(layout)) {
+            memset(&subform_col_ctx, 0, sizeof(subform_col_ctx));
+            if (col_ctx) subform_col_ctx = *col_ctx;
+
+            if (layout && strcmp(layout, "table") == 0) {
+                subform_col_ctx.count =
+                    pdf_xfa_parse_column_widths(ctx, node, subform_col_ctx.widths, PDF_XFA_MAX_COLUMNS);
+                subform_col_ctx.current_column = 0;
+                subform_col_ctx.row_x = 0;
+                subform_col_ctx.in_row = 0;
+            } else {
+                subform_col_ctx.current_column = 0;
+                subform_col_ctx.row_x = 0;
+                subform_col_ctx.in_row = 1;
+            }
+            active_col_ctx = &subform_col_ctx;
+        }
+    }
 
     if (node->name && strcmp(node->name, "pageSet") == 0) {
         for (child = node->first_child; child; child = child->next_sibling) {
@@ -395,7 +521,7 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
                 if (!child->name || strcmp(child->name, "pageArea") != 0) continue;
                 if (!pdf_xfa_pagearea_is_target(ctx, child, rctx->target_page_area)) continue;
             }
-            pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, pos, rctx, 1);
+            pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, pos, rctx, 1, col_ctx);
         }
         return;
     }
@@ -430,6 +556,7 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
     if (render_node) {
         pdf_xfa_render_pos node_pos = *pos;
         int ignore_node_xy = 0;
+        float layout_w = 0;
 
         if (!under_pageset && node->flow_page >= 0 && rctx->target_page_area) {
             pdf_xfa_object* content_area = pdf_xfa_find_content_area(rctx->target_page_area);
@@ -439,17 +566,27 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
             ignore_node_xy = 1;
         }
 
+        if (active_col_ctx && active_col_ctx->in_row && pdf_xfa_parent_is_row(ctx, node)) {
+            char* x_attr = pdf_xfa_object_get_attr(ctx, node, "x");
+
+            layout_w = pdf_xfa_node_layout_width(ctx, node, active_col_ctx);
+            if (!x_attr || !x_attr[0]) node_pos.ox += active_col_ctx->row_x;
+        }
+
         if (node->name && strcmp(node->name, "field") == 0)
-            pdf_xfa_render_field(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy);
+            pdf_xfa_render_field(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy, layout_w);
         else if (node->name && strcmp(node->name, "draw") == 0)
-            pdf_xfa_render_draw(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy);
+            pdf_xfa_render_draw(ctx, dev, ctm, xfa, node, page_h, font, &node_pos, ignore_node_xy, layout_w);
+
+        if (active_col_ctx && active_col_ctx->in_row && pdf_xfa_parent_is_row(ctx, node))
+            pdf_xfa_row_advance(ctx, node, active_col_ctx, layout_w);
     }
 
     child_pos = *pos;
     if (pdf_xfa_node_shifts_children(node->name)) pdf_xfa_render_pos_add_attrs(ctx, node, &child_pos);
 
     for (child = node->first_child; child; child = child->next_sibling)
-        pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &child_pos, rctx, under_pageset);
+        pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &child_pos, rctx, under_pageset, active_col_ctx);
 }
 
 fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int page_index, fz_matrix ctm) {
@@ -485,7 +622,7 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
         dev = fz_new_list_device(ctx, list);
 
         pdf_xfa_render_fill_rect(ctx, dev, ctm, page_bbox, white);
-        pdf_xfa_render_tree(ctx, dev, ctm, xfa, xfa->form, page_h, font, &pos, &rctx, 0);
+        pdf_xfa_render_tree(ctx, dev, ctm, xfa, xfa->form, page_h, font, &pos, &rctx, 0, NULL);
 
         fz_close_device(ctx, dev);
     }

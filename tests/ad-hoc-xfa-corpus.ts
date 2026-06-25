@@ -19,6 +19,8 @@ const dataDir = join(here, "ad-hoc-xfa-data");
 
 type CorpusExpect = Pick<XfaInfo, "has_xfa" | "pure_xfa" | "valid"> & {
   min_page_count?: number;
+  min_render_fields?: number;
+  min_p1_fields?: number;
 };
 
 type CorpusEntry = {
@@ -43,8 +45,15 @@ const corpus: CorpusEntry[] = [
   {
     name: "ad-hoc-f1040",
     path: join(dataDir, "ad-hoc-f1040.pdf"),
-    // Hybrid IRS 1040: AcroForm + XFA packet.
-    expect: { has_xfa: 1, pure_xfa: 0, valid: 1, min_page_count: 1 },
+    // Hybrid IRS 1040: AcroForm + XFA packet (116 fields: 69 on page 0, 47 on page 1).
+    expect: {
+      has_xfa: 1,
+      pure_xfa: 0,
+      valid: 1,
+      min_page_count: 2,
+      min_render_fields: 69,
+      min_p1_fields: 47,
+    },
   },
   {
     name: "transfer-auth-form",
@@ -67,6 +76,16 @@ function assertCorpus(name: string, xfa: XfaInfo, expect: CorpusExpect): void {
   if (expect.min_page_count !== undefined && xfa.page_count < expect.min_page_count) {
     throw new Error(
       `${name}: expected page_count>=${expect.min_page_count}, got page_count=${xfa.page_count}`,
+    );
+  }
+  if (expect.min_render_fields !== undefined && xfa.render_fields < expect.min_render_fields) {
+    throw new Error(
+      `${name}: expected render_fields>=${expect.min_render_fields}, got render_fields=${xfa.render_fields}`,
+    );
+  }
+  if (expect.min_p1_fields !== undefined && xfa.p1_fields < expect.min_p1_fields) {
+    throw new Error(
+      `${name}: expected p1_fields>=${expect.min_p1_fields}, got p1_fields=${xfa.p1_fields}`,
     );
   }
 }
