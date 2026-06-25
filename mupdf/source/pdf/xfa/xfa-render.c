@@ -216,6 +216,10 @@ static int pdf_xfa_layout_is_table(const char* layout) {
     return layout && strcmp(layout, "table") == 0;
 }
 
+static int pdf_xfa_layout_is_tb(const char* layout) {
+    return layout && strcmp(layout, "tb") == 0;
+}
+
 static int pdf_xfa_subform_has_layout(fz_context* ctx, pdf_xfa_object* subform, int (*match)(const char*)) {
     char* layout;
 
@@ -247,6 +251,53 @@ static float pdf_xfa_row_content_height(fz_context* ctx, pdf_xfa_object* row) {
         if (h > max_h) max_h = h;
     }
     return max_h;
+}
+
+static int pdf_xfa_tb_should_stack_child(fz_context* ctx, pdf_xfa_object* child) {
+    if (!child || !child->name) return 0;
+    if (pdf_xfa_object_is_prototype_def(ctx, child)) return 0;
+    if (strcmp(child->name, "pageSet") == 0) return 0;
+    if (child->flow_page >= 0) return 0;
+    if (strcmp(child->name, "subform") == 0 && pdf_xfa_page_subform_index(ctx, child) >= 0) return 0;
+    return strcmp(child->name, "field") == 0 || strcmp(child->name, "draw") == 0 ||
+           strcmp(child->name, "subform") == 0;
+}
+
+static float pdf_xfa_tb_stack_advance(fz_context* ctx, pdf_xfa_object* child) {
+    char* layout;
+    float y;
+
+    if (!pdf_xfa_tb_should_stack_child(ctx, child)) return 0;
+
+    y = pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, child, "y"), 0);
+
+    if (strcmp(child->name, "field") == 0 || strcmp(child->name, "draw") == 0)
+        return pdf_xfa_node_content_height(ctx, child) + y;
+
+    if (strcmp(child->name, "subform") == 0) {
+        pdf_xfa_object* row;
+        float h = 0;
+
+        layout = pdf_xfa_object_get_attr(ctx, child, "layout");
+        if (pdf_xfa_layout_is_table(layout)) {
+            for (row = child->first_child; row; row = row->next_sibling) {
+                if (!pdf_xfa_subform_has_layout(ctx, row, pdf_xfa_layout_is_row)) continue;
+                h += pdf_xfa_row_content_height(ctx, row) +
+                     pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, row, "y"), 0);
+            }
+            return h + y;
+        }
+        if (pdf_xfa_layout_is_tb(layout)) {
+            for (row = child->first_child; row; row = row->next_sibling) h += pdf_xfa_tb_stack_advance(ctx, row);
+            return h + y;
+        }
+        if (pdf_xfa_layout_is_row(layout)) return pdf_xfa_row_content_height(ctx, child) + y;
+
+        for (row = child->first_child; row; row = row->next_sibling) h += pdf_xfa_tb_stack_advance(ctx, row);
+        return h + y;
+    }
+
+    return 0;
 }
 
 static int pdf_xfa_parent_is_row(fz_context* ctx, pdf_xfa_object* node) {
@@ -1227,10 +1278,30 @@ static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, 
                 row_pos.oy += tb_y;
                 pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &row_pos, rctx, under_pageset,
                                     active_col_ctx);
-                tb_y += pdf_xfa_row_content_height(ctx, child);
+                tb_y += pdf_xfa_row_content_height(ctx, child) +
+                        pdf_xfa_parse_measurement(pdf_xfa_object_get_attr(ctx, child, "y"), 0);
             } else
                 pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &child_pos, rctx, under_pageset,
                                     active_col_ctx);
+        }
+    } else if (pdf_xfa_subform_has_layout(ctx, node, pdf_xfa_layout_is_tb)) {
+        float tb_y = 0;
+
+        for (child = node->first_child; child; child = child->next_sibling) {
+            if (!pdf_xfa_tb_should_stack_child(ctx, child)) {
+                pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &child_pos, rctx, under_pageset,
+                                    active_col_ctx);
+                continue;
+            }
+
+            {
+                pdf_xfa_render_pos stack_pos = child_pos;
+
+                stack_pos.oy += tb_y;
+                pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &stack_pos, rctx, under_pageset,
+                                    active_col_ctx);
+                tb_y += pdf_xfa_tb_stack_advance(ctx, child);
+            }
         }
     } else {
         for (child = node->first_child; child; child = child->next_sibling)

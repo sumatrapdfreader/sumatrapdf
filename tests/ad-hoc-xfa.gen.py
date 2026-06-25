@@ -78,6 +78,26 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
               <text>Pack my box with five dozen liquor jugs today</text>
             </value>
           </draw>
+          <subform name="stackedSection" layout="tb" x="0.75in" y="3.85in">
+            <draw w="2in" h="0.2in">
+              <value>
+                <text>Stack A</text>
+              </value>
+            </draw>
+            <draw w="2in" h="0.2in">
+              <value>
+                <text>Stack B</text>
+              </value>
+            </draw>
+            <field name="stackField" w="2in" h="0.25in">
+              <border>
+                <edge stroke="lowered"/>
+              </border>
+              <value>
+                <text>C</text>
+              </value>
+            </field>
+          </subform>
         </contentArea>
       </pageArea>
     </pageSet>
@@ -119,6 +139,7 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
   <data>
     <firstName>Alice</firstName>
     <lastName>Bob</lastName>
+    <stackField>C</stackField>
   </data>
 </datasets>
 </xdp>

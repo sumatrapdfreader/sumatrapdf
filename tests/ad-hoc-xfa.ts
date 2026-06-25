@@ -46,17 +46,17 @@ export async function testit(): Promise<void> {
       `ad-hoc-xfa.pdf: expected render_borders=1 on page 0 (field border), got render_borders=${xfa.render_borders}`,
     );
   }
-  if (xfa.p1_fields !== 1) {
-    throw new Error(`ad-hoc-xfa.pdf: expected p1_fields=1 on page 1, got p1_fields=${xfa.p1_fields}`);
+  if (xfa.p1_fields !== 2) {
+    throw new Error(`ad-hoc-xfa.pdf: expected p1_fields=2 on page 1, got p1_fields=${xfa.p1_fields}`);
   }
-  if (xfa.p1_draws !== 8) {
+  if (xfa.p1_draws !== 10) {
     throw new Error(
-      `ad-hoc-xfa.pdf: expected p1_draws=8 on page 1 (pageArea + flowed + border + line + multiline + justify), got p1_draws=${xfa.p1_draws}`,
+      `ad-hoc-xfa.pdf: expected p1_draws=10 on page 1 (pageArea + flowed + border + line + multiline + justify + tb stack), got p1_draws=${xfa.p1_draws}`,
     );
   }
-  if (xfa.p1_borders !== 2) {
+  if (xfa.p1_borders !== 3) {
     throw new Error(
-      `ad-hoc-xfa.pdf: expected p1_borders=2 on page 1 (field + draw), got p1_borders=${xfa.p1_borders}`,
+      `ad-hoc-xfa.pdf: expected p1_borders=3 on page 1 (field + draw + stackField), got p1_borders=${xfa.p1_borders}`,
     );
   }
   if (xfa.p1_lines !== 1) {

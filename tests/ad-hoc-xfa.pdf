@@ -12,7 +12,7 @@ endobj
 << /Fields [] /XFA [(xdp:xdp) 5 0 R] >>
 endobj
 5 0 obj
-<< /Length 3608 >>
+<< /Length 4256 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
@@ -82,6 +82,26 @@ stream
               <text>Pack my box with five dozen liquor jugs today</text>
             </value>
           </draw>
+          <subform name="stackedSection" layout="tb" x="0.75in" y="3.85in">
+            <draw w="2in" h="0.2in">
+              <value>
+                <text>Stack A</text>
+              </value>
+            </draw>
+            <draw w="2in" h="0.2in">
+              <value>
+                <text>Stack B</text>
+              </value>
+            </draw>
+            <field name="stackField" w="2in" h="0.25in">
+              <border>
+                <edge stroke="lowered"/>
+              </border>
+              <value>
+                <text>C</text>
+              </value>
+            </field>
+          </subform>
         </contentArea>
       </pageArea>
     </pageSet>
@@ -123,6 +143,7 @@ stream
   <data>
     <firstName>Alice</firstName>
     <lastName>Bob</lastName>
+    <stackField>C</stackField>
   </data>
 </datasets>
 </xdp>
@@ -140,5 +161,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-3917
+4565
 %%EOF
