@@ -189,8 +189,9 @@ int pdf_xfa_builder_is_ns_agnostic(fz_context* ctx, pdf_xfa_builder* builder);
 
 /* parser.c */
 pdf_xfa_object* pdf_xfa_parse_xml(fz_context* ctx, fz_pool* pool, fz_buffer* buf, pdf_xfa_ns_id root_ns, int rich_text,
-                                  fz_hash_table* ids);
-pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_packet* packets, fz_hash_table* ids);
+                                  fz_hash_table* ids, pdf_xfa_global_data* global);
+pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_packet* packets, fz_hash_table* ids,
+                                      pdf_xfa_global_data* global);
 
 /* layout.c */
 float pdf_xfa_parse_measurement(const char* text, float default_pt);
@@ -205,6 +206,8 @@ int pdf_xfa_factory_layout(fz_context* ctx, pdf_xfa* xfa);
 void pdf_xfa_fonts_register_typeface(fz_context* ctx, pdf_xfa_global_data* global, const char* typeface);
 pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_packet* packets);
 void pdf_xfa_fonts_drop(fz_context* ctx, pdf_xfa_fonts* fonts);
+const char* pdf_xfa_fonts_default_typeface(pdf_xfa_fonts* fonts);
+void pdf_xfa_fonts_check_used(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* form);
 fz_font* pdf_xfa_fonts_resolve(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold, int italic);
 
 /* render.c */

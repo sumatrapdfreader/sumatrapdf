@@ -50,6 +50,7 @@ struct pdf_xfa_fonts {
     pdf_xfa_psmap_entry* psmap;
     int psmap_n;
     int psmap_cap;
+    char default_typeface[FZ_HASH_TABLE_KEY_LENGTH];
     fz_font* held[PDF_XFA_MAX_HELD_FONTS];
     int held_n;
 };
@@ -183,6 +184,32 @@ static void pdf_xfa_fonts_add_psmap(fz_context* ctx, pdf_xfa_fonts* fonts, const
     strncpy(entry->psname, psname, sizeof(entry->psname) - 1);
 }
 
+static void pdf_xfa_fonts_set_default_typeface(pdf_xfa_fonts* fonts, const char* typeface, int wildcard) {
+    if (!fonts || !typeface || !typeface[0]) return;
+    if (wildcard || !fonts->default_typeface[0])
+        pdf_xfa_strip_typeface_quotes(typeface, fonts->default_typeface, sizeof(fonts->default_typeface));
+}
+
+static void pdf_xfa_fonts_walk_default_typefaces(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* node) {
+    pdf_xfa_object* child;
+    char* script;
+    const char* face;
+    int wildcard;
+
+    if (!node) return;
+
+    if (node->name && strcmp(node->name, "defaultTypeface") == 0) {
+        script = pdf_xfa_object_get_attr(ctx, node, "writingScript");
+        wildcard = !script || !script[0] || strcmp(script, "*") == 0;
+        face = node->content;
+        if (!face || !face[0]) face = pdf_xfa_object_text(ctx, node);
+        pdf_xfa_fonts_set_default_typeface(fonts, face, wildcard);
+    }
+
+    for (child = node->first_child; child; child = child->next_sibling)
+        pdf_xfa_fonts_walk_default_typefaces(ctx, fonts, child);
+}
+
 static void pdf_xfa_fonts_walk_equates(fz_context* ctx, fz_pool* pool, pdf_xfa_fonts* fonts, pdf_xfa_object* node) {
     pdf_xfa_object* child;
     char* from;
@@ -235,9 +262,10 @@ static void pdf_xfa_fonts_parse_config_packet(fz_context* ctx, fz_pool* pool, pd
         if (!packet->name || !packet->data || strcmp(packet->name, "config") != 0) continue;
 
         fz_try(ctx) {
-            config = pdf_xfa_parse_xml(ctx, pool, packet->data, PDF_XFA_NS_CONFIG, 0, NULL);
+            config = pdf_xfa_parse_xml(ctx, pool, packet->data, PDF_XFA_NS_CONFIG, 0, NULL, NULL);
             if (config) {
                 pdf_xfa_fonts_walk_equates(ctx, pool, fonts, config);
+                pdf_xfa_fonts_walk_default_typefaces(ctx, fonts, config);
                 pdf_xfa_fonts_parse_psmap(ctx, fonts, config);
             }
         }
@@ -602,4 +630,49 @@ fz_font* pdf_xfa_fonts_resolve(fz_context* ctx, pdf_xfa_fonts* fonts, const char
 
     if (font) return font;
     return pdf_xfa_fonts_base14(ctx, fonts, mapped, bold, italic);
+}
+
+const char* pdf_xfa_fonts_default_typeface(pdf_xfa_fonts* fonts) {
+    if (!fonts || !fonts->default_typeface[0]) return NULL;
+    return fonts->default_typeface;
+}
+
+static void pdf_xfa_fonts_check_used_walk(fz_context* ctx, pdf_xfa_fonts* fonts, fz_hash_table* warned,
+                                          pdf_xfa_object* node) {
+    pdf_xfa_object* child;
+    char* typeface;
+    char clean[FZ_HASH_TABLE_KEY_LENGTH];
+    char key[FZ_HASH_TABLE_KEY_LENGTH];
+
+    if (!node) return;
+
+    if (node->name && strcmp(node->name, "font") == 0) {
+        typeface = pdf_xfa_object_get_attr(ctx, node, "typeface");
+        if (typeface && typeface[0]) {
+            pdf_xfa_strip_typeface_quotes(typeface, clean, sizeof clean);
+            pdf_xfa_family_key(clean, key, sizeof key);
+            if (key[0] && !fz_hash_find(ctx, warned, key)) {
+                fz_hash_insert(ctx, warned, key, (void*)1);
+                if (!pdf_xfa_fonts_resolve(ctx, fonts, typeface, 0, 0))
+                    fz_warn(ctx, "XFA: cannot find the font: %s", clean);
+            }
+        }
+    }
+
+    for (child = node->first_child; child; child = child->next_sibling)
+        pdf_xfa_fonts_check_used_walk(ctx, fonts, warned, child);
+}
+
+void pdf_xfa_fonts_check_used(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* form) {
+    fz_hash_table* warned = NULL;
+
+    if (!fonts || !form) return;
+
+    fz_var(warned);
+    fz_try(ctx) {
+        warned = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
+        pdf_xfa_fonts_check_used_walk(ctx, fonts, warned, form);
+    }
+    fz_always(ctx) fz_drop_hash_table(ctx, warned);
+    fz_catch(ctx) fz_rethrow(ctx);
 }

@@ -41,13 +41,15 @@ pdf_xfa* pdf_xfa_new_from_packets(fz_context* ctx, pdf_document* doc, pdf_xfa_pa
     xfa->packets = packets;
 
     fz_try(ctx) {
-        xfa->root = pdf_xfa_parse_packets(ctx, xfa->pool, packets, xfa->ids);
+        xfa->global.used_typefaces = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
+        xfa->root = pdf_xfa_parse_packets(ctx, xfa->pool, packets, xfa->ids, &xfa->global);
         if (!xfa->root) fz_throw(ctx, FZ_ERROR_FORMAT, "XFA: parse failed");
 
         xfa->form = pdf_xfa_bind(ctx, xfa->pool, xfa);
         if (xfa->form) {
             xfa->global.template_root = xfa->form;
             xfa->fonts = pdf_xfa_fonts_load(ctx, doc, xfa->pool, xfa->packets);
+            pdf_xfa_fonts_check_used(ctx, xfa->fonts, xfa->form);
             xfa->valid = 1;
         }
     }
@@ -66,6 +68,7 @@ static void pdf_xfa_drop_imp(fz_context* ctx, pdf_xfa* xfa) {
     fz_free(ctx, xfa->page_areas);
     fz_free(ctx, xfa->page_subforms);
     pdf_xfa_fonts_drop(ctx, xfa->fonts);
+    fz_drop_hash_table(ctx, xfa->global.used_typefaces);
     fz_drop_hash_table(ctx, xfa->ids);
     fz_drop_pool(ctx, xfa->pool);
     fz_free(ctx, xfa);

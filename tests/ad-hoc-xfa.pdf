@@ -20,13 +20,14 @@ stream
 endstream
 endobj
 6 0 obj
-<< /Length 352 >>
+<< /Length 421 >>
 stream
 <config xmlns="http://www.xfa.org/schema/xci/3.0/">
   <present>
     <pdf>
       <fontInfo>
         <embed>1</embed>
+        <defaultTypeface writingScript="*">Courier</defaultTypeface>
         <map>
           <equate from="AliasCourier" to="Courier"/>
         </map>
@@ -41,7 +42,7 @@ stream
 endstream
 endobj
 7 0 obj
-<< /Length 4971 >>
+<< /Length 5159 >>
 stream
 <template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
   <subform name="form1" layout="tb">
@@ -158,6 +159,12 @@ stream
               <text>Alias courier</text>
             </value>
           </draw>
+          <draw x="3.25in" y="4.8in" w="2in" h="0.25in">
+            <font size="10pt"/>
+            <value>
+              <text>Default face</text>
+            </value>
+          </draw>
         </contentArea>
       </pageArea>
     </pageSet>
@@ -230,12 +237,12 @@ xref
 0000000202 00000 n 
 0000000355 00000 n 
 0000000483 00000 n 
-0000000886 00000 n 
-0000005909 00000 n 
-0000006143 00000 n 
-0000006199 00000 n 
+0000000955 00000 n 
+0000006166 00000 n 
+0000006400 00000 n 
+0000006456 00000 n 
 trailer
 << /Size 11 /Root 1 0 R >>
 startxref
-6295
+6552
 %%EOF

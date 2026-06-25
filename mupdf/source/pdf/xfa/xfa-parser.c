@@ -224,7 +224,7 @@ static void pdf_xfa_walk_xml(fz_context* ctx, pdf_xfa_parser* parser, fz_xml* it
 }
 
 pdf_xfa_object* pdf_xfa_parse_xml(fz_context* ctx, fz_pool* pool, fz_buffer* buf, pdf_xfa_ns_id root_ns,
-                                  int rich_text, fz_hash_table* ids) {
+                                  int rich_text, fz_hash_table* ids, pdf_xfa_global_data* global) {
     fz_xml* xml = NULL;
     pdf_xfa_parser parser;
     pdf_xfa_object* result = NULL;
@@ -241,9 +241,15 @@ pdf_xfa_object* pdf_xfa_parse_xml(fz_context* ctx, fz_pool* pool, fz_buffer* buf
         drop_ids = 1;
     }
     parser.ids = ids;
-    parser.global = fz_pool_alloc(ctx, pool, sizeof(pdf_xfa_global_data));
-    memset(parser.global, 0, sizeof(*parser.global));
-    parser.global->used_typefaces = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
+    if (global) {
+        parser.global = global;
+        if (!parser.global->used_typefaces)
+            parser.global->used_typefaces = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
+    } else {
+        parser.global = fz_pool_alloc(ctx, pool, sizeof(pdf_xfa_global_data));
+        memset(parser.global, 0, sizeof(*parser.global));
+        parser.global->used_typefaces = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
+    }
     parser.root = pdf_xfa_builder_build_root(ctx, pool, parser.ids);
 
     fz_try(ctx) {
@@ -266,11 +272,12 @@ pdf_xfa_object* pdf_xfa_parse_xml(fz_context* ctx, fz_pool* pool, fz_buffer* buf
     return result;
 }
 
-pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_packet* packets, fz_hash_table* ids) {
+pdf_xfa_object* pdf_xfa_parse_packets(fz_context* ctx, fz_pool* pool, pdf_xfa_packet* packets, fz_hash_table* ids,
+                                      pdf_xfa_global_data* global) {
     fz_buffer* xdp = pdf_xfa_packets_to_xdp(ctx, packets);
     pdf_xfa_object* root = NULL;
 
-    fz_try(ctx) root = pdf_xfa_parse_xml(ctx, pool, xdp, PDF_XFA_NS_XDP, 0, ids);
+    fz_try(ctx) root = pdf_xfa_parse_xml(ctx, pool, xdp, PDF_XFA_NS_XDP, 0, ids, global);
     fz_always(ctx) fz_drop_buffer(ctx, xdp);
     fz_catch(ctx) fz_rethrow(ctx);
 

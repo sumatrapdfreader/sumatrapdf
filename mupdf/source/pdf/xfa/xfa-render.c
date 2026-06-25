@@ -618,9 +618,21 @@ static void pdf_xfa_parse_text_style(fz_context* ctx, pdf_xfa_object* node, pdf_
 
 static fz_font* pdf_xfa_font_for_style(fz_context* ctx, pdf_xfa_render_ctx* rctx, pdf_xfa_text_style* style) {
     fz_font* font;
+    const char* typeface = NULL;
+    int bold = 0;
+    int italic = 0;
 
-    if (rctx && rctx->fonts && style && style->typeface[0]) {
-        font = pdf_xfa_fonts_resolve(ctx, rctx->fonts, style->typeface, style->bold, style->italic);
+    if (style) {
+        bold = style->bold;
+        italic = style->italic;
+        if (style->typeface[0])
+            typeface = style->typeface;
+        else if (rctx && rctx->fonts)
+            typeface = pdf_xfa_fonts_default_typeface(rctx->fonts);
+    }
+
+    if (rctx && rctx->fonts && typeface && typeface[0]) {
+        font = pdf_xfa_fonts_resolve(ctx, rctx->fonts, typeface, bold, italic);
         if (font) return font;
     }
 

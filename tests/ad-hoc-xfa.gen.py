@@ -18,6 +18,7 @@ CONFIG = """<config xmlns="http://www.xfa.org/schema/xci/3.0/">
     <pdf>
       <fontInfo>
         <embed>1</embed>
+        <defaultTypeface writingScript="*">Courier</defaultTypeface>
         <map>
           <equate from="AliasCourier" to="Courier"/>
         </map>
@@ -144,6 +145,12 @@ TEMPLATE = """<template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
             <font typeface="AliasCourier" posture="italic" size="10pt"/>
             <value>
               <text>Alias courier</text>
+            </value>
+          </draw>
+          <draw x="3.25in" y="4.8in" w="2in" h="0.25in">
+            <font size="10pt"/>
+            <value>
+              <text>Default face</text>
             </value>
           </draw>
         </contentArea>
