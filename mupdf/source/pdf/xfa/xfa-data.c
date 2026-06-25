@@ -243,3 +243,250 @@ fz_buffer* pdf_xfa_factory_serialize_data(fz_context* ctx, pdf_xfa* xfa) {
 
     return buf;
 }
+
+static int pdf_xfa_packet_is_datasets(const char* name) {
+    size_t n;
+
+    if (!name) return 0;
+    if (strcmp(name, "datasets") == 0) return 1;
+    n = strlen(name);
+    if (n > 9 && strcmp(name + n - 8, "datasets") == 0 && name[n - 9] == ':') return 1;
+    return 0;
+}
+
+static int pdf_xfa_is_element_start(const char* p, const char* local_name) {
+    size_t n = strlen(local_name);
+    char c;
+
+    if (p[0] != '<') return 0;
+    if (strncmp(p + 1, local_name, n) == 0) {
+        c = p[1 + n];
+        return c == '>' || c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '/';
+    }
+    {
+        const char* colon = strchr(p + 1, ':');
+        if (colon && strncmp(colon + 1, local_name, n) == 0) {
+            c = colon[1 + n];
+            return c == '>' || c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '/';
+        }
+    }
+    return 0;
+}
+
+static const char* pdf_xfa_find_element_close(const char* start, const char* local_name) {
+    char close[64];
+    const char* end;
+    const char* p;
+
+    snprintf(close, sizeof close, "</%s>", local_name);
+    end = strstr(start, close);
+    if (end) return end + strlen(close);
+
+    for (p = start; (p = strstr(p, "</")) != NULL; p += 2) {
+        const char* q = p + 2;
+        const char* colon = strchr(q, ':');
+        const char* name = colon ? colon + 1 : q;
+        if (strncmp(name, local_name, strlen(local_name)) == 0 && name[strlen(local_name)] == '>') return name + strlen(local_name) + 1;
+    }
+    return NULL;
+}
+
+static int pdf_xfa_find_element_span(const char* text, size_t len, const char* local_name, const char** out_start,
+                                     const char** out_end) {
+    const char* start = NULL;
+    const char* end = NULL;
+    const char* p;
+
+    if (!text || len == 0) return 0;
+
+    for (p = text; p + strlen(local_name) + 1 < text + len; p++) {
+        if (pdf_xfa_is_element_start(p, local_name)) {
+            start = p;
+            break;
+        }
+    }
+    if (!start) return 0;
+
+    end = pdf_xfa_find_element_close(start, local_name);
+    if (!end) return 0;
+
+    *out_start = start;
+    *out_end = end;
+    return 1;
+}
+
+static fz_buffer* pdf_xfa_serialize_data_node_xml(fz_context* ctx, pdf_xfa* xfa) {
+    fz_buffer* buf = NULL;
+
+    if (!xfa || !xfa->valid || !xfa->data_node) return fz_new_buffer(ctx, 0);
+
+    fz_var(buf);
+    fz_try(ctx) {
+        pdf_xfa_sync_form_to_data(ctx, xfa->pool, xfa);
+        buf = fz_new_buffer(ctx, 256);
+        pdf_xfa_serialize_node(ctx, buf, xfa->data_node);
+    }
+    fz_catch(ctx) {
+        fz_drop_buffer(ctx, buf);
+        fz_rethrow(ctx);
+    }
+
+    return buf;
+}
+
+static fz_buffer* pdf_xfa_replace_element_in_buffer(fz_context* ctx, fz_buffer* orig, const char* local_name,
+                                                    fz_buffer* replacement) {
+    unsigned char* orig_data;
+    size_t orig_len;
+    const char* start;
+    const char* end;
+    const char* o;
+    fz_buffer* out = NULL;
+
+    if (!replacement) return NULL;
+    if (!orig) return fz_keep_buffer(ctx, replacement);
+
+    orig_len = fz_buffer_storage(ctx, orig, &orig_data);
+    o = (const char*)orig_data;
+    if (!pdf_xfa_find_element_span(o, orig_len, local_name, &start, &end)) return NULL;
+
+    fz_var(out);
+    fz_try(ctx) {
+        out = fz_new_buffer(ctx, orig_len + fz_buffer_storage(ctx, replacement, NULL));
+        fz_append_data(ctx, out, orig_data, (size_t)(start - o));
+        fz_append_buffer(ctx, out, replacement);
+        fz_append_data(ctx, out, end, orig_len - (size_t)(end - o));
+    }
+    fz_catch(ctx) {
+        fz_drop_buffer(ctx, out);
+        fz_rethrow(ctx);
+    }
+
+    return out;
+}
+
+static fz_buffer* pdf_xfa_replace_datasets_in_buffer(fz_context* ctx, pdf_xfa* xfa, fz_buffer* orig,
+                                                    fz_buffer* datasets_xml) {
+    fz_buffer* data_xml = NULL;
+    fz_buffer* out = NULL;
+
+    if (!datasets_xml) return NULL;
+
+    fz_var(data_xml);
+    fz_var(out);
+    fz_try(ctx) {
+        out = pdf_xfa_replace_element_in_buffer(ctx, orig, "datasets", datasets_xml);
+        if (!out && xfa) {
+            data_xml = pdf_xfa_serialize_data_node_xml(ctx, xfa);
+            out = pdf_xfa_replace_element_in_buffer(ctx, orig, "data", data_xml);
+        }
+        if (!out) out = fz_keep_buffer(ctx, datasets_xml);
+    }
+    fz_always(ctx) fz_drop_buffer(ctx, data_xml);
+    fz_catch(ctx) {
+        fz_drop_buffer(ctx, out);
+        fz_rethrow(ctx);
+    }
+
+    return out;
+}
+
+static pdf_xfa_packet* pdf_xfa_find_packet(pdf_xfa* xfa, const char* name) {
+    pdf_xfa_packet* p;
+
+    if (!xfa || !name) return NULL;
+    for (p = xfa->packets; p; p = p->next) {
+        if (p->name && strcmp(p->name, name) == 0) return p;
+    }
+    return NULL;
+}
+
+static int pdf_xfa_update_packet_data(fz_context* ctx, pdf_xfa_packet* packet, fz_buffer* buf) {
+    if (!packet || !buf) return 0;
+    fz_drop_buffer(ctx, packet->data);
+    packet->data = fz_keep_buffer(ctx, buf);
+    return 1;
+}
+
+static int pdf_xfa_write_datasets_stream(fz_context* ctx, pdf_document* doc, pdf_obj* stm, pdf_xfa* xfa,
+                                         const char* packet_name, fz_buffer* datasets_xml) {
+    pdf_xfa_packet* packet;
+    fz_buffer* packet_buf = NULL;
+    int ok = 0;
+
+    fz_var(packet_buf);
+    fz_try(ctx) {
+        packet = pdf_xfa_find_packet(xfa, packet_name);
+        if (packet && packet->data)
+            packet_buf = pdf_xfa_replace_datasets_in_buffer(ctx, xfa, packet->data, datasets_xml);
+        else
+            packet_buf = fz_keep_buffer(ctx, datasets_xml);
+
+        pdf_update_stream(ctx, doc, stm, packet_buf, 0);
+        if (packet) pdf_xfa_update_packet_data(ctx, packet, packet_buf);
+        ok = 1;
+    }
+    fz_always(ctx) fz_drop_buffer(ctx, packet_buf);
+    fz_catch(ctx) fz_rethrow(ctx);
+
+    return ok;
+}
+
+int pdf_xfa_factory_write_datasets(fz_context* ctx, pdf_xfa* xfa) {
+    pdf_document* doc;
+    pdf_obj* xfa_obj;
+    fz_buffer* datasets_xml = NULL;
+    int wrote = 0;
+
+    if (!xfa || !xfa->valid || !xfa->doc) return 0;
+    doc = xfa->doc;
+
+    fz_var(datasets_xml);
+    fz_try(ctx) {
+        datasets_xml = pdf_xfa_factory_serialize_data(ctx, xfa);
+        if (!datasets_xml || fz_buffer_storage(ctx, datasets_xml, NULL) == 0)
+            fz_throw(ctx, FZ_ERROR_GENERIC, "XFA: empty datasets");
+
+        xfa_obj = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm/XFA");
+
+        if (pdf_is_array(ctx, xfa_obj)) {
+            int n = pdf_array_len(ctx, xfa_obj);
+            int i;
+            for (i = 0; i + 1 < n; i += 2) {
+                pdf_obj* nameobj = pdf_array_get(ctx, xfa_obj, i);
+                pdf_obj* stm;
+                char* name;
+
+                if (!pdf_is_string(ctx, nameobj)) continue;
+                name = pdf_load_stream_or_string_as_utf8(ctx, nameobj);
+                if (!pdf_xfa_packet_is_datasets(name)) {
+                    fz_free(ctx, name);
+                    continue;
+                }
+                stm = pdf_array_get(ctx, xfa_obj, i + 1);
+                if (!pdf_is_stream(ctx, stm)) {
+                    fz_free(ctx, name);
+                    continue;
+                }
+                if (pdf_xfa_write_datasets_stream(ctx, doc, stm, xfa, name, datasets_xml)) wrote = 1;
+                fz_free(ctx, name);
+                break;
+            }
+        } else if (pdf_is_stream(ctx, xfa_obj)) {
+            pdf_xfa_packet* p;
+            const char* packet_name = "xdp:xdp";
+
+            for (p = xfa->packets; p; p = p->next) {
+                if (p->name && p->data) {
+                    packet_name = p->name;
+                    break;
+                }
+            }
+            if (pdf_xfa_write_datasets_stream(ctx, doc, xfa_obj, xfa, packet_name, datasets_xml)) wrote = 1;
+        }
+    }
+    fz_always(ctx) fz_drop_buffer(ctx, datasets_xml);
+    fz_catch(ctx) fz_rethrow(ctx);
+
+    return wrote;
+}

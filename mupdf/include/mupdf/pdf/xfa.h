@@ -170,6 +170,13 @@ int pdf_xfa_get_field_kind(fz_context* ctx, pdf_xfa* xfa, const char* field_name
 int pdf_xfa_get_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_name, char* buf, int buflen);
 
 /*
+        Write bound datasets XML back into the document's AcroForm/XFA packet
+        (call before pdf_save_document to persist form edits).
+        Returns 1 if a datasets stream was updated, 0 otherwise.
+*/
+int pdf_xfa_write_datasets_to_document(fz_context* ctx, pdf_xfa* xfa);
+
+/*
         Drop a reference obtained via pdf_keep_xfa.  Document-owned instances are
         freed by pdf_invalidate_xfa / pdf_drop_document.
 */

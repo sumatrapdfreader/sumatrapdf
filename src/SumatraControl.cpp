@@ -45,6 +45,7 @@ enum class ControlCmd : u16 {
     TestXfaFieldRects = 31,
     TestXfaSerializeData = 32,
     TestXfaSetFieldSerializeData = 33,
+    TestXfaSaveFieldRoundTrip = 34,
 };
 
 enum class ControlArgType : u16 {
@@ -533,6 +534,23 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestXfaSetFieldSerializeDataResult(pdf, fieldName, value, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestXfaSaveFieldRoundTrip: {
+            const char* pdf = StringArg(req, 0);
+            const char* fieldName = StringArg(req, 1);
+            const char* value = StringArg(req, 2);
+            const char* outPath = StringArg(req, 3);
+            if (!pdf || !fieldName || !outPath) {
+                AppendError(req,
+                            "TestXfaSaveFieldRoundTrip expects string pdfPath, string fieldName, string value, "
+                            "string outPath");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestXfaSaveFieldRoundTripResult(pdf, fieldName, value, outPath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

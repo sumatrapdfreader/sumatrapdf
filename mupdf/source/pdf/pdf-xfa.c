@@ -282,3 +282,8 @@ int pdf_xfa_get_field_content(fz_context* ctx, pdf_xfa* xfa, const char* field_n
     if (!xfa || !xfa->valid) return 0;
     return pdf_xfa_factory_get_field_content(ctx, xfa, field_name, buf, buflen);
 }
+
+int pdf_xfa_write_datasets_to_document(fz_context* ctx, pdf_xfa* xfa) {
+    if (!xfa || !xfa->valid) return 0;
+    return pdf_xfa_factory_write_datasets(ctx, xfa);
+}

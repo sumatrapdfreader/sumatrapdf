@@ -4686,6 +4686,11 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, const ShowErro
     bool ok = false;
     fz_var(ok);
     fz_try(ctx) {
+        if (epdf->pdfdoc->xfa_ctx && pdf_xfa_is_valid(ctx, epdf->pdfdoc->xfa_ctx)) {
+            if (!pdf_xfa_write_datasets_to_document(ctx, epdf->pdfdoc->xfa_ctx)) {
+                logf("Warning: XFA datasets not written before save\n");
+            }
+        }
         pdf_save_document(ctx, epdf->pdfdoc, path, &save_opts);
         ok = true;
         auto dur = TimeSinceInMs(timeStart);
@@ -5671,6 +5676,96 @@ char* TestXfaSetFieldSerializeDataResult(const char* pdfPath, const char* fieldN
                 }
             }
             SafeEngineRelease(&engine);
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = exitCode;
+    }
+    return out.StealData();
+}
+
+// Set one XFA field, write datasets into the PDF, save, reload, return field content.
+char* TestXfaSaveFieldRoundTripResult(const char* pdfPath, const char* fieldName, const char* value,
+                                      const char* outPath, int* exitCodeOut) {
+    StrBuilder out;
+    int exitCode = 1;
+    char readBuf[64] = {};
+
+    if (!pdfPath || !fieldName || !fieldName[0] || !outPath || !outPath[0]) {
+        out.AppendFmt("ERROR invalid-args pdf=%s field=%s out=%s\n", pdfPath ? pdfPath : "(null)",
+                      fieldName ? fieldName : "(null)", outPath ? outPath : "(null)");
+    } else {
+        EngineBase* engine = CreateEngineMupdfFromFile(pdfPath, kindFilePDF, 96, nullptr);
+        if (!engine) {
+            out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+        } else {
+            EngineMupdf* epdf = AsEngineMupdf(engine);
+            int saved = 0;
+            if (!epdf || !epdf->pdfdoc) {
+                out.AppendFmt("ERROR not-pdf pdf=%s\n", pdfPath);
+                SafeEngineRelease(&engine);
+            } else {
+                fz_context* ctx = epdf->Ctx();
+                pdf_document* pdfdoc = epdf->pdfdoc;
+                pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
+                int set_ok = 0;
+                int wrote = 0;
+
+                if (!xfa || !pdf_xfa_is_valid(ctx, xfa)) {
+                    out.AppendFmt("ERROR xfa-invalid pdf=%s\n", pdfPath);
+                } else {
+                    fz_try(ctx) {
+                        set_ok = pdf_xfa_set_field_content(ctx, xfa, fieldName, value ? value : "");
+                        if (!set_ok) {
+                            out.AppendFmt("ERROR field-not-found pdf=%s field=%s\n", pdfPath, fieldName);
+                        } else {
+                            wrote = pdf_xfa_write_datasets_to_document(ctx, xfa);
+                            if (!wrote) {
+                                out.AppendFmt("ERROR datasets-not-written pdf=%s\n", pdfPath);
+                            } else {
+                                pdf_write_options save_opts = pdf_default_write_options2;
+                                save_opts.do_incremental = pdf_can_be_saved_incrementally(ctx, pdfdoc);
+                                save_opts.do_compress = 1;
+                                pdf_save_document(ctx, pdfdoc, outPath, &save_opts);
+                                saved = 1;
+                            }
+                        }
+                    }
+                    fz_catch(ctx) {
+                        fz_report_error(ctx);
+                        out.AppendFmt("ERROR save-failed pdf=%s out=%s\n", pdfPath, outPath);
+                    }
+                }
+                SafeEngineRelease(&engine);
+
+                if (saved) {
+                    EngineBase* engine2 = CreateEngineMupdfFromFile(outPath, kindFilePDF, 96, nullptr);
+                    if (!engine2) {
+                        out.AppendFmt("ERROR reload-failed out=%s\n", outPath);
+                    } else {
+                        EngineMupdf* epdf2 = AsEngineMupdf(engine2);
+                        fz_context* ctx2 = epdf2->Ctx();
+                        pdf_xfa* xfa2 = pdf_load_xfa(ctx2, epdf2->pdfdoc);
+                        if (!xfa2 || !pdf_xfa_is_valid(ctx2, xfa2)) {
+                            out.AppendFmt("ERROR reload-xfa-invalid out=%s\n", outPath);
+                        } else {
+                            fz_try(ctx2) {
+                                if (!pdf_xfa_get_field_content(ctx2, xfa2, fieldName, readBuf, (int)sizeof readBuf)) {
+                                    out.AppendFmt("ERROR reload-field-not-found out=%s field=%s\n", outPath, fieldName);
+                                } else {
+                                    out.Append(readBuf);
+                                    exitCode = 0;
+                                }
+                            }
+                            fz_catch(ctx2) {
+                                fz_report_error(ctx2);
+                                out.AppendFmt("ERROR reload-read-failed out=%s field=%s\n", outPath, fieldName);
+                            }
+                        }
+                        SafeEngineRelease(&engine2);
+                    }
+                }
+            }
         }
     }
     if (exitCodeOut) {
