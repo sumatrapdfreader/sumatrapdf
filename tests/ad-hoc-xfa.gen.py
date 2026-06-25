@@ -9,10 +9,29 @@ Regenerate:
 
 from pathlib import Path
 
-# Pure-XFA form: prototypes + usehref instances on two pages.
-XDP = """<?xml version="1.0" encoding="UTF-8"?>
+PREAMBLE = """<?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
-<template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
+"""
+
+CONFIG = """<config xmlns="http://www.xfa.org/schema/xci/3.0/">
+  <present>
+    <pdf>
+      <fontInfo>
+        <embed>1</embed>
+        <map>
+          <equate from="AliasCourier" to="Courier"/>
+        </map>
+      </fontInfo>
+    </pdf>
+  </present>
+  <psMap>
+    <font typeface="Courier" psName="Courier" weight="normal" posture="italic"/>
+  </psMap>
+</config>
+"""
+
+# Pure-XFA form: prototypes + usehref instances on two pages.
+TEMPLATE = """<template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
   <subform name="form1" layout="tb">
     <pageSet>
       <pageArea name="Page1" id="Page1">
@@ -121,6 +140,12 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
               <text>Courier italic</text>
             </value>
           </draw>
+          <draw x="0.75in" y="4.8in" w="2in" h="0.25in">
+            <font typeface="AliasCourier" posture="italic" size="10pt"/>
+            <value>
+              <text>Alias courier</text>
+            </value>
+          </draw>
         </contentArea>
       </pageArea>
     </pageSet>
@@ -158,19 +183,33 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
     </draw>
   </subform>
 </template>
-<datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">
+"""
+
+DATASETS = """<datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">
   <data>
     <firstName>Alice</firstName>
     <lastName>Bob</lastName>
     <stackField>C</stackField>
   </data>
 </datasets>
-</xdp>
 """
 
+POSTAMBLE = "</xdp>\n"
 
-def build_pdf(xdp: str) -> bytes:
-    xdp_bytes = xdp.encode("utf-8")
+
+def stream_obj(text: str) -> str:
+    data = text.encode("utf-8")
+    return f"<< /Length {len(data)} >>\nstream\n".encode("latin-1").decode("latin-1") + text + "\nendstream"
+
+
+def build_pdf() -> bytes:
+    packets = [
+        ("xdp:xdp", PREAMBLE),
+        ("config", CONFIG),
+        ("template", TEMPLATE),
+        ("datasets", DATASETS),
+        ("xdp:xdp", POSTAMBLE),
+    ]
     objects = []
 
     def add(obj: str) -> int:
@@ -180,13 +219,11 @@ def build_pdf(xdp: str) -> bytes:
     add("<< /Type /Catalog /Pages 2 0 R /AcroForm 4 0 R >>")
     add("<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
     add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>")
-    add("<< /Fields [] /DR << /Font << /F1 5 0 R >> >> /XFA [(xdp:xdp) 6 0 R] >>")
+    xfa_refs = " ".join(f"({name}) {5 + i} 0 R" for i, (name, _) in enumerate(packets))
+    add(f"<< /Fields [] /DR << /Font << /F1 {5 + len(packets)} 0 R >> >> /XFA [{xfa_refs}] >>")
+    for _, text in packets:
+        add(stream_obj(text))
     add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
-    add(
-        f"<< /Length {len(xdp_bytes)} >>\nstream\n".encode("latin-1").decode("latin-1")
-        + xdp
-        + "\nendstream"
-    )
 
     parts = [b"%PDF-1.4\n"]
     offsets = [0]
@@ -211,7 +248,7 @@ def build_pdf(xdp: str) -> bytes:
 
 def main() -> None:
     out = Path(__file__).with_name("ad-hoc-xfa.pdf")
-    out.write_bytes(build_pdf(XDP))
+    out.write_bytes(build_pdf())
     print(f"wrote {out} ({out.stat().st_size} bytes)")
 
 

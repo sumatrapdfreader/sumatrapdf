@@ -47,7 +47,7 @@ pdf_xfa* pdf_xfa_new_from_packets(fz_context* ctx, pdf_document* doc, pdf_xfa_pa
         xfa->form = pdf_xfa_bind(ctx, xfa->pool, xfa);
         if (xfa->form) {
             xfa->global.template_root = xfa->form;
-            xfa->fonts = pdf_xfa_fonts_load(ctx, doc, xfa->pool);
+            xfa->fonts = pdf_xfa_fonts_load(ctx, doc, xfa->pool, xfa->packets);
             xfa->valid = 1;
         }
     }

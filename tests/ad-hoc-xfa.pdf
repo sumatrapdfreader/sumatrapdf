@@ -9,16 +9,40 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>
 endobj
 4 0 obj
-<< /Fields [] /DR << /Font << /F1 5 0 R >> >> /XFA [(xdp:xdp) 6 0 R] >>
+<< /Fields [] /DR << /Font << /F1 10 0 R >> >> /XFA [(xdp:xdp) 5 0 R (config) 6 0 R (template) 7 0 R (datasets) 8 0 R (xdp:xdp) 9 0 R] >>
 endobj
 5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
-endobj
-6 0 obj
-<< /Length 5009 >>
+<< /Length 78 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
+
+endstream
+endobj
+6 0 obj
+<< /Length 352 >>
+stream
+<config xmlns="http://www.xfa.org/schema/xci/3.0/">
+  <present>
+    <pdf>
+      <fontInfo>
+        <embed>1</embed>
+        <map>
+          <equate from="AliasCourier" to="Courier"/>
+        </map>
+      </fontInfo>
+    </pdf>
+  </present>
+  <psMap>
+    <font typeface="Courier" psName="Courier" weight="normal" posture="italic"/>
+  </psMap>
+</config>
+
+endstream
+endobj
+7 0 obj
+<< /Length 4971 >>
+stream
 <template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
   <subform name="form1" layout="tb">
     <pageSet>
@@ -128,6 +152,12 @@ stream
               <text>Courier italic</text>
             </value>
           </draw>
+          <draw x="0.75in" y="4.8in" w="2in" h="0.25in">
+            <font typeface="AliasCourier" posture="italic" size="10pt"/>
+            <value>
+              <text>Alias courier</text>
+            </value>
+          </draw>
         </contentArea>
       </pageArea>
     </pageSet>
@@ -165,6 +195,12 @@ stream
     </draw>
   </subform>
 </template>
+
+endstream
+endobj
+8 0 obj
+<< /Length 183 >>
+stream
 <datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">
   <data>
     <firstName>Alice</firstName>
@@ -172,21 +208,34 @@ stream
     <stackField>C</stackField>
   </data>
 </datasets>
+
+endstream
+endobj
+9 0 obj
+<< /Length 7 >>
+stream
 </xdp>
 
 endstream
 endobj
+10 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
 xref
-0 7
+0 11
 0000000000 65535 f 
 0000000009 00000 n 
 0000000074 00000 n 
 0000000131 00000 n 
 0000000202 00000 n 
-0000000289 00000 n 
-0000000384 00000 n 
+0000000355 00000 n 
+0000000483 00000 n 
+0000000886 00000 n 
+0000005909 00000 n 
+0000006143 00000 n 
+0000006199 00000 n 
 trailer
-<< /Size 7 /Root 1 0 R >>
+<< /Size 11 /Root 1 0 R >>
 startxref
-5445
+6295
 %%EOF

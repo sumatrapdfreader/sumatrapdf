@@ -26,8 +26,16 @@
 #include <string.h>
 
 #define PDF_XFA_MAX_HELD_FONTS 256
+#define PDF_XFA_PSMAP_INIT 32
 
 typedef struct pdf_xfa_font_slot pdf_xfa_font_slot;
+
+typedef struct {
+    char typeface[FZ_HASH_TABLE_KEY_LENGTH];
+    int bold;
+    int italic;
+    char psname[FZ_HASH_TABLE_KEY_LENGTH];
+} pdf_xfa_psmap_entry;
 
 struct pdf_xfa_font_slot {
     fz_font* regular;
@@ -38,6 +46,10 @@ struct pdf_xfa_font_slot {
 
 struct pdf_xfa_fonts {
     fz_hash_table* families;
+    fz_hash_table* equates;
+    pdf_xfa_psmap_entry* psmap;
+    int psmap_n;
+    int psmap_cap;
     fz_font* held[PDF_XFA_MAX_HELD_FONTS];
     int held_n;
 };
@@ -93,6 +105,184 @@ static void pdf_xfa_family_key(const char* family, char* key, size_t keysz) {
         key[n++] = (char)c;
     }
     key[n] = 0;
+}
+
+static int pdf_xfa_font_attr_bold(const char* weight) {
+    return weight && strcmp(weight, "bold") == 0;
+}
+
+static int pdf_xfa_font_attr_italic(const char* posture) {
+    return posture && strcmp(posture, "italic") == 0;
+}
+
+static int pdf_xfa_typeface_keys_match(const char* a, const char* b) {
+    char keya[FZ_HASH_TABLE_KEY_LENGTH];
+    char keyb[FZ_HASH_TABLE_KEY_LENGTH];
+    char cleana[FZ_HASH_TABLE_KEY_LENGTH];
+    char cleanb[FZ_HASH_TABLE_KEY_LENGTH];
+
+    pdf_xfa_strip_typeface_quotes(a, cleana, sizeof cleana);
+    pdf_xfa_strip_typeface_quotes(b, cleanb, sizeof cleanb);
+    pdf_xfa_family_key(cleana, keya, sizeof keya);
+    pdf_xfa_family_key(cleanb, keyb, sizeof keyb);
+    return keya[0] && strcmp(keya, keyb) == 0;
+}
+
+static pdf_xfa_object* pdf_xfa_fonts_find_child(pdf_xfa_object* node, const char* name) {
+    pdf_xfa_object* child;
+
+    if (!node || !name) return NULL;
+    for (child = node->first_child; child; child = child->next_sibling) {
+        if (child->name && strcmp(child->name, name) == 0) return child;
+    }
+    return NULL;
+}
+
+static void pdf_xfa_fonts_add_equate(fz_context* ctx, fz_pool* pool, pdf_xfa_fonts* fonts, const char* from,
+                                     const char* to) {
+    char clean_from[FZ_HASH_TABLE_KEY_LENGTH];
+    char clean_to[FZ_HASH_TABLE_KEY_LENGTH];
+    char key_from[FZ_HASH_TABLE_KEY_LENGTH];
+    char* key_to;
+
+    if (!fonts || !fonts->equates || !from || !from[0] || !to || !to[0]) return;
+
+    pdf_xfa_strip_typeface_quotes(from, clean_from, sizeof clean_from);
+    pdf_xfa_strip_typeface_quotes(to, clean_to, sizeof clean_to);
+    pdf_xfa_family_key(clean_from, key_from, sizeof key_from);
+    if (!key_from[0]) return;
+
+    key_to = fz_pool_strdup(ctx, pool, clean_to);
+    fz_hash_insert(ctx, fonts->equates, key_from, key_to);
+}
+
+static void pdf_xfa_fonts_add_psmap(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold, int italic,
+                                    const char* psname) {
+    char clean[FZ_HASH_TABLE_KEY_LENGTH];
+    pdf_xfa_psmap_entry* entry;
+
+    if (!fonts || !typeface || !typeface[0] || !psname || !psname[0]) return;
+
+    if (fonts->psmap_n == fonts->psmap_cap) {
+        int newcap = fonts->psmap_cap ? fonts->psmap_cap * 2 : PDF_XFA_PSMAP_INIT;
+        pdf_xfa_psmap_entry* newmap = fz_malloc_array(ctx, newcap, pdf_xfa_psmap_entry);
+        if (fonts->psmap) {
+            memcpy(newmap, fonts->psmap, sizeof(*newmap) * fonts->psmap_n);
+            fz_free(ctx, fonts->psmap);
+        }
+        fonts->psmap = newmap;
+        fonts->psmap_cap = newcap;
+    }
+
+    entry = &fonts->psmap[fonts->psmap_n++];
+    memset(entry, 0, sizeof(*entry));
+    pdf_xfa_strip_typeface_quotes(typeface, clean, sizeof clean);
+    strncpy(entry->typeface, clean, sizeof(entry->typeface) - 1);
+    entry->bold = bold;
+    entry->italic = italic;
+    strncpy(entry->psname, psname, sizeof(entry->psname) - 1);
+}
+
+static void pdf_xfa_fonts_walk_equates(fz_context* ctx, fz_pool* pool, pdf_xfa_fonts* fonts, pdf_xfa_object* node) {
+    pdf_xfa_object* child;
+    char* from;
+    char* to;
+
+    if (!node) return;
+
+    if (node->name && strcmp(node->name, "equate") == 0) {
+        from = pdf_xfa_object_get_attr(ctx, node, "from");
+        to = pdf_xfa_object_get_attr(ctx, node, "to");
+        pdf_xfa_fonts_add_equate(ctx, pool, fonts, from, to);
+    }
+
+    for (child = node->first_child; child; child = child->next_sibling)
+        pdf_xfa_fonts_walk_equates(ctx, pool, fonts, child);
+}
+
+static void pdf_xfa_fonts_parse_psmap(fz_context* ctx, pdf_xfa_fonts* fonts, pdf_xfa_object* config) {
+    pdf_xfa_object* psmap;
+    pdf_xfa_object* child;
+    char* typeface;
+    char* psname;
+    char* weight;
+    char* posture;
+
+    psmap = pdf_xfa_fonts_find_child(config, "psMap");
+    if (!psmap) return;
+
+    for (child = psmap->first_child; child; child = child->next_sibling) {
+        if (!child->name || strcmp(child->name, "font") != 0) continue;
+        typeface = pdf_xfa_object_get_attr(ctx, child, "typeface");
+        psname = pdf_xfa_object_get_attr(ctx, child, "psName");
+        if (!psname || !psname[0]) psname = pdf_xfa_object_get_attr(ctx, child, "psname");
+        if (!typeface || !typeface[0] || !psname || !psname[0]) continue;
+        weight = pdf_xfa_object_get_attr(ctx, child, "weight");
+        posture = pdf_xfa_object_get_attr(ctx, child, "posture");
+        pdf_xfa_fonts_add_psmap(ctx, fonts, typeface, pdf_xfa_font_attr_bold(weight),
+                                pdf_xfa_font_attr_italic(posture), psname);
+    }
+}
+
+static void pdf_xfa_fonts_parse_config_packet(fz_context* ctx, fz_pool* pool, pdf_xfa_fonts* fonts,
+                                              pdf_xfa_packet* packets) {
+    pdf_xfa_packet* packet;
+    pdf_xfa_object* config = NULL;
+
+    if (!fonts || !packets) return;
+
+    for (packet = packets; packet; packet = packet->next) {
+        if (!packet->name || !packet->data || strcmp(packet->name, "config") != 0) continue;
+
+        fz_try(ctx) {
+            config = pdf_xfa_parse_xml(ctx, pool, packet->data, PDF_XFA_NS_CONFIG, 0, NULL);
+            if (config) {
+                pdf_xfa_fonts_walk_equates(ctx, pool, fonts, config);
+                pdf_xfa_fonts_parse_psmap(ctx, fonts, config);
+            }
+        }
+        fz_catch(ctx) fz_warn(ctx, "XFA: could not parse config fontInfo");
+        break;
+    }
+}
+
+static void pdf_xfa_fonts_map_typeface(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, char* out,
+                                       size_t outsz) {
+    char clean[FZ_HASH_TABLE_KEY_LENGTH];
+    char key[FZ_HASH_TABLE_KEY_LENGTH];
+    const char* mapped;
+
+    if (!out || outsz == 0) return;
+    out[0] = 0;
+    if (!typeface || !typeface[0]) return;
+
+    pdf_xfa_strip_typeface_quotes(typeface, clean, sizeof clean);
+    if (fonts && fonts->equates) {
+        pdf_xfa_family_key(clean, key, sizeof key);
+        if (key[0]) {
+            mapped = (const char*)fz_hash_find(ctx, fonts->equates, key);
+            if (mapped && mapped[0]) {
+                strncpy(out, mapped, outsz - 1);
+                out[outsz - 1] = 0;
+                return;
+            }
+        }
+    }
+
+    strncpy(out, clean, outsz - 1);
+    out[outsz - 1] = 0;
+}
+
+static const char* pdf_xfa_fonts_psmap_lookup(pdf_xfa_fonts* fonts, const char* typeface, int bold, int italic) {
+    int i;
+
+    if (!fonts || !typeface || !typeface[0]) return NULL;
+    for (i = 0; i < fonts->psmap_n; i++) {
+        pdf_xfa_psmap_entry* entry = &fonts->psmap[i];
+        if (entry->bold != bold || entry->italic != italic) continue;
+        if (pdf_xfa_typeface_keys_match(entry->typeface, typeface)) return entry->psname;
+    }
+    return NULL;
 }
 
 static pdf_xfa_font_slot* pdf_xfa_fonts_slot_for_family(fz_context* ctx, pdf_xfa_fonts* fonts, const char* family) {
@@ -226,9 +416,19 @@ static void pdf_xfa_fonts_load_dr(fz_context* ctx, pdf_document* doc, fz_pool* p
             fontdesc = pdf_load_font(ctx, doc, NULL, fontobj);
             family = pdf_xfa_font_family_name(ctx, pool, fontobj, fontdesc);
             if (family && family[0]) {
+                const char* basefont_name = NULL;
+                pdf_obj* basefontobj;
+
                 bold = pdf_xfa_font_is_bold(ctx, fontobj, fontdesc);
                 italic = pdf_xfa_font_is_italic(ctx, fontobj, fontdesc);
                 pdf_xfa_fonts_add_variant(ctx, fonts, family, bold, italic, fontdesc->font);
+                basefontobj = pdf_dict_get(ctx, fontobj, PDF_NAME(BaseFont));
+                if (basefontobj) {
+                    basefont_name = pdf_to_name(ctx, basefontobj);
+                    if (basefont_name && basefont_name[0] &&
+                        !pdf_xfa_typeface_keys_match(basefont_name, family))
+                        pdf_xfa_fonts_add_variant(ctx, fonts, basefont_name, bold, italic, fontdesc->font);
+                }
             }
         }
         fz_always(ctx) pdf_drop_font(ctx, fontdesc);
@@ -293,12 +493,14 @@ void pdf_xfa_fonts_register_typeface(fz_context* ctx, pdf_xfa_global_data* globa
     fz_hash_insert(ctx, global->used_typefaces, key, (void*)1);
 }
 
-pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* pool) {
+pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_packet* packets) {
     pdf_xfa_fonts* fonts = fz_malloc_struct(ctx, pdf_xfa_fonts);
 
     fz_try(ctx) {
         fonts->families =
             fz_new_hash_table(ctx, 64, FZ_HASH_TABLE_KEY_LENGTH, -1, pdf_xfa_fonts_drop_slot);
+        fonts->equates = fz_new_hash_table(ctx, 32, FZ_HASH_TABLE_KEY_LENGTH, -1, NULL);
+        pdf_xfa_fonts_parse_config_packet(ctx, pool, fonts, packets);
         pdf_xfa_fonts_load_dr(ctx, doc, pool, fonts);
     }
     fz_catch(ctx) {
@@ -314,7 +516,9 @@ void pdf_xfa_fonts_drop(fz_context* ctx, pdf_xfa_fonts* fonts) {
 
     if (!fonts) return;
     for (i = 0; i < fonts->held_n; i++) fz_drop_font(ctx, fonts->held[i]);
+    fz_drop_hash_table(ctx, fonts->equates);
     fz_drop_hash_table(ctx, fonts->families);
+    fz_free(ctx, fonts->psmap);
     fz_free(ctx, fonts);
 }
 
@@ -354,28 +558,48 @@ static pdf_xfa_font_slot* pdf_xfa_fonts_find_slot(fz_context* ctx, pdf_xfa_fonts
     return state.slot;
 }
 
+static fz_font* pdf_xfa_fonts_pick_variant(pdf_xfa_font_slot* slot, int bold, int italic) {
+    fz_font* font = NULL;
+
+    if (!slot) return NULL;
+    if (bold && italic && slot->bold_italic)
+        font = slot->bold_italic;
+    else if (bold && slot->bold)
+        font = slot->bold;
+    else if (italic && slot->italic)
+        font = slot->italic;
+    else if (slot->regular)
+        font = slot->regular;
+    else if (slot->bold)
+        font = slot->bold;
+    else if (slot->italic)
+        font = slot->italic;
+    else if (slot->bold_italic)
+        font = slot->bold_italic;
+    return font;
+}
+
 fz_font* pdf_xfa_fonts_resolve(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold, int italic) {
     pdf_xfa_font_slot* slot;
     fz_font* font = NULL;
+    char mapped[FZ_HASH_TABLE_KEY_LENGTH];
+    const char* psname;
 
-    slot = pdf_xfa_fonts_find_slot(ctx, fonts, typeface);
+    pdf_xfa_fonts_map_typeface(ctx, fonts, typeface, mapped, sizeof mapped);
+    if (!mapped[0]) return pdf_xfa_fonts_base14(ctx, fonts, typeface, bold, italic);
+
+    psname = pdf_xfa_fonts_psmap_lookup(fonts, mapped, bold, italic);
+    if (psname) {
+        slot = pdf_xfa_fonts_find_slot(ctx, fonts, psname);
+        font = pdf_xfa_fonts_pick_variant(slot, bold, italic);
+        if (font) return font;
+    }
+
+    slot = pdf_xfa_fonts_find_slot(ctx, fonts, mapped);
     if (slot) {
-        if (bold && italic && slot->bold_italic)
-            font = slot->bold_italic;
-        else if (bold && slot->bold)
-            font = slot->bold;
-        else if (italic && slot->italic)
-            font = slot->italic;
-        else if (slot->regular)
-            font = slot->regular;
-        else if (slot->bold)
-            font = slot->bold;
-        else if (slot->italic)
-            font = slot->italic;
-        else if (slot->bold_italic)
-            font = slot->bold_italic;
+        font = pdf_xfa_fonts_pick_variant(slot, bold, italic);
     }
 
     if (font) return font;
-    return pdf_xfa_fonts_base14(ctx, fonts, typeface, bold, italic);
+    return pdf_xfa_fonts_base14(ctx, fonts, mapped, bold, italic);
 }

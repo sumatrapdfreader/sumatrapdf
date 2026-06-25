@@ -49,9 +49,9 @@ export async function testit(): Promise<void> {
   if (xfa.p1_fields !== 2) {
     throw new Error(`ad-hoc-xfa.pdf: expected p1_fields=2 on page 1, got p1_fields=${xfa.p1_fields}`);
   }
-  if (xfa.p1_draws !== 14) {
+  if (xfa.p1_draws !== 15) {
     throw new Error(
-      `ad-hoc-xfa.pdf: expected p1_draws=14 on page 1 (pageArea + flowed + border + line + multiline + justify + tb/lr-tb + typeface), got p1_draws=${xfa.p1_draws}`,
+      `ad-hoc-xfa.pdf: expected p1_draws=15 on page 1 (pageArea + flowed + border + line + multiline + justify + tb/lr-tb + typeface + fontInfo alias), got p1_draws=${xfa.p1_draws}`,
     );
   }
   if (xfa.p1_borders !== 3) {

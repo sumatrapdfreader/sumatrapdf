@@ -203,7 +203,7 @@ int pdf_xfa_factory_layout(fz_context* ctx, pdf_xfa* xfa);
 
 /* fonts.c */
 void pdf_xfa_fonts_register_typeface(fz_context* ctx, pdf_xfa_global_data* global, const char* typeface);
-pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* pool);
+pdf_xfa_fonts* pdf_xfa_fonts_load(fz_context* ctx, pdf_document* doc, fz_pool* pool, pdf_xfa_packet* packets);
 void pdf_xfa_fonts_drop(fz_context* ctx, pdf_xfa_fonts* fonts);
 fz_font* pdf_xfa_fonts_resolve(fz_context* ctx, pdf_xfa_fonts* fonts, const char* typeface, int bold, int italic);
 
