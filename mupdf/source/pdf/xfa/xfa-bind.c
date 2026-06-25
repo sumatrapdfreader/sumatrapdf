@@ -57,17 +57,12 @@ static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, p
     pdf_xfa_object *child, *match, *next;
     char *name, *ref;
     int n;
+    int consume_siblings = merge_mode > 0;
 
     for (child = form->first_child; child; child = next) {
         next = child->next_sibling;
 
         if (child->data_node) continue;
-
-        /* Highest-level subform binds to first data child (bind.js). */
-        if (strcmp(child->name, "subform") == 0 && merge_mode < 0) {
-            if (data && data->first_child) pdf_xfa_bind_element(ctx, pool, xfa, child, data->first_child, 0);
-            continue;
-        }
 
         name = pdf_xfa_object_get_attr(ctx, child, "name");
         if (!name || !name[0]) {
@@ -85,9 +80,9 @@ static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, p
             }
         }
 
-        match = pdf_xfa_find_data_child(data, name, merge_mode > 0);
+        match = pdf_xfa_find_data_child(data, name, consume_siblings);
         if (match) {
-            if (merge_mode > 0) match->consumed = 1;
+            if (consume_siblings) match->consumed = 1;
             if (pdf_xfa_object_is_data_value(match))
                 pdf_xfa_bind_value(ctx, pool, child, match);
             else
@@ -97,10 +92,22 @@ static void pdf_xfa_bind_element(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa, p
     }
 }
 
+static pdf_xfa_object* pdf_xfa_bind_data_root(fz_context* ctx, pdf_xfa_object* form, pdf_xfa_object* data) {
+    char* form_name;
+    pdf_xfa_object* match;
+
+    if (!data) return NULL;
+    form_name = pdf_xfa_object_get_attr(ctx, form, "name");
+    if (form_name && form_name[0]) {
+        match = pdf_xfa_find_data_child(data, form_name, 0);
+        if (match) return match;
+    }
+    return data->first_child ? data->first_child : data;
+}
+
 pdf_xfa_object* pdf_xfa_bind(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa) {
-    pdf_xfa_object *xdp, *template_node, *datasets, *data, *form;
-    int merge_mode = -1;
-    int empty_merge;
+    pdf_xfa_object *xdp, *template_node, *datasets, *data, *form, *data_root;
+    int bind_mode;
 
     if (!xfa || !xfa->root) return NULL;
 
@@ -124,7 +131,7 @@ pdf_xfa_object* pdf_xfa_bind(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa) {
     xfa->datasets_node = datasets;
     xfa->data_node = data;
 
-    empty_merge = !data->first_child;
+    bind_mode = data->first_child ? 1 : 0;
     pdf_xfa_resolve_prototypes(ctx, pool, xfa, template_node);
     pdf_xfa_count_field_stats(template_node, NULL, NULL, &xfa->fields_with_pagearea_template);
 
@@ -132,7 +139,8 @@ pdf_xfa_object* pdf_xfa_bind(fz_context* ctx, fz_pool* pool, pdf_xfa* xfa) {
     if (!form) fz_throw(ctx, FZ_ERROR_GENERIC, "XFA: failed to clone template");
 
     form->global = &xfa->global;
-    pdf_xfa_bind_element(ctx, pool, xfa, form, data, empty_merge ? 0 : merge_mode);
+    data_root = pdf_xfa_bind_data_root(ctx, form, data);
+    pdf_xfa_bind_element(ctx, pool, xfa, form, data_root, bind_mode);
 
     return form;
 }

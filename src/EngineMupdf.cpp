@@ -5352,6 +5352,58 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
     return out.StealData();
 }
 
+// Return serialized datasets XML for an XFA document (pdf_xfa_serialize_data).
+char* TestXfaSerializeDataResult(const char* pdfPath, int* exitCodeOut) {
+    StrBuilder out;
+    int exitCode = 1;
+
+    if (!pdfPath) {
+        out.AppendFmt("ERROR invalid-args pdf=%s\n", pdfPath ? pdfPath : "(null)");
+    } else {
+        EngineBase* engine = CreateEngineMupdfFromFile(pdfPath, kindFilePDF, 96, nullptr);
+        if (!engine) {
+            out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+        } else {
+            EngineMupdf* epdf = AsEngineMupdf(engine);
+            if (!epdf || !epdf->pdfdoc) {
+                out.AppendFmt("ERROR not-pdf pdf=%s\n", pdfPath);
+            } else {
+                fz_context* ctx = epdf->Ctx();
+                pdf_document* pdfdoc = epdf->pdfdoc;
+                pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
+                fz_buffer* data_xml = nullptr;
+                unsigned char* data = nullptr;
+                size_t n = 0;
+                fz_var(data_xml);
+                fz_var(data);
+
+                if (!xfa || !pdf_xfa_is_valid(ctx, xfa)) {
+                    out.AppendFmt("ERROR xfa-invalid pdf=%s\n", pdfPath);
+                } else {
+                    fz_try(ctx) {
+                        data_xml = pdf_xfa_serialize_data(ctx, xfa);
+                        n = fz_buffer_storage(ctx, data_xml, &data);
+                        if (data && n > 0) {
+                            out.Append(data, n);
+                        }
+                        exitCode = 0;
+                    }
+                    fz_always(ctx) fz_drop_buffer(ctx, data_xml);
+                    fz_catch(ctx) {
+                        fz_report_error(ctx);
+                        out.AppendFmt("ERROR serialize-failed pdf=%s\n", pdfPath);
+                    }
+                }
+            }
+            SafeEngineRelease(&engine);
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = exitCode;
+    }
+    return out.StealData();
+}
+
 // Probe laid-out XFA field bounding boxes (pdf points, PDF y-up) for layout tests.
 char* TestXfaFieldRectsResult(const char* pdfPath, int pageNo, int* exitCodeOut) {
     StrBuilder out;

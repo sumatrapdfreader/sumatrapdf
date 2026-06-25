@@ -43,6 +43,7 @@ enum class ControlCmd : u16 {
     TestXfa = 29,
     TestRenderPagePng = 30,
     TestXfaFieldRects = 31,
+    TestXfaSerializeData = 32,
 };
 
 enum class ControlArgType : u16 {
@@ -505,6 +506,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestXfaFieldRectsResult(pdf, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestXfaSerializeData: {
+            const char* pdf = StringArg(req, 0);
+            if (!pdf) {
+                AppendError(req, "TestXfaSerializeData expects string pdfPath");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestXfaSerializeDataResult(pdf, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

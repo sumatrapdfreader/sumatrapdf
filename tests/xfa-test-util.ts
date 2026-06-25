@@ -81,3 +81,13 @@ export async function queryXfa(pdfPath: string): Promise<XfaInfo> {
   }
   return parseXfaLine(String(raw ?? ""));
 }
+
+export async function queryXfaSerializeData(pdfPath: string): Promise<string> {
+  const res = await runControlCommand(EXE, ControlCommand.TestXfaSerializeData, [pdfPath]);
+  const exitCode = res[0] as number;
+  const xml = String(res[1] ?? "");
+  if (exitCode !== 0) {
+    throw new Error(`TestXfaSerializeData failed for ${pdfPath}: ${xml.trim()}`);
+  }
+  return xml;
+}
