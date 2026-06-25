@@ -482,6 +482,19 @@ static char* pdf_xfa_font_family_name(fz_context* ctx, fz_pool* pool, pdf_obj* f
     return NULL;
 }
 
+static void pdf_xfa_fonts_register_psmap_aliases(fz_context* ctx, pdf_xfa_fonts* fonts, const char* stripped, int bold,
+                                                 int italic, fz_font* font) {
+    int i;
+
+    if (!fonts || !stripped || !stripped[0] || !font) return;
+    for (i = 0; i < fonts->psmap_n; i++) {
+        pdf_xfa_psmap_entry* entry = &fonts->psmap[i];
+        if (entry->bold != bold || entry->italic != italic) continue;
+        if (pdf_xfa_typeface_keys_match(entry->psname, stripped))
+            pdf_xfa_fonts_add_variant(ctx, fonts, entry->typeface, bold, italic, font);
+    }
+}
+
 static void pdf_xfa_fonts_register_loaded(fz_context* ctx, fz_pool* pool, pdf_xfa_fonts* fonts, pdf_obj* fontobj,
                                           pdf_font_desc* fontdesc) {
     char* family;
@@ -507,6 +520,7 @@ static void pdf_xfa_fonts_register_loaded(fz_context* ctx, fz_pool* pool, pdf_xf
             pdf_xfa_fonts_strip_subset_prefix(basefont_name, stripped, sizeof stripped);
             if (stripped[0] && !pdf_xfa_typeface_keys_match(stripped, basefont_name))
                 pdf_xfa_fonts_add_variant(ctx, fonts, stripped, bold, italic, fontdesc->font);
+            if (stripped[0]) pdf_xfa_fonts_register_psmap_aliases(ctx, fonts, stripped, bold, italic, fontdesc->font);
         }
     }
 
@@ -518,6 +532,7 @@ static void pdf_xfa_fonts_register_loaded(fz_context* ctx, fz_pool* pool, pdf_xf
             if (fontname && fontname[0]) {
                 pdf_xfa_fonts_strip_subset_prefix(fontname, stripped, sizeof stripped);
                 pdf_xfa_fonts_add_variant(ctx, fonts, stripped, bold, italic, fontdesc->font);
+                pdf_xfa_fonts_register_psmap_aliases(ctx, fonts, stripped, bold, italic, fontdesc->font);
             }
         }
     }

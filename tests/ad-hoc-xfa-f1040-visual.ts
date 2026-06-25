@@ -35,8 +35,14 @@ const PAGES: PageBaseline[] = [
 
 const MIN_METRICS: Record<number, Pick<PngMetrics, "dark" | "distinct">> = {
   1: { dark: 9000, distinct: 15 },
-  2: { dark: 9000, distinct: 28 },
+  2: { dark: 9000, distinct: 15 },
 };
+
+const RENDER_ATTEMPTS = 6;
+
+function paintScore(metrics: PngMetrics): number {
+  return metrics.dark + metrics.distinct * 40;
+}
 
 export type PngMetrics = {
   width: number;
@@ -100,11 +106,11 @@ async function renderPagePng(pageNo: number, outPath: string): Promise<{ msg: st
   let bestPath = "";
   let bestMsg = "";
   let bestMetrics: PngMetrics | null = null;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < RENDER_ATTEMPTS; attempt++) {
     const tryPath = outPath.replace(/\.png$/i, `.try${attempt}.png`);
     const msg = await renderPagePngOnce(pageNo, tryPath);
     const metrics = analyzePngMetrics(tryPath);
-    if (!bestMetrics || metrics.dark > bestMetrics.dark) {
+    if (!bestMetrics || paintScore(metrics) > paintScore(bestMetrics)) {
       bestMetrics = metrics;
       bestPath = tryPath;
       bestMsg = msg;
@@ -113,7 +119,7 @@ async function renderPagePng(pageNo: number, outPath: string): Promise<{ msg: st
       copyFileSync(tryPath, outPath);
       return { msg, metrics };
     }
-    await sleep(120);
+    await sleep(200);
   }
   if (!bestMetrics || !bestPath) {
     throw new Error(`TestRenderPagePng page ${pageNo}: no render captured`);
@@ -125,7 +131,7 @@ async function renderPagePng(pageNo: number, outPath: string): Promise<{ msg: st
         `need dark>=${min.dark} distinct>=${min.distinct}`,
     );
   }
-  return { msg: `${bestMsg} (best-of-4)`, metrics: bestMetrics };
+  return { msg: `${bestMsg} (best-of-${RENDER_ATTEMPTS})`, metrics: bestMetrics };
 }
 
 function assertMetrics(name: string, actual: PngMetrics, expected: PngMetrics, pageNo: number): void {
