@@ -43,6 +43,7 @@ extern "C" {
 
 #include "mupdf/pdf/annot.h"
 #include "mupdf/pdf/form.h"
+#include "mupdf/pdf/xfa.h"
 #include "mupdf/pdf/event.h"
 #include "mupdf/pdf/javascript.h"
 

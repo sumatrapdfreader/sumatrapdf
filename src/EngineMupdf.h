@@ -124,6 +124,8 @@ class EngineMupdf : public EngineBase {
     int displayDPI{96};
     fz_document* _doc = nullptr;
     pdf_document* pdfdoc = nullptr;
+    // pure/dynamic XFA forms: page count and rendering come from pdf_xfa
+    bool useXfaPages = false;
     Vec<FzPageInfo*> pages;
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;

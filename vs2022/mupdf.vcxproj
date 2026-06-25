@@ -921,6 +921,7 @@
     <ClInclude Include="..\mupdf\source\pdf\annotation-icons.h" />
     <ClInclude Include="..\mupdf\source\pdf\pdf-annot-imp.h" />
     <ClInclude Include="..\mupdf\source\pdf\pdf-imp.h" />
+    <ClInclude Include="..\mupdf\source\pdf\xfa\xfa-imp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\mupdf_load_system_font.c" />
@@ -1143,7 +1144,13 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-write.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xobject.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xref.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-xfa.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-zugferd.c" />
+    <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-builder.c" />
+    <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-factory.c" />
+    <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-namespaces.c" />
+    <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-object.c" />
+    <ClCompile Include="..\mupdf\source\pdf\xfa\xfa-parser.c" />
     <ClCompile Include="..\mupdf\source\reflow\reflow-doc.c" />
     <ClCompile Include="..\mupdf\source\svg\svg-color.c" />
     <ClCompile Include="..\mupdf\source\svg\svg-doc.c" />

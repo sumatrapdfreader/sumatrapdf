@@ -1320,7 +1320,13 @@ function mupdf_files()
     "pdf-write.c",
     "pdf-xobject.c",
     "pdf-xref.c",
+    "pdf-xfa.c",
     "pdf-zugferd.c",
+    "xfa/xfa-builder.c",
+    "xfa/xfa-factory.c",
+    "xfa/xfa-namespaces.c",
+    "xfa/xfa-object.c",
+    "xfa/xfa-parser.c",
   })
 
   files_in_dir("mupdf/source/svg", {

@@ -32,6 +32,7 @@
 
 typedef struct pdf_xref pdf_xref;
 typedef struct pdf_ocg_descriptor pdf_ocg_descriptor;
+typedef struct pdf_xfa pdf_xfa;
 
 typedef struct pdf_page pdf_page;
 typedef struct pdf_annot pdf_annot;
@@ -575,6 +576,7 @@ struct pdf_document
 	pdf_obj **orphans;
 
 	fz_xml_doc *xfa;
+	pdf_xfa *xfa_ctx;
 
 	pdf_journal *journal;
 

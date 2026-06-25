@@ -1984,6 +1984,8 @@ pdf_invalidate_xfa(fz_context *ctx, pdf_document *doc)
 {
 	if (doc == NULL)
 		return;
+	pdf_drop_xfa(ctx, doc->xfa_ctx);
+	doc->xfa_ctx = NULL;
 	fz_drop_xml(ctx, doc->xfa);
 	doc->xfa = NULL;
 }

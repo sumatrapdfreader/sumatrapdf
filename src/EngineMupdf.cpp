@@ -2772,6 +2772,7 @@ bool EngineMupdf::FinishLoading() {
     }
 
     pageCount = 0;
+    useXfaPages = false;
     fz_var(pageCount);
     fz_try(ctx) {
         // this call might throw the first time
@@ -2781,6 +2782,18 @@ bool EngineMupdf::FinishLoading() {
         fz_report_error(ctx);
         pageCount = 0;
     }
+
+    if (pdfdoc && pdf_document_has_xfa(ctx, pdfdoc)) {
+        pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
+        if (pdf_xfa_is_valid(ctx, xfa)) {
+            int xfaPageCount = pdf_xfa_page_count(ctx, xfa);
+            if (xfaPageCount > 0) {
+                pageCount = xfaPageCount;
+                useXfaPages = true;
+            }
+        }
+    }
+
     if (pageCount == 0) {
         fz_warn(ctx, "document has no pages");
         return false;
@@ -2802,20 +2815,23 @@ bool EngineMupdf::FinishLoading() {
     ScopedCritSec scope(&docLock);
 
     for (int pageNo = 0; pageNo < pageCount; pageNo++) {
-        pdf_obj* pageref = nullptr;
         fz_rect mbox{};
-        fz_matrix page_ctm{};
-        fz_var(pageref);
-        fz_var(mbox);
-        fz_try(ctx) {
-            // note: don't pdf_drop_obj() this
-            pageref = pdf_lookup_page_obj(ctx, pdfdoc, pageNo);
-            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
-            mbox = fz_transform_rect(mbox, page_ctm);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-            mbox = {};
+        if (useXfaPages && pdfdoc->xfa_ctx) {
+            mbox = pdf_xfa_page_bbox(ctx, pdfdoc->xfa_ctx, pageNo);
+        } else {
+            pdf_obj* pageref = nullptr;
+            fz_matrix page_ctm{};
+            fz_var(pageref);
+            fz_try(ctx) {
+                // note: don't pdf_drop_obj() this
+                pageref = pdf_lookup_page_obj(ctx, pdfdoc, pageNo);
+                pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
+                mbox = fz_transform_rect(mbox, page_ctm);
+            }
+            fz_catch(ctx) {
+                fz_report_error(ctx);
+                mbox = {};
+            }
         }
         if (fz_is_empty_rect(mbox)) {
             logfa("cannot find page size for page %d", pageNo);
@@ -2881,9 +2897,8 @@ bool EngineMupdf::FinishLoading() {
             }
             pdf_dict_puts_drop(ctx, pdfInfo, "OutputIntents", list);
         }
-        // also note common unsupported features (such as XFA forms)
-        pdf_obj* xfa = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/AcroForm/XFA");
-        if (pdf_is_array(ctx, xfa)) {
+        // XFA is unsupported only when present but failed to parse/bind
+        if (pdf_document_has_xfa(ctx, pdfdoc) && !pdf_xfa_is_valid(ctx, pdfdoc->xfa_ctx)) {
             pdf_dict_puts_drop(ctx, pdfInfo, "Unsupported_XFA", PDF_TRUE);
         }
     }
@@ -3340,7 +3355,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     // page-running operations on this specific page run under per-page lock.
     // pagesLock (held above) serializes concurrent fz_load_page on _doc.
     ScopedCritSec ctxScope(&renderLock);
-    if (!pageInfo->page) {
+    if (!pageInfo->page && !useXfaPages) {
         fz_try(ctx) {
             pageInfo->page = fz_load_page(ctx, _doc, pageIdx);
         }
@@ -3350,12 +3365,12 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     }
 
     fz_page* page = pageInfo->page;
-    if (!page) {
+    if (!page && !useXfaPages) {
         return nullptr;
     }
 
     // build annotations + widgets info on first access
-    if (pdfdoc && !pageInfo->annotsLoaded) {
+    if (pdfdoc && page && !pageInfo->annotsLoaded) {
         pageInfo->annotsLoaded = true;
         fz_try(ctx) {
             pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pageInfo->page);
@@ -3392,6 +3407,10 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     ReportIf(pageInfo->pageNo != pageNo);
 
     pageInfo->fullyLoaded = true;
+
+    if (!page) {
+        return pageInfo;
+    }
 
     fz_stext_page* stext = nullptr;
     fz_var(stext);
@@ -3435,11 +3454,16 @@ RectF EngineMupdf::PageMediabox(int pageNo) {
 // building+caching it on first call. Caller must fz_drop_display_list when done.
 // must be called with pi->renderLock held (this both protects pi->displayList
 // and serializes the page-running done by fz_new_display_list_from_page).
-static fz_display_list* GetOrBuildPageDisplayList(FzPageInfo* pi, fz_context* ctx) {
+static fz_display_list* GetOrBuildPageDisplayList(FzPageInfo* pi, fz_context* ctx, pdf_document* pdfdoc,
+                                                  bool useXfaPages) {
     if (!pi->displayList) {
         fz_display_list* list = nullptr;
         fz_try(ctx) {
-            list = fz_new_display_list_from_page(ctx, pi->page);
+            if (useXfaPages && pdfdoc && pdfdoc->xfa_ctx) {
+                list = pdf_xfa_run_page(ctx, pdfdoc->xfa_ctx, pi->pageNo - 1, fz_identity);
+            } else if (pi->page) {
+                list = fz_new_display_list_from_page(ctx, pi->page);
+            }
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
@@ -3471,8 +3495,12 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
     {
         // Hold per-page lock briefly: page bounds + (re-)acquire cached display list.
         ScopedCritSec scope(&renderLock);
-        pagerect = fz_bound_page(ctx, pageInfo->page);
-        keptList = GetOrBuildPageDisplayList(pageInfo, ctx);
+        if (useXfaPages || !pageInfo->page) {
+            pagerect = ToFzRect(pageInfo->mediabox);
+        } else {
+            pagerect = fz_bound_page(ctx, pageInfo->page);
+        }
+        keptList = GetOrBuildPageDisplayList(pageInfo, ctx, pdfdoc, useXfaPages);
     }
     if (!keptList) {
         return mediabox;
@@ -3539,7 +3567,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     }
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, fzcookie);
-    if (!pageInfo || !pageInfo->page) {
+    if (!pageInfo || (!pageInfo->page && !useXfaPages)) {
         return nullptr;
     }
     fz_page* page = pageInfo->page;
@@ -3571,15 +3599,20 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
         if (pageRect) {
             pRect = ToFzRect(*pageRect);
+        } else if (useXfaPages || !page) {
+            pRect = ToFzRect(pageInfo->mediabox);
         } else {
-            // TODO(port): use pageInfo->mediabox?
             pRect = fz_bound_page(ctx, page);
         }
-        ctm = viewctm(page, zoom, rotation);
+        if (page) {
+            ctm = viewctm(page, zoom, rotation);
+        } else {
+            ctm = viewctm(pageNo, zoom, rotation);
+        }
         ibounds = fz_round_rect(fz_transform_rect(pRect, ctm));
 
         if (useCache) {
-            keptList = GetOrBuildPageDisplayList(pageInfo, ctx);
+            keptList = GetOrBuildPageDisplayList(pageInfo, ctx, pdfdoc, useXfaPages);
         }
     }
 
