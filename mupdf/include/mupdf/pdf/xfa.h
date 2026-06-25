@@ -123,9 +123,20 @@ void pdf_xfa_font_stats(fz_context* ctx, pdf_xfa* xfa, int* families_out, int* h
 enum {
     PDF_XFA_RENDER_FIELDS_ONLY = 1,
     PDF_XFA_RENDER_NO_BACKGROUND = 2,
+    PDF_XFA_RENDER_PROBE_FIELDS = 4,
 };
 
+#define PDF_XFA_FIELD_PROBE_MAX 256
+
+typedef struct {
+    char name[64];
+    fz_rect rect;
+} pdf_xfa_field_probe;
+
 void pdf_xfa_set_render_flags(fz_context* ctx, pdf_xfa* xfa, int flags);
+
+int pdf_xfa_field_probe_count(fz_context* ctx, pdf_xfa* xfa);
+const pdf_xfa_field_probe* pdf_xfa_field_probe_entry(fz_context* ctx, pdf_xfa* xfa, int index);
 
 /*
         Render a laid-out XFA page into a display list (replaces pdf.js htmlForXfa

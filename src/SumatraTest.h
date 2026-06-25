@@ -15,5 +15,6 @@ char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCode
 char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut = nullptr);
 char* TestI18nErrorStringResult(int* exitCodeOut = nullptr);
 char* TestXfaResult(const char* pdfPath, int* exitCodeOut = nullptr);
+char* TestXfaFieldRectsResult(const char* pdfPath, int pageNo, int* exitCodeOut = nullptr);
 char* TestRenderPagePngResult(const char* pdfPath, int pageNo, int zoomPct, const char* outPath,
                               int* exitCodeOut = nullptr);

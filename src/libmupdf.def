@@ -108,6 +108,8 @@ EXPORTS
 	pdf_xfa_layout
 	pdf_xfa_run_page
 	pdf_xfa_set_render_flags
+	pdf_xfa_field_probe_count
+	pdf_xfa_field_probe_entry
 	pdf_xfa_last_render_fields
 	pdf_xfa_last_render_draws
 	pdf_xfa_last_render_borders

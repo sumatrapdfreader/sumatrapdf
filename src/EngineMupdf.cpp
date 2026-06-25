@@ -5323,6 +5323,68 @@ char* TestXfaResult(const char* pdfPath, int* exitCodeOut) {
     return out.StealData();
 }
 
+// Probe laid-out XFA field bounding boxes (pdf points, PDF y-up) for layout tests.
+char* TestXfaFieldRectsResult(const char* pdfPath, int pageNo, int* exitCodeOut) {
+    StrBuilder out;
+    int exitCode = 1;
+
+    if (!pdfPath || pageNo < 1) {
+        out.AppendFmt("ERROR invalid-args pdf=%s page=%d\n", pdfPath ? pdfPath : "(null)", pageNo);
+    } else {
+        EngineBase* engine = CreateEngineMupdfFromFile(pdfPath, kindFilePDF, 96, nullptr);
+        if (!engine) {
+            out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+        } else {
+            EngineMupdf* epdf = AsEngineMupdf(engine);
+            if (!epdf || !epdf->pdfdoc) {
+                out.AppendFmt("ERROR not-pdf pdf=%s\n", pdfPath);
+            } else {
+                fz_context* ctx = epdf->Ctx();
+                pdf_document* pdfdoc = epdf->pdfdoc;
+                pdf_xfa* xfa = pdf_load_xfa(ctx, pdfdoc);
+                int probe_n = 0;
+                fz_display_list* list = nullptr;
+                fz_var(list);
+
+                if (!xfa || !pdf_xfa_is_valid(ctx, xfa)) {
+                    out.AppendFmt("ERROR xfa-invalid pdf=%s\n", pdfPath);
+                } else if (pageNo > pdf_xfa_page_count(ctx, xfa)) {
+                    out.AppendFmt("ERROR invalid-page pdf=%s page=%d page_count=%d\n", pdfPath, pageNo,
+                                  pdf_xfa_page_count(ctx, xfa));
+                } else {
+                    fz_try(ctx) {
+                        pdf_xfa_set_render_flags(ctx, xfa, PDF_XFA_RENDER_PROBE_FIELDS);
+                        list = pdf_xfa_run_page(ctx, xfa, pageNo - 1, fz_identity);
+                        pdf_xfa_set_render_flags(ctx, xfa, 0);
+                        probe_n = pdf_xfa_field_probe_count(ctx, xfa);
+                        out.AppendFmt("page=%d probe_count=%d\n", pageNo, probe_n);
+                        for (int i = 0; i < probe_n; i++) {
+                            const pdf_xfa_field_probe* probe = pdf_xfa_field_probe_entry(ctx, xfa, i);
+                            if (!probe) continue;
+                            out.AppendFmt("%s=%.2f,%.2f,%.2f,%.2f\n", probe->name, probe->rect.x0, probe->rect.y0,
+                                          probe->rect.x1, probe->rect.y1);
+                        }
+                        exitCode = 0;
+                    }
+                    fz_always(ctx) {
+                        pdf_xfa_set_render_flags(ctx, xfa, 0);
+                        fz_drop_display_list(ctx, list);
+                    }
+                    fz_catch(ctx) {
+                        fz_report_error(ctx);
+                        out.AppendFmt("ERROR probe-failed pdf=%s page=%d\n", pdfPath, pageNo);
+                    }
+                }
+            }
+            SafeEngineRelease(&engine);
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = exitCode;
+    }
+    return out.StealData();
+}
+
 static void PrimeXfaPageRender(EngineMupdf* epdf, int pageNo) {
     if (!epdf || !epdf->useXfaPages || pageNo < 1 || pageNo > epdf->pageCount) {
         return;

@@ -132,6 +132,8 @@ struct pdf_xfa {
     int fields_with_pagearea;
     int fields_with_pagearea_template;
     int render_flags;
+    pdf_xfa_field_probe field_probes[PDF_XFA_FIELD_PROBE_MAX];
+    int field_probe_count;
 };
 
 struct pdf_xfa_builder {

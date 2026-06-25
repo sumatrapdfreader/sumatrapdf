@@ -42,6 +42,7 @@ enum class ControlCmd : u16 {
     TestPageInfoOverlay = 28,
     TestXfa = 29,
     TestRenderPagePng = 30,
+    TestXfaFieldRects = 31,
 };
 
 enum class ControlArgType : u16 {
@@ -491,6 +492,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestXfaResult(pdf, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestXfaFieldRects: {
+            const char* pdf = StringArg(req, 0);
+            i32 pageNo = 0;
+            if (!pdf || !IntArg(req, 1, pageNo)) {
+                AppendError(req, "TestXfaFieldRects expects string pdfPath, int pageNo");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestXfaFieldRectsResult(pdf, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

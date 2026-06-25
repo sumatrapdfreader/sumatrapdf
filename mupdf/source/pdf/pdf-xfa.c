@@ -163,7 +163,21 @@ fz_rect pdf_xfa_page_bbox(fz_context* ctx, pdf_xfa* xfa, int page_index) {
 
 void pdf_xfa_set_render_flags(fz_context* ctx, pdf_xfa* xfa, int flags) {
     (void)ctx;
-    if (xfa) xfa->render_flags = flags;
+    if (xfa) {
+        xfa->render_flags = flags;
+        if (flags & PDF_XFA_RENDER_PROBE_FIELDS) xfa->field_probe_count = 0;
+    }
+}
+
+int pdf_xfa_field_probe_count(fz_context* ctx, pdf_xfa* xfa) {
+    (void)ctx;
+    return xfa ? xfa->field_probe_count : 0;
+}
+
+const pdf_xfa_field_probe* pdf_xfa_field_probe_entry(fz_context* ctx, pdf_xfa* xfa, int index) {
+    (void)ctx;
+    if (!xfa || index < 0 || index >= xfa->field_probe_count) return NULL;
+    return &xfa->field_probes[index];
 }
 
 fz_display_list* pdf_xfa_run_page(fz_context* ctx, pdf_xfa* xfa, int page_index, fz_matrix ctm) {
