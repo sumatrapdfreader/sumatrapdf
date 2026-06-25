@@ -40,6 +40,7 @@ enum class ControlCmd : u16 {
     TestScrollToLink = 26,
     TestI18nErrorString = 27,
     TestPageInfoOverlay = 28,
+    TestXfa = 29,
 };
 
 enum class ControlArgType : u16 {
@@ -477,6 +478,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestPageInfoOverlayResult(pathTwo, pathOne, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestXfa: {
+            const char* pdf = StringArg(req, 0);
+            if (!pdf) {
+                AppendError(req, "TestXfa expects string pdfPath");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestXfaResult(pdf, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

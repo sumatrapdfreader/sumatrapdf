@@ -14,3 +14,4 @@ char* TestContextMenuSelectionResult(const char* word1, const char* word2, const
 char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCodeOut = nullptr);
 char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut = nullptr);
 char* TestI18nErrorStringResult(int* exitCodeOut = nullptr);
+char* TestXfaResult(const char* pdfPath, int* exitCodeOut = nullptr);

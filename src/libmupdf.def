@@ -98,6 +98,17 @@ EXPORTS
 	pdf_new_utf8_from_pdf_string_obj
 	pdf_load_stream_number
 	pdf_xobject_resources
+	pdf_document_has_xfa
+	pdf_document_is_pure_xfa
+	pdf_load_xfa
+	pdf_xfa_is_valid
+	pdf_xfa_page_count
+	pdf_xfa_page_bbox
+	pdf_xfa_layout
+	pdf_xfa_run_page
+	pdf_xfa_serialize_data
+	pdf_keep_xfa
+	pdf_drop_xfa
 	pdf_page_resources
 	xps_drop_part
 	install_load_windows_font_funcs
