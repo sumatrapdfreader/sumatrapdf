@@ -16,6 +16,8 @@
 #include "Menu.h"
 #include "HomePage.h"
 #include "Theme.h"
+#include "FileHistory.h"
+#include "AppSettings.h"
 
 #include "utils/Log.h"
 
@@ -96,6 +98,26 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
     } else if (str::Eq(url, kLinkNextTip)) {
         PickAnotherRandomPromotion();
         win->RedrawAll(true);
+    } else if (str::Eq(url, kLinkHomeListView)) {
+        gGlobalPrefs->homePageShowList = true;
+        win->homePageScrollY = 0;
+        SaveSettings();
+        win->RedrawAll(true);
+    } else if (str::Eq(url, kLinkHomeThumbnailView)) {
+        gGlobalPrefs->homePageShowList = false;
+        win->homePageScrollY = 0;
+        SaveSettings();
+        win->RedrawAll(true);
+    } else if (str::StartsWith(url, kLinkHomeRemoveFilePrefix)) {
+        ForgetFileFromFrequentlyRead(win, url + str::Len(kLinkHomeRemoveFilePrefix));
+    } else if (str::StartsWith(url, kLinkHomePinFilePrefix)) {
+        FileState* fs = gFileHistory.FindByPath(url + str::Len(kLinkHomePinFilePrefix));
+        if (fs) {
+            fs->isPinned = !fs->isPinned;
+            SaveSettings();
+            win->DeleteToolTip();
+            win->RedrawAll(true);
+        }
     } else if (str::StartsWith(url, "Cmd")) {
         int cmdId = GetCommandIdByName(url);
         if (cmdId > 0) {

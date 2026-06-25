@@ -30,6 +30,9 @@ enum class TbIcon {
     ArrowsDiagonal,
     ArrowsDiagonalMinimize,
     MatchWholeWord,
+    HomeList,
+    HomeThumbnails,
+    Pin,
     kMax
 };
 

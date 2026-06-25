@@ -508,6 +508,9 @@ struct GlobalPrefs {
     // if true implements pre-3.6 behavior of showing opened files by
     // frequently used count. If false, shows most recently opened first
     bool homePageSortByFrequentlyRead;
+    // if true, shows the home page document history as a list instead of
+    // thumbnails
+    bool homePageShowList;
     // if true, a document will be reloaded automatically whenever it's
     // changed (currently doesn't work for documents shown in the ebook UI)
     bool reloadModifiedDocuments;
@@ -1027,6 +1030,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, (intptr_t)"#80fff200"},
     {offsetof(GlobalPrefs, noHomeTab), SettingType::Bool, false},
     {offsetof(GlobalPrefs, homePageSortByFrequentlyRead), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, homePageShowList), SettingType::Bool, false},
     {offsetof(GlobalPrefs, reloadModifiedDocuments), SettingType::Bool, true},
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
     {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},
@@ -1120,19 +1124,19 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 107, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 108, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0Ena"
     "bleTeXEnhancements\0EscToExit\0FullPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab"
-    "\0HomePageSortByFrequentlyRead\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSes"
-    "sion\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0SearchUIFloating\0Show"
-    "Favorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0Citation"
-    "HoverDelay\0ReadAloudVoiceId\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0TocDy\0ToolbarSi"
-    "ze\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0DisableAutoLinks\0UseSysColors\0UseTabs\0TabsMru\0Zo"
-    "omLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0ClaudeCode\0\0GrokBuild\0"
-    "\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDe"
-    "faults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0DefaultPasswords\0UiLanguage\0V"
-    "ersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateChec"
-    "k\0OpenCountWeek\0PropWinPos\0\0"};
+    "\0HomePageSortByFrequentlyRead\0HomePageShowList\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDo"
+    "cument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowTips\0CustomColors\0ShowToolbar\0Sear"
+    "chUIFloating\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0Smoo"
+    "thScroll\0CitationHoverDelay\0ReadAloudVoiceId\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme"
+    "\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0DisableAutoLinks\0UseSysColors\0Us"
+    "eTabs\0TabsMru\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0ClaudeCo"
+    "de\0\0GrokBuild\0\0CodexBuild\0\0AIChatSidebarDx\0\0TranslateToLang\0\0Annotations\0\0ExternalViewers\0\0ForwardSe"
+    "arch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0\0DefaultPasswor"
+    "ds\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0FileStates\0SessionData\0ReopenOnce\0Tim"
+    "eOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

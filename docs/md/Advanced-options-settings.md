@@ -84,6 +84,9 @@ NoHomeTab = false
 ; count. If false, shows most recently opened first
 HomePageSortByFrequentlyRead = false
 
+; if true, shows the home page document history as a list instead of thumbnails
+HomePageShowList = false
+
 ; if true, a document will be reloaded automatically whenever it's changed
 ; (currently doesn't work for documents shown in the ebook UI) (introduced in
 ; version 2.5)

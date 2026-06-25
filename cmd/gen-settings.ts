@@ -785,6 +785,12 @@ const globalPrefs: Field[] = [
     false,
     "if true implements pre-3.6 behavior of showing opened files by frequently used count. If false, shows most recently opened first",
   ),
+  mkField(
+    "HomePageShowList",
+    Bool,
+    false,
+    "if true, shows the home page document history as a list instead of thumbnails",
+  ),
   setVersion(
     setExpert(
       mkField(
