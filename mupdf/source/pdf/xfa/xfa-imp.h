@@ -114,6 +114,8 @@ struct pdf_xfa {
     int page_count;
     fz_rect* page_bboxes;
     pdf_xfa_html_node* pages; /* laid-out page tree roots */
+    int render_fields;
+    int render_draws;
 };
 
 struct pdf_xfa_builder {

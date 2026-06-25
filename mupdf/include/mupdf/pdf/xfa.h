@@ -27,85 +27,91 @@
 #include "mupdf/pdf/document.h"
 
 /*
-	XFA (XML Forms Architecture) support.
+        XFA (XML Forms Architecture) support.
 
-	This API mirrors the pdf.js XFAFactory / XfaLayer surface, adapted for
-	MuPDF's C rendering pipeline.  Parsing, binding, layout, and rendering are
-	staged; see the implementation plan in the xfa/ sources.
+        This API mirrors the pdf.js XFAFactory / XfaLayer surface, adapted for
+        MuPDF's C rendering pipeline.  Parsing, binding, layout, and rendering are
+        staged; see the implementation plan in the xfa/ sources.
 */
 
 typedef struct pdf_xfa pdf_xfa;
 
 typedef struct pdf_xfa_html_node pdf_xfa_html_node;
 
-struct pdf_xfa_html_node
-{
-	char *name;
-	char *value; /* for #text nodes */
-	pdf_xfa_html_node *parent;
-	pdf_xfa_html_node *first_child;
-	pdf_xfa_html_node *next_sibling;
-	/* attribute list: parallel arrays terminated by NULL name */
-	char **attr_names;
-	char **attr_values;
+struct pdf_xfa_html_node {
+    char* name;
+    char* value; /* for #text nodes */
+    pdf_xfa_html_node* parent;
+    pdf_xfa_html_node* first_child;
+    pdf_xfa_html_node* next_sibling;
+    /* attribute list: parallel arrays terminated by NULL name */
+    char** attr_names;
+    char** attr_values;
 };
 
 /*
-	Return non-zero if the document has an AcroForm/XFA entry.
+        Return non-zero if the document has an AcroForm/XFA entry.
 */
-int pdf_document_has_xfa(fz_context *ctx, pdf_document *doc);
+int pdf_document_has_xfa(fz_context* ctx, pdf_document* doc);
 
 /*
-	Return non-zero if this is (or was) a pure XFA document: empty AcroForm
-	Fields with an XFA packet present.  Wraps pdf_was_pure_xfa.
+        Return non-zero if this is (or was) a pure XFA document: empty AcroForm
+        Fields with an XFA packet present.  Wraps pdf_was_pure_xfa.
 */
-int pdf_document_is_pure_xfa(fz_context *ctx, pdf_document *doc);
+int pdf_document_is_pure_xfa(fz_context* ctx, pdf_document* doc);
 
 /*
-	Lazily load and parse the XFA resource.  Returns NULL when no XFA is
-	present or parsing failed.  The returned pointer is owned by the document.
+        Lazily load and parse the XFA resource.  Returns NULL when no XFA is
+        present or parsing failed.  The returned pointer is owned by the document.
 */
-pdf_xfa *pdf_load_xfa(fz_context *ctx, pdf_document *doc);
+pdf_xfa* pdf_load_xfa(fz_context* ctx, pdf_document* doc);
 
 /*
-	After a failed pdf_load_xfa, returns the last error message (empty string if none).
-	Valid until the next pdf_load_xfa call on any context in this thread.
+        After a failed pdf_load_xfa, returns the last error message (empty string if none).
+        Valid until the next pdf_load_xfa call on any context in this thread.
 */
-const char *pdf_xfa_last_load_error(fz_context *ctx);
+const char* pdf_xfa_last_load_error(fz_context* ctx);
 
 /*
-	Return non-zero when parse + bind succeeded (pdf.js: XFAFactory.isValid).
+        Return non-zero when parse + bind succeeded (pdf.js: XFAFactory.isValid).
 */
-int pdf_xfa_is_valid(fz_context *ctx, pdf_xfa *xfa);
+int pdf_xfa_is_valid(fz_context* ctx, pdf_xfa* xfa);
 
 /*
-	Page geometry after layout (pdf.js: getNumPages / getBoundingBox).
+        Page geometry after layout (pdf.js: getNumPages / getBoundingBox).
 */
-int pdf_xfa_page_count(fz_context *ctx, pdf_xfa *xfa);
-fz_rect pdf_xfa_page_bbox(fz_context *ctx, pdf_xfa *xfa, int page_index);
+int pdf_xfa_page_count(fz_context* ctx, pdf_xfa* xfa);
+fz_rect pdf_xfa_page_bbox(fz_context* ctx, pdf_xfa* xfa, int page_index);
 
 /*
-	Run layout if not done yet.  Returns the page count (may be 0 until
-	template/layout modules are ported).
+        Run layout if not done yet.  Returns the page count (may be 0 until
+        template/layout modules are ported).
 */
-int pdf_xfa_layout(fz_context *ctx, pdf_xfa *xfa);
+int pdf_xfa_layout(fz_context* ctx, pdf_xfa* xfa);
 
 /*
-	Render a laid-out XFA page into a display list (replaces pdf.js htmlForXfa
-	+ XfaLayer for MuPDF consumers).
+        Return how many field/draw nodes were painted by the last pdf_xfa_run_page
+        call (0 before any render).
 */
-fz_display_list *pdf_xfa_run_page(fz_context *ctx, pdf_xfa *xfa, int page_index, fz_matrix ctm);
+int pdf_xfa_last_render_fields(fz_context* ctx, pdf_xfa* xfa);
+int pdf_xfa_last_render_draws(fz_context* ctx, pdf_xfa* xfa);
 
 /*
-	Serialize bound datasets back to XML (pdf.js: serializeData).
+        Render a laid-out XFA page into a display list (replaces pdf.js htmlForXfa
+        + XfaLayer for MuPDF consumers).
 */
-fz_buffer *pdf_xfa_serialize_data(fz_context *ctx, pdf_xfa *xfa);
+fz_display_list* pdf_xfa_run_page(fz_context* ctx, pdf_xfa* xfa, int page_index, fz_matrix ctm);
 
 /*
-	Drop a reference obtained via pdf_keep_xfa.  Document-owned instances are
-	freed by pdf_invalidate_xfa / pdf_drop_document.
+        Serialize bound datasets back to XML (pdf.js: serializeData).
 */
-pdf_xfa *pdf_keep_xfa(fz_context *ctx, pdf_xfa *xfa);
-void pdf_drop_xfa(fz_context *ctx, pdf_xfa *xfa);
+fz_buffer* pdf_xfa_serialize_data(fz_context* ctx, pdf_xfa* xfa);
+
+/*
+        Drop a reference obtained via pdf_keep_xfa.  Document-owned instances are
+        freed by pdf_invalidate_xfa / pdf_drop_document.
+*/
+pdf_xfa* pdf_keep_xfa(fz_context* ctx, pdf_xfa* xfa);
+void pdf_drop_xfa(fz_context* ctx, pdf_xfa* xfa);
 
 #endif

@@ -22,11 +22,15 @@
 
 #include "xfa-imp.h"
 
-#include "mupdf/pdf/annot.h"
-
 #include <string.h>
 
 #define PDF_XFA_FIELD_PAD 2.0f
+#define PDF_XFA_DEFAULT_DRAW_H 14.0f
+
+typedef struct {
+    float ox;
+    float oy;
+} pdf_xfa_render_pos;
 
 static void pdf_xfa_render_fill_rect(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_rect rect, float rgb[3]) {
     fz_path* path = fz_new_path(ctx);
@@ -69,7 +73,23 @@ static void pdf_xfa_render_stroke_rect(fz_context* ctx, fz_device* dev, fz_matri
     fz_catch(ctx) fz_rethrow(ctx);
 }
 
-static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float page_h) {
+static void pdf_xfa_render_pos_add_attrs(fz_context* ctx, pdf_xfa_object* node, pdf_xfa_render_pos* pos) {
+    char *x, *y;
+
+    x = pdf_xfa_object_get_attr(ctx, node, "x");
+    y = pdf_xfa_object_get_attr(ctx, node, "y");
+    if (x && x[0]) pos->ox += pdf_xfa_parse_measurement(x, 0);
+    if (y && y[0]) pos->oy += pdf_xfa_parse_measurement(y, 0);
+}
+
+static int pdf_xfa_node_shifts_children(const char* name) {
+    if (!name) return 0;
+    return strcmp(name, "subform") == 0 || strcmp(name, "contentArea") == 0 || strcmp(name, "pageArea") == 0 ||
+           strcmp(name, "area") == 0;
+}
+
+static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float page_h, pdf_xfa_render_pos* pos,
+                                   float default_w, float default_h) {
     char *x, *y, *w, *h;
     float xf, yf, wf, hf;
     fz_rect rect = fz_empty_rect;
@@ -79,10 +99,10 @@ static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float 
     w = pdf_xfa_object_get_attr(ctx, node, "w");
     h = pdf_xfa_object_get_attr(ctx, node, "h");
 
-    xf = pdf_xfa_parse_measurement(x, 0);
-    yf = pdf_xfa_parse_measurement(y, 0);
-    wf = pdf_xfa_parse_measurement(w, 0);
-    hf = pdf_xfa_parse_measurement(h, 0);
+    xf = pos->ox + pdf_xfa_parse_measurement(x, 0);
+    yf = pos->oy + pdf_xfa_parse_measurement(y, 0);
+    wf = pdf_xfa_parse_measurement(w, default_w);
+    hf = pdf_xfa_parse_measurement(h, default_h);
 
     if (wf <= 0 || hf <= 0) return rect;
 
@@ -93,12 +113,12 @@ static fz_rect pdf_xfa_object_rect(fz_context* ctx, pdf_xfa_object* node, float 
     return rect;
 }
 
-static const char* pdf_xfa_field_text(fz_context* ctx, pdf_xfa_object* field) {
+static const char* pdf_xfa_node_text(fz_context* ctx, pdf_xfa_object* node) {
     pdf_xfa_object* value;
 
-    if (field->content && field->content[0]) return field->content;
+    if (node->content && node->content[0]) return node->content;
 
-    value = pdf_xfa_object_find_child(field, "value");
+    value = pdf_xfa_object_find_child(node, "value");
     if (value) {
         const char* text = pdf_xfa_object_text(ctx, value);
         if (text && text[0]) return text;
@@ -107,49 +127,89 @@ static const char* pdf_xfa_field_text(fz_context* ctx, pdf_xfa_object* field) {
     return NULL;
 }
 
-static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa_object* field, float page_h,
-                                 fz_font* font) {
-    fz_rect rect, text_rect;
-    float white[3] = {1.0f, 1.0f, 1.0f};
-    float gray[3] = {0.75f, 0.75f, 0.75f};
-    float black[3] = {0.0f, 0.0f, 0.0f};
-    const char* text;
+static void pdf_xfa_render_text_in_rect(fz_context* ctx, fz_device* dev, fz_matrix ctm, fz_font* font, const char* text,
+                                        fz_rect rect, float pad, float rgb[3]) {
     fz_text* fztext = NULL;
+    float fontsize;
+    fz_matrix trm;
 
-    rect = pdf_xfa_object_rect(ctx, field, page_h);
-    if (fz_is_empty_rect(rect)) return;
+    if (!text || !text[0] || fz_is_empty_rect(rect)) return;
 
-    pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, white);
-    pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, gray, 1.0f);
+    rect.x0 += pad;
+    rect.x1 -= pad;
+    rect.y0 += pad;
+    rect.y1 -= pad;
+    if (rect.x1 <= rect.x0 || rect.y1 <= rect.y0) return;
 
-    text = pdf_xfa_field_text(ctx, field);
-    if (!text) return;
-
-    text_rect = rect;
-    text_rect.x0 += PDF_XFA_FIELD_PAD;
-    text_rect.x1 -= PDF_XFA_FIELD_PAD;
-    text_rect.y0 += PDF_XFA_FIELD_PAD;
-    text_rect.y1 -= PDF_XFA_FIELD_PAD;
+    fontsize = rect.y1 - rect.y0 - pad;
+    if (fontsize > 12.0f) fontsize = 12.0f;
+    if (fontsize < 6.0f) fontsize = 6.0f;
 
     fz_var(fztext);
     fz_try(ctx) {
-        fztext = pdf_layout_fit_text(ctx, font, FZ_LANG_UNSET, text, text_rect);
-        fz_fill_text(ctx, dev, fztext, ctm, fz_device_rgb(ctx), black, 1.0f, fz_default_color_params);
+        fztext = fz_new_text(ctx);
+        trm = fz_scale(fontsize, -fontsize);
+        trm.e = rect.x0;
+        trm.f = rect.y1 - pad;
+        fz_show_string(ctx, fztext, font, trm, text, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
+        fz_fill_text(ctx, dev, fztext, ctm, fz_device_rgb(ctx), rgb, 1.0f, fz_default_color_params);
     }
     fz_always(ctx) fz_drop_text(ctx, fztext);
     fz_catch(ctx) fz_rethrow(ctx);
 }
 
-static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa_object* node, float page_h,
-                                fz_font* font) {
+static void pdf_xfa_render_field(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* field,
+                                 float page_h, fz_font* font, pdf_xfa_render_pos* pos) {
+    fz_rect rect;
+    float white[3] = {1.0f, 1.0f, 1.0f};
+    float gray[3] = {0.75f, 0.75f, 0.75f};
+    float black[3] = {0.0f, 0.0f, 0.0f};
+    const char* text;
+
+    rect = pdf_xfa_object_rect(ctx, field, page_h, pos, 0, 0);
+    if (fz_is_empty_rect(rect)) return;
+
+    xfa->render_fields++;
+
+    pdf_xfa_render_fill_rect(ctx, dev, ctm, rect, white);
+    pdf_xfa_render_stroke_rect(ctx, dev, ctm, rect, gray, 1.0f);
+
+    text = pdf_xfa_node_text(ctx, field);
+    pdf_xfa_render_text_in_rect(ctx, dev, ctm, font, text, rect, PDF_XFA_FIELD_PAD, black);
+}
+
+static void pdf_xfa_render_draw(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* draw,
+                                float page_h, fz_font* font, pdf_xfa_render_pos* pos) {
+    fz_rect rect;
+    float black[3] = {0.0f, 0.0f, 0.0f};
+    const char* text;
+
+    rect = pdf_xfa_object_rect(ctx, draw, page_h, pos, 0, PDF_XFA_DEFAULT_DRAW_H);
+    if (fz_is_empty_rect(rect)) return;
+
+    xfa->render_draws++;
+
+    text = pdf_xfa_node_text(ctx, draw);
+    pdf_xfa_render_text_in_rect(ctx, dev, ctm, font, text, rect, 0, black);
+}
+
+static void pdf_xfa_render_tree(fz_context* ctx, fz_device* dev, fz_matrix ctm, pdf_xfa* xfa, pdf_xfa_object* node,
+                                float page_h, fz_font* font, pdf_xfa_render_pos* pos) {
     pdf_xfa_object* child;
+    pdf_xfa_render_pos child_pos;
 
     if (!node) return;
 
-    if (node->name && strcmp(node->name, "field") == 0) pdf_xfa_render_field(ctx, dev, ctm, node, page_h, font);
+    if (node->name && strcmp(node->name, "field") == 0)
+        pdf_xfa_render_field(ctx, dev, ctm, xfa, node, page_h, font, pos);
+    else if (node->name && strcmp(node->name, "draw") == 0)
+        pdf_xfa_render_draw(ctx, dev, ctm, xfa, node, page_h, font, pos);
+
+    child_pos = *pos;
+    if (pdf_xfa_node_shifts_children(node->name)) pdf_xfa_render_pos_add_attrs(ctx, node, &child_pos);
 
     for (child = node->first_child; child; child = child->next_sibling)
-        pdf_xfa_render_tree(ctx, dev, ctm, child, page_h, font);
+        pdf_xfa_render_tree(ctx, dev, ctm, xfa, child, page_h, font, &child_pos);
 }
 
 fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int page_index, fz_matrix ctm) {
@@ -159,12 +219,15 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
     fz_rect page_bbox;
     float page_h;
     float white[3] = {1.0f, 1.0f, 1.0f};
+    pdf_xfa_render_pos pos = {0, 0};
 
     if (!xfa || !xfa->valid || !xfa->form) return NULL;
     if (page_index < 0 || page_index >= pdf_xfa_factory_layout(ctx, xfa)) return NULL;
 
     page_bbox = xfa->page_bboxes[page_index];
     page_h = page_bbox.y1 - page_bbox.y0;
+    xfa->render_fields = 0;
+    xfa->render_draws = 0;
 
     fz_var(list);
     fz_var(dev);
@@ -176,7 +239,7 @@ fz_display_list* pdf_xfa_factory_render_page(fz_context* ctx, pdf_xfa* xfa, int 
         dev = fz_new_list_device(ctx, list);
 
         pdf_xfa_render_fill_rect(ctx, dev, ctm, page_bbox, white);
-        pdf_xfa_render_tree(ctx, dev, ctm, xfa->form, page_h, font);
+        pdf_xfa_render_tree(ctx, dev, ctm, xfa, xfa->form, page_h, font, &pos);
 
         fz_close_device(ctx, dev);
     }

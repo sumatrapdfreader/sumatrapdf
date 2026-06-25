@@ -12,7 +12,7 @@ endobj
 << /Fields [] /XFA [(xdp:xdp) 5 0 R] >>
 endobj
 5 0 obj
-<< /Length 711 >>
+<< /Length 939 >>
 stream
 <?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
@@ -21,17 +21,23 @@ stream
     <pageSet>
       <pageArea name="Page1" id="Page1">
         <medium short="8.5in" long="11in"/>
-        <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in"/>
+        <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in">
+          <draw x="0.75in" y="0.75in" w="2in" h="0.2in">
+            <value>
+              <text>First name:</text>
+            </value>
+          </draw>
+          <field name="firstName" x="0.75in" y="1in" w="3in" h="0.25in">
+            <ui>
+              <textEdit/>
+            </ui>
+            <value>
+              <text>placeholder</text>
+            </value>
+          </field>
+        </contentArea>
       </pageArea>
     </pageSet>
-    <field name="firstName" x="1in" y="1in" w="3in" h="0.25in">
-      <ui>
-        <textEdit/>
-      </ui>
-      <value>
-        <text>placeholder</text>
-      </value>
-    </field>
   </subform>
 </template>
 <datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">
@@ -54,5 +60,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-1019
+1247
 %%EOF

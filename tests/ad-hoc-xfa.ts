@@ -18,11 +18,13 @@ type XfaInfo = {
   valid: number;
   page_count: number;
   render_nonempty: number;
+  render_fields: number;
+  render_draws: number;
 };
 
 function parseXfaLine(raw: string): XfaInfo {
   const m = raw.match(
-    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+)/,
+    /has_xfa=(\d+) pure_xfa=(\d+) valid=(\d+) page_count=(\d+) render_nonempty=(\d+) render_fields=(\d+) render_draws=(\d+)/,
   );
   if (!m) {
     throw new Error(`unexpected TestXfa output: ${raw.trim()}`);
@@ -33,6 +35,8 @@ function parseXfaLine(raw: string): XfaInfo {
     valid: Number(m[3]),
     page_count: Number(m[4]),
     render_nonempty: Number(m[5]),
+    render_fields: Number(m[6]),
+    render_draws: Number(m[7]),
   };
 }
 
@@ -50,7 +54,7 @@ export async function testit(): Promise<void> {
 
   const xfa = await queryXfa(xfaPdf);
   console.log(
-    `ad-hoc-xfa.pdf: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty}`,
+    `ad-hoc-xfa.pdf: has_xfa=${xfa.has_xfa} pure_xfa=${xfa.pure_xfa} valid=${xfa.valid} page_count=${xfa.page_count} render_nonempty=${xfa.render_nonempty} render_fields=${xfa.render_fields} render_draws=${xfa.render_draws}`,
   );
   if (xfa.has_xfa !== 1) {
     throw new Error("ad-hoc-xfa.pdf: expected has_xfa=1");
@@ -66,6 +70,12 @@ export async function testit(): Promise<void> {
   }
   if (xfa.render_nonempty !== 1) {
     throw new Error(`ad-hoc-xfa.pdf: expected render_nonempty=1, got render_nonempty=${xfa.render_nonempty}`);
+  }
+  if (xfa.render_fields !== 1) {
+    throw new Error(`ad-hoc-xfa.pdf: expected render_fields=1, got render_fields=${xfa.render_fields}`);
+  }
+  if (xfa.render_draws !== 1) {
+    throw new Error(`ad-hoc-xfa.pdf: expected render_draws=1, got render_draws=${xfa.render_draws}`);
   }
 
   const plain = await queryXfa(plainPdf);

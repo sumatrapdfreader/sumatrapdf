@@ -9,7 +9,7 @@ datasets data. Regenerate:
 
 from pathlib import Path
 
-# Minimal but realistic pure-XFA form: one pageArea + one bound field.
+# Pure-XFA form: pageArea/contentArea offsets, a static draw label, bound field.
 XDP = """<?xml version="1.0" encoding="UTF-8"?>
 <xdp xmlns="http://ns.adobe.com/xdp/">
 <template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
@@ -17,17 +17,23 @@ XDP = """<?xml version="1.0" encoding="UTF-8"?>
     <pageSet>
       <pageArea name="Page1" id="Page1">
         <medium short="8.5in" long="11in"/>
-        <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in"/>
+        <contentArea x="0.25in" y="0.25in" w="8in" h="10.5in">
+          <draw x="0.75in" y="0.75in" w="2in" h="0.2in">
+            <value>
+              <text>First name:</text>
+            </value>
+          </draw>
+          <field name="firstName" x="0.75in" y="1in" w="3in" h="0.25in">
+            <ui>
+              <textEdit/>
+            </ui>
+            <value>
+              <text>placeholder</text>
+            </value>
+          </field>
+        </contentArea>
       </pageArea>
     </pageSet>
-    <field name="firstName" x="1in" y="1in" w="3in" h="0.25in">
-      <ui>
-        <textEdit/>
-      </ui>
-      <value>
-        <text>placeholder</text>
-      </value>
-    </field>
   </subform>
 </template>
 <datasets xmlns="http://www.xfa.org/schema/xfa-data/1.0/">

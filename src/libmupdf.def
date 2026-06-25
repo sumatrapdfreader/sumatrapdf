@@ -107,6 +107,8 @@ EXPORTS
 	pdf_xfa_page_bbox
 	pdf_xfa_layout
 	pdf_xfa_run_page
+	pdf_xfa_last_render_fields
+	pdf_xfa_last_render_draws
 	pdf_xfa_serialize_data
 	pdf_keep_xfa
 	pdf_drop_xfa
