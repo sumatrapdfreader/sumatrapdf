@@ -29,8 +29,8 @@ static SeqStrNum gVirtKeysNum =
     "End\0" "\x46" \
     "Home\0" "\x48" \
     "Left\0" "\x4a" \
-    "Right\0" "\x4c" \
-    "Up\0" "\x4e" \
+    "Right\0" "\x4e" \
+    "Up\0" "\x4c" \
     "Down\0" "\x50" \
     "PageDown\0" "\x44" \
     "PgDown\0" "\x44" \

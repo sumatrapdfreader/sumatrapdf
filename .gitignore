@@ -33,6 +33,8 @@ nul
 docs/scratch.txt
 bin/zopflipng.exe
 
+cmd/tmp/
+
 docs-www/
 docs-manual/
 translations/translations.txt.lzsa

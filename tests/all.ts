@@ -33,6 +33,7 @@ import { testit as issue1678 } from "./issue-1678.ts";
 import { testit as issue5718 } from "./issue-5718.ts";
 import { testit as issue5734 } from "./issue-5734.ts";
 import { testit as issue5736 } from "./issue-5736.ts";
+import { testit as issue5751 } from "./issue-5751.ts";
 import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as issue2252 } from "./issue-2252.ts";
 
@@ -60,6 +61,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-5718", issue5718],
   ["issue-5734", issue5734],
   ["issue-5736", issue5736],
+  ["issue-5751", issue5751],
   ["issue-find-match-select", findMatchSelect],
   ["issue-2252", issue2252],
 ];
