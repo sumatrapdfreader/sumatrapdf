@@ -480,9 +480,11 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
     return out;
 }
 
-// pick an integer subsample so decode resolution matches the zoomed target
-// (like ddjvu_page_render scaling to prect/rrect). Compound pages must stay
-// at subsample=1 so djvu_compose_page runs; bitonal JB2 subsample is fine.
+// Pick the largest subsample whose decoded bitmap still covers the target
+// pixel size (floor division). StretchBlt then only shrinks, never upscales;
+// HALFTONE on that downscale gives anti-aliased edges like libdjvu. Ceil-based
+// subsample decoded smaller than the target and upscale looked jagged at 100%.
+// Compound pages must stay at subsample=1 so djvu_compose_page runs.
 static int DjvuDecPickSubsample(djvu_page_type pageType, int uprightW, int uprightH, int targetDx, int targetDy) {
     if (pageType == DJVU_PAGE_COMPOUND) {
         return 1;
@@ -490,9 +492,9 @@ static int DjvuDecPickSubsample(djvu_page_type pageType, int uprightW, int uprig
     if (uprightW <= 0 || uprightH <= 0 || targetDx <= 0 || targetDy <= 0) {
         return 1;
     }
-    int subX = (uprightW + targetDx - 1) / targetDx;
-    int subY = (uprightH + targetDy - 1) / targetDy;
-    int subsample = subX > subY ? subX : subY;
+    int subX = uprightW / targetDx;
+    int subY = uprightH / targetDy;
+    int subsample = subX < subY ? subX : subY;
     if (subsample < 1) {
         subsample = 1;
     }
