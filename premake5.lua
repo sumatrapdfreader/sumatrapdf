@@ -351,6 +351,9 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optimized_conf()
+    -- the DjVu decoder is CPU-bound (ZP arithmetic decoder in the JB2 inner
+    -- loop), so favor speed over size here (the rest of the tree uses /O1)
+    optimize "Speed"
     defines { "_CRT_SECURE_NO_WARNINGS" }
     disablewarnings { "4018", "4101", "4244", "4267", "4996" }
     files { "ext/djvudec/djvu.c", "ext/djvudec/djvu.h" }
