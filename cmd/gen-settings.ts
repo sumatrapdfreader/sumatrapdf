@@ -900,8 +900,8 @@ const globalPrefs: Field[] = [
     mkField(
       "DjvuEngine",
       Str,
-      "djvudec",
-      "which engine to use for DjVu documents: djvudec (built-in plain-C decoder, the default) or libdjvu",
+      "libdjvu",
+      "which engine to use for DjVu documents: libdjvu (the default) or djvudec (built-in plain-C decoder)",
     ),
     "3.7",
   ),

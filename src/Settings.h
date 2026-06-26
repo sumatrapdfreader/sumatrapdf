@@ -567,8 +567,8 @@ struct GlobalPrefs {
     bool scrollbarInSinglePage;
     // if true, implements smooth scrolling
     bool smoothScroll;
-    // which engine to use for DjVu documents: djvudec (built-in plain-C
-    // decoder, the default) or libdjvu
+    // which engine to use for DjVu documents: libdjvu (the default) or
+    // djvudec (built-in plain-C decoder)
     char* djvuEngine;
     // how long to hover an internal-document link (in ms) before we show a
     // popup rendering the destination region (citation entry, figure,
@@ -1062,7 +1062,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, scrollbars), SettingType::String, (intptr_t)"windows"},
     {offsetof(GlobalPrefs, scrollbarInSinglePage), SettingType::Bool, false},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, djvuEngine), SettingType::String, (intptr_t)"djvudec"},
+    {offsetof(GlobalPrefs, djvuEngine), SettingType::String, (intptr_t)"libdjvu"},
     {offsetof(GlobalPrefs, citationHoverDelay), SettingType::Int, -1},
     {offsetof(GlobalPrefs, readAloudVoiceId), SettingType::String, 0},
     {offsetof(GlobalPrefs, fastScrollOverScrollbar), SettingType::Bool, false},

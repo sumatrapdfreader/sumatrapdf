@@ -165,9 +165,9 @@ ScrollbarInSinglePage = false
 ; if true, implements smooth scrolling (introduced in version 3.6)
 SmoothScroll = false
 
-; which engine to use for DjVu documents: djvudec (built-in plain-C decoder, the
-; default) or libdjvu (introduced in version 3.7)
-DjvuEngine = djvudec
+; which engine to use for DjVu documents: libdjvu (the default) or djvudec
+; (built-in plain-C decoder) (introduced in version 3.7)
+DjvuEngine = libdjvu
 
 ; how long to hover an internal-document link (in ms) before we show a popup
 ; rendering the destination region (citation entry, figure, footnote). -1 (the

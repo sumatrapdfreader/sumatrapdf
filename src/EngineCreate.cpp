@@ -158,7 +158,7 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
 // falling back to the other if the preferred one fails to load
 static bool UseDjvuDec() {
     if (!gGlobalPrefs || str::IsEmpty(gGlobalPrefs->djvuEngine)) {
-        return true; // default
+        return false; // default: libdjvu
     }
     return !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
 }
