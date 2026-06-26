@@ -257,7 +257,6 @@ static i32 gCommandsDebugOnly[] = {
     CmdDebugTestApp,
     CmdDebugShowNotif,
     CmdDebugStartStressTest,
-    CmdDebugToggleRenderInfo,
     0,
 };
 

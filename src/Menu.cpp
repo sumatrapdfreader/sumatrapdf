@@ -572,6 +572,10 @@ static MenuDef menuDefHelp[] = {
         CmdCheckUpdate,
     },
     {
+        _TRN("Toggle Render Queue Info"),
+        CmdDebugToggleRenderInfo,
+    },
+    {
         kMenuSeparator,
         0,
     },
@@ -603,10 +607,6 @@ static MenuDef menuDefDebug[] = {
     {
         "Show notification",
         CmdDebugShowNotif,
-    },
-    {
-        "Toggle render queue info",
-        CmdDebugToggleRenderInfo,
     },
     {
         nullptr,
