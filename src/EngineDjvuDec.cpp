@@ -248,6 +248,10 @@ bool EngineDjvuDec::FinishLoading() {
     if (!ctx) {
         return false;
     }
+    // ask the decoder to emit color output in B,G,R order so it lands in a
+    // Windows DIB without a separate RGB->BGR pass (the swap is folded into the
+    // decoder's final output copy at no cost).
+    djvu_ctx_set_bgr(ctx, 1);
     doc = djvu_doc_open(ctx, fileData.data(), fileData.size());
     if (!doc) {
         return false;
@@ -349,54 +353,6 @@ RectF EngineDjvuDec::Transform(const RectF& rect, int pageNo, float zoom, int ro
     return RectF::FromXY(TL, BR);
 }
 
-// build a top-down 24bpp BGR buffer from the djvu image (gray8 or rgb24)
-static u8* DjvuImageToBgr(djvu_image* img, int& dxOut, int& dyOut) {
-    int dx = img->width;
-    int dy = img->height;
-    u8* out = AllocArray<u8>((size_t)dx * dy * 3);
-    if (!out) {
-        return nullptr;
-    }
-    for (int y = 0; y < dy; y++) {
-        const u8* src = img->data + (size_t)y * img->stride;
-        u8* dst = out + (size_t)y * dx * 3;
-        if (img->format == DJVU_FORMAT_GRAY8) {
-            for (int x = 0; x < dx; x++) {
-                u8 v = src[x];
-                dst[x * 3 + 0] = v;
-                dst[x * 3 + 1] = v;
-                dst[x * 3 + 2] = v;
-            }
-        } else {
-            for (int x = 0; x < dx; x++) {
-                dst[x * 3 + 0] = src[x * 3 + 2]; // B
-                dst[x * 3 + 1] = src[x * 3 + 1]; // G
-                dst[x * 3 + 2] = src[x * 3 + 0]; // R
-            }
-        }
-    }
-    dxOut = dx;
-    dyOut = dy;
-    return out;
-}
-
-// copy a top-down gray8 buffer from the djvu image
-static u8* DjvuImageCopyGray8(djvu_image* img, int& dxOut, int& dyOut) {
-    int dx = img->width;
-    int dy = img->height;
-    u8* out = AllocArray<u8>((size_t)dx * dy);
-    if (!out) {
-        return nullptr;
-    }
-    for (int y = 0; y < dy; y++) {
-        const u8* src = img->data + (size_t)y * img->stride;
-        memcpy(out + (size_t)y * dx, src, (size_t)dx);
-    }
-    dxOut = dx;
-    dyOut = dy;
-    return out;
-}
-
 // rotate a top-down gray8 buffer clockwise by rotation (0/90/180/270)
 static u8* RotateGray8(const u8* src, int dx, int dy, int rotation, int& dxOut, int& dyOut) {
     rotation = NormalizeRotation(rotation);
@@ -480,11 +436,14 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
     return out;
 }
 
-// Pick the largest subsample whose decoded bitmap still covers the target
-// pixel size (floor division). StretchBlt then only shrinks, never upscales;
-// HALFTONE on that downscale gives anti-aliased edges like libdjvu. Ceil-based
-// subsample decoded smaller than the target and upscale looked jagged at 100%.
-// Compound pages must stay at subsample=1 so djvu_compose_page runs.
+// Pick the largest subsample whose decoded bitmap still covers the target pixel
+// size, so StretchBlt only shrinks (never upscales) and HALFTONE gives
+// anti-aliased edges like libdjvu. The coverage test is ceil(dim/(s+1)) >=
+// target; plain floor division (dim/target) is off by one when target doesn't
+// divide dim -- e.g. 3597/1799 == 1 even though ceil(3597/2) == 1799 still
+// covers 1799, which made high-dpi pages decode at full resolution (4x the
+// pixels) at 100% zoom. Compound pages stay at subsample=1 so the color
+// composite runs.
 static int DjvuDecPickSubsample(djvu_page_type pageType, int uprightW, int uprightH, int targetDx, int targetDy) {
     if (pageType == DJVU_PAGE_COMPOUND) {
         return 1;
@@ -492,11 +451,10 @@ static int DjvuDecPickSubsample(djvu_page_type pageType, int uprightW, int uprig
     if (uprightW <= 0 || uprightH <= 0 || targetDx <= 0 || targetDy <= 0) {
         return 1;
     }
-    int subX = uprightW / targetDx;
-    int subY = uprightH / targetDy;
-    int subsample = subX < subY ? subX : subY;
-    if (subsample < 1) {
-        subsample = 1;
+    int subsample = 1;
+    while ((uprightW + subsample) / (subsample + 1) >= targetDx &&
+           (uprightH + subsample) / (subsample + 1) >= targetDy) {
+        subsample++; // ceil(uprightW/(s+1)) >= targetDx && ceil(uprightH/(s+1)) >= targetDy
     }
     if (subsample > uprightW) {
         subsample = uprightW;
@@ -633,29 +591,29 @@ RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
 
     auto pi = pages[pageNo - 1];
     int subsample = DjvuDecPickSubsample(pi->pageType, pi->uprightW, pi->uprightH, full.dx, full.dy);
-    // subsample=1 applies intrinsic rotation inside djvu_page_render; for
-    // subsample>1 we must rotate intrinsic+user ourselves after decode.
+    // The decoder applies the page's intrinsic rotation at every subsample (via
+    // a fast tiled transpose) and djvu_page_render_info already reports the
+    // upright dims, so we only rotate here for an explicit user rotation (rare).
     int rotateAfter = userRotation;
-    if (subsample > 1) {
-        rotateAfter = NormalizeRotation(pi->intrinsicRotation + userRotation);
-    }
 
-    djvu_image* img = djvu_page_render(doc, pageNo - 1, subsample);
-    if (!img) {
+    // Query the output geometry, then render straight into our own buffer (BGR
+    // for color, since djvu_ctx_set_bgr is on) -- no intermediate djvu_image and
+    // no separate RGB->BGR/copy pass. (A further optimization would render_into
+    // the DIB bits directly to also drop the CreateBgrDib copy; kept as a plain
+    // buffer here to preserve the user-rotate path below.)
+    djvu_render_info ri{};
+    if (djvu_page_render_info(doc, pageNo - 1, subsample, &ri) != 0) {
         return nullptr;
     }
-
-    bool isBitonal = pi->pageType == DJVU_PAGE_BITONAL || img->format == DJVU_FORMAT_GRAY8;
-
-    int sdx = 0, sdy = 0;
-    u8* pixels = nullptr;
-    if (isBitonal && img->format == DJVU_FORMAT_GRAY8) {
-        pixels = DjvuImageCopyGray8(img, sdx, sdy);
-    } else {
-        pixels = DjvuImageToBgr(img, sdx, sdy);
-    }
-    djvu_image_destroy(ctx, img);
+    bool isBitonal = pi->pageType == DJVU_PAGE_BITONAL || ri.format == DJVU_FORMAT_GRAY8;
+    int comp = (ri.format == DJVU_FORMAT_GRAY8) ? 1 : 3;
+    int sdx = ri.width, sdy = ri.height;
+    u8* pixels = AllocArray<u8>((size_t)sdx * sdy * comp);
     if (!pixels) {
+        return nullptr;
+    }
+    if (djvu_page_render_into(doc, pageNo - 1, subsample, pixels, sdx * comp) != 0) {
+        free(pixels);
         return nullptr;
     }
 
