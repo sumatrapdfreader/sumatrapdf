@@ -88,12 +88,18 @@ EXPORTS
 	djvu_init
 	djvu_ctx_new
 	djvu_ctx_free
+	djvu_ctx_set_lazy_iw44
+	djvu_ctx_set_no_compose
+	djvu_ctx_set_iw_max_chunks
+	djvu_ctx_set_bgr
 	djvu_doc_open
 	djvu_doc_close
 	djvu_doc_page_count
 	djvu_doc_page_info
 	djvu_page_get_type
 	djvu_page_render
+	djvu_page_render_info
+	djvu_page_render_into
 	djvu_image_destroy
 	djvu_doc_page_id
 	djvu_doc_page_title

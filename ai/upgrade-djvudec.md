@@ -107,11 +107,18 @@ Current djvudec exports:
 djvu_init
 djvu_ctx_new
 djvu_ctx_free
+djvu_ctx_set_lazy_iw44
+djvu_ctx_set_no_compose
+djvu_ctx_set_iw_max_chunks
+djvu_ctx_set_bgr
 djvu_doc_open
 djvu_doc_close
 djvu_doc_page_count
 djvu_doc_page_info
+djvu_page_get_type
 djvu_page_render
+djvu_page_render_info
+djvu_page_render_into
 djvu_image_destroy
 djvu_doc_page_id
 djvu_doc_page_title
@@ -170,12 +177,12 @@ Append `prompt: ...` if the change was AI-assisted (per Agents.md).
 
 - `ext/djvudec` is a **single-file amalgamation** (like sqlite): compile
   `djvu.c` directly; include `djvu.h`.
-- `EngineDjvuDec` keeps a **render-doc pool** (one `djvu_doc` per concurrent
-  render thread) plus a separate metadata `djvu_doc` under `lock`.
+- `EngineDjvuDec` keeps a single shared `djvu_doc` (read-only after open);
+  `djvu_page_render_into` / metadata calls are re-entrant on the same doc.
 - Thread-safety analysis lives in `ai/djvudec-threading.md` and upstream
   `thread-safety.md`.
-- Default engine is `djvudec` (`DjvuEngine` advanced setting); libdjvu remains
-  as fallback.
+- Default engine is **libdjvu** (`DjvuEngine` advanced setting); opt in to
+  djvudec via `DjvuEngine = djvudec` or `CmdToggleDjvuEngine`.
 
 ## Checklist
 
