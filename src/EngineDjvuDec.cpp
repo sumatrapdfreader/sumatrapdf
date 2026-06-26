@@ -111,6 +111,11 @@ static TocItem* NewDjvuDecTocItem(TocItem* parent, const char* title, const char
 struct DjvuDecPageInfo {
     RectF mediabox;
     int dpi = 300;
+    // upright pixel size at subsample=1 (after intrinsic page rotation)
+    int uprightW = 0;
+    int uprightH = 0;
+    int intrinsicRotation = 0;
+    djvu_page_type pageType = DJVU_PAGE_UNKNOWN;
     Vec<IPageElement*> allElements;
     bool gotElements = false;
 };
@@ -150,29 +155,15 @@ class EngineDjvuDec : public EngineBase {
     IStream* stream = nullptr;
     ByteSlice fileData; // must outlive all docs
 
-    // a djvu_doc isn't thread-safe, so we keep one doc for metadata queries
-    // (TOC, links, text) used by the UI thread under `lock`, and a separate
-    // pool of docs for rendering used by the background render threads. This
-    // way a slow render never blocks UI-thread metadata calls, and multiple
-    // render threads can decode different pages concurrently.
+    // After djvu_init(), a djvu_doc is read-only and djvu_page_render /
+    // djvu_page_text_get_zones / djvu_page_get_links are re-entrant on the same
+    // doc. cacheLock only guards lazy one-time caches (page links, TOC).
     djvu_ctx* ctx = nullptr;
     djvu_doc* doc = nullptr;
-    CRITICAL_SECTION lock; // protects `doc` (metadata)
-
-    // render-doc pool, each entry an independent (ctx, doc) over fileData
-    struct RenderDoc {
-        djvu_ctx* ctx = nullptr;
-        djvu_doc* doc = nullptr;
-        bool inUse = false;
-    };
-    Vec<RenderDoc*> renderDocs;
-    CRITICAL_SECTION poolLock; // protects renderDocs bookkeeping
+    CRITICAL_SECTION cacheLock;
 
     Vec<DjvuDecPageInfo*> pages;
     TocTree* tocTree = nullptr;
-
-    RenderDoc* AcquireRenderDoc();
-    void ReleaseRenderDoc(RenderDoc*);
 
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool FinishLoading();
@@ -183,22 +174,12 @@ EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
     str::ReplaceWithCopy(&defaultExt, ".djvu");
     fileDPI = 300.0f;
-    InitializeCriticalSection(&lock);
-    InitializeCriticalSection(&poolLock);
+    InitializeCriticalSection(&cacheLock);
 }
 
 EngineDjvuDec::~EngineDjvuDec() {
     delete tocTree;
     DeleteVecMembers(pages);
-    for (RenderDoc* rd : renderDocs) {
-        if (rd->doc) {
-            djvu_doc_close(rd->doc);
-        }
-        if (rd->ctx) {
-            djvu_ctx_free(rd->ctx);
-        }
-        delete rd;
-    }
     if (doc) {
         djvu_doc_close(doc);
     }
@@ -209,49 +190,7 @@ EngineDjvuDec::~EngineDjvuDec() {
     if (stream) {
         stream->Release();
     }
-    DeleteCriticalSection(&lock);
-    DeleteCriticalSection(&poolLock);
-}
-
-// get a free render doc from the pool (creating one if needed). Each render
-// doc is an independent djvudec document over the same in-memory file, so
-// renders run without contending with metadata queries or each other.
-EngineDjvuDec::RenderDoc* EngineDjvuDec::AcquireRenderDoc() {
-    {
-        ScopedCritSec scope(&poolLock);
-        for (RenderDoc* rd : renderDocs) {
-            if (!rd->inUse) {
-                rd->inUse = true;
-                return rd;
-            }
-        }
-    }
-    // none free: open a new independent doc (djvu_doc_open over a read-only
-    // shared buffer is safe to call concurrently)
-    auto rd = new RenderDoc();
-    rd->ctx = djvu_ctx_new(nullptr, nullptr, nullptr, nullptr);
-    if (rd->ctx) {
-        rd->doc = djvu_doc_open(rd->ctx, fileData.data(), fileData.size());
-    }
-    if (!rd->doc) {
-        if (rd->ctx) {
-            djvu_ctx_free(rd->ctx);
-        }
-        delete rd;
-        return nullptr;
-    }
-    rd->inUse = true;
-    ScopedCritSec scope(&poolLock);
-    renderDocs.Append(rd);
-    return rd;
-}
-
-void EngineDjvuDec::ReleaseRenderDoc(RenderDoc* rd) {
-    if (!rd) {
-        return;
-    }
-    ScopedCritSec scope(&poolLock);
-    rd->inUse = false;
+    DeleteCriticalSection(&cacheLock);
 }
 
 EngineBase* EngineDjvuDec::Clone() {
@@ -328,13 +267,16 @@ bool EngineDjvuDec::FinishLoading() {
                 dpi = 300;
             }
             pi->dpi = dpi;
-            // djvu_page_render at subsample=1 applies the page's intrinsic
-            // rotation, so the upright dimensions swap width/height for 90/270
+            pi->intrinsicRotation = NormalizeRotation(info.rotation);
+            // djvu_page_render at subsample=1 applies intrinsic rotation, so
+            // upright dimensions swap width/height for 90/270
             int upW = info.width;
             int upH = info.height;
-            if (info.rotation == 90 || info.rotation == 270) {
+            if (pi->intrinsicRotation == 90 || pi->intrinsicRotation == 270) {
                 std::swap(upW, upH);
             }
+            pi->uprightW = upW;
+            pi->uprightH = upH;
             float dx = upW * GetFileDPI() / dpi;
             float dy = upH * GetFileDPI() / dpi;
             bool isValid = dx > 0 && dx < 1e6f && dy > 0 && dy < 1e6f;
@@ -343,6 +285,7 @@ bool EngineDjvuDec::FinishLoading() {
             }
         }
         pi->mediabox = mbox;
+        pi->pageType = djvu_page_get_type(doc, i);
         pages.Append(pi);
 
         const char* title = djvu_doc_page_title(doc, i);
@@ -437,6 +380,63 @@ static u8* DjvuImageToBgr(djvu_image* img, int& dxOut, int& dyOut) {
     return out;
 }
 
+// copy a top-down gray8 buffer from the djvu image
+static u8* DjvuImageCopyGray8(djvu_image* img, int& dxOut, int& dyOut) {
+    int dx = img->width;
+    int dy = img->height;
+    u8* out = AllocArray<u8>((size_t)dx * dy);
+    if (!out) {
+        return nullptr;
+    }
+    for (int y = 0; y < dy; y++) {
+        const u8* src = img->data + (size_t)y * img->stride;
+        memcpy(out + (size_t)y * dx, src, (size_t)dx);
+    }
+    dxOut = dx;
+    dyOut = dy;
+    return out;
+}
+
+// rotate a top-down gray8 buffer clockwise by rotation (0/90/180/270)
+static u8* RotateGray8(const u8* src, int dx, int dy, int rotation, int& dxOut, int& dyOut) {
+    rotation = NormalizeRotation(rotation);
+    if (rotation == 0) {
+        dxOut = dx;
+        dyOut = dy;
+        u8* out = AllocArray<u8>((size_t)dx * dy);
+        if (out) {
+            memcpy(out, src, (size_t)dx * dy);
+        }
+        return out;
+    }
+    int ndx = (rotation == 180) ? dx : dy;
+    int ndy = (rotation == 180) ? dy : dx;
+    u8* out = AllocArray<u8>((size_t)ndx * ndy);
+    if (!out) {
+        return nullptr;
+    }
+    for (int y = 0; y < dy; y++) {
+        for (int x = 0; x < dx; x++) {
+            u8 v = src[(size_t)y * dx + x];
+            int nx = 0, ny = 0;
+            if (rotation == 90) {
+                nx = dy - 1 - y;
+                ny = x;
+            } else if (rotation == 180) {
+                nx = dx - 1 - x;
+                ny = dy - 1 - y;
+            } else { // 270
+                nx = y;
+                ny = dx - 1 - x;
+            }
+            out[(size_t)ny * ndx + nx] = v;
+        }
+    }
+    dxOut = ndx;
+    dyOut = ndy;
+    return out;
+}
+
 // rotate a top-down 24bpp BGR buffer clockwise by rotation (0/90/180/270)
 static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, int& dyOut) {
     rotation = NormalizeRotation(rotation);
@@ -480,6 +480,31 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
     return out;
 }
 
+// pick an integer subsample so decode resolution matches the zoomed target
+// (like ddjvu_page_render scaling to prect/rrect). Compound pages must stay
+// at subsample=1 so djvu_compose_page runs; bitonal JB2 subsample is fine.
+static int DjvuDecPickSubsample(djvu_page_type pageType, int uprightW, int uprightH, int targetDx, int targetDy) {
+    if (pageType == DJVU_PAGE_COMPOUND) {
+        return 1;
+    }
+    if (uprightW <= 0 || uprightH <= 0 || targetDx <= 0 || targetDy <= 0) {
+        return 1;
+    }
+    int subX = (uprightW + targetDx - 1) / targetDx;
+    int subY = (uprightH + targetDy - 1) / targetDy;
+    int subsample = subX > subY ? subX : subY;
+    if (subsample < 1) {
+        subsample = 1;
+    }
+    if (subsample > uprightW) {
+        subsample = uprightW;
+    }
+    if (subsample > uprightH) {
+        subsample = uprightH;
+    }
+    return subsample;
+}
+
 // create a top-down 24bpp DIB section and copy bgr into it (row-aligned)
 static HBITMAP CreateBgrDib(const u8* bgr, int dx, int dy, HANDLE* hMapOut) {
     int stride = ((dx * 3 + 3) / 4) * 4;
@@ -507,62 +532,47 @@ static HBITMAP CreateBgrDib(const u8* bgr, int dx, int dy, HANDLE* hMapOut) {
     return hbmp;
 }
 
-RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
-    int pageNo = args.pageNo;
-    int rotation = NormalizeRotation(args.rotation);
-    float zoom = args.zoom;
-
-    RectF pageRc = args.pageRect ? *args.pageRect : PageMediabox(pageNo);
-    Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
-    Rect full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();
-    screen = full.Intersect(screen);
-    if (screen.IsEmpty() || full.IsEmpty()) {
+// create a top-down 8bpp grayscale DIB (like EngineDjVu for bitonal pages)
+static HBITMAP CreateGray8Dib(const u8* gray, int dx, int dy, HANDLE* hMapOut) {
+    int stride = ((dx + 3) / 4) * 4;
+    BITMAPINFO* bmi = (BITMAPINFO*)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    if (!bmi) {
         return nullptr;
     }
+    for (int i = 0; i < 256; i++) {
+        bmi->bmiColors[i].rgbRed = bmi->bmiColors[i].rgbGreen = bmi->bmiColors[i].rgbBlue = (BYTE)i;
+    }
+    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi->bmiHeader.biWidth = dx;
+    bmi->bmiHeader.biHeight = -dy;
+    bmi->bmiHeader.biPlanes = 1;
+    bmi->bmiHeader.biBitCount = 8;
+    bmi->bmiHeader.biCompression = BI_RGB;
+    bmi->bmiHeader.biClrUsed = 256;
+    bmi->bmiHeader.biSizeImage = stride * dy;
 
-    // render on a dedicated pool doc so we don't block (or get blocked by)
-    // UI-thread metadata queries on the main doc, and so multiple render
-    // threads can decode concurrently
-    RenderDoc* rd = AcquireRenderDoc();
-    if (!rd) {
-        return nullptr;
-    }
-    // render the whole page upright at full resolution (subsample=1 applies the
-    // page's intrinsic rotation), then scale/rotate into the requested rect
-    djvu_image* img = djvu_page_render(rd->doc, pageNo - 1, 1);
-    int sdx = 0, sdy = 0;
-    u8* bgr = img ? DjvuImageToBgr(img, sdx, sdy) : nullptr;
-    if (img) {
-        djvu_image_destroy(rd->ctx, img);
-    }
-    ReleaseRenderDoc(rd);
-    if (!bgr) {
-        return nullptr;
-    }
-
-    // apply the user rotation to the upright source buffer
-    int rdx = 0, rdy = 0;
-    u8* rbgr = RotateBgr(bgr, sdx, sdy, rotation, rdx, rdy);
-    free(bgr);
-    if (!rbgr) {
-        return nullptr;
-    }
-
-    HANDLE srcMap = nullptr;
-    HBITMAP srcBmp = CreateBgrDib(rbgr, rdx, rdy, &srcMap);
-    free(rbgr);
-    if (!srcBmp) {
-        if (srcMap) {
-            CloseHandle(srcMap);
+    void* data = nullptr;
+    HANDLE hMap =
+        CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi->bmiHeader.biSizeImage, nullptr);
+    HBITMAP hbmp = CreateDIBSection(nullptr, bmi, DIB_RGB_COLORS, &data, hMap, 0);
+    if (hbmp && data && gray) {
+        for (int y = 0; y < dy; y++) {
+            memcpy((u8*)data + (size_t)y * stride, gray + (size_t)y * dx, (size_t)dx);
         }
-        return nullptr;
     }
+    free(bmi);
+    if (hMapOut) {
+        *hMapOut = hMap;
+    }
+    return hbmp;
+}
 
-    // dest bitmap is the requested screen sub-rectangle
+static RenderedBitmap* StretchDibToScreen(HBITMAP srcBmp, HANDLE srcMap, int rdx, int rdy, const Rect& screen,
+                                          const Rect& full, bool isBitonal) {
     HANDLE dstMap = nullptr;
     int ddx = screen.dx;
     int ddy = screen.dy;
-    HBITMAP dstBmp = CreateBgrDib(nullptr, ddx, ddy, &dstMap);
+    HBITMAP dstBmp = isBitonal ? CreateGray8Dib(nullptr, ddx, ddy, &dstMap) : CreateBgrDib(nullptr, ddx, ddy, &dstMap);
     RenderedBitmap* res = nullptr;
     if (dstBmp) {
         HDC hdc = GetDC(nullptr);
@@ -570,10 +580,6 @@ RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         HDC dstDC = CreateCompatibleDC(hdc);
         HGDIOBJ oldSrc = SelectObject(srcDC, srcBmp);
         HGDIOBJ oldDst = SelectObject(dstDC, dstBmp);
-        SetStretchBltMode(dstDC, HALFTONE);
-        SetBrushOrgEx(dstDC, 0, 0, nullptr);
-        // map the screen sub-rect (within `full`) back to source pixels
-        // full origin is (0,0) since it's the transform of the mediabox
         double sx = (double)rdx / full.dx;
         double sy = (double)rdy / full.dy;
         int srcX = (int)(screen.x * sx);
@@ -586,7 +592,14 @@ RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         if (srcH < 1) {
             srcH = 1;
         }
-        StretchBlt(dstDC, 0, 0, ddx, ddy, srcDC, srcX, srcY, srcW, srcH, SRCCOPY);
+        bool sameSize = (srcW == ddx && srcH == ddy);
+        if (sameSize && screen.x == 0 && screen.y == 0) {
+            BitBlt(dstDC, 0, 0, ddx, ddy, srcDC, srcX, srcY, SRCCOPY);
+        } else {
+            SetStretchBltMode(dstDC, HALFTONE);
+            SetBrushOrgEx(dstDC, 0, 0, nullptr);
+            StretchBlt(dstDC, 0, 0, ddx, ddy, srcDC, srcX, srcY, srcW, srcH, SRCCOPY);
+        }
         SelectObject(srcDC, oldSrc);
         SelectObject(dstDC, oldDst);
         DeleteDC(srcDC);
@@ -596,12 +609,79 @@ RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     } else if (dstMap) {
         CloseHandle(dstMap);
     }
-
     DeleteObject(srcBmp);
     if (srcMap) {
         CloseHandle(srcMap);
     }
     return res;
+}
+
+RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
+    int pageNo = args.pageNo;
+    int userRotation = NormalizeRotation(args.rotation);
+    float zoom = args.zoom;
+
+    RectF pageRc = args.pageRect ? *args.pageRect : PageMediabox(pageNo);
+    Rect screen = Transform(pageRc, pageNo, zoom, userRotation).Round();
+    Rect full = Transform(PageMediabox(pageNo), pageNo, zoom, userRotation).Round();
+    screen = full.Intersect(screen);
+    if (screen.IsEmpty() || full.IsEmpty()) {
+        return nullptr;
+    }
+
+    auto pi = pages[pageNo - 1];
+    int subsample = DjvuDecPickSubsample(pi->pageType, pi->uprightW, pi->uprightH, full.dx, full.dy);
+    // subsample=1 applies intrinsic rotation inside djvu_page_render; for
+    // subsample>1 we must rotate intrinsic+user ourselves after decode.
+    int rotateAfter = userRotation;
+    if (subsample > 1) {
+        rotateAfter = NormalizeRotation(pi->intrinsicRotation + userRotation);
+    }
+
+    djvu_image* img = djvu_page_render(doc, pageNo - 1, subsample);
+    if (!img) {
+        return nullptr;
+    }
+
+    bool isBitonal = pi->pageType == DJVU_PAGE_BITONAL || img->format == DJVU_FORMAT_GRAY8;
+
+    int sdx = 0, sdy = 0;
+    u8* pixels = nullptr;
+    if (isBitonal && img->format == DJVU_FORMAT_GRAY8) {
+        pixels = DjvuImageCopyGray8(img, sdx, sdy);
+    } else {
+        pixels = DjvuImageToBgr(img, sdx, sdy);
+    }
+    djvu_image_destroy(ctx, img);
+    if (!pixels) {
+        return nullptr;
+    }
+
+    u8* rotated = pixels;
+    int rdx = sdx, rdy = sdy;
+    if (rotateAfter != 0) {
+        if (isBitonal) {
+            rotated = RotateGray8(pixels, sdx, sdy, rotateAfter, rdx, rdy);
+        } else {
+            rotated = RotateBgr(pixels, sdx, sdy, rotateAfter, rdx, rdy);
+        }
+        free(pixels);
+        if (!rotated) {
+            return nullptr;
+        }
+    }
+
+    HANDLE srcMap = nullptr;
+    HBITMAP srcBmp = isBitonal ? CreateGray8Dib(rotated, rdx, rdy, &srcMap) : CreateBgrDib(rotated, rdx, rdy, &srcMap);
+    free(rotated);
+    if (!srcBmp) {
+        if (srcMap) {
+            CloseHandle(srcMap);
+        }
+        return nullptr;
+    }
+
+    return StretchDibToScreen(srcBmp, srcMap, rdx, rdy, screen, full, isBitonal);
 }
 
 ByteSlice EngineDjvuDec::GetFileData() {
@@ -657,7 +737,6 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, StrBuilder& sb, Vec<
 }
 
 PageTextUtf8 EngineDjvuDec::ExtractPageTextUtf8(int pageNo) {
-    ScopedCritSec scope(&lock);
     djvu_page_text_zones* z = djvu_page_text_get_zones(doc, pageNo - 1);
     if (!z || !z->root) {
         if (z) {
@@ -740,7 +819,10 @@ static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, const char* name) {
 Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     ReportIf(pageNo < 1 || pageNo > PageCount());
     auto pi = pages[pageNo - 1];
-    ScopedCritSec scope(&lock);
+    if (pi->gotElements) {
+        return pi->allElements;
+    }
+    ScopedCritSec scope(&cacheLock);
     if (pi->gotElements) {
         return pi->allElements;
     }
@@ -858,7 +940,10 @@ TocTree* EngineDjvuDec::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    ScopedCritSec scope(&lock);
+    ScopedCritSec scope(&cacheLock);
+    if (tocTree) {
+        return tocTree;
+    }
     djvu_outline_item* root = djvu_doc_outline(doc);
     if (!root) {
         return nullptr;

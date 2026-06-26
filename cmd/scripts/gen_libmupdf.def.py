@@ -92,6 +92,7 @@ EXPORTS
 	djvu_doc_close
 	djvu_doc_page_count
 	djvu_doc_page_info
+	djvu_page_get_type
 	djvu_page_render
 	djvu_image_destroy
 	djvu_doc_page_id
