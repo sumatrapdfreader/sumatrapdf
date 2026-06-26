@@ -214,6 +214,7 @@ typedef struct {
 
 typedef struct iw_pixmap iw_pixmap;
 typedef struct jb2_image jb2_image;
+typedef struct { int w, h; uint8_t *d; } djvu_cpix;
 
 typedef struct {
     char *incl_id;
@@ -236,6 +237,9 @@ typedef struct {
     iw_pixmap *iw_bg;
     iw_pixmap *iw_fg;
     jb2_image *jb2_dict;
+    jb2_image *jb2_mask;
+    djvu_cpix bg_native;
+    djvu_cpix bg_scaled;
 } djvu_page_int;
 
 struct djvu_doc {
@@ -258,7 +262,10 @@ iw_pixmap *djvu_doc_iw44_by_form(djvu_doc *doc, uint32_t form_off, const char *c
 void djvu_doc_drop_page_iw44(djvu_doc *doc, int page_no);
 void djvu_doc_preload_iw44_range(djvu_doc *doc, int lo0, int hi0);
 void djvu_doc_preload_jb2_range(djvu_doc *doc, int lo0, int hi0);
+void djvu_doc_preload_jb2_masks_range(djvu_doc *doc, int lo0, int hi0);
+void djvu_doc_preload_compose_bg_range(djvu_doc *doc, int lo0, int hi0);
 
+jb2_image *djvu_doc_jb2_mask(djvu_doc *doc, int page_no);
 jb2_image *djvu_doc_jb2_dict(djvu_doc *doc, const char *incl_id);
 jb2_image *djvu_doc_jb2_dict_inline(djvu_doc *doc, uint32_t form_off);
 jb2_image *djvu_doc_jb2_dict_for_form(djvu_doc *doc, uint32_t form_off);
@@ -623,8 +630,6 @@ int djvu_iw44_render_rgb_raw(iw_pixmap *pm, uint8_t *rgb);
 int djvu_iw44_render_gray(iw_pixmap *pm, uint8_t *gray);
 
 int djvu_iw44_render_plane(iw_pixmap *pm, int plane, uint8_t *gray);
-
-typedef struct { int w, h; uint8_t *d; } djvu_cpix;
 
 int  djvu_cpix_init(djvu_ctx *ctx, djvu_cpix *p, int w, int h);
 void djvu_cpix_free(djvu_ctx *ctx, djvu_cpix *p);
@@ -3321,6 +3326,14 @@ static void scaler_get_line(scaler *s, int fy, const djvu_cpix *in, int in_x0, i
     }
 }
 
+static int cpix_init_uninit(djvu_ctx *ctx, djvu_cpix *p, int w, int h)
+{
+    djvu_free(ctx, p->d);
+    p->w = w; p->h = h;
+    p->d = (uint8_t *)djvu_alloc(ctx, (size_t)w * h * 3);
+    return p->d ? 0 : -1;
+}
+
 static int scaler_scale(scaler *s, const djvu_cpix *in, djvu_cpix *out)
 {
     djvu_ctx *ctx = s->ctx;
@@ -3332,7 +3345,7 @@ static int scaler_scale(scaler *s, const djvu_cpix *in, djvu_cpix *out)
     prepare_interp();
     if (!s->hcoord) scaler_set_h(s, 0, 0);
     if (!s->vcoord) scaler_set_v(s, 0, 0);
-    if (djvu_cpix_init(ctx, out, s->outw, s->outh) != 0) return -1;
+    if (cpix_init_uninit(ctx, out, s->outw, s->outh) != 0) return -1;
     bufw = s->redw;
     lbuf = (uint8_t *)djvu_alloc(ctx, (size_t)(bufw + 2) * 3);
     if (!lbuf) return -1;
@@ -3375,14 +3388,27 @@ static int scaler_scale(scaler *s, const djvu_cpix *in, djvu_cpix *out)
         lbuf[0]=lbuf[3]; lbuf[1]=lbuf[4]; lbuf[2]=lbuf[5];
         lbuf[(bufw+1)*3+0]=lbuf[bufw*3+0]; lbuf[(bufw+1)*3+1]=lbuf[bufw*3+1]; lbuf[(bufw+1)*3+2]=lbuf[bufw*3+2];
         dest = out->d + (size_t)y * s->outw * 3;
-        for (x = 0; x < s->outw; x++) {
-            int n = s->hcoord[x];
-            const uint8_t *lo = lbuf + (1 + (n >> FRACBITS) - red_xmin) * 3;
-            const short *dh = &s_interp[n & FRACMASK][256];
-            int lr = lo[0], lg = lo[1], lb = lo[2];
-            dest[x*3+0] = (uint8_t)(lr + dh[lo[3] - lr]);
-            dest[x*3+1] = (uint8_t)(lg + dh[lo[4] - lg]);
-            dest[x*3+2] = (uint8_t)(lb + dh[lo[5] - lb]);
+        if (red_xmin == 0) {
+            for (x = 0; x < s->outw; x++) {
+                int n = s->hcoord[x];
+                const uint8_t *lo = lbuf + (1 + (n >> FRACBITS)) * 3;
+                const short *dh = &s_interp[n & FRACMASK][256];
+                int lr = lo[0], lg = lo[1], lb = lo[2];
+                int dr = lo[3] - lr, dg = lo[4] - lg, db = lo[5] - lb;
+                dest[x*3+0] = (uint8_t)(lr + dh[dr]);
+                dest[x*3+1] = (uint8_t)(lg + dh[dg]);
+                dest[x*3+2] = (uint8_t)(lb + dh[db]);
+            }
+        } else {
+            for (x = 0; x < s->outw; x++) {
+                int n = s->hcoord[x];
+                const uint8_t *lo = lbuf + (1 + (n >> FRACBITS) - red_xmin) * 3;
+                const short *dh = &s_interp[n & FRACMASK][256];
+                int lr = lo[0], lg = lo[1], lb = lo[2];
+                dest[x*3+0] = (uint8_t)(lr + dh[lo[3] - lr]);
+                dest[x*3+1] = (uint8_t)(lg + dh[lo[4] - lg]);
+                dest[x*3+2] = (uint8_t)(lb + dh[lo[5] - lb]);
+            }
         }
     }
     djvu_free(ctx, lbuf); djvu_free(ctx, p1); djvu_free(ctx, p2);
@@ -3463,14 +3489,107 @@ void djvu_flip_rgb_bottomup(uint8_t *dst, const uint8_t *src, int w, int h, int 
 #include <string.h>
 #include <math.h>
 
+static int compose_bg_page_no(djvu_doc *doc, uint32_t form_off)
+{
+    int i;
+    if (!doc) return -1;
+    for (i = 0; i < doc->npages; i++)
+        if (doc->pages[i].form_off == form_off)
+            return i;
+    return -1;
+}
+
+static int compose_background_from_native(djvu_ctx *ctx, const djvu_cpix *native,
+                                          int width, int height, djvu_cpix *out)
+{
+    int red;
+
+    if (!native || !native->d || native->w <= 0 || native->h <= 0) return -1;
+    red = djvu_compute_red(width, height, native->w, native->h);
+    if (red < 1) return -1;
+    if (red == 1 && native->w == width && native->h == height) {
+        size_t n = (size_t)width * (size_t)height * 3;
+        if (djvu_cpix_init(ctx, out, width, height) != 0) return -1;
+        memcpy(out->d, native->d, n);
+        return 0;
+    }
+    return djvu_cpix_scale(ctx, native, out, width, height, red);
+}
+
+static int compose_bg_native_build(djvu_doc *doc, djvu_page_int *pg)
+{
+    djvu_ctx *ctx = doc->ctx;
+    iw_pixmap *pm;
+    int bw, bh, w, h;
+    uint32_t sz;
+
+    if (!doc || !pg || pg->bg_native.d) return 0;
+    if (!pg->has_info || pg->info.width <= 0 || pg->info.height <= 0)
+        return -1;
+    if (!djvu_form_find_chunk(doc, pg->form_off, "BG44", &sz, NULL))
+        return -1;
+    pm = djvu_doc_iw44_by_form(doc, pg->form_off, "BG44");
+    if (!pm) return -1;
+    bw = djvu_iw44_width(pm);
+    bh = djvu_iw44_height(pm);
+    if (bw <= 0 || bh <= 0) return -1;
+    if (djvu_cpix_init(ctx, &pg->bg_native, bw, bh) != 0) return -1;
+    if (djvu_iw44_render_rgb_raw(pm, pg->bg_native.d) != 0) {
+        djvu_cpix_free(ctx, &pg->bg_native);
+        return -1;
+    }
+    w = pg->info.width;
+    h = pg->info.height;
+    if (!pg->bg_scaled.d &&
+        compose_background_from_native(ctx, &pg->bg_native, w, h, &pg->bg_scaled) != 0) {
+        djvu_cpix_free(ctx, &pg->bg_native);
+        return -1;
+    }
+    return 0;
+}
+
+void djvu_doc_preload_compose_bg_range(djvu_doc *doc, int lo0, int hi0)
+{
+    int i;
+
+    if (!doc) return;
+    if (lo0 < 0) lo0 = 0;
+    if (hi0 >= doc->npages) hi0 = doc->npages - 1;
+    if (lo0 > hi0) return;
+    for (i = lo0; i <= hi0; i++)
+        compose_bg_native_build(doc, &doc->pages[i]);
+}
+
 int djvu_compose_background(djvu_doc *doc, uint32_t form_off, int width, int height,
                             djvu_cpix *out)
 {
     djvu_ctx *ctx = doc->ctx;
-    iw_pixmap *pm = djvu_doc_iw44_by_form(doc, form_off, "BG44");
-    int bw, bh, red, rc = -1;
+    iw_pixmap *pm;
+    int page_no, bw, bh, red, rc = -1;
     djvu_cpix native;
+    djvu_page_int *pg;
+
     memset(&native, 0, sizeof(native));
+    page_no = compose_bg_page_no(doc, form_off);
+    if (page_no >= 0) {
+        pg = &doc->pages[page_no];
+        if (!pg->bg_native.d)
+            compose_bg_native_build(doc, pg);
+        if (pg->bg_scaled.d && pg->bg_scaled.w == width && pg->bg_scaled.h == height) {
+            size_t n = (size_t)width * (size_t)height * 3;
+            djvu_free(ctx, out->d);
+            out->w = width;
+            out->h = height;
+            out->d = (uint8_t *)djvu_alloc(ctx, n);
+            if (!out->d) return -1;
+            memcpy(out->d, pg->bg_scaled.d, n);
+            return 0;
+        }
+        if (pg->bg_native.d)
+            return compose_background_from_native(ctx, &pg->bg_native, width, height, out);
+    }
+
+    pm = djvu_doc_iw44_by_form(doc, form_off, "BG44");
     if (!pm) return -1;
     bw = djvu_iw44_width(pm); bh = djvu_iw44_height(pm);
     red = djvu_compute_red(width, height, bw, bh);
@@ -3940,6 +4059,20 @@ static void free_page_iw44(djvu_page_int *pg)
     if (pg->iw_fg) { djvu_iw44_free(pg->iw_fg); pg->iw_fg = NULL; }
 }
 
+static void free_page_jb2_mask(djvu_ctx *ctx, djvu_page_int *pg)
+{
+    if (pg->jb2_mask) {
+        djvu_jb2_free(ctx, pg->jb2_mask);
+        pg->jb2_mask = NULL;
+    }
+}
+
+static void free_page_bg_native(djvu_ctx *ctx, djvu_page_int *pg)
+{
+    djvu_cpix_free(ctx, &pg->bg_native);
+    djvu_cpix_free(ctx, &pg->bg_scaled);
+}
+
 static void preload_iw_layer(djvu_doc *doc, djvu_page_int *pg, const char *id,
                              iw_pixmap **slot)
 {
@@ -4161,6 +4294,56 @@ void djvu_doc_preload_jb2_range(djvu_doc *doc, int lo0, int hi0)
     }
 }
 
+static void preload_jb2_mask(djvu_doc *doc, djvu_page_int *pg)
+{
+    uint32_t sz;
+    const uint8_t *sjbz;
+    jb2_image *dict, *mask;
+
+    if (!doc || !pg || pg->jb2_mask) return;
+    sjbz = djvu_form_find_chunk(doc, pg->form_off, "Sjbz", &sz, NULL);
+    if (!sjbz) return;
+    dict = pg->jb2_dict;
+    if (!dict)
+        dict = djvu_doc_jb2_dict_for_form(doc, pg->form_off);
+    mask = djvu_jb2_decode(doc->ctx, sjbz, sz, dict);
+    if (!mask) {
+        djvu_errorf(doc->ctx, DJVU_SEVERITY_WARNING,
+                    "JB2 mask preload failed (form %u)", pg->form_off);
+        return;
+    }
+    pg->jb2_mask = mask;
+}
+
+static void djvu_doc_preload_jb2_masks(djvu_doc *doc)
+{
+    if (!doc) return;
+    djvu_doc_preload_jb2_masks_range(doc, 0, doc->npages - 1);
+}
+
+void djvu_doc_preload_jb2_masks_range(djvu_doc *doc, int lo0, int hi0)
+{
+    int i;
+
+    if (!doc) return;
+    if (lo0 < 0) lo0 = 0;
+    if (hi0 >= doc->npages) hi0 = doc->npages - 1;
+    if (lo0 > hi0) return;
+    for (i = lo0; i <= hi0; i++)
+        preload_jb2_mask(doc, &doc->pages[i]);
+}
+
+jb2_image *djvu_doc_jb2_mask(djvu_doc *doc, int page_no)
+{
+    djvu_page_int *pg;
+
+    if (!doc || page_no < 0 || page_no >= doc->npages) return NULL;
+    pg = &doc->pages[page_no];
+    if (!pg->jb2_mask)
+        preload_jb2_mask(doc, pg);
+    return pg->jb2_mask;
+}
+
 static void free_jb2_inline_cache(djvu_ctx *ctx, djvu_doc *doc)
 {
     int i;
@@ -4379,6 +4562,8 @@ djvu_doc *djvu_doc_open(djvu_ctx *ctx, const uint8_t *data, size_t len)
     if (!doc->ctx->lazy_iw44) {
         djvu_doc_preload_iw44(doc);
         djvu_doc_preload_jb2_dicts(doc);
+        djvu_doc_preload_jb2_masks(doc);
+        djvu_doc_preload_compose_bg_range(doc, 0, doc->npages - 1);
     }
     return doc;
 }
@@ -4397,8 +4582,11 @@ void djvu_doc_close(djvu_doc *doc)
     free_jb2_dict_cache(doc->ctx, doc);
     free_jb2_inline_cache(doc->ctx, doc);
     if (doc->pages) {
-        for (i = 0; i < doc->npages; i++)
+        for (i = 0; i < doc->npages; i++) {
+            free_page_bg_native(doc->ctx, &doc->pages[i]);
+            free_page_jb2_mask(doc->ctx, &doc->pages[i]);
             free_page_iw44(&doc->pages[i]);
+        }
         djvu_free(doc->ctx, doc->pages);
     }
     djvu_free(doc->ctx, doc);
@@ -4475,29 +4663,6 @@ char *djvu_br_strdup(djvu_buf_reader *br, int slen)
 
 #include <stdlib.h>
 #include <string.h>
-
-static jb2_image *load_page_dict(djvu_doc *doc, uint32_t form_off, int *owned)
-{
-    djvu_ctx *ctx = doc->ctx;
-    uint32_t sz;
-    const uint8_t *djbz;
-    jb2_image *dict;
-
-    if (owned) *owned = 0;
-    dict = djvu_doc_jb2_dict_inline(doc, form_off);
-    if (dict) return dict;
-    djbz = djvu_form_find_chunk(doc, form_off, "Djbz", &sz, NULL);
-    if (djbz) {
-        if (owned) *owned = 1;
-        return djvu_jb2_decode_dict(ctx, djbz, sz);
-    }
-    dict = djvu_doc_jb2_dict_for_form(doc, form_off);
-    if (dict) return dict;
-    djbz = djvu_form_find_incl_chunk(doc, form_off, "Djbz", &sz);
-    if (!djbz) return NULL;
-    if (owned) *owned = 1;
-    return djvu_jb2_decode_dict(ctx, djbz, sz);
-}
 
 static int rotation_quarter_turns(int rotation)
 {
@@ -4709,8 +4874,7 @@ djvu_image *djvu_page_render_timed(djvu_doc *doc, int page_no, int subsample,
     djvu_page_type type;
     djvu_page_info pi;
     int info_ok;
-    jb2_image *dict = NULL, *mask = NULL;
-    int dict_owned = 0;
+    jb2_image *mask = NULL;
     djvu_image *out = NULL;
     double t0;
 
@@ -4724,11 +4888,10 @@ djvu_image *djvu_page_render_timed(djvu_doc *doc, int page_no, int subsample,
 
 
     if (type == DJVU_PAGE_BITONAL || type == DJVU_PAGE_COMPOUND) {
-        const uint8_t *sjbz = djvu_form_find_chunk(doc, form_off, "Sjbz", &sz, NULL);
-        if (!sjbz) goto done;
+        if (!djvu_form_find_chunk(doc, form_off, "Sjbz", &sz, NULL))
+            goto done;
         if (t) t0 = djvu_bench_now_ms();
-        dict = load_page_dict(doc, form_off, &dict_owned);
-        mask = djvu_jb2_decode(ctx, sjbz, sz, dict);
+        mask = djvu_doc_jb2_mask(doc, page_no);
         if (t) t->jb2_ms += djvu_bench_now_ms() - t0;
         if (!mask) goto done;
     }
@@ -4756,8 +4919,6 @@ djvu_image *djvu_page_render_timed(djvu_doc *doc, int page_no, int subsample,
     }
 
 done:
-    djvu_jb2_free(ctx, mask);
-    if (dict_owned) djvu_jb2_free(ctx, dict);
     return apply_page_rotation(ctx, doc, page_no, out, subsample, t);
 }
 
@@ -4851,23 +5012,14 @@ int djvu_page_render_into(djvu_doc *doc, int page_no, int subsample,
     if (color && k == 0) {
         uint32_t form_off = doc->pages[page_no].form_off;
         uint32_t sz;
-        const uint8_t *sjbz;
-        jb2_image *dict = NULL, *mask = NULL;
-        int owned = 0;
+        jb2_image *mask = NULL;
 
-        sjbz = djvu_form_find_chunk(doc, form_off, "Sjbz", &sz, NULL);
-        if (sjbz) {
-            dict = load_page_dict(doc, form_off, &owned);
-            mask = djvu_jb2_decode(ctx, sjbz, sz, dict);
-            if (!mask) {
-                if (owned) djvu_jb2_free(ctx, dict);
+        if (djvu_form_find_chunk(doc, form_off, "Sjbz", &sz, NULL)) {
+            mask = djvu_doc_jb2_mask(doc, page_no);
+            if (!mask)
                 return -1;
-            }
         }
-        rc = djvu_compose_page_into(doc, page_no, mask, w, h, dst, stride);
-        djvu_jb2_free(ctx, mask);
-        if (owned) djvu_jb2_free(ctx, dict);
-        return rc;
+        return djvu_compose_page_into(doc, page_no, mask, w, h, dst, stride);
     }
 
 
