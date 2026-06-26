@@ -32,6 +32,11 @@ typedef void (*djvu_error_cb)(void *user, djvu_severity sev, const char *msg);
 typedef struct djvu_ctx djvu_ctx;
 typedef struct djvu_doc djvu_doc;
 
+/* Idempotent process-wide setup (bilinear scaler lookup table). Call once from
+   the main thread before creating worker threads or concurrent decode. Safe to
+   call again; also invoked by djvu_doc_open. */
+void djvu_init(void);
+
 /* Pass NULL for alloc/free to use the default malloc/free.
    Pass NULL for error to silently ignore diagnostics. */
 djvu_ctx *djvu_ctx_new(djvu_alloc_cb alloc, djvu_free_cb free_cb,

@@ -286,10 +286,25 @@ static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) {
     }
 }
 
+// djvu_init() must run once before concurrent decode (bilinear scaler table).
+// Engines can be created on multiple threads (async document loads).
+static SRWLOCK gDjvuDecInitLock = SRWLOCK_INIT;
+static bool gDjvuDecInitialized = false;
+
+static void DjvuDecInitOnce() {
+    AcquireSRWLockExclusive(&gDjvuDecInitLock);
+    if (!gDjvuDecInitialized) {
+        djvu_init();
+        gDjvuDecInitialized = true;
+    }
+    ReleaseSRWLockExclusive(&gDjvuDecInitLock);
+}
+
 bool EngineDjvuDec::FinishLoading() {
     if (fileData.empty()) {
         return false;
     }
+    DjvuDecInitOnce();
     ctx = djvu_ctx_new(nullptr, nullptr, DjvuDecErrorCb, nullptr);
     if (!ctx) {
         return false;

@@ -85,6 +85,7 @@ EXPORTS
 
 ; djvudec exports (required for EngineDjvuDec, ext/djvudec)
 
+	djvu_init
 	djvu_ctx_new
 	djvu_ctx_free
 	djvu_doc_open
