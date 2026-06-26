@@ -172,7 +172,7 @@ Append `prompt: ...` if the change was AI-assisted (per Agents.md).
   `djvu.c` directly; include `djvu.h`.
 - `EngineDjvuDec` keeps a **render-doc pool** (one `djvu_doc` per concurrent
   render thread) plus a separate metadata `djvu_doc` under `lock`.
-- Thread-safety analysis lives in `docs-ai/djvudec-threading.md` and upstream
+- Thread-safety analysis lives in `ai/djvudec-threading.md` and upstream
   `thread-safety.md`.
 - Default engine is `djvudec` (`DjvuEngine` advanced setting); libdjvu remains
   as fallback.
