@@ -167,6 +167,15 @@ function optimized_conf()
   filter {}
 end
 
+-- override the size optimization (set by optimized_conf / mixed_dbg_rel_conf)
+-- with speed optimization for Release builds. Use for CPU-bound codec/render
+-- libraries where decode/render speed matters more than a few KB of code size.
+function favor_speed()
+  filter "configurations:Release*"
+  optimize "Speed"
+  filter {}
+end
+
 -- per-workspace setting that differ in clang-cl.exe vs cl.exe builds
 function clang_conf()
   filter "options:with-clang"
@@ -521,6 +530,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optimized_conf()
+    favor_speed()
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
