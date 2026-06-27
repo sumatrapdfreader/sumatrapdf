@@ -64,10 +64,9 @@ bool ValidReparseIdx(ptrdiff_t idx, HtmlPullParser* parser) {
     return !((idx < 0) || (idx > (int)parser->Len()));
 }
 
-DrawInstr DrawInstr::Str(const char* s, size_t len, RectF bbox, bool rtl) {
+DrawInstr DrawInstr::Text(::Str s, RectF bbox, bool rtl) {
     DrawInstr di(rtl ? DrawInstrType::RtlString : DrawInstrType::String, bbox);
-    di.str.s = s;
-    di.str.len = len;
+    di.str = s;
     return di;
 }
 
@@ -85,37 +84,34 @@ DrawInstr DrawInstr::FixedSpace(float dx) {
 
 DrawInstr DrawInstr::Image(const ByteSlice& img, RectF bbox) {
     DrawInstr di(DrawInstrType::Image);
-    di.str.s = (const char*)img.data();
-    di.str.len = img.size();
+    di.str = Str((char*)img.data(), (int)img.size());
     di.bbox = bbox;
     return di;
 }
 
-DrawInstr DrawInstr::LinkStart(const char* s, size_t len) {
+DrawInstr DrawInstr::LinkStart(::Str s) {
     DrawInstr di(DrawInstrType::LinkStart);
-    di.str.s = s;
-    di.str.len = len;
+    di.str = s;
     return di;
 }
 
-DrawInstr DrawInstr::Anchor(const char* s, size_t len, RectF bbox) {
+DrawInstr DrawInstr::Anchor(::Str s, RectF bbox) {
     DrawInstr di(DrawInstrType::Anchor);
-    di.str.s = s;
-    di.str.len = len;
+    di.str = s;
     di.bbox = bbox;
     return di;
 }
 
 // parses size in the form "1em", "3pt" or "15px"
-static void ParseSizeWithUnit(const char* s, size_t len, float* size, StyleRule::Unit* unit) {
-    if (str::Parse(s, len, "%fem", size)) {
+static void ParseSizeWithUnit(Str s, float* size, StyleRule::Unit* unit) {
+    if (str::Parse(s.s, s.len, "%fem", size)) {
         *unit = StyleRule::em;
-    } else if (str::Parse(s, len, "%fin", size)) {
+    } else if (str::Parse(s.s, s.len, "%fin", size)) {
         *unit = StyleRule::pt;
         *size *= 72; // 1 inch is 72 points
-    } else if (str::Parse(s, len, "%fpt", size)) {
+    } else if (str::Parse(s.s, s.len, "%fpt", size)) {
         *unit = StyleRule::pt;
-    } else if (str::Parse(s, len, "%fpx", size)) {
+    } else if (str::Parse(s.s, s.len, "%fpx", size)) {
         *unit = StyleRule::px;
     } else {
         *unit = StyleRule::inherit;
@@ -128,19 +124,19 @@ StyleRule StyleRule::Parse(CssPullParser* parser) {
     while ((prop = parser->NextProperty()) != nullptr) {
         switch (prop->type) {
             case Css_Text_Align:
-                rule.textAlign = FindAlignAttr(prop->s, prop->sLen);
+                rule.textAlign = FindAlignAttr(prop->s.s, (size_t)prop->s.len);
                 break;
             // TODO: some documents use Css_Padding_Left for indentation
             case Css_Text_Indent:
-                ParseSizeWithUnit(prop->s, prop->sLen, &rule.textIndent, &rule.textIndentUnit);
+                ParseSizeWithUnit(prop->s, &rule.textIndent, &rule.textIndentUnit);
                 break;
         }
     }
     return rule;
 }
 
-StyleRule StyleRule::Parse(const char* s, size_t len) {
-    CssPullParser parser(s, len);
+StyleRule StyleRule::Parse(Str s) {
+    CssPullParser parser(s);
     return Parse(&parser);
 }
 
@@ -540,7 +536,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
     currLineTopPadding = 0;
     currX = NewLineX();
     if (currLinkIdx) {
-        AppendInstr(DrawInstr::LinkStart(link.str.s, link.str.len));
+        AppendInstr(DrawInstr::LinkStart(link.str));
         currLinkIdx = currLineInstr.size();
     }
     nextPageStyle = styleStack.Last();
@@ -702,24 +698,26 @@ static bool CanBreakWordOnChar(WCHAR c) {
 }
 
 // a text run is a string of consecutive text with uniform style
-void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
-    currReparseIdx = s - htmlParser->Start();
+void HtmlFormatter::EmitTextRun(Str s) {
+    const char* start = s.s;
+    const char* end = s.s + s.len;
+    currReparseIdx = start - htmlParser->Start();
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
-    ReportIf(IsSpaceOnly(s, end) && !preFormatted);
-    ::Str tmp = ResolveHtmlEntities(::Str{(char*)s, (int)(end - s)}, textAllocator);
-    bool resolved = tmp.s != s;
+    ReportIf(IsSpaceOnly(start, end) && !preFormatted);
+    ::Str tmp = ResolveHtmlEntities(s, textAllocator);
+    bool resolved = tmp.s != start;
     if (resolved) {
-        s = tmp.s;
-        end = s + tmp.len;
+        start = tmp.s;
+        end = start + tmp.len;
     }
 
-    while (s < end) {
-        // don't update the reparseIdx if s doesn't point into the original source
+    while (start < end) {
+        // don't update the reparseIdx if start doesn't point into the original source
         if (!resolved) {
-            currReparseIdx = s - htmlParser->Start();
+            currReparseIdx = start - htmlParser->Start();
         }
 
-        TempWStr buf = ToWStrTemp(s, end - s);
+        TempWStr buf = ToWStrTemp(start, end - start);
         size_t strLen = str::Len(buf);
         // soft hyphens should not be displayed
         strLen -= str::RemoveCharsInPlace(buf, L"\xad");
@@ -729,7 +727,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
         textMeasure->SetFont(CurrFont());
         RectF bbox = textMeasure->Measure(buf, strLen);
         if (bbox.dx <= pageDx - currX) {
-            AppendInstr(DrawInstr::Str(s, end - s, bbox, dirRtl));
+            AppendInstr(DrawInstr::Text(Str((char*)start, (int)(end - start)), bbox, dirRtl));
             currX += bbox.dx;
             break;
         }
@@ -771,9 +769,9 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
         for (size_t i = lenThatFits; i > 0; i--) {
             lenThatFits += buf.s[i - 1] < 0x80 ? 0 : buf.s[i - 1] < 0x800 ? 1 : 2;
         }
-        AppendInstr(DrawInstr::Str(s, lenThatFits, bbox, dirRtl));
+        AppendInstr(DrawInstr::Text(Str((char*)start, (int)lenThatFits), bbox, dirRtl));
         currX += bbox.dx;
-        s += lenThatFits;
+        start += lenThatFits;
     }
 }
 
@@ -781,19 +779,18 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
 // position. Unlike EmitTextRun, s isn't part of the source HTML, so it must
 // stay valid for the lifetime of the page: pass a string literal or one
 // allocated in textAllocator.
-void HtmlFormatter::EmitTextMarker(const char* s) {
-    size_t sLen = str::Len(s);
-    if (sLen == 0) {
+void HtmlFormatter::EmitTextMarker(Str s) {
+    if (!s) {
         return;
     }
-    TempWStr buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s);
     size_t strLen = str::Len(buf);
     if (strLen == 0) {
         return;
     }
     textMeasure->SetFont(CurrFont());
     RectF bbox = textMeasure->Measure(buf, strLen);
-    AppendInstr(DrawInstr::Str(s, sLen, bbox, dirRtl));
+    AppendInstr(DrawInstr::Text(s, bbox, dirRtl));
     currX += bbox.dx;
 }
 
@@ -814,7 +811,7 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     RectF bbox(0, currY, pageDx, 0);
     // append at the start of the line to prevent the anchor
     // from being flushed to the next page (with wrong currY value)
-    currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+    currPage->instructions.Append(DrawInstr::Anchor(Str((char*)attr->val, (int)attr->valLen), bbox));
 }
 
 void HtmlFormatter::HandleDirAttr(HtmlToken* t) {
@@ -919,11 +916,11 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     SetFont(faceName, (FontStyle)CurrFont()->GetStyle(), fontSize);
 }
 
-bool HtmlFormatter::HandleTagA(HtmlToken* t, const char* linkAttr, const char* attrNS) {
+bool HtmlFormatter::HandleTagA(HtmlToken* t, Str linkAttr, Str attrNS) {
     if (t->IsStartTag() && !currLinkIdx) {
         AttrInfo* attr = attrNS ? t->GetAttrByNameNS(linkAttr, attrNS) : t->GetAttrByName(linkAttr);
         if (attr) {
-            AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
+            AppendInstr(DrawInstr::LinkStart(Str((char*)attr->val, (int)attr->valLen)));
             currLinkIdx = currLineInstr.size();
             return true;
         }
@@ -991,8 +988,8 @@ void HtmlFormatter::HandleTagPre(HtmlToken* t) {
     }
 }
 
-StyleRule* HtmlFormatter::FindStyleRule(HtmlTag tag, const char* clazz, size_t clazzLen) {
-    u32 classHash = clazz ? MurmurHash2(clazz, clazzLen) : 0;
+StyleRule* HtmlFormatter::FindStyleRule(HtmlTag tag, Str clazz) {
+    u32 classHash = clazz ? MurmurHash2(clazz.s, clazz.len) : 0;
     for (size_t i = 0; i < styleRules.size(); i++) {
         StyleRule& rule = styleRules.at(i);
         if (tag == rule.tag && classHash == rule.classHash) {
@@ -1005,40 +1002,41 @@ StyleRule* HtmlFormatter::FindStyleRule(HtmlTag tag, const char* clazz, size_t c
 StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
     StyleRule rule;
     // get style rules ordered by specificity
-    StyleRule* prevRule = FindStyleRule(Tag_Body, nullptr, 0);
+    StyleRule* prevRule = FindStyleRule(Tag_Body, Str());
     if (prevRule) {
         rule.Merge(*prevRule);
     }
-    prevRule = FindStyleRule(Tag_Any, nullptr, 0);
+    prevRule = FindStyleRule(Tag_Any, Str());
     if (prevRule) {
         rule.Merge(*prevRule);
     }
-    prevRule = FindStyleRule(t->tag, nullptr, 0);
+    prevRule = FindStyleRule(t->tag, Str());
     if (prevRule) {
         rule.Merge(*prevRule);
     }
     // TODO: support multiple class names
     AttrInfo* attr = t->GetAttrByName("class");
     if (attr) {
-        prevRule = FindStyleRule(Tag_Any, attr->val, attr->valLen);
+        Str clazz((char*)attr->val, (int)attr->valLen);
+        prevRule = FindStyleRule(Tag_Any, clazz);
         if (prevRule) {
             rule.Merge(*prevRule);
         }
-        prevRule = FindStyleRule(t->tag, attr->val, attr->valLen);
+        prevRule = FindStyleRule(t->tag, clazz);
         if (prevRule) {
             rule.Merge(*prevRule);
         }
     }
     attr = t->GetAttrByName("style");
     if (attr) {
-        StyleRule newRule = StyleRule::Parse(attr->val, attr->valLen);
+        StyleRule newRule = StyleRule::Parse(Str((char*)attr->val, (int)attr->valLen));
         rule.Merge(newRule);
     }
     return rule;
 }
 
-void HtmlFormatter::ParseStyleSheet(const char* data, size_t len) {
-    CssPullParser parser(data, len);
+void HtmlFormatter::ParseStyleSheet(Str data) {
+    CssPullParser parser(data);
     while (parser.NextRule()) {
         StyleRule rule = StyleRule::Parse(&parser);
         const CssSelector* sel;
@@ -1046,12 +1044,13 @@ void HtmlFormatter::ParseStyleSheet(const char* data, size_t len) {
             if (Tag_NotFound == sel->tag) {
                 continue;
             }
-            StyleRule* prevRule = FindStyleRule(sel->tag, sel->clazz, sel->clazzLen);
+            Str clazz = sel->clazz;
+            StyleRule* prevRule = FindStyleRule(sel->tag, clazz);
             if (prevRule) {
                 prevRule->Merge(rule);
             } else {
                 rule.tag = sel->tag;
-                rule.classHash = sel->clazz ? MurmurHash2(sel->clazz, sel->clazzLen) : 0;
+                rule.classHash = clazz ? MurmurHash2(clazz.s, clazz.len) : 0;
                 styleRules.Append(rule);
             }
         }
@@ -1076,7 +1075,7 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
     }
     const char* end = t->s - 2;
     ReportIf(start > end);
-    ParseStyleSheet(start, end - start);
+    ParseStyleSheet(Str((char*)start, (int)(end - start)));
     UpdateTagNesting(t);
 }
 
@@ -1237,9 +1236,9 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
             if (li.ordered) {
                 const char* marker = str::Dup(textAllocator, str::FormatTemp("%d. ", li.nextNum));
                 li.nextNum++;
-                EmitTextMarker(marker);
+                EmitTextMarker(Str((char*)marker));
             } else {
-                EmitTextMarker("\xe2\x80\xa2  "); // U+2022 bullet + 2 spaces
+                EmitTextMarker(StrL("\xe2\x80\xa2  ")); // U+2022 bullet + 2 spaces
             }
         }
     } else if (Tag_Dt == tag) {
@@ -1290,12 +1289,12 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
 
 void HtmlFormatter::HandleText(HtmlToken* t) {
     ReportIf(!t->IsText());
-    HandleText(t->s, t->sLen);
+    HandleText(Str((char*)t->s, (int)t->sLen));
 }
 
-void HtmlFormatter::HandleText(const char* s, size_t sLen) {
-    const char* curr = s;
-    const char* end = s + sLen;
+void HtmlFormatter::HandleText(Str s) {
+    const char* curr = s.s;
+    const char* end = s.s + s.len;
 
     if (preFormatted) {
         // don't collapse whitespace and respect text newlines
@@ -1309,7 +1308,7 @@ void HtmlFormatter::HandleText(const char* s, size_t sLen) {
             if (curr < end && curr > text && *(curr - 1) == '\r') {
                 curr--;
             }
-            EmitTextRun(text, curr);
+            EmitTextRun(Str((char*)text, (int)(curr - text)));
             if ('\n' == *curr || '\r' == *curr) {
                 curr += '\r' == *curr ? 2 : 1;
                 HandleTagBr();
@@ -1332,7 +1331,7 @@ void HtmlFormatter::HandleText(const char* s, size_t sLen) {
         currReparseIdx = curr - htmlParser->Start();
         skipped = SkipNonWs(curr, end);
         if (skipped) {
-            EmitTextRun(text, curr);
+            EmitTextRun(Str((char*)text, (int)(curr - text)));
         }
     }
 }
@@ -1451,7 +1450,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         bbox.x += offX;
         bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            TempWStr buf = ToWStrTemp(i.str.s, i.str.len);
+            TempWStr buf = ToWStrTemp(i.str);
             size_t strLen = str::Len(buf);
             // soft hyphens should not be displayed
             strLen -= str::RemoveCharsInPlace(buf, L"\xad");

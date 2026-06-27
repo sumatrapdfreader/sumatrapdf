@@ -84,7 +84,7 @@ bool CssPullParser::NextRule() {
 
     if (currPos == src.s) {
         SkipWsAndComments(currPos, end);
-        if (currPos + 4 < end && str::StartsWith(Str(currPos), StrL("<!--"))) {
+        if (currPos + 4 < end && str::StartsWith(currPos, "<!--")) {
             currPos += 4;
         }
     }
@@ -124,7 +124,8 @@ const CssSelector* CssPullParser::NextSelector() {
         return nullptr;
     }
 
-    const char* sStart = currSel;
+    const char* selStart = currSel;
+    // skip single selector
     const char* sEnd = currSel;
     while (currSel < selEnd && *currSel != ',') {
         if (*currSel == '"' || *currSel == '\'') {
@@ -142,28 +143,29 @@ const CssSelector* CssPullParser::NextSelector() {
         currSel++;
     }
 
-    sel.s = Str((char*)sStart, (int)(sEnd - sStart));
+    sel.s = Str((char*)selStart, (int)(sEnd - selStart));
     sel.tag = Tag_NotFound;
-    sel.clazz = {};
+    sel.clazz = Str();
 
+    // parse "*", "el", ".class" and "el.class"
     const char* c = sEnd;
-    for (; c > sStart && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
+    for (; c > selStart && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
         ;
     }
-    if (c > sStart && *(c - 1) == '.') {
+    if (c > selStart && *(c - 1) == '.') {
         sel.clazz = Str((char*)c, (int)(sEnd - c));
         c--;
     }
-    for (; c > sStart && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
+    for (; c > selStart && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
         ;
     }
-    if (sel.clazz && sel.clazz.s - 1 == sStart) {
+    if (sel.clazz && sel.clazz.s - 1 == selStart) {
         sel.tag = Tag_Any;
-    } else if (c == (sel.clazz ? sel.clazz.s - 1 : sEnd) && c == sStart + 1 && *sStart == '*') {
+    } else if (c == (sel.clazz ? sel.clazz.s - 1 : sEnd) && c == selStart + 1 && *selStart == '*') {
         sel.tag = Tag_Any;
-    } else if (c == sStart) {
-        size_t tagLen = sel.clazz ? (size_t)(sel.clazz.s - sStart - 1) : (size_t)sel.s.len;
-        sel.tag = FindHtmlTag(sStart, tagLen);
+    } else if (c == selStart) {
+        size_t tagLen = sel.clazz ? (size_t)(sel.clazz.s - selStart - 1) : (size_t)sel.s.len;
+        sel.tag = FindHtmlTag(sel.s.s, tagLen);
     }
 
     return &sel;
@@ -211,6 +213,7 @@ GetNextProperty:
     SkipWsAndComments(currPos, end);
 
     const char* valStart = currPos;
+    // skip value
     const char* valEnd = currPos;
     while (currPos < end && *currPos != ';' && *currPos != '}') {
         if (*currPos == '"' || *currPos == '\'') {

@@ -105,7 +105,7 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
         }
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(attr->val, attr->valLen);
+        HandleText(Str((char*)attr->val, (int)attr->valLen));
     }
 }
 
@@ -149,7 +149,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(attr->val, attr->valLen);
+        HandleText(Str((char*)attr->val, (int)attr->valLen));
     }
 }
 
@@ -160,7 +160,7 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
-        currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+        currPage->instructions.Append(DrawInstr::Anchor(Str((char*)attr->val, (int)attr->valLen), bbox));
         pagePath.Set(str::Dup(attr->val, attr->valLen));
         // reset CSS style rules for the new document
         styleRules.Reset();
@@ -189,7 +189,7 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
     url::DecodeInPlace(src);
     ByteSlice data = epubDoc->GetFileData(src, Str(pagePath));
     if (data) {
-        ParseStyleSheet(data, data.size());
+        ParseStyleSheet(Str((char*)data.data(), (int)data.size()));
         data.Free();
     }
 }
@@ -295,7 +295,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         if (!isSubtitle && t->IsStartTag()) {
             char* link = (char*)Alloc(textAllocator, 24);
             sprintf_s(link, 24, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
-            currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), Gdiplus::RectF(0, currY, pageDx, 0)));
+            currPage->instructions.Append(DrawInstr::Anchor(Str((char*)link), Gdiplus::RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {
         if (t->IsStartTag()) {
@@ -348,7 +348,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(attr->val, attr->valLen);
+        HandleText(Str((char*)attr->val, (int)attr->valLen));
     }
 }
 
@@ -374,7 +374,7 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
     url::DecodeInPlace(src);
     ByteSlice data = htmlDoc->GetFileData(src);
     if (data) {
-        ParseStyleSheet(data, data.size());
+        ParseStyleSheet(Str((char*)data.data(), (int)data.size()));
     }
     data.Free();
 }

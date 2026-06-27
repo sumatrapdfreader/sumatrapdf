@@ -1414,7 +1414,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(attr->val, attr->valLen);
+        HandleText(Str((char*)attr->val, (int)attr->valLen));
     }
 }
 
@@ -1425,7 +1425,7 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
-        currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+        currPage->instructions.Append(DrawInstr::Anchor(Str((char*)attr->val, (int)attr->valLen), bbox));
         pagePath.Set(str::Dup(attr->val, attr->valLen));
         // reset CSS style rules for the new document
         styleRules.Reset();
@@ -1454,7 +1454,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
     url::DecodeInPlace(src);
     ByteSlice data = chmDoc->GetFileData(src, pagePath);
     if (data.Get()) {
-        ParseStyleSheet(data, data.size());
+        ParseStyleSheet(Str((char*)data.data(), (int)data.size()));
     }
     data.Free();
 }

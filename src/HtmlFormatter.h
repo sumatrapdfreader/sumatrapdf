@@ -49,15 +49,10 @@ enum class DrawInstrType {
 
 struct DrawInstr {
     DrawInstrType type{DrawInstrType::Unknown};
-    union {
-        // info specific to a given instruction
-        // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString, InstrImage
-        struct {
-            const char* s;
-            size_t len;
-        } str{nullptr, 0};
-        mui::CachedFont* font; // InstrSetFont
-    };
+    // info specific to a given instruction
+    // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString, InstrImage
+    ::Str str;
+    mui::CachedFont* font = nullptr; // InstrSetFont
     RectF bbox{}; // common to most instructions
 
     DrawInstr() = default;
@@ -65,16 +60,16 @@ struct DrawInstr {
     explicit DrawInstr(DrawInstrType t, RectF bbox = {}) : type(t), bbox(bbox) {}
     ByteSlice GetImage() {
         ReportIf(type != DrawInstrType::Image);
-        return {(u8*)str.s, str.len};
+        return {(u8*)str.s, (size_t)str.len};
     }
 
     // helper constructors for instructions that need additional arguments
-    static DrawInstr Str(const char* s, size_t len, RectF bbox, bool rtl = false);
+    static DrawInstr Text(::Str s, RectF bbox, bool rtl = false);
     static DrawInstr Image(const ByteSlice&, RectF bbox);
     static DrawInstr SetFont(mui::CachedFont* font);
     static DrawInstr FixedSpace(float dx);
-    static DrawInstr LinkStart(const char* s, size_t len);
-    static DrawInstr Anchor(const char* s, size_t len, RectF bbox);
+    static DrawInstr LinkStart(::Str s);
+    static DrawInstr Anchor(::Str s, RectF bbox);
 };
 
 class CssPullParser;
@@ -99,7 +94,7 @@ struct StyleRule {
     void Merge(StyleRule& source);
 
     static StyleRule Parse(CssPullParser* parser);
-    static StyleRule Parse(const char* s, size_t len);
+    static StyleRule Parse(::Str s);
 };
 
 struct DrawStyle {
@@ -163,7 +158,7 @@ class HtmlFormatter {
     void HandleTagBr();
     void HandleTagP(HtmlToken* t, bool isDiv = false);
     void HandleTagFont(HtmlToken* t);
-    bool HandleTagA(HtmlToken* t, const char* linkAttr = "href", const char* attrNS = nullptr);
+    bool HandleTagA(HtmlToken* t, ::Str linkAttr = StrL("href"), ::Str attrNS = ::Str());
     void HandleTagHx(HtmlToken* t);
     void HandleTagList(HtmlToken* t);
     void HandleTagPre(HtmlToken* t);
@@ -176,7 +171,7 @@ class HtmlFormatter {
     void UpdateTagNesting(HtmlToken* t);
     virtual void HandleHtmlTag(HtmlToken* t);
     void HandleText(HtmlToken* t);
-    void HandleText(const char* s, size_t sLen);
+    void HandleText(::Str s);
     // blank convenience methods to override
     virtual void HandleTagImg(HtmlToken* t) {}
     virtual void HandleTagPagebreak(HtmlToken*) {}
@@ -193,9 +188,9 @@ class HtmlFormatter {
 
     bool EmitImage(const ByteSlice* img);
     void EmitHr();
-    void EmitTextRun(const char* s, const char* end);
+    void EmitTextRun(::Str s);
     // emits a synthetic, persistent string (e.g. a list bullet/number)
-    void EmitTextMarker(const char* s);
+    void EmitTextMarker(::Str s);
     void EmitElasticSpace();
     void EmitParagraph(float indent);
     void EmitEmptyLine(float lineDy);
@@ -211,8 +206,8 @@ class HtmlFormatter {
     void SetAlignment(AlignAttr align);
     void RevertStyleChange();
 
-    void ParseStyleSheet(const char* data, size_t len);
-    StyleRule* FindStyleRule(HtmlTag tag, const char* clazz, size_t clazzLen);
+    void ParseStyleSheet(::Str data);
+    StyleRule* FindStyleRule(HtmlTag tag, ::Str clazz);
     StyleRule ComputeStyleRule(HtmlToken* t);
 
     void AppendInstr(const DrawInstr& di);

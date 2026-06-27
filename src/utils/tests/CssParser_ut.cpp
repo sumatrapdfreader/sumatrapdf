@@ -9,15 +9,15 @@
 #include "utils/UtAssert.h"
 
 static inline bool IsPropVal(const CssProperty* prop, const char* val) {
-    return str::EqNIx(prop->s, prop->sLen, val);
+    return str::EqNIx(prop->s, prop->s.len, Str(val));
 }
 static inline bool IsSelector(const CssSelector* sel, const char* val) {
-    return str::EqNIx(sel->s, sel->sLen, val);
+    return str::EqNIx(sel->s, sel->s.len, Str(val));
 }
 
 static void Test01() {
     const char* inlineCss = "color: red; text-indent: 20px; /* comment */";
-    CssPullParser parser(inlineCss, str::Len(inlineCss));
+    CssPullParser parser{Str(inlineCss)};
     const CssProperty* prop = parser.NextProperty();
     utassert(prop && Css_Color == prop->type && IsPropVal(prop, "red"));
     prop = parser.NextProperty();
@@ -28,7 +28,7 @@ static void Test01() {
 
 static void Test02() {
     const char* inlineCss = "font-family: 'Courier New', \"Times New Roman\", Arial ; font: 12pt Georgia bold";
-    CssPullParser parser(inlineCss, str::Len(inlineCss));
+    CssPullParser parser{Str(inlineCss)};
     const CssProperty* prop = parser.NextProperty();
     utassert(prop && Css_Font_Family == prop->type && IsPropVal(prop, "'Courier New', \"Times New Roman\", Arial"));
     prop = parser.NextProperty();
@@ -40,7 +40,7 @@ static void Test02() {
 static void Test03() {
     const char* simpleCss =
         "* { color: red }\np { color: blue }\n.green { color: green }\np.green { color: rgb(0,128,0) }\n";
-    CssPullParser parser(simpleCss, str::Len(simpleCss));
+    CssPullParser parser{Str(simpleCss)};
     const CssSelector* sel = parser.NextSelector();
     utassert(!sel);
     const CssProperty* prop;
@@ -68,7 +68,7 @@ static void Test03() {
     ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_Any == sel->tag && IsSelector(sel, ".green") && str::EqNIx(sel->clazz, sel->clazzLen, "green"));
+    utassert(sel && Tag_Any == sel->tag && IsSelector(sel, ".green") && str::EqNIx(sel->clazz, sel->clazz.len, Str("green")));
     prop = parser.NextProperty();
     utassert(prop && Css_Color == prop->type && IsPropVal(prop, "green"));
     prop = parser.NextProperty();
@@ -77,7 +77,7 @@ static void Test03() {
     ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_P == sel->tag && IsSelector(sel, "p.green") && str::EqNIx(sel->clazz, sel->clazzLen, "green"));
+    utassert(sel && Tag_P == sel->tag && IsSelector(sel, "p.green") && str::EqNIx(sel->clazz, sel->clazz.len, Str("green")));
     prop = parser.NextProperty();
     utassert(prop && Css_Color == prop->type && IsPropVal(prop, "rgb(0,128,0)"));
     prop = parser.NextProperty();
@@ -89,7 +89,7 @@ static void Test03() {
 
 static void Test04() {
     const char* simpleCss = " span\n{ color: red }\n\tp /* plain paragraph */ , p#id { }";
-    CssPullParser parser(simpleCss, str::Len(simpleCss));
+    CssPullParser parser{Str(simpleCss)};
     const CssSelector* sel;
     const CssProperty* prop;
 
@@ -121,7 +121,7 @@ static void Test04() {
 
 static void Test05() {
     const char* simpleCss = "<!-- html { ignore } @ignore this; p { } -->";
-    CssPullParser parser(simpleCss, str::Len(simpleCss));
+    CssPullParser parser{Str(simpleCss)};
     const CssSelector* sel;
     const CssProperty* prop;
 
@@ -149,7 +149,7 @@ static void Test05() {
 
 static void Test06() {
     const char* inlineCss = "block: {{ ignore this }} ; color: red; } color: blue";
-    CssPullParser parser(inlineCss, str::Len(inlineCss));
+    CssPullParser parser{Str(inlineCss)};
     const CssProperty* prop = parser.NextProperty();
     utassert(prop && Css_Unknown == prop->type && IsPropVal(prop, "{{ ignore this }}"));
     prop = parser.NextProperty();
@@ -162,7 +162,7 @@ static void Test06() {
 
 static void Test07() {
     const char* simpleCss = " span\n{ color: red }\n\tp /* plain paragraph */ , p#id { }";
-    CssPullParser parser(simpleCss, str::Len(simpleCss));
+    CssPullParser parser{Str(simpleCss)};
     bool ok = parser.NextRule();
     utassert(ok);
     ok = parser.NextRule();
@@ -173,7 +173,7 @@ static void Test07() {
 
 static void Test08() {
     const char* simpleCss = "broken { brace: \"doesn't close\"; { ignore { color: red; }";
-    CssPullParser parser(simpleCss, str::Len(simpleCss));
+    CssPullParser parser{Str(simpleCss)};
     bool ok = parser.NextRule();
     utassert(ok);
     const CssProperty* prop = parser.NextProperty();
