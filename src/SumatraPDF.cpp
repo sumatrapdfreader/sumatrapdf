@@ -5756,7 +5756,10 @@ static void OnFrameKeyEsc(MainWindow* win) {
         return;
     }
     if (win->showSelection) {
-        ClearSearchResult(win);
+        // clear the user's text/rect selection (ClearSearchResult only clears
+        // find-match highlights since issue #5737, so it can't do this anymore)
+        DeleteOldSelectionInfo(win, true);
+        ClearSearchResult(win); // repaints; also drops any find-match highlights
         ToolbarUpdateStateForWindow(win, false);
         return;
     }
