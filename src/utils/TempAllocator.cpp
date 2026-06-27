@@ -59,48 +59,24 @@ TempStr DupTemp(Str s, size_t cb) {
     return Dup(GetTempArena(), s, cb);
 }
 
-TempWStr DupTemp(const WCHAR* s, size_t cch) {
-    return WrapTempWStr(Dup(GetTempArena(), s, cch), cch);
+TempWStr DupTemp(WStr s, size_t cch) {
+    return WrapTempWStr(Dup(GetTempArena(), s.s, cch), cch);
 }
 
-TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
-    return Join(GetTempArena(), Str(s1), Str(s2), Str(s3));
+TempStr JoinTemp(Str s1, Str s2, Str s3) {
+    return Join(GetTempArena(), s1, s2, s3);
 }
 
-TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4) {
-    return Join(GetTempArena(), Str(s1), Str(s2), Str(s3), Str(s4));
+TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4) {
+    return Join(GetTempArena(), s1, s2, s3, s4, Str{});
 }
 
-TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4, const char* s5) {
-    return Join(GetTempArena(), Str(s1), Str(s2), Str(s3), Str(s4), Str(s5));
+TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4, Str s5) {
+    return Join(GetTempArena(), s1, s2, s3, s4, s5);
 }
 
-TempWStr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
-    return WrapTempWStr(Join(GetTempArena(), s1, s2, s3));
-}
-
-TempStr JoinTemp(Str s1, const char* s2, const char* s3) {
-    return Join(GetTempArena(), s1, Str(s2), Str(s3));
-}
-
-TempStr JoinTemp(const char* s1, Str s2, const char* s3) {
-    return Join(GetTempArena(), Str(s1), s2, Str(s3));
-}
-
-TempStr JoinTemp(Str s1, Str s2, const char* s3) {
-    return Join(GetTempArena(), s1, s2, Str(s3));
-}
-
-TempWStr JoinTemp(WStr s1, const WCHAR* s2, const WCHAR* s3) {
-    return JoinTemp(s1.s, s2, s3);
-}
-
-TempWStr JoinTemp(const WCHAR* s1, WStr s2, const WCHAR* s3) {
-    return JoinTemp(s1, s2.s, s3);
-}
-
-TempWStr JoinTemp(WStr s1, WStr s2, const WCHAR* s3) {
-    return JoinTemp(s1.s, s2.s, s3);
+TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
+    return WrapTempWStr(Join(GetTempArena(), s1.s, s2.s, s3.s));
 }
 
 TempStr FormatTemp(const char* fmt, ...) {
@@ -111,26 +87,26 @@ TempStr FormatTemp(const char* fmt, ...) {
     return res;
 }
 
-TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWith) {
+TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     if (!s || str::IsEmpty(toReplace) || !replaceWith) {
         return {};
     }
 
-    const char* curr = s;
+    const char* curr = s.s;
     Str end = str::Find(Str(curr), toReplace);
     if (!end) {
         // optimization: nothing to replace so do nothing
-        return Str(s);
+        return s;
     }
 
-    size_t findLen = str::Len(toReplace);
-    size_t replLen = str::Len(replaceWith);
+    size_t findLen = (size_t)toReplace.len;
+    size_t replLen = (size_t)replaceWith.len;
     size_t lenDiff = 0;
     if (replLen > findLen) {
         lenDiff = replLen - findLen;
     }
     // heuristic: allow 6 replacements without reallocating
-    size_t capHint = str::Len(s) + 1 + (lenDiff * 6);
+    size_t capHint = (size_t)s.len + 1 + (lenDiff * 6);
     StrBuilder result(capHint);
     bool ok;
     while (end) {
@@ -138,7 +114,7 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
         if (!ok) {
             return {};
         }
-        ok = result.Append(replaceWith, replLen);
+        ok = result.Append(replaceWith.s, replLen);
         if (!ok) {
             return {};
         }
@@ -152,14 +128,14 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
     return WrapTempStr(result.StealData(GetTempArena()));
 }
 
-TempStr ReplaceNoCaseTemp(const char* s, const char* toReplace, const char* replaceWith) {
-    int n = str::Leni(toReplace);
-    Str pos = str::FindI(Str(s), toReplace);
+TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
+    int n = toReplace.len;
+    Str pos = str::FindI(s, toReplace);
     if (!pos) {
-        return Str(s);
+        return s;
     }
-    if (!memeq(pos.s, toReplace, n)) {
-        toReplace = str::DupTemp(pos, n).s;
+    if (!memeq(pos.s, toReplace.s, n)) {
+        toReplace = str::DupTemp(pos, n);
     }
     TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);
     return res;
@@ -168,7 +144,7 @@ TempStr ReplaceNoCaseTemp(const char* s, const char* toReplace, const char* repl
 } // namespace str
 
 // handles embedded 0 in the string
-TempWStr ToWStrTemp(const StrBuilder& str) {
+TempWStr ToWStrTempFromBuilder(const StrBuilder& str) {
     if (str.IsEmpty()) {
         return {};
     }

@@ -48,7 +48,8 @@ int StrQueue::Size() {
 
 char* StrQueue::Append(const char* s, int len) {
     Lock();
-    auto res = strings.Append(s, len);
+    Str str = len < 0 ? Str(s) : Str((char*)s, len);
+    auto res = strings.Append(str);
     Unlock();
     SetEvent(hEvent);
     return res;
