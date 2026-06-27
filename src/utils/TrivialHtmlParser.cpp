@@ -16,10 +16,10 @@ name/val pointers inside Element/Attr structs refer to
 memory inside HtmlParser::s, so they don't need to be freed.
 */
 
-bool HtmlElement::NameIs(const char* nameIn) const {
+bool HtmlElement::NameIs(Str nameIn) const {
     if (!name) {
         ReportIf(Tag_NotFound == tag);
-        HtmlTag tg = FindHtmlTag(nameIn, str::Len(nameIn));
+        HtmlTag tg = FindHtmlTag(nameIn.s, nameIn.len);
         return tg == tag;
     }
     return str::EqI(name, nameIn);
@@ -28,7 +28,7 @@ bool HtmlElement::NameIs(const char* nameIn) const {
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "opf:content" with name="content" and any value of ns)
 // TODO: add proper namespace support
-bool HtmlElement::NameIsNS(const char* nameIn, const char*) const {
+bool HtmlElement::NameIsNS(Str nameIn, Str) const {
     // ReportIf(!ns);
     const char* nameStart = nullptr;
     if (name) {
@@ -61,7 +61,7 @@ static WCHAR IntToChar(int codepoint) {
 }
 
 // caller needs to free() the result
-WCHAR* DecodeHtmlEntitites(const char* string, uint codepage) {
+WStr DecodeHtmlEntitites(Str string, uint codepage) {
     TempWStr fixedTemp = strconv::StrCPToWStrTemp(string, codepage);
     WCHAR* fixed = str::Dup(fixedTemp);
     WCHAR* dst = fixed;
@@ -90,7 +90,7 @@ WCHAR* DecodeHtmlEntitites(const char* string, uint codepage) {
 
         if (entityEnd != src) {
             size_t entityLen = entityEnd - src;
-            rune = HtmlEntityNameToRune(src, entityLen);
+            rune = HtmlEntityNameToRune(WStr((wchar_t*)src, (int)entityLen));
         }
         if (-1 != rune) {
             *dst++ = IntToChar(rune);
@@ -104,14 +104,14 @@ WCHAR* DecodeHtmlEntitites(const char* string, uint codepage) {
     }
     *dst = '\0';
 
-    return fixed;
+    return WStr(fixed);
 }
 
 // TODO: optimize
-TempStr DecodeHtmlEntititesTemp(const char* s, uint codepage) {
-    WCHAR* ws = DecodeHtmlEntitites(s, codepage);
-    char* res = ToUtf8Temp(ws);
-    str::Free(ws);
+Str DecodeHtmlEntititesTemp(Str s, uint codepage) {
+    WStr ws = DecodeHtmlEntitites(s, codepage);
+    Str res = ToUtf8Temp(ws);
+    str::Free(ws.s);
     return res;
 }
 
@@ -151,22 +151,22 @@ HtmlAttr* HtmlParser::AllocAttr(char* name, HtmlAttr* next) {
 }
 
 // caller needs to free() the result
-WCHAR* HtmlElement::GetAttribute(const char* name) const {
+WStr HtmlElement::GetAttribute(Str name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name)) {
-            return DecodeHtmlEntitites(attr->val, codepage);
+            return DecodeHtmlEntitites(Str(attr->val), codepage);
         }
     }
-    return nullptr;
+    return {};
 }
 
-TempStr HtmlElement::GetAttributeTemp(const char* name) const {
+Str HtmlElement::GetAttributeTemp(Str name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name)) {
-            return DecodeHtmlEntititesTemp(attr->val, codepage);
+            return DecodeHtmlEntititesTemp(Str(attr->val), codepage);
         }
     }
-    return nullptr;
+    return {};
 }
 
 HtmlElement* HtmlParser::AllocElement(HtmlTag tag, char* name, HtmlElement* parent) {
@@ -322,11 +322,11 @@ HtmlElement* HtmlParser::Parse(const ByteSlice& d, uint codepage) {
 // it starts from *next* element in traversal order, which allows for
 // easy iteration over elements.
 // Note: name must be lower-case
-HtmlElement* HtmlParser::FindElementByName(const char* name, HtmlElement* from) {
-    return FindElementByNameNS(name, nullptr, from);
+HtmlElement* HtmlParser::FindElementByName(Str name, HtmlElement* from) {
+    return FindElementByNameNS(name, {}, from);
 }
 
-HtmlElement* HtmlParser::FindElementByNameNS(const char* name, const char* ns, HtmlElement* from) {
+HtmlElement* HtmlParser::FindElementByNameNS(Str name, Str ns, HtmlElement* from) {
     HtmlElement* el = from ? from : rootElement;
     if (from) {
         goto FindNext;

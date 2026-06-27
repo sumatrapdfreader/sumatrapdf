@@ -6,8 +6,8 @@
 #include "HtmlPullParser.h"
 
 // returns -1 if didn't find
-int HtmlEntityNameToRune(const char* name, size_t nameLen) {
-    return FindHtmlEntityRune(name, nameLen);
+int HtmlEntityNameToRune(Str name) {
+    return FindHtmlEntityRune(name.s, name.len);
 }
 
 #define MAX_ENTITY_NAME_LEN 8
@@ -17,18 +17,18 @@ int HtmlEntityNameToRune(const char* name, size_t nameLen) {
 // conversion from unicode to ascii succeeds, we can use ascii
 // version, otherwise it wouldn't match anyway
 // returns -1 if didn't find
-int HtmlEntityNameToRune(const WCHAR* name, size_t nameLen) {
+int HtmlEntityNameToRune(WStr name) {
     char asciiName[MAX_ENTITY_NAME_LEN]{};
-    if (nameLen > MAX_ENTITY_NAME_LEN) {
+    if ((size_t)name.len > MAX_ENTITY_NAME_LEN) {
         return -1;
     }
-    for (size_t i = 0; i < nameLen; i++) {
-        if (name[i] > 127) {
+    for (int i = 0; i < name.len; i++) {
+        if (name.s[i] > 127) {
             return -1;
         }
-        asciiName[i] = (char)name[i];
+        asciiName[i] = (char)name.s[i];
     }
-    return FindHtmlEntityRune(asciiName, nameLen);
+    return FindHtmlEntityRune(asciiName, name.len);
 }
 
 bool SkipUntil(const char*& s, const char* end, char c) {
@@ -115,7 +115,7 @@ const char* ResolveHtmlEntity(const char* s, size_t len, int& rune) {
         ;
     }
     if (entEnd != s) {
-        rune = HtmlEntityNameToRune(s, entEnd - s);
+        rune = HtmlEntityNameToRune(Str((char*)s, (int)(entEnd - s)));
         if (-1 == rune) {
             return nullptr;
         }
@@ -135,7 +135,9 @@ const char* ResolveHtmlEntity(const char* s, size_t len, int& rune) {
 // with alloc in which entities are converted to their values
 // Entities are encoded as utf8 in the result.
 // alloc can be nullptr, in which case we'll allocate with malloc()
-const char* ResolveHtmlEntities(const char* s, const char* end, Arena* alloc) {
+Str ResolveHtmlEntities(Str str, Arena* alloc) {
+    const char* s = str.s;
+    const char* end = str.s + str.len;
     char* res = nullptr;
     size_t resLen = 0;
     char* dst;
@@ -145,7 +147,7 @@ const char* ResolveHtmlEntities(const char* s, const char* end, Arena* alloc) {
         bool found = SkipUntil(curr, end, '&');
         if (!found) {
             if (!res) {
-                return s;
+                return str;
             }
             // copy the remaining string
             MemAppend(dst, s, end - s);
@@ -175,30 +177,30 @@ const char* ResolveHtmlEntities(const char* s, const char* end, Arena* alloc) {
     }
     *dst = 0;
     ReportIf(dst >= res + resLen);
-    return (const char*)res;
+    return Str(res, (int)(dst - res));
 }
 
 // convenience function for the above that always allocates
-char* ResolveHtmlEntities(const char* s, size_t len) {
-    const char* res = ResolveHtmlEntities(s, s + len, nullptr);
-    if (res == s) {
+Str ResolveHtmlEntities(Str s) {
+    Str res = ResolveHtmlEntities(s, nullptr);
+    if (res.s == s.s) {
         // ensure 0-terminated string is returned
-        return str::Dup(s, len);
-    }
-    return (char*)res;
-}
-
-TempStr ResolveHtmlEntitiesTemp(const char* s, size_t len) {
-    const char* res = ResolveHtmlEntities(s, s + len, GetTempArena());
-    if (res == s) {
-        // ensure 0-terminated string is returned
-        return str::DupTemp(s, len);
+        return str::Dup(s);
     }
     return res;
 }
 
-bool AttrInfo::NameIs(const char* s) const {
-    return str::EqNIx(name, nameLen, s);
+Str ResolveHtmlEntitiesTemp(Str s) {
+    Str res = ResolveHtmlEntities(s, GetTempArena());
+    if (res.s == s.s) {
+        // ensure 0-terminated string is returned
+        return str::DupTemp(s);
+    }
+    return res;
+}
+
+bool AttrInfo::NameIs(Str s) const {
+    return str::EqNIx(Str((char*)name, (int)nameLen), nameLen, s);
 }
 
 // return true if nameToCheck is the same as s after skipping namespace preifix
@@ -219,13 +221,13 @@ static bool IsNameWithNS(const char* s, size_t sLen, const char* nameToCheck) {
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "xlink:href" with name="href" and any value of attrNS)
 // TODO: add proper namespace support
-bool AttrInfo::NameIsNS(const char* nameToCheck, const char*) const {
+bool AttrInfo::NameIsNS(Str nameToCheck, Str) const {
     // ReportIf(!ns);
-    return IsNameWithNS(name, nameLen, nameToCheck);
+    return IsNameWithNS(name, nameLen, nameToCheck.s);
 }
 
-bool AttrInfo::ValIs(const char* s) const {
-    return str::EqNIx(val, valLen, s);
+bool AttrInfo::ValIs(Str s) const {
+    return str::EqNIx(Str((char*)val, (int)valLen), valLen, s);
 }
 
 void HtmlToken::SetTag(TokenType new_type, const char* new_s, const char* end) {
@@ -250,17 +252,17 @@ void HtmlToken::SetError(ParsingError err, const char* errContext) {
     this->s = errContext;
 }
 
-bool HtmlToken::NameIs(const char* nameToFind) const {
-    return (str::Len(nameToFind) == nLen) && str::StartsWithI(s, nameToFind);
+bool HtmlToken::NameIs(Str nameToFind) const {
+    return (nameToFind.len == (int)nLen) && str::StartsWithI(Str((char*)s, (int)nLen), nameToFind);
 }
 
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "opf:content" with name="content" and any value of ns)
 // TODO: add proper namespace support
-bool HtmlToken::NameIsNS(const char* nameToCheck, const char*) const {
+bool HtmlToken::NameIsNS(Str nameToCheck, Str) const {
     // ReportIf(!ns);
     //  nLen is 'nameLen' i.e. first nLen characters of s is a name
-    return IsNameWithNS(s, nLen, nameToCheck);
+    return IsNameWithNS(s, nLen, nameToCheck.s);
 }
 
 // reparse point is an address within html that we can
@@ -279,7 +281,7 @@ const char* HtmlToken::GetReparsePoint() const {
     return nullptr;
 }
 
-AttrInfo* HtmlToken::GetAttrByName(const char* name) {
+AttrInfo* HtmlToken::GetAttrByName(Str name) {
     nextAttr = nullptr; // start from the beginning
     for (AttrInfo* a = NextAttr(); a; a = NextAttr()) {
         if (a->NameIs(name)) {
@@ -289,7 +291,7 @@ AttrInfo* HtmlToken::GetAttrByName(const char* name) {
     return nullptr;
 }
 
-AttrInfo* HtmlToken::GetAttrByNameNS(const char* name, const char* attrNS) {
+AttrInfo* HtmlToken::GetAttrByNameNS(Str name, Str attrNS) {
     nextAttr = nullptr; // start from the beginning
     for (AttrInfo* a = NextAttr(); a; a = NextAttr()) {
         if (a->NameIsNS(name, attrNS)) {

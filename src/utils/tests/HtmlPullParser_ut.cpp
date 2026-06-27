@@ -47,8 +47,8 @@ static void HtmlEntities() {
     const char* unchanged[] = {"foo", "", " as;d "};
     for (size_t i = 0; i < dimof(unchanged); i++) {
         const char* s = unchanged[i];
-        TempStr res = ResolveHtmlEntities(s, s + str::Len(s), ta);
-        utassert(res == s);
+        Str res = ResolveHtmlEntities(Str(s), ta);
+        utassert(res.s == s);
     }
 
     struct {
@@ -68,7 +68,7 @@ static void HtmlEntities() {
     };
     for (size_t i = 0; i < dimof(changed); i++) {
         const char* s = changed[i].s;
-        TempStr res = ResolveHtmlEntities(s, s + str::Len(s), ta);
+        Str res = ResolveHtmlEntities(Str(s), ta);
         utassert(str::Eq(res, changed[i].res));
     }
 }

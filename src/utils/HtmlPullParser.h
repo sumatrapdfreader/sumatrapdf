@@ -7,9 +7,9 @@ struct AttrInfo {
     const char* val;
     size_t valLen;
 
-    bool NameIs(const char* s) const;
-    bool NameIsNS(const char* nameToCheck, const char* ns) const;
-    bool ValIs(const char* s) const;
+    bool NameIs(Str s) const;
+    bool NameIsNS(Str nameToCheck, Str ns) const;
+    bool ValIs(Str s) const;
 };
 
 // TrivialHtmlParser needs to enumerate all attributes of an HtmlToken
@@ -54,10 +54,10 @@ struct HtmlToken {
     HtmlTag tag = Tag_NotFound;
     size_t nLen = 0;
 
-    bool NameIs(const char* name) const;
-    bool NameIsNS(const char* name, const char* ns) const;
-    AttrInfo* GetAttrByName(const char* name);
-    AttrInfo* GetAttrByNameNS(const char* name, const char* attrNS);
+    bool NameIs(Str name) const;
+    bool NameIsNS(Str name, Str ns) const;
+    AttrInfo* GetAttrByName(Str name);
+    AttrInfo* GetAttrByNameNS(Str name, Str attrNS);
 
   protected:
     AttrInfo* NextAttr();
@@ -96,10 +96,10 @@ bool SkipUntil(const char*& s, const char* end, char c);
 bool SkipUntil(const char*& s, const char* end, const char* term);
 bool IsSpaceOnly(const char* s, const char* end);
 
-int HtmlEntityNameToRune(const char* name, size_t nameLen);
-int HtmlEntityNameToRune(const WCHAR* name, size_t nameLen);
+int HtmlEntityNameToRune(Str name);
+int HtmlEntityNameToRune(WStr name);
 
 const char* ResolveHtmlEntity(const char* s, size_t len, int& rune);
-const char* ResolveHtmlEntities(const char* s, const char* end, Arena* alloc);
-char* ResolveHtmlEntities(const char* s, size_t len);
-TempStr ResolveHtmlEntitiesTemp(const char* s, size_t len);
+Str ResolveHtmlEntities(Str s, Arena* alloc);
+Str ResolveHtmlEntities(Str s);
+Str ResolveHtmlEntitiesTemp(Str s);
