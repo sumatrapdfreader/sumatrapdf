@@ -294,11 +294,11 @@ static MenuDef menuDefContextTab[] = {
     // these top items are removed unless the document has unsaved changes;
     // text matches the "Unsaved changes" close dialog
     {
-        _TRN("&Save to existing PDF"),
+        _TRN("&Save changes to existing PDF"),
         CmdSaveAnnotations,
     },
     {
-        _TRN("Save to &new PDF"),
+        _TRN("Save changes to &new PDF"),
         CmdSaveAnnotationsNewFile,
     },
     {
