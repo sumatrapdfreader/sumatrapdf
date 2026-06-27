@@ -645,8 +645,7 @@ static bool RunTranslation(AIChatBackend backend, const char* srcLang, const cha
     return true;
 }
 
-char* TestSelectionTranslateResult(int backend, const char* srcLang, const char* dstLang, const char* text,
-                                   int* exitCode) {
+Str TestSelectionTranslateResult(int backend, Str srcLang, Str dstLang, Str text, int* exitCode) {
     AIChatBackend chatBackend = AIChatBackend::Grok;
     if (backend == 0) {
         chatBackend = AIChatBackend::Claude;
@@ -658,7 +657,7 @@ char* TestSelectionTranslateResult(int backend, const char* srcLang, const char*
     if (exitCode) {
         *exitCode = ok ? 0 : 1;
     }
-    return str::Dup(msg.Get());
+    return Str(str::Dup(msg.Get()));
 }
 
 static void SetDialogClientSize(HWND hwnd, int clientW, int clientH) {
