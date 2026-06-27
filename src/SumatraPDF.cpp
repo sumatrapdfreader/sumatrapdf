@@ -6456,7 +6456,7 @@ static void ListPrintersThread(HWND* hwndPtr) {
 }
 
 void ReopenLastClosedFile(MainWindow* win) {
-    char* path = PopRecentlyClosedDocument();
+    Str path = PopRecentlyClosedDocument();
     if (!path) {
         return;
     }

@@ -17,10 +17,10 @@ struct FileHistory {
     void Append(FileState* state) const;
     void Remove(FileState* state) const;
     FileState* Get(size_t index) const;
-    FileState* FindByPath(const char* filePath) const;
-    FileState* FindByName(const char* filePath, size_t* idxOut) const;
-    FileState* MarkFileLoaded(const char* filePath) const;
-    bool MarkFileInexistent(const char* filePath, bool hide = false) const;
+    FileState* FindByPath(Str filePath) const;
+    FileState* FindByName(Str filePath, size_t* idxOut) const;
+    FileState* MarkFileLoaded(Str filePath) const;
+    bool MarkFileInexistent(Str filePath, bool hide = false) const;
     void GetFrequencyOrder(Vec<FileState*>& list) const;
     void GetRecentlyOpenedOrder(Vec<FileState*>& list) const;
     void Purge(bool alwaysUseDefaultState = false) const;
@@ -30,8 +30,8 @@ struct FileHistory {
 extern FileHistory gFileHistory;
 
 int RecentlyCloseDocumentsCount();
-void RememberRecentlyClosedDocument(const char* path);
-char* PopRecentlyClosedDocument();
+void RememberRecentlyClosedDocument(Str path);
+Str PopRecentlyClosedDocument();
 void RemoveNonExistentFilesAsync();
-bool DocumentPathExists(const char* path);
+bool DocumentPathExists(Str path);
 void CleanUpThumbnailCache();

@@ -83,7 +83,7 @@ FileState* FileHistory::Get(size_t index) const {
     return nullptr;
 }
 
-FileState* FileHistory::FindByPath(const char* filePath) const {
+FileState* FileHistory::FindByPath(Str filePath) const {
     int idxExact = -1;
     int n = states->Size();
     for (int i = 0; i < n; i++) {
@@ -100,7 +100,7 @@ FileState* FileHistory::FindByPath(const char* filePath) const {
 
 // returns an exact match by path or match by just file name
 // TODO: audit the uses of FindByName and maybe convert to FindByPath
-FileState* FileHistory::FindByName(const char* filePath, size_t* idxOut) const {
+FileState* FileHistory::FindByName(Str filePath, size_t* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
     TempStr fileName = path::GetBaseNameTemp(Str(filePath));
@@ -126,7 +126,7 @@ FileState* FileHistory::FindByName(const char* filePath, size_t* idxOut) const {
     return states->at(idFound);
 }
 
-FileState* FileHistory::MarkFileLoaded(const char* filePath) const {
+FileState* FileHistory::MarkFileLoaded(Str filePath) const {
     ReportIf(!filePath);
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
@@ -144,7 +144,7 @@ FileState* FileHistory::MarkFileLoaded(const char* filePath) const {
     return fs;
 }
 
-bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
+bool FileHistory::MarkFileInexistent(Str filePath, bool hide) const {
     ReportIf(!filePath);
     FileState* state = FindByPath(filePath);
     if (!state) {
@@ -287,19 +287,19 @@ int RecentlyCloseDocumentsCount() {
     return gClosedDocuments.Size();
 }
 
-void RememberRecentlyClosedDocument(const char* path) {
+void RememberRecentlyClosedDocument(Str path) {
     if (str::IsEmptyOrWhiteSpace(path)) {
         return;
     }
     gClosedDocuments.Append(path);
 }
 
-char* PopRecentlyClosedDocument() {
+Str PopRecentlyClosedDocument() {
     int n = gClosedDocuments.Size();
     if (n > 0) {
-        return gClosedDocuments.RemoveAtFast(n - 1);
+        return Str(gClosedDocuments.RemoveAtFast(n - 1));
     }
-    return nullptr;
+    return Str();
 }
 
 // --- thumbnail cache delete
@@ -363,18 +363,18 @@ extern void MaybeRedrawHomePage();
 
 // document path is either a file or a directory
 // (when browsing images inside directory).
-bool DocumentPathExists(const char* path) {
-    if (file::Exists(Str(path)) || dir::Exists(Str(path))) {
+bool DocumentPathExists(Str path) {
+    if (file::Exists(path) || dir::Exists(path)) {
         return true;
     }
-    auto pos = str::FindCharLast(path + 2, ':');
+    auto pos = str::FindCharLast(path.s + 2, ':');
     if (!pos) {
         return false;
     }
     // remove information needed for pointing at embedded documents
     // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
     // container document exists
-    TempStr realPath = str::DupTemp(path, pos - path);
+    TempStr realPath = str::DupTemp(path.s, pos - path.s);
     return file::Exists(realPath);
 }
 
