@@ -11,18 +11,18 @@ enum class RegType {
 
 struct TextEditor {
     // Editor's binary file name
-    const char* binaryFilename = nullptr;
+    Str binaryFilename;
     // Parameters to be passed to the editor;
     // use placeholder '%f' for path to source file and '%l' for line number.
-    const char* inverseSearchArgs = nullptr;
+    Str inverseSearchArgs;
     // Type of the path information obtained from the registry
     RegType type;
     // Registry key path
-    const char* regKey = nullptr;
+    Str regKey;
     // Registry value name
-    const char* regValue = nullptr;
-    const char* fullPath = nullptr;
-    const char* openFileCmd = nullptr;
+    Str regValue;
+    Str fullPath;
+    Str openFileCmd;
 };
 
 bool IsRunningInPortableMode();
@@ -31,12 +31,12 @@ bool IsInstallerOrUninstallerExe();
 
 void DeleteAppTools();
 
-void SetAppDataDir(const char* path);
+void SetAppDataDir(Str path);
 TempStr GetAppDataDirTemp();
-TempStr GetPathInAppDataDirTemp(const char* fileName);
+TempStr GetPathInAppDataDirTemp(Str fileName);
 
 void DetectTextEditors(Vec<TextEditor*>&);
-char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col);
+Str BuildOpenFileCmd(Str pattern, Str path, int line, int col);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
@@ -44,13 +44,13 @@ void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();
 void SaveCallstackLogs();
 
-char* Sha1OfAppExe();
+Str Sha1OfAppExe();
 TempStr GetWebViewDataDirTemp();
 
 TempStr FormatFileSizeTransTemp(i64);
 
-bool LaunchFileIfExists(const char* path);
+bool LaunchFileIfExists(Str path);
 
-bool AdjustVariableDriveLetter(char* path);
+bool AdjustVariableDriveLetter(Str& path);
 
-bool IsUntrustedFile(const char* filePath, const char* fileUrl = nullptr);
+bool IsUntrustedFile(Str filePath, Str fileUrl = {});

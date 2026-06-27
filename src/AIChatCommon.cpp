@@ -37,7 +37,7 @@ bool IsAIChatAvailable() {
 #endif
 }
 
-bool IsAIChatSupportedForFile(const char* filePath, Kind engineKind) {
+bool IsAIChatSupportedForFile(Str filePath, Kind engineKind) {
     if (!filePath) {
         return false;
     }
@@ -58,13 +58,14 @@ bool IsAIChatSupportedForTab(WindowTab* tab) {
     return IsAIChatSupportedForFile(tab->filePath, tab->GetEngineType());
 }
 
-TempStr AIChatJsEscapeTemp(const char* s) {
+TempStr AIChatJsEscapeTemp(Str s) {
     if (!s) {
         return str::DupTemp("");
     }
     StrBuilder buf;
-    while (*s) {
-        switch (*s) {
+    const char* p = s.s;
+    while (*p) {
+        switch (*p) {
             case '\\':
                 buf.Append("\\\\");
                 break;
@@ -81,15 +82,15 @@ TempStr AIChatJsEscapeTemp(const char* s) {
                 buf.Append("\\t");
                 break;
             default:
-                buf.AppendChar(*s);
+                buf.AppendChar(*p);
                 break;
         }
-        s++;
+        p++;
     }
     return str::DupTemp(buf.LendData());
 }
 
-TempStr AIChatJsonStrTemp(const char* json, const char* key) {
+TempStr AIChatJsonStrTemp(Str json, Str key) {
     TempStr pattern = str::FormatTemp("\"%s\":\"", key);
     const char* start = str::Find(Str(json), pattern).s;
     if (!start) {
@@ -130,9 +131,9 @@ MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame) {
 
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions) {
     for (int i = 0; i < sessions.Size(); i++) {
-        str::Free(sessions[i].sessionId);
-        str::Free(sessions[i].display);
-        str::Free(sessions[i].project);
+        str::Free(sessions[i].sessionId.s);
+        str::Free(sessions[i].display.s);
+        str::Free(sessions[i].project.s);
     }
     sessions.Reset();
 }
@@ -157,7 +158,7 @@ i64 AIChatFileTimeToMs(const FILETIME& ft) {
     return (i64)(uli.QuadPart / 10000);
 }
 
-void AIChatLog(AIChatLogger* logger, const char* direction, const char* text) {
+void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
     if (!logger) {
         return;
     }
@@ -202,7 +203,7 @@ constexpr int kBtnIdAIChatLearnMore = 100;
 
 static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                                          LONG_PTR lpRefData) {
-    const char* docUri = (const char*)lpRefData;
+    Str docUri = (const char*)lpRefData;
     switch (msg) {
         case TDN_HYPERLINK_CLICKED:
             LaunchDocumentation(docUri);
@@ -239,7 +240,7 @@ void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
     dialogConfig.nDefaultButton = IDOK;
     dialogConfig.dwFlags = flags;
     dialogConfig.pfCallback = AIChatNotInstalledDialogCallback;
-    dialogConfig.lpCallbackData = (LONG_PTR)args.docUri;
+    dialogConfig.lpCallbackData = (LONG_PTR)args.docUri.s;
     dialogConfig.pButtons = buttons;
     dialogConfig.cButtons = dimof(buttons);
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
@@ -266,7 +267,7 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, const WCHAR* 
     return nullptr;
 }
 
-void AIChatAppendModelUnique(StrVec& models, const char* model) {
+void AIChatAppendModelUnique(StrVec& models, Str model) {
     if (str::IsEmpty(model)) {
         return;
     }
@@ -287,7 +288,7 @@ void AIChatAppendModelUnique(StrVec& models, const char* model) {
     models.Append(s);
 }
 
-int AIChatFindModelInList(const StrVec& models, const char* model) {
+int AIChatFindModelInList(const StrVec& models, Str model) {
     if (str::IsEmpty(model)) {
         return -1;
     }
@@ -301,9 +302,9 @@ int AIChatFindModelInList(const StrVec& models, const char* model) {
     return -1;
 }
 
-TempStr AIChatModelDisplayNameTemp(const char* model, const char* defaultDisplay) {
+TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay) {
     if (str::IsEmpty(model)) {
-        return str::DupTemp(defaultDisplay ? defaultDisplay : "");
+        return str::DupTemp(defaultDisplay ? defaultDisplay : StrL(""));
     }
     char* dup = str::DupTemp(model);
     dup[0] = (char)toupper((unsigned char)dup[0]);
@@ -401,9 +402,9 @@ function scrollToBottom() {
 }
 </script></body></html>)";
 
-TempStr AIChatFormatChatHtmlTemp(const char* virtualHost, const char* bgColor) {
-    const char* host = virtualHost ? virtualHost : "";
-    const char* bg = bgColor ? bgColor : "#ffffff";
+TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
+    Str host = virtualHost ? virtualHost : Str("");
+    Str bg = bgColor ? bgColor : Str("#ffffff");
     return str::FormatTemp(kAIChatHtmlFmt, host, bg);
 }
 
@@ -419,7 +420,7 @@ void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning) {
     CloseHandle(h);
 }
 
-bool AIChatLaunchProcessWithStdoutPipe(const char* cmdLine, const char* cwd, AIChatProcessLaunchResult* out) {
+bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out) {
     if (!out || str::IsEmpty(cmdLine)) {
         return false;
     }
@@ -474,7 +475,7 @@ int AIChatLabelMaxTextDx(HWND labelHwnd, int labelDx) {
     return maxDx > 0 ? maxDx : 0;
 }
 
-TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, const char* prefix, const char* docName, int maxDx) {
+TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, Str prefix, Str docName, int maxDx) {
     TempStr full = str::JoinTemp(prefix, docName);
     if (maxDx <= 0) {
         return full;
@@ -484,7 +485,7 @@ TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, const char* prefix, 
         return full;
     }
 
-    int nRunes = utf8StrLen((u8*)docName);
+    int nRunes = utf8StrLen((u8*)docName.s);
     if (nRunes < 0) {
         return full;
     }
@@ -506,14 +507,14 @@ TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, const char* prefix, 
     return best;
 }
 
-char* AIChatGenerateSessionId() {
+Str AIChatGenerateSessionId() {
     GUID guid;
     if (FAILED(CoCreateGuid(&guid))) {
         return nullptr;
     }
-    return str::Format("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3,
-                       guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5],
-                       guid.Data4[6], guid.Data4[7]);
+    return Str(str::Format("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3,
+                           guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5],
+                           guid.Data4[6], guid.Data4[7]));
 }
 
 static AIChatBackend BackendFromTabStorage(int v) {

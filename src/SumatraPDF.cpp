@@ -2307,7 +2307,7 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
     }
     // try to find non-existent files with history data
     // on a different removable drive before failing
-    char* adjPath = str::DupTemp(path);
+    Str adjPath = str::DupTemp(path);
     if (AdjustVariableDriveLetter(adjPath)) {
         RenameFileInHistory(path, adjPath);
         args->SetFilePath(adjPath);
@@ -5056,11 +5056,10 @@ static void OpenFileWithTextEditor(const char* path) {
     DetectTextEditors(editors);
     const char* cmd = editors[0]->openFileCmd;
 
-    char* cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
-    logf("OpenFileWithTextEditor: '%s'\n", cmdLine);
+    Str cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
+    logf("OpenFileWithTextEditor: '%s'\n", cmdLine.s);
     char* appDir = GetSelfExeDirTemp();
     AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
-    str::Free(cmdLine);
 }
 #endif
 

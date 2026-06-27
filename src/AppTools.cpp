@@ -111,21 +111,21 @@ bool IsInstallerOrUninstallerExe() {
     return str::FindI(exeName, Str("uninstall")).s || str::FindI(exeName, Str("install")).s;
 }
 
-static char* gAppDataDir = nullptr;
+static Str gAppDataDir;
 
 void DeleteAppTools() {
     // gAppDataDir is allocated from gLifetimeArena (freed wholesale on exit)
-    gAppDataDir = nullptr;
+    gAppDataDir = {};
 }
 
-void SetAppDataDir(const char* dir) {
-    dir = path::NormalizeTemp(Str(dir));
+void SetAppDataDir(Str dir) {
+    dir = path::NormalizeTemp(dir);
     // don't try to create root directories like d:\ (CreateAll would fail)
-    bool isRootDir = str::Len(dir) == 3 && dir[1] == ':' && dir[2] == '\\';
+    bool isRootDir = str::Len(dir) == 3 && dir.s[1] == ':' && dir.s[2] == '\\';
     if (!isRootDir) {
-        bool ok = dir::CreateAll(Str(dir));
+        bool ok = dir::CreateAll(dir);
         if (!ok) {
-            logf("SetAppDataDir: failed to create directory '%s'\n", dir);
+            logf("SetAppDataDir: failed to create directory '%s'\n", dir.s);
             LogLastError();
             ReportIf(true);
         }
@@ -133,12 +133,12 @@ void SetAppDataDir(const char* dir) {
     // lives for the whole program: allocate from the lifetime arena. SetAppDataDir
     // is called at most a couple of times (default + a -appdata override), so the
     // (rare) replaced value being retained until exit is negligible.
-    gAppDataDir = str::Dup(GetLifetimeArena(), dir);
+    gAppDataDir = Str(str::Dup(GetLifetimeArena(), dir));
 }
 
 TempStr GetAppDataDirTemp() {
     if (gAppDataDir) {
-        return gAppDataDir;
+        return gAppDataDir.s;
     }
     bool isPortable = IsRunningInPortableMode();
     TempStr dir = nullptr;
@@ -162,11 +162,11 @@ TempStr GetAppDataDirTemp() {
     }
     logf("GetAppDataDirTemp(): '%s'%s\n", dir, isPortable ? " (portable)" : "(installed)");
     SetAppDataDir(dir);
-    return gAppDataDir;
+    return gAppDataDir.s;
 }
 
 // Generate full path for a file or directory for storing data
-TempStr GetPathInAppDataDirTemp(const char* name) {
+TempStr GetPathInAppDataDirTemp(Str name) {
     if (!name) {
         return {};
     }
@@ -384,8 +384,8 @@ static void FindTextEditors() {
             continue;
         }
 
-        rule.fullPath = str::Dup(exePath);
-        rule.openFileCmd = str::Format("\"%s\" %s", exePath, inverseSearchArgs);
+        rule.fullPath = Str(str::Dup(exePath));
+        rule.openFileCmd = Str(str::Format("\"%s\" %s", exePath, inverseSearchArgs));
         found.Append(exePath);
     }
     didFindTextEditors = true;
@@ -407,7 +407,7 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the caller must free() the result
-char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col) {
+Str BuildOpenFileCmd(Str pattern, Str path, int line, int col) {
     const char* perc;
     StrBuilder cmdline(256);
 
@@ -432,7 +432,7 @@ char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col)
     }
     cmdline.Append(s);
 
-    return cmdline.StealData();
+    return Str(cmdline.StealData());
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
@@ -563,9 +563,9 @@ static char gAppSha1[41];
 
 // return hex version of sha1 of app's executable (pointer to cached value)
 // nullptr if there was an error
-char* Sha1OfAppExe() {
+Str Sha1OfAppExe() {
     if (gAppSha1[0]) {
-        return gAppSha1;
+        return Str(gAppSha1);
     }
 
     TempStr appPath = GetSelfExePathTemp();
@@ -584,7 +584,7 @@ char* Sha1OfAppExe() {
     for (size_t i = 0; i < 20; i++) {
         sprintf_s(&gAppSha1[2 * i], 3, "%02x", sha1[i]);
     }
-    return gAppSha1;
+    return Str(gAppSha1);
 }
 
 TempStr GetWebViewDataDirTemp() {
@@ -594,7 +594,7 @@ TempStr GetWebViewDataDirTemp() {
     }
     dir = path::JoinTemp(dir, "SumatraPDF-data");
     char id[7] = "000000";
-    char* sha1 = Sha1OfAppExe();
+    Str sha1 = Sha1OfAppExe();
     if (sha1) {
         str::BufSet(id, dimof(id), sha1);
     }
@@ -626,17 +626,17 @@ TempStr FormatFileSizeTransTemp(i64 size) {
 }
 
 // returns true if file exists
-bool LaunchFileIfExists(const char* path) {
+bool LaunchFileIfExists(Str path) {
     if (!path) {
         return false;
     }
-    if (!file::Exists(Str(path))) {
-        logf("LaunchFileIfExists: !file::Exists('%s')\n", path);
+    if (!file::Exists(path)) {
+        logf("LaunchFileIfExists: !file::Exists('%s')\n", path.s);
         return false;
     }
     if (gIsStoreBuild) {
         path = path::GetNonVirtualTemp(path);
-        logf("LaunchFileIfExists: gIsStoreBuild, path='%s'\n", path);
+        logf("LaunchFileIfExists: gIsStoreBuild, path='%s'\n", path.s);
     }
     LaunchFileShell(path, nullptr, "open");
     return true;
@@ -645,36 +645,36 @@ bool LaunchFileIfExists(const char* path) {
 // Updates the drive letter for a path that could have been on a removable drive,
 // if that same path can be found on a different removable drive
 // returns true if the path has been changed
-bool AdjustVariableDriveLetter(char* path) {
+bool AdjustVariableDriveLetter(Str& path) {
     // Don't bother if the file path is still valid
-    if (file::Exists(Str(path))) {
+    if (file::Exists(path)) {
         return false;
     }
     // only check absolute path on drives i.e. those that start with "d:\"
-    if (str::Leni(path) < 4 || path[1] != ':') {
+    if (str::Leni(path) < 4 || path.s[1] != ':') {
         return false;
     }
 
     // Iterate through all (other) removable drives and try to find the file there
     char szDrive[] = "A:\\";
-    char origDrive = path[0];
+    char origDrive = path.s[0];
     for (DWORD driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
         if ((driveMask & 1) && szDrive[0] != origDrive && path::HasVariableDriveLetter(szDrive)) {
-            path[0] = szDrive[0];
-            if (file::Exists(Str(path))) {
+            path.s[0] = szDrive[0];
+            if (file::Exists(path)) {
                 return true;
             }
         }
         szDrive[0]++;
     }
-    path[0] = origDrive;
+    path.s[0] = origDrive;
     return false;
 }
 
 // files are considered untrusted, if they're either loaded from a
 // non-file URL in plugin mode, or if they're marked as being from
 // an untrusted zone (e.g. by the browser that's downloaded them)
-bool IsUntrustedFile(const char* filePath, const char* fileURL) {
+bool IsUntrustedFile(Str filePath, Str fileURL) {
     AutoFreeStr protocol;
     if (fileURL && str::Parse(fileURL, "%S:", &protocol)) {
         if (str::Leni(protocol) > 1 && !str::EqI(protocol, "file")) {

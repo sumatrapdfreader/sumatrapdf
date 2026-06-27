@@ -13,22 +13,22 @@ enum class AIChatBackend {
 };
 
 struct AIChatSessionInfo {
-    char* sessionId;
-    char* display;
-    char* project;
+    Str sessionId;
+    Str display;
+    Str project;
     i64 timestamp;
 };
 
 struct AIChatLogger {
     Mutex* mutex;
-    const char* logFileName;
-    const char* logTag;
+    Str logFileName;
+    Str logTag;
 };
 
 struct AIChatNotInstalledDialogArgs {
-    const char* windowTitle;
-    const char* mainInstruction;
-    const char* docUri;
+    Str windowTitle;
+    Str mainInstruction;
+    Str docUri;
 };
 
 struct AIChatProcessLaunchResult {
@@ -39,11 +39,11 @@ struct AIChatProcessLaunchResult {
 };
 
 bool IsAIChatAvailable();
-bool IsAIChatSupportedForFile(const char* filePath, Kind engineKind = nullptr);
+bool IsAIChatSupportedForFile(Str filePath, Kind engineKind = nullptr);
 bool IsAIChatSupportedForTab(WindowTab* tab);
 
-TempStr AIChatJsEscapeTemp(const char* s);
-TempStr AIChatJsonStrTemp(const char* json, const char* key);
+TempStr AIChatJsEscapeTemp(Str s);
+TempStr AIChatJsonStrTemp(Str json, Str key);
 
 MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame);
 
@@ -51,25 +51,25 @@ void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions);
 void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions);
 i64 AIChatFileTimeToMs(const FILETIME& ft);
 
-void AIChatLog(AIChatLogger* logger, const char* direction, const char* text);
+void AIChatLog(AIChatLogger* logger, Str direction, Str text);
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args);
 
 TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, const WCHAR* searchExeName,
                                  const WCHAR* searchNameNoExt = nullptr);
 
-void AIChatAppendModelUnique(StrVec& models, const char* model);
-int AIChatFindModelInList(const StrVec& models, const char* model);
-TempStr AIChatModelDisplayNameTemp(const char* model, const char* defaultDisplay);
+void AIChatAppendModelUnique(StrVec& models, Str model);
+int AIChatFindModelInList(const StrVec& models, Str model);
+TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay);
 
 bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res);
-TempStr AIChatFormatChatHtmlTemp(const char* virtualHost, const char* bgColor);
+TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor);
 
 void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning);
-bool AIChatLaunchProcessWithStdoutPipe(const char* cmdLine, const char* cwd, AIChatProcessLaunchResult* out);
+bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out);
 
 int AIChatLabelMaxTextDx(HWND labelHwnd, int labelDx);
-TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, const char* prefix, const char* docName, int maxDx);
-char* AIChatGenerateSessionId();
+TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, Str prefix, Str docName, int maxDx);
+Str AIChatGenerateSessionId();
 
 AIChatBackend AIChatGetTabPanelOpen(WindowTab* tab);
 void AIChatSetTabPanelOpen(WindowTab* tab, AIChatBackend backend);
