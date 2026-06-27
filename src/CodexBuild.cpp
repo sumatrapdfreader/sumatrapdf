@@ -66,7 +66,7 @@ static void ShowCodexBuildNotInstalledDialog() {
     AIChatShowNotInstalledDialog(args);
 }
 
-bool IsCodexBuildSupportedForFile(const char* filePath, Kind engineKind) {
+bool IsCodexBuildSupportedForFile(Str filePath, Kind engineKind) {
     return IsAIChatSupportedForFile(filePath, engineKind);
 }
 
