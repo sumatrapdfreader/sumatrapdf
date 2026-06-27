@@ -243,7 +243,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     return checkUpdate;
 }
 
-void StartInstallerAutoUpgrade(const char* installerPath) {
+void StartInstallerAutoUpgrade(Str installerPath) {
     StrBuilder cmd;
     if (IsOurExeInstalled()) {
         // no need for sleep because it shows the installer dialog anyway
@@ -754,7 +754,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
 // the assumption is that this is a portable version downloaded to temp directory
 // we should copy ourselves over the existing file, launch ourselves and
 // tell our new copy to delete ourselves
-void UpdateSelfTo(const char* path) {
+void UpdateSelfTo(Str path) {
     ReportIf(!path);
     if (!file::Exists(path)) {
         logf("UpdateSelfTo: failed because destination doesn't exist\n");
