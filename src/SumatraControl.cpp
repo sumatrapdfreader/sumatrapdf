@@ -41,6 +41,7 @@ enum class ControlCmd : u16 {
     TestI18nErrorString = 27,
     TestPageInfoOverlay = 28,
     TestGetToc = 29,
+    TestPageLinks = 30,
 };
 
 enum class ControlArgType : u16 {
@@ -490,6 +491,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestGetTocResult(path, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageLinks: {
+            const char* path = StringArg(req, 0);
+            i32 pageNo = 1;
+            if (!path || !IntArg(req, 1, pageNo)) {
+                AppendError(req, "TestPageLinks expects string path, int pageNo");
+                break;
+            }
+            int exitCode = 0;
+            char* res = TestPageLinksResult(path, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

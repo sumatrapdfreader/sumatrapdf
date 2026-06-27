@@ -15,3 +15,4 @@ char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCode
 char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut = nullptr);
 char* TestI18nErrorStringResult(int* exitCodeOut = nullptr);
 char* TestGetTocResult(const char* path, int* exitCodeOut = nullptr);
+char* TestPageLinksResult(const char* path, int pageNo, int* exitCodeOut = nullptr);

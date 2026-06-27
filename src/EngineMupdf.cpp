@@ -226,6 +226,41 @@ static int FzGetPageNo(fz_context* ctx, fz_document* doc, fz_link* link, fz_outl
     return pageNo;
 }
 
+// MuPDF html/md link URIs for relative hrefs are built with an empty base file,
+// so e.g. [other](other.md) becomes "/other.md". Treat those like the HTML
+// ebook engine: launch a local file Sumatra can open.
+static bool IsMupdfLocalFileLink(const char* uri, TempStr* pathOut, const char** fragmentOut) {
+    if (!uri || uri[0] == '#') {
+        return false;
+    }
+    if (str::StartsWith(uri, "file:") || IsExternalUrl(uri) || IsExternalLink(uri)) {
+        return false;
+    }
+
+    TempStr path = str::DupTemp(uri);
+    TempStr fragment = str::FindChar(path, '#');
+    if (fragment) {
+        *fragment = 0;
+        fragment++;
+    }
+    // MuPDF uses unix paths; strip a leading slash from relative URIs.
+    while (path[0] == '/' || path[0] == '\\') {
+        path++;
+    }
+    if (!path[0]) {
+        return false;
+    }
+    path = str::ReplaceTemp(path, "/", "\\");
+
+    Kind kind = GuessFileTypeFromName(path);
+    if (!IsEngineMupdfSupportedFileType(kind)) {
+        return false;
+    }
+    *pathOut = path;
+    *fragmentOut = fragment;
+    return true;
+}
+
 static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* doc, fz_link* link,
                                                  fz_outline* outline) {
     ReportIf(link && outline);
@@ -267,6 +302,14 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
 
     if (IsExternalUrl(uri)) {
         auto res = new PageDestinationURL(uri);
+        res->rect = FzGetRectF(link, outline);
+        return res;
+    }
+
+    TempStr localPath;
+    const char* localFragment = nullptr;
+    if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
+        auto res = new PageDestinationFile(localPath, localFragment);
         res->rect = FzGetRectF(link, outline);
         return res;
     }
@@ -3759,8 +3802,12 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
         logfa("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri);
     }
     if (pageNo < 0) {
-        // TODO: more?
-        // ReportIf(true);
+        TempStr localPath;
+        const char* localFragment = nullptr;
+        if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
+            PageDestinationFile fileDest(localPath, localFragment);
+            linkHandler->GotoLink(&fileDest);
+        }
         return;
     }
 

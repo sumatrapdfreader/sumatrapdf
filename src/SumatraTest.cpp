@@ -809,4 +809,53 @@ char* TestGetTocResult(const char* path, int* exitCodeOut) {
     return out.StealData();
 }
 
+// Headless test for page link elements. Returns one line per link:
+// "kind=<kind> value=<value>". Used by tests/ad-hoc-md-links.ts.
+char* TestPageLinksResult(const char* path, int pageNo, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
 
+    StrBuilder out;
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.AppendFmt("ERROR engine-create-failed path=%s\n", path);
+        return out.StealData();
+    }
+
+    if (!engine->BenchLoadPage(pageNo)) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.AppendFmt("ERROR page-load-failed page=%d\n", pageNo);
+        SafeEngineRelease(&engine);
+        return out.StealData();
+    }
+
+    int nLinks = 0;
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (!el || !el->Is(kindPageElementDest)) {
+            continue;
+        }
+        IPageDestination* dest = el->AsLink();
+        if (!dest) {
+            continue;
+        }
+        nLinks++;
+        char* value = PageDestGetValue(dest);
+        out.AppendFmt("kind=%s value=%s\n", dest->GetKind(), value ? value : "");
+    }
+    if (nLinks == 0) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.AppendFmt("ERROR no-links page=%d\n", pageNo);
+    } else if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    SafeEngineRelease(&engine);
+    return out.StealData();
+}
