@@ -16,9 +16,9 @@ enum class PaperFormat {
 PaperFormat GetPaperFormatFromSizeApprox(SizeF size);
 
 struct Printer {
-    char* name = nullptr;
-    char* output = nullptr;
-    char* docName = nullptr;
+    Str name;
+    Str output;
+    Str docName;
     DEVMODEW* devMode = nullptr;
     PRINTER_INFO_2* info = nullptr;
 
@@ -44,7 +44,7 @@ struct Printer {
     void SetDevMode(DEVMODEW*);
 };
 
-Printer* NewPrinter(const char* name);
+Printer* NewPrinter(Str name);
 void GetPrintersInfo(StrBuilder& out);
 
 class EngineBase;
@@ -62,9 +62,7 @@ enum class PrintResult {
     NoPermission = 6,       // printing is disabled by restriction policy
 };
 
-PrintResult PrintFile(const char* fileName, char* printerName = nullptr, bool displayErrors = true,
-                      const char* settings = nullptr);
-PrintResult PrintFile2(EngineBase* engine, char* printerName = nullptr, bool displayErrors = true,
-                       const char* settings = nullptr);
+PrintResult PrintFile(Str fileName, Str printerName = {}, bool displayErrors = true, Str settings = {});
+PrintResult PrintFile2(EngineBase* engine, Str printerName = {}, bool displayErrors = true, Str settings = {});
 void PrintCurrentFile(MainWindow* win, bool waitForCompletion = false);
 void AbortPrinting(MainWindow* win);

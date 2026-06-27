@@ -109,9 +109,9 @@ void Printer::SetDevMode(DEVMODEW* dm) {
 }
 
 Printer::~Printer() {
-    str::Free(name);
-    str::Free(output);
-    str::Free(docName);
+    str::Free(name.s);
+    str::Free(output.s);
+    str::Free(docName.s);
     free((void*)devMode);
     free((void*)papers);
     free((void*)paperSizes);
@@ -422,7 +422,7 @@ void GetPrintersInfo(StrBuilder& out) {
 }
 
 // get all the important info about a printer
-Printer* NewPrinter(const char* printerName) {
+Printer* NewPrinter(Str printerName) {
     HANDLE hPrinter = nullptr;
     LONG ret = 0;
     Printer* printer = nullptr;
@@ -465,7 +465,7 @@ Printer* NewPrinter(const char* printerName) {
     }
 
     printer = new Printer();
-    printer->name = str::Dup(printerName);
+    printer->name = Str(str::Dup(printerName));
     printer->devMode = devMode;
     printer->info = info;
 
@@ -1857,9 +1857,9 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             devMode->dmPaperSize = GetPaperKind(s + 10);
             devMode->dmFields |= DM_PAPERSIZE;
         } else if (str::StartsWithI(s, "output=")) {
-            printer->output = str::Dup(s + 7);
+            printer->output = Str(str::Dup(s + 7));
         } else if (str::StartsWithI(s, "docname=")) {
-            printer->docName = str::Dup(s + 8);
+            printer->docName = Str(str::Dup(s + 8));
         } else if (str::EqI(s, kIgnorePdfPrintSettingsToken)) {
             // handled before ApplyPrintSettings (see PrintFile2); ignore here
         }
@@ -1923,7 +1923,7 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
     return false;
 }
 
-PrintResult PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const char* settings) {
+PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, Str settings) {
     bool ok = false;
     Printer* printer = nullptr;
 
@@ -2011,7 +2011,7 @@ PrintResult PrintFile2(EngineBase* engine, char* printerName, bool displayErrors
     return PrintResult::Ok;
 }
 
-PrintResult PrintFile(const char* fileName, char* printerName, bool displayErrors, const char* settings) {
+PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str settings) {
     logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     fileName = path::NormalizeTemp(Str(fileName));
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
