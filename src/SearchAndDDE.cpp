@@ -1201,7 +1201,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
         return true;
     }
 
-    char* inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
+    Str inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
     if (!inverseSearch) {
         Vec<TextEditor*> editors;
         DetectTextEditors(editors);
@@ -1210,18 +1210,18 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
         }
     }
 
-    AutoFreeStr cmdLine;
+    Str cmdLine;
     if (inverseSearch) {
-        cmdLine = BuildOpenFileCmd(inverseSearch, srcfilepath, line, col);
+        cmdLine = BuildOpenFileCmd(inverseSearch, Str(srcfilepath), line, col);
     }
 
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = _TRA("Cannot start inverse search command. Please check the command line in the settings.");
-    if (!str::IsEmpty(cmdLine.Get())) {
+    if (!str::IsEmpty(cmdLine)) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         char* appDir = GetSelfExeDirTemp();
-        AutoCloseHandle process(LaunchProcessInDir(Str(cmdLine), Str(appDir)));
+        AutoCloseHandle process(LaunchProcessInDir(cmdLine, Str(appDir)));
         if (!process) {
             ShowNotification(args);
         }
