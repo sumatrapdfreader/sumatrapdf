@@ -6,8 +6,8 @@ struct StrVec;
 template <typename T>
 class Vec;
 
-void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& filterWords, Vec<u8>& highlighted,
+void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
                               COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt);
 
-void SplitFilterToWords(const char* filter, StrVec& words);
-bool FilterMatches(const char* str, const StrVec& words);
+void SplitFilterToWords(Str filter, StrVec& words);
+bool FilterMatches(Str str, const StrVec& words);

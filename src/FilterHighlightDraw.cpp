@@ -18,7 +18,7 @@ static bool IsWordByte(u8 b) {
     return IsCharAlphaNumericW((WCHAR)b) || b == '_';
 }
 
-void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& filterWords, Vec<u8>& highlighted,
+void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
                               COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt) {
     int nWords = filterWords.Size();
     if (nWords == 0) {
@@ -28,18 +28,18 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& 
     }
 
     // find all match ranges in text
-    int textLen = str::Leni(text);
+    int textLen = text.len;
     u8* hl = highlighted.EnsureCap((size_t)textLen);
     memset(hl, 0, textLen);
     for (int w = 0; w < nWords; w++) {
-        const char* word = filterWords.At(w);
-        int wordLen = str::Leni(word);
+        Str word = filterWords.AtStr(w);
+        int wordLen = word.len;
         if (wordLen == 0) {
             continue;
         }
-        const char* p = text;
-        while ((p = str::FindI(p, word)) != nullptr) {
-            int off = (int)(p - text);
+        const char* p = text.s;
+        while ((p = str::FindI(Str((char*)p, textLen - (int)(p - text.s)), word).s) != nullptr) {
+            int off = (int)(p - text.s);
             int end = off + wordLen;
             // with "match whole word", skip occurrences that sit inside a larger
             // word so the snippet doesn't highlight non-matching substrings (e.g.
@@ -47,8 +47,8 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& 
             // rule: a boundary is only required when both sides are word chars.
             bool wholeWordOk = true;
             if (matchWholeWord) {
-                bool leftViolation = off > 0 && IsWordByte((u8)text[off - 1]) && IsWordByte((u8)text[off]);
-                bool rightViolation = end < textLen && IsWordByte((u8)text[end - 1]) && IsWordByte((u8)text[end]);
+                bool leftViolation = off > 0 && IsWordByte((u8)text.s[off - 1]) && IsWordByte((u8)text.s[off]);
+                bool rightViolation = end < textLen && IsWordByte((u8)text.s[end - 1]) && IsWordByte((u8)text.s[end]);
                 wholeWordOk = !leftViolation && !rightViolation;
             }
             if (wholeWordOk) {
@@ -96,9 +96,9 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& 
     // compute pixel rectangles for each highlighted range
     RECT highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
-        TempWStr prefixToStart = ToWStrTemp(text, (size_t)byteRanges[i].start);
+        TempWStr prefixToStart = ToWStrTemp(Str(text.s, byteRanges[i].start));
         int wStart = str::Leni(prefixToStart);
-        TempWStr prefixToEnd = ToWStrTemp(text, (size_t)byteRanges[i].end);
+        TempWStr prefixToEnd = ToWStrTemp(Str(text.s, byteRanges[i].end));
         int wEnd = str::Leni(prefixToEnd);
 
         SIZE szStart, szEnd;
@@ -130,10 +130,10 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& 
     DrawTextW(hdc, textW, -1, &rc, drawFmt);
 }
 
-bool FilterMatches(const char* str, const StrVec& words) {
+bool FilterMatches(Str str, const StrVec& words) {
     int nWords = words.Size();
     for (int i = 0; i < nWords; i++) {
-        auto word = words.At(i);
+        Str word = words.AtStr(i);
         if (!str::ContainsI(str, word)) {
             return false;
         }
@@ -141,7 +141,7 @@ bool FilterMatches(const char* str, const StrVec& words) {
     return true;
 }
 
-void SplitFilterToWords(const char* filter, StrVec& words) {
+void SplitFilterToWords(Str filter, StrVec& words) {
     char* s = str::DupTemp(filter);
     char* wordStart = s;
     bool wasWs = false;
