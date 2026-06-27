@@ -1732,7 +1732,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
     AutoFreeStr urlReal = str::Dup(url).s;
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     ReportIf(ok && (protoWindowId != windowId));
-    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
+    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(Str(urlReal.Get()), newWindow);
     return shouldNavigate;
 }
 
@@ -1771,7 +1771,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR* urlW) {
 
     currentURL.Set(urlReal.StealData());
     if (htmlWinCb) {
-        htmlWinCb->OnDocumentComplete(currentURL);
+        htmlWinCb->OnDocumentComplete(Str(currentURL.Get()));
     }
     SetScrollbarToAuto();
 }

@@ -173,22 +173,23 @@ int BufSet(char* dst, int dstCchSize, const char* src);
 int BufAppend(char* dst, int dstCchSize, const char* s);
 
 Str MemToHex(const u8* buf, size_t len);
-bool HexToMem(const char* s, u8* buf, size_t bufLen);
+bool HexToMem(Str s, u8* buf, size_t bufLen);
 
-const char* Parse(const char* str, const char* fmt, ...);
-const char* Parse(const char* str, size_t len, const char* fmt, ...);
+Str Parse(Str str, const char* fmt, ...);
+Str Parse(Str str, size_t len, const char* fmt, ...);
 
-int CmpNatural(const char*, const char*);
+int CmpNatural(Str a, Str b);
 
 TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT, bool stripTrailingZero = true);
 TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
-TempStr FormatSizeShortTemp(i64 size, const char* sizeUnits[3]);
+TempStr FormatSizeShortTemp(i64 size);
+TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits);
 TempStr FormatFileSizeTemp(i64);
 TempStr FormatRomanNumeralTemp(int number);
 
-bool IsEmptyOrWhiteSpace(const char*);
-bool Skip(const char*& s, const char* toSkip);
-const char* SkipChar(const char* s, char toSkip);
+bool IsEmptyOrWhiteSpace(Str s);
+bool Skip(Str& s, Str toSkip);
+Str SkipChar(Str s, char toSkip);
 
 WCHAR* Dup(Arena*, const WCHAR* str, size_t cch = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
@@ -218,14 +219,14 @@ bool IsNonCharacter(WCHAR c);
 size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
-WCHAR* CastToWCHAR(const char* s);
+WCHAR* CastToWCHAR(Str s);
 } // namespace str
 
 namespace url {
 
-void DecodeInPlace(char* url);
-FORCEINLINE void DecodeInPlace(Str url) {
-    DecodeInPlace(url.s);
+void DecodeInPlace(Str url);
+FORCEINLINE void DecodeInPlace(char* url) {
+    DecodeInPlace(Str(url));
 }
 bool IsAbsolute(Str url);
 FORCEINLINE bool IsAbsolute(const char* url) {
@@ -246,8 +247,8 @@ using SeqStrings = const char*;
 
 void SeqStrNext(const char*& s);
 void SeqStrNext(const char*& s, int* idxInOut);
-int SeqStrIndex(SeqStrings strs, const char* toFind);
-int SeqStrIndexIS(SeqStrings strs, const char* toFind);
+int SeqStrIndex(SeqStrings strs, Str toFind);
+int SeqStrIndexIS(SeqStrings strs, Str toFind);
 const char* SeqStrByIndex(SeqStrings strs, int idx);
 
 // SeqStrNum: like SeqStrings but each entry is <string>\0<varint i64>, sequence ends with \0.
@@ -261,8 +262,8 @@ using SeqStrNum = const char*;
 
 void SeqStrNumNext(const char*& s, int* idxInOut);
 void SeqStrNumNext(const char*& s);
-int SeqStrNumIndex(SeqStrNum strs, const char* toFind, i64* numOut);
-int SeqStrNumIndexIS(SeqStrNum strs, const char* toFind, i64* numOut);
+int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut);
+int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut);
 const char* SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
 const char* SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
@@ -331,7 +332,7 @@ struct StrBuilder {
     iterator end() const { return &(els[len]); }
 };
 
-void SeqStrNumAppend(StrBuilder* b, const char* s, i64 num);
+void SeqStrNumAppend(StrBuilder* b, Str s, i64 num);
 void SeqStrNumFinish(StrBuilder* b);
 
 struct WStrBuilder {
@@ -580,6 +581,47 @@ FORCEINLINE int FindCharIdx(const char* str, char c) {
 }
 FORCEINLINE const WCHAR* Find(const WStr& str, const WCHAR* find) {
     return Find(str.s, find);
+}
+FORCEINLINE bool HexToMem(const char* s, u8* buf, size_t bufLen) {
+    return HexToMem(Str((char*)s), buf, bufLen);
+}
+const char* Parse(const char* str, const char* fmt, ...);
+const char* Parse(const char* str, size_t len, const char* fmt, ...);
+FORCEINLINE int CmpNatural(const char* a, const char* b) {
+    return CmpNatural(Str(a), Str(b));
+}
+
+FORCEINLINE bool IsEmptyOrWhiteSpace(const char* s) {
+    return IsEmptyOrWhiteSpace(Str(s));
+}
+FORCEINLINE bool Skip(const char*& s, const char* toSkip) {
+    Str slice((char*)s);
+    if (Skip(slice, Str(toSkip))) {
+        s = slice.s;
+        return true;
+    }
+    return false;
+}
+FORCEINLINE const char* SkipChar(const char* s, char toSkip) {
+    return SkipChar(Str((char*)s), toSkip).s;
+}
+FORCEINLINE WCHAR* CastToWCHAR(const char* s) {
+    return CastToWCHAR(Str((char*)s));
+}
+FORCEINLINE int SeqStrIndex(SeqStrings strs, const char* toFind) {
+    return SeqStrIndex(strs, Str(toFind));
+}
+FORCEINLINE int SeqStrIndexIS(SeqStrings strs, const char* toFind) {
+    return SeqStrIndexIS(strs, Str(toFind));
+}
+FORCEINLINE int SeqStrNumIndex(SeqStrNum strs, const char* toFind, i64* numOut) {
+    return SeqStrNumIndex(strs, Str(toFind), numOut);
+}
+FORCEINLINE int SeqStrNumIndexIS(SeqStrNum strs, const char* toFind, i64* numOut) {
+    return SeqStrNumIndexIS(strs, Str(toFind), numOut);
+}
+FORCEINLINE void SeqStrNumAppend(StrBuilder* b, const char* s, i64 num) {
+    SeqStrNumAppend(b, Str(s), num);
 }
 
 } // namespace str

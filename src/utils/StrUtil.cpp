@@ -983,16 +983,17 @@ Str MemToHex(const u8* buf, size_t len) {
    binary data pointed by <buf> of max size bufLen.
    Returns false if size of <s> doesn't match bufLen or is not a valid
    hex string. */
-bool HexToMem(const char* s, u8* buf, size_t bufLen) {
+bool HexToMem(Str s, u8* buf, size_t bufLen) {
+    const char* p = s.s;
     for (; bufLen > 0; bufLen--) {
         unsigned int c;
-        if (1 != sscanf_s(s, "%02x", &c)) {
+        if (1 != sscanf_s(p, "%02x", &c)) {
             return false;
         }
-        s += 2;
+        p += 2;
         *buf++ = (u8)c;
     }
-    return *s == '\0';
+    return !p || p >= s.s + s.len || *p == '\0';
 }
 
 static Str ExtractUntil(const char* pos, char c, const char** endOut) {
@@ -1040,63 +1041,120 @@ static const char* ParseLimitedNumber(const char* str, const char* format, const
    characters must be read for parsing the number (e.g. "%4d" parses -123 out of "-12345"
    and doesn't parse "123" at all).
 */
-static const char* ParseV(const char* str, const char* format, va_list args) {
+static Str ParseV(Str str, const char* format, va_list args) {
+    if (!str) {
+        return {};
+    }
+    const char* start = str.s;
+    const char* p = str.s;
     for (const char* f = format; *f; f++) {
         if (*f != '%') {
-            if (*f != *str) {
-                return nullptr;
+            if (*f != *p) {
+                return {};
             }
-            str++;
+            p++;
             continue;
         }
         f++;
 
         const char* end = nullptr;
         if ('u' == *f) {
-            *va_arg(args, unsigned int*) = strtoul(str, (char**)&end, 10);
+            *va_arg(args, unsigned int*) = strtoul(p, (char**)&end, 10);
         } else if ('d' == *f) {
-            *va_arg(args, int*) = strtol(str, (char**)&end, 10);
+            *va_arg(args, int*) = strtol(p, (char**)&end, 10);
         } else if ('x' == *f) {
-            *va_arg(args, unsigned int*) = strtoul(str, (char**)&end, 16);
+            *va_arg(args, unsigned int*) = strtoul(p, (char**)&end, 16);
         } else if ('f' == *f) {
-            *va_arg(args, float*) = (float)strtod(str, (char**)&end);
+            *va_arg(args, float*) = (float)strtod(p, (char**)&end);
         } else if ('g' == *f) {
-            *va_arg(args, float*) = (float)strtod(str, (char**)&end);
+            *va_arg(args, float*) = (float)strtod(p, (char**)&end);
         } else if ('c' == *f) {
-            *va_arg(args, char*) = *str, end = str + 1;
+            *va_arg(args, char*) = *p, end = p + 1;
         } else if ('s' == *f) {
-            *va_arg(args, char**) = ExtractUntil(str, *(f + 1), &end).s;
+            *va_arg(args, char**) = ExtractUntil(p, *(f + 1), &end).s;
         } else if ('S' == *f) {
-            va_arg(args, AutoFree*)->Set(ExtractUntil(str, *(f + 1), &end).s);
-        } else if ('$' == *f && !*str) {
+            va_arg(args, AutoFree*)->Set(ExtractUntil(p, *(f + 1), &end).s);
+        } else if ('$' == *f && !*p) {
             continue; // don't fail, if we're indeed at the end of the string
-        } else if ('%' == *f && *f == *str) {
-            end = str + 1;
-        } else if (' ' == *f && str::IsWs(*str)) {
-            end = str + 1;
+        } else if ('%' == *f && *f == *p) {
+            end = p + 1;
+        } else if (' ' == *f && str::IsWs(*p)) {
+            end = p + 1;
         } else if ('_' == *f) {
-            if (!str::IsWs(*str)) {
+            if (!str::IsWs(*p)) {
                 continue; // don't fail, if there's no whitespace at all
             }
-            for (end = str + 1; str::IsWs(*end); end++) {
+            for (end = p + 1; str::IsWs(*end); end++) {
                 // do nothing
             }
         } else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (*str != *++f) {
+            if (*p != *++f) {
                 continue;
             }
-            end = (char*)str + 1;
+            end = (char*)p + 1;
         } else if (str::IsDigit(*f)) {
-            f = ParseLimitedNumber(str, f, &end, va_arg(args, void*)) - 1;
+            f = ParseLimitedNumber(p, f, &end, va_arg(args, void*)) - 1;
         }
-        if (!end || end == str) {
-            return nullptr;
+        if (!end || end == p) {
+            return {};
         }
-        str = end;
+        p = end;
     }
-    return str;
+    int off = (int)(p - start);
+    return Str((char*)p, str.len - off);
+}
+
+Str Parse(Str str, const char* fmt, ...) {
+    if (!str || !fmt) {
+        return {};
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    Str res = ParseV(str, fmt, args);
+    va_end(args);
+    return res;
+}
+
+// TODO: could optimize it by making the main Parse() implementation
+// work with explicit length and not rely on zero-termination
+Str Parse(Str str, size_t len, const char* fmt, ...) {
+    char buf[128]{};
+    char* s = buf;
+    Str work = str;
+
+    if (!str.s || !fmt) {
+        return {};
+    }
+
+    if (len < dimof(buf)) {
+        memcpy(buf, str.s, len);
+        work = Str(buf, (int)len);
+    } else {
+        Str dup = Dup(Str(str.s, (int)len));
+        s = dup.s;
+        work = dup;
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    Str res = ParseV(work, fmt, args);
+    va_end(args);
+
+    if (!res) {
+        if (s != buf) {
+            free(s);
+        }
+        return {};
+    }
+    int off = (int)(res.s - work.s);
+    Str out((char*)(str.s + off), str.len - off);
+    if (s != buf) {
+        free(s);
+    }
+    return out;
 }
 
 const char* Parse(const char* str, const char* fmt, ...) {
@@ -1106,40 +1164,45 @@ const char* Parse(const char* str, const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    const char* res = ParseV(str, fmt, args);
+    Str res = ParseV(Str((char*)str), fmt, args);
     va_end(args);
-    return res;
+    return res.s;
 }
 
-// TODO: could optimize it by making the main Parse() implementation
-// work with explicit length and not rely on zero-termination
 const char* Parse(const char* str, size_t len, const char* fmt, ...) {
-    char buf[128]{};
-    char* s = buf;
-
     if (!str || !fmt) {
         return nullptr;
     }
 
+    va_list args;
+    va_start(args, fmt);
+    char buf[128]{};
+    char* s = buf;
+    Str work((char*)str, (int)len);
+
     if (len < dimof(buf)) {
         memcpy(buf, str, len);
+        work = Str(buf, (int)len);
     } else {
         Str dup = Dup(Str((char*)str, (int)len));
         s = dup.s;
+        work = dup;
     }
 
-    va_list args;
-    va_start(args, fmt);
-    const char* res = ParseV(s, fmt, args);
+    Str res = ParseV(work, fmt, args);
     va_end(args);
 
-    if (res) {
-        res = str + (res - s);
+    if (!res) {
+        if (s != buf) {
+            free(s);
+        }
+        return nullptr;
     }
+    const char* out = str + (res.s - work.s);
     if (s != buf) {
         free(s);
     }
-    return res;
+    return out;
 }
 
 bool IsAlNum(char c) {
@@ -1161,9 +1224,12 @@ bool IsAlNum(char c) {
    (e.g. ".hg" < "2.pdf" < "100.pdf" < "zzz")
    // TODO: this should be utf8-aware, see e.g. cbx\bug1234-*.cbr file
 */
-int CmpNatural(const char* a, const char* b) {
-    ReportIf(!a || !b);
-    const char *aStart = a, *bStart = b;
+int CmpNatural(Str aIn, Str bIn) {
+    ReportIf(!aIn || !bIn);
+    const char* a = aIn.s;
+    const char* b = bIn.s;
+    const char* aStart = a;
+    const char* bStart = b;
     int diff = 0;
 
     while (diff == 0) {
@@ -1226,52 +1292,59 @@ int CmpNatural(const char* a, const char* b) {
     return diff;
 }
 
-bool IsEmptyOrWhiteSpace(const char* s) {
+bool IsEmptyOrWhiteSpace(Str s) {
     if (!s) {
         return true;
     }
-    while (*s) {
-        char c = *s++;
-        if (!str::IsWs(c)) {
+    for (int i = 0; i < s.len; i++) {
+        if (!str::IsWs(s.s[i])) {
             return false;
         }
     }
     return true;
 }
 
-bool Skip(const char*& s, const char* toSkip) {
+bool Skip(Str& s, Str toSkip) {
     if (str::StartsWith(s, toSkip)) {
-        s = s + str::Len(toSkip);
+        s.s += toSkip.len;
+        s.len -= toSkip.len;
         return true;
     }
     return false;
 }
 
-const char* SkipChar(const char* s, char toSkip) {
+Str SkipChar(Str s, char toSkip) {
     if (!s) {
-        return nullptr;
+        return {};
     }
-    while (*s == toSkip) {
-        s++;
+    const char* p = s.s;
+    const char* end = s.s + s.len;
+    while (p < end && *p == toSkip) {
+        p++;
     }
-    return s;
+    return Str((char*)p, s.len - (int)(p - s.s));
 }
 
 } // namespace str
 
 namespace url {
 
-void DecodeInPlace(char* url) {
-    for (char* src = url; *src; src++, url++) {
+void DecodeInPlace(Str url) {
+    if (!url) {
+        return;
+    }
+    char* dst = url.s;
+    for (char* src = url.s; *src; src++, dst++) {
         int val;
-        if (*src == '%' && str::Parse(src, "%%%2x", &val)) {
-            *url = (char)val;
+        if (*src == '%' && str::Parse(Str(src), "%%%2x", &val)) {
+            *dst = (char)val;
             src += 2;
         } else {
-            *url = *src;
+            *dst = *src;
         }
     }
-    *url = '\0';
+    *dst = '\0';
+    url.len = (int)strlen(url.s);
 }
 } // namespace url
 
@@ -1332,14 +1405,14 @@ static inline const char* StrEqWeird(const char* s, const char* toFind) {
 // out sequentially in memory, terminated with a 0-length string
 // Returns index of toFind string in strings
 // Returns -1 if string doesn't exist
-int SeqStrIndex(SeqStrings strs, const char* toFind) {
+int SeqStrIndex(SeqStrings strs, Str toFind) {
     if (!toFind) {
         return -1;
     }
     const char* s = strs;
     int idx = 0;
     while (*s) {
-        s = StrEqWeird(s, toFind);
+        s = StrEqWeird(s, toFind.s);
         if (nullptr == s) {
             return idx;
         }
@@ -1349,14 +1422,14 @@ int SeqStrIndex(SeqStrings strs, const char* toFind) {
 }
 
 // like SeqStrIndex but ignores case and whitespace
-int SeqStrIndexIS(SeqStrings strs, const char* toFind) {
+int SeqStrIndexIS(SeqStrings strs, Str toFind) {
     if (!toFind) {
         return -1;
     }
     const char* s = strs;
     int idx = 0;
     while (*s) {
-        if (str::EqIS(s, toFind)) {
+        if (str::EqIS(Str(s), toFind)) {
             return idx;
         }
         s = s + str::Len(s) + 1;
@@ -1432,7 +1505,7 @@ static void SeqStrNumEntryParts(const char* entry, const char** strOut, i64* num
     VarIntDecode(p, numOut);
 }
 
-void SeqStrNumAppend(StrBuilder* b, const char* s, i64 num) {
+void SeqStrNumAppend(StrBuilder* b, Str s, i64 num) {
     b->Append(s);
     b->AppendChar('\0');
     u8 buf[12];
@@ -1465,14 +1538,14 @@ void SeqStrNumNext(const char*& s) {
     SeqStrNumNext(s, &idxDummy);
 }
 
-int SeqStrNumIndex(SeqStrNum strs, const char* toFind, i64* numOut) {
+int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
     if (!toFind) {
         return -1;
     }
     const char* s = strs;
     int idx = 0;
     while (*s) {
-        if (str::Eq(s, toFind)) {
+        if (str::Eq(Str(s), toFind)) {
             if (numOut) {
                 SeqStrNumEntryParts(s, &s, numOut);
             }
@@ -1484,14 +1557,14 @@ int SeqStrNumIndex(SeqStrNum strs, const char* toFind, i64* numOut) {
     return -1;
 }
 
-int SeqStrNumIndexIS(SeqStrNum strs, const char* toFind, i64* numOut) {
+int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
     if (!toFind) {
         return -1;
     }
     const char* s = strs;
     int idx = 0;
     while (*s) {
-        if (str::EqIS(s, toFind)) {
+        if (str::EqIS(Str(s), toFind)) {
             if (numOut) {
                 SeqStrNumEntryParts(s, &s, numOut);
             }
@@ -2219,8 +2292,8 @@ bool IsNonCharacter(WCHAR c) {
 
 // hack: to fool CodeQL which doesn't approve of char* => WCHAR* casts
 // and doesn't allow any way to disable that warning
-WCHAR* CastToWCHAR(const char* s) {
-    void* d = (void*)s;
+WCHAR* CastToWCHAR(Str s) {
+    void* d = (void*)s.s;
     return (WCHAR*)d;
 }
 
@@ -2506,13 +2579,17 @@ constexpr double KB = 1024;
 constexpr double MB = (double)1024 * (double)1024;
 constexpr double GB = (double)1024 * (double)1024 * (double)1024;
 
-static const char* sizeUnitsEnglish[3] = {"GB", "MB", "KB"};
+static Str sizeUnitsEnglish[3] = {Str("GB"), Str("MB"), Str("KB")};
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // To be used in a context where translations are not yet available
-TempStr FormatSizeShortTemp(i64 size, const char* sizeUnits[3]) {
-    const char* unit = nullptr;
+TempStr FormatSizeShortTemp(i64 size) {
+    return FormatSizeShortTemp(size, sizeUnitsEnglish);
+}
+
+TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
+    Str unit{};
     double s = (double)size;
     if (!sizeUnits) {
         sizeUnits = sizeUnitsEnglish;
@@ -2532,7 +2609,7 @@ TempStr FormatSizeShortTemp(i64 size, const char* sizeUnits[3]) {
     if (!unit) {
         return sizestr;
     }
-    return fmt::FormatTemp("%s %s", sizestr, unit);
+    return fmt::FormatTemp("%s %s", sizestr, unit.s);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -2541,7 +2618,7 @@ TempStr FormatFileSizeTemp(i64 size) {
     if (size <= 0) {
         return str::FormatTemp("%d", (int)size);
     }
-    char* n1 = str::FormatSizeShortTemp(size, nullptr);
+    char* n1 = str::FormatSizeShortTemp(size);
     char* n2 = str::FormatNumWithThousandSepTemp(size);
     return fmt::FormatTemp("%s (%s %s)", n1, n2, "Bytes");
 }

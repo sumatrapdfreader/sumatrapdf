@@ -610,7 +610,8 @@ TempStr FormatSizeShortTransTemp(i64 size) {
         _TRA("MB"),
         _TRA("KB"),
     };
-    return str::FormatSizeShortTemp(size, sizeUnits);
+    Str units[3] = {Str(sizeUnits[0]), Str(sizeUnits[1]), Str(sizeUnits[2])};
+    return str::FormatSizeShortTemp(size, units);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
