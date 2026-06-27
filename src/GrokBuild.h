@@ -7,7 +7,7 @@ struct WindowTab;
 bool IsGrokBuildAvailable();
 bool IsGrokBuildInstalled();
 TempStr GrokBuildExecutablePathTemp();
-bool IsGrokBuildSupportedForFile(const char* filePath, Kind engineKind = nullptr);
+bool IsGrokBuildSupportedForFile(Str filePath, Kind engineKind = nullptr);
 bool IsGrokBuildSupportedForTab(WindowTab* tab);
 
 void CreateGrokPanel(MainWindow* win);

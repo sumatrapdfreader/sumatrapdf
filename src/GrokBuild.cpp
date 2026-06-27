@@ -66,7 +66,7 @@ static void ShowGrokBuildNotInstalledDialog() {
     AIChatShowNotInstalledDialog(args);
 }
 
-bool IsGrokBuildSupportedForFile(const char* filePath, Kind engineKind) {
+bool IsGrokBuildSupportedForFile(Str filePath, Kind engineKind) {
     return IsAIChatSupportedForFile(filePath, engineKind);
 }
 
