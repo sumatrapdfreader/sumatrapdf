@@ -293,7 +293,7 @@ void InitializePolicies(bool restrict) {
     }
 
     ByteSlice restrictData = file::ReadFile(restrictPath);
-    SquareTreeNode* root = ParseSquareTree(restrictData);
+    SquareTreeNode* root = ParseSquareTree(Str((char*)restrictData.data(), (int)restrictData.size()));
     AutoDelete delRoot(root);
     SquareTreeNode* polsec = root ? root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction
@@ -385,7 +385,7 @@ bool SumatraLaunchBrowser(Str url) {
         return false;
     }
     str::ToLowerInPlace(protocol);
-    if (!gAllowedLinkProtocols.Contains(protocol)) {
+    if (!gAllowedLinkProtocols.Contains(Str(protocol.Get()))) {
         return false;
     }
 
@@ -1394,7 +1394,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
 }
 
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
-    const char* titlePath = tab->displayName ? tab->displayName : tab->filePath;
+    Str titlePath = tab->displayName ? Str(tab->displayName) : tab->filePath;
     TempStr embeddedFileName = GetEmbeddedFileNameTemp(titlePath);
     if (embeddedFileName) {
         titlePath = embeddedFileName;
@@ -3273,7 +3273,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     fileFilter.Append("\1*.pdf\1");
     fileFilter.Append("\1*.*\1");
     str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
-    TempWStr fileFilterW = ToWStrTemp(fileFilter);
+    TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
@@ -3842,7 +3842,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = ToWStrTemp(fileFilter);
+    ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter);
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
     if (str::Leni(defExt) > 0 && defExt.s[0] == '.') {
@@ -4037,7 +4037,7 @@ static void RenameCurrentFile(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFilePathW;
     ofn.nMaxFile = dimof(dstFilePathW);
-    ofn.lpstrFilter = ToWStrTemp(fileFilter);
+    ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter);
     ofn.nFilterIndex = 1;
     // note: the other two dialogs are named "Open" and "Save As"
     auto s = _TRA("Rename To");
@@ -4112,7 +4112,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     StrBuilder fileFilter;
     fileFilter.AppendFmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts"));
     str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
-    TempWStr fileFilterW = ToWStrTemp(fileFilter);
+    TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
@@ -4348,7 +4348,7 @@ static TempWStr GetFileFilterTemp() {
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
     str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
-    return ToWStrTemp(fileFilter);
+    return ToWStrTempFromBuilder(fileFilter);
 }
 
 static void OpenFile(MainWindow* win) {
@@ -9467,7 +9467,8 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
         InvalidateRect(tab->win->hwndCanvas, nullptr, FALSE);
         ReadAloudPlaybackBarHide(tab->win);
     }
-    str::FreePtr(&tab->readAloudText);
+    str::Free(tab->readAloudText);
+    tab->readAloudText = {};
     tab->readAloudResumePos = -1;
     tab->readAloudChunkStart = 0;
     tab->readAloudChunkEnd = 0;
@@ -9501,7 +9502,7 @@ static bool ReadAloudSpeakChunk(WindowTab* tab, const char* errMsg) {
     }
 
     int chunkLen = end - start;
-    TempStr chunk = str::DupTemp(tab->readAloudText + start, (size_t)chunkLen);
+    TempStr chunk = str::DupTemp(tab->readAloudText.s + start, (size_t)chunkLen);
     logf("ReadAloud: SpeakChunk: %d..%d of %d (mapBase=%d)\n", start, end, textLen, tab->readAloudHighlightBase);
 
     if (!TtsSpeakUtf8(chunk)) {
@@ -9694,7 +9695,8 @@ static void ResetReadAloudStateForTab(WindowTab* tab) {
         return;
     }
     StopReadAloudIfSourceTab(tab);
-    str::FreePtr(&tab->readAloudText);
+    str::Free(tab->readAloudText);
+    tab->readAloudText = {};
     tab->readAloudResumePos = -1;
     if (tab->win) {
         ReadAloudHighlightTimerStop(tab->win);

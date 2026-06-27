@@ -241,7 +241,7 @@ static void CloseClaudeProcess(WindowTab* tab, bool terminateIfRunning) {
 static void StopClaude(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     if (tab && tab->claudeProcess) {
-        ClaudeCodeLog("stop", tab->claudeSessionId ? tab->claudeSessionId : "(no session)");
+        ClaudeCodeLog("stop", tab->claudeSessionId ? tab->claudeSessionId : Str("(no session)"));
         CloseClaudeProcess(tab, true);
         WebViewAddError(win, "Stopped by user.");
         SetClaudeWorking(win, false);
@@ -603,8 +603,7 @@ static void OnSessionComboChange(MainWindow* win) {
 
     if (sel == 0) {
         // "New Session" — clear current session
-        str::Free(tab->claudeSessionId);
-        tab->claudeSessionId = nullptr;
+        str::ReplaceWithCopy(&tab->claudeSessionId, Str{});
         delete tab->claudeChatLog;
         tab->claudeChatLog = nullptr;
         WebViewClearChat(win);
@@ -618,8 +617,7 @@ static void OnSessionComboChange(MainWindow* win) {
 
     int sessionIdx = sel - 1;
     if (sessionIdx >= 0 && sessionIdx < sessions.Size()) {
-        str::Free(tab->claudeSessionId);
-        tab->claudeSessionId = str::Dup(sessions[sessionIdx].sessionId);
+        str::ReplaceWithCopy(&tab->claudeSessionId, sessions[sessionIdx].sessionId);
         delete tab->claudeChatLog;
         tab->claudeChatLog = nullptr;
         WebViewClearChat(win);
@@ -846,7 +844,7 @@ static void SendClaudeMessage(MainWindow* win) {
 
     bool isNewSession = (tab->claudeSessionId == nullptr);
     if (isNewSession) {
-        tab->claudeSessionId = AIChatGenerateSessionId();
+        str::ReplaceWithCopy(&tab->claudeSessionId, AIChatGenerateSessionId());
     }
 
     const char* filePath = tab->filePath;
@@ -1274,7 +1272,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
 
     if (sessions.Size() > 0) {
         // sessions are sorted by timestamp desc, so [0] is most recent
-        tab->claudeSessionId = str::Dup(sessions[0].sessionId);
+        str::ReplaceWithCopy(&tab->claudeSessionId, sessions[0].sessionId);
 
         // load its history
         WebViewClearChat(win);

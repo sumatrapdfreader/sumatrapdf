@@ -239,7 +239,7 @@ static void CloseGrokProcess(WindowTab* tab, bool terminateIfRunning) {
 static void StopGrok(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     if (tab && tab->grokProcess) {
-        GrokBuildLog("stop", tab->grokSessionId ? tab->grokSessionId : "(no session)");
+        GrokBuildLog("stop", tab->grokSessionId ? tab->grokSessionId : Str("(no session)"));
         CloseGrokProcess(tab, true);
         WebViewAddError(win, "Stopped by user.");
         SetGrokWorking(win, false);
@@ -640,8 +640,7 @@ static void OnSessionComboChange(MainWindow* win) {
     if (sel == 0) {
         // "New Session" — clear current session
         GrokBuildLog("session", "new");
-        str::Free(tab->grokSessionId);
-        tab->grokSessionId = nullptr;
+        str::ReplaceWithCopy(&tab->grokSessionId, Str{});
         delete tab->grokChatLog;
         tab->grokChatLog = nullptr;
         WebViewClearChat(win);
@@ -656,8 +655,7 @@ static void OnSessionComboChange(MainWindow* win) {
     int sessionIdx = sel - 1;
     if (sessionIdx >= 0 && sessionIdx < sessions.Size()) {
         GrokBuildLog("session", sessions[sessionIdx].sessionId);
-        str::Free(tab->grokSessionId);
-        tab->grokSessionId = str::Dup(sessions[sessionIdx].sessionId);
+        str::ReplaceWithCopy(&tab->grokSessionId, sessions[sessionIdx].sessionId);
         delete tab->grokChatLog;
         tab->grokChatLog = nullptr;
         WebViewClearChat(win);
@@ -754,8 +752,7 @@ static void OnGrokUpdate(GrokUpdateData* data) {
                     GrokBuildLog("<<< session", data->text);
                 }
                 if (tab && data->text) {
-                    str::Free(tab->grokSessionId);
-                    tab->grokSessionId = str::Dup(data->text);
+                    str::ReplaceWithCopy(&tab->grokSessionId, data->text);
                 }
                 break;
             case GrokUpdateType::Finished:
@@ -927,7 +924,7 @@ static void SendGrokMessage(MainWindow* win) {
 
     GrokBuildLog(">>> user", input);
     GrokBuildLog(">>> session",
-                 str::FormatTemp("%s (%s)", tab->grokSessionId ? tab->grokSessionId : kGrokPendingSessionId,
+                 str::FormatTemp("%s (%s)", tab->grokSessionId ? tab->grokSessionId : Str(kGrokPendingSessionId),
                                  isNewSession ? "new" : "resume"));
     GrokBuildLog(">>> cwd", dir);
 
@@ -959,7 +956,7 @@ static void SendGrokMessage(MainWindow* win) {
     auto ctx = (GrokReadCtx*)calloc(1, sizeof(GrokReadCtx));
     ctx->hReadPipe = launch.hReadPipe;
     ctx->hwndFrame = win->hwndFrame;
-    ctx->sessionId = str::Dup(tab->grokSessionId ? tab->grokSessionId : kGrokPendingSessionId);
+    ctx->sessionId = str::Dup(tab->grokSessionId ? tab->grokSessionId : Str(kGrokPendingSessionId));
     RunAsync(MkFunc0(StartGrokReadThread, ctx), "GrokReadThread");
 }
 
@@ -1319,7 +1316,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
 
     if (sessions.Size() > 0) {
         // sessions are sorted by timestamp desc, so [0] is most recent
-        tab->grokSessionId = str::Dup(sessions[0].sessionId);
+        str::ReplaceWithCopy(&tab->grokSessionId, sessions[0].sessionId);
 
         // load its history
         WebViewClearChat(win);

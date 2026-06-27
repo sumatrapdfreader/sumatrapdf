@@ -567,7 +567,7 @@ static bool ReadAloudGetCurrentWordAbsRange(WindowTab* tab, int* startAbsOut, in
         return false;
     }
 
-    const char* chunkText = tab->readAloudText + tab->readAloudChunkStart;
+    const char* chunkText = tab->readAloudText.s + tab->readAloudChunkStart;
     int wordStartAbs = tab->readAloudHighlightBase + tab->readAloudChunkStart + spokenPos;
     int wordEndAbs =
         tab->readAloudHighlightBase + tab->readAloudChunkStart + ReadAloudWordEndUtf8(chunkText, spokenPos);

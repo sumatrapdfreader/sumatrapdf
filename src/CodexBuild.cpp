@@ -240,7 +240,7 @@ static void CloseCodexProcess(WindowTab* tab, bool terminateIfRunning) {
 static void StopCodex(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     if (tab && tab->codexProcess) {
-        CodexBuildLog("stop", tab->codexSessionId ? tab->codexSessionId : "(no session)");
+        CodexBuildLog("stop", tab->codexSessionId ? tab->codexSessionId : Str("(no session)"));
         CloseCodexProcess(tab, true);
         WebViewAddError(win, "Stopped by user.");
         SetCodexWorking(win, false);
@@ -762,8 +762,7 @@ static void OnSessionComboChange(MainWindow* win) {
     if (sel == 0) {
         // "New Session" — clear current session
         CodexBuildLog("session", "new");
-        str::Free(tab->codexSessionId);
-        tab->codexSessionId = nullptr;
+        str::ReplaceWithCopy(&tab->codexSessionId, Str{});
         delete tab->codexChatLog;
         tab->codexChatLog = nullptr;
         WebViewClearChat(win);
@@ -778,8 +777,7 @@ static void OnSessionComboChange(MainWindow* win) {
     int sessionIdx = sel - 1;
     if (sessionIdx >= 0 && sessionIdx < sessions.Size()) {
         CodexBuildLog("session", sessions[sessionIdx].sessionId);
-        str::Free(tab->codexSessionId);
-        tab->codexSessionId = str::Dup(sessions[sessionIdx].sessionId);
+        str::ReplaceWithCopy(&tab->codexSessionId, sessions[sessionIdx].sessionId);
         delete tab->codexChatLog;
         tab->codexChatLog = nullptr;
         WebViewClearChat(win);
@@ -876,8 +874,7 @@ static void OnCodexUpdate(CodexUpdateData* data) {
                     CodexBuildLog("<<< session", data->text);
                 }
                 if (tab && data->text) {
-                    str::Free(tab->codexSessionId);
-                    tab->codexSessionId = str::Dup(data->text);
+                    str::ReplaceWithCopy(&tab->codexSessionId, data->text);
                 }
                 break;
             case CodexUpdateType::Finished:
@@ -1050,7 +1047,7 @@ static void SendCodexMessage(MainWindow* win) {
 
     CodexBuildLog(">>> user", input);
     CodexBuildLog(">>> session",
-                  str::FormatTemp("%s (%s)", tab->codexSessionId ? tab->codexSessionId : kCodexPendingSessionId,
+                  str::FormatTemp("%s (%s)", tab->codexSessionId ? tab->codexSessionId : Str(kCodexPendingSessionId),
                                   isNewSession ? "new" : "resume"));
     CodexBuildLog(">>> cwd", dir);
 
@@ -1087,7 +1084,7 @@ static void SendCodexMessage(MainWindow* win) {
     auto ctx = (CodexReadCtx*)calloc(1, sizeof(CodexReadCtx));
     ctx->hReadPipe = launch.hReadPipe;
     ctx->hwndFrame = win->hwndFrame;
-    ctx->sessionId = str::Dup(tab->codexSessionId ? tab->codexSessionId : kCodexPendingSessionId);
+    ctx->sessionId = str::Dup(tab->codexSessionId ? tab->codexSessionId : Str(kCodexPendingSessionId));
     RunAsync(MkFunc0(StartCodexReadThread, ctx), "CodexReadThread");
 }
 
@@ -1446,7 +1443,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
 
     if (sessions.Size() > 0) {
         // sessions are sorted by timestamp desc, so [0] is most recent
-        tab->codexSessionId = str::Dup(sessions[0].sessionId);
+        str::ReplaceWithCopy(&tab->codexSessionId, sessions[0].sessionId);
 
         // load its history
         WebViewClearChat(win);

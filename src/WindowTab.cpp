@@ -28,12 +28,12 @@ WindowTab::WindowTab(MainWindow* win) {
     this->win = win;
 }
 
-void WindowTab::SetFilePath(const char* path) {
+void WindowTab::SetFilePath(Str path) {
     type = Type::Document;
     str::ReplaceWithCopy(&filePath, path);
 }
 
-void WindowTab::SetDisplayName(const char* name) {
+void WindowTab::SetDisplayName(Str name) {
     str::ReplaceWithCopy(&displayName, name);
 }
 
@@ -63,27 +63,34 @@ WindowTab::~WindowTab() {
     // so doesn't need to be kept for long
     gMostRecentlyOpenedDoc = nullptr;
     delete ctrl;
-    str::FreePtr(&filePath);
-    str::FreePtr(&displayName);
-    str::FreePtr(&frameTitle);
-    str::FreePtr(&readAloudText);
+    str::Free(filePath);
+    filePath = {};
+    str::Free(displayName);
+    displayName = {};
+    str::Free(frameTitle);
+    frameTitle = {};
+    str::Free(readAloudText);
+    readAloudText = {};
     if (readAloudHighlight) {
         ReadAloudHighlightFree(readAloudHighlight);
         delete readAloudHighlight;
     }
     str::Free(claudeSessionId);
+    claudeSessionId = {};
     delete claudeChatLog;
     if (claudeProcess) {
         TerminateProcess(claudeProcess, 0);
         CloseHandle(claudeProcess);
     }
     str::Free(grokSessionId);
+    grokSessionId = {};
     delete grokChatLog;
     if (grokProcess) {
         TerminateProcess(grokProcess, 0);
         CloseHandle(grokProcess);
     }
     str::Free(codexSessionId);
+    codexSessionId = {};
     delete codexChatLog;
     if (codexProcess) {
         TerminateProcess(codexProcess, 0);
@@ -117,15 +124,15 @@ EngineBase* WindowTab::GetEngine() const {
     return nullptr;
 }
 
-const char* WindowTab::GetTabTitle() const {
+Str WindowTab::GetTabTitle() const {
     if (displayName) {
         return displayName;
     }
     if (!filePath) {
         if (IsAboutTab()) {
-            return "Home";
+            return Str("Home");
         }
-        return "";
+        return Str("");
     }
     TempStr embeddedFileName = GetEmbeddedFileNameTemp(filePath);
     if (embeddedFileName) {
@@ -189,7 +196,7 @@ LinkSaver::LinkSaver(WindowTab* tab, HWND parentHwnd, const WCHAR* fileName) {
 }
 #endif
 
-bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
+bool SaveDataToFile(HWND hwndParent, Str fileName, ByteSlice data) {
     if (!CanAccessDisk()) {
         return false;
     }
@@ -201,8 +208,8 @@ bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
     ofn.hwndOwner = hwndParent;
 
     WCHAR dstFileName[MAX_PATH] = {};
-    if (fileNameA) {
-        str::BufSet(dstFileName, dimof(dstFileName), fileNameA);
+    if (fileName) {
+        str::BufSet(dstFileName, dimof(dstFileName), fileName);
     }
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);

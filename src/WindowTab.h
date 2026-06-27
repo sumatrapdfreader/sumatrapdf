@@ -18,12 +18,12 @@ struct WindowTab {
         Document,
     };
     Type type = Type::None;
-    const char* filePath = nullptr;
-    const char* displayName = nullptr;
+    Str filePath;
+    Str displayName;
     MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
-    const char* frameTitle = nullptr;
+    Str frameTitle;
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;
@@ -69,17 +69,17 @@ struct WindowTab {
     bool ignoreNextAutoReload = false;
 
     // Claude Code session for this tab
-    char* claudeSessionId = nullptr;
+    Str claudeSessionId;
     StrBuilder* claudeChatLog = nullptr;
     HANDLE claudeProcess = nullptr;
 
     // Grok Build session for this tab
-    char* grokSessionId = nullptr;
+    Str grokSessionId;
     StrBuilder* grokChatLog = nullptr;
     HANDLE grokProcess = nullptr;
 
     // OpenAI Codex session for this tab
-    char* codexSessionId = nullptr;
+    Str codexSessionId;
     StrBuilder* codexChatLog = nullptr;
     HANDLE codexProcess = nullptr;
 
@@ -89,7 +89,7 @@ struct WindowTab {
     // read aloud: cleaned text that was being read and the utf8 offset
     // within it where the user stopped reading; enables "Continue reading"
     // (reset when the document is closed or reloaded)
-    char* readAloudText = nullptr;
+    Str readAloudText;
     int readAloudResumePos = -1;
     ReadAloudHighlightMap* readAloudHighlight = nullptr;
     // utf8 offset in the highlight map where readAloudText[0] maps to
@@ -116,8 +116,8 @@ struct WindowTab {
 
     DisplayModel* AsFixed() const;
 
-    void SetFilePath(const char* path);
-    void SetDisplayName(const char* name);
+    void SetFilePath(Str path);
+    void SetDisplayName(Str name);
 
     // only if AsFixed()
     EngineBase* GetEngine() const;
@@ -125,10 +125,10 @@ struct WindowTab {
 
     ChmModel* AsChm() const;
 
-    const char* GetTabTitle() const;
+    Str GetTabTitle() const;
     bool IsDocLoaded() const;
     void MoveDocBy(int dx, int dy) const;
     void ToggleZoom() const;
 };
 
-bool SaveDataToFile(HWND hwndParent, char* fileName, ByteSlice data);
+bool SaveDataToFile(HWND hwndParent, Str fileName, ByteSlice data);
