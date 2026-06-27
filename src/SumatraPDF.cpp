@@ -870,7 +870,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered*) override;
     void GotoLink(IPageDestination* dest) override { win->linkHandler->GotoLink(dest); }
     void FocusFrame(bool always) override;
-    void SaveDownload(const char* url, const ByteSlice&) override;
+    void SaveDownload(Str url, const ByteSlice&) override;
 };
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {
@@ -1032,7 +1032,7 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
     }
 }
 
-void ControllerCallbackHandler::SaveDownload(const char* url, const ByteSlice& data) {
+void ControllerCallbackHandler::SaveDownload(Str url, const ByteSlice& data) {
     TempStr path = url::GetFileNameTemp(url);
     // LinkSaver linkSaver(win->CurrentTab(), win->hwndFrame, fileName);
     SaveDataToFile(win->hwndFrame, path, data);
@@ -2996,9 +2996,9 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
         selStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
     }
 
-    char* posInfo = fmt::FormatTemp("%s %s", _TRA("Cursor position:"), posStr);
+    char* posInfo = fmt::FormatTemp("%s %s", _TRA("Cursor position:").s, posStr);
     if (selStr) {
-        posInfo = fmt::FormatTemp("%s - %s %s", posInfo, _TRA("Selection:"), selStr);
+        posInfo = fmt::FormatTemp("%s - %s %s", posInfo, _TRA("Selection:").s, selStr);
     }
     NotificationUpdateMessage(wnd, posInfo);
 }
@@ -9341,9 +9341,9 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 }
                 gMenuAccelPressed = (WCHAR)lp;
                 if (' ' == gMenuAccelPressed) {
-                    auto pos = str::FindChar(_TRA("&Window"), '&');
+                    Str pos = str::FindChar(_TRA("&Window"), '&');
                     if (pos) {
-                        char c = pos[1];
+                        char c = pos.s[1];
                         gMenuAccelPressed = (WCHAR)c;
                     }
                 }

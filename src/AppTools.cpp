@@ -622,7 +622,7 @@ TempStr FormatFileSizeTransTemp(i64 size) {
     }
     char* n1 = FormatSizeShortTransTemp(size);
     char* n2 = str::FormatNumWithThousandSepTemp(size);
-    return fmt::FormatTemp("%s (%s %s)", n1, n2, _TRA("Bytes"));
+    return fmt::FormatTemp("%s (%s %s)", n1, n2, _TRA("Bytes").s);
 }
 
 // returns true if file exists

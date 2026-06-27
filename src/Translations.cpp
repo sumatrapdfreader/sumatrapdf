@@ -128,7 +128,7 @@ static void ParseTranslationsTxt(Str d, const char* langCode) {
 }
 
 // don't free the result
-const char* GetTranslation(const char* s) {
+Str GetTranslation(Str s) {
     if (gCurrLangIdx == 0) {
         // 0 is english, no translation needed
         return s;
@@ -168,7 +168,7 @@ int GetLangsCount() {
     return gLangsCount;
 }
 
-const char* GetCurrentLangCode() {
+Str GetCurrentLangCode() {
     return gCurrLangCode;
 }
 
@@ -179,7 +179,7 @@ static void FallbackToEnglish() {
     gCurrLangCode = GetLangCodeByIdx(0);
 }
 
-void SetCurrentLangByCode(const char* langCode) {
+void SetCurrentLangByCode(Str langCode) {
     if (str::Eq(langCode, gCurrLangCode)) {
         return;
     }
@@ -230,8 +230,8 @@ void SetCurrentLangByCode(const char* langCode) {
     free(data);
 }
 
-const char* ValidateLangCode(const char* langCode) {
-    if (!langCode) return nullptr;
+Str ValidateLangCode(Str langCode) {
+    if (!langCode) return Str();
     int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
         return nullptr;
@@ -239,11 +239,11 @@ const char* ValidateLangCode(const char* langCode) {
     return GetLangCodeByIdx(idx);
 }
 
-const char* GetLangCodeByIdx(int idx) {
+Str GetLangCodeByIdx(int idx) {
     return SeqStrByIndex(gLangCodes, idx);
 }
 
-const char* GetLangNameByIdx(int idx) {
+Str GetLangNameByIdx(int idx) {
     return SeqStrByIndex(gLangNames, idx);
 }
 
@@ -251,7 +251,7 @@ bool IsCurrLangRtl() {
     return IsLangRtl(gCurrLangIdx);
 }
 
-const char* DetectUserLang() {
+Str DetectUserLang() {
     const LANGID* langIds = GetLangIds();
     LANGID langId = GetUserDefaultUILanguage();
     // try the exact match
@@ -279,10 +279,10 @@ void Destroy() {
 
 } // namespace trans
 
-const char* _TRA(const char* s) {
+Str _TRA(Str s) {
     return trans::GetTranslation(s);
 }
 
-TempWStr _TRW(const char* s) {
+TempWStr _TRW(Str s) {
     return ToWStrTemp(trans::GetTranslation(s));
 }

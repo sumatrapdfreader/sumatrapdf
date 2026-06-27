@@ -303,7 +303,7 @@ static TBBUTTON TbButtonFromButtonInfo(const ToolbarButtonInfo& bi, bool noTrans
         b.fsStyle |= BTNS_SHOWTEXT;
         b.fsStyle |= BTNS_AUTOSIZE;
     }
-    auto s = noTranslate ? bi.toolTip : trans::GetTranslation(bi.toolTip);
+    Str s = noTranslate ? Str(bi.toolTip) : trans::GetTranslation(bi.toolTip);
     b.iString = (INT_PTR)ToWStrTemp(s).s;
     return b;
 }

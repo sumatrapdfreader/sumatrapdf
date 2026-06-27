@@ -1467,7 +1467,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
             if (UseDarkModeLib()) {
                 DarkMode::setDarkWndSafe(hDlg);
             }
-            HwndSetText(hDlg, data->title ? data->title : _TRA("Change Background Color"));
+            HwndSetText(hDlg, data->title ? Str(data->title) : _TRA("Change Background Color"));
             HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
             HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
             if (data->showRadioButtons) {
