@@ -2,10 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct SimpleBrowserCreateArgs {
-    const char* title = nullptr;
+    Str title;
     Rect pos{}; // if empty, will use CW_USEDEFAULT
-    const char* url = nullptr;
-    const char* dataDir = nullptr;
+    Str url;
+    Str dataDir;
     WebViewResourceProvider resourceProvider;
     const WCHAR* resourceUriPrefix = nullptr;
 };

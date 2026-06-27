@@ -28,11 +28,11 @@ static LRESULT CALLBACK UrlStaticSubclassProc(HWND hwnd, UINT msg, WPARAM wp, LP
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static void SetCurrentUrl(SimpleBrowserWindow* w, const char* url) {
+static void SetCurrentUrl(SimpleBrowserWindow* w, Str url) {
     if (!w || !w->hwndUrl) {
         return;
     }
-    SetWindowTextA(w->hwndUrl, url ? url : "");
+    SetWindowTextA(w->hwndUrl, url ? url.s : "");
 }
 
 static void UpdateNavButtons(SimpleBrowserWindow* w) {
@@ -112,7 +112,7 @@ static void OnForward(SimpleBrowserWindow* w) {
 // an absolute http(s)/mailto URL is "non-internal": it points outside the
 // content we serve from our virtual host (UrlForWebViewEvent strips the host
 // prefix off internal pages, so those arrive as a bare path without a scheme)
-static bool IsExternalUrl(const char* url) {
+static bool IsExternalUrl(Str url) {
     return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
 }
 
@@ -244,7 +244,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
 
     {
         webView = new WebviewWnd();
-        const char* dataDir = args.dataDir;
+        Str dataDir = args.dataDir;
         if (!dataDir) {
             dataDir = GetWebViewDataDirTemp();
         }
