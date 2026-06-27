@@ -67,11 +67,15 @@ static bool IsCmdInList(i32 cmdId, i32* ids) {
     return false;
 }
 
-const char* CommandPaletteSkipWS(const char* s) {
-    while (str::IsWs(*s)) {
-        s++;
+Str CommandPaletteSkipWS(Str s) {
+    const char* p = s.s;
+    if (!p) {
+        return Str();
     }
-    return s;
+    while (str::IsWs(*p)) {
+        p++;
+    }
+    return Str(p);
 }
 
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;
@@ -147,7 +151,7 @@ static void EditSetTextAndFocus(Edit* e, const char* s) {
     HwndSetFocus(e->hwnd);
 }
 
-void CommandPaletteWnd::SwitchToPrefix(const char* prefix) {
+void CommandPaletteWnd::SwitchToPrefix(Str prefix) {
     EditSetTextAndFocus(editQuery, prefix);
 }
 
@@ -246,8 +250,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         }
 
         if (msg.wParam == VK_DELETE) {
-            const char* filter = editQuery->GetTextTemp();
-            filter = CommandPaletteSkipWS(filter);
+            Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
             if (str::StartsWith(filter, kPalettePrefixFileHistory)) {
                 int n = listBox->GetCount();
                 if (n == 0) {
@@ -382,7 +385,7 @@ static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
     return c;
 }
 
-bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTabAdvance) {
+bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance) {
     if (str::Eq(prefix, kPalettePrefixTabs)) {
         smartTabMode = smartTabAdvance != 0;
     }
@@ -548,7 +551,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
     return true;
 }
 
-void RunCommandPalette(MainWindow* win, const char* prefix, int smartTabAdvance) {
+void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     if (gCommandPaletteWnd) {
         HwndSetFocus(gCommandPaletteHwnd);
         return;

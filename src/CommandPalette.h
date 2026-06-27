@@ -10,5 +10,5 @@ constexpr const char* kPalettePrefixEverything = ":";
 constexpr const char* kPalettePrefixTOC = "*";
 constexpr const char* kPalettePrefixFavorites = "$";
 
-void RunCommandPalette(MainWindow*, const char* prefix, int smartTabAdvance);
+void RunCommandPalette(MainWindow*, Str prefix, int smartTabAdvance);
 HWND CommandPaletteHwndForAccelerator(HWND hwnd);

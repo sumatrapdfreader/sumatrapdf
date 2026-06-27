@@ -22,31 +22,31 @@ static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matched
     }
 }
 
-void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& strings) {
+void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     strings.Reset();
     if (!filter) {
-        filter = "";
+        filter = Str("");
     }
 
     bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false;
     if (str::StartsWith(filter, kPalettePrefixEverything)) {
-        filter++;
+        filter = Str(filter.s + 1);
         searchTabs = searchHistory = searchCommands = true;
     } else if (str::StartsWith(filter, kPalettePrefixTabs)) {
-        filter++;
+        filter = Str(filter.s + 1);
         searchTabs = true;
     } else if (str::StartsWith(filter, kPalettePrefixFileHistory)) {
-        filter++;
+        filter = Str(filter.s + 1);
         searchHistory = true;
     } else if (str::StartsWith(filter, kPalettePrefixTOC)) {
-        filter++;
+        filter = Str(filter.s + 1);
         searchToc = true;
     } else if (str::StartsWith(filter, kPalettePrefixFavorites)) {
-        filter++;
+        filter = Str(filter.s + 1);
         searchFavorites = true;
     } else {
         if (str::StartsWith(filter, kPalettePrefixCommands)) {
-            filter++;
+            filter = Str(filter.s + 1);
         }
         searchCommands = true;
     }
@@ -72,8 +72,7 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& stri
 }
 
 void CommandPaletteWnd::QueryChanged() {
-    const char* filter = editQuery->GetTextTemp();
-    filter = CommandPaletteSkipWS(filter);
+    Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
     int currSelIdx = 0;
     auto m = (ListBoxModelCP*)listBox->model;
     int nItemsPrev = m->ItemsCount();

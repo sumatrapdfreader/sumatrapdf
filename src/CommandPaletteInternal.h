@@ -10,7 +10,7 @@ struct Favorite;
 struct ItemDataCP {
     i32 cmdId = 0;
     WindowTab* tab = nullptr;
-    const char* filePath = nullptr;
+    Str filePath;
     TocItem* tocItem = nullptr;
     int indent = 0;
     FileState* favFs = nullptr;
@@ -60,14 +60,14 @@ struct CommandPaletteWnd : Wnd {
     void CollectTabsMru(MainWindow*, WindowTab* currTab);
     void CollectToc(MainWindow*);
     void CollectFavorites(MainWindow*);
-    void FilterStringsForQuery(const char*, StrVecCP&);
+    void FilterStringsForQuery(Str, StrVecCP&);
 
-    bool Create(MainWindow* win, const char* prefix, int smartTabAdvance);
+    bool Create(MainWindow* win, Str prefix, int smartTabAdvance);
     void QueryChanged();
 
     void ExecuteCurrentSelection();
     bool AdvanceSelection(int dir);
-    void SwitchToPrefix(const char* prefix);
+    void SwitchToPrefix(Str prefix);
     void SwitchToCommands();
     void SwitchToTabs();
     void SwitchToEverything();
@@ -82,7 +82,7 @@ struct CommandPaletteWnd : Wnd {
 extern CommandPaletteWnd* gCommandPaletteWnd;
 extern HWND gCommandPaletteHwnd;
 
-const char* CommandPaletteSkipWS(const char* s);
+Str CommandPaletteSkipWS(Str s);
 void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx);
 void ScheduleDeleteAndExecCommand(i32 cmdId = 0);
 void SafeDeleteCommandPaletteWnd();
