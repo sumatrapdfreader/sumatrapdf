@@ -788,9 +788,9 @@ bool IsFindWindowVisible(MainWindow* win) {
     return win->findWindow && IsWindowVisible(win->findWindow->hwnd);
 }
 
-void FindWindowSetStatus(MainWindow* win, const char* s) {
+void FindWindowSetStatus(MainWindow* win, Str s) {
     if (win->findWindow && win->findWindow->status) {
-        HwndSetText(win->findWindow->status->hwnd, s ? s : "");
+        HwndSetText(win->findWindow->status->hwnd, s ? s : Str(""));
     }
 }
 
@@ -819,15 +819,15 @@ void UpdateFindWindowTheme(MainWindow* win) {
     }
 }
 
-char* TestFindResultPageColumnClipResult(int* exitCodeOut) {
+Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> char* {
+    auto fail = [&](const char* msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     };
 
     if (gWindows.IsEmpty()) {
@@ -890,11 +890,11 @@ char* TestFindResultPageColumnClipResult(int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     }
     out.AppendFmt("OK pixel=0x%06x\n", (unsigned)px);
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }

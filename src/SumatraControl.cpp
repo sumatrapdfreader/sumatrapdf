@@ -436,7 +436,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestFindResultPageColumnClip: {
             int exitCode = 0;
-            char* res = TestFindResultPageColumnClipResult(&exitCode);
+            Str res = TestFindResultPageColumnClipResult(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

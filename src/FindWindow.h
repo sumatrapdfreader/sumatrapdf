@@ -11,7 +11,7 @@ void DeleteFindWindow(MainWindow* win);
 void ShowFindWindow(MainWindow* win);
 void HideFindWindow(MainWindow* win);
 bool IsFindWindowVisible(MainWindow* win);
-void FindWindowSetStatus(MainWindow* win, const char* s);
+void FindWindowSetStatus(MainWindow* win, Str s);
 void FindWindowSetMatchCaseChecked(MainWindow* win, bool checked);
 void FindWindowSetMatchWholeWordChecked(MainWindow* win, bool checked);
 // repopulate the results list from win->findMatches (no-op if not visible)
@@ -20,4 +20,4 @@ void FindWindowRefreshResults(MainWindow* win);
 void UpdateFindWindowTheme(MainWindow* win);
 
 // Headless draw test for issue #5736: match highlights must not bleed into the page column.
-char* TestFindResultPageColumnClipResult(int* exitCodeOut = nullptr);
+Str TestFindResultPageColumnClipResult(int* exitCodeOut = nullptr);
