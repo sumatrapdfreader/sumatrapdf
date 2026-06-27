@@ -116,8 +116,7 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
 // unfortunately libarchive's rar support is weak
 static bool gUnrarFirst = true;
 
-bool MultiFormatArchive::Open(const char* path, bool eagerLoad, Kind hintKind,
-                              const ArchiveExtractProgressCb& cbProgress) {
+bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress) {
     if (!path) {
         return false;
     }
@@ -219,7 +218,7 @@ bool MultiFormatArchive::Open(IStream* stream) {
     return ok;
 }
 
-bool MultiFormatArchive::OpenArchive(const char* path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+bool MultiFormatArchive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     struct archive* a = archive_read_new();
     archive_read_support_format_all(a);
     archive_read_support_filter_all(a);
@@ -246,20 +245,20 @@ Vec<MultiFormatArchive::FileInfo*> const& MultiFormatArchive::GetFileInfos() {
     return fileInfos_;
 }
 
-size_t getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, const char* name) {
+size_t getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, Str name) {
     for (auto fileInfo : fileInfos) {
-        if (str::EqI(fileInfo->name, name)) {
+        if (str::EqI(fileInfo->name, name.s)) {
             return fileInfo->fileId;
         }
     }
     return (size_t)-1;
 }
 
-size_t MultiFormatArchive::GetFileId(const char* fileName) {
+size_t MultiFormatArchive::GetFileId(Str fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
-MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataByName(const char* fileName) {
+MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataByName(Str fileName) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
 }
@@ -415,7 +414,7 @@ const char* MultiFormatArchive::GetComment() {
 
 ///// format specific handling /////
 
-MultiFormatArchive* OpenArchiveFromFile(const char* path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     auto* archive = new MultiFormatArchive();
     if (!archive->Open(path, eagerLoad, nullptr, cbProgress)) {
         delete archive;
@@ -633,8 +632,7 @@ Exit:
 
 // asan build crashes in UnRAR code
 // see https://codeeval.dev/gist/801ad556960e59be41690d0c2fa7cba0
-bool MultiFormatArchive::OpenUnrarFallback(const char* rarPath, bool eagerLoad,
-                                           const ArchiveExtractProgressCb& cbProgress) {
+bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     if (!rarPath) {
         return false;
     }

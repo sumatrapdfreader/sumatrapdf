@@ -57,12 +57,12 @@ class MultiFormatArchive {
     // cbProgress fires after each entry is processed (see
     // ArchiveExtractProgress). Pass a default-constructed Func1 to skip
     // notifications.
-    bool Open(const char* path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress);
+    bool Open(Str path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress);
     bool Open(IStream* stream);
 
     Vec<FileInfo*> const& GetFileInfos();
 
-    size_t GetFileId(const char* fileName);
+    size_t GetFileId(Str fileName);
 
     // Return the FileInfo record for a given entry, loading its data into
     // fileInfo->data on demand (on a miss, re-opens the archive unless
@@ -78,7 +78,7 @@ class MultiFormatArchive {
     // Returns nullptr for an unknown name / out-of-range fileId. For an
     // entry whose decompression failed check fileInfo->failed — data will
     // be nullptr in that case.
-    FileInfo* GetFileDataByName(const char* filename);
+    FileInfo* GetFileDataByName(Str filename);
     FileInfo* GetFileDataById(size_t fileId);
     ByteSlice GetFileDataPartById(size_t fileId, size_t sizeHint);
 
@@ -100,10 +100,10 @@ class MultiFormatArchive {
     // only set when we loaded file infos using unrar.dll fallback
     const char* rarFilePath_ = nullptr;
 
-    bool OpenArchive(const char* path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
+    bool OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
     bool ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
 
-    bool OpenUnrarFallback(const char* rarPathUtf, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
+    bool OpenUnrarFallback(Str rarPathUtf, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
     // Populate fileInfos_[fileId]->data via the respective backend; set
     // ->failed when extraction didn't produce the expected bytes.
     void LoadFileDataByIdUnrarDll(size_t fileId);
@@ -134,7 +134,7 @@ struct ArchiveExtractProgress {
 // file; use FileInfo::failed to tell "not yet loaded" from "failed".
 // cbProgress fires once per entry (see ArchiveExtractProgress); pass a
 // default-constructed Func1 to skip notifications.
-MultiFormatArchive* OpenArchiveFromFile(const char* path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
+MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
 
 // Open from an IStream. libarchive auto-detects the container (zip/rar/
 // 7z/tar/etc.). Always eager-loads (can't re-open a stream); no progress
