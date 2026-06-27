@@ -15,7 +15,7 @@
 
 #include "utils/Log.h"
 
-TempStr GetThumbnailPathTemp(const char* filePath) {
+TempStr GetThumbnailPathTemp(Str filePath) {
     // create a fingerprint of a (normalized) path for the file name
     // I'd have liked to also include the file's last modification time
     // in the fingerprint (much quicker than hashing the entire file's
@@ -52,7 +52,7 @@ void DeleteThumbnailCacheDirectory() {
     dir::RemoveAll(thumbsDir);
 }
 
-void DeleteThumbnailForFile(const char* filePath) {
+void DeleteThumbnailForFile(Str filePath) {
     TempStr thumbPath = GetThumbnailPathTemp(filePath);
     bool ok = file::Delete(thumbPath);
     auto status = ok ? "ok" : "failed";
