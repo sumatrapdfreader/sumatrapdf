@@ -332,7 +332,7 @@ struct FindThreadData {
     AutoFreeWStr text;
     HANDLE thread = nullptr;
 
-    FindThreadData(MainWindow* win, TextSearch::Direction direction, const char* text, bool wasModified) {
+    FindThreadData(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified) {
         this->win = win;
         this->direction = direction;
         this->text.SetCopy(ToWStr(text).s);
@@ -886,7 +886,7 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
 //   if true, starting a search for new term
 //   if false, searching for the next occurrence of previous term
 // TODO: should detect wasModified by comparing with the last search result
-void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const char* text, bool wasModified,
+void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified,
                       bool showProgress) {
     AbortFinding(win, false);
     if (str::IsEmpty(text)) {
@@ -1233,7 +1233,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void ShowForwardSearchResult(MainWindow* win, const char* fileName, int line, int /* col */, int ret, int page,
+void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col */, int ret, int page,
                              Vec<Rect>& rects) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -1361,7 +1361,7 @@ static const char* HandleSyncCmd(const char* cmd, bool* ack) {
     int page;
     Vec<Rect> rects;
     int ret = dm->pdfSync->SourceToDoc(Str(srcFile.Get()), line, col, &page, rects);
-    ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
+    ShowForwardSearchResult(win, Str(srcFile.Get()), line, col, ret, page, rects);
     if (setFocus) {
         win->Focus();
     }
@@ -1401,7 +1401,7 @@ static const char* HandleSearchCmd(const char* cmd, bool* ack) {
     }
     bool wasModified = true;
     bool showProgress = true;
-    FindTextOnThread(win, TextSearch::Direction::Forward, term, wasModified, showProgress);
+    FindTextOnThread(win, TextSearch::Direction::Forward, Str(term.Get()), wasModified, showProgress);
     win->Focus();
     *ack = true;
     return next;
@@ -1624,7 +1624,7 @@ static const char* HandleGotoCmd(const char* cmd, bool* ack) {
         }
     }
 
-    win->linkHandler->GotoNamedDest(destName);
+    win->linkHandler->GotoNamedDest(Str(destName.Get()));
     win->Focus();
     *ack = true;
     return next;

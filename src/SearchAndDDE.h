@@ -38,7 +38,7 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp);
 bool NeedsFindUI(MainWindow* win);
 void ClearSearchResult(MainWindow* win);
 bool OnInverseSearch(MainWindow* win, int x, int y);
-void ShowForwardSearchResult(MainWindow* win, const char* fileName, int line, int col, int ret, int page,
+void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int col, int ret, int page,
                              Vec<Rect>& rects);
 void PaintForwardSearchMark(MainWindow* win, HDC hdc);
 void PaintAllFindMatches(MainWindow* win, HDC hdc);
@@ -65,7 +65,7 @@ void ClearFindMatches(MainWindow* win);
 void FindSelection(MainWindow* win, TextSearch::Direction direction);
 bool AbortFinding(MainWindow* win, bool hideMessage);
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress);
-void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const char* text, bool wasModified,
+void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified,
                       bool showProgress);
 extern bool gIsStartup;
 extern StrVec gDdeOpenOnStartup;
