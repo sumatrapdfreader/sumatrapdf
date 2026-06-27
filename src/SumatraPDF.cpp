@@ -10043,7 +10043,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
         return;
     }
 
-    const char* currentVoiceId = TtsGetVoiceId();
+    Str currentVoiceId = TtsGetVoiceId();
 
     UINT defaultFlags = MF_STRING;
     if (str::IsEmpty(currentVoiceId)) {
@@ -10063,7 +10063,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
             break;
         }
 
-        const char* lang = str::IsEmpty(voice.lang) ? "" : voice.lang;
+        Str lang = str::IsEmpty(voice.lang) ? Str("") : voice.lang;
 
         if (lastLang && !str::EqI(lastLang, lang)) {
             AppendMenuW(voiceMenu, MF_SEPARATOR, 0, nullptr);

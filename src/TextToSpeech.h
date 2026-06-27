@@ -1,12 +1,12 @@
 #pragma once
 
 struct TtsVoiceInfo {
-    char* id;
-    char* name;
-    char* lang;
+    Str id;
+    Str name;
+    Str lang;
 };
 
-bool TtsSpeakUtf8(const char* text);
+bool TtsSpeakUtf8(Str text);
 void TtsStop();
 void TtsRelease();
 
@@ -22,5 +22,5 @@ void TtsProcessEvents();
 Vec<TtsVoiceInfo> TtsGetVoices();
 void TtsFreeVoices(Vec<TtsVoiceInfo>& voices);
 
-bool TtsSetVoiceById(const char* voiceId);
-const char* TtsGetVoiceId();
+bool TtsSetVoiceById(Str voiceId);
+Str TtsGetVoiceId();

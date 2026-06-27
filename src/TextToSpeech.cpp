@@ -53,8 +53,8 @@ static void TtsPostNotifyMsg() {
     }
 }
 
-static const char* TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
-    return str::IsEmpty(voice.lang) ? "ffff" : voice.lang;
+static Str TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
+    return str::IsEmpty(voice.lang) ? Str("ffff") : voice.lang;
 }
 
 static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
@@ -63,7 +63,7 @@ static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
         return langCmp < 0;
     }
 
-    return lstrcmpiA(a.name ? a.name : "", b.name ? b.name : "") < 0;
+    return lstrcmpiA(a.name ? a.name.s : "", b.name ? b.name.s : "") < 0;
 }
 
 static void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices) {
@@ -89,7 +89,7 @@ static ULONG gSapiLastWordPos = 0;
 
 // Voice token lookup and metadata
 
-static ISpObjectToken* SapiFindVoiceTokenById(const char* voiceId) {
+static ISpObjectToken* SapiFindVoiceTokenById(Str voiceId) {
     if (str::IsEmpty(voiceId)) {
         return nullptr;
     }
@@ -304,7 +304,7 @@ static void SapiGetVoices(Vec<TtsVoiceInfo>& voices) {
     enumTokens->Release();
 }
 
-static bool SapiSetVoiceById(const char* voiceId) {
+static bool SapiSetVoiceById(Str voiceId) {
     if (!SapiInit()) {
         return false;
     }
@@ -722,7 +722,7 @@ static void WinTtsGetVoices(Vec<TtsVoiceInfo>& voices) {
     allVoices->Release();
 }
 
-static bool WinTtsSetVoiceById(const char* voiceId) {
+static bool WinTtsSetVoiceById(Str voiceId) {
     if (!WinTtsInit() || !gWinVoicesStatic) {
         return false;
     }
@@ -1146,7 +1146,7 @@ void TtsProcessEvents() {
     }
 }
 
-bool TtsSpeakUtf8(const char* text) {
+bool TtsSpeakUtf8(Str text) {
     if (str::IsEmpty(text)) {
         return false;
     }
@@ -1217,7 +1217,7 @@ Vec<TtsVoiceInfo> TtsGetVoices() {
     return voices;
 }
 
-bool TtsSetVoiceById(const char* voiceId) {
+bool TtsSetVoiceById(Str voiceId) {
     bool ok;
     if (IsWinRtBackend()) {
         ok = WinTtsSetVoiceById(voiceId);
@@ -1228,19 +1228,19 @@ bool TtsSetVoiceById(const char* voiceId) {
         return false;
     }
 
-    str::ReplaceWithCopy(&gTtsVoiceId, voiceId ? voiceId : "");
+    str::ReplaceWithCopy(&gTtsVoiceId, voiceId ? voiceId.s : "");
     return true;
 }
 
-const char* TtsGetVoiceId() {
-    return gTtsVoiceId ? gTtsVoiceId : "";
+Str TtsGetVoiceId() {
+    return Str(gTtsVoiceId ? gTtsVoiceId : "");
 }
 
 void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {
     for (TtsVoiceInfo& voice : voices) {
-        free(voice.id);
-        free(voice.name);
-        free(voice.lang);
+        free(voice.id.s);
+        free(voice.name.s);
+        free(voice.lang.s);
     }
     voices.Reset();
 }
