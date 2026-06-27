@@ -80,7 +80,7 @@ static TempStr TooltipGetTextTemp(HWND hwnd, HWND owner, int id) {
 
 static const int MULTILINE_INFOTIP_WIDTH_PX = 500;
 
-static void SetMaxWidthForText(HWND hwnd, const char* s, bool multiline) {
+static void SetMaxWidthForText(HWND hwnd, Str s, bool multiline) {
     int dx = -1;
     if (multiline || str::FindChar(s, '\n')) {
         // TODO: dpi scale
@@ -89,7 +89,7 @@ static void SetMaxWidthForText(HWND hwnd, const char* s, bool multiline) {
     SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
 }
 
-static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, const char* s, bool multiline) {
+static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, Str s, bool multiline) {
     // avoid flickering
     char* s2 = TooltipGetTextTemp(hwnd, owner, id);
     if (str::Eq(s, s2)) {
@@ -146,7 +146,7 @@ void Tooltip::SetMaxWidth(int dx) {
     SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
 }
 
-int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
+int Tooltip::Add(Str s, const Rect& rc, bool multiline) {
     int id = GetNextTooltipID();
     SetMaxWidthForText(hwnd, s, multiline);
     TempWStr ws = ToWStrTemp(s);
@@ -172,17 +172,17 @@ TempStr Tooltip::GetTextTemp(int id) {
     return TooltipGetTextTemp(hwnd, parent, id);
 }
 
-void Tooltip::Update(int id, const char* s, const Rect& rc, bool multiline) {
+void Tooltip::Update(int id, Str s, const Rect& rc, bool multiline) {
     TooltipUpdateText(hwnd, parent, id, s, multiline);
     TooltipUpdateRect(hwnd, parent, id, rc);
 }
 
 // this assumes we only have at most one tool per this tooltip
-int Tooltip::SetSingle(const char* s, const Rect& rc, bool multiline) {
+int Tooltip::SetSingle(Str s, const Rect& rc, bool multiline) {
     if (str::Len(s) > 256) {
         // pathological cases make for tooltips that take too long to display
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2814
-        s = (const char*)ShortenStringUtf8InTheMiddleTemp(s, 250);
+        s = Str(ShortenStringUtf8InTheMiddleTemp(s, 250));
     }
     int n = Count();
     // if want to use more tooltips, use Add() and Update()

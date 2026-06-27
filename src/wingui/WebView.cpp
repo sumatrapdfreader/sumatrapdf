@@ -590,7 +590,7 @@ class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
     ULONG m_refCount = 1;
 };
 
-static TempWStr MimeHeaderFromContentType(const char* contentType) {
+static TempWStr MimeHeaderFromContentType(Str contentType) {
     if (str::IsEmpty(contentType)) {
         contentType = "text/html";
     }
@@ -622,7 +622,7 @@ static TempWStr UriPathFromPrefix(const WCHAR* uri, const WCHAR* prefix) {
 }
 
 static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedEventArgs* args, const char* data,
-                                              size_t dataLen, const char* contentType, int statusCode) {
+                                              size_t dataLen, Str contentType, int statusCode) {
     if (!args || !gSharedEnvironment) {
         return false;
     }
@@ -795,13 +795,13 @@ WebviewWnd::WebviewWnd() {
     kind = kindWebView;
 }
 
-void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, const char* text) {
+void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, Str text) {
     if (initFailed) {
         return;
     }
     PendingWebViewOp op;
     op.kind = kind;
-    op.text = str::Dup(text ? text : "");
+    op.text = str::Dup(text ? text : Str(""));
     pendingOps.Append(op);
 }
 
@@ -1022,7 +1022,7 @@ void WebviewWnd::UpdateWebviewSize() {
     controller->put_Bounds(bounds);
 }
 
-void WebviewWnd::Eval(const char* js) {
+void WebviewWnd::Eval(Str js) {
     if (initFailed || str::IsEmpty(js)) {
         return;
     }
@@ -1034,7 +1034,7 @@ void WebviewWnd::Eval(const char* js) {
     webview->ExecuteScript(ws, nullptr);
 }
 
-void WebviewWnd::SetHtml(const char* html) {
+void WebviewWnd::SetHtml(Str html) {
     if (initFailed || str::IsEmpty(html)) {
         return;
     }
@@ -1046,7 +1046,7 @@ void WebviewWnd::SetHtml(const char* html) {
     webview->NavigateToString(html2);
 }
 
-void WebviewWnd::Init(const char* js) {
+void WebviewWnd::Init(Str js) {
     if (initFailed || str::IsEmpty(js)) {
         return;
     }
@@ -1058,7 +1058,7 @@ void WebviewWnd::Init(const char* js) {
     webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
 }
 
-void WebviewWnd::Navigate(const char* url) {
+void WebviewWnd::Navigate(Str url) {
     if (initFailed || str::IsEmpty(url)) {
         return;
     }
@@ -1232,7 +1232,7 @@ static void ComHandlerCbHwnd(void* hwndVoid, ICoreWebView2Controller* ctrl) {
     self->OnControllerReady(ctrl);
 }
 
-static void OnBrowserMessageCbHwnd(void* hwndVoid, const char* msg);
+static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg);
 
 static void FailPendingWebviews() {
     Vec<WebviewWnd*> pending = gPendingWebviews;
@@ -1279,7 +1279,7 @@ static void OnSharedEnvironmentReady(HRESULT res, ICoreWebView2Environment* env)
             continue;
         }
         HWND hwnd = wv->hwnd;
-        auto fn = MkFunc1<void, const char*>(OnBrowserMessageCbHwnd, (void*)hwnd);
+        auto fn = MkFunc1<void, Str>(OnBrowserMessageCbHwnd, (void*)hwnd);
         CreateControllerWithSharedEnvironment(wv, fn);
     }
 }
@@ -1352,11 +1352,11 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
     return true;
 }
 
-void WebviewWnd::OnBrowserMessage(const char* msg) {
+void WebviewWnd::OnBrowserMessage(Str msg) {
     log(msg);
 }
 
-static void OnBrowserMessageCbHwnd(void* hwndVoid, const char* msg) {
+static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg) {
     HWND hwnd = (HWND)hwndVoid;
     auto* self = (WebviewWnd*)WndListFindByHwnd(hwnd);
     if (self) {
@@ -1379,7 +1379,7 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
         return nullptr;
     }
 
-    auto fn = MkFunc1<void, const char*>(OnBrowserMessageCbHwnd, (void*)hwnd);
+    auto fn = MkFunc1<void, Str>(OnBrowserMessageCbHwnd, (void*)hwnd);
     if (!Embed(fn)) {
         HwndDestroyWindowSafe(&hwnd);
         return nullptr;
@@ -1445,10 +1445,10 @@ WebviewWnd::~WebviewWnd() {
 HWND WebviewWnd::Create(const CreateWebViewArgs&) {
     return nullptr;
 }
-void WebviewWnd::Eval(const char*) {}
-void WebviewWnd::SetHtml(const char*) {}
-void WebviewWnd::Init(const char*) {}
-void WebviewWnd::Navigate(const char*) {}
+void WebviewWnd::Eval(Str) {}
+void WebviewWnd::SetHtml(Str) {}
+void WebviewWnd::Init(Str) {}
+void WebviewWnd::Navigate(Str) {}
 void WebviewWnd::RegisterForwardingDropTarget() {}
 void WebviewWnd::RevokeForwardingDropTarget() {}
 void WebviewWnd::GoBack() {}
@@ -1470,10 +1470,10 @@ bool WebviewWnd::Embed(WebViewMsgCb&) {
 }
 void WebviewWnd::OnControllerReady(ICoreWebView2Controller*) {}
 void WebviewWnd::FailInit() {}
-void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, const char*) {}
+void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, Str) {}
 void WebviewWnd::FlushPendingOps() {}
 void WebviewWnd::SetControllerVisible(bool) {}
-void WebviewWnd::OnBrowserMessage(const char*) {}
+void WebviewWnd::OnBrowserMessage(Str) {}
 LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }

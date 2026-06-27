@@ -77,7 +77,7 @@ void DropDown::SetCurrentSelection(int n) {
     ComboBox_SetCurSel(hwnd, n);
 }
 
-void DropDown::SetCueBanner(const char* sv) {
+void DropDown::SetCueBanner(Str sv) {
     auto ws = ToWStrTemp(sv);
     ComboBox_SetCueBannerText(hwnd, ws.s);
 }
@@ -93,13 +93,13 @@ void DropDown::SetItems(StrVec& newItems) {
     SetCurrentSelection(-1);
 }
 
-static void DropDownItemsFromStringArray(StrVec& items, const char* strings) {
+static void DropDownItemsFromStringArray(StrVec& items, SeqStrings strings) {
     for (; strings; SeqStrNext(strings)) {
         items.Append(strings);
     }
 }
 
-void DropDown::SetItemsSeqStrings(const char* items) {
+void DropDown::SetItemsSeqStrings(SeqStrings items) {
     StrVec strings;
     DropDownItemsFromStringArray(strings, items);
     SetItems(strings);

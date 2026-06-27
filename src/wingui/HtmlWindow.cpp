@@ -127,7 +127,7 @@ bool IsBlankUrl(const WCHAR* url) {
     return str::EqI(L"about:blank", url);
 }
 
-bool IsBlankUrl(const char* url) {
+bool IsBlankUrl(Str url) {
     return str::EqI("about:blank", url);
 }
 
@@ -1408,12 +1408,12 @@ void HtmlWindow::SetVisible(bool visible) {
 
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
 // (will be called from OnBeforeNavigate())
-void HtmlWindow::NavigateToDataUrl(const char* url) {
+void HtmlWindow::NavigateToDataUrl(Str url) {
     TempStr fullUrl = str::FormatTemp("its://%d/%s", windowId, url);
     NavigateToUrl(fullUrl);
 }
 
-void HtmlWindow::NavigateToUrl(const char* urlA) {
+void HtmlWindow::NavigateToUrl(Str urlA) {
     TempWStr url = ToWStrTemp(urlA);
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
@@ -1476,7 +1476,7 @@ void HtmlWindow::NavigateToAboutBlank() {
     NavigateToUrl("about:blank");
 }
 
-void HtmlWindow::SetHtml(const ByteSlice& d, const char* url) {
+void HtmlWindow::SetHtml(const ByteSlice& d, Str url) {
     FreeHtmlSetInProgressData();
     str::ReplaceWithCopy(&htmlSetInProgress, d);
     str::ReplaceWithCopy(&htmlSetInProgress, url);

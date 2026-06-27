@@ -109,9 +109,9 @@ Kind Wnd::GetKind() {
     return kind;
 }
 
-void Wnd::SetText(const char* s) {
+void Wnd::SetText(Str s) {
     if (!s) {
-        s = "";
+        s = Str("");
     }
     HwndSetText(hwnd, s);
     HwndRepaintNow(hwnd); // TODO: move inside HwndSetText()?

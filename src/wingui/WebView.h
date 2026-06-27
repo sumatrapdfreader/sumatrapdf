@@ -8,7 +8,7 @@ bool HasWebView();
 typedef interface ICoreWebView2 ICoreWebView2;
 typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 
-using WebViewMsgCb = Func1<const char*>;
+using WebViewMsgCb = Func1<Str>;
 
 struct WebViewResourceResult {
     char* data = nullptr;
@@ -24,8 +24,8 @@ constexpr int kWebViewForwardKey = -1;
 
 struct WebViewEvents {
     void* ctx = nullptr;
-    bool (*navigationStarting)(void* ctx, const char* url, bool newWindow) = nullptr;
-    void (*navigationCompleted)(void* ctx, const char* url, bool success) = nullptr;
+    bool (*navigationStarting)(void* ctx, Str url, bool newWindow) = nullptr;
+    void (*navigationCompleted)(void* ctx, Str url, bool success) = nullptr;
     void (*historyChanged)(void* ctx, bool canGoBack, bool canGoForward) = nullptr;
     // maps an accelerator key press inside the webview to an app command id to
     // post (WM_COMMAND) to the top-level window, or 0 to leave it to the
@@ -36,7 +36,7 @@ struct WebViewEvents {
 
 struct WebViewResourceProvider {
     void* ctx = nullptr;
-    bool (*getResource)(void* ctx, const char* path, WebViewResourceResult* res) = nullptr;
+    bool (*getResource)(void* ctx, Str path, WebViewResourceResult* res) = nullptr;
 };
 
 struct PendingWebViewOp {
@@ -62,10 +62,10 @@ struct WebviewWnd : Wnd {
 
     HWND Create(const CreateWebViewArgs&);
 
-    void Eval(const char* js);
-    void SetHtml(const char* html);
-    void Init(const char* js);
-    void Navigate(const char* url);
+    void Eval(Str js);
+    void SetHtml(Str html);
+    void Init(Str js);
+    void Navigate(Str url);
     void GoBack();
     void GoForward();
     void SetZoomPercent(int zoom);
@@ -80,11 +80,11 @@ struct WebviewWnd : Wnd {
     bool Embed(WebViewMsgCb& cb);
     void OnControllerReady(ICoreWebView2Controller* controller);
     void FailInit();
-    void QueuePendingOp(PendingWebViewOp::Kind kind, const char* text);
+    void QueuePendingOp(PendingWebViewOp::Kind kind, Str text);
     void FlushPendingOps();
     void SetControllerVisible(bool visible);
 
-    virtual void OnBrowserMessage(const char* msg);
+    virtual void OnBrowserMessage(Str msg);
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 

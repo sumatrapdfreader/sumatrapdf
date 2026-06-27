@@ -280,5 +280,5 @@ struct TableLayout : LayoutBase {
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Size LayoutToSize(ILayout* layout, Size size);
 
-void dbglayoutf(const char* fmt, ...);
-void LogConstraints(Constraints c, const char* suffix);
+void dbglayoutf(Str fmt, ...);
+void LogConstraints(Constraints c, Str suffix);

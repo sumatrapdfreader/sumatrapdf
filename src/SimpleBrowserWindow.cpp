@@ -116,7 +116,7 @@ static bool IsExternalUrl(const char* url) {
     return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
 }
 
-static bool NavigationStarting(void* ctx, const char* url, bool newWindow) {
+static bool NavigationStarting(void* ctx, Str url, bool newWindow) {
     auto* w = (SimpleBrowserWindow*)ctx;
     if (!w) {
         return true;
@@ -135,7 +135,7 @@ static bool NavigationStarting(void* ctx, const char* url, bool newWindow) {
     return true;
 }
 
-static void NavigationCompleted(void* ctx, const char* url, bool success) {
+static void NavigationCompleted(void* ctx, Str url, bool success) {
     auto* w = (SimpleBrowserWindow*)ctx;
     if (!w || !success) {
         return;

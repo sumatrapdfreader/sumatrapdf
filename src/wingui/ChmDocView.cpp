@@ -30,10 +30,10 @@ constexpr const char* kReportScrollJs =
 // WebView2 host that captures scroll-position messages posted by kReportScrollJs.
 struct ChmWebviewWnd : WebviewWnd {
     ChmDocView* owner = nullptr;
-    void OnBrowserMessage(const char* msg) override;
+    void OnBrowserMessage(Str msg) override;
 };
 
-void ChmWebviewWnd::OnBrowserMessage(const char* msg) {
+void ChmWebviewWnd::OnBrowserMessage(Str msg) {
     int x = 0;
     int y = 0;
     if (owner && str::Parse(msg, "chmscroll %d %d", &x, &y)) {
@@ -85,7 +85,7 @@ static char* ChmMimeFromPath(const char* path, const ByteSlice& data) {
     return str::Dup("text/html");
 }
 
-bool ChmDocView::ResourceGet(void* ctx, const char* path, WebViewResourceResult* res) {
+bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
     auto* view = (ChmDocView*)ctx;
     if (!view || !view->cb || !res || str::IsEmpty(path)) {
         return false;
@@ -101,7 +101,7 @@ bool ChmDocView::ResourceGet(void* ctx, const char* path, WebViewResourceResult*
     return true;
 }
 
-bool ChmDocView::NavigationStarting(void* ctx, const char* url, bool newWindow) {
+bool ChmDocView::NavigationStarting(void* ctx, Str url, bool newWindow) {
     auto* view = (ChmDocView*)ctx;
     if (!view || !view->cb) {
         return false;
@@ -109,7 +109,7 @@ bool ChmDocView::NavigationStarting(void* ctx, const char* url, bool newWindow) 
     return view->cb->OnBeforeNavigate(url, newWindow);
 }
 
-void ChmDocView::NavigationCompleted(void* ctx, const char* url, bool success) {
+void ChmDocView::NavigationCompleted(void* ctx, Str url, bool success) {
     auto* view = (ChmDocView*)ctx;
     if (!view || !view->cb || !success || str::IsEmpty(url)) {
         return;
@@ -266,7 +266,7 @@ ChmDocView::~ChmDocView() {
     delete ie;
 }
 
-void ChmDocView::NavigateToDataUrl(const char* url) {
+void ChmDocView::NavigateToDataUrl(Str url) {
     if (!url) {
         return;
     }

@@ -61,7 +61,7 @@ void AIChatAppendModelUnique(StrVec& models, const char* model);
 int AIChatFindModelInList(const StrVec& models, const char* model);
 TempStr AIChatModelDisplayNameTemp(const char* model, const char* defaultDisplay);
 
-bool AIChatGetMarkedJsResource(void* ctx, const char* path, WebViewResourceResult* res);
+bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res);
 TempStr AIChatFormatChatHtmlTemp(const char* virtualHost, const char* bgColor);
 
 void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning);

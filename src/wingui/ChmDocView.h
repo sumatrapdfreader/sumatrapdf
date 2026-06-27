@@ -16,7 +16,7 @@ class ChmDocView {
     static ChmDocView* Create(HWND hwndParent, HtmlWindowCallback* cb);
     ~ChmDocView();
 
-    void NavigateToDataUrl(const char* url);
+    void NavigateToDataUrl(Str url);
     void GoBack();
     void GoForward();
     void SetZoomPercent(int zoom);
@@ -54,8 +54,8 @@ class ChmDocView {
     void UnsubclassParent();
     static LRESULT CALLBACK ParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
                                           DWORD_PTR data);
-    static bool ResourceGet(void* ctx, const char* path, WebViewResourceResult* res);
-    static bool NavigationStarting(void* ctx, const char* url, bool newWindow);
-    static void NavigationCompleted(void* ctx, const char* url, bool success);
+    static bool ResourceGet(void* ctx, Str path, WebViewResourceResult* res);
+    static bool NavigationStarting(void* ctx, Str url, bool newWindow);
+    static void NavigationCompleted(void* ctx, Str url, bool success);
     static void HistoryChanged(void* ctx, bool canGoBack, bool canGoForward);
 };

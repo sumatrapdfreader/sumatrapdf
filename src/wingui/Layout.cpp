@@ -9,19 +9,19 @@
 
 bool gEnableDebugLayout = false;
 
-void dbglayoutf(const char* fmt, ...) {
+void dbglayoutf(Str fmt, ...) {
     if (!gEnableDebugLayout) {
         return;
     }
 
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args).s;
+    AutoFreeStr s = str::FmtV(fmt.s, args).s;
     OutputDebugStringA(s.Get());
     va_end(args);
 }
 
-static void LogAppendNum(StrBuilder& s, int n, const char* suffix) {
+static void LogAppendNum(StrBuilder& s, int n, Str suffix) {
     if (n == Inf) {
         s.Append("Inf");
     } else {
@@ -32,7 +32,7 @@ static void LogAppendNum(StrBuilder& s, int n, const char* suffix) {
     }
 }
 
-void LogConstraints(Constraints c, const char* suffix) {
+void LogConstraints(Constraints c, Str suffix) {
     StrBuilder s;
     if (c.min.dx == c.max.dx) {
         dbglayoutf("dx: ");

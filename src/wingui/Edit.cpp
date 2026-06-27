@@ -25,7 +25,7 @@
 
 Kind kindEdit = "edit";
 
-static bool EditSetCueText(HWND hwnd, const char* s) {
+static bool EditSetCueText(HWND hwnd, Str s) {
     if (!hwnd) {
         return false;
     }

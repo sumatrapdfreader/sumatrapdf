@@ -41,14 +41,14 @@ struct CreateControlArgs {
     HMENU ctrlId = 0;
     bool visible = true;
     HFONT font = nullptr;
-    const char* text = nullptr;
+    Str text;
     bool isRtl = false;
 };
 
 struct CreateCustomArgs {
     HWND parent = nullptr;
     const WCHAR* className = nullptr;
-    const char* title = nullptr;
+    Str title;
     DWORD style = 0;
     DWORD exStyle = 0;
     Rect pos = {};
@@ -142,7 +142,7 @@ struct Wnd : ILayout {
     void SetPos(RECT* r);
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
-    void SetText(const char*);
+    void SetText(Str);
     TempStr GetTextTemp();
 
     HFONT GetFont();
@@ -196,7 +196,7 @@ struct Static : Wnd {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;
-        const char* text = nullptr;
+        Str text;
         bool isRtl = false;
     };
 
@@ -218,7 +218,7 @@ struct Button : Wnd {
     struct CreateArgs {
         HWND parent = nullptr;
         HFONT font = nullptr;
-        const char* text = nullptr;
+        Str text;
         bool isRtl = false;
     };
 
@@ -236,8 +236,8 @@ struct Button : Wnd {
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
 
-Button* CreateButton(HWND parent, const char* s, const Func0& onClick, bool isRtl);
-Button* CreateDefaultButton(HWND parent, const char* s, bool isRtl);
+Button* CreateButton(HWND parent, Str s, const Func0& onClick, bool isRtl);
+Button* CreateDefaultButton(HWND parent, Str s, bool isRtl);
 
 //--- Tooltip
 
@@ -253,11 +253,11 @@ struct Tooltip : Wnd {
     HWND Create(const CreateArgs&);
     Size GetIdealSize() override;
 
-    int Add(const char* s, const Rect& rc, bool multiline);
-    void Update(int id, const char* s, const Rect& rc, bool multiline);
+    int Add(Str s, const Rect& rc, bool multiline);
+    void Update(int id, Str s, const Rect& rc, bool multiline);
     void Delete(int id = 0);
 
-    int SetSingle(const char* s, const Rect& rc, bool multiline);
+    int SetSingle(Str s, const Rect& rc, bool multiline);
 
     int Count();
 
@@ -273,7 +273,7 @@ struct Tooltip : Wnd {
 };
 
 struct TooltipInfo {
-    const char* s;
+    Str s;
     Rect r;
     int id;
 };
@@ -290,8 +290,8 @@ struct Edit : Wnd {
         HWND parent = nullptr;
         bool isMultiLine = false;
         bool withBorder = false;
-        const char* cueText = nullptr;
-        const char* text = nullptr;
+        Str cueText;
+        Str text;
         int idealSizeLines = 1;
         HFONT font = nullptr;
         bool isRtl = false;
@@ -379,7 +379,7 @@ struct Checkbox : Wnd {
 
     struct CreateArgs {
         HWND parent = nullptr;
-        const char* text = nullptr;
+        Str text;
         State initialState = State::Unchecked;
         bool isRtl = false;
     };
@@ -453,8 +453,8 @@ struct DropDown : Wnd {
     int GetCurrentSelection();
     void SetCurrentSelection(int n);
     void SetItems(StrVec& newItems);
-    void SetItemsSeqStrings(const char* items);
-    void SetCueBanner(const char*);
+    void SetItemsSeqStrings(SeqStrings items);
+    void SetCueBanner(Str);
 };
 
 //--- Trackbar
@@ -820,7 +820,7 @@ struct TabsCtrl : Wnd {
     TabInfo* GetTab(int idx);
     void SwapTabs(int idx1, int idx2);
 
-    void SetTextAndTooltip(int idx, const char* text, const char* tooltip);
+    void SetTextAndTooltip(int idx, Str text, Str tooltip);
     void SetTabDirty(int idx, bool isDirty);
 
     int TabCount();

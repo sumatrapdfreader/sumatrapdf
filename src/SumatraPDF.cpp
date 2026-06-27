@@ -6703,7 +6703,7 @@ static TempStr ManualArchiveLookupPathTemp(const char* path) {
     return lookupPath;
 }
 
-static bool ManualGetResource(void* ctx, const char* path, WebViewResourceResult* res) {
+static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
     auto* archive = (lzma::SimpleArchive*)ctx;
     if (!archive || !res || str::IsEmpty(path)) {
         return false;

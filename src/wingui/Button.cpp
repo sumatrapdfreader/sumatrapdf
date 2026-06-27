@@ -73,7 +73,7 @@ Size Button::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-Button* CreateButton(HWND parent, const char* s, const Func0& onClick, bool isRtl) {
+Button* CreateButton(HWND parent, Str s, const Func0& onClick, bool isRtl) {
     Button::CreateArgs args;
     args.parent = parent;
     args.text = s;
@@ -87,7 +87,7 @@ Button* CreateButton(HWND parent, const char* s, const Func0& onClick, bool isRt
 
 #define kButtonMargin 8
 
-Button* CreateDefaultButton(HWND parent, const char* s, bool isRtl) {
+Button* CreateDefaultButton(HWND parent, Str s, bool isRtl) {
     Button::CreateArgs args;
     args.parent = parent;
     args.text = s;

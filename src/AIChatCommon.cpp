@@ -310,7 +310,7 @@ TempStr AIChatModelDisplayNameTemp(const char* model, const char* defaultDisplay
     return dup;
 }
 
-bool AIChatGetMarkedJsResource(void* ctx, const char* path, WebViewResourceResult* res) {
+bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) {
     auto* data = (LoadedDataResource*)ctx;
     if (!data || !res || str::IsEmpty(path)) {
         return false;
