@@ -432,7 +432,7 @@ bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     return LaunchFileShell(ev->exeFullPath, args);
 }
 
-bool PathMatchFilter(const char* path, const char* filter) {
+bool PathMatchFilter(Str path, Str filter) {
     if (filterMatchesEverything(filter)) {
         return true;
     }
@@ -463,7 +463,7 @@ static TempStr ExtractExePathTemp(const char* cmdLine, const char** restOut) {
     return str::DupTemp(exe.Get());
 }
 
-bool RunWithExe(WindowTab* tab, const char* cmdLine, const char* filter) {
+bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
     const char* path = tab->filePath;
     if (!PathMatchFilter(path, filter)) {
         return false;
