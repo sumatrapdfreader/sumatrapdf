@@ -330,7 +330,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
 
     ctx.tab = win->CurrentTab();
     ctx.isDocLoaded = win->IsDocLoaded();
-    ctx.filePath = ctx.tab ? ctx.tab->filePath : nullptr;
+    ctx.filePath = ctx.tab ? ctx.tab->filePath : Str();
     ctx.allowToggleMenuBar = true;
 
     if (ctx.tab) {

@@ -23,7 +23,7 @@ struct AppCommandCtx {
     WindowTab* tab = nullptr;
 
     bool isDocLoaded = false;
-    const char* filePath = nullptr;
+    Str filePath;
     Kind engineKind = nullptr;
     int pageCount = 0;
     bool isPdf = false;
