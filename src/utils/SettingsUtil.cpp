@@ -218,7 +218,6 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
         }
         case SettingType::Color:
             if (!*(const char**)fieldPtr) {
-                ReportIf(field.value);
                 return false; // skip empty strings
             }
             if (!NeedsEscaping(*(const char**)fieldPtr)) {
