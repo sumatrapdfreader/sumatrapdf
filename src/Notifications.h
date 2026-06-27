@@ -39,19 +39,19 @@ struct NotificationCreateArgs {
     NotifCorner corner = NotifCorner::TopLeft;
     int xMargin = kNotifDefaultMargin; // distance from the left/right edge
     int yMargin = kNotifDefaultMargin; // distance from the top/bottom edge
-    const char* msg = nullptr;
+    Str msg;
     // if set, the notification is only shown while this tab is the active tab
     // (hidden when switching to another tab in the same window)
     WindowTab* tab = nullptr;
     NotificationWndRemoved onRemoved;
 };
 
-void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS = 0, bool highlight = false);
+void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS = 0, bool highlight = false);
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd);
 void RemoveNotification(NotificationWnd*);
 bool RemoveNotificationsForGroup(HWND, Kind);
 NotificationWnd* GetNotificationForGroup(HWND, Kind);
-bool UpdateNotificationProgress(NotificationWnd*, const char* msg, int perc);
+bool UpdateNotificationProgress(NotificationWnd*, Str msg, int perc);
 void RelayoutNotifications(HWND hwnd);
 // show notifications tied to activeTab (and untied ones), hide those tied to
 // other tabs; call when the active tab changes
@@ -60,10 +60,10 @@ void ShowNotificationsForActiveTab(HWND hwndCanvas, WindowTab* activeTab);
 void RemoveNotificationsForTab(WindowTab* tab);
 
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
-NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs = kNotifDefaultTimeOut);
-NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int timeoutMs);
+NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs = kNotifDefaultTimeOut);
+NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs);
 
-void MaybeDelayedWarningNotification(const char* fmt, ...);
+void MaybeDelayedWarningNotification(const char* fmt, ...); // fmt stays const char* (printf format)
 void ShowMaybeDelayedNotifications(HWND hwndParent);
 
 int CalcPerc(int current, int total);

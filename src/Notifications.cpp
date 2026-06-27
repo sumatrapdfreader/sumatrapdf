@@ -57,10 +57,10 @@ struct NotificationWnd : Wnd {
     void OnTimer(UINT_PTR event_id) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
-    void UpdateMessage(const char* msg, int timeoutMs = 0, bool highlight = false);
+    void UpdateMessage(Str msg, int timeoutMs = 0, bool highlight = false);
 
     bool HasProgress() const { return progressPerc >= 0; }
-    void Layout(const char* message);
+    void Layout(Str message);
 
     int timeoutMs = kNotifDefaultTimeOut; // 0 means no timeout
 
@@ -319,9 +319,9 @@ static bool NotificationCloseHitTest(HWND hwnd, const Rect& rClose, Point pt) {
     return rClose.Contains(pt);
 }
 
-void NotificationWnd::Layout(const char* message) {
+void NotificationWnd::Layout(Str message) {
     if (!message) {
-        message = "";
+        message = Str("");
     }
     int padX = DpiScale(hwnd, 12);
     int padY = DpiScale(hwnd, 8);
@@ -543,7 +543,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     buffer.Flush(hdcIn);
 }
 
-void NotificationWnd::UpdateMessage(const char* msg, int timeoutMs, bool highlight) {
+void NotificationWnd::UpdateMessage(Str msg, int timeoutMs, bool highlight) {
     HwndSetText(hwnd, msg);
     this->highlight = highlight;
     this->timeoutMs = timeoutMs;
@@ -555,7 +555,7 @@ void NotificationWnd::UpdateMessage(const char* msg, int timeoutMs, bool highlig
     }
 }
 
-bool UpdateNotificationProgress(NotificationWnd* wnd, const char* msg, int perc) {
+bool UpdateNotificationProgress(NotificationWnd* wnd, Str msg, int perc) {
     if (NotificationIndexOf(wnd) < 0) {
         return false;
     }
@@ -735,7 +735,7 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
 }
 
 // show a temporary notification that will go away after a timeout
-NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs) {
+NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs) {
     if (timeoutMs <= 0) {
         timeoutMs = kNotifDefaultTimeOut;
     }
@@ -746,7 +746,7 @@ NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeo
     return ShowNotification(args);
 }
 
-NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int timeoutMs) {
+NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs) {
     if (timeoutMs < 0) {
         timeoutMs = kNotifDefaultTimeOut;
     }
@@ -758,7 +758,7 @@ NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int t
     return ShowNotification(args);
 }
 
-void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutMs, bool highlight) {
+void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutMs, bool highlight) {
     if (!wnd) {
         return;
     }
