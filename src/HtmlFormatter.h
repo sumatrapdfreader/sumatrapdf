@@ -35,7 +35,7 @@ enum class DrawInstrType {
     Line,
     // change current font
     SetFont,
-    // an image (raw data for e.g. BitmapFromData)
+    // an image (raw data for e.g. PixmapFromData)
     Image,
     // marks the beginning of a link (<a> tag)
     LinkStart,

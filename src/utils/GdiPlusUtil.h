@@ -11,6 +11,10 @@ Gdiplus::RectF RectToRectF(Gdiplus::Rect r);
 // Pixmap must outlive the bitmap, which the returned object guarantees. Returns nullptr
 // (and frees px) on failure. Only BGRA8/BGR8 Pixmaps are supported.
 Gdiplus::Bitmap* NewGdiplusBitmapFromPixmap(Pixmap* px);
+// Zero-copy borrow: wrap a Pixmap's pixels in a Gdiplus::Bitmap that does NOT own the
+// Pixmap. The Pixmap must outlive the returned bitmap. Use when the Pixmap is owned
+// elsewhere (e.g. EngineImage's frame list). Returns nullptr on failure.
+Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px);
 // Copy a Gdiplus::Bitmap's pixels out into a freshly allocated BGRA8 Pixmap (used to
 // turn an awkwardly-formatted GDI+ decode - 16bpp TGA, CMYK JPEG - into a uniform
 // Pixmap). Does not take ownership of bmp. Returns nullptr on failure.
@@ -33,7 +37,11 @@ RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, size_t
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);
 
-Gdiplus::Bitmap* BitmapFromDataWin(const ByteSlice& bmpData);
+// Decode an image to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
+Pixmap* PixmapFromDataWin(const ByteSlice& bmpData);
+// Decode an image to one Pixmap per frame: multi-page TIFF and animated GIF yield more
+// than one, everything else exactly one. Empty on failure. Caller owns each Pixmap.
+Vec<Pixmap*> PixmapsFromDataWin(const ByteSlice& bmpData);
 Size ImageSizeFromData(const ByteSlice&);
 Size ImageSizeFromHeader(const ByteSlice&);
 bool ExifOrientationSwapsDimensions(int orientation);

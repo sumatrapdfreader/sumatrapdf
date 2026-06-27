@@ -1487,7 +1487,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             ReportIf(status != Ok);
         } else if (DrawInstrType::Image == i.type) {
             // TODO: cache the bitmap somewhere (?)
-            Bitmap* bmp = BitmapFromData(i.GetImage());
+            Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(i.GetImage()));
             if (bmp) {
                 status = g->DrawImage(bmp, ToGdipRectF(bbox), 0, 0, (float)bmp->GetWidth(), (float)bmp->GetHeight(),
                                       UnitPixel);

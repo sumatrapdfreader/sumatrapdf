@@ -429,38 +429,52 @@ Pixmap* PixmapApplyExifOrientation(Pixmap* px, int orientation) {
     return out;
 }
 
-Bitmap* BitmapFromDataWin(const ByteSlice& bmpData) {
-    Bitmap* bmp = nullptr;
+Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
+    if (!px) {
+        return nullptr;
+    }
+    Gdiplus::PixelFormat fmt = PixmapToGdiplusPixelFormat(px);
+    auto* bmp = new Gdiplus::Bitmap(px->width, px->height, px->stride, fmt, px->data);
+    if (bmp->GetLastStatus() != Gdiplus::Ok) {
+        delete bmp;
+        return nullptr;
+    }
+    bmp->SetResolution(px->xres, px->yres);
+    return bmp;
+}
 
+Pixmap* PixmapFromDataWin(const ByteSlice& bmpData) {
     Kind kind = GuessFileTypeFromContent(bmpData);
     if (kindFileTga == kind) {
-        bmp = NewGdiplusBitmapFromPixmap(tga::PixmapFromData(bmpData));
-        if (bmp) {
-            return bmp;
+        Pixmap* px = tga::PixmapFromData(bmpData);
+        if (px) {
+            return px;
         }
     }
     if (kindFileWebp == kind) {
-        bmp = NewGdiplusBitmapFromPixmap(webp::PixmapFromData(bmpData));
-        if (bmp) {
-            return bmp;
+        Pixmap* px = webp::PixmapFromData(bmpData);
+        if (px) {
+            return px;
         }
     }
     if (kindFileJxl == kind) {
-        bmp = NewGdiplusBitmapFromPixmap(jxl::PixmapFromData(bmpData));
-        if (bmp) {
-            return bmp;
+        Pixmap* px = jxl::PixmapFromData(bmpData);
+        if (px) {
+            return px;
+        }
+    }
+    if (kindFileHeic == kind || kindFileAvif == kind) {
+        Pixmap* px = PixmapFromAvifData(bmpData);
+        if (px) {
+            return px;
         }
     }
 
-    if (kindFileHeic == kind || kindFileAvif == kind) {
-        bmp = NewGdiplusBitmapFromPixmap(PixmapFromAvifData(bmpData));
-    }
-
-    // those are potentially multi-image formats and WICDecodeImageFromStream
-    // doesn't support that
-    // TODO: more formats? webp?
+    // remaining formats (png, bmp, jxr, tiff, gif, ...) decode via GDI+/WIC. tryGdiplusFirst
+    // for potentially multi-image formats (WICDecodeImageFromStream is single-frame). The
+    // (first) frame is copied out into a uniform Pixmap.
     bool tryGdiplusFirst = (kindFileTiff == kind) || (kindFileGif == kind);
-
+    Gdiplus::Bitmap* bmp = nullptr;
     if (tryGdiplusFirst) {
         bmp = DecodeWithGdiplus(bmpData);
     }
@@ -470,7 +484,47 @@ Bitmap* BitmapFromDataWin(const ByteSlice& bmpData) {
     if (!bmp && !tryGdiplusFirst) {
         bmp = DecodeWithGdiplus(bmpData);
     }
-    return bmp;
+    if (!bmp) {
+        return nullptr;
+    }
+    Pixmap* px = PixmapFromGdiplus(bmp);
+    delete bmp;
+    return px;
+}
+
+Vec<Pixmap*> PixmapsFromDataWin(const ByteSlice& bmpData) {
+    Vec<Pixmap*> res;
+    Kind kind = GuessFileTypeFromContent(bmpData);
+    if (kindFileTiff == kind || kindFileGif == kind) {
+        // decode every frame of a multi-page TIFF / animated GIF via GDI+
+        Gdiplus::Bitmap* bmp = DecodeWithGdiplus(bmpData);
+        if (!bmp) {
+            bmp = DecodeWithWIC(bmpData);
+        }
+        if (bmp) {
+            const GUID* dim = (kindFileTiff == kind) ? &Gdiplus::FrameDimensionPage : &Gdiplus::FrameDimensionTime;
+            UINT nFrames = bmp->GetFrameCount(dim);
+            for (UINT i = 0; i < nFrames; i++) {
+                if (bmp->SelectActiveFrame(dim, i) != Gdiplus::Ok) {
+                    break;
+                }
+                Pixmap* px = PixmapFromGdiplus(bmp);
+                if (px) {
+                    res.Append(px);
+                }
+            }
+            delete bmp;
+        }
+        if (res.Size() > 0) {
+            return res;
+        }
+    }
+    // single-frame (or multi-frame decode failed): exactly one Pixmap
+    Pixmap* px = PixmapFromDataWin(bmpData);
+    if (px) {
+        res.Append(px);
+    }
+    return res;
 }
 
 #define JP2_JP2H 0x6a703268 /**< JP2 header box (super-box) */
@@ -859,10 +913,10 @@ Size ImageSizeFromData(const ByteSlice& d) {
 
     // try expensive way of getting the info by decoding the image
     // (currently happens for animated GIF)
-    Bitmap* bmp = BitmapFromDataWin(d);
-    if (bmp) {
-        result = Size(bmp->GetWidth(), bmp->GetHeight());
-        delete bmp;
+    Pixmap* px = PixmapFromDataWin(d);
+    if (px) {
+        result = Size(px->width, px->height);
+        FreePixmap(px);
     }
     return result;
 }
@@ -933,7 +987,7 @@ RenderedBitmap* LoadRenderedBitmapWin(const char* path) {
     if (!data) {
         return nullptr;
     }
-    Gdiplus::Bitmap* bmp = BitmapFromDataWin(data);
+    Gdiplus::Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromDataWin(data));
     data.Free();
 
     if (!bmp) {

@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/GdiPlusUtil.h"
 #include "FzImgReader.h"
 
 #include "wingui/UIModels.h"
@@ -1863,7 +1864,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
         if (data.empty()) {
             return;
         }
-        bmp = BitmapFromData(data);
+        bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(data));
         data.Free();
         if (!bmp) {
             return;

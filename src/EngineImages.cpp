@@ -6,6 +6,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
+#include "utils/Pixmap.h"
 #include "utils/GdiPlusUtil.h"
 #include "GumboHelpers.h"
 #include "utils/JsonParser.h"
@@ -873,7 +874,9 @@ class EngineImage : public EngineImages {
     static EngineBase* CreateFromFile(const char* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
-    Bitmap* image = nullptr;
+    // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF.
+    // owned by the engine; per-page Gdiplus::Bitmaps borrow these (WrapPixmapGdiplus).
+    Vec<Pixmap*> frames;
     Kind imageFormat = nullptr;
 
     bool LoadSingleFile(const char* fileName);
@@ -891,13 +894,14 @@ EngineImage::EngineImage() {
 }
 
 EngineImage::~EngineImage() {
-    delete image;
+    for (Pixmap* px : frames) {
+        FreePixmap(px);
+    }
 }
 
 EngineBase* EngineImage::Clone() {
-    Bitmap* bmp = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
-    if (!bmp) {
-        logf("EngineImage::Clone() failed: Bitmap::Clone() failed for '%s'\n", FilePath() ? FilePath() : "(null)");
+    if (frames.empty() || !frames[0]) {
+        logf("EngineImage::Clone() failed: no frames for '%s'\n", FilePath() ? FilePath() : "(null)");
         return nullptr;
     }
 
@@ -909,7 +913,9 @@ EngineBase* EngineImage::Clone() {
     if (fileStream) {
         fileStream->Clone(&clone->fileStream);
     }
-    clone->image = bmp;
+    for (Pixmap* px : frames) {
+        clone->frames.Append(ClonePixmap(px));
+    }
     clone->FinishLoading();
 
     return clone;
@@ -946,7 +952,7 @@ bool EngineImage::LoadSingleFile(const char* path) {
         fileExt = "";
     }
     str::ReplaceWithCopy(&defaultExt, fileExt);
-    image = BitmapFromData(data);
+    frames = PixmapsFromData(data);
     bool ok = FinishLoading();
     if (ok) {
         pageInfos[0]->rawData = data;
@@ -975,7 +981,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileExtA));
 
     ByteSlice data = GetDataFromStream(stream, nullptr);
-    image = BitmapFromData(data);
+    frames = PixmapsFromData(data);
     bool ok = FinishLoading();
     if (ok) {
         pageInfos[0]->rawData = data;
@@ -985,40 +991,21 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     return ok;
 }
 
-static bool IsMultiImage(Kind fmt) {
-    return (fmt == kindFileTiff) || (fmt == kindFileGif);
-}
-
-static void ReportIfNotMultiImage(EngineImage* e) {
-    Kind fmt = e->imageFormat;
-    if (IsMultiImage(fmt)) {
-        return;
-    }
-    logfa("EngineImage::LoadBitmapForPage: trying for non-multi image, %s, path: '%s'\n", fmt, e->FilePath());
-    ReportIf(true);
-}
-
 bool EngineImage::FinishLoading() {
-    if (!image || image->GetLastStatus() != Ok) {
+    if (frames.empty() || !frames[0]) {
         return false;
     }
-    fileDPI = image->GetHorizontalResolution();
+    Pixmap* p0 = frames[0];
+    fileDPI = p0->xres;
 
     auto pi = new ImagePageInfo();
-    pi->mediabox = RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
+    pi->mediabox = RectF(0, 0, (float)p0->width, (float)p0->height);
     pageInfos.Append(pi);
     pi->state = PageInfoState::Known;
-    ReportIf(pageInfos.size() != 1);
 
-    // extract all frames from multi-page TIFFs and animated GIFs
-    // TODO: do the same for .avif and .heic formats
-    if (IsMultiImage(imageFormat)) {
-        const GUID* dim = imageFormat == kindFileTiff ? &FrameDimensionPage : &FrameDimensionTime;
-        int nFrames = image->GetFrameCount(dim) - 1;
-        for (int i = 0; i < nFrames; i++) {
-            pi = new ImagePageInfo();
-            pageInfos.Append(pi);
-        }
+    // one page per decoded frame (multi-page TIFFs and animated GIFs have >1)
+    for (size_t i = 1; i < frames.size(); i++) {
+        pageInfos.Append(new ImagePageInfo());
     }
     pageCount = pageInfos.Size();
 
@@ -1110,7 +1097,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
 }
 
 // load bitmap using GDI+ Bitmap::FromStream which preserves EXIF metadata
-// BitmapFromData() uses WIC which decodes to raw pixels, losing EXIF
+// PixmapFromData() uses WIC which decodes to raw pixels, losing EXIF
 static Bitmap* BitmapWithExifFromData(const ByteSlice& data) {
     if (data.empty()) {
         return nullptr;
@@ -1566,30 +1553,14 @@ void EngineImage::GetImageProperties(int pageNo, StrVec& keyValOut) {
 }
 
 Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
-    if (1 == pageNo) {
-        deleteAfterUse = false;
-        return image;
-    }
-
-    // extract other frames from multi-page TIFFs and animated GIFs
-    ReportIfNotMultiImage(this);
-    const GUID* dim = imageFormat == kindFileTiff ? &FrameDimensionPage : &FrameDimensionTime;
-    uint frameCount = image->GetFrameCount(dim);
-    ReportIf((unsigned int)pageNo > frameCount);
-    Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
-    if (!frame) {
-        logf("EngineImage::LoadBitmapForPage: failed to clone bitmap for page %d, path: '%s'\n", pageNo, FilePath());
+    int idx = pageNo - 1;
+    if (idx < 0 || idx >= (int)frames.size()) {
         return nullptr;
     }
-    Status ok = frame->SelectActiveFrame(dim, pageNo - 1);
-    if (ok != Ok) {
-        delete frame;
-        logf("EngineImage::LoadBitmapForPage: failed to select frame %d, status %d, path: '%s'\n", pageNo, ok,
-             FilePath());
-        return nullptr;
-    }
+    // zero-copy: borrow the frame's pixels. The Pixmap stays owned by `frames`;
+    // the caller deletes this wrapper (deleteAfterUse) without freeing the buffer.
     deleteAfterUse = true;
-    return frame;
+    return WrapPixmapGdiplus(frames[idx]);
 }
 
 ByteSlice EngineImage::GetImageData(int) {
@@ -1602,9 +1573,9 @@ ByteSlice EngineImage::GetImageData(int) {
 }
 
 fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
-    // mupdf can decode the file's first frame, but multi-frame TIFFs and
-    // animated GIFs are handled by GDI+'s SelectActiveFrame in
-    // LoadBitmapForPage. Fall back to the GDI+ path for non-first frames.
+    // mupdf decodes the file's first frame lazily at render scale. Additional
+    // frames of multi-page TIFFs / animated GIFs come from the pre-decoded
+    // `frames` list via LoadBitmapForPage, so opt out of the mupdf path for them.
     if (pageNo != 1) {
         return nullptr;
     }
@@ -1612,33 +1583,11 @@ fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
 }
 
 RectF EngineImage::LoadMediabox(int pageNo) {
-    if (1 == pageNo) {
-        return RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
+    int idx = pageNo - 1;
+    if (idx >= 0 && idx < (int)frames.size() && frames[idx]) {
+        return RectF(0, 0, (float)frames[idx]->width, (float)frames[idx]->height);
     }
-
-    // fill the cache to prevent the first few frames from being unpacked twice
-    ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
-    if (page) {
-        if (page->bmp) {
-            RectF mbox(0, 0, (float)page->bmp->GetWidth(), (float)page->bmp->GetHeight());
-            DropPage(page, false);
-            return mbox;
-        }
-        DropPage(page, false);
-    }
-    ReportIfNotMultiImage(this);
-    RectF mbox = RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
-    Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
-    if (!frame) {
-        return mbox;
-    }
-    const GUID* dim = imageFormat == kindFileTiff ? &FrameDimensionPage : &FrameDimensionTime;
-    Status ok = frame->SelectActiveFrame(dim, pageNo - 1);
-    if (Ok == ok) {
-        mbox = RectF(0, 0, (float)frame->GetWidth(), (float)frame->GetHeight());
-    }
-    delete frame;
-    return mbox;
+    return RectF();
 }
 
 EngineBase* EngineImage::CreateFromFile(const char* path) {
@@ -1853,7 +1802,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
         return nullptr;
     }
     deleteAfterUse = true;
-    Bitmap* res = BitmapFromData(bmpData);
+    Bitmap* res = NewGdiplusBitmapFromPixmap(PixmapFromData(bmpData));
     bmpData.Free();
     return res;
 }
@@ -2385,7 +2334,7 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
         return nullptr;
     }
     deleteAfterUse = true;
-    auto res = BitmapFromData(img);
+    auto res = NewGdiplusBitmapFromPixmap(PixmapFromData(img));
     auto dur = TimeSinceInMs(timeStart);
     logf("EngineCbx::LoadBitmapForPage(page: %d) took %.2f ms\n", pageNo, dur);
     return res;

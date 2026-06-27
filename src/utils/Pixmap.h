@@ -70,3 +70,18 @@ inline void FreePixmap(Pixmap* p) {
         delete p;
     }
 }
+
+// deep copy (own pixels). returns nullptr on bad input / OOM.
+inline Pixmap* ClonePixmap(const Pixmap* src) {
+    if (!src || !src->data) {
+        return nullptr;
+    }
+    Pixmap* p = AllocPixmap(src->width, src->height, src->format, src->premultiplied);
+    if (!p) {
+        return nullptr;
+    }
+    p->xres = src->xres;
+    p->yres = src->yres;
+    memcpy(p->data, src->data, (size_t)src->stride * (size_t)src->height);
+    return p;
+}

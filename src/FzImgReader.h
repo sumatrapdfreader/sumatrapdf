@@ -8,5 +8,9 @@ struct fz_context;
 fz_context* fz_new_context_windows(size_t maxStore = kFzStoreUnlimited);
 void fz_drop_context_windows(fz_context* ctx);
 
-Gdiplus::Bitmap* BitmapFromData(const ByteSlice&);
+struct Pixmap;
+// single (first-frame) Pixmap; caller owns it (FreePixmap)
+Pixmap* PixmapFromData(const ByteSlice&);
+// one Pixmap per frame (multi-page TIFF / animated GIF yield >1); caller owns each
+Vec<Pixmap*> PixmapsFromData(const ByteSlice&);
 RenderedBitmap* LoadRenderedBitmap(const char* path);

@@ -54,7 +54,7 @@ void fz_drop_context_windows(fz_context* ctx) {
     delete c;
 }
 
-static Pixmap* ImageFromJpegData(fz_context* ctx, const u8* data, int len) {
+static Pixmap* PixmapFromJpegData(fz_context* ctx, const u8* data, int len) {
     int w = 0, h = 0, xres = 0, yres = 0;
     fz_colorspace* cs = nullptr;
     fz_stream* stm = nullptr;
@@ -143,7 +143,7 @@ static Pixmap* ImageFromJpegData(fz_context* ctx, const u8* data, int len) {
     return PixmapFromGdiplus(&bmp);
 }
 
-static Pixmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int len) {
+static Pixmap* PixmapFromJp2Data(fz_context* ctx, const u8* data, int len) {
     fz_pixmap* pix = nullptr;
 
     fz_var(pix);
@@ -208,9 +208,9 @@ static Pixmap* FzImageFromData(const ByteSlice& d) {
 
     Pixmap* result = nullptr;
     if (str::StartsWith(data, "\xFF\xD8")) {
-        result = ImageFromJpegData(ctx, data, (int)len);
+        result = PixmapFromJpegData(ctx, data, (int)len);
     } else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
-        result = ImageFromJp2Data(ctx, data, (int)len);
+        result = PixmapFromJp2Data(ctx, data, (int)len);
     }
 
     fz_drop_context_windows(ctx);
@@ -218,13 +218,25 @@ static Pixmap* FzImageFromData(const ByteSlice& d) {
     return result;
 }
 
-Gdiplus::Bitmap* BitmapFromData(const ByteSlice& bmpData) {
-    auto res = BitmapFromDataWin(bmpData);
-    if (res) {
+Pixmap* PixmapFromData(const ByteSlice& bmpData) {
+    Pixmap* px = PixmapFromDataWin(bmpData);
+    if (px) {
+        return px;
+    }
+    return FzImageFromData(bmpData);
+}
+
+Vec<Pixmap*> PixmapsFromData(const ByteSlice& bmpData) {
+    Vec<Pixmap*> res = PixmapsFromDataWin(bmpData);
+    if (res.Size() > 0) {
         return res;
     }
-    // zero-copy: wrap the decoded fz Pixmap in a Gdiplus::Bitmap that owns it
-    return NewGdiplusBitmapFromPixmap(FzImageFromData(bmpData));
+    // formats only the fz path decodes (JPEG/JP2) are single-frame
+    Pixmap* px = FzImageFromData(bmpData);
+    if (px) {
+        res.Append(px);
+    }
+    return res;
 }
 
 RenderedBitmap* LoadRenderedBitmap(const char* path) {
@@ -237,7 +249,7 @@ RenderedBitmap* LoadRenderedBitmap(const char* path) {
         if (!data) {
             return nullptr;
         }
-        bmp = BitmapFromData(data);
+        bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(data));
         data.Free();
         if (!bmp) {
             return nullptr;

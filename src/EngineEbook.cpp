@@ -595,7 +595,7 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
 
 static RenderedBitmap* getImageFromData(const ByteSlice& imageData) {
     HBITMAP hbmp = nullptr;
-    Bitmap* bmp = BitmapFromData(imageData);
+    Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(imageData));
     if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
         delete bmp;
         return nullptr;
