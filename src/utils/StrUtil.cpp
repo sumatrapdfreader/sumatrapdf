@@ -677,28 +677,41 @@ bool IsWs(char c) {
     return false;
 }
 
-const char* FindChar(const char* str, char c) {
-    return strchr(str, c);
+Str FindChar(Str str, char c) {
+    if (!str) {
+        return {};
+    }
+    const char* p = strchr(str.s, c);
+    if (!p) {
+        return {};
+    }
+    int off = (int)(p - str.s);
+    return Str((char*)p, str.len - off);
 }
 
-char* FindChar(char* str, char c) {
-    return strchr(str, c);
-}
-
-int FindCharIdx(const char* str, char c) {
-    for (auto start = str; *str; str++) {
-        if (*str == c) {
-            return (int)(str - start);
+int FindCharIdx(Str str, char c) {
+    if (!str) {
+        return -1;
+    }
+    const char* start = str.s;
+    for (const char* p = start; *p; p++) {
+        if (*p == c) {
+            return (int)(p - start);
         }
     }
     return -1;
 }
 
-const char* FindCharLast(const char* str, char c) {
-    return strrchr(str, c);
-}
-char* FindCharLast(char* str, char c) {
-    return strrchr(str, c);
+Str FindCharLast(Str str, char c) {
+    if (!str) {
+        return {};
+    }
+    const char* p = strrchr(str.s, c);
+    if (!p) {
+        return {};
+    }
+    int off = (int)(p - str.s);
+    return Str((char*)p, str.len - off);
 }
 
 Str Find(Str str, Str find) {

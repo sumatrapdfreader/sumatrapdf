@@ -143,11 +143,9 @@ bool IsDigit(char c);
 bool IsWs(char c);
 bool IsAlNum(char c);
 
-const char* FindChar(const char* str, char c);
-char* FindChar(char* str, char c);
-int FindCharIdx(const char* str, char c);
-const char* FindCharLast(const char* str, char c);
-char* FindCharLast(char* str, char c);
+Str FindChar(Str str, char c);
+Str FindCharLast(Str str, char c);
+int FindCharIdx(Str str, char c);
 Str Find(Str str, Str find);
 Str FindI(Str str, Str find);
 int BufFind(const char* buf, int bufSize, const char* toFind);
@@ -555,14 +553,27 @@ FORCEINLINE bool ContainsI(Str s, const char* txt) {
 FORCEINLINE bool ContainsI(const char* s, Str txt) {
     return ContainsI(Str(s), txt);
 }
-FORCEINLINE char* FindChar(Str str, char c) {
-    return FindChar(str.s, c);
+FORCEINLINE char* FindChar(char* str, char c) {
+    Str res = FindChar(Str(str), c);
+    return res.s;
+}
+FORCEINLINE const char* FindChar(const char* str, char c) {
+    Str res = FindChar(Str((char*)str), c);
+    return res.s;
 }
 FORCEINLINE WCHAR* FindChar(WStr str, WCHAR c) {
     return FindChar(str.s, c);
 }
-FORCEINLINE char* FindCharLast(Str str, char c) {
-    return FindCharLast(str.s, c);
+FORCEINLINE char* FindCharLast(char* str, char c) {
+    Str res = FindCharLast(Str(str), c);
+    return res.s;
+}
+FORCEINLINE const char* FindCharLast(const char* str, char c) {
+    Str res = FindCharLast(Str((char*)str), c);
+    return res.s;
+}
+FORCEINLINE int FindCharIdx(const char* str, char c) {
+    return FindCharIdx(Str((char*)str), c);
 }
 FORCEINLINE const WCHAR* Find(const WStr& str, const WCHAR* find) {
     return Find(str.s, find);

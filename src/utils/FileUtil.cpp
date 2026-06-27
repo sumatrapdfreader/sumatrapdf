@@ -489,7 +489,7 @@ bool Match(Str path, Str filter) {
         if (MatchWildcardsRec(baseName, filter)) {
             return true;
         }
-        filter = Str(str::FindChar(filter, ';') + 1);
+        filter = Str(str::FindChar(filter, ';').s + 1);
     }
     return MatchWildcardsRec(baseName, filter);
 }
