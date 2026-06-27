@@ -5,62 +5,62 @@
 
 #include "DocProperties.h"
 
-const char* kPropTitle = "title";
-const char* kPropAuthor = "author";
-const char* kPropCopyright = "copyright";
-const char* kPropSubject = "subject";
-const char* kPropCreationDate = "creationDate";
-const char* kPropModificationDate = "modDate";
-const char* kPropCreatorApp = "creatorApp";
-const char* kPropUnsupportedFeatures = "unsupportedFeatures";
-const char* kPropFontList = "fontList";
-const char* kPropPdfVersion = "pdfVersion";
-const char* kPropPdfProducer = "pdfProducer";
-const char* kPropPdfFileStructure = "pdfFileStructure";
-const char* kPropFiles = "files";
-const char* kPropKeywords = "keywords";
-const char* kPropEncryption = "encryption";
-const char* kPropSignatures = "signatures";
-const char* kPropImageSize = "imageSize";
-const char* kPropDpi = "dpi";
-const char* kPropComment = "comment";
-const char* kPropCameraMake = "cameraMake";
-const char* kPropCameraModel = "cameraModel";
-const char* kPropDateOriginal = "dateOriginal";
-const char* kPropExposureTime = "exposureTime";
-const char* kPropFNumber = "fNumber";
-const char* kPropIsoSpeed = "isoSpeed";
-const char* kPropFocalLength = "focalLength";
-const char* kPropFocalLength35mm = "focalLength35mm";
-const char* kPropFlash = "flash";
-const char* kPropOrientation = "orientation";
-const char* kPropExposureProgram = "exposureProgram";
-const char* kPropMeteringMode = "meteringMode";
-const char* kPropWhiteBalance = "whiteBalance";
-const char* kPropExposureBias = "exposureBias";
-const char* kPropBitsPerSample = "bitsPerSample";
-const char* kPropResolutionUnit = "resolutionUnit";
-const char* kPropSoftware = "software";
-const char* kPropDateTime = "dateTime";
-const char* kPropYCbCrPositioning = "yCbCrPositioning";
-const char* kPropExifVersion = "exifVersion";
-const char* kPropDateTimeDigitized = "dateTimeDigitized";
-const char* kPropComponentsConfig = "componentsConfig";
-const char* kPropCompressedBpp = "compressedBpp";
-const char* kPropMaxAperture = "maxAperture";
-const char* kPropLightSource = "lightSource";
-const char* kPropUserComment = "userComment";
-const char* kPropFlashpixVersion = "flashpixVersion";
-const char* kPropColorSpace = "colorSpace";
-const char* kPropPixelXDimension = "pixelXDimension";
-const char* kPropPixelYDimension = "pixelYDimension";
-const char* kPropFileSource = "fileSource";
-const char* kPropSceneType = "sceneType";
-const char* kPropImageFileSize = "imageFileSize";
-const char* kPropImagePath = "imagePath";
+Str kPropTitle = StrL("title");
+Str kPropAuthor = StrL("author");
+Str kPropCopyright = StrL("copyright");
+Str kPropSubject = StrL("subject");
+Str kPropCreationDate = StrL("creationDate");
+Str kPropModificationDate = StrL("modDate");
+Str kPropCreatorApp = StrL("creatorApp");
+Str kPropUnsupportedFeatures = StrL("unsupportedFeatures");
+Str kPropFontList = StrL("fontList");
+Str kPropPdfVersion = StrL("pdfVersion");
+Str kPropPdfProducer = StrL("pdfProducer");
+Str kPropPdfFileStructure = StrL("pdfFileStructure");
+Str kPropFiles = StrL("files");
+Str kPropKeywords = StrL("keywords");
+Str kPropEncryption = StrL("encryption");
+Str kPropSignatures = StrL("signatures");
+Str kPropImageSize = StrL("imageSize");
+Str kPropDpi = StrL("dpi");
+Str kPropComment = StrL("comment");
+Str kPropCameraMake = StrL("cameraMake");
+Str kPropCameraModel = StrL("cameraModel");
+Str kPropDateOriginal = StrL("dateOriginal");
+Str kPropExposureTime = StrL("exposureTime");
+Str kPropFNumber = StrL("fNumber");
+Str kPropIsoSpeed = StrL("isoSpeed");
+Str kPropFocalLength = StrL("focalLength");
+Str kPropFocalLength35mm = StrL("focalLength35mm");
+Str kPropFlash = StrL("flash");
+Str kPropOrientation = StrL("orientation");
+Str kPropExposureProgram = StrL("exposureProgram");
+Str kPropMeteringMode = StrL("meteringMode");
+Str kPropWhiteBalance = StrL("whiteBalance");
+Str kPropExposureBias = StrL("exposureBias");
+Str kPropBitsPerSample = StrL("bitsPerSample");
+Str kPropResolutionUnit = StrL("resolutionUnit");
+Str kPropSoftware = StrL("software");
+Str kPropDateTime = StrL("dateTime");
+Str kPropYCbCrPositioning = StrL("yCbCrPositioning");
+Str kPropExifVersion = StrL("exifVersion");
+Str kPropDateTimeDigitized = StrL("dateTimeDigitized");
+Str kPropComponentsConfig = StrL("componentsConfig");
+Str kPropCompressedBpp = StrL("compressedBpp");
+Str kPropMaxAperture = StrL("maxAperture");
+Str kPropLightSource = StrL("lightSource");
+Str kPropUserComment = StrL("userComment");
+Str kPropFlashpixVersion = StrL("flashpixVersion");
+Str kPropColorSpace = StrL("colorSpace");
+Str kPropPixelXDimension = StrL("pixelXDimension");
+Str kPropPixelYDimension = StrL("pixelYDimension");
+Str kPropFileSource = StrL("fileSource");
+Str kPropSceneType = StrL("sceneType");
+Str kPropImageFileSize = StrL("imageFileSize");
+Str kPropImagePath = StrL("imagePath");
 
 // clang-format off
-const char* gAllProps[] = {
+Str gAllProps[] = {
      kPropTitle,
      kPropAuthor,
      kPropCopyright,
@@ -73,7 +73,7 @@ const char* gAllProps[] = {
      kPropPdfVersion,
      kPropPdfProducer,
      kPropPdfFileStructure,
-     nullptr,
+     Str(),
 };
 // clang-format off
 
@@ -83,51 +83,49 @@ int PropsCount(const Props& props) {
     return n / 2;
 }
 
-int GetPropIdx(const Props& props, const char* name) {
+int GetPropIdx(const Props& props, Str name) {
     int n = PropsCount(props);
     for (int i = 0; i < n; i++) {
         int idx = i * 2;
-        char* v = props.At(idx);
-        if (str::Eq(v, name)) {
+        if (StrEq(props.AtStr(idx), name)) {
             return idx;
         }
     }
     return -1;
 }
 
-TempStr GetPropValueTemp(const Props& props, const char* name) {
+Str GetPropValueTemp(const Props& props, Str name) {
     int idx = GetPropIdx(props, name);
     if (idx < 0) {
-        return nullptr;
+        return {};
     }
-    char* v = props.At(idx + 1);
-    return v;
+    return props.AtStr(idx + 1);
 }
 
-void AddProp(Props& props, const char* name, const char* val, bool replaceIfExists) {
+void AddProp(Props& props, Str name, Str val, bool replaceIfExists) {
     ReportIf(!name || !val);
     int idx = GetPropIdx(props, name);
     if (idx < 0) {
         // doesn't exsit
-        props.Append(name);
-        props.Append(val);
+        props.Append(name.s, name.len);
+        props.Append(val.s, val.len);
         return;
     }
     if (!replaceIfExists) {
         return;
     }
-    props.SetAt(idx + 1, val);
+    props.SetAt(idx + 1, val.s, val.len);
 }
 
-// strings are pairs of str1, str2 laid in sequence, with nullptr to mark the en
-// we find str1 matching s and return str2 or nullptr if not found
-const char* GetMatchingString(const char** strings, const char* s) {
+// strings are pairs of str1, str2 laid in sequence, with empty Str to mark the end
+// we find str1 matching s and return str2 or empty Str if not found
+Str GetMatchingString(const Str* strings, Str s) {
     while (*strings) {
-        const char* str1 = *strings++;
-        const char* str2 = *strings++;
-        if (str1 == s || str::Eq(str1, s)) {
+        Str str1 = *strings++;
+        Str str2 = *strings++;
+        if (str1.s == s.s || StrEq(str1, s)) {
             return str2;
         }
     }
-    return nullptr;
+    return {};
 }

@@ -285,7 +285,7 @@ static void AppendProp(StrBuilder& out, const char* key, const char* value) {
 }
 
 // clang-format off
-static const char* propToName[] = {
+static const Str propToName[] = {
     kPropTitle, _TRN("Title:"),
     kPropSubject, _TRN("Subject:"),
     kPropAuthor, _TRN("Author:"),
@@ -333,7 +333,7 @@ static const char* propToName[] = {
     kPropSceneType, _TRN("Scene Type:"),
     kPropImageFileSize, _TRN("Image File Size:"),
     kPropImagePath, _TRN("Path:"),
-    nullptr,
+    Str(),
 };
 // clang-format on
 
@@ -344,7 +344,7 @@ static void AppendPropTranslated(StrBuilder& out, const char* propName, const ch
         AppendProp(out, _TRA("File Size:"), valFormatted);
         return;
     }
-    const char* s = GetMatchingString(propToName, propName);
+    Str s = GetMatchingString(propToName, propName);
     if (!s) {
         TempStr label = str::FormatTemp("%s:", propName);
         AppendProp(out, label, val);
@@ -468,7 +468,7 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
     AppendPropTranslated(out, kPropCopyright, GetPropValueTemp(props, kPropCopyright));
 
     bool isPdfDate = dm && kindEngineMupdf == dm->engineType;
-    char* val = GetPropValueTemp(props, kPropCreationDate);
+    Str val = GetPropValueTemp(props, kPropCreationDate);
     AppendDateProp(out, _TRA("Created:"), val, isPdfDate);
     val = GetPropValueTemp(props, kPropModificationDate);
     AppendDateProp(out, _TRA("Modified:"), val, isPdfDate);

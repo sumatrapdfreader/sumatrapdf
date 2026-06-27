@@ -4196,15 +4196,15 @@ TempStr EngineMupdf::ExtractFontListTemp() {
 }
 
 // clang-format off
-static const char* mupdfPropsMap[] = {
-    kPropTitle, FZ_META_INFO_TITLE,
-    kPropAuthor, FZ_META_INFO_AUTHOR,
-    kPropSubject, "info:Subject",
-    kPropPdfProducer, FZ_META_INFO_PRODUCER,
-    kPropCreatorApp, "info:Creator", // not sure if the same meaning
-    kPropCreationDate, "info:CreationDate",
-    kPropModificationDate, "info:ModDate",
-    nullptr,
+static const Str mupdfPropsMap[] = {
+    kPropTitle, Str(FZ_META_INFO_TITLE),
+    kPropAuthor, Str(FZ_META_INFO_AUTHOR),
+    kPropSubject, StrL("info:Subject"),
+    kPropPdfProducer, Str(FZ_META_INFO_PRODUCER),
+    kPropCreatorApp, StrL("info:Creator"), // not sure if the same meaning
+    kPropCreationDate, StrL("info:CreationDate"),
+    kPropModificationDate, StrL("info:ModDate"),
+    Str(),
 };
 // clang-format on
 
@@ -4212,7 +4212,7 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
     auto ctx = Ctx();
     ScopedCritSec ctxScope(&docLock);
 
-    const char* key = GetMatchingString(mupdfPropsMap, name);
+    Str key = GetMatchingString(mupdfPropsMap, name);
     if (key) {
         char buf[1024]{};
         int bufSize = (int)dimof(buf);
@@ -4279,14 +4279,14 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
         return ExtractFontListTemp();
     }
 
-    static const char* pdfPropNames[] = {
-        kPropTitle,        "Title",        kPropAuthor,           "Author",
-        kPropSubject,      "Subject",      kPropCopyright,        "Copyright",
-        kPropCreationDate, "CreationDate", kPropModificationDate, "ModDate",
-        kPropCreatorApp,   "Creator",      kPropPdfProducer,      "Producer",
-        nullptr,
+    static const Str pdfPropNames[] = {
+        kPropTitle,        StrL("Title"),        kPropAuthor,           StrL("Author"),
+        kPropSubject,      StrL("Subject"),      kPropCopyright,        StrL("Copyright"),
+        kPropCreationDate, StrL("CreationDate"), kPropModificationDate, StrL("ModDate"),
+        kPropCreatorApp,   StrL("Creator"),      kPropPdfProducer,      StrL("Producer"),
+        Str(),
     };
-    const char* pdfPropName = GetMatchingString(pdfPropNames, name);
+    Str pdfPropName = GetMatchingString(pdfPropNames, name);
     if (!pdfPropName) {
         return {};
     }

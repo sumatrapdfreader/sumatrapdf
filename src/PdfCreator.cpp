@@ -241,16 +241,16 @@ bool PdfCreator::AddPageFromImageData(const ByteSlice& data, float imgDpi) const
 }
 
 // clang-format off
-static const char* pdfCreatorPropsMap[] = {
-    kPropTitle, "Title",
-    kPropAuthor, "Author",
-    kPropSubject, "Subject",
-    kPropCopyright, "Copyright",
-    kPropCreationDate, "CreationDate",
-    kPropModificationDate, "ModDate",
-    kPropCreatorApp, "Creator",
-    kPropPdfProducer, "Producer",
-    nullptr
+static const Str pdfCreatorPropsMap[] = {
+    kPropTitle, StrL("Title"),
+    kPropAuthor, StrL("Author"),
+    kPropSubject, StrL("Subject"),
+    kPropCopyright, StrL("Copyright"),
+    kPropCreationDate, StrL("CreationDate"),
+    kPropModificationDate, StrL("ModDate"),
+    kPropCreatorApp, StrL("Creator"),
+    kPropPdfProducer, StrL("Producer"),
+    Str(),
 };
 // clang-format on
 
@@ -259,7 +259,7 @@ bool PdfCreator::SetProperty(const char* propName, const char* value) const {
         return false;
     }
 
-    const char* name = GetMatchingString(pdfCreatorPropsMap, propName);
+    Str name = GetMatchingString(pdfCreatorPropsMap, propName);
     if (!name) {
         return false;
     }

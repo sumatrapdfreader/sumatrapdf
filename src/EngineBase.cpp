@@ -555,12 +555,12 @@ TocTree* EngineBase::GetToc() {
 // default implementation that just sets wanted keys
 void EngineBase::GetProperties(StrVec& keyValueOut) {
     for (int i = 0;; i++) {
-        const char* key = gAllProps[i];
+        Str key = gAllProps[i];
         if (!key) {
             break;
         }
         // font list is loaded asynchronously in ShowProperties()
-        if (str::Eq(key, kPropFontList)) {
+        if (StrEq(key, kPropFontList)) {
             continue;
         }
         TempStr val = GetPropertyTemp(key);

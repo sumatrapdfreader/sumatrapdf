@@ -788,10 +788,9 @@ static bool GoToNextPage(StressTest* st) {
         // trigger getting toc and props
         st->gotToc = true;
         ctrl->GetToc();
-        const char** props = gAllProps;
-        while (*props) {
-            const char* prop = *props++;
-            if (str::Eq(prop, kPropFontList)) {
+        for (int i = 0; gAllProps[i]; i++) {
+            Str prop = gAllProps[i];
+            if (StrEq(prop, kPropFontList)) {
                 // this can be expensive so skip
                 continue;
             }
