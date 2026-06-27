@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/FileUtil.h"
@@ -122,6 +123,11 @@ RenderCache::~RenderCache() {
 /* Find a bitmap for a page defined by <dm> and <pageNo> and optionally also
    <rotation> and <zoom> in the cache - call DropCacheEntry when you
    no longer need a found entry. */
+// out-of-line so RenderCache.h needn't include Pixmap.h (only forward-declare it)
+BitmapCacheEntry::~BitmapCacheEntry() {
+    FreePixmap(bitmap);
+}
+
 BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile) {
     ScopedCritSec scope(&cacheAccess);
     rotation = NormalizeRotation(rotation);
@@ -228,7 +234,7 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     return false;
 }
 
-void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bmp) {
+void RenderCache::Add(PageRenderRequest& req, Pixmap* bmp) {
     ScopedCritSec scope(&cacheAccess);
     ReportIf(!req.dm);
 
@@ -834,7 +840,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
     delete td;
 
     PageRenderRequest req;
-    RenderedBitmap* bmp;
+    Pixmap* bmp;
 
     for (;;) {
         if (AtomicBoolGet(&cache->shouldExit)) {
@@ -886,7 +892,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         bmp = engine->RenderPage(args);
         if (req.abort) {
             // aborted - do nothing, discard result
-            delete bmp;
+            FreePixmap(bmp);
             continue;
         }
         auto durMs = TimeSinceInMs(timeStart);
@@ -900,7 +906,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
 
         if (bmp) {
             if (!engine->IsImageCollection()) {
-                UpdateBitmapColors(bmp->GetBitmap(), cache->textColor, cache->backgroundColor);
+                UpdateBitmapColors(bmp->hbmp, cache->textColor, cache->backgroundColor);
             }
             cache->Add(req, bmp);
             req.bmp = nullptr; // ownership transferred to cache
@@ -936,8 +942,8 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
             renderDelay = 1;
         }
     }
-    RenderedBitmap* renderedBmp = entry ? entry->bitmap : nullptr;
-    HBITMAP hbmp = renderedBmp ? renderedBmp->GetBitmap() : nullptr;
+    Pixmap* renderedBmp = entry ? entry->bitmap : nullptr;
+    HBITMAP hbmp = renderedBmp ? renderedBmp->hbmp : nullptr;
 
     if (!hbmp) {
         if (entry && !(renderedBmp && ReduceTileSize())) {
@@ -954,7 +960,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
 
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (bmpDC) {
-        Size bmpSize = renderedBmp->GetSize();
+        Size bmpSize = Size(renderedBmp->width, renderedBmp->height);
         int xSrc = -std::min(tileOnScreen.x, 0);
         int ySrc = -std::min(tileOnScreen.y, 0);
         float factor = std::min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);
@@ -1023,9 +1029,9 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);
-        RenderedBitmap* bmp = dm->GetEngine()->RenderPage(args);
-        bool success = bmp && bmp->IsValid() && bmp->Blit(hdc, bounds);
-        delete bmp;
+        Pixmap* bmp = dm->GetEngine()->RenderPage(args);
+        bool success = bmp && bmp->hbmp && BlitPixmap(bmp, hdc, bounds);
+        FreePixmap(bmp);
 
         return success ? 0 : RENDER_DELAY_FAILED;
     }
@@ -1102,7 +1108,7 @@ void RenderCache::LogCacheSize() {
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
         if (e->bitmap) {
-            i64 bs = RenderedBitmapByteSize(e->bitmap);
+            i64 bs = PixmapByteSize(e->bitmap);
             size += bs;
         }
     }

@@ -99,7 +99,7 @@ class EngineEbook : public EngineBase {
     RectF PageMediabox(int pageNo) override;
     RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderPage(RenderPageArgs& args) override;
+    Pixmap* RenderPage(RenderPageArgs& args) override;
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
@@ -314,7 +314,7 @@ RectF EngineEbook::Transform(const RectF& rect, int, float zoom, int rotation, b
     return RectF::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
+Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto zoom = args.zoom;
     auto rotation = args.rotation;
@@ -363,7 +363,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-    return new RenderedBitmap(hbmp, screen.Size(), hMap);
+    return PixmapFromHBITMAP(hbmp, screen.Size(), hMap);
 }
 
 static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {

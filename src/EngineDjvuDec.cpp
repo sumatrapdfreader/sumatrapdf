@@ -128,7 +128,7 @@ class EngineDjvuDec : public EngineBase {
 
     RectF PageMediabox(int pageNo) override;
 
-    RenderedBitmap* RenderPage(RenderPageArgs&) override;
+    Pixmap* RenderPage(RenderPageArgs&) override;
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
@@ -576,7 +576,7 @@ static RenderedBitmap* StretchDibToScreen(HBITMAP srcBmp, HANDLE srcMap, int rdx
     return res;
 }
 
-RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
+Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     int pageNo = args.pageNo;
     int userRotation = NormalizeRotation(args.rotation);
     float zoom = args.zoom;
@@ -641,7 +641,7 @@ RenderedBitmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-    return StretchDibToScreen(srcBmp, srcMap, rdx, rdy, screen, full, isBitonal);
+    return PixmapFromRenderedBitmap(StretchDibToScreen(srcBmp, srcMap, rdx, rdy, screen, full, isBitonal));
 }
 
 ByteSlice EngineDjvuDec::GetFileData() {

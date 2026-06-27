@@ -20,6 +20,7 @@ constexpr int RENDER_DELAY_FAILED = std::numeric_limits<int>::max() - 2;
 constexpr int kMaxPredictiveRequests = 4;
 
 struct PageInfo;
+struct Pixmap;
 
 // describes the chain of pages to render predictively after the current page.
 // originPageNo is the visible page that anchors the chain; the chain stops
@@ -60,12 +61,11 @@ struct BitmapCacheEntry {
     int cacheIdx = -1; // index within RenderCache.cache
 
     // owned by the BitmapCacheEntry
-    RenderedBitmap* bitmap = nullptr;
+    Pixmap* bitmap = nullptr;
     bool outOfDate = false;
     int refs = 1;
 
-    BitmapCacheEntry(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile,
-                     RenderedBitmap* bitmap) {
+    BitmapCacheEntry(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile, Pixmap* bitmap) {
         this->dm = dm;
         this->pageNo = pageNo;
         this->rotation = rotation;
@@ -73,7 +73,7 @@ struct BitmapCacheEntry {
         this->tile = tile;
         this->bitmap = bitmap;
     }
-    ~BitmapCacheEntry() { delete bitmap; }
+    ~BitmapCacheEntry();
 };
 
 /* Even though this looks a lot like a BitmapCacheEntry, we keep it
@@ -92,7 +92,7 @@ struct PageRenderRequest {
     DWORD timestamp = 0;
 
     // set by render thread before calling renderFinishedCb
-    RenderedBitmap* bmp = nullptr;
+    Pixmap* bmp = nullptr;
     int errorCode = 0; // 0 = success
 
     // Predictive rendering: once this page finishes rendering, the pages in
@@ -189,7 +189,7 @@ struct RenderCache {
 
     bool ClearCurrentRequest(int threadIdx);
     bool GetNextRequest(PageRenderRequest* req, int threadIdx);
-    void Add(PageRenderRequest& req, RenderedBitmap* bmp);
+    void Add(PageRenderRequest& req, Pixmap* bmp);
 
     USHORT GetTileRes(DisplayModel* dm, int pageNo) const;
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);

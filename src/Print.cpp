@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
@@ -623,12 +624,12 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
         if (abortCookie) {
             args.cookie_out = &abortCookie->cookie;
         }
-        RenderedBitmap* bmp = engine.RenderPage(args);
+        Pixmap* bmp = engine.RenderPage(args);
         if (abortCookie) {
             abortCookie->Clear();
         }
-        if (!bmp || !bmp->IsValid()) {
-            delete bmp;
+        if (!bmp || !bmp->hbmp) {
+            FreePixmap(bmp);
             // couldn't allocate even a band: try thinner bands before giving up,
             // so we still print at full resolution (never the old whole-page shrink)
             if (bandH > 1) {
@@ -647,10 +648,10 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
         rc.y = devTarget.y + (int)((i64)dy0 * devTarget.dy / fullH);
         int yBot = devTarget.y + (int)((i64)(dy0 + h) * devTarget.dy / fullH);
         rc.dy = yBot - rc.y;
-        if (bmp->Blit(hdc, rc)) {
+        if (BlitPixmap(bmp, hdc, rc)) {
             anyOk = true;
         }
-        delete bmp;
+        FreePixmap(bmp);
         dy0 += h;
     }
     return anyOk;

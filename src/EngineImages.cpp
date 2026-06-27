@@ -128,7 +128,7 @@ class EngineImages : public EngineBase {
 
     RectF PageMediabox(int pageNo) override;
 
-    RenderedBitmap* RenderPage(RenderPageArgs& args) override;
+    Pixmap* RenderPage(RenderPageArgs& args) override;
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
@@ -362,7 +362,7 @@ static RenderedBitmap* FzPixmapToRenderedBitmap(fz_context* ctx, fz_pixmap* pixm
     return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
-RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
+Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto pageRect = args.pageRect;
     auto zoom = args.zoom;
@@ -431,7 +431,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
             }
             if (result) {
                 DropPage(page, false);
-                return result;
+                return PixmapFromRenderedBitmap(result);
             }
             // fall through to GDI+ on failure
         }
@@ -495,7 +495,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
         g.DrawString(msgW, -1, &font, layoutRect, &sf, &textBrush);
         DropPage(page, false);
         DeleteDC(hDC);
-        return new RenderedBitmap(hbmp, screen.Size(), hMap);
+        return PixmapFromHBITMAP(hbmp, screen.Size(), hMap);
     }
 
     Matrix m;
@@ -526,7 +526,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-    return new RenderedBitmap(hbmp, screen.Size(), hMap);
+    return PixmapFromHBITMAP(hbmp, screen.Size(), hMap);
 }
 
 void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation) {

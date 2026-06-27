@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -48,7 +49,7 @@ void TestRenderPage(const Flags& i) {
         if (bmp == nullptr) {
             printf("failed to render page\n");
         }
-        delete bmp;
+        FreePixmap(bmp);
         SafeEngineRelease(&engine);
     }
 }

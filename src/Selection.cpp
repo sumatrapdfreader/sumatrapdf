@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include <uiautomationcore.h>
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
@@ -303,11 +304,11 @@ void CopySelectionToClipboard(MainWindow* win) {
     float zoom = dm->GetZoomReal(selOnPage->pageNo);
     int rotation = dm->GetRotation();
     RenderPageArgs args(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
-    RenderedBitmap* bmp = dm->GetEngine()->RenderPage(args);
+    Pixmap* bmp = dm->GetEngine()->RenderPage(args);
     if (bmp) {
-        CopyImageToClipboard(bmp->GetBitmap(), true);
+        CopyImageToClipboard(bmp->hbmp, true);
     }
-    delete bmp;
+    FreePixmap(bmp);
 }
 
 void OnSelectAll(MainWindow* win, bool textOnly) {

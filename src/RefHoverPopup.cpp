@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
 
@@ -75,10 +76,10 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (s && s->bmp) {
-            Size bmpSize = s->bmp->GetSize();
+            Size bmpSize = Size(s->bmp->width, s->bmp->height);
             int border = DpiScale(hwnd, kRefHoverBorder);
             HDC bmpDC = CreateCompatibleDC(hdc);
-            HGDIOBJ oldBmp = bmpDC ? SelectObject(bmpDC, s->bmp->GetBitmap()) : nullptr;
+            HGDIOBJ oldBmp = bmpDC ? SelectObject(bmpDC, s->bmp->hbmp) : nullptr;
             if (oldBmp) {
                 BitBlt(hdc, border, border, bmpSize.dx, bmpSize.dy, bmpDC, 0, 0, SRCCOPY);
                 SelectObject(bmpDC, oldBmp);
@@ -142,7 +143,7 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
     if (!s || !s->hwndPopup || !s->bmp) {
         return;
     }
-    Size bmpSize = s->bmp->GetSize();
+    Size bmpSize = Size(s->bmp->width, s->bmp->height);
     int border = DpiScale(s->hwndPopup, kRefHoverBorder);
     int popupW = bmpSize.dx + 2 * border;
     int popupH = bmpSize.dy + 2 * border;

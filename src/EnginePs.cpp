@@ -266,7 +266,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->PageContentBox(pageNo, target);
     }
 
-    RenderedBitmap* RenderPage(RenderPageArgs& args) override { return pdfEngine->RenderPage(args); }
+    Pixmap* RenderPage(RenderPageArgs& args) override { return pdfEngine->RenderPage(args); }
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);

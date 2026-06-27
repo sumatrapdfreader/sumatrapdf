@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -358,12 +359,12 @@ bool PdfCreator::RenderToFile(const char* pdfFileName, EngineBase* engine, int d
     float zoom = dpi / engine->GetFileDPI();
     for (int i = 1; ok && i <= engine->PageCount(); i++) {
         RenderPageArgs args(i, zoom, 0, nullptr, RenderTarget::Export);
-        RenderedBitmap* bmp = engine->RenderPage(args);
+        Pixmap* bmp = engine->RenderPage(args);
         ok = false;
         if (bmp) {
-            ok = AddPageFromHBITMAP(c, bmp->GetBitmap(), bmp->GetSize(), dpi);
+            ok = AddPageFromHBITMAP(c, bmp->hbmp, Size(bmp->width, bmp->height), dpi);
         }
-        delete bmp;
+        FreePixmap(bmp);
     }
     if (!ok) {
         delete c;

@@ -2550,6 +2550,64 @@ Pixmap* AllocPixmapDIB(int w, int h) {
     return p;
 }
 
+// Adopt an existing HBITMAP (and optional file mapping) into a Pixmap that owns them.
+// If it's a DIB section, the Pixmap's `data`/`stride`/`format` are filled in to point at
+// its pixels (so pixel access works); otherwise only the blittable handle is carried.
+// Used by engines that already render into a DIB section - they hand the handle to a
+// Pixmap with no copy.
+Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap) {
+    if (!hbmp) {
+        return nullptr;
+    }
+    Pixmap* p = new Pixmap();
+    p->width = size.dx;
+    p->height = size.dy;
+    p->hbmp = hbmp;
+    p->hMap = hMap;
+    DIBSECTION ds{};
+    if (GetObject(hbmp, sizeof(ds), &ds) == sizeof(ds) && ds.dsBm.bmBits) {
+        p->stride = ds.dsBm.bmWidthBytes;
+        p->data = (u8*)ds.dsBm.bmBits;
+        p->format = (ds.dsBm.bmBitsPixel == 24) ? PixmapFormat::BGR8 : PixmapFormat::BGRA8;
+        // NOTE: orientation follows the DIB (biHeight < 0 => top-down). Pixel readers that
+        // care about orientation should prefer the HBITMAP-based helpers, which handle it.
+    }
+    return p;
+}
+
+// Transfer a RenderedBitmap's HBITMAP (+ mapping) into a Pixmap with no copy, then free the
+// now-empty RenderedBitmap shell. Bridges engine internals that still build RenderedBitmaps
+// while RenderPage's public result becomes a Pixmap.
+Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb) {
+    if (!rb) {
+        return nullptr;
+    }
+    Pixmap* p = PixmapFromHBITMAP(rb->hbmp, rb->size, rb->hMap);
+    rb->hbmp = nullptr; // ownership moved to the Pixmap
+    rb->hMap = nullptr;
+    delete rb;
+    return p;
+}
+
+// Reverse of PixmapFromRenderedBitmap: move a DIB-section Pixmap's HBITMAP into a
+// RenderedBitmap (the long-lived present-layer handle, e.g. a saved thumbnail) and free
+// the Pixmap shell. Returns nullptr (freeing px) if px isn't blittable.
+RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px) {
+    if (!px) {
+        return nullptr;
+    }
+    if (!px->hbmp) {
+        FreePixmap(px);
+        return nullptr;
+    }
+    auto* rb = new RenderedBitmap((HBITMAP)px->hbmp, Size(px->width, px->height), (HANDLE)px->hMap);
+    px->hbmp = nullptr; // ownership moved to rb
+    px->hMap = nullptr;
+    px->data = nullptr; // pixels were owned by hbmp, now rb's
+    FreePixmap(px);
+    return rb;
+}
+
 // frees the native handles of a DIB-section-backed Pixmap (the pixels are owned by hbmp).
 void FreePixmapNativeBitmap(Pixmap* p) {
     if (!p) {

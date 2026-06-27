@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
@@ -15,7 +16,7 @@
 struct RefHoverRenderJob {
     RefHoverState* s = nullptr;
     RefHoverState::RenderRequest req;
-    RenderedBitmap* bmp = nullptr;
+    Pixmap* bmp = nullptr;
 };
 
 static void RefHoverStartRenderJob(RefHoverRenderJob* job);
@@ -23,13 +24,13 @@ static void RefHoverStartRenderJob(RefHoverRenderJob* job);
 static void RefHoverRenderDone(RefHoverRenderJob* job) {
     RefHoverState* s = job->s;
     if (!RefHoverIsLiveState(s)) {
-        delete job->bmp;
+        FreePixmap(job->bmp);
         delete job;
         return;
     }
     s->renderInFlight = false;
     if (job->bmp && job->req.gen == s->renderGen) {
-        delete s->bmp;
+        FreePixmap(s->bmp);
         s->bmp = job->bmp;
         if (job->req.showPopup) {
             s->displayed.destPage = job->req.pageNo;
@@ -43,7 +44,7 @@ static void RefHoverRenderDone(RefHoverRenderJob* job) {
             InvalidateRect(s->hwndPopup, nullptr, TRUE);
         }
     } else {
-        delete job->bmp;
+        FreePixmap(job->bmp);
     }
     delete job;
     if (s->queuedRender.valid) {

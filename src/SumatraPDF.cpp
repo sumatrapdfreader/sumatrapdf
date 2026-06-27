@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/StrFormat.h"
 #include "utils/WinDynCalls.h"
 #include "utils/DirIter.h"
@@ -882,8 +883,8 @@ struct ThumbnailRenderData {
 
 static void ThumbnailRenderFinished(ThumbnailRenderData* d, PageRenderRequest* req) {
     // extract bitmap from request and pass to original callback
-    // the callback takes ownership of the bitmap
-    RenderedBitmap* bmp = req->bmp;
+    // the callback takes ownership of the bitmap (the present-layer handle)
+    RenderedBitmap* bmp = RenderedBitmapFromPixmap(req->bmp);
     req->bmp = nullptr; // prevent double-free
     d->saveThumbnail->Call(bmp);
     delete d->saveThumbnail;
@@ -919,14 +920,14 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
 
 struct CreateThumbnailFromFileData {
     char* filePath = nullptr;
-    RenderedBitmap* bmp = nullptr;
+    Pixmap* bmp = nullptr;
     ~CreateThumbnailFromFileData() { str::Free(filePath); }
 };
 
 static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
     if (d->bmp) {
         FileState* fs = gFileHistory.FindByPath(d->filePath);
-        SetThumbnail(fs, d->bmp);
+        SetThumbnail(fs, RenderedBitmapFromPixmap(d->bmp));
     }
     delete d;
 }

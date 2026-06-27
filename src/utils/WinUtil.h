@@ -258,10 +258,18 @@ struct BitmapPixels {
 };
 
 struct Pixmap;
+struct RenderedBitmap;
 // Allocate a DIB-section-backed Pixmap (pixels double as a blittable HBITMAP). WinUtil.cpp.
 Pixmap* AllocPixmapDIB(int w, int h);
 // Blit a Pixmap into target (DIB-section fast path, else StretchDIBits from memory).
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
+// Adopt an existing HBITMAP (+ optional mapping) into a Pixmap that owns it; exposes the
+// DIB section's pixels when applicable. Used by engines that render into a DIB section.
+Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
+// Transfer a RenderedBitmap's handles into a Pixmap (no copy) and free the shell.
+Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);
+// Reverse: move a DIB-section Pixmap's handles into a RenderedBitmap and free the shell.
+RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
 
 // A Windows present-layer bitmap handle: an HBITMAP (+ optional file mapping) that can be
 // blitted to an HDC. Concrete and Windows-only by design - portable pixel data lives in

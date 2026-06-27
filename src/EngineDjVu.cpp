@@ -269,7 +269,7 @@ class EngineDjVu : public EngineBase {
     RectF PageMediabox(int pageNo) override;
     RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderPage(RenderPageArgs&) override;
+    Pixmap* RenderPage(RenderPageArgs&) override;
 
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse = false);
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -613,7 +613,7 @@ RenderedBitmap* EngineDjVu::CreateRenderedBitmap(const char* bmpData, Size size,
     return new RenderedBitmap(hbmp, size, hMap);
 }
 
-RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
+Pixmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     ddjvu_page_t* page = nullptr;
     ddjvu_format_t* fmt = nullptr;
     RenderedBitmap* bmp = nullptr;
@@ -707,7 +707,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     ddjvu_format_release(fmt);
     ddjvu_page_release(page);
 
-    return bmp;
+    return PixmapFromRenderedBitmap(bmp);
 }
 
 RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {

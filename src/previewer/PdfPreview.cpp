@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/ScopedWin.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
@@ -58,10 +59,10 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
 
     page = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
     RenderPageArgs args(1, zoom, 0, &page);
-    RenderedBitmap* bmp = engine->RenderPage(args);
+    Pixmap* bmp = engine->RenderPage(args);
 
     HDC hdc = GetDC(nullptr);
-    if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
+    if (bmp && GetDIBits(hdc, bmp->hbmp, 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
         for (int i = 0; i < thumb.dx * thumb.dy; i++) {
             bmpData[4 * i + 3] = 0xFF;
@@ -79,7 +80,7 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
     }
 
     ReleaseDC(nullptr, hdc);
-    delete bmp;
+    FreePixmap(bmp);
 
     return hthumb ? S_OK : E_NOTIMPL;
 }
@@ -89,7 +90,7 @@ class PageRenderer {
     HWND hwnd = nullptr;
 
     int currPage = 0;
-    RenderedBitmap* currBmp = nullptr;
+    Pixmap* currBmp = nullptr;
     // due to rounding differences, currBmp->Size() and currSize can differ slightly
     Size currSize;
     int reqPage = 0;
@@ -118,7 +119,7 @@ class PageRenderer {
         if (thread) {
             WaitForSingleObject(thread, INFINITE);
         }
-        delete currBmp;
+        FreePixmap(currBmp);
         DeleteCriticalSection(&currAccess);
     }
 
@@ -140,7 +141,7 @@ class PageRenderer {
 
         ScopedCritSec scope(&currAccess);
         if (currBmp && currPage == pageNo && currSize == target.Size()) {
-            currBmp->Blit(hdc, target);
+            BlitPixmap(currBmp, hdc, target);
         } else if (!thread) {
             reqPage = pageNo;
             reqZoom = zoom;
@@ -162,7 +163,7 @@ class PageRenderer {
 
         PageRenderer* pr = (PageRenderer*)data;
         RenderPageArgs args(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
-        RenderedBitmap* bmp = pr->engine->RenderPage(args);
+        Pixmap* bmp = pr->engine->RenderPage(args);
         if (!bmp) {
             return 0;
         }
@@ -170,12 +171,12 @@ class PageRenderer {
         ScopedCritSec scope(&pr->currAccess);
 
         if (!pr->reqAbort) {
-            delete pr->currBmp;
+            FreePixmap(pr->currBmp);
             pr->currBmp = bmp;
             pr->currPage = pr->reqPage;
             pr->currSize = pr->reqSize;
         } else {
-            delete bmp;
+            FreePixmap(bmp);
         }
         delete pr->abortCookie;
         pr->abortCookie = nullptr;

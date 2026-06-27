@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
@@ -80,13 +81,13 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
 
     t = TimeGet();
     RenderPageArgs args(pagenum, 1.0, 0);
-    RenderedBitmap* rendered = engine->RenderPage(args);
+    Pixmap* rendered = engine->RenderPage(args);
 
     if (!rendered) {
         logf("Error: failed to render page %d\n", pagenum);
         return;
     }
-    delete rendered;
+    FreePixmap(rendered);
     timeMs = TimeSinceInMs(t);
     logf("pagerender %3d: %.2f ms\n", pagenum, timeMs);
 }

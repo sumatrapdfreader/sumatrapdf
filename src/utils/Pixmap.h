@@ -20,13 +20,8 @@
 // handle. When present (hbmp != null on Windows), `data` points into the present object's
 // pixels and is owned by it (freed via FreePixmapNativeBitmap), not by malloc/free.
 //
-// This header stays free of <windows.h> / <gdiplus.h> so it remains lightweight; the
-// Windows handle types below are the real opaque handle pointers.
-
-#if defined(_WIN32)
-using PixmapHBITMAP = struct HBITMAP__*; // == HBITMAP
-using PixmapHANDLE = void*;              // == HANDLE
-#endif
+// On Windows this header uses HBITMAP/HANDLE directly; <windows.h> is assumed to have
+// been included before it (it comes in via BaseUtil.h).
 
 enum class PixmapFormat : u8 {
     // byte order in memory. BGRA8 is the zero-copy layout on all 3 platforms.
@@ -48,8 +43,8 @@ struct Pixmap {
 #if defined(_WIN32)
     // When non-null, the Pixmap is backed by a GDI DIB section: `data` is its pixels and
     // the bitmap is directly blittable (BlitPixmap). Owns these handles.
-    PixmapHBITMAP hbmp = nullptr;
-    PixmapHANDLE hMap = nullptr; // optional file mapping backing hbmp
+    HBITMAP hbmp = nullptr;
+    HANDLE hMap = nullptr; // optional file mapping backing hbmp
 #endif
 };
 
@@ -61,6 +56,11 @@ void FreePixmapNativeBitmap(Pixmap* p);
 
 inline int PixmapBytesPerPixel(PixmapFormat fmt) {
     return fmt == PixmapFormat::BGR8 ? 3 : 4;
+}
+
+// approximate memory footprint (4 bytes/pixel, ignoring stride). 0 for null.
+inline i64 PixmapByteSize(const Pixmap* p) {
+    return p ? (i64)p->width * (i64)p->height * 4 : 0;
 }
 
 // allocate a top-down Pixmap; data is uninitialized. returns nullptr on bad args / OOM.

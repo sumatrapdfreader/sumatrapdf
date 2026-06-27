@@ -3589,7 +3589,7 @@ RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rota
     return ToRectF(rect2);
 }
 
-RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
+Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     auto ctx = Ctx();
     auto pageNo = args.pageNo;
 
@@ -3683,7 +3683,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             delete bitmap;
             return nullptr;
         }
-        return bitmap;
+        return PixmapFromRenderedBitmap(bitmap);
     }
 
     // Fallback: Print or hideAnnotations (each needs different content/usage,
@@ -3746,7 +3746,7 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         }
     }
 
-    return bitmap;
+    return PixmapFromRenderedBitmap(bitmap);
 }
 
 // don't delete the result

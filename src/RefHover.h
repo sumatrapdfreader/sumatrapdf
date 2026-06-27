@@ -10,6 +10,7 @@ struct ILinkHandler;
 struct IPageDestination;
 struct IPageElement;
 struct RenderedBitmap;
+struct Pixmap;
 struct RefLookupCache;
 
 struct RefHoverState {
@@ -19,7 +20,7 @@ struct RefHoverState {
     DocController* ctrl = nullptr;
     ILinkHandler* linkHandler = nullptr;
     // currently shown rendered destination strip (owned)
-    RenderedBitmap* bmp = nullptr;
+    Pixmap* bmp = nullptr;
     // engine for the currently displayed page, AddRef'd while shown so the
     // popup can hit-test links under the cursor (hand cursor + click-to-open)
     EngineBase* hitEngine = nullptr;

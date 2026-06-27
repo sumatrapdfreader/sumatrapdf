@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/FileUtil.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/TgaReader.h"
@@ -323,13 +324,13 @@ void DumpThumbnail(EngineBase* engine) {
     Rect thumb = RectF(0, 0, rect.dx * zoom, rect.dy * zoom).Round();
     rect = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
     RenderPageArgs args(1, zoom, 0, &rect);
-    RenderedBitmap* bmp = engine->RenderPage(args);
+    Pixmap* bmp = engine->RenderPage(args);
     if (!bmp) {
         Out1("\t<Thumbnail />\n");
         return;
     }
 
-    ByteSlice imgData = tga::SerializeBitmap(bmp->GetBitmap());
+    ByteSlice imgData = tga::SerializeBitmap(bmp->hbmp);
     size_t len = imgData.size();
     u8* data = imgData.data();
     AutoFree hexData(data ? str::MemToHex(data, len) : nullptr);
@@ -408,35 +409,35 @@ bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f
     bool success = true;
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderPageArgs args(pageNo, zoom, 0);
-        RenderedBitmap* bmp = engine->RenderPage(args);
+        Pixmap* bmp = engine->RenderPage(args);
         success &= bmp != nullptr;
         if (!bmp && !silent) {
             ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FilePath());
         }
         if (!bmp || silent) {
-            delete bmp;
+            FreePixmap(bmp);
             continue;
         }
         TempStr pageBmpPath = str::FormatTemp(renderPath, pageNo);
         if (str::EndsWithI(pageBmpPath, ".png")) {
-            Gdiplus::Bitmap gbmp(bmp->GetBitmap(), nullptr);
+            Gdiplus::Bitmap gbmp(bmp->hbmp, nullptr);
             CLSID pngEncId = GetGdiPlusEncoderClsid(L"image/png");
             WCHAR* pageBmpPathW = ToWStrTemp(pageBmpPath);
             gbmp.Save(pageBmpPathW, &pngEncId, nullptr);
         } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
-            ByteSlice imgData = SerializeBitmap(bmp->GetBitmap());
+            ByteSlice imgData = SerializeBitmap(bmp->hbmp);
             if (!imgData.empty()) {
                 file::WriteFile(pageBmpPath, imgData);
                 str::Free(imgData.data());
             }
         } else { // render as TGA for all other file extensions
-            ByteSlice imgData = tga::SerializeBitmap(bmp->GetBitmap());
+            ByteSlice imgData = tga::SerializeBitmap(bmp->hbmp);
             if (!imgData.empty()) {
                 file::WriteFile(pageBmpPath, imgData);
                 str::Free(imgData.data());
             }
         }
-        delete bmp;
+        FreePixmap(bmp);
     }
 
     return success;

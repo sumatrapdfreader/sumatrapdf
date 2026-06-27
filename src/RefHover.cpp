@@ -6,6 +6,7 @@
 // sibling RefHover*.cpp files.
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -35,7 +36,7 @@ void RefHoverDestroy(RefHoverState* s) {
         DestroyWindow(s->hwndPopup);
         s->hwndPopup = nullptr;
     }
-    delete s->bmp;
+    FreePixmap(s->bmp);
     s->bmp = nullptr;
     if (s->hitEngine) {
         s->hitEngine->Release();
