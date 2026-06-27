@@ -84,7 +84,7 @@ struct AnnotCreateArgs {
     // for free text, < 0 means not given
     int borderWidth = -1;
     bool setContentToSelection = false;
-    TempStr content = nullptr;
+    Str content;
     // for Stamp annotations: encoded image bytes (e.g. BMP from the clipboard).
     // when set, the Stamp is created as an image stamp sized to the image.
     ByteSlice stampImage;
@@ -97,34 +97,34 @@ void SetRect(Annotation*, RectF);
 void SetQuadPointsAsRect(Annotation*, const Vec<RectF>&);
 
 // EditAnnotations.cpp
-const char* Author(Annotation*);
+Str Author(Annotation*);
 time_t ModificationDate(Annotation*);
 int PopupId(Annotation*); // -1 if not exist
-TempStr AnnotationReadableNameTemp(AnnotationType tp);
+Str AnnotationReadableNameTemp(AnnotationType tp);
 AnnotationType Type(Annotation*);
 
-const char* DefaultAppearanceTextFont(Annotation*);
+Str DefaultAppearanceTextFont(Annotation*);
 PdfColor DefaultAppearanceTextColor(Annotation*);
 int DefaultAppearanceTextSize(Annotation*);
-TempStr Contents(Annotation*);
+Str Contents(Annotation*);
 PdfColor GetColor(Annotation*);      // kColorUnset if no color
 PdfColor InteriorColor(Annotation*); // kColorUnset if no color
 int Quadding(Annotation*);
 int BorderWidth(Annotation*);
-const char* IconName(Annotation*); // empty() if no icon
+Str IconName(Annotation*); // empty if no icon
 int Opacity(Annotation*);
 void GetLineEndingStyles(Annotation*, int* start, int* end);
 
-void SetDefaultAppearanceTextFont(Annotation*, const char*);
+void SetDefaultAppearanceTextFont(Annotation*, Str);
 void SetDefaultAppearanceTextSize(Annotation*, int);
 void SetDefaultAppearanceTextColor(Annotation*, PdfColor);
-bool SetContents(Annotation*, const char*);
+bool SetContents(Annotation*, Str);
 bool SetColor(Annotation*, PdfColor);
 bool SetInteriorColor(Annotation*, PdfColor);
 bool SetQuadding(Annotation*, int);
 void SetBorderWidth(Annotation*, int);
 void SetOpacity(Annotation*, int);
-void SetIconName(Annotation*, const char*);
+void SetIconName(Annotation*, Str);
 void SetLineEndStyles(Annotation*, int end);
 void SetLineStartStyles(Annotation*, int start);
 
@@ -143,17 +143,17 @@ WidgetCursorKind GetWidgetCursorKind(Annotation*);
 // pdf_annot_field_flags (PDF_FIELD_IS_*, PDF_TX_FIELD_IS_* bits), or 0.
 int GetWidgetFieldFlags(Annotation*);
 // current text value of a form field (owned temp copy), or "" .
-TempStr GetWidgetValue(Annotation*);
+Str GetWidgetValue(Annotation*);
 // font size from the field's /DA (in PDF points), or 0 for auto-size.
 float GetWidgetFontSize(Annotation*);
 // max length of a text field (chars), or 0 for unlimited.
 int GetWidgetMaxLen(Annotation*);
 // set a text field's value (runs validation); returns true if accepted.
-bool SetWidgetTextValue(Annotation*, const char* value);
+bool SetWidgetTextValue(Annotation*, Str value);
 // options of a combobox/listbox field (display strings), appended to `out`.
 void GetWidgetChoiceOptions(Annotation*, StrVec& out);
 // set a choice field's value to one of its options; returns true if applied.
-bool SetWidgetChoiceValue(Annotation*, const char* value);
+bool SetWidgetChoiceValue(Annotation*, Str value);
 // Toggle a checkbox / radio-button form field in place. Returns true if it was
 // a (non-read-only) checkbox/radio and got toggled.
 bool ToggleFormButton(Annotation*);

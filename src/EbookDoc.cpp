@@ -923,7 +923,7 @@ bool Fb2Doc::Load() {
                 if (tok->IsText()) {
                     TempStr author = ResolveHtmlEntitiesTemp(tok->s, tok->sLen);
                     if (docAuthor) {
-                        docAuthor = str::JoinTemp(docAuthor, " ", author);
+                        docAuthor = str::JoinTemp(Str(docAuthor), Str(" "), Str(author));
                     } else {
                         docAuthor = author;
                     }

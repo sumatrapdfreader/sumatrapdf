@@ -50,7 +50,7 @@ void CommitFormFieldEdit(bool save) {
     MainWindow* win = gEdit.win;
     bool isChoice = gEdit.isChoice;
 
-    TempStr text = nullptr;
+    Str text;
     if (save) {
         if (isChoice) {
             int sel = (int)SendMessageW(h, LB_GETCURSEL, 0, 0);
@@ -229,7 +229,7 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     SetWindowFont(hLb, font, TRUE);
     SendMessageW(hLb, LB_SETITEMHEIGHT, 0, (LPARAM)itemDy);
 
-    TempStr cur = GetWidgetValue(widget);
+    Str cur = GetWidgetValue(widget);
     int curIdx = -1;
     for (int i = 0; i < n; i++) {
         char* o = opts.At(i);

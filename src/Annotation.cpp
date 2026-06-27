@@ -123,14 +123,14 @@ Annotation::~Annotation() {
     }
 }
 
-TempStr AnnotationReadableNameTemp(AnnotationType tp) {
+Str AnnotationReadableNameTemp(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {
-        return (char*)"Unknown";
+        return Str("Unknown");
     }
     char* s = (char*)SeqStrByIndex(gAnnotReadableNames, n);
     ReportIf(!s);
-    return s;
+    return Str(s);
 }
 
 AnnotationType Type(Annotation* annot) {
@@ -205,7 +205,7 @@ void SetRect(Annotation* annot, RectF r) {
     MarkNotificationAsModified(e, annot);
 }
 
-const char* Author(Annotation* annot) {
+Str Author(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -222,9 +222,9 @@ const char* Author(Annotation* annot) {
         s = nullptr;
     }
     if (!s || str::IsEmptyOrWhiteSpace(s)) {
-        return {};
+        return Str();
     }
-    return s;
+    return StrDupTemp(Str(s));
 }
 
 int Quadding(Annotation* annot) {
@@ -432,18 +432,18 @@ int GetWidgetFieldFlags(Annotation* annot) {
     return flags;
 }
 
-TempStr GetWidgetValue(Annotation* annot) {
+Str GetWidgetValue(Annotation* annot) {
     if (!annot || annot->type != AnnotationType::Widget) {
-        return "";
+        return Str();
     }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    TempStr res = {};
+    Str res;
     fz_try(ctx) {
         const char* s = pdf_annot_field_value(ctx, a);
-        res = s ? str::DupTemp(s) : Str("");
+        res = s ? StrDupTemp(Str(s)) : Str();
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -492,18 +492,19 @@ int GetWidgetMaxLen(Annotation* annot) {
     return maxLen;
 }
 
-bool SetWidgetTextValue(Annotation* annot, const char* value) {
+bool SetWidgetTextValue(Annotation* annot, Str value) {
     if (!annot || annot->type != AnnotationType::Widget) {
         return false;
     }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     bool ok = false;
+    TempStr valueZ = StrDupTemp(value);
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
-            ok = pdf_set_text_field_value(ctx, a, value ? value : "") != 0;
+            ok = pdf_set_text_field_value(ctx, a, IsEmpty(valueZ) ? "" : valueZ.s) != 0;
             pdf_update_annot(ctx, a);
             UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
         }
@@ -542,18 +543,19 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
     }
 }
 
-bool SetWidgetChoiceValue(Annotation* annot, const char* value) {
+bool SetWidgetChoiceValue(Annotation* annot, Str value) {
     if (!annot || annot->type != AnnotationType::Widget) {
         return false;
     }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     bool ok = false;
+    TempStr valueZ = StrDupTemp(value);
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
-            pdf_set_choice_field_value(ctx, a, value ? value : "");
+            pdf_set_choice_field_value(ctx, a, IsEmpty(valueZ) ? "" : valueZ.s);
             pdf_update_annot(ctx, a);
             UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
             ok = true;
@@ -595,7 +597,7 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
 }
 */
 
-TempStr Contents(Annotation* annot) {
+Str Contents(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -609,25 +611,29 @@ TempStr Contents(Annotation* annot) {
         s = nullptr;
         logf("Contents(): pdf_annot_contents()\n");
     }
-    return s;
+    if (!s) {
+        return Str();
+    }
+    return StrDupTemp(Str(s));
 }
 
-bool SetContents(Annotation* annot, const char* sv) {
+bool SetContents(Annotation* annot, Str sv) {
     ReportIf(!annot);
     if (!annot) {
         return false;
     }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
-    const char* currValue = Contents(annot);
-    if (str::Eq(sv, currValue)) {
+    Str currValue = Contents(annot);
+    if (StrEq(sv, currValue)) {
         return false;
     }
+    TempStr valueZ = StrDupTemp(sv);
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
-            pdf_set_annot_contents(ctx, a, sv);
+            pdf_set_annot_contents(ctx, a, IsEmpty(valueZ) ? "" : valueZ.s);
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -742,8 +748,8 @@ time_t ModificationDate(Annotation* annot) {
     return res;
 }
 
-// return empty() if no icon
-const char* IconName(Annotation* annot) {
+// return empty if no icon
+Str IconName(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -760,17 +766,21 @@ const char* IconName(Annotation* annot) {
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    return iconName;
+    if (!iconName) {
+        return Str();
+    }
+    return StrDupTemp(Str(iconName));
 }
 
-void SetIconName(Annotation* annot, const char* iconName) {
+void SetIconName(Annotation* annot, Str iconName) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
+    TempStr nameZ = StrDupTemp(iconName);
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
-            pdf_set_annot_icon_name(ctx, a, iconName);
+            pdf_set_annot_icon_name(ctx, a, IsEmpty(nameZ) ? "" : nameZ.s);
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -1005,7 +1015,7 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
     return true;
 }
 
-const char* DefaultAppearanceTextFont(Annotation* annot) {
+Str DefaultAppearanceTextFont(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
@@ -1020,12 +1030,16 @@ const char* DefaultAppearanceTextFont(Annotation* annot) {
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    return fontName;
+    if (!fontName) {
+        return Str();
+    }
+    return StrDupTemp(Str(fontName));
 }
 
-void SetDefaultAppearanceTextFont(Annotation* annot, const char* sv) {
+void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
+    TempStr fontZ = StrDupTemp(sv);
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
@@ -1035,7 +1049,7 @@ void SetDefaultAppearanceTextFont(Annotation* annot, const char* sv) {
         float textColor[4]{};
         fz_try(ctx) {
             pdf_annot_default_appearance(ctx, a, &fontName, &sizeF, &n, textColor);
-            pdf_set_annot_default_appearance(ctx, a, sv, sizeF, n, textColor);
+            pdf_set_annot_default_appearance(ctx, a, IsEmpty(fontZ) ? "" : fontZ.s, sizeF, n, textColor);
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -1235,16 +1249,16 @@ static const char* getuser(void) {
     return u;
 }
 
-static TempStr GetAnnotationTextIconTemp() {
+static Str GetAnnotationTextIconTemp() {
     char* s = str::DupTemp(gGlobalPrefs->annotations.textIconType);
     // this way user can use "new paragraph" and we'll match "NewParagraph"
     str::RemoveCharsInPlace(s, " ");
     int idx = SeqStrIndexIS(gAnnotationTextIcons, s);
     if (idx < 0) {
-        return (char*)"Note";
+        return Str("Note");
     }
     char* real = (char*)SeqStrByIndex(gAnnotationTextIcons, idx);
-    return real;
+    return Str(real);
 }
 
 static AnnotationType supportsInteriorColor[] = {
@@ -1374,8 +1388,9 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 case AnnotationType::Underline:
                 case AnnotationType::Squiggly:
                 case AnnotationType::StrikeOut: {
-                    if (!str::IsEmptyOrWhiteSpace(args->content)) {
-                        pdf_set_annot_contents(ctx, annot, args->content);
+                    TempStr content = StrDupTemp(args->content);
+                    if (!str::IsEmptyOrWhiteSpace(content.s)) {
+                        pdf_set_annot_contents(ctx, annot, content.s);
                     }
                 } break;
                 case AnnotationType::Text:
@@ -1440,8 +1455,9 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 if (args->borderWidth >= 0) {
                     pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);
                 }
-                if (!str::IsEmptyOrWhiteSpace(args->content)) {
-                    pdf_set_annot_contents(ctx, annot, args->content);
+                TempStr content = StrDupTemp(args->content);
+                if (!str::IsEmptyOrWhiteSpace(content.s)) {
+                    pdf_set_annot_contents(ctx, annot, content.s);
                 } else {
                     pdf_set_annot_contents(ctx, annot, "This is a text...");
                 }
@@ -1492,8 +1508,8 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     MarkNotificationAsModified(epdf, res, AnnotationChange::Add);
 
     if (typ == AnnotationType::Text) {
-        TempStr iconName = GetAnnotationTextIconTemp();
-        if (!str::EqI(iconName, "Note")) {
+        Str iconName = GetAnnotationTextIconTemp();
+        if (!str::EqI(iconName.s, "Note")) {
             SetIconName(res, iconName);
         }
     }

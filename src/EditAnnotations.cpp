@@ -350,7 +350,7 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
         auto annot = ew->annotations.at(i);
         s.Reset();
         s.AppendFmt(_TRA("page %d,"), annot->pageNo);
-        TempStr name = AnnotationReadableNameTemp(annot->type);
+        Str name = AnnotationReadableNameTemp(annot->type);
         s.AppendFmt(" %s", name);
         model->strings.Append(s.Get());
     }
@@ -535,8 +535,8 @@ static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void DoAuthor(EditAnnotationsWindow* ew, Annotation* annot) {
-    const char* author = Author(annot);
-    bool isVisible = !str::IsEmpty(author);
+    Str author = Author(annot);
+    bool isVisible = !IsEmpty(author);
     if (!isVisible) {
         return;
     }
@@ -579,7 +579,7 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
-    TempStr s = Contents(annot);
+    Str s = Contents(annot);
     // don't replace if already is "\r\n"
     s = str::ReplaceTemp(s, "\r\n", "\n");
     s = str::ReplaceTemp(s, "\n", "\r\n");
@@ -616,7 +616,7 @@ static void DoTextFont(EditAnnotationsWindow* ew, Annotation* annot) {
     if (Type(annot) != AnnotationType::FreeText) {
         return;
     }
-    const char* fontName = DefaultAppearanceTextFont(annot);
+    Str fontName = DefaultAppearanceTextFont(annot);
     // TODO: might have other fonts, like "Symb" and "ZaDb"
     auto itemNo = SeqStrIndex(gFontNames, fontName);
     if (itemNo < 0) {
@@ -764,7 +764,7 @@ static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
 }
 
 static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
-    const char* itemName = IconName(annot);
+    Str itemName = IconName(annot);
     const char* items = nullptr;
     switch (Type(annot)) {
         case AnnotationType::Text:
@@ -783,7 +783,7 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
             // no-op
             break;
     }
-    if (!items || str::IsEmpty(itemName)) {
+    if (!items || IsEmpty(itemName)) {
         return;
     }
     ew->dropDownIcon->SetItemsSeqStrings(items);

@@ -1011,8 +1011,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             bool hasInternalLink = citationHoverEnabled && RefHoverIsInternalLink(el, dm);
             if (annot != prev) {
 #if 0
-                TempStr name = annot ? AnnotationReadableNameTemp(annot->type) :  "none";
-                TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) :  "none";
+                Str name = annot ? AnnotationReadableNameTemp(annot->type) : Str("none");
+                Str prevName = prev ? AnnotationReadableNameTemp(prev->type) : Str("none");
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
 #endif
                 if (gShowAnnotationNotification && !hasInternalLink) {
@@ -1026,7 +1026,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.timeoutMs = 3000;
                         args.delayInMs = 1000;
                         args.noClose = true;
-                        TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : Str("none");
+                        Str name = annot ? AnnotationReadableNameTemp(annot->type) : Str("none");
                         const char* fmt = _TRA("%s annotation. Ctrl+click to edit.");
                         args.msg = str::FormatTemp(fmt, name);
                         ShowNotification(args);
