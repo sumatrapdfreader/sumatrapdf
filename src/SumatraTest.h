@@ -1,18 +1,16 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-char* TestSynctexResult(const char* pdfPath, const char* srcPath, int line);
-char* TestInverseSearchResult(const char* pdfPath, int pageNo, int x, int y);
-char* TestSearchResult(const char* pdfPath, const char* needle, const char* password = nullptr);
-char* TestDestResult(const char* pdfPath, int destNo);
-char* TestNamedDestResult(const char* pdfPath, const char* destName);
-char* TestChmResult(const char* chmPath, int* exitCodeOut = nullptr);
-char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord, const char* expectedLine,
-                                      int* exitCodeOut = nullptr);
-char* TestContextMenuSelectionResult(const char* word1, const char* word2, const char* cursorWord,
-                                     int* exitCodeOut = nullptr);
-char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCodeOut = nullptr);
-char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut = nullptr);
-char* TestI18nErrorStringResult(int* exitCodeOut = nullptr);
-char* TestGetTocResult(const char* path, int* exitCodeOut = nullptr);
-char* TestPageLinksResult(const char* path, int pageNo, int* exitCodeOut = nullptr);
+Str TestSynctexResult(Str pdfPath, Str srcPath, int line);
+Str TestInverseSearchResult(Str pdfPath, int pageNo, int x, int y);
+Str TestSearchResult(Str pdfPath, Str needle, Str password = Str());
+Str TestDestResult(Str pdfPath, int destNo);
+Str TestNamedDestResult(Str pdfPath, Str destName);
+Str TestChmResult(Str chmPath, int* exitCodeOut = nullptr);
+Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine, int* exitCodeOut = nullptr);
+Str TestContextMenuSelectionResult(Str word1, Str word2, Str cursorWord, int* exitCodeOut = nullptr);
+Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut = nullptr);
+Str TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut = nullptr);
+Str TestI18nErrorStringResult(int* exitCodeOut = nullptr);
+Str TestGetTocResult(Str path, int* exitCodeOut = nullptr);
+Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut = nullptr);

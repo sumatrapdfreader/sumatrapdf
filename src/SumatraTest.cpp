@@ -43,7 +43,7 @@ static void EnsureTestGlobalPrefs() {
 // Headless synctex forward-search test for issue #5633. Loads the pdf, builds
 // the synctex index (decompressing .synctex/.synctex.gz as needed) and runs a
 // SourceToDoc query, returning a machine-readable result line.
-char* TestSynctexResult(const char* pdfPath, const char* srcPath, int line) {
+Str TestSynctexResult(Str pdfPath, Str srcPath, int line) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
@@ -71,13 +71,13 @@ char* TestSynctexResult(const char* pdfPath, const char* srcPath, int line) {
         SafeEngineRelease(&engine);
     }
 
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 // Headless inverse-search test for issue #5702. Loads the pdf, creates a
 // Synchronizer, and resolves (page, point) -> (srcfile, line, col) via
 // DocToSource, returning a machine-readable result line.
-char* TestInverseSearchResult(const char* pdfPath, int pageNo, int x, int y) {
+Str TestInverseSearchResult(Str pdfPath, int pageNo, int x, int y) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
@@ -105,7 +105,7 @@ char* TestInverseSearchResult(const char* pdfPath, int pageNo, int x, int y) {
         SafeEngineRelease(&engine);
     }
 
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 // Headless case-insensitive text-search test for issue #5597. Loads the pdf,
@@ -113,11 +113,11 @@ char* TestInverseSearchResult(const char* pdfPath, int pageNo, int x, int y) {
 // it was found on (1-based) or NOTFOUND -- to the output file, then exits.
 // Used by tests/issue-5597.ts; not meant for end users.
 class TestPasswordUI : public PasswordUI {
-    const char* password = nullptr;
+    Str password = nullptr;
     bool triedPassword = false;
 
   public:
-    explicit TestPasswordUI(const char* password) : password(password) {}
+    explicit TestPasswordUI(Str password) : password(password) {}
 
     Str GetPassword(Str, u8*, u8[32], bool* saveKey) override {
         *saveKey = false;
@@ -129,7 +129,7 @@ class TestPasswordUI : public PasswordUI {
     }
 };
 
-char* TestSearchResult(const char* pdfPath, const char* needle, const char* password) {
+Str TestSearchResult(Str pdfPath, Str needle, Str password) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
@@ -153,7 +153,7 @@ char* TestSearchResult(const char* pdfPath, const char* needle, const char* pass
         SafeEngineRelease(&engine);
     }
 
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 // walk the outline tree in document order, return the `target`-th (1-based) item
@@ -178,7 +178,7 @@ static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
 // <no>-th (1-based) outline destination and returns "page=P zoom=Z". zoom is in
 // SumatraPDF units (1.0 == 100%); zoom=0 means "retain current zoom" (what /XYZ
 // ... 0 must map to). Used by tests/issue-5537.ts.
-char* TestDestResult(const char* pdfPath, int destNo) {
+Str TestDestResult(Str pdfPath, int destNo) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
@@ -201,7 +201,7 @@ char* TestDestResult(const char* pdfPath, int destNo) {
         SafeEngineRelease(&engine);
     }
 
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 // Headless test for remote named-destination resolution (issue #5642). Loads the
@@ -209,7 +209,7 @@ char* TestDestResult(const char* pdfPath, int destNo) {
 // remote GoToR link's name does -- the same way LinkHandler::LaunchFile does
 // (CleanRemoteDestName + GetNamedDest), returning the resolved page.
 // Used by tests/issue-5642.ts.
-char* TestNamedDestResult(const char* pdfPath, const char* destName) {
+Str TestNamedDestResult(Str pdfPath, Str destName) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
@@ -229,7 +229,7 @@ char* TestNamedDestResult(const char* pdfPath, const char* destName) {
         SafeEngineRelease(&engine);
     }
 
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 static int ChmTestEnumerate(struct chmFile* h, struct chmUnitInfo* ui, void* ctx) {
@@ -245,7 +245,7 @@ static int ChmTestEnumerate(struct chmFile* h, struct chmUnitInfo* ui, void* ctx
 // ASan can catch the lzx.c overflow on a heap buffer), opens the chm via chm_open,
 // enumerates and retrieves objects, and optionally loads ChmFile / EngineChm.
 // Used by tests/issue-chm-lzx.ts; not meant for end users.
-char* TestChmResult(const char* chmPath, int* exitCodeOut) {
+Str TestChmResult(Str chmPath, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
@@ -278,7 +278,7 @@ char* TestChmResult(const char* chmPath, int* exitCodeOut) {
             chm_enumerate(h, CHM_ENUMERATE_ALL, ChmTestEnumerate, &paths);
 
             for (int i = 0; i < paths.Size(); i++) {
-                const char* path = paths.At(i);
+                Str path = paths.At(i);
                 struct chmUnitInfo ui{};
                 if (chm_resolve_object(h, path, &ui) != CHM_RESOLVE_SUCCESS) {
                     continue;
@@ -349,10 +349,10 @@ char* TestChmResult(const char* chmPath, int* exitCodeOut) {
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }
 
-static bool FindWordCenter(EngineBase* engine, int pageNo, const char* word, double* xOut, double* yOut);
+static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut);
 
 // Regression test for issue #5718: opening the context menu over text used to
 // corrupt an existing selection because ReadAloudCanReadFromCursor() (called
@@ -360,15 +360,15 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, const char* word, dou
 // result "Copy Selection" copied from the old selection end to the cursor
 // instead of the selected text. Operates on the document loaded into the first
 // window (passed on the command line), so it exercises the real menu code path.
-char* TestContextMenuSelectionResult(const char* word1, const char* word2, const char* cursorWord, int* exitCodeOut) {
+Str TestContextMenuSelectionResult(Str word1, Str word2, Str cursorWord, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> char* {
+    auto fail = [&](const char* msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     };
 
     if (str::IsEmptyOrWhiteSpace(word1) || str::IsEmptyOrWhiteSpace(word2) || str::IsEmptyOrWhiteSpace(cursorWord)) {
@@ -425,11 +425,11 @@ char* TestContextMenuSelectionResult(const char* word1, const char* word2, const
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 // find the [start, end) glyph range of the first occurrence of `word` on a page
-static bool FindWordGlyphRange(EngineBase* engine, int pageNo, const char* word, int* startOut, int* endOut) {
+static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* startOut, int* endOut) {
     if (!engine || !word || !startOut || !endOut) {
         return false;
     }
@@ -466,15 +466,15 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, const char* word,
 // sets a text selection (matches are highlighted by PaintAllFindMatches), so we
 // verify navigation: the picked match becomes textSearch's current position and
 // is scrolled into view.
-char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCodeOut) {
+Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> char* {
+    auto fail = [&](const char* msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     };
 
     if (str::IsEmptyOrWhiteSpace(word) || str::IsEmptyOrWhiteSpace(typed)) {
@@ -563,10 +563,10 @@ char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCode
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }
 
-static bool FindWordCenter(EngineBase* engine, int pageNo, const char* word, double* xOut, double* yOut) {
+static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut) {
     if (!engine || !word || !xOut || !yOut) {
         return false;
     }
@@ -612,7 +612,7 @@ static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
 // Headless triple-click line-selection test (issue #5712). Loads the pdf, clicks
 // the middle of <clickWord>, runs the same TextSelection steps as a double-click
 // followed by a triple-click (without the mouse-up trim), and checks the result.
-char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord, const char* expectedLine,
+Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine,
                                       int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
@@ -624,7 +624,7 @@ char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     }
 
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
@@ -633,7 +633,7 @@ char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     }
 
     const int pageNo = 1;
@@ -645,7 +645,7 @@ char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     }
 
     TextSelection ts(engine);
@@ -665,7 +665,7 @@ char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     }
 
     bool ok = str::Eq(selected, expectedLine);
@@ -679,7 +679,7 @@ char* TestTripleClickLineSelectResult(const char* pdfPath, const char* clickWord
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
@@ -701,15 +701,15 @@ static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
 
 // Follow the first internal link on page 1 after pinning the viewport to the
 // left; used by tests/issue-5064.ts (issue #5064).
-char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
+Str TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> char* {
+    auto fail = [&](const char* msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     };
 
     if (gWindows.IsEmpty()) {
@@ -747,11 +747,11 @@ char* TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 // Verifies _TRA resolves error-path strings through the translation table.
-char* TestI18nErrorStringResult(int* exitCodeOut) {
+Str TestI18nErrorStringResult(int* exitCodeOut) {
     StrBuilder out;
     const char* err = _TRA("Error");
     const char* crash = _TRA("SumatraPDF crashed");
@@ -769,7 +769,7 @@ char* TestI18nErrorStringResult(int* exitCodeOut) {
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 static void AppendTocItems(StrBuilder& out, TocItem* item) {
@@ -783,7 +783,7 @@ static void AppendTocItems(StrBuilder& out, TocItem* item) {
 
 // Headless test for document TOC (e.g. ComicInfo.xml bookmarks in CBZ). Returns
 // one line per top-level TOC entry: "title|page=N". Used by tests/issue-1201.ts.
-char* TestGetTocResult(const char* path, int* exitCodeOut) {
+Str TestGetTocResult(Str path, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
@@ -809,12 +809,12 @@ char* TestGetTocResult(const char* path, int* exitCodeOut) {
         }
         SafeEngineRelease(&engine);
     }
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 // Headless test for page link elements. Returns one line per link:
 // "kind=<kind> value=<value>". Used by tests/ad-hoc-md-links.ts.
-char* TestPageLinksResult(const char* path, int pageNo, int* exitCodeOut) {
+Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
@@ -825,7 +825,7 @@ char* TestPageLinksResult(const char* path, int pageNo, int* exitCodeOut) {
             *exitCodeOut = 1;
         }
         out.AppendFmt("ERROR engine-create-failed path=%s\n", path);
-        return out.StealData();
+        return Str(out.StealData());
     }
 
     if (!engine->BenchLoadPage(pageNo)) {
@@ -834,7 +834,7 @@ char* TestPageLinksResult(const char* path, int pageNo, int* exitCodeOut) {
         }
         out.AppendFmt("ERROR page-load-failed page=%d\n", pageNo);
         SafeEngineRelease(&engine);
-        return out.StealData();
+        return Str(out.StealData());
     }
 
     int nLinks = 0;
@@ -860,5 +860,5 @@ char* TestPageLinksResult(const char* path, int pageNo, int* exitCodeOut) {
         *exitCodeOut = 0;
     }
     SafeEngineRelease(&engine);
-    return out.StealData();
+    return Str(out.StealData());
 }
