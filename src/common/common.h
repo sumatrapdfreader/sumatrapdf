@@ -229,8 +229,11 @@ struct Str {
     int len;
 
     Str() : s(nullptr), len(0) {}
+    Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; }
     explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }
     explicit Str(char* s_, int len_) : s(s_), len(len_) {}
+
+    explicit operator bool() const { return len > 0 && s; }
 };
 
 // Create Str from string literal with compile-time length
@@ -243,10 +246,15 @@ struct WStr {
     int len;
 
     WStr() : s(nullptr), len(0) {}
+    WStr(const wchar_t* s_) : s((wchar_t*)s_), len(0) {
+        while (s_ && s_[len]) len++;
+    }
     explicit WStr(wchar_t* s_) : s(s_), len(0) {
         while (s && s[len]) len++;
     }
     explicit WStr(wchar_t* s_, int len_) : s(s_), len(len_) {}
+
+    explicit operator bool() const { return len > 0 && s; }
 };
 
 // Create WStr from wide string literal with compile-time length
