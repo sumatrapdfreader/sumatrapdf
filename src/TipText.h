@@ -11,7 +11,7 @@
 
 // a word in a parsed tip; can be part of a link
 struct TipWord {
-    char* text = nullptr; // owned
+    Str text; // owned
     int dx = 0;
     int dy = 0;
     int x = 0;
@@ -21,7 +21,7 @@ struct TipWord {
 };
 
 struct TipLink {
-    char* cmd = nullptr; // owned, resolved target (url or "Cmd...")
+    Str cmd; // owned, resolved target (url or "Cmd...")
     int firstWord = 0;
     int lastWord = 0; // inclusive
 };
@@ -52,7 +52,7 @@ struct ParsedTip {
 TempStr TipPlainTextTemp(ParsedTip& tip);
 bool TipHasLinks(ParsedTip& tip);
 
-void ParseTip(ParsedTip& tip, const char* s);
+void ParseTip(ParsedTip& tip, Str s);
 void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font);
 // lays out words within areaWidth (wrapping); sets per-word x/y and tip.totalDx/totalDy
 void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY);
@@ -61,4 +61,4 @@ void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORRE
 // returns index into tip.links of the link at (x, y) in layout coords, or -1
 int HitTestTipLink(ParsedTip& tip, int x, int y);
 // runs a link target: "Cmd..." sends the command to hwnd, a url opens the browser
-void ExecuteTipLink(HWND hwnd, const char* cmd);
+void ExecuteTipLink(HWND hwnd, Str cmd);

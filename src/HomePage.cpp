@@ -114,7 +114,7 @@ static void AppendTipWordsFromText(ParsedTip& tip, const char* text, bool isLink
             lt++;
         }
         TipWord w;
-        w.text = str::Dup(wordStart, (int)(lt - wordStart));
+        str::ReplaceWithCopy(&w.text, Str((char*)wordStart, (int)(lt - wordStart)));
         w.isLink = isLink;
         w.linkIdx = linkIdx;
         tip.words.Append(w);
@@ -150,28 +150,29 @@ static TempStr ResolveLinkCmdTemp(const char* cmd) {
     return str::DupTemp(cmd);
 }
 
-void ParseTip(ParsedTip& tip, const char* s) {
+void ParseTip(ParsedTip& tip, Str s) {
     if (!s) {
         return;
     }
     StrBuilder expanded;
+    const char* sp = s;
     // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands)
-    while (*s) {
-        if (*s == '(' && str::StartsWith(s + 1, "Key/")) {
-            const char* end = str::FindChar(s, ')');
+    while (*sp) {
+        if (*sp == '(' && str::StartsWith(sp + 1, "Key/")) {
+            const char* end = str::FindChar(sp, ')');
             if (end) {
-                const char* cmdStart = s + 5; // skip "(Key/"
+                const char* cmdStart = sp + 5; // skip "(Key/"
                 TempStr cmdName = str::DupTemp(cmdStart, (int)(end - cmdStart));
                 if (GetCommandIdByName(cmdName) > 0) {
                     TempStr shortcut = ResolveKeyShortcutTemp(cmdName);
                     expanded.Append(shortcut);
-                    s = end + 1;
+                    sp = end + 1;
                     continue;
                 }
             }
         }
-        expanded.AppendChar(*s);
-        s++;
+        expanded.AppendChar(*sp);
+        sp++;
     }
 
     // second pass: split into words, detecting [text](link) markdown links
@@ -196,7 +197,7 @@ void ParseTip(ParsedTip& tip, const char* s) {
                         TempStr linkText = str::DupTemp(textStart, (int)(textEnd - textStart));
 
                         TipLink link;
-                        link.cmd = str::Dup(ResolveLinkCmdTemp(linkCmd));
+                        str::ReplaceWithCopy(&link.cmd, ResolveLinkCmdTemp(linkCmd));
                         link.firstWord = tip.words.Size();
                         AppendTipWordsFromText(tip, linkText, true, tip.links.Size());
 
@@ -210,7 +211,7 @@ void ParseTip(ParsedTip& tip, const char* s) {
                     } else {
                         // empty [text]: treat the whole markup as literal text
                         TipWord w;
-                        w.text = str::Dup(p, (int)(cmdEnd + 1 - p));
+                        str::ReplaceWithCopy(&w.text, Str((char*)p, (int)(cmdEnd + 1 - p)));
                         tip.words.Append(w);
                         p = cmdEnd + 1;
                         continue;
@@ -234,7 +235,7 @@ void ParseTip(ParsedTip& tip, const char* s) {
         }
         if (p > wordStart) {
             TipWord w;
-            w.text = str::Dup(wordStart, (int)(p - wordStart));
+            str::ReplaceWithCopy(&w.text, Str((char*)wordStart, (int)(p - wordStart)));
             tip.words.Append(w);
         }
     }
@@ -311,7 +312,7 @@ int HitTestTipLink(ParsedTip& tip, int x, int y) {
     return -1;
 }
 
-void ExecuteTipLink(HWND hwnd, const char* cmd) {
+void ExecuteTipLink(HWND hwnd, Str cmd) {
     if (str::IsEmpty(cmd)) {
         return;
     }
