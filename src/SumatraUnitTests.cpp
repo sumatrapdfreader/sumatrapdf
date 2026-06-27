@@ -178,7 +178,7 @@ static void versioncheck_test() {
 static void hexstrTest() {
     u8 buf[6] = {1, 2, 33, 255, 0, 18};
     u8 buf2[6]{};
-    AutoFreeStr s = _MemToHex(&buf);
+    AutoFreeStr s(_MemToHex(&buf).s);
     utassert(str::Eq(s, "010221ff0012"));
     bool ok = _HexToMem(s, &buf2);
     utassert(ok);
@@ -186,13 +186,13 @@ static void hexstrTest() {
 
     FILETIME ft1, ft2;
     GetSystemTimeAsFileTime(&ft1);
-    s.Set(_MemToHex(&ft1));
+    s.Set(_MemToHex(&ft1).s);
     _HexToMem(s, &ft2);
     DWORD diff = FileTimeDiffInSecs(ft1, ft2);
     utassert(0 == diff);
     utassert(FileTimeEq(ft1, ft2));
 
-    s.Set(str::MemToHex(nullptr, 0));
+    s.Set(str::MemToHex(nullptr, 0).s);
     utassert(str::Eq(s, ""));
     ok = str::HexToMem(s, nullptr, 0);
     utassert(ok);

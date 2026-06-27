@@ -965,18 +965,18 @@ size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove) {
 }
 
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
-char* MemToHex(const u8* buf, size_t len) {
+Str MemToHex(const u8* buf, size_t len) {
     /* 2 hex chars per byte, +1 for terminating 0 */
     char* ret = AllocArray<char>(2 * len + 1);
     if (!ret) {
-        return nullptr;
+        return {};
     }
     char* dst = ret;
     for (; len > 0; len--) {
         sprintf_s(dst, 3, "%02x", *buf++);
         dst += 2;
     }
-    return ret;
+    return Str(ret, (int)(2 * (dst - ret)));
 }
 
 /* Reverse of MemToHex. Convert a 0-terminatd hex-encoded string <s> to

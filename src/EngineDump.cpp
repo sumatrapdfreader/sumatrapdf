@@ -333,7 +333,7 @@ void DumpThumbnail(EngineBase* engine) {
     ByteSlice imgData = tga::SerializeBitmap(bmp->hbmp);
     size_t len = imgData.size();
     u8* data = imgData.data();
-    AutoFree hexData(data ? str::MemToHex(data, len) : nullptr);
+    AutoFree hexData(data ? str::MemToHex(data, len).s : nullptr);
     if (hexData) {
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
     } else {

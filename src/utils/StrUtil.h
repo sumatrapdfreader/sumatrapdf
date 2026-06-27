@@ -172,7 +172,7 @@ size_t RemoveCharsInPlace(char* str, const char* toRemove);
 int BufSet(char* dst, int dstCchSize, const char* src);
 int BufAppend(char* dst, int dstCchSize, const char* s);
 
-char* MemToHex(const u8* buf, size_t len);
+Str MemToHex(const u8* buf, size_t len);
 bool HexToMem(const char* s, u8* buf, size_t bufLen);
 
 const char* Parse(const char* str, const char* fmt, ...);
