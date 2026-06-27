@@ -7,7 +7,7 @@ struct WindowTab;
 bool IsClaudeCodeAvailable();
 bool IsClaudeCodeInstalled();
 TempStr ClaudeCodeExecutablePathTemp();
-bool IsClaudeCodeSupportedForFile(const char* filePath, Kind engineKind = nullptr);
+bool IsClaudeCodeSupportedForFile(Str filePath, Kind engineKind = nullptr);
 bool IsClaudeCodeSupportedForTab(WindowTab* tab);
 
 void CreateClaudePanel(MainWindow* win);

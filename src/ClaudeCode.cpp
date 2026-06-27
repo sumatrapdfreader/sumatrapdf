@@ -67,7 +67,7 @@ static void ShowClaudeCodeNotInstalledDialog() {
     AIChatShowNotInstalledDialog(args);
 }
 
-bool IsClaudeCodeSupportedForFile(const char* filePath, Kind engineKind) {
+bool IsClaudeCodeSupportedForFile(Str filePath, Kind engineKind) {
     return IsAIChatSupportedForFile(filePath, engineKind);
 }
 
