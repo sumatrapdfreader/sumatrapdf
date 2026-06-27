@@ -273,15 +273,10 @@ static TempWStr NormalizeTemp(WStr path) {
     return NormalizeTemp(path.s);
 }
 
-TempStr NormalizeTemp(const char* path) {
+TempStr NormalizeTemp(Str path) {
     TempWStr s = ToWStrTemp(path);
     TempWStr ws = NormalizeTemp(s);
-    TempStr res = ToUtf8Temp(ws);
-    return res;
-}
-
-TempStr NormalizeTemp(Str path) {
-    return NormalizeTemp(path.s);
+    return ToUtf8Temp(ws);
 }
 
 // Normalizes the file path and the converts it into a short form that
