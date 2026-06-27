@@ -105,7 +105,8 @@ void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     }
 }
 
-void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha, int pad) {
+void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha, int pad,
+                                bool drawBorder) {
     // create path from rectangles
     Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
     screenRc.Inflate(pad, pad);
@@ -126,6 +127,13 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
     Gdiplus::Color c(alpha, r, g, b);
     Gdiplus::SolidBrush tmpBrush(c);
     gs.FillPath(&tmpBrush, &path);
+    if (drawBorder && pad > 0) {
+        // black outline around the filled region (only the selection asks for this;
+        // find-match and read-aloud highlights stay borderless)
+        path.Outline(nullptr, 0.2f);
+        Gdiplus::Pen tmpPen(Gdiplus::Color(alpha, 0, 0, 0), (float)pad);
+        gs.DrawPath(&tmpPen, &path);
+    }
 }
 
 void PaintSelection(MainWindow* win, HDC hdc) {
@@ -182,7 +190,7 @@ void PaintSelection(MainWindow* win, HDC hdc) {
     if (alpha == 0) {
         alpha = kSelectionDefaultAlpha;
     }
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha);
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha, 2, /*drawBorder*/ true);
 }
 
 void UpdateTextSelection(MainWindow* win, bool select) {
