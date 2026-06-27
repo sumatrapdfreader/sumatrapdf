@@ -5,7 +5,7 @@ class HuffDicDecompressor;
 class PdbReader;
 
 struct MobiDoc {
-    char* fileName = nullptr;
+    Str fileName;
 
     PdbReader* pdbReader = nullptr;
 
@@ -27,7 +27,7 @@ struct MobiDoc {
 
     Props props;
 
-    explicit MobiDoc(const char* filePath);
+    explicit MobiDoc(Str filePath);
 
     bool ParseHeader();
     bool LoadDocRecordIntoBuffer(size_t recNo, StrBuilder& strOut);
@@ -46,14 +46,14 @@ struct MobiDoc {
     ByteSlice GetHtmlData() const;
     ByteSlice* GetCoverImage();
     ByteSlice* GetImage(size_t imgRecIndex) const;
-    const char* GetFileName() const { return fileName; }
-    TempStr GetPropertyTemp(const char* name);
+    Str GetFileName() const { return fileName; }
+    TempStr GetPropertyTemp(Str name);
     PdbDocType GetDocType() const { return docType; }
 
     bool HasToc();
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind);
-    static MobiDoc* CreateFromFile(const char* fileName);
+    static MobiDoc* CreateFromFile(Str fileName);
     static MobiDoc* CreateFromStream(IStream* stream);
 };

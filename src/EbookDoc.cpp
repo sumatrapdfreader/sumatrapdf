@@ -1198,7 +1198,7 @@ static const char* HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, con
 }
 
 bool PalmDoc::Load() {
-    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(fileName);
+    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(Str(fileName.Get()));
     if (!mobiDoc) {
         return false;
     }

@@ -51,7 +51,7 @@ class PdbReader {
     ByteSlice GetRecord(size_t recNo);
 
     static PdbReader* CreateFromData(const ByteSlice&);
-    static PdbReader* CreateFromFile(const char* path);
+    static PdbReader* CreateFromFile(Str path);
 
     static PdbReader* CreateFromStream(IStream* stream);
 };
@@ -64,4 +64,4 @@ enum class PdbDocType {
     TealDoc,
     Plucker
 };
-PdbDocType GetPdbDocType(const char* typeCreator);
+PdbDocType GetPdbDocType(Str typeCreator);

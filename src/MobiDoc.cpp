@@ -456,13 +456,13 @@ static bool IsValidCompression(int comprType) {
     return (COMPRESSION_NONE == comprType) || (COMPRESSION_PALM == comprType) || (COMPRESSION_HUFF == comprType);
 }
 
-MobiDoc::MobiDoc(const char* filePath) {
+MobiDoc::MobiDoc(Str filePath) {
     docTocIndex = kInvalidSize;
-    fileName = str::Dup(filePath);
+    str::ReplaceWithCopy(&fileName, filePath);
 }
 
 MobiDoc::~MobiDoc() {
-    free(fileName);
+    str::Free(fileName);
     free(images);
     delete huffDic;
     delete doc;
@@ -901,7 +901,7 @@ ByteSlice MobiDoc::GetHtmlData() const {
     return {};
 }
 
-TempStr MobiDoc::GetPropertyTemp(const char* name) {
+TempStr MobiDoc::GetPropertyTemp(Str name) {
     Str v = GetPropValueTemp(props, name);
     if (!v) {
         return {};
@@ -1080,7 +1080,7 @@ bool MobiDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFileMobi;
 }
 
-MobiDoc* MobiDoc::CreateFromFile(const char* fileName) {
+MobiDoc* MobiDoc::CreateFromFile(Str fileName) {
     MobiDoc* mb = new MobiDoc(fileName);
     PdbReader* pdbReader = PdbReader::CreateFromFile(fileName);
     if (!pdbReader || !mb->LoadForPdbReader(pdbReader)) {
@@ -1091,7 +1091,7 @@ MobiDoc* MobiDoc::CreateFromFile(const char* fileName) {
 }
 
 MobiDoc* MobiDoc::CreateFromStream(IStream* stream) {
-    MobiDoc* mb = new MobiDoc(nullptr);
+    MobiDoc* mb = new MobiDoc(Str());
     PdbReader* pdbReader = PdbReader::CreateFromStream(stream);
     if (!pdbReader || !mb->LoadForPdbReader(pdbReader)) {
         delete mb;

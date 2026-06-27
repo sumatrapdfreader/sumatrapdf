@@ -130,8 +130,8 @@ PdbReader* PdbReader::CreateFromData(const ByteSlice& d) {
     return reader;
 }
 
-PdbReader* PdbReader::CreateFromFile(const char* path) {
-    ByteSlice d = file::ReadFile(Str(path));
+PdbReader* PdbReader::CreateFromFile(Str path) {
+    ByteSlice d = file::ReadFile(path);
     return CreateFromData(d);
 }
 
@@ -146,7 +146,7 @@ PdbReader* PdbReader::CreateFromStream(IStream* stream) {
 #define TEALDOC_TYPE_CREATOR "TEXtTlDc"
 #define PLUCKER_TYPE_CREATOR "DataPlkr"
 
-PdbDocType GetPdbDocType(const char* typeCreator) {
+PdbDocType GetPdbDocType(Str typeCreator) {
     if (memeq(typeCreator, MOBI_TYPE_CREATOR, 8)) {
         return PdbDocType::Mobipocket;
     }
