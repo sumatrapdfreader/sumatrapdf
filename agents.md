@@ -22,6 +22,17 @@ When committing a fix for a GitHub issue, include `(fixes #<issue-no>)` at the e
 
 When committing work done with AI assistance, append the user prompt(s) that produced the change at the very end of the commit message as a single line: `prompt: ...`. If there were multiple prompts, squash them into one concise line. Record the substantive request only — omit meta-instructions such as "commit", "push", "check work", or "verify".
 
+## C/C++ #include conventions
+
+We rely on a controlled include order rather than self-sufficient headers (this is the inverse of the common "own header first" advice). In a `.cpp`/`.c` file:
+
+- `#include "utils/BaseUtil.h"` comes **first**. It pulls in `<windows.h>` plus many common C/C++ headers and our base string / container / `ByteSlice` helpers, which most other headers assume are already available.
+- Then the remaining includes (other `utils/` headers, then the rest of the project headers).
+- The file's **own header goes at the end** of the include list (after the headers it depends on, since headers are not self-sufficient) — only `utils/Log.h` may come after it.
+- `utils/Log.h`, if present, is the **last** include.
+
+Do **not** use `#pragma once` in `.h` files.
+
 ## Adding a new advanced setting
 
 To add a new advanced setting:
