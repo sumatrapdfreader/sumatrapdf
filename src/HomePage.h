@@ -25,7 +25,7 @@ constexpr const char* kLinkHomeThumbnailView = "<HomePage,ThumbnailView>";
 constexpr const char* kLinkHomeRemoveFilePrefix = "<HomePage,RemoveFile>";
 constexpr const char* kLinkHomePinFilePrefix = "<HomePage,PinFile>";
 
-void SetPromoString(const char*);
+void SetPromoString(Str s);
 
 void DrawHomePage(MainWindow* win, HDC hdc);
 void PickAnotherRandomPromotion();

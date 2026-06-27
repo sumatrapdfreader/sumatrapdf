@@ -468,7 +468,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 
 static Vec<StaticLink*> gStaticLinks;
 
-void SetPromoString(const char* s) {
+void SetPromoString(Str s) {
     if (!s) return;
     str::ReplaceWithCopy(&promoFromServer, s);
 }
