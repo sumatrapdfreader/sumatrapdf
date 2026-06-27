@@ -103,7 +103,7 @@ int DisplayModel::PageCount() const {
     return engine->PageCount();
 }
 
-TempStr DisplayModel::GetPropertyTemp(const char* name) {
+TempStr DisplayModel::GetPropertyTemp(Str name) {
     return engine->GetPropertyTemp(name);
 }
 
@@ -122,7 +122,7 @@ TocTree* DisplayModel::GetToc() {
     return engine->GetToc();
 }
 
-IPageDestination* DisplayModel::GetNamedDest(const char* name) {
+IPageDestination* DisplayModel::GetNamedDest(Str name) {
     return engine->GetNamedDest(name);
 }
 
@@ -139,7 +139,7 @@ TempStr DisplayModel::GetPageLabeTemp(int pageNo) const {
     return engine->GetPageLabeTemp(pageNo);
 }
 
-int DisplayModel::GetPageByLabel(const char* label) const {
+int DisplayModel::GetPageByLabel(Str label) const {
     return engine->GetPageByLabel(label);
 }
 

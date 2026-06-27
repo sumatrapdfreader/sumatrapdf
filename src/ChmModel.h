@@ -15,7 +15,7 @@ struct ChmModel : DocController {
     const char* GetFilePath() const override;
     const char* GetDefaultFileExt() const override;
     int PageCount() const override;
-    TempStr GetPropertyTemp(const char* name) override;
+    TempStr GetPropertyTemp(Str name) override;
 
     // page navigation (stateful)
     int CurrentPageNo() const override;
@@ -38,7 +38,7 @@ struct ChmModel : DocController {
 
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
-    IPageDestination* GetNamedDest(const char* name) override;
+    IPageDestination* GetNamedDest(Str name) override;
 
     void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)

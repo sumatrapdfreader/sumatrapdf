@@ -2167,7 +2167,7 @@ TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     return path2;
 }
 
-TempStr GetEmbeddedFileNameTemp(Str path)) {
+TempStr GetEmbeddedFileNameTemp(Str path) {
     if (!path) {
         return {};
     }
@@ -3107,7 +3107,7 @@ MakeTree:
     return tocTree;
 }
 
-IPageDestination* EngineMupdf::GetNamedDest(Str name)) {
+IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     if (!pdfdoc) {
         return nullptr;
     }
@@ -3127,7 +3127,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name)) {
 }
 
 #if 0
-IPageDestination* EngineMupdf::GetNamedDest(Str name)) {
+IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     if (!pdfdoc) {
         return nullptr;
     }
@@ -4208,7 +4208,7 @@ static const char* mupdfPropsMap[] = {
 };
 // clang-format on
 
-TempStr EngineMupdf::GetPropertyTemp(Str name)) {
+TempStr EngineMupdf::GetPropertyTemp(Str name) {
     auto ctx = Ctx();
     ScopedCritSec ctxScope(&docLock);
 
@@ -4675,7 +4675,7 @@ TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
     return res;
 }
 
-int EngineMupdf::GetPageByLabel(Str label)) const {
+int EngineMupdf::GetPageByLabel(Str label) const {
     if (!pdfdoc) {
         // non-pdf documents don't have labels so label is just a page number as string
         return EngineBase::GetPageByLabel(label);

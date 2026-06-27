@@ -275,12 +275,12 @@ class EngineDjVu : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     ByteSlice GetFileData() override;
-    bool SaveFileAs(const char* copyFileName) override;
+    bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
 
-    TempStr GetPropertyTemp(const char* name) override;
+    TempStr GetPropertyTemp(Str name) override;
 
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override;
@@ -289,11 +289,11 @@ class EngineDjVu : public EngineBase {
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
-    IPageDestination* GetNamedDest(const char* name) override;
+    IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
     TempStr GetPageLabeTemp(int pageNo) const override;
-    int GetPageByLabel(const char* label) const override;
+    int GetPageByLabel(Str label) const override;
 
     bool Load(const char* fileName);
     bool Load(IStream* stream);
@@ -381,7 +381,7 @@ bool EngineDjVu::HasClipOptimizations(int) {
     return false;
 }
 
-TempStr EngineDjVu::GetPropertyTemp(const char*) {
+TempStr EngineDjVu::GetPropertyTemp(Str) {
     return {};
 }
 
@@ -849,7 +849,7 @@ ByteSlice EngineDjVu::GetFileData() {
     return GetStreamOrFileData(stream, FilePath());
 }
 
-bool EngineDjVu::SaveFileAs(const char* dstPath) {
+bool EngineDjVu::SaveFileAs(Str dstPath) {
     if (stream) {
         ByteSlice d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(dstPath, d);
@@ -1320,7 +1320,7 @@ TempStr EngineDjVu::ResolveNamedDestTemp(const char* name) {
     return {};
 }
 
-IPageDestination* EngineDjVu::GetNamedDest(const char* name) {
+IPageDestination* EngineDjVu::GetNamedDest(Str name) {
     if (!str::StartsWith(name, "#")) {
         name = str::JoinTemp("#", name);
     }
@@ -1403,7 +1403,7 @@ TempStr EngineDjVu::GetPageLabeTemp(int pageNo) const {
     return EngineBase::GetPageLabeTemp(pageNo);
 }
 
-int EngineDjVu::GetPageByLabel(const char* label) const {
+int EngineDjVu::GetPageByLabel(Str label) const {
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
         if (str::EqI(info.title, label) && !str::Eq(info.title, info.id)) {

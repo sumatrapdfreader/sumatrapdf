@@ -631,7 +631,7 @@ ByteSlice EngineImages::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FilePath());
 }
 
-bool EngineImages::SaveFileAs(const char* dstPath) {
+bool EngineImages::SaveFileAs(Str dstPath) {
     const char* srcPath = FilePath();
     if (srcPath) {
         bool ok = file::Copy(dstPath, srcPath, false);
@@ -1125,7 +1125,7 @@ static Bitmap* BitmapWithExifFromFile(const char* path) {
     return bmp;
 }
 
-TempStr EngineImage::GetPropertyTemp(const char* name) {
+TempStr EngineImage::GetPropertyTemp(Str name) {
     Bitmap* bmp = BitmapWithExifFromFile(FilePath());
     TempStr res = nullptr;
     if (bmp) {
@@ -1740,7 +1740,7 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
     return str::DupTemp(fileName, n);
 }
 
-int EngineImageDir::GetPageByLabel(const char* label) const {
+int EngineImageDir::GetPageByLabel(Str label) const {
     size_t nLabel = str::Len(label);
     for (int i = 0; i < pageFileNames.Size(); i++) {
         char* pagePath = pageFileNames[i];
@@ -1781,7 +1781,7 @@ TocTree* EngineImageDir::GetToc() {
     return tocTree;
 }
 
-bool EngineImageDir::SaveFileAs(const char* dstPath) {
+bool EngineImageDir::SaveFileAs(Str dstPath) {
     // only copy the files if the target directory doesn't exist yet
     bool ok = dir::CreateAll(Str(dstPath));
     if (!ok) {
@@ -2274,7 +2274,7 @@ ByteSlice EngineCbx::GetImageData(int pageNo) {
     return {(u8*)fi->data, fi->fileSizeUncompressed};
 }
 
-TempStr EngineCbx::GetPropertyTemp(const char* name) {
+TempStr EngineCbx::GetPropertyTemp(Str name) {
     if (str::Eq(name, kPropTitle)) {
         return Str(cip.propTitle);
     }

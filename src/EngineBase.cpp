@@ -537,7 +537,7 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
-IPageDestination* EngineBase::GetNamedDest(const char*) {
+IPageDestination* EngineBase::GetNamedDest(Str) {
     return nullptr;
 }
 
@@ -579,7 +579,7 @@ TempStr EngineBase::GetPageLabeTemp(int pageNo) const {
     return str::FormatTemp("%d", pageNo);
 }
 
-int EngineBase::GetPageByLabel(const char* label) const {
+int EngineBase::GetPageByLabel(Str label) const {
     return atoi(label);
 }
 

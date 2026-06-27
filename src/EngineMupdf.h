@@ -65,13 +65,13 @@ class EngineMupdf : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     ByteSlice GetFileData() override;
-    bool SaveFileAs(const char* copyFileName) override;
+    bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     void ReleaseTextExtractionThreadContext() override;
 
     bool HasClipOptimizations(int pageNo) override;
-    TempStr GetPropertyTemp(const char* name) override;
+    TempStr GetPropertyTemp(Str name) override;
     void GetProperties(StrVec& keyValOut) override;
 
     bool BenchLoadPage(int pageNo) override;
@@ -82,11 +82,11 @@ class EngineMupdf : public EngineBase {
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
-    IPageDestination* GetNamedDest(const char* name) override;
+    IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
     TempStr GetPageLabeTemp(int pageNo) const override;
-    int GetPageByLabel(const char* label) const override;
+    int GetPageByLabel(Str label) const override;
 
     fz_context* Ctx() const;
 
@@ -133,17 +133,17 @@ class EngineMupdf : public EngineBase {
     TocTree* tocTree = nullptr;
 
     // password used to decrypt the document (needed for re-encryption/decryption)
-    char* pdfPassword = nullptr;
+    TempStr pdfPassword;
 
     // used to track "dirty" state of annotations. not perfect because if we add and delete
     // the same annotation, we should be back to 0
     bool modifiedAnnotations = false;
 
-    bool Load(const char* filePath, PasswordUI* pwdUI = nullptr);
-    bool Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
+    bool Load(Str filePath, PasswordUI* pwdUI = nullptr);
+    bool Load(IStream* stream, Str nameHint, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
-    bool LoadFromStream(fz_stream* stm, const char* nameHing, PasswordUI* pwdUI = nullptr);
+    bool LoadFromStream(fz_stream* stm, Str nameHing, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
     RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
 
@@ -155,7 +155,7 @@ class EngineMupdf : public EngineBase {
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
     TempStr ExtractFontListTemp();
 
-    ByteSlice LoadStreamFromPDFFile(const char* filePath);
+    ByteSlice LoadStreamFromPDFFile(Str filePath);
 };
 
 EngineMupdf* AsEngineMupdf(EngineBase* engine);

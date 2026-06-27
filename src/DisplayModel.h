@@ -77,7 +77,7 @@ struct DisplayModel : DocController {
     const char* GetFilePath() const override;
     const char* GetDefaultFileExt() const override;
     int PageCount() const override;
-    TempStr GetPropertyTemp(const char* name) override;
+    TempStr GetPropertyTemp(Str name) override;
 
     // page navigation (stateful)
     int CurrentPageNo() const override;
@@ -98,7 +98,7 @@ struct DisplayModel : DocController {
     TocTree* GetToc() override;
     void ScrollTo(int pageNo, RectF rect, float zoom) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
-    IPageDestination* GetNamedDest(const char* name) override;
+    IPageDestination* GetNamedDest(Str name) override;
 
     void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
@@ -107,7 +107,7 @@ struct DisplayModel : DocController {
     // page labels (optional)
     bool HasPageLabels() const override;
     TempStr GetPageLabeTemp(int pageNo) const override;
-    int GetPageByLabel(const char* label) const override;
+    int GetPageByLabel(Str label) const override;
 
     // common shortcuts
     bool ValidPageNo(int pageNo) const override;

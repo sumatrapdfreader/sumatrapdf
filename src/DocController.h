@@ -62,7 +62,7 @@ struct DocController {
     virtual const char* GetFilePath() const = 0;
     virtual const char* GetDefaultFileExt() const = 0;
     virtual int PageCount() const = 0;
-    virtual TempStr GetPropertyTemp(const char* name) = 0;
+    virtual TempStr GetPropertyTemp(Str name) = 0;
 
     // page navigation (stateful)
     virtual int CurrentPageNo() const = 0;
@@ -87,7 +87,7 @@ struct DocController {
     virtual TocTree* GetToc() = 0;
     virtual void ScrollTo(int pageNo, RectF rect, float zoom) = 0;
 
-    virtual IPageDestination* GetNamedDest(const char* name) = 0;
+    virtual IPageDestination* GetNamedDest(Str name) = 0;
 
     // get display state (pageNo, zoom, scroll etc. of the document)
     virtual void GetDisplayState(FileState* ds) = 0;
@@ -97,7 +97,7 @@ struct DocController {
     // page labels (optional)
     virtual bool HasPageLabels() const { return false; }
     virtual TempStr GetPageLabeTemp(int pageNo) const { return str::FormatTemp("%d", pageNo); }
-    virtual int GetPageByLabel(const char* label) const { return atoi(label); }
+    virtual int GetPageByLabel(Str label) const { return atoi(label); }
 
     // common shortcuts
     virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= PageCount(); }

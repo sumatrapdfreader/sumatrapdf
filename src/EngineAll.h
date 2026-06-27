@@ -58,19 +58,19 @@ void EngineImagesGetImageProperties(EngineBase*, int pageNo, StrVec& keyValOut);
 using ShowErrorCb = Func1<const char*>;
 
 bool IsEngineMupdfSupportedFileType(Kind);
-EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
-EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, PasswordUI* pwdUI = nullptr);
-EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, const char* nameHint, PasswordUI* pwdUI);
-ByteSlice LoadEmbeddedPDFFile(const char* path);
-const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut);
-TempStr GetEmbeddedFileNameTemp(const char* path);
+EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
+EngineBase* CreateEngineMupdfFromStream(IStream* stream, Str nameHint, PasswordUI* pwdUI = nullptr);
+EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, Str nameHint, PasswordUI* pwdUI);
+ByteSlice LoadEmbeddedPDFFile(Str path);
+TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut);
+TempStr GetEmbeddedFileNameTemp(Str path);
 Annotation* EngineMupdfCreateAnnotation(EngineBase*, int pageNo, PointF pos, AnnotCreateArgs* args);
 void EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfSupportsAnnotations(EngineBase*);
 bool EngineMupdfIsEncrypted(EngineBase* engine);
-const char* EngineMupdfGetPassword(EngineBase* engine);
-bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, const ShowErrorCb& showErrorFunc);
+Str EngineMupdfGetPassword(EngineBase* engine);
+bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc);
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, Annotation*);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);
@@ -81,8 +81,8 @@ void EngineMupdfSetDisableJavaScript(bool disable);
 void EngineMupdfSetAllowExternalImages(bool allow);
 ByteSlice EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 ByteSlice EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
-TempStr EngineMupdfGetPdfInfo(const char* path);
-TempStr EngineMupdfGetPdfOutline(const char* path);
+TempStr EngineMupdfGetPdfInfo(Str path);
+TempStr EngineMupdfGetPdfOutline(Str path);
 
 /* EnginePs.cpp */
 

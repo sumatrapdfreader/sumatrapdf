@@ -101,7 +101,7 @@ int ChmModel::PageCount() const {
     return pages.Size();
 }
 
-TempStr ChmModel::GetPropertyTemp(const char* name) {
+TempStr ChmModel::GetPropertyTemp(Str name) {
     return doc->GetPropertyTemp(name);
 }
 
@@ -635,7 +635,7 @@ void ChmModel::OnLButtonDown() {
 }
 
 // named destinations are either in-document URLs or Alias topic IDs
-IPageDestination* ChmModel::GetNamedDest(const char* name) {
+IPageDestination* ChmModel::GetNamedDest(Str name) {
     TempStr url = url::GetFullPathTemp(name);
     int pageNo = pages.Find(url) + 1;
     if (pageNo >= 1) {

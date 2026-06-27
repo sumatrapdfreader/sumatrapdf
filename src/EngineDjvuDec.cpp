@@ -133,19 +133,19 @@ class EngineDjvuDec : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     ByteSlice GetFileData() override;
-    bool SaveFileAs(const char* copyFileName) override;
+    bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
 
-    TempStr GetPropertyTemp(const char* name) override;
+    TempStr GetPropertyTemp(Str name) override;
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
-    IPageDestination* GetNamedDest(const char* name) override;
+    IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
     bool Load(const char* fileName);
@@ -310,7 +310,7 @@ bool EngineDjvuDec::HasClipOptimizations(int) {
     return false;
 }
 
-TempStr EngineDjvuDec::GetPropertyTemp(const char*) {
+TempStr EngineDjvuDec::GetPropertyTemp(Str) {
     return {};
 }
 
@@ -648,7 +648,7 @@ ByteSlice EngineDjvuDec::GetFileData() {
     return GetStreamOrFileData(stream, FilePath());
 }
 
-bool EngineDjvuDec::SaveFileAs(const char* dstPath) {
+bool EngineDjvuDec::SaveFileAs(Str dstPath) {
     if (stream) {
         ByteSlice d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(dstPath, d);
@@ -859,7 +859,7 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
     return true;
 }
 
-IPageDestination* EngineDjvuDec::GetNamedDest(const char* name) {
+IPageDestination* EngineDjvuDec::GetNamedDest(Str name) {
     const char* n = name;
     if (str::StartsWith(n, "#")) {
         n = n + 1;

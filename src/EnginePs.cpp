@@ -277,7 +277,7 @@ class EnginePs : public EngineBase {
         return file::ReadFile(Str(path));
     }
 
-    bool SaveFileAs(const char* dstPath) override {
+    bool SaveFileAs(Str dstPath) override {
         const char* srcPath = FilePath();
         if (!srcPath) {
             return false;
@@ -290,7 +290,7 @@ class EnginePs : public EngineBase {
 
     bool HasClipOptimizations(int pageNo) override { return pdfEngine->HasClipOptimizations(pageNo); }
 
-    TempStr GetPropertyTemp(const char* name) override {
+    TempStr GetPropertyTemp(Str name) override {
         // omit properties created by Ghostscript
         if (!pdfEngine) {
             return nullptr;
@@ -316,7 +316,7 @@ class EnginePs : public EngineBase {
 
     bool HandleLink(IPageDestination* dest, ILinkHandler* lh) override { return pdfEngine->HandleLink(dest, lh); }
 
-    IPageDestination* GetNamedDest(const char* name) override { return pdfEngine->GetNamedDest(name); }
+    IPageDestination* GetNamedDest(Str name) override { return pdfEngine->GetNamedDest(name); }
 
     TocTree* GetToc() override { return pdfEngine->GetToc(); }
 

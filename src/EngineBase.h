@@ -468,7 +468,7 @@ class EngineBase {
     virtual ByteSlice GetFileData() = 0;
 
     // saves a copy of the current file under a different name (overwriting an existing file)
-    virtual bool SaveFileAs(const char* copyFileName) = 0;
+    virtual bool SaveFileAs(Str copyFileName) = 0;
 
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
@@ -494,7 +494,7 @@ class EngineBase {
     bool IsImageCollection() const;
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual TempStr GetPropertyTemp(const char* name) = 0;
+    virtual TempStr GetPropertyTemp(Str name) = 0;
 
     // keys are names of properties the caller wants. If given, we append those
     // proerties in this order and potentially add more
@@ -521,7 +521,7 @@ class EngineBase {
 
     // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result
-    virtual IPageDestination* GetNamedDest(const char* name);
+    virtual IPageDestination* GetNamedDest(Str name);
 
     // checks whether this document has an associated Table of Contents
     bool HasToc();
@@ -539,7 +539,7 @@ class EngineBase {
     virtual TempStr GetPageLabeTemp(int pageNo) const;
 
     // reverts GetPageLabel by returning the first page number having the given label
-    virtual int GetPageByLabel(const char* label) const;
+    virtual int GetPageByLabel(Str label) const;
 
     // whether this document required a password in order to be loaded
     bool IsPasswordProtected() const;

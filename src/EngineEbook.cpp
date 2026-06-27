@@ -105,7 +105,7 @@ class EngineEbook : public EngineBase {
 
     ByteSlice GetFileData() override;
 
-    bool SaveFileAs(const char* copyFileName) override;
+    bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     // make RenderCache request larger tiles than per default
@@ -122,7 +122,7 @@ class EngineEbook : public EngineBase {
         return true;
     }
 
-    IPageDestination* GetNamedDest(const char* name) override;
+    IPageDestination* GetNamedDest(Str name) override;
     RenderedBitmap* GetImageForPageElement(IPageElement* el) override;
 
     bool BenchLoadPage(int pageNo) override;
@@ -235,7 +235,7 @@ ByteSlice EngineEbook::GetFileData() {
     return file::ReadFile(Str(fileName));
 }
 
-bool EngineEbook::SaveFileAs(const char* dstPath) {
+bool EngineEbook::SaveFileAs(Str dstPath) {
     const char* srcPath = FilePath();
     if (!srcPath) {
         return false;
@@ -628,7 +628,7 @@ IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
     return nullptr;
 }
 
-IPageDestination* EngineEbook::GetNamedDest(const char* name) {
+IPageDestination* EngineEbook::GetNamedDest(Str name) {
     const char* id = name;
     if (str::FindChar(id, '#')) {
         id = str::FindChar(id, '#') + 1;
@@ -640,11 +640,11 @@ IPageDestination* EngineEbook::GetNamedDest(const char* name) {
     // for the same ID to be reused on different pages
     DrawInstr* baseAnchor = nullptr;
     int basePageNo = 0;
-    if (id > name + 1) {
-        size_t base_len = id - name - 1;
+    if (id > name.s + 1) {
+        size_t base_len = (size_t)(id - name.s - 1);
         for (size_t i = 0; i < baseAnchors.size(); i++) {
             DrawInstr* anchor = baseAnchors.at(i);
-            if (anchor && base_len == anchor->str.len && str::EqNI(name, anchor->str.s, base_len)) {
+            if (anchor && base_len == (size_t)anchor->str.len && str::EqNI(name.s, anchor->str.s, base_len)) {
                 baseAnchor = anchor;
                 basePageNo = (int)i + 1;
                 break;
@@ -794,9 +794,9 @@ class EngineEpub : public EngineEbook {
     EngineBase* Clone() override;
 
     ByteSlice GetFileData() override;
-    bool SaveFileAs(const char* copyFileName) override;
+    bool SaveFileAs(Str copyFileName) override;
 
-    TempStr GetPropertyTemp(const char* name) override {
+    TempStr GetPropertyTemp(Str name) override {
         if (str::Eq(name, kPropFontList)) {
             return ExtractFontListTemp();
         }
@@ -907,7 +907,7 @@ ByteSlice EngineEpub::GetFileData() {
     return GetStreamOrFileData(stream, path);
 }
 
-bool EngineEpub::SaveFileAs(const char* dstPath) {
+bool EngineEpub::SaveFileAs(Str dstPath) {
     if (stream) {
         ByteSlice d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(dstPath, d);
@@ -985,7 +985,7 @@ class EngineFb2 : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(const char* name) override {
+    TempStr GetPropertyTemp(Str name) override {
         if (str::Eq(name, kPropFontList)) {
             return ExtractFontListTemp();
         }
@@ -1108,14 +1108,14 @@ class EngineMobi : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(const char* name) override {
+    TempStr GetPropertyTemp(Str name) override {
         if (str::Eq(name, kPropFontList)) {
             return ExtractFontListTemp();
         }
         return doc->GetPropertyTemp(name);
     }
 
-    IPageDestination* GetNamedDest(const char* name) override;
+    IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const char* fileName);
@@ -1164,9 +1164,9 @@ bool EngineMobi::FinishLoading() {
     return pageCount > 0;
 }
 
-IPageDestination* EngineMobi::GetNamedDest(const char* name) {
+IPageDestination* EngineMobi::GetNamedDest(Str name) {
     int filePos = atoi(name);
-    if (filePos < 0 || 0 == filePos && *name != '0') {
+    if (filePos < 0 || (0 == filePos && (!name.s || name.s[0] != '0'))) {
         return nullptr;
     }
     int pageNo;
@@ -1263,7 +1263,7 @@ class EnginePdb : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(const char* name) override {
+    TempStr GetPropertyTemp(Str name) override {
         if (str::Eq(name, kPropFontList)) {
             return ExtractFontListTemp();
         }
@@ -1481,14 +1481,14 @@ class EngineChm : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(const char* name) override {
+    TempStr GetPropertyTemp(Str name) override {
         if (str::Eq(name, kPropFontList)) {
             return ExtractFontListTemp();
         }
         return doc->GetPropertyTemp(name);
     }
 
-    IPageDestination* GetNamedDest(const char* name) override;
+    IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const char* fileName);
@@ -1668,7 +1668,7 @@ bool EngineChm::Load(const char* fileName) {
     return pageCount > 0;
 }
 
-IPageDestination* EngineChm::GetNamedDest(const char* name) {
+IPageDestination* EngineChm::GetNamedDest(Str name) {
     IPageDestination* dest = EngineEbook::GetNamedDest(name);
     if (dest) {
         return dest;
@@ -1765,7 +1765,7 @@ class EngineHtml : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(const char* name) override {
+    TempStr GetPropertyTemp(Str name) override {
         if (str::Eq(name, kPropFontList)) {
             return ExtractFontListTemp();
         }
@@ -1871,7 +1871,7 @@ class EngineTxt : public EngineEbook {
         return CreateFromFile(fileName);
     }
 
-    TempStr GetPropertyTemp(const char* name) override {
+    TempStr GetPropertyTemp(Str name) override {
         if (str::Eq(name, kPropFontList)) {
             return ExtractFontListTemp();
         }
