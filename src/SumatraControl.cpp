@@ -429,7 +429,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            char* res = TestImageResizeArrowKeyResult(imagePath, &exitCode);
+            Str res = TestImageResizeArrowKeyResult(imagePath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
