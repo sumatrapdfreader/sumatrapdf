@@ -22,7 +22,7 @@ extern "C" {
 
 static AutoFreeStr gPdfProducer;
 
-void PdfCreator::SetProducerName(const char* name) {
+void PdfCreator::SetProducerName(Str name) {
     if (!str::Eq(gPdfProducer, name)) {
         gPdfProducer.SetCopy(name);
     }
@@ -254,7 +254,7 @@ static const Str pdfCreatorPropsMap[] = {
 };
 // clang-format on
 
-bool PdfCreator::SetProperty(const char* propName, const char* value) const {
+bool PdfCreator::SetProperty(Str propName, Str value) const {
     if (!ctx || !doc) {
         return false;
     }
@@ -330,13 +330,13 @@ const pdf_write_options pdf_default_write_options2 = {
     "", /* upwd_utf8[128] */
 };
 
-bool PdfCreator::SaveToFile(const char* filePath) const {
+bool PdfCreator::SaveToFile(Str filePath) const {
     if (!ctx || !doc) {
         return false;
     }
 
     if (gPdfProducer) {
-        SetProperty(kPropPdfProducer, gPdfProducer);
+        SetProperty(kPropPdfProducer, Str(gPdfProducer.Get()));
     }
 
     fz_try(ctx) {
@@ -352,7 +352,7 @@ bool PdfCreator::SaveToFile(const char* filePath) const {
     return true;
 }
 
-bool PdfCreator::RenderToFile(const char* pdfFileName, EngineBase* engine, int dpi) {
+bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
     PdfCreator* c = new PdfCreator();
     bool ok = true;
     // render all pages to images
