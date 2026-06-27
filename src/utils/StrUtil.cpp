@@ -418,8 +418,8 @@ bool StartsWithI(Str s, Str prefix) {
     return 0 == _strnicmp(s.s, prefix.s, str::Len(prefix));
 }
 
-bool Contains(Str s, const char* txt) {
-    Str found = str::Find(s, Str(txt));
+bool Contains(Str s, Str txt) {
+    Str found = str::Find(s, txt);
     return (bool)found;
 }
 

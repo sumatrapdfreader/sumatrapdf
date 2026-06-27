@@ -150,7 +150,7 @@ Str Find(Str str, Str find);
 Str FindI(Str str, Str find);
 int BufFind(const char* buf, int bufSize, const char* toFind);
 
-bool Contains(Str s, const char* txt);
+bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);
 
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
@@ -479,7 +479,10 @@ FORCEINLINE bool EndsWithI(const char* txt, Str end) {
     return EndsWithI(Str(txt), end);
 }
 FORCEINLINE bool Contains(const char* s, const char* txt) {
-    return Contains(Str(s), txt);
+    return Contains(Str(s), Str(txt));
+}
+FORCEINLINE bool Contains(Str s, const char* txt) {
+    return Contains(s, Str(txt));
 }
 FORCEINLINE Str ToLowerInPlace(const char* s) {
     return ToLowerInPlace(Str((char*)s));
