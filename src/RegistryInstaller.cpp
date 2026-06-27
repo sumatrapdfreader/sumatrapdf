@@ -79,7 +79,7 @@ static DWORD GetDirSize(const char* dir, bool recur) {
     return (DWORD)totalSize;
 }
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, const char* installDir) {
+bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey),
          (int)allUsers, installDir);
     bool ok = true;
@@ -366,7 +366,7 @@ bool OldWriteFileAssoc(HKEY hkey) {
 #endif
 
 // http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
-bool WriteExtendedFileExtensionInfo(HKEY hkey, const char* installedExePath) {
+bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
     logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
     bool ok = true;
     const char* key;

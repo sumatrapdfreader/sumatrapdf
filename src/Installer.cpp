@@ -94,12 +94,12 @@ static Checkbox* CreateCheckbox(HWND hwndParent, const char* s, bool isChecked) 
 
 constexpr const char* kLogFileName = "sumatra-install-log.txt";
 // caller has to free()
-char* GetInstallerLogPath() {
+Str GetInstallerLogPath() {
     TempStr dir = GetTempDirTemp();
     if (!dir) {
-        return str::Dup(kLogFileName);
+        return Str(str::Dup(kLogFileName));
     }
-    return path::Join(dir, kLogFileName);
+    return Str(path::Join(dir, kLogFileName));
 }
 
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, const char* destDir) {
@@ -1117,7 +1117,7 @@ u32 GetLibmupdfDllSize() {
     return 0;
 }
 
-bool ExtractLibmupdfDll(const char* destDir) {
+bool ExtractLibmupdfDll(Str destDir) {
     if (!OpenEmbeddedFilesArchive()) {
         return false;
     }
@@ -1149,7 +1149,7 @@ bool ExtractLibmupdfDll(const char* destDir) {
     return true;
 }
 
-bool ExtractInstallerFiles(char* dir) {
+bool ExtractInstallerFiles(Str dir) {
     logf("ExtractInstallerFiles() to '%s'\n", dir);
     bool ok = dir::CreateAll(Str(dir));
     if (!ok) {
@@ -1226,7 +1226,7 @@ static bool ShouldInstallMismatchedArch(HWND hwndParent) {
 int RunInstaller() {
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
-    const char* installerLogPath = nullptr;
+    Str installerLogPath;
 
     gCliNew.log = gCli->log;
     gCliNew.allUsers = gCli->allUsers;
@@ -1371,7 +1371,7 @@ Exit:
     }
 #if 0 // technically a leak but there's no point
     str::Free(installerLogPath);
-    str::Free(gFirstError);
+    str::Free(gFirstError.s);
 #endif
     return ret;
 }

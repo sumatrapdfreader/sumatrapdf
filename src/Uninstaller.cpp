@@ -592,7 +592,7 @@ int RunUninstaller() {
 
 Exit:
 #if 0 // technically a leak but there's no point
-    free(gFirstError);
+    str::Free(gFirstError.s);
 #endif
     return ret;
 }

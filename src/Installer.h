@@ -11,7 +11,7 @@ enum class PreviousInstallationType {
 };
 
 struct PreviousInstallationInfo {
-    char* installationDir = nullptr;
+    Str installationDir;
     PreviousInstallationType typ = PreviousInstallationType::None;
     bool searchFilterInstalled = false;
     bool previewInstalled = false;
@@ -29,10 +29,10 @@ extern int gButtonDy;
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 #define WM_APP_START_INSTALLATION (WM_APP + 2)
 
-extern char* gFirstError;
-extern const char* gDefaultMsg;
+extern Str gFirstError;
+extern Str gDefaultMsg;
 extern HWND gHwndFrame;
-extern char* gMsgError;
+extern Str gMsgError;
 
 extern Gdiplus::Color COLOR_MSG_WELCOME;
 extern Gdiplus::Color COLOR_MSG_OK;
@@ -52,45 +52,45 @@ extern Gdiplus::Color gCol5Shadow;
 void OnPaintFrame(HWND hwnd, bool skipoMessage);
 void AnimStep();
 
-void NotifyFailed(const char* msg);
+void NotifyFailed(Str msg);
 
-void SetMsg(const char* msg, Gdiplus::Color color);
+void SetMsg(Str msg, Gdiplus::Color color);
 void SetDefaultMsg();
 
-int KillProcessesWithModule(const char* modulePath, bool waitUntilTerminated);
+int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated);
 
 TempStr GetShortcutPathTemp(int csidl);
 
-bool ExtractInstallerFiles(char* dir);
+bool ExtractInstallerFiles(Str dir);
 u32 GetLibmupdfDllSize();
-bool ExtractLibmupdfDll(const char* destDir);
+bool ExtractLibmupdfDll(Str destDir);
 
-char* GetExistingInstallationDir();
+Str GetExistingInstallationDir();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 bool IsOurExeInstalled();
 
-TempStr GetInstallationFilePathTemp(const char* installDir, const char* name);
+TempStr GetInstallationFilePathTemp(Str installDir, Str name);
 
-void RegisterPreviewer(bool allUsers, const char* installDir);
+void RegisterPreviewer(bool allUsers, Str installDir);
 void UnRegisterPreviewer();
 
-void RegisterSearchFilter(bool allUsers, const char* installDir);
+void RegisterSearchFilter(bool allUsers, Str installDir);
 void UnRegisterSearchFilter();
 
 void UninstallBrowserPlugin();
 
 bool CheckInstallUninstallPossible(HWND hwnd, bool silent = false);
-char* GetInstallerLogPath();
+Str GetInstallerLogPath();
 
-TempStr GetRegPathUninstTemp(const char* appName);
+TempStr GetRegPathUninstTemp(Str appName);
 
 // Installer.cpp
 void RemoveAppShortcuts();
 
 // RegistryInstaller.cpp
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, const char* installedExePat);
-bool WriteExtendedFileExtensionInfo(HKEY hkey, const char* installedExePat);
+bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installedExePat);
+bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePat);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
 void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();
