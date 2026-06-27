@@ -133,8 +133,8 @@ void EditImplementCtrlBack(HWND hwnd) {
     SendMessageW(hwnd, WM_CLEAR, 0, 0); // delete selected text
 }
 
-void ListBox_AppendString_NoSort(HWND hwnd, const WCHAR* txt) {
-    ListBox_InsertString(hwnd, -1, txt);
+void ListBox_AppendString_NoSort(HWND hwnd, WStr txt) {
+    ListBox_InsertString(hwnd, -1, txt.s);
 }
 
 // https://learn.microsoft.com/en-us/windows/win32/controls/lb-gettopindex
@@ -156,13 +156,13 @@ void InitAllCommonControls() {
     InitCommonControlsEx(&cex);
 }
 
-void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR* clsName, WNDPROC wndproc) {
+void FillWndClassEx(WNDCLASSEX& wcex, WStr clsName, WNDPROC wndproc) {
     ZeroMemory(&wcex, sizeof(WNDCLASSEX));
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.style = CS_HREDRAW | CS_VREDRAW;
     wcex.hInstance = GetModuleHandle(nullptr);
     wcex.hCursor = GetCachedCursor(IDC_ARROW);
-    wcex.lpszClassName = clsName;
+    wcex.lpszClassName = clsName.s;
     wcex.lpfnWndProc = wndproc;
 }
 
@@ -315,7 +315,7 @@ TempStr GetWindowsVerTemp() {
 }
 
 // returns nullptr if not set
-TempStr GetEnvVariableTemp(const char* name) {
+TempStr GetEnvVariableTemp(Str name) {
     WCHAR bufStatic[256];
     WCHAR* buf = &bufStatic[0];
     DWORD cchBufSize = dimof(bufStatic);
@@ -439,7 +439,7 @@ void DbgOutLastError(DWORD err) {
 }
 
 // return true if a given registry key (path) exists
-bool RegKeyExists(HKEY hkey, const char* keyName) {
+bool RegKeyExists(HKEY hkey, Str keyName) {
     HKEY hKey;
     TempWStr keyNameW = ToWStrTemp(keyName);
     LONG res = RegOpenKeyW(hkey, keyNameW, &hKey);
@@ -453,7 +453,7 @@ bool RegKeyExists(HKEY hkey, const char* keyName) {
     return ERROR_ACCESS_DENIED == res;
 }
 
-TempStr ReadRegStrTemp(HKEY hkey, const char* keyName, const char* valName) {
+TempStr ReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
     if (!hkey) {
         return nullptr;
     }
@@ -491,13 +491,13 @@ TryAgainWOW64:
     return resv;
 }
 
-TempStr LoggedReadRegStrTemp(HKEY hkey, const char* keyName, const char* valName) {
+TempStr LoggedReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
     auto res = ReadRegStrTemp(hkey, keyName, valName);
     logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(hkey), keyName, valName, res);
     return res;
 }
 
-TempStr ReadRegStr2Temp(const char* keyName, const char* valName) {
+TempStr ReadRegStr2Temp(Str keyName, Str valName) {
     char* res = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
         res = ReadRegStrTemp(HKEY_CURRENT_USER, keyName, valName);
@@ -505,7 +505,7 @@ TempStr ReadRegStr2Temp(const char* keyName, const char* valName) {
     return res;
 }
 
-TempStr LoggedReadRegStr2Temp(const char* keyName, const char* valName) {
+TempStr LoggedReadRegStr2Temp(Str keyName, Str valName) {
     char* res = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
         res = LoggedReadRegStrTemp(HKEY_CURRENT_USER, keyName, valName);
@@ -513,22 +513,22 @@ TempStr LoggedReadRegStr2Temp(const char* keyName, const char* valName) {
     return res;
 }
 
-bool WriteRegStr(HKEY hkey, const char* keyName, const char* valName, const char* value) {
+bool WriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valNameW = ToWStrTemp(valName);
     TempWStr valueW = ToWStrTemp(value);
 
-    DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
+    DWORD cbData = (DWORD)(valueW.len + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegStr(HKEY hkey, const char* keyName, const char* valName, const char* value) {
+bool LoggedWriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valNameW = ToWStrTemp(valName);
     TempWStr valueW = ToWStrTemp(value);
 
-    DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
+    DWORD cbData = (DWORD)(valueW.len + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     if (res != ERROR_SUCCESS) {
         logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, value, res);
@@ -539,7 +539,7 @@ bool LoggedWriteRegStr(HKEY hkey, const char* keyName, const char* valName, cons
     return true;
 }
 
-bool ReadRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD& value) {
+bool ReadRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD& value) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valNameW = ToWStrTemp(valName);
     DWORD size = sizeof(DWORD);
@@ -547,14 +547,14 @@ bool ReadRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD& va
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
-bool WriteRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD value) {
+bool WriteRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD value) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD value) {
+bool LoggedWriteRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD value) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
@@ -568,7 +568,7 @@ bool LoggedWriteRegDWORD(HKEY hkey, const char* keyName, const char* valName, DW
     return true;
 }
 
-bool LoggedWriteRegNone(HKEY hkey, const char* key, const char* valName) {
+bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName) {
     TempWStr keyW = ToWStrTemp(key);
     TempWStr valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
@@ -576,7 +576,7 @@ bool LoggedWriteRegNone(HKEY hkey, const char* key, const char* valName) {
     return (ERROR_SUCCESS == res);
 }
 
-bool CreateRegKey(HKEY hkey, const char* keyName) {
+bool CreateRegKey(HKEY hkey, Str keyName) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     HKEY hKey;
     LSTATUS res = RegCreateKeyExW(hkey, keyNameW, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
@@ -626,7 +626,7 @@ static void ResetRegKeyAcl(HKEY hkey, const char* keyName) {
     RegCloseKey(hKey);
 }
 
-bool DeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
+bool DeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
     if (resetACLFirst) {
         ResetRegKeyAcl(hkey, keyName);
     }
@@ -635,7 +635,7 @@ bool DeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-bool LoggedDeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
+bool LoggedDeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
     if (resetACLFirst) {
         ResetRegKeyAcl(hkey, keyName);
     }
@@ -649,7 +649,7 @@ bool LoggedDeleteRegKey(HKEY hkey, const char* keyName, bool resetACLFirst) {
     return ok;
 }
 
-bool DeleteRegValue(HKEY hkey, const char* keyName, const char* value) {
+bool DeleteRegValue(HKEY hkey, Str keyName, Str value) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valueW = ToWStrTemp(value);
 
@@ -657,7 +657,7 @@ bool DeleteRegValue(HKEY hkey, const char* keyName, const char* value) {
     return res == ERROR_SUCCESS;
 }
 
-bool LoggedDeleteRegValue(HKEY hkey, const char* keyName, const char* valName) {
+bool LoggedDeleteRegValue(HKEY hkey, Str keyName, Str valName) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valNameW = ToWStrTemp(valName);
 
@@ -670,7 +670,7 @@ bool LoggedDeleteRegValue(HKEY hkey, const char* keyName, const char* valName) {
     return ok;
 }
 
-HRESULT CLSIDFromString(const char* lpsz, LPCLSID pclsid) {
+HRESULT CLSIDFromString(Str lpsz, LPCLSID pclsid) {
     TempWStr ws = ToWStrTemp(lpsz);
     return CLSIDFromString(ws, pclsid);
 }
@@ -830,13 +830,13 @@ void HandleRedirectedConsoleOnShutdown() {
     }
 }
 
-WCHAR* GetSelfExePathW() {
+TempWStr GetSelfExePathW() {
     WCHAR buf[MAX_PATH + 2]{};
     DWORD nChars = dimof(buf) - 1;
     auto h = GetInstance();
     // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
     GetModuleFileNameW(h, buf, nChars);
-    return str::Dup(buf);
+    return WStr(str::Dup(buf));
 }
 
 // Return the full exe path of my own executable
@@ -878,7 +878,7 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
     return (int)diff;
 }
 
-TempStr ResolveLnkTemp(const char* path) {
+TempStr ResolveLnkTemp(Str path) {
     WCHAR* pathW = ToWStr(path);
     ScopedMem<OLECHAR> olePath(pathW);
     if (!olePath) {
@@ -914,8 +914,7 @@ TempStr ResolveLnkTemp(const char* path) {
     return ToUtf8Temp(newPath);
 }
 
-bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* args, const char* description,
-                    int iconIndex) {
+bool CreateShortcut(Str shortcutPath, Str exePath, Str args, Str description, int iconIndex) {
     TempWStr ws;
     ScopedCom com;
 
@@ -954,7 +953,7 @@ bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* a
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
-IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd) {
+IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd) {
     ScopedComPtr<IShellFolder> pDesktopFolder;
     HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
     if (FAILED(hr)) {
@@ -1019,7 +1018,7 @@ DWORD GetFileVersion(const WCHAR* path) {
 }
 #endif
 
-bool LaunchFileShell(const char* path, const char* params, const char* verb, bool hidden) {
+bool LaunchFileShell(Str path, Str params, Str verb, bool hidden) {
     if (str::IsEmpty(path)) {
         return false;
     }
@@ -1042,18 +1041,18 @@ bool LaunchFileShell(const char* path, const char* params, const char* verb, boo
     return true;
 }
 
-bool LaunchBrowser(const char* url) {
-    return LaunchFileShell(url, nullptr, "open");
+bool LaunchBrowser(Str url) {
+    return LaunchFileShell(url, Str(), StrL("open"));
 }
 
-void OpenPathInDefaultFileManager(const char* path) {
-    if (!path || !*path) {
+void OpenPathInDefaultFileManager(Str path) {
+    if (IsEmpty(path)) {
         return;
     }
 
     // strip \\?\ prefix — shell APIs (ILCreateFromPath, explorer.exe) don't understand it
-    if (str::StartsWith(path, "\\\\?\\")) {
-        path = path + 4;
+    if (StrHasPrefix(path, StrL("\\\\?\\"))) {
+        path = Str(path.s + 4, path.len - 4);
     }
 
     // Use SHOpenFolderAndSelectItems which respects the default file manager
@@ -1077,7 +1076,7 @@ void OpenPathInDefaultFileManager(const char* path) {
     CreateProcessHelper(explorer, args);
 }
 
-HANDLE LaunchProcessWithCmdLine(const char* exe, const char* cmdLine) {
+HANDLE LaunchProcessWithCmdLine(Str exe, Str cmdLine) {
     PROCESS_INFORMATION pi = {nullptr};
     STARTUPINFOW si{};
     si.cb = sizeof(si);
@@ -1098,7 +1097,7 @@ HANDLE LaunchProcessWithCmdLine(const char* exe, const char* cmdLine) {
 }
 
 // cmdLine must contain quoted exe path as first argument
-HANDLE LaunchProcessInDir(const char* cmdLine, const char* currDir, DWORD flags) {
+HANDLE LaunchProcessInDir(Str cmdLine, Str currDir, DWORD flags) {
     PROCESS_INFORMATION pi = {nullptr};
     STARTUPINFOW si{};
     si.cb = sizeof(si);
@@ -1115,7 +1114,7 @@ HANDLE LaunchProcessInDir(const char* cmdLine, const char* currDir, DWORD flags)
     return pi.hProcess;
 }
 
-bool CreateProcessHelper(const char* exe, const char* args) {
+bool CreateProcessHelper(Str exe, Str args) {
     if (!args) {
         args = "";
     }
@@ -1294,7 +1293,7 @@ DWORD GetOriginalAccountType() {
     return GetAccountTypeHelper(false);
 }
 
-bool LaunchElevated(const char* path, const char* cmdline) {
+bool LaunchElevated(Str path, Str cmdline) {
     return LaunchFileShell(path, cmdline, "runas");
 }
 
@@ -1554,17 +1553,14 @@ static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
     return handle != nullptr;
 }
 
-static bool CopyOrAppendTextToClipboard(const char* s, bool appendOnly) {
+bool CopyTextToClipboard(Str s) {
     TempWStr ws = ToWStrTemp(s);
-    return CopyOrAppendTextToClipboard(ws, appendOnly);
+    return CopyOrAppendTextToClipboard(ws.s, false);
 }
 
-bool CopyTextToClipboard(const char* s) {
-    return CopyOrAppendTextToClipboard(s, false);
-}
-
-bool AppendTextToClipboard(const char* s) {
-    return CopyOrAppendTextToClipboard(s, true);
+bool AppendTextToClipboard(Str s) {
+    TempWStr ws = ToWStrTemp(s);
+    return CopyOrAppendTextToClipboard(ws.s, true);
 }
 
 static bool SetClipboardImage(HBITMAP hbmp) {
@@ -1667,11 +1663,11 @@ struct CreatedFontInfo {
 static CreatedFontInfo* gFonts = nullptr;
 static HFONT gMenuFont = nullptr;
 
-static CreatedFontInfo* FindCreatedFont(const char* name, int size, u16 flags, u16 weightOffset) {
+static CreatedFontInfo* FindCreatedFont(Str name, int size, u16 flags, u16 weightOffset) {
     CreatedFontInfo* curr = gFonts;
     while (curr) {
         if (curr->size == (u16)size && curr->flags == flags && curr->weightOffset == weightOffset &&
-            str::Eq(curr->name, name)) {
+            str::Eq(curr->name, name.s)) {
             /* logf("FindCreatedFont: found font '%s', size: %d, flags: %x, weightOffset: %d\n", name, (int)size,
                  (int)flags, (int)weightOffset); */
             return curr;
@@ -1696,9 +1692,9 @@ void DeleteCreatedFonts() {
     gMenuFont = nullptr;
 }
 
-static HFONT RememberCreatedFont(HFONT font, const char* name, int size, u16 flags, u16 weightOffset) {
+static HFONT RememberCreatedFont(HFONT font, Str name, int size, u16 flags, u16 weightOffset) {
     auto cf = new CreatedFontInfo();
-    cf->name = str::Dup(name);
+    cf->name = str::Dup(name.s);
     cf->font = font;
     cf->size = (u16)size;
     cf->flags = flags;
@@ -1719,7 +1715,7 @@ HFONT GetMenuFont() {
     return gMenuFont;
 }
 
-HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSizePt) {
+HFONT CreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
     int realSize = MulDiv(fontSizePt, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
 
     u16 flags = 0;
@@ -1751,7 +1747,7 @@ HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSizePt) {
 }
 
 HFONT GetDefaultGuiFontOfSize(int size) {
-    auto f = FindCreatedFont(nullptr, size, 0, 0);
+    auto f = FindCreatedFont(Str(), size, 0, 0);
     if (f) {
         return f->font;
     }
@@ -1761,16 +1757,16 @@ HFONT GetDefaultGuiFontOfSize(int size) {
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     ncm.lfMessageFont.lfHeight = -size;
     HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return RememberCreatedFont(res, nullptr, size, 0, 0);
+    return RememberCreatedFont(res, Str(), size, 0, 0);
 }
 
-HFONT GetUserGuiFont(const char* fontName, int size) {
+HFONT GetUserGuiFont(Str fontName, int size) {
     return GetUserGuiFontEx(fontName, size, false, false);
 }
 
-HFONT GetUserGuiFontEx(const char* fontName, int size, bool bold, bool italic) {
+HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
     if (str::EqI(fontName, "automatic") || str::EqI(fontName, "auto")) {
-        fontName = nullptr;
+        fontName = Str();
     }
     u16 flags = 0;
     if (bold) {
@@ -1787,11 +1783,11 @@ HFONT GetUserGuiFontEx(const char* fontName, int size, bool bold, bool italic) {
     NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    if (fontName) {
+    if (!IsEmpty(fontName)) {
         WCHAR* dest = ncm.lfMessageFont.lfFaceName;
         int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
         TempWStr nameW = ToWStrTemp(fontName);
-        str::BufSet(dest, cchDestBufSize, nameW);
+        str::BufSet(dest, cchDestBufSize, nameW.s);
     }
     ncm.lfMessageFont.lfHeight = -size;
     if (bold) {
@@ -1818,7 +1814,7 @@ HFONT GetDefaultGuiFont(bool bold, bool italic) {
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     int size = (int)std::abs(ncm.lfMessageFont.lfHeight);
 
-    auto f = FindCreatedFont(nullptr, size, flags, 0);
+    auto f = FindCreatedFont(Str(), size, flags, 0);
     if (f) {
         return f->font;
     }
@@ -1830,7 +1826,7 @@ HFONT GetDefaultGuiFont(bool bold, bool italic) {
         ncm.lfMessageFont.lfItalic = true;
     }
     HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return RememberCreatedFont(res, nullptr, size, flags, 0);
+    return RememberCreatedFont(res, Str(), size, flags, 0);
 }
 
 int GetSizeOfDefaultGuiFont() {
@@ -1940,25 +1936,25 @@ void MenuEmpty(HMENU m) {
     }
 }
 
-void MenuSetText(HMENU m, int id, const WCHAR* s) {
+void MenuSetText(HMENU m, int id, WStr s) {
     ReportIf(id < 0);
     MENUITEMINFOW mii{};
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
     mii.fType = MFT_STRING;
-    mii.dwTypeData = (WCHAR*)s;
-    mii.cch = (uint)str::Len(s);
+    mii.dwTypeData = s.s;
+    mii.cch = (uint)s.len;
     BOOL ok = SetMenuItemInfoW(m, id, FALSE, &mii);
     if (!ok) {
         // setting text on a menu item that isn't present is benign (e.g. the
         // item was filtered out by command visibility): log it, don't assert
-        TempStr tmp = s ? ToUtf8Temp(s) : Str("(null)");
+        TempStr tmp = IsEmpty(s) ? Str("(null)") : ToUtf8Temp(s);
         logf("MenuSetText(): id=%d, s='%s'\n", id, tmp.s);
         LogLastError();
     }
 }
 
-void MenuSetText(HMENU m, int id, const char* s) {
+void MenuSetText(HMENU m, int id, Str s) {
     TempWStr ws = ToWStrTemp(s);
     MenuSetText(m, id, ws);
 }
@@ -1967,7 +1963,7 @@ void MenuSetText(HMENU m, int id, const char* s) {
    (preserving all & so that they don't get swallowed)
    if no change is needed, the string is returned as is,
    else it's also saved in newResult for automatic freeing */
-TempStr MenuToSafeStringTemp(const char* s) {
+TempStr MenuToSafeStringTemp(Str s) {
     TempStr safe = str::ReplaceTemp(s, "&", "&&");
     return safe;
 }
@@ -2046,7 +2042,7 @@ ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     return {(u8*)data, (size_t)size};
 }
 
-ByteSlice GetStreamOrFileData(IStream* stream, const char* filePath) {
+ByteSlice GetStreamOrFileData(IStream* stream, Str filePath) {
     if (stream) {
         return GetDataFromStream(stream, nullptr);
     }
@@ -2078,29 +2074,29 @@ bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset
     return SUCCEEDED(res) && read == len;
 }
 
-uint GuessTextCodepage(const char* data, size_t len, uint defVal) {
+uint GuessTextCodepage(Str data, uint defVal) {
     // try to guess the codepage
     ScopedComPtr<IMultiLanguage2> pMLang;
     if (!pMLang.Create(CLSID_CMultiLanguage)) {
         return defVal;
     }
 
-    int ilen = std::min((int)len, INT_MAX);
+    int ilen = std::min(data.len, INT_MAX);
     int count = 1;
     DetectEncodingInfo info{};
-    HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char*)data, &ilen, &info, &count);
+    HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, data.s, &ilen, &info, &count);
     if (FAILED(hr) || count != 1) {
         return defVal;
     }
     return info.nCodePage;
 }
 
-char* NormalizeString(const char* strA, int /* NORM_FORM */ form) {
+TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
     if (!DynNormalizeString) {
         return nullptr;
     }
     TempWStr str = ToWStrTemp(strA);
-    int sizeEst = DynNormalizeString(form, str, -1, nullptr, 0);
+    int sizeEst = DynNormalizeString(form, str.s, str.len, nullptr, 0);
     if (sizeEst <= 0) {
         return nullptr;
     }
@@ -2108,14 +2104,14 @@ char* NormalizeString(const char* strA, int /* NORM_FORM */ form) {
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
     sizeEst = sizeEst * 2;
     AutoFreeWStr res(AllocArray<WCHAR>(sizeEst));
-    sizeEst = DynNormalizeString(form, str, -1, res, sizeEst);
+    sizeEst = DynNormalizeString(form, str.s, str.len, res, sizeEst);
     if (sizeEst <= 0) {
         return nullptr;
     }
-    return ToUtf8(res.Get());
+    return ToUtf8Temp(WStr(res.Get()));
 }
 
-bool RegisterOrUnregisterServerDLL(const char* dllPath, bool install, const char* args) {
+bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
     if (FAILED(OleInitialize(nullptr))) {
         return false;
     }
@@ -2166,11 +2162,11 @@ bool RegisterOrUnregisterServerDLL(const char* dllPath, bool install, const char
     return ok;
 }
 
-bool RegisterServerDLL(const char* dllPath, const char* args) {
+bool RegisterServerDLL(Str dllPath, Str args) {
     return RegisterOrUnregisterServerDLL(dllPath, true, args);
 }
 
-bool UnRegisterServerDLL(const char* dllPath, const char* args) {
+bool UnRegisterServerDLL(Str dllPath, Str args) {
     if (!file::Exists(dllPath)) {
         return true;
     }
@@ -2709,7 +2705,7 @@ bool SafeCloseHandle(HANDLE* hPtr) {
 // - using CreateProcessAsUser() with hand-crafted token
 // It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
-void RunNonElevated(const char* exePath) {
+void RunNonElevated(Str exePath) {
     if (!file::Exists(exePath)) {
         logf("RunNonElevated: file '%s' doesn't exist\n", exePath);
         return;
@@ -2729,7 +2725,7 @@ void RunNonElevated(const char* exePath) {
     }
     cmd = str::FormatTemp("\"%s\" \"%s\"", explorerPath, exePath);
 Run:
-    HANDLE h = LaunchProcessInDir(cmd ? cmd.s : exePath);
+    HANDLE h = LaunchProcessInDir(IsEmpty(cmd) ? exePath : cmd);
     SafeCloseHandle(&h);
 }
 
@@ -2768,29 +2764,29 @@ void ResizeWindow(HWND hwnd, int dx, int dy) {
     SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, SWP_NOMOVE | SWP_NOZORDER);
 }
 
-void MessageBoxWarningSimple(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
+void MessageBoxWarningSimple(HWND hwnd, WStr msg, WStr title) {
     uint type = MB_OK | MB_ICONEXCLAMATION;
-    if (!title) {
-        title = L"Warning";
+    if (IsEmpty(title)) {
+        title = WStrL(L"Warning");
     }
-    MessageBox(hwnd, msg, title, type);
+    MessageBoxW(hwnd, msg.s, title.s, type);
 }
 
 void MessageBoxNYI(HWND hwnd) {
     MessageBoxWarningSimple(hwnd, L"Not Yet Implemented!", L"NYI");
 }
 
-void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
+void VariantInitBstr(VARIANT& urlVar, WStr s) {
     VariantInit(&urlVar);
     urlVar.vt = VT_BSTR;
-    urlVar.bstrVal = SysAllocString(s);
+    urlVar.bstrVal = SysAllocStringLen(s.s, s.len);
 }
 
 static HDDEDATA CALLBACK DdeCallback(UINT, UINT, HCONV, HSZ, HSZ, HDDEDATA, ULONG_PTR, ULONG_PTR) {
     return nullptr;
 }
 
-bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
+bool DDEExecute(WStr server, WStr topic, WStr command) {
     DWORD inst = 0;
     HSZ hszServer = nullptr, hszTopic = nullptr;
     HCONV hconv = nullptr;
@@ -2799,8 +2795,8 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
     DWORD cbLen = 0;
     HDDEDATA answer;
 
-    ReportIf(str::Len(command) >= INT_MAX - 1);
-    if (str::Len(command) >= INT_MAX - 1) {
+    ReportIf(command.len >= INT_MAX - 1);
+    if (command.len >= INT_MAX - 1) {
         return false;
     }
 
@@ -2809,11 +2805,11 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
         return false;
     }
 
-    hszServer = DdeCreateStringHandleW(inst, server, CP_WINNEUTRAL);
+    hszServer = DdeCreateStringHandleW(inst, server.s, CP_WINNEUTRAL);
     if (!hszServer) {
         goto Exit;
     }
-    hszTopic = DdeCreateStringHandleW(inst, topic, CP_WINNEUTRAL);
+    hszTopic = DdeCreateStringHandleW(inst, topic.s, CP_WINNEUTRAL);
     if (!hszTopic) {
         goto Exit;
     }
@@ -2822,8 +2818,8 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
         goto Exit;
     }
 
-    cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
-    answer = DdeClientTransaction((BYTE*)command, cbLen, hconv, nullptr, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
+    cbLen = ((DWORD)command.len + 1) * sizeof(WCHAR);
+    answer = DdeClientTransaction((BYTE*)command.s, cbLen, hconv, nullptr, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
     if (answer) {
         DdeFreeDataHandle(answer);
         ok = true;
@@ -3030,13 +3026,13 @@ bool IsValidDelayType(int type) {
     return false;
 }
 
-void HwndSetText(HWND hwnd, const char* sv) {
+void HwndSetText(HWND hwnd, Str sv) {
     // can be called before a window is created
     if (!hwnd) {
         return;
     }
-    if (!sv) {
-        sv = "";
+    if (IsEmpty(sv)) {
+        sv = Str();
     }
     // WM_SETTEXT unconditionally invalidates and repaints the control (and, for
     // edit controls, fires EN_CHANGE and resets the caret/selection). Skip it
@@ -3052,13 +3048,13 @@ void HwndSetText(HWND hwnd, const char* sv) {
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws.s);
 }
 
-void HwndSetDlgItemText(HWND hDlg, int itemID, const char* s) {
+void HwndSetDlgItemText(HWND hDlg, int itemID, Str s) {
     TempWStr ws = ToWStrTemp(s);
-    SetDlgItemTextW(hDlg, itemID, ws);
+    SetDlgItemTextW(hDlg, itemID, ws.s);
 }
 
 // hwnd should be Combo Box control
-void CbAddString(HWND hwnd, const char* s) {
+void CbAddString(HWND hwnd, Str s) {
     TempWStr ws = ToWStrTemp(s);
     SendMessageW(hwnd, CB_ADDSTRING, 0, (LPARAM)ws.s);
 }
@@ -3251,25 +3247,25 @@ bool DestroyIconSafe(HICON* h) {
     return ToBool(res);
 }
 
-int HdcDrawText(HDC hdc, const char* s, RECT* r, uint fmt, HFONT font) {
-    if (!s) {
+int HdcDrawText(HDC hdc, Str s, RECT* r, uint fmt, HFONT font) {
+    if (IsEmpty(s)) {
         return 0;
     }
     TempWStr ws = ToWStrTemp(s);
-    if (!ws) {
+    if (IsEmpty(ws)) {
         return 0;
     }
-    int cch = (int)str::Len(ws);
+    int cch = ws.len;
     ScopedSelectFont f(hdc, font);
-    return DrawTextW(hdc, ws, cch, r, fmt);
+    return DrawTextW(hdc, ws.s, cch, r, fmt);
 }
 
-int HdcDrawText(HDC hdc, const char* s, const Rect& r, uint fmt, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, const Rect& r, uint fmt, HFONT font) {
     RECT r2 = ToRECT(r);
     return HdcDrawText(hdc, s, &r2, fmt, font);
 }
 
-int HdcDrawText(HDC hdc, const char* s, const Point& pos, uint fmt, HFONT font) {
+int HdcDrawText(HDC hdc, Str s, const Point& pos, uint fmt, HFONT font) {
     Rect r = {pos.x, pos.y, 0, 0};
     RECT r2 = ToRECT(r);
     return HdcDrawText(hdc, s, &r2, fmt, font);
@@ -3277,17 +3273,17 @@ int HdcDrawText(HDC hdc, const char* s, const Point& pos, uint fmt, HFONT font) 
 
 // uses the same logic as HdcDrawText
 // maxDx limits the width, used when measuring text wrapped with DT_WORDBREAK
-Size HdcMeasureText(HDC hdc, const char* s, int maxDx, uint fmt, HFONT font) {
+Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint fmt, HFONT font) {
     fmt |= DT_CALCRECT;
     TempWStr ws = ToWStrTemp(s);
-    if (!ws) {
+    if (IsEmpty(ws)) {
         return {};
     }
 
     ScopedSelectFont f(hdc, font);
-    int sLen = (int)str::Len(ws);
+    int sLen = ws.len;
     RECT rc{0, 0, maxDx, 4096};
-    int dy = DrawTextW(hdc, ws, sLen, &rc, fmt);
+    int dy = DrawTextW(hdc, ws.s, sLen, &rc, fmt);
     if (0 == dy) {
         return {};
     }
@@ -3299,12 +3295,12 @@ Size HdcMeasureText(HDC hdc, const char* s, int maxDx, uint fmt, HFONT font) {
     return Size(dx, dy);
 }
 
-Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
+Size HdcMeasureText(HDC hdc, Str s, uint fmt, HFONT font) {
     // a very large area
     return HdcMeasureText(hdc, s, 4096, fmt, font);
 }
 
-Size HdcMeasureText(HDC hdc, const char* s, HFONT font) {
+Size HdcMeasureText(HDC hdc, Str s, HFONT font) {
     // DT_LEFT - left-aligned
     // DT_NOCLIP - is faster, no clipping
     // DT_NOPREFIX - doesn't process & to underline next char
@@ -3312,7 +3308,7 @@ Size HdcMeasureText(HDC hdc, const char* s, HFONT font) {
     return HdcMeasureText(hdc, s, fmt, font);
 }
 
-void DrawCenteredText(HDC hdc, const Rect r, const char* txt, bool isRTL) {
+void DrawCenteredText(HDC hdc, const Rect r, Str txt, bool isRTL) {
     TempWStr ws = ToWStrTemp(txt);
     int prevMode = SetBkMode(hdc, TRANSPARENT);
     RECT tmpRect = ToRECT(r);
@@ -3320,7 +3316,7 @@ void DrawCenteredText(HDC hdc, const Rect r, const char* txt, bool isRTL) {
     if (isRTL) {
         format |= DT_RTLREADING;
     }
-    DrawTextW(hdc, ws, -1, &tmpRect, format);
+    DrawTextW(hdc, ws.s, -1, &tmpRect, format);
     if (prevMode != 0) {
         SetBkMode(hdc, prevMode);
     }
@@ -3352,12 +3348,12 @@ static Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
-    if (!txt || !*txt) {
+Size HwndMeasureText(HWND hwnd, Str txt, HFONT font) {
+    if (IsEmpty(txt)) {
         return Size{};
     }
     TempWStr sw = ToWStrTemp(txt);
-    return HwndMeasureText(hwnd, sw, font);
+    return HwndMeasureText(hwnd, sw.s, font);
 }
 
 // return approximate height of font in pixels
@@ -3390,7 +3386,7 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
     }
 }
 
-void AddPathToRecentDocs(const char* path) {
+void AddPathToRecentDocs(Str path) {
     TempWStr pathW = ToWStrTemp(path);
     SHAddToRecentDocs(SHARD_PATH, pathW);
 }
@@ -3424,7 +3420,7 @@ HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
     return h;
 }
 
-HGLOBAL StrToHGLOBAL(const char* s, UINT flags) {
+HGLOBAL StrToHGLOBAL(Str s, UINT flags) {
     int cb = (int)str::Len(s) + 1;
     return MemToHGLOBAL((void*)s, cb, flags);
 }
@@ -3438,10 +3434,10 @@ TempStr AtomToStrTemp(ATOM a) {
     return ToUtf8Temp(buf, cch);
 }
 
-int MsgBox(HWND hwnd, const char* text, const char* caption, UINT flags) {
+int MsgBox(HWND hwnd, Str text, Str caption, UINT flags) {
     TempWStr textW = ToWStrTemp(text);
     TempWStr captionW = ToWStrTemp(caption);
-    return MessageBoxW(hwnd, textW, captionW, flags);
+    return MessageBoxW(hwnd, textW.s, captionW.s, flags);
 }
 
 // Some 3rd-party DLLs loaded into our process (e.g. ffmpeg-based WIC codecs
@@ -3487,7 +3483,7 @@ static LRESULT CALLBACK WndProcTextViewDialog(HWND hwnd, UINT msg, WPARAM wp, LP
     return WndProcTextView(hwnd, msg, wp, lp);
 }
 
-static void RegisterTextViewClass(const WCHAR* className, WNDPROC wndProc) {
+static void RegisterTextViewClass(WStr className, WNDPROC wndProc) {
     HMODULE h = GetModuleHandleW(nullptr);
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, className, wndProc);
@@ -3495,12 +3491,11 @@ static void RegisterTextViewClass(const WCHAR* className, WNDPROC wndProc) {
     RegisterClassEx(&wcex);
 }
 
-static HWND CreateTextViewWindow(const WCHAR* className, const char* title, const char* text) {
+static HWND CreateTextViewWindow(WStr className, Str title, Str text) {
     HMODULE h = GetModuleHandleW(nullptr);
     auto titleW = ToWStrTemp(title);
     DWORD style = WS_OVERLAPPEDWINDOW;
-    HWND hwnd = CreateWindowExW(0, className, titleW, style, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr,
-                                h, nullptr);
+    HWND hwnd = CreateWindowExW(0, className.s, titleW.s, style, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr, h, nullptr);
     if (!hwnd) {
         return nullptr;
     }
@@ -3525,13 +3520,14 @@ static HWND CreateTextViewWindow(const WCHAR* className, const char* title, cons
 
     // edit control needs \r\n line endings
     StrBuilder crlfText;
-    for (const char* s = text; *s; s++) {
-        if (*s == '\n' && (s == text || *(s - 1) != '\r')) {
+    for (int i = 0; i < text.len; i++) {
+        char c = text.s[i];
+        if (c == '\n' && (i == 0 || text.s[i - 1] != '\r')) {
             crlfText.AppendChar('\r');
         }
-        crlfText.AppendChar(*s);
+        crlfText.AppendChar(c);
     }
-    HwndSetText(hwndEdit, crlfText.CStr());
+    HwndSetText(hwndEdit, Str(crlfText.CStr()));
     SendMessageW(hwndEdit, EM_SETSEL, 0, 0);
 
     ShowWindow(hwnd, SW_SHOW);
@@ -3539,7 +3535,7 @@ static HWND CreateTextViewWindow(const WCHAR* className, const char* title, cons
     return hwnd;
 }
 
-HWND ShowTextInWindow(const char* title, const char* text, HWND* hwndPtr) {
+HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
     static const WCHAR* kClassName = L"SumatraPDF_TextViewWnd";
     static bool registered = false;
     if (!registered) {
@@ -3553,7 +3549,7 @@ HWND ShowTextInWindow(const char* title, const char* text, HWND* hwndPtr) {
     return hwnd;
 }
 
-void ShowTextInWindowDialog(const char* title, const char* text) {
+void ShowTextInWindowDialog(Str title, Str text) {
     static const WCHAR* kClassName = L"SumatraPDF_TextViewDlgWnd";
     static bool registered = false;
     if (!registered) {
@@ -3641,38 +3637,38 @@ u32 CpuID() {
 #endif
 }
 
-const char* LatestSupportedSIMD() {
+Str LatestSupportedSIMD() {
     u32 id = CpuID();
     // x86/x64
     if (id & kCpuAVX2) {
-        return "avx2";
+        return StrL("avx2");
     }
     if (id & kCpuAVX) {
-        return "avx";
+        return StrL("avx");
     }
     if (id & kCpuSSE42) {
-        return "sse42";
+        return StrL("sse42");
     }
     if (id & kCpuSSE41) {
-        return "sse41";
+        return StrL("sse41");
     }
     if (id & kCpuSSE3) {
-        return "sse3";
+        return StrL("sse3");
     }
     if (id & kCpuSSE2) {
-        return "sse2";
+        return StrL("sse2");
     }
     if (id & kCpuSSE) {
-        return "sse";
+        return StrL("sse");
     }
     // ARM
     if (id & kCpuArmDotProd) {
-        return "dotprod";
+        return StrL("dotprod");
     }
     if (id & kCpuNEON) {
-        return "neon";
+        return StrL("neon");
     }
-    return "none";
+    return StrL("none");
 }
 
 LARGE_INTEGER TimeNow() {
@@ -3697,7 +3693,7 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
     return res * 1000;
 }
 
-bool IsPEFileSigned(const char* filePath) {
+bool IsPEFileSigned(Str filePath) {
     TempWStr ws = ToWStrTemp(filePath);
     WINTRUST_FILE_INFO fileInfo = {};
     fileInfo.cbStruct = sizeof(WINTRUST_FILE_INFO);
@@ -3730,7 +3726,7 @@ bool IsPEFileSigned(const char* filePath) {
     }
 }
 
-TempStr GetExecutableSignerTemp(const char* exePath) {
+TempStr GetExecutableSignerTemp(Str exePath) {
     TempWStr ws = ToWStrTemp(exePath);
 
     HCERTSTORE hStore = nullptr;

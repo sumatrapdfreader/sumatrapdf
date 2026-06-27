@@ -403,13 +403,13 @@ static TempStr BuildSymbolPathTemp(const char* symDir) {
     }
 
     if (gAddNtSymbolPath) {
-        TempStr ntSymPath = GetEnvVariableTemp("_NT_SYMBOL_PATH");
+        TempStr ntSymPath = GetEnvVariableTemp(StrL("_NT_SYMBOL_PATH"));
         // internet talks about both _NT_ALT_SYMBOL_PATH and _NT_ALTERNATE_SYMBOL_PATH
         if (str::IsEmpty(ntSymPath)) {
-            ntSymPath = GetEnvVariableTemp("_NT_ALT_SYMBOL_PATH");
+            ntSymPath = GetEnvVariableTemp(StrL("_NT_ALT_SYMBOL_PATH"));
         }
         if (str::IsEmpty(ntSymPath)) {
-            ntSymPath = GetEnvVariableTemp("_NT_ALTERNATE_SYMBOL_PATH");
+            ntSymPath = GetEnvVariableTemp(StrL("_NT_ALTERNATE_SYMBOL_PATH"));
         }
         if (!str::IsEmpty(ntSymPath)) {
             path.Append(ntSymPath);

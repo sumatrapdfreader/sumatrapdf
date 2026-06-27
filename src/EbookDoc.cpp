@@ -105,7 +105,7 @@ static TempStr DecodeTextToUtf8Temp(const char* s, bool isXML = false) {
         return str::DupTemp(s);
     }
     if (CP_ACP == codePage) {
-        codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
+        codePage = GuessTextCodepage(Str(s), CP_ACP);
     }
     return strconv::ToMultiByteTemp(s, codePage, CP_UTF8);
 }
@@ -1213,7 +1213,7 @@ bool PalmDoc::Load() {
     }
 
     ByteSlice text = mobiDoc->GetHtmlData();
-    uint codePage = GuessTextCodepage((const char*)text.data(), text.size(), CP_ACP);
+    uint codePage = GuessTextCodepage(Str((char*)text.data(), (int)text.size()), CP_ACP);
     TempStr textUtf8 = strconv::ToMultiByteTemp((const char*)text.data(), codePage, CP_UTF8);
 
     const char* start = textUtf8;

@@ -2145,10 +2145,10 @@ EngineBase* EngineMupdf::Clone() {
 // File names ending in :<digits> are interpreted as containing
 // embedded PDF documents (the digits is stream number of the embedded file stream)
 // the caller must free()
-const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
+TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     int streamNo = -1;
-    char* path2 = str::Dup(path);
-    char* streamNoStr = (char*)FindEmbeddedPdfFileStreamNo(path2);
+    Str path2 = str::Dup(path);
+    char* streamNoStr = (char*)FindEmbeddedPdfFileStreamNo(path2.s);
     if (streamNoStr) {
         char* rest = (char*)str::Parse(streamNoStr, ":%d", &streamNo);
         bool hasAttachmentName = rest && str::StartsWith(rest, ":attachname=");
@@ -2167,7 +2167,7 @@ const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
     return path2;
 }
 
-TempStr GetEmbeddedFileNameTemp(const char* path) {
+TempStr GetEmbeddedFileNameTemp(Str path)) {
     if (!path) {
         return {};
     }
@@ -2192,16 +2192,15 @@ TempStr GetEmbeddedFileNameTemp(const char* path) {
     return name;
 }
 
-ByteSlice EngineMupdf::LoadStreamFromPDFFile(const char* filePath) {
+ByteSlice EngineMupdf::LoadStreamFromPDFFile(Str filePath) {
     auto ctx = Ctx();
     int streamNo = -1;
-    AutoFreeStr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
+    TempStr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
     if (streamNo < 0) {
         return {};
     }
 
-    char* path = fnCopy.Get();
-    bool ok = Load(path, nullptr);
+    bool ok = Load(fnCopy, nullptr);
     if (!ok) {
         return {};
     }
@@ -2231,14 +2230,14 @@ ByteSlice EngineMupdf::LoadStreamFromPDFFile(const char* filePath) {
 
 // <filePath> should end with embed marks, which is a stream number
 // inside pdf file
-ByteSlice LoadEmbeddedPDFFile(const char* filePath) {
+ByteSlice LoadEmbeddedPDFFile(Str filePath) {
     EngineMupdf* engine = new EngineMupdf();
     auto res = engine->LoadStreamFromPDFFile(filePath);
     SafeEngineRelease(&engine);
     return res;
 }
 
-static ByteSlice TxtFileToHTML(const char* path) {
+static ByteSlice TxtFileToHTML(Str path) {
     ByteSlice fd = file::ReadFileWithArena(path, GetTempArena());
     if (fd.empty()) {
         return {};
@@ -2288,7 +2287,7 @@ static ByteSlice TxtFileToHTML(const char* path) {
     return {(u8*)d.StealData(), sz};
 }
 
-static ByteSlice PalmDocToHTML(const char* path) {
+static ByteSlice PalmDocToHTML(Str path) {
     auto doc = PalmDoc::CreateFromFile(path);
     if (!doc) {
         return {};
@@ -2297,9 +2296,8 @@ static ByteSlice PalmDocToHTML(const char* path) {
     return html.Clone();
 }
 
-bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
+bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     bool ok;
-    const char* pathA = path;
     auto ctx = Ctx();
     ReportIf(FilePath() || _doc);
     if (!ctx) {
@@ -2307,13 +2305,13 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
     }
     SetFilePath(path);
 
-    auto ext = path::GetExtTemp(Str(path));
+    auto ext = path::GetExtTemp(path);
     str::ReplaceWithCopy(&defaultExt, ext);
 
     int streamNo = -1;
-    AutoFreeStr fnCopy = ParseEmbeddedStreamNumber(pathA, &streamNo);
+    TempStr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
 
-    Kind kind = GuessFileTypeFromName(pathA);
+    Kind kind = GuessFileTypeFromName(path);
     // show .txt, .xml and other text files as plain text
     // using html engine
     if (kind == kindFileTxt) {
@@ -2335,7 +2333,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
 
     if (str::EqI(ext, ".pdb")) {
         // synthesize a .html file from pdb file
-        ByteSlice d = PalmDocToHTML(pathA);
+        ByteSlice d = PalmDocToHTML(path);
         if (d.empty()) {
             return false;
         }
@@ -2407,7 +2405,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
 }
 
 // TODO: need to do stuff to support .txt etc.
-bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
+bool EngineMupdf::Load(IStream* stream, Str nameHint, PasswordUI* pwdUI) {
     auto ctx = Ctx();
     ReportIf(FilePath() || _doc);
     if (!ctx) {
@@ -2437,7 +2435,7 @@ bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI)
 extern EBookUI* GetEBookUI();
 
 // stm is either freed or retained via _doc
-bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordUI* pwdUI) {
+bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
     }
@@ -2573,7 +2571,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         // for crypt revisions 5 and above are in SASLprep normalization
         if (!ok) {
             // TODO: this is only part of SASLprep
-            pwd.Set(NormalizeString(pwd, 5 /* NormalizationKC */));
+            pwd.Set(NormalizeString(Str(pwd.Get()), 5 /* NormalizationKC */).s);
             if (pwd) {
                 pwdA = pwd.Get();
                 ok = fz_authenticate_password(ctx, _doc, pwdA);
@@ -2588,7 +2586,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
             ok = fz_authenticate_password(ctx, _doc, pwdA);
         }
         if (ok) {
-            str::ReplaceWithCopy(&pdfPassword, pwdA);
+            str::ReplaceWithCopy(&pdfPassword.s, pwdA);
         }
     }
 
@@ -3109,7 +3107,7 @@ MakeTree:
     return tocTree;
 }
 
-IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
+IPageDestination* EngineMupdf::GetNamedDest(Str name)) {
     if (!pdfdoc) {
         return nullptr;
     }
@@ -3129,7 +3127,7 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
 }
 
 #if 0
-IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
+IPageDestination* EngineMupdf::GetNamedDest(Str name)) {
     if (!pdfdoc) {
         return nullptr;
     }
@@ -4210,7 +4208,7 @@ static const char* mupdfPropsMap[] = {
 };
 // clang-format on
 
-TempStr EngineMupdf::GetPropertyTemp(const char* name) {
+TempStr EngineMupdf::GetPropertyTemp(Str name)) {
     auto ctx = Ctx();
     ScopedCritSec ctxScope(&docLock);
 
@@ -4533,7 +4531,7 @@ ByteSlice EngineMupdf::GetFileData() {
     return file::ReadFile(Str(path));
 }
 
-bool EngineMupdf::SaveFileAs(const char* dstPath) {
+bool EngineMupdf::SaveFileAs(Str dstPath) {
     ByteSlice d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d);
@@ -4576,7 +4574,7 @@ bool EngineMupdfIsEncrypted(EngineBase* engine) {
     return epdf->pdfdoc->crypt != nullptr;
 }
 
-const char* EngineMupdfGetPassword(EngineBase* engine) {
+Str EngineMupdfGetPassword(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf) {
         return nullptr;
@@ -4589,7 +4587,7 @@ const char* EngineMupdfGetPassword(EngineBase* engine) {
 // annotations).
 // if filePath is not given, we save under the same name
 // TODO: if the file is locked, this might fail.
-bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, const ShowErrorCb& showErrorFunc) {
+bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc) {
     ReportIf(!engine);
     if (!engine) {
         return false;
@@ -4677,7 +4675,7 @@ TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
     return res;
 }
 
-int EngineMupdf::GetPageByLabel(const char* label) const {
+int EngineMupdf::GetPageByLabel(Str label)) const {
     if (!pdfdoc) {
         // non-pdf documents don't have labels so label is just a page number as string
         return EngineBase::GetPageByLabel(label);
@@ -4728,7 +4726,7 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
     return false;
 }
 
-EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDPI, PasswordUI* pwdUI) {
+EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, PasswordUI* pwdUI) {
     if (str::IsEmpty(path)) {
         return nullptr;
     }
@@ -4779,7 +4777,7 @@ EngineBase* CreateEngineMupdfFromFile(const char* path, Kind kind, int displayDP
     return engine;
 }
 
-EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
+EngineBase* CreateEngineMupdfFromStream(IStream* stream, Str nameHint, PasswordUI* pwdUI) {
     EngineMupdf* engine = new EngineMupdf();
     if (!engine->Load(stream, nameHint, pwdUI)) {
         SafeEngineRelease(&engine);
@@ -4788,7 +4786,7 @@ EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, P
     return engine;
 }
 
-EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, const char* nameHint, PasswordUI* pwdUI) {
+EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, Str nameHint, PasswordUI* pwdUI) {
     EngineMupdf* engine = new EngineMupdf();
     IStream* stream = CreateStreamFromData(data);
     if (!engine->Load(stream, nameHint, pwdUI)) {
@@ -5094,7 +5092,7 @@ static void outline_to_buffer_rec(fz_context* ctx, fz_output* out, fz_outline* o
     }
 }
 
-TempStr EngineMupdfGetPdfOutline(const char* path) {
+TempStr EngineMupdfGetPdfOutline(Str path) {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx) {
         return {};
@@ -5131,7 +5129,7 @@ TempStr EngineMupdfGetPdfOutline(const char* path) {
     return res;
 }
 
-TempStr EngineMupdfGetPdfInfo(const char* path) {
+TempStr EngineMupdfGetPdfInfo(Str path) {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx) {
         return {};

@@ -1117,7 +1117,7 @@ static void WinTtsStop() {
 static bool IsWinRtBackend() {
     if (gTtsBackend == TtsBackend::Unknown) {
         // an escape hatch, also for testing the SAPI implementation
-        bool forceSapi = !str::IsEmpty(GetEnvVariableTemp("SUMATRA_TTS_FORCE_SAPI"));
+        bool forceSapi = !str::IsEmpty(GetEnvVariableTemp(StrL("SUMATRA_TTS_FORCE_SAPI")));
         if (!forceSapi && WinTtsInit()) {
             gTtsBackend = TtsBackend::WinRt;
             log("Tts: using Windows.Media.SpeechSynthesis\n");

@@ -421,8 +421,8 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
         return;
     }
     TempStr link = str::FormatTemp("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update"));
-    TempStr msg =
-        str::FormatTemp(_TRA("Update %s available (you have %s) available. %s"), updateInfo->latestVer, CURR_VERSION_STRA, link);
+    TempStr msg = str::FormatTemp(_TRA("Update %s available (you have %s) available. %s"), updateInfo->latestVer,
+                                  CURR_VERSION_STRA, link);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = msg;
@@ -657,7 +657,7 @@ static void BuildUpdateURL(StrBuilder& url, const char* baseURL, UpdateCheck upd
         url.Append("&store");
     }
     url.Append("&simd=");
-    url.Append(LatestSupportedSIMD());
+    url.Append(LatestSupportedSIMD().s);
     url.Append("&withPromo");
     if (UpdateCheck::UserInitiated == updateCheckType) {
         url.Append("&force");
