@@ -41,7 +41,6 @@ enum class ControlCmd : u16 {
     TestI18nErrorString = 27,
     TestPageInfoOverlay = 28,
     TestGetToc = 29,
-    TestParseTip = 30,
 };
 
 enum class ControlArgType : u16 {
@@ -491,18 +490,6 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             char* res = TestGetTocResult(path, &exitCode);
-            AppendTestResult(req, exitCode, res);
-            break;
-        }
-
-        case ControlCmd::TestParseTip: {
-            const char* text = StringArg(req, 0);
-            if (!text) {
-                AppendError(req, "TestParseTip expects string text");
-                break;
-            }
-            int exitCode = 0;
-            char* res = TestParseTipResult(text, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

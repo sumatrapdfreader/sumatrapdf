@@ -1045,6 +1045,9 @@ workspace "SumatraPDF"
     uia_files()
     engines_files()
     sumatrapdf_files()
+    filter "configurations:Debug or DebugFull"
+    files { "src/AppUnitTests.cpp" }
+    filter {}
 
     webview_conf()
 

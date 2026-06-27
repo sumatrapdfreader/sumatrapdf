@@ -60,6 +60,67 @@ Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 // TODO: leaks if set
 const char* promoFromServer = nullptr;
 
+static bool IsTipWhitespace(char c) {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
+
+// closing ']' for the '[' at (textStart - 1); supports nested brackets in link text
+static const char* FindMarkdownLinkTextEnd(const char* textStart) {
+    int depth = 1;
+    for (const char* p = textStart; *p; p++) {
+        if (*p == '[') {
+            depth++;
+        } else if (*p == ']') {
+            depth--;
+            if (depth == 0) {
+                return p;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// closing ')' for the '(' before cmdStart; balances parens in http(s) targets
+static const char* FindMarkdownLinkCmdEnd(const char* cmdStart) {
+    if (str::StartsWith(cmdStart, "http://") || str::StartsWith(cmdStart, "https://")) {
+        int depth = 0;
+        for (const char* p = cmdStart; *p; p++) {
+            if (*p == '(') {
+                depth++;
+            } else if (*p == ')') {
+                if (depth > 0) {
+                    depth--;
+                } else {
+                    return p;
+                }
+            }
+        }
+        return nullptr;
+    }
+    return str::FindChar(cmdStart, ')');
+}
+
+static void AppendTipWordsFromText(ParsedTip& tip, const char* text, bool isLink, int linkIdx) {
+    const char* lt = text;
+    while (*lt) {
+        while (IsTipWhitespace(*lt)) {
+            lt++;
+        }
+        if (!*lt) {
+            break;
+        }
+        const char* wordStart = lt;
+        while (*lt && !IsTipWhitespace(*lt)) {
+            lt++;
+        }
+        TipWord w;
+        w.text = str::Dup(wordStart, (int)(lt - wordStart));
+        w.isLink = isLink;
+        w.linkIdx = linkIdx;
+        tip.words.Append(w);
+    }
+}
+
 // resolve (Key/CmdXxx) to keyboard shortcut string
 static TempStr ResolveKeyShortcutTemp(const char* cmdName) {
     int cmdId = GetCommandIdByName(cmdName);
@@ -94,18 +155,19 @@ void ParseTip(ParsedTip& tip, const char* s) {
         return;
     }
     StrBuilder expanded;
-    // first pass: expand (Key/CmdXxx) to shortcut strings
+    // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands)
     while (*s) {
         if (*s == '(' && str::StartsWith(s + 1, "Key/")) {
             const char* end = str::FindChar(s, ')');
             if (end) {
-                // extract command name between "Key/" and ")"
                 const char* cmdStart = s + 5; // skip "(Key/"
                 TempStr cmdName = str::DupTemp(cmdStart, (int)(end - cmdStart));
-                TempStr shortcut = ResolveKeyShortcutTemp(cmdName);
-                expanded.Append(shortcut);
-                s = end + 1;
-                continue;
+                if (GetCommandIdByName(cmdName) > 0) {
+                    TempStr shortcut = ResolveKeyShortcutTemp(cmdName);
+                    expanded.Append(shortcut);
+                    s = end + 1;
+                    continue;
+                }
             }
         }
         expanded.AppendChar(*s);
@@ -115,8 +177,7 @@ void ParseTip(ParsedTip& tip, const char* s) {
     // second pass: split into words, detecting [text](link) markdown links
     const char* p = expanded.Get();
     while (*p) {
-        // skip spaces
-        while (*p == ' ') {
+        while (IsTipWhitespace(*p)) {
             p++;
         }
         if (!*p) {
@@ -124,56 +185,48 @@ void ParseTip(ParsedTip& tip, const char* s) {
         }
 
         if (*p == '[') {
-            // parse markdown link: [text](cmd)
             const char* textStart = p + 1;
-            const char* textEnd = str::FindChar(textStart, ']');
+            const char* textEnd = FindMarkdownLinkTextEnd(textStart);
             if (textEnd && textEnd[1] == '(') {
                 const char* cmdStart = textEnd + 2;
-                const char* cmdEnd = str::FindChar(cmdStart, ')');
+                const char* cmdEnd = FindMarkdownLinkCmdEnd(cmdStart);
                 if (cmdEnd) {
-                    TempStr linkCmd = str::DupTemp(cmdStart, (int)(cmdEnd - cmdStart));
-                    TempStr linkText = str::DupTemp(textStart, (int)(textEnd - textStart));
+                    if (textEnd > textStart) {
+                        TempStr linkCmd = str::DupTemp(cmdStart, (int)(cmdEnd - cmdStart));
+                        TempStr linkText = str::DupTemp(textStart, (int)(textEnd - textStart));
 
-                    TipLink link;
-                    link.cmd = str::Dup(ResolveLinkCmdTemp(linkCmd));
-                    link.firstWord = tip.words.Size();
+                        TipLink link;
+                        link.cmd = str::Dup(ResolveLinkCmdTemp(linkCmd));
+                        link.firstWord = tip.words.Size();
+                        AppendTipWordsFromText(tip, linkText, true, tip.links.Size());
 
-                    // split link text into words
-                    const char* lt = linkText;
-                    while (*lt) {
-                        while (*lt == ' ') {
-                            lt++;
+                        if (link.firstWord < tip.words.Size()) {
+                            link.lastWord = tip.words.Size() - 1;
+                            tip.links.Append(link);
+                            p = cmdEnd + 1;
+                            continue;
                         }
-                        if (!*lt) {
-                            break;
-                        }
-                        const char* wordStart = lt;
-                        while (*lt && *lt != ' ') {
-                            lt++;
-                        }
+                        str::Free(link.cmd);
+                    } else {
+                        // empty [text]: treat the whole markup as literal text
                         TipWord w;
-                        w.text = str::Dup(wordStart, (int)(lt - wordStart));
-                        w.isLink = true;
-                        w.linkIdx = tip.links.Size();
+                        w.text = str::Dup(p, (int)(cmdEnd + 1 - p));
                         tip.words.Append(w);
+                        p = cmdEnd + 1;
+                        continue;
                     }
-
-                    link.lastWord = tip.words.Size() - 1;
-                    tip.links.Append(link);
-                    p = cmdEnd + 1;
-                    continue;
                 }
             }
             // not a valid [text](link) — fall through (e.g. "[CIW]" in a filename)
         }
 
-        // regular word; '[' is allowed unless it starts a [text](link) sequence
+        // regular word; '[' is allowed unless it starts a complete [text](link)
         const char* wordStart = p;
-        while (*p && *p != ' ') {
+        while (*p && !IsTipWhitespace(*p)) {
             if (*p == '[') {
                 const char* textStart = p + 1;
-                const char* textEnd = str::FindChar(textStart, ']');
-                if (textEnd && textEnd[1] == '(' && str::FindChar(textEnd + 2, ')')) {
+                const char* textEnd = FindMarkdownLinkTextEnd(textStart);
+                if (textEnd && textEnd[1] == '(' && FindMarkdownLinkCmdEnd(textEnd + 2)) {
                     break;
                 }
             }

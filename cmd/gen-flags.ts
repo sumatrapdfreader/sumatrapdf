@@ -88,6 +88,7 @@ const args = [
     "DumpExif", "dump-exif",
     "DumpChm", "dump-chm",
     "Control", "dbg-control",
+    "UnitTests", "unit-tests",
 ];
 
 function generateCode(): string {

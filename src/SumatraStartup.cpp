@@ -55,6 +55,7 @@
 #include "StressTesting.h"
 #include "Version.h"
 #include "Tests.h"
+#include "AppUnitTests.h"
 #include "Menu.h"
 #include "AppTools.h"
 #include "Installer.h"
@@ -1990,13 +1991,29 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
     // when not a single self-contained exe, a missing sibling libmupdf.dll means
     // we're really the installer; run it (matches pre-single-exe behavior)
-    if (!gSingleExe && ForceRunningAsInstaller() && !flags.dumpExif && !flags.dumpChm && !flags.engineDump) {
+    if (!gSingleExe && ForceRunningAsInstaller() && !flags.dumpExif && !flags.dumpChm && !flags.engineDump &&
+        !flags.unitTests) {
         logf("forcing running as an installer\n");
         exitCode = RunInstaller();
         // exit immediately. for some reason exit handlers try to
         // pull in libmupdf.dll which we don't have access to in the installer
         ::ExitProcess(exitCode);
     }
+
+#if defined(DEBUG)
+    if (flags.unitTests) {
+        CreateSumatraAcceleratorTable();
+        exitCode = RunAppUnitTests();
+        FreeAcceleratorTables();
+        ShutdownCommon();
+        return exitCode;
+    }
+#else
+    if (flags.unitTests) {
+        fprintf(stderr, "-unit-tests is only available in debug builds\n");
+        return 1;
+    }
+#endif
 
     // load libmupdf.dll eagerly before any code path that might call into it.
     // if we let the delay-load helper do it and it fails, it raises a fatal
