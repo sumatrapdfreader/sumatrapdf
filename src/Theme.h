@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
 License: GPLv3 */
 
-void SetTheme(const char* name);
+void SetTheme(Str name);
 void SetCurrentThemeFromSettings();
 void SelectNextTheme();
 void CreateThemeCommands();

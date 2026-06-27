@@ -250,7 +250,7 @@ void SelectNextTheme() {
 }
 
 // not case sensitive
-static int GetThemeByName(const char* name) {
+static int GetThemeByName(Str name) {
     for (int i = 0; i < gThemeCount; i++) {
         Theme* theme = gThemes->At(i);
         if (str::EqI(theme->name, name)) {
@@ -267,7 +267,7 @@ static bool IsDefaultMainWinColor(ParsedColor* col) {
     return col->parsedOk && col->col == kMainWinBgColDefault;
 }
 
-void SetTheme(const char* name) {
+void SetTheme(Str name) {
     int idx = GetThemeByName(name);
     if (idx < 0) {
         // invalid name, reset to light theme
