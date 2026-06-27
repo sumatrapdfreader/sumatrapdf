@@ -22,7 +22,7 @@ class EngineBase;
 
 class Synchronizer {
   public:
-    explicit Synchronizer(const char* syncfilepath, const char* pdffilename);
+    explicit Synchronizer(Str syncfilepath, Str pdffilename);
     virtual ~Synchronizer() = default;
 
     // Inverse-search:
@@ -36,7 +36,7 @@ class Synchronizer {
 
     // Forward-search:
     // The result is returned in page and rects (list of rectangles to highlight).
-    virtual int SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) = 0;
+    virtual int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) = 0;
 
   private:
     // true if the index needs to be recomputed (needs to be set to true when a change to the
@@ -48,11 +48,11 @@ class Synchronizer {
   protected:
     bool NeedsToRebuildIndex() const;
     int MarkIndexWasRebuilt();
-    char* PrependDir(const char* filename) const;
+    Str PrependDir(Str filename) const;
 
     AutoFreeStr syncFilePath; // path to the synchronization file
     AutoFreeStr pdfPath;
 
   public:
-    static int Create(const char* pdffilename, EngineBase* engine, Synchronizer** sync);
+    static int Create(Str pdffilename, EngineBase* engine, Synchronizer** sync);
 };

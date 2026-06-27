@@ -1360,7 +1360,7 @@ static const char* HandleSyncCmd(const char* cmd, bool* ack) {
 
     int page;
     Vec<Rect> rects;
-    int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
+    int ret = dm->pdfSync->SourceToDoc(Str(srcFile.Get()), line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
     if (setFocus) {
         win->Focus();

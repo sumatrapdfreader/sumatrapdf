@@ -49,7 +49,7 @@ class Pdfsync : public Synchronizer {
     }
 
     int DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) override;
-    int SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
+    int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
   private:
     int RebuildIndexIfNeeded();
@@ -76,7 +76,7 @@ class SyncTex : public Synchronizer {
     ~SyncTex() override { synctex_scanner_free(scanner); }
 
     int DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) override;
-    int SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
+    int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
   private:
     int RebuildIndexIfNeeded();
@@ -85,7 +85,7 @@ class SyncTex : public Synchronizer {
     synctex_scanner_p scanner;
 };
 
-Synchronizer::Synchronizer(const char* syncFilePathIn, const char* pdfPathIn) {
+Synchronizer::Synchronizer(Str syncFilePathIn, Str pdfPathIn) {
     syncFilePath = str::Dup(syncFilePathIn);
     pdfPath = str::Dup(pdfPathIn);
     TempWStr path = ToWStrTemp(syncFilePathIn);
@@ -117,15 +117,15 @@ int Synchronizer::MarkIndexWasRebuilt() {
     return PDFSYNCERR_SUCCESS;
 }
 
-char* Synchronizer::PrependDir(const char* filename) const {
+Str Synchronizer::PrependDir(Str filename) const {
     TempStr dir = path::GetDirTemp(Str(syncFilePath));
-    return path::Join(dir, Str(filename)).s;
+    return path::Join(dir, filename);
 }
 
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
-int Synchronizer::Create(const char* path, EngineBase* engine, Synchronizer** sync) {
+int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
     if (!sync || !engine) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
@@ -192,7 +192,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
     AutoFreeStr jobName;
     jobName.Set(strconv::AnsiToUtf8(line).s);
     jobName.Set(str::Join(Str(jobName), Str(".tex")).s);
-    jobName.Set(PrependDir(jobName));
+    jobName.Set(PrependDir(Str(jobName.Get())).s);
 
     line = Advance0Line(line, dataEnd);
     UINT versionNumber = 0;
@@ -276,7 +276,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 }
                 // ensure that the path is absolute
                 if (!path::IsAbsolute(Str(filename))) {
-                    filename = PrependDir(filename);
+                    filename.Set(PrependDir(Str(filename.Get())).s);
                 }
 
                 filestack.Append((size_t)srcfiles.Size());
@@ -471,7 +471,7 @@ UINT Pdfsync::SourceToRecord(const char* srcfilename, int line, int, Vec<size_t>
     return PDFSYNCERR_SUCCESS;
 }
 
-int Pdfsync::SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
+int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
         return res;
@@ -833,7 +833,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         str::TransCharsInPlace(filename, "/", "\\");
         // Convert the source filepath to an absolute path
         if (!path::IsAbsolute(Str(filename))) {
-            filename.Set(PrependDir(filename));
+            filename.Set(PrependDir(Str(filename.Get())).s);
         }
         filename.SetCopy(path::NormalizeTemp(filename.Get()));
         TryRecoverMovedSourceFile(filename, pdfPath);
@@ -871,7 +871,7 @@ static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, const char
     return ret;
 }
 
-int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
+int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) {
     logfa("SyncTex::SourceToDoc: '%s', line: %d, col: %d\n", srcfilename, line, col);
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
@@ -882,9 +882,7 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
     TempStr srcfilepath = srcfilename;
     // convert the source file to an absolute path
     if (!path::IsAbsolute(srcfilename)) {
-        char* tmp = PrependDir(srcfilename);
-        srcfilepath = str::DupTemp(tmp);
-        str::Free(tmp);
+        srcfilepath = PrependDir(srcfilename);
     }
     if (!srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
