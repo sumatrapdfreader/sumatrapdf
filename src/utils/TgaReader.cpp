@@ -2,6 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "Pixmap.h"
+#include "GdiPlusUtil.h"
 #include "TgaReader.h"
 
 namespace tga {
@@ -204,63 +206,6 @@ bool HasSignature(const ByteSlice& d) {
     return true;
 }
 
-static void SetImageProperty(Gdiplus::Bitmap* bmp, PROPID id, const char* asciiValue) {
-    Gdiplus::PropertyItem item;
-    item.id = id;
-    item.type = PropertyTagTypeASCII;
-    item.value = (void*)asciiValue;
-    item.length = (ULONG)(str::Len(asciiValue) + 1);
-    Gdiplus::Status ok = bmp->SetPropertyItem(&item);
-    ReportIf(ok != Gdiplus::Ok);
-}
-
-static bool IsFieldSet(const char* field, size_t len, bool isBinary = false) {
-    for (size_t i = 0; i < len; i++) {
-        if (field[i] && (isBinary || field[i] != ' ')) {
-            return isBinary || '\0' == field[len - 1];
-        }
-    }
-    return false;
-}
-
-static void CopyMetadata(const u8* data, size_t len, Gdiplus::Bitmap* bmp) {
-    const TgaExtArea* extAreaLE = GetExtAreaPtr(data, len);
-    if (!extAreaLE) {
-        return;
-    }
-
-    if (IsFieldSet(extAreaLE->author, sizeof(extAreaLE->author))) {
-        SetImageProperty(bmp, PropertyTagArtist, extAreaLE->author);
-    }
-
-    if (IsFieldSet((const char*)extAreaLE->dateTime, sizeof(extAreaLE->dateTime), true)) {
-        char dateTime[20];
-        auto v1 = convLE(extAreaLE->dateTime[2]);
-        auto v2 = convLE(extAreaLE->dateTime[1]);
-        auto v3 = convLE(extAreaLE->dateTime[0]);
-        auto v4 = convLE(extAreaLE->dateTime[3]);
-        auto v5 = convLE(extAreaLE->dateTime[4]);
-        auto v6 = convLE(extAreaLE->dateTime[5]);
-        int count = snprintf(dateTime, dimof(dateTime), "%04u-%02u-%02u %02u:%02u:%02u", v1, v2, v3, v4, v5, v6);
-        if (19 == count) {
-            SetImageProperty(bmp, PropertyTagDateTime, dateTime);
-        }
-    }
-
-    if (IsFieldSet(extAreaLE->progName, sizeof(extAreaLE->progName))) {
-        char software[49];
-        str::BufSet(software, 41, extAreaLE->progName);
-        if (convLE(extAreaLE->progVersion) != 0) {
-            auto v1 = convLE(extAreaLE->progVersion) / 100;
-            auto v2 = convLE(extAreaLE->progVersion) % 100;
-            auto v3 = extAreaLE->progVersionC != ' ' ? extAreaLE->progVersionC : '\0';
-            snprintf(software + str::Len(software), 9, " %d.%d%c", v1, v2, v3);
-            software[48] = '\0';
-        }
-        SetImageProperty(bmp, PropertyTagSoftwareUsed, software);
-    }
-}
-
 struct ReadState {
     const u8* data;
     const u8* end;
@@ -328,7 +273,7 @@ static void ReadPixel(ReadState& s, u8* dst) {
     }
 }
 
-Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
+Pixmap* PixmapFromData(const ByteSlice& d) {
     size_t len = d.size();
     const u8* data = (const u8*)d.data();
 
@@ -379,8 +324,10 @@ Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
     if (s.failed) {
         return nullptr;
     }
-    CopyMetadata(data, len, &bmp);
-    return bmp.Clone(0, 0, w, h, format);
+    // copy out into a uniform BGRA8 Pixmap; GDI+ handles the source format (incl. 16bpp).
+    // NOTE: TGA author/date/software metadata (formerly set as GDI+ property items) is not
+    // carried over - Pixmap has no metadata and it was not consumed downstream.
+    return PixmapFromGdiplus(&bmp);
 }
 
 inline bool memeq3(const char* pix1, const char* pix2) {

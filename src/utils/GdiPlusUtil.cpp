@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
@@ -346,31 +347,113 @@ static Bitmap* DecodeWithGdiplus(const ByteSlice& bmpData) {
     return bmp;
 }
 
+static Gdiplus::PixelFormat PixmapToGdiplusPixelFormat(const Pixmap* px) {
+    if (px->format == PixmapFormat::BGR8) {
+        return PixelFormat24bppRGB;
+    }
+    // BGRA8 (RGBA8 isn't produced by our decoders and has no zero-copy GDI+ format)
+    return px->premultiplied ? PixelFormat32bppPARGB : PixelFormat32bppARGB;
+}
+
+// a Gdiplus::Bitmap that borrows a Pixmap's pixels and frees the Pixmap when destroyed.
+// Gdiplus::Image has a virtual destructor, so deleting via Gdiplus::Bitmap* (as all
+// callers do) runs this destructor and releases the borrowed buffer.
+namespace {
+struct PixmapBackedBitmap : Gdiplus::Bitmap {
+    Pixmap* px;
+    PixmapBackedBitmap(Pixmap* p, Gdiplus::PixelFormat fmt)
+        : Gdiplus::Bitmap(p->width, p->height, p->stride, fmt, p->data), px(p) {}
+    ~PixmapBackedBitmap() override { FreePixmap(px); }
+};
+} // namespace
+
+Gdiplus::Bitmap* NewGdiplusBitmapFromPixmap(Pixmap* px) {
+    if (!px) {
+        return nullptr;
+    }
+    Gdiplus::PixelFormat fmt = PixmapToGdiplusPixelFormat(px);
+    auto* bmp = new PixmapBackedBitmap(px, fmt);
+    if (bmp->GetLastStatus() != Gdiplus::Ok) {
+        delete bmp; // also frees px
+        return nullptr;
+    }
+    bmp->SetResolution(px->xres, px->yres);
+    return bmp;
+}
+
+Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp) {
+    if (!bmp) {
+        return nullptr;
+    }
+    int w = (int)bmp->GetWidth();
+    int h = (int)bmp->GetHeight();
+    Pixmap* px = AllocPixmap(w, h, PixmapFormat::BGRA8);
+    if (!px) {
+        return nullptr;
+    }
+    Gdiplus::Rect rc(0, 0, w, h);
+    Gdiplus::BitmapData bd;
+    if (bmp->LockBits(&rc, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &bd) != Gdiplus::Ok) {
+        FreePixmap(px);
+        return nullptr;
+    }
+    for (int y = 0; y < h; y++) {
+        memcpy(px->data + (size_t)y * px->stride, (u8*)bd.Scan0 + (size_t)y * bd.Stride, (size_t)w * 4);
+    }
+    bmp->UnlockBits(&bd);
+    px->xres = bmp->GetHorizontalResolution();
+    px->yres = bmp->GetVerticalResolution();
+    return px;
+}
+
+Pixmap* PixmapApplyExifOrientation(Pixmap* px, int orientation) {
+    if (!px || orientation < 2 || orientation > 8) {
+        return px;
+    }
+    Gdiplus::PixelFormat fmt = PixmapToGdiplusPixelFormat(px);
+    // borrow px's pixels (no copy), clone to an owning bitmap we can rotate in place
+    Gdiplus::Bitmap borrow(px->width, px->height, px->stride, fmt, px->data);
+    Gdiplus::Bitmap* rot = borrow.Clone(0, 0, px->width, px->height, fmt);
+    if (!rot) {
+        return px;
+    }
+    ApplyExifOrientation(rot, orientation);
+    Pixmap* out = PixmapFromGdiplus(rot);
+    delete rot;
+    if (!out) {
+        return px; // rotation failed; keep the unrotated pixels
+    }
+    out->xres = px->xres;
+    out->yres = px->yres;
+    FreePixmap(px);
+    return out;
+}
+
 Bitmap* BitmapFromDataWin(const ByteSlice& bmpData) {
     Bitmap* bmp = nullptr;
 
     Kind kind = GuessFileTypeFromContent(bmpData);
     if (kindFileTga == kind) {
-        bmp = tga::ImageFromData(bmpData);
+        bmp = NewGdiplusBitmapFromPixmap(tga::PixmapFromData(bmpData));
         if (bmp) {
             return bmp;
         }
     }
     if (kindFileWebp == kind) {
-        bmp = webp::ImageFromData(bmpData);
+        bmp = NewGdiplusBitmapFromPixmap(webp::PixmapFromData(bmpData));
         if (bmp) {
             return bmp;
         }
     }
     if (kindFileJxl == kind) {
-        bmp = jxl::ImageFromData(bmpData);
+        bmp = NewGdiplusBitmapFromPixmap(jxl::PixmapFromData(bmpData));
         if (bmp) {
             return bmp;
         }
     }
 
     if (kindFileHeic == kind || kindFileAvif == kind) {
-        bmp = AvifImageFromData(bmpData);
+        bmp = NewGdiplusBitmapFromPixmap(PixmapFromAvifData(bmpData));
     }
 
     // those are potentially multi-image formats and WICDecodeImageFromStream

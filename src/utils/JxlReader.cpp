@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/JxlReader.h"
 
@@ -17,17 +18,15 @@ bool HasSignature(const ByteSlice& d) {
     return sig == JXL_SIG_CODESTREAM || sig == JXL_SIG_CONTAINER;
 }
 
-// RGBA bytes -> a freshly allocated 32bpp ARGB GDI+ bitmap (which is BGRA in memory)
-static Gdiplus::Bitmap* RgbaToBitmap(const u8* rgba, int w, int h) {
-    Gdiplus::Bitmap bmp(w, h, PixelFormat32bppARGB);
-    Gdiplus::Rect rc(0, 0, w, h);
-    Gdiplus::BitmapData bd;
-    if (bmp.LockBits(&rc, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bd) != Gdiplus::Ok) {
+// RGBA bytes -> a freshly allocated BGRA8 Pixmap (swizzle, no extra copy)
+static Pixmap* RgbaToPixmap(const u8* rgba, int w, int h) {
+    Pixmap* px = AllocPixmap(w, h, PixmapFormat::BGRA8);
+    if (!px) {
         return nullptr;
     }
     const u8* src = rgba;
     for (int y = 0; y < h; y++) {
-        u8* dst = (u8*)bd.Scan0 + (size_t)y * bd.Stride;
+        u8* dst = px->data + (size_t)y * px->stride;
         for (int x = 0; x < w; x++) {
             dst[0] = src[2]; // B
             dst[1] = src[1]; // G
@@ -37,11 +36,10 @@ static Gdiplus::Bitmap* RgbaToBitmap(const u8* rgba, int w, int h) {
             dst += 4;
         }
     }
-    bmp.UnlockBits(&bd);
-    return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
+    return px;
 }
 
-Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
+Pixmap* PixmapFromData(const ByteSlice& d) {
     if (d.empty()) {
         return nullptr;
     }
@@ -49,7 +47,7 @@ Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
     if (!dec) {
         return nullptr;
     }
-    Gdiplus::Bitmap* result = nullptr;
+    Pixmap* result = nullptr;
     u8* pixels = nullptr; // RGBA, 8 bits per channel
     uint32_t w = 0, h = 0;
 
@@ -90,7 +88,7 @@ Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
                 case JXL_DEC_FULL_IMAGE:
                     // first frame is decoded into `pixels`; that's all we need
                     if (pixels) {
-                        result = RgbaToBitmap(pixels, (int)w, (int)h);
+                        result = RgbaToPixmap(pixels, (int)w, (int)h);
                     }
                     done = true;
                     break;
@@ -140,7 +138,7 @@ bool HasSignature(const ByteSlice&) {
 Size SizeFromData(const ByteSlice&) {
     return Size();
 }
-Gdiplus::Bitmap* ImageFromData(const ByteSlice&) {
+Pixmap* PixmapFromData(const ByteSlice&) {
     return nullptr;
 }
 } // namespace jxl

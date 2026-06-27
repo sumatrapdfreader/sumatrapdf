@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WebpReader.h"
 
@@ -26,25 +27,22 @@ Size SizeFromData(const ByteSlice& d) {
     return size;
 }
 
-Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
+Pixmap* PixmapFromData(const ByteSlice& d) {
     int w, h;
     if (!WebPGetInfo((const u8*)d.data(), d.size(), &w, &h)) {
         return nullptr;
     }
 
-    Gdiplus::Bitmap bmp(w, h, PixelFormat32bppARGB);
-    Gdiplus::Rect bmpRect(0, 0, w, h);
-    Gdiplus::BitmapData bmpData;
-    Gdiplus::Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
-    if (ok != Gdiplus::Ok) {
+    // decode BGRA straight into the Pixmap buffer (no intermediate bitmap, no copy)
+    Pixmap* px = AllocPixmap(w, h, PixmapFormat::BGRA8);
+    if (!px) {
         return nullptr;
     }
-    if (!WebPDecodeBGRAInto((const u8*)d.data(), d.size(), (u8*)bmpData.Scan0, bmpData.Stride * h, bmpData.Stride)) {
+    if (!WebPDecodeBGRAInto((const u8*)d.data(), d.size(), px->data, (size_t)px->stride * h, px->stride)) {
+        FreePixmap(px);
         return nullptr;
     }
-    bmp.UnlockBits(&bmpData);
-    ApplyExifOrientation(&bmp, WebpExifOrientation(d));
-    return bmp.Clone(0, 0, bmp.GetWidth(), bmp.GetHeight(), PixelFormat32bppARGB);
+    return PixmapApplyExifOrientation(px, WebpExifOrientation(d));
 }
 
 } // namespace webp
@@ -57,7 +55,7 @@ bool HasSignature(const ByteSlice&) {
 Size SizeFromData(const ByteSlice&) {
     return Size();
 }
-Gdiplus::Bitmap* ImageFromData(const ByteSlice&) {
+Pixmap* PixmapFromData(const ByteSlice&) {
     return nullptr;
 }
 } // namespace webp

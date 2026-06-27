@@ -2,8 +2,23 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct RenderedBitmap;
+struct Pixmap;
 
 Gdiplus::RectF RectToRectF(Gdiplus::Rect r);
+
+// Zero-copy: wrap a Pixmap's pixels in a Gdiplus::Bitmap that borrows the buffer and
+// takes ownership of the Pixmap (frees it when the returned bitmap is deleted). The
+// Pixmap must outlive the bitmap, which the returned object guarantees. Returns nullptr
+// (and frees px) on failure. Only BGRA8/BGR8 Pixmaps are supported.
+Gdiplus::Bitmap* NewGdiplusBitmapFromPixmap(Pixmap* px);
+// Copy a Gdiplus::Bitmap's pixels out into a freshly allocated BGRA8 Pixmap (used to
+// turn an awkwardly-formatted GDI+ decode - 16bpp TGA, CMYK JPEG - into a uniform
+// Pixmap). Does not take ownership of bmp. Returns nullptr on failure.
+Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp);
+// Apply an EXIF orientation (2..8) to a Pixmap, returning a possibly-rotated Pixmap and
+// freeing the input. orientation 0/1 (or out of range) returns px unchanged. Rotation
+// is done via GDI+, so this lives here rather than in the portable Pixmap.h.
+Pixmap* PixmapApplyExifOrientation(Pixmap* px, int orientation);
 
 typedef RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
 

@@ -5,10 +5,12 @@
 // (as e.g. produced by EngineDump and mudraw)
 // spec: http://www.gamers.org/dEngine/quake3/TGA.ps.gz
 
+struct Pixmap;
+
 namespace tga {
 
 bool HasSignature(const ByteSlice&);
-Gdiplus::Bitmap* ImageFromData(const ByteSlice&);
+Pixmap* PixmapFromData(const ByteSlice&);
 
 ByteSlice SerializeBitmap(HBITMAP hbmp);
 

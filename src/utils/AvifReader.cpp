@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/Pixmap.h"
 #include "utils/AvifReader.h"
 
 #ifndef NO_AVIF
@@ -34,8 +35,8 @@ Exit:
     return res;
 }
 
-Gdiplus::Bitmap* AvifImageFromData(const ByteSlice& d) {
-    Gdiplus::Bitmap* bmp = nullptr;
+Pixmap* PixmapFromAvifData(const ByteSlice& d) {
+    Pixmap* px = nullptr;
     struct heif_image_handle* hdl = nullptr;
     struct heif_image* img = nullptr;
     int dx, dy, srcStride;
@@ -74,32 +75,25 @@ Gdiplus::Bitmap* AvifImageFromData(const ByteSlice& d) {
         goto Exit;
     }
 
-    bmp = new Gdiplus::Bitmap(dx, dy, PixelFormat32bppRGB);
-    {
-        Gdiplus::Rect bmpRect(0, 0, dx, dy);
-        Gdiplus::BitmapData bmpData;
-        Gdiplus::Status ok = bmp->LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppRGB, &bmpData);
-        if (ok != Gdiplus::Ok) {
-            return nullptr;
-        }
-        int dstStride = bmpData.Stride;
+    // expand interleaved RGB into a BGRA8 Pixmap (opaque alpha)
+    px = AllocPixmap(dx, dy, PixmapFormat::BGRA8);
+    if (px) {
+        int dstStride = px->stride;
         u8* src = (u8*)data;
-        u8* dst = (u8*)bmpData.Scan0;
+        u8* dst = px->data;
         for (int i = 0; i < dy; i++) {
             u8* srcTmp = src;
             u8* dstTmp = dst;
-            // TODO: memcpy?
             for (int j = 0; j < dx; j++) {
-                *dst++ = src[2];
-                *dst++ = src[1];
-                *dst++ = src[0];
-                dst++;
+                *dst++ = src[2]; // B
+                *dst++ = src[1]; // G
+                *dst++ = src[0]; // R
+                *dst++ = 255;    // A (opaque)
                 src += 3;
             }
             src = srcTmp + srcStride;
             dst = dstTmp + dstStride;
         }
-        bmp->UnlockBits(&bmpData);
     }
 
 Exit:
@@ -112,7 +106,7 @@ Exit:
     if (ctx) {
         heif_context_free(ctx);
     }
-    return bmp;
+    return px;
 }
 
 bool AvifExifBlobFromData(const ByteSlice& d, u8** outData, size_t* outSize) {
@@ -163,7 +157,7 @@ bool AvifExifBlobFromData(const ByteSlice& d, u8** outData, size_t* outSize) {
 Size AvifSizeFromData(const ByteSlice&) {
     return {};
 }
-Gdiplus::Bitmap* AvifImageFromData(const ByteSlice&) {
+Pixmap* PixmapFromAvifData(const ByteSlice&) {
     return nullptr;
 }
 bool AvifExifBlobFromData(const ByteSlice&, u8**, size_t*) {
