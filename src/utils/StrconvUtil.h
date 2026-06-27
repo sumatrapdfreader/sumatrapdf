@@ -3,28 +3,26 @@
 
 namespace strconv {
 
-WCHAR* Utf8ToWStr(const char* s, size_t cb = (size_t)-1, Arena* a = nullptr);
-char* WStrToUtf8(const WCHAR* s, size_t cch = (size_t)-1, Arena* a = nullptr);
+WStr Utf8ToWStr(Str s, Arena* a = nullptr);
+Str WStrToUtf8(WStr s, Arena* a = nullptr);
 
-char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch = (size_t)-1, Arena* a = nullptr);
-TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest);
-WCHAR* StrCPToWStr(const char* src, uint codePage, int cbSrc = -1);
-TempWStr StrCPToWStrTemp(const char* src, uint codePage, int cbSrc = -1);
-TempStr StrToUtf8Temp(const char* src, uint codePage);
+Str WStrToCodePage(uint codePage, WStr s, Arena* a = nullptr);
+TempStr ToMultiByteTemp(Str src, uint codePageSrc, uint codePageDest);
+WStr StrCPToWStr(Str src, uint codePage);
+TempWStr StrCPToWStrTemp(Str src, uint codePage);
+TempStr StrToUtf8Temp(Str src, uint codePage);
 
-TempStr UnknownToUtf8Temp(const char*, size_t cb = (size_t)-1);
+TempStr UnknownToUtf8Temp(Str s);
 
-char* WStrToAnsi(const WCHAR*);
-char* Utf8ToAnsi(const char*);
+Str WStrToAnsi(WStr src);
+Str Utf8ToAnsi(Str s);
 
-TempWStr AnsiToWStrTemp(const char* src, size_t cbLen = (size_t)-1);
-char* AnsiToUtf8(const char* src, size_t cbLen = (size_t)-1);
-TempStr AnsiToUtf8Temp(const char* src, size_t cbLen);
+TempWStr AnsiToWStrTemp(Str src);
+Str AnsiToUtf8(Str src);
+TempStr AnsiToUtf8Temp(Str src);
 } // namespace strconv
 
 // shorter names
 // TODO: eventually we want to migrate all strconv:: to them
-char* ToUtf8(const WCHAR* s, size_t cch = (size_t)-1);
-char* ToUtf8(WStr s, size_t cch = (size_t)-1);
-WCHAR* ToWStr(const char* s, size_t cb = (size_t)-1);
-WCHAR* ToWStr(Str s, size_t cb = (size_t)-1);
+Str ToUtf8(WStr s, Arena* a = nullptr);
+WStr ToWStr(Str s, Arena* a = nullptr);

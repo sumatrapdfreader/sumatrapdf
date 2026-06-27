@@ -473,9 +473,9 @@ void StrTest() {
 // the test string should only contain ASCII characters,
 // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-        AutoFree strA = strconv::WStrToAnsi(TEXT(TEST_STRING));
+        AutoFree strA(strconv::WStrToAnsi(TEXT(TEST_STRING)).s);
         utassert(str::Eq(strA.Get(), TEST_STRING));
-        auto res = strconv::AnsiToWStrTemp(strA.Get());
+        auto res = strconv::AnsiToWStrTemp(Str(strA.Get()));
         utassert(str::Eq(res, TEXT(TEST_STRING)));
 #undef TEST_STRING
     }
@@ -641,16 +641,16 @@ void StrTest() {
         utassert(!tmp);
     }
     {
-        AutoFree tmp = strconv::WStrToCodePage(98765, L"abc");
-        utassert(!tmp.Get());
+        Str tmp = strconv::WStrToCodePage(98765, L"abc");
+        utassert(!tmp);
     }
     {
         TempWStr tmp = strconv::StrCPToWStrTemp("abc", 12345);
         utassert(str::IsEmpty(tmp));
     }
     {
-        AutoFree tmp = strconv::WStrToCodePage(987654, L"abc");
-        utassert(str::IsEmpty(tmp.Get()));
+        Str tmp = strconv::WStrToCodePage(987654, L"abc");
+        utassert(str::IsEmpty(tmp));
     }
 
     {

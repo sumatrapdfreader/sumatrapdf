@@ -1214,7 +1214,7 @@ bool PalmDoc::Load() {
 
     ByteSlice text = mobiDoc->GetHtmlData();
     uint codePage = GuessTextCodepage(Str((char*)text.data(), (int)text.size()), CP_ACP);
-    TempStr textUtf8 = strconv::ToMultiByteTemp((const char*)text.data(), codePage, CP_UTF8);
+    TempStr textUtf8 = strconv::ToMultiByteTemp(Str((char*)text.data(), text.size()), codePage, CP_UTF8);
 
     const char* start = textUtf8;
     const char* end = start + str::Len(textUtf8);

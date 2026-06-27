@@ -133,7 +133,7 @@ class EngineImages : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     ByteSlice GetFileData() override;
-    bool SaveFileAs(const char* copyFileName) override;
+    bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int) override { return {}; }
     bool HasClipOptimizations(int) override { return false; }
 
@@ -867,7 +867,7 @@ class EngineImage : public EngineImages {
 
     EngineBase* Clone() override;
 
-    TempStr GetPropertyTemp(const char* name) override;
+    TempStr GetPropertyTemp(Str name) override;
     void GetProperties(StrVec& keyValOut) override;
     void GetImageProperties(int pageNo, StrVec& keyValOut);
 
@@ -1085,7 +1085,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
         /* property didn't exist */;
         return altId == 0 ? nullptr : GetImagePropertyTemp(bmp, altId);
     } else if (PropertyTagTypeASCII == item->type) {
-        value = strconv::AnsiToUtf8Temp((char*)item->value, (size_t)size);
+        value = strconv::AnsiToUtf8Temp(Str((char*)item->value, size));
     } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
                !((WCHAR*)item->value)[item->length / 2 - 1]) {
         value = ToUtf8Temp((WCHAR*)item->value);
@@ -1665,12 +1665,12 @@ class EngineImageDir : public EngineImages {
     }
 
     ByteSlice GetFileData() override { return {}; }
-    bool SaveFileAs(const char* copyFileName) override;
+    bool SaveFileAs(Str copyFileName) override;
 
-    TempStr GetPropertyTemp(const char*) override { return nullptr; }
+    TempStr GetPropertyTemp(Str) override { return nullptr; }
 
     TempStr GetPageLabeTemp(int pageNo) const override;
-    int GetPageByLabel(const char* label) const override;
+    int GetPageByLabel(Str label) const override;
 
     TocTree* GetToc() override;
 
@@ -1951,7 +1951,7 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
     // Detect the encoding from a leading BOM and produce UTF-8 (gumbo expects
     // UTF-8 input). Handles UTF-8, UTF-16 LE, and UTF-16 BE BOMs; if there's
     // no BOM the data is treated as UTF-8 (ComicInfo.xml's spec encoding).
-    TempStr utf8 = strconv::UnknownToUtf8Temp((const char*)xmlData.data(), xmlData.size());
+    TempStr utf8 = strconv::UnknownToUtf8Temp(Str((char*)xmlData.data(), (int)xmlData.size()));
     if (!utf8) {
         return;
     }
@@ -2006,7 +2006,7 @@ class EngineCbx : public EngineImages {
 
     EngineBase* Clone() override;
 
-    TempStr GetPropertyTemp(const char* name) override;
+    TempStr GetPropertyTemp(Str name) override;
     void GetProperties(StrVec& keyValOut) override;
 
     TocTree* GetToc() override;

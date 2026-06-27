@@ -167,28 +167,10 @@ TempStr ReplaceNoCaseTemp(const char* s, const char* toReplace, const char* repl
 
 } // namespace str
 
-TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
-    if (!s) {
-        ReportIf((int)cch > 0);
-        return {};
-    }
-    return WrapTempStr(strconv::WStrToUtf8(s, cch, GetTempArena()), cch == (size_t)-1 ? (size_t)-1 : cch);
-}
-
-TempWStr ToWStrTemp(const char* s, size_t cb) {
-    if (!s) {
-        ReportIf((int)cb > 0);
-        return {};
-    }
-    return WrapTempWStr(strconv::Utf8ToWStr(s, cb, GetTempArena()), cb == (size_t)-1 ? (size_t)-1 : cb / sizeof(char));
-}
-
 // handles embedded 0 in the string
 TempWStr ToWStrTemp(const StrBuilder& str) {
     if (str.IsEmpty()) {
         return {};
     }
-    char* s = str.CStr();
-    size_t cb = str.Size();
-    return WrapTempWStr(strconv::Utf8ToWStr(s, cb, GetTempArena()), cb);
+    return ToWStrTemp(Str(str.CStr(), str.Size()));
 }
