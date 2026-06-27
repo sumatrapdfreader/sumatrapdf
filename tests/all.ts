@@ -37,6 +37,7 @@ import { testit as issue5751 } from "./issue-5751.ts";
 import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as issue2252 } from "./issue-2252.ts";
 import { testit as issue1201 } from "./issue-1201.ts";
+import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
   ["combining-mark-first", combiningMarkFirst],
@@ -66,6 +67,7 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-find-match-select", findMatchSelect],
   ["issue-2252", issue2252],
   ["issue-1201", issue1201],
+  ["parse-tip-brackets", parseTipBrackets],
 ];
 
 export type AllTestOptions = {

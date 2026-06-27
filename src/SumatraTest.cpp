@@ -22,6 +22,7 @@
 #include "SearchAndDDE.h"
 #include "ReadAloudHighlight.h"
 #include "Translations.h"
+#include "TipText.h"
 
 #include <chm_lib.h>
 #include "lzx.h"
@@ -805,6 +806,20 @@ char* TestGetTocResult(const char* path, int* exitCodeOut) {
             AppendTocItems(out, toc->root->child);
         }
         SafeEngineRelease(&engine);
+    }
+    return out.StealData();
+}
+
+// Headless test for ParseTip (notification / home-page tip markup). Returns
+// "words=N links=M text=..." Used by tests/parse-tip-brackets.ts.
+char* TestParseTipResult(const char* text, int* exitCodeOut) {
+    StrBuilder out;
+    ParsedTip tip;
+    ParseTip(tip, text);
+    TempStr plain = TipPlainTextTemp(tip);
+    out.AppendFmt("words=%d links=%d text=%s\n", tip.words.Size(), tip.links.Size(), plain ? plain : "");
+    if (exitCodeOut) {
+        *exitCodeOut = (tip.words.Size() > 0) ? 0 : 1;
     }
     return out.StealData();
 }

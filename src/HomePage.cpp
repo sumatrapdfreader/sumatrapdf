@@ -164,11 +164,19 @@ void ParseTip(ParsedTip& tip, const char* s) {
                     continue;
                 }
             }
+            // not a valid [text](link) — fall through (e.g. "[CIW]" in a filename)
         }
 
-        // regular word
+        // regular word; '[' is allowed unless it starts a [text](link) sequence
         const char* wordStart = p;
-        while (*p && *p != ' ' && *p != '[') {
+        while (*p && *p != ' ') {
+            if (*p == '[') {
+                const char* textStart = p + 1;
+                const char* textEnd = str::FindChar(textStart, ']');
+                if (textEnd && textEnd[1] == '(' && str::FindChar(textEnd + 2, ')')) {
+                    break;
+                }
+            }
             p++;
         }
         if (p > wordStart) {

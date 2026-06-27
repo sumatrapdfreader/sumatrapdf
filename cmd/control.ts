@@ -22,6 +22,7 @@ export enum ControlCommand {
   TestI18nErrorString = 27,
   TestPageInfoOverlay = 28,
   TestGetToc = 29,
+  TestParseTip = 30,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
