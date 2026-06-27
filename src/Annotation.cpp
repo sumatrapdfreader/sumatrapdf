@@ -434,16 +434,16 @@ int GetWidgetFieldFlags(Annotation* annot) {
 
 TempStr GetWidgetValue(Annotation* annot) {
     if (!annot || annot->type != AnnotationType::Widget) {
-        return (TempStr) "";
+        return "";
     }
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    TempStr res = (TempStr) "";
+    TempStr res = {};
     fz_try(ctx) {
         const char* s = pdf_annot_field_value(ctx, a);
-        res = s ? str::DupTemp(s) : (TempStr) "";
+        res = s ? str::DupTemp(s) : Str("");
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -609,7 +609,7 @@ TempStr Contents(Annotation* annot) {
         s = nullptr;
         logf("Contents(): pdf_annot_contents()\n");
     }
-    return (TempStr)s;
+    return s;
 }
 
 bool SetContents(Annotation* annot, const char* sv) {

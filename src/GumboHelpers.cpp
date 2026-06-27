@@ -76,7 +76,7 @@ const GumboNode* GumboFindDescendantByTag(const GumboNode* node, const char* nam
 
 TempStr GumboTextContentTemp(const GumboNode* node) {
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
-        return nullptr;
+        return {};
     }
     StrBuilder sb;
     const GumboVector* children = &node->v.element.children;
@@ -87,7 +87,7 @@ TempStr GumboTextContentTemp(const GumboNode* node) {
         }
     }
     if (sb.IsEmpty()) {
-        return nullptr;
+        return {};
     }
     return str::DupTemp(sb.LendData());
 }

@@ -895,14 +895,14 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     HDC hdc = tvcd->nmcd.hdc;
 
-    WCHAR* titleW = ToWStrTemp(title);
+    TempWStr titleW = ToWStrTemp(title);
 
     // compute pixel rectangles for each highlighted range
     RECT highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
-        WCHAR* prefixToStart = ToWStrTemp(title, (size_t)byteRanges[i].start);
+        TempWStr prefixToStart = ToWStrTemp(title, (size_t)byteRanges[i].start);
         int wStart = str::Leni(prefixToStart);
-        WCHAR* prefixToEnd = ToWStrTemp(title, (size_t)byteRanges[i].end);
+        TempWStr prefixToEnd = ToWStrTemp(title, (size_t)byteRanges[i].end);
         int wEnd = str::Leni(prefixToEnd);
 
         SIZE szStart, szEnd;

@@ -79,7 +79,7 @@ void DropDown::SetCurrentSelection(int n) {
 
 void DropDown::SetCueBanner(const char* sv) {
     auto ws = ToWStrTemp(sv);
-    ComboBox_SetCueBannerText(hwnd, ws);
+    ComboBox_SetCueBannerText(hwnd, ws.s);
 }
 
 void DropDown::SetItems(StrVec& newItems) {

@@ -55,8 +55,8 @@ static void AdvanceDirIter(DirIter::iterator* it, int n) {
     bool ok;
     bool isFile;
     bool isDir;
-    char* name;
-    char* path;
+    TempStr name;
+    TempStr path;
 
 NextDir:
     if (!it->pattern) {
@@ -83,9 +83,9 @@ NextDir:
         isFile = IsRegularFile(it->fd.dwFileAttributes);
         isDir = IsDirectory(it->fd.dwFileAttributes);
         name = ToUtf8Temp(it->fd.cFileName);
-        path = path::JoinTemp(it->currDir, name);
-        it->data.name = name;
-        it->data.filePath = path;
+        path = path::JoinTemp(it->currDir.s, name.s);
+        it->data.name = name.s;
+        it->data.filePath = path.s;
         if (isFile && includeFiles) {
             return;
         }

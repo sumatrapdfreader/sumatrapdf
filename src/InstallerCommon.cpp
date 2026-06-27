@@ -158,7 +158,7 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
          (int)info->allUsers);
 }
 
-static char* GetExistingInstallationFilePathTemp(const char* name) {
+static TempStr GetExistingInstallationFilePathTemp(const char* name) {
     char* dir = GetExistingInstallationDir();
     if (!dir) {
         return nullptr;
@@ -166,7 +166,7 @@ static char* GetExistingInstallationFilePathTemp(const char* name) {
     return path::JoinTemp(dir, name);
 }
 
-char* GetInstallationFilePathTemp(const char* installDir, const char* name) {
+TempStr GetInstallationFilePathTemp(const char* installDir, const char* name) {
     TempStr res = path::JoinTemp(installDir, name);
     logf("GetInstallationFilePath(%s) = > %s\n", name, res);
     return res;
@@ -181,7 +181,7 @@ TempStr GetShortcutPathTemp(int csidl) {
     return path::JoinTemp(dir, lnkName);
 }
 
-static char* GetInstalledBrowserPluginPathTemp() {
+static TempStr GetInstalledBrowserPluginPathTemp() {
 #ifndef _WIN64
     const char* kRegPathPlugin = "Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
 #else

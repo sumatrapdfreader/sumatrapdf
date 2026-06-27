@@ -69,7 +69,7 @@ char* GetExistingInstallationDir();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 bool IsOurExeInstalled();
 
-char* GetInstallationFilePathTemp(const char* installDir, const char* name);
+TempStr GetInstallationFilePathTemp(const char* installDir, const char* name);
 
 void RegisterPreviewer(bool allUsers, const char* installDir);
 void UnRegisterPreviewer();

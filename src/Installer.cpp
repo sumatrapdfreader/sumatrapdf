@@ -262,8 +262,8 @@ static void AddInstallDirToPath(bool allUsers, const char* installDir) {
     newPath.Append(installDir);
 
     // write as REG_EXPAND_SZ since PATH may contain %vars%
-    WCHAR* keyNameW = ToWStrTemp(keyName);
-    WCHAR* valueW = ToWStrTemp(newPath.CStr());
+    TempWStr keyNameW = ToWStrTemp(keyName);
+    TempWStr valueW = ToWStrTemp(newPath.CStr());
     DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
     HKEY hKey;
     LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
@@ -271,7 +271,7 @@ static void AddInstallDirToPath(bool allUsers, const char* installDir) {
         logf("AddInstallDirToPath: RegOpenKeyExW failed with %d\n", (int)res);
         return;
     }
-    res = RegSetValueExW(hKey, L"Path", 0, REG_EXPAND_SZ, (const BYTE*)valueW, cbData);
+    res = RegSetValueExW(hKey, L"Path", 0, REG_EXPAND_SZ, (const BYTE*)valueW.s, cbData);
     RegCloseKey(hKey);
     if (res != ERROR_SUCCESS) {
         logf("AddInstallDirToPath: RegSetValueExW failed with %d\n", (int)res);
@@ -578,7 +578,7 @@ static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) 
 
     if (dirPrevInstall && !ignorePrev) {
         logf("  using %s from previous install\n", dirPrevInstall);
-        return (TempStr)dirPrevInstall;
+        return dirPrevInstall;
     }
 
     if (forAllUsers) {
@@ -673,13 +673,13 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
 }
 
 static TempStr BrowseForFolderTemp(HWND hwnd, const char* initialFolderA, const char* caption) {
-    WCHAR* initialFolder = ToWStrTemp(initialFolderA);
+    TempWStr initialFolder = ToWStrTemp(initialFolderA);
     BROWSEINFO bi{};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     bi.lpszTitle = ToWStrTemp(caption);
     bi.lpfn = BrowseCallbackProc;
-    bi.lParam = (LPARAM)initialFolder;
+    bi.lParam = (LPARAM)initialFolder.s;
 
     LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
     if (!pidlFolder) {

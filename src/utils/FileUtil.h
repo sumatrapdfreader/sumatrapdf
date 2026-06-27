@@ -15,14 +15,23 @@ TempWStr GetDirTemp(const WCHAR* path);
 TempStr GetNonVirtualTemp(const char* virtualPath);
 
 char* Join(Arena* allocator, const char* path, const char* fileName);
+char* Join(Arena* allocator, Str path, const char* fileName);
 char* Join(const char* path, const char* fileName);
+char* Join(Str path, const char* fileName);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
+WCHAR* Join(WStr path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
 TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2 = nullptr);
+TempStr JoinTemp(Str path, const char* fileName, const char* fileName2 = nullptr);
+TempStr JoinTemp(const char* path, Str fileName, const char* fileName2 = nullptr);
+TempStr JoinTemp(Str path, Str fileName, const char* fileName2 = nullptr);
 TempWStr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
+TempWStr JoinTemp(WStr path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
+TempWStr JoinTemp(const WCHAR* path, WStr fileName, const WCHAR* fileName2 = nullptr);
 
 bool IsDirectory(const char*);
 
 TempStr NormalizeTemp(const char* path);
+TempStr NormalizeTemp(Str path);
 
 TempStr ShortPathTemp(const char* pathA);
 bool IsSame(const char* path1, const char* path2);
@@ -69,6 +78,7 @@ bool WriteFile(const char* path, const ByteSlice&);
 
 i64 GetSize(HANDLE h);
 i64 GetSize(const char*);
+i64 GetSize(Str path);
 bool Delete(const char* path);
 bool DeleteFileToTrash(const char* path);
 

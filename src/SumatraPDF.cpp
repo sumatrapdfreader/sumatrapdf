@@ -1404,7 +1404,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
         titlePath = path::GetBaseNameTemp(titlePath);
     }
 
-    TempStr docTitle = (TempStr) "";
+    TempStr docTitle = "";
     if (tab->ctrl) {
         TempStr title = tab->ctrl->GetPropertyTemp(kPropTitle);
         if (title != nullptr) {
@@ -3347,7 +3347,7 @@ enum class SaveChoice {
 };
 
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
-    TempStr fileName = (TempStr)path::GetBaseNameTemp(filePath);
+    TempStr fileName = path::GetBaseNameTemp(filePath);
     TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'"), fileName);
     TempWStr mainInstr = ToWStrTemp(mainInstrA);
     auto content = _TRA("Save changes?");
@@ -3744,7 +3744,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, StrBuilder& fileFilter) 
     } else if (type == kindEngineComicBooks) {
         fileFilter.Append(_TRA("Comic books"));
     } else if (type == kindEngineImage) {
-        WCHAR* extW = ToWStrTemp(ctrl->GetDefaultFileExt() + 1);
+        TempWStr extW = ToWStrTemp(ctrl->GetDefaultFileExt() + 1);
         fileFilter.AppendFmt(_TRA("Image files (*.%s)"), extW);
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
@@ -3777,10 +3777,10 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
-    TempStr srcFileName = (TempStr)ctrl->GetFilePath();
+    TempStr srcFileName = ctrl->GetFilePath();
     if (gPluginMode) {
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        srcFileName = (TempStr) "filename";
+        srcFileName = "filename";
         TempStr urlName = url::GetFileNameTemp(gPluginURL);
         if (urlName) {
             srcFileName = urlName;
@@ -3872,9 +3872,9 @@ static void SaveCurrentFileAs(MainWindow* win) {
         return;
     }
     ctrl = win->ctrl;
-    srcFileName = (TempStr)ctrl->GetFilePath();
+    srcFileName = ctrl->GetFilePath();
     if (gPluginMode) {
-        srcFileName = (TempStr) "filename";
+        srcFileName = "filename";
         TempStr urlName = url::GetFileNameTemp(gPluginURL);
         if (urlName) {
             srcFileName = urlName;
@@ -3931,7 +3931,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         ok = false;
     }
     if (!ok) {
-        TempStr msg = (errorMsg != nullptr) ? errorMsg : (TempStr)_TRA("Failed to save a file");
+        TempStr msg = errorMsg ? errorMsg : Str(_TRA("Failed to save a file"));
         logf("SaveCurrentFileAs() failed with '%s'\n", msg);
         MessageBoxWarning(win->hwndFrame, msg);
     }
@@ -4026,7 +4026,7 @@ static void RenameCurrentFile(MainWindow* win) {
         dstFilePathW[idx] = '\0';
     }
 
-    WCHAR* srcPathW = ToWStrTemp(srcPath);
+    TempWStr srcPathW = ToWStrTemp(srcPath);
     WCHAR* initDir = path::GetDirTemp(srcPathW);
 
     OPENFILENAME ofn{};
@@ -4040,7 +4040,7 @@ static void RenameCurrentFile(MainWindow* win) {
     auto s = _TRA("Rename To");
     ofn.lpstrTitle = ToWStrTemp(s);
     ofn.lpstrInitialDir = initDir;
-    ofn.lpstrDefExt = defExtW + 1;
+    ofn.lpstrDefExt = defExtW.s + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     ok = GetSaveFileNameW(&ofn);
@@ -4091,7 +4091,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     auto* ctrl = win->ctrl;
     const char* path = ctrl->GetFilePath();
 
-    const WCHAR* defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
+    const TempWStr defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
 
     WCHAR dstFileName[MAX_PATH] = {};
     // Remove the extension so that it can be replaced with .lnk
@@ -4137,11 +4137,11 @@ static void CreateLnkShortcut(MainWindow* win) {
     const char* viewMode = DisplayModeToString(ctrl->GetDisplayMode());
     TempStr zoomVirtual = str::FormatTemp("%.2f", ctrl->GetZoomVirtual());
     if (kZoomFitPage == ctrl->GetZoomVirtual()) {
-        zoomVirtual = (TempStr) "fitpage";
+        zoomVirtual = "fitpage";
     } else if (kZoomFitWidth == ctrl->GetZoomVirtual()) {
-        zoomVirtual = (TempStr) "fitwidth";
+        zoomVirtual = "fitwidth";
     } else if (kZoomFitContent == ctrl->GetZoomVirtual()) {
-        zoomVirtual = (TempStr) "fitcontent";
+        zoomVirtual = "fitcontent";
     }
 
     TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode,
@@ -6135,10 +6135,10 @@ static TempStr URLEncodeMayTruncateTemp(const char* s) {
     int maxLen = kMaxURLLen;
     for (int i = 0; i < 10; i++) {
         if (str::Leni(ws) >= maxLen) {
-            ws[maxLen - 1] = 0;
+            ws.s[maxLen - 1] = 0;
         }
         DWORD cchSizeInOut = kMaxURLLen;
-        hr = UrlEscapeW(ws, buf, &cchSizeInOut, flags);
+        hr = UrlEscapeW(ws.s, buf, &cchSizeInOut, flags);
         if (SUCCEEDED(hr)) {
             return ToUtf8Temp(buf);
         }
@@ -6151,11 +6151,11 @@ static TempStr URLEncodeMayTruncateTemp(const char* s) {
         }
         if ((int)diff >= maxLen) {
             // can't reduce further
-            return nullptr;
+            return {};
         }
         maxLen -= diff;
     }
-    return nullptr;
+    return {};
 }
 
 constexpr const char* kUserLangStr = "${userlang}";
@@ -6260,7 +6260,7 @@ static void OnMenuCustomZoom(MainWindow* win) {
 TempStr GetNotImportantDataDirTemp() {
     TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (!dir) {
-        return nullptr;
+        return {};
     }
     return path::JoinTemp(dir, "SumatraPDF-data");
 }
@@ -6268,7 +6268,7 @@ TempStr GetNotImportantDataDirTemp() {
 TempStr GetBuildDirNameTemp() {
     TempStr dataDir = GetNotImportantDataDirTemp();
     if (!dataDir) {
-        return nullptr;
+        return {};
     }
     char id[7] = "000000";
     char* sha1 = Sha1OfAppExe();
@@ -6281,7 +6281,7 @@ TempStr GetBuildDirNameTemp() {
 TempStr GetLogFilePathTemp() {
     TempStr buildDir = GetBuildDirNameTemp();
     if (!buildDir) {
-        return nullptr;
+        return {};
     }
     // TODO: maybe use unique name
     return path::JoinTemp(buildDir, "sumatra-log.txt");
@@ -6290,7 +6290,7 @@ TempStr GetLogFilePathTemp() {
 TempStr GetCrashInfoDirTemp() {
     TempStr buildDir = GetBuildDirNameTemp();
     if (!buildDir) {
-        return nullptr;
+        return {};
     }
     return path::JoinTemp(buildDir, "crashinfo");
 }
@@ -6593,7 +6593,7 @@ static void TogglePredictiveRender(MainWindow* win) {
 }
 
 static void DownloadDebugSymbols() {
-    TempStr msg = (TempStr) "Symbols were already downloaded";
+    TempStr msg = "Symbols were already downloaded";
 
     bool ok = AreSymbolsDownloaded(gSymbolsDir);
     if (ok) {
@@ -6601,7 +6601,7 @@ static void DownloadDebugSymbols() {
     }
     ok = CrashHandlerDownloadSymbols();
     if (!ok) {
-        msg = (TempStr) "Failed to download symbols";
+        msg = "Failed to download symbols";
         goto ShowMessage;
     }
     msg = str::FormatTemp("Downloaded symbols to %s", gSymbolsDir);
@@ -7816,7 +7816,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             TempStr notifMsg = nullptr;
             if (enabled) {
                 TempStr dir = GetPdfPreviewLogDirTemp();
-                notifMsg = str::FormatTemp("PDF preview logging enabled.\nLogs: %s", dir ? dir : "(unknown)");
+                notifMsg = str::FormatTemp("PDF preview logging enabled.\nLogs: %s", dir ? dir.s : "(unknown)");
             } else {
                 notifMsg = str::DupTemp("PDF preview logging disabled.");
             }
@@ -9556,7 +9556,7 @@ static bool ReadAloudAppendChar(char** dst, size_t* len, size_t* cap, char c) {
 
 static TempStr CleanReadAloudTextTemp(const char* text) {
     if (str::IsEmpty(text)) {
-        return nullptr;
+        return {};
     }
 
     char* out = nullptr;
@@ -9608,7 +9608,7 @@ static TempStr CleanReadAloudTextTemp(const char* text) {
 
             if (!lastWasSpace && outLen > 0) {
                 if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
-                    return nullptr;
+                    return {};
                 }
                 lastWasSpace = true;
             }
@@ -9616,7 +9616,7 @@ static TempStr CleanReadAloudTextTemp(const char* text) {
             // Keep a slightly stronger pause for paragraph breaks.
             if (lineBreaks >= 2) {
                 if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
-                    return nullptr;
+                    return {};
                 }
             }
 
@@ -9627,7 +9627,7 @@ static TempStr CleanReadAloudTextTemp(const char* text) {
         if (IsReadAloudHorizontalSpace(c)) {
             if (!lastWasSpace && outLen > 0) {
                 if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
-                    return nullptr;
+                    return {};
                 }
                 lastWasSpace = true;
             }
@@ -9637,7 +9637,7 @@ static TempStr CleanReadAloudTextTemp(const char* text) {
         }
 
         if (!ReadAloudAppendChar(&out, &outLen, &outCap, c)) {
-            return nullptr;
+            return {};
         }
 
         lastWasSpace = false;
@@ -10583,7 +10583,7 @@ void GetProgramInfo(StrBuilder& s) {
         s.AppendFmt("Dll: %s %s\r\n", dllPath, fileSizeDll);
     }
     TempStr signer = GetExecutableSignerTemp(exePath);
-    s.AppendFmt("Signer: %s\r\n", signer ? signer : "(not signed)");
+    s.AppendFmt("Signer: %s\r\n", signer ? signer.s : "(not signed)");
     if (builtOn != nullptr) {
         s.AppendFmt("BuiltOn: %s\n", builtOn);
     }

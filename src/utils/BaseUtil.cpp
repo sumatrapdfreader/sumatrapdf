@@ -163,7 +163,8 @@ u32 MurmurHashWStrI(const WCHAR* str) {
 // variation of MurmurHash2 which deals with strings that are
 // mostly ASCII and should be treated case independently
 u32 MurmurHashStrI(const char* s) {
-    char* dst = str::DupTemp(s);
+    TempStr dst = str::DupTemp(s);
+    char* d = dst.s;
     char c;
     size_t len = 0;
     while (*s) {
@@ -172,9 +173,9 @@ u32 MurmurHashStrI(const char* s) {
         if ('A' <= c && c <= 'Z') {
             c = (c + 'a' - 'A');
         }
-        *dst++ = c;
+        *d++ = c;
     }
-    return MurmurHash2(dst - len, len);
+    return MurmurHash2(d - len, len);
 }
 
 int limitValue(int val, int min, int max) {

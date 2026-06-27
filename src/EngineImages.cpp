@@ -186,7 +186,7 @@ class EngineImages : public EngineBase {
     // Returns a non-owning view into engine-owned storage; the caller must
     // not free. Bytes stay valid until the engine is destroyed.
     virtual ByteSlice GetImageData(int pageNo) = 0;
-    virtual TempStr GetImagePathTemp(int pageNo) { return nullptr; }
+    virtual TempStr GetImagePathTemp(int pageNo) { return {}; }
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
     void DropPage(ImagePage* page, bool forceRemove);
@@ -1078,7 +1078,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
         return altId == 0 ? nullptr : GetImagePropertyTemp(bmp, altId);
     }
     PropertyItem* item = (PropertyItem*)malloc(size);
-    if (!item) return nullptr;
+    if (!item) return {};
     AutoFree freeItem((const char*)item);
     Status ok = bmp->GetPropertyItem(id, size, item);
     if (Ok != ok) {
@@ -1749,8 +1749,8 @@ int EngineImageDir::GetPageByLabel(const char* label) const {
         if (!str::StartsWith(fileName, label)) {
             continue;
         }
-        const char* maybeExt = fileName + nLabel;
-        if (str::Eq(maybeExt, ext) || fileName[nLabel] == 0) {
+        const char* maybeExt = fileName.s + nLabel;
+        if (str::Eq(maybeExt, ext) || fileName.s[nLabel] == 0) {
             return i + 1;
         }
     }
@@ -2276,31 +2276,31 @@ ByteSlice EngineCbx::GetImageData(int pageNo) {
 
 TempStr EngineCbx::GetPropertyTemp(const char* name) {
     if (str::Eq(name, kPropTitle)) {
-        return cip.propTitle;
+        return Str(cip.propTitle);
     }
 
     if (str::Eq(name, kPropAuthor)) {
         if (cip.propAuthors.Size() == 0) {
-            return nullptr;
+            return {};
         }
         return JoinTemp(&cip.propAuthors, ", ");
     }
 
     if (str::Eq(name, kPropCreationDate)) {
-        return cip.propDate;
+        return Str(cip.propDate);
     }
     if (str::Eq(name, kPropModificationDate)) {
-        return cip.propModDate;
+        return Str(cip.propModDate);
     }
     if (str::Eq(name, kPropCreatorApp)) {
-        return cip.propCreator;
+        return Str(cip.propCreator);
     }
     if (str::Eq(name, kPropSubject)) {
         // TODO: replace with Prop_Summary
-        return cip.propSummary;
+        return Str(cip.propSummary);
     }
 
-    return nullptr;
+    return {};
 }
 
 void EngineCbx::GetProperties(StrVec& keyValOut) {

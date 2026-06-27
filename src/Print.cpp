@@ -422,11 +422,11 @@ void GetPrintersInfo(StrBuilder& out) {
 }
 
 // get all the important info about a printer
-Printer* NewPrinter(char* printerName) {
+Printer* NewPrinter(const char* printerName) {
     HANDLE hPrinter = nullptr;
     LONG ret = 0;
     Printer* printer = nullptr;
-    WCHAR* printerNameW = ToWStrTemp(printerName);
+    TempWStr printerNameW = ToWStrTemp(printerName);
     BOOL ok = OpenPrinterW(printerNameW, &hPrinter, nullptr);
     if (!ok) {
         return nullptr;
@@ -689,7 +689,7 @@ static bool PrintToDevice(const PrintData& pd) {
         TempStr fileName = url::GetFileNameTemp(gPluginURL);
         // fall back to a generic "filename" instead of the more confusing temporary filename
         if (!fileName) {
-            fileName = (TempStr) "filename";
+            fileName = "filename";
         }
         di.lpszDocName = ToWStrTemp(fileName);
     } else {
@@ -728,7 +728,7 @@ static bool PrintToDevice(const PrintData& pd) {
 
     auto devMode = pd.printer->devMode;
     // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
-    WCHAR* printerName = ToWStrTemp(pd.printer->name);
+    TempWStr printerName = ToWStrTemp(pd.printer->name);
 
     {
         // validate printer settings as per
@@ -1611,9 +1611,9 @@ static short GetPaperByName(Printer* printer, const char* wantedName) {
     TempStr name = str::DupTemp(wantedName);
     str::TrimWSInPlace(name, str::TrimOpt::Both);
     size_t nameLen = str::Len(name);
-    if (nameLen >= 2 && name[0] == '"' && name[nameLen - 1] == '"') {
-        name[nameLen - 1] = '\0';
-        wantedName = name + 1;
+    if (nameLen >= 2 && name.s[0] == '"' && name.s[nameLen - 1] == '"') {
+        name.s[nameLen - 1] = '\0';
+        wantedName = Str(name.s + 1);
     } else {
         wantedName = name;
     }
@@ -1893,7 +1893,7 @@ static short DetectPrinterPaperSize(EngineBase* engine, Printer* printer) {
 // let the driver validate and canonicalize the devmode; returns false if the
 // driver rejects it (e.g. doesn't support a custom paper size, see issue #2188)
 static bool ValidateDevMode(Printer* printer) {
-    WCHAR* nameW = ToWStrTemp(printer->name);
+    TempWStr nameW = ToWStrTemp(printer->name);
     HANDLE hPrinter = nullptr;
     if (!OpenPrinterW(nameW, &hPrinter, nullptr)) {
         return false;

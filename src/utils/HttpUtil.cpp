@@ -32,7 +32,7 @@ bool HttpGet(const char* urlA, HttpRsp* rspOut) {
     HINTERNET hReq = nullptr;
     DWORD infoLevel;
     DWORD headerBuffSize = sizeof(DWORD);
-    WCHAR* url = ToWStrTemp(urlA);
+    TempWStr url = ToWStrTemp(urlA);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD | INTERNET_FLAG_IGNORE_CERT_CN_INVALID;
 
     if (str::StartsWithI(urlA, "https")) {
@@ -108,12 +108,12 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath, const Func1<HttpP
     DWORD dwRead = 0;
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD statusCode = 0;
-    WCHAR* url = ToWStrTemp(urlA);
+    TempWStr url = ToWStrTemp(urlA);
     char* buf = nullptr;
 
     HttpProgress progress{};
 
-    WCHAR* pathW = ToWStrTemp(destFilePath);
+    TempWStr pathW = ToWStrTemp(destFilePath);
     HANDLE hf =
         CreateFileW(pathW, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (INVALID_HANDLE_VALUE == hf) {
@@ -195,8 +195,8 @@ bool HttpPost(const char* serverA, int port, const char* urlA, StrBuilder* heade
     DWORD dwRead = 0;
     DWORD flags;
     DWORD dwService;
-    WCHAR* server = ToWStrTemp(serverA);
-    WCHAR* url = ToWStrTemp(urlA);
+    TempWStr server = ToWStrTemp(serverA);
+    TempWStr url = ToWStrTemp(urlA);
     DWORD infoLevel;
 
     DWORD accessType = INTERNET_OPEN_TYPE_PRECONFIG;

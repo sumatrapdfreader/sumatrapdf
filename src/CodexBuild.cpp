@@ -130,8 +130,8 @@ static void PopulateModelCombo(HWND combo) {
     BuildCodexModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
         TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Gpt-5.5");
-        WCHAR* displayW = ToWStrTemp(display);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
+        TempWStr displayW = ToWStrTemp(display);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW.s);
     }
 }
 
@@ -327,14 +327,14 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
 static TempStr CodexSessionsRootTemp() {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (!userProfile) {
-        return nullptr;
+        return {};
     }
     return str::FormatTemp("%s\\.codex\\sessions", userProfile);
 }
 
 static TempStr NormalizeCodexPathTemp(const char* path) {
     if (!path) {
-        return nullptr;
+        return {};
     }
     if (str::StartsWith(path, "\\\\?\\")) {
         path += 4;
@@ -358,7 +358,7 @@ static bool IsCodexRolloutFileName(const char* name) {
 static TempStr ExtractCodexPromptFromHistoryLineTemp(const char* line, const char* sessionId) {
     TempStr sid = AIChatJsonStrTemp(line, "session_id");
     if (!sid || !str::Eq(sid, sessionId)) {
-        return nullptr;
+        return {};
     }
     return AIChatJsonStrTemp(line, "text");
 }
@@ -455,7 +455,7 @@ static void TryAddCodexSession(const char* rolloutPath, const FILETIME& ft, cons
 static TempStr FindCodexRolloutPathTemp(const char* sessionId) {
     TempStr root = CodexSessionsRootTemp();
     if (!root || !sessionId) {
-        return nullptr;
+        return {};
     }
     TempStr suffix = str::FormatTemp("%s.jsonl", sessionId);
     TempStr result = nullptr;
@@ -463,7 +463,7 @@ static TempStr FindCodexRolloutPathTemp(const char* sessionId) {
     WIN32_FIND_DATAW fdY;
     HANDLE hY = FindFirstFileW(ToWStrTemp(yearPat), &fdY);
     if (hY == INVALID_HANDLE_VALUE) {
-        return nullptr;
+        return {};
     }
     do {
         if ((fdY.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
@@ -608,8 +608,8 @@ static void PopulateSessionCombo(MainWindow* win) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
-        WCHAR* labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
+        TempWStr labelW = ToWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
 
         if (tab->codexSessionId && str::Eq(tab->codexSessionId, sessions[i].sessionId)) {
             selectedIdx = i + 1;
@@ -620,8 +620,8 @@ static void PopulateSessionCombo(MainWindow* win) {
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->codexSessionId && !foundCurrent) {
         const char* label = "(current session)";
-        WCHAR* labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
+        TempWStr labelW = ToWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
         selectedIdx = sessions.Size() + 1;
     }
 
@@ -652,18 +652,18 @@ static bool IsCodexInjectedUserText(const char* text) {
 
 static TempStr ExtractCodexRolloutUserTextTemp(const char* line) {
     if (!str::Find(line, "\"type\":\"response_item\"")) {
-        return nullptr;
+        return {};
     }
     if (!str::Find(line, "\"role\":\"user\"")) {
-        return nullptr;
+        return {};
     }
     const char* inputText = str::Find(line, "\"input_text\"");
     if (!inputText) {
-        return nullptr;
+        return {};
     }
     TempStr text = AIChatJsonStrTemp(inputText, "text");
     if (!text || IsCodexInjectedUserText(text)) {
-        return nullptr;
+        return {};
     }
     str::TrimWSInPlace(text, str::TrimOpt::Both);
     return str::Len(text) > 0 ? text : nullptr;
@@ -671,14 +671,14 @@ static TempStr ExtractCodexRolloutUserTextTemp(const char* line) {
 
 static TempStr ExtractCodexRolloutAssistantTextTemp(const char* line) {
     if (!str::Find(line, "\"type\":\"response_item\"")) {
-        return nullptr;
+        return {};
     }
     if (!str::Find(line, "\"role\":\"assistant\"")) {
-        return nullptr;
+        return {};
     }
     const char* outputText = str::Find(line, "\"output_text\"");
     if (!outputText) {
-        return nullptr;
+        return {};
     }
     return AIChatJsonStrTemp(outputText, "text");
 }

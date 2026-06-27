@@ -108,7 +108,7 @@ WCHAR* DecodeHtmlEntitites(const char* string, uint codepage) {
 }
 
 // TODO: optimize
-char* DecodeHtmlEntititesTemp(const char* s, uint codepage) {
+TempStr DecodeHtmlEntititesTemp(const char* s, uint codepage) {
     WCHAR* ws = DecodeHtmlEntitites(s, codepage);
     char* res = ToUtf8Temp(ws);
     str::Free(ws);
@@ -160,7 +160,7 @@ WCHAR* HtmlElement::GetAttribute(const char* name) const {
     return nullptr;
 }
 
-char* HtmlElement::GetAttributeTemp(const char* name) const {
+TempStr HtmlElement::GetAttributeTemp(const char* name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name)) {
             return DecodeHtmlEntititesTemp(attr->val, codepage);

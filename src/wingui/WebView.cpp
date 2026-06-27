@@ -22,7 +22,7 @@ Kind kindWebView = "webView";
 
 #ifndef _MSC_VER
 TempStr GetWebView2VersionTemp() {
-    return nullptr;
+    return {};
 }
 bool HasWebView() {
     return false;
@@ -32,7 +32,7 @@ TempStr GetWebView2VersionTemp() {
     WCHAR* ver = nullptr;
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
     if (FAILED(hr) || (ver == nullptr)) {
-        return nullptr;
+        return {};
     }
     TempStr res = ToUtf8Temp(ver);
     CoTaskMemFree((void*)ver);
@@ -348,12 +348,12 @@ static TempWStr UriPathFromPrefix(const WCHAR* uri, const WCHAR* prefix);
 
 static TempStr UrlForWebViewEvent(const WCHAR* uri, const WCHAR* prefix) {
     if (!uri) {
-        return nullptr;
+        return {};
     }
     if (prefix && str::StartsWith(uri, prefix)) {
         TempWStr pathW = UriPathFromPrefix(uri, prefix);
         if (!pathW) {
-            return nullptr;
+            return {};
         }
         TempStr path = ToUtf8Temp(pathW);
         str::Free(pathW);
@@ -600,21 +600,21 @@ static TempWStr MimeHeaderFromContentType(const char* contentType) {
 
 static TempWStr UriPathFromPrefix(const WCHAR* uri, const WCHAR* prefix) {
     if (!uri || !prefix || !str::StartsWith(uri, prefix)) {
-        return nullptr;
+        return {};
     }
     const WCHAR* path = uri + str::Len(prefix);
     while (*path == L'/') {
         path++;
     }
     if (str::IsEmpty(path)) {
-        return nullptr;
+        return {};
     }
     TempWStr pathCopy = str::Dup(path);
-    WCHAR* q = (WCHAR*)str::FindChar(pathCopy, '?');
+    WCHAR* q = str::FindChar(pathCopy, L'?');
     if (q) {
         *q = 0;
     }
-    WCHAR* h = (WCHAR*)str::FindChar(pathCopy, '#');
+    WCHAR* h = str::FindChar(pathCopy, L'#');
     if (h) {
         *h = 0;
     }
@@ -1042,7 +1042,7 @@ void WebviewWnd::SetHtml(const char* html) {
         QueuePendingOp(PendingWebViewOp::SetHtml, html);
         return;
     }
-    WCHAR* html2 = ToWStrTemp(html);
+    TempWStr html2 = ToWStrTemp(html);
     webview->NavigateToString(html2);
 }
 

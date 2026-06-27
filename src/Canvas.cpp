@@ -269,7 +269,7 @@ static void StartTextDragDrop(MainWindow* win) {
     if (str::IsEmpty(text)) {
         return;
     }
-    WCHAR* wtext = ToWStrTemp(text);
+    TempWStr wtext = ToWStrTemp(text);
     TextDataObject* dataObj = new TextDataObject(wtext);
     TextDropSource* dropSrc = new TextDropSource();
     DWORD dwEffect = 0;
@@ -1011,8 +1011,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             bool hasInternalLink = citationHoverEnabled && RefHoverIsInternalLink(el, dm);
             if (annot != prev) {
 #if 0
-                TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
-                TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) : (TempStr) "none";
+                TempStr name = annot ? AnnotationReadableNameTemp(annot->type) :  "none";
+                TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) :  "none";
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
 #endif
                 if (gShowAnnotationNotification && !hasInternalLink) {
@@ -1026,7 +1026,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.timeoutMs = 3000;
                         args.delayInMs = 1000;
                         args.noClose = true;
-                        TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
+                        TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : Str("none");
                         const char* fmt = _TRA("%s annotation. Ctrl+click to edit.");
                         args.msg = str::FormatTemp(fmt, name);
                         ShowNotification(args);
@@ -3315,7 +3315,7 @@ static TempStr GetDownloadsDirTemp() {
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_Downloads, 0, nullptr, &pathW);
     if (FAILED(hr) || !pathW) {
         CoTaskMemFree(pathW);
-        return nullptr;
+        return {};
     }
     TempStr res = ToUtf8Temp(pathW);
     CoTaskMemFree(pathW);
@@ -3339,11 +3339,11 @@ static TempStr FileNameFromUrlTemp(const char* url) {
         p++;
     }
     if (!lastSlash) {
-        return nullptr;
+        return {};
     }
     int nameLen = (int)(p - lastSlash - 1);
     if (nameLen <= 0) {
-        return nullptr;
+        return {};
     }
     return str::DupTemp(lastSlash + 1, nameLen);
 }
@@ -3370,7 +3370,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         fileName = str::DupTemp("dropped_image.png");
     }
 
-    TempStr destPath = path::JoinTemp(downloadsDir, fileName);
+    TempStr destPath = path::JoinTemp(downloadsDir.s, fileName.s);
 
     // avoid overwriting: if file exists, add a numeric suffix
     if (file::Exists(destPath)) {
@@ -3378,7 +3378,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         TempStr base = str::DupTemp(fileName, str::Leni(fileName) - str::Leni(ext));
         for (int i = 1; i < 1000; i++) {
             TempStr newName = str::FormatTemp("%s_%d%s", base, i, ext);
-            destPath = path::JoinTemp(downloadsDir, newName);
+            destPath = path::JoinTemp(downloadsDir.s, newName.s);
             if (!file::Exists(destPath)) {
                 break;
             }
@@ -3456,7 +3456,7 @@ static TempStr GetTextFromDataObject(IDataObject* dataObj) {
         res = s ? str::DupTemp(s) : nullptr;
         goto Cleanup;
     }
-    return nullptr;
+    return {};
 Cleanup:
     GlobalUnlock(medium.hGlobal);
     ReleaseStgMedium(&medium);
@@ -3497,7 +3497,7 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
             }
         }
     }
-    return nullptr;
+    return {};
 }
 
 static bool DataObjectHasFiles(IDataObject* dataObj) {

@@ -117,10 +117,10 @@
 
 // some GDI+ PropertyTag* are missing from mingw headers (but present in MS SDK)
 #ifndef PropertyTagExifFocalLengthIn35mmFilm
-#define PropertyTagExifFocalLengthIn35mmFilm ((PROPID) 0xA405)
+#define PropertyTagExifFocalLengthIn35mmFilm ((PROPID)0xA405)
 #endif
 #ifndef PropertyTagExifWhiteBalance
-#define PropertyTagExifWhiteBalance ((PROPID) 0xA403)
+#define PropertyTagExifWhiteBalance ((PROPID)0xA403)
 #endif
 
 #include <io.h>
@@ -653,8 +653,8 @@ defer { instance->Release(); };
 */
 
 // exists just to mark the intent, needed by both StrUtil.h and TempAllocator.h
-using TempStr = char*;
-using TempWStr = WCHAR*;
+using TempStr = Str;
+using TempWStr = WStr;
 
 #include "GeomUtil.h"
 #include "Vec.h"

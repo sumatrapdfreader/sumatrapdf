@@ -904,7 +904,7 @@ ByteSlice MobiDoc::GetHtmlData() const {
 TempStr MobiDoc::GetPropertyTemp(const char* name) {
     char* v = GetPropValueTemp(props, name);
     if (!v) {
-        return nullptr;
+        return {};
     }
     return strconv::StrToUtf8Temp(v, textEncoding);
 }

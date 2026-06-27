@@ -1959,8 +1959,8 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
     if (!fromRenderedBitmap) {
         pathLabelStyle |= WS_VISIBLE;
     }
-    ew->hwndPathLabel = CreateWindowExW(0, L"STATIC", filePath ? ToWStrTemp(filePath) : L"", pathLabelStyle, 0, 0, 0, 0,
-                                        hwnd, nullptr, h, nullptr);
+    ew->hwndPathLabel = CreateWindowExW(0, L"STATIC", filePath ? ToWStrTemp(filePath).s : L"", pathLabelStyle, 0, 0, 0,
+                                        0, hwnd, nullptr, h, nullptr);
     SendMessageW(ew->hwndPathLabel, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
 
     // row 2: dest edit + browse

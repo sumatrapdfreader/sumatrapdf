@@ -105,8 +105,8 @@ static void RemoveInstallDirFromPath(bool allUsers, const char* installDir) {
     }
 
     // write as REG_EXPAND_SZ since PATH may contain %vars%
-    WCHAR* keyNameW = ToWStrTemp(keyName);
-    WCHAR* valueW = ToWStrTemp(newPath.CStr());
+    TempWStr keyNameW = ToWStrTemp(keyName);
+    TempWStr valueW = ToWStrTemp(newPath.CStr());
     DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
     HKEY hKey;
     LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
@@ -114,7 +114,7 @@ static void RemoveInstallDirFromPath(bool allUsers, const char* installDir) {
         logf("RemoveInstallDirFromPath: RegOpenKeyExW failed with %d\n", (int)res);
         return;
     }
-    res = RegSetValueExW(hKey, L"Path", 0, REG_EXPAND_SZ, (const BYTE*)valueW, cbData);
+    res = RegSetValueExW(hKey, L"Path", 0, REG_EXPAND_SZ, (const BYTE*)valueW.s, cbData);
     RegCloseKey(hKey);
     if (res != ERROR_SUCCESS) {
         logf("RemoveInstallDirFromPath: RegSetValueExW failed with %d\n", (int)res);
@@ -386,7 +386,7 @@ static int RunApp() {
     }
 }
 
-static char* GetUninstallerPathInTemp() {
+static TempStr GetUninstallerPathInTemp() {
     WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     ReportIf(res == 0 || res >= dimof(tempDir));
@@ -459,7 +459,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     ::ExitProcess(0);
 }
 
-static char* GetSelfDeleteBatchPathInTemp() {
+static TempStr GetSelfDeleteBatchPathInTemp() {
     WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     ReportIf(res == 0 || res >= dimof(tempDir));

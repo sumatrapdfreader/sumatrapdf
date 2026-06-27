@@ -31,7 +31,7 @@ struct HtmlElement {
     bool NameIsNS(const char* name, const char* ns) const;
 
     WCHAR* GetAttribute(const char* name) const;
-    char* GetAttributeTemp(const char* name) const;
+    TempStr GetAttributeTemp(const char* name) const;
     HtmlElement* GetChildByTag(HtmlTag tag, int idx = 0) const;
 };
 
@@ -85,17 +85,17 @@ class HtmlParser {
 };
 
 WCHAR* DecodeHtmlEntitites(const char* string, uint codepage);
-char* DecodeHtmlEntititesTemp(const char* string, uint codepage);
+TempStr DecodeHtmlEntititesTemp(const char* string, uint codepage);
 
 namespace strconv {
 
 inline WCHAR* FromHtmlUtf8(const char* s, size_t len) {
-    char* tmp = str::DupTemp(s, len);
+    TempStr tmp = str::DupTemp(s, len);
     return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 
-inline char* FromHtmlUtf8Temp(const char* s, size_t len) {
-    char* tmp = str::DupTemp(s, len);
+inline TempStr FromHtmlUtf8Temp(const char* s, size_t len) {
+    TempStr tmp = str::DupTemp(s, len);
     return DecodeHtmlEntititesTemp(tmp, CP_UTF8);
 }
 } // namespace strconv

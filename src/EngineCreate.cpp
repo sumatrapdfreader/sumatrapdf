@@ -28,25 +28,25 @@ static bool gEnableEpubWithPdfEngine = true;
 static TempStr GetCbxCachePathTemp(const char* path, i64 fileSize) {
     TempStr dataDir = GetNotImportantDataDirTemp();
     if (!dataDir) {
-        return nullptr;
+        return {};
     }
     if (path::IsOnNetworkDrive(dataDir)) {
         // local-appdata is also remote (unusual) -- caching wouldn't help
-        return nullptr;
+        return {};
     }
     TempStr cacheDir = path::JoinTemp(dataDir, "cbx-cache");
 
     u8 digest[16]{};
     TempStr keyStr = str::FormatTemp("%s|%lld", path, (long long)fileSize);
-    CalcMD5Digest((const u8*)keyStr, str::Leni(keyStr), digest);
+    CalcMD5Digest((const u8*)keyStr.s, str::Leni(keyStr), digest);
     AutoFreeStr hex = str::MemToHex(digest, dimof(digest));
 
     TempStr ext = path::GetExtTemp(path);
     if (str::IsEmpty(ext)) {
-        ext = (TempStr) ".cbx";
+        ext = Str(".cbx");
     }
     TempStr name = str::JoinTemp(hex, ext);
-    return path::JoinTemp(cacheDir, name);
+    return path::JoinTemp(cacheDir.s, name.s);
 }
 
 struct CbxCopyProgressState {
@@ -75,20 +75,20 @@ static void OnCbxCopyProgress(CbxCopyProgressState* s, file::CopyProgress* p) {
 // the caller falls back to opening the original file directly.
 static TempStr MaybeCopyCbxToLocalCache(const char* path) {
     if (!path::IsOnNetworkDrive(path)) {
-        return nullptr;
+        return {};
     }
     // stress testing opens thousands of files back-to-back; copying each
     // one into the local cache would just churn the disk.
     if (IsStressTesting()) {
-        return nullptr;
+        return {};
     }
     i64 fileSize = file::GetSize(path);
     if (fileSize <= 0) {
-        return nullptr;
+        return {};
     }
     TempStr cachePath = GetCbxCachePathTemp(path, fileSize);
     if (!cachePath) {
-        return nullptr;
+        return {};
     }
     if (file::Exists(cachePath)) {
         FILETIME now;
@@ -99,7 +99,7 @@ static TempStr MaybeCopyCbxToLocalCache(const char* path) {
     }
     if (!dir::CreateForFile(cachePath)) {
         logf("MaybeCopyCbxToLocalCache: dir::CreateForFile('%s') failed\n", cachePath);
-        return nullptr;
+        return {};
     }
 
     auto timeStart = TimeGet();
@@ -109,7 +109,7 @@ static TempStr MaybeCopyCbxToLocalCache(const char* path) {
     if (!ok) {
         logf("MaybeCopyCbxToLocalCache: file::Copy('%s' -> '%s') failed\n", path, cachePath);
         file::Delete(cachePath);
-        return nullptr;
+        return {};
     }
     logf("MaybeCopyCbxToLocalCache: copied '%s' -> '%s' in %.2f ms\n", path, cachePath, TimeSinceInMs(timeStart));
     return cachePath;

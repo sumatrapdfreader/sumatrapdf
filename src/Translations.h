@@ -20,7 +20,7 @@ void Destroy();
 } // namespace trans
 
 const char* _TRA(const char* s);
-WCHAR* _TRW(const char* s);
+TempWStr _TRW(const char* s);
 
 // _TRN() marks strings that need to be translated but are used in a context
 // that doesn't allow calling Trans::GetTranslationTemp() (e.g. when used as part

@@ -47,7 +47,7 @@ static void HtmlEntities() {
     const char* unchanged[] = {"foo", "", " as;d "};
     for (size_t i = 0; i < dimof(unchanged); i++) {
         const char* s = unchanged[i];
-        TempStr res = (TempStr)ResolveHtmlEntities(s, s + str::Len(s), ta);
+        TempStr res = ResolveHtmlEntities(s, s + str::Len(s), ta);
         utassert(res == s);
     }
 
@@ -68,7 +68,7 @@ static void HtmlEntities() {
     };
     for (size_t i = 0; i < dimof(changed); i++) {
         const char* s = changed[i].s;
-        TempStr res = (TempStr)ResolveHtmlEntities(s, s + str::Len(s), ta);
+        TempStr res = ResolveHtmlEntities(s, s + str::Len(s), ta);
         utassert(str::Eq(res, changed[i].res));
     }
 }

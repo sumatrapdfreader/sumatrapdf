@@ -64,8 +64,8 @@ static void extractPageText(EngineBase* engine, int pageNo) {
     // print characters as hex because I don't know what kind of locale-specific mangling
     // printf() might do
     int idx = 0;
-    while (s[idx] != 0) {
-        char c = s[idx++];
+    while (s.s[idx] != 0) {
+        char c = s.s[idx++];
         printf("%02x ", (u8)c);
     }
     printf("'\n");

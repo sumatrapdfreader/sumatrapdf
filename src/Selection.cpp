@@ -228,18 +228,18 @@ void UpdateTextSelection(MainWindow* win, bool select) {
 // caller needs to str::Free() the result
 TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnlySelectionOut) {
     if (!tab || !tab->selectionOnPage) {
-        return nullptr;
+        return {};
     }
     if (tab->selectionOnPage->size() == 0) {
-        return nullptr;
+        return {};
     }
     DisplayModel* dm = tab->AsFixed();
     ReportIf(!dm);
     if (!dm) {
-        return nullptr;
+        return {};
     }
     if (dm->GetEngine()->IsImageCollection()) {
-        return nullptr;
+        return {};
     }
 
     isTextOnlySelectionOut = dm->textSelection->result.len > 0;
@@ -262,7 +262,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnl
         str::Free(text);
     }
     if (selections.Size() == 0) {
-        return nullptr;
+        return {};
     }
     TempStr s = JoinTemp(&selections, lineSep);
     return s;

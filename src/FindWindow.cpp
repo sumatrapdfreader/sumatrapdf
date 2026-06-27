@@ -367,7 +367,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     // the window is being resized (issue #5692)
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     TempStr pageStr = str::FormatTemp("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
-    WCHAR* pageW = ToWStrTemp(pageStr);
+    TempWStr pageW = ToWStrTemp(pageStr);
     SIZE pSz{};
     GetTextExtentPoint32W(hdc, pageW, str::Leni(pageW), &pSz);
     int pageGap = DpiScale(lb->hwnd, 10);

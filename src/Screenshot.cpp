@@ -440,16 +440,16 @@ static TempStr GetWindowProcessNameTemp(HWND hwnd) {
     DWORD pid = 0;
     GetWindowThreadProcessId(hwnd, &pid);
     if (pid == 0) {
-        return nullptr;
+        return {};
     }
     AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
     if (!hProc.IsValid()) {
-        return nullptr;
+        return {};
     }
     WCHAR path[MAX_PATH]{};
     DWORD pathLen = MAX_PATH;
     if (!QueryFullProcessImageNameW(hProc, 0, path, &pathLen)) {
-        return nullptr;
+        return {};
     }
     TempStr fullPath = ToUtf8Temp(path);
     TempStr baseName = path::GetBaseNameTemp(fullPath);
@@ -470,7 +470,7 @@ static TempStr MakeUniquePathTemp(const char* dir, const char* base) {
             return path;
         }
     }
-    return nullptr;
+    return {};
 }
 
 // Create a scaled thumbnail of a bitmap (only downscale, never upscale)
@@ -548,7 +548,7 @@ static BOOL CALLBACK EnumCaptureWindowsProc(HWND hwnd, LPARAM lParam) {
     cs.origH = h;
     cs.thumb = CreateThumbnail(hbm, w, h, &cs.thumbW, &cs.thumbH);
     TempStr procName = GetWindowProcessNameTemp(hwnd);
-    cs.processName = str::Dup(procName ? procName : "unknown");
+    cs.processName = str::Dup(procName ? procName.s : "unknown");
     ctx->captures->Append(cs);
     return TRUE;
 }
@@ -1206,7 +1206,7 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
         s.AppendFmt("Numpad%d", (int)(vk - VK_NUMPAD0));
     } else {
         // unknown key
-        return nullptr;
+        return {};
     }
     return str::DupTemp(s.Get());
 }

@@ -55,9 +55,9 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
     TempStr rightStr = nullptr;
     if (data->cmdId != 0) {
-        TempStr withAccel = AppendAccelKeyToMenuStringTemp((TempStr) "", data->cmdId);
-        if (withAccel && withAccel[0] == '\t') {
-            rightStr = withAccel + 1;
+        TempStr withAccel = AppendAccelKeyToMenuStringTemp("", data->cmdId);
+        if (withAccel && withAccel.s[0] == '\t') {
+            rightStr = Str(withAccel.s + 1);
         }
     } else if (data->filePath) {
         rightStr = path::GetDirTemp(data->filePath);
@@ -90,11 +90,11 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         DrawMaybeHighlightedText(hdc, rc, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
     }
 
-    if (rightStr && rightStr[0]) {
-        WCHAR* rightStrW = ToWStrTemp(rightStr);
+    if (rightStr && rightStr.s[0]) {
+        TempWStr rightStrW = ToWStrTemp(rightStr);
         int gap = DpiScale(lb->hwnd, 8);
 
-        WCHAR* itemTextW2 = ToWStrTemp(itemText);
+        TempWStr itemTextW2 = ToWStrTemp(itemText);
         SIZE szLeft{};
         GetTextExtentPoint32W(hdc, itemTextW2, str::Leni(itemText), &szLeft);
         int leftEnd = rc.left + szLeft.cx + gap;

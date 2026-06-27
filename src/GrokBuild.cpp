@@ -129,8 +129,8 @@ static void PopulateModelCombo(HWND combo) {
     BuildGrokModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
         TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Grok-composer-2.5-fast");
-        WCHAR* displayW = ToWStrTemp(display);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
+        TempWStr displayW = ToWStrTemp(display);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW.s);
     }
 }
 
@@ -363,7 +363,7 @@ static bool IsGrokSessionDirName(const char* name) {
 static TempStr GrokSessionsProjectDirTemp(const char* dir) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (!userProfile) {
-        return nullptr;
+        return {};
     }
     TempStr encodedDir = EncodeGrokDirTemp(dir);
     return str::FormatTemp("%s\\.grok\\sessions\\%s", userProfile, encodedDir);
@@ -372,7 +372,7 @@ static TempStr GrokSessionsProjectDirTemp(const char* dir) {
 static TempStr ExtractGrokPromptFromHistoryLineTemp(const char* line, const char* sessionId) {
     TempStr sid = AIChatJsonStrTemp(line, "session_id");
     if (!sid || !str::Eq(sid, sessionId)) {
-        return nullptr;
+        return {};
     }
     return AIChatJsonStrTemp(line, "prompt");
 }
@@ -416,7 +416,7 @@ static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
 
     TempStr pattern = str::FormatTemp("%s\\*", projectDir);
     WIN32_FIND_DATAW fd;
-    WCHAR* patternW = ToWStrTemp(pattern);
+    TempWStr patternW = ToWStrTemp(pattern);
     HANDLE hFind = FindFirstFileW(patternW, &fd);
     if (hFind == INVALID_HANDLE_VALUE) {
         return;
@@ -483,8 +483,8 @@ static void PopulateSessionCombo(MainWindow* win) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
-        WCHAR* labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
+        TempWStr labelW = ToWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
 
         if (tab->grokSessionId && str::Eq(tab->grokSessionId, sessions[i].sessionId)) {
             selectedIdx = i + 1;
@@ -495,8 +495,8 @@ static void PopulateSessionCombo(MainWindow* win) {
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->grokSessionId && !foundCurrent) {
         const char* label = "(current session)";
-        WCHAR* labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
+        TempWStr labelW = ToWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
         selectedIdx = sessions.Size() + 1;
     }
 
@@ -508,16 +508,16 @@ static void PopulateSessionCombo(MainWindow* win) {
 
 static TempStr StripGrokUserQueryWrapperTemp(const char* text) {
     if (!text) {
-        return nullptr;
+        return {};
     }
     const char* start = str::Find(text, "<user_query>");
     if (!start) {
-        return nullptr; // skip injected context (user_info, rules, skills, etc.)
+        return {}; // skip injected context (user_info, rules, skills, etc.)
     }
     start += str::Len("<user_query>");
     const char* end = str::Find(start, "</user_query>");
     if (!end || end <= start) {
-        return nullptr;
+        return {};
     }
     TempStr result = str::DupTemp(start, (int)(end - start));
     str::TrimWSInPlace(result, str::TrimOpt::Both);
@@ -526,7 +526,7 @@ static TempStr StripGrokUserQueryWrapperTemp(const char* text) {
 
 static TempStr ExtractGrokChatUserTextTemp(const char* line) {
     if (!str::Find(line, "\"type\":\"user\"")) {
-        return nullptr;
+        return {};
     }
     if (str::Find(line, "\"type\":\"text\",\"text\":\"")) {
         TempStr text = AIChatJsonStrTemp(line, "text");

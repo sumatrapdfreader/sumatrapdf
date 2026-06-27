@@ -127,13 +127,13 @@ static TempStr ResolveKeyShortcutTemp(const char* cmdName) {
     if (cmdId <= 0) {
         return str::DupTemp(cmdName);
     }
-    TempStr accel = AppendAccelKeyToMenuStringTemp((TempStr) "", cmdId);
-    if (!accel || !*accel) {
+    TempStr accel = AppendAccelKeyToMenuStringTemp("", cmdId);
+    if (!accel || !*accel.s) {
         return str::DupTemp(cmdName);
     }
     // AppendAccelKeyToMenuStringTemp prepends \t, skip it
-    if (accel[0] == '\t') {
-        accel++;
+    if (accel.s[0] == '\t') {
+        return Str(accel.s + 1);
     }
     return accel;
 }
@@ -792,7 +792,7 @@ static void CopyAboutInfoToClipboard() {
 
 TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& staticLinks, int x, int y, StaticLink** linkOut) {
     if (!CanAccessDisk()) {
-        return nullptr;
+        return {};
     }
 
     Point pt(x, y);
@@ -806,7 +806,7 @@ TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& staticLinks, int x, int y, StaticL
         }
     }
 
-    return nullptr;
+    return {};
 }
 
 static void CreateInfotipForLink(StaticLink* linkInfo) {
@@ -1133,7 +1133,7 @@ void LayoutHomePage(HomePageLayout& l) {
     if (win->hwndHomeSearch) {
         searchQuery = HwndGetTextTemp(win->hwndHomeSearch);
     }
-    bool hasFilter = searchQuery && searchQuery[0];
+    bool hasFilter = searchQuery && searchQuery.s[0];
     if (hasFilter) {
         SplitFilterToWords(searchQuery, l.filterWords);
     }
@@ -1472,7 +1472,7 @@ static void GetFileStateIcon(FileState* fs) {
     SHFILEINFO sfi{};
     sfi.iIcon = -1;
     uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-    WCHAR* filePathW = ToWStrTemp(fs->filePath);
+    TempWStr filePathW = ToWStrTemp(fs->filePath);
     fs->himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
     fs->iconIdx = sfi.iIcon;
 }
@@ -1621,7 +1621,7 @@ void HomePageUpdateCloseButton(MainWindow* win, int x, int y) {
     StaticLink* link = nullptr;
     TempStr target = GetStaticLinkAtTemp(win->staticLinks, x, y, &link);
     // a thumbnail link's target is a file path (not a "<...>" command or a URL)
-    bool isThumb = !str::IsEmpty(target) && link && target[0] != '<' && !str::StartsWithI(target, "http");
+    bool isThumb = !str::IsEmpty(target) && link && target.s[0] != '<' && !str::StartsWithI(target, "http");
     if (!isThumb) {
         HomePageHideCloseButton();
         return;

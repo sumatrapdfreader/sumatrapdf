@@ -93,7 +93,7 @@ TempStr AIChatJsonStrTemp(const char* json, const char* key) {
     TempStr pattern = str::FormatTemp("\"%s\":\"", key);
     const char* start = str::Find(json, pattern);
     if (!start) {
-        return nullptr;
+        return {};
     }
     start += str::Len(pattern);
     StrBuilder buf;
@@ -443,7 +443,7 @@ bool AIChatLaunchProcessWithStdoutPipe(const char* cmdLine, const char* cwd, AIC
     si.dwFlags = STARTF_USESTDHANDLES;
 
     PROCESS_INFORMATION pi = {};
-    WCHAR* cmdLineW = ToWStrTemp(cmdLine);
+    TempWStr cmdLineW = ToWStrTemp(cmdLine);
     WCHAR* dirW = cwd ? ToWStrTemp(cwd) : nullptr;
 
     BOOL ok = CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, dirW, &si, &pi);

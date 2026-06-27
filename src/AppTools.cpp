@@ -34,7 +34,7 @@ static bool HasBeenInstalled() {
 
     TempStr exePath = GetSelfExePathTemp();
     if (!str::EndsWithI(installedPath, ".exe")) {
-        installedPath = path::JoinTemp(installedPath, path::GetBaseNameTemp(exePath));
+        installedPath = path::JoinTemp(installedPath.s, path::GetBaseNameTemp(exePath).s);
     }
     return path::IsSame(installedPath, exePath);
 }
@@ -168,7 +168,7 @@ TempStr GetAppDataDirTemp() {
 // Generate full path for a file or directory for storing data
 TempStr GetPathInAppDataDirTemp(const char* name) {
     if (!name) {
-        return nullptr;
+        return {};
     }
     TempStr dir = GetAppDataDirTemp();
     return path::JoinTemp(dir, name);
@@ -590,7 +590,7 @@ char* Sha1OfAppExe() {
 TempStr GetWebViewDataDirTemp() {
     TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (!dir) {
-        return nullptr;
+        return {};
     }
     dir = path::JoinTemp(dir, "SumatraPDF-data");
     char id[7] = "000000";
@@ -687,8 +687,8 @@ bool IsUntrustedFile(const char* filePath, const char* fileURL) {
 
     // check all parents of embedded files and ADSs as well
     TempStr path = str::DupTemp(filePath);
-    while (str::Leni(path) > 2 && str::FindChar(path + 2, ':')) {
-        *str::FindCharLast(path, ':') = '\0';
+    while (str::Leni(path) > 2 && str::FindChar(path.s + 2, ':')) {
+        *str::FindCharLast(path.s, ':') = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET) {
             return true;
         }

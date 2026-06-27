@@ -1209,12 +1209,12 @@ static void AppendCommandsToMenu(HMENU m, const Vec<CustomCommand*>& cmds, bool 
         if (!cmd->name) {
             continue;
         }
-        TempStr menuString = (TempStr)cmd->name;
+        TempStr menuString = cmd->name;
         int cmdId = cmd->id;
         menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
         UINT flags = MF_STRING;
         flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
-        WCHAR* ws = ToWStrTemp(menuString);
+        TempWStr ws = ToWStrTemp(menuString);
         AppendMenuW(m, flags, (UINT_PTR)cmd->id, ws);
     }
 }
@@ -1437,7 +1437,7 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             TempWStr ws = ToWStrTemp(title);
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, ws);
         } else {
-            title = (TempStr)AppendAccelKeyToMenuStringTemp((TempStr)title, cmdId);
+            title = AppendAccelKeyToMenuStringTemp(title, cmdId);
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
             TempWStr ws = ToWStrTemp(title);
             AppendMenuW(menu, flags, md.idOrSubmenu, ws);
@@ -1491,7 +1491,7 @@ static void BuildMenuZoom(HMENU m) {
         float zl = customZoomLevels->At(idx);
         cmdId = prefs->zoomLevelsCmdIds->At(idx);
         title = ZoomLevelStr(zl);
-        title = (TempStr)AppendAccelKeyToMenuStringTemp((TempStr)title, cmdId);
+        title = AppendAccelKeyToMenuStringTemp(title, cmdId);
         UINT flags = MF_STRING | MF_ENABLED;
         TempWStr ws = ToWStrTemp(title);
         AppendMenuW(m, flags, cmdId, ws);
@@ -1554,9 +1554,9 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
         if (def.idOrSubmenu != CmdPrint) {
             continue;
         }
-        TempStr printItem = (TempStr)trans::GetTranslation(def.title);
+        TempStr printItem = trans::GetTranslation(def.title);
         if (!filePrintAllowed) {
-            printItem = (TempStr)_TRA("&Print... (denied)");
+            printItem = _TRA("&Print... (denied)");
         } else {
             printItem = AppendAccelKeyToMenuStringTemp(printItem, CmdPrint);
         }
@@ -2081,7 +2081,7 @@ void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
 // - text of the menu item
 // - text for the keyboard shortcut
 // They are separated with \t
-static char* ParseMenuTextTemp(const char* sIn, char** shortcutOut) {
+static TempStr ParseMenuTextTemp(const char* sIn, char** shortcutOut) {
     *shortcutOut = nullptr;
     auto tabPos = str::FindChar(sIn, '\t');
     if (!tabPos) {

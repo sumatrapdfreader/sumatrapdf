@@ -55,12 +55,12 @@ void LogLastError(DWORD err = 0);
 void DbgOutLastError(DWORD err = 0);
 
 // registry
-const char* RegKeyNameTemp(HKEY key);
+const TempStr RegKeyNameTemp(HKEY key);
 bool RegKeyExists(HKEY keySub, const char* keyName);
-char* ReadRegStrTemp(HKEY keySub, const char* keyName, const char* valName);
-char* LoggedReadRegStrTemp(HKEY keySub, const char* keyName, const char* valName);
-char* ReadRegStr2Temp(const char* keyName, const char* valName);
-char* LoggedReadRegStr2Temp(const char* keyName, const char* valName);
+TempStr ReadRegStrTemp(HKEY keySub, const char* keyName, const char* valName);
+TempStr LoggedReadRegStrTemp(HKEY keySub, const char* keyName, const char* valName);
+TempStr ReadRegStr2Temp(const char* keyName, const char* valName);
+TempStr LoggedReadRegStr2Temp(const char* keyName, const char* valName);
 bool WriteRegStr(HKEY keySub, const char* keyName, const char* valName, const char* value);
 bool LoggedWriteRegStr(HKEY keySub, const char* keyName, const char* valName, const char* value);
 bool ReadRegDWORD(HKEY keySub, const char* keyName, const char* valName, DWORD& value);
@@ -82,7 +82,7 @@ WCHAR* GetSelfExePathW();
 TempStr GetSelfExeDirTemp();
 void ChangeCurrDirToDocuments();
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
-char* ResolveLnkTemp(const char* path);
+TempStr ResolveLnkTemp(const char* path);
 bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* args = nullptr,
                     const char* description = nullptr, int iconIndex = 0);
 IDataObject* GetDataObjectForFile(const char* filePath, HWND hwnd = nullptr);
@@ -152,7 +152,7 @@ bool IsMouseOverRect(HWND hwnd, const Rect& r);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt);
 
-char* GetDefaultPrinterNameTemp();
+TempStr GetDefaultPrinterNameTemp();
 
 bool CopyTextToClipboard(const char*);
 bool AppendTextToClipboard(const char*);

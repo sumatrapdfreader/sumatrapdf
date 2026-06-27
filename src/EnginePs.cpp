@@ -80,9 +80,9 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariableW(L"PATH", nullptr, 0);
-    TempWStr envpathW = AllocArrayTemp<WCHAR>(size + 1);
+    TempWStr envpathW = WStr(AllocArrayTemp<WCHAR>(size + 1), (int)size + 1);
     if (size == 0) {
-        return nullptr;
+        return {};
     }
     GetEnvironmentVariableW(L"PATH", envpathW, size);
     TempStr envPath = ToUtf8Temp(envpathW);
@@ -98,7 +98,7 @@ TryAgain64Bit:
         }
         return exe;
     }
-    return nullptr;
+    return {};
 }
 
 struct AutoDeleteFile {
@@ -205,13 +205,13 @@ static EngineBase* psgz2pdf(const char* fileName) {
         return nullptr;
     }
 
-    WCHAR* path = ToWStrTemp(fileName);
+    TempWStr path = ToWStrTemp(fileName);
     gzFile inFile = gzopen_w(path, "rb");
     if (!inFile) {
         return nullptr;
     }
     FILE* outFile = nullptr;
-    WCHAR* tmpFileW = ToWStrTemp(tmpFile);
+    TempWStr tmpFileW = ToWStrTemp(tmpFile);
     errno_t err = _wfopen_s(&outFile, tmpFileW, L"wb");
     if (err != 0 || !outFile) {
         gzclose(inFile);

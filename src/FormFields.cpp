@@ -59,7 +59,7 @@ void CommitFormFieldEdit(bool save) {
             } else {
                 int len = (int)SendMessageW(h, LB_GETTEXTLEN, sel, 0);
                 TempWStr buf = AllocArrayTemp<WCHAR>((size_t)len + 1);
-                SendMessageW(h, LB_GETTEXT, sel, (LPARAM)buf);
+                SendMessageW(h, LB_GETTEXT, sel, (LPARAM)buf.s);
                 text = ToUtf8Temp(buf);
             }
         } else {
@@ -233,7 +233,7 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     int curIdx = -1;
     for (int i = 0; i < n; i++) {
         char* o = opts.At(i);
-        SendMessageW(hLb, LB_ADDSTRING, 0, (LPARAM)ToWStrTemp(o));
+        SendMessageW(hLb, LB_ADDSTRING, 0, (LPARAM)ToWStrTemp(o).s);
         if (curIdx < 0 && str::Eq(o, cur)) {
             curIdx = i;
         }

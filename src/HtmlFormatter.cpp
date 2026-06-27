@@ -719,7 +719,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             currReparseIdx = s - htmlParser->Start();
         }
 
-        WCHAR* buf = ToWStrTemp(s, end - s);
+        TempWStr buf = ToWStrTemp(s, end - s);
         size_t strLen = str::Len(buf);
         // soft hyphens should not be displayed
         strLen -= str::RemoveCharsInPlace(buf, L"\xad");
@@ -737,10 +737,10 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
         size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx - currX);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
-            if (!CanBreakWordOnChar(buf[lenThatFits])) {
+            if (!CanBreakWordOnChar(buf.s[lenThatFits])) {
                 size_t lenTmp;
                 for (lenTmp = lenThatFits; lenTmp > 0; lenTmp--) {
-                    if (CanBreakWordOnChar(buf[lenTmp - 1])) {
+                    if (CanBreakWordOnChar(buf.s[lenTmp - 1])) {
                         break;
                     }
                 }
@@ -769,7 +769,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
         // WCHAR doesn't always equal one char
         // TODO: this usually fails for non-BMP characters (i.e. hardly ever)
         for (size_t i = lenThatFits; i > 0; i--) {
-            lenThatFits += buf[i - 1] < 0x80 ? 0 : buf[i - 1] < 0x800 ? 1 : 2;
+            lenThatFits += buf.s[i - 1] < 0x80 ? 0 : buf.s[i - 1] < 0x800 ? 1 : 2;
         }
         AppendInstr(DrawInstr::Str(s, lenThatFits, bbox, dirRtl));
         currX += bbox.dx;
@@ -786,7 +786,7 @@ void HtmlFormatter::EmitTextMarker(const char* s) {
     if (sLen == 0) {
         return;
     }
-    WCHAR* buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s, sLen);
     size_t strLen = str::Len(buf);
     if (strLen == 0) {
         return;
@@ -892,12 +892,12 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("face");
     const WCHAR* faceName = CurrFont()->GetName();
     if (attr) {
-        WCHAR* buf = ToWStrTemp(attr->val, attr->valLen);
+        TempWStr buf = ToWStrTemp(attr->val, attr->valLen);
         size_t strLen = str::Len(buf);
         // multiple font names can be comma separated
-        if (strLen > 0 && *buf != ',') {
+        if (strLen > 0 && *buf.s != ',') {
             str::TransCharsInPlace(buf, L",", L"\0");
-            faceName = buf;
+            faceName = buf.s;
         }
     }
 
@@ -1451,7 +1451,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         bbox.x += offX;
         bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            WCHAR* buf = ToWStrTemp(i.str.s, i.str.len);
+            TempWStr buf = ToWStrTemp(i.str.s, i.str.len);
             size_t strLen = str::Len(buf);
             // soft hyphens should not be displayed
             strLen -= str::RemoveCharsInPlace(buf, L"\xad");

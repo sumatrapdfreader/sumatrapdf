@@ -424,7 +424,7 @@ static TempStr BuildSymbolPathTemp(const char* symDir) {
 
     // remove ";" from the end
     path.RemoveLast();
-    return (TempStr)path.StealData(GetTempArena());
+    return path.StealData(GetTempArena());
 }
 
 bool InitializeDbgHelp(bool force) {
@@ -723,7 +723,7 @@ static void GetSystemInfo(StrBuilder& s) {
     {
         TempStr ver = GetWebView2VersionTemp();
         if (str::IsEmpty(ver)) {
-            ver = (TempStr) "no WebView2 installed";
+            ver = "no WebView2 installed";
         }
         s.AppendFmt("WebView2: %s\n", ver);
     }

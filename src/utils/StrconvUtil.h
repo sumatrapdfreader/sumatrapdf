@@ -25,4 +25,6 @@ TempStr AnsiToUtf8Temp(const char* src, size_t cbLen);
 // shorter names
 // TODO: eventually we want to migrate all strconv:: to them
 char* ToUtf8(const WCHAR* s, size_t cch = (size_t)-1);
+char* ToUtf8(WStr s, size_t cch = (size_t)-1);
 WCHAR* ToWStr(const char* s, size_t cb = (size_t)-1);
+WCHAR* ToWStr(Str s, size_t cb = (size_t)-1);

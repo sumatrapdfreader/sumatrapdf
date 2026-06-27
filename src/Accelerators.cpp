@@ -410,18 +410,18 @@ again:
     }
 
     // now we expect a character like 'a' or 'P'
-    TempStr s = (TempStr)shortcut;
+    TempStr s = shortcut;
     if (str::Leni(s) > 1) {
         s = str::DupTemp(shortcut);
         str::TrimWSInPlace(s, str::TrimOpt::Both);
     }
     if (str::Leni(s) > 1) {
         // possibly a unicode character
-        WCHAR* ws = ToWStrTemp(s);
+        TempWStr ws = ToWStrTemp(s);
         if (str::Len(ws) != 1) {
             return false;
         }
-        WCHAR wc = *ws;
+        WCHAR wc = *ws.s;
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/4490
         // handle cyrrilic / hebrew keyboards where shortcut character
         // is unicode and needs to be translated to virtual char
@@ -454,7 +454,8 @@ again:
         accel.key = (WORD)key;
         return true;
     }
-    char c = *s++;
+    char* sp = s.s;
+    char c = *sp++;
     if (!c) {
         return false;
     }

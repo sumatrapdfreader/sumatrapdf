@@ -38,11 +38,11 @@ static bool NeedsEscape(const char* s) {
 
 static TempStr EscapeTemp(const char* str) {
     if (str::IsEmpty(str)) {
-        return nullptr;
+        return {};
     }
 
     if (!NeedsEscape(str)) {
-        return (TempStr)str;
+        return str;
     }
 
     StrBuilder escaped(256);
@@ -74,50 +74,50 @@ static TempStr EscapeTemp(const char* str) {
 void DumpProperties(EngineBase* engine, bool fullDump) {
     Out1("\t<Properties\n");
     TempStr str = EscapeTemp(engine->FilePath());
-    Out("\t\tFilePath=\"%s\"\n", str);
+    Out("\t\tFilePath=\"%s\"\n", str.s);
     str = EscapeTemp(engine->GetPropertyTemp(kPropTitle));
     if (str) {
-        Out("\t\tTitle=\"%s\"\n", str);
+        Out("\t\tTitle=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropSubject));
     if (str) {
-        Out("\t\tSubject=\"%s\"\n", str);
+        Out("\t\tSubject=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropAuthor));
     if (str) {
-        Out("\t\tAuthor=\"%s\"\n", str);
+        Out("\t\tAuthor=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropCopyright));
     if (str) {
-        Out("\t\tCopyright=\"%s\"\n", str);
+        Out("\t\tCopyright=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropCreationDate));
     if (str) {
-        Out("\t\tCreationDate=\"%s\"\n", str);
+        Out("\t\tCreationDate=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropModificationDate));
     if (str) {
-        Out("\t\tModDate=\"%s\"\n", str);
+        Out("\t\tModDate=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropCreatorApp));
     if (str) {
-        Out("\t\tCreator=\"%s\"\n", str);
+        Out("\t\tCreator=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropPdfProducer));
     if (str) {
-        Out("\t\tPdfProducer=\"%s\"\n", str);
+        Out("\t\tPdfProducer=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropPdfVersion));
     if (str) {
-        Out("\t\tPdfVersion=\"%s\"\n", str);
+        Out("\t\tPdfVersion=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropPdfFileStructure));
     if (str) {
-        Out("\t\tPdfFileStructure=\"%s\"\n", str);
+        Out("\t\tPdfFileStructure=\"%s\"\n", str.s);
     }
     str = EscapeTemp(engine->GetPropertyTemp(kPropUnsupportedFeatures));
     if (str) {
-        Out("\t\tUnsupportedFeatures=\"%s\"\n", str);
+        Out("\t\tUnsupportedFeatures=\"%s\"\n", str.s);
     }
     if (!engine->AllowsPrinting()) {
         Out1("\t\tPrintingAllowed=\"no\"\n");
@@ -143,7 +143,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
         StrVec fonts;
         Split(&fonts, fontlist, "\n");
         str = EscapeTemp(Join(&fonts, "\n\t\t"));
-        Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str);
+        Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.s);
     }
 }
 
@@ -181,7 +181,7 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
         for (int i = 0; i < level; i++) {
             Out1("\t");
         }
-        Out("<Item Title=\"%s\"", title);
+        Out("<Item Title=\"%s\"", title.s);
         if (item->pageNo) {
             Out(" Page=\"%d\"", item->pageNo);
         }
@@ -192,7 +192,7 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
             IPageDestination* dest = item->GetPageDestination();
             TempStr target = EscapeTemp(PageDestGetValue(dest));
             if (target) {
-                Out(" Target=\"%s\"", target);
+                Out(" Target=\"%s\"", target.s);
             }
             if (item->pageNo != PageDestGetPageNo(dest)) {
                 Out(" TargetPage=\"%d\"", PageDestGetPageNo(dest));
@@ -253,7 +253,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     Out("\t<Page Number=\"%d\"\n", pageNo);
     if (engine->HasPageLabels()) {
         TempStr label = EscapeTemp(engine->GetPageLabeTemp(pageNo));
-        Out("\t\tLabel=\"%s\"\n", label);
+        Out("\t\tLabel=\"%s\"\n", label.s);
     }
     Rect bbox = engine->PageMediabox(pageNo).Round();
     Out("\t\tMediaBox=\"%d %d %d %d\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
@@ -271,7 +271,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
         if (pageText.text != nullptr) {
             TempStr text = EscapeTemp(pageText.text);
             if (text) {
-                Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text);
+                Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.s);
             }
         }
         FreePageTextUtf8(&pageText);
@@ -291,7 +291,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                 }
                 TempStr value = EscapeTemp(PageDestGetValue(dest));
                 if (value) {
-                    Out("\t\t\t\tLinkTarget=\"%s\"\n", value);
+                    Out("\t\t\t\tLinkTarget=\"%s\"\n", value.s);
                 }
                 if (PageDestGetPageNo(dest)) {
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", PageDestGetPageNo(dest));
@@ -303,7 +303,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
             }
             TempStr name = EscapeTemp(el->GetValue());
             if (name) {
-                Out("\t\t\t\tLabel=\"%s\"\n", name);
+                Out("\t\t\t\tLabel=\"%s\"\n", name.s);
             }
             Out1("\t\t\t/>\n");
         }
@@ -422,7 +422,7 @@ bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f
         if (str::EndsWithI(pageBmpPath, ".png")) {
             Gdiplus::Bitmap gbmp(bmp->hbmp, nullptr);
             CLSID pngEncId = GetGdiPlusEncoderClsid(L"image/png");
-            WCHAR* pageBmpPathW = ToWStrTemp(pageBmpPath);
+            TempWStr pageBmpPathW = ToWStrTemp(pageBmpPath);
             gbmp.Save(pageBmpPathW, &pngEncId, nullptr);
         } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
             ByteSlice imgData = SerializeBitmap(bmp->hbmp);
@@ -515,7 +515,7 @@ void EngineDump(const Flags& flags) {
     ScopedMui miniMui;
 
     WIN32_FIND_DATA fdata;
-    WCHAR* pathW = ToWStrTemp(filePath);
+    TempWStr pathW = ToWStrTemp(filePath);
     HANDLE hfind = FindFirstFileW(pathW, &fdata);
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")

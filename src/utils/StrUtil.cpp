@@ -521,16 +521,16 @@ const char* FindI(const char* s, const char* toFind) {
     TempWStr ws = ToWStrTemp(s); // unfolded, used to map the match back to bytes
     TempWStr wsLo = str::DupTemp(ws);
     TempWStr wfLo = ToWStrTemp(toFind);
-    FoldCaseForFindW(wsLo, str::Leni(wsLo));
-    FoldCaseForFindW(wfLo, str::Leni(wfLo));
+    FoldCaseForFindW(wsLo.s, str::Leni(wsLo));
+    FoldCaseForFindW(wfLo.s, str::Leni(wfLo));
 
     const char* res = nullptr;
-    const WCHAR* m = wcsstr(wsLo, wfLo);
+    const WCHAR* m = wcsstr(wsLo.s, wfLo.s);
     if (m) {
-        int idx = (int)(m - wsLo); // WCHAR index, 1:1 with the unfolded ws
+        int idx = (int)(m - wsLo.s); // WCHAR index, 1:1 with the unfolded ws
         int nbytes = 0;
         if (idx > 0) {
-            nbytes = WideCharToMultiByte(CP_UTF8, 0, ws, idx, nullptr, 0, nullptr, nullptr);
+            nbytes = WideCharToMultiByte(CP_UTF8, 0, ws.s, idx, nullptr, 0, nullptr, nullptr);
         }
         res = s + nbytes;
     }
@@ -2540,7 +2540,7 @@ TempStr FormatFileSizeTemp(i64 size) {
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
 TempStr FormatRomanNumeralTemp(int n) {
     if (n < 1) {
-        return nullptr;
+        return {};
     }
 
     static struct {
@@ -2669,14 +2669,14 @@ TempStr GetFullPathTemp(const char* url) {
 TempStr GetFileNameTemp(const char* url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
-    char* base = path + str::Len(path);
-    for (; base > path; base--) {
+    char* base = path.s + str::Len(path);
+    for (; base > path.s; base--) {
         if ('/' == base[-1] || '\\' == base[-1]) {
             break;
         }
     }
     if (str::IsEmpty(base)) {
-        return nullptr;
+        return {};
     }
     DecodeInPlace(base);
     return str::DupTemp(base);
@@ -2775,7 +2775,7 @@ int CompareProgramVersion(const char* txt1, const char* txt2) {
 static TempStr ShortenStringTemp(const char* s, int maxLen) {
     int sLen = str::Leni(s);
     if (sLen <= maxLen) {
-        return (TempStr)s;
+        return s;
     }
     char* ret = AllocArrayTemp<char>(maxLen + 2);
     const int half = maxLen / 2;
@@ -2798,7 +2798,7 @@ TempStr ShortenStringUtf8Temp(const char* s, int maxRunes) {
         // not a valid utf8, fall back to byte truncation
         int sLen = str::Leni(s);
         if (sLen <= maxRunes) {
-            return (TempStr)s;
+            return s;
         }
         int keep = maxRunes - 3; // 3 for "..."
         if (keep < 0) {
@@ -2813,7 +2813,7 @@ TempStr ShortenStringUtf8Temp(const char* s, int maxRunes) {
         return ret;
     }
     if (nRunes <= maxRunes) {
-        return (TempStr)s;
+        return s;
     }
     int keep = maxRunes - 3; // 3 for "..."
     if (keep < 0) {
@@ -2859,7 +2859,7 @@ TempStr ShortenStringUtf8InTheMiddleTemp(const char* s, int maxRunes) {
         return ShortenStringTemp(s, maxRunes);
     }
     if (nRunes <= maxRunes) {
-        return (TempStr)s;
+        return s;
     }
     int toRemove = (nRunes - maxRunes) + 3; // 3 for "..."
     int removeStartingAt = (nRunes / 2) - (toRemove / 2);

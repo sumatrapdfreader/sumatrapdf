@@ -162,6 +162,54 @@ bool WStrEq(WStr a, WStr b) {
     return WStrEqRest(a.s, b.s, a.len);
 }
 
+bool operator==(Str a, Str b) {
+    return StrEq(a, b);
+}
+
+bool operator==(Str a, const char* b) {
+    return a.s == b;
+}
+
+bool operator==(const char* a, Str b) {
+    return a == b.s;
+}
+
+bool operator!=(Str a, Str b) {
+    return !(a == b);
+}
+
+bool operator!=(Str a, const char* b) {
+    return !(a == b);
+}
+
+bool operator!=(const char* a, Str b) {
+    return !(a == b);
+}
+
+bool operator==(WStr a, WStr b) {
+    return WStrEq(a, b);
+}
+
+bool operator==(WStr a, const wchar_t* b) {
+    return a.s == b;
+}
+
+bool operator==(const wchar_t* a, WStr b) {
+    return a == b.s;
+}
+
+bool operator!=(WStr a, WStr b) {
+    return !(a == b);
+}
+
+bool operator!=(WStr a, const wchar_t* b) {
+    return !(a == b);
+}
+
+bool operator!=(const wchar_t* a, WStr b) {
+    return !(a == b);
+}
+
 // Case-insensitive substring search for Str (ASCII case folding)
 bool StrContains(Str str, Str substr) {
     if (substr.len == 0) return true; // Empty search matches all

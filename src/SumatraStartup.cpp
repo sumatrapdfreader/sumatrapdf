@@ -137,7 +137,7 @@ static bool InstanceInit() {
 }
 
 static void SendMyselfDDE(const char* cmdA, HWND targetHwnd) {
-    WCHAR* cmd = ToWStrTemp(cmdA);
+    TempWStr cmd = ToWStrTemp(cmdA);
     if (targetHwnd) {
         // try WM_COPYDATA first, as that allows targetting a specific window
         size_t cbData = (str::Len(cmd) + 1) * sizeof(WCHAR);
@@ -933,7 +933,7 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         logf("last err: 0x%x\n", (int)err);
         if (err != 0) {
             errStr = GetLastErrorStrTemp(err);
-            logf("error string: %s\n", errStr ? errStr : "(none)");
+            logf("error string: %s\n", errStr ? errStr.s : "(none)");
         }
         ReportIfFast(true);
     }
@@ -948,7 +948,7 @@ Error code: %d
 Error message: %s
 We can't proceed.
 For more information see <a href="%s">SumatraPDF docs</a>.)",
-                                  (int)err, errStr ? errStr : "unknown", kFailedToLoadURL);
+                                  (int)err, errStr ? errStr.s : "unknown", kFailedToLoadURL);
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
@@ -1078,7 +1078,7 @@ static void ShowInstallerHelp() {
     bool ok = RedirectIOToExistingConsole();
     if (ok) {
         // if we're launched from console, print help to consle window
-        printf("%s\n%s\n", msg, "See more at https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments");
+        printf("%s\n%s\n", msg.s, "See more at https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments");
         return;
     }
 
@@ -1225,7 +1225,7 @@ static bool IsBuildDirName(const char* name) {
 // prefers the directory mtime; falls back to the newest file mtime inside.
 static i64 GetDirLastActivityAgeSec(const char* dirPath, const ULARGE_INTEGER& now) {
     WIN32_FILE_ATTRIBUTE_DATA fileInfo{};
-    WCHAR* dirPathW = ToWStrTemp(dirPath);
+    TempWStr dirPathW = ToWStrTemp(dirPath);
     if (GetFileAttributesExW(dirPathW, GetFileExInfoStandard, &fileInfo)) {
         i64 age = FileTimeAgeSec(fileInfo.ftLastWriteTime, now);
         if (age >= 0) {

@@ -34,29 +34,73 @@ void DestroyLifetimeArena() {
     gLifetimeArena = nullptr;
 }
 
+static Str WrapTempStr(char* s, size_t cb = (size_t)-1) {
+    if (!s) {
+        return {};
+    }
+    if (cb == (size_t)-1) {
+        return Str(s);
+    }
+    return Str(s, (int)cb);
+}
+
+static WStr WrapTempWStr(WCHAR* s, size_t cch = (size_t)-1) {
+    if (!s) {
+        return {};
+    }
+    if (cch == (size_t)-1) {
+        return WStr(s);
+    }
+    return WStr(s, (int)cch);
+}
+
 namespace str {
 TempStr DupTemp(const char* s, size_t cb) {
-    return str::Dup(GetTempArena(), s, cb);
+    return WrapTempStr(str::Dup(GetTempArena(), s, cb), cb);
 }
 
 TempWStr DupTemp(const WCHAR* s, size_t cch) {
-    return str::Dup(GetTempArena(), s, cch);
+    return WrapTempWStr(str::Dup(GetTempArena(), s, cch), cch);
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
-    return Join(GetTempArena(), s1, s2, s3);
+    return WrapTempStr(Join(GetTempArena(), s1, s2, s3));
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4) {
-    return Join(GetTempArena(), s1, s2, s3, s4, nullptr);
+    return WrapTempStr(Join(GetTempArena(), s1, s2, s3, s4, nullptr));
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4, const char* s5) {
-    return Join(GetTempArena(), s1, s2, s3, s4, s5);
+    return WrapTempStr(Join(GetTempArena(), s1, s2, s3, s4, s5));
 }
 
 TempWStr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
-    return Join(GetTempArena(), s1, s2, s3);
+    return WrapTempWStr(Join(GetTempArena(), s1, s2, s3));
+}
+
+TempStr JoinTemp(Str s1, const char* s2, const char* s3) {
+    return JoinTemp(s1.s, s2, s3);
+}
+
+TempStr JoinTemp(const char* s1, Str s2, const char* s3) {
+    return JoinTemp(s1, s2.s, s3);
+}
+
+TempStr JoinTemp(Str s1, Str s2, const char* s3) {
+    return JoinTemp(s1.s, s2.s, s3);
+}
+
+TempWStr JoinTemp(WStr s1, const WCHAR* s2, const WCHAR* s3) {
+    return JoinTemp(s1.s, s2, s3);
+}
+
+TempWStr JoinTemp(const WCHAR* s1, WStr s2, const WCHAR* s3) {
+    return JoinTemp(s1, s2.s, s3);
+}
+
+TempWStr JoinTemp(WStr s1, WStr s2, const WCHAR* s3) {
+    return JoinTemp(s1.s, s2.s, s3);
 }
 
 TempStr FormatTemp(const char* fmt, ...) {
@@ -64,19 +108,19 @@ TempStr FormatTemp(const char* fmt, ...) {
     va_start(args, fmt);
     char* res = FmtVWithArena(GetTempArena(), fmt, args);
     va_end(args);
-    return res;
+    return WrapTempStr(res);
 }
 
 TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWith) {
     if (!s || str::IsEmpty(toReplace) || !replaceWith) {
-        return nullptr;
+        return {};
     }
 
     const char* curr = s;
     const char* end = str::Find(curr, toReplace);
     if (!end) {
         // optimization: nothing to replace so do nothing
-        return (TempStr)s;
+        return Str(s);
     }
 
     size_t findLen = str::Len(toReplace);
@@ -92,30 +136,30 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
     while (end != nullptr) {
         ok = result.Append(curr, end - curr);
         if (!ok) {
-            return nullptr;
+            return {};
         }
         ok = result.Append(replaceWith, replLen);
         if (!ok) {
-            return nullptr;
+            return {};
         }
         curr = end + findLen;
         end = str::Find(curr, toReplace);
     }
     ok = result.Append(curr);
     if (!ok) {
-        return nullptr;
+        return {};
     }
-    return result.StealData(GetTempArena());
+    return WrapTempStr(result.StealData(GetTempArena()));
 }
 
 TempStr ReplaceNoCaseTemp(const char* s, const char* toReplace, const char* replaceWith) {
     int n = str::Leni(toReplace);
     const char* pos = str::FindI(s, toReplace);
     if (!pos) {
-        return (TempStr)s;
+        return Str(s);
     }
     if (!memeq(pos, toReplace, n)) {
-        toReplace = (const char*)str::DupTemp(pos, n);
+        toReplace = str::DupTemp(pos, n).s;
     }
     TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);
     return res;
@@ -126,25 +170,25 @@ TempStr ReplaceNoCaseTemp(const char* s, const char* toReplace, const char* repl
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
     if (!s) {
         ReportIf((int)cch > 0);
-        return nullptr;
+        return {};
     }
-    return strconv::WStrToUtf8(s, cch, GetTempArena());
+    return WrapTempStr(strconv::WStrToUtf8(s, cch, GetTempArena()), cch == (size_t)-1 ? (size_t)-1 : cch);
 }
 
 TempWStr ToWStrTemp(const char* s, size_t cb) {
     if (!s) {
         ReportIf((int)cb > 0);
-        return nullptr;
+        return {};
     }
-    return strconv::Utf8ToWStr(s, cb, GetTempArena());
+    return WrapTempWStr(strconv::Utf8ToWStr(s, cb, GetTempArena()), cb == (size_t)-1 ? (size_t)-1 : cb / sizeof(char));
 }
 
 // handles embedded 0 in the string
 TempWStr ToWStrTemp(const StrBuilder& str) {
     if (str.IsEmpty()) {
-        return nullptr;
+        return {};
     }
     char* s = str.CStr();
     size_t cb = str.Size();
-    return strconv::Utf8ToWStr(s, cb, GetTempArena());
+    return WrapTempWStr(strconv::Utf8ToWStr(s, cb, GetTempArena()), cb);
 }

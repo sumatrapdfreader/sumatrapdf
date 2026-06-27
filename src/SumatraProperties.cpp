@@ -161,7 +161,7 @@ static bool IsoDateParse(const char* date, SYSTEMTIME* timeOut, int* timeZoneOut
 }
 
 static TempStr AddTimeZone(TempStr s, int timeZone) {
-    if (timeZone == 0) return nullptr;
+    if (timeZone == 0) return {};
 
     const char* tzSign = (timeZone > 0) ? "+" : "-";
     int abs = (timeZone > 0) ? timeZone : -timeZone;
@@ -175,7 +175,7 @@ static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
     int cchBufLen = dimof(bufW);
     int ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, bufW, cchBufLen);
     if (ret < 2) { // GetDateFormat() failed or returned an empty result
-        return nullptr;
+        return {};
     }
 
     // don't add 00:00:00 for dates without time
@@ -261,7 +261,7 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
 // returns a list of permissions denied by this document
 static TempStr FormatPermissionsTemp(DocController* ctrl) {
     if (!ctrl->AsFixed()) {
-        return nullptr;
+        return {};
     }
 
     StrVec denials;

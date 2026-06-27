@@ -127,7 +127,7 @@ static void GetFileState(const char* path, FileWatcherState* fs) {
     // Windows Defender to re-scan it, which is slow and generates unwanted
     // network traffic. GetFileAttributesExW queries filesystem metadata
     // without opening the file content, avoiding the scan.
-    WCHAR* pathW = ToWStrTemp(path);
+    TempWStr pathW = ToWStrTemp(path);
     WIN32_FILE_ATTRIBUTE_DATA attrs{};
     if (GetFileAttributesExW(pathW, GetFileExInfoStandard, &attrs)) {
         fs->time = attrs.ftLastWriteTime;
@@ -388,7 +388,7 @@ static void CALLBACK SignalExitMonitoringThread(ULONG_PTR arg) {
 }
 
 static WatchedDir* NewWatchedDir(const char* dirPath) {
-    WCHAR* dirW = ToWStrTemp(dirPath);
+    TempWStr dirW = ToWStrTemp(dirPath);
     DWORD access = FILE_LIST_DIRECTORY;
     DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE;
     DWORD disp = OPEN_EXISTING;

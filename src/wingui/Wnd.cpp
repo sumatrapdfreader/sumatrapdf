@@ -911,7 +911,7 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     }
     HINSTANCE inst = GetInstance();
     void* createParams = this;
-    WCHAR* titleW = ToWStrTemp(args.title);
+    TempWStr titleW = ToWStrTemp(args.title);
 
     HWND hwndTmp = ::CreateWindowExW(exStyle, className, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
 

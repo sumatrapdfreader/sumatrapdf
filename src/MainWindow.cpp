@@ -572,12 +572,12 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* remoteLink)
 
     TempStr path = str::ReplaceTemp(pathOrig, "/", "\\");
     if (str::StartsWith(path, ".\\")) {
-        path = path + 2;
+        path = Str(path.s + 2);
     }
 
     TempStr fullPath = path;
     bool isAbsPath = str::StartsWith(path, "\\");
-    if (str::Len(path) >= 2 && path[1] == ':') {
+    if (str::Len(path) >= 2 && path.s[1] == ':') {
         /* technically c: is not abs, only c:\\ */
         isAbsPath = true;
     }

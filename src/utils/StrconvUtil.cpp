@@ -82,16 +82,16 @@ WCHAR* StrCPToWStr(const char* src, uint codePage, int cbSrc) {
 TempWStr StrCPToWStrTemp(const char* src, uint codePage, int cbSrc) {
     ReportIf(!src);
     if (!src) {
-        return nullptr;
+        return {};
     }
 
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrc, nullptr, 0);
     if (0 == requiredBufSize) {
-        return nullptr;
+        return {};
     }
     WCHAR* res = AllocArrayTemp<WCHAR>((size_t)requiredBufSize + 1);
     if (!res) {
-        return nullptr;
+        return {};
     }
     MultiByteToWideChar(codePage, 0, src, cbSrc, res, requiredBufSize);
     return res;
@@ -100,7 +100,7 @@ TempWStr StrCPToWStrTemp(const char* src, uint codePage, int cbSrc) {
 TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
     ReportIf(!src);
     if (!src) {
-        return nullptr;
+        return {};
     }
 
     if (codePageSrc == codePageDest) {
@@ -116,11 +116,11 @@ TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
 
     TempWStr tmp = StrCPToWStrTemp(src, codePageSrc);
     if (!tmp) {
-        return nullptr;
+        return {};
     }
     size_t tmpLen = str::Len(tmp);
     Arena* a = GetTempArena();
-    TempStr res = (TempStr)WStrToCodePage(codePageDest, tmp, tmpLen, a);
+    TempStr res = WStrToCodePage(codePageDest, tmp, tmpLen, a);
     return res;
 }
 
@@ -211,6 +211,20 @@ char* ToUtf8(const WCHAR* s, size_t cch) {
     return strconv::WStrToUtf8(s, cch);
 }
 
+char* ToUtf8(WStr s, size_t cch) {
+    if (cch == (size_t)-1) {
+        cch = (size_t)s.len;
+    }
+    return strconv::WStrToUtf8(s.s, cch);
+}
+
 WCHAR* ToWStr(const char* s, size_t cb) {
     return strconv::Utf8ToWStr(s, cb);
+}
+
+WCHAR* ToWStr(Str s, size_t cb) {
+    if (cb == (size_t)-1) {
+        cb = (size_t)s.len;
+    }
+    return strconv::Utf8ToWStr(s.s, cb);
 }

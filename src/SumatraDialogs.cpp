@@ -556,22 +556,22 @@ const char* Dialog_ChangeLanguge(HWND hwnd, const char* currLangCode) {
 
 TempStr ZoomLevelStr(float zoom) {
     if (zoom == kZoomFitPage) {
-        return (TempStr)_TRA("Fit Page");
+        return _TRA("Fit Page");
     }
     if (zoom == kZoomFitWidth) {
-        return (TempStr)_TRA("Fit Width");
+        return _TRA("Fit Width");
     }
     if (zoom == kZoomFitContent) {
-        return (TempStr)_TRA("Fit Content");
+        return _TRA("Fit Content");
     }
     if (zoom == kZoomShrinkToFit) {
-        return (TempStr)_TRA("Shrink To Fit");
+        return _TRA("Shrink To Fit");
     }
     if (zoom == kZoomFitByOrientation) {
-        return (TempStr)_TRA("Fit by Orientation");
+        return _TRA("Fit by Orientation");
     }
     if (zoom == 0) {
-        return (TempStr) "-";
+        return "-";
     }
     TempStr res = str::FormatTemp("%.f%%", zoom);
     return res;
@@ -811,7 +811,7 @@ static void FillInverseSearchCombo(HWND hwndComboBox, const char* cmdLine) {
         return;
     }
     TempWStr cmdLineW = ToWStrTemp(cmdLine);
-    LRESULT ind = SendMessageW(hwndComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cmdLineW);
+    LRESULT ind = SendMessageW(hwndComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cmdLineW.s);
     if (CB_ERR == ind) {
         HwndSetText(hwndComboBox, cmdLine);
     } else {
@@ -1397,7 +1397,7 @@ static void UpdateBgColorEditFromColor(HWND hDlg, BgColorDlgData* data) {
 
 static bool TryParseBgColorEdit(HWND hDlg, BgColorDlgData* data) {
     TempStr text = HwndGetTextTemp(GetDlgItem(hDlg, IDC_BGCOL_EDIT));
-    if (!text || !*text) {
+    if (!text || !text.s[0]) {
         return false;
     }
     ParsedColor parsed;

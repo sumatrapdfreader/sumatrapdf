@@ -61,7 +61,7 @@ extern const char* gAllProps[];
 using Props = StrVec;
 int PropsCount(const Props& props);
 int GetPropIdx(const Props& props, const char* name);
-char* GetPropValueTemp(const Props& props, const char* name);
+TempStr GetPropValueTemp(const Props& props, const char* name);
 void AddProp(Props& props, const char* name, const char* val, bool replaceIfExists = false);
 
 const char* GetMatchingString(const char**, const char*);

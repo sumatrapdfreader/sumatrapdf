@@ -234,6 +234,10 @@ struct Str {
     explicit Str(char* s_, int len_) : s(s_), len(len_) {}
 
     explicit operator bool() const { return len > 0 && s; }
+
+    // NUL-terminated temp strings (DupTemp etc.) convert for API calls; prefer .s when explicit
+    operator const char*() const { return s; }
+    operator char*() const { return s; }
 };
 
 // Create Str from string literal with compile-time length
@@ -255,12 +259,28 @@ struct WStr {
     explicit WStr(wchar_t* s_, int len_) : s(s_), len(len_) {}
 
     explicit operator bool() const { return len > 0 && s; }
+
+    // NUL-terminated temp strings (DupTemp etc.) convert for API calls; prefer .s when explicit
+    operator const wchar_t*() const { return s; }
+    operator wchar_t*() const { return s; }
 };
 
 // Create WStr from wide string literal with compile-time length
 #define WStrL(lit) WStr((wchar_t*)(lit), (int)(sizeof(lit) / sizeof(wchar_t) - 1))
 
 bool WStrEq(WStr a, WStr b);
+bool operator==(Str a, Str b);
+bool operator==(Str a, const char* b);
+bool operator==(const char* a, Str b);
+bool operator!=(Str a, Str b);
+bool operator!=(Str a, const char* b);
+bool operator!=(const char* a, Str b);
+bool operator==(WStr a, WStr b);
+bool operator==(WStr a, const wchar_t* b);
+bool operator==(const wchar_t* a, WStr b);
+bool operator!=(WStr a, WStr b);
+bool operator!=(WStr a, const wchar_t* b);
+bool operator!=(const wchar_t* a, WStr b);
 void WStrCopy(wchar_t* dst, const wchar_t* src, int maxLen);
 wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);

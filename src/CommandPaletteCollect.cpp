@@ -46,7 +46,7 @@ static TempStr RemovePrefixFromString(const char* s) {
     return str::ReplaceTemp(s, "&", "");
 }
 
-static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char* s) {
+static const TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, const char* s) {
     bool isToggle = false;
     bool newIsOn = false;
     switch (cmdId) {
@@ -396,13 +396,13 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         ItemDataCP data;
         data.cmdId = (i32)cmdId;
         auto nameTranslated = trans::GetTranslation(name);
-        auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, (TempStr)nameTranslated);
+        auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, nameTranslated);
         tempCommands.Append(nameUpdated, data);
     }
 
     auto curr = gFirstCustomCommand;
     while (curr) {
-        TempStr name = (TempStr)curr->name;
+        TempStr name = curr->name;
         cmdId = curr->id;
         if (cmdId > 0 && !str::IsEmptyOrWhiteSpace(name)) {
             if (AllowCommand(ctx, cmdId)) {

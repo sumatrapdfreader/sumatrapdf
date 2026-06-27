@@ -644,7 +644,7 @@ static int ChmEntityByte(WCHAR c) {
 // codepage. Labels that decoded to real Unicode (codepoints > 0xFF, i.e. raw
 // non-Latin bytes already converted by SmartToUtf8Temp) are left untouched, as
 // are pure-ASCII labels (issue #842).
-static const char* FixChmTocEntitiesTemp(const char* s, uint codepage) {
+static const TempStr FixChmTocEntitiesTemp(const char* s, uint codepage) {
     uint cp = (codepage == CP_ACP) ? GetACP() : codepage;
     if (!s || !ChmTocNeedsEntityRemap(cp)) {
         return s;

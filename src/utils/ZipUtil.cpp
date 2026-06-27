@@ -22,7 +22,7 @@ class FileWriteStream : public ISequentialStream {
 
   public:
     explicit FileWriteStream(const char* filePath) : refCount(1) {
-        WCHAR* path = ToWStrTemp(filePath);
+        TempWStr path = ToWStrTemp(filePath);
         hFile =
             CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
@@ -186,7 +186,7 @@ bool ZipCreator::AddFile(const char* path, const char* nameInZip) {
     }
 
     if (!nameInZip) {
-        nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : path;
+        nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : Str(path);
     }
 
     char* name = str::Dup(nameInZip);

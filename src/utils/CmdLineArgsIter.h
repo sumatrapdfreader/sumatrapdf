@@ -22,5 +22,5 @@ struct CmdLineArgsIter {
     const char* AdditionalParam(int n) const;
 
     char* at(int) const;
-    char* ParamsTemp();
+    TempStr ParamsTemp();
 };

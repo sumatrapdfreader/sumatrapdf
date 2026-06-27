@@ -901,14 +901,14 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const ch
 }
 
 // TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
-char* ReverseTextTemp(char* s) {
+TempStr ReverseTextTemp(char* s) {
     TempWStr ws = ToWStrTemp(s);
     int n = str::Leni(ws);
     for (int i = 0; i < n / 2; i++) {
-        WCHAR c1 = ws[i];
-        WCHAR c2 = ws[n - 1 - i];
-        ws[i] = c2;
-        ws[n - 1 - i] = c1;
+        WCHAR c1 = ws.s[i];
+        WCHAR c2 = ws.s[n - 1 - i];
+        ws.s[i] = c2;
+        ws.s[n - 1 - i] = c1;
     }
     return ToUtf8Temp(ws);
 }
@@ -930,8 +930,8 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool sho
             // strips a leading space (match word start) from both. Normalize ws
             // the same way (drop one leading space) so trailing/leading/whole-word
             // searches don't always look "modified" and find-next can advance.
-            if (ws[0] == ' ') {
-                ws++;
+            if (ws.s[0] == ' ') {
+                ws = WStr(ws.s + 1);
             }
             if (!str::Eq(ws, dm->textSearch->lastText)) {
                 wasModified = true;

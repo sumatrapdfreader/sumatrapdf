@@ -271,7 +271,7 @@ void TreeView::Clear() {
     ::RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
-char* TreeView::GetDefaultTooltipTemp(TreeItem ti) {
+TempStr TreeView::GetDefaultTooltipTemp(TreeItem ti) {
     auto hItem = GetHandleByTreeItem(ti);
     WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
 

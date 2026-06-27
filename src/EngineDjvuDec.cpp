@@ -311,7 +311,7 @@ bool EngineDjvuDec::HasClipOptimizations(int) {
 }
 
 TempStr EngineDjvuDec::GetPropertyTemp(const char*) {
-    return nullptr;
+    return {};
 }
 
 bool EngineDjvuDec::BenchLoadPage(int) {
@@ -767,11 +767,11 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
 // returns a numeric DjVu link to a named page (if the name resolves)
 static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, const char* name) {
     if (str::IsEmpty(name)) {
-        return nullptr;
+        return {};
     }
     int pageNo = djvu_doc_page_by_name(doc, name);
     if (pageNo < 0) {
-        return nullptr;
+        return {};
     }
     return str::FormatTemp("#%d", pageNo + 1);
 }
@@ -802,7 +802,7 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
         Rect rect((int)(l.x * dpiF), (int)(l.y * dpiF), (int)(l.w * dpiF), (int)(l.h * dpiF));
         TempStr link = ResolveNamedDestDjvuDecTemp(doc, l.url);
         if (!link) {
-            link = (TempStr)l.url;
+            link = l.url;
         }
         auto el = NewDjvuDecLink(pageNo, rect, link, l.comment);
         if (el) {
@@ -877,7 +877,7 @@ TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, 
         djvu_outline_item& it = items[i];
         const char* title = it.title ? it.title : "";
         const char* url = it.url ? it.url : "";
-        TempStr link = (TempStr)url;
+        TempStr link = url;
         TempStr resolved = ResolveNamedDestDjvuDecTemp(doc, url);
         if (resolved) {
             link = resolved;

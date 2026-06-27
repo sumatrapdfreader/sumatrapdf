@@ -173,7 +173,7 @@ static const char* PrimaryLangIdToEnglishName(WORD primary) {
     }
 }
 
-static const char* OsDefaultDestinationLanguageTemp() {
+static const TempStr OsDefaultDestinationLanguageTemp() {
     LANGID langId = GetUserDefaultUILanguage();
     const char* name = PrimaryLangIdToEnglishName(PRIMARYLANGID(langId));
     if (name) {
@@ -185,7 +185,7 @@ static const char* OsDefaultDestinationLanguageTemp() {
     return "English";
 }
 
-static const char* DefaultDestinationLanguageTemp() {
+static const TempStr DefaultDestinationLanguageTemp() {
     if (gGlobalPrefs && !str::IsEmptyOrWhiteSpace(gGlobalPrefs->translateToLang)) {
         return gGlobalPrefs->translateToLang;
     }
@@ -194,7 +194,7 @@ static const char* DefaultDestinationLanguageTemp() {
 
 static TempStr NormalizeLangNameTemp(const char* lang) {
     if (str::IsEmptyOrWhiteSpace(lang)) {
-        return nullptr;
+        return {};
     }
     TempStr normalized = str::DupTemp(lang);
     str::TrimWSInPlace(normalized, str::TrimOpt::Both);
@@ -243,7 +243,7 @@ static bool IsSrcLangAutoTemp(const char* srcLang) {
     return str::EqI(lang, kSrcLangAuto);
 }
 
-static char* GetWindowTextUtf8Temp(HWND hwnd) {
+static TempStr GetWindowTextUtf8Temp(HWND hwnd) {
     int len = GetWindowTextLengthW(hwnd);
     if (len <= 0) {
         return nullptr;
@@ -336,18 +336,18 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, const
 
 static TempStr StripTrailingSlashTemp(TempStr path) {
     if (!path) {
-        return nullptr;
+        return {};
     }
     TempStr p = str::DupTemp(path);
-    while (str::Len(p) > 0 && (p[str::Len(p) - 1] == '\\' || p[str::Len(p) - 1] == '/')) {
-        p[str::Len(p) - 1] = 0;
+    while (str::Len(p) > 0 && (p.s[str::Len(p) - 1] == '\\' || p.s[str::Len(p) - 1] == '/')) {
+        p.s[str::Len(p) - 1] = 0;
     }
     return p;
 }
 
 static TempStr NormalizeTextForPromptTemp(const char* text) {
     if (!text) {
-        return nullptr;
+        return {};
     }
     StrBuilder buf;
     for (const char* s = text; *s; s++) {
@@ -548,7 +548,7 @@ static TempStr FindBackendExecutableTemp(AIChatBackend backend) {
         case AIChatBackend::Codex:
             return CodexBuildExecutablePathTemp();
     }
-    return nullptr;
+    return {};
 }
 
 static bool IsBackendInstalled(AIChatBackend backend) {
@@ -759,7 +759,8 @@ static void OnTranslateDone(SelectionTranslateDoneData* data) {
     EnableWindow(dlg->hwndSrcLang, TRUE);
     EnableWindow(dlg->hwndDstLang, TRUE);
     SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translate"));
-    TempStr display = data->ok ? data->msg.Get() : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg.Get());
+    TempStr display =
+        data->ok ? Str(data->msg.Get()) : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg.Get());
     ShowTranslationResult(dlg, display, !data->ok);
     if (data->ok) {
         MaybeSaveTranslateToLang(GetWindowTextUtf8Temp(dlg->hwndDstLang));

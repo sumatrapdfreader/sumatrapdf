@@ -717,7 +717,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
         }
     }
     if (fonts.Size() == 0) {
-        return nullptr;
+        return {};
     }
 
     SortNatural(&fonts);

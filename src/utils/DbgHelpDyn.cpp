@@ -477,7 +477,7 @@ StrBuilder* gCallstackLogs = nullptr;
 TempStr GetCurrentThreadCallstackTemp() {
     StrBuilder s(2048);
     if (!GetCurrentThreadCallstack(s)) {
-        return (TempStr) "";
+        return "";
     }
     return str::DupTemp(s.Get());
 }

@@ -115,9 +115,9 @@ Kind kindTocDjvu = "tocDjvu";
 // boxes (#2647).
 TempStr CleanupTreeViewControlStringTemp(const char* s) {
     if (!s) {
-        return nullptr;
+        return {};
     }
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     // soft hyphen (U+00AD): an invisible line-break hint, but rendered as a
     // visible hyphen by some fonts
     str::RemoveCharsInPlace(ws, L"\x00ad");

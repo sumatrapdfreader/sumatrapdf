@@ -126,7 +126,7 @@ RectF TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
 }
 
 RectF TextRenderGdi::Measure(const char* s, size_t sLen) {
-    WCHAR* buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s, sLen);
     size_t bufLen = str::Len(buf);
     return Measure(buf, bufLen);
 }
@@ -192,7 +192,7 @@ void TextRenderGdi::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl)
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
-    WCHAR* buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s, sLen);
     size_t bufLen = str::Len(buf);
     return Draw(buf, bufLen, bb, isRtl);
 #endif
@@ -286,7 +286,7 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectF bb,
 }
 
 void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    WCHAR* buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s, sLen);
     size_t bufLen = str::Len(buf);
     return DrawTransparent(buf, bufLen, bb, isRtl);
 }
@@ -321,7 +321,7 @@ RectF TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
 
 RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
     ReportIf(!currFont);
-    WCHAR* buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s, sLen);
     size_t strLen = str::Len(buf);
     return MeasureText(gfx, currFont->font, buf, strLen, measureAlgo);
 }
@@ -352,7 +352,7 @@ void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool i
 }
 
 void TextRenderGdiplus::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    WCHAR* buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s, sLen);
     size_t strLen = str::Len(buf);
     Draw(buf, strLen, bb, isRtl);
 }
@@ -437,7 +437,7 @@ float TextRenderHdc::GetCurrFontLineSpacing() {
 RectF TextRenderHdc::Measure(const char* s, size_t sLen) {
     ReportIf(!currFont);
     ReportIf(!hdc);
-    WCHAR* buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s, sLen);
     size_t strLen = str::Len(buf);
     return Measure(buf, strLen);
 }
@@ -451,7 +451,7 @@ RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
 }
 
 void TextRenderHdc::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
-    WCHAR* buf = ToWStrTemp(s, sLen);
+    TempWStr buf = ToWStrTemp(s, sLen);
     size_t strLen = str::Len(buf);
     return Draw(buf, strLen, bb, isRtl);
 }

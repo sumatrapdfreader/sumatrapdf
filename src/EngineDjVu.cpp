@@ -382,7 +382,7 @@ bool EngineDjVu::HasClipOptimizations(int) {
 }
 
 TempStr EngineDjVu::GetPropertyTemp(const char*) {
-    return nullptr;
+    return {};
 }
 
 // we currently don't load pages lazily, so there's nothing to do here
@@ -1218,11 +1218,11 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
 
         TempStr link = ResolveNamedDestTemp(urlA);
         if (!link) {
-            link = (TempStr)urlA;
+            link = urlA;
         }
         auto el = NewDjVuLink(pageNo, rect, link, commentUtf8);
         if (!el || el->GetKind() == kindDestinationNone) {
-            logf("invalid link '%s', pages in document: %d\n", link ? link : "", PageCount());
+            logf("invalid link '%s', pages in document: %d\n", link ? link.s : "", PageCount());
             ReportIf(true);
             delete el; // not appended to els, so we own it
             continue;
@@ -1309,7 +1309,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
 // caller needs to free() the result
 TempStr EngineDjVu::ResolveNamedDestTemp(const char* name) {
     if (!str::StartsWith(name, "#")) {
-        return nullptr;
+        return {};
     }
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& fi = fileInfos[i];
@@ -1317,7 +1317,7 @@ TempStr EngineDjVu::ResolveNamedDestTemp(const char* name) {
             return str::FormatTemp("#%d", fi.pageno + 1);
         }
     }
-    return nullptr;
+    return {};
 }
 
 IPageDestination* EngineDjVu::GetNamedDest(const char* name) {

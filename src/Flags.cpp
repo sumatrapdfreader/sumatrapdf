@@ -142,9 +142,9 @@ static const char* zoomValues =
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
 static void ParseZoomValue(float* zoom, const char* txtOrig) {
-    auto txtDup = str::DupTemp(txtOrig);
-    char* txt = str::ToLowerInPlace(txtDup);
-    int zoomVal = SeqStrIndex(zoomValues, txt);
+    TempStr txtDup = str::DupTemp(txtOrig);
+    str::ToLowerInPlace(txtDup);
+    int zoomVal = SeqStrIndex(zoomValues, txtDup);
     if (zoomVal >= 0) {
         // 0-2 : fit page
         // 3-5 : fit width
@@ -163,10 +163,10 @@ static void ParseZoomValue(float* zoom, const char* txtOrig) {
         return;
     }
     // remove trailing % in place, if exists
-    if (str::EndsWith(txt, "%")) {
-        txt[str::Leni(txt) - 1] = 0;
+    if (str::EndsWith(txtDup, "%")) {
+        txtDup.s[str::Leni(txtDup) - 1] = 0;
     }
-    str::Parse(txt, "%f", zoom);
+    str::Parse(txtDup, "%f", zoom);
     // prevent really small zoom and zoom values that are not valid numbers
     // (which would be parsed as 0)
     if (*zoom < 1.f) {
@@ -316,7 +316,7 @@ FileArgs* ParseFileArgs(const char* path) {
     }
     FileArgs* res = new FileArgs();
     res->origPath = str::Dup(path);
-    char* s = str::DupTemp(path);
+    TempStr s = str::DupTemp(path);
     size_t n = hashPos - path;
     res->cleanPath = str::Dup(s, n);
     ParseAdobeFlags(*res, hashPos + 1);

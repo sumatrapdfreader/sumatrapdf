@@ -69,7 +69,7 @@ static const char* ReadAloudScopeLabel(WindowTab* tab) {
 
 static TempStr ReadAloudPlaybackBarTextTemp(WindowTab* tab) {
     if (!tab) {
-        return nullptr;
+        return {};
     }
 
     const char* docName = tab->GetTabTitle();

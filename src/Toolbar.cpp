@@ -304,7 +304,7 @@ static TBBUTTON TbButtonFromButtonInfo(const ToolbarButtonInfo& bi, bool noTrans
         b.fsStyle |= BTNS_AUTOSIZE;
     }
     auto s = noTranslate ? bi.toolTip : trans::GetTranslation(bi.toolTip);
-    b.iString = (INT_PTR)ToWStrTemp(s);
+    b.iString = (INT_PTR)ToWStrTemp(s).s;
     return b;
 }
 
@@ -321,7 +321,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
             continue;
         }
         const char* accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
-        TempStr s = (TempStr)trans::GetTranslation(bi.toolTip);
+        TempStr s = trans::GetTranslation(bi.toolTip);
         if (accelStr) {
             TempStr s2 = str::FormatTemp(" (%s)", accelStr + 1); // +1 to skip \t
             s = str::JoinTemp(s, s2);
@@ -340,7 +340,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         for (int i = 0; i < n; i++) {
             const ToolbarButtonInfo& bi = gCustomToolbarButtons->At(i);
             const char* accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
-            TempStr s = (TempStr)bi.toolTip;
+            TempStr s = bi.toolTip;
             if (accelStr) {
                 TempStr s2 = str::FormatTemp(" (%s)", accelStr + 1); // +1 to skip \t
                 s = str::JoinTemp(s, s2);
@@ -957,12 +957,12 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
 #endif
         // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
-        txt = (TempStr) " ";
+        txt = " ";
         minSize.dx = 0;
         size2.dx = 0;
     } else if (!pageCount) {
         // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
-        txt = (TempStr) " ";
+        txt = " ";
         minSize.dx = 0;
         size2.dx = 0;
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
@@ -1085,7 +1085,7 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
-static const char* ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
+static const TempStr ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
     if (!str::IsEmptyOrWhiteSpace(shortcut->name)) {
         return shortcut->name;
     }
@@ -1103,7 +1103,7 @@ static const char* ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
     return shortcut->cmd;
 }
 
-static const char* CustomCommandToolbarToolTipTemp(CustomCommand* cmd, const char* fallback) {
+static const TempStr CustomCommandToolbarToolTipTemp(CustomCommand* cmd, const char* fallback) {
     if (cmd && !str::IsEmptyOrWhiteSpace(cmd->name)) {
         return cmd->name;
     }

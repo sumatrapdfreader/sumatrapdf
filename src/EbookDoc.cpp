@@ -880,7 +880,7 @@ bool Fb2Doc::Load() {
         return false;
     }
 
-    ByteSlice data2(tmp);
+    ByteSlice data2{(u8*)tmp.s, (size_t)tmp.len};
 
     HtmlPullParser parser(data2);
     HtmlToken* tok;
@@ -1430,7 +1430,7 @@ static TempStr DecompressTcrTextTemp(const char* data, size_t dataLen) {
         const char* entry = dict[(u8)*curr];
         bool ok = text.Append(entry + 1, (u8)*entry);
         if (!ok) {
-            return nullptr;
+            return {};
         }
     }
 

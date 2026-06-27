@@ -13,7 +13,7 @@
 // https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170&redirectedfrom=MSDN
 TempStr QuoteCmdLineArgTemp(char* arg) {
     if (!arg) {
-        return nullptr;
+        return {};
     }
     int n = (int)str::Len(arg);
     if (n < 2) {
@@ -153,15 +153,15 @@ char* CmdLineArgsIter::at(int n) const {
 // returns just the params i.e. everything but the first
 // arg (which is the name of the command)
 // returns nullptr if no args
-char* CmdLineArgsIter::ParamsTemp() {
+TempStr CmdLineArgsIter::ParamsTemp() {
     if (nArgs < 2) {
-        return nullptr;
+        return {};
     }
     if (nArgs == 2) {
-        return args[1];
+        return Str(args[1]);
     }
     // must concat all the
-    char* s = args[1];
+    TempStr s = Str(args[1]);
     for (int i = 2; i < nArgs; i++) {
         s = str::JoinTemp(s, " ", args[i]);
     }

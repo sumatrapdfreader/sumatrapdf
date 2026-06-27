@@ -555,7 +555,7 @@ char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCode
     if (ok) {
         out.AppendFmt("OK match=%s page=%d visible=1\n", matched, pageNo);
     } else {
-        out.AppendFmt("FAIL expected=%s match=%s page=%d visible=%d\n", word, matched ? matched : "(none)", pageNo,
+        out.AppendFmt("FAIL expected=%s match=%s page=%d visible=%d\n", word, matched ? matched.s : "(none)", pageNo,
                       visible ? 1 : 0);
     }
     if (exitCodeOut) {

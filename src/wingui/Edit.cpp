@@ -30,7 +30,7 @@ static bool EditSetCueText(HWND hwnd, const char* s) {
         return false;
     }
     TempWStr ws = ToWStrTemp(s);
-    bool ok = Edit_SetCueBannerText(hwnd, ws) == TRUE;
+    bool ok = Edit_SetCueBannerText(hwnd, ws.s) == TRUE;
     return ok;
 }
 

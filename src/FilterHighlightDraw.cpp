@@ -20,10 +20,9 @@ static bool IsWordByte(u8 b) {
 
 void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& filterWords, Vec<u8>& highlighted,
                               COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt) {
-
     int nWords = filterWords.Size();
     if (nWords == 0) {
-        WCHAR* textW = ToWStrTemp(text);
+        TempWStr textW = ToWStrTemp(text);
         DrawTextW(hdc, textW, -1, &rc, drawFmt);
         return;
     }
@@ -83,7 +82,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& 
         }
     }
 
-    WCHAR* textW = ToWStrTemp(text);
+    TempWStr textW = ToWStrTemp(text);
     int textWLen = str::Leni(textW);
 
     // measure total string width for RTL positioning
@@ -97,9 +96,9 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, const char* text, const StrVec& 
     // compute pixel rectangles for each highlighted range
     RECT highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
-        WCHAR* prefixToStart = ToWStrTemp(text, (size_t)byteRanges[i].start);
+        TempWStr prefixToStart = ToWStrTemp(text, (size_t)byteRanges[i].start);
         int wStart = str::Leni(prefixToStart);
-        WCHAR* prefixToEnd = ToWStrTemp(text, (size_t)byteRanges[i].end);
+        TempWStr prefixToEnd = ToWStrTemp(text, (size_t)byteRanges[i].end);
         int wEnd = str::Leni(prefixToEnd);
 
         SIZE szStart, szEnd;

@@ -238,19 +238,20 @@ static bool IsMupdfLocalFileLink(const char* uri, TempStr* pathOut, const char**
     }
 
     TempStr path = str::DupTemp(uri);
-    TempStr fragment = str::FindChar(path, '#');
+    char* pathPtr = path.s;
+    char* fragment = str::FindChar(pathPtr, '#');
     if (fragment) {
         *fragment = 0;
         fragment++;
     }
     // MuPDF uses unix paths; strip a leading slash from relative URIs.
-    while (path[0] == '/' || path[0] == '\\') {
-        path++;
+    while (pathPtr[0] == '/' || pathPtr[0] == '\\') {
+        pathPtr++;
     }
-    if (!path[0]) {
+    if (!pathPtr[0]) {
         return false;
     }
-    path = str::ReplaceTemp(path, "/", "\\");
+    path = str::ReplaceTemp(pathPtr, "/", "\\");
 
     Kind kind = GuessFileTypeFromName(path);
     if (!IsEngineMupdfSupportedFileType(kind)) {
@@ -279,14 +280,15 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         str::Skip(maybePath, "/");
 
         TempStr path = str::DupTemp(maybePath);
-        TempStr dest = str::FindChar(path, '#');
+        char* pathPtr = path.s;
+        char* dest = str::FindChar(pathPtr, '#');
         if (dest) {
             *dest = 0;
             dest++;
         }
         // mupdf url-encodes paths so we un-decode them
-        fz_urldecode(path);
-        fz_cleanname(path);
+        fz_urldecode(pathPtr);
+        fz_cleanname(pathPtr);
 
         // mupdf does unix path, we want windows
         path = str::ReplaceTemp(path, "/", "\\");
@@ -408,7 +410,7 @@ static float FzRectOverlap(fz_rect r1, RectF r2f) {
 
 static TempWStr PdfToWStrTemp(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    WCHAR* res = ToWStrTemp(s);
+    TempWStr res = ToWStrTemp(s);
     fz_free(ctx, s);
     return res;
 }
@@ -605,7 +607,7 @@ static fz_stream* FzOpenOrReadFile(fz_context* ctx, const char* path) {
     if (stm) {
         return stm;
     }
-    WCHAR* pathW = ToWStrTemp(path);
+    TempWStr pathW = ToWStrTemp(path);
     fz_try(ctx) {
         stm = fz_open_file_w(ctx, pathW);
     }
@@ -2167,24 +2169,24 @@ const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
 
 TempStr GetEmbeddedFileNameTemp(const char* path) {
     if (!path) {
-        return nullptr;
+        return {};
     }
     const char* meta = nullptr;
     for (const char* pos = str::Find(path, ":attachname="); pos; pos = str::Find(pos + 1, ":attachname=")) {
         meta = pos;
     }
     if (!meta) {
-        return nullptr;
+        return {};
     }
     const char* hex = meta + str::Len(":attachname=");
     size_t hexLen = str::Len(hex);
     if (hexLen == 0 || (hexLen % 2) != 0) {
-        return nullptr;
+        return {};
     }
     size_t nameLen = hexLen / 2;
     char* name = AllocArrayTemp<char>(nameLen + 1);
     if (!str::HexToMem(hex, (u8*)name, nameLen)) {
-        return nullptr;
+        return {};
     }
     name[nameLen] = 0;
     return name;
@@ -2247,7 +2249,7 @@ static ByteSlice TxtFileToHTML(const char* path) {
         InterlockedDecrement(&gAllowAllocFailure);
     };
 
-    TempStr data = (TempStr)fd.data();
+    TempStr data = Str((char*)fd.data(), fd.Size());
     data = str::ReplaceTemp(data, "&", "&amp;");
     if (!data) {
         return {};
@@ -4045,7 +4047,7 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
 
 TempStr EngineMupdf::ExtractFontListTemp() {
     if (!pdfdoc) {
-        return nullptr;
+        return {};
     }
 
     Vec<pdf_obj*> fontList;
@@ -4188,7 +4190,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         AppendIfNotExists(&fonts, fontName);
     }
     if (fonts.Size() == 0) {
-        return nullptr;
+        return {};
     }
 
     SortNatural(&fonts);
@@ -4228,7 +4230,7 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
         }
     }
     if (!pdfdoc) {
-        return nullptr;
+        return {};
     }
 
     if (str::Eq(kPropPdfVersion, name)) {
@@ -4263,16 +4265,16 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
             }
         }
         if (fstruct.Size() == 0) {
-            return nullptr;
+            return {};
         }
         return JoinTemp(&fstruct, ",");
     }
 
     if (str::Eq(kPropUnsupportedFeatures, name)) {
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Unsupported_XFA"))) {
-            return (TempStr) "XFA";
+            return "XFA";
         }
-        return nullptr;
+        return {};
     }
 
     if (str::Eq(kPropFontList, name)) {
@@ -4288,14 +4290,14 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
     };
     const char* pdfPropName = GetMatchingString(pdfPropNames, name);
     if (!pdfPropName) {
-        return nullptr;
+        return {};
     }
 
     // _info is guaranteed not to contain any indirect references,
     // so no need for docLock
     pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, pdfPropName);
     if (!obj) {
-        return nullptr;
+        return {};
     }
     TempWStr ws = PdfToWStrTemp(ctx, obj);
     PdfCleanStringInPlace(ws);
@@ -4307,7 +4309,7 @@ static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, const char*
     char buf[1024]{};
     int n = fz_lookup_metadata(ctx, doc, key, buf, (int)dimof(buf));
     if (n <= 0) {
-        return nullptr;
+        return {};
     }
     if (n > (int)dimof(buf)) {
         n = (int)dimof(buf) - 1;
@@ -5095,7 +5097,7 @@ static void outline_to_buffer_rec(fz_context* ctx, fz_output* out, fz_outline* o
 TempStr EngineMupdfGetPdfOutline(const char* path) {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx) {
-        return nullptr;
+        return {};
     }
     fz_register_document_handlers(ctx);
     TempStr res = nullptr;
@@ -5132,7 +5134,7 @@ TempStr EngineMupdfGetPdfOutline(const char* path) {
 TempStr EngineMupdfGetPdfInfo(const char* path) {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx) {
-        return nullptr;
+        return {};
     }
     fz_register_document_handlers(ctx);
     TempStr res = nullptr;

@@ -220,6 +220,9 @@ WCHAR* CastToWCHAR(const char* s);
 namespace url {
 
 void DecodeInPlace(char* url);
+FORCEINLINE void DecodeInPlace(Str url) {
+    DecodeInPlace(url.s);
+}
 bool IsAbsolute(const char* url);
 TempStr GetFullPathTemp(const char* url);
 TempStr GetFileNameTemp(const char* url);
@@ -374,6 +377,133 @@ struct WStrBuilder {
 namespace str {
 
 bool Replace(WStrBuilder& s, const WCHAR* toReplace, const WCHAR* replaceWith);
+
+FORCEINLINE size_t Len(Str s) {
+    return (size_t)s.len;
+}
+FORCEINLINE size_t Len(WStr s) {
+    return (size_t)s.len;
+}
+FORCEINLINE int Leni(Str s) {
+    return s.len;
+}
+FORCEINLINE int Leni(WStr s) {
+    return s.len;
+}
+FORCEINLINE bool Eq(Str s1, const char* s2) {
+    return Eq(s1.s, s2);
+}
+FORCEINLINE bool Eq(const char* s1, Str s2) {
+    return Eq(s1, s2.s);
+}
+FORCEINLINE bool Eq(Str s1, Str s2) {
+    return StrEq(s1, s2);
+}
+FORCEINLINE bool Eq(WStr s1, const WCHAR* s2) {
+    return Eq(s1.s, s2);
+}
+FORCEINLINE bool Eq(const WCHAR* s1, WStr s2) {
+    return Eq(s1, s2.s);
+}
+FORCEINLINE bool Eq(WStr s1, WStr s2) {
+    return WStrEq(s1, s2);
+}
+FORCEINLINE bool EqI(Str s1, const char* s2) {
+    return EqI(s1.s, s2);
+}
+FORCEINLINE bool EqI(const char* s1, Str s2) {
+    return EqI(s1, s2.s);
+}
+FORCEINLINE bool EqI(WStr s1, const WCHAR* s2) {
+    return EqI(s1.s, s2);
+}
+FORCEINLINE bool EqI(const WCHAR* s1, WStr s2) {
+    return EqI(s1, s2.s);
+}
+FORCEINLINE bool EqI(Str s1, Str s2) {
+    return EqI(s1.s, s2.s);
+}
+FORCEINLINE bool EqI(WStr s1, WStr s2) {
+    return EqI(s1.s, s2.s);
+}
+FORCEINLINE bool IsEmpty(Str s) {
+    return !s || s.len == 0;
+}
+FORCEINLINE bool IsEmpty(WStr s) {
+    return !s || s.len == 0;
+}
+FORCEINLINE bool StartsWith(Str str, const char* prefix) {
+    return StartsWith(str.s, prefix);
+}
+FORCEINLINE bool StartsWith(WStr str, const WCHAR* prefix) {
+    return StartsWith(str.s, prefix);
+}
+FORCEINLINE bool StartsWithI(Str str, const char* prefix) {
+    return StartsWithI(str.s, prefix);
+}
+FORCEINLINE bool StartsWithI(WStr str, const WCHAR* prefix) {
+    return StartsWithI(str.s, prefix);
+}
+FORCEINLINE bool EndsWith(Str txt, const char* end) {
+    return EndsWith(txt.s, end);
+}
+FORCEINLINE bool EndsWith(WStr txt, const WCHAR* end) {
+    return EndsWith(txt.s, end);
+}
+FORCEINLINE bool Contains(Str s, const char* txt) {
+    return Contains(s.s, txt);
+}
+FORCEINLINE char* ToLowerInPlace(Str s) {
+    return ToLowerInPlace(s.s);
+}
+FORCEINLINE WCHAR* ToLowerInPlace(WStr s) {
+    return ToLowerInPlace(s.s);
+}
+FORCEINLINE size_t TransCharsInPlace(Str s, const char* oldChars, const char* newChars) {
+    return TransCharsInPlace(s.s, oldChars, newChars);
+}
+FORCEINLINE size_t TransCharsInPlace(WStr s, const WCHAR* oldChars, const WCHAR* newChars) {
+    return TransCharsInPlace(s.s, oldChars, newChars);
+}
+FORCEINLINE size_t TrimWSInPlace(Str s, TrimOpt opt) {
+    return TrimWSInPlace(s.s, opt);
+}
+FORCEINLINE int BufSet(char* dst, int dstCchSize, Str src) {
+    return BufSet(dst, dstCchSize, src.s);
+}
+FORCEINLINE int BufSet(WCHAR* dst, int dstCchSize, WStr src) {
+    return BufSet(dst, dstCchSize, src.s);
+}
+FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
+    return BufSet(dst.s, dstCchSize, src.s);
+}
+FORCEINLINE char* Dup(Arena* a, Str s) {
+    return Dup(a, s.s, s.len);
+}
+FORCEINLINE char* Dup(Str s) {
+    return Dup(s.s, s.len);
+}
+FORCEINLINE WCHAR* Dup(Arena* a, WStr s) {
+    return Dup(a, s.s, s.len);
+}
+FORCEINLINE WCHAR* Dup(WStr s) {
+    return Dup(s.s, s.len);
+}
+FORCEINLINE const char* Find(const Str& str, const char* find) {
+    return Find(str.s, find);
+}
+FORCEINLINE char* FindChar(Str str, char c) {
+    return FindChar(str.s, c);
+}
+FORCEINLINE WCHAR* FindChar(WStr str, WCHAR c) {
+    return FindChar(str.s, c);
+}
+FORCEINLINE char* FindCharLast(Str str, char c) {
+    return FindCharLast(str.s, c);
+}
+FORCEINLINE const WCHAR* Find(const WStr& str, const WCHAR* find) {
+    return Find(str.s, find);
+}
 
 } // namespace str
 

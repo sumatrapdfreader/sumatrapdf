@@ -194,7 +194,7 @@ TempStr ResolveHtmlEntitiesTemp(const char* s, size_t len) {
         // ensure 0-terminated string is returned
         return str::DupTemp(s, len);
     }
-    return (TempStr)res;
+    return res;
 }
 
 bool AttrInfo::NameIs(const char* s) const {

@@ -150,7 +150,7 @@ static void SaveTabGroup(TabGroupsDialog* d) {
     if (n <= 0) {
         return;
     }
-    WCHAR* buf = AllocArrayTemp<WCHAR>(n + 1);
+    TempWStr buf = WStr(AllocArrayTemp<WCHAR>(n + 1), (int)n + 1);
     GetWindowTextW(d->hwndEdit, buf, n + 1);
     TempStr name = ToUtf8Temp(buf);
 
@@ -294,7 +294,7 @@ static void DrawTabGroupItem(TabGroupsDialog* d, ListBox::DrawItemEvent* ev) {
 
     // draw group name on the left
     const char* name = d->model->Item(ev->itemIndex);
-    WCHAR* nameW = ToWStrTemp(name);
+    TempWStr nameW = ToWStrTemp(name);
     uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT;
     DrawTextW(hdc, nameW, -1, &rc, fmt);
 
@@ -302,7 +302,7 @@ static void DrawTabGroupItem(TabGroupsDialog* d, ListBox::DrawItemEvent* ev) {
     int nTabs = d->model->TabCount(ev->itemIndex);
     char buf[32];
     snprintf(buf, sizeof(buf), "%d tabs", nTabs);
-    WCHAR* countW = ToWStrTemp(buf);
+    TempWStr countW = ToWStrTemp(buf);
     COLORREF rightCol = AccentColor(colText, 80);
     SetTextColor(hdc, rightCol);
     RECT rcRight = rc;

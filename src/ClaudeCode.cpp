@@ -131,8 +131,8 @@ static void PopulateModelCombo(HWND combo) {
     BuildClaudeModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
         TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Opus");
-        WCHAR* displayW = ToWStrTemp(display);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
+        TempWStr displayW = ToWStrTemp(display);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW.s);
     }
 }
 
@@ -349,11 +349,11 @@ static TempStr EncodeClaudeDirTemp(const char* dir) {
 // Handles both "content":"string" and "content":[{"type":"text","text":"..."}] formats.
 static TempStr ExtractUserTextTemp(const char* line) {
     if (!str::Find(line, "\"role\":\"user\"")) {
-        return nullptr;
+        return {};
     }
     // skip tool_result messages (they have role:user but contain tool output, not user text)
     if (str::Find(line, "\"tool_result\"")) {
-        return nullptr;
+        return {};
     }
     // try string format: "content":"text"
     if (str::Find(line, "\"content\":\"")) {
@@ -376,7 +376,7 @@ static TempStr ExtractUserTextTemp(const char* line) {
             }
         }
     }
-    return nullptr;
+    return {};
 }
 
 // Read the first user message from a session JSONL as description
@@ -423,7 +423,7 @@ static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
     // scan for *.jsonl files in the project directory
     TempStr pattern = str::FormatTemp("%s\\*.jsonl", projectDir);
     WIN32_FIND_DATAW fd;
-    WCHAR* patternW = ToWStrTemp(pattern);
+    TempWStr patternW = ToWStrTemp(pattern);
     HANDLE hFind = FindFirstFileW(patternW, &fd);
     if (hFind == INVALID_HANDLE_VALUE) {
         return;
@@ -494,8 +494,8 @@ static void PopulateSessionCombo(MainWindow* win) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
-        WCHAR* labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
+        TempWStr labelW = ToWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
 
         if (tab->claudeSessionId && str::Eq(tab->claudeSessionId, sessions[i].sessionId)) {
             selectedIdx = i + 1;
@@ -506,8 +506,8 @@ static void PopulateSessionCombo(MainWindow* win) {
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->claudeSessionId && !foundCurrent) {
         const char* label = "(current session)";
-        WCHAR* labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
+        TempWStr labelW = ToWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
         selectedIdx = sessions.Size() + 1;
     }
 

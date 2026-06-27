@@ -95,7 +95,7 @@ int GetPropIdx(const Props& props, const char* name) {
     return -1;
 }
 
-char* GetPropValueTemp(const Props& props, const char* name) {
+TempStr GetPropValueTemp(const Props& props, const char* name) {
     int idx = GetPropIdx(props, name);
     if (idx < 0) {
         return nullptr;

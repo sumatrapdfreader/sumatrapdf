@@ -197,7 +197,7 @@ void FreeExternalViewers() {
     }
 }
 
-static char* GetAcrobatPathTemp() {
+static TempStr GetAcrobatPathTemp() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
     const char* keyName = R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)";
     char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, nullptr);
@@ -211,7 +211,7 @@ static char* GetAcrobatPathTemp() {
     return nullptr;
 }
 
-static char* GetFoxitPathTemp() {
+static TempStr GetFoxitPathTemp() {
     const char* keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)";
     char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
     if (path && file::Exists(path)) {
@@ -245,7 +245,7 @@ static char* GetFoxitPathTemp() {
     return nullptr;
 }
 
-static char* GetPDFXChangePathTemp() {
+static TempStr GetPDFXChangePathTemp() {
     const char* keyName = R"(Software\Tracker Software\PDFViewer)";
     char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "InstallPath");
     if (!path) {

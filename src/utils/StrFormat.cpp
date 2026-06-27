@@ -260,7 +260,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
             return false;
         }
 
-        char* s;
+        TempStr s;
         switch (arg.t) {
             case Type::Char:
                 res.AppendChar(arg.u.c);
@@ -338,7 +338,7 @@ char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const A
     return res;
 }
 
-char* FormatTemp(const char* s, const Arg** args, int nArgs) {
+TempStr FormatTemp(const char* s, const Arg** args, int nArgs) {
     // arguments at the end could be empty
     while (nArgs >= 0 && args[nArgs - 1]->t == Type::None) {
         nArgs--;
@@ -346,25 +346,25 @@ char* FormatTemp(const char* s, const Arg** args, int nArgs) {
 
     if (nArgs == 0) {
         // TODO: verify that format has no references to args
-        return (char*)s;
+        return Str(s);
     }
 
     Fmt fmt;
     bool ok = ParseFormat(fmt, s);
     if (!ok) {
-        return nullptr;
+        return {};
     }
     ok = fmt.Eval(args, nArgs);
     if (!ok) {
-        return nullptr;
+        return {};
     }
     char* res = fmt.res.Get();
     size_t n = fmt.res.size();
     return str::DupTemp(res, n);
 }
 
-char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
-                 const Arg& a6) {
+TempStr FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
+                   const Arg& a6) {
     const Arg* args[6];
     int nArgs = 0;
     args[nArgs++] = &a1;
@@ -377,17 +377,17 @@ char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, con
     return FormatTemp(s, args, nArgs);
 }
 
-char* FormatTemp(const char* s, const Arg a1) {
+TempStr FormatTemp(const char* s, const Arg a1) {
     const Arg* args[3] = {&a1};
     return FormatTemp(s, args, 1);
 }
 
-char* FormatTemp(const char* s, const Arg a1, const Arg a2) {
+TempStr FormatTemp(const char* s, const Arg a1, const Arg a2) {
     const Arg* args[3] = {&a1, &a2};
     return FormatTemp(s, args, 2);
 }
 
-char* FormatTemp(const char* s, const Arg a1, const Arg a2, const Arg a3) {
+TempStr FormatTemp(const char* s, const Arg a1, const Arg a2, const Arg a3) {
     const Arg* args[3] = {&a1, &a2, &a3};
     return FormatTemp(s, args, 3);
 }

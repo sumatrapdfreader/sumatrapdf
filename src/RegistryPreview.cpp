@@ -182,12 +182,12 @@ void SetPdfPreviewLoggingEnabled(bool enable) {
 TempStr GetPdfPreviewLogDirTemp() {
     TempStr exeDir = GetSelfExeDirTemp();
     if (!exeDir) {
-        return nullptr;
+        return {};
     }
     TempStr exePath = path::JoinTemp(exeDir, "SumatraPDF.exe");
     ByteSlice d = file::ReadFile(exePath);
     if (d.empty()) {
-        return nullptr;
+        return {};
     }
     u8 sha1[20]{};
     CalcSHA1Digest(d.data(), d.Size(), sha1);
@@ -198,7 +198,7 @@ TempStr GetPdfPreviewLogDirTemp() {
     }
     TempStr local = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (!local) {
-        return nullptr;
+        return {};
     }
     TempStr dir = path::JoinTemp(local, "SumatraPDF-data");
     return path::JoinTemp(dir, id);
@@ -208,16 +208,16 @@ TempStr GetPdfPreviewLogDirTemp() {
 static TempStr GetNewPdfPreviewLogFilePathTemp() {
     TempStr dir = GetPdfPreviewLogDirTemp();
     if (!dir) {
-        return nullptr;
+        return {};
     }
     SYSTEMTIME st{};
     GetLocalTime(&st);
     // unique part: pid plus low bits of tick, so concurrent preview hosts that
     // start in the same minute don't collide
     DWORD uniq = (GetCurrentProcessId() << 16) ^ (GetTickCount() & 0xffff);
-    TempStr name = str::FormatTemp("%s%02d-%02d.%02d-%02d.%08x.txt", kPdfPreviewLogPrefix, (int)st.wMonth,
-                                   (int)st.wDay, (int)st.wHour, (int)st.wMinute, uniq);
-    return path::JoinTemp(dir, name);
+    TempStr name = str::FormatTemp("%s%02d-%02d.%02d-%02d.%08x.txt", kPdfPreviewLogPrefix, (int)st.wMonth, (int)st.wDay,
+                                   (int)st.wHour, (int)st.wMinute, uniq);
+    return path::JoinTemp(dir.s, name.s);
 }
 
 void StartPdfPreviewLoggingIfEnabled() {

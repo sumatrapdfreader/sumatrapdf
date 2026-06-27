@@ -33,8 +33,8 @@ static void ShellNotifyAssociationsChanged() {
 }
 
 static bool HasRegistryValue(HKEY hkey, const char* keyName, const char* valName) {
-    WCHAR* keyW = ToWStrTemp(keyName);
-    WCHAR* valW = ToWStrTemp(valName);
+    TempWStr keyW = ToWStrTemp(keyName);
+    TempWStr valW = ToWStrTemp(valName);
     DWORD type = 0;
     DWORD cb = 0;
     LSTATUS res = SHGetValueW(hkey, keyW, valW, &type, nullptr, &cb);
@@ -267,11 +267,11 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // PDF icon will be shown (we need icons and properly configure them)
     bool ok = true;
 
-    WCHAR* openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
+    TempWStr openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
     auto exts = gSupportedExts;
     while (exts) {
-        WCHAR* ext = ToWStrTemp(exts);
-        WCHAR* name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
+        TempWStr ext = ToWStrTemp(exts);
+        TempWStr name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
         ok &= CreateRegKey(hkey, name);
         SeqStrNext(exts);
     }
@@ -341,7 +341,7 @@ bool OldWriteFileAssoc(HKEY hkey) {
     WCHAR* regPath = GetRegClassesAppsTemp(kAppName);
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    WCHAR* iconPath = str::JoinTemp(exePath, L",1");
+    TempWStr iconPath = str::JoinTemp(exePath, L",1");
     {
         key = str::JoinTemp(regPath, L"\\DefaultIcon");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
@@ -401,7 +401,7 @@ bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     return ok1 && ok2;
 }
 
-static const char* GetRegClassesAppTemp(const char* appName) {
+static const TempStr GetRegClassesAppTemp(const char* appName) {
     return str::JoinTemp("Software\\Classes\\", appName);
 }
 
@@ -435,7 +435,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
 // delete registry key but only if it's empty
 static bool DeleteEmptyRegKey(HKEY root, const char* keyName) {
     HKEY hkey;
-    WCHAR* keyNameW = ToWStrTemp(keyName);
+    TempWStr keyNameW = ToWStrTemp(keyName);
     LSTATUS status = RegOpenKeyExW(root, keyNameW, 0, KEY_READ, &hkey);
     if (status != ERROR_SUCCESS) {
         return true;

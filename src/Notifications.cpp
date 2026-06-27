@@ -767,7 +767,7 @@ void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeou
 
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd) {
     if (!wnd) {
-        return nullptr;
+        return {};
     }
     return HwndGetTextTemp(wnd->hwnd);
 }
