@@ -353,7 +353,7 @@ bool CrashHandlerDownloadSymbols() {
     return DownloadAndUnzipSymbols(gSymbolsDir);
 }
 
-bool AreSymbolsDownloaded(const char* symDir) {
+bool AreSymbolsDownloaded(Str symDir) {
     TempStr path = path::JoinTemp(symDir, "SumatraPDF.pdb");
     if (file::Exists(Str(path))) {
         logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path, symDir);
@@ -808,7 +808,7 @@ static void BuildSystemInfo() {
     gSystemInfo = s.StealData();
 }
 
-bool SetSymbolsDir(const char* symDir) {
+bool SetSymbolsDir(Str symDir) {
     if (!symDir) {
         return false;
     }
@@ -860,7 +860,7 @@ static char* BuildSymbolsUrl() {
     return str::Join(urlBase, suff);
 }
 
-void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir, bool localOnly) {
+void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool localOnly) {
     ReportIf(gDumpEvent || gDumpThread);
 
     if (!crashDumpPath) {

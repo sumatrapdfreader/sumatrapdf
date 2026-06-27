@@ -4,9 +4,9 @@
 extern char* gCrashFilePath;
 extern char* gSymbolsDir;
 
-void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir, bool localOnly);
+void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool localOnly);
 void UninstallCrashHandler();
 bool CrashHandlerDownloadSymbols();
-bool AreSymbolsDownloaded(const char* symDir);
+bool AreSymbolsDownloaded(Str symDir);
 bool InitializeDbgHelp(bool force);
-bool SetSymbolsDir(const char* symDir);
+bool SetSymbolsDir(Str symDir);
