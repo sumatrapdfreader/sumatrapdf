@@ -19,7 +19,7 @@
 // clang-format off
 static SeqStrings gSupportedExts = 
     ".pdf\0.xps\0.oxps\0.cbz\0.cbr\0.cb7\0.cbt\0" \
-    ".djvu\0.chm\0.mobi\0.epub\0.md\0.markdown\0.azw\0.azw3\0.azw4\0" \
+    ".djvu\0.chm\0.mobi\0.epub\0.md\0.markdown\0.svg\0.azw\0.azw3\0.azw4\0" \
     ".fb2\0.fb2z\0.prc\0.tif\0.tiff\0.jp2\0.png\0" \
     ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0.heif\0" \
     ".jfif\0.webp\0";
@@ -46,6 +46,17 @@ static bool HasOurOpenWithEntry(HKEY hkey, const char* ext) {
     TempStr key = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
     TempStr progID = str::JoinTemp(kAppName, ext);
     return HasRegistryValue(hkey, key, progID);
+}
+
+static bool HasAllOurOpenWithEntries(HKEY hkey) {
+    auto exts = gSupportedExts;
+    while (exts) {
+        if (!HasOurOpenWithEntry(hkey, exts)) {
+            return false;
+        }
+        SeqStrNext(exts);
+    }
+    return true;
 }
 
 // caller needs to str::Free() the result
@@ -530,7 +541,7 @@ void ReRegisterFileAssociations() {
     }
 
     bool didRegister = false;
-    if (!HasOurOpenWithEntry(HKEY_CURRENT_USER, ".pdf")) {
+    if (!HasAllOurOpenWithEntries(HKEY_CURRENT_USER)) {
         RegisterForOpenWith(HKEY_CURRENT_USER, exePath);
         if (IsWindows10OrGreater()) {
             RegisterForDefaultPrograms(HKEY_CURRENT_USER, exePath);
@@ -541,7 +552,7 @@ void ReRegisterFileAssociations() {
     // for all-users installs, also try to restore the HKLM entries (best effort)
     TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
     if (HasRegistryValue(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation")) {
-        if (!HasOurOpenWithEntry(HKEY_LOCAL_MACHINE, ".pdf")) {
+        if (!HasAllOurOpenWithEntries(HKEY_LOCAL_MACHINE)) {
             RegisterForOpenWith(HKEY_LOCAL_MACHINE, exePath);
             if (IsWindows10OrGreater()) {
                 RegisterForDefaultPrograms(HKEY_LOCAL_MACHINE, exePath);
