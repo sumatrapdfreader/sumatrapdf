@@ -18,7 +18,7 @@ ChmFile::~ChmFile() {
     chm_close(chmHandle);
 }
 
-bool ChmFile::HasData(const char* fileName) const {
+bool ChmFile::HasData(Str fileName) const {
     if (!fileName) {
         return false;
     }
@@ -26,18 +26,18 @@ bool ChmFile::HasData(const char* fileName) const {
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp("/", fileName);
     } else if (str::StartsWith(fileName, "///")) {
-        fileName += 2;
+        fileName = Str(fileName.s + 2, fileName.len - 2);
     }
 
     struct chmUnitInfo info{};
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-ByteSlice ChmFile::GetData(const char* fileName) const {
+ByteSlice ChmFile::GetData(Str fileName) const {
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp("/", fileName);
     } else if (str::StartsWith(fileName, "///")) {
-        fileName = fileName + 2;
+        fileName = Str(fileName.s + 2, fileName.len - 2);
     }
 
     struct chmUnitInfo info;
@@ -70,9 +70,9 @@ ByteSlice ChmFile::GetData(const char* fileName) const {
     return {d, len};
 }
 
-TempStr SmartToUtf8Temp(const char* s, uint codepage) {
+TempStr SmartToUtf8Temp(Str s, uint codepage) {
     if (str::StartsWith(s, UTF8_BOM)) {
-        return str::DupTemp(s + 3);
+        return str::DupTemp(Str(s.s + 3, s.len - 3));
     }
     if (CP_UTF8 == codepage) {
         return str::DupTemp(s);
@@ -247,7 +247,7 @@ bool ChmFile::ParseSystemData() {
     return true;
 }
 
-char* ChmFile::ResolveTopicID(unsigned int id) const {
+TempStr ChmFile::ResolveTopicID(unsigned int id) const {
     ByteSlice ivbData = GetData("/#IVB");
     AutoFree f = ivbData.Get();
     size_t ivbLen = ivbData.size();
@@ -261,14 +261,19 @@ char* ChmFile::ResolveTopicID(unsigned int id) const {
             ByteSlice stringsData = GetData("/#STRINGS");
             char* res = GetCharZ(stringsData, br.DWordLE(off + 4));
             stringsData.Free();
-            return res;
+            if (!res) {
+                return nullptr;
+            }
+            TempStr tmp = str::DupTemp(res);
+            str::Free(res);
+            return tmp;
         }
     }
     return nullptr;
 }
 
 void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
-    if (!path || HasData(path)) {
+    if (!path || HasData(path.Get())) {
         return;
     }
 
@@ -291,8 +296,8 @@ void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
     }
 }
 
-bool ChmFile::Load(const char* path) {
-    ByteSlice fileContent = file::ReadFile(Str(path));
+bool ChmFile::Load(Str path) {
+    ByteSlice fileContent = file::ReadFile(path);
     data = fileContent.Get();
     chmHandle = chm_open(fileContent, fileContent.size());
     if (!chmHandle) {
@@ -323,14 +328,14 @@ bool ChmFile::Load(const char* path) {
         codepage = CP_ACP;
     }
 
-    if (!HasData(homePath)) {
+    if (!HasData(homePath.Get())) {
         const char* pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
         for (int i = 0; i < dimof(pathsToTest); i++) {
             if (HasData(pathsToTest[i])) {
                 homePath.SetCopy(pathsToTest[i]);
             }
         }
-        if (!HasData(homePath)) {
+        if (!HasData(homePath.Get())) {
             return false;
         }
     }
@@ -338,7 +343,7 @@ bool ChmFile::Load(const char* path) {
     return true;
 }
 
-TempStr ChmFile::GetPropertyTemp(const char* name) const {
+TempStr ChmFile::GetPropertyTemp(Str name) const {
     char* result = nullptr;
     if (str::Eq(kPropTitle, name) && title.CStr()) {
         result = SmartToUtf8Temp(title.CStr(), codepage);
@@ -352,8 +357,8 @@ TempStr ChmFile::GetPropertyTemp(const char* name) const {
     return result;
 }
 
-const char* ChmFile::GetHomePath() const {
-    return homePath;
+TempStr ChmFile::GetHomePath() const {
+    return homePath.Get();
 }
 
 static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, void* data) {
@@ -644,7 +649,7 @@ static int ChmEntityByte(WCHAR c) {
 // codepage. Labels that decoded to real Unicode (codepoints > 0xFF, i.e. raw
 // non-Latin bytes already converted by SmartToUtf8Temp) are left untouched, as
 // are pure-ASCII labels (issue #842).
-static const TempStr FixChmTocEntitiesTemp(const char* s, uint codepage) {
+static const TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     uint cp = (codepage == CP_ACP) ? GetACP() : codepage;
     if (!s || !ChmTocNeedsEntityRemap(cp)) {
         return s;
@@ -679,7 +684,7 @@ struct ChmTocEntityFixer : EbookTocVisitor {
     }
 };
 
-bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) const {
+bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) const {
     if (!path) {
         return false;
     }
@@ -691,7 +696,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool i
     // Convert to UTF-8 (handling UTF-8 BOM and the file's codepage) so gumbo's
     // attribute values come out in a known encoding -- no per-attribute
     // conversion needed in the visit functions.
-    TempStr utf8 = SmartToUtf8Temp((const char*)htmlData.data(), codepage);
+    TempStr utf8 = SmartToUtf8Temp(Str((char*)htmlData.data(), (int)htmlData.size()), codepage);
     if (!utf8) {
         return false;
     }
@@ -729,7 +734,7 @@ bool ChmFile::HasToc() const {
 }
 
 bool ChmFile::ParseToc(EbookTocVisitor* visitor) const {
-    return ParseTocOrIndex(visitor, tocPath, false);
+    return ParseTocOrIndex(visitor, tocPath.Get(), false);
 }
 
 bool ChmFile::HasIndex() const {
@@ -737,14 +742,14 @@ bool ChmFile::HasIndex() const {
 }
 
 bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {
-    return ParseTocOrIndex(visitor, indexPath, true);
+    return ParseTocOrIndex(visitor, indexPath.Get(), true);
 }
 
 bool ChmFile::IsSupportedFileType(Kind kind) {
     return kind == kindFileChm;
 }
 
-ChmFile* ChmFile::CreateFromFile(const char* path) {
+ChmFile* ChmFile::CreateFromFile(Str path) {
     ChmFile* chmFile = new ChmFile();
     if (!chmFile || !chmFile->Load(path)) {
         delete chmFile;

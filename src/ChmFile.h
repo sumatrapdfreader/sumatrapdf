@@ -3,7 +3,7 @@
 
 // Strip a UTF-8 BOM if present; otherwise convert from `codepage` to UTF-8
 // (unless already UTF-8). Returns a TempStr owned by the temp allocator.
-TempStr SmartToUtf8Temp(const char* s, uint codepage);
+TempStr SmartToUtf8Temp(Str s, uint codepage);
 
 struct ChmFile {
     struct chmFile* chmHandle = nullptr;
@@ -19,20 +19,20 @@ struct ChmFile {
 
     void ParseWindowsData();
     bool ParseSystemData();
-    bool ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) const;
+    bool ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) const;
     void FixPathCodepage(AutoFreeStr& path, uint& fileCP);
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
 
     ChmFile() = default;
     ~ChmFile();
 
-    bool HasData(const char* fileName) const;
-    ByteSlice GetData(const char* fileName) const;
-    char* ResolveTopicID(unsigned int id) const;
+    bool HasData(Str fileName) const;
+    ByteSlice GetData(Str fileName) const;
+    TempStr ResolveTopicID(unsigned int id) const;
 
-    TempStr GetPropertyTemp(const char* name) const;
-    const char* GetHomePath() const;
+    TempStr GetPropertyTemp(Str name) const;
+    TempStr GetHomePath() const;
     void GetAllPaths(StrVec*) const;
 
     bool HasToc() const;
@@ -41,5 +41,5 @@ struct ChmFile {
     bool ParseIndex(EbookTocVisitor* visitor) const;
 
     static bool IsSupportedFileType(Kind);
-    static ChmFile* CreateFromFile(const char* path);
+    static ChmFile* CreateFromFile(Str path);
 };

@@ -1368,7 +1368,7 @@ class ChmDataCache {
             }
         }
 
-        auto tmp = doc->GetData(url);
+        auto tmp = doc->GetData(url.Get());
         if (tmp.empty()) {
             return nullptr;
         }
@@ -1383,7 +1383,7 @@ class ChmDataCache {
 
     ByteSlice GetFileData(const char* relPath, const char* pagePath) {
         AutoFreeStr url(NormalizeURL(Str(relPath), Str(pagePath)).s);
-        return doc->GetData(url);
+        return doc->GetData(url.Get());
     }
 };
 
@@ -1587,7 +1587,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
 
     char* GetHtml() {
         // first add the homepage
-        const char* index = doc->GetHomePath();
+        TempStr index = doc->GetHomePath();
         TempWStr urlW = strconv::StrCPToWStrTemp(index, doc->codepage);
         char* url = ToUtf8Temp(urlW);
         Visit(nullptr, url, 0);
@@ -1633,7 +1633,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         if (!charset) {
             charset = doc->codepage;
         }
-        TempStr s = SmartToUtf8Temp((const char*)pageHtml.Get(), charset);
+        TempStr s = SmartToUtf8Temp(Str((char*)pageHtml.data(), (int)pageHtml.size()), charset);
         html.Append(s);
         added.Append(plainUrl);
         pageHtml.Free();
@@ -1676,10 +1676,9 @@ IPageDestination* EngineChm::GetNamedDest(Str name) {
     }
     unsigned int topicID;
     if (str::Parse(name, "%u%$", &topicID)) {
-        char* url = doc->ResolveTopicID(topicID);
+        TempStr url = doc->ResolveTopicID(topicID);
         if (url) {
             dest = EngineEbook::GetNamedDest(url);
-            str::Free(url);
         }
     }
     return dest;
@@ -1726,7 +1725,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
     AutoFreeStr basePath = str::Dup(baseAnchor->str.s, baseAnchor->str.len).s;
     AutoFreeStr url = str::Dup(link->str.s, link->str.len).s;
     url.Set(NormalizeURL(Str(url), Str(basePath)).s);
-    if (!doc->HasData(url)) {
+    if (!doc->HasData(url.Get())) {
         return nullptr;
     }
 

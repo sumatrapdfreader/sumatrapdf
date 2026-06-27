@@ -47,7 +47,7 @@ struct ChmModel : DocController {
     // for quick type determination and type-safe casting
     ChmModel* AsChm() override;
 
-    static ChmModel* Create(const char* fileName, DocControllerCallback* cb = nullptr);
+    static ChmModel* Create(Str fileName, DocControllerCallback* cb = nullptr);
 
     // the following is specific to ChmModel
 
@@ -61,11 +61,11 @@ struct ChmModel : DocController {
     LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
 
     // for HtmlWindowCallback (called through htmlWindowCb)
-    bool OnBeforeNavigate(const char* url, bool newWindow);
-    void OnDocumentComplete(const char* url);
+    bool OnBeforeNavigate(Str url, bool newWindow);
+    void OnDocumentComplete(Str url);
     void OnLButtonDown();
-    ByteSlice GetDataForUrl(const char* url);
-    void DownloadData(const char* url, const ByteSlice& data);
+    ByteSlice GetDataForUrl(Str url);
+    void DownloadData(Str url, const ByteSlice& data);
 
     static bool IsSupportedFileType(Kind);
 
@@ -101,16 +101,16 @@ struct ChmModel : DocController {
     // (e.g. for titles and URLs for ChmTocItem and ChmCacheEntry)
     Arena* poolAlloc = nullptr;
 
-    bool Load(const char* fileName);
-    bool DisplayPage(const char* pageUrl);
+    bool Load(Str fileName);
+    bool DisplayPage(Str pageUrl);
 
-    ChmCacheEntry* FindDataForUrl(const char* url) const;
+    ChmCacheEntry* FindDataForUrl(Str url) const;
 
     void SaveHtmlScrollPos();
     void SaveHtmlScrollPosForPage(int pageNo);
-    void SaveHtmlScrollPosForUrl(const char* url, PointF pos);
+    void SaveHtmlScrollPosForUrl(Str url, PointF pos);
     bool GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const;
-    bool GetSavedHtmlScrollPosForUrl(const char* url, PointF* pos) const;
+    bool GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const;
     void RestoreHtmlScrollPos();
     void ZoomTo(float zoomLevel) const;
 };
