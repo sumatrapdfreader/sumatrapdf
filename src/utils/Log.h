@@ -7,23 +7,23 @@ extern bool gLogToConsole;
 extern bool gLogToDebugger;
 extern bool gReducedLogging;
 extern bool gLogToPipe;
-extern const char* gLogAppName;
+extern Str gLogAppName;
 extern char* gLogFilePath;
-void StartLogToFile(const char* path, bool removeIfExists);
-bool WriteCurrentLogToFile(const char* path);
+void StartLogToFile(Str path, bool removeIfExists);
+bool WriteCurrentLogToFile(Str path);
 
-void log(const char* s);
+void log(Str s);
 void logf(const char* fmt, ...);
 
 void logvf(const char* fmt, ...);
-void logv(const char* s);
+void logv(Str s);
 
 void logPipe(const char* fmt, ...);
 
-void logValueSize(const char* name, i64 v);
+void logValueSize(Str name, i64 v);
 
 // log always
 void logfa(const char* fmt, ...);
-void loga(const char* s);
+void loga(Str s);
 
 void DestroyLogging();

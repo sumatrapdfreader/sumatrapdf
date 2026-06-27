@@ -117,7 +117,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void*) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         ReportIf(hInstance != GetInstance());
     }
-    gLogAppName = "PdfPreview";
+    gLogAppName = StrL("PdfPreview");
     logf("PdfPreview: DllMain %s\n", GetReason(dwReason));
     return TRUE;
 }

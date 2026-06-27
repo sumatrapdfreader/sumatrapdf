@@ -9,7 +9,7 @@
 
 constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\LOCAL\\ArsLexis-Logger";
 
-const char* gLogAppName = "SumatraPDF";
+Str gLogAppName = StrL("SumatraPDF");
 
 Mutex gLogMutex;
 
@@ -83,16 +83,14 @@ static void maybeOpenLogPipe() {
     // TODO: retry if ERROR_PIPE_BUSY?
 }
 
-static void logToPipe(const char* s, size_t n = 0) {
+static void logToPipe(Str s) {
     if (!gLogToPipe) {
         return;
     }
-    if (!s || (*s == 0)) {
+    if (!s) {
         return;
     }
-    if (n == 0) {
-        n = str::Len(s);
-    }
+    size_t n = (size_t)s.len;
 
     gPipeMutex.Lock();
 
@@ -110,12 +108,12 @@ static void logToPipe(const char* s, size_t n = 0) {
 
     if (didConnect) {
         // logview accepts logging from anyone, so announce ourselves
-        TempStr initialMsg = str::FormatTemp("app: %s\n", gLogAppName);
-        WriteFile(hLogPipe, initialMsg, (DWORD)str::Len(initialMsg), &cbWritten, nullptr);
+        TempStr initialMsg = str::FormatTemp("app: %s\n", gLogAppName.s);
+        WriteFile(hLogPipe, initialMsg.s, (DWORD)initialMsg.len, &cbWritten, nullptr);
     }
 
     DWORD cb = (DWORD)n;
-    ok = WriteFile(hLogPipe, s, cb, &cbWritten, nullptr);
+    ok = WriteFile(hLogPipe, s.s, cb, &cbWritten, nullptr);
     if (!ok) {
         CloseHandle(hLogPipe);
         hLogPipe = INVALID_HANDLE_VALUE;
@@ -130,13 +128,13 @@ void logPipe(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args).s;
-    logToPipe(s.Get());
+    logToPipe(Str(s.Get()));
     va_end(args);
 }
 
 // verbose log, only to pipe
 // used to log to debugger but 10x shows it and is really slow
-void logv(const char* s) {
+void logv(Str s) {
     // if (gLogToDebugger || IsDebuggerPresent()) {
     //     OutputDebugStringA(s);
     // }
@@ -147,23 +145,23 @@ void logvf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args).s;
-    logv(s.Get());
+    logv(Str(s.Get()));
     va_end(args);
 }
 
 // logs value that is byte size to pipe
-void logValueSize(const char* name, i64 v) {
-    TempStr s = str::FormatTemp(":v %s size %lld\n", name, v);
+void logValueSize(Str name, i64 v) {
+    TempStr s = str::FormatTemp(":v %s size %lld\n", name.s, v);
     logToPipe(s);
 }
 
-static void log2(const char* s, bool always) {
-    bool skipLog = !always && gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s);
+static void log2(Str s, bool always) {
+    bool skipLog = !always && gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s.s);
 
     if (!skipLog) {
         // in reduced logging mode, we do want to log to at least the debugger
         if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
-            OutputDebugStringA(s);
+            OutputDebugStringA(s.s);
         }
     }
     if (gDestroyedLogging) {
@@ -195,36 +193,36 @@ static void log2(const char* s, bool always) {
         }
     }
 
-    size_t n = str::Len(s);
+    size_t n = (size_t)s.len;
 
     // when skipping, we skip buf (crash reports) and console
     // but write to file and logview
     if (!skipLog) {
-        gLogBuf->Append(s, n);
+        gLogBuf->Append(s.s, n);
     }
 
     if (!skipLog && gLogToConsole) {
-        fwrite(s, 1, n, stdout);
+        fwrite(s.s, 1, n, stdout);
         fflush(stdout);
     }
 
     if (gLogFilePath) {
         auto f = fopen(gLogFilePath, "a");
         if (f != nullptr) {
-            fwrite(s, 1, n, f);
+            fwrite(s.s, 1, n, f);
             fflush(f);
             fclose(f);
         }
     }
-    logToPipe(s, n);
+    logToPipe(s);
     gLogMutex.Unlock();
 }
 
-void log(const char* s) {
+void log(Str s) {
     log2(s, false);
 }
 
-void loga(const char* s) {
+void loga(Str s) {
     if (gDestroyedLogging) {
         return;
     }
@@ -239,7 +237,7 @@ void logf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args).s;
-    log2(s.Get(), false);
+    log2(Str(s.Get()), false);
     va_end(args);
 }
 
@@ -251,20 +249,20 @@ void logfa(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char* s = str::FmtV(fmt, args);
-    log2(s, true);
+    log2(Str(s), true);
     str::Free(s);
     va_end(args);
 }
 
-void StartLogToFile(const char* path, bool removeIfExists) {
+void StartLogToFile(Str path, bool removeIfExists) {
     ReportIf(gLogFilePath);
-    gLogFilePath = str::Dup(path);
+    gLogFilePath = str::Dup(path).s;
     if (removeIfExists) {
         file::Delete(path);
     }
 }
 
-bool WriteCurrentLogToFile(const char* path) {
+bool WriteCurrentLogToFile(Str path) {
     if (!gLogBuf) return false;
     ByteSlice slice = gLogBuf->AsByteSlice();
     if (slice.empty()) {

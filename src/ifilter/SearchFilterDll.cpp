@@ -92,7 +92,7 @@ STDAPI_(BOOL) DllMain(__unused HINSTANCE hInstance, DWORD dwReason, __unused LPV
     if (dwReason == DLL_PROCESS_ATTACH) {
         ReportIf(hInstance != GetInstance());
     }
-    gLogAppName = "PdfFilter";
+    gLogAppName = StrL("PdfFilter");
     gLogToConsole = false;
     log("DllMain\n");
     return TRUE;
