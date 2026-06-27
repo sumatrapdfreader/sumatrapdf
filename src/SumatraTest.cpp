@@ -28,7 +28,7 @@
 #include "EbookBase.h"
 #include "ChmFile.h"
 
-const char* CleanRemoteDestName(const char* destName);
+Str CleanRemoteDestName(Str destName);
 
 static void EnsureTestGlobalPrefs() {
     // engine creation reads a few fields off gGlobalPrefs (e.g. disableAntiAlias)
@@ -218,7 +218,7 @@ char* TestNamedDestResult(const char* pdfPath, const char* destName) {
     if (!engine) {
         out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
     } else {
-        const char* name = CleanRemoteDestName(destName);
+        Str name = CleanRemoteDestName(destName);
         IPageDestination* dest = engine->GetNamedDest(name);
         if (dest) {
             out.AppendFmt("name=%s page=%d\n", destName, PageDestGetPageNo(dest));
@@ -438,7 +438,8 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, const char* word,
     if (!text || textLen <= 0) {
         return false;
     }
-    AutoFreeWStr wordW = ToWStr(word);
+    AutoFreeWStr wordW;
+    wordW.SetCopy(ToWStr(word).s);
     int wordLen = (int)str::Len(wordW);
     if (wordLen <= 0) {
         return false;
@@ -505,7 +506,8 @@ char* TestGoToFindMatchResult(const char* word, const char* typed, int* exitCode
 
     // mimic a prior find: the typed (lowercase) text becomes textSearch's
     // lastText, so SetLastResult() inside GoToFindMatch() sees a text change
-    AutoFreeWStr typedW = ToWStr(typed);
+    AutoFreeWStr typedW;
+    typedW.SetCopy(ToWStr(typed).s);
     dm->textSearch->SetText(typedW);
 
     // make sure the match isn't already on screen, so navigating to it is
@@ -574,7 +576,8 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, const char* word, dou
     if (!text || textLen <= 0) {
         return false;
     }
-    AutoFreeWStr wordW = ToWStr(word);
+    AutoFreeWStr wordW;
+    wordW.SetCopy(ToWStr(word).s);
     int wordLen = (int)str::Len(wordW);
     if (wordLen <= 0) {
         return false;

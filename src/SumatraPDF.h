@@ -97,7 +97,7 @@ struct Flags;
 extern Flags* gCli;
 extern bool gShowFrameRate;
 
-extern const char* gPluginURL;
+extern Str gPluginURL;
 extern bool gMyWindowWasEmbedded;
 extern Favorites gFavorites;
 extern WNDPROC DefWndProcCloseButton;
@@ -115,7 +115,7 @@ extern DocController* gMostRecentlyOpenedDoc;
 struct DocControllerCallback;
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win);
 
-#define gPluginMode (gPluginURL != nullptr)
+#define gPluginMode ((bool)gPluginURL)
 
 bool NeedsWindowEmbeddingHacks();
 bool SettingsUseTabs();
@@ -128,9 +128,9 @@ bool HasPermission(Perm permission);
 bool CanAccessDisk();
 bool AnnotationsAreDisabled();
 bool IsUIRtl();
-bool SumatraLaunchBrowser(const char* url);
-void LaunchDocumentation(const char* docURI);
-bool OpenFileExternally(const char* path);
+bool SumatraLaunchBrowser(Str url);
+void LaunchDocumentation(Str docURI);
+bool OpenFileExternally(Str path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
 // true if read aloud was paused and can be resumed in this tab
@@ -160,7 +160,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
 void RememberFavTreeExpansionState(MainWindow* win);
 void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree);
 void AdvanceFocus(MainWindow* win);
-void SetCurrentLanguageAndRefreshUI(const char* langCode);
+void SetCurrentLanguageAndRefreshUI(Str langCode);
 void UpdateDocumentColors();
 void UpdateFixedPageScrollbarsVisibility();
 
@@ -201,9 +201,9 @@ void DuplicateTabInNewWindow(WindowTab* tab);
 void CopyFilePath(WindowTab*);
 
 // note: background tabs are only searched if focusTab is true
-MainWindow* FindMainWindowByFile(const char* file, bool focusTab);
-MainWindow* FindMainWindowBySyncFile(const char* file, bool focusTab);
-WindowTab* FindTabByFile(const char* file);
+MainWindow* FindMainWindowByFile(Str file, bool focusTab);
+MainWindow* FindMainWindowBySyncFile(Str file, bool focusTab);
+WindowTab* FindTabByFile(Str file);
 void SelectTabInWindow(WindowTab*);
 
 class EngineBase;
@@ -212,13 +212,13 @@ struct FileArgs;
 
 // LoadDocument carries a lot of state, this holds them in one place
 struct LoadArgs {
-    explicit LoadArgs(const char* origPath, MainWindow* win);
+    explicit LoadArgs(Str origPath, MainWindow* win);
     ~LoadArgs();
 
-    const char* FilePath() const;
-    void SetFilePath(const char* path);
-    const char* DisplayName() const;
-    void SetDisplayName(const char* name);
+    Str FilePath() const;
+    void SetFilePath(Str path);
+    Str DisplayName() const;
+    void SetDisplayName(Str name);
     LoadArgs* Clone();
 
     // we don't own those values
@@ -260,15 +260,14 @@ MainWindow* LoadDocumentFinish(LoadArgs* args);
 void StartLoadDocument(LoadArgs* args);
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr, bool showWin = true);
 void ShowMainWindow(MainWindow* win, int windowState);
-DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* path, PasswordUI* pwdUI,
-                                               MainWindow* win);
+DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win);
 
 uint MbRtlReadingMaybe();
-void MessageBoxWarning(HWND hwnd, const char* msg, const char* title = nullptr);
+void MessageBoxWarning(HWND hwnd, Str msg, Str title = nullptr);
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd);
 void EnterFullScreen(MainWindow* win, bool presentation = false);
 void ExitFullScreen(MainWindow* win);
-void SetCurrentLang(const char* langCode);
+void SetCurrentLang(Str langCode);
 void RebuildMenuBarForWindow(MainWindow* win);
 void DeleteMainWindow(MainWindow* win);
 void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous = false);
@@ -276,11 +275,11 @@ void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void ShutdownCleanup();
 
-char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePage, int* exitCodeOut = nullptr);
+Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOut = nullptr);
 bool DocIsSupportedFileType(Kind);
 TempStr GetLogFilePathTemp();
-void ShowErrorLoadingNotification(MainWindow* win, const char* path, bool noSavePrefs);
-void SumatraOpenPathInDefaultFileManager(const char* path);
+void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs);
+void SumatraOpenPathInDefaultFileManager(Str path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetNotImportantDataDirTemp();
 TempStr GetCrashInfoDirTemp();

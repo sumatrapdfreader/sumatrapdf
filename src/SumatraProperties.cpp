@@ -440,8 +440,8 @@ static void AddImageProperties(EngineBase* engine, int pageNo, StrBuilder& out) 
 static void GetPropsText(DocController* ctrl, StrBuilder& out) {
     ReportIf(!ctrl);
 
-    const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
-    AppendProp(out, _TRA("File:"), path ? path : "(not available)");
+    Str path = gPluginMode ? gPluginURL : Str(ctrl->GetFilePath());
+    AppendProp(out, _TRA("File:"), IsEmpty(path) ? "(not available)" : path.s);
 
     DisplayModel* dm = ctrl->AsFixed();
     i64 fileSize = file::GetSize(Str(path)); // can be gPluginURL

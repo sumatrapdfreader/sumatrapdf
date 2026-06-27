@@ -74,7 +74,7 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
         return true;
     }
     logfa("MakePluginWindow: win: 0x%p, hwndParent: 0x%p (isWindow: %d), gPluginURL: %s\n", win, hwndParent,
-          (int)IsWindow(hwndParent), gPluginURL ? gPluginURL : "<nulL>");
+          (int)IsWindow(hwndParent), IsEmpty(gPluginURL) ? "<nulL>" : gPluginURL.s);
     ReportIf(!gPluginMode);
 
     if (!IsWindow(hwndParent)) {
@@ -136,7 +136,7 @@ static bool InstanceInit() {
     return true;
 }
 
-static void SendMyselfDDE(const char* cmdA, HWND targetHwnd) {
+static void SendMyselfDDE(Str cmdA, HWND targetHwnd) {
     TempWStr cmd = ToWStrTemp(cmdA);
     if (targetHwnd) {
         // try WM_COPYDATA first, as that allows targetting a specific window
@@ -181,7 +181,7 @@ static bool IsSimpleOpenCase(const Flags& i, bool isFirstWin) {
 // Send just the path + newWindow flag to an already-running SumatraPDF via
 // WM_COPYDATA. Receiver (OnCopyData) handles it asynchronously so this
 // SendMessageW returns fast. Returns true if the message was handled.
-static bool SendOpenFileToExistingInstance(HWND targetHwnd, const char* fullPath, u32 newWindow) {
+static bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 newWindow) {
     size_t pathLen = strlen(fullPath);
     size_t cbData = sizeof(SumatraOpenCopyData) + pathLen + 1;
     SumatraOpenCopyData* payload = (SumatraOpenCopyData*)malloc(cbData);
@@ -197,7 +197,7 @@ static bool SendOpenFileToExistingInstance(HWND targetHwnd, const char* fullPath
 }
 
 // delegate file opening to a previously running instance by sending a DDE message
-static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFirstWin) {
+static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
     char* fullPath = path::NormalizeTemp(Str(path));
 
     u32 newWindow = 0;
@@ -259,7 +259,7 @@ static void FlagsEnterFullscreen(const Flags& flags, MainWindow* win) {
     }
 }
 
-static void MaybeGoTo(MainWindow* win, const char* destName, int pageNumber) {
+static void MaybeGoTo(MainWindow* win, Str destName, int pageNumber) {
     if (!win->IsDocLoaded()) {
         return;
     }
@@ -275,7 +275,7 @@ static void MaybeGoTo(MainWindow* win, const char* destName, int pageNumber) {
     }
 }
 
-static void MaybeStartSearch(MainWindow* win, const char* searchTerm) {
+static void MaybeStartSearch(MainWindow* win, Str searchTerm) {
     if (!win || !searchTerm) {
         return;
     }
@@ -285,7 +285,7 @@ static void MaybeStartSearch(MainWindow* win, const char* searchTerm) {
     FindTextOnThread(win, TextSearch::Direction::Forward, searchTerm, wasModified, showProgress);
 }
 
-static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {
+static MainWindow* LoadOnStartup(Str filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
     MainWindow* win = LoadDocument(&args);
@@ -412,9 +412,9 @@ static bool SetupPluginMode(Flags& i) {
         return false;
     }
 
-    gPluginURL = i.pluginURL;
+    gPluginURL = Str(i.pluginURL);
     if (!gPluginURL) {
-        gPluginURL = i.fileNames[0];
+        gPluginURL = Str(i.fileNames[0]);
     }
 
     // don't save preferences for plugin windows (and don't allow fullscreen mode)

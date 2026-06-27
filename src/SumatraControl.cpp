@@ -273,11 +273,11 @@ static void AppendError(ControlRequest* req, const char* msg) {
     AppendArgEnd(req->results);
 }
 
-static void AppendTestResult(ControlRequest* req, int exitCode, char* result) {
+static void AppendTestResult(ControlRequest* req, int exitCode, Str result) {
     AppendArgInt(req->results, exitCode);
     AppendArgString(req->results, result);
     AppendArgEnd(req->results);
-    str::Free(result);
+    str::Free(result.s);
 }
 
 static void ExecuteControlRequest(ControlRequest* req) {
@@ -478,7 +478,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            char* res = TestPageInfoOverlayResult(pathTwo, pathOne, &exitCode);
+            Str res = TestPageInfoOverlayResult(pathTwo, pathOne, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

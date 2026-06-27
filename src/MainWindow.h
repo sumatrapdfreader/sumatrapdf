@@ -97,7 +97,7 @@ struct StaticLink {
     char* target = nullptr;
     char* tooltip = nullptr;
 
-    explicit StaticLink(Rect rect, const char* target, const char* infotip = nullptr);
+    explicit StaticLink(Rect rect, Str target, Str infotip = nullptr);
     StaticLink() = default;
     ~StaticLink();
 };
@@ -428,7 +428,7 @@ struct MainWindow {
     void ToggleZoom() const;
     void MoveDocBy(int dx, int dy) const;
 
-    void ShowToolTip(const char* text, Rect& rc, bool multiline = false) const;
+    void ShowToolTip(Str text, Rect& rc, bool multiline = false) const;
     void DeleteToolTip() const;
 
     bool CreateUIAProvider();
@@ -453,4 +453,4 @@ void OpenSystemMenu(MainWindow* win);
 
 // strips mupdf's "nameddest=" prefix from a remote link's destination name
 // so it can be passed to GetNamedDest (issue #5642)
-const char* CleanRemoteDestName(const char* destName);
+Str CleanRemoteDestName(Str destName);

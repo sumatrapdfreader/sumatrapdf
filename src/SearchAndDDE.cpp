@@ -335,7 +335,7 @@ struct FindThreadData {
     FindThreadData(MainWindow* win, TextSearch::Direction direction, const char* text, bool wasModified) {
         this->win = win;
         this->direction = direction;
-        this->text = ToWStr(text);
+        this->text.SetCopy(ToWStr(text).s);
         this->wasModified = wasModified;
     }
     ~FindThreadData() { CloseHandle(thread); }
@@ -1221,7 +1221,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     if (!str::IsEmpty(cmdLine.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         char* appDir = GetSelfExeDirTemp();
-        AutoCloseHandle process(LaunchProcessInDir(cmdLine, appDir));
+        AutoCloseHandle process(LaunchProcessInDir(Str(cmdLine), Str(appDir)));
         if (!process) {
             ShowNotification(args);
         }
@@ -1332,17 +1332,17 @@ static const char* HandleSyncCmd(const char* cmd, bool* ack) {
     MainWindow* win = nullptr;
     if (pdfFile) {
         // check if the PDF is already opened
-        win = FindMainWindowByFile(pdfFile, !newWindow);
+        win = FindMainWindowByFile(Str(pdfFile), !newWindow);
         // if not then open it
         if (newWindow || !win) {
-            LoadArgs args(pdfFile, !newWindow ? win : nullptr);
+            LoadArgs args(Str(pdfFile), !newWindow ? win : nullptr);
             win = LoadDocument(&args);
         } else if (!win->IsDocLoaded()) {
             ReloadDocument(win, false);
         }
     } else {
         // check if any opened PDF has sync information for the source file
-        win = FindMainWindowBySyncFile(srcFile, true);
+        win = FindMainWindowBySyncFile(Str(srcFile), true);
         if (win && newWindow) {
             LoadArgs args(win->CurrentTab()->filePath, nullptr);
             win = LoadDocument(&args);
@@ -1389,7 +1389,7 @@ static const char* HandleSearchCmd(const char* cmd, bool* ack) {
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
     if (!win) {
         return next;
     }
@@ -1421,7 +1421,7 @@ static const char* HandleGotoPageWordCmd(const char* cmd, bool* ack) {
     if (!next) {
         return nullptr;
     }
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
     if (!win) {
         return next;
     }
@@ -1529,7 +1529,7 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
     }
     bool doLoad = true;
     if (!win) {
-        win = FindMainWindowByFile(filePath, focusTab);
+        win = FindMainWindowByFile(Str(filePath), focusTab);
         if (win) {
             logf("HandleOpenCmd: found existing window with file '%s'\n", filePath.Get());
             doLoad = false;
@@ -1564,7 +1564,7 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
     }
 
     if (doLoad) {
-        LoadArgs args(filePath, win);
+        LoadArgs args(Str(filePath), win);
         args.activateExisting = !isCtrl;
         if (newWindow) {
             args.activateExisting = false;
@@ -1613,7 +1613,7 @@ static const char* HandleGotoCmd(const char* cmd, bool* ack) {
         return nullptr;
     }
 
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
     if (!win) {
         return next;
     }
@@ -1648,7 +1648,7 @@ static const char* HandlePageCmd(HWND, const char* cmd, bool* ack) {
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
     if (!win) {
         return next;
     }
@@ -1691,7 +1691,7 @@ static const char* HandleSetViewCmd(const char* cmd, bool* ack) {
         return nullptr;
     }
 
-    MainWindow* win = FindMainWindowByFile(filePath, true);
+    MainWindow* win = FindMainWindowByFile(Str(filePath), true);
     if (!win) {
         return next;
     }
@@ -1785,7 +1785,7 @@ static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, 
 
     MainWindow* win = nullptr;
     if (!str::IsEmpty(filePath.Get())) {
-        win = FindMainWindowByFile(filePath, true);
+        win = FindMainWindowByFile(Str(filePath), true);
     } else {
         // no path given: report the currently active document
         win = FindMainWindowByHwnd(gLastActiveFrameHwnd);

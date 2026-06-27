@@ -111,8 +111,8 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, const char* installD
     // size of installed directory after copying files
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "EstimatedSize", size);
     // current date as YYYYMMDD
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, "InstallDate", installDate);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, "InstallLocation", installDir);
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "InstallDate", Str(installDate));
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, "InstallLocation", Str(installDir));
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "NoModify", 1);
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, "NoRepair", 1);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, "Publisher", kPublisherStr);

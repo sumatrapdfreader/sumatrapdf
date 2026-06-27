@@ -132,7 +132,7 @@ bool gShowFrameRate = false;
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
-const char* gPluginURL = nullptr; // owned by Flags in WinMain
+Str gPluginURL; // owned by Flags in WinMain
 bool gMyWindowWasEmbedded = false;
 
 bool NeedsWindowEmbeddingHacks() {
@@ -218,16 +218,16 @@ EBookUI* GetEBookUI() {
     return &gGlobalPrefs->eBookUI;
 }
 
-LoadArgs::LoadArgs(const char* origPath, MainWindow* win) {
+LoadArgs::LoadArgs(Str origPath, MainWindow* win) {
     this->fileArgs = ParseFileArgs(origPath);
-    const char* cleanPath = origPath;
+    Str cleanPath = origPath;
     if (fileArgs) {
         cleanPath = fileArgs->cleanPath;
-        logf("LoadArgs: origPath='%s', cleanPath='%s'\n", origPath, cleanPath);
+        logf("LoadArgs: origPath='%s', cleanPath='%s'\n", origPath.s, cleanPath.s);
     }
     char* path = path::NormalizeTemp(cleanPath);
     if (!str::EqI(path, cleanPath)) {
-        logf("LoadArgs: cleanPath='%s', path='%s'\n", cleanPath, path);
+        logf("LoadArgs: cleanPath='%s', path='%s'\n", cleanPath.s, path);
     }
     this->fileName.SetCopy(path);
     this->win = win;
@@ -237,30 +237,30 @@ LoadArgs::~LoadArgs() {
     delete fileArgs;
 }
 
-const char* LoadArgs::FilePath() const {
-    return fileName.Get();
+Str LoadArgs::FilePath() const {
+    return Str(fileName.Get());
 }
 
-void LoadArgs::SetFilePath(const char* path) {
+void LoadArgs::SetFilePath(Str path) {
     fileName.SetCopy(path);
 }
 
-const char* LoadArgs::DisplayName() const {
-    return displayName.Get();
+Str LoadArgs::DisplayName() const {
+    return Str(displayName.Get());
 }
 
-void LoadArgs::SetDisplayName(const char* name) {
+void LoadArgs::SetDisplayName(Str name) {
     displayName.SetCopy(name);
 }
 
 LoadArgs* LoadArgs::Clone() {
-    LoadArgs* res = new LoadArgs(fileName, win);
+    LoadArgs* res = new LoadArgs(Str(fileName.Get()), win);
     res->SetDisplayName(displayName.Get());
     res->tabState = this->tabState;
     return res;
 }
 
-void SetCurrentLang(const char* langCode) {
+void SetCurrentLang(Str langCode) {
     if (!langCode) {
         return;
     }
@@ -358,7 +358,7 @@ bool AnnotationsAreDisabled() {
 
 // lets the shell open a URI for any supported scheme in
 // the appropriate application (web browser, mail client, etc.)
-bool SumatraLaunchBrowser(const char* url) {
+bool SumatraLaunchBrowser(Str url) {
     if (gPluginMode) {
         // pass the URI back to the browser
         ReportIf(gWindows.empty());
@@ -410,7 +410,7 @@ bool DocIsSupportedFileType(Kind kind) {
 
 // lets the shell open a file of any supported perceived type
 // in the default application for opening such files
-bool OpenFileExternally(const char* path) {
+bool OpenFileExternally(Str path) {
     if (!CanAccessDisk() || gPluginMode) {
         return false;
     }
@@ -453,7 +453,7 @@ static WindowTab* FindTabByController(DocController* ctrl) {
     return nullptr;
 }
 
-WindowTab* FindTabByFile(const char* file) {
+WindowTab* FindTabByFile(Str file) {
     char* normFile = path::NormalizeTemp(file);
 
     for (MainWindow* win : gWindows) {
@@ -481,7 +481,7 @@ void SelectTabInWindow(WindowTab* tab) {
 }
 
 // Find the first window showing a given PDF file
-MainWindow* FindMainWindowByFile(const char* file, bool focusTab) {
+MainWindow* FindMainWindowByFile(Str file, bool focusTab) {
     WindowTab* tab = nullptr;
     if (!file) {
         return nullptr;
@@ -505,7 +505,7 @@ MainWindow* FindMainWindowByFile(const char* file, bool focusTab) {
 }
 
 // Find the first window that has been produced from <file>
-MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
+MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab) {
     for (MainWindow* win : gWindows) {
         Vec<Rect> rects;
         int page;
@@ -690,7 +690,7 @@ uint MbRtlReadingMaybe() {
     return 0;
 }
 
-void MessageBoxWarning(HWND hwnd, const char* msg, const char* title) {
+void MessageBoxWarning(HWND hwnd, Str msg, Str title) {
     uint type = MB_OK | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
     if (!title) {
         title = _TRA("Warning");
@@ -1319,7 +1319,7 @@ static NO_INLINE void VerifyController(DocController* ctrl, const char* path) {
     ReportIf(true);
 }
 
-static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI, MainWindow* win) {
+static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWindow* win) {
     Kind kind = GuessFileType(path, true);
 
     bool isChm = ChmModel::IsSupportedFileType(kind);
@@ -1365,8 +1365,7 @@ static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/3903
 DocController* gMostRecentlyOpenedDoc = nullptr;
 
-DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* path, PasswordUI* pwdUI,
-                                               MainWindow* win) {
+DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win) {
     auto timeStart = TimeGet();
     bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
     // TODO: sniff file content only once
@@ -2344,7 +2343,7 @@ static void ShowFileNotFound(MainWindow* win, const char* path, bool noSavePrefs
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
 
-void ShowErrorLoadingNotification(MainWindow* win, const char* path, bool noSavePrefs) {
+void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs) {
     // TODO: same message as in Canvas.cpp to not introduce
     // new translation. Find a better message e.g. why failed.
     NotificationCreateArgs nargs;
@@ -3942,7 +3941,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
 }
 
-void SumatraOpenPathInDefaultFileManager(const char* path) {
+void SumatraOpenPathInDefaultFileManager(Str path) {
     if (gPluginMode || !CanAccessDisk()) {
         return;
     }
@@ -4890,7 +4889,7 @@ static void OnDpiChanged(MainWindow* win, RECT* suggested) {
     RedrawWindow(win->hwndFrame, nullptr, nullptr, flags);
 }
 
-void SetCurrentLanguageAndRefreshUI(const char* langCode) {
+void SetCurrentLanguageAndRefreshUI(Str langCode) {
     if (!langCode || str::Eq(langCode, trans::GetCurrentLangCode())) {
         return;
     }
@@ -6803,7 +6802,7 @@ static TempStr DocURIToWebUrlTemp(const char* docURI) {
     return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", docURI);
 }
 
-void LaunchDocumentation(const char* docURI) {
+void LaunchDocumentation(Str docURI) {
     TempStr localUrl = DocURIToLocalManualUrlTemp(docURI);
     TempStr webUrl = DocURIToWebUrlTemp(docURI);
 
@@ -10657,15 +10656,15 @@ void ShowCrashHandlerMessage() {
     LaunchFileShell(url, nullptr, "open");
 }
 
-char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePage, int* exitCodeOut) {
+Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> char* {
+    auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     };
 
     if (str::IsEmpty(pathTwoPages) || str::IsEmpty(pathOnePage)) {
@@ -10698,7 +10697,7 @@ char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePag
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     }
 
     EngineBase* engine = CreateEngineFromFile(pathOnePage, nullptr, true);
@@ -10730,7 +10729,7 @@ char* TestPageInfoOverlayResult(const char* pathTwoPages, const char* pathOnePag
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }
 
 void ShutdownCleanup() {

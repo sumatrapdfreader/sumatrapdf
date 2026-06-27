@@ -189,7 +189,8 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransCharsInPlace(line, "*/", " \\");
-    AutoFreeStr jobName = strconv::AnsiToUtf8(line);
+    AutoFreeStr jobName;
+    jobName.Set(strconv::AnsiToUtf8(line).s);
     jobName.Set(str::Join(Str(jobName), Str(".tex")).s);
     jobName.Set(PrependDir(jobName));
 

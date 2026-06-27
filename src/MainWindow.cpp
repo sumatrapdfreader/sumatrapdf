@@ -73,7 +73,7 @@ LinkHandler::~LinkHandler() {
 
 Vec<MainWindow*> gWindows;
 
-StaticLink::StaticLink(Rect rect, const char* target, const char* infotip) {
+StaticLink::StaticLink(Rect rect, Str target, Str infotip) {
     this->rect = rect;
     this->target = str::Dup(target);
     this->tooltip = str::Dup(infotip);
@@ -413,7 +413,7 @@ void MainWindow::MoveDocBy(int dx, int dy) const {
     CurrentTab()->MoveDocBy(dx, dy);
 }
 
-void MainWindow::ShowToolTip(const char* text, Rect& rc, bool multiline) const {
+void MainWindow::ShowToolTip(Str text, Rect& rc, bool multiline) const {
     if (str::IsEmpty(text)) {
         DeleteToolTip();
         return;
@@ -555,9 +555,9 @@ static bool IsFileSupportedByContent(const char* filePath) {
 // fragment, but EngineBase::GetNamedDest prepends "#nameddest=" itself -- so the
 // prefix must be stripped or the lookup becomes "#nameddest=nameddest=<name>"
 // and fails, leaving the remote PDF on page 1 (issue #5642).
-const char* CleanRemoteDestName(const char* destName) {
-    if (destName && str::StartsWithI(destName, "nameddest=")) {
-        return destName + 10; // strlen("nameddest=")
+Str CleanRemoteDestName(Str destName) {
+    if (destName && str::StartsWithI(destName, Str("nameddest="))) {
+        return Str(destName.s + 10, destName.len - 10);
     }
     return destName;
 }
