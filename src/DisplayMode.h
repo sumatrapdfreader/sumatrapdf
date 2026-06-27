@@ -7,9 +7,9 @@ bool IsFacing(DisplayMode mode);
 bool IsBookView(DisplayMode mode);
 bool IsValidZoom(float zoomLevel);
 
-const char* DisplayModeToString(DisplayMode mode);
-DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal);
-float ZoomFromString(const char* s, float defVal);
+Str DisplayModeToString(DisplayMode mode);
+DisplayMode DisplayModeFromString(Str s, DisplayMode defVal);
+float ZoomFromString(Str s, float defVal);
 void ZoomToString(Str* dst, float zoom, FileState* fileState);
 bool MaybeGetNextZoomByIncrement(float* currZoomInOut, float towardsLevel);
 float* GetDefaultZoomLevels(int* nZoomLevelsOut);

@@ -1702,7 +1702,7 @@ static const char* HandleSetViewCmd(const char* cmd, bool* ack) {
         }
     }
 
-    DisplayMode mode = DisplayModeFromString(viewMode, DisplayMode::Automatic);
+    DisplayMode mode = DisplayModeFromString(Str(viewMode.Get()), DisplayMode::Automatic);
     if (mode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, mode);
     }

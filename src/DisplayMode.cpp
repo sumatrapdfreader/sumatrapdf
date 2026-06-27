@@ -62,7 +62,7 @@ static const char* displayModeNames =
     "continuous facing\0"
     "continuous book view\0";
 
-const char* DisplayModeToString(DisplayMode mode) {
+Str DisplayModeToString(DisplayMode mode) {
     int idx = (int)mode;
     const char* s = SeqStrByIndex(displayModeNames, idx);
     if (!s) {
@@ -72,9 +72,9 @@ const char* DisplayModeToString(DisplayMode mode) {
     return s;
 }
 
-DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal) {
+DisplayMode DisplayModeFromString(Str s, DisplayMode defVal) {
     // for consistency ("continuous" is used instead in the settings instead for brevity)
-    if (str::EqIS(s, "continuous single page")) {
+    if (str::EqIS(s, StrL("continuous single page"))) {
         return DisplayMode::Continuous;
     }
     int idx = SeqStrIndexIS(displayModeNames, s);
@@ -84,20 +84,20 @@ DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal) {
     return (DisplayMode)idx;
 }
 
-float ZoomFromString(const char* s, float defVal) {
-    if (str::EqIS(s, "fit page")) {
+float ZoomFromString(Str s, float defVal) {
+    if (str::EqIS(s, StrL("fit page"))) {
         return kZoomFitPage;
     }
-    if (str::EqIS(s, "fit width")) {
+    if (str::EqIS(s, StrL("fit width"))) {
         return kZoomFitWidth;
     }
-    if (str::EqIS(s, "fit content")) {
+    if (str::EqIS(s, StrL("fit content"))) {
         return kZoomFitContent;
     }
-    if (str::EqIS(s, "shrink to fit")) {
+    if (str::EqIS(s, StrL("shrink to fit"))) {
         return kZoomShrinkToFit;
     }
-    if (str::EqIS(s, "fit by orientation")) {
+    if (str::EqIS(s, StrL("fit by orientation"))) {
         return kZoomFitByOrientation;
     }
     float zoom;
