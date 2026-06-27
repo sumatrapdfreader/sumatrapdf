@@ -929,7 +929,7 @@ EngineBase* CreateEngineDjvuDecFromStream(IStream* stream) {
     return nullptr;
 }
 
-EngineBase* CreateEngineDjvuDecFromFile(const char* path) {
+EngineBase* CreateEngineDjvuDecFromFile(Str path) {
     EngineDjvuDec* engine = new EngineDjvuDec();
     if (engine->Load(path)) {
         return engine;

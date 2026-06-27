@@ -3207,7 +3207,7 @@ struct ShowErrorData {
     const char* path;
 };
 
-static void ShowSaveAnnotationError(ShowErrorData* d, const char* err) {
+static void ShowSaveAnnotationError(ShowErrorData* d, Str err) {
     auto tab = d->tab;
     auto path = d->path;
     ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, err);

@@ -355,7 +355,7 @@ class EnginePs : public EngineBase {
     }
 };
 
-EngineBase* CreateEnginePsFromFile(const char* fileName) {
+EngineBase* CreateEnginePsFromFile(Str fileName) {
     EnginePs* engine = new EnginePs();
     if (!engine->Load(fileName)) {
         SafeEngineRelease(&engine);

@@ -1631,7 +1631,7 @@ bool IsEngineImageSupportedFileType(Kind kind) {
     return KindIndexOf(imageEngineKinds, n, kind) >= 0;
 }
 
-EngineBase* CreateEngineImageFromFile(const char* path) {
+EngineBase* CreateEngineImageFromFile(Str path) {
     logf("CreateEngineImageFromFile(%s)\n", path);
     return EngineImage::CreateFromFile(path);
 }
@@ -1838,12 +1838,12 @@ EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
     return engine;
 }
 
-bool IsEngineImageDirSupportedFile(const char* fileName, bool) {
+bool IsEngineImageDirSupportedFile(Str fileName, bool) {
     // whether it actually contains images will be checked in LoadImageDir
-    return dir::Exists(Str(fileName));
+    return dir::Exists(fileName);
 }
 
-EngineBase* CreateEngineImageDirFromFile(const char* fileName) {
+EngineBase* CreateEngineImageDirFromFile(Str fileName) {
     return EngineImageDir::CreateFromFile(fileName);
 }
 
@@ -2464,7 +2464,7 @@ bool IsEngineCbxSupportedFileType(Kind kind) {
     return KindIndexOf(cbxKinds, n, kind) >= 0;
 }
 
-EngineBase* CreateEngineCbxFromFile(const char* path, PasswordUI* pwdUI, Kind hintKind, const char* realPath) {
+EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, Str realPath) {
     MultiFormatArchive::Format fmt = MultiFormatArchive::Format::Unknown;
     bool isEncrypted = false;
     EngineBase* engine = EngineCbx::CreateFromFile(path, nullptr, &fmt, &isEncrypted, hintKind, realPath);

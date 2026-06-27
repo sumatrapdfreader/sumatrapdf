@@ -25,7 +25,7 @@ static bool gEnableEpubWithPdfEngine = true;
 // md5(path + size) so it stays stable across opens of the same file, and
 // reuses the file's own extension (.cbr/.cbz/.cb7/.cbt) so tooling that
 // inspects the temp copy still sniffs the right format.
-static TempStr GetCbxCachePathTemp(const char* path, i64 fileSize) {
+static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
     TempStr dataDir = GetNotImportantDataDirTemp();
     if (!dataDir) {
         return {};
@@ -41,7 +41,7 @@ static TempStr GetCbxCachePathTemp(const char* path, i64 fileSize) {
     CalcMD5Digest((const u8*)keyStr.s, str::Leni(keyStr), digest);
     AutoFreeStr hex = str::MemToHex(digest, dimof(digest));
 
-    TempStr ext = path::GetExtTemp(Str(path));
+    TempStr ext = path::GetExtTemp(path);
     if (str::IsEmpty(ext)) {
         ext = Str(".cbx");
     }
@@ -73,7 +73,7 @@ static void OnCbxCopyProgress(CbxCopyProgressState* s, file::CopyProgress* p) {
 // stale-files sweep in DeleteStaleFilesAsync() keeps the file warm. Any
 // failure (copy error, cache dir unavailable, ...) returns nullptr and
 // the caller falls back to opening the original file directly.
-static TempStr MaybeCopyCbxToLocalCache(const char* path) {
+static TempStr MaybeCopyCbxToLocalCache(Str path) {
     if (!path::IsOnNetworkDrive(path)) {
         return {};
     }
@@ -82,7 +82,7 @@ static TempStr MaybeCopyCbxToLocalCache(const char* path) {
     if (IsStressTesting()) {
         return {};
     }
-    i64 fileSize = file::GetSize(Str(path));
+    i64 fileSize = file::GetSize(path);
     if (fileSize <= 0) {
         return {};
     }
@@ -163,7 +163,7 @@ static bool UseDjvuDec() {
     return !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
 }
 
-EngineBase* CreateEngineDjVuFromFileDispatch(const char* path) {
+EngineBase* CreateEngineDjVuFromFileDispatch(Str path) {
     if (UseDjvuDec()) {
         EngineBase* e = CreateEngineDjvuDecFromFile(path);
         if (e) {
@@ -194,7 +194,7 @@ EngineBase* CreateEngineDjVuFromStreamDispatch(IStream* stream) {
     return CreateEngineDjvuDecFromStream(stream);
 }
 
-static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, const char* path, PasswordUI* pwdUI,
+static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, Str path, PasswordUI* pwdUI,
                                        bool enableChmEngine) {
     if (!kind) {
         return nullptr;
@@ -280,11 +280,11 @@ static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, const ch
     return nullptr;
 }
 
-EngineBase* CreateEngineFromFile(const char* path, PasswordUI* pwdUI, bool enableChmEngine) {
-    ReportIf(!path);
+EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngine) {
+    ReportIf(str::IsEmpty(path));
 
     if (str::EndsWithI(path, ".p7m")) {
-        ByteSlice fileData = file::ReadFile(Str(path));
+        ByteSlice fileData = file::ReadFile(path);
         ByteSlice extracted = ExtractP7m(fileData);
         fileData.Free();
         if (!extracted.empty()) {

@@ -1426,7 +1426,7 @@ EngineBase* CreateEngineDjVuFromStream(IStream* stream) {
     return nullptr;
 }
 
-EngineBase* CreateEngineDjVuFromFile(const char* path) {
+EngineBase* CreateEngineDjVuFromFile(Str path) {
     EngineDjVu* engine = new EngineDjVu();
     if (engine->Load(path)) {
         return engine;

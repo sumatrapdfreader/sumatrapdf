@@ -61,12 +61,12 @@ static float GetDefaultFontSize() {
     return gDefaultFontSize * 96.0f / (float)DpiGetForHwnd(HWND_DESKTOP);
 }
 
-void SetDefaultEbookFont(const char* name, float size) {
+void SetDefaultEbookFont(Str name, float size) {
     // intentionally don't validate the input
     if (str::Eq(name, "default")) {
         // "default" is used for mupdf engine to indicate
         // we should use the font as given in css
-        name = "Georgia";
+        name = Str("Georgia");
     }
     gDefaultFontName.SetCopy(name);
     // use a somewhat smaller size than in the EbookUI, since fit page/width
@@ -957,7 +957,7 @@ EngineBase* EngineEpub::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-EngineBase* CreateEngineEpubFromFile(const char* fileName) {
+EngineBase* CreateEngineEpubFromFile(Str fileName) {
     return EngineEpub::CreateFromFile(fileName);
 }
 
@@ -1078,7 +1078,7 @@ EngineBase* EngineFb2::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-EngineBase* CreateEngineFb2FromFile(const char* fileName) {
+EngineBase* CreateEngineFb2FromFile(Str fileName) {
     return EngineFb2::CreateFromFile(fileName);
 }
 
@@ -1235,7 +1235,7 @@ EngineBase* EngineMobi::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-EngineBase* CreateEngineMobiFromFile(const char* fileName) {
+EngineBase* CreateEngineMobiFromFile(Str fileName) {
     return EngineMobi::CreateFromFile(fileName);
 }
 
@@ -1333,7 +1333,7 @@ EngineBase* EnginePdb::CreateFromFile(const char* fileName) {
     return engine;
 }
 
-EngineBase* CreateEnginePdbFromFile(const char* fileName) {
+EngineBase* CreateEnginePdbFromFile(Str fileName) {
     return EnginePdb::CreateFromFile(fileName);
 }
 
@@ -1742,7 +1742,7 @@ EngineBase* EngineChm::CreateFromFile(const char* fileName) {
     return engine;
 }
 
-EngineBase* CreateEngineChmFromFile(const char* fileName) {
+EngineBase* CreateEngineChmFromFile(Str fileName) {
     return EngineChm::CreateFromFile(fileName);
 }
 
@@ -1845,7 +1845,7 @@ EngineBase* EngineHtml::CreateFromFile(const char* fileName) {
     return engine;
 }
 
-EngineBase* CreateEngineHtmlFromFile(const char* fileName) {
+EngineBase* CreateEngineHtmlFromFile(Str fileName) {
     return EngineHtml::CreateFromFile(fileName);
 }
 
@@ -1950,7 +1950,7 @@ EngineBase* EngineTxt::CreateFromFile(const char* fileName) {
     return engine;
 }
 
-EngineBase* CreateEngineTxtFromFile(const char* fileName) {
+EngineBase* CreateEngineTxtFromFile(Str fileName) {
     return EngineTxt::CreateFromFile(fileName);
 }
 

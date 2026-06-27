@@ -10,44 +10,43 @@ struct AnnotCreateArgs;
 /* EngineDjVu.cpp */
 void CleanupEngineDjVu();
 bool IsEngineDjVuSupportedFileType(Kind kind);
-EngineBase* CreateEngineDjVuFromFile(const char* path);
+EngineBase* CreateEngineDjVuFromFile(Str path);
 EngineBase* CreateEngineDjVuFromStream(IStream* stream);
 
 /* EngineDjvuDec.cpp: alternative DjVu engine built on ext/djvudec */
-EngineBase* CreateEngineDjvuDecFromFile(const char* path);
+EngineBase* CreateEngineDjvuDecFromFile(Str path);
 EngineBase* CreateEngineDjvuDecFromStream(IStream* stream);
 
 /* EngineCreate.cpp: dispatch to libdjvu or djvudec per the DjvuEngine setting */
-EngineBase* CreateEngineDjVuFromFileDispatch(const char* path);
+EngineBase* CreateEngineDjVuFromFileDispatch(Str path);
 EngineBase* CreateEngineDjVuFromStreamDispatch(IStream* stream);
 
 /* EngineEbook.cpp */
-EngineBase* CreateEngineEpubFromFile(const char* fileName);
+EngineBase* CreateEngineEpubFromFile(Str fileName);
 EngineBase* CreateEngineEpubFromStream(IStream* stream);
-EngineBase* CreateEngineFb2FromFile(const char* fileName);
+EngineBase* CreateEngineFb2FromFile(Str fileName);
 EngineBase* CreateEngineFb2FromStream(IStream* stream);
-EngineBase* CreateEngineMobiFromFile(const char* fileName);
+EngineBase* CreateEngineMobiFromFile(Str fileName);
 EngineBase* CreateEngineMobiFromStream(IStream* stream);
-EngineBase* CreateEnginePdbFromFile(const char* fileName);
-EngineBase* CreateEngineChmFromFile(const char* fileName);
-EngineBase* CreateEngineHtmlFromFile(const char* fileName);
-EngineBase* CreateEngineTxtFromFile(const char* fileName);
+EngineBase* CreateEnginePdbFromFile(Str fileName);
+EngineBase* CreateEngineChmFromFile(Str fileName);
+EngineBase* CreateEngineHtmlFromFile(Str fileName);
+EngineBase* CreateEngineTxtFromFile(Str fileName);
 
-void SetDefaultEbookFont(const char* name, float size);
+void SetDefaultEbookFont(Str name, float size);
 void EngineEbookCleanup();
 
 /* EngineImages.cpp */
 
 bool IsEngineImageSupportedFileType(Kind);
-EngineBase* CreateEngineImageFromFile(const char* fileName);
+EngineBase* CreateEngineImageFromFile(Str fileName);
 EngineBase* CreateEngineImageFromStream(IStream* stream);
 
-bool IsEngineImageDirSupportedFile(const char* fileName, bool sniff = false);
-EngineBase* CreateEngineImageDirFromFile(const char* fileName);
+bool IsEngineImageDirSupportedFile(Str fileName, bool sniff = false);
+EngineBase* CreateEngineImageDirFromFile(Str fileName);
 
 bool IsEngineCbxSupportedFileType(Kind kind);
-EngineBase* CreateEngineCbxFromFile(const char* path, PasswordUI* pwdUI = nullptr, Kind hintKind = nullptr,
-                                    const char* realPath = nullptr);
+EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI = nullptr, Kind hintKind = nullptr, Str realPath = {});
 EngineBase* CreateEngineCbxFromStream(IStream* stream);
 
 bool IsEngineImages(EngineBase*);
@@ -55,7 +54,7 @@ void EngineImagesGetImageProperties(EngineBase*, int pageNo, StrVec& keyValOut);
 
 /* EngineMupdf.cpp */
 
-using ShowErrorCb = Func1<const char*>;
+using ShowErrorCb = Func1<Str>;
 
 bool IsEngineMupdfSupportedFileType(Kind);
 EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
@@ -88,13 +87,13 @@ TempStr EngineMupdfGetPdfOutline(Str path);
 
 bool IsEnginePsAvailable();
 bool IsEnginePsSupportedFileType(Kind);
-EngineBase* CreateEnginePsFromFile(const char* fileName);
+EngineBase* CreateEnginePsFromFile(Str fileName);
 
 /* EngineCreate.cpp */
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks);
 
-EngineBase* CreateEngineFromFile(const char* filePath, PasswordUI* pwdUI, bool enableChmEngine);
+EngineBase* CreateEngineFromFile(Str filePath, PasswordUI* pwdUI, bool enableChmEngine);
 
 bool EngineSupportsAnnotations(EngineBase*);
 bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>&);
