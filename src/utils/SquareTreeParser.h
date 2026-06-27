@@ -6,28 +6,28 @@ struct SquareTreeNode {
     ~SquareTreeNode();
 
     struct DataItem {
-        const char* key = nullptr;
+        Str key = {};
         // only one of str or child are set
-        const char* str = nullptr;
+        Str str = {};
         SquareTreeNode* child = nullptr;
 
         DataItem() = default;
-        DataItem(const char* k, const char* string) {
+        DataItem(Str k, Str string) {
             this->key = k;
             this->str = string;
             this->child = nullptr;
         }
-        DataItem(const char* k, SquareTreeNode* node) {
+        DataItem(Str k, SquareTreeNode* node) {
             this->key = k;
-            this->str = nullptr;
+            this->str = {};
             this->child = node;
         }
     };
     Vec<DataItem> data;
 
-    const char* GetValue(const char* key, size_t* startIdx = nullptr) const;
-    SquareTreeNode* GetChild(const char* key, size_t* startIdx = nullptr) const;
+    Str GetValue(Str key, size_t* startIdx = nullptr) const;
+    SquareTreeNode* GetChild(Str key, size_t* startIdx = nullptr) const;
 };
 
-SquareTreeNode* ParseSquareTree(const char* s);
-const char* SerializeSquareTreeNode(SquareTreeNode*);
+SquareTreeNode* ParseSquareTree(Str s);
+Str SerializeSquareTreeNode(SquareTreeNode*);

@@ -86,14 +86,17 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
 }
 #endif
 
-void ParseCmdLine(const char* cmdLine, StrVec& argsOut) {
+void ParseCmdLine(Str cmdLine, StrVec& argsOut) {
     TempWStr s = ToWStrTemp(cmdLine);
     ParseCmdLine(s, argsOut);
 }
 
-bool CouldBeArg(const char* s) {
-    char c = *s;
-    return (c == L'-') || (c == L'/');
+bool CouldBeArg(Str s) {
+    if (!s) {
+        return false;
+    }
+    char c = *s.s;
+    return (c == '-') || (c == '/');
 }
 
 CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {
@@ -105,20 +108,20 @@ CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {
 #endif
 }
 
-const char* CmdLineArgsIter::NextArg() {
+Str CmdLineArgsIter::NextArg() {
     if (curr >= nArgs) {
-        return nullptr;
+        return {};
     }
-    currArg = args[curr++];
+    currArg = args.AtStr(curr++);
     return currArg;
 }
 
-const char* CmdLineArgsIter::EatParam() {
+Str CmdLineArgsIter::EatParam() {
     // doesn't change currArg
     if (curr >= nArgs) {
-        return nullptr;
+        return {};
     }
-    return args[curr++];
+    return args.AtStr(curr++);
 }
 
 void CmdLineArgsIter::RewindParam() {
@@ -130,20 +133,20 @@ void CmdLineArgsIter::RewindParam() {
 // additional param is one in addition to the default first param
 // they start at 1
 // returns nullptr if no additional param
-const char* CmdLineArgsIter::AdditionalParam(int n) const {
+Str CmdLineArgsIter::AdditionalParam(int n) const {
     ReportIf(n < 1);
     if (curr + n - 1 >= nArgs) {
-        return nullptr;
+        return {};
     }
 
     // we assume that param cannot be args (i.e. start with - or /
     for (int i = 0; i < n; i++) {
-        const char* s = args[curr + i];
+        Str s = args.AtStr(curr + i);
         if (CouldBeArg(s)) {
-            return nullptr;
+            return {};
         }
     }
-    return args[curr + n - 1];
+    return args.AtStr(curr + n - 1);
 }
 
 char* CmdLineArgsIter::at(int n) const {

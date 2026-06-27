@@ -4,22 +4,19 @@
 #define Tag_Any ((HtmlTag) - 1)
 
 struct CssSelector {
-    const char* s = nullptr;
-    size_t sLen = 0;
+    Str s = {};
     // for convenience
     HtmlTag tag = Tag_NotFound;
-    const char* clazz = nullptr;
-    size_t clazzLen = 0;
+    Str clazz = {};
 };
 
 struct CssProperty {
     CssProp type = Css_Unknown;
-    const char* s = nullptr;
-    size_t sLen = 0;
+    Str s = {};
 };
 
 class CssPullParser {
-    const char* s = nullptr;
+    Str src = {};
     const char* currPos = nullptr;
     const char* end = nullptr;
 
@@ -33,10 +30,10 @@ class CssPullParser {
     CssProperty prop{};
 
   public:
-    CssPullParser(const char* s, size_t len) {
-        this->s = s;
-        currPos = s;
-        end = s + len;
+    CssPullParser(Str s) {
+        this->src = s;
+        currPos = s.s;
+        end = s.s ? s.s + s.len : nullptr;
     }
 
     // call NextRule first for parsing a style element and

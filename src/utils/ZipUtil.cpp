@@ -48,7 +48,7 @@ class FileWriteStream : public ISequentialStream {
     }
 };
 
-ZipCreator::ZipCreator(const char* zipFilePath) : bytesWritten(0), fileCount(0) {
+ZipCreator::ZipCreator(Str zipFilePath) : bytesWritten(0), fileCount(0) {
     stream = new FileWriteStream(zipFilePath);
 }
 
@@ -94,7 +94,7 @@ static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
     return newdstlen;
 }
 
-bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size, u32 dosdate) {
+bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 dosdate) {
     ReportIf(size >= UINT32_MAX);
     ReportIf(str::Len(nameUtf8) >= UINT16_MAX);
     if (size >= UINT32_MAX) {
@@ -169,7 +169,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
 }
 
 // add a given file under (optional) nameInZip
-bool ZipCreator::AddFile(const char* path, const char* nameInZip) {
+bool ZipCreator::AddFile(Str path, Str nameInZip) {
     ByteSlice fileData = file::ReadFile(path);
     if (!fileData) {
         return false;
@@ -198,18 +198,18 @@ bool ZipCreator::AddFile(const char* path, const char* nameInZip) {
 }
 
 // we use the filePath relative to dir as the zip name
-bool ZipCreator::AddFileFromDir(const char* filePath, const char* dir) {
+bool ZipCreator::AddFileFromDir(Str filePath, Str dir) {
     if (str::IsEmpty(dir) || !str::StartsWith(filePath, dir)) {
         return false;
     }
-    const char* nameInZip = filePath + str::Len(dir) + 1;
+    const char* nameInZip = filePath.s + dir.len + 1;
     if (!path::IsSep(nameInZip[-1])) {
         return false;
     }
     return AddFile(filePath, nameInZip);
 }
 
-bool ZipCreator::AddDir(const char* dir, bool recursive) {
+bool ZipCreator::AddDir(Str dir, bool recursive) {
     DirIter di{dir};
     di.recurse = recursive;
     bool ok;
@@ -246,7 +246,7 @@ bool ZipCreator::Finish() {
     return ok;
 }
 
-IStream* OpenDirAsZipStream(const char* dirPath, bool recursive) {
+IStream* OpenDirAsZipStream(Str dirPath, bool recursive) {
     if (!dir::Exists(dirPath)) {
         return nullptr;
     }

@@ -154,7 +154,7 @@ static Kind GetKindByFileExt(const char* path) {
     return gExtsKind[idx];
 }
 
-const char* GetExtForKind(Kind kind) {
+Str GetExtForKind(Kind kind) {
     int idx = KindIndexOf(gExtsKind, dimofi(gExtsKind), kind);
     if (idx >= 0) {
         return SeqStrByIndex(gFileExts, idx);
@@ -408,7 +408,7 @@ static bool IsFb2Archive(MultiFormatArchive* archive) {
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(const char* path) {
+Kind GuessFileTypeFromContent(Str path) {
     ReportIf(!path);
     if (path::IsDirectory(path)) {
         char* mimetypePath = path::JoinTemp(path, "mimetype");
@@ -450,7 +450,7 @@ Kind GuessFileTypeFromContent(const char* path) {
 // embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
 // or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}"
 // return pointer starting at ":${pdfStream}"
-const char* FindEmbeddedPdfFileStreamNo(const char* path) {
+Str FindEmbeddedPdfFileStreamNo(Str path) {
     const char* start = path;
     const char* parseEnd = start + str::Len(start);
     const char* meta = nullptr;
@@ -484,7 +484,7 @@ const char* FindEmbeddedPdfFileStreamNo(const char* path) {
     return nullptr;
 }
 
-Kind GuessFileTypeFromName(const char* path) {
+Kind GuessFileTypeFromName(Str path) {
     VerifyExtsMatch();
 
     if (!path) {
@@ -506,7 +506,7 @@ Kind GuessFileTypeFromName(const char* path) {
     return nullptr;
 }
 
-Kind GuessFileType(const char* path, bool sniff) {
+Kind GuessFileType(Str path, bool sniff) {
     if (sniff) {
         Kind kind = GuessFileTypeFromContent(path);
         if (kind) {
@@ -563,7 +563,7 @@ static int FindImageKindIdx(Kind kind) {
     return -1;
 }
 
-const char* GfxFileExtFromKind(Kind kind) {
+Str GfxFileExtFromKind(Kind kind) {
     int idx = FindImageKindIdx(kind);
     if (idx >= 0) {
         return SeqStrByIndex(gImageFormatExts, idx);
@@ -571,12 +571,12 @@ const char* GfxFileExtFromKind(Kind kind) {
     return nullptr;
 }
 
-const char* GfxFileExtFromData(const ByteSlice& d) {
+Str GfxFileExtFromData(const ByteSlice& d) {
     Kind kind = GuessFileTypeFromContent(d);
     return GfxFileExtFromKind(kind);
 }
 
-char* TestFileKindResult(const char* path, const char* expectedKindName, int* exitCodeOut) {
+char* TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
     StrBuilder out;
     auto fail = [&](const char* msg) -> char* {
         out.Append(msg);

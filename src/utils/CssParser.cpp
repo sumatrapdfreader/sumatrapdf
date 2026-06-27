@@ -82,9 +82,9 @@ bool CssPullParser::NextRule() {
         return false;
     }
 
-    if (currPos == s) {
+    if (currPos == src.s) {
         SkipWsAndComments(currPos, end);
-        if (currPos + 4 < end && str::StartsWith(currPos, "<!--")) {
+        if (currPos + 4 < end && str::StartsWith(Str(currPos), StrL("<!--"))) {
             currPos += 4;
         }
     }
@@ -124,8 +124,7 @@ const CssSelector* CssPullParser::NextSelector() {
         return nullptr;
     }
 
-    sel.s = currSel;
-    // skip single selector
+    const char* sStart = currSel;
     const char* sEnd = currSel;
     while (currSel < selEnd && *currSel != ',') {
         if (*currSel == '"' || *currSel == '\'') {
@@ -143,37 +142,35 @@ const CssSelector* CssPullParser::NextSelector() {
         currSel++;
     }
 
-    sel.sLen = sEnd - sel.s;
+    sel.s = Str((char*)sStart, (int)(sEnd - sStart));
     sel.tag = Tag_NotFound;
-    sel.clazz = nullptr;
-    sel.clazzLen = 0;
+    sel.clazz = {};
 
-    // parse "*", "el", ".class" and "el.class"
     const char* c = sEnd;
-    for (; c > sel.s && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
+    for (; c > sStart && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
         ;
     }
-    if (c > sel.s && *(c - 1) == '.') {
-        sel.clazz = c;
-        sel.clazzLen = sEnd - c;
+    if (c > sStart && *(c - 1) == '.') {
+        sel.clazz = Str((char*)c, (int)(sEnd - c));
         c--;
     }
-    for (; c > sel.s && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
+    for (; c > sStart && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
         ;
     }
-    if (sel.clazz && sel.clazz - 1 == sel.s) {
+    if (sel.clazz && sel.clazz.s - 1 == sStart) {
         sel.tag = Tag_Any;
-    } else if (c == (sel.clazz ? sel.clazz - 1 : sEnd) && c == sel.s + 1 && *sel.s == '*') {
+    } else if (c == (sel.clazz ? sel.clazz.s - 1 : sEnd) && c == sStart + 1 && *sStart == '*') {
         sel.tag = Tag_Any;
-    } else if (c == sel.s) {
-        sel.tag = FindHtmlTag(sel.s, sel.clazz ? sel.clazz - sel.s - 1 : sel.sLen);
+    } else if (c == sStart) {
+        size_t tagLen = sel.clazz ? (size_t)(sel.clazz.s - sStart - 1) : (size_t)sel.s.len;
+        sel.tag = FindHtmlTag(sStart, tagLen);
     }
 
     return &sel;
 }
 
 const CssProperty* CssPullParser::NextProperty() {
-    if (currPos == s) {
+    if (currPos == src.s) {
         inlineStyle = inProps = true;
     } else if (!inProps) {
         return nullptr;
@@ -213,8 +210,7 @@ GetNextProperty:
     currPos++;
     SkipWsAndComments(currPos, end);
 
-    prop.s = currPos;
-    // skip value
+    const char* valStart = currPos;
     const char* valEnd = currPos;
     while (currPos < end && *currPos != ';' && *currPos != '}') {
         if (*currPos == '"' || *currPos == '\'') {
@@ -234,7 +230,7 @@ GetNextProperty:
             valEnd = ++currPos;
         }
     }
-    prop.sLen = valEnd - prop.s;
+    prop.s = Str((char*)valStart, (int)(valEnd - valStart));
 
     return &prop;
 }

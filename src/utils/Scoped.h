@@ -81,24 +81,24 @@ struct AutoFree {
     AutoFree(AutoFree& other) = delete;
     AutoFree(AutoFree&& other) = delete;
 
-    AutoFree(const char* p) { // NOLINT
-        data = (char*)p;
+    AutoFree(char* p) { // NOLINT
+        data = p;
     }
 
     AutoFree(const u8* p) { // NOLINT
         data = (char*)p;
     }
 
-    void Set(const char* newPtr) {
+    void Set(char* newPtr) {
         free(data);
-        data = (char*)newPtr;
+        data = newPtr;
     }
 
-    void SetCopy(const char* newPtr) {
+    void SetCopy(Str newVal) {
         free(data);
         data = nullptr;
-        if (newPtr) {
-            data = str::Dup(newPtr);
+        if (newVal) {
+            data = str::Dup(newVal).s;
         }
     }
 
@@ -115,12 +115,12 @@ struct AutoFree {
         return *this;
     }
     // takes ownership of the data
-    AutoFree& operator=(const char* d) noexcept {
+    AutoFree& operator=(char* d) noexcept {
         if (data == d) {
             return *this;
         }
         free(data);
-        data = (char*)d;
+        data = d;
         return *this;
     }
 
@@ -207,8 +207,8 @@ struct AutoFreeWStr {
         data = (WCHAR*)newPtr;
     }
 
-    void SetCopy(const WCHAR* newVal) {
-        WCHAR* w = str::Dup(newVal);
+    void SetCopy(WStr newVal) {
+        WCHAR* w = str::Dup(newVal.s);
         str::FreePtr(&data);
         data = w;
     }

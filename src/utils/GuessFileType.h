@@ -44,17 +44,17 @@ extern Kind kindFileTxt;
 
 extern Kind kindDirectory;
 
-const char* FindEmbeddedPdfFileStreamNo(const char* path);
+Str FindEmbeddedPdfFileStreamNo(Str path);
 
-Kind GuessFileTypeFromContent(const char* path);
+Kind GuessFileTypeFromContent(Str path);
 Kind GuessFileTypeFromContent(const ByteSlice& d);
-Kind GuessFileTypeFromName(const char*);
-Kind GuessFileType(const char* path, bool sniff);
-const char* GfxFileExtFromData(const ByteSlice&);
-const char* GfxFileExtFromKind(Kind);
-const char* GetExtForKind(Kind kind);
+Kind GuessFileTypeFromName(Str path);
+Kind GuessFileType(Str path, bool sniff);
+Str GfxFileExtFromData(const ByteSlice&);
+Str GfxFileExtFromKind(Kind);
+Str GetExtForKind(Kind kind);
 
 int KindIndexOf(Kind* kinds, int nKinds, Kind kind);
 
 // Headless test helper: compare GuessFileTypeFromName to an expected kind name.
-char* TestFileKindResult(const char* path, const char* expectedKindName, int* exitCodeOut = nullptr);
+char* TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut = nullptr);

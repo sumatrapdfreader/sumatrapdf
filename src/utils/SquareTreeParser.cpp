@@ -98,7 +98,7 @@ SquareTreeNode::~SquareTreeNode() {
     }
 }
 
-const char* SquareTreeNode::GetValue(const char* key, size_t* startIdx) const {
+Str SquareTreeNode::GetValue(Str key, size_t* startIdx) const {
     int start = startIdx ? (int)*startIdx : 0;
     int n = data.Size();
     for (int i = start; i < n; i++) {
@@ -110,10 +110,10 @@ const char* SquareTreeNode::GetValue(const char* key, size_t* startIdx) const {
             return item.str;
         }
     }
-    return nullptr;
+    return {};
 }
 
-SquareTreeNode* SquareTreeNode::GetChild(const char* key, size_t* startIdx) const {
+SquareTreeNode* SquareTreeNode::GetChild(Str key, size_t* startIdx) const {
     int start = startIdx ? (int)*startIdx : 0;
     int n = data.Size();
     for (int i = start; i < n; i++) {
@@ -163,12 +163,12 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
             // parse child node(s)
             data = SkipWsAndComments(separator) + 1;
             *SkipWsRev(key, separator) = '\0';
-            node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
+            node->data.Append(SquareTreeNode::DataItem(Str(key), ParseSquareTreeRec(data)));
             // arrays are created by either reusing the same key for a different child
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
             while (IsBracketLine((data = SkipWsAndComments(data)))) {
                 data++;
-                node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
+                node->data.Append(SquareTreeNode::DataItem(Str(key), ParseSquareTreeRec(data)));
             }
         } else if (']' == *key) {
             // finish parsing child node
@@ -188,7 +188,7 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
             // trim whitespace around section name (for consistency with GetPrivateProfileString)
             key = SkipWs(key + 1);
             *SkipWsRev(key, SkipWsRev(value, data) - 1) = '\0';
-            node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
+            node->data.Append(SquareTreeNode::DataItem(Str(key), ParseSquareTreeRec(data)));
         } else if ('[' == *separator || ']' == *separator) {
             // invalid line (ignored)
         } else {
@@ -196,7 +196,7 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
             bool hasMoreLines = '\n' == *data;
             *SkipWsRev(key, separator) = '\0';
             *SkipWsRev(value, data) = '\0';
-            node->data.Append(SquareTreeNode::DataItem(key, value));
+            node->data.Append(SquareTreeNode::DataItem(Str(key), Str(value)));
             if (hasMoreLines) {
                 data++;
             }
@@ -235,16 +235,16 @@ static void SerializeRec(SquareTreeNode* node, StrBuilder& s, int indent) {
     }
 }
 
-const char* SerializeSquareTreeNode(SquareTreeNode* node) {
+Str SerializeSquareTreeNode(SquareTreeNode* node) {
     if (!node) {
-        return nullptr;
+        return {};
     }
     StrBuilder s;
     SerializeRec(node, s, 0);
     return s.StealData();
 }
 
-SquareTreeNode* ParseSquareTree(const char* s) {
+SquareTreeNode* ParseSquareTree(Str s) {
     TempStr data = strconv::UnknownToUtf8Temp(s);
     if (!data) {
         return nullptr;
