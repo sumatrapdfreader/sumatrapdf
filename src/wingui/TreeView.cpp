@@ -318,7 +318,7 @@ static void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
     tvitem->state = state;
     tvitem->stateMask = stateMask;
     tvitem->lParam = static_cast<LPARAM>(ti);
-    char* title = tm->Text(ti);
+    Str title = tm->Text(ti);
     tvitem->pszText = ToWStrTemp(title);
 }
 

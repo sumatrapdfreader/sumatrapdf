@@ -88,11 +88,11 @@ bool ScrollState::operator==(const ScrollState& other) const {
     return page == other.page && x == other.x && y == other.y;
 }
 
-const char* DisplayModel::GetFilePath() const {
+Str DisplayModel::GetFilePath() const {
     return engine->FilePath();
 }
 
-const char* DisplayModel::GetDefaultFileExt() const {
+Str DisplayModel::GetDefaultFileExt() const {
     return engine->defaultExt;
 }
 

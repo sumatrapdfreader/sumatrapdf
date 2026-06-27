@@ -204,7 +204,7 @@ bool ReadAloudHighlightBuildFromPage(EngineBase* engine, int pageNo, ReadAloudHi
         if (r.x || r.dx) {
             ReadAloudByteLocSetFromRect(loc, pageNo, r);
         }
-        ReadAloudHighlightAppendRaw(raw, pageText.text[i], loc);
+        ReadAloudHighlightAppendRaw(raw, pageText.text.s[i], loc);
     }
     FreePageTextUtf8(&pageText);
 

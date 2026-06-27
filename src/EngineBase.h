@@ -26,7 +26,12 @@ extern Kind kindEngineHtml;
 extern Kind kindEngineTxt;
 
 bool IsExternalUrl(const WCHAR* url);
-bool IsExternalUrl(const char* url);
+bool IsExternalUrl(Str url);
+
+static inline void SetDefaultExt(Str& ext, Str snew) {
+    str::Free(ext.s);
+    ext = Str(str::Dup(snew));
+}
 
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum class RenderTarget {
@@ -77,7 +82,7 @@ enum class TextExtractionState {
 // terminating null), and coords has one entry per UTF-8 byte (the same rect
 // repeated for each byte of a multi-byte codepoint).
 struct PageTextUtf8 {
-    char* text = nullptr;
+    Str text;
     Rect* coords = nullptr;
     int len = 0;
 };
@@ -103,17 +108,17 @@ struct IPageDestination : KindBase {
     virtual RectF GetDestPoint2() { return GetRect2(); }
 
     // string value associated with the destination (e.g. a path or a URL)
-    virtual char* GetValue2() { return nullptr; }
+    virtual Str GetValue2() { return {}; }
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    virtual char* GetName2() { return nullptr; }
+    virtual Str GetName2() { return {}; }
 };
 
-static inline char* PageDestGetName(IPageDestination* dest) {
+static inline Str PageDestGetName(IPageDestination* dest) {
     return dest->GetName2();
 }
 
-static inline char* PageDestGetValue(IPageDestination* dest) {
+static inline Str PageDestGetValue(IPageDestination* dest) {
     return dest->GetValue2();
 }
 
@@ -144,71 +149,71 @@ static inline float PageDestGetZoom(IPageDestination* dest) {
 }
 
 struct PageDestinationURL : IPageDestination {
-    char* url = nullptr;
-    char* displayUrl = nullptr;
+    Str url;
+    Str displayUrl;
 
     PageDestinationURL() = delete;
 
-    PageDestinationURL(const char* u) {
+    PageDestinationURL(Str u) {
         ReportIf(!u);
         kind = kindDestinationLaunchURL;
-        url = str::Dup(u);
+        url = Str(str::Dup(u));
     }
 
     ~PageDestinationURL() override {
-        str::Free(url);
-        str::Free(displayUrl);
+        str::Free(url.s);
+        str::Free(displayUrl.s);
     }
 
-    char* GetValue2() override {
+    Str GetValue2() override {
         if (!url) {
-            return nullptr;
+            return {};
         }
         if (!displayUrl) {
-            displayUrl = str::Dup(url);
-            url::DecodeInPlace(displayUrl);
+            displayUrl = Str(str::Dup(url));
+            url::DecodeInPlace(displayUrl.s);
         }
         return displayUrl;
     }
 };
 
 struct PageDestinationFile : IPageDestination {
-    char* path = nullptr;
-    char* dest = nullptr;
+    Str path;
+    Str dest;
 
     PageDestinationFile() = delete;
 
-    PageDestinationFile(const char* u, const char* dest) {
+    PageDestinationFile(Str u, Str dest) {
         ReportIf(!u);
         kind = kindDestinationLaunchFile;
-        path = str::Dup(u);
-        this->dest = str::Dup(dest);
+        path = Str(str::Dup(u));
+        this->dest = Str(str::Dup(dest));
     }
 
     ~PageDestinationFile() override {
-        str::Free(path);
-        str::Free(dest);
+        str::Free(path.s);
+        str::Free(dest.s);
     }
 
-    char* GetValue2() override { return path; }
+    Str GetValue2() override { return path; }
 
-    char* GetName2() override { return dest; }
+    Str GetName2() override { return dest; }
 };
 
 struct PageDestination : IPageDestination {
-    char* value = nullptr;
-    char* name = nullptr;
+    Str value;
+    Str name;
     int embedObjNum = 0; // PDF object number for embedded file attachment annotations
 
     PageDestination() = default;
 
     ~PageDestination() override;
 
-    char* GetValue2() override;
-    char* GetName2() override;
+    Str GetValue2() override;
+    Str GetName2() override;
 };
 
-IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, const char* value = nullptr);
+IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, Str value = {});
 
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9f
@@ -237,7 +242,7 @@ struct IPageElement {
     RectF GetRect() { return rect; }
 
     // string value associated with this element (e.g. displayed in an infotip)
-    virtual char* GetValue() { return nullptr; }
+    virtual Str GetValue() { return {}; }
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
     virtual IPageDestination* AsLink() { return nullptr; }
@@ -251,16 +256,16 @@ struct PageElementImage : IPageElement {
 };
 
 struct PageElementComment : IPageElement {
-    char* comment = nullptr;
+    Str comment;
 
-    PageElementComment(const char* c) {
+    PageElementComment(Str c) {
         kind = kindPageElementComment;
-        comment = str::Dup(c);
+        comment = Str(str::Dup(c));
     }
 
-    ~PageElementComment() override { str::Free(comment); }
+    ~PageElementComment() override { str::Free(comment.s); }
 
-    char* GetValue() override { return comment; }
+    Str GetValue() override { return comment; }
 };
 
 struct PageElementDestination : IPageElement {
@@ -273,11 +278,11 @@ struct PageElementDestination : IPageElement {
 
     ~PageElementDestination() override { delete dest; }
 
-    char* GetValue() override {
+    Str GetValue() override {
         if (dest) {
             return dest->GetValue2();
         }
-        return nullptr;
+        return {};
     }
     IPageDestination* AsLink() override { return dest; }
 };
@@ -300,7 +305,7 @@ struct TocItem {
     TocItem* parent = nullptr;
 
     // the item's visible label
-    char* title = nullptr;
+    Str title;
 
     // in some formats, the document can specify the tree item
     // is expanded by default. We keep track if user toggled
@@ -336,7 +341,7 @@ struct TocItem {
 
     TocItem() = default;
 
-    explicit TocItem(TocItem* parent, const char* title, int pageNo);
+    explicit TocItem(TocItem* parent, Str title, int pageNo);
 
     ~TocItem();
 
@@ -365,7 +370,7 @@ struct TocTree : TreeModel {
     // TreeModel
     TreeItem Root() override;
 
-    char* Text(TreeItem) override;
+    Str Text(TreeItem) override;
     TreeItem Parent(TreeItem) override;
     int ChildCount(TreeItem) override;
     TreeItem ChildAt(TreeItem, int index) override;
@@ -415,7 +420,7 @@ class EngineBase {
     AtomicRefCount refCount = 1; // starts life as acquired
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
-    const char* defaultExt = nullptr;
+    Str defaultExt;
     PageLayout preferredLayout;
     float fileDPI = 96.0f;
     bool isImageCollection = false;
@@ -549,7 +554,7 @@ class EngineBase {
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // the name of the file this engine handles
-    const char* FilePath() const;
+    Str FilePath() const;
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 
@@ -558,7 +563,7 @@ class EngineBase {
     virtual bool HandleLink(IPageDestination*, ILinkHandler*);
 
     // protected:
-    void SetFilePath(const char* s);
+    void SetFilePath(Str s);
 
   protected:
     virtual ~EngineBase();
@@ -570,7 +575,7 @@ class EngineBase {
 };
 
 struct PasswordUI {
-    virtual char* GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
+    virtual Str GetPassword(Str fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
     virtual ~PasswordUI() = default;
 };
 

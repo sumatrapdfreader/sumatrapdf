@@ -32,7 +32,7 @@ static IPageDestination* NewChmNamedDest(const char* url, int pageNo) {
     } else {
         auto pdest = new PageDestination();
         pdest->kind = kindDestinationScrollTo;
-        pdest->name = str::Dup(url);
+        pdest->name = Str(str::Dup(url));
         dest = pdest;
     }
     dest->pageNo = pageNo;
@@ -89,11 +89,11 @@ ChmModel::~ChmModel() {
     ArenaDelete(poolAlloc);
 }
 
-const char* ChmModel::GetFilePath() const {
-    return fileName;
+Str ChmModel::GetFilePath() const {
+    return Str(fileName.Get());
 }
 
-const char* ChmModel::GetDefaultFileExt() const {
+Str ChmModel::GetDefaultFileExt() const {
     return ".chm";
 }
 

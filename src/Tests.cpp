@@ -59,7 +59,7 @@ static void extractPageText(EngineBase* engine, int pageNo) {
     if (!pageText.text) {
         return;
     }
-    TempStr s = str::ReplaceTemp(pageText.text, "\n", "_");
+    TempStr s = str::ReplaceTemp(pageText.text.s, "\n", "_");
     printf("text on page %d: '", pageNo);
     // print characters as hex because I don't know what kind of locale-specific mangling
     // printf() might do

@@ -238,7 +238,7 @@ class EnginePs : public EngineBase {
   public:
     EnginePs() {
         kind = kindEnginePostScript;
-        defaultExt = str::Dup(".ps");
+        defaultExt = Str(str::Dup(".ps"));
     }
 
     ~EnginePs() override {
@@ -250,7 +250,7 @@ class EnginePs : public EngineBase {
     EngineBase* Clone() override {
         EngineBase* newEngine = pdfEngine->Clone();
         if (!newEngine) {
-            return nullptr;
+            return {};
         }
         EnginePs* clone = new EnginePs();
         if (FilePath()) {
@@ -293,7 +293,7 @@ class EnginePs : public EngineBase {
     TempStr GetPropertyTemp(Str name) override {
         // omit properties created by Ghostscript
         if (!pdfEngine) {
-            return nullptr;
+            return {};
         }
         static const char* toOmit[] = {kPropCreationDate, kPropModificationDate, kPropPdfVersion,
                                        kPropPdfProducer,  kPropPdfFileStructure, nullptr};
@@ -301,7 +301,7 @@ class EnginePs : public EngineBase {
         for (const char** ptr = toOmit; *ptr; ptr++) {
             const char* s = *ptr;
             if (str::Eq(s, name)) {
-                return nullptr;
+                return {};
             }
         }
         return pdfEngine->GetPropertyTemp(name);
@@ -341,7 +341,7 @@ class EnginePs : public EngineBase {
         }
 
         if (str::EndsWithI(FilePath(), ".eps")) {
-            defaultExt = str::Dup(".eps");
+            defaultExt = Str(str::Dup(".eps"));
         }
 
         preferredLayout = pdfEngine->preferredLayout;

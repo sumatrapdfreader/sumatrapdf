@@ -539,19 +539,19 @@ class HwndPasswordUI : public PasswordUI {
   public:
     explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd), pwdIdx(0) {}
 
-    char* GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override;
+    Str GetPassword(Str fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override;
 };
 
 /* Get password for a given 'fileName', can be nullptr if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
+Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
     FileState* fileFromHistory = gFileHistory.FindByName(path, nullptr);
     if (fileFromHistory && fileFromHistory->decryptionKey && fileDigest && decryptionKeyOut) {
         AutoFreeStr fingerprint(str::MemToHex(fileDigest, 16).s);
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
         if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32)) {
-            return nullptr;
+            return {};
         }
     }
 
@@ -559,22 +559,22 @@ char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptio
 
     if (!triedCliPwd && gCli && gCli->password) {
         triedCliPwd = true;
-        return str::Dup(gCli->password);
+        return Str(str::Dup(gCli->password));
     }
 
     // try the list of default passwords before asking the user
     if (pwdIdx < gGlobalPrefs->defaultPasswords->size()) {
         char* pwd = gGlobalPrefs->defaultPasswords->at(pwdIdx++);
-        return str::Dup(pwd);
+        return Str(str::Dup(pwd));
     }
 
     if (IsStressTesting()) {
-        return nullptr;
+        return {};
     }
 
     // can't show a dialog (e.g. thumbnail generation thread)
     if (!hwnd) {
-        return nullptr;
+        return {};
     }
 
     // extract the filename from the URL in plugin mode instead
@@ -596,7 +596,7 @@ char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptio
     HwndToForeground(hwnd);
 
     bool* rememberPwd = SettingsRememberOpenedFiles() ? saveKey : nullptr;
-    return Dialog_GetPassword(hwnd, path, rememberPwd, &gShowPassword);
+    return Str(Dialog_GetPassword(hwnd, path, rememberPwd, &gShowPassword));
 }
 
 // update global windowState for next default launch when either
@@ -3743,7 +3743,11 @@ static bool AppendFileFilterForDoc(DocController* ctrl, StrBuilder& fileFilter) 
     } else if (type == kindEngineComicBooks) {
         fileFilter.Append(_TRA("Comic books"));
     } else if (type == kindEngineImage) {
-        TempWStr extW = ToWStrTemp(ctrl->GetDefaultFileExt() + 1);
+        Str imgDefExt = ctrl->GetDefaultFileExt();
+        if (imgDefExt.len > 0 && imgDefExt.s[0] == '.') {
+            imgDefExt = Str(imgDefExt.s + 1, imgDefExt.len - 1);
+        }
+        TempWStr extW = ToWStrTemp(imgDefExt);
         fileFilter.AppendFmt(_TRA("Image files (*.%s)"), extW);
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
@@ -3841,8 +3845,8 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.lpstrFilter = ToWStrTemp(fileFilter);
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
-    if (str::Leni(defExt) > 0 && defExt[0] == L'.') {
-        defExt++;
+    if (str::Leni(defExt) > 0 && defExt.s[0] == '.') {
+        defExt = Str(defExt.s + 1, defExt.len - 1);
     }
     ofn.lpstrDefExt = ToWStrTemp(defExt);
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
@@ -3884,8 +3888,8 @@ static void SaveCurrentFileAs(MainWindow* win) {
         return;
     }
     defExt = ctrl->GetDefaultFileExt();
-    if (str::Leni(defExt) > 0 && defExt[0] == '.') {
-        defExt++;
+    if (str::Leni(defExt) > 0 && defExt.s[0] == '.') {
+        defExt = Str(defExt.s + 1, defExt.len - 1);
     }
     dm = win->AsFixed();
     engine = dm ? dm->GetEngine() : nullptr;

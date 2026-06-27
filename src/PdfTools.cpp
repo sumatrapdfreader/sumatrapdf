@@ -344,7 +344,7 @@ static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, const char* destPath
         for (int pageNo = start; pageNo <= end; pageNo++) {
             PageTextUtf8 pt = engine->ExtractPageTextUtf8(pageNo);
             if (pt.text) {
-                text.Append(pt.text);
+                text.Append(pt.text.s);
                 text.AppendChar('\n');
             }
             FreePageTextUtf8(&pt);

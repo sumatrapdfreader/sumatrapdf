@@ -158,7 +158,7 @@ static IPageElement* NewEbookLink(DrawInstr* link, Rect rect, IPageDestination* 
         dest = new PageDestination();
         dest->kind = kindDestinationLaunchURL;
         // TODO: not sure about this
-        // dest->value = str::Dup(res->value);
+        // dest->value = Str(str::Dup(res->value));
         dest->rect = ToRectF(rect);
     }
 
@@ -540,7 +540,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
 
     PageTextUtf8 res;
     res.len = (int)content.size();
-    res.text = content.StealData();
+    res.text = Str(content.StealData());
     res.coords = coords.StealData();
     return res;
 }
@@ -821,7 +821,7 @@ class EngineEpub : public EngineEbook {
 
 EngineEpub::EngineEpub() : EngineEbook() {
     kind = kindEngineEpub;
-    str::ReplaceWithCopy(&defaultExt, ".epub");
+    SetDefaultExt(defaultExt, ".epub");
 }
 
 EngineEpub::~EngineEpub() {
@@ -972,7 +972,7 @@ class EngineFb2 : public EngineEbook {
   public:
     EngineFb2() : EngineEbook() {
         kind = kindEngineFb2;
-        str::ReplaceWithCopy(&defaultExt, ".fb2");
+        SetDefaultExt(defaultExt, ".fb2");
     }
     ~EngineFb2() override {
         delete tocTree;
@@ -981,7 +981,7 @@ class EngineFb2 : public EngineEbook {
     EngineBase* Clone() override {
         const char* fileName = FilePath();
         if (!fileName) {
-            return nullptr;
+            return {};
         }
         return CreateFromFile(fileName);
     }
@@ -1033,7 +1033,7 @@ bool EngineFb2::FinishLoading() {
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     if (doc->IsZipped()) {
-        str::ReplaceWithCopy(&defaultExt, ".fb2z");
+        SetDefaultExt(defaultExt, ".fb2z");
     }
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
@@ -1095,7 +1095,7 @@ class EngineMobi : public EngineEbook {
   public:
     EngineMobi() : EngineEbook() {
         kind = kindEngineMobi;
-        str::ReplaceWithCopy(&defaultExt, ".mobi");
+        SetDefaultExt(defaultExt, ".mobi");
     }
     ~EngineMobi() override {
         delete tocTree;
@@ -1104,7 +1104,7 @@ class EngineMobi : public EngineEbook {
     EngineBase* Clone() override {
         const char* fileName = FilePath();
         if (!fileName) {
-            return nullptr;
+            return {};
         }
         return CreateFromFile(fileName);
     }
@@ -1250,7 +1250,7 @@ class EnginePdb : public EngineEbook {
   public:
     EnginePdb() : EngineEbook() {
         kind = kindEnginePdb;
-        str::ReplaceWithCopy(&defaultExt, ".pdb");
+        SetDefaultExt(defaultExt, ".pdb");
     }
     ~EnginePdb() override {
         delete tocTree;
@@ -1259,7 +1259,7 @@ class EnginePdb : public EngineEbook {
     EngineBase* Clone() override {
         const char* fileName = FilePath();
         if (!fileName) {
-            return nullptr;
+            return {};
         }
         return CreateFromFile(fileName);
     }
@@ -1370,7 +1370,7 @@ class ChmDataCache {
 
         auto tmp = doc->GetData(url.Get());
         if (tmp.empty()) {
-            return nullptr;
+            return {};
         }
 
         ImageData data;
@@ -1467,7 +1467,7 @@ class EngineChm : public EngineEbook {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
-        str::ReplaceWithCopy(&defaultExt, ".chm");
+        SetDefaultExt(defaultExt, ".chm");
     }
     ~EngineChm() override {
         delete dataCache;
@@ -1477,7 +1477,7 @@ class EngineChm : public EngineEbook {
     EngineBase* Clone() override {
         const char* fileName = FilePath();
         if (!fileName) {
-            return nullptr;
+            return {};
         }
         return CreateFromFile(fileName);
     }
@@ -1711,7 +1711,7 @@ TocTree* EngineChm::GetToc() {
 static IPageDestination* newChmEmbeddedDest(const char* path) {
     auto res = new PageDestination();
     res->kind = kindDestinationLaunchEmbedded;
-    res->value = str::Dup(path::GetBaseNameTemp(Str(path)));
+    res->value = Str(str::Dup(path::GetBaseNameTemp(Str(path))));
     return res;
 }
 
@@ -1754,13 +1754,13 @@ class EngineHtml : public EngineEbook {
     EngineHtml() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        str::ReplaceWithCopy(&defaultExt, ".html");
+        SetDefaultExt(defaultExt, ".html");
     }
     ~EngineHtml() override { delete doc; }
     EngineBase* Clone() override {
         const char* fileName = FilePath();
         if (!fileName) {
-            return nullptr;
+            return {};
         }
         return CreateFromFile(fileName);
     }
@@ -1813,10 +1813,10 @@ static IPageDestination* newRemoteHtmlDest(const char* relativeURL) {
     auto* res = new PageDestination();
     const char* id = str::FindChar(relativeURL, '#');
     if (id) {
-        res->value = str::Dup(relativeURL, id - relativeURL);
-        res->name = str::Dup(id);
+        res->value = Str(str::Dup(relativeURL, id - relativeURL));
+        res->name = Str(str::Dup(id));
     } else {
-        res->value = str::Dup(relativeURL);
+        res->value = Str(str::Dup(relativeURL));
     }
     res->kind = kindDestinationLaunchFile;
     return res;
@@ -1857,7 +1857,7 @@ class EngineTxt : public EngineEbook {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
-        str::ReplaceWithCopy(&defaultExt, ".txt");
+        SetDefaultExt(defaultExt, ".txt");
     }
     ~EngineTxt() override {
         delete tocTree;
@@ -1866,7 +1866,7 @@ class EngineTxt : public EngineEbook {
     EngineBase* Clone() override {
         const char* fileName = FilePath();
         if (!fileName) {
-            return nullptr;
+            return {};
         }
         return CreateFromFile(fileName);
     }
@@ -1896,7 +1896,7 @@ bool EngineTxt::Load(const char* fileName) {
 
     SetFilePath(fileName);
 
-    str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(Str(fileName)));
+    SetDefaultExt(defaultExt, path::GetExtTemp(Str(fileName)));
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc) {

@@ -37,7 +37,7 @@ struct TreeModel {
 
     virtual TreeItem Root() = 0;
 
-    virtual char* Text(TreeItem) = 0;
+    virtual Str Text(TreeItem) = 0;
     virtual TreeItem Parent(TreeItem) = 0;
     virtual int ChildCount(TreeItem) = 0;
     virtual TreeItem ChildAt(TreeItem, int index) = 0;

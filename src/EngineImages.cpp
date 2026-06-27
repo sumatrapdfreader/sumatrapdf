@@ -661,7 +661,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
             }
         }
         if (!result && tryOnly) {
-            return nullptr;
+            return {};
         }
 
         if (!result) {
@@ -901,13 +901,13 @@ EngineImage::~EngineImage() {
 
 EngineBase* EngineImage::Clone() {
     if (frames.empty() || !frames[0]) {
-        logf("EngineImage::Clone() failed: no frames for '%s'\n", FilePath() ? FilePath() : "(null)");
+        logf("EngineImage::Clone() failed: no frames for '%s'\n", FilePath() ? FilePath().s : "(null)");
         return nullptr;
     }
 
     EngineImage* clone = new EngineImage();
     clone->SetFilePath(FilePath());
-    clone->defaultExt = str::Dup(defaultExt);
+    clone->defaultExt = Str(str::Dup(defaultExt));
     clone->imageFormat = imageFormat;
     clone->fileDPI = fileDPI;
     if (fileStream) {
@@ -951,7 +951,7 @@ bool EngineImage::LoadSingleFile(const char* path) {
     if (fileExt == nullptr) {
         fileExt = "";
     }
-    str::ReplaceWithCopy(&defaultExt, fileExt);
+    SetDefaultExt(defaultExt, fileExt);
     frames = PixmapsFromData(data);
     bool ok = FinishLoading();
     if (ok) {
@@ -978,7 +978,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     if (!fileExtA) {
         return false;
     }
-    str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileExtA));
+    SetDefaultExt(defaultExt, path::GetExtTemp(fileExtA));
 
     ByteSlice data = GetDataFromStream(stream, nullptr);
     frames = PixmapsFromData(data);
@@ -1648,7 +1648,7 @@ class EngineImageDir : public EngineImages {
     EngineImageDir() {
         fileDPI = 96.0f;
         kind = kindEngineImageDir;
-        str::ReplaceWithCopy(&defaultExt, "");
+        SetDefaultExt(defaultExt, "");
         // TODO: is there a better place to expose pageFileNames
         // than through page labels?
         hasPageLabels = true;
@@ -2141,7 +2141,7 @@ bool EngineCbx::FinishLoading() {
     fileDPI = 96.f;
 
     const char* ext = GetExtFromArchiveType(cbxArchive);
-    str::ReplaceWithCopy(&defaultExt, ext);
+    SetDefaultExt(defaultExt, ext);
 
     Vec<MultiFormatArchive::FileInfo*> pageFiles;
 
@@ -2483,12 +2483,12 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, 
     // archive might be password-protected
     bool saveKey = false;
     for (;;) {
-        char* pwd = pwdUI->GetPassword(path, nullptr, nullptr, &saveKey);
+        Str pwd = pwdUI->GetPassword(path, nullptr, nullptr, &saveKey);
         if (!pwd) {
-            return nullptr; // user cancelled
+            return {}; // user cancelled
         }
         engine = EngineCbx::CreateFromFile(path, pwd, nullptr, nullptr, hintKind, realPath);
-        str::Free(pwd);
+        str::Free(pwd.s);
         if (engine) {
             return engine;
         }

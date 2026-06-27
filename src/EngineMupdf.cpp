@@ -105,8 +105,8 @@ struct PageDestinationMupdf : IPageDestination {
     fz_outline* outline = nullptr;
     fz_link* link = nullptr;
 
-    char* value = nullptr;
-    char* name = nullptr;
+    Str value;
+    Str name;
 
     // anchor (x, y) on the destination page resolved from the link URI;
     // -1 means "not resolved" (e.g. external URL or file launch).
@@ -145,33 +145,33 @@ struct PageDestinationMupdf : IPageDestination {
     float GetZoom2() override { return destZoom; }
 
     ~PageDestinationMupdf() override {
-        str::Free(value);
-        str::Free(name);
+        str::Free(value.s);
+        str::Free(name.s);
     }
 
-    char* GetValue2() override;
-    char* GetName2() override;
+    Str GetValue2() override;
+    Str GetName2() override;
 };
 
-char* PageDestinationMupdf ::GetValue2() {
+Str PageDestinationMupdf::GetValue2() {
     if (value) {
         return value;
     }
 
     char* uri = FzGetURL(link, outline);
     if (uri && IsExternalLink(uri)) {
-        value = str::Dup(uri);
+        value = Str(str::Dup(uri));
         url::DecodeInPlace(value);
     }
     return value;
 }
 
-char* PageDestinationMupdf ::GetName2() {
+Str PageDestinationMupdf::GetName2() {
     if (name) {
         return name;
     }
     if (outline && outline->title) {
-        name = str::Dup(outline->title);
+        name = Str(str::Dup(outline->title));
     }
     return name;
 }
@@ -1196,7 +1196,7 @@ static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
                         if (hMap) {
                             CloseHandle(hMap);
                         }
-                        return nullptr;
+                        return {};
                     }
                     k = paletteSize++;
                     hashKey[slot] = px;
@@ -1998,7 +1998,7 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
 EngineMupdf::EngineMupdf() {
     InitializeEngineMupdf();
     kind = kindEngineMupdf;
-    defaultExt = str::Dup(".pdf");
+    defaultExt = Str(str::Dup(".pdf"));
     fileDPI = 72.0f;
 
     // pages Vec + its FzPageInfo elements live for the lifetime of the
@@ -2099,10 +2099,10 @@ class PasswordCloner : public PasswordUI {
   public:
     explicit PasswordCloner(u8* cryptKey) { this->cryptKey = cryptKey; }
 
-    char* GetPassword(const char*, u8*, u8 decryptionKeyOut[32], bool* saveKey) override {
+    Str GetPassword(Str, u8*, u8 decryptionKeyOut[32], bool* saveKey) override {
         memcpy(decryptionKeyOut, cryptKey, 32);
         *saveKey = true;
-        return nullptr;
+        return {};
     }
 };
 
@@ -2306,7 +2306,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     SetFilePath(path);
 
     auto ext = path::GetExtTemp(path);
-    str::ReplaceWithCopy(&defaultExt, ext);
+    SetDefaultExt(defaultExt, ext);
 
     int streamNo = -1;
     TempStr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
@@ -2997,11 +2997,11 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationAttachment;
     // WCHAR* path = ToWStr(outline->uri);
-    dest->name = str::Dup(outline->title);
+    dest->name = Str(str::Dup(outline->title));
     // page is really a stream number
     const char* title = outline->title ? outline->title : "";
     AutoFreeStr nameHex(str::MemToHex((const u8*)title, str::Len(title)));
-    dest->value = str::Format("%s:%d:attachname=%s", engine->FilePath(), outline->page.page, nameHex.Get());
+    dest->value = Str(str::Format("%s:%d:attachname=%s", engine->FilePath(), outline->page.page, nameHex.Get()));
     dest->pageNo = outline->page.page;
     return dest;
 }
@@ -3248,7 +3248,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
 
         auto dest = new PageDestination();
         dest->kind = kindDestinationLaunchEmbedded;
-        dest->value = str::Dup(attname);
+        dest->value = Str(str::Dup(attname));
         dest->embedObjNum = num;
 
         auto el = new PageElementDestination(dest);
@@ -3681,7 +3681,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fz_catch(ctx) {
             fz_report_error(ctx);
             delete bitmap;
-            return nullptr;
+            return {};
         }
         return PixmapFromRenderedBitmap(bitmap);
     }
@@ -3724,7 +3724,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fz_catch(ctx) {
             fz_report_error(ctx);
             delete bitmap;
-            return nullptr;
+            return {};
         }
     } else {
         fz_try(ctx) {
@@ -3742,7 +3742,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fz_catch(ctx) {
             fz_report_error(ctx);
             delete bitmap;
-            return nullptr;
+            return {};
         }
     }
 
@@ -4009,7 +4009,7 @@ PageTextUtf8 EngineMupdf::ExtractPageTextUtf8(int pageNo) {
     PageTextUtf8 res;
     char* text = FzTextPageToUtf8(stext, &res.coords);
     fz_drop_stext_page(ctx, stext);
-    res.text = text;
+    res.text = Str(text);
     res.len = (int)str::Len(text);
     return res;
 }
@@ -4733,21 +4733,21 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
     if (kind == kindFileFb2z) {
         AutoDelete archive = OpenArchiveFromFile(path, /*eagerLoad=*/true, gArchiveProgressCb);
         if (!archive) {
-            return nullptr;
+            return {};
         }
         auto files = archive->GetFileInfos();
         if (files.size() != 1) {
-            return nullptr;
+            return {};
         }
         auto* fi = archive->GetFileDataById(0);
         if (!fi || !fi->data) {
-            return nullptr;
+            return {};
         }
         ByteSlice d{(u8*)fi->data, fi->fileSizeUncompressed};
         IStream* strm = CreateStreamFromData(d);
         ScopedComPtr<IStream> stream(strm);
         if (!stream) {
-            return nullptr;
+            return {};
         }
         EngineMupdf* engine = new EngineMupdf();
         if (displayDPI < 70) {
@@ -4756,7 +4756,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
         engine->displayDPI = displayDPI;
         if (!engine->Load(stream, "foo.fb2", pwdUI)) {
             SafeEngineRelease(&engine);
-            return nullptr;
+            return {};
         }
         engine->SetFilePath(path);
         return engine;
@@ -4772,7 +4772,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
     }
     const char* ext = GetExtForKind(kind);
     if (ext) {
-        str::ReplaceWithCopy(&engine->defaultExt, ext);
+        SetDefaultExt(engine->defaultExt, ext);
     }
     return engine;
 }

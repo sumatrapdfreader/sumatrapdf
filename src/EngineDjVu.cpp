@@ -61,29 +61,29 @@ static bool CouldBeURL(const char* link) {
 
 struct PageDestinationDjVu : IPageDestination {
     const char* link = nullptr;
-    char* value = nullptr;
+    Str value;
 
     PageDestinationDjVu(const char* l, const char* comment) {
         kind = kindDestinationDjVu;
         link = str::Dup(l);
         if (comment) {
-            value = str::Dup(comment);
+            value = Str(str::Dup(comment));
         }
     }
     ~PageDestinationDjVu() {
         str::Free(link);
-        str::Free(value);
+        str::Free(value.s);
     }
 
-    char* GetValue2() override {
+    Str GetValue2() override {
         if (value) {
             return value;
         }
         if (!CouldBeURL(link)) {
-            return nullptr;
+            return {};
         }
-        value = str::Dup(link);
-        url::DecodeInPlace(value);
+        value = Str(str::Dup(link));
+        url::DecodeInPlace(value.s);
         return value;
     }
 };
@@ -207,7 +207,7 @@ struct DjVuContext {
         ByteSlice d = GetDataFromStream(stream, nullptr);
         AutoFree dFree(d.Get());
         if (d.empty() || d.size() > ULONG_MAX) {
-            return nullptr;
+            return {};
         }
         auto res = ddjvu_document_create_by_data(ctx, d, (ULONG)d.size());
         return res;
@@ -320,7 +320,7 @@ class EngineDjVu : public EngineBase {
 
 EngineDjVu::EngineDjVu() {
     kind = kindEngineDjVu;
-    str::ReplaceWithCopy(&defaultExt, ".djvu");
+    SetDefaultExt(defaultExt, ".djvu");
     // DPI isn't constant for all pages and thus premultiplied
     fileDPI = 300.0f;
     GetDjVuContext();
@@ -1115,7 +1115,7 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
     }
     ReportIf(coords.size() != extracted.size());
     res.len = (int)extracted.size();
-    res.text = extracted.StealData();
+    res.text = Str(extracted.StealData());
     res.coords = coords.StealData();
     return res;
 }

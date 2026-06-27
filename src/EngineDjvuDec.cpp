@@ -51,29 +51,29 @@ static bool DjvuDecCouldBeURL(const char* link) {
 
 struct PageDestinationDjvuDec : IPageDestination {
     char* link = nullptr;
-    char* value = nullptr;
+    Str value;
 
     PageDestinationDjvuDec(const char* l, const char* comment) {
         kind = kindDestinationDjVu;
         link = str::Dup(l);
         if (comment) {
-            value = str::Dup(comment);
+            value = Str(str::Dup(comment));
         }
     }
     ~PageDestinationDjvuDec() override {
         str::Free(link);
-        str::Free(value);
+        str::Free(value.s);
     }
 
-    char* GetValue2() override {
+    Str GetValue2() override {
         if (value) {
             return value;
         }
         if (!DjvuDecCouldBeURL(link)) {
-            return nullptr;
+            return {};
         }
-        value = str::Dup(link);
-        url::DecodeInPlace(value);
+        value = Str(str::Dup(link));
+        url::DecodeInPlace(value.s);
         return value;
     }
 };
@@ -172,7 +172,7 @@ class EngineDjvuDec : public EngineBase {
 
 EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
-    str::ReplaceWithCopy(&defaultExt, ".djvu");
+    SetDefaultExt(defaultExt, ".djvu");
     fileDPI = 300.0f;
     InitializeCriticalSection(&cacheLock);
 }
@@ -627,7 +627,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
         }
         free(pixels);
         if (!rotated) {
-            return nullptr;
+            return {};
         }
     }
 
@@ -716,7 +716,7 @@ PageTextUtf8 EngineDjvuDec::ExtractPageTextUtf8(int pageNo) {
     ReportIf((size_t)sb.size() != coords.size());
     PageTextUtf8 res;
     res.len = (int)sb.size();
-    res.text = sb.StealData();
+    res.text = Str(sb.StealData());
     res.coords = coords.StealData();
     return res;
 }

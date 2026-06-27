@@ -53,7 +53,7 @@ struct FavTreeModel : TreeModel {
 
     TreeItem Root() override;
 
-    char* Text(TreeItem) override;
+    Str Text(TreeItem) override;
     TreeItem Parent(TreeItem) override;
     int ChildCount(TreeItem) override;
     TreeItem ChildAt(TreeItem, int index) override;
@@ -73,7 +73,7 @@ TreeItem FavTreeModel::Root() {
     return (TreeItem)root;
 }
 
-char* FavTreeModel::Text(TreeItem ti) {
+Str FavTreeModel::Text(TreeItem ti) {
     auto fti = (FavTreeItem*)ti;
     return fti->text;
 }

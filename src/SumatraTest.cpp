@@ -119,13 +119,13 @@ class TestPasswordUI : public PasswordUI {
   public:
     explicit TestPasswordUI(const char* password) : password(password) {}
 
-    char* GetPassword(const char*, u8*, u8[32], bool* saveKey) override {
+    Str GetPassword(Str, u8*, u8[32], bool* saveKey) override {
         *saveKey = false;
         if (triedPassword || !password) {
             return nullptr;
         }
         triedPassword = true;
-        return str::Dup(password);
+        return Str(str::Dup(password));
     }
 };
 

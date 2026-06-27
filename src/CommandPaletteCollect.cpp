@@ -285,7 +285,7 @@ void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) 
 
 static void CollectTocRec(StrVecCP& toc, TocItem* ti, int indent, int currPageNo, int& bestIdx, int& bestPageNo) {
     while (ti) {
-        const char* title = ti->title ? ti->title : "";
+        Str title = ti->title ? ti->title : Str("");
         ItemDataCP data;
         data.tocItem = ti;
         data.indent = indent;

@@ -268,8 +268,8 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
 
     if (fullDump) {
         PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
-        if (pageText.text != nullptr) {
-            TempStr text = EscapeTemp(pageText.text);
+        if (pageText.text) {
+            TempStr text = EscapeTemp(pageText.text.s);
             if (text) {
                 Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.s);
             }
@@ -392,8 +392,8 @@ bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f
         StrBuilder text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
             PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
-            if (pageText.text != nullptr) {
-                text.Append(pageText.text);
+            if (pageText.text) {
+                text.Append(pageText.text.s);
             }
             FreePageTextUtf8(&pageText);
         }
@@ -412,7 +412,7 @@ bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f
         Pixmap* bmp = engine->RenderPage(args);
         success &= bmp != nullptr;
         if (!bmp && !silent) {
-            ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FilePath());
+            ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FilePath().s);
         }
         if (!bmp || silent) {
             FreePixmap(bmp);
@@ -448,7 +448,7 @@ class PasswordHolder : public PasswordUI {
 
   public:
     explicit PasswordHolder(const char* password) : password(password) {}
-    char* GetPassword(const char*, u8*, __unused u8 decryptionKeyOut[32], bool*) override { return str::Dup(password); }
+    Str GetPassword(Str, u8*, __unused u8 decryptionKeyOut[32], bool*) override { return Str(str::Dup(password)); }
 };
 
 void EngineDump(const Flags& flags) {

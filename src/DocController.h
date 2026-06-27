@@ -59,8 +59,8 @@ struct DocController {
     virtual ~DocController() = default;
 
     // meta data
-    virtual const char* GetFilePath() const = 0;
-    virtual const char* GetDefaultFileExt() const = 0;
+    virtual Str GetFilePath() const = 0;
+    virtual Str GetDefaultFileExt() const = 0;
     virtual int PageCount() const = 0;
     virtual TempStr GetPropertyTemp(Str name) = 0;
 

@@ -84,7 +84,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
 
     // TODO: this causes a duplicate. Not sure what changed
     if (false && rcLine.right + 2 < rcLabel.right) {
-        char* currInfoTip = tm->Text(ti);
+        Str currInfoTip = tm->Text(ti);
         infotip.Append(currInfoTip);
         infotip.Append("\r\n");
     }

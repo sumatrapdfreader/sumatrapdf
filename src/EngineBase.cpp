@@ -44,7 +44,7 @@ bool IsExternalUrl(const WCHAR* url) {
     return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
 }
 
-bool IsExternalUrl(const char* url) {
+bool IsExternalUrl(Str url) {
     return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
 }
 
@@ -65,30 +65,30 @@ static void EnsurePageText(PageText* pageText) {
 }
 
 void FreePageTextUtf8(PageTextUtf8* pageText) {
-    str::Free(pageText->text);
+    str::Free(pageText->text.s);
     free((void*)pageText->coords);
-    pageText->text = nullptr;
+    pageText->text = {};
     pageText->coords = nullptr;
     pageText->len = 0;
 }
 
 PageDestination::~PageDestination() {
-    free(value);
-    free(name);
+    str::Free(value.s);
+    str::Free(name.s);
 }
 
 // string value associated with the destination (e.g. a path or a URL)
-char* PageDestination::GetValue2() {
+Str PageDestination::GetValue2() {
     return value;
 }
 
 // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
 // (mainly applicable for links of type "LaunchFile" to PDF documents)
-char* PageDestination::GetName2() {
+Str PageDestination::GetName2() {
     return name;
 }
 
-IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, const char* value) {
+IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom, Str value) {
     if (value) {
         return new PageDestinationURL(value);
     }
@@ -113,7 +113,7 @@ Kind kindTocDjvu = "tocDjvu";
 // bookmark/TOC label): drop soft hyphens and turn control chars / line
 // separators into spaces, so they don't render as a stray hyphen or as
 // boxes (#2647).
-TempStr CleanupTreeViewControlStringTemp(const char* s) {
+TempStr CleanupTreeViewControlStringTemp(Str s) {
     if (!s) {
         return {};
     }
@@ -133,8 +133,8 @@ TempStr CleanupTreeViewControlStringTemp(const char* s) {
     return ToUtf8Temp(ws);
 }
 
-TocItem::TocItem(TocItem* parent, const char* title, int pageNo) {
-    this->title = str::Dup(CleanupTreeViewControlStringTemp(title));
+TocItem::TocItem(TocItem* parent, Str title, int pageNo) {
+    this->title = Str(str::Dup(CleanupTreeViewControlStringTemp(title)));
     this->pageNo = pageNo;
     this->parent = parent;
 }
@@ -150,7 +150,7 @@ TocItem::~TocItem() {
         delete next;
         next = tmp;
     }
-    str::Free(title);
+    str::Free(title.s);
 }
 
 void TocItem::AddSibling(TocItem* sibling) {
@@ -257,7 +257,7 @@ TreeItem TocTree::Root() {
     return (TreeItem)root;
 }
 
-char* TocTree::Text(TreeItem ti) {
+Str TocTree::Text(TreeItem ti) {
     auto tocItem = (TocItem*)ti;
     return tocItem->title;
 }
@@ -376,7 +376,7 @@ EngineBase::~EngineBase() {
     }
     free(pagesTextState);
     DeleteCriticalSection(&textCacheLock);
-    str::Free(defaultExt);
+    str::Free(defaultExt.s);
     ArenaDelete(arena);
 }
 
@@ -587,8 +587,8 @@ bool EngineBase::IsPasswordProtected() const {
     return isPasswordProtected;
 }
 
-const char* EngineBase::FilePath() const {
-    return fileNameBase.s;
+Str EngineBase::FilePath() const {
+    return fileNameBase;
 }
 
 RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
@@ -596,8 +596,8 @@ RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
     return nullptr;
 }
 
-void EngineBase::SetFilePath(const char* s) {
-    fileNameBase = s ? StrDup(arena, Str((char*)s)) : Str();
+void EngineBase::SetFilePath(Str s) {
+    fileNameBase = s ? StrDup(arena, s) : Str();
 }
 
 PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {

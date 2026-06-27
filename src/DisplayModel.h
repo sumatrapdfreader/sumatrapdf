@@ -74,8 +74,8 @@ struct DisplayModel : DocController {
     ~DisplayModel() override;
 
     // meta data
-    const char* GetFilePath() const override;
-    const char* GetDefaultFileExt() const override;
+    Str GetFilePath() const override;
+    Str GetDefaultFileExt() const override;
     int PageCount() const override;
     TempStr GetPropertyTemp(Str name) override;
 
