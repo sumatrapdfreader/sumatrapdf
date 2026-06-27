@@ -3,13 +3,13 @@
 
 // note: include BaseUtil.h instead of including directly
 
-typedef bool (*StrLessFunc)(const char* s1, const char* s2);
+typedef bool (*StrLessFunc)(Str s1, Str s2);
 
-bool StrLess(const char* s1, const char* s2);
-bool StrLessNoCase(const char* s1, const char* s2);
-bool StrLessNatural(const char* s1, const char* s2);
+bool StrLess(Str s1, Str s2);
+bool StrLessNoCase(Str s1, Str s2);
+bool StrLessNatural(Str s1, Str s2);
 
-ByteSlice ToByteSlice(const char* s);
+ByteSlice ToByteSlice(Str s);
 
 struct StrVecPage;
 
@@ -35,18 +35,16 @@ struct StrVec {
     void* AtDataRaw(int i) const;
     char* operator[](int) const;
 
-    char* Append(const char*, int sLen = -1);
-    char* SetAt(int idx, const char*, int sLen = -1);
-    char* InsertAt(int, const char*, int sLen = -1);
+    char* Append(Str s);
+    char* SetAt(int idx, Str s);
+    char* InsertAt(int, Str s);
     char* RemoveAt(int);
     char* RemoveAtFast(int);
-    bool Remove(const char*);
+    bool Remove(Str s);
 
-    int Find(const Str&, int startAt = 0) const;
-    int Find(const char* s, int startAt = 0) const;
-    int FindI(const Str&, int startAt = 0) const;
-    int FindI(const char* s, int startAt = 0) const;
-    bool Contains(const char*, int sLen = -1) const;
+    int Find(Str s, int startAt = 0) const;
+    int FindI(Str s, int startAt = 0) const;
+    bool Contains(Str s) const;
 
     struct iterator {
         const StrVec* v;
@@ -78,17 +76,11 @@ struct StrVecWithData : StrVec {
         return (T*)(res);
     }
 
-    int Append(const Str& s, const T& data) {
-        StrVec::Append(s.s, s.len);
+    int Append(Str s, const T& data) {
+        StrVec::Append(s);
         int idx = Size() - 1;
         T* d = AtData(idx);
         *d = data;
-        return idx;
-    }
-
-    int Append(const char* s, const T& data) {
-        Str sp((char*)s);
-        int idx = this->Append(sp, data);
         return idx;
     }
 
@@ -100,16 +92,16 @@ struct StrVecWithData : StrVec {
     }
 };
 
-int AppendIfNotExists(StrVec* v, const char* s, int sLen = -1);
+int AppendIfNotExists(StrVec* v, Str s);
 
 void Sort(StrVec* v, StrLessFunc lessFn = StrLess);
 void SortIndex(StrVec* v, StrLessFunc lessFn = StrLess);
 void SortNoCase(StrVec*);
 void SortNatural(StrVec*);
 
-int Split(StrVec* v, const char* s, const char* separator, bool collapse = false, int max = -1);
-char* Join(StrVec* v, const char* sep = nullptr);
-TempStr JoinTemp(StrVec* v, const char* sep);
+int Split(StrVec* v, Str s, Str separator, bool collapse = false, int max = -1);
+char* Join(StrVec* v, Str sep = {});
+TempStr JoinTemp(StrVec* v, Str sep);
 
 StrVecPage* StrVecPageNext(StrVecPage*);
 int StrVecPageSize(StrVecPage*);

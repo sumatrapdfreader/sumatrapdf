@@ -3,15 +3,14 @@
 
 #include "BaseUtil.h"
 
-ByteSlice ToByteSlice(const char* s) {
-    size_t n = str::Len(s);
-    return {(u8*)s, n};
+ByteSlice ToByteSlice(Str s) {
+    return {(u8*)s.s, (size_t)s.len};
 }
 
 // represents null string
 constexpr u32 kNullOffset = (u32)-2;
 
-bool StrLess(const char* s1, const char* s2) {
+bool StrLess(Str s1, Str s2) {
     if (str::IsEmpty(s1)) {
         if (str::IsEmpty(s2)) {
             return false;
@@ -21,11 +20,11 @@ bool StrLess(const char* s1, const char* s2) {
     if (str::IsEmpty(s2)) {
         return false;
     }
-    int n = strcmp(s1, s2);
+    int n = strcmp(s1.s, s2.s);
     return n < 0;
 }
 
-bool StrLessNoCase(const char* s1, const char* s2) {
+bool StrLessNoCase(Str s1, Str s2) {
     if (str::IsEmpty(s1)) {
         // null / empty string is smallest
         if (str::IsEmpty(s2)) {
@@ -36,11 +35,11 @@ bool StrLessNoCase(const char* s1, const char* s2) {
     if (str::IsEmpty(s2)) {
         return false;
     }
-    int n = _stricmp(s1, s2);
+    int n = _stricmp(s1.s, s2.s);
     return n < 0;
 }
 
-bool StrLessNatural(const char* s1, const char* s2) {
+bool StrLessNatural(Str s1, Str s2) {
     int n = str::CmpNatural(s1, s2);
     return n < 0; // TODO: verify it's < and not >
 }
@@ -431,13 +430,12 @@ static StrVecPage* AllocatePage(StrVec* v, StrVecPage* last, int nBytesNeeded) {
     return page;
 }
 
-char* StrVec::Append(const char* s, int sLen) {
-    if (sLen < 0) {
-        sLen = str::Leni(s);
-    }
+char* StrVec::Append(Str s) {
+    int sLen = s.len;
+    const char* str = s.s;
     int cbIndex = cbIndexSize(dataSize);
     int cbNeeded = cbIndex;
-    if (s) {
+    if (str) {
         cbNeeded += (sLen + 1); // +1 for zero termination
     }
     auto last = first;
@@ -447,22 +445,19 @@ char* StrVec::Append(const char* s, int sLen) {
     if (!last || last->BytesLeft() < cbNeeded) {
         last = AllocatePage(this, last, cbNeeded);
     }
-    auto res = last->Append(s, sLen);
+    auto res = last->Append(str, sLen);
     size++;
     InvalidateSortIndexes(this);
     return res;
 }
 
 // returns index of inserted string, -1 if not inserted
-int AppendIfNotExists(StrVec* v, const char* s, int sLen) {
-    if (sLen < 0) {
-        sLen = str::Leni(s);
-    }
-    if (v->Contains(s, sLen)) {
+int AppendIfNotExists(StrVec* v, Str s) {
+    if (v->Contains(s)) {
         return -1;
     }
     int idx = v->Size();
-    v->Append(s, sLen);
+    v->Append(s);
     return idx;
 }
 
@@ -483,14 +478,13 @@ static StrVecPage* PageForIdx(const StrVec* v, int idx, int* idxInPageOut) {
 // returns a string
 // note: this might invalidate previously returned strings because
 // it might re-allocate memory used for those strings
-char* StrVec::SetAt(int idx, const char* s, int sLen) {
-    if (sLen < 0) {
-        sLen = str::Leni(s);
-    }
+char* StrVec::SetAt(int idx, Str s) {
+    int sLen = s.len;
+    const char* str = s.s;
     {
         int idxInPage;
         auto page = PageForIdx(this, idx, &idxInPage);
-        char* res = page->SetAt(idxInPage, s, sLen);
+        char* res = page->SetAt(idxInPage, str, sLen);
         if (res != kNoSpace) {
             InvalidateSortIndexes(this);
             return res;
@@ -500,7 +494,7 @@ char* StrVec::SetAt(int idx, const char* s, int sLen) {
     // extra space to make many SetAt() calls less expensive
     int extraSpace = RoundUp(sLen + 1, 2048);
     CompactPages(this, extraSpace);
-    char* res = first->SetAt(idx, s, sLen);
+    char* res = first->SetAt(idx, str, sLen);
     ReportIf(res == kNoSpace);
     InvalidateSortIndexes(this);
     return res;
@@ -509,18 +503,17 @@ char* StrVec::SetAt(int idx, const char* s, int sLen) {
 // returns a string
 // note: this might invalidate previously returned strings because
 // it might re-allocate memory used for those strings
-char* StrVec::InsertAt(int idx, const char* s, int sLen) {
+char* StrVec::InsertAt(int idx, Str s) {
+    int sLen = s.len;
+    const char* str = s.s;
     if (idx == size) {
-        return Append(s, sLen);
+        return Append(s);
     }
 
     {
         int idxInPage;
         auto page = PageForIdx(this, idx, &idxInPage);
-        if (sLen < 0) {
-            sLen = str::Leni(s);
-        }
-        char* res = page->InsertAt(idxInPage, s, sLen);
+        char* res = page->InsertAt(idxInPage, str, sLen);
         if (res != kNoSpace) {
             size++;
             InvalidateSortIndexes(this);
@@ -532,7 +525,7 @@ char* StrVec::InsertAt(int idx, const char* s, int sLen) {
     // extra space to make many InsertAt() calls less expensive
     int extraSpace = RoundUp(sLen + 1, 2048);
     CompactPages(this, extraSpace);
-    char* res = first->InsertAt(idx, s, sLen);
+    char* res = first->InsertAt(idx, str, sLen);
     ReportIf(res == kNoSpace);
     size++;
     InvalidateSortIndexes(this);
@@ -562,7 +555,7 @@ char* StrVec::RemoveAtFast(int idx) {
 }
 
 // return true if did remove
-bool StrVec::Remove(const char* s) {
+bool StrVec::Remove(Str s) {
     int idx = Find(s);
     if (idx >= 0) {
         RemoveAt(idx);
@@ -604,15 +597,7 @@ char* StrVec::operator[](int idx) const {
     return At(idx);
 }
 
-int StrVec::Find(const char* s, int startAt) const {
-    return Find(Str((char*)s), startAt);
-}
-
-int StrVec::FindI(const char* s, int startAt) const {
-    return FindI(Str((char*)s), startAt);
-}
-
-int StrVec::Find(const Str& s, int startAt) const {
+int StrVec::Find(Str s, int startAt) const {
     int sLen = s.len;
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
@@ -624,7 +609,7 @@ int StrVec::Find(const Str& s, int startAt) const {
     return -1;
 }
 
-int StrVec::FindI(const Str& s, int startAt) const {
+int StrVec::FindI(Str s, int startAt) const {
     int sLen = s.len;
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
@@ -636,9 +621,8 @@ int StrVec::FindI(const Str& s, int startAt) const {
     return -1;
 }
 
-bool StrVec::Contains(const char* s, int sLen) const {
-    Str span((char*)s, sLen < 0 ? str::Leni(s) : sLen);
-    int idx = Find(span);
+bool StrVec::Contains(Str s) const {
+    int idx = Find(s);
     return idx != -1;
 }
 
@@ -735,8 +719,8 @@ static void SortNoData(StrVec* v, StrLessFunc lessFn) {
     std::sort(b, e, [pageStart, lessFn](u64 offLen1, u64 offLen2) -> bool {
         u32 off1 = (u32)(offLen1 & 0xffffffff);
         u32 off2 = (u32)(offLen2 & 0xffffffff);
-        const char* s1 = (off1 == kNullOffset) ? nullptr : pageStart + off1;
-        const char* s2 = (off2 == kNullOffset) ? nullptr : pageStart + off2;
+        Str s1 = (off1 == kNullOffset) ? Str{} : Str(pageStart + off1);
+        Str s2 = (off2 == kNullOffset) ? Str{} : Str(pageStart + off2);
         bool ret = lessFn(s1, s2);
         return ret;
     });
@@ -761,8 +745,8 @@ void SortIndex(StrVec* v, StrLessFunc lessFn) {
     int* b = indexes;
     int* e = indexes + n;
     std::sort(b, e, [v, lessFn](int idx1, int idx2) -> bool {
-        const char* s1 = v->At(idx1);
-        const char* s2 = v->At(idx2);
+        Str s1 = v->AtStr(idx1);
+        Str s2 = v->AtStr(idx2);
         bool ret = lessFn(s1, s2);
         return ret;
     });
@@ -802,47 +786,50 @@ static bool reachedMax(int nAdded, int max) {
     (optionally collapsing several consecutive separators into one);
     e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
     (resp. "a", "b", "c" if separators are collapsed) */
-int Split(StrVec* v, const char* s, const char* separator, bool collapse, int max) {
-    const char* next;
+int Split(StrVec* v, Str s, Str separator, bool collapse, int max) {
+    const char* curr = s.s;
+    const char* end = s.s ? s.s + s.len : nullptr;
     int nAdded = 0;
     while (true) {
         if (reachedMax(nAdded, max)) {
             return nAdded;
         }
-        next = str::Find(s, separator);
+        Str rest = curr ? Str((char*)curr, (int)(end - curr)) : Str{};
+        Str next = str::Find(rest, separator);
         if (!next) {
             break;
         }
-        if (!collapse || next > s) {
+        if (!collapse || next.s > curr) {
             nAdded++;
             if (reachedMax(nAdded, max)) {
                 // this is the last one
-                v->Append(s);
+                v->Append(rest);
                 return nAdded;
             }
-            int sLen = (int)(next - s);
-            v->Append(s, sLen);
+            int sLen = (int)(next.s - curr);
+            v->Append(Str((char*)curr, sLen));
         }
-        s = next + str::Len(separator);
+        curr = next.s + separator.len;
     }
     bool shouldAddRest = true;
-    if (!*s) {
+    if (!curr || curr == end) {
         // if we're collapsing, we're not adding empty string
         // at the end, unless we haven't added any strings yet
         // i.e. to match other languages, "".split(" ") => [""]
         shouldAddRest = !collapse || v->Size() == 0;
     }
     if (shouldAddRest) {
-        v->Append(s);
+        Str rest = curr ? Str((char*)curr, (int)(end - curr)) : Str{};
+        v->Append(rest);
         nAdded++;
     }
     return nAdded;
 }
 
-static int CalcCapForJoin(const StrVec* v, const char* joint) {
+static int CalcCapForJoin(const StrVec* v, Str joint) {
     // it's ok to over-estimate
     int cap = 0;
-    int jointLen = str::Leni(joint);
+    int jointLen = joint.len;
     for (auto it = v->begin(); it != v->end(); it++) {
         Str s = it.AsStr();
         cap += s.len + 1 + jointLen;
@@ -850,8 +837,8 @@ static int CalcCapForJoin(const StrVec* v, const char* joint) {
     return cap + 32; // +32 arbitrary buffer
 }
 
-static char* JoinInner(const StrVec* v, const char* joint, StrBuilder& res) {
-    int jointLen = str::Leni(joint);
+static char* JoinInner(const StrVec* v, Str joint, StrBuilder& res) {
+    int jointLen = joint.len;
     // TODO: possibly not handling null values in the middle. need to add more tests and fix
     int firstForJoint = 0;
     int i = 0;
@@ -863,7 +850,7 @@ static char* JoinInner(const StrVec* v, const char* joint, StrBuilder& res) {
             continue;
         }
         if (i > firstForJoint && jointLen > 0) {
-            res.Append(joint, jointLen);
+            res.Append(joint.s, jointLen);
         }
         res.Append(s.s, s.len);
         i++;
@@ -871,13 +858,13 @@ static char* JoinInner(const StrVec* v, const char* joint, StrBuilder& res) {
     return res.StealData();
 }
 
-char* Join(StrVec* v, const char* joint) {
+char* Join(StrVec* v, Str joint) {
     int capHint = CalcCapForJoin(v, joint);
     StrBuilder tmp(capHint);
     return JoinInner(v, joint, tmp);
 }
 
-TempStr JoinTemp(StrVec* v, const char* joint) {
+TempStr JoinTemp(StrVec* v, Str joint) {
     int capHint = CalcCapForJoin(v, joint);
     StrBuilder tmp(capHint, GetTempArena());
     return JoinInner(v, joint, tmp);
