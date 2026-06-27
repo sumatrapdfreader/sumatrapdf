@@ -768,3 +768,43 @@ char* TestI18nErrorStringResult(int* exitCodeOut) {
     }
     return out.StealData();
 }
+
+static void AppendTocItems(StrBuilder& out, TocItem* item) {
+    for (; item; item = item->next) {
+        if (item->title) {
+            out.AppendFmt("%s|page=%d\n", item->title, item->pageNo);
+        }
+        AppendTocItems(out, item->child);
+    }
+}
+
+// Headless test for document TOC (e.g. ComicInfo.xml bookmarks in CBZ). Returns
+// one line per top-level TOC entry: "title|page=N". Used by tests/issue-1201.ts.
+char* TestGetTocResult(const char* path, int* exitCodeOut) {
+    ScopedGdiPlus gdiPlus;
+    EnsureTestGlobalPrefs();
+
+    StrBuilder out;
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.AppendFmt("ERROR engine-create-failed path=%s\n", path);
+    } else {
+        TocTree* toc = engine->GetToc();
+        if (!toc || !toc->root || !toc->root->child) {
+            if (exitCodeOut) {
+                *exitCodeOut = 1;
+            }
+            out.Append("ERROR no-toc\n");
+        } else {
+            if (exitCodeOut) {
+                *exitCodeOut = 0;
+            }
+            AppendTocItems(out, toc->root->child);
+        }
+        SafeEngineRelease(&engine);
+    }
+    return out.StealData();
+}

@@ -1911,11 +1911,24 @@ struct ComicInfoParser : json::ValueVisitor {
     // temporary state needed for extracting metadata
     AutoFreeStr propAuthorTmp;
 
+    // ComicInfo.xml <Page Image="N" Bookmark="..."/> entries (Image is 0-based)
+    Vec<int> bookmarkImageIdx;
+    StrVec bookmarkTitles;
+
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::Type type) override;
 
     void Parse(const ByteSlice& xmlData);
+    void AddBookmark(int imageIdx, const char* title);
 };
+
+void ComicInfoParser::AddBookmark(int imageIdx, const char* title) {
+    if (!title || !title[0] || imageIdx < 0) {
+        return;
+    }
+    bookmarkImageIdx.Append(imageIdx);
+    bookmarkTitles.Append(str::Dup(title));
+}
 
 static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
@@ -1959,6 +1972,12 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
                 if (v) {
                     cip->Visit("/ComicBookInfo/1.0/credits[1]/person", v, json::Type::String);
                     cip->Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type::Bool);
+                }
+            } else if (GumboTagNameIs(node, "Page")) {
+                const GumboAttribute* imageAttr = gumbo_get_attribute(&node->v.element.attributes, "Image");
+                const GumboAttribute* bookmarkAttr = gumbo_get_attribute(&node->v.element.attributes, "Bookmark");
+                if (imageAttr && bookmarkAttr) {
+                    cip->AddBookmark(atoi(imageAttr->value), bookmarkAttr->value);
                 }
             }
             children = &node->v.element.children;
@@ -2248,24 +2267,44 @@ bool EngineCbx::FinishLoading() {
     files = std::move(pageFiles);
     pageCount = nFiles;
 
-    TocItem* root = nullptr;
-    TocItem* curr = nullptr;
-    for (int i = 0; i < pageCount; i++) {
-        const char* fname = files[i]->name;
-        TempStr baseName = path::GetBaseNameTemp(fname);
-        TocItem* ti = new TocItem(nullptr, baseName, i + 1);
-        if (root == nullptr) {
-            root = ti;
-        } else {
-            if (curr) { // just to silence cppcheck
-                curr->next = ti;
-            }
+    TocItem* tocBuildRoot = nullptr;
+    TocItem* tocBuildCurr = nullptr;
+    auto addTocItem = [&](const char* title, int pageNo) {
+        TocItem* ti = new TocItem(nullptr, title, pageNo);
+        if (!tocBuildRoot) {
+            tocBuildRoot = ti;
+        } else if (tocBuildCurr) {
+            tocBuildCurr->next = ti;
         }
-        curr = ti;
+        tocBuildCurr = ti;
+    };
+
+    int nBookmarks = cip.bookmarkImageIdx.Size();
+    if (nBookmarks > 0) {
+        Vec<int> order;
+        for (int i = 0; i < nBookmarks; i++) {
+            order.Append(i);
+        }
+        std::sort(order.begin(), order.end(),
+                  [&](int a, int b) { return cip.bookmarkImageIdx[a] < cip.bookmarkImageIdx[b]; });
+        for (int oi = 0; oi < nBookmarks; oi++) {
+            int bi = order[oi];
+            int pageNo = cip.bookmarkImageIdx[bi] + 1;
+            if (pageNo < 1 || pageNo > pageCount) {
+                continue;
+            }
+            addTocItem(cip.bookmarkTitles[bi], pageNo);
+        }
+    } else {
+        for (int i = 0; i < pageCount; i++) {
+            const char* fname = files[i]->name;
+            TempStr baseName = path::GetBaseNameTemp(fname);
+            addTocItem(baseName, i + 1);
+        }
     }
-    if (root) {
+    if (tocBuildRoot) {
         auto realRoot = new TocItem();
-        realRoot->child = root;
+        realRoot->child = tocBuildRoot;
         tocTree = new TocTree(realRoot);
     }
 

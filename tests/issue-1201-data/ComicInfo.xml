@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ComicInfo>
+  <Title>Issue 1201 Test Comic</Title>
+  <Pages>
+    <Page Image="0" Type="FrontCover" Bookmark="Cover" />
+    <Page Image="2" Type="Story" Bookmark="Chapter 1" />
+    <Page Image="4" Type="Story" Bookmark="Chapter 2" />
+  </Pages>
+</ComicInfo>

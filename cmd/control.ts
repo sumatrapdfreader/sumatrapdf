@@ -21,6 +21,7 @@ export enum ControlCommand {
   TestScrollToLink = 26,
   TestI18nErrorString = 27,
   TestPageInfoOverlay = 28,
+  TestGetToc = 29,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
