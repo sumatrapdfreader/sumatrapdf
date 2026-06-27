@@ -3,15 +3,15 @@
 
 extern GlobalPrefs* gGlobalPrefs;
 
-FileState* NewFileState(const char*);
+FileState* NewFileState(Str);
 void DeleteFileState(FileState*);
 void DeleteFileStates(Vec<FileState*>*);
 
-Favorite* NewFavorite(int pageNo, const char* name, const char* pageLabel);
+Favorite* NewFavorite(int pageNo, Str name, Str pageLabel);
 void DeleteFavorite(Favorite* fav);
 
-GlobalPrefs* NewGlobalPrefs(const char*);
-ByteSlice SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData);
+GlobalPrefs* NewGlobalPrefs(Str);
+ByteSlice SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData);
 void DeleteGlobalPrefs(GlobalPrefs*);
 
 SessionData* NewSessionData();
@@ -19,12 +19,12 @@ TabState* NewTabState(FileState*);
 void DeleteTabState(TabState*);
 void FreeSessionData(SessionData*);
 void FreeSessionDataVec(Vec<SessionData*>*);
-ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed);
-COLORREF GetParsedCOLORREF(const char* s, ParsedColor& parsed, COLORREF def);
+ParsedColor* GetParsedColor(Str s, ParsedColor& parsed);
+COLORREF GetParsedCOLORREF(Str s, ParsedColor& parsed, COLORREF def);
 
-void SetFileStatePath(FileState* fs, const char* path);
+void SetFileStatePath(FileState* fs, Str path);
 
-Themes* ParseThemes(const char*);
+Themes* ParseThemes(Str);
 void FreeParsedThemes(Themes*);
 
 #define GetPrefsColor(name) GetParsedColor(name, name##Parsed)

@@ -10,6 +10,6 @@ bool IsValidZoom(float zoomLevel);
 const char* DisplayModeToString(DisplayMode mode);
 DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal);
 float ZoomFromString(const char* s, float defVal);
-void ZoomToString(char** dst, float zoom, FileState* fileState);
+void ZoomToString(Str* dst, float zoom, FileState* fileState);
 bool MaybeGetNextZoomByIncrement(float* currZoomInOut, float towardsLevel);
 float* GetDefaultZoomLevels(int* nZoomLevelsOut);

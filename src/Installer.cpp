@@ -608,7 +608,7 @@ static void ForAllUsersStateChanged() {
     SetInstallButtonElevationState();
     cli->allUsers = forAllUsers;
     auto dir = GetDefaultInstallationDirTemp(cli->allUsers, true);
-    str::ReplacePtr(&cli->installDir, str::Dup(dir));
+    str::ReplaceWithCopy(&cli->installDir, dir);
     gWnd->editInstallationDir->SetText(cli->installDir);
     logf("ForAllUsersStateChanged: cli->allUsers: %d, cli->installDir: '%s', forAllUsers: %d\n", (int)cli->allUsers,
          cli->installDir, (int)forAllUsers);

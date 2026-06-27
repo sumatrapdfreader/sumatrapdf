@@ -45,12 +45,12 @@ struct SutStruct {
     char* color;
     float floatingPoint;
     int integer;
-    char* string;
-    char* nullString;
-    char* escapedString;
-    char* utf8String;
-    char* nullUtf8String;
-    char* escapedUtf8String;
+    Str string;
+    Str nullString;
+    Str escapedString;
+    Str utf8String;
+    Str nullUtf8String;
+    Str escapedUtf8String;
     Vec<int>* intArray;
     Vec<char*>* strArray;
     Vec<char*>* emptyStrArray;
@@ -157,8 +157,8 @@ Key = Value";
         data->internal++;
     }
     utassert(str::Eq(data->color, "#abcdef"));
-    utassert(str::Eq(data->escapedString, "\t\r\n$ "));
-    utassert(str::Eq(data->escapedUtf8String, "\r\n[]\t"));
+    utassert(str::Eq(data->escapedString.s, "\t\r\n$ "));
+    utassert(str::Eq(data->escapedUtf8String.s, "\r\n[]\t"));
     utassert(2 == data->intArray->size() && 3 == data->intArray->at(0));
     utassert(3 == data->strArray->size() && 0 == data->emptyStrArray->size());
     utassert(str::Eq(data->strArray->at(0), "with space") && str::Eq(data->strArray->at(1), "plain") &&
@@ -184,8 +184,8 @@ Key = Value";
     }
     utassert(data->boolean && str::Eq("0xffcc9933", data->color));
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
-    utassert(str::Eq(data->string, "String") && !data->nullString && str::Eq(data->escapedString, "$\nstring "));
-    utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String &&
+    utassert(str::Eq(data->string, "String") && !data->nullString.s && str::Eq(data->escapedString, "$\nstring "));
+    utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String.s &&
              str::Eq(data->escapedUtf8String, "$\nstring "));
     utassert(data->intArray);
     utassert(3 == data->intArray->size() && 1 == data->intArray->at(0));

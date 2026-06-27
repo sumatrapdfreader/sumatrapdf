@@ -573,6 +573,21 @@ void ReplaceWithCopy(char** s, const char* snew) {
     }
 }
 
+void ReplaceWithCopy(Str* s, const char* snew) {
+    Str dup = str::Dup(snew);
+    if (s->s != dup.s) {
+        str::Free(s->s);
+        *s = dup;
+    }
+}
+
+void ReplaceWithCopy(Str* s, Str snew) {
+    if (s->s != snew.s) {
+        str::Free(s->s);
+        *s = snew;
+    }
+}
+
 Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
     size_t s1Len = str::Len(s1);
     size_t s2Len = str::Len(s2);

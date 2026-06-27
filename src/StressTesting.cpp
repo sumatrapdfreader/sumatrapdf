@@ -973,7 +973,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
 
         PositionStressWindows(windows, n);
 
-        printf("Scanning for files in directory %s\n", i->stressTestPath);
+        printf("Scanning for files in directory %s\n", i->stressTestPath.s);
         fflush(stdout);
 
         auto filesProvider =

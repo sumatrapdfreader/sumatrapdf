@@ -166,7 +166,7 @@ static void SaveTabGroup(TabGroupsDialog* d) {
             continue;
         }
         auto* tf = AllocStruct<TabFile>();
-        tf->path = str::Dup(tab->filePath);
+        str::ReplaceWithCopy(&tf->path, tab->filePath);
         group->tabFiles->Append(tf);
     }
 
@@ -207,7 +207,7 @@ static void OpenTabGroup(TabGroupsDialog* d) {
     }
     bool first = true;
     for (TabFile* tf : *group->tabFiles) {
-        if (!tf->path || !*tf->path) {
+        if (!tf->path.s) {
             continue;
         }
         LoadArgs args(tf->path, targetWin);
@@ -226,10 +226,10 @@ static void FreeTabGroup(TabGroup* group) {
     if (!group) {
         return;
     }
-    str::Free(group->name);
+    str::Free(group->name.s);
     if (group->tabFiles) {
         for (auto* tf : *group->tabFiles) {
-            str::Free(tf->path);
+            str::Free(tf->path.s);
             free(tf);
         }
         delete group->tabFiles;

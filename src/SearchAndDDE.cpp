@@ -1916,7 +1916,7 @@ static const char* HandleCmdCommand(HWND hwnd, const char* cmd, bool* ack) {
     // if there are arguments after the command name, create a custom command with those args
     int idToSend = cmdId;
     if (spacePos) {
-        CustomCommand* customCmd = CreateCommandFromDefinition(cmdContent);
+        CustomCommand* customCmd = CreateCommandFromDefinition(Str(cmdContent));
         if (customCmd) {
             idToSend = customCmd->id;
         }

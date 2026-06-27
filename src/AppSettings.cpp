@@ -120,7 +120,7 @@ static void SetCommandNameAndShortcut(CustomCommand* cmd, const char* name, cons
     if (!cmd) {
         return;
     }
-    cmd->name = str::IsEmptyOrWhiteSpace(name) ? nullptr : str::Dup(name);
+    cmd->name = str::IsEmptyOrWhiteSpace(name) ? Str{} : str::Dup(name);
     if (str::IsEmptyOrWhiteSpace(key)) {
         return;
     }
@@ -239,7 +239,7 @@ bool LoadSettings() {
     {
         ByteSlice prefsData = file::ReadFile(settingsPath);
 
-        gGlobalPrefs = NewGlobalPrefs(prefsData);
+        gGlobalPrefs = NewGlobalPrefs(Str((char*)prefsData.data(), (int)prefsData.size()));
         ReportIf(!gGlobalPrefs);
         gprefs = gGlobalPrefs;
         prefsData.Free();
@@ -391,10 +391,10 @@ bool LoadSettings() {
 
 static TabState* CloneTabState(const TabState* src) {
     TabState* dst = (TabState*)AllocStruct<TabState>();
-    dst->filePath = str::Dup(src->filePath);
-    dst->displayMode = str::Dup(src->displayMode);
+    str::ReplaceWithCopy(&dst->filePath, src->filePath);
+    str::ReplaceWithCopy(&dst->displayMode, src->displayMode);
     dst->pageNo = src->pageNo;
-    dst->zoom = str::Dup(src->zoom);
+    str::ReplaceWithCopy(&dst->zoom, src->zoom);
     dst->rotation = src->rotation;
     dst->scrollPos = src->scrollPos;
     dst->showToc = src->showToc;
@@ -596,7 +596,7 @@ bool SaveSettings() {
         return false;
     }
     ByteSlice prevPrefs = file::ReadFile(Str(path));
-    const char* prevPrefsData = (char*)prevPrefs.data();
+    Str prevPrefsData((char*)prevPrefs.data(), (int)prevPrefs.size());
     ByteSlice prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {
         str::Free(prevPrefs.data());

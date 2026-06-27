@@ -12,7 +12,7 @@
 
 GlobalPrefs* gGlobalPrefs = nullptr;
 
-FileState* NewFileState(const char* filePath) {
+FileState* NewFileState(Str filePath) {
     FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
     SetFileStatePath(fs, filePath);
     return fs;
@@ -30,11 +30,11 @@ void DeleteFileStates(Vec<FileState*>* a) {
     delete a;
 }
 
-Favorite* NewFavorite(int pageNo, const char* name, const char* pageLabel) {
+Favorite* NewFavorite(int pageNo, Str name, Str pageLabel) {
     Favorite* fav = (Favorite*)DeserializeStruct(&gFavoriteInfo, nullptr);
     fav->pageNo = pageNo;
-    fav->name = str::Dup(name);
-    fav->pageLabel = str::Dup(pageLabel);
+    str::ReplaceWithCopy(&fav->name, name);
+    str::ReplaceWithCopy(&fav->pageLabel, pageLabel);
     return fav;
 }
 
@@ -42,13 +42,13 @@ void DeleteFavorite(Favorite* fav) {
     FreeStruct(&gFavoriteInfo, fav);
 }
 
-GlobalPrefs* NewGlobalPrefs(const char* data) {
+GlobalPrefs* NewGlobalPrefs(Str data) {
     return (GlobalPrefs*)DeserializeStruct(&gGlobalPrefsInfo, data);
 }
 
 // prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
 // caller has to free()
-ByteSlice SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
+ByteSlice SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData) {
     if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
         for (FileState* fs : *prefs->fileStates) {
             fs->useDefaultState = true;
@@ -121,7 +121,7 @@ void FreeSessionDataVec(Vec<SessionData*>* sessionData) {
     sessionData->Reset();
 }
 
-ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed) {
+ParsedColor* GetParsedColor(Str s, ParsedColor& parsed) {
     if (parsed.wasParsed) {
         return &parsed;
     }
@@ -129,7 +129,7 @@ ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed) {
     return &parsed;
 }
 
-COLORREF GetParsedCOLORREF(const char* s, ParsedColor& parsed, COLORREF def) {
+COLORREF GetParsedCOLORREF(Str s, ParsedColor& parsed, COLORREF def) {
     if (parsed.wasParsed) {
         return parsed.col;
     }
@@ -140,7 +140,7 @@ COLORREF GetParsedCOLORREF(const char* s, ParsedColor& parsed, COLORREF def) {
     return def;
 }
 
-void SetFileStatePath(FileState* fs, const char* path) {
+void SetFileStatePath(FileState* fs, Str path) {
     if (fs->filePath && str::EqI(fs->filePath, path)) {
         return;
     }
@@ -148,11 +148,10 @@ void SetFileStatePath(FileState* fs, const char* path) {
 }
 
 void SetFileStatePath(FileState* fs, const WCHAR* path) {
-    char* pathA = ToUtf8Temp(path);
-    SetFileStatePath(fs, pathA);
+    SetFileStatePath(fs, ToUtf8Temp(path));
 }
 
-Themes* ParseThemes(const char* data) {
+Themes* ParseThemes(Str data) {
     return (Themes*)DeserializeStruct(&gThemesInfo, data);
 }
 

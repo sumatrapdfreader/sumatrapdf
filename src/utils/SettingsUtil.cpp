@@ -204,7 +204,19 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
         case SettingType::Float:
             out.AppendFmt("%g", *(float*)fieldPtr);
             return true;
-        case SettingType::String:
+        case SettingType::String: {
+            Str str = *(Str*)fieldPtr;
+            if (!str.s) {
+                ReportIf(field.value);
+                return false; // skip empty strings
+            }
+            if (!NeedsEscaping(str.s)) {
+                out.Append(str.s);
+            } else {
+                EscapeStr(out, str.s);
+            }
+            return true;
+        }
         case SettingType::Color:
             if (!*(const char**)fieldPtr) {
                 ReportIf(field.value);
@@ -298,8 +310,7 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
             break;
         }
 
-        case SettingType::Color:
-        case SettingType::String: {
+        case SettingType::Color: {
             char** strPtr = (char**)fieldPtr;
             free(*strPtr);
             if (value) {
@@ -307,6 +318,17 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
             } else {
                 *strPtr = str::Dup((const char*)field.value);
             }
+        } break;
+
+        case SettingType::String: {
+            Str* strPtr = (Str*)fieldPtr;
+            free(strPtr->s);
+            if (value) {
+                strPtr->s = UnescapeStr(value);
+            } else {
+                strPtr->s = str::Dup((const char*)field.value).s;
+            }
+            strPtr->len = strPtr->s ? (int)strlen(strPtr->s) : 0;
         } break;
 
         case SettingType::Compact:
@@ -523,17 +545,17 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
     return base;
 }
 
-ByteSlice SerializeStruct(const StructInfo* info, const void* strct, const char* prevData) {
+ByteSlice SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
     StrBuilder out;
     out.Append(UTF8_BOM);
-    SquareTreeNode* root = ParseSquareTree(prevData);
+    SquareTreeNode* root = ParseSquareTree(prevData.s);
     SerializeStructRec(out, info, strct, root);
     delete root;
     return out.StealAsByteSlice();
 }
 
-void* DeserializeStruct(const StructInfo* info, const char* data, void* strct) {
-    SquareTreeNode* root = ParseSquareTree(data);
+void* DeserializeStruct(const StructInfo* info, Str data, void* strct) {
+    SquareTreeNode* root = ParseSquareTree(data.s);
     auto res = DeserializeStructRec(info, root, (u8*)strct, !strct);
     delete root;
     return res;
@@ -561,10 +583,16 @@ static void FreeStructData(const StructInfo* info, u8* base) {
                 FreeArray(array, field);
                 break;
             }
-            case SettingType::Color:
-            case SettingType::String: {
+            case SettingType::Color: {
                 void* str = *((void**)fieldPtr);
                 free(str);
+                break;
+            }
+            case SettingType::String: {
+                Str* str = (Str*)fieldPtr;
+                free(str->s);
+                str->s = nullptr;
+                str->len = 0;
                 break;
             }
             case SettingType::FloatArray:

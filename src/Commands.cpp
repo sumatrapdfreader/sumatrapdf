@@ -850,7 +850,7 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s
 
 // cmdName is "CmdOpenFile" etc.
 // returns -1 if not found
-int GetCommandIdByName(const char* cmdName) {
+int GetCommandIdByName(Str cmdName) {
     int cmdId = GetCommandIdByNameOrDesc(gCommandNames, cmdName);
     if (cmdId >= 0) {
         return cmdId;
@@ -870,7 +870,7 @@ int GetCommandIdByName(const char* cmdName) {
 }
 
 // returns -1 if not found
-int GetCommandIdByDesc(const char* cmdDesc) {
+int GetCommandIdByDesc(Str cmdDesc) {
     int cmdId = GetCommandIdByNameOrDesc(gCommandDescriptions, cmdDesc);
     if (cmdId >= 0) {
         return cmdId;
@@ -946,7 +946,7 @@ CustomCommand::~CustomCommand() {
     str::Free(definition);
 }
 
-CustomCommand* CreateCustomCommand(const char* definition, int origCmdId, CommandArg* args) {
+CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* args) {
     // if no args we retain original command id
     // only when we have unique args we have to create a new command id
     int id = origCmdId;
@@ -1011,7 +1011,7 @@ static CommandArg* NewArg(CommandArg::Type type, const char* name) {
     return res;
 }
 
-CommandArg* NewStringArg(const char* name, const char* val) {
+CommandArg* NewStringArg(Str name, Str val) {
     auto res = new CommandArg();
     res->type = CommandArg::Type::String;
     res->name = str::Dup(name);
@@ -1019,7 +1019,7 @@ CommandArg* NewStringArg(const char* name, const char* val) {
     return res;
 }
 
-CommandArg* NewFloatArg(const char* name, float val) {
+CommandArg* NewFloatArg(Str name, float val) {
     auto res = new CommandArg();
     res->type = CommandArg::Type::Float;
     res->name = str::Dup(name);
@@ -1190,7 +1190,7 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
 // create custom command as defined in Shortcuts section in advanced settings
 // or DDE commands
 // return null if unkown command
-CustomCommand* CreateCommandFromDefinition(const char* definition) {
+CustomCommand* CreateCommandFromDefinition(Str definition) {
     // the same command can be sent via DDE many times
     // we don't want to create duplicate CustomCommand
     for (auto cmd = gFirstCustomCommand; cmd; cmd = cmd->next) {
@@ -1314,7 +1314,7 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
     return res;
 }
 
-CommandArg* GetCommandArg(CustomCommand* cmd, const char* name) {
+CommandArg* GetCommandArg(CustomCommand* cmd, Str name) {
     if (!cmd) {
         return nullptr;
     }
@@ -1328,7 +1328,7 @@ CommandArg* GetCommandArg(CustomCommand* cmd, const char* name) {
     return nullptr;
 }
 
-int GetCommandIntArg(CustomCommand* cmd, const char* name, int defValue) {
+int GetCommandIntArg(CustomCommand* cmd, Str name, int defValue) {
     auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->intVal;
@@ -1336,7 +1336,7 @@ int GetCommandIntArg(CustomCommand* cmd, const char* name, int defValue) {
     return defValue;
 }
 
-bool GetCommandBoolArg(CustomCommand* cmd, const char* name, bool defValue) {
+bool GetCommandBoolArg(CustomCommand* cmd, Str name, bool defValue) {
     auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->boolVal;
@@ -1344,7 +1344,7 @@ bool GetCommandBoolArg(CustomCommand* cmd, const char* name, bool defValue) {
     return defValue;
 }
 
-const char* GetCommandStringArg(CustomCommand* cmd, const char* name, const char* defValue) {
+Str GetCommandStringArg(CustomCommand* cmd, Str name, Str defValue) {
     auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->strVal;

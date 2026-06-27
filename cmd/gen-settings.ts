@@ -41,7 +41,7 @@ const Bool: Type = { name: "Bool", ctype: "bool" };
 const Color: Type = { name: "Color", ctype: "char*" };
 const Float: Type = { name: "Float", ctype: "float" };
 const Int: Type = { name: "Int", ctype: "int" };
-const Str: Type = { name: "String", ctype: "char*" };
+const Str: Type = { name: "String", ctype: "Str" };
 const Comment: Type = { name: "Comment", ctype: "" };
 
 function toCName(name: string): string {

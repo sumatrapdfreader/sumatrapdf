@@ -89,7 +89,7 @@ void ShowPrintersDialog() {
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
 // caller must delete the result
-bool ParsePageRanges(const char* ranges, Vec<PageRange>& result) {
+bool ParsePageRanges(Str ranges, Vec<PageRange>& result) {
     if (!ranges) {
         return false;
     }
@@ -117,7 +117,7 @@ bool ParsePageRanges(const char* ranges, Vec<PageRange>& result) {
 // a valid page range is a non-empty, comma separated list of either
 // single page ("3") numbers, closed intervals "2-4" or intervals
 // unlimited to the right ("5-")
-bool IsValidPageRange(const char* ranges) {
+bool IsValidPageRange(Str ranges) {
     Vec<PageRange> rangeList;
     return ParsePageRanges(ranges, rangeList);
 }
@@ -125,7 +125,7 @@ bool IsValidPageRange(const char* ranges) {
 // <s> can be:
 // * "loadonly"
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
-bool IsBenchPagesInfo(const char* s) {
+bool IsBenchPagesInfo(Str s) {
     return str::EqI(s, "loadonly") || IsValidPageRange(s);
 }
 
@@ -211,7 +211,7 @@ static Arg GetArg(const char* s) {
 // https://stackoverflow.com/questions/619158/adobe-reader-command-line-reference
 // https://www.robvanderwoude.com/commandlineswitches.php#Acrobat
 // with Sumatra extensions
-void ParseAdobeFlags(FileArgs& i, const char* s) {
+void ParseAdobeFlags(FileArgs& i, Str s) {
     StrVec parts;
     StrVec parts2;
     char* name;
@@ -295,16 +295,16 @@ void ParseAdobeFlags(FileArgs& i, const char* s) {
 }
 
 FileArgs::~FileArgs() {
-    str::FreePtr(&origPath);
-    str::FreePtr(&cleanPath);
-    str::FreePtr(&destName);
-    str::FreePtr(&search);
+    str::Free(origPath);
+    str::Free(cleanPath);
+    str::Free(destName);
+    str::Free(search);
 }
 
 // given file path `foo.pdf?page=4;dest=foo` etc., extract `?page=4;dest=foo`
 // args into FileArgs
 // returns nullptr if there are not args
-FileArgs* ParseFileArgs(const char* path) {
+FileArgs* ParseFileArgs(Str path) {
     const char* hashPos = str::FindCharLast(path, '?');
     if (!hashPos) {
         return nullptr;
@@ -324,7 +324,7 @@ FileArgs* ParseFileArgs(const char* path) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, const char* toolNames) {
+void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
     ReportIf(!a);
     // logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
     CmdLineArgsIter args(cmdLine);
@@ -730,8 +730,8 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, const char* toolNames)
         if (arg == Arg::Adobe) {
             FileArgs fargs;
             ParseAdobeFlags(fargs, param);
-            i.search = fargs.search ? str::Dup(a, fargs.search).s : i.search;
-            i.namedDest = fargs.destName ? str::Dup(a, fargs.destName).s : i.namedDest;
+            i.search = fargs.search ? str::Dup(a, fargs.search) : i.search;
+            i.namedDest = fargs.destName ? str::Dup(a, fargs.destName) : i.namedDest;
             i.pageNumber = fargs.pageNumber > 0 ? fargs.pageNumber : i.pageNumber;
             // TODO: annotAttObjNum and attachmentNo?
             continue;

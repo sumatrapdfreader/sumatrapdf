@@ -236,7 +236,7 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
         char* srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
         cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath, srcPath, i.forwardSearchLine);
     }
-    if (i.search != nullptr) {
+    if (i.search) {
         // TODO: quote if i.search has '"' in it
         cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullPath, i.search);
     }
@@ -447,7 +447,7 @@ static bool SetupPluginMode(Flags& i) {
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        TempStr args = str::DupTemp(str::FindChar(i.pluginURL, '#') + 1);
+        TempStr args = str::DupTemp(str::FindChar(i.pluginURL, '#').s + 1);
         str::TransCharsInPlace(args, "#", "&");
         StrVec parts;
         Split(&parts, args, "&", true);
@@ -759,7 +759,8 @@ static void ReplaceColor(char** col, char* maybeColor) {
 static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
         char* cmdLine = str::Dup(i.inverseSearchCmdLine);
-        str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
+        str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
+        str::Free(cmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }
     if (i.invertColors) {
@@ -2167,7 +2168,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // search only applies if there's 1 file
         auto nFiles = flags.fileNames.Size();
         if (nFiles != 1) {
-            str::FreePtr(&flags.search);
+            flags.search = {};
         }
     }
 

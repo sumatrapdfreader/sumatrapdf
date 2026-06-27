@@ -86,7 +86,7 @@ struct EBookUI {
     // if true, we ignore ebook's CSS
     bool ignoreDocumentCSS;
     // custom CSS. Might need to set IgnoreDocumentCSS = true
-    char* customCSS;
+    Str customCSS;
     // if given, sets the canvas background color for ebook documents
     // (epub, mobi etc.)
     char* windowBgCol;
@@ -116,7 +116,7 @@ struct ImageUI {
     ParsedColor windowBgColParsed;
     // default zoom for image files. valid values: fit page, fit width, fit
     // content, shrink to fit or percent like 100%
-    char* defaultZoom;
+    Str defaultZoom;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
 };
@@ -133,10 +133,10 @@ struct ChmUI {
 struct ClaudeCode {
     // Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus
     // if not in the model list
-    char* model;
+    Str model;
     // extra Claude model aliases for the dropdown, comma-separated;
     // sonnet, opus, and haiku are always included
-    char* models;
+    Str models;
     // Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max
     int effort;
     // if true, pass --dangerously-skip-permissions to Claude Code
@@ -149,10 +149,10 @@ struct ClaudeCode {
 // settings for the Grok Build chat sidebar
 struct GrokBuild {
     // Grok model ID for --model (e.g. grok-composer-2.5-fast, grok-build)
-    char* model;
+    Str model;
     // extra Grok model IDs for the dropdown, comma-separated;
     // grok-composer-2.5-fast and grok-build are always included
-    char* models;
+    Str models;
     // Grok effort level: 0=Low, 1=Medium, 2=High, 3=XHigh, 4=Max
     int effort;
     // if true, pass --always-approve to Grok Build (auto-approve tool
@@ -166,10 +166,10 @@ struct GrokBuild {
 // settings for the OpenAI Codex chat sidebar
 struct CodexBuild {
     // Codex model ID for -m (e.g. gpt-5.5, gpt-5.4, o3)
-    char* model;
+    Str model;
     // extra Codex model IDs for the dropdown, comma-separated; gpt-5.5,
     // gpt-5.4, and o3 are always included
-    char* models;
+    Str models;
     // Codex sandbox mode: 0=read-only, 1=workspace-write,
     // 2=danger-full-access
     int sandbox;
@@ -212,10 +212,10 @@ struct Annotations {
     ParsedColor textIconColorParsed;
     // type of text annotation icon: comment, help, insert, key, new
     // paragraph, note, paragraph. If not set: note.
-    char* textIconType;
+    Str textIconType;
     // default author for created annotations, use (none) to not add an
     // author at all. If not set will use Windows user name
-    char* defaultAuthor;
+    Str defaultAuthor;
 };
 
 // list of additional external viewers for various file types. See [docs
@@ -225,21 +225,21 @@ struct ExternalViewer {
     // command line with which to call the external viewer, may contain %p
     // for page number and "%1" for the file name (add quotation marks
     // around paths containing spaces)
-    char* commandLine;
+    Str commandLine;
     // name of the external viewer to be shown in the menu (implied by
     // CommandLine if missing)
-    char* name;
+    Str name;
     // optional filter for which file types the menu item is to be shown;
     // separate multiple entries using ';' and don't include any spaces
     // (e.g. *.pdf;*.xps for all PDF and XPS documents)
-    char* filter;
+    Str filter;
     // optional: keyboard shortcut e.g. Alt + 7
-    char* key;
+    Str key;
     // if given, shows in toolbar
-    char* toolbarText;
+    Str toolbarText;
     // optional SVG icon for toolbar button; if both ToolbarSvgIcon and
     // ToolbarText are set, the icon is used
-    char* toolbarSvgIcon;
+    Str toolbarSvgIcon;
 };
 
 // customization options for how we show forward search results (used
@@ -262,10 +262,10 @@ struct ForwardSearch {
 // these override the default settings in the Print dialog
 struct PrinterDefaults {
     // default value for scaling (shrink, fit, none)
-    char* printScale;
+    Str printScale;
     // default value for collate in the print dialog (default, collate,
     // nocollate)
-    char* collate;
+    Str collate;
 };
 
 // options for fullscreen mode
@@ -283,26 +283,26 @@ struct SelectionHandler {
     // url to invoke for the selection. ${selection} will be replaced with
     // current selection and ${userlang} with language code for current UI
     // (e.g. 'de' for German)
-    char* url;
+    Str url;
     // name shown in context menu
-    char* name;
+    Str name;
     // keyboard shortcut
-    char* key;
+    Str key;
 };
 
 // custom keyboard shortcuts
 struct Shortcut {
     // command
-    char* cmd;
+    Str cmd;
     // keyboard shortcut (e.g. Ctrl-Alt-F)
-    char* key;
+    Str key;
     // name shown in command palette
-    char* name;
+    Str name;
     // if given, shows in toolbar
-    char* toolbarText;
+    Str toolbarText;
     // optional SVG icon for toolbar button; if both ToolbarSvgIcon and
     // ToolbarText are set, the icon is used
-    char* toolbarSvgIcon;
+    Str toolbarSvgIcon;
     // command id
     int cmdId;
 };
@@ -310,7 +310,7 @@ struct Shortcut {
 // color themes
 struct Theme {
     // name of the theme
-    char* name;
+    Str name;
     // text color
     char* textColor;
     ParsedColor textColorParsed;
@@ -330,13 +330,13 @@ struct Theme {
 // files in the tab group
 struct TabFile {
     // file path
-    char* path;
+    Str path;
 };
 
 // saved groups of tabs
 struct TabGroup {
     // name of the tab group
-    char* name;
+    Str name;
     // files in the tab group
     Vec<TabFile*>* tabFiles;
 };
@@ -344,12 +344,12 @@ struct TabGroup {
 // Values which are persisted for bookmarks/favorites
 struct Favorite {
     // name of this favorite as shown in the menu
-    char* name;
+    Str name;
     // number of the bookmarked page
     int pageNo;
     // label for this page (only present if logical and physical page
     // numbers are not the same)
-    char* pageLabel;
+    Str pageLabel;
     // id of this favorite in the menu (assigned by AppendFavMenuItems)
     int menuId;
 };
@@ -357,7 +357,7 @@ struct Favorite {
 // information about opened files (in most recently used order)
 struct FileState {
     // path of the document
-    char* filePath;
+    Str filePath;
     // Values which are persisted for bookmarks/favorites
     Vec<Favorite*>* favorites;
     // a document can be "pinned" to the Frequently Read list so that it
@@ -375,20 +375,20 @@ struct FileState {
     int openCount;
     // Hex encoded MD5 fingerprint of file content (32 chars) followed by
     // crypt key (64 chars) - only applies for PDF documents
-    char* decryptionKey;
+    Str decryptionKey;
     // if true, we use global defaults when opening this file (instead of
     // the values below)
     bool useDefaultState;
     // how pages should be laid out for this document, needs to be
     // synchronized with DefaultDisplayMode after deserialization and
     // before serialization
-    char* displayMode;
+    Str displayMode;
     // how far this document has been scrolled (in x and y direction)
     PointF scrollPos;
     // number of the last read page
     int pageNo;
     // zoom (in %) or one of those values: fit page, fit width, fit content
-    char* zoom;
+    Str zoom;
     // how far pages have been rotated as a multiple of 90 degrees
     int rotation;
     // state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4
@@ -434,13 +434,13 @@ struct FileState {
 // tab (required for handling documents being opened twice)
 struct TabState {
     // path of the document
-    char* filePath;
+    Str filePath;
     // same as FileStates -> DisplayMode
-    char* displayMode;
+    Str displayMode;
     // number of the last read page
     int pageNo;
     // same as FileStates -> Zoom
-    char* zoom;
+    Str zoom;
     // same as FileStates -> Rotation
     int rotation;
     // how far this document has been scrolled (in x and y direction)
@@ -477,10 +477,10 @@ struct GlobalPrefs {
     // how pages should be laid out by default, needs to be synchronized
     // with DefaultDisplayMode after deserialization and before
     // serialization
-    char* defaultDisplayMode;
+    Str defaultDisplayMode;
     // default zoom. valid values: fit page, fit width, fit content or
     // percent like 100%
-    char* defaultZoom;
+    Str defaultZoom;
     // if true, JavaScript in PDF documents is disabled (e.g. form-field
     // calculations won't run)
     bool disableJavaScript;
@@ -496,7 +496,7 @@ struct GlobalPrefs {
     // if true, we show the full path to a file in the title bar
     bool fullPathInTitle;
     // pattern used to launch the LaTeX editor when doing inverse search
-    char* inverseSearchCmdLine;
+    Str inverseSearchCmdLine;
     // when restoring session, delay loading of documents until their tab
     // is selected
     bool lazyLoading;
@@ -534,16 +534,16 @@ struct GlobalPrefs {
     bool showTips;
     // up to 13 custom colors for the background color picker, separated by
     // space (e.g. '#ff0000 #00ff00 #0000ff')
-    char* customColors;
+    Str customColors;
     // if true, we show the toolbar at the top of the window
     bool showToolbar;
     // toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar
     // floats over the page, sized to its natural width and centered, only
     // shown when the mouse is near it). if empty, derived from ShowToolbar
-    char* toolbar;
+    Str toolbar;
     // where the toolbar is placed: top or bottom (applies to both show and
     // overlay modes)
-    char* toolbarPosition;
+    Str toolbarPosition;
     // if true, the find UI is a floating, movable window with a results
     // list instead of the compact toolbar overlay
     bool searchUIFloating;
@@ -562,14 +562,14 @@ struct GlobalPrefs {
     // scrollbar mode: windows (standard Windows scrollbar), smart (overlay
     // scrollbar with auto-hide), overlay (always visible overlay
     // scrollbar), hidden (no scrollbars)
-    char* scrollbars;
+    Str scrollbars;
     // if true, we show scrollbar in single page mode
     bool scrollbarInSinglePage;
     // if true, implements smooth scrolling
     bool smoothScroll;
     // which engine to use for DjVu documents: libdjvu (the default) or
     // djvudec (built-in plain-C decoder)
-    char* djvuEngine;
+    Str djvuEngine;
     // how long to hover an internal-document link (in ms) before we show a
     // popup rendering the destination region (citation entry, figure,
     // footnote). -1 (the default) disables the popup; set a positive value
@@ -578,7 +578,7 @@ struct GlobalPrefs {
     // voice id for Read Aloud text-to-speech; empty or unset means system
     // default. Voice ids match those used internally by the Read Aloud
     // Voice menu (WinRT voice id or SAPI token id)
-    char* readAloudVoiceId;
+    Str readAloudVoiceId;
     // if true, mouse wheel scrolling is faster when mouse is over a
     // scrollbar
     bool fastScrollOverScrollbar;
@@ -588,7 +588,7 @@ struct GlobalPrefs {
     // maximum width of a single tab
     int tabWidth;
     // the name of the theme to use
-    char* theme;
+    Str theme;
     // if both favorites and bookmarks parts of sidebar are visible, this
     // is the height of bookmarks (table of contents) part
     int tocDy;
@@ -596,7 +596,7 @@ struct GlobalPrefs {
     int toolbarSize;
     // font name for bookmarks and favorites tree views. automatic means
     // Windows default
-    char* treeFontName;
+    Str treeFontName;
     // font size for bookmarks and favorites tree views. 0 means Windows
     // default
     int treeFontSize;
@@ -645,7 +645,7 @@ struct GlobalPrefs {
     int aiChatSidebarDx;
     // remembered destination language for selection translation; empty
     // uses OS UI language
-    char* translateToLang;
+    Str translateToLang;
     // default values for annotations in PDF documents
     Annotations annotations;
     // list of additional external viewers for various file types. See
@@ -670,11 +670,11 @@ struct GlobalPrefs {
     // saved groups of tabs
     Vec<TabGroup*>* tabGroups;
     // passwords to try when opening a password protected document
-    Vec<char*>* defaultPasswords;
+    Vec<Str>* defaultPasswords;
     // ISO code of the current UI language
-    char* uiLanguage;
+    Str uiLanguage;
     // we won't ask again to update to this version
-    char* versionToSkip;
+    Str versionToSkip;
     // default state of new windows (same as the last closed)
     int windowState;
     // default position (can be on any monitor)
@@ -688,7 +688,7 @@ struct GlobalPrefs {
     // a list of paths for files to be reopened at the next start or the
     // string "SessionData" if this data is saved in SessionData (needed
     // for auto-updating)
-    Vec<char*>* reopenOnce;
+    Vec<Str>* reopenOnce;
     // timestamp of the last update check
     FILETIME timeOfLastUpdateCheck;
     // week count since 2011-01-01 needed to "age" openCount values in file

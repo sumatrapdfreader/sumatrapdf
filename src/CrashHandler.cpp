@@ -911,7 +911,7 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
         ByteSlice prefsData = file::ReadFile(Str(path));
         if (!prefsData.empty()) {
             // serialize without FileStates info because it's the largest
-            GlobalPrefs* gp = NewGlobalPrefs((const char*)prefsData.data());
+            GlobalPrefs* gp = NewGlobalPrefs(Str((char*)prefsData.data(), (int)prefsData.size()));
             DeleteFileStates(gp->fileStates);
             gp->fileStates = new Vec<FileState*>();
             // TODO: also sessionData?

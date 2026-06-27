@@ -107,8 +107,8 @@ float ZoomFromString(const char* s, float defVal) {
     return defVal;
 }
 
-void ZoomToString(char** dst, float zoom, FileState* fileState) {
-    float prevZoom = *dst ? ZoomFromString(*dst, kInvalidZoom) : kInvalidZoom;
+void ZoomToString(Str* dst, float zoom, FileState* fileState) {
+    float prevZoom = dst->s ? ZoomFromString(dst->s, kInvalidZoom) : kInvalidZoom;
     if (prevZoom == zoom) {
         return;
     }
@@ -122,18 +122,17 @@ void ZoomToString(char** dst, float zoom, FileState* fileState) {
         logf("PageNo: %d\n", fileState->pageNo);
     }
     ReportIf(!IsValidZoom(zoom));
-    str::FreePtr(dst);
     if (kZoomFitPage == zoom) {
-        *dst = str::Dup("fit page");
+        str::ReplaceWithCopy(dst, "fit page");
     } else if (kZoomFitWidth == zoom) {
-        *dst = str::Dup("fit width");
+        str::ReplaceWithCopy(dst, "fit width");
     } else if (kZoomFitContent == zoom) {
-        *dst = str::Dup("fit content");
+        str::ReplaceWithCopy(dst, "fit content");
     } else if (kZoomShrinkToFit == zoom) {
-        *dst = str::Dup("shrink to fit");
+        str::ReplaceWithCopy(dst, "shrink to fit");
     } else if (kZoomFitByOrientation == zoom) {
-        *dst = str::Dup("fit by orientation");
+        str::ReplaceWithCopy(dst, "fit by orientation");
     } else {
-        *dst = str::Format("%g", zoom);
+        str::ReplaceWithCopy(dst, str::Format("%g", zoom));
     }
 }

@@ -8,15 +8,15 @@ struct PageRange {
 };
 
 struct FileArgs {
-    const char* origPath = nullptr;
-    const char* cleanPath = nullptr;
+    Str origPath;
+    Str cleanPath;
 
     // page=%d
     int pageNumber = 0;
     // dest=%s
-    const char* destName = nullptr;
+    Str destName;
     // search=%s
-    const char* search = nullptr;
+    Str search;
 
     // annotatt=%d
     int annotAttObjNum = 0;
@@ -27,7 +27,7 @@ struct FileArgs {
     ~FileArgs();
 };
 
-FileArgs* ParseFileArgs(const char* path);
+FileArgs* ParseFileArgs(Str path);
 
 struct Flags {
     StrVec fileNames;
@@ -39,12 +39,12 @@ struct Flags {
     StrVec pathsToBenchmark;
     bool exitWhenDone = false;
     bool printDialog = false;
-    char* printerName = nullptr;
-    char* printSettings = nullptr;
-    char* forwardSearchOrigin = nullptr;
+    Str printerName;
+    Str printSettings;
+    Str forwardSearchOrigin;
     int forwardSearchLine = 0;
     bool reuseDdeInstance = false;
-    char* namedDest = nullptr;
+    Str namedDest;
     int pageNumber = -1;
     bool restrictedUse = false;
     bool enterPresentation = false;
@@ -54,28 +54,28 @@ struct Flags {
     Point startScroll = {-1, -1};
     bool showConsole = false;
     HWND hwndPluginParent = nullptr;
-    char* pluginURL = nullptr;
+    Str pluginURL;
     bool exitImmediately = false;
     // installer: doesn't show any UI
     bool silent = false;
     // installer: starts the install immediately and launches the app at end
     bool fastInstall = false;
-    char* appdataDir = nullptr;
-    char* inverseSearchCmdLine = nullptr;
+    Str appdataDir;
+    Str inverseSearchCmdLine;
     bool invertColors = false;
     bool regress = false;
     bool tester = false;
     // -new-window, if true and we're using tabs, opens
     // the document in new window
     bool inNewWindow = false;
-    char* search = nullptr;
-    char* password = nullptr;
+    Str search;
+    Str password;
 
     // stress-testing related
-    char* stressTestPath = nullptr;
-    // nullptr is equivalent to "*" (i.e. all files)
-    char* stressTestFilter = nullptr;
-    char* stressTestRanges = nullptr;
+    Str stressTestPath;
+    // empty is equivalent to "*" (i.e. all files)
+    Str stressTestFilter;
+    Str stressTestRanges;
     int stressTestCycles = 1;
     int stressParallelCount = 1;
     bool stressRandomizeFiles = false;
@@ -86,15 +86,15 @@ struct Flags {
     // -for-testing: for ad-hoc testing by humans or agents. Always starts
     // a new instance, doesn't restore session, doesn't save settings
     bool forTesting = false;
-    char* controlPipeName = nullptr; // -dbg-control <named-pipe>
+    Str controlPipeName; // -dbg-control <named-pipe>
     bool testRenderPage = false;
     bool testExtractPage = false;
     int testPageNo = 0;
     bool testApp = false;
     bool testPlugin = false;
     bool testPreview = false;
-    char* upgradeFrom = nullptr;
-    char* dde = nullptr;
+    Str upgradeFrom;
+    Str dde;
     bool engineDump = false; // -engine-dump
     bool dumpExif = false;   // -dump-exif
     bool dumpChm = false;    // -dump-chm
@@ -104,26 +104,26 @@ struct Flags {
     bool crashOnOpen = false;
 
     // deprecated flags
-    char* lang = nullptr;
+    Str lang;
     StrVec globalPrefArgs;
 
     // related to installer
     bool showHelp = false;
-    char* installDir = nullptr;
+    Str installDir;
     bool install = false;
     bool uninstall = false;
     bool withFilter = false;
     bool withPreview = false;
     bool justExtractFiles = false;
     bool log = false;
-    char* logFile = nullptr;
+    Str logFile;
     bool allUsers = false;
     bool runInstallNow = false;
     bool storeInstaller = false;
 
     // for internal use
-    char* updateSelfTo = nullptr;
-    char* deleteFile = nullptr;
+    Str updateSelfTo;
+    Str deleteFile;
 
     // for some commands, will sleep for sleepMs milliseconds
     // before proceeding
@@ -133,9 +133,9 @@ struct Flags {
     ~Flags() = default;
 };
 
-void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags&, const char* toolNames = nullptr);
+void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags&, Str toolNames = {});
 void ShowPrintersDialog();
 
-bool IsValidPageRange(const char* ranges);
-bool IsBenchPagesInfo(const char* s);
-bool ParsePageRanges(const char* ranges, Vec<PageRange>& result);
+bool IsValidPageRange(Str ranges);
+bool IsBenchPagesInfo(Str s);
+bool ParsePageRanges(Str ranges, Vec<PageRange>& result);

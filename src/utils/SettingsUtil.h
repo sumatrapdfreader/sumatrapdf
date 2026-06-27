@@ -59,6 +59,6 @@ struct StructInfo {
     const char* fieldNames = nullptr;
 };
 
-ByteSlice SerializeStruct(const StructInfo* info, const void* strct, const char* prevData = nullptr);
-void* DeserializeStruct(const StructInfo* info, const char* data, void* strct = nullptr);
+ByteSlice SerializeStruct(const StructInfo* info, const void* strct, Str prevData = {});
+void* DeserializeStruct(const StructInfo* info, Str data, void* strct = nullptr);
 void FreeStruct(const StructInfo* info, void* strct);

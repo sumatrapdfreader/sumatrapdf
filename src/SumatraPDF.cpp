@@ -550,7 +550,7 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     if (fileFromHistory && fileFromHistory->decryptionKey && fileDigest && decryptionKeyOut) {
         AutoFreeStr fingerprint(str::MemToHex(fileDigest, 16).s);
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
-        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32)) {
+        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey.s + 32, decryptionKeyOut, 32)) {
             return {};
         }
     }

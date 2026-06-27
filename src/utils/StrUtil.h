@@ -105,6 +105,8 @@ void ReplacePtr(char** s, const char* snew);
 void ReplaceWithCopy(const char** s, const char* snew);
 void ReplaceWithCopy(const char** s, const ByteSlice&);
 void ReplaceWithCopy(char** s, const char* snew);
+void ReplaceWithCopy(Str* s, const char* snew);
+void ReplaceWithCopy(Str* s, Str snew);
 
 Str Join(Arena*, Str, Str, Str);
 Str Join(Arena*, Str, Str, Str, Str, Str);
