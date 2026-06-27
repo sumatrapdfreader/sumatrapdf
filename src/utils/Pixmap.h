@@ -14,7 +14,19 @@
 // PremultipliedFirst|ByteOrder32Little, cairo ARGB32). The Windows-specific zero-copy
 // conversion helpers live in GdiPlusUtil.h (NewGdiplusBitmapFromPixmap / PixmapFromGdiplus).
 //
-// This header is intentionally free of <windows.h> / <gdiplus.h> so it stays portable.
+// A Pixmap may additionally be backed by a platform "present" object so it can be blitted
+// to the screen with no copy (a GDI DIB section on Windows; later a CGImage/cairo surface
+// on mac/linux). That backing is described per-platform with #if rather than an opaque
+// handle. When present (hbmp != null on Windows), `data` points into the present object's
+// pixels and is owned by it (freed via FreePixmapNativeBitmap), not by malloc/free.
+//
+// This header stays free of <windows.h> / <gdiplus.h> so it remains lightweight; the
+// Windows handle types below are the real opaque handle pointers.
+
+#if defined(_WIN32)
+using PixmapHBITMAP = struct HBITMAP__*; // == HBITMAP
+using PixmapHANDLE = void*;              // == HANDLE
+#endif
 
 enum class PixmapFormat : u8 {
     // byte order in memory. BGRA8 is the zero-copy layout on all 3 platforms.
@@ -31,8 +43,21 @@ struct Pixmap {
     bool premultiplied = false; // alpha premultiplied into RGB
     float xres = 96.0f;
     float yres = 96.0f;
-    u8* data = nullptr; // owns the pixel buffer
+    u8* data = nullptr; // pixel buffer; owned by malloc, or by hbmp when DIB-section-backed
+
+#if defined(_WIN32)
+    // When non-null, the Pixmap is backed by a GDI DIB section: `data` is its pixels and
+    // the bitmap is directly blittable (BlitPixmap). Owns these handles.
+    PixmapHBITMAP hbmp = nullptr;
+    PixmapHANDLE hMap = nullptr; // optional file mapping backing hbmp
+#endif
 };
+
+#if defined(_WIN32)
+// frees a DIB-section-backed Pixmap's native handles (and its pixels). implemented in
+// WinUtil.cpp where <windows.h> is available. Does nothing if not DIB-backed.
+void FreePixmapNativeBitmap(Pixmap* p);
+#endif
 
 inline int PixmapBytesPerPixel(PixmapFormat fmt) {
     return fmt == PixmapFormat::BGR8 ? 3 : 4;
@@ -65,10 +90,19 @@ inline Pixmap* AllocPixmap(int w, int h, PixmapFormat fmt = PixmapFormat::BGRA8,
 }
 
 inline void FreePixmap(Pixmap* p) {
-    if (p) {
-        free(p->data);
-        delete p;
+    if (!p) {
+        return;
     }
+#if defined(_WIN32)
+    if (p->hbmp) {
+        // DIB-section-backed: GDI owns the pixels, free via the native handles
+        FreePixmapNativeBitmap(p);
+        delete p;
+        return;
+    }
+#endif
+    free(p->data);
+    delete p;
 }
 
 // deep copy (own pixels). returns nullptr on bad input / OOM.

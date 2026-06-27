@@ -1102,7 +1102,7 @@ void RenderCache::LogCacheSize() {
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
         if (e->bitmap) {
-            i64 bs = BlittableBitmapByteSize(e->bitmap);
+            i64 bs = RenderedBitmapByteSize(e->bitmap);
             size += bs;
         }
     }

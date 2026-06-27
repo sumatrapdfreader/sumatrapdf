@@ -257,33 +257,31 @@ struct BitmapPixels {
     HDC hdc;
 };
 
-struct BlittableBitmap {
+struct Pixmap;
+// Allocate a DIB-section-backed Pixmap (pixels double as a blittable HBITMAP). WinUtil.cpp.
+Pixmap* AllocPixmapDIB(int w, int h);
+// Blit a Pixmap into target (DIB-section fast path, else StretchDIBits from memory).
+bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
+
+// A Windows present-layer bitmap handle: an HBITMAP (+ optional file mapping) that can be
+// blitted to an HDC. Concrete and Windows-only by design - portable pixel data lives in
+// Pixmap; this is just the GDI handle the UI paints. Built from a Pixmap or an HBITMAP.
+struct RenderedBitmap {
     Size size = {};
-
-    BlittableBitmap() {};
-
-    Size GetSize();
-
-    virtual bool Blit(HDC hdc, Rect target) = 0;
-    virtual bool IsValid() = 0;
-
-    virtual ~BlittableBitmap() {};
-};
-
-i64 BlittableBitmapByteSize(BlittableBitmap*);
-
-struct RenderedBitmap : BlittableBitmap {
     HBITMAP hbmp = nullptr;
     HANDLE hMap = nullptr;
 
     RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
-    ~RenderedBitmap() override;
+    ~RenderedBitmap();
 
+    Size GetSize();
     RenderedBitmap* Clone() const;
     HBITMAP GetBitmap() const;
-    bool IsValid() override;
-    bool Blit(HDC hdc, Rect target) override;
+    bool IsValid();
+    bool Blit(HDC hdc, Rect target);
 };
+
+i64 RenderedBitmapByteSize(RenderedBitmap*);
 
 void InitAllCommonControls();
 Size GetBitmapSize(HBITMAP hbmp);

@@ -7,6 +7,7 @@
 #include "utils/FileUtil.h"
 #include "utils/WinDynCalls.h"
 #include "utils/ScopedWin.h"
+#include "utils/Pixmap.h"
 #include "utils/WinUtil.h"
 
 #include <wintrust.h>
@@ -34,12 +35,12 @@ bool ToBool(BOOL b) {
     return b ? true : false;
 }
 
-Size BlittableBitmap::GetSize() {
+Size RenderedBitmap::GetSize() {
     return size;
 }
 
 // approximate size, we assume 4 bytes per pixel and don't count stride
-i64 BlittableBitmapByteSize(BlittableBitmap* bmp) {
+i64 RenderedBitmapByteSize(RenderedBitmap* bmp) {
     if (!bmp) {
         return 0;
     }
@@ -2514,6 +2515,78 @@ bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target) {
     SelectObject(bmpDC, oldBmp);
     DeleteDC(bmpDC);
     return ok;
+}
+
+// Allocate a Pixmap backed by a GDI DIB section: its pixels (`data`) double as a directly
+// blittable HBITMAP, so decoding/rendering into it needs no copy to reach the screen.
+// 32bpp BGRA, top-down. Returns nullptr on failure.
+Pixmap* AllocPixmapDIB(int w, int h) {
+    if (w <= 0 || h <= 0) {
+        return nullptr;
+    }
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = -h; // negative => top-down (row 0 is the top row)
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    void* bits = nullptr;
+    HBITMAP hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!hbmp || !bits) {
+        if (hbmp) {
+            DeleteObject(hbmp);
+        }
+        return nullptr;
+    }
+    Pixmap* p = new Pixmap();
+    p->width = w;
+    p->height = h;
+    p->stride = w * 4; // 32bpp DIB rows are DWORD-aligned, so w*4 is already the stride
+    p->format = PixmapFormat::BGRA8;
+    p->data = (u8*)bits;
+    p->hbmp = hbmp;
+    return p;
+}
+
+// frees the native handles of a DIB-section-backed Pixmap (the pixels are owned by hbmp).
+void FreePixmapNativeBitmap(Pixmap* p) {
+    if (!p) {
+        return;
+    }
+    if (p->hbmp) {
+        DeleteObject((HBITMAP)p->hbmp);
+        p->hbmp = nullptr;
+    }
+    if (p->hMap) {
+        CloseHandle((HANDLE)p->hMap);
+        p->hMap = nullptr;
+    }
+    p->data = nullptr; // was owned by the DIB section
+}
+
+// Blit a Pixmap into the target rect (stretching if sizes differ). DIB-section-backed
+// Pixmaps go through the GDI HBITMAP fast path; malloc-backed ones blit straight from
+// memory via StretchDIBits (no intermediate object).
+bool BlitPixmap(Pixmap* p, HDC hdc, Rect target) {
+    if (!p || !p->data) {
+        return false;
+    }
+    if (p->hbmp) {
+        return BlitHBITMAP((HBITMAP)p->hbmp, hdc, target);
+    }
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = p->width;
+    bmi.bmiHeader.biHeight = -p->height; // top-down
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = (p->format == PixmapFormat::BGR8) ? 24 : 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    SetStretchBltMode(hdc, HALFTONE);
+    int r = StretchDIBits(hdc, target.x, target.y, target.dx, target.dy, 0, 0, p->width, p->height, p->data, &bmi,
+                          DIB_RGB_COLORS, SRCCOPY);
+    return r != GDI_ERROR && r != 0;
 }
 
 // This is meant to measure program startup time from the user perspective.

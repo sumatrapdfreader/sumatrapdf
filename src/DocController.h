@@ -10,10 +10,10 @@ struct TocTree;
 struct TocItem;
 struct MainWindow;
 struct FileState;
-struct BlittableBitmap;
+struct RenderedBitmap;
 enum class DisplayMode;
 
-using OnBitmapRendered = Func1<BlittableBitmap*>;
+using OnBitmapRendered = Func1<RenderedBitmap*>;
 
 struct ILinkHandler {
     virtual ~ILinkHandler() {};
