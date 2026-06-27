@@ -60,11 +60,11 @@ struct LinkHandler : ILinkHandler {
 
     DocController* GetDocController() override { return win->ctrl; }
     void GotoLink(IPageDestination*) override;
-    void GotoNamedDest(const char*) override;
+    void GotoNamedDest(Str) override;
     void ScrollTo(IPageDestination*) override;
-    void LaunchURL(const char*) override;
-    void LaunchFile(const char* path, IPageDestination*) override;
-    IPageDestination* FindTocItem(TocItem* item, const char* name, bool partially) override;
+    void LaunchURL(Str) override;
+    void LaunchFile(Str path, IPageDestination*) override;
+    IPageDestination* FindTocItem(TocItem* item, Str name, bool partially) override;
 };
 
 LinkHandler::~LinkHandler() {
@@ -520,7 +520,7 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     win->ctrl->ScrollTo(pageNo, rect, zoom);
 }
 
-void LinkHandler::LaunchURL(const char* uri) {
+void LinkHandler::LaunchURL(Str uri) {
     if (!uri) {
         /* ignore missing URLs */;
         return;
@@ -565,7 +565,7 @@ Str CleanRemoteDestName(Str destName) {
 // for safety, only handle relative paths and only open them in SumatraPDF
 // (unless they're of an allowed perceived type) and never launch any external
 // file in plugin mode (where documents are supposed to be self-contained)
-void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* remoteLink) {
+void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
     if (gPluginMode || !CanAccessDisk()) {
         return;
     }
@@ -676,7 +676,7 @@ static bool MatchFuzzy(const char* s1, const char* s2, bool partially) {
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-IPageDestination* LinkHandler::FindTocItem(TocItem* item, const char* name, bool partially) {
+IPageDestination* LinkHandler::FindTocItem(TocItem* item, Str name, bool partially) {
     for (; item; item = item->next) {
         if (item->title) {
             TempStr fuzTitle = NormalizeFuzzyTemp(item->title);
@@ -692,7 +692,7 @@ IPageDestination* LinkHandler::FindTocItem(TocItem* item, const char* name, bool
     return nullptr;
 }
 
-void LinkHandler::GotoNamedDest(const char* name) {
+void LinkHandler::GotoNamedDest(Str name) {
     ReportIf(!win || win->linkHandler != this);
     DocController* ctrl = win->ctrl;
     if (!ctrl) {

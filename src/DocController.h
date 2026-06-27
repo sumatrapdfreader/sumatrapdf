@@ -19,11 +19,11 @@ struct ILinkHandler {
     virtual ~ILinkHandler() {};
     virtual DocController* GetDocController() = 0;
     virtual void GotoLink(IPageDestination*) = 0;
-    virtual void GotoNamedDest(const char*) = 0;
+    virtual void GotoNamedDest(Str) = 0;
     virtual void ScrollTo(IPageDestination*) = 0;
-    virtual void LaunchURL(const char*) = 0;
-    virtual void LaunchFile(const char* path, IPageDestination*) = 0;
-    virtual IPageDestination* FindTocItem(TocItem* item, const char* name, bool partially) = 0;
+    virtual void LaunchURL(Str) = 0;
+    virtual void LaunchFile(Str path, IPageDestination*) = 0;
+    virtual IPageDestination* FindTocItem(TocItem* item, Str name, bool partially) = 0;
 };
 
 struct DocControllerCallback {
@@ -49,7 +49,7 @@ struct DocControllerCallback {
     // an HtmlWindow and thus outside the reach of the main UI)
     virtual void FocusFrame(bool always) = 0;
     // tell the UI to let the user save the provided data to a file
-    virtual void SaveDownload(const char* url, const ByteSlice&) = 0;
+    virtual void SaveDownload(Str url, const ByteSlice&) = 0;
 };
 
 struct DocController {
