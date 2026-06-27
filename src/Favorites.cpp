@@ -165,7 +165,7 @@ static FileState* GetFavByFilePath(const char* filePath) {
     return fs;
 }
 
-bool IsPageInFavorites(const char* filePath, int pageNo) {
+bool IsPageInFavorites(Str filePath, int pageNo) {
     FileState* fav = GetFavByFilePath(filePath);
     if (!fav) {
         return false;
@@ -710,7 +710,7 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
     return currItem;
 }
 
-void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLabel, const char* nameIn) {
+void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn) {
     AutoFreeStr name = str::Dup(nameIn).s;
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd) {
@@ -762,7 +762,7 @@ void AddFavoriteForCurrentPage(MainWindow* win) {
     AddFavoriteForPage(win, pageNo);
 }
 
-void DelFavorite(const char* filePath, int pageNo) {
+void DelFavorite(Str filePath, int pageNo) {
     if (!filePath) {
         return;
     }

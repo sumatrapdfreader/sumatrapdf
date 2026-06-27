@@ -20,10 +20,10 @@ per-file basis in FileHistory.
 */
 
 bool HasFavorites();
-void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLabel, const char* nameIn);
+void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn);
 void AddFavoriteForPage(MainWindow* win, int pageNo);
 void AddFavoriteForCurrentPage(MainWindow* win);
-void DelFavorite(const char* filePath, int pageNo);
+void DelFavorite(Str filePath, int pageNo);
 void RebuildFavMenu(MainWindow* win, HMENU menu);
 void CreateFavorites(MainWindow* win);
 void ToggleFavorites(MainWindow* win);
@@ -31,7 +31,7 @@ void PopulateFavTreeIfNeeded(MainWindow* win);
 void GoToFavoriteByMenuId(MainWindow* win, int cmdId);
 void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();
-bool IsPageInFavorites(const char* filePath, int pageNo);
+bool IsPageInFavorites(Str filePath, int pageNo);
 
 // navigate to the nearest favorite (bookmark) page after / before the current
 // page in the open document (issue #3744)
