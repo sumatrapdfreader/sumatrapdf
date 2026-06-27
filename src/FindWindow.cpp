@@ -386,12 +386,12 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
         HRGN clipRgn = CreateRectRgnIndirect(&rcSnippet);
         if (clipRgn) {
             SelectClipRgn(hdc, clipRgn);
-            DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet ? fm.snippet : "", filterWords, hlScratch, colBg, false,
+            DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet, filterWords, hlScratch, colBg, false,
                                      win->findMatchWholeWord, drawFmt);
             SelectClipRgn(hdc, nullptr);
             DeleteObject(clipRgn);
         } else {
-            DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet ? fm.snippet : "", filterWords, hlScratch, colBg, false,
+            DrawMaybeHighlightedText(hdc, rcSnippet, fm.snippet, filterWords, hlScratch, colBg, false,
                                      win->findMatchWholeWord, drawFmt);
         }
     }
@@ -848,7 +848,7 @@ Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
     ClearFindMatches(win);
     FindMatch fm;
     fm.startPage = 1;
-    fm.snippet = str::Dup("longprefix testword suffix");
+    str::ReplaceWithCopy(&fm.snippet, "longprefix testword suffix");
     win->findMatches.Append(fm);
     fw->filterWords.Reset();
     fw->filterWords.Append("testword");

@@ -564,7 +564,7 @@ static void CountEndTask(CountEndTaskData* d) {
             ClearFindMatches(win);
             win->findMatches = *d->matches;
             for (int i = 0; i < (int)d->matches->size(); i++) {
-                (*d->matches)[i].snippet = nullptr; // transferred to win->findMatches
+                (*d->matches)[i].snippet = Str(); // transferred to win->findMatches
             }
             win->findCountHasSnippets = ctd->wantSnippets;
             if (ctd->wantSnippets) {
@@ -614,7 +614,7 @@ static void CountThread(CountThreadData* d) {
                 fm.endPage = ts.endPage;
                 fm.endGlyph = ts.endGlyph;
                 if (d->wantSnippets) {
-                    fm.snippet = BuildSnippet(engine, fm);
+                    str::ReplaceWithCopy(&fm.snippet, Str(BuildSnippet(engine, fm)));
                 }
                 matches->Append(fm);
             }

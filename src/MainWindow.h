@@ -24,7 +24,7 @@ struct FindMatch {
     int startGlyph = 0;
     int endPage = 0;
     int endGlyph = 0;
-    char* snippet = nullptr; // UTF-8, owned (freed when findMatches is rebuilt)
+    Str snippet; // UTF-8, owned (freed when findMatches is rebuilt)
 };
 
 // factor by how large the non-maximized caption should be in relation to the tabbar
