@@ -1356,7 +1356,7 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
     bool addExternalViewersNext = false;
     while (true) {
         MenuDef md = menuDef[i];
-        if (md.title == nullptr) { // sentinel
+        if (!md.title) { // sentinel
             break;
         }
         i++;
@@ -1413,9 +1413,9 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         bool noTranslate = isDebugMenu || cmdIdInList(menusNoTranslate);
         noTranslate |= (subMenuDef == menuDefDebug);
-        const char* title = md.title;
+        Str title = md.title;
         if (!noTranslate) {
-            title = trans::GetTranslation(md.title);
+            title = Str(trans::GetTranslation(md.title));
         }
 
         if (isSubMenu) {
@@ -1749,7 +1749,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
 // removes a file from the Frequently Read list on the home page. Files with
 // favorites are only hidden (so the favorites aren't lost). Used by both the
 // context menu and the per-thumbnail ✕ button (issue #283).
-void ForgetFileFromFrequentlyRead(MainWindow* win, const char* filePath) {
+void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
     FileState* fs = gFileHistory.FindByPath(filePath);
     if (!fs) {
         return;
