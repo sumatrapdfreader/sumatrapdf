@@ -623,7 +623,7 @@ static void SumatraControlThread(char* pipeName) {
     }
 }
 
-void StartSumatraControl(const char* pipeName) {
+void StartSumatraControl(Str pipeName) {
     if (str::IsEmpty(pipeName)) {
         return;
     }

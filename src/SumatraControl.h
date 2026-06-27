@@ -1,4 +1,4 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-void StartSumatraControl(const char* pipeName);
+void StartSumatraControl(Str pipeName);
