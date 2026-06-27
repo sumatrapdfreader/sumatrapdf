@@ -238,7 +238,7 @@ WindowTab* MainWindow::CurrentTab() const {
         return nullptr;
     }
     int i = tabsCtrl->GetSelected();
-    if (i >= 0) {
+    if (i >= 0 && i < tabsCtrl->TabCount()) {
         curr = GetTab(i);
         return curr;
     }
