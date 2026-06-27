@@ -5,8 +5,8 @@ void FreeAcceleratorTables();
 void CreateSumatraAcceleratorTable();
 HACCEL* GetAcceleratorTables();
 TempStr AppendAccelKeyToMenuStringTemp(TempStr str, int cmdId);
-bool IsValidShortcutString(const char* shortcut);
-bool ParseShortcutString(const char* shortcut, ACCEL& accel);
+bool IsValidShortcutString(Str shortcut);
+bool ParseShortcutString(Str shortcut, ACCEL& accel);
 
 // Command bound to a key+modifiers among the accelerators that are "safe" to
 // process while a custom control (edit / tree / WebView2-hosted CHM) has focus.

@@ -487,13 +487,13 @@ again:
     return true;
 }
 
-bool IsValidShortcutString(const char* shortcut) {
+bool IsValidShortcutString(Str shortcut) {
     ACCEL accel = {};
     accel.cmd = (WORD)-1; // for debugging
     return parseShortcut(shortcut, accel);
 }
 
-bool ParseShortcutString(const char* shortcut, ACCEL& accel) {
+bool ParseShortcutString(Str shortcut, ACCEL& accel) {
     return parseShortcut(shortcut, accel);
 }
 
