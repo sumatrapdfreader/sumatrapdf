@@ -38,7 +38,7 @@ TempStr GetThumbnailPathTemp(const char* filePath) {
         return {};
     }
 
-    TempStr res = path::JoinTemp(thumbsDir.s, str::JoinTemp(fingerPrint, ".png").s);
+    TempStr res = path::JoinTemp(thumbsDir, str::JoinTemp(Str(fingerPrint), Str(".png")));
     return res;
 }
 

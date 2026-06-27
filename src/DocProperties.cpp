@@ -107,14 +107,14 @@ void AddProp(Props& props, Str name, Str val, bool replaceIfExists) {
     int idx = GetPropIdx(props, name);
     if (idx < 0) {
         // doesn't exsit
-        props.Append(name.s, name.len);
-        props.Append(val.s, val.len);
+        props.Append(name);
+        props.Append(val);
         return;
     }
     if (!replaceIfExists) {
         return;
     }
-    props.SetAt(idx + 1, val.s, val.len);
+    props.SetAt(idx + 1, val);
 }
 
 // strings are pairs of str1, str2 laid in sequence, with empty Str to mark the end

@@ -256,7 +256,7 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
         case SettingType::StringArray:
             value.Set(SerializeUtf8StringArray(*(Vec<char*>**)fieldPtr));
             if (!NeedsEscaping(value)) {
-                out.Append(value);
+                out.Append(value.Get());
             } else {
                 EscapeStr(out, value);
             }

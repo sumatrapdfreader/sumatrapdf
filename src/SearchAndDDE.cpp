@@ -1495,7 +1495,7 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
         logf("HandleOpenCmd: gIsStartup, appending to gDdeOpenOnStartup\n");
-        gDdeOpenOnStartup.Append(filePath);
+        gDdeOpenOnStartup.Append(Str(filePath.Get()));
         return next;
     }
 

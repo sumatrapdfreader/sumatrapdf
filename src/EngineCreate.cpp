@@ -45,8 +45,8 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
     if (str::IsEmpty(ext)) {
         ext = Str(".cbx");
     }
-    TempStr name = str::JoinTemp(hex, ext);
-    return path::JoinTemp(cacheDir.s, name.s);
+    TempStr name = str::JoinTemp(Str(hex), ext);
+    return path::JoinTemp(cacheDir, name);
 }
 
 struct CbxCopyProgressState {

@@ -366,7 +366,7 @@ bool CouldBePDFDoc(WindowTab* tab) {
 // Note: substituted values (path, dir) are inserted literally and not
 // re-scanned, so a '%' inside a file path can't trigger another substitution.
 static TempStr FormatParamTemp(const char* arg, WindowTab* tab) {
-    const char* path = tab->filePath ? tab->filePath : "";
+    Str path = tab->filePath ? tab->filePath : Str("");
 
     StrBuilder out;
     const char* s = arg;

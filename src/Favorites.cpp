@@ -360,7 +360,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
     }
 }
 
-static bool SortByBaseFileName(const char* s1, const char* s2) {
+static bool SortByBaseFileName(Str s1, Str s2) {
     if (str::IsEmpty(s1)) {
         if (str::IsEmpty(s2)) {
             return false;
@@ -370,8 +370,8 @@ static bool SortByBaseFileName(const char* s1, const char* s2) {
     if (str::IsEmpty(s2)) {
         return false;
     }
-    TempStr base1 = path::GetBaseNameTemp(Str(s1));
-    TempStr base2 = path::GetBaseNameTemp(Str(s2));
+    TempStr base1 = path::GetBaseNameTemp(s1);
+    TempStr base2 = path::GetBaseNameTemp(s2);
     int n = str::CmpNatural(base1, base2);
     return n < 0;
 }

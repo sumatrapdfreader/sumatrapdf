@@ -213,7 +213,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     // add the initial tex file to the source file stack
     filestack.Append((size_t)srcfiles.Size());
-    srcfiles.Append(jobName);
+    srcfiles.Append(Str(jobName.Get()));
     PdfsyncFileIndex findex{};
     fileIndex.Append(findex);
 
@@ -280,7 +280,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 }
 
                 filestack.Append((size_t)srcfiles.Size());
-                srcfiles.Append(filename);
+                srcfiles.Append(Str(filename.Get()));
                 findex.start = findex.end = lines.size();
                 fileIndex.Append(findex);
             } break;

@@ -1079,7 +1079,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     }
     PropertyItem* item = (PropertyItem*)malloc(size);
     if (!item) return {};
-    AutoFree freeItem((const char*)item);
+    AutoFree freeItem((char*)item);
     Status ok = bmp->GetPropertyItem(id, size, item);
     if (Ok != ok) {
         /* property didn't exist */;
@@ -1988,7 +1988,7 @@ bool ComicInfoParser::Visit(const char* path, const char* value, json::Type type
             if (json::Type::String == type && str::Eq(prop, "person")) {
                 propAuthorTmp.Set(str::Dup(value));
             } else if (json::Type::Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
-                       !propAuthors.Contains(propAuthorTmp)) {
+                       !propAuthors.Contains(Str(propAuthorTmp))) {
                 propAuthors.Append(propAuthorTmp.Get());
             }
         }

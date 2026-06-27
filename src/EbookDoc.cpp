@@ -572,7 +572,7 @@ ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
 
     // try to also load images which aren't registered in the manifest
     ImageData data;
-    data.fileId = archive->GetFileId(url);
+    data.fileId = archive->GetFileId(Str(url));
     if (data.fileId != (size_t)-1) {
         auto* fi = archive->GetFileDataById(data.fileId);
         if (fi && fi->data) {
@@ -596,7 +596,7 @@ ByteSlice EpubDoc::GetFileData(Str relPath, Str pagePath) {
     ScopedCritSec scope(&zipAccess);
 
     AutoFreeStr url(NormalizeURL(relPath, Str(pagePath)).s);
-    auto* fi = archive->GetFileDataByName(url);
+    auto* fi = archive->GetFileDataByName(Str(url));
     if (!fi || !fi->data) {
         return {};
     }
@@ -740,7 +740,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     const char* tocData = nullptr;
     {
         ScopedCritSec scope(&zipAccess);
-        auto* fi = archive->GetFileDataByName(tocPath);
+        auto* fi = archive->GetFileDataByName(Str(tocPath));
         if (fi && fi->data) {
             tocData = fi->data;
             tocDataLen = fi->fileSizeUncompressed;
@@ -812,7 +812,7 @@ static ByteSlice takeFileData(MultiFormatArchive* archive, size_t fileId) {
 }
 
 static ByteSlice loadFromFile(Fb2Doc* doc) {
-    MultiFormatArchive* archive = OpenArchiveFromFile(doc->fileName, /*eagerLoad=*/true, gArchiveProgressCb);
+    MultiFormatArchive* archive = OpenArchiveFromFile(Str(doc->fileName), /*eagerLoad=*/true, gArchiveProgressCb);
     if (!archive) {
         return file::ReadFile(Str(doc->fileName));
     }
@@ -1303,7 +1303,7 @@ bool HtmlDoc::Load() {
         data.Free();
     }
 
-    pagePath.SetCopy(fileName);
+    pagePath.SetCopy(Str(fileName));
     str::TransCharsInPlace(pagePath, "\\", "/");
 
     HtmlPullParser parser(htmlData);

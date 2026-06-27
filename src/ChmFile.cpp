@@ -99,8 +99,8 @@ void ChmFile::ParseWindowsData() {
     ByteSlice windowsData = GetData("/#WINDOWS");
     ByteSlice stringsData = GetData("/#STRINGS");
 
-    AutoFree stringsDataFree(stringsData);
-    AutoFree windowsDataFree(windowsData);
+    defer { stringsData.Free(); };
+    defer { windowsData.Free(); };
 
     if (windowsData.empty() || stringsData.empty()) {
         return;
