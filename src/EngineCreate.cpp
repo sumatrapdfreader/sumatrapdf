@@ -41,7 +41,7 @@ static TempStr GetCbxCachePathTemp(const char* path, i64 fileSize) {
     CalcMD5Digest((const u8*)keyStr.s, str::Leni(keyStr), digest);
     AutoFreeStr hex = str::MemToHex(digest, dimof(digest));
 
-    TempStr ext = path::GetExtTemp(path);
+    TempStr ext = path::GetExtTemp(Str(path));
     if (str::IsEmpty(ext)) {
         ext = Str(".cbx");
     }
@@ -82,7 +82,7 @@ static TempStr MaybeCopyCbxToLocalCache(const char* path) {
     if (IsStressTesting()) {
         return {};
     }
-    i64 fileSize = file::GetSize(path);
+    i64 fileSize = file::GetSize(Str(path));
     if (fileSize <= 0) {
         return {};
     }
@@ -284,7 +284,7 @@ EngineBase* CreateEngineFromFile(const char* path, PasswordUI* pwdUI, bool enabl
     ReportIf(!path);
 
     if (str::EndsWithI(path, ".p7m")) {
-        ByteSlice fileData = file::ReadFile(path);
+        ByteSlice fileData = file::ReadFile(Str(path));
         ByteSlice extracted = ExtractP7m(fileData);
         fileData.Free();
         if (!extracted.empty()) {

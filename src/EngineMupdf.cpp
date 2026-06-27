@@ -549,7 +549,7 @@ constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
 
 static fz_stream* FzReadFileIfSmall(fz_context* ctx, const char* path) {
     fz_stream* stm = nullptr;
-    i64 fileSize = file::GetSize(path);
+    i64 fileSize = file::GetSize(Str(path));
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     bool isSmallFile = fileSize > 0 && fileSize < kMaxMemoryFileSize;
@@ -557,7 +557,7 @@ static fz_stream* FzReadFileIfSmall(fz_context* ctx, const char* path) {
         return nullptr;
     }
 
-    ByteSlice d = file::ReadFile(path);
+    ByteSlice d = file::ReadFile(Str(path));
     if (d.empty()) {
         // failed to read
         return nullptr;
@@ -588,7 +588,7 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, const char* path) {
         return nullptr;
     }
 
-    ByteSlice d = file::ReadFile(path);
+    ByteSlice d = file::ReadFile(Str(path));
     if (d.empty()) {
         // failed to read
         return nullptr;
@@ -2307,7 +2307,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
     }
     SetFilePath(path);
 
-    auto ext = path::GetExtTemp(path);
+    auto ext = path::GetExtTemp(Str(path));
     str::ReplaceWithCopy(&defaultExt, ext);
 
     int streamNo = -1;
@@ -2809,7 +2809,7 @@ static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* fil
     if (str::FindChar(filespec, '/') || str::FindChar(filespec, '\\') || str::FindChar(filespec, ':')) {
         return nullptr;
     }
-    TempStr full = path::JoinTemp(path::GetDirTemp(pdfPath), filespec);
+    TempStr full = path::JoinTemp(path::GetDirTemp(Str(pdfPath)), filespec);
     if (!file::Exists(full)) {
         return nullptr;
     }
@@ -4530,7 +4530,7 @@ ByteSlice EngineMupdf::GetFileData() {
     if (!path) {
         return {};
     }
-    return file::ReadFile(path);
+    return file::ReadFile(Str(path));
 }
 
 bool EngineMupdf::SaveFileAs(const char* dstPath) {

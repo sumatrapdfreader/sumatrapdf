@@ -516,7 +516,7 @@ static void SaveAttachment(WindowTab* tab, const char* fileName, int attachmentN
         return;
     }
     char* dir = path::GetDirTemp(tab->filePath);
-    fileName = path::GetBaseNameTemp(fileName);
+    fileName = path::GetBaseNameTemp(Str(fileName));
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
@@ -562,7 +562,7 @@ static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fi
         return;
     }
     char* dir = path::GetDirTemp(tab->filePath);
-    fileName = path::GetBaseNameTemp(fileName);
+    fileName = path::GetBaseNameTemp(Str(fileName));
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
@@ -852,7 +852,7 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     u8* highlighted = AllocArrayTemp<u8>(titleLen);
     int filterLen = str::Leni(filter);
     const char* p = title;
-    while ((p = str::FindI(p, filter)) != nullptr) {
+    while ((p = str::FindI(Str(p), Str(filter)).s) != nullptr) {
         int off = (int)(p - title);
         for (int k = 0; k < filterLen && off + k < titleLen; k++) {
             highlighted[off + k] = 1;

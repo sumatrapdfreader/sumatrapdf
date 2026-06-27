@@ -460,13 +460,13 @@ static TempStr GetWindowProcessNameTemp(HWND hwnd) {
 static TempStr MakeUniquePathTemp(const char* dir, const char* base) {
     TempStr name = str::FormatTemp("%s.png", base);
     TempStr path = path::JoinTemp(dir, name);
-    if (!file::Exists(path)) {
+    if (!file::Exists(Str(path))) {
         return path;
     }
     for (int i = 1; i < 10000; i++) {
         name = str::FormatTemp("%s.%d.png", base, i);
         path = path::JoinTemp(dir, name);
-        if (!file::Exists(path)) {
+        if (!file::Exists(Str(path))) {
             return path;
         }
     }

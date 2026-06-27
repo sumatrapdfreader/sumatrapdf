@@ -210,10 +210,10 @@ static void CreateAppShortcuts(bool forAllUsers, const char* installedExePath) {
 
 static void RemoveShortcutFile(int csidl) {
     char* path = GetShortcutPathTemp(csidl);
-    if (!path || !file::Exists(path)) {
+    if (!path || !file::Exists(Str(path))) {
         return;
     }
-    file::Delete(path);
+    file::Delete(Str(path));
     logf("RemoveShortcutFile: deleted '%s'\n", path);
 }
 
@@ -658,7 +658,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
         // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
         case BFFM_SELCHANGED: {
             WCHAR path[MAX_PATH];
-            if (SHGetPathFromIDList((LPITEMIDLIST)lp, path) && dir::Exists(path)) {
+            if (SHGetPathFromIDList((LPITEMIDLIST)lp, path) && dir::Exists(WStr(path))) {
                 SHFILEINFO sfi{};
                 SHGetFileInfo((LPCWSTR)lp, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
                 if (!(sfi.dwAttributes & SFGAO_LINK)) {
@@ -704,8 +704,8 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
     char* installDir = HwndGetTextTemp(editDir->hwnd);
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
-    if (!dir::Exists(installDir)) {
-        installDir = path::GetDirTemp(installDir);
+    if (!dir::Exists(Str(installDir))) {
+        installDir = path::GetDirTemp(Str(installDir));
     }
 
     auto caption = _TRA("Select the folder where SumatraPDF should be installed:");
@@ -1151,7 +1151,7 @@ bool ExtractLibmupdfDll(const char* destDir) {
 
 bool ExtractInstallerFiles(char* dir) {
     logf("ExtractInstallerFiles() to '%s'\n", dir);
-    bool ok = dir::CreateAll(dir);
+    bool ok = dir::CreateAll(Str(dir));
     if (!ok) {
         log("  dir::CreateAll() failed\n");
         LogLastError();

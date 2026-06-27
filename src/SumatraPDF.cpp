@@ -416,7 +416,7 @@ bool OpenFileExternally(const char* path) {
     }
 
     // check if this file's perceived type is allowed
-    char* ext = path::GetExtTemp(path);
+    char* ext = path::GetExtTemp(Str(path));
     char* perceivedType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "PerceivedType");
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html") || str::EndsWithI(path, ".xhtml")) {
@@ -585,7 +585,7 @@ char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptio
             path = urlName;
         }
     }
-    path = path::GetBaseNameTemp(path);
+    path = path::GetBaseNameTemp(Str(path));
 
     // check if the window is still valid as it might have been closed by now
     if (!IsWindow(hwnd)) {
@@ -2497,7 +2497,7 @@ static NotificationWnd* ShowLoadingNotif(MainWindow* win, const char* path) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.groupId = path;
-    nargs.msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(path));
+    nargs.msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(Str(path)));
     return ShowNotification(nargs);
 }
 
@@ -3347,7 +3347,7 @@ enum class SaveChoice {
 };
 
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
-    TempStr fileName = path::GetBaseNameTemp(filePath);
+    TempStr fileName = path::GetBaseNameTemp(Str(filePath));
     TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'"), fileName);
     TempWStr mainInstr = ToWStrTemp(mainInstrA);
     auto content = _TRA("Save changes?");
@@ -3442,7 +3442,7 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
     // don't try to access it - engine uses memory-mapped I/O and accessing
     // pages of a gone file causes EXCEPTION_IN_PAGE_ERROR
     auto filePath = dm->GetFilePath();
-    if (!file::Exists(filePath)) {
+    if (!file::Exists(Str(filePath))) {
         logf("MaybeSaveAnnotations: file '%s' no longer exists, skipping\n", filePath);
         return true;
     }
@@ -3970,7 +3970,7 @@ static void DeleteCurrentFile(MainWindow* win) {
     auto* ctrl = win->ctrl;
     const char* path = str::DupTemp(ctrl->GetFilePath());
     // this happens e.g. for embedded documents and directories
-    if (!file::Exists(path)) {
+    if (!file::Exists(Str(path))) {
         return;
     }
     CloseCurrentTab(win, false);
@@ -4095,7 +4095,7 @@ static void CreateLnkShortcut(MainWindow* win) {
 
     WCHAR dstFileName[MAX_PATH] = {};
     // Remove the extension so that it can be replaced with .lnk
-    auto name = path::GetBaseNameTemp(path);
+    auto name = path::GetBaseNameTemp(Str(path));
     str::BufSet(dstFileName, dimof(dstFileName), name);
     str::TransCharsInPlace(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
@@ -4407,7 +4407,7 @@ static void RemoveFailedFiles(StrVec& files) {
 static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
     StrVec& files = gNextPrevDirCache;
 
-    char* dir = path::GetDirTemp(path);
+    char* dir = path::GetDirTemp(Str(path));
     if (path::IsSame(dir, gNextPrevDir)) {
         // failed files could have changed
         RemoveFailedFiles(files);
@@ -4466,7 +4466,7 @@ again:
         idx = (idx + nFiles - 1) % nFiles;
     }
     path = files[idx];
-    if (!file::Exists(path)) {
+    if (!file::Exists(Str(path))) {
         if (didRetry) {
             // TODO: can I do something better?
             return;
@@ -10564,7 +10564,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 }
 
 static TempStr GetFileSizeAsStrTemp(const char* path) {
-    i64 fileSize = file::GetSize(path);
+    i64 fileSize = file::GetSize(Str(path));
     return str::FormatFileSizeTemp(fileSize);
 }
 

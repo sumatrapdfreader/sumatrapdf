@@ -927,7 +927,7 @@ bool EngineImage::LoadSingleFile(const char* path) {
     }
     SetFilePath(path);
 
-    ByteSlice data = file::ReadFile(path);
+    ByteSlice data = file::ReadFile(Str(path));
     imageFormat = GuessFileTypeFromContent(data);
     if (imageFormat == nullptr) {
         imageFormat = GuessFileTypeFromName(path);
@@ -946,7 +946,7 @@ bool EngineImage::LoadSingleFile(const char* path) {
         fileExt = GfxFileExtFromKind(imageFormat);
     }
     if (fileExt == nullptr) {
-        fileExt = path::GetExtTemp(path);
+        fileExt = path::GetExtTemp(Str(path));
     }
     if (fileExt == nullptr) {
         fileExt = "";
@@ -1119,7 +1119,7 @@ static Bitmap* BitmapWithExifFromFile(const char* path) {
     if (!path) {
         return nullptr;
     }
-    ByteSlice data = file::ReadFile(path);
+    ByteSlice data = file::ReadFile(Str(path));
     Bitmap* bmp = BitmapWithExifFromData(data);
     data.Free();
     return bmp;
@@ -1730,13 +1730,13 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
     }
 
     const char* path = pageFileNames.At(pageNo - 1);
-    TempStr fileName = path::GetBaseNameTemp(path);
-    TempStr ext = path::GetExtTemp(fileName);
+    TempStr fileName = path::GetBaseNameTemp(Str(path));
+    TempStr ext = path::GetExtTemp(Str(fileName));
     if (!ext) {
         return str::DupTemp(fileName);
     }
-    auto pos = str::Find(fileName, ext);
-    size_t n = pos - fileName;
+    Str pos = str::Find(fileName, ext);
+    size_t n = pos ? (size_t)(pos.s - fileName.s) : fileName.len;
     return str::DupTemp(fileName, n);
 }
 
@@ -1745,7 +1745,7 @@ int EngineImageDir::GetPageByLabel(const char* label) const {
     for (int i = 0; i < pageFileNames.Size(); i++) {
         char* pagePath = pageFileNames[i];
         TempStr fileName = path::GetBaseNameTemp(pagePath);
-        char* ext = path::GetExtTemp(fileName);
+        char* ext = path::GetExtTemp(Str(fileName));
         if (!str::StartsWith(fileName, label)) {
             continue;
         }
@@ -1783,12 +1783,12 @@ TocTree* EngineImageDir::GetToc() {
 
 bool EngineImageDir::SaveFileAs(const char* dstPath) {
     // only copy the files if the target directory doesn't exist yet
-    bool ok = dir::CreateAll(dstPath);
+    bool ok = dir::CreateAll(Str(dstPath));
     if (!ok) {
         return false;
     }
     for (char* pathOld : pageFileNames) {
-        TempStr fileName = path::GetBaseNameTemp(pathOld);
+        TempStr fileName = path::GetBaseNameTemp(Str(pathOld));
         TempStr pathNew = path::JoinTemp(dstPath, fileName);
         ok = ok && file::Copy(pathNew, pathOld, true);
     }
@@ -1797,7 +1797,7 @@ bool EngineImageDir::SaveFileAs(const char* dstPath) {
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     char* path = pageFileNames.At(pageNo - 1);
-    ByteSlice bmpData = file::ReadFile(path);
+    ByteSlice bmpData = file::ReadFile(Str(path));
     if (!bmpData) {
         return nullptr;
     }
@@ -1812,14 +1812,14 @@ ByteSlice EngineImageDir::GetImageData(int pageNo) {
     auto pi = pageInfos[pageNo - 1];
     if (pi->rawData.empty()) {
         char* path = pageFileNames.At(pageNo - 1);
-        pi->rawData = file::ReadFile(path);
+        pi->rawData = file::ReadFile(Str(path));
     }
     return pi->rawData;
 }
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
     char* path = pageFileNames.At(pageNo - 1);
-    ByteSlice bmpData = file::ReadFile(path);
+    ByteSlice bmpData = file::ReadFile(Str(path));
     if (bmpData) {
         Size size = ImageSizeFromData(bmpData);
         bmpData.Free();
@@ -1829,7 +1829,7 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
 }
 
 EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
-    ReportIf(!dir::Exists(fileName));
+    ReportIf(!dir::Exists(Str(fileName)));
     EngineImageDir* engine = new EngineImageDir();
     if (!LoadImageDir(engine, fileName)) {
         SafeEngineRelease(&engine);
@@ -1840,7 +1840,7 @@ EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
 
 bool IsEngineImageDirSupportedFile(const char* fileName, bool) {
     // whether it actually contains images will be checked in LoadImageDir
-    return dir::Exists(fileName);
+    return dir::Exists(Str(fileName));
 }
 
 EngineBase* CreateEngineImageDirFromFile(const char* fileName) {
@@ -2161,7 +2161,7 @@ bool EngineCbx::FinishLoading() {
         Kind kind = GuessFileTypeFromName(fileName);
         if (IsEngineImageSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
-            !str::StartsWith(path::GetBaseNameTemp(fileName), ".")) {
+            !str::StartsWith(path::GetBaseNameTemp(Str(fileName)), ".")) {
             pageFiles.Append(fileInfo);
         }
     }
@@ -2247,7 +2247,7 @@ bool EngineCbx::FinishLoading() {
     } else {
         for (int i = 0; i < pageCount; i++) {
             const char* fname = files[i]->name;
-            TempStr baseName = path::GetBaseNameTemp(fname);
+            TempStr baseName = path::GetBaseNameTemp(Str(fname));
             addTocItem(baseName, i + 1);
         }
     }
@@ -2413,7 +2413,7 @@ EngineBase* EngineCbx::CreateFromFile(const char* path, const char* password, Mu
     // eagerly decompress small archives up front so we don't have to
     // re-open the file for each page's image data.
     constexpr i64 kMaxEagerLoadSize = 32 * 1024 * 1024;
-    i64 fileSize = file::GetSize(openPath);
+    i64 fileSize = file::GetSize(Str(openPath));
     bool eagerLoad = fileSize > 0 && fileSize < kMaxEagerLoadSize;
 
     if (!archive->Open(openPath, eagerLoad, hintKind, gArchiveProgressCb)) {

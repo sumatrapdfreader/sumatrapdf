@@ -129,7 +129,7 @@ void logPipe(const char* fmt, ...) {
     if (!gLogToPipe) return;
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args);
+    AutoFreeStr s = str::FmtV(fmt, args).s;
     logToPipe(s.Get());
     va_end(args);
 }
@@ -146,7 +146,7 @@ void logv(const char* s) {
 void logvf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args);
+    AutoFreeStr s = str::FmtV(fmt, args).s;
     logv(s.Get());
     va_end(args);
 }
@@ -238,7 +238,7 @@ void logf(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args);
+    AutoFreeStr s = str::FmtV(fmt, args).s;
     log2(s.Get(), false);
     va_end(args);
 }

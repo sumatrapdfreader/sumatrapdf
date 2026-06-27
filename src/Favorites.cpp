@@ -370,8 +370,8 @@ static bool SortByBaseFileName(const char* s1, const char* s2) {
     if (str::IsEmpty(s2)) {
         return false;
     }
-    TempStr base1 = path::GetBaseNameTemp(s1);
-    TempStr base2 = path::GetBaseNameTemp(s2);
+    TempStr base1 = path::GetBaseNameTemp(Str(s1));
+    TempStr base2 = path::GetBaseNameTemp(Str(s2));
     int n = str::CmpNatural(base1, base2);
     return n < 0;
 }
@@ -445,7 +445,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
         if (!combined) {
             const char* s = _TRA("Current file");
             if (f != currFileFav) {
-                s = MenuToSafeStringTemp(path::GetBaseNameTemp(filePath));
+                s = MenuToSafeStringTemp(path::GetBaseNameTemp(Str(filePath)));
             }
             AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWStrTemp(s));
         }
@@ -616,7 +616,7 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
         text = FavCompactReadableNameTemp(fs, fn);
     } else {
         char* fp = fs->filePath;
-        text = path::GetBaseNameTemp(fp);
+        text = path::GetBaseNameTemp(Str(fp));
     }
     res->text = str::Dup(text);
     return res;
@@ -711,7 +711,7 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
 }
 
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLabel, const char* nameIn) {
-    AutoFreeStr name = str::Dup(nameIn);
+    AutoFreeStr name = str::Dup(nameIn).s;
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd) {
         return;

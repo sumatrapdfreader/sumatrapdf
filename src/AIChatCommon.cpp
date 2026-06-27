@@ -91,7 +91,7 @@ TempStr AIChatJsEscapeTemp(const char* s) {
 
 TempStr AIChatJsonStrTemp(const char* json, const char* key) {
     TempStr pattern = str::FormatTemp("\"%s\":\"", key);
-    const char* start = str::Find(json, pattern);
+    const char* start = str::Find(Str(json), pattern).s;
     if (!start) {
         return {};
     }

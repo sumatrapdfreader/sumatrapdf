@@ -117,7 +117,7 @@ static void BenchChmLoadOnly(const char* filePath) {
 }
 
 static void BenchFile(const char* path, const char* pagesSpec) {
-    if (!file::Exists(path)) {
+    if (!file::Exists(Str(path))) {
         return;
     }
 
@@ -214,9 +214,9 @@ void BenchFileOrDir(StrVec& pathsToBench) {
     int n = pathsToBench.Size() / 2;
     for (int i = 0; i < n; i++) {
         char* path = pathsToBench.At(2 * i);
-        if (file::Exists(path)) {
+        if (file::Exists(Str(path))) {
             BenchFile(path, pathsToBench.At(2 * i + 1));
-        } else if (dir::Exists(path)) {
+        } else if (dir::Exists(Str(path))) {
             BenchDir(path);
         } else {
             logf("Error: file or dir %s doesn't exist", path);
@@ -225,7 +225,7 @@ void BenchFileOrDir(StrVec& pathsToBench) {
 }
 
 static bool IsBlacklistedForStressTest(const char* filePath) {
-    const char* name = path::GetBaseNameTemp(filePath);
+    const char* name = path::GetBaseNameTemp(Str(filePath));
     for (size_t i = 0; i < dimof(gStressTestBlacklist); i++) {
         if (str::EqI(name, gStressTestBlacklist[i])) {
             return true;
@@ -238,7 +238,7 @@ static bool IsStressTestSupportedFile(const char* filePath, const char* filter) 
     if (IsBlacklistedForStressTest(filePath)) {
         return false;
     }
-    if (filter && !path::Match(path::GetBaseNameTemp(filePath), filter)) {
+    if (filter && !path::Match(path::GetBaseNameTemp(Str(filePath)), filter)) {
         return false;
     }
     Kind kind = GuessFileType(filePath, false);
@@ -541,11 +541,11 @@ static void Finished(StressTest* st, bool success) {
 }
 
 static void Start(StressTest* st, const char* path, const char* filter, const char* ranges, int cycles) {
-    if (file::Exists(path)) {
+    if (file::Exists(Str(path))) {
         FilesProvider* filesProvider = new FilesProvider(path);
         ParsePageRanges(ranges, st->pageRanges);
         Start(st, filesProvider, cycles);
-    } else if (dir::Exists(path)) {
+    } else if (dir::Exists(Str(path))) {
         auto dirFileProvider = new DirFileProviderAsync(path, filter);
         ParsePageRanges(ranges, st->fileRanges);
         Start(st, dirFileProvider, cycles);

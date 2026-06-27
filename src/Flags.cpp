@@ -730,8 +730,8 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, const char* toolNames)
         if (arg == Arg::Adobe) {
             FileArgs fargs;
             ParseAdobeFlags(fargs, param);
-            i.search = fargs.search ? str::Dup(a, fargs.search) : i.search;
-            i.namedDest = fargs.destName ? str::Dup(a, fargs.destName) : i.namedDest;
+            i.search = fargs.search ? str::Dup(a, fargs.search).s : i.search;
+            i.namedDest = fargs.destName ? str::Dup(a, fargs.destName).s : i.namedDest;
             i.pageNumber = fargs.pageNumber > 0 ? fargs.pageNumber : i.pageNumber;
             // TODO: annotAttObjNum and attachmentNo?
             continue;

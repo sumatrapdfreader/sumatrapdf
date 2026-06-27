@@ -474,7 +474,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
                      pd->embedObjNum, (int)data.sz);
                 TempStr tmpDir = GetTempDirTemp();
                 if (tmpDir) {
-                    TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(fileName));
+                    TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(Str(fileName)));
                     if (file::WriteFile(tmpPath, data)) {
                         SumatraLaunchBrowser(tmpPath);
                     }

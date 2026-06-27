@@ -118,8 +118,8 @@ int Synchronizer::MarkIndexWasRebuilt() {
 }
 
 char* Synchronizer::PrependDir(const char* filename) const {
-    TempStr dir = path::GetDirTemp(syncFilePath);
-    return path::Join(dir, filename);
+    TempStr dir = path::GetDirTemp(Str(syncFilePath));
+    return path::Join(dir, Str(filename)).s;
 }
 
 // Create a Synchronizer object for a PDF file.
@@ -134,7 +134,7 @@ int Synchronizer::Create(const char* path, EngineBase* engine, Synchronizer** sy
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    char* basePath = path::GetPathNoExtTemp(path);
+    char* basePath = path::GetPathNoExtTemp(Str(path));
 
     // Check if a PDFSYNC file is present
     char* syncFile = str::JoinTemp(basePath, ".pdfsync");
@@ -175,7 +175,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
         return PDFSYNCERR_SUCCESS;
     }
 
-    ByteSlice data = file::ReadFile(syncFilePath);
+    ByteSlice data = file::ReadFile(Str(syncFilePath));
     if (!data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
@@ -190,7 +190,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransCharsInPlace(line, "*/", " \\");
     AutoFreeStr jobName = strconv::AnsiToUtf8(line);
-    jobName.Set(str::Join(jobName, ".tex"));
+    jobName.Set(str::Join(Str(jobName), Str(".tex")).s);
     jobName.Set(PrependDir(jobName));
 
     line = Advance0Line(line, dataEnd);
@@ -270,11 +270,11 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransCharsInPlace(filename, "*/", " \\");
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (str::IsEmpty(path::GetExtTemp(filename))) {
-                    filename = str::Join(filename, ".tex");
+                if (str::IsEmpty(path::GetExtTemp(Str(filename)))) {
+                    filename = str::Join(Str(filename), Str(".tex")).s;
                 }
                 // ensure that the path is absolute
-                if (!path::IsAbsolute(filename)) {
+                if (!path::IsAbsolute(Str(filename))) {
                     filename = PrependDir(filename);
                 }
 
@@ -313,11 +313,11 @@ static int cmpLineRecords(const void* a, const void* b) {
 // If `srcfilepath` doesn't exist on disk, checks whether it's been moved to sit
 // next to the PDF document (which happens if all files are moved together)
 static void TryRecoverMovedSourceFile(AutoFreeStr& srcfilepath, const char* pdfPath) {
-    if (file::Exists(srcfilepath)) {
+    if (file::Exists(Str(srcfilepath))) {
         return;
     }
-    TempStr altsrcpath = path::GetDirTemp(pdfPath);
-    altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(srcfilepath));
+    TempStr altsrcpath = path::GetDirTemp(Str(pdfPath));
+    altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(Str(srcfilepath)));
     if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath)) {
         srcfilepath.SetCopy(altsrcpath);
     }
@@ -384,7 +384,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     }
 
     char* path = srcfiles[found->file];
-    filename.SetCopy(path::NormalizeTemp(path));
+    filename.SetCopy(path::NormalizeTemp(Str(path)));
     TryRecoverMovedSourceFile(filename, pdfPath);
 
     *line = (int)found->line;
@@ -426,7 +426,7 @@ UINT Pdfsync::SourceToRecord(const char* srcfilename, int line, int, Vec<size_t>
     int isrc;
     for (isrc = 0; isrc < srcfiles.Size(); isrc++) {
         char* path = srcfiles[isrc];
-        if (path::IsSame(srcfilepath, path)) {
+        if (path::IsSame(Str(srcfilepath), Str(path))) {
             break;
         }
     }
@@ -702,7 +702,7 @@ int SyncTex::RebuildIndexIfNeeded() {
     TempStr pathSync;   //  abc.synctex
     TempStr pathSyncGz; //  abc.synctex.gz
     pathSync = str::DupTemp(syncFilePath.Get());
-    pathBase = path::GetPathNoExtTemp(syncFilePath);
+    pathBase = path::GetPathNoExtTemp(Str(syncFilePath));
     pathSyncGz = str::JoinTemp(pathBase, ".synctex.gz");
 
     i64 fsize;
@@ -749,7 +749,7 @@ int SyncTex::RebuildIndexIfNeeded() {
         logfa("SyncTex::RebuildIndexIfNeeded: temp file for origin file '%s' not found\n", pathSync);
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
-    fsize = file::GetSize(tempsync2);
+    fsize = file::GetSize(Str(tempsync2));
     logf("SyncTex::RebuildIndexIfNeeded: org path: %s\n; final file path: %s, final file size: %lld.\n", pathSync,
          tempsync2, fsize);
 
@@ -824,14 +824,14 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         if (filename[0] != '/') {
             TempStr unixSyncFilePath = path::WslUncToUnixTemp(syncFilePath.Get());
             TempStr dir = path::GetDirTemp(unixSyncFilePath);
-            filename.Set(path::Join(dir, filename));
+            filename.Set(path::Join(dir, Str(filename)).s);
         }
     } else {
         // Treat filename as Windows path
 
         str::TransCharsInPlace(filename, "/", "\\");
         // Convert the source filepath to an absolute path
-        if (!path::IsAbsolute(filename)) {
+        if (!path::IsAbsolute(Str(filename))) {
             filename.Set(PrependDir(filename));
         }
         filename.SetCopy(path::NormalizeTemp(filename.Get()));

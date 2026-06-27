@@ -55,24 +55,24 @@ static WStr WrapTempWStr(WCHAR* s, size_t cch = (size_t)-1) {
 }
 
 namespace str {
-TempStr DupTemp(const char* s, size_t cb) {
-    return WrapTempStr(str::Dup(GetTempArena(), s, cb), cb);
+TempStr DupTemp(Str s, size_t cb) {
+    return Dup(GetTempArena(), s, cb);
 }
 
 TempWStr DupTemp(const WCHAR* s, size_t cch) {
-    return WrapTempWStr(str::Dup(GetTempArena(), s, cch), cch);
+    return WrapTempWStr(Dup(GetTempArena(), s, cch), cch);
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
-    return WrapTempStr(Join(GetTempArena(), s1, s2, s3));
+    return Join(GetTempArena(), Str(s1), Str(s2), Str(s3));
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4) {
-    return WrapTempStr(Join(GetTempArena(), s1, s2, s3, s4, nullptr));
+    return Join(GetTempArena(), Str(s1), Str(s2), Str(s3), Str(s4));
 }
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4, const char* s5) {
-    return WrapTempStr(Join(GetTempArena(), s1, s2, s3, s4, s5));
+    return Join(GetTempArena(), Str(s1), Str(s2), Str(s3), Str(s4), Str(s5));
 }
 
 TempWStr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
@@ -80,15 +80,15 @@ TempWStr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
 }
 
 TempStr JoinTemp(Str s1, const char* s2, const char* s3) {
-    return JoinTemp(s1.s, s2, s3);
+    return Join(GetTempArena(), s1, Str(s2), Str(s3));
 }
 
 TempStr JoinTemp(const char* s1, Str s2, const char* s3) {
-    return JoinTemp(s1, s2.s, s3);
+    return Join(GetTempArena(), Str(s1), s2, Str(s3));
 }
 
 TempStr JoinTemp(Str s1, Str s2, const char* s3) {
-    return JoinTemp(s1.s, s2.s, s3);
+    return Join(GetTempArena(), s1, s2, Str(s3));
 }
 
 TempWStr JoinTemp(WStr s1, const WCHAR* s2, const WCHAR* s3) {
@@ -106,9 +106,9 @@ TempWStr JoinTemp(WStr s1, WStr s2, const WCHAR* s3) {
 TempStr FormatTemp(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char* res = FmtVWithArena(GetTempArena(), fmt, args);
+    Str res = FmtVWithArena(GetTempArena(), fmt, args);
     va_end(args);
-    return WrapTempStr(res);
+    return res;
 }
 
 TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWith) {
@@ -117,7 +117,7 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
     }
 
     const char* curr = s;
-    const char* end = str::Find(curr, toReplace);
+    Str end = str::Find(Str(curr), toReplace);
     if (!end) {
         // optimization: nothing to replace so do nothing
         return Str(s);
@@ -133,8 +133,8 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
     size_t capHint = str::Len(s) + 1 + (lenDiff * 6);
     StrBuilder result(capHint);
     bool ok;
-    while (end != nullptr) {
-        ok = result.Append(curr, end - curr);
+    while (end) {
+        ok = result.Append(curr, end.s - curr);
         if (!ok) {
             return {};
         }
@@ -142,8 +142,8 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
         if (!ok) {
             return {};
         }
-        curr = end + findLen;
-        end = str::Find(curr, toReplace);
+        curr = end.s + findLen;
+        end = str::Find(Str(curr), toReplace);
     }
     ok = result.Append(curr);
     if (!ok) {
@@ -154,11 +154,11 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
 
 TempStr ReplaceNoCaseTemp(const char* s, const char* toReplace, const char* replaceWith) {
     int n = str::Leni(toReplace);
-    const char* pos = str::FindI(s, toReplace);
+    Str pos = str::FindI(Str(s), toReplace);
     if (!pos) {
         return Str(s);
     }
-    if (!memeq(pos, toReplace, n)) {
+    if (!memeq(pos.s, toReplace, n)) {
         toReplace = str::DupTemp(pos, n).s;
     }
     TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);

@@ -2013,7 +2013,7 @@ PrintResult PrintFile2(EngineBase* engine, char* printerName, bool displayErrors
 
 PrintResult PrintFile(const char* fileName, char* printerName, bool displayErrors, const char* settings) {
     logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
-    fileName = path::NormalizeTemp(fileName);
+    fileName = path::NormalizeTemp(Str(fileName));
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
         TempStr msg = str::FormatTemp("Couldn't open file '%s' for printing", fileName);

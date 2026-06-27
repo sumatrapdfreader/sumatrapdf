@@ -245,7 +245,7 @@ RenderedBitmap* LoadRenderedBitmap(const char* path) {
     }
     Gdiplus::Bitmap* bmp;
     {
-        ByteSlice data = file::ReadFile(path);
+        ByteSlice data = file::ReadFile(Str(path));
         if (!data) {
             return nullptr;
         }

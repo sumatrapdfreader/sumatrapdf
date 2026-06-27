@@ -40,7 +40,7 @@ static void CliPrint(const char* s) {
 static void CliPrintf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args);
+    AutoFreeStr s = str::FmtV(fmt, args).s;
     va_end(args);
     CliPrint(s.Get());
 }
@@ -210,7 +210,7 @@ class ChmDumpIndexVisitor : public EbookTocVisitor {
 };
 
 static bool DumpChmFileRaw(const char* path) {
-    ByteSlice data = file::ReadFile(path);
+    ByteSlice data = file::ReadFile(Str(path));
     if (data.empty()) {
         CliPrint("error: couldn't read file");
         return false;

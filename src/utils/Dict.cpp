@@ -237,7 +237,7 @@ bool MapStrToInt::Insert(const char* key, int val, int* existingValOut, const ch
         }
         return false;
     }
-    e->key = (intptr_t)str::Dup(allocator, key);
+    e->key = (intptr_t)str::Dup(allocator, key).s;
     e->val = (intptr_t)val;
     if (existingKeyOut) {
         *existingKeyOut = (const char*)e->key;

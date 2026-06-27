@@ -232,7 +232,7 @@ ByteSlice EngineEbook::GetFileData() {
     if (!fileName) {
         return {};
     }
-    return file::ReadFile(fileName);
+    return file::ReadFile(Str(fileName));
 }
 
 bool EngineEbook::SaveFileAs(const char* dstPath) {
@@ -853,7 +853,7 @@ EngineBase* EngineEpub::Clone() {
 
 bool EngineEpub::Load(const char* fileName) {
     SetFilePath(fileName);
-    if (dir::Exists(fileName)) {
+    if (dir::Exists(Str(fileName))) {
         // load uncompressed documents as a recompressed ZIP stream
         ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
         if (!zipStream) {
@@ -1407,7 +1407,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFreeStr src = str::Dup(attr->val, attr->valLen);
+        AutoFreeStr src = str::Dup(attr->val, attr->valLen).s;
         url::DecodeInPlace(src);
         ByteSlice* img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
@@ -1711,7 +1711,7 @@ TocTree* EngineChm::GetToc() {
 static IPageDestination* newChmEmbeddedDest(const char* path) {
     auto res = new PageDestination();
     res->kind = kindDestinationLaunchEmbedded;
-    res->value = str::Dup(path::GetBaseNameTemp(path));
+    res->value = str::Dup(path::GetBaseNameTemp(Str(path)));
     return res;
 }
 
@@ -1722,8 +1722,8 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
     }
 
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
-    AutoFreeStr basePath = str::Dup(baseAnchor->str.s, baseAnchor->str.len);
-    AutoFreeStr url = str::Dup(link->str.s, link->str.len);
+    AutoFreeStr basePath = str::Dup(baseAnchor->str.s, baseAnchor->str.len).s;
+    AutoFreeStr url = str::Dup(link->str.s, link->str.len).s;
     url.Set(NormalizeURL(url, basePath));
     if (!doc->HasData(url)) {
         return nullptr;
@@ -1896,7 +1896,7 @@ bool EngineTxt::Load(const char* fileName) {
 
     SetFilePath(fileName);
 
-    str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(fileName));
+    str::ReplaceWithCopy(&defaultExt, path::GetExtTemp(Str(fileName)));
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc) {

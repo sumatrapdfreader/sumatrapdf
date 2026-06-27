@@ -41,7 +41,7 @@ static bool HasBeenInstalled() {
 
 static char* PathStripBaseName(char* path) {
     // base will either return path or a pointer inside path right after last "/"
-    char* base = (char*)path::GetBaseNameTemp(path);
+    char* base = (char*)path::GetBaseNameTemp(Str(path));
     if (base > path) {
         base[-1] = 0;
         return path;
@@ -108,7 +108,7 @@ bool IsDllBuild() {
 // (e.g. SumatraPDF-prerel-64-install.exe)
 bool IsInstallerOrUninstallerExe() {
     TempStr exeName = path::GetBaseNameTemp(GetSelfExePathTemp());
-    return str::FindI(exeName, "uninstall") || str::FindI(exeName, "install");
+    return str::FindI(exeName, Str("uninstall")).s || str::FindI(exeName, Str("install")).s;
 }
 
 static char* gAppDataDir = nullptr;
@@ -119,11 +119,11 @@ void DeleteAppTools() {
 }
 
 void SetAppDataDir(const char* dir) {
-    dir = path::NormalizeTemp(dir);
+    dir = path::NormalizeTemp(Str(dir));
     // don't try to create root directories like d:\ (CreateAll would fail)
     bool isRootDir = str::Len(dir) == 3 && dir[1] == ':' && dir[2] == '\\';
     if (!isRootDir) {
-        bool ok = dir::CreateAll(dir);
+        bool ok = dir::CreateAll(Str(dir));
         if (!ok) {
             logf("SetAppDataDir: failed to create directory '%s'\n", dir);
             LogLastError();
@@ -367,7 +367,7 @@ static void FindTextEditors() {
         const char* inverseSearchArgs = rule.inverseSearchArgs;
         if (rule.type == RegType::SiblingPath) {
             // remove file part
-            char* dir = path::GetDirTemp(path);
+            char* dir = path::GetDirTemp(Str(path));
             exePath = path::JoinTemp(dir, binaryFileName);
         } else if (rule.type == RegType::BinaryDir) {
             exePath = path::JoinTemp(path, binaryFileName);
@@ -629,7 +629,7 @@ bool LaunchFileIfExists(const char* path) {
     if (!path) {
         return false;
     }
-    if (!file::Exists(path)) {
+    if (!file::Exists(Str(path))) {
         logf("LaunchFileIfExists: !file::Exists('%s')\n", path);
         return false;
     }
@@ -646,7 +646,7 @@ bool LaunchFileIfExists(const char* path) {
 // returns true if the path has been changed
 bool AdjustVariableDriveLetter(char* path) {
     // Don't bother if the file path is still valid
-    if (file::Exists(path)) {
+    if (file::Exists(Str(path))) {
         return false;
     }
     // only check absolute path on drives i.e. those that start with "d:\"
@@ -660,7 +660,7 @@ bool AdjustVariableDriveLetter(char* path) {
     for (DWORD driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
         if ((driveMask & 1) && szDrive[0] != origDrive && path::HasVariableDriveLetter(szDrive)) {
             path[0] = szDrive[0];
-            if (file::Exists(path)) {
+            if (file::Exists(Str(path))) {
                 return true;
             }
         }

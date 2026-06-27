@@ -128,7 +128,7 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
         }
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
-            auto pos = str::FindI(gModulesInfo, pathA);
+            auto pos = str::FindI(Str(gModulesInfo), pathA).s;
             if (!pos) {
                 s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA);
             }
@@ -316,13 +316,13 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
         return false;
     }
 
-    if (!dir::CreateAll(symDir)) {
+    if (!dir::CreateAll(Str(symDir))) {
         logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", symDir);
         return false;
     }
 
     logf("DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
-    if (!symDir || !dir::Exists(symDir)) {
+    if (!symDir || !dir::Exists(Str(symDir))) {
         log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
         return false;
     }
@@ -355,7 +355,7 @@ bool CrashHandlerDownloadSymbols() {
 
 bool AreSymbolsDownloaded(const char* symDir) {
     TempStr path = path::JoinTemp(symDir, "SumatraPDF.pdb");
-    if (file::Exists(path)) {
+    if (file::Exists(Str(path))) {
         logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path, symDir);
         return true;
     }
@@ -389,7 +389,7 @@ static bool gAddExeDir = false;
 static TempStr BuildSymbolPathTemp(const char* symDir) {
     StrBuilder path(2048, GetTempArena());
 
-    bool symDirExists = dir::Exists(symDir);
+    bool symDirExists = dir::Exists(Str(symDir));
 
     // at this point symDir might not exist but we add it anyway
     path.Append(symDir);
@@ -908,7 +908,7 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
     if (!IsInstallerOrUninstallerExe()) {
         TempStr path = GetSettingsPathTemp();
         // can be empty on first run but that's fine because then we know it has default values
-        ByteSlice prefsData = file::ReadFile(path);
+        ByteSlice prefsData = file::ReadFile(Str(path));
         if (!prefsData.empty()) {
             // serialize without FileStates info because it's the largest
             GlobalPrefs* gp = NewGlobalPrefs((const char*)prefsData.data());

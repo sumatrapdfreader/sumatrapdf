@@ -114,9 +114,9 @@ char* GetExistingInstallationDir() {
         return nullptr;
     }
     if (str::EndsWithI(dir, ".exe")) {
-        dir = path::GetDirTemp(dir);
+        dir = path::GetDirTemp(Str(dir));
     }
-    if (!str::IsEmpty(dir) && dir::Exists(dir)) {
+    if (!str::IsEmpty(dir) && dir::Exists(Str(dir))) {
         gCachedExistingInstallationDir = str::Dup(dir);
         return str::Dup(dir);
     }
@@ -408,8 +408,8 @@ static bool KillProcessesUsingInstallation() {
     if (dir.empty()) {
         return true;
     }
-    TempStr libmupdf = path::JoinTemp(dir, "libmupdf.dll");
-    TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
+    TempStr libmupdf = path::JoinTemp(Str(dir), "libmupdf.dll");
+    TempStr browserPlugin = path::JoinTemp(Str(dir), kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
@@ -445,8 +445,8 @@ static void ProcessesUsingInstallation(StrVec& names) {
     if (dir.empty()) {
         return;
     }
-    char* libmupdf = path::JoinTemp(dir, "libmupdf.dll");
-    char* browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
+    char* libmupdf = path::JoinTemp(Str(dir), "libmupdf.dll");
+    char* browserPlugin = path::JoinTemp(Str(dir), kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {

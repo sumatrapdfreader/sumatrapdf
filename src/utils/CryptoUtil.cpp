@@ -75,7 +75,7 @@ static bool ExtractSignature(const char* hexSignature, const void* data, size_t&
             return false;
         }
         dataLen = lastLine - (const char*)data;
-        hexSignature = str::Find(lastLine, " Signature sha1:") + 16;
+        hexSignature = str::Find(Str(lastLine), Str(" Signature sha1:")).s + 16;
     } else {
         return false;
     }

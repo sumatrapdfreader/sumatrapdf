@@ -95,9 +95,9 @@ void FreePtr(char** s);
 void FreePtr(const WCHAR** s);
 void FreePtr(WCHAR** s);
 
-char* Dup(Arena*, const char* str, size_t cch = (size_t)-1);
-char* Dup(const char* s, size_t cch = (size_t)-1);
-char* Dup(const ByteSlice&);
+Str Dup(Arena*, Str str, size_t cch = (size_t)-1);
+Str Dup(Str s, size_t cch = (size_t)-1);
+Str Dup(const ByteSlice&);
 
 void ReplacePtr(const char** s, const char* snew);
 void ReplacePtr(char** s, const char* snew);
@@ -106,28 +106,34 @@ void ReplaceWithCopy(const char** s, const char* snew);
 void ReplaceWithCopy(const char** s, const ByteSlice&);
 void ReplaceWithCopy(char** s, const char* snew);
 
-char* Join(Arena*, const char*, const char*, const char*);
-char* Join(Arena*, const char*, const char*, const char*, const char*, const char*);
-char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
+Str Join(Arena*, Str, Str, Str);
+Str Join(Arena*, Str, Str, Str, Str, Str);
+Str Join(Str s1, Str s2, Str s3 = {});
+FORCEINLINE Str Join(Arena* a, Str s1, Str s2, Str s3, Str s4) {
+    return Join(a, s1, s2, s3, s4, Str{});
+}
+FORCEINLINE Str Join(Str s1, Str s2, Str s3, Str s4) {
+    return Join(nullptr, s1, s2, s3, s4);
+}
 
-bool Eq(const char* s1, const char* s2);
+bool Eq(Str s1, Str s2);
 bool Eq(const ByteSlice& sp1, const ByteSlice& sp2);
-bool EqI(const char* s1, const char* s2);
-bool EqIS(const char* s1, const char* s2);
-bool EqN(const char* s1, const char* s2, size_t len);
-bool EqNI(const char* s1, const char* s2, size_t len);
-bool IsEmpty(const char* s);
-bool StartsWith(const char* str, const char* prefix);
+bool EqI(Str s1, Str s2);
+bool EqIS(Str s1, Str s2);
+bool EqN(Str s1, Str s2, size_t len);
+bool EqNI(Str s1, Str s2, size_t len);
+bool IsEmpty(Str s);
+bool StartsWith(Str str, Str prefix);
 bool StartsWith(const u8* str, const char* prefix);
 
-bool StartsWithI(const char* str, const char* prefix);
-bool EndsWith(const char* txt, const char* end);
-bool EndsWithI(const char* txt, const char* end);
-bool EqNIx(const char* s, size_t len, const char* s2);
+bool StartsWithI(Str str, Str prefix);
+bool EndsWith(Str txt, Str end);
+bool EndsWithI(Str txt, Str end);
+bool EqNIx(Str s, size_t len, Str s2);
 
-char* ToLowerInPlace(char*);
+Str ToLowerInPlace(Str s);
 
-char* ToLower(const char*);
+Str ToLower(Str s);
 
 char* ToUpperInPlace(char*);
 
@@ -142,18 +148,18 @@ char* FindChar(char* str, char c);
 int FindCharIdx(const char* str, char c);
 const char* FindCharLast(const char* str, char c);
 char* FindCharLast(char* str, char c);
-const char* Find(const char* str, const char* find);
-const char* FindI(const char* str, const char* find);
+Str Find(Str str, Str find);
+Str FindI(Str str, Str find);
 int BufFind(const char* buf, int bufSize, const char* toFind);
 
-bool Contains(const char* s, const char* txt);
-bool ContainsI(const char* s, const char* txt);
+bool Contains(Str s, const char* txt);
+bool ContainsI(Str s, Str txt);
 
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
 bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...);
-char* FmtVWithArena(Arena* a, const char* fmt, va_list args);
-char* FmtV(const char* fmt, va_list args);
-char* Format(const char* fmt, ...);
+Str FmtVWithArena(Arena* a, const char* fmt, va_list args);
+Str FmtV(const char* fmt, va_list args);
+Str Format(const char* fmt, ...);
 
 size_t TrimWSInPlace(char* s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
@@ -223,9 +229,18 @@ void DecodeInPlace(char* url);
 FORCEINLINE void DecodeInPlace(Str url) {
     DecodeInPlace(url.s);
 }
-bool IsAbsolute(const char* url);
-TempStr GetFullPathTemp(const char* url);
-TempStr GetFileNameTemp(const char* url);
+bool IsAbsolute(Str url);
+FORCEINLINE bool IsAbsolute(const char* url) {
+    return IsAbsolute(Str(url));
+}
+TempStr GetFullPathTemp(Str url);
+FORCEINLINE TempStr GetFullPathTemp(const char* url) {
+    return GetFullPathTemp(Str(url));
+}
+TempStr GetFileNameTemp(Str url);
+FORCEINLINE TempStr GetFileNameTemp(const char* url) {
+    return GetFileNameTemp(Str(url));
+}
 
 } // namespace url
 
@@ -390,14 +405,14 @@ FORCEINLINE int Leni(Str s) {
 FORCEINLINE int Leni(WStr s) {
     return s.len;
 }
+FORCEINLINE bool Eq(const char* s1, const char* s2) {
+    return Eq(Str(s1), Str(s2));
+}
 FORCEINLINE bool Eq(Str s1, const char* s2) {
-    return Eq(s1.s, s2);
+    return Eq(s1, Str(s2));
 }
 FORCEINLINE bool Eq(const char* s1, Str s2) {
-    return Eq(s1, s2.s);
-}
-FORCEINLINE bool Eq(Str s1, Str s2) {
-    return StrEq(s1, s2);
+    return Eq(Str(s1), s2);
 }
 FORCEINLINE bool Eq(WStr s1, const WCHAR* s2) {
     return Eq(s1.s, s2);
@@ -408,11 +423,14 @@ FORCEINLINE bool Eq(const WCHAR* s1, WStr s2) {
 FORCEINLINE bool Eq(WStr s1, WStr s2) {
     return WStrEq(s1, s2);
 }
+FORCEINLINE bool EqI(const char* s1, const char* s2) {
+    return EqI(Str(s1), Str(s2));
+}
 FORCEINLINE bool EqI(Str s1, const char* s2) {
-    return EqI(s1.s, s2);
+    return EqI(s1, Str(s2));
 }
 FORCEINLINE bool EqI(const char* s1, Str s2) {
-    return EqI(s1, s2.s);
+    return EqI(Str(s1), s2);
 }
 FORCEINLINE bool EqI(WStr s1, const WCHAR* s2) {
     return EqI(s1.s, s2);
@@ -420,41 +438,53 @@ FORCEINLINE bool EqI(WStr s1, const WCHAR* s2) {
 FORCEINLINE bool EqI(const WCHAR* s1, WStr s2) {
     return EqI(s1, s2.s);
 }
-FORCEINLINE bool EqI(Str s1, Str s2) {
-    return EqI(s1.s, s2.s);
-}
 FORCEINLINE bool EqI(WStr s1, WStr s2) {
     return EqI(s1.s, s2.s);
-}
-FORCEINLINE bool IsEmpty(Str s) {
-    return !s || s.len == 0;
 }
 FORCEINLINE bool IsEmpty(WStr s) {
     return !s || s.len == 0;
 }
+FORCEINLINE bool StartsWith(const char* str, const char* prefix) {
+    return StartsWith(Str(str), Str(prefix));
+}
 FORCEINLINE bool StartsWith(Str str, const char* prefix) {
-    return StartsWith(str.s, prefix);
+    return StartsWith(str, Str(prefix));
 }
 FORCEINLINE bool StartsWith(WStr str, const WCHAR* prefix) {
     return StartsWith(str.s, prefix);
 }
+FORCEINLINE bool StartsWithI(const char* str, const char* prefix) {
+    return StartsWithI(Str(str), Str(prefix));
+}
 FORCEINLINE bool StartsWithI(Str str, const char* prefix) {
-    return StartsWithI(str.s, prefix);
+    return StartsWithI(str, Str(prefix));
 }
 FORCEINLINE bool StartsWithI(WStr str, const WCHAR* prefix) {
     return StartsWithI(str.s, prefix);
 }
+FORCEINLINE bool EndsWith(const char* txt, const char* end) {
+    return EndsWith(Str(txt), Str(end));
+}
 FORCEINLINE bool EndsWith(Str txt, const char* end) {
-    return EndsWith(txt.s, end);
+    return EndsWith(txt, Str(end));
 }
 FORCEINLINE bool EndsWith(WStr txt, const WCHAR* end) {
     return EndsWith(txt.s, end);
 }
-FORCEINLINE bool Contains(Str s, const char* txt) {
-    return Contains(s.s, txt);
+FORCEINLINE bool EndsWithI(const char* txt, const char* end) {
+    return EndsWithI(Str(txt), Str(end));
 }
-FORCEINLINE char* ToLowerInPlace(Str s) {
-    return ToLowerInPlace(s.s);
+FORCEINLINE bool EndsWithI(Str txt, const char* end) {
+    return EndsWithI(txt, Str(end));
+}
+FORCEINLINE bool EndsWithI(const char* txt, Str end) {
+    return EndsWithI(Str(txt), end);
+}
+FORCEINLINE bool Contains(const char* s, const char* txt) {
+    return Contains(Str(s), txt);
+}
+FORCEINLINE Str ToLowerInPlace(const char* s) {
+    return ToLowerInPlace(Str((char*)s));
 }
 FORCEINLINE WCHAR* ToLowerInPlace(WStr s) {
     return ToLowerInPlace(s.s);
@@ -477,11 +507,17 @@ FORCEINLINE int BufSet(WCHAR* dst, int dstCchSize, WStr src) {
 FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src.s);
 }
-FORCEINLINE char* Dup(Arena* a, Str s) {
-    return Dup(a, s.s, s.len);
+FORCEINLINE Str Dup(Arena* a, const char* s, size_t cch = (size_t)-1) {
+    if (!s) {
+        return {};
+    }
+    if (cch == (size_t)-1) {
+        return Dup(a, Str(s));
+    }
+    return Dup(a, Str((char*)s, (int)cch));
 }
-FORCEINLINE char* Dup(Str s) {
-    return Dup(s.s, s.len);
+FORCEINLINE Str Dup(const char* s, size_t cch = (size_t)-1) {
+    return Dup(nullptr, s, cch);
 }
 FORCEINLINE WCHAR* Dup(Arena* a, WStr s) {
     return Dup(a, s.s, s.len);
@@ -489,8 +525,35 @@ FORCEINLINE WCHAR* Dup(Arena* a, WStr s) {
 FORCEINLINE WCHAR* Dup(WStr s) {
     return Dup(s.s, s.len);
 }
-FORCEINLINE const char* Find(const Str& str, const char* find) {
-    return Find(str.s, find);
+FORCEINLINE Str Find(const Str& str, const char* find) {
+    return Find(str, Str(find));
+}
+FORCEINLINE Str FindI(const Str& str, const char* find) {
+    return FindI(str, Str(find));
+}
+FORCEINLINE Str ToLower(const char* s) {
+    return ToLower(Str(s));
+}
+FORCEINLINE bool EqIS(const char* s1, const char* s2) {
+    return EqIS(Str(s1), Str(s2));
+}
+FORCEINLINE bool EqN(const char* s1, const char* s2, size_t len) {
+    return EqN(Str(s1), Str(s2), len);
+}
+FORCEINLINE bool EqNI(const char* s1, const char* s2, size_t len) {
+    return EqNI(Str(s1), Str(s2), len);
+}
+FORCEINLINE bool EqNIx(const char* s, size_t len, const char* s2) {
+    return EqNIx(Str(s), len, Str(s2));
+}
+FORCEINLINE bool ContainsI(const char* s, const char* txt) {
+    return ContainsI(Str(s), Str(txt));
+}
+FORCEINLINE bool ContainsI(Str s, const char* txt) {
+    return ContainsI(s, Str(txt));
+}
+FORCEINLINE bool ContainsI(const char* s, Str txt) {
+    return ContainsI(Str(s), txt);
 }
 FORCEINLINE char* FindChar(Str str, char c) {
     return FindChar(str.s, c);
@@ -511,7 +574,13 @@ int ParseInt(const char* bytes);
 i64 ParseInt64(const char* s);
 bool IsValidProgramVersion(const char* ver);
 int CompareProgramVersion(const char* ver1, const char* ver2);
-TempStr ShortenStringUtf8Temp(const char* s, int maxRunes);
-TempStr ShortenStringUtf8InTheMiddleTemp(const char* s, int maxRunes);
+TempStr ShortenStringUtf8Temp(Str s, int maxRunes);
+FORCEINLINE TempStr ShortenStringUtf8Temp(const char* s, int maxRunes) {
+    return ShortenStringUtf8Temp(Str(s), maxRunes);
+}
+TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes);
+FORCEINLINE TempStr ShortenStringUtf8InTheMiddleTemp(const char* s, int maxRunes) {
+    return ShortenStringUtf8InTheMiddleTemp(Str(s), maxRunes);
+}
 bool IsTextRtl(const WCHAR* s);
 bool IsTextRtl(const char* s);

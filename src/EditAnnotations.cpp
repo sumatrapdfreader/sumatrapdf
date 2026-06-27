@@ -1012,7 +1012,7 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
     }
 
     TempStr dir = path::GetDirTemp(ew->tab->filePath);
-    fileName = path::GetBaseNameTemp(fileName);
+    fileName = path::GetBaseNameTemp(Str(fileName));
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(ew->hwnd, dstPath, data);
     str::Free(data.data());

@@ -595,7 +595,7 @@ bool SaveSettings() {
     if (!path) {
         return false;
     }
-    ByteSlice prevPrefs = file::ReadFile(path);
+    ByteSlice prevPrefs = file::ReadFile(Str(path));
     const char* prevPrefsData = (char*)prevPrefs.data();
     ByteSlice prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {

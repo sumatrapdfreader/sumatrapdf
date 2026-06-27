@@ -206,7 +206,7 @@ EngineBase* EngineDjvuDec::Clone() {
 
 bool EngineDjvuDec::Load(const char* fileName) {
     SetFilePath(fileName);
-    fileData = file::ReadFile(fileName);
+    fileData = file::ReadFile(Str(fileName));
     return FinishLoading();
 }
 

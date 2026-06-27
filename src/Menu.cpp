@@ -1158,7 +1158,7 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
         return;
     }
 
-    TempStr menuString = path::GetBaseNameTemp(filePath);
+    TempStr menuString = path::GetBaseNameTemp(Str(filePath));
     // shorten very long file names so that menu isn't too wide
     const size_t kMaxRunes = 70;
     menuString = ShortenStringUtf8InTheMiddleTemp(menuString, kMaxRunes);
@@ -1232,7 +1232,7 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
 }
 
 static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
-    if (!CanAccessDisk() || (filePath && !file::Exists(filePath))) {
+    if (!CanAccessDisk() || (filePath && !file::Exists(Str(filePath)))) {
         return;
     }
     Vec<CustomCommand*> cmds;
@@ -1255,7 +1255,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
                     continue;
                 }
                 char* arg0 = args.at(2 + 0);
-                name = str::DupTemp(path::GetBaseNameTemp(arg0));
+                name = str::DupTemp(path::GetBaseNameTemp(Str(arg0)));
                 char* pos = str::FindChar(name, '.');
                 if (pos) {
                     *pos = 0;
@@ -1981,8 +1981,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             if (pageEl && pageEl->Is(kindPageElementImage)) {
                 RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {
-                    TempStr dir = path::GetDirTemp(filePath);
-                    TempStr base = path::GetBaseNameTemp(filePath);
+                    TempStr dir = path::GetDirTemp(Str(filePath));
+                    TempStr base = path::GetBaseNameTemp(Str(filePath));
                     TempStr noExt = path::GetPathNoExtTemp(base);
                     TempStr destPath = path::JoinTemp(dir, str::FormatTemp("%s_page_%d.png", noExt, pageNoUnderCursor));
                     ImageEditMode m = ImageEditMode::Save;
@@ -2025,8 +2025,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                     ByteSlice data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
                     if (!data.empty()) {
                         const char* fileName = pd->GetValue2();
-                        TempStr dir = path::GetDirTemp(filePath);
-                        fileName = path::GetBaseNameTemp(fileName);
+                        TempStr dir = path::GetDirTemp(Str(filePath));
+                        fileName = path::GetBaseNameTemp(Str(fileName));
                         TempStr dstPath = path::JoinTemp(dir, fileName);
                         SaveDataToFile(win->hwndFrame, dstPath, data);
                         str::Free(data.data());

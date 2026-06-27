@@ -367,11 +367,11 @@ static char* GetCodexSessionDescription(const char* sessionId) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     TempStr historyPath = userProfile ? str::FormatTemp("%s\\.codex\\history.jsonl", userProfile) : nullptr;
     if (!historyPath) {
-        return str::Dup("(no description)");
+        return str::Dup("(no description)").s;
     }
     ByteSlice data = file::ReadFile(historyPath);
     if (data.empty()) {
-        return str::Dup("(no description)");
+        return str::Dup("(no description)").s;
     }
     const char* s = (const char*)data.data();
     const char* end = s + data.size();
@@ -385,7 +385,7 @@ static char* GetCodexSessionDescription(const char* sessionId) {
             TempStr line = str::DupTemp(s, (int)(lineEnd - s));
             TempStr prompt = ExtractCodexPromptFromHistoryLineTemp(line, sessionId);
             if (prompt && str::Len(prompt) > 0) {
-                result = str::Dup(prompt);
+                result = str::Dup(prompt).s;
             }
         }
         s = lineEnd;
@@ -394,7 +394,7 @@ static char* GetCodexSessionDescription(const char* sessionId) {
         }
     }
     data.Free();
-    return result ? result : str::Dup("(no description)");
+    return result ? result : str::Dup("(no description)").s;
 }
 
 static bool ParseCodexRolloutMetaLine(const char* line, const char* matchDir, char** sessionIdOut) {
@@ -517,7 +517,7 @@ static TempStr FindCodexRolloutPathTemp(const char* sessionId) {
 // Scan ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl for sessions with matching cwd
 static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr root = CodexSessionsRootTemp();
-    if (!root || !dir::Exists(root)) {
+    if (!root || !dir::Exists(Str(root))) {
         return;
     }
 
@@ -1023,7 +1023,7 @@ static void SendCodexMessage(MainWindow* win) {
     bool isNewSession = (tab->codexSessionId == nullptr);
 
     const char* filePath = tab->filePath;
-    TempStr dir = path::GetDirTemp(filePath);
+    TempStr dir = path::GetDirTemp(Str(filePath));
 
     TempStr prompt = str::FormatTemp("The user is currently reading the file: %s\n\n%s", filePath, input);
     TempStr escapedInput = str::ReplaceTemp(prompt, "\"", "\\\"");

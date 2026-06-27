@@ -383,7 +383,7 @@ static TempStr ExtractUserTextTemp(const char* line) {
 static char* GetSessionDescription(const char* sessionPath) {
     ByteSlice data = file::ReadFile(sessionPath);
     if (data.empty()) {
-        return str::Dup("(empty)");
+        return str::Dup("(empty)").s;
     }
     const char* s = (const char*)data.data();
     const char* end = s + data.size();
@@ -399,7 +399,7 @@ static char* GetSessionDescription(const char* sessionPath) {
             TempStr line = str::DupTemp(s, lineLen);
             TempStr userText = ExtractUserTextTemp(line);
             if (userText) {
-                result = str::Dup(userText);
+                result = str::Dup(userText).s;
             }
         }
         s = lineEnd;
@@ -408,7 +408,7 @@ static char* GetSessionDescription(const char* sessionPath) {
         }
     }
     data.Free();
-    return result ? result : str::Dup("(no description)");
+    return result ? result : str::Dup("(no description)").s;
 }
 
 // Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files
@@ -850,8 +850,8 @@ static void SendClaudeMessage(MainWindow* win) {
     }
 
     const char* filePath = tab->filePath;
-    TempStr dir = path::GetDirTemp(filePath);
-    TempStr fileName = path::GetBaseNameTemp(filePath);
+    TempStr dir = path::GetDirTemp(Str(filePath));
+    TempStr fileName = path::GetBaseNameTemp(Str(filePath));
 
     TempStr escapedInput = str::ReplaceTemp(input, "\"", "\\\"");
 

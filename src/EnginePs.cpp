@@ -108,7 +108,7 @@ struct AutoDeleteFile {
     explicit AutoDeleteFile(const char* path) { filePath.SetCopy(path); }
     ~AutoDeleteFile() {
         if (filePath) {
-            file::Delete(filePath);
+            file::Delete(Str(filePath));
         }
     }
 };
@@ -140,7 +140,7 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
 
 static EngineBase* ps2pdf(const char* path) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    TempStr shortPath = path::ShortPathTemp(path);
+    TempStr shortPath = path::ShortPathTemp(Str(path));
     TempStr tmpFile = GetTempFilePathTemp("PsE");
     AutoDeleteFile tmpFileScope(tmpFile);
     TempStr gswin32c = GetGhostscriptPathTemp();
@@ -274,7 +274,7 @@ class EnginePs : public EngineBase {
 
     ByteSlice GetFileData() override {
         const char* path = FilePath();
-        return file::ReadFile(path);
+        return file::ReadFile(Str(path));
     }
 
     bool SaveFileAs(const char* dstPath) override {

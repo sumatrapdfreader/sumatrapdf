@@ -103,7 +103,7 @@ FileState* FileHistory::FindByPath(const char* filePath) const {
 FileState* FileHistory::FindByName(const char* filePath, size_t* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
-    TempStr fileName = path::GetBaseNameTemp(filePath);
+    TempStr fileName = path::GetBaseNameTemp(Str(filePath));
     int n = states->Size();
     for (int i = 0; i < n; i++) {
         FileState* fs = states->at(i);
@@ -352,7 +352,7 @@ void CleanUpThumbnailCache() {
     for (char* path : filePaths) {
         if (shouldDeleteThumbnail) {
             logf("CleanUpThumbnailCache: deleting '%s'\n", path);
-            file::Delete(path);
+            file::Delete(Str(path));
         }
     }
 }
@@ -364,7 +364,7 @@ extern void MaybeRedrawHomePage();
 // document path is either a file or a directory
 // (when browsing images inside directory).
 bool DocumentPathExists(const char* path) {
-    if (file::Exists(path) || dir::Exists(path)) {
+    if (file::Exists(Str(path)) || dir::Exists(Str(path))) {
         return true;
     }
     auto pos = str::FindCharLast(path + 2, ':');

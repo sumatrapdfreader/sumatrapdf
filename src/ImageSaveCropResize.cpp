@@ -1860,7 +1860,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
             }
             filePath = tab->filePath;
         }
-        ByteSlice data = file::ReadFile(filePath);
+        ByteSlice data = file::ReadFile(Str(filePath));
         if (data.empty()) {
             return;
         }
@@ -1964,7 +1964,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePa
     SendMessageW(ew->hwndPathLabel, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
 
     // row 2: dest edit + browse
-    TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp("");
+    TempStr destPath = filePath ? MakeUniqueFilePathTemp(Str(filePath)) : str::DupTemp("");
     ew->hwndDestEdit = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(destPath),
                                        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 0, 0, 0, hwnd, nullptr, h, nullptr);
     SendMessageW(ew->hwndDestEdit, WM_SETFONT, (WPARAM)ew->hFont, TRUE);

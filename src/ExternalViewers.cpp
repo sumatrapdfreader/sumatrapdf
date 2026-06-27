@@ -205,7 +205,7 @@ static TempStr GetAcrobatPathTemp() {
         keyName = R"(Software\Microsoft\Windows\CurrentVersion\App Paths\Acrobat.exe)";
         path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, nullptr);
     }
-    if (path && file::Exists(path)) {
+    if (path && file::Exists(Str(path))) {
         return path;
     }
     return nullptr;
@@ -214,13 +214,13 @@ static TempStr GetAcrobatPathTemp() {
 static TempStr GetFoxitPathTemp() {
     const char* keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader)";
     char* path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
-    if (path && file::Exists(path)) {
+    if (path && file::Exists(Str(path))) {
         return path;
     }
     // Registry value for Foxit 5 (and maybe later)
     keyName = R"(Software\Microsoft\Windows\CurrentVersion\Uninstall\Foxit Reader_is1)";
     path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "DisplayIcon");
-    if (path && file::Exists(path)) {
+    if (path && file::Exists(Str(path))) {
         return path;
     }
     // Registry value for Foxit 5.5 MSI installer
@@ -229,7 +229,7 @@ static TempStr GetFoxitPathTemp() {
     if (path) {
         path = path::JoinTemp(path, "Foxit Reader.exe");
     }
-    if (path && file::Exists(path)) {
+    if (path && file::Exists(Str(path))) {
         return path;
     }
     // Registry value for Foxit PDF Reader 12.1.3.15356 (The last version with Add Bookmark function without bugs in
@@ -239,7 +239,7 @@ static TempStr GetFoxitPathTemp() {
     if (path) {
         path = path::JoinTemp(path, "FoxitPDFReader.exe");
     }
-    if (path && file::Exists(path)) {
+    if (path && file::Exists(Str(path))) {
         return path;
     }
     return nullptr;
@@ -282,7 +282,7 @@ static bool DetectExternalViewer(ExternalViewerInfo* ev) {
     for (int csidl : csidls) {
         TempStr dir = GetSpecialFolderTemp(csidl);
         TempStr path = path::JoinTemp(dir, partialPath);
-        if (file::Exists(path)) {
+        if (file::Exists(Str(path))) {
             ev->exeFullPath = str::Dup(path);
             // logf("DetectExternalViewer: cmd %d, '%s' %s\n", ev->cmdId, ev->exeFullPath, ev->launchArgs);
             return true;
@@ -331,7 +331,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
 
     if (!filterMatchesEverything(ev->exts)) {
         const char* filePath = tab->filePath;
-        char* ext = path::GetExtTemp(filePath);
+        char* ext = path::GetExtTemp(Str(filePath));
         const char* pos = str::FindI(ev->exts, ext);
         if (!pos) {
             // logfa("CanViewWithKnownExternalViewer cmd: %d, !pos\n", cmd);
@@ -388,7 +388,7 @@ static TempStr FormatParamTemp(const char* arg, WindowTab* tab) {
                 s += 2;
                 break;
             case 'd':
-                out.Append(path::GetDirTemp(path));
+                out.Append(path::GetDirTemp(Str(path)));
                 s += 2;
                 break;
             case 'p':
@@ -576,7 +576,7 @@ bool SendAsEmailAttachmentWithMapi(HWND hwndParent, const char* filePath) {
     }
 
     TempWStr filePathW = ToWStrTemp(filePath);
-    TempStr fileName = path::GetBaseNameTemp(filePath);
+    TempStr fileName = path::GetBaseNameTemp(Str(filePath));
     TempWStr fileNameW = ToWStrTemp(fileName);
 
     MapiFileDescW fileDesc{};

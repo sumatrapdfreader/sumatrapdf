@@ -279,22 +279,32 @@ void FreePtr(WCHAR** s) {
     *s = nullptr;
 }
 
-char* Dup(Arena* a, const char* s, size_t cch) {
+static Str WrapAllocated(char* s, size_t cch = (size_t)-1) {
     if (!s) {
-        return nullptr;
+        return {};
     }
     if (cch == (size_t)-1) {
-        cch = str::Len(s);
+        return Str(s);
     }
-    return (char*)MemDup(a, s, cch * sizeof(char), sizeof(char));
+    return Str(s, (int)cch);
 }
 
-char* Dup(const char* s, size_t cch) {
+Str Dup(Arena* a, Str s, size_t cch) {
+    if (!s) {
+        return {};
+    }
+    if (cch == (size_t)-1) {
+        cch = (size_t)s.len;
+    }
+    return WrapAllocated((char*)MemDup(a, s.s, cch * sizeof(char), sizeof(char)), cch);
+}
+
+Str Dup(Str s, size_t cch) {
     return Dup(nullptr, s, cch);
 }
 
-char* Dup(const ByteSlice& d) {
-    return Dup(nullptr, (const char*)d.data(), d.size());
+Str Dup(const ByteSlice& d) {
+    return Dup(Str((char*)d.data(), (int)d.size()));
 }
 
 WCHAR* Dup(Arena* a, const WCHAR* s, size_t cch) {
@@ -309,14 +319,8 @@ WCHAR* Dup(const WCHAR* s, size_t cch) {
 }
 
 // return true if s1 == s2, case sensitive
-bool Eq(const char* s1, const char* s2) {
-    if (s1 == s2) {
-        return true;
-    }
-    if (!s1 || !s2) {
-        return false;
-    }
-    return 0 == strcmp(s1, s2);
+bool Eq(Str s1, Str s2) {
+    return StrEq(s1, s2);
 }
 
 bool Eq(const ByteSlice& sp1, const ByteSlice& sp2) {
@@ -332,71 +336,70 @@ bool Eq(const ByteSlice& sp1, const ByteSlice& sp2) {
 }
 
 // return true if s1 == s2, case insensitive
-bool EqI(const char* s1, const char* s2) {
-    if (s1 == s2) {
+bool EqI(Str s1, Str s2) {
+    if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2) {
         return false;
     }
-    return 0 == _stricmp(s1, s2);
+    return 0 == _stricmp(s1.s, s2.s);
 }
 
 // compares two strings ignoring case and whitespace
-bool EqIS(const char* s1, const char* s2) {
-    if (s1 == s2) {
+bool EqIS(Str s1, Str s2) {
+    if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2) {
         return false;
     }
 
-    while (*s1 && *s2) {
-        // skip whitespace
-        for (; IsWs(*s1); s1++) {
-            // do nothing
+    const char* p1 = s1.s;
+    const char* p2 = s2.s;
+    while (*p1 && *p2) {
+        for (; IsWs(*p1); p1++) {
         }
-        for (; IsWs(*s2); s2++) {
-            // do nothing
+        for (; IsWs(*p2); p2++) {
         }
 
-        if (tolower(*s1) != tolower(*s2)) {
+        if (tolower(*p1) != tolower(*p2)) {
             return false;
         }
-        if (*s1) {
-            s1++;
-            s2++;
+        if (*p1) {
+            p1++;
+            p2++;
         }
     }
 
-    return !*s1 && !*s2;
+    return !*p1 && !*p2;
 }
 
-bool EqN(const char* s1, const char* s2, size_t len) {
-    if (s1 == s2) {
+bool EqN(Str s1, Str s2, size_t len) {
+    if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2) {
         return false;
     }
-    return 0 == strncmp(s1, s2, len);
+    return 0 == strncmp(s1.s, s2.s, len);
 }
 
-bool EqNI(const char* s1, const char* s2, size_t len) {
-    if (s1 == s2) {
+bool EqNI(Str s1, Str s2, size_t len) {
+    if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2) {
         return false;
     }
-    return 0 == _strnicmp(s1, s2, len);
+    return 0 == _strnicmp(s1.s, s2.s, len);
 }
 
-bool IsEmpty(const char* s) {
-    return !s || (0 == *s);
+bool IsEmpty(Str s) {
+    return !s || s.len == 0 || (0 == *s.s);
 }
 
-bool StartsWith(const char* s, const char* prefix) {
+bool StartsWith(Str s, Str prefix) {
     return EqN(s, prefix, Len(prefix));
 }
 
@@ -405,29 +408,27 @@ bool StartsWith(const u8* str, const char* prefix) {
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-bool StartsWithI(const char* s, const char* prefix) {
-    if (s == prefix) {
+bool StartsWithI(Str s, Str prefix) {
+    if (s.s == prefix.s) {
         return true;
     }
     if (!s || !prefix) {
         return false;
     }
-    return 0 == _strnicmp(s, prefix, str::Len(prefix));
+    return 0 == _strnicmp(s.s, prefix.s, str::Len(prefix));
 }
 
-bool Contains(const char* s, const char* txt) {
-    const char* p = str::Find(s, txt);
-    bool contains = p != nullptr;
-    return contains;
+bool Contains(Str s, const char* txt) {
+    Str found = str::Find(s, Str(txt));
+    return (bool)found;
 }
 
-bool ContainsI(const char* s, const char* txt) {
-    const char* p = str::FindI(s, txt);
-    bool contains = p != nullptr;
-    return contains;
+bool ContainsI(Str s, Str txt) {
+    Str found = str::FindI(s, txt);
+    return (bool)found;
 }
 
-bool EndsWith(const char* txt, const char* end) {
+bool EndsWith(Str txt, Str end) {
     if (!txt || !end) {
         return false;
     }
@@ -436,10 +437,10 @@ bool EndsWith(const char* txt, const char* end) {
     if (endLen > txtLen) {
         return false;
     }
-    return str::Eq(txt + txtLen - endLen, end);
+    return str::Eq(Str(txt.s + txtLen - endLen, (int)endLen), end);
 }
 
-bool EndsWithI(const char* txt, const char* end) {
+bool EndsWithI(Str txt, Str end) {
     if (!txt || !end) {
         return false;
     }
@@ -448,10 +449,10 @@ bool EndsWithI(const char* txt, const char* end) {
     if (endLen > txtLen) {
         return false;
     }
-    return str::EqI(txt + txtLen - endLen, end);
+    return str::EqI(Str(txt.s + txtLen - endLen, (int)endLen), end);
 }
 
-bool EqNIx(const char* s, size_t len, const char* s2) {
+bool EqNIx(Str s, size_t len, Str s2) {
     return str::Len(s2) == len && str::StartsWithI(s, s2);
 }
 
@@ -473,12 +474,12 @@ static void FoldCaseForFindW(WCHAR* s, int n) {
     }
 }
 
-const char* FindI(const char* s, const char* toFind) {
+Str FindI(Str s, Str toFind) {
     if (!s || !toFind) {
-        return nullptr;
+        return {};
     }
 
-    char first = (char)tolower(*toFind);
+    char first = (char)tolower(*toFind.s);
     if (!first) {
         return s;
     }
@@ -489,23 +490,25 @@ const char* FindI(const char* s, const char* toFind) {
     // case-fold a non-ASCII needle (e.g. Cyrillic), so that case-insensitive
     // search works for non-Latin text too (issue #5717).
     bool asciiNeedle = true;
-    for (const char* p = toFind; *p; p++) {
+    for (const char* p = toFind.s; *p; p++) {
         if ((u8)*p >= 0x80) {
             asciiNeedle = false;
             break;
         }
     }
     if (asciiNeedle) {
-        while (*s) {
-            char c = (char)tolower(*s);
+        const char* p = s.s;
+        while (*p) {
+            char c = (char)tolower(*p);
             if (c == first) {
-                if (str::StartsWithI(s, toFind)) {
-                    return s;
+                if (str::StartsWithI(Str((char*)p), toFind)) {
+                    int off = (int)(p - s.s);
+                    return Str(s.s + off, s.len - off);
                 }
             }
-            s++;
+            p++;
         }
-        return nullptr;
+        return {};
     }
 
     // Unicode path: case-fold both strings (UTF-16) and search, then map the
@@ -524,7 +527,7 @@ const char* FindI(const char* s, const char* toFind) {
     FoldCaseForFindW(wsLo.s, str::Leni(wsLo));
     FoldCaseForFindW(wfLo.s, str::Leni(wfLo));
 
-    const char* res = nullptr;
+    Str res = {};
     const WCHAR* m = wcsstr(wsLo.s, wfLo.s);
     if (m) {
         int idx = (int)(m - wsLo.s); // WCHAR index, 1:1 with the unfolded ws
@@ -532,7 +535,7 @@ const char* FindI(const char* s, const char* toFind) {
         if (idx > 0) {
             nbytes = WideCharToMultiByte(CP_UTF8, 0, ws.s, idx, nullptr, 0, nullptr, nullptr);
         }
-        res = s + nbytes;
+        res = Str(s.s + nbytes, s.len - nbytes);
     }
     ArenaRestoreSavepoint(sp);
     return res;
@@ -552,25 +555,25 @@ void ReplacePtr(char** s, const char* snew) {
 void ReplaceWithCopy(const char** s, const char* snew) {
     if (*s != snew) {
         str::Free(*s);
-        *s = str::Dup(snew);
+        *s = str::Dup(snew).s;
     }
 }
 
 void ReplaceWithCopy(const char** s, const ByteSlice& d) {
     if (*s != (const char*)d.data()) {
         str::Free(*s);
-        *s = str::Dup((const char*)d.data(), d.size());
+        *s = str::Dup(d).s;
     }
 }
 
 void ReplaceWithCopy(char** s, const char* snew) {
     if (*s != snew) {
         str::Free(*s);
-        *s = str::Dup(snew);
+        *s = str::Dup(snew).s;
     }
 }
 
-char* Join(Arena* allocator, const char* s1, const char* s2, const char* s3, const char* s4, const char* s5) {
+Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
     size_t s1Len = str::Len(s1);
     size_t s2Len = str::Len(s2);
     size_t s3Len = str::Len(s3);
@@ -580,43 +583,28 @@ char* Join(Arena* allocator, const char* s1, const char* s2, const char* s3, con
     char* res = (char*)Alloc(allocator, len);
 
     char* s = res;
-    memcpy(s, s1, s1Len);
+    memcpy(s, s1.s, s1Len);
     s += s1Len;
-    memcpy(s, s2, s2Len);
+    memcpy(s, s2.s, s2Len);
     s += s2Len;
-    memcpy(s, s3, s3Len);
+    memcpy(s, s3.s, s3Len);
     s += s3Len;
-    memcpy(s, s4, s4Len);
+    memcpy(s, s4.s, s4Len);
     s += s4Len;
-    memcpy(s, s5, s5Len);
+    memcpy(s, s5.s, s5Len);
     s += s5Len;
     *s = 0;
 
-    return res;
+    return Str(res, (int)(len - 1));
 }
 
-char* Join(Arena* allocator, const char* s1, const char* s2, const char* s3) {
-    size_t s1Len = str::Len(s1);
-    size_t s2Len = str::Len(s2);
-    size_t s3Len = str::Len(s3);
-    size_t len = s1Len + s2Len + s3Len + 1;
-    char* res = (char*)Alloc(allocator, len);
-
-    char* s = res;
-    memcpy(s, s1, s1Len);
-    s += s1Len;
-    memcpy(s, s2, s2Len);
-    s += s2Len;
-    memcpy(s, s3, s3Len);
-    s += s3Len;
-    *s = 0;
-
-    return res;
+Str Join(Arena* allocator, Str s1, Str s2, Str s3) {
+    return Join(allocator, s1, s2, s3, Str{}, Str{});
 }
 
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
-char* Join(const char* s1, const char* s2, const char* s3) {
+Str Join(Str s1, Str s2, Str s3) {
     return Join(nullptr, s1, s2, s3);
 }
 
@@ -639,16 +627,15 @@ WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
     return Join(nullptr, s1, s2, s3);
 }
 
-char* ToLowerInPlace(char* s) {
-    char* res = s;
-    for (; s && *s; s++) {
-        *s = (char)tolower(*s);
+Str ToLowerInPlace(Str s) {
+    for (char* p = s.s; p && *p; p++) {
+        *p = (char)tolower(*p);
     }
-    return res;
+    return s;
 }
 
-char* ToLower(const char* s) {
-    char* s2 = str::Dup(s);
+Str ToLower(Str s) {
+    Str s2 = str::Dup(s);
     return ToLowerInPlace(s2);
 }
 
@@ -714,8 +701,16 @@ char* FindCharLast(char* str, char c) {
     return strrchr(str, c);
 }
 
-const char* Find(const char* str, const char* find) {
-    return strstr(str, find);
+Str Find(Str str, Str find) {
+    if (!str || !find) {
+        return {};
+    }
+    const char* p = strstr(str.s, find.s);
+    if (!p) {
+        return {};
+    }
+    int off = (int)(p - str.s);
+    return Str((char*)p, str.len - off);
 }
 
 int BufFind(const char* buf, int bufSize, const char* toFind) {
@@ -752,14 +747,14 @@ bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
 }
 
 // TODO: need to finish StrFormat and use it instead.
-char* FmtVWithArena(Arena* a, const char* fmt, va_list args) {
+Str FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     char message[512]{};
     va_list argsCopy;
     va_copy(argsCopy, args);
     int count = VsnprintfUtf8(message, dimof(message), fmt, argsCopy);
     va_end(argsCopy);
     if ((count >= 0) && (count < dimofi(message))) {
-        return str::Dup(a, message);
+        return str::Dup(a, Str(message, count));
     }
 
     va_copy(argsCopy, args);
@@ -769,12 +764,12 @@ char* FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     // when %S string had certain Unicode characters
     ReportIf(count == -1);
     if (count < 0) {
-        return str::Dup(a, "vsnprintf() returned -1");
+        return str::Dup(a, Str("vsnprintf() returned -1"));
     }
 
     char* buf = AllocArray<char>(a, count + 1);
     if (!buf) {
-        return nullptr;
+        return {};
     }
 
     va_copy(argsCopy, args);
@@ -783,20 +778,20 @@ char* FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     ReportIf(count2 != count);
     if (count2 < 0) {
         Free(a, buf);
-        return str::Dup(a, "vsnprintf() returned -1");
+        return str::Dup(a, Str("vsnprintf() returned -1"));
     }
-    return buf;
+    return Str(buf, count);
 }
 
-char* FmtV(const char* fmt, va_list args) {
+Str FmtV(const char* fmt, va_list args) {
     return FmtVWithArena(nullptr, fmt, args);
 }
 
 // caller needs to str::Free()
-char* Format(const char* fmt, ...) {
+Str Format(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char* res = FmtV(fmt, args);
+    Str res = FmtV(fmt, args);
     va_end(args);
     return res;
 }
@@ -987,12 +982,12 @@ bool HexToMem(const char* s, u8* buf, size_t bufLen) {
     return *s == '\0';
 }
 
-static char* ExtractUntil(const char* pos, char c, const char** endOut) {
+static Str ExtractUntil(const char* pos, char c, const char** endOut) {
     *endOut = FindChar(pos, c);
     if (!*endOut) {
-        return nullptr;
+        return {};
     }
-    return str::Dup(pos, *endOut - pos);
+    return str::Dup(Str((char*)pos, (int)(*endOut - pos)));
 }
 
 static const char* ParseLimitedNumber(const char* str, const char* format, const char** endOut, void* valueOut) {
@@ -1057,9 +1052,9 @@ static const char* ParseV(const char* str, const char* format, va_list args) {
         } else if ('c' == *f) {
             *va_arg(args, char*) = *str, end = str + 1;
         } else if ('s' == *f) {
-            *va_arg(args, char**) = ExtractUntil(str, *(f + 1), &end);
+            *va_arg(args, char**) = ExtractUntil(str, *(f + 1), &end).s;
         } else if ('S' == *f) {
-            va_arg(args, AutoFree*)->Set(ExtractUntil(str, *(f + 1), &end));
+            va_arg(args, AutoFree*)->Set(ExtractUntil(str, *(f + 1), &end).s);
         } else if ('$' == *f && !*str) {
             continue; // don't fail, if we're indeed at the end of the string
         } else if ('%' == *f && *f == *str) {
@@ -1116,7 +1111,8 @@ const char* Parse(const char* str, size_t len, const char* fmt, ...) {
     if (len < dimof(buf)) {
         memcpy(buf, str, len);
     } else {
-        s = Dup(str, len);
+        Str dup = Dup(Str((char*)str, (int)len));
+        s = dup.s;
     }
 
     va_list args;
@@ -1847,7 +1843,7 @@ bool StrBuilder::AppendSlice(const ByteSlice& d) {
 void StrBuilder::AppendFmt(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char* res = str::FmtV(fmt, args);
+    Str res = str::FmtV(fmt, args);
     if (res) {
         Append(res);
         str::Free(res);
@@ -2653,20 +2649,20 @@ Failure:
 
 namespace url {
 
-bool IsAbsolute(const char* url) {
-    const char* colon = str::FindChar(url, ':');
-    const char* hash = str::FindChar(url, '#');
+bool IsAbsolute(Str url) {
+    const char* colon = str::FindChar(url.s, ':');
+    const char* hash = str::FindChar(url.s, '#');
     return colon && (!hash || hash > colon);
 }
 
-TempStr GetFullPathTemp(const char* url) {
+TempStr GetFullPathTemp(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
     DecodeInPlace(path);
     return path;
 }
 
-TempStr GetFileNameTemp(const char* url) {
+TempStr GetFileNameTemp(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
     char* base = path.s + str::Len(path);
@@ -2679,7 +2675,7 @@ TempStr GetFileNameTemp(const char* url) {
         return {};
     }
     DecodeInPlace(base);
-    return str::DupTemp(base);
+    return str::DupTemp(Str(base));
 }
 
 } // namespace url
@@ -2772,7 +2768,7 @@ int CompareProgramVersion(const char* txt1, const char* txt2) {
 
 // shorten a string to maxLen characters, adding ellipsis in the middle
 // ascii version that doesn't handle UTF-8
-static TempStr ShortenStringTemp(const char* s, int maxLen) {
+static TempStr ShortenStringTemp(Str s, int maxLen) {
     int sLen = str::Leni(s);
     if (sLen <= maxLen) {
         return s;
@@ -2782,18 +2778,18 @@ static TempStr ShortenStringTemp(const char* s, int maxLen) {
     const int strSize = sLen + 1; // +1 for terminating \0
     // copy first N/2 characters, move last N/2 characters to the halfway point
     for (int i = 0; i < half; i++) {
-        ret[i] = s[i];
-        ret[i + half] = s[strSize - half + i];
+        ret[i] = s.s[i];
+        ret[i + half] = s.s[strSize - half + i];
     }
     // add ellipsis in the middle
     ret[half - 2] = ret[half - 1] = ret[half] = '.';
-    return ret;
+    return Str(ret, maxLen + 2);
 }
 
 // shorten a string to maxRunes characters, adding ellipsis at the end
 // works correctly with utf8 strings
-TempStr ShortenStringUtf8Temp(const char* s, int maxRunes) {
-    int nRunes = utf8StrLen((u8*)s);
+TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
+    int nRunes = utf8StrLen((u8*)s.s);
     if (nRunes < 0) {
         // not a valid utf8, fall back to byte truncation
         int sLen = str::Leni(s);
@@ -2805,12 +2801,12 @@ TempStr ShortenStringUtf8Temp(const char* s, int maxRunes) {
             keep = 0;
         }
         char* ret = AllocArrayTemp<char>(keep + 4);
-        memcpy(ret, s, keep);
+        memcpy(ret, s.s, keep);
         ret[keep] = '.';
         ret[keep + 1] = '.';
         ret[keep + 2] = '.';
         ret[keep + 3] = 0;
-        return ret;
+        return Str(ret, keep + 3);
     }
     if (nRunes <= maxRunes) {
         return s;
@@ -2822,38 +2818,39 @@ TempStr ShortenStringUtf8Temp(const char* s, int maxRunes) {
     // over-allocate the result by 4x to be always safe
     char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1);
     char* tmp = ret;
+    const char* src = s.s;
     int n;
     for (int i = 0; i < keep; i++) {
-        n = utf8RuneLen((const u8*)s);
+        n = utf8RuneLen((const u8*)src);
         ReportIf(n <= 0);
         switch (n) {
             default:
                 ReportIf(true);
                 break;
             case 4:
-                *tmp++ = *s++;
+                *tmp++ = *src++;
                 __fallthrough;
             case 3:
-                *tmp++ = *s++;
+                *tmp++ = *src++;
                 __fallthrough;
             case 2:
-                *tmp++ = *s++;
+                *tmp++ = *src++;
                 __fallthrough;
             case 1:
-                *tmp++ = *s++;
+                *tmp++ = *src++;
         }
     }
     *tmp++ = '.';
     *tmp++ = '.';
     *tmp++ = '.';
     *tmp = 0;
-    return ret;
+    return Str(ret, (int)(tmp - ret));
 }
 
 // shorten a string to maxLen characters, adding ellipsis in the middle
 // works correctly with utf8 strings
-TempStr ShortenStringUtf8InTheMiddleTemp(const char* s, int maxRunes) {
-    int nRunes = utf8StrLen((u8*)s);
+TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
+    int nRunes = utf8StrLen((u8*)s.s);
     if (nRunes < 0) {
         // not a valid utf8
         return ShortenStringTemp(s, maxRunes);
@@ -2866,9 +2863,10 @@ TempStr ShortenStringUtf8InTheMiddleTemp(const char* s, int maxRunes) {
     // over-allocate the result by 4x to be always safe
     char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1);
     char* tmp = ret;
+    const char* src = s.s;
     int n;
     for (int i = 0; i < nRunes; i++) {
-        n = utf8RuneLen((const u8*)s);
+        n = utf8RuneLen((const u8*)src);
         ReportIf(n <= 0);
         if (i < removeStartingAt || i >= removeStartingAt + toRemove) {
             switch (n) {
@@ -2876,27 +2874,27 @@ TempStr ShortenStringUtf8InTheMiddleTemp(const char* s, int maxRunes) {
                     ReportIf(true);
                     break;
                 case 4:
-                    *tmp++ = *s++;
+                    *tmp++ = *src++;
                     __fallthrough;
                 case 3:
-                    *tmp++ = *s++;
+                    *tmp++ = *src++;
                     __fallthrough;
                 case 2:
-                    *tmp++ = *s++;
+                    *tmp++ = *src++;
                     __fallthrough;
                 case 1:
-                    *tmp++ = *s++;
+                    *tmp++ = *src++;
             }
         } else if (i == removeStartingAt) {
             *tmp++ = '.';
             *tmp++ = '.';
             *tmp++ = '.';
-            s += n;
+            src += n;
         } else {
-            s += n;
+            src += n;
         }
     }
-    return ret;
+    return Str(ret, (int)(tmp - ret));
 }
 
 // IsTextRtl is optimized version of checking if a string is rtl

@@ -1729,7 +1729,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    AutoFreeStr urlReal = str::Dup(url);
+    AutoFreeStr urlReal = str::Dup(url).s;
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     ReportIf(ok && (protoWindowId != windowId));
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
@@ -1765,7 +1765,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR* urlW) {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    AutoFreeStr urlReal = str::Dup(url);
+    AutoFreeStr urlReal = str::Dup(url).s;
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     ReportIf(ok && (protoWindowId != windowId));
 

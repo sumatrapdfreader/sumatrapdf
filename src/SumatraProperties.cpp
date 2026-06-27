@@ -444,7 +444,7 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
     AppendProp(out, _TRA("File:"), path ? path : "(not available)");
 
     DisplayModel* dm = ctrl->AsFixed();
-    i64 fileSize = file::GetSize(path); // can be gPluginURL
+    i64 fileSize = file::GetSize(Str(path)); // can be gPluginURL
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
         ByteSlice d = engine->GetFileData();

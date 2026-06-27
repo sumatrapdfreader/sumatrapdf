@@ -5,96 +5,86 @@ namespace path {
 
 bool IsSep(char c);
 
-TempStr GetExtTemp(const char* path);
-TempStr GetBaseNameTemp(const char* path);
-TempStr GetPathNoExtTemp(const char* path);
+TempStr GetExtTemp(Str path);
+TempStr GetBaseNameTemp(Str path);
+TempStr GetPathNoExtTemp(Str path);
 
-TempStr GetDirTemp(const char* path);
-TempWStr GetDirTemp(const WCHAR* path);
+TempStr GetDirTemp(Str path);
+TempWStr GetDirTemp(WStr path);
 
-TempStr GetNonVirtualTemp(const char* virtualPath);
+TempStr GetNonVirtualTemp(Str virtualPath);
 
-char* Join(Arena* allocator, const char* path, const char* fileName);
-char* Join(Arena* allocator, Str path, const char* fileName);
-char* Join(const char* path, const char* fileName);
-char* Join(Str path, const char* fileName);
-WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
-WCHAR* Join(WStr path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
-TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2 = nullptr);
-TempStr JoinTemp(Str path, const char* fileName, const char* fileName2 = nullptr);
-TempStr JoinTemp(const char* path, Str fileName, const char* fileName2 = nullptr);
-TempStr JoinTemp(Str path, Str fileName, const char* fileName2 = nullptr);
-TempWStr JoinTemp(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
-TempWStr JoinTemp(WStr path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);
-TempWStr JoinTemp(const WCHAR* path, WStr fileName, const WCHAR* fileName2 = nullptr);
+Str Join(Arena* allocator, Str path, Str fileName);
+Str Join(Str path, Str fileName);
+WStr Join(WStr path, WStr fileName, WStr fileName2 = WStr());
+TempStr JoinTemp(Str path, Str fileName, Str fileName2 = Str());
+TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2 = WStr());
 
-bool IsDirectory(const char*);
+bool IsDirectory(Str path);
 
-TempStr NormalizeTemp(const char* path);
 TempStr NormalizeTemp(Str path);
 
-TempStr ShortPathTemp(const char* pathA);
-bool IsSame(const char* path1, const char* path2);
-bool HasVariableDriveLetter(const char* path);
-bool IsOnFixedDrive(const char* path);
-bool IsOnNetworkDrive(const char* path);
+TempStr ShortPathTemp(Str path);
+bool IsSame(Str path1, Str path2);
+bool HasVariableDriveLetter(Str path);
+bool IsOnFixedDrive(Str path);
+bool IsOnNetworkDrive(Str path);
 // OneDrive / iCloud / Dropbox "Files On-Demand" placeholders — cloud-only
 // stubs that hydrate on first read. File I/O is slow and/or bursty, so
 // callers may prefer to slurp the whole file into RAM once.
-bool IsCloudPlaceholder(const char* path);
-bool SupportsChangeNotifications(const char* path);
-bool IsAbsolute(const char* path);
+bool IsCloudPlaceholder(Str path);
+bool SupportsChangeNotifications(Str path);
+bool IsAbsolute(Str path);
 
-bool IsWslUnc(const char* path);
-bool IsWslMount(const char* path);
-TempStr WslUncToUnixTemp(const char* path);
-TempStr WindowsToWslMountTemp(const char* path);
+bool IsWslUnc(Str path);
+bool IsWslMount(Str path);
+TempStr WslUncToUnixTemp(Str path);
+TempStr WindowsToWslMountTemp(Str path);
 
-bool Match(const char* path, const char* filter);
+bool Match(Str path, Str filter);
 
 enum Type {
     None, // path doesn't exist
     File,
     Dir,
 };
-Type GetType(const char* path);
+Type GetType(Str path);
 
 } // namespace path
 
-TempStr GetTempFilePathTemp(const char* filePrefix = nullptr);
-TempStr GetPathInExeDirTemp(const char* fileName = nullptr);
-TempStr MakeUniqueFilePathTemp(const char* path);
+TempStr GetTempFilePathTemp(Str filePrefix = Str());
+TempStr GetPathInExeDirTemp(Str fileName = Str());
+TempStr MakeUniqueFilePathTemp(Str path);
 
 namespace file {
 
-bool Exists(const char* path);
+bool Exists(Str path);
 
-FILE* OpenFILE(const char* path);
-HANDLE OpenReadOnly(const char*);
-ByteSlice ReadFileWithArena(const char* path, Arena*);
-ByteSlice ReadFile(const char* path);
-int ReadN(const char* path, char* buf, size_t toRead);
-bool WriteFile(const char* path, const ByteSlice&);
+FILE* OpenFILE(Str path);
+HANDLE OpenReadOnly(Str path);
+ByteSlice ReadFileWithArena(Str path, Arena*);
+ByteSlice ReadFile(Str path);
+int ReadN(Str path, char* buf, size_t toRead);
+bool WriteFile(Str path, const ByteSlice&);
 
 i64 GetSize(HANDLE h);
-i64 GetSize(const char*);
 i64 GetSize(Str path);
-bool Delete(const char* path);
-bool DeleteFileToTrash(const char* path);
+bool Delete(Str path);
+bool DeleteFileToTrash(Str path);
 
-FILETIME GetModificationTime(const char* path);
+FILETIME GetModificationTime(Str path);
 
-bool SetModificationTime(const char* path, FILETIME lastMod);
+bool SetModificationTime(Str path, FILETIME lastMod);
 
-DWORD GetAttributes(const char* path);
-bool SetAttributes(const char* path, DWORD attrs);
+DWORD GetAttributes(Str path);
+bool SetAttributes(Str path, DWORD attrs);
 
-bool StartsWithN(const char* path, const char* s, size_t len);
-bool StartsWith(const char* path, const char* s);
+bool StartsWithN(Str path, Str s);
+bool StartsWith(Str path, Str s);
 
-int GetZoneIdentifier(const char* path);
-bool SetZoneIdentifier(const char* path, int zoneId = URLZONE_INTERNET);
-bool DeleteZoneIdentifier(const char* path);
+int GetZoneIdentifier(Str path);
+bool SetZoneIdentifier(Str path, int zoneId = URLZONE_INTERNET);
+bool DeleteZoneIdentifier(Str path);
 
 // Progress reported by Copy(). bytesTotal == 0 means "total not known".
 struct CopyProgress {
@@ -108,25 +98,25 @@ using CopyProgressCb = Func1<CopyProgress*>;
 // an operation that may copy large files; clears it afterwards.
 extern thread_local CopyProgressCb gFileCopyProgressCb;
 
-bool Copy(const char* dst, const char* src, bool dontOverwrite);
-bool Copy(const char* dst, const char* src, bool dontOverwrite, const CopyProgressCb& cbProgress);
-bool Rename(const char* newPath, const char* oldPath);
+bool Copy(Str dst, Str src, bool dontOverwrite);
+bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress);
+bool Rename(Str newPath, Str oldPath);
 
-bool SetAccessTime(const char* path, FILETIME accessTime);
-FILETIME GetAccessTime(const char* path);
+bool SetAccessTime(Str path, FILETIME accessTime);
+FILETIME GetAccessTime(Str path);
 
 } // namespace file
 
 namespace dir {
 
-bool Exists(const WCHAR* dir);
-bool Exists(const char*);
+bool Exists(WStr dir);
+bool Exists(Str dir);
 
-bool Create(const char* dir);
-bool CreateForFile(const char* path);
-bool CreateAll(const char* dir);
-bool RemoveAll(const char* dir);
-bool HasWriteAccess(const char* dir);
+bool Create(Str dir);
+bool CreateForFile(Str path);
+bool CreateAll(Str dir);
+bool RemoveAll(Str dir);
+bool HasWriteAccess(Str dir);
 
 } // namespace dir
 

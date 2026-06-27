@@ -20,7 +20,10 @@ FORCEINLINE T* AllocArrayTemp(size_t n) {
 }
 
 namespace str {
-TempStr DupTemp(const char* s, size_t cb = (size_t)-1);
+TempStr DupTemp(Str s, size_t cb = (size_t)-1);
+FORCEINLINE TempStr DupTemp(const char* s, size_t cb = (size_t)-1) {
+    return DupTemp(Str(s), cb);
+}
 TempWStr DupTemp(const WCHAR* s, size_t cch = (size_t)-1);
 
 TempStr JoinTemp(const char* s1, const char* s2, const char* s3 = nullptr);

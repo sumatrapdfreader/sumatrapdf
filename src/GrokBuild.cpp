@@ -381,7 +381,7 @@ static char* GetGrokSessionDescription(const char* projectDir, const char* sessi
     TempStr historyPath = str::FormatTemp("%s\\prompt_history.jsonl", projectDir);
     ByteSlice data = file::ReadFile(historyPath);
     if (data.empty()) {
-        return str::Dup("(no description)");
+        return str::Dup("(no description)").s;
     }
     const char* s = (const char*)data.data();
     const char* end = s + data.size();
@@ -395,7 +395,7 @@ static char* GetGrokSessionDescription(const char* projectDir, const char* sessi
             TempStr line = str::DupTemp(s, (int)(lineEnd - s));
             TempStr prompt = ExtractGrokPromptFromHistoryLineTemp(line, sessionId);
             if (prompt && str::Len(prompt) > 0) {
-                result = str::Dup(prompt);
+                result = str::Dup(prompt).s;
             }
         }
         s = lineEnd;
@@ -404,13 +404,13 @@ static char* GetGrokSessionDescription(const char* projectDir, const char* sessi
         }
     }
     data.Free();
-    return result ? result : str::Dup("(no description)");
+    return result ? result : str::Dup("(no description)").s;
 }
 
 // Scan ~/.grok/sessions/<url-encoded-dir>/ for session subdirectories
 static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr projectDir = GrokSessionsProjectDirTemp(dir);
-    if (!projectDir || !dir::Exists(projectDir)) {
+    if (!projectDir || !dir::Exists(Str(projectDir))) {
         return;
     }
 
@@ -900,7 +900,7 @@ static void SendGrokMessage(MainWindow* win) {
     bool isNewSession = (tab->grokSessionId == nullptr);
 
     const char* filePath = tab->filePath;
-    TempStr dir = path::GetDirTemp(filePath);
+    TempStr dir = path::GetDirTemp(Str(filePath));
 
     TempStr escapedInput = str::ReplaceTemp(input, "\"", "\\\"");
 

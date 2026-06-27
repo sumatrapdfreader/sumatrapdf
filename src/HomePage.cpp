@@ -1107,7 +1107,7 @@ void PickAnotherRandomPromotion() {
 
 // thumbnail tooltip: the file path, then two spaces and a human-readable size
 static TempStr HomeThumbTooltipTemp(const char* path) {
-    i64 size = file::GetSize(path);
+    i64 size = file::GetSize(Str(path));
     if (size < 0) {
         return str::DupTemp(path);
     }
@@ -1684,7 +1684,7 @@ static Rect FitRectInRect(Size src, Rect dst) {
 }
 
 static TempStr FileSizeForHomeListTemp(const char* path) {
-    i64 size = file::GetSize(path);
+    i64 size = file::GetSize(Str(path));
     if (size < 0) {
         return str::DupTemp("");
     }
@@ -1713,7 +1713,7 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
     RoundRect(hdc, thumbBox.x, thumbBox.y, thumbBox.x + thumbBox.dx, thumbBox.y + thumbBox.dy, 4, 4);
 
     char* path = fs->filePath;
-    TempStr fileName = path::GetBaseNameTemp(path);
+    TempStr fileName = path::GetBaseNameTemp(Str(path));
     UINT nameFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
     SelectObject(hdc, fontText);
     {
@@ -1821,7 +1821,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
 
         const Rect& rect = thumb.rcText;
         char* path = fs->filePath;
-        TempStr fileName = path::GetBaseNameTemp(path);
+        TempStr fileName = path::GetBaseNameTemp(Str(path));
         UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
 
         SelectObject(hdc, fontText);

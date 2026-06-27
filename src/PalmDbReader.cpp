@@ -131,7 +131,7 @@ PdbReader* PdbReader::CreateFromData(const ByteSlice& d) {
 }
 
 PdbReader* PdbReader::CreateFromFile(const char* path) {
-    ByteSlice d = file::ReadFile(path);
+    ByteSlice d = file::ReadFile(Str(path));
     return CreateFromData(d);
 }
 

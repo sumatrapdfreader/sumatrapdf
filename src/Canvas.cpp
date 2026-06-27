@@ -3055,7 +3055,7 @@ static void OnPaintError(MainWindow* win) {
     auto tab = win->CurrentTab();
     const char* filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(filePath));
+        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(Str(filePath)));
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }

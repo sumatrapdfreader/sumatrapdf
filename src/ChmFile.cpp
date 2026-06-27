@@ -292,7 +292,7 @@ void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
 }
 
 bool ChmFile::Load(const char* path) {
-    ByteSlice fileContent = file::ReadFile(path);
+    ByteSlice fileContent = file::ReadFile(Str(path));
     data = fileContent.Get();
     chmHandle = chm_open(fileContent, fileContent.size());
     if (!chmHandle) {

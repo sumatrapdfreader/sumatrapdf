@@ -198,7 +198,7 @@ static bool SendOpenFileToExistingInstance(HWND targetHwnd, const char* fullPath
 
 // delegate file opening to a previously running instance by sending a DDE message
 static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFirstWin) {
-    char* fullPath = path::NormalizeTemp(path);
+    char* fullPath = path::NormalizeTemp(Str(path));
 
     u32 newWindow = 0;
     if (i.inNewWindow) {
@@ -810,16 +810,16 @@ static void UpdateGlobalPrefs(const Flags& i) {
 static bool ExeHasNameOfInstaller() {
     TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindI(exeName, "uninstall")) {
+    if (str::FindI(exeName, Str("uninstall")).s) {
         return false;
     }
-    return str::FindI(exeName, "install");
+    return str::FindI(exeName, Str("install")).s != nullptr;
 }
 
 static bool ExeHasNameOfStoreInstaller() {
     TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
-    return str::FindI(exeName, "install-store");
+    return str::FindI(exeName, Str("install-store")).s != nullptr;
 }
 
 static bool HasDataResource(int id) {
@@ -890,7 +890,7 @@ static bool EnsureLibmupdfDll() {
         return false;
     }
     TempStr path = path::JoinTemp(buildDir, "libmupdf.dll");
-    i64 realSize = file::GetSize(path);
+    i64 realSize = file::GetSize(Str(path));
     if (realSize == (i64)expectedSize) {
         return true;
     }
@@ -1007,7 +1007,7 @@ static bool ForceRunningAsInstaller() {
 
     TempStr dir = GetSelfExeDirTemp();
     TempStr path = path::JoinTemp(dir, "libmupdf.dll");
-    auto realSize = file::GetSize(path);
+    auto realSize = file::GetSize(Str(path));
     if (realSize < 0) {
         return true;
     }
@@ -1265,7 +1265,7 @@ static int CmpPreviewLogNewestFirst(const void* a, const void* b) {
 }
 static void DeleteOldPdfPreviewLogs(int keep) {
     TempStr dir = GetPdfPreviewLogDirTemp();
-    if (!dir || !dir::Exists(dir)) {
+    if (!dir || !dir::Exists(Str(dir))) {
         return;
     }
     Vec<PreviewLogFile> files;

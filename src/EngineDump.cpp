@@ -462,7 +462,7 @@ void EngineDump(const Flags& flags) {
     if (nArgs < 2) {
     Usage:
         ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>",
-               path::GetBaseNameTemp(argList.args[0]));
+               path::GetBaseNameTemp(Str(argList.args[0])));
         return 2;
     }
 
@@ -520,7 +520,7 @@ void EngineDump(const Flags& flags) {
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")
     if (INVALID_HANDLE_VALUE != hfind) {
-        char* dir = path::GetDirTemp(filePath);
+        char* dir = path::GetDirTemp(Str(filePath));
         char* name = ToUtf8Temp(fdata.cFileName);
         filePath = path::JoinTemp(dir, name);
         FindClose(hfind);
@@ -529,7 +529,7 @@ void EngineDump(const Flags& flags) {
     PasswordHolder pwdUI(password);
     EngineBase* engine = CreateEngineFromFile(filePath, &pwdUI, false);
     if (!engine) {
-        ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(filePath));
+        ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(Str(filePath)));
         return 1;
     }
     if (!loadOnly) {
