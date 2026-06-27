@@ -39,7 +39,7 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
     u8 digest[16]{};
     TempStr keyStr = str::FormatTemp("%s|%lld", path, (long long)fileSize);
     CalcMD5Digest((const u8*)keyStr.s, str::Leni(keyStr), digest);
-    AutoFreeStr hex = str::MemToHex(digest, dimof(digest));
+    AutoFreeStr hex(str::MemToHex(digest, dimof(digest)).s);
 
     TempStr ext = path::GetExtTemp(path);
     if (str::IsEmpty(ext)) {

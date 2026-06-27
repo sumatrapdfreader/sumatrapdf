@@ -97,7 +97,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
                 t->sLen--;
             }
             if (t->sLen > 0) {
-                TempStr s = ResolveHtmlEntitiesTemp(t->s, t->sLen);
+                TempStr s = ResolveHtmlEntitiesTemp(::Str{(char*)t->s, (int)t->sLen});
                 text.Append(s);
                 text.AppendChar(' ');
             }

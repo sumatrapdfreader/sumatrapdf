@@ -168,7 +168,7 @@ static IPageElement* NewEbookLink(DrawInstr* link, Rect rect, IPageDestination* 
 
 #if 0 // TODO: figure out
     if (showUrl) {
-        res->value = strconv::FromHtmlUtf8(link->str.s, link->str.len);
+        res->value = strconv::FromHtmlUtf8(Str((char*)link->str.s, (int)link->str.len));
     }
 #endif
     return res;
@@ -404,7 +404,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    AutoFreeWStr s(strconv::FromHtmlUtf8(i.str.s, i.str.len));
+                    AutoFreeWStr s(strconv::FromHtmlUtf8(Str((char*)i.str.s, (int)i.str.len)).s);
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
@@ -428,7 +428,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    AutoFreeWStr s(strconv::FromHtmlUtf8(i.str.s, i.str.len));
+                    AutoFreeWStr s(strconv::FromHtmlUtf8(Str((char*)i.str.s, (int)i.str.len)).s);
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
@@ -488,7 +488,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    TempStr s = strconv::FromHtmlUtf8Temp(i.str.s, i.str.len);
+                    TempStr s = strconv::FromHtmlUtf8Temp(Str((char*)i.str.s, (int)i.str.len));
                     size_t len = str::Len(s);
                     content.Append(s);
                     if (len > 0) {
@@ -514,7 +514,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    TempStr s = strconv::FromHtmlUtf8Temp(i.str.s, i.str.len);
+                    TempStr s = strconv::FromHtmlUtf8Temp(Str((char*)i.str.s, (int)i.str.len));
                     size_t len = str::Len(s);
                     content.Append(s);
                     if (len > 0) {
@@ -546,16 +546,17 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
 }
 
 IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
-    char* url = strconv::FromHtmlUtf8Temp(link->str.s, link->str.len);
+    ::Str linkStr{(char*)link->str.s, (int)link->str.len};
+    TempStr url = strconv::FromHtmlUtf8Temp(linkStr);
     if (url::IsAbsolute(url)) {
         return NewEbookLink(link, rect, nullptr, pageNo);
     }
 
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
     if (baseAnchor) {
-        char* basePath = str::DupTemp(baseAnchor->str.s, baseAnchor->str.len);
-        TempStr relPath = ResolveHtmlEntitiesTemp(link->str.s, link->str.len);
-        AutoFreeStr absPath = NormalizeURL(relPath, basePath);
+        TempStr basePath = str::DupTemp(Str((char*)baseAnchor->str.s, (int)baseAnchor->str.len));
+        TempStr relPath = ResolveHtmlEntitiesTemp(linkStr);
+        AutoFreeStr absPath(NormalizeURL(relPath, basePath).s);
         url = str::DupTemp(absPath.Get());
     }
 
@@ -1352,7 +1353,7 @@ class ChmDataCache {
     ~ChmDataCache() {
         for (auto&& img : images) {
             str::Free(img.base);
-            str::Free(img.fileName);
+            str::Free(img.fileName.s);
         }
         html.Free();
     }
@@ -1360,7 +1361,7 @@ class ChmDataCache {
     ByteSlice GetHtmlData() { return html; }
 
     ByteSlice* GetImageData(const char* id, const char* pagePath) {
-        AutoFreeStr url = NormalizeURL(id, pagePath);
+        AutoFreeStr url(NormalizeURL(Str(id), Str(pagePath)).s);
         for (size_t i = 0; i < images.size(); i++) {
             if (str::Eq(images.at(i).fileName, url)) {
                 return &images.at(i).base;
@@ -1375,13 +1376,13 @@ class ChmDataCache {
         ImageData data;
         data.base = tmp;
 
-        data.fileName = url.Release();
+        data.fileName = Str(url.Release());
         images.Append(data);
         return &images.Last().base;
     }
 
     ByteSlice GetFileData(const char* relPath, const char* pagePath) {
-        AutoFreeStr url = NormalizeURL(relPath, pagePath);
+        AutoFreeStr url(NormalizeURL(Str(relPath), Str(pagePath)).s);
         return doc->GetData(url);
     }
 };
@@ -1724,7 +1725,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
     AutoFreeStr basePath = str::Dup(baseAnchor->str.s, baseAnchor->str.len).s;
     AutoFreeStr url = str::Dup(link->str.s, link->str.len).s;
-    url.Set(NormalizeURL(url, basePath));
+    url.Set(NormalizeURL(Str(url), Str(basePath)).s);
     if (!doc->HasData(url)) {
         return nullptr;
     }
@@ -1827,8 +1828,8 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
         return nullptr;
     }
 
-    char* url = strconv::FromHtmlUtf8Temp(link->str.s, link->str.len);
-    if (url::IsAbsolute(url) || '#' == *url) {
+    TempStr url = strconv::FromHtmlUtf8Temp(Str((char*)link->str.s, (int)link->str.len));
+    if (url::IsAbsolute(url) || '#' == url.s[0]) {
         return EngineEbook::CreatePageLink(link, rect, pageNo);
     }
 

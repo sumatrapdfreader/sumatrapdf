@@ -145,7 +145,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         TempStr src = str::DupTemp(attr->val, attr->valLen);
         url::DecodeInPlace(src);
-        ByteSlice* img = epubDoc->GetImageData(src, pagePath);
+        ByteSlice* img = epubDoc->GetImageData(src, Str(pagePath));
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
@@ -187,7 +187,7 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
 
     char* src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
-    ByteSlice data = epubDoc->GetFileData(src, pagePath);
+    ByteSlice data = epubDoc->GetFileData(src, Str(pagePath));
     if (data) {
         ParseStyleSheet(data, data.size());
         data.Free();
@@ -208,7 +208,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     }
     TempStr src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
-    ByteSlice* img = epubDoc->GetImageData(src, pagePath);
+    ByteSlice* img = epubDoc->GetImageData(src, Str(pagePath));
     if (img) {
         EmitImage(img);
     }
@@ -277,9 +277,9 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
     }
 }
 
-void Fb2Formatter::HandleTagAsHtml(HtmlToken* t, const char* name) {
+void Fb2Formatter::HandleTagAsHtml(HtmlToken* t, Str name) {
     HtmlToken tok;
-    tok.SetTag(t->type, name, name + str::Len(name));
+    tok.SetTag(t->type, name.s, name.s + name.len);
     HtmlFormatter::HandleHtmlTag(&tok);
 }
 

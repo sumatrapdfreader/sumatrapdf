@@ -706,11 +706,11 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
     currReparseIdx = s - htmlParser->Start();
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
     ReportIf(IsSpaceOnly(s, end) && !preFormatted);
-    const char* tmp = ResolveHtmlEntities(s, end, textAllocator);
-    bool resolved = tmp != s;
+    ::Str tmp = ResolveHtmlEntities(::Str{(char*)s, (int)(end - s)}, textAllocator);
+    bool resolved = tmp.s != s;
     if (resolved) {
-        s = tmp;
-        end = s + str::Len(s);
+        s = tmp.s;
+        end = s + tmp.len;
     }
 
     while (s < end) {

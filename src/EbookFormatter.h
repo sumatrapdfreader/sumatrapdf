@@ -48,7 +48,7 @@ class Fb2Formatter : public HtmlFormatter {
     int titleCount;
 
     void HandleTagImg(HtmlToken* t) override;
-    void HandleTagAsHtml(HtmlToken* t, const char* name);
+    void HandleTagAsHtml(HtmlToken* t, Str name);
     void HandleHtmlTag(HtmlToken* t) override;
 
     bool IgnoreText() override { return false; }

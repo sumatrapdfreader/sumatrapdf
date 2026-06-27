@@ -7,12 +7,12 @@ struct HtmlToken;
 struct ImageData {
     ByteSlice base;
     // path by which content refers to this image
-    char* fileName = nullptr;
+    Str fileName;
     // document specific id by whcih to find this image
     size_t fileId{0};
 };
 
-char* NormalizeURL(const char* url, const char* base);
+Str NormalizeURL(Str url, Str base);
 
 /* ********** EPUB ********** */
 
@@ -31,22 +31,22 @@ class EpubDoc {
     bool isRtlDoc = false;
 
     bool Load();
-    void ParseMetadata(const char* content);
-    bool ParseNavToc(const char* data, size_t dataLen, const char* pagePath, EbookTocVisitor* visitor);
-    bool ParseNcxToc(const char* data, size_t dataLen, const char* pagePath, EbookTocVisitor* visitor);
+    void ParseMetadata(Str content);
+    bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor);
+    bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor);
 
   public:
-    explicit EpubDoc(const char* fileName);
+    explicit EpubDoc(Str fileName);
     explicit EpubDoc(IStream* stream);
     ~EpubDoc();
 
     ByteSlice GetHtmlData() const;
 
-    ByteSlice* GetImageData(const char* fileName, const char* pagePath);
-    ByteSlice GetFileData(const char* relPath, const char* pagePath);
+    ByteSlice* GetImageData(Str fileName, Str pagePath);
+    ByteSlice GetFileData(Str relPath, Str pagePath);
 
-    TempStr GetPropertyTemp(const char* name) const;
-    const char* GetFileName() const;
+    TempStr GetPropertyTemp(Str name) const;
+    Str GetFileName() const;
     bool IsRTL() const;
 
     bool HasToc() const;
@@ -54,7 +54,7 @@ class EpubDoc {
 
     static bool IsSupportedFileType(Kind kind);
 
-    static EpubDoc* CreateFromFile(const char* path);
+    static EpubDoc* CreateFromFile(Str path);
     static EpubDoc* CreateFromStream(IStream* stream);
 };
 
@@ -77,17 +77,17 @@ class Fb2Doc {
     bool Load();
     void ExtractImage(HtmlPullParser* parser, HtmlToken* tok);
 
-    explicit Fb2Doc(const char* fileName);
+    explicit Fb2Doc(Str fileName);
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
     ByteSlice GetXmlData() const;
 
-    ByteSlice* GetImageData(const char* fileName) const;
+    ByteSlice* GetImageData(Str fileName) const;
     ByteSlice* GetCoverImage() const;
 
-    TempStr GetPropertyTemp(const char* name) const;
-    const char* GetFileName() const;
+    TempStr GetPropertyTemp(Str name) const;
+    Str GetFileName() const;
     bool IsZipped() const;
 
     bool HasToc() const;
@@ -95,7 +95,7 @@ class Fb2Doc {
 
     static bool IsSupportedFileType(Kind kind);
 
-    static Fb2Doc* CreateFromFile(const char* path);
+    static Fb2Doc* CreateFromFile(Str path);
     static Fb2Doc* CreateFromStream(IStream* stream);
 };
 
@@ -111,19 +111,19 @@ class PalmDoc {
     bool Load();
 
   public:
-    explicit PalmDoc(const char* path);
+    explicit PalmDoc(Str path);
     ~PalmDoc();
 
     ByteSlice GetHtmlData() const;
 
-    TempStr GetPropertyTemp(const char* name) const;
-    const char* GetFileName() const;
+    TempStr GetPropertyTemp(Str name) const;
+    Str GetFileName() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
-    static PalmDoc* CreateFromFile(const char* path);
+    static PalmDoc* CreateFromFile(Str path);
 };
 
 /* ********** Plain HTML ********** */
@@ -136,22 +136,22 @@ class HtmlDoc {
     Props props;
 
     bool Load();
-    ByteSlice LoadURL(const char* url);
+    ByteSlice LoadURL(Str url);
 
   public:
-    explicit HtmlDoc(const char* path);
+    explicit HtmlDoc(Str path);
     ~HtmlDoc();
 
     ByteSlice GetHtmlData();
 
-    ByteSlice* GetImageData(const char* fileName);
-    ByteSlice GetFileData(const char* relPath);
+    ByteSlice* GetImageData(Str fileName);
+    ByteSlice GetFileData(Str relPath);
 
-    TempStr GetPropertyTemp(const char* name) const;
-    const char* GetFileName() const;
+    TempStr GetPropertyTemp(Str name) const;
+    Str GetFileName() const;
 
     static bool IsSupportedFileType(Kind kind);
-    static HtmlDoc* CreateFromFile(const char* fileName);
+    static HtmlDoc* CreateFromFile(Str fileName);
 };
 
 /* ********** Plain Text (and RFCs and TCR) ********** */
@@ -164,17 +164,17 @@ class TxtDoc {
     bool Load();
 
   public:
-    explicit TxtDoc(const char* fileName);
+    explicit TxtDoc(Str fileName);
 
     ByteSlice GetHtmlData() const;
 
-    TempStr GetPropertyTemp(const char* name) const;
-    const char* GetFileName() const;
+    TempStr GetPropertyTemp(Str name) const;
+    Str GetFileName() const;
 
     bool IsRFC() const;
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
-    static TxtDoc* CreateFromFile(const char* fileName);
+    static TxtDoc* CreateFromFile(Str fileName);
 };
