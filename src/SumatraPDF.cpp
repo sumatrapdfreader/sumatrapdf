@@ -4314,7 +4314,10 @@ static TempWStr GetFileFilterTemp() {
         {_TRA("Mobi documents"), "*.mobi", true},
         {_TRA("FictionBook documents"), "*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},
         {_TRA("PalmDoc documents"), "*.pdb;*.prc", true},
-        {_TRA("Images"), "*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jxr;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.avif", true},
+        {_TRA("Images"),
+         "*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jfif;*.jxr;*.hdp;*.wdp;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.heif;"
+         "*.avif;*.jxl;*.jp2;*.j2k;*.jpx;*.jpf;*.jpm;*.j2c",
+         true},
         {_TRA("Text documents"), "*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr", true},
     };
     // Prepare the file filters (use \1 instead of \0 so that the

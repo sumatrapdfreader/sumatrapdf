@@ -90,6 +90,7 @@ Kind kindFileAvif = "fileAvif";
     V(".png", kindFilePng)           \
     V(".jpg", kindFileJpeg)          \
     V(".jpeg", kindFileJpeg)         \
+    V(".jfif", kindFileJpeg)         \
     V(".gif", kindFileGif)           \
     V(".tif", kindFileTiff)          \
     V(".tiff", kindFileTiff)         \
@@ -108,6 +109,7 @@ Kind kindFileAvif = "fileAvif";
     V(".azw", kindFileMobi)          \
     V(".azw1", kindFileMobi)         \
     V(".azw3", kindFileMobi)         \
+    V(".azw4", kindFileMobi)         \
     V(".pdb", kindFilePalmDoc)       \
     V(".html", kindFileHTML)         \
     V(".htm", kindFileHTML)          \
@@ -125,6 +127,7 @@ Kind kindFileAvif = "fileAvif";
     V(".rar", kindFileRar)           \
     V(".7z", kindFile7Z)             \
     V(".heic", kindFileHeic)         \
+    V(".heif", kindFileHeic)         \
     V(".avif", kindFileAvif)         \
     V(".tar", kindFileTar)
 
