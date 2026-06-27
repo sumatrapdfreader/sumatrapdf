@@ -499,13 +499,13 @@ void FindBarReposition(MainWindow* win) {
     PositionFindBar(win->findBar);
 }
 
-void FindBarSetStatus(MainWindow* win, const char* s) {
+void FindBarSetStatus(MainWindow* win, Str s) {
     if (gGlobalPrefs->searchUIFloating) {
         FindWindowSetStatus(win, s);
         return;
     }
     if (win->findBar && win->findBar->status) {
-        HwndSetText(win->findBar->status->hwnd, s ? s : "");
+        HwndSetText(win->findBar->status->hwnd, s ? s : Str(""));
     }
 }
 

@@ -17,7 +17,7 @@ bool IsFindUIVisible(MainWindow* win);
 // reposition over the search toolbar icon (no-op if not visible)
 void FindBarReposition(MainWindow* win);
 // show n/m or "No matches" style status in the bar
-void FindBarSetStatus(MainWindow* win, const char* s);
+void FindBarSetStatus(MainWindow* win, Str s);
 // reflect match-case toggle state on the bar's button
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked);
 // reflect match-whole-word toggle state on the bar's button
