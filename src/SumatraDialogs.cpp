@@ -250,7 +250,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
    nullptr if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
-char* Dialog_GetPassword(HWND hwndParent, const char* fileName, bool* rememberPassword, bool* showPassword) {
+Str Dialog_GetPassword(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword) {
     Dialog_GetPassword_Data data = {nullptr};
     data.fileName = fileName;
     data.remember = rememberPassword;
@@ -259,9 +259,9 @@ char* Dialog_GetPassword(HWND hwndParent, const char* fileName, bool* rememberPa
     INT_PTR res = CreateDialogBox(IDD_DIALOG_GET_PASSWORD, hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
     if (IDOK != res) {
         free(data.pwdOut);
-        return nullptr;
+        return Str();
     }
-    return data.pwdOut;
+    return Str(data.pwdOut);
 }
 
 /* For passing data to/from GoToPage dialog */
@@ -334,7 +334,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
 /* Shows a 'go to page' dialog and returns the page label entered by the user
    or nullptr if user clicked the "cancel" button or there was an error.
    The caller must free() the result. */
-char* Dialog_GoToPage(HWND hwnd, const char* currentPageLabel, int pageCount, bool onlyNumeric) {
+Str Dialog_GoToPage(HWND hwnd, Str currentPageLabel, int pageCount, bool onlyNumeric) {
     Dialog_GoToPage_Data data;
     data.currPageLabel = str::Dup(currentPageLabel);
     data.pageCount = pageCount;
@@ -414,19 +414,19 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
 /* Shows a 'Find' dialog and returns the new search term entered by the user
    or nullptr if the search was canceled. previousSearch is the search term to
    be displayed as default. */
-char* Dialog_Find(HWND hwnd, const char* previousSearch, bool* matchCase) {
+Str Dialog_Find(HWND hwnd, Str previousSearch, bool* matchCase) {
     Dialog_Find_Data data;
     data.searchTerm = str::DupTemp(previousSearch);
     data.matchCase = matchCase ? *matchCase : false;
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FIND, hwnd, Dialog_Find_Proc, (LPARAM)&data);
     if (res != IDOK) {
-        return nullptr;
+        return Str();
     }
 
     if (matchCase) {
         *matchCase = data.matchCase;
     }
-    return data.searchTerm;
+    return Str(data.searchTerm);
 }
 
 /* For passing data to/from ChangeLanguage dialog */
@@ -541,7 +541,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
 }
 
 /* Returns nullptr  -1 if user choses 'cancel' */
-const char* Dialog_ChangeLanguge(HWND hwnd, const char* currLangCode) {
+Str Dialog_ChangeLanguge(HWND hwnd, Str currLangCode) {
     Dialog_ChangeLanguage_Data data;
     data.langCode = currLangCode;
 
@@ -549,9 +549,9 @@ const char* Dialog_ChangeLanguge(HWND hwnd, const char* currLangCode) {
     delete gLangListMap;
     gLangListMap = nullptr;
     if (IDCANCEL == res) {
-        return nullptr;
+        return Str();
     }
-    return data.langCode;
+    return Str(data.langCode);
 }
 
 TempStr ZoomLevelStr(float zoom) {
@@ -1656,7 +1656,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
     return FALSE;
 }
 
-bool Dialog_ChangeBackgroundColor(HWND hwnd, COLORREF currentColor, bool isCheckered, const char* allFilesLabel,
+bool Dialog_ChangeBackgroundColor(HWND hwnd, COLORREF currentColor, bool isCheckered, Str allFilesLabel,
                                   BgColorResult& result) {
     BgColorDlgData data;
     data.currentColor = currentColor;
@@ -1699,7 +1699,7 @@ bool Dialog_SetTabColor(HWND hwnd, COLORREF currentColor, bool isUnset, COLORREF
     return true;
 }
 
-bool Dialog_AddFavorite(HWND hwnd, const char* pageNo, AutoFreeStr& favName) {
+bool Dialog_AddFavorite(HWND hwnd, Str pageNo, AutoFreeStr& favName) {
     Dialog_AddFav_Data data;
     data.pageNo = str::Dup(pageNo);
     data.favName = str::Dup(favName);

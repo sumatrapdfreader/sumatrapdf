@@ -596,7 +596,7 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     HwndToForeground(hwnd);
 
     bool* rememberPwd = SettingsRememberOpenedFiles() ? saveKey : nullptr;
-    return Str(Dialog_GetPassword(hwnd, path, rememberPwd, &gShowPassword));
+    return Dialog_GetPassword(hwnd, path, rememberPwd, &gShowPassword);
 }
 
 // update global windowState for next default launch when either
@@ -4909,7 +4909,7 @@ void SetCurrentLanguageAndRefreshUI(Str langCode) {
 }
 
 static void OnMenuChangeLanguage(HWND hwnd) {
-    const char* newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
+    Str newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
     SetCurrentLanguageAndRefreshUI(newLangCode);
 }
 
@@ -5367,7 +5367,11 @@ static void OnMenuGoToPage(MainWindow* win) {
 
     auto* ctrl = win->ctrl;
     TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
-    AutoFreeStr newPageLabel = Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels());
+    Str pageLabelResult = Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels());
+    if (!pageLabelResult) {
+        return;
+    }
+    AutoFreeStr newPageLabel = pageLabelResult.s;
     if (!newPageLabel) {
         return;
     }
