@@ -969,6 +969,9 @@ workspace "SumatraPDF"
     darkmodelib_files()
 
     webview_conf()
+    filter "configurations:Debug or DebugFull"
+      files { "src/AppUnitTests.cpp" }
+    filter {}
 
     synctex_files()
     mui_files()
@@ -1046,7 +1049,7 @@ workspace "SumatraPDF"
     engines_files()
     sumatrapdf_files()
     filter "configurations:Debug or DebugFull"
-    files { "src/AppUnitTests.cpp" }
+      files { "src/AppUnitTests.cpp" }
     filter {}
 
     webview_conf()

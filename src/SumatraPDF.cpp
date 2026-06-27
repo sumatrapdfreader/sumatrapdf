@@ -4309,6 +4309,7 @@ static TempWStr GetFileFilterTemp() {
         {_TRA("CHM documents"), "*.chm", true},
         {_TRA("SVG documents"), "*.svg", true},
         {_TRA("EPUB ebooks"), "*.epub", true},
+        {_TRA("Markdown documents"), "*.md;*.markdown", true},
         {_TRA("Mobi documents"), "*.mobi", true},
         {_TRA("FictionBook documents"), "*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},
         {_TRA("PalmDoc documents"), "*.pdb;*.prc", true},

@@ -476,6 +476,9 @@
     <ClCompile Include="..\src\AppTools.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\AppUnitTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Canvas.cpp">
       <Filter>src</Filter>
     </ClCompile>

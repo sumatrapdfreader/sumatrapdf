@@ -36,6 +36,7 @@ EXPORTS
 	fz_style_document
 	fz_urldecode
 	fz_open_document_with_stream
+	fz_open_document_with_stream_and_dir
 	fz_authenticate_password
 	fz_layout_document
 	fz_page_number_from_location

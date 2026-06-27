@@ -2447,11 +2447,30 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
 
     float dx, dy, fontDy;
     _doc = nullptr;
+    fz_archive* dir = nullptr;
     fz_var(dx);
     fz_var(dy);
     fz_var(fontDy);
+    fz_var(dir);
+    Kind kind = GuessFileTypeFromName(nameHint);
+    if (kind == kindFileMarkdown) {
+        TempStr parentDir = path::GetDirTemp(nameHint);
+        if (!str::IsEmpty(parentDir)) {
+            fz_try(ctx) {
+                dir = fz_open_directory(ctx, parentDir);
+            }
+            fz_catch(ctx) {
+                dir = nullptr;
+                fz_report_error(ctx);
+            }
+        }
+    }
     fz_try(ctx) {
-        _doc = fz_open_document_with_stream(ctx, nameHint, stm);
+        if (dir) {
+            _doc = fz_open_document_with_stream_and_dir(ctx, nameHint, stm, dir);
+        } else {
+            _doc = fz_open_document_with_stream(ctx, nameHint, stm);
+        }
         // per-document CSS styling (replaces the global fz_set_user_css /
         // fz_set_use_document_css); must be set before fz_layout_document
         fz_style_document(ctx, _doc, usePublisherCss, userCss);
@@ -2463,6 +2482,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
     }
     fz_always(ctx) {
         fz_drop_stream(ctx, stm);
+        fz_drop_archive(ctx, dir);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
