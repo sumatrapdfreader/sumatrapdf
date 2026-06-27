@@ -206,8 +206,7 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
             return true;
         case SettingType::String: {
             Str str = *(Str*)fieldPtr;
-            if (!str.s) {
-                ReportIf(field.value);
+            if (!str) {
                 return false; // skip empty strings
             }
             if (!NeedsEscaping(str.s)) {
