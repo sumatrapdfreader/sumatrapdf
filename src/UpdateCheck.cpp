@@ -422,7 +422,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     }
     TempStr link = str::FormatTemp("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update"));
     TempStr msg =
-        str::FormatTemp(_TRA("Update %s (you have %s) available. %s"), updateInfo->latestVer, CURR_VERSION_STRA, link);
+        str::FormatTemp(_TRA("Update %s available (you have %s) available. %s"), updateInfo->latestVer, CURR_VERSION_STRA, link);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = msg;
