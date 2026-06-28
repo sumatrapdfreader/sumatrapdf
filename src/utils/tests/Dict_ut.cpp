@@ -13,7 +13,7 @@ static inline char GenRandChar() {
     return LETTERS[rand() % dimof(LETTERS)];
 }
 
-static char* GenRandomString() {
+static Str GenRandomString() {
     static char buf[256];
     int len = 1 + (rand() % (dimof(buf) - 4)); // 4 just in case, 2 should be precise value
 
@@ -21,7 +21,7 @@ static char* GenRandomString() {
         buf[i] = GenRandChar();
     }
     buf[len] = 0;
-    return &buf[0];
+    return Str(buf, len);
 }
 
 void DictTestMapStrToInt() {
@@ -57,23 +57,23 @@ void DictTestMapStrToInt() {
     utassert(0 == d.Count());
 
     srand((unsigned int)time(nullptr));
-    Vec<char*> toRemove;
+    StrVec toRemove;
     for (int i = 0; i < 1024; i++) {
-        char* k = GenRandomString();
-        ok = d.Insert(Str(k), i, nullptr);
+        Str k = GenRandomString();
+        ok = d.Insert(k, i, nullptr);
         // no guarantee that the string is unique, so Insert() doesn't always succeeds
         if (!ok) continue;
         toRemove.Append(str::Dup(k));
-        utassert(toRemove.size() == d.Count());
-        ok = d.Get(Str(k), &val);
+        utassert(toRemove.Size() == d.Count());
+        ok = d.Get(k, &val);
         ReportIf(!ok);
         ReportIf(i != val);
     }
-    for (const char* k : toRemove) {
-        ok = d.Remove(Str(k), nullptr);
+    for (int i = 0; i < toRemove.Size(); i++) {
+        Str k = toRemove.At(i);
+        ok = d.Remove(k, nullptr);
         utassert(ok);
     }
-    toRemove.FreeMembers();
 }
 
 void DictTest() {

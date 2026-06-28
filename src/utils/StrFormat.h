@@ -107,8 +107,8 @@ struct Arg {
         wstr = arg;
     }
 
-    Arg(const char* s_) : Arg(Str(s_)) {}
-    Arg(const WCHAR* ws_) : Arg(WStr(ws_)) {}
+    Arg(const char* s_) : Arg(Str(s_)) {}     // str-port: C-string variadic adapter
+    Arg(const WCHAR* ws_) : Arg(WStr(ws_)) {} // str-port: Win32 variadic adapter
 };
 
 Str Format(Str s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),

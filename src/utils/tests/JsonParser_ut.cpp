@@ -8,13 +8,12 @@
 #include "utils/UtAssert.h"
 
 struct JsonValue {
-    const char* path = nullptr;
-    const char* value = nullptr;
+    Str path;
+    Str value;
     json::Type type{json::Type::String};
 
     JsonValue() = default;
-    JsonValue(const char* path, const char* value, json::Type type = json::Type::String)
-        : path(path), type(type), value(value) {}
+    JsonValue(Str path, Str value, json::Type type = json::Type::String) : path(path), type(type), value(value) {}
 };
 
 class JsonVerifier : public json::ValueVisitor {
@@ -40,7 +39,7 @@ class JsonVerifier : public json::ValueVisitor {
 
 void JsonTest() {
     static const struct {
-        const char* json;
+        Str json;
         JsonValue value;
     } validJsonData[] = {
         // strings
@@ -77,7 +76,7 @@ void JsonTest() {
     }
 
     static const struct {
-        const char* json;
+        Str json;
         JsonValue value;
     } invalidJsonData[] = {
         // dictionaries
@@ -95,13 +94,13 @@ void JsonTest() {
         utassert(!json::Parse(invalidJsonData[i].json, &verifier));
     }
 
-    static const char* invalidJson[] = {
+    static Str invalidJson[] = {
         "",  "string", "nada", "\"open", "\"\\xC4\"",   "\"\\u123h\"",   "'string'",       "01", ".1", "12.", "1e",
         "-", "-01",    "{",    "{,}",    "{\"key\": }", "{\"key: 123 }", "{ 'key': 123 }", "[",  "[,]"};
 
     JsonVerifier verifyError(nullptr, 0);
     {
-        auto s = invalidJson[10]; // this one caused buffer overflow
+        Str s = invalidJson[10]; // this one caused buffer overflow
         utassert(!json::Parse(s, &verifyError));
     }
 
@@ -120,7 +119,7 @@ void JsonTest() {
         JsonValue("/ComicBookInfo/1.0/credits[2]", "null", json::Type::Null),
         JsonValue("/appID", "Test/123"),
     };
-    const char* jsonSample =
+    Str jsonSample =
         "{\n\
     \"ComicBookInfo/1.0\": {\n\
         \"title\": \"Meta data demo\",\n\

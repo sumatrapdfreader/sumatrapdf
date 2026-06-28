@@ -117,7 +117,7 @@ Str ToLower(Str s);
 
 Str ToUpperInPlace(Str s);
 
-void Utf8Encode(char* buf, int& off, int c);
+void Utf8Encode(char* buf, int& off, int c); // str-port: owned heap write buffer
 
 bool IsDigit(char c);
 bool IsWs(char c);
