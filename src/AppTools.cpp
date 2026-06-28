@@ -39,24 +39,30 @@ static bool HasBeenInstalled() {
     return path::IsSame(installedPath, exePath);
 }
 
-static char* PathStripBaseName(char* path) {
-    // base will either return path or a pointer inside path right after last "/"
-    char* base = (char*)path::GetBaseNameTemp(Str(path));
-    if (base > path) {
-        base[-1] = 0;
-        return path;
+static bool PathStripBaseNameInPlace(Str& path) {
+    if (!path.s) {
+        return false;
     }
-    return nullptr;
+    TempStr base = path::GetBaseNameTemp(path);
+    if (base.s > path.s) {
+        base.s[-1] = 0;
+        path.len = (int)(base.s - path.s - 1);
+        return true;
+    }
+    return false;
 }
 
 // return true if path is in a given dir, even if dir is a junction etc.
-static bool IsPathInDirSmart(const char* path, const char* dir) {
-    char* dir2 = str::DupTemp(path);
-    while (dir2) {
-        if (path::IsSame(dir, dir2)) {
+static bool IsPathInDirSmart(Str path, Str dir) {
+    TempStr work = StrDupTemp(path);
+    Str p = work;
+    while (p) {
+        if (path::IsSame(dir, p)) {
             return true;
         }
-        dir2 = PathStripBaseName(dir2);
+        if (!PathStripBaseNameInPlace(p)) {
+            break;
+        }
     }
     return false;
 }
@@ -355,19 +361,19 @@ static void FindTextEditors() {
     int n = (int)dimof(editorRules) - 1;
     for (int i = 0; i < n; i++) {
         auto& rule = editorRules[i];
-        const char* regKey = rule.regKey;
-        const char* regValue = rule.regValue;
-        char* path = LoggedReadRegStr2Temp(regKey, regValue);
+        Str regKey = rule.regKey;
+        Str regValue = rule.regValue;
+        TempStr path = LoggedReadRegStr2Temp(regKey, regValue);
         if (!path) {
             continue;
         }
 
-        char* exePath = nullptr;
-        const char* binaryFileName = rule.binaryFilename;
-        const char* inverseSearchArgs = rule.inverseSearchArgs;
+        TempStr exePath;
+        Str binaryFileName = rule.binaryFilename;
+        Str inverseSearchArgs = rule.inverseSearchArgs;
         if (rule.type == RegType::SiblingPath) {
             // remove file part
-            char* dir = path::GetDirTemp(Str(path));
+            TempStr dir = path::GetDirTemp(path);
             exePath = path::JoinTemp(dir, binaryFileName);
         } else if (rule.type == RegType::BinaryDir) {
             exePath = path::JoinTemp(path, binaryFileName);
@@ -408,29 +414,35 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the caller must free() the result
 Str BuildOpenFileCmd(Str pattern, Str path, int line, int col) {
-    const char* perc;
     StrBuilder cmdline(256);
 
     logf("BuildOpenFileCmd: path: '%s', pattern: '%s'\n", path, pattern);
-    const char* s = pattern;
-    while ((perc = str::FindChar(s, '%')) != nullptr) {
-        cmdline.Append(s, perc - s);
-        s = perc + 2;
-        perc++;
-
-        if (*perc == 'f') {
+    Str s = pattern;
+    while (s) {
+        Str perc = str::FindChar(s, '%');
+        if (!perc) {
+            cmdline.Append(s);
+            break;
+        }
+        cmdline.Append(Str(s.s, (int)(perc.s - s.s)));
+        if (perc.len < 2) {
+            cmdline.Append(perc);
+            break;
+        }
+        char spec = perc.s[1];
+        if (spec == 'f') {
             cmdline.Append(path);
-        } else if (*perc == 'l') {
+        } else if (spec == 'l') {
             cmdline.AppendFmt("%d", line);
-        } else if (*perc == 'c') {
+        } else if (spec == 'c') {
             cmdline.AppendFmt("%d", col);
-        } else if (*perc == '%') {
+        } else if (spec == '%') {
             cmdline.AppendChar('%');
         } else {
-            cmdline.Append(perc - 1, 2);
+            cmdline.Append(Str(perc.s, 2));
         }
+        s = Str(perc.s + 2, s.len - (int)(perc.s - s.s) - 2);
     }
-    cmdline.Append(s);
 
     return Str(cmdline.StealData());
 }
@@ -605,12 +617,7 @@ TempStr GetWebViewDataDirTemp() {
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 TempStr FormatSizeShortTransTemp(i64 size) {
-    const char* sizeUnits[3] = {
-        _TRA("GB"),
-        _TRA("MB"),
-        _TRA("KB"),
-    };
-    Str units[3] = {Str(sizeUnits[0]), Str(sizeUnits[1]), Str(sizeUnits[2])};
+    Str units[3] = {_TRA("GB"), _TRA("MB"), _TRA("KB")};
     return str::FormatSizeShortTemp(size, units);
 }
 
@@ -620,9 +627,9 @@ TempStr FormatFileSizeTransTemp(i64 size) {
     if (size <= 0) {
         return fmt::FormatTemp("%d", size);
     }
-    char* n1 = FormatSizeShortTransTemp(size);
-    char* n2 = str::FormatNumWithThousandSepTemp(size);
-    return fmt::FormatTemp("%s (%s %s)", n1, n2, _TRA("Bytes").s);
+    TempStr n1 = FormatSizeShortTransTemp(size);
+    TempStr n2 = str::FormatNumWithThousandSepTemp(size);
+    return fmt::FormatTemp("%s (%s %s)", (const char*)n1, (const char*)n2, (const char*)_TRA("Bytes"));
 }
 
 // returns true if file exists
