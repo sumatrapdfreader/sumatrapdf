@@ -51,7 +51,7 @@ struct CapturedScreenshot {
     int origH = 0;
     int thumbW = 0;
     int thumbH = 0;
-    char* processName = nullptr; // for file naming
+    Str processName; // for file naming
 };
 
 struct ScreenshotOverlayData {
@@ -457,14 +457,14 @@ static TempStr GetWindowProcessNameTemp(HWND hwnd) {
     return noExt;
 }
 
-static TempStr MakeUniquePathTemp(const char* dir, const char* base) {
-    TempStr name = str::FormatTemp("%s.png", base);
+static TempStr MakeUniquePathTemp(Str dir, Str base) {
+    TempStr name = str::FormatTemp("%s.png", base.s);
     TempStr path = path::JoinTemp(dir, name);
     if (!file::Exists(Str(path))) {
         return path;
     }
     for (int i = 1; i < 10000; i++) {
-        name = str::FormatTemp("%s.%d.png", base, i);
+        name = str::FormatTemp("%s.%d.png", base.s, i);
         path = path::JoinTemp(dir, name);
         if (!file::Exists(Str(path))) {
             return path;
@@ -548,7 +548,7 @@ static BOOL CALLBACK EnumCaptureWindowsProc(HWND hwnd, LPARAM lParam) {
     cs.origH = h;
     cs.thumb = CreateThumbnail(hbm, w, h, &cs.thumbW, &cs.thumbH);
     TempStr procName = GetWindowProcessNameTemp(hwnd);
-    cs.processName = str::Dup(procName ? procName.s : "unknown");
+    cs.processName = procName ? str::Dup(procName) : str::Dup(StrL("unknown"));
     ctx->captures->Append(cs);
     return TRUE;
 }
@@ -564,7 +564,7 @@ static void CaptureAllScreenshots(ScreenshotOverlayData* data, HWND overlayHwnd)
         cs.origW = dw;
         cs.origH = dh;
         cs.thumb = CreateThumbnail(hbmDesktop, dw, dh, &cs.thumbW, &cs.thumbH);
-        cs.processName = str::Dup("desktop");
+        cs.processName = str::Dup(StrL("desktop"));
         data->captures.Append(cs);
     }
 
@@ -1105,23 +1105,23 @@ static bool IsOtherSumatraProcessRunning() {
     return false;
 }
 
-// find custom shortcut key string for CmdScreenshot, or nullptr if none
-static const char* FindScreenshotShortcut() {
+// find custom shortcut key string for CmdScreenshot, or empty if none
+static Str FindScreenshotShortcut() {
     // check gGlobalPrefs->shortcuts first (may have been updated at runtime)
     for (Shortcut* sc : *gGlobalPrefs->shortcuts) {
-        if (str::EqI(sc->cmd, "CmdScreenshot") && !str::IsEmptyOrWhiteSpace(sc->key)) {
+        if (str::EqI(sc->cmd, "CmdScreenshot") && sc->key) {
             return sc->key;
         }
     }
     // fall back to custom commands (built at startup)
     auto curr = gFirstCustomCommand;
     while (curr) {
-        if (curr->origId == CmdScreenshot && !str::IsEmptyOrWhiteSpace(curr->key)) {
+        if (curr->origId == CmdScreenshot && curr->key) {
             return curr->key;
         }
         curr = curr->next;
     }
-    return nullptr;
+    return {};
 }
 
 static UINT AccelFVirtToHotkeyMod(BYTE fVirt) {
@@ -1139,7 +1139,7 @@ static UINT AccelFVirtToHotkeyMod(BYTE fVirt) {
 }
 
 void RegisterScreenshotHotkey(HWND hwnd) {
-    const char* shortcut = FindScreenshotShortcut();
+    Str shortcut = FindScreenshotShortcut();
     if (!shortcut) {
         // don't register global hotkey by default; require explicit
         // Shortcuts entry (e.g. Key = PrtSc, CmdScreenshot)
@@ -1253,8 +1253,8 @@ struct SetHotkeyDialog {
 };
 
 static void SetHotkeyUpdateUI(SetHotkeyDialog* dlg) {
-    const char* display = dlg->newHotkey ? dlg->newHotkey.s : (dlg->currentHotkey ? dlg->currentHotkey.s : "None");
-    SetWindowTextA(dlg->hwndHotkeyLabel, display);
+    Str display = dlg->newHotkey ? dlg->newHotkey : (dlg->currentHotkey ? dlg->currentHotkey : StrL("None"));
+    SetWindowTextA(dlg->hwndHotkeyLabel, display.s);
     EnableWindow(dlg->hwndSetBtn, dlg->newHotkey != nullptr);
     EnableWindow(dlg->hwndRemoveBtn, dlg->currentHotkey != nullptr || dlg->newHotkey != nullptr);
 }
@@ -1412,7 +1412,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     SetHotkeyDialog* dlg = new SetHotkeyDialog();
     dlg->hwndOwner = hwndOwner;
     dlg->hFont = GetDefaultGuiFont();
-    const char* existing = FindScreenshotShortcut();
+    Str existing = FindScreenshotShortcut();
     if (existing) {
         dlg->currentHotkey = str::Dup(existing);
     }
@@ -1443,7 +1443,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     y += rowH + rowGap;
 
     // row 2: hotkey display
-    const char* display = dlg->currentHotkey ? dlg->currentHotkey.s : "None";
+    Str display = dlg->currentHotkey ? dlg->currentHotkey : StrL("None");
     dlg->hwndHotkeyLabel =
         CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", ToWStrTemp(display),
                         WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, x, y, w, rowH, hwnd, nullptr, h, nullptr);
