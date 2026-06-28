@@ -40,10 +40,6 @@ static Kind destKinds[] = {
 };
 // clang-format on
 
-bool IsExternalUrl(const WCHAR* url) {
-    return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
-}
-
 bool IsExternalUrl(Str url) {
     return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
 }
@@ -123,9 +119,10 @@ TempStr CleanupTreeViewControlStringTemp(Str s) {
     str::RemoveCharsInPlace(ws, L"\x00ad");
     // control chars (incl. embedded newlines/tabs) and the Unicode line and
     // paragraph separators render as boxes in a single-line label
-    for (WCHAR* p = ws; *p; p++) {
-        if (*p < 0x20 || *p == 0x7f || *p == 0x2028 || *p == 0x2029) {
-            *p = ' ';
+    for (int i = 0; i < ws.len; i++) {
+        wchar_t c = ws.s[i];
+        if (c < 0x20 || c == 0x7f || c == 0x2028 || c == 0x2029) {
+            ws.s[i] = L' ';
         }
     }
     // collapse the runs of whitespace we just introduced (and trim)

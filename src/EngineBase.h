@@ -25,7 +25,6 @@ extern Kind kindEngineChm;
 extern Kind kindEngineHtml;
 extern Kind kindEngineTxt;
 
-bool IsExternalUrl(const WCHAR* url);
 bool IsExternalUrl(Str url);
 
 static inline void SetDefaultExt(Str& ext, Str snew) {
