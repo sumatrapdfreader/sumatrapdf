@@ -1954,15 +1954,13 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
 
     WStrBuilder result;
     Rect regionI = region.Round();
-    const WCHAR* srcBase = pageText.s;
-    int nChars = pageText.len;
-    for (int i = 0; i < nChars; i++) {
-        const WCHAR* src = srcBase + i;
-        if (*src != '\n') {
+    for (int i = 0; i < pageText.len; i++) {
+        wchar_t c = pageText.s[i];
+        if (c != L'\n') {
             Rect rect = coords[i];
             Rect isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
-                result.AppendChar(*src);
+                result.AppendChar(c);
             }
         } else if (result.size() > 0 && result.Last() != '\n') {
             result.Append(L"\r\n", 2);
