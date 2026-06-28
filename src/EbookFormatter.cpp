@@ -40,17 +40,21 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc) : HtmlFormat
     }
 }
 
+static Str AttrVal(const AttrInfo* attr) {
+    return Str(attr->val, (int)attr->valLen);
+}
+
 // parses size in the form "1em" or "3pt". To interpret ems we need emInPoints
 // to be passed by the caller
-static float ParseSizeAsPixels(const char* s, size_t len, float emInPoints) {
+static float ParseSizeAsPixels(Str s, float emInPoints) {
     float sizeInPoints = 0;
-    if (str::Parse(s, len, "%fem", &sizeInPoints)) {
+    if (str::Parse(s, "%fem", &sizeInPoints)) {
         sizeInPoints *= emInPoints;
-    } else if (str::Parse(s, len, "%fin", &sizeInPoints)) {
+    } else if (str::Parse(s, "%fin", &sizeInPoints)) {
         sizeInPoints *= 72;
-    } else if (str::Parse(s, len, "%fpt", &sizeInPoints)) {
+    } else if (str::Parse(s, "%fpt", &sizeInPoints)) {
         // no conversion needed
-    } else if (str::Parse(s, len, "%fpx", &sizeInPoints)) {
+    } else if (str::Parse(s, "%fpx", &sizeInPoints)) {
         return sizeInPoints;
     } else {
         return 0;
@@ -70,7 +74,7 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
     // 3pt top padding (the same seems to apply for <blockquote>)
     AttrInfo* attr = t->GetAttrByName("width");
     if (attr) {
-        float lineIndent = ParseSizeAsPixels(attr->val, attr->valLen, CurrFont()->GetSize());
+        float lineIndent = ParseSizeAsPixels(AttrVal(attr), CurrFont()->GetSize());
         // there are files with negative width which produces partially invisible
         // text, so don't allow that
         if (lineIndent > 0) {
@@ -81,7 +85,7 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
     attr = t->GetAttrByName("height");
     if (attr) {
         // for use it in FlushCurrLine()
-        currLineTopPadding = ParseSizeAsPixels(attr->val, attr->valLen, CurrFont()->GetSize());
+        currLineTopPadding = ParseSizeAsPixels(AttrVal(attr), CurrFont()->GetSize());
     }
 }
 
@@ -99,13 +103,13 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("recindex");
     if (attr) {
         int n;
-        if (str::Parse(attr->val, attr->valLen, "%d", &n)) {
+        if (str::Parse(AttrVal(attr), "%d", &n)) {
             ByteSlice* img = doc->GetImage(n);
             needAlt = !img || !EmitImage(img);
         }
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(Str((char*)attr->val, (int)attr->valLen));
+        HandleText(AttrVal(attr));
     }
 }
 
@@ -149,7 +153,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(Str((char*)attr->val, (int)attr->valLen));
+        HandleText(AttrVal(attr));
     }
 }
 
@@ -160,8 +164,8 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
-        currPage->instructions.Append(DrawInstr::Anchor(Str((char*)attr->val, (int)attr->valLen), bbox));
-        pagePath.Set(str::Dup(attr->val, attr->valLen));
+        currPage->instructions.Append(DrawInstr::Anchor(AttrVal(attr), bbox));
+        pagePath.SetCopy(AttrVal(attr));
         // reset CSS style rules for the new document
         styleRules.Reset();
     }
@@ -185,11 +189,11 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    char* src = str::DupTemp(attr->val, attr->valLen);
+    TempStr src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
     ByteSlice data = epubDoc->GetFileData(src, Str(pagePath));
     if (data) {
-        ParseStyleSheet(Str((char*)data.data(), (int)data.size()));
+        ParseStyleSheet(AsStr(data));
         data.Free();
     }
 }
@@ -293,9 +297,8 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         HandleTagHx(&tok);
         HandleAnchorAttr(t);
         if (!isSubtitle && t->IsStartTag()) {
-            char* link = (char*)Alloc(textAllocator, 24);
-            sprintf_s(link, 24, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
-            currPage->instructions.Append(DrawInstr::Anchor(Str((char*)link), Gdiplus::RectF(0, currY, pageDx, 0)));
+            TempStr link = str::FormatTemp(FB2_TOC_ENTRY_MARK "%d", ++titleCount);
+            currPage->instructions.Append(DrawInstr::Anchor(link, Gdiplus::RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {
         if (t->IsStartTag()) {
@@ -348,7 +351,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(Str((char*)attr->val, (int)attr->valLen));
+        HandleText(AttrVal(attr));
     }
 }
 
@@ -370,11 +373,11 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    char* src = str::DupTemp(attr->val, attr->valLen);
+    TempStr src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
     ByteSlice data = htmlDoc->GetFileData(src);
     if (data) {
-        ParseStyleSheet(Str((char*)data.data(), (int)data.size()));
+        ParseStyleSheet(AsStr(data));
     }
     data.Free();
 }
