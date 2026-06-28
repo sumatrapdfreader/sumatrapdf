@@ -577,11 +577,11 @@ void ReplacePtr(Str* s, Str snew) {
 }
 
 void ReplaceWithCopy(Str* s, Str snew) {
+    // dup before free so it's safe even if snew aliases *s; dup is always a
+    // fresh allocation so it can never alias the old s->s -- no check needed
     Str dup = str::Dup(snew);
-    if (s->s != dup.s) {
-        str::Free(s->s);
-        *s = dup;
-    }
+    str::Free(s->s);
+    *s = dup;
 }
 
 Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
