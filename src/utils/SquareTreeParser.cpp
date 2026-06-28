@@ -52,43 +52,50 @@ Final note: Whitespace at the start and end of a line as well as around key-valu
 separators is always ignored.
 */
 
-static inline char* SkipWs(char* s, bool stopAtLineEnd = false) {
-    for (; str::IsWs(*s) && (!stopAtLineEnd || *s != '\n'); s++) {
+static int SkipWs(Str data, int off, bool stopAtLineEnd = false) {
+    for (; off < data.len && str::IsWs(data.s[off]) && (!stopAtLineEnd || data.s[off] != '\n'); off++) {
         ;
     }
-    return s;
-}
-static inline char* SkipWsRev(char* begin, char* s) {
-    for (; s > begin && str::IsWs(*(s - 1)); s--) {
-        ;
-    }
-    return s;
+    return off;
 }
 
-static char* SkipWsAndComments(char* s) {
-    do {
-        s = SkipWs(s);
-        if ('#' == *s || ';' == *s) {
-            // skip entire comment line
-            for (; *s && *s != '\n'; s++) {
+static int SkipWsRev(Str data, int begin, int off) {
+    for (; off > begin && str::IsWs(data.s[off - 1]); off--) {
+        ;
+    }
+    return off;
+}
+
+static int SkipWsAndComments(Str data, int off) {
+    for (;;) {
+        off = SkipWs(data, off);
+        if (off < data.len && (data.s[off] == '#' || data.s[off] == ';')) {
+            for (; off < data.len && data.s[off] != '\n'; off++) {
                 ;
             }
+        } else {
+            break;
         }
-    } while (str::IsWs(*s));
-    return s;
+    }
+    return off;
 }
 
-static bool IsBracketLine(char* s) {
-    if (*s != '[') {
+static bool IsBracketLine(Str data, int off) {
+    if (off >= data.len || data.s[off] != '[') {
         return false;
     }
-    // the line may only contain whitespace and a comment
-    for (s++; *s && *s != '\n' && *s != '#' && *s != ';'; s++) {
-        if (!str::IsWs(*s)) {
+    for (off++; off < data.len && data.s[off] != '\n' && data.s[off] != '#' && data.s[off] != ';'; off++) {
+        if (!str::IsWs(data.s[off])) {
             return false;
         }
     }
     return true;
+}
+
+static Str ExtractTrimmed(Str data, int begin, int end) {
+    end = SkipWsRev(data, begin, end);
+    begin = SkipWs(data, begin);
+    return Str(data.s + begin, end - begin);
 }
 
 SquareTreeNode::~SquareTreeNode() {
@@ -128,77 +135,87 @@ SquareTreeNode* SquareTreeNode::GetChild(Str key, size_t* startIdx) const {
     return nullptr;
 }
 
-static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) {
+static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = false) {
     SquareTreeNode* node = new SquareTreeNode();
 
-    while (*(data = SkipWsAndComments(data))) {
+    while (off < data.len && data.s[off]) {
+        off = SkipWsAndComments(data, off);
+        if (off >= data.len || !data.s[off]) {
+            break;
+        }
         // all non-empty non-comment lines contain a key-value pair
         // where the value is either a string (separated by '=' or ':')
         // or a list of child nodes (if the key is followed by '[' alone)
-        char* key = data;
-        for (data = key; *data && *data != '=' && *data != ':' && *data != '[' && *data != ']' && *data != '\n';
-             data++) {
+        int keyOff = off;
+        for (; off < data.len && data.s[off] != '=' && data.s[off] != ':' && data.s[off] != '[' && data.s[off] != ']' &&
+               data.s[off] != '\n';
+             off++) {
             ;
         }
-        if (!*data || '\n' == *data) {
+        if (off >= data.len || data.s[off] == '\n') {
             // use first whitespace as a fallback separator
-            for (data = key; *data && !str::IsWs(*data); data++) {
+            for (off = keyOff; off < data.len && !str::IsWs(data.s[off]); off++) {
                 ;
             }
         }
-        char* separator = data;
-        if (*data && *data != '\n') {
+        int sepOff = off;
+        if (off < data.len && data.s[off] != '\n') {
             // skip to the first non-whitespace character on the same line (value)
-            data = SkipWs(data + 1, true);
+            off = SkipWs(data, off + 1, true);
         }
-        char* value = data;
+        int valOff = off;
         // skip to the end of the line
-        for (; *data && *data != '\n'; data++) {
+        for (; off < data.len && data.s[off] != '\n'; off++) {
             ;
         }
-        if (IsBracketLine(separator) ||
+        if (IsBracketLine(data, sepOff) ||
             // also tolerate "key \n [ \n ... \n ]" (else the key
             // gets an empty value and the child node an empty key)
-            str::IsWs(*separator) && '\n' == *value && IsBracketLine(SkipWsAndComments(data))) {
+            (str::IsWs(data.s[sepOff]) && valOff < data.len && data.s[valOff] == '\n' &&
+             IsBracketLine(data, SkipWsAndComments(data, off)))) {
             // parse child node(s)
-            data = SkipWsAndComments(separator) + 1;
-            *SkipWsRev(key, separator) = '\0';
-            node->data.Append(SquareTreeNode::DataItem(Str(key), ParseSquareTreeRec(data)));
+            int childOff = SkipWsAndComments(data, sepOff) + 1;
+            Str key = str::Dup(ExtractTrimmed(data, keyOff, sepOff));
+            node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data, childOff)));
+            off = childOff;
             // arrays are created by either reusing the same key for a different child
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
-            while (IsBracketLine((data = SkipWsAndComments(data)))) {
-                data++;
-                node->data.Append(SquareTreeNode::DataItem(Str(key), ParseSquareTreeRec(data)));
+            while (IsBracketLine(data, (off = SkipWsAndComments(data, off)))) {
+                off++;
+                node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data, off)));
             }
-        } else if (']' == *key) {
+        } else if (data.s[keyOff] == ']') {
             // finish parsing child node
-            data = key + 1;
+            off = keyOff + 1;
             if (!isTopLevel) {
                 return node;
             }
             // ignore superfluous closing square brackets instead of
             // ignoring all content following them
-        } else if ('[' == *key && ']' == SkipWsRev(value, data)[-1]) {
+        } else if (data.s[keyOff] == '[' && data.s[SkipWsRev(data, valOff, off) - 1] == ']') {
             // treat INI section headers as top-level node names
             // (else "[Section]" would be ignored)
             if (!isTopLevel) {
-                data = key;
+                off = keyOff;
                 return node;
             }
             // trim whitespace around section name (for consistency with GetPrivateProfileString)
-            key = SkipWs(key + 1);
-            *SkipWsRev(key, SkipWsRev(value, data) - 1) = '\0';
-            node->data.Append(SquareTreeNode::DataItem(Str(key), ParseSquareTreeRec(data)));
-        } else if ('[' == *separator || ']' == *separator) {
+            int nameStart = SkipWs(data, keyOff + 1);
+            int nameEnd = SkipWsRev(data, nameStart, SkipWsRev(data, valOff, off));
+            Str sectionKey = str::Dup(Str(data.s + nameStart, nameEnd - nameStart));
+            int sectionChildOff = off;
+            node->data.Append(SquareTreeNode::DataItem(sectionKey, ParseSquareTreeRec(data, sectionChildOff)));
+            off = sectionChildOff;
+        } else if ((off < data.len && data.s[sepOff] == '[') || data.s[sepOff] == ']') {
             // invalid line (ignored)
         } else {
             // string value (decoding is left to the consumer)
-            bool hasMoreLines = '\n' == *data;
-            *SkipWsRev(key, separator) = '\0';
-            *SkipWsRev(value, data) = '\0';
-            node->data.Append(SquareTreeNode::DataItem(Str(key), Str(value)));
+            bool hasMoreLines = off < data.len && data.s[off] == '\n';
+            Str key = str::Dup(ExtractTrimmed(data, keyOff, sepOff));
+            Str val = str::Dup(ExtractTrimmed(data, valOff, off));
+            node->data.Append(SquareTreeNode::DataItem(key, val));
             if (hasMoreLines) {
-                data++;
+                off++;
             }
         }
     }
@@ -245,11 +262,13 @@ Str SerializeSquareTreeNode(SquareTreeNode* node) {
 }
 
 SquareTreeNode* ParseSquareTree(Str s) {
+    if (!s) {
+        return nullptr;
+    }
     TempStr data = strconv::UnknownToUtf8Temp(s);
     if (!data) {
         return nullptr;
     }
-    char* tmp = data;
-    auto res = ParseSquareTreeRec(tmp, true);
-    return res;
+    int off = 0;
+    return ParseSquareTreeRec(data, off, true);
 }

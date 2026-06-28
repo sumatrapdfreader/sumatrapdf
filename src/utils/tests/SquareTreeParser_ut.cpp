@@ -108,7 +108,7 @@ void SquareTreeTest() {
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 2 == root->data.size());
         size_t off = 0;
-        const char* value = root->GetValue("count", &off);
+        Str value = root->GetValue("count", &off);
         utassert(str::Eq(value, "0") && 1 == off);
         value = root->GetValue("count", &off);
         utassert(str::Eq(value, "1") && 2 == off);
