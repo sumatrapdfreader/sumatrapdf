@@ -37,9 +37,13 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
         if (wordLen == 0) {
             continue;
         }
-        const char* p = text.s;
-        while ((p = str::FindI(Str((char*)p, textLen - (int)(p - text.s)), word).s) != nullptr) {
-            int off = (int)(p - text.s);
+        Str rest = text;
+        while (rest) {
+            Str found = str::FindI(rest, word);
+            if (!found) {
+                break;
+            }
+            int off = (int)(found.s - text.s);
             int end = off + wordLen;
             // with "match whole word", skip occurrences that sit inside a larger
             // word so the snippet doesn't highlight non-matching substrings (e.g.
@@ -56,7 +60,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
                     hl[off + k] = 1;
                 }
             }
-            p += wordLen;
+            rest = Str(found.s + wordLen, textLen - (int)(found.s + wordLen - text.s));
         }
     }
 
@@ -142,21 +146,18 @@ bool FilterMatches(Str str, const StrVec& words) {
 }
 
 void SplitFilterToWords(Str filter, StrVec& words) {
-    char* s = str::DupTemp(filter);
-    char* wordStart = s;
-    bool wasWs = false;
-    while (*s) {
-        if (str::IsWs(*s)) {
-            *s = 0;
-            if (!wasWs) {
-                AppendIfNotExists(&words, wordStart);
-                wasWs = true;
-            }
-            wordStart = s + 1;
+    int i = 0;
+    while (i < filter.len) {
+        while (i < filter.len && str::IsWs(filter.s[i])) {
+            i++;
         }
-        s++;
-    }
-    if (str::Leni(wordStart) > 0) {
-        AppendIfNotExists(&words, wordStart);
+        if (i >= filter.len) {
+            break;
+        }
+        int start = i;
+        while (i < filter.len && !str::IsWs(filter.s[i])) {
+            i++;
+        }
+        AppendIfNotExists(&words, Str(filter.s + start, i - start));
     }
 }
