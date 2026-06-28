@@ -68,14 +68,14 @@ static bool IsCmdInList(i32 cmdId, i32* ids) {
 }
 
 Str CommandPaletteSkipWS(Str s) {
-    const char* p = s.s;
-    if (!p) {
+    if (!s.s) {
         return Str();
     }
-    while (str::IsWs(*p)) {
-        p++;
+    int off = 0;
+    while (off < s.len && str::IsWs(s.s[off])) {
+        off++;
     }
-    return Str(p);
+    return Str(s.s + off, s.len - off);
 }
 
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;
@@ -145,7 +145,7 @@ void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx) {
     wnd->OnSelectionChange();
 }
 
-static void EditSetTextAndFocus(Edit* e, const char* s) {
+static void EditSetTextAndFocus(Edit* e, Str s) {
     e->SetText(s);
     e->SetCursorPositionAtEnd();
     HwndSetFocus(e->hwnd);
@@ -373,7 +373,7 @@ static void OnDestroy(Wnd::DestroyEvent*) {
     ScheduleDeleteAndExecCommand();
 }
 
-static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
+static Static* CreateStatic(HWND parent, HFONT font, Str s) {
     Static::CreateArgs args;
     args.parent = parent;
     args.font = font;
