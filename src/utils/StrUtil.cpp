@@ -2607,16 +2607,16 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     if (!GetLocaleInfoW(locale, LOCALE_STHOUSAND, thousandSepW, dimof(thousandSepW))) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
     }
-    char* thousandSep = ToUtf8Temp(thousandSepW);
-    char* buf = fmt::FormatTemp("%d", num);
+    TempStr thousandSep = ToUtf8Temp(thousandSepW);
+    TempStr buf = fmt::FormatTemp(Str("%d"), num);
 
     char res[128] = {};
     int resLen = dimof(res);
     char* next = res;
-    int i = 3 - (str::Len(buf) % 3);
-    for (const char* src = buf; *src;) {
-        *next++ = *src++;
-        if (*src && i == 2) {
+    int i = 3 - (buf.len % 3);
+    for (int src = 0; src < buf.len; src++) {
+        *next++ = buf.s[src];
+        if (src + 1 < buf.len && i == 2) {
             next += str::BufSet(next, resLen - (int)(next - res), thousandSep);
         }
         i = (i + 1) % 3;
@@ -2631,7 +2631,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
 TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTrailingZero) {
     i64 num = (i64)(number * 100 + 0.5);
 
-    char* tmp = FormatNumWithThousandSepTemp(num / 100, locale);
+    TempStr tmp = FormatNumWithThousandSepTemp(num / 100, locale);
     WCHAR decimalW[4] = {};
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
@@ -2644,9 +2644,10 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     }
 
     // add between one and two decimals after the point
-    char* buf = fmt::FormatTemp("%s%s%02d", tmp, decimal, num % 100);
-    if (stripTrailingZero && str::EndsWith(buf, "0")) {
-        buf[str::Len(buf) - 1] = '\0';
+    TempStr buf = fmt::FormatTemp(Str("%s%s%02d"), tmp, Str(decimal), num % 100);
+    if (stripTrailingZero && str::EndsWith(buf, StrL("0"))) {
+        buf.s[buf.len - 1] = '\0';
+        buf.len--;
     }
 
     return buf;
@@ -2682,11 +2683,11 @@ TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
         unit = sizeUnits[2];
     }
 
-    char* sizestr = str::FormatFloatWithThousandSepTemp(s, LOCALE_USER_DEFAULT, false);
+    TempStr sizestr = str::FormatFloatWithThousandSepTemp(s, LOCALE_USER_DEFAULT, false);
     if (!unit) {
         return sizestr;
     }
-    return fmt::FormatTemp("%s %s", sizestr, unit.s);
+    return fmt::FormatTemp(Str("%s %s"), sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -2695,9 +2696,9 @@ TempStr FormatFileSizeTemp(i64 size) {
     if (size <= 0) {
         return str::FormatTemp("%d", (int)size);
     }
-    char* n1 = str::FormatSizeShortTemp(size);
-    char* n2 = str::FormatNumWithThousandSepTemp(size);
-    return fmt::FormatTemp("%s (%s %s)", n1, n2, "Bytes");
+    TempStr n1 = str::FormatSizeShortTemp(size);
+    TempStr n2 = str::FormatNumWithThousandSepTemp(size);
+    return fmt::FormatTemp(Str("%s (%s %s)"), n1, n2, StrL("Bytes"));
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B

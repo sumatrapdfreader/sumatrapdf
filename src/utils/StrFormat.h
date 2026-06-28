@@ -58,61 +58,57 @@ enum class Type {
 // at the end are FormatStr arguments from format string
 struct Arg {
     Type t{Type::None};
-    union {
-        char c;
-        i64 i;
-        float f;
-        double d;
-        const char* s;
-        const WCHAR* ws;
-    } u{};
+    Str str;
+    WStr wstr;
+    char c = 0;
+    i64 i = 0;
+    float f = 0;
+    double d = 0;
 
     Arg() = default;
 
-    Arg(char c) {
+    Arg(char c_) {
         t = Type::Char;
-        u.c = c;
+        c = c_;
     }
 
     Arg(int arg) {
         t = Type::Int;
-        u.i = (i64)arg;
+        i = (i64)arg;
     }
 
     Arg(size_t arg) {
         t = Type::Int;
-        u.i = (i64)arg;
+        i = (i64)arg;
     }
 
     Arg(i64 arg) {
         t = Type::Int;
-        u.i = arg;
+        i = arg;
     }
 
-    Arg(float f) {
+    Arg(float f_) {
         t = Type::Float;
-        u.f = f;
+        f = f_;
     }
 
-    Arg(double d) {
+    Arg(double d_) {
         t = Type::Double;
-        u.d = d;
+        d = d_;
     }
 
     Arg(Str arg) {
         t = Type::Str;
-        u.s = arg.s;
+        str = arg;
     }
 
-    Arg(const char* arg) {
-        t = Type::Str;
-        u.s = arg;
-    }
-
-    Arg(const WCHAR* arg) {
+    Arg(WStr arg) {
         t = Type::WStr;
-        u.ws = arg;
+        wstr = arg;
     }
+
+    Arg(const char* s_) : Arg(Str(s_)) {}
+    Arg(const WCHAR* ws_) : Arg(WStr(ws_)) {}
 };
 
 Str Format(Str s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
