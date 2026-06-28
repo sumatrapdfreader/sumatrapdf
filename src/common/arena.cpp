@@ -85,7 +85,7 @@ static void* ArenaGetAvailableSpaceLocked(Arena* arena, int* bufSizeOut) {
         available = 0x7fffffff;
     }
     *bufSizeOut = (int)available;
-    return (char*)current + pos;
+    return (char*)current + pos; // str-port: arena buffer
 }
 
 static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
@@ -143,7 +143,7 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
         u64 commitEnd = ArenaAlignPow2(posPost, current->cmt_size);
         u64 commitClamped = ArenaClampTop(commitEnd, current->res);
         u64 commitSize = commitClamped - current->cmt;
-        void* commitPtr = (char*)current + current->cmt;
+        void* commitPtr = (char*)current + current->cmt; // str-port: arena buffer
         if (!ArenaCommit(commitPtr, commitSize, false)) {
             return nullptr;
         }
@@ -154,7 +154,7 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
         return nullptr;
     }
 
-    void* result = (char*)current + posPre;
+    void* result = (char*)current + posPre; // str-port: arena buffer
     current->pos = posPost;
 
     // update allocation stats on the head arena (stats live on the head, not on
@@ -471,7 +471,7 @@ void* MemDup(Arena* arena, const void* mem, size_t size, size_t extraBytes) {
     // memory. When allocated from an arena via Push(..., zero=false) or from
     // malloc() the bytes past `size` aren't otherwise zeroed.
     if (extraBytes > 0) {
-        memset((char*)newMem + size, 0, extraBytes);
+        memset((char*)newMem + size, 0, extraBytes); // str-port: arena buffer
     }
     return newMem;
 }

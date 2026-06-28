@@ -330,7 +330,7 @@ Pixmap* PixmapFromData(const ByteSlice& d) {
     return PixmapFromGdiplus(&bmp);
 }
 
-inline bool memeq3(const char* pix1, const char* pix2) {
+inline bool memeq3(const char* pix1, const char* pix2) { // str-port: bitmap pixel
     return *(WORD*)pix1 == *(WORD*)pix2 && pix1[2] == pix2[2];
 }
 
@@ -344,7 +344,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     WORD w = (WORD)bmpInfo.bmWidth;
     WORD h = (WORD)bmpInfo.bmHeight;
     int stride = ((w * 3 + 3) / 4) * 4;
-    char* bmpData = AllocArrayTemp<char>(stride * h);
+    char* bmpData = AllocArrayTemp<char>(stride * h); // str-port: bitmap buffer
     if (!bmpData) {
         return {};
     }
@@ -372,9 +372,9 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     TgaFooter footerLE = {0, 0, TGA_FOOTER_SIGNATURE};
 
     StrBuilder tgaData;
-    tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
+    tgaData.AppendSlice(ByteSlice((u8*)&headerLE, sizeof(headerLE)));
     for (int k = 0; k < h; k++) {
-        const char* line = bmpData + k * stride;
+        const char* line = bmpData + k * stride; // str-port: bitmap row
         for (int i = 0, j = 1; i < w; i += j, j = 1) {
             // determine the length of a run of identical pixels
             while (i + j < w && j < 128 && memeq3(line + i * 3, line + (i + j) * 3)) {
@@ -396,17 +396,17 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
             }
         }
     }
-    tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
+    tgaData.AppendSlice(ByteSlice((u8*)&footerLE, sizeof(footerLE)));
 
     // don't compress the image data if that increases the file size
     if (tgaData.size() > sizeof(headerLE) + w * h * 3 + sizeof(footerLE)) {
         tgaData.RemoveAt(0, tgaData.size());
         headerLE.imageType = Type_Truecolor;
-        tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
+        tgaData.AppendSlice(ByteSlice((u8*)&headerLE, sizeof(headerLE)));
         for (int k = 0; k < h; k++) {
             tgaData.Append(Str(bmpData + k * stride, w * 3));
         }
-        tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
+        tgaData.AppendSlice(ByteSlice((u8*)&footerLE, sizeof(footerLE)));
     }
 
     size_t sz = tgaData.size();

@@ -85,7 +85,7 @@ struct AutoFree {
         data = p;
     }
 
-    AutoFree(const u8* p) { // NOLINT
+    AutoFree(const u8* p) { // NOLINT str-port: owned heap
         data = (char*)p;
     }
 

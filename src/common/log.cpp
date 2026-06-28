@@ -31,7 +31,7 @@ void LogInit(Str logFilePath) {
     if (gLogFilePath) {
         free(gLogFilePath);
     }
-    gLogFilePath = (char*)malloc(logFilePath.len + 1);
+    gLogFilePath = (char*)malloc(logFilePath.len + 1); // str-port: owned heap
     memcpy(gLogFilePath, logFilePath.s, logFilePath.len);
     gLogFilePath[logFilePath.len] = 0;
 

@@ -2254,7 +2254,7 @@ WStr WStrBuilder::StealData() {
     int n = (int)len;
     WCHAR* res = els;
     if (els == buf) {
-        res = (WCHAR*)MemDup(allocator, buf, (len + kPadding) * kElSize);
+        res = (WCHAR*)MemDup(allocator, buf, (len + kPadding) * kElSize); // str-port: owned heap
     }
     els = buf;
     Reset();
@@ -2344,7 +2344,7 @@ WStr CastToWCHAR(Str s) {
     if (!s) {
         return {};
     }
-    return WStr((WCHAR*)s.s, s.len / (int)sizeof(WCHAR));
+    return WStr((WCHAR*)s.s, s.len / (int)sizeof(WCHAR)); // str-port: byte reinterpret
 }
 
 // return true if s1 == s2, case sensitive
