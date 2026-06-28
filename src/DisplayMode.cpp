@@ -133,6 +133,6 @@ void ZoomToString(Str* dst, float zoom, FileState* fileState) {
     } else if (kZoomFitByOrientation == zoom) {
         str::ReplaceWithCopy(dst, "fit by orientation");
     } else {
-        str::ReplaceWithCopy(dst, str::Format("%g", zoom));
+        str::ReplaceWithCopy(dst, str::FormatTemp("%g", zoom));
     }
 }

@@ -1268,7 +1268,7 @@ static void SaveCustomColors(BgColorDlgData* data) {
         TempStr cs = SerializeColorTemp(data->customColors[i]);
         buf.Append(cs);
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->customColors, buf.StealData());
+    str::ReplaceWithCopy(&gGlobalPrefs->customColors, buf.Get());
     SaveSettings();
 }
 
