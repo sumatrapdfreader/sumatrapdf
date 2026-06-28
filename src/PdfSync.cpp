@@ -159,8 +159,8 @@ int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
 // PDFSYNC synchronizer
 
 // move to the next line in a list of zero-terminated lines
-static char* Advance0Line(char* line, char* end) {
-    line += str::Leni(line);
+static u8* Advance0Line(u8* line, u8* end) {
+    line += str::Leni(Str((const char*)line));
     // skip all zeroes until the next non-empty line
     for (; line < end && !*line; line++) {
         ;
@@ -179,23 +179,23 @@ int Pdfsync::RebuildIndexIfNeeded() {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
 
-    char* line = (char*)data.Get();
+    u8* line = data.Get();
     // convert the file data into a list of zero-terminated strings
-    str::TransCharsInPlace(Str(line), "\r\n", "\0\0");
+    str::TransCharsInPlace(Str((char*)line), "\r\n", "\0\0");
 
     // parse preamble (jobname and version marker)
-    char* dataEnd = line + data.size();
+    u8* dataEnd = line + data.size();
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
-    str::TransCharsInPlace(Str(line), "*/", " \\");
+    str::TransCharsInPlace(Str((char*)line), "*/", " \\");
     AutoFreeStr jobName;
-    jobName.Set(strconv::AnsiToUtf8(line).s);
+    jobName.Set(strconv::AnsiToUtf8((const char*)line).s);
     jobName.Set(str::Join(Str(jobName), Str(".tex")).s);
     jobName.Set(PrependDir(Str(jobName.Get())).s);
 
     line = Advance0Line(line, dataEnd);
     UINT versionNumber = 0;
-    if (!line || !str::Parse(line, "version %u", &versionNumber) || versionNumber != 1) {
+    if (!line || !str::Parse(Str((const char*)line), "version %u", &versionNumber) || versionNumber != 1) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
 
@@ -229,9 +229,9 @@ int Pdfsync::RebuildIndexIfNeeded() {
         switch (*line) {
             case 'l':
                 psline.file = filestack.Last();
-                if (str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column)) {
+                if (str::Parse(Str((const char*)line), "l %u %u %u", &psline.record, &psline.line, &psline.column)) {
                     lines.Append(psline);
-                } else if (str::Parse(line, "l %u %u", &psline.record, &psline.line)) {
+                } else if (str::Parse(Str((const char*)line), "l %u %u", &psline.record, &psline.line)) {
                     psline.column = 0;
                     lines.Append(psline);
                 }
@@ -239,7 +239,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 break;
 
             case 's':
-                if (str::Parse(line, "s %u", &page)) {
+                if (str::Parse(Str((const char*)line), "s %u", &page)) {
                     sheetIndex.Append(points.size());
                 }
                 // else dbg("Bad 's' line in the pdfsync file");
@@ -251,16 +251,16 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 pspoint.page = page;
                 if (0 == page || page > maxPageNo) {
                     /* ignore point for invalid page number */;
-                } else if (str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
+                } else if (str::Parse(Str((const char*)line), "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
                     points.Append(pspoint);
-                } else if (str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
+                } else if (str::Parse(Str((const char*)line), "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
                     points.Append(pspoint);
                 }
                 // else dbg("Bad 'p' line in the pdfsync file");
                 break;
 
             case '(': {
-                AutoFreeStr filename(strconv::AnsiToUtf8(line + 1));
+                AutoFreeStr filename(strconv::AnsiToUtf8((const char*)(line + 1)));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 if (filename[0] == '"' && filename[str::Leni(filename) - 1] == '"') {
@@ -536,30 +536,25 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (wLen == 0) {
         return {};
     }
-    wchar_t* wBuf = (wchar_t*)malloc(wLen * sizeof(wchar_t));
+    AutoFreeWStr wBuf((wchar_t*)malloc(wLen * sizeof(wchar_t)));
     if (!wBuf) {
         return {};
     }
-    if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, wBuf, wLen) == 0) {
-        free(wBuf);
+    if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, wBuf.Get(), wLen) == 0) {
         return {};
     }
-    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, NULL, 0, NULL, NULL);
+    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf.Get(), -1, NULL, 0, NULL, NULL);
     if (utf8Len == 0) {
-        free(wBuf);
         return {};
     }
     char* utf8Buf = (char*)malloc(utf8Len);
     if (!utf8Buf) {
-        free(wBuf);
         return {};
     }
-    if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf, utf8Len, NULL, NULL) == 0) {
-        free(wBuf);
+    if (WideCharToMultiByte(CP_UTF8, 0, wBuf.Get(), -1, utf8Buf, utf8Len, NULL, NULL) == 0) {
         free(utf8Buf);
         return {};
     }
-    free(wBuf);
     return Str(utf8Buf);
 }
 
@@ -607,13 +602,14 @@ TempStr DealPlainSync(TempStr pathSync) {
         logf("DealPlainSync: '%s' failed\n", pathSync);
         return {};
     }
-    int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (char*)src.data(), -1, NULL, 0);
+    TempStr srcZ = StrDupTemp(Str((const char*)src.data(), (int)src.size()));
+    int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, NULL, 0);
     if (wlen != 0) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
         return pathSync;
     } else {
         logf("DealPlainSync: '%s' NOT utf-8, decode by local ansi and write utf-8 to temp file\n", pathSync);
-        Str converted = ConvertLocalToUTF8(Str((char*)src.data()));
+        Str converted = ConvertLocalToUTF8(srcZ);
         if (!converted) {
             logfa("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
             return {};
@@ -814,7 +810,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    const char* name = synctex_scanner_get_name(this->scanner, synctex_node_tag(node));
+    Str name = Str(synctex_scanner_get_name(this->scanner, synctex_node_tag(node))); // str-port: api-boundary
     if (!name) {
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
