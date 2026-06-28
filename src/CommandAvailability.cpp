@@ -417,24 +417,24 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (!IsClaudeCodeAvailable()) {
             return CommandVisibility::Hide;
         }
-        if (ctx.tab && !IsClaudeCodeSupportedForTab(ctx.tab)) {
-            return CommandVisibility::Disable;
+        if (!IsClaudeCodeSupportedForTab(ctx.tab)) {
+            return MapForSurface(CommandVisibility::Disable, surface);
         }
     }
     if (cmdId == CmdAIChatWithGrokBuild) {
         if (!IsGrokBuildAvailable()) {
             return CommandVisibility::Hide;
         }
-        if (ctx.tab && !IsGrokBuildSupportedForTab(ctx.tab)) {
-            return CommandVisibility::Disable;
+        if (!IsGrokBuildSupportedForTab(ctx.tab)) {
+            return MapForSurface(CommandVisibility::Disable, surface);
         }
     }
     if (cmdId == CmdAIChatWithOpenAICodex) {
         if (!IsCodexBuildAvailable()) {
             return CommandVisibility::Hide;
         }
-        if (ctx.tab && !IsCodexBuildSupportedForTab(ctx.tab)) {
-            return CommandVisibility::Disable;
+        if (!IsCodexBuildSupportedForTab(ctx.tab)) {
+            return MapForSurface(CommandVisibility::Disable, surface);
         }
     }
     if (cmdId == CmdTranslateSelectionWithGrokBuild && !IsGrokBuildInstalled()) {
