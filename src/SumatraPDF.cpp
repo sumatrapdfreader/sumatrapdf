@@ -417,8 +417,8 @@ bool OpenFileExternally(Str path) {
     }
 
     // check if this file's perceived type is allowed
-    char* ext = path::GetExtTemp(Str(path));
-    char* perceivedType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "PerceivedType");
+    TempStr ext = path::GetExtTemp(path);
+    TempStr perceivedType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "PerceivedType");
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html") || str::EndsWithI(path, ".xhtml")) {
         perceivedType = str::DupTemp("webpage");
@@ -565,7 +565,7 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
 
     // try the list of default passwords before asking the user
     if (pwdIdx < gGlobalPrefs->defaultPasswords->size()) {
-        char* pwd = gGlobalPrefs->defaultPasswords->at(pwdIdx++);
+        Str pwd = gGlobalPrefs->defaultPasswords->at(pwdIdx++);
         return Str(str::Dup(pwd));
     }
 
@@ -920,7 +920,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
 }
 
 struct CreateThumbnailFromFileData {
-    char* filePath = nullptr;
+    Str filePath;
     Pixmap* bmp = nullptr;
     ~CreateThumbnailFromFileData() { str::Free(filePath); }
 };
@@ -980,15 +980,14 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
         if (model) {
             auto* engine = model->GetEngine();
             bool withPwd = engine->IsPasswordProtected();
-            const char* decrKey = engine->decryptionKey.s;
+            Str decrKey = engine->decryptionKey;
             if (withPwd && !decrKey) {
                 RemoveThumbnail(ds);
                 return;
             }
             // save decryption key to file history so the thumbnail thread can use it
             if (decrKey && !str::Eq(ds->decryptionKey, decrKey)) {
-                free(ds->decryptionKey);
-                ds->decryptionKey = str::Dup(decrKey);
+                str::ReplaceWithCopy(&ds->decryptionKey, decrKey);
             }
         }
     }
@@ -1214,8 +1213,8 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
 
 static TempStr BuildZoomString(float zoomLevel) {
     TempStr zoomLevelStr = ZoomLevelStr(zoomLevel);
-    const char* zoomStr = _TRA("Zoom");
-    return str::FormatTemp("%s: %s", zoomStr, zoomLevelStr);
+    Str zoomStr = _TRA("Zoom");
+    return str::FormatTemp("%s: %s", zoomStr.s, zoomLevelStr.s);
 }
 
 static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo) {
@@ -1730,8 +1729,8 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 
     TempStr unsupported = win->ctrl->GetPropertyTemp(kPropUnsupportedFeatures);
     if (unsupported) {
-        const char* s = _TRA("%s not supported");
-        TempStr msg = str::FormatTemp(s, unsupported);
+        Str s = _TRA("%s not supported");
+        TempStr msg = str::FormatTemp(s.s, unsupported.s);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;
@@ -1889,12 +1888,11 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     if (tab->AsFixed()) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
-        const char* decryptionKey = tab->AsFixed()->GetEngine()->decryptionKey.s;
+        Str decryptionKey = tab->AsFixed()->GetEngine()->decryptionKey;
         if (decryptionKey) {
             FileState* fs2 = gFileHistory.FindByName(fs->filePath, nullptr);
             if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {
-                free(fs2->decryptionKey);
-                fs2->decryptionKey = str::Dup(decryptionKey);
+                str::ReplaceWithCopy(&fs2->decryptionKey, decryptionKey);
             }
         }
     }
@@ -6277,9 +6275,9 @@ TempStr GetBuildDirNameTemp() {
         return {};
     }
     char id[7] = "000000";
-    char* sha1 = Sha1OfAppExe();
+    Str sha1 = Sha1OfAppExe();
     if (sha1) {
-        str::BufSet(id, dimof(id), sha1);
+        str::BufSet(id, dimof(id), sha1.s);
     }
     return path::JoinTemp(dataDir, id);
 }
@@ -6535,11 +6533,11 @@ void ClearHistory(MainWindow* win) {
 
     SaveSettings();
 
-    const char* msg = _TRA("Clearing history...");
     NotificationCreateArgs args;
     args.groupId = kNotifClearHistory;
     args.hwndParent = win->hwndCanvas;
     args.timeoutMs = kNotif5SecsTimeOut;
+    args.msg = _TRA("Clearing history...");
     ShowNotification(args);
     auto data = new ClearHistoryData;
     data->win = win;
@@ -7943,8 +7941,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdTranslateSelectionWithDeepL: {
             // Note: we don't know if selected string is English but I don't know
             // how to get deepl.com to auto-detect language
-            const char* lang = trans::GetCurrentLangCode();
-            const char* uri = "https://www.deepl.com/translator#en/${userlang}/${selection}";
+            Str lang = trans::GetCurrentLangCode();
+            Str uri = "https://www.deepl.com/translator#en/${userlang}/${selection}";
             if (str::Eq(lang, "en")) {
                 // it's pointless to translate from English to English
                 // this format will hopefully trigger auto-detection of user languge by deepl.com
@@ -10647,7 +10645,7 @@ void ShowCrashHandlerMessage() {
     }
 #endif
 
-    const char* msg = _TRA("We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.");
+    Str msg = _TRA("We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.");
     uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
     flags |= MB_SETFOREGROUND | MB_TOPMOST;
 
