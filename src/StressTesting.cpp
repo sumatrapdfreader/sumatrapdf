@@ -92,7 +92,7 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
     logf("pagerender %3d: %.2f ms\n", pagenum, timeMs);
 }
 
-static void BenchChmLoadOnly(const char* filePath) {
+static void BenchChmLoadOnly(Str filePath) {
     auto total = TimeGet();
     logf("Starting: %s\n", filePath);
 
@@ -116,8 +116,8 @@ static void BenchChmLoadOnly(const char* filePath) {
     logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
-static void BenchFile(const char* path, const char* pagesSpec) {
-    if (!file::Exists(Str(path))) {
+static void BenchFile(Str path, Str pagesSpec) {
+    if (!file::Exists(path)) {
         return;
     }
 
@@ -180,7 +180,7 @@ static void BenchFile(const char* path, const char* pagesSpec) {
     logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), path);
 }
 
-static bool IsFileToBench(const char* path) {
+static bool IsFileToBench(Str path) {
     Kind kind = GuessFileType(path, true);
     if (IsSupportedFileType(kind, true)) {
         return true;
@@ -191,7 +191,7 @@ static bool IsFileToBench(const char* path) {
     return false;
 }
 
-static void CollectFilesToBench(char* dir, StrVec& files) {
+static void CollectFilesToBench(Str dir, StrVec& files) {
     DirIter di{dir};
     di.recurse = true;
     for (DirIterEntry* de : di) {
@@ -202,7 +202,7 @@ static void CollectFilesToBench(char* dir, StrVec& files) {
     }
 }
 
-static void BenchDir(char* dir) {
+static void BenchDir(Str dir) {
     StrVec files;
     CollectFilesToBench(dir, files);
     for (int i = 0; i < files.Size(); i++) {
@@ -213,10 +213,10 @@ static void BenchDir(char* dir) {
 void BenchFileOrDir(StrVec& pathsToBench) {
     int n = pathsToBench.Size() / 2;
     for (int i = 0; i < n; i++) {
-        char* path = pathsToBench.At(2 * i);
-        if (file::Exists(Str(path))) {
+        Str path = pathsToBench.At(2 * i);
+        if (file::Exists(path)) {
             BenchFile(path, pathsToBench.At(2 * i + 1));
-        } else if (dir::Exists(Str(path))) {
+        } else if (dir::Exists(path)) {
             BenchDir(path);
         } else {
             logf("Error: file or dir %s doesn't exist", path);
@@ -224,8 +224,8 @@ void BenchFileOrDir(StrVec& pathsToBench) {
     }
 }
 
-static bool IsBlacklistedForStressTest(const char* filePath) {
-    const char* name = path::GetBaseNameTemp(Str(filePath));
+static bool IsBlacklistedForStressTest(Str filePath) {
+    TempStr name = path::GetBaseNameTemp(filePath);
     for (size_t i = 0; i < dimof(gStressTestBlacklist); i++) {
         if (str::EqI(name, gStressTestBlacklist[i])) {
             return true;
@@ -234,11 +234,11 @@ static bool IsBlacklistedForStressTest(const char* filePath) {
     return false;
 }
 
-static bool IsStressTestSupportedFile(const char* filePath, const char* filter) {
+static bool IsStressTestSupportedFile(Str filePath, Str filter) {
     if (IsBlacklistedForStressTest(filePath)) {
         return false;
     }
-    if (filter && !path::Match(path::GetBaseNameTemp(Str(filePath)), filter)) {
+    if (filter && !path::Match(path::GetBaseNameTemp(filePath), filter)) {
         return false;
     }
     Kind kind = GuessFileType(filePath, false);
@@ -352,14 +352,14 @@ struct FilesProvider : TestFileProvider {
     StrVec files;
     int provided = 0;
 
-    explicit FilesProvider(const char* path) {
+    explicit FilesProvider(Str path) {
         files.Append(path);
         provided = 0;
     }
     FilesProvider(StrVec& filesIn, int n, int offset) {
         // get every n-th file starting at offset
         for (int i = offset; i < filesIn.Size(); i += n) {
-            const char* f = filesIn[i];
+            Str f = filesIn.At(i);
             files.Append(f);
         }
         provided = 0;
@@ -371,7 +371,7 @@ struct FilesProvider : TestFileProvider {
 
     TempStr NextFile() override {
         if (provided >= files.Size()) {
-            return nullptr;
+            return {};
         }
         TempStr res = files.At(provided++);
         return res;
@@ -382,8 +382,8 @@ struct FilesProvider : TestFileProvider {
 
 struct DirFileProviderAsync : TestFileProvider {
     StrQueue queue;
-    AutoFreeStr startDir;
-    AutoFreeStr fileFilter;
+    Str startDir;
+    Str fileFilter;
     // those are only set once and then only read so
     // don't have to be atomic
     volatile int max = 0;
@@ -391,26 +391,29 @@ struct DirFileProviderAsync : TestFileProvider {
 
     AtomicInt nFiles = 0;
 
-    DirFileProviderAsync(const char* path, const char* filter, int max = 0, bool random = false) {
-        startDir.SetCopy(path);
+    DirFileProviderAsync(Str path, Str filter, int max = 0, bool random = false) {
+        startDir = str::Dup(path);
         if (filter && !str::Eq(filter, "*")) {
-            fileFilter.SetCopy(filter);
+            fileFilter = str::Dup(filter);
         }
         this->max = max;
         this->random = random;
-        StartDirTraverseAsync(&queue, startDir.CStr(), true);
+        StartDirTraverseAsync(&queue, startDir, true);
     }
-    ~DirFileProviderAsync() override = default;
+    ~DirFileProviderAsync() override {
+        str::Free(startDir);
+        str::Free(fileFilter);
+    }
     TempStr NextFile() override;
     int GetFilesCount() override { return queue.Size(); }
 
     void Restart() override {
         AtomicIntSet(&nFiles, 0);
-        StartDirTraverseAsync(&queue, startDir.CStr(), true);
+        StartDirTraverseAsync(&queue, startDir, true);
     }
 };
 
-static void GetNextFileCb(char** path, StrQueue* q) {
+static void GetNextFileCb(Str* path, StrQueue* q) {
     int n = q->strings.Size();
     int idx = rand() % n;
     *path = q->strings.RemoveAtFast(idx);
@@ -421,7 +424,7 @@ TempStr DirFileProviderAsync::NextFile() {
         return {};
     }
 again:
-    char* path = nullptr;
+    Str path;
     if (random) {
         auto fn = MkFunc1(GetNextFileCb, &path);
         bool ok = queue.Access(fn);
@@ -430,17 +433,20 @@ again:
             return {};
         }
         ReportIf(!path);
-        if (!IsStressTestSupportedFile(path, fileFilter.Get())) {
+        if (!IsStressTestSupportedFile(path, fileFilter)) {
             goto again;
         }
         AtomicIntInc(&nFiles);
         return path;
     }
-    path = queue.PopFront();
-    if (queue.IsSentinel(path)) {
+    char* pathZ = queue.PopFront(); // str-port: StrQueue still returns owned char*
+    if (queue.IsSentinel(pathZ)) {
         return {};
     }
-    if (!IsStressTestSupportedFile(path, fileFilter.Get())) {
+    path = str::Dup(pathZ);
+    str::Free(pathZ);
+    if (!IsStressTestSupportedFile(path, fileFilter)) {
+        str::Free(path);
         goto again;
     }
     AtomicIntInc(&nFiles);
@@ -540,12 +546,12 @@ static void Finished(StressTest* st, bool success) {
     delete st;
 }
 
-static void Start(StressTest* st, const char* path, const char* filter, const char* ranges, int cycles) {
-    if (file::Exists(Str(path))) {
+static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) {
+    if (file::Exists(path)) {
         FilesProvider* filesProvider = new FilesProvider(path);
         ParsePageRanges(ranges, st->pageRanges);
         Start(st, filesProvider, cycles);
-    } else if (dir::Exists(Str(path))) {
+    } else if (dir::Exists(path)) {
         auto dirFileProvider = new DirFileProviderAsync(path, filter);
         ParsePageRanges(ranges, st->fileRanges);
         Start(st, dirFileProvider, cycles);
@@ -562,13 +568,13 @@ static void Start(StressTest* st, const char* path, const char* filter, const ch
     }
 }
 
-static bool OpenFile(StressTest* st, const char* fileName) {
+static bool OpenFile(StressTest* st, Str fileName) {
     if (IsBlacklistedForStressTest(fileName)) {
-        logf("Skipping blacklisted file: %s\n", fileName);
+        logf("Skipping blacklisted file: %s\n", fileName.s);
         return false;
     }
     int fileNo = AtomicIntInc(&gStressTestFileNo);
-    printf("%d: %s\n", fileNo, fileName);
+    printf("%d: %s\n", fileNo, fileName.s);
     fflush(stdout);
 
     LoadArgs args(fileName, st->win);
@@ -900,7 +906,7 @@ void GetStressTestInfo(StrBuilder* s) {
         }
 
         s->Append("File: ");
-        const char* filePath = w->CurrentTab()->filePath;
+        Str filePath = w->CurrentTab()->filePath;
         s->Append(filePath);
         GetLogInfo(w->stressTest, s);
         s->Append("\r\n");
