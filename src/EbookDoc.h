@@ -16,7 +16,7 @@ TempStr NormalizeURLTemp(Str url, Str base);
 
 /* ********** EPUB ********** */
 
-class EpubDoc {
+struct EpubDoc {
     MultiFormatArchive* archive = nullptr;
     // zip and images are the only mutable members of EpubDoc after initialization;
     // access to them must be serialized for multi-threaded users
@@ -32,7 +32,6 @@ class EpubDoc {
 
     bool Load();
 
-  public:
     explicit EpubDoc(Str fileName);
     explicit EpubDoc(IStream* stream);
     ~EpubDoc();

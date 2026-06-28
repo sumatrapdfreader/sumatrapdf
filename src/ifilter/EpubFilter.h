@@ -10,7 +10,7 @@ enum EPUB_FILTER_STATE {
     STATE_EPUB_END
 };
 
-class EpubDoc;
+struct EpubDoc;
 
 class EpubFilter : public FilterBase {
   public:
