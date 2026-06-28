@@ -37,14 +37,6 @@ static void CliPrint(Str s) {
     CliWrite("\n", 1);
 }
 
-static void CliPrintf(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    TempStr msg = str::FmtVTemp(fmt, args);
-    va_end(args);
-    CliPrint(msg);
-}
-
 static Str ChmSpaceName(int space) {
     switch (space) {
         case CHM_UNCOMPRESSED:
@@ -183,9 +175,9 @@ static int ChmDumpEntry(struct chmFile* h, struct chmUnitInfo* ui, void* data) {
         sha1Str = Str(sha1Hex, 40);
     }
 
-    CliPrintf("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(ui).s,
-              ChmEntryClass(ui).s, ChmSpaceName(ui->space).s, (unsigned long long)ui->length,
-              (unsigned long long)readResult.bytesRead, sha1Str.s, unpacked ? "ok" : "failed", ui->path);
+    CliPrint(fmt("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(ui).s,
+                 ChmEntryClass(ui).s, ChmSpaceName(ui->space).s, (unsigned long long)ui->length,
+                 (unsigned long long)readResult.bytesRead, sha1Str.s, unpacked ? "ok" : "failed", ui->path));
     return CHM_ENUMERATOR_CONTINUE;
 }
 
@@ -195,7 +187,7 @@ struct ChmDumpTocVisitor : EbookTocVisitor {
 
     void Visit(Str name, Str url, int level) override {
         any = true;
-        CliPrintf("toc level=%d name=%s url=%s", level, name.s ? name.s : "", url.s ? url.s : "");
+        CliPrint(fmt("toc level=%d name=%s url=%s", level, name.s ? name.s : "", url.s ? url.s : ""));
     }
 };
 
@@ -205,7 +197,7 @@ struct ChmDumpIndexVisitor : EbookTocVisitor {
 
     void Visit(Str name, Str url, int level) override {
         any = true;
-        CliPrintf("index level=%d name=%s url=%s", level, name.s ? name.s : "", url.s ? url.s : "");
+        CliPrint(fmt("index level=%d name=%s url=%s", level, name.s ? name.s : "", url.s ? url.s : ""));
     }
 };
 
@@ -224,8 +216,8 @@ static bool DumpChmFileRaw(Str path) {
 
     ChmDumpCtx ctx;
     bool ok = chm_enumerate(h, CHM_ENUMERATE_ALL, ChmDumpEntry, &ctx) != 0;
-    CliPrintf("summary entries=%d files=%d dirs=%d total-size=%llu unpack-failures=%d enumerate=%s", ctx.entries,
-              ctx.files, ctx.dirs, (unsigned long long)ctx.totalSize, ctx.unpackFailures, ok ? "ok" : "failed");
+    CliPrint(fmt("summary entries=%d files=%d dirs=%d total-size=%llu unpack-failures=%d enumerate=%s", ctx.entries,
+                 ctx.files, ctx.dirs, (unsigned long long)ctx.totalSize, ctx.unpackFailures, ok ? "ok" : "failed"));
 
     chm_close(h);
     data.Free();
@@ -238,12 +230,12 @@ static void DumpChmFileMetadata(Str path) {
         CliPrint("metadata: unavailable");
         return;
     }
-    CliPrintf("metadata title=%s", !str::IsEmpty(doc->title) ? doc->title.s : "");
-    CliPrintf("metadata creator=%s", !str::IsEmpty(doc->creator) ? doc->creator.s : "");
-    CliPrintf("metadata home=%s", !str::IsEmpty(doc->homePath) ? doc->homePath.s : "");
-    CliPrintf("metadata toc=%s", !str::IsEmpty(doc->tocPath) ? doc->tocPath.s : "");
-    CliPrintf("metadata index=%s", !str::IsEmpty(doc->indexPath) ? doc->indexPath.s : "");
-    CliPrintf("metadata codepage=%u", doc->codepage);
+    CliPrint(fmt("metadata title=%s", !str::IsEmpty(doc->title) ? doc->title.s : ""));
+    CliPrint(fmt("metadata creator=%s", !str::IsEmpty(doc->creator) ? doc->creator.s : ""));
+    CliPrint(fmt("metadata home=%s", !str::IsEmpty(doc->homePath) ? doc->homePath.s : ""));
+    CliPrint(fmt("metadata toc=%s", !str::IsEmpty(doc->tocPath) ? doc->tocPath.s : ""));
+    CliPrint(fmt("metadata index=%s", !str::IsEmpty(doc->indexPath) ? doc->indexPath.s : ""));
+    CliPrint(fmt("metadata codepage=%u", doc->codepage));
 
     ChmDumpTocVisitor toc;
     if (!doc->ParseToc(&toc) || !toc.any) {
@@ -258,7 +250,7 @@ static void DumpChmFileMetadata(Str path) {
 }
 
 static bool DumpChmFile(Str path) {
-    CliPrintf("chm path=%s", path.s);
+    CliPrint(fmt("chm path=%s", path.s));
     bool ok = DumpChmFileRaw(path);
     DumpChmFileMetadata(path);
     CliPrint("end");
