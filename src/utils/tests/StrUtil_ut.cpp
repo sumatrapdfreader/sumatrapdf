@@ -281,17 +281,15 @@ void StrTest() {
     str = str::Dup(buf, 4);
     utassert(str::Eq(str, "a st"));
     str::Free(str);
-    str = str::Format("%s", buf);
+    str = str::FormatTemp("%s", buf);
     utassert(str::Eq(str, buf));
-    str::Free(str);
-    str = str::Format("%S",
-                      L"a"
-                      L"\x2019"
-                      L"a.pdf");
+    str = str::FormatTemp("%S",
+                          L"a"
+                          L"\x2019"
+                          L"a.pdf");
     utassert(str::Eq(str,
                      "a\xE2\x80\x99"
                      "a.pdf"));
-    str::Free(str);
     utassert(str::BufFmt(buf, dimof(buf), "%S",
                          L"a"
                          L"\x2019"
@@ -303,9 +301,8 @@ void StrTest() {
         Str str2;
         AutoFreeStr large(AllocArray<char>(2000));
         memset(large, 0x11, 1998);
-        str2 = str::Format("%s", large.Get());
+        str2 = str::FormatTemp("%s", large.Get());
         utassert(str::Eq(str2, Str(large.Get())));
-        str::Free(str2);
     }
 #if 0
     // TODO: this test slows down DEBUG builds significantly

@@ -558,9 +558,8 @@ static Str StrForN(int n) {
     if (!stringsForNum) {
         stringsForNum = new StrVec();
         for (int i = 0; i < kMaxStringN + 1; i++) {
-            Str s = str::Format("%d", i);
+            TempStr s = str::FormatTemp("%d", i);
             stringsForNum->Append(s);
-            str::Free(s);
         }
     }
     return stringsForNum->At(n);
