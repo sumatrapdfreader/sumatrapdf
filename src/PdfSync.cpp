@@ -43,7 +43,7 @@ struct PdfsyncPoint {
 // Synchronizer based on .pdfsync file generated with the pdfsync tex package
 class Pdfsync : public Synchronizer {
   public:
-    Pdfsync(const char* syncfilename, const char* pdffilename, EngineBase* engine)
+    Pdfsync(Str syncfilename, Str pdffilename, EngineBase* engine)
         : Synchronizer(syncfilename, pdffilename), engine(engine) {
         ReportIf(!str::EndsWithI(syncfilename, ".pdfsync"));
     }
@@ -53,7 +53,7 @@ class Pdfsync : public Synchronizer {
 
   private:
     int RebuildIndexIfNeeded();
-    UINT SourceToRecord(const char* srcfilename, int line, int col, Vec<size_t>& records);
+    UINT SourceToRecord(Str srcfilename, int line, int col, Vec<size_t>& records);
 
     EngineBase* engine;              // needed for converting between coordinate systems
     StrVec srcfiles;                 // source file names
@@ -66,8 +66,7 @@ class Pdfsync : public Synchronizer {
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer {
   public:
-    SyncTex(const char* syncfilename, const char* pdffilename, EngineBase* engineIn)
-        : Synchronizer(syncfilename, pdffilename) {
+    SyncTex(Str syncfilename, Str pdffilename, EngineBase* engineIn) : Synchronizer(syncfilename, pdffilename) {
         engine = engineIn;
         scanner = nullptr;
         ReportIf(!str::EndsWithI(syncfilename, ".synctex"));
@@ -134,18 +133,18 @@ int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    char* basePath = path::GetPathNoExtTemp(Str(path));
+    TempStr basePath = path::GetPathNoExtTemp(path);
 
     // Check if a PDFSYNC file is present
-    char* syncFile = str::JoinTemp(basePath, ".pdfsync");
+    TempStr syncFile = str::JoinTemp(basePath, ".pdfsync");
     if (file::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile, path, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
     // check if SYNCTEX or compressed SYNCTEX file is present
-    char* texGzFile = str::JoinTemp(basePath, ".synctex.gz");
-    char* texFile = str::JoinTemp(basePath, ".synctex");
+    TempStr texGzFile = str::JoinTemp(basePath, ".synctex.gz");
+    TempStr texFile = str::JoinTemp(basePath, ".synctex");
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be
@@ -313,11 +312,11 @@ static int cmpLineRecords(const void* a, const void* b) {
 
 // If `srcfilepath` doesn't exist on disk, checks whether it's been moved to sit
 // next to the PDF document (which happens if all files are moved together)
-static void TryRecoverMovedSourceFile(AutoFreeStr& srcfilepath, const char* pdfPath) {
+static void TryRecoverMovedSourceFile(AutoFreeStr& srcfilepath, Str pdfPath) {
     if (file::Exists(Str(srcfilepath))) {
         return;
     }
-    TempStr altsrcpath = path::GetDirTemp(Str(pdfPath));
+    TempStr altsrcpath = path::GetDirTemp(pdfPath);
     altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(Str(srcfilepath)));
     if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath)) {
         srcfilepath.SetCopy(altsrcpath);
@@ -384,9 +383,9 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    char* path = srcfiles[found->file];
-    filename.SetCopy(path::NormalizeTemp(Str(path)));
-    TryRecoverMovedSourceFile(filename, pdfPath);
+    Str path = srcfiles.At((int)found->file);
+    filename.SetCopy(path::NormalizeTemp(path));
+    TryRecoverMovedSourceFile(filename, Str(pdfPath.Get()));
 
     *line = (int)found->line;
     *col = (int)found->column;
@@ -407,7 +406,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
 // (within a range of EPSILON_LINE)
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
-UINT Pdfsync::SourceToRecord(const char* srcfilename, int line, int, Vec<size_t>& records) {
+UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& records) {
     if (!srcfilename) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
@@ -426,8 +425,8 @@ UINT Pdfsync::SourceToRecord(const char* srcfilename, int line, int, Vec<size_t>
     // find the source file entry
     int isrc;
     for (isrc = 0; isrc < srcfiles.Size(); isrc++) {
-        char* path = srcfiles[isrc];
-        if (path::IsSame(Str(srcfilepath), Str(path))) {
+        Str path = srcfiles.At(isrc);
+        if (path::IsSame(Str(srcfilepath), path)) {
             break;
         }
     }
@@ -510,9 +509,12 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 }
 
-static bool PathHasNonAscii(const char* s) {
-    for (; *s; s++) {
-        if ((u8)*s > 127) {
+static bool PathHasNonAscii(Str s) {
+    if (!s) {
+        return false;
+    }
+    for (int i = 0; i < s.len; i++) {
+        if ((u8)s.s[i] > 127) {
             return true;
         }
     }
@@ -648,7 +650,7 @@ TempStr DealPlainSync(TempStr pathSync) {
     }
 }
 
-static bool IsGzipFile(const char* path) {
+static bool IsGzipFile(Str path) {
     // gzip files start with magic bytes 0x1f 0x8b; only need to read the header
     u8 buf[2] = {0};
     int nRead = file::ReadN(path, (char*)buf, sizeof(buf));
@@ -656,7 +658,7 @@ static bool IsGzipFile(const char* path) {
 }
 
 // returns path of ungzipped file
-TempStr ungzipToTempSync(char* gzPath) {
+TempStr ungzipToTempSync(Str gzPath) {
     if (!gzPath) {
         return {};
     }
@@ -715,8 +717,8 @@ int SyncTex::RebuildIndexIfNeeded() {
     i64 fsize;
     bool path_nonascii = PathHasNonAscii(pathSync);
 
-    TempStr tempsync1 = nullptr;
-    TempStr tempsync2 = nullptr;
+    TempStr tempsync1;
+    TempStr tempsync2;
     if (!path_nonascii) {
         // Only ASCII
         if (file::Exists(pathSync)) {
@@ -760,7 +762,8 @@ int SyncTex::RebuildIndexIfNeeded() {
     logf("SyncTex::RebuildIndexIfNeeded: org path: %s\n; final file path: %s, final file size: %lld.\n", pathSync,
          tempsync2, fsize);
 
-    scanner = synctex_scanner_new_with_output_file(tempsync2, nullptr, 1);
+    TempStr tempsync2Z = StrDupTemp(tempsync2);
+    scanner = synctex_scanner_new_with_output_file(tempsync2Z.s, nullptr, 1);
     if (scanner) {
         logfa("SyncTex::RebuildIndexIfNeeded: file '%s' is ok.\n", pathSync);
     } else {
@@ -779,7 +782,7 @@ int SyncTex::RebuildIndexIfNeeded() {
 // Also true if the resolved path is a WSL mount path (e.g. /mnt/c/...),
 // which happens when the PDF lives on a Windows drive but was compiled from
 // inside WSL
-static bool IsUnixSourcePath(const char* syncFilePath, const char* resolvedSrcPath) {
+static bool IsUnixSourcePath(Str syncFilePath, Str resolvedSrcPath) {
     if (!syncFilePath || !resolvedSrcPath) {
         return false;
     }
@@ -824,11 +827,11 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     // Unescape SyncTeX's space encoding: * represents a space in filenames
     str::TransCharsInPlace(Str(filename), "*", " ");
 
-    if (IsUnixSourcePath(syncFilePath.Get(), filename)) {
+    if (IsUnixSourcePath(Str(syncFilePath.Get()), Str(filename.Get()))) {
         // Treat filename as unix path
 
         // Resolve relative Unix paths relative to the sync file's directory
-        if (filename[0] != '/') {
+        if (filename.Get()[0] != '/') {
             TempStr unixSyncFilePath = path::WslUncToUnixTemp(syncFilePath.Get());
             TempStr dir = path::GetDirTemp(unixSyncFilePath);
             filename.Set(path::Join(dir, Str(filename)).s);
@@ -842,7 +845,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
             filename.Set(PrependDir(Str(filename.Get())).s);
         }
         filename.SetCopy(path::NormalizeTemp(filename.Get()));
-        TryRecoverMovedSourceFile(filename, pdfPath);
+        TryRecoverMovedSourceFile(filename, Str(pdfPath.Get()));
     }
 
     *line = synctex_node_line(node);
@@ -854,8 +857,9 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     return PDFSYNCERR_SUCCESS;
 }
 
-static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, const char* srcPath, int line, int col) {
-    int ret = synctex_display_query(scanner, srcPath, line, col, 0);
+static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, Str srcPath, int line, int col) {
+    TempStr srcPathZ = StrDupTemp(srcPath);
+    int ret = synctex_display_query(scanner, srcPathZ.s, line, col, 0);
     if (ret > 0) {
         return ret;
     }
@@ -869,7 +873,8 @@ static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, const char
             continue;
         }
         logfa("SynctexDisplayQueryWithVariants: '%s' failed, retrying with '%s'\n", srcPath, variant);
-        int ret2 = synctex_display_query(scanner, variant, line, col, 0);
+        TempStr variantZ = StrDupTemp(variant);
+        int ret2 = synctex_display_query(scanner, variantZ.s, line, col, 0);
         if (ret2 > 0) {
             return ret2;
         }
