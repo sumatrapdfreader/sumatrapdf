@@ -1819,7 +1819,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
         return;
     }
-    logfa("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
+    logfa("ReloadDocument: %s, auto refresh: %d\n", path.s, (int)autoRefresh);
 
     // Save display state before potentially destroying the old controller
     FileState* fs = NewFileState(path);
@@ -3934,7 +3934,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
     if (!ok) {
         TempStr msg = errorMsg ? errorMsg : Str(_TRA("Failed to save a file"));
-        logf("SaveCurrentFileAs() failed with '%s'\n", msg);
+        logf("SaveCurrentFileAs() failed with '%s'\n", msg.s);
         MessageBoxWarning(win->hwndFrame, msg);
     }
 
