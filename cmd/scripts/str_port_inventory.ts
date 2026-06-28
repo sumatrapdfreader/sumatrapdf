@@ -169,7 +169,11 @@ function scanFile(path: string): Entry[] {
     }
 
     if (charPtrRe.test(line) || wcharPtrRe.test(line)) {
-      const isParam = /\([^)]*(?:const\s+)?(?:char|WCHAR|wchar_t)\s*\*/.test(line);
+      // Match first param (open-paren immediately before char*) and later params (comma before char*).
+      const ptrSig = String.raw`(?:const\s+)?(?:char|WCHAR|wchar_t)\s*\*`;
+      const isParam =
+        new RegExp(String.raw`\w\s*\(\s*${ptrSig}`).test(line) ||
+        new RegExp(String.raw`[(,]\s*${ptrSig}`).test(line);
       if (isParam) {
         const m = line.match(charPtrRe) ?? line.match(wcharPtrRe);
         entries.push({
