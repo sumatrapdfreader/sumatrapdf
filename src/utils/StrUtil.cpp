@@ -838,10 +838,14 @@ void TrimWsEnd(char* s, char*& e) {
 
 // Trim whitespace characters, in-place, inside s.
 // Returns number of trimmed characters.
-size_t TrimWSInPlace(char* s, TrimOpt opt) {
-    size_t sLen = str::Len(s);
-    char* ns = s;
-    char* e = s + sLen;
+size_t TrimWSInPlace(Str s, TrimOpt opt) {
+    if (!s) {
+        return 0;
+    }
+    char* str = s.s;
+    size_t sLen = (size_t)s.len;
+    char* ns = str;
+    char* e = str + sLen;
     char* ne = e;
     if ((TrimOpt::Left == opt) || (TrimOpt::Both == opt)) {
         while (IsWs(*ns)) {
@@ -855,10 +859,10 @@ size_t TrimWSInPlace(char* s, TrimOpt opt) {
         }
     }
     *ne = 0;
-    size_t trimmed = (ns - s) + (e - ne);
-    if (ns != s) {
+    size_t trimmed = (size_t)(ns - str) + (size_t)(e - ne);
+    if (ns != str) {
         size_t toCopy = sLen - trimmed + 1; // +1 for terminating 0
-        memmove(s, ns, toCopy);
+        memmove(str, ns, toCopy);
     }
     return trimmed;
 }

@@ -159,7 +159,7 @@ Str FmtVWithArena(Arena* a, const char* fmt, va_list args);
 Str FmtV(const char* fmt, va_list args);
 Str Format(const char* fmt, ...);
 
-size_t TrimWSInPlace(char* s, TrimOpt opt);
+size_t TrimWSInPlace(Str s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
 
 size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars);
@@ -525,8 +525,8 @@ FORCEINLINE size_t TransCharsInPlace(Str s, const char* oldChars, const char* ne
 FORCEINLINE size_t TransCharsInPlace(WStr s, const WCHAR* oldChars, const WCHAR* newChars) {
     return TransCharsInPlace(s.s, oldChars, newChars);
 }
-FORCEINLINE size_t TrimWSInPlace(Str s, TrimOpt opt) {
-    return TrimWSInPlace(s.s, opt);
+FORCEINLINE size_t TrimWSInPlace(char* s, TrimOpt opt) {
+    return TrimWSInPlace(Str(s), opt);
 }
 // str-port: char*/WCHAR* shims; remove when callers use Str/WStr
 FORCEINLINE int BufSet(char* dst, int dstCchSize, const char* src) {
