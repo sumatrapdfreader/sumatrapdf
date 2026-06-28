@@ -24,8 +24,8 @@ class EpubDoc {
 
     StrBuilder htmlData;
     Vec<ImageData> images;
-    AutoFreeStr tocPath;
-    AutoFreeStr fileName;
+    Str tocPath;
+    Str fileName;
     Props props;
     bool isNcxToc = false;
     bool isRtlDoc = false;
@@ -60,7 +60,7 @@ class EpubDoc {
 #define FB2_TOC_ENTRY_MARK "ToC!Entry!"
 
 struct Fb2Doc {
-    AutoFreeStr fileName;
+    Str fileName;
     IStream* stream = nullptr;
 
     StrBuilder xmlData;
@@ -100,7 +100,7 @@ struct Fb2Doc {
 struct PdbReader;
 
 struct PalmDoc {
-    AutoFreeStr fileName;
+    Str fileName;
     StrBuilder htmlData;
     StrVec tocEntries;
 
@@ -124,9 +124,9 @@ struct PalmDoc {
 /* ********** Plain HTML ********** */
 
 struct HtmlDoc {
-    AutoFreeStr fileName;
+    Str fileName;
     ByteSlice htmlData;
-    AutoFreeStr pagePath;
+    Str pagePath;
     Vec<ImageData> images;
     Props props;
 
@@ -151,13 +151,14 @@ struct HtmlDoc {
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
 struct TxtDoc {
-    AutoFreeStr fileName;
+    Str fileName;
     StrBuilder htmlData;
     bool isRFC = false;
 
     bool Load();
 
     explicit TxtDoc(Str fileName);
+    ~TxtDoc();
 
     ByteSlice GetHtmlData() const;
 

@@ -263,7 +263,8 @@ static Str EPUB_ENC_NS() {
 }
 
 EpubDoc::EpubDoc(Str fileName) {
-    this->fileName.SetCopy(fileName);
+    str::Free(this->fileName);
+    this->fileName = str::Dup(fileName);
     InitializeCriticalSection(&zipAccess);
     archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
 }
@@ -284,6 +285,8 @@ EpubDoc::~EpubDoc() {
     LeaveCriticalSection(&zipAccess);
     DeleteCriticalSection(&zipAccess);
     delete archive;
+    str::Free(tocPath);
+    str::Free(fileName);
 }
 
 // TODO: switch to seqstring
@@ -407,7 +410,8 @@ bool EpubDoc::Load() {
             // EPUB 3 ToC
             TempStr properties = node->GetAttributeTemp("properties");
             if (properties && str::Find(properties, "nav") && str::Eq(mediaType, "application/xhtml+xml")) {
-                tocPath.Set(str::Join(contentPath, htmlPath).s);
+                str::Free(tocPath);
+                tocPath = str::Join(contentPath, htmlPath);
             }
 
             TempStr fullContentPath = str::JoinTemp(contentPath, htmlPath);
@@ -428,10 +432,11 @@ bool EpubDoc::Load() {
 
     // EPUB 2 ToC
     TempStr tocId = node->GetAttributeTemp("toc");
-    int tocIdx = (tocId && !tocPath) ? idList.Find(tocId) : -1;
+    int tocIdx = (tocId && str::IsEmpty(tocPath)) ? idList.Find(tocId) : -1;
     if (tocIdx >= 0) {
         Str s = pathList.At(tocIdx);
-        tocPath.Set(str::Join(contentPath, s).s);
+        str::Free(tocPath);
+        tocPath = str::Join(contentPath, s);
         isNcxToc = true;
     }
     TempStr readingDir = node->GetAttributeTemp("page-progression-direction");
@@ -625,7 +630,7 @@ TempStr EpubDoc::GetPropertyTemp(Str name) const {
 }
 
 Str EpubDoc::GetFileName() const {
-    return Str(fileName);
+    return fileName;
 }
 
 bool EpubDoc::IsRTL() const {
@@ -633,7 +638,7 @@ bool EpubDoc::IsRTL() const {
 }
 
 bool EpubDoc::HasToc() const {
-    return tocPath != nullptr;
+    return !str::IsEmpty(tocPath);
 }
 
 static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
@@ -747,13 +752,13 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
 }
 
 bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
-    if (!tocPath) {
+    if (str::IsEmpty(tocPath)) {
         return false;
     }
     Str tocDataStr;
     {
         ScopedCritSec scope(&zipAccess);
-        auto* fi = archive->GetFileDataByName(Str(tocPath));
+        auto* fi = archive->GetFileDataByName(tocPath);
         if (fi && fi->data) {
             tocDataStr = Str(fi->data, (int)fi->fileSizeUncompressed);
         }
@@ -762,7 +767,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
         return false;
     }
 
-    Str pagePath(tocPath.Get());
+    Str pagePath = tocPath;
     if (isNcxToc) {
         return ParseNcxToc(tocDataStr, pagePath, visitor);
     }
@@ -800,7 +805,7 @@ static Str FB2_XLINK_NS() {
     return StrL("http://www.w3.org/1999/xlink");
 }
 
-Fb2Doc::Fb2Doc(Str fileName) : fileName(str::Dup(fileName).s) {}
+Fb2Doc::Fb2Doc(Str fileName) : fileName(str::Dup(fileName)) {}
 
 Fb2Doc::Fb2Doc(IStream* stream) : stream(stream) {
     stream->AddRef();
@@ -814,6 +819,7 @@ Fb2Doc::~Fb2Doc() {
     if (stream) {
         stream->Release();
     }
+    str::Free(fileName);
 }
 
 static ByteSlice takeFileData(MultiFormatArchive* archive, size_t fileId) {
@@ -827,9 +833,9 @@ static ByteSlice takeFileData(MultiFormatArchive* archive, size_t fileId) {
 }
 
 static ByteSlice loadFromFile(Fb2Doc* doc) {
-    MultiFormatArchive* archive = OpenArchiveFromFile(Str(doc->fileName), /*eagerLoad=*/true, gArchiveProgressCb);
+    MultiFormatArchive* archive = OpenArchiveFromFile(doc->fileName, /*eagerLoad=*/true, gArchiveProgressCb);
     if (!archive) {
-        return file::ReadFile(Str(doc->fileName));
+        return file::ReadFile(doc->fileName);
     }
 
     AutoDelete delArchive(archive);
@@ -881,10 +887,10 @@ static ByteSlice loadFromStream(Fb2Doc* doc) {
 }
 
 bool Fb2Doc::Load() {
-    ReportIf(!stream && !fileName);
+    ReportIf(!stream && str::IsEmpty(fileName));
 
     ByteSlice data;
-    if (fileName) {
+    if (!str::IsEmpty(fileName)) {
         data = loadFromFile(this);
     } else if (stream) {
         data = loadFromStream(this);
@@ -1049,7 +1055,7 @@ TempStr Fb2Doc::GetPropertyTemp(Str name) const {
 }
 
 Str Fb2Doc::GetFileName() const {
-    return Str(fileName);
+    return fileName;
 }
 
 bool Fb2Doc::IsZipped() const {
@@ -1126,10 +1132,12 @@ Fb2Doc* Fb2Doc::CreateFromStream(IStream* stream) {
 /* ********** PalmDOC (and TealDoc) ********** */
 
 PalmDoc::PalmDoc(Str path) {
-    this->fileName = str::Dup(path).s;
+    this->fileName = str::Dup(path);
 }
 
-PalmDoc::~PalmDoc() {}
+PalmDoc::~PalmDoc() {
+    str::Free(fileName);
+}
 
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
@@ -1214,7 +1222,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
 }
 
 bool PalmDoc::Load() {
-    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(Str(fileName.Get()));
+    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(fileName);
     if (!mobiDoc) {
         return false;
     }
@@ -1266,7 +1274,7 @@ TempStr PalmDoc::GetPropertyTemp(Str) const {
 }
 
 Str PalmDoc::GetFileName() const {
-    return Str(fileName);
+    return fileName;
 }
 
 bool PalmDoc::HasToc() const {
@@ -1297,7 +1305,7 @@ PalmDoc* PalmDoc::CreateFromFile(Str path) {
 
 /* ********** Plain HTML ********** */
 
-HtmlDoc::HtmlDoc(Str path) : fileName(str::Dup(path).s) {}
+HtmlDoc::HtmlDoc(Str path) : fileName(str::Dup(path)) {}
 
 HtmlDoc::~HtmlDoc() {
     for (auto&& img : images) {
@@ -1305,11 +1313,13 @@ HtmlDoc::~HtmlDoc() {
         str::Free(img.fileName);
     }
     htmlData.Free();
+    str::Free(fileName);
+    str::Free(pagePath);
 }
 
 bool HtmlDoc::Load() {
     {
-        ByteSlice data = file::ReadFile(Str(fileName));
+        ByteSlice data = file::ReadFile(fileName);
         if (!data) {
             return false;
         }
@@ -1322,8 +1332,9 @@ bool HtmlDoc::Load() {
         data.Free();
     }
 
-    pagePath.SetCopy(Str(fileName));
-    str::TransCharsInPlace(Str(pagePath), "\\", "/");
+    str::Free(pagePath);
+    pagePath = str::Dup(fileName);
+    str::TransCharsInPlace(pagePath, "\\", "/");
 
     HtmlPullParser parser(htmlData);
     HtmlToken* tok;
@@ -1363,7 +1374,7 @@ ByteSlice HtmlDoc::GetHtmlData() {
 ByteSlice* HtmlDoc::GetImageData(Str fileName) {
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
 
-    TempStr url = NormalizeURLTemp(fileName, Str(pagePath));
+    TempStr url = NormalizeURLTemp(fileName, pagePath);
     for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).fileName, url)) {
             return &images.at(i).base;
@@ -1381,7 +1392,7 @@ ByteSlice* HtmlDoc::GetImageData(Str fileName) {
 }
 
 ByteSlice HtmlDoc::GetFileData(Str relPath) {
-    TempStr url = NormalizeURLTemp(relPath, Str(pagePath));
+    TempStr url = NormalizeURLTemp(relPath, pagePath);
     return LoadURL(url);
 }
 
@@ -1403,7 +1414,7 @@ TempStr HtmlDoc::GetPropertyTemp(Str name) const {
 }
 
 Str HtmlDoc::GetFileName() const {
-    return Str(fileName);
+    return fileName;
 }
 
 bool HtmlDoc::IsSupportedFileType(Kind kind) {
@@ -1422,7 +1433,11 @@ HtmlDoc* HtmlDoc::CreateFromFile(Str fileName) {
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
 TxtDoc::TxtDoc(Str fileName) {
-    this->fileName = str::Dup(fileName).s;
+    this->fileName = str::Dup(fileName);
+}
+
+TxtDoc::~TxtDoc() {
+    str::Free(fileName);
 }
 
 // cf. http://www.cix.co.uk/~gidds/Software/TCR.html
@@ -1589,14 +1604,14 @@ static Str TextFindRfcEnd(StrBuilder& htmlData, Str curr, char prevChar) {
 }
 
 bool TxtDoc::Load() {
-    ByteSlice fileContent = file::ReadFile(Str(fileName));
+    ByteSlice fileContent = file::ReadFile(fileName);
     if (!fileContent) {
         return false;
     }
 
     TempStr text;
     Str raw = AsStr(fileContent);
-    if (str::EndsWithI(Str(fileName.Get()), ".tcr") && str::StartsWith(raw, TCR_HEADER)) {
+    if (str::EndsWithI(fileName, ".tcr") && str::StartsWith(raw, TCR_HEADER)) {
         text = DecompressTcrTextTemp(raw);
     } else {
         text = DecodeTextToUtf8Temp(raw);
@@ -1606,7 +1621,7 @@ bool TxtDoc::Load() {
     }
 
     int rfc;
-    isRFC = str::Parse(path::GetBaseNameTemp(Str(fileName)), "rfc%d.txt%$", &rfc) != nullptr;
+    isRFC = str::Parse(path::GetBaseNameTemp(fileName), "rfc%d.txt%$", &rfc) != nullptr;
 
     int linkEndPos = -1;
     bool rfcHeader = false;
@@ -1699,7 +1714,7 @@ TempStr TxtDoc::GetPropertyTemp(Str) const {
 }
 
 Str TxtDoc::GetFileName() const {
-    return Str(fileName);
+    return fileName;
 }
 
 bool TxtDoc::IsRFC() const {
