@@ -3269,7 +3269,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     fileFilter.Append(_TRA("PDF documents"));
     fileFilter.Append("\1*.pdf\1");
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(Str(fileFilter.CStr(), fileFilter.Size()), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
     TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
@@ -3810,7 +3810,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(Str(fileFilter.CStr(), fileFilter.Size()), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
 
     WCHAR dstFileName[MAX_PATH];
     TempStr baseName = path::GetBaseNameTemp(srcFileName);
@@ -4109,7 +4109,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // methods too early on)
     StrBuilder fileFilter;
     fileFilter.AppendFmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts"));
-    str::TransCharsInPlace(Str(fileFilter.CStr(), fileFilter.Size()), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
     TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
     OPENFILENAME ofn{};
@@ -4345,7 +4345,7 @@ static TempWStr GetFileFilterTemp() {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(Str(fileFilter.CStr(), fileFilter.Size()), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
     return ToWStrTempFromBuilder(fileFilter);
 }
 

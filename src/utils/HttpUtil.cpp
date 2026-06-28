@@ -220,11 +220,11 @@ bool HttpPost(Str serverA, int port, Str urlA, StrBuilder* headers, StrBuilder* 
     }
 
     if (headers && headers->size() > 0) {
-        hdr = headers->CStr();
+        hdr = headers->CStr().s;
         hdrLen = (DWORD)headers->size();
     }
     if (data && data->size() > 0) {
-        d = data->CStr();
+        d = data->CStr().s;
         dLen = (DWORD)data->size();
     }
 

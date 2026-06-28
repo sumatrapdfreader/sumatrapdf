@@ -312,7 +312,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
         return;
     }
     // the log is newline-separated JS commands
-    Str log = Str(tab->claudeChatLog->LendData(), tab->claudeChatLog->Size());
+    Str log = tab->claudeChatLog->LendData();
     Str rest = log;
     while (rest.len > 0) {
         Str lineEnd = str::FindChar(rest, '\n');
@@ -344,7 +344,7 @@ static TempStr EncodeClaudeDirTemp(Str dir) {
         }
     }
     // remove trailing dash if present
-    if (buf.Size() > 0 && buf.LendData()[buf.Size() - 1] == '-') {
+    if (buf.Size() > 0 && buf.LastChar() == '-') {
         buf.RemoveLast();
     }
     return str::DupTemp(buf.LendData());
@@ -750,7 +750,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
         buf[bytesRead] = 0;
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
-                Str line = Str(lineBuf.LendData());
+                Str line = lineBuf.LendData();
                 if (line) {
                     ClaudeCodeLog("<<<", line);
                 }
@@ -782,7 +782,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                             } else if (pat) {
                                 desc.AppendFmt(" /%s/", pat);
                             }
-                            PostUpdate(hwndFrame, sessionId, Str(desc.LendData(), desc.Size()), ClaudeUpdateType::Tool);
+                            PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
                         }
                     }
                 } else if (eventType && str::Eq(eventType, "user")) {
@@ -791,7 +791,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                         if (fp) {
                             StrBuilder desc;
                             desc.AppendFmt("Result: %s", fp);
-                            PostUpdate(hwndFrame, sessionId, Str(desc.LendData(), desc.Size()), ClaudeUpdateType::Tool);
+                            PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
                         }
                     }
                 } else if (eventType && str::Eq(eventType, "result")) {

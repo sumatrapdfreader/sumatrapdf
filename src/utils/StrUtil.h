@@ -285,7 +285,7 @@ struct StrBuilder {
     char RemoveLast();
     char& Last() const;
     Str StealData(Arena* a = nullptr);
-    char* LendData() const;
+    Str LendData() const;
     bool Contains(Str s);
     bool IsEmpty() const;
     ByteSlice AsByteSlice() const;
@@ -295,7 +295,7 @@ struct StrBuilder {
     void AppendFmt(const char* fmt, ...);
     void Set(Str s);
     Str Get() const;
-    char* CStr() const;
+    Str CStr() const;
     char LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html

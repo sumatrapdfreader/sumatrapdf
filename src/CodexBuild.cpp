@@ -312,7 +312,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
         return;
     }
     // the log is newline-separated JS commands
-    Str log = Str(tab->codexChatLog->LendData(), tab->codexChatLog->Size());
+    Str log = tab->codexChatLog->LendData();
     Str rest = log;
     while (rest.len > 0) {
         Str lineEnd = str::FindChar(rest, '\n');
@@ -947,7 +947,7 @@ static void CodexReadThread(CodexReadCtx* ctx) {
         buf[bytesRead] = 0;
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
-                Str line = Str(lineBuf.LendData());
+                Str line = lineBuf.LendData();
                 if (line) {
                     CodexBuildLog("<<<", line);
                 }
@@ -975,8 +975,7 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                                 TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);
                                 StrBuilder desc;
                                 desc.AppendFmt("Tool: %s", shortCmd);
-                                PostUpdate(hwndFrame, sessionId, Str(desc.LendData(), desc.Size()),
-                                           CodexUpdateType::Tool);
+                                PostUpdate(hwndFrame, sessionId, desc.LendData(), CodexUpdateType::Tool);
                                 PostUpdate(hwndFrame, sessionId, {}, CodexUpdateType::Flush);
                             }
                         }
@@ -992,7 +991,7 @@ static void CodexReadThread(CodexReadCtx* ctx) {
         }
     }
 
-    Str rem = Str(lineBuf.LendData());
+    Str rem = lineBuf.LendData();
     if (rem) {
         CodexBuildLog("<<<", rem);
     }

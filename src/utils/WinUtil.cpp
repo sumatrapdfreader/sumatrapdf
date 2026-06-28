@@ -3529,7 +3529,7 @@ static HWND CreateTextViewWindow(WStr className, Str title, Str text) {
         }
         crlfText.AppendChar(c);
     }
-    HwndSetText(hwndEdit, Str(crlfText.CStr()));
+    HwndSetText(hwndEdit, crlfText.CStr());
     SendMessageW(hwndEdit, EM_SETSEL, 0, 0);
 
     ShowWindow(hwnd, SW_SHOW);

@@ -311,7 +311,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
         return;
     }
     // the log is newline-separated JS commands
-    Str log = Str(tab->grokChatLog->LendData(), tab->grokChatLog->Size());
+    Str log = tab->grokChatLog->LendData();
     Str rest = log;
     while (rest.len > 0) {
         Str lineEnd = str::FindChar(rest, '\n');
@@ -585,8 +585,8 @@ static void AppendGrokHistoryTools(MainWindow* win, Str line) {
         }
         if (nameBuf.Size() > 0) {
             StrBuilder desc;
-            desc.AppendFmt("Tool: %s", nameBuf.LendData());
-            WebViewAddTool(win, Str(desc.LendData(), desc.Size()));
+            desc.AppendFmt("Tool: %s", nameBuf.LendData().s);
+            WebViewAddTool(win, desc.LendData());
         }
         if (j + 1 >= rest.len) {
             break;
@@ -832,7 +832,7 @@ static void GrokReadThread(GrokReadCtx* ctx) {
         buf[bytesRead] = 0;
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
-                Str line = Str(lineBuf.LendData());
+                Str line = lineBuf.LendData();
                 if (line) {
                     GrokBuildLog("<<<", line);
                 }
@@ -875,7 +875,7 @@ static void GrokReadThread(GrokReadCtx* ctx) {
         }
     }
 
-    Str rem = Str(lineBuf.LendData());
+    Str rem = lineBuf.LendData();
     if (rem) {
         GrokBuildLog("<<<", rem);
     }

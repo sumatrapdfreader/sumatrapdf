@@ -1761,7 +1761,7 @@ bool StrBuilder::Append(Str src, size_t count) {
 }
 
 bool StrBuilder::Append(const StrBuilder& s) {
-    return Append(Str(s.LendData(), (int)s.size()));
+    return Append(s.LendData());
 }
 
 char StrBuilder::RemoveAt(size_t idx, size_t count) {
@@ -1813,8 +1813,8 @@ Str StrBuilder::StealData(Arena* a) {
     return Str(res, n);
 }
 
-char* StrBuilder::LendData() const {
-    return els;
+Str StrBuilder::LendData() const {
+    return Get();
 }
 
 // TODO: rewrite as size_t Find(const char* s, size_t sLen, size_t start);
@@ -1827,7 +1827,7 @@ bool StrBuilder::Contains(Str s) {
         return false;
     }
     // must account for possibility of 0 in the string
-    const char* curr = LendData();
+    const char* curr = els;
     int nLeft = (int)(len - sLen);
     char c = *s.s;
     char c2;
@@ -1906,8 +1906,8 @@ Str StrBuilder::Get() const {
     return Str(els, (int)len);
 }
 
-char* StrBuilder::CStr() const {
-    return els;
+Str StrBuilder::CStr() const {
+    return Get();
 }
 
 char StrBuilder::LastChar() const {

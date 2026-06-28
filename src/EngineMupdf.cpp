@@ -4207,7 +4207,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         if (info.IsEmpty()) {
             continue;
         }
-        AppendIfNotExists(&fonts, Str(info.CStr(), info.Size()));
+        AppendIfNotExists(&fonts, info.CStr());
     }
     if (fonts.Size() == 0) {
         return {};

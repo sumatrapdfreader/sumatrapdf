@@ -70,7 +70,7 @@ void VecTest() {
             v.Append(buf, 1);
             buf[0] = buf[0] + 1;
         }
-        char* s = v.LendData();
+        Str s = v.LendData();
         utassert(str::Eq("abcdefg", s));
         utassert(7 == v.size());
         v.Set(Str("helo"));
@@ -116,7 +116,7 @@ void VecTest() {
 
         v.RemoveAt(0, 6 * 15);
         utassert(v.size() == 6);
-        char* s = v.LendData();
+        Str s = v.LendData();
         utassert(str::Eq(s, "lambda"));
         s = v.StealData();
         utassert(str::Eq(s, "lambda"));

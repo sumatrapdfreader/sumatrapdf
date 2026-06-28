@@ -148,5 +148,5 @@ TempWStr ToWStrTempFromBuilder(const StrBuilder& str) {
     if (str.IsEmpty()) {
         return {};
     }
-    return ToWStrTemp(Str(str.CStr(), str.Size()));
+    return ToWStrTemp(str.CStr());
 }
