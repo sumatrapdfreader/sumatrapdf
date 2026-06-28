@@ -85,8 +85,8 @@ static Rect ReadAloudByteLocToRect(const ReadAloudByteLoc& loc) {
     return Rect(loc.x, loc.y, loc.dx, loc.dy);
 }
 
-static bool IsLineBreakGlyph(const WCHAR* text, const Rect* coords, int idx, int textLen) {
-    return idx >= 0 && idx < textLen && text[idx] == '\n' && !coords[idx].x && !coords[idx].dx;
+static bool IsLineBreakGlyph(WStr text, const Rect* coords, int idx) {
+    return idx >= 0 && idx < text.len && text.s[idx] == L'\n' && !coords[idx].x && !coords[idx].dx;
 }
 
 static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map, StrBuilder& cleanedOut) {
@@ -213,24 +213,23 @@ bool ReadAloudHighlightBuildFromPage(EngineBase* engine, int pageNo, ReadAloudHi
 
 static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* engine, int pageNo, int startGlyph,
                                       int endGlyph) {
-    int textLen = 0;
     Rect* coords = nullptr;
-    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen, &coords);
-    if (!text || textLen <= 0) {
-        logf("ReadAloud: AppendPageGlyphs: page %d has no text (textLen=%d)\n", pageNo, textLen);
+    WStr text = engine->GetTextForPage(pageNo, nullptr, &coords);
+    if (!text) {
+        logf("ReadAloud: AppendPageGlyphs: page %d has no text (textLen=%d)\n", pageNo, text.len);
         return;
     }
 
     if (startGlyph < 0) {
         startGlyph = 0;
     }
-    if (endGlyph < 0 || endGlyph > textLen) {
-        endGlyph = textLen;
+    if (endGlyph < 0 || endGlyph > text.len) {
+        endGlyph = text.len;
     }
 
     ReadAloudByteLoc noLoc;
     for (int g = startGlyph; g < endGlyph; g++) {
-        if (IsLineBreakGlyph(text, coords, g, textLen)) {
+        if (IsLineBreakGlyph(text, coords, g)) {
             ReadAloudHighlightAppendRaw(raw, '\r', noLoc);
             ReadAloudHighlightAppendRaw(raw, '\n', noLoc);
             continue;
@@ -242,7 +241,7 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
             ReadAloudByteLocSetFromRect(loc, pageNo, r);
         }
 
-        WCHAR wc[2] = {text[g], 0};
+        WCHAR wc[2] = {text.s[g], 0};
         TempStr utf8 = ToUtf8Temp(wc);
         if (str::IsEmpty(utf8)) {
             continue;
@@ -297,24 +296,23 @@ bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGl
             firstVisiblePage = pageNo;
         }
 
-        int textLen = 0;
         Rect* coords = nullptr;
-        const WCHAR* text = engine->GetTextForPage(pageNo, &textLen, &coords);
-        if (!text || textLen <= 0) {
+        WStr text = engine->GetTextForPage(pageNo, nullptr, &coords);
+        if (!text) {
             continue;
         }
 
         int g = 0;
-        while (g < textLen) {
-            while (g < textLen && IsLineBreakGlyph(text, coords, g, textLen)) {
+        while (g < text.len) {
+            while (g < text.len && IsLineBreakGlyph(text, coords, g)) {
                 g++;
             }
-            if (g >= textLen) {
+            if (g >= text.len) {
                 break;
             }
 
             int lineStart = g;
-            while (g < textLen && !IsLineBreakGlyph(text, coords, g, textLen)) {
+            while (g < text.len && !IsLineBreakGlyph(text, coords, g)) {
                 g++;
             }
 
@@ -372,10 +370,9 @@ static bool ReadAloudGetGlyphAtCursor(DisplayModel* dm, Point screenPt, int* pag
 
     PointF pt = dm->CvtFromScreen(screenPt, pageNo);
 
-    int textLen = 0;
     Rect* coords = nullptr;
-    engine->GetTextForPage(pageNo, &textLen, &coords);
-    if (textLen <= 0) {
+    WStr text = engine->GetTextForPage(pageNo, nullptr, &coords);
+    if (!text) {
         return false;
     }
 
@@ -386,10 +383,10 @@ static bool ReadAloudGetGlyphAtCursor(DisplayModel* dm, Point screenPt, int* pag
     // the index after the glyph under the cursor when clicking its right half.
     int glyph = dm->textSelection->FindClosestGlyphAt(pageNo, pt.x, pt.y);
     Point pti = ToPoint(pt);
-    if (glyph == textLen || (glyph >= 0 && glyph < textLen && !coords[glyph].Contains(pti))) {
+    if (glyph == text.len || (glyph >= 0 && glyph < text.len && !coords[glyph].Contains(pti))) {
         glyph--;
     }
-    if (glyph < 0 || glyph >= textLen) {
+    if (glyph < 0 || glyph >= text.len) {
         return false;
     }
 
@@ -478,12 +475,12 @@ void ReadAloudHighlightTimerStop(MainWindow* win) {
 
 static int gReadAloudPaintLogState = 0;
 
-static void ReadAloudPaintLogOnce(int code, const char* fmt, ...) {
+static void ReadAloudPaintLogOnce(int code, Str fmt) {
     if (gReadAloudPaintLogState == code) {
         return;
     }
     gReadAloudPaintLogState = code;
-    logf(fmt);
+    logf(fmt.s);
 }
 
 static int ReadAloudWordEndUtf8(Str text, int pos) {
