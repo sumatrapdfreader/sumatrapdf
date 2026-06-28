@@ -234,7 +234,7 @@ void SaveCrashInfo(const ByteSlice& d) {
         logf("SaveCrashInfo: skipping because !gCrashFilePath");
         return;
     }
-    logf("SaveCrashInfo: gCrashFilePath='%s'\n", gCrashFilePath);
+    logf("SaveCrashInfo: gCrashFilePath='%s'\n", gCrashFilePath.s);
     dir::CreateForFile(gCrashFilePath);
     file::WriteFile(gCrashFilePath, d);
 }
@@ -278,7 +278,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, Str dstDir, A
     for (int i = 0; i < archive.filesCount; i++) {
         lzma::FileInfo* fi = &(archive.files[i]);
         Str name = fi->name;
-        logf("ExtractSymbols: file %d is '%s'\n", i, name);
+        logf("ExtractSymbols: file %d is '%s'\n", i, name.s);
         u8* uncompressed = GetFileDataByIdx(&archive, i, allocator);
         if (!uncompressed) {
             return false;
