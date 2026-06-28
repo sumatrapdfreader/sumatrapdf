@@ -342,7 +342,7 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
         surnameW.AppendChar(s[j]);
     }
     while (surnameW.size() > 0) {
-        WCHAR last = surnameW.Get()[surnameW.size() - 1];
+        WCHAR last = surnameW.LastChar();
         if (last == L' ' || last == L'.' || last == L',') {
             surnameW.RemoveLast();
         } else {

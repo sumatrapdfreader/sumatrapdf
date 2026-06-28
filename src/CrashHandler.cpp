@@ -194,7 +194,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
         s.Append("\n");
     }
 
-    return Str(s.StealData());
+    return s.StealData();
 }
 
 static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
@@ -226,7 +226,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
         s.Append("\n");
     }
 
-    return Str(s.StealData());
+    return s.StealData();
 }
 
 void SaveCrashInfo(const ByteSlice& d) {
@@ -337,7 +337,7 @@ static bool DownloadAndUnzipSymbols(Str symDir) {
         log("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
     }
 
-    bool ok = ExtractSymbols((const u8*)rsp.data.Get(), rsp.data.size(), symDir, gCrashHandlerAllocator);
+    bool ok = ExtractSymbols((const u8*)rsp.data.Get().s, rsp.data.size(), symDir, gCrashHandlerAllocator);
     if (!ok) {
         log("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
     }
@@ -795,7 +795,7 @@ static void GetSystemInfo(StrBuilder& s) {
 static bool BuildModulesInfo() {
     StrBuilder s(1024);
     bool isWine = GetModules(s, false);
-    gModulesInfo = Str(s.StealData());
+    gModulesInfo = s.StealData();
     return isWine;
 }
 
@@ -804,7 +804,7 @@ static void BuildSystemInfo() {
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
-    gSystemInfo = Str(s.StealData());
+    gSystemInfo = s.StealData();
 }
 
 bool SetSymbolsDir(Str symDir) {

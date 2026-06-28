@@ -446,7 +446,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
 
     PageText res;
     res.len = (int)content.size();
-    res.text = WStr(content.StealData());
+    res.text = content.StealData();
     res.coords = coords.StealData();
     return res;
 }
@@ -535,7 +535,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
 
     PageTextUtf8 res;
     res.len = (int)content.size();
-    res.text = Str(content.StealData());
+    res.text = content.StealData();
     res.coords = coords.StealData();
     return res;
 }

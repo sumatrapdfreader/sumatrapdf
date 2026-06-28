@@ -87,6 +87,6 @@ ByteSlice PrettyPrintHtml(const ByteSlice& d) {
         }
     }
     size_t sz = res.size();
-    u8* dres = (u8*)res.StealData();
-    return {dres, sz};
+    Str stolen = res.StealData();
+    return {(u8*)stolen.s, sz};
 }

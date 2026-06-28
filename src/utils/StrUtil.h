@@ -281,7 +281,8 @@ struct StrBuilder {
     explicit StrBuilder(size_t capHint = 0, Arena* allocator = nullptr);
     StrBuilder(const StrBuilder& that);
     StrBuilder& operator=(const StrBuilder& that);
-    StrBuilder(const char*); // NOLINT
+    StrBuilder(Str s);
+    StrBuilder(const char* s) : StrBuilder(Str(s)) {} // NOLINT str-port shim
 
     ~StrBuilder();
 
@@ -305,17 +306,21 @@ struct StrBuilder {
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();
     char& Last() const;
-    char* StealData(Arena* a = nullptr);
+    Str StealData(Arena* a = nullptr);
     char* LendData() const;
-    bool Contains(const char* s, size_t sLen = 0);
+    bool Contains(Str s);
     bool IsEmpty() const;
     ByteSlice AsByteSlice() const;
     ByteSlice StealAsByteSlice();
     bool Append(const u8* src, size_t size = -1);
     bool AppendSlice(const ByteSlice& d);
     void AppendFmt(const char* fmt, ...);
-    void Set(const char*);
-    char* Get() const;
+    void Set(Str s);
+    void Set(const char* s) { Set(Str(s)); } // str-port shim
+    Str Get() const;
+    bool Contains(const char* s, size_t sLen = 0) {
+        return Contains(sLen ? Str(s, (int)sLen) : Str(s));
+    } // str-port shim
     char* CStr() const;
     char LastChar() const;
 
@@ -343,7 +348,8 @@ struct WStrBuilder {
 
     explicit WStrBuilder(size_t capHint = 0, Arena* allocator = nullptr);
     WStrBuilder(const WStrBuilder&);
-    WStrBuilder(const WCHAR*); // NOLINT
+    WStrBuilder(WStr s);
+    WStrBuilder(const WCHAR* s) : WStrBuilder(WStr(s)) {} // NOLINT str-port shim
     WStrBuilder& operator=(const WStrBuilder& that);
     ~WStrBuilder();
     void Reset();
@@ -361,18 +367,20 @@ struct WStrBuilder {
     int isize() const;
     bool InsertAt(size_t idx, const WCHAR& el);
     bool AppendChar(WCHAR);
+    bool Append(WStr s);
     bool Append(const WCHAR* src, size_t count = -1);
     WCHAR RemoveAt(size_t idx, size_t count = 1);
     WCHAR RemoveLast();
     WCHAR& Last() const;
-    WCHAR* StealData();
+    WStr StealData();
     WCHAR* LendData() const;
     int Find(const WCHAR& el, size_t startAt = 0) const;
     bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);
     bool IsEmpty() const;
-    void Set(const WCHAR*);
-    WCHAR* Get() const;
+    void Set(WStr s);
+    void Set(const WCHAR* s) { Set(WStr(s)); } // str-port shim
+    WStr Get() const;
     WCHAR LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html

@@ -177,7 +177,7 @@ void ParseTip(ParsedTip& tip, Str s) {
     }
 
     // second pass: split into words, detecting [text](link) markdown links
-    Str p(expanded.Get(), expanded.Size());
+    Str p = expanded.Get();
     while (p) {
         while (p.len > 0 && IsTipWhitespace(p.s[0])) {
             p = Str(p.s + 1, p.len - 1);

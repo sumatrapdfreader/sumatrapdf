@@ -1825,8 +1825,7 @@ LRESULT CALLBACK WndProcImageEdit(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
-void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp,
-                         bool selectPdf) {
+void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf) {
     if (!win) {
         return;
     }
@@ -2074,7 +2073,7 @@ Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     };
 
     if (str::IsEmpty(imagePath) || !file::Exists(imagePath)) {
@@ -2104,12 +2103,12 @@ Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
             *exitCodeOut = 1;
         }
         DestroyWindow(ew->hwnd);
-        return Str(out.StealData());
+        return out.StealData();
     }
     out.AppendFmt("OK newW=%d\n", wAfter);
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
     DestroyWindow(ew->hwnd);
-    return Str(out.StealData());
+    return out.StealData();
 }

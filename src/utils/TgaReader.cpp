@@ -409,7 +409,8 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
         tgaData.Append((char*)&footerLE, sizeof(footerLE));
     }
 
-    u8* data = (u8*)tgaData.StealData();
-    return {data, tgaData.size()};
+    size_t sz = tgaData.size();
+    Str stolen = tgaData.StealData();
+    return {(u8*)stolen.s, sz};
 }
 } // namespace tga

@@ -4016,7 +4016,7 @@ static void RenameCurrentFile(MainWindow* win) {
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
     fileFilter.AppendFmt("\1*%s\1", defExt);
-    str::TransCharsInPlace(Str(fileFilter.Get(), fileFilter.Size()), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
 
     WCHAR dstFilePathW[MAX_PATH];
     auto baseName = path::GetBaseNameTemp(srcPath);
@@ -9859,7 +9859,7 @@ static void ReadAloudStartFromViewportTop(WindowTab* tab, Str errMsg) {
         return;
     }
 
-    ReadAloudStartText(tab, Str(cleaned.Get(), cleaned.Size()), &map, 0, errMsg);
+    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
 }
 
 static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
@@ -9879,7 +9879,7 @@ static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
         return;
     }
 
-    ReadAloudStartText(tab, Str(cleaned.Get(), cleaned.Size()), &map, 0, errMsg);
+    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
 }
 
 static void ReadAloudInTab(WindowTab* tab) {
@@ -9933,7 +9933,7 @@ static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg)
         return;
     }
 
-    ReadAloudStartText(tab, Str(cleaned.Get(), cleaned.Size()), &map, 0, errMsg);
+    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
 }
 
 static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
@@ -10671,7 +10671,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     };
 
     if (str::IsEmpty(pathTwoPages) || str::IsEmpty(pathOnePage)) {
@@ -10704,7 +10704,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     }
 
     EngineBase* engine = CreateEngineFromFile(pathOnePage, nullptr, true);
@@ -10736,7 +10736,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 void ShutdownCleanup() {

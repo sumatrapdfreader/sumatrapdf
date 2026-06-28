@@ -444,7 +444,7 @@ Str BuildOpenFileCmd(Str pattern, Str path, int line, int col) {
         s = Str(perc.s + 2, s.len - (int)(perc.s - s.s) - 2);
     }
 
-    return Str(cmdline.StealData());
+    return cmdline.StealData();
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)

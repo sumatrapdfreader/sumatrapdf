@@ -824,7 +824,7 @@ Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     };
 
     if (gWindows.IsEmpty()) {
@@ -887,11 +887,11 @@ Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     }
     out.AppendFmt("OK pixel=0x%06x\n", (unsigned)px);
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }

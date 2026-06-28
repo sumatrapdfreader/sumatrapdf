@@ -1023,7 +1023,8 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
 }
 
 ByteSlice Fb2Doc::GetXmlData() const {
-    return {(u8*)xmlData.Get(), xmlData.size()};
+    Str s = xmlData.Get();
+    return {(u8*)s.s, xmlData.size()};
 }
 
 ByteSlice* Fb2Doc::GetImageData(Str fileName) const {

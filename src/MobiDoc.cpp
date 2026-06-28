@@ -1061,7 +1061,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     // there doesn't seem to be a standard for Mobi ToCs, so we try to
     // determine the author's intentions by looking at commonly used tags
     GumboOptions opts = GumboMakeOptions();
-    const char* tocStart = doc->Get() + docTocIndex;
+    const char* tocStart = doc->Get().s + docTocIndex;
     size_t tocLen = doc->size() - docTocIndex;
     GumboOutput* output = gumbo_parse_with_options(&opts, tocStart, tocLen);
     if (!output) {

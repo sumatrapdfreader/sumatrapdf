@@ -141,7 +141,7 @@ static void DeserializeUtf8StringArray(Vec<Str>* strArray, const char* serialize
                 }
                 part.AppendChar(*s);
             }
-            strArray->Append(Str(part.StealData()));
+            strArray->Append(part.StealData());
             if ('"' == *s) {
                 s++;
             }

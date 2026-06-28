@@ -845,7 +845,7 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
     if (coordsOut) {
         *coordsOut = rects.StealData();
     }
-    return Str(content.StealData());
+    return content.StealData();
 }
 
 static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
@@ -2302,7 +2302,8 @@ static ByteSlice TxtFileToHTML(Str path) {
 </body>
 </html>)");
     size_t sz = d.size();
-    return {(u8*)d.StealData(), sz};
+    Str stolen = d.StealData();
+    return {(u8*)stolen.s, sz};
 }
 
 static ByteSlice PalmDocToHTML(Str path) {

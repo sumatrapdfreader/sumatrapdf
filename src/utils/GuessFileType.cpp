@@ -584,7 +584,7 @@ Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     };
 
     if (str::IsEmpty(path) || str::IsEmpty(expectedKindName)) {
@@ -599,11 +599,11 @@ Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     }
     out.AppendFmt("OK path=%s kind=%s\n", path, kind);
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }

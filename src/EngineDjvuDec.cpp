@@ -716,7 +716,7 @@ PageTextUtf8 EngineDjvuDec::ExtractPageTextUtf8(int pageNo) {
     ReportIf((size_t)sb.size() != coords.size());
     PageTextUtf8 res;
     res.len = (int)sb.size();
-    res.text = Str(sb.StealData());
+    res.text = sb.StealData();
     res.coords = coords.StealData();
     return res;
 }

@@ -71,7 +71,7 @@ Str TestSynctexResult(Str pdfPath, Str srcPath, int line) {
         SafeEngineRelease(&engine);
     }
 
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 // Headless inverse-search test for issue #5702. Loads the pdf, creates a
@@ -105,7 +105,7 @@ Str TestInverseSearchResult(Str pdfPath, int pageNo, int x, int y) {
         SafeEngineRelease(&engine);
     }
 
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 // Headless case-insensitive text-search test for issue #5597. Loads the pdf,
@@ -153,7 +153,7 @@ Str TestSearchResult(Str pdfPath, Str needle, Str password) {
         SafeEngineRelease(&engine);
     }
 
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 // walk the outline tree in document order, return the `target`-th (1-based) item
@@ -201,7 +201,7 @@ Str TestDestResult(Str pdfPath, int destNo) {
         SafeEngineRelease(&engine);
     }
 
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 // Headless test for remote named-destination resolution (issue #5642). Loads the
@@ -229,7 +229,7 @@ Str TestNamedDestResult(Str pdfPath, Str destName) {
         SafeEngineRelease(&engine);
     }
 
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 static int ChmTestEnumerate(struct chmFile* h, struct chmUnitInfo* ui, void* ctx) {
@@ -349,7 +349,7 @@ Str TestChmResult(Str chmPath, int* exitCodeOut) {
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut);
@@ -368,7 +368,7 @@ Str TestContextMenuSelectionResult(Str word1, Str word2, Str cursorWord, int* ex
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     };
 
     if (str::IsEmptyOrWhiteSpace(word1) || str::IsEmptyOrWhiteSpace(word2) || str::IsEmptyOrWhiteSpace(cursorWord)) {
@@ -425,7 +425,7 @@ Str TestContextMenuSelectionResult(Str word1, Str word2, Str cursorWord, int* ex
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 // find the [start, end) glyph range of the first occurrence of `word` on a page
@@ -474,7 +474,7 @@ Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     };
 
     if (str::IsEmptyOrWhiteSpace(word) || str::IsEmptyOrWhiteSpace(typed)) {
@@ -563,7 +563,7 @@ Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut) {
@@ -623,7 +623,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     }
 
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
@@ -632,7 +632,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     }
 
     const int pageNo = 1;
@@ -644,7 +644,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     }
 
     TextSelection ts(engine);
@@ -664,7 +664,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     }
 
     bool ok = str::Eq(selected, expectedLine);
@@ -678,7 +678,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
@@ -708,7 +708,7 @@ Str TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return Str(out.StealData());
+        return out.StealData();
     };
 
     if (gWindows.IsEmpty()) {
@@ -746,7 +746,7 @@ Str TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 // Verifies _TRA resolves error-path strings through the translation table.
@@ -768,7 +768,7 @@ Str TestI18nErrorStringResult(int* exitCodeOut) {
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 static void AppendTocItems(StrBuilder& out, TocItem* item) {
@@ -808,7 +808,7 @@ Str TestGetTocResult(Str path, int* exitCodeOut) {
         }
         SafeEngineRelease(&engine);
     }
-    return Str(out.StealData());
+    return out.StealData();
 }
 
 // Headless test for page link elements. Returns one line per link:
@@ -824,7 +824,7 @@ Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut) {
             *exitCodeOut = 1;
         }
         out.AppendFmt("ERROR engine-create-failed path=%s\n", path);
-        return Str(out.StealData());
+        return out.StealData();
     }
 
     if (!engine->BenchLoadPage(pageNo)) {
@@ -833,7 +833,7 @@ Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut) {
         }
         out.AppendFmt("ERROR page-load-failed page=%d\n", pageNo);
         SafeEngineRelease(&engine);
-        return Str(out.StealData());
+        return out.StealData();
     }
 
     int nLinks = 0;
@@ -859,5 +859,5 @@ Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut) {
         *exitCodeOut = 0;
     }
     SafeEngineRelease(&engine);
-    return Str(out.StealData());
+    return out.StealData();
 }

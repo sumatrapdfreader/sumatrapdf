@@ -1731,13 +1731,13 @@ StrBuilder::StrBuilder(size_t capHint, Arena* a) {
 StrBuilder::StrBuilder(const StrBuilder& that) {
     Reset();
     char* s = EnsureCap(this, that.len);
-    char* sOrig = that.Get();
+    Str sOrig = that.Get();
     len = that.len;
     size_t n = len + kPadding;
-    memcpy(s, sOrig, n);
+    memcpy(s, sOrig.s, n);
 }
 
-StrBuilder::StrBuilder(const char* s) {
+StrBuilder::StrBuilder(Str s) {
     Reset();
     Append(s);
 }
@@ -1748,10 +1748,10 @@ StrBuilder& StrBuilder::operator=(const StrBuilder& that) {
     }
     Reset();
     char* s = EnsureCap(this, that.len);
-    char* sOrig = that.Get();
+    Str sOrig = that.Get();
     len = that.len;
     size_t n = len + kPadding;
-    memcpy(s, sOrig, n);
+    memcpy(s, sOrig.s, n);
     return *this;
 }
 
@@ -1862,7 +1862,8 @@ char& StrBuilder::Last() const {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-char* StrBuilder::StealData(Arena* a) {
+Str StrBuilder::StealData(Arena* a) {
+    int n = (int)len;
     char* res = els;
     if (a) {
         // if allocator is specified, have to duplicate
@@ -1878,7 +1879,7 @@ char* StrBuilder::StealData(Arena* a) {
     }
 
     Reset();
-    return res;
+    return Str(res, n);
 }
 
 char* StrBuilder::LendData() const {
@@ -1886,20 +1887,18 @@ char* StrBuilder::LendData() const {
 }
 
 // TODO: rewrite as size_t Find(const char* s, size_t sLen, size_t start);
-bool StrBuilder::Contains(const char* s, size_t sLen) {
-    if (str::IsEmpty(s)) {
+bool StrBuilder::Contains(Str s) {
+    if (!s) {
         return false;
     }
-    if (sLen == 0) {
-        sLen = str::Len(s);
-    }
+    size_t sLen = (size_t)s.len;
     if (sLen > len) {
         return false;
     }
     // must account for possibility of 0 in the string
     const char* curr = LendData();
     int nLeft = (int)(len - sLen);
-    char c = *s;
+    char c = *s.s;
     char c2;
     while (nLeft >= 0) {
         c2 = *curr++;
@@ -1907,7 +1906,7 @@ bool StrBuilder::Contains(const char* s, size_t sLen) {
         if (c != c2) {
             continue;
         }
-        if (str::EqN(s, curr - 1, sLen)) {
+        if (str::EqN(s.s, curr - 1, sLen)) {
             return true;
         }
     }
@@ -1919,13 +1918,13 @@ bool StrBuilder::IsEmpty() const {
 }
 
 ByteSlice StrBuilder::AsByteSlice() const {
-    return {(u8*)Get(), size()};
+    return {(u8*)els, size()};
 }
 
 ByteSlice StrBuilder::StealAsByteSlice() {
     size_t n = size();
-    char* d = StealData();
-    return {(u8*)d, n};
+    Str d = StealData();
+    return {(u8*)d.s, n};
 }
 
 bool StrBuilder::Append(const u8* src, size_t size) {
@@ -1964,13 +1963,13 @@ bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
 }
 #endif
 
-void StrBuilder::Set(const char* s) {
+void StrBuilder::Set(Str s) {
     Reset();
     Append(s);
 }
 
-char* StrBuilder::Get() const {
-    return els;
+Str StrBuilder::Get() const {
+    return Str(els, (int)len);
 }
 
 char* StrBuilder::CStr() const {
@@ -2087,13 +2086,13 @@ WStrBuilder::WStrBuilder(size_t capHint, Arena* a) {
 WStrBuilder::WStrBuilder(const WStrBuilder& that) {
     Reset();
     WCHAR* s = EnsureCap(this, that.cap);
-    WCHAR* sOrig = that.Get();
+    WStr sOrig = that.Get();
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
-    memcpy(s, sOrig, n);
+    memcpy(s, sOrig.s, n);
 }
 
-WStrBuilder::WStrBuilder(const WCHAR* s) {
+WStrBuilder::WStrBuilder(WStr s) {
     Reset();
     Append(s);
 }
@@ -2104,10 +2103,10 @@ WStrBuilder& WStrBuilder::operator=(const WStrBuilder& that) {
     }
     Reset();
     WCHAR* s = EnsureCap(this, that.cap);
-    WCHAR* sOrig = that.Get();
+    WStr sOrig = that.Get();
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
-    memcpy(s, sOrig, n);
+    memcpy(s, sOrig.s, n);
     return *this;
 }
 
@@ -2173,6 +2172,10 @@ bool WStrBuilder::AppendChar(WCHAR c) {
     return InsertAt(len, c);
 }
 
+bool WStrBuilder::Append(WStr s) {
+    return Append(s.s, (size_t)s.len);
+}
+
 bool WStrBuilder::Append(const WCHAR* src, size_t count) {
     if (-1 == count) {
         count = str::Len(src);
@@ -2216,14 +2219,15 @@ WCHAR& WStrBuilder::Last() const {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-WCHAR* WStrBuilder::StealData() {
+WStr WStrBuilder::StealData() {
+    int n = (int)len;
     WCHAR* res = els;
     if (els == buf) {
         res = (WCHAR*)MemDup(allocator, buf, (len + kPadding) * kElSize);
     }
     els = buf;
     Reset();
-    return res;
+    return WStr(res, n);
 }
 
 WCHAR* WStrBuilder::LendData() const {
@@ -2257,13 +2261,13 @@ bool WStrBuilder::IsEmpty() const {
     return len == 0;
 }
 
-void WStrBuilder::Set(const WCHAR* s) {
+void WStrBuilder::Set(WStr s) {
     Reset();
     Append(s);
 }
 
-WCHAR* WStrBuilder::Get() const {
-    return els;
+WStr WStrBuilder::Get() const {
+    return WStr(els, (int)len);
 }
 
 WCHAR WStrBuilder::LastChar() const {
@@ -2478,7 +2482,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         result.Append(replaceWith.s, replLen);
         start = match.s + findLen;
     }
-    return WStr(result.StealData());
+    return result.StealData();
 }
 
 // replaces all whitespace characters with spaces, collapses several
