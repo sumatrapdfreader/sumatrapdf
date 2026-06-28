@@ -692,15 +692,21 @@ Str Find(Str str, Str find) {
     return Str((char*)p, str.len - off);
 }
 
-int BufFind(const char* buf, int bufSize, const char* toFind) {
-    int toFindLen = str::Leni(toFind);
-    char c = *toFind;
-    const char* end = buf + (bufSize - toFindLen);
-    const char* s = buf;
+int BufFind(Str buf, Str toFind) {
+    if (!buf || !toFind) {
+        return -1;
+    }
+    int toFindLen = toFind.len;
+    if (toFindLen <= 0 || buf.len < toFindLen) {
+        return -1;
+    }
+    char c = toFind.s[0];
+    const char* end = buf.s + (buf.len - toFindLen);
+    const char* s = buf.s;
     while (s < end) {
         if (*s == c) {
-            if (memeq((const void*)s, (const void*)toFind, (size_t)toFindLen)) {
-                return (int)(s - buf);
+            if (memeq((const void*)s, (const void*)toFind.s, (size_t)toFindLen)) {
+                return (int)(s - buf.s);
             }
         }
         s++;

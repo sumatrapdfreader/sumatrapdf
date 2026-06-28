@@ -587,7 +587,7 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
     if (n < 1024) {
         return nullptr;
     }
-    n = str::BufFind(buf, (int)bufSize, "%PDF-");
+    n = str::BufFind(Str(buf, n), "%PDF-");
     if (n <= 0) {
         // not PDF or no garbage at the beginning
         return nullptr;

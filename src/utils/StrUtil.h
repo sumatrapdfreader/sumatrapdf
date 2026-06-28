@@ -143,7 +143,7 @@ Str FindCharLast(Str str, char c);
 int FindCharIdx(Str str, char c);
 Str Find(Str str, Str find);
 Str FindI(Str str, Str find);
-int BufFind(const char* buf, int bufSize, const char* toFind);
+int BufFind(Str buf, Str toFind);
 
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);
