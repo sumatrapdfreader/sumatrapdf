@@ -279,17 +279,17 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
                 }
                 f[i++] = 'd';
                 ReportIf(i >= dimof(f));
-                str::BufFmt(buf, dimof(buf), Str(f), (int)arg.i);
+                str::BufFmt(buf, dimof(buf), f, (int)arg.i);
                 res.Append(buf);
             } break;
             case Type::Float:
                 // Note: %G, unlike %f, avoid trailing '0'
-                str::BufFmt(buf, dimof(buf), StrL("%G"), arg.f);
+                str::BufFmt(buf, dimof(buf), "%G", arg.f);
                 res.Append(buf);
                 break;
             case Type::Double:
                 // Note: %G, unlike %f, avoid trailing '0'
-                str::BufFmt(buf, dimof(buf), StrL("%G"), arg.d);
+                str::BufFmt(buf, dimof(buf), "%G", arg.d);
                 res.Append(buf);
                 break;
             case Type::Str:

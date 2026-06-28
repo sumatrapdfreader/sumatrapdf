@@ -19,15 +19,14 @@ static _locale_t GetUtf8FormatLocale() {
 }
 #endif
 
-static int VsnprintfUtf8(char* buf, size_t bufCchSize, Str fmt, va_list args) { // str-port: C-string
-    char* fmtZ = CStrTemp(fmt);
+static int VsnprintfUtf8(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
 #if defined(_MSC_VER)
     _locale_t loc = GetUtf8FormatLocale();
     if (loc) {
-        return _vsnprintf_l(buf, bufCchSize, fmtZ, loc, args);
+        return _vsnprintf_l(buf, bufCchSize, fmt, loc, args);
     }
 #endif
-    return vsnprintf(buf, bufCchSize, fmtZ, args);
+    return vsnprintf(buf, bufCchSize, fmt, args);
 }
 
 static int VscprintfUtf8(const char* fmt, va_list args) {
@@ -760,13 +759,13 @@ Str Find(Str str, Str find) {
 // format string to a buffer provided by the caller
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
-bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args) { // str-port: C-string
+bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
     int count = VsnprintfUtf8(buf, bufCchSize, fmt, args);
     buf[bufCchSize - 1] = 0;
     return (count >= 0) && ((size_t)count < bufCchSize);
 }
 
-bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...) { // str-port: C-string
+bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     auto res = BufFmtV(buf, bufCchSize, fmt, args);

@@ -142,8 +142,8 @@ int BufFind(Str buf, Str toFind);
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);
 
-bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args); // str-port: C-string
-bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);           // str-port: C-string
+bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
+bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...);
 // formatting functions take the format string as a plain const char* (as an
 // exception to the Str rule): it's almost always a string literal, and a
 // const char* is what vsnprintf needs anyway (no NUL-termination footgun).
