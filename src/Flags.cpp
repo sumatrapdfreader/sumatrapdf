@@ -345,14 +345,14 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
         // and gives "%3" and "%4' on cmd-line.
         // this is a hack to ignore that
         if (str::Eq(argName, "%2") || str::Eq(argName, "%3") || str::Eq(argName, "%4")) {
-            logf("ParseFlags: skipping '%s'\n", argName);
+            logf("ParseFlags: skipping '%s'\n", argName.s);
             continue;
         }
         Arg arg = GetArg(argName);
         if (arg == Arg::Unknown) {
             goto CollectFile;
         }
-        logf("ParseFlags: argName: '%s', arg: %d\n", argName, (int)arg);
+        logf("ParseFlags: argName: '%s', arg: %d\n", argName.s, (int)arg);
 
         if (arg == Arg::Silent || arg == Arg::Silent2) {
             // silences errors happening during -print-to and -print-to-default
