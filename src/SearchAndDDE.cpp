@@ -2025,7 +2025,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     void* data;
     int cbData;
     if (fmt == CF_TEXT) {
-        data = (void*)str.Get();
+        data = (void*)str.Get().s;
         cbData = str.Size() + 1;
     } else if (fmt == CF_UNICODETEXT) {
         TempWStr tmp = ToWStrTemp(str.Get());

@@ -125,7 +125,8 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     if (!ok) {
         return {};
     }
-    return WrapTempStr(result.StealData(GetTempArena()));
+    Str sd = result.StealData(GetTempArena());
+    return WrapTempStr(sd.s, (size_t)sd.len);
 }
 
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {

@@ -147,16 +147,16 @@ PdbReader* PdbReader::CreateFromStream(IStream* stream) {
 #define PLUCKER_TYPE_CREATOR "DataPlkr"
 
 PdbDocType GetPdbDocType(Str typeCreator) {
-    if (memeq(typeCreator, MOBI_TYPE_CREATOR, 8)) {
+    if (memeq(typeCreator.s, MOBI_TYPE_CREATOR, 8)) {
         return PdbDocType::Mobipocket;
     }
-    if (memeq(typeCreator, PALMDOC_TYPE_CREATOR, 8)) {
+    if (memeq(typeCreator.s, PALMDOC_TYPE_CREATOR, 8)) {
         return PdbDocType::PalmDoc;
     }
-    if (memeq(typeCreator, TEALDOC_TYPE_CREATOR, 8)) {
+    if (memeq(typeCreator.s, TEALDOC_TYPE_CREATOR, 8)) {
         return PdbDocType::TealDoc;
     }
-    if (memeq(typeCreator, PLUCKER_TYPE_CREATOR, 8)) {
+    if (memeq(typeCreator.s, PLUCKER_TYPE_CREATOR, 8)) {
         return PdbDocType::Plucker;
     }
     return PdbDocType::Unknown;

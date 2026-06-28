@@ -950,7 +950,7 @@ bool MobiDoc::HasToc() {
 
     // search for <reference type="toc" filepos="N"/>
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, doc->Get(), doc->size());
+    GumboOutput* output = gumbo_parse_with_options(&opts, doc->Get().s, doc->size());
     if (!output) {
         return false;
     }

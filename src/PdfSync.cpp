@@ -85,8 +85,8 @@ class SyncTex : public Synchronizer {
 };
 
 Synchronizer::Synchronizer(Str syncFilePathIn, Str pdfPathIn) {
-    syncFilePath = str::Dup(syncFilePathIn);
-    pdfPath = str::Dup(pdfPathIn);
+    syncFilePath = str::Dup(syncFilePathIn).s;
+    pdfPath = str::Dup(pdfPathIn).s;
     TempWStr path = ToWStrTemp(syncFilePathIn);
     _wstat(path, &syncfileTimestamp);
 }
@@ -272,7 +272,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 break;
 
             case '(': {
-                AutoFreeStr filename(strconv::AnsiToUtf8(Str(line.s + 1, line.len - 1)));
+                AutoFreeStr filename(strconv::AnsiToUtf8(Str(line.s + 1, line.len - 1)).s);
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 Str fn = Str(filename.Get());
@@ -427,7 +427,7 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
     AutoFreeStr srcfilepath;
     // convert the source file to an absolute path
     if (!path::IsAbsolute(srcfilename)) {
-        srcfilepath.Set(PrependDir(srcfilename));
+        srcfilepath.Set(PrependDir(srcfilename).s);
     } else {
         srcfilepath.SetCopy(srcfilename);
     }
@@ -595,7 +595,7 @@ TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
 
     TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);        // stxabcdef
     TempStr tempPathSync = str::JoinTemp(tempPathNoExt, ".synctex"); // stxabcdef.synctex
-    int ret = rename(tempPath, tempPathSync);
+    int ret = rename(tempPath.s, tempPathSync.s);
     if (ret) {
         logfa("CopyPlainSyncToTempFile: unable rename from '%s' to '%s'. error: %d.\n", tempPath.s, tempPathSync.s,
               errno);
@@ -649,7 +649,7 @@ TempStr DealPlainSync(TempStr pathSync) {
 
         TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);        // stxabcdef
         TempStr tempPathSync = str::JoinTemp(tempPathNoExt, ".synctex"); // stxabcdef.synctex
-        int ret = rename(tempPath, tempPathSync);
+        int ret = rename(tempPath.s, tempPathSync.s);
         if (ret) {
             logfa("DealPlainSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath.s, tempPathSync.s, errno);
             return {};
@@ -698,7 +698,7 @@ TempStr ungzipToTempSync(Str gzPath) {
 
     TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);        // stxabcdef
     TempStr tempPathSync = str::JoinTemp(tempPathNoExt, ".synctex"); // stxabcdef.synctex
-    int ret = rename(tempPath, tempPathSync);
+    int ret = rename(tempPath.s, tempPathSync.s);
     if (ret) {
         logfa("ungzipToTempSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath.s, tempPathSync.s, errno);
         return {};
@@ -828,7 +828,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 
-    filename.Set(str::Dup(name));
+    filename.Set(str::Dup(name).s);
     if (!filename) {
         return PDFSYNCERR_OUTOFMEMORY;
     }

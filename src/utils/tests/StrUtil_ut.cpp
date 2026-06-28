@@ -49,7 +49,7 @@ static void StrSeqNumTest() {
     SeqStrNumAppend(&b, "bar", -3);
     SeqStrNumAppend(&b, "baz", 0x1234);
     SeqStrNumFinish(&b);
-    SeqStrNum seq = b.Get();
+    SeqStrNum seq = b.Get().s;
 
     i64 num = 0;
     utassert(0 == SeqStrNumIndex(seq, "foo", &num));

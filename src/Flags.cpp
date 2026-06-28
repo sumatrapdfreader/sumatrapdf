@@ -331,7 +331,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     // if the first argument is a tool name, skip parsing flags entirely
     if (toolNames && args.curr < args.nArgs) {
         Str firstArg = args.at(args.curr);
-        if (firstArg && SeqStrIndexIS(toolNames, firstArg) >= 0) {
+        if (firstArg && SeqStrIndexIS(toolNames.s, firstArg) >= 0) {
             return;
         }
     }
@@ -576,7 +576,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             i.forwardSearchOrigin = str::Dup(a, param);
-            i.forwardSearchLine = atoi(args.EatParam());
+            i.forwardSearchLine = atoi(args.EatParam().s);
             continue;
         }
         if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
@@ -612,9 +612,9 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // (used e.g. for embedding it into a browser plugin)
             if (args.AdditionalParam(1) && !str::IsDigit(param.s[0])) {
                 i.pluginURL = str::Dup(a, param);
-                i.hwndPluginParent = (HWND)(INT_PTR)atol(args.EatParam());
+                i.hwndPluginParent = (HWND)(INT_PTR)atol(args.EatParam().s);
             } else {
-                i.hwndPluginParent = (HWND)(INT_PTR)atol(param);
+                i.hwndPluginParent = (HWND)(INT_PTR)atol(param.s);
             }
             continue;
         }

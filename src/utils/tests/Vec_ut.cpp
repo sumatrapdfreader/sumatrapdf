@@ -120,7 +120,7 @@ void VecTest() {
         utassert(str::Eq(s, "lambda"));
         s = v.StealData();
         utassert(str::Eq(s, "lambda"));
-        free(s);
+        free(s.s);
         utassert(v.size() == 0);
 
         v.Append("lambda");

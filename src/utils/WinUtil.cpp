@@ -435,7 +435,7 @@ void LogLastError(DWORD err) {
 
 void DbgOutLastError(DWORD err) {
     TempStr msg = GetLastErrorStrTemp(err);
-    OutputDebugStringA(msg);
+    OutputDebugStringA(msg.s);
 }
 
 // return true if a given registry key (path) exists
@@ -2130,7 +2130,7 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
         OleUninitialize();
     };
 
-    HMODULE lib = LoadLibraryA(dllPath);
+    HMODULE lib = LoadLibraryA(dllPath.s);
     if (!lib) {
         return false;
     }
@@ -3419,7 +3419,7 @@ HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
 
 HGLOBAL StrToHGLOBAL(Str s, UINT flags) {
     int cb = (int)str::Len(s) + 1;
-    return MemToHGLOBAL((void*)s, cb, flags);
+    return MemToHGLOBAL((void*)s.s, cb, flags);
 }
 
 TempStr AtomToStrTemp(ATOM a) {

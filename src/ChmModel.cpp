@@ -818,7 +818,7 @@ bool ChmThumbnailTask::OnBeforeNavigate(Str, bool newWindow) {
 
 void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
     this->hw = hw;
-    homeUrl.Set(strconv::AnsiToUtf8(doc->GetHomePath()));
+    homeUrl.Set(strconv::AnsiToUtf8(doc->GetHomePath()).s);
     if (*homeUrl == '/') {
         homeUrl.SetCopy(homeUrl + 1);
     }

@@ -280,7 +280,7 @@ Str TestChmResult(Str chmPath, int* exitCodeOut) {
             for (int i = 0; i < paths.Size(); i++) {
                 Str path = paths.At(i);
                 struct chmUnitInfo ui{};
-                if (chm_resolve_object(h, path, &ui) != CHM_RESOLVE_SUCCESS) {
+                if (chm_resolve_object(h, path.s, &ui) != CHM_RESOLVE_SUCCESS) {
                     continue;
                 }
                 if (ui.length == 0 || ui.length > 128 * 1024 * 1024) {

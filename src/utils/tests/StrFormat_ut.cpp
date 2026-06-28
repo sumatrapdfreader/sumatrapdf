@@ -22,7 +22,7 @@ void StrFormatTest() {
     }
 
     s = fmt::FormatTemp("%04d", 34);
-    s2 = str::Format("%04d", 34);
+    s2 = str::Format("%04d", 34).s;
     check(s, Str(s2.Get()));
 
     {

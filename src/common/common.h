@@ -235,10 +235,6 @@ struct Str {
     explicit Str(char* s_, int len_) : s(s_), len(len_) {}                         // str-port: owned heap
 
     explicit operator bool() const { return len > 0 && s; }
-
-    // TODO(str-port): remove after all API boundaries use .s / StrDupTemp explicitly
-    operator const char*() const { return s; } // str-port: C-string
-    operator char*() const { return s; }       // str-port: C-string
 };
 
 // Create Str from string literal with compile-time length

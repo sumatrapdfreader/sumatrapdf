@@ -275,7 +275,7 @@ bool PdfCreator::SetProperty(Str propName, Str value) const {
         // TODO: not sure if pdf_new_text_string() handles utf8
         TempStr val = StrDupTemp(value);
         pdf_obj* valobj = pdf_new_text_string(ctx, val.s);
-        pdf_dict_puts_drop(ctx, info, name, valobj);
+        pdf_dict_puts_drop(ctx, info, name.s, valobj);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);

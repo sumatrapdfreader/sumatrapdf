@@ -226,7 +226,7 @@ static void PopulateLanguageCombo(HWND hwnd, Str initial, bool includeAuto) {
         CbAddString(hwnd, lang);
     }
     if (!str::IsEmptyOrWhiteSpace(initial)) {
-        SetWindowTextA(hwnd, initial);
+        SetWindowTextA(hwnd, initial.s);
         LRESULT idx = SendMessageW(hwnd, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)initial.s);
         if (idx != CB_ERR) {
             SendMessageW(hwnd, CB_SETCURSEL, (WPARAM)idx, 0);
@@ -570,7 +570,7 @@ static Str BackendDisplayName(AIChatBackend backend) {
 static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, AutoFreeStr& msgOut) {
     TempStr exePath = FindBackendExecutableTemp(backend);
     if (!exePath) {
-        msgOut = str::Dup(_TRA("The selected AI CLI is not installed."));
+        msgOut = str::Dup(_TRA("The selected AI CLI is not installed.")).s;
         return false;
     }
 
@@ -597,7 +597,7 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
 
     AIChatProcessLaunchResult launch;
     if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, cwd, &launch)) {
-        msgOut = str::Dup(_TRA("Failed to launch the AI CLI."));
+        msgOut = str::Dup(_TRA("Failed to launch the AI CLI.")).s;
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;
     }
@@ -611,7 +611,7 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
     if (waitRes == WAIT_TIMEOUT) {
         TerminateProcess(launch.hProcess, 1);
         AIChatCloseProcess(&launch.hProcess, false);
-        msgOut = str::Dup(_TRA("Translation timed out."));
+        msgOut = str::Dup(_TRA("Translation timed out.")).s;
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;
     }
@@ -623,16 +623,16 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
     ParseTranslationOutput(backend, Str(output.Get()), translation);
     LogTranslation(backend, "<<< parsed", translation.Get());
     if (translation.Size() == 0) {
-        msgOut = str::Dup(_TRA("Translation response did not contain text."));
+        msgOut = str::Dup(_TRA("Translation response did not contain text.")).s;
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;
     }
     if (TranslationLooksLikeError(Str(translation.Get()))) {
-        msgOut.Set(translation.StealData());
+        msgOut.Set(translation.StealData().s);
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;
     }
-    msgOut.Set(translation.StealData());
+    msgOut.Set(translation.StealData().s);
     return true;
 }
 
@@ -718,7 +718,7 @@ static void ShowTranslationResult(SelectionTranslateDialog* dlg, Str text, bool 
         dlg->resultVisible = true;
     }
     if (dlg->hwndResultLabel) {
-        SetWindowTextA(dlg->hwndResultLabel, label);
+        SetWindowTextA(dlg->hwndResultLabel, label.s);
     }
     SetWindowTextA(dlg->hwndResultText, text.s);
     ShowWindow(dlg->hwndResultLabel, SW_SHOW);
@@ -748,7 +748,7 @@ static void OnTranslateDone(SelectionTranslateDoneData* data) {
     EnableWindow(dlg->hwndSrcText, TRUE);
     EnableWindow(dlg->hwndSrcLang, TRUE);
     EnableWindow(dlg->hwndDstLang, TRUE);
-    SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translate"));
+    SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translate").s);
     TempStr display =
         data->ok ? Str(data->msg.Get()) : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg.Get());
     ShowTranslationResult(dlg, display, !data->ok);
@@ -763,7 +763,7 @@ static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
     AutoFreeStr result;
     bool ok = RunTranslation(data->backend, data->srcLang.Get(), data->dstLang.Get(), data->text.Get(), result);
     if (!ok && result.empty()) {
-        result = str::Dup(_TRA("Translation failed."));
+        result = str::Dup(_TRA("Translation failed.")).s;
     }
 
     auto done = new SelectionTranslateDoneData();
@@ -789,7 +789,7 @@ static void StartTranslation(SelectionTranslateDialog* dlg) {
     EnableWindow(dlg->hwndSrcLang, FALSE);
     EnableWindow(dlg->hwndDstLang, FALSE);
     EnableWindow(dlg->hwndTranslateBtn, FALSE);
-    SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translating..."));
+    SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translating...").s);
     if (dlg->resultVisible) {
         ShowWindow(dlg->hwndResultLabel, SW_HIDE);
         ShowWindow(dlg->hwndResultText, SW_HIDE);

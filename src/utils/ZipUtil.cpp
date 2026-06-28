@@ -138,7 +138,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
 
     Str localHeader = local.d.Get();
     bool ok = WriteData(localHeader.s, kHdrSize);
-    ok = ok && WriteData(nameUtf8, namelen);
+    ok = ok && WriteData(nameUtf8.s, namelen);
     ok = ok && WriteData(compressed, compressedSize);
 
     constexpr size_t kCentralSize = 46;
@@ -241,8 +241,8 @@ bool ZipCreator::Finish() {
     eocd.Write16(0); // comment len
     ReportIf(eocd.d.size() != kDirSize);
 
-    bool ok = WriteData(centraldir.Get(), centraldir.size());
-    ok = ok && WriteData(eocd.d.Get(), kDirSize);
+    bool ok = WriteData(centraldir.Get().s, centraldir.size());
+    ok = ok && WriteData(eocd.d.Get().s, kDirSize);
     return ok;
 }
 

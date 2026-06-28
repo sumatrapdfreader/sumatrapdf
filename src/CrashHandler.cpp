@@ -92,7 +92,7 @@ static bool TryStartCrashHandling(Str handlerName) {
         return true;
     }
 
-    OutputDebugStringA(handlerName);
+    OutputDebugStringA(handlerName.s);
     OutputDebugStringA(": ignoring nested crash\n");
 
     DWORD threadId = GetCurrentThreadId();

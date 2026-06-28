@@ -1990,7 +1990,7 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
     size_t utf8Len = str::Len(utf8);
 
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, utf8, utf8Len);
+    GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, utf8Len);
     if (!output) {
         return;
     }
@@ -2002,23 +2002,23 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
 // https://code.google.com/archive/p/comicbookinfo/
 bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
     if (json::Type::String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
-        propTitle.Set(str::Dup(value));
+        propTitle.Set(str::Dup(value).s);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
-        propDate.Set(str::Format("%s/%d", propDate ? propDate.Get() : "", atoi(value)));
+        propDate.Set(str::Format("%s/%d", propDate ? propDate.Get() : "", atoi(value.s)).s);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
-        propDate.Set(str::Format("%d%s", atoi(value), propDate ? propDate.Get() : ""));
+        propDate.Set(str::Format("%d%s", atoi(value.s), propDate ? propDate.Get() : "").s);
     } else if (json::Type::String == type && str::Eq(path, "/appID")) {
-        propCreator.Set(str::Dup(value));
+        propCreator.Set(str::Dup(value).s);
     } else if (json::Type::String == type && str::Eq(path, "/lastModified")) {
-        propModDate.Set(str::Dup(value));
+        propModDate.Set(str::Dup(value).s);
     } else if (json::Type::String == type && str::Eq(path, "/X-summary")) {
-        propSummary.Set(str::Dup(value));
+        propSummary.Set(str::Dup(value).s);
     } else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
         int idx = -1;
         Str prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
             if (json::Type::String == type && str::Eq(prop, "person")) {
-                propAuthorTmp.Set(str::Dup(value));
+                propAuthorTmp.Set(str::Dup(value).s);
             } else if (json::Type::Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
                        !propAuthors.Contains(Str(propAuthorTmp))) {
                 propAuthors.Append(propAuthorTmp.Get());

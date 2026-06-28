@@ -42,7 +42,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         "*",
         "explorer.exe",
         R"(/select,"%1")",
-        Str{},
+        nullptr,
         Str{},
     },
     {
@@ -51,7 +51,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         "*",
         R"(GPSoftware\Directory Opus\dopus.exe)",
         R"("%d")",
-        Str{},
+        nullptr,
         Str{},
     },
     {
@@ -60,7 +60,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         "*",
         R"(totalcmd\TOTALCMD64.EXE)",
         R"("%d")",
-        Str{},
+        nullptr,
         Str{},
     },
     {
@@ -69,7 +69,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         "*",
         R"(Double Commander\doublecmd.exe)",
         R"(--no-splash --client "%d")",
-        Str{},
+        nullptr,
         Str{},
     },
     {

@@ -585,7 +585,7 @@ TempStr EngineBase::GetPageLabeTemp(int pageNo) const {
 }
 
 int EngineBase::GetPageByLabel(Str label) const {
-    return atoi(label);
+    return atoi(label.s);
 }
 
 bool EngineBase::IsPasswordProtected() const {

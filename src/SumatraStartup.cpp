@@ -181,14 +181,14 @@ static bool IsSimpleOpenCase(const Flags& i, bool isFirstWin) {
 // WM_COPYDATA. Receiver (OnCopyData) handles it asynchronously so this
 // SendMessageW returns fast. Returns true if the message was handled.
 static bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 newWindow) {
-    size_t pathLen = strlen(fullPath);
+    size_t pathLen = strlen(fullPath.s);
     size_t cbData = sizeof(SumatraOpenCopyData) + pathLen + 1;
     SumatraOpenCopyData* payload = (SumatraOpenCopyData*)malloc(cbData);
     if (!payload) {
         return false;
     }
     payload->newWindow = newWindow;
-    memcpy(payload + 1, fullPath, pathLen + 1);
+    memcpy(payload + 1, fullPath.s, pathLen + 1);
     COPYDATASTRUCT cds = {kCopyDataOpen, (DWORD)cbData, payload};
     LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
     free(payload);
@@ -520,7 +520,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex, bool* openInNewWindow) {
     // (allows independent side-by-side installations)
     TempStr combinedPath = str::JoinTemp(GetSelfExePathTemp(), "|", GetAppDataDirTemp());
     str::ToLowerInPlace(combinedPath);
-    u32 hash = MurmurHash2(combinedPath, str::Len(combinedPath));
+    u32 hash = MurmurHash2(combinedPath.s, str::Len(combinedPath));
     TempStr mapId = str::FormatTemp("SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
@@ -781,11 +781,11 @@ static void UpdateGlobalPrefs(const Flags& i) {
             ReplaceColor(&gGlobalPrefs->fixedPageUI.backgroundColor, param);
         } else if (str::EqI(arg, "-fwdsearch-offset")) {
             param = i.globalPrefArgs.At(++n);
-            gGlobalPrefs->forwardSearch.highlightOffset = atoi(param);
+            gGlobalPrefs->forwardSearch.highlightOffset = atoi(param.s);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-width")) {
             param = i.globalPrefArgs.At(++n);
-            gGlobalPrefs->forwardSearch.highlightWidth = atoi(param);
+            gGlobalPrefs->forwardSearch.highlightWidth = atoi(param.s);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-color")) {
             param = i.globalPrefArgs.At(++n);
@@ -793,7 +793,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-permanent")) {
             param = i.globalPrefArgs.At(++n);
-            gGlobalPrefs->forwardSearch.highlightPermanent = atoi(param);
+            gGlobalPrefs->forwardSearch.highlightPermanent = atoi(param.s);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-manga-mode")) {
             param = i.globalPrefArgs.At(++n);
@@ -1747,7 +1747,7 @@ Run the command from cmd.exe instead, e.g.:
                 HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
                 if (hErr && hErr != INVALID_HANDLE_VALUE) {
                     DWORD written = 0;
-                    WriteFile(hErr, msg, (DWORD)str::Len(msg), &written, nullptr);
+                    WriteFile(hErr, msg.s, (DWORD)str::Len(msg), &written, nullptr);
                 }
                 res = 1;
                 goto Exit;

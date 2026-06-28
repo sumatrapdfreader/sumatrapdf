@@ -30,7 +30,7 @@ bool ChmFile::HasData(Str fileName) const {
     }
 
     struct chmUnitInfo info{};
-    return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
+    return chm_resolve_object(chmHandle, fileName.s, &info) == CHM_RESOLVE_SUCCESS;
 }
 
 ByteSlice ChmFile::GetData(Str fileName) const {
@@ -41,12 +41,12 @@ ByteSlice ChmFile::GetData(Str fileName) const {
     }
 
     struct chmUnitInfo info;
-    int res = chm_resolve_object(chmHandle, fileName, &info);
+    int res = chm_resolve_object(chmHandle, fileName.s, &info);
     if (CHM_RESOLVE_SUCCESS != res && str::FindChar(fileName, '\\')) {
         // Microsoft's HTML Help CHM viewer tolerates backslashes in URLs
         auto fileNameTemp = str::DupTemp(fileName);
         str::TransCharsInPlace(fileNameTemp, "\\", "/");
-        res = chm_resolve_object(chmHandle, fileNameTemp, &info);
+        res = chm_resolve_object(chmHandle, fileNameTemp.s, &info);
     }
 
     if (CHM_RESOLVE_SUCCESS != res) {
@@ -126,19 +126,19 @@ void ChmFile::ParseWindowsData() {
         size_t off = 8 + i * entrySize;
         if (!title) {
             DWORD strOff = rw.DWordLE(off + (size_t)0x14);
-            title.Set(GetCharZ(stringsData, strOff));
+            title.Set(GetCharZ(stringsData, strOff).s);
         }
         if (!tocPath) {
             DWORD strOff = rw.DWordLE(off + (size_t)0x60);
-            tocPath.Set(GetCharZ(stringsData, strOff));
+            tocPath.Set(GetCharZ(stringsData, strOff).s);
         }
         if (!indexPath) {
             DWORD strOff = rw.DWordLE(off + (size_t)0x64);
-            indexPath.Set(GetCharZ(stringsData, strOff));
+            indexPath.Set(GetCharZ(stringsData, strOff).s);
         }
         if (!homePath) {
             DWORD strOff = rw.DWordLE(off + (size_t)0x68);
-            homePath.Set(GetCharZ(stringsData, strOff));
+            homePath.Set(GetCharZ(stringsData, strOff).s);
         }
     }
 }
@@ -212,22 +212,22 @@ bool ChmFile::ParseSystemData() {
         switch (type) {
             case 0:
                 if (!tocPath) {
-                    tocPath.Set(GetCharZ(d, off + 4));
+                    tocPath.Set(GetCharZ(d, off + 4).s);
                 }
                 break;
             case 1:
                 if (!indexPath) {
-                    indexPath.Set(GetCharZ(d, off + 4));
+                    indexPath.Set(GetCharZ(d, off + 4).s);
                 }
                 break;
             case 2:
                 if (!homePath) {
-                    homePath.Set(GetCharZ(d, off + 4));
+                    homePath.Set(GetCharZ(d, off + 4).s);
                 }
                 break;
             case 3:
                 if (!title) {
-                    title.Set(GetCharZ(d, off + 4));
+                    title.Set(GetCharZ(d, off + 4).s);
                 }
                 break;
             case 4:
@@ -240,7 +240,7 @@ bool ChmFile::ParseSystemData() {
                 break;
             case 9:
                 if (!creator) {
-                    creator.Set(GetCharZ(d, off + 4));
+                    creator.Set(GetCharZ(d, off + 4).s);
                 }
                 break;
             case 16:
@@ -411,7 +411,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, 
             continue;
         }
         if (str::EqI(attrName->value, "Name")) {
-            name.Set(str::Dup(attrVal->value));
+            name.Set(str::Dup(attrVal->value).s);
         } else if (str::EqI(attrName->value, "Local")) {
             local.Set(str::Dup(StripItsProtocol(Str(attrVal->value))).s);
         }
@@ -706,7 +706,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     size_t len = str::Len(utf8);
 
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, utf8, len);
+    GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, len);
     if (!output) {
         return false;
     }

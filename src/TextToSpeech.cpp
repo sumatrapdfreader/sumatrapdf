@@ -58,7 +58,7 @@ static Str TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
 }
 
 static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
-    int langCmp = lstrcmpiA(TtsVoiceLangForSort(a), TtsVoiceLangForSort(b));
+    int langCmp = lstrcmpiA(TtsVoiceLangForSort(a).s, TtsVoiceLangForSort(b).s);
     if (langCmp != 0) {
         return langCmp < 0;
     }

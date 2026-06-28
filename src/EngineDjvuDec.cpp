@@ -768,7 +768,7 @@ static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, Str name) {
         return {};
     }
     TempStr nameZ = StrDupTemp(name); // str-port: djvu C API
-    int pageNo = djvu_doc_page_by_name(doc, nameZ);
+    int pageNo = djvu_doc_page_by_name(doc, nameZ.s);
     if (pageNo < 0) {
         return {};
     }

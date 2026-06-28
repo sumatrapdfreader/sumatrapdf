@@ -200,9 +200,9 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
     }
 
     logger->mutex->Lock();
-    FILE* f = fopen(path, "a");
+    FILE* f = fopen(path.s, "a");
     if (f) {
-        fwrite(entry.Get(), 1, entry.Size(), f);
+        fwrite(entry.Get().s, 1, entry.Size(), f);
         fflush(f);
         fclose(f);
     }

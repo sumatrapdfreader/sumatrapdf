@@ -2604,7 +2604,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         if (pdfdoc) {
             decryptKey = pdf_crypt_key(ctx, pdfdoc->crypt);
         }
-        AutoFreeStr pwd(pwdUI->GetPassword(FilePath(), digest, decryptKey, &saveKey));
+        AutoFreeStr pwd(pwdUI->GetPassword(FilePath(), digest, decryptKey, &saveKey).s);
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -2613,7 +2613,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
 
         // MuPDF expects passwords to be UTF-8 encoded
         TempStr pwdA = pwd.Get();
-        ok = fz_authenticate_password(ctx, _doc, pwdA);
+        ok = fz_authenticate_password(ctx, _doc, pwdA.s);
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
         if (!ok) {
@@ -2621,7 +2621,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             pwd.Set(NormalizeString(Str(pwd.Get()), 5 /* NormalizationKC */).s);
             if (pwd) {
                 pwdA = pwd.Get();
-                ok = fz_authenticate_password(ctx, _doc, pwdA);
+                ok = fz_authenticate_password(ctx, _doc, pwdA.s);
             }
         }
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
@@ -2630,7 +2630,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             TempStr pwd_ansi = pwd.Get();
             TempWStr pwdCp1252 = strconv::StrCPToWStrTemp(pwd_ansi, 1252);
             pwdA = ToUtf8Temp(pwdCp1252);
-            ok = fz_authenticate_password(ctx, _doc, pwdA);
+            ok = fz_authenticate_password(ctx, _doc, pwdA.s);
         }
         if (ok) {
             str::ReplaceWithCopy(&pdfPassword, pwdA);
@@ -3049,7 +3049,7 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     dest->name = Str(str::Dup(outline->title));
     // page is really a stream number
     Str title = outline->title ? Str(outline->title) : Str("");
-    AutoFreeStr nameHex(str::MemToHex((const u8*)title.s, title.len));
+    AutoFreeStr nameHex(str::MemToHex((const u8*)title.s, title.len).s);
     dest->value = Str(str::Format("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.Get()));
     dest->pageNo = outline->page.page;
     return dest;
@@ -4342,7 +4342,7 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
 
     // _info is guaranteed not to contain any indirect references,
     // so no need for docLock
-    pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, pdfPropName);
+    pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, pdfPropName.s);
     if (!obj) {
         return {};
     }
@@ -5189,7 +5189,7 @@ TempStr EngineMupdfGetPdfInfo(Str path) {
     TempStr res = nullptr;
     fz_buffer* buf = nullptr;
     fz_try(ctx) {
-        buf = pdfinfo_to_buffer(ctx, path);
+        buf = pdfinfo_to_buffer(ctx, path.s);
         unsigned char* data;
         size_t len = fz_buffer_storage(ctx, buf, &data);
         res = str::DupTemp(AsStr(ByteSlice(data, len)));

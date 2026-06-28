@@ -498,7 +498,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     }
 
     {
-        char const* strings[3];
+        Str strings[3];
         if (smartTabMode) {
             strings[0] = _TRA("Ctrl+Tab to navigate");
             strings[1] = _TRA("Release Ctrl to select");

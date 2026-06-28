@@ -498,7 +498,7 @@ ByteSlice GetCallstacks() {
     if (!gCallstackLogs) {
         return {};
     }
-    char* s = str::Dup(gCallstackLogs->Get()); // str-port: owned heap
+    char* s = str::Dup(gCallstackLogs->Get()).s; // str-port: owned heap
     return ToByteSlice(s);
 }
 

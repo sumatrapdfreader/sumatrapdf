@@ -1217,7 +1217,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
                 // honor <ol start="N">
                 AttrInfo* attr = t->GetAttrByName("start");
                 if (attr) {
-                    li.nextNum = atoi(str::DupTemp(attr->val));
+                    li.nextNum = atoi(str::DupTemp(attr->val).s);
                 }
             }
             listInfos.Append(li);

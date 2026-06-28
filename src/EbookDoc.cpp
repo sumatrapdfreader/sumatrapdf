@@ -407,7 +407,7 @@ bool EpubDoc::Load() {
             // EPUB 3 ToC
             TempStr properties = node->GetAttributeTemp("properties");
             if (properties && str::Find(properties, "nav") && str::Eq(mediaType, "application/xhtml+xml")) {
-                tocPath.Set(str::Join(contentPath, htmlPath));
+                tocPath.Set(str::Join(contentPath, htmlPath).s);
             }
 
             TempStr fullContentPath = str::JoinTemp(contentPath, htmlPath);
@@ -431,7 +431,7 @@ bool EpubDoc::Load() {
     if (tocId && !tocPath && idList.Contains(tocId)) {
         auto idx = idList.Find(tocId);
         auto s = pathList.At(idx);
-        tocPath.Set(str::Join(contentPath, s));
+        tocPath.Set(str::Join(contentPath, s).s);
         isNcxToc = true;
     }
     AutoFreeWStr readingDir(node->GetAttribute(Str("page-progression-direction")).s);

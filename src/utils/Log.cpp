@@ -207,7 +207,7 @@ static void log2(Str s, bool always) {
     }
 
     if (gLogFilePath) {
-        auto f = fopen(gLogFilePath, "a");
+        auto f = fopen(gLogFilePath.s, "a");
         if (f != nullptr) {
             fwrite(s.s, 1, n, f);
             fflush(f);
@@ -248,7 +248,7 @@ void logfa(Str fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    char* s = str::FmtV(fmt, args); // str-port: owned heap
+    char* s = str::FmtV(fmt, args).s; // str-port: owned heap
     log2(Str(s), true);
     str::Free(s);
     va_end(args);
