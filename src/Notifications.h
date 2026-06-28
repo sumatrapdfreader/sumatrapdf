@@ -63,7 +63,7 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
 NotificationWnd* ShowTemporaryNotification(HWND hwnd, Str msg, int timeoutMs = kNotifDefaultTimeOut);
 NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs);
 
-void MaybeDelayedWarningNotification(const char* fmt, ...); // fmt stays const char* (printf format)
+void MaybeDelayedWarningNotification(Str fmt, ...);
 void ShowMaybeDelayedNotifications(HWND hwndParent);
 
 int CalcPerc(int current, int total);
