@@ -44,9 +44,9 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
 }
 
 #if defined(REMOVE_FIRST_ARG)
-void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
+void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
     int nArgs;
-    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    WCHAR** argsArr = CommandLineToArgvW(cmdLine.s, &nArgs);
     for (int i = 0; i < nArgs; i++) {
         TempStr arg = ToUtf8Temp(argsArr[i]);
         // ignore empty quoted strings ("")
@@ -58,9 +58,9 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     LocalFree(argsArr);
 }
 #else
-void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
+void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
     int nArgs;
-    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    WCHAR** argsArr = CommandLineToArgvW(cmdLine.s, &nArgs);
     TempStr exePath = GetSelfExePathTemp();
     for (int i = 0; i < nArgs; i++) {
         TempStr arg = ToUtf8Temp(argsArr[i]);
@@ -80,10 +80,6 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
 }
 #endif
 
-void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
-    ParseCmdLine(cmdLine.s, argsOut);
-}
-
 void ParseCmdLine(Str cmdLine, StrVec& argsOut) {
     TempWStr s = ToWStrTemp(cmdLine);
     ParseCmdLine(s, argsOut);
@@ -95,15 +91,6 @@ bool CouldBeArg(Str s) {
     }
     char c = *s.s;
     return (c == '-') || (c == '/');
-}
-
-CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {
-    ParseCmdLine(cmdLine, args);
-    nArgs = args.Size();
-#if defined(REMOVE_FIRST_ARG)
-    // first arg is executable name by convention, we skip it
-    curr = 1;
-#endif
 }
 
 CmdLineArgsIter::CmdLineArgsIter(WStr cmdLine) {
