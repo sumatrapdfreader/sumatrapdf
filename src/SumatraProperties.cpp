@@ -88,17 +88,18 @@ void DeletePropertiesWindow(HWND hwndParent) {
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
-static bool PdfDateParseA(const char* date, SYSTEMTIME* timeOut, int* timeZoneOut) {
-    if (!date || !*date) return false;
+static bool PdfDateParseA(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
+    if (!date) return false;
 
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     *timeZoneOut = 0;
 
+    const char* p = date.s;
     // "D:" at the beginning is optional
-    if (str::StartsWith(date, "D:")) {
-        date += 2;
+    if (str::StartsWith(p, "D:")) {
+        p += 2;
     }
-    const char* end = str::Parse(date,
+    const char* end = str::Parse(p,
                                  "%4d%2d%2d"
                                  "%2d%2d%2d",
                                  &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
@@ -130,13 +131,13 @@ static bool PdfDateParseA(const char* date, SYSTEMTIME* timeOut, int* timeZoneOu
 // See: ISO 8601 specification
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
-static bool IsoDateParse(const char* date, SYSTEMTIME* timeOut, int* timeZoneOut) {
-    if (!date || !*date) return false;
+static bool IsoDateParse(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
+    if (!date) return false;
 
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     *timeZoneOut = 0;
 
-    const char* end = str::Parse(date, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    const char* end = str::Parse(date.s, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) { // time is optional
         const char* timeEnd = str::Parse(end, "T%2d:%2d:%2d", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
         if (timeEnd) {
@@ -252,8 +253,8 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
         height += 0.01;
     }
 
-    char* strWidth = str::FormatFloatWithThousandSepTemp(width);
-    char* strHeight = str::FormatFloatWithThousandSepTemp(height);
+    TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
+    TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
 
     return str::FormatTemp("%s x %s %s%s", strWidth, strHeight, unit, formatName);
 }
@@ -277,8 +278,8 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
     return JoinTemp(&denials, ", ");
 }
 
-static void AppendProp(StrBuilder& out, const char* key, const char* value) {
-    if (str::IsEmpty(value)) {
+static void AppendProp(StrBuilder& out, Str key, Str value) {
+    if (!value) {
         return;
     }
     out.AppendFmt("%s %s\n", key, value);
@@ -337,7 +338,7 @@ static const Str propToName[] = {
 };
 // clang-format on
 
-static void AppendPropTranslated(StrBuilder& out, const char* propName, const char* val) {
+static void AppendPropTranslated(StrBuilder& out, Str propName, Str val) {
     if (!propName || !val) return;
     if (str::Eq(propName, kPropImageFileSize)) {
         TempStr valFormatted = FormatFileSizeTransTemp(ParseInt64(val));
@@ -350,11 +351,11 @@ static void AppendPropTranslated(StrBuilder& out, const char* propName, const ch
         AppendProp(out, label, val);
         return;
     }
-    const char* trans = trans::GetTranslation(s);
+    Str trans = trans::GetTranslation(s);
     AppendProp(out, trans, val);
 }
 
-static void AppendPdfFileStructure(StrBuilder& out, const char* fstruct, const char* filePath) {
+static void AppendPdfFileStructure(StrBuilder& out, Str fstruct, Str filePath) {
     if (str::IsEmpty(fstruct)) {
         bool isPDF = str::EndsWithI(filePath, ".pdf");
         if (isPDF) {
@@ -367,7 +368,7 @@ static void AppendPdfFileStructure(StrBuilder& out, const char* fstruct, const c
 
     StrVec props;
 
-    const char* linearized = _TRA("No");
+    Str linearized = _TRA("No");
     if (parts.Contains("linearized")) {
         linearized = _TRA("Yes");
     }
@@ -404,7 +405,7 @@ static void GetAllProps(DocController* ctrl, Props& propsOut) {
     }
 }
 
-void AppendDateProp(StrBuilder& out, const char* key, const char* val, bool isPdfDate) {
+void AppendDateProp(StrBuilder& out, Str key, Str val, bool isPdfDate) {
     SYSTEMTIME date;
     int timeZone = 0;
     bool ok = false;
@@ -431,8 +432,8 @@ static void AddImageProperties(EngineBase* engine, int pageNo, StrBuilder& out) 
     out.Append(header);
     out.AppendChar('\n');
     for (int i = 0; i < nImageProps; i++) {
-        char* propName = imageProps.At(i * 2);
-        char* propVal = imageProps.At(i * 2 + 1);
+        Str propName = imageProps.At(i * 2);
+        Str propVal = imageProps.At(i * 2 + 1);
         AppendPropTranslated(out, propName, propVal);
     }
 }
@@ -441,7 +442,7 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
     ReportIf(!ctrl);
 
     Str path = gPluginMode ? gPluginURL : Str(ctrl->GetFilePath());
-    AppendProp(out, _TRA("File:"), IsEmpty(path) ? "(not available)" : path.s);
+    AppendProp(out, _TRA("File:"), IsEmpty(path) ? Str("(not available)") : path);
 
     DisplayModel* dm = ctrl->AsFixed();
     i64 fileSize = file::GetSize(Str(path)); // can be gPluginURL
@@ -504,7 +505,7 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
 
     // clang-format off
     // properties already shown above, skip when appending remaining
-    static const char* handledProps[] = {
+    static const Str handledProps[] = {
         kPropTitle, kPropSubject, kPropAuthor, kPropCopyright,
         kPropCreationDate, kPropModificationDate,
         kPropCreatorApp, kPropPdfProducer, kPropPdfVersion,
@@ -517,9 +518,9 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
     // append any remaining properties not already shown
     int nProps = PropsCount(props);
     for (int i = 0; i < nProps; i++) {
-        char* propName = props.At(i * 2);
-        char* propVal = props.At(i * 2 + 1);
-        if (str::IsEmpty(propVal)) {
+        Str propName = props.At(i * 2);
+        Str propVal = props.At(i * 2 + 1);
+        if (!propVal) {
             continue;
         }
         bool handled = false;
@@ -539,12 +540,12 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
     AppendPropTranslated(out, kPropFiles, GetPropValueTemp(props, kPropFiles));
 }
 
-static int GetPropertyLabelWidth(const char* line, int lineLen, int* labelBytesOut) {
-    for (int i = 0; i + 2 < lineLen; i++) {
-        if (line[i] != ':' || line[i + 1] != ' ') {
+static int GetPropertyLabelWidth(Str line, int* labelBytesOut) {
+    for (int i = 0; i + 2 < line.len; i++) {
+        if (line.s[i] != ':' || line.s[i + 1] != ' ') {
             continue;
         }
-        TempWStr label = ToWStrTemp(line, (size_t)i + 1);
+        TempWStr label = ToWStrTemp(line.s, (size_t)i + 1);
         *labelBytesOut = i + 1;
         return str::Leni(label);
     }
@@ -553,28 +554,30 @@ static int GetPropertyLabelWidth(const char* line, int lineLen, int* labelBytesO
 
 static void AlignPropertiesText(StrBuilder& text) {
     int maxLabelWidth = 0;
-    const char* start = text.CStr();
-    while (*start) {
+    Str content = text.Get();
+    const char* start = content.s;
+    const char* end = content.s + content.len;
+    while (start < end) {
         const char* nl = str::FindChar(start, '\n');
-        int lineLen = nl ? (int)(nl - start) : str::Leni(start);
+        int lineLen = nl ? (int)(nl - start) : (int)(end - start);
         int labelBytes = 0;
-        int labelWidth = GetPropertyLabelWidth(start, lineLen, &labelBytes);
+        int labelWidth = GetPropertyLabelWidth(Str(start, lineLen), &labelBytes);
         if (labelWidth > maxLabelWidth) {
             maxLabelWidth = labelWidth;
         }
-        start = nl ? nl + 1 : start + lineLen;
+        start = nl ? nl + 1 : end;
     }
     if (maxLabelWidth == 0) {
         return;
     }
 
     StrBuilder aligned;
-    start = text.CStr();
-    while (*start) {
+    start = content.s;
+    while (start < end) {
         const char* nl = str::FindChar(start, '\n');
-        int lineLen = nl ? (int)(nl - start) : str::Leni(start);
+        int lineLen = nl ? (int)(nl - start) : (int)(end - start);
         int labelBytes = 0;
-        int labelWidth = GetPropertyLabelWidth(start, lineLen, &labelBytes);
+        int labelWidth = GetPropertyLabelWidth(Str(start, lineLen), &labelBytes);
         if (labelWidth >= 0) {
             int nSpacesBefore = maxLabelWidth - labelWidth;
             for (int i = 0; i < nSpacesBefore; i++) {
@@ -589,21 +592,22 @@ static void AlignPropertiesText(StrBuilder& text) {
         if (nl) {
             aligned.AppendChar('\n');
         }
-        start = nl ? nl + 1 : start + lineLen;
+        start = nl ? nl + 1 : end;
     }
-    text.Set(aligned.CStr());
+    text.Set(aligned.Get());
 }
 
-static void SetEditText(HWND hwndEdit, const char* text) {
+static void SetEditText(HWND hwndEdit, Str text) {
     // edit control needs \r\n line endings
     StrBuilder crlfText;
-    for (const char* s = text; *s; s++) {
-        if (*s == '\n' && (s == text || *(s - 1) != '\r')) {
+    for (int i = 0; i < text.len; i++) {
+        char c = text.s[i];
+        if (c == '\n' && (i == 0 || text.s[i - 1] != '\r')) {
             crlfText.AppendChar('\r');
         }
-        crlfText.AppendChar(*s);
+        crlfText.AppendChar(c);
     }
-    HwndSetText(hwndEdit, crlfText.CStr());
+    HwndSetText(hwndEdit, crlfText.Get());
     SendMessageW(hwndEdit, EM_SETSEL, 0, 0);
 }
 
@@ -623,18 +627,20 @@ static void SizeToContent(PropertiesLayout* pl) {
     HGDIOBJ origFont = SelectObject(hdcEdit, font);
     int maxLineDx = 0;
     int nLines = 0;
-    const char* text = pl->propsText.CStr();
-    while (*text) {
-        const char* nl = str::FindChar(text, '\n');
-        int lineLen = nl ? (int)(nl - text) : str::Leni(text);
+    Str text = pl->propsText.Get();
+    const char* p = text.s;
+    const char* textEnd = text.s + text.len;
+    while (p < textEnd) {
+        const char* nl = str::FindChar(p, '\n');
+        int lineLen = nl ? (int)(nl - p) : (int)(textEnd - p);
         SIZE sz{};
-        TempWStr lineW = ToWStrTemp(text, (size_t)lineLen);
-        GetTextExtentPoint32W(hdcEdit, lineW, str::Leni(lineW), &sz);
+        TempWStr lineW = ToWStrTemp(p, (size_t)lineLen);
+        GetTextExtentPoint32W(hdcEdit, lineW.s, lineW.len, &sz);
         if (sz.cx > maxLineDx) {
             maxLineDx = sz.cx;
         }
         nLines++;
-        text = nl ? nl + 1 : text + lineLen;
+        p = nl ? nl + 1 : textEnd;
     }
     maxLineDx += 16;
 
@@ -772,17 +778,18 @@ static void OnGetFontsFinished(GetFontsResult* result) {
     PropertiesLayout* pl = FindPropertyWindowByHwnd(result->hwnd);
     if (pl) {
         // remove "Getting fonts information..." line
-        const char* marker = _TRA("Getting fonts information...");
-        const char* found = str::Find(pl->propsText.CStr(), marker);
+        Str marker = _TRA("Getting fonts information...");
+        Str props = pl->propsText.Get();
+        Str found = str::Find(props, marker);
         if (found) {
-            int pos = (int)(found - pl->propsText.CStr());
-            if (pos > 0 && pl->propsText.CStr()[pos - 1] == '\n') {
+            int pos = (int)(found.s - props.s);
+            if (pos > 0 && props.s[pos - 1] == '\n') {
                 pos--;
             }
             pl->propsText.RemoveAt(pos, pl->propsText.Size() - pos);
         }
-        pl->propsText.Append(result->fontsText.CStr());
-        SetEditText(pl->hwndEdit, pl->propsText.CStr());
+        pl->propsText.Append(result->fontsText.Get());
+        SetEditText(pl->hwndEdit, pl->propsText.Get());
         SizeToContent(pl);
     }
     delete result;
@@ -886,7 +893,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         b->onClick = MkFunc0(CopyPropertiesToClipboard, layoutData);
     }
 
-    SetEditText(hwndEdit, layoutData->propsText.CStr());
+    SetEditText(hwndEdit, layoutData->propsText.Get());
 
     SizeToContent(layoutData);
     LayoutButtons(layoutData);
