@@ -60,10 +60,10 @@ int main() {
     StrVec args;
     ParseCmdLine(GetCommandLineW(), args);
 
-    const char* filePath = nullptr;
-    const char* certName = nullptr;
-    const char* signFilePath = nullptr;
-    const char* pubkeyPath = nullptr;
+    Str filePath;
+    Str certName;
+    Str signFilePath;
+    Str pubkeyPath;
     AutoFreeStr inFileCommentSyntax;
     // find certificate
     HCERTSTORE hStore = nullptr;
@@ -80,7 +80,7 @@ int main() {
     AutoFreeStr hexSignature;
     ScopedMem<BYTE> signature;
     BOOL ok;
-    const char* sig = nullptr;
+    Str sig;
 
 #define is_arg(name, var) (str::EqI(args[i], name) && i + 1 < args.Size() && !var)
     for (int i = 1; i < args.Size(); i++) {
@@ -130,13 +130,14 @@ int main() {
     } else {
         DWORD keySpec;
         do {
+            TempWStr certNameW = ToWStrTemp(certName);
             pCertCtx = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0,
-                                                  CERT_FIND_SUBJECT_STR, certName, pCertCtx);
+                                                  CERT_FIND_SUBJECT_STR, certNameW, pCertCtx);
             if (!pCertCtx) break;
             keySpec = 0;
             ok = CryptAcquireCertificatePrivateKey(pCertCtx, 0, nullptr, &hProv, &keySpec, nullptr);
         } while (!ok || (keySpec & AT_SIGNATURE) != AT_SIGNATURE);
-        QuitIfNot(pCertCtx, "Error: Failed to find a signature certificate for \"%s\" in store \"My\"!", certName);
+        QuitIfNot(pCertCtx, "Error: Failed to find a signature certificate for \"%s\" in store \"My\"!", certName.s);
     }
 
     // extract public key for verficiation and export
@@ -150,8 +151,8 @@ int main() {
     if (pubkeyPath) {
         ByteSlice d(pubkey.Get(), pubkeyLen);
         ok = file::WriteFile(pubkeyPath, d);
-        QuitIfNot(ok, "Error: Failed to write the public key to \"%s\"!", pubkeyPath);
-        QuitIfNot(filePath, "Wrote the public key to \"%s\", no file to sign.", pubkeyPath);
+        QuitIfNot(ok, "Error: Failed to write the public key to \"%s\"!", pubkeyPath.s);
+        QuitIfNot(filePath, "Wrote the public key to \"%s\", no file to sign.", pubkeyPath.s);
     }
 
     // prepare data for signing
@@ -161,18 +162,18 @@ int main() {
         dataLen = tmp.size();
         data.Set(tmp);
     }
-    QuitIfNot(data && dataLen <= UINT_MAX, "Error: Failed to read from \"%s\" (or file is too large)!", filePath);
+    QuitIfNot(data && dataLen <= UINT_MAX, "Error: Failed to read from \"%s\" (or file is too large)!", filePath.s);
     ok = !inFileCommentSyntax || (dataLen > 0 && !memchr(data.Get(), 0, dataLen));
     QuitIfNot(ok, "%s", "Error: Can't put signature comment into binary or empty file!");
     if (inFileCommentSyntax) {
         // cut previous signature from file
-        char* lastLine = data + dataLen - 1;
+        char* lastLine = data + dataLen - 1; // str-port: binary buffer cursor
         while (lastLine > data.Get() && *(lastLine - 1) != '\n') lastLine--;
         Str dataStr(data.Get(), (int)dataLen);
-        const char* lf = str::Find(dataStr, "\r\n") || !str::FindChar(dataStr, '\n') ? "\r\n" : "\n";
+        Str lf = str::Find(dataStr, "\r\n") || !str::FindChar(dataStr, '\n') ? "\r\n" : "\n";
         if (lastLine > data && str::StartsWith(lastLine, inFileCommentSyntax.Get()) &&
             str::StartsWith(lastLine + str::Len(inFileCommentSyntax), " Signature sha1:")) {
-            strcpy_s(lastLine, 3, lf);
+            strcpy_s(lastLine, 3, lf.s);
         } else {
             data.Set(str::Format("%s%s", data.Get(), lf));
         }
@@ -205,9 +206,9 @@ int main() {
     hexSignature.Set(str::MemToHex((const u8*)signature.Get(), sigLen));
     if (inFileCommentSyntax) {
         Str dataStr(data.Get(), (int)dataLen);
-        const char* lf = str::Find(dataStr, "\r\n") || !str::FindChar(dataStr, '\n') ? "\r\n" : "\n";
+        Str lf = str::Find(dataStr, "\r\n") || !str::FindChar(dataStr, '\n') ? "\r\n" : "\n";
         data.Set(
-            str::Format("%s%s Signature sha1:%s%s", data.Get(), inFileCommentSyntax.Get(), hexSignature.Get(), lf));
+            str::Format("%s%s Signature sha1:%s%s", data.Get(), inFileCommentSyntax.Get(), hexSignature.Get(), lf.s));
         dataLen = str::Len(data);
         hexSignature.SetCopy(data);
     } else {
@@ -215,18 +216,17 @@ int main() {
     }
 
     if (!inFileCommentSyntax) {
-        sig = hexSignature.Get();
+        sig = Str(hexSignature.Get());
     }
     ok = VerifySHA1Signature(data.Get(), dataLen, sig, pubkey, pubkeyLen);
     QuitIfNot(ok, "%s", "Error: Failed to verify signature!");
 
     // save/display signature
     if (signFilePath) {
-        char* s = hexSignature.Get();
-        size_t sLen = str::Len(s);
-        ByteSlice d((u8*)s, sLen);
+        Str s(hexSignature.Get());
+        ByteSlice d((u8*)s.s, s.len);
         ok = file::WriteFile(signFilePath, d);
-        QuitIfNot(ok, "Error: Failed to write signature to \"%s\"!", signFilePath);
+        QuitIfNot(ok, "Error: Failed to write signature to \"%s\"!", signFilePath.s);
     } else {
         fprintf(stdout, "%s", hexSignature.Get());
     }
