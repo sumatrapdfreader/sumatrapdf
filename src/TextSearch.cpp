@@ -73,8 +73,8 @@ void TextSearch::SetText(const WCHAR* text) {
     }
 
     this->Clear();
-    this->lastText = str::Dup(text);
-    this->findText = str::Dup(text);
+    this->lastText = WStr(str::Dup(text));
+    this->findText = WStr(str::Dup(text));
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
@@ -82,22 +82,22 @@ void TextSearch::SetText(const WCHAR* text) {
         for (end = text; isnoncjkwordchar(*end); end++) {
             ;
         }
-        anchor = str::Dup(text, end - text);
+        anchor = WStr(str::Dup(text, end - text));
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
     // cf. https://web.archive.org/web/20140201013717/http://forums.fofou.org:80/sumatrapdf/topic?id=2432337&comments=3
     else if (*text == '-' || *text == '\'' || *text == '"') {
-        anchor = nullptr;
+        anchor = {};
     } else {
-        anchor = str::Dup(text, 1);
+        anchor = WStr(str::Dup(text, 1));
     }
 
     if (str::Len(this->findText) >= INT_MAX) {
-        this->findText[(unsigned)INT_MAX - 1] = '\0';
+        this->findText.s[(unsigned)INT_MAX - 1] = '\0';
     }
     if (str::EndsWith(this->findText, L" ")) {
-        this->findText[str::Len(this->findText) - 1] = '\0';
+        this->findText.s[str::Len(this->findText) - 1] = '\0';
     }
 
     markAllPagesNonSkip(pagesToSkip);
@@ -284,7 +284,8 @@ static const WCHAR* StrRStrFoldCase(const WCHAR* start, const WCHAR* end, const 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
 TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
-    const WCHAR *match = findText, *end = start;
+    const WCHAR* match = findText.s;
+    const WCHAR* end = start;
     const PageAndOffset notFound = {-1, -1};
     int currentPage = findPage;
     const WCHAR* currentPageText = pageText;
@@ -409,15 +410,15 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
         } else if (forward) {
             const WCHAR* s = pageText + findIndex;
             if (matchCase) {
-                found = StrStr(s, anchor);
+                found = StrStr(s, anchor.s);
             } else {
-                found = StrStrFoldCase(s, anchor);
+                found = StrStrFoldCase(s, anchor.s);
             }
         } else {
             if (matchCase) {
-                found = StrRStr(pageText, pageText + findIndex, anchor);
+                found = StrRStr(pageText, pageText + findIndex, anchor.s);
             } else {
-                found = StrRStrFoldCase(pageText, pageText + findIndex, anchor);
+                found = StrRStrFoldCase(pageText, pageText + findIndex, anchor.s);
             }
         }
         if (!found) {

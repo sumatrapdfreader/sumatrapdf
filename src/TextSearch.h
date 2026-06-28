@@ -30,8 +30,8 @@ struct TextSearch : public TextSelection {
         int offset;
     };
 
-    WCHAR* findText = nullptr;
-    WCHAR* anchor = nullptr;
+    WStr findText;
+    WStr anchor;
     int findPage = 0;
     int searchHitStartAt = 0; // when text found spans several pages, searchHitStartAt < findPage
     bool forward = true;
@@ -57,7 +57,7 @@ struct TextSearch : public TextSelection {
     const WCHAR* pageText = nullptr;
     int findIndex = 0;
 
-    WCHAR* lastText = nullptr;
+    WStr lastText;
     int nPages = 0;
     Vec<bool> pagesToSkip;
 };
