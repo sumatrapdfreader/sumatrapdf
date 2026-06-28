@@ -307,38 +307,6 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
     return true;
 }
 
-Str Format(Str s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5, const Arg& a6) {
-    const Arg* args[6];
-    int nArgs = 0;
-    args[nArgs++] = &a1;
-    args[nArgs++] = &a2;
-    args[nArgs++] = &a3;
-    args[nArgs++] = &a4;
-    args[nArgs++] = &a5;
-    args[nArgs++] = &a6;
-    ReportIf(nArgs > dimofi(args));
-    // arguments at the end could be empty
-    while (nArgs > 0 && args[nArgs - 1]->t == Type::None) {
-        nArgs--;
-    }
-
-    if (nArgs == 0) {
-        // TODO: verify that format has no references to args
-        return str::Dup(s);
-    }
-
-    Fmt fmt;
-    bool ok = ParseFormat(fmt, s);
-    if (!ok) {
-        return {};
-    }
-    ok = fmt.Eval(args, nArgs);
-    if (!ok) {
-        return {};
-    }
-    return fmt.res.StealData();
-}
-
 TempStr FormatTemp(Str s, const Arg** args, int nArgs) {
     // arguments at the end could be empty
     while (nArgs >= 0 && args[nArgs - 1]->t == Type::None) {
@@ -373,21 +341,6 @@ TempStr FormatTemp(Str s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg
     args[nArgs++] = &a6;
     ReportIf(nArgs > dimofi(args));
     return FormatTemp(s, args, nArgs);
-}
-
-TempStr FormatTemp(Str s, const Arg a1) {
-    const Arg* args[3] = {&a1};
-    return FormatTemp(s, args, 1);
-}
-
-TempStr FormatTemp(Str s, const Arg a1, const Arg a2) {
-    const Arg* args[3] = {&a1, &a2};
-    return FormatTemp(s, args, 2);
-}
-
-TempStr FormatTemp(Str s, const Arg a1, const Arg a2, const Arg a3) {
-    const Arg* args[3] = {&a1, &a2, &a3};
-    return FormatTemp(s, args, 3);
 }
 
 } // namespace strfmt
