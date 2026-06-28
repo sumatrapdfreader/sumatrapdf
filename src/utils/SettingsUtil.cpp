@@ -11,18 +11,22 @@ static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
 
 // only escape characters which are significant to SquareTreeParser:
 // newlines and leading/trailing whitespace (and escape characters)
-static bool NeedsEscaping(const char* s) {
-    return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) || str::FindChar(s, '\n') ||
-           str::FindChar(s, '\r') || str::FindChar(s, '$');
+static bool NeedsEscaping(Str s) {
+    if (!s) {
+        return false;
+    }
+    return str::IsWs(s.s[0]) || str::IsWs(s.s[s.len - 1]) || str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
+           str::FindChar(s, '$');
 }
 
-static void EscapeStr(StrBuilder& out, const char* s) {
+static void EscapeStr(StrBuilder& out, Str s) {
     ReportIf(!NeedsEscaping(s));
-    if (str::IsWs(*s) && *s != '\n' && *s != '\r') {
+    if (str::IsWs(s.s[0]) && s.s[0] != '\n' && s.s[0] != '\r') {
         out.AppendChar('$');
     }
-    for (const char* c = s; *c; c++) {
-        switch (*c) {
+    for (int i = 0; i < s.len; i++) {
+        char c = s.s[i];
+        switch (c) {
             case '$':
                 out.Append("$$");
                 break;
@@ -33,30 +37,37 @@ static void EscapeStr(StrBuilder& out, const char* s) {
                 out.Append("$r");
                 break;
             default:
-                out.AppendChar(*c);
+                out.AppendChar(c);
         }
     }
-    if (*s && str::IsWs(s[str::Len(s) - 1])) {
+    if (str::IsWs(s.s[s.len - 1])) {
         out.AppendChar('$');
     }
 }
 
-static char* UnescapeStr(const char* s) {
+static Str UnescapeStr(Str s) {
+    if (!s) {
+        return {};
+    }
     if (!str::FindChar(s, '$')) {
         return str::Dup(s);
     }
 
     StrBuilder ret;
-    const char* end = s + str::Len(s);
-    if ('$' == *s && str::IsWs(*(s + 1))) {
-        s++; // leading whitespace
+    int off = 0;
+    if (s.s[0] == '$' && s.len > 1 && str::IsWs(s.s[1])) {
+        off = 1; // leading whitespace
     }
-    for (const char* c = s; c < end; c++) {
-        if (*c != '$') {
-            ret.AppendChar(*c);
+    for (int i = off; i < s.len; i++) {
+        char c = s.s[i];
+        if (c != '$') {
+            ret.AppendChar(c);
             continue;
         }
-        switch (*++c) {
+        if (++i >= s.len) {
+            break;
+        }
+        switch (s.s[i]) {
             case '$':
                 ret.AppendChar('$');
                 break;
@@ -66,12 +77,10 @@ static char* UnescapeStr(const char* s) {
             case 'r':
                 ret.AppendChar('\r');
                 break;
-            case '\0':
-                break; // trailing whitespace
             default:
                 // keep all other instances of the escape character
                 ret.AppendChar('$');
-                ret.AppendChar(*c);
+                ret.AppendChar(s.s[i]);
                 break;
         }
     }
@@ -81,7 +90,7 @@ static char* UnescapeStr(const char* s) {
 // string arrays are serialized by quoting strings containing spaces
 // or quotation marks (doubling quotation marks within quotes);
 // this is simpler than full command line serialization as read by ParseCmdLine
-static char* SerializeUtf8StringArray(const Vec<Str>* strArray) {
+static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
     StrBuilder serialized;
 
     for (size_t i = 0; i < strArray->size(); i++) {
@@ -90,65 +99,70 @@ static char* SerializeUtf8StringArray(const Vec<Str>* strArray) {
         }
         Str str = strArray->at(i);
         bool needsQuotes = !str;
-        for (const char* c = str.s; str && !needsQuotes && *c; c++) {
-            needsQuotes = str::IsWs(*c) || '"' == *c;
+        for (int j = 0; str && !needsQuotes && j < str.len; j++) {
+            char c = str.s[j];
+            needsQuotes = str::IsWs(c) || '"' == c;
         }
         if (!needsQuotes) {
-            serialized.Append(str.s);
+            serialized.Append(str);
         } else {
             serialized.AppendChar('"');
-            for (const char* c = str.s; str && *c; c++) {
-                if ('"' == *c) {
+            for (int j = 0; str && j < str.len; j++) {
+                char c = str.s[j];
+                if ('"' == c) {
                     serialized.AppendChar('"');
                 }
-                serialized.AppendChar(*c);
+                serialized.AppendChar(c);
             }
             serialized.AppendChar('"');
         }
     }
 
-    return (char*)serialized.StealData();
+    return serialized.StealData();
 }
 
-static char* skipNonWhitespace(const char* s) {
-    while (*s && !str::IsWs(*s)) {
-        s++;
+static int SkipNonWhitespaceOff(Str s, int off) {
+    while (off < s.len && !str::IsWs(s.s[off])) {
+        off++;
     }
-    return (char*)s;
+    return off;
 }
 
-static char* skipWhitespace(const char* s) {
-    while (str::IsWs(*s)) {
-        s++;
+static int SkipWhitespaceOff(Str s, int off) {
+    while (off < s.len && str::IsWs(s.s[off])) {
+        off++;
     }
-    return (char*)s;
+    return off;
 }
 
-static void DeserializeUtf8StringArray(Vec<Str>* strArray, const char* serialized) {
-    char* str = (char*)serialized;
-    const char* s = str;
+static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {
+    int off = 0;
 
     for (;;) {
-        s = skipWhitespace(s);
-        if (!*s) {
+        off = SkipWhitespaceOff(serialized, off);
+        if (off >= serialized.len) {
             return;
         }
-        if ('"' == *s) {
+        if ('"' == serialized.s[off]) {
             StrBuilder part;
-            for (s++; *s && (*s != '"' || *(s + 1) == '"'); s++) {
-                if ('"' == *s) {
-                    s++;
+            for (off++; off < serialized.len;) {
+                if (serialized.s[off] == '"' && (off + 1 >= serialized.len || serialized.s[off + 1] != '"')) {
+                    break;
                 }
-                part.AppendChar(*s);
+                if (serialized.s[off] == '"') {
+                    off++;
+                }
+                part.AppendChar(serialized.s[off]);
+                off++;
             }
             strArray->Append(part.StealData());
-            if ('"' == *s) {
-                s++;
+            if (off < serialized.len && '"' == serialized.s[off]) {
+                off++;
             }
         } else {
-            const char* e = skipNonWhitespace(s);
-            strArray->Append(str::Dup(s, e - s));
-            s = e;
+            int end = SkipNonWhitespaceOff(serialized, off);
+            strArray->Append(str::Dup(serialized.s + off, end - off));
+            off = end;
         }
     }
 }
@@ -194,7 +208,6 @@ static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
 
 static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& field) {
     const u8* fieldPtr = base + field.offset;
-    AutoFreeStr value;
 
     switch (field.type) {
         case SettingType::Bool:
@@ -211,10 +224,10 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
             if (!str) {
                 return false; // skip empty strings
             }
-            if (!NeedsEscaping(str.s)) {
-                out.Append(str.s);
+            if (!NeedsEscaping(str)) {
+                out.Append(str);
             } else {
-                EscapeStr(out, str.s);
+                EscapeStr(out, str);
             }
             return true;
         }
@@ -223,10 +236,10 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
             if (!str) {
                 return false; // skip empty strings
             }
-            if (!NeedsEscaping(str.s)) {
-                out.Append(str.s);
+            if (!NeedsEscaping(str)) {
+                out.Append(str);
             } else {
-                EscapeStr(out, str.s);
+                EscapeStr(out, str);
             }
             return true;
         }
@@ -255,15 +268,16 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
             // prevent empty arrays from being replaced with the defaults
             return (*(Vec<int>**)fieldPtr)->size() > 0 || field.value != 0;
         case SettingType::ColorArray:
-        case SettingType::StringArray:
-            value.Set(SerializeUtf8StringArray(*(Vec<Str>**)fieldPtr));
-            if (!NeedsEscaping(value)) {
-                out.Append(value.Get());
+        case SettingType::StringArray: {
+            Str serialized = SerializeUtf8StringArray(*(Vec<Str>**)fieldPtr);
+            if (!NeedsEscaping(serialized)) {
+                out.Append(serialized);
             } else {
-                EscapeStr(out, value);
+                EscapeStr(out, serialized);
             }
             // prevent empty arrays from being replaced with the defaults
             return (*(Vec<Str>**)fieldPtr)->size() > 0 || field.value != 0;
+        }
         default:
             ReportIf(true);
             return false;
@@ -271,19 +285,22 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
 }
 
 // boolean true are "true", "yes" and any non-zero integer
-static bool parseBool(const char* value) {
-    if (str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4]))) {
+static bool parseBool(Str value) {
+    if (!value) {
+        return false;
+    }
+    if (str::StartsWithI(value, "true") && (value.len <= 4 || str::IsWs(value.s[4]))) {
         return true;
     }
-    if (str::StartsWithI(value, "yes") && (!value[3] || str::IsWs(value[3]))) {
+    if (str::StartsWithI(value, "yes") && (value.len <= 3 || str::IsWs(value.s[3]))) {
         return true;
     }
 
-    int i = ParseInt(value);
+    int i = ParseInt(value.s);
     return i != 0;
 }
 
-static void deserializeField(const FieldInfo& field, u8* base, const char* value) {
+static void deserializeField(const FieldInfo& field, u8* base, Str value) {
     u8* fieldPtr = base + field.offset;
 
     switch (field.type) {
@@ -307,58 +324,57 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
         } break;
 
         case SettingType::Float: {
-            const char* s = value ? value : (const char*)field.value;
+            Str s = value ? value : Str((const char*)field.value);
             str::Parse(s, "%f", (float*)fieldPtr);
             break;
         }
 
         case SettingType::Color: {
             Str* strPtr = (Str*)fieldPtr;
-            free(strPtr->s);
+            str::Free(strPtr->s);
             if (value) {
-                strPtr->s = UnescapeStr(value);
+                *strPtr = UnescapeStr(value);
             } else {
-                strPtr->s = str::Dup((const char*)field.value).s;
+                *strPtr = str::Dup(Str((const char*)field.value));
             }
-            strPtr->len = strPtr->s ? (int)strlen(strPtr->s) : 0;
         } break;
 
         case SettingType::String: {
             Str* strPtr = (Str*)fieldPtr;
-            free(strPtr->s);
+            str::Free(strPtr->s);
             if (value) {
-                strPtr->s = UnescapeStr(value);
+                *strPtr = UnescapeStr(value);
             } else {
-                strPtr->s = str::Dup((const char*)field.value).s;
+                *strPtr = str::Dup(Str((const char*)field.value));
             }
-            strPtr->len = strPtr->s ? (int)strlen(strPtr->s) : 0;
         } break;
 
         case SettingType::Compact:
             ReportIf(!IsCompactable(GetSubstruct(field)));
-            for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
-                if (value) {
-                    value = skipWhitespace(value);
-                    if (!*value) {
-                        value = nullptr;
+            {
+                int off = 0;
+                for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
+                    Str token;
+                    if (value) {
+                        off = SkipWhitespaceOff(value, off);
+                        token = off < value.len ? Str(value.s + off, value.len - off) : Str{};
                     }
-                }
-                deserializeField(GetSubstruct(field)->fields[i], fieldPtr, value);
-                if (value) {
-                    value = skipNonWhitespace(value);
+                    deserializeField(GetSubstruct(field)->fields[i], fieldPtr, token);
+                    if (value) {
+                        off = SkipNonWhitespaceOff(value, off);
+                    }
                 }
             }
             break;
         case SettingType::FloatArray:
         case SettingType::IntArray: {
-            if (!value) {
-                value = (const char*)field.value;
-            }
+            Str src = value ? value : Str((const char*)field.value);
             Vec<int>* v = *(Vec<int>**)fieldPtr;
             delete v;
             v = new Vec<int>();
             *(Vec<int>**)fieldPtr = v;
-            while (value && *value) {
+            int off = 0;
+            while (src && off < src.len) {
                 FieldInfo info{};
                 switch (field.type) {
                     case SettingType::IntArray:
@@ -371,9 +387,10 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
                         ReportIf(true);
                         break;
                 }
-                deserializeField(info, (u8*)v->AppendBlanks(1), value);
-                value = skipNonWhitespace(value);
-                value = skipWhitespace(value);
+                Str token = Str(src.s + off, src.len - off);
+                deserializeField(info, (u8*)v->AppendBlanks(1), token);
+                off = SkipNonWhitespaceOff(src, off);
+                off = SkipWhitespaceOff(src, off);
             }
         } break;
         case SettingType::ColorArray:
@@ -383,11 +400,9 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
             v = new Vec<Str>();
             *(Vec<Str>**)fieldPtr = v;
             if (value) {
-                char* v2 = UnescapeStr(value);
-                DeserializeUtf8StringArray(v, v2);
-                free(v2);
+                DeserializeUtf8StringArray(v, UnescapeStr(value));
             } else if (field.value) {
-                DeserializeUtf8StringArray(v, (const char*)field.value);
+                DeserializeUtf8StringArray(v, Str((const char*)field.value));
             }
         } break;
         default:
@@ -401,7 +416,7 @@ static inline void Indent(StrBuilder& out, int indent) {
     }
 }
 
-static void MarkFieldKnown(SquareTreeNode* node, const char* fieldName, SettingType type) {
+static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type) {
     if (!node) {
         return;
     }
@@ -449,8 +464,9 @@ static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const vo
     const char* fieldName = info->fieldNames;
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
-        ReportIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') || str::FindChar(fieldName, '[') ||
-                 str::FindChar(fieldName, ']') || NeedsEscaping(fieldName));
+        Str fieldNameStr = Str(fieldName);
+        ReportIf(str::FindChar(fieldNameStr, '=') || str::FindChar(fieldNameStr, ':') ||
+                 str::FindChar(fieldNameStr, '[') || str::FindChar(fieldNameStr, ']') || NeedsEscaping(fieldNameStr));
         if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
 #if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
             if (SettingType::Prerelease == field.type) {
@@ -458,15 +474,15 @@ static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const vo
             }
 #endif
             Indent(out, indent);
-            out.Append(fieldName);
+            out.Append(fieldNameStr);
             out.Append(" [\r\n");
             SerializeStructRec(out, GetSubstruct(field), base + field.offset,
-                               prevNode ? prevNode->GetChild(fieldName) : nullptr, indent + 1);
+                               prevNode ? prevNode->GetChild(fieldNameStr) : nullptr, indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
         } else if (SettingType::Array == field.type) {
             Indent(out, indent);
-            out.Append(fieldName);
+            out.Append(fieldNameStr);
             out.Append(" [\r\n");
             Vec<void*>* array = *(Vec<void*>**)(base + field.offset);
             if (array && array->size() > 0) {
@@ -490,7 +506,7 @@ static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const vo
         } else {
             size_t offset = out.size();
             Indent(out, indent);
-            out.Append(fieldName);
+            out.Append(fieldNameStr);
             out.Append(" = ");
             bool keep = SerializeField(out, base, field);
             if (keep) {
@@ -499,7 +515,7 @@ static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const vo
                 out.RemoveAt(offset, out.size() - offset);
             }
         }
-        MarkFieldKnown(prevNode, fieldName, field.type);
+        MarkFieldKnown(prevNode, fieldNameStr, field.type);
     }
     SerializeUnknownFields(out, prevNode, indent);
 }
@@ -513,8 +529,9 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         u8* fieldPtr = base + field.offset;
+        Str fieldNameStr = Str(fieldName);
         if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
-            SquareTreeNode* child = node ? node->GetChild(fieldName) : nullptr;
+            SquareTreeNode* child = node ? node->GetChild(fieldNameStr) : nullptr;
 #if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
             if (SettingType::Prerelease == field.type) {
                 child = nullptr;
@@ -523,15 +540,16 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
             DeserializeStructRec(GetSubstruct(field), child, fieldPtr, useDefaults);
         } else if (SettingType::Array == field.type) {
             SquareTreeNode *parent = node, *child = nullptr;
-            if (parent && (child = parent->GetChild(fieldName)) != nullptr &&
+            if (parent && (child = parent->GetChild(fieldNameStr)) != nullptr &&
                 (0 == child->data.size() || child->GetChild(""))) {
                 parent = child;
                 fieldName += str::Len(fieldName);
+                fieldNameStr = Str(fieldName);
             }
             if (child || useDefaults || !*(Vec<void*>**)fieldPtr) {
                 Vec<void*>* array = new Vec<void*>();
                 size_t idx = 0;
-                while (parent && (child = parent->GetChild(fieldName, &idx)) != nullptr) {
+                while (parent && (child = parent->GetChild(fieldNameStr, &idx)) != nullptr) {
                     void* v = DeserializeStructRec(GetSubstruct(field), child, nullptr, true);
                     array->Append(v);
                 }
@@ -539,7 +557,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
                 *(Vec<void*>**)fieldPtr = array;
             }
         } else if (field.type != SettingType::Comment) {
-            const char* value = node ? node->GetValue(fieldName) : nullptr;
+            Str value = node ? node->GetValue(fieldNameStr) : Str{};
             if (useDefaults || value) {
                 deserializeField(field, base, value);
             }
