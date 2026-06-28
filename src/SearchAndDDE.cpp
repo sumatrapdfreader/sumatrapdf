@@ -508,7 +508,7 @@ struct CountThreadData {
         this->epoch = epoch;
     }
     ~CountThreadData() {
-        str::Free(text.s);
+        str::Free(text);
         CloseHandle(thread);
     }
 };
@@ -579,7 +579,7 @@ static void CountEndTask(CountEndTaskData* d) {
         WStr pending = win->findCountPendingText;
         win->findCountPendingText = {};
         StartFindCount(win, pending, win->findCountPendingMatchCase, win->findCountPendingMatchWholeWord);
-        str::Free(pending.s);
+        str::Free(pending);
     }
 }
 

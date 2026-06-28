@@ -193,7 +193,7 @@ static bool CanViewExternally(WindowTab* tab) {
 
 void FreeExternalViewers() {
     for (ExternalViewerInfo& info : gExternalViewers) {
-        str::Free(info.exeFullPath.s);
+        str::Free(info.exeFullPath);
         info.exeFullPath = {};
     }
 }

@@ -32,13 +32,13 @@ void FileUtilTest() {
     path1 = "C:\\Program Files";
     Str path2 = path::Join("C:\\", "Program Files");
     utassert(str::Eq(path1, path2));
-    str::Free(path2.s);
+    str::Free(path2);
     path2 = path::Join(path1, "SumatraPDF");
     utassert(str::Eq(path2, "C:\\Program Files\\SumatraPDF"));
-    str::Free(path2.s);
+    str::Free(path2);
     path2 = path::Join("C:\\", "\\Windows");
     utassert(str::Eq(path2, "C:\\Windows"));
-    str::Free(path2.s);
+    str::Free(path2);
 
     utassert(path::Match("C:\\file.pdf", "*.pdf"));
     utassert(path::Match("C:\\file.pdf", "file.*"));
@@ -68,22 +68,22 @@ void FileUtilTest() {
     {
         Str path = path::Join("foo", "bar");
         utassert(str::Eq(path, "foo\\bar"));
-        str::Free(path.s);
+        str::Free(path);
 
         path = path::Join("foo\\", "bar");
         utassert(str::Eq(path, "foo\\bar"));
-        str::Free(path.s);
+        str::Free(path);
 
         path = path::Join("foo", "\\bar");
         utassert(str::Eq(path, "foo\\bar"));
-        str::Free(path.s);
+        str::Free(path);
 
         path = path::Join("foo\\", "\\bar");
         utassert(str::Eq(path, "foo\\bar"));
-        str::Free(path.s);
+        str::Free(path);
 
         // path = path::Join("foo\\", "\\bar\\", "\\z");
         // utassert(str::Eq(path, "foo\\bar\\z"));
-        // str::Free(path.s);
+        // str::Free(path);
     }
 }

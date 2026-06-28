@@ -487,7 +487,7 @@ TryAgainWOW64:
         goto TryAgainWOW64;
     }
     TempStr resv = ToUtf8Temp(val.s);
-    str::Free(val.s);
+    str::Free(val);
     return resv;
 }
 

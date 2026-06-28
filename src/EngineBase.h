@@ -28,7 +28,7 @@ extern Kind kindEngineTxt;
 bool IsExternalUrl(Str url);
 
 static inline void SetDefaultExt(Str& ext, Str snew) {
-    str::Free(ext.s);
+    str::Free(ext);
     ext = str::Dup(snew);
 }
 
@@ -160,8 +160,8 @@ struct PageDestinationURL : IPageDestination {
     }
 
     ~PageDestinationURL() override {
-        str::Free(url.s);
-        str::Free(displayUrl.s);
+        str::Free(url);
+        str::Free(displayUrl);
     }
 
     Str GetValue2() override {
@@ -190,8 +190,8 @@ struct PageDestinationFile : IPageDestination {
     }
 
     ~PageDestinationFile() override {
-        str::Free(path.s);
-        str::Free(dest.s);
+        str::Free(path);
+        str::Free(dest);
     }
 
     Str GetValue2() override { return path; }
@@ -262,7 +262,7 @@ struct PageElementComment : IPageElement {
         comment = str::Dup(c);
     }
 
-    ~PageElementComment() override { str::Free(comment.s); }
+    ~PageElementComment() override { str::Free(comment); }
 
     Str GetValue() override { return comment; }
 };

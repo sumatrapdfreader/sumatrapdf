@@ -77,7 +77,7 @@ static Color gMsgColor;
 static StrVec gProcessesToClose;
 
 PreviousInstallationInfo::~PreviousInstallationInfo() {
-    str::Free(installationDir.s);
+    str::Free(installationDir);
 }
 
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app

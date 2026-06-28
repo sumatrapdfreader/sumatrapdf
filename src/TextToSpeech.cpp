@@ -1167,7 +1167,7 @@ bool TtsSpeakUtf8(Str text) {
         return false;
     }
 
-    str::Free(gTtsSpokenText.s);
+    str::Free(gTtsSpokenText);
     gTtsSpokenText = str::Dup(textW);
     gTtsActive = true;
     return true;

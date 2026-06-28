@@ -43,7 +43,7 @@ static void CliPrintf(Str fmt, ...) {
     Str msg = str::FmtV(fmt, args);
     va_end(args);
     CliPrint(msg);
-    str::Free(msg.s);
+    str::Free(msg);
 }
 
 static Str ChmSpaceName(int space) {

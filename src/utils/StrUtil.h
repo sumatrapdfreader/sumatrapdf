@@ -76,6 +76,11 @@ enum class TrimOpt {
 
 void Free(Str s);
 void Free(WStr s);
+// catch passing a raw char*/wchar_t* (e.g. the .s member): pass the Str/WStr
+// directly instead -- going through the pointer builds an unnecessary temp Str
+// (with a strlen). To free a raw owned pointer use ::free().
+void Free(const char*) = delete;
+void Free(const wchar_t*) = delete;
 void FreePtr(Str* s);
 void FreePtr(WStr* s);
 

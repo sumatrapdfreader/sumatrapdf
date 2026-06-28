@@ -1599,7 +1599,7 @@ static void ResetHomeCloseBtn() {
     HomeCloseBtn& b = gHomeCloseBtn;
     b.visible = false;
     b.isHover = false;
-    str::Free(b.filePath.s);
+    str::Free(b.filePath);
     b.filePath = {};
     gHomeCloseBtnPaintedRc = {};
 }
@@ -1613,7 +1613,7 @@ void HomePageHideCloseButton() {
     EraseHomeCloseGlyph(win);
     b.visible = false;
     b.isHover = false;
-    str::Free(b.filePath.s);
+    str::Free(b.filePath);
     b.filePath = {};
 }
 

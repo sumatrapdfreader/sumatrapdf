@@ -2084,7 +2084,7 @@ EngineCbx::EngineCbx(MultiFormatArchive* archive) {
 EngineCbx::~EngineCbx() {
     delete tocTree;
     delete cbxArchive;
-    str::Free(physicalPath.s);
+    str::Free(physicalPath);
 }
 
 EngineBase* EngineCbx::Clone() {
@@ -2517,7 +2517,7 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, 
             return {}; // user cancelled
         }
         engine = EngineCbx::CreateFromFile(path, pwd, nullptr, nullptr, hintKind, realPath);
-        str::Free(pwd.s);
+        str::Free(pwd);
         if (engine) {
             return engine;
         }

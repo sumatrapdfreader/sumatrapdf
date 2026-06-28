@@ -149,8 +149,8 @@ struct PageDestinationMupdf : IPageDestination {
     float GetZoom2() override { return destZoom; }
 
     ~PageDestinationMupdf() override {
-        str::Free(value.s);
-        str::Free(name.s);
+        str::Free(value);
+        str::Free(name);
     }
 
     Str GetValue2() override;
@@ -1526,7 +1526,7 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     }
 
     LinkRectList* list = LinkifyText(pageText, coords);
-    str::Free(pageText.s);
+    str::Free(pageText);
 
     for (int i = 0; i < list->links.Size(); i++) {
         fz_rect bbox = list->coords.at(i);

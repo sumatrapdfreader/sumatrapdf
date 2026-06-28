@@ -176,7 +176,7 @@ struct ImageEditWindow {
     ImageEditWindow() = default;
     ~ImageEditWindow() {
         delete srcBitmap;
-        str::Free(filePath.s);
+        str::Free(filePath);
         delete btnSave;
         delete btnCrop;
         delete btnResize;
@@ -1252,7 +1252,7 @@ static void OnSave(ImageEditWindow* ew) {
         LoadArgs args(savedPath, win);
         StartLoadDocument(&args);
     }
-    str::Free(savedPath.s);
+    str::Free(savedPath);
 }
 
 static void SwitchToSaveMode(ImageEditWindow* ew) {

@@ -278,7 +278,7 @@ static void AppendTestResult(ControlRequest* req, int exitCode, Str result) {
     AppendArgInt(req->results, exitCode);
     AppendArgString(req->results, result);
     AppendArgEnd(req->results);
-    str::Free(result.s);
+    str::Free(result);
 }
 
 static void ExecuteControlRequest(ControlRequest* req) {

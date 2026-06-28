@@ -602,7 +602,7 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
 static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
     WStr ws = ts.ExtractText(" ");
     TempStr res = ToUtf8Temp(ws);
-    str::Free(ws.s);
+    str::Free(ws);
     return res;
 }
 

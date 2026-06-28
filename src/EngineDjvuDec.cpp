@@ -752,7 +752,7 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
     }
     res.coords = wcoords;
     res.len = wlen;
-    str::Free(u.text.s);
+    str::Free(u.text);
     free(u.coords);
     return res;
 }

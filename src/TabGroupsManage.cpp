@@ -226,10 +226,10 @@ static void FreeTabGroup(TabGroup* group) {
     if (!group) {
         return;
     }
-    str::Free(group->name.s);
+    str::Free(group->name);
     if (group->tabFiles) {
         for (auto* tf : *group->tabFiles) {
-            str::Free(tf->path.s);
+            str::Free(tf->path);
             free(tf);
         }
         delete group->tabFiles;

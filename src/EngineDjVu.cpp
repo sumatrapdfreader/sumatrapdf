@@ -69,8 +69,8 @@ struct PageDestinationDjVu : IPageDestination {
         }
     }
     ~PageDestinationDjVu() {
-        str::Free(link.s);
-        str::Free(value.s);
+        str::Free(link);
+        str::Free(value);
     }
 
     Str GetValue2() override {

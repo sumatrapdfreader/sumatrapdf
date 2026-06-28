@@ -112,7 +112,7 @@ WStr DecodeHtmlEntities(Str string, uint codepage) {
 Str DecodeHtmlEntitiesTemp(Str s, uint codepage) {
     WStr ws = DecodeHtmlEntities(s, codepage);
     Str res = ToUtf8Temp(ws);
-    str::Free(ws.s);
+    str::Free(ws);
     return res;
 }
 

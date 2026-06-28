@@ -109,9 +109,9 @@ void Printer::SetDevMode(DEVMODEW* dm) {
 }
 
 Printer::~Printer() {
-    str::Free(name.s);
-    str::Free(output.s);
-    str::Free(docName.s);
+    str::Free(name);
+    str::Free(output);
+    str::Free(docName);
     free((void*)devMode);
     free((void*)papers);
     free((void*)paperSizes);
@@ -489,7 +489,7 @@ Printer* NewPrinter(Str printerName) {
             TempStr name = ToUtf8Temp(WStr(paperNamesSeq + i * paperNameSize));
             printer->paperNames.Append(name);
         }
-        str::Free(paperNamesSeq);
+        free(paperNamesSeq);
     }
 
     {
@@ -511,7 +511,7 @@ Printer* NewPrinter(Str printerName) {
                 TempStr name = ToUtf8Temp(WStr(binNamesSeq + i * binNameSize));
                 printer->binNames.Append(name);
             }
-            str::Free(binNamesSeq);
+            free(binNamesSeq);
         }
     }
 

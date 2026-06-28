@@ -176,7 +176,7 @@ static void FreeUtf8StringArray(Vec<Str>* strArray) {
         return;
     }
     for (size_t i = 0; i < strArray->size(); i++) {
-        str::Free(strArray->at(i).s);
+        str::Free(strArray->at(i));
     }
     delete strArray;
 }
@@ -335,7 +335,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
 
         case SettingType::Color: {
             Str* strPtr = (Str*)fieldPtr;
-            str::Free(strPtr->s);
+            str::Free(*strPtr);
             if (!str::IsNull(value)) {
                 *strPtr = UnescapeStr(value);
             } else {
@@ -345,7 +345,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
 
         case SettingType::String: {
             Str* strPtr = (Str*)fieldPtr;
-            str::Free(strPtr->s);
+            str::Free(*strPtr);
             if (!str::IsNull(value)) {
                 *strPtr = UnescapeStr(value);
             } else {

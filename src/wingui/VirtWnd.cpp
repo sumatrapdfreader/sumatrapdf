@@ -44,7 +44,7 @@ VirtWndText::VirtWndText(HWND hwnd, Str s, HFONT font) {
 }
 
 VirtWndText::~VirtWndText() {
-    str::Free(s.s);
+    str::Free(s);
 }
 
 Size VirtWndText::Layout(const Constraints bc) {

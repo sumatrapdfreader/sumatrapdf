@@ -816,7 +816,7 @@ void MaybeDelayedWarningNotification(Str fmt, ...) {
         StrNode* node = AllocStrNode(msg);
         ListInsertFront(&gDelayedNotifications, node);
     }
-    str::Free(msg.s);
+    str::Free(msg);
 }
 
 void ShowMaybeDelayedNotifications(HWND hwndParent) {

@@ -740,7 +740,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 // NormalizeURL doesn't modify its url arg, so no need to dup it first
                 Str src = NormalizeURL(attrInfo->val, pagePath);
                 itemSrc.Set(strconv::FromHtmlUtf8(src));
-                str::Free(src.s);
+                str::Free(src);
             }
         }
     }

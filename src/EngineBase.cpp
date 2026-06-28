@@ -45,7 +45,7 @@ bool IsExternalUrl(Str url) {
 }
 
 void FreePageText(PageText* pageText) {
-    str::Free(pageText->text.s);
+    str::Free(pageText->text);
     free((void*)pageText->coords);
     pageText->text = {};
     pageText->coords = nullptr;
@@ -61,7 +61,7 @@ static void EnsurePageText(PageText* pageText) {
 }
 
 void FreePageTextUtf8(PageTextUtf8* pageText) {
-    str::Free(pageText->text.s);
+    str::Free(pageText->text);
     free((void*)pageText->coords);
     pageText->text = {};
     pageText->coords = nullptr;
@@ -69,8 +69,8 @@ void FreePageTextUtf8(PageTextUtf8* pageText) {
 }
 
 PageDestination::~PageDestination() {
-    str::Free(value.s);
-    str::Free(name.s);
+    str::Free(value);
+    str::Free(name);
 }
 
 // string value associated with the destination (e.g. a path or a URL)
@@ -147,7 +147,7 @@ TocItem::~TocItem() {
         delete next;
         next = tmp;
     }
-    str::Free(title.s);
+    str::Free(title);
 }
 
 void TocItem::AddSibling(TocItem* sibling) {
@@ -367,13 +367,13 @@ EngineBase::~EngineBase() {
         for (int i = 0; i < pageCount; i++) {
             PageText* pt = &pagesText[i];
             free(pt->coords);
-            str::Free(pt->text.s);
+            str::Free(pt->text);
         }
         free(pagesText);
     }
     free(pagesTextState);
     DeleteCriticalSection(&textCacheLock);
-    str::Free(defaultExt.s);
+    str::Free(defaultExt);
     ArenaDelete(arena);
 }
 

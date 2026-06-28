@@ -120,7 +120,7 @@ DirIter::iterator::iterator(const DirIter* di, bool didFinish) {
 }
 
 DirIter::iterator::~iterator() {
-    str::Free(pattern.s);
+    str::Free(pattern);
 }
 
 DirIter::iterator DirIter::begin() const {
@@ -174,7 +174,7 @@ struct DirTraverseThreadData {
     StrQueue* queue = nullptr; // we don't own it
     Str dir;
     bool recurse = false;
-    ~DirTraverseThreadData() { str::Free(dir.s); }
+    ~DirTraverseThreadData() { str::Free(dir); }
 };
 
 static void DirTraverseThread(DirTraverseThreadData* td) {

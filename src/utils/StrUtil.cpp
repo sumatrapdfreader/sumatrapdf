@@ -571,7 +571,7 @@ Str FindI(Str s, Str toFind) {
 
 void ReplacePtr(Str* s, Str snew) {
     if (s->s != snew.s) {
-        str::Free(s->s);
+        str::Free(*s);
         *s = snew;
     }
 }
@@ -580,7 +580,7 @@ void ReplaceWithCopy(Str* s, Str snew) {
     // dup before free so it's safe even if snew aliases *s; dup is always a
     // fresh allocation so it can never alias the old s->s -- no check needed
     Str dup = str::Dup(snew);
-    str::Free(s->s);
+    str::Free(*s);
     *s = dup;
 }
 
@@ -2377,7 +2377,7 @@ bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith) {
     s.Reset();
     if (newStr) {
         s.Append(newStr);
-        str::Free(newStr.s);
+        str::Free(newStr);
     }
     return true;
 }
@@ -2561,7 +2561,7 @@ size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
     return nReplaced;
 }
 
-// free() the result via str::Free(s.s) or str::FreePtr(&s)
+// free() the result via str::Free(s) or str::FreePtr(&s)
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     if (!s || str::IsEmpty(toReplace) || !replaceWith) {
         return {};

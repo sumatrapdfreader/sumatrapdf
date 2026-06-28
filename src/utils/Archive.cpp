@@ -52,8 +52,8 @@ MultiFormatArchive::~MultiFormatArchive() {
     for (auto& fi : fileInfos_) {
         free((void*)fi->data);
     }
-    str::Free(archivePath_.s);
-    str::Free(password.s);
+    str::Free(archivePath_);
+    str::Free(password);
     ArenaDelete(allocator_);
 }
 
@@ -163,7 +163,7 @@ bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const Arc
         // decompression failed above have failed=true and data=nullptr, and
         // later GetFileDataById will see archivePath_==nullptr and mark
         // the entry as failed.
-        str::Free(archivePath_.s);
+        str::Free(archivePath_);
         archivePath_ = {};
         rarFilePath_ = {}; // arena-allocated; don't free
     }

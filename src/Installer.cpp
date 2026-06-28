@@ -1370,7 +1370,7 @@ Exit:
     }
 #if 0 // technically a leak but there's no point
     str::Free(installerLogPath);
-    str::Free(gFirstError.s);
+    str::Free(gFirstError);
 #endif
     return ret;
 }
