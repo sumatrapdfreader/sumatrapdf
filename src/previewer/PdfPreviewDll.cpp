@@ -144,7 +144,7 @@ STDAPI DllRegisterServer() {
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
     }
-    logf("DllRegisterServer: dllPath=%s\n", dllPath);
+    logf("DllRegisterServer: dllPath=%s\n", dllPath.s);
 
     // for compat with SumatraPDF 3.3 and lower
     // in 3.4 we call this code from the installer
