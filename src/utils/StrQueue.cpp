@@ -58,11 +58,11 @@ Str StrQueue::Append(Str s, int len) {
 constexpr uintptr_t kStrQueueSentinel = (uintptr_t)-2;
 
 static Str StrQueueSentinel() {
-    return Str((char*)kStrQueueSentinel, 0);
+    return Str((char*)kStrQueueSentinel, 0); // str-port: sentinel marker
 }
 
 bool StrQueue::IsSentinel(Str s) {
-    return s.s == (char*)kStrQueueSentinel;
+    return s.s == (char*)kStrQueueSentinel; // str-port: sentinel marker
 }
 
 // is blocking

@@ -257,7 +257,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         if (!nextOff) {
             break;
         }
-        notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff);
+        notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff); // str-port: Win32
     }
 
     StartMonitoringDirForChanges(wd);

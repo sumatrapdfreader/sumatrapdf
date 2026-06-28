@@ -645,7 +645,7 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
     uncompressedBuf.password = password;
 
     RAROpenArchiveDataEx arcData = {nullptr};
-    arcData.ArcNameW = (WCHAR*)rarPathW;
+    arcData.ArcNameW = (WCHAR*)rarPathW.s; // str-port: Win32 unrar
     arcData.OpenMode = eagerLoad ? RAR_OM_EXTRACT : RAR_OM_LIST;
     arcData.Callback = unrarCallback;
     arcData.UserData = (LPARAM)&uncompressedBuf;

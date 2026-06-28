@@ -181,7 +181,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* 
         fi->uncompressedCrc32 = br.UInt32();
         fi->ftModified.dwLowDateTime = br.UInt32();
         fi->ftModified.dwHighDateTime = br.UInt32();
-        fi->name = Str((char*)archiveHeader + br.Offset());
+        fi->name = Str((char*)archiveHeader + br.Offset()); // str-port: C-string archive entry
         br.Skip(fileHeaderSize - FILE_ENTRY_MIN_SIZE);
         if (br.Char() != '\0') {
             return false;

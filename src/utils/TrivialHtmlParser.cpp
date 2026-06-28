@@ -90,7 +90,7 @@ WStr DecodeHtmlEntitites(Str string, uint codepage) {
 
         if (entityEnd != src) {
             size_t entityLen = entityEnd - src;
-            rune = HtmlEntityNameToRune(WStr((wchar_t*)src, (int)entityLen));
+            rune = HtmlEntityNameToRune(WStr((wchar_t*)src, (int)entityLen)); // str-port: UTF-16 entity name
         }
         if (-1 != rune) {
             *dst++ = IntToChar(rune);

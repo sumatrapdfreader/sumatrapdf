@@ -41,11 +41,11 @@ class HasherComparator {
 
 static Str KeyAsStr(uintptr_t key) {
     // interned hash table keys are NUL-terminated
-    return Str((char*)key);
+    return Str((char*)key); // str-port: interned key
 }
 
 static WStr KeyAsWStr(uintptr_t key) {
-    return WStr((wchar_t*)key);
+    return WStr((wchar_t*)key); // str-port: interned key
 }
 
 class StrKeyHasherComparator : public HasherComparator {

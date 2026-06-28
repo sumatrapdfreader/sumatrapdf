@@ -156,8 +156,8 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
             // allocate memory for the result string
             // I'm banking that text after resolving entities will
             // be smaller than the original
-            resLen = (size_t)str.len + 8; // +8 just in case
-            res.s = (char*)Alloc(alloc, resLen);
+            resLen = (size_t)str.len + 8;        // +8 just in case
+            res.s = (char*)Alloc(alloc, resLen); // str-port: owned heap
         }
         MemAppend(res.s, dstOff, Str(str.s + chunkStart, off - chunkStart));
         // off points at '&'

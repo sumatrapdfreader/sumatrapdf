@@ -68,8 +68,8 @@ static bool ExtractSignature(Str hexSignature, const void* data, size_t& dataLen
         if (dataLen < 20 || memchr(data, 0, dataLen)) {
             return false;
         }
-        const char* lastLine = (const char*)data + dataLen - 1; // str-port: binary PEM trailer scan
-        while (lastLine > (const char*)data && *(lastLine - 1) != '\n') {
+        const char* lastLine = (const char*)data + dataLen - 1;           // str-port: binary PEM trailer scan
+        while (lastLine > (const char*)data && *(lastLine - 1) != '\n') { // str-port: binary PEM scan
             lastLine--;
         }
         if (lastLine == data || !str::Find(Str(lastLine), Str(" Signature sha1:"))) {
