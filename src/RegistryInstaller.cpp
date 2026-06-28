@@ -491,11 +491,11 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
         keyname = str::JoinTemp("Software\\Classes\\", ext, openWithVal);
         if (LoggedDeleteRegKey(hkey, keyname)) {
             // remove empty keys that the installer might have created
-            char* p = str::FindCharLast(keyname, '\\'); // str-port: mutable registry key path trim
-            *p = 0;
+            Str p = str::FindCharLast(keyname, '\\'); // str-port: mutable registry key path trim
+            *p.s = 0;
             if (DeleteEmptyRegKey(hkey, keyname)) {
                 p = str::FindCharLast(keyname, '\\'); // str-port: mutable registry key path trim
-                *p = 0;
+                *p.s = 0;
                 DeleteEmptyRegKey(hkey, keyname);
             }
         }

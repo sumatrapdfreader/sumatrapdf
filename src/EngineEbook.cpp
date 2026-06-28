@@ -765,7 +765,7 @@ void EbookTocBuilder::Visit(Str name, Str url, int level) {
         dest = NewSimpleDest(0, RectF(), 0.f, url);
     } else {
         dest = engine->GetNamedDest(url);
-        if (!dest && str::FindChar(url.s, '%')) {
+        if (!dest && str::FindChar(url, '%')) {
             TempStr decodedUrl = str::DupTemp(url);
             url::DecodeInPlace(decodedUrl.s);
             dest = engine->GetNamedDest(decodedUrl);

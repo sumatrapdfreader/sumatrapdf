@@ -151,11 +151,11 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
 
     for (int i = skipFiles; i < files.Size(); i++) {
         AutoFreeStr filePath(str::Dup(files.At(i)));
-        char* sep = str::FindCharLast(filePath, ':');
+        Str sep = str::FindCharLast(Str(filePath.Get()), ':');
         AutoFreeStr utf8Name;
         if (sep) {
-            utf8Name = str::Dup(sep + 1);
-            *sep = '\0';
+            utf8Name = str::Dup(Str(sep.s + 1));
+            *sep.s = '\0';
         } else {
             utf8Name = str::Dup(filePath);
         }

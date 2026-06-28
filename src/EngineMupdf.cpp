@@ -1005,7 +1005,7 @@ static int LinkifyMultilineText(LinkRectList* list, WStr pageText, int startOff,
 inline bool IsEmailUsernameChar(WCHAR c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
-    return iswalnum(c) || c && str::FindChar(L".!#$%&'*+=?^_`{|}~-", c);
+    return iswalnum(c) || c && str::FindChar(WStr(L".!#$%&'*+=?^_`{|}~-"), c);
 }
 inline bool IsEmailDomainChar(WCHAR c) {
     return iswalnum(c) || '-' == c;

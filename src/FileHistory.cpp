@@ -367,14 +367,14 @@ bool DocumentPathExists(Str path) {
     if (file::Exists(path) || dir::Exists(path)) {
         return true;
     }
-    auto pos = str::FindCharLast(path.s + 2, ':');
+    Str pos = str::FindCharLast(Str(path.s + 2, path.len - 2), ':');
     if (!pos) {
         return false;
     }
     // remove information needed for pointing at embedded documents
     // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
     // container document exists
-    TempStr realPath = str::DupTemp(path.s, pos - path.s);
+    TempStr realPath = str::DupTemp(path.s, (int)(pos.s - path.s));
     return file::Exists(realPath);
 }
 

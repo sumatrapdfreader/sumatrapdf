@@ -255,7 +255,7 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     //   2. PDF text extraction split a single-word surname by dropping a
     //      glyph ("Bash b" for "Bashab") — the longest fragment ("Bash")
     //      prefix-matches the real surname in the bibliography.
-    if (!result && cite.surname && str::FindChar(cite.surname, ' ')) {
+    if (!result && cite.surname && str::FindChar(Str(cite.surname), ' ')) {
         struct Part {
             Str s;
         };

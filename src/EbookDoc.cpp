@@ -565,7 +565,7 @@ ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
 
     AutoFreeStr url(NormalizeURL(fileName, Str(pagePath)).s);
     // some EPUB producers use wrong path separators
-    if (str::FindChar(url, '\\')) {
+    if (str::FindChar(Str(url.Get()), '\\')) {
         str::TransCharsInPlace(Str(url), "\\", "/");
     }
     for (ImageData& img : images) {

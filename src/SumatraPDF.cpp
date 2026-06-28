@@ -3815,20 +3815,20 @@ static void SaveCurrentFileAs(MainWindow* win) {
     WCHAR dstFileName[MAX_PATH];
     TempStr baseName = path::GetBaseNameTemp(srcFileName);
     str::BufSet(dstFileName, dimof(dstFileName), baseName);
-    if (str::FindChar(dstFileName, ':')) {
+    if (str::FindChar(WStr(dstFileName), L':')) {
         // handle embed-marks (for embedded PDF documents):
         // remove the container document's extension and include
         // the embedding reference in the suggested filename
-        WCHAR* colon = (WCHAR*)str::FindChar(dstFileName, ':');
-        str::TransCharsInPlace(WStr(colon), L":", L"_");
+        WStr colon = str::FindChar(WStr(dstFileName), L':');
+        str::TransCharsInPlace(colon, L":", L"_");
         WCHAR* ext;
-        for (ext = colon; ext > dstFileName && *ext != '.'; ext--) {
+        for (ext = colon.s; ext > dstFileName && *ext != '.'; ext--) {
             // no-op
         }
         if (ext == dstFileName) {
-            ext = colon;
+            ext = colon.s;
         }
-        memmove(ext, colon, (str::Len(colon) + 1) * sizeof(WCHAR));
+        memmove(ext, colon.s, (str::Len(colon) + 1) * sizeof(WCHAR));
     } else if (str::EndsWithI(dstFileName, ToWStrTemp(defExt))) {
         // Remove the extension so that it can be re-added depending on the chosen filter
         int idx = str::Leni(dstFileName) - str::Leni(defExt);

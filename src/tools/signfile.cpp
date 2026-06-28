@@ -168,7 +168,8 @@ int main() {
         // cut previous signature from file
         char* lastLine = data + dataLen - 1;
         while (lastLine > data.Get() && *(lastLine - 1) != '\n') lastLine--;
-        const char* lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
+        Str dataStr(data.Get(), (int)dataLen);
+        const char* lf = str::Find(dataStr, "\r\n") || !str::FindChar(dataStr, '\n') ? "\r\n" : "\n";
         if (lastLine > data && str::StartsWith(lastLine, inFileCommentSyntax.Get()) &&
             str::StartsWith(lastLine + str::Len(inFileCommentSyntax), " Signature sha1:")) {
             strcpy_s(lastLine, 3, lf);
@@ -203,7 +204,8 @@ int main() {
     // convert signature to ASCII text
     hexSignature.Set(str::MemToHex((const u8*)signature.Get(), sigLen));
     if (inFileCommentSyntax) {
-        const char* lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
+        Str dataStr(data.Get(), (int)dataLen);
+        const char* lf = str::Find(dataStr, "\r\n") || !str::FindChar(dataStr, '\n') ? "\r\n" : "\n";
         data.Set(
             str::Format("%s%s Signature sha1:%s%s", data.Get(), inFileCommentSyntax.Get(), hexSignature.Get(), lf));
         dataLen = str::Len(data);

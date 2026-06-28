@@ -695,8 +695,9 @@ bool IsUntrustedFile(Str filePath, Str fileURL) {
 
     // check all parents of embedded files and ADSs as well
     TempStr path = str::DupTemp(filePath);
-    while (str::Leni(path) > 2 && str::FindChar(path.s + 2, ':')) {
-        *str::FindCharLast(path.s, ':') = '\0';
+    while (str::Leni(path) > 2 && str::FindChar(Str(path.s + 2, path.len - 2), ':')) {
+        Str lastColon = str::FindCharLast(path, ':');
+        *lastColon.s = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET) {
             return true;
         }

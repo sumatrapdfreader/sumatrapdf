@@ -50,9 +50,11 @@ void ChmWebviewWnd::OnBrowserMessage(Str msg) {
 }
 
 static char* ChmMimeFromPath(const char* path, const ByteSlice& data) {
-    const char* ext = str::FindCharLast(path, '.');
+    Str pathStr(path);
+    Str ext = str::FindCharLast(pathStr, '.');
     if (ext && str::FindChar(ext, ';')) {
-        TempStr trimmed = str::DupTemp(path, str::FindChar(ext, ';') - path);
+        Str semi = str::FindChar(ext, ';');
+        TempStr trimmed = str::DupTemp(path, (int)(semi.s - path));
         return ChmMimeFromPath(trimmed, data);
     }
 

@@ -422,48 +422,8 @@ FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src);
 }
 
-FORCEINLINE Str Find(const Str& str, const char* find) {
-    return Find(str, Str(find));
-}
-FORCEINLINE Str FindI(const Str& str, const char* find) {
-    return FindI(str, Str(find));
-}
 FORCEINLINE Str ToLower(const char* s) {
     return ToLower(Str(s));
-}
-FORCEINLINE char* FindChar(char* str, char c) {
-    Str res = FindChar(Str(str), c);
-    return res.s;
-}
-FORCEINLINE const char* FindChar(const char* str, char c) {
-    Str res = FindChar(Str((char*)str), c);
-    return res.s;
-}
-FORCEINLINE const WCHAR* FindChar(const WCHAR* str, WCHAR c) {
-    return FindChar(WStr(str), c).s;
-}
-FORCEINLINE WCHAR* FindChar(WCHAR* str, WCHAR c) {
-    return FindChar(WStr(str), c).s;
-}
-FORCEINLINE char* FindCharLast(char* str, char c) {
-    Str res = FindCharLast(Str(str), c);
-    return res.s;
-}
-FORCEINLINE const char* FindCharLast(const char* str, char c) {
-    Str res = FindCharLast(Str((char*)str), c);
-    return res.s;
-}
-FORCEINLINE int FindCharIdx(const char* str, char c) {
-    return FindCharIdx(Str((char*)str), c);
-}
-FORCEINLINE const WCHAR* Find(const WCHAR* str, const WCHAR* find) {
-    return Find(WStr(str), WStr(find)).s;
-}
-FORCEINLINE const WCHAR* Find(const WStr& str, const WCHAR* find) {
-    return Find(str, WStr(find)).s;
-}
-FORCEINLINE const WCHAR* Find(const WCHAR* str, WStr find) {
-    return Find(WStr(str), find).s;
 }
 FORCEINLINE bool HexToMem(const char* s, u8* buf, size_t bufLen) {
     return HexToMem(Str((char*)s), buf, bufLen);
