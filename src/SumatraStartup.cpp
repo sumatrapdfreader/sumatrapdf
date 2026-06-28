@@ -217,27 +217,26 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
     }
 
     StrBuilder cmd;
-    cmd.AppendFmt("[Open(\"%s\", %d, 1, 0)]", fullPath, newWindow);
+    cmd.AppendFmt("[Open(\"%s\", %d, 1, 0)]", fullPath.s, newWindow);
     if (i.namedDest && isFirstWin) {
-        cmd.AppendFmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath, i.namedDest);
+        cmd.AppendFmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath.s, i.namedDest.s);
     } else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.AppendFmt("[GotoPage(\"%s\", %d)]", fullPath, i.pageNumber);
+        cmd.AppendFmt("[GotoPage(\"%s\", %d)]", fullPath.s, i.pageNumber);
     }
     if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         Str viewModeStr = DisplayModeToString(i.startView);
-        auto viewMode = ToWStrTemp(viewModeStr);
-        cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath, viewMode, i.startZoom, i.startScroll.x,
-                      i.startScroll.y);
+        cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath.s, viewModeStr.s, i.startZoom,
+                      i.startScroll.x, i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         TempStr srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
-        cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath, srcPath, i.forwardSearchLine);
+        cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath.s, srcPath.s, i.forwardSearchLine);
     }
     if (i.search) {
         // TODO: quote if i.search has '"' in it
-        cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullPath, i.search);
+        cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullPath.s, i.search.s);
     }
 
     if (i.reuseDdeInstance) {
