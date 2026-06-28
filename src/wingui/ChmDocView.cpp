@@ -49,12 +49,11 @@ void ChmWebviewWnd::OnBrowserMessage(Str msg) {
     WebviewWnd::OnBrowserMessage(msg);
 }
 
-static char* ChmMimeFromPath(const char* path, const ByteSlice& data) {
-    Str pathStr(path);
-    Str ext = str::FindCharLast(pathStr, '.');
+static Str ChmMimeFromPath(Str path, const ByteSlice& data) {
+    Str ext = str::FindCharLast(path, '.');
     if (ext && str::FindChar(ext, ';')) {
         Str semi = str::FindChar(ext, ';');
-        TempStr trimmed = str::DupTemp(path, (int)(semi.s - path));
+        TempStr trimmed = str::DupTemp(path.s, (int)(semi.s - path.s));
         return ChmMimeFromPath(trimmed, data);
     }
 
@@ -71,7 +70,7 @@ static char* ChmMimeFromPath(const char* path, const ByteSlice& data) {
         for (int i = 0; i < dimof(mimeTypes); i++) {
             if (str::EqI(ext, mimeTypes[i].ext)) {
                 if (str::StartsWith(mimeTypes[i].mimetype, "image/")) {
-                    const char* imgExt = GfxFileExtFromData(data);
+                    Str imgExt = GfxFileExtFromData(data);
                     if (imgExt) {
                         for (int j = 0; j < dimof(mimeTypes); j++) {
                             if (str::Eq(imgExt, mimeTypes[j].ext)) {
@@ -98,7 +97,7 @@ bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
     }
     res->data = (char*)data.data();
     res->dataLen = data.size();
-    res->contentType = ChmMimeFromPath(path, data);
+    res->contentType = ChmMimeFromPath(path, data).s;
     res->ownsData = false;
     return true;
 }
