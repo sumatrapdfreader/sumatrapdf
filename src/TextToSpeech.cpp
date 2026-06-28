@@ -1239,9 +1239,9 @@ Str TtsGetVoiceId() {
 
 void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {
     for (TtsVoiceInfo& voice : voices) {
-        free(voice.id.s);
-        free(voice.name.s);
-        free(voice.lang.s);
+        str::Free(voice.id);
+        str::Free(voice.name);
+        str::Free(voice.lang);
     }
     voices.Reset();
 }

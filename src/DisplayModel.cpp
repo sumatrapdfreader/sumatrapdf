@@ -289,7 +289,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->rotation = rotation;
     fs->displayR2L = displayR2L;
 
-    free(fs->decryptionKey.s);
+    str::Free(fs->decryptionKey);
     fs->decryptionKey = engine->decryptionKey.s ? str::Dup(engine->decryptionKey.s) : nullptr;
 }
 

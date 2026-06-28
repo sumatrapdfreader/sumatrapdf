@@ -613,14 +613,14 @@ static void FreeStructData(const StructInfo* info, u8* base) {
             }
             case SettingType::Color: {
                 Str* str = (Str*)fieldPtr;
-                free(str->s);
+                str::Free(*str);
                 str->s = nullptr;
                 str->len = 0;
                 break;
             }
             case SettingType::String: {
                 Str* str = (Str*)fieldPtr;
-                free(str->s);
+                str::Free(*str);
                 str->s = nullptr;
                 str->len = 0;
                 break;
