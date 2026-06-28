@@ -9,7 +9,7 @@ int ListBoxModelStrings::ItemsCount() {
 }
 
 Str ListBoxModelStrings::Item(int i) {
-    return strings.AtStr(i);
+    return strings.At(i);
 }
 
 void FillWithItems(HWND hwnd, ListBoxModel* model) {

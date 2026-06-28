@@ -1238,7 +1238,7 @@ bool DumpExifFile(Str path) {
 void DumpExif(const Flags& flags) {
     bool any = false;
     for (int i = 0; i < flags.fileNames.Size(); i++) {
-        if (DumpExifFile(flags.fileNames.AtStr(i))) {
+        if (DumpExifFile(flags.fileNames.At(i))) {
             any = true;
         }
     }

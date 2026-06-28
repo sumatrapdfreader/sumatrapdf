@@ -18,7 +18,7 @@ static void ValidateSize(StrVec* v) {
 }
 
 static void ValidateAtStr(StrVec* v, int idx, const char* s) {
-    Str sp = v->AtStr(idx);
+    Str sp = v->At(idx);
     ReportIf(!str::Eq(s, sp.s));
     ReportIf(str::Leni(s) != sp.len);
 }
@@ -77,14 +77,14 @@ static void TestRemoveAt(StrVec* v) {
     while (v->Size() > 0) {
         int n = v->Size();
         int idx = v->Size() / 2;
-        auto exp = v->At(idx);
-        char* got;
+        Str exp = v->At(idx);
+        Str got;
         if (n % 2 == 0) {
             got = v->RemoveAt(idx);
         } else {
             got = v->RemoveAtFast(idx);
         }
-        utassert(exp == got); // should be exact same pointer value
+        utassert(str::Eq(exp, got));
         utassert(v->Size() == n - 1);
     }
 
@@ -592,7 +592,7 @@ static void validateStringMatchesData(StrVecWithData<T>* v) {
     for (int i = 0; i < nStrings; i++) {
         d = v->AtData(i);
         n = (int)d->n;
-        got = v->AtStr(i);
+        got = v->At(i);
         exp = StrForN(n);
         utassert(str::Eq(got.s, exp));
     }

@@ -430,7 +430,7 @@ static StrVecPage* AllocatePage(StrVec* v, StrVecPage* last, int nBytesNeeded) {
     return page;
 }
 
-char* StrVec::Append(Str s) {
+Str StrVec::Append(Str s) {
     int sLen = s.len;
     const char* str = s.s;
     int cbIndex = cbIndexSize(dataSize);
@@ -448,7 +448,7 @@ char* StrVec::Append(Str s) {
     auto res = last->Append(str, sLen);
     size++;
     InvalidateSortIndexes(this);
-    return res;
+    return Str(res, sLen);
 }
 
 // returns index of inserted string, -1 if not inserted
@@ -478,7 +478,7 @@ static StrVecPage* PageForIdx(const StrVec* v, int idx, int* idxInPageOut) {
 // returns a string
 // note: this might invalidate previously returned strings because
 // it might re-allocate memory used for those strings
-char* StrVec::SetAt(int idx, Str s) {
+Str StrVec::SetAt(int idx, Str s) {
     int sLen = s.len;
     const char* str = s.s;
     {
@@ -487,7 +487,7 @@ char* StrVec::SetAt(int idx, Str s) {
         char* res = page->SetAt(idxInPage, str, sLen);
         if (res != kNoSpace) {
             InvalidateSortIndexes(this);
-            return res;
+            return Str(res, sLen);
         }
     }
     // perf: we assume that there will be more SetAt() calls so pre-allocate
@@ -497,13 +497,13 @@ char* StrVec::SetAt(int idx, Str s) {
     char* res = first->SetAt(idx, str, sLen);
     ReportIf(res == kNoSpace);
     InvalidateSortIndexes(this);
-    return res;
+    return Str(res, sLen);
 }
 
 // returns a string
 // note: this might invalidate previously returned strings because
 // it might re-allocate memory used for those strings
-char* StrVec::InsertAt(int idx, Str s) {
+Str StrVec::InsertAt(int idx, Str s) {
     int sLen = s.len;
     const char* str = s.s;
     if (idx == size) {
@@ -517,7 +517,7 @@ char* StrVec::InsertAt(int idx, Str s) {
         if (res != kNoSpace) {
             size++;
             InvalidateSortIndexes(this);
-            return res;
+            return Str(res, sLen);
         }
     }
 
@@ -529,29 +529,31 @@ char* StrVec::InsertAt(int idx, Str s) {
     ReportIf(res == kNoSpace);
     size++;
     InvalidateSortIndexes(this);
-    return res;
+    return Str(res, sLen);
 }
 
 // remove string at idx and return it
 // return value is valid as long as StrVec is valid
-char* StrVec::RemoveAt(int idx) {
+Str StrVec::RemoveAt(int idx) {
     int idxInPage;
     auto page = PageForIdx(this, idx, &idxInPage);
-    auto res = page->RemoveAt(idxInPage);
+    Str removed = page->AtStr(idxInPage);
+    page->RemoveAt(idxInPage);
     size--;
     InvalidateSortIndexes(this);
-    return res;
+    return removed;
 }
 
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec is valid
-char* StrVec::RemoveAtFast(int idx) {
+Str StrVec::RemoveAtFast(int idx) {
     int idxInPage;
     auto page = PageForIdx(this, idx, &idxInPage);
-    auto res = page->RemoveAtFast(idxInPage);
+    Str removed = page->AtStr(idxInPage);
+    page->RemoveAtFast(idxInPage);
     size--;
     InvalidateSortIndexes(this);
-    return res;
+    return removed;
 }
 
 // return true if did remove
@@ -564,16 +566,7 @@ bool StrVec::Remove(Str s) {
     return false;
 }
 
-char* StrVec::At(int idx) const {
-    if (sortIndexes) {
-        idx = sortIndexes[idx];
-    }
-    int idxInPage;
-    auto page = PageForIdx(this, idx, &idxInPage);
-    return page->At(idxInPage);
-}
-
-Str StrVec::AtStr(int idx) const {
+Str StrVec::At(int idx) const {
     if (sortIndexes) {
         idx = sortIndexes[idx];
     }
@@ -592,7 +585,7 @@ void* StrVec::AtDataRaw(int idx) const {
     return page->AtDataRaw(idxInPage);
 }
 
-char* StrVec::operator[](int idx) const {
+Str StrVec::operator[](int idx) const {
     ReportIf(idx < 0);
     return At(idx);
 }
@@ -601,7 +594,7 @@ int StrVec::Find(Str s, int startAt) const {
     int sLen = s.len;
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
-        Str s2 = it.AsStr();
+        Str s2 = *it;
         if (s2.len == sLen && str::Eq(s.s, s2.s)) {
             return it.idx;
         }
@@ -613,7 +606,7 @@ int StrVec::FindI(Str s, int startAt) const {
     int sLen = s.len;
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
-        Str s2 = it.AsStr();
+        Str s2 = *it;
         if (s2.len == sLen && str::EqI(s.s, s2.s)) {
             return it.idx;
         }
@@ -646,16 +639,9 @@ StrVec::iterator StrVec::end() const {
     return StrVec::iterator(this, this->Size());
 }
 
-char* StrVec::iterator::operator*() const {
+Str StrVec::iterator::operator*() const {
     if (this->v->sortIndexes) {
         return v->At(idx);
-    }
-    return page->At(idxInPage);
-}
-
-Str StrVec::iterator::AsStr() const {
-    if (this->v->sortIndexes) {
-        return v->AtStr(idx);
     }
     return page->AtStr(idxInPage);
 }
@@ -745,8 +731,8 @@ void SortIndex(StrVec* v, StrLessFunc lessFn) {
     int* b = indexes;
     int* e = indexes + n;
     std::sort(b, e, [v, lessFn](int idx1, int idx2) -> bool {
-        Str s1 = v->AtStr(idx1);
-        Str s2 = v->AtStr(idx2);
+        Str s1 = v->At(idx1);
+        Str s2 = v->At(idx2);
         bool ret = lessFn(s1, s2);
         return ret;
     });
@@ -831,7 +817,7 @@ static int CalcCapForJoin(const StrVec* v, Str joint) {
     int cap = 0;
     int jointLen = joint.len;
     for (auto it = v->begin(); it != v->end(); it++) {
-        Str s = it.AsStr();
+        Str s = *it;
         cap += s.len + 1 + jointLen;
     }
     return cap + 32; // +32 arbitrary buffer
@@ -843,7 +829,7 @@ static char* JoinInner(const StrVec* v, Str joint, StrBuilder& res) {
     int firstForJoint = 0;
     int i = 0;
     for (auto it = v->begin(); it != v->end(); it++) {
-        Str s = it.AsStr();
+        Str s = *it;
         if (!s.s) {
             firstForJoint++;
             i++;

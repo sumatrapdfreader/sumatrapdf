@@ -30,16 +30,15 @@ struct StrVec {
 
     int Size() const;
     bool IsEmpty() const;
-    char* At(int i) const;
-    Str AtStr(int i) const;
+    Str At(int i) const;
     void* AtDataRaw(int i) const;
-    char* operator[](int) const;
+    Str operator[](int) const;
 
-    char* Append(Str s);
-    char* SetAt(int idx, Str s);
-    char* InsertAt(int, Str s);
-    char* RemoveAt(int);
-    char* RemoveAtFast(int);
+    Str Append(Str s);
+    Str SetAt(int idx, Str s);
+    Str InsertAt(int, Str s);
+    Str RemoveAt(int);
+    Str RemoveAtFast(int);
     bool Remove(Str s);
 
     int Find(Str s, int startAt = 0) const;
@@ -55,8 +54,7 @@ struct StrVec {
         StrVecPage* page;
 
         iterator(const StrVec* v, int idx);
-        char* operator*() const;
-        Str AsStr() const;
+        Str operator*() const;
         iterator& operator++();   // ++it
         iterator operator++(int); // it++
         iterator& operator+(int); // it += n
@@ -85,7 +83,7 @@ struct StrVecWithData : StrVec {
     }
 
     int AppendFrom(StrVecWithData<T>* src, int srcIdx) {
-        Str s = src->AtStr(srcIdx);
+        Str s = src->At(srcIdx);
         T* data = src->AtData(srcIdx);
         int idx = this->Append(s, *data);
         return idx;

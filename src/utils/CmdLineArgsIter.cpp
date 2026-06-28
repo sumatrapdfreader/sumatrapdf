@@ -112,7 +112,7 @@ Str CmdLineArgsIter::NextArg() {
     if (curr >= nArgs) {
         return {};
     }
-    currArg = args.AtStr(curr++);
+    currArg = args.At(curr++);
     return currArg;
 }
 
@@ -121,7 +121,7 @@ Str CmdLineArgsIter::EatParam() {
     if (curr >= nArgs) {
         return {};
     }
-    return args.AtStr(curr++);
+    return args.At(curr++);
 }
 
 void CmdLineArgsIter::RewindParam() {
@@ -141,12 +141,12 @@ Str CmdLineArgsIter::AdditionalParam(int n) const {
 
     // we assume that param cannot be args (i.e. start with - or /
     for (int i = 0; i < n; i++) {
-        Str s = args.AtStr(curr + i);
+        Str s = args.At(curr + i);
         if (CouldBeArg(s)) {
             return {};
         }
     }
-    return args.AtStr(curr + n - 1);
+    return args.At(curr + n - 1);
 }
 
 char* CmdLineArgsIter::at(int n) const {

@@ -100,7 +100,7 @@ static void ParseTranslationsTxt(Str d, const char* langCode) {
         orig += 1; // skip the ':' at the beginning
         i++;
         trans = nullptr;
-        while (i < nLines && lines[i][0] != ':') {
+        while (i < nLines && lines.At(i) && lines.At(i).s[0] != ':') {
             if (!trans) {
                 line = lines[i];
                 if (str::StartsWith(line, langCode)) {
@@ -144,7 +144,7 @@ Str GetTranslation(Str s) {
     int sLen = str::Leni(s);
     for (int i = 0; i < n; i++) {
         int idx = i * 2;
-        Str s2 = c->AtStr(idx);
+        Str s2 = c->At(idx);
         if (s2.len == sLen && str::Eq(s, s2.s)) {
             auto tr = c->At(idx + 1);
             if (!tr) {

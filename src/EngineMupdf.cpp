@@ -4692,7 +4692,7 @@ TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
-    return pageLabels->AtStr(pageNo - 1);
+    return pageLabels->At(pageNo - 1);
 }
 
 int EngineMupdf::GetPageByLabel(Str label) const {
