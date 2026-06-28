@@ -95,7 +95,6 @@ static void logToPipe(Str s) {
     gPipeMutex.Lock();
 
     DWORD cbWritten = 0;
-    BOOL ok = false;
     bool didConnect = false;
     if (!IsValidHandle(hLogPipe)) {
         maybeOpenLogPipe();
@@ -113,7 +112,7 @@ static void logToPipe(Str s) {
     }
 
     DWORD cb = (DWORD)n;
-    ok = WriteFile(hLogPipe, s.s, cb, &cbWritten, nullptr);
+    BOOL ok = WriteFile(hLogPipe, s.s, cb, &cbWritten, nullptr);
     if (!ok) {
         CloseHandle(hLogPipe);
         hLogPipe = INVALID_HANDLE_VALUE;
