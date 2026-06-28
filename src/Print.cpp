@@ -79,8 +79,8 @@ struct PrintData {
         this->engine = engine->Clone();
         if (!this->engine) {
             // re-create engine from file to avoid sharing with render cache
-            const char* path = engine->FilePath();
-            logf("PrintData: engine->Clone() failed for '%s', re-creating\n", path ? path : "(null)");
+            Str path = engine->FilePath();
+            logf("PrintData: engine->Clone() failed for '%s', re-creating\n", path ? path.s : "(null)");
             if (path) {
                 this->engine = CreateEngineFromFile(path, nullptr, false);
             }
@@ -315,8 +315,8 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
     }
     out.Append("  devmode defaults:\n");
     if (dm->dmFields & DM_ORIENTATION) {
-        const char* s = dm->dmOrientation == DMORIENT_PORTRAIT ? "portrait" : "landscape";
-        out.AppendFmt("    orientation: %s\n", s);
+        Str s = dm->dmOrientation == DMORIENT_PORTRAIT ? Str("portrait") : Str("landscape");
+        out.AppendFmt("    orientation: %s\n", s.s);
     }
     if (dm->dmFields & DM_PAPERSIZE) {
         out.AppendFmt("    paper size id: %d\n", (int)dm->dmPaperSize);
@@ -337,11 +337,11 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
         out.AppendFmt("    y resolution: %d dpi\n", (int)dm->dmYResolution);
     }
     if (dm->dmFields & DM_COLOR) {
-        const char* s = dm->dmColor == DMCOLOR_COLOR ? "color" : "monochrome";
-        out.AppendFmt("    color: %s\n", s);
+        Str s = dm->dmColor == DMCOLOR_COLOR ? Str("color") : Str("monochrome");
+        out.AppendFmt("    color: %s\n", s.s);
     }
     if (dm->dmFields & DM_DUPLEX) {
-        const char* s = "unknown";
+        Str s = "unknown";
         if (dm->dmDuplex == DMDUP_SIMPLEX) {
             s = "simplex";
         } else if (dm->dmDuplex == DMDUP_HORIZONTAL) {
@@ -349,7 +349,7 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
         } else if (dm->dmDuplex == DMDUP_VERTICAL) {
             s = "vertical";
         }
-        out.AppendFmt("    duplex: %s\n", s);
+        out.AppendFmt("    duplex: %s\n", s.s);
     }
     if (dm->dmFields & DM_COLLATE) {
         out.AppendFmt("    collate: %s\n", dm->dmCollate == DMCOLLATE_TRUE ? "yes" : "no");
@@ -489,7 +489,7 @@ Printer* NewPrinter(Str printerName) {
 
         WCHAR* paperName = paperNamesSeq;
         for (int i = 0; i < (int)n; i++) {
-            char* name = ToUtf8Temp(paperName);
+            TempStr name = ToUtf8Temp(paperName);
             printer->paperNames.Append(name);
             paperName += paperNameSize;
         }
@@ -513,7 +513,7 @@ Printer* NewPrinter(Str printerName) {
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
             WCHAR* binName = binNamesSeq;
             for (int i = 0; i < (int)n; i++) {
-                char* name = ToUtf8Temp(binName);
+                TempStr name = ToUtf8Temp(binName);
                 printer->binNames.Append(name);
                 binName += binNameSize;
             }
@@ -1141,7 +1141,7 @@ static HGLOBAL GlobalMemDup(const void* data, size_t len) {
 // the PrinterDefaults.Collate setting (issue #1558).
 // returns 1 to force collate, 0 to force no-collate, -1 to leave the driver default
 static int CollateDefaultPref() {
-    const char* s = gGlobalPrefs->printerDefaults.collate;
+    Str s = gGlobalPrefs->printerDefaults.collate;
     if (str::EqI(s, "collate")) {
         return 1;
     }
@@ -1344,7 +1344,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         if (devNames) {
             // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
             WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
-            char* name = ToUtf8Temp(printerName);
+            TempStr name = ToUtf8Temp(printerName);
             printer = NewPrinter(name);
             // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
             GlobalUnlock(pdex.hDevNames);
