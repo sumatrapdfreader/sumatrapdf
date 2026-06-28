@@ -27,17 +27,12 @@ extern Kind kindEngineDjVu;
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
 static int ParseDjvuDecLink(Str link) {
+    str::SkipChar(link, '#');
+    str::SkipChar(link, ' ');
     if (!link) {
         return -1;
     }
-    int off = 0;
-    if (link.s[0] == '#') {
-        off = 1;
-    }
-    if (off < link.len && link.s[off] == ' ') {
-        off++;
-    }
-    return ParseInt(Str(link.s + off, link.len - off));
+    return ParseInt(link);
 }
 
 static bool DjvuDecCouldBeURL(Str link) {
