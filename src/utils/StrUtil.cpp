@@ -554,9 +554,9 @@ Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
     size_t s4Len = str::Len(s4);
     size_t s5Len = str::Len(s5);
     size_t len = s1Len + s2Len + s3Len + s4Len + s5Len + 1;
-    char* res = (char*)Alloc(allocator, len);
+    char* res = (char*)Alloc(allocator, len); // str-port: owned heap
 
-    char* s = res;
+    char* s = res; // str-port: owned heap
     memcpy(s, s1.s, s1Len);
     s += s1Len;
     memcpy(s, s2.s, s2Len);
@@ -589,7 +589,7 @@ WStr Join(Arena* allocator, WStr s1, WStr s2, WStr s3) {
     // might contain non-characters which str::Format fails to handle
     size_t s1Len = (size_t)s1.len, s2Len = (size_t)s2.len, s3Len = (size_t)s3.len;
     size_t len = s1Len + s2Len + s3Len + 1;
-    WCHAR* res = (WCHAR*)Alloc(allocator, len * sizeof(WCHAR));
+    WCHAR* res = (WCHAR*)Alloc(allocator, len * sizeof(WCHAR)); // str-port: owned heap
     memcpy(res, s1.s, s1Len * sizeof(WCHAR));
     memcpy(res + s1Len, s2.s, s2Len * sizeof(WCHAR));
     memcpy(res + s1Len + s2Len, s3.s, s3Len * sizeof(WCHAR));
@@ -1916,27 +1916,22 @@ Str StrBuilder::LendData() const {
     return Get();
 }
 
-// TODO: rewrite as size_t Find(const char* s, size_t sLen, size_t start);
 bool StrBuilder::Contains(Str s) {
     if (!s) {
         return false;
     }
-    size_t sLen = (size_t)s.len;
-    if (sLen > len) {
+    int sLen = s.len;
+    if (sLen > (int)len) {
         return false;
     }
     // must account for possibility of 0 in the string
-    const char* curr = els;
-    int nLeft = (int)(len - sLen);
-    char c = *s.s;
-    char c2;
-    while (nLeft >= 0) {
-        c2 = *curr++;
-        nLeft--;
-        if (c != c2) {
+    char c = s.s[0];
+    int nLeft = (int)len - sLen;
+    for (int i = 0; i <= nLeft; i++) {
+        if (c != els[i]) {
             continue;
         }
-        if (str::EqN(s.s, curr - 1, sLen)) {
+        if (str::EqN(s.s, els + i, (size_t)sLen)) {
             return true;
         }
     }
@@ -2606,20 +2601,17 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
     TempStr buf = fmt::FormatTemp(Str("%d"), num);
 
-    char res[128] = {};
-    int resLen = dimof(res);
-    char* next = res;
+    StrBuilder res;
     int i = 3 - (buf.len % 3);
     for (int src = 0; src < buf.len; src++) {
-        *next++ = buf.s[src];
+        res.AppendChar(buf.s[src]);
         if (src + 1 < buf.len && i == 2) {
-            next += str::BufSet(next, resLen - (int)(next - res), thousandSep);
+            res.Append(thousandSep);
         }
         i = (i + 1) % 3;
     }
-    *next = '\0';
 
-    return str::DupTemp(res);
+    return str::DupTemp(res.Get());
 }
 
 // Format a floating point number with at most two decimal after the point
@@ -3061,13 +3053,12 @@ static TempStr ShortenStringTemp(Str s, int maxLen) {
     if (sLen <= maxLen) {
         return s;
     }
-    char* ret = AllocArrayTemp<char>(maxLen + 2);
+    char* ret = AllocArrayTemp<char>(maxLen + 2); // str-port: owned heap
     const int half = maxLen / 2;
-    const int strSize = sLen + 1; // +1 for terminating \0
     // copy first N/2 characters, move last N/2 characters to the halfway point
     for (int i = 0; i < half; i++) {
         ret[i] = s.s[i];
-        ret[i + half] = s.s[strSize - half + i];
+        ret[i + half] = s.s[sLen - half + i];
     }
     // add ellipsis in the middle
     ret[half - 2] = ret[half - 1] = ret[half] = '.';
@@ -3104,35 +3095,35 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
         keep = 0;
     }
     // over-allocate the result by 4x to be always safe
-    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1);
-    char* tmp = ret;
-    const char* src = s.s;
+    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1); // str-port: owned heap
+    int src = 0;
+    int tmp = 0;
     int n;
     for (int i = 0; i < keep; i++) {
-        n = utf8RuneLen((const u8*)src);
+        n = utf8RuneLen((const u8*)(s.s + src));
         ReportIf(n <= 0);
         switch (n) {
             default:
                 ReportIf(true);
                 break;
             case 4:
-                *tmp++ = *src++;
+                ret[tmp++] = s.s[src++];
                 __fallthrough;
             case 3:
-                *tmp++ = *src++;
+                ret[tmp++] = s.s[src++];
                 __fallthrough;
             case 2:
-                *tmp++ = *src++;
+                ret[tmp++] = s.s[src++];
                 __fallthrough;
             case 1:
-                *tmp++ = *src++;
+                ret[tmp++] = s.s[src++];
         }
     }
-    *tmp++ = '.';
-    *tmp++ = '.';
-    *tmp++ = '.';
-    *tmp = 0;
-    return Str(ret, (int)(tmp - ret));
+    ret[tmp++] = '.';
+    ret[tmp++] = '.';
+    ret[tmp++] = '.';
+    ret[tmp] = 0;
+    return Str(ret, tmp);
 }
 
 // shorten a string to maxLen characters, adding ellipsis in the middle
@@ -3149,12 +3140,12 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
     int toRemove = (nRunes - maxRunes) + 3; // 3 for "..."
     int removeStartingAt = (nRunes / 2) - (toRemove / 2);
     // over-allocate the result by 4x to be always safe
-    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1);
-    char* tmp = ret;
-    const char* src = s.s;
+    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1); // str-port: owned heap
+    int src = 0;
+    int tmp = 0;
     int n;
     for (int i = 0; i < nRunes; i++) {
-        n = utf8RuneLen((const u8*)src);
+        n = utf8RuneLen((const u8*)(s.s + src));
         ReportIf(n <= 0);
         if (i < removeStartingAt || i >= removeStartingAt + toRemove) {
             switch (n) {
@@ -3162,27 +3153,27 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
                     ReportIf(true);
                     break;
                 case 4:
-                    *tmp++ = *src++;
+                    ret[tmp++] = s.s[src++];
                     __fallthrough;
                 case 3:
-                    *tmp++ = *src++;
+                    ret[tmp++] = s.s[src++];
                     __fallthrough;
                 case 2:
-                    *tmp++ = *src++;
+                    ret[tmp++] = s.s[src++];
                     __fallthrough;
                 case 1:
-                    *tmp++ = *src++;
+                    ret[tmp++] = s.s[src++];
             }
         } else if (i == removeStartingAt) {
-            *tmp++ = '.';
-            *tmp++ = '.';
-            *tmp++ = '.';
+            ret[tmp++] = '.';
+            ret[tmp++] = '.';
+            ret[tmp++] = '.';
             src += n;
         } else {
             src += n;
         }
     }
-    return Str(ret, (int)(tmp - ret));
+    return Str(ret, tmp);
 }
 
 // IsTextRtl is optimized version of checking if a string is rtl
