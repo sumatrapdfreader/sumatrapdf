@@ -168,8 +168,8 @@ void BaseUtilTest() {
         utassert(exp == got);
         size_t got2 = RoundUp((size_t)v, (size_t)8);
         utassert(got2 == (size_t)exp);
-        char* got3 = RoundUp((char*)(uintptr_t)v, (int)8);
-        utassert(got3 == (char*)(uintptr_t)exp);
+        void* got3 = RoundUp((void*)(uintptr_t)v, (int)8);
+        utassert(got3 == (void*)(uintptr_t)exp);
     }
 
     utassert(RoundToPowerOf2(0) == 1);

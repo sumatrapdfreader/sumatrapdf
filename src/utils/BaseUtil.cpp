@@ -55,13 +55,13 @@ int RoundUp(int n, int rounding) {
     return ((n + rounding - 1) / rounding) * rounding;
 }
 
-char* RoundUp(char* d, int rounding) {
+void* RoundUp(void* d, int rounding) {
     if (rounding <= 1) {
         return d;
     }
     uintptr_t n = (uintptr_t)d;
     n = ((n + rounding - 1) / rounding) * rounding;
-    return (char*)n;
+    return (void*)n;
 }
 
 size_t RoundToPowerOf2(size_t size) {
@@ -136,17 +136,12 @@ u32 MurmurHash2(const void* key, size_t len) {
 
 // variation of MurmurHash2 which deals with strings that are
 // mostly ASCII and should be treated case independently
-u32 MurmurHashWStrI(const WCHAR* str) {
-    size_t len = str::Len(str);
+u32 MurmurHashWStrI(WStr str) {
     auto a = GetTempArena();
-    u8* data = (u8*)a->Alloc((int)len);
-    WCHAR c;
+    u8* data = (u8*)a->Alloc(str.len);
     u8* dst = data;
-    while (true) {
-        c = *str++;
-        if (!c) {
-            break;
-        }
+    for (int i = 0; i < str.len; i++) {
+        wchar_t c = str.s[i];
         if (c & 0xFF80) {
             *dst++ = 0x80;
             continue;
@@ -157,25 +152,20 @@ u32 MurmurHashWStrI(const WCHAR* str) {
         }
         *dst++ = (u8)c;
     }
-    return MurmurHash2(data, len);
+    return MurmurHash2(data, dst - data);
 }
 
 // variation of MurmurHash2 which deals with strings that are
 // mostly ASCII and should be treated case independently
-u32 MurmurHashStrI(const char* s) {
+u32 MurmurHashStrI(Str s) {
     TempStr dst = str::DupTemp(s);
-    char* d = dst.s;
-    char c;
-    size_t len = 0;
-    while (*s) {
-        c = *s++;
-        len++;
+    for (int i = 0; i < dst.len; i++) {
+        char c = dst.s[i];
         if ('A' <= c && c <= 'Z') {
-            c = (c + 'a' - 'A');
+            dst.s[i] = (char)(c + 'a' - 'A');
         }
-        *d++ = c;
     }
-    return MurmurHash2(d - len, len);
+    return MurmurHash2(dst.s, dst.len);
 }
 
 int limitValue(int val, int min, int max) {

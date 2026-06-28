@@ -342,12 +342,12 @@ bool memeq(const void* s1, const void* s2, size_t len);
 
 size_t RoundToPowerOf2(size_t size);
 u32 MurmurHash2(const void* key, size_t len);
-u32 MurmurHashWStrI(const WCHAR*);
-u32 MurmurHashStrI(const char*);
+u32 MurmurHashWStrI(WStr str);
+u32 MurmurHashStrI(Str s);
 
 size_t RoundUp(size_t n, size_t rounding);
 int RoundUp(int n, int rounding);
-char* RoundUp(char*, int rounding);
+void* RoundUp(void* d, int rounding);
 
 template <typename T>
 void ListDelete(T* root) {
