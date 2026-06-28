@@ -428,25 +428,24 @@ static TempStr PdfToUtf8Temp(fz_context* ctx, pdf_obj* obj) {
 
 // some PDF documents contain control characters in outline titles or /Info properties
 // we replace them with spaces and cleanup for display with NormalizeWSInPlace()
-static WCHAR* PdfCleanStringInPlace(WCHAR* s) {
-    if (!s) {
-        return nullptr;
+static void PdfCleanStringInPlace(WStr& ws) {
+    if (!ws) {
+        return;
     }
-    WCHAR* curr = s;
-    while (*curr) {
-        WCHAR c = *curr;
+    for (int i = 0; i < ws.len; i++) {
+        WCHAR c = ws.s[i];
         if (c < 0x20) {
-            *curr = ' ';
+            ws.s[i] = ' ';
         } else if (c == 0xfffd) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/4965
             // TODO: was there mupdf change that caused this?
-            *curr = 0;
+            ws.s[i] = 0;
+            ws.len = i;
             break;
         }
-        curr++;
     }
-    str::NormalizeWSInPlace(s);
-    return s;
+    str::NormalizeWSInPlace(ws.s);
+    ws.len = (int)str::Len(ws.s);
 }
 
 struct istream_filter {
@@ -1348,7 +1347,7 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
-static TocItem* NewTocItemWithDestination(TocItem* parent, char* title, IPageDestination* dest) {
+static TocItem* NewTocItemWithDestination(TocItem* parent, Str title, IPageDestination* dest) {
     auto res = new TocItem(parent, title, 0);
     res->dest = dest;
     return res;
@@ -2164,9 +2163,9 @@ EngineBase* EngineMupdf::Clone() {
 TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     int streamNo = -1;
     Str path2 = str::Dup(path);
-    char* streamNoStr = (char*)FindEmbeddedPdfFileStreamNo(path2.s);
+    Str streamNoStr = FindEmbeddedPdfFileStreamNo(path2);
     if (streamNoStr) {
-        char* rest = (char*)str::Parse(streamNoStr, ":%d", &streamNo);
+        char* rest = (char*)str::Parse(streamNoStr.s, ":%d", &streamNo);
         bool hasAttachmentName = rest && str::StartsWith(rest, ":attachname=");
         // there shouldn't be any left unparsed data except attachment name metadata
         ReportIf(!rest || (*rest && !hasAttachmentName));
@@ -2177,7 +2176,7 @@ TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
             *rest = 0;
         }
         // replace ':' with 0 to create a filesystem path
-        *streamNoStr = 0;
+        *streamNoStr.s = 0;
     }
     *streamNoOut = streamNo;
     return path2;
@@ -3015,8 +3014,8 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     // WCHAR* path = ToWStr(outline->uri);
     dest->name = Str(str::Dup(outline->title));
     // page is really a stream number
-    const char* title = outline->title ? outline->title : "";
-    AutoFreeStr nameHex(str::MemToHex((const u8*)title, str::Len(title)));
+    Str title = outline->title ? Str(outline->title) : Str("");
+    AutoFreeStr nameHex(str::MemToHex((const u8*)title.s, title.len));
     dest->value = Str(str::Format("%s:%d:attachname=%s", engine->FilePath(), outline->page.page, nameHex.Get()));
     dest->pageNo = outline->page.page;
     return dest;
@@ -3028,17 +3027,12 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
 
     auto ctx = Ctx();
     while (outline) {
-        char* name = nullptr;
-        WCHAR* nameW = nullptr;
+        TempStr name;
         if (outline->title) {
             // must convert to Unicode because PdfCleanString() doesn't work on utf8
-            nameW = ToWStr(outline->title);
+            TempWStr nameW = ToWStr(outline->title);
             PdfCleanStringInPlace(nameW);
-            name = ToUtf8(nameW);
-            str::Free(nameW);
-        }
-        if (!name) {
-            name = str::Dup("");
+            name = ToUtf8Temp(nameW);
         }
 
         int pageNo = FzGetPageNo(ctx, _doc, nullptr, outline);
@@ -3050,8 +3044,6 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
             dest = NewPageDestinationMupdf(ctx, _doc, nullptr, outline);
         }
         TocItem* item = NewTocItemWithDestination(parent, name, dest);
-
-        free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         item->fontFlags = 0; // TODO: had outline->flags; but mupdf changed outline
@@ -3218,11 +3210,11 @@ static IPageElement* NewFzComment(Str comment, int pageNo, RectF rect) {
 // must be called inside fz_try
 static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_bound_annot(ctx, annot);
-    const char* contents = pdf_annot_contents(ctx, annot);
-    const char* label = pdf_annot_field_label(ctx, annot);
-    const char* s = contents;
+    Str contents = pdf_annot_contents(ctx, annot);
+    Str label = pdf_annot_field_label(ctx, annot);
+    Str s = contents;
     // TODO: use separate classes for comments and tooltips?
-    if (str::IsEmpty(contents)) {
+    if (!contents) {
         s = label;
     }
     RectF rd = ToRectF(rect);
@@ -3233,13 +3225,13 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
 static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* annot, int pageNo,
                                                 Vec<IPageElement*>& comments) {
     auto tp = pdf_annot_type(ctx, annot);
-    const char* contents = pdf_annot_contents(ctx, annot); // don't free
-    if (str::Len(contents) > 128) {
-        contents = str::DupTemp(contents, 128);
+    Str contents = pdf_annot_contents(ctx, annot); // don't free
+    if (contents.len > 128) {
+        contents = str::DupTemp(contents.s, 128);
     }
-    bool isContentsEmpty = str::IsEmpty(contents);
-    const char* label = pdf_annot_field_label(ctx, annot); // don't free
-    bool isLabelEmpty = str::IsEmpty(label);
+    bool isContentsEmpty = !contents;
+    Str label = pdf_annot_field_label(ctx, annot); // don't free
+    bool isLabelEmpty = !label;
     int flags = pdf_annot_field_flags(ctx, annot);
     bool isEmpty = isContentsEmpty && isLabelEmpty;
 
@@ -4341,7 +4333,7 @@ static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     return str::DupTemp(buf, (size_t)n - 1);
 }
 
-static void AppendSigDictText(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, const char* label, pdf_obj* key) {
+static void AppendSigDictText(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, Str label, pdf_obj* key) {
     const char* val = nullptr;
     fz_try(ctx) {
         pdf_obj* obj = pdf_dict_get(ctx, sigDict, key);
@@ -4354,11 +4346,11 @@ static void AppendSigDictText(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, 
         val = nullptr;
     }
     if (val && *val) {
-        s.AppendFmt("  %s: %s\n", label, val);
+        s.AppendFmt("  %s: %s\n", label.s, val);
     }
 }
 
-static void AppendSigDictDate(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, const char* label, pdf_obj* key) {
+static void AppendSigDictDate(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, Str label, pdf_obj* key) {
     int64_t secs = 0;
     fz_try(ctx) {
         pdf_obj* obj = pdf_dict_get(ctx, sigDict, key);
@@ -4378,7 +4370,7 @@ static void AppendSigDictDate(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, 
     gmtime_s(&tm, &t);
     char buf[64];
     strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", &tm);
-    s.AppendFmt("  %s: %s\n", label, buf);
+    s.AppendFmt("  %s: %s\n", label.s, buf);
 }
 
 static void AppendSignatureInfo(fz_context* ctx, StrBuilder& s, pdf_pkcs7_verifier* verifier, pdf_document* pdfdoc,
@@ -4696,8 +4688,7 @@ TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
-    char* res = pageLabels->At(pageNo - 1);
-    return res;
+    return pageLabels->AtStr(pageNo - 1);
 }
 
 int EngineMupdf::GetPageByLabel(Str label) const {
@@ -4795,7 +4786,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
         SafeEngineRelease(&engine);
         return nullptr;
     }
-    const char* ext = GetExtForKind(kind);
+    Str ext = GetExtForKind(kind);
     if (ext) {
         SetDefaultExt(engine->defaultExt, ext);
     }
