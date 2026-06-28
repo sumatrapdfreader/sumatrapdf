@@ -120,16 +120,16 @@ HtmlParser::HtmlParser() {
 
 HtmlParser::~HtmlParser() {
     if (freeHtml) {
-        free(html);
+        str::Free(html);
     }
     ArenaDelete(allocator);
 }
 
 void HtmlParser::Reset() {
     if (freeHtml) {
-        free(html);
+        str::Free(html);
     }
-    html = nullptr;
+    html = {};
     freeHtml = false;
     rootElement = currElement = nullptr;
     elementsCount = attributesCount = 0;
@@ -259,13 +259,13 @@ size_t HtmlParser::TotalAttrCount() const {
 // Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
 // The caller owns the memory for s.
 HtmlElement* HtmlParser::ParseInPlace(const ByteSlice& d, uint codepage) {
-    if (this->html) {
+    if (html) {
         Reset();
     }
-    this->html = (char*)d.data();
+    html = AsStr(d);
     this->codepage = codepage;
 
-    HtmlPullParser parser(this->html, d.size());
+    HtmlPullParser parser(html);
     HtmlToken* tok;
 
     while ((tok = parser.Next()) != nullptr) {
@@ -309,7 +309,7 @@ HtmlElement* HtmlParser::ParseInPlace(const ByteSlice& d, uint codepage) {
 }
 
 HtmlElement* HtmlParser::Parse(const ByteSlice& d, uint codepage) {
-    char* s = str::Dup(d);
+    Str s = str::Dup(d);
     HtmlElement* root = ParseInPlace(ToByteSlice(s), codepage);
     freeHtml = true;
     return root;

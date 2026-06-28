@@ -39,7 +39,7 @@ class HtmlParser {
     Arena* allocator = nullptr;
 
     // text to parse. It can be changed.
-    char* html = nullptr;
+    Str html;
     // true if s was allocated by ourselves, false if managed
     // by the caller
     bool freeHtml = false;
