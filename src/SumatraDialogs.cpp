@@ -73,7 +73,7 @@ static u8* SkipSzOrOrd(u8* d) {
         pw++;
     } else {
         // anything else: zero-terminated WCHAR*
-        WCHAR* s = (WCHAR*)pw;
+        WCHAR* s = (WCHAR*)pw; // str-port: Win32 MENU resource
         while (*s) {
             s++;
         }
@@ -84,7 +84,7 @@ static u8* SkipSzOrOrd(u8* d) {
 }
 
 static u8* SkipSz(u8* d) {
-    WCHAR* s = (WCHAR*)d;
+    WCHAR* s = (WCHAR*)d; // str-port: Win32 MENU resource
     while (*s) {
         s++;
     }

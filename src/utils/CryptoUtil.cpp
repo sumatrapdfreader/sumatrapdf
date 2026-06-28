@@ -75,7 +75,7 @@ static bool ExtractSignature(Str hexSignature, const void* data, size_t& dataLen
         if (lastLine == data || !str::Find(Str(lastLine), Str(" Signature sha1:"))) {
             return false;
         }
-        dataLen = (size_t)(lastLine - (const char*)data);
+        dataLen = (size_t)(lastLine - (const char*)data); // str-port: binary PEM scan
         Str sigMarker = str::Find(Str(lastLine), Str(" Signature sha1:"));
         hex = Str(sigMarker.s + 16, sigMarker.len - 16);
     } else {

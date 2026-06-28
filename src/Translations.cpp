@@ -32,9 +32,9 @@ static StrVec* gTranslationCache = nullptr;
 
 static TempStr UnescapeTemp(Str sOrig) {
     TempStr s = str::DupTemp(sOrig);
-    char* unescaped = s.s;
-    char* dst = s.s;
-    char* src = s.s;
+    char* unescaped = s.s; // str-port: in-place parse cursor
+    char* dst = s.s;       // str-port: in-place parse cursor
+    char* src = s.s;       // str-port: in-place parse cursor
     char c, c2;
     while (*src) {
         c = *src++;

@@ -86,7 +86,7 @@ struct AutoFree {
     }
 
     AutoFree(const u8* p) { // NOLINT str-port: owned heap
-        data = (char*)p;
+        data = (char*)p;    // str-port: owned heap
     }
 
     void Set(char* newPtr) { // str-port: owned heap
@@ -169,7 +169,7 @@ struct AutoFreeWStr {
     AutoFreeWStr(AutoFreeWStr&& other) = delete;
 
     AutoFreeWStr(const WCHAR* p) { // NOLINT str-port: owned heap
-        data = (WCHAR*)p;
+        data = (WCHAR*)p;          // str-port: owned heap
     }
 
     AutoFreeWStr(WCHAR* p) { // NOLINT str-port: owned heap
@@ -204,7 +204,7 @@ struct AutoFreeWStr {
 
     void Set(const WCHAR* newPtr) { // str-port: owned heap
         free(data);
-        data = (WCHAR*)newPtr;
+        data = (WCHAR*)newPtr; // str-port: owned heap
     }
 
     void SetCopy(WStr newVal) {
