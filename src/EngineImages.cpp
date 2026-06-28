@@ -1664,7 +1664,7 @@ bool IsEngineImageSupportedFileType(Kind kind) {
 }
 
 EngineBase* CreateEngineImageFromFile(Str path) {
-    logf("CreateEngineImageFromFile(%s)\n", path);
+    logf("CreateEngineImageFromFile(%s)\n", path.s);
     return EngineImage::CreateFromFile(path);
 }
 
