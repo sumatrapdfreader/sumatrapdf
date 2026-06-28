@@ -16,32 +16,33 @@ namespace trans {
 
 // defined in Trans*_txt.cpp
 extern int gLangsCount;
-extern const char* gLangNames;
-extern const char* gLangCodes;
+extern SeqStrings gLangNames;
+extern SeqStrings gLangCodes;
 extern const LANGID* GetLangIds();
 extern bool IsLangRtl(int langIdx);
 } // namespace trans
 
 namespace trans {
 
-// used locally, gCurrLangCode points into gLangCodes
-static const char* gCurrLangCode = nullptr;
+// used locally, gCurrLangCode is a view into gLangCodes
+static Str gCurrLangCode;
 static int gCurrLangIdx = 0;
 // for each translation: english string followed by a translation
 static StrVec* gTranslationCache = nullptr;
 
-static TempStr UnescapeTemp(char* sOrig) {
-    char* s = str::DupTemp(sOrig);
-    char* unescaped = s;
-    char* dst = s;
+static TempStr UnescapeTemp(Str sOrig) {
+    TempStr s = str::DupTemp(sOrig);
+    char* unescaped = s.s;
+    char* dst = s.s;
+    char* src = s.s;
     char c, c2;
-    while (*s) {
-        c = *s++;
+    while (*src) {
+        c = *src++;
         if (c != '\\') {
             *dst++ = c;
             continue;
         }
-        c2 = *s;
+        c2 = *src;
         switch (c2) {
             case '\\':
                 *dst++ = '\\';
@@ -59,7 +60,7 @@ static TempStr UnescapeTemp(char* sOrig) {
                 *dst++ = c;
                 break;
         }
-        s++;
+        src++;
     }
     *dst = 0;
     return unescaped;
@@ -70,9 +71,9 @@ static void FreeTranslations() {
     gTranslationCache = nullptr;
 }
 
-static void ParseTranslationsTxt(Str d, const char* langCode) {
-    langCode = str::JoinTemp(langCode, ":");
-    int nLangCode = str::Len(langCode);
+static void ParseTranslationsTxt(Str d, Str langCode) {
+    TempStr langCodePref = str::JoinTemp(langCode, StrL(":"));
+    int nLangCode = langCodePref.len;
 
     StrVec lines;
     Split(&lines, d.s, "\n", true);
@@ -90,20 +91,20 @@ static void ParseTranslationsTxt(Str d, const char* langCode) {
     auto c = gTranslationCache;
     int nUntranslated = 0;
 
-    char* orig = nullptr;
-    char* trans = nullptr;
+    Str orig;
+    Str trans;
     int i = 2; // skip first 2 header lines
     while (i < nLines) {
         Str origLine = lines.At(i);
         ReportDebugIf(!origLine || origLine.s[0] != ':');
-        orig = origLine.s + 1; // skip the ':' at the beginning
+        orig = Str(origLine.s + 1, origLine.len - 1);
         i++;
-        trans = nullptr;
+        trans = {};
         while (i < nLines && lines.At(i) && lines.At(i).s[0] != ':') {
             if (!trans) {
                 Str line = lines.At(i);
-                if (str::StartsWith(line, langCode)) {
-                    trans = line.s + nLangCode;
+                if (str::StartsWith(line, langCodePref)) {
+                    trans = Str(line.s + nLangCode, line.len - nLangCode);
                 }
             }
             i++;
@@ -121,8 +122,8 @@ static void ParseTranslationsTxt(Str d, const char* langCode) {
         c->Append(unescaped);
     }
     ReportDebugIf(c->Size() != nStrings * 2);
-    if (nUntranslated > 0 && !str::Eq(langCode, "en:")) {
-        logf("Untranslated strings: %d for lang '%s'\n", nUntranslated, langCode);
+    if (nUntranslated > 0 && !str::Eq(langCodePref, StrL("en:"))) {
+        logf("Untranslated strings: %d for lang '%s'\n", nUntranslated, langCodePref.s);
     }
 }
 
@@ -144,17 +145,17 @@ Str GetTranslation(Str s) {
     for (int i = 0; i < n; i++) {
         int idx = i * 2;
         Str s2 = c->At(idx);
-        if (s2.len == sLen && str::Eq(s, s2.s)) {
-            auto tr = c->At(idx + 1);
+        if (s2.len == sLen && str::Eq(s, s2)) {
+            Str tr = c->At(idx + 1);
             if (!tr) {
-                logf("Didn't find translation for '%s'\n", s);
+                logf("Didn't find translation for '%s'\n", s.s);
                 return s;
             }
             // special case of "Change Language"
             // if we accidentally change language, we want be able to
             // change it back so add ("Change Language") to translation
-            if (str::ContainsI(s, "Change Language") && !str::ContainsI(tr, "Change Language")) {
-                tr = (char*)str::JoinTemp(tr, " (Change Language)");
+            if (str::ContainsI(s, StrL("Change Language")) && !str::ContainsI(tr, StrL("Change Language"))) {
+                tr = str::JoinTemp(tr, StrL(" (Change Language)"));
             }
             return tr;
         }
@@ -269,7 +270,7 @@ Str DetectUserLang() {
         }
     }
 
-    return "en";
+    return StrL("en");
 }
 
 void Destroy() {
