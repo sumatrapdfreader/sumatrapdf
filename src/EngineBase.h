@@ -65,7 +65,7 @@ extern Kind kindDestinationMupdf;
 // text on a page
 // a character and its bounding box in page coordinates
 struct PageText {
-    WCHAR* text = nullptr;
+    WStr text;
     Rect* coords = nullptr;
     int len = 0; // number of chars in text and bounding boxes in coords
 };
@@ -488,7 +488,7 @@ class EngineBase {
     bool HasTextForPage(int pageNo);
     TextExtractionState GetTextExtractionState(int pageNo);
     void RequestTextExtraction(int pageNo);
-    const WCHAR* GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
+    WStr GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
     virtual void ReleaseTextExtractionThreadContext() {}
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;

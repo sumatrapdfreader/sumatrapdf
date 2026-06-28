@@ -729,12 +729,12 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
     // convert utf8 -> wchar, expanding per-byte coords to per-wchar coords
     PageText res;
     StrBuilder ignore;
-    WCHAR* ws = ToWStr(u.text);
-    int wlen = (int)str::Len(ws);
+    res.text = strconv::Utf8ToWStr(u.text, nullptr);
+    int wlen = res.text.len;
     Rect* wcoords = AllocArray<Rect>(wlen);
     // walk utf8 and wchar in lockstep, assigning the coord of each utf8 lead
     // byte to its decoded wchar(s)
-    const char* s = u.text;
+    const char* s = u.text.s;
     int wi = 0;
     int bi = 0;
     while (*s && wi < wlen) {
@@ -756,10 +756,9 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
         s += nb;
         bi += nb;
     }
-    res.text = ws;
     res.coords = wcoords;
     res.len = wlen;
-    str::Free(u.text);
+    str::Free(u.text.s);
     free(u.coords);
     return res;
 }

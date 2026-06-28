@@ -380,14 +380,14 @@ static TempStr ExtractUserTextTemp(const char* line) {
 }
 
 // Read the first user message from a session JSONL as description
-static char* GetSessionDescription(const char* sessionPath) {
+static Str GetSessionDescription(Str sessionPath) {
     ByteSlice data = file::ReadFile(sessionPath);
     if (data.empty()) {
-        return str::Dup("(empty)").s;
+        return Str("(empty)");
     }
     const char* s = (const char*)data.data();
     const char* end = s + data.size();
-    char* result = nullptr;
+    Str result;
 
     while (s < end && !result) {
         const char* lineEnd = s;
@@ -399,7 +399,7 @@ static char* GetSessionDescription(const char* sessionPath) {
             TempStr line = str::DupTemp(s, lineLen);
             TempStr userText = ExtractUserTextTemp(line);
             if (userText) {
-                result = str::Dup(userText).s;
+                result = str::Dup(userText);
             }
         }
         s = lineEnd;
@@ -408,11 +408,11 @@ static char* GetSessionDescription(const char* sessionPath) {
         }
     }
     data.Free();
-    return result ? result : str::Dup("(no description)").s;
+    return result ? result : Str("(no description)");
 }
 
 // Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files
-static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
+static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (!userProfile) {
         return;
@@ -440,7 +440,7 @@ static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
         TempStr sessionId = str::DupTemp(fileName, nameLen - 6);
 
         TempStr fullPath = str::FormatTemp("%s\\%s", projectDir, fileName);
-        char* desc = GetSessionDescription(fullPath);
+        Str desc = GetSessionDescription(fullPath);
 
         // use file modification time as timestamp
         ULARGE_INTEGER uli;

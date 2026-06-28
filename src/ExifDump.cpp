@@ -1192,12 +1192,12 @@ static void CliPrint(const char* s) {
     CliWrite("\n", 1);
 }
 
-bool DumpExifFile(const char* path) {
+bool DumpExifFile(Str path) {
     if (!path) {
         return false;
     }
     CliPrint(str::FormatTemp("Opening: %s", path));
-    ByteSlice data = file::ReadFile(Str(path));
+    ByteSlice data = file::ReadFile(path);
     if (data.empty()) {
         CliPrint("No EXIF information found");
         return false;
@@ -1240,8 +1240,8 @@ bool DumpExifFile(const char* path) {
 
 void DumpExif(const Flags& flags) {
     bool any = false;
-    for (char* path : flags.fileNames) {
-        if (DumpExifFile(path)) {
+    for (int i = 0; i < flags.fileNames.Size(); i++) {
+        if (DumpExifFile(flags.fileNames.AtStr(i))) {
             any = true;
         }
     }

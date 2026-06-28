@@ -8,8 +8,8 @@ int ListBoxModelStrings::ItemsCount() {
     return strings.Size();
 }
 
-const char* ListBoxModelStrings::Item(int i) {
-    return strings.At(i);
+Str ListBoxModelStrings::Item(int i) {
+    return strings.AtStr(i);
 }
 
 void FillWithItems(HWND hwnd, ListBoxModel* model) {

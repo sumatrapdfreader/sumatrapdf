@@ -2634,20 +2634,20 @@ static u32 LowerU64(ULONGLONG v) {
     return res;
 }
 
-const char* GiFlagsToStr(DWORD flags) {
+Str GiFlagsToStr(DWORD flags) {
     switch (flags) {
         case 0:
-            return "";
+            return Str("");
         case GF_BEGIN:
-            return "GF_BEGIN";
+            return Str("GF_BEGIN");
         case GF_INERTIA:
-            return "GF_INERTIA";
+            return Str("GF_INERTIA");
         case GF_END:
-            return "GF_END";
+            return Str("GF_END");
         case GF_INERTIA | GF_END:
-            return "GF_INERTIA  | GF_END";
+            return Str("GF_INERTIA  | GF_END");
     }
-    return "unknown";
+    return Str("unknown");
 }
 
 static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {

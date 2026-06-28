@@ -48,7 +48,7 @@ struct TabGroupsListBoxModel : ListBoxModel {
 
     int ItemsCount() override { return groups.Size(); }
 
-    const char* Item(int i) override { return groups.At(i)->name; }
+    Str Item(int i) override { return groups.At(i)->name; }
 
     int TabCount(int i) {
         auto* tf = groups.At(i)->tabFiles;

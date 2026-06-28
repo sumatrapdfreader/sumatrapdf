@@ -60,10 +60,7 @@ struct FindResultsModel : ListBoxModel {
     MainWindow* win = nullptr;
     explicit FindResultsModel(MainWindow* win) { this->win = win; }
     int ItemsCount() override { return (int)win->findMatches.size(); }
-    const char* Item(int i) override {
-        const char* s = win->findMatches[i].snippet;
-        return s ? s : "";
-    }
+    Str Item(int i) override { return win->findMatches[i].snippet; }
 };
 
 struct FindWindowWnd : Wnd {

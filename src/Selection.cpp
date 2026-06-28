@@ -255,11 +255,10 @@ TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnl
         if (!dm->ValidPageNo(sel.pageNo)) {
             continue;
         }
-        char* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
-        if (!str::IsEmpty(text)) {
+        Str text = dm->GetTextInRegion(sel.pageNo, sel.rect);
+        if (text) {
             selections.Append(text);
         }
-        str::Free(text);
     }
     if (selections.Size() == 0) {
         return {};

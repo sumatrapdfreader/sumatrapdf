@@ -141,11 +141,11 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
         case PdfFilterState::Content:
             while (++m_iPageNo <= m_pdfEngine->PageCount()) {
                 PageText pageText = m_pdfEngine->ExtractPageText(m_iPageNo);
-                if (str::IsEmpty(pageText.text)) {
+                if (!pageText.text) {
                     FreePageText(&pageText);
                     continue;
                 }
-                ws = pageText.text;
+                ws = pageText.text.s;
                 WCHAR* str = str::Replace(ws, L"\n", L"\r\n");
                 chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
                 str::FreePtr(&str);

@@ -451,7 +451,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
 
     PageText res;
     res.len = (int)content.size();
-    res.text = content.StealData();
+    res.text = WStr(content.StealData());
     res.coords = coords.StealData();
     return res;
 }

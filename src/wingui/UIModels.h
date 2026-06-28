@@ -9,7 +9,7 @@ Don't depend on UI subsystem because they are used in non-gui code e.g. engines.
 struct ListBoxModel {
     virtual ~ListBoxModel() = default;
     virtual int ItemsCount() = 0;
-    virtual const char* Item(int) = 0;
+    virtual Str Item(int) = 0;
 };
 
 using DropDownModel = ListBoxModel;
@@ -19,7 +19,7 @@ struct ListBoxModelStrings : ListBoxModel {
 
     ~ListBoxModelStrings() override = default;
     int ItemsCount() override;
-    const char* Item(int) override;
+    Str Item(int) override;
 };
 
 using DropDownModelStrings = ListBoxModelStrings;

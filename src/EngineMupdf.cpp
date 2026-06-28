@@ -3979,8 +3979,8 @@ PageText EngineMupdf::ExtractPageText(int pageNo) {
     // TODO: convert to return PageText
     WCHAR* text = FzTextPageToStr(stext, &res.coords);
     fz_drop_stext_page(ctx, stext);
-    res.text = text;
-    res.len = (int)str::Len(text);
+    res.text = WStr(text);
+    res.len = text ? (int)str::Len(text) : 0;
     return res;
 }
 
@@ -4280,10 +4280,22 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
     }
 
     static const Str pdfPropNames[] = {
-        kPropTitle,        StrL("Title"),        kPropAuthor,           StrL("Author"),
-        kPropSubject,      StrL("Subject"),      kPropCopyright,        StrL("Copyright"),
-        kPropCreationDate, StrL("CreationDate"), kPropModificationDate, StrL("ModDate"),
-        kPropCreatorApp,   StrL("Creator"),      kPropPdfProducer,      StrL("Producer"),
+        kPropTitle,
+        StrL("Title"),
+        kPropAuthor,
+        StrL("Author"),
+        kPropSubject,
+        StrL("Subject"),
+        kPropCopyright,
+        StrL("Copyright"),
+        kPropCreationDate,
+        StrL("CreationDate"),
+        kPropModificationDate,
+        StrL("ModDate"),
+        kPropCreatorApp,
+        StrL("Creator"),
+        kPropPdfProducer,
+        StrL("Producer"),
         Str(),
     };
     Str pdfPropName = GetMatchingString(pdfPropNames, name);

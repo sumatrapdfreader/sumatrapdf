@@ -988,7 +988,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     }
     ReportIf(coords.size() != extracted.size());
     res.len = (int)extracted.size();
-    res.text = extracted.StealData();
+    res.text = WStr(extracted.StealData());
     res.coords = coords.StealData();
     return res;
 }

@@ -49,9 +49,9 @@ bool IsExternalUrl(Str url) {
 }
 
 void FreePageText(PageText* pageText) {
-    str::Free(pageText->text);
+    str::Free(pageText->text.s);
     free((void*)pageText->coords);
-    pageText->text = nullptr;
+    pageText->text = {};
     pageText->coords = nullptr;
     pageText->len = 0;
 }
@@ -60,7 +60,7 @@ static void EnsurePageText(PageText* pageText) {
     if (pageText->text) {
         return;
     }
-    pageText->text = str::Dup(L"");
+    pageText->text = WStr(str::Dup(L""));
     pageText->len = 0;
 }
 
@@ -370,7 +370,7 @@ EngineBase::~EngineBase() {
         for (int i = 0; i < pageCount; i++) {
             PageText* pt = &pagesText[i];
             free(pt->coords);
-            free(pt->text);
+            str::Free(pt->text.s);
         }
         free(pagesText);
     }
@@ -402,7 +402,7 @@ bool EngineBase::HasTextForPage(int pageNo) {
         return false;
     }
     PageText* pt = &pagesText[pageNo - 1];
-    return pt->text != nullptr;
+    return (bool)pt->text;
 }
 
 TextExtractionState EngineBase::GetTextExtractionState(int pageNo) {
@@ -459,7 +459,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     delete data;
 }
 
-const WCHAR* EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
+WStr EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
         if (lenOut) {
@@ -468,7 +468,7 @@ const WCHAR* EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOu
         if (coordsOut) {
             *coordsOut = nullptr;
         }
-        return L"";
+        return {};
     }
 
     bool extract = false;
