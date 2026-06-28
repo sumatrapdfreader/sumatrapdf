@@ -747,7 +747,7 @@ Str FmtVWithArena(Arena* a, Str fmt, va_list args) {
         return str::Dup(a, Str("vsnprintf() returned -1"));
     }
 
-    char* buf = AllocArray<char>(a, count + 1);
+    char* buf = AllocArray<char>(a, count + 1); // str-port: owned heap
     if (!buf) {
         return {};
     }
@@ -1078,7 +1078,7 @@ static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
     TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
     ptrdiff_t consumed = 0;
     {
-        char* endPtr = nullptr;
+        char* endPtr = nullptr; // str-port: CRT out-param
         *val = strtod(sliceZ.s, &endPtr);
         if (!endPtr || endPtr == sliceZ.s) {
             return false;
@@ -1116,87 +1116,96 @@ static Str ParseV(Str str, Str format, va_list args) {
         return {};
     }
     int p = 0;
-    for (const char* f = format.s; *f; f++) {
-        if (*f != '%') {
-            if (p >= str.len || *f != str.s[p]) {
+    for (int fi = 0; fi < format.len; fi++) {
+        char fc = format.s[fi];
+        if (fc != '%') {
+            if (p >= str.len || fc != str.s[p]) {
                 return {};
             }
             p++;
             continue;
         }
-        f++;
+        fi++;
+        if (fi >= format.len) {
+            return {};
+        }
+        char spec = format.s[fi];
 
         int end = -1;
-        if ('u' == *f) {
+        if ('u' == spec) {
             unsigned long v = 0;
             if (!ParseULongAt(str, p, 10, &v, &end)) {
                 return {};
             }
             *va_arg(args, unsigned int*) = (unsigned int)v;
-        } else if ('d' == *f) {
+        } else if ('d' == spec) {
             long v = 0;
             if (!ParseLongAt(str, p, 10, &v, &end)) {
                 return {};
             }
             *va_arg(args, int*) = (int)v;
-        } else if ('x' == *f) {
+        } else if ('x' == spec) {
             unsigned long v = 0;
             if (!ParseULongAt(str, p, 16, &v, &end)) {
                 return {};
             }
             *va_arg(args, unsigned int*) = (unsigned int)v;
-        } else if ('f' == *f) {
+        } else if ('f' == spec) {
             double v = 0;
             if (!ParseDoubleAt(str, p, &v, &end)) {
                 return {};
             }
             *va_arg(args, float*) = (float)v;
-        } else if ('g' == *f) {
+        } else if ('g' == spec) {
             double v = 0;
             if (!ParseDoubleAt(str, p, &v, &end)) {
                 return {};
             }
             *va_arg(args, float*) = (float)v;
-        } else if ('c' == *f) {
+        } else if ('c' == spec) {
             if (p >= str.len) {
                 return {};
             }
             *va_arg(args, char*) = str.s[p];
             end = p + 1;
-        } else if ('s' == *f || 'S' == *f) {
-            va_arg(args, AutoFree*)->Set(ExtractUntil(str, p, *(f + 1), &end).s);
-        } else if ('$' == *f && p >= str.len) {
+        } else if ('s' == spec || 'S' == spec) {
+            if (fi + 1 >= format.len) {
+                return {};
+            }
+            va_arg(args, AutoFree*)->Set(ExtractUntil(str, p, format.s[fi + 1], &end).s);
+        } else if ('$' == spec && p >= str.len) {
             continue; // don't fail, if we're indeed at the end of the string
-        } else if ('%' == *f) {
-            if (p >= str.len || *f != str.s[p]) {
+        } else if ('%' == spec) {
+            if (p >= str.len || spec != str.s[p]) {
                 return {};
             }
             end = p + 1;
-        } else if (' ' == *f) {
+        } else if (' ' == spec) {
             if (p >= str.len || !str::IsWs(str.s[p])) {
                 return {};
             }
             end = p + 1;
-        } else if ('_' == *f) {
+        } else if ('_' == spec) {
             if (p >= str.len || !str::IsWs(str.s[p])) {
                 continue; // don't fail, if there's no whitespace at all
             }
             for (end = p + 1; end < str.len && str::IsWs(str.s[end]); end++) {
                 // do nothing
             }
-        } else if ('?' == *f && *(f + 1)) {
+        } else if ('?' == spec && fi + 1 < format.len) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (p >= str.len || str.s[p] != *++f) {
+            if (p >= str.len || str.s[p] != format.s[fi + 1]) {
                 continue;
             }
+            fi++;
             end = p + 1;
-        } else if (str::IsDigit(*f)) {
-            int formatIdx = ParseLimitedNumber(str, p, (int)(f - format.s), format, &end, va_arg(args, void*));
+        } else if (str::IsDigit(spec)) {
+            int formatIdx = ParseLimitedNumber(str, p, fi, format, &end, va_arg(args, void*));
             if (formatIdx < 0) {
                 return {};
             }
-            f = format.s + formatIdx;
+            fi = formatIdx;
         }
         if (end < 0 || end == p) {
             return {};
@@ -1414,7 +1423,7 @@ Str SeqStrAt(SeqStrings strs, int off) {
     if (!strs || off < 0 || !strs[off]) {
         return {};
     }
-    return Str((char*)strs + off);
+    return Str(strs + off);
 }
 
 bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut) {
@@ -2814,81 +2823,90 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
         return {};
     }
     int p = 0;
-    for (const WCHAR* f = format.s; *f; f++) {
-        if (*f != L'%') {
-            if (p >= str.len || *f != str.s[p]) {
+    for (int fi = 0; fi < format.len; fi++) {
+        WCHAR fc = format.s[fi];
+        if (fc != L'%') {
+            if (p >= str.len || fc != str.s[p]) {
                 return {};
             }
             p++;
             continue;
         }
-        f++;
+        fi++;
+        if (fi >= format.len) {
+            return {};
+        }
+        WCHAR spec = format.s[fi];
 
         int end = -1;
-        if (L'u' == *f) {
+        if (L'u' == spec) {
             unsigned long v = 0;
             if (!ParseULongAtW(str, p, 10, &v, &end)) {
                 return {};
             }
             *va_arg(args, unsigned int*) = (unsigned int)v;
-        } else if (L'd' == *f) {
+        } else if (L'd' == spec) {
             long v = 0;
             if (!ParseLongAtW(str, p, 10, &v, &end)) {
                 return {};
             }
             *va_arg(args, int*) = (int)v;
-        } else if (L'x' == *f) {
+        } else if (L'x' == spec) {
             unsigned long v = 0;
             if (!ParseULongAtW(str, p, 16, &v, &end)) {
                 return {};
             }
             *va_arg(args, unsigned int*) = (unsigned int)v;
-        } else if (L'f' == *f) {
+        } else if (L'f' == spec) {
             double v = 0;
             if (!ParseDoubleAtW(str, p, &v, &end)) {
                 return {};
             }
             *va_arg(args, float*) = (float)v;
-        } else if (L'c' == *f) {
+        } else if (L'c' == spec) {
             if (p >= str.len) {
                 return {};
             }
             *va_arg(args, WCHAR*) = str.s[p];
             end = p + 1;
-        } else if (L's' == *f || L'S' == *f) {
-            va_arg(args, AutoFreeWStr*)->Set(ExtractUntilW(str, p, *(f + 1), &end).s);
-        } else if (L'$' == *f && p >= str.len) {
+        } else if (L's' == spec || L'S' == spec) {
+            if (fi + 1 >= format.len) {
+                return {};
+            }
+            va_arg(args, AutoFreeWStr*)->Set(ExtractUntilW(str, p, format.s[fi + 1], &end).s);
+        } else if (L'$' == spec && p >= str.len) {
             continue; // don't fail, if we're indeed at the end of the string
-        } else if (L'%' == *f) {
-            if (p >= str.len || *f != str.s[p]) {
+        } else if (L'%' == spec) {
+            if (p >= str.len || spec != str.s[p]) {
                 return {};
             }
             end = p + 1;
-        } else if (L' ' == *f) {
+        } else if (L' ' == spec) {
             if (p >= str.len || !str::IsWs(str.s[p])) {
                 return {};
             }
             end = p + 1;
-        } else if (L'_' == *f) {
+        } else if (L'_' == spec) {
             if (p >= str.len || !str::IsWs(str.s[p])) {
                 continue; // don't fail, if there's no whitespace at all
             }
             for (end = p + 1; end < str.len && str::IsWs(str.s[end]); end++) {
                 // do nothing
             }
-        } else if (L'?' == *f && *(f + 1)) {
+        } else if (L'?' == spec && fi + 1 < format.len) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (p >= str.len || str.s[p] != *++f) {
+            if (p >= str.len || str.s[p] != format.s[fi + 1]) {
                 continue;
             }
+            fi++;
             end = p + 1;
-        } else if (str::IsDigit(*f)) {
-            int formatIdx = ParseLimitedNumberW(str, p, (int)(f - format.s), format, &end, va_arg(args, void*));
+        } else if (str::IsDigit(spec)) {
+            int formatIdx = ParseLimitedNumberW(str, p, fi, format, &end, va_arg(args, void*));
             if (formatIdx < 0) {
                 return {};
             }
-            f = format.s + formatIdx;
+            fi = formatIdx;
         }
         if (end < 0 || end == p) {
             return {};
