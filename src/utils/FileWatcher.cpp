@@ -67,7 +67,7 @@ struct FileWatcherState {
 
 struct WatchedDir {
     WatchedDir* next = nullptr;
-    const char* dirPath = nullptr;
+    Str dirPath;
     HANDLE hDir = nullptr;
     bool startMonitoring = true;
     OverlappedEx overlapped;
@@ -77,7 +77,7 @@ struct WatchedDir {
 struct WatchedFile {
     WatchedFile* next = nullptr;
     WatchedDir* watchedDir = nullptr;
-    const char* filePath = nullptr;
+    Str filePath;
     Func0 onFileChangedCb;
 
     // if true, the file is not on a fixed drive and we have
@@ -115,7 +115,7 @@ static void AwakeWatcherThread() {
     SetEvent(gThreadControlHandle);
 }
 
-static void GetFileState(const char* path, FileWatcherState* fs) {
+static void GetFileState(Str path, FileWatcherState* fs) {
     // Note: in my testing on network drive that is mac volume mounted
     // via parallels, lastWriteTime is not updated. lastAccessTime is,
     // but it's also updated when the file is being read from (e.g.
@@ -145,7 +145,7 @@ static bool FileStateEq(FileWatcherState* fs1, FileWatcherState* fs2) {
     return true;
 }
 
-static bool FileStateChanged(const char* filePath, FileWatcherState* fs) {
+static bool FileStateChanged(Str filePath, FileWatcherState* fs) {
     FileWatcherState fsTmp;
 
     GetFileState(filePath, &fsTmp);
@@ -162,12 +162,12 @@ static bool FileStateChanged(const char* filePath, FileWatcherState* fs) {
 // to it wrt. to rename/delete operation, which we don't get notified about
 //
 
-static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
+static void NotifyAboutFile(WatchedDir* d, Str fileName) {
     int i = 0;
 
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->ignore) {
-            logf("NotifyAboutFile: ignoring '%s'\n", wf->filePath);
+            logf("NotifyAboutFile: ignoring '%s'\n", wf->filePath.s);
             continue;
         }
         if (wf->watchedDir != d) {
@@ -178,7 +178,7 @@ static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
         if (!str::EqI(fileName, path)) {
             continue;
         }
-        logf("NotifyAboutFile(): i=%d '%s' '%s'\n", i, wf->filePath, fileName);
+        logf("NotifyAboutFile(): i=%d '%s' '%s'\n", i, wf->filePath.s, fileName.s);
         i++;
 
         // NOTE: It is not recommended to check whether the timestamp has changed
@@ -242,7 +242,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     StrVec changedFiles;
     for (;;) {
         size_t fnLen = notify->FileNameLength / sizeof(WCHAR);
-        char* fileName = ToUtf8Temp(notify->FileName, fnLen);
+        TempStr fileName = ToUtf8Temp(WStr(notify->FileName, (int)fnLen));
         // files can get updated either by writing to them directly or
         // by writing to a .tmp file first and then moving that file in place
         // (the latter only yields a RENAMED action with the expected file name)
@@ -262,7 +262,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
 
     StartMonitoringDirForChanges(wd);
 
-    for (char* f : changedFiles) {
+    for (Str f : changedFiles) {
         NotifyAboutFile(wd, f);
     }
 }
@@ -277,7 +277,7 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
     // this is called after reading change notification and we're only
     // interested in logging the first time a dir is registered for monitoring
     if (wd->startMonitoring) {
-        logf("StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
+        logf("StartMonitoringDirForChangesAPC() %s\n", wd->dirPath.s);
     }
 
     DWORD dwNotifyFilter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME;
@@ -359,7 +359,7 @@ static void FileWatcherThread() {
     DestroyTempArena();
 }
 
-static WatchedDir* FindExistingWatchedDir(const char* dirPath) {
+static WatchedDir* FindExistingWatchedDir(Str dirPath) {
     for (WatchedDir* wd = gWatchedDirs; wd; wd = wd->next) {
         // TODO: normalize dirPath?
         if (str::EqI(dirPath, wd->dirPath)) {
@@ -387,7 +387,7 @@ static void CALLBACK SignalExitMonitoringThread(ULONG_PTR arg) {
     AtomicBoolSet(&gShouldExit, true);
 }
 
-static WatchedDir* NewWatchedDir(const char* dirPath) {
+static WatchedDir* NewWatchedDir(Str dirPath) {
     TempWStr dirW = ToWStrTemp(dirPath);
     DWORD access = FILE_LIST_DIRECTORY;
     DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE;
@@ -406,8 +406,7 @@ static WatchedDir* NewWatchedDir(const char* dirPath) {
     return wd;
 }
 
-static WatchedFile* NewWatchedFile(const char* filePath, const Func0& onFileChangedCb,
-                                   bool enableManualCheckOnNetworkDrives) {
+static WatchedFile* NewWatchedFile(Str filePath, const Func0& onFileChangedCb, bool enableManualCheckOnNetworkDrives) {
     bool isManualCheck = !path::SupportsChangeNotifications(filePath);
     bool isNetworkDrive = path::IsOnNetworkDrive(filePath);
     if (isManualCheck) {
@@ -473,16 +472,16 @@ We take ownership of observer object.
 Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
 way we can support multiple callers subscribing to the same file.
 */
-WatchedFile* FileWatcherSubscribe(const char* path, const Func0& onFileChangedCb, bool enableManualCheck) {
+WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool enableManualCheck) {
     // logf("FileWatcherSubscribe() path: %s\n", path);
 
     if (!file::Exists(path)) {
-        logf("FileWatcherSubscribe: '%s' doesn't exist\n", path);
+        logf("FileWatcherSubscribe: '%s' doesn't exist\n", path.s);
         return nullptr;
     }
 
     if (path::IsSame(gLogFilePath, path)) {
-        logf("FileWatcherSubscribe: '%s' is our own log file\n", path);
+        logf("FileWatcherSubscribe: '%s' is our own log file\n", path.s);
         return nullptr;
     }
 #if 0
