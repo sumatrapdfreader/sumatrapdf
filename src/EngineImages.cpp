@@ -1085,7 +1085,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
         /* property didn't exist */;
         return altId == 0 ? nullptr : GetImagePropertyTemp(bmp, altId);
     } else if (PropertyTagTypeASCII == item->type) {
-        value = strconv::AnsiToUtf8Temp(Str((char*)item->value, size));
+        value = strconv::AnsiToUtf8Temp(AsStr(ByteSlice((u8*)item->value, size)));
     } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
                !((WCHAR*)item->value)[item->length / 2 - 1]) {
         value = ToUtf8Temp((WCHAR*)item->value);
@@ -1348,7 +1348,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         PropertyItem* item = nullptr;
         if (GetImagePropertyItem(bmp, PropertyTagExifVer, &item)) {
             if (item->length >= 4) {
-                Str exifVer((char*)item->value, (int)item->length);
+                Str exifVer = AsStr(ByteSlice((u8*)item->value, item->length));
                 val = str::DupTemp(exifVer);
                 AddProp(keyValOut, kPropExifVersion, val);
             }
@@ -1468,7 +1468,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         if (GetImagePropertyItem(bmp, PropertyTagExifUserComment, &item)) {
             // first 8 bytes are character code identifier
             if (item->length > 8) {
-                Str commentData((char*)item->value + 8, (int)item->length - 8);
+                Str commentData = AsStr(ByteSlice((u8*)item->value + 8, item->length - 8));
                 // check if it's ASCII
                 if (memcmp(item->value, "ASCII\0\0\0", 8) == 0) {
                     val = str::DupTemp(commentData);
@@ -1493,7 +1493,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         PropertyItem* item = nullptr;
         if (GetImagePropertyItem(bmp, PropertyTagExifFPXVer, &item)) {
             if (item->length >= 4) {
-                Str fpVer((char*)item->value, (int)item->length);
+                Str fpVer = AsStr(ByteSlice((u8*)item->value, item->length));
                 val = str::DupTemp(fpVer);
                 AddProp(keyValOut, kPropFlashpixVersion, val);
             }
@@ -1983,7 +1983,7 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
     // Detect the encoding from a leading BOM and produce UTF-8 (gumbo expects
     // UTF-8 input). Handles UTF-8, UTF-16 LE, and UTF-16 BE BOMs; if there's
     // no BOM the data is treated as UTF-8 (ComicInfo.xml's spec encoding).
-    TempStr utf8 = strconv::UnknownToUtf8Temp(Str((char*)xmlData.data(), (int)xmlData.size()));
+    TempStr utf8 = strconv::UnknownToUtf8Temp(AsStr(xmlData));
     if (!utf8) {
         return;
     }
