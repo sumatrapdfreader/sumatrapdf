@@ -57,8 +57,8 @@ struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */
     TbIcon bmpIndex;
     int cmdId;
-    const char* toolTip;
-    const char* svgIcon = nullptr;
+    Str toolTip;
+    Str svgIcon = {};
 };
 
 // thos are not real commands but we have to refer to toolbar buttons
@@ -320,10 +320,11 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         if (bi.bmpIndex == TbIcon::Text) {
             continue;
         }
-        const char* accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
+        TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
         TempStr s = trans::GetTranslation(bi.toolTip);
         if (accelStr) {
-            TempStr s2 = str::FormatTemp(" (%s)", accelStr + 1); // +1 to skip \t
+            Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
+            TempStr s2 = str::FormatTemp(" (%s)", accel.s);
             s = str::JoinTemp(s, s2);
         }
 
@@ -339,10 +340,11 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         int n = gCustomToolbarButtons->Size();
         for (int i = 0; i < n; i++) {
             const ToolbarButtonInfo& bi = gCustomToolbarButtons->At(i);
-            const char* accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
+            TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
             TempStr s = bi.toolTip;
             if (accelStr) {
-                TempStr s2 = str::FormatTemp(" (%s)", accelStr + 1); // +1 to skip \t
+                Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
+                TempStr s2 = str::FormatTemp(" (%s)", accel.s);
                 s = str::JoinTemp(s, s2);
             }
 
@@ -365,10 +367,11 @@ static void SetToolbarButtonImageByIdx(HWND hwnd, int idx, TbIcon icon) {
 }
 
 // sets button text, which the toolbar shows as its tooltip
-static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, const char* s) {
-    const char* accelStr = AppendAccelKeyToMenuStringTemp(nullptr, cmdId);
+static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, Str s) {
+    TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, cmdId);
     if (accelStr) {
-        TempStr s2 = str::FormatTemp(" (%s)", accelStr + 1); // +1 to skip \t
+        Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
+        TempStr s2 = str::FormatTemp(" (%s)", accel.s);
         s = str::JoinTemp(s, s2);
     }
     TBBUTTONINFOW bi{};
@@ -400,7 +403,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             bool speaking = TtsIsSpeaking();
             SetToolbarButtonImageByIdx(hwnd, i, speaking ? TbIcon::PauseSpeaking : TbIcon::Speak);
             // tooltip reflects what clicking the button will do
-            const char* tip = _TRA("Read Aloud");
+            Str tip = _TRA("Read Aloud");
             if (speaking) {
                 tip = _TRA("Pause Reading");
             } else if (CanContinueReadAloud(win->CurrentTab())) {
@@ -428,7 +431,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             // update tooltip before SetTabDirty (which rebuilds tooltips via LayoutTabs)
             TabInfo* ti = win->tabsCtrl->GetTab(i);
             if (ti && tab && tab->filePath) {
-                const char* path = tab->filePath;
+                Str path = tab->filePath;
                 if (dirty) {
                     TempStr tooltip = str::JoinTemp(path, " ", _TRA("(unsaved annotations)"));
                     str::ReplaceWithCopy(&ti->tooltip, tooltip);
@@ -886,7 +889,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     } else if (WM_CHAR == msg) {
         switch (wp) {
             case VK_RETURN: {
-                char* s = HwndGetTextTemp(win->hwndPageEdit);
+                TempStr s = HwndGetTextTemp(win->hwndPageEdit);
                 int newPageNo = win->ctrl->GetPageByLabel(s);
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
@@ -923,7 +926,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (!win->hwndToolbar) {
         return;
     }
-    const char* text = _TRA("Page:");
+    Str text = _TRA("Page:");
     if (!updateOnly) {
         HwndSetText(win->hwndPageLabel, text);
     }
@@ -1103,7 +1106,7 @@ static const TempStr ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
     return shortcut->cmd;
 }
 
-static const TempStr CustomCommandToolbarToolTipTemp(CustomCommand* cmd, const char* fallback) {
+static TempStr CustomCommandToolbarToolTipTemp(CustomCommand* cmd, Str fallback) {
     if (cmd && !str::IsEmptyOrWhiteSpace(cmd->name)) {
         return cmd->name;
     }
@@ -1142,8 +1145,8 @@ static void PopulateCustomToolbarButtons() {
         if (gCustomButtonsCount >= kMaxCustomButtons) {
             break;
         }
-        const char* svgIcon = GetCommandStringArg(cc, kCmdArgToolbarSvgIcon, nullptr);
-        const char* tbText = GetCommandStringArg(cc, kCmdArgToolbarText, nullptr);
+        Str svgIcon = GetCommandStringArg(cc, kCmdArgToolbarSvgIcon, nullptr);
+        Str tbText = GetCommandStringArg(cc, kCmdArgToolbarText, nullptr);
         if (!str::IsEmptyOrWhiteSpace(svgIcon)) {
             ToolbarButtonInfo tbi;
             tbi.bmpIndex = TbIcon::None;
@@ -1210,7 +1213,7 @@ static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int 
     }
 }
 
-static HBITMAP BuildIconsBitmap(int dx, int dy, const char** customSvgs, int customCount) {
+static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount) {
     fz_context* ctx = fz_new_context_windows();
     int nBuiltIn = (int)TbIcon::kMax;
     int nIcons = nBuiltIn + customCount;
@@ -1288,11 +1291,11 @@ static int SetToolbarIconsImageList(MainWindow* win) {
     // but the docs say to do it
     SendMessage(hwndToolbar, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(dx, dx));
 
-    const char* customSvgs[kMaxCustomButtons];
+    Str customSvgs[kMaxCustomButtons];
     int customCount = 0;
     int nBuiltIn = (int)TbIcon::kMax;
     for (int i = 0; i < gCustomButtonsCount; i++) {
-        const char* svg = gCustomButtons[i].svgIcon;
+        Str svg = gCustomButtons[i].svgIcon;
         if (str::IsEmptyOrWhiteSpace(svg)) {
             continue;
         }
