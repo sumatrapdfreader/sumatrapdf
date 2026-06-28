@@ -120,18 +120,18 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
     // based on TextSelection::SelectWordAt
     int textLen;
     auto engine = document->GetDM()->GetEngine();
-    const WCHAR* pageText = engine->GetTextForPage(pageno, &textLen);
+    WStr pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx > 0; idx--) {
-            if (isWordChar(pageText[idx - 1])) {
+            if (isWordChar(pageText.s[idx - 1])) {
                 break;
             }
         }
     }
 
     for (; idx > 0; idx--) {
-        if (!isWordChar(pageText[idx - 1])) {
+        if (!isWordChar(pageText.s[idx - 1])) {
             break;
         }
     }
@@ -141,18 +141,18 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
 int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
     auto engine = document->GetDM()->GetEngine();
-    const WCHAR* pageText = engine->GetTextForPage(pageno, &textLen);
+    WStr pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx < textLen; idx++) {
-            if (isWordChar(pageText[idx])) {
+            if (isWordChar(pageText.s[idx])) {
                 break;
             }
         }
     }
 
     for (; idx < textLen; idx++) {
-        if (!isWordChar(pageText[idx])) {
+        if (!isWordChar(pageText.s[idx])) {
             break;
         }
     }
@@ -162,18 +162,18 @@ int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool
 int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
     auto engine = document->GetDM()->GetEngine();
-    const WCHAR* pageText = engine->GetTextForPage(pageno, &textLen);
+    WStr pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx > 0; idx--) {
-            if (pageText[idx - 1] != L'\n') {
+            if (pageText.s[idx - 1] != L'\n') {
                 break;
             }
         }
     }
 
     for (; idx > 0; idx--) {
-        if (pageText[idx - 1] == L'\n') {
+        if (pageText.s[idx - 1] == L'\n') {
             break;
         }
     }
@@ -183,18 +183,18 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
 int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
     auto engine = document->GetDM()->GetEngine();
-    const WCHAR* pageText = engine->GetTextForPage(pageno, &textLen);
+    WStr pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx < textLen; idx++) {
-            if (pageText[idx] != L'\n') {
+            if (pageText.s[idx] != L'\n') {
                 break;
             }
         }
     }
 
     for (; idx < textLen; idx++) {
-        if (pageText[idx] == L'\n') {
+        if (pageText.s[idx] == L'\n') {
             break;
         }
     }

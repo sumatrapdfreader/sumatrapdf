@@ -228,13 +228,13 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_Value(BSTR* pRetV
         return E_FAIL;
     }
 
-    const WCHAR* pageContent = dm->GetEngine()->GetTextForPage(pageNum);
+    WStr pageContent = dm->GetEngine()->GetTextForPage(pageNum);
     if (!pageContent) {
         *pRetVal = nullptr;
         return S_OK;
     }
 
-    *pRetVal = SysAllocString(pageContent);
+    *pRetVal = SysAllocString(pageContent.s);
     return S_OK;
 }
 
