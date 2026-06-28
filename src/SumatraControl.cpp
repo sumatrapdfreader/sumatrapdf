@@ -57,7 +57,7 @@ struct ControlArg {
     i32 intVal = 0;
     u8* bytes = nullptr;
     u32 bytesLen = 0;
-    char* str = nullptr;
+    Str str;
     Vec<ControlArg*>* list = nullptr;
 };
 
@@ -66,7 +66,7 @@ static void DeleteControlArg(ControlArg* arg) {
         return;
     }
     free(arg->bytes);
-    str::Free(arg->str);
+    str::FreePtr(&arg->str);
     if (arg->list) {
         for (ControlArg* el : *arg->list) {
             DeleteControlArg(el);
@@ -147,14 +147,14 @@ static void AppendArgInt(StrBuilder& s, i32 v) {
     AppendU32(s, (u32)v);
 }
 
-static void AppendArgString(StrBuilder& s, const char* str) {
+static void AppendArgString(StrBuilder& s, Str str) {
     if (!str) {
-        str = "";
+        str = Str("");
     }
-    size_t len = str::Len(str);
+    size_t len = (size_t)str.len;
     AppendU16(s, (u16)ControlArgType::String);
     AppendU32(s, (u32)len);
-    s.Append(str, len);
+    s.Append(str);
     s.AppendChar(0);
 }
 
@@ -212,11 +212,12 @@ static bool ParseArg(PacketReader& r, ControlArg** argOut) {
             DeleteControlArg(arg);
             return false;
         }
-        arg->str = AllocArray<char>((size_t)len + 1);
-        if (!r.ReadBytes((u8*)arg->str, len)) {
+        char* strBuf = AllocArray<char>((size_t)len + 1);
+        if (!r.ReadBytes((u8*)strBuf, len)) {
             DeleteControlArg(arg);
             return false;
         }
+        arg->str = Str(strBuf, (int)len);
         u8 zero = 1;
         if (!r.ReadBytes(&zero, 1) || zero != 0) {
             DeleteControlArg(arg);
@@ -252,9 +253,9 @@ static ControlArg* ArgAt(ControlRequest* req, size_t idx, ControlArgType type) {
     return arg;
 }
 
-static const char* StringArg(ControlRequest* req, size_t idx) {
+static Str StringArg(ControlRequest* req, size_t idx) {
     ControlArg* arg = ArgAt(req, idx, ControlArgType::String);
-    return arg ? arg->str : nullptr;
+    return arg ? arg->str : Str{};
 }
 
 static bool IntArg(ControlRequest* req, size_t idx, i32& valOut) {
@@ -266,7 +267,7 @@ static bool IntArg(ControlRequest* req, size_t idx, i32& valOut) {
     return true;
 }
 
-static void AppendError(ControlRequest* req, const char* msg) {
+static void AppendError(ControlRequest* req, Str msg) {
     req->results.Reset();
     AppendArgInt(req->results, -1);
     AppendArgString(req->results, msg);
@@ -295,8 +296,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestSynctex: {
             i32 line = 0;
-            const char* pdf = StringArg(req, 0);
-            const char* src = StringArg(req, 1);
+            Str pdf = StringArg(req, 0);
+            Str src = StringArg(req, 1);
             if (!pdf || !src || !IntArg(req, 2, line)) {
                 AppendError(req, "TestSynctex expects string pdf, string source, int line");
                 break;
@@ -307,7 +308,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestInverseSearch: {
             i32 page = 0, x = 0, y = 0;
-            const char* pdf = StringArg(req, 0);
+            Str pdf = StringArg(req, 0);
             if (!pdf || !IntArg(req, 1, page) || !IntArg(req, 2, x) || !IntArg(req, 3, y)) {
                 AppendError(req, "TestInverseSearch expects string pdf, int page, int x, int y");
                 break;
@@ -317,9 +318,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestSearch: {
-            const char* pdf = StringArg(req, 0);
-            const char* needle = StringArg(req, 1);
-            const char* password = StringArg(req, 2);
+            Str pdf = StringArg(req, 0);
+            Str needle = StringArg(req, 1);
+            Str password = StringArg(req, 2);
             if (!pdf || !needle) {
                 AppendError(req, "TestSearch expects string pdf, string needle, optional string password");
                 break;
@@ -333,7 +334,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestDest: {
             i32 destNo = 0;
-            const char* pdf = StringArg(req, 0);
+            Str pdf = StringArg(req, 0);
             if (!pdf || !IntArg(req, 1, destNo)) {
                 AppendError(req, "TestDest expects string pdf, int destinationNumber");
                 break;
@@ -343,8 +344,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestNamedDest: {
-            const char* pdf = StringArg(req, 0);
-            const char* name = StringArg(req, 1);
+            Str pdf = StringArg(req, 0);
+            Str name = StringArg(req, 1);
             if (!pdf || !name) {
                 AppendError(req, "TestNamedDest expects string pdf, string name");
                 break;
@@ -354,76 +355,76 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestChm: {
-            const char* chm = StringArg(req, 0);
+            Str chm = StringArg(req, 0);
             if (!chm) {
                 AppendError(req, "TestChm expects string chmPath");
                 break;
             }
             int exitCode = 0;
-            char* res = TestChmResult(chm, &exitCode);
+            Str res = TestChmResult(chm, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestSelectionTranslate: {
             i32 backend = 0;
-            const char* srcLang = StringArg(req, 1);
-            const char* dstLang = StringArg(req, 2);
-            const char* text = StringArg(req, 3);
+            Str srcLang = StringArg(req, 1);
+            Str dstLang = StringArg(req, 2);
+            Str text = StringArg(req, 3);
             if (!IntArg(req, 0, backend) || !srcLang || !dstLang || !text) {
                 AppendError(req,
                             "TestSelectionTranslate expects int backend, string srcLang, string dstLang, string text");
                 break;
             }
             int exitCode = 0;
-            char* res = TestSelectionTranslateResult(backend, srcLang, dstLang, text, &exitCode);
+            Str res = TestSelectionTranslateResult(backend, srcLang, dstLang, text, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestTripleClickLineSelect: {
-            const char* pdf = StringArg(req, 0);
-            const char* clickWord = StringArg(req, 1);
-            const char* expectedLine = StringArg(req, 2);
+            Str pdf = StringArg(req, 0);
+            Str clickWord = StringArg(req, 1);
+            Str expectedLine = StringArg(req, 2);
             if (!pdf || !clickWord || !expectedLine) {
                 AppendError(req, "TestTripleClickLineSelect expects string pdf, string clickWord, string expectedLine");
                 break;
             }
             int exitCode = 0;
-            char* res = TestTripleClickLineSelectResult(pdf, clickWord, expectedLine, &exitCode);
+            Str res = TestTripleClickLineSelectResult(pdf, clickWord, expectedLine, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestContextMenuSelection: {
-            const char* word1 = StringArg(req, 0);
-            const char* word2 = StringArg(req, 1);
-            const char* cursorWord = StringArg(req, 2);
+            Str word1 = StringArg(req, 0);
+            Str word2 = StringArg(req, 1);
+            Str cursorWord = StringArg(req, 2);
             if (!word1 || !word2 || !cursorWord) {
                 AppendError(req, "TestContextMenuSelection expects string word1, string word2, string cursorWord");
                 break;
             }
             int exitCode = 0;
-            char* res = TestContextMenuSelectionResult(word1, word2, cursorWord, &exitCode);
+            Str res = TestContextMenuSelectionResult(word1, word2, cursorWord, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestGoToFindMatch: {
-            const char* word = StringArg(req, 0);
-            const char* typed = StringArg(req, 1);
+            Str word = StringArg(req, 0);
+            Str typed = StringArg(req, 1);
             if (!word || !typed) {
                 AppendError(req, "TestGoToFindMatch expects string word, string typed");
                 break;
             }
             int exitCode = 0;
-            char* res = TestGoToFindMatchResult(word, typed, &exitCode);
+            Str res = TestGoToFindMatchResult(word, typed, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestImageResizeArrowKey: {
-            const char* imagePath = StringArg(req, 0);
+            Str imagePath = StringArg(req, 0);
             if (!imagePath) {
                 AppendError(req, "TestImageResizeArrowKey expects string imagePath");
                 break;
@@ -442,8 +443,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestFileKind: {
-            const char* path = StringArg(req, 0);
-            const char* expectedKind = StringArg(req, 1);
+            Str path = StringArg(req, 0);
+            Str expectedKind = StringArg(req, 1);
             if (!path || !expectedKind) {
                 AppendError(req, "TestFileKind expects string path, string expectedKind");
                 break;
@@ -458,21 +459,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 minDelta = 50;
             IntArg(req, 0, minDelta);
             int exitCode = 0;
-            char* res = TestScrollToLinkResult(minDelta, &exitCode);
+            Str res = TestScrollToLinkResult(minDelta, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestI18nErrorString: {
             int exitCode = 0;
-            char* res = TestI18nErrorStringResult(&exitCode);
+            Str res = TestI18nErrorStringResult(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestPageInfoOverlay: {
-            const char* pathTwo = StringArg(req, 0);
-            const char* pathOne = StringArg(req, 1);
+            Str pathTwo = StringArg(req, 0);
+            Str pathOne = StringArg(req, 1);
             if (!pathTwo || !pathOne) {
                 AppendError(req, "TestPageInfoOverlay expects string pathTwoPages, string pathOnePage");
                 break;
@@ -484,26 +485,26 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestGetToc: {
-            const char* path = StringArg(req, 0);
+            Str path = StringArg(req, 0);
             if (!path) {
                 AppendError(req, "TestGetToc expects string path");
                 break;
             }
             int exitCode = 0;
-            char* res = TestGetTocResult(path, &exitCode);
+            Str res = TestGetTocResult(path, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestPageLinks: {
-            const char* path = StringArg(req, 0);
+            Str path = StringArg(req, 0);
             i32 pageNo = 1;
             if (!path || !IntArg(req, 1, pageNo)) {
                 AppendError(req, "TestPageLinks expects string path, int pageNo");
                 break;
             }
             int exitCode = 0;
-            char* res = TestPageLinksResult(path, pageNo, &exitCode);
+            Str res = TestPageLinksResult(path, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -594,22 +595,20 @@ static void ProcessControlConnection(HANDLE h) {
     }
 }
 
-static WCHAR* FullPipeName(const char* pipeName) {
+static TempWStr FullPipeName(Str pipeName) {
     if (str::StartsWith(pipeName, R"(\\.\pipe\)")) {
-        return ToWStr(pipeName);
+        return ToWStrTemp(pipeName);
     }
-    TempStr fullName = str::FormatTemp(R"(\\.\pipe\%s)", pipeName);
-    return ToWStr(fullName);
+    return ToWStrTemp(str::FormatTemp(R"(\\.\pipe\%s)", pipeName));
 }
 
 static void SumatraControlThread(char* pipeName) {
-    AutoFreeWStr pipeNameW(FullPipeName(pipeName));
+    TempWStr pipeNameW = FullPipeName(Str(pipeName));
     str::Free(pipeName);
 
     for (;;) {
-        HANDLE pipe =
-            CreateNamedPipeW(pipeNameW.Get(), PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1,
-                             64 * 1024, 64 * 1024, 0, nullptr);
+        HANDLE pipe = CreateNamedPipeW(pipeNameW.s, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                                       1, 64 * 1024, 64 * 1024, 0, nullptr);
         if (pipe == INVALID_HANDLE_VALUE) {
             logf("CreateNamedPipeW failed for control pipe\n");
             return;
@@ -627,5 +626,5 @@ void StartSumatraControl(Str pipeName) {
     if (str::IsEmpty(pipeName)) {
         return;
     }
-    RunAsync(MkFunc0<char>(SumatraControlThread, str::Dup(pipeName)), "SumatraControl");
+    RunAsync(MkFunc0(SumatraControlThread, str::Dup(pipeName).s), "SumatraControl");
 }
