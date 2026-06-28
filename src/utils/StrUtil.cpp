@@ -908,24 +908,28 @@ static bool isNl(char c) {
 }
 
 // replaces '\r\n' and '\r' with just '\n' and removes empty lines
-size_t NormalizeNewlinesInPlace(char* s, char* e) {
-    char* start = s;
-    char* dst = s;
+size_t NormalizeNewlinesInPlace(Str s, Str endExclusive) {
+    if (!s) {
+        return 0;
+    }
+    char* start = s.s;
+    char* dst = s.s;
+    char* e = endExclusive.s ? endExclusive.s : s.s + s.len;
     // remove newlines at the beginning
-    while (s < e && isNl(*s)) {
-        ++s;
+    while (s.s < e && isNl(*s.s)) {
+        ++s.s;
     }
 
     bool inNewline = false;
-    while (s < e) {
-        if (isNl(*s)) {
+    while (s.s < e) {
+        if (isNl(*s.s)) {
             if (!inNewline) {
                 *dst++ = '\n';
             }
             inNewline = true;
-            ++s;
+            ++s.s;
         } else {
-            *dst++ = *s++;
+            *dst++ = *s.s++;
             inNewline = false;
         }
     }
@@ -937,11 +941,11 @@ size_t NormalizeNewlinesInPlace(char* s, char* e) {
         --dst;
         *dst = 0;
     }
-    return dst - start;
+    return (size_t)(dst - start);
 }
 
-size_t NormalizeNewlinesInPlace(char* s) {
-    return NormalizeNewlinesInPlace(s, s + str::Len(s));
+size_t NormalizeNewlinesInPlace(Str s) {
+    return NormalizeNewlinesInPlace(s, Str(s.s + s.len, 0));
 }
 
 // Remove all characters in "toRemove" from "str", in place.

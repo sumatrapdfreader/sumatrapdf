@@ -165,8 +165,8 @@ void TrimWsEnd(char* s, char*& e);
 size_t TransCharsInPlace(Str str, Str oldChars, Str newChars);
 
 size_t NormalizeWSInPlace(Str str);
-size_t NormalizeNewlinesInPlace(char* s, char* e);
-size_t NormalizeNewlinesInPlace(char* s);
+size_t NormalizeNewlinesInPlace(Str s, Str endExclusive);
+size_t NormalizeNewlinesInPlace(Str s);
 size_t RemoveCharsInPlace(Str str, Str toRemove);
 
 int BufSet(char* dst, int dstCchSize, Str src);
