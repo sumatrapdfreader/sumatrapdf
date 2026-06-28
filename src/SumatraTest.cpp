@@ -535,7 +535,7 @@ Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     Rect* coords = nullptr;
     const WCHAR* pageTxt = engine->GetTextForPage(pageNo, &textLen, &coords);
     if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= textLen && curStart < curEnd) {
-        AutoFreeWStr w = str::Dup(pageTxt + curStart, (size_t)(curEnd - curStart));
+        AutoFreeWStr w(str::Dup(WStr(pageTxt + curStart, (int)(curEnd - curStart))).s);
         matched = ToUtf8Temp(w);
     }
 

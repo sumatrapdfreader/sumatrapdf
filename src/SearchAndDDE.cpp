@@ -478,10 +478,10 @@ static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
     const int kCtx = 40;
     int from = std::max(0, mStart - kCtx);
     int to = std::min(textLen, mEnd + kCtx);
-    WCHAR* sub = str::Dup(pageText.s + from, (size_t)(to - from));
+    WStr sub = str::Dup(WStr(pageText.s + from, (int)(to - from)));
     str::NormalizeWSInPlace(sub);
-    TempStr u = ToUtf8Temp(sub);
-    str::Free(sub);
+    TempStr u = ToUtf8Temp(sub.s);
+    str::FreePtr(&sub);
     return str::FormatTemp("%s%s%s", from > 0 ? "..." : "", u, to < textLen ? "..." : "");
 }
 

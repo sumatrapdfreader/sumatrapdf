@@ -187,10 +187,10 @@ bool IsEmptyOrWhiteSpace(Str s);
 bool Skip(Str& s, Str toSkip);
 Str SkipChar(Str s, char toSkip);
 
-WCHAR* Dup(Arena*, const WCHAR* str, size_t cch = (size_t)-1);
-WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
-WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
-WCHAR* Join(Arena*, const WCHAR*, const WCHAR*, const WCHAR* s3);
+WStr Dup(Arena*, WStr str, size_t cch = (size_t)-1);
+WStr Dup(WStr s, size_t cch = (size_t)-1);
+WStr Join(WStr, WStr, WStr s3 = {});
+WStr Join(Arena*, WStr, WStr, WStr s3);
 bool Eq(const WCHAR*, const WCHAR*);
 bool EqI(const WCHAR*, const WCHAR*);
 bool EqN(const WCHAR*, const WCHAR*, size_t);
@@ -557,11 +557,17 @@ FORCEINLINE Str Dup(Arena* a, const char* s, size_t cch = (size_t)-1) {
 FORCEINLINE Str Dup(const char* s, size_t cch = (size_t)-1) {
     return Dup(nullptr, s, cch);
 }
-FORCEINLINE WCHAR* Dup(Arena* a, WStr s) {
-    return Dup(a, s.s, s.len);
+FORCEINLINE WStr Dup(Arena* a, const WCHAR* s, size_t cch = (size_t)-1) {
+    if (!s) {
+        return {};
+    }
+    if (cch == (size_t)-1) {
+        return Dup(a, WStr(s));
+    }
+    return Dup(a, WStr((WCHAR*)s, (int)cch));
 }
-FORCEINLINE WCHAR* Dup(WStr s) {
-    return Dup(s.s, s.len);
+FORCEINLINE WStr Dup(const WCHAR* s, size_t cch = (size_t)-1) {
+    return Dup(nullptr, s, cch);
 }
 FORCEINLINE Str Find(const Str& str, const char* find) {
     return Find(str, Str(find));

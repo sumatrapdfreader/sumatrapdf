@@ -1091,7 +1091,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             if (str::IsEmpty(itemText.Get())) {
                 itemText.Set(text.StealData());
             } else {
-                itemText.Set(str::Join(itemText, L" ", text));
+                itemText.Set(str::Join(WStr(itemText.Get()), WStr(L" "), WStr(text.Get())).s);
             }
         }
     }

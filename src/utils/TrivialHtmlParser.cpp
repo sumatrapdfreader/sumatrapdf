@@ -63,9 +63,9 @@ static WCHAR IntToChar(int codepoint) {
 // caller needs to free() the result
 WStr DecodeHtmlEntitites(Str string, uint codepage) {
     TempWStr fixedTemp = strconv::StrCPToWStrTemp(string, codepage);
-    WCHAR* fixed = str::Dup(fixedTemp);
-    WCHAR* dst = fixed;
-    const WCHAR* src = fixed;
+    WStr fixed = str::Dup(fixedTemp);
+    WCHAR* dst = fixed.s;
+    const WCHAR* src = fixed.s;
 
     while (*src) {
         if (*src != '&') {
@@ -104,7 +104,7 @@ WStr DecodeHtmlEntitites(Str string, uint codepage) {
     }
     *dst = '\0';
 
-    return WStr(fixed);
+    return fixed;
 }
 
 // TODO: optimize

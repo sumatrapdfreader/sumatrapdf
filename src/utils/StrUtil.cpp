@@ -301,14 +301,27 @@ Str Dup(const ByteSlice& d) {
     return Dup(Str((char*)d.data(), (int)d.size()));
 }
 
-WCHAR* Dup(Arena* a, const WCHAR* s, size_t cch) {
-    if (cch == (size_t)-1) {
-        cch = str::Len(s);
+static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) {
+    if (!s) {
+        return {};
     }
-    return (WCHAR*)MemDup(a, s, cch * sizeof(WCHAR), sizeof(WCHAR));
+    if (cch == (size_t)-1) {
+        return WStr(s);
+    }
+    return WStr(s, (int)cch);
 }
 
-WCHAR* Dup(const WCHAR* s, size_t cch) {
+WStr Dup(Arena* a, WStr s, size_t cch) {
+    if (!s) {
+        return {};
+    }
+    if (cch == (size_t)-1) {
+        cch = (size_t)s.len;
+    }
+    return WrapAllocatedW((WCHAR*)MemDup(a, s.s, cch * sizeof(WCHAR), sizeof(WCHAR)), cch);
+}
+
+WStr Dup(WStr s, size_t cch) {
     return Dup(nullptr, s, cch);
 }
 
@@ -586,20 +599,20 @@ Str Join(Str s1, Str s2, Str s3) {
 
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
-WCHAR* Join(Arena* allocator, const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
+WStr Join(Arena* allocator, WStr s1, WStr s2, WStr s3) {
     // don't use str::Format(L"%s%s%s", s1, s2, s3) since the strings
     // might contain non-characters which str::Format fails to handle
-    size_t s1Len = str::Len(s1), s2Len = str::Len(s2), s3Len = str::Len(s3);
+    size_t s1Len = (size_t)s1.len, s2Len = (size_t)s2.len, s3Len = (size_t)s3.len;
     size_t len = s1Len + s2Len + s3Len + 1;
     WCHAR* res = (WCHAR*)Alloc(allocator, len * sizeof(WCHAR));
-    memcpy(res, s1, s1Len * sizeof(WCHAR));
-    memcpy(res + s1Len, s2, s2Len * sizeof(WCHAR));
-    memcpy(res + s1Len + s2Len, s3, s3Len * sizeof(WCHAR));
+    memcpy(res, s1.s, s1Len * sizeof(WCHAR));
+    memcpy(res + s1Len, s2.s, s2Len * sizeof(WCHAR));
+    memcpy(res + s1Len + s2Len, s3.s, s3Len * sizeof(WCHAR));
     res[s1Len + s2Len + s3Len] = '\0';
-    return res;
+    return WStr(res);
 }
 
-WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
+WStr Join(WStr s1, WStr s2, WStr s3) {
     return Join(nullptr, s1, s2, s3);
 }
 
