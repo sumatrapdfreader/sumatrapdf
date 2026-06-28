@@ -34,7 +34,7 @@ struct FavTreeItem {
 
     HTREEITEM hItem = nullptr;
     FavTreeItem* parent = nullptr;
-    char* text = nullptr;
+    Str text;
     bool isExpanded = false;
 
     // not owned by us
@@ -44,7 +44,7 @@ struct FavTreeItem {
 };
 
 FavTreeItem::~FavTreeItem() {
-    str::Free(text);
+    str::Free(text.s);
     DeleteVecMembers(children);
 }
 
