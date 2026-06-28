@@ -56,7 +56,7 @@ void DeleteThumbnailForFile(Str filePath) {
     TempStr thumbPath = GetThumbnailPathTemp(filePath);
     bool ok = file::Delete(thumbPath);
     auto status = ok ? "ok" : "failed";
-    logf("DeleteThumbnailForFile: file::Remove('%s') %s\n", thumbPath, status);
+    logf("DeleteThumbnailForFile: file::Remove('%s') %s\n", thumbPath.s, status);
 }
 
 RenderedBitmap* LoadThumbnail(FileState* fs) {
@@ -121,7 +121,7 @@ void SaveThumbnail(FileState* fs) {
         return;
     }
     if (!dir::CreateForFile(thumbnailPath)) {
-        logf("SaveThumbnail: dir::CreateForFile('%s') failed, file path: '%s'\n", thumbnailPath, fs->filePath);
+        logf("SaveThumbnail: dir::CreateForFile('%s') failed, file path: '%s'\n", thumbnailPath.s, fs->filePath.s);
         ReportIfFast(true);
     }
     ReportIfFast(!str::EndsWithI(thumbnailPath, ".png"));
