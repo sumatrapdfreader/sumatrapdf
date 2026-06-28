@@ -63,9 +63,9 @@ TempStr AIChatJsEscapeTemp(Str s) {
         return str::DupTemp("");
     }
     StrBuilder buf;
-    const char* p = s.s;
-    while (*p) {
-        switch (*p) {
+    for (int i = 0; i < s.len; i++) {
+        char c = s.s[i];
+        switch (c) {
             case '\\':
                 buf.Append("\\\\");
                 break;
@@ -82,40 +82,43 @@ TempStr AIChatJsEscapeTemp(Str s) {
                 buf.Append("\\t");
                 break;
             default:
-                buf.AppendChar(*p);
+                buf.AppendChar(c);
                 break;
         }
-        p++;
     }
     return str::DupTemp(buf.LendData());
 }
 
 TempStr AIChatJsonStrTemp(Str json, Str key) {
     TempStr pattern = str::FormatTemp("\"%s\":\"", key);
-    const char* start = str::Find(Str(json), pattern).s;
-    if (!start) {
+    Str found = str::Find(json, pattern);
+    if (!found) {
         return {};
     }
-    start += str::Len(pattern);
+    Str rest = Str(found.s + pattern.len, found.len - pattern.len);
     StrBuilder buf;
-    while (*start && *start != '"') {
-        if (*start == '\\' && *(start + 1)) {
-            start++;
-            if (*start == 'n') {
+    for (int i = 0; i < rest.len; i++) {
+        char c = rest.s[i];
+        if (c == '"') {
+            break;
+        }
+        if (c == '\\' && i + 1 < rest.len) {
+            i++;
+            c = rest.s[i];
+            if (c == 'n') {
                 buf.AppendChar('\n');
-            } else if (*start == 't') {
+            } else if (c == 't') {
                 buf.AppendChar('\t');
-            } else if (*start == '\\') {
+            } else if (c == '\\') {
                 buf.AppendChar('\\');
-            } else if (*start == '"') {
+            } else if (c == '"') {
                 buf.AppendChar('"');
             } else {
-                buf.AppendChar(*start);
+                buf.AppendChar(c);
             }
         } else {
-            buf.AppendChar(*start);
+            buf.AppendChar(c);
         }
-        start++;
     }
     return str::DupTemp(buf.LendData());
 }
@@ -131,9 +134,9 @@ MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame) {
 
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions) {
     for (int i = 0; i < sessions.Size(); i++) {
-        str::Free(sessions[i].sessionId.s);
-        str::Free(sessions[i].display.s);
-        str::Free(sessions[i].project.s);
+        str::Free(sessions[i].sessionId);
+        str::Free(sessions[i].display);
+        str::Free(sessions[i].project);
     }
     sessions.Reset();
 }
@@ -219,8 +222,8 @@ static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND hwnd, UINT msg, WP
 }
 
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
-    const char* linkLabel = _TRA("AI Chat documentation");
-    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions."), linkLabel);
+    Str linkLabel = _TRA("AI Chat documentation");
+    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions."), linkLabel.s);
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
@@ -271,20 +274,21 @@ void AIChatAppendModelUnique(StrVec& models, Str model) {
         return;
     }
     TempStr norm = str::DupTemp(model);
-    char* s = norm;
-    while (str::IsWs(*s)) {
-        s++;
+    int start = 0;
+    while (start < norm.len && str::IsWs(norm.s[start])) {
+        start++;
     }
-    if (!*s) {
+    if (start >= norm.len) {
         return;
     }
-    str::ToLowerInPlace(s);
+    norm = Str(norm.s + start, norm.len - start);
+    str::ToLowerInPlace(norm);
     for (int i = 0; i < models.Size(); i++) {
-        if (str::EqI(models.At(i), s)) {
+        if (str::EqI(models.At(i), norm)) {
             return;
         }
     }
-    models.Append(s);
+    models.Append(norm);
 }
 
 int AIChatFindModelInList(const StrVec& models, Str model) {
@@ -305,8 +309,10 @@ TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay) {
     if (str::IsEmpty(model)) {
         return str::DupTemp(defaultDisplay ? defaultDisplay : StrL(""));
     }
-    char* dup = str::DupTemp(model);
-    dup[0] = (char)toupper((unsigned char)dup[0]);
+    TempStr dup = str::DupTemp(model);
+    if (dup.len > 0) {
+        dup.s[0] = (char)toupper((unsigned char)dup.s[0]);
+    }
     return dup;
 }
 
@@ -320,12 +326,12 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
     }
     res->data = (char*)data->data;
     res->dataLen = data->dataSize;
-    res->contentType = str::Dup("text/javascript");
+    res->contentType = str::Dup("text/javascript").s;
     res->ownsData = false;
     return res->dataLen > 0;
 }
 
-static const char* kAIChatHtmlFmt = R"(<!DOCTYPE html><html><head><meta charset='utf-8'>
+static Str kAIChatHtmlFmt = R"(<!DOCTYPE html><html><head><meta charset='utf-8'>
 <script src='%smarked.min.js'></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -404,7 +410,7 @@ function scrollToBottom() {
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
     Str host = virtualHost ? virtualHost : Str("");
     Str bg = bgColor ? bgColor : Str("#ffffff");
-    return str::FormatTemp(kAIChatHtmlFmt, host, bg);
+    return str::FormatTemp(kAIChatHtmlFmt.s, host.s, bg.s);
 }
 
 void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning) {
