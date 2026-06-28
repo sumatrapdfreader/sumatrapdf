@@ -52,17 +52,19 @@ TempStr CodexBuildExecutablePathTemp() {
 static Mutex gCodexBuildLogMutex;
 static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, "gpt-5.5-log.txt", "gpt-5.5"};
 
-static void CodexBuildLog(const char* direction, const char* text) {
+static void CodexBuildLog(Str direction, Str text) {
     AIChatLog(&gCodexBuildLogger, direction, text);
 }
 
-constexpr const char* kCodexBuildDocURI = "/AI-Chat-with-document#openai-codex";
+static Str kCodexBuildDocURI() {
+    return Str("/AI-Chat-with-document#openai-codex");
+}
 
 static void ShowCodexBuildNotInstalledDialog() {
     AIChatNotInstalledDialogArgs args;
     args.windowTitle = _TRA("Codex chat");
     args.mainInstruction = _TRA("OpenAI Codex CLI must be installed for this functionality");
-    args.docUri = kCodexBuildDocURI;
+    args.docUri = kCodexBuildDocURI();
     AIChatShowNotInstalledDialog(args);
 }
 
@@ -81,15 +83,17 @@ bool IsCodexBuildSupportedForTab(WindowTab* tab) {
 #define IDC_CODEX_SANDBOX_COMBO 1134
 #define IDC_CODEX_STOP_BTN 1135
 
-constexpr const char* kCodexVirtualHost = "https://sumatrapdf.codex/";
+static Str kCodexVirtualHost() {
+    return Str("https://sumatrapdf.codex/");
+}
 constexpr const WCHAR* kCodexVirtualHostW = L"https://sumatrapdf.codex/";
 
 static LoadedDataResource gCodexMarkedJs;
 
-static const char* CodexBgColor() {
-    const char* bg = gGlobalPrefs->codexBuild.bgColor;
+static Str CodexBgColor() {
+    Str bg = gGlobalPrefs->codexBuild.bgColor;
     if (str::IsEmpty(bg)) {
-        return "#ffffff";
+        return Str("#ffffff");
     }
     return bg;
 }
@@ -99,7 +103,7 @@ static void BuildCodexModelsList(StrVec& models) {
     AIChatAppendModelUnique(models, "gpt-5.5");
     AIChatAppendModelUnique(models, "gpt-5.4");
     AIChatAppendModelUnique(models, "o3");
-    const char* extra = gGlobalPrefs->codexBuild.models;
+    Str extra = gGlobalPrefs->codexBuild.models;
     if (!str::IsEmpty(extra)) {
         StrVec parts;
         Split(&parts, extra, ",", true);
@@ -185,7 +189,7 @@ static void SyncCodexSettingsFromUI(MainWindow* win) {
 // Execute JS on the WebView AND record it in the current tab's chat log
 static void LayoutCodexBox(MainWindow* win);
 static void AutoSelectRecentSession(MainWindow* win);
-static void WebViewAddError(MainWindow* win, const char* text); // forward decl
+static void WebViewAddError(MainWindow* win, Str text); // forward decl
 static void WebViewShowUnsupportedFileType(MainWindow* win);
 
 static void UpdateCodexPanelForCurrentTab(MainWindow* win) {
@@ -247,7 +251,7 @@ static void StopCodex(MainWindow* win) {
     }
 }
 
-static void WebViewEval(MainWindow* win, const char* js, bool record = true) {
+static void WebViewEval(MainWindow* win, Str js, bool record = true) {
     if (win->codexWebView && win->codexWebViewReady) {
         win->codexWebView->Eval(js);
     }
@@ -263,22 +267,22 @@ static void WebViewEval(MainWindow* win, const char* js, bool record = true) {
     }
 }
 
-static void WebViewAppendText(MainWindow* win, const char* text) {
+static void WebViewAppendText(MainWindow* win, Str text) {
     TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
-static void WebViewAddUser(MainWindow* win, const char* text) {
+static void WebViewAddUser(MainWindow* win, Str text) {
     TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
-static void WebViewAddTool(MainWindow* win, const char* text) {
+static void WebViewAddTool(MainWindow* win, Str text) {
     TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
-static void WebViewAddError(MainWindow* win, const char* text) {
+static void WebViewAddError(MainWindow* win, Str text) {
     CodexBuildLog("error", text);
     TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
@@ -294,7 +298,7 @@ static void WebViewClearChat(MainWindow* win) {
 
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
-    const char* msg = "OpenAI Codex is only available for PDF and image files.";
+    Str msg = "OpenAI Codex is only available for PDF and image files.";
     TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg));
     WebViewEval(win, js, false);
 }
@@ -308,18 +312,20 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
         return;
     }
     // the log is newline-separated JS commands
-    const char* s = tab->codexChatLog->LendData();
-    const char* end = s + tab->codexChatLog->Size();
-    while (s < end) {
-        const char* lineEnd = s;
-        while (lineEnd < end && *lineEnd != '\n') {
-            lineEnd++;
-        }
-        if (lineEnd > s) {
-            TempStr line = str::DupTemp(s, (int)(lineEnd - s));
+    Str log = Str(tab->codexChatLog->LendData(), tab->codexChatLog->Size());
+    Str rest = log;
+    while (rest.len > 0) {
+        Str lineEnd = str::FindChar(rest, '\n');
+        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
+        if (lineLen > 0) {
+            TempStr line = str::DupTemp(Str(rest.s, lineLen));
             win->codexWebView->Eval(line);
         }
-        s = lineEnd + 1;
+        if (!lineEnd) {
+            break;
+        }
+        rest.s = lineEnd.s + 1;
+        rest.len -= lineLen + 1;
     }
 }
 
@@ -332,17 +338,17 @@ static TempStr CodexSessionsRootTemp() {
     return str::FormatTemp("%s\\.codex\\sessions", userProfile);
 }
 
-static TempStr NormalizeCodexPathTemp(const char* path) {
+static TempStr NormalizeCodexPathTemp(Str path) {
     if (!path) {
         return {};
     }
     if (str::StartsWith(path, "\\\\?\\")) {
-        path += 4;
+        return str::DupTemp(Str(path.s + 4, path.len - 4));
     }
     return str::DupTemp(path);
 }
 
-static bool CodexPathsEqual(const char* a, const char* b) {
+static bool CodexPathsEqual(Str a, Str b) {
     TempStr na = NormalizeCodexPathTemp(a);
     TempStr nb = NormalizeCodexPathTemp(b);
     if (!na || !nb) {
@@ -351,11 +357,11 @@ static bool CodexPathsEqual(const char* a, const char* b) {
     return path::IsSame(na, nb);
 }
 
-static bool IsCodexRolloutFileName(const char* name) {
+static bool IsCodexRolloutFileName(Str name) {
     return name && str::StartsWith(name, "rollout-") && str::EndsWithI(name, ".jsonl");
 }
 
-static TempStr ExtractCodexPromptFromHistoryLineTemp(const char* line, const char* sessionId) {
+static TempStr ExtractCodexPromptFromHistoryLineTemp(Str line, Str sessionId) {
     TempStr sid = AIChatJsonStrTemp(line, "session_id");
     if (!sid || !str::Eq(sid, sessionId)) {
         return {};
@@ -363,45 +369,51 @@ static TempStr ExtractCodexPromptFromHistoryLineTemp(const char* line, const cha
     return AIChatJsonStrTemp(line, "text");
 }
 
-static char* GetCodexSessionDescription(const char* sessionId) {
+static Str GetCodexSessionDescription(Str sessionId) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     TempStr historyPath = userProfile ? str::FormatTemp("%s\\.codex\\history.jsonl", userProfile) : nullptr;
     if (!historyPath) {
-        return str::Dup("(no description)").s;
+        return Str("(no description)");
     }
     ByteSlice data = file::ReadFile(historyPath);
     if (data.empty()) {
-        return str::Dup("(no description)").s;
+        return Str("(no description)");
     }
-    const char* s = (const char*)data.data();
-    const char* end = s + data.size();
-    char* result = nullptr;
-    while (s < end && !result) {
-        const char* lineEnd = s;
-        while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
-            lineEnd++;
+    Str content = AsStr(data);
+    Str rest = content;
+    Str result;
+
+    while (rest.len > 0 && !result) {
+        Str lineEnd = str::FindChar(rest, '\n');
+        if (!lineEnd) {
+            lineEnd = str::FindChar(rest, '\r');
         }
-        if (lineEnd > s) {
-            TempStr line = str::DupTemp(s, (int)(lineEnd - s));
+        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
+        if (lineLen > 0) {
+            TempStr line = str::DupTemp(Str(rest.s, lineLen));
             TempStr prompt = ExtractCodexPromptFromHistoryLineTemp(line, sessionId);
             if (prompt && str::Len(prompt) > 0) {
-                result = str::Dup(prompt).s;
+                result = str::Dup(prompt);
             }
         }
-        s = lineEnd;
-        while (s < end && (*s == '\n' || *s == '\r')) {
-            s++;
+        if (!lineEnd) {
+            break;
+        }
+        rest.s = lineEnd.s + 1;
+        while (rest.len > 0 && (*rest.s == '\n' || *rest.s == '\r')) {
+            rest.s++;
+            rest.len--;
         }
     }
     data.Free();
-    return result ? result : str::Dup("(no description)").s;
+    return result ? result : Str("(no description)");
 }
 
-static bool ParseCodexRolloutMetaLine(const char* line, const char* matchDir, char** sessionIdOut) {
+static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut) {
     if (!str::Find(line, "\"type\":\"session_meta\"")) {
         return false;
     }
-    const char* payload = str::Find(line, "\"payload\":");
+    Str payload = str::Find(line, "\"payload\":");
     TempStr cwd = payload ? AIChatJsonStrTemp(payload, "cwd") : nullptr;
     TempStr id = payload ? AIChatJsonStrTemp(payload, "id") : nullptr;
     if (!cwd || !id || !CodexPathsEqual(cwd, matchDir)) {
@@ -411,23 +423,23 @@ static bool ParseCodexRolloutMetaLine(const char* line, const char* matchDir, ch
     return true;
 }
 
-static void TryAddCodexSession(const char* rolloutPath, const FILETIME& ft, const char* matchDir,
-                               Vec<AIChatSessionInfo>& sessions) {
+static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir, Vec<AIChatSessionInfo>& sessions) {
     ByteSlice data = file::ReadFile(rolloutPath);
     if (data.empty()) {
         return;
     }
-    const char* s = (const char*)data.data();
-    const char* lineEnd = s;
-    while (lineEnd < s + data.size() && *lineEnd != '\n' && *lineEnd != '\r') {
-        lineEnd++;
+    Str content = AsStr(data);
+    Str lineEnd = str::FindChar(content, '\n');
+    if (!lineEnd) {
+        lineEnd = str::FindChar(content, '\r');
     }
-    if (lineEnd <= s) {
+    int lineLen = lineEnd ? (int)(lineEnd.s - content.s) : content.len;
+    if (lineLen <= 0) {
         data.Free();
         return;
     }
-    TempStr line = str::DupTemp(s, (int)(lineEnd - s));
-    char* sessionId = nullptr;
+    TempStr line = str::DupTemp(Str(content.s, lineLen));
+    Str sessionId;
     if (!ParseCodexRolloutMetaLine(line, matchDir, &sessionId)) {
         data.Free();
         return;
@@ -452,7 +464,7 @@ static void TryAddCodexSession(const char* rolloutPath, const FILETIME& ft, cons
     data.Free();
 }
 
-static TempStr FindCodexRolloutPathTemp(const char* sessionId) {
+static TempStr FindCodexRolloutPathTemp(Str sessionId) {
     TempStr root = CodexSessionsRootTemp();
     if (!root || !sessionId) {
         return {};
@@ -515,7 +527,7 @@ static TempStr FindCodexRolloutPathTemp(const char* sessionId) {
 }
 
 // Scan ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl for sessions with matching cwd
-static void CollectSessions(const char* dir, Vec<AIChatSessionInfo>& sessions) {
+static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr root = CodexSessionsRootTemp();
     if (!root || !dir::Exists(Str(root))) {
         return;
@@ -603,7 +615,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     int selectedIdx = 0;
     bool foundCurrent = false;
     for (int i = 0; i < sessions.Size(); i++) {
-        const char* display = sessions[i].display;
+        Str display = sessions[i].display;
         if (str::IsEmpty(display)) {
             display = "(no description)";
         }
@@ -619,7 +631,7 @@ static void PopulateSessionCombo(MainWindow* win) {
 
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->codexSessionId && !foundCurrent) {
-        const char* label = "(current session)";
+        Str label = "(current session)";
         TempWStr labelW = ToWStrTemp(label);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
         selectedIdx = sessions.Size() + 1;
@@ -631,8 +643,8 @@ static void PopulateSessionCombo(MainWindow* win) {
     gPopulatingCombo = false;
 }
 
-static bool IsCodexInjectedUserText(const char* text) {
-    if (!text || !*text) {
+static bool IsCodexInjectedUserText(Str text) {
+    if (!text) {
         return true;
     }
     if (str::Find(text, "# AGENTS.md")) {
@@ -650,14 +662,14 @@ static bool IsCodexInjectedUserText(const char* text) {
     return false;
 }
 
-static TempStr ExtractCodexRolloutUserTextTemp(const char* line) {
+static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
     if (!str::Find(line, "\"type\":\"response_item\"")) {
         return {};
     }
     if (!str::Find(line, "\"role\":\"user\"")) {
         return {};
     }
-    const char* inputText = str::Find(line, "\"input_text\"");
+    Str inputText = str::Find(line, "\"input_text\"");
     if (!inputText) {
         return {};
     }
@@ -669,21 +681,21 @@ static TempStr ExtractCodexRolloutUserTextTemp(const char* line) {
     return str::Len(text) > 0 ? text : nullptr;
 }
 
-static TempStr ExtractCodexRolloutAssistantTextTemp(const char* line) {
+static TempStr ExtractCodexRolloutAssistantTextTemp(Str line) {
     if (!str::Find(line, "\"type\":\"response_item\"")) {
         return {};
     }
     if (!str::Find(line, "\"role\":\"assistant\"")) {
         return {};
     }
-    const char* outputText = str::Find(line, "\"output_text\"");
+    Str outputText = str::Find(line, "\"output_text\"");
     if (!outputText) {
         return {};
     }
     return AIChatJsonStrTemp(outputText, "text");
 }
 
-static void AppendCodexRolloutTools(MainWindow* win, const char* line) {
+static void AppendCodexRolloutTools(MainWindow* win, Str line) {
     if (!str::Find(line, "\"type\":\"response_item\"")) {
         return;
     }
@@ -701,7 +713,7 @@ static void AppendCodexRolloutTools(MainWindow* win, const char* line) {
 }
 
 // Load conversation history from Codex rollout JSONL
-static void LoadSessionHistory(MainWindow* win, const char* sessionId, const char* dir) {
+static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     (void)dir;
     TempStr sessionPath = FindCodexRolloutPathTemp(sessionId);
     if (!sessionPath || !file::Exists(sessionPath)) {
@@ -713,16 +725,17 @@ static void LoadSessionHistory(MainWindow* win, const char* sessionId, const cha
         return;
     }
 
-    const char* s = (const char*)data.data();
-    const char* end = s + data.size();
+    Str content = AsStr(data);
+    Str rest = content;
 
-    while (s < end) {
-        const char* lineEnd = s;
-        while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
-            lineEnd++;
+    while (rest.len > 0) {
+        Str lineEnd = str::FindChar(rest, '\n');
+        if (!lineEnd) {
+            lineEnd = str::FindChar(rest, '\r');
         }
-        if (lineEnd > s) {
-            TempStr line = str::DupTemp(s, (int)(lineEnd - s));
+        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
+        if (lineLen > 0) {
+            TempStr line = str::DupTemp(Str(rest.s, lineLen));
             TempStr userText = ExtractCodexRolloutUserTextTemp(line);
             if (userText) {
                 WebViewAddUser(win, userText);
@@ -736,9 +749,13 @@ static void LoadSessionHistory(MainWindow* win, const char* sessionId, const cha
                 }
             }
         }
-        s = lineEnd;
-        while (s < end && (*s == '\n' || *s == '\r')) {
-            s++;
+        if (!lineEnd) {
+            break;
+        }
+        rest.s = lineEnd.s + 1;
+        while (rest.len > 0 && (*rest.s == '\n' || *rest.s == '\r')) {
+            rest.s++;
+            rest.len--;
         }
     }
 
@@ -798,12 +815,14 @@ enum class CodexUpdateType {
     Finished,
 };
 
-constexpr const char* kCodexPendingSessionId = "pending";
+static Str kCodexPendingSessionId() {
+    return Str("pending");
+}
 
 struct CodexUpdateData {
     HWND hwndFrame;
-    char* text;
-    char* sessionId; // to identify which tab this belongs to
+    Str text;
+    Str sessionId; // to identify which tab this belongs to
     CodexUpdateType updateType;
 };
 
@@ -825,7 +844,7 @@ static void OnCodexUpdate(CodexUpdateData* data) {
                 tab = t;
                 break;
             }
-            if (data->sessionId && str::Eq(data->sessionId, kCodexPendingSessionId) && !t->codexSessionId) {
+            if (data->sessionId && str::Eq(data->sessionId, kCodexPendingSessionId()) && !t->codexSessionId) {
                 tab = t;
                 break;
             }
@@ -899,11 +918,11 @@ static void OnCodexUpdate(CodexUpdateData* data) {
     free(data);
 }
 
-static void PostUpdate(HWND hwndFrame, const char* sessionId, const char* text, CodexUpdateType type) {
+static void PostUpdate(HWND hwndFrame, Str sessionId, Str text, CodexUpdateType type) {
     auto data = (CodexUpdateData*)calloc(1, sizeof(CodexUpdateData));
     data->hwndFrame = hwndFrame;
-    data->sessionId = sessionId ? str::Dup(sessionId) : nullptr;
-    data->text = text ? str::Dup(text) : nullptr;
+    data->sessionId = sessionId ? str::Dup(sessionId) : Str{};
+    data->text = text ? str::Dup(text) : Str{};
     data->updateType = type;
     uitask::Post(MkFunc0(OnCodexUpdate, data));
 }
@@ -911,13 +930,13 @@ static void PostUpdate(HWND hwndFrame, const char* sessionId, const char* text, 
 struct CodexReadCtx {
     HANDLE hReadPipe;
     HWND hwndFrame;
-    char* sessionId;
+    Str sessionId;
 };
 
 static void CodexReadThread(CodexReadCtx* ctx) {
     HANDLE hPipe = ctx->hReadPipe;
     HWND hwndFrame = ctx->hwndFrame;
-    char* sessionId = ctx->sessionId;
+    Str sessionId = ctx->sessionId;
     free(ctx);
 
     StrBuilder lineBuf;
@@ -928,11 +947,11 @@ static void CodexReadThread(CodexReadCtx* ctx) {
         buf[bytesRead] = 0;
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
-                const char* line = lineBuf.LendData();
-                if (line && *line) {
+                Str line = Str(lineBuf.LendData());
+                if (line) {
                     CodexBuildLog("<<<", line);
                 }
-                if (line && *line == '{') {
+                if (line.len > 0 && line.s[0] == '{') {
                     TempStr eventType = AIChatJsonStrTemp(line, "type");
 
                     if (eventType && str::Eq(eventType, "thread.started")) {
@@ -944,24 +963,25 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                         }
                     } else if (eventType && str::Eq(eventType, "item.completed")) {
                         if (str::Find(line, "\"type\":\"agent_message\"")) {
-                            const char* p = str::Find(line, "\"type\":\"agent_message\"");
+                            Str p = str::Find(line, "\"type\":\"agent_message\"");
                             TempStr text = AIChatJsonStrTemp(p, "text");
                             if (text && str::Len(text) > 0) {
                                 PostUpdate(hwndFrame, sessionId, text, CodexUpdateType::Text);
                             }
                         } else if (str::Find(line, "\"type\":\"command_execution\"")) {
-                            const char* p = str::Find(line, "\"type\":\"command_execution\"");
+                            Str p = str::Find(line, "\"type\":\"command_execution\"");
                             TempStr cmd = AIChatJsonStrTemp(p, "command");
                             if (cmd && str::Len(cmd) > 0) {
                                 TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);
                                 StrBuilder desc;
                                 desc.AppendFmt("Tool: %s", shortCmd);
-                                PostUpdate(hwndFrame, sessionId, desc.Get(), CodexUpdateType::Tool);
-                                PostUpdate(hwndFrame, sessionId, nullptr, CodexUpdateType::Flush);
+                                PostUpdate(hwndFrame, sessionId, Str(desc.LendData(), desc.Size()),
+                                           CodexUpdateType::Tool);
+                                PostUpdate(hwndFrame, sessionId, {}, CodexUpdateType::Flush);
                             }
                         }
                     } else if (eventType && str::Eq(eventType, "turn.completed")) {
-                        PostUpdate(hwndFrame, sessionId, nullptr, CodexUpdateType::Flush);
+                        PostUpdate(hwndFrame, sessionId, {}, CodexUpdateType::Flush);
                     }
                 }
 
@@ -972,14 +992,14 @@ static void CodexReadThread(CodexReadCtx* ctx) {
         }
     }
 
-    const char* rem = lineBuf.LendData();
-    if (rem && *rem) {
+    Str rem = Str(lineBuf.LendData());
+    if (rem) {
         CodexBuildLog("<<<", rem);
     }
     CodexBuildLog("eof", "(stdout closed)");
 
     CloseHandle(hPipe);
-    PostUpdate(hwndFrame, sessionId, nullptr, CodexUpdateType::Finished);
+    PostUpdate(hwndFrame, sessionId, {}, CodexUpdateType::Finished);
     str::Free(sessionId);
 }
 
@@ -1019,15 +1039,15 @@ static void SendCodexMessage(MainWindow* win) {
 
     bool isNewSession = (tab->codexSessionId == nullptr);
 
-    const char* filePath = tab->filePath;
-    TempStr dir = path::GetDirTemp(Str(filePath));
+    Str filePath = tab->filePath;
+    TempStr dir = path::GetDirTemp(filePath);
 
     TempStr prompt = str::FormatTemp("The user is currently reading the file: %s\n\n%s", filePath, input);
     TempStr escapedInput = str::ReplaceTemp(prompt, "\"", "\\\"");
 
     SyncCodexSettingsFromUI(win);
 
-    const char* sandboxes[] = {"read-only", "workspace-write", "danger-full-access"};
+    Str sandboxes[] = {Str("read-only"), Str("workspace-write"), Str("danger-full-access")};
     StrVec modelList;
     BuildCodexModelsList(modelList);
     Str model = ResolveCodexModel(modelList, gGlobalPrefs->codexBuild.model);
@@ -1035,7 +1055,7 @@ static void SendCodexMessage(MainWindow* win) {
     if (sandboxIdx < 0 || sandboxIdx > 2) {
         sandboxIdx = 1;
     }
-    const char* skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? "--dangerously-bypass-approvals-and-sandbox" : "";
+    Str skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? Str("--dangerously-bypass-approvals-and-sandbox") : Str{};
 
     TempStr codexPath = FindCodexExecutableTemp();
     if (!codexPath) {
@@ -1047,20 +1067,20 @@ static void SendCodexMessage(MainWindow* win) {
 
     CodexBuildLog(">>> user", input);
     CodexBuildLog(">>> session",
-                  str::FormatTemp("%s (%s)", tab->codexSessionId ? tab->codexSessionId : Str(kCodexPendingSessionId),
+                  str::FormatTemp("%s (%s)", tab->codexSessionId ? tab->codexSessionId : kCodexPendingSessionId(),
                                   isNewSession ? "new" : "resume"));
     CodexBuildLog(">>> cwd", dir);
 
     TempStr cmdLine;
     if (isNewSession) {
-        if (skipFlag[0]) {
+        if (skipFlag) {
             cmdLine = str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s %s %s \"%s\"",
                                       codexPath, dir, model, sandboxes[sandboxIdx], skipFlag, escapedInput);
         } else {
             cmdLine = str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s %s \"%s\"",
                                       codexPath, dir, model, sandboxes[sandboxIdx], escapedInput);
         }
-    } else if (skipFlag[0]) {
+    } else if (skipFlag) {
         cmdLine = str::FormatTemp("\"%s\" exec resume --json --skip-git-repo-check -m %s %s %s \"%s\"", codexPath,
                                   model, skipFlag, tab->codexSessionId, escapedInput);
     } else {
@@ -1084,11 +1104,11 @@ static void SendCodexMessage(MainWindow* win) {
     auto ctx = (CodexReadCtx*)calloc(1, sizeof(CodexReadCtx));
     ctx->hReadPipe = launch.hReadPipe;
     ctx->hwndFrame = win->hwndFrame;
-    ctx->sessionId = str::Dup(tab->codexSessionId ? tab->codexSessionId : Str(kCodexPendingSessionId));
+    ctx->sessionId = str::Dup(tab->codexSessionId ? tab->codexSessionId : kCodexPendingSessionId());
     RunAsync(MkFunc0(StartCodexReadThread, ctx), "CodexReadThread");
 }
 
-static TempStr FitCodexPanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
+static TempStr FitCodexPanelTitleTemp(HWND labelHwnd, HFONT font, Str docName, int maxDx) {
     TempStr prefix = str::JoinTemp(_TRA("Codex chat"), " with ");
     return AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
 }
@@ -1097,10 +1117,10 @@ static void UpdateCodexPanelTitle(MainWindow* win, int labelDx) {
     if (!win || !win->codexLabelWithClose) {
         return;
     }
-    const char* docName = "document";
+    Str docName = "document";
     WindowTab* tab = win->CurrentTab();
     if (tab && !tab->IsAboutTab() && tab->filePath) {
-        const char* title = tab->GetTabTitle();
+        Str title = tab->GetTabTitle();
         if (!str::IsEmpty(title)) {
             docName = title;
         }
@@ -1323,7 +1343,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->Create(wvArgs);
 
     if (webView->hwnd) {
-        TempStr chatHtml = AIChatFormatChatHtmlTemp(kCodexVirtualHost, CodexBgColor());
+        TempStr chatHtml = AIChatFormatChatHtmlTemp(kCodexVirtualHost(), CodexBgColor());
         webView->SetHtml(chatHtml);
         win->codexWebView = webView;
         win->codexWebViewReady = true;
@@ -1559,7 +1579,7 @@ void DestroyCodexPanel(MainWindow* win) {
     }
 
     // save webview dataDir before deleting so we can clean up
-    char* webViewDataDir = nullptr;
+    Str webViewDataDir;
     WebviewWnd* webView = win->codexWebView;
     win->codexWebView = nullptr;
     if (webView) {
