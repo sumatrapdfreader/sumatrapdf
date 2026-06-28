@@ -113,20 +113,20 @@ int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
 // delete word backwards from current cursor position
 void EditImplementCtrlBack(HWND hwnd) {
     // we calc selection in WCHAR space because it's easier
-    WCHAR* text = HwndGetTextWTemp(hwnd);
+    TempWStr text = HwndGetTextWTemp(hwnd);
     int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
     // remove the rectangle produced by Ctrl+Backspace
-    if (selStart > 0 && text[selStart - 1] == '\x7F') {
-        memmove(text + selStart - 1, text + selStart, str::Len(text + selStart - 1) * sizeof(WCHAR));
+    if (selStart > 0 && text.s[selStart - 1] == '\x7F') {
+        memmove(text.s + selStart - 1, text.s + selStart, str::Len(text.s + selStart - 1) * sizeof(WCHAR));
         TempStr s = ToUtf8Temp(text);
         HwndSetText(hwnd, s);
         selStart = selEnd = selStart - 1;
     }
     // remove the previous word (and any spacing after it)
-    for (; selStart > 0 && str::IsWs(text[selStart - 1]); selStart--) {
+    for (; selStart > 0 && str::IsWs(text.s[selStart - 1]); selStart--) {
         ;
     }
-    for (; selStart > 0 && !str::IsWs(text[selStart - 1]); selStart--) {
+    for (; selStart > 0 && !str::IsWs(text.s[selStart - 1]); selStart--) {
         ;
     }
     Edit_SetSel(hwnd, selStart, selEnd);
