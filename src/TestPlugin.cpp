@@ -26,12 +26,12 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
     if (WM_CREATE == msg) {
         PluginStartData* data = (PluginStartData*)((CREATESTRUCT*)lp)->lpCreateParams;
         auto path = data->filePath;
-        TempStr cmdLine = str::FormatTemp("-plugin %lld \"%s\"", (long long)(INT_PTR)hwnd, path);
+        TempStr cmdLine = str::FormatTemp("-plugin %lld \"%s\"", (long long)(INT_PTR)hwnd, path.s);
         if (data->fileOriginUrl) {
             cmdLine =
-                str::FormatTemp("-plugin \"%s\" %lld \"%s\"", data->fileOriginUrl, (long long)(INT_PTR)hwnd, path);
+                str::FormatTemp("-plugin \"%s\" %lld \"%s\"", data->fileOriginUrl.s, (long long)(INT_PTR)hwnd, path.s);
         }
-        TempStr fullCmd = str::FormatTemp("\"%s\" %s", data->sumatraPath, cmdLine);
+        TempStr fullCmd = str::FormatTemp("\"%s\" %s", data->sumatraPath.s, cmdLine.s);
         STARTUPINFOW si{};
         si.cb = sizeof(si);
         PROCESS_INFORMATION pi{};

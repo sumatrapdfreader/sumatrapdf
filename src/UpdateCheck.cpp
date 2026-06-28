@@ -554,28 +554,29 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     Str url = Str(rsp->url.Get());
 
     if (rsp->error != 0) {
-        logf("ShowAutoUpdateDialog: http get of '%s' failed with %d\n", url, (int)rsp->error);
+        logf("ShowAutoUpdateDialog: http get of '%s' failed with %d\n", url.s, (int)rsp->error);
         return rsp->error;
     }
     if (rsp->httpStatusCode != 200) {
-        logf("ShowAutoUpdateDialog: http get of '%s' failed with code %d\n", url, (int)rsp->httpStatusCode);
+        logf("ShowAutoUpdateDialog: http get of '%s' failed with code %d\n", url.s, (int)rsp->httpStatusCode);
         return ERROR_INTERNET_INVALID_URL;
     }
 
     bool isValidURL = str::StartsWith(url, kUpdateInfoURL) || str::StartsWith(url, kUpdateInfoURL2);
     if (!isValidURL) {
-        logf("ShowAutoUpdateDialog: '%s' is not a valid url\n", url);
+        logf("ShowAutoUpdateDialog: '%s' is not a valid url\n", url.s);
         return ERROR_INTERNET_INVALID_URL;
     }
     StrBuilder* data = &rsp->data;
     if (0 == data->size()) {
-        logf("ShowAutoUpdateDialog: empty response from url '%s'\n", url);
+        logf("ShowAutoUpdateDialog: empty response from url '%s'\n", url.s);
         return ERROR_INTERNET_CONNECTION_ABORTED;
     }
 
     UpdateInfo* updateInfo = ParseUpdateInfo(data->Get());
     if (!updateInfo) {
-        logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n", url, data->Get());
+        logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n", url.s,
+             data->Get().s);
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
     updateInfo->hwndParent = hwndParent;
@@ -603,7 +604,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
 
     if (!updateInfo->dlURL) {
         // currently for release builds we don't set this and redirecto to a website instead
-        logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
+        logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get().s);
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         delete updateInfo;
@@ -782,6 +783,6 @@ void UpdateSelfTo(Str path) {
     }
     logf("UpdateSelfTo: copied self to file\n");
 
-    TempStr args = str::FormatTemp(R"(-sleep-ms 500 -delete-file "%s")", srcPath);
+    TempStr args = str::FormatTemp(R"(-sleep-ms 500 -delete-file "%s")", srcPath.s);
     CreateProcessHelper(path, args);
 }

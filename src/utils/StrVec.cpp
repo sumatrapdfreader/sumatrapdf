@@ -10,6 +10,24 @@ ByteSlice ToByteSlice(Str s) {
 // represents null string
 constexpr u32 kNullOffset = (u32)-2;
 
+static int StrCmp(Str s1, Str s2) {
+    size_t len = std::min((size_t)s1.len, (size_t)s2.len);
+    int cmp = len > 0 ? memcmp(s1.s, s2.s, len) : 0;
+    if (cmp != 0) {
+        return cmp;
+    }
+    return s1.len - s2.len;
+}
+
+static int StrCmpI(Str s1, Str s2) {
+    size_t len = std::min((size_t)s1.len, (size_t)s2.len);
+    int cmp = len > 0 ? _strnicmp(s1.s, s2.s, len) : 0;
+    if (cmp != 0) {
+        return cmp;
+    }
+    return s1.len - s2.len;
+}
+
 bool StrLess(Str s1, Str s2) {
     if (str::IsEmpty(s1)) {
         if (str::IsEmpty(s2)) {
@@ -20,7 +38,7 @@ bool StrLess(Str s1, Str s2) {
     if (str::IsEmpty(s2)) {
         return false;
     }
-    int n = strcmp(s1.s, s2.s);
+    int n = StrCmp(s1, s2);
     return n < 0;
 }
 
@@ -35,7 +53,7 @@ bool StrLessNoCase(Str s1, Str s2) {
     if (str::IsEmpty(s2)) {
         return false;
     }
-    int n = _stricmp(s1.s, s2.s);
+    int n = StrCmpI(s1, s2);
     return n < 0;
 }
 

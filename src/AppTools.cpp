@@ -391,7 +391,7 @@ static void FindTextEditors() {
         }
 
         rule.fullPath = Str(str::Dup(exePath));
-        rule.openFileCmd = Str(str::Format("\"%s\" %s", exePath, inverseSearchArgs));
+        rule.openFileCmd = Str(str::Format("\"%s\" %s", exePath.s, inverseSearchArgs.s));
         found.Append(exePath);
     }
     didFindTextEditors = true;

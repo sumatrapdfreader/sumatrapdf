@@ -90,7 +90,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     }
 
     if (kindDestinationLaunchEmbedded == k || kindDestinationAttachment == k) {
-        TempStr tmp = str::FormatTemp(_TRA("Attachment: %s"), path);
+        TempStr tmp = str::FormatTemp(_TRA("Attachment: %s"), path.s);
         infotip.Append(tmp);
     } else {
         infotip.Append(path);

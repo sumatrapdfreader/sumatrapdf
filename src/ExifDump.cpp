@@ -1196,7 +1196,7 @@ bool DumpExifFile(Str path) {
     if (!path) {
         return false;
     }
-    CliPrint(str::FormatTemp("Opening: %s", path));
+    CliPrint(str::FormatTemp("Opening: %s", path.s));
     ByteSlice data = file::ReadFile(path);
     if (data.empty()) {
         CliPrint(StrL("No EXIF information found"));

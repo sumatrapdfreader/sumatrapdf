@@ -495,7 +495,7 @@ static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
     Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? Str("--always-approve") : Str{};
     return str::FormatTemp("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort low %s",
-                           exePath, escapedPrompt, cwd, model, permsFlag);
+                           exePath.s, escapedPrompt.s, cwd.s, model.s, permsFlag.s);
 }
 
 static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
@@ -507,7 +507,7 @@ static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
     Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? Str("--dangerously-skip-permissions") : Str{};
     Str sessionId = AIChatGenerateSessionId();
     return str::FormatTemp("\"%s\" -p --verbose --output-format stream-json --model %s %s --session-id %s \"%s\"",
-                           exePath, model, permsFlag, sessionId, escapedPrompt);
+                           exePath.s, model.s, permsFlag.s, sessionId.s, escapedPrompt.s);
 }
 
 static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
@@ -518,17 +518,17 @@ static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) 
     if (skipFlag) {
         if (hasModel) {
             return str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only %s \"%s\"",
-                                   exePath, cwd, model, skipFlag, escapedPrompt);
+                                   exePath.s, cwd.s, model.s, skipFlag.s, escapedPrompt.s);
         }
-        return str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only %s \"%s\"", exePath,
-                               cwd, skipFlag, escapedPrompt);
+        return str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only %s \"%s\"", exePath.s,
+                               cwd.s, skipFlag.s, escapedPrompt.s);
     }
     if (hasModel) {
-        return str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only \"%s\"", exePath,
-                               cwd, model, escapedPrompt);
+        return str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only \"%s\"",
+                               exePath.s, cwd.s, model.s, escapedPrompt.s);
     }
-    return str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only \"%s\"", exePath, cwd,
-                           escapedPrompt);
+    return str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only \"%s\"", exePath.s, cwd.s,
+                           escapedPrompt.s);
 }
 
 static TempStr FindBackendExecutableTemp(AIChatBackend backend) {

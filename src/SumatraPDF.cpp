@@ -4146,10 +4146,10 @@ static void CreateLnkShortcut(MainWindow* win) {
         zoomVirtual = "fitcontent";
     }
 
-    TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode,
-                                   zoomVirtual, (int)ss.x, (int)ss.y);
+    TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path.s, ss.page, viewMode.s,
+                                   zoomVirtual.s, (int)ss.x, (int)ss.y);
     TempStr label = ctrl->GetPageLabeTemp(ss.page);
-    TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s"), label, path);
+    TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s"), label.s, path.s);
     auto exePath = GetSelfExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }

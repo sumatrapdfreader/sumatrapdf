@@ -741,7 +741,15 @@ static void StrVecTest8() {
     }
 }
 
+static void StrVecTest9() {
+    utassert(!StrLess(Str("abz", 2), Str("abq", 2)));
+    utassert(StrLess(Str("abz", 2), Str("abz", 3)));
+    utassert(!StrLessNoCase(Str("ABz", 2), Str("abq", 2)));
+    utassert(StrLessNoCase(Str("ABz", 2), Str("ABZ", 3)));
+}
+
 void StrVecTest() {
+    StrVecTest9();
     StrVecTest8();
     StrVecTest1();
     StrVecTest2();

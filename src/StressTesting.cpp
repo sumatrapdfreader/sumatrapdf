@@ -555,7 +555,7 @@ static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) 
         ParsePageRanges(ranges, st->fileRanges);
         Start(st, dirFileProvider, cycles);
     } else {
-        TempStr s = str::FormatTemp("Path '%s' doesn't exist", path);
+        TempStr s = str::FormatTemp("Path '%s' doesn't exist", path.s);
         NotificationCreateArgs args;
         args.hwndParent = st->win->hwndCanvas;
         args.msg = s;

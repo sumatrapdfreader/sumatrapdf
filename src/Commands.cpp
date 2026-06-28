@@ -1255,7 +1255,8 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         int id = argSpecs[i].cmdId;
         if (id == CmdNone) {
             // the command doesn't accept any arguments
-            MaybeDelayedWarningNotification("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n", definition);
+            MaybeDelayedWarningNotification("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n",
+                                            definition.s);
             return CreateCustomCommand(definition, cmdId, nullptr);
         }
         if (id != argCmdId) {
@@ -1286,7 +1287,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         }
     }
     if (!firstArg) {
-        MaybeDelayedWarningNotification("Error parsing Shortcuts: failed to parse arguments for '%s'\n", definition);
+        MaybeDelayedWarningNotification("Error parsing Shortcuts: failed to parse arguments for '%s'\n", definition.s);
         return nullptr;
     }
 

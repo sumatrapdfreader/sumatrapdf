@@ -267,23 +267,23 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
 }
 
 static void WebViewAppendText(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddUser(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddTool(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddError(MainWindow* win, Str text) {
     GrokBuildLog("error", text);
-    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
@@ -298,7 +298,7 @@ static void WebViewClearChat(MainWindow* win) {
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     Str msg = "Grok Build is only available for PDF and image files.";
-    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg).s);
     WebViewEval(win, js, false);
 }
 
@@ -372,7 +372,7 @@ static TempStr GrokSessionsProjectDirTemp(Str dir) {
         return {};
     }
     TempStr encodedDir = EncodeGrokDirTemp(dir);
-    return str::FormatTemp("%s\\.grok\\sessions\\%s", userProfile, encodedDir);
+    return str::FormatTemp("%s\\.grok\\sessions\\%s", userProfile.s, encodedDir.s);
 }
 
 static TempStr ExtractGrokPromptFromHistoryLineTemp(Str line, Str sessionId) {
@@ -384,7 +384,7 @@ static TempStr ExtractGrokPromptFromHistoryLineTemp(Str line, Str sessionId) {
 }
 
 static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
-    TempStr historyPath = str::FormatTemp("%s\\prompt_history.jsonl", projectDir);
+    TempStr historyPath = str::FormatTemp("%s\\prompt_history.jsonl", projectDir.s);
     ByteSlice data = file::ReadFile(historyPath);
     if (data.empty()) {
         return Str("(no description)");
@@ -426,7 +426,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
 
-    TempStr pattern = str::FormatTemp("%s\\*", projectDir);
+    TempStr pattern = str::FormatTemp("%s\\*", projectDir.s);
     WIN32_FIND_DATAW fd;
     TempWStr patternW = ToWStrTemp(pattern);
     HANDLE hFind = FindFirstFileW(patternW, &fd);
@@ -601,7 +601,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     if (!projectDir) {
         return;
     }
-    TempStr sessionPath = str::FormatTemp("%s\\%s\\chat_history.jsonl", projectDir, sessionId);
+    TempStr sessionPath = str::FormatTemp("%s\\%s\\chat_history.jsonl", projectDir.s, sessionId.s);
     if (!file::Exists(sessionPath)) {
         return;
     }
@@ -936,7 +936,7 @@ static void SendGrokMessage(MainWindow* win) {
         effortIdx = 1;
     }
     Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? Str("--always-approve") : Str{};
-    TempStr rules = str::FormatTemp("The user is currently reading the file: %s", filePath);
+    TempStr rules = str::FormatTemp("The user is currently reading the file: %s", filePath.s);
 
     TempStr grokPath = FindGrokExecutableTemp();
     if (!grokPath) {

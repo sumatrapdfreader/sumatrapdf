@@ -35,8 +35,8 @@ static TempStr FindCodexExecutableTemp() {
     StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
-        candidates.Append(str::FormatTemp("%s\\.codex\\bin\\codex.exe", userProfile));
-        candidates.Append(str::FormatTemp("%s\\.local\\bin\\codex.exe", userProfile));
+        candidates.Append(str::FormatTemp("%s\\.codex\\bin\\codex.exe", userProfile.s));
+        candidates.Append(str::FormatTemp("%s\\.local\\bin\\codex.exe", userProfile.s));
     }
     return AIChatFindExecutableTemp(candidates, WStr(L"codex.exe"), WStr(L"codex"));
 }
@@ -268,23 +268,23 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
 }
 
 static void WebViewAppendText(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddUser(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddTool(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddError(MainWindow* win, Str text) {
     CodexBuildLog("error", text);
-    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
@@ -299,7 +299,7 @@ static void WebViewClearChat(MainWindow* win) {
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     Str msg = "OpenAI Codex is only available for PDF and image files.";
-    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg));
+    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg).s);
     WebViewEval(win, js, false);
 }
 
@@ -335,7 +335,7 @@ static TempStr CodexSessionsRootTemp() {
     if (!userProfile) {
         return {};
     }
-    return str::FormatTemp("%s\\.codex\\sessions", userProfile);
+    return str::FormatTemp("%s\\.codex\\sessions", userProfile.s);
 }
 
 static TempStr NormalizeCodexPathTemp(Str path) {
@@ -371,7 +371,7 @@ static TempStr ExtractCodexPromptFromHistoryLineTemp(Str line, Str sessionId) {
 
 static Str GetCodexSessionDescription(Str sessionId) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
-    TempStr historyPath = userProfile ? str::FormatTemp("%s\\.codex\\history.jsonl", userProfile) : nullptr;
+    TempStr historyPath = userProfile ? str::FormatTemp("%s\\.codex\\history.jsonl", userProfile.s) : nullptr;
     if (!historyPath) {
         return Str("(no description)");
     }
@@ -469,9 +469,9 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
     if (!root || !sessionId) {
         return {};
     }
-    TempStr suffix = str::FormatTemp("%s.jsonl", sessionId);
+    TempStr suffix = str::FormatTemp("%s.jsonl", sessionId.s);
     TempStr result = nullptr;
-    TempStr yearPat = str::FormatTemp("%s\\*", root);
+    TempStr yearPat = str::FormatTemp("%s\\*", root.s);
     WIN32_FIND_DATAW fdY;
     HANDLE hY = FindFirstFileW(ToWStrTemp(yearPat), &fdY);
     if (hY == INVALID_HANDLE_VALUE) {
@@ -485,7 +485,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
         if (str::Eq(year, ".") || str::Eq(year, "..")) {
             continue;
         }
-        TempStr monthPat = str::FormatTemp("%s\\%s\\*", root, year);
+        TempStr monthPat = str::FormatTemp("%s\\%s\\*", root.s, year.s);
         WIN32_FIND_DATAW fdM;
         HANDLE hM = FindFirstFileW(ToWStrTemp(monthPat), &fdM);
         if (hM == INVALID_HANDLE_VALUE) {
@@ -499,7 +499,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
             if (str::Eq(month, ".") || str::Eq(month, "..")) {
                 continue;
             }
-            TempStr dayPat = str::FormatTemp("%s\\%s\\%s\\*", root, year, month);
+            TempStr dayPat = str::FormatTemp("%s\\%s\\%s\\*", root.s, year.s, month.s);
             WIN32_FIND_DATAW fdD;
             HANDLE hD = FindFirstFileW(ToWStrTemp(dayPat), &fdD);
             if (hD == INVALID_HANDLE_VALUE) {
@@ -511,7 +511,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
                 }
                 TempStr name = ToUtf8Temp(fdD.cFileName);
                 if (str::EndsWithI(name, suffix)) {
-                    result = str::FormatTemp("%s\\%s\\%s\\%s", root, year, month, name);
+                    result = str::FormatTemp("%s\\%s\\%s\\%s", root.s, year.s, month.s, name.s);
                     FindClose(hD);
                     FindClose(hM);
                     FindClose(hY);
@@ -533,7 +533,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
 
-    TempStr yearPat = str::FormatTemp("%s\\*", root);
+    TempStr yearPat = str::FormatTemp("%s\\*", root.s);
     WIN32_FIND_DATAW fdY;
     HANDLE hY = FindFirstFileW(ToWStrTemp(yearPat), &fdY);
     if (hY == INVALID_HANDLE_VALUE) {
@@ -547,7 +547,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         if (str::Eq(year, ".") || str::Eq(year, "..")) {
             continue;
         }
-        TempStr monthPat = str::FormatTemp("%s\\%s\\*", root, year);
+        TempStr monthPat = str::FormatTemp("%s\\%s\\*", root.s, year.s);
         WIN32_FIND_DATAW fdM;
         HANDLE hM = FindFirstFileW(ToWStrTemp(monthPat), &fdM);
         if (hM == INVALID_HANDLE_VALUE) {
@@ -561,7 +561,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
             if (str::Eq(month, ".") || str::Eq(month, "..")) {
                 continue;
             }
-            TempStr dayPat = str::FormatTemp("%s\\%s\\%s\\*", root, year, month);
+            TempStr dayPat = str::FormatTemp("%s\\%s\\%s\\*", root.s, year.s, month.s);
             WIN32_FIND_DATAW fdD;
             HANDLE hD = FindFirstFileW(ToWStrTemp(dayPat), &fdD);
             if (hD == INVALID_HANDLE_VALUE) {
@@ -575,7 +575,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
                 if (!IsCodexRolloutFileName(name)) {
                     continue;
                 }
-                TempStr fullPath = str::FormatTemp("%s\\%s\\%s\\%s", root, year, month, name);
+                TempStr fullPath = str::FormatTemp("%s\\%s\\%s\\%s", root.s, year.s, month.s, name.s);
                 TryAddCodexSession(fullPath, fdD.ftLastWriteTime, dir, sessions);
             } while (FindNextFileW(hD, &fdD));
             FindClose(hD);
@@ -707,7 +707,7 @@ static void AppendCodexRolloutTools(MainWindow* win, Str line) {
     }
     if (name && str::Len(name) > 0) {
         StrBuilder desc;
-        desc.AppendFmt("Tool: %s", name);
+        desc.AppendFmt("Tool: %s", name.s);
         WebViewAddTool(win, desc.Get());
     }
 }
@@ -974,7 +974,7 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                             if (cmd && str::Len(cmd) > 0) {
                                 TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);
                                 StrBuilder desc;
-                                desc.AppendFmt("Tool: %s", shortCmd);
+                                desc.AppendFmt("Tool: %s", shortCmd.s);
                                 PostUpdate(hwndFrame, sessionId, desc.LendData(), CodexUpdateType::Tool);
                                 PostUpdate(hwndFrame, sessionId, {}, CodexUpdateType::Flush);
                             }
@@ -1039,7 +1039,7 @@ static void SendCodexMessage(MainWindow* win) {
     Str filePath = tab->filePath;
     TempStr dir = path::GetDirTemp(filePath);
 
-    TempStr prompt = str::FormatTemp("The user is currently reading the file: %s\n\n%s", filePath, input);
+    TempStr prompt = str::FormatTemp("The user is currently reading the file: %s\n\n%s", filePath.s, input.s);
     TempStr escapedInput = str::ReplaceTemp(prompt, "\"", "\\\"");
 
     SyncCodexSettingsFromUI(win);
@@ -1064,7 +1064,7 @@ static void SendCodexMessage(MainWindow* win) {
 
     CodexBuildLog(">>> user", input);
     CodexBuildLog(">>> session",
-                  str::FormatTemp("%s (%s)", tab->codexSessionId ? tab->codexSessionId : kCodexPendingSessionId(),
+                  str::FormatTemp("%s (%s)", tab->codexSessionId ? tab->codexSessionId.s : kCodexPendingSessionId().s,
                                   isNewSession ? "new" : "resume"));
     CodexBuildLog(">>> cwd", dir);
 
@@ -1072,17 +1072,17 @@ static void SendCodexMessage(MainWindow* win) {
     if (isNewSession) {
         if (skipFlag) {
             cmdLine = str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s %s %s \"%s\"",
-                                      codexPath, dir, model, sandboxes[sandboxIdx], skipFlag, escapedInput);
+                                      codexPath.s, dir.s, model.s, sandboxes[sandboxIdx].s, skipFlag.s, escapedInput.s);
         } else {
             cmdLine = str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s %s \"%s\"",
-                                      codexPath, dir, model, sandboxes[sandboxIdx], escapedInput);
+                                      codexPath.s, dir.s, model.s, sandboxes[sandboxIdx].s, escapedInput.s);
         }
     } else if (skipFlag) {
-        cmdLine = str::FormatTemp("\"%s\" exec resume --json --skip-git-repo-check -m %s %s %s \"%s\"", codexPath,
-                                  model, skipFlag, tab->codexSessionId, escapedInput);
+        cmdLine = str::FormatTemp("\"%s\" exec resume --json --skip-git-repo-check -m %s %s %s \"%s\"", codexPath.s,
+                                  model.s, skipFlag.s, tab->codexSessionId.s, escapedInput.s);
     } else {
-        cmdLine = str::FormatTemp("\"%s\" exec resume --json --skip-git-repo-check -m %s %s \"%s\"", codexPath, model,
-                                  tab->codexSessionId, escapedInput);
+        cmdLine = str::FormatTemp("\"%s\" exec resume --json --skip-git-repo-check -m %s %s \"%s\"", codexPath.s,
+                                  model.s, tab->codexSessionId.s, escapedInput.s);
     }
 
     CodexBuildLog(">>> cmd", cmdLine);
@@ -1323,7 +1323,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     auto webView = new WebviewWnd();
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA);
     // use unique data dir per process to avoid locking conflicts
-    webView->dataDir = str::Format("%s\\SumatraPDF\\CodexWebView_%d", userProfile, (int)GetCurrentProcessId());
+    webView->dataDir = str::Format("%s\\SumatraPDF\\CodexWebView_%d", userProfile.s, (int)GetCurrentProcessId());
     if (!LockDataResource(IDR_CLAUDE_MARKED_JS, &gCodexMarkedJs)) {
         delete webView;
         return;

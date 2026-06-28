@@ -322,7 +322,10 @@ bool EqI(Str s1, Str s2) {
     if (!s1 || !s2) {
         return false;
     }
-    return 0 == _stricmp(s1.s, s2.s);
+    if (s1.len != s2.len) {
+        return false;
+    }
+    return 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len);
 }
 
 // compares two strings ignoring case and whitespace

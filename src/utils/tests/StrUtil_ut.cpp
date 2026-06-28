@@ -261,6 +261,8 @@ void StrTest() {
     utassert(!str::Eq(str, Str{}) && !str::Eq(str, "A String"));
     utassert(str::EqI(str, "A String") && str::EqI(str, str));
     utassert(!str::EqI(str, Str{}) && str::EqI(Str{}, Str{}));
+    utassert(str::EqI(Str("AbCx", 3), Str("abcY", 3)));
+    utassert(!str::EqI(Str("AbCx", 3), Str("abcY", 4)));
     utassert(str::EqN("abcd", "abce", 3) && !str::EqN("abcd", "Abcd", 3));
     utassert(str::StartsWith(str, "a s") && str::StartsWithI(str, "A Str"));
     utassert(!str::StartsWith(str, "Astr"));
