@@ -5,7 +5,7 @@
 
 #include "GumboHelpers.h"
 
-bool GumboTagNameIs(const GumboNode* node, const char* name) {
+bool GumboTagNameIs(const GumboNode* node, Str name) {
     if (node->type != GUMBO_NODE_ELEMENT) {
         return false;
     }
@@ -28,10 +28,10 @@ bool GumboTagNameIs(const GumboNode* node, const char* name) {
         tag = s;
         tagLen = (size_t)(end - s);
     }
-    return str::EqNIx(tag, tagLen, name);
+    return str::EqNIx(Str((char*)tag, (int)tagLen), tagLen, name);
 }
 
-const GumboNode* GumboFindChildByTag(const GumboNode* node, const char* name) {
+const GumboNode* GumboFindChildByTag(const GumboNode* node, Str name) {
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
         return nullptr;
     }
@@ -45,7 +45,7 @@ const GumboNode* GumboFindChildByTag(const GumboNode* node, const char* name) {
     return nullptr;
 }
 
-const GumboNode* GumboFindDescendantByTag(const GumboNode* node, const char* name) {
+const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name) {
     // iterative pre-order DFS so a deeply nested document can't overflow the
     // stack (gumbo builds the tree iteratively, but recursing over it doesn't)
     Vec<const GumboNode*> toVisit;

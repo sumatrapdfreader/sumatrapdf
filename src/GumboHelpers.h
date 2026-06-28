@@ -10,15 +10,15 @@ extern "C" {
 // gumbo_normalized_tagname) and unknown tags (case-preserved in
 // original_tag) -- the latter covers e.g. PascalCase XML element names
 // like <ComicInfo>'s <Title>, <Year>, ...
-bool GumboTagNameIs(const GumboNode* node, const char* name);
+bool GumboTagNameIs(const GumboNode* node, Str name);
 
 // First direct element child of `node` whose tag matches `name`.
 // Returns nullptr if `node` isn't an element or no matching child exists.
-const GumboNode* GumboFindChildByTag(const GumboNode* node, const char* name);
+const GumboNode* GumboFindChildByTag(const GumboNode* node, Str name);
 
 // Depth-first search for the first element under `node` with the given
 // tag name. Walks both ELEMENT and DOCUMENT nodes.
-const GumboNode* GumboFindDescendantByTag(const GumboNode* node, const char* name);
+const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name);
 
 // Concatenated text content (TEXT/WHITESPACE/CDATA children) of an
 // element. Returns nullptr for non-element nodes or empty content.
