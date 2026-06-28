@@ -338,7 +338,7 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
     return res->dataLen > 0;
 }
 
-static Str kAIChatHtmlFmt = R"(<!DOCTYPE html><html><head><meta charset='utf-8'>
+static const char* kAIChatHtmlFmt = R"(<!DOCTYPE html><html><head><meta charset='utf-8'>
 <script src='%smarked.min.js'></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -417,7 +417,7 @@ function scrollToBottom() {
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
     Str host = virtualHost ? virtualHost : StrL("");
     Str bg = bgColor ? bgColor : StrL("#ffffff");
-    return fmt(kAIChatHtmlFmt.s, host.s, bg.s);
+    return fmt(kAIChatHtmlFmt, host.s, bg.s);
 }
 
 void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning) {
