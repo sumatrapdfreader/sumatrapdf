@@ -81,23 +81,23 @@ static char* UnescapeStr(const char* s) {
 // string arrays are serialized by quoting strings containing spaces
 // or quotation marks (doubling quotation marks within quotes);
 // this is simpler than full command line serialization as read by ParseCmdLine
-static char* SerializeUtf8StringArray(const Vec<char*>* strArray) {
+static char* SerializeUtf8StringArray(const Vec<Str>* strArray) {
     StrBuilder serialized;
 
     for (size_t i = 0; i < strArray->size(); i++) {
         if (i > 0) {
             serialized.AppendChar(' ');
         }
-        const char* str = strArray->at(i);
-        bool needsQuotes = !*str;
-        for (const char* c = str; !needsQuotes && *c; c++) {
+        Str str = strArray->at(i);
+        bool needsQuotes = !str;
+        for (const char* c = str.s; str && !needsQuotes && *c; c++) {
             needsQuotes = str::IsWs(*c) || '"' == *c;
         }
         if (!needsQuotes) {
-            serialized.Append(str);
+            serialized.Append(str.s);
         } else {
             serialized.AppendChar('"');
-            for (const char* c = str; *c; c++) {
+            for (const char* c = str.s; str && *c; c++) {
                 if ('"' == *c) {
                     serialized.AppendChar('"');
                 }
@@ -124,7 +124,7 @@ static char* skipWhitespace(const char* s) {
     return (char*)s;
 }
 
-static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* serialized) {
+static void DeserializeUtf8StringArray(Vec<Str>* strArray, const char* serialized) {
     char* str = (char*)serialized;
     const char* s = str;
 
@@ -141,7 +141,7 @@ static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* seriali
                 }
                 part.AppendChar(*s);
             }
-            strArray->Append(part.StealData());
+            strArray->Append(Str(part.StealData()));
             if ('"' == *s) {
                 s++;
             }
@@ -153,11 +153,13 @@ static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* seriali
     }
 }
 
-static void FreeUtf8StringArray(Vec<char*>* strArray) {
+static void FreeUtf8StringArray(Vec<Str>* strArray) {
     if (!strArray) {
         return;
     }
-    strArray->FreeMembers();
+    for (size_t i = 0; i < strArray->size(); i++) {
+        str::Free(strArray->at(i).s);
+    }
     delete strArray;
 }
 
@@ -216,16 +218,18 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
             }
             return true;
         }
-        case SettingType::Color:
-            if (!*(const char**)fieldPtr) {
+        case SettingType::Color: {
+            Str str = *(Str*)fieldPtr;
+            if (!str) {
                 return false; // skip empty strings
             }
-            if (!NeedsEscaping(*(const char**)fieldPtr)) {
-                out.Append(*(const char**)fieldPtr);
+            if (!NeedsEscaping(str.s)) {
+                out.Append(str.s);
             } else {
-                EscapeStr(out, *(const char**)fieldPtr);
+                EscapeStr(out, str.s);
             }
             return true;
+        }
         case SettingType::Compact:
             ReportIf(!IsCompactable(GetSubstruct(field)));
             for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
@@ -252,14 +256,14 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
             return (*(Vec<int>**)fieldPtr)->size() > 0 || field.value != 0;
         case SettingType::ColorArray:
         case SettingType::StringArray:
-            value.Set(SerializeUtf8StringArray(*(Vec<char*>**)fieldPtr));
+            value.Set(SerializeUtf8StringArray(*(Vec<Str>**)fieldPtr));
             if (!NeedsEscaping(value)) {
                 out.Append(value.Get());
             } else {
                 EscapeStr(out, value);
             }
             // prevent empty arrays from being replaced with the defaults
-            return (*(Vec<char*>**)fieldPtr)->size() > 0 || field.value != 0;
+            return (*(Vec<Str>**)fieldPtr)->size() > 0 || field.value != 0;
         default:
             ReportIf(true);
             return false;
@@ -309,13 +313,14 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
         }
 
         case SettingType::Color: {
-            char** strPtr = (char**)fieldPtr;
-            free(*strPtr);
+            Str* strPtr = (Str*)fieldPtr;
+            free(strPtr->s);
             if (value) {
-                *strPtr = UnescapeStr(value);
+                strPtr->s = UnescapeStr(value);
             } else {
-                *strPtr = str::Dup((const char*)field.value);
+                strPtr->s = str::Dup((const char*)field.value).s;
             }
+            strPtr->len = strPtr->s ? (int)strlen(strPtr->s) : 0;
         } break;
 
         case SettingType::String: {
@@ -373,10 +378,10 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
         } break;
         case SettingType::ColorArray:
         case SettingType::StringArray: {
-            Vec<char*>* v = *(Vec<char*>**)fieldPtr;
+            Vec<Str>* v = *(Vec<Str>**)fieldPtr;
             FreeUtf8StringArray(v);
-            v = new Vec<char*>();
-            *(Vec<char*>**)fieldPtr = v;
+            v = new Vec<Str>();
+            *(Vec<Str>**)fieldPtr = v;
             if (value) {
                 char* v2 = UnescapeStr(value);
                 DeserializeUtf8StringArray(v, v2);
@@ -582,8 +587,10 @@ static void FreeStructData(const StructInfo* info, u8* base) {
                 break;
             }
             case SettingType::Color: {
-                void* str = *((void**)fieldPtr);
-                free(str);
+                Str* str = (Str*)fieldPtr;
+                free(str->s);
+                str->s = nullptr;
+                str->len = 0;
                 break;
             }
             case SettingType::String: {
@@ -601,7 +608,7 @@ static void FreeStructData(const StructInfo* info, u8* base) {
             }
             case SettingType::StringArray:
             case SettingType::ColorArray: {
-                Vec<char*>* strArray = *(Vec<char*>**)fieldPtr;
+                Vec<Str>* strArray = *(Vec<Str>**)fieldPtr;
                 FreeUtf8StringArray(strArray);
                 break;
             }

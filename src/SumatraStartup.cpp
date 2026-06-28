@@ -747,7 +747,7 @@ static void ShutdownCommon() {
     dbghelp::FreeCallstackLogs();
 }
 
-static void ReplaceColor(char** col, char* maybeColor) {
+static void ReplaceColor(Str* col, Str maybeColor) {
     ParsedColor c;
     ParseColor(c, maybeColor);
     if (c.parsedOk) {

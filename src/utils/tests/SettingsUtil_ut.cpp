@@ -15,7 +15,7 @@ static const StructInfo gSutPointIInfo = {sizeof(Point), 2, gSutPointIFields, "X
 
 struct SutStructNested {
     Point point;
-    Vec<char*>* colorArray;
+    Vec<Str>* colorArray;
 };
 
 static const FieldInfo gSutStructNestedFields[] = {
@@ -42,7 +42,7 @@ static const StructInfo gSutStructItemInfo = {sizeof(SutStructItem), 3, gSutStru
 struct SutStruct {
     int internal;
     bool boolean;
-    char* color;
+    Str color;
     float floatingPoint;
     int integer;
     Str string;
@@ -52,8 +52,8 @@ struct SutStruct {
     Str nullUtf8String;
     Str escapedUtf8String;
     Vec<int>* intArray;
-    Vec<char*>* strArray;
-    Vec<char*>* emptyStrArray;
+    Vec<Str>* strArray;
+    Vec<Str>* emptyStrArray;
     Point point;
     Vec<SutStructItem*>* sutStructItems;
     char* internalString;
@@ -202,7 +202,7 @@ Key = Value";
     utassert(data->emptyStrArray);
     utassert(3 == data->strArray->size());
     utassert(0 == data->emptyStrArray->size());
-    Vec<char*>* sa = data->strArray;
+    Vec<Str>* sa = data->strArray;
     utassert(str::Eq(sa->at(0), "one"));
     utassert(str::Eq(sa->at(1), "two three"));
     utassert(str::Eq(sa->at(2), ""));

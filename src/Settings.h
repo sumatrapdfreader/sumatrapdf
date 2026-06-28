@@ -43,16 +43,16 @@ struct WindowMargin {
 // customization options for PDF, XPS, DjVu and PostScript UI
 struct FixedPageUI {
     // color value with which black (text) will be substituted
-    char* textColor;
+    Str textColor;
     ParsedColor textColorParsed;
     // color value with which white (background) will be substituted
-    char* backgroundColor;
+    Str backgroundColor;
     ParsedColor backgroundColorParsed;
     // color value for the text selection rectangle (also used to highlight
     // found text). Use an #aarrggbb value to control opacity: a smaller
     // alpha (e.g. #40ffff00) makes the selection more transparent so the
     // selected text stays crisp; #rrggbb uses the default opacity
-    char* selectionColor;
+    Str selectionColor;
     ParsedColor selectionColorParsed;
     // top, right, bottom and left margin (in that order) between window
     // and document
@@ -66,12 +66,12 @@ struct FixedPageUI {
     // experimental feature is that the background might allow to
     // subconsciously determine reading progress; suggested values: #2828aa
     // #28aa28 #aa2828
-    Vec<char*>* gradientColors;
+    Vec<Str>* gradientColors;
     // if true, TextColor and BackgroundColor of the document will be
     // swapped
     bool invertColors;
     // if given, sets the canvas background color for PDF files
-    char* windowBgCol;
+    Str windowBgCol;
     ParsedColor windowBgColParsed;
 };
 
@@ -89,7 +89,7 @@ struct EBookUI {
     Str customCSS;
     // if given, sets the canvas background color for ebook documents
     // (epub, mobi etc.)
-    char* windowBgCol;
+    Str windowBgCol;
     ParsedColor windowBgColParsed;
 };
 
@@ -105,14 +105,14 @@ struct ComicBookUI {
     // right to left if showing 2 pages at a time)
     bool cbxMangaMode;
     // if given, sets the canvas background color for comic book files
-    char* windowBgCol;
+    Str windowBgCol;
     ParsedColor windowBgColParsed;
 };
 
 // customization options for image files UI
 struct ImageUI {
     // if given, sets the canvas background color for image files
-    char* windowBgCol;
+    Str windowBgCol;
     ParsedColor windowBgColParsed;
     // default zoom for image files. valid values: fit page, fit width, fit
     // content, shrink to fit or percent like 100%
@@ -142,7 +142,7 @@ struct ClaudeCode {
     // if true, pass --dangerously-skip-permissions to Claude Code
     bool skipPermissions;
     // background color of the Claude Code chat panel
-    char* bgColor;
+    Str bgColor;
     ParsedColor bgColorParsed;
 };
 
@@ -159,7 +159,7 @@ struct GrokBuild {
     // executions)
     bool alwaysApprove;
     // background color of the Grok Build chat panel
-    char* bgColor;
+    Str bgColor;
     ParsedColor bgColorParsed;
 };
 
@@ -176,29 +176,29 @@ struct CodexBuild {
     // if true, pass --dangerously-bypass-approvals-and-sandbox to Codex
     bool skipSandbox;
     // background color of the OpenAI Codex chat panel
-    char* bgColor;
+    Str bgColor;
     ParsedColor bgColorParsed;
 };
 
 // default values for annotations in PDF documents
 struct Annotations {
     // highlight annotation color
-    char* highlightColor;
+    Str highlightColor;
     ParsedColor highlightColorParsed;
     // underline annotation color
-    char* underlineColor;
+    Str underlineColor;
     ParsedColor underlineColorParsed;
     // squiggly annotation color
-    char* squigglyColor;
+    Str squigglyColor;
     ParsedColor squigglyColorParsed;
     // strike out annotation color
-    char* strikeOutColor;
+    Str strikeOutColor;
     ParsedColor strikeOutColorParsed;
     // text color of free text annotation
-    char* freeTextColor;
+    Str freeTextColor;
     ParsedColor freeTextColorParsed;
     // background color of free text annotation
-    char* freeTextBackgroundColor;
+    Str freeTextBackgroundColor;
     ParsedColor freeTextBackgroundColorParsed;
     // opacity of free text annotation in percent (0-100); 0 - fully
     // transparent (invisible), 50 - half transparent, 100 - fully opaque
@@ -208,7 +208,7 @@ struct Annotations {
     // width of free text annotation border
     int freeTextBorderWidth;
     // text icon annotation color
-    char* textIconColor;
+    Str textIconColor;
     ParsedColor textIconColorParsed;
     // type of text annotation icon: comment, help, insert, key, new
     // paragraph, note, paragraph. If not set: note.
@@ -252,7 +252,7 @@ struct ForwardSearch {
     // width of the highlight rectangle (if HighlightOffset is > 0)
     int highlightWidth;
     // color used for the forward search highlight
-    char* highlightColor;
+    Str highlightColor;
     ParsedColor highlightColorParsed;
     // if true, highlight remains visible until the next mouse click
     // (instead of fading away immediately)
@@ -312,16 +312,16 @@ struct Theme {
     // name of the theme
     Str name;
     // text color
-    char* textColor;
+    Str textColor;
     ParsedColor textColorParsed;
     // background color
-    char* backgroundColor;
+    Str backgroundColor;
     ParsedColor backgroundColorParsed;
     // control background color
-    char* controlBackgroundColor;
+    Str controlBackgroundColor;
     ParsedColor controlBackgroundColorParsed;
     // link color
-    char* linkColor;
+    Str linkColor;
     ParsedColor linkColorParsed;
     // should we colorize Windows controls and window areas
     bool colorizeControls;
@@ -405,10 +405,10 @@ struct FileState {
     // view modes (only used for comic book documents)
     bool displayR2L;
     // if given, overrides the background color for this document
-    char* bgCol;
+    Str bgCol;
     ParsedColor bgColParsed;
     // if given, overrides the tab color for this document
-    char* tabCol;
+    Str tabCol;
     ParsedColor tabColParsed;
     // index into an ebook's HTML data from which reparsing has to happen
     // in order to restore the last viewed page (i.e. the equivalent of
@@ -501,7 +501,7 @@ struct GlobalPrefs {
     // is selected
     bool lazyLoading;
     // background color of the non-document windows, traditionally yellow
-    char* mainWindowBackground;
+    Str mainWindowBackground;
     ParsedColor mainWindowBackgroundParsed;
     // if true, doesn't open Home tab
     bool noHomeTab;

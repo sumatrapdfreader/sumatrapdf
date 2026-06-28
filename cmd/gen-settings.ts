@@ -38,7 +38,7 @@ interface Field {
 }
 
 const Bool: Type = { name: "Bool", ctype: "bool" };
-const Color: Type = { name: "Color", ctype: "char*" };
+const Color: Type = { name: "Color", ctype: "Str" };
 const Float: Type = { name: "Float", ctype: "float" };
 const Int: Type = { name: "Int", ctype: "int" };
 const Str: Type = { name: "String", ctype: "Str" };
