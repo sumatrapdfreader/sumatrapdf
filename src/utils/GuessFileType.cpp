@@ -223,7 +223,7 @@ static bool IsPdfFileContent(const ByteSlice& d) {
     if (d.size() < 8) {
         return false;
     }
-    Str data = Str((char*)d.data(), (int)d.size() - 5);
+    Str data = AsStr(ByteSlice(d.data(), d.size() - 5));
     while (data.len >= 5) {
         Str found = str::FindChar(data, '%');
         if (!found) {
@@ -239,7 +239,7 @@ static bool IsPdfFileContent(const ByteSlice& d) {
 }
 
 static bool IsPSFileContent(const ByteSlice& d) {
-    Str header = Str((char*)d.data(), (int)d.size());
+    Str header = AsStr(d);
     size_t n = d.size();
     if (n < 64) {
         return false;
@@ -272,7 +272,7 @@ static Kind DetectHicAndAvif(const ByteSlice& d) {
     if (d.size() < 0x18) {
         return nullptr;
     }
-    Str s = Str((char*)d.data(), (int)d.size());
+    Str s = AsStr(d);
     Str hdr = Str(s.s + 4, s.len - 4);
     // ftyp values per https://github.com/strukturag/libheif/issues/83
     /*
