@@ -40,9 +40,10 @@ class PreviewClassFactory : public IClassFactory {
         return cRef;
     }
 
-    bool IsClsid(const char* s) {
+    bool IsClsid(Str s) {
         CLSID clsid;
-        return SUCCEEDED(CLSIDFromString(s, &clsid)) && IsEqualCLSID(m_clsid, clsid);
+        TempWStr ws = ToWStrTemp(s);
+        return SUCCEEDED(CLSIDFromString(ws, &clsid)) && IsEqualCLSID(m_clsid, clsid);
     }
 
     // IClassFactory
@@ -99,7 +100,7 @@ class PreviewClassFactory : public IClassFactory {
     CLSID m_clsid;
 };
 
-static const char* GetReason(DWORD dwReason) {
+static Str GetReason(DWORD dwReason) {
     switch (dwReason) {
         case DLL_PROCESS_ATTACH:
             return "DLL_PROCESS_ATTACH";
@@ -118,7 +119,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void*) {
         ReportIf(hInstance != GetInstance());
     }
     gLogAppName = StrL("PdfPreview");
-    logf("PdfPreview: DllMain %s\n", GetReason(dwReason));
+    logf("PdfPreview: DllMain %s\n", GetReason(dwReason).s);
     return TRUE;
 }
 
@@ -170,7 +171,7 @@ STDAPI DllUnregisterServer() {
 }
 
 // TODO: maybe remove, is anyone using this functionality?
-STDAPI DllInstall(BOOL bInstall, const WCHAR* pszCmdLine) {
+STDAPI DllInstall(BOOL bInstall, const WCHAR* pszCmdLine) { // str-port: Win32 DLL export API
     TempStr s = ToUtf8Temp(pszCmdLine);
     DisablePreviewInstallExts(s);
     if (!bInstall) {
