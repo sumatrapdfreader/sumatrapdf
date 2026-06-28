@@ -50,7 +50,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         SetLayout(hdc, 0);
     }
 
-    const char* itemText = m->Item(ev->itemIndex);
+    Str itemText = m->Item(ev->itemIndex);
     ItemDataCP* data = m->Data(ev->itemIndex);
 
     TempStr rightStr = nullptr;
