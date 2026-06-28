@@ -633,7 +633,7 @@ static void TextFontSelectionChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto idx = ew->dropDownTextFont->GetCurrentSelection();
-    const char* font = SeqStrByIndex(gFontNames, idx);
+    Str font = SeqStrByIndex(gFontNames, idx);
     SetDefaultAppearanceTextFont(annot, font);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);

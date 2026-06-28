@@ -80,14 +80,14 @@ static bool PdfDateParse(const char* pdfDate, SYSTEMTIME* timeOut) {
 
 // Start, Author, Title, Date, Content, End
 
-static const char* PdfFilterStateToStr(PdfFilterState state) {
-    const char* res = SeqStrByIndex(kPdfFilterStateStrs, (int)state);
-    return res ? res : "unknown";
+static Str PdfFilterStateToStr(PdfFilterState state) {
+    Str res = SeqStrByIndex(kPdfFilterStateStrs, (int)state);
+    return res ? res : Str("unknown");
 }
 
 HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
-    const char* stateStr = PdfFilterStateToStr(m_state);
-    logf("PdfFilter::GetNextChunkValue(), state: %s (%d)\n", stateStr, (int)m_state);
+    Str stateStr = PdfFilterStateToStr(m_state);
+    logf("PdfFilter::GetNextChunkValue(), state: %s (%d)\n", stateStr.s, (int)m_state);
     char* prop = nullptr;
     WCHAR* ws = nullptr;
     switch (m_state) {

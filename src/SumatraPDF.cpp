@@ -308,7 +308,7 @@ void InitializePolicies(bool restrict) {
 
     // enable policies as indicated in sumatrapdfrestrict.ini
     for (int i = 0; i < dimofi(perms); i++) {
-        const char* name = SeqStrByIndex(permNames, i);
+        Str name = SeqStrByIndex(permNames, i);
         const char* val = polsec->GetValue(name);
         if (val && atoi(val) != 0) {
             gPolicyRestrictions = gPolicyRestrictions | perms[i];
@@ -1091,7 +1091,7 @@ bool ToolbarModeIsHidden() {
 }
 
 void SetToolbarMode(int mode) {
-    const char* name = SeqStrByIndex(gToolbarModeNames, mode);
+    Str name = SeqStrByIndex(gToolbarModeNames, mode);
     if (!name) {
         name = "show";
         mode = kToolbarShow;
@@ -1117,7 +1117,7 @@ bool ToolbarAtBottom() {
 
 void ToggleToolbarPosition() {
     int pos = ToolbarPositionFromPrefs() == kToolbarBottom ? kToolbarTop : kToolbarBottom;
-    const char* name = SeqStrByIndex(gToolbarPositionNames, pos);
+    Str name = SeqStrByIndex(gToolbarPositionNames, pos);
     str::ReplaceWithCopy(&gGlobalPrefs->toolbarPosition, name);
 }
 
