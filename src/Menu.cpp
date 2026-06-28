@@ -46,7 +46,7 @@
 
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
-    const char* text = nullptr;
+    Str text = {};
     // copy of MENUITEMINFO fields
     uint fType = 0;
     uint fState = 0;
@@ -1152,13 +1152,13 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
 
 #define cmdIdInList(name) __cmdIdInList(cmdId, name, dimof(name))
 
-static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
+static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
     ReportIf(!filePath || !menuFile);
     if (!filePath || !menuFile) {
         return;
     }
 
-    TempStr menuString = path::GetBaseNameTemp(Str(filePath));
+    TempStr menuString = path::GetBaseNameTemp(filePath);
     // shorten very long file names so that menu isn't too wide
     const size_t kMaxRunes = 70;
     menuString = ShortenStringUtf8InTheMiddleTemp(menuString, kMaxRunes);
@@ -1182,7 +1182,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
         if (!fs || fs->isMissing) {
             break;
         }
-        const char* fp = fs->filePath;
+        Str fp = fs->filePath;
         if (!fp) {
             // comes from settings file so can be missing due to user modifications
             continue;
@@ -1231,22 +1231,22 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
     AppendCommandsToMenu(m, cmds, isEnabled);
 }
 
-static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
-    if (!CanAccessDisk() || (filePath && !file::Exists(Str(filePath)))) {
+static void AppendExternalViewersToMenu(HMENU menuFile, Str filePath) {
+    if (!CanAccessDisk() || (filePath && !file::Exists(filePath))) {
         return;
     }
     Vec<CustomCommand*> cmds;
     GetCommandsWithOrigId(cmds, CmdViewWithExternalViewer);
     for (CustomCommand* cmd : cmds) {
-        const char* commandLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
-        const char* filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+        Str commandLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
+        Str filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
         if (str::IsEmptyOrWhiteSpace(commandLine)) {
             continue;
         }
         if (filter && !(filePath && PathMatchFilter(filePath, filter))) {
             continue;
         }
-        char* name = (char*)cmd->name;
+        TempStr name = cmd->name;
         if (str::IsEmptyOrWhiteSpace(cmd->name)) {
             if (str::IsEmptyOrWhiteSpace(name)) {
                 CmdLineArgsIter args(ToWStrTemp(commandLine));
@@ -1255,10 +1255,10 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
                     continue;
                 }
                 Str arg0 = args.at(2 + 0);
-                name = str::DupTemp(path::GetBaseNameTemp(arg0));
-                char* pos = str::FindChar(name, '.');
-                if (pos) {
-                    *pos = 0;
+                name = path::GetBaseNameTemp(arg0);
+                Str dotPos = str::FindChar(name, '.');
+                if (dotPos) {
+                    name = str::DupTemp(Str(name.s, (int)(dotPos.s - name.s)));
                 }
             }
         }
@@ -1364,7 +1364,7 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         if (addExternalViewersNext && ctx) {
             // append user external viewers after menu item with CmdOpenWithHtmlHelp
             WindowTab* tab = ctx->tab;
-            const char* path = tab ? tab->filePath : nullptr;
+            Str path = tab ? tab->filePath : Str{};
             AppendExternalViewersToMenu(menu, path);
             addExternalViewersNext = false;
             continue;
@@ -1770,10 +1770,11 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
 
 // s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
 // We only want the "path.pdf" / "foo@bar.com"
-static TempStr CleanupURLForClipbardCopyTemp(const char* s) {
-    str::Skip(s, "file:");
-    str::Skip(s, "mailto:");
-    return str::DupTemp(s);
+static TempStr CleanupURLForClipbardCopyTemp(Str s) {
+    Str slice = s;
+    str::Skip(slice, "file:");
+    str::Skip(slice, "mailto:");
+    return str::DupTemp(slice);
 }
 
 void OnWindowContextMenu(MainWindow* win, int x, int y) {
@@ -1788,7 +1789,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     int pageNoUnderEl = 0;
     IPageElement* pageEl = dm->GetElementAtPos(cursorPos, &pageNoUnderEl);
 
-    char* value = nullptr;
+    Str value = {};
     if (pageEl) {
         value = pageEl->GetValue();
     }
@@ -1891,7 +1892,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         MenuSetText(popup, CmdEditAnnotations, s);
     }
 
-    const char* filePath = win->ctrl->GetFilePath();
+    Str filePath = win->ctrl->GetFilePath();
     bool favsSupported = HasPermission(Perm::SavePreferences) && CanAccessDisk();
     if (favsSupported) {
         if (pageNoUnderCursor > 0) {
@@ -1901,7 +1902,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 MenuRemove(popup, CmdFavoriteAdd);
 
                 // %s and not %d because re-using translation from RebuildFavMenu()
-                const char* tr = _TRA("Remove page %s from favorites");
+                Str tr = _TRA("Remove page %s from favorites");
                 TempStr s = str::FormatTemp(tr, pageLabel);
                 MenuSetText(popup, CmdFavoriteDel, s);
             } else {
@@ -2024,9 +2025,9 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 if (pd && pd->embedObjNum > 0) {
                     ByteSlice data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
                     if (!data.empty()) {
-                        const char* fileName = pd->GetValue2();
-                        TempStr dir = path::GetDirTemp(Str(filePath));
-                        fileName = path::GetBaseNameTemp(Str(fileName));
+                        Str fileName = pd->GetValue2();
+                        TempStr dir = path::GetDirTemp(filePath);
+                        fileName = path::GetBaseNameTemp(fileName);
                         TempStr dstPath = path::JoinTemp(dir, fileName);
                         SaveDataToFile(win->hwndFrame, dstPath, data);
                         str::Free(data.data());
@@ -2081,17 +2082,15 @@ void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
 // - text of the menu item
 // - text for the keyboard shortcut
 // They are separated with \t
-static TempStr ParseMenuTextTemp(const char* sIn, char** shortcutOut) {
-    *shortcutOut = nullptr;
-    auto tabPos = str::FindChar(sIn, '\t');
+static TempStr ParseMenuTextTemp(Str sIn, Str* shortcutOut) {
+    *shortcutOut = {};
+    Str tabPos = str::FindChar(sIn, '\t');
     if (!tabPos) {
-        return (char*)sIn;
+        return sIn;
     }
-    int n = tabPos - sIn;
-    char* s = str::DupTemp(sIn);
-    s[n] = 0;
-    *shortcutOut = s + n + 1;
-    return s;
+    int n = (int)(tabPos.s - sIn.s);
+    *shortcutOut = Str(tabPos.s + 1, sIn.len - n - 1);
+    return str::DupTemp(Str(sIn.s, n));
 }
 
 void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
@@ -2222,15 +2221,15 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
         return;
     }
 
-    auto text = modi && modi->text ? modi->text : "Dummy";
+    Str text = modi && modi->text ? modi->text : Str("Dummy");
     HFONT font = GetAppMenuFont();
-    char* shortcutText = nullptr;
-    char* menuText = ParseMenuTextTemp(text, &shortcutText);
+    Str shortcutText = {};
+    TempStr menuText = ParseMenuTextTemp(text, &shortcutText);
 
     auto size = HwndMeasureText(hwnd, menuText, font);
     mis->itemHeight = size.dy;
     int dx = size.dx;
-    if (shortcutText != nullptr) {
+    if (shortcutText) {
         // add space betweeen menu text and shortcut
         size = HwndMeasureText(hwnd, "    ", font);
         dx += size.dx;
@@ -2350,15 +2349,15 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         return;
     }
 
-    char* shortcutText = nullptr;
-    char* menuText = ParseMenuTextTemp(modi->text, &shortcutText);
+    Str shortcutText = {};
+    TempStr menuText = ParseMenuTextTemp(modi->text, &shortcutText);
 
     // DrawTextEx handles & => underscore drawing
     rc.top += padY;
     rc.left += cxCheckMark;
     TempWStr ws = ToWStrTemp(menuText);
     DrawTextExW(hdc, ws, -1, &rc, DT_LEFT, nullptr);
-    if (shortcutText != nullptr) {
+    if (shortcutText) {
         ws = ToWStrTemp(shortcutText);
         rc = dis->rcItem;
         rc.top += padY;
