@@ -76,15 +76,14 @@ static AnnotationType gAnnotsIsColorBackground[] = {
 };
 // clang-format on
 
-const char* GetKnownColorName(PdfColor c) {
+Str GetKnownColorName(PdfColor c) {
     int n = (int)dimof(gColorsValues);
     for (int i = 0; i < n; i++) {
         if (c == gColorsValues[i]) {
-            const char* s = SeqStrByIndex(gColors, i);
-            return s;
+            return SeqStrByIndex(gColors, i);
         }
     }
-    return nullptr;
+    return {};
 }
 
 struct EditAnnotationsWindow : Wnd {
@@ -489,7 +488,7 @@ static void ItemsFromSeqstrings(StrVec& items, const char* strings) {
 static void DropDownFillColors(DropDown* w, PdfColor col, StrBuilder& customColor) {
     StrVec items;
     ItemsFromSeqstrings(items, gColors);
-    const char* colorName = GetKnownColorName(col);
+    Str colorName = GetKnownColorName(col);
     int idx = SeqStrIndex(gColors, colorName);
     if (idx < 0) {
         customColor.Reset();
