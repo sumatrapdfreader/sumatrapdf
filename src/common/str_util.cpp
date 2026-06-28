@@ -50,11 +50,9 @@ Str StrDupTemp(Str s) {
     if (IsEmpty(s)) {
         return s;
     }
-    int n = len(s) + 1;
-    char* buf = (char*)AllocTemp(n);
-    memcpy(buf, s.s, s.len);
-    buf[s.len] = 0;
-    return Str(buf, s.len);
+    Str buf = AllocStrTemp(s.len);
+    memcpy(buf.s, s.s, s.len);
+    return buf;
 }
 
 int StrLastIndexOfChar(Str s, char c) {
@@ -369,17 +367,17 @@ int FormatSizeHumanIntoBuf(u64 size, Str buf) {
     const u64 MB = 1024ULL * 1024;
     const u64 KB = 1024ULL;
 
-    const char* suffix;
+    Str suffix;
     u64 divisor;
 
     if (size >= GB) {
-        suffix = " GB";
+        suffix = StrL(" GB");
         divisor = GB;
     } else if (size >= MB) {
-        suffix = " MB";
+        suffix = StrL(" MB");
         divisor = MB;
     } else if (size >= KB) {
-        suffix = " KB";
+        suffix = StrL(" KB");
         divisor = KB;
     } else {
         // Bytes - just format as integer
@@ -394,11 +392,11 @@ int FormatSizeHumanIntoBuf(u64 size, Str buf) {
 
     int len;
     if (frac == 0) {
-        len = snprintf(buf.s, buf.len, "%llu%s", whole, suffix);
+        len = snprintf(buf.s, buf.len, "%llu%s", whole, suffix.s);
     } else if (frac % 10 == 0) {
-        len = snprintf(buf.s, buf.len, "%llu.%d%s", whole, frac / 10, suffix);
+        len = snprintf(buf.s, buf.len, "%llu.%d%s", whole, frac / 10, suffix.s);
     } else {
-        len = snprintf(buf.s, buf.len, "%llu.%02d%s", whole, frac, suffix);
+        len = snprintf(buf.s, buf.len, "%llu.%02d%s", whole, frac, suffix.s);
     }
     return len < buf.len ? len : buf.len - 1;
 }
@@ -422,28 +420,29 @@ void FormatSizeHumanIntoWBuf(u64 size, WStr wbuf) {
 Str PathJoinTemp(Str dir, Str name) {
     // Handle ".." - go up one directory
     if (StrEq(name, StrL(".."))) {
-        char* result = (char*)AllocTemp(dir.len + 1);
+        Str result = AllocStrTemp(dir.len);
         for (int i = 0; i < dir.len; i++) {
-            result[i] = dir.s[i];
+            result.s[i] = dir.s[i];
         }
-        result[dir.len] = 0;
 
         // Find last backslash
         int lastSlash = -1;
         for (int i = 0; i < dir.len; i++) {
-            if (result[i] == '\\') lastSlash = i;
+            if (result.s[i] == '\\') {
+                lastSlash = i;
+            }
         }
         // Don't go above root (e.g., "C:\")
         int newLen = dir.len;
         if (lastSlash > 2) {
-            result[lastSlash] = 0;
+            result.s[lastSlash] = 0;
             newLen = lastSlash;
         } else if (lastSlash == 2) {
             // Going up from "C:\something" to "C:\"
-            result[3] = 0;
+            result.s[3] = 0;
             newLen = 3;
         }
-        return Str(result, newLen);
+        return Str(result.s, newLen);
     }
 
     // Strip trailing "/" from name if present
@@ -455,26 +454,25 @@ Str PathJoinTemp(Str dir, Str name) {
     int needsSlash = (dir.len > 0 && dir.s[dir.len - 1] != '\\') ? 1 : 0;
     int totalLen = dir.len + needsSlash + nameLen;
 
-    char* result = (char*)AllocTemp(totalLen + 1);
+    Str result = AllocStrTemp(totalLen);
     int pos = 0;
 
     // Copy dir
     for (int i = 0; i < dir.len; i++) {
-        result[pos++] = dir.s[i];
+        result.s[pos++] = dir.s[i];
     }
 
     // Add backslash if needed
     if (needsSlash) {
-        result[pos++] = '\\';
+        result.s[pos++] = '\\';
     }
 
     // Copy name (without trailing /)
     for (int i = 0; i < nameLen; i++) {
-        result[pos++] = name.s[i];
+        result.s[pos++] = name.s[i];
     }
 
-    result[pos] = 0;
-    return Str(result, pos);
+    return Str(result.s, pos);
 }
 
 // Copy UTF-8 string with max bytes
