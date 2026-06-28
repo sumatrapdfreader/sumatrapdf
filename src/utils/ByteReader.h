@@ -7,7 +7,7 @@ struct ByteReader {
 
     // Unpacks a structure from the data according to the given format
     // e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
-    bool Unpack(void* strct, size_t size, const char* format, size_t off, bool isBE) const;
+    bool Unpack(void* strct, size_t size, Str format, size_t off, bool isBE) const;
 
     explicit ByteReader(const ByteSlice&);
     explicit ByteReader(Str data);
@@ -24,7 +24,7 @@ struct ByteReader {
     u64 QWordBE(size_t off) const;
     u64 QWord(size_t off, bool isBE) const;
     const u8* Find(size_t off, u8 byte) const;
-    bool UnpackLE(void* strct, size_t size, const char* format, size_t off = 0) const;
-    bool UnpackBE(void* strct, size_t size, const char* format, size_t off = 0) const;
-    bool Unpack(void* strct, size_t size, const char* format, bool isBE, size_t off = 0) const;
+    bool UnpackLE(void* strct, size_t size, Str format, size_t off = 0) const;
+    bool UnpackBE(void* strct, size_t size, Str format, size_t off = 0) const;
+    bool Unpack(void* strct, size_t size, Str format, bool isBE, size_t off = 0) const;
 };

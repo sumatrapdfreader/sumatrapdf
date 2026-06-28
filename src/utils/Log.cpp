@@ -123,7 +123,7 @@ static void logToPipe(Str s) {
 }
 
 // to use in
-void logPipe(const char* fmt, ...) {
+void logPipe(Str fmt, ...) {
     if (!gLogToPipe) return;
     va_list args;
     va_start(args, fmt);
@@ -141,7 +141,7 @@ void logv(Str s) {
     logToPipe(s);
 }
 
-void logvf(const char* fmt, ...) {
+void logvf(Str fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args).s;
@@ -229,7 +229,7 @@ void loga(Str s) {
     log2(s, true);
 }
 
-void logf(const char* fmt, ...) {
+void logf(Str fmt, ...) {
     if (gReducedLogging || gDestroyedLogging) {
         return;
     }
@@ -241,7 +241,7 @@ void logf(const char* fmt, ...) {
     va_end(args);
 }
 
-void logfa(const char* fmt, ...) {
+void logfa(Str fmt, ...) {
     if (gDestroyedLogging) {
         return;
     }
@@ -270,12 +270,12 @@ bool WriteCurrentLogToFile(Str path) {
     }
     bool ok = dir::CreateForFile(path);
     if (!ok) {
-        logf("WriteCurrentLogToFile: dir::CreateForFile('%s') failed\n", path);
+        logf("WriteCurrentLogToFile: dir::CreateForFile('%s') failed\n", path.s);
         return false;
     }
     ok = file::WriteFile(path, slice);
     if (!ok) {
-        logf("WriteCurrentLogToFile: file::WriteFile('%s') failed\n", path);
+        logf("WriteCurrentLogToFile: file::WriteFile('%s') failed\n", path.s);
     }
     return ok;
 }

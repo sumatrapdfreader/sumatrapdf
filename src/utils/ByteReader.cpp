@@ -6,10 +6,13 @@
 
 // Unpacks a structure from the data according to the given format
 // e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
-bool ByteReader::Unpack(void* strct, size_t size, const char* format, size_t off, bool isBE) const {
+bool ByteReader::Unpack(void* strct, size_t size, Str format, size_t off, bool isBE) const {
+    if (!format) {
+        return false;
+    }
     int repeat = 0;
     size_t idx = 0;
-    for (const char* c = format; *c; c++) {
+    for (const char* c = format.s; *c; c++) {
         if (isdigit((u8)*c)) {
             repeat = atoi(c);
             for (c++; isdigit((u8)*c); c++) {
@@ -132,14 +135,14 @@ const u8* ByteReader::Find(size_t off, u8 byte) const {
     return (const u8*)memchr(d + off, byte, len - off);
 }
 
-bool ByteReader::UnpackLE(void* strct, size_t size, const char* format, size_t off) const {
+bool ByteReader::UnpackLE(void* strct, size_t size, Str format, size_t off) const {
     return Unpack(strct, size, format, off, false);
 }
 
-bool ByteReader::UnpackBE(void* strct, size_t size, const char* format, size_t off) const {
+bool ByteReader::UnpackBE(void* strct, size_t size, Str format, size_t off) const {
     return Unpack(strct, size, format, off, true);
 }
 
-bool ByteReader::Unpack(void* strct, size_t size, const char* format, bool isBE, size_t off) const {
+bool ByteReader::Unpack(void* strct, size_t size, Str format, bool isBE, size_t off) const {
     return Unpack(strct, size, format, off, isBE);
 }
