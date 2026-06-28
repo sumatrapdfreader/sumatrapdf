@@ -272,7 +272,7 @@ Str Dup(Str s, size_t cch) {
 }
 
 Str Dup(const ByteSlice& d) {
-    return Dup(Str((char*)d.data(), (int)d.size()));
+    return Dup(AsStr(d));
 }
 
 static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) { // str-port: owned heap
@@ -1557,7 +1557,7 @@ void SeqStrNumAppend(StrBuilder* b, Str s, i64 num) {
     b->AppendChar('\0');
     u8 buf[12];
     size_t n = VarIntEncode(buf, num);
-    b->Append((const char*)buf, n);
+    b->AppendSlice(ByteSlice(buf, n));
 }
 
 void SeqStrNumFinish(StrBuilder* b) {
