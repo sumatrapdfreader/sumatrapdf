@@ -735,9 +735,10 @@ bool EpubDoc::ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS())) {
             AttrInfo* attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
-                AutoFreeStr src = str::Dup(attrInfo->val).s;
-                src.Set(NormalizeURL(Str(src), Str(pagePath)).s);
-                itemSrc.Set(strconv::FromHtmlUtf8(Str(src)));
+                // NormalizeURL doesn't modify its url arg, so no need to dup it first
+                Str src = NormalizeURL(attrInfo->val, pagePath);
+                itemSrc.Set(strconv::FromHtmlUtf8(src));
+                str::Free(src.s);
             }
         }
     }
