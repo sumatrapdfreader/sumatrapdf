@@ -38,15 +38,15 @@ static bool AllowCommand(const AppCommandCtx& ctx, i32 cmdId) {
     return CommandShouldShow(GetCommandVisibility(cmdId, ctx, CommandSurface::Palette));
 }
 
-static TempStr ConvertPathForDisplayTemp(const char* s) {
+static TempStr ConvertPathForDisplayTemp(Str s) {
     return path::GetBaseNameTemp(s);
 }
 
-static TempStr RemovePrefixFromString(const char* s) {
+static TempStr RemovePrefixFromString(Str s) {
     return str::ReplaceTemp(s, "&", "");
 }
 
-static const TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, const char* s) {
+static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     bool isToggle = false;
     bool newIsOn = false;
     switch (cmdId) {
@@ -171,46 +171,39 @@ static const TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, const cha
     }
 
     if (isToggle) {
-        s = (const char*)str::JoinTemp(s, newIsOn ? ": set to true" : ": set to false");
-        return s;
+        return str::JoinTemp(s, newIsOn ? ": set to true" : ": set to false");
     }
 
     if (cmdId == CmdToggleChmUI) {
         if (gGlobalPrefs->chmUI.useFixedPageUI) {
-            s = (const char*)str::JoinTemp(s, ": browser");
-        } else {
-            s = (const char*)str::JoinTemp(s, ": fixed");
+            return str::JoinTemp(s, ": browser");
         }
-        return s;
+        return str::JoinTemp(s, ": fixed");
     }
 
     if (cmdId == CmdToggleToolbarPosition) {
-        const char* next = ToolbarAtBottom() ? "top" : "bottom";
-        return (const char*)str::JoinTemp(s, ": set to ", next);
+        Str next = ToolbarAtBottom() ? Str("top") : Str("bottom");
+        return str::JoinTemp(s, ": set to ", next);
     }
 
     if (cmdId == CmdToggleDjvuEngine) {
         bool useDjvuDec = !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
-        const char* next = useDjvuDec ? "libdjvu" : "djvudec";
-        return (const char*)str::JoinTemp(s, ": set to ", next);
+        Str next = useDjvuDec ? Str("libdjvu") : Str("djvudec");
+        return str::JoinTemp(s, ": set to ", next);
     }
 
     if (cmdId == CmdToggleWindowsPreviewer) {
         if (IsPreviewInstalled()) {
-            s = _TRA("Un-register Windows Previewer");
-        } else {
-            s = _TRA("Register Windows Previewer");
+            return _TRA("Un-register Windows Previewer");
         }
-        return s;
+        return _TRA("Register Windows Previewer");
     }
 
     if (cmdId == CmdToggleWindowsSearchFilter) {
         if (IsSearchFilterInstalled()) {
-            s = _TRA("Un-register Windows Search Filter");
-        } else {
-            s = _TRA("Register Windows Search Filter");
+            return _TRA("Un-register Windows Search Filter");
         }
-        return s;
+        return _TRA("Register Windows Search Filter");
     }
 
     if (cmdId == CmdAIChatWithClaudeCode) {
@@ -342,7 +335,7 @@ static void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCu
 void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
     favorites.Reset();
     WindowTab* currTab = mainWin->CurrentTab();
-    const char* currFilePath = currTab ? currTab->filePath : nullptr;
+    Str currFilePath = currTab ? currTab->filePath : nullptr;
 
     FileState* currFs = nullptr;
     if (currFilePath) {
@@ -379,8 +372,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     fileHistory.Reset();
     for (FileState* fs : *gGlobalPrefs->fileStates) {
-        char* s = fs->filePath;
-        s = ConvertPathForDisplayTemp(s);
+        TempStr s = ConvertPathForDisplayTemp(fs->filePath);
         ItemDataCP data;
         data.filePath = fs->filePath;
         fileHistory.Append(s, data);
