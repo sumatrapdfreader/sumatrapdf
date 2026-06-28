@@ -95,6 +95,8 @@ static UINT_PTR gNoDocWhitelist[] = {
 
 UINT_PTR disableIfNoSelection[] = {
     CmdCopySelection,
+    CmdFindNextSel,
+    CmdFindPrevSel,
     CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGoogle,
     CmdTranslateSelectionWithGrokBuild,
@@ -521,7 +523,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if ((origCmdId == CmdSelectionHandler) || CmdIdInList(cmdId, disableIfNoSelection)) {
-        return ctx.hasSelection ? CommandVisibility::Show : CommandVisibility::Disable;
+        return ctx.hasSelection ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
     }
 
     if (surface == CommandSurface::Palette && cmdId == CmdToggleFrequentlyRead) {
