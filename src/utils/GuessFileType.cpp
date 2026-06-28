@@ -141,8 +141,8 @@ static const char* gFileExts = DEF_EXT_KIND(EXT);
 static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
 #undef KIND
 
-static Kind GetKindByFileExt(const char* path) {
-    char* ext = path::GetExtTemp(path);
+static Kind GetKindByFileExt(Str path) {
+    TempStr ext = path::GetExtTemp(path);
     int idx = SeqStrIndexIS(gFileExts, ext);
     if (idx < 0) {
         return nullptr;
@@ -223,25 +223,23 @@ static bool IsPdfFileContent(const ByteSlice& d) {
     if (d.size() < 8) {
         return false;
     }
-    int n = (int)d.size() - 5;
-    char* data = (char*)d.data();
-    char* end = data + n;
-    while (data < end) {
-        size_t nLeft = end - data;
-        data = (char*)memchr(data, '%', nLeft);
-        if (!data) {
+    Str data = Str((char*)d.data(), (int)d.size() - 5);
+    while (data.len >= 5) {
+        Str found = str::FindChar(data, '%');
+        if (!found) {
             return false;
         }
-        if (str::EqN(data, "%PDF-", 5)) {
+        if (str::EqN(found, Str("%PDF-"), 5)) {
             return true;
         }
-        ++data;
+        int off = (int)(found.s - data.s) + 1;
+        data = Str(data.s + off, data.len - off);
     }
     return false;
 }
 
 static bool IsPSFileContent(const ByteSlice& d) {
-    char* header = (char*)d.data();
+    Str header = Str((char*)d.data(), (int)d.size());
     size_t n = d.size();
     if (n < 64) {
         return false;
@@ -249,7 +247,11 @@ static bool IsPSFileContent(const ByteSlice& d) {
     // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
     if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
         DWORD psStart = ByteReader(d).DWordLE(4);
-        return psStart >= n - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
+        if (psStart >= n - 12) {
+            return true;
+        }
+        Str sub = Str(header.s + psStart, header.len - (int)psStart);
+        return str::StartsWith(sub, "%!PS-Adobe-");
     }
     if (str::StartsWith(header, "%!PS-Adobe-")) {
         return true;
@@ -257,12 +259,8 @@ static bool IsPSFileContent(const ByteSlice& d) {
     // PJL (Printer Job Language) files containing Postscript data
     // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
     bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
-    if (isPJL) {
-        // TODO: use something else other than str::Find() so that it works even if header is not null-terminated
-        const char* hdr = str::Find(header, "%!PS-Adobe-");
-        if (!hdr) {
-            isPJL = false;
-        }
+    if (isPJL && !str::Find(header, "%!PS-Adobe-")) {
+        isPJL = false;
     }
     return isPJL;
 }
@@ -274,8 +272,8 @@ static Kind DetectHicAndAvif(const ByteSlice& d) {
     if (d.size() < 0x18) {
         return nullptr;
     }
-    char* s = (char*)d.data();
-    char* hdr = s + 4;
+    Str s = Str((char*)d.data(), (int)d.size());
+    Str hdr = Str(s.s + 4, s.len - 4);
     // ftyp values per https://github.com/strukturag/libheif/issues/83
     /*
         'heic': the usual HEIF images
@@ -301,7 +299,7 @@ static Kind DetectHicAndAvif(const ByteSlice& d) {
     if (str::StartsWith(hdr, "ftypavif")) {
         return kindFileAvif;
     }
-    hdr = s + 16;
+    hdr = Str(s.s + 16, s.len - 16);
     if (str::StartsWith(hdr, "mif1heic")) {
         return kindFileHeic;
     }
@@ -361,14 +359,18 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
         return false;
     }
 
-    char* mt = mimeType->data;
+    char* mt = mimeType->data; // str-port: archive byte buffer
     // trailing whitespace is allowed for the mimetype file
     size_t n = mimeType->fileSizeUncompressed;
     for (size_t i = n; i > 0; i--) {
         if (!str::IsWs(mt[i - 1])) {
+            n = i;
             break;
         }
         mt[i - 1] = '\0';
+        if (i == 1) {
+            n = 0;
+        }
     }
 
 #if 0
@@ -379,12 +381,13 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
         return false; 
     }
 #endif
-    if (str::Eq(mt, "application/epub+zip")) {
+    Str mtStr = Str(mt, (int)n);
+    if (str::Eq(mtStr, "application/epub+zip")) {
         return true;
     }
     // also open renamed .ibooks files
     // http://en.wikipedia.org/wiki/IBooks#Formats
-    return str::Eq(mt, "application/x-ibooks+zip");
+    return str::Eq(mtStr, "application/x-ibooks+zip");
 }
 
 // check if a given file is a likely a .zip archive containing XPS
@@ -411,7 +414,7 @@ static bool IsFb2Archive(MultiFormatArchive* archive) {
 Kind GuessFileTypeFromContent(Str path) {
     ReportIf(!path);
     if (path::IsDirectory(path)) {
-        char* mimetypePath = path::JoinTemp(path, "mimetype");
+        TempStr mimetypePath = path::JoinTemp(path, "mimetype");
         if (file::StartsWith(mimetypePath, "application/epub+zip")) {
             return kindFileEpub;
         }
@@ -451,37 +454,44 @@ Kind GuessFileTypeFromContent(Str path) {
 // or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}"
 // return pointer starting at ":${pdfStream}"
 Str FindEmbeddedPdfFileStreamNo(Str path) {
-    const char* start = path;
-    const char* parseEnd = start + str::Len(start);
-    const char* meta = nullptr;
-    for (const char* pos = str::Find(path, ":attachname="); pos; pos = str::Find(pos + 1, ":attachname=")) {
+    if (!path) {
+        return {};
+    }
+    Str parseEnd = path;
+    Str meta;
+    Str pos = str::Find(path, ":attachname=");
+    while (pos) {
         meta = pos;
+        int nextOff = (int)(pos.s - path.s) + 1;
+        if (nextOff >= path.len) {
+            break;
+        }
+        pos = str::Find(Str(path.s + nextOff, path.len - nextOff), ":attachname=");
     }
     if (meta) {
-        parseEnd = meta;
+        parseEnd = Str(path.s, (int)(meta.s - path.s));
     }
-    if (parseEnd <= start) {
-        return nullptr;
+    if (!parseEnd) {
+        return {};
     }
-    const char* end = parseEnd - 1;
+    int endIdx = parseEnd.len - 1;
 
     int nDigits = 0;
-    while (end > start) {
-        char c = *end;
+    while (endIdx >= 0) {
+        char c = parseEnd.s[endIdx];
         if (c == ':') {
             if (nDigits > 0) {
-                return end;
+                return Str(parseEnd.s + endIdx, parseEnd.len - endIdx);
             }
-            // it was just ':' at the end
-            return nullptr;
+            return {};
         }
         if (!str::IsDigit(c)) {
-            return nullptr;
+            return {};
         }
         nDigits++;
-        end--;
+        endIdx--;
     }
-    return nullptr;
+    return {};
 }
 
 Kind GuessFileTypeFromName(Str path) {
@@ -499,7 +509,7 @@ Kind GuessFileTypeFromName(Str path) {
     }
 
     // cases that cannot be decided just by looking at file extension
-    if (FindEmbeddedPdfFileStreamNo(path) != nullptr) {
+    if (FindEmbeddedPdfFileStreamNo(path)) {
         return kindFilePDF;
     }
 
