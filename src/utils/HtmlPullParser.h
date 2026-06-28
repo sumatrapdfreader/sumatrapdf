@@ -73,14 +73,11 @@ class HtmlPullParser {
 
   public:
     explicit HtmlPullParser(Str s) : html(s) {}
-    HtmlPullParser(const char* s, size_t len) : html(Str((char*)s, (int)len)) {}
-    HtmlPullParser(const char* s, const char* end) : html(Str((char*)s, (int)(end - s))) {}
     explicit HtmlPullParser(const ByteSlice& d) : html(AsStr(d)) {}
 
     void SetCurrPosOff(ptrdiff_t off) { currPos = (int)off; }
     size_t Len() const { return (size_t)html.len; }
     Str Html() const { return html; }
-    const char* Start() const { return html.s; }
     int PosOf(Str p) const { return (int)(p.s - html.s); }
 
     HtmlToken* Next();

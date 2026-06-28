@@ -700,7 +700,7 @@ static bool CanBreakWordOnChar(WCHAR c) {
 // a text run is a string of consecutive text with uniform style
 void HtmlFormatter::EmitTextRun(Str s) {
     Str run = s;
-    currReparseIdx = (int)(run.s - htmlParser->Start());
+    currReparseIdx = htmlParser->PosOf(run);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
     ReportIf(IsSpaceOnly(run) && !preFormatted);
     ::Str tmp = ResolveHtmlEntities(s, textAllocator);
@@ -712,7 +712,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
     while (run) {
         // don't update the reparseIdx if run doesn't point into the original source
         if (!resolved) {
-            currReparseIdx = (int)(run.s - htmlParser->Start());
+            currReparseIdx = htmlParser->PosOf(run);
         }
 
         TempWStr buf = ToWStrTemp(run);
@@ -1293,7 +1293,7 @@ void HtmlFormatter::HandleText(Str s) {
     if (preFormatted) {
         // don't collapse whitespace and respect text newlines
         while (curr) {
-            currReparseIdx = (int)(curr.s - htmlParser->Start());
+            currReparseIdx = htmlParser->PosOf(curr);
             Str text = curr;
             Str nl = str::FindChar(curr, '\n');
             if (nl) {
@@ -1319,14 +1319,14 @@ void HtmlFormatter::HandleText(Str s) {
     // break text into runs i.e. chunks that are either all
     // whitespace or all non-whitespace
     while (curr) {
-        currReparseIdx = (int)(curr.s - htmlParser->Start());
+        currReparseIdx = htmlParser->PosOf(curr);
         int off = 0;
         if (SkipWs(curr, off)) {
             EmitElasticSpace();
         }
 
         int textStart = off;
-        currReparseIdx = (int)(curr.s + off - htmlParser->Start());
+        currReparseIdx = htmlParser->PosOf(curr) + off;
         if (SkipNonWs(curr, off)) {
             EmitTextRun(Str(curr.s + textStart, off - textStart));
         }

@@ -494,7 +494,7 @@ static bool IsTokPropName(HtmlToken* tok, Str name) {
 }
 
 void EpubDoc::ParseMetadata(Str content) {
-    HtmlPullParser pullParser(content.s, content.len);
+    HtmlPullParser pullParser(content);
     int insideMetadata = 0;
     HtmlToken* tok;
 
@@ -635,7 +635,7 @@ bool EpubDoc::HasToc() const {
 }
 
 bool EpubDoc::ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
-    HtmlPullParser parser(data.s, data.len);
+    HtmlPullParser parser(data);
     HtmlToken* tok;
     // skip to the start of the <nav epub:type="toc">
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
@@ -696,7 +696,7 @@ bool EpubDoc::ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
 }
 
 bool EpubDoc::ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
-    HtmlPullParser parser(data.s, data.len);
+    HtmlPullParser parser(data);
     HtmlToken* tok;
     // skip to the start of the navMap
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
@@ -1144,7 +1144,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
         !str::StartsWithI(text, "<TEALPAINT")) {
         goto Fallback;
     }
-    HtmlPullParser parser(text, len);
+    HtmlPullParser parser(Str(text.s, (int)len));
     HtmlToken* tok = parser.Next();
     if (!tok || !tok->IsStartTag()) {
         goto Fallback;

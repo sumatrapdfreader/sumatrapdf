@@ -9,7 +9,7 @@
 #include "utils/UtAssert.h"
 
 static void Test00(const char* s, HtmlToken::TokenType expectedType) {
-    HtmlPullParser parser(s, str::Len(s));
+    HtmlPullParser parser{Str(s)};
     HtmlToken* t = parser.Next();
     utassert(t->type == expectedType);
     utassert(t->NameIs("p"));
@@ -86,7 +86,7 @@ static void Test01() {
 
 static void Test02() {
     const char* s = "<p>Last paragraph";
-    HtmlPullParser parser(s, str::Len(s));
+    HtmlPullParser parser{Str(s)};
     HtmlToken* t = parser.Next();
     utassert(t && t->IsTag() && t->IsStartTag() && Tag_P == t->tag);
     t = parser.Next();
@@ -95,7 +95,7 @@ static void Test02() {
 
 static void Test03() {
     const char* s = "a < b > c <> d <";
-    HtmlPullParser parser(s, str::Len(s));
+    HtmlPullParser parser{Str(s)};
     HtmlToken* t = parser.Next();
     utassert(t && t->IsText() && str::EqI(t->s, "a "));
     t = parser.Next();
