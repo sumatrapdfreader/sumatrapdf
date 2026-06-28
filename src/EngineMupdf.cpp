@@ -302,7 +302,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
             destStr = destNul;
         }
 
-        logf("NewPageDestinationMupdf: path='%s', dest='%s'\n", path, destStr);
+        logf("NewPageDestinationMupdf: path='%s', dest='%s'\n", path.s, destStr.s);
         auto res = new PageDestinationFile(path, destStr);
         res->rect = FzGetRectF(link, outline);
         return res;
@@ -2156,7 +2156,7 @@ EngineBase* EngineMupdf::Clone() {
     EngineMupdf* clone = new EngineMupdf();
     bool ok = clone->Load(FilePath(), pwdUI);
     if (!ok) {
-        logf("EngineMupdf::Clone() failed: Load('%s') failed\n", FilePath());
+        logf("EngineMupdf::Clone() failed: Load('%s') failed\n", FilePath().s);
         delete clone;
         delete pwdUI;
         return nullptr;
@@ -3601,7 +3601,7 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget target) {
 RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     if (zoom <= 0) {
         Str name = FilePath();
-        logf("doc: %s, pageNo: %d, zoom: %.2f\n", name ? name : Str(""), pageNo, zoom);
+        logf("doc: %s, pageNo: %d, zoom: %.2f\n", name.s, pageNo, zoom);
     }
     ReportIf(zoom <= 0);
     if (zoom <= 0) {
@@ -4665,12 +4665,12 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
         pdf_save_document(ctx, epdf->pdfdoc, pathZ.s, &save_opts);
         ok = true;
         auto dur = TimeSinceInMs(timeStart);
-        logf("Saved annotations to '%s' in  %.2f ms, incremental: %d\n", path, dur, save_opts.do_incremental);
+        logf("Saved annotations to '%s' in  %.2f ms, incremental: %d\n", path.s, dur, save_opts.do_incremental);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
         const char* mupdfErr = fz_caught_message(ctx); // str-port: mupdf
-        logf("Saving '%s' failed with: '%s'\n", path, mupdfErr);
+        logf("Saving '%s' failed with: '%s'\n", path.s, mupdfErr);
         if (showErrorFunc.IsValid()) {
             showErrorFunc.Call(Str(mupdfErr));
         }
