@@ -8,7 +8,7 @@ extern bool gLogToDebugger;
 extern bool gReducedLogging;
 extern bool gLogToPipe;
 extern Str gLogAppName;
-extern char* gLogFilePath;
+extern Str gLogFilePath;
 void StartLogToFile(Str path, bool removeIfExists);
 bool WriteCurrentLogToFile(Str path);
 

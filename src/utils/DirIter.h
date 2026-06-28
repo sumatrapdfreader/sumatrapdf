@@ -23,7 +23,7 @@ struct DirIter {
 
         StrVec dirsToVisit;
         TempStr currDir = {};
-        WCHAR* pattern = nullptr;
+        WStr pattern;
         WIN32_FIND_DATAW fd{};
         HANDLE h = nullptr;
         DirIterEntry data;

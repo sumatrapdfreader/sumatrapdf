@@ -37,7 +37,7 @@ bool gLogToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
 static Mutex gPipeMutex;
 
-char* gLogFilePath = nullptr;
+Str gLogFilePath;
 
 // 1 MB - 128 to stay under 1 MB even after appending (an estimate)
 constexpr int kMaxLogBuf = 1024 * 1024 - 128;
@@ -256,7 +256,7 @@ void logfa(const char* fmt, ...) {
 
 void StartLogToFile(Str path, bool removeIfExists) {
     ReportIf(gLogFilePath);
-    gLogFilePath = str::Dup(path).s;
+    gLogFilePath = str::Dup(path);
     if (removeIfExists) {
         file::Delete(path);
     }
