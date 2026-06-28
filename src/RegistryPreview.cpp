@@ -236,5 +236,5 @@ void StartPdfPreviewLoggingIfEnabled() {
     // already buffered (e.g. DllMain); StartLogToFile appends subsequent lines.
     WriteCurrentLogToFile(path);
     StartLogToFile(path, false);
-    logf("PdfPreview: logging to '%s'\n", path);
+    logf("PdfPreview: logging to '%s'\n", path.s);
 }
