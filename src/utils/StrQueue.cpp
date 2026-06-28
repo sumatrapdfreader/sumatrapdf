@@ -46,9 +46,9 @@ int StrQueue::Size() {
     return res;
 }
 
-char* StrQueue::Append(const char* s, int len) {
+Str StrQueue::Append(Str s, int len) {
     Lock();
-    Str str = len < 0 ? Str(s) : Str((char*)s, len);
+    Str str = len < 0 ? s : Str(s.s, len);
     auto res = strings.Append(str);
     Unlock();
     SetEvent(hEvent);
@@ -57,26 +57,30 @@ char* StrQueue::Append(const char* s, int len) {
 
 constexpr uintptr_t kStrQueueSentinel = (uintptr_t)-2;
 
-bool StrQueue::IsSentinel(char* s) {
-    return s == (char*)kStrQueueSentinel;
+static Str StrQueueSentinel() {
+    return Str((char*)kStrQueueSentinel, 0);
+}
+
+bool StrQueue::IsSentinel(Str s) {
+    return s.s == (char*)kStrQueueSentinel;
 }
 
 // is blocking
 // retuns sentinel value if no more strings
 // use IsSentinel() to check if returned value is a sentinel
-char* StrQueue::PopFront() {
+Str StrQueue::PopFront() {
 again:
     Lock();
     if (strings.Size() == 0) {
         bool end = isFinished;
         Unlock();
         if (end) {
-            return (char*)kStrQueueSentinel;
+            return StrQueueSentinel();
         }
         WaitForSingleObject(hEvent, INFINITE);
         goto again;
     }
-    char* s = strings.RemoveAt(0);
+    Str s = strings.RemoveAt(0);
     Unlock();
     return s;
 }

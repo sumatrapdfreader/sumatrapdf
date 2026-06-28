@@ -9,9 +9,9 @@ struct StrQueue {
     void Lock();
     void Unlock();
     int Size();
-    char* Append(const char*, int len = -1);
-    char* PopFront();
-    bool IsSentinel(char*);
+    Str Append(Str s, int len = -1);
+    Str PopFront();
+    bool IsSentinel(Str s);
     void MarkFinished();
     bool IsFinished();
     bool Access(const Func1<StrQueue*>& fn);

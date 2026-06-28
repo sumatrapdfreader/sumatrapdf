@@ -439,12 +439,11 @@ again:
         AtomicIntInc(&nFiles);
         return path;
     }
-    char* pathZ = queue.PopFront(); // str-port: StrQueue still returns owned char*
-    if (queue.IsSentinel(pathZ)) {
+    path = queue.PopFront();
+    if (queue.IsSentinel(path)) {
         return {};
     }
-    path = str::Dup(pathZ);
-    str::Free(pathZ);
+    path = str::Dup(path);
     if (!IsStressTestSupportedFile(path, fileFilter)) {
         str::Free(path);
         goto again;
