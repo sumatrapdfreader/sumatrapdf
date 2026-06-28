@@ -100,7 +100,7 @@ static bool DetectCitationAtCursor(EngineBase* engine, int srcPage, Point pagePo
     out->year = 0;
     int textLen = 0;
     Rect* coords = nullptr;
-    const WCHAR* text = engine->GetTextForPage(srcPage, &textLen, &coords);
+    WStr text = engine->GetTextForPage(srcPage, &textLen, &coords);
     return DetectCitationInPageText(text, coords, textLen, pagePos, &out->surname, &out->year, srcRectOut);
 }
 
@@ -121,15 +121,13 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
     if (!surnameW || str::Len(surnameW) < 2) {
         return false;
     }
-    int surnameLen = (int)str::Len(surnameW);
-
     bool found = false;
     for (int p = pageCount; p >= srcPage; p--) {
         int textLen = 0;
         Rect* coords = nullptr;
-        const WCHAR* text = engine->GetTextForPage(p, &textLen, &coords);
+        WStr text = engine->GetTextForPage(p, &textLen, &coords);
         float x = 0, y = 0;
-        if (FindSurnameInPageText(text, coords, textLen, surnameW.s, surnameLen, year, &x, &y)) {
+        if (FindSurnameInPageText(text, coords, textLen, surnameW, year, &x, &y)) {
             *destPageOut = p;
             *destXOut = x;
             *destYOut = y;
@@ -195,7 +193,7 @@ static bool LookupOrSearchNumeric(RefHoverState* s, EngineBase* engine, int srcP
     for (int p = pageCount; p >= srcPage; p--) {
         int textLen = 0;
         Rect* coords = nullptr;
-        const WCHAR* text = engine->GetTextForPage(p, &textLen, &coords);
+        WStr text = engine->GetTextForPage(p, &textLen, &coords);
         float x = 0, y = 0;
         if (FindNumericReferenceInPageText(text, coords, textLen, num, &x, &y)) {
             destPage = p;
@@ -232,7 +230,7 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     {
         int textLen = 0;
         Rect* coords = nullptr;
-        const WCHAR* text = engine->GetTextForPage(srcPage, &textLen, &coords);
+        WStr text = engine->GetTextForPage(srcPage, &textLen, &coords);
         int num = 0;
         if (DetectNumericCitationInPageText(text, coords, textLen, pagePos, &num, &srcRect)) {
             if (LookupOrSearchNumeric(s, engine, srcPage, num, destPageOut, destXOut, destYOut)) {

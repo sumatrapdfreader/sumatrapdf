@@ -15,9 +15,12 @@
 
 // Lowercase name-prefix particles that are part of a multi-word surname
 // (e.g. "van der Berg", "de la Cruz"). Match case-insensitively.
-static const WCHAR* kNamePrefixes[] = {L"van", L"von", L"de", L"der", L"den", L"la",  L"le", L"el",  L"al",
-                                       L"da",  L"du",  L"di", L"do",  L"bin", L"ben", L"te", L"ten", L"ter",
-                                       L"op",  L"'t",  L"af", L"av",  L"zu",  L"san", L"st", L"st.", nullptr};
+static const WStr kNamePrefixes[] = {
+    WStrL(L"van"), WStrL(L"von"), WStrL(L"de"),  WStrL(L"der"), WStrL(L"den"), WStrL(L"la"), WStrL(L"le"),
+    WStrL(L"el"),  WStrL(L"al"),  WStrL(L"da"),  WStrL(L"du"),  WStrL(L"di"),  WStrL(L"do"), WStrL(L"bin"),
+    WStrL(L"ben"), WStrL(L"te"),  WStrL(L"ten"), WStrL(L"ter"), WStrL(L"op"),  WStrL(L"'t"), WStrL(L"af"),
+    WStrL(L"av"),  WStrL(L"zu"),  WStrL(L"san"), WStrL(L"st"),  WStrL(L"st."),
+};
 
 // Bounding box of glyphs [startIdx..endIdx] on one text line.
 static Rect GlyphSpanBounds(const Rect* coords, int textLen, int startIdx, int endIdx) {
@@ -71,13 +74,12 @@ static Rect CitationSpanBounds(const Rect* coords, int textLen, const Vec<int>& 
     return GlyphSpanBounds(coords, textLen, gStart, gEnd);
 }
 
-static bool IsNamePrefix(const WCHAR* word, int wordLen) {
-    if (wordLen == 0 || !iswlower(word[0])) {
+static bool IsNamePrefix(WStr word) {
+    if (!word || !iswlower(word.s[0])) {
         return false;
     }
-    for (int i = 0; kNamePrefixes[i]; i++) {
-        int plen = (int)wcslen(kNamePrefixes[i]);
-        if (wordLen == plen && _wcsnicmp(word, kNamePrefixes[i], plen) == 0) {
+    for (WStr prefix : kNamePrefixes) {
+        if (word.len == prefix.len && _wcsnicmp(word.s, prefix.s, (size_t)prefix.len) == 0) {
             return true;
         }
     }
@@ -88,8 +90,8 @@ static bool IsNamePrefix(const WCHAR* word, int wordLen) {
 // pagePos in a page's glyph arrays. On success, returns true and fills
 // *surnameOut with a freshly-allocated UTF-8 surname (caller frees) and
 // *yearOut with the 4-digit year.
-bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut,
-                              int* yearOut, Rect* srcRectOut) {
+bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut, int* yearOut,
+                              Rect* srcRectOut) {
     *surnameOut = {};
     *yearOut = 0;
     if (!text || textLen <= 0 || !coords) {
@@ -144,7 +146,7 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
         if (r.y < yMin || r.y > yMax) {
             continue;
         }
-        WCHAR c = text[i];
+        WCHAR c = text.s[i];
         bool isLineBreak = (prevY != INT_MIN && r.y > prevY + 2);
         bool isSpace = isLineBreak || c == L' ' || c == L'\t' || c == L'\n' || c == L'\r';
         if (i == cursorIdx) {
@@ -167,8 +169,8 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
         return false;
     }
 
-    const WCHAR* s = chunk.Get();
-    int slen = (int)chunk.size();
+    WStr s = chunk.Get();
+    int slen = s.len;
 
     // 3. Find a 4-digit year near the cursor. Prefer a year that comes
     // *after* the cursor (within 60 chars) — for "(Bashab et al., 2023; Gu
@@ -178,16 +180,16 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
         if (i + 4 > slen) {
             return -1;
         }
-        if (!iswdigit(s[i]) || !iswdigit(s[i + 1]) || !iswdigit(s[i + 2]) || !iswdigit(s[i + 3])) {
+        if (!iswdigit(s.s[i]) || !iswdigit(s.s[i + 1]) || !iswdigit(s.s[i + 2]) || !iswdigit(s.s[i + 3])) {
             return -1;
         }
-        if (i + 4 < slen && iswdigit(s[i + 4])) {
+        if (i + 4 < slen && iswdigit(s.s[i + 4])) {
             return -1;
         }
-        if (i > 0 && iswdigit(s[i - 1])) {
+        if (i > 0 && iswdigit(s.s[i - 1])) {
             return -1;
         }
-        int y = (s[i] - L'0') * 1000 + (s[i + 1] - L'0') * 100 + (s[i + 2] - L'0') * 10 + (s[i + 3] - L'0');
+        int y = (s.s[i] - L'0') * 1000 + (s.s[i + 1] - L'0') * 100 + (s.s[i + 2] - L'0') * 10 + (s.s[i + 3] - L'0');
         if (y < 1900 || y > 2050) {
             return -1;
         }
@@ -219,13 +221,14 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
             return false;
         }
     }
-    int year = (s[bestYearPos] - L'0') * 1000 + (s[bestYearPos + 1] - L'0') * 100 + (s[bestYearPos + 2] - L'0') * 10 +
-               (s[bestYearPos + 3] - L'0');
+    int year = (s.s[bestYearPos] - L'0') * 1000 + (s.s[bestYearPos + 1] - L'0') * 100 +
+               (s.s[bestYearPos + 2] - L'0') * 10 + (s.s[bestYearPos + 3] - L'0');
 
     // 4. Walk back from the year through punctuation to find the surname.
     int p = bestYearPos - 1;
     // Skip spaces and citation punctuation: ", " " ( ", " "
-    while (p >= 0 && (s[p] == L' ' || s[p] == L'\t' || s[p] == L',' || s[p] == L'(' || s[p] == L'\n' || s[p] == L';')) {
+    while (p >= 0 && (s.s[p] == L' ' || s.s[p] == L'\t' || s.s[p] == L',' || s.s[p] == L'(' || s.s[p] == L'\n' ||
+                      s.s[p] == L';')) {
         p--;
     }
 
@@ -234,26 +237,26 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
     // "al" may both be absent.
     {
         int q = p;
-        if (q >= 0 && s[q] == L'.') {
+        if (q >= 0 && s.s[q] == L'.') {
             q--;
-            while (q >= 0 && s[q] == L' ') {
+            while (q >= 0 && s.s[q] == L' ') {
                 q--;
             }
         }
-        if (q >= 4 && (s[q] == L'l' || s[q] == L'L')) {
+        if (q >= 4 && (s.s[q] == L'l' || s.s[q] == L'L')) {
             int r = q - 1;
             // Optional 'a' — drop tolerated.
-            if (r >= 0 && (s[r] == L'a' || s[r] == L'A')) {
+            if (r >= 0 && (s.s[r] == L'a' || s.s[r] == L'A')) {
                 r--;
             }
             // Spaces between "et" and "al"/"l".
-            while (r >= 0 && s[r] == L' ') {
+            while (r >= 0 && s.s[r] == L' ') {
                 r--;
             }
             // "et" required.
-            if (r >= 1 && (s[r] == L't' || s[r] == L'T') && (s[r - 1] == L'e' || s[r - 1] == L'E')) {
+            if (r >= 1 && (s.s[r] == L't' || s.s[r] == L'T') && (s.s[r - 1] == L'e' || s.s[r - 1] == L'E')) {
                 p = r - 2;
-                while (p >= 0 && s[p] == L' ') {
+                while (p >= 0 && s.s[p] == L' ') {
                     p--;
                 }
             }
@@ -265,17 +268,17 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
     // "Oude Vrielink", "van der Berg", "El Mansouri").
     int surnameEnd = p + 1; // exclusive
     while (p >= 0) {
-        WCHAR c = s[p];
+        WCHAR c = s.s[p];
         if (iswalpha(c) || c == L'-' || c == L'\'') {
             p--;
         } else if (c == L' ') {
             // Look at the word before this space.
             int wordEnd = p - 1;
-            while (wordEnd >= 0 && s[wordEnd] == L' ') {
+            while (wordEnd >= 0 && s.s[wordEnd] == L' ') {
                 wordEnd--;
             }
             int wordStart = wordEnd;
-            while (wordStart >= 0 && (iswalpha(s[wordStart]) || s[wordStart] == L'\'' || s[wordStart] == L'-')) {
+            while (wordStart >= 0 && (iswalpha(s.s[wordStart]) || s.s[wordStart] == L'\'' || s.s[wordStart] == L'-')) {
                 wordStart--;
             }
             wordStart++;
@@ -283,11 +286,11 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
                 break;
             }
             int wordLen = wordEnd - wordStart + 1;
-            WCHAR firstChar = s[wordStart];
+            WCHAR firstChar = s.s[wordStart];
             bool isLower = iswlower(firstChar);
             bool isUpper = iswupper(firstChar);
             // Stop on connectors like "and", "&", or non-name words.
-            if (isLower && !IsNamePrefix(s + wordStart, wordLen)) {
+            if (isLower && !IsNamePrefix(WStr(s.s + wordStart, wordLen))) {
                 // Extraction artifact tolerance: a single 1-2 char lowercase
                 // token between two capitalized words is likely a mangled
                 // glyph from the real surname ("Oude" → "O d", "Vrielink"
@@ -297,16 +300,16 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
                 bool peekCap = false;
                 if (wordLen <= 2) {
                     int peek = wordStart - 1;
-                    while (peek >= 0 && s[peek] == L' ') {
+                    while (peek >= 0 && s.s[peek] == L' ') {
                         peek--;
                     }
                     int peekEnd = peek;
-                    while (peekEnd >= 0 && (iswalpha(s[peekEnd]) || s[peekEnd] == L'\'' || s[peekEnd] == L'-')) {
+                    while (peekEnd >= 0 && (iswalpha(s.s[peekEnd]) || s.s[peekEnd] == L'\'' || s.s[peekEnd] == L'-')) {
                         peekEnd--;
                     }
                     int peekStart = peekEnd + 1;
                     int peekLen = peek - peekEnd;
-                    if (peekLen > 0 && iswupper(s[peekStart])) {
+                    if (peekLen > 0 && iswupper(s.s[peekStart])) {
                         peekCap = true;
                     }
                 }
@@ -329,17 +332,17 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
     }
 
     // Sanity: must start with an uppercase letter and be at least 2 chars.
-    while (surnameStart < surnameEnd && (s[surnameStart] == L' ' || s[surnameStart] == L'.')) {
+    while (surnameStart < surnameEnd && (s.s[surnameStart] == L' ' || s.s[surnameStart] == L'.')) {
         surnameStart++;
     }
-    if (surnameEnd - surnameStart < 2 || !iswupper(s[surnameStart])) {
+    if (surnameEnd - surnameStart < 2 || !iswupper(s.s[surnameStart])) {
         return false;
     }
 
     // Build surname string.
     WStrBuilder surnameW;
     for (int j = surnameStart; j < surnameEnd; j++) {
-        surnameW.AppendChar(s[j]);
+        surnameW.AppendChar(s.s[j]);
     }
     while (surnameW.size() > 0) {
         WCHAR last = surnameW.LastChar();
@@ -368,16 +371,17 @@ bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen
 // `surnameW` and where `year` appears within the next ~5 lines (the entry).
 // Returns true on hit and fills xOut/yOut with the entry's anchor (top-left
 // of the surname's first glyph).
-bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, const WCHAR* surnameW, int surnameLen,
-                           int year, float* xOut, float* yOut) {
-    if (!text || textLen <= 0 || !coords) {
+bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surnameW, int year, float* xOut,
+                           float* yOut) {
+    if (!text || textLen <= 0 || !coords || !surnameW) {
         return false;
     }
+    int surnameLen = surnameW.len;
 
     // Determine the page's leftmost text X (= bibliography column left edge).
     int leftX = INT_MAX;
     for (int i = 0; i < textLen; i++) {
-        WCHAR c = text[i];
+        WCHAR c = text.s[i];
         if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
             continue;
         }
@@ -400,7 +404,7 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
     int prevY = INT_MIN;
     int currentLineFirstIdx = -1;
     for (int i = 0; i < textLen; i++) {
-        WCHAR c = text[i];
+        WCHAR c = text.s[i];
         if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
             continue;
         }
@@ -425,7 +429,7 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
         }
         int matchAt = -1;
         // Tier 1: strict line-start prefix.
-        if (i + surnameLen <= textLen && _wcsnicmp(text + i, surnameW, (size_t)surnameLen) == 0) {
+        if (i + surnameLen <= textLen && _wcsnicmp(text.s + i, surnameW.s, (size_t)surnameLen) == 0) {
             matchAt = i;
         }
         // Tier 2: fragment match within the first ~30 chars of the line.
@@ -433,9 +437,9 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
         if (matchAt < 0 && surnameLen >= 3) {
             int lineEnd = (i + 30 < textLen) ? i + 30 : textLen;
             for (int k = i + 1; k + surnameLen <= lineEnd; k++) {
-                if (_wcsnicmp(text + k, surnameW, (size_t)surnameLen) == 0) {
+                if (_wcsnicmp(text.s + k, surnameW.s, (size_t)surnameLen) == 0) {
                     // Require token boundary (not preceded by another letter).
-                    if (iswalpha(text[k - 1])) {
+                    if (iswalpha(text.s[k - 1])) {
                         continue;
                     }
                     matchAt = k;
@@ -451,12 +455,12 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
         int scanEnd = (matchAt + 600 < textLen) ? matchAt + 600 : textLen;
         bool yearFound = false;
         for (int j = matchAt + surnameLen; j + 4 <= scanEnd; j++) {
-            if (text[j] == yearStr[0] && text[j + 1] == yearStr[1] && text[j + 2] == yearStr[2] &&
-                text[j + 3] == yearStr[3]) {
-                if (j > 0 && iswdigit(text[j - 1])) {
+            if (text.s[j] == yearStr[0] && text.s[j + 1] == yearStr[1] && text.s[j + 2] == yearStr[2] &&
+                text.s[j + 3] == yearStr[3]) {
+                if (j > 0 && iswdigit(text.s[j - 1])) {
                     continue;
                 }
-                if (j + 4 < scanEnd && iswdigit(text[j + 4])) {
+                if (j + 4 < scanEnd && iswdigit(text.s[j + 4])) {
                     continue;
                 }
                 yearFound = true;
@@ -475,7 +479,7 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
 
 // === Numeric "[N]" citation detection ===
 
-bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, int* numOut,
+bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, int* numOut,
                                      Rect* srcRectOut) {
     *numOut = 0;
     if (!text || textLen <= 0 || !coords) {
@@ -518,7 +522,7 @@ bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int 
 
     int open = -1;
     for (int i = cursorIdx; i >= 0 && sameLine(i); i--) {
-        WCHAR c = text[i];
+        WCHAR c = text.s[i];
         if (c == L'[') {
             open = i;
             break;
@@ -536,7 +540,7 @@ bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int 
     }
     int close = -1;
     for (int i = open + 1; i < textLen && sameLine(i); i++) {
-        WCHAR c = text[i];
+        WCHAR c = text.s[i];
         if (c == L']') {
             close = i;
             break;
@@ -554,14 +558,14 @@ bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int 
     int bestTokDist = INT_MAX;
     int i = open + 1;
     while (i < close) {
-        if (!iswdigit(text[i])) {
+        if (!iswdigit(text.s[i])) {
             i++;
             continue;
         }
         int start = i;
         int val = 0;
-        while (i < close && iswdigit(text[i])) {
-            val = val * 10 + (text[i] - L'0');
+        while (i < close && iswdigit(text.s[i])) {
+            val = val * 10 + (text.s[i] - L'0');
             if (val > 99999) {
                 val = 99999; // guard against pathological runs
             }
@@ -592,8 +596,7 @@ bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int 
     return true;
 }
 
-bool FindNumericReferenceInPageText(const WCHAR* text, const Rect* coords, int textLen, int num, float* xOut,
-                                    float* yOut) {
+bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, int num, float* xOut, float* yOut) {
     if (!text || textLen <= 0 || !coords || num <= 0) {
         return false;
     }
@@ -608,18 +611,18 @@ bool FindNumericReferenceInPageText(const WCHAR* text, const Rect* coords, int t
     // narrower than a column gutter / hanging indent.
     constexpr int kGap = 12;
     for (int i = 0; i < textLen; i++) {
-        if (text[i] != L'[') {
+        if (text.s[i] != L'[') {
             continue;
         }
         int j = i + 1;
         int val = 0;
         int nd = 0;
-        while (j < textLen && iswdigit(text[j])) {
-            val = val * 10 + (text[j] - L'0');
+        while (j < textLen && iswdigit(text.s[j])) {
+            val = val * 10 + (text.s[j] - L'0');
             j++;
             nd++;
         }
-        if (nd == 0 || j >= textLen || text[j] != L']') {
+        if (nd == 0 || j >= textLen || text.s[j] != L']') {
             continue;
         }
         if (val != num) {
@@ -632,7 +635,7 @@ bool FindNumericReferenceInPageText(const WCHAR* text, const Rect* coords, int t
         int yTol = coords[i].dy > 6 ? coords[i].dy : 8;
         bool hasLeftNeighbour = false;
         for (int k = 0; k < textLen; k++) {
-            WCHAR c = text[k];
+            WCHAR c = text.s[k];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                 continue;
             }

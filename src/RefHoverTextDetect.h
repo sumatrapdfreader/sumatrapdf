@@ -17,15 +17,15 @@
 // key — the matched citation's glyph span on the page (surname through year).
 // Lets callers tell two occurrences of the same citation apart, including
 // two markers on the same text line (different x/dx → reposition).
-bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut,
-                              int* yearOut, Rect* srcRectOut = nullptr);
+bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut, int* yearOut,
+                              Rect* srcRectOut = nullptr);
 
 // Search a page's glyph arrays for a bibliography entry whose line starts
 // with (or contains, near the line start) `surnameW` and whose entry text
 // contains `year`. Returns true on hit and fills xOut/yOut with the entry's
 // anchor (top-left of the matching line's first glyph).
-bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, const WCHAR* surnameW, int surnameLen,
-                           int year, float* xOut, float* yOut);
+bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surnameW, int year, float* xOut,
+                           float* yOut);
 
 // Detect a numeric "[N]" citation marker (IEEE / numbered reference style) at
 // pagePos (page coordinates). Handles lists / ranges ("[1, 2]", "[3-5]") by
@@ -33,11 +33,10 @@ bool FindSurnameInPageText(const WCHAR* text, const Rect* coords, int textLen, c
 // fills *numOut with the reference number.
 // srcRectOut (optional): see DetectCitationInPageText — stable per-occurrence
 // "[N]" bracket span set on success.
-bool DetectNumericCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, int* numOut,
+bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen, Point pagePos, int* numOut,
                                      Rect* srcRectOut = nullptr);
 
 // Search a page's glyph arrays for a bibliography entry whose line starts with
 // "[num]" at the page's leftmost text column. Returns true on hit and fills
 // xOut/yOut with the entry's anchor (top-left of the "[" glyph).
-bool FindNumericReferenceInPageText(const WCHAR* text, const Rect* coords, int textLen, int num, float* xOut,
-                                    float* yOut);
+bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, int num, float* xOut, float* yOut);

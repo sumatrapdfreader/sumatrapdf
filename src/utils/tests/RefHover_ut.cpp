@@ -392,7 +392,7 @@ static void PlainTextCitationDetected() {
     Str surname{};
     int year = 0;
     // Cursor on the 'S' of "Smith" (glyph 13 → x = 72 + 13*6 = 150).
-    bool ok = DetectCitationInPageText(text, coords, len, Point{152, 206}, &surname, &year);
+    bool ok = DetectCitationInPageText(WStr(text, len), coords, len, Point{152, 206}, &surname, &year);
     utassert(ok);
     utassert(surname && str::Eq(surname, "Smith"));
     utassert(year == 2020);
@@ -407,7 +407,7 @@ static void PlainTextCitationNoYear() {
     AddText(text, coords, len, 256, L"plain body text without any citation", 72, 200);
     Str surname{};
     int year = 0;
-    bool ok = DetectCitationInPageText(text, coords, len, Point{100, 206}, &surname, &year);
+    bool ok = DetectCitationInPageText(WStr(text, len), coords, len, Point{100, 206}, &surname, &year);
     utassert(!ok);
     utassert(!surname);
 }
@@ -423,11 +423,11 @@ static void SurnameFoundOnBibPage() {
     AddText(text, coords, len, 512, L"Smith, J. (2020). Some title.", 72, 130);
     AddText(text, coords, len, 512, L"continuation of the entry.", 90, 145);
     float x = 0.f, y = 0.f;
-    bool ok = FindSurnameInPageText(text, coords, len, L"Smith", 5, 2020, &x, &y);
+    bool ok = FindSurnameInPageText(WStr(text, len), coords, len, WStrL(L"Smith"), 2020, &x, &y);
     utassert(ok);
     utassert(x == 72.f);
     utassert(y == 130.f);
-    ok = FindSurnameInPageText(text, coords, len, L"Jones", 5, 2021, &x, &y);
+    ok = FindSurnameInPageText(WStr(text, len), coords, len, WStrL(L"Jones"), 2021, &x, &y);
     utassert(!ok);
 }
 
@@ -440,7 +440,7 @@ static void NumericCitationDetected() {
     AddText(text, coords, len, 256, L"see [1] for details", 72, 200);
     int num = 0;
     // Cursor on the '1' (glyph 5 → x = 72 + 5*6 = 102).
-    bool ok = DetectNumericCitationInPageText(text, coords, len, Point{105, 206}, &num);
+    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{105, 206}, &num);
     utassert(ok);
     utassert(num == 1);
 
@@ -448,14 +448,14 @@ static void NumericCitationDetected() {
     AddText(text, coords, len, 256, L"prior work [1, 2] showed", 72, 200);
     num = 0;
     // Cursor on the '2' (glyph 15 → x = 72 + 15*6 = 162).
-    ok = DetectNumericCitationInPageText(text, coords, len, Point{165, 206}, &num);
+    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{165, 206}, &num);
     utassert(ok);
     utassert(num == 2);
 
     len = 0;
     AddText(text, coords, len, 256, L"no brackets here at all", 72, 200);
     num = 0;
-    ok = DetectNumericCitationInPageText(text, coords, len, Point{100, 206}, &num);
+    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{100, 206}, &num);
     utassert(!ok);
 }
 
@@ -467,11 +467,11 @@ static void NumericCitationSrcRectDistinctOnLine() {
     AddText(text, coords, len, 256, L"see [1] and again [1] end", 72, 200);
     Rect first{}, second{};
     int num = 0;
-    bool ok = DetectNumericCitationInPageText(text, coords, len, Point{105, 206}, &num, &first);
+    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{105, 206}, &num, &first);
     utassert(ok);
     utassert(num == 1);
     utassert(first.dx > 0);
-    ok = DetectNumericCitationInPageText(text, coords, len, Point{189, 206}, &num, &second);
+    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{189, 206}, &num, &second);
     utassert(ok);
     utassert(num == 1);
     utassert(second.dx > 0);
@@ -489,14 +489,14 @@ static void PlainTextCitationSrcRectDistinctOnLine() {
     int year = 0;
     Rect first{}, second{};
     // Cursor on 'S' of Smith (glyph 6 → x = 72 + 6*6 = 108).
-    bool ok = DetectCitationInPageText(text, coords, len, Point{110, 206}, &surname, &year, &first);
+    bool ok = DetectCitationInPageText(WStr(text, len), coords, len, Point{110, 206}, &surname, &year, &first);
     utassert(ok);
     utassert(surname && str::Eq(surname, "Smith"));
     utassert(year == 2020);
     utassert(first.dx > 0);
     str::Free(surname);
     // Cursor on 'J' of Jones (glyph 25 → x = 72 + 25*6 = 222).
-    ok = DetectCitationInPageText(text, coords, len, Point{224, 206}, &surname, &year, &second);
+    ok = DetectCitationInPageText(WStr(text, len), coords, len, Point{224, 206}, &surname, &year, &second);
     utassert(ok);
     utassert(surname && str::Eq(surname, "Jones"));
     utassert(year == 2021);
@@ -516,14 +516,14 @@ static void NumericReferenceFoundOnBibPage() {
     AddText(text, coords, len, 512, L"[1] A. Trentin, Some title 2025.", 72, 130);
     AddText(text, coords, len, 512, L"[2] B. Other, Another title 2024.", 72, 150);
     float x = 0.f, y = 0.f;
-    bool ok = FindNumericReferenceInPageText(text, coords, len, 1, &x, &y);
+    bool ok = FindNumericReferenceInPageText(WStr(text, len), coords, len, 1, &x, &y);
     utassert(ok);
     utassert(x == 72.f);
     utassert(y == 130.f);
-    ok = FindNumericReferenceInPageText(text, coords, len, 2, &x, &y);
+    ok = FindNumericReferenceInPageText(WStr(text, len), coords, len, 2, &x, &y);
     utassert(ok);
     utassert(y == 150.f);
-    ok = FindNumericReferenceInPageText(text, coords, len, 3, &x, &y);
+    ok = FindNumericReferenceInPageText(WStr(text, len), coords, len, 3, &x, &y);
     utassert(!ok);
 }
 
@@ -718,19 +718,19 @@ static void TwoColumnNumericReferenceFound() {
     AddText(text, coords, len, 1024, L"[4] Right column four.", 320, 120);
     float x = 0, y = 0;
     // right-column entries must resolve
-    utassert(FindNumericReferenceInPageText(text, coords, len, 4, &x, &y));
+    utassert(FindNumericReferenceInPageText(WStr(text, len), coords, len, 4, &x, &y));
     utassert(x == 320.f && y == 120.f);
-    utassert(FindNumericReferenceInPageText(text, coords, len, 3, &x, &y));
+    utassert(FindNumericReferenceInPageText(WStr(text, len), coords, len, 3, &x, &y));
     utassert(x == 320.f && y == 100.f);
     // left-column entries still resolve
-    utassert(FindNumericReferenceInPageText(text, coords, len, 1, &x, &y));
+    utassert(FindNumericReferenceInPageText(WStr(text, len), coords, len, 1, &x, &y));
     utassert(x == 72.f && y == 100.f);
     // absent number fails
-    utassert(!FindNumericReferenceInPageText(text, coords, len, 9, &x, &y));
+    utassert(!FindNumericReferenceInPageText(WStr(text, len), coords, len, 9, &x, &y));
     // a mid-line body citation "[2]" (text to its left) is not an entry start
     len = 0;
     AddText(text, coords, len, 1024, L"as reported in [2] by others", 72, 200);
-    utassert(!FindNumericReferenceInPageText(text, coords, len, 2, &x, &y));
+    utassert(!FindNumericReferenceInPageText(WStr(text, len), coords, len, 2, &x, &y));
 }
 
 // (16) 2-column entry whose second line is much wider than its first (e.g. a
