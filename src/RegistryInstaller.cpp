@@ -68,7 +68,7 @@ static TempStr GetInstallDateTemp() {
 
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(Str dir, bool recur) {
-    logf("GetDirSize(%s)\n", dir);
+    logf("GetDirSize(%s)\n", dir.s);
     i64 totalSize = 0;
     DirIter di{dir};
     di.recurse = recur;
