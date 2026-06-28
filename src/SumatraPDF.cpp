@@ -206,7 +206,7 @@ static StrVec gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static StrVec gAllowedFileTypes;
 
-static const char* gNextPrevDir = nullptr;
+static Str gNextPrevDir = {};
 static StrVec gNextPrevDirCache; // cached files in gNextPrevDir
 
 static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool deleteModel);
@@ -309,24 +309,24 @@ void InitializePolicies(bool restrict) {
     // enable policies as indicated in sumatrapdfrestrict.ini
     for (int i = 0; i < dimofi(perms); i++) {
         Str name = SeqStrByIndex(permNames, i);
-        const char* val = polsec->GetValue(name);
-        if (val && atoi(val) != 0) {
+        Str val = polsec->GetValue(name);
+        if (val && atoi(val.s) != 0) {
             gPolicyRestrictions = gPolicyRestrictions | perms[i];
         }
     }
 
     // determine the list of allowed link protocols and perceived file types
     if ((gPolicyRestrictions & Perm::DiskAccess) != (Perm)0) {
-        const char* value = polsec->GetValue("LinkProtocols");
-        if (value != nullptr) {
-            char* protocols = str::DupTemp(value);
+        Str value = polsec->GetValue("LinkProtocols");
+        if (value) {
+            TempStr protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransCharsInPlace(protocols, " :;", ",,,");
             Split(&gAllowedLinkProtocols, protocols, ",", true);
         }
         value = polsec->GetValue("SafeFileTypes");
-        if (value != nullptr) {
-            char* protocols = str::DupTemp(value);
+        if (value) {
+            TempStr protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransCharsInPlace(protocols, " :;", ",,,");
             Split(&gAllowedFileTypes, protocols, ",", true);
@@ -371,7 +371,8 @@ bool SumatraLaunchBrowser(Str url) {
         if (!parent || !url || (urlLen > 4096)) {
             return false;
         }
-        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlLen + 1, (char*)url};
+        TempStr urlZ = StrDupTemp(url);
+        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlZ.len + 1, urlZ.s};
         return SendMessageW(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
@@ -1305,16 +1306,16 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
 }
 
 // Debug check: ctrl->GetFilePath() should match path; logs and ReportIf on mismatch.
-static NO_INLINE void VerifyController(DocController* ctrl, const char* path) {
+static NO_INLINE void VerifyController(DocController* ctrl, Str path) {
     if (!ctrl) {
         return;
     }
-    const char* ctrlFilePath = ctrl->GetFilePath();
+    Str ctrlFilePath = ctrl->GetFilePath();
     if (str::Eq(ctrlFilePath, path)) {
         return;
     }
-    const char* s1 = ctrlFilePath ? ctrlFilePath : "<null>";
-    const char* s2 = path ? path : "<null>";
+    Str s1 = ctrlFilePath ? ctrlFilePath : Str("<null>");
+    Str s2 = path ? path : Str("<null>");
     logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
     ReportIf(true);
 }
@@ -4407,10 +4408,10 @@ static void RemoveFailedFiles(StrVec& files) {
     }
 }
 
-static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
+static StrVec& CollectNextPrevFilesIfChanged(Str path) {
     StrVec& files = gNextPrevDirCache;
 
-    char* dir = path::GetDirTemp(Str(path));
+    TempStr dir = path::GetDirTemp(path);
     if (path::IsSame(dir, gNextPrevDir)) {
         // failed files could have changed
         RemoveFailedFiles(files);
@@ -4429,7 +4430,7 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
     // remove unsupported files
     // traverse from the end so that removing doesn't change iterator
     for (int i = nFiles - 1; i >= 0; i--) {
-        char* path2 = files[i];
+        Str path2 = files[i];
         Kind kind = GuessFileTypeFromName(path2);
         bool isSupported = IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind);
         bool inHistory = gFileHistory.FindByPath(path2);
@@ -4455,7 +4456,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     WindowTab* tab = win->CurrentTab();
     bool didRetry = false;
 again:
-    const char* path = tab->filePath;
+    Str path = tab->filePath;
     StrVec files = CollectNextPrevFilesIfChanged(path);
     if (files.Size() < 2) {
         return;
@@ -4469,13 +4470,14 @@ again:
         idx = (idx + nFiles - 1) % nFiles;
     }
     path = files[idx];
-    if (!file::Exists(Str(path))) {
+    if (!file::Exists(path)) {
         if (didRetry) {
             // TODO: can I do something better?
             return;
         }
         didRetry = true;
-        str::FreePtr(&gNextPrevDir); // trigger re-reading the directory
+        str::Free(gNextPrevDir);
+        gNextPrevDir = {}; // trigger re-reading the directory
         goto again;
     }
 
@@ -7056,11 +7058,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // most of them require a win, the few exceptions are no-ops
     switch (cmdId) {
         case CmdViewWithExternalViewer: {
-            const char* cmdLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
+            Str cmdLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
             if (!cmdLine || !CanAccessDisk() || !tab || !file::Exists(tab->filePath)) {
                 return 0;
             }
-            const char* filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+            Str filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
             RunWithExe(tab, cmdLine, filter);
             return 0;
         }
@@ -7158,7 +7160,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdCommandPalette: {
-            const char* mode = nullptr;
+            Str mode = {};
             if (cmd) {
                 mode = GetCommandStringArg(cmd, kCmdArgMode, nullptr);
             }
