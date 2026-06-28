@@ -332,43 +332,6 @@ TempStr GetRegClassesAppsTemp(Str appName) {
     return str::JoinTemp("Software\\Classes\\Applications\\", appName, ".exe");
 }
 
-// pre-3.4, for reference so that we know what to delete
-#if 0
-bool OldWriteFileAssoc(HKEY hkey) {
-    bool ok = true;
-    WCHAR* exePath = GetInstalledExePathTemp();
-    const WCHAR* key;
-    if (HKEY_LOCAL_MACHINE == hkey) {
-        key = str::JoinTemp(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", kExeName);
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, exePath);
-    }
-    WCHAR* regPath = GetRegClassesAppsTemp(kAppName);
-
-    // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    TempWStr iconPath = str::JoinTemp(exePath, L",1");
-    {
-        key = str::JoinTemp(regPath, L"\\DefaultIcon");
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
-    }
-    AutoFreeWStr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.s);
-    {
-        key = str::JoinTemp(regPath, L"\\Shell\\Open\\Command");
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
-    }
-    AutoFreeWStr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.s);
-    {
-        key = str::JoinTemp(regPath, L"\\Shell\\Print\\Command");
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, printPath);
-    }
-    AutoFreeWStr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.s);
-    {
-        key = str::JoinTemp(regPath, L"\\Shell\\PrintTo\\Command");
-        ok &= LoggedWriteRegStr(hkey, key, nullptr, printToPath);
-    }
-    return ok;
-}
-#endif
-
 // http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
     logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey).s);
