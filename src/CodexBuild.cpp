@@ -952,8 +952,7 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                         TempStr threadId = AIChatJsonStrTemp(line, "thread_id");
                         if (threadId) {
                             PostUpdate(hwndFrame, sessionId, threadId, CodexUpdateType::SessionId);
-                            str::Free(sessionId);
-                            sessionId = str::Dup(threadId);
+                            str::ReplaceWithCopy(&sessionId, threadId);
                         }
                     } else if (eventType && str::Eq(eventType, "item.completed")) {
                         if (str::Find(line, "\"type\":\"agent_message\"")) {

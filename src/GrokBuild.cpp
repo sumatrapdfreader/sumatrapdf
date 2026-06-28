@@ -855,8 +855,7 @@ static void GrokReadThread(GrokReadCtx* ctx) {
                     TempStr newSessionId = AIChatJsonStrTemp(line, "sessionId");
                     if (newSessionId) {
                         PostUpdate(hwndFrame, sessionId, newSessionId, GrokUpdateType::SessionId);
-                        str::Free(sessionId);
-                        sessionId = str::Dup(newSessionId);
+                        str::ReplaceWithCopy(&sessionId, newSessionId);
                     }
                     PostUpdate(hwndFrame, sessionId, {}, GrokUpdateType::Flush);
                     PostUpdate(hwndFrame, sessionId, {}, GrokUpdateType::Finished);

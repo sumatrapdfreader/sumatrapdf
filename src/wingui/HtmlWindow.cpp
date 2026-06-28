@@ -1076,8 +1076,7 @@ HtmlMoniker::~HtmlMoniker() {
 }
 
 HRESULT HtmlMoniker::SetHtml(const ByteSlice& d) {
-    str::Free(htmlData);
-    htmlData = str::Dup(d);
+    str::ReplaceWithCopy(&htmlData, AsStr(d));
     if (htmlStream) {
         htmlStream->Release();
     }

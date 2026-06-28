@@ -263,8 +263,7 @@ static Str EPUB_ENC_NS() {
 }
 
 EpubDoc::EpubDoc(Str fileName) {
-    str::Free(this->fileName);
-    this->fileName = str::Dup(fileName);
+    str::ReplaceWithCopy(&this->fileName, fileName);
     InitializeCriticalSection(&zipAccess);
     archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
 }
@@ -1332,8 +1331,7 @@ bool HtmlDoc::Load() {
         data.Free();
     }
 
-    str::Free(pagePath);
-    pagePath = str::Dup(fileName);
+    str::ReplaceWithCopy(&pagePath, fileName);
     str::TransCharsInPlace(pagePath, "\\", "/");
 
     HtmlPullParser parser(htmlData);

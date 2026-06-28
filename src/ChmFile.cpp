@@ -287,8 +287,7 @@ void ChmFile::FixPathCodepage(Str& path, uint& fileCP) {
 
     TempStr utf8Path = SmartToUtf8Temp(path, codepage);
     if (HasData(utf8Path)) {
-        str::Free(path);
-        path = str::Dup(utf8Path);
+        str::ReplaceWithCopy(&path, utf8Path);
         fileCP = codepage;
         return;
     }
@@ -299,8 +298,7 @@ void ChmFile::FixPathCodepage(Str& path, uint& fileCP) {
 
     utf8Path = SmartToUtf8Temp(path, fileCP);
     if (HasData(utf8Path)) {
-        str::Free(path);
-        path = str::Dup(utf8Path);
+        str::ReplaceWithCopy(&path, utf8Path);
         codepage = fileCP;
         return;
     }
@@ -342,8 +340,7 @@ bool ChmFile::Load(Str path) {
         Str pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
         for (int i = 0; i < dimof(pathsToTest); i++) {
             if (HasData(pathsToTest[i])) {
-                str::Free(homePath);
-                homePath = str::Dup(pathsToTest[i]);
+                str::ReplaceWithCopy(&homePath, pathsToTest[i]);
             }
         }
         if (!HasData(homePath)) {
