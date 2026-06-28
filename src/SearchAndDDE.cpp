@@ -488,7 +488,7 @@ static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
 struct CountThreadData {
     MainWindow* win = nullptr;
     EngineBase* engine = nullptr; // AddRef'd by the caller, released by the thread
-    WCHAR* text = nullptr;
+    WStr text;
     bool matchCase = false;
     bool matchWholeWord = false;
     bool wantMatchList = false; // build findMatches (for all-match painting or the results list)
@@ -500,7 +500,7 @@ struct CountThreadData {
                     bool wantMatchList, bool wantSnippets, LONG epoch) {
         this->win = win;
         this->engine = engine;
-        this->text = str::Dup(text);
+        this->text = WStr(str::Dup(text));
         this->matchCase = matchCase;
         this->matchWholeWord = matchWholeWord;
         this->wantMatchList = wantMatchList;
@@ -508,7 +508,7 @@ struct CountThreadData {
         this->epoch = epoch;
     }
     ~CountThreadData() {
-        str::Free(text);
+        str::Free(text.s);
         CloseHandle(thread);
     }
 };
@@ -552,7 +552,7 @@ static void CountEndTask(CountEndTaskData* d) {
         // not canceled: install the freshly built cache (steal text from ctd)
         str::FreePtr(&win->findCountText);
         win->findCountText = ctd->text;
-        ctd->text = nullptr;
+        ctd->text = {};
         win->findCountMatchCase = ctd->matchCase;
         win->findCountMatchWholeWord = ctd->matchWholeWord;
         win->findCountEngine = ctd->engine;
@@ -576,10 +576,10 @@ static void CountEndTask(CountEndTaskData* d) {
     }
     // a newer term arrived while we were scanning: run it now (no worker running)
     if (win->findCountPendingText) {
-        WCHAR* pending = win->findCountPendingText;
-        win->findCountPendingText = nullptr;
-        StartFindCount(win, pending, win->findCountPendingMatchCase, win->findCountPendingMatchWholeWord);
-        str::Free(pending);
+        WStr pending = win->findCountPendingText;
+        win->findCountPendingText = {};
+        StartFindCount(win, pending.s, win->findCountPendingMatchCase, win->findCountPendingMatchWholeWord);
+        str::Free(pending.s);
     }
 }
 
@@ -601,7 +601,7 @@ static void CountThread(CountThreadData* d) {
         ts.SetMatchWholeWord(d->matchWholeWord);
         ts.SetDirection(TextSearch::Direction::Forward);
         ts.progressCb = MkFunc1<CountThreadData, ProgressUpdateData*>(CountProgress, d);
-        TextSel* m = ts.FindFirst(1, d->text);
+        TextSel* m = ts.FindFirst(1, d->text.s);
         // check the epoch at the top so a cancel (AbortCount, which joins us on
         // the UI thread) bails before the expensive snippet build / next scan
         while (m && win->findCountEpoch == d->epoch) {
@@ -673,7 +673,7 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase, b
         // worker's CountEndTask will start it once it exits
         InterlockedIncrement(&win->findCountEpoch);
         str::FreePtr(&win->findCountPendingText);
-        win->findCountPendingText = str::Dup(text);
+        win->findCountPendingText = WStr(str::Dup(text));
         win->findCountPendingMatchCase = matchCase;
         win->findCountPendingMatchWholeWord = matchWholeWord;
         return;
