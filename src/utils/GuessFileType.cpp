@@ -159,7 +159,7 @@ Str GetExtForKind(Kind kind) {
     if (idx >= 0) {
         return SeqStrByIndex(gFileExts, idx);
     }
-    return nullptr;
+    return {};
 }
 
 // ensure gFileExts and gExtsKind match
@@ -568,7 +568,7 @@ Str GfxFileExtFromKind(Kind kind) {
     if (idx >= 0) {
         return SeqStrByIndex(gImageFormatExts, idx);
     }
-    return nullptr;
+    return {};
 }
 
 Str GfxFileExtFromData(const ByteSlice& d) {
@@ -576,34 +576,34 @@ Str GfxFileExtFromData(const ByteSlice& d) {
     return GfxFileExtFromKind(kind);
 }
 
-char* TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
+Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> char* {
+    auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     };
 
     if (str::IsEmpty(path) || str::IsEmpty(expectedKindName)) {
-        return fail("ERROR missing path or expectedKind");
+        return fail(Str("ERROR missing path or expectedKind"));
     }
     Kind kind = GuessFileTypeFromName(path);
     if (!kind) {
-        return fail("ERROR unknown-kind");
+        return fail(Str("ERROR unknown-kind"));
     }
     if (!str::Eq(kind, expectedKindName)) {
         out.AppendFmt("FAIL path=%s got=%s expected=%s\n", path, kind, expectedKindName);
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return Str(out.StealData());
     }
     out.AppendFmt("OK path=%s kind=%s\n", path, kind);
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
-    return out.StealData();
+    return Str(out.StealData());
 }

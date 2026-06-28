@@ -99,7 +99,7 @@ bool IsSpaceOnly(const char* s, const char* end);
 int HtmlEntityNameToRune(Str name);
 int HtmlEntityNameToRune(WStr name);
 
-const char* ResolveHtmlEntity(const char* s, size_t len, int& rune);
+const char* ResolveHtmlEntity(Str s, int& rune);
 Str ResolveHtmlEntities(Str s, Arena* alloc);
 Str ResolveHtmlEntities(Str s);
 Str ResolveHtmlEntitiesTemp(Str s);

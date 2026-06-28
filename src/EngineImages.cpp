@@ -2171,9 +2171,9 @@ bool EngineCbx::FinishLoading() {
         ByteSlice metadata{(u8*)metadataFi->data, metadataFi->fileSizeUncompressed};
         cip.Parse(metadata);
     }
-    const char* comment = cbxArchive->GetComment();
+    Str comment = cbxArchive->GetComment();
     if (comment) {
-        json::Parse(comment, &cip);
+        json::Parse(comment.s, &cip);
     }
 
     int nFiles = pageFiles.Size();

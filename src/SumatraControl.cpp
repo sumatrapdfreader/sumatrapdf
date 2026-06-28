@@ -449,7 +449,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            char* res = TestFileKindResult(path, expectedKind, &exitCode);
+            Str res = TestFileKindResult(path, expectedKind, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

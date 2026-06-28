@@ -82,7 +82,7 @@ class MultiFormatArchive {
     FileInfo* GetFileDataById(size_t fileId);
     ByteSlice GetFileDataPartById(size_t fileId, size_t sizeHint);
 
-    const char* GetComment();
+    Str GetComment();
 
     // password for encrypted archives (owned by this object)
     char* password = nullptr;

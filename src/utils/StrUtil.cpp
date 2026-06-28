@@ -1455,17 +1455,17 @@ int SeqStrIndexIS(SeqStrings strs, Str toFind) {
 
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
-const char* SeqStrByIndex(SeqStrings strs, int idx) {
+Str SeqStrByIndex(SeqStrings strs, int idx) {
     ReportIf(idx < 0);
     const char* s = strs;
     while (idx > 0) {
         SeqStrNext(s);
         if (!s) {
-            return nullptr;
+            return {};
         }
         --idx;
     }
-    return s;
+    return Str(s);
 }
 
 // unsigned LEB128 of zigzag-encoded i64

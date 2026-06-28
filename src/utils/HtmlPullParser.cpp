@@ -100,7 +100,9 @@ void MemAppend(char*& dst, const char* s, size_t len) {
 // after '&' and len is the maximum lenght of the string
 // (4 in case of "foo;")
 // returns a pointer to the first character after the entity
-const char* ResolveHtmlEntity(const char* s, size_t len, int& rune) {
+const char* ResolveHtmlEntity(Str str, int& rune) {
+    const char* s = str.s;
+    size_t len = (size_t)str.len;
     const char* entEnd = str::Parse(s, len, "#%d%?;", &rune);
     if (entEnd) {
         return entEnd;
@@ -164,7 +166,7 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
         MemAppend(dst, s, curr - s);
         // curr points at '&'
         int rune = -1;
-        const char* entEnd = ResolveHtmlEntity(curr + 1, end - curr - 1, rune);
+        const char* entEnd = ResolveHtmlEntity(Str(curr + 1, (int)(end - curr - 1)), rune);
         if (!entEnd) {
             // unknown entity, just copy the '&'
             MemAppend(dst, curr, 1);

@@ -230,6 +230,7 @@ struct Str {
 
     Str() : s(nullptr), len(0) {}
     Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; }
+    explicit Str(const char* s_, int len_) : s((char*)s_), len(len_) {}
     explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }
     explicit Str(char* s_, int len_) : s(s_), len(len_) {}
 

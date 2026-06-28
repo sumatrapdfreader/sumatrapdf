@@ -91,8 +91,8 @@ bool PdbReader::ParseHeader() {
     return true;
 }
 
-const char* PdbReader::GetDbType() {
-    return hdr.typeCreator;
+Str PdbReader::GetDbType() {
+    return Str(hdr.typeCreator, 8);
 }
 
 size_t PdbReader::GetRecordCount() {

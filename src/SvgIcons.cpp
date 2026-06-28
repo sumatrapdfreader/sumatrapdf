@@ -291,11 +291,11 @@ static const char* gIcons[] = {
 };
 // clang-format on
 
-const char* GetSvgIcon(TbIcon idx) {
+Str GetSvgIcon(TbIcon idx) {
     int n = (int)idx;
     ReportIf(n < 0 || n >= dimofi(gIcons));
     if (n >= dimofi(gIcons)) {
-        return nullptr;
+        return {};
     }
-    return gIcons[n];
+    return Str(gIcons[n]);
 }

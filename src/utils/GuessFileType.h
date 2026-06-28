@@ -57,4 +57,4 @@ Str GetExtForKind(Kind kind);
 int KindIndexOf(Kind* kinds, int nKinds, Kind kind);
 
 // Headless test helper: compare GuessFileTypeFromName to an expected kind name.
-char* TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut = nullptr);
+Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut = nullptr);

@@ -1164,14 +1164,13 @@ static void PopulateCustomToolbarButtons() {
     }
 }
 
-static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, const char* svgData, int dx, int dy, COLORREF fgCol,
-                                      COLORREF bgCol) {
+static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, Str svgData, int dx, int dy, COLORREF fgCol, COLORREF bgCol) {
     TempStr strokeCol = SerializeColorTemp(fgCol);
     TempStr fillCol = SerializeColorTemp(bgCol);
     TempStr fillColRepl = str::JoinTemp("fill=\"", fillCol, "\"");
-    svgData = str::ReplaceTemp(svgData, "currentColor", strokeCol);
-    svgData = str::ReplaceTemp(svgData, R"(fill="none")", fillColRepl);
-    fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svgData, str::Len(svgData));
+    TempStr svg = str::ReplaceTemp(svgData, "currentColor", strokeCol);
+    svg = str::ReplaceTemp(svg, R"(fill="none")", fillColRepl);
+    fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svg.s, svg.len);
     fz_image* image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
     image->w = dx;
     image->h = dy;
@@ -1252,7 +1251,7 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, const char** customSvgs, int cus
     COLORREF fgCol = ThemeWindowTextColor();
     COLORREF bgCol = ThemeControlBackgroundColor();
     for (int i = 0; i < nBuiltIn; i++) {
-        const char* svgData = GetSvgIcon((TbIcon)i);
+        Str svgData = GetSvgIcon((TbIcon)i);
         fz_pixmap* pixmap = RenderSvgIconPixmap(ctx, svgData, dx, dy, fgCol, bgCol);
         BlitPixmap(hbmpData, dstStride, pixmap, dx * i, 0, bgCol);
         fz_drop_pixmap(ctx, pixmap);

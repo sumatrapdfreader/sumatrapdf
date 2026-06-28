@@ -109,7 +109,7 @@ static void BuildCodexModelsList(StrVec& models) {
     }
 }
 
-static const char* ResolveCodexModel(const StrVec& models, const char* model) {
+static Str ResolveCodexModel(const StrVec& models, Str model) {
     int idx = AIChatFindModelInList(models, model);
     if (idx >= 0) {
         return models.At(idx);
@@ -118,7 +118,7 @@ static const char* ResolveCodexModel(const StrVec& models, const char* model) {
     if (idx >= 0) {
         return models.At(idx);
     }
-    return "gpt-5.5";
+    return Str("gpt-5.5");
 }
 
 static void PopulateModelCombo(HWND combo) {
@@ -145,7 +145,7 @@ static void ApplyCodexSettingsToUI(MainWindow* win) {
         PopulateModelCombo(win->hwndCodexModelCombo);
         StrVec models;
         BuildCodexModelsList(models);
-        const char* model = ResolveCodexModel(models, gGlobalPrefs->codexBuild.model);
+        Str model = ResolveCodexModel(models, gGlobalPrefs->codexBuild.model);
         int modelIdx = AIChatFindModelInList(models, model);
         if (modelIdx < 0) {
             modelIdx = 0;
@@ -1030,7 +1030,7 @@ static void SendCodexMessage(MainWindow* win) {
     const char* sandboxes[] = {"read-only", "workspace-write", "danger-full-access"};
     StrVec modelList;
     BuildCodexModelsList(modelList);
-    const char* model = ResolveCodexModel(modelList, gGlobalPrefs->codexBuild.model);
+    Str model = ResolveCodexModel(modelList, gGlobalPrefs->codexBuild.model);
     int sandboxIdx = gGlobalPrefs->codexBuild.sandbox;
     if (sandboxIdx < 0 || sandboxIdx > 2) {
         sandboxIdx = 1;

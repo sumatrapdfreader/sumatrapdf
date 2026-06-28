@@ -46,7 +46,7 @@ class PdbReader {
 
     bool Parse(const ByteSlice&);
 
-    const char* GetDbType();
+    Str GetDbType();
     size_t GetRecordCount();
     ByteSlice GetRecord(size_t recNo);
 

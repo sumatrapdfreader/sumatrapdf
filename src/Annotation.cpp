@@ -128,9 +128,9 @@ Str AnnotationReadableNameTemp(AnnotationType tp) {
     if (n < 0) {
         return Str("Unknown");
     }
-    char* s = (char*)SeqStrByIndex(gAnnotReadableNames, n);
+    Str s = SeqStrByIndex(gAnnotReadableNames, n);
     ReportIf(!s);
-    return Str(s);
+    return s;
 }
 
 AnnotationType Type(Annotation* annot) {
@@ -1257,8 +1257,7 @@ static Str GetAnnotationTextIconTemp() {
     if (idx < 0) {
         return Str("Note");
     }
-    char* real = (char*)SeqStrByIndex(gAnnotationTextIcons, idx);
-    return Str(real);
+    return SeqStrByIndex(gAnnotationTextIcons, idx);
 }
 
 static AnnotationType supportsInteriorColor[] = {

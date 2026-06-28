@@ -407,9 +407,9 @@ ByteSlice MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint
     return {};
 }
 
-const char* MultiFormatArchive::GetComment() {
+Str MultiFormatArchive::GetComment() {
     // libarchive doesn't support zip global comments
-    return nullptr;
+    return {};
 }
 
 ///// format specific handling /////

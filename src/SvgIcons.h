@@ -36,4 +36,4 @@ enum class TbIcon {
     kMax
 };
 
-const char* GetSvgIcon(TbIcon);
+Str GetSvgIcon(TbIcon);

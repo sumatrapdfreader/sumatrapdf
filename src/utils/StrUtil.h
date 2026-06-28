@@ -251,7 +251,7 @@ void SeqStrNext(const char*& s);
 void SeqStrNext(const char*& s, int* idxInOut);
 int SeqStrIndex(SeqStrings strs, Str toFind);
 int SeqStrIndexIS(SeqStrings strs, Str toFind);
-const char* SeqStrByIndex(SeqStrings strs, int idx);
+Str SeqStrByIndex(SeqStrings strs, int idx);
 
 // SeqStrNum: like SeqStrings but each entry is <string>\0<varint i64>, sequence ends with \0.
 // Varint is unsigned LEB128 of zigzag-encoded i64 (small for non-negative values).

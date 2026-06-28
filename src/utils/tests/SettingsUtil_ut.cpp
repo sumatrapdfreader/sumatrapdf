@@ -172,9 +172,17 @@ Key = Value";
     utassert(str::Eq("#12345678", data->sutStructItems->at(1)->nested.colorArray->at(0)));
     utassert(str::Eq("#987654", data->sutStructItems->at(1)->nested.colorArray->at(1)));
     utassert(!data->internalString);
-    utassert(!str::Eq(serialized, AutoFree(SerializeStruct(&gSutStructInfo, data))));
+    {
+        ByteSlice res = SerializeStruct(&gSutStructInfo, data);
+        utassert(!str::Eq(serialized, Str((char*)res.data(), (int)res.size())));
+        res.Free();
+    }
     data->sutStructItems->at(0)->nested.point.x++;
-    utassert(!str::Eq(serialized, AutoFree(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
+    {
+        ByteSlice res = SerializeStruct(&gSutStructInfo, data, unknownOnly);
+        utassert(!str::Eq(serialized, Str((char*)res.data(), (int)res.size())));
+        res.Free();
+    }
     FreeStruct(&gSutStructInfo, data);
 
     data = (SutStruct*)DeserializeStruct(&gSutStructInfo, nullptr);
