@@ -9,65 +9,70 @@
 // http://www.w3.org/TR/CSS21/syndata.html#syntax
 
 // return true if skipped
-static bool SkipWsAndComments(const char*& s, const char* end) {
-    const char* start = s;
-    for (; s < end && str::IsWs(*s); s++) {
+static bool SkipWsAndComments(Str data, int& off) {
+    int start = off;
+    for (; off < data.len && str::IsWs(data.s[off]); off++) {
         ;
     }
-    while (s + 2 <= end && s[0] == '/' && s[1] == '*') {
-        for (s += 2; s < end; s++) {
-            if (s + 2 <= end && s[0] == '*' && s[1] == '/') {
-                s += 2;
+    while (off + 2 <= data.len && data.s[off] == '/' && data.s[off + 1] == '*') {
+        for (off += 2; off < data.len; off++) {
+            if (off + 2 <= data.len && data.s[off] == '*' && data.s[off + 1] == '/') {
+                off += 2;
                 break;
             }
         }
-        for (; s < end && str::IsWs(*s); s++) {
+        for (; off < data.len && str::IsWs(data.s[off]); off++) {
             ;
         }
     }
-    return start != s;
+    return start != off;
 }
 
 // returns false if there was no closing quotation mark
-static bool SkipQuotedString(const char*& s, const char* end) {
-    char quote = *s;
-    while (++s < end && *s != quote) {
-        if (*s == '\\') {
-            s++;
-            if (s >= end) {
+static bool SkipQuotedString(Str data, int& off) {
+    if (off >= data.len) {
+        return false;
+    }
+    char quote = data.s[off];
+    off++;
+    while (off < data.len && data.s[off] != quote) {
+        if (data.s[off] == '\\') {
+            off++;
+            if (off >= data.len) {
                 return false;
             }
         }
+        off++;
     }
-    if (s == end) {
+    if (off >= data.len) {
         return false;
     }
-    s++;
+    off++;
     return true;
 }
 
-static bool SkipBlock(const char*& s, const char* end) {
-    ReportIf(s >= end || *s != '{');
-    s++;
-    while (s < end && *s != '}') {
-        if (*s == '"' || *s == '\'') {
-            if (!SkipQuotedString(s, end)) {
+static bool SkipBlock(Str data, int& off) {
+    ReportIf(off >= data.len || data.s[off] != '{');
+    off++;
+    while (off < data.len && data.s[off] != '}') {
+        if (data.s[off] == '"' || data.s[off] == '\'') {
+            if (!SkipQuotedString(data, off)) {
                 return false;
             }
-        } else if (*s == '{') {
-            if (!SkipBlock(s, end)) {
+        } else if (data.s[off] == '{') {
+            if (!SkipBlock(data, off)) {
                 return false;
             }
-        } else if (*s == '\\' && s < end - 1) {
-            s += 2;
-        } else if (!SkipWsAndComments(s, end)) {
-            s++;
+        } else if (data.s[off] == '\\' && off < data.len - 1) {
+            off += 2;
+        } else if (!SkipWsAndComments(data, off)) {
+            off++;
         }
     }
-    if (s == end) {
+    if (off >= data.len) {
         return false;
     }
-    s++;
+    off++;
     return true;
 }
 
@@ -77,94 +82,97 @@ bool CssPullParser::NextRule() {
             ;
         }
     }
-    ReportIf(inProps && currPos < end);
-    if (inlineStyle || currPos == end) {
+    ReportIf(inProps && currOff < src.len);
+    if (inlineStyle || currOff >= src.len) {
         return false;
     }
 
-    if (currPos == src.s) {
-        SkipWsAndComments(currPos, end);
-        if (currPos + 4 < end && str::StartsWith(currPos, "<!--")) {
-            currPos += 4;
+    if (currOff == 0) {
+        SkipWsAndComments(src, currOff);
+        if (currOff + 4 < src.len && str::StartsWith(Str(src.s + currOff, src.len - currOff), Str("<!--"))) {
+            currOff += 4;
         }
     }
 
-    SkipWsAndComments(currPos, end);
-    currSel = currPos;
+    SkipWsAndComments(src, currOff);
+    currSelOff = currOff;
     // skip selectors
-    while (currPos < end && *currPos != '{') {
-        if (*currPos == '"' || *currPos == '\'') {
-            if (!SkipQuotedString(currPos, end)) {
+    while (currOff < src.len && src.s[currOff] != '{') {
+        if (src.s[currOff] == '"' || src.s[currOff] == '\'') {
+            if (!SkipQuotedString(src, currOff)) {
                 break;
             }
-        } else if (*currPos == ';') {
-            currPos++;
-            SkipWsAndComments(currPos, end);
-            currSel = currPos;
-        } else if (!SkipWsAndComments(currPos, end)) {
-            currPos++;
+        } else if (src.s[currOff] == ';') {
+            currOff++;
+            SkipWsAndComments(src, currOff);
+            currSelOff = currOff;
+        } else if (!SkipWsAndComments(src, currOff)) {
+            currOff++;
         }
     }
 
-    if (currPos == end) {
-        currSel = nullptr;
+    if (currOff >= src.len) {
+        currSelOff = -1;
         return false;
     }
-    selEnd = currPos++;
+    selEndOff = currOff++;
     inProps = true;
     return true;
 }
 
 const CssSelector* CssPullParser::NextSelector() {
-    if (!currSel) {
+    if (currSelOff < 0) {
         return nullptr;
     }
-    SkipWsAndComments(currSel, selEnd);
-    if (currSel == selEnd) {
+    int selOff = currSelOff;
+    SkipWsAndComments(src, selOff);
+    if (selOff >= selEndOff) {
         return nullptr;
     }
 
-    const char* selStart = currSel;
+    int selStart = selOff;
     // skip single selector
-    const char* sEnd = currSel;
-    while (currSel < selEnd && *currSel != ',') {
-        if (*currSel == '"' || *currSel == '\'') {
-            bool ok = SkipQuotedString(currSel, selEnd);
+    int sEnd = selOff;
+    while (selOff < selEndOff && src.s[selOff] != ',') {
+        if (src.s[selOff] == '"' || src.s[selOff] == '\'') {
+            bool ok = SkipQuotedString(src, selOff);
             ReportIf(!ok);
-            sEnd = currSel;
-        } else if (*currSel == '\\' && currSel < selEnd - 1) {
-            currSel += 2;
-            sEnd = currSel;
-        } else if (!SkipWsAndComments(currSel, selEnd)) {
-            sEnd = ++currSel;
+            sEnd = selOff;
+        } else if (src.s[selOff] == '\\' && selOff < selEndOff - 1) {
+            selOff += 2;
+            sEnd = selOff;
+        } else if (!SkipWsAndComments(src, selOff)) {
+            sEnd = ++selOff;
         }
     }
-    if (currSel < selEnd) {
-        currSel++;
+    if (selOff < selEndOff) {
+        selOff++;
     }
+    currSelOff = selOff;
 
-    sel.s = Str((char*)selStart, (int)(sEnd - selStart));
+    sel.s = Str(src.s + selStart, sEnd - selStart);
     sel.tag = Tag_NotFound;
     sel.clazz = Str();
 
     // parse "*", "el", ".class" and "el.class"
-    const char* c = sEnd;
-    for (; c > selStart && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
+    int c = sEnd;
+    for (; c > selStart && (isalnum((u8)src.s[c - 1]) || src.s[c - 1] == '-'); c--) {
         ;
     }
-    if (c > selStart && *(c - 1) == '.') {
-        sel.clazz = Str((char*)c, (int)(sEnd - c));
+    if (c > selStart && src.s[c - 1] == '.') {
+        sel.clazz = Str(src.s + c, sEnd - c);
         c--;
     }
-    for (; c > selStart && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
+    for (; c > selStart && (isalnum((u8)src.s[c - 1]) || src.s[c - 1] == '-'); c--) {
         ;
     }
-    if (sel.clazz && sel.clazz.s - 1 == selStart) {
+    if (sel.clazz && sel.clazz.s == src.s + selStart + 1) {
         sel.tag = Tag_Any;
-    } else if (c == (sel.clazz ? sel.clazz.s - 1 : sEnd) && c == selStart + 1 && *selStart == '*') {
+    } else if (c == (sel.clazz ? (int)(sel.clazz.s - src.s - 1) : sEnd) && c == selStart + 1 &&
+               src.s[selStart] == '*') {
         sel.tag = Tag_Any;
     } else if (c == selStart) {
-        size_t tagLen = sel.clazz ? (size_t)(sel.clazz.s - selStart - 1) : (size_t)sel.s.len;
+        size_t tagLen = sel.clazz ? (size_t)(sel.clazz.s - src.s - selStart - 1) : (size_t)sel.s.len;
         sel.tag = FindHtmlTag(sel.s.s, tagLen);
     }
 
@@ -172,68 +180,68 @@ const CssSelector* CssPullParser::NextSelector() {
 }
 
 const CssProperty* CssPullParser::NextProperty() {
-    if (currPos == src.s) {
+    if (currOff == 0) {
         inlineStyle = inProps = true;
     } else if (!inProps) {
         return nullptr;
     }
 
 GetNextProperty:
-    SkipWsAndComments(currPos, end);
-    if (currPos == end) {
+    SkipWsAndComments(src, currOff);
+    if (currOff >= src.len) {
         return nullptr;
     }
-    if (*currPos == '}') {
-        currPos++;
+    if (src.s[currOff] == '}') {
+        currOff++;
         inProps = false;
         return nullptr;
     }
-    if (*currPos == '{') {
-        if (!SkipBlock(currPos, end)) {
+    if (src.s[currOff] == '{') {
+        if (!SkipBlock(src, currOff)) {
             return nullptr;
         }
         goto GetNextProperty;
     }
-    if (*currPos == ';') {
-        currPos++;
+    if (src.s[currOff] == ';') {
+        currOff++;
         goto GetNextProperty;
     }
-    const char* name = currPos;
+    int nameOff = currOff;
     // skip identifier
-    while (currPos < end && !str::IsWs(*currPos) && *currPos != ':' && *currPos != ';' && *currPos != '{' &&
-           *currPos != '}') {
-        currPos++;
+    while (currOff < src.len && !str::IsWs(src.s[currOff]) && src.s[currOff] != ':' && src.s[currOff] != ';' &&
+           src.s[currOff] != '{' && src.s[currOff] != '}') {
+        currOff++;
     }
-    SkipWsAndComments(currPos, end);
-    if (currPos == end || *currPos != ':') {
+    SkipWsAndComments(src, currOff);
+    if (currOff >= src.len || src.s[currOff] != ':') {
         goto GetNextProperty;
     }
-    prop.type = FindCssProp(name, currPos - name);
-    currPos++;
-    SkipWsAndComments(currPos, end);
+    prop.type = FindCssProp(src.s + nameOff, (size_t)(currOff - nameOff));
+    currOff++;
+    SkipWsAndComments(src, currOff);
 
-    const char* valStart = currPos;
+    int valStart = currOff;
     // skip value
-    const char* valEnd = currPos;
-    while (currPos < end && *currPos != ';' && *currPos != '}') {
-        if (*currPos == '"' || *currPos == '\'') {
-            if (!SkipQuotedString(currPos, end)) {
+    int valEnd = currOff;
+    while (currOff < src.len && src.s[currOff] != ';' && src.s[currOff] != '}') {
+        if (src.s[currOff] == '"' || src.s[currOff] == '\'') {
+            if (!SkipQuotedString(src, currOff)) {
                 return nullptr;
             }
-            valEnd = currPos;
-        } else if (*currPos == '{') {
-            if (!SkipBlock(currPos, end)) {
+            valEnd = currOff;
+        } else if (src.s[currOff] == '{') {
+            if (!SkipBlock(src, currOff)) {
                 return nullptr;
             }
-            valEnd = currPos;
-        } else if (*currPos == '\\' && currPos < end - 1) {
-            currPos += 2;
-            valEnd = currPos;
-        } else if (!SkipWsAndComments(currPos, end)) {
-            valEnd = ++currPos;
+            valEnd = currOff;
+        } else if (src.s[currOff] == '\\' && currOff < src.len - 1) {
+            currOff += 2;
+            valEnd = currOff;
+        } else if (!SkipWsAndComments(src, currOff)) {
+            valEnd = ++currOff;
         }
     }
-    prop.s = Str((char*)valStart, (int)(valEnd - valStart));
+    prop.s = Str(src.s + valStart, valEnd - valStart);
 
     return &prop;
 }

@@ -17,24 +17,19 @@ struct CssProperty {
 
 class CssPullParser {
     Str src = {};
-    const char* currPos = nullptr;
-    const char* end = nullptr;
+    int currOff = 0;
 
     bool inProps = false;
     bool inlineStyle = false;
 
-    const char* currSel = nullptr;
-    const char* selEnd = nullptr;
+    int currSelOff = -1;
+    int selEndOff = 0;
 
     CssSelector sel{};
     CssProperty prop{};
 
   public:
-    CssPullParser(Str s) {
-        this->src = s;
-        currPos = s.s;
-        end = s.s ? s.s + s.len : nullptr;
-    }
+    explicit CssPullParser(Str s) : src(s) {}
 
     // call NextRule first for parsing a style element and
     // NextProperty only for parsing a single style attribute
