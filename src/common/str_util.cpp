@@ -116,26 +116,29 @@ WStr ToWStrTemp(Str s) {
 }
 
 // Duplicate string with known length (internal helper)
-static Str StrDupInternal(Arena* arena, const char* src, int len) {
-    if (!src || len <= 0) return Str();
-    char* dst = (char*)Alloc(arena, len + 1);
-    for (int i = 0; i < len; i++) {
-        dst[i] = src[i];
+static Str StrDupInternal(Arena* arena, Str src) {
+    if (!src.s || src.len <= 0) {
+        return Str();
     }
-    dst[len] = 0;
-    return Str(dst, len);
+    char* dst = (char*)Alloc(arena, src.len + 1);
+    for (int i = 0; i < src.len; i++) {
+        dst[i] = src.s[i];
+    }
+    dst[src.len] = 0;
+    return Str(dst, src.len);
 }
 
 // Duplicate Str
 Str StrDup(Arena* arena, Str s) {
-    return StrDupInternal(arena, s.s, s.len);
+    return StrDupInternal(arena, s);
 }
 
 // Str equality - compare characters using pointers
-__declspec(noinline) bool StrEqRest(const char* a, const char* b, int len) {
-    const char* end = a + len;
-    while (a < end) {
-        if (*a++ != *b++) return false;
+__declspec(noinline) bool StrEqRest(Str a, Str b, int len) {
+    for (int i = 0; i < len; i++) {
+        if (a.s[i] != b.s[i]) {
+            return false;
+        }
     }
     return true;
 }
@@ -144,13 +147,14 @@ __declspec(noinline) bool StrEqRest(const char* a, const char* b, int len) {
 // and StrEqRest() will not
 bool StrEq(Str a, Str b) {
     if (a.len != b.len) return false;
-    return StrEqRest(a.s, b.s, a.len);
+    return StrEqRest(a, b, a.len);
 }
 
-__declspec(noinline) bool WStrEqRest(const wchar_t* a, const wchar_t* b, int len) {
-    const wchar_t* end = a + len;
-    while (a < end) {
-        if (*a++ != *b++) return false;
+__declspec(noinline) bool WStrEqRest(WStr a, WStr b, int len) {
+    for (int i = 0; i < len; i++) {
+        if (a.s[i] != b.s[i]) {
+            return false;
+        }
     }
     return true;
 }
@@ -159,7 +163,7 @@ __declspec(noinline) bool WStrEqRest(const wchar_t* a, const wchar_t* b, int len
 // and WStrEqRest() will not
 bool WStrEq(WStr a, WStr b) {
     if (a.len != b.len) return false;
-    return WStrEqRest(a.s, b.s, a.len);
+    return WStrEqRest(a, b, a.len);
 }
 
 bool operator==(Str a, Str b) {
@@ -240,25 +244,17 @@ bool StrHasPrefixNoCase(Str s, Str prefix) {
 }
 
 bool StrHasPrefix(Str s, Str prefix) {
-    if (prefix.len > s.len) return false;
-    char* sc = s.s;
-    char* se = sc + prefix.len;
-    char* pc = prefix.s;
-    while (sc < se) {
-        if (*sc++ != *pc++) return false;
+    if (prefix.len > s.len) {
+        return false;
     }
-    return true;
+    return StrEqRest(Str(s.s, prefix.len), prefix, prefix.len);
 }
 
 bool StrHasSuffix(Str s, Str suffix) {
-    if (suffix.len > s.len) return false;
-    char* sc = s.s + s.len - suffix.len;
-    char* se = s.s + s.len;
-    char* pc = suffix.s;
-    while (sc < se) {
-        if (*sc++ != *pc++) return false;
+    if (suffix.len > s.len) {
+        return false;
     }
-    return true;
+    return StrEqRest(Str(s.s + s.len - suffix.len, suffix.len), suffix, suffix.len);
 }
 
 Str StrTrimSuffix(Str s, Str suffix) {
