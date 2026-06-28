@@ -1649,8 +1649,9 @@ void HomePageUpdateCloseButton(MainWindow* win, int x, int y) {
 
     StaticLink* link = nullptr;
     TempStr target = GetStaticLinkAtTemp(win->staticLinks, x, y, &link);
-    // a thumbnail link's target is a file path (not a "<...>" command or a URL)
-    bool isThumb = !str::IsEmpty(target) && link && target.s[0] != '<' && !str::StartsWithI(target, "http");
+    // a thumbnail link's target is an absolute file path; everything else (a
+    // "<...>" command, a "Cmd..." tip link, a URL) is not, so it gets no button
+    bool isThumb = !str::IsEmpty(target) && link && path::IsAbsolute(target);
     if (!isThumb) {
         HomePageHideCloseButton();
         return;
