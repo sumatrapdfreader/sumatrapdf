@@ -540,20 +540,20 @@ void UpdateDeltaPerLine() {
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
-const char* scrollMsgStr(USHORT msg) {
+Str scrollMsgStr(USHORT msg) {
     switch (msg) {
         case SB_LINEDOWN:
-            return "SB_LINEDOWN";
+            return Str("SB_LINEDOWN");
         case SB_LINEUP:
-            return "SB_LINEUP";
+            return Str("SB_LINEUP");
         case SB_HALF_PAGEDOWN:
-            return "SB_HALF_PAGEDOWN";
+            return Str("SB_HALF_PAGEDOWN");
         case SB_HALF_PAGEUP:
-            return "SB_HALF_PAGEUP";
+            return Str("SB_HALF_PAGEUP");
         case SB_PAGEDOWN:
-            return "SB_PAGEDOWN";
+            return Str("SB_PAGEDOWN");
         case SB_PAGEUP:
-            return "SB_PAGEUP";
+            return Str("SB_PAGEUP");
     }
     return str::FormatTemp("%d", (int)msg);
 }

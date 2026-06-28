@@ -198,7 +198,7 @@ static bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 ne
 
 // delegate file opening to a previously running instance by sending a DDE message
 static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
-    char* fullPath = path::NormalizeTemp(Str(path));
+    TempStr fullPath = path::NormalizeTemp(path);
 
     u32 newWindow = 0;
     if (i.inNewWindow) {
@@ -233,7 +233,7 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
                       i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
-        char* srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
+        TempStr srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
         cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath, srcPath, i.forwardSearchLine);
     }
     if (i.search) {
@@ -321,7 +321,7 @@ static MainWindow* LoadOnStartup(Str filePath, const Flags& flags, bool isFirstW
     if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         int page;
         Vec<Rect> rects;
-        char* srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
+        TempStr srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
         int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
     }
@@ -2300,7 +2300,7 @@ ContinueOpenWindow:
                 if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
                     int page;
                     Vec<Rect> rects;
-                    char* srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
+                    TempStr srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
                     int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
                     ShowForwardSearchResult(win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
                 }

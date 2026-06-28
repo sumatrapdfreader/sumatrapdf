@@ -225,7 +225,7 @@ LoadArgs::LoadArgs(Str origPath, MainWindow* win) {
         cleanPath = fileArgs->cleanPath;
         logf("LoadArgs: origPath='%s', cleanPath='%s'\n", origPath.s, cleanPath.s);
     }
-    char* path = path::NormalizeTemp(cleanPath);
+    TempStr path = path::NormalizeTemp(cleanPath);
     if (!str::EqI(path, cleanPath)) {
         logf("LoadArgs: cleanPath='%s', path='%s'\n", cleanPath.s, path);
     }
@@ -454,7 +454,7 @@ static WindowTab* FindTabByController(DocController* ctrl) {
 }
 
 WindowTab* FindTabByFile(Str file) {
-    char* normFile = path::NormalizeTemp(file);
+    TempStr normFile = path::NormalizeTemp(file);
 
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
@@ -3320,7 +3320,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     CloseDocumentInCurrentTab(win, true, true);
     HwndSetFocus(win->hwndFrame);
 
-    char* newPath = path::NormalizeTemp(dstFilePath);
+    TempStr newPath = path::NormalizeTemp(dstFilePath);
     // TODO: this should be 'duplicate FileInHistory"
     RenameFileInHistory(srcFileName, newPath);
     str::Free(srcFileName);
