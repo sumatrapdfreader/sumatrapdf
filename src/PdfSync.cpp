@@ -771,8 +771,7 @@ int SyncTex::RebuildIndexIfNeeded() {
     logf("SyncTex::RebuildIndexIfNeeded: org path: %s\n; final file path: %s, final file size: %lld.\n", pathSync.s,
          tempsync2.s, fsize);
 
-    TempStr tempsync2Z = StrDupTemp(tempsync2);
-    scanner = synctex_scanner_new_with_output_file(tempsync2Z.s, nullptr, 1);
+    scanner = synctex_scanner_new_with_output_file(CStrTemp(tempsync2), nullptr, 1);
     if (scanner) {
         logfa("SyncTex::RebuildIndexIfNeeded: file '%s' is ok.\n", pathSync.s);
     } else {
@@ -867,8 +866,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
 }
 
 static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, Str srcPath, int line, int col) {
-    TempStr srcPathZ = StrDupTemp(srcPath);
-    int ret = synctex_display_query(scanner, srcPathZ.s, line, col, 0);
+    int ret = synctex_display_query(scanner, CStrTemp(srcPath), line, col, 0);
     if (ret > 0) {
         return ret;
     }
@@ -882,8 +880,7 @@ static int SynctexDisplayQueryWithVariants(synctex_scanner_p scanner, Str srcPat
             continue;
         }
         logfa("SynctexDisplayQueryWithVariants: '%s' failed, retrying with '%s'\n", srcPath.s, variant.s);
-        TempStr variantZ = StrDupTemp(variant);
-        int ret2 = synctex_display_query(scanner, variantZ.s, line, col, 0);
+        int ret2 = synctex_display_query(scanner, CStrTemp(variant), line, col, 0);
         if (ret2 > 0) {
             return ret2;
         }

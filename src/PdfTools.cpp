@@ -127,9 +127,7 @@ void PdfBakeDialog::DoBake() {
     logf("PdfBakeDoIt: baking '%s' to '%s'\n", srcPath.s, destPath.s);
 
     // build argv for pdfbake_main: "bake" input output
-    TempStr srcZ = StrDupTemp(srcPath);
-    TempStr destZ = StrDupTemp(destPath);
-    char* argv[] = {(char*)"bake", srcZ.s, destZ.s}; // str-port: mupdf CLI
+    char* argv[] = {(char*)"bake", CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
     int argc = 3;
 
     fz_set_optind(0);
@@ -373,10 +371,8 @@ void PdfExtractTextDialog::DoExtract() {
     bool isPdf = tab && CouldBePDFDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
-        TempStr destZ = StrDupTemp(destPath);
-        TempStr srcZ = StrDupTemp(srcPath);
-        TempStr pagesZ = StrDupTemp(pages);
-        char* argv[] = {(char*)"convert", (char*)"-o", destZ.s, srcZ.s, pagesZ.s}; // str-port: mupdf CLI
+        char* argv[] = {(char*)"convert", (char*)"-o", CStrTemp(destPath), CStrTemp(srcPath),
+                        CStrTemp(pages)}; // str-port: mupdf CLI
         int argc = 5;
         fz_set_optind(0);
         ok = muconvert_main(argc, argv) == 0;
@@ -601,10 +597,8 @@ void PdfCompressDialog::DoCompress() {
     logf("PdfCompressDoIt: compressing '%s' to '%s'\n", srcPath.s, destPath.s);
 
     // equivalent of: clean -gggg -e 100 -f -i -t -Z input output
-    TempStr srcZ = StrDupTemp(srcPath);
-    TempStr destZ = StrDupTemp(destPath);
-    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f",
-                    (char*)"-i",    (char*)"-t",    (char*)"-Z", srcZ.s,       destZ.s}; // str-port: mupdf CLI
+    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e",       (char*)"100",      (char*)"-f", (char*)"-i",
+                    (char*)"-t",    (char*)"-Z",    CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
     int argc = 10;
 
     fz_set_optind(0);
@@ -799,9 +793,7 @@ void PdfDecompressDialog::DoDecompress() {
     logf("PdfDecompressDoIt: decompressing '%s' to '%s'\n", srcPath.s, destPath.s);
 
     // equivalent of: clean -d input output
-    TempStr srcZ = StrDupTemp(srcPath);
-    TempStr destZ = StrDupTemp(destPath);
-    char* argv[] = {(char*)"clean", (char*)"-d", srcZ.s, destZ.s}; // str-port: mupdf CLI
+    char* argv[] = {(char*)"clean", (char*)"-d", CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
     int argc = 4;
 
     fz_set_optind(0);
@@ -1182,11 +1174,9 @@ void PdfDeletePageDialog::DoIt() {
     // use the same compression flags as Compress PDF so the result is re-written
     // compactly; otherwise the kept pages drag along the original's full content
     // and the output is nearly as big as the source
-    TempStr srcZ = StrDupTemp(srcPath);
-    TempStr destZ = StrDupTemp(destPath);
-    TempStr pageRangeZ = StrDupTemp(pageRange);
-    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f", (char*)"-i",
-                    (char*)"-t",    (char*)"-Z",    srcZ.s,      destZ.s,      pageRangeZ.s}; // str-port: mupdf CLI
+    char* argv[] = {(char*)"clean",    (char*)"-gggg",     (char*)"-e",        (char*)"100",
+                    (char*)"-f",       (char*)"-i",        (char*)"-t",        (char*)"-Z",
+                    CStrTemp(srcPath), CStrTemp(destPath), CStrTemp(pageRange)}; // str-port: mupdf CLI
     int argc = 11;
 
     fz_set_optind(0);
@@ -1468,11 +1458,9 @@ void PdfEncryptDialog::DoEncrypt() {
     logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", srcPath.s, destPath.s);
 
     // equivalent of: clean -E aes-256 -U <pwd> -O <pwd> input output
-    TempStr pwdZ = StrDupTemp(pwd);
-    TempStr srcZ = StrDupTemp(srcPath);
-    TempStr destZ = StrDupTemp(destPath);
-    char* argv[] = {(char*)"clean", (char*)"-E", (char*)"aes-256", (char*)"-U", pwdZ.s,
-                    (char*)"-O",    pwdZ.s,      srcZ.s,           destZ.s}; // str-port: mupdf CLI
+    char* pwdZ = CStrTemp(pwd);
+    char* argv[] = {(char*)"clean", (char*)"-E", (char*)"aes-256",  (char*)"-U",       pwdZ,
+                    (char*)"-O",    pwdZ,        CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
     int argc = 9;
 
     fz_set_optind(0);
@@ -1707,10 +1695,8 @@ void PdfDecryptDialog::DoDecrypt() {
 
     // equivalent of: clean -p <pwd> -D input output
     // -p provides the password to open the encrypted input, -D removes encryption from output
-    TempStr pwdZ = StrDupTemp(password);
-    TempStr srcZ = StrDupTemp(srcPath);
-    TempStr destZ = StrDupTemp(destPath);
-    char* argv[] = {(char*)"clean", (char*)"-p", pwdZ.s, (char*)"-D", srcZ.s, destZ.s}; // str-port: mupdf CLI
+    char* argv[] = {(char*)"clean", (char*)"-p",       CStrTemp(password),
+                    (char*)"-D",    CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
     int argc = 6;
 
     fz_set_optind(0);

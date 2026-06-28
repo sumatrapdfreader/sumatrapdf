@@ -10000,10 +10000,10 @@ static TempStr TtsLangIdToLocaleNameTemp(Str lang) {
         return str::DupTemp(lang);
     }
 
-    TempStr langZ = StrDupTemp(lang);
+    char* langZ = CStrTemp(lang);
     char* end = nullptr; // str-port: C-string
-    unsigned long langId = strtoul(langZ.s, &end, 16);
-    if (end == langZ.s || langId == 0) {
+    unsigned long langId = strtoul(langZ, &end, 16);
+    if (end == langZ || langId == 0) {
         return str::DupTemp(lang);
     }
 

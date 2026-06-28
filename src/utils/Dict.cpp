@@ -233,9 +233,8 @@ bool MapStrToInt::Insert(Str key, int val, int* existingValOut, Str* existingKey
     if (str::IsEmpty(key)) {
         return false;
     }
-    TempStr keyZ = StrDupTemp(key);
     bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)keyZ.s, allocator, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)CStrTemp(key), allocator, newEntry);
     if (!newEntry) {
         if (existingValOut) {
             *existingValOut = (int)e->val;
@@ -259,9 +258,8 @@ bool MapStrToInt::Remove(Str key, int* removedValOut) const {
     if (str::IsEmpty(key)) {
         return false;
     }
-    TempStr keyZ = StrDupTemp(key);
     uintptr_t removedVal;
-    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)keyZ.s, &removedVal);
+    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)CStrTemp(key), &removedVal);
     if (removed && removedValOut) {
         *removedValOut = (int)removedVal;
     }
@@ -272,10 +270,9 @@ bool MapStrToInt::Get(Str key, int* valOut) const {
     if (str::IsEmpty(key)) {
         return false;
     }
-    TempStr keyZ = StrDupTemp(key);
     StrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)keyZ.s, nullptr, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)CStrTemp(key), nullptr, newEntry);
     if (!e) {
         return false;
     }

@@ -346,8 +346,7 @@ bool ToggleFormButton(Annotation* annot) {
                 bool isOn = curAS && !pdf_name_eq(ctx, curAS, PDF_NAME(Off));
                 bool noToggleOff = (flags & PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF) != 0;
                 Str onName = Str(pdf_to_name(ctx, pdf_button_field_on_state(ctx, kid)));
-                TempStr newValZ = StrDupTemp((isOn && !noToggleOff) ? Str("Off") : onName);
-                pdf_set_field_value(ctx, e->pdfdoc, grp, newValZ.s, 0);
+                pdf_set_field_value(ctx, e->pdfdoc, grp, CStrTemp((isOn && !noToggleOff) ? Str("Off") : onName), 0);
                 pdf_update_annot(ctx, a);
                 UpdateFormFieldPage(ctx, a); // refresh all radio-group siblings
                 changed = true;
@@ -1301,8 +1300,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     if (!str::IsEmptyOrWhiteSpace(defAuthor)) {
                         author = defAuthor;
                     }
-                    TempStr authorZ = StrDupTemp(author);
-                    pdf_set_annot_author(ctx, annot, authorZ.s);
+                    pdf_set_annot_author(ctx, annot, CStrTemp(author));
                 }
             }
 
@@ -1332,9 +1330,9 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 case AnnotationType::Underline:
                 case AnnotationType::Squiggly:
                 case AnnotationType::StrikeOut: {
-                    TempStr content = StrDupTemp(args->content);
-                    if (!str::IsEmptyOrWhiteSpace(content.s)) {
-                        pdf_set_annot_contents(ctx, annot, content.s);
+                    const char* content = CStrTemp(args->content);
+                    if (!str::IsEmptyOrWhiteSpace(content)) {
+                        pdf_set_annot_contents(ctx, annot, content);
                     }
                 } break;
                 case AnnotationType::Text:
@@ -1399,9 +1397,9 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 if (args->borderWidth >= 0) {
                     pdf_set_annot_border_width(ctx, annot, (float)args->borderWidth);
                 }
-                TempStr content = StrDupTemp(args->content);
-                if (!str::IsEmptyOrWhiteSpace(content.s)) {
-                    pdf_set_annot_contents(ctx, annot, content.s);
+                const char* content = CStrTemp(args->content);
+                if (!str::IsEmptyOrWhiteSpace(content)) {
+                    pdf_set_annot_contents(ctx, annot, content);
                 } else {
                     pdf_set_annot_contents(ctx, annot, "This is a text...");
                 }

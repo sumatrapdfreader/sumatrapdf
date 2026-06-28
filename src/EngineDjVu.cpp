@@ -202,8 +202,7 @@ struct DjVuContext {
         ScopedCritSec scope(&lock);
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
         //       https://code.google.com/archive/p/sumatrapdf/issues/1434
-        TempStr fileNameZ = StrDupTemp(fileName);
-        return ddjvu_document_create_by_filename_utf8(ctx, fileNameZ.s, /* cache */ FALSE);
+        return ddjvu_document_create_by_filename_utf8(ctx, CStrTemp(fileName), /* cache */ FALSE);
     }
 
     ddjvu_document_t* OpenStream(IStream* stream) {

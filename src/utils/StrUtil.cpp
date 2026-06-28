@@ -20,27 +20,27 @@ static _locale_t GetUtf8FormatLocale() {
 #endif
 
 static int VsnprintfUtf8(char* buf, size_t bufCchSize, Str fmt, va_list args) { // str-port: C-string
-    TempStr fmtZ = StrDupTemp(fmt);
+    char* fmtZ = CStrTemp(fmt);
 #if defined(_MSC_VER)
     _locale_t loc = GetUtf8FormatLocale();
     if (loc) {
-        return _vsnprintf_l(buf, bufCchSize, fmtZ.s, loc, args);
+        return _vsnprintf_l(buf, bufCchSize, fmtZ, loc, args);
     }
 #endif
-    return vsnprintf(buf, bufCchSize, fmtZ.s, args);
+    return vsnprintf(buf, bufCchSize, fmtZ, args);
 }
 
 static int VscprintfUtf8(Str fmt, va_list args) {
-    TempStr fmtZ = StrDupTemp(fmt);
+    char* fmtZ = CStrTemp(fmt);
 #if defined(_MSC_VER)
     _locale_t loc = GetUtf8FormatLocale();
     if (loc) {
-        return _vscprintf_l(fmtZ.s, loc, args);
+        return _vscprintf_l(fmtZ, loc, args);
     }
 #endif
     va_list argsCopy;
     va_copy(argsCopy, args);
-    int res = vsnprintf(nullptr, 0, fmtZ.s, argsCopy);
+    int res = vsnprintf(nullptr, 0, fmtZ, argsCopy);
     va_end(argsCopy);
     return res;
 }
@@ -1124,15 +1124,15 @@ static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
     if (off >= str.len) {
         return false;
     }
-    TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
+    char* sliceZ = CStrTemp(Str(str.s + off, str.len - off));
     ptrdiff_t consumed = 0;
     {
         char* endPtr = nullptr; // str-port: C-string
-        *val = strtod(sliceZ.s, &endPtr);
-        if (!endPtr || endPtr == sliceZ.s) {
+        *val = strtod(sliceZ, &endPtr);
+        if (!endPtr || endPtr == sliceZ) {
             return false;
         }
-        consumed = endPtr - sliceZ.s;
+        consumed = endPtr - sliceZ;
     }
     *endOff = off + (int)consumed;
     return true;

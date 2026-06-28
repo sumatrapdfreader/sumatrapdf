@@ -273,8 +273,7 @@ bool PdfCreator::SetProperty(Str propName, Str value) const {
         }
 
         // TODO: not sure if pdf_new_text_string() handles utf8
-        TempStr val = StrDupTemp(value);
-        pdf_obj* valobj = pdf_new_text_string(ctx, val.s);
+        pdf_obj* valobj = pdf_new_text_string(ctx, CStrTemp(value));
         pdf_dict_puts_drop(ctx, info, name.s, valobj);
     }
     fz_catch(ctx) {
@@ -342,8 +341,7 @@ bool PdfCreator::SaveToFile(Str filePath) const {
         pdf_write_options opts = pdf_default_write_options2;
         opts.do_compress = 1;
         opts.do_compress_images = 1;
-        TempStr pathZ = StrDupTemp(filePath);
-        pdf_save_document(ctx, doc, pathZ.s, &opts);
+        pdf_save_document(ctx, doc, CStrTemp(filePath), &opts);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);

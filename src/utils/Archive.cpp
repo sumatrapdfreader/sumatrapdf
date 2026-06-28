@@ -172,8 +172,7 @@ bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const Arc
 
 static void SetArchivePassword(struct archive* a, Str password) {
     if (password) {
-        TempStr pwd = StrDupTemp(password);
-        archive_read_add_passphrase(a, pwd.s);
+        archive_read_add_passphrase(a, CStrTemp(password));
     }
 }
 

@@ -197,8 +197,7 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
     fz_var(ldest);
     fz_var(pageNo);
     fz_try(ctx) {
-        TempStr uriZ = StrDupTemp(uri);
-        ldest = fz_resolve_link_dest(ctx, doc, uriZ.s);
+        ldest = fz_resolve_link_dest(ctx, doc, CStrTemp(uri));
         pageNo = fz_page_number_from_location(ctx, doc, ldest.loc);
     }
     fz_catch(ctx) {
@@ -2541,13 +2540,12 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     fz_var(fontDy);
     fz_var(dir);
     Kind kind = GuessFileTypeFromName(nameHint);
-    TempStr nameHintZ = StrDupTemp(nameHint); // str-port: mupdf NUL-term boundary
+    const char* nameHintZ = CStrTemp(nameHint); // str-port: mupdf NUL-term boundary
     if (kind == kindFileMarkdown) {
         TempStr parentDir = path::GetDirTemp(nameHint);
         if (!str::IsEmpty(parentDir)) {
             fz_try(ctx) {
-                TempStr parentDirZ = StrDupTemp(parentDir); // str-port: mupdf NUL-term boundary
-                dir = fz_open_directory(ctx, parentDirZ.s);
+                dir = fz_open_directory(ctx, CStrTemp(parentDir));
             }
             fz_catch(ctx) {
                 dir = nullptr;
@@ -2557,9 +2555,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     }
     fz_try(ctx) {
         if (dir) {
-            _doc = fz_open_document_with_stream_and_dir(ctx, nameHintZ.s, stm, dir);
+            _doc = fz_open_document_with_stream_and_dir(ctx, nameHintZ, stm, dir);
         } else {
-            _doc = fz_open_document_with_stream(ctx, nameHintZ.s, stm);
+            _doc = fz_open_document_with_stream(ctx, nameHintZ, stm);
         }
         // per-document CSS styling (replaces the global fz_set_user_css /
         // fz_set_use_document_css); must be set before fz_layout_document
@@ -3736,7 +3734,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             usage = "Print";
             break;
     }
-    TempStr usageZ = StrDupTemp(usage); // str-port: mupdf
+    const char* usageZ = CStrTemp(usage); // str-port: mupdf
 
     pdf_page* pdfpage = nullptr;
     fz_var(pdfpage);
@@ -3747,10 +3745,10 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             fz_clear_pixmap_with_value(ctx, pix, 0xff);
             dev = fz_new_draw_device(ctx, ctm, pix);
             if (hideAnnotations) {
-                pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ.s, fzcookie);
-                pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ.s, fzcookie);
+                pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+                pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             } else {
-                pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ.s, fzcookie);
+                pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             }
             bitmap = NewRenderedFzPixmap(ctx, pix);
             fz_close_device(ctx, dev);
@@ -3834,8 +3832,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     auto ctx = e->Ctx();
     fz_var(pageNo);
     fz_try(ctx) {
-        TempStr uriZ = StrDupTemp(uri);
-        ldest = fz_resolve_link_dest(ctx, e->_doc, uriZ.s);
+        ldest = fz_resolve_link_dest(ctx, e->_doc, CStrTemp(uri));
         pageNo = fz_page_number_from_location(ctx, e->_doc, ldest.loc);
     }
     fz_catch(ctx) {
@@ -4253,8 +4250,7 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
     if (key) {
         char buf[1024]{};
         int bufSize = (int)dimof(buf);
-        TempStr keyZ = StrDupTemp(key);
-        int n = fz_lookup_metadata(ctx, _doc, keyZ.s, buf, bufSize);
+        int n = fz_lookup_metadata(ctx, _doc, CStrTemp(key), buf, bufSize);
         if (n > 0) {
             if (n > bufSize) {
                 // can be bigger if output truncated
@@ -4354,8 +4350,7 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
 
 static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     char buf[1024]{};
-    TempStr keyZ = StrDupTemp(key);
-    int n = fz_lookup_metadata(ctx, doc, keyZ.s, buf, (int)dimof(buf));
+    int n = fz_lookup_metadata(ctx, doc, CStrTemp(key), buf, (int)dimof(buf));
     if (n <= 0) {
         return {};
     }
@@ -4655,7 +4650,6 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
     if (str::IsEmpty(path)) {
         path = currPath;
     }
-    TempStr pathZ = StrDupTemp(path); // str-port: mupdf
     auto ctx = epdf->Ctx();
     ScopedCritSec scope(&epdf->docLock);
 
@@ -4674,7 +4668,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
     bool ok = false;
     fz_var(ok);
     fz_try(ctx) {
-        pdf_save_document(ctx, epdf->pdfdoc, pathZ.s, &save_opts);
+        pdf_save_document(ctx, epdf->pdfdoc, CStrTemp(path), &save_opts);
         ok = true;
         auto dur = TimeSinceInMs(timeStart);
         logf("Saved annotations to '%s' in  %.2f ms, incremental: %d\n", path.s, dur, save_opts.do_incremental);
@@ -5154,8 +5148,7 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
     fz_buffer* buf = nullptr;
     fz_output* out = nullptr;
     fz_try(ctx) {
-        TempStr pathZ = StrDupTemp(path); // str-port: mupdf NUL-term boundary
-        doc = fz_open_document(ctx, pathZ.s);
+        doc = fz_open_document(ctx, CStrTemp(path));
         outline = fz_load_outline(ctx, doc);
         if (!outline) {
             res = str::DupTemp("(no outline)");

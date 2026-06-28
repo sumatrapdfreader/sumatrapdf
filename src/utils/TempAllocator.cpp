@@ -144,6 +144,16 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
 
 } // namespace str
 
+// Temporary, guaranteed zero-terminated copy, for passing to C / win32 APIs
+// that require a NUL-terminated string.
+char* CStrTemp(Str s) {
+    return str::DupTemp(s).s;
+}
+
+WCHAR* CWStrTemp(WStr s) {
+    return str::DupTemp(s).s;
+}
+
 // handles embedded 0 in the string
 TempWStr ToWStrTempFromBuilder(const StrBuilder& str) {
     if (str.IsEmpty()) {

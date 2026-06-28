@@ -42,10 +42,9 @@ void SetThreadName(Str threadName, DWORD threadId) {
     if (threadId == 0) {
         threadId = GetCurrentThreadId();
     }
-    TempStr nameZ = StrDupTemp(threadName);
     THREADNAME_INFO info;
     info.dwType = 0x1000;
-    info.szName = nameZ.s;
+    info.szName = CStrTemp(threadName);
     info.dwThreadID = threadId;
     info.dwFlags = 0;
 

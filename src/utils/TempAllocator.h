@@ -34,4 +34,12 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
 TempStr FormatTemp(Str fmt, ...);
 } // namespace str
 
+// Temporary, guaranteed zero-terminated copy of s (lives in the temp arena).
+// Use when passing a Str/WStr to a C or win32 API that requires a
+// NUL-terminated string; the name documents that intent at the call site.
+// Returns non-const so it implicitly converts to both char* and const char*
+// (some C/win32 APIs take non-const), avoiding casts at the call site.
+char* CStrTemp(Str s);
+WCHAR* CWStrTemp(WStr s);
+
 TempWStr ToWStrTempFromBuilder(const StrBuilder& s);
