@@ -33,7 +33,7 @@ extern "C" void fz_set_optind(int val);
 
 // compute a dialog client width that fits the source path text, clamped to a
 // minimum and to 80% of the screen width (long paths get ellipsized instead)
-static int CalcDlgWidth(HWND hwndParent, HFONT font, const char* path, int minW, int padding) {
+static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int padding) {
     HDC hdc = GetDC(nullptr);
     HFONT oldFont = (HFONT)SelectObject(hdc, font);
     TempWStr pathW = ToWStrTemp(path);
@@ -70,7 +70,7 @@ static void BrowseForDest(HWND owner, Edit* edit, const WCHAR* filter, const WCH
 
 // create the source-path Static used as the first row of the PDF tool dialogs,
 // ellipsized in the middle for long paths
-static Static* CreatePathLabel(HWND parent, HFONT font, const char* path, bool isRtl) {
+static Static* CreatePathLabel(HWND parent, HFONT font, Str path, bool isRtl) {
     Static::CreateArgs args;
     args.parent = parent;
     args.font = font;
@@ -87,7 +87,7 @@ static Static* CreatePathLabel(HWND parent, HFONT font, const char* path, bool i
 // instead of manual control positioning.
 struct PdfBakeDialog : Wnd {
     HFONT hFont = nullptr;
-    char* srcPath = nullptr;
+    Str srcPath;
     MainWindow* win = nullptr;
 
     ILayout* mainLayout = nullptr;
@@ -106,7 +106,7 @@ struct PdfBakeDialog : Wnd {
 };
 
 PdfBakeDialog::~PdfBakeDialog() {
-    str::Free(srcPath);
+    str::FreePtr(&srcPath);
     delete mainLayout;
 }
 
@@ -127,7 +127,9 @@ void PdfBakeDialog::DoBake() {
     logf("PdfBakeDoIt: baking '%s' to '%s'\n", srcPath, destPath);
 
     // build argv for pdfbake_main: "bake" input output
-    char* argv[] = {(char*)"bake", srcPath, destPath};
+    TempStr srcZ = StrDupTemp(srcPath);
+    TempStr destZ = StrDupTemp(destPath);
+    char* argv[] = {(char*)"bake", srcZ.s, destZ.s};
     int argc = 3;
 
     fz_set_optind(0);
@@ -286,7 +288,7 @@ void ShowPdfBakeDialog(MainWindow* win) {
 
 struct PdfExtractTextDialog : Wnd {
     HFONT hFont = nullptr;
-    char* srcPath = nullptr;
+    Str srcPath;
     MainWindow* win = nullptr;
 
     ILayout* mainLayout = nullptr;
@@ -307,7 +309,7 @@ struct PdfExtractTextDialog : Wnd {
 };
 
 PdfExtractTextDialog::~PdfExtractTextDialog() {
-    str::Free(srcPath);
+    str::FreePtr(&srcPath);
     delete mainLayout;
 }
 
@@ -319,7 +321,7 @@ void PdfExtractTextDialog::OnBrowse() {
     BrowseForDest(hwnd, destEdit, L"Text Files\0*.txt\0All Files\0*.*\0", L"txt");
 }
 
-static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, const char* destPath, const char* pages) {
+static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, Str destPath, Str pages) {
     MainWindow* win = dlg->win;
     if (!win || !win->ctrl) {
         return false;
@@ -371,7 +373,10 @@ void PdfExtractTextDialog::DoExtract() {
     bool isPdf = tab && CouldBePDFDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
-        char* argv[] = {(char*)"convert", (char*)"-o", destPath, srcPath, pages};
+        TempStr destZ = StrDupTemp(destPath);
+        TempStr srcZ = StrDupTemp(srcPath);
+        TempStr pagesZ = StrDupTemp(pages);
+        char* argv[] = {(char*)"convert", (char*)"-o", destZ.s, srcZ.s, pagesZ.s};
         int argc = 5;
         fz_set_optind(0);
         ok = muconvert_main(argc, argv) == 0;
@@ -556,7 +561,7 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
 
 struct PdfCompressDialog : Wnd {
     HFONT hFont = nullptr;
-    char* srcPath = nullptr;
+    Str srcPath;
     MainWindow* win = nullptr;
 
     ILayout* mainLayout = nullptr;
@@ -575,7 +580,7 @@ struct PdfCompressDialog : Wnd {
 };
 
 PdfCompressDialog::~PdfCompressDialog() {
-    str::Free(srcPath);
+    str::FreePtr(&srcPath);
     delete mainLayout;
 }
 
@@ -596,9 +601,11 @@ void PdfCompressDialog::DoCompress() {
     logf("PdfCompressDoIt: compressing '%s' to '%s'\n", srcPath, destPath);
 
     // equivalent of: clean -gggg -e 100 -f -i -t -Z input output
+    TempStr srcZ = StrDupTemp(srcPath);
+    TempStr destZ = StrDupTemp(destPath);
     char* argv[] = {
         (char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f",
-        (char*)"-i",    (char*)"-t",    (char*)"-Z", srcPath,      destPath,
+        (char*)"-i",    (char*)"-t",    (char*)"-Z", srcZ.s,       destZ.s,
     };
     int argc = 10;
 
@@ -754,7 +761,7 @@ void ShowPdfCompressDialog(MainWindow* win) {
 
 struct PdfDecompressDialog : Wnd {
     HFONT hFont = nullptr;
-    char* srcPath = nullptr;
+    Str srcPath;
     MainWindow* win = nullptr;
 
     ILayout* mainLayout = nullptr;
@@ -773,7 +780,7 @@ struct PdfDecompressDialog : Wnd {
 };
 
 PdfDecompressDialog::~PdfDecompressDialog() {
-    str::Free(srcPath);
+    str::FreePtr(&srcPath);
     delete mainLayout;
 }
 
@@ -794,7 +801,9 @@ void PdfDecompressDialog::DoDecompress() {
     logf("PdfDecompressDoIt: decompressing '%s' to '%s'\n", srcPath, destPath);
 
     // equivalent of: clean -d input output
-    char* argv[] = {(char*)"clean", (char*)"-d", srcPath, destPath};
+    TempStr srcZ = StrDupTemp(srcPath);
+    TempStr destZ = StrDupTemp(destPath);
+    char* argv[] = {(char*)"clean", (char*)"-d", srcZ.s, destZ.s};
     int argc = 4;
 
     fz_set_optind(0);
@@ -949,7 +958,7 @@ void ShowPdfDecompressDialog(MainWindow* win) {
 
 struct PdfDeletePageDialog : Wnd {
     HFONT hFont = nullptr;
-    char* srcPath = nullptr;
+    Str srcPath;
     bool isExtract = false;
     MainWindow* win = nullptr;
     int pageCount = 0;
@@ -975,7 +984,7 @@ struct PdfDeletePageDialog : Wnd {
 };
 
 PdfDeletePageDialog::~PdfDeletePageDialog() {
-    str::Free(srcPath);
+    str::FreePtr(&srcPath);
     delete mainLayout;
 }
 
@@ -986,8 +995,8 @@ void PdfDeletePageDialog::OnCancel() {
 // Parse delete page ranges like "1,3-8,13-N" where N means last page.
 // Returns a sorted list of unique 1-based page numbers to delete.
 // Returns false if the syntax is invalid or any page is out of range.
-static bool ParseDeletePages(const char* s, int pageCount, Vec<int>& pagesToDelete) {
-    if (!s || !*s) {
+static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
+    if (!s) {
         return false;
     }
     StrVec parts;
@@ -995,24 +1004,25 @@ static bool ParseDeletePages(const char* s, int pageCount, Vec<int>& pagesToDele
     if (parts.Size() == 0) {
         return false;
     }
-    for (char* part : parts) {
+    for (int pi = 0; pi < parts.Size(); pi++) {
+        Str part = parts.At(pi);
         str::TrimWSInPlace(part, str::TrimOpt::Both);
-        if (str::IsEmpty(part)) {
+        if (!part) {
             return false;
         }
         // check for range "A-B" where A/B can be a number or "N"
-        char* dash = (char*)str::FindChar(part, '-');
+        Str dash = str::FindChar(part, '-');
         if (dash) {
-            *dash = 0;
-            char* startStr = part;
-            char* endStr = dash + 1;
+            int dashIdx = (int)(dash.s - part.s);
+            Str startStr = Str(part.s, dashIdx);
+            Str endStr = Str(dash.s + 1, part.len - dashIdx - 1);
             str::TrimWSInPlace(startStr, str::TrimOpt::Both);
             str::TrimWSInPlace(endStr, str::TrimOpt::Both);
-            if (str::IsEmpty(startStr)) {
+            if (!startStr) {
                 return false;
             }
             // "8-" means "8-N" (from page 8 to the last page)
-            bool endIsEmpty = str::IsEmpty(endStr);
+            bool endIsEmpty = !endStr;
             int start, end;
             if (str::EqI(startStr, "N")) {
                 start = pageCount;
@@ -1166,7 +1176,7 @@ void PdfDeletePageDialog::DoIt() {
         pageRange = BuildKeepPagesRange(pageCount, parsedPages);
     }
 
-    const char* op = isExtract ? "extract" : "delete";
+    Str op = isExtract ? Str("extract") : Str("delete");
     logf("PdfDeletePageDoIt: %s pages '%s' from '%s' to '%s', range for pdfclean: %s\n", op, pages, srcPath, destPath,
          pageRange);
 
@@ -1174,9 +1184,12 @@ void PdfDeletePageDialog::DoIt() {
     // use the same compression flags as Compress PDF so the result is re-written
     // compactly; otherwise the kept pages drag along the original's full content
     // and the output is nearly as big as the source
+    TempStr srcZ = StrDupTemp(srcPath);
+    TempStr destZ = StrDupTemp(destPath);
+    TempStr pageRangeZ = StrDupTemp(pageRange);
     char* argv[] = {
-        (char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f", (char*)"-i",
-        (char*)"-t",    (char*)"-Z",    srcPath,     destPath,     pageRange,
+        (char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f",  (char*)"-i",
+        (char*)"-t",    (char*)"-Z",    srcZ.s,      destZ.s,      pageRangeZ.s,
     };
     int argc = 11;
 
@@ -1191,9 +1204,9 @@ void PdfDeletePageDialog::DoIt() {
         StartLoadDocument(&args);
     } else {
         logf("PdfDeletePageDoIt: pdfclean_main failed with %d for %s\n", res, op);
-        const char* msg =
-            isExtract ? "Failed to extract pages from PDF file." : "Failed to delete pages from PDF file.";
-        const char* title = isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
+        Str msg =
+            isExtract ? Str("Failed to extract pages from PDF file.") : Str("Failed to delete pages from PDF file.");
+        Str title = isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
         MessageBoxWarning(hwnd, msg, title);
     }
 }
@@ -1406,7 +1419,7 @@ void ShowPdfExtractPagesDialog(MainWindow* win) {
 
 struct PdfEncryptDialog : Wnd {
     HFONT hFont = nullptr;
-    char* srcPath = nullptr;
+    Str srcPath;
     MainWindow* win = nullptr;
 
     ILayout* mainLayout = nullptr;
@@ -1428,7 +1441,7 @@ struct PdfEncryptDialog : Wnd {
 };
 
 PdfEncryptDialog::~PdfEncryptDialog() {
-    str::Free(srcPath);
+    str::FreePtr(&srcPath);
     delete mainLayout;
 }
 
@@ -1459,8 +1472,11 @@ void PdfEncryptDialog::DoEncrypt() {
     logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", srcPath, destPath);
 
     // equivalent of: clean -E aes-256 -U <pwd> -O <pwd> input output
+    TempStr pwdZ = StrDupTemp(pwd);
+    TempStr srcZ = StrDupTemp(srcPath);
+    TempStr destZ = StrDupTemp(destPath);
     char* argv[] = {
-        (char*)"clean", (char*)"-E", (char*)"aes-256", (char*)"-U", pwd, (char*)"-O", pwd, srcPath, destPath,
+        (char*)"clean", (char*)"-E", (char*)"aes-256", (char*)"-U", pwdZ.s, (char*)"-O", pwdZ.s, srcZ.s, destZ.s,
     };
     int argc = 9;
 
@@ -1653,8 +1669,8 @@ void ShowPdfEncryptDialog(MainWindow* win) {
 
 struct PdfDecryptDialog : Wnd {
     HFONT hFont = nullptr;
-    char* srcPath = nullptr;
-    char* password = nullptr;
+    Str srcPath;
+    Str password;
     MainWindow* win = nullptr;
 
     ILayout* mainLayout = nullptr;
@@ -1666,15 +1682,15 @@ struct PdfDecryptDialog : Wnd {
 
     ~PdfDecryptDialog() override;
 
-    bool Create(MainWindow* win, WindowTab* tab, const char* pwd);
+    bool Create(MainWindow* win, WindowTab* tab, Str pwd);
     void OnBrowse();
     void DoDecrypt();
     void OnCancel();
 };
 
 PdfDecryptDialog::~PdfDecryptDialog() {
-    str::Free(srcPath);
-    str::Free(password);
+    str::FreePtr(&srcPath);
+    str::FreePtr(&password);
     delete mainLayout;
 }
 
@@ -1696,8 +1712,11 @@ void PdfDecryptDialog::DoDecrypt() {
 
     // equivalent of: clean -p <pwd> -D input output
     // -p provides the password to open the encrypted input, -D removes encryption from output
+    TempStr pwdZ = StrDupTemp(password);
+    TempStr srcZ = StrDupTemp(srcPath);
+    TempStr destZ = StrDupTemp(destPath);
     char* argv[] = {
-        (char*)"clean", (char*)"-p", password, (char*)"-D", srcPath, destPath,
+        (char*)"clean", (char*)"-p", pwdZ.s, (char*)"-D", srcZ.s, destZ.s,
     };
     int argc = 6;
 
@@ -1722,7 +1741,7 @@ static void PdfDecryptOnClose(Wnd::CloseEvent* ev) {
     delete dlg;
 }
 
-bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, const char* pwd) {
+bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
     win = w;
     srcPath = str::Dup(tab->filePath);
     password = str::Dup(pwd);
@@ -1848,7 +1867,7 @@ void ShowPdfDecryptDialog(MainWindow* win) {
         logf("ShowPdfDecryptDialog: '%s' is not encrypted, skipping\n", tab->filePath);
         return;
     }
-    const char* pwd = EngineMupdfGetPassword(engine);
+    Str pwd = EngineMupdfGetPassword(engine);
     if (str::IsEmpty(pwd)) {
         logf("ShowPdfDecryptDialog: '%s' is encrypted but no password available\n", tab->filePath);
         return;

@@ -595,22 +595,30 @@ static void ProcessControlConnection(HANDLE h) {
     }
 }
 
-static TempWStr FullPipeName(Str pipeName) {
+static WStr FullPipeNameOwned(Str pipeName) {
     if (str::StartsWith(pipeName, R"(\\.\pipe\)")) {
-        return ToWStrTemp(pipeName);
+        return ToWStr(pipeName);
     }
-    return ToWStrTemp(str::FormatTemp(R"(\\.\pipe\%s)", pipeName));
+    Str fullName = str::Join(Str(R"(\\.\pipe\)"), pipeName);
+    WStr res = ToWStr(fullName);
+    str::Free(fullName);
+    return res;
 }
 
-static void SumatraControlThread(char* pipeName) {
-    TempWStr pipeNameW = FullPipeName(Str(pipeName));
-    str::Free(pipeName);
+struct ControlThreadArg {
+    Str pipeName;
+};
+
+static void SumatraControlThread(ControlThreadArg* arg) {
+    WStr pipeNameW = FullPipeNameOwned(arg->pipeName);
+    str::FreePtr(&arg->pipeName);
+    delete arg;
 
     for (;;) {
         HANDLE pipe = CreateNamedPipeW(pipeNameW.s, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
                                        1, 64 * 1024, 64 * 1024, 0, nullptr);
         if (pipe == INVALID_HANDLE_VALUE) {
-            logf("CreateNamedPipeW failed for control pipe\n");
+            logf("CreateNamedPipeW failed for control pipe, err=%u\n", (unsigned)GetLastError());
             return;
         }
         BOOL connected = ConnectNamedPipe(pipe, nullptr) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
@@ -626,5 +634,6 @@ void StartSumatraControl(Str pipeName) {
     if (str::IsEmpty(pipeName)) {
         return;
     }
-    RunAsync(MkFunc0(SumatraControlThread, str::Dup(pipeName).s), "SumatraControl");
+    auto* arg = new ControlThreadArg{str::Dup(pipeName)};
+    RunAsync(MkFunc0(SumatraControlThread, arg), "SumatraControl");
 }
