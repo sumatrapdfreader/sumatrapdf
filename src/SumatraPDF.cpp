@@ -293,7 +293,7 @@ void InitializePolicies(bool restrict) {
     }
 
     ByteSlice restrictData = file::ReadFile(restrictPath);
-    SquareTreeNode* root = ParseSquareTree(Str((char*)restrictData.data(), (int)restrictData.size()));
+    SquareTreeNode* root = ParseSquareTree(AsStr(restrictData));
     AutoDelete delRoot(root);
     SquareTreeNode* polsec = root ? root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction
@@ -1958,8 +1958,8 @@ static MainWindow* CreateMainWindow() {
     int nShift = (int)gWindows.size();
     windowPos.x += (nShift * 15); // TODO: DPI scale
 
-    const WCHAR* clsName = FRAME_CLASS_NAME;
-    const WCHAR* title = kSumatraWindowTitleW;
+    WStr clsName = WStrL(FRAME_CLASS_NAME);
+    WStr title = WStr(kSumatraWindowTitleW);
     DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     int x = windowPos.x;
     int y = windowPos.y;
@@ -1967,7 +1967,7 @@ static MainWindow* CreateMainWindow() {
     int dy = windowPos.dy;
     HINSTANCE h = GetModuleHandle(nullptr);
     HWND hwndFrame =
-        CreateWindowExW(WS_EX_APPWINDOW, clsName, title, style, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+        CreateWindowExW(WS_EX_APPWINDOW, clsName.s, title.s, style, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     if (!hwndFrame) {
         return nullptr;
     }
@@ -3821,14 +3821,15 @@ static void SaveCurrentFileAs(MainWindow* win) {
         // the embedding reference in the suggested filename
         WStr colon = str::FindChar(WStr(dstFileName), L':');
         str::TransCharsInPlace(colon, L":", L"_");
-        WCHAR* ext;
-        for (ext = colon.s; ext > dstFileName && *ext != '.'; ext--) {
-            // no-op
+        int colonOff = (int)(colon.s - dstFileName);
+        int extOff = colonOff;
+        while (extOff > 0 && dstFileName[extOff] != L'.') {
+            extOff--;
         }
-        if (ext == dstFileName) {
-            ext = colon.s;
+        if (extOff == 0 && dstFileName[0] != L'.') {
+            extOff = colonOff;
         }
-        memmove(ext, colon.s, (str::Len(colon) + 1) * sizeof(WCHAR));
+        memmove(dstFileName + extOff, colon.s, (str::Len(colon) + 1) * sizeof(WCHAR));
     } else if (str::EndsWithI(dstFileName, ToWStrTemp(defExt))) {
         // Remove the extension so that it can be re-added depending on the chosen filter
         int idx = str::Leni(dstFileName) - str::Leni(defExt);
@@ -4028,7 +4029,7 @@ static void RenameCurrentFile(MainWindow* win) {
     }
 
     TempWStr srcPathW = ToWStrTemp(srcPath);
-    WCHAR* initDir = path::GetDirTemp(srcPathW);
+    TempWStr initDir = path::GetDirTemp(srcPathW);
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
@@ -4040,7 +4041,7 @@ static void RenameCurrentFile(MainWindow* win) {
     // note: the other two dialogs are named "Open" and "Save As"
     auto s = _TRA("Rename To");
     ofn.lpstrTitle = ToWStrTemp(s);
-    ofn.lpstrInitialDir = initDir;
+    ofn.lpstrInitialDir = initDir.s;
     ofn.lpstrDefExt = defExtW.s + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
@@ -4168,7 +4169,7 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM l
             // all the selected filenames
             int cbLength = CommDlg_OpenSave_GetSpec(GetParent(hDlg), nullptr, 0) + MAX_PATH;
             if (cbLength >= 0 && lpofn->nMaxFile < (DWORD)cbLength) {
-                WCHAR *oldBuffer = lpofn->lpstrFile;
+                WCHAR* oldBuffer = lpofn->lpstrFile; // str-port: Win32 OPENFILENAME buffer
                 lpofn->lpstrFile = (LPWSTR)realloc(lpofn->lpstrFile, cbLength * sizeof(WCHAR));
                 if (lpofn->lpstrFile)
                     lpofn->nMaxFile = cbLength;
@@ -4279,8 +4280,8 @@ static void DuplicateInNewTab(MainWindow* win) {
 }
 
 static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
-    WCHAR* dir = ofn->lpstrFile;
-    WCHAR* file = ofn->lpstrFile + ofn->nFileOffset;
+    WCHAR* dir = ofn->lpstrFile;                     // str-port: Win32 OPENFILENAME layout
+    WCHAR* file = ofn->lpstrFile + ofn->nFileOffset; // str-port: Win32 OPENFILENAME layout
     // only a single file, full path
     TempStr path;
     if (file[-1] != 0) {
@@ -6626,8 +6627,8 @@ void DebugCorruptMemory() {
     if (!gIsDebugBuild) {
         return;
     }
-    char* s = (char*)malloc(23);
-    char* d = (char*)malloc(34);
+    char* s = (char*)malloc(23); // str-port: debug corrupt-memory test buffer
+    char* d = (char*)malloc(34); // str-port: debug corrupt-memory test buffer
     free(s);
     free(d);
     // this triggers ntdll.dll!RtlReportCriticalFailure()
@@ -6933,7 +6934,7 @@ static void PasteImageFromClipboard(MainWindow* win) {
     }
 
     // get Downloads folder
-    WCHAR* downloadsW = nullptr;
+    WCHAR* downloadsW = nullptr; // str-port: Win32 COM out-param
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_Downloads, 0, nullptr, &downloadsW);
     if (FAILED(hr) || !downloadsW) {
         CoTaskMemFree(downloadsW);
@@ -9532,41 +9533,12 @@ static bool IsReadAloudHorizontalSpace(char c) {
     return c == ' ' || c == '\t';
 }
 
-static bool ReadAloudAppendChar(char** dst, size_t* len, size_t* cap, char c) {
-    if (!dst || !len || !cap) {
-        return false;
-    }
-
-    if (*len + 1 >= *cap) {
-        size_t newCap = (*cap == 0) ? 256 : (*cap * 2);
-        char* newDst = (char*)realloc(*dst, newCap);
-        if (!newDst) {
-            free(*dst);
-            *dst = nullptr;
-            *len = 0;
-            *cap = 0;
-            return false;
-        }
-
-        *dst = newDst;
-        *cap = newCap;
-    }
-
-    (*dst)[*len] = c;
-    (*len)++;
-    (*dst)[*len] = 0;
-    return true;
-}
-
 static TempStr CleanReadAloudTextTemp(Str text) {
     if (str::IsEmpty(text)) {
         return {};
     }
 
-    char* out = nullptr;
-    size_t outLen = 0;
-    size_t outCap = 0;
-
+    StrBuilder out;
     int i = 0;
     bool lastWasSpace = false;
 
@@ -9610,18 +9582,14 @@ static TempStr CleanReadAloudTextTemp(Str text) {
                 i++;
             }
 
-            if (!lastWasSpace && outLen > 0) {
-                if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
-                    return {};
-                }
+            if (!lastWasSpace && out.size() > 0) {
+                out.AppendChar(' ');
                 lastWasSpace = true;
             }
 
             // Keep a slightly stronger pause for paragraph breaks.
             if (lineBreaks >= 2) {
-                if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
-                    return {};
-                }
+                out.AppendChar(' ');
             }
 
             continue;
@@ -9629,10 +9597,8 @@ static TempStr CleanReadAloudTextTemp(Str text) {
 
         // Collapse spaces and tabs.
         if (IsReadAloudHorizontalSpace(c)) {
-            if (!lastWasSpace && outLen > 0) {
-                if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
-                    return {};
-                }
+            if (!lastWasSpace && out.size() > 0) {
+                out.AppendChar(' ');
                 lastWasSpace = true;
             }
 
@@ -9640,17 +9606,15 @@ static TempStr CleanReadAloudTextTemp(Str text) {
             continue;
         }
 
-        if (!ReadAloudAppendChar(&out, &outLen, &outCap, c)) {
-            return {};
-        }
-
+        out.AppendChar(c);
         lastWasSpace = false;
         i++;
     }
 
-    TempStr res = str::DupTemp(out);
-    free(out);
-    return res;
+    if (out.IsEmpty()) {
+        return {};
+    }
+    return str::DupTemp(out.LendData());
 }
 
 // Read-aloud lifetime and commands
@@ -10025,7 +9989,7 @@ static TempStr TtsLangIdToLocaleNameTemp(Str lang) {
     }
 
     TempStr langZ = StrDupTemp(lang);
-    char* end = nullptr;
+    char* end = nullptr; // str-port: C-string
     unsigned long langId = strtoul(langZ.s, &end, 16);
     if (end == langZ.s || langId == 0) {
         return str::DupTemp(lang);
