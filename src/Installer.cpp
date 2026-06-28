@@ -649,7 +649,7 @@ static void OnButtonOptions(InstallerWnd* wnd) {
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lpData) {
     switch (msg) {
         case BFFM_INITIALIZED:
-            if (!str::IsEmpty((WCHAR*)lpData)) {
+            if (!str::IsEmpty(WStr((wchar_t*)lpData))) { // str-port: Win32 BFFM callback
                 SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, lpData);
             }
             break;
@@ -980,7 +980,7 @@ static bool CreateInstallerWnd(Flags* cli) {
 
         FillWndClassEx(wcex, kInstallerWindowClassName, WndProcInstallerFrame);
         auto h = GetModuleHandleW(nullptr);
-        WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID());
+        WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
         wcex.hIcon = LoadIconW(h, resName);
 
         RegisterClassExW(&wcex);
@@ -991,7 +991,7 @@ static bool CreateInstallerWnd(Flags* cli) {
     if (trans::IsCurrLangRtl()) {
         exStyle = WS_EX_LAYOUTRTL;
     }
-    const WCHAR* winCls = kInstallerWindowClassName;
+    WStr winCls = kInstallerWindowClassName;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
     int dx = GetInstallerWinDx();
