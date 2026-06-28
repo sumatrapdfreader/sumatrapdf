@@ -121,16 +121,6 @@ static void logToPipe(Str s) {
     gPipeMutex.Unlock();
 }
 
-// to use in
-void logPipe(const char* fmt, ...) {
-    if (!gLogToPipe) return;
-    va_list args;
-    va_start(args, fmt);
-    TempStr s = str::FmtVTemp(fmt, args);
-    logToPipe(s);
-    va_end(args);
-}
-
 // verbose log, only to pipe
 // used to log to debugger but 10x shows it and is really slow
 void logv(Str s) {
