@@ -3353,17 +3353,30 @@ static TempStr FileNameFromUrlTemp(Str url) {
 }
 
 struct DownloadAndOpenUrlData {
-    char* url; // str-port: owned heap copy for async worker
+    Str url;
     HWND hwndCanvas;
 };
 
+static void OpenDownloadedPath(Str* path) {
+    MainWindow* win = FindMainWindowByHwnd(GetForegroundWindow());
+    if (!win && !gWindows.IsEmpty()) {
+        win = gWindows.at(0);
+    }
+    if (win) {
+        LoadArgs args(*path, win);
+        StartLoadDocument(&args);
+    }
+    str::Free(*path);
+    delete path;
+}
+
 static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
-    TempStr url = data->url;
+    Str url = data->url;
 
     TempStr downloadsDir = GetDownloadsDirTemp();
     if (!downloadsDir) {
         logf("DownloadAndOpenUrl: failed to get Downloads folder\n");
-        free(data->url);
+        str::Free(data->url);
         delete data;
         return;
     }
@@ -3395,7 +3408,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     bool ok = HttpGetToFile(url, destPath, emptyProgress);
     if (!ok) {
         logf("DownloadAndOpenUrl: download failed for '%s'\n", url);
-        free(data->url);
+        str::Free(data->url);
         delete data;
         return;
     }
@@ -3405,7 +3418,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     if (!IsEngineImageSupportedFileType(kind)) {
         logf("DownloadAndOpenUrl: downloaded file is not a supported image type: '%s'\n", destPath);
         file::Delete(destPath);
-        free(data->url);
+        str::Free(data->url);
         delete data;
         return;
     }
@@ -3422,23 +3435,11 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     }
 
     // open the file on the UI thread
-    char* pathDup = str::Dup(destPath); // str-port: owned heap copy for uitask
-    auto fn = MkFunc0<char>(
-        [](char* path) { // str-port: owned heap copy from DownloadAndOpenUrl
-            MainWindow* win = FindMainWindowByHwnd(GetForegroundWindow());
-            if (!win && !gWindows.IsEmpty()) {
-                win = gWindows.at(0);
-            }
-            if (win) {
-                LoadArgs args(path, win);
-                StartLoadDocument(&args);
-            }
-            free(path);
-        },
-        pathDup);
+    auto pathDup = new Str(str::Dup(destPath));
+    auto fn = MkFunc0<Str>(OpenDownloadedPath, pathDup);
     uitask::Post(fn, "DownloadAndOpenUrl");
 
-    free(data->url);
+    str::Free(data->url);
     delete data;
 }
 
@@ -3595,7 +3596,7 @@ class CanvasDropTarget : public IDropTarget {
             auto data = new DownloadAndOpenUrlData();
             data->url = str::Dup(url);
             data->hwndCanvas = hwnd;
-            auto fn = MkFunc0<DownloadAndOpenUrlData>([](DownloadAndOpenUrlData* d) { DownloadAndOpenUrl(d); }, data);
+            auto fn = MkFunc0<DownloadAndOpenUrlData>(DownloadAndOpenUrl, data);
             RunAsync(fn, "DownloadAndOpenUrl");
         }
 
