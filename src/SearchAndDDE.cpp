@@ -1305,10 +1305,10 @@ if pdffilepath is provided, the file will be opened if no open window can be fou
 if newwindow = 1 then a new window is created even if the file is already open
 if focus = 1 then the focus is set to the window
 */
-static const char* HandleSyncCmd(const char* cmd, bool* ack) {
+static Str HandleSyncCmd(Str cmd, bool* ack) {
     AutoFreeStr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
-    const char* next = str::Parse(cmd, "[ForwardSearch(\"%s\",%? \"%s\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
+    Str next = str::Parse(cmd, "[ForwardSearch(\"%s\",%? \"%s\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
     if (!next) {
         next = str::Parse(cmd, "[ForwardSearch(\"%s\",%? \"%s\",%u,%u,%u,%u)]", &pdfFile, &srcFile, &line, &col,
                           &newWindow, &setFocus);
@@ -1324,7 +1324,7 @@ static const char* HandleSyncCmd(const char* cmd, bool* ack) {
     }
 
     if (!next) {
-        return nullptr;
+        return {};
     }
 
     MainWindow* win = nullptr;
@@ -1373,13 +1373,13 @@ Search DDE command
 
 [Search("<pdffile>","<search-term>")]
 */
-static const char* HandleSearchCmd(const char* cmd, bool* ack) {
+static Str HandleSearchCmd(Str cmd, bool* ack) {
     AutoFreeStr pdfFile;
     AutoFreeStr term;
-    const char* next = str::Parse(cmd, "[Search(\"%s\",\"%s\")]", &pdfFile, &term);
+    Str next = str::Parse(cmd, "[Search(\"%s\",\"%s\")]", &pdfFile, &term);
     // TODO: should un-quote text to allow searching text with '"' in them
     if (!next) {
-        return nullptr;
+        return {};
     }
     if (str::IsEmpty(term.Get())) {
         return next;
@@ -1411,13 +1411,13 @@ Go to a page and select the search term, but only if it's found on that page
 
 [GotoPageWord("<pdffile>",<page>,"<search-term>")]
 */
-static const char* HandleGotoPageWordCmd(const char* cmd, bool* ack) {
+static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
     AutoFreeStr pdfFile;
     AutoFreeStr term;
     int page = 0;
-    const char* next = str::Parse(cmd, "[GotoPageWord(\"%s\",%d,\"%s\")]", &pdfFile, &page, &term);
+    Str next = str::Parse(cmd, "[GotoPageWord(\"%s\",%d,\"%s\")]", &pdfFile, &page, &term);
     if (!next) {
-        return nullptr;
+        return {};
     }
     MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
     if (!win) {
@@ -1468,23 +1468,22 @@ valid formats:
     [Open("c:\file.pdf",1,1,0)]
     [Open("c:\file.pdf",1,1,0,1)]
 */
-static const char* HandleOpenCmd(const char* cmd, bool* ack) {
+static Str HandleOpenCmd(Str cmd, bool* ack) {
     AutoFreeStr filePath;
     int newWindow = 0;
     int setFocus = 0;
     int forceRefresh = 0;
     int inCurrentTab = 0;
-    const char* next = str::Parse(cmd, "[Open(\"%s\")]", &filePath);
+    Str next = str::Parse(cmd, "[Open(\"%s\")]", &filePath);
     if (!next) {
-        const char* pat = "[Open(\"%s\",%u,%u,%u,%u)]";
-        next = str::Parse(cmd, pat, &filePath, &newWindow, &setFocus, &forceRefresh, &inCurrentTab);
+        next = str::Parse(cmd, "[Open(\"%s\",%u,%u,%u,%u)]", &filePath, &newWindow, &setFocus, &forceRefresh,
+                          &inCurrentTab);
     }
     if (!next) {
-        const char* pat = "[Open(\"%s\",%u,%u,%u)]";
-        next = str::Parse(cmd, pat, &filePath, &newWindow, &setFocus, &forceRefresh);
+        next = str::Parse(cmd, "[Open(\"%s\",%u,%u,%u)]", &filePath, &newWindow, &setFocus, &forceRefresh);
     }
     if (!next) {
-        return nullptr;
+        return {};
     }
     bool isCtrl = IsCtrlPressed();
     logf("HandleOpenCmd: '%s', newWindow: %d, setFocus: %d, forceRefresh: %d, inCurrentTab: %d, isCtrl: %d\n",
@@ -1604,11 +1603,11 @@ DDE command: jump to named destination in an already opened document.
 e.g.:
 [GoToNamedDest("c:\file.pdf", "chapter.1")]
 */
-static const char* HandleGotoCmd(const char* cmd, bool* ack) {
+static Str HandleGotoCmd(Str cmd, bool* ack) {
     AutoFreeStr pdfFile, destName;
-    const char* next = str::Parse(cmd, "[GotoNamedDest(\"%s\",%? \"%s\")]", &pdfFile, &destName);
+    Str next = str::Parse(cmd, "[GotoNamedDest(\"%s\",%? \"%s\")]", &pdfFile, &destName);
     if (!next) {
-        return nullptr;
+        return {};
     }
 
     MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
@@ -1635,12 +1634,12 @@ DDE command: jump to a page in an already opened document.
 
 eg: [GoToPage("c:\file.pdf",37)]
 */
-static const char* HandlePageCmd(HWND, const char* cmd, bool* ack) {
+static Str HandlePageCmd(HWND, Str cmd, bool* ack) {
     AutoFreeStr pdfFile;
     uint page = 0;
-    const char* next = str::Parse(cmd, "[GotoPage(\"%S\",%u)]", &pdfFile, &page);
+    Str next = str::Parse(cmd, "[GotoPage(\"%S\",%u)]", &pdfFile, &page);
     if (!next) {
-        return nullptr;
+        return {};
     }
 
     // check if the PDF is already opened
@@ -1676,17 +1675,17 @@ eg: [SetView("c:\file.pdf", "book view", -2)]
 
 use -1 for kZoomFitPage, -2 for kZoomFitWidth and -3 for kZoomFitContent
 */
-static const char* HandleSetViewCmd(const char* cmd, bool* ack) {
+static Str HandleSetViewCmd(Str cmd, bool* ack) {
     AutoFreeStr filePath, viewMode;
     float zoom = kInvalidZoom;
     Point scroll(-1, -1);
-    const char* next = str::Parse(cmd, "[SetView(\"%s\",%? \"%s\",%f)]", &filePath, &viewMode, &zoom);
+    Str next = str::Parse(cmd, "[SetView(\"%s\",%? \"%s\",%f)]", &filePath, &viewMode, &zoom);
     if (!next) {
         next =
             str::Parse(cmd, "[SetView(\"%s\",%? \"%s\",%f,%d,%d)]", &filePath, &viewMode, &zoom, &scroll.x, &scroll.y);
     }
     if (!next) {
-        return nullptr;
+        return {};
     }
 
     MainWindow* win = FindMainWindowByFile(Str(filePath), true);
@@ -1729,12 +1728,13 @@ Open new window.
 
 [NewWindow]
 */
-static const char* HandleNewWindowCmd(const char* cmd, bool* ack) {
-    if (!str::StartsWith(cmd, "[NewWindow]")) {
-        return nullptr;
+static Str HandleNewWindowCmd(Str cmd, bool* ack) {
+    Str kNewWindowCmd = "[NewWindow]";
+    if (!str::StartsWith(cmd, kNewWindowCmd)) {
+        return {};
     }
     logf("HandleNewWindowCmd\n");
-    const char* next = cmd + str::Leni("[NewWindow]");
+    Str next = Str(cmd.s + kNewWindowCmd.len, cmd.len - kNewWindowCmd.len);
     CreateAndShowMainWindow(nullptr);
     *ack = true;
     return next;
@@ -1765,9 +1765,9 @@ Returns:
 error: <error message>
 if file doesn't exist or no opened file
 */
-static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, StrBuilder& res) {
+static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, StrBuilder& res) {
     AutoFreeStr filePath;
-    const char* next = str::Parse(cmd, "[GetFileState(\"%s\")]", &filePath);
+    Str next = str::Parse(cmd, "[GetFileState(\"%s\")]", &filePath);
     if (!next) {
         next = str::Parse(cmd, "[GetFileState()]");
     }
@@ -1775,7 +1775,7 @@ static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, 
         next = str::Parse(cmd, "[GetFileState]");
     }
     if (!next) {
-        return nullptr;
+        return {};
     }
 
     // we recognized the command, so from here on we always produce a response
@@ -1819,13 +1819,13 @@ static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, 
 }
 
 // returns the full path of every open document, one per line (issue #5060)
-static const char* HandleGetOpenFilesCmd(const char* cmd, bool* ack, StrBuilder& res) {
-    const char* next = str::Parse(cmd, "[GetOpenFiles()]");
+static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, StrBuilder& res) {
+    Str next = str::Parse(cmd, "[GetOpenFiles()]");
     if (!next) {
         next = str::Parse(cmd, "[GetOpenFiles]");
     }
     if (!next) {
-        return nullptr;
+        return {};
     }
     *ack = true;
     for (MainWindow* win : gWindows) {
@@ -1841,13 +1841,13 @@ static const char* HandleGetOpenFilesCmd(const char* cmd, bool* ack, StrBuilder&
 // returns the document position currently under the mouse cursor, in PDF points
 // -- the same unit as the "pt" cursor-position notification and .smx files
 // (issue #1411). page is 0 if the cursor isn't over a page.
-static const char* HandleGetMousePosCmd(const char* cmd, bool* ack, StrBuilder& res) {
-    const char* next = str::Parse(cmd, "[GetMousePos()]");
+static Str HandleGetMousePosCmd(Str cmd, bool* ack, StrBuilder& res) {
+    Str next = str::Parse(cmd, "[GetMousePos()]");
     if (!next) {
         next = str::Parse(cmd, "[GetMousePos]");
     }
     if (!next) {
-        return nullptr;
+        return {};
     }
     *ack = true;
     MainWindow* win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
@@ -1885,11 +1885,11 @@ static const char* HandleGetMousePosCmd(const char* cmd, bool* ack, StrBuilder& 
 Handle all commands as defined in Commands.h
 eg: [CmdClose] or [CmdCreateAnnotHighlight #00ff00 openEdit]
 */
-static const char* HandleCmdCommand(HWND hwnd, const char* cmd, bool* ack) {
+static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     AutoFreeStr cmdContent;
-    const char* next = str::Parse(cmd, "[%s]", &cmdContent);
+    Str next = str::Parse(cmd, "[%s]", &cmdContent);
     if (!next) {
-        return nullptr;
+        return {};
     }
     // cmdContent is the full content between [ and ]
     // it might be just "CmdClose" or "CmdCreateAnnotHighlight #00ff00 openEdit"
@@ -1905,12 +1905,12 @@ static const char* HandleCmdCommand(HWND hwnd, const char* cmd, bool* ack) {
 
     int cmdId = GetCommandIdByName(name);
     if (cmdId < 0) {
-        return nullptr;
+        return {};
     }
     MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
         logfa("HandleCmdCommand: not executing DDE because MainWindow for hwnd 0x%p not found\n", hwnd);
-        return nullptr;
+        return {};
     }
 
     // if there are arguments after the command name, create a custom command with those args
@@ -1929,16 +1929,16 @@ static const char* HandleCmdCommand(HWND hwnd, const char* cmd, bool* ack) {
 }
 
 // returns true if did handle a message
-static bool HandleExecuteCmds(HWND hwnd, const char* cmd) {
+static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
     gMostRecentlyOpenedDoc = nullptr;
 
     bool didHandle = false;
-    while (!str::IsEmpty(cmd)) {
+    while (cmd) {
         {
-            logf("HandleExecuteCmds: '%s'\n", cmd);
+            logf("HandleExecuteCmds: '%s'\n", cmd.s);
         }
 
-        const char* nextCmd = HandleSyncCmd(cmd, &didHandle);
+        Str nextCmd = HandleSyncCmd(cmd, &didHandle);
         if (!nextCmd) {
             nextCmd = HandleOpenCmd(cmd, &didHandle);
         }
@@ -1973,14 +1973,14 @@ static bool HandleExecuteCmds(HWND hwnd, const char* cmd) {
     return didHandle;
 }
 
-static bool HandleRequestCmds(HWND hwnd, const char* cmd, StrBuilder& rsp) {
+static bool HandleRequestCmds(HWND hwnd, Str cmd, StrBuilder& rsp) {
     bool didHandle = false;
-    while (!str::IsEmpty(cmd)) {
+    while (cmd) {
         {
-            logf("HandleRequestCmds: '%s'\n", cmd);
+            logf("HandleRequestCmds: '%s'\n", cmd.s);
         }
 
-        const char* nextCmd = HandleGetFileStateCmd(hwnd, cmd, &didHandle, rsp);
+        Str nextCmd = HandleGetFileStateCmd(hwnd, cmd, &didHandle, rsp);
         if (!nextCmd) {
             nextCmd = HandleGetOpenFilesCmd(cmd, &didHandle, rsp);
         }
