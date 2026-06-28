@@ -125,7 +125,7 @@ static ISpObjectToken* SapiFindVoiceTokenById(Str voiceId) {
     ULONG fetched = 0;
 
     while (enumTokens->Next(1, &token, &fetched) == S_OK && fetched > 0) {
-        WCHAR* idW = nullptr;
+        WCHAR* idW = nullptr; // str-port: Win32 COM out-param
         hr = token->GetId(&idW);
 
         if (SUCCEEDED(hr) && idW && str::EqI(ToUtf8Temp(idW), voiceId)) {
@@ -159,7 +159,7 @@ static Str SapiGetVoiceLanguage(ISpObjectToken* token) {
         return {};
     }
 
-    WCHAR* langW = nullptr;
+    WCHAR* langW = nullptr; // str-port: Win32 COM out-param
     hr = attributes->GetStringValue(L"Language", &langW);
     attributes->Release();
 
@@ -275,8 +275,8 @@ static void SapiGetVoices(Vec<TtsVoiceInfo>& voices) {
     ULONG fetched = 0;
 
     while (enumTokens->Next(1, &token, &fetched) == S_OK && fetched > 0) {
-        WCHAR* idW = nullptr;
-        WCHAR* nameW = nullptr;
+        WCHAR* idW = nullptr;   // str-port: Win32 COM out-param
+        WCHAR* nameW = nullptr; // str-port: Win32 COM out-param
 
         HRESULT idHr = token->GetId(&idW);
         HRESULT nameHr = token->GetStringValue(nullptr, &nameW);
@@ -393,13 +393,13 @@ static void SapiProcessEvents() {
     eventSource->Release();
 }
 
-static bool SapiSpeak(const WCHAR* textW) {
+static bool SapiSpeak(WStr textW) {
     if (!SapiInit()) {
         return false;
     }
 
     ULONG streamNum = 0;
-    HRESULT hr = gSapiVoice->Speak(textW, SPF_ASYNC | SPF_PURGEBEFORESPEAK | SPF_IS_NOT_XML, &streamNum);
+    HRESULT hr = gSapiVoice->Speak(textW.s, SPF_ASYNC | SPF_PURGEBEFORESPEAK | SPF_IS_NOT_XML, &streamNum);
     if (FAILED(hr)) {
         return false;
     }
@@ -579,9 +579,9 @@ static bool WinTtsInit() {
     // ok if it fails because COM is already initialized
     pRoInitialize(RO_INIT_SINGLETHREADED);
 
-    const WCHAR* clsName = RuntimeClass_Windows_Media_SpeechSynthesis_SpeechSynthesizer;
+    WStr clsName(RuntimeClass_Windows_Media_SpeechSynthesis_SpeechSynthesizer);
     HSTRING cls = nullptr;
-    hr = pWindowsCreateString(clsName, (UINT32)str::Len(clsName), &cls);
+    hr = pWindowsCreateString(clsName.s, (UINT32)clsName.len, &cls);
     if (FAILED(hr)) {
         return false;
     }
@@ -769,7 +769,7 @@ static bool WinTtsSetVoiceById(Str voiceId) {
     return didSet;
 }
 
-static bool WinTtsSpeak(const WCHAR* textW) {
+static bool WinTtsSpeak(WStr textW) {
     if (!WinTtsInit()) {
         return false;
     }
@@ -779,7 +779,7 @@ static bool WinTtsSpeak(const WCHAR* textW) {
     gWinCues.Reset();
 
     HSTRING text = nullptr;
-    HRESULT hr = pWindowsCreateString(textW, (UINT32)str::Len(textW), &text);
+    HRESULT hr = pWindowsCreateString(textW.s, (UINT32)textW.len, &text);
     if (FAILED(hr)) {
         return false;
     }
@@ -928,8 +928,8 @@ static DWORD WavGetU32(const u8* d) {
 
 // finds "fmt " and "data" chunks in a RIFF WAVE file
 static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** dataOut, DWORD* dataSizeOut) {
-    if (n < 12 + 8 || !str::EqN(Str((const char*)d, 4), StrL("RIFF"), 4) ||
-        !str::EqN(Str((const char*)d + 8, 4), StrL("WAVE"), 4)) {
+    if (n < 12 + 8 || !str::EqN(Str((char*)d, 4), StrL("RIFF"), 4) ||
+        !str::EqN(Str((char*)d + 8, 4), StrL("WAVE"), 4)) {
         return false;
     }
 
@@ -939,7 +939,7 @@ static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** 
 
     size_t off = 12;
     while (off + 8 <= n) {
-        Str chunkId((const char*)d + off, 4);
+        Str chunkId((char*)d + off, 4);
         DWORD chunkSize = WavGetU32(d + off + 4);
         off += 8;
         if (chunkSize > n - off) {
