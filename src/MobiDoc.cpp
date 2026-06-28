@@ -126,7 +126,7 @@ static bool PalmdocUncompress(const u8* src, size_t srcLen, StrBuilder& dst) {
             if (src + c > srcEnd) {
                 return false;
             }
-            dst.Append(Str((const char*)src, (int)c));
+            dst.Append(AsStr(ByteSlice(src, (size_t)c)));
             src += c;
         } else if (c < 128) {
             dst.AppendChar((char)c);
@@ -249,7 +249,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, StrBuilder& dst) {
             logf("symLen too big\n");
             return false;
         }
-        dst.Append(Str((char*)p, (int)symLen));
+        dst.Append(AsStr(ByteSlice(p, (size_t)symLen)));
     }
     return true;
 }
@@ -367,7 +367,7 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     if (cdicDataLen < kCdicHeaderLen) {
         return false;
     }
-    if (!str::EqN(StrL("CDIC"), Str((char*)cdicData, 4), 4)) {
+    if (!str::EqN(StrL("CDIC"), AsStr(ByteSlice(cdicData, 4)), 4)) {
         return false;
     }
     u32 hdrLen = UInt32BE(cdicData + 4);
@@ -666,7 +666,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
             default:
                 continue;
         }
-        TempStr value = str::DupTemp(Str((char*)(data + d.Offset() - length + 8), (int)length - 8));
+        TempStr value = str::DupTemp(AsStr(ByteSlice(data + d.Offset() - length + 8, (size_t)length - 8)));
         if (!str::IsEmpty(value)) {
             AddProp(props, prop, value);
         }
@@ -824,7 +824,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, StrBuilder& strOut) {
     }
 
     if (COMPRESSION_NONE == compressionType) {
-        strOut.Append(Str((const char*)recData, (int)recSize));
+        strOut.Append(AsStr(ByteSlice(recData, recSize)));
         return true;
     }
     if (COMPRESSION_PALM == compressionType) {
@@ -879,9 +879,9 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     // replace unexpected \0 with spaces
     // https://code.google.com/archive/p/sumatrapdf/issues/2529
     Str docStr = doc->Get();
-    char* s = docStr.s;
-    char* end = s + doc->size();
-    while ((s = (char*)memchr(s, '\0', end - s)) != nullptr) {
+    u8* s = (u8*)docStr.s;
+    u8* end = s + doc->size();
+    while ((s = (u8*)memchr(s, 0, (size_t)(end - s))) != nullptr) {
         *s = ' ';
     }
     if (textEncoding != CP_UTF8) {
