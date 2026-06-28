@@ -29,7 +29,10 @@ typedef struct tagTHREADNAME_INFO {
                                 // EXCEPTION_EXECUTE_HANDLER. This might mask exceptions that were
                                 // not intended to be handled
 #pragma warning(disable : 6322) // silence /analyze: Empty _except block
-void SetThreadName(const char* threadName, DWORD threadId) {
+void SetThreadName(Str threadName, DWORD threadId) {
+    if (!threadName) {
+        return;
+    }
     if (DynSetThreadDescription && threadId == 0) {
         TempWStr ws = ToWStrTemp(threadName);
         DynSetThreadDescription(GetCurrentThread(), ws);
@@ -39,9 +42,10 @@ void SetThreadName(const char* threadName, DWORD threadId) {
     if (threadId == 0) {
         threadId = GetCurrentThreadId();
     }
+    TempStr nameZ = StrDupTemp(threadName);
     THREADNAME_INFO info;
     info.dwType = 0x1000;
-    info.szName = threadName;
+    info.szName = nameZ.s;
     info.dwThreadID = threadId;
     info.dwFlags = 0;
 
@@ -52,7 +56,7 @@ void SetThreadName(const char* threadName, DWORD threadId) {
 }
 #pragma warning(push)
 #else
-void SetThreadName(const char*, DWORD) {
+void SetThreadName(Str, DWORD) {
     // nothing
 }
 #endif // COMPILER_MSVC
@@ -65,20 +69,20 @@ static DWORD WINAPI ThreadFunc0(void* data) {
     return 0;
 }
 
-HANDLE StartThread(const Func0& fn, const char* threadName) {
+HANDLE StartThread(const Func0& fn, Str threadName) {
     auto fp = new Func0(fn);
     DWORD threadId = 0;
     HANDLE hThread = CreateThread(nullptr, 0, ThreadFunc0, (void*)fp, 0, &threadId);
     if (!hThread) {
         return nullptr;
     }
-    if (threadName != nullptr) {
+    if (threadName) {
         SetThreadName(threadName, threadId);
     }
     return hThread;
 }
 
-void RunAsync(const Func0& fn, const char* threadName) {
+void RunAsync(const Func0& fn, Str threadName) {
     HANDLE hThread = StartThread(fn, threadName);
     SafeCloseHandle(&hThread);
 }

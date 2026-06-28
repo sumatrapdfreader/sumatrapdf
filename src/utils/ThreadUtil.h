@@ -11,10 +11,10 @@ struct Mutex {
     void Unlock() { LeaveCriticalSection(&cs); }
 };
 
-void SetThreadName(const char* threadName, DWORD threadId = 0);
+void SetThreadName(Str threadName, DWORD threadId = 0);
 
-void RunAsync(const Func0&, const char* threadName = nullptr);
-HANDLE StartThread(const Func0&, const char* threadName = nullptr);
+void RunAsync(const Func0&, Str threadName = {});
+HANDLE StartThread(const Func0&, Str threadName = {});
 
 extern AtomicInt gDangerousThreadCount;
 bool AreDangerousThreadsPending();
