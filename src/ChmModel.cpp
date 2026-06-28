@@ -273,7 +273,7 @@ bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler*) {
         logf("ChmModel::HandleLink: unsupported kind '%s'\n", k);
         ReportIfFast(link->GetKind() != kindDestinationScrollTo);
     }
-    char* url = PageDestGetName(link);
+    Str url = PageDestGetName(link);
     if (DisplayPage(url)) {
         return true;
     }
@@ -749,7 +749,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
 }
 
 void ChmModel::GetDisplayState(FileState* fs) {
-    char* fileNameA = fileName;
+    Str fileNameA = fileName.Get();
     if (!fs->filePath || !str::EqI(fs->filePath, fileNameA)) {
         SetFileStatePath(fs, fileNameA);
     }

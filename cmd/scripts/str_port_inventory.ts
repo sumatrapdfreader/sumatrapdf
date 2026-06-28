@@ -56,7 +56,7 @@ function tagExclusion(line: string, kind: Kind): string | undefined {
   if (kind === "local" && /\b(?:cursor|p|s|src|dst|start|end|pos|it|iter)\b/.test(t)) {
     return "parse-cursor";
   }
-  if (/\bstr-port:\s*(?:mupdf|api-boundary)/.test(t)) {
+  if (/\bstr-port:\s*(?:mupdf|api-boundary|Win32|owned heap)/i.test(t)) {
     return "api-boundary";
   }
   return undefined;

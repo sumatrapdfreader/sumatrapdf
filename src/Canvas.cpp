@@ -3249,12 +3249,11 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
 static void GetDropFilesResolved(HDROP hDrop, bool dragFinish, StrVec& files) {
     int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
     WCHAR pathW[MAX_PATH]{};
-    char* path = nullptr;
     for (int i = 0; i < nFiles; i++) {
         DragQueryFile(hDrop, i, pathW, dimof(pathW));
-        path = ToUtf8Temp(pathW);
+        Str path = ToUtf8Temp(pathW);
         if (str::EndsWithI(path, ".lnk")) {
-            char* resolved = ResolveLnkTemp(path);
+            TempStr resolved = ResolveLnkTemp(path);
             if (resolved) {
                 path = resolved;
             }
@@ -3271,7 +3270,7 @@ static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
     bool isShift = IsShiftPressed();
 
     GetDropFilesResolved(hDrop, dragFinish, files);
-    for (char* path : files) {
+    for (Str path : files) {
         // The first dropped document may override the current window
         LoadArgs args(path, win);
         if (isShift && !win) {
@@ -3310,7 +3309,7 @@ static bool IsImageUrl(Str url) {
 
 // Get the user's Downloads folder path
 static TempStr GetDownloadsDirTemp() {
-    WCHAR* pathW = nullptr;
+    WCHAR* pathW = nullptr; // str-port: Win32 out-param
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_Downloads, 0, nullptr, &pathW);
     if (FAILED(hr) || !pathW) {
         CoTaskMemFree(pathW);
@@ -3423,9 +3422,9 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     }
 
     // open the file on the UI thread
-    char* pathDup = str::Dup(destPath);
+    char* pathDup = str::Dup(destPath); // str-port: owned heap copy for uitask
     auto fn = MkFunc0<char>(
-        [](char* path) {
+        [](char* path) { // str-port: owned heap copy from DownloadAndOpenUrl
             MainWindow* win = FindMainWindowByHwnd(GetForegroundWindow());
             if (!win && !gWindows.IsEmpty()) {
                 win = gWindows.at(0);
@@ -3451,14 +3450,14 @@ static TempStr GetTextFromDataObject(IDataObject* dataObj) {
     HRESULT hr = dataObj->GetData(&fmtUnicode, &medium);
     TempStr res;
     if (SUCCEEDED(hr) && medium.hGlobal) {
-        WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal);
+        WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal); // str-port: Win32 clipboard
         res = w ? ToUtf8Temp(w) : nullptr;
         goto Cleanup;
     }
     hr = dataObj->GetData(&fmtAnsi, &medium);
     if (SUCCEEDED(hr) && medium.hGlobal) {
-        char* s = (char*)GlobalLock(medium.hGlobal);
-        res = s ? str::DupTemp(s) : nullptr;
+        char* s = (char*)GlobalLock(medium.hGlobal); // str-port: Win32 clipboard
+        res = s ? str::DupTemp(Str(s)) : nullptr;
         goto Cleanup;
     }
     return {};
@@ -3477,7 +3476,7 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
         STGMEDIUM medium{};
         HRESULT hr = dataObj->GetData(&fmt, &medium);
         if (SUCCEEDED(hr) && medium.hGlobal) {
-            WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal);
+            WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal); // str-port: Win32 clipboard
             TempStr res = w ? ToUtf8Temp(w) : nullptr;
             GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
@@ -3493,8 +3492,8 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
         STGMEDIUM medium{};
         HRESULT hr = dataObj->GetData(&fmt, &medium);
         if (SUCCEEDED(hr) && medium.hGlobal) {
-            char* s = (char*)GlobalLock(medium.hGlobal);
-            TempStr res = s ? str::DupTemp(s) : nullptr;
+            char* s = (char*)GlobalLock(medium.hGlobal); // str-port: Win32 clipboard
+            TempStr res = s ? str::DupTemp(Str(s)) : nullptr;
             GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
             if (res && (str::StartsWithI(res, "http://") || str::StartsWithI(res, "https://"))) {
