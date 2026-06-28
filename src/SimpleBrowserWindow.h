@@ -7,7 +7,7 @@ struct SimpleBrowserCreateArgs {
     Str url;
     Str dataDir;
     WebViewResourceProvider resourceProvider;
-    const WCHAR* resourceUriPrefix = nullptr;
+    WStr resourceUriPrefix;
 };
 
 struct SimpleBrowserWindow : Wnd {

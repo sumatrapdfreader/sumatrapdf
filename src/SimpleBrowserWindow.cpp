@@ -32,7 +32,8 @@ static void SetCurrentUrl(SimpleBrowserWindow* w, Str url) {
     if (!w || !w->hwndUrl) {
         return;
     }
-    SetWindowTextA(w->hwndUrl, url ? url.s : "");
+    TempWStr urlW = ToWStrTemp(url);
+    SetWindowTextW(w->hwndUrl, urlW ? urlW.s : L"");
 }
 
 static void UpdateNavButtons(SimpleBrowserWindow* w) {
@@ -204,7 +205,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
             cargs.title = "Browser Window";
         }
         HMODULE h = GetModuleHandleW(nullptr);
-        WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+        WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
         cargs.icon = LoadIconW(h, iconName);
         // TODO: if set, navigate to url doesn't work
         // args.visible = false;
@@ -251,9 +252,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         webView->dataDir = str::Dup(dataDir);
         webView->resourceProvider = args.resourceProvider;
         str::Free(webView->resourceUriPrefix);
-        if (args.resourceUriPrefix) {
-            webView->resourceUriPrefix = str::Dup(args.resourceUriPrefix);
-        }
+        webView->resourceUriPrefix = str::Dup(args.resourceUriPrefix);
         webView->events.ctx = this;
         webView->events.navigationStarting = NavigationStarting;
         webView->events.navigationCompleted = NavigationCompleted;
