@@ -34,7 +34,7 @@ void DestroyLifetimeArena() {
     gLifetimeArena = nullptr;
 }
 
-static Str WrapTempStr(char* s, size_t cb = (size_t)-1) {
+static Str WrapTempStr(char* s, size_t cb = (size_t)-1) { // str-port: owned heap
     if (!s) {
         return {};
     }
@@ -44,7 +44,7 @@ static Str WrapTempStr(char* s, size_t cb = (size_t)-1) {
     return Str(s, (int)cb);
 }
 
-static WStr WrapTempWStr(WCHAR* s, size_t cch = (size_t)-1) {
+static WStr WrapTempWStr(WCHAR* s, size_t cch = (size_t)-1) { // str-port: owned heap
     if (!s) {
         return {};
     }
@@ -92,8 +92,8 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
         return {};
     }
 
-    const char* curr = s.s;
-    Str end = str::Find(Str(curr), toReplace);
+    Str curr = s;
+    Str end = str::Find(curr, toReplace);
     if (!end) {
         // optimization: nothing to replace so do nothing
         return s;
@@ -110,7 +110,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     StrBuilder result(capHint);
     bool ok;
     while (end) {
-        ok = result.Append(Str(curr, (int)(end.s - curr)));
+        ok = result.Append(Str(curr.s, (int)(end.s - curr.s)));
         if (!ok) {
             return {};
         }
@@ -118,8 +118,8 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
         if (!ok) {
             return {};
         }
-        curr = end.s + findLen;
-        end = str::Find(Str(curr), toReplace);
+        curr = Str(end.s + findLen, s.len - (int)(end.s + findLen - s.s));
+        end = str::Find(curr, toReplace);
     }
     ok = result.Append(curr);
     if (!ok) {

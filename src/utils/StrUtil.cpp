@@ -2120,7 +2120,7 @@ WStrBuilder::WStrBuilder(size_t capHint, Arena* a) {
 // note: we don't inherit allocator as it's not needed for our use cases
 WStrBuilder::WStrBuilder(const WStrBuilder& that) {
     Reset();
-    WCHAR* s = EnsureCap(this, that.cap);
+    WCHAR* s = EnsureCap(this, that.cap); // str-port: owned heap
     WStr sOrig = that.Get();
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
@@ -2137,7 +2137,7 @@ WStrBuilder& WStrBuilder::operator=(const WStrBuilder& that) {
         return *this;
     }
     Reset();
-    WCHAR* s = EnsureCap(this, that.cap);
+    WCHAR* s = EnsureCap(this, that.cap); // str-port: owned heap
     WStr sOrig = that.Get();
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
@@ -2195,7 +2195,7 @@ int WStrBuilder::isize() const {
 }
 
 bool WStrBuilder::InsertAt(size_t idx, const WCHAR& el) {
-    WCHAR* p = MakeSpaceAt(this, idx, 1);
+    WCHAR* p = MakeSpaceAt(this, idx, 1); // str-port: owned heap
     if (!p) {
         return false;
     }
@@ -2214,7 +2214,7 @@ bool WStrBuilder::Append(WStr src, size_t count) {
     if (!src.s || 0 == count) {
         return true;
     }
-    WCHAR* dst = MakeSpaceAt(this, len, count);
+    WCHAR* dst = MakeSpaceAt(this, len, count); // str-port: owned heap
     if (!dst) {
         return false;
     }
@@ -2225,8 +2225,8 @@ bool WStrBuilder::Append(WStr src, size_t count) {
 WCHAR WStrBuilder::RemoveAt(size_t idx, size_t count) {
     WCHAR res = at(idx);
     if (len > idx + count) {
-        WCHAR* dst = els + idx;
-        WCHAR* src = els + idx + count;
+        WCHAR* dst = els + idx;         // str-port: owned heap
+        WCHAR* src = els + idx + count; // str-port: owned heap
         memmove(dst, src, (len - idx - count) * kElSize);
     }
     len -= (u32)count;
