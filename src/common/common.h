@@ -54,9 +54,9 @@ struct ArenaParams {
     u64 reserve_size = 0;
     u64 commit_size = 0;
     void* optional_backing_buffer = nullptr;
-    const char* allocation_site_file = nullptr;
+    const char* allocation_site_file = nullptr; // str-port: C-string
     int allocation_site_line = 0;
-    const char* name = nullptr;
+    const char* name = nullptr; // str-port: C-string
 };
 
 struct Arena;
@@ -76,9 +76,9 @@ struct Arena {
     u64 pos;
     u64 cmt;
     u64 res;
-    const char* allocation_site_file;
+    const char* allocation_site_file; // str-port: C-string
     int allocation_site_line;
-    const char* name;
+    const char* name; // str-port: C-string
     bool uses_external_buffer;
     SRWLOCK lock;
 
@@ -225,65 +225,65 @@ VecIterator<Vec> VecIter(Vec* v) {
 // str_util.cpp
 
 struct Str {
-    char* s;
+    char* s; // str-port: owned heap
     int len;
 
     Str() : s(nullptr), len(0) {}
-    Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; }
-    explicit Str(const char* s_, int len_) : s((char*)s_), len(len_) {}
-    explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }
-    explicit Str(char* s_, int len_) : s(s_), len(len_) {}
+    Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; } // str-port: C-string
+    explicit Str(const char* s_, int len_) : s((char*)s_), len(len_) {}            // str-port: C-string
+    explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }       // str-port: owned heap
+    explicit Str(char* s_, int len_) : s(s_), len(len_) {}                         // str-port: owned heap
 
     explicit operator bool() const { return len > 0 && s; }
 
     // TODO(str-port): remove after all API boundaries use .s / StrDupTemp explicitly
-    operator const char*() const { return s; }
-    operator char*() const { return s; }
+    operator const char*() const { return s; } // str-port: C-string
+    operator char*() const { return s; }       // str-port: C-string
 };
 
 // Create Str from string literal with compile-time length
-#define StrL(lit) Str((char*)(lit), (int)(sizeof(lit) - 1))
+#define StrL(lit) Str((char*)(lit), (int)(sizeof(lit) - 1)) // str-port: C-string
 
 Str AllocStrTemp(int size);
 
 struct WStr {
-    wchar_t* s;
+    wchar_t* s; // str-port: owned heap
     int len;
 
     WStr() : s(nullptr), len(0) {}
-    WStr(const wchar_t* s_) : s((wchar_t*)s_), len(0) {
+    WStr(const wchar_t* s_) : s((wchar_t*)s_), len(0) { // str-port: C-string
         while (s_ && s_[len]) len++;
     }
-    explicit WStr(const wchar_t* s_, int len_) : s((wchar_t*)s_), len(len_) {}
-    explicit WStr(wchar_t* s_) : s(s_), len(0) {
+    explicit WStr(const wchar_t* s_, int len_) : s((wchar_t*)s_), len(len_) {} // str-port: C-string
+    explicit WStr(wchar_t* s_) : s(s_), len(0) {                               // str-port: owned heap
         while (s && s[len]) len++;
     }
-    explicit WStr(wchar_t* s_, int len_) : s(s_), len(len_) {}
+    explicit WStr(wchar_t* s_, int len_) : s(s_), len(len_) {} // str-port: owned heap
 
     explicit operator bool() const { return len > 0 && s; }
 
     // TODO(str-port): remove after all API boundaries use .s / ToWStrTemp explicitly
-    operator const wchar_t*() const { return s; }
-    operator wchar_t*() const { return s; }
+    operator const wchar_t*() const { return s; } // str-port: C-string
+    operator wchar_t*() const { return s; }       // str-port: C-string
 };
 
 // Create WStr from wide string literal with compile-time length
-#define WStrL(lit) WStr((wchar_t*)(lit), (int)(sizeof(lit) / sizeof(wchar_t) - 1))
+#define WStrL(lit) WStr((wchar_t*)(lit), (int)(sizeof(lit) / sizeof(wchar_t) - 1)) // str-port: C-string
 
 bool WStrEq(WStr a, WStr b);
 bool operator==(Str a, Str b);
-bool operator==(Str a, const char* b);
-bool operator==(const char* a, Str b);
+bool operator==(Str a, const char* b); // str-port: C-string
+bool operator==(const char* a, Str b); // str-port: C-string
 bool operator!=(Str a, Str b);
-bool operator!=(Str a, const char* b);
-bool operator!=(const char* a, Str b);
+bool operator!=(Str a, const char* b); // str-port: C-string
+bool operator!=(const char* a, Str b); // str-port: C-string
 bool operator==(WStr a, WStr b);
-bool operator==(WStr a, const wchar_t* b);
-bool operator==(const wchar_t* a, WStr b);
+bool operator==(WStr a, const wchar_t* b); // str-port: C-string
+bool operator==(const wchar_t* a, WStr b); // str-port: C-string
 bool operator!=(WStr a, WStr b);
-bool operator!=(WStr a, const wchar_t* b);
-bool operator!=(const wchar_t* a, WStr b);
-void WStrCopy(wchar_t* dst, const wchar_t* src, int maxLen);
+bool operator!=(WStr a, const wchar_t* b);                   // str-port: C-string
+bool operator!=(const wchar_t* a, WStr b);                   // str-port: C-string
+void WStrCopy(wchar_t* dst, const wchar_t* src, int maxLen); // str-port: C-string
 wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);
 int WStrCmpNoCase(WStr a, WStr b);
