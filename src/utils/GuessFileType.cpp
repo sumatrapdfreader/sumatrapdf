@@ -605,13 +605,13 @@ Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
         return fail(Str("ERROR unknown-kind"));
     }
     if (!str::Eq(kind, expectedKindName)) {
-        out.AppendFmt("FAIL path=%s got=%s expected=%s\n", path, kind, expectedKindName);
+        out.AppendFmt("FAIL path=%s got=%s expected=%s\n", path.s, kind, expectedKindName.s);
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
         return out.StealData();
     }
-    out.AppendFmt("OK path=%s kind=%s\n", path, kind);
+    out.AppendFmt("OK path=%s kind=%s\n", path.s, kind);
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
