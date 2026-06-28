@@ -85,7 +85,7 @@ class MultiFormatArchive {
     Str GetComment();
 
     // password for encrypted archives (owned by this object)
-    char* password = nullptr;
+    Str password;
 
     // set after Open() if the archive contains encrypted entries
     bool isEncrypted = false;
@@ -95,10 +95,10 @@ class MultiFormatArchive {
     Arena* allocator_ = nullptr;
     Vec<FileInfo*> fileInfos_;
 
-    char* archivePath_ = nullptr;
+    Str archivePath_;
 
     // only set when we loaded file infos using unrar.dll fallback
-    const char* rarFilePath_ = nullptr;
+    Str rarFilePath_;
 
     bool OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
     bool ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
@@ -109,7 +109,7 @@ class MultiFormatArchive {
     void LoadFileDataByIdUnrarDll(size_t fileId);
     void LoadFileDataByIdLibarchive(size_t fileId);
     ByteSlice GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint);
-    bool LoadedUsingUnrarDll() const { return rarFilePath_ != nullptr; }
+    bool LoadedUsingUnrarDll() const { return (bool)rarFilePath_; }
 };
 
 // Progress callback payload. fileInfo points at the FileInfo record for

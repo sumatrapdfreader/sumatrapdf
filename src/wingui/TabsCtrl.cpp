@@ -54,8 +54,8 @@ static bool IsTabsRtl(HWND hwnd) {
 }
 
 TabInfo::~TabInfo() {
-    str::Free(text);
-    str::Free(tooltip);
+    str::Free(text.s);
+    str::Free(tooltip.s);
 }
 
 void TabsCtrl::ScheduleRepaint() {

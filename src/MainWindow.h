@@ -94,8 +94,8 @@ struct TouchState {
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLink {
     Rect rect;
-    char* target = nullptr;
-    char* tooltip = nullptr;
+    Str target;
+    Str tooltip;
 
     explicit StaticLink(Rect rect, Str target, Str infotip = nullptr);
     StaticLink() = default;

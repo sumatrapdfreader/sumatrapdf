@@ -683,8 +683,8 @@ struct TabInfo;
 #define kTabDefaultBgCol (COLORREF) - 1
 
 struct TabInfo {
-    char* text = nullptr;
-    char* tooltip = nullptr;
+    Str text;
+    Str tooltip;
     bool isPinned = false;
     bool canClose = true; // TODO: same as !isPinned?
     bool isDirty = false;

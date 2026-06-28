@@ -80,8 +80,8 @@ StaticLink::StaticLink(Rect rect, Str target, Str infotip) {
 }
 
 StaticLink::~StaticLink() {
-    str::Free(target);
-    str::Free(tooltip);
+    str::Free(target.s);
+    str::Free(tooltip.s);
 }
 
 MainWindow::MainWindow(HWND hwnd) {

@@ -52,8 +52,8 @@ MultiFormatArchive::~MultiFormatArchive() {
     for (auto& fi : fileInfos_) {
         free((void*)fi->data);
     }
-    free(archivePath_);
-    str::Free(password);
+    str::Free(archivePath_.s);
+    str::Free(password.s);
     ArenaDelete(allocator_);
 }
 
@@ -162,16 +162,17 @@ bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const Arc
         // decompression failed above have failed=true and data=nullptr, and
         // later GetFileDataById will see archivePath_==nullptr and mark
         // the entry as failed.
-        free(archivePath_);
-        archivePath_ = nullptr;
-        rarFilePath_ = nullptr; // arena-allocated; don't free
+        str::Free(archivePath_.s);
+        archivePath_ = {};
+        rarFilePath_ = {}; // arena-allocated; don't free
     }
     return true;
 }
 
-static void SetArchivePassword(struct archive* a, const char* password) {
-    if (password && *password) {
-        archive_read_add_passphrase(a, password);
+static void SetArchivePassword(struct archive* a, Str password) {
+    if (password) {
+        TempStr pwd = StrDupTemp(password);
+        archive_read_add_passphrase(a, pwd.s);
     }
 }
 
@@ -508,7 +509,7 @@ void MultiFormatArchive::LoadFileDataByIdUnrarDll(size_t fileId) {
     auto rarPath = ToWStrTemp(rarFilePath_);
 
     UnrarData uncompressedBuf;
-    uncompressedBuf.password = password;
+    uncompressedBuf.password = password.s;
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = rarPath;
@@ -578,7 +579,7 @@ ByteSlice MultiFormatArchive::GetFileDataPartByIdUnrarDll(size_t fileId, size_t 
     auto rarPath = ToWStrTemp(rarFilePath_);
 
     UnrarData uncompressedBuf;
-    uncompressedBuf.password = password;
+    uncompressedBuf.password = password.s;
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = rarPath;
@@ -640,7 +641,7 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
     auto rarPathW = ToWStrTemp(rarPath);
 
     UnrarData uncompressedBuf;
-    uncompressedBuf.password = password;
+    uncompressedBuf.password = password.s;
 
     RAROpenArchiveDataEx arcData = {nullptr};
     arcData.ArcNameW = (WCHAR*)rarPathW;
