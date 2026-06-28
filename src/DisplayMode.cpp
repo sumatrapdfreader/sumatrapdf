@@ -64,10 +64,10 @@ static const char* displayModeNames =
 
 Str DisplayModeToString(DisplayMode mode) {
     int idx = (int)mode;
-    const char* s = SeqStrByIndex(displayModeNames, idx);
+    Str s = SeqStrByIndex(displayModeNames, idx);
     if (!s) {
         ReportIf(true);
-        return "unknown display mode";
+        return Str("unknown display mode");
     }
     return s;
 }
