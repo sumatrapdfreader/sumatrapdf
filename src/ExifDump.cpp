@@ -39,7 +39,7 @@ enum class IfdGroup {
 
 struct TagDef {
     u16 id;
-    const char* name;
+    Str name;
 };
 
 // IFD0 / image tags
@@ -168,171 +168,174 @@ static Str LookupTagName(const TagDef* tags, int n, u16 id) {
 static Str GroupPrefix(IfdGroup g) {
     switch (g) {
         case IfdGroup::Image:
-            return "Image";
+            return StrL("Image");
         case IfdGroup::Exif:
-            return "EXIF";
+            return StrL("EXIF");
         case IfdGroup::Gps:
-            return "GPS";
+            return StrL("GPS");
         case IfdGroup::Interop:
-            return "Interoperability";
+            return StrL("Interoperability");
         case IfdGroup::Thumbnail:
-            return "Thumbnail";
+            return StrL("Thumbnail");
         case IfdGroup::MakerNote:
-            return "MakerNote";
+            return StrL("MakerNote");
     }
-    return "";
+    return StrL("");
 }
 
 static Str TypeName(u16 type) {
     switch (type) {
         case TiffType::Byte:
-            return "Byte";
+            return StrL("Byte");
         case TiffType::Ascii:
-            return "ASCII";
+            return StrL("ASCII");
         case TiffType::Short:
-            return "Short";
+            return StrL("Short");
         case TiffType::Long:
-            return "Long";
+            return StrL("Long");
         case TiffType::Rational:
-            return "Ratio";
+            return StrL("Ratio");
         case TiffType::SByte:
-            return "Signed Byte";
+            return StrL("Signed Byte");
         case TiffType::Undefined:
-            return "Undefined";
+            return StrL("Undefined");
         case TiffType::SShort:
-            return "Signed Short";
+            return StrL("Signed Short");
         case TiffType::SLong:
-            return "Signed Long";
+            return StrL("Signed Long");
         case TiffType::SRational:
-            return "Signed Ratio";
+            return StrL("Signed Ratio");
         default:
-            return "Unknown";
+            return StrL("Unknown");
     }
 }
 
-static Str LookupEnum(const char** names, int n, u32 val) {
+static Str LookupEnum(const Str* names, int n, u32 val) {
     if (val < (u32)n) {
-        return Str(names[val]);
+        return names[val];
     }
     return {};
 }
 
 static Str FormatOrientation(u32 val) {
-    static const char* names[] = {
-        "", // 0 unused
-        "Horizontal (normal)",
-        "Mirrored horizontal",
-        "Rotated 180",
-        "Mirrored vertical",
-        "Mirrored horizontal then rotated 90 CCW",
-        "Rotated 90 CW",
-        "Mirrored horizontal then rotated 90 CW",
-        "Rotated 90 CCW",
+    static const Str names[] = {
+        StrL(""), // 0 unused
+        StrL("Horizontal (normal)"),
+        StrL("Mirrored horizontal"),
+        StrL("Rotated 180"),
+        StrL("Mirrored vertical"),
+        StrL("Mirrored horizontal then rotated 90 CCW"),
+        StrL("Rotated 90 CW"),
+        StrL("Mirrored horizontal then rotated 90 CW"),
+        StrL("Rotated 90 CCW"),
     };
     return LookupEnum(names, dimof(names), val);
 }
 
 static Str FormatExposureProgram(u32 val) {
-    static const char* names[] = {
-        "Unidentified",     "Manual",         "Program Normal", "Aperture Priority", "Shutter Priority",
-        "Program Creative", "Program Action", "Portrait Mode",  "Landscape Mode",
+    static const Str names[] = {
+        StrL("Unidentified"),      StrL("Manual"),           StrL("Program Normal"),
+        StrL("Aperture Priority"), StrL("Shutter Priority"), StrL("Program Creative"),
+        StrL("Program Action"),    StrL("Portrait Mode"),    StrL("Landscape Mode"),
     };
     return LookupEnum(names, dimof(names), val);
 }
 
 static Str FormatMeteringMode(u32 val) {
-    static const char* names[] = {
-        "Unidentified", "Average", "CenterWeightedAverage", "Spot", "MultiSpot", "Pattern", "Partial",
+    static const Str names[] = {
+        StrL("Unidentified"), StrL("Average"), StrL("CenterWeightedAverage"), StrL("Spot"), StrL("MultiSpot"),
+        StrL("Pattern"),      StrL("Partial"),
     };
     return LookupEnum(names, dimof(names), val);
 }
 
 static Str FormatColorSpace(u32 val) {
     if (val == 1) {
-        return "sRGB";
+        return StrL("sRGB");
     }
     if (val == 0xFFFF) {
-        return "Uncalibrated";
+        return StrL("Uncalibrated");
     }
     return {};
 }
 
 static Str FormatWhiteBalance(u32 val) {
-    return val == 0 ? "Auto" : "Manual";
+    return val == 0 ? StrL("Auto") : StrL("Manual");
 }
 
 static Str FormatExposureMode(u32 val) {
-    static const char* names[] = {"Auto Exposure", "Manual Exposure", "Auto Bracket"};
+    static const Str names[] = {StrL("Auto Exposure"), StrL("Manual Exposure"), StrL("Auto Bracket")};
     return LookupEnum(names, dimof(names), val);
 }
 
 static Str FormatSceneCaptureType(u32 val) {
-    static const char* names[] = {"Standard", "Landscape", "Portrait", "Night"};
+    static const Str names[] = {StrL("Standard"), StrL("Landscape"), StrL("Portrait"), StrL("Night")};
     return LookupEnum(names, dimof(names), val);
 }
 
 static Str FormatGainControl(u32 val) {
-    static const char* names[] = {"None", "Low gain up", "High gain up", "Low gain down", "High gain down"};
+    static const Str names[] = {StrL("None"), StrL("Low gain up"), StrL("High gain up"), StrL("Low gain down"),
+                                StrL("High gain down")};
     return LookupEnum(names, dimof(names), val);
 }
 
 static Str FormatContrastSatSharp(u32 val) {
-    static const char* names[] = {"Normal", "Soft", "Hard"};
+    static const Str names[] = {StrL("Normal"), StrL("Soft"), StrL("Hard")};
     return LookupEnum(names, dimof(names), val);
 }
 
 static Str FormatCustomRendered(u32 val) {
-    return val == 0 ? "Normal" : "Custom";
+    return val == 0 ? StrL("Normal") : StrL("Custom");
 }
 
 static Str FormatSensitivityType(u32 val) {
-    static const char* names[] = {
-        "Unknown",
-        "Standard Output Sensitivity",
-        "Recommended Exposure Index",
-        "ISO Speed",
-        "Standard Output Sensitivity and Recommended Exposure Index",
-        "Standard Output Sensitivity and ISO Speed",
-        "Recommended Exposure Index and ISO Speed",
-        "Standard Output Sensitivity, Recommended Exposure Index and ISO Speed",
+    static const Str names[] = {
+        StrL("Unknown"),
+        StrL("Standard Output Sensitivity"),
+        StrL("Recommended Exposure Index"),
+        StrL("ISO Speed"),
+        StrL("Standard Output Sensitivity and Recommended Exposure Index"),
+        StrL("Standard Output Sensitivity and ISO Speed"),
+        StrL("Recommended Exposure Index and ISO Speed"),
+        StrL("Standard Output Sensitivity, Recommended Exposure Index and ISO Speed"),
     };
     return LookupEnum(names, dimof(names), val);
 }
 
 static Str FormatResolutionUnit(u32 val) {
     if (val == 2) {
-        return "Pixels/Inch";
+        return StrL("Pixels/Inch");
     }
     if (val == 3) {
-        return "Pixels/Centimeter";
+        return StrL("Pixels/Centimeter");
     }
     return {};
 }
 
 static Str FormatYCbCrPositioning(u32 val) {
-    return val == 1 ? "Centered" : "Co-sited";
+    return val == 1 ? StrL("Centered") : StrL("Co-sited");
 }
 
 static Str FormatCompression(u32 val) {
     if (val == 6) {
-        return "JPEG (old-style)";
+        return StrL("JPEG (old-style)");
     }
     if (val == 7) {
-        return "JPEG";
+        return StrL("JPEG");
     }
     return {};
 }
 
 static Str FormatFileSource(u8 val) {
     if (val == 3) {
-        return "Digital Camera";
+        return StrL("Digital Camera");
     }
     return {};
 }
 
 static Str FormatSceneType(u8 val) {
     if (val == 1) {
-        return "Directly Photographed";
+        return StrL("Directly Photographed");
     }
     return {};
 }
@@ -341,21 +344,21 @@ static Str FormatSceneType(u8 val) {
 static Str FormatFlash(u32 val) {
     switch (val) {
         case 0:
-            return "Flash did not fire";
+            return StrL("Flash did not fire");
         case 1:
-            return "Flash fired";
+            return StrL("Flash fired");
         case 5:
-            return "Strobe return light not detected";
+            return StrL("Strobe return light not detected");
         case 7:
-            return "Strobe return light detected";
+            return StrL("Strobe return light detected");
         case 9:
-            return "Flash fired, compulsory flash mode";
+            return StrL("Flash fired, compulsory flash mode");
         case 16:
-            return "Flash did not fire, compulsory flash mode";
+            return StrL("Flash did not fire, compulsory flash mode");
         case 24:
-            return "Flash did not fire, auto mode";
+            return StrL("Flash did not fire, auto mode");
         case 25:
-            return "Flash fired, auto mode";
+            return StrL("Flash fired, auto mode");
         default:
             return {};
     }
@@ -496,7 +499,7 @@ struct TiffParser {
         while (n > 0 && r.Byte(off + n - 1) == 0) {
             n--;
         }
-        return str::DupTemp((const char*)(r.d + off), n);
+        return str::DupTemp(Str((const char*)(r.d + off), (int)n));
     }
 
     TempStr FormatRationalPair(u32 num, u32 den, bool asFraction) const {
@@ -516,7 +519,7 @@ struct TiffParser {
     }
 
     TempStr FormatComponentsConfig(size_t off, u32 count) const {
-        static const char* compNames[] = {"", "Y", "Cb", "Cr", "R", "G", "B"};
+        static const Str compNames[] = {StrL(""), StrL("Y"), StrL("Cb"), StrL("Cr"), StrL("R"), StrL("G"), StrL("B")};
         StrBuilder s;
         for (u32 i = 0; i < count && off + i < r.len; i++) {
             u8 c = r.Byte(off + i);
@@ -526,7 +529,7 @@ struct TiffParser {
             if (s.size() > 0) {
                 s.Append(", ");
             }
-            if (c < dimof(compNames) && compNames[c][0]) {
+            if (c < dimof(compNames) && compNames[c]) {
                 s.Append(compNames[c]);
             }
         }
@@ -1145,7 +1148,7 @@ static void DumpFromGdiplus(const ByteSlice& d, StrVec& lines) {
         PropertyItem* item = (PropertyItem*)buf;
         TempStr val;
         if (item->type == PropertyTagTypeASCII) {
-            val = str::DupTemp((char*)item->value, item->length);
+            val = str::DupTemp(Str((char*)item->value, (int)item->length));
         } else if (item->type == PropertyTagTypeShort && item->length >= 2) {
             val = str::FormatTemp("%u", *(u16*)item->value);
         } else if (item->type == PropertyTagTypeLong && item->length >= 4) {
@@ -1168,25 +1171,25 @@ static void DumpFromGdiplus(const ByteSlice& d, StrVec& lines) {
 } // namespace
 
 // GUI-subsystem exes lose CRT stdout when spawned with a pipe (issue #5677).
-static void CliWrite(const char* s, size_t n = 0) {
+static void CliWrite(Str s, size_t n = 0) {
     if (!s) {
         return;
     }
     if (n == 0) {
-        n = str::Len(s);
+        n = (size_t)s.len;
     }
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     if (h && h != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        WriteFile(h, s, (DWORD)n, &written, nullptr);
+        WriteFile(h, s.s, (DWORD)n, &written, nullptr);
         return;
     }
-    fwrite(s, 1, n, stdout);
+    fwrite(s.s, 1, n, stdout);
 }
 
-static void CliPrint(const char* s) {
+static void CliPrint(Str s) {
     CliWrite(s);
-    CliWrite("\n", 1);
+    CliWrite(StrL("\n"), 1);
 }
 
 bool DumpExifFile(Str path) {
@@ -1196,7 +1199,7 @@ bool DumpExifFile(Str path) {
     CliPrint(str::FormatTemp("Opening: %s", path));
     ByteSlice data = file::ReadFile(path);
     if (data.empty()) {
-        CliPrint("No EXIF information found");
+        CliPrint(StrL("No EXIF information found"));
         return false;
     }
 
@@ -1216,17 +1219,17 @@ bool DumpExifFile(Str path) {
     }
 
     if (!found) {
-        CliPrint("No EXIF information found");
+        CliPrint(StrL("No EXIF information found"));
         free(ownedExif);
         data.Free();
         return false;
     }
 
     if (parser.hasJpegThumbnail) {
-        CliPrint("File has JPEG thumbnail");
+        CliPrint(StrL("File has JPEG thumbnail"));
     }
 
-    for (char* line : parser.lines) {
+    for (Str line : parser.lines) {
         CliPrint(line);
     }
 
