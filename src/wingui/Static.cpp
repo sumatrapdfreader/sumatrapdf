@@ -36,7 +36,7 @@ HWND Static::Create(const CreateArgs& args) {
 
 Size Static::GetIdealSize() {
     ReportIf(!hwnd);
-    char* txt = HwndGetTextTemp(hwnd);
+    TempStr txt = HwndGetTextTemp(hwnd);
     HFONT hfont = GetWindowFont(hwnd);
     return HwndMeasureText(hwnd, txt, hfont);
 }
