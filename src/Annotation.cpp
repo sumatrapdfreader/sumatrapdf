@@ -76,7 +76,7 @@ static const char* gAnnotNames =
     "Projection\0";
 #endif
 
-static const char* gAnnotReadableNames =
+static SeqStrings gAnnotReadableNames =
     "Text\0"
     "Link\0"
     "Free Text\0"
@@ -1241,16 +1241,15 @@ void SetOpacity(Annotation* annot, int newOpacity) {
     MarkNotificationAsModified(e, annot);
 }
 
-static const char* getuser(void) {
-    const char* u;
-    u = getenv("USER");
+static Str GetUserTemp() {
+    const char* u = getenv("USER");
     if (!u) {
         u = getenv("USERNAME");
     }
     if (!u) {
-        u = "user";
+        return Str("user");
     }
-    return u;
+    return Str(u);
 }
 
 static Str GetAnnotationTextIconTemp() {
@@ -1354,14 +1353,15 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
 
             pdf_set_annot_modification_date(ctx, annot, time(nullptr));
             if (pdf_annot_has_author(ctx, annot)) {
-                char* defAuthor = gGlobalPrefs->annotations.defaultAuthor;
+                Str defAuthor = gGlobalPrefs->annotations.defaultAuthor;
                 // if "(none)" we don't set it
                 if (!str::Eq(defAuthor, "(none)")) {
-                    const char* author = getuser();
+                    Str author = GetUserTemp();
                     if (!str::IsEmptyOrWhiteSpace(defAuthor)) {
                         author = defAuthor;
                     }
-                    pdf_set_annot_author(ctx, annot, author);
+                    TempStr authorZ = StrDupTemp(author);
+                    pdf_set_annot_author(ctx, annot, authorZ.s);
                 }
             }
 
