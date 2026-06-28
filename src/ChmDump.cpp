@@ -239,11 +239,11 @@ static void DumpChmFileMetadata(Str path) {
         CliPrint("metadata: unavailable");
         return;
     }
-    CliPrintf("metadata title=%s", doc->title ? doc->title.Get() : "");
-    CliPrintf("metadata creator=%s", doc->creator ? doc->creator.Get() : "");
-    CliPrintf("metadata home=%s", doc->homePath ? doc->homePath.Get() : "");
-    CliPrintf("metadata toc=%s", doc->tocPath ? doc->tocPath.Get() : "");
-    CliPrintf("metadata index=%s", doc->indexPath ? doc->indexPath.Get() : "");
+    CliPrintf("metadata title=%s", !str::IsEmpty(doc->title) ? doc->title.s : "");
+    CliPrintf("metadata creator=%s", !str::IsEmpty(doc->creator) ? doc->creator.s : "");
+    CliPrintf("metadata home=%s", !str::IsEmpty(doc->homePath) ? doc->homePath.s : "");
+    CliPrintf("metadata toc=%s", !str::IsEmpty(doc->tocPath) ? doc->tocPath.s : "");
+    CliPrintf("metadata index=%s", !str::IsEmpty(doc->indexPath) ? doc->indexPath.s : "");
     CliPrintf("metadata codepage=%u", doc->codepage);
 
     ChmDumpTocVisitor toc;

@@ -16,6 +16,11 @@
 
 ChmFile::~ChmFile() {
     chm_close(chmHandle);
+    str::Free(title);
+    str::Free(tocPath);
+    str::Free(indexPath);
+    str::Free(homePath);
+    str::Free(creator);
 }
 
 bool ChmFile::HasData(Str fileName) const {
@@ -124,21 +129,21 @@ void ChmFile::ParseWindowsData() {
 
     for (size_t i = 0; i < entries && ((i + (size_t)1) * entrySize) <= windowsLen; i++) {
         size_t off = 8 + i * entrySize;
-        if (!title) {
+        if (str::IsNull(title)) {
             DWORD strOff = rw.DWordLE(off + (size_t)0x14);
-            title.Set(GetCharZ(stringsData, strOff).s);
+            title = GetCharZ(stringsData, strOff);
         }
-        if (!tocPath) {
+        if (str::IsNull(tocPath)) {
             DWORD strOff = rw.DWordLE(off + (size_t)0x60);
-            tocPath.Set(GetCharZ(stringsData, strOff).s);
+            tocPath = GetCharZ(stringsData, strOff);
         }
-        if (!indexPath) {
+        if (str::IsNull(indexPath)) {
             DWORD strOff = rw.DWordLE(off + (size_t)0x64);
-            indexPath.Set(GetCharZ(stringsData, strOff).s);
+            indexPath = GetCharZ(stringsData, strOff);
         }
-        if (!homePath) {
+        if (str::IsNull(homePath)) {
             DWORD strOff = rw.DWordLE(off + (size_t)0x68);
-            homePath.Set(GetCharZ(stringsData, strOff).s);
+            homePath = GetCharZ(stringsData, strOff);
         }
     }
 }
@@ -211,23 +216,23 @@ bool ChmFile::ParseSystemData() {
         WORD type = r.WordLE(off);
         switch (type) {
             case 0:
-                if (!tocPath) {
-                    tocPath.Set(GetCharZ(d, off + 4).s);
+                if (str::IsNull(tocPath)) {
+                    tocPath = GetCharZ(d, off + 4);
                 }
                 break;
             case 1:
-                if (!indexPath) {
-                    indexPath.Set(GetCharZ(d, off + 4).s);
+                if (str::IsNull(indexPath)) {
+                    indexPath = GetCharZ(d, off + 4);
                 }
                 break;
             case 2:
-                if (!homePath) {
-                    homePath.Set(GetCharZ(d, off + 4).s);
+                if (str::IsNull(homePath)) {
+                    homePath = GetCharZ(d, off + 4);
                 }
                 break;
             case 3:
-                if (!title) {
-                    title.Set(GetCharZ(d, off + 4).s);
+                if (str::IsNull(title)) {
+                    title = GetCharZ(d, off + 4);
                 }
                 break;
             case 4:
@@ -239,8 +244,8 @@ bool ChmFile::ParseSystemData() {
                 // compiled file - ignore
                 break;
             case 9:
-                if (!creator) {
-                    creator.Set(GetCharZ(d, off + 4).s);
+                if (str::IsNull(creator)) {
+                    creator = GetCharZ(d, off + 4);
                 }
                 break;
             case 16:
@@ -275,14 +280,15 @@ TempStr ChmFile::ResolveTopicID(unsigned int id) const {
     return {};
 }
 
-void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
-    if (!path || HasData(path.Get())) {
+void ChmFile::FixPathCodepage(Str& path, uint& fileCP) {
+    if (str::IsEmpty(path) || HasData(path)) {
         return;
     }
 
-    TempStr utf8Path = SmartToUtf8Temp(path.Get(), codepage);
+    TempStr utf8Path = SmartToUtf8Temp(path, codepage);
     if (HasData(utf8Path)) {
-        path.SetCopy(utf8Path);
+        str::Free(path);
+        path = str::Dup(utf8Path);
         fileCP = codepage;
         return;
     }
@@ -291,9 +297,10 @@ void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
         return;
     }
 
-    utf8Path = SmartToUtf8Temp(path.Get(), fileCP);
+    utf8Path = SmartToUtf8Temp(path, fileCP);
     if (HasData(utf8Path)) {
-        path.SetCopy(utf8Path);
+        str::Free(path);
+        path = str::Dup(utf8Path);
         codepage = fileCP;
         return;
     }
@@ -331,14 +338,15 @@ bool ChmFile::Load(Str path) {
         codepage = CP_ACP;
     }
 
-    if (!HasData(homePath.Get())) {
+    if (!HasData(homePath)) {
         Str pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
         for (int i = 0; i < dimof(pathsToTest); i++) {
             if (HasData(pathsToTest[i])) {
-                homePath.SetCopy(pathsToTest[i]);
+                str::Free(homePath);
+                homePath = str::Dup(pathsToTest[i]);
             }
         }
-        if (!HasData(homePath.Get())) {
+        if (!HasData(homePath)) {
             return false;
         }
     }
@@ -348,10 +356,10 @@ bool ChmFile::Load(Str path) {
 
 TempStr ChmFile::GetPropertyTemp(Str name) const {
     TempStr result;
-    if (str::Eq(kPropTitle, name) && title.CStr()) {
-        result = SmartToUtf8Temp(title.CStr(), codepage);
-    } else if (str::Eq(kPropCreatorApp, name) && creator.CStr()) {
-        result = SmartToUtf8Temp(creator.CStr(), codepage);
+    if (str::Eq(kPropTitle, name) && !str::IsEmpty(title)) {
+        result = SmartToUtf8Temp(title, codepage);
+    } else if (str::Eq(kPropCreatorApp, name) && !str::IsEmpty(creator)) {
+        result = SmartToUtf8Temp(creator, codepage);
     }
     if (!result) {
         return {};
@@ -361,7 +369,7 @@ TempStr ChmFile::GetPropertyTemp(Str name) const {
 }
 
 TempStr ChmFile::GetHomePath() const {
-    return homePath.Get();
+    return homePath;
 }
 
 static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, void* data) {
@@ -733,19 +741,19 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
 }
 
 bool ChmFile::HasToc() const {
-    return tocPath != nullptr;
+    return !str::IsEmpty(tocPath);
 }
 
 bool ChmFile::ParseToc(EbookTocVisitor* visitor) const {
-    return ParseTocOrIndex(visitor, tocPath.Get(), false);
+    return ParseTocOrIndex(visitor, tocPath, false);
 }
 
 bool ChmFile::HasIndex() const {
-    return indexPath != nullptr;
+    return !str::IsEmpty(indexPath);
 }
 
 bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {
-    return ParseTocOrIndex(visitor, indexPath.Get(), true);
+    return ParseTocOrIndex(visitor, indexPath, true);
 }
 
 bool ChmFile::IsSupportedFileType(Kind kind) {
