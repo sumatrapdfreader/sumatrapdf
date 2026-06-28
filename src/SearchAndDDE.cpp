@@ -151,7 +151,7 @@ void OnFindBarTextChanged(MainWindow* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    char* s = HwndGetTextTemp(win->hwndFindEdit);
+    TempStr s = HwndGetTextTemp(win->hwndFindEdit);
     if (str::IsEmpty(s)) {
         AbortFinding(win, true); // also cancels a pending debounce timer
         ClearSearchResult(win);
@@ -899,7 +899,7 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
 }
 
 // TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
-TempStr ReverseTextTemp(char* s) {
+TempStr ReverseTextTemp(Str s) {
     TempWStr ws = ToWStrTemp(s);
     int n = str::Leni(ws);
     for (int i = 0; i < n / 2; i++) {
@@ -912,7 +912,7 @@ TempStr ReverseTextTemp(char* s) {
 }
 
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress) {
-    char* s = HwndGetTextTemp(win->hwndFindEdit);
+    TempStr s = HwndGetTextTemp(win->hwndFindEdit);
     // if document is rtl, need to reverse the text
     // s = ReverseTextTemp(s);
     bool wasModified = Edit_GetModify(win->hwndFindEdit);
@@ -1162,7 +1162,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
     if (!dm->pdfSync) {
-        const char* path = tab->filePath;
+        Str path = tab->filePath;
         int err = Synchronizer::Create(path, dm->GetEngine(), &dm->pdfSync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // We used to warn that "No synchronization file found" at this
@@ -1218,8 +1218,8 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     args.msg = _TRA("Cannot start inverse search command. Please check the command line in the settings.");
     if (!str::IsEmpty(cmdLine)) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
-        char* appDir = GetSelfExeDirTemp();
-        AutoCloseHandle process(LaunchProcessInDir(cmdLine, Str(appDir)));
+        TempStr appDir = GetSelfExeDirTemp();
+        AutoCloseHandle process(LaunchProcessInDir(cmdLine, appDir));
         if (!process) {
             ShowNotification(args);
         }
@@ -1804,16 +1804,16 @@ static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, 
     }
 
     DocController* ctrl = win->ctrl;
-    const char* docPath = ctrl->GetFilePath();
+    Str docPath = ctrl->GetFilePath();
     // zoom uses the same convention as SetView: a percentage, or -1 = fit page,
     // -2 = fit width, -3 = fit content
     float zoom = ctrl->GetZoomVirtual();
-    const char* view = DisplayModeToString(ctrl->GetDisplayMode());
-    res.AppendFmt("path: %s\n", docPath ? docPath : "");
+    Str view = DisplayModeToString(ctrl->GetDisplayMode());
+    res.AppendFmt("path: %s\n", docPath.s);
     res.AppendFmt("page: %d\n", ctrl->CurrentPageNo());
     res.AppendFmt("pageCount: %d\n", ctrl->PageCount());
     res.AppendFmt("zoom: %g\n", zoom);
-    res.AppendFmt("view: %s\n", view ? view : "");
+    res.AppendFmt("view: %s\n", view.s);
     res.AppendFmt("sumver: %s\n", CURR_VERSION_STRA);
     return next;
 }
@@ -1831,7 +1831,7 @@ static const char* HandleGetOpenFilesCmd(const char* cmd, bool* ack, StrBuilder&
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             if (!str::IsEmpty(tab->filePath)) {
-                res.AppendFmt("%s\n", tab->filePath);
+                res.AppendFmt("%s\n", tab->filePath.s);
             }
         }
     }
@@ -1894,11 +1894,13 @@ static const char* HandleCmdCommand(HWND hwnd, const char* cmd, bool* ack) {
     // cmdContent is the full content between [ and ]
     // it might be just "CmdClose" or "CmdCreateAnnotHighlight #00ff00 openEdit"
     // extract the command name (first space-delimited token)
-    char* s = cmdContent.Get();
-    char* spacePos = str::FindChar(s, ' ');
-    TempStr name = s;
+    Str content = Str(cmdContent.Get());
+    Str spacePos = str::FindChar(content, ' ');
+    TempStr name;
     if (spacePos) {
-        name = str::DupTemp(s, (size_t)(spacePos - s));
+        name = str::DupTemp(content.s, (size_t)(spacePos.s - content.s));
+    } else {
+        name = str::DupTemp(content);
     }
 
     int cmdId = GetCommandIdByName(name);
@@ -2092,7 +2094,7 @@ LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM) {
 
 // Payload for async Open command carried in kCopyDataOpen WM_COPYDATA
 struct OpenCopyDataAsync {
-    char* path; // heap-allocated, freed by OpenCopyDataAsyncRun
+    Str path; // heap-allocated, freed by OpenCopyDataAsyncRun
     u32 newWindow;
 };
 
@@ -2149,14 +2151,14 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
             return FALSE;
         }
         auto* data = (const SumatraOpenCopyData*)cds->lpData;
-        const char* path = (const char*)(data + 1);
+        const char* pathZ = (const char*)(data + 1);
         size_t pathMax = cds->cbData - sizeof(SumatraOpenCopyData);
         // require null-terminator within bounds
-        if (strnlen_s(path, pathMax) >= pathMax) {
+        if (strnlen_s(pathZ, pathMax) >= pathMax) {
             return FALSE;
         }
         auto* d = new OpenCopyDataAsync;
-        d->path = str::Dup(path);
+        d->path = str::Dup(pathZ);
         d->newWindow = data->newWindow;
         auto fn = MkFunc0<OpenCopyDataAsync>(OpenCopyDataAsyncRun, d);
         uitask::Post(fn, "OnCopyData/Open");
