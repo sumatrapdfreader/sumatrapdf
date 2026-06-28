@@ -496,11 +496,11 @@ struct CountThreadData {
     LONG epoch = 0;
     HANDLE thread = nullptr;
 
-    CountThreadData(MainWindow* win, EngineBase* engine, const WCHAR* text, bool matchCase, bool matchWholeWord,
+    CountThreadData(MainWindow* win, EngineBase* engine, WStr text, bool matchCase, bool matchWholeWord,
                     bool wantMatchList, bool wantSnippets, LONG epoch) {
         this->win = win;
         this->engine = engine;
-        this->text = WStr(str::Dup(text));
+        this->text = str::Dup(text);
         this->matchCase = matchCase;
         this->matchWholeWord = matchWholeWord;
         this->wantMatchList = wantMatchList;
@@ -535,7 +535,7 @@ struct CountEndTaskData {
     }
 };
 
-static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase, bool matchWholeWord);
+static void StartFindCount(MainWindow* win, WStr text, bool matchCase, bool matchWholeWord);
 
 static void CountEndTask(CountEndTaskData* d) {
     AutoDelete delData(d);
@@ -578,7 +578,7 @@ static void CountEndTask(CountEndTaskData* d) {
     if (win->findCountPendingText) {
         WStr pending = win->findCountPendingText;
         win->findCountPendingText = {};
-        StartFindCount(win, pending.s, win->findCountPendingMatchCase, win->findCountPendingMatchWholeWord);
+        StartFindCount(win, pending, win->findCountPendingMatchCase, win->findCountPendingMatchWholeWord);
         str::Free(pending.s);
     }
 }
@@ -656,7 +656,7 @@ static void AbortCount(MainWindow* win) {
 // scan is already running, remember only the latest request and let the running
 // worker start it when it finishes, so rapid typing never piles up scans and
 // the UI thread never blocks waiting on a scan.
-static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase, bool matchWholeWord) {
+static void StartFindCount(MainWindow* win, WStr text, bool matchCase, bool matchWholeWord) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -673,7 +673,7 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase, b
         // worker's CountEndTask will start it once it exits
         InterlockedIncrement(&win->findCountEpoch);
         str::FreePtr(&win->findCountPendingText);
-        win->findCountPendingText = WStr(str::Dup(text));
+        win->findCountPendingText = str::Dup(text);
         win->findCountPendingMatchCase = matchCase;
         win->findCountPendingMatchWholeWord = matchWholeWord;
         return;
@@ -694,7 +694,7 @@ static void StartFindCount(MainWindow* win, const WCHAR* text, bool matchCase, b
 
 // update the n/m counter after a search settles on a match: instant from cache
 // when the term/match-case/document are unchanged, otherwise rebuild it
-static void UpdateMatchCount(MainWindow* win, const WCHAR* text) {
+static void UpdateMatchCount(MainWindow* win, WStr text) {
     DisplayModel* dm = win->AsFixed();
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
@@ -770,7 +770,7 @@ static void FindEndTask(FindEndTaskData* d) {
     } else if (textSel) {
         ShowSearchResult(win, textSel, wasModifiedCanceled);
         ftd->HideUI(true, loopedAround);
-        UpdateMatchCount(win, ftd->text);
+        UpdateMatchCount(win, WStr(ftd->text.Get(), (int)ftd->text.size()));
     } else {
         // nothing found, or find-as-you-type self-canceled before reaching a
         // far match. Still kick the full-document count: it does its own
@@ -779,7 +779,7 @@ static void FindEndTask(FindEndTaskData* d) {
         // find thread has exited, so the two never scan the engine at once.)
         ClearSearchResult(win);
         ftd->HideUI(false, !wasModifiedCanceled);
-        UpdateMatchCount(win, ftd->text);
+        UpdateMatchCount(win, WStr(ftd->text.Get(), (int)ftd->text.size()));
     }
     win->findThread = nullptr;
 }
