@@ -34,7 +34,7 @@ constexpr COLORREF kColBlack = 0x000000;
 constexpr COLORREF kColWhite = 0xFFFFFF;
 constexpr COLORREF kRedColor = RgbToCOLORREF(0xff0000);
 
-static const char* themesTxt = R"(Themes [
+static Str themesTxt = Str(R"(Themes [
     [
         Name = Light
         TextColor = #000000
@@ -132,7 +132,7 @@ static const char* themesTxt = R"(Themes [
         ColorizeControls = true
     ]
 ]
-)";
+)");
 
 extern void UpdateAfterThemeChange();
 
@@ -181,10 +181,10 @@ void CreateThemeCommands() {
     CustomCommand* cmd;
     for (int i = 0; i < gThemeCount; i++) {
         Theme* theme = gThemes->At(i);
-        const char* themeName = theme->name;
+        Str themeName = theme->name;
         auto args = NewStringArg(kCmdArgTheme, themeName);
         cmd = CreateCustomCommand(themeName, CmdSetTheme, args);
-        cmd->name = str::Format(_TRA("Set theme '%s'"), themeName);
+        cmd->name = str::Format(_TRA("Set theme '%s'"), themeName.s);
         if (i == 0) {
             gFirstSetThemeCmdId = cmd->id;
         } else if (i == gThemeCount - 1) {

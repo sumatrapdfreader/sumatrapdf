@@ -293,7 +293,7 @@ static void DrawTabGroupItem(TabGroupsDialog* d, ListBox::DrawItemEvent* ev) {
     rc.right -= padX;
 
     // draw group name on the left
-    const char* name = d->model->Item(ev->itemIndex);
+    Str name = d->model->Item(ev->itemIndex);
     TempWStr nameW = ToWStrTemp(name);
     uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT;
     DrawTextW(hdc, nameW, -1, &rc, fmt);
@@ -422,13 +422,12 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, kTabGroupsWinClassName, WndProcTabGroups);
     wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    wcex.hIcon = LoadIconW(h, iconName);
+    wcex.hIcon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
     RegisterClassEx(&wcex);
 
     bool isRtl = IsUIRtl();
 
-    const char* titleStr = (mode == TabGroupDialogMode::Save) ? _TRA("Save Tab Group") : _TRA("Restore Tab Group");
+    Str titleStr = (mode == TabGroupDialogMode::Save) ? Str(_TRA("Save Tab Group")) : Str(_TRA("Restore Tab Group"));
     auto title = ToWStrTemp(titleStr);
 
     DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
@@ -487,7 +486,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
 
     // buttons
     {
-        const char* okText = (mode == TabGroupDialogMode::Save) ? _TRA("Save") : _TRA("Restore");
+        Str okText = (mode == TabGroupDialogMode::Save) ? Str(_TRA("Save")) : Str(_TRA("Restore"));
         Button::CreateArgs args;
         args.parent = hwnd;
         args.text = okText;
