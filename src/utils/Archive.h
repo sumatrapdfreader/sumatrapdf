@@ -39,7 +39,7 @@ class MultiFormatArchive {
 
         // internal use
         i64 filePos = 0;
-        char* data = nullptr;
+        char* data = nullptr; // str-port: binary file payload, not a string
 
         FILETIME GetWinFileTime() const;
     };

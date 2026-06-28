@@ -84,13 +84,13 @@ TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
     if (fileName && IsSep(fileName.s[0])) {
         fileName = Str(fileName.s + 1, fileName.len - 1);
     }
-    const char* sepStr = nullptr;
+    Str sepStr = {};
     if (path.len > 0) {
         if (!IsSep(path.s[path.len - 1])) {
-            sepStr = "\\";
+            sepStr = Str("\\");
         }
     }
-    TempStr res = str::JoinTemp(path, Str(sepStr), fileName);
+    TempStr res = str::JoinTemp(path, sepStr, fileName);
     if (fileName2) {
         res = JoinTemp(res, fileName2);
     }
@@ -101,13 +101,13 @@ Str Join(Arena* allocator, Str path, Str fileName) {
     if (fileName && IsSep(fileName.s[0])) {
         fileName = Str(fileName.s + 1, fileName.len - 1);
     }
-    const char* sepStr = nullptr;
+    Str sepStr = {};
     if (path.len > 0) {
         if (!IsSep(path.s[path.len - 1])) {
-            sepStr = "\\";
+            sepStr = Str("\\");
         }
     }
-    return str::Join(allocator, path, Str(sepStr), fileName);
+    return str::Join(allocator, path, sepStr, fileName);
 }
 
 Str Join(Str path, Str fileName) {
@@ -518,25 +518,25 @@ TempStr WslUncToUnixTemp(Str path) {
         return {};
     }
 
-    const char* p = nullptr;
+    int off = 0;
 
     if (str::StartsWithI(path, "\\\\wsl.localhost\\")) {
-        p = path.s + str::Len("\\\\wsl.localhost\\");
+        off = str::Len("\\\\wsl.localhost\\");
     } else if (str::StartsWithI(path, "\\\\wsl$\\")) {
-        p = path.s + str::Len("\\\\wsl$\\");
+        off = str::Len("\\\\wsl$\\");
     } else {
         return {};
     }
 
     // Skip the distribution name, e.g. "Ubuntu" in "\\wsl.localhost\Ubuntu\home\..."
-    while (*p && !IsSep(*p)) {
-        p++;
+    for (; off < path.len && path.s[off] && !IsSep(path.s[off]); off++) {
+        ;
     }
-    if (!IsSep(*p) || !p[1]) {
+    if (off >= path.len || !IsSep(path.s[off]) || off + 1 >= path.len) {
         return {};
     }
 
-    TempStr unixPath = str::JoinTemp("/", p + 1);
+    TempStr unixPath = str::JoinTemp("/", Str(path.s + off + 1, path.len - off - 1));
     str::TransCharsInPlace(unixPath, "\\", "/");
     return unixPath;
 }
