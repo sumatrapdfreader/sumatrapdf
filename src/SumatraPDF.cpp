@@ -3973,9 +3973,9 @@ static void DeleteCurrentFile(MainWindow* win) {
         return;
     }
     auto* ctrl = win->ctrl;
-    const char* path = str::DupTemp(ctrl->GetFilePath());
+    TempStr path = str::DupTemp(ctrl->GetFilePath());
     // this happens e.g. for embedded documents and directories
-    if (!file::Exists(Str(path))) {
+    if (!file::Exists(path)) {
         return;
     }
     CloseCurrentTab(win, false);
@@ -4005,7 +4005,7 @@ static void RenameCurrentFile(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
-    const char* srcPath = str::DupTemp(ctrl->GetFilePath());
+    TempStr srcPath = str::DupTemp(ctrl->GetFilePath());
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcPath)) {
         return;
@@ -4014,7 +4014,7 @@ static void RenameCurrentFile(MainWindow* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    const char* defExt = ctrl->GetDefaultFileExt();
+    Str defExt = ctrl->GetDefaultFileExt();
     TempWStr defExtW = ToWStrTemp(defExt);
     StrBuilder fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
@@ -4094,13 +4094,13 @@ static void CreateLnkShortcut(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
-    const char* path = ctrl->GetFilePath();
+    Str path = ctrl->GetFilePath();
 
     const TempWStr defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
 
     WCHAR dstFileName[MAX_PATH] = {};
     // Remove the extension so that it can be replaced with .lnk
-    auto name = path::GetBaseNameTemp(Str(path));
+    auto name = path::GetBaseNameTemp(path);
     str::BufSet(dstFileName, dimof(dstFileName), name);
     str::TransCharsInPlace(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
@@ -4130,7 +4130,7 @@ static void CreateLnkShortcut(MainWindow* win) {
         return;
     }
 
-    char* fileName = ToUtf8Temp(dstFileName);
+    TempStr fileName = ToUtf8Temp(dstFileName);
     if (!str::EndsWithI(fileName, ".lnk")) {
         fileName = str::JoinTemp(fileName, ".lnk");
     }
@@ -4139,7 +4139,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     if (win->AsFixed()) {
         ss = win->AsFixed()->GetScrollState();
     }
-    const char* viewMode = DisplayModeToString(ctrl->GetDisplayMode());
+    Str viewMode = DisplayModeToString(ctrl->GetDisplayMode());
     TempStr zoomVirtual = str::FormatTemp("%.2f", ctrl->GetZoomVirtual());
     if (kZoomFitPage == ctrl->GetZoomVirtual()) {
         zoomVirtual = "fitpage";
@@ -4209,7 +4209,7 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     // so that the file is opened in the same state
     SaveSettings();
 
-    const char* path = tab->filePath;
+    Str path = tab->filePath;
     ReportIf(!path);
     if (!path) {
         return;
@@ -4260,7 +4260,7 @@ static void DuplicateInNewTab(MainWindow* win) {
         return;
     }
 
-    const char* path = currentTab->filePath;
+    Str path = currentTab->filePath;
     ReportIf(!path);
     if (!path) {
         return;
@@ -4286,7 +4286,7 @@ static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
     WCHAR* dir = ofn->lpstrFile;
     WCHAR* file = ofn->lpstrFile + ofn->nFileOffset;
     // only a single file, full path
-    char* path;
+    TempStr path;
     if (file[-1] != 0) {
         path = ToUtf8Temp(dir);
         filesOut.Append(path);
@@ -4303,8 +4303,8 @@ static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
 
 static TempWStr GetFileFilterTemp() {
     const struct {
-        const char* name; /* nullptr if only to include in "All supported documents" */
-        const char* filter;
+        Str name; /* empty if only to include in "All supported documents" */
+        Str filter;
         bool available;
     } fileFormats[] = {
         {_TRA("PDF documents"), "*.pdf;*.p7m", true},
@@ -4394,14 +4394,14 @@ static void OpenFile(MainWindow* win) {
 
     StrVec files;
     GetFilesFromGetOpenFileName(&ofn, files);
-    for (char* path : files) {
+    for (Str path : files) {
         LoadArgs args(path, win);
         LoadDocument(&args);
     }
 }
 
 static void RemoveFailedFiles(StrVec& files) {
-    for (char* path : gFilesFailedToOpen) {
+    for (Str path : gFilesFailedToOpen) {
         int idx = files.Find(path);
         if (idx >= 0) {
             files.RemoveAt(idx);
