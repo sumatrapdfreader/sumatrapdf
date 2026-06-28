@@ -84,14 +84,15 @@ class FitzAbortCookie : public AbortCookie {
 };
 
 // copy of fz_is_external_link without ctx
-static bool IsExternalLink(const char* uri) {
+static bool IsExternalLink(Str uri) {
     if (!uri) {
         return false;
     }
-    while (*uri >= 'a' && *uri <= 'z') {
-        ++uri;
+    int i = 0;
+    while (i < uri.len && uri.s[i] >= 'a' && uri.s[i] <= 'z') {
+        ++i;
     }
-    return uri[0] == ':';
+    return i < uri.len && uri.s[i] == ':';
 }
 
 static char* FzGetURL(fz_link* link, fz_outline* outline) {
@@ -547,9 +548,9 @@ static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size) {
 // so that their content can be loaded on demand in order to preserve memory
 constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
 
-static fz_stream* FzReadFileIfSmall(fz_context* ctx, const char* path) {
+static fz_stream* FzReadFileIfSmall(fz_context* ctx, Str path) {
     fz_stream* stm = nullptr;
-    i64 fileSize = file::GetSize(Str(path));
+    i64 fileSize = file::GetSize(path);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     bool isSmallFile = fileSize > 0 && fileSize < kMaxMemoryFileSize;
@@ -557,7 +558,7 @@ static fz_stream* FzReadFileIfSmall(fz_context* ctx, const char* path) {
         return nullptr;
     }
 
-    ByteSlice d = file::ReadFile(Str(path));
+    ByteSlice d = file::ReadFile(path);
     if (d.empty()) {
         // failed to read
         return nullptr;
@@ -573,7 +574,7 @@ https://github.com/sumatrapdfreader/sumatrapdf/issues/4514
 Some PDF files have garbage at the beginning, before the %PDF- marker
 Sometimes removing this garbage fixes the file for mupdf
 */
-static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, const char* path) {
+static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
     fz_stream* stm;
     // fast fail: read enough to check if this is PDF file with garbage
     char buf[1024];
@@ -588,7 +589,7 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, const char* path) {
         return nullptr;
     }
 
-    ByteSlice d = file::ReadFile(Str(path));
+    ByteSlice d = file::ReadFile(path);
     if (d.empty()) {
         // failed to read
         return nullptr;
@@ -602,7 +603,7 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, const char* path) {
     return stm;
 }
 
-static fz_stream* FzOpenOrReadFile(fz_context* ctx, const char* path) {
+static fz_stream* FzOpenOrReadFile(fz_context* ctx, Str path) {
     fz_stream* stm = FzReadFileIfSmall(ctx, path);
     if (stm) {
         return stm;
@@ -3192,7 +3193,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
     return pageInfo;
 }
 
-static IPageElement* NewFzComment(const char* comment, int pageNo, RectF rect) {
+static IPageElement* NewFzComment(Str comment, int pageNo, RectF rect) {
     auto res = new PageElementComment(comment);
     res->pageNo = pageNo;
     res->rect = rect;
