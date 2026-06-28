@@ -1011,7 +1011,7 @@ static void OnBrowse(ImageEditWindow* ew) {
 
 // Save a GDI+ Bitmap using WIC. Supports all formats that have a WIC encoder installed,
 // including WebP on Windows 10+.
-static bool SaveBitmapWithWIC(Bitmap* bmp, const WCHAR* destPath, const GUID* containerFormat) {
+static bool SaveBitmapWithWIC(Bitmap* bmp, WStr destPath, const GUID* containerFormat) {
     if (!bmp || !destPath || !containerFormat) {
         return false;
     }
@@ -1042,8 +1042,8 @@ static bool SaveBitmapWithWIC(Bitmap* bmp, const WCHAR* destPath, const GUID* co
         goto Done;
     }
 
-    hr = SHCreateStreamOnFileEx(destPath, STGM_CREATE | STGM_WRITE | STGM_SHARE_EXCLUSIVE, FILE_ATTRIBUTE_NORMAL, TRUE,
-                                nullptr, &pStream);
+    hr = SHCreateStreamOnFileEx(destPath.s, STGM_CREATE | STGM_WRITE | STGM_SHARE_EXCLUSIVE, FILE_ATTRIBUTE_NORMAL,
+                                TRUE, nullptr, &pStream);
     if (FAILED(hr)) {
         goto Done;
     }
@@ -1931,14 +1931,14 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
         winH = screenH;
     }
 
-    const WCHAR* title = L"Save Image";
+    WStr title = L"Save Image";
     if (mode == ImageEditMode::Crop) {
         title = L"Crop Image";
     } else if (mode == ImageEditMode::Resize) {
         title = L"Resize Image";
     }
     HWND hwnd =
-        CreateWindowExW(WS_EX_CONTROLPARENT, kImageEditWinClassName, title, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+        CreateWindowExW(WS_EX_CONTROLPARENT, kImageEditWinClassName, title.s, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
                         CW_USEDEFAULT, CW_USEDEFAULT, winW, winH, nullptr, nullptr, h, nullptr);
     if (!hwnd) {
         gImageEditWindows.Remove(ew);
