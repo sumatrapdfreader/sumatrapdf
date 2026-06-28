@@ -30,17 +30,16 @@ static int VsnprintfUtf8(char* buf, size_t bufCchSize, Str fmt, va_list args) { 
     return vsnprintf(buf, bufCchSize, fmtZ, args);
 }
 
-static int VscprintfUtf8(Str fmt, va_list args) {
-    char* fmtZ = CStrTemp(fmt);
+static int VscprintfUtf8(const char* fmt, va_list args) {
 #if defined(_MSC_VER)
     _locale_t loc = GetUtf8FormatLocale();
     if (loc) {
-        return _vscprintf_l(fmtZ, loc, args);
+        return _vscprintf_l(fmt, loc, args);
     }
 #endif
     va_list argsCopy;
     va_copy(argsCopy, args);
-    int res = vsnprintf(nullptr, 0, fmtZ, argsCopy);
+    int res = vsnprintf(nullptr, 0, fmt, argsCopy);
     va_end(argsCopy);
     return res;
 }
@@ -778,7 +777,7 @@ bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...) { // str-port: C-string
 }
 
 // TODO: need to finish StrFormat and use it instead.
-Str FmtVWithArena(Arena* a, Str fmt, va_list args) {
+Str FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     char message[512]{};
     va_list argsCopy;
     va_copy(argsCopy, args);
@@ -814,12 +813,12 @@ Str FmtVWithArena(Arena* a, Str fmt, va_list args) {
     return Str(buf, count);
 }
 
-Str FmtV(Str fmt, va_list args) {
+Str FmtV(const char* fmt, va_list args) {
     return FmtVWithArena(nullptr, fmt, args);
 }
 
 // caller needs to str::Free()
-Str Format(Str fmt, ...) {
+Str Format(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     Str res = FmtV(fmt, args);
@@ -2049,7 +2048,7 @@ bool StrBuilder::AppendSlice(const ByteSlice& d) {
     return this->Append(AsStr(d));
 }
 
-void StrBuilder::AppendFmt(Str fmt, ...) {
+void StrBuilder::AppendFmt(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     Str res = str::FmtV(fmt, args);
@@ -3377,7 +3376,7 @@ TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
     return wstr::Join(GetTempArena(), s1, s2, s3);
 }
 
-TempStr FormatTemp(Str fmt, ...) {
+TempStr FormatTemp(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     Str res = FmtVWithArena(GetTempArena(), fmt, args);

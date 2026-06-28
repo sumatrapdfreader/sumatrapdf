@@ -144,10 +144,13 @@ bool ContainsI(Str s, Str txt);
 
 bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args); // str-port: C-string
 bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);           // str-port: C-string
-Str FmtVWithArena(Arena* a, Str fmt, va_list args);
-Str FmtV(Str fmt, va_list args);
-Str Format(Str fmt, ...);
-TempStr FormatTemp(Str fmt, ...);
+// formatting functions take the format string as a plain const char* (as an
+// exception to the Str rule): it's almost always a string literal, and a
+// const char* is what vsnprintf needs anyway (no NUL-termination footgun).
+Str FmtVWithArena(Arena* a, const char* fmt, va_list args);
+Str FmtV(const char* fmt, va_list args);
+Str Format(const char* fmt, ...);
+TempStr FormatTemp(const char* fmt, ...);
 
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
@@ -307,7 +310,7 @@ struct StrBuilder {
     ByteSlice StealAsByteSlice();
     bool Append(const u8* src, size_t size = -1);
     bool AppendSlice(const ByteSlice& d);
-    void AppendFmt(Str fmt, ...);
+    void AppendFmt(const char* fmt, ...);
     void Set(Str s);
     Str Get() const;
     Str CStr() const;

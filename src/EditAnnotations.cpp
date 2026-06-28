@@ -351,7 +351,7 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     for (int i = 0; i < n; i++) {
         auto annot = ew->annotations.at(i);
         s.Reset();
-        s.AppendFmt(_TRA("page %d,"), annot->pageNo);
+        s.AppendFmt(_TRA("page %d,").s, annot->pageNo);
         Str name = AnnotationReadableNameTemp(annot->type);
         s.AppendFmt(" %s", name.s);
         model->strings.Append(s.Get());
@@ -533,7 +533,7 @@ static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
     int y = (int)rect.y;
     int dx = (int)rect.dx;
     int dy = (int)rect.dy;
-    s.AppendFmt(_TRA("Rect: x=%d y=%d dx=%d dy=%d"), x, y, dx, dy);
+    s.AppendFmt(_TRA("Rect: x=%d y=%d dx=%d dy=%d").s, x, y, dx, dy);
     ew->staticRect->SetText(s.Get());
     ew->staticRect->SetIsVisible(true);
 }
@@ -545,7 +545,7 @@ static void DoAuthor(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     StrBuilder s;
-    s.AppendFmt(_TRA("Author: %s"), author.s);
+    s.AppendFmt(_TRA("Author: %s").s, author.s);
     ew->staticAuthor->SetText(s.Get());
     ew->staticAuthor->SetIsVisible(true);
 }
@@ -577,7 +577,7 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     StrBuilder s;
-    s.AppendFmt(_TRA("Popup: %d 0 R"), popupId);
+    s.AppendFmt(_TRA("Popup: %d 0 R").s, popupId);
     ew->staticPopup->SetText(s.Get());
     ew->staticPopup->SetIsVisible(true);
 }
@@ -649,7 +649,7 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int fontSize = DefaultAppearanceTextSize(annot);
-    TempStr s = str::FormatTemp(_TRA("Text Size: %d"), fontSize);
+    TempStr s = str::FormatTemp(_TRA("Text Size: %d").s, fontSize);
     ew->staticTextSize->SetText(s);
     // TODO: DoTextSize() shouldn't modify the annotation but I'm not sure
     // if it's not needed to be called for free text annotations
@@ -667,7 +667,7 @@ static void TextFontSizeChanging(EditAnnotationsWindow* ew, Trackbar::PositionCh
     }
     int fontSize = ev->pos;
     SetDefaultAppearanceTextSize(annot, fontSize);
-    TempStr s = str::FormatTemp(_TRA("Text Size: %d"), fontSize);
+    TempStr s = str::FormatTemp(_TRA("Text Size: %d").s, fontSize);
     ew->staticTextSize->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
@@ -702,7 +702,7 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     int borderWidth = BorderWidth(annot);
     borderWidth = std::clamp(borderWidth, borderWidthMin, borderWidthMax);
-    TempStr s = str::FormatTemp(_TRA("Border: %d"), borderWidth);
+    TempStr s = str::FormatTemp(_TRA("Border: %d").s, borderWidth);
     ew->staticBorder->SetText(s);
     ew->trackbarBorder->SetValue(borderWidth);
     ew->staticBorder->SetIsVisible(true);
@@ -716,7 +716,7 @@ static void BorderWidthChanging(EditAnnotationsWindow* ew, Trackbar::PositionCha
     }
     int borderWidth = ev->pos;
     SetBorderWidth(annot, borderWidth);
-    TempStr s = str::FormatTemp(_TRA("Border: %d"), borderWidth);
+    TempStr s = str::FormatTemp(_TRA("Border: %d").s, borderWidth);
     ew->staticBorder->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
@@ -867,7 +867,7 @@ static void DoOpacity(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int opacity = Opacity(ew->tab->selectedAnnotation);
-    TempStr s = str::FormatTemp(_TRA("Opacity: %d"), opacity);
+    TempStr s = str::FormatTemp(_TRA("Opacity: %d").s, opacity);
     ew->staticOpacity->SetText(s);
     ew->staticOpacity->SetIsVisible(true);
     ew->trackbarOpacity->SetIsVisible(true);
@@ -889,7 +889,7 @@ static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangin
     }
     int opacity = ev->pos;
     SetOpacity(annot, opacity);
-    TempStr s = str::FormatTemp(_TRA("Opacity: %d"), opacity);
+    TempStr s = str::FormatTemp(_TRA("Opacity: %d").s, opacity);
     ew->staticOpacity->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);

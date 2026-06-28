@@ -230,7 +230,7 @@ static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND hwnd, UINT msg, WP
 
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
     Str linkLabel = _TRA("AI Chat documentation");
-    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions."), linkLabel.s);
+    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions.").s, linkLabel.s);
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;

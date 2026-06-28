@@ -428,7 +428,7 @@ static void AddImageProperties(EngineBase* engine, int pageNo, StrBuilder& out) 
     int nImageProps = PropsCount(imageProps);
     if (nImageProps == 0) return;
     out.AppendChar('\n');
-    TempStr header = str::FormatTemp(_TRA("Current Image (%d):"), pageNo);
+    TempStr header = str::FormatTemp(_TRA("Current Image (%d):").s, pageNo);
     out.Append(header);
     out.AppendChar('\n');
     for (int i = 0; i < nImageProps; i++) {

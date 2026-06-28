@@ -239,7 +239,7 @@ static bool UninstallerOnWmCommand(WPARAM wp) {
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
 static void CreateUninstallerWindow() {
-    TempStr title = str::FormatTemp(_TRA("SumatraPDF %s Uninstaller"), CURR_VERSION_STRA);
+    TempStr title = str::FormatTemp(_TRA("SumatraPDF %s Uninstaller").s, CURR_VERSION_STRA);
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
     int dx = GetInstallerWinDx();

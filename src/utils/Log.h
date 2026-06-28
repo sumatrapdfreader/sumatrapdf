@@ -13,17 +13,17 @@ void StartLogToFile(Str path, bool removeIfExists);
 bool WriteCurrentLogToFile(Str path);
 
 void log(Str s);
-void logf(Str fmt, ...);
+void logf(const char* fmt, ...);
 
-void logvf(Str fmt, ...);
+void logvf(const char* fmt, ...);
 void logv(Str s);
 
-void logPipe(Str fmt, ...);
+void logPipe(const char* fmt, ...);
 
 void logValueSize(Str name, i64 v);
 
 // log always
-void logfa(Str fmt, ...);
+void logfa(const char* fmt, ...);
 void loga(Str s);
 
 void DestroyLogging();

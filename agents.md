@@ -35,6 +35,25 @@ We rely on a controlled include order rather than self-sufficient headers (this 
 
 Do **not** use `#pragma once` in `.h` files.
 
+## String formatting functions take `const char*` fmt
+
+We use our own `Str` value type (a `char*` + `int len`) for strings instead of
+raw `char*` / `std::string`. **Exception:** the `printf`-style formatting
+functions take the format string as a plain `const char*`, not a `Str`. The
+format string is almost always a string literal, and a `const char*` is what
+the underlying `vsnprintf` needs anyway — so taking `Str` only added a wasted
+`strlen` and a NUL-termination footgun.
+
+Functions following this rule: `str::Format`, `str::FormatTemp`, `str::FmtV`,
+`str::FmtVWithArena`, `StrBuilder::AppendFmt`, `logf`, `logfa`, `logvf`,
+`logPipe`, `logConsole`, `dbglayoutf`, `CliPrintf`,
+`MaybeDelayedWarningNotification`, `VscprintfUtf8`. (Note this is only the
+**format string** — the variadic args are unchanged.)
+
+When the format string is a `Str` rather than a literal (most commonly a
+`_TRA("...")` translation, which returns a `Str`), pass its `.s` to get the
+underlying NUL-terminated `char*`, e.g. `str::FormatTemp(_TRA("page %d").s, n)`.
+
 ## Adding a new advanced setting
 
 To add a new advanced setting:

@@ -29,14 +29,13 @@ extern void StrTest();
 extern void TrivialHtmlParser_UnitTests();
 extern void VecTest();
 extern void WinUtilTest();
-extern void StrFormatTest();
 extern void StrVecTest();
 
 void GetPrintersInfo(struct StrBuilder&) {
     /* stub: do nothing */
 }
 
-void MaybeDelayedWarningNotification(Str, ...) {
+void MaybeDelayedWarningNotification(const char*, ...) {
     // a stub to make this compile
 }
 

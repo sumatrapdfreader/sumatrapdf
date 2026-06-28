@@ -81,13 +81,13 @@ static void EnsureConsole() {
     }
 }
 
-void logConsole(Str fmt, ...) {
+void logConsole(const char* fmt, ...) {
     EnsureConsole();
 
     char buf[4096];
     va_list args;
     va_start(args, fmt);
-    int len = wvsprintfA(buf, fmt.s, args);
+    int len = wvsprintfA(buf, fmt, args);
     va_end(args);
 
     if (len <= 0) return;

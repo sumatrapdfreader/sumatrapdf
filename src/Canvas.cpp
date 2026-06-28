@@ -1032,7 +1032,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.noClose = true;
                         Str name = annot ? AnnotationReadableNameTemp(annot->type) : StrL("none");
                         Str fmt = _TRA("%s annotation. Ctrl+click to edit.");
-                        args.msg = str::FormatTemp(fmt, name.s);
+                        args.msg = str::FormatTemp(fmt.s, name.s);
                         ShowNotification(args);
                     }
                 }
@@ -2063,7 +2063,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
                     // set shouldPaint and gNoFlickerRender skips flushing the buffer.
                     shouldPaint = true;
                     SetTextColor(hdc, colDocTxt);
-                    TempStr msg = str::FormatTemp(_TRA("Rendering page %d..."), pageNo);
+                    TempStr msg = str::FormatTemp(_TRA("Rendering page %d...").s, pageNo);
                     DrawCenteredText(hdc, bounds, msg, isRtl);
                 }
                 rendering = true;
@@ -3059,7 +3059,7 @@ static void OnPaintError(MainWindow* win) {
     auto tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(filePath).s);
+        TempStr msg = str::FormatTemp(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath).s);
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }

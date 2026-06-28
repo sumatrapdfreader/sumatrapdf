@@ -315,10 +315,10 @@ TempStr FavReadableNameTemp(Favorite* fn) {
         label = str::FormatTemp("%d", fn->pageNo);
     }
     if (fn->name) {
-        TempStr pageNo = str::FormatTemp(_TRA("(page %s)"), label.s);
+        TempStr pageNo = str::FormatTemp(_TRA("(page %s)").s, label.s);
         return str::JoinTemp(fn->name, " ", pageNo);
     }
-    return str::FormatTemp(_TRA("Page %s"), label.s);
+    return str::FormatTemp(_TRA("Page %s").s, label.s);
 }
 
 // caller has to free() the result
@@ -466,11 +466,11 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
         bool isBookmarked = IsPageInFavorites(win->ctrl->GetFilePath(), win->currPageNo);
         if (isBookmarked) {
             MenuSetEnabled(menu, CmdFavoriteAdd, false);
-            TempStr s = str::FormatTemp(_TRA("Remove page %s from favorites"), label.s);
+            TempStr s = str::FormatTemp(_TRA("Remove page %s from favorites").s, label.s);
             MenuSetText(menu, CmdFavoriteDel, s);
         } else {
             MenuSetEnabled(menu, CmdFavoriteDel, false);
-            TempStr s = str::FormatTemp(_TRA("Add page %s to favorites"), label.s);
+            TempStr s = str::FormatTemp(_TRA("Add page %s to favorites").s, label.s);
             s = AppendAccelKeyToMenuStringTemp(s, CmdFavoriteAdd);
             MenuSetText(menu, CmdFavoriteAdd, s);
         }

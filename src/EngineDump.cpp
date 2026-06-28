@@ -409,7 +409,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
         if (silent) {
             return true;
         }
-        TempStr txtFilePath = str::FormatTemp(renderPath, 0);
+        TempStr txtFilePath = str::FormatTemp(renderPath.s, 0);
         TempStr textCrLf = str::ReplaceTemp(text.Get(), "\n", "\r\n");
         TempStr textUTF8BOM = str::JoinTemp(UTF8_BOM, textCrLf);
         return file::WriteFile(txtFilePath, ToByteSlice(textUTF8BOM));
@@ -427,7 +427,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
             FreePixmap(bmp);
             continue;
         }
-        TempStr pageBmpPath = str::FormatTemp(renderPath, pageNo);
+        TempStr pageBmpPath = str::FormatTemp(renderPath.s, pageNo);
         if (str::EndsWithI(pageBmpPath, ".png")) {
             Gdiplus::Bitmap gbmp(bmp->hbmp, nullptr);
             CLSID pngEncId = GetGdiPlusEncoderClsid(L"image/png");

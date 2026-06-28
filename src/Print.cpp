@@ -984,7 +984,7 @@ struct UpdatePrintProgressData {
 
 static void UpdatePrintProgress(UpdatePrintProgressData* d) {
     int perc = CalcPerc(d->current, d->total);
-    TempStr msg = str::FormatTemp(_TRA("Printing page %d of %d..."), d->current, d->total);
+    TempStr msg = str::FormatTemp(_TRA("Printing page %d of %d...").s, d->current, d->total);
     UpdateNotificationProgress(d->wnd, msg, perc);
     delete d;
 }
@@ -1952,7 +1952,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     }
 
     if (!printer) {
-        TempStr msg = str::FormatTemp(_TRA("Printer '%s' doesn't exist"), printerName.s);
+        TempStr msg = str::FormatTemp(_TRA("Printer '%s' doesn't exist").s, printerName.s);
         MessageBoxWarningCond(displayErrors, msg, _TRA("Printing problem."));
         return PrintResult::PrinterNotFound;
     }

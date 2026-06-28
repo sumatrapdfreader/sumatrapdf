@@ -801,7 +801,7 @@ static StrNode* AllocStrNode(Str s) {
     return node;
 }
 
-void MaybeDelayedWarningNotification(Str fmt, ...) {
+void MaybeDelayedWarningNotification(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     Str msg = str::FmtV(fmt, args);

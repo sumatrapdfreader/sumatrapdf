@@ -286,7 +286,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     auto mainInstr = _TRA("New version available");
     auto ver = updateInfo->latestVer;
     auto fmt = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install new version?");
-    auto content = str::Format(fmt, CURR_VERSION_STRA, ver);
+    auto content = str::Format(fmt.s, CURR_VERSION_STRA, ver);
 
     auto installerPath = updateInfo->installerPath;
     bool didDownloadInstaller = file::Exists(installerPath);
@@ -426,7 +426,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
         return;
     }
     TempStr link = str::FormatTemp("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update").s);
-    TempStr msg = str::FormatTemp(_TRA("Update %s available (you have %s) available. %s"), updateInfo->latestVer,
+    TempStr msg = str::FormatTemp(_TRA("Update %s available (you have %s) available. %s").s, updateInfo->latestVer,
                                   CURR_VERSION_STRA, link.s);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
@@ -702,7 +702,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
     if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         // notify the user about network error during a manual update check
-        TempStr msg = str::FormatTemp(_TRA("Can't connect to the Internet (error %#x)."), err);
+        TempStr msg = str::FormatTemp(_TRA("Can't connect to the Internet (error %#x).").s, err);
         MessageBoxWarning(hwnd, msg, _TRA("SumatraPDF Update"));
     }
 }

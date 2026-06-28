@@ -1433,7 +1433,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
         // base the prefix on the freshly-built title 's', not tab->frameTitle:
         // the latter may already carry the prefix from a previous refresh, so
         // reusing it stacks "[..] [..] [..] file.pdf" on repeated changes (#5690)
-        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s"), s.s);
+        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s").s, s.s);
     }
     str::ReplaceWithCopy(&tab->frameTitle, s);
 }
@@ -2343,7 +2343,7 @@ static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.warning = true;
-    nargs.msg = str::FormatTemp(_TRA("File %s not found"), path.s);
+    nargs.msg = str::FormatTemp(_TRA("File %s not found").s, path.s);
     ShowNotification(nargs);
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
@@ -2353,7 +2353,7 @@ void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs) {
     // new translation. Find a better message e.g. why failed.
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
-    nargs.msg = str::FormatTemp(_TRA("Error loading %s"), path.s);
+    nargs.msg = str::FormatTemp(_TRA("Error loading %s").s, path.s);
     nargs.warning = true;
     nargs.timeoutMs = 1000 * 5;
     ShowNotification(nargs);
@@ -2501,7 +2501,7 @@ static NotificationWnd* ShowLoadingNotif(MainWindow* win, Str path) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.groupId = path.s;
-    nargs.msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(path).s);
+    nargs.msg = str::FormatTemp(_TRA("Loading %s ...").s, path::GetBaseNameTemp(path).s);
     return ShowNotification(nargs);
 }
 
@@ -2591,9 +2591,9 @@ static void UpdateLoadingNotifUI(ExtractProgressUITask* task) {
         TempStr basename = path::GetBaseNameTemp(task->path);
         TempStr msg;
         if (task->nTotal > 0) {
-            msg = str::FormatTemp(_TRA("Loading %s %d of %d"), basename.s, task->nDecoded, task->nTotal);
+            msg = str::FormatTemp(_TRA("Loading %s %d of %d").s, basename.s, task->nDecoded, task->nTotal);
         } else {
-            msg = str::FormatTemp(_TRA("Loading %s %d"), basename.s, task->nDecoded);
+            msg = str::FormatTemp(_TRA("Loading %s %d").s, basename.s, task->nDecoded);
         }
         NotificationUpdateMessage(task->wnd, msg);
     }
@@ -2646,9 +2646,9 @@ static void UpdateCopyNotifUI(CopyProgressUITask* task) {
         TempStr msg;
         if (task->bytesTotal > 0) {
             TempStr total = str::FormatSizeShortTemp(task->bytesTotal, nullptr);
-            msg = str::FormatTemp(_TRA("Copying %s: %s / %s"), basename.s, copied.s, total.s);
+            msg = str::FormatTemp(_TRA("Copying %s: %s / %s").s, basename.s, copied.s, total.s);
         } else {
-            msg = str::FormatTemp(_TRA("Copying %s: %s"), basename.s, copied.s);
+            msg = str::FormatTemp(_TRA("Copying %s: %s").s, basename.s, copied.s);
         }
         NotificationUpdateMessage(task->wnd, msg);
     }
@@ -2855,7 +2855,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsAboutTab()) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
-        args.msg = str::FormatTemp(_TRA("Please wait - loading..."));
+        args.msg = str::FormatTemp(_TRA("Please wait - loading...").s);
         args.warning = true;
         ShowNotification(args);
         ShowWindow(win->hwndFrame, SW_SHOW);
@@ -3197,7 +3197,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
 
 static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
     StrBuilder msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path.s);
+    msg.AppendFmt(_TRA("Saved annotations to '%s'").s, path.s);
     NotificationCreateArgs nargs;
     nargs.hwndParent = hwndParent;
     nargs.font = GetDefaultGuiFont();
@@ -3208,7 +3208,7 @@ static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
 
 static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, Str path, Str mupdfErr) {
     StrBuilder msg;
-    msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.s, mupdfErr.s);
+    msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'").s, path.s, mupdfErr.s);
     ShowWarningNotification(hwndParent, msg.Get(), 0);
 }
 
@@ -3358,7 +3358,7 @@ enum class SaveChoice {
 
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
     TempStr fileName = path::GetBaseNameTemp(filePath);
-    TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'"), fileName.s);
+    TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'").s, fileName.s);
     TempWStr mainInstr = ToWStrTemp(mainInstrA);
     auto content = _TRA("Save changes?");
 
@@ -3758,7 +3758,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, StrBuilder& fileFilter) 
         if (!str::IsEmpty(imgDefExt) && imgDefExt.s[0] == '.') {
             imgDefExt = Str(imgDefExt.s + 1, imgDefExt.len - 1);
         }
-        fileFilter.AppendFmt(_TRA("Image files (*.%s)"), imgDefExt.s);
+        fileFilter.AppendFmt(_TRA("Image files (*.%s)").s, imgDefExt.s);
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {
@@ -4161,7 +4161,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path.s, ss.page, viewMode.s,
                                    zoomVirtual.s, (int)ss.x, (int)ss.y);
     TempStr label = ctrl->GetPageLabeTemp(ss.page);
-    TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s"), label.s, path.s);
+    TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s").s, label.s, path.s);
     auto exePath = GetSelfExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
@@ -6502,7 +6502,7 @@ static void ClearHistoryFinish(ClearHistoryData* d) {
     }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifClearHistory);
     HwndRepaintNow(win->hwndCanvas);
-    TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), d->nFiles);
+    TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails.").s, d->nFiles);
     ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
 }
 
@@ -6596,7 +6596,7 @@ void RemoveDeletedFilesFromHistory(MainWindow* win) {
         SaveSettings();
         MaybeRedrawHomePage();
     }
-    TempStr msg = str::FormatTemp(_TRA("Deleted files removed from history: %d"), nRemoved);
+    TempStr msg = str::FormatTemp(_TRA("Deleted files removed from history: %d").s, nRemoved);
     ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 }
 

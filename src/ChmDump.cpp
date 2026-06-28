@@ -37,7 +37,7 @@ static void CliPrint(Str s) {
     CliWrite("\n", 1);
 }
 
-static void CliPrintf(Str fmt, ...) {
+static void CliPrintf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     Str msg = str::FmtV(fmt, args);

@@ -9,14 +9,14 @@
 
 bool gEnableDebugLayout = false;
 
-void dbglayoutf(Str fmt, ...) {
+void dbglayoutf(const char* fmt, ...) {
     if (!gEnableDebugLayout) {
         return;
     }
 
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt.s, args).s;
+    AutoFreeStr s = str::FmtV(fmt, args).s;
     OutputDebugStringA(s.Get());
     va_end(args);
 }

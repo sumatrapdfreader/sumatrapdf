@@ -896,7 +896,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     dlg->backend = backend;
     dlg->hFont = GetDefaultGuiFont();
 
-    TempStr title = str::FormatTemp(_TRA("Translate with %s"), BackendDisplayName(backend).s);
+    TempStr title = str::FormatTemp(_TRA("Translate with %s").s, BackendDisplayName(backend).s);
 
     HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kSelectionTranslateWinClass, ToWStrTemp(title),
                                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,

@@ -123,7 +123,7 @@ static void logToPipe(Str s) {
 }
 
 // to use in
-void logPipe(Str fmt, ...) {
+void logPipe(const char* fmt, ...) {
     if (!gLogToPipe) return;
     va_list args;
     va_start(args, fmt);
@@ -141,7 +141,7 @@ void logv(Str s) {
     logToPipe(s);
 }
 
-void logvf(Str fmt, ...) {
+void logvf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args).s;
@@ -229,7 +229,7 @@ void loga(Str s) {
     log2(s, true);
 }
 
-void logf(Str fmt, ...) {
+void logf(const char* fmt, ...) {
     if (gReducedLogging || gDestroyedLogging) {
         return;
     }
@@ -241,7 +241,7 @@ void logf(Str fmt, ...) {
     va_end(args);
 }
 
-void logfa(Str fmt, ...) {
+void logfa(const char* fmt, ...) {
     if (gDestroyedLogging) {
         return;
     }
