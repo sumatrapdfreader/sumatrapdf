@@ -523,36 +523,42 @@ static bool PathHasNonAscii(const char* s) {
  * Convert a string encoded in the local character page (system ANSI code page) to UTF-8 encoding.
  *
  * @param localStr  A null-terminated string encoded in the local character page
- * @return          A dynamically allocated UTF-8 string (caller must free), or NULL on failure
+ * @return          A heap-allocated UTF-8 string (caller must free via ByteSlice/str::Free), or empty on failure
  */
-char* ConvertLocalToUTF8(const char* localStr) {
-    if (!localStr) return NULL;
+static Str ConvertLocalToUTF8(Str localStr) {
+    if (!localStr) {
+        return {};
+    }
     UINT acp = GetACP();
-    int wLen = MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr, -1, NULL, 0);
-    if (wLen == 0) return NULL;
+    int wLen = MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, NULL, 0);
+    if (wLen == 0) {
+        return {};
+    }
     wchar_t* wBuf = (wchar_t*)malloc(wLen * sizeof(wchar_t));
-    if (!wBuf) return NULL;
-    if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr, -1, wBuf, wLen) == 0) {
+    if (!wBuf) {
+        return {};
+    }
+    if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, wBuf, wLen) == 0) {
         free(wBuf);
-        return NULL;
+        return {};
     }
     int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, NULL, 0, NULL, NULL);
     if (utf8Len == 0) {
         free(wBuf);
-        return NULL;
+        return {};
     }
     char* utf8Buf = (char*)malloc(utf8Len);
     if (!utf8Buf) {
         free(wBuf);
-        return NULL;
+        return {};
     }
     if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf, utf8Len, NULL, NULL) == 0) {
         free(wBuf);
         free(utf8Buf);
-        return NULL;
+        return {};
     }
     free(wBuf);
-    return utf8Buf;
+    return Str(utf8Buf);
 }
 
 TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
@@ -605,12 +611,12 @@ TempStr DealPlainSync(TempStr pathSync) {
         return pathSync;
     } else {
         logf("DealPlainSync: '%s' NOT utf-8, decode by local ansi and write utf-8 to temp file\n", pathSync);
-        char* converted = ConvertLocalToUTF8((char*)src.data());
+        Str converted = ConvertLocalToUTF8(Str((char*)src.data()));
         if (!converted) {
             logfa("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
             return {};
         }
-        ByteSlice dst(converted);
+        ByteSlice dst(converted.s);
 
         if (dst.IsEmpty()) {
             logfa("DealPlainSync: decoded content is empty.\n", pathSync);
