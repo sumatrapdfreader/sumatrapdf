@@ -1027,7 +1027,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.delayInMs = 1000;
                         args.noClose = true;
                         Str name = annot ? AnnotationReadableNameTemp(annot->type) : Str("none");
-                        const char* fmt = _TRA("%s annotation. Ctrl+click to edit.");
+                        Str fmt = _TRA("%s annotation. Ctrl+click to edit.");
                         args.msg = str::FormatTemp(fmt, name);
                         ShowNotification(args);
                     }
@@ -2212,10 +2212,10 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         win->DeleteToolTip();
         return TRUE;
     }
-    char* text = pageEl->GetValue();
+    Str text = pageEl->GetValue();
     if (!dm->ValidPageNo(pageNo)) {
-        const char* kind = pageEl->GetKind();
-        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", text, kind, pageNo);
+        Kind kind = pageEl->GetKind();
+        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", text.s, kind, pageNo);
         ReportIf(true);
         return TRUE;
     }
@@ -3053,9 +3053,9 @@ static void OnPaintError(MainWindow* win) {
     FillRect(hdc, &ps.rcPaint, bgBrush);
     // TODO: should this be "Error opening %s"?
     auto tab = win->CurrentTab();
-    const char* filePath = tab->filePath;
+    Str filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(Str(filePath)));
+        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(filePath));
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
@@ -3283,24 +3283,23 @@ static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
 }
 
 // returns true if url looks like it could be an image URL
-static bool IsImageUrl(const char* url) {
+static bool IsImageUrl(Str url) {
     // strip query string / fragment for extension check
-    const char* q = str::FindChar(url, '?');
-    const char* h = str::FindChar(url, '#');
-    int len = str::Leni(url);
-    if (q && (int)(q - url) < len) {
-        len = (int)(q - url);
+    Str q = str::FindChar(url, '?');
+    Str h = str::FindChar(url, '#');
+    int len = url.len;
+    if (q && (int)(q.s - url.s) < len) {
+        len = (int)(q.s - url.s);
     }
-    if (h && (int)(h - url) < len) {
-        len = (int)(h - url);
+    if (h && (int)(h.s - url.s) < len) {
+        len = (int)(h.s - url.s);
     }
     // check for common image extensions
-    const char* exts[] = {".png",  ".jpg",  ".jpeg", ".gif", ".bmp", ".tiff", ".tif",
-                          ".webp", ".avif", ".heic", ".jxr", ".jp2", ".tga"};
-    for (auto ext : exts) {
-        int extLen = str::Leni(ext);
-        if (len >= extLen) {
-            TempStr ending = str::DupTemp(url + len - extLen, extLen);
+    Str exts[] = {".png",  ".jpg",  ".jpeg", ".gif", ".bmp", ".tiff", ".tif",
+                  ".webp", ".avif", ".heic", ".jxr", ".jp2", ".tga"};
+    for (Str ext : exts) {
+        if (len >= ext.len) {
+            Str ending(url.s + len - ext.len, ext.len);
             if (str::EqI(ending, ext)) {
                 return true;
             }
@@ -3323,33 +3322,39 @@ static TempStr GetDownloadsDirTemp() {
 }
 
 // Extract a file name from a URL (last path component, without query/fragment)
-static TempStr FileNameFromUrlTemp(const char* url) {
+static TempStr FileNameFromUrlTemp(Str url) {
     // skip past scheme
-    const char* s = str::FindChar(url, '/');
-    if (s && s[1] == '/') {
-        s += 2; // skip "//"
+    Str path = url;
+    Str slash = str::FindChar(url, '/');
+    if (slash) {
+        path = slash;
+        if (path.len >= 2 && path.s[0] == '/' && path.s[1] == '/') {
+            path.s += 2;
+            path.len -= 2;
+        }
     }
     // find last '/' before any '?' or '#'
-    const char* lastSlash = nullptr;
-    const char* p = s ? s : url;
-    while (*p && *p != '?' && *p != '#') {
-        if (*p == '/') {
+    Str lastSlash;
+    Str p = path;
+    while (p.len > 0 && p.s[0] != '?' && p.s[0] != '#') {
+        if (p.s[0] == '/') {
             lastSlash = p;
         }
-        p++;
+        p.s++;
+        p.len--;
     }
     if (!lastSlash) {
         return {};
     }
-    int nameLen = (int)(p - lastSlash - 1);
+    int nameLen = (int)(p.s - lastSlash.s - 1);
     if (nameLen <= 0) {
         return {};
     }
-    return str::DupTemp(lastSlash + 1, nameLen);
+    return str::DupTemp(Str(lastSlash.s + 1, nameLen));
 }
 
 struct DownloadAndOpenUrlData {
-    char* url;
+    char* url; // str-port: owned heap copy for async worker
     HWND hwndCanvas;
 };
 
@@ -3408,7 +3413,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
 
     // ensure it has a good extension, some urls are like:
     // https://pbs.twimg.com/media/HEwit7bbQAAWiIO?format=jpg&name=large
-    const char* ext = GetExtForKind(kind);
+    Str ext = GetExtForKind(kind);
     if (!str::EndsWithI(destPath, ext)) {
         TempStr newDest = str::JoinTemp(destPath, ext);
         ok = file::Rename(newDest, destPath);
