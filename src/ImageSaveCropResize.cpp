@@ -48,9 +48,9 @@ constexpr int kRowPadding = 6;
 constexpr int kButtonPadding = 8;
 
 struct ImageFormat {
-    const char* label;
+    Str label;
     const GUID* containerFormat; // WIC container format GUID (null for PDF)
-    const char* ext;
+    Str ext;
     bool needsProbe; // if true, check if encoder is available before offering
     bool available;  // set after probing
     bool isPdf;      // PDF is created via PdfCreator, not WIC
@@ -58,13 +58,13 @@ struct ImageFormat {
 
 // clang-format off
 static ImageFormat gImageFormats[] = {
-    {"PNG",  &GUID_ContainerFormatPng,  ".png",  false, true,  false},
-    {"JPEG", &GUID_ContainerFormatJpeg, ".jpg",  false, true,  false},
-    {"BMP",  &GUID_ContainerFormatBmp,  ".bmp",  false, true,  false},
-    {"GIF",  &GUID_ContainerFormatGif,  ".gif",  false, true,  false},
-    {"TIFF", &GUID_ContainerFormatTiff, ".tif",  false, true,  false},
-    {"WebP", &GUID_ContainerFormatWebp, ".webp", true,  false, false},
-    {"PDF",  nullptr,                   ".pdf",  false, true,  true},
+    {StrL("PNG"),  &GUID_ContainerFormatPng,  StrL(".png"),  false, true,  false},
+    {StrL("JPEG"), &GUID_ContainerFormatJpeg, StrL(".jpg"),  false, true,  false},
+    {StrL("BMP"),  &GUID_ContainerFormatBmp,  StrL(".bmp"),  false, true,  false},
+    {StrL("GIF"),  &GUID_ContainerFormatGif,  StrL(".gif"),  false, true,  false},
+    {StrL("TIFF"), &GUID_ContainerFormatTiff, StrL(".tif"),  false, true,  false},
+    {StrL("WebP"), &GUID_ContainerFormatWebp, StrL(".webp"), true,  false, false},
+    {StrL("PDF"),  nullptr,                   StrL(".pdf"),  false, true,  true},
 };
 // clang-format on
 
@@ -135,7 +135,7 @@ struct ImageEditWindow {
     Vec<int> formatIndices; // maps dropdown index to gImageFormats index
 
     // source image
-    char* filePath = nullptr;
+    Str filePath;
     Bitmap* srcBitmap = nullptr;
     int imgW = 0;
     int imgH = 0;
@@ -176,7 +176,7 @@ struct ImageEditWindow {
     ImageEditWindow() = default;
     ~ImageEditWindow() {
         delete srcBitmap;
-        free(filePath);
+        str::Free(filePath.s);
         delete btnSave;
         delete btnCrop;
         delete btnResize;
@@ -445,7 +445,7 @@ static int GetSelectedFormatIdx(ImageEditWindow* ew) {
 
 static void OnFormatChanged(ImageEditWindow* ew) {
     int idx = GetSelectedFormatIdx(ew);
-    const char* newExt = gImageFormats[idx].ext;
+    Str newExt = gImageFormats[idx].ext;
     // update the extension in the dest path
     WCHAR destW[MAX_PATH + 1]{};
     GetWindowTextW(ew->hwndDestEdit, destW, MAX_PATH);
@@ -454,7 +454,7 @@ static void OnFormatChanged(ImageEditWindow* ew) {
         TempStr oldExt = path::GetExtTemp(dest);
         int baseLen = str::Leni(dest) - str::Leni(oldExt);
         TempStr base = str::DupTemp(dest, baseLen);
-        TempStr newDest = str::FormatTemp("%s%s", base, newExt);
+        TempStr newDest = str::FormatTemp("%s%s", base.s, newExt.s);
         SetWindowTextW(ew->hwndDestEdit, ToWStrTemp(newDest));
     }
     SetFocus(ew->hwnd);
@@ -464,7 +464,7 @@ static void UpdateSaveButtonText(ImageEditWindow* ew) {
     WCHAR destW[MAX_PATH + 1]{};
     GetWindowTextW(ew->hwndDestEdit, destW, MAX_PATH);
     TempStr dest = ToUtf8Temp(destW);
-    const char* text = file::Exists(dest) ? _TRA("&Overwrite") : _TRA("&Save");
+    Str text = file::Exists(dest) ? Str(_TRA("&Overwrite")) : Str(_TRA("&Save"));
     ew->btnSave->SetText(text);
     // re-layout since button width may have changed
     LayoutControls(ew);
@@ -1149,7 +1149,7 @@ static TempStr FormatPdfDateTemp() {
 // Create a single-page PDF from a bitmap using PdfCreator. The image is
 // converted to a 24-bit RGB pixmap (a format PDF supports) and stamped with
 // the current time as CreationDate/ModDate (issue #949).
-static bool SaveBitmapAsPdf(Bitmap* bmp, const char* destPath) {
+static bool SaveBitmapAsPdf(Bitmap* bmp, Str destPath) {
     if (!bmp || !destPath) {
         return false;
     }
@@ -1159,7 +1159,7 @@ static bool SaveBitmapAsPdf(Bitmap* bmp, const char* destPath) {
         TempStr now = FormatPdfDateTemp();
         c->SetProperty(kPropCreationDate, now);
         c->SetProperty(kPropModificationDate, now);
-        c->SetProperty(kPropCreatorApp, "SumatraPDF");
+        c->SetProperty(kPropCreatorApp, StrL("SumatraPDF"));
         ok = c->SaveToFile(destPath);
     }
     delete c;
@@ -1186,7 +1186,7 @@ static void OnSave(ImageEditWindow* ew) {
 
     // ensure extension matches selected format
     int fmtIdx = GetSelectedFormatIdx(ew);
-    const char* fmtExt = gImageFormats[fmtIdx].ext;
+    Str fmtExt = gImageFormats[fmtIdx].ext;
     TempStr destExt = path::GetExtTemp(rawDest);
     TempStr dest;
     if (str::EqI(destExt, fmtExt)) {
@@ -1194,7 +1194,7 @@ static void OnSave(ImageEditWindow* ew) {
     } else {
         int baseLen = str::Leni(rawDest) - str::Leni(destExt);
         TempStr base = str::DupTemp(rawDest, baseLen);
-        dest = str::FormatTemp("%s%s", base, fmtExt);
+        dest = str::FormatTemp("%s%s", base.s, fmtExt.s);
     }
 
     Bitmap* result = nullptr;
@@ -1241,7 +1241,7 @@ static void OnSave(ImageEditWindow* ew) {
 
     // load the saved image
     HWND hwndParent = ew->hwndParent;
-    char* savedPath = str::Dup(dest);
+    Str savedPath = str::Dup(dest);
     DestroyWindow(ew->hwnd);
 
     MainWindow* win = FindMainWindowByHwnd(hwndParent);
@@ -1252,7 +1252,7 @@ static void OnSave(ImageEditWindow* ew) {
         LoadArgs args(savedPath, win);
         StartLoadDocument(&args);
     }
-    free(savedPath);
+    str::Free(savedPath.s);
 }
 
 static void SwitchToSaveMode(ImageEditWindow* ew) {
@@ -1859,7 +1859,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
             }
             filePath = tab->filePath;
         }
-        ByteSlice data = file::ReadFile(Str(filePath));
+        ByteSlice data = file::ReadFile(filePath);
         if (data.empty()) {
             return;
         }
@@ -1880,7 +1880,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     auto* ew = new ImageEditWindow();
     ew->mode = mode;
     ew->fromRenderedBitmap = fromRenderedBitmap;
-    ew->filePath = filePath ? str::Dup(filePath) : nullptr;
+    ew->filePath = filePath ? str::Dup(filePath) : Str();
     ew->srcBitmap = bmp;
     ew->imgW = imgW;
     ew->imgH = imgH;
@@ -1963,7 +1963,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     SendMessageW(ew->hwndPathLabel, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
 
     // row 2: dest edit + browse
-    TempStr destPath = filePath ? MakeUniqueFilePathTemp(Str(filePath)) : str::DupTemp("");
+    TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp(StrL(""));
     ew->hwndDestEdit = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(destPath),
                                        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 0, 0, 0, hwnd, nullptr, h, nullptr);
     SendMessageW(ew->hwndDestEdit, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
@@ -2067,7 +2067,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
 
 Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> Str {
+    auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
@@ -2077,20 +2077,20 @@ Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
     };
 
     if (str::IsEmpty(imagePath) || !file::Exists(imagePath)) {
-        return fail("ERROR missing-image");
+        return fail(StrL("ERROR missing-image"));
     }
     if (gWindows.IsEmpty()) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
     MainWindow* win = gWindows.at(0);
     if (!win) {
-        return fail("NOTREADY no-window");
+        return fail(StrL("NOTREADY no-window"));
     }
 
     int beforeCount = gImageEditWindows.Size();
     ShowImageEditWindow(win, ImageEditMode::Resize, imagePath);
     if (gImageEditWindows.Size() != beforeCount + 1) {
-        return fail("ERROR dialog-not-opened");
+        return fail(StrL("ERROR dialog-not-opened"));
     }
     ImageEditWindow* ew = gImageEditWindows.at(gImageEditWindows.Size() - 1);
     int wBefore = ew->newW;
