@@ -65,7 +65,7 @@ static Arena* gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
-char* gSymbolsDir = nullptr;
+Str gSymbolsDir;
 char* gCrashFilePath = nullptr;
 
 static char* gSymbolsUrl = nullptr;
@@ -812,7 +812,7 @@ bool SetSymbolsDir(Str symDir) {
     if (!symDir) {
         return false;
     }
-    str::ReplaceWithCopy(&gSymbolsDir, symDir);
+    str::ReplaceWithCopy(&gSymbolsDir, str::Dup(symDir));
     return true;
 }
 
@@ -961,7 +961,8 @@ void UninstallCrashHandler() {
 
     str::FreePtr(&gCrashDumpPath);
     str::FreePtr(&gSymbolsUrl);
-    str::FreePtr(&gSymbolsDir);
+    str::Free(gSymbolsDir);
+    gSymbolsDir = {};
 
     str::FreePtr(&gSystemInfo);
     str::FreePtr(&gSettingsFile);

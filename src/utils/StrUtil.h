@@ -97,13 +97,8 @@ Str Dup(Arena*, Str str, size_t cch = (size_t)-1);
 Str Dup(Str s, size_t cch = (size_t)-1);
 Str Dup(const ByteSlice&);
 
-void ReplacePtr(const char** s, const char* snew);
-void ReplacePtr(char** s, const char* snew);
+void ReplacePtr(Str* s, Str snew);
 
-void ReplaceWithCopy(const char** s, const char* snew);
-void ReplaceWithCopy(const char** s, const ByteSlice&);
-void ReplaceWithCopy(char** s, const char* snew);
-void ReplaceWithCopy(Str* s, const char* snew);
 void ReplaceWithCopy(Str* s, Str snew);
 
 Str Join(Arena*, Str, Str, Str);

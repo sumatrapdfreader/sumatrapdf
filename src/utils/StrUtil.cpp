@@ -525,43 +525,10 @@ Str FindI(Str s, Str toFind) {
     return res;
 }
 
-void ReplacePtr(const char** s, const char* snew) {
-    if (*s != snew) {
-        str::Free(*s);
-        *s = (char*)snew;
-    }
-}
-
-void ReplacePtr(char** s, const char* snew) {
-    ReplacePtr((const char**)s, snew);
-}
-
-void ReplaceWithCopy(const char** s, const char* snew) {
-    if (*s != snew) {
-        str::Free(*s);
-        *s = str::Dup(snew).s;
-    }
-}
-
-void ReplaceWithCopy(const char** s, const ByteSlice& d) {
-    if (*s != (const char*)d.data()) {
-        str::Free(*s);
-        *s = str::Dup(d).s;
-    }
-}
-
-void ReplaceWithCopy(char** s, const char* snew) {
-    if (*s != snew) {
-        str::Free(*s);
-        *s = str::Dup(snew).s;
-    }
-}
-
-void ReplaceWithCopy(Str* s, const char* snew) {
-    Str dup = str::Dup(snew);
-    if (s->s != dup.s) {
+void ReplacePtr(Str* s, Str snew) {
+    if (s->s != snew.s) {
         str::Free(s->s);
-        *s = dup;
+        *s = snew;
     }
 }
 

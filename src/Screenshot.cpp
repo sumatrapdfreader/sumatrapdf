@@ -1247,13 +1247,13 @@ struct SetHotkeyDialog {
     HWND hwndCancelBtn = nullptr;
     HFONT hFont = nullptr;
     HWND hwndOwner = nullptr;
-    char* currentHotkey = nullptr; // current hotkey string, or nullptr if none
-    char* newHotkey = nullptr;     // newly captured hotkey string
-    bool committed = false;        // true if Set or Remove was pressed
+    Str currentHotkey;      // current hotkey string, or empty if none
+    Str newHotkey;          // newly captured hotkey string
+    bool committed = false; // true if Set or Remove was pressed
 };
 
 static void SetHotkeyUpdateUI(SetHotkeyDialog* dlg) {
-    const char* display = dlg->newHotkey ? dlg->newHotkey : (dlg->currentHotkey ? dlg->currentHotkey : "None");
+    const char* display = dlg->newHotkey ? dlg->newHotkey.s : (dlg->currentHotkey ? dlg->currentHotkey.s : "None");
     SetWindowTextA(dlg->hwndHotkeyLabel, display);
     EnableWindow(dlg->hwndSetBtn, dlg->newHotkey != nullptr);
     EnableWindow(dlg->hwndRemoveBtn, dlg->currentHotkey != nullptr || dlg->newHotkey != nullptr);
@@ -1299,7 +1299,7 @@ static void SetHotkeyDoRemove(SetHotkeyDialog* dlg) {
     auto curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdScreenshot) {
-            str::ReplaceWithCopy(&curr->key, nullptr);
+            str::ReplaceWithCopy(&curr->key, Str{});
         }
         curr = curr->next;
     }
@@ -1443,7 +1443,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     y += rowH + rowGap;
 
     // row 2: hotkey display
-    const char* display = dlg->currentHotkey ? dlg->currentHotkey : "None";
+    const char* display = dlg->currentHotkey ? dlg->currentHotkey.s : "None";
     dlg->hwndHotkeyLabel =
         CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", ToWStrTemp(display),
                         WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, x, y, w, rowH, hwnd, nullptr, h, nullptr);

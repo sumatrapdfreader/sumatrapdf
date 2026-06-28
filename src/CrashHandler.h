@@ -2,7 +2,7 @@
    License: Simplified BSD */
 
 extern char* gCrashFilePath;
-extern char* gSymbolsDir;
+extern Str gSymbolsDir;
 
 void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool localOnly);
 void UninstallCrashHandler();

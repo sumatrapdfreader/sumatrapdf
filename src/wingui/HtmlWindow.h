@@ -46,8 +46,8 @@ class HtmlWindow {
     HWND oleObjectHwnd = nullptr;
     int zoomDPI = 96;
 
-    const char* htmlSetInProgress = nullptr;
-    const char* htmlSetInProgressUrl = nullptr;
+    Str htmlSetInProgress;
+    Str htmlSetInProgressUrl;
 
     DWORD adviseCookie = 0;
     bool blankWasShown = false;

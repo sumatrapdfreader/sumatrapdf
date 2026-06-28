@@ -1478,8 +1478,8 @@ void HtmlWindow::NavigateToAboutBlank() {
 
 void HtmlWindow::SetHtml(const ByteSlice& d, Str url) {
     FreeHtmlSetInProgressData();
-    str::ReplaceWithCopy(&htmlSetInProgress, d);
-    str::ReplaceWithCopy(&htmlSetInProgress, url);
+    str::ReplaceWithCopy(&htmlSetInProgress, str::Dup(d));
+    str::ReplaceWithCopy(&htmlSetInProgressUrl, str::Dup(url));
     NavigateToAboutBlank();
     // the real work will happen in OnDocumentComplete()
 }
@@ -1737,14 +1737,16 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
 }
 
 void HtmlWindow::FreeHtmlSetInProgressData() {
-    str::FreePtr(&this->htmlSetInProgress);
-    str::FreePtr(&this->htmlSetInProgressUrl);
+    str::Free(htmlSetInProgress);
+    htmlSetInProgress = {};
+    str::Free(htmlSetInProgressUrl);
+    htmlSetInProgressUrl = {};
 }
 
 void HtmlWindow::OnDocumentComplete(const WCHAR* urlW) {
     char* url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
-        if (htmlSetInProgress != nullptr) {
+        if (htmlSetInProgress) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
             // which we should ignore?
             SetHtmlReal(ToByteSlice(htmlSetInProgress));

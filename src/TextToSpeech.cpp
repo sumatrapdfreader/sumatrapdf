@@ -40,7 +40,7 @@ static bool gTtsActive = false;
 // of the last word boundary reached, for resuming stopped speech
 static WCHAR* gTtsSpokenText = nullptr;
 
-static char* gTtsVoiceId = nullptr;
+static Str gTtsVoiceId;
 
 static HWND gTtsNotifyHwnd = nullptr;
 static UINT gTtsNotifyMsg = 0;
@@ -1228,12 +1228,12 @@ bool TtsSetVoiceById(Str voiceId) {
         return false;
     }
 
-    str::ReplaceWithCopy(&gTtsVoiceId, voiceId ? voiceId.s : "");
+    str::ReplaceWithCopy(&gTtsVoiceId, voiceId ? str::Dup(voiceId) : Str{});
     return true;
 }
 
 Str TtsGetVoiceId() {
-    return Str(gTtsVoiceId ? gTtsVoiceId : "");
+    return gTtsVoiceId;
 }
 
 void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {
@@ -1253,6 +1253,6 @@ void TtsRelease() {
     gTtsBackend = TtsBackend::Unknown;
     str::FreePtr(&gTtsSpokenText);
 
-    free(gTtsVoiceId);
-    gTtsVoiceId = nullptr;
+    str::Free(gTtsVoiceId);
+    gTtsVoiceId = {};
 }

@@ -2605,7 +2605,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             ok = fz_authenticate_password(ctx, _doc, pwdA);
         }
         if (ok) {
-            str::ReplaceWithCopy(&pdfPassword.s, pwdA);
+            str::ReplaceWithCopy(&pdfPassword, pwdA);
         }
     }
 
