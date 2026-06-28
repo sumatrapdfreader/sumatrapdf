@@ -88,12 +88,12 @@ bool IsSpaceOnly(Str s) {
     return off == s.len;
 }
 
-static void MemAppend(char*& dst, Str src) {
+static void MemAppend(char* buf, int& off, Str src) {
     if (!src) {
         return;
     }
-    memcpy(dst, src.s, src.len);
-    dst += src.len;
+    memcpy(buf + off, src.s, src.len);
+    off += src.len;
 }
 
 // if "&foo;" was the entity, str points at the char after '&'
@@ -138,7 +138,7 @@ Str ResolveHtmlEntity(Str str, int& rune) {
 Str ResolveHtmlEntities(Str str, Arena* alloc) {
     Str res;
     size_t resLen = 0;
-    char* dst = nullptr;
+    int dstOff = 0;
 
     int off = 0;
     int chunkStart = 0;
@@ -149,7 +149,7 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
                 return str;
             }
             // copy the remaining string
-            MemAppend(dst, Str(str.s + chunkStart, str.len - chunkStart));
+            MemAppend(res.s, dstOff, Str(str.s + chunkStart, str.len - chunkStart));
             break;
         }
         if (!res) {
@@ -158,25 +158,24 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
             // be smaller than the original
             resLen = (size_t)str.len + 8; // +8 just in case
             res.s = (char*)Alloc(alloc, resLen);
-            dst = res.s;
         }
-        MemAppend(dst, Str(str.s + chunkStart, off - chunkStart));
+        MemAppend(res.s, dstOff, Str(str.s + chunkStart, off - chunkStart));
         // off points at '&'
         int rune = -1;
         Str entEnd = ResolveHtmlEntity(Str(str.s + off + 1, str.len - off - 1), rune);
         if (!entEnd) {
             // unknown entity, just copy the '&'
-            MemAppend(dst, Str(str.s + off, 1));
+            MemAppend(res.s, dstOff, Str(str.s + off, 1));
             off++;
         } else {
-            str::Utf8Encode(dst, rune);
+            str::Utf8Encode(res.s, dstOff, rune);
             off = (int)(entEnd.s - str.s);
         }
         chunkStart = off;
     }
-    *dst = 0;
-    ReportIf(dst >= res.s + resLen);
-    res.len = (int)(dst - res.s);
+    res.s[dstOff] = 0;
+    ReportIf(dstOff >= (int)resLen);
+    res.len = dstOff;
     return res;
 }
 

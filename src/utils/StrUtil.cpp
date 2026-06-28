@@ -613,10 +613,10 @@ Str ToLower(Str s) {
     return ToLowerInPlace(s2);
 }
 
-// Encode unicode character as utf8 to dst buffer and advance dst pointer.
-// The caller must ensure there is enough free space (4 bytes) in dst
-void Utf8Encode(char*& dst, int c) { // str-port: parse-cursor
-    u8* tmp = (u8*)dst;
+// Encode unicode character as utf8 to buf at off and advance off.
+// The caller must ensure there is enough free space (4 bytes) in buf
+void Utf8Encode(char* buf, int& off, int c) {
+    u8* tmp = (u8*)(buf + off);
     if (c < 0x00080) {
         *tmp++ = (u8)(c & 0xFF);
     } else if (c < 0x00800) {
@@ -632,7 +632,7 @@ void Utf8Encode(char*& dst, int c) { // str-port: parse-cursor
         *tmp++ = 0x80 + (u8)((c >> 6) & 0x3F);
         *tmp++ = 0x80 + (u8)(c & 0x3F);
     }
-    dst = (char*)tmp;
+    off = (int)((char*)tmp - buf);
 }
 
 // Note: I tried an optimization: return (unsigned)(c - '0') < 10;

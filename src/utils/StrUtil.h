@@ -125,7 +125,7 @@ Str ToLower(Str s);
 
 Str ToUpperInPlace(Str s);
 
-void Utf8Encode(char*& dst, int c); // str-port: parse-cursor
+void Utf8Encode(char* buf, int& off, int c);
 
 bool IsDigit(char c);
 bool IsWs(char c);
