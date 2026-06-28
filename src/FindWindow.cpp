@@ -114,15 +114,15 @@ static void DeferredGoToFindMatch(DeferredGoToFindMatchData* d) {
 }
 
 // append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
-static const char* AppendCmdAccel(const char* base, int cmd) {
-    const char* accel = AppendAccelKeyToMenuStringTemp(nullptr, cmd);
+static TempStr AppendCmdAccel(Str base, int cmd) {
+    TempStr accel = AppendAccelKeyToMenuStringTemp(nullptr, cmd);
     if (!accel) {
         return base;
     }
-    return str::JoinTemp(base, str::FormatTemp(" (%s)", accel + 1)); // +1 skips the leading \t
+    return str::JoinTemp(base, str::FormatTemp(" (%s)", Str(accel.s + 1))); // +1 skips the leading \t
 }
 
-static const char* FindWindowButtonTooltip(int cmd) {
+static TempStr FindWindowButtonTooltip(int cmd) {
     switch (cmd) {
         case CmdFindPrev:
             return AppendCmdAccel(_TRA("Find Previous"), cmd);
@@ -135,7 +135,7 @@ static const char* FindWindowButtonTooltip(int cmd) {
         case kFindWinPinCmdId:
             return _TRA("Dock to toolbar");
     }
-    return nullptr;
+    return {};
 }
 
 FindWindowWnd::~FindWindowWnd() {
@@ -638,7 +638,7 @@ LRESULT FindWindowWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
 LRESULT FindWindowWnd::OnNotify(int, NMHDR* nmh) {
     if (nmh->code == TTN_GETDISPINFOW) {
         auto di = (NMTTDISPINFOW*)nmh;
-        const char* s = FindWindowButtonTooltip((int)nmh->idFrom);
+        TempStr s = FindWindowButtonTooltip((int)nmh->idFrom);
         if (s) {
             lstrcpynW(di->szText, ToWStrTemp(s), dimof(di->szText));
             di->lpszText = di->szText;
@@ -818,7 +818,7 @@ void UpdateFindWindowTheme(MainWindow* win) {
 
 Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> Str {
+    auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {

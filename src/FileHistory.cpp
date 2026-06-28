@@ -349,10 +349,10 @@ void CleanUpThumbnailCache() {
         }
     }
 
-    for (char* path : filePaths) {
+    for (Str path : filePaths) {
         if (shouldDeleteThumbnail) {
             logf("CleanUpThumbnailCache: deleting '%s'\n", path);
-            file::Delete(Str(path));
+            file::Delete(path);
         }
     }
 }
@@ -387,7 +387,7 @@ struct CheckFilesExistData {
 };
 
 static void HideMissingFiles(CheckFilesExistData* d) {
-    for (const char* path : d->missing) {
+    for (Str path : d->missing) {
         gFileHistory.MarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
@@ -402,7 +402,7 @@ static void CheckFilesExistAsync(CheckFilesExistData* d) {
     // be marked as inexistent in gFileHistory)
     int n = toCheck.Size();
     for (int i = 0; i < n; i++) {
-        const char* path = toCheck[i];
+        Str path = toCheck.At(i);
         if (!path) {
             continue;
         }
@@ -425,8 +425,7 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
     FileState* fs;
     for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (!fs->isMissing) {
-            char* fp = fs->filePath;
-            toCheck.Append(fp);
+            toCheck.Append(fs->filePath);
         }
     }
     // add missing paths from the list of most frequently opened documents
@@ -435,8 +434,7 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
     size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
     for (size_t i = 0; i < iMax; i++) {
         fs = frequencyList.at(i);
-        char* fp = fs->filePath;
-        AppendIfNotExists(&toCheck, fp);
+        AppendIfNotExists(&toCheck, fs->filePath);
     }
 }
 
