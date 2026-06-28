@@ -2383,12 +2383,14 @@ const WCHAR* Find(const WCHAR* str, const WCHAR* find) {
     return wcsstr(str, find);
 }
 
-char* ToUpperInPlace(char* s) {
-    char* res = s;
-    for (; s && *s; s++) {
-        *s = (char)toupper(*s);
+Str ToUpperInPlace(Str s) {
+    if (!s) {
+        return {};
     }
-    return res;
+    for (int i = 0; i < s.len; i++) {
+        s.s[i] = (char)toupper((u8)s.s[i]);
+    }
+    return s;
 }
 
 WCHAR* ToLowerInPlace(WCHAR* s) {

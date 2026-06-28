@@ -135,7 +135,7 @@ Str ToLowerInPlace(Str s);
 
 Str ToLower(Str s);
 
-char* ToUpperInPlace(char*);
+Str ToUpperInPlace(Str s);
 
 void Utf8Encode(char*& dst, int c);
 
@@ -512,6 +512,9 @@ FORCEINLINE bool Contains(Str s, const char* txt) {
 }
 FORCEINLINE Str ToLowerInPlace(const char* s) {
     return ToLowerInPlace(Str((char*)s));
+}
+FORCEINLINE Str ToUpperInPlace(const char* s) {
+    return ToUpperInPlace(Str((char*)s));
 }
 FORCEINLINE WCHAR* ToLowerInPlace(WStr s) {
     return ToLowerInPlace(s.s);
