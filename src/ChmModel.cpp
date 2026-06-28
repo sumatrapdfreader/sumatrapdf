@@ -22,7 +22,7 @@
 
 #include "utils/Log.h"
 
-static IPageDestination* NewChmNamedDest(const char* url, int pageNo) {
+static IPageDestination* NewChmNamedDest(Str url, int pageNo) {
     if (!url) {
         return nullptr;
     }
@@ -32,7 +32,7 @@ static IPageDestination* NewChmNamedDest(const char* url, int pageNo) {
     } else {
         auto pdest = new PageDestination();
         pdest->kind = kindDestinationScrollTo;
-        pdest->name = Str(str::Dup(url));
+        pdest->name = str::Dup(url);
         dest = pdest;
     }
     dest->pageNo = pageNo;
@@ -41,7 +41,7 @@ static IPageDestination* NewChmNamedDest(const char* url, int pageNo) {
     return dest;
 }
 
-static TocItem* NewChmTocItem(TocItem* parent, const char* title, int pageNo, const char* url) {
+static TocItem* NewChmTocItem(TocItem* parent, Str title, int pageNo, Str url) {
     auto res = new TocItem(parent, title, pageNo);
     res->dest = NewChmNamedDest(url, pageNo);
     return res;
@@ -62,8 +62,8 @@ class HtmlWindowHandler : public HtmlWindowCallback {
 };
 
 struct ChmTocTraceItem {
-    const char* title = nullptr; // owned by ChmModel::poolAllocator
-    const char* url = nullptr;   // owned by ChmModel::poolAllocator
+    Str title; // owned by ChmModel::poolAllocator
+    Str url;   // owned by ChmModel::poolAllocator
     int level = 0;
     int pageNo = 0;
 };
@@ -471,7 +471,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         this->allocator = allocator;
         int n = pages->Size();
         for (int i = 0; i < n; i++) {
-            const char* url = pages->At(i);
+            Str url = pages->At(i);
             bool inserted = urlsSet.Insert(url, i + 1, nullptr);
             ReportIf(!inserted);
         }
@@ -481,7 +481,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         Str nameDup = str::Dup(allocator, name);
         Str urlDup = str::Dup(allocator, url);
         int pageNo = CreatePageNoForURL(urlDup);
-        auto item = ChmTocTraceItem{nameDup.s, urlDup.s, level, pageNo};
+        ChmTocTraceItem item{nameDup, urlDup, level, pageNo};
         tocTrace->Append(item);
     }
 };
@@ -507,7 +507,7 @@ bool ChmModel::Load(Str fileName) {
 
 struct ChmCacheEntry {
     // owned by ChmModel::poolAllocator
-    const char* url = nullptr;
+    Str url;
     ByteSlice data;
 
     explicit ChmCacheEntry(Str url);
