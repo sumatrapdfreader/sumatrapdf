@@ -31,7 +31,7 @@ TempWStr JoinTemp(WStr s1, WStr s2, WStr s3 = {});
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
 
-TempStr FormatTemp(const char* fmt, ...);
+TempStr FormatTemp(Str fmt, ...);
 } // namespace str
 
 TempWStr ToWStrTempFromBuilder(const StrBuilder& s);

@@ -79,7 +79,7 @@ TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
     return WrapTempWStr(Join(GetTempArena(), s1.s, s2.s, s3.s));
 }
 
-TempStr FormatTemp(const char* fmt, ...) {
+TempStr FormatTemp(Str fmt, ...) {
     va_list args;
     va_start(args, fmt);
     Str res = FmtVWithArena(GetTempArena(), fmt, args);

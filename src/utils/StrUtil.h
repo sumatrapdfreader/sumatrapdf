@@ -142,11 +142,11 @@ int BufFind(Str buf, Str toFind);
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);
 
-bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
-bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...);
-Str FmtVWithArena(Arena* a, const char* fmt, va_list args);
-Str FmtV(const char* fmt, va_list args);
-Str Format(const char* fmt, ...);
+bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args);
+bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);
+Str FmtVWithArena(Arena* a, Str fmt, va_list args);
+Str FmtV(Str fmt, va_list args);
+Str Format(Str fmt, ...);
 
 size_t TrimWSInPlace(Str s, TrimOpt opt);
 
@@ -163,8 +163,8 @@ int BufAppend(char* dst, int dstCchSize, Str s);
 Str MemToHex(const u8* buf, size_t len);
 bool HexToMem(Str s, u8* buf, size_t bufLen);
 
-Str Parse(Str str, const char* fmt, ...);
-Str Parse(Str str, size_t len, const char* fmt, ...);
+Str Parse(Str str, Str fmt, ...);
+Str Parse(Str str, size_t len, Str fmt, ...);
 
 int CmpNatural(Str a, Str b);
 

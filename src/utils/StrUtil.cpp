@@ -712,13 +712,13 @@ int BufFind(Str buf, Str toFind) {
 // format string to a buffer provided by the caller
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
-bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
-    int count = VsnprintfUtf8(buf, bufCchSize, fmt, args);
+bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args) {
+    int count = VsnprintfUtf8(buf, bufCchSize, fmt.s, args);
     buf[bufCchSize - 1] = 0;
     return (count >= 0) && ((size_t)count < bufCchSize);
 }
 
-bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
+bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...) {
     va_list args;
     va_start(args, fmt);
     auto res = BufFmtV(buf, bufCchSize, fmt, args);
@@ -727,18 +727,18 @@ bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
 }
 
 // TODO: need to finish StrFormat and use it instead.
-Str FmtVWithArena(Arena* a, const char* fmt, va_list args) {
+Str FmtVWithArena(Arena* a, Str fmt, va_list args) {
     char message[512]{};
     va_list argsCopy;
     va_copy(argsCopy, args);
-    int count = VsnprintfUtf8(message, dimof(message), fmt, argsCopy);
+    int count = VsnprintfUtf8(message, dimof(message), fmt.s, argsCopy);
     va_end(argsCopy);
     if ((count >= 0) && (count < dimofi(message))) {
         return str::Dup(a, Str(message, count));
     }
 
     va_copy(argsCopy, args);
-    count = VscprintfUtf8(fmt, argsCopy);
+    count = VscprintfUtf8(fmt.s, argsCopy);
     va_end(argsCopy);
     // happened in https://github.com/sumatrapdfreader/sumatrapdf/issues/878
     // when %S string had certain Unicode characters
@@ -753,7 +753,7 @@ Str FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     }
 
     va_copy(argsCopy, args);
-    int count2 = VsnprintfUtf8(buf, (size_t)count + 1, fmt, argsCopy);
+    int count2 = VsnprintfUtf8(buf, (size_t)count + 1, fmt.s, argsCopy);
     va_end(argsCopy);
     ReportIf(count2 != count);
     if (count2 < 0) {
@@ -763,12 +763,12 @@ Str FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     return Str(buf, count);
 }
 
-Str FmtV(const char* fmt, va_list args) {
+Str FmtV(Str fmt, va_list args) {
     return FmtVWithArena(nullptr, fmt, args);
 }
 
 // caller needs to str::Free()
-Str Format(const char* fmt, ...) {
+Str Format(Str fmt, ...) {
     va_list args;
     va_start(args, fmt);
     Str res = FmtV(fmt, args);
@@ -1026,13 +1026,13 @@ static const char* ParseLimitedNumber(const char* str, const char* format, const
    characters must be read for parsing the number (e.g. "%4d" parses -123 out of "-12345"
    and doesn't parse "123" at all).
 */
-static Str ParseV(Str str, const char* format, va_list args) {
-    if (!str) {
+static Str ParseV(Str str, Str format, va_list args) {
+    if (!str || !format) {
         return {};
     }
     const char* start = str.s;
     const char* p = str.s;
-    for (const char* f = format; *f; f++) {
+    for (const char* f = format.s; *f; f++) {
         if (*f != '%') {
             if (*f != *p) {
                 return {};
@@ -1091,7 +1091,7 @@ static Str ParseV(Str str, const char* format, va_list args) {
     return Str((char*)p, str.len - off);
 }
 
-Str Parse(Str str, const char* fmt, ...) {
+Str Parse(Str str, Str fmt, ...) {
     if (!str || !fmt) {
         return {};
     }
@@ -1105,7 +1105,7 @@ Str Parse(Str str, const char* fmt, ...) {
 
 // TODO: could optimize it by making the main Parse() implementation
 // work with explicit length and not rely on zero-termination
-Str Parse(Str str, size_t len, const char* fmt, ...) {
+Str Parse(Str str, size_t len, Str fmt, ...) {
     char buf[128]{};
     char* s = buf;
     Str work = str;
