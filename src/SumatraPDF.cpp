@@ -3184,7 +3184,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
 
 static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
     StrBuilder msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
+    msg.AppendFmt(_TRA("Saved annotations to '%s'"), path.s);
     NotificationCreateArgs nargs;
     nargs.hwndParent = hwndParent;
     nargs.font = GetDefaultGuiFont();
@@ -3195,7 +3195,7 @@ static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
 
 static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, Str path, Str mupdfErr) {
     StrBuilder msg;
-    msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
+    msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path.s, mupdfErr.s);
     ShowWarningNotification(hwndParent, msg.Get(), 0);
 }
 
@@ -10539,7 +10539,7 @@ static TempStr GetFileSizeAsStrTemp(Str path) {
 }
 
 void GetProgramInfo(StrBuilder& s) {
-    s.AppendFmt("Crash file: %s\r\n", gCrashFilePath);
+    s.AppendFmt("Crash file: %s\r\n", gCrashFilePath.s);
 
     TempStr exePath = GetSelfExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
@@ -10665,7 +10665,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
     }
     TempStr msg = NotificationGetMessageTemp(wnd);
     if (!str::Find(msg, "/ 2")) {
-        out.AppendFmt("FAIL before-reload msg=%s\n", msg);
+        out.AppendFmt("FAIL before-reload msg=%s\n", msg.s);
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
@@ -10694,9 +10694,9 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
     msg = NotificationGetMessageTemp(wnd);
     bool ok = str::Find(msg, "/ 1") != nullptr && !str::Find(msg, "/ 2");
     if (ok) {
-        out.AppendFmt("OK msg=%s\n", msg);
+        out.AppendFmt("OK msg=%s\n", msg.s);
     } else {
-        out.AppendFmt("FAIL after-reload msg=%s\n", msg);
+        out.AppendFmt("FAIL after-reload msg=%s\n", msg.s);
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
