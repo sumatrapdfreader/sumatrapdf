@@ -191,8 +191,8 @@ bool CreateArchiveFromDir(const char* archivePath, const char* dir) {
     di.includeFiles = true;
     di.includeDirs = false;
     for (DirIterEntry* de : di) {
-        const char* path = de->filePath;
-        const char* archiveName = path + n;
+        Str path = de->filePath;
+        const char* archiveName = path.s + n;
         if ('\\' == *archiveName) archiveName++;
         if ('/' == *archiveName) archiveName++;
         TempStr s = str::JoinTemp(path, ":", archiveName);

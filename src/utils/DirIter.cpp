@@ -33,7 +33,7 @@ bool IsDirectory(DWORD fileAttr) {
     return (fileAttr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
-static bool IsSpecialDir(const char* s) {
+static bool IsSpecialDir(Str s) {
     return str::Eq(s, ".") || str::Eq(s, "..");
 }
 
@@ -84,8 +84,8 @@ NextDir:
         isDir = IsDirectory(it->fd.dwFileAttributes);
         name = ToUtf8Temp(it->fd.cFileName);
         path = path::JoinTemp(it->currDir.s, name.s);
-        it->data.name = name.s;
-        it->data.filePath = path.s;
+        it->data.name = name;
+        it->data.filePath = path;
         if (isFile && includeFiles) {
             return;
         }
@@ -172,9 +172,9 @@ i64 GetFileSize(WIN32_FIND_DATAW* fd) {
 
 struct DirTraverseThreadData {
     StrQueue* queue = nullptr; // we don't own it
-    const char* dir = nullptr;
+    Str dir;
     bool recurse = false;
-    ~DirTraverseThreadData() { str::FreePtr(&dir); }
+    ~DirTraverseThreadData() { str::Free(dir.s); }
 };
 
 static void DirTraverseThread(DirTraverseThreadData* td) {
@@ -189,7 +189,7 @@ static void DirTraverseThread(DirTraverseThreadData* td) {
     delete td;
 }
 
-void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse) {
+void StartDirTraverseAsync(StrQueue* queue, Str dir, bool recurse) {
     auto td = new DirTraverseThreadData{queue, str::Dup(dir), recurse};
     auto fn = MkFunc0(DirTraverseThread, td);
     RunAsync(fn, "DirTraverseThread");

@@ -1317,7 +1317,7 @@ static void DeleteStaleFilesAsync() {
     di.includeFiles = false;
     di.includeDirs = true;
     for (DirIterEntry* de : di) {
-        const char* name = de->name;
+        Str name = de->name;
         if (str::Eq(name, "cbx-cache")) {
             continue;
         }

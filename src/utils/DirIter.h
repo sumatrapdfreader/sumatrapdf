@@ -5,14 +5,14 @@ struct StrQueue;
 
 struct DirIterEntry {
     WIN32_FIND_DATAW* fd = nullptr;
-    const char* name = nullptr;
-    const char* filePath = nullptr;
+    Str name;
+    Str filePath;
     bool stopTraversal = false;
     bool fileMatches = false;
 };
 
 struct DirIter {
-    const char* dir = nullptr;
+    Str dir;
     bool includeFiles = true;
     bool includeDirs = false;
     bool recurse = false;
@@ -42,7 +42,7 @@ struct DirIter {
     iterator end() const;
 };
 
-void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse);
+void StartDirTraverseAsync(StrQueue* queue, Str dir, bool recurse);
 
 i64 GetFileSize(WIN32_FIND_DATAW*);
 bool IsDirectory(DWORD fileAttr);
