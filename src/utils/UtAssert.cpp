@@ -9,14 +9,14 @@ static int g_nFailed = 0;
 #define MAX_FAILED_ASSERTS 32
 
 struct FailedAssert {
-    const char* exprStr;
-    const char* file;
+    Str exprStr;
+    Str file;
     int lineNo;
 };
 
 static FailedAssert g_failedAssert[MAX_FAILED_ASSERTS];
 
-void utassert_func(bool ok, const char* exprStr, const char* file, int lineNo) {
+void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
     ++g_nTotal;
     if (ok) {
         return;
@@ -28,9 +28,9 @@ void utassert_func(bool ok, const char* exprStr, const char* file, int lineNo) {
     }
     ++g_nFailed;
     OutputDebugStringA("Assertion failed: ");
-    OutputDebugStringA(exprStr);
+    OutputDebugStringA(exprStr.s);
     OutputDebugStringA("\n");
-    OutputDebugStringA(file);
+    OutputDebugStringA(file.s);
     OutputDebugStringA("\n");
     if (IsDebuggerPresent()) {
         DebugBreak();
@@ -46,7 +46,7 @@ int utassert_print_results() {
     fprintf(stderr, "Failed %d (of %d) tests\n", g_nFailed, g_nTotal);
     for (int i = 0; i < g_nFailed && i < MAX_FAILED_ASSERTS; i++) {
         FailedAssert* a = &(g_failedAssert[i]);
-        fprintf(stderr, "'%s' %s@%d\n", a->exprStr, a->file, a->lineNo);
+        fprintf(stderr, "'%s' %s@%d\n", a->exprStr.s, a->file.s, a->lineNo);
     }
     return g_nFailed;
 }
