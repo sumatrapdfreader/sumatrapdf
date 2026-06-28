@@ -385,7 +385,7 @@ bool SumatraLaunchBrowser(Str url) {
     if (!str::Parse(url, "%S:", &protocol)) {
         return false;
     }
-    str::ToLowerInPlace(protocol);
+    str::ToLowerInPlace(Str(protocol.Get()));
     if (!gAllowedLinkProtocols.Contains(Str(protocol.Get()))) {
         return false;
     }

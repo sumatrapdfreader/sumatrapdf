@@ -1078,7 +1078,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             titleCount++;
         } else if (tok->IsEndTag() && Tag_Title == tok->tag) {
             if (itemText) {
-                str::NormalizeWSInPlace(itemText);
+                str::NormalizeWSInPlace(WStr(itemText.Get()));
             }
             if (!str::IsEmpty(itemText.Get())) {
                 TempStr url = str::FormatTemp(FB2_TOC_ENTRY_MARK "%d", titleCount);

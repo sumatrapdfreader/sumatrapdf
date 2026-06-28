@@ -112,7 +112,7 @@ void FindFirst(MainWindow* win) {
     // triggers find-as-you-type via the bar's onTextChanged handler.
     if (!hadFindFocus && dm->textSelection->result.len > 0) {
         AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
-        str::NormalizeWSInPlace(selection);
+        str::NormalizeWSInPlace(WStr(selection.Get()));
         if (!str::IsEmpty(selection.Get())) {
             TempStr s = ToUtf8Temp(selection);
             TempStr current = HwndGetTextTemp(win->hwndFindEdit);
@@ -258,7 +258,7 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
     }
 
     AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
-    str::NormalizeWSInPlace(selection);
+    str::NormalizeWSInPlace(WStr(selection.Get()));
     if (str::IsEmpty(selection.Get())) {
         return;
     }

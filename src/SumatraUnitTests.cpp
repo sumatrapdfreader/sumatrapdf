@@ -180,21 +180,21 @@ static void hexstrTest() {
     u8 buf2[6]{};
     AutoFreeStr s(_MemToHex(&buf).s);
     utassert(str::Eq(Str(s.Get()), "010221ff0012"));
-    bool ok = _HexToMem(s, &buf2);
+    bool ok = str::HexToMem(Str(s.Get()), (u8*)&buf2, sizeof(buf2));
     utassert(ok);
     utassert(memeq(buf, buf2, sizeof(buf)));
 
     FILETIME ft1, ft2;
     GetSystemTimeAsFileTime(&ft1);
     s.Set(_MemToHex(&ft1).s);
-    _HexToMem(s, &ft2);
+    str::HexToMem(Str(s.Get()), (u8*)&ft2, sizeof(ft2));
     DWORD diff = FileTimeDiffInSecs(ft1, ft2);
     utassert(0 == diff);
     utassert(FileTimeEq(ft1, ft2));
 
     s.Set(str::MemToHex(nullptr, 0).s);
     utassert(str::Eq(Str(s.Get()), ""));
-    ok = str::HexToMem(s, nullptr, 0);
+    ok = str::HexToMem(Str(s.Get()), nullptr, 0);
     utassert(ok);
 }
 

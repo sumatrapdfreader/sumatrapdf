@@ -388,91 +388,17 @@ FORCEINLINE int Leni(WStr s) {
     return s.len;
 }
 
-FORCEINLINE Str ToLowerInPlace(const char* s) {
-    return ToLowerInPlace(Str((char*)s));
-}
-FORCEINLINE Str ToUpperInPlace(const char* s) {
-    return ToUpperInPlace(Str((char*)s));
-}
-
-FORCEINLINE size_t TrimWSInPlace(char* s, TrimOpt opt) {
-    return TrimWSInPlace(Str(s), opt);
-}
-FORCEINLINE size_t NormalizeWSInPlace(char* str) {
-    return NormalizeWSInPlace(Str(str));
-}
-FORCEINLINE size_t NormalizeWSInPlace(WCHAR* str) {
-    return NormalizeWSInPlace(WStr(str));
-}
-
 FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src);
 }
 
-FORCEINLINE Str ToLower(const char* s) {
-    return ToLower(Str(s));
-}
-FORCEINLINE bool HexToMem(const char* s, u8* buf, size_t bufLen) {
-    return HexToMem(Str((char*)s), buf, bufLen);
-}
-FORCEINLINE int CmpNatural(const char* a, const char* b) {
-    return CmpNatural(Str(a), Str(b));
-}
-
-FORCEINLINE bool IsEmptyOrWhiteSpace(const char* s) {
-    return IsEmptyOrWhiteSpace(Str(s));
-}
-FORCEINLINE bool Skip(const char*& s, const char* toSkip) {
-    Str slice((char*)s);
-    if (Skip(slice, Str(toSkip))) {
-        s = slice.s;
-        return true;
-    }
-    return false;
-}
-FORCEINLINE const char* SkipChar(const char* s, char toSkip) {
-    return SkipChar(Str((char*)s), toSkip).s;
-}
-FORCEINLINE WStr CastToWCHAR(const char* s) {
-    return CastToWCHAR(Str((char*)s));
-}
-FORCEINLINE int SeqStrIndex(SeqStrings strs, const char* toFind) {
-    return SeqStrIndex(strs, Str(toFind));
-}
-FORCEINLINE int SeqStrIndexIS(SeqStrings strs, const char* toFind) {
-    return SeqStrIndexIS(strs, Str(toFind));
-}
 } // namespace str
 
 int ParseInt(Str s);
 i64 ParseInt64(Str s);
 bool IsValidProgramVersion(Str ver);
 int CompareProgramVersion(Str ver1, Str ver2);
-FORCEINLINE int ParseInt(const char* s) {
-    return ParseInt(Str(s));
-} // str-port shim
-FORCEINLINE i64 ParseInt64(const char* s) {
-    return ParseInt64(Str(s));
-} // str-port shim
-FORCEINLINE bool IsValidProgramVersion(const char* ver) {
-    return IsValidProgramVersion(Str(ver));
-} // str-port shim
-FORCEINLINE int CompareProgramVersion(const char* ver1, const char* ver2) {
-    return CompareProgramVersion(Str(ver1), Str(ver2));
-} // str-port shim
 TempStr ShortenStringUtf8Temp(Str s, int maxRunes);
-FORCEINLINE TempStr ShortenStringUtf8Temp(const char* s, int maxRunes) {
-    return ShortenStringUtf8Temp(Str(s), maxRunes);
-}
 TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes);
-FORCEINLINE TempStr ShortenStringUtf8InTheMiddleTemp(const char* s, int maxRunes) {
-    return ShortenStringUtf8InTheMiddleTemp(Str(s), maxRunes);
-}
 bool IsTextRtl(WStr s);
 bool IsTextRtl(Str s);
-FORCEINLINE bool IsTextRtl(const WCHAR* s) {
-    return IsTextRtl(WStr(s));
-} // str-port shim
-FORCEINLINE bool IsTextRtl(const char* s) {
-    return IsTextRtl(Str(s));
-} // str-port shim

@@ -146,7 +146,7 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     CopySelection(sel);
 
     AutoFreeWStr selection(ExtractText(" ").s);
-    str::NormalizeWSInPlace(selection);
+    str::NormalizeWSInPlace(WStr(selection.Get()));
     SetText(WStr(selection.Get()));
 
     searchHitStartAt = findPage = std::min(startPage, endPage);
