@@ -201,12 +201,11 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         out.AppendFmt("  error: call to DeviceCapabilities failed with error %#x\n", GetLastError());
     } else {
         ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
-        DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
+        DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr); // str-port: Win32
         ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
         DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
         for (DWORD j = 0; j < bins; j++) {
-            WCHAR* ws = binNameValues.Get() + 24 * (size_t)j; // str-port: Win32 DC_BINNAMES entry
-            TempStr s = ToUtf8Temp(ws);
+            TempStr s = ToUtf8Temp(WStr(binNameValues.Get() + 24 * (size_t)j));
             out.AppendFmt("  bin %d: '%s' (%d)\n", (int)j, s, binValues.Get()[j]);
         }
     }
@@ -216,17 +215,16 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
     DWORD paperNames = DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, nullptr, nullptr);
     if (papers > 0 && papers != (DWORD)-1) {
         ScopedMem<WORD> paperValues(AllocArray<WORD>(papers));
-        DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues.Get(), nullptr);
+        DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues.Get(), nullptr); // str-port: Win32
         // paper names are 64 WCHARs each
         ScopedMem<WCHAR> paperNameValues(AllocArray<WCHAR>(64 * (size_t)paperNames));
         DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues.Get(), nullptr);
         // paper sizes in tenths of a millimeter
         ScopedMem<POINT> paperSizes(AllocArray<POINT>(papers));
-        DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes.Get(), nullptr);
+        DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes.Get(), nullptr); // str-port: Win32
         out.Append("  paper sizes:\n");
         for (DWORD j = 0; j < papers; j++) {
-            WCHAR* ws = paperNameValues.Get() + 64 * (size_t)j; // str-port: Win32 DC_PAPERNAMES entry
-            TempStr s = ToUtf8Temp(ws);
+            TempStr s = ToUtf8Temp(WStr(paperNameValues.Get() + 64 * (size_t)j));
             POINT sz = paperSizes.Get()[j];
             out.AppendFmt("    '%s' (id %d, %.1f x %.1f mm)\n", s, paperValues.Get()[j], sz.x / 10.0, sz.y / 10.0);
         }
@@ -270,7 +268,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
     DWORD nRes = DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, nullptr, nullptr);
     if (nRes > 0 && nRes != (DWORD)-1) {
         ScopedMem<LONG> resPairs(AllocArray<LONG>(2 * (size_t)nRes));
-        DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs.Get(), nullptr);
+        DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs.Get(), nullptr); // str-port: Win32
         out.Append("  resolutions:");
         for (DWORD j = 0; j < nRes; j++) {
             LONG xDpi = resPairs.Get()[j * 2];
@@ -284,7 +282,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
     DWORD nup = DeviceCapabilitiesW(nameW, portW, DC_NUP, nullptr, nullptr);
     if (nup > 0 && nup != (DWORD)-1) {
         ScopedMem<DWORD> nupValues(AllocArray<DWORD>(nup));
-        DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues.Get(), nullptr);
+        DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues.Get(), nullptr); // str-port: Win32
         out.Append("  pages per sheet (N-up):");
         for (DWORD j = 0; j < nup; j++) {
             out.AppendFmt(" %d", (int)nupValues.Get()[j]);
@@ -299,11 +297,10 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         ScopedMem<WCHAR> mediaNames(AllocArray<WCHAR>(64 * (size_t)nMedia));
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, mediaNames.Get(), nullptr);
         ScopedMem<DWORD> mediaValues(AllocArray<DWORD>(nMedia));
-        DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr);
+        DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr); // str-port: Win32
         out.Append("  media types:\n");
         for (DWORD j = 0; j < nMedia; j++) {
-            WCHAR* ws = mediaNames.Get() + 64 * (size_t)j; // str-port: Win32 DC_MEDIATYPENAMES entry
-            TempStr s = ToUtf8Temp(ws);
+            TempStr s = ToUtf8Temp(WStr(mediaNames.Get() + 64 * (size_t)j));
             out.AppendFmt("    '%s' (%d)\n", s, (int)mediaValues.Get()[j]);
         }
     }
@@ -483,15 +480,14 @@ Printer* NewPrinter(Str printerName) {
         WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1); // str-port: Win32 DC_PAPERNAMES buffer
         printer->paperSizes = AllocArray<POINT>(n);
 
-        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr); // str-port: Win32
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
-        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes,
+                            nullptr); // str-port: Win32
 
-        WCHAR* paperName = paperNamesSeq; // str-port: cursor into DC_PAPERNAMES buffer
         for (int i = 0; i < (int)n; i++) {
-            TempStr name = ToUtf8Temp(paperName);
+            TempStr name = ToUtf8Temp(WStr(paperNamesSeq + i * paperNameSize));
             printer->paperNames.Append(name);
-            paperName += paperNameSize;
         }
         str::Free(paperNamesSeq);
     }
@@ -509,13 +505,11 @@ Printer* NewPrinter(Str printerName) {
             size_t binNameSize = 24;
             printer->bins = AllocArray<WORD>(n);
             WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * n + 1); // str-port: Win32 DC_BINNAMES buffer
-            DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
+            DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr); // str-port: Win32
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
-            WCHAR* binName = binNamesSeq; // str-port: cursor into DC_BINNAMES buffer
             for (int i = 0; i < (int)n; i++) {
-                TempStr name = ToUtf8Temp(binName);
+                TempStr name = ToUtf8Temp(WStr(binNamesSeq + i * binNameSize));
                 printer->binNames.Append(name);
-                binName += binNameSize;
             }
             str::Free(binNamesSeq);
         }
@@ -1910,7 +1904,7 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
 
     auto devMode = printer->devMode;
     size_t devModeSize = devMode->dmSize + devMode->dmDriverExtra;
-    AutoFree backup((char*)memdup(devMode, devModeSize)); // str-port: raw DEVMODE bytes
+    AutoFree backup((char*)memdup(devMode, devModeSize)); // str-port: Win32 binary buffer
     SetCustomPaperSize(printer, size);
     if (ValidateDevMode(printer)) {
         return true;
