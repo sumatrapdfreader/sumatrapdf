@@ -2529,11 +2529,13 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     fz_var(fontDy);
     fz_var(dir);
     Kind kind = GuessFileTypeFromName(nameHint);
+    TempStr nameHintZ = StrDupTemp(nameHint); // str-port: mupdf NUL-term boundary
     if (kind == kindFileMarkdown) {
         TempStr parentDir = path::GetDirTemp(nameHint);
         if (!str::IsEmpty(parentDir)) {
             fz_try(ctx) {
-                dir = fz_open_directory(ctx, parentDir);
+                TempStr parentDirZ = StrDupTemp(parentDir); // str-port: mupdf NUL-term boundary
+                dir = fz_open_directory(ctx, parentDirZ.s);
             }
             fz_catch(ctx) {
                 dir = nullptr;
@@ -2543,9 +2545,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     }
     fz_try(ctx) {
         if (dir) {
-            _doc = fz_open_document_with_stream_and_dir(ctx, nameHint, stm, dir);
+            _doc = fz_open_document_with_stream_and_dir(ctx, nameHintZ.s, stm, dir);
         } else {
-            _doc = fz_open_document_with_stream(ctx, nameHint, stm);
+            _doc = fz_open_document_with_stream(ctx, nameHintZ.s, stm);
         }
         // per-document CSS styling (replaces the global fz_set_user_css /
         // fz_set_use_document_css); must be set before fz_layout_document
@@ -5140,7 +5142,8 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
     fz_buffer* buf = nullptr;
     fz_output* out = nullptr;
     fz_try(ctx) {
-        doc = fz_open_document(ctx, path);
+        TempStr pathZ = StrDupTemp(path); // str-port: mupdf NUL-term boundary
+        doc = fz_open_document(ctx, pathZ.s);
         outline = fz_load_outline(ctx, doc);
         if (!outline) {
             res = str::DupTemp("(no outline)");
