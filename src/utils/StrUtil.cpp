@@ -940,16 +940,19 @@ size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
 Str MemToHex(const u8* buf, size_t len) {
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char* ret = AllocArray<char>(2 * len + 1);
+    char* ret = AllocArray<char>(2 * len + 1); // str-port: owned heap
     if (!ret) {
         return {};
     }
-    char* dst = ret;
-    for (; len > 0; len--) {
-        sprintf_s(dst, 3, "%02x", *buf++);
-        dst += 2;
+    static const char hex[] = "0123456789abcdef";
+    int dst = 0;
+    for (size_t i = 0; i < len; i++) {
+        u8 b = buf[i];
+        ret[dst++] = hex[b >> 4];
+        ret[dst++] = hex[b & 0x0f];
     }
-    return Str(ret, (int)(2 * (dst - ret)));
+    ret[dst] = 0;
+    return Str(ret, dst);
 }
 
 /* Reverse of MemToHex. Convert a 0-terminatd hex-encoded string <s> to
@@ -1000,32 +1003,50 @@ static Str ExtractUntil(Str str, int off, char c, int* endOffOut) {
     return str::Dup(Str(str.s + off, endOff - off));
 }
 
-static const char* ParseLimitedNumber(Str str, int p, const char* format, int* endOffOut, void* valueOut) {
+static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* endOffOut, void* valueOut) {
     unsigned int width;
     char f2[] = "% ";
-    Str endF = Parse(Str(format), "%u%c", &width, &f2[1]);
+    Str formatAt = Str(format.s + formatOff);
+    Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
     if (endF && FindChar(Str("udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str(str.s + p, (int)width));
         Str end = Parse(Str(limited), f2, valueOut);
         if (end && !end.s[0]) {
             *endOffOut = p + (int)width;
+            return formatOff + (int)(endF.s - format.s) - 1;
         }
     }
-    return endF ? endF.s : nullptr;
+    return -1;
 }
 
 static bool ParseULongAt(Str str, int off, int base, unsigned long* val, int* endOff) {
     if (off >= str.len) {
         return false;
     }
-    TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
-    char* ep = nullptr;
-    *val = strtoul(sliceZ.s, &ep, base);
-    if (!ep || ep == sliceZ.s) {
+    unsigned long v = 0;
+    int i = off;
+    bool any = false;
+    while (i < str.len) {
+        char c = str.s[i];
+        int digit = -1;
+        if (c >= '0' && c <= '9') {
+            digit = c - '0';
+        } else if (base == 16) {
+            digit = HexDigitVal(c);
+        }
+        if (digit < 0 || (unsigned)digit >= (unsigned)base) {
+            break;
+        }
+        any = true;
+        v = v * (unsigned long)base + (unsigned long)digit;
+        i++;
+    }
+    if (!any) {
         return false;
     }
-    *endOff = off + (int)(ep - sliceZ.s);
+    *val = v;
+    *endOff = i;
     return true;
 }
 
@@ -1033,13 +1054,21 @@ static bool ParseLongAt(Str str, int off, int base, long* val, int* endOff) {
     if (off >= str.len) {
         return false;
     }
-    TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
-    char* ep = nullptr;
-    *val = strtol(sliceZ.s, &ep, base);
-    if (!ep || ep == sliceZ.s) {
+    bool neg = false;
+    int i = off;
+    if (str.s[i] == '-') {
+        neg = true;
+        i++;
+    } else if (str.s[i] == '+') {
+        i++;
+    }
+    unsigned long uv = 0;
+    int end = i;
+    if (!ParseULongAt(Str(str.s + i, str.len - i), 0, base, &uv, &end)) {
         return false;
     }
-    *endOff = off + (int)(ep - sliceZ.s);
+    *val = neg ? -(long)uv : (long)uv;
+    *endOff = i + end;
     return true;
 }
 
@@ -1048,12 +1077,16 @@ static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
         return false;
     }
     TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
-    char* ep = nullptr;
-    *val = strtod(sliceZ.s, &ep);
-    if (!ep || ep == sliceZ.s) {
-        return false;
+    ptrdiff_t consumed = 0;
+    {
+        char* endPtr = nullptr;
+        *val = strtod(sliceZ.s, &endPtr);
+        if (!endPtr || endPtr == sliceZ.s) {
+            return false;
+        }
+        consumed = endPtr - sliceZ.s;
     }
-    *endOff = off + (int)(ep - sliceZ.s);
+    *endOff = off + (int)consumed;
     return true;
 }
 
@@ -1162,7 +1195,11 @@ static Str ParseV(Str str, Str format, va_list args) {
             }
             end = p + 1;
         } else if (str::IsDigit(*f)) {
-            f = ParseLimitedNumber(str, p, f, &end, va_arg(args, void*)) - 1;
+            int formatIdx = ParseLimitedNumber(str, p, (int)(f - format.s), format, &end, va_arg(args, void*));
+            if (formatIdx < 0) {
+                return {};
+            }
+            f = format.s + formatIdx;
         }
         if (end < 0 || end == p) {
             return {};
@@ -1483,22 +1520,26 @@ static bool VarIntDecode(const u8*& p, i64* out) {
     }
 }
 
-static const char* SeqStrNumEntryEnd(const char* entry) {
-    if (!entry || !*entry) {
-        return entry;
+static int SeqStrNumEntryEndOff(SeqStrNum strs, int off) {
+    if (!strs || off < 0 || !strs[off]) {
+        return off;
     }
-    entry += str::Len(entry) + 1;
-    const u8* p = (const u8*)entry;
+    int next = off + str::Leni(strs + off) + 1;
+    const u8* p = (const u8*)(strs + next);
     while (*p & 0x80) {
         p++;
     }
-    return (const char*)(p + 1);
+    return next + (int)(p - (const u8*)(strs + next)) + 1;
 }
 
-static void SeqStrNumEntryParts(const char* entry, const char** strOut, i64* numOut) {
-    *strOut = entry;
-    const u8* p = (const u8*)(entry + str::Len(entry) + 1);
-    VarIntDecode(p, numOut);
+static void SeqStrNumEntryParts(SeqStrNum strs, int off, Str* strOut, i64* numOut) {
+    if (strOut) {
+        *strOut = SeqStrAt(strs, off);
+    }
+    const u8* p = (const u8*)(strs + off + str::Leni(strs + off) + 1);
+    if (numOut) {
+        VarIntDecode(p, numOut);
+    }
 }
 
 void SeqStrNumAppend(StrBuilder* b, Str s, i64 num) {
@@ -1525,7 +1566,7 @@ bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut) {
         }
         return false;
     }
-    off = (int)(SeqStrNumEntryEnd(strs + off) - strs);
+    off = SeqStrNumEntryEndOff(strs, off);
     if (!strs[off]) {
         off = -1;
         return false;
@@ -1545,8 +1586,7 @@ int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
     while (strs && strs[off]) {
         if (str::Eq(SeqStrNumAt(strs, off), toFind)) {
             if (numOut) {
-                const char* dummy = nullptr;
-                SeqStrNumEntryParts(strs + off, &dummy, numOut);
+                SeqStrNumEntryParts(strs, off, nullptr, numOut);
             }
             return idx;
         }
@@ -1567,8 +1607,7 @@ int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
     while (strs && strs[off]) {
         if (str::EqIS(SeqStrNumAt(strs, off), toFind)) {
             if (numOut) {
-                const char* dummy = nullptr;
-                SeqStrNumEntryParts(strs + off, &dummy, numOut);
+                SeqStrNumEntryParts(strs, off, nullptr, numOut);
             }
             return idx;
         }
@@ -1593,8 +1632,7 @@ Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
         return {};
     }
     if (numOut) {
-        const char* dummy = nullptr;
-        SeqStrNumEntryParts(strs + off, &dummy, numOut);
+        SeqStrNumEntryParts(strs, off, nullptr, numOut);
     }
     return SeqStrNumAt(strs, off);
 }
@@ -1603,10 +1641,10 @@ Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
     int off = 0;
     while (strs && strs[off]) {
         i64 n = 0;
-        const char* str = nullptr;
-        SeqStrNumEntryParts(strs + off, &str, &n);
+        Str s;
+        SeqStrNumEntryParts(strs, off, &s, &n);
         if (n == num) {
-            return Str(str);
+            return s;
         }
         if (!SeqStrNumAdvance(strs, off)) {
             break;
