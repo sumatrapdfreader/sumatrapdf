@@ -382,27 +382,27 @@ bool GetCommandBoolArg(CustomCommand* cmd, Str name, bool defValue);
 Str GetCommandStringArg(CustomCommand* cmd, Str name, Str defValue);
 void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 
-constexpr const char* kCmdArgColor = "color";
-constexpr const char* kCmdArgBgColor = "bgcolor";
-constexpr const char* kCmdArgOpacity = "opacity";
-constexpr const char* kCmdArgOpenEdit = "openedit";
-constexpr const char* kCmdArgTextSize = "textsize";
-constexpr const char* kCmdArgBorderWidth = "borderwidth";
-constexpr const char* kCmdArgInteriorColor = "interiorcolor";
+#define kCmdArgColor StrL("color")
+#define kCmdArgBgColor StrL("bgcolor")
+#define kCmdArgOpacity StrL("opacity")
+#define kCmdArgOpenEdit StrL("openedit")
+#define kCmdArgTextSize StrL("textsize")
+#define kCmdArgBorderWidth StrL("borderwidth")
+#define kCmdArgInteriorColor StrL("interiorcolor")
 
-constexpr const char* kCmdArgCopyToClipboard = "copytoclipboard";
-constexpr const char* kCmdArgSetContent = "setcontent";
-constexpr const char* kCmdArgExe = "exe";
-constexpr const char* kCmdArgURL = "url";
-constexpr const char* kCmdArgLevel = "level";
-constexpr const char* kCmdArgFilter = "filter";
-constexpr const char* kCmdArgN = "n";
-constexpr const char* kCmdArgMode = "mode";
-constexpr const char* kCmdArgTheme = "theme";
-constexpr const char* kCmdArgCommandLine = "cmdline";
-constexpr const char* kCmdArgToolbarText = "toolbartext";
-constexpr const char* kCmdArgToolbarSvgIcon = "toolbarsvgicon";
-constexpr const char* kCmdArgFocusEdit = "focusedit";
-constexpr const char* kCmdArgFocusList = "focuslist";
+#define kCmdArgCopyToClipboard StrL("copytoclipboard")
+#define kCmdArgSetContent StrL("setcontent")
+#define kCmdArgExe StrL("exe")
+#define kCmdArgURL StrL("url")
+#define kCmdArgLevel StrL("level")
+#define kCmdArgFilter StrL("filter")
+#define kCmdArgN StrL("n")
+#define kCmdArgMode StrL("mode")
+#define kCmdArgTheme StrL("theme")
+#define kCmdArgCommandLine StrL("cmdline")
+#define kCmdArgToolbarText StrL("toolbartext")
+#define kCmdArgToolbarSvgIcon StrL("toolbarsvgicon")
+#define kCmdArgFocusEdit StrL("focusedit")
+#define kCmdArgFocusList StrL("focuslist")
 // optional bool to force a state on a toggle command instead of flipping it (#5067)
-constexpr const char* kCmdArgState = "state";
+#define kCmdArgState StrL("state")
