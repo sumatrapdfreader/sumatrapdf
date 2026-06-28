@@ -18,11 +18,11 @@ struct ByteSlice {
 
     ByteSlice() = default;
     ~ByteSlice() = default;
-    ByteSlice(const char* str) {
+    explicit ByteSlice(const char* str) {
         d = (u8*)str;
         sz = strlen(str);
     }
-    ByteSlice(char* str) {
+    explicit ByteSlice(char* str) {
         d = (u8*)str;
         sz = strlen(str);
     }
@@ -422,42 +422,7 @@ FORCEINLINE int Leni(Str s) {
 FORCEINLINE int Leni(WStr s) {
     return s.len;
 }
-FORCEINLINE bool Eq(const char* s1, const char* s2) {
-    return Eq(Str(s1), Str(s2));
-}
-FORCEINLINE bool Eq(Str s1, const char* s2) {
-    return Eq(s1, Str(s2));
-}
-FORCEINLINE bool Eq(const char* s1, Str s2) {
-    return Eq(Str(s1), s2);
-}
-FORCEINLINE bool Eq(const WCHAR* s1, const WCHAR* s2) {
-    return Eq(WStr(s1), WStr(s2));
-}
-FORCEINLINE bool Eq(WStr s1, const WCHAR* s2) {
-    return Eq(s1, WStr(s2));
-}
-FORCEINLINE bool Eq(const WCHAR* s1, WStr s2) {
-    return Eq(WStr(s1), s2);
-}
-FORCEINLINE bool EqI(const char* s1, const char* s2) {
-    return EqI(Str(s1), Str(s2));
-}
-FORCEINLINE bool EqI(Str s1, const char* s2) {
-    return EqI(s1, Str(s2));
-}
-FORCEINLINE bool EqI(const char* s1, Str s2) {
-    return EqI(Str(s1), s2);
-}
-FORCEINLINE bool EqI(const WCHAR* s1, const WCHAR* s2) {
-    return EqI(WStr(s1), WStr(s2));
-}
-FORCEINLINE bool EqI(WStr s1, const WCHAR* s2) {
-    return EqI(s1, WStr(s2));
-}
-FORCEINLINE bool EqI(const WCHAR* s1, WStr s2) {
-    return EqI(WStr(s1), s2);
-}
+
 FORCEINLINE bool IsEmpty(const WCHAR* s) {
     return !s || !*s;
 }

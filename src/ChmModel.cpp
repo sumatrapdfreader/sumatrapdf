@@ -210,7 +210,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
     }
 
     TempStr url = url::GetFullPathTemp(pageUrl);
-    bool wasSameUrl = currentPageUrl && str::Eq(currentPageUrl, url);
+    bool wasSameUrl = currentPageUrl.Get() && str::Eq(Str(currentPageUrl.Get()), url);
     int pageNo = pages.Find(url) + 1;
     // if we're reloading the same url to restore a scroll position, don't
     // clobber that saved position by saving the current (pre-restore) one
@@ -837,7 +837,7 @@ void ChmThumbnailTask::OnDocumentComplete(Str url) {
     if (url && url.s[0] == '/') {
         url = Str(url.s + 1, url.len - 1);
     }
-    if (!str::Eq(url, homeUrl)) {
+    if (!str::Eq(url, Str(homeUrl.Get()))) {
         return;
     }
     logf("ChmThumbnailTask::OnDocumentComplete: '%s'\n", url.s);

@@ -804,7 +804,7 @@ static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
         newMii.dwTypeData = newName;
         GetMenuItemInfoW(oldMenu, i, TRUE, &oldMii);
         GetMenuItemInfoW(newMenu, i, TRUE, &newMii);
-        if (!str::Eq(oldName, newName)) {
+        if (!str::Eq(WStr(oldName.Get()), WStr(newName.Get()))) {
             return true;
         }
     }
@@ -10619,7 +10619,8 @@ void GetProgramInfo(StrBuilder& s) {
     s.Append("\r\n");
 
     if (gitCommidId) {
-        s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId.s, gitCommidId.s);
+        s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId.s,
+                    gitCommidId.s);
     }
 }
 

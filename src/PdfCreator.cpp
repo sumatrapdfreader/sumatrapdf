@@ -23,7 +23,7 @@ extern "C" {
 static AutoFreeStr gPdfProducer;
 
 void PdfCreator::SetProducerName(Str name) {
-    if (!str::Eq(gPdfProducer, name)) {
+    if (!str::Eq(Str(gPdfProducer.Get()), name)) {
         gPdfProducer.SetCopy(name);
     }
 }

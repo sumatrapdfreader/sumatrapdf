@@ -11,21 +11,21 @@ static bool TestDigestMD5(const char* data, int size, const char* verify) {
     u8 digest[16];
     CalcMD5Digest((const u8*)data, size, digest);
     AutoFreeStr hash(_MemToHex(&digest).s);
-    return str::Eq(hash, verify);
+    return str::Eq(Str(hash.Get()), verify);
 }
 
 static bool TestDigestSHA1(const char* data, int size, const char* verify) {
     u8 digest[20];
     CalcSHA1Digest((const u8*)data, size, digest);
     AutoFreeStr hash(_MemToHex(&digest).s);
-    return str::Eq(hash, verify);
+    return str::Eq(Str(hash.Get()), verify);
 }
 
 static bool TestDigestSHA2(const char* data, int size, const char* verify) {
     u8 digest[32];
     CalcSHA2Digest((const u8*)data, size, digest);
     AutoFreeStr hash(_MemToHex(&digest).s);
-    return str::Eq(hash, verify);
+    return str::Eq(Str(hash.Get()), verify);
 }
 
 void CryptoUtilTest() {

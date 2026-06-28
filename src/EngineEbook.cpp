@@ -1359,7 +1359,7 @@ class ChmDataCache {
     ByteSlice* GetImageData(Str id, Str pagePath) {
         AutoFreeStr url(NormalizeURL(id, pagePath).s);
         for (size_t i = 0; i < images.size(); i++) {
-            if (str::Eq(images.at(i).fileName, url)) {
+            if (str::Eq(images.at(i).fileName, Str(url.Get()))) {
                 return &images.at(i).base;
             }
         }

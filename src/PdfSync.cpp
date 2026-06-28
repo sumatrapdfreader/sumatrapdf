@@ -319,7 +319,7 @@ static void TryRecoverMovedSourceFile(AutoFreeStr& srcfilepath, Str pdfPath) {
     }
     TempStr altsrcpath = path::GetDirTemp(pdfPath);
     altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(Str(srcfilepath)));
-    if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath)) {
+    if (!str::Eq(altsrcpath, Str(srcfilepath.Get())) && file::Exists(altsrcpath)) {
         srcfilepath.SetCopy(altsrcpath);
     }
 }

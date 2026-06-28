@@ -179,7 +179,7 @@ static void hexstrTest() {
     u8 buf[6] = {1, 2, 33, 255, 0, 18};
     u8 buf2[6]{};
     AutoFreeStr s(_MemToHex(&buf).s);
-    utassert(str::Eq(s, "010221ff0012"));
+    utassert(str::Eq(Str(s.Get()), "010221ff0012"));
     bool ok = _HexToMem(s, &buf2);
     utassert(ok);
     utassert(memeq(buf, buf2, sizeof(buf)));
@@ -193,7 +193,7 @@ static void hexstrTest() {
     utassert(FileTimeEq(ft1, ft2));
 
     s.Set(str::MemToHex(nullptr, 0).s);
-    utassert(str::Eq(s, ""));
+    utassert(str::Eq(Str(s.Get()), ""));
     ok = str::HexToMem(s, nullptr, 0);
     utassert(ok);
 }

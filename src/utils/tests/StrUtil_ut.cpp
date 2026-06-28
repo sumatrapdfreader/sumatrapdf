@@ -301,7 +301,7 @@ void StrTest() {
         AutoFreeStr large(AllocArray<char>(2000));
         memset(large, 0x11, 1998);
         str2 = str::Format("%s", large.Get());
-        utassert(str::Eq(str2, large));
+        utassert(str::Eq(Str(str2), Str(large.Get())));
         str::Free(str2);
     }
 #if 0
@@ -368,12 +368,12 @@ void StrTest() {
             AutoFreeStr str1;
             Str end = str::Parse(Str(str2), "[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
             utassert(end.s && !end.s[0]);
-            utassert(u1 == 1 && str::Eq(str1, "filename.pdf"));
+            utassert(u1 == 1 && str::Eq(Str(str1.Get()), "filename.pdf"));
 
             utassert(str::Parse(StrL("0xABCD"), "%x", &u1).s);
             utassert(u1 == 0xABCD);
             utassert(str::Parse(StrL("ABCD"), "%2x%S", &u1, &str1).s);
-            utassert(u1 == 0xAB && str::Eq(str1, "CD"));
+            utassert(u1 == 0xAB && str::Eq(Str(str1.Get()), "CD"));
         }
     }
     {
@@ -442,14 +442,14 @@ void StrTest() {
         int i, j;
         float f;
         utassert(str::Parse(StrL("ansi string, -30-20 1.5%"), "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f).s);
-        utassert(str::Eq(str1, "ansi string") && i == -30 && j == 20 && f == 1.5f);
+        utassert(str::Eq(Str(str1.Get()), "ansi string") && i == -30 && j == 20 && f == 1.5f);
     }
     {
         AutoFreeStr str1;
         int i, j;
         float f;
         utassert(str::Parse(StrL("wide string, -30-20 1.5%"), "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f).s);
-        utassert(str::Eq(str1, "wide string") && i == -30 && j == 20 && f == 1.5f);
+        utassert(str::Eq(Str(str1.Get()), "wide string") && i == -30 && j == 20 && f == 1.5f);
     }
 
     {

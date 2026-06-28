@@ -436,7 +436,7 @@ bool EpubDoc::Load() {
     }
     AutoFreeWStr readingDir(node->GetAttribute(Str("page-progression-direction")).s);
     if (readingDir) {
-        isRtlDoc = str::EqI(readingDir, L"rtl");
+        isRtlDoc = str::EqI(WStr(readingDir.Get()), WStr(L"rtl"));
     }
 
     for (node = node->down; node; node = node->next) {
@@ -569,7 +569,7 @@ ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
         str::TransCharsInPlace(Str(url), "\\", "/");
     }
     for (ImageData& img : images) {
-        if (str::Eq(img.fileName, url)) {
+        if (str::Eq(img.fileName, Str(url.Get()))) {
             if (img.base.empty()) {
                 auto* fi = archive->GetFileDataById(img.fileId);
                 if (fi && fi->data) {
@@ -1316,7 +1316,8 @@ bool HtmlDoc::Load() {
         if (!decoded) {
             return false;
         }
-        htmlData = str::Dup(decoded).s;
+        Str dup = str::Dup(decoded);
+        htmlData.Set((u8*)dup.s, (size_t)dup.len);
         data.Free();
     }
 
@@ -1363,7 +1364,7 @@ ByteSlice* HtmlDoc::GetImageData(Str fileName) {
 
     AutoFreeStr url(NormalizeURL(fileName, Str(pagePath)).s);
     for (size_t i = 0; i < images.size(); i++) {
-        if (str::Eq(images.at(i).fileName, url)) {
+        if (str::Eq(images.at(i).fileName, Str(url.Get()))) {
             return &images.at(i).base;
         }
     }
