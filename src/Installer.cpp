@@ -236,24 +236,24 @@ void RemoveAppShortcuts() {
     }
 }
 
-static const char* GetEnvRegKey(bool allUsers) {
+static Str GetEnvRegKey(bool allUsers) {
     if (allUsers) {
         return "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
     }
     return "Environment";
 }
 
-static void AddInstallDirToPath(bool allUsers, const char* installDir) {
+static void AddInstallDirToPath(bool allUsers, Str installDir) {
     HKEY root = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-    const char* keyName = GetEnvRegKey(allUsers);
-    char* currPath = ReadRegStrTemp(root, keyName, "Path");
+    Str keyName = GetEnvRegKey(allUsers);
+    TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
     // check if installDir is already in PATH (case-insensitive)
     if (currPath && str::FindI(currPath, installDir)) {
         logf("AddInstallDirToPath: '%s' already in PATH\n", installDir);
         return;
     }
     StrBuilder newPath;
-    if (currPath && *currPath) {
+    if (!str::IsEmpty(currPath)) {
         newPath.Append(currPath);
         if (newPath.Last() != ';') {
             newPath.Append(";");
