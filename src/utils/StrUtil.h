@@ -431,27 +431,6 @@ FORCEINLINE Str FindI(const Str& str, const char* find) {
 FORCEINLINE Str ToLower(const char* s) {
     return ToLower(Str(s));
 }
-FORCEINLINE bool EqIS(const char* s1, const char* s2) {
-    return EqIS(Str(s1), Str(s2));
-}
-FORCEINLINE bool EqN(const char* s1, const char* s2, size_t len) {
-    return EqN(Str(s1), Str(s2), len);
-}
-FORCEINLINE bool EqNI(const char* s1, const char* s2, size_t len) {
-    return EqNI(Str(s1), Str(s2), len);
-}
-FORCEINLINE bool EqNIx(const char* s, size_t len, const char* s2) {
-    return EqNIx(Str(s), len, Str(s2));
-}
-FORCEINLINE bool ContainsI(const char* s, const char* txt) {
-    return ContainsI(Str(s), Str(txt));
-}
-FORCEINLINE bool ContainsI(Str s, const char* txt) {
-    return ContainsI(s, Str(txt));
-}
-FORCEINLINE bool ContainsI(const char* s, Str txt) {
-    return ContainsI(Str(s), txt);
-}
 FORCEINLINE char* FindChar(char* str, char c) {
     Str res = FindChar(Str(str), c);
     return res.s;
