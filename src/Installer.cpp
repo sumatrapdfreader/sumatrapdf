@@ -129,7 +129,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
             NotifyFailed(msg);
             return false;
         }
-        logf("  extracted '%s'\n", filePath);
+        logf("  extracted '%s'\n", filePath.s);
         ProgressStep();
     }
 
@@ -249,7 +249,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
     // check if installDir is already in PATH (case-insensitive)
     if (currPath && str::FindI(currPath, installDir)) {
-        logf("AddInstallDirToPath: '%s' already in PATH\n", installDir);
+        logf("AddInstallDirToPath: '%s' already in PATH\n", installDir.s);
         return;
     }
     StrBuilder newPath;
@@ -277,7 +277,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
         logf("AddInstallDirToPath: RegSetValueExW failed with %d\n", (int)res);
         return;
     }
-    logf("AddInstallDirToPath: added '%s' to PATH\n", installDir);
+    logf("AddInstallDirToPath: added '%s' to PATH\n", installDir.s);
     // notify other processes that environment has changed
     SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, nullptr);
 }
@@ -1133,7 +1133,7 @@ bool ExtractLibmupdfDll(Str destDir) {
     }
     if (!dir::CreateAll(destDir)) {
         free(uncompressed);
-        logf("ExtractLibmupdfDll: couldn't create directory '%s'\n", destDir);
+        logf("ExtractLibmupdfDll: couldn't create directory '%s'\n", destDir.s);
         return false;
     }
     TempStr filePath = path::JoinTemp(destDir, fi->name);
@@ -1141,15 +1141,15 @@ bool ExtractLibmupdfDll(Str destDir) {
     bool ok = file::WriteFile(filePath, d);
     free(uncompressed);
     if (!ok) {
-        logf("ExtractLibmupdfDll: failed to write '%s'\n", filePath);
+        logf("ExtractLibmupdfDll: failed to write '%s'\n", filePath.s);
         return false;
     }
-    logf("ExtractLibmupdfDll: extracted '%s'\n", filePath);
+    logf("ExtractLibmupdfDll: extracted '%s'\n", filePath.s);
     return true;
 }
 
 bool ExtractInstallerFiles(Str dir) {
-    logf("ExtractInstallerFiles() to '%s'\n", dir);
+    logf("ExtractInstallerFiles() to '%s'\n", dir.s);
     bool ok = dir::CreateAll(Str(dir));
     if (!ok) {
         log("  dir::CreateAll() failed\n");
@@ -1244,7 +1244,7 @@ int RunInstaller() {
         DWORD parentPid = 0;
         TempStr path = GetParentProcessPath(&parentPid);
         if (path) {
-            logf("Parent process: pid=%d, path='%s'\n", (int)parentPid, path);
+            logf("Parent process: pid=%d, path='%s'\n", (int)parentPid, path.s);
         } else if (parentPid != 0) {
             logf("Parent process: pid=%d, path unknown\n", (int)parentPid);
         } else {
