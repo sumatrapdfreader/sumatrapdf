@@ -266,8 +266,8 @@ void UploadCrashReport(const ByteSlice& d) {
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
 }
 
-static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* dstDir, Arena* allocator) {
-    logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
+static bool ExtractSymbols(const u8* archiveData, size_t dataSize, Str dstDir, Arena* allocator) {
+    logf("ExtractSymbols: dir '%s', size: %d\n", dstDir.s, (int)dataSize);
     lzma::SimpleArchive archive;
     bool ok = ParseSimpleArchive(archiveData, dataSize, &archive);
     if (!ok) {
@@ -283,7 +283,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
         if (!uncompressed) {
             return false;
         }
-        char* filePath = path::Join(allocator, dstDir, name);
+        TempStr filePath = path::JoinTemp(dstDir, name);
         if (!filePath) {
             return false;
         }
@@ -291,10 +291,9 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
         ok = file::WriteFile(filePath, d);
         if (!ok) {
             DWORD err = GetLastError();
-            logf("ExtractSymbols: failed to write '%s'\n", filePath);
+            logf("ExtractSymbols: failed to write '%s'\n", filePath.s);
             LogLastError(err);
         }
-        Free(allocator, filePath);
         Free(allocator, uncompressed);
         if (!ok) {
             return false;
@@ -309,20 +308,20 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
 // Returns false if downloading or extracting failed
 // note: to simplify callers, it could choose pdbZipPath by itself (in a temporary
 // directory) as the file is deleted on exit anyway
-static bool DownloadAndUnzipSymbols(const char* symDir) {
+static bool DownloadAndUnzipSymbols(Str symDir) {
     if (gDisableSymbolsDownload) {
         // don't care about debug builds because we don't release them
         log("DownloadAndUnzipSymbols: DEBUG build so not doing anything\n");
         return false;
     }
 
-    if (!dir::CreateAll(Str(symDir))) {
-        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", symDir);
+    if (!dir::CreateAll(symDir)) {
+        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", symDir.s);
         return false;
     }
 
-    logf("DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
-    if (!symDir || !dir::Exists(Str(symDir))) {
+    logf("DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir.s, gSymbolsUrl.s);
+    if (!symDir || !dir::Exists(symDir)) {
         log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
         return false;
     }
@@ -386,10 +385,10 @@ static bool gAddNtSymbolPath = false;
 static bool gAddSymbolServer = false;
 static bool gAddExeDir = false;
 
-static TempStr BuildSymbolPathTemp(const char* symDir) {
+static TempStr BuildSymbolPathTemp(Str symDir) {
     StrBuilder path(2048, GetTempArena());
 
-    bool symDirExists = dir::Exists(Str(symDir));
+    bool symDirExists = dir::Exists(symDir);
 
     // at this point symDir might not exist but we add it anyway
     path.Append(symDir);
