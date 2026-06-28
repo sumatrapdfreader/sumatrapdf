@@ -249,7 +249,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
         }
 
         if (inst.t == Type::RawStr) {
-            res.Append(inst.s, (size_t)inst.sLen);
+            res.Append(Str(inst.s, inst.sLen));
             continue;
         }
 

@@ -372,7 +372,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     TgaFooter footerLE = {0, 0, TGA_FOOTER_SIGNATURE};
 
     StrBuilder tgaData;
-    tgaData.Append((char*)&headerLE, sizeof(headerLE));
+    tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
     for (int k = 0; k < h; k++) {
         const char* line = bmpData + k * stride;
         for (int i = 0, j = 1; i < w; i += j, j = 1) {
@@ -382,7 +382,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
             }
             if (j > 1) {
                 tgaData.AppendChar((char)(j - 1 + 128));
-                tgaData.Append(line + i * 3, 3);
+                tgaData.Append(Str(line + i * 3, 3));
             } else {
                 // determine the length of a run of different pixels
                 while (i + j < w && j <= 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3)) {
@@ -392,21 +392,21 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
                     j--;
                 }
                 tgaData.AppendChar((char)(j - 1));
-                tgaData.Append(line + i * 3, j * 3);
+                tgaData.Append(Str(line + i * 3, (int)(j * 3)));
             }
         }
     }
-    tgaData.Append((char*)&footerLE, sizeof(footerLE));
+    tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
 
     // don't compress the image data if that increases the file size
     if (tgaData.size() > sizeof(headerLE) + w * h * 3 + sizeof(footerLE)) {
         tgaData.RemoveAt(0, tgaData.size());
         headerLE.imageType = Type_Truecolor;
-        tgaData.Append((char*)&headerLE, sizeof(headerLE));
+        tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
         for (int k = 0; k < h; k++) {
-            tgaData.Append(bmpData + k * stride, w * 3);
+            tgaData.Append(Str(bmpData + k * stride, w * 3));
         }
-        tgaData.Append((char*)&footerLE, sizeof(footerLE));
+        tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
     }
 
     size_t sz = tgaData.size();

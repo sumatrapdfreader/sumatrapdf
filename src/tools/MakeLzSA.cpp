@@ -93,7 +93,7 @@ static bool AppendEntry(StrBuilder& data, StrBuilder& content, const char* fileP
         meta.Write32(ft.dwHighDateTime);
         ReportIf(meta.Size() != kBufSize);
         data.AppendSlice(meta.AsByteSlice());
-        data.Append(inArchiveName, nameLen + 1);
+        data.Append(Str(inArchiveName, (int)nameLen + 1));
         return content.Append(fi->compressedData, fi->compressedSize);
     }
 
@@ -177,7 +177,7 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
     buf.Write32(headerCrc32);
     ReportIf(buf.Size() != 4);
     data.AppendSlice(buf.AsByteSlice());
-    if (!data.Append(content.Get(), content.size())) return false;
+    if (!data.Append(content.Get())) return false;
 
     ByteSlice d = data.AsByteSlice();
     return file::WriteFile(archivePath, d);

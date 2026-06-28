@@ -279,8 +279,7 @@ struct StrBuilder {
     int Size() const;
     bool InsertAt(size_t idx, char el);
     bool AppendChar(char c);
-    bool Append(const char* src, size_t count = -1);
-    bool Append(const Str&);
+    bool Append(Str src, size_t count = (size_t)-1);
     bool Append(const StrBuilder& s);
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();

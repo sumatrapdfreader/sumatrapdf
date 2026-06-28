@@ -1745,27 +1745,23 @@ bool StrBuilder::AppendChar(char c) {
     return InsertAt(len, c);
 }
 
-bool StrBuilder::Append(const Str& s) {
-    return Append(s.s, (size_t)s.len);
-}
-
-bool StrBuilder::Append(const char* src, size_t count) {
-    if (-1 == count) {
-        count = str::Len(src);
+bool StrBuilder::Append(Str src, size_t count) {
+    if ((size_t)-1 == count) {
+        count = (size_t)src.len;
     }
-    if (!src || 0 == count) {
+    if (!src.s || 0 == count) {
         return true;
     }
     char* dst = MakeSpaceAt(this, len, count);
     if (!dst) {
         return false;
     }
-    memcpy(dst, src, count);
+    memcpy(dst, src.s, count);
     return true;
 }
 
 bool StrBuilder::Append(const StrBuilder& s) {
-    return Append(s.LendData(), s.size());
+    return Append(Str(s.LendData(), (int)s.size()));
 }
 
 char StrBuilder::RemoveAt(size_t idx, size_t count) {
@@ -1863,14 +1859,17 @@ ByteSlice StrBuilder::StealAsByteSlice() {
 }
 
 bool StrBuilder::Append(const u8* src, size_t size) {
-    return this->Append((const char*)src, size);
+    if ((size_t)-1 == size) {
+        return this->Append(Str((const char*)src));
+    }
+    return this->Append(Str((const char*)src, (int)size));
 }
 
 bool StrBuilder::AppendSlice(const ByteSlice& d) {
     if (d.empty()) {
         return true;
     }
-    return this->Append(d.data(), d.size());
+    return this->Append(Str((const char*)d.data(), (int)d.size()));
 }
 
 void StrBuilder::AppendFmt(const char* fmt, ...) {

@@ -379,7 +379,7 @@ static void ReadPipeToStrBuilder(HANDLE hPipe, StrBuilder& out) {
     char buf[4096];
     DWORD bytesRead = 0;
     while (ReadFile(hPipe, buf, sizeof(buf) - 1, &bytesRead, nullptr) && bytesRead > 0) {
-        out.Append(buf, bytesRead);
+        out.Append(Str(buf, (int)bytesRead));
     }
 }
 

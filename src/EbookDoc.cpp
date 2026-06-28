@@ -914,7 +914,7 @@ bool Fb2Doc::Load() {
                     xmlData.Append("<pagebreak />");
                 }
                 xmlData.AppendChar('<');
-                xmlData.Append(bodyStart.s, (int)(tok->s.s - bodyStart.s) + tok->s.len);
+                xmlData.Append(Str(bodyStart.s, (int)(tok->s.s - bodyStart.s) + tok->s.len));
                 xmlData.AppendChar('>');
             }
         } else if (inBody && tok->IsStartTag() && Tag_Title == tok->tag) {
@@ -1452,7 +1452,7 @@ static TempStr DecompressTcrTextTemp(Str data) {
     Str rest = curr;
     for (int i = 0; i < rest.len; i++) {
         Str entry = dict[(u8)rest.s[i]];
-        bool ok = text.Append(entry.s + 1, (u8)entry.s[0]);
+        bool ok = text.Append(Str(entry.s + 1, (u8)entry.s[0]));
         if (!ok) {
             return {};
         }
@@ -1564,12 +1564,12 @@ static Str TextFindEmailEnd(StrBuilder& htmlData, Str curr) {
         htmlData.RemoveAt(idx, htmlData.size() - idx);
     }
     htmlData.Append("<a href=\"mailto:");
-    htmlData.Append(beforeAt);
+    htmlData.Append(Str(beforeAt.Get()));
     for (int i = 0; i < (int)(end.s - linkStart.s); i++) {
         AppendChar(htmlData, linkStart.s[i]);
     }
     htmlData.Append("\">");
-    htmlData.Append(beforeAt);
+    htmlData.Append(Str(beforeAt.Get()));
 
     return end;
 }

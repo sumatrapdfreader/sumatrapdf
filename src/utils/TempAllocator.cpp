@@ -110,11 +110,11 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     StrBuilder result(capHint);
     bool ok;
     while (end) {
-        ok = result.Append(curr, end.s - curr);
+        ok = result.Append(Str(curr, (int)(end.s - curr)));
         if (!ok) {
             return {};
         }
-        ok = result.Append(replaceWith.s, replLen);
+        ok = result.Append(Str(replaceWith.s, (int)replLen));
         if (!ok) {
             return {};
         }

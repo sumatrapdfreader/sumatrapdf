@@ -161,8 +161,8 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
     central.Write32((u32)fileOffset);
     ReportIf(central.d.size() != kCentralSize);
 
-    centraldir.Append(central.d.Get(), kCentralSize);
-    centraldir.Append(nameUtf8, namelen);
+    centraldir.Append(Str(central.d.LendData(), (int)kCentralSize));
+    centraldir.Append(nameUtf8);
 
     fileCount++;
     return ok;

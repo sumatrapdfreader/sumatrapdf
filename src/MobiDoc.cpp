@@ -126,7 +126,7 @@ static bool PalmdocUncompress(const u8* src, size_t srcLen, StrBuilder& dst) {
             if (src + c > srcEnd) {
                 return false;
             }
-            dst.Append(src, c);
+            dst.Append(Str((const char*)src, (int)c));
             src += c;
         } else if (c < 128) {
             dst.AppendChar((char)c);
@@ -249,7 +249,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, StrBuilder& dst) {
             logf("symLen too big\n");
             return false;
         }
-        dst.Append((char*)p, symLen);
+        dst.Append(Str((char*)p, (int)symLen));
     }
     return true;
 }
@@ -824,7 +824,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, StrBuilder& strOut) {
     }
 
     if (COMPRESSION_NONE == compressionType) {
-        strOut.Append((const char*)recData, recSize);
+        strOut.Append(Str((const char*)recData, (int)recSize));
         return true;
     }
     if (COMPRESSION_PALM == compressionType) {

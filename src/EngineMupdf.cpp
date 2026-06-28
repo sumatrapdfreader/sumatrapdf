@@ -792,7 +792,7 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, StrBuilder& s, Vec<Rec
     }
     char buf[4];
     int n = fz_runetochar(buf, rune);
-    s.Append(buf, (size_t)n);
+    s.Append(Str(buf, n));
     for (int i = 0; i < n; i++) {
         rects.Append(r);
     }
