@@ -169,10 +169,10 @@ static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM d
 
 /* For passing data to/from GetPassword dialog */
 struct Dialog_GetPassword_Data {
-    const char* fileName; /* name of the file for which we need the password */
-    char* pwdOut;         /* password entered by the user */
-    bool* remember;       /* remember the password (encrypted) or ask again? */
-    bool* showPassword;   /* keep the "show password" state across retries */
+    Str fileName;       /* name of the file for which we need the password */
+    Str pwdOut;         /* password entered by the user */
+    bool* remember;     /* remember the password (encrypted) or ask again? */
+    bool* showPassword; /* keep the "show password" state across retries */
 };
 
 static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
@@ -210,19 +210,19 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
     }
     //] ACCESSKEY_GROUP Password Dialog
 
-    char* tmp;
     switch (msg) {
         case WM_COMMAND:
             switch (LOWORD(wp)) {
-                case IDOK:
+                case IDOK: {
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+                    TempStr tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
                     data->pwdOut = str::Dup(tmp);
                     if (data->remember) {
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
                     }
                     EndDialog(hDlg, IDOK);
                     return TRUE;
+                }
 
                 case IDCANCEL:
                     EndDialog(hDlg, IDCANCEL);
@@ -251,25 +251,25 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
    Caller needs to free() the result.
 */
 Str Dialog_GetPassword(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword) {
-    Dialog_GetPassword_Data data = {nullptr};
+    Dialog_GetPassword_Data data;
     data.fileName = fileName;
     data.remember = rememberPassword;
     data.showPassword = showPassword;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_GET_PASSWORD, hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
     if (IDOK != res) {
-        free(data.pwdOut);
+        str::Free(data.pwdOut);
         return Str();
     }
-    return Str(data.pwdOut);
+    return str::Dup(data.pwdOut);
 }
 
 /* For passing data to/from GoToPage dialog */
 struct Dialog_GoToPage_Data {
-    char* currPageLabel = nullptr; // currently shown page label
-    int pageCount = 0;             // total number of pages
-    bool onlyNumeric = false;      // whether the page label must be numeric
-    char* newPageLabel = nullptr;  // page number entered by user
+    Str currPageLabel;        // currently shown page label
+    int pageCount = 0;        // total number of pages
+    bool onlyNumeric = false; // whether the page label must be numeric
+    Str newPageLabel;         // page number entered by user
 
     ~Dialog_GoToPage_Data() {
         str::Free(currPageLabel);
@@ -310,17 +310,17 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
     }
     //] ACCESSKEY_GROUP GoTo Page Dialog
 
-    char* tmp;
     switch (msg) {
         case WM_COMMAND:
             switch (LOWORD(wp)) {
-                case IDOK:
+                case IDOK: {
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-                    tmp = HwndGetTextTemp(editPageNo);
+                    TempStr tmp = HwndGetTextTemp(editPageNo);
                     str::ReplaceWithCopy(&data->newPageLabel, tmp);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
+                }
 
                 case IDCANCEL:
                     EndDialog(hDlg, IDCANCEL);
@@ -339,15 +339,13 @@ Str Dialog_GoToPage(HWND hwnd, Str currentPageLabel, int pageCount, bool onlyNum
     data.currPageLabel = str::Dup(currentPageLabel);
     data.pageCount = pageCount;
     data.onlyNumeric = onlyNumeric;
-    data.newPageLabel = nullptr;
-
     CreateDialogBox(IDD_DIALOG_GOTO_PAGE, hwnd, Dialog_GoToPage_Proc, (LPARAM)&data);
     return str::Dup(data.newPageLabel);
 }
 
 /* For passing data to/from Find dialog */
 struct Dialog_Find_Data {
-    char* searchTerm;
+    Str searchTerm;
     bool matchCase;
     WNDPROC editWndProc;
 };
@@ -379,7 +377,8 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             if (data->searchTerm) {
                 HwndSetDlgItemText(hDlg, IDC_FIND_EDIT, data->searchTerm);
             }
-            data->searchTerm = nullptr;
+            str::Free(data->searchTerm);
+            data->searchTerm = {};
             CheckDlgButton(hDlg, IDC_MATCH_CASE, data->matchCase ? BST_CHECKED : BST_UNCHECKED);
             data->editWndProc = (WNDPROC)SetWindowLongPtr(GetDlgItem(hDlg, IDC_FIND_EDIT), GWLP_WNDPROC,
                                                           (LONG_PTR)Dialog_Find_Edit_Proc);
@@ -420,24 +419,25 @@ Str Dialog_Find(HWND hwnd, Str previousSearch, bool* matchCase) {
     data.matchCase = matchCase ? *matchCase : false;
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FIND, hwnd, Dialog_Find_Proc, (LPARAM)&data);
     if (res != IDOK) {
+        str::Free(data.searchTerm);
         return Str();
     }
 
     if (matchCase) {
         *matchCase = data.matchCase;
     }
-    return Str(data.searchTerm);
+    return str::Dup(data.searchTerm);
 }
 
 /* For passing data to/from ChangeLanguage dialog */
 struct Dialog_ChangeLanguage_Data {
-    const char* langCode;
+    Str langCode;
 };
 
 // maps listbox index to lang index when filtered
 static Vec<int>* gLangListMap = nullptr;
 
-static void FilterLangList(HWND hDlg, const char* filter, const char* currLangCode) {
+static void FilterLangList(HWND hDlg, Str filter, Str currLangCode) {
     HWND langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
     ListBox_ResetContent(langList);
 
@@ -446,13 +446,13 @@ static void FilterLangList(HWND hDlg, const char* filter, const char* currLangCo
 
     int itemToSelect = 0;
     for (int i = 0; i < trans::GetLangsCount(); i++) {
-        const char* name = trans::GetLangNameByIdx(i);
-        if (filter && *filter && !str::ContainsI(name, filter)) {
+        Str name = trans::GetLangNameByIdx(i);
+        if (filter && !str::ContainsI(name, filter)) {
             continue;
         }
         auto langName = ToWStrTemp(name);
         ListBox_AppendString_NoSort(langList, langName);
-        const char* langCode = trans::GetLangCodeByIdx(i);
+        Str langCode = trans::GetLangCodeByIdx(i);
         if (str::Eq(langCode, currLangCode)) {
             itemToSelect = gLangListMap->Size();
         }
@@ -502,7 +502,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         case WM_COMMAND:
             data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             if (LOWORD(wp) == IDC_CHANGE_LANG_SEARCH && HIWORD(wp) == EN_CHANGE) {
-                char* filter = HwndGetTextTemp(GetDlgItem(hDlg, IDC_CHANGE_LANG_SEARCH));
+                TempStr filter = HwndGetTextTemp(GetDlgItem(hDlg, IDC_CHANGE_LANG_SEARCH));
                 FilterLangList(hDlg, filter, data->langCode);
                 return TRUE;
             }
@@ -551,7 +551,7 @@ Str Dialog_ChangeLanguge(HWND hwnd, Str currLangCode) {
     if (IDCANCEL == res) {
         return Str();
     }
-    return Str(data.langCode);
+    return str::Dup(data.langCode);
 }
 
 TempStr ZoomLevelStr(float zoom) {
@@ -669,8 +669,8 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
     float newZoom = defaultZoom;
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
-        char* customZoom = HwndGetTextTemp(GetDlgItem(hDlg, idComboBox));
-        float zoom = (float)atof(customZoom);
+        TempStr customZoom = HwndGetTextTemp(GetDlgItem(hDlg, idComboBox));
+        float zoom = (float)atof(customZoom.s);
         newZoom = limitValue(zoom, kZoomMin, kZoomMax);
         return newZoom;
     }
@@ -746,7 +746,7 @@ static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM 
             if (UseDarkModeLib()) {
                 DarkMode::setDarkWndSafe(hDlg);
             }
-            const char* s = gGlobalPrefs->scrollbars;
+            Str s = gGlobalPrefs->scrollbars;
             int checkId = IDC_SCROLLBAR_WINDOWS;
             if (str::EqI(s, "smart")) {
                 checkId = IDC_SCROLLBAR_SMART;
@@ -765,7 +765,7 @@ static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM 
         case WM_COMMAND:
             switch (LOWORD(wp)) {
                 case IDOK: {
-                    const char* val = "windows";
+                    Str val = "windows";
                     if (IsDlgButtonChecked(hDlg, IDC_SCROLLBAR_SMART) == BST_CHECKED) {
                         val = "smart";
                     } else if (IsDlgButtonChecked(hDlg, IDC_SCROLLBAR_OVERLAY) == BST_CHECKED) {
@@ -791,20 +791,19 @@ bool Dialog_ChangeScrollbar(HWND hwnd) {
     return res == IDOK;
 }
 
-static void FillInverseSearchCombo(HWND hwndComboBox, const char* cmdLine) {
+static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
     Vec<TextEditor*> textEditors;
     DetectTextEditors(textEditors);
     StrVec detected;
     for (auto e : textEditors) {
-        const char* open = e->openFileCmd;
-        AppendIfNotExists(&detected, open);
+        AppendIfNotExists(&detected, e->openFileCmd);
     }
     if (cmdLine) {
         AppendIfNotExists(&detected, cmdLine);
     } else if (detected.Size() > 0) {
-        cmdLine = detected[0];
+        cmdLine = detected.At(0);
     }
-    for (char* s : detected) {
+    for (Str s : detected) {
         CbAddString(hwndComboBox, s);
     }
     if (!cmdLine) {
@@ -820,10 +819,8 @@ static void FillInverseSearchCombo(HWND hwndComboBox, const char* cmdLine) {
 }
 
 static void ApplyInverseSearchSettings(GlobalPrefs* prefs, HWND hwndComboBox) {
-    char* tmp = HwndGetTextTemp(hwndComboBox);
-    char* cmdLine = str::Dup(tmp);
-    str::ReplaceWithCopy(&prefs->inverseSearchCmdLine, cmdLine);
-    str::Free(cmdLine);
+    TempStr tmp = HwndGetTextTemp(hwndComboBox);
+    str::ReplaceWithCopy(&prefs->inverseSearchCmdLine, tmp);
     prefs->enableTeXEnhancements = true;
 }
 
@@ -930,10 +927,8 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     prefs->checkForUpdates = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_CHECK_FOR_UPDATES));
                     prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
                     if (prefs->enableTeXEnhancements && CanAccessDisk()) {
-                        char* tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
-                        char* cmdLine = str::Dup(tmp);
-                        str::ReplaceWithCopy(&prefs->inverseSearchCmdLine, cmdLine);
-                        str::Free(cmdLine);
+                        TempStr tmp = HwndGetTextTemp(GetDlgItem(hDlg, IDC_CMDLINE));
+                        str::ReplaceWithCopy(&prefs->inverseSearchCmdLine, tmp);
                     }
                     EndDialog(hDlg, IDOK);
                     return TRUE;
@@ -1146,8 +1141,8 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem
 }
 
 struct Dialog_AddFav_Data {
-    char* pageNo = nullptr;
-    char* favName = nullptr;
+    Str pageNo;
+    Str favName;
     ~Dialog_AddFav_Data() {
         str::Free(pageNo);
         str::Free(favName);
@@ -1179,12 +1174,13 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
         WORD cmd = LOWORD(wp);
         if (IDOK == cmd) {
-            char* name = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
+            TempStr name = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
             str::TrimWSInPlace(name, str::TrimOpt::Both);
             if (!str::IsEmpty(name)) {
                 str::ReplaceWithCopy(&data->favName, name);
             } else {
-                str::FreePtr(&data->favName);
+                str::Free(data->favName);
+                data->favName = {};
             }
             EndDialog(hDlg, IDOK);
             return TRUE;
@@ -1212,11 +1208,11 @@ struct BgColorDlgData {
     COLORREF customColors[kMaxCustomColors];
     bool customColorSet[kMaxCustomColors]; // true if slot has a color
     bool customColorsChanged;
-    int selectedCustomIdx;     // -1 = no custom button selected
-    bool previewSelected;      // true if preview button is selected
-    const char* title;         // dialog title (nullptr = default)
-    bool showRadioButtons;     // show "this file" / "all files" radio buttons
-    const char* allFilesLabel; // label for "all files" radio button (nullptr = default)
+    int selectedCustomIdx; // -1 = no custom button selected
+    bool previewSelected;  // true if preview button is selected
+    Str title;             // dialog title (empty = default)
+    bool showRadioButtons; // show "this file" / "all files" radio buttons
+    Str allFilesLabel;     // label for "all files" radio button (empty = default)
 };
 
 // fixed preset colors: checkered, black, white
@@ -1233,28 +1229,29 @@ static void ParseCustomColors(BgColorDlgData* data) {
         data->customColors[i] = 0;
     }
     data->customColorsChanged = false;
-    char* s = gGlobalPrefs->customColors;
-    if (!s || !*s) {
+    Str s = gGlobalPrefs->customColors;
+    if (str::IsEmpty(s)) {
         return;
     }
     int idx = 0;
-    while (*s && idx < kMaxCustomColors) {
-        while (*s == ' ') {
-            s++;
+    int i = 0;
+    while (i < s.len && idx < kMaxCustomColors) {
+        while (i < s.len && s.s[i] == ' ') {
+            i++;
         }
-        if (!*s) {
+        if (i >= s.len) {
             break;
         }
+        int start = i;
+        while (i < s.len && s.s[i] != ' ') {
+            i++;
+        }
         ParsedColor parsed;
-        ParseColor(parsed, s);
+        ParseColor(parsed, Str(s.s + start, i - start));
         if (parsed.parsedOk) {
             data->customColors[idx] = parsed.col;
             data->customColorSet[idx] = true;
             idx++;
-        }
-        // skip to next space or end
-        while (*s && *s != ' ') {
-            s++;
         }
     }
 }
@@ -1467,7 +1464,7 @@ static INT_PTR CALLBACK Dialog_ChangeBgColor_Proc(HWND hDlg, UINT msg, WPARAM wp
             if (UseDarkModeLib()) {
                 DarkMode::setDarkWndSafe(hDlg);
             }
-            HwndSetText(hDlg, data->title ? Str(data->title) : _TRA("Change Background Color"));
+            HwndSetText(hDlg, data->title ? data->title : _TRA("Change Background Color"));
             HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
             HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
             if (data->showRadioButtons) {
@@ -1664,7 +1661,6 @@ bool Dialog_ChangeBackgroundColor(HWND hwnd, COLORREF currentColor, bool isCheck
     data.applyToAll = false;
     data.selectedCustomIdx = -1;
     data.previewSelected = true;
-    data.title = nullptr;
     data.showRadioButtons = true;
     data.allFilesLabel = allFilesLabel;
 
