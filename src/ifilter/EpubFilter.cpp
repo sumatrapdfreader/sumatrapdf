@@ -66,12 +66,12 @@ HRESULT EpubFilter::OnInit() {
 // copied from SumatraProperties.cpp
 static bool IsoDateParse(const char* isoDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    const char* end = str::Parse(isoDate, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
-    if (end) {
+    Str end = str::Parse(Str(isoDate), "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    if (end.s) {
         // time is optional
         str::Parse(end, "T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     }
-    return end != nullptr;
+    return end.s != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 

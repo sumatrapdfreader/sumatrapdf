@@ -343,8 +343,8 @@ static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWStr* url
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
 static bool ParseProtoUrl(const char* url, int* htmlWindowId, AutoFreeStr* urlRest) {
-    const char* rest = str::Parse(url, HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
-    return rest && !*rest;
+    Str rest = str::Parse(Str(url), HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
+    return rest.s && !rest.s[0];
 }
 
 #define kDefaultMimeType "text/html"

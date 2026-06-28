@@ -110,7 +110,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
     }
     size_t n = str::Len(p);
     unsigned int r, g, b, a;
-    bool ok = str::Parse(p, n, "%2x%2x%2x%2x", &a, &r, &g, &b);
+    bool ok = str::Parse(Str(p, (int)n), n, "%2x%2x%2x%2x", &a, &r, &g, &b).s != nullptr;
     if (ok) {
         parsed.col = MkColor((u8)r, (u8)g, (u8)b, (u8)a);
         parsed.pdfCol = MkPdfColor((u8)r, (u8)g, (u8)b, (u8)a);
@@ -118,7 +118,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
         return;
     }
 
-    ok = str::Parse(p, n, "%2x%2x%2x", &r, &g, &b);
+    ok = str::Parse(Str(p, (int)n), n, "%2x%2x%2x", &r, &g, &b).s != nullptr;
     if (!ok) {
         return;
     }

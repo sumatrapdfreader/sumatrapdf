@@ -94,32 +94,32 @@ static bool PdfDateParseA(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     *timeZoneOut = 0;
 
-    const char* p = date.s;
+    Str slice = date;
     // "D:" at the beginning is optional
-    if (str::StartsWith(p, "D:")) {
-        p += 2;
+    if (str::StartsWith(slice, "D:")) {
+        slice = Str(slice.s + 2, slice.len - 2);
     }
-    const char* end = str::Parse(p,
-                                 "%4d%2d%2d"
-                                 "%2d%2d%2d",
-                                 &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
-                                 &timeOut->wSecond);
-    if (!end) {
+    Str end = str::Parse(slice,
+                         "%4d%2d%2d"
+                         "%2d%2d%2d",
+                         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
+                         &timeOut->wSecond);
+    if (!end.s) {
         return false;
     }
     // parse optional timezone: Z, +HH'MM', -HH'MM' (or +HH'MM, +HHMM, +HH)
-    if (*end == 'Z') {
+    if (end.s[0] == 'Z') {
         *timeZoneOut = 0;
-    } else if (*end == '+' || *end == '-') {
-        int sign = (*end == '+') ? 1 : -1;
+    } else if (end.s[0] == '+' || end.s[0] == '-') {
+        int sign = (end.s[0] == '+') ? 1 : -1;
         int tzHour = 0;
         int tzMin = 0;
-        const char* tz = end + 1;
-        const char* tzEnd = str::Parse(tz, "%2d'%2d", &tzHour, &tzMin);
-        if (!tzEnd) {
+        Str tz = Str(end.s + 1, end.len - 1);
+        Str tzEnd = str::Parse(tz, "%2d'%2d", &tzHour, &tzMin);
+        if (!tzEnd.s) {
             tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
         }
-        if (!tzEnd) {
+        if (!tzEnd.s) {
             str::Parse(tz, "%2d", &tzHour);
         }
         *timeZoneOut = sign * (tzHour * 100 + tzMin);
@@ -137,27 +137,27 @@ static bool IsoDateParse(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     *timeZoneOut = 0;
 
-    const char* end = str::Parse(date.s, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
-    if (end) { // time is optional
-        const char* timeEnd = str::Parse(end, "T%2d:%2d:%2d", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
-        if (timeEnd) {
+    Str end = str::Parse(date, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    if (end.s) { // time is optional
+        Str timeEnd = str::Parse(end, "T%2d:%2d:%2d", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        if (timeEnd.s) {
             // parse optional timezone: Z, +HH:MM, -HH:MM
-            if (*timeEnd == 'Z') {
+            if (timeEnd.s[0] == 'Z') {
                 *timeZoneOut = 0;
-            } else if (*timeEnd == '+' || *timeEnd == '-') {
-                int sign = (*timeEnd == '+') ? 1 : -1;
+            } else if (timeEnd.s[0] == '+' || timeEnd.s[0] == '-') {
+                int sign = (timeEnd.s[0] == '+') ? 1 : -1;
                 int tzHour = 0;
                 int tzMin = 0;
-                const char* tz = timeEnd + 1;
-                const char* tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
-                if (!tzEnd) {
+                Str tz = Str(timeEnd.s + 1, timeEnd.len - 1);
+                Str tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
+                if (!tzEnd.s) {
                     str::Parse(tz, "%2d%2d", &tzHour, &tzMin);
                 }
                 *timeZoneOut = sign * (tzHour * 100 + tzMin);
             }
         }
     }
-    return end != nullptr;
+    return end.s != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 

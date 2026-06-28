@@ -2183,15 +2183,15 @@ TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     Str path2 = str::Dup(path);
     Str streamNoStr = FindEmbeddedPdfFileStreamNo(path2);
     if (streamNoStr) {
-        const char* rest = str::Parse(streamNoStr.s, ":%d", &streamNo); // str-port: parse cursor
-        bool hasAttachmentName = rest && str::StartsWith(Str(rest), ":attachname=");
+        Str rest = str::Parse(streamNoStr, ":%d", &streamNo);
+        bool hasAttachmentName = rest && str::StartsWith(rest, ":attachname=");
         // there shouldn't be any left unparsed data except attachment name metadata
-        ReportIf(!rest || (*rest && !hasAttachmentName));
-        if (!rest || (*rest && !hasAttachmentName)) {
+        ReportIf(!rest.s || (rest.s[0] && !hasAttachmentName));
+        if (!rest.s || (rest.s[0] && !hasAttachmentName)) {
             streamNo = -1;
         }
         if (hasAttachmentName) {
-            path2 = Str(path2.s, (int)(rest - path2.s));
+            path2 = Str(path2.s, (int)(rest.s - path2.s));
         }
         // truncate at ':' to create a filesystem path
         path2 = Str(path2.s, (int)(streamNoStr.s - path2.s));

@@ -101,31 +101,31 @@ void MemAppend(char*& dst, const char* s, size_t len) {
 // (4 in case of "foo;")
 // returns a pointer to the first character after the entity
 const char* ResolveHtmlEntity(Str str, int& rune) {
-    const char* s = str.s;
-    size_t len = (size_t)str.len;
-    const char* entEnd = str::Parse(s, len, "#%d%?;", &rune);
-    if (entEnd) {
-        return entEnd;
+    Str entEnd = str::Parse(str, str.len, "#%d%?;", &rune);
+    if (entEnd.s) {
+        return entEnd.s;
     }
-    entEnd = str::Parse(s, len, "#x%x%?;", &rune);
-    if (entEnd) {
-        return entEnd;
+    entEnd = str::Parse(str, str.len, "#x%x%?;", &rune);
+    if (entEnd.s) {
+        return entEnd.s;
     }
 
     // go to the end of a potential named entity
-    for (entEnd = s; entEnd < s + len && isalnum((u8)*entEnd); entEnd++) {
-        ;
+    int entLen = 0;
+    while (entLen < str.len && isalnum((u8)str.s[entLen])) {
+        entLen++;
     }
-    if (entEnd != s) {
-        rune = HtmlEntityNameToRune(Str((char*)s, (int)(entEnd - s)));
+    if (entLen > 0) {
+        rune = HtmlEntityNameToRune(Str(str.s, entLen));
         if (-1 == rune) {
             return nullptr;
         }
+        int endOff = entLen;
         // skip the trailing colon - if there is one
-        if (entEnd < s + len && *entEnd == ';') {
-            entEnd++;
+        if (endOff < str.len && str.s[endOff] == ';') {
+            endOff++;
         }
-        return entEnd;
+        return str.s + endOff;
     }
 
     rune = -1;

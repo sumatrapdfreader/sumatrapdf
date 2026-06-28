@@ -1983,7 +1983,7 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
         propSummary.Set(str::Dup(value));
     } else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
         int idx = -1;
-        const char* prop = str::Parse(path.s, "/ComicBookInfo/1.0/credits[%d]/", &idx);
+        Str prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
             if (json::Type::String == type && str::Eq(prop, "person")) {
                 propAuthorTmp.Set(str::Dup(value));

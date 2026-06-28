@@ -682,8 +682,6 @@ FORCEINLINE const WCHAR* Find(const WCHAR* str, WStr find) {
 FORCEINLINE bool HexToMem(const char* s, u8* buf, size_t bufLen) {
     return HexToMem(Str((char*)s), buf, bufLen);
 }
-const char* Parse(const char* str, const char* fmt, ...);
-const char* Parse(const char* str, size_t len, const char* fmt, ...);
 FORCEINLINE int CmpNatural(const char* a, const char* b) {
     return CmpNatural(Str(a), Str(b));
 }

@@ -992,16 +992,16 @@ static Str ExtractUntil(const char* pos, char c, const char** endOut) {
 static const char* ParseLimitedNumber(const char* str, const char* format, const char** endOut, void* valueOut) {
     unsigned int width;
     char f2[] = "% ";
-    const char* endF = Parse(format, "%u%c", &width, &f2[1]);
-    if (endF && FindChar("udx", f2[1]) && width <= Len(str)) {
+    Str endF = Parse(Str((char*)format), "%u%c", &width, &f2[1]);
+    if (endF && FindChar(Str("udx"), f2[1]) && width <= Len(Str(str))) {
         char limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), str);
-        const char* end = Parse(limited, f2, valueOut);
-        if (end && !*end) {
+        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str((char*)str));
+        Str end = Parse(Str(limited), f2, valueOut);
+        if (end && !end.s[0]) {
             *endOut = str + width;
         }
     }
-    return endF;
+    return endF ? endF.s : nullptr;
 }
 
 /* Parses a string into several variables sscanf-style (i.e. pass in pointers
@@ -1136,54 +1136,6 @@ Str Parse(Str str, size_t len, const char* fmt, ...) {
     }
     int off = (int)(res.s - work.s);
     Str out((char*)(str.s + off), str.len - off);
-    if (s != buf) {
-        free(s);
-    }
-    return out;
-}
-
-const char* Parse(const char* str, const char* fmt, ...) {
-    if (!str || !fmt) {
-        return nullptr;
-    }
-
-    va_list args;
-    va_start(args, fmt);
-    Str res = ParseV(Str((char*)str), fmt, args);
-    va_end(args);
-    return res.s;
-}
-
-const char* Parse(const char* str, size_t len, const char* fmt, ...) {
-    if (!str || !fmt) {
-        return nullptr;
-    }
-
-    va_list args;
-    va_start(args, fmt);
-    char buf[128]{};
-    char* s = buf;
-    Str work((char*)str, (int)len);
-
-    if (len < dimof(buf)) {
-        memcpy(buf, str, len);
-        work = Str(buf, (int)len);
-    } else {
-        Str dup = Dup(Str((char*)str, (int)len));
-        s = dup.s;
-        work = dup;
-    }
-
-    Str res = ParseV(work, fmt, args);
-    va_end(args);
-
-    if (!res) {
-        if (s != buf) {
-            free(s);
-        }
-        return nullptr;
-    }
-    const char* out = str + (res.s - work.s);
     if (s != buf) {
         free(s);
     }

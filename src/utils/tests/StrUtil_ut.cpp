@@ -357,8 +357,8 @@ void StrTest() {
         {
             uint u1 = 0;
             char* str1 = nullptr;
-            const char* end = str::Parse(str2, "[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
-            utassert(end && !*end);
+            Str end = str::Parse(Str(str2), "[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
+            utassert(end.s && !end.s[0]);
             utassert(u1 == 1 && str::Eq(str1, "filename.pdf"));
             free(str1);
         }
@@ -366,74 +366,74 @@ void StrTest() {
         {
             uint u1 = 0;
             AutoFreeStr str1;
-            const char* end = str::Parse(str2, "[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
-            utassert(end && !*end);
+            Str end = str::Parse(Str(str2), "[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
+            utassert(end.s && !end.s[0]);
             utassert(u1 == 1 && str::Eq(str1, "filename.pdf"));
 
-            utassert(str::Parse("0xABCD", "%x", &u1));
+            utassert(str::Parse(StrL("0xABCD"), "%x", &u1).s);
             utassert(u1 == 0xABCD);
-            utassert(str::Parse("ABCD", "%2x%S", &u1, &str1));
+            utassert(str::Parse(StrL("ABCD"), "%2x%S", &u1, &str1).s);
             utassert(u1 == 0xAB && str::Eq(str1, "CD"));
         }
     }
     {
         int i1, i2;
-        const char* end = str::Parse("1, 2+3", "%d,%d", &i1, &i2);
-        utassert(end && str::Eq(end, "+3"));
+        Str end = str::Parse(StrL("1, 2+3"), "%d,%d", &i1, &i2);
+        utassert(end.s && str::Eq(end, "+3"));
         utassert(i1 == 1 && i2 == 2);
         end = str::Parse(end, "+3");
-        utassert(end && !*end);
+        utassert(end.s && !end.s[0]);
 
-        utassert(str::Parse(" -2", "%d", &i1));
+        utassert(str::Parse(StrL(" -2"), "%d", &i1).s);
         utassert(i1 == -2);
-        utassert(str::Parse(" 2", " %u", &i1));
+        utassert(str::Parse(StrL(" 2"), " %u", &i1).s);
         utassert(i1 == 2);
-        utassert(str::Parse("123-456", "%3d%3d6", &i1, &i2));
+        utassert(str::Parse(StrL("123-456"), "%3d%3d6", &i1, &i2).s);
         utassert(i1 == 123 && i2 == -45);
-        utassert(!str::Parse("123", "%4d", &i1));
-        utassert(str::Parse("654", "%3d", &i1));
+        utassert(!str::Parse(StrL("123"), "%4d", &i1).s);
+        utassert(str::Parse(StrL("654"), "%3d", &i1).s);
         utassert(i1 == 654);
     }
 
-    utassert(str::Parse("abc", "abc%$"));
-    utassert(str::Parse("abc", "a%?bc%?d%$"));
-    utassert(!str::Parse("abc", "ab%$"));
-    utassert(str::Parse("a \r\n\t b", "a%_b"));
-    utassert(str::Parse("ab", "a%_b"));
-    utassert(!str::Parse("a,b", "a%_b"));
-    utassert(str::Parse("a\tb", "a% b"));
-    utassert(!str::Parse("a\r\nb", "a% b"));
-    utassert(str::Parse("a\r\nb", "a% %_b"));
-    utassert(!str::Parse("ab", "a% b"));
-    utassert(!str::Parse("%+", "+") && !str::Parse("%+", "%+"));
+    utassert(str::Parse(StrL("abc"), "abc%$").s);
+    utassert(str::Parse(StrL("abc"), "a%?bc%?d%$").s);
+    utassert(!str::Parse(StrL("abc"), "ab%$").s);
+    utassert(str::Parse(StrL("a \r\n\t b"), "a%_b").s);
+    utassert(str::Parse(StrL("ab"), "a%_b").s);
+    utassert(!str::Parse(StrL("a,b"), "a%_b").s);
+    utassert(str::Parse(StrL("a\tb"), "a% b").s);
+    utassert(!str::Parse(StrL("a\r\nb"), "a% b").s);
+    utassert(str::Parse(StrL("a\r\nb"), "a% %_b").s);
+    utassert(!str::Parse(StrL("ab"), "a% b").s);
+    utassert(!str::Parse(StrL("%+"), "+").s && !str::Parse(StrL("%+"), "%+").s);
 
-    utassert(str::Parse("abcd", 3, "abc%$"));
-    utassert(str::Parse("abc", 3, "a%?bc%?d%$"));
-    utassert(!str::Parse("abcd", 3, "abcd"));
+    utassert(str::Parse(StrL("abcd"), 3, "abc%$").s);
+    utassert(str::Parse(StrL("abc"), 3, "a%?bc%?d%$").s);
+    utassert(!str::Parse(StrL("abcd"), 3, "abcd").s);
 
     {
         const char* str1 = "string";
-        utassert(str::Parse(str1, 4, "str") == str1 + 3);
+        utassert(str::Parse(Str(str1, 4), "str").s == str1 + 3);
 
         float f1, f2;
-        const char* end = str::Parse("%1.23y -2e-3z", "%%%fy%fz%$", &f1, &f2);
-        utassert(end && !*end);
+        Str end = str::Parse(StrL("%1.23y -2e-3z"), "%%%fy%fz%$", &f1, &f2);
+        utassert(end.s && !end.s[0]);
         utassert(f1 == 1.23f && f2 == -2e-3f);
         f1 = 0;
         f2 = 0;
-        const char* end2 = str::Parse("%1.23y -2e-3zlah", 13, "%%%fy%fz%$", &f1, &f2);
-        utassert(end2 && str::Eq(end2, "lah"));
+        Str end2 = str::Parse(StrL("%1.23y -2e-3zlah"), 13, "%%%fy%fz%$", &f1, &f2);
+        utassert(end2.s && str::Eq(end2, "lah"));
         utassert(f1 == 1.23f && f2 == -2e-3f);
     }
 
     {
         char* str1 = nullptr;
         char c1;
-        utassert(!str::Parse("no exclamation mark?", "%s!", &str1));
+        utassert(!str::Parse(StrL("no exclamation mark?"), "%s!", &str1).s);
         utassert(!str1);
-        utassert(str::Parse("xyz", "x%cz", &c1));
+        utassert(str::Parse(StrL("xyz"), "x%cz", &c1).s);
         utassert(c1 == 'y');
-        utassert(!str::Parse("leaks memory!?", "%s!%$", &str1));
+        utassert(!str::Parse(StrL("leaks memory!?"), "%s!%$", &str1).s);
         free(str1);
     }
 
@@ -441,14 +441,14 @@ void StrTest() {
         AutoFree str1;
         int i, j;
         float f;
-        utassert(str::Parse("ansi string, -30-20 1.5%", "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));
+        utassert(str::Parse(StrL("ansi string, -30-20 1.5%"), "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f).s);
         utassert(str::Eq(str1, "ansi string") && i == -30 && j == 20 && f == 1.5f);
     }
     {
         AutoFreeStr str1;
         int i, j;
         float f;
-        utassert(str::Parse("wide string, -30-20 1.5%", "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));
+        utassert(str::Parse(StrL("wide string, -30-20 1.5%"), "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f).s);
         utassert(str::Eq(str1, "wide string") && i == -30 && j == 20 && f == 1.5f);
     }
 
@@ -457,16 +457,18 @@ void StrTest() {
             "M10 80 C 40 10, 65\r\n10,\t95\t80 S 150 150, 180 80\nA 45 45, 0, 1, 0, 125 125\nA 1 2 3\n0\n1\n20  -20";
         float f[6];
         int b[2];
-        const char* s = str::Parse(path, "M%f%_%f", &f[0], &f[1]);
-        utassert(s && f[0] == 10 && f[1] == 80);
-        s = str::Parse(s + 1, "C%f%_%f,%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4], &f[5]);
-        utassert(s && f[0] == 40 && f[1] == 10 && f[2] == 65 && f[3] == 10 && f[4] == 95 && f[5] == 80);
-        s = str::Parse(s + 1, "S%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4]);
-        utassert(s && f[0] == 150 && f[1] == 150 && f[2] == 180 && f[3] == 80);
-        s = str::Parse(s + 1, "A%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f", &f[0], &f[1], &f[2], &b[0], &b[1], &f[4], &f[5]);
-        utassert(s && f[0] == 45 && f[1] == 45 && f[2] == 0 && b[0] == 1 && b[1] == 0 && f[4] == 125 && f[5] == 125);
-        s = str::Parse(s + 1, "A%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f", &f[0], &f[1], &f[2], &b[0], &b[1], &f[4], &f[5]);
-        utassert(s && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 && f[5] == -20);
+        Str s = str::Parse(Str(path), "M%f%_%f", &f[0], &f[1]);
+        utassert(s.s && f[0] == 10 && f[1] == 80);
+        s = str::Parse(Str(s.s + 1), "C%f%_%f,%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4], &f[5]);
+        utassert(s.s && f[0] == 40 && f[1] == 10 && f[2] == 65 && f[3] == 10 && f[4] == 95 && f[5] == 80);
+        s = str::Parse(Str(s.s + 1), "S%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4]);
+        utassert(s.s && f[0] == 150 && f[1] == 150 && f[2] == 180 && f[3] == 80);
+        s = str::Parse(Str(s.s + 1), "A%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f", &f[0], &f[1], &f[2], &b[0], &b[1], &f[4],
+                       &f[5]);
+        utassert(s.s && f[0] == 45 && f[1] == 45 && f[2] == 0 && b[0] == 1 && b[1] == 0 && f[4] == 125 && f[5] == 125);
+        s = str::Parse(Str(s.s + 1), "A%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f", &f[0], &f[1], &f[2], &b[0], &b[1], &f[4],
+                       &f[5]);
+        utassert(s.s && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 && f[5] == -20);
     }
 
     {
