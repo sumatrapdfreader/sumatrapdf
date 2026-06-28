@@ -115,7 +115,7 @@ void WaitForConsoleClose() {
     if (!gAllocatedConsole) return;
 
     // Print message and wait for Enter
-    const char* msg = "press Enter to exit";
+    const char* msg = "press Enter to exit"; // str-port: C-string literal
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hConsole != INVALID_HANDLE_VALUE) {
         DWORD written;

@@ -68,7 +68,7 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
     HANDLE hFind =
         FindFirstFileExW(searchPath, FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, FIND_FIRST_EX_LARGE_FETCH);
     if (hFind == INVALID_HANDLE_VALUE) {
-        dv->err = GetLastErrorAsStr(arena).s;
+        dv->err = GetLastErrorAsStr(arena);
         return;
     }
     do {

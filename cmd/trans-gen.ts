@@ -144,11 +144,13 @@ const compactCTmpl = `/*
 
 namespace trans {
 
+using SeqStrings = const char*; // str-port: generated packed string table base
+
 constexpr int kLangsCount = {{langsCount}};
 
-const char *gLangCodes = {{langcodes}} "\\0";
+SeqStrings gLangCodes = {{langcodes}} "\\0"; // str-port: generated packed string table
 
-const char *gLangNames = {{langnames}} "\\0";
+SeqStrings gLangNames = {{langnames}} "\\0"; // str-port: generated packed string table
 
 // from https://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses

@@ -29,12 +29,9 @@ Str GetWindowTextTemp(HWND hwnd) {
     if (wideLen == 0) {
         return Str();
     }
-    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
-    GetWindowTextW(hwnd, wide, wideLen + 1);
-    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wide, -1, nullptr, 0, nullptr, nullptr);
-    char* utf8 = (char*)AllocTemp(utf8Len);
-    WideCharToMultiByte(CP_UTF8, 0, wide, -1, utf8, utf8Len, nullptr, nullptr);
-    return Str(utf8, utf8Len - 1); // Exclude null terminator from length
+    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t)); // str-port: owned heap
+    GetWindowTextW(hwnd, wide, wideLen + 1);                              // str-port: Win32
+    return ToUtf8Temp(WStr(wide, wideLen));
 }
 
 void SetHwndText(HWND hwnd, Str s) {
@@ -47,7 +44,7 @@ Str GetLastErrorAsStr(Arena* arena) {
     if (!err) {
         return StrDup(arena, StrL("no error"));
     }
-    wchar_t* msgBuf = nullptr;
+    wchar_t* msgBuf = nullptr; // str-port: Win32 out-param
     FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
                    err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&msgBuf, 0, nullptr);
     if (!msgBuf) {
@@ -118,7 +115,7 @@ bool WasLaunchedByPowershellWithPipeRedirect() {
 }
 
 Str GetAppLocalDataDirTemp() {
-    wchar_t* path = nullptr;
+    wchar_t* path = nullptr; // str-port: Win32 COM out-param
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path);
     if (FAILED(hr) || !path) {
         return Str();

@@ -507,7 +507,7 @@ Str AllocStrTemp(int size) {
         return Str();
     }
     Arena* arena = GetTempArena();
-    char* res = (char*)arena->Push((u64)size + 1, 1, false);
+    char* res = (char*)arena->Push((u64)size + 1, 1, false); // str-port: arena buffer
     res[size] = 0;
     return Str(res, size);
 }

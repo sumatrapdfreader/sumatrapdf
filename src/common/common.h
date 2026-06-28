@@ -384,7 +384,7 @@ struct DirEntries {
     Str fullDir; // Full path of this directory
     int len;
     DirEntry* els;
-    char* err; // Error message if directory couldn't be read, nullptr otherwise
+    Str err; // Error message if directory couldn't be read, empty if none
 };
 
 struct DirEntriesNode {
