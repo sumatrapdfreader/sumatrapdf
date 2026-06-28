@@ -147,11 +147,11 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     }
 }
 
-static Str DestRectToStr(EngineBase* engine, IPageDestination* dest) {
+static TempStr DestRectToStrTemp(EngineBase* engine, IPageDestination* dest) {
     Str destName = PageDestGetName(dest);
     if (destName) {
         TempStr name = EscapeTemp(destName);
-        return str::Format("Name=\"%s\"", name.s);
+        return str::FormatTemp("Name=\"%s\"", name.s);
     }
     // as handled by LinkHandler::ScrollTo in MainWindow.cpp
     int pageNo = PageDestGetPageNo(dest);
@@ -161,15 +161,15 @@ static Str DestRectToStr(EngineBase* engine, IPageDestination* dest) {
     RectF rect = PageDestGetRect(dest);
     if (rect.IsEmpty()) {
         PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
-        return str::Format("Point=\"%.0f %.0f\"", pt.x, pt.y);
+        return str::FormatTemp("Point=\"%.0f %.0f\"", pt.x, pt.y);
     }
     if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         Rect rc = engine->Transform(rect, pageNo, 1.0, 0).Round();
-        return str::Format("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
+        return str::FormatTemp("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
     }
     if (rect.y != DEST_USE_DEFAULT) {
         PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
-        return str::Format("Point=\"x %.0f\"", pt.y);
+        return str::FormatTemp("Point=\"x %.0f\"", pt.y);
     }
     return nullptr;
 }
@@ -196,7 +196,7 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
             if (item->pageNo != PageDestGetPageNo(dest)) {
                 Out(" TargetPage=\"%d\"", PageDestGetPageNo(dest));
             }
-            Str rectStr = DestRectToStr(engine, dest);
+            TempStr rectStr = DestRectToStrTemp(engine, dest);
             if (rectStr) {
                 Out(" Target%s", rectStr.s);
             }
@@ -295,7 +295,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                 if (PageDestGetPageNo(dest)) {
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", PageDestGetPageNo(dest));
                 }
-                Str rectStr = DestRectToStr(engine, dest);
+                TempStr rectStr = DestRectToStrTemp(engine, dest);
                 if (rectStr) {
                     Out("\t\t\t\tLinked%s\n", rectStr.s);
                 }
