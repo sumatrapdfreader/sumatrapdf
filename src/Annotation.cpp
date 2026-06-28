@@ -209,26 +209,35 @@ void SetRect(Annotation* annot, RectF r) {
     MarkNotificationAsModified(e, annot);
 }
 
+static Str MupdfCStrDupTemp(const char* s) {
+    if (!s) {
+        return {};
+    }
+    return StrDupTemp(Str(s));
+}
+
+static Str MupdfCStrTemp(const char* s) {
+    if (!s || str::IsEmptyOrWhiteSpace(s)) {
+        return {};
+    }
+    return StrDupTemp(Str(s));
+}
+
 Str Author(Annotation* annot) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
 
-    const char* s = nullptr;
-
-    fz_var(s);
+    Str res;
     fz_try(ctx) {
-        s = pdf_annot_author(ctx, a);
+        res = MupdfCStrTemp(pdf_annot_author(ctx, a));
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        s = nullptr;
+        res = {};
     }
-    if (!s || str::IsEmptyOrWhiteSpace(s)) {
-        return Str();
-    }
-    return StrDupTemp(Str(s));
+    return res;
 }
 
 int Quadding(Annotation* annot) {
@@ -393,9 +402,9 @@ bool ToggleFormButton(Annotation* annot) {
                 pdf_obj* curAS = pdf_dict_get(ctx, kid, PDF_NAME(AS));
                 bool isOn = curAS && !pdf_name_eq(ctx, curAS, PDF_NAME(Off));
                 bool noToggleOff = (flags & PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF) != 0;
-                const char* onName = pdf_to_name(ctx, pdf_button_field_on_state(ctx, kid));
-                const char* newVal = (isOn && !noToggleOff) ? "Off" : onName;
-                pdf_set_field_value(ctx, e->pdfdoc, grp, newVal, 0);
+                Str onName = Str(pdf_to_name(ctx, pdf_button_field_on_state(ctx, kid)));
+                TempStr newValZ = StrDupTemp((isOn && !noToggleOff) ? Str("Off") : onName);
+                pdf_set_field_value(ctx, e->pdfdoc, grp, newValZ.s, 0);
                 pdf_update_annot(ctx, a);
                 UpdateFormFieldPage(ctx, a); // refresh all radio-group siblings
                 changed = true;
@@ -446,8 +455,7 @@ Str GetWidgetValue(Annotation* annot) {
     ScopedCritSec cs(&e->docLock);
     Str res;
     fz_try(ctx) {
-        const char* s = pdf_annot_field_value(ctx, a);
-        res = s ? StrDupTemp(Str(s)) : Str();
+        res = MupdfCStrTemp(pdf_annot_field_value(ctx, a));
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -465,10 +473,10 @@ float GetWidgetFontSize(Annotation* annot) {
     ScopedCritSec cs(&e->docLock);
     float size = 0;
     fz_try(ctx) {
-        const char* font = nullptr;
+        const char* fontZ = nullptr; // str-port: mupdf out-param
         int nColor = 0;
         float color[4] = {0};
-        pdf_annot_default_appearance(ctx, a, &font, &size, &nColor, color);
+        pdf_annot_default_appearance(ctx, a, &fontZ, &size, &nColor, color);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -534,7 +542,7 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
     fz_try(ctx) {
         int n = pdf_choice_widget_options(ctx, a, 0, nullptr);
         if (n > 0) {
-            const char** opts = (const char**)fz_malloc(ctx, n * sizeof(char*));
+            const char** opts = (const char**)fz_malloc(ctx, n * sizeof(char*)); // str-port: mupdf out-param
             pdf_choice_widget_options(ctx, a, 0, opts);
             for (int i = 0; i < n; i++) {
                 out.Append(opts[i] ? opts[i] : "");
@@ -606,19 +614,16 @@ Str Contents(Annotation* annot) {
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    const char* s = nullptr;
+    Str res;
     fz_try(ctx) {
-        s = pdf_annot_contents(ctx, a);
+        res = MupdfCStrDupTemp(pdf_annot_contents(ctx, a));
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        s = nullptr;
+        res = {};
         logf("Contents(): pdf_annot_contents()\n");
     }
-    if (!s) {
-        return Str();
-    }
-    return StrDupTemp(Str(s));
+    return res;
 }
 
 bool SetContents(Annotation* annot, Str sv) {
@@ -758,22 +763,18 @@ Str IconName(Annotation* annot) {
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    bool hasIcon = false;
-    const char* iconName = nullptr;
+    Str iconName;
     fz_try(ctx) {
-        hasIcon = pdf_annot_has_icon_name(ctx, a);
-        if (hasIcon) {
+        if (pdf_annot_has_icon_name(ctx, a)) {
             // can only call if pdf_annot_has_icon_name() returned true
-            iconName = pdf_annot_icon_name(ctx, a);
+            iconName = MupdfCStrDupTemp(pdf_annot_icon_name(ctx, a));
         }
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
+        iconName = {};
     }
-    if (!iconName) {
-        return Str();
-    }
-    return StrDupTemp(Str(iconName));
+    return iconName;
 }
 
 void SetIconName(Annotation* annot, Str iconName) {
@@ -1024,20 +1025,17 @@ Str DefaultAppearanceTextFont(Annotation* annot) {
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    const char* fontName = nullptr;
+    const char* fontNameZ = nullptr; // str-port: mupdf out-param
     float sizeF{0.0};
     int n = 0;
     float textColor[4]{};
     fz_try(ctx) {
-        pdf_annot_default_appearance(ctx, a, &fontName, &sizeF, &n, textColor);
+        pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    if (!fontName) {
-        return Str();
-    }
-    return StrDupTemp(Str(fontName));
+    return MupdfCStrDupTemp(fontNameZ);
 }
 
 void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
@@ -1047,12 +1045,12 @@ void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
-        const char* fontName = nullptr;
+        const char* fontNameZ = nullptr; // str-port: mupdf out-param
         float sizeF{0.0};
         int n = 0;
         float textColor[4]{};
         fz_try(ctx) {
-            pdf_annot_default_appearance(ctx, a, &fontName, &sizeF, &n, textColor);
+            pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
             pdf_set_annot_default_appearance(ctx, a, IsEmpty(fontZ) ? "" : fontZ.s, sizeF, n, textColor);
             pdf_update_annot(ctx, a);
         }
@@ -1068,12 +1066,12 @@ int DefaultAppearanceTextSize(Annotation* annot) {
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    const char* fontName = nullptr;
+    const char* fontNameZ = nullptr; // str-port: mupdf out-param
     float sizeF{0.0};
     int n = 0;
     float textColor[4]{};
     fz_try(ctx) {
-        pdf_annot_default_appearance(ctx, a, &fontName, &sizeF, &n, textColor);
+        pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -1087,13 +1085,13 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
-        const char* fontName = nullptr;
+        const char* fontNameZ = nullptr; // str-port: mupdf out-param
         float sizeF{0.0};
         int n = 0;
         float textColor[4]{};
         fz_try(ctx) {
-            pdf_annot_default_appearance(ctx, a, &fontName, &sizeF, &n, textColor);
-            pdf_set_annot_default_appearance(ctx, a, fontName, (float)textSize, n, textColor);
+            pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
+            pdf_set_annot_default_appearance(ctx, a, fontNameZ, (float)textSize, n, textColor);
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -1108,12 +1106,12 @@ PdfColor DefaultAppearanceTextColor(Annotation* annot) {
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    const char* fontName = nullptr;
+    const char* fontNameZ = nullptr; // str-port: mupdf out-param
     float sizeF{0.0};
     int n = 0;
     float textColor[4]{};
     fz_try(ctx) {
-        pdf_annot_default_appearance(ctx, a, &fontName, &sizeF, &n, textColor);
+        pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -1128,14 +1126,14 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
-        const char* fontName = nullptr;
+        const char* fontNameZ = nullptr; // str-port: mupdf out-param
         float sizeF{0.0};
         int n = 0;
         float textColor[4]{}; // must be at least 4
         fz_try(ctx) {
-            pdf_annot_default_appearance(ctx, a, &fontName, &sizeF, &n, textColor);
+            pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
             PdfColorToFloat(col, textColor);
-            pdf_set_annot_default_appearance(ctx, a, fontName, sizeF, 3, textColor);
+            pdf_set_annot_default_appearance(ctx, a, fontNameZ, sizeF, 3, textColor);
             pdf_update_annot(ctx, a);
         }
         fz_catch(ctx) {
@@ -1242,14 +1240,9 @@ void SetOpacity(Annotation* annot, int newOpacity) {
 }
 
 static Str GetUserTemp() {
-    Str u;
-    if (const char* env = getenv("USER")) {
-        u = Str(env);
-    }
+    Str u = Str(getenv("USER"));
     if (!u) {
-        if (const char* env = getenv("USERNAME")) {
-            u = Str(env);
-        }
+        u = Str(getenv("USERNAME"));
     }
     if (!u) {
         return Str("user");
