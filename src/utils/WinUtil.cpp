@@ -459,7 +459,7 @@ TempStr ReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
     }
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valNameW = ToWStrTemp(valName);
-    WCHAR* val = nullptr;
+    WStr val;
     REGSAM access = KEY_READ;
     HKEY hKey;
 TryAgainWOW64:
@@ -468,8 +468,8 @@ TryAgainWOW64:
         DWORD valLen;
         res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, nullptr, &valLen);
         if (ERROR_SUCCESS == res) {
-            val = AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1);
-            res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val, &valLen);
+            val = WStr(AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1));
+            res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val.s, &valLen);
             if (ERROR_SUCCESS != res) {
                 str::FreePtr(&val);
             }
@@ -486,8 +486,8 @@ TryAgainWOW64:
 #endif
         goto TryAgainWOW64;
     }
-    char* resv = ToUtf8Temp(val);
-    str::Free(val);
+    TempStr resv = ToUtf8Temp(val.s);
+    str::Free(val.s);
     return resv;
 }
 
@@ -498,7 +498,7 @@ TempStr LoggedReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
 }
 
 TempStr ReadRegStr2Temp(Str keyName, Str valName) {
-    char* res = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
+    TempStr res = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
         res = ReadRegStrTemp(HKEY_CURRENT_USER, keyName, valName);
     }
@@ -506,7 +506,7 @@ TempStr ReadRegStr2Temp(Str keyName, Str valName) {
 }
 
 TempStr LoggedReadRegStr2Temp(Str keyName, Str valName) {
-    char* res = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
+    TempStr res = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, valName);
     if (!res) {
         res = LoggedReadRegStrTemp(HKEY_CURRENT_USER, keyName, valName);
     }
@@ -2819,7 +2819,8 @@ bool DDEExecute(WStr server, WStr topic, WStr command) {
     }
 
     cbLen = ((DWORD)command.len + 1) * sizeof(WCHAR);
-    answer = DdeClientTransaction((BYTE*)command.s, cbLen, hconv, nullptr, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
+    answer =
+        DdeClientTransaction((BYTE*)command.s, cbLen, hconv, nullptr, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
     if (answer) {
         DdeFreeDataHandle(answer);
         ok = true;
@@ -3495,7 +3496,8 @@ static HWND CreateTextViewWindow(WStr className, Str title, Str text) {
     HMODULE h = GetModuleHandleW(nullptr);
     auto titleW = ToWStrTemp(title);
     DWORD style = WS_OVERLAPPEDWINDOW;
-    HWND hwnd = CreateWindowExW(0, className.s, titleW.s, style, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr, h, nullptr);
+    HWND hwnd = CreateWindowExW(0, className.s, titleW.s, style, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr,
+                                nullptr, h, nullptr);
     if (!hwnd) {
         return nullptr;
     }
