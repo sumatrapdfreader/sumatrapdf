@@ -356,11 +356,10 @@ void StrTest() {
         const char* str2 = "[Open(\"filename.pdf\",0,1,0)]";
         {
             uint u1 = 0;
-            char* str1 = nullptr;
+            AutoFreeStr str1;
             Str end = str::Parse(Str(str2), "[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
             utassert(end.s && !end.s[0]);
-            utassert(u1 == 1 && str::Eq(str1, "filename.pdf"));
-            free(str1);
+            utassert(u1 == 1 && str::Eq(Str(str1.Get()), "filename.pdf"));
         }
 
         {
@@ -427,14 +426,14 @@ void StrTest() {
     }
 
     {
-        char* str1 = nullptr;
+        AutoFreeStr str1;
         char c1;
         utassert(!str::Parse(StrL("no exclamation mark?"), "%s!", &str1).s);
-        utassert(!str1);
+        utassert(!str1.Get());
         utassert(str::Parse(StrL("xyz"), "x%cz", &c1).s);
         utassert(c1 == 'y');
         utassert(!str::Parse(StrL("leaks memory!?"), "%s!%$", &str1).s);
-        free(str1);
+        utassert(str::Eq(Str(str1.Get()), "leaks memory"));
     }
 
     {

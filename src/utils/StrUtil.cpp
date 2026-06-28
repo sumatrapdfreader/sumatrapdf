@@ -19,7 +19,7 @@ static _locale_t GetUtf8FormatLocale() {
 }
 #endif
 
-static int VsnprintfUtf8(char* buf, size_t bufCchSize, Str fmt, va_list args) {
+static int VsnprintfUtf8(char* buf, size_t bufCchSize, Str fmt, va_list args) { // str-port: C-string
     TempStr fmtZ = StrDupTemp(fmt);
 #if defined(_MSC_VER)
     _locale_t loc = GetUtf8FormatLocale();
@@ -712,13 +712,13 @@ Str Find(Str str, Str find) {
 // format string to a buffer provided by the caller
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
-bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args) {
+bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args) { // str-port: C-string
     int count = VsnprintfUtf8(buf, bufCchSize, fmt, args);
     buf[bufCchSize - 1] = 0;
     return (count >= 0) && ((size_t)count < bufCchSize);
 }
 
-bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...) {
+bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...) { // str-port: C-string
     va_list args;
     va_start(args, fmt);
     auto res = BufFmtV(buf, bufCchSize, fmt, args);
@@ -1099,8 +1099,8 @@ static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
      %x - parses an unsigned hex-int
      %f - parses a float
      %c - parses a single char
-     %s - parses a string (pass in a char**, free after use - also on failure!)
-     %S - parses a string into a AutoFree
+     %s - parses a string into an AutoFree (also on failure!)
+     %S - parses a string into an AutoFree
      %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
      %$ - causes the parsing to fail if it's encountered when not at the end of the string
      %  - skips a single whitespace character
@@ -1163,9 +1163,7 @@ static Str ParseV(Str str, Str format, va_list args) {
             }
             *va_arg(args, char*) = str.s[p];
             end = p + 1;
-        } else if ('s' == *f) {
-            *va_arg(args, char**) = ExtractUntil(str, p, *(f + 1), &end).s;
-        } else if ('S' == *f) {
+        } else if ('s' == *f || 'S' == *f) {
             va_arg(args, AutoFree*)->Set(ExtractUntil(str, p, *(f + 1), &end).s);
         } else if ('$' == *f && p >= str.len) {
             continue; // don't fail, if we're indeed at the end of the string
@@ -1660,7 +1658,7 @@ Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 // kPadding is number of characters needed for terminating character
 static constexpr size_t kPadding = 1;
 
-static char* EnsureCap(StrBuilder* s, size_t needed) {
+static char* EnsureCap(StrBuilder* s, size_t needed) { // str-port: owned heap
     if (needed + kPadding <= StrBuilder::kBufChars) {
         s->els = s->buf; // TODO: not needed?
         return s->buf;
@@ -1708,7 +1706,7 @@ static char* EnsureCap(StrBuilder* s, size_t needed) {
     return newEls;
 }
 
-static char* MakeSpaceAt(StrBuilder* s, size_t idx, size_t count) {
+static char* MakeSpaceAt(StrBuilder* s, size_t idx, size_t count) { // str-port: owned heap
     ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
     char* buf = EnsureCap(s, newLen);
@@ -2012,7 +2010,7 @@ char StrBuilder::LastChar() const {
     return at(n - 1);
 }
 
-static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) {
+static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) { // str-port: owned heap
     if (needed + kPadding <= StrBuilder::kBufChars) {
         s->els = s->buf; // TODO: not needed?
         return s->buf;
@@ -2059,7 +2057,7 @@ static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) {
     return newEls;
 }
 
-static WCHAR* MakeSpaceAt(WStrBuilder* s, size_t idx, size_t count) {
+static WCHAR* MakeSpaceAt(WStrBuilder* s, size_t idx, size_t count) { // str-port: owned heap
     ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
     WCHAR* buf = EnsureCap(s, newLen);
@@ -2857,9 +2855,7 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
             }
             *va_arg(args, WCHAR*) = str.s[p];
             end = p + 1;
-        } else if (L's' == *f) {
-            *va_arg(args, WCHAR**) = ExtractUntilW(str, p, *(f + 1), &end).s;
-        } else if (L'S' == *f) {
+        } else if (L's' == *f || L'S' == *f) {
             va_arg(args, AutoFreeWStr*)->Set(ExtractUntilW(str, p, *(f + 1), &end).s);
         } else if (L'$' == *f && p >= str.len) {
             continue; // don't fail, if we're indeed at the end of the string
