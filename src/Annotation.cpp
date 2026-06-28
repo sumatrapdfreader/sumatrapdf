@@ -1196,7 +1196,7 @@ static Str GetUserTemp() {
 static Str GetAnnotationTextIconTemp() {
     TempStr s = StrDupTemp(gGlobalPrefs->annotations.textIconType);
     // this way user can use "new paragraph" and we'll match "NewParagraph"
-    str::RemoveCharsInPlace(s.s, " ");
+    str::RemoveCharsInPlace(s, " ");
     int idx = SeqStrIndexIS(gAnnotationTextIcons, s);
     if (idx < 0) {
         return Str("Note");

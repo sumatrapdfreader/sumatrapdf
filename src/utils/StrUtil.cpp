@@ -942,11 +942,16 @@ size_t NormalizeNewlinesInPlace(char* s) {
 
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
-size_t RemoveCharsInPlace(char* str, const char* toRemove) {
+size_t RemoveCharsInPlace(Str str, Str toRemove) {
+    if (!str) {
+        return 0;
+    }
     size_t removed = 0;
-    char* dst = str;
-    while (*str) {
-        char c = *str++;
+    char* dst = str.s;
+    char* src = str.s;
+    char* end = str.s + str.len;
+    while (src < end) {
+        char c = *src++;
         if (!str::FindChar(toRemove, c)) {
             *dst++ = c;
         } else {
@@ -959,11 +964,16 @@ size_t RemoveCharsInPlace(char* str, const char* toRemove) {
 
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
-size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove) {
+size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
+    if (!str) {
+        return 0;
+    }
     size_t removed = 0;
-    WCHAR* dst = str;
-    while (*str) {
-        WCHAR c = *str++;
+    WCHAR* dst = str.s;
+    WCHAR* src = str.s;
+    WCHAR* end = str.s + str.len;
+    while (src < end) {
+        WCHAR c = *src++;
         if (!str::FindChar(toRemove, c)) {
             *dst++ = c;
         } else {

@@ -167,7 +167,7 @@ size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars);
 size_t NormalizeWSInPlace(Str str);
 size_t NormalizeNewlinesInPlace(char* s, char* e);
 size_t NormalizeNewlinesInPlace(char* s);
-size_t RemoveCharsInPlace(char* str, const char* toRemove);
+size_t RemoveCharsInPlace(Str str, Str toRemove);
 
 int BufSet(char* dst, int dstCchSize, Str src);
 int BufAppend(char* dst, int dstCchSize, Str s);
@@ -209,7 +209,7 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
 size_t NormalizeWSInPlace(WStr str);
-size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
+size_t RemoveCharsInPlace(WStr str, WStr toRemove);
 const WCHAR* FindChar(const WCHAR* str, WCHAR c);
 WCHAR* FindChar(WCHAR* str, WCHAR c);
 const WCHAR* Find(const WCHAR* str, const WCHAR* find);
@@ -534,6 +534,7 @@ FORCEINLINE size_t NormalizeWSInPlace(char* str) {
 FORCEINLINE size_t NormalizeWSInPlace(WCHAR* str) {
     return NormalizeWSInPlace(WStr(str));
 }
+
 // str-port: char*/WCHAR* shims; remove when callers use Str/WStr
 FORCEINLINE int BufSet(char* dst, int dstCchSize, const char* src) {
     return BufSet(dst, dstCchSize, Str(src));
