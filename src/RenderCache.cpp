@@ -1139,10 +1139,10 @@ static void SerializePredictive(StrBuilder& s, int originPageNo, int nPred, cons
     s.Append("]");
 }
 
-static void SerializeRequest(StrBuilder& s, const char* label, PageRenderRequest* r, DWORD now) {
+static void SerializeRequest(StrBuilder& s, Str label, PageRenderRequest* r, DWORD now) {
     int ageMs = (int)(now - r->timestamp);
-    s.AppendFmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label, r->pageNo, r->zoom,
-                r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs);
+    s.AppendFmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label.s, r->pageNo,
+                r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs);
     if (r->abort) {
         s.Append("  ABORT");
     }
@@ -1157,8 +1157,8 @@ static void SerializeRequest(StrBuilder& s, const char* label, PageRenderRequest
 static void SerializeFinished(StrBuilder& s, FinishedRequestInfo* r, DWORD now) {
     int durMs = (int)(r->finishedAt - r->timestamp);
     int agoMs = (int)(now - r->finishedAt);
-    const char* label = r->aborted ? "ABORTED" : "DONE";
-    s.AppendFmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  took %5dms  %6dms ago", label,
+    Str label = r->aborted ? StrL("ABORTED") : StrL("DONE");
+    s.AppendFmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  took %5dms  %6dms ago", label.s,
                 r->pageNo, r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, durMs, agoMs);
     SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
     if (r->fileName[0]) {
@@ -1206,12 +1206,12 @@ void RenderCache::SerializeQueueState(StrBuilder& s) {
 
     for (int i = 0; i < nRenderThreads; i++) {
         if (curReqs[i]) {
-            SerializeRequest(s, "RENDERING", curReqs[i], now);
+            SerializeRequest(s, StrL("RENDERING"), curReqs[i], now);
         }
     }
     // queued requests are rendered LIFO, so list from top (next to render) down
     for (int i = requestCount - 1; i >= 0; i--) {
-        SerializeRequest(s, "QUEUED", &requests[i], now);
+        SerializeRequest(s, StrL("QUEUED"), &requests[i], now);
     }
 
     // recently finished requests, most recently finished first
@@ -1228,11 +1228,12 @@ void RenderCache::SerializeQueueState(StrBuilder& s) {
     }
 }
 
-static void SetRenderInfoTextOnUI(char* s) {
+static void SetRenderInfoTextOnUI(Str* s) {
     if (gRenderInfoEdit) {
-        HwndSetText(gRenderInfoEdit, s);
+        HwndSetText(gRenderInfoEdit, *s);
     }
-    str::Free(s);
+    str::Free(*s);
+    delete s;
 }
 
 void RenderCache::UpdateRenderInfo() {
@@ -1243,8 +1244,8 @@ void RenderCache::UpdateRenderInfo() {
     SerializeQueueState(s);
     // marshal to the UI thread: updating the window from a render thread while
     // holding requestAccess could deadlock if the UI thread is blocked on it
-    char* dup = str::Dup(s.CStr());
-    auto fn = MkFunc0(SetRenderInfoTextOnUI, dup);
+    auto dup = new Str(str::Dup(s.Get()));
+    auto fn = MkFunc0<Str>(SetRenderInfoTextOnUI, dup);
     uitask::Post(fn, "RenderInfo");
 }
 
