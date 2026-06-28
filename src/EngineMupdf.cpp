@@ -95,11 +95,14 @@ static bool IsExternalLink(Str uri) {
     return i < uri.len && uri.s[i] == ':';
 }
 
-static char* FzGetURL(fz_link* link, fz_outline* outline) {
+static Str FzGetURL(fz_link* link, fz_outline* outline) {
     if (link) {
-        return link->uri;
+        return Str(link->uri);
     }
-    return outline->uri;
+    if (outline) {
+        return Str(outline->uri);
+    }
+    return {};
 }
 
 struct PageDestinationMupdf : IPageDestination {
@@ -159,9 +162,9 @@ Str PageDestinationMupdf::GetValue2() {
         return value;
     }
 
-    char* uri = FzGetURL(link, outline);
+    Str uri = FzGetURL(link, outline);
     if (uri && IsExternalLink(uri)) {
-        value = Str(str::Dup(uri));
+        value = Str(str::Dup(uri.s));
         url::DecodeInPlace(value);
     }
     return value;
@@ -184,8 +187,7 @@ static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
     return {};
 }
 
-static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float* xp, float* yp,
-                       float* zoomp = nullptr) {
+static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, float* yp, float* zoomp = nullptr) {
     if (!uri) {
         return -1;
     }
@@ -195,7 +197,7 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float
     fz_var(ldest);
     fz_var(pageNo);
     fz_try(ctx) {
-        ldest = fz_resolve_link_dest(ctx, doc, uri);
+        ldest = fz_resolve_link_dest(ctx, doc, uri.s);
         pageNo = fz_page_number_from_location(ctx, doc, ldest.loc);
     }
     fz_catch(ctx) {
@@ -222,7 +224,7 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float
 
 static int FzGetPageNo(fz_context* ctx, fz_document* doc, fz_link* link, fz_outline* outline) {
     float x, y;
-    const char* uri = link ? link->uri : outline ? outline->uri : nullptr;
+    Str uri = FzGetURL(link, outline);
     int pageNo = ResolveLink(ctx, doc, uri, &x, &y);
     return pageNo;
 }
@@ -230,8 +232,8 @@ static int FzGetPageNo(fz_context* ctx, fz_document* doc, fz_link* link, fz_outl
 // MuPDF html/md link URIs for relative hrefs are built with an empty base file,
 // so e.g. [other](other.md) becomes "/other.md". Treat those like the HTML
 // ebook engine: launch a local file Sumatra can open.
-static bool IsMupdfLocalFileLink(const char* uri, TempStr* pathOut, const char** fragmentOut) {
-    if (!uri || uri[0] == '#') {
+static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
+    if (!uri || uri.s[0] == '#') {
         return false;
     }
     if (str::StartsWith(uri, "file:") || IsExternalUrl(uri) || IsExternalLink(uri)) {
@@ -259,7 +261,7 @@ static bool IsMupdfLocalFileLink(const char* uri, TempStr* pathOut, const char**
         return false;
     }
     *pathOut = path;
-    *fragmentOut = fragment;
+    *fragmentOut = fragment ? Str(fragment) : Str{};
     return true;
 }
 
@@ -267,9 +269,8 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
                                                  fz_outline* outline) {
     ReportIf(link && outline);
     ReportIf(!link && !outline);
-    char* uri = FzGetURL(link, outline);
-
-    const char* maybePath = (const char*)uri;
+    Str uri = FzGetURL(link, outline);
+    Str maybePath = uri;
 
     if (str::Skip(maybePath, "file:")) {
         // decode: file:path%20to_file.pdf#page=1
@@ -283,9 +284,11 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         TempStr path = str::DupTemp(maybePath);
         char* pathPtr = path.s;
         char* dest = str::FindChar(pathPtr, '#');
+        Str destStr;
         if (dest) {
             *dest = 0;
             dest++;
+            destStr = Str(dest);
         }
         // mupdf url-encodes paths so we un-decode them
         fz_urldecode(pathPtr);
@@ -293,12 +296,12 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
 
         // mupdf does unix path, we want windows
         path = str::ReplaceTemp(path, "/", "\\");
-        if (dest) {
-            fz_urldecode(dest);
+        if (destStr) {
+            fz_urldecode(destStr.s);
         }
 
-        logf("NewPageDestinationMupdf: path='%s', dest='%s'\n", path, dest);
-        auto res = new PageDestinationFile(path, dest);
+        logf("NewPageDestinationMupdf: path='%s', dest='%s'\n", path, destStr);
+        auto res = new PageDestinationFile(path, destStr);
         res->rect = FzGetRectF(link, outline);
         return res;
     }
@@ -310,7 +313,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     }
 
     TempStr localPath;
-    const char* localFragment = nullptr;
+    Str localFragment;
     if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
         auto res = new PageDestinationFile(localPath, localFragment);
         res->rect = FzGetRectF(link, outline);
@@ -321,7 +324,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     dest->rect = FzGetRectF(link, outline);
     {
         float x = 0, y = 0, z = 0;
-        const char* destUri = link ? link->uri : (outline ? outline->uri : nullptr);
+        Str destUri = FzGetURL(link, outline);
         dest->pageNo = ResolveLink(ctx, doc, destUri, &x, &y, &z);
         if (dest->pageNo > 0) {
             dest->destX = x;
@@ -795,8 +798,8 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, StrBuilder& s, Vec<Rec
     AddSeenGlyph(seen, rune, r);
 }
 
-static void AddLineSepUtf8(StrBuilder& s, Vec<Rect>& rects, const char* lineSep) {
-    size_t lineSepLen = str::Len(lineSep);
+static void AddLineSepUtf8(StrBuilder& s, Vec<Rect>& rects, Str lineSep) {
+    size_t lineSepLen = (size_t)lineSep.len;
     if (lineSepLen == 0) {
         return;
     }
@@ -811,8 +814,8 @@ static void AddLineSepUtf8(StrBuilder& s, Vec<Rect>& rects, const char* lineSep)
     }
 }
 
-static char* FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
-    const char* lineSep = "\n";
+static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
+    Str lineSep = Str("\n");
     StrBuilder content;
     Vec<Rect> rects;
     Vec<SeenGlyph> seen;
@@ -841,7 +844,7 @@ static char* FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
     if (coordsOut) {
         *coordsOut = rects.StealData();
     }
-    return content.StealData();
+    return Str(content.StealData());
 }
 
 static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
@@ -3784,9 +3787,9 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     ReportIf(kindDestinationMupdf != dest->GetKind());
     PageDestinationMupdf* link = (PageDestinationMupdf*)dest;
     ReportIf(!(link->outline || link->link));
-    const char* uri = link->outline ? link->outline->uri : nullptr;
+    Str uri = link->outline ? Str(link->outline->uri) : Str{};
     if (!link->outline) {
-        uri = link->link->uri;
+        uri = Str(link->link->uri);
     }
     if (!uri) {
         return;
@@ -3807,7 +3810,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     auto ctx = e->Ctx();
     fz_var(pageNo);
     fz_try(ctx) {
-        ldest = fz_resolve_link_dest(ctx, e->_doc, uri);
+        ldest = fz_resolve_link_dest(ctx, e->_doc, uri.s);
         pageNo = fz_page_number_from_location(ctx, e->_doc, ldest.loc);
     }
     fz_catch(ctx) {
@@ -3816,7 +3819,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     }
     if (pageNo < 0) {
         TempStr localPath;
-        const char* localFragment = nullptr;
+        Str localFragment;
         if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
             PageDestinationFile fileDest(localPath, localFragment);
             linkHandler->GotoLink(&fileDest);
@@ -4018,10 +4021,9 @@ PageTextUtf8 EngineMupdf::ExtractPageTextUtf8(int pageNo) {
         return {};
     }
     PageTextUtf8 res;
-    char* text = FzTextPageToUtf8(stext, &res.coords);
+    res.text = FzTextPageToUtf8(stext, &res.coords);
     fz_drop_stext_page(ctx, stext);
-    res.text = Str(text);
-    res.len = (int)str::Len(text);
+    res.len = res.text.len;
     return res;
 }
 
