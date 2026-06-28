@@ -939,17 +939,17 @@ bool EngineImage::LoadSingleFile(Str path) {
 
     // TODO: maybe default to file extension and only use detected from content
     // if no extension?
-    const char* fileExt = GfxFileExtFromData(data); // str-port: GfxFileExtFromData
-    if (fileExt == nullptr) {
+    Str fileExt = GfxFileExtFromData(data);
+    if (!fileExt) {
         // imageFormat already holds the Kind we resolved above; skip the
         // redundant GuessFileTypeFromName call.
-        fileExt = GfxFileExtFromKind(imageFormat); // str-port: GfxFileExtFromKind
+        fileExt = GfxFileExtFromKind(imageFormat);
     }
-    if (fileExt == nullptr) {
+    if (!fileExt) {
         fileExt = path::GetExtTemp(path);
     }
-    if (fileExt == nullptr) {
-        fileExt = "";
+    if (!fileExt) {
+        fileExt = StrL("");
     }
     SetDefaultExt(defaultExt, fileExt);
     frames = PixmapsFromData(data);
@@ -969,16 +969,16 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     fileStream = stream;
     fileStream->AddRef();
 
-    const char* fileExtA = nullptr;
+    Str fileExt;
     u8 header[18];
     if (ReadDataFromStream(stream, header, sizeof(header))) {
         ByteSlice d = {header, sizeof(header)};
-        fileExtA = GfxFileExtFromData(d);
+        fileExt = GfxFileExtFromData(d);
     }
-    if (!fileExtA) {
+    if (!fileExt) {
         return false;
     }
-    SetDefaultExt(defaultExt, path::GetExtTemp(fileExtA));
+    SetDefaultExt(defaultExt, path::GetExtTemp(fileExt));
 
     ByteSlice data = GetDataFromStream(stream, nullptr);
     frames = PixmapsFromData(data);
@@ -1246,7 +1246,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // flash
     ULONG flashVal;
     if (GetImagePropertyLong(bmp, PropertyTagExifFlash, flashVal)) {
-        const char* flashStr = (flashVal & 1) ? "Yes" : "No";
+        Str flashStr = (flashVal & 1) ? StrL("Yes") : StrL("No");
         AddProp(keyValOut, kPropFlash, flashStr);
     }
 
@@ -1261,10 +1261,10 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     ULONG expProg;
     if (GetImagePropertyLong(bmp, PropertyTagExifExposureProg, expProg)) {
         // clang-format off
-        static const char* exposurePrograms[] = {
-            "Not defined", "Manual", "Normal program", "Aperture priority",
-            "Shutter priority", "Creative program", "Action program",
-            "Portrait mode", "Landscape mode",
+        static const Str exposurePrograms[] = {
+            StrL("Not defined"),     StrL("Manual"),           StrL("Normal program"),
+            StrL("Aperture priority"), StrL("Shutter priority"), StrL("Creative program"),
+            StrL("Action program"),  StrL("Portrait mode"),    StrL("Landscape mode"),
         };
         // clang-format on
         if (expProg < dimof(exposurePrograms)) {
@@ -1276,9 +1276,9 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     ULONG metering;
     if (GetImagePropertyLong(bmp, PropertyTagExifMeteringMode, metering)) {
         // clang-format off
-        static const char* meteringModes[] = {
-            "Unknown", "Average", "Center Weighted Average", "Spot",
-            "Multi Spot", "Pattern", "Partial",
+        static const Str meteringModes[] = {
+            StrL("Unknown"), StrL("Average"), StrL("Center Weighted Average"), StrL("Spot"),
+            StrL("Multi Spot"), StrL("Pattern"), StrL("Partial"),
         };
         // clang-format on
         if (metering < dimof(meteringModes)) {
@@ -1289,7 +1289,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // white balance
     ULONG wb;
     if (GetImagePropertyLong(bmp, PropertyTagExifWhiteBalance, wb)) {
-        AddProp(keyValOut, kPropWhiteBalance, wb == 0 ? "Auto" : "Manual");
+        AddProp(keyValOut, kPropWhiteBalance, wb == 0 ? StrL("Auto") : StrL("Manual"));
     }
 
     // exposure bias
@@ -1312,10 +1312,14 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     ULONG resUnit;
     if (GetImagePropertyLong(bmp, PropertyTagResolutionUnit, resUnit)) {
         // clang-format off
-        const char* unitStr = nullptr;
-        if (resUnit == 2) { unitStr = "inches"; }
-        else if (resUnit == 3) { unitStr = "centimeters"; }
-        else { unitStr = "unknown"; }
+        Str unitStr;
+        if (resUnit == 2) {
+            unitStr = StrL("inches");
+        } else if (resUnit == 3) {
+            unitStr = StrL("centimeters");
+        } else {
+            unitStr = StrL("unknown");
+        }
         // clang-format on
         AddProp(keyValOut, kPropResolutionUnit, unitStr);
     }
@@ -1335,7 +1339,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // YCbCr positioning
     ULONG ycbcrPos;
     if (GetImagePropertyLong(bmp, PropertyTagYCbCrPositioning, ycbcrPos)) {
-        const char* posStr = (ycbcrPos == 1) ? "centered" : "co-sited";
+        Str posStr = (ycbcrPos == 1) ? StrL("centered") : StrL("co-sited");
         AddProp(keyValOut, kPropYCbCrPositioning, posStr);
     }
 
@@ -1344,7 +1348,8 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         PropertyItem* item = nullptr;
         if (GetImagePropertyItem(bmp, PropertyTagExifVer, &item)) {
             if (item->length >= 4) {
-                val = str::FormatTemp("%.*s", (int)item->length, (char*)item->value);
+                Str exifVer((char*)item->value, (int)item->length);
+                val = str::DupTemp(exifVer);
                 AddProp(keyValOut, kPropExifVersion, val);
             }
             free(item);
@@ -1362,7 +1367,8 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         PropertyItem* item = nullptr;
         if (GetImagePropertyItem(bmp, PropertyTagExifCompConfig, &item)) {
             // each byte: 0=does not exist, 1=Y, 2=Cb, 3=Cr, 4=R, 5=G, 6=B
-            static const char* compNames[] = {"", "Y", "Cb", "Cr", "R", "G", "B"};
+            static const Str compNames[] = {StrL(""),  StrL("Y"), StrL("Cb"), StrL("Cr"),
+                                            StrL("R"), StrL("G"), StrL("B")};
             StrBuilder s;
             u8* data = (u8*)item->value;
             for (ULONG i = 0; i < item->length; i++) {
@@ -1378,7 +1384,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
                 }
             }
             if (s.size() > 0) {
-                AddProp(keyValOut, kPropComponentsConfig, s.CStr());
+                AddProp(keyValOut, kPropComponentsConfig, s.Get());
             }
             free(item);
         }
@@ -1410,21 +1416,47 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     ULONG lightSrc;
     if (GetImagePropertyLong(bmp, PropertyTagExifLightSource, lightSrc)) {
         // clang-format off
-        const char* lightStr = nullptr;
+        Str lightStr;
         switch (lightSrc) {
-            case 0:  lightStr = "Unknown"; break;
-            case 1:  lightStr = "Daylight"; break;
-            case 2:  lightStr = "Fluorescent"; break;
-            case 3:  lightStr = "Tungsten"; break;
-            case 4:  lightStr = "Flash"; break;
-            case 9:  lightStr = "Fine weather"; break;
-            case 10: lightStr = "Cloudy weather"; break;
-            case 11: lightStr = "Shade"; break;
-            case 17: lightStr = "Standard light A"; break;
-            case 18: lightStr = "Standard light B"; break;
-            case 19: lightStr = "Standard light C"; break;
-            case 255: lightStr = "Other"; break;
-            default: lightStr = "Unknown"; break;
+            case 0:
+                lightStr = StrL("Unknown");
+                break;
+            case 1:
+                lightStr = StrL("Daylight");
+                break;
+            case 2:
+                lightStr = StrL("Fluorescent");
+                break;
+            case 3:
+                lightStr = StrL("Tungsten");
+                break;
+            case 4:
+                lightStr = StrL("Flash");
+                break;
+            case 9:
+                lightStr = StrL("Fine weather");
+                break;
+            case 10:
+                lightStr = StrL("Cloudy weather");
+                break;
+            case 11:
+                lightStr = StrL("Shade");
+                break;
+            case 17:
+                lightStr = StrL("Standard light A");
+                break;
+            case 18:
+                lightStr = StrL("Standard light B");
+                break;
+            case 19:
+                lightStr = StrL("Standard light C");
+                break;
+            case 255:
+                lightStr = StrL("Other");
+                break;
+            default:
+                lightStr = StrL("Unknown");
+                break;
         }
         // clang-format on
         AddProp(keyValOut, kPropLightSource, lightStr);
@@ -1436,18 +1468,17 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         if (GetImagePropertyItem(bmp, PropertyTagExifUserComment, &item)) {
             // first 8 bytes are character code identifier
             if (item->length > 8) {
-                char* commentData = (char*)item->value + 8;
-                ULONG commentLen = item->length - 8;
+                Str commentData((char*)item->value + 8, (int)item->length - 8);
                 // check if it's ASCII
                 if (memcmp(item->value, "ASCII\0\0\0", 8) == 0) {
-                    val = str::DupTemp(commentData, commentLen);
+                    val = str::DupTemp(commentData);
                     if (val && !str::IsEmpty(val)) {
                         AddProp(keyValOut, kPropUserComment, val);
                     }
                 }
                 // Unicode
                 else if (memcmp(item->value, "UNICODE\0", 8) == 0) {
-                    val = ToUtf8Temp((WCHAR*)commentData, commentLen / 2);
+                    val = ToUtf8Temp((WCHAR*)commentData.s, commentData.len / 2);
                     if (val && !str::IsEmpty(val)) {
                         AddProp(keyValOut, kPropUserComment, val);
                     }
@@ -1462,7 +1493,8 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         PropertyItem* item = nullptr;
         if (GetImagePropertyItem(bmp, PropertyTagExifFPXVer, &item)) {
             if (item->length >= 4) {
-                val = str::FormatTemp("%.*s", (int)item->length, (char*)item->value);
+                Str fpVer((char*)item->value, (int)item->length);
+                val = str::DupTemp(fpVer);
                 AddProp(keyValOut, kPropFlashpixVersion, val);
             }
             free(item);
@@ -1472,7 +1504,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // color space
     ULONG cs;
     if (GetImagePropertyLong(bmp, PropertyTagExifColorSpace, cs)) {
-        const char* csStr = (cs == 1) ? "sRGB" : (cs == 0xFFFF) ? "Uncalibrated" : "Unknown";
+        Str csStr = (cs == 1) ? StrL("sRGB") : (cs == 0xFFFF) ? StrL("Uncalibrated") : StrL("Unknown");
         AddProp(keyValOut, kPropColorSpace, csStr);
     }
 
@@ -1497,7 +1529,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
             if (item->length >= 1) {
                 u8 src = *(u8*)item->value;
                 if (src == 3) {
-                    AddProp(keyValOut, kPropFileSource, "DSC");
+                    AddProp(keyValOut, kPropFileSource, StrL("DSC"));
                 }
             }
             free(item);
@@ -1511,7 +1543,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
             if (item->length >= 1) {
                 u8 scene = *(u8*)item->value;
                 if (scene == 1) {
-                    AddProp(keyValOut, kPropSceneType, "A directly photographed image");
+                    AddProp(keyValOut, kPropSceneType, StrL("A directly photographed image"));
                 }
             }
             free(item);
@@ -1926,7 +1958,7 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
                 const GumboAttribute* imageAttr = gumbo_get_attribute(&node->v.element.attributes, "Image");
                 const GumboAttribute* bookmarkAttr = gumbo_get_attribute(&node->v.element.attributes, "Bookmark");
                 if (imageAttr && bookmarkAttr) {
-                    cip->AddBookmark(atoi(imageAttr->value), bookmarkAttr->value);
+                    cip->AddBookmark(atoi(imageAttr->value), Str(bookmarkAttr->value));
                 }
             }
             children = &node->v.element.children;
@@ -2317,8 +2349,8 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
         filesStr.Append(fi->name);
     }
     // show paths in Windows style (#5543)
-    str::TransCharsInPlace(Str(filesStr.CStr(), filesStr.Size()), "/", "\\");
-    AddProp(keyValOut, kPropFiles, filesStr.CStr());
+    str::TransCharsInPlace(filesStr.Get(), StrL("/"), StrL("\\"));
+    AddProp(keyValOut, kPropFiles, filesStr.Get());
 }
 
 Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
