@@ -121,7 +121,7 @@ Printer::~Printer() {
 static void AppendPrinterAttributes(StrBuilder& out, DWORD attr) {
     struct {
         DWORD flag;
-        const char* name;
+        Str name;
     } flags[] = {
         {PRINTER_ATTRIBUTE_QUEUED, "QUEUED"},
         {PRINTER_ATTRIBUTE_DIRECT, "DIRECT"},
@@ -150,7 +150,7 @@ static void AppendPrinterAttributes(StrBuilder& out, DWORD attr) {
 static void AppendPrinterStatus(StrBuilder& out, DWORD status) {
     struct {
         DWORD flag;
-        const char* name;
+        Str name;
     } flags[] = {
         {PRINTER_STATUS_PAUSED, "PAUSED"},
         {PRINTER_STATUS_ERROR, "ERROR"},
@@ -190,7 +190,7 @@ static void AppendPrinterStatus(StrBuilder& out, DWORD status) {
     }
 }
 
-static void AppendDeviceCapabilities(StrBuilder& out, const WCHAR* nameW, const WCHAR* portW) {
+static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
     // paper bins
     DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
     DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
@@ -205,7 +205,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, const WCHAR* nameW, const 
         ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
         DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
         for (DWORD j = 0; j < bins; j++) {
-            WCHAR* ws = binNameValues.Get() + 24 * (size_t)j;
+            WCHAR* ws = binNameValues.Get() + 24 * (size_t)j; // str-port: Win32 DC_BINNAMES entry
             TempStr s = ToUtf8Temp(ws);
             out.AppendFmt("  bin %d: '%s' (%d)\n", (int)j, s, binValues.Get()[j]);
         }
@@ -225,7 +225,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, const WCHAR* nameW, const 
         DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes.Get(), nullptr);
         out.Append("  paper sizes:\n");
         for (DWORD j = 0; j < papers; j++) {
-            WCHAR* ws = paperNameValues.Get() + 64 * (size_t)j;
+            WCHAR* ws = paperNameValues.Get() + 64 * (size_t)j; // str-port: Win32 DC_PAPERNAMES entry
             TempStr s = ToUtf8Temp(ws);
             POINT sz = paperSizes.Get()[j];
             out.AppendFmt("    '%s' (id %d, %.1f x %.1f mm)\n", s, paperValues.Get()[j], sz.x / 10.0, sz.y / 10.0);
@@ -302,7 +302,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, const WCHAR* nameW, const 
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr);
         out.Append("  media types:\n");
         for (DWORD j = 0; j < nMedia; j++) {
-            WCHAR* ws = mediaNames.Get() + 64 * (size_t)j;
+            WCHAR* ws = mediaNames.Get() + 64 * (size_t)j; // str-port: Win32 DC_MEDIATYPENAMES entry
             TempStr s = ToUtf8Temp(ws);
             out.AppendFmt("    '%s' (%d)\n", s, (int)mediaValues.Get()[j]);
         }
@@ -377,8 +377,8 @@ void GetPrintersInfo(StrBuilder& out) {
     out.AppendFmt("Default printer: \"%s\"\n", defName);
     for (DWORD i = 0; i < printersCount; i++) {
         PRINTER_INFO_2& info = info2Arr[i];
-        const WCHAR* nameW = info.pPrinterName;
-        const WCHAR* portW = info.pPortName;
+        WStr nameW = info.pPrinterName;
+        WStr portW = info.pPortName;
         DWORD attr = info.Attributes;
         TempStr name = ToUtf8Temp(nameW);
         TempStr port = ToUtf8Temp(portW);
@@ -480,14 +480,14 @@ Printer* NewPrinter(Str printerName) {
         printer->nPaperSizes = (int)n;
         size_t paperNameSize = 64;
         printer->papers = AllocArray<WORD>(n);
-        WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1); // +1 is "just in case"
+        WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1); // str-port: Win32 DC_PAPERNAMES buffer
         printer->paperSizes = AllocArray<POINT>(n);
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
 
-        WCHAR* paperName = paperNamesSeq;
+        WCHAR* paperName = paperNamesSeq; // str-port: cursor into DC_PAPERNAMES buffer
         for (int i = 0; i < (int)n; i++) {
             TempStr name = ToUtf8Temp(paperName);
             printer->paperNames.Append(name);
@@ -508,10 +508,10 @@ Printer* NewPrinter(Str printerName) {
         if (n > 0) {
             size_t binNameSize = 24;
             printer->bins = AllocArray<WORD>(n);
-            WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * n + 1); // +1 is "just in case"
+            WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * n + 1); // str-port: Win32 DC_BINNAMES buffer
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
-            WCHAR* binName = binNamesSeq;
+            WCHAR* binName = binNamesSeq; // str-port: cursor into DC_BINNAMES buffer
             for (int i = 0; i < (int)n; i++) {
                 TempStr name = ToUtf8Temp(binName);
                 printer->binNames.Append(name);
@@ -1240,8 +1240,8 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     if (win->printThread) {
         uint type = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
-        const char* title = _TRA("Printing in progress.");
-        const char* msg = _TRA("Printing is still in progress. Abort and start over?");
+        Str title = _TRA("Printing in progress.");
+        Str msg = _TRA("Printing is still in progress. Abort and start over?");
         int res = MsgBox(win->hwndFrame, msg, title, type);
         if (res == IDNO) {
             return;
@@ -1343,7 +1343,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         DEVNAMES* devNames = (DEVNAMES*)GlobalLock(pdex.hDevNames);
         if (devNames) {
             // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
-            WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
+            WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset; // str-port: Win32 DEVNAMES offset
             TempStr name = ToUtf8Temp(printerName);
             printer = NewPrinter(name);
             // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
@@ -1685,7 +1685,7 @@ static short GetPaperSourceByName(Printer* printer, Str binName) {
 
 // the -print-settings token that disables honoring a PDF's /ViewerPreferences
 // print defaults (issue #534)
-static const char* kIgnorePdfPrintSettingsToken = "ignore-pdf-print-settings";
+static Str kIgnorePdfPrintSettingsToken = "ignore-pdf-print-settings";
 
 static bool PrintSettingsHaveToken(Str settings, Str token) {
     if (!settings) {
@@ -1910,7 +1910,7 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
 
     auto devMode = printer->devMode;
     size_t devModeSize = devMode->dmSize + devMode->dmDriverExtra;
-    AutoFree backup((char*)memdup(devMode, devModeSize));
+    AutoFree backup((char*)memdup(devMode, devModeSize)); // str-port: raw DEVMODE bytes
     SetCustomPaperSize(printer, size);
     if (ValidateDevMode(printer)) {
         return true;
@@ -1975,7 +1975,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
         // apply print defaults from the PDF's /ViewerPreferences (issue #534),
         // unless the caller opted out. Done before ApplyPrintSettings so that an
         // explicit -print-settings value overrides the PDF's default.
-        if (!PrintSettingsHaveToken(settings, Str(kIgnorePdfPrintSettingsToken))) {
+        if (!PrintSettingsHaveToken(settings, kIgnorePdfPrintSettingsToken)) {
             PdfViewerPrintPrefs prefs;
             if (GetPdfViewerPrintPrefs(engine, prefs)) {
                 ApplyPdfViewerPrintPrefs(prefs, devMode, advanced);
