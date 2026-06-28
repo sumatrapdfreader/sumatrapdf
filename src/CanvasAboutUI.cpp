@@ -55,7 +55,7 @@ static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
     win->urlOnLastButtonDown.SetCopy(GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr));
 }
 
-static bool IsLink(const char* url) {
+static bool IsLink(Str url) {
     if (str::StartsWithI(url, "http:")) {
         return true;
     }
@@ -83,9 +83,8 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         win->urlOnLastButtonDown.Set(nullptr);
         return;
     }
-    char* url = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
-    char* prevUrl = win->urlOnLastButtonDown;
-    bool clickedURL = url && str::Eq(url, prevUrl);
+    TempStr url = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
+    bool clickedURL = url && str::Eq(url, win->urlOnLastButtonDown.Get());
     win->urlOnLastButtonDown.Set(nullptr);
     if (!clickedURL) {
         return;
@@ -112,9 +111,11 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         SaveSettings();
         win->RedrawAll(true);
     } else if (str::StartsWith(url, kLinkHomeRemoveFilePrefix)) {
-        ForgetFileFromFrequentlyRead(win, url + str::Len(kLinkHomeRemoveFilePrefix));
+        int prefixLen = str::Len(kLinkHomeRemoveFilePrefix);
+        ForgetFileFromFrequentlyRead(win, Str(url.s + prefixLen, url.len - prefixLen));
     } else if (str::StartsWith(url, kLinkHomePinFilePrefix)) {
-        FileState* fs = gFileHistory.FindByPath(url + str::Len(kLinkHomePinFilePrefix));
+        int prefixLen = str::Len(kLinkHomePinFilePrefix);
+        FileState* fs = gFileHistory.FindByPath(Str(url.s + prefixLen, url.len - prefixLen));
         if (fs) {
             fs->isPinned = !fs->isPinned;
             SaveSettings();

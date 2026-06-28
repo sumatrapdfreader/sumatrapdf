@@ -435,7 +435,7 @@ constexpr int kVersionTxtFontSize = 12;
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
 static Tooltip* gAboutTooltip = nullptr;
-static const char* gClickedURL = nullptr;
+static Str gClickedURL;
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
@@ -835,7 +835,7 @@ static void DeleteInfotip() {
 }
 
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    const char* url;
+    TempStr url;
     Point pt;
 
     int x = GET_X_LPARAM(lp);

@@ -236,7 +236,7 @@ struct Str {
 
     explicit operator bool() const { return len > 0 && s; }
 
-    // NUL-terminated temp strings (DupTemp etc.) convert for API calls; prefer .s when explicit
+    // TODO(str-port): remove after all API boundaries use .s / StrDupTemp explicitly
     operator const char*() const { return s; }
     operator char*() const { return s; }
 };
@@ -262,7 +262,7 @@ struct WStr {
 
     explicit operator bool() const { return len > 0 && s; }
 
-    // NUL-terminated temp strings (DupTemp etc.) convert for API calls; prefer .s when explicit
+    // TODO(str-port): remove after all API boundaries use .s / ToWStrTemp explicitly
     operator const wchar_t*() const { return s; }
     operator wchar_t*() const { return s; }
 };
