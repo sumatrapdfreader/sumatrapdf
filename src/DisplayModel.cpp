@@ -272,7 +272,7 @@ bool DisplayModel::InPresentation() const {
 }
 
 void DisplayModel::GetDisplayState(FileState* fs) {
-    const char* fileNameA = engine->FilePath();
+    Str fileNameA = engine->FilePath();
     SetFileStatePath(fs, fileNameA);
 
     fs->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
@@ -1149,7 +1149,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
     if (zoom > 0) {
         return zoom;
     }
-    const char* name = dm->GetFilePath();
+    Str name = dm->GetFilePath();
     logf(
         "getZoomSafe: invalid zoom in doc: %s\npageNo: %d\npageInfo->zoomReal\n%.2f\ndm->zoomReal: %.2f\n"
         "dm->zoomVirtual: %.2f\n",
