@@ -8,9 +8,11 @@
 
 #include "utils/Log.h"
 
-bool InstallSearchFilter(const char* dllPath, bool allUsers) {
+bool InstallSearchFilter(Str dllPath, bool allUsers) {
     struct {
-        const char *key, *value, *data;
+        Str key;
+        Str value;
+        Str data;
     } regVals[] = {
         {"Software\\Classes\\CLSID\\" kPdfFilterClsid, nullptr, "SumatraPDF IFilter"},
         {"Software\\Classes\\CLSID\\" kPdfFilterClsid "\\InProcServer32", nullptr, dllPath},
@@ -59,7 +61,7 @@ bool InstallSearchFilter(const char* dllPath, bool allUsers) {
 
 // Note: for compat with pre-3.4 removes HKLM and HKCU keys
 bool UninstallSearchFilter() {
-    const char* regKeys[] = {
+    Str regKeys[] = {
         "Software\\Classes\\CLSID\\" kPdfFilterClsid,  "Software\\Classes\\CLSID\\" kPdfFilterHandler,
         "Software\\Classes\\.pdf\\PersistentHandler",
 #ifdef BUILD_TEX_IFILTER
@@ -82,8 +84,8 @@ bool UninstallSearchFilter() {
 }
 
 bool IsSearchFilterInstalled() {
-    const char* key = ".pdf\\PersistentHandler";
-    char* iid = LoggedReadRegStrTemp(HKEY_CLASSES_ROOT, key, nullptr);
+    Str key = ".pdf\\PersistentHandler";
+    TempStr iid = LoggedReadRegStrTemp(HKEY_CLASSES_ROOT, key, nullptr);
     bool isInstalled = str::EqI(iid, kPdfFilterHandler);
     logf("IsSearchFilterInstalled() isInstalled=%d\n", (int)isInstalled);
     return isInstalled;
