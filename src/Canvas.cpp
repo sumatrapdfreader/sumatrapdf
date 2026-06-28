@@ -3406,12 +3406,12 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         }
     }
 
-    logf("DownloadAndOpenUrl: downloading '%s' to '%s'\n", url, destPath);
+    logf("DownloadAndOpenUrl: downloading '%s' to '%s'\n", url.s, destPath.s);
 
     Func1<HttpProgress*> emptyProgress;
     bool ok = HttpGetToFile(url, destPath, emptyProgress);
     if (!ok) {
-        logf("DownloadAndOpenUrl: download failed for '%s'\n", url);
+        logf("DownloadAndOpenUrl: download failed for '%s'\n", url.s);
         str::Free(data->url);
         delete data;
         return;
@@ -3420,7 +3420,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     // verify the downloaded file is a supported image type
     Kind kind = GuessFileTypeFromContent(destPath);
     if (!IsEngineImageSupportedFileType(kind)) {
-        logf("DownloadAndOpenUrl: downloaded file is not a supported image type: '%s'\n", destPath);
+        logf("DownloadAndOpenUrl: downloaded file is not a supported image type: '%s'\n", destPath.s);
         file::Delete(destPath);
         str::Free(data->url);
         delete data;

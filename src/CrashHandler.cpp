@@ -872,8 +872,8 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
         return;
     }
 
-    logf("InstallCrashHandler:\n  crashDumpPath: '%s'\n  crashFilePath: '%s'\n  symDir: '%s'\n", crashDumpPath,
-         crashFilePath, symDir);
+    logf("InstallCrashHandler:\n  crashDumpPath: '%s'\n  crashFilePath: '%s'\n  symDir: '%s'\n", crashDumpPath.s,
+         crashFilePath.s, symDir.s);
 
     gCrashDumpPath = str::Dup(crashDumpPath);
     gCrashFilePath = str::Dup(crashFilePath);

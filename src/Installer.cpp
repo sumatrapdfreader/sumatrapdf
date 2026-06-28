@@ -176,7 +176,7 @@ static void CopySettingsFile() {
     bool failIfExists = true;
     // don't care if it fails or not
     file::Copy(dstPath, srcPath, failIfExists);
-    logf("  copied '%s' to '%s'\n", srcPath, dstPath);
+    logf("  copied '%s' to '%s'\n", srcPath.s, dstPath.s);
 }
 
 static bool CreateAppShortcut(int csidl, Str installedExePath) {

@@ -125,8 +125,8 @@ static void SetCommandNameAndShortcut(CustomCommand* cmd, Str name, Str key) {
         return;
     }
     if (!IsValidShortcutString(key)) {
-        logf("SetCommandNameAndShortcut: '%s' is not a valid shortcut for '%s'\n", key, cmd->definition);
-        MaybeDelayedWarningNotification("'%s' is not a valid shortcut for '%s'", key, cmd->definition);
+        logf("SetCommandNameAndShortcut: '%s' is not a valid shortcut for '%s'\n", key.s, cmd->definition.s);
+        MaybeDelayedWarningNotification("'%s' is not a valid shortcut for '%s'", key.s, cmd->definition.s);
         return;
     }
     cmd->key = str::Dup(key);
