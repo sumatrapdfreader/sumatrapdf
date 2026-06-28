@@ -153,7 +153,7 @@ class HtmlPullParser;
 struct HtmlToken;
 struct CssSelector;
 
-class HtmlFormatter {
+struct HtmlFormatter {
   protected:
     void HandleTagBr();
     void HandleTagP(HtmlToken* t, bool isDiv = false);

@@ -1382,7 +1382,7 @@ class ChmDataCache {
     }
 };
 
-class ChmFormatter : public HtmlFormatter {
+struct ChmFormatter : HtmlFormatter {
   protected:
     void HandleTagImg(HtmlToken* t) override;
     void HandleTagPagebreak(HtmlToken* t) override;

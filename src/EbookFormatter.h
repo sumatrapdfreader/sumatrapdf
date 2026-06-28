@@ -5,7 +5,7 @@
 
 struct MobiDoc;
 
-class MobiFormatter : public HtmlFormatter {
+struct MobiFormatter : HtmlFormatter {
     // accessor to images (and other format-specific data)
     // it can be nullptr (enables testing by feeding raw html)
     MobiDoc* doc;
@@ -20,9 +20,9 @@ class MobiFormatter : public HtmlFormatter {
 
 /* formatting extensions for EPUB */
 
-class EpubDoc;
+struct EpubDoc;
 
-class EpubFormatter : public HtmlFormatter {
+struct EpubFormatter : HtmlFormatter {
     void HandleTagImg(HtmlToken* t) override;
     void HandleTagPagebreak(HtmlToken* t) override;
     void HandleTagLink(HtmlToken* t) override;
