@@ -148,7 +148,6 @@ bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);           // str-port: 
 // exception to the Str rule): it's almost always a string literal, and a
 // const char* is what vsnprintf needs anyway (no NUL-termination footgun).
 TempStr FmtVTemp(const char* fmt, va_list args);
-Str Format(const char* fmt, ...);
 TempStr FormatTemp(const char* fmt, ...);
 
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);

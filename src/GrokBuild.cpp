@@ -1194,7 +1194,8 @@ static void EnsureWebViewReady(MainWindow* win) {
     auto webView = new WebviewWnd();
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA);
     // use unique data dir per process to avoid locking conflicts
-    webView->dataDir = str::Format("%s\\SumatraPDF\\GrokWebView_%d", userProfile.s, (int)GetCurrentProcessId());
+    webView->dataDir =
+        str::Dup(str::FormatTemp("%s\\SumatraPDF\\GrokWebView_%d", userProfile.s, (int)GetCurrentProcessId()));
     if (!LockDataResource(IDR_CLAUDE_MARKED_JS, &gGrokMarkedJs)) {
         delete webView;
         return;

@@ -811,15 +811,6 @@ TempStr FmtVTemp(const char* fmt, va_list args) {
     return Str(buf, count);
 }
 
-// caller needs to str::Free()
-Str Format(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    Str res = str::Dup(FmtVTemp(fmt, args));
-    va_end(args);
-    return res;
-}
-
 /* replace in <str> the chars from <oldChars> with their equivalents
    from <newChars> (similar to UNIX's tr command)
    Returns the number of replaced characters. */

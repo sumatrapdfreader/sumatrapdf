@@ -175,7 +175,7 @@ int main() {
             str::StartsWith(lastLine + str::Len(inFileCommentSyntax), " Signature sha1:")) {
             strcpy_s(lastLine, 3, lf.s);
         } else {
-            data.Set(str::Format("%s%s", data.Get(), lf));
+            data.Set(str::Dup(str::FormatTemp("%s%s", data.Get(), lf)));
         }
         dataLen = str::Len(data);
     }
@@ -207,12 +207,12 @@ int main() {
     if (inFileCommentSyntax) {
         Str dataStr(data.Get(), (int)dataLen);
         Str lf = str::Find(dataStr, "\r\n") || !str::FindChar(dataStr, '\n') ? "\r\n" : "\n";
-        data.Set(
-            str::Format("%s%s Signature sha1:%s%s", data.Get(), inFileCommentSyntax.Get(), hexSignature.Get(), lf.s));
+        data.Set(str::Dup(str::FormatTemp("%s%s Signature sha1:%s%s", data.Get(), inFileCommentSyntax.Get(),
+                                          hexSignature.Get(), lf.s)));
         dataLen = str::Len(data);
         hexSignature.SetCopy(data);
     } else {
-        hexSignature.Set(str::Format("sha1:%s\r\n", hexSignature.Get()));
+        hexSignature.Set(str::Dup(str::FormatTemp("sha1:%s\r\n", hexSignature.Get())));
     }
 
     if (!inFileCommentSyntax) {

@@ -2014,11 +2014,11 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
         str::Free(propTitle);
         propTitle = str::Dup(value);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
-        Str newDate = str::Format("%s/%d", str::IsEmpty(propDate) ? "" : propDate.s, ParseInt(value));
+        Str newDate = str::Dup(str::FormatTemp("%s/%d", str::IsEmpty(propDate) ? "" : propDate.s, ParseInt(value)));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
-        Str newDate = str::Format("%d%s", ParseInt(value), str::IsEmpty(propDate) ? "" : propDate.s);
+        Str newDate = str::Dup(str::FormatTemp("%d%s", ParseInt(value), str::IsEmpty(propDate) ? "" : propDate.s));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::String == type && str::Eq(path, "/appID")) {

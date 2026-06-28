@@ -3047,7 +3047,7 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     // page is really a stream number
     Str title = outline->title ? Str(outline->title) : StrL("");
     TempStr nameHex = str::MemToHexTemp((const u8*)title.s, title.len);
-    dest->value = str::Format("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.s);
+    dest->value = str::Dup(str::FormatTemp("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.s));
     dest->pageNo = outline->page.page;
     return dest;
 }

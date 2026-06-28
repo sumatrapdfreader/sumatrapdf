@@ -44,7 +44,7 @@ format string is almost always a string literal, and a `const char*` is what
 the underlying `vsnprintf` needs anyway — so taking `Str` only added a wasted
 `strlen` and a NUL-termination footgun.
 
-Functions following this rule: `str::Format`, `str::FormatTemp`,
+Functions following this rule: `str::FormatTemp`,
 `str::FmtVTemp`, `StrBuilder::AppendFmt`, `logf`, `logfa`, `logvf`,
 `logPipe`, `logConsole`, `dbglayoutf`, `CliPrintf`,
 `MaybeDelayedWarningNotification`, `VscprintfUtf8`. (Note this is only the
