@@ -20,18 +20,18 @@
 Kind kindEnginePostScript = "enginePostScript";
 
 static TempStr GetGhostscriptPathTemp() {
-    const char* gsProducts[] = {
-        "AFPL Ghostscript",
-        "Aladdin Ghostscript",
-        "GPL Ghostscript",
-        "GNU Ghostscript",
+    static const Str gsProducts[] = {
+        StrL("AFPL Ghostscript"),
+        StrL("Aladdin Ghostscript"),
+        StrL("GPL Ghostscript"),
+        StrL("GNU Ghostscript"),
     };
 
     // find all installed Ghostscript versions
     StrVec versions;
     REGSAM access = KEY_READ | KEY_WOW64_32KEY;
 TryAgain64Bit:
-    for (const char* gsProd : gsProducts) {
+    for (Str gsProd : gsProducts) {
         HKEY hkey;
         TempStr keyName = str::JoinTemp("Software\\", gsProd);
         TempWStr keyNameW = ToWStrTemp(keyName);
@@ -59,9 +59,9 @@ TryAgain64Bit:
     // return the path to the newest installation
     int nVers = versions.Size();
     for (int i = nVers; i > 0; i--) {
-        for (const char* gsProd : gsProducts) {
-            char* ver = versions.At(i - 1);
-            TempStr keyName = str::FormatTemp("Software\\%s\\%s", gsProd, ver);
+        for (Str gsProd : gsProducts) {
+            Str ver = versions.At(i - 1);
+            TempStr keyName = str::FormatTemp("Software\\%s\\%s", gsProd.s, ver.s);
             TempStr gsDLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
             if (!gsDLL) {
                 continue;
@@ -88,7 +88,7 @@ TryAgain64Bit:
     TempStr envPath = ToUtf8Temp(envpathW);
     StrVec paths;
     Split(&paths, envPath, ";", true);
-    for (char* path : paths) {
+    for (Str path : paths) {
         TempStr exe = path::JoinTemp(path, "gswin32c.exe");
         if (!file::Exists(exe)) {
             exe = path::JoinTemp(path, "gswin64c.exe");
@@ -105,7 +105,7 @@ struct AutoDeleteFile {
     AutoFreeStr filePath;
 
     explicit AutoDeleteFile(const WCHAR* path) { filePath.Set(ToUtf8(path)); }
-    explicit AutoDeleteFile(const char* path) { filePath.SetCopy(path); }
+    explicit AutoDeleteFile(Str path) { filePath.SetCopy(path); }
     ~AutoDeleteFile() {
         if (filePath) {
             file::Delete(Str(filePath));
@@ -138,9 +138,9 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
 }
 #endif
 
-static EngineBase* ps2pdf(const char* path) {
+static EngineBase* ps2pdf(Str path) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    TempStr shortPath = path::ShortPathTemp(Str(path));
+    TempStr shortPath = path::ShortPathTemp(path);
     TempStr tmpFile = GetTempFilePathTemp("PsE");
     AutoDeleteFile tmpFileScope(tmpFile);
     TempStr gswin32c = GetGhostscriptPathTemp();
@@ -153,12 +153,12 @@ static EngineBase* ps2pdf(const char* path) {
     TempStr cmdLine = str::FormatTemp(
         "\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
         "-f \"%s\"",
-        gswin32c, tmpFile, shortPath);
+        gswin32c.s, tmpFile.s, shortPath.s);
 
     {
         TempStr fileName = path::GetBaseNameTemp(__FILE__);
         TempStr tmpFileName = path::GetBaseNameTemp(tmpFile);
-        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin32c, tmpFileName);
+        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName.s, __LINE__, gswin32c.s, tmpFileName.s);
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
@@ -198,7 +198,7 @@ static EngineBase* ps2pdf(const char* path) {
     return CreateEngineMupdfFromStream(stream, nameHint);
 }
 
-static EngineBase* psgz2pdf(const char* fileName) {
+static EngineBase* psgz2pdf(Str fileName) {
     TempStr tmpFile = GetTempFilePathTemp("PsE");
     AutoDeleteFile tmpFileScope(tmpFile);
     if (!tmpFile) {
@@ -272,13 +272,10 @@ class EnginePs : public EngineBase {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
-    ByteSlice GetFileData() override {
-        const char* path = FilePath();
-        return file::ReadFile(Str(path));
-    }
+    ByteSlice GetFileData() override { return file::ReadFile(FilePath()); }
 
     bool SaveFileAs(Str dstPath) override {
-        const char* srcPath = FilePath();
+        Str srcPath = FilePath();
         if (!srcPath) {
             return false;
         }
@@ -295,12 +292,14 @@ class EnginePs : public EngineBase {
         if (!pdfEngine) {
             return {};
         }
-        static const char* toOmit[] = {kPropCreationDate, kPropModificationDate, kPropPdfVersion,
-                                       kPropPdfProducer,  kPropPdfFileStructure, nullptr};
+        static const Str toOmit[] = {kPropCreationDate, kPropModificationDate, kPropPdfVersion,
+                                     kPropPdfProducer,  kPropPdfFileStructure, Str()};
 
-        for (const char** ptr = toOmit; *ptr; ptr++) {
-            const char* s = *ptr;
-            if (str::Eq(s, name)) {
+        for (Str omit : toOmit) {
+            if (!omit) {
+                break;
+            }
+            if (str::Eq(omit, name)) {
                 return {};
             }
         }
@@ -322,7 +321,7 @@ class EnginePs : public EngineBase {
 
     EngineBase* pdfEngine = nullptr;
 
-    bool Load(const char* fileName) {
+    bool Load(Str fileName) {
         pageCount = 0;
         ReportIf(FilePath() || pdfEngine);
         if (!fileName) {
@@ -330,7 +329,7 @@ class EnginePs : public EngineBase {
         }
 
         SetFilePath(fileName);
-        if (file::StartsWith(fileName, "\x1F\x8B")) {
+        if (file::StartsWith(fileName, StrL("\x1F\x8B"))) {
             pdfEngine = psgz2pdf(fileName);
         } else {
             pdfEngine = ps2pdf(fileName);
