@@ -153,7 +153,7 @@ TempStr GetAppDataDirTemp() {
         // sometimes people put executable in directory like c:\windows
         // and we can't write to it. in that case we'll fall back to %APPDATA%
         if (!dir::HasWriteAccess(dir)) {
-            logf("GetAppDataDirTemp: no write access to '%s'\n", dir);
+            logf("GetAppDataDirTemp: no write access to '%s'\n", dir.s);
             dir = nullptr;
         }
     }
@@ -166,7 +166,7 @@ TempStr GetAppDataDirTemp() {
         }
         dir = path::JoinTemp(dir, kAppName);
     }
-    logf("GetAppDataDirTemp(): '%s'%s\n", dir, isPortable ? " (portable)" : "(installed)");
+    logf("GetAppDataDirTemp(): '%s'%s\n", dir.s, isPortable ? " (portable)" : "(installed)");
     SetAppDataDir(dir);
     return gAppDataDir.s;
 }
@@ -416,7 +416,7 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
 Str BuildOpenFileCmd(Str pattern, Str path, int line, int col) {
     StrBuilder cmdline(256);
 
-    logf("BuildOpenFileCmd: path: '%s', pattern: '%s'\n", path, pattern);
+    logf("BuildOpenFileCmd: path: '%s', pattern: '%s'\n", path.s, pattern.s);
     Str s = pattern;
     while (s) {
         Str perc = str::FindChar(s, '%');

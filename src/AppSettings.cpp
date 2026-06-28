@@ -385,7 +385,7 @@ bool LoadSettings() {
         SaveSettings();
     }
 
-    logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));
+    logf("LoadSettings('%s') took %.2f ms\n", settingsPath.s, TimeSinceInMs(timeStart));
     return true;
 }
 
@@ -640,7 +640,7 @@ static void ReloadSettings() {
             ok = true;
             prefsData.Free();
         } else {
-            logf("ReloadSettings: failed to load '%s', i=%d\n", settingsPath, i);
+            logf("ReloadSettings: failed to load '%s', i=%d\n", settingsPath.s, i);
         }
     }
     if (!ok) {

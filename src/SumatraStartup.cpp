@@ -377,7 +377,7 @@ void SetTabState(WindowTab* tab, TabState* state) {
 }
 
 static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
-    logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath);
+    logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath.s);
     gFileHistory.MarkFileInexistent(state->filePath, true);
     WindowTab* tab = new WindowTab(win);
     tab->SetFilePath(state->filePath);
@@ -388,7 +388,7 @@ static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
 // TODO: when files are lazy loaded, they do not restore TabState. Need to remember
 // it in LoadArgs and call SetTabState() if present after loading
 static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad = true) {
-    logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
+    logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath.s);
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
     args.showWin = false;
@@ -697,7 +697,7 @@ static void ResetTempArenaWithLogging() {
         char human[32];
         FormatSizeHumanIntoBuf(gPeakBytes, Str(human, (int)sizeof(human)));
         logf("temp allocator new max: %s allocations, peak %s bytes (%s)\n",
-             str::FormatNumWithThousandSepTemp((i64)gMaxAllocs), str::FormatNumWithThousandSepTemp((i64)gPeakBytes),
+             str::FormatNumWithThousandSepTemp((i64)gMaxAllocs).s, str::FormatNumWithThousandSepTemp((i64)gPeakBytes).s,
              human);
     }
     ResetTempArena();
@@ -713,8 +713,8 @@ static void LogArenaLifetimeStats(Str what, Arena* a) {
     u64 peakBytes = a->peakBytesLifetime;
     char human[32];
     FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
-    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what, str::FormatNumWithThousandSepTemp((i64)nAllocs),
-         str::FormatNumWithThousandSepTemp((i64)peakBytes), human);
+    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what.s, str::FormatNumWithThousandSepTemp((i64)nAllocs).s,
+         str::FormatNumWithThousandSepTemp((i64)peakBytes).s, human);
 }
 
 static int RunMessageLoop() {
@@ -894,7 +894,8 @@ static bool EnsureLibmupdfDll() {
         return true;
     }
     if (realSize >= 0) {
-        logf("EnsureLibmupdfDll: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize, expectedSize);
+        logf("EnsureLibmupdfDll: overwriting '%s' (size %lld, expected %u)\n", path.s, (long long)realSize,
+             expectedSize);
     }
     return ExtractLibmupdfDll(buildDir);
 }
@@ -927,7 +928,7 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         if (hm) {
             return true;
         }
-        logf("LoadLibmupdf: failed to load %s\n", path);
+        logf("LoadLibmupdf: failed to load %s\n", path.s);
         err = GetLastError();
         logf("last err: 0x%x\n", (int)err);
         if (err != 0) {
@@ -1191,7 +1192,7 @@ static void DeleteStaleCbxCacheFiles() {
             continue;
         }
         bool ok = file::Delete(de->filePath);
-        logf("DeleteStaleCbxCacheFiles: delete '%s' (age %lld days) -> %d\n", de->filePath,
+        logf("DeleteStaleCbxCacheFiles: delete '%s' (age %lld days) -> %d\n", de->filePath.s,
              (long long)(ageSec / (24 * 60 * 60)), (int)ok);
     }
 }
@@ -1281,7 +1282,7 @@ static void DeleteOldPdfPreviewLogs(int keep) {
     if (n > keep) {
         files.Sort(CmpPreviewLogNewestFirst);
         for (int i = keep; i < n; i++) {
-            logf("DeleteOldPdfPreviewLogs: deleting '%s'\n", files[i].path);
+            logf("DeleteOldPdfPreviewLogs: deleting '%s'\n", files[i].path.s);
             file::Delete(files[i].path);
         }
     }
@@ -1301,7 +1302,7 @@ static void DeleteStaleFilesAsync() {
     if (!dataDir) {
         return;
     }
-    logf("DeleteStaleFilesAsync: dataDir: '%s'\n", dataDir);
+    logf("DeleteStaleFilesAsync: dataDir: '%s'\n", dataDir.s);
 
     FILETIME nowFt;
     GetSystemTimeAsFileTime(&nowFt);
@@ -1322,29 +1323,29 @@ static void DeleteStaleFilesAsync() {
         bool isLegacy = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
         bool isBuildDir = IsBuildDirName(name);
         if (!isLegacy && !isBuildDir) {
-            logf("DeleteStaleFilesAsync: skipping '%s'\n", name);
+            logf("DeleteStaleFilesAsync: skipping '%s'\n", name.s);
             continue;
         }
 
         if (isBuildDir) {
             i64 ageSec = GetDirLastActivityAgeSec(de->filePath, now);
             if (ageSec < 0) {
-                logf("DeleteStaleFilesAsync: skipping '%s', couldn't determine age\n", de->filePath);
+                logf("DeleteStaleFilesAsync: skipping '%s', couldn't determine age\n", de->filePath.s);
                 continue;
             }
             if (ageSec < kMaxAgeSec) {
-                logf("DeleteStaleFilesAsync: skipping '%s' (age %lld days)\n", de->filePath,
+                logf("DeleteStaleFilesAsync: skipping '%s' (age %lld days)\n", de->filePath.s,
                      (long long)(ageSec / (24 * 60 * 60)));
                 continue;
             }
-            logf("DeleteStaleFilesAsync: deleting stale build dir '%s' (age %lld days)\n", de->filePath,
+            logf("DeleteStaleFilesAsync: deleting stale build dir '%s' (age %lld days)\n", de->filePath.s,
                  (long long)(ageSec / (24 * 60 * 60)));
         } else {
-            logf("DeleteStaleFilesAsync: deleting legacy dir '%s'\n", de->filePath);
+            logf("DeleteStaleFilesAsync: deleting legacy dir '%s'\n", de->filePath.s);
         }
 
         bool ok = dir::RemoveAll(de->filePath);
-        logf("DeleteStaleFilesAsync: dir::RemoveAll('%s') returned %d\n", de->filePath, ok);
+        logf("DeleteStaleFilesAsync: dir::RemoveAll('%s') returned %d\n", de->filePath.s, ok);
     }
 }
 
@@ -1694,7 +1695,7 @@ static int MaybeDelegateToToolExe() {
     PROCESS_INFORMATION pi{};
     BOOL ok = CreateProcessW(toolExeW, cmdW, nullptr, nullptr, TRUE /*inherit handles*/, 0, nullptr, nullptr, &si, &pi);
     if (!ok) {
-        logf("MaybeDelegateToToolExe: CreateProcessW failed for '%s'\n", toolExe);
+        logf("MaybeDelegateToToolExe: CreateProcessW failed for '%s'\n", toolExe.s);
         return kNoMutool; // fall back to running the tool in-process
     }
     WaitForSingleObject(pi.hProcess, INFINITE);
@@ -1773,7 +1774,7 @@ Exit:
 
 static void LogCommandLine() {
     TempStr s = ToUtf8Temp(GetCommandLineW());
-    logf("'%s'\n  ver %s\n", s, UPDATE_CHECK_VERA);
+    logf("'%s'\n  ver %s\n", s.s, UPDATE_CHECK_VERA);
 }
 
 static void InstallSumatraCrashHandler(bool localOnly) {
@@ -1874,7 +1875,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         auto di = DirIter{dir};
         di.recurse = true;
         for (DirIterEntry* d : di) {
-            logf("d->filePath: '%s'\n", d->filePath);
+            logf("d->filePath: '%s'\n", d->filePath.s);
         }
     }
     if (false) {
@@ -1930,7 +1931,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     if (flags.updateSelfTo) {
-        logf(" flags.updateSelfTo: '%s'\n", flags.updateSelfTo);
+        logf(" flags.updateSelfTo: '%s'\n", flags.updateSelfTo.s);
         RedirectIOToExistingConsole();
         UpdateSelfTo(flags.updateSelfTo);
         if (flags.exitWhenDone) {
@@ -1940,14 +1941,14 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     if (flags.upgradeFrom) {
-        logf(" flags.upgradeFrom: '%s'\n", flags.upgradeFrom);
+        logf(" flags.upgradeFrom: '%s'\n", flags.upgradeFrom.s);
         StartInstallerAutoUpgrade(flags.upgradeFrom);
         fastExit = true;
         goto Exit;
     }
 
     if (flags.deleteFile) {
-        logf(" flags.deleteFile: '%s'\n", flags.deleteFile);
+        logf(" flags.deleteFile: '%s'\n", flags.deleteFile.s);
         RedirectIOToExistingConsole();
         // sleeping for a bit to make sure that the program that launched us
         // had time to exit so that we can overwrite it
@@ -1957,9 +1958,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // TODO: retry if file busy?
         bool ok = file::Delete(flags.deleteFile);
         if (ok) {
-            logf("Deleted '%s'\n", flags.deleteFile);
+            logf("Deleted '%s'\n", flags.deleteFile.s);
         } else {
-            logf("Failed to delete '%s'\n", flags.deleteFile);
+            logf("Failed to delete '%s'\n", flags.deleteFile.s);
         }
         if (flags.exitWhenDone) {
             HandleRedirectedConsoleOnShutdown();
@@ -2205,7 +2206,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     if (flags.dde) {
-        logf("sending flags.dde '%s', hwnd: 0x%p\n", flags.dde, existingHwnd);
+        logf("sending flags.dde '%s', hwnd: 0x%p\n", flags.dde.s, existingHwnd);
         SendMyselfDDE(flags.dde, existingHwnd);
         goto Exit;
     }
