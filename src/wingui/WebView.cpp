@@ -146,7 +146,7 @@ enum class SharedWebViewEnvState {
 
 SharedWebViewEnvState gSharedEnvState = SharedWebViewEnvState::NotStarted;
 ICoreWebView2Environment* gSharedEnvironment = nullptr;
-WCHAR* gSharedUserDataFolder = nullptr;
+WStr gSharedUserDataFolder;
 Vec<WebviewWnd*> gPendingWebviews;
 
 void FreePendingOps(Vec<PendingWebViewOp>& ops) {
@@ -246,7 +246,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
         if (!message) {
             return S_OK;
         }
-        char* s = ToUtf8Temp(message);
+        TempStr s = ToUtf8Temp(message);
         msgCb.Call(s);
         CoTaskMemFree(message);
         return S_OK;
@@ -344,9 +344,9 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
     WebviewWnd* m_wnd = nullptr;
 };
 
-static TempWStr UriPathFromPrefix(const WCHAR* uri, const WCHAR* prefix);
+static TempWStr UriPathFromPrefix(WStr uri, WStr prefix);
 
-static TempStr UrlForWebViewEvent(const WCHAR* uri, const WCHAR* prefix) {
+static TempStr UrlForWebViewEvent(WStr uri, WStr prefix) {
     if (!uri) {
         return {};
     }
@@ -404,7 +404,7 @@ class webview2_navigation_starting_handler : public ICoreWebView2NavigationStart
         if (FAILED(args->get_Uri(&uri)) || !uri) {
             return S_OK;
         }
-        TempStr url = UrlForWebViewEvent(uri, m_wnd->resourceUriPrefix);
+        TempStr url = UrlForWebViewEvent(WStr(uri), m_wnd->resourceUriPrefix);
         CoTaskMemFree(uri);
         if (!url) {
             return S_OK;
@@ -455,7 +455,7 @@ class webview2_navigation_completed_handler : public ICoreWebView2NavigationComp
         if (webview) {
             webview->get_Source(&uri);
         }
-        TempStr url = UrlForWebViewEvent(uri, m_wnd->resourceUriPrefix);
+        TempStr url = UrlForWebViewEvent(WStr(uri), m_wnd->resourceUriPrefix);
         if (uri) {
             CoTaskMemFree(uri);
         }
@@ -535,7 +535,7 @@ class webview2_new_window_handler : public ICoreWebView2NewWindowRequestedEventH
         if (FAILED(args->get_Uri(&uri)) || !uri) {
             return S_OK;
         }
-        TempStr url = UrlForWebViewEvent(uri, m_wnd->resourceUriPrefix);
+        TempStr url = UrlForWebViewEvent(WStr(uri), m_wnd->resourceUriPrefix);
         CoTaskMemFree(uri);
         args->put_Handled(TRUE);
         if (url) {
@@ -598,11 +598,11 @@ static TempWStr MimeHeaderFromContentType(Str contentType) {
     return str::JoinTemp(L"Content-Type: ", contentTypeW);
 }
 
-static TempWStr UriPathFromPrefix(const WCHAR* uri, const WCHAR* prefix) {
+static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
     if (!uri || !prefix || !str::StartsWith(uri, prefix)) {
         return {};
     }
-    const WCHAR* path = uri + str::Len(prefix);
+    const WCHAR* path = uri.s + str::Len(prefix);
     while (*path == L'/') {
         path++;
     }
@@ -704,7 +704,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
             return S_OK;
         }
 
-        TempWStr pathW = UriPathFromPrefix(uri, m_wnd->resourceUriPrefix);
+        TempWStr pathW = UriPathFromPrefix(WStr(uri), m_wnd->resourceUriPrefix);
         CoTaskMemFree(uri);
         if (!pathW) {
             return S_OK;

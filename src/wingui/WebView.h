@@ -48,7 +48,7 @@ struct PendingWebViewOp {
     };
 
     Kind kind;
-    char* text = nullptr;
+    Str text;
 };
 
 struct CreateWebViewArgs {
@@ -94,7 +94,7 @@ struct WebviewWnd : Wnd {
     // must be set before we call create
     // TODO: make Webview2CreateCustomArgs
     // with dataDir
-    char* dataDir = nullptr;
+    Str dataDir;
     // DWORD m_main_thread = GetCurrentThreadId();
     ICoreWebView2* webview = nullptr;
     ICoreWebView2Controller* controller = nullptr;
@@ -111,8 +111,8 @@ struct WebviewWnd : Wnd {
     bool isInSizeMove = false;
     RECT lastBounds = {};
     bool hasLastBounds = false;
-    WCHAR* userDataFolder = nullptr;
-    WCHAR* resourceUriPrefix = nullptr;
+    WStr userDataFolder;
+    WStr resourceUriPrefix;
     WebViewResourceProvider resourceProvider;
     WebViewEvents events;
     bool forwardAppAccelerators = true;
