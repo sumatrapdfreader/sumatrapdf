@@ -80,18 +80,18 @@ TempStr SmartToUtf8Temp(Str s, uint codepage) {
     return strconv::ToMultiByteTemp(s, codepage, CP_UTF8);
 }
 
-static char* GetCharZ(const ByteSlice& d, size_t off) {
+static Str GetCharZ(const ByteSlice& d, size_t off) {
     u8* data = d.data();
     size_t len = d.size();
     if (off >= len) {
-        return nullptr;
+        return {};
     }
     ReportIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
     u8* str = data + off;
-    if (str::IsEmpty((const char*)str)) {
-        return nullptr;
+    if (str::IsEmpty(Str((char*)str))) {
+        return {};
     }
-    return str::Dup((const char*)str);
+    return str::Dup(Str((char*)str));
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
@@ -257,23 +257,21 @@ TempStr ChmFile::ResolveTopicID(unsigned int id) const {
     size_t ivbLen = ivbData.size();
     ByteReader br(ivbData);
     if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
-        return nullptr;
+        return {};
     }
 
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
             ByteSlice stringsData = GetData("/#STRINGS");
-            char* res = GetCharZ(stringsData, br.DWordLE(off + 4));
+            Str res = GetCharZ(stringsData, br.DWordLE(off + 4));
             stringsData.Free();
             if (!res) {
-                return nullptr;
+                return {};
             }
-            TempStr tmp = str::DupTemp(res);
-            str::Free(res);
-            return tmp;
+            return str::DupTemp(res);
         }
     }
-    return nullptr;
+    return {};
 }
 
 void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
@@ -333,7 +331,7 @@ bool ChmFile::Load(Str path) {
     }
 
     if (!HasData(homePath.Get())) {
-        const char* pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
+        Str pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
         for (int i = 0; i < dimof(pathsToTest); i++) {
             if (HasData(pathsToTest[i])) {
                 homePath.SetCopy(pathsToTest[i]);
@@ -348,14 +346,14 @@ bool ChmFile::Load(Str path) {
 }
 
 TempStr ChmFile::GetPropertyTemp(Str name) const {
-    char* result = nullptr;
+    TempStr result;
     if (str::Eq(kPropTitle, name) && title.CStr()) {
         result = SmartToUtf8Temp(title.CStr(), codepage);
     } else if (str::Eq(kPropCreatorApp, name) && creator.CStr()) {
         result = SmartToUtf8Temp(creator.CStr(), codepage);
     }
     if (!result) {
-        return nullptr;
+        return {};
     }
     str::NormalizeWSInPlace(result);
     return result;
@@ -391,9 +389,9 @@ void ChmFile::GetAllPaths(StrVec* v) const {
 */
 // Strip the "ITS protocol" prefix from a CHM URL, e.g.
 // "mk:@MSITStore:foo.chm::/index.html" -> "index.html".
-static const char* StripItsProtocol(const char* url) {
-    const char* p = str::Find(url, "::/");
-    return p ? p + 3 : url;
+static Str StripItsProtocol(Str url) {
+    Str p = str::Find(url, "::/");
+    return p ? Str(p.s + 3, p.len - 3) : url;
 }
 
 static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, int level) {
@@ -414,7 +412,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, 
         if (str::EqI(attrName->value, "Name")) {
             name.Set(str::Dup(attrVal->value));
         } else if (str::EqI(attrName->value, "Local")) {
-            local.Set(str::Dup(StripItsProtocol(attrVal->value)));
+            local.Set(str::Dup(StripItsProtocol(Str(attrVal->value))).s);
         }
     }
     if (!name) {
@@ -441,8 +439,8 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
     ReportIf(!GumboTagNameIs(objNode, "object"));
 
     StrVec references;
-    const char* keyword = nullptr;
-    const char* name = nullptr;
+    Str keyword;
+    Str name;
     const GumboVector* children = &objNode->v.element.children;
     for (unsigned int i = 0; i < children->length; i++) {
         const GumboNode* child = (const GumboNode*)children->data[i];
@@ -455,16 +453,16 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
             continue;
         }
         if (str::EqI(attrName->value, "Keyword")) {
-            keyword = attrVal->value;
+            keyword = Str(attrVal->value);
         } else if (str::EqI(attrName->value, "Name")) {
-            name = attrVal->value;
+            name = Str(attrVal->value);
             // some CHM documents seem to use a lonely Name instead of Keyword
             if (!keyword) {
                 keyword = name;
             }
         } else if (str::EqI(attrName->value, "Local") && name) {
-            references.Append((char*)name);
-            references.Append((char*)StripItsProtocol(attrVal->value));
+            references.Append(name);
+            references.Append(StripItsProtocol(Str(attrVal->value)));
         }
     }
     if (!keyword) {
@@ -472,10 +470,10 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
     }
 
     if (references.Size() == 2) {
-        visitor->Visit((char*)keyword, references[1], level);
+        visitor->Visit(keyword, references.At(1), level);
         return true;
     }
-    visitor->Visit(Str((char*)keyword), {}, level);
+    visitor->Visit(keyword, {}, level);
     int n = references.Size();
     for (int i = 0; i < n; i += 2) {
         visitor->Visit(references[i], references[i + 1], level + 1);

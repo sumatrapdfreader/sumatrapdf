@@ -10,21 +10,21 @@
 // must be last to over-write assert()
 #include "utils/UtAssert.h"
 
-static void ParseTipExpectWordsLinks(const char* input, int expWords, int expLinks) {
+static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
     ParsedTip tip;
     ParseTip(tip, input);
     utassert(tip.words.Size() == expWords);
     utassert(tip.links.Size() == expLinks);
 }
 
-static void ParseTipExpectPlainContains(const char* input, const char* needle) {
+static void ParseTipExpectPlainContains(Str input, Str needle) {
     ParsedTip tip;
     ParseTip(tip, input);
     TempStr plain = TipPlainTextTemp(tip);
     utassert(plain && str::Find(plain, needle));
 }
 
-static void ParseTipExpectLinkCmd(const char* input, const char* expCmd) {
+static void ParseTipExpectLinkCmd(Str input, Str expCmd) {
     ParsedTip tip;
     ParseTip(tip, input);
     utassert(tip.links.Size() == 1);
