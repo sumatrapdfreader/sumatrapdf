@@ -227,7 +227,7 @@ LoadArgs::LoadArgs(Str origPath, MainWindow* win) {
     }
     TempStr path = path::NormalizeTemp(cleanPath);
     if (!str::EqI(path, cleanPath)) {
-        logf("LoadArgs: cleanPath='%s', path='%s'\n", cleanPath.s, path);
+        logf("LoadArgs: cleanPath='%s', path='%s'\n", cleanPath.s, path.s);
     }
     this->fileName.SetCopy(path);
     this->win = win;
@@ -1315,7 +1315,7 @@ static NO_INLINE void VerifyController(DocController* ctrl, Str path) {
     }
     Str s1 = ctrlFilePath ? ctrlFilePath : Str("<null>");
     Str s2 = path ? path : Str("<null>");
-    logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
+    logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1.s, s2.s);
     ReportIf(true);
 }
 
@@ -1380,7 +1380,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
     }
     int nPages = engine ? engine->pageCount : 0;
     auto dur = TimeSinceInMs(timeStart);
-    logf("CreateControllerForEngineOrFile: '%s', %d pages, took %2.f ms\n", path, nPages, dur);
+    logf("CreateControllerForEngineOrFile: '%s', %d pages, took %2.f ms\n", path.s, nPages, dur);
     if (nPages <= 0) {
         // seen nPages < 0 in a crash in epub file
         SafeEngineRelease(&engine);
@@ -2814,9 +2814,9 @@ MainWindow* LoadDocument(LoadArgs* args) {
             auto durMs = TimeSinceInMs(timeStart);
             if (ctrl) {
                 int nPages = ctrl->PageCount();
-                logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
+                logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path.s);
             } else {
-                logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
+                logf("LoadDocument: failed to load '%s' in %.2f ms\n", path.s, (float)durMs);
                 AppendIfNotExists(&gFilesFailedToOpen, path);
             }
         }
@@ -3900,14 +3900,14 @@ static void SaveCurrentFileAs(MainWindow* win) {
         realDstFileName = str::JoinTemp(realDstFileName, defExt);
     }
 
-    logf("Saving '%s' to '%s'\n", srcFileName, realDstFileName);
+    logf("Saving '%s' to '%s'\n", srcFileName.s, realDstFileName.s);
 
     // TODO: engine->SaveFileA() is stupid
     // Replace with EngineGetDocumentData() and save that if not empty
     TempStr errorMsg = nullptr;
     if (!file::Exists(srcFileName) && engine) {
         // Recreate nonexistent files from memory...
-        logf("calling engine->SaveFileAs(%s)\n", realDstFileName);
+        logf("calling engine->SaveFileAs(%s)\n", realDstFileName.s);
         ok = engine->SaveFileAs(realDstFileName);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
         ok = file::Copy(realDstFileName, srcFileName, false);

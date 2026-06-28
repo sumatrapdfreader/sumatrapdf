@@ -493,7 +493,7 @@ TryAgainWOW64:
 
 TempStr LoggedReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
     auto res = ReadRegStrTemp(hkey, keyName, valName);
-    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(hkey), keyName, valName, res);
+    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(hkey).s, keyName.s, valName.s, res.s);
     return res;
 }
 
