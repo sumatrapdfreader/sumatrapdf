@@ -125,7 +125,7 @@ bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const Arc
         // No pre-sniffed hint: peek at the first 2 KiB ourselves so we can
         // route RAR files through unrar.dll instead of libarchive.
         char buf[2048 + 1]{};
-        int n = file::ReadN(path, buf, dimof(buf) - 1);
+        int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
         if (n > 0) {
             ByteSlice d = {(u8*)buf, (size_t)n};
             kind = GuessFileTypeFromContent(d);

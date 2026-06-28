@@ -583,7 +583,7 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
     // fast fail: read enough to check if this is PDF file with garbage
     char buf[1024];
     size_t bufSize = dimof(buf);
-    int n = file::ReadN(path, buf, bufSize);
+    int n = file::ReadN(path, (u8*)buf, bufSize);
     if (n < 1024) {
         return nullptr;
     }

@@ -650,7 +650,7 @@ TempStr DealPlainSync(TempStr pathSync) {
 static bool IsGzipFile(Str path) {
     // gzip files start with magic bytes 0x1f 0x8b; only need to read the header
     u8 buf[2] = {0};
-    int nRead = file::ReadN(path, (char*)buf, sizeof(buf));
+    int nRead = file::ReadN(path, buf, sizeof(buf));
     return nRead == 2 && buf[0] == 0x1f && buf[1] == 0x8b;
 }
 

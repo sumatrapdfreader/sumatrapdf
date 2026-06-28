@@ -777,10 +777,10 @@ i64 GetSize(Str path) {
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
 // returns -1 for error
-int ReadN(Str path, char* buf, size_t toRead) {
+int ReadN(Str path, u8* buf, size_t toRead) {
     AutoCloseHandle h = OpenReadOnly(path);
     if (h == INVALID_HANDLE_VALUE) {
-        return false;
+        return -1;
     }
 
     ZeroMemory(buf, toRead);
@@ -910,11 +910,11 @@ bool SetModificationTime(Str path, FILETIME lastMod) {
 
 // return true if a file starts with string s of size len
 bool StartsWithN(Str path, Str s) {
-    char* buf = AllocArrayTemp<char>(s.len);
+    u8* buf = AllocArrayTemp<u8>(s.len);
     if (!buf) {
         return false;
     }
-    if (!ReadN(path, buf, s.len)) {
+    if (ReadN(path, buf, s.len) != s.len) {
         return false;
     }
     return memeq(buf, s.s, s.len);

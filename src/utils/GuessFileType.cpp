@@ -424,7 +424,7 @@ Kind GuessFileTypeFromContent(Str path) {
 
     // +1 for zero-termination
     char buf[2048 + 1]{};
-    int n = file::ReadN(path, buf, dimof(buf) - 1);
+    int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
     if (n <= 0) {
         return nullptr;
     }
