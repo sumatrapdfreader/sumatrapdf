@@ -440,7 +440,7 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* st
     }
     AutoFreeWStr wordW;
     wordW.SetCopy(ToWStr(word).s);
-    int wordLen = (int)str::Len(wordW);
+    int wordLen = (int)wordW.size();
     if (wordLen <= 0) {
         return false;
     }
@@ -578,7 +578,7 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
     }
     AutoFreeWStr wordW;
     wordW.SetCopy(ToWStr(word).s);
-    int wordLen = (int)str::Len(wordW);
+    int wordLen = (int)wordW.size();
     if (wordLen <= 0) {
         return false;
     }

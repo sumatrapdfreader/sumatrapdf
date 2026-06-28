@@ -1559,7 +1559,7 @@ static Str TextFindEmailEnd(StrBuilder& htmlData, Str curr) {
     Str linkStart = curr.len > 0 && '@' == curr.s[0] ? curr : Str(curr.s + 7, curr.len - 7);
 
     if (beforeAt) {
-        size_t idx = htmlData.size() - str::Len(beforeAt);
+        size_t idx = htmlData.size() - (size_t)Str(beforeAt.Get()).len;
         htmlData.RemoveAt(idx, htmlData.size() - idx);
     }
     htmlData.Append("<a href=\"mailto:");

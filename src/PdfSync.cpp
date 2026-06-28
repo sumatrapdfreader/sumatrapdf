@@ -263,9 +263,10 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 AutoFreeStr filename(strconv::AnsiToUtf8((const char*)(line + 1)));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
-                if (filename[0] == '"' && filename[str::Leni(filename) - 1] == '"') {
-                    size_t n = str::Len(filename) - 2;
-                    filename = str::Dup(filename + 1, n);
+                Str fn = Str(filename.Get());
+                if (fn.len > 0 && fn.s[0] == '"' && fn.s[fn.len - 1] == '"') {
+                    size_t n = (size_t)fn.len - 2;
+                    filename.SetCopy(Str(fn.s + 1, (int)n));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransCharsInPlace(Str(filename), "*/", " \\");

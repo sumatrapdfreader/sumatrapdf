@@ -416,36 +416,11 @@ FORCEINLINE size_t Len(Str s) {
 FORCEINLINE size_t Len(WStr s) {
     return (size_t)s.len;
 }
-// str-port: char*/WCHAR* shims; remove when callers use Str/WStr
-FORCEINLINE size_t Len(const char* s) {
-    return Len(Str(s));
-}
-FORCEINLINE size_t Len(char* s) {
-    return Len(Str(s));
-}
-FORCEINLINE size_t Len(const WCHAR* s) {
-    return Len(WStr(s));
-}
-FORCEINLINE size_t Len(WCHAR* s) {
-    return Len(WStr(s));
-}
 FORCEINLINE int Leni(Str s) {
     return s.len;
 }
 FORCEINLINE int Leni(WStr s) {
     return s.len;
-}
-FORCEINLINE int Leni(const char* s) {
-    return Leni(Str(s));
-}
-FORCEINLINE int Leni(char* s) {
-    return Leni(Str(s));
-}
-FORCEINLINE int Leni(const WCHAR* s) {
-    return Leni(WStr(s));
-}
-FORCEINLINE int Leni(WCHAR* s) {
-    return Leni(WStr(s));
 }
 FORCEINLINE bool Eq(const char* s1, const char* s2) {
     return Eq(Str(s1), Str(s2));
