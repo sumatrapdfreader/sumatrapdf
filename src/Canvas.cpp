@@ -169,12 +169,16 @@ class TextDataObject : public IDataObject {
     HGLOBAL hText = nullptr;
 
   public:
-    explicit TextDataObject(const WCHAR* text) {
-        size_t cb = (str::Len(text) + 1) * sizeof(WCHAR);
+    explicit TextDataObject(WStr text) {
+        if (!text) {
+            return;
+        }
+        size_t cb = (size_t)(text.len + 1) * sizeof(WCHAR);
         hText = GlobalAlloc(GMEM_MOVEABLE, cb);
         if (hText) {
             void* p = GlobalLock(hText);
-            memcpy(p, text, cb);
+            memcpy(p, text.s, text.len * sizeof(WCHAR));
+            ((WCHAR*)p)[text.len] = 0;
             GlobalUnlock(hText);
         }
     }
