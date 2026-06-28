@@ -119,7 +119,6 @@ bool EqN(Str s1, Str s2, size_t len);
 bool EqNI(Str s1, Str s2, size_t len);
 bool IsEmpty(Str s);
 bool StartsWith(Str str, Str prefix);
-bool StartsWith(const u8* str, const char* prefix);
 
 bool StartsWithI(Str str, Str prefix);
 bool EndsWith(Str txt, Str end);
@@ -155,7 +154,6 @@ Str FmtV(const char* fmt, va_list args);
 Str Format(const char* fmt, ...);
 
 size_t TrimWSInPlace(Str s, TrimOpt opt);
-void TrimWsEnd(char* s, char*& e);
 
 size_t TransCharsInPlace(Str str, Str oldChars, Str newChars);
 

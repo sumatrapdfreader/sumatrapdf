@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-extern char* gCrashFilePath;
+extern Str gCrashFilePath;
 extern Str gSymbolsDir;
 
 void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool localOnly);

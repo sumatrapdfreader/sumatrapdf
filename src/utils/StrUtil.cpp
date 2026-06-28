@@ -387,10 +387,6 @@ bool StartsWith(Str s, Str prefix) {
     return EqN(s, prefix, Len(prefix));
 }
 
-bool StartsWith(const u8* str, const char* prefix) {
-    return StartsWith((const char*)str, prefix);
-}
-
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(Str s, Str prefix) {
     if (s.s == prefix.s) {
@@ -800,17 +796,6 @@ size_t TransCharsInPlace(Str str, Str oldChars, Str newChars) {
     }
 
     return findCount;
-}
-
-// potentially moves e backwards, skipping over whitespace
-void TrimWsEnd(char* s, char*& e) {
-    while (e > s) {
-        --e;
-        if (!str::IsWs(*e)) {
-            ++e;
-            return;
-        }
-    }
 }
 
 // Trim whitespace characters, in-place, inside s.

@@ -66,13 +66,13 @@ static Arena* gCrashHandlerAllocator = nullptr;
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
 Str gSymbolsDir;
-char* gCrashFilePath = nullptr;
+Str gCrashFilePath;
 
-static char* gSymbolsUrl = nullptr;
-static char* gCrashDumpPath = nullptr;
-static char* gSystemInfo = nullptr;
-static char* gSettingsFile = nullptr;
-static char* gModulesInfo = nullptr;
+static Str gSymbolsUrl;
+static Str gCrashDumpPath;
+static Str gSystemInfo;
+static Str gSettingsFile;
+static Str gModulesInfo;
 static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
 static bool isDllBuild = false;
@@ -128,7 +128,7 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
         }
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
-            auto pos = str::FindI(Str(gModulesInfo), pathA).s;
+            auto pos = str::FindI(gModulesInfo, pathA).s;
             if (!pos) {
                 s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA);
             }
@@ -796,7 +796,7 @@ static void GetSystemInfo(StrBuilder& s) {
 static bool BuildModulesInfo() {
     StrBuilder s(1024);
     bool isWine = GetModules(s, false);
-    gModulesInfo = s.StealData();
+    gModulesInfo = Str(s.StealData());
     return isWine;
 }
 
@@ -805,7 +805,7 @@ static void BuildSystemInfo() {
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
-    gSystemInfo = s.StealData();
+    gSystemInfo = Str(s.StealData());
 }
 
 bool SetSymbolsDir(Str symDir) {
@@ -837,8 +837,7 @@ int __cdecl _purecall() {
     return 0;
 }
 
-// Get url for file with symbols. Caller needs to free().
-static char* BuildSymbolsUrl() {
+static Str BuildSymbolsUrl() {
     const char* urlBase = "https://www.sumatrapdfreader.org/dl/";
     if (gIsPreReleaseBuild) {
         const char* ver = preReleaseVersion;
@@ -916,7 +915,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
             gp->fileStates = new Vec<FileState*>();
             // TODO: also sessionData?
             ByteSlice d = SerializeGlobalPrefs(gp, nullptr);
-            gSettingsFile = (char*)d.data();
+            gSettingsFile = Str((char*)d.data(), (int)d.size());
             DeleteGlobalPrefs(gp);
             prefsData.Free();
         }
@@ -959,15 +958,21 @@ void UninstallCrashHandler() {
     CloseHandle(gDumpThread);
     CloseHandle(gDumpEvent);
 
-    str::FreePtr(&gCrashDumpPath);
-    str::FreePtr(&gSymbolsUrl);
+    str::Free(gCrashDumpPath);
+    gCrashDumpPath = {};
+    str::Free(gSymbolsUrl);
+    gSymbolsUrl = {};
     str::Free(gSymbolsDir);
     gSymbolsDir = {};
 
-    str::FreePtr(&gSystemInfo);
-    str::FreePtr(&gSettingsFile);
-    str::FreePtr(&gModulesInfo);
-    str::FreePtr(&gCrashFilePath);
+    str::Free(gSystemInfo);
+    gSystemInfo = {};
+    str::Free(gSettingsFile);
+    gSettingsFile = {};
+    str::Free(gModulesInfo);
+    gModulesInfo = {};
+    str::Free(gCrashFilePath);
+    gCrashFilePath = {};
     ArenaDelete(gCrashHandlerAllocator);
     gCrashThreadId = 0;
     gDumpThreadId = 0;
