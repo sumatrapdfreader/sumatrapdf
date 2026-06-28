@@ -106,7 +106,7 @@ struct SelectionTranslateDoneData {
     AutoFreeStr msg;
 };
 
-static const char* PrimaryLangIdToEnglishName(WORD primary) {
+static Str PrimaryLangIdToEnglishName(WORD primary) {
     switch (primary) {
         case LANG_ENGLISH:
             return "English";
@@ -169,13 +169,13 @@ static const char* PrimaryLangIdToEnglishName(WORD primary) {
         case LANG_BENGALI:
             return "Bengali";
         default:
-            return nullptr;
+            return {};
     }
 }
 
 static const TempStr OsDefaultDestinationLanguageTemp() {
     LANGID langId = GetUserDefaultUILanguage();
-    const char* name = PrimaryLangIdToEnglishName(PRIMARYLANGID(langId));
+    Str name = PrimaryLangIdToEnglishName(PRIMARYLANGID(langId));
     if (name) {
         return name;
     }
@@ -209,7 +209,7 @@ static void MaybeSaveTranslateToLang(Str dstLang) {
     if (!normalized) {
         return;
     }
-    const char* saved = gGlobalPrefs->translateToLang;
+    Str saved = gGlobalPrefs->translateToLang;
     if (saved && str::EqI(saved, normalized)) {
         return;
     }
@@ -490,37 +490,34 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, StrBuilder
 }
 
 static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
-    const char* model = gGlobalPrefs->grokBuild.model;
+    Str model = gGlobalPrefs->grokBuild.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = "grok-composer-2.5-fast";
     }
     TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
-    const char* permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? "--always-approve" : "";
+    Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? Str("--always-approve") : Str{};
     return str::FormatTemp("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort low %s",
                            exePath, escapedPrompt, cwd, model, permsFlag);
 }
 
 static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
-    const char* model = gGlobalPrefs->claudeCode.model;
+    Str model = gGlobalPrefs->claudeCode.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = "claude-sonnet-4-20250514";
     }
     TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
-    const char* permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? "--dangerously-skip-permissions" : "";
-    char* sessionId = AIChatGenerateSessionId();
-    defer {
-        str::Free(sessionId);
-    };
+    Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? Str("--dangerously-skip-permissions") : Str{};
+    Str sessionId = AIChatGenerateSessionId();
     return str::FormatTemp("\"%s\" -p --verbose --output-format stream-json --model %s %s --session-id %s \"%s\"",
                            exePath, model, permsFlag, sessionId, escapedPrompt);
 }
 
 static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
-    const char* model = gGlobalPrefs->codexBuild.model;
+    Str model = gGlobalPrefs->codexBuild.model;
     bool hasModel = !str::IsEmptyOrWhiteSpace(model);
     TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
-    const char* skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? "--dangerously-bypass-approvals-and-sandbox" : "";
-    if (skipFlag[0]) {
+    Str skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? Str("--dangerously-bypass-approvals-and-sandbox") : Str{};
+    if (skipFlag) {
         if (hasModel) {
             return str::FormatTemp("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only %s \"%s\"",
                                    exePath, cwd, model, skipFlag, escapedPrompt);
@@ -923,8 +920,8 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     dlg->contentDx = clientW - 2 * dlg->pad;
     int colDx = (dlg->contentDx - dlg->gap) / 2;
 
-    auto createLabel = [&](const char* text, int lx, int ly, int ldx) {
-        HWND h = CreateWindowExW(0, L"STATIC", ToWStrTemp(text), WS_CHILD | WS_VISIBLE, lx, ly, ldx, labelDy, hwnd,
+    auto createLabel = [&](Str text, int lx, int ly, int ldx) {
+        HWND h = CreateWindowExW(0, L"STATIC", ToWStrTemp(text.s), WS_CHILD | WS_VISIBLE, lx, ly, ldx, labelDy, hwnd,
                                  nullptr, GetModuleHandleW(nullptr), nullptr);
         SetWindowFont(h, dlg->hFont, TRUE);
         return h;
@@ -941,7 +938,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     int editBorder = GetSystemMetrics(SM_CXEDGE);
     LRESULT margins = SendMessageW(dlg->hwndSrcText, EM_GETMARGINS, 0, 0);
     dlg->labelShift = editBorder + LOWORD(margins);
-    createLabel(_TRA("Translate:"), x + dlg->labelShift, translateLabelY, dlg->contentDx - dlg->labelShift);
+    createLabel(Str(_TRA("Translate:")), x + dlg->labelShift, translateLabelY, dlg->contentDx - dlg->labelShift);
     y += srcTextDy + dlg->gap;
 
     int charDx = HwndMeasureText(hwnd, " ", dlg->hFont).dx;
@@ -960,7 +957,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     MoveWindow(dlg->hwndSrcLang, srcComboX, langRowY, srcComboDx, comboRowDy + DpiScale(hwnd, 200), TRUE);
     PopulateLanguageCombo(dlg->hwndSrcLang, kSrcLangAuto, true);
     int labelYOffset = ComboLabelYOffset(dlg->hwndSrcLang, hwnd, dlg->hFont);
-    createLabel(_TRA("From:"), fromLabelX, langRowY + labelYOffset, fromLabelSize.dx);
+    createLabel(Str(_TRA("From:")), fromLabelX, langRowY + labelYOffset, fromLabelSize.dx);
 
     int toLabelX = col2X + dlg->labelShift;
     int dstComboX = toLabelX + toLabelSize.dx + charDx;
@@ -971,7 +968,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     SetWindowFont(dlg->hwndDstLang, dlg->hFont, TRUE);
     MoveWindow(dlg->hwndDstLang, dstComboX, langRowY, dstComboDx, comboRowDy + DpiScale(hwnd, 200), TRUE);
     PopulateLanguageCombo(dlg->hwndDstLang, DefaultDestinationLanguageTemp(), false);
-    createLabel(_TRA("To:"), toLabelX, langRowY + labelYOffset, toLabelSize.dx);
+    createLabel(Str(_TRA("To:")), toLabelX, langRowY + labelYOffset, toLabelSize.dx);
     y += comboRowDy + dlg->gap;
     dlg->yAfterLangs = y;
 
