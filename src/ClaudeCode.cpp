@@ -39,7 +39,7 @@ static TempStr FindClaudeExecutableTemp() {
         candidates.Append(str::FormatTemp("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile));
         candidates.Append(str::FormatTemp("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile));
     }
-    return AIChatFindExecutableTemp(candidates, L"claude.exe", L"claude");
+    return AIChatFindExecutableTemp(candidates, WStr(L"claude.exe"), WStr(L"claude"));
 }
 
 bool IsClaudeCodeInstalled() {

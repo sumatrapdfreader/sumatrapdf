@@ -54,8 +54,7 @@ i64 AIChatFileTimeToMs(const FILETIME& ft);
 void AIChatLog(AIChatLogger* logger, Str direction, Str text);
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args);
 
-TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, const WCHAR* searchExeName,
-                                 const WCHAR* searchNameNoExt = nullptr);
+TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchExeName, WStr searchNameNoExt = nullptr);
 
 void AIChatAppendModelUnique(StrVec& models, Str model);
 int AIChatFindModelInList(const StrVec& models, Str model);

@@ -248,8 +248,7 @@ void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
     TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
-TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, const WCHAR* searchExeName,
-                                 const WCHAR* searchNameNoExt) {
+TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchExeName, WStr searchNameNoExt) {
 #ifdef _MSC_VER
     for (int i = 0; i < fullPathCandidates.Size(); i++) {
         if (file::Exists(fullPathCandidates.At(i))) {

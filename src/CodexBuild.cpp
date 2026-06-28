@@ -38,7 +38,7 @@ static TempStr FindCodexExecutableTemp() {
         candidates.Append(str::FormatTemp("%s\\.codex\\bin\\codex.exe", userProfile));
         candidates.Append(str::FormatTemp("%s\\.local\\bin\\codex.exe", userProfile));
     }
-    return AIChatFindExecutableTemp(candidates, L"codex.exe", L"codex");
+    return AIChatFindExecutableTemp(candidates, WStr(L"codex.exe"), WStr(L"codex"));
 }
 
 bool IsCodexBuildInstalled() {

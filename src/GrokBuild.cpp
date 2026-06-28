@@ -38,7 +38,7 @@ static TempStr FindGrokExecutableTemp() {
         candidates.Append(str::FormatTemp("%s\\.grok\\bin\\grok.exe", userProfile));
         candidates.Append(str::FormatTemp("%s\\.local\\bin\\grok.exe", userProfile));
     }
-    return AIChatFindExecutableTemp(candidates, L"grok.exe", L"grok");
+    return AIChatFindExecutableTemp(candidates, WStr(L"grok.exe"), WStr(L"grok"));
 }
 
 bool IsGrokBuildInstalled() {
