@@ -87,7 +87,7 @@ void TextSearch::SetText(WStr text) {
         for (; end < searchText.len && isnoncjkwordchar(searchText.s[end]); end++) {
             ;
         }
-        anchor = wstr::Dup(searchText.s, (size_t)end);
+        anchor = wstr::Dup(WStr(searchText.s, (int)end));
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
@@ -95,7 +95,7 @@ void TextSearch::SetText(WStr text) {
     else if (searchText && (searchText.s[0] == L'-' || searchText.s[0] == L'\'' || searchText.s[0] == L'"')) {
         anchor = {};
     } else if (searchText) {
-        anchor = wstr::Dup(searchText.s, 1);
+        anchor = wstr::Dup(WStr(searchText.s, 1));
     } else {
         anchor = {};
     }

@@ -1898,7 +1898,7 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     Str spacePos = str::FindChar(content, ' ');
     TempStr name;
     if (spacePos) {
-        name = str::DupTemp(content.s, (size_t)(spacePos.s - content.s));
+        name = str::DupTemp(Str(content.s, (int)((size_t)(spacePos.s - content.s))));
     } else {
         name = str::DupTemp(content);
     }

@@ -165,7 +165,7 @@ static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {
             }
         } else {
             int end = SkipNonWhitespaceOff(serialized, off);
-            strArray->Append(str::Dup(serialized.s + off, end - off));
+            strArray->Append(str::Dup(Str(serialized.s + off, end - off)));
             off = end;
         }
     }

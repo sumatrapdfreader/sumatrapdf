@@ -317,7 +317,7 @@ FileArgs* ParseFileArgs(Str path) {
     FileArgs* res = new FileArgs();
     res->origPath = str::Dup(path);
     int n = (int)(hashPos.s - path.s);
-    res->cleanPath = str::Dup(path, (size_t)n);
+    res->cleanPath = str::Dup(Str(path.s, (int)n));
     ParseAdobeFlags(*res, Str(hashPos.s + 1, path.len - off - 1));
     return res;
 }

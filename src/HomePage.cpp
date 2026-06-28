@@ -607,7 +607,7 @@ static TempStr TrimGitTemp(Str s) {
     if (gitCommidId && str::EndsWith(s, gitCommidId)) {
         auto sLen = str::Len(s);
         auto gitLen = str::Len(gitCommidId);
-        return str::DupTemp(s, sLen - gitLen - 7);
+        return str::DupTemp(Str(s.s, (int)(sLen - gitLen - 7)));
     }
     return s;
 }

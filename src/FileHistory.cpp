@@ -374,7 +374,7 @@ bool DocumentPathExists(Str path) {
     // remove information needed for pointing at embedded documents
     // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
     // container document exists
-    TempStr realPath = str::DupTemp(path.s, (int)(pos.s - path.s));
+    TempStr realPath = str::DupTemp(Str(path.s, (int)(pos.s - path.s)));
     return file::Exists(realPath);
 }
 

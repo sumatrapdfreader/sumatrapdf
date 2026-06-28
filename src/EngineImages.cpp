@@ -1769,7 +1769,7 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
     }
     Str pos = str::Find(fileName, ext);
     size_t n = pos ? (size_t)(pos.s - fileName.s) : fileName.len;
-    return str::DupTemp(fileName, n);
+    return str::DupTemp(Str(fileName.s, (int)n));
 }
 
 int EngineImageDir::GetPageByLabel(Str label) const {

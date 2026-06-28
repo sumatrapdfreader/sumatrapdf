@@ -75,7 +75,7 @@ TempStr GetExtTemp(Str path) {
     if (ext < 0) {
         return StrL("");
     }
-    return str::DupTemp(path.s + ext, path.len - ext);
+    return str::DupTemp(Str(path.s + ext, path.len - ext));
 }
 
 TempStr GetPathNoExtTemp(Str path) {
@@ -83,7 +83,7 @@ TempStr GetPathNoExtTemp(Str path) {
     if (ext < 0) {
         return str::DupTemp(path);
     }
-    return str::DupTemp(path.s, ext);
+    return str::DupTemp(Str(path.s, ext));
 }
 
 TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
@@ -153,18 +153,18 @@ TempWStr GetDirTemp(WStr path) {
     }
     if (baseName.s == path.s + 1) {
         // relative root
-        return str::DupTemp(path.s, 1);
+        return str::DupTemp(WStr(path.s, 1));
     }
     if (baseName.s == path.s + 3 && path.s[1] == ':') {
         // local drive root
-        return str::DupTemp(path.s, 3);
+        return str::DupTemp(WStr(path.s, 3));
     }
     if (baseName.s == path.s + 2 && wstr::StartsWith(path, L"\\\\")) {
         // server root
         return str::DupTemp(path);
     }
     // any subdirectory
-    return str::DupTemp(path.s, baseName.s - path.s - 1);
+    return str::DupTemp(WStr(path.s, (int)(baseName.s - path.s - 1)));
 }
 
 TempStr GetDirTemp(Str path) {
@@ -175,18 +175,18 @@ TempStr GetDirTemp(Str path) {
     }
     if (baseName.s == path.s + 1) {
         // relative root
-        return str::DupTemp(path.s, 1);
+        return str::DupTemp(Str(path.s, 1));
     }
     if (baseName.s == path.s + 3 && path.s[1] == ':') {
         // local drive root
-        return str::DupTemp(path.s, 3);
+        return str::DupTemp(Str(path.s, 3));
     }
     if (baseName.s == path.s + 2 && str::StartsWith(path, "\\\\")) {
         // server root
         return str::DupTemp(path);
     }
     // any subdirectory
-    return str::DupTemp(path.s, baseName.s - path.s - 1);
+    return str::DupTemp(Str(path.s, (int)(baseName.s - path.s - 1)));
 }
 
 TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
@@ -567,7 +567,7 @@ TempStr WindowsToWslMountTemp(Str path) {
         return {};
     }
 
-    TempStr rest = str::DupTemp(path.s + 3, path.len - 3);
+    TempStr rest = str::DupTemp(Str(path.s + 3, path.len - 3));
     str::TransCharsInPlace(rest, "\\", "/");
     return str::FormatTemp("/mnt/%c/%s", drive, rest.s);
 }

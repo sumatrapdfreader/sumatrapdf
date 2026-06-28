@@ -55,12 +55,12 @@ static WStr WrapTempWStr(WCHAR* s, size_t cch = (size_t)-1) { // str-port: owned
 }
 
 namespace str {
-TempStr DupTemp(Str s, size_t cb) {
-    return Dup(GetTempArena(), s, cb);
+TempStr DupTemp(Str s) {
+    return Dup(GetTempArena(), s);
 }
 
-TempWStr DupTemp(WStr s, size_t cch) {
-    return WrapTempWStr(wstr::Dup(GetTempArena(), s.s, cch), cch);
+TempWStr DupTemp(WStr s) {
+    return wstr::Dup(GetTempArena(), s);
 }
 
 TempStr JoinTemp(Str s1, Str s2, Str s3) {
@@ -136,7 +136,7 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
         return s;
     }
     if (!memeq(pos.s, toReplace.s, n)) {
-        toReplace = str::DupTemp(pos, n);
+        toReplace = str::DupTemp(Str(pos.s, n));
     }
     TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);
     return res;

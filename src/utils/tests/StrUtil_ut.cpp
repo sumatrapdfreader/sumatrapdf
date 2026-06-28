@@ -278,7 +278,7 @@ void StrTest() {
     str = str::Dup(buf);
     utassert(str::Eq(str, buf));
     str::Free(str);
-    str = str::Dup(buf, 4);
+    str = str::Dup(Str(buf, 4));
     utassert(str::Eq(str, "a st"));
     str::Free(str);
     str = str::FormatTemp("%s", buf);

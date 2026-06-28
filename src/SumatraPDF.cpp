@@ -6798,7 +6798,7 @@ static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
         fragment = {};
     }
 
-    TempStr htmlFile = str::DupTemp(pathStart, pathLen);
+    TempStr htmlFile = str::DupTemp(Str(pathStart.s, pathLen));
     if (!str::EndsWithI(htmlFile, ".html")) {
         htmlFile = str::JoinTemp(htmlFile, ".html");
     }
@@ -9531,7 +9531,7 @@ static bool ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
     }
 
     int chunkLen = end - start;
-    TempStr chunk = str::DupTemp(tab->readAloudText.s + start, (size_t)chunkLen);
+    TempStr chunk = str::DupTemp(Str(tab->readAloudText.s + start, (int)((size_t)chunkLen)));
     logf("ReadAloud: SpeakChunk: %d..%d of %d (mapBase=%d)\n", start, end, textLen, tab->readAloudHighlightBase);
 
     if (!TtsSpeakUtf8(chunk)) {

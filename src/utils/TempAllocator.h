@@ -20,8 +20,8 @@ FORCEINLINE T* AllocArrayTemp(size_t n) {
 }
 
 namespace str {
-TempStr DupTemp(Str s, size_t cb = (size_t)-1);
-TempWStr DupTemp(WStr s, size_t cch = (size_t)-1);
+TempStr DupTemp(Str s);
+TempWStr DupTemp(WStr s);
 
 TempStr JoinTemp(Str s1, Str s2, Str s3 = {});
 TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4);

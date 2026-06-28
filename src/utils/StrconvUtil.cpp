@@ -158,7 +158,7 @@ TempStr UnknownToUtf8Temp(Str s) {
         // convert from utf16 big endian to utf16
         int bomOff = 2;
         int n = (s.len - bomOff) / 2;
-        TempWStr tmpW = str::DupTemp(WStr((wchar_t*)(s.s + bomOff), n), n + 1); // str-port: byte slice UTF-16 BE
+        TempWStr tmpW = str::DupTemp(WStr((wchar_t*)(s.s + bomOff), n)); // str-port: byte slice UTF-16 BE
         u8* bytes = (u8*)tmpW.s;
         for (int i = 0; i < n; i++) {
             int idx = i * (int)sizeof(WCHAR);

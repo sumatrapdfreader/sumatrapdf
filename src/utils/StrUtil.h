@@ -81,8 +81,8 @@ void Free(Str s);
 void Free(const char*) = delete;
 void FreePtr(Str* s);
 
-Str Dup(Arena*, Str str, size_t cch = (size_t)-1);
-Str Dup(Str s, size_t cch = (size_t)-1);
+Str Dup(Arena*, Str str);
+Str Dup(Str s);
 Str Dup(const ByteSlice&);
 
 void ReplacePtr(Str* s, Str snew);
@@ -187,8 +187,8 @@ void Free(WStr s);
 void Free(const wchar_t*) = delete;
 void FreePtr(WStr* s);
 
-WStr Dup(Arena*, WStr str, size_t cch = (size_t)-1);
-WStr Dup(WStr s, size_t cch = (size_t)-1);
+WStr Dup(Arena*, WStr str);
+WStr Dup(WStr s);
 WStr Join(WStr, WStr, WStr s3 = {});
 WStr Join(Arena*, WStr, WStr, WStr s3);
 bool Eq(WStr s1, WStr s2);

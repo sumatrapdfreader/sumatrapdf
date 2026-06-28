@@ -53,7 +53,7 @@ static Str ChmMimeFromPath(Str path, const ByteSlice& data) {
     Str ext = str::FindCharLast(path, '.');
     if (ext && str::FindChar(ext, ';')) {
         Str semi = str::FindChar(ext, ';');
-        TempStr trimmed = str::DupTemp(path.s, (int)(semi.s - path.s));
+        TempStr trimmed = str::DupTemp(Str(path.s, (int)(semi.s - path.s)));
         return ChmMimeFromPath(trimmed, data);
     }
 

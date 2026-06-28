@@ -1806,7 +1806,7 @@ static IPageDestination* newRemoteHtmlDest(Str relativeURL) {
     auto* res = new PageDestination();
     Str hash = str::FindChar(relativeURL, '#');
     if (hash) {
-        res->value = str::Dup(relativeURL, (size_t)(hash.s - relativeURL.s));
+        res->value = str::Dup(Str(relativeURL.s, (int)(hash.s - relativeURL.s)));
         res->name = str::Dup(hash);
     } else {
         res->value = str::Dup(relativeURL);

@@ -460,7 +460,7 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, StrBuilder
             off++;
         }
         if (off > lineStart) {
-            TempStr line = str::DupTemp(output.s + lineStart, off - lineStart);
+            TempStr line = str::DupTemp(Str(output.s + lineStart, off - lineStart));
             switch (backend) {
                 case AIChatBackend::Grok:
                     AppendGrokTranslationText(line, translationOut);

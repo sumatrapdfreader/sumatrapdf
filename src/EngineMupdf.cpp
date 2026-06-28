@@ -3258,7 +3258,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
     auto tp = pdf_annot_type(ctx, annot);
     Str contents = pdf_annot_contents(ctx, annot); // don't free
     if (contents.len > 128) {
-        contents = str::DupTemp(contents.s, 128);
+        contents = str::DupTemp(Str(contents.s, 128));
     }
     bool isContentsEmpty = !contents;
     Str label = pdf_annot_field_label(ctx, annot); // don't free
@@ -4256,7 +4256,7 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
                 n = bufSize - 1;
                 buf[bufSize - 1] = 0; // not sure if necessary
             }
-            return str::DupTemp(buf, (size_t)n - 1);
+            return str::DupTemp(Str(buf, (int)((size_t)n - 1)));
         }
     }
     if (!pdfdoc) {
@@ -4357,7 +4357,7 @@ static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
         n = (int)dimof(buf) - 1;
         buf[n] = 0;
     }
-    return str::DupTemp(buf, (size_t)n - 1);
+    return str::DupTemp(Str(buf, (int)((size_t)n - 1)));
 }
 
 static void AppendSigDictText(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, Str label, pdf_obj* key) {

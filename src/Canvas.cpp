@@ -3400,7 +3400,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     // avoid overwriting: if file exists, add a numeric suffix
     if (file::Exists(destPath)) {
         TempStr ext = path::GetExtTemp(destPath);
-        TempStr base = str::DupTemp(fileName, str::Leni(fileName) - str::Leni(ext));
+        TempStr base = str::DupTemp(Str(fileName.s, (int)(str::Leni(fileName) - str::Leni(ext))));
         for (int i = 1; i < 1000; i++) {
             TempStr newName = str::FormatTemp("%s_%d%s", base.s, i, ext.s);
             destPath = path::JoinTemp(downloadsDir.s, newName.s);

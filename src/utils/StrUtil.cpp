@@ -269,21 +269,16 @@ static Str WrapAllocated(char* s, size_t cch = (size_t)-1) { // str-port: owned 
     return Str(s, (int)cch);
 }
 
-Str Dup(Arena* a, Str s, size_t cch) {
-    if (str::IsNull(s)) {
+Str Dup(Arena* a, Str s) {
+    if (str::IsNull(s) || s.len < 0) {
         return {};
     }
-    if (cch == (size_t)-1) {
-        if (s.len < 0) {
-            return {};
-        }
-        cch = (size_t)s.len;
-    }
+    size_t cch = (size_t)s.len;
     return WrapAllocated((char*)MemDup(a, s.s, cch * sizeof(char), sizeof(char)), cch); // str-port: owned heap
 }
 
-Str Dup(Str s, size_t cch) {
-    return Dup(nullptr, s, cch);
+Str Dup(Str s) {
+    return Dup(nullptr, s);
 }
 
 Str Dup(const ByteSlice& d) {
@@ -303,21 +298,16 @@ static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) { // str-port: own
     return WStr(s, (int)cch);
 }
 
-WStr Dup(Arena* a, WStr s, size_t cch) {
-    if (wstr::IsNull(s)) {
+WStr Dup(Arena* a, WStr s) {
+    if (wstr::IsNull(s) || s.len < 0) {
         return {};
     }
-    if (cch == (size_t)-1) {
-        if (s.len < 0) {
-            return {};
-        }
-        cch = (size_t)s.len;
-    }
+    size_t cch = (size_t)s.len;
     return WrapAllocatedW((WCHAR*)MemDup(a, s.s, cch * sizeof(WCHAR), sizeof(WCHAR)), cch); // str-port: owned heap
 }
 
-WStr Dup(WStr s, size_t cch) {
-    return Dup(nullptr, s, cch);
+WStr Dup(WStr s) {
+    return Dup(nullptr, s);
 }
 
 } // namespace wstr
