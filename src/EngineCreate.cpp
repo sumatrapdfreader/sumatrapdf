@@ -94,11 +94,11 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
         FILETIME now;
         GetSystemTimeAsFileTime(&now);
         file::SetAccessTime(cachePath, now);
-        logf("MaybeCopyCbxToLocalCache: cache hit '%s'\n", cachePath);
+        logf("MaybeCopyCbxToLocalCache: cache hit '%s'\n", cachePath.s);
         return cachePath;
     }
     if (!dir::CreateForFile(cachePath)) {
-        logf("MaybeCopyCbxToLocalCache: dir::CreateForFile('%s') failed\n", cachePath);
+        logf("MaybeCopyCbxToLocalCache: dir::CreateForFile('%s') failed\n", cachePath.s);
         return {};
     }
 
@@ -107,11 +107,11 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
     auto cb = MkFunc1<CbxCopyProgressState, file::CopyProgress*>(OnCbxCopyProgress, &progState);
     bool ok = file::Copy(cachePath, path, false, cb);
     if (!ok) {
-        logf("MaybeCopyCbxToLocalCache: file::Copy('%s' -> '%s') failed\n", path, cachePath);
+        logf("MaybeCopyCbxToLocalCache: file::Copy('%s' -> '%s') failed\n", path.s, cachePath.s);
         file::Delete(cachePath);
         return {};
     }
-    logf("MaybeCopyCbxToLocalCache: copied '%s' -> '%s' in %.2f ms\n", path, cachePath, TimeSinceInMs(timeStart));
+    logf("MaybeCopyCbxToLocalCache: copied '%s' -> '%s' in %.2f ms\n", path.s, cachePath.s, TimeSinceInMs(timeStart));
     return cachePath;
 }
 
@@ -169,7 +169,7 @@ EngineBase* CreateEngineDjVuFromFileDispatch(Str path) {
         if (e) {
             return e;
         }
-        logf("djvudec failed for '%s', falling back to libdjvu\n", path);
+        logf("djvudec failed for '%s', falling back to libdjvu\n", path.s);
         return CreateEngineDjVuFromFile(path);
     }
     EngineBase* e = CreateEngineDjVuFromFile(path);
