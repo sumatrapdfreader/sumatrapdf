@@ -5151,7 +5151,7 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
             fz_close_output(ctx, out);
             unsigned char* data;
             size_t len = fz_buffer_storage(ctx, buf, &data);
-            res = str::DupTemp(Str((const char*)data, len));
+            res = str::DupTemp(AsStr(ByteSlice(data, len)));
         }
     }
     fz_catch(ctx) {
@@ -5177,7 +5177,7 @@ TempStr EngineMupdfGetPdfInfo(Str path) {
         buf = pdfinfo_to_buffer(ctx, path);
         unsigned char* data;
         size_t len = fz_buffer_storage(ctx, buf, &data);
-        res = str::DupTemp(Str((const char*)data, len));
+        res = str::DupTemp(AsStr(ByteSlice(data, len)));
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
