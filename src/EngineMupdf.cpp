@@ -940,8 +940,8 @@ static int LinkifyTrimTrailingPunctOff(int startOff, int endOff, WStr trimChars,
         }
         if (trimCloseParen && L')' == c) {
             WStr span = WStr(pageText.s + startOff, endOff - startOff);
-            WStr openParen = str::FindChar(span, L'(');
-            if (!openParen || openParen.s >= pageText.s + endOff) {
+            int openParenOff = str::FindCharIdx(span, L'(');
+            if (openParenOff < 0) {
                 endOff--;
                 if (!trimRepeat) {
                     break;
@@ -965,9 +965,9 @@ static int LinkifyFindEndOff(int startOff, wchar_t prevChar, WStr pageText) {
     // cut the link at the first quotation mark, if it's also preceded by one
     if (L'"' == prevChar || L'\'' == prevChar) {
         WStr span = WStr(pageText.s + startOff, endOff - startOff);
-        WStr quote = str::FindChar(span, prevChar);
-        if (quote && quote.s < pageText.s + endOff) {
-            endOff = (int)(quote.s - pageText.s);
+        int quoteOff = str::FindCharIdx(span, prevChar);
+        if (quoteOff >= 0) {
+            endOff = startOff + quoteOff;
         }
     }
 

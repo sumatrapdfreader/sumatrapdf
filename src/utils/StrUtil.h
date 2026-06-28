@@ -189,6 +189,7 @@ int BufSet(WCHAR* dst, int dstCchSize, WStr src); // str-port: Win32
 int BufSet(WCHAR* dst, int dstCchSize, Str src);  // str-port: Win32
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
+int FindCharIdx(WStr str, WCHAR c);
 WStr FindChar(WStr str, WCHAR c);
 WStr Find(WStr str, WStr find);
 bool IsWs(WCHAR c);

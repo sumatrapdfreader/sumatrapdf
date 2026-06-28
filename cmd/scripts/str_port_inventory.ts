@@ -1,12 +1,13 @@
 // Scan src/ for remaining char*/const char* (and WCHAR*) API surface to port to Str/WStr.
 // Usage: bun cmd/scripts/str_port_inventory.ts [output-path]
 
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 
 const repoRoot = join(import.meta.dir, "..", "..");
 const srcDir = join(repoRoot, "src");
-const defaultOut = join(repoRoot, "str-port-remaining.txt");
+// Default to gitignored tests/tmp so the audit tool never dirties the repo root.
+const defaultOut = join(repoRoot, "tests", "tmp", "str-port-remaining.txt");
 
 const outPath = process.argv[2] ?? defaultOut;
 
@@ -202,5 +203,6 @@ for (const e of all) {
   lines.push(`  ${e.text}`);
 }
 
+mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, lines.join("\n") + "\n", "utf-8");
 console.log(`Wrote ${all.length} entries (${mustConvert.length} untagged) to ${outPath}`);

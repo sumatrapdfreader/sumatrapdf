@@ -2424,16 +2424,24 @@ bool EndsWithI(WStr txt, WStr end) {
     return EqI(WStr(txt.s + txt.len - end.len, (int)end.len), end);
 }
 
-WStr FindChar(WStr str, WCHAR c) {
+int FindCharIdx(WStr str, WCHAR c) {
     if (!str) {
-        return {};
+        return -1;
     }
     for (int i = 0; i < str.len; i++) {
         if (str.s[i] == c) {
-            return WStr(str.s + i, str.len - i);
+            return i;
         }
     }
-    return {};
+    return -1;
+}
+
+WStr FindChar(WStr str, WCHAR c) {
+    int idx = FindCharIdx(str, c);
+    if (idx < 0) {
+        return {};
+    }
+    return WStr(str.s + idx, str.len - idx);
 }
 
 WStr Find(WStr str, WStr find) {
