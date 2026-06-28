@@ -850,7 +850,7 @@ static void SendClaudeMessage(MainWindow* win) {
 
     bool isNewSession = (tab->claudeSessionId == nullptr);
     if (isNewSession) {
-        str::ReplaceWithCopy(&tab->claudeSessionId, AIChatGenerateSessionId());
+        str::ReplaceWithCopy(&tab->claudeSessionId, AIChatGenerateSessionIdTemp());
     }
 
     Str filePath = tab->filePath;

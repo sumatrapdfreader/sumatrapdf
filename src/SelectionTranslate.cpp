@@ -505,7 +505,7 @@ static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
     }
     TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
     Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? Str("--dangerously-skip-permissions") : Str{};
-    Str sessionId = AIChatGenerateSessionId();
+    TempStr sessionId = AIChatGenerateSessionIdTemp();
     return str::FormatTemp("\"%s\" -p --verbose --output-format stream-json --model %s %s --session-id %s \"%s\"",
                            exePath.s, model.s, permsFlag.s, sessionId.s, escapedPrompt.s);
 }

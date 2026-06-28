@@ -520,14 +520,14 @@ TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, Str prefix, Str docN
     return best;
 }
 
-Str AIChatGenerateSessionId() {
+TempStr AIChatGenerateSessionIdTemp() {
     GUID guid;
     if (FAILED(CoCreateGuid(&guid))) {
         return nullptr;
     }
-    return Str(str::Format("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3,
+    return str::FormatTemp("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3,
                            guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5],
-                           guid.Data4[6], guid.Data4[7]));
+                           guid.Data4[6], guid.Data4[7]);
 }
 
 static AIChatBackend BackendFromTabStorage(int v) {

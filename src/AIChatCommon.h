@@ -69,7 +69,7 @@ bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunch
 
 int AIChatLabelMaxTextDx(HWND labelHwnd, int labelDx);
 TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, Str prefix, Str docName, int maxDx);
-Str AIChatGenerateSessionId();
+TempStr AIChatGenerateSessionIdTemp();
 
 AIChatBackend AIChatGetTabPanelOpen(WindowTab* tab);
 void AIChatSetTabPanelOpen(WindowTab* tab, AIChatBackend backend);
