@@ -1961,22 +1961,22 @@ ByteSlice StrBuilder::StealAsByteSlice() {
 
 bool StrBuilder::Append(const u8* src, size_t size) {
     if ((size_t)-1 == size) {
-        return this->Append(Str((const char*)src));
+        return this->Append(Str((const char*)src)); // str-port: C-string
     }
-    return this->Append(Str((const char*)src, (int)size));
+    return AppendSlice(ByteSlice(src, size));
 }
 
 bool StrBuilder::AppendSlice(const ByteSlice& d) {
     if (d.empty()) {
         return true;
     }
-    return this->Append(Str((const char*)d.data(), (int)d.size()));
+    return this->Append(AsStr(d));
 }
 
 void StrBuilder::AppendFmt(Str fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    Str res = str::FmtV(fmt.s, args);
+    Str res = str::FmtV(fmt, args);
     if (res) {
         Append(res);
         str::Free(res);
