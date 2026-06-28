@@ -197,7 +197,8 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
     fz_var(ldest);
     fz_var(pageNo);
     fz_try(ctx) {
-        ldest = fz_resolve_link_dest(ctx, doc, uri.s);
+        TempStr uriZ = StrDupTemp(uri);
+        ldest = fz_resolve_link_dest(ctx, doc, uriZ.s);
         pageNo = fz_page_number_from_location(ctx, doc, ldest.loc);
     }
     fz_catch(ctx) {
@@ -3802,7 +3803,8 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     auto ctx = e->Ctx();
     fz_var(pageNo);
     fz_try(ctx) {
-        ldest = fz_resolve_link_dest(ctx, e->_doc, uri.s);
+        TempStr uriZ = StrDupTemp(uri);
+        ldest = fz_resolve_link_dest(ctx, e->_doc, uriZ.s);
         pageNo = fz_page_number_from_location(ctx, e->_doc, ldest.loc);
     }
     fz_catch(ctx) {
@@ -4221,7 +4223,8 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
     if (key) {
         char buf[1024]{};
         int bufSize = (int)dimof(buf);
-        int n = fz_lookup_metadata(ctx, _doc, key, buf, bufSize);
+        TempStr keyZ = StrDupTemp(key);
+        int n = fz_lookup_metadata(ctx, _doc, keyZ.s, buf, bufSize);
         if (n > 0) {
             if (n > bufSize) {
                 // can be bigger if output truncated
@@ -4322,7 +4325,8 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
 
 static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     char buf[1024]{};
-    int n = fz_lookup_metadata(ctx, doc, key.s, buf, (int)dimof(buf));
+    TempStr keyZ = StrDupTemp(key);
+    int n = fz_lookup_metadata(ctx, doc, keyZ.s, buf, (int)dimof(buf));
     if (n <= 0) {
         return {};
     }

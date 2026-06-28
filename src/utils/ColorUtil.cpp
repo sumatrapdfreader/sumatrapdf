@@ -86,7 +86,7 @@ TempStr SerializeColorTemp(COLORREF c) {
     return s;
 }
 
-void ParseColor(ParsedColor& parsed, const char* txt) {
+void ParseColor(ParsedColor& parsed, Str txt) {
     if (parsed.wasParsed) {
         return;
     }
@@ -95,21 +95,22 @@ void ParseColor(ParsedColor& parsed, const char* txt) {
     if (!txt) {
         return;
     }
-    char* s = str::DupTemp(txt);
+    TempStr s = StrDupTemp(txt);
     str::TrimWSInPlace(s, str::TrimOpt::Both);
     if (str::EqI(s, "checkered") || str::EqI(s, "unset")) {
         parsed.col = kColorUnset;
         parsed.parsedOk = true;
         return;
     }
-    if (str::StartsWith(s, "0x")) {
-        s += 2;
-    } else if (str::StartsWith(s, "#")) {
-        s += 1;
+    char* p = s.s;
+    if (str::StartsWith(p, "0x")) {
+        p += 2;
+    } else if (str::StartsWith(p, "#")) {
+        p += 1;
     }
-    size_t n = str::Len(s);
+    size_t n = str::Len(p);
     unsigned int r, g, b, a;
-    bool ok = str::Parse(s, n, "%2x%2x%2x%2x", &a, &r, &g, &b);
+    bool ok = str::Parse(p, n, "%2x%2x%2x%2x", &a, &r, &g, &b);
     if (ok) {
         parsed.col = MkColor((u8)r, (u8)g, (u8)b, (u8)a);
         parsed.pdfCol = MkPdfColor((u8)r, (u8)g, (u8)b, (u8)a);
@@ -117,7 +118,7 @@ void ParseColor(ParsedColor& parsed, const char* txt) {
         return;
     }
 
-    ok = str::Parse(s, n, "%2x%2x%2x", &r, &g, &b);
+    ok = str::Parse(p, n, "%2x%2x%2x", &r, &g, &b);
     if (!ok) {
         return;
     }
@@ -127,7 +128,7 @@ void ParseColor(ParsedColor& parsed, const char* txt) {
 }
 
 /* Parse 's' as hex color and return the result in 'destColor' */
-bool ParseColor(COLORREF* destColor, const char* s) {
+bool ParseColor(COLORREF* destColor, Str s) {
     ReportIf(!destColor);
     ParsedColor p;
     ParseColor(p, s);
@@ -141,7 +142,7 @@ void SerializePdfColor(PdfColor c, StrBuilder& out) {
     out.AppendFmt("#%02x%02x%02x", r, g, b);
 }
 
-COLORREF ParseColor(const char* s, COLORREF defCol) {
+COLORREF ParseColor(Str s, COLORREF defCol) {
     COLORREF c;
     if (ParseColor(&c, s)) {
         return c;

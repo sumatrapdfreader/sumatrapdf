@@ -27,9 +27,9 @@ void UnpackColor(COLORREF, u8& r, u8& g, u8& b, u8& a);
 
 bool IsSpecialColor(COLORREF col);
 
-void ParseColor(ParsedColor& parsed, const char* txt);
-bool ParseColor(COLORREF* destColor, const char* s);
-COLORREF ParseColor(const char* s, COLORREF defCol = 0);
+void ParseColor(ParsedColor& parsed, Str txt);
+bool ParseColor(COLORREF* destColor, Str s);
+COLORREF ParseColor(Str s, COLORREF defCol = 0);
 TempStr SerializeColorTemp(COLORREF);
 
 PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a = 0xff); // 0xff is opaque
