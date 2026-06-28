@@ -80,6 +80,10 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
 }
 #endif
 
+void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
+    ParseCmdLine(cmdLine.s, argsOut);
+}
+
 void ParseCmdLine(Str cmdLine, StrVec& argsOut) {
     TempWStr s = ToWStrTemp(cmdLine);
     ParseCmdLine(s, argsOut);
@@ -98,6 +102,14 @@ CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {
     nArgs = args.Size();
 #if defined(REMOVE_FIRST_ARG)
     // first arg is executable name by convention, we skip it
+    curr = 1;
+#endif
+}
+
+CmdLineArgsIter::CmdLineArgsIter(WStr cmdLine) {
+    ParseCmdLine(cmdLine, args);
+    nArgs = args.Size();
+#if defined(REMOVE_FIRST_ARG)
     curr = 1;
 #endif
 }
