@@ -9,26 +9,23 @@ bool GumboTagNameIs(const GumboNode* node, Str name) {
     if (node->type != GUMBO_NODE_ELEMENT) {
         return false;
     }
-    const char* tag;
-    size_t tagLen;
+    Str tag;
     if (node->v.element.tag != GUMBO_TAG_UNKNOWN) {
-        tag = gumbo_normalized_tagname(node->v.element.tag);
-        tagLen = str::Len(tag);
+        tag = Str((char*)gumbo_normalized_tagname(node->v.element.tag));
     } else {
-        const char* s = node->v.element.original_tag.data;
-        const char* sentinel = s + node->v.element.original_tag.length;
-        if (s < sentinel && s[0] == '<') {
-            s++;
+        Str orig = Str((char*)node->v.element.original_tag.data, (int)node->v.element.original_tag.length);
+        int off = 0;
+        if (orig.len > 0 && orig.s[0] == '<') {
+            off = 1;
         }
-        const char* end = s;
-        while (end < sentinel && end[0] != '>' && end[0] != '/' && end[0] != ' ' && end[0] != '\t' && end[0] != '\n' &&
-               end[0] != '\r') {
+        int end = off;
+        while (end < orig.len && orig.s[end] != '>' && orig.s[end] != '/' && orig.s[end] != ' ' &&
+               orig.s[end] != '\t' && orig.s[end] != '\n' && orig.s[end] != '\r') {
             end++;
         }
-        tag = s;
-        tagLen = (size_t)(end - s);
+        tag = Str(orig.s + off, end - off);
     }
-    return str::EqNIx(Str((char*)tag, (int)tagLen), tagLen, name);
+    return str::EqI(tag, name);
 }
 
 const GumboNode* GumboFindChildByTag(const GumboNode* node, Str name) {
@@ -83,7 +80,7 @@ TempStr GumboTextContentTemp(const GumboNode* node) {
     for (unsigned int i = 0; i < children->length; i++) {
         const GumboNode* child = (const GumboNode*)children->data[i];
         if (child->type == GUMBO_NODE_TEXT || child->type == GUMBO_NODE_WHITESPACE || child->type == GUMBO_NODE_CDATA) {
-            sb.Append(child->v.text.text);
+            sb.Append(Str(child->v.text.text));
         }
     }
     if (sb.IsEmpty()) {
