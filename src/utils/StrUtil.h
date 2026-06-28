@@ -247,21 +247,9 @@ WStr CastToWCHAR(Str s);
 namespace url {
 
 void DecodeInPlace(Str url);
-FORCEINLINE void DecodeInPlace(char* url) {
-    DecodeInPlace(Str(url));
-}
 bool IsAbsolute(Str url);
-FORCEINLINE bool IsAbsolute(const char* url) {
-    return IsAbsolute(Str(url));
-}
 TempStr GetFullPathTemp(Str url);
-FORCEINLINE TempStr GetFullPathTemp(const char* url) {
-    return GetFullPathTemp(Str(url));
-}
 TempStr GetFileNameTemp(Str url);
-FORCEINLINE TempStr GetFileNameTemp(const char* url) {
-    return GetFileNameTemp(Str(url));
-}
 
 } // namespace url
 

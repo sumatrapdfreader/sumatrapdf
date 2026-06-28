@@ -54,17 +54,16 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     if (useLinkZoom) {
         region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
     } else {
-        int textLen = 0;
         Rect* coords = nullptr;
-        const WCHAR* text = engine->GetTextForPage(destPage, &textLen, &coords);
+        WStr text = engine->GetTextForPage(destPage, nullptr, &coords);
         Rect* normCoords = coords;
-        if (coords && textLen > 0) {
-            normCoords = AllocArray<Rect>((size_t)textLen);
-            NormalizeGlyphLines(coords, normCoords, textLen);
+        if (coords && text.len > 0) {
+            normCoords = AllocArray<Rect>((size_t)text.len);
+            NormalizeGlyphLines(coords, normCoords, text.len);
         }
-        region = DetectEquationBox(text, normCoords, textLen, mediabox, destX, destY);
+        region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
         if (region.dx <= 0.f || region.dy <= 0.f) {
-            region = DetectEntryBox(text, normCoords, textLen, mediabox, destX, destY);
+            region = DetectEntryBox(text, normCoords, mediabox, destX, destY);
         }
         if (normCoords != coords) {
             free(normCoords);

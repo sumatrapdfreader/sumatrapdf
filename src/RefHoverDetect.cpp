@@ -81,28 +81,25 @@ static SeqStrings gHeadingPrefixWords =
 // word `w`. Returns true on full word match. When requireTrailingDigit is
 // set, also requires optional whitespace then a digit immediately after the
 // word (the "Figure 1.2" trailing-number constraint).
-static bool MatchWordAt(const WCHAR* text, int textLen, int idx, const WCHAR* w, bool requireTrailingDigit) {
-    int n = 0;
-    while (w[n]) {
-        n++;
-    }
-    if (idx + n > textLen) {
+static bool MatchWordAt(WStr text, int idx, WStr w, bool requireTrailingDigit) {
+    int n = w.len;
+    if (idx + n > text.len) {
         return false;
     }
-    if (requireTrailingDigit && idx + n + 1 >= textLen) {
+    if (requireTrailingDigit && idx + n + 1 >= text.len) {
         return false;
     }
     for (int j = 0; j < n; j++) {
-        WCHAR c = FoldCaseW(text[idx + j]);
-        if (c != w[j]) {
+        WCHAR c = FoldCaseW(text.s[idx + j]);
+        if (c != w.s[j]) {
             return false;
         }
     }
     if (!requireTrailingDigit) {
         // require a trailing word boundary so that e.g. "Sections of ..."
         // doesn't match "section" or "Tableaux ..." match "tableau"
-        if (idx + n < textLen) {
-            WCHAR next = text[idx + n];
+        if (idx + n < text.len) {
+            WCHAR next = text.s[idx + n];
             if ((next >= L'a' && next <= L'z') || (next >= L'A' && next <= L'Z')) {
                 return false;
             }
@@ -110,23 +107,23 @@ static bool MatchWordAt(const WCHAR* text, int textLen, int idx, const WCHAR* w,
         return true;
     }
     int k = idx + n;
-    while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
+    while (k < text.len && (text.s[k] == L' ' || text.s[k] == L'\t')) {
         k++;
     }
-    return k < textLen && text[k] >= L'0' && text[k] <= L'9';
+    return k < text.len && text.s[k] >= L'0' && text.s[k] <= L'9';
 }
 
 // True if `text[idx..]` starts a caption label like "Figure 1.2", "Tableau 2".
 // See kCaptionWords for the language list. Requires the previous glyph to be
 // a word boundary and the word to be followed by whitespace and a digit.
-static bool IsCaptionLabelAt(const WCHAR* text, int textLen, int idx) {
-    if (idx > 0 && IsAsciiAlnum(text[idx - 1])) {
+static bool IsCaptionLabelAt(WStr text, int idx) {
+    if (idx > 0 && IsAsciiAlnum(text.s[idx - 1])) {
         return false;
     }
     SeqStrings words = gCaptionWords;
     while (words) {
         TempWStr w = ToWStrTemp(words);
-        if (MatchWordAt(text, textLen, idx, w, /*requireTrailingDigit=*/true)) {
+        if (MatchWordAt(text, idx, w, /*requireTrailingDigit=*/true)) {
             return true;
         }
         SeqStrNext(words);
@@ -164,10 +161,10 @@ static void ClipToMediabox(RectF& box, RectF mediabox) {
 // hijacking the entry-start search. The glyph *baseline* (y + dy) is stable
 // across a line (a digit and a period share it), so cluster by baseline and
 // flatten each line to a uniform top-aligned row — the shape the detectors
-// assume. `out` must have room for textLen rects; aliasing `coords` is not
+// assume. `out` must have room for glyphCount rects; aliasing `coords` is not
 // allowed.
-void NormalizeGlyphLines(const Rect* coords, Rect* out, int textLen) {
-    if (!coords || !out || textLen <= 0) {
+void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
+    if (!coords || !out || glyphCount <= 0) {
         return;
     }
     constexpr int kBaselineTolPt = 4;
@@ -175,9 +172,9 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int textLen) {
     int* lineBaseline = AllocArray<int>(kMaxLines);
     int* lineTop = AllocArray<int>(kMaxLines);
     int* lineBottom = AllocArray<int>(kMaxLines);
-    int* lineId = AllocArray<int>((size_t)textLen);
+    int* lineId = AllocArray<int>((size_t)glyphCount);
     int nLines = 0;
-    for (int i = 0; i < textLen; i++) {
+    for (int i = 0; i < glyphCount; i++) {
         int bl = coords[i].y + coords[i].dy;
         int best = -1;
         int bestDist = kBaselineTolPt + 1;
@@ -211,7 +208,7 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int textLen) {
         }
         lineId[i] = best;
     }
-    for (int i = 0; i < textLen; i++) {
+    for (int i = 0; i < glyphCount; i++) {
         out[i] = coords[i];
         int L = lineId[i];
         out[i].y = lineTop[L];
@@ -232,7 +229,7 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int textLen) {
 // Auto-fit in RefHoverOnTimer + the monitor-based popup height cap keep
 // the popup a sensible size; the user can wheel-zoom in if text is too
 // small.
-RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, const Rect* coords, int textLen) {
+RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Rect* coords) {
     (void)destX;
     float ty = (destY >= 0.f) ? destY - kAnchorTopMarginPt : 0.f;
     if (ty < 0.f) {
@@ -244,14 +241,14 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, 
     // includes the figure body, not just the caption + the paragraph
     // following it.
     bool destAtCaption = false;
-    if (text && coords && textLen > 0 && destY > 0.f) {
+    if (text && coords && text.len > 0 && destY > 0.f) {
         int dY = (int)destY;
-        for (int i = 0; i < textLen; i++) {
+        for (int i = 0; i < text.len; i++) {
             int gy = coords[i].y;
             if (gy < dY - 5 || gy > dY + 15) {
                 continue;
             }
-            if (IsCaptionLabelAt(text, textLen, i)) {
+            if (IsCaptionLabelAt(text, i)) {
                 destAtCaption = true;
                 break;
             }
@@ -286,7 +283,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, 
     // where the figure body has no extractable text at destY — the caller
     // falls to LandscapeBox without ever running the caption-aware
     // DetectEntryBox path.
-    if (text && coords && textLen > 0) {
+    if (text && coords && text.len > 0) {
         // Search to end of page so tall figures with captions far below the
         // initial 200pt cap still match. The topmost (smallest y) "Figure
         // N.M" below the cap wins — PDFs draw text in arbitrary order, so
@@ -296,12 +293,12 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, 
         int searchBot = (int)mediabox.dy;
         int capStartIdx = -1;
         int capBestY = INT_MAX;
-        for (int i = 0; i < textLen; i++) {
+        for (int i = 0; i < text.len; i++) {
             int gy = coords[i].y;
             if (gy < searchTop || gy > searchBot || gy >= capBestY) {
                 continue;
             }
-            if (IsCaptionLabelAt(text, textLen, i)) {
+            if (IsCaptionLabelAt(text, i)) {
                 capStartIdx = i;
                 capBestY = gy;
             }
@@ -316,7 +313,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, 
             // the page. A line reaching within ~30pt of pageRightX is at the
             // column edge (justified body, or a hyphenated caption line).
             int pageRightX = 0;
-            for (int j = 0; j < textLen; j++) {
+            for (int j = 0; j < text.len; j++) {
                 int rx = coords[j].x + coords[j].dx;
                 if (rx > pageRightX) {
                     pageRightX = rx;
@@ -348,7 +345,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, 
                 int lineTopY = INT_MAX;
                 int lineBottomY = -1;
                 int lineRightX = 0;
-                for (int j = 0; j < textLen; j++) {
+                for (int j = 0; j < text.len; j++) {
                     int gy = coords[j].y;
                     if (gy < capTop || gy > capBot) {
                         continue;
@@ -394,12 +391,12 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, 
     // Trim trailing blank margin: find the bottom of the last text glyph
     // inside the candidate region and end the region just below it so the
     // popup doesn't render an empty trailing margin.
-    if (text && coords && textLen > 0) {
+    if (text && coords && text.len > 0) {
         int boxTop = (int)ty;
         int boxBottom = (int)(ty + h);
         int lastTextBottom = boxTop;
-        for (int i = 0; i < textLen; i++) {
-            WCHAR c = text[i];
+        for (int i = 0; i < text.len; i++) {
+            WCHAR c = text.s[i];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                 continue;
             }
@@ -426,10 +423,10 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, 
 // bounding box (full page width, ~one eq line tall) when found, empty rect
 // otherwise. Used to avoid the landscape-style 200pt slice that sweeps in
 // the paragraph and the next equation below an equation cross-reference.
-RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, RectF mediabox, float destX, float destY) {
+RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY) {
     (void)destX;
     RectF empty{};
-    if (destY <= 0.f || !text || textLen <= 0 || !coords) {
+    if (destY <= 0.f || !text || text.len <= 0 || !coords) {
         return empty;
     }
     int dY = (int)destY;
@@ -439,8 +436,8 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
     int bestLabelY = -1;
     int bestLabelDy = 0;
     int bestDist = INT_MAX;
-    for (int i = 0; i < textLen; i++) {
-        if (text[i] != L')') {
+    for (int i = 0; i < text.len; i++) {
+        if (text.s[i] != L')') {
             continue;
         }
         int ly = coords[i].y;
@@ -450,7 +447,7 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
         // Walk backward through digits on the same line.
         int p = i - 1;
         int digits = 0;
-        while (p >= 0 && str::IsDigit(text[p]) && coords[p].y == ly) {
+        while (p >= 0 && str::IsDigit(text.s[p]) && coords[p].y == ly) {
             p--;
             digits++;
         }
@@ -459,11 +456,11 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
         }
         // Optional ".M" form.
         bool hadDot = false;
-        if (p >= 0 && text[p] == L'.' && coords[p].y == ly) {
+        if (p >= 0 && text.s[p] == L'.' && coords[p].y == ly) {
             hadDot = true;
             p--;
             int d2 = 0;
-            while (p >= 0 && str::IsDigit(text[p]) && coords[p].y == ly) {
+            while (p >= 0 && str::IsDigit(text.s[p]) && coords[p].y == ly) {
                 p--;
                 d2++;
             }
@@ -471,7 +468,7 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
                 continue;
             }
         }
-        if (p < 0 || text[p] != L'(' || coords[p].y != ly) {
+        if (p < 0 || text.s[p] != L'(' || coords[p].y != ly) {
             continue;
         }
         // Reject a 4-digit "(YYYY)" — a citation year at the end of a
@@ -487,11 +484,11 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
         // Reject if any non-space glyph on the same line sits further right
         // than the label — equation labels are line-trailing by construction.
         bool hasRightOf = false;
-        for (int j = 0; j < textLen; j++) {
+        for (int j = 0; j < text.len; j++) {
             if (j >= p && j <= i) {
                 continue;
             }
-            if (str::IsWs(text[j])) {
+            if (str::IsWs(text.s[j])) {
                 continue;
             }
             if (coords[j].y != ly) {
@@ -539,8 +536,8 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
 // line. (Tradeoff: a description-list label separated from its body by more
 // than the threshold isn't reached; the bracket-label search in
 // DetectEntryBox recovers the common "[Foo09]" case.)
-static void LineRunExtent(const WCHAR* text, const Rect* coords, int textLen, int anchorIdx, int* leftIdxOut,
-                          int* leftXOut, int* rightXOut) {
+static void LineRunExtent(WStr text, const Rect* coords, int anchorIdx, int* leftIdxOut, int* leftXOut,
+                          int* rightXOut) {
     constexpr int kMaxLineGapPt = 20;
     int sy = coords[anchorIdx].y;
     int leftIdx = anchorIdx;
@@ -549,8 +546,8 @@ static void LineRunExtent(const WCHAR* text, const Rect* coords, int textLen, in
     bool extended = true;
     while (extended) {
         extended = false;
-        for (int i = 0; i < textLen; i++) {
-            WCHAR c = text[i];
+        for (int i = 0; i < text.len; i++) {
+            WCHAR c = text.s[i];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                 continue;
             }
@@ -584,7 +581,7 @@ static void LineRunExtent(const WCHAR* text, const Rect* coords, int textLen, in
 // (TOC, topbar, cross-ref, table caption). The landscape box renders a half-
 // page-tall slice of the page anchored on the destination so the user sees
 // surrounding context (e.g. the table rows under a caption).
-RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF mediabox, float destX, float destY) {
+RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY) {
     // Sparse-text dest page (image-only or near-image-only — e.g. a
     // children's PDF overview with character thumbnails plus a single
     // heading). Fitting to the heading line gives a thin sliver and hides
@@ -592,11 +589,11 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // would navigate to; the auto-fit in RefHoverOnTimer scales the bitmap
     // to popup limits.
     constexpr int kSparsePageTextLen = 50;
-    if (!text || textLen < kSparsePageTextLen || !coords) {
+    if (!text || text.len < kSparsePageTextLen || !coords) {
         return RectF{0.f, 0.f, mediabox.dx, mediabox.dy};
     }
     if (destY < 0.f) {
-        return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+        return LandscapeBox(mediabox, destX, destY, text, coords);
     }
 
     int dY = (int)destY;
@@ -618,8 +615,8 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     int startIdx = -1;
     int bestDistY = INT_MAX;
     int bestX = INT_MAX;
-    for (int i = 0; i < textLen; i++) {
-        WCHAR c = text[i];
+    for (int i = 0; i < text.len; i++) {
+        WCHAR c = text.s[i];
         if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
             continue;
         }
@@ -638,7 +635,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         }
     }
     if (startIdx < 0) {
-        return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+        return LandscapeBox(mediabox, destX, destY, text, coords);
     }
 
     // PDF link destX is unreliable: poorly-authored links carry the source
@@ -655,14 +652,14 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     {
         int leftIdx = startIdx;
         int leftX = coords[startIdx].x;
-        LineRunExtent(text, coords, textLen, startIdx, &leftIdx, &leftX, &lineRunRightX);
+        LineRunExtent(text, coords, startIdx, &leftIdx, &leftX, &lineRunRightX);
         // Only adopt the walked-left line start when startIdx didn't already
         // land on the entry's "[" label. The left walk exists for unreliable
         // PDF-link destX that lands mid-line; when startIdx is already the
         // bracket label, walking left can cross a narrow column gutter into a
         // neighbouring column whose row text reaches close to the gutter,
         // dragging the box into the wrong column.
-        if (text[startIdx] != L'[') {
+        if (text.s[startIdx] != L'[') {
             startIdx = leftIdx;
         }
     }
@@ -674,7 +671,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // line height of destY at a smaller x — that's the bracket label of
     // the entry the link points at. Don't look further left than a hanging
     // indent (in 2-column layouts another column's "[" is much further).
-    if (text[startIdx] != L'[') {
+    if (text.s[startIdx] != L'[') {
         constexpr int kMaxHangingIndentPt = 60;
         int sy = coords[startIdx].y;
         int sDy = coords[startIdx].dy;
@@ -682,8 +679,8 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         int bracketIdx = -1;
         int bracketX = coords[startIdx].x;
         int minBracketX = coords[startIdx].x - kMaxHangingIndentPt;
-        for (int i = 0; i < textLen; i++) {
-            if (text[i] != L'[') {
+        for (int i = 0; i < text.len; i++) {
+            if (text.s[i] != L'[') {
                 continue;
             }
             Rect r = coords[i];
@@ -723,15 +720,15 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // entry but looks like a column gutter to the column scan below; start that
     // scan at the body so the labelsep isn't mistaken for a gutter (which would
     // clip the body to the label width).
-    if (text[startIdx] == L'[') {
+    if (text.s[startIdx] == L'[') {
         int yTol = firstLineDy > 6 ? firstLineDy : 8;
-        for (int i = startIdx + 1; i < textLen; i++) {
+        for (int i = startIdx + 1; i < text.len; i++) {
             if (abs(coords[i].y - firstLineY) > yTol) {
                 continue;
             }
-            if (text[i] == L']') {
-                for (int j = i + 1; j < textLen; j++) {
-                    WCHAR cj = text[j];
+            if (text.s[i] == L']') {
+                for (int j = i + 1; j < text.len; j++) {
+                    WCHAR cj = text.s[j];
                     if (cj == L' ' || cj == L'\t' || cj == L'\n' || cj == L'\r') {
                         continue;
                     }
@@ -764,13 +761,13 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // gutter (which can be < kMaxLabelSepPt) into the next column, blowing the
     // box width into the neighbouring entry.
     constexpr int kMaxLabelWidthPt = 70;
-    if (text[startIdx] == L'[' && (lineRunRightX - firstLineLeftX) < kMaxLabelWidthPt) {
+    if (text.s[startIdx] == L'[' && (lineRunRightX - firstLineLeftX) < kMaxLabelWidthPt) {
         constexpr int kMaxLabelSepPt = 50;
         int bandBot = firstLineY + (firstLineDy > 10 ? firstLineDy : 10);
         int bodyIdx = -1;
         int bodyX = INT_MAX;
-        for (int i = 0; i < textLen; i++) {
-            WCHAR c = text[i];
+        for (int i = 0; i < text.len; i++) {
+            WCHAR c = text.s[i];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                 continue;
             }
@@ -788,7 +785,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         }
         if (bodyIdx >= 0) {
             int bLeftIdx, bLeftX, bRightX;
-            LineRunExtent(text, coords, textLen, bodyIdx, &bLeftIdx, &bLeftX, &bRightX);
+            LineRunExtent(text, coords, bodyIdx, &bLeftIdx, &bLeftX, &bRightX);
             entryBodyLeftX = bLeftX;
             if (bRightX + 40 > columnRightX) {
                 columnRightX = bRightX + 40;
@@ -804,8 +801,8 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     {
         constexpr int kColWidthMax = 250;
         int nextTop = INT_MAX;
-        for (int i = 0; i < textLen; i++) {
-            WCHAR c = text[i];
+        for (int i = 0; i < text.len; i++) {
+            WCHAR c = text.s[i];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                 continue;
             }
@@ -846,9 +843,9 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         int xHi = (int)mediabox.dx;
         if (xHi > xLo + 2) {
             int n = xHi - xLo;
-            char* occ = AllocArray<char>((size_t)n);
-            for (int i = 0; i < textLen; i++) {
-                WCHAR c = text[i];
+            char* occ = AllocArray<char>((size_t)n); // str-port: column occupancy bitmap, not a string
+            for (int i = 0; i < text.len; i++) {
+                WCHAR c = text.s[i];
                 if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                     continue;
                 }
@@ -893,13 +890,13 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // labels and body in non-monotonic order — that made rule (a) terminate
     // on a *later* entry's "[" appearing early in the text array, before our
     // entry's body lines 2+. The y-range approach is order-independent.
-    if (text[startIdx] == L'[') {
+    if (text.s[startIdx] == L'[') {
         int entryYBoundary = (int)mediabox.dy;
-        for (int i = 0; i < textLen; i++) {
+        for (int i = 0; i < text.len; i++) {
             if (i == startIdx) {
                 continue;
             }
-            if (text[i] != L'[') {
+            if (text.s[i] != L'[') {
                 continue;
             }
             Rect r = coords[i];
@@ -957,8 +954,8 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             int blockBottom = prevBottom;
             for (;;) {
                 int nextBottom = -1;
-                for (int i = 0; i < textLen; i++) {
-                    WCHAR c = text[i];
+                for (int i = 0; i < text.len; i++) {
+                    WCHAR c = text.s[i];
                     if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                         continue;
                     }
@@ -986,8 +983,8 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             }
         }
         int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
-        for (int i = 0; i < textLen; i++) {
-            WCHAR c = text[i];
+        for (int i = 0; i < text.len; i++) {
+            WCHAR c = text.s[i];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                 continue;
             }
@@ -1026,7 +1023,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     }
 
     // 2. Scan forward to find the end of the entry.
-    int endIdx = textLen;
+    int endIdx = text.len;
     // Treat a glyph as "still on the current line" if its top y is above the
     // line's current max-bottom (with a small overlap tolerance). This is
     // robust to Word-style extraction quirks where glyphs on the same line
@@ -1050,8 +1047,8 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // entry is a single line.
     bool descListSibling = false;
 
-    for (int i = startIdx + 1; i < textLen; i++) {
-        WCHAR c = text[i];
+    for (int i = startIdx + 1; i < text.len; i++) {
+        WCHAR c = text.s[i];
         if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
             continue;
         }
@@ -1144,7 +1141,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         // firstLineLeftX, so rule (d) would already have ended the entry. This
         // is a last-resort bound: most author-year bib entries fit in 5-6
         // lines, so cap at 6 to avoid bleeding into the following entry.
-        WCHAR entryFirstC = text[startIdx];
+        WCHAR entryFirstC = text.s[startIdx];
         bool markedEntry = (entryFirstC == L'[' || entryFirstC == L'(' || (entryFirstC >= L'0' && entryFirstC <= L'9'));
         if (!markedEntry && isNewLine && indentX < 0) {
             int linesSinceStart = (lineHeight > 0) ? (r.y - firstLineY + lineHeight - 1) / lineHeight : 0;
@@ -1181,7 +1178,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // 3. Compute bounding box of glyphs in [startIdx, endIdx).
     int minX = INT_MAX, minY = INT_MAX, maxX = INT_MIN, maxY = INT_MIN;
     for (int i = startIdx; i < endIdx; i++) {
-        WCHAR c = text[i];
+        WCHAR c = text.s[i];
         if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
             continue;
         }
@@ -1207,14 +1204,14 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         }
     }
     if (minX == INT_MAX) {
-        return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+        return LandscapeBox(mediabox, destX, destY, text, coords);
     }
 
     RectF box{(float)minX - kEntryPadPt, (float)minY - kEntryPadPt, (float)(maxX - minX) + 2.f * kEntryPadPt,
               (float)(maxY - minY) + 2.f * kEntryPadPt};
     ClipToMediabox(box, mediabox);
     if (box.dx < 50.f || box.dy < 20.f) {
-        return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+        return LandscapeBox(mediabox, destX, destY, text, coords);
     }
     // "Figure N.M" / "Table N.M" / "Listing N.M" / "Algorithm N.M" caption
     // anywhere below the detected box: the destination is a figure / table
@@ -1224,28 +1221,28 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // be misclassified as description-list bibliography entries.
     {
         int boxBottomY = (int)(box.y + box.dy);
-        for (int i = 0; i < textLen; i++) {
+        for (int i = 0; i < text.len; i++) {
             if (coords[i].y <= boxBottomY) {
                 continue;
             }
-            if (IsCaptionLabelAt(text, textLen, i)) {
+            if (IsCaptionLabelAt(text, i)) {
                 // Let LandscapeBox handle the caption-extension — it has a
                 // tighter, line-count-capped walk that doesn't sweep into
                 // following body paragraphs.
-                return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+                return LandscapeBox(mediabox, destX, destY, text, coords);
             }
         }
     }
     // Description-list bibliography ("[Smith2020]", "[1]", …) — unambiguous,
     // keep the fitted box.
-    if (text[startIdx] == L'[') {
+    if (text.s[startIdx] == L'[') {
         return box;
     }
     // Tabular layout: continuation X far right of firstLineLeftX is a
     // column gap, not a hanging indent. Detection terminated at the first
     // data row; show the landscape view so the user sees the full table.
     if (indentX > 0 && (indentX - firstLineLeftX) > 80) {
-        return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+        return LandscapeBox(mediabox, destX, destY, text, coords);
     }
     // Section heading or caption-style label. Body paragraph below the
     // heading has first-line indent, so detection captures heading + body
@@ -1253,17 +1250,17 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // Use the entry's first character / first word to disambiguate: real
     // bibliographies rarely start with a digit or with a label word like
     // "Figure"/"Table"/"Section". Catches "6.2 Foo", "Figure 2.2: …", etc.
-    WCHAR firstC = text[startIdx];
+    WCHAR firstC = text.s[startIdx];
     bool digitStart = (firstC >= L'0' && firstC <= L'9');
     bool labelStart = false;
     SeqStrings words = gHeadingPrefixWords;
     while (!labelStart && words) {
         TempWStr w = ToWStrTemp(words);
-        labelStart = MatchWordAt(text, textLen, startIdx, w, /*requireTrailingDigit=*/false);
+        labelStart = MatchWordAt(text, startIdx, w, /*requireTrailingDigit=*/false);
         SeqStrNext(words);
     }
     if (digitStart || labelStart) {
-        return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+        return LandscapeBox(mediabox, destX, destY, text, coords);
     }
     // Code-listing detector: a high density of braces / semicolons / parens
     // within the detected box means the destination is most likely a code
@@ -1274,7 +1271,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         int codeChars = 0;
         int totalChars = 0;
         for (int i = startIdx; i < endIdx; i++) {
-            WCHAR c = text[i];
+            WCHAR c = text.s[i];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                 continue;
             }
@@ -1284,7 +1281,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             }
         }
         if (totalChars > 50 && codeChars * 12 > totalChars) {
-            return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+            return LandscapeBox(mediabox, destX, destY, text, coords);
         }
     }
     // Description-list / glossary / footnote-style entry: rule (a) or (d)
@@ -1297,7 +1294,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // Single-line entry with no continuation indent and no sibling entry
     // detected — caption / heading / in-text cross-ref destination.
     if (box.dy < 30.f && indentX < 0) {
-        return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+        return LandscapeBox(mediabox, destX, destY, text, coords);
     }
     // Default: looks like a multi-line author-year bibliography entry,
     // keep the fitted box.

@@ -1004,7 +1004,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     AttrInfo* attrInfo = tok->GetAttrByNameNS("id", FB2_MAIN_NS());
     if (attrInfo) {
         id.SetCopy(attrInfo->val);
-        url::DecodeInPlace(id);
+        url::DecodeInPlace(Str(id.Get()));
     }
 
     tok = parser->Next();

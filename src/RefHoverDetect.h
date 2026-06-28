@@ -21,20 +21,20 @@
 // this first (grouping by baseline = y+dy). `out` needs textLen rects and must
 // not alias `coords`. Synthetic top-aligned input is left effectively
 // unchanged (each line already has a single top).
-void NormalizeGlyphLines(const Rect* coords, Rect* out, int textLen);
+void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount);
 
 // Landscape view: full page width strip anchored at destY, extending downward
 // to the last text glyph or a recognised caption block. Fallback when no
 // recognisable entry or equation is found.
-RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, const Rect* coords, int textLen);
+RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Rect* coords);
 
 // Equation cross-ref: tight one-line box around a "(N)" or "(N.M)" label
 // sitting at the right column edge near destY. Returns empty rect when no
 // equation label is detected.
-RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, RectF mediabox, float destX, float destY);
+RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY);
 
 // Bibliography / glossary / abbreviation entry box. Tries bracket-style
 // ("[Foo+09]"), hanging-indent author-year, and single-line description-list
 // layouts. Falls back to LandscapeBox when the destination doesn't look like
 // a list entry.
-RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF mediabox, float destX, float destY);
+RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY);

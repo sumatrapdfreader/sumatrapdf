@@ -43,7 +43,7 @@ static void SparseTextReturnsWholePage() {
     Rect coords[64];
     int len = 0;
     AddText(text, coords, len, 64, L"Heading only", 100, 100);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 100.f, 100.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 100.f, 100.f);
     utassert(box.x == 0.f);
     utassert(box.y == 0.f);
     utassert(box.dx == kPageW);
@@ -59,7 +59,7 @@ static void NegativeDestYFallsToLandscape() {
     for (int i = 0; i < 10; i++) {
         AddText(text, coords, len, 512, L"Body text line content here.", 72, 100 + i * 14);
     }
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, -1.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, -1.f);
     utassert(box.x == 0.f);
     utassert(box.y == 0.f);
     utassert(box.dx == kPageW);
@@ -79,7 +79,7 @@ static void BracketEntryFitsToOneEntry() {
     // Entry 2 at y=240, sibling start back at x=72.
     AddText(text, coords, len, 512, L"[Bar11] Doe J., 2011, Another title.", 72, 240);
     AddText(text, coords, len, 512, L"continuation line of the entry.", 92, 255);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // Box should end before entry 2 starts at y=240.
     utassert(box.y + box.dy < 240.f);
@@ -99,7 +99,7 @@ static void AuthorYearEntryFitsToOneEntry() {
     AddText(text, coords, len, 1024, L"Journal of Things, 12(3), 45-67.", 92, 215);
     AddText(text, coords, len, 1024, L"Doe, A. (2011). Another work title.", 72, 240);
     AddText(text, coords, len, 1024, L"Other Journal, 4(2), 89-101.", 92, 255);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // both lines of entry 1, nothing of entry 2
     utassert(box.y <= 200.f && box.y >= 188.f);
@@ -118,7 +118,7 @@ static void SingleLineEntryList() {
     AddText(text, coords, len, 1024, L"JVM Java Virtual Machine. 19, 36", 72, 200);
     AddText(text, coords, len, 1024, L"LLM Large Language Model. 45", 72, 215);
     AddText(text, coords, len, 1024, L"PDF Portable Document Format. 7", 72, 230);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // first entry only: the second line's glyphs (bottom 227) are excluded
     utassert(box.y + box.dy < 227.f);
@@ -133,7 +133,7 @@ static void GapSeparatedEntryList() {
     int len = 0;
     AddText(text, coords, len, 1024, L"First footnote text goes here.", 72, 200);
     AddText(text, coords, len, 1024, L"Second footnote starts here.", 72, 240);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     utassert(box.y + box.dy < 240.f);
     utassert(box.dx < kPageW);
@@ -154,7 +154,7 @@ static void TwoColumnRightEntryStaysInColumn() {
     AddText(text, coords, len, 1024, L"[Foo10] Smith J., 2010, Title.", 320, 200);
     AddText(text, coords, len, 1024, L"continuation of the entry.", 340, 215);
     AddText(text, coords, len, 1024, L"[Bar11] Doe J., 2011, Other.", 320, 240);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 320.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 320.f, 200.f);
     utassert(!IsEmpty(box));
     // Box must stay right of the gutter (not include the left column).
     utassert(box.x > 246.f);
@@ -176,7 +176,7 @@ static void TwoColumnLeftEntryStaysInColumn() {
     for (int i = 0; i < 5; i++) {
         AddText(text, coords, len, 1024, L"right column body text line..", 340, 200 + i * 15);
     }
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // Box must not reach into the right column at x=340.
     utassert(box.x + box.dx < 340.f);
@@ -199,7 +199,7 @@ static void AccentedAllCapsHeadingDetected() {
     for (int i = 0; i < 3; i++) {
         AddText(text, coords, len, 1024, L"mas lineas de texto del cuerpo.", 72, 245 + i * 15);
     }
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // heading destination => landscape view spanning the full page width
     utassert(box.x == 0.f);
@@ -219,7 +219,7 @@ static void EquationLabelDetected() {
     for (int i = 0; i < 3; i++) {
         AddText(text, coords, len, 512, L"Paragraph text below the equation here.", 72, 330 + i * 14);
     }
-    RectF box = DetectEquationBox(text, coords, len, Mediabox(), 72.f, 300.f);
+    RectF box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 72.f, 300.f);
     utassert(!IsEmpty(box));
     utassert(box.x == 0.f);
     utassert(box.dx == kPageW);
@@ -239,7 +239,7 @@ static void BodyTextParenRejected() {
     AddText(text, coords, len, 512, L"some body text on another line.", 72, 280);
     // line-trailing "(14)" at x=80 — left half of the 612-wide page
     AddText(text, coords, len, 512, L"(14)", 80, 300);
-    RectF box = DetectEquationBox(text, coords, len, Mediabox(), 80.f, 300.f);
+    RectF box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 80.f, 300.f);
     utassert(IsEmpty(box));
 }
 
@@ -253,7 +253,7 @@ static void NonTrailingParenRejected() {
     AddText(text, coords, len, 512, L"dH/dt = ...", 200, 300);
     AddText(text, coords, len, 512, L"(14)", 540, 300);
     AddText(text, coords, len, 512, L"trail", 560, 300);
-    RectF box = DetectEquationBox(text, coords, len, Mediabox(), 200.f, 300.f);
+    RectF box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 200.f, 300.f);
     utassert(IsEmpty(box));
 }
 
@@ -267,26 +267,26 @@ static void BibYearParenNotEquationLabel() {
     int len = 0;
     // Reference line ending in "(2013)" at the right column (right half).
     AddText(text, coords, len, 512, L"O. Zimmermann Decisions IGI Global (2013)", 320, 300);
-    RectF box = DetectEquationBox(text, coords, len, Mediabox(), 320.f, 300.f);
+    RectF box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 320.f, 300.f);
     utassert(IsEmpty(box));
     // sanity: a genuine 2-digit equation label is still detected
     len = 0;
     AddText(text, coords, len, 512, L"some eq body", 200, 300);
     AddText(text, coords, len, 512, L"(14)", 540, 300);
-    box = DetectEquationBox(text, coords, len, Mediabox(), 200.f, 300.f);
+    box = DetectEquationBox(WStr(text, len), coords, Mediabox(), 200.f, 300.f);
     utassert(!IsEmpty(box));
 }
 
 // (7) Empty / null inputs: DetectEquationBox returns empty rect, never crashes.
 static void EmptyInputsHandled() {
-    RectF box1 = DetectEquationBox(nullptr, nullptr, 0, Mediabox(), 0.f, 100.f);
+    RectF box1 = DetectEquationBox(WStr{}, nullptr, Mediabox(), 0.f, 100.f);
     utassert(IsEmpty(box1));
     WCHAR text[1] = {0};
     Rect coords[1]{};
-    RectF box2 = DetectEquationBox(text, coords, 0, Mediabox(), 0.f, 100.f);
+    RectF box2 = DetectEquationBox(WStr(text, 0), coords, Mediabox(), 0.f, 100.f);
     utassert(IsEmpty(box2));
     // destY <= 0 short-circuit.
-    RectF box3 = DetectEquationBox(text, coords, 0, Mediabox(), 0.f, -1.f);
+    RectF box3 = DetectEquationBox(WStr(text, 0), coords, Mediabox(), 0.f, -1.f);
     utassert(IsEmpty(box3));
 }
 
@@ -303,7 +303,7 @@ static void FrenchCaptionDetected() {
     for (int i = 0; i < 5; i++) {
         AddText(text, coords, len, 512, L"Paragraphe de texte courant.", 72, 320 + i * 14);
     }
-    RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, text, coords, len);
+    RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, WStr(text, len), coords);
     // destAtCaption pulls region top above destY (figure body extension).
     utassert(box.y < 300.f - 50.f);
     utassert(box.dx == kPageW);
@@ -321,7 +321,7 @@ static void ItalianPortugueseCaptionDetected() {
         for (int i = 0; i < 5; i++) {
             AddText(text, coords, len, 512, L"testo del corpo del documento.", 72, 320 + i * 14);
         }
-        RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, text, coords, len);
+        RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, WStr(text, len), coords);
         // destAtCaption pulls region top above destY (figure body extension)
         utassert(box.y < 300.f - 50.f);
     }
@@ -337,7 +337,7 @@ static void PluralHeadingWordNotMatched() {
     AddText(text, coords, len, 1024, L"Sections of papers, J. Smith.", 72, 200);
     AddText(text, coords, len, 1024, L"continuation line of the entry.", 92, 215);
     AddText(text, coords, len, 1024, L"Another entry begins here now.", 72, 240);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // fitted entry box, not the full-width landscape heading view
     utassert(box.dx < kPageW);
@@ -358,7 +358,7 @@ static void CaptionExtensionPicksTopmost() {
     AddText(text, coords, len, 1024, L" Figure 9: far away caption", 72, 700);
     // ... and a nearer caption drawn later
     AddText(text, coords, len, 1024, L" Figure 2: near caption", 72, 420);
-    RectF box = LandscapeBox(Mediabox(), 72.f, 100.f, text, coords, len);
+    RectF box = LandscapeBox(Mediabox(), 72.f, 100.f, WStr(text, len), coords);
     // region must extend to the near caption only, not down to y=700
     utassert(box.y + box.dy > 420.f);
     utassert(box.y + box.dy < 600.f);
@@ -373,7 +373,7 @@ static void LandscapeBoxBasicShape() {
     for (int i = 0; i < 5; i++) {
         AddText(text, coords, len, 256, L"some body content.", 72, 400 + i * 14);
     }
-    RectF box = LandscapeBox(Mediabox(), 72.f, 400.f, text, coords, len);
+    RectF box = LandscapeBox(Mediabox(), 72.f, 400.f, WStr(text, len), coords);
     utassert(box.x == 0.f);
     utassert(box.dx == kPageW);
     utassert(box.y >= 0.f);
@@ -543,7 +543,7 @@ static void HangingIndentNarrowLabelFullWidth() {
     AddText(text, coords, len, 1024, L"continuation line two of the same entry.", 130, 215);
     AddText(text, coords, len, 1024, L"[Vai20]", 72, 240);
     AddText(text, coords, len, 1024, L"Thomas Vaillant. Log4brains. 2020.", 130, 240);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // box must reach across the body (without the labelsep bridge it would
     // collapse to ~the label width, near x=150)
@@ -572,7 +572,7 @@ static void TwoColumnHangingIndentStaysInColumn() {
     for (int i = 0; i < 4; i++) {
         AddText(text, coords, len, 1024, L"right column body text line..", 340, 200 + i * 15);
     }
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     // box must not reach into the right column at x=340
     utassert(box.x + box.dx < 340.f);
@@ -591,7 +591,7 @@ static void LastEntryTrailingFooterTrimmed() {
     AddText(text, coords, len, 1024, L"continuation of the last entry.", 130, 615);
     // page-number footer far below (73pt gap), centered in the text column
     AddText(text, coords, len, 1024, L"13", 300, 700);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 600.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 600.f);
     utassert(!IsEmpty(box));
     // footer at y=700 must be excluded (box ends just below the 2nd line)
     utassert(box.y + box.dy < 650.f);
@@ -655,7 +655,7 @@ static void VariableGlyphTopsEntryNotHijacked() {
     }
     Rect norm[1024];
     NormalizeGlyphLines(coords, norm, len);
-    RectF box = DetectEntryBox(text, norm, len, Mediabox(), 72.f, 312.f);
+    RectF box = DetectEntryBox(WStr(text, len), norm, Mediabox(), 72.f, 312.f);
     utassert(!IsEmpty(box));
     // entry start, not the previous line (normalized top 305)
     utassert(box.y > 305.f);
@@ -688,7 +688,7 @@ static void TwoColumnNumericLeftEntryNotHijacked() {
     AddText(text, coords, len, 1024, L"[26] Zimmermann Miksovic Decisions", 244, 624);
     AddText(text, coords, len, 1024, L"connecting enterprise architects", 244, 638);
     AddText(text, coords, len, 1024, L"[27] Zimmermann Zdun Combining", 244, 660);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 628.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 628.f);
     utassert(!IsEmpty(box));
     // anchored at the left-column entry, not the higher right-column line
     utassert(box.x <= 72.f + 6.f);
@@ -749,7 +749,7 @@ static void TwoColumnWideSecondLineStaysInColumn() {
     AddText(text, coords, len, 1024, L"http://example.com/a/very/long/url", 72, 214);
     AddText(text, coords, len, 1024, L"[9] Right one.", 300, 200);
     AddText(text, coords, len, 1024, L"right two.", 300, 214);
-    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 200.f);
     utassert(!IsEmpty(box));
     utassert(box.x <= 72.f + 6.f);
     // covers the long 2nd line (well past the short first line's ~x=168)
