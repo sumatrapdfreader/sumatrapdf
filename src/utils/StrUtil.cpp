@@ -19,26 +19,28 @@ static _locale_t GetUtf8FormatLocale() {
 }
 #endif
 
-static int VsnprintfUtf8(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
+static int VsnprintfUtf8(char* buf, size_t bufCchSize, Str fmt, va_list args) {
+    TempStr fmtZ = StrDupTemp(fmt);
 #if defined(_MSC_VER)
     _locale_t loc = GetUtf8FormatLocale();
     if (loc) {
-        return _vsnprintf_l(buf, bufCchSize, fmt, loc, args);
+        return _vsnprintf_l(buf, bufCchSize, fmtZ.s, loc, args);
     }
 #endif
-    return vsnprintf(buf, bufCchSize, fmt, args);
+    return vsnprintf(buf, bufCchSize, fmtZ.s, args);
 }
 
-static int VscprintfUtf8(const char* fmt, va_list args) {
+static int VscprintfUtf8(Str fmt, va_list args) {
+    TempStr fmtZ = StrDupTemp(fmt);
 #if defined(_MSC_VER)
     _locale_t loc = GetUtf8FormatLocale();
     if (loc) {
-        return _vscprintf_l(fmt, loc, args);
+        return _vscprintf_l(fmtZ.s, loc, args);
     }
 #endif
     va_list argsCopy;
     va_copy(argsCopy, args);
-    int res = vsnprintf(nullptr, 0, fmt, argsCopy);
+    int res = vsnprintf(nullptr, 0, fmtZ.s, argsCopy);
     va_end(argsCopy);
     return res;
 }
@@ -713,7 +715,7 @@ int BufFind(Str buf, Str toFind) {
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
 bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args) {
-    int count = VsnprintfUtf8(buf, bufCchSize, fmt.s, args);
+    int count = VsnprintfUtf8(buf, bufCchSize, fmt, args);
     buf[bufCchSize - 1] = 0;
     return (count >= 0) && ((size_t)count < bufCchSize);
 }
@@ -731,14 +733,14 @@ Str FmtVWithArena(Arena* a, Str fmt, va_list args) {
     char message[512]{};
     va_list argsCopy;
     va_copy(argsCopy, args);
-    int count = VsnprintfUtf8(message, dimof(message), fmt.s, argsCopy);
+    int count = VsnprintfUtf8(message, dimof(message), fmt, argsCopy);
     va_end(argsCopy);
     if ((count >= 0) && (count < dimofi(message))) {
         return str::Dup(a, Str(message, count));
     }
 
     va_copy(argsCopy, args);
-    count = VscprintfUtf8(fmt.s, argsCopy);
+    count = VscprintfUtf8(fmt, argsCopy);
     va_end(argsCopy);
     // happened in https://github.com/sumatrapdfreader/sumatrapdf/issues/878
     // when %S string had certain Unicode characters
@@ -753,7 +755,7 @@ Str FmtVWithArena(Arena* a, Str fmt, va_list args) {
     }
 
     va_copy(argsCopy, args);
-    int count2 = VsnprintfUtf8(buf, (size_t)count + 1, fmt.s, argsCopy);
+    int count2 = VsnprintfUtf8(buf, (size_t)count + 1, fmt, argsCopy);
     va_end(argsCopy);
     ReportIf(count2 != count);
     if (count2 < 0) {
