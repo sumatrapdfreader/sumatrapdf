@@ -114,7 +114,7 @@ void FindFirst(MainWindow* win) {
         AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
         str::NormalizeWSInPlace(WStr(selection.Get()));
         if (!str::IsEmpty(selection.Get())) {
-            TempStr s = ToUtf8Temp(selection);
+            TempStr s = ToUtf8Temp(WStr(selection.Get()));
             TempStr current = HwndGetTextTemp(win->hwndFindEdit);
             if (!str::EqI(s, current)) {
                 AbortFinding(win, false);
@@ -263,7 +263,7 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
         return;
     }
 
-    TempStr s = ToUtf8Temp(selection);
+    TempStr s = ToUtf8Temp(WStr(selection.Get()));
     HwndSetText(win->hwndFindEdit, s);
     AbortFinding(win, false); // cancel "find as you type"
     Edit_SetModify(win->hwndFindEdit, FALSE);

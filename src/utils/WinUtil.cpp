@@ -706,7 +706,7 @@ TempStr GetTempDirTemp() {
     }
     // TODO: should handle this
     ReportIf(cch >= dimof(dir));
-    return ToUtf8Temp(dir, cch);
+    return ToUtf8Temp(WStr(dir, (int)cch));
 }
 
 void DisableDataExecution() {
@@ -3432,7 +3432,7 @@ TempStr AtomToStrTemp(ATOM a) {
     if (cch == 0) {
         return {};
     }
-    return ToUtf8Temp(buf, cch);
+    return ToUtf8Temp(WStr(buf, (int)cch));
 }
 
 int MsgBox(HWND hwnd, Str text, Str caption, UINT flags) {

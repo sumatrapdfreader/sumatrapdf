@@ -984,7 +984,7 @@ static int LinkifyMultilineText(LinkRectList* list, WStr pageText, int startOff,
         endOff = LinkifyFindEndOff(nextOff, prevChar, pageText);
         multiline = LinkifyCheckMultiline(pageText, endOff, coords);
 
-        TempStr part = ToUtf8Temp(pageText.s + nextOff, endOff - nextOff);
+        TempStr part = ToUtf8Temp(WStr(pageText.s + nextOff, (int)(endOff - nextOff)));
         uri = str::JoinTemp(uri, part);
         Rect bbox = coords[nextOff].Union(coords[endOff - 1]);
         list->coords.Append(ToFzRect(ToRectF(bbox)));
@@ -1135,7 +1135,7 @@ static LinkRectList* LinkifyText(WStr pageText, Rect* coords) {
             continue;
         }
 
-        TempStr part = ToUtf8Temp(pageText.s + startOff, endOff - startOff);
+        TempStr part = ToUtf8Temp(WStr(pageText.s + startOff, (int)(endOff - startOff)));
         TempStr uri = part;
         if (protocol) {
             TempStr proto = ToUtf8Temp(protocol);

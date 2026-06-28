@@ -64,11 +64,9 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
         if (!s) {
             s = L"<null>";
         }
-        char* s2 = ToUtf8Temp(s, (size_t)len);
-        if (len > 256) {
-            s2[256] = 0;
-        }
-        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, s2);
+        TempStr s2 = ToUtf8Temp(WStr(s, (int)len));
+        Str logStr = s2.len > 256 ? Str(s2.s, 256) : s2;
+        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, logStr.s);
         // ReportIf(status != Ok);
     }
     Gdiplus::RectF bbox;

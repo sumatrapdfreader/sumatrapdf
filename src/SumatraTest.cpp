@@ -536,7 +536,7 @@ Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     const WCHAR* pageTxt = engine->GetTextForPage(pageNo, &textLen, &coords);
     if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= textLen && curStart < curEnd) {
         AutoFreeWStr w(str::Dup(WStr(pageTxt + curStart, (int)(curEnd - curStart))).s);
-        matched = ToUtf8Temp(w);
+        matched = ToUtf8Temp(WStr(w.Get()));
     }
 
     // is the match rect actually within the visible viewport now? (mirrors

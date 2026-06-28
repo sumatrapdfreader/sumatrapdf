@@ -471,7 +471,7 @@ static Str HStringToUtf8Dup(HSTRING hs) {
     if (!s) {
         return {};
     }
-    return str::Dup(ToUtf8Temp(s, (size_t)len));
+    return str::Dup(ToUtf8Temp(WStr(s, (int)len)));
 }
 
 class WinTtsSynthCompletedHandler : public SynthAsyncHandler {
@@ -757,7 +757,7 @@ static bool WinTtsSetVoiceById(Str voiceId) {
         if (id) {
             UINT32 len = 0;
             PCWSTR s = pWindowsGetStringRawBuffer(id, &len);
-            if (s && str::EqI(ToUtf8Temp(s, (size_t)len), voiceId)) {
+            if (s && str::EqI(ToUtf8Temp(WStr(s, (int)len)), voiceId)) {
                 didSet = SUCCEEDED(gWinSynth->put_Voice(vi));
             }
             pWindowsDeleteString(id);

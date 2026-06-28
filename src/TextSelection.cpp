@@ -118,7 +118,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         }
 
         if (lines) {
-            char* s = ToUtf8Temp(text + (c0 - coords), c - c0);
+            char* s = ToUtf8Temp(WStr(text + (c0 - coords), c - c0));
             lines->Append(s);
             continue;
         }

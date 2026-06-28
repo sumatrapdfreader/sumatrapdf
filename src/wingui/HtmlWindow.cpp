@@ -426,7 +426,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     if (!win->htmlWinCb) {
         return INET_E_OBJECT_NOT_FOUND;
     }
-    TempStr urlRestA = ToUtf8Temp(urlRest);
+    TempStr urlRestA = ToUtf8Temp(WStr(urlRest.Get()));
     data = win->htmlWinCb->GetDataForUrl(urlRestA);
     if (data.empty()) {
         return INET_E_DATA_NOT_AVAILABLE;
@@ -956,7 +956,7 @@ class HW_IDownloadManager : public IDownloadManager {
         if (!win || !win->htmlWinCb) {
             return INET_E_OBJECT_NOT_FOUND;
         }
-        TempStr urlRestA = ToUtf8Temp(urlRest);
+        TempStr urlRestA = ToUtf8Temp(WStr(urlRest.Get()));
         auto data = win->htmlWinCb->GetDataForUrl(urlRestA);
         if (data.empty()) {
             return INET_E_DATA_NOT_AVAILABLE;

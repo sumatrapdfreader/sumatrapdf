@@ -349,9 +349,9 @@ bool ChmFile::Load(Str path) {
 TempStr ChmFile::GetPropertyTemp(Str name) const {
     TempStr result;
     if (str::Eq(kPropTitle, name) && title.CStr()) {
-        result = SmartToUtf8Temp(title.CStr(), codepage);
+        result = SmartToUtf8Temp(Str(title.CStr()), codepage);
     } else if (str::Eq(kPropCreatorApp, name) && creator.CStr()) {
-        result = SmartToUtf8Temp(creator.CStr(), codepage);
+        result = SmartToUtf8Temp(Str(creator.CStr()), codepage);
     }
     if (!result) {
         return {};
@@ -673,7 +673,7 @@ static const TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     if (!hasHigh) {
         return s; // pure ASCII -> nothing to remap
     }
-    return SmartToUtf8Temp(bytes.LendData(), cp);
+    return SmartToUtf8Temp(Str(bytes.LendData()), cp);
 }
 
 // Wraps the caller's visitor to repair Latin-1-entity-encoded ToC labels (see

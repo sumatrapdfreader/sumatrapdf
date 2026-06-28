@@ -250,7 +250,7 @@ static TempStr GetWindowTextUtf8Temp(HWND hwnd) {
     }
     AutoFreeWStr ws = AllocArray<WCHAR>(len + 1);
     GetWindowTextW(hwnd, ws, len + 1);
-    return ToUtf8Temp(ws);
+    return ToUtf8Temp(WStr(ws.Get()));
 }
 
 static bool LanguagesAreSameTemp(Str a, Str b) {

@@ -34,14 +34,4 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
 TempStr FormatTemp(const char* fmt, ...);
 } // namespace str
 
-FORCEINLINE TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1) {
-    if (!s) {
-        ReportIf((int)cch > 0);
-        return {};
-    }
-    if (cch == (size_t)-1) {
-        return ToUtf8Temp(WStr(s));
-    }
-    return ToUtf8Temp(WStr((wchar_t*)s, (int)cch));
-}
 TempWStr ToWStrTempFromBuilder(const StrBuilder& s);

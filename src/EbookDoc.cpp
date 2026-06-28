@@ -88,7 +88,7 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
     if (str::StartsWith(s, UTF16_BOM)) {
         s = Str(s.s + 2, s.len - 2);
         WStr ws = str::CastToWCHAR(s);
-        return ToUtf8Temp(ws.s);
+        return ToUtf8Temp(ws);
     }
     if (str::StartsWith(s, UTF16BE_BOM)) {
         // convert from utf16 big endian to utf16
@@ -99,7 +99,7 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
             std::swap(s.s[idx], s.s[idx + 1]);
         }
         WStr ws = str::CastToWCHAR(s);
-        return ToUtf8Temp(ws.s);
+        return ToUtf8Temp(ws);
     }
     uint codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
     if (CP_ACP == codePage && IsValidUtf8(s)) {
@@ -687,7 +687,7 @@ bool EpubDoc::ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 itemSrc.Set(strconv::FromHtmlUtf8(Str(href.Get())));
             }
             TempStr txt = ToUtf8Temp(itemText);
-            TempStr src = ToUtf8Temp(itemSrc);
+            TempStr src = ToUtf8Temp(WStr(itemSrc.Get()));
             visitor->Visit(txt, src, level);
         }
     }
@@ -714,8 +714,8 @@ bool EpubDoc::ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
            (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS()))) {
         if (tok->IsTag() && tok->NameIsNS("navPoint", EPUB_NCX_NS())) {
             if (itemText) {
-                TempStr txt = ToUtf8Temp(itemText);
-                TempStr src = ToUtf8Temp(itemSrc);
+                TempStr txt = ToUtf8Temp(WStr(itemText.Get()));
+                TempStr src = ToUtf8Temp(WStr(itemSrc.Get()));
                 visitor->Visit(txt, src, level);
                 itemText.Reset();
                 itemSrc.Reset();
@@ -1082,7 +1082,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             }
             if (!str::IsEmpty(itemText.Get())) {
                 TempStr url = str::FormatTemp(FB2_TOC_ENTRY_MARK "%d", titleCount);
-                TempStr txt = ToUtf8Temp(itemText);
+                TempStr txt = ToUtf8Temp(WStr(itemText.Get()));
                 visitor->Visit(txt, url, level);
                 itemText.Reset();
             }
@@ -1155,7 +1155,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
         AttrInfo* attr = tok->GetAttrByName("NAME");
         if (attr && attr->val) {
             WStr ws = strconv::FromHtmlUtf8(Str(attr->val));
-            TempStr s = ToUtf8Temp(ws.s);
+            TempStr s = ToUtf8Temp(ws);
             tocEntries.Append(s);
             str::FreePtr(&ws);
             builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size());
@@ -1735,8 +1735,8 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
                 dot = SkipDigits(WStr(dot.s + 1, dot.len - 1));
             }
         }
-        TempStr titleA = ToUtf8Temp(title);
-        TempStr idA = ToUtf8Temp(id);
+        TempStr titleA = ToUtf8Temp(WStr(title.Get()));
+        TempStr idA = ToUtf8Temp(WStr(id.Get()));
         visitor->Visit(titleA, idA, level);
     }
 
