@@ -63,15 +63,15 @@ struct FindBarWnd : Wnd {
 
 // tooltip text for the bar's toolbar buttons
 // append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
-static const char* AppendCmdAccel(const char* base, int cmd) {
-    const char* accel = AppendAccelKeyToMenuStringTemp(nullptr, cmd);
+static TempStr AppendCmdAccel(Str base, int cmd) {
+    TempStr accel = AppendAccelKeyToMenuStringTemp(nullptr, cmd);
     if (!accel) {
         return base;
     }
-    return str::JoinTemp(base, str::FormatTemp(" (%s)", accel + 1)); // +1 skips the leading \t
+    return str::JoinTemp(base, str::FormatTemp(" (%s)", Str(accel.s + 1))); // +1 skips the leading \t
 }
 
-static const char* FindBarButtonTooltip(int cmd) {
+static TempStr FindBarButtonTooltip(int cmd) {
     switch (cmd) {
         case CmdFindPrev:
             return AppendCmdAccel(_TRA("Find Previous"), cmd);
@@ -86,7 +86,7 @@ static const char* FindBarButtonTooltip(int cmd) {
         case kFindBarCloseCmdId:
             return _TRA("Close");
     }
-    return nullptr;
+    return {};
 }
 
 FindBarWnd::~FindBarWnd() {
@@ -268,7 +268,7 @@ LRESULT FindBarWnd::WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
 LRESULT FindBarWnd::OnNotify(int, NMHDR* nmh) {
     if (nmh->code == TTN_GETDISPINFOW) {
         auto di = (NMTTDISPINFOW*)nmh;
-        const char* s = FindBarButtonTooltip((int)nmh->idFrom);
+        TempStr s = FindBarButtonTooltip((int)nmh->idFrom);
         if (s) {
             lstrcpynW(di->szText, ToWStrTemp(s), dimof(di->szText));
             di->lpszText = di->szText;

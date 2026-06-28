@@ -1289,29 +1289,33 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
 
 void HtmlFormatter::HandleText(HtmlToken* t) {
     ReportIf(!t->IsText());
-    HandleText(Str((char*)t->s, (int)t->sLen));
+    HandleText(Str(t->s, (int)t->sLen));
 }
 
 void HtmlFormatter::HandleText(Str s) {
-    const char* curr = s.s;
-    const char* end = s.s + s.len;
+    Str curr = s;
 
     if (preFormatted) {
         // don't collapse whitespace and respect text newlines
-        while (curr < end) {
-            const char* text = curr;
-            currReparseIdx = curr - htmlParser->Start();
-            // skip to the next newline
-            for (; curr < end && *curr != '\n'; curr++) {
-                ;
-            }
-            if (curr < end && curr > text && *(curr - 1) == '\r') {
-                curr--;
-            }
-            EmitTextRun(Str((char*)text, (int)(curr - text)));
-            if ('\n' == *curr || '\r' == *curr) {
-                curr += '\r' == *curr ? 2 : 1;
+        while (curr) {
+            currReparseIdx = (int)(curr.s - htmlParser->Start());
+            Str text = curr;
+            Str nl = str::FindChar(curr, '\n');
+            if (nl) {
+                text = Str(curr.s, (int)(nl.s - curr.s));
+                if (text.len > 0 && text.s[text.len - 1] == '\r') {
+                    text = Str(text.s, text.len - 1);
+                }
+                EmitTextRun(text);
+                int skip = 1;
+                if (nl.s[0] == '\r' && nl.len > 1 && nl.s[1] == '\n') {
+                    skip = 2;
+                }
+                curr = Str(nl.s + skip, curr.s + curr.len - (nl.s + skip));
                 HandleTagBr();
+            } else {
+                EmitTextRun(curr);
+                break;
             }
         }
         return;
@@ -1319,20 +1323,20 @@ void HtmlFormatter::HandleText(Str s) {
 
     // break text into runs i.e. chunks that are either all
     // whitespace or all non-whitespace
-    while (curr < end) {
-        // collapse multiple, consecutive white-spaces into a single space
-        currReparseIdx = curr - htmlParser->Start();
-        bool skipped = SkipWs(curr, end);
-        if (skipped) {
+    while (curr) {
+        currReparseIdx = (int)(curr.s - htmlParser->Start());
+        const char* p = curr.s;
+        const char* e = curr.s + curr.len;
+        if (SkipWs(p, e)) {
             EmitElasticSpace();
         }
 
-        const char* text = curr;
-        currReparseIdx = curr - htmlParser->Start();
-        skipped = SkipNonWs(curr, end);
-        if (skipped) {
-            EmitTextRun(Str((char*)text, (int)(curr - text)));
+        const char* text = p;
+        currReparseIdx = (int)(p - htmlParser->Start());
+        if (SkipNonWs(p, e)) {
+            EmitTextRun(Str(text, (int)(p - text)));
         }
+        curr = Str(p, (int)(e - p));
     }
 }
 
