@@ -602,8 +602,8 @@ WStr Join(WStr s1, WStr s2, WStr s3) {
 }
 
 Str ToLowerInPlace(Str s) {
-    for (char* p = s.s; p && *p; p++) {
-        *p = (char)tolower(*p);
+    for (int i = 0; i < s.len; i++) {
+        s.s[i] = (char)tolower((u8)s.s[i]);
     }
     return s;
 }
@@ -784,12 +784,11 @@ size_t TransCharsInPlace(Str str, Str oldChars, Str newChars) {
         return 0;
     }
     size_t findCount = 0;
-    char* end = str.s + str.len;
-    for (char* c = str.s; c < end; c++) {
-        Str found = str::FindChar(oldChars, *c);
+    for (int i = 0; i < str.len; i++) {
+        Str found = str::FindChar(oldChars, str.s[i]);
         if (found) {
             int idx = (int)(found.s - oldChars.s);
-            *c = newChars.s[idx];
+            str.s[i] = newChars.s[idx];
             findCount++;
         }
     }
@@ -968,17 +967,34 @@ Str MemToHex(const u8* buf, size_t len) {
    binary data pointed by <buf> of max size bufLen.
    Returns false if size of <s> doesn't match bufLen or is not a valid
    hex string. */
+static int HexDigitVal(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    }
+    return -1;
+}
+
 bool HexToMem(Str s, u8* buf, size_t bufLen) {
-    const char* p = s.s;
-    for (; bufLen > 0; bufLen--) {
-        unsigned int c;
-        if (1 != sscanf_s(p, "%02x", &c)) {
+    size_t needed = bufLen * 2;
+    if (s.len < (int)needed) {
+        return false;
+    }
+    for (size_t i = 0; i < bufLen; i++) {
+        int off = (int)(i * 2);
+        int hi = HexDigitVal(s.s[off]);
+        int lo = HexDigitVal(s.s[off + 1]);
+        if (hi < 0 || lo < 0) {
             return false;
         }
-        p += 2;
-        *buf++ = (u8)c;
+        buf[i] = (u8)((hi << 4) | lo);
     }
-    return !p || p >= s.s + s.len || *p == '\0';
+    return s.len == (int)needed || (s.len > (int)needed && s.s[needed] == '\0');
 }
 
 static Str ExtractUntil(const char* pos, char c, const char** endOut) {
