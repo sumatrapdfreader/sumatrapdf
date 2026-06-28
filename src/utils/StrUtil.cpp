@@ -862,33 +862,32 @@ size_t NormalizeNewlinesInPlace(Str s, Str endExclusive) {
     if (!s) {
         return 0;
     }
-    char* start = s.s;
     int endOff = endExclusive.s ? (int)(endExclusive.s - s.s) : s.len;
     int read = 0;
-    while (read < endOff && isNl(start[read])) {
+    while (read < endOff && isNl(s.s[read])) {
         read++;
     }
 
     int dst = 0;
     bool inNewline = false;
     while (read < endOff) {
-        if (isNl(start[read])) {
+        if (isNl(s.s[read])) {
             if (!inNewline) {
-                start[dst++] = '\n';
+                s.s[dst++] = '\n';
             }
             inNewline = true;
             read++;
         } else {
-            start[dst++] = start[read++];
+            s.s[dst++] = s.s[read++];
             inNewline = false;
         }
     }
     if (dst < endOff) {
-        start[dst] = 0;
+        s.s[dst] = 0;
     }
-    while (dst > 0 && start[dst - 1] == '\n') {
+    while (dst > 0 && s.s[dst - 1] == '\n') {
         dst--;
-        start[dst] = 0;
+        s.s[dst] = 0;
     }
     return (size_t)dst;
 }
@@ -1221,43 +1220,24 @@ Str Parse(Str str, Str fmt, ...) {
     return res;
 }
 
-// TODO: could optimize it by making the main Parse() implementation
-// work with explicit length and not rely on zero-termination
 Str Parse(Str str, size_t len, Str fmt, ...) {
-    char buf[128]{};
-    char* s = buf;
-    Str work = str;
-
     if (!str.s || !fmt) {
         return {};
     }
 
-    if (len < dimof(buf)) {
-        memcpy(buf, str.s, len);
-        work = Str(buf, (int)len);
-    } else {
-        Str dup = Dup(Str(str.s, (int)len));
-        s = dup.s;
-        work = dup;
-    }
+    int useLen = (int)std::min(len, (size_t)str.len);
+    Str bounded = Str(str.s, useLen);
 
     va_list args;
     va_start(args, fmt);
-    Str res = ParseV(work, fmt, args);
+    Str res = ParseV(bounded, fmt, args);
     va_end(args);
 
     if (!res) {
-        if (s != buf) {
-            free(s);
-        }
         return {};
     }
-    int off = (int)(res.s - work.s);
-    Str out((char*)(str.s + off), str.len - off);
-    if (s != buf) {
-        free(s);
-    }
-    return out;
+    int off = (int)(res.s - bounded.s);
+    return Str(str.s + off, str.len - off);
 }
 
 bool IsAlNum(char c) {
