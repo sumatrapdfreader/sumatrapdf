@@ -140,9 +140,9 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     }
     info->searchFilterInstalled = IsSearchFilterInstalled();
     info->previewInstalled = IsPreviewInstalled();
-    char* regPathUninst = GetRegPathUninstTemp(kAppName);
-    char* dirLM = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation");
-    char* dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
+    TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
+    TempStr dirLM = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation");
+    TempStr dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
     if (dirLM && dirCU) {
         info->typ = PreviousInstallationType::Both;
         info->allUsers = true;
