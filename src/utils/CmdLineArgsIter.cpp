@@ -48,7 +48,7 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     int nArgs;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
     for (int i = 0; i < nArgs; i++) {
-        char* arg = ToUtf8Temp(argsArr[i]);
+        TempStr arg = ToUtf8Temp(argsArr[i]);
         // ignore empty quoted strings ("")
         if (str::IsEmpty(arg)) {
             continue;
@@ -63,7 +63,7 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
     TempStr exePath = GetSelfExePathTemp();
     for (int i = 0; i < nArgs; i++) {
-        char* arg = ToUtf8Temp(argsArr[i]);
+        TempStr arg = ToUtf8Temp(argsArr[i]);
         // sometimes cmd-line args have exe as first argument, sometimes not
         // to handle both possibilities we filter out first arg if it is path
         // of our executable, case-insensitive because not all filesystems
