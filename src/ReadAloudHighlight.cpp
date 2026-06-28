@@ -247,8 +247,8 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
         if (str::IsEmpty(utf8)) {
             continue;
         }
-        for (const char* p = utf8; *p; p++) {
-            ReadAloudHighlightAppendRaw(raw, *p, loc);
+        for (int i = 0; i < utf8.len; i++) {
+            ReadAloudHighlightAppendRaw(raw, utf8.s[i], loc);
         }
     }
 }
@@ -486,19 +486,18 @@ static void ReadAloudPaintLogOnce(int code, const char* fmt, ...) {
     logf(fmt);
 }
 
-static int ReadAloudWordEndUtf8(const char* text, int pos) {
+static int ReadAloudWordEndUtf8(Str text, int pos) {
     if (!text || pos < 0) {
         return pos;
     }
-    int len = str::Leni(text);
-    if (pos >= len) {
-        return len;
+    if (pos >= text.len) {
+        return text.len;
     }
-    while (pos < len && (IsReadAloudHorizontalSpace(text[pos]) || IsReadAloudLineBreak(text[pos]))) {
+    while (pos < text.len && (IsReadAloudHorizontalSpace(text.s[pos]) || IsReadAloudLineBreak(text.s[pos]))) {
         pos++;
     }
     int end = pos;
-    while (end < len && !IsReadAloudHorizontalSpace(text[end]) && !IsReadAloudLineBreak(text[end])) {
+    while (end < text.len && !IsReadAloudHorizontalSpace(text.s[end]) && !IsReadAloudLineBreak(text.s[end])) {
         end++;
     }
     return end;
@@ -567,7 +566,10 @@ static bool ReadAloudGetCurrentWordAbsRange(WindowTab* tab, int* startAbsOut, in
         return false;
     }
 
-    const char* chunkText = tab->readAloudText.s + tab->readAloudChunkStart;
+    int chunkLen = tab->readAloudChunkEnd > tab->readAloudChunkStart
+                       ? tab->readAloudChunkEnd - tab->readAloudChunkStart
+                       : tab->readAloudText.len - tab->readAloudChunkStart;
+    Str chunkText = Str(tab->readAloudText.s + tab->readAloudChunkStart, chunkLen);
     int wordStartAbs = tab->readAloudHighlightBase + tab->readAloudChunkStart + spokenPos;
     int wordEndAbs =
         tab->readAloudHighlightBase + tab->readAloudChunkStart + ReadAloudWordEndUtf8(chunkText, spokenPos);
