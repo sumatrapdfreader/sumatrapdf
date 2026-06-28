@@ -11,39 +11,33 @@
 
 // TODO: quote '"' etc as per:
 // https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170&redirectedfrom=MSDN
-TempStr QuoteCmdLineArgTemp(char* arg) {
+TempStr QuoteCmdLineArgTemp(Str arg) {
     if (!arg) {
         return {};
     }
-    int n = (int)str::Len(arg);
+    int n = arg.len;
     if (n < 2) {
         return arg;
     }
-    if (*arg == '"' && arg[n - 1] == '"') {
+    if (arg.s[0] == '"' && arg.s[n - 1] == '"') {
         // already quoted, we assume correctly
         return arg;
     }
     bool needsQuote = false;
-    char* s = arg;
-    char c = *s++;
-    while (c) {
+    for (int i = 0; i < n; i++) {
+        char c = arg.s[i];
         if (c == ' ' || c == '"') {
             needsQuote = true;
             break;
         }
-        c = *s++;
     }
     if (!needsQuote) {
         return arg;
     }
     StrBuilder res;
     res.AppendChar('"');
-    s = arg;
-    c = *s++;
-    while (c) {
-        // TODO: quote '"' ?
-        res.AppendChar(c);
-        c = *s++;
+    for (int i = 0; i < n; i++) {
+        res.AppendChar(arg.s[i]);
     }
     res.AppendChar('"');
     return res.StealData();
@@ -149,8 +143,8 @@ Str CmdLineArgsIter::AdditionalParam(int n) const {
     return args.At(curr + n - 1);
 }
 
-char* CmdLineArgsIter::at(int n) const {
-    return args[n];
+Str CmdLineArgsIter::at(int n) const {
+    return args.At(n);
 }
 
 // returns just the params i.e. everything but the first

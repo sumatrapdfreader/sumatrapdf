@@ -98,7 +98,7 @@ bool ParsePageRanges(Str ranges, Vec<PageRange>& result) {
     Split(&rangeList, ranges, ",", true);
     SortNatural(&rangeList);
 
-    for (char* rangeStr : rangeList) {
+    for (Str rangeStr : rangeList) {
         int start, end;
         if (str::Parse(rangeStr, "%d-%d%$", &start, &end) && 0 < start && start <= end) {
             result.Append(PageRange{start, end});
@@ -130,7 +130,7 @@ bool IsBenchPagesInfo(Str s) {
 }
 
 // -view [continuous][singlepage|facing|bookview]
-static void ParseViewMode(DisplayMode* mode, const char* s) {
+static void ParseViewMode(DisplayMode* mode, Str s) {
     *mode = DisplayModeFromString(s, DisplayMode::Automatic);
 }
 
@@ -141,7 +141,7 @@ static const char* zoomValues =
 // -zoom [fitwidth|fitpage|fitcontent|n]
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
-static void ParseZoomValue(float* zoom, const char* txtOrig) {
+static void ParseZoomValue(float* zoom, Str txtOrig) {
     TempStr txtDup = str::DupTemp(txtOrig);
     str::ToLowerInPlace(txtDup);
     int zoomVal = SeqStrIndex(zoomValues, txtDup);
@@ -164,7 +164,7 @@ static void ParseZoomValue(float* zoom, const char* txtOrig) {
     }
     // remove trailing % in place, if exists
     if (str::EndsWith(txtDup, "%")) {
-        txtDup.s[str::Leni(txtDup) - 1] = 0;
+        txtDup.len--;
     }
     str::Parse(txtDup, "%f", zoom);
     // prevent really small zoom and zoom values that are not valid numbers
@@ -175,7 +175,7 @@ static void ParseZoomValue(float* zoom, const char* txtOrig) {
 }
 
 // -scroll x,y
-static void ParseScrollValue(Point* scroll, const char* txt) {
+static void ParseScrollValue(Point* scroll, Str txt) {
     int x, y;
     if (str::Parse(txt, "%d,%d%$", &x, &y)) {
         *scroll = Point(x, y);
@@ -184,23 +184,23 @@ static void ParseScrollValue(Point* scroll, const char* txt) {
 
 // Adobe Reader /t accepts optional driver and port after the printer name; we ignore them.
 static void SkipOptionalAdobePrinterParams(CmdLineArgsIter& args) {
-    const char* driver = args.AdditionalParam(1);
+    Str driver = args.AdditionalParam(1);
     if (!driver || CouldBeArg(driver)) {
         return;
     }
     args.EatParam();
-    const char* port = args.AdditionalParam(1);
+    Str port = args.AdditionalParam(1);
     if (!port || CouldBeArg(port)) {
         return;
     }
     args.EatParam();
 }
 
-static Arg GetArg(const char* s) {
+static Arg GetArg(Str s) {
     if (!CouldBeArg(s)) {
         return Arg::Unknown;
     }
-    const char* arg = s + 1;
+    Str arg(s.s + 1, s.len - 1);
     int idx = SeqStrIndexIS(gArgNames, arg);
     if (idx < 0) {
         return Arg::Unknown;
@@ -214,8 +214,8 @@ static Arg GetArg(const char* s) {
 void ParseAdobeFlags(FileArgs& i, Str s) {
     StrVec parts;
     StrVec parts2;
-    char* name;
-    char* val;
+    Str name;
+    Str val;
     int valN;
 
     // tha args can be separated with `#` or `?` or `:`
@@ -230,7 +230,7 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
         Split(&parts, s, ";", true);
     }
 
-    for (char* part : parts) {
+    for (Str part : parts) {
         parts2.Reset();
         Split(&parts2, part, "=", true);
         if (parts2.Size() != 2) {
@@ -238,10 +238,10 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
         }
         name = parts2[0];
         val = parts2[1];
-        valN = atoi(val);
+        valN = atoi(val.s);
 
         // https://pdfobject.com/pdf/pdf_open_parameters_acro8.pdf
-        if (str::EqI("name", "nameddest")) {
+        if (str::EqI(name, "nameddest")) {
             i.destName = str::Dup(val);
             continue;
         }
@@ -305,21 +305,20 @@ FileArgs::~FileArgs() {
 // args into FileArgs
 // returns nullptr if there are not args
 FileArgs* ParseFileArgs(Str path) {
-    const char* hashPos = str::FindCharLast(path, '?');
+    Str hashPos = str::FindCharLast(path, '?');
     if (!hashPos) {
         return nullptr;
     }
     // don't mutilate long file paths that start with "\\?\"
-    int off = (int)(hashPos - path);
+    int off = (int)(hashPos.s - path.s);
     if (off == 2) {
         return nullptr;
     }
     FileArgs* res = new FileArgs();
     res->origPath = str::Dup(path);
-    TempStr s = str::DupTemp(path);
-    size_t n = hashPos - path;
-    res->cleanPath = str::Dup(s, n);
-    ParseAdobeFlags(*res, hashPos + 1);
+    int n = (int)(hashPos.s - path.s);
+    res->cleanPath = str::Dup(path, (size_t)n);
+    ParseAdobeFlags(*res, Str(hashPos.s + 1, path.len - off - 1));
     return res;
 }
 
@@ -331,16 +330,16 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
 
     // if the first argument is a tool name, skip parsing flags entirely
     if (toolNames && args.curr < args.nArgs) {
-        const char* firstArg = args.at(args.curr);
+        Str firstArg = args.at(args.curr);
         if (firstArg && SeqStrIndexIS(toolNames, firstArg) >= 0) {
             return;
         }
     }
 
-    const char* param = nullptr;
+    Str param = {};
     int paramInt = 0;
 
-    for (const char* argName = args.NextArg(); argName != nullptr; argName = args.NextArg()) {
+    for (Str argName = args.NextArg(); argName; argName = args.NextArg()) {
         // we register SumatraPDF with "%1" "%2" "%3" "%4"
         // for some reason that makes Directory Opus "Open With" provide the file twice
         // and gives "%3" and "%4' on cmd-line.
@@ -375,11 +374,11 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
         if (arg == Arg::PrintSilent) {
             // Adobe Reader: /t <file> <printer> [<driver> [<port>]]
             // also: <file> /t <printer> when the file is given earlier on the cmd-line
-            const char* p1 = args.EatParam();
+            Str p1 = args.EatParam();
             if (!p1) {
                 goto CollectFile;
             }
-            const char* p2 = args.AdditionalParam(1);
+            Str p2 = args.AdditionalParam(1);
             if (p2 && !CouldBeArg(p2)) {
                 if (i.fileNames.Size() == 0 || !str::Eq(i.fileNames.At(i.fileNames.Size() - 1), p1)) {
                     i.fileNames.Append(p1);
@@ -532,12 +531,12 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
         param = args.EatParam();
         // following args require at least one param
         // if no params here, assume this is a file
-        if (nullptr == param) {
+        if (!param) {
             // argName starts with '-' but there are no params after that and it's not
             // one of the args without params, so assume this is a file that starts with '-'
             goto CollectFile;
         }
-        paramInt = atoi(param);
+        paramInt = atoi(param.s);
 
         if (arg == Arg::LogToFile) {
             i.logFile = str::Dup(a, param);
@@ -611,7 +610,7 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
             // <parent HWND> is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            if (args.AdditionalParam(1) && !str::IsDigit(*param)) {
+            if (args.AdditionalParam(1) && !str::IsDigit(param.s[0])) {
                 i.pluginURL = str::Dup(a, param);
                 i.hwndPluginParent = (HWND)(INT_PTR)atol(args.EatParam());
             } else {
@@ -628,7 +627,7 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
             //      -stress-test dir 301-  2x  render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
             i.stressTestPath = str::Dup(a, param);
-            const char* s = args.AdditionalParam(1);
+            Str s = args.AdditionalParam(1);
             if (s && str::FindChar(s, '*')) {
                 i.stressTestFilter = str::Dup(a, args.EatParam());
                 s = args.AdditionalParam(1);
@@ -669,15 +668,15 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
         }
         if (arg == Arg::Bench) {
             i.pathsToBenchmark.Append(param);
-            const char* s = args.AdditionalParam(1);
+            Str s = args.AdditionalParam(1);
             if (s && IsBenchPagesInfo(s)) {
                 s = args.EatParam();
                 i.pathsToBenchmark.Append(s);
             } else {
                 // pathsToBenchmark are always in pairs
                 // i.e. path + page spec
-                // if page spec is missing, we do nullptr
-                i.pathsToBenchmark.Append(nullptr);
+                // if page spec is missing, we do empty Str
+                i.pathsToBenchmark.Append({});
             }
             i.exitImmediately = true;
             continue;
@@ -753,7 +752,7 @@ void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
 
     CollectFile:
         // TODO: resolve .lnk when opening file
-        const char* filePath = argName;
+        Str filePath = argName;
         if (str::EndsWithI(filePath, ".lnk")) {
             filePath = ResolveLnkTemp(argName);
         }

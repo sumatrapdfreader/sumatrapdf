@@ -82,7 +82,7 @@ int TesterMain() {
 
     int i = 2; // skip program name and "/tester"
     while (i < nArgs) {
-        char* arg = argv.at(i);
+        Str arg = argv.at(i);
         if (str::Eq(arg, "-layout")) {
             gLayout = true;
             ++i;

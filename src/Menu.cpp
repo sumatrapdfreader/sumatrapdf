@@ -1254,8 +1254,8 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
                 if (nArgs <= 0) {
                     continue;
                 }
-                char* arg0 = args.at(2 + 0);
-                name = str::DupTemp(path::GetBaseNameTemp(Str(arg0)));
+                Str arg0 = args.at(2 + 0);
+                name = str::DupTemp(path::GetBaseNameTemp(arg0));
                 char* pos = str::FindChar(name, '.');
                 if (pos) {
                     *pos = 0;

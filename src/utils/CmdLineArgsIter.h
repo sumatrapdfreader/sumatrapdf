@@ -5,7 +5,7 @@ bool CouldBeArg(Str s);
 
 void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut);
 void ParseCmdLine(Str cmdLine, StrVec& argsOut);
-TempStr QuoteCmdLineArgTemp(char* arg);
+TempStr QuoteCmdLineArgTemp(Str arg);
 
 struct CmdLineArgsIter {
     StrVec args;
@@ -21,6 +21,6 @@ struct CmdLineArgsIter {
     void RewindParam();
     Str AdditionalParam(int n) const;
 
-    char* at(int) const;
+    Str at(int) const;
     TempStr ParamsTemp();
 };
