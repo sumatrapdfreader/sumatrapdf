@@ -1455,42 +1455,47 @@ void SeqStrNumFinish(StrBuilder* b) {
     b->AppendChar('\0');
 }
 
-void SeqStrNumNext(const char*& s, int* idxInOut) {
-    int idx = *idxInOut;
-    if (!s || !*s || idx < 0) {
-        s = nullptr;
-        *idxInOut = -1;
-        return;
-    }
-    s = SeqStrNumEntryEnd(s);
-    if (!s || !*s) {
-        s = nullptr;
-        return;
-    }
-    idx++;
-    *idxInOut = idx;
+Str SeqStrNumAt(SeqStrNum strs, int off) {
+    return SeqStrAt(strs, off);
 }
 
-void SeqStrNumNext(const char*& s) {
-    int idxDummy = 0;
-    SeqStrNumNext(s, &idxDummy);
+bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut) {
+    if (!strs || off < 0 || !strs[off]) {
+        off = -1;
+        if (idxInOut) {
+            *idxInOut = -1;
+        }
+        return false;
+    }
+    off = (int)(SeqStrNumEntryEnd(strs + off) - strs);
+    if (!strs[off]) {
+        off = -1;
+        return false;
+    }
+    if (idxInOut) {
+        (*idxInOut)++;
+    }
+    return true;
 }
 
 int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
     if (!toFind) {
         return -1;
     }
-    const char* s = strs;
+    int off = 0;
     int idx = 0;
-    while (*s) {
-        if (str::Eq(Str(s), toFind)) {
+    while (strs && strs[off]) {
+        if (str::Eq(SeqStrNumAt(strs, off), toFind)) {
             if (numOut) {
-                SeqStrNumEntryParts(s, &s, numOut);
+                const char* dummy = nullptr;
+                SeqStrNumEntryParts(strs + off, &dummy, numOut);
             }
             return idx;
         }
-        s = SeqStrNumEntryEnd(s);
-        ++idx;
+        if (!SeqStrNumAdvance(strs, off)) {
+            break;
+        }
+        idx++;
     }
     return -1;
 }
@@ -1499,50 +1504,55 @@ int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
     if (!toFind) {
         return -1;
     }
-    const char* s = strs;
+    int off = 0;
     int idx = 0;
-    while (*s) {
-        if (str::EqIS(Str(s), toFind)) {
+    while (strs && strs[off]) {
+        if (str::EqIS(SeqStrNumAt(strs, off), toFind)) {
             if (numOut) {
-                SeqStrNumEntryParts(s, &s, numOut);
+                const char* dummy = nullptr;
+                SeqStrNumEntryParts(strs + off, &dummy, numOut);
             }
             return idx;
         }
-        s = SeqStrNumEntryEnd(s);
-        ++idx;
+        if (!SeqStrNumAdvance(strs, off)) {
+            break;
+        }
+        idx++;
     }
     return -1;
 }
 
 Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
     ReportIf(idx < 0);
-    const char* s = strs;
+    int off = 0;
     while (idx > 0) {
-        s = SeqStrNumEntryEnd(s);
-        if (!s || !*s) {
+        if (!SeqStrNumAdvance(strs, off)) {
             return {};
         }
-        --idx;
+        idx--;
     }
-    if (!s || !*s) {
+    if (!strs || !strs[off]) {
         return {};
     }
     if (numOut) {
-        SeqStrNumEntryParts(s, &s, numOut);
+        const char* dummy = nullptr;
+        SeqStrNumEntryParts(strs + off, &dummy, numOut);
     }
-    return Str(s);
+    return SeqStrNumAt(strs, off);
 }
 
 Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
-    const char* s = strs;
-    while (s && *s) {
+    int off = 0;
+    while (strs && strs[off]) {
         i64 n = 0;
-        const char* str = s;
-        SeqStrNumEntryParts(s, &str, &n);
+        const char* str = nullptr;
+        SeqStrNumEntryParts(strs + off, &str, &n);
         if (n == num) {
             return Str(str);
         }
-        s = SeqStrNumEntryEnd(s);
+        if (!SeqStrNumAdvance(strs, off)) {
+            break;
+        }
     }
     return {};
 }

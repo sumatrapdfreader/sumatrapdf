@@ -68,13 +68,13 @@ static void StrSeqNumTest() {
     utassert(str::Eq(s, "foo"));
     s = SeqStrNumStrByNumber(seq, 0x1234);
     utassert(str::Eq(s, "baz"));
-    utassert(nullptr == SeqStrNumStrByNumber(seq, 99));
+    utassert(!SeqStrNumStrByNumber(seq, 99));
 
-    const char* it = seq;
+    int off = 0;
     int idx = 0;
-    SeqStrNumNext(it, &idx);
+    SeqStrNumAdvance(seq, off, &idx);
     utassert(idx == 1);
-    utassert(str::Eq(it, "bar"));
+    utassert(str::Eq(SeqStrNumAt(seq, off), "bar"));
 }
 
 static void StrSeqTest() {
