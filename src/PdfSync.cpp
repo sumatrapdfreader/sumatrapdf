@@ -158,14 +158,27 @@ int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
 
 // PDFSYNC synchronizer
 
-// move to the next line in a list of zero-terminated lines
-static u8* Advance0Line(u8* line, u8* end) {
-    line += str::Leni(Str((const char*)line));
-    // skip all zeroes until the next non-empty line
-    for (; line < end && !*line; line++) {
-        ;
+static int SyncLineLen(ByteSlice data, int off) {
+    int end = off;
+    int n = (int)data.size();
+    while (end < n && data.data()[end]) {
+        end++;
     }
-    return line < end ? line : nullptr;
+    return end - off;
+}
+
+static Str SyncLineAt(ByteSlice data, int off) {
+    return Str((char*)data.data() + off, SyncLineLen(data, off));
+}
+
+// move to the next line in a list of zero-terminated lines
+static int SyncAdvanceLine(ByteSlice data, int off) {
+    off += SyncLineLen(data, off);
+    int n = (int)data.size();
+    while (off < n && !data.data()[off]) {
+        off++;
+    }
+    return off < n ? off : -1;
 }
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
@@ -179,23 +192,21 @@ int Pdfsync::RebuildIndexIfNeeded() {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
 
-    u8* line = data.Get();
     // convert the file data into a list of zero-terminated strings
-    str::TransCharsInPlace(Str((char*)line), "\r\n", "\0\0");
+    Str blob = Str((char*)data.data(), (int)data.size());
+    str::TransCharsInPlace(blob, "\r\n", "\0\0");
 
     // parse preamble (jobname and version marker)
-    u8* dataEnd = line + data.size();
-
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
-    str::TransCharsInPlace(Str((char*)line), "*/", " \\");
+    str::TransCharsInPlace(blob, "*/", " \\");
     AutoFreeStr jobName;
-    jobName.Set(strconv::AnsiToUtf8((const char*)line).s);
+    jobName.Set(strconv::AnsiToUtf8(SyncLineAt(data, 0)).s);
     jobName.Set(str::Join(Str(jobName), Str(".tex")).s);
     jobName.Set(PrependDir(Str(jobName.Get())).s);
 
-    line = Advance0Line(line, dataEnd);
+    int lineOff = SyncAdvanceLine(data, 0);
     UINT versionNumber = 0;
-    if (!line || !str::Parse(Str((const char*)line), "version %u", &versionNumber) || versionNumber != 1) {
+    if (lineOff < 0 || !str::Parse(SyncLineAt(data, lineOff), "version %u", &versionNumber) || versionNumber != 1) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
 
@@ -222,16 +233,17 @@ int Pdfsync::RebuildIndexIfNeeded() {
     // parse data
     int maxPageNo = engine->PageCount();
     while (true) {
-        line = Advance0Line(line, dataEnd);
-        if (!line) {
+        lineOff = SyncAdvanceLine(data, lineOff);
+        if (lineOff < 0) {
             break;
         }
-        switch (*line) {
+        Str line = SyncLineAt(data, lineOff);
+        switch (line.s[0]) {
             case 'l':
                 psline.file = filestack.Last();
-                if (str::Parse(Str((const char*)line), "l %u %u %u", &psline.record, &psline.line, &psline.column)) {
+                if (str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column)) {
                     lines.Append(psline);
-                } else if (str::Parse(Str((const char*)line), "l %u %u", &psline.record, &psline.line)) {
+                } else if (str::Parse(line, "l %u %u", &psline.record, &psline.line)) {
                     psline.column = 0;
                     lines.Append(psline);
                 }
@@ -239,7 +251,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 break;
 
             case 's':
-                if (str::Parse(Str((const char*)line), "s %u", &page)) {
+                if (str::Parse(line, "s %u", &page)) {
                     sheetIndex.Append(points.size());
                 }
                 // else dbg("Bad 's' line in the pdfsync file");
@@ -251,16 +263,16 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 pspoint.page = page;
                 if (0 == page || page > maxPageNo) {
                     /* ignore point for invalid page number */;
-                } else if (str::Parse(Str((const char*)line), "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
+                } else if (str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
                     points.Append(pspoint);
-                } else if (str::Parse(Str((const char*)line), "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
+                } else if (str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
                     points.Append(pspoint);
                 }
                 // else dbg("Bad 'p' line in the pdfsync file");
                 break;
 
             case '(': {
-                AutoFreeStr filename(strconv::AnsiToUtf8((const char*)(line + 1)));
+                AutoFreeStr filename(strconv::AnsiToUtf8(Str(line.s + 1, line.len - 1)));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 Str fn = Str(filename.Get());
@@ -548,15 +560,14 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (utf8Len == 0) {
         return {};
     }
-    char* utf8Buf = (char*)malloc(utf8Len);
+    AutoFree utf8Buf((char*)malloc(utf8Len)); // str-port: owned heap
     if (!utf8Buf) {
         return {};
     }
-    if (WideCharToMultiByte(CP_UTF8, 0, wBuf.Get(), -1, utf8Buf, utf8Len, NULL, NULL) == 0) {
-        free(utf8Buf);
+    if (WideCharToMultiByte(CP_UTF8, 0, wBuf.Get(), -1, utf8Buf.Get(), utf8Len, NULL, NULL) == 0) {
         return {};
     }
-    return Str(utf8Buf);
+    return Str(utf8Buf.StealData(), utf8Len - 1);
 }
 
 TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
@@ -603,7 +614,7 @@ TempStr DealPlainSync(TempStr pathSync) {
         logf("DealPlainSync: '%s' failed\n", pathSync);
         return {};
     }
-    TempStr srcZ = StrDupTemp(Str((const char*)src.data(), (int)src.size()));
+    TempStr srcZ = StrDupTemp(Str((char*)src.data(), (int)src.size()));
     int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, NULL, 0);
     if (wlen != 0) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
