@@ -405,19 +405,6 @@ FORCEINLINE size_t NormalizeWSInPlace(WCHAR* str) {
     return NormalizeWSInPlace(WStr(str));
 }
 
-// str-port: char*/WCHAR* shims; remove when callers use Str/WStr
-FORCEINLINE int BufSet(char* dst, int dstCchSize, const char* src) {
-    return BufSet(dst, dstCchSize, Str(src));
-}
-FORCEINLINE int BufAppend(char* dst, int dstCchSize, const char* s) {
-    return BufAppend(dst, dstCchSize, Str(s));
-}
-FORCEINLINE int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src) {
-    return BufSet(dst, dstCchSize, WStr(src));
-}
-FORCEINLINE int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
-    return BufSet(dst, dstCchSize, Str(src));
-}
 FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src);
 }
