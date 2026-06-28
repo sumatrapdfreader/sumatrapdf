@@ -167,7 +167,7 @@ static TempStr GetExistingInstallationFilePathTemp(Str name) {
 
 TempStr GetInstallationFilePathTemp(Str installDir, Str name) {
     TempStr res = path::JoinTemp(installDir, name);
-    logf("GetInstallationFilePath(%s) = > %s\n", name, res);
+    logf("GetInstallationFilePath(%s) = > %s\n", name.s, res.s);
     return res;
 }
 
