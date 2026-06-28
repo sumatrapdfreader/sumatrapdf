@@ -659,7 +659,6 @@ using TempWStr = WStr;
 #include "GeomUtil.h"
 #include "Vec.h"
 #include "StrUtil.h"
-#include "TempAllocator.h"
 #include "StrVec.h"
 #include "StrconvUtil.h"
 #include "Scoped.h"

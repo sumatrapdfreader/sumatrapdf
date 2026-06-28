@@ -123,6 +123,13 @@ Arena* GetTempArena();
 void ResetTempArena();
 void DestroyTempArena();
 
+// Arena for allocations that live for the whole lifetime of the program (i.e.
+// never freed until exit). Allocating them here avoids per-allocation frees and
+// lets us track how much such memory we use (logged on exit). Never Reset().
+extern Arena* gLifetimeArena;
+Arena* GetLifetimeArena();
+void DestroyLifetimeArena();
+
 template <typename T>
 inline T* push_array_no_zero_aligned(Arena* arena, u64 count, u64 align) {
     return (T*)arena->Push(sizeof(T) * count, align, false);
@@ -156,6 +163,12 @@ void* MemDup(struct Arena* arena, const void* mem, size_t size, size_t extraByte
 template <typename T>
 inline T* AllocArray(struct Arena* arena, size_t n = 1) {
     return (T*)AllocZero(arena, n * sizeof(T));
+}
+
+// like AllocArray but in the thread-local temp arena (reset each message loop)
+template <typename T>
+inline T* AllocArrayTemp(size_t n = 1) {
+    return AllocArray<T>(GetTempArena(), n);
 }
 
 void* AllocTemp(int size, u64 align = 8);

@@ -84,6 +84,8 @@ void FreePtr(Str* s);
 Str Dup(Arena*, Str str);
 Str Dup(Str s);
 Str Dup(const ByteSlice&);
+TempStr DupTemp(Str s);
+TempWStr DupTemp(WStr s);
 
 void ReplacePtr(Str* s, Str snew);
 
@@ -98,6 +100,10 @@ FORCEINLINE Str Join(Arena* a, Str s1, Str s2, Str s3, Str s4) {
 FORCEINLINE Str Join(Str s1, Str s2, Str s3, Str s4) {
     return Join(nullptr, s1, s2, s3, s4);
 }
+TempStr JoinTemp(Str s1, Str s2, Str s3 = {});
+TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4);
+TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4, Str s5);
+TempWStr JoinTemp(WStr s1, WStr s2, WStr s3 = {});
 
 bool Eq(Str s1, Str s2);
 bool Eq(const ByteSlice& sp1, const ByteSlice& sp2);
@@ -141,6 +147,10 @@ bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);           // str-port: 
 Str FmtVWithArena(Arena* a, Str fmt, va_list args);
 Str FmtV(Str fmt, va_list args);
 Str Format(Str fmt, ...);
+TempStr FormatTemp(Str fmt, ...);
+
+TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);
+TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
 
 size_t TrimWSInPlace(Str s, TrimOpt opt);
 
@@ -403,3 +413,13 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes);
 TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes);
 bool IsTextRtl(WStr s);
 bool IsTextRtl(Str s);
+
+// Temporary, guaranteed zero-terminated copy of s (lives in the temp arena).
+// Use when passing a Str/WStr to a C or win32 API that requires a
+// NUL-terminated string; the name documents that intent at the call site.
+// Returns non-const so it implicitly converts to both char* and const char*
+// (some C/win32 APIs take non-const), avoiding casts at the call site.
+char* CStrTemp(Str s);
+WCHAR* CWStrTemp(WStr s);
+
+TempWStr ToWStrTempFromBuilder(const StrBuilder& s);

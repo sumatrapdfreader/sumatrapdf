@@ -496,6 +496,20 @@ void DestroyTempArena() {
     gTempArena = nullptr;
 }
 
+Arena* gLifetimeArena = nullptr;
+
+Arena* GetLifetimeArena() {
+    if (!gLifetimeArena) {
+        gLifetimeArena = ArenaNew();
+    }
+    return gLifetimeArena;
+}
+
+void DestroyLifetimeArena() {
+    ArenaDelete(gLifetimeArena);
+    gLifetimeArena = nullptr;
+}
+
 void* AllocTemp(int size, u64 align) {
     Arena* arena = GetTempArena();
     return arena->Push((u64)size, align, false);

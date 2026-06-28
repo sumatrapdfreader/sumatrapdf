@@ -26,7 +26,6 @@ function makelzsa_files()
     "StrQueue.*",
     "StrUtil.*",
     "StrVec.*",
-    "TempAllocator.*",
     "WinDynCalls.*",
     "WinUtil.*",
   })
@@ -992,7 +991,6 @@ function utils_files()
     "StrQueue.*",
     "StrUtil.*",
     "StrVec.*",
-    "TempAllocator.*",
     "TgaReader.*",
     "ThreadUtil.*",
     "TrivialHtmlParser.*",
@@ -1436,7 +1434,6 @@ function test_util_files()
     "StrQueue.*",
     "StrUtil.*",
     "StrVec.*",
-    "TempAllocator.*",
     "tests/*",
     "TrivialHtmlParser.*",
     "UtAssert.*",
@@ -1557,7 +1554,6 @@ function pdf_preview2_files()
     "utils/StrFormat.*",
     "utils/StrUtil.*",
     "utils/StrVec.*",
-    "utils/TempAllocator.*",
     "utils/WinDynCalls.*",
     "utils/WinUtil.*",
   })
@@ -1585,7 +1581,6 @@ function search_filter2_files()
     "utils/StrFormat.*",
     "utils/StrUtil.*",
     "utils/StrVec.*",
-    "utils/TempAllocator.*",
     "utils/WinDynCalls.*",
     "utils/WinUtil.*",
   })

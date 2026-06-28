@@ -3349,3 +3349,110 @@ bool IsTextRtl(Str s) {
     TempWStr ws = ToWStrTemp(s);
     return IsTextRtl(ws);
 }
+
+// ---- temp-arena variants of the str:: functions above ----
+
+namespace str {
+TempStr DupTemp(Str s) {
+    return Dup(GetTempArena(), s);
+}
+
+TempWStr DupTemp(WStr s) {
+    return wstr::Dup(GetTempArena(), s);
+}
+
+TempStr JoinTemp(Str s1, Str s2, Str s3) {
+    return Join(GetTempArena(), s1, s2, s3);
+}
+
+TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4) {
+    return Join(GetTempArena(), s1, s2, s3, s4, Str{});
+}
+
+TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4, Str s5) {
+    return Join(GetTempArena(), s1, s2, s3, s4, s5);
+}
+
+TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
+    return wstr::Join(GetTempArena(), s1, s2, s3);
+}
+
+TempStr FormatTemp(Str fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    Str res = FmtVWithArena(GetTempArena(), fmt, args);
+    va_end(args);
+    return res;
+}
+
+TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
+    if (str::IsNull(s) || str::IsEmpty(toReplace) || str::IsNull(replaceWith)) {
+        return {};
+    }
+
+    Str curr = s;
+    Str end = str::Find(curr, toReplace);
+    if (str::IsNull(end)) {
+        // optimization: nothing to replace so do nothing
+        return s;
+    }
+
+    size_t findLen = (size_t)toReplace.len;
+    size_t replLen = (size_t)replaceWith.len;
+    size_t lenDiff = 0;
+    if (replLen > findLen) {
+        lenDiff = replLen - findLen;
+    }
+    // heuristic: allow 6 replacements without reallocating
+    size_t capHint = (size_t)s.len + 1 + (lenDiff * 6);
+    StrBuilder result(capHint);
+    bool ok;
+    while (!str::IsNull(end)) {
+        ok = result.Append(Str(curr.s, (int)(end.s - curr.s)));
+        if (!ok) {
+            return {};
+        }
+        ok = result.Append(Str(replaceWith.s, (int)replLen));
+        if (!ok) {
+            return {};
+        }
+        curr = Str(end.s + findLen, s.len - (int)(end.s + findLen - s.s));
+        end = str::Find(curr, toReplace);
+    }
+    ok = result.Append(curr);
+    if (!ok) {
+        return {};
+    }
+    return result.StealData(GetTempArena());
+}
+
+TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
+    int n = toReplace.len;
+    Str pos = str::FindI(s, toReplace);
+    if (str::IsNull(pos)) {
+        return s;
+    }
+    if (!memeq(pos.s, toReplace.s, n)) {
+        toReplace = str::DupTemp(Str(pos.s, n));
+    }
+    return str::ReplaceTemp(s, toReplace, replaceWith);
+}
+} // namespace str
+
+// Temporary, guaranteed zero-terminated copy, for passing to C / win32 APIs
+// that require a NUL-terminated string.
+char* CStrTemp(Str s) {
+    return str::DupTemp(s).s;
+}
+
+WCHAR* CWStrTemp(WStr s) {
+    return str::DupTemp(s).s;
+}
+
+// handles embedded 0 in the string
+TempWStr ToWStrTempFromBuilder(const StrBuilder& str) {
+    if (str.IsEmpty()) {
+        return {};
+    }
+    return ToWStrTemp(str.CStr());
+}
