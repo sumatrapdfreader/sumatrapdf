@@ -46,7 +46,7 @@ static int ParseDjVuLink(Str link) {
     if (off >= link.len) {
         return -1;
     }
-    return atoi(link.s + off);
+    return ParseInt(Str(link.s + off, link.len - off));
 }
 
 static bool CouldBeURL(Str link) {

@@ -781,11 +781,11 @@ static void UpdateGlobalPrefs(const Flags& i) {
             ReplaceColor(&gGlobalPrefs->fixedPageUI.backgroundColor, param);
         } else if (str::EqI(arg, "-fwdsearch-offset")) {
             param = i.globalPrefArgs.At(++n);
-            gGlobalPrefs->forwardSearch.highlightOffset = atoi(param.s);
+            gGlobalPrefs->forwardSearch.highlightOffset = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-width")) {
             param = i.globalPrefArgs.At(++n);
-            gGlobalPrefs->forwardSearch.highlightWidth = atoi(param.s);
+            gGlobalPrefs->forwardSearch.highlightWidth = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-color")) {
             param = i.globalPrefArgs.At(++n);
@@ -793,7 +793,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-fwdsearch-permanent")) {
             param = i.globalPrefArgs.At(++n);
-            gGlobalPrefs->forwardSearch.highlightPermanent = atoi(param.s);
+            gGlobalPrefs->forwardSearch.highlightPermanent = ParseInt(param);
             gGlobalPrefs->enableTeXEnhancements = true;
         } else if (str::EqI(arg, "-manga-mode")) {
             param = i.globalPrefArgs.At(++n);

@@ -1958,7 +1958,7 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
                 const GumboAttribute* imageAttr = gumbo_get_attribute(&node->v.element.attributes, "Image");
                 const GumboAttribute* bookmarkAttr = gumbo_get_attribute(&node->v.element.attributes, "Bookmark");
                 if (imageAttr && bookmarkAttr) {
-                    cip->AddBookmark(atoi(imageAttr->value), Str(bookmarkAttr->value));
+                    cip->AddBookmark(ParseInt(Str(imageAttr->value)), Str(bookmarkAttr->value));
                 }
             }
             children = &node->v.element.children;
@@ -2004,9 +2004,9 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
     if (json::Type::String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
         propTitle.Set(str::Dup(value).s);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
-        propDate.Set(str::Format("%s/%d", propDate ? propDate.Get() : "", atoi(value.s)).s);
+        propDate.Set(str::Format("%s/%d", propDate ? propDate.Get() : "", ParseInt(value)).s);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
-        propDate.Set(str::Format("%d%s", atoi(value.s), propDate ? propDate.Get() : "").s);
+        propDate.Set(str::Format("%d%s", ParseInt(value), propDate ? propDate.Get() : "").s);
     } else if (json::Type::String == type && str::Eq(path, "/appID")) {
         propCreator.Set(str::Dup(value).s);
     } else if (json::Type::String == type && str::Eq(path, "/lastModified")) {

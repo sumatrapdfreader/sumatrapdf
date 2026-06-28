@@ -15,7 +15,7 @@ bool ByteReader::Unpack(void* strct, size_t size, Str format, size_t off, bool i
     for (int i = 0; i < format.len; i++) {
         char c = format.s[i];
         if (isdigit((u8)c)) {
-            repeat = atoi(format.s + i);
+            repeat = ParseInt(Str(format.s + i, format.len - i));
             for (i++; i < format.len && isdigit((u8)format.s[i]); i++) {
                 ;
             }

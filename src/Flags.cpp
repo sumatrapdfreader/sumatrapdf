@@ -238,7 +238,7 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
         }
         name = parts2[0];
         val = parts2[1];
-        valN = atoi(val.s);
+        valN = ParseInt(val);
 
         // https://pdfobject.com/pdf/pdf_open_parameters_acro8.pdf
         if (str::EqI(name, "nameddest")) {
@@ -536,7 +536,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // one of the args without params, so assume this is a file that starts with '-'
             goto CollectFile;
         }
-        paramInt = atoi(param.s);
+        paramInt = ParseInt(param);
 
         if (arg == Arg::LogToFile) {
             i.logFile = str::Dup(a, param);
@@ -576,7 +576,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             i.forwardSearchOrigin = str::Dup(a, param);
-            i.forwardSearchLine = atoi(args.EatParam().s);
+            i.forwardSearchLine = ParseInt(args.EatParam());
             continue;
         }
         if (arg == Arg::NamedDest || arg == Arg::NamedDest2) {
@@ -612,9 +612,9 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // (used e.g. for embedding it into a browser plugin)
             if (args.AdditionalParam(1) && !str::IsDigit(param.s[0])) {
                 i.pluginURL = str::Dup(a, param);
-                i.hwndPluginParent = (HWND)(INT_PTR)atol(args.EatParam().s);
+                i.hwndPluginParent = (HWND)(INT_PTR)ParseInt64(args.EatParam());
             } else {
-                i.hwndPluginParent = (HWND)(INT_PTR)atol(param.s);
+                i.hwndPluginParent = (HWND)(INT_PTR)ParseInt64(param);
             }
             continue;
         }

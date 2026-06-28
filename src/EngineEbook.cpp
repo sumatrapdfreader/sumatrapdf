@@ -1162,7 +1162,7 @@ bool EngineMobi::FinishLoading() {
 }
 
 IPageDestination* EngineMobi::GetNamedDest(Str name) {
-    int filePos = atoi(name.s);
+    int filePos = ParseInt(name);
     if (filePos < 0 || (0 == filePos && (!name.s || name.s[0] != '0'))) {
         return nullptr;
     }

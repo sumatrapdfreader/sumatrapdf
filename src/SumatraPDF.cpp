@@ -310,7 +310,7 @@ void InitializePolicies(bool restrict) {
     for (int i = 0; i < dimofi(perms); i++) {
         Str name = SeqStrByIndex(permNames, i);
         Str val = polsec->GetValue(name);
-        if (val && atoi(val.s) != 0) {
+        if (val && ParseInt(val) != 0) {
             gPolicyRestrictions = gPolicyRestrictions | perms[i];
         }
     }

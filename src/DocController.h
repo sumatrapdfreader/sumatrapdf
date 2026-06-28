@@ -97,7 +97,7 @@ struct DocController {
     // page labels (optional)
     virtual bool HasPageLabels() const { return false; }
     virtual TempStr GetPageLabeTemp(int pageNo) const { return str::FormatTemp("%d", pageNo); }
-    virtual int GetPageByLabel(Str label) const { return atoi(label.s); }
+    virtual int GetPageByLabel(Str label) const { return ParseInt(label); }
 
     // common shortcuts
     virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= PageCount(); }
