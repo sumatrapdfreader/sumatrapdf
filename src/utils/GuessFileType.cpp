@@ -209,7 +209,7 @@ int KindIndexOf(Kind* kinds, int nKinds, Kind kind) {
 // offset in the file
 struct FileSig {
     size_t offset;
-    const char* sig;
+    Str sig;
     size_t sigLen;
     Kind kind;
 };
@@ -314,12 +314,12 @@ Kind GuessFileTypeFromContent(const ByteSlice& d) {
     int n = (int)dimof(gFileSigs);
 
     for (int i = 0; i < n; i++) {
-        const char* sig = gFileSigs[i].sig;
+        Str sig = gFileSigs[i].sig;
         size_t off = gFileSigs[i].offset;
         size_t sigLen = gFileSigs[i].sigLen;
         size_t sigMaxLen = off + sigLen;
         u8* dat = data + off;
-        if ((len > sigMaxLen) && memeq(dat, sig, sigLen)) {
+        if ((len > sigMaxLen) && memeq(dat, sig.s, sigLen)) {
             return gFileSigs[i].kind;
         }
     }

@@ -12,14 +12,19 @@ bool ByteReader::Unpack(void* strct, size_t size, Str format, size_t off, bool i
     }
     int repeat = 0;
     size_t idx = 0;
-    for (const char* c = format.s; *c; c++) {
-        if (isdigit((u8)*c)) {
-            repeat = atoi(c);
-            for (c++; isdigit((u8)*c); c++) {
+    for (int i = 0; i < format.len; i++) {
+        char c = format.s[i];
+        if (isdigit((u8)c)) {
+            repeat = atoi(format.s + i);
+            for (i++; i < format.len && isdigit((u8)format.s[i]); i++) {
                 ;
             }
+            if (i >= format.len) {
+                break;
+            }
+            c = format.s[i];
         }
-        switch (*c) {
+        switch (c) {
             case 'b':
                 if (off + idx + 1 > len || idx + 1 > size) {
                     return false;
@@ -52,7 +57,7 @@ bool ByteReader::Unpack(void* strct, size_t size, Str format, size_t off, bool i
                 return false;
         }
         if (--repeat > 0) {
-            c--;
+            i--;
         }
     }
     return idx == size;
