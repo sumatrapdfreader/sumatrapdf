@@ -181,7 +181,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* 
         fi->uncompressedCrc32 = br.UInt32();
         fi->ftModified.dwLowDateTime = br.UInt32();
         fi->ftModified.dwHighDateTime = br.UInt32();
-        fi->name = (char*)archiveHeader + br.Offset();
+        fi->name = Str((char*)archiveHeader + br.Offset());
         br.Skip(fileHeaderSize - FILE_ENTRY_MIN_SIZE);
         if (br.Char() != '\0') {
             return false;
@@ -212,10 +212,9 @@ bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* 
     return br.Offset() == dataLen;
 }
 
-int GetIdxFromName(SimpleArchive* archive, const char* fileName) {
+int GetIdxFromName(SimpleArchive* archive, Str fileName) {
     for (int i = 0; i < archive->filesCount; i++) {
-        const char* file = archive->files[i].name;
-        if (str::Eq(file, fileName)) {
+        if (str::Eq(archive->files[i].name, fileName)) {
             return i;
         }
     }
@@ -252,7 +251,7 @@ u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* allocator) {
     return uncompressed;
 }
 
-u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Arena* allocator) {
+u8* GetFileDataByName(SimpleArchive* archive, Str fileName, Arena* allocator) {
     int idx = GetIdxFromName(archive, fileName);
     if (-1 != idx) {
         return GetFileDataByIdx(archive, idx, allocator);
@@ -260,7 +259,7 @@ u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Arena* alloc
     return nullptr;
 }
 
-static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir, Arena* allocator) {
+static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena* allocator) {
     FileInfo* fi = &archive->files[idx];
 
     u8* uncompressed = GetFileDataByIdx(archive, idx, allocator);
@@ -281,7 +280,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
     return ok;
 }
 
-bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Arena* allocator) {
+bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* allocator) {
     auto d = file::ReadFileWithArena(archivePath, allocator);
     if (d.empty()) {
         return false;
@@ -296,7 +295,7 @@ bool ExtractFiles(const char* archivePath, const char* dstDir, const char** file
     if (!ok) {
         return false;
     }
-    for (; *files; files++) {
+    for (; files->s; files++) {
         int idx = GetIdxFromName(&archive, *files);
         if (-1 != idx) {
             ok &= ExtractFileByIdx(&archive, idx, dstDir, allocator);

@@ -9,7 +9,7 @@ struct FileInfo {
     u32 uncompressedSize;
     u32 uncompressedCrc32;
     FILETIME ftModified;
-    const char* name;
+    Str name;
     const u8* compressedData;
 };
 
@@ -22,10 +22,10 @@ struct SimpleArchive {
 };
 
 bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* archiveOut);
-int GetIdxFromName(SimpleArchive* archive, const char* name);
+int GetIdxFromName(SimpleArchive* archive, Str name);
 u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* allocator);
-u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Arena* allocator);
-// files is an array of char * entries, last element must be nullptr
-bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Arena* allocator);
+u8* GetFileDataByName(SimpleArchive* archive, Str fileName, Arena* allocator);
+// files is an array of Str entries, last element must be empty
+bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* allocator);
 
 } // namespace lzma

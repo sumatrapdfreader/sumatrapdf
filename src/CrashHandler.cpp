@@ -277,7 +277,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
 
     for (int i = 0; i < archive.filesCount; i++) {
         lzma::FileInfo* fi = &(archive.files[i]);
-        const char* name = fi->name;
+        Str name = fi->name;
         logf("ExtractSymbols: file %d is '%s'\n", i, name);
         u8* uncompressed = GetFileDataByIdx(&archive, i, allocator);
         if (!uncompressed) {

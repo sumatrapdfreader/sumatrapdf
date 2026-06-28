@@ -236,7 +236,7 @@ int mainVerify(const char* archivePath) {
 
     for (int i = 0; i < lzsa.filesCount; i++) {
         AutoFree data(lzma::GetFileDataByIdx(&lzsa, i, nullptr));
-        FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name);
+        FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name.s);
         errorStep++;
     }
 
