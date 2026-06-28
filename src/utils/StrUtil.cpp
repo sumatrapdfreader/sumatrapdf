@@ -1279,69 +1279,92 @@ bool IsAlNum(char c) {
    (e.g. ".hg" < "2.pdf" < "100.pdf" < "zzz")
    // TODO: this should be utf8-aware, see e.g. cbx\bug1234-*.cbr file
 */
+static bool CmpNaturalAtEnd(Str s, int i) {
+    return i >= s.len || s.s[i] == '\0';
+}
+
+static char CmpNaturalAt(Str s, int i) {
+    if (CmpNaturalAtEnd(s, i)) {
+        return '\0';
+    }
+    return s.s[i];
+}
+
+static int CmpNaturalLex(Str a, Str b) {
+    int minLen = std::min(a.len, b.len);
+    for (int i = 0; i < minLen; i++) {
+        if (a.s[i] != b.s[i]) {
+            return (unsigned char)a.s[i] - (unsigned char)b.s[i];
+        }
+    }
+    return a.len - b.len;
+}
+
 int CmpNatural(Str aIn, Str bIn) {
     ReportIf(!aIn || !bIn);
-    const char* a = aIn.s;
-    const char* b = bIn.s;
-    const char* aStart = a;
-    const char* bStart = b;
+    int ai = 0;
+    int bi = 0;
     int diff = 0;
 
     while (diff == 0) {
         // ignore leading and trailing spaces, and differences in whitespace only
-        if (a == aStart || !*a || !*b || IsWs(*a) && IsWs(*b)) {
-            for (; a && IsWs(*a); a++) {
-                // do nothing
+        if (ai == 0 || bi == 0 || CmpNaturalAtEnd(aIn, ai) || CmpNaturalAtEnd(bIn, bi) ||
+            (IsWs(aIn.s[ai]) && IsWs(bIn.s[bi]))) {
+            while (!CmpNaturalAtEnd(aIn, ai) && IsWs(aIn.s[ai])) {
+                ai++;
             }
-            for (; b && IsWs(*b); b++) {
-                // do nothing
+            while (!CmpNaturalAtEnd(bIn, bi) && IsWs(bIn.s[bi])) {
+                bi++;
             }
         }
         // if two strings are identical when ignoring case, leading zeroes and
         // whitespace, compare them traditionally for a stable sort order
-        if (!*a && !*b) {
-            return strcmp(aStart, bStart);
+        if (CmpNaturalAtEnd(aIn, ai) && CmpNaturalAtEnd(bIn, bi)) {
+            return CmpNaturalLex(aIn, bIn);
         }
 
-        if (str::IsDigit(*a) && str::IsDigit(*b)) {
+        char ca = CmpNaturalAt(aIn, ai);
+        char cb = CmpNaturalAt(bIn, bi);
+
+        if (str::IsDigit(ca) && str::IsDigit(cb)) {
             // ignore leading zeroes
-            for (; '0' == *a; a++) {
-                // do nothing
+            while (!CmpNaturalAtEnd(aIn, ai) && aIn.s[ai] == '0') {
+                ai++;
             }
-            for (; '0' == *b; b++) {
-                // do nothing
+            while (!CmpNaturalAtEnd(bIn, bi) && bIn.s[bi] == '0') {
+                bi++;
             }
             // compare the two numbers as (positive) integers
-            for (diff = 0; str::IsDigit(*a) || str::IsDigit(*b); a++, b++) {
-                // if either *a or *b isn't a number, they differ in magnitude
-                if (!str::IsDigit(*a)) {
+            for (diff = 0; str::IsDigit(CmpNaturalAt(aIn, ai)) || str::IsDigit(CmpNaturalAt(bIn, bi)); ai++, bi++) {
+                // if either isn't a number, they differ in magnitude
+                if (!str::IsDigit(CmpNaturalAt(aIn, ai))) {
                     return -1;
                 }
-                if (!str::IsDigit(*b)) {
+                if (!str::IsDigit(CmpNaturalAt(bIn, bi))) {
                     return 1;
                 }
                 // remember the difference for when the numbers are of the same magnitude
                 if (0 == diff) {
-                    diff = *a - *b;
+                    diff = (unsigned char)aIn.s[ai] - (unsigned char)bIn.s[bi];
                 }
             }
-            // neither *a nor *b is a digit, so continue with them (unless diff != 0)
-            a--;
-            b--;
-        } else if (str::IsAlNum(*a) && str::IsAlNum(*b)) {
+            // neither is a digit, so continue with them (unless diff != 0)
+            ai--;
+            bi--;
+        } else if (str::IsAlNum(ca) && str::IsAlNum(cb)) {
             // sort letters case-insensitively
-            diff = tolower(*a) - tolower(*b);
-        } else if (str::IsAlNum(*a)) {
+            diff = tolower((u8)ca) - tolower((u8)cb);
+        } else if (str::IsAlNum(ca)) {
             // sort special characters before text and numbers
             return 1;
-        } else if (str::IsAlNum(*b)) {
+        } else if (str::IsAlNum(cb)) {
             return -1;
         } else {
             // sort special characters by ASCII code
-            diff = *a - *b;
+            diff = (unsigned char)ca - (unsigned char)cb;
         }
-        a++;
-        b++;
+        ai++;
+        bi++;
     }
 
     return diff;
