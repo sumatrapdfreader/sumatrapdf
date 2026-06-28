@@ -22,7 +22,7 @@
 // is resolved instantly. Negative results (citation not found) are also
 // cached to avoid re-scanning the document on each hover.
 struct CitationCacheEntry {
-    char* surname; // owned UTF-8
+    Str surname; // owned UTF-8
     int year;
     int srcPage;  // page where the lookup was issued (so cap at srcPage works per-page)
     int destPage; // -1 if not found
@@ -34,7 +34,7 @@ struct RefLookupCache {
     Vec<CitationCacheEntry> entries;
 };
 
-static const CitationCacheEntry* CacheLookup(RefLookupCache* c, const char* surname, int year, int srcPage) {
+static const CitationCacheEntry* CacheLookup(RefLookupCache* c, Str surname, int year, int srcPage) {
     if (!c) {
         return nullptr;
     }
@@ -47,8 +47,7 @@ static const CitationCacheEntry* CacheLookup(RefLookupCache* c, const char* surn
     return nullptr;
 }
 
-static void CacheInsert(RefLookupCache* c, const char* surname, int year, int srcPage, int destPage, float destX,
-                        float destY) {
+static void CacheInsert(RefLookupCache* c, Str surname, int year, int srcPage, int destPage, float destX, float destY) {
     if (!c) {
         return;
     }
@@ -83,13 +82,13 @@ void RefHoverFreeLookupCache(RefHoverState* s) {
 
 // Result of detecting a citation under the cursor.
 struct DetectedCitation {
-    char* surname; // owned UTF-8 (caller frees), or nullptr
+    Str surname; // owned UTF-8 (caller frees)
     int year;
 };
 
 static void FreeDetectedCitation(DetectedCitation* c) {
     str::Free(c->surname);
-    c->surname = nullptr;
+    c->surname = {};
 }
 
 // Detect a citation pattern under the cursor on srcPage. On success, returns
@@ -97,7 +96,7 @@ static void FreeDetectedCitation(DetectedCitation* c) {
 // pattern matching is the pure DetectCitationInPageText (RefHoverDetect.cpp).
 static bool DetectCitationAtCursor(EngineBase* engine, int srcPage, Point pagePos, DetectedCitation* out,
                                    Rect* srcRectOut = nullptr) {
-    out->surname = nullptr;
+    out->surname = {};
     out->year = 0;
     int textLen = 0;
     Rect* coords = nullptr;
@@ -107,9 +106,9 @@ static bool DetectCitationAtCursor(EngineBase* engine, int srcPage, Point pagePo
 
 // Walk pages from pageCount → srcPage looking for a bibliography entry that
 // matches the surname + year. Returns true on hit.
-static bool FindReferenceLocation(EngineBase* engine, int srcPage, const char* surname, int year, int* destPageOut,
+static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, int year, int* destPageOut,
                                   float* destXOut, float* destYOut) {
-    if (!engine || !surname || !*surname) {
+    if (!engine || !surname) {
         return false;
     }
     int pageCount = engine->PageCount();
@@ -118,15 +117,11 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, const char* s
     }
 
     // Convert surname to wide string for engine text matching.
-    WCHAR* surnameW = ToWStr(surname);
-    if (!surnameW) {
+    WStr surnameW = ToWStr(surname);
+    if (!surnameW || str::Len(surnameW) < 2) {
         return false;
     }
     int surnameLen = (int)str::Len(surnameW);
-    if (surnameLen < 2) {
-        free(surnameW);
-        return false;
-    }
 
     bool found = false;
     for (int p = pageCount; p >= srcPage; p--) {
@@ -134,7 +129,7 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, const char* s
         Rect* coords = nullptr;
         const WCHAR* text = engine->GetTextForPage(p, &textLen, &coords);
         float x = 0, y = 0;
-        if (FindSurnameInPageText(text, coords, textLen, surnameW, surnameLen, year, &x, &y)) {
+        if (FindSurnameInPageText(text, coords, textLen, surnameW.s, surnameLen, year, &x, &y)) {
             *destPageOut = p;
             *destXOut = x;
             *destYOut = y;
@@ -142,14 +137,14 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, const char* s
             break;
         }
     }
-    free(surnameW);
+    str::Free(surnameW);
     return found;
 }
 
 // Look up `surname` in the cache; on miss, do a fresh document scan and
 // insert the result (positive or negative). Returns true on positive hit.
-static bool LookupOrSearch(RefHoverState* s, EngineBase* engine, int srcPage, const char* surname, int year,
-                           int& destPageOut, float& destXOut, float& destYOut) {
+static bool LookupOrSearch(RefHoverState* s, EngineBase* engine, int srcPage, Str surname, int year, int& destPageOut,
+                           float& destXOut, float& destYOut) {
     const CitationCacheEntry* hit = CacheLookup(s->lookupCache, surname, year, srcPage);
     if (hit) {
         if (hit->destPage > 0) {
@@ -179,7 +174,7 @@ static bool LookupOrSearch(RefHoverState* s, EngineBase* engine, int srcPage, co
 // line starting with "[num]".
 static bool LookupOrSearchNumeric(RefHoverState* s, EngineBase* engine, int srcPage, int num, int& destPageOut,
                                   float& destXOut, float& destYOut) {
-    char* key = str::FormatTemp("[%d]", num);
+    TempStr key = str::FormatTemp("[%d]", num);
     const CitationCacheEntry* hit = CacheLookup(s->lookupCache, key, num, srcPage);
     if (hit) {
         if (hit->destPage > 0) {
@@ -264,34 +259,32 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     //      prefix-matches the real surname in the bibliography.
     if (!result && cite.surname && str::FindChar(cite.surname, ' ')) {
         struct Part {
-            const char* s;
-            int len;
+            Str s;
         };
         Part parts[8];
         int nParts = 0;
-        const char* p = cite.surname;
-        while (*p && nParts < 8) {
-            while (*p == ' ') {
-                p++;
+        Str p = cite.surname;
+        while (p && nParts < 8) {
+            while (p && *p.s == ' ') {
+                p = Str(p.s + 1, p.len - 1);
             }
-            if (!*p) {
+            if (!p) {
                 break;
             }
-            const char* start = p;
-            while (*p && *p != ' ') {
-                p++;
+            Str start = p;
+            while (p && *p.s != ' ') {
+                p = Str(p.s + 1, p.len - 1);
             }
-            int len = (int)(p - start);
+            int len = (int)(p.s - start.s);
             if (len >= 2) {
-                parts[nParts].s = start;
-                parts[nParts].len = len;
+                parts[nParts].s = Str(start.s, len);
                 nParts++;
             }
         }
         // Sort parts by length descending (simple selection sort, n<=8).
         for (int i = 0; i < nParts - 1; i++) {
             for (int j = i + 1; j < nParts; j++) {
-                if (parts[j].len > parts[i].len) {
+                if (str::Len(parts[j].s) > str::Len(parts[i].s)) {
                     Part t = parts[i];
                     parts[i] = parts[j];
                     parts[j] = t;
@@ -299,11 +292,7 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
             }
         }
         for (int i = 0; i < nParts && !result; i++) {
-            char buf[64];
-            int n = parts[i].len < 63 ? parts[i].len : 63;
-            memcpy(buf, parts[i].s, n);
-            buf[n] = 0;
-            result = LookupOrSearch(s, engine, srcPage, buf, cite.year, destPageOut, destXOut, destYOut);
+            result = LookupOrSearch(s, engine, srcPage, parts[i].s, cite.year, destPageOut, destXOut, destYOut);
         }
     }
 

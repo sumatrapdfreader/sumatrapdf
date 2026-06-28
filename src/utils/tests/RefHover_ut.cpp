@@ -389,7 +389,7 @@ static void PlainTextCitationDetected() {
     Rect coords[256];
     int len = 0;
     AddText(text, coords, len, 256, L"as shown in (Smith et al., 2020) earlier", 72, 200);
-    char* surname = nullptr;
+    Str surname{};
     int year = 0;
     // Cursor on the 'S' of "Smith" (glyph 13 → x = 72 + 13*6 = 150).
     bool ok = DetectCitationInPageText(text, coords, len, Point{152, 206}, &surname, &year);
@@ -405,7 +405,7 @@ static void PlainTextCitationNoYear() {
     Rect coords[256];
     int len = 0;
     AddText(text, coords, len, 256, L"plain body text without any citation", 72, 200);
-    char* surname = nullptr;
+    Str surname{};
     int year = 0;
     bool ok = DetectCitationInPageText(text, coords, len, Point{100, 206}, &surname, &year);
     utassert(!ok);
@@ -485,7 +485,7 @@ static void PlainTextCitationSrcRectDistinctOnLine() {
     Rect coords[256];
     int len = 0;
     AddText(text, coords, len, 256, L"per (Smith, 2020) and (Jones, 2021) here", 72, 200);
-    char* surname = nullptr;
+    Str surname{};
     int year = 0;
     Rect first{}, second{};
     // Cursor on 'S' of Smith (glyph 6 → x = 72 + 6*6 = 108).

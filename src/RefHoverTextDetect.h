@@ -17,7 +17,7 @@
 // key — the matched citation's glyph span on the page (surname through year).
 // Lets callers tell two occurrences of the same citation apart, including
 // two markers on the same text line (different x/dx → reposition).
-bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, char** surnameOut,
+bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut,
                               int* yearOut, Rect* srcRectOut = nullptr);
 
 // Search a page's glyph arrays for a bibliography entry whose line starts

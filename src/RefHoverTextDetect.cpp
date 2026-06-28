@@ -88,9 +88,9 @@ static bool IsNamePrefix(const WCHAR* word, int wordLen) {
 // pagePos in a page's glyph arrays. On success, returns true and fills
 // *surnameOut with a freshly-allocated UTF-8 surname (caller frees) and
 // *yearOut with the 4-digit year.
-bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, char** surnameOut,
+bool DetectCitationInPageText(const WCHAR* text, const Rect* coords, int textLen, Point pagePos, Str* surnameOut,
                               int* yearOut, Rect* srcRectOut) {
-    *surnameOut = nullptr;
+    *surnameOut = {};
     *yearOut = 0;
     if (!text || textLen <= 0 || !coords) {
         return false;
