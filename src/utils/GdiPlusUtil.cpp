@@ -156,7 +156,12 @@ size_t StringLenForWidth(Graphics* g, Font* f, WStr s, float dx, TextMeasureAlgo
     }
     // make the best guess of the length that fits
     size_t n = (size_t)((dx / r.dx) * (float)len);
-    ReportIf((0 == n) || (n > len));
+    ReportIf(n > len);
+    if (n == 0) {
+        // nothing fits in the remaining space; caller flushes the line and
+        // re-lays the run at full width. Don't Measure an empty string.
+        return 0;
+    }
     r = MeasureText(g, f, WStr(s.s, (int)n), algo);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
