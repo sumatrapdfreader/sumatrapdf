@@ -4,8 +4,8 @@
 class FrameSite;
 class HtmlMoniker;
 
-bool IsBlankUrl(const WCHAR*);
-bool IsBlankUrl(Str);
+bool IsBlankUrl(Str url);
+bool IsBlankUrl(WStr url);
 
 // HtmlWindowCallback allows HtmlWindow to notify other code about notable
 // events or delegate some of the functionality.
@@ -93,8 +93,8 @@ class HtmlWindow {
 
     UINT_PTR subclassId = 0;
 
-    bool OnBeforeNavigate(const WCHAR* url, bool newWindow);
-    void OnDocumentComplete(const WCHAR* url);
+    bool OnBeforeNavigate(WStr url, bool newWindow);
+    void OnDocumentComplete(WStr url);
     HRESULT OnDragEnter(IDataObject* dataObj);
     HRESULT OnDragDrop(IDataObject* dataObj);
 

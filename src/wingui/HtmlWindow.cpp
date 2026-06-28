@@ -123,12 +123,12 @@ inline void VariantSetLong(VARIANT* res, long val) {
     res->lVal = val;
 }
 
-bool IsBlankUrl(const WCHAR* url) {
-    return str::EqI(L"about:blank", url);
-}
-
 bool IsBlankUrl(Str url) {
     return str::EqI("about:blank", url);
+}
+
+bool IsBlankUrl(WStr url) {
+    return str::EqI(WStrL(L"about:blank"), url);
 }
 
 // HW stands for HtmlWindow
@@ -995,7 +995,7 @@ class HtmlMoniker : public IMoniker {
     virtual ~HtmlMoniker();
 
     HRESULT SetHtml(const ByteSlice&);
-    HRESULT SetBaseUrl(const WCHAR* baseUrl);
+    HRESULT SetBaseUrl(WStr baseUrl);
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override;
@@ -1057,10 +1057,10 @@ class HtmlMoniker : public IMoniker {
   private:
     LONG refCount = 1;
 
-    char* htmlData = nullptr;
+    Str htmlData;
     IStream* htmlStream = nullptr;
 
-    WCHAR* baseUrl = nullptr;
+    WStr baseUrl;
 };
 
 HtmlMoniker::HtmlMoniker() = default;
@@ -1070,22 +1070,22 @@ HtmlMoniker::~HtmlMoniker() {
         htmlStream->Release();
     }
 
-    free(htmlData);
-    free(baseUrl);
+    str::Free(htmlData);
+    str::Free(baseUrl);
 }
 
 HRESULT HtmlMoniker::SetHtml(const ByteSlice& d) {
-    free(htmlData);
+    str::Free(htmlData);
     htmlData = str::Dup(d);
     if (htmlStream) {
         htmlStream->Release();
     }
-    htmlStream = CreateStreamFromData({(u8*)htmlData, d.size()});
+    htmlStream = CreateStreamFromData({(u8*)htmlData.s, d.size()});
     return S_OK;
 }
 
-HRESULT HtmlMoniker::SetBaseUrl(const WCHAR* newBaseUrl) {
-    free(baseUrl);
+HRESULT HtmlMoniker::SetBaseUrl(WStr newBaseUrl) {
+    str::Free(baseUrl);
     baseUrl = str::Dup(newBaseUrl);
     return S_OK;
 }
@@ -1097,8 +1097,8 @@ STDMETHODIMP HtmlMoniker::BindToStorage(__unused IBindCtx* pbc, __unused IMonike
     return htmlStream->QueryInterface(riid, ppvObj);
 }
 
-static LPOLESTR OleStrDup(const WCHAR* s) {
-    size_t cb = sizeof(WCHAR) * (str::Len(s) + 1);
+static LPOLESTR OleStrDup(WStr s) {
+    size_t cb = sizeof(WCHAR) * (size_t)(s.len + 1);
     LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cb);
     if (ret) {
         memcpy(ret, s, cb);
@@ -1111,7 +1111,7 @@ STDMETHODIMP HtmlMoniker::GetDisplayName(__unused IBindCtx* pbc, __unused IMonik
     if (!ppszDisplayName) {
         return E_POINTER;
     }
-    *ppszDisplayName = OleStrDup(baseUrl ? baseUrl : L"");
+    *ppszDisplayName = OleStrDup(baseUrl ? baseUrl : WStr{});
     return *ppszDisplayName ? S_OK : E_OUTOFMEMORY;
 }
 
@@ -1717,7 +1717,7 @@ HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
 
 // called before an url is shown. If returns false, will cancel
 // the navigation.
-bool HtmlWindow::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
+bool HtmlWindow::OnBeforeNavigate(WStr urlW, bool newWindow) {
     currentURL.Reset();
     if (!htmlWinCb) {
         return true;
@@ -1744,7 +1744,7 @@ void HtmlWindow::FreeHtmlSetInProgressData() {
     htmlSetInProgressUrl = {};
 }
 
-void HtmlWindow::OnDocumentComplete(const WCHAR* urlW) {
+void HtmlWindow::OnDocumentComplete(WStr urlW) {
     TempStr url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
         if (htmlSetInProgress) {
@@ -1975,7 +1975,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
     switch (dispIdMember) {
         case DISPID_BEFORENAVIGATE2: {
             BSTR url = BstrFromVariant(pDispParams->rgvarg[5].pvarVal);
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, false);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(WStr(url), false);
             *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }
@@ -1996,7 +1996,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
             // on completion of top-level frame. On the other hand, I haven't
             // encountered problems related to that yet
             BSTR url = BstrFromVariant(pDispParams->rgvarg[0].pvarVal);
-            fs->htmlWindow->OnDocumentComplete(url);
+            fs->htmlWindow->OnDocumentComplete(WStr(url));
             break;
         }
 
@@ -2018,7 +2018,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
 
         case DISPID_NEWWINDOW3: {
             BSTR url = pDispParams->rgvarg[0].bstrVal;
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, true);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(WStr(url), true);
             *pDispParams->rgvarg[3].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }
