@@ -852,7 +852,7 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
         }
     }
     if (pageNo < 1 || pageNo > pageCount) {
-        logf("EngineDjvuDec::HandleLink: invalid link '%s'\n", link);
+        logf("EngineDjvuDec::HandleLink: invalid link '%s'\n", link.s);
         return false;
     }
     ctrl->GoToPage(pageNo, true);
