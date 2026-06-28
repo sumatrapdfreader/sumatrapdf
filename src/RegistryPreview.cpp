@@ -20,8 +20,9 @@
 
 // clang-format off
 static struct {
-    const char* clsid = nullptr;
-    const char *ext = nullptr, *ext2 = nullptr;
+    Str clsid;
+    Str ext;
+    Str ext2;
     bool skip = false;
 } gPreviewers[] = {
     {kPdfPreviewClsid, ".pdf"},
@@ -36,7 +37,7 @@ static struct {
 };
 // clang-format on
 
-bool InstallPreviewDll(const char* dllPath, bool allUsers) {
+bool InstallPreviewDll(Str dllPath, bool allUsers) {
     HKEY hkey = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
     bool ok;
 
@@ -44,9 +45,9 @@ bool InstallPreviewDll(const char* dllPath, bool allUsers) {
         if (prev.skip) {
             continue;
         }
-        const char* clsid = prev.clsid;
-        const char* ext = prev.ext;
-        const char* ext2 = prev.ext2;
+        Str clsid = prev.clsid;
+        Str ext = prev.ext;
+        Str ext2 = prev.ext2;
         ok = true;
 
         TempStr displayName = str::FormatTemp("SumatraPDF Preview (*%s)", ext);
@@ -81,7 +82,7 @@ bool InstallPreviewDll(const char* dllPath, bool allUsers) {
     return true;
 }
 
-static void DeleteOrFail(const char* key, HRESULT* hr) {
+static void DeleteOrFail(Str key, HRESULT* hr) {
     LoggedDeleteRegKey(HKEY_LOCAL_MACHINE, key);
     if (!LoggedDeleteRegKey(HKEY_CURRENT_USER, key)) {
         *hr = E_FAIL;
@@ -98,9 +99,9 @@ bool UninstallPreviewDll() {
             logf("UninstallPreviewDll: skipping '%s'\n", prev.ext);
             continue;
         }
-        const char* clsid = prev.clsid;
-        const char* ext = prev.ext;
-        const char* ext2 = prev.ext2;
+        Str clsid = prev.clsid;
+        Str ext = prev.ext;
+        Str ext2 = prev.ext2;
 
         // unregister preview handler
         DeleteRegValue(HKEY_LOCAL_MACHINE, kRegKeyPreviewHandlers, clsid);
@@ -135,23 +136,24 @@ bool UninstallPreviewDll() {
 }
 
 // TODO: is anyone using this functionality?
-void DisablePreviewInstallExts(const char* cmdLine) {
+void DisablePreviewInstallExts(Str cmdLine) {
     // allows installing only a subset of available preview handlers
     if (str::StartsWithI(cmdLine, "exts:")) {
-        TempStr extsList = str::DupTemp(cmdLine + 5);
+        TempStr extsList = str::DupTemp(Str(cmdLine.s + 5, cmdLine.len - 5));
         str::ToLowerInPlace(extsList);
         str::TransCharsInPlace(extsList, ";. :", ",,,\0");
         StrVec exts;
         Split(&exts, extsList, ",", true);
         for (auto& p : gPreviewers) {
-            p.skip = !exts.Contains(p.ext + 1);
+            Str extNoDot = Str(p.ext.s + 1, p.ext.len - 1);
+            p.skip = !exts.Contains(extNoDot);
         }
     }
 }
 
 bool IsPreviewInstalled() {
-    const char* key = ".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
-    char* iid = LoggedReadRegStrTemp(HKEY_CLASSES_ROOT, key, nullptr);
+    Str key = ".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
+    TempStr iid = LoggedReadRegStrTemp(HKEY_CLASSES_ROOT, key, nullptr);
     bool isInstalled = str::EqI(iid, kPdfPreviewClsid);
     logf("IsPreviewInstalled() isInstalled=%d\n", (int)isInstalled);
     return isInstalled;

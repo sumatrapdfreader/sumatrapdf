@@ -171,7 +171,7 @@ STDAPI DllUnregisterServer() {
 
 // TODO: maybe remove, is anyone using this functionality?
 STDAPI DllInstall(BOOL bInstall, const WCHAR* pszCmdLine) {
-    char* s = ToUtf8Temp(pszCmdLine);
+    TempStr s = ToUtf8Temp(pszCmdLine);
     DisablePreviewInstallExts(s);
     if (!bInstall) {
         return DllUnregisterServer();

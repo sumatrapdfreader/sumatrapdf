@@ -10,9 +10,9 @@
 #define kCbxPreviewClsid "{C29D3E2B-8FF6-4033-A4E8-54221D859D74}"
 #define kTgaPreviewClsid "{CB1D63A6-FE5E-4DED-BEA5-3F6AF1A70D08}"
 
-bool InstallPreviewDll(const char* dllPath, bool allUsers);
+bool InstallPreviewDll(Str dllPath, bool allUsers);
 bool UninstallPreviewDll();
-void DisablePreviewInstallExts(const char* cmdLine);
+void DisablePreviewInstallExts(Str cmdLine);
 bool IsPreviewInstalled();
 
 // opt-in file logging for the preview handler (PdfPreview.dll), controlled by a
