@@ -265,7 +265,7 @@ Str TestChmResult(Str chmPath, int* exitCodeOut) {
         out.AppendFmt("open=FAILED path=%s\n", chmPath.s);
         ok = false;
     } else {
-        struct chmFile* h = chm_open((const char*)fileData.data(), fileData.size());
+        struct chmFile* h = chm_open((const char*)fileData.data(), fileData.size()); // str-port: chm_lib API
         if (!h) {
             out.AppendFmt("chm_open=FAILED path=%s\n", chmPath.s);
             ok = false;
