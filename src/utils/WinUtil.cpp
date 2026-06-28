@@ -412,7 +412,7 @@ TempStr GetLastErrorStrTemp(DWORD err) {
         buf[4095] = 0;
         return str::DupTemp(buf);
     }
-    char* msgBuf = nullptr;
+    char* msgBuf = nullptr; // str-port: Win32 out-param
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
     DWORD ferr = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
@@ -879,8 +879,8 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
 }
 
 TempStr ResolveLnkTemp(Str path) {
-    WCHAR* pathW = ToWStr(path);
-    ScopedMem<OLECHAR> olePath(pathW);
+    WStr pathW = ToWStr(path);
+    ScopedMem<OLECHAR> olePath(pathW.s);
     if (!olePath) {
         return nullptr;
     }
@@ -1522,7 +1522,7 @@ TempStr GetDefaultPrinterNameTemp() {
     return nullptr;
 }
 
-static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
+static bool CopyOrAppendTextToClipboard(WStr text, bool appendOnly) {
     if (!text) {
         return false;
     }
@@ -1534,10 +1534,10 @@ static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
         EmptyClipboard();
     }
 
-    int n = str::Leni(text) + 1;
+    int n = text.len + 1;
     HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
     if (handle) {
-        WCHAR* globalText = (WCHAR*)GlobalLock(handle);
+        WCHAR* globalText = (WCHAR*)GlobalLock(handle); // str-port: Win32
         if (globalText) {
             str::BufSet(globalText, n, text);
         }
@@ -1554,13 +1554,11 @@ static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
 }
 
 bool CopyTextToClipboard(Str s) {
-    TempWStr ws = ToWStrTemp(s);
-    return CopyOrAppendTextToClipboard(ws.s, false);
+    return CopyOrAppendTextToClipboard(ToWStrTemp(s), false);
 }
 
 bool AppendTextToClipboard(Str s) {
-    TempWStr ws = ToWStrTemp(s);
-    return CopyOrAppendTextToClipboard(ws.s, true);
+    return CopyOrAppendTextToClipboard(ToWStrTemp(s), true);
 }
 
 static bool SetClipboardImage(HBITMAP hbmp) {
@@ -1784,10 +1782,10 @@ HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     if (!IsEmpty(fontName)) {
-        WCHAR* dest = ncm.lfMessageFont.lfFaceName;
+        WCHAR* dest = ncm.lfMessageFont.lfFaceName; // str-port: Win32
         int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
         TempWStr nameW = ToWStrTemp(fontName);
-        str::BufSet(dest, cchDestBufSize, nameW.s);
+        str::BufSet(dest, cchDestBufSize, nameW);
     }
     ncm.lfMessageFont.lfHeight = -size;
     if (bold) {
@@ -2009,7 +2007,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     ULONG n = stat.cbSize.LowPart;
     // zero-terminate the stream's content, so that it could be
     // used directly as either a char* or a WCHAR* string
-    char* d = AllocArray<char>(n + sizeof(WCHAR) + 1);
+    char* d = AllocArray<char>(n + sizeof(WCHAR) + 1); // str-port: binary stream buffer
     if (!d) {
         return E_OUTOFMEMORY;
     }
@@ -2067,7 +2065,7 @@ bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset
             return false;
         }
         len -= ULONG_MAX;
-        buffer = (char*)buffer + ULONG_MAX;
+        buffer = (char*)buffer + ULONG_MAX; // str-port: Win32
     }
 #endif
     res = stream->Read(buffer, (ULONG)len, &read);
@@ -3000,7 +2998,7 @@ bool LockDataResource(int resId, LoadedDataResource* res) {
     }
 
     auto h = GetModuleHandleW(nullptr);
-    WCHAR* name = MAKEINTRESOURCEW(resId);
+    WCHAR* name = MAKEINTRESOURCEW(resId); // str-port: Win32 resource id
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
         res->dataSize = kResourceNotFound;
@@ -3396,9 +3394,9 @@ TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
 
     TempStr res;
     if (isUnicode) {
-        res = ToUtf8Temp((WCHAR*)mem);
+        res = ToUtf8Temp(WStr((WCHAR*)mem));
     } else {
-        res = str::DupTemp((char*)mem);
+        res = str::DupTemp(Str((char*)mem));
     }
     GlobalUnlock(h);
     return res;
