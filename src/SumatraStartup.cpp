@@ -139,7 +139,7 @@ static void SendMyselfDDE(Str cmdA, HWND targetHwnd) {
     TempWStr cmd = ToWStrTemp(cmdA);
     if (targetHwnd) {
         // try WM_COPYDATA first, as that allows targetting a specific window
-        size_t cbData = (str::Len(cmd) + 1) * sizeof(WCHAR);
+        size_t cbData = (wstr::Len(cmd) + 1) * sizeof(WCHAR);
         COPYDATASTRUCT cds = {kCopyDataDdeW, (DWORD)cbData, (void*)cmd};
         LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res) {
@@ -632,7 +632,7 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
     if (n == 0) {
         return nullptr;
     }
-    if (str::EqI(clsName, WC_EDITW)) {
+    if (wstr::EqI(clsName, WC_EDITW)) {
         *hwndAccel = win->hwndFrame;
         if (forwardSysKeys) {
             *forwardSysKeys = true;
@@ -640,7 +640,7 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
         return editAccTable;
     }
 
-    if (str::EqI(clsName, WC_TREEVIEWW)) {
+    if (wstr::EqI(clsName, WC_TREEVIEWW)) {
         *hwndAccel = win->hwndFrame;
         if (forwardSysKeys) {
             *forwardSysKeys = true;
@@ -1602,7 +1602,7 @@ static bool IsRunningTool() {
     }
     bool isTool = false;
     for (int i = 1; i < argc; i++) {
-        if (str::EqI(wargv[i], L"-dump-chm") || str::EqI(wargv[i], L"-dump-exif")) {
+        if (wstr::EqI(wargv[i], L"-dump-chm") || wstr::EqI(wargv[i], L"-dump-exif")) {
             isTool = true;
             break;
         }

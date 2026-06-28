@@ -468,7 +468,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
         WCHAR* pwdBuf = (WCHAR*)rarBuffer; // str-port: Win32
         int maxLen = (int)bytesProcessed;
         auto pwdW = ToWStrTemp(buf->password);
-        int n = str::Leni(pwdW);
+        int n = wstr::Leni(pwdW);
         if (n >= maxLen) {
             n = maxLen - 1;
         }
@@ -486,8 +486,8 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, WStr fileName) {
         if (0 != res) {
             return false;
         }
-        str::TransCharsInPlace(WStr(rarHeader->FileNameW), L"\\", L"/");
-        if (str::EqI(WStr(rarHeader->FileNameW), fileName)) {
+        wstr::TransCharsInPlace(WStr(rarHeader->FileNameW), L"\\", L"/");
+        if (wstr::EqI(WStr(rarHeader->FileNameW), fileName)) {
             // don't support files whose uncompressed size is greater than 4GB
             return rarHeader->UnpSizeHigh == 0;
         }
@@ -668,7 +668,7 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
             isEncrypted = true;
         }
 
-        str::TransCharsInPlace(WStr(rarHeader.FileNameW), L"\\", L"/");
+        wstr::TransCharsInPlace(WStr(rarHeader.FileNameW), L"\\", L"/");
         auto name = ToUtf8Temp(rarHeader.FileNameW);
 
         FileInfo* i = AllocArray<FileInfo>(allocator_);

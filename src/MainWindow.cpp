@@ -139,8 +139,8 @@ MainWindow::~MainWindow() {
         WaitForSingleObject(findCountThread, INFINITE);
         findCountThread = nullptr;
     }
-    str::FreePtr(&findCountText);
-    str::FreePtr(&findCountPendingText);
+    wstr::FreePtr(&findCountText);
+    wstr::FreePtr(&findCountPendingText);
     ClearFindMatches(this);
 
     delete linkHandler;

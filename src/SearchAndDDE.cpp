@@ -112,8 +112,8 @@ void FindFirst(MainWindow* win) {
     // triggers find-as-you-type via the bar's onTextChanged handler.
     if (!hadFindFocus && dm->textSelection->result.len > 0) {
         AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
-        str::NormalizeWSInPlace(WStr(selection.Get()));
-        if (!str::IsEmpty(selection.Get())) {
+        wstr::NormalizeWSInPlace(WStr(selection.Get()));
+        if (!wstr::IsEmpty(selection.Get())) {
             TempStr s = ToUtf8Temp(WStr(selection.Get()));
             TempStr current = HwndGetTextTemp(win->hwndFindEdit);
             if (!str::EqI(s, current)) {
@@ -258,8 +258,8 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
     }
 
     AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
-    str::NormalizeWSInPlace(WStr(selection.Get()));
-    if (str::IsEmpty(selection.Get())) {
+    wstr::NormalizeWSInPlace(WStr(selection.Get()));
+    if (wstr::IsEmpty(selection.Get())) {
         return;
     }
 
@@ -478,10 +478,10 @@ static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
     const int kCtx = 40;
     int from = std::max(0, mStart - kCtx);
     int to = std::min(textLen, mEnd + kCtx);
-    WStr sub = str::Dup(WStr(pageText.s + from, (int)(to - from)));
-    str::NormalizeWSInPlace(sub);
+    WStr sub = wstr::Dup(WStr(pageText.s + from, (int)(to - from)));
+    wstr::NormalizeWSInPlace(sub);
     TempStr u = ToUtf8Temp(sub.s);
-    str::FreePtr(&sub);
+    wstr::FreePtr(&sub);
     return str::FormatTemp("%s%s%s", from > 0 ? "..." : "", u.s, to < textLen ? "..." : "");
 }
 
@@ -500,7 +500,7 @@ struct CountThreadData {
                     bool wantMatchList, bool wantSnippets, LONG epoch) {
         this->win = win;
         this->engine = engine;
-        this->text = str::Dup(text);
+        this->text = wstr::Dup(text);
         this->matchCase = matchCase;
         this->matchWholeWord = matchWholeWord;
         this->wantMatchList = wantMatchList;
@@ -508,7 +508,7 @@ struct CountThreadData {
         this->epoch = epoch;
     }
     ~CountThreadData() {
-        str::Free(text);
+        wstr::Free(text);
         CloseHandle(thread);
     }
 };
@@ -550,7 +550,7 @@ static void CountEndTask(CountEndTaskData* d) {
     win->findCountThread = nullptr;
     if (win->findCountEpoch == ctd->epoch) {
         // not canceled: install the freshly built cache (steal text from ctd)
-        str::FreePtr(&win->findCountText);
+        wstr::FreePtr(&win->findCountText);
         win->findCountText = ctd->text;
         ctd->text = {};
         win->findCountMatchCase = ctd->matchCase;
@@ -579,7 +579,7 @@ static void CountEndTask(CountEndTaskData* d) {
         WStr pending = win->findCountPendingText;
         win->findCountPendingText = {};
         StartFindCount(win, pending, win->findCountPendingMatchCase, win->findCountPendingMatchWholeWord);
-        str::Free(pending);
+        wstr::Free(pending);
     }
 }
 
@@ -644,7 +644,7 @@ static void CountThread(CountThreadData* d) {
 // the epoch after every match, so it exits within one page's work.
 static void AbortCount(MainWindow* win) {
     InterlockedIncrement(&win->findCountEpoch);
-    str::FreePtr(&win->findCountPendingText);
+    wstr::FreePtr(&win->findCountPendingText);
     HANDLE th = win->findCountThread;
     if (th) {
         WaitForSingleObject(th, INFINITE);
@@ -672,8 +672,8 @@ static void StartFindCount(MainWindow* win, WStr text, bool matchCase, bool matc
         // a scan is in flight: cancel it and queue this request; the running
         // worker's CountEndTask will start it once it exits
         InterlockedIncrement(&win->findCountEpoch);
-        str::FreePtr(&win->findCountPendingText);
-        win->findCountPendingText = str::Dup(text);
+        wstr::FreePtr(&win->findCountPendingText);
+        win->findCountPendingText = wstr::Dup(text);
         win->findCountPendingMatchCase = matchCase;
         win->findCountPendingMatchWholeWord = matchWholeWord;
         return;
@@ -699,7 +699,7 @@ static void UpdateMatchCount(MainWindow* win, WStr text) {
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     bool wantMatchList = wantSnippets || gShowAllMatches;
-    bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
+    bool cacheHit = win->findCountValid && win->findCountText && wstr::Eq(win->findCountText, text) &&
                     win->findCountMatchCase == win->findMatchCase &&
                     win->findCountMatchWholeWord == win->findMatchWholeWord && win->findCountEngine == engine &&
                     (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : win->findMatches.size() > 0));
@@ -901,7 +901,7 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
 // TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
 TempStr ReverseTextTemp(Str s) {
     TempWStr ws = ToWStrTemp(s);
-    int n = str::Leni(ws);
+    int n = wstr::Leni(ws);
     for (int i = 0; i < n / 2; i++) {
         WCHAR c1 = ws.s[i];
         WCHAR c2 = ws.s[n - 1 - i];
@@ -931,7 +931,7 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool sho
             if (ws.s[0] == ' ') {
                 ws = WStr(ws.s + 1);
             }
-            if (!str::Eq(ws, dm->textSearch->lastText)) {
+            if (!wstr::Eq(ws, dm->textSearch->lastText)) {
                 wasModified = true;
             }
         }
@@ -2030,7 +2030,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     } else if (fmt == CF_UNICODETEXT) {
         TempWStr tmp = ToWStrTemp(str.Get());
         data = (void*)tmp;
-        cbData = (str::Leni(tmp) + 1) * 2;
+        cbData = (wstr::Leni(tmp) + 1) * 2;
     } else {
         ReportIf(true);
         return 0;

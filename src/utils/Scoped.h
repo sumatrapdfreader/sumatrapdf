@@ -208,7 +208,7 @@ struct AutoFreeWStr {
     }
 
     void SetCopy(WStr newVal) {
-        WStr w = str::Dup(newVal);
+        WStr w = wstr::Dup(newVal);
         free(data);
         data = w.s;
     }
@@ -218,7 +218,7 @@ struct AutoFreeWStr {
     // this is size in characters, not bytes
     size_t size() {
         if (len == 0) {
-            len = str::Len(WStr(data));
+            len = wstr::Len(WStr(data));
         }
         return len;
     }

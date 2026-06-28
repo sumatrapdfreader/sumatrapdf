@@ -35,7 +35,7 @@ HRESULT TeXFilter::OnInit() {
 }
 
 #define iscmdchar(c) (iswalnum(c) || (c) == '_')
-#define skipspace(pc) for (; str::IsWs(*(pc)) && *(pc) != '\n'; (pc)++)
+#define skipspace(pc) for (; wstr::IsWs(*(pc)) && *(pc) != '\n'; (pc)++)
 #define skipcomment(pc) while (*(pc) && *(pc)++ != '\n')
 
 // appends a new line, if the last character isn't one already
@@ -47,7 +47,7 @@ static inline void addsingleNL(WCHAR* base, WCHAR** cur) { // str-port: internal
 
 // appends a space, if the last character isn't one already
 static inline void addsinglespace(WCHAR* base, WCHAR** cur) { // str-port: internal wchar write cursor
-    if (*cur > base && !str::IsWs(*(*cur - 1))) {
+    if (*cur > base && !wstr::IsWs(*(*cur - 1))) {
         *(*cur)++ = ' ';
     }
 }
@@ -68,14 +68,14 @@ WStr TeXFilter::ExtractBracedBlock() {
                 // skip all LaTeX/TeX commands
                 if (iscmdchar(*m_pPtr)) {
                     // ignore the content of \begin{...} and \end{...}
-                    if (str::StartsWith(m_pPtr, L"begin{") || str::StartsWith(m_pPtr, L"end{")) {
+                    if (wstr::StartsWith(m_pPtr, L"begin{") || wstr::StartsWith(m_pPtr, L"end{")) {
                         m_pPtr = wcschr(m_pPtr, '{') + 1;
                         ExtractBracedBlock();
                         addsingleNL(result, &rptr);
                         break;
                     }
                     // convert \item to a single dash
-                    if (str::StartsWith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
+                    if (wstr::StartsWith(m_pPtr, L"item") && !iscmdchar(*(m_pPtr + 4))) {
                         m_pPtr += 4;
                         addsingleNL(result, &rptr);
                         *rptr++ = '-';
@@ -113,17 +113,17 @@ WStr TeXFilter::ExtractBracedBlock() {
                     break;
                 }
                 // TODO: handle more international characters
-                if (str::StartsWith(m_pPtr, L"'e")) {
+                if (wstr::StartsWith(m_pPtr, L"'e")) {
                     *rptr++ = L'é';
                     m_pPtr += 2;
                     break;
                 }
-                if (str::StartsWith(m_pPtr, L"`e")) {
+                if (wstr::StartsWith(m_pPtr, L"`e")) {
                     *rptr++ = L'è';
                     m_pPtr += 2;
                     break;
                 }
-                if (str::StartsWith(m_pPtr, L"`a")) {
+                if (wstr::StartsWith(m_pPtr, L"`a")) {
                     *rptr++ = L'à';
                     m_pPtr += 2;
                     break;
@@ -196,7 +196,7 @@ WStr TeXFilter::ExtractBracedBlock() {
                 }
             default:
                 m_pPtr--;
-                if (str::IsWs(*m_pPtr)) {
+                if (wstr::IsWs(*m_pPtr)) {
                     addsinglespace(result, &rptr);
                     m_pPtr++;
                     break;
@@ -271,7 +271,7 @@ ContinueParsing:
                 return S_OK;
             }
 
-            if (!wcsncmp(start, L"begin", end - start) && str::Eq(ExtractBracedBlock(), L"document")) {
+            if (!wcsncmp(start, L"begin", end - start) && wstr::Eq(ExtractBracedBlock(), L"document")) {
                 m_state = STATE_TEX_CONTENT;
             }
             goto ContinueParsing;

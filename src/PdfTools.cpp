@@ -38,7 +38,7 @@ static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int pad
     HFONT oldFont = (HFONT)SelectObject(hdc, font);
     TempWStr pathW = ToWStrTemp(path);
     SIZE sz{};
-    GetTextExtentPoint32W(hdc, pathW, str::Leni(pathW), &sz);
+    GetTextExtentPoint32W(hdc, pathW, wstr::Leni(pathW), &sz);
     SelectObject(hdc, oldFont);
     ReleaseDC(nullptr, hdc);
     int dlgW = sz.cx + 2 * padding + DpiScale(hwndParent, 32);

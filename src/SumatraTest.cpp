@@ -533,7 +533,7 @@ Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     Rect* coords = nullptr;
     WStr pageTxt = engine->GetTextForPage(pageNo, nullptr, &coords);
     if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTxt.len && curStart < curEnd) {
-        AutoFreeWStr w(str::Dup(WStr(pageTxt.s + curStart, (int)(curEnd - curStart))).s);
+        AutoFreeWStr w(wstr::Dup(WStr(pageTxt.s + curStart, (int)(curEnd - curStart))).s);
         matched = ToUtf8Temp(WStr(w.Get()));
     }
 
@@ -602,7 +602,7 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
 static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
     WStr ws = ts.ExtractText(" ");
     TempStr res = ToUtf8Temp(ws);
-    str::Free(ws);
+    wstr::Free(ws);
     return res;
 }
 

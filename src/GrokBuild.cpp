@@ -1200,8 +1200,8 @@ static void EnsureWebViewReady(MainWindow* win) {
         delete webView;
         return;
     }
-    str::Free(webView->resourceUriPrefix);
-    webView->resourceUriPrefix = str::Dup(kGrokVirtualHostW);
+    wstr::Free(webView->resourceUriPrefix);
+    webView->resourceUriPrefix = wstr::Dup(kGrokVirtualHostW);
     webView->resourceProvider.ctx = &gGrokMarkedJs;
     webView->resourceProvider.getResource = AIChatGetMarkedJsResource;
 

@@ -45,7 +45,7 @@ bool IsExternalUrl(Str url) {
 }
 
 void FreePageText(PageText* pageText) {
-    str::Free(pageText->text);
+    wstr::Free(pageText->text);
     free((void*)pageText->coords);
     pageText->text = {};
     pageText->coords = nullptr;
@@ -116,7 +116,7 @@ TempStr CleanupTreeViewControlStringTemp(Str s) {
     TempWStr ws = ToWStrTemp(s);
     // soft hyphen (U+00AD): an invisible line-break hint, but rendered as a
     // visible hyphen by some fonts
-    str::RemoveCharsInPlace(ws, L"\x00ad");
+    wstr::RemoveCharsInPlace(ws, L"\x00ad");
     // control chars (incl. embedded newlines/tabs) and the Unicode line and
     // paragraph separators render as boxes in a single-line label
     for (int i = 0; i < ws.len; i++) {
@@ -126,7 +126,7 @@ TempStr CleanupTreeViewControlStringTemp(Str s) {
         }
     }
     // collapse the runs of whitespace we just introduced (and trim)
-    str::NormalizeWSInPlace(ws);
+    wstr::NormalizeWSInPlace(ws);
     return ToUtf8Temp(ws);
 }
 
@@ -367,7 +367,7 @@ EngineBase::~EngineBase() {
         for (int i = 0; i < pageCount; i++) {
             PageText* pt = &pagesText[i];
             free(pt->coords);
-            str::Free(pt->text);
+            wstr::Free(pt->text);
         }
         free(pagesText);
     }

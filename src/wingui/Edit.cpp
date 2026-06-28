@@ -48,7 +48,7 @@ void Edit::SetSelection(int start, int end) {
 
 void Edit::SelectAll() {
     TempWStr s = HwndGetTextWTemp(hwnd);
-    int pos = (int)str::Len(s);
+    int pos = (int)wstr::Len(s);
     Edit_SetSel(hwnd, 0, pos);
 }
 
@@ -58,7 +58,7 @@ void Edit::SetCursorPosition(int pos) {
 
 void Edit::SetCursorPositionAtEnd() {
     TempWStr s = HwndGetTextWTemp(hwnd);
-    int pos = (int)str::Len(s);
+    int pos = (int)wstr::Len(s);
     SetCursorPosition(pos);
 }
 

@@ -908,9 +908,9 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     RECT highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
         TempWStr prefixToStart = ToWStrTemp(Str(title.s, (int)byteRanges[i].start));
-        int wStart = str::Leni(prefixToStart);
+        int wStart = wstr::Leni(prefixToStart);
         TempWStr prefixToEnd = ToWStrTemp(Str(title.s, (int)byteRanges[i].end));
-        int wEnd = str::Leni(prefixToEnd);
+        int wEnd = wstr::Leni(prefixToEnd);
 
         SIZE szStart, szEnd;
         GetTextExtentPoint32W(hdc, titleW, wStart, &szStart);

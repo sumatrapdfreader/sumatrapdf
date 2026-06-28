@@ -233,19 +233,31 @@ void Free(Str s) {
     free(s.s);
 }
 
+} // namespace str
+namespace wstr {
+
 void Free(WStr s) {
     free(s.s);
 }
+
+} // namespace wstr
+namespace str {
 
 void FreePtr(Str* s) {
     str::Free(*s);
     *s = {};
 }
 
+} // namespace str
+namespace wstr {
+
 void FreePtr(WStr* s) {
-    str::Free(*s);
+    wstr::Free(*s);
     *s = {};
 }
+
+} // namespace wstr
+namespace str {
 
 static Str WrapAllocated(char* s, size_t cch = (size_t)-1) { // str-port: owned heap
     if (!s) {
@@ -278,6 +290,9 @@ Str Dup(const ByteSlice& d) {
     return Dup(AsStr(d));
 }
 
+} // namespace str
+namespace wstr {
+
 static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) { // str-port: owned heap
     if (!s) {
         return {};
@@ -289,7 +304,7 @@ static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) { // str-port: own
 }
 
 WStr Dup(Arena* a, WStr s, size_t cch) {
-    if (str::IsNull(s)) {
+    if (wstr::IsNull(s)) {
         return {};
     }
     if (cch == (size_t)-1) {
@@ -304,6 +319,9 @@ WStr Dup(Arena* a, WStr s, size_t cch) {
 WStr Dup(WStr s, size_t cch) {
     return Dup(nullptr, s, cch);
 }
+
+} // namespace wstr
+namespace str {
 
 // return true if s1 == s2, case sensitive
 bool Eq(Str s1, Str s2) {
@@ -619,6 +637,9 @@ Str Join(Str s1, Str s2, Str s3) {
     return Join(nullptr, s1, s2, s3);
 }
 
+} // namespace str
+namespace wstr {
+
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
 WStr Join(Arena* allocator, WStr s1, WStr s2, WStr s3) {
@@ -637,6 +658,9 @@ WStr Join(Arena* allocator, WStr s1, WStr s2, WStr s3) {
 WStr Join(WStr s1, WStr s2, WStr s3) {
     return Join(nullptr, s1, s2, s3);
 }
+
+} // namespace wstr
+namespace str {
 
 Str ToLowerInPlace(Str s) {
     for (int i = 0; i < s.len; i++) {
@@ -955,6 +979,9 @@ size_t RemoveCharsInPlace(Str str, Str toRemove) {
 
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
+} // namespace str
+namespace wstr {
+
 size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
     if (!str) {
         return 0;
@@ -963,7 +990,7 @@ size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
     int dst = 0;
     for (int src = 0; src < str.len; src++) {
         WCHAR c = str.s[src];
-        if (!str::FindChar(toRemove, c)) {
+        if (!wstr::FindChar(toRemove, c)) {
             str.s[dst++] = c;
         } else {
             ++removed;
@@ -972,6 +999,9 @@ size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
     str.s[dst] = '\0';
     return removed;
 }
+
+} // namespace wstr
+namespace str {
 
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
 TempStr MemToHexTemp(const u8* buf, size_t len) {
@@ -2267,7 +2297,7 @@ bool WStrBuilder::Append(WStr src, size_t count) {
     if ((size_t)-1 == count) {
         count = (size_t)src.len;
     }
-    if (str::IsNull(src) || 0 == count) {
+    if (wstr::IsNull(src) || 0 == count) {
         return true;
     }
     WCHAR* dst = MakeSpaceAt(this, len, count); // str-port: owned heap
@@ -2365,19 +2395,19 @@ WCHAR WStrBuilder::LastChar() const {
     return at(n - 1);
 }
 
-namespace str {
+namespace wstr {
 
 // returns true if was replaced
 bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith) {
     // fast path: nothing to replace
-    if (!str::Find(WStr(s.els), toReplace)) {
+    if (!wstr::Find(WStr(s.els), toReplace)) {
         return false;
     }
-    WStr newStr = str::Replace(WStr(s.els), toReplace, replaceWith);
+    WStr newStr = wstr::Replace(WStr(s.els), toReplace, replaceWith);
     s.Reset();
     if (newStr) {
         s.Append(newStr);
-        str::Free(newStr);
+        wstr::Free(newStr);
     }
     return true;
 }
@@ -2394,6 +2424,9 @@ bool IsNonCharacter(WCHAR c) {
     return c >= 0xFFFE || (c & ~1) == 0xDFFE || (0xFDD0 <= c && c <= 0xFDEF);
 }
 
+} // namespace wstr
+namespace str {
+
 // hack: to fool CodeQL which doesn't approve of char* => WCHAR* casts
 // and doesn't allow any way to disable that warning
 WStr CastToWCHAR(Str s) {
@@ -2402,6 +2435,9 @@ WStr CastToWCHAR(Str s) {
     }
     return WStr((WCHAR*)s.s, s.len / (int)sizeof(WCHAR)); // str-port: byte reinterpret
 }
+
+} // namespace str
+namespace wstr {
 
 // return true if s1 == s2, case sensitive
 bool Eq(WStr s1, WStr s2) {
@@ -2419,7 +2455,7 @@ bool EqI(WStr s1, WStr s2) {
     if (s1.len == 0) {
         return true;
     }
-    if (str::IsNull(s1) || str::IsNull(s2)) {
+    if (wstr::IsNull(s1) || wstr::IsNull(s2)) {
         return false;
     }
     return 0 == _wcsnicmp(s1.s, s2.s, (size_t)s1.len);
@@ -2440,7 +2476,7 @@ bool IsNull(const WStr& s) {
 }
 
 bool IsEmpty(WStr s) {
-    return str::IsNull(s) || s.len == 0;
+    return wstr::IsNull(s) || s.len == 0;
 }
 
 bool StartsWith(WStr str, WStr prefix) {
@@ -2519,6 +2555,9 @@ WStr Find(WStr str, WStr find) {
     return {};
 }
 
+} // namespace wstr
+namespace str {
+
 Str ToUpperInPlace(Str s) {
     if (!s) {
         return {};
@@ -2528,6 +2567,9 @@ Str ToUpperInPlace(Str s) {
     }
     return s;
 }
+
+} // namespace str
+namespace wstr {
 
 WStr ToLowerInPlace(WStr s) {
     if (!s) {
@@ -2540,7 +2582,7 @@ WStr ToLowerInPlace(WStr s) {
 }
 
 WStr ToLower(WStr s) {
-    WStr s2 = str::Dup(s);
+    WStr s2 = wstr::Dup(s);
     return ToLowerInPlace(s2);
 }
 
@@ -2550,7 +2592,7 @@ size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
     }
     size_t nReplaced = 0;
     for (int i = 0; i < str.len; i++) {
-        WStr pos = str::FindChar(oldChars, str.s[i]);
+        WStr pos = wstr::FindChar(oldChars, str.s[i]);
         if (pos) {
             size_t idx = (size_t)(pos.s - oldChars.s);
             str.s[i] = newChars.s[idx];
@@ -2563,7 +2605,7 @@ size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
 
 // free() the result via str::Free(s) or str::FreePtr(&s)
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
-    if (!s || str::IsEmpty(toReplace) || !replaceWith) {
+    if (!s || wstr::IsEmpty(toReplace) || !replaceWith) {
         return {};
     }
 
@@ -2572,7 +2614,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     int start = 0;
     while (start < s.len) {
         WStr rest(s.s + start, s.len - start);
-        WStr match = str::Find(rest, toReplace);
+        WStr match = wstr::Find(rest, toReplace);
         if (!match) {
             result.Append(WStr(s.s + start, s.len - start));
             break;
@@ -2615,6 +2657,9 @@ size_t NormalizeWSInPlace(WStr s) {
     return (size_t)(src - dst);
 }
 
+} // namespace wstr
+namespace str {
+
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
@@ -2633,6 +2678,9 @@ int BufSet(char* dst, int cchDst, Str src) { // str-port: caller-owned out-buffe
     return toCopy;
 }
 
+} // namespace str
+namespace wstr {
+
 int BufSet(WCHAR* dst, int cchDst, WStr src) { // str-port: caller-owned out-buffer
     ReportIf(0 == cchDst || !dst);
     if (!src) {
@@ -2647,8 +2695,11 @@ int BufSet(WCHAR* dst, int cchDst, WStr src) { // str-port: caller-owned out-buf
     return toCopy;
 }
 
+} // namespace wstr
+namespace str {
+
 int BufSet(WCHAR* dst, int dstCchSize, Str src) { // str-port: caller-owned out-buffer
-    return BufSet(dst, dstCchSize, ToWStrTemp(src));
+    return wstr::BufSet(dst, dstCchSize, ToWStrTemp(src));
 }
 
 // append as much of s at the end of dst (which must be properly null-terminated)
@@ -2789,18 +2840,21 @@ TempStr FormatRomanNumeralTemp(int n) {
     return str::DupTemp(roman.Get());
 }
 
+} // namespace str
+namespace wstr {
+
 static WStr ExtractUntilW(WStr str, int off, WCHAR c, int* endOffOut) {
     if (off < 0 || off > str.len) {
         return {};
     }
     WStr slice = WStr(str.s + off, str.len - off);
     WStr found = FindChar(slice, c);
-    if (str::IsNull(found)) {
+    if (wstr::IsNull(found)) {
         return {};
     }
     int endOff = (int)(found.s - str.s);
     *endOffOut = endOff;
-    return str::Dup(WStr(str.s + off, endOff - off));
+    return wstr::Dup(WStr(str.s + off, endOff - off));
 }
 
 static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int* endOffOut, void* valueOut) {
@@ -2808,11 +2862,11 @@ static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int*
     WCHAR f2[] = L"% ";
     WStr formatAt = WStr(format.s + formatOff, format.len - formatOff);
     WStr endF = Parse(formatAt, L"%u%c", &width, &f2[1]);
-    if (!str::IsNull(endF) && !str::IsNull(FindChar(WStr(L"udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
+    if (!wstr::IsNull(endF) && !wstr::IsNull(FindChar(WStr(L"udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
+        wstr::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
         WStr end = Parse(WStr(limited), f2, valueOut);
-        if (!str::IsNull(end) && !end.s[0]) {
+        if (!wstr::IsNull(end) && !end.s[0]) {
             *endOffOut = p + (int)width;
             return (int)(endF.s - format.s) - 1;
         }
@@ -2826,7 +2880,7 @@ static bool ParseULongAtW(WStr str, int off, int base, unsigned long* val, int* 
     }
     unsigned long v = 0;
     int i = off;
-    while (i < str.len && str::IsWs(str.s[i])) {
+    while (i < str.len && wstr::IsWs(str.s[i])) {
         i++;
     }
     if (base == 16 && i + 1 < str.len && str.s[i] == L'0' && (str.s[i + 1] == L'x' || str.s[i + 1] == L'X')) {
@@ -2839,7 +2893,7 @@ static bool ParseULongAtW(WStr str, int off, int base, unsigned long* val, int* 
         if (wc >= L'0' && wc <= L'9') {
             digit = (int)(wc - L'0');
         } else if (base == 16) {
-            digit = HexDigitVal((char)wc);
+            digit = str::HexDigitVal((char)wc);
         }
         if (digit < 0 || (unsigned)digit >= (unsigned)base) {
             break;
@@ -2862,7 +2916,7 @@ static bool ParseLongAtW(WStr str, int off, int base, long* val, int* endOff) {
     }
     bool neg = false;
     int i = off;
-    while (i < str.len && str::IsWs(str.s[i])) {
+    while (i < str.len && wstr::IsWs(str.s[i])) {
         i++;
     }
     if (i >= str.len) {
@@ -2902,7 +2956,7 @@ static bool ParseDoubleAtW(WStr str, int off, double* val, int* endOff) {
 }
 
 static WStr ParseVW(WStr str, WStr format, va_list args) {
-    if (str::IsNull(str) || str::IsNull(format)) {
+    if (wstr::IsNull(str) || wstr::IsNull(format)) {
         return {};
     }
     int p = 0;
@@ -2956,7 +3010,7 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
             if (fi + 1 < format.len) {
                 va_arg(args, AutoFreeWStr*)->Set(ExtractUntilW(str, p, format.s[fi + 1], &end).s);
             } else {
-                va_arg(args, AutoFreeWStr*)->Set(str::Dup(WStr(str.s + p, str.len - p)).s);
+                va_arg(args, AutoFreeWStr*)->Set(wstr::Dup(WStr(str.s + p, str.len - p)).s);
                 end = str.len;
             }
         } else if (L'$' == spec && p >= str.len) {
@@ -2967,15 +3021,15 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
             }
             end = p + 1;
         } else if (L' ' == spec) {
-            if (p >= str.len || !str::IsWs(str.s[p])) {
+            if (p >= str.len || !wstr::IsWs(str.s[p])) {
                 return {};
             }
             end = p + 1;
         } else if (L'_' == spec) {
-            if (p >= str.len || !str::IsWs(str.s[p])) {
+            if (p >= str.len || !wstr::IsWs(str.s[p])) {
                 continue; // don't fail, if there's no whitespace at all
             }
-            for (end = p + 1; end < str.len && str::IsWs(str.s[end]); end++) {
+            for (end = p + 1; end < str.len && wstr::IsWs(str.s[end]); end++) {
                 // do nothing
             }
         } else if (L'?' == spec && fi + 1 < format.len) {
@@ -2986,7 +3040,7 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
                 continue;
             }
             end = p + 1;
-        } else if (str::IsDigit(spec)) {
+        } else if (wstr::IsDigit(spec)) {
             int formatIdx = ParseLimitedNumberW(str, p, fi, format, &end, va_arg(args, void*));
             if (formatIdx < 0) {
                 return {};
@@ -3002,7 +3056,7 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
 }
 
 WStr Parse(WStr str, WStr format, ...) {
-    if (str::IsNull(str) || str::IsNull(format)) {
+    if (wstr::IsNull(str) || wstr::IsNull(format)) {
         return {};
     }
     va_list args;
@@ -3012,7 +3066,7 @@ WStr Parse(WStr str, WStr format, ...) {
     return res;
 }
 
-} // namespace str
+} // namespace wstr
 
 namespace url {
 

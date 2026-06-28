@@ -1322,8 +1322,8 @@ static void EnsureWebViewReady(MainWindow* win) {
         delete webView;
         return;
     }
-    str::Free(webView->resourceUriPrefix);
-    webView->resourceUriPrefix = str::Dup(kCodexVirtualHostW);
+    wstr::Free(webView->resourceUriPrefix);
+    webView->resourceUriPrefix = wstr::Dup(kCodexVirtualHostW);
     webView->resourceProvider.ctx = &gCodexMarkedJs;
     webView->resourceProvider.getResource = AIChatGetMarkedJsResource;
 

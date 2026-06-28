@@ -36,9 +36,9 @@ TextSearch::~TextSearch() {
 }
 
 void TextSearch::Clear() {
-    str::FreePtr(&findText);
-    str::FreePtr(&anchor);
-    str::FreePtr(&lastText);
+    wstr::FreePtr(&findText);
+    wstr::FreePtr(&anchor);
+    wstr::FreePtr(&lastText);
     Reset();
 }
 
@@ -64,22 +64,22 @@ void TextSearch::SetText(WStr text) {
     // "match whole word" forces both word-boundary checks on; otherwise they're
     // driven by a leading / trailing single space in the search text
     this->matchWordStart =
-        matchWholeWord || (!str::IsEmpty(text) && text.s[0] == L' ' && (text.len < 2 || text.s[1] != L' '));
-    this->matchWordEnd = matchWholeWord || (str::EndsWith(text, WStrL(L" ")) && !str::EndsWith(text, WStrL(L"  ")));
+        matchWholeWord || (!wstr::IsEmpty(text) && text.s[0] == L' ' && (text.len < 2 || text.s[1] != L' '));
+    this->matchWordEnd = matchWholeWord || (wstr::EndsWith(text, WStrL(L" ")) && !wstr::EndsWith(text, WStrL(L"  ")));
 
     WStr searchText = text;
-    if (!str::IsEmpty(searchText) && searchText.s[0] == L' ') {
+    if (!wstr::IsEmpty(searchText) && searchText.s[0] == L' ') {
         searchText = WStr(searchText.s + 1, searchText.len - 1);
     }
 
     // don't reset anything if the search text hasn't changed at all
-    if (str::Eq(this->lastText, searchText)) {
+    if (wstr::Eq(this->lastText, searchText)) {
         return;
     }
 
     this->Clear();
-    this->lastText = str::Dup(searchText);
-    this->findText = str::Dup(searchText);
+    this->lastText = wstr::Dup(searchText);
+    this->findText = wstr::Dup(searchText);
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (searchText && isnoncjkwordchar(searchText.s[0])) {
@@ -87,7 +87,7 @@ void TextSearch::SetText(WStr text) {
         for (; end < searchText.len && isnoncjkwordchar(searchText.s[end]); end++) {
             ;
         }
-        anchor = str::Dup(searchText.s, (size_t)end);
+        anchor = wstr::Dup(searchText.s, (size_t)end);
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
@@ -95,16 +95,16 @@ void TextSearch::SetText(WStr text) {
     else if (searchText && (searchText.s[0] == L'-' || searchText.s[0] == L'\'' || searchText.s[0] == L'"')) {
         anchor = {};
     } else if (searchText) {
-        anchor = str::Dup(searchText.s, 1);
+        anchor = wstr::Dup(searchText.s, 1);
     } else {
         anchor = {};
     }
 
-    if (str::Len(this->findText) >= INT_MAX) {
+    if (wstr::Len(this->findText) >= INT_MAX) {
         this->findText.s[(unsigned)INT_MAX - 1] = '\0';
     }
-    if (str::EndsWith(this->findText, WStrL(L" "))) {
-        this->findText.s[str::Len(this->findText) - 1] = '\0';
+    if (wstr::EndsWith(this->findText, WStrL(L" "))) {
+        this->findText.s[wstr::Len(this->findText) - 1] = '\0';
     }
 
     markAllPagesNonSkip(pagesToSkip);
@@ -137,7 +137,7 @@ void TextSearch::SetDirection(TextSearch::Direction direction) {
     }
     forward = fwd;
     if (findText) {
-        int n = (int)str::Len(findText);
+        int n = (int)wstr::Len(findText);
         if (fwd) {
             findIndex += n;
         } else {
@@ -150,7 +150,7 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     CopySelection(sel);
 
     AutoFreeWStr selection(ExtractText(" ").s);
-    str::NormalizeWSInPlace(WStr(selection.Get()));
+    wstr::NormalizeWSInPlace(WStr(selection.Get()));
     SetText(WStr(selection.Get()));
 
     searchHitStartAt = findPage = std::min(startPage, endPage);
@@ -404,7 +404,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(WStr start) const {
 }
 
 static WStr WStrStr(WStr haystack, WStr needle) {
-    if (!haystack || str::IsEmpty(needle)) {
+    if (!haystack || wstr::IsEmpty(needle)) {
         return {};
     }
     for (int i = 0; i <= haystack.len - needle.len; i++) {
@@ -424,7 +424,7 @@ static WStr GetNextIndex(WStr base, int offset, bool forward) {
 }
 
 bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyph) {
-    if (str::IsEmpty(findText)) {
+    if (wstr::IsEmpty(findText)) {
         return false;
     }
     if (!pageNo) {
@@ -479,7 +479,7 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
 }
 
 bool TextSearch::FindStartingAtPage(int pageNo) {
-    if (str::IsEmpty(findText)) {
+    if (wstr::IsEmpty(findText)) {
         return false;
     }
 
@@ -535,7 +535,7 @@ TextSel* TextSearch::FindFirst(int page, WStr text) {
 // inside FindStartingAtPage. Used for page-constrained search (issue #3085)
 TextSel* TextSearch::FindFirstOnPage(int pageNo, WStr text) {
     SetText(text);
-    if (str::IsEmpty(findText) || pageNo < 1 || pageNo > nPages) {
+    if (wstr::IsEmpty(findText) || pageNo < 1 || pageNo > nPages) {
         return nullptr;
     }
     Reset();

@@ -69,14 +69,14 @@ class ScopedMuiCritSec {
 class FontListItem {
   public:
     FontListItem(WStr name, float sizePt, FontStyle style, Font* font, HFONT hFont) : next(nullptr) {
-        cf.name = str::Dup(name);
+        cf.name = wstr::Dup(name);
         cf.sizePt = sizePt;
         cf.style = style;
         cf.font = font;
         cf.hFont = hFont;
     }
     ~FontListItem() {
-        str::Free(cf.name);
+        wstr::Free(cf.name);
         delete cf.font;
         DeleteObject(cf.hFont);
         delete next;
@@ -173,7 +173,7 @@ bool CachedFont::SameAs(WStr otherName, float otherSizePt, FontStyle otherStyle)
     if (style != otherStyle) {
         return false;
     }
-    return str::Eq(name, otherName);
+    return wstr::Eq(name, otherName);
 }
 
 HFONT CachedFont::GetHFont() {

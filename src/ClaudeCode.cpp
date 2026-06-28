@@ -1146,8 +1146,8 @@ static void EnsureWebViewReady(MainWindow* win) {
         delete webView;
         return;
     }
-    str::Free(webView->resourceUriPrefix);
-    webView->resourceUriPrefix = str::Dup(kClaudeVirtualHostW);
+    wstr::Free(webView->resourceUriPrefix);
+    webView->resourceUriPrefix = wstr::Dup(kClaudeVirtualHostW);
     webView->resourceProvider.ctx = &gClaudeMarkedJs;
     webView->resourceProvider.getResource = AIChatGetMarkedJsResource;
 

@@ -264,7 +264,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     // write as REG_EXPAND_SZ since PATH may contain %vars%
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valueW = ToWStrTemp(newPath.CStr());
-    DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
+    DWORD cbData = (DWORD)(wstr::Len(valueW) + 1) * sizeof(WCHAR);
     HKEY hKey;
     LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
     if (res != ERROR_SUCCESS) {
@@ -649,7 +649,7 @@ static void OnButtonOptions(InstallerWnd* wnd) {
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lpData) {
     switch (msg) {
         case BFFM_INITIALIZED:
-            if (!str::IsEmpty(WStr((wchar_t*)lpData))) { // str-port: Win32 BFFM callback
+            if (!wstr::IsEmpty(WStr((wchar_t*)lpData))) { // str-port: Win32 BFFM callback
                 SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, lpData);
             }
             break;

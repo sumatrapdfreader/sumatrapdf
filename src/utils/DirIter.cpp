@@ -66,7 +66,7 @@ NextDir:
         }
         it->currDir = it->dirsToVisit.RemoveAt(nDirs - 1);
         TempWStr ws = ToWStrTemp(it->currDir);
-        it->pattern = str::Join(ws, WStr(L"*"));
+        it->pattern = wstr::Join(ws, WStr(L"*"));
         it->h = FindFirstFileW(it->pattern, &it->fd);
         if (!IsValidHandle(it->h)) {
             goto DidFinish;
@@ -75,7 +75,7 @@ NextDir:
         ok = FindNextFileW(it->h, &it->fd);
         if (!ok) {
             SafeFindClose(&it->h);
-            str::FreePtr(&it->pattern);
+            wstr::FreePtr(&it->pattern);
             goto NextDir;
         }
     }
@@ -100,12 +100,12 @@ NextDir:
         ok = FindNextFileW(it->h, &it->fd);
         if (!ok) {
             SafeFindClose(&it->h);
-            str::FreePtr(&it->pattern);
+            wstr::FreePtr(&it->pattern);
             goto NextDir;
         }
     };
 DidFinish:
-    str::FreePtr(&it->pattern);
+    wstr::FreePtr(&it->pattern);
     SafeFindClose(&it->h);
     it->didFinish = true;
     return;
@@ -120,7 +120,7 @@ DirIter::iterator::iterator(const DirIter* di, bool didFinish) {
 }
 
 DirIter::iterator::~iterator() {
-    str::Free(pattern);
+    wstr::Free(pattern);
 }
 
 DirIter::iterator DirIter::begin() const {

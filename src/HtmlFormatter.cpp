@@ -717,8 +717,8 @@ void HtmlFormatter::EmitTextRun(Str s) {
 
         TempWStr buf = ToWStrTemp(run);
         // soft hyphens should not be displayed
-        buf.len -= (int)str::RemoveCharsInPlace(buf, L"\xad");
-        if (str::IsEmpty(buf)) {
+        buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
+        if (wstr::IsEmpty(buf)) {
             break;
         }
         textMeasure->SetFont(CurrFont());
@@ -781,7 +781,7 @@ void HtmlFormatter::EmitTextMarker(Str s) {
         return;
     }
     TempWStr buf = ToWStrTemp(s);
-    if (str::IsEmpty(buf)) {
+    if (wstr::IsEmpty(buf)) {
         return;
     }
     textMeasure->SetFont(CurrFont());
@@ -888,7 +888,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
         TempWStr buf = ToWStrTemp(attr->val);
         // multiple font names can be comma separated
         if (buf && buf.s[0] != L',') {
-            str::TransCharsInPlace(buf, WStrL(L","), WStrL(L"\0"));
+            wstr::TransCharsInPlace(buf, WStrL(L","), WStrL(L"\0"));
             faceName = buf;
         }
     }
@@ -1450,7 +1450,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
             TempWStr buf = ToWStrTemp(i.str);
             // soft hyphens should not be displayed
-            buf.len -= (int)str::RemoveCharsInPlace(buf, L"\xad");
+            buf.len -= (int)wstr::RemoveCharsInPlace(buf, L"\xad");
             textDraw->Draw(buf, ToGdipRectF(bbox), DrawInstrType::RtlString == i.type);
         } else if (DrawInstrType::SetFont == i.type) {
             textDraw->SetFont(i.font);

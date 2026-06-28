@@ -682,7 +682,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 continue;
             }
             auto itemText = ToWStrTemp(text.Get());
-            str::NormalizeWSInPlace(itemText);
+            wstr::NormalizeWSInPlace(itemText);
             AutoFreeWStr itemSrc;
             if (href) {
                 href.Set(NormalizeURL(Str(href), Str(pagePath)).s);
@@ -1081,9 +1081,9 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             titleCount++;
         } else if (tok->IsEndTag() && Tag_Title == tok->tag) {
             if (itemText) {
-                str::NormalizeWSInPlace(WStr(itemText.Get()));
+                wstr::NormalizeWSInPlace(WStr(itemText.Get()));
             }
-            if (!str::IsEmpty(itemText.Get())) {
+            if (!wstr::IsEmpty(itemText.Get())) {
                 TempStr url = str::FormatTemp(FB2_TOC_ENTRY_MARK "%d", titleCount);
                 TempStr txt = ToUtf8Temp(WStr(itemText.Get()));
                 visitor->Visit(txt, url, level);
@@ -1092,10 +1092,10 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             inTitle = false;
         } else if (inTitle && tok->IsText()) {
             AutoFreeWStr text(strconv::FromHtmlUtf8(tok->s).s);
-            if (str::IsEmpty(itemText.Get())) {
+            if (wstr::IsEmpty(itemText.Get())) {
                 itemText.Set(text.StealData());
             } else {
-                itemText.Set(str::Join(WStr(itemText.Get()), WStr(L" "), WStr(text.Get())).s);
+                itemText.Set(wstr::Join(WStr(itemText.Get()), WStr(L" "), WStr(text.Get())).s);
             }
         }
     }
@@ -1160,7 +1160,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
             WStr ws = strconv::FromHtmlUtf8(Str(attr->val));
             TempStr s = ToUtf8Temp(ws);
             tocEntries.Append(s);
-            str::FreePtr(&ws);
+            wstr::FreePtr(&ws);
             builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size());
             return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
         }

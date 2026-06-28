@@ -242,7 +242,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     // includes the figure body, not just the caption + the paragraph
     // following it.
     bool destAtCaption = false;
-    if (!str::IsEmpty(text) && coords && destY > 0.f) {
+    if (!wstr::IsEmpty(text) && coords && destY > 0.f) {
         int dY = (int)destY;
         for (int i = 0; i < text.len; i++) {
             int gy = coords[i].y;
@@ -284,7 +284,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     // where the figure body has no extractable text at destY — the caller
     // falls to LandscapeBox without ever running the caption-aware
     // DetectEntryBox path.
-    if (!str::IsEmpty(text) && coords) {
+    if (!wstr::IsEmpty(text) && coords) {
         // Search to end of page so tall figures with captions far below the
         // initial 200pt cap still match. The topmost (smallest y) "Figure
         // N.M" below the cap wins — PDFs draw text in arbitrary order, so
@@ -392,7 +392,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
     // Trim trailing blank margin: find the bottom of the last text glyph
     // inside the candidate region and end the region just below it so the
     // popup doesn't render an empty trailing margin.
-    if (!str::IsEmpty(text) && coords) {
+    if (!wstr::IsEmpty(text) && coords) {
         int boxTop = (int)ty;
         int boxBottom = (int)(ty + h);
         int lastTextBottom = boxTop;
@@ -427,7 +427,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
 RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY) {
     (void)destX;
     RectF empty{};
-    if (destY <= 0.f || str::IsEmpty(text) || !coords) {
+    if (destY <= 0.f || wstr::IsEmpty(text) || !coords) {
         return empty;
     }
     int dY = (int)destY;
@@ -448,7 +448,7 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
         // Walk backward through digits on the same line.
         int p = i - 1;
         int digits = 0;
-        while (p >= 0 && str::IsDigit(text.s[p]) && coords[p].y == ly) {
+        while (p >= 0 && wstr::IsDigit(text.s[p]) && coords[p].y == ly) {
             p--;
             digits++;
         }
@@ -461,7 +461,7 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
             hadDot = true;
             p--;
             int d2 = 0;
-            while (p >= 0 && str::IsDigit(text.s[p]) && coords[p].y == ly) {
+            while (p >= 0 && wstr::IsDigit(text.s[p]) && coords[p].y == ly) {
                 p--;
                 d2++;
             }
@@ -489,7 +489,7 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
             if (j >= p && j <= i) {
                 continue;
             }
-            if (str::IsWs(text.s[j])) {
+            if (wstr::IsWs(text.s[j])) {
                 continue;
             }
             if (coords[j].y != ly) {

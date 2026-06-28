@@ -127,7 +127,7 @@ static bool NavigationStarting(void* ctx, Str url, bool newWindow) {
     // a new-window request. Open those (and any external in-window navigation) in
     // the user's default browser instead of the in-app webview. A plain browser
     // window (no virtual host) keeps normal in-window navigation.
-    bool servesInternalContent = w->webView && !str::IsEmpty(w->webView->resourceUriPrefix);
+    bool servesInternalContent = w->webView && !wstr::IsEmpty(w->webView->resourceUriPrefix);
     if (newWindow || (servesInternalContent && IsExternalUrl(url))) {
         SumatraLaunchBrowser(url);
         return false;
@@ -251,8 +251,8 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         }
         webView->dataDir = str::Dup(dataDir);
         webView->resourceProvider = args.resourceProvider;
-        str::Free(webView->resourceUriPrefix);
-        webView->resourceUriPrefix = str::Dup(args.resourceUriPrefix);
+        wstr::Free(webView->resourceUriPrefix);
+        webView->resourceUriPrefix = wstr::Dup(args.resourceUriPrefix);
         webView->events.ctx = this;
         webView->events.navigationStarting = NavigationStarting;
         webView->events.navigationCompleted = NavigationCompleted;

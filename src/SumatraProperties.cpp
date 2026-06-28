@@ -547,7 +547,7 @@ static int GetPropertyLabelWidth(Str line, int* labelBytesOut) {
         }
         TempWStr label = ToWStrTemp(Str(line.s, i + 1));
         *labelBytesOut = i + 1;
-        return str::Leni(label);
+        return wstr::Leni(label);
     }
     return -1;
 }

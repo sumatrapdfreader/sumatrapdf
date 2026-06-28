@@ -871,7 +871,7 @@ static void AppendNewline(WStrBuilder& extracted, Vec<Rect>& coords, WStr lineSe
         coords.RemoveLast();
     }
     extracted.Append(lineSep);
-    coords.AppendBlanks(str::Len(lineSep));
+    coords.AppendBlanks(wstr::Len(lineSep));
 }
 
 bool EngineDjVu::ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rect>& coords) {
@@ -954,13 +954,13 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     if (!success) {
         return {};
     }
-    if (extracted.size() > 0 && !str::EndsWith(extracted.Get(), lineSep)) {
+    if (extracted.size() > 0 && !wstr::EndsWith(extracted.Get(), lineSep)) {
         AppendNewline(extracted, coords, lineSep);
     }
 
     PageText res;
 
-    ReportIf(str::Len(extracted.Get()) != coords.size());
+    ReportIf(wstr::Len(extracted.Get()) != coords.size());
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {

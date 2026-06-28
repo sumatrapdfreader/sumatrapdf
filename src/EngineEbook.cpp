@@ -388,7 +388,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(str::Len(lineSep));
+                    coords.AppendBlanks(wstr::Len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
@@ -412,7 +412,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(str::Len(lineSep));
+                    coords.AppendBlanks(wstr::Len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
@@ -438,9 +438,9 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 break;
         }
     }
-    if (content.size() > 0 && !str::EndsWith(content.Get(), lineSep)) {
+    if (content.size() > 0 && !wstr::EndsWith(content.Get(), lineSep)) {
         content.Append(lineSep);
-        coords.AppendBlanks(str::Len(lineSep));
+        coords.AppendBlanks(wstr::Len(lineSep));
     }
     ReportIf(coords.size() != content.size());
 

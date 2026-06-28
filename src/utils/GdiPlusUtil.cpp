@@ -97,9 +97,9 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
     if (-1 == idx) {
         LOGFONTW lfw;
         Status ok = f->GetLogFontW(g, &lfw);
-        bool isItalicOrMonospace = Ok != ok || lfw.lfItalic || str::Eq(lfw.lfFaceName, L"Courier New") ||
-                                   str::Find(lfw.lfFaceName, L"Consol") || str::EndsWith(lfw.lfFaceName, L"Mono") ||
-                                   str::EndsWith(lfw.lfFaceName, L"Typewriter");
+        bool isItalicOrMonospace = Ok != ok || lfw.lfItalic || wstr::Eq(lfw.lfFaceName, L"Courier New") ||
+                                   wstr::Find(lfw.lfFaceName, L"Consol") || wstr::EndsWith(lfw.lfFaceName, L"Mono") ||
+                                   wstr::EndsWith(lfw.lfFaceName, L"Typewriter");
         fontCache.Append(f);
         fixCache.Append(isItalicOrMonospace);
         idx = (int)fontCache.size() - 1;
@@ -972,7 +972,7 @@ CLSID GetGdiPlusEncoderClsid(WStr format) {
     }
     GetImageEncoders(numEncoders, size, codecInfo);
     for (uint j = 0; j < numEncoders; j++) {
-        if (str::Eq(WStr(codecInfo[j].MimeType), format)) {
+        if (wstr::Eq(WStr(codecInfo[j].MimeType), format)) {
             return codecInfo[j].Clsid;
         }
     }

@@ -116,11 +116,11 @@ static void StrIsDigitTest() {
 
     WStr nonDigitsW = L"/:.bz{}";
     WStr digitsW = L"0123456789";
-    for (size_t i = 0; i < str::Len(nonDigitsW); i++) {
-        utassert(!str::IsDigit(nonDigitsW.s[i]));
+    for (size_t i = 0; i < wstr::Len(nonDigitsW); i++) {
+        utassert(!wstr::IsDigit(nonDigitsW.s[i]));
     }
-    for (size_t i = 0; i < str::Len(digitsW); i++) {
-        utassert(str::IsDigit(digitsW.s[i]));
+    for (size_t i = 0; i < wstr::Len(digitsW); i++) {
+        utassert(wstr::IsDigit(digitsW.s[i]));
     }
 }
 
@@ -482,7 +482,7 @@ void StrTest() {
         AutoFree strA(strconv::WStrToAnsi(TEXT(TEST_STRING)).s);
         utassert(str::Eq(strA.Get(), TEST_STRING));
         auto res = strconv::AnsiToWStrTemp(Str(strA.Get()));
-        utassert(str::Eq(res, TEXT(TEST_STRING)));
+        utassert(wstr::Eq(res, TEXT(TEST_STRING)));
 #undef TEST_STRING
     }
 
@@ -652,7 +652,7 @@ void StrTest() {
     }
     {
         TempWStr tmp = strconv::StrCPToWStrTemp("abc", 12345);
-        utassert(str::IsEmpty(tmp));
+        utassert(wstr::IsEmpty(tmp));
     }
     {
         Str tmp = strconv::WStrToCodePage(987654, L"abc");
@@ -679,7 +679,7 @@ void StrTest() {
             utassert(!!isspace((u8)c) == str::IsWs((char)c));
         }
         for (int c = 0x00; c < 0x10000; c++) {
-            utassert(!!iswspace((WCHAR)c) == str::IsWs((WCHAR)c));
+            utassert(!!iswspace((WCHAR)c) == wstr::IsWs((WCHAR)c));
         }
     }
 

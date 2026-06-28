@@ -61,7 +61,7 @@ class WStrKeyHasherComparator : public HasherComparator {
         WStr s = KeyAsWStr(key);
         return MurmurHash2((const void*)s.s, (size_t)s.len * sizeof(wchar_t));
     }
-    bool Equal(uintptr_t k1, uintptr_t k2) override { return str::Eq(KeyAsWStr(k1), KeyAsWStr(k2)); }
+    bool Equal(uintptr_t k1, uintptr_t k2) override { return wstr::Eq(KeyAsWStr(k1), KeyAsWStr(k2)); }
 };
 
 static StrKeyHasherComparator gStrKeyHasherComparator;

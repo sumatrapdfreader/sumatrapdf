@@ -366,7 +366,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     TempStr pageStr = str::FormatTemp("%s", win->ctrl->GetPageLabeTemp(fm.startPage).s);
     TempWStr pageW = ToWStrTemp(pageStr);
     SIZE pSz{};
-    GetTextExtentPoint32W(hdc, pageW, str::Leni(pageW), &pSz);
+    GetTextExtentPoint32W(hdc, pageW, wstr::Leni(pageW), &pSz);
     int pageGap = DpiScale(lb->hwnd, 10);
     int pageColDx = std::max((int)pSz.cx, DpiScale(lb->hwnd, 32));
     RECT rcPage = rcText;

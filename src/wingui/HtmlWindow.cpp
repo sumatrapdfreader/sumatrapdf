@@ -128,7 +128,7 @@ bool IsBlankUrl(Str url) {
 }
 
 bool IsBlankUrl(WStr url) {
-    return str::EqI(WStrL(L"about:blank"), url);
+    return wstr::EqI(WStrL(L"about:blank"), url);
 }
 
 // HW stands for HtmlWindow
@@ -335,7 +335,7 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
 static bool ParseProtoUrl(WStr url, int* htmlWindowId, AutoFreeWStr* urlRest) {
-    WStr rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
+    WStr rest = wstr::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
     return !rest;
 }
 
@@ -1072,7 +1072,7 @@ HtmlMoniker::~HtmlMoniker() {
     }
 
     str::Free(htmlData);
-    str::Free(baseUrl);
+    wstr::Free(baseUrl);
 }
 
 HRESULT HtmlMoniker::SetHtml(const ByteSlice& d) {
@@ -1086,8 +1086,8 @@ HRESULT HtmlMoniker::SetHtml(const ByteSlice& d) {
 }
 
 HRESULT HtmlMoniker::SetBaseUrl(WStr newBaseUrl) {
-    str::Free(baseUrl);
-    baseUrl = str::Dup(newBaseUrl);
+    wstr::Free(baseUrl);
+    baseUrl = wstr::Dup(newBaseUrl);
     return S_OK;
 }
 

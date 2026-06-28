@@ -117,16 +117,16 @@ void EditImplementCtrlBack(HWND hwnd) {
     int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
     // remove the rectangle produced by Ctrl+Backspace
     if (selStart > 0 && text.s[selStart - 1] == '\x7F') {
-        memmove(text.s + selStart - 1, text.s + selStart, str::Len(text.s + selStart - 1) * sizeof(WCHAR));
+        memmove(text.s + selStart - 1, text.s + selStart, wstr::Len(text.s + selStart - 1) * sizeof(WCHAR));
         TempStr s = ToUtf8Temp(text);
         HwndSetText(hwnd, s);
         selStart = selEnd = selStart - 1;
     }
     // remove the previous word (and any spacing after it)
-    for (; selStart > 0 && str::IsWs(text.s[selStart - 1]); selStart--) {
+    for (; selStart > 0 && wstr::IsWs(text.s[selStart - 1]); selStart--) {
         ;
     }
-    for (; selStart > 0 && !str::IsWs(text.s[selStart - 1]); selStart--) {
+    for (; selStart > 0 && !wstr::IsWs(text.s[selStart - 1]); selStart--) {
         ;
     }
     Edit_SetSel(hwnd, selStart, selEnd);
@@ -471,7 +471,7 @@ TryAgainWOW64:
             val = WStr(AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1));
             res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val.s, &valLen);
             if (ERROR_SUCCESS != res) {
-                str::FreePtr(&val);
+                wstr::FreePtr(&val);
             }
         }
         RegCloseKey(hKey);
@@ -487,7 +487,7 @@ TryAgainWOW64:
         goto TryAgainWOW64;
     }
     TempStr resv = ToUtf8Temp(val.s);
-    str::Free(val);
+    wstr::Free(val);
     return resv;
 }
 
@@ -837,7 +837,7 @@ TempWStr GetSelfExePathW() {
     auto h = GetInstance();
     // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
     GetModuleFileNameW(h, buf, nChars);
-    return str::Dup(buf);
+    return wstr::Dup(buf);
 }
 
 // Return the full exe path of my own executable
@@ -1540,7 +1540,7 @@ static bool CopyOrAppendTextToClipboard(WStr text, bool appendOnly) {
     if (handle) {
         WCHAR* globalText = (WCHAR*)GlobalLock(handle); // str-port: Win32
         if (globalText) {
-            str::BufSet(globalText, n, text);
+            wstr::BufSet(globalText, n, text);
         }
         GlobalUnlock(handle);
 
@@ -1735,7 +1735,7 @@ HFONT CreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;
-    str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontNameW);
+    wstr::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontNameW);
     lf.lfWeight = FW_DONTCARE;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfEscapement = 0;
@@ -1786,7 +1786,7 @@ HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
         WCHAR* dest = ncm.lfMessageFont.lfFaceName; // str-port: Win32
         int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
         TempWStr nameW = ToWStrTemp(fontName);
-        str::BufSet(dest, cchDestBufSize, nameW);
+        wstr::BufSet(dest, cchDestBufSize, nameW);
     }
     ncm.lfMessageFont.lfHeight = -size;
     if (bold) {

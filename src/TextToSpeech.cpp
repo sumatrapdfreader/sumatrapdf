@@ -1167,8 +1167,8 @@ bool TtsSpeakUtf8(Str text) {
         return false;
     }
 
-    str::Free(gTtsSpokenText);
-    gTtsSpokenText = str::Dup(textW);
+    wstr::Free(gTtsSpokenText);
+    gTtsSpokenText = wstr::Dup(textW);
     gTtsActive = true;
     return true;
 }
@@ -1252,7 +1252,7 @@ void TtsRelease() {
 
     gTtsActive = false;
     gTtsBackend = TtsBackend::Unknown;
-    str::FreePtr(&gTtsSpokenText);
+    wstr::FreePtr(&gTtsSpokenText);
 
     str::Free(gTtsVoiceId);
     gTtsVoiceId = {};

@@ -119,7 +119,7 @@ Str Join(Str path, Str fileName) {
 
 WStr Join(WStr path, WStr fileName, WStr fileName2) {
     TempWStr res = JoinTemp(path, fileName, fileName2);
-    return str::Dup(res);
+    return wstr::Dup(res);
 }
 
 bool IsDirectory(Str path) {
@@ -159,7 +159,7 @@ TempWStr GetDirTemp(WStr path) {
         // local drive root
         return str::DupTemp(path.s, 3);
     }
-    if (baseName.s == path.s + 2 && str::StartsWith(path, L"\\\\")) {
+    if (baseName.s == path.s + 2 && wstr::StartsWith(path, L"\\\\")) {
         // server root
         return str::DupTemp(path);
     }
@@ -195,7 +195,7 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
         fileName = WStr(fileName.s + 1, fileName.len - 1);
     }
     WStr sepStr;
-    if (!str::IsEmpty(path)) {
+    if (!wstr::IsEmpty(path)) {
         if (!IsSep(path.s[path.len - 1])) {
             sepStr = L"\\";
         }
@@ -263,10 +263,10 @@ static TempWStr NormalizeTemp(WStr path) {
         return shortPath;
     }
     // only add \\?\ prefix for paths that are actually overlong
-    if (str::StartsWith(normPath.s, L"\\\\?\\")) {
+    if (wstr::StartsWith(normPath.s, L"\\\\?\\")) {
         return normPath;
     }
-    if (str::Len(normPath) >= MAX_PATH) {
+    if (wstr::Len(normPath) >= MAX_PATH) {
         return str::JoinTemp(L"\\\\?\\", normPath);
     }
     return normPath;
@@ -441,10 +441,10 @@ bool SupportsChangeNotifications(Str pathA) {
     if (!GetVolumeInformationW(root, nullptr, 0, nullptr, nullptr, nullptr, fsName, dimof(fsName))) {
         return false;
     }
-    if (str::EqI(fsName, L"NTFS")) {
+    if (wstr::EqI(fsName, L"NTFS")) {
         return true;
     }
-    if (str::EqI(fsName, L"ReFS")) {
+    if (wstr::EqI(fsName, L"ReFS")) {
         return true;
     }
     return false;
@@ -820,9 +820,9 @@ bool Delete(Str filePath) {
 
 bool DeleteFileToTrash(Str path) {
     TempWStr pathW = ToWStrTemp(path);
-    auto n = str::Len(pathW) + 2;
+    auto n = wstr::Len(pathW) + 2;
     TempWStr pathDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), (int)n);
-    str::BufSet(pathDoubleTerminated, (int)n, pathW);
+    wstr::BufSet(pathDoubleTerminated, (int)n, pathW);
     FILEOP_FLAGS flags = FOF_NO_UI | FOF_ALLOWUNDO;
     uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, pathDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};
@@ -1031,9 +1031,9 @@ bool RemoveAll(Str dir) {
     TempWStr dirW = ToWStrTemp(dir);
     // path must be doubly terminated
     // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructa#fo_rename
-    auto n = str::Len(dirW) + 2;
+    auto n = wstr::Len(dirW) + 2;
     TempWStr dirDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), (int)n);
-    str::BufSet(dirDoubleTerminated, (int)n, dirW);
+    wstr::BufSet(dirDoubleTerminated, (int)n, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};

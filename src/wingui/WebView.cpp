@@ -42,7 +42,7 @@ TempStr GetWebView2VersionTemp() {
 bool HasWebView() {
     WCHAR* ver = nullptr; // str-port: Win32 COM out-param
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
-    if (FAILED(hr) || str::IsEmpty(ver)) {
+    if (FAILED(hr) || wstr::IsEmpty(ver)) {
         logf("WebView2 is not available\n");
         return false;
     }
@@ -350,13 +350,13 @@ static TempStr UrlForWebViewEvent(WStr uri, WStr prefix) {
     if (!uri) {
         return {};
     }
-    if (prefix && str::StartsWith(uri, prefix)) {
+    if (prefix && wstr::StartsWith(uri, prefix)) {
         TempWStr pathW = UriPathFromPrefix(uri, prefix);
         if (!pathW) {
             return {};
         }
         TempStr path = ToUtf8Temp(pathW);
-        str::Free(pathW);
+        wstr::Free(pathW);
         return path;
     }
     return ToUtf8Temp(uri);
@@ -599,7 +599,7 @@ static TempWStr MimeHeaderFromContentType(Str contentType) {
 }
 
 static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
-    if (!uri || !prefix || !str::StartsWith(uri, prefix)) {
+    if (!uri || !prefix || !wstr::StartsWith(uri, prefix)) {
         return {};
     }
     int pathOff = prefix.len;
@@ -610,15 +610,15 @@ static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
         return {};
     }
     WStr path = WStr(uri.s + pathOff, uri.len - pathOff);
-    WStr q = str::FindChar(path, L'?');
+    WStr q = wstr::FindChar(path, L'?');
     if (q) {
         path = WStr(path.s, (int)(q.s - path.s));
     }
-    WStr h = str::FindChar(path, L'#');
+    WStr h = wstr::FindChar(path, L'#');
     if (h) {
         path = WStr(path.s, (int)(h.s - path.s));
     }
-    return str::Dup(path);
+    return wstr::Dup(path);
 }
 
 static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedEventArgs* args, ByteSlice data,
@@ -711,7 +711,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
         }
 
         TempStr path = ToUtf8Temp(pathW);
-        str::Free(pathW);
+        wstr::Free(pathW);
         WebViewResourceResult res;
         if (!m_wnd->resourceProvider.getResource(m_wnd->resourceProvider.ctx, path, &res)) {
             CreateWebResourceResponseFromData(args, {}, "text/plain", 404);
@@ -1314,8 +1314,8 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
         return false;
     }
     initStarted = true;
-    str::Free(userDataFolder);
-    userDataFolder = str::Dup(ToWStrTemp(dataDir));
+    wstr::Free(userDataFolder);
+    userDataFolder = wstr::Dup(ToWStrTemp(dataDir));
 
     if (gSharedEnvState == SharedWebViewEnvState::Ready && gSharedEnvironment) {
         CreateControllerWithSharedEnvironment(this, cb);
@@ -1331,8 +1331,8 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
 
     if (gSharedEnvState == SharedWebViewEnvState::NotStarted) {
         gSharedEnvState = SharedWebViewEnvState::Creating;
-        str::Free(gSharedUserDataFolder);
-        gSharedUserDataFolder = str::Dup(userDataFolder);
+        wstr::Free(gSharedUserDataFolder);
+        gSharedUserDataFolder = wstr::Dup(userDataFolder);
         auto options = CreateOfflineEnvironmentOptions();
         auto* envHandler = new webview2_env_handler(OnSharedEnvironmentReady);
         HRESULT hr =
@@ -1344,7 +1344,7 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
             return false;
         }
     } else if (gSharedEnvState == SharedWebViewEnvState::Creating) {
-        if (!str::Eq(userDataFolder, gSharedUserDataFolder)) {
+        if (!wstr::Eq(userDataFolder, gSharedUserDataFolder)) {
             logf("WebviewWnd::Embed: reusing shared WebView2 environment with first dataDir\n");
         }
     }
@@ -1428,8 +1428,8 @@ WebviewWnd::~WebviewWnd() {
         controller = nullptr;
     }
     str::Free(dataDir);
-    str::Free(userDataFolder);
-    str::Free(resourceUriPrefix);
+    wstr::Free(userDataFolder);
+    wstr::Free(resourceUriPrefix);
 }
 
 #endif // _MSC_VER
@@ -1439,8 +1439,8 @@ WebviewWnd::~WebviewWnd() {
 WebviewWnd::WebviewWnd() = default;
 WebviewWnd::~WebviewWnd() {
     str::Free(dataDir);
-    str::Free(userDataFolder);
-    str::Free(resourceUriPrefix);
+    wstr::Free(userDataFolder);
+    wstr::Free(resourceUriPrefix);
 }
 HWND WebviewWnd::Create(const CreateWebViewArgs&) {
     return nullptr;

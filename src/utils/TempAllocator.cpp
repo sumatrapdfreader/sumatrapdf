@@ -60,7 +60,7 @@ TempStr DupTemp(Str s, size_t cb) {
 }
 
 TempWStr DupTemp(WStr s, size_t cch) {
-    return WrapTempWStr(Dup(GetTempArena(), s.s, cch), cch);
+    return WrapTempWStr(wstr::Dup(GetTempArena(), s.s, cch), cch);
 }
 
 TempStr JoinTemp(Str s1, Str s2, Str s3) {
@@ -76,7 +76,7 @@ TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4, Str s5) {
 }
 
 TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
-    return WrapTempWStr(Join(GetTempArena(), s1.s, s2.s, s3.s));
+    return WrapTempWStr(wstr::Join(GetTempArena(), s1.s, s2.s, s3.s));
 }
 
 TempStr FormatTemp(Str fmt, ...) {

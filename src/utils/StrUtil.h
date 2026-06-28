@@ -75,14 +75,11 @@ enum class TrimOpt {
 };
 
 void Free(Str s);
-void Free(WStr s);
-// catch passing a raw char*/wchar_t* (e.g. the .s member): pass the Str/WStr
-// directly instead -- going through the pointer builds an unnecessary temp Str
-// (with a strlen). To free a raw owned pointer use ::free().
+// catch passing a raw char* (e.g. the .s member): pass the Str directly instead
+// -- going through the pointer builds an unnecessary temp Str (with a strlen).
+// To free a raw owned pointer use ::free().
 void Free(const char*) = delete;
-void Free(const wchar_t*) = delete;
 void FreePtr(Str* s);
-void FreePtr(WStr* s);
 
 Str Dup(Arena*, Str str, size_t cch = (size_t)-1);
 Str Dup(Str s, size_t cch = (size_t)-1);
@@ -176,6 +173,20 @@ bool IsEmptyOrWhiteSpace(Str s);
 bool Skip(Str& s, Str toSkip);
 bool SkipChar(Str& s, char toSkip);
 
+int BufSet(WCHAR* dst, int dstCchSize, Str src); // str-port: Win32 (wide dst, utf8 src)
+
+WStr CastToWCHAR(Str s);
+} // namespace str
+
+// wide (WStr/WCHAR) counterparts of the str:: functions above
+namespace wstr {
+
+void Free(WStr s);
+// catch passing a raw wchar_t* (e.g. the .s member): pass the WStr directly
+// instead. To free a raw owned pointer use ::free().
+void Free(const wchar_t*) = delete;
+void FreePtr(WStr* s);
+
 WStr Dup(Arena*, WStr str, size_t cch = (size_t)-1);
 WStr Dup(WStr s, size_t cch = (size_t)-1);
 WStr Join(WStr, WStr, WStr s3 = {});
@@ -192,8 +203,7 @@ bool EndsWithI(WStr txt, WStr end);
 WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
 WStr Parse(WStr str, WStr format, ...);
-int BufSet(WCHAR* dst, int dstCchSize, WStr src); // str-port: Win32
-int BufSet(WCHAR* dst, int dstCchSize, Str src);  // str-port: Win32
+int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
 int FindCharIdx(WStr str, WCHAR c);
@@ -205,8 +215,7 @@ bool IsNonCharacter(WCHAR c);
 size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars);
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith);
 
-WStr CastToWCHAR(Str s);
-} // namespace str
+} // namespace wstr
 
 namespace url {
 
@@ -360,16 +369,21 @@ struct WStrBuilder {
 
 namespace str {
 
-bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith);
-
 FORCEINLINE size_t Len(Str s) {
-    return (size_t)s.len;
-}
-FORCEINLINE size_t Len(WStr s) {
     return (size_t)s.len;
 }
 FORCEINLINE int Leni(Str s) {
     return s.len;
+}
+
+} // namespace str
+
+namespace wstr {
+
+bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith);
+
+FORCEINLINE size_t Len(WStr s) {
+    return (size_t)s.len;
 }
 FORCEINLINE int Leni(WStr s) {
     return s.len;
@@ -379,7 +393,7 @@ FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src);
 }
 
-} // namespace str
+} // namespace wstr
 
 int ParseInt(Str s);
 i64 ParseInt64(Str s);

@@ -44,7 +44,7 @@ WStr Utf8ToWStr(Str s, Arena* a) {
 
 Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
     // subtle: if s.s is nullptr, we return empty. if empty string => we return empty string
-    if (str::IsNull(s)) {
+    if (wstr::IsNull(s)) {
         return {};
     }
     if (s.len == 0) {

@@ -171,10 +171,10 @@ static void UpdateOverlayScrollbarPositions(MainWindow* win);
 static Str HwndName(HWND hwnd) {
     WCHAR cls[64]{};
     GetClassNameW(hwnd, cls, dimof(cls));
-    if (str::Eq(cls, FRAME_CLASS_NAME)) {
+    if (wstr::Eq(cls, FRAME_CLASS_NAME)) {
         return "frame";
     }
-    if (str::Eq(cls, CANVAS_CLASS_NAME)) {
+    if (wstr::Eq(cls, CANVAS_CLASS_NAME)) {
         return "canvas";
     }
     // TODO: could identify more windows (rebar, toc, etc.)
@@ -804,7 +804,7 @@ static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
         newMii.dwTypeData = newName;
         GetMenuItemInfoW(oldMenu, i, TRUE, &oldMii);
         GetMenuItemInfoW(newMenu, i, TRUE, &newMii);
-        if (!str::Eq(WStr(oldName.Get()), WStr(newName.Get()))) {
+        if (!wstr::Eq(WStr(oldName.Get()), WStr(newName.Get()))) {
             return true;
         }
     }
@@ -3289,7 +3289,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     TempStr srcFileName = str::Dup(engine->FilePath());
     TempWStr srcFileNameW = ToWStrTemp(srcFileName);
-    str::BufSet(dstFileName, dimof(dstFileName), srcFileNameW);
+    wstr::BufSet(dstFileName, dimof(dstFileName), srcFileNameW);
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = tab->win->hwndFrame;
@@ -3827,12 +3827,12 @@ static void SaveCurrentFileAs(MainWindow* win) {
     WCHAR dstFileName[MAX_PATH];
     TempStr baseName = path::GetBaseNameTemp(srcFileName);
     str::BufSet(dstFileName, dimof(dstFileName), baseName);
-    if (str::FindChar(WStr(dstFileName), L':')) {
+    if (wstr::FindChar(WStr(dstFileName), L':')) {
         // handle embed-marks (for embedded PDF documents):
         // remove the container document's extension and include
         // the embedding reference in the suggested filename
-        WStr colon = str::FindChar(WStr(dstFileName), L':');
-        str::TransCharsInPlace(colon, L":", L"_");
+        WStr colon = wstr::FindChar(WStr(dstFileName), L':');
+        wstr::TransCharsInPlace(colon, L":", L"_");
         int colonOff = (int)(colon.s - dstFileName);
         int extOff = colonOff;
         while (extOff > 0 && dstFileName[extOff] != L'.') {
@@ -3841,10 +3841,10 @@ static void SaveCurrentFileAs(MainWindow* win) {
         if (extOff == 0 && dstFileName[0] != L'.') {
             extOff = colonOff;
         }
-        memmove(dstFileName + extOff, colon.s, (str::Len(colon) + 1) * sizeof(WCHAR));
-    } else if (str::EndsWithI(dstFileName, ToWStrTemp(defExt))) {
+        memmove(dstFileName + extOff, colon.s, (wstr::Len(colon) + 1) * sizeof(WCHAR));
+    } else if (wstr::EndsWithI(dstFileName, ToWStrTemp(defExt))) {
         // Remove the extension so that it can be re-added depending on the chosen filter
-        int idx = str::Leni(dstFileName) - str::Leni(defExt);
+        int idx = wstr::Leni(dstFileName) - str::Leni(defExt);
         dstFileName[idx] = '\0';
     }
 
@@ -4035,8 +4035,8 @@ static void RenameCurrentFile(MainWindow* win) {
     auto baseName = path::GetBaseNameTemp(srcPath);
     str::BufSet(dstFilePathW, dimof(dstFilePathW), baseName);
     // Remove the extension so that it can be re-added depending on the chosen filter
-    if (str::EndsWithI(dstFilePathW, defExtW)) {
-        int idx = str::Leni(dstFilePathW) - str::Leni(defExtW);
+    if (wstr::EndsWithI(dstFilePathW, defExtW)) {
+        int idx = wstr::Leni(dstFilePathW) - wstr::Leni(defExtW);
         dstFilePathW[idx] = '\0';
     }
 
@@ -4111,9 +4111,9 @@ static void CreateLnkShortcut(MainWindow* win) {
     // Remove the extension so that it can be replaced with .lnk
     auto name = path::GetBaseNameTemp(path);
     str::BufSet(dstFileName, dimof(dstFileName), name);
-    str::TransCharsInPlace(WStr(dstFileName), L":", L"_");
-    if (str::EndsWithI(dstFileName, defExt)) {
-        int idx = str::Leni(dstFileName) - str::Leni(defExt);
+    wstr::TransCharsInPlace(WStr(dstFileName), L":", L"_");
+    if (wstr::EndsWithI(dstFileName, defExt)) {
+        int idx = wstr::Leni(dstFileName) - wstr::Leni(defExt);
         dstFileName[idx] = '\0';
     }
 
@@ -4306,7 +4306,7 @@ static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
     while (*file) {
         path = ToUtf8Temp(path::JoinTemp(dir, file));
         filesOut.Append(path);
-        file += str::Leni(file) + 1;
+        file += wstr::Leni(file) + 1;
     }
 }
 
@@ -6152,7 +6152,7 @@ static TempStr URLEncodeMayTruncateTemp(Str s) {
     // with increasingly smaller input strings, from 1500 down to 1000
     int maxLen = kMaxURLLen;
     for (int i = 0; i < 10; i++) {
-        if (str::Leni(ws) >= maxLen) {
+        if (wstr::Leni(ws) >= maxLen) {
             ws.s[maxLen - 1] = 0;
         }
         DWORD cchSizeInOut = kMaxURLLen;

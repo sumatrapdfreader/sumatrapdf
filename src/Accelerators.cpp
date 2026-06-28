@@ -427,7 +427,7 @@ again:
     if (str::Leni(s) > 1) {
         // possibly a unicode character
         TempWStr ws = ToWStrTemp(s);
-        if (str::Len(ws) != 1) {
+        if (wstr::Len(ws) != 1) {
             return false;
         }
         WCHAR wc = *ws.s;

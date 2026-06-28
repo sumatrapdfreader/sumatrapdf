@@ -97,11 +97,11 @@ static bool ShouldCaptureWindow(HWND hwnd, HWND overlayHwnd) {
     WCHAR className[256];
     bool isMenu = false;
     if (GetClassNameW(hwnd, className, 256) > 0) {
-        if (str::Eq(className, L"Progman") || str::Eq(className, L"WorkerW")) {
+        if (wstr::Eq(className, L"Progman") || wstr::Eq(className, L"WorkerW")) {
             return false;
         }
         // #32768 is the Win32 menu window class (context menus, popups etc.)
-        isMenu = str::Eq(className, L"#32768");
+        isMenu = wstr::Eq(className, L"#32768");
     }
     // our own floating UI (e.g. the find bar) is a tool window owned by a frame;
     // capture it even though the tool/owned-window filters below would drop it

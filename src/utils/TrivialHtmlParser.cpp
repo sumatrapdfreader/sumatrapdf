@@ -62,7 +62,7 @@ static WCHAR IntToChar(int codepoint) {
 // caller needs to free() the result
 WStr DecodeHtmlEntities(Str string, uint codepage) {
     TempWStr fixedTemp = strconv::StrCPToWStrTemp(string, codepage);
-    WStr fixed = str::Dup(fixedTemp);
+    WStr fixed = wstr::Dup(fixedTemp);
     WCHAR* dst = fixed.s;       // str-port: owned heap write cursor
     const WCHAR* src = fixed.s; // str-port: owned heap read cursor
 
@@ -74,10 +74,10 @@ WStr DecodeHtmlEntities(Str string, uint codepage) {
         src++;
         // numeric entities
         int unicode;
-        if (!str::IsNull(str::Parse(WStr(src), L"#%d;", &unicode)) ||
-            !str::IsNull(str::Parse(WStr(src), L"#x%x;", &unicode))) {
+        if (!wstr::IsNull(wstr::Parse(WStr(src), L"#%d;", &unicode)) ||
+            !wstr::IsNull(wstr::Parse(WStr(src), L"#x%x;", &unicode))) {
             *dst++ = IntToChar(unicode);
-            WStr semi = str::FindChar(WStr(src), L';');
+            WStr semi = wstr::FindChar(WStr(src), L';');
             src = semi.s + 1;
             continue;
         }
@@ -112,7 +112,7 @@ WStr DecodeHtmlEntities(Str string, uint codepage) {
 Str DecodeHtmlEntitiesTemp(Str s, uint codepage) {
     WStr ws = DecodeHtmlEntities(s, codepage);
     Str res = ToUtf8Temp(ws);
-    str::Free(ws);
+    wstr::Free(ws);
     return res;
 }
 

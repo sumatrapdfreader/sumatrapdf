@@ -118,7 +118,7 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
 
     // Convert surname to wide string for engine text matching.
     WStr surnameW = ToWStr(surname);
-    if (!surnameW || str::Len(surnameW) < 2) {
+    if (!surnameW || wstr::Len(surnameW) < 2) {
         return false;
     }
     bool found = false;
@@ -135,7 +135,7 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
             break;
         }
     }
-    str::Free(surnameW);
+    wstr::Free(surnameW);
     return found;
 }
 

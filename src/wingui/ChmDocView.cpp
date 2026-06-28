@@ -201,7 +201,7 @@ bool ChmDocView::CreateWebView2() {
     chmWv->owner = this;
     wv = chmWv;
     wv->dataDir = str::Dup(GetWebViewDataDirTemp());
-    wv->resourceUriPrefix = str::Dup(kChmVirtualHostW);
+    wv->resourceUriPrefix = wstr::Dup(kChmVirtualHostW);
     wv->resourceProvider.ctx = this;
     wv->resourceProvider.getResource = ResourceGet;
     wv->events.ctx = this;
