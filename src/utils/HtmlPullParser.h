@@ -38,15 +38,14 @@ struct HtmlToken {
     bool IsText() const { return type == Text; }
     bool IsError() const { return type == Error; }
 
-    const char* GetReparsePoint() const;
-    void SetTag(TokenType new_type, const char* new_s, const char* end);
-    void SetError(ParsingError err, const char* errContext);
-    void SetText(const char* new_s, const char* end);
+    Str GetReparsePoint() const;
+    void SetTag(TokenType new_type, Str slice);
+    void SetError(ParsingError err, Str errContext);
+    void SetText(Str slice);
 
     TokenType type = Error;
     ParsingError error = NoError;
-    const char* s = nullptr;
-    size_t sLen = 0;
+    Str s;
 
     // only for tags: type and name length
     HtmlTag tag = Tag_NotFound;
@@ -59,7 +58,7 @@ struct HtmlToken {
 
   protected:
     AttrInfo* NextAttr();
-    const char* nextAttr;
+    int nextAttrOff = -1;
     AttrInfo attrInfo;
 };
 
@@ -67,37 +66,36 @@ struct HtmlToken {
 which can be one one of 3 tag types or error. If a tag has attributes,
 the caller has to parse them out (using HtmlToken::NextAttr()) */
 class HtmlPullParser {
-    const char* currPos = nullptr;
-    const char* end = nullptr;
-
-    const char* start = nullptr;
-    size_t len = 0;
+    Str html;
+    int currPos = 0;
 
     HtmlToken currToken{};
 
   public:
-    HtmlPullParser(const char* s, size_t len) : currPos(s), end(s + len), start(s), len(len) {}
-    HtmlPullParser(const char* s, const char* end) : currPos(s), end(end), start(s), len(end - s) {}
-    explicit HtmlPullParser(const ByteSlice& d)
-        : currPos((char*)d.data()), end((char*)d.data() + d.size()), start((char*)d.data()), len(d.size()) {}
+    explicit HtmlPullParser(Str s) : html(s) {}
+    HtmlPullParser(const char* s, size_t len) : html(Str((char*)s, (int)len)) {}
+    HtmlPullParser(const char* s, const char* end) : html(Str((char*)s, (int)(end - s))) {}
+    explicit HtmlPullParser(const ByteSlice& d) : html(AsStr(d)) {}
 
-    void SetCurrPosOff(ptrdiff_t off) { currPos = start + off; }
-    size_t Len() const { return len; }
-    const char* Start() const { return start; }
+    void SetCurrPosOff(ptrdiff_t off) { currPos = (int)off; }
+    size_t Len() const { return (size_t)html.len; }
+    Str Html() const { return html; }
+    const char* Start() const { return html.s; }
+    int PosOf(Str p) const { return (int)(p.s - html.s); }
 
     HtmlToken* Next();
 };
 
-bool SkipWs(const char*& s, const char* end);
-bool SkipNonWs(const char*& s, const char* end);
-bool SkipUntil(const char*& s, const char* end, char c);
-bool SkipUntil(const char*& s, const char* end, const char* term);
-bool IsSpaceOnly(const char* s, const char* end);
+bool SkipWs(Str s, int& off);
+bool SkipNonWs(Str s, int& off);
+bool SkipUntil(Str s, int& off, char c);
+bool SkipUntil(Str s, int& off, Str term);
+bool IsSpaceOnly(Str s);
 
 int HtmlEntityNameToRune(Str name);
 int HtmlEntityNameToRune(WStr name);
 
-const char* ResolveHtmlEntity(Str s, int& rune);
+Str ResolveHtmlEntity(Str str, int& rune);
 Str ResolveHtmlEntities(Str s, Arena* alloc);
 Str ResolveHtmlEntities(Str s);
 Str ResolveHtmlEntitiesTemp(Str s);

@@ -31,7 +31,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
         return CP_ACP;
     }
     HtmlToken pi;
-    pi.SetTag(HtmlToken::EmptyElementTag, xmlPI.s + 2, xmlPIEnd.s);
+    pi.SetTag(HtmlToken::EmptyElementTag, Str(xmlPI.s + 2, (int)(xmlPIEnd.s - xmlPI.s - 2)));
     pi.nLen = 4;
     AttrInfo* enc = pi.GetAttrByName("encoding");
     if (!enc) {
@@ -522,7 +522,7 @@ void EpubDoc::ParseMetadata(Str content) {
             tok = pullParser.Next();
             if (tok && tok->IsText()) {
                 auto prop = epubPropsMap[idx];
-                TempStr val = ResolveHtmlEntitiesTemp(Str(tok->s, tok->sLen));
+                TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddProp(props, prop, val);
             }
             break;
@@ -668,7 +668,7 @@ bool EpubDoc::ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             }
             while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
                 if (tok->IsText()) {
-                    AutoFreeStr part = str::Dup(tok->s, tok->sLen).s;
+                    AutoFreeStr part = str::Dup(tok->s).s;
                     if (!text) {
                         text.Set(part.Release());
                     } else {
@@ -730,7 +730,7 @@ bool EpubDoc::ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 break;
             }
             if (tok->IsText()) {
-                itemText.Set(strconv::FromHtmlUtf8(Str(tok->s, tok->sLen)));
+                itemText.Set(strconv::FromHtmlUtf8(tok->s));
             }
         } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS())) {
             AttrInfo* attrInfo = tok->GetAttrByName("src");
@@ -906,7 +906,7 @@ bool Fb2Doc::Load() {
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!inTitleInfo && !inDocInfo && tok->IsStartTag() && Tag_Body == tok->tag) {
             if (!inBody++) {
-                bodyStart = Str(tok->s);
+                bodyStart = tok->s;
             }
         } else if (inBody && tok->IsEndTag() && Tag_Body == tok->tag) {
             if (!--inBody) {
@@ -914,7 +914,7 @@ bool Fb2Doc::Load() {
                     xmlData.Append("<pagebreak />");
                 }
                 xmlData.AppendChar('<');
-                xmlData.Append(bodyStart.s, (int)(tok->s - bodyStart.s) + tok->sLen);
+                xmlData.Append(bodyStart.s, (int)(tok->s.s - bodyStart.s) + tok->s.len);
                 xmlData.AppendChar('>');
             }
         } else if (inBody && tok->IsStartTag() && Tag_Title == tok->tag) {
@@ -930,7 +930,7 @@ bool Fb2Doc::Load() {
                 break;
             }
             if (tok->IsText()) {
-                TempStr val = ResolveHtmlEntitiesTemp(Str(tok->s, tok->sLen));
+                TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddProp(props, kPropTitle, val);
             }
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS("author", FB2_MAIN_NS())) {
@@ -938,7 +938,7 @@ bool Fb2Doc::Load() {
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
                    !(tok->IsEndTag() && tok->NameIsNS("author", FB2_MAIN_NS()))) {
                 if (tok->IsText()) {
-                    TempStr author = ResolveHtmlEntitiesTemp(Str(tok->s, tok->sLen));
+                    TempStr author = ResolveHtmlEntitiesTemp(tok->s);
                     if (docAuthor) {
                         docAuthor = str::JoinTemp(Str(docAuthor), Str(" "), Str(author));
                     } else {
@@ -971,7 +971,7 @@ bool Fb2Doc::Load() {
                 break;
             }
             if (tok->IsText()) {
-                TempStr val = ResolveHtmlEntitiesTemp(Str(tok->s, tok->sLen));
+                TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddProp(props, kPropCreatorApp, val);
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("coverpage", FB2_MAIN_NS())) {
@@ -1013,7 +1013,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     }
 
     ImageData data;
-    data.base = Base64Decode({(u8*)tok->s, tok->sLen});
+    data.base = Base64Decode({(u8*)tok->s.s, (size_t)tok->s.len});
     if (data.base.empty()) {
         return;
     }
@@ -1088,7 +1088,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             }
             inTitle = false;
         } else if (inTitle && tok->IsText()) {
-            AutoFreeWStr text(strconv::FromHtmlUtf8(Str(tok->s, tok->sLen)).s);
+            AutoFreeWStr text(strconv::FromHtmlUtf8(tok->s).s);
             if (str::IsEmpty(itemText.Get())) {
                 itemText.Set(text.StealData());
             } else {
@@ -1159,7 +1159,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
             tocEntries.Append(s);
             str::FreePtr(&ws);
             builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size());
-            return Str(tok->s + tok->sLen, text.s + text.len - (tok->s + tok->sLen));
+            return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
         }
     } else if (tok->NameIs("HEADER")) {
         // <HEADER TEXT="Contents" ALIGN=CENTER STYLE=UNDERLINE>
@@ -1173,12 +1173,12 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
             builder.AppendFmt("<h%d>", hx);
             builder.Append(attr->val);
             builder.AppendFmt("</h%d>", hx);
-            return Str(tok->s + tok->sLen, text.s + text.len - (tok->s + tok->sLen));
+            return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
         }
     } else if (tok->NameIs("HRULE")) {
         // <HRULE STYLE=OUTLINE>
         builder.Append("<hr>");
-        return Str(tok->s + tok->sLen, text.s + text.len - (tok->s + tok->sLen));
+        return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
     } else if (tok->NameIs("LABEL")) {
         // <LABEL NAME="Contents">
         AttrInfo* attr = tok->GetAttrByName("NAME");
@@ -1186,7 +1186,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
             builder.Append("<a name=\"");
             builder.Append(attr->val);
             builder.Append("\">");
-            return Str(tok->s + tok->sLen, text.s + text.len - (tok->s + tok->sLen));
+            return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
         }
     } else if (tok->NameIs("LINK")) {
         // <LINK TEXT="Press Me" TAG="Contents" FILE="My Novels">
@@ -1195,19 +1195,19 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
         if (attrTag && attrText) {
             if (tok->GetAttrByName("FILE")) {
                 // skip links to other files
-                return Str(tok->s + tok->sLen, text.s + text.len - (tok->s + tok->sLen));
+                return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
             }
             builder.Append("<a href=\"#");
             builder.Append(attrTag->val);
             builder.Append("\">");
             builder.Append(attrText->val);
             builder.Append("</a>");
-            return Str(tok->s + tok->sLen, text.s + text.len - (tok->s + tok->sLen));
+            return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
         }
     } else if (tok->NameIs("TEALPAINT")) {
         // <TEALPAINT SRC="Pictures" INDEX=0 LINK=SUPERMAP SUPERIMAGE=1 SUPERW=640 SUPERH=480>
         // support removed in r7047
-        return Str(tok->s + tok->sLen, text.s + text.len - (tok->s + tok->sLen));
+        return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
     }
     goto Fallback;
 }
@@ -1330,7 +1330,7 @@ bool HtmlDoc::Load() {
         if (tok->IsStartTag() && Tag_Title == tok->tag) {
             tok = parser.Next();
             if (tok && tok->IsText()) {
-                TempStr val = ResolveHtmlEntitiesTemp(Str(tok->s, tok->sLen));
+                TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddProp(props, kPropTitle, val);
             }
         } else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {

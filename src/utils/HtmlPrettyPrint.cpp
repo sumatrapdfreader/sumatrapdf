@@ -30,7 +30,7 @@ static void HtmlAddWithNesting(StrBuilder* out, HtmlToken* tok, size_t nesting) 
         out->AppendChar('/');
     }
     // TODO: normalize whitespace between attributes?
-    out->Append(tok->s, tok->sLen);
+    out->Append(tok->s);
     if (tok->IsEmptyElementEndTag()) {
         out->AppendChar('/');
     }
@@ -41,12 +41,10 @@ static void HtmlAddWithNesting(StrBuilder* out, HtmlToken* tok, size_t nesting) 
     }
 }
 
-static bool IsWsText(const char* s, size_t len) {
-    const char* end = s + len;
-    for (; s < end && str::IsWs(*s); s++) {
-        ;
-    }
-    return s == end;
+static bool IsWsText(Str s) {
+    int off = 0;
+    SkipWs(s, off);
+    return off == s.len;
 }
 
 ByteSlice PrettyPrintHtml(const ByteSlice& d) {
@@ -58,8 +56,8 @@ ByteSlice PrettyPrintHtml(const ByteSlice& d) {
     while ((t = parser.Next()) != nullptr && !t->IsError()) {
         if (t->IsText()) {
             // TODO: normalize whitespace instead?
-            if (!IsWsText(t->s, t->sLen)) {
-                res.Append(t->s, t->sLen);
+            if (!IsWsText(t->s)) {
+                res.Append(t->s);
             }
         }
         if (!t->IsTag()) {

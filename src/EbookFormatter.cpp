@@ -279,7 +279,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
 
 void Fb2Formatter::HandleTagAsHtml(HtmlToken* t, Str name) {
     HtmlToken tok;
-    tok.SetTag(t->type, name.s, name.s + name.len);
+    tok.SetTag(t->type, name);
     HtmlFormatter::HandleHtmlTag(&tok);
 }
 
@@ -289,7 +289,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         bool isSubtitle = Tag_Subtitle == t->tag;
         TempStr name = str::FormatTemp("h%d", section + (isSubtitle ? 1 : 0));
         HtmlToken tok;
-        tok.SetTag(t->type, name, name.s + str::Len(name));
+        tok.SetTag(t->type, name);
         HandleTagHx(&tok);
         HandleAnchorAttr(t);
         if (!isSubtitle && t->IsStartTag()) {

@@ -702,7 +702,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
     Str run = s;
     currReparseIdx = (int)(run.s - htmlParser->Start());
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
-    ReportIf(IsSpaceOnly(run.s, run.s + run.len) && !preFormatted);
+    ReportIf(IsSpaceOnly(run) && !preFormatted);
     ::Str tmp = ResolveHtmlEntities(s, textAllocator);
     bool resolved = tmp.s != s.s;
     if (resolved) {
@@ -949,7 +949,7 @@ void HtmlFormatter::HandleTagHx(HtmlToken* t) {
         RevertStyleChange();
     } else {
         EmitParagraph(0);
-        float fontSize = defaultFontSize * (float)pow(1.1f, '5' - t->s[1]);
+        float fontSize = defaultFontSize * (float)pow(1.1f, '5' - t->s.s[1]);
         if (currY > 0) {
             currY += fontSize / 2;
         }
@@ -1063,14 +1063,14 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
         return;
     }
 
-    Str start = Str(t->s + t->sLen + 1);
+    Str start = Str(t->s.s + t->s.len + 1, 0);
     while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
         t = htmlParser->Next();
     }
     if (!t || !t->IsEndTag() || Tag_Style != t->tag) {
         return;
     }
-    Str end = Str(t->s - 2);
+    Str end = Str(t->s.s - 2, 0);
     ReportIf(start.s > end.s);
     ParseStyleSheet(Str(start.s, (int)(end.s - start.s)));
     UpdateTagNesting(t);
@@ -1117,7 +1117,7 @@ void HtmlFormatter::AutoCloseTags(size_t count) {
     keepTagNesting = true; // prevent recursion
     HtmlToken tok{};
     tok.type = HtmlToken::EndTag;
-    tok.sLen = 0;
+    tok.s = {};
     // let HandleHtmlTag clean up (in reverse order)
     for (size_t i = 0; i < count; i++) {
         tok.tag = tagNesting.Pop();
@@ -1286,7 +1286,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
 
 void HtmlFormatter::HandleText(HtmlToken* t) {
     ReportIf(!t->IsText());
-    HandleText(Str(t->s, (int)t->sLen));
+    HandleText(t->s);
 }
 
 void HtmlFormatter::HandleText(Str s) {
@@ -1322,18 +1322,17 @@ void HtmlFormatter::HandleText(Str s) {
     // whitespace or all non-whitespace
     while (curr) {
         currReparseIdx = (int)(curr.s - htmlParser->Start());
-        const char* p = curr.s; // str-port: HtmlPullParser SkipWs cursor
-        const char* e = curr.s + curr.len;
-        if (SkipWs(p, e)) {
+        int off = 0;
+        if (SkipWs(curr, off)) {
             EmitElasticSpace();
         }
 
-        Str text = Str(p, (int)(e - p));
-        currReparseIdx = (int)(p - htmlParser->Start());
-        if (SkipNonWs(p, e)) {
-            EmitTextRun(Str(text.s, (int)(p - text.s)));
+        int textStart = off;
+        currReparseIdx = (int)(curr.s + off - htmlParser->Start());
+        if (SkipNonWs(curr, off)) {
+            EmitTextRun(Str(curr.s + textStart, off - textStart));
         }
-        curr = Str(p, (int)(e - p));
+        curr = Str(curr.s + off, curr.len - off);
     }
 }
 
@@ -1400,7 +1399,7 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
             break;
         }
 
-        currReparseIdx = t->GetReparsePoint() - htmlParser->Start();
+        currReparseIdx = htmlParser->PosOf(t->GetReparsePoint());
         ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
         if (t->IsTag()) {
             HandleHtmlTag(t);

@@ -89,15 +89,16 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
         if (t->IsText() && !tagNesting.Contains(Tag_Head) && !tagNesting.Contains(Tag_Script) &&
             !tagNesting.Contains(Tag_Style)) {
             // trim whitespace (TODO: also normalize within text?)
-            while (t->sLen > 0 && str::IsWs(t->s[0])) {
-                t->s++;
-                t->sLen--;
+            Str tokText = t->s;
+            while (tokText.len > 0 && str::IsWs(tokText.s[0])) {
+                tokText.s++;
+                tokText.len--;
             }
-            while (t->sLen > 0 && str::IsWs(t->s[t->sLen - 1])) {
-                t->sLen--;
+            while (tokText.len > 0 && str::IsWs(tokText.s[tokText.len - 1])) {
+                tokText.len--;
             }
-            if (t->sLen > 0) {
-                TempStr s = ResolveHtmlEntitiesTemp(::Str{(char*)t->s, (int)t->sLen});
+            if (tokText.len > 0) {
+                TempStr s = ResolveHtmlEntitiesTemp(tokText);
                 text.Append(s);
                 text.AppendChar(' ');
             }

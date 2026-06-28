@@ -39,7 +39,7 @@ static void HtmlEntities() {
     for (size_t i = 0; i < dimof(entities); i++) {
         const char* s = entities[i].s;
         int got;
-        const char* entEnd = ResolveHtmlEntity(Str(s + 1, str::Len(s) - 1), got);
+        Str entEnd = ResolveHtmlEntity(Str(s + 1, str::Len(s) - 1), got);
         utassert(got == entities[i].rune);
         utassert((-1 == got) == !entEnd);
     }
@@ -90,18 +90,18 @@ static void Test02() {
     HtmlToken* t = parser.Next();
     utassert(t && t->IsTag() && t->IsStartTag() && Tag_P == t->tag);
     t = parser.Next();
-    utassert(t && t->IsText() && str::EqNIx(t->s, t->sLen, "Last paragraph"));
+    utassert(t && t->IsText() && str::EqI(t->s, "Last paragraph"));
 }
 
 static void Test03() {
     const char* s = "a < b > c <> d <";
     HtmlPullParser parser(s, str::Len(s));
     HtmlToken* t = parser.Next();
-    utassert(t && t->IsText() && str::EqNIx(t->s, t->sLen, "a "));
+    utassert(t && t->IsText() && str::EqI(t->s, "a "));
     t = parser.Next();
-    utassert(t && t->IsText() && str::EqNIx(t->s, t->sLen, "< b > c "));
+    utassert(t && t->IsText() && str::EqI(t->s, "< b > c "));
     t = parser.Next();
-    utassert(t && t->IsText() && str::EqNIx(t->s, t->sLen, "<> d "));
+    utassert(t && t->IsText() && str::EqI(t->s, "<> d "));
     t = parser.Next();
     utassert(t && t->IsError() && HtmlToken::UnclosedTag == t->error);
     t = parser.Next();

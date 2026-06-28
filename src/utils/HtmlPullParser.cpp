@@ -31,17 +31,16 @@ int HtmlEntityNameToRune(WStr name) {
     return FindHtmlEntityRune(asciiName, name.len);
 }
 
-bool SkipUntil(const char*& s, const char* end, char c) {
-    while ((s < end) && (*s != c)) {
-        ++s;
+bool SkipUntil(Str s, int& off, char c) {
+    while (off < s.len && s.s[off] != c) {
+        ++off;
     }
-    return s < end;
+    return off < s.len;
 }
 
-bool SkipUntil(const char*& s, const char* end, const char* term) {
-    size_t len = str::Len(term);
-    for (; s < end; s++) {
-        if (s + len <= end && str::StartsWith(s, term)) {
+bool SkipUntil(Str s, int& off, Str term) {
+    for (; off < s.len; off++) {
+        if (off + term.len <= s.len && str::StartsWith(Str(s.s + off, s.len - off), term)) {
             return true;
         }
     }
@@ -49,21 +48,21 @@ bool SkipUntil(const char*& s, const char* end, const char* term) {
 }
 
 // return true if skipped
-bool SkipWs(const char*& s, const char* end) {
-    const char* start = s;
-    while ((s < end) && str::IsWs(*s)) {
-        ++s;
+bool SkipWs(Str s, int& off) {
+    int start = off;
+    while (off < s.len && str::IsWs(s.s[off])) {
+        ++off;
     }
-    return start != s;
+    return start != off;
 }
 
 // return true if skipped
-bool SkipNonWs(const char*& s, const char* end) {
-    const char* start = s;
-    while ((s < end) && !str::IsWs(*s)) {
-        ++s;
+bool SkipNonWs(Str s, int& off) {
+    int start = off;
+    while (off < s.len && !str::IsWs(s.s[off])) {
+        ++off;
     }
-    return start != s;
+    return start != off;
 }
 
 static bool IsNameChar(char c) {
@@ -76,38 +75,37 @@ static bool IsValidTagStart(char c) {
 }
 
 // skip all html tag or attribute characters
-static void SkipName(const char*& s, const char* end) {
-    while ((s < end) && IsNameChar(*s)) {
-        s++;
+static void SkipName(Str s, int& off) {
+    while (off < s.len && IsNameChar(s.s[off])) {
+        off++;
     }
 }
 
 // return true if s consists only of whitespace
-bool IsSpaceOnly(const char* s, const char* end) {
-    SkipWs(s, end);
-    return s == end;
+bool IsSpaceOnly(Str s) {
+    int off = 0;
+    SkipWs(s, off);
+    return off == s.len;
 }
 
-void MemAppend(char*& dst, const char* s, size_t len) {
-    if (0 == len) {
+static void MemAppend(char*& dst, Str src) {
+    if (!src) {
         return;
     }
-    memcpy(dst, s, len);
-    dst += len;
+    memcpy(dst, src.s, src.len);
+    dst += src.len;
 }
 
-// if "&foo;" was the entity, s points at the char
-// after '&' and len is the maximum lenght of the string
-// (4 in case of "foo;")
-// returns a pointer to the first character after the entity
-const char* ResolveHtmlEntity(Str str, int& rune) {
+// if "&foo;" was the entity, str points at the char after '&'
+// returns a slice starting after the entity, or empty on failure
+Str ResolveHtmlEntity(Str str, int& rune) {
     Str entEnd = str::Parse(str, str.len, "#%d%?;", &rune);
     if (entEnd.s) {
-        return entEnd.s;
+        return entEnd;
     }
     entEnd = str::Parse(str, str.len, "#x%x%?;", &rune);
     if (entEnd.s) {
-        return entEnd.s;
+        return entEnd;
     }
 
     // go to the end of a potential named entity
@@ -118,18 +116,18 @@ const char* ResolveHtmlEntity(Str str, int& rune) {
     if (entLen > 0) {
         rune = HtmlEntityNameToRune(Str(str.s, entLen));
         if (-1 == rune) {
-            return nullptr;
+            return {};
         }
         int endOff = entLen;
         // skip the trailing colon - if there is one
         if (endOff < str.len && str.s[endOff] == ';') {
             endOff++;
         }
-        return str.s + endOff;
+        return Str(str.s + endOff, str.len - endOff);
     }
 
     rune = -1;
-    return nullptr;
+    return {};
 }
 
 // if s doesn't contain html entities, we just return it
@@ -138,48 +136,48 @@ const char* ResolveHtmlEntity(Str str, int& rune) {
 // Entities are encoded as utf8 in the result.
 // alloc can be nullptr, in which case we'll allocate with malloc()
 Str ResolveHtmlEntities(Str str, Arena* alloc) {
-    const char* s = str.s;
-    const char* end = str.s + str.len;
-    char* res = nullptr;
+    Str res;
     size_t resLen = 0;
-    char* dst;
+    char* dst = nullptr;
 
-    const char* curr = s;
+    int off = 0;
+    int chunkStart = 0;
     for (;;) {
-        bool found = SkipUntil(curr, end, '&');
+        bool found = SkipUntil(str, off, '&');
         if (!found) {
             if (!res) {
                 return str;
             }
             // copy the remaining string
-            MemAppend(dst, s, end - s);
+            MemAppend(dst, Str(str.s + chunkStart, str.len - chunkStart));
             break;
         }
         if (!res) {
             // allocate memory for the result string
             // I'm banking that text after resolving entities will
             // be smaller than the original
-            resLen = end - s + 8; // +8 just in case
-            res = (char*)Alloc(alloc, resLen);
-            dst = res;
+            resLen = (size_t)str.len + 8; // +8 just in case
+            res.s = (char*)Alloc(alloc, resLen);
+            dst = res.s;
         }
-        MemAppend(dst, s, curr - s);
-        // curr points at '&'
+        MemAppend(dst, Str(str.s + chunkStart, off - chunkStart));
+        // off points at '&'
         int rune = -1;
-        const char* entEnd = ResolveHtmlEntity(Str(curr + 1, (int)(end - curr - 1)), rune);
+        Str entEnd = ResolveHtmlEntity(Str(str.s + off + 1, str.len - off - 1), rune);
         if (!entEnd) {
             // unknown entity, just copy the '&'
-            MemAppend(dst, curr, 1);
-            curr++;
+            MemAppend(dst, Str(str.s + off, 1));
+            off++;
         } else {
             str::Utf8Encode(dst, rune);
-            curr = entEnd;
+            off = (int)(entEnd.s - str.s);
         }
-        s = curr;
+        chunkStart = off;
     }
     *dst = 0;
-    ReportIf(dst >= res + resLen);
-    return Str(res, (int)(dst - res));
+    ReportIf(dst >= res.s + resLen);
+    res.len = (int)(dst - res.s);
+    return res;
 }
 
 // convenience function for the above that always allocates
@@ -207,17 +205,13 @@ bool AttrInfo::NameIs(Str s) const {
 
 // return true if nameToCheck is the same as s after skipping namespace preifix
 static bool IsNameWithNS(Str s, Str nameToCheck) {
-    const char* sRealStart = s.s;
-    int len = s.len;
-    // skip (potential) namespace prefix i.e. "foo:bar" = "bar"
-    const char* tmp = (const char*)memchr(s.s, ':', len);
-    if (tmp) {
-        sRealStart = tmp + 1;
-        int prefixLen = (int)(sRealStart - s.s);
-        ReportIf(prefixLen > len);
-        len -= prefixLen;
+    Str name = s;
+    const char* colon = (const char*)memchr(s.s, ':', s.len);
+    if (colon) {
+        int prefixLen = (int)(colon + 1 - s.s);
+        name = Str(s.s + prefixLen, s.len - prefixLen);
     }
-    return str::EqNIx(Str(sRealStart, len), len, nameToCheck);
+    return str::EqNIx(name, name.len, nameToCheck);
 }
 
 // for now just ignores any namespace qualifier
@@ -232,30 +226,29 @@ bool AttrInfo::ValIs(Str s) const {
     return str::EqNIx(val, val.len, s);
 }
 
-void HtmlToken::SetTag(TokenType new_type, const char* new_s, const char* end) {
+void HtmlToken::SetTag(TokenType new_type, Str slice) {
     type = new_type;
-    s = new_s;
-    sLen = end - s;
-    SkipName(new_s, s + sLen);
-    nLen = new_s - s;
-    tag = FindHtmlTag(s, nLen);
-    nextAttr = nullptr;
+    s = slice;
+    int nameEnd = 0;
+    SkipName(s, nameEnd);
+    nLen = (size_t)nameEnd;
+    tag = FindHtmlTag(s.s, (int)nLen);
+    nextAttrOff = -1;
 }
 
-void HtmlToken::SetText(const char* new_s, const char* end) {
+void HtmlToken::SetText(Str slice) {
     type = Text;
-    s = new_s;
-    sLen = end - s;
+    s = slice;
 }
 
-void HtmlToken::SetError(ParsingError err, const char* errContext) {
+void HtmlToken::SetError(ParsingError err, Str errContext) {
     type = Error;
     error = err;
-    this->s = errContext;
+    s = errContext;
 }
 
 bool HtmlToken::NameIs(Str nameToFind) const {
-    return (nameToFind.len == (int)nLen) && str::StartsWithI(Str((char*)s, (int)nLen), nameToFind);
+    return (nameToFind.len == (int)nLen) && str::StartsWithI(Str(s.s, (int)nLen), nameToFind);
 }
 
 // for now just ignores any namespace qualifier
@@ -264,27 +257,27 @@ bool HtmlToken::NameIs(Str nameToFind) const {
 bool HtmlToken::NameIsNS(Str nameToCheck, Str) const {
     // ReportIf(!ns);
     //  nLen is 'nameLen' i.e. first nLen characters of s is a name
-    return IsNameWithNS(Str(s, (int)nLen), nameToCheck);
+    return IsNameWithNS(Str(s.s, (int)nLen), nameToCheck);
 }
 
 // reparse point is an address within html that we can
 // can feed to HtmlPullParser() to start parsing from that point
-const char* HtmlToken::GetReparsePoint() const {
+Str HtmlToken::GetReparsePoint() const {
     if (IsStartTag() || IsEmptyElementEndTag()) {
-        return s - 1;
+        return Str(s.s - 1, s.len + 1);
     }
     if (IsEndTag()) {
-        return s - 2;
+        return Str(s.s - 2, s.len + 2);
     }
     if (IsText()) {
         return s;
     }
     ReportIf(true); // don't call us on error tokens
-    return nullptr;
+    return {};
 }
 
 AttrInfo* HtmlToken::GetAttrByName(Str name) {
-    nextAttr = nullptr; // start from the beginning
+    nextAttrOff = -1; // start from the beginning
     for (AttrInfo* a = NextAttr(); a; a = NextAttr()) {
         if (a->NameIs(name)) {
             return a;
@@ -294,7 +287,7 @@ AttrInfo* HtmlToken::GetAttrByName(Str name) {
 }
 
 AttrInfo* HtmlToken::GetAttrByNameNS(Str name, Str attrNS) {
-    nextAttr = nullptr; // start from the beginning
+    nextAttrOff = -1; // start from the beginning
     for (AttrInfo* a = NextAttr(); a; a = NextAttr()) {
         if (a->NameIsNS(name, attrNS)) {
             return a;
@@ -308,54 +301,51 @@ AttrInfo* HtmlToken::GetAttrByNameNS(Str name, Str attrNS) {
 // where attribute value can be quoted
 AttrInfo* HtmlToken::NextAttr() {
     // start after the last attribute found (or the beginning)
-    const char* curr = nextAttr;
-    if (!curr) {
-        curr = s + nLen;
-    }
-    const char* end = s + sLen;
+    int off = nextAttrOff >= 0 ? nextAttrOff : (int)nLen;
 
     // parse attribute name
-    SkipWs(curr, end);
-    if (curr == end) {
+    SkipWs(s, off);
+    if (off == s.len) {
     NoNextAttr:
-        nextAttr = nullptr;
+        nextAttrOff = -1;
         return nullptr;
     }
-    const char* nameStart = curr;
-    SkipName(curr, end);
-    attrInfo.name = Str(nameStart, (int)(curr - nameStart));
+    int nameStart = off;
+    SkipName(s, off);
+    attrInfo.name = Str(s.s + nameStart, off - nameStart);
     if (!attrInfo.name) {
         goto NoNextAttr;
     }
-    SkipWs(curr, end);
-    if ((curr == end) || ('=' != *curr)) {
+    SkipWs(s, off);
+    if ((off == s.len) || ('=' != s.s[off])) {
         // attributes without values get their names as value in HTML
         attrInfo.val = attrInfo.name;
-        nextAttr = curr;
+        nextAttrOff = off;
         return &attrInfo;
     }
 
     // parse attribute value
-    ++curr; // skip '='
-    SkipWs(curr, end);
-    if (curr == end) {
+    ++off; // skip '='
+    SkipWs(s, off);
+    if (off == s.len) {
         // attribute with implicit empty value
-        attrInfo.val = Str(curr, 0);
-    } else if (('\'' == *curr) || ('\"' == *curr)) {
+        attrInfo.val = Str(s.s + off, 0);
+    } else if (('\'' == s.s[off]) || ('\"' == s.s[off])) {
         // attribute with quoted value
-        ++curr;
-        const char* valStart = curr;
-        if (!SkipUntil(curr, end, *(curr - 1))) {
+        char quote = s.s[off];
+        ++off;
+        int valStart = off;
+        if (!SkipUntil(s, off, quote)) {
             goto NoNextAttr;
         }
-        attrInfo.val = Str(valStart, (int)(curr - valStart));
-        ++curr;
+        attrInfo.val = Str(s.s + valStart, off - valStart);
+        ++off;
     } else {
-        const char* valStart = curr;
-        SkipNonWs(curr, end);
-        attrInfo.val = Str(valStart, (int)(curr - valStart));
+        int valStart = off;
+        SkipNonWs(s, off);
+        attrInfo.val = Str(s.s + valStart, off - valStart);
     }
-    nextAttr = curr;
+    nextAttrOff = off;
     return &attrInfo;
 }
 
@@ -364,18 +354,18 @@ AttrInfo* HtmlToken::NextAttr() {
 // tries to find the closing '>' and not be confused by '>' that
 // are part of attribute value. We're not very strict here
 // Returns false if didn't find
-static bool SkipUntilTagEnd(const char*& s, const char* end) {
-    while (s < end) {
-        char c = *s++;
+static bool SkipUntilTagEnd(Str s, int& off) {
+    while (off < s.len) {
+        char c = s.s[off++];
         if ('>' == c) {
-            --s;
+            --off;
             return true;
         }
         if (('\'' == c) || ('"' == c)) {
-            if (!SkipUntil(s, end, c)) {
+            if (!SkipUntil(s, off, c)) {
                 return false;
             }
-            ++s;
+            ++off;
         }
     }
     return false;
@@ -383,19 +373,19 @@ static bool SkipUntilTagEnd(const char*& s, const char* end) {
 
 // Returns next part of html or nullptr if finished
 HtmlToken* HtmlPullParser::Next() {
-    if (currPos >= end) {
+    if (currPos >= html.len) {
         return nullptr;
     }
 
 Next:
-    const char* start = currPos;
-    if (*currPos != '<' || currPos + 1 < end && !IsValidTagStart(*++currPos)) {
+    int start = currPos;
+    if (html.s[currPos] != '<' || currPos + 1 < html.len && !IsValidTagStart(html.s[currPos + 1])) {
         // this must be text between tags
-        if (!SkipUntil(currPos, end, '<') && IsSpaceOnly(start, currPos)) {
+        if (!SkipUntil(html, currPos, '<') && IsSpaceOnly(Str(html.s + start, currPos - start))) {
             // ignore whitespace after the last tag
             return nullptr;
         }
-        currToken.SetText(start, currPos);
+        currToken.SetText(Str(html.s + start, currPos - start));
         return &currToken;
     }
 
@@ -403,42 +393,43 @@ Next:
     ++start;
 
     // skip <? and <! (processing instructions and comments)
-    if (start < end && (('?' == *start) || ('!' == *start))) {
-        if ('!' == *start && start + 2 < end && str::StartsWith(start, "!--")) {
+    if (start < html.len && (('?' == html.s[start]) || ('!' == html.s[start]))) {
+        if ('!' == html.s[start] && start + 2 < html.len &&
+            str::StartsWith(Str(html.s + start, html.len - start), "!--")) {
             currPos = start + 3;
-            if (!SkipUntil(currPos, end, "-->")) {
-                currToken.SetError(HtmlToken::UnclosedTag, start);
+            if (!SkipUntil(html, currPos, Str("-->"))) {
+                currToken.SetError(HtmlToken::UnclosedTag, Str(html.s + start, html.len - start));
                 return &currToken;
             }
-            currPos += 2;
-        } else if (!SkipUntil(currPos, end, '>')) {
-            currToken.SetError(HtmlToken::UnclosedTag, start);
+            currPos += 3;
+        } else if (!SkipUntil(html, currPos, '>')) {
+            currToken.SetError(HtmlToken::UnclosedTag, Str(html.s + start, html.len - start));
             return &currToken;
         }
         ++currPos;
         goto Next;
     }
 
-    if (!SkipUntilTagEnd(currPos, end)) {
-        currToken.SetError(HtmlToken::UnclosedTag, start);
+    if (!SkipUntilTagEnd(html, currPos)) {
+        currToken.SetError(HtmlToken::UnclosedTag, Str(html.s + start, html.len - start));
         return &currToken;
     }
 
-    ReportIf('>' != *currPos);
-    if (currPos == start || currPos == start + 1 && *start == '/') {
+    ReportIf('>' != html.s[currPos]);
+    if (currPos == start || currPos == start + 1 && html.s[start] == '/') {
         // skip empty tags (</>), because we're lenient
         ++currPos;
         goto Next;
     }
 
-    if (('/' == *start) && ('/' == currPos[-1])) { // </foo/>
-        currToken.SetError(HtmlToken::InvalidTag, start);
-    } else if ('/' == *start) { // </foo>
-        currToken.SetTag(HtmlToken::EndTag, start + 1, currPos);
-    } else if ('/' == currPos[-1]) { // <foo/>
-        currToken.SetTag(HtmlToken::EmptyElementTag, start, currPos - 1);
+    if (('/' == html.s[start]) && ('/' == html.s[currPos - 1])) { // </foo/>
+        currToken.SetError(HtmlToken::InvalidTag, Str(html.s + start, currPos - start));
+    } else if ('/' == html.s[start]) { // </foo>
+        currToken.SetTag(HtmlToken::EndTag, Str(html.s + start + 1, currPos - start - 1));
+    } else if ('/' == html.s[currPos - 1]) { // <foo/>
+        currToken.SetTag(HtmlToken::EmptyElementTag, Str(html.s + start, currPos - start - 1));
     } else {
-        currToken.SetTag(HtmlToken::StartTag, start, currPos);
+        currToken.SetTag(HtmlToken::StartTag, Str(html.s + start, currPos - start));
     }
     ++currPos;
     return &currToken;
