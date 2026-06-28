@@ -12,7 +12,10 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 
-#define SkipWhitespace(c) for (; str::IsWs(*(c)); (c)++)
+static void SkipWhitespaceIdx(WStr text, int& idx) {
+    for (; idx < text.len && str::IsWs(text.s[idx]); idx++) {
+    }
+}
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
 // cf. https://code.google.com/archive/p/sumatrapdf/issues/959
 #define isnoncjkwordchar(c) (isWordChar(c) && (unsigned short)(c) < 0x2E80)
@@ -242,22 +245,16 @@ static WStr StrStrFoldCase(WStr haystack, WStr needle) {
 }
 
 static WStr StrRStr(WStr text, int endOff, WStr needle) {
-    if (!text || !needle || endOff <= 0) {
+    if (!text || !needle || endOff <= 0 || endOff > text.len) {
         return {};
     }
-    const WCHAR* start = text.s;
-    const WCHAR* end = text.s + endOff;
-    if (!needle || start >= end) {
+    int needleLen = needle.len;
+    if (needleLen <= 0 || needleLen > endOff) {
         return {};
     }
-    size_t needleLen = str::Len(needle);
-    if (needleLen > (size_t)(end - start)) {
-        return {};
-    }
-    const WCHAR* s = end - needleLen;
-    for (; s >= start; s--) {
-        if (memcmp(s, needle.s, needleLen * sizeof(WCHAR)) == 0) {
-            return WStr((wchar_t*)s, (int)(end - s));
+    for (int i = endOff - needleLen; i >= 0; i--) {
+        if (memcmp(text.s + i, needle.s, (size_t)needleLen * sizeof(WCHAR)) == 0) {
+            return WStr(text.s + i, endOff - i);
         }
     }
     return {};
@@ -297,42 +294,48 @@ static WStr StrRStrFoldCase(WStr text, int endOff, WStr needle) {
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
 TextSearch::PageAndOffset TextSearch::MatchEnd(WStr start) const {
-    const WCHAR* match = findText.s;
-    const WCHAR* end = start.s;
     const PageAndOffset notFound = {-1, -1};
     int currentPage = findPage;
     WStr currentPageText = pageText;
     bool lookingAtWs;
 
-    if (matchWordStart && start.s > pageText.s && isWordChar(start.s[-1]) && isWordChar(start.s[0])) {
+    int startOff = (int)(start.s - pageText.s);
+    if (matchWordStart && startOff > 0 && isWordChar(pageText.s[startOff - 1]) && isWordChar(pageText.s[startOff])) {
         return notFound;
     }
 
-    if (!match) {
+    if (!findText) {
         return notFound;
     }
 
-    while (*match) {
-        if (!*end) {
+    int matchIdx = 0;
+    int endIdx = startOff;
+    while (matchIdx < findText.len && findText.s[matchIdx]) {
+        bool atPageEnd = endIdx >= currentPageText.len || !currentPageText.s[endIdx];
+        if (atPageEnd && currentPage >= nPages) {
             return notFound;
         }
+        WCHAR endCh = atPageEnd ? 0 : currentPageText.s[endIdx];
         /* Going from page n to page n+1 is a space, too.*/
-        lookingAtWs = (!*end && (currentPage < nPages)) || str::IsWs(*end);
+        lookingAtWs = (atPageEnd && (currentPage < nPages)) || str::IsWs(endCh);
         bool isMatch = false;
         // extra advance for the German ß <-> ss equivalence, where one side
         // consumes one WCHAR and the other two (issue #933)
         int extraMatchAdv = 0;
         int extraEndAdv = 0;
+        WCHAR matchCh = findText.s[matchIdx];
         if (matchCase) {
-            isMatch = *match == *end;
+            isMatch = matchCh == endCh;
         } else {
-            isMatch = FoldCaseForSearch(*match) == FoldCaseForSearch(*end);
+            isMatch = FoldCaseForSearch(matchCh) == FoldCaseForSearch(endCh);
             if (!isMatch) {
-                if (IsSharpS(*match) && IsLatinS(end[0]) && IsLatinS(end[1])) {
+                if (IsSharpS(matchCh) && !atPageEnd && endIdx + 1 < currentPageText.len && IsLatinS(endCh) &&
+                    IsLatinS(currentPageText.s[endIdx + 1])) {
                     // ß in the search text matches "ss" in the page
                     isMatch = true;
                     extraEndAdv = 1;
-                } else if (IsLatinS(match[0]) && IsLatinS(match[1]) && IsSharpS(*end)) {
+                } else if (matchIdx + 1 < findText.len && IsLatinS(findText.s[matchIdx]) &&
+                           IsLatinS(findText.s[matchIdx + 1]) && IsSharpS(endCh)) {
                     // "ss" in the search text matches ß in the page
                     isMatch = true;
                     extraMatchAdv = 1;
@@ -341,71 +344,74 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(WStr start) const {
         }
         if (isMatch) {
             /* characters are identical */;
-        } else if (str::IsWs(*match) && lookingAtWs) {
+        } else if (str::IsWs(matchCh) && lookingAtWs) {
             /* treat all whitespace as identical and end of page as whitespace.
                The end of the document is NOT seen as whitespace */
             ;
             // TODO: Adobe Reader seems to have a more extensive list of
             //       normalizations - is there an easier way?
-        } else if (*match == '-' && (0x2010 <= *end && *end <= 0x2014)) {
+        } else if (matchCh == L'-' && (0x2010 <= endCh && endCh <= 0x2014)) {
             /* make HYPHEN-MINUS also match HYPHEN, NON-BREAKING HYPHEN,
                FIGURE DASH, EN DASH and EM DASH (but not the other way around) */
             ;
-        } else if (*match == '\'' && (0x2018 <= *end && *end <= 0x201b)) {
+        } else if (matchCh == L'\'' && (0x2018 <= endCh && endCh <= 0x201b)) {
             /* make APOSTROPHE also match LEFT/RIGHT SINGLE QUOTATION MARK */;
-        } else if (*match == '"' && (0x201c <= *end && *end <= 0x201f)) {
+        } else if (matchCh == L'"' && (0x201c <= endCh && endCh <= 0x201f)) {
             /* make QUOTATION MARK also match LEFT/RIGHT DOUBLE QUOTATION MARK */;
         } else {
             return notFound;
         }
         // consume the extra char on whichever side of a ß <-> ss match is longer
-        match += extraMatchAdv;
-        end += extraEndAdv;
-        match++;
+        matchIdx += extraMatchAdv;
+        endIdx += extraEndAdv;
+        matchIdx++;
         // We might get here either ...
-        if (*end) {
+        if (!atPageEnd && endCh) {
             // ... because there's a genuine match -> consider next character in next loop iteration
-            end++;
+            endIdx++;
         } else {
             // ... or because we were looking at whitespace in the pattern and we were at a page break
             // -> skip to next page
             ++currentPage;
             currentPageText = engine->GetTextForPage(currentPage);
-            end = currentPageText.s;
+            endIdx = 0;
         }
         // treat "??" and "? ?" differently, since '?' could have been a word
         // character that's just missing an encoding (and '?' is the replacement
         // character); cf. https://code.google.com/archive/p/sumatrapdf/issues/1574
-        if (*match && !isnoncjkwordchar(*(match - 1)) && (*(match - 1) != '?' || *match != '?') ||
-            lookingAtWs && str::IsWs(*(match - 1))) {
-            SkipWhitespace(match);
-            SkipWhitespace(end);
-            while ((!*end) && (currentPage < nPages)) {
+        if (matchIdx < findText.len && findText.s[matchIdx] &&
+            ((!isnoncjkwordchar(findText.s[matchIdx - 1]) &&
+              (findText.s[matchIdx - 1] != L'?' || findText.s[matchIdx] != L'?')) ||
+             (lookingAtWs && str::IsWs(findText.s[matchIdx - 1])))) {
+            SkipWhitespaceIdx(findText, matchIdx);
+            SkipWhitespaceIdx(currentPageText, endIdx);
+            while (endIdx >= currentPageText.len && currentPage < nPages) {
                 // treat page break as whitespace, too
                 ++currentPage;
                 currentPageText = engine->GetTextForPage(currentPage);
-                end = currentPageText.s;
-                SkipWhitespace(end);
+                endIdx = 0;
+                SkipWhitespaceIdx(currentPageText, endIdx);
             }
         }
     }
-    if (matchWordEnd && end > currentPageText.s && isWordChar(end[-1]) && isWordChar(end[0])) {
+    if (matchWordEnd && endIdx > 0 && endIdx < currentPageText.len && isWordChar(currentPageText.s[endIdx - 1]) &&
+        isWordChar(currentPageText.s[endIdx])) {
         return notFound;
     }
 
-    int off = (int)(end - currentPageText.s);
-    return {currentPage, off};
+    return {currentPage, endIdx};
 }
 
 static WStr WStrStr(WStr haystack, WStr needle) {
-    if (!haystack || !needle) {
+    if (!haystack || !needle || needle.len <= 0) {
         return {};
     }
-    const WCHAR* p = wcsstr(haystack.s, needle.s);
-    if (!p) {
-        return {};
+    for (int i = 0; i <= haystack.len - needle.len; i++) {
+        if (memcmp(haystack.s + i, needle.s, (size_t)needle.len * sizeof(WCHAR)) == 0) {
+            return WStr(haystack.s + i, haystack.len - i);
+        }
     }
-    return WStr((wchar_t*)p, haystack.len - (int)(p - haystack.s));
+    return {};
 }
 
 static WStr GetNextIndex(WStr base, int offset, bool forward) {
