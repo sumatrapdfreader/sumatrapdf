@@ -227,7 +227,7 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
     if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
-        const char* viewModeStr = DisplayModeToString(i.startView);
+        Str viewModeStr = DisplayModeToString(i.startView);
         auto viewMode = ToWStrTemp(viewModeStr);
         cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath, viewMode, i.startZoom, i.startScroll.x,
                       i.startScroll.y);
@@ -452,13 +452,13 @@ static bool SetupPluginMode(Flags& i) {
         StrVec parts;
         Split(&parts, args, "&", true);
         for (int k = 0; k < parts.Size(); k++) {
-            char* part = parts.At(k);
+            Str part = parts.At(k);
             int pageNo;
-            if (str::StartsWithI(part, "page=") && str::Parse(part + 4, "=%d%$", &pageNo)) {
+            if (str::StartsWithI(part, "page=") && str::Parse(Str(part.s + 4, part.len - 4), "=%d%$", &pageNo)) {
                 i.pageNumber = pageNo;
-            } else if (str::StartsWithI(part, "nameddest=") && part[10]) {
-                i.namedDest = str::Dup(part + 10);
-            } else if (!str::FindChar(part, '=') && part[0]) {
+            } else if (str::StartsWithI(part, "nameddest=") && part.len > 10) {
+                i.namedDest = str::Dup(Str(part.s + 10, part.len - 10));
+            } else if (!str::FindChar(part, '=') && part) {
                 i.namedDest = str::Dup(part);
             }
         }
@@ -706,7 +706,7 @@ static void ResetTempArenaWithLogging() {
 
 // Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
 // logging is torn down.
-static void LogArenaLifetimeStats(const char* what, Arena* a) {
+static void LogArenaLifetimeStats(Str what, Arena* a) {
     if (!a) {
         return;
     }
@@ -758,17 +758,15 @@ static void ReplaceColor(Str* col, Str maybeColor) {
 
 static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
-        char* cmdLine = str::Dup(i.inverseSearchCmdLine);
-        str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, cmdLine);
-        str::Free(cmdLine);
+        str::ReplaceWithCopy(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }
     if (i.invertColors) {
         gGlobalPrefs->fixedPageUI.invertColors = true;
     }
 
-    char* arg = nullptr;
-    char* param = nullptr;
+    Str arg;
+    Str param;
     for (int n = 0; n < i.globalPrefArgs.Size(); n++) {
         arg = i.globalPrefArgs.At(n);
         if (str::EqI(arg, "-esc-to-exit")) {
@@ -853,7 +851,9 @@ static bool IsInstallerButNotInstalled() {
 // here I'm trying to explicitly LoadLibrary() to hopefully fix that
 // if not, at least I can add logging to figure out why it fails
 constexpr int kBtnIdLearnMore = 100;
-constexpr const char* kFailedToLoadURL = "https://www.sumatrapdfreader.org/docs/Failed-to-load-libmpdf";
+static Str kFailedToLoadURL() {
+    return Str("https://www.sumatrapdfreader.org/docs/Failed-to-load-libmpdf");
+}
 
 static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                                    LONG_PTR lpRefData) {
@@ -865,7 +865,7 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
         }
         case TDN_BUTTON_CLICKED:
             if ((int)wParam == kBtnIdLearnMore) {
-                LaunchBrowser(kFailedToLoadURL);
+                LaunchBrowser(kFailedToLoadURL());
                 return S_FALSE; // don't close the dialog
             }
             break;
@@ -1016,18 +1016,17 @@ static bool ForceRunningAsInstaller() {
         return false;
     }
 
-    constexpr const char* corruptedInstallationConsole = R"(
+    Str corruptedInstallationConsole = R"(
 Looks like corrupted installation of SumatraPDF.
 
 Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
 )";
-    constexpr const char* corruptedInstallation =
-        R"(Looks like corrupted installation of SumatraPDF.
+    Str corruptedInstallation = R"(Looks like corrupted installation of SumatraPDF.
 )";
     bool ok = RedirectIOToExistingConsole();
     if (ok) {
         // if we're launched from console, print help to consle window
-        printf("%s", corruptedInstallationConsole);
+        printf("%s", corruptedInstallationConsole.s);
     }
 
     auto title = L"SumatraPDF installer";
@@ -1055,7 +1054,8 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
     ::ExitProcess(1);
 }
 
-constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
+static Str kInstallerHelpTmpl() {
+    return Str(R"(${appName} installer options:
 [-s] [-d <path>] [-with-filter] [-with-preview] [-x]
 
 -s
@@ -1070,11 +1070,12 @@ constexpr const char* kInstallerHelpTmpl = R"(${appName} installer options:
     extracts the files, doesn't install
 -log
     writes installation log to %LOCALAPPDATA%\sumatra-install-log.txt
-)";
+)");
+}
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    TempStr msg = str::ReplaceTemp(kInstallerHelpTmpl, "${appName}", kAppName);
+    TempStr msg = str::ReplaceTemp(kInstallerHelpTmpl(), "${appName}", kAppName);
 
     bool ok = RedirectIOToExistingConsole();
     if (ok) {
@@ -1209,12 +1210,12 @@ static i64 FileTimeAgeSec(FILETIME ft, const ULARGE_INTEGER& now) {
     return (i64)((now.QuadPart - t.QuadPart) / 10000000ULL);
 }
 
-static bool IsBuildDirName(const char* name) {
-    if (str::Len(name) != 6) {
+static bool IsBuildDirName(Str name) {
+    if (name.len != 6) {
         return false;
     }
-    for (const char* s = name; *s; s++) {
-        char c = *s;
+    for (int i = 0; i < name.len; i++) {
+        char c = name.s[i];
         if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) {
             return false;
         }
@@ -1224,7 +1225,7 @@ static bool IsBuildDirName(const char* name) {
 
 // returns age in seconds of the dir's last activity, or -1 if unknown.
 // prefers the directory mtime; falls back to the newest file mtime inside.
-static i64 GetDirLastActivityAgeSec(const char* dirPath, const ULARGE_INTEGER& now) {
+static i64 GetDirLastActivityAgeSec(Str dirPath, const ULARGE_INTEGER& now) {
     WIN32_FILE_ATTRIBUTE_DATA fileInfo{};
     TempWStr dirPathW = ToWStrTemp(dirPath);
     if (GetFileAttributesExW(dirPathW, GetFileExInfoStandard, &fileInfo)) {
@@ -1256,7 +1257,7 @@ static i64 GetDirLastActivityAgeSec(const char* dirPath, const ULARGE_INTEGER& n
 // but, being a restricted shell host, doesn't prune them -- so SumatraPDF.exe
 // keeps only the newest `keep` here (the logs live in our per-build data dir).
 struct PreviewLogFile {
-    char* path;
+    Str path;
     FILETIME ft;
 };
 static int CmpPreviewLogNewestFirst(const void* a, const void* b) {
@@ -1373,10 +1374,10 @@ static bool IsNoAdminToAdmin(HWND hPrevWnd) {
 }
 
 static int WineDpiFromEnv() {
-    static const char* scaleVars[] = {"GDK_SCALE", "QT_SCALE_FACTOR", "ELM_SCALE"};
+    static Str scaleVars[] = {Str("GDK_SCALE"), Str("QT_SCALE_FACTOR"), Str("ELM_SCALE")};
     int bestDpi = 0;
-    for (const char* var : scaleVars) {
-        const char* val = getenv(var);
+    for (Str var : scaleVars) {
+        const char* val = getenv(var.s); // str-port: CRT getenv
         if (!val || !*val) {
             continue;
         }
@@ -1458,6 +1459,7 @@ extern "C" void destroy_system_font_list();
 extern void DeleteManualBrowserWindow();
 
 extern "C" {
+// str-port: mupdf C main entry points
 int muconvert_main(int argc, char* argv[]);
 int mudraw_main(int argc, char* argv[]);
 int mutrace_main(int argc, char* argv[]);
@@ -1481,7 +1483,7 @@ int mugrep_main(int argc, char* argv[]);
 int cmapdump_main(int argc, char* argv[]);
 int pdfaudit_main(int argc, char* argv[]);
 
-char** fz_argv_from_wargv(int argc, wchar_t** wargv);
+char** fz_argv_from_wargv(int argc, wchar_t** wargv); // str-port: mupdf argv conversion
 void fz_free_argv(int argc, char** argv);
 int fz_redirect_io_to_existing_console();
 }
@@ -1495,7 +1497,7 @@ bool WasLaunchedByPowershellWithPipeRedirect();
 #define FZ_ENABLE_BARCODE 0
 #define FZ_VERSION "1.27.2"
 
-using MutoolFunc = int (*)(int argc, char* argv[]);
+using MutoolFunc = int (*)(int argc, char* argv[]); // str-port: mupdf C main
 
 static MutoolFunc toolFuncs[] = {
 #if FZ_ENABLE_JS
@@ -1727,7 +1729,7 @@ static int MaybeRunMutool() {
 
     argv = fz_argv_from_wargv(argc, wargv);
     {
-        const char* toolName = argv[0];
+        Str toolName = Str(argv[0]); // str-port: mupdf argv
         int idx = SeqStrIndexIS(gToolNames, toolName);
         if (idx >= 0) {
             // PowerShell pipes a GUI app's stdout through a pipe that the CRT
@@ -1737,7 +1739,7 @@ static int MaybeRunMutool() {
             // Emit the message via raw WriteFile (CRT fwrite is what's broken
             // here) to the inherited stderr handle so it survives the bad pipe.
             if (WasLaunchedByPowershellWithPipeRedirect()) {
-                static const char* msg = R"(SumatraPDF: command-line tools don't work when their output is redirected by
+                static Str msg = R"(SumatraPDF: command-line tools don't work when their output is redirected by
 PowerShell (e.g. `SumatraPDF.exe info file.pdf > out.txt` or `... | more`).
 PowerShell pipes a GUI app's output through a pipe that drops the data.
 
@@ -1799,7 +1801,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     HWND existingHwnd = nullptr;
     bool openInNewWindow = false;
     WindowTab* tabToSelect = nullptr;
-    const char* logFilePath = nullptr;
+    Str logFilePath;
     bool logFileBecauseDebug = false;
 
     supressThrowFromNew();
@@ -1870,7 +1872,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
 #if defined(DEBUG)
     if (false) {
-        const char* dir = "C:\\Users\\kjk\\Downloads";
+        Str dir = "C:\\Users\\kjk\\Downloads";
         auto di = DirIter{dir};
         di.recurse = true;
         for (DirIterEntry* d : di) {
@@ -2182,7 +2184,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // exit code is 0 on success, otherwise the category of the first
         // failure (see PrintResult), so an automated caller knows why (#3478)
         PrintResult printRes = PrintResult::Ok;
-        for (char* path : flags.fileNames) {
+        for (Str path : flags.fileNames) {
             PrintResult r = PrintFile(path, flags.printerName, !flags.silent, flags.printSettings);
             if (r != PrintResult::Ok && printRes == PrintResult::Ok) {
                 printRes = r;
@@ -2221,7 +2223,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // (#5630). Subsequent files then open into that (now current) window.
         bool reuseInNewWindow = openInNewWindow && (existingHwnd == existingInstanceHwnd);
         for (int n = 0; n < nFiles; n++) {
-            char* path = flags.fileNames[n];
+            Str path = flags.fileNames[n];
             bool isFirstWindow = (0 == n);
             bool savedInNewWindow = flags.inNewWindow;
             if (reuseInNewWindow && n == 0) {
@@ -2292,7 +2294,7 @@ ContinueOpenWindow:
         }
     }
 
-    for (const char* path : flags.fileNames) {
+    for (Str path : flags.fileNames) {
         if (restoreSession) {
             auto tab = FindTabByFile(path);
             if (tab) {
@@ -2325,7 +2327,7 @@ ContinueOpenWindow:
     nWithDde = gDdeOpenOnStartup.Size();
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
-        for (char* path : gDdeOpenOnStartup) {
+        for (Str path : gDdeOpenOnStartup) {
             if (restoreSession && FindMainWindowByFile(path, false)) {
                 continue;
             }
