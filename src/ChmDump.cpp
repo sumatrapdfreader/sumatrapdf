@@ -193,9 +193,9 @@ class ChmDumpTocVisitor : public EbookTocVisitor {
   public:
     bool any = false;
 
-    void Visit(const char* name, const char* url, int level) override {
+    void Visit(Str name, Str url, int level) override {
         any = true;
-        CliPrintf("toc level=%d name=%s url=%s", level, name ? name : "", url ? url : "");
+        CliPrintf("toc level=%d name=%s url=%s", level, name.s ? name.s : "", url.s ? url.s : "");
     }
 };
 
@@ -203,9 +203,9 @@ class ChmDumpIndexVisitor : public EbookTocVisitor {
   public:
     bool any = false;
 
-    void Visit(const char* name, const char* url, int level) override {
+    void Visit(Str name, Str url, int level) override {
         any = true;
-        CliPrintf("index level=%d name=%s url=%s", level, name ? name : "", url ? url : "");
+        CliPrintf("index level=%d name=%s url=%s", level, name.s ? name.s : "", url.s ? url.s : "");
     }
 };
 

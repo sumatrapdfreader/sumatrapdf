@@ -446,7 +446,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     // We fake page numbers by doing a depth-first traversal of
     // toc tree and considering each unique html page in toc tree
     // as a page
-    int CreatePageNoForURL(const char* url) {
+    int CreatePageNoForURL(Str url) {
         if (!url || IsExternalUrl(url)) {
             return 0;
         }
@@ -477,11 +477,11 @@ class ChmTocBuilder : public EbookTocVisitor {
         }
     }
 
-    void Visit(const char* name, const char* url, int level) override {
-        name = str::Dup(allocator, name, (size_t)-1);
-        url = str::Dup(allocator, url, (size_t)-1);
-        int pageNo = CreatePageNoForURL(url);
-        auto item = ChmTocTraceItem{name, url, level, pageNo};
+    void Visit(Str name, Str url, int level) override {
+        Str nameDup = str::Dup(allocator, name);
+        Str urlDup = str::Dup(allocator, url);
+        int pageNo = CreatePageNoForURL(urlDup);
+        auto item = ChmTocTraceItem{nameDup.s, urlDup.s, level, pageNo};
         tocTrace->Append(item);
     }
 };

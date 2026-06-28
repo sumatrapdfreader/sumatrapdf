@@ -182,7 +182,7 @@ static IPageElement* NewImageDataElement(int pageNo, Rect bbox, int imageID) {
     return res;
 }
 
-static TocItem* newEbookTocItem(TocItem* parent, const char* title, IPageDestination* dest) {
+static TocItem* newEbookTocItem(TocItem* parent, Str title, IPageDestination* dest) {
     auto res = new TocItem(parent, title, 0);
     res->dest = dest;
     if (dest) {
@@ -755,13 +755,13 @@ class EbookTocBuilder : public EbookTocVisitor {
   public:
     explicit EbookTocBuilder(EngineBase* engine) { this->engine = engine; }
 
-    void Visit(const char* name, const char* url, int level) override;
+    void Visit(Str name, Str url, int level) override;
 
     TocItem* GetRoot() { return root; }
     void SetIsIndex(bool value) { isIndex = value; }
 };
 
-void EbookTocBuilder::Visit(const char* name, const char* url, int level) {
+void EbookTocBuilder::Visit(Str name, Str url, int level) {
     IPageDestination* dest;
     if (!url) {
         dest = nullptr;
@@ -769,9 +769,9 @@ void EbookTocBuilder::Visit(const char* name, const char* url, int level) {
         dest = NewSimpleDest(0, RectF(), 0.f, url);
     } else {
         dest = engine->GetNamedDest(url);
-        if (!dest && str::FindChar(url, '%')) {
-            char* decodedUrl = str::DupTemp(url);
-            url::DecodeInPlace(decodedUrl);
+        if (!dest && str::FindChar(url.s, '%')) {
+            TempStr decodedUrl = str::DupTemp(url);
+            url::DecodeInPlace(decodedUrl.s);
             dest = engine->GetNamedDest(decodedUrl);
         }
     }
@@ -1606,13 +1606,13 @@ class ChmHtmlCollector : public EbookTocVisitor {
                 urlW = ToWStr(path);
                 url = ToUtf8Temp(urlW);
                 str::Free(urlW);
-                Visit(nullptr, url, -1);
+                Visit({}, url, -1);
             }
         }
         return html.StealData();
     }
 
-    void Visit(const char*, const char* url, int) override {
+    void Visit(Str, Str url, int) override {
         if (!url || url::IsAbsolute(url)) {
             return;
         }

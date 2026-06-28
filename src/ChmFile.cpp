@@ -99,8 +99,12 @@ void ChmFile::ParseWindowsData() {
     ByteSlice windowsData = GetData("/#WINDOWS");
     ByteSlice stringsData = GetData("/#STRINGS");
 
-    defer { stringsData.Free(); };
-    defer { windowsData.Free(); };
+    defer {
+        stringsData.Free();
+    };
+    defer {
+        windowsData.Free();
+    };
 
     if (windowsData.empty() || stringsData.empty()) {
         return;
@@ -471,7 +475,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
         visitor->Visit((char*)keyword, references[1], level);
         return true;
     }
-    visitor->Visit((char*)keyword, nullptr, level);
+    visitor->Visit(Str((char*)keyword), {}, level);
     int n = references.Size();
     for (int i = 0; i < n; i += 2) {
         visitor->Visit(references[i], references[i + 1], level + 1);
@@ -679,7 +683,7 @@ struct ChmTocEntityFixer : EbookTocVisitor {
     EbookTocVisitor* inner;
     uint codepage;
     ChmTocEntityFixer(EbookTocVisitor* v, uint cp) : inner(v), codepage(cp) {}
-    void Visit(const char* name, const char* url, int level) override {
+    void Visit(Str name, Str url, int level) override {
         inner->Visit(FixChmTocEntitiesTemp(name, codepage), url, level);
     }
 };
