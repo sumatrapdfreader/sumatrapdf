@@ -615,7 +615,7 @@ Str ToLower(Str s) {
 
 // Encode unicode character as utf8 to buf at off and advance off.
 // The caller must ensure there is enough free space (4 bytes) in buf
-void Utf8Encode(char* buf, int& off, int c) {
+void Utf8Encode(char* buf, int& off, int c) { // str-port: owned heap
     u8* tmp = (u8*)(buf + off);
     if (c < 0x00080) {
         *tmp++ = (u8)(c & 0xFF);
@@ -1078,7 +1078,7 @@ static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
     TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
     ptrdiff_t consumed = 0;
     {
-        char* endPtr = nullptr; // str-port: CRT out-param
+        char* endPtr = nullptr; // str-port: C-string
         *val = strtod(sliceZ.s, &endPtr);
         if (!endPtr || endPtr == sliceZ.s) {
             return false;
@@ -1697,14 +1697,14 @@ static char* EnsureCap(StrBuilder* s, size_t needed) { // str-port: owned heap
     s->nReallocs++;
 
     size_t allocSize = newElCount;
-    char* newEls;
+    char* newEls; // str-port: owned heap
     if (s->buf == s->els) {
-        newEls = (char*)Alloc(s->allocator, allocSize);
+        newEls = (char*)Alloc(s->allocator, allocSize); // str-port: owned heap
         if (newEls) {
             memcpy(newEls, s->buf, s->len + 1);
         }
     } else {
-        newEls = (char*)Realloc(s->allocator, s->els, allocSize);
+        newEls = (char*)Realloc(s->allocator, s->els, allocSize); // str-port: owned heap
     }
     if (!newEls) {
         ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
@@ -1718,16 +1718,16 @@ static char* EnsureCap(StrBuilder* s, size_t needed) { // str-port: owned heap
 static char* MakeSpaceAt(StrBuilder* s, size_t idx, size_t count) { // str-port: owned heap
     ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
-    char* buf = EnsureCap(s, newLen);
+    char* buf = EnsureCap(s, newLen); // str-port: owned heap
     if (!buf) {
         return nullptr;
     }
     buf[newLen] = 0;
-    char* res = &(buf[idx]);
+    char* res = &(buf[idx]); // str-port: owned heap
     if (s->len > idx) {
         // inserting in the middle of string, have to copy
-        char* src = buf + idx;
-        char* dst = buf + idx + count;
+        char* src = buf + idx;         // str-port: owned heap
+        char* dst = buf + idx + count; // str-port: owned heap
         memmove(dst, src, s->len - idx);
     }
     s->len = newLen;
@@ -1771,7 +1771,7 @@ StrBuilder::StrBuilder(size_t capHint, Arena* a) {
 // note: we don't inherit allocator as it's not needed for our use cases
 StrBuilder::StrBuilder(const StrBuilder& that) {
     Reset();
-    char* s = EnsureCap(this, that.len);
+    char* s = EnsureCap(this, that.len); // str-port: owned heap
     Str sOrig = that.Get();
     len = that.len;
     size_t n = len + kPadding;
@@ -1788,7 +1788,7 @@ StrBuilder& StrBuilder::operator=(const StrBuilder& that) {
         return *this;
     }
     Reset();
-    char* s = EnsureCap(this, that.len);
+    char* s = EnsureCap(this, that.len); // str-port: owned heap
     Str sOrig = that.Get();
     len = that.len;
     size_t n = len + kPadding;
@@ -1839,7 +1839,7 @@ int StrBuilder::Size() const {
 }
 
 bool StrBuilder::InsertAt(size_t idx, char el) {
-    char* p = MakeSpaceAt(this, idx, 1);
+    char* p = MakeSpaceAt(this, idx, 1); // str-port: owned heap
     if (!p) {
         return false;
     }
@@ -1858,7 +1858,7 @@ bool StrBuilder::Append(Str src, size_t count) {
     if (!src.s || 0 == count) {
         return true;
     }
-    char* dst = MakeSpaceAt(this, len, count);
+    char* dst = MakeSpaceAt(this, len, count); // str-port: owned heap
     if (!dst) {
         return false;
     }
@@ -1873,8 +1873,8 @@ bool StrBuilder::Append(const StrBuilder& s) {
 char StrBuilder::RemoveAt(size_t idx, size_t count) {
     char res = at(idx);
     if (len > idx + count) {
-        char* dst = els + idx;
-        char* src = els + idx + count;
+        char* dst = els + idx;         // str-port: owned heap
+        char* src = els + idx + count; // str-port: owned heap
         size_t nToMove = len - idx - count;
         memmove(dst, src, nToMove);
     }
@@ -1901,14 +1901,14 @@ char& StrBuilder::Last() const {
 // it doesn't matter
 Str StrBuilder::StealData(Arena* a) {
     int n = (int)len;
-    char* res = els;
+    char* res = els; // str-port: owned heap
     if (a) {
         // if allocator is specified, have to duplicate
-        res = (char*)MemDup(a, els, len + kPadding);
+        res = (char*)MemDup(a, els, len + kPadding); // str-port: owned heap
     } else {
         if (els == buf) {
             a = (a != nullptr) ? a : this->allocator;
-            res = (char*)MemDup(a, els, len + kPadding);
+            res = (char*)MemDup(a, els, len + kPadding); // str-port: owned heap
         } else {
             // we're returning els, so reset to small buf
             els = buf;
@@ -2047,14 +2047,14 @@ static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) { // str-port: owned heap
     size_t newElCount = newCap + kPadding;
 
     size_t allocSize = newElCount * WStrBuilder::kElSize;
-    WCHAR* newEls;
+    WCHAR* newEls; // str-port: owned heap
     if (s->buf == s->els) {
-        newEls = (WCHAR*)Alloc(s->allocator, allocSize);
+        newEls = (WCHAR*)Alloc(s->allocator, allocSize); // str-port: owned heap
         if (newEls) {
             memcpy(newEls, s->buf, WStrBuilder::kElSize * (s->len + 1));
         }
     } else {
-        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize);
+        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize); // str-port: owned heap
     }
 
     if (!newEls) {
@@ -2069,15 +2069,15 @@ static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) { // str-port: owned heap
 static WCHAR* MakeSpaceAt(WStrBuilder* s, size_t idx, size_t count) { // str-port: owned heap
     ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
-    WCHAR* buf = EnsureCap(s, newLen);
+    WCHAR* buf = EnsureCap(s, newLen); // str-port: owned heap
     if (!buf) {
         return nullptr;
     }
     buf[newLen] = 0;
-    WCHAR* res = &(buf[idx]);
+    WCHAR* res = &(buf[idx]); // str-port: owned heap
     if (s->len > idx) {
-        WCHAR* src = buf + idx;
-        WCHAR* dst = buf + idx + count;
+        WCHAR* src = buf + idx;         // str-port: owned heap
+        WCHAR* dst = buf + idx + count; // str-port: owned heap
         memmove(dst, src, (s->len - idx) * WStrBuilder::kElSize);
     }
     s->len = newLen;
