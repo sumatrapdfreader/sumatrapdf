@@ -24,7 +24,7 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
     ComboBox_ResetContent(hwnd);
     int n = items.Size();
     for (int i = 0; i < n; i++) {
-        char* s = items[i];
+        Str s = items[i];
         TempWStr ws = ToWStrTemp(s);
         ComboBox_AddString(hwnd, ws);
     }
@@ -86,7 +86,7 @@ void DropDown::SetItems(StrVec& newItems) {
     items.Reset();
     int n = newItems.Size();
     for (int i = 0; i < n; i++) {
-        char* s = newItems[i];
+        Str s = newItems[i];
         items.Append(s);
     }
     SetDropDownItems(hwnd, items);
@@ -114,7 +114,7 @@ Size DropDown::GetIdealSize() {
 
     int n = items.Size();
     for (int i = 0; i < n; i++) {
-        char* s = items[i];
+        Str s = items[i];
         Size s2 = HwndMeasureText(hwnd, s, hfont);
         s1.dx = std::max(s1.dx, s2.dx);
         s1.dy = std::max(s1.dy, s2.dy);
