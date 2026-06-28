@@ -30,7 +30,7 @@ HWND GetHwndForNotification();
 
 struct StrNode {
     StrNode* next;
-    const char* s;
+    Str s;
 };
 
 static StrNode* gDelayedNotifications = nullptr;
@@ -499,7 +499,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         DrawTipWords(hdc, parsedMsg, font, colTxt, ThemeWindowLinkColor());
         SetViewportOrgEx(hdc, oldOrg.x, oldOrg.y, nullptr);
     } else {
-        char* text = HwndGetTextTemp(hwnd);
+        TempStr text = HwndGetTextTemp(hwnd);
         RECT rTmp = ToRECT(rTxt);
         HdcDrawText(hdc, text, &rTmp, txtFmt);
     }
@@ -789,21 +789,22 @@ NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind kind) {
     return NotifsGetForGroup(wnds, nWnds, kind);
 }
 
-static StrNode* AllocStrNode(const char* s) {
-    size_t n = str::Len(s) + 1;
+static StrNode* AllocStrNode(Str s) {
+    size_t n = (size_t)s.len + 1;
     size_t cbAlloc = sizeof(StrNode) + n;
     auto* node = (StrNode*)malloc(cbAlloc);
     char* dst = (char*)node + sizeof(StrNode);
-    memcpy(dst, s, n);
+    memcpy(dst, s.s, s.len);
+    dst[s.len] = 0;
     node->next = nullptr;
-    node->s = dst;
+    node->s = Str(dst, (int)s.len);
     return node;
 }
 
 void MaybeDelayedWarningNotification(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char* msg = str::FmtV(fmt, args);
+    Str msg = str::FmtV(fmt, args);
     va_end(args);
 
     log(msg);
@@ -815,7 +816,7 @@ void MaybeDelayedWarningNotification(const char* fmt, ...) {
         StrNode* node = AllocStrNode(msg);
         ListInsertFront(&gDelayedNotifications, node);
     }
-    str::Free(msg);
+    str::Free(msg.s);
 }
 
 void ShowMaybeDelayedNotifications(HWND hwndParent) {
