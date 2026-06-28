@@ -311,6 +311,8 @@ static bool isImageMediaType(Str mediatype) {
     return str::Eq(mediatype, "image/png") || str::Eq(mediatype, "image/jpeg") || str::Eq(mediatype, "image/gif");
 }
 
+static void ParseMetadata(Str content, Props& props);
+
 bool EpubDoc::Load() {
     if (!archive) {
         return false;
@@ -359,7 +361,7 @@ bool EpubDoc::Load() {
         return false;
     }
     ByteSlice content{(u8*)contentFi->data, contentFi->fileSizeUncompressed};
-    ParseMetadata(AsStr(content));
+    ParseMetadata(AsStr(content), props);
     node = parser.ParseInPlace(content);
     if (!node) {
         return false;
@@ -493,7 +495,7 @@ static bool IsTokPropName(HtmlToken* tok, Str name) {
     return attr && attr->ValIs(name);
 }
 
-void EpubDoc::ParseMetadata(Str content) {
+static void ParseMetadata(Str content, Props& props) {
     HtmlPullParser pullParser(content);
     int insideMetadata = 0;
     HtmlToken* tok;

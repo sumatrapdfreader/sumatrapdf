@@ -31,7 +31,6 @@ class EpubDoc {
     bool isRtlDoc = false;
 
     bool Load();
-    void ParseMetadata(Str content);
 
   public:
     explicit EpubDoc(Str fileName);
