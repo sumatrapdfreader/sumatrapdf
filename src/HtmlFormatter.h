@@ -123,13 +123,19 @@ struct HtmlPage {
 // just to pack args to HtmlFormatter
 struct HtmlFormatterArgs {
     HtmlFormatterArgs() = default;
+    ~HtmlFormatterArgs() {
+        wstr::Free(fontName);
+    }
 
     float pageDx = 0;
     float pageDy = 0;
 
-    void SetFontName(WStr s) { fontName.SetCopy(s); }
+    void SetFontName(WStr s) {
+        wstr::Free(fontName);
+        fontName = wstr::Dup(s);
+    }
 
-    WStr GetFontName() const { return WStr(fontName.Get()); }
+    WStr GetFontName() const { return fontName; }
 
     float fontSize = 0;
 
@@ -146,7 +152,7 @@ struct HtmlFormatterArgs {
     // we start parsing from htmlStr + reparseIdx
     int reparseIdx = 0;
 
-    AutoFreeWStr fontName;
+    WStr fontName;
 };
 
 class HtmlPullParser;
@@ -222,7 +228,7 @@ struct HtmlFormatter {
     float lineSpacing = 0;
     float spaceDx = 0;
     Graphics* gfx = nullptr; // for measuring text
-    AutoFreeWStr defaultFontName;
+    WStr defaultFontName;
     float defaultFontSize = 0;
     Arena* textAllocator = nullptr;
     mui::ITextRender* textMeasure = nullptr;

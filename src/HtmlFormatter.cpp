@@ -159,11 +159,11 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
 
     gfx = mui::AllocGraphicsForMeasureText();
     textMeasure = CreateTextRender(args->textRenderMethod, gfx, 10, 10);
-    defaultFontName.SetCopy(args->GetFontName());
+    defaultFontName = wstr::Dup(args->GetFontName());
     defaultFontSize = args->fontSize;
 
     DrawStyle style;
-    style.font = mui::GetCachedFont(WStr(defaultFontName.Get()), defaultFontSize, FontStyleRegular);
+    style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = AlignAttr::Justify;
     style.dirRtl = false;
     styleStack.Append(style);
@@ -188,6 +188,7 @@ HtmlFormatter::~HtmlFormatter() {
     delete textMeasure;
     mui::FreeGraphicsForMeasureText(gfx);
     delete htmlParser;
+    wstr::Free(defaultFontName);
 }
 
 void HtmlFormatter::AppendInstr(const DrawInstr& di) {
@@ -214,8 +215,8 @@ void HtmlFormatter::SetFont(WStr fontName, FontStyle fs, float fontSize) {
 
 void HtmlFormatter::SetFontBasedOn(mui::CachedFont* font, FontStyle fs, float fontSize) {
     WStr fontName = font->GetName();
-    if (!fontName) {
-        fontName = WStr(defaultFontName.Get());
+    if (wstr::IsEmpty(fontName)) {
+        fontName = defaultFontName;
     }
     SetFont(fontName, fs, fontSize);
 }
