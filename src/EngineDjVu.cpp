@@ -695,7 +695,8 @@ Pixmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     }
 
     ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
-    int ok = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, (char*)bmpData);
+    int ok =
+        ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, (char*)bmpData); // str-port: libdjvu
     if (!ok) {
         // nothing was rendered, leave the page blank (same as WinDjView)
         memset(bmpData, 0xFF, stride * dy);
@@ -754,7 +755,8 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
         return pageRc;
     }
 
-    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, (char*)bmpData);
+    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx,
+                               (char*)bmpData); // str-port: libdjvu
     if (!ok) {
         LeaveCriticalSection(&gDjVuContext->lock);
         ddjvu_format_release(fmt);

@@ -481,7 +481,7 @@ Printer* NewPrinter(Str printerName) {
         printer->paperSizes = AllocArray<POINT>(n);
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr); // str-port: Win32
-        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);       // str-port: Win32
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes,
                             nullptr); // str-port: Win32
 
