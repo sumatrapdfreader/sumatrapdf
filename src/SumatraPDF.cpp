@@ -2956,7 +2956,7 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
 
     // for MeasurementUnit::in
     float factor = 1;
-    const char* unitName = "in";
+    Str unitName = "in";
     switch (unit) {
         case MeasurementUnit::pt:
             factor = 72;
@@ -2969,20 +2969,18 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
             break;
     }
 
-    char* xPos = str::FormatFloatWithThousandSepTemp((double)pt.x * (double)factor);
-    char* yPos = str::FormatFloatWithThousandSepTemp((double)pt.y * (double)factor);
+    TempStr xPos = str::FormatFloatWithThousandSepTemp((double)pt.x * (double)factor);
+    TempStr yPos = str::FormatFloatWithThousandSepTemp((double)pt.y * (double)factor);
     if (unit != MeasurementUnit::in) {
         // use similar precision for all units
-        int xLen = str::Leni(xPos);
-        if (str::IsDigit(xPos[xLen - 2])) {
-            xPos[xLen - 1] = '\0';
+        if (xPos.len >= 2 && str::IsDigit(xPos.s[xPos.len - 2])) {
+            xPos.len--;
         }
-        int yLen = str::Leni(yPos);
-        if (str::IsDigit(yPos[yLen - 2])) {
-            yPos[yLen - 1] = '\0';
+        if (yPos.len >= 2 && str::IsDigit(yPos.s[yPos.len - 2])) {
+            yPos.len--;
         }
     }
-    return fmt::FormatTemp("%s x %s %s", xPos, yPos, unitName);
+    return fmt::FormatTemp("%s x %s %s", xPos.s, yPos.s, unitName.s);
 }
 
 static auto cursorPosUnit = MeasurementUnit::pt;
@@ -2990,16 +2988,16 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
     ReportIf(!win->AsFixed());
     EngineBase* engine = win->AsFixed()->GetEngine();
     PointF pt = win->AsFixed()->CvtFromScreen(pos);
-    char* posStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
-    char* selStr = nullptr;
+    TempStr posStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
+    TempStr selStr = {};
     if (!win->selectionMeasure.IsEmpty()) {
         pt = PointF(win->selectionMeasure.dx, win->selectionMeasure.dy);
         selStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
     }
 
-    char* posInfo = fmt::FormatTemp("%s %s", _TRA("Cursor position:").s, posStr);
+    TempStr posInfo = fmt::FormatTemp("%s %s", _TRA("Cursor position:").s, posStr.s);
     if (selStr) {
-        posInfo = fmt::FormatTemp("%s - %s %s", posInfo, _TRA("Selection:").s, selStr);
+        posInfo = fmt::FormatTemp("%s - %s %s", posInfo.s, _TRA("Selection:").s, selStr.s);
     }
     NotificationUpdateMessage(wnd, posInfo);
 }
@@ -6131,7 +6129,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
 
 // if url-encoded s is bigger than a reasonable URL path,
 // we don't want to fail but truncate and encode less
-static TempStr URLEncodeMayTruncateTemp(const char* s) {
+static TempStr URLEncodeMayTruncateTemp(Str s) {
     constexpr int kMaxURLLen = 1500;
 
     HRESULT hr;
@@ -6182,16 +6180,15 @@ constexpr const char* kSelectionStr = "${selection}";
 // https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
 // but not fully and it might be incorrect anyway wrt. to other translation websites
 static const char* gLangsMap = "am\0hy\0by\0be\0ca-xv\0ca\0cz\0cs\0kr\0ko\0vn\0vi\0cn\0zh-CN\0tw\0zh-TW\0";
-static const char* GetISO639LangCodeFromLang(const char* lang) {
+static Str GetISO639LangCodeFromLang(Str lang) {
     int idx = SeqStrIndex(gLangsMap, lang);
     if (idx < 0 || idx % 2 != 0) {
         return lang;
     }
-    lang = SeqStrByIndex(gLangsMap, idx + 1);
-    return lang;
+    return SeqStrByIndex(gLangsMap, idx + 1);
 }
 
-static void LaunchBrowserWithSelection(WindowTab* tab, const char* urlPattern) {
+static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     if (!tab || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
     }
@@ -6212,11 +6209,11 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const char* urlPattern) {
     TempStr encodedSelection = URLEncodeMayTruncateTemp(selText);
     // ${userLang} and and ${selectin} are typed by user in settings file
     // to be shomewhat resilient against typos, we'll accept a different case
-    const char* lang = trans::GetCurrentLangCode();
+    Str lang = trans::GetCurrentLangCode();
     if (str::Eq(lang, "kr")) {
         lang = "ko";
     }
-    auto contryCode = GetISO639LangCodeFromLang(lang);
+    Str contryCode = GetISO639LangCodeFromLang(lang);
     TempStr uri = str::ReplaceNoCaseTemp(urlPattern, kUserLangStr, contryCode);
     uri = str::ReplaceNoCaseTemp(uri, kSelectionStr, encodedSelection);
     LaunchBrowser(uri);
@@ -6378,7 +6375,7 @@ static void TransitionToNoTabs() {
 
     // re-open each file in its own window, reuse the surviving window for the first file
     for (int i = 0; i < paths.Size(); i++) {
-        const char* path = paths.At(i);
+        Str path = paths.At(i);
         MainWindow* win;
         if (i == 0 && surviving) {
             win = surviving;
@@ -6434,7 +6431,7 @@ static void TransitionToTabs() {
     }
     SetTabsInTitlebar(win, true);
     for (int i = 0; i < paths.Size(); i++) {
-        const char* path = paths.At(i);
+        Str path = paths.At(i);
         LoadArgs args(path, win);
         args.showWin = true;
         args.forceReuse = (i == 0);
@@ -6444,7 +6441,7 @@ static void TransitionToTabs() {
 
 struct ListPrintersResult {
     HWND hwndParent;
-    char* text;
+    Str text;
 };
 
 static void ListPrintersShowResult(ListPrintersResult* d) {
@@ -6475,7 +6472,7 @@ void CopyFilePath(WindowTab* tab) {
     if (!tab) {
         return;
     }
-    const char* path = tab->filePath;
+    Str path = tab->filePath;
     CopyTextToClipboard(path);
 }
 
