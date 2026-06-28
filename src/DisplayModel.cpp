@@ -1963,7 +1963,7 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
                 result.AppendChar(c);
             }
         } else if (result.size() > 0 && result.Last() != '\n') {
-            result.Append(L"\r\n", 2);
+            result.Append(WStr(L"\r\n", 2));
         }
     }
 

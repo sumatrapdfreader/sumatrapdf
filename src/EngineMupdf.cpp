@@ -713,7 +713,7 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, WStrBuilder& s, Vec<R
         WCHAR tmp[2];
         tmp[0] = 0xD800 | ((rune - 0x10000) >> 10) & 0x3FF;
         tmp[1] = 0xDC00 | (rune - 0x10000) & 0x3FF;
-        s.Append(tmp, 2);
+        s.Append(WStr(tmp, 2));
         rects.Append(r);
         rects.Append(r);
         AddSeenGlyph(seen, rune, r);

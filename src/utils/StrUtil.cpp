@@ -2106,22 +2106,18 @@ bool WStrBuilder::AppendChar(WCHAR c) {
     return InsertAt(len, c);
 }
 
-bool WStrBuilder::Append(WStr s) {
-    return Append(s.s, (size_t)s.len);
-}
-
-bool WStrBuilder::Append(const WCHAR* src, size_t count) {
-    if (-1 == count) {
-        count = str::Len(src);
+bool WStrBuilder::Append(WStr src, size_t count) {
+    if ((size_t)-1 == count) {
+        count = (size_t)src.len;
     }
-    if (!src || 0 == count) {
+    if (!src.s || 0 == count) {
         return true;
     }
     WCHAR* dst = MakeSpaceAt(this, len, count);
     if (!dst) {
         return false;
     }
-    memcpy(dst, src, count * kElSize);
+    memcpy(dst, src.s, count * kElSize);
     return true;
 }
 
@@ -2223,7 +2219,7 @@ bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith) {
     WStr newStr = str::Replace(WStr(s.els), toReplace, replaceWith);
     s.Reset();
     if (newStr) {
-        s.Append(newStr.s);
+        s.Append(newStr);
         str::Free(newStr.s);
     }
     return true;
@@ -2409,11 +2405,11 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         WStr rest(start, (int)(end - start));
         WStr match = str::Find(rest, toReplace);
         if (!match) {
-            result.Append(start, (size_t)(end - start));
+            result.Append(WStr(start, (int)(end - start)));
             break;
         }
-        result.Append(start, (size_t)(match.s - start));
-        result.Append(replaceWith.s, replLen);
+        result.Append(WStr(start, (int)(match.s - start)));
+        result.Append(WStr(replaceWith.s, (int)replLen));
         start = match.s + findLen;
     }
     return result.StealData();

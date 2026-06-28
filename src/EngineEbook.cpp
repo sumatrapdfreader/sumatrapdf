@@ -400,7 +400,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 insertSpace = false;
                 {
                     AutoFreeWStr s(strconv::FromHtmlUtf8(i.str).s);
-                    content.Append(s);
+                    content.Append(WStr(s.Get()));
                     size_t len = s.size();
                     double cwidth = 1.0 * bbox.dx / len;
                     for (size_t k = 0; k < len; k++) {
@@ -424,7 +424,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 insertSpace = false;
                 {
                     AutoFreeWStr s(strconv::FromHtmlUtf8(i.str).s);
-                    content.Append(s);
+                    content.Append(WStr(s.Get()));
                     size_t len = s.size();
                     double cwidth = 1.0 * bbox.dx / len;
                     for (size_t k = 0; k < len; k++) {
