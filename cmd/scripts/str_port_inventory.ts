@@ -42,7 +42,7 @@ function walk(dir: string): string[] {
   return res;
 }
 
-function tagExclusion(line: string, kind: Kind): string | undefined {
+function tagExclusion(line: string, kind: Kind, contextLines: string[]): string | undefined {
   const t = line.trim();
   if (t.startsWith("//") || t.startsWith("/*") || t.startsWith("*")) {
     return "comment";
@@ -53,10 +53,17 @@ function tagExclusion(line: string, kind: Kind): string | undefined {
   if (/\b(?:printf|fprintf|sprintf|snprintf|sscanf|scanf|str::Parse|logf|logfa|CliPrintf)\s*\(/.test(t)) {
     return "format-string";
   }
+  if (/\bMAKEINTRESOURCEW?\s*\(/.test(t)) {
+    return "win32-resource";
+  }
+  if (/\bchar\s*\*\s*p\s*=\s*nullptr/.test(t) && /\*\s*p\s*=/.test(t)) {
+    return "crash-test";
+  }
   if (kind === "local" && /\b(?:cursor|p|s|src|dst|start|end|pos|it|iter)\b/.test(t)) {
     return "parse-cursor";
   }
-  if (/\bstr-port:/i.test(t)) {
+  const block = [line, ...contextLines].join("\n");
+  if (/\bstr-port:/i.test(block)) {
     return "api-boundary";
   }
   return undefined;
@@ -67,9 +74,49 @@ function scanFile(path: string): Entry[] {
   const lines = readFileSync(path, "utf-8").split(/\r?\n/);
   const entries: Entry[] = [];
 
+  let inBlockComment = false;
+  let if0Depth = 0;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const n = i + 1;
+
+    // Track /* */ block comments (including multi-line).
+    if (inBlockComment) {
+      if (line.includes("*/")) {
+        inBlockComment = !line.includes("/*") || line.indexOf("/*") > line.indexOf("*/");
+      }
+      continue;
+    }
+    if (line.includes("/*")) {
+      const after = line.slice(line.indexOf("/*") + 2);
+      if (!after.includes("*/")) {
+        inBlockComment = true;
+      }
+      // Single-line /* ... */ — skip if entire hit is inside comment.
+      const beforeComment = line.slice(0, line.indexOf("/*")).trim();
+      if (!beforeComment) {
+        continue;
+      }
+    }
+
+    // Skip disabled preprocessor blocks (#if 0).
+    const trimmed = line.trim();
+    if (/^#\s*if\s+0\b/.test(trimmed)) {
+      if0Depth++;
+      continue;
+    }
+    if (if0Depth > 0) {
+      if (/^#\s*if(?:def|ndef)?\b/.test(trimmed) || /^#\s*if\s+\d/.test(trimmed)) {
+        if0Depth++;
+      } else if (/^#\s*endif\b/.test(trimmed)) {
+        if0Depth--;
+      }
+      continue;
+    }
+
+    const contextLines = lines.slice(i + 1, Math.min(i + 4, lines.length));
+    const exclusionCtx = (kind: Kind) => tagExclusion(line, kind, contextLines);
 
     if (memberCharRe.test(line)) {
       const m = line.match(memberCharRe);
@@ -80,7 +127,7 @@ function scanFile(path: string): Entry[] {
         kind: "member",
         symbol: sym,
         text: line.trimEnd(),
-        exclusion: tagExclusion(line, "member"),
+        exclusion: exclusionCtx("member"),
       });
       continue;
     }
@@ -93,7 +140,7 @@ function scanFile(path: string): Entry[] {
         kind: "member",
         symbol: sym,
         text: line.trimEnd(),
-        exclusion: tagExclusion(line, "member"),
+        exclusion: exclusionCtx("member"),
       });
       continue;
     }
@@ -106,7 +153,7 @@ function scanFile(path: string): Entry[] {
         kind: "return",
         symbol: m?.[1] ?? "?",
         text: line.trimEnd(),
-        exclusion: tagExclusion(line, "return"),
+        exclusion: exclusionCtx("return"),
       });
     } else if (returnWcharRe.test(line)) {
       const m = line.match(returnWcharRe);
@@ -116,7 +163,7 @@ function scanFile(path: string): Entry[] {
         kind: "return",
         symbol: m?.[1] ?? "?",
         text: line.trimEnd(),
-        exclusion: tagExclusion(line, "return"),
+        exclusion: exclusionCtx("return"),
       });
     }
 
@@ -130,7 +177,7 @@ function scanFile(path: string): Entry[] {
           kind: "param",
           symbol: m?.[1] ?? "?",
           text: line.trimEnd(),
-          exclusion: tagExclusion(line, "param"),
+          exclusion: exclusionCtx("param"),
         });
       }
     }

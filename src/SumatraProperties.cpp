@@ -836,7 +836,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, kPropertiesWinClassName, WndProcProperties);
     wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
     wcex.hIcon = LoadIconW(h, iconName);
     ReportIf(!wcex.hIcon);
     RegisterClassEx(&wcex);

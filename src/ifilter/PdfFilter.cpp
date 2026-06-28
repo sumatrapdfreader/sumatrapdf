@@ -64,13 +64,17 @@ HRESULT PdfFilter::OnInit() {
 }
 
 // copied from SumatraProperties.cpp
-static bool PdfDateParse(const char* pdfDate, SYSTEMTIME* timeOut) {
-    ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    // "D:" at the beginning is optional
-    if (str::StartsWith(pdfDate, "D:")) {
-        pdfDate += 2;
+static bool PdfDateParse(Str pdfDate, SYSTEMTIME* timeOut) {
+    if (!pdfDate) {
+        return false;
     }
-    return str::Parse(pdfDate,
+    ZeroMemory(timeOut, sizeof(SYSTEMTIME));
+    Str slice = pdfDate;
+    // "D:" at the beginning is optional
+    if (str::StartsWith(slice, "D:")) {
+        slice = Str(slice.s + 2, slice.len - 2);
+    }
+    return str::Parse(slice,
                       "%4d%2d%2d"
                       "%2d%2d%2d",
                       &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
@@ -88,8 +92,8 @@ static Str PdfFilterStateToStr(PdfFilterState state) {
 HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     Str stateStr = PdfFilterStateToStr(m_state);
     logf("PdfFilter::GetNextChunkValue(), state: %s (%d)\n", stateStr.s, (int)m_state);
-    char* prop = nullptr;
-    WCHAR* ws = nullptr;
+    Str prop;
+    WStr ws;
     switch (m_state) {
         case PdfFilterState::Start:
             m_state = PdfFilterState::Author;
@@ -101,7 +105,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             prop = m_pdfEngine->GetPropertyTemp(kPropAuthor);
             if (!str::IsEmpty(prop)) {
                 ws = ToWStr(prop);
-                chunkValue.SetTextValue(PKEY_Author, ws);
+                chunkValue.SetTextValue(PKEY_Author, ws.s);
                 return S_OK;
             }
 
@@ -115,7 +119,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             }
             if (!str::IsEmpty(prop)) {
                 ws = ToWStr(prop);
-                chunkValue.SetTextValue(PKEY_Title, ws);
+                chunkValue.SetTextValue(PKEY_Title, ws.s);
                 return S_OK;
             }
 
@@ -145,8 +149,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                     FreePageText(&pageText);
                     continue;
                 }
-                ws = pageText.text.s;
-                WStr str = str::Replace(WStr(ws), WStr(L"\n"), WStr(L"\r\n"));
+                WStr str = str::Replace(pageText.text, WStr(L"\n"), WStr(L"\r\n"));
                 chunkValue.SetTextValue(PKEY_Search_Contents, str.s, CHUNK_TEXT);
                 str::FreePtr(&str);
                 FreePageText(&pageText);

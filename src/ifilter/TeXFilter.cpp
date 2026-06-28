@@ -39,14 +39,14 @@ HRESULT TeXFilter::OnInit() {
 #define skipcomment(pc) while (*(pc) && *(pc)++ != '\n')
 
 // appends a new line, if the last character isn't one already
-static inline void addsingleNL(WCHAR* base, WCHAR** cur) {
+static inline void addsingleNL(WCHAR* base, WCHAR** cur) { // str-port: internal wchar write cursor
     if (*cur > base && *(*cur - 1) != '\n') {
         *(*cur)++ = '\n';
     }
 }
 
 // appends a space, if the last character isn't one already
-static inline void addsinglespace(WCHAR* base, WCHAR** cur) {
+static inline void addsinglespace(WCHAR* base, WCHAR** cur) { // str-port: internal wchar write cursor
     if (*cur > base && !str::IsWs(*(*cur - 1))) {
         *(*cur)++ = ' ';
     }
@@ -54,11 +54,11 @@ static inline void addsinglespace(WCHAR* base, WCHAR** cur) {
 
 // extracts a text block contained within a pair of braces
 // (may contain nested braces)
-WCHAR* TeXFilter::ExtractBracedBlock() {
+WStr TeXFilter::ExtractBracedBlock() {
     m_iDepth++;
 
-    WCHAR* result = m_pBuffer + (m_pPtr - m_pData);
-    WCHAR* rptr = result;
+    WCHAR* result = m_pBuffer + (m_pPtr - m_pData); // str-port: internal wchar write cursor
+    WCHAR* rptr = result;                           // str-port: internal wchar write cursor
 
     int currDepth = m_iDepth;
 
@@ -210,7 +210,7 @@ WCHAR* TeXFilter::ExtractBracedBlock() {
         m_pPtr++;
     }
     *rptr = '\0';
-    return result;
+    return WStr(result, (int)(rptr - result));
 }
 
 HRESULT TeXFilter::GetNextChunkValue(ChunkValue& chunkValue) {
@@ -267,7 +267,7 @@ ContinueParsing:
             m_pPtr++;
 
             if (!wcsncmp(start, L"author", end - start) || !wcsncmp(start, L"title", end - start)) {
-                chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock());
+                chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock().s);
                 return S_OK;
             }
 
@@ -276,7 +276,7 @@ ContinueParsing:
             }
             goto ContinueParsing;
         case STATE_TEX_CONTENT:
-            chunkValue.SetTextValue(PKEY_Search_Contents, ExtractBracedBlock(), CHUNK_TEXT);
+            chunkValue.SetTextValue(PKEY_Search_Contents, ExtractBracedBlock().s, CHUNK_TEXT);
             return S_OK;
         default:
             return FILTER_E_END_OF_CHUNKS;

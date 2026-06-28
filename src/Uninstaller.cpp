@@ -328,7 +328,7 @@ static bool RegisterWinClass() {
 
     FillWndClassEx(wcex, kInstallerWindowClassName, WndProcUninstallerFrame);
     auto h = GetModuleHandle(nullptr);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
     wcex.hIcon = LoadIconW(h, iconName);
 
     RegisterClassExW(&wcex);

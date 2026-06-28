@@ -28,13 +28,13 @@ class TeXFilter : public FilterBase {
         free(m_pBuffer);
         m_pBuffer = nullptr;
     }
-    WCHAR* ExtractBracedBlock();
+    WStr ExtractBracedBlock();
 
     // IPersist
     IFACEMETHODIMP GetClassID(CLSID* pClassID) { return CLSIDFromString(kTexFilterClsid, pClassID); }
 
   private:
     TEX_FILTER_STATE m_state;
-    WCHAR *m_pData, *m_pPtr, *m_pBuffer;
+    WCHAR *m_pData, *m_pPtr, *m_pBuffer; // str-port: owned/cursor wchar buffers
     int m_iDepth;
 };

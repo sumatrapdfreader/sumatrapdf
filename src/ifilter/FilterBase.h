@@ -193,7 +193,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
         return hr;
     }
 
-    IFACEMETHODIMP GetText(ULONG* pcwcBuffer, WCHAR* awcBuffer) {
+    IFACEMETHODIMP GetText(ULONG* pcwcBuffer, WCHAR* awcBuffer) { // str-port: IFilter COM out-buffer
         if (!pcwcBuffer || !*pcwcBuffer) return E_INVALIDARG;
         if (!m_currentChunk.IsValid()) return FILTER_E_NO_MORE_TEXT;
         if (m_currentChunk.GetChunkType() != CHUNK_TEXT) return FILTER_E_NO_TEXT;
