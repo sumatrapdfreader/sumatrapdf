@@ -87,10 +87,12 @@ ChmModel::~ChmModel() {
     LeaveCriticalSection(&docAccess);
     DeleteCriticalSection(&docAccess);
     ArenaDelete(poolAlloc);
+    str::Free(fileName);
+    str::Free(currentPageUrl);
 }
 
 Str ChmModel::GetFilePath() const {
-    return Str(fileName.Get());
+    return fileName;
 }
 
 Str ChmModel::GetDefaultFileExt() const {
@@ -116,8 +118,8 @@ void ChmModel::GoToPage(int pageNo, bool) {
     }
     // re-display the exact current url (which may be a redirect/anchor not in
     // `pages`) so navigating to the same page preserves it
-    if (pageNo == currentPageNo && currentPageUrl && *currentPageUrl) {
-        DisplayPage(currentPageUrl.Get());
+    if (pageNo == currentPageNo && !str::IsEmpty(currentPageUrl)) {
+        DisplayPage(currentPageUrl);
         return;
     }
     DisplayPage(pages.At(pageNo - 1));
@@ -210,7 +212,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
     }
 
     TempStr url = url::GetFullPathTemp(pageUrl);
-    bool wasSameUrl = currentPageUrl.Get() && str::Eq(Str(currentPageUrl.Get()), url);
+    bool wasSameUrl = !str::IsEmpty(currentPageUrl) && str::Eq(currentPageUrl, url);
     int pageNo = pages.Find(url) + 1;
     // if we're reloading the same url to restore a scroll position, don't
     // clobber that saved position by saving the current (pre-restore) one
@@ -219,7 +221,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
         SaveHtmlScrollPos();
         skipNextBeforeNavigateScrollSave = true;
     }
-    currentPageUrl.SetCopy(url);
+    str::ReplaceWithCopy(&currentPageUrl, url);
     if (pageNo > 0) {
         currentPageNo = pageNo;
     }
@@ -350,8 +352,8 @@ void ChmModel::SaveHtmlScrollPos() {
         return;
     }
     htmlScrollPos = PointF((float)pos.x, (float)pos.y);
-    if (currentPageUrl && *currentPageUrl) {
-        SaveHtmlScrollPosForUrl(currentPageUrl.Get(), htmlScrollPos);
+    if (!str::IsEmpty(currentPageUrl)) {
+        SaveHtmlScrollPosForUrl(currentPageUrl, htmlScrollPos);
         return;
     }
     SaveHtmlScrollPosForPage(currentPageNo);
@@ -487,7 +489,7 @@ struct ChmTocBuilder : EbookTocVisitor {
 };
 
 bool ChmModel::Load(Str fileName) {
-    this->fileName.SetCopy(fileName);
+    str::ReplaceWithCopy(&this->fileName, fileName);
     doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
         return false;
@@ -540,7 +542,7 @@ void ChmModel::OnDocumentComplete(Str url) {
         url = Str(url.s + 1, url.len - 1);
     }
     TempStr toFind = url::GetFullPathTemp(url);
-    currentPageUrl.SetCopy(toFind);
+    str::ReplaceWithCopy(&currentPageUrl, toFind);
     int pageNo = pages.Find(toFind) + 1;
     if (pageNo > 0) {
         currentPageNo = pageNo;
@@ -749,7 +751,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const {
 }
 
 void ChmModel::GetDisplayState(FileState* fs) {
-    Str fileNameA = fileName.Get();
+    Str fileNameA = fileName;
     if (!fs->filePath || !str::EqI(fs->filePath, fileNameA)) {
         SetFileStatePath(fs, fileNameA);
     }
@@ -771,7 +773,7 @@ struct ChmThumbnailTask : HtmlWindowCallback {
     bool didSave = false;
     Size size;
     const OnBitmapRendered* saveThumbnail = nullptr;
-    AutoFreeStr homeUrl;
+    Str homeUrl;
     Vec<ByteSlice> data;
     CRITICAL_SECTION docAccess;
 
@@ -810,6 +812,7 @@ ChmThumbnailTask::~ChmThumbnailTask() {
     LeaveCriticalSection(&docAccess);
     DeleteCriticalSection(&docAccess);
     delete saveThumbnail;
+    str::Free(homeUrl);
 }
 
 bool ChmThumbnailTask::OnBeforeNavigate(Str, bool newWindow) {
@@ -818,11 +821,11 @@ bool ChmThumbnailTask::OnBeforeNavigate(Str, bool newWindow) {
 
 void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
     this->hw = hw;
-    homeUrl.Set(strconv::AnsiToUtf8(doc->GetHomePath()).s);
-    if (*homeUrl == '/') {
-        homeUrl.SetCopy(homeUrl + 1);
+    homeUrl = strconv::AnsiToUtf8(doc->GetHomePath());
+    if (str::StartsWith(homeUrl, "/")) {
+        str::ReplaceWithCopy(&homeUrl, Str(homeUrl.s + 1));
     }
-    hw->NavigateToDataUrl(homeUrl.Get());
+    hw->NavigateToDataUrl(homeUrl);
 }
 
 ByteSlice ChmThumbnailTask::GetDataForUrl(Str url) {
@@ -837,7 +840,7 @@ void ChmThumbnailTask::OnDocumentComplete(Str url) {
     if (url && url.s[0] == '/') {
         url = Str(url.s + 1, url.len - 1);
     }
-    if (!str::Eq(url, Str(homeUrl.Get()))) {
+    if (!str::Eq(url, homeUrl)) {
         return;
     }
     logf("ChmThumbnailTask::OnDocumentComplete: '%s'\n", url.s);
@@ -900,7 +903,7 @@ static void CreateChmThumbnail(Str path, const Size& size, const OnBitmapRendere
 // Create a thumbnail of chm document by loading it again and rendering
 // its first page to a hwnd specially created for it.
 void ChmModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) {
-    CreateChmThumbnail(fileName.Get(), size, saveThumbnail);
+    CreateChmThumbnail(fileName, size, saveThumbnail);
 }
 
 bool ChmModel::IsSupportedFileType(Kind kind) {

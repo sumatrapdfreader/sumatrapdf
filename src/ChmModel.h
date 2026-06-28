@@ -69,7 +69,7 @@ struct ChmModel : DocController {
 
     static bool IsSupportedFileType(Kind);
 
-    AutoFreeStr fileName;
+    Str fileName;
     ChmFile* doc = nullptr;
     TocTree* tocTree = nullptr;
     CRITICAL_SECTION docAccess;
@@ -79,7 +79,7 @@ struct ChmModel : DocController {
     int currentPageNo = 1;
     // url of the currently displayed page; may be a redirect/anchor url that
     // isn't in `pages`, so it's tracked separately from currentPageNo
-    AutoFreeStr currentPageUrl;
+    Str currentPageUrl;
     ChmDocView* docView = nullptr;
     HtmlWindowCallback* htmlWindowCb = nullptr;
     float initZoom = kInvalidZoom;
