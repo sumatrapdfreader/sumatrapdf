@@ -111,10 +111,10 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
     return strconv::ToMultiByteTemp(s, codePage, CP_UTF8);
 }
 
-Str NormalizeURL(Str url, Str base) {
+TempStr NormalizeURLTemp(Str url, Str base) {
     ReportIf(!url || !base);
     if (url.s[0] == '/' || str::FindChar(url, ':')) {
-        return str::Dup(url);
+        return str::DupTemp(url);
     }
 
     Str baseEnd = str::FindCharLast(base, '/');
@@ -135,7 +135,7 @@ Str NormalizeURL(Str url, Str base) {
         basePathLen = 0;
     }
     TempStr basePath = basePathLen > 0 ? str::DupTemp(Str(base.s, basePathLen)) : Str{};
-    Str norm = str::Join(basePath, url);
+    TempStr norm = str::JoinTemp(basePath, url);
 
     int dst = 0;
     for (int src = 0; src < norm.len; src++) {
@@ -565,13 +565,13 @@ ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
         return {};
     }
 
-    AutoFreeStr url(NormalizeURL(fileName, Str(pagePath)).s);
+    TempStr url = NormalizeURLTemp(fileName, pagePath);
     // some EPUB producers use wrong path separators
-    if (str::FindChar(Str(url.Get()), '\\')) {
-        str::TransCharsInPlace(Str(url), "\\", "/");
+    if (str::FindChar(url, '\\')) {
+        str::TransCharsInPlace(url, "\\", "/");
     }
     for (ImageData& img : images) {
-        if (str::Eq(img.fileName, Str(url.Get()))) {
+        if (str::Eq(img.fileName, url)) {
             if (img.base.empty()) {
                 auto* fi = archive->GetFileDataById(img.fileId);
                 if (fi && fi->data) {
@@ -587,13 +587,13 @@ ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
 
     // try to also load images which aren't registered in the manifest
     ImageData data;
-    data.fileId = archive->GetFileId(Str(url));
+    data.fileId = archive->GetFileId(url);
     if (data.fileId != (size_t)-1) {
         auto* fi = archive->GetFileDataById(data.fileId);
         if (fi && fi->data) {
             data.base = {(u8*)fi->data, fi->fileSizeUncompressed};
             fi->data = nullptr;
-            data.fileName = str::Dup(Str(url));
+            data.fileName = str::Dup(url);
             images.Append(data);
             return &images.Last().base;
         }
@@ -610,8 +610,8 @@ ByteSlice EpubDoc::GetFileData(Str relPath, Str pagePath) {
 
     ScopedCritSec scope(&zipAccess);
 
-    AutoFreeStr url(NormalizeURL(relPath, Str(pagePath)).s);
-    auto* fi = archive->GetFileDataByName(Str(url));
+    TempStr url = NormalizeURLTemp(relPath, pagePath);
+    auto* fi = archive->GetFileDataByName(url);
     if (!fi || !fi->data) {
         return {};
     }
@@ -685,8 +685,8 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             wstr::NormalizeWSInPlace(itemText);
             AutoFreeWStr itemSrc;
             if (href) {
-                href.Set(NormalizeURL(Str(href), Str(pagePath)).s);
-                itemSrc.Set(strconv::FromHtmlUtf8(Str(href.Get())));
+                TempStr normHref = NormalizeURLTemp(href.CStr(), pagePath);
+                itemSrc.Set(strconv::FromHtmlUtf8(normHref));
             }
             TempStr txt = ToUtf8Temp(itemText);
             TempStr src = ToUtf8Temp(WStr(itemSrc.Get()));
@@ -737,10 +737,8 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS())) {
             AttrInfo* attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
-                // NormalizeURL doesn't modify its url arg, so no need to dup it first
-                Str src = NormalizeURL(attrInfo->val, pagePath);
+                TempStr src = NormalizeURLTemp(attrInfo->val, pagePath);
                 itemSrc.Set(strconv::FromHtmlUtf8(src));
-                str::Free(src);
             }
         }
     }
@@ -1365,26 +1363,26 @@ ByteSlice HtmlDoc::GetHtmlData() {
 ByteSlice* HtmlDoc::GetImageData(Str fileName) {
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
 
-    AutoFreeStr url(NormalizeURL(fileName, Str(pagePath)).s);
+    TempStr url = NormalizeURLTemp(fileName, Str(pagePath));
     for (size_t i = 0; i < images.size(); i++) {
-        if (str::Eq(images.at(i).fileName, Str(url.Get()))) {
+        if (str::Eq(images.at(i).fileName, url)) {
             return &images.at(i).base;
         }
     }
 
     ImageData data;
-    data.base = LoadURL(Str(url));
+    data.base = LoadURL(url);
     if (data.base.empty()) {
         return {};
     }
-    data.fileName = Str(url.Release());
+    data.fileName = str::Dup(url);
     images.Append(data);
     return &images.Last().base;
 }
 
 ByteSlice HtmlDoc::GetFileData(Str relPath) {
-    AutoFreeStr url(NormalizeURL(relPath, Str(pagePath)).s);
-    return LoadURL(Str(url));
+    TempStr url = NormalizeURLTemp(relPath, Str(pagePath));
+    return LoadURL(url);
 }
 
 ByteSlice HtmlDoc::LoadURL(Str url) {

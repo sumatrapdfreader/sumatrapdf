@@ -12,7 +12,7 @@ struct ImageData {
     size_t fileId{0};
 };
 
-Str NormalizeURL(Str url, Str base);
+TempStr NormalizeURLTemp(Str url, Str base);
 
 /* ********** EPUB ********** */
 

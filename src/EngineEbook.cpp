@@ -551,8 +551,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     if (baseAnchor) {
         TempStr basePath = str::DupTemp(baseAnchor->str);
         TempStr relPath = ResolveHtmlEntitiesTemp(linkStr);
-        AutoFreeStr absPath(NormalizeURL(relPath, basePath).s);
-        url = str::DupTemp(absPath.Get());
+        url = NormalizeURLTemp(relPath, basePath);
     }
 
     IPageDestination* dest = GetNamedDest(url);
@@ -1357,14 +1356,14 @@ class ChmDataCache {
     ByteSlice GetHtmlData() { return html; }
 
     ByteSlice* GetImageData(Str id, Str pagePath) {
-        AutoFreeStr url(NormalizeURL(id, pagePath).s);
+        TempStr url = NormalizeURLTemp(id, pagePath);
         for (size_t i = 0; i < images.size(); i++) {
-            if (str::Eq(images.at(i).fileName, Str(url.Get()))) {
+            if (str::Eq(images.at(i).fileName, url)) {
                 return &images.at(i).base;
             }
         }
 
-        auto tmp = doc->GetData(url.Get());
+        auto tmp = doc->GetData(url);
         if (tmp.empty()) {
             return {};
         }
@@ -1372,14 +1371,14 @@ class ChmDataCache {
         ImageData data;
         data.base = tmp;
 
-        data.fileName = Str(url.Release());
+        data.fileName = str::Dup(url);
         images.Append(data);
         return &images.Last().base;
     }
 
     ByteSlice GetFileData(Str relPath, Str pagePath) {
-        AutoFreeStr url(NormalizeURL(relPath, pagePath).s);
-        return doc->GetData(url.Get());
+        TempStr url = NormalizeURLTemp(relPath, pagePath);
+        return doc->GetData(url);
     }
 };
 
@@ -1718,14 +1717,12 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
     }
 
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
-    AutoFreeStr basePath = str::Dup(baseAnchor->str.s, baseAnchor->str.len).s;
-    AutoFreeStr url = str::Dup(link->str.s, link->str.len).s;
-    url.Set(NormalizeURL(Str(url), Str(basePath)).s);
-    if (!doc->HasData(url.Get())) {
+    TempStr url = NormalizeURLTemp(link->str, baseAnchor->str);
+    if (!doc->HasData(url)) {
         return nullptr;
     }
 
-    IPageDestination* dest = newChmEmbeddedDest(Str(url));
+    IPageDestination* dest = newChmEmbeddedDest(url);
     return NewEbookLink(link, rect, dest, pageNo);
 }
 
