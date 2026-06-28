@@ -141,7 +141,7 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
     return isWine;
 }
 
-static char* BuildCrashInfoText(const char* condStr, const char* fileLine, bool isCrash, bool captureCallstack) {
+static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
     StrBuilder s(16 * 1024, gCrashHandlerAllocator);
     if (!isCrash) {
         captureCallstack = true;
@@ -194,10 +194,10 @@ static char* BuildCrashInfoText(const char* condStr, const char* fileLine, bool 
         s.Append("\n");
     }
 
-    return s.StealData();
+    return Str(s.StealData());
 }
 
-static char* BuildLocalCrashInfoText(const char* condStr, const char* fileLine, bool isCrash, bool captureCallstack) {
+static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
     StrBuilder s(16 * 1024, gCrashHandlerAllocator);
     if (!isCrash) {
         captureCallstack = true;
@@ -226,7 +226,7 @@ static char* BuildLocalCrashInfoText(const char* condStr, const char* fileLine, 
         s.Append("\n");
     }
 
-    return s.StealData();
+    return Str(s.StealData());
 }
 
 void SaveCrashInfo(const ByteSlice& d) {
@@ -455,7 +455,7 @@ static bool DownloadSymbolsIfNeededAndInitializeDbgHelp() {
 }
 
 // like crash report, but can be triggered without a crash
-void _uploadDebugReport(const char* condStr, const char* fileLine, bool isCrash, bool captureCallstack) {
+void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
     // in release builds ReportIf()/ReportIfFast() will break if running under
     // the debugger. In other builds it sends a debug report
     if (condStr) {
@@ -483,7 +483,7 @@ void _uploadDebugReport(const char* condStr, const char* fileLine, bool isCrash,
             loga("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n");
             return;
         }
-        ByteSlice d(s);
+        ByteSlice d{(u8*)s.s, (size_t)s.len};
         SaveCrashInfo(d);
         WriteCrashInfoToStdErr(d);
         loga(s);
@@ -501,7 +501,7 @@ void _uploadDebugReport(const char* condStr, const char* fileLine, bool isCrash,
                 loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
                 return;
             }
-            ByteSlice d(s);
+            ByteSlice d{(u8*)s.s, (size_t)s.len};
             SaveCrashInfo(d);
             log(s);
         }
@@ -544,7 +544,7 @@ void _uploadDebugReport(const char* condStr, const char* fileLine, bool isCrash,
         loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
-    ByteSlice d(s);
+    ByteSlice d{(u8*)s.s, (size_t)s.len};
     SaveCrashInfo(d);
 
     UploadCrashReport(d);

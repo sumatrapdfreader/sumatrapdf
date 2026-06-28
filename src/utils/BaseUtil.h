@@ -241,7 +241,7 @@ inline void CrashMe() {
 // rare cases where we really want to know a given condition happens. Before
 // each release we should audit the uses of ReportAlwaysIf()
 
-extern void _uploadDebugReport(const char*, const char*, bool, bool);
+extern void _uploadDebugReport(Str, Str, bool, bool);
 
 #define STRINGIZE_(x) #x
 #define STRINGIZE(x) STRINGIZE_(x)
