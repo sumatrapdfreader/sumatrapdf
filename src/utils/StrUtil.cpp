@@ -2305,9 +2305,11 @@ bool IsNonCharacter(WCHAR c) {
 
 // hack: to fool CodeQL which doesn't approve of char* => WCHAR* casts
 // and doesn't allow any way to disable that warning
-WCHAR* CastToWCHAR(Str s) {
-    void* d = (void*)s.s;
-    return (WCHAR*)d;
+WStr CastToWCHAR(Str s) {
+    if (!s) {
+        return {};
+    }
+    return WStr((WCHAR*)s.s, s.len / (int)sizeof(WCHAR));
 }
 
 // return true if s1 == s2, case sensitive

@@ -214,7 +214,7 @@ bool IsNonCharacter(WCHAR c);
 size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars);
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith);
 
-WCHAR* CastToWCHAR(Str s);
+WStr CastToWCHAR(Str s);
 } // namespace str
 
 namespace url {
@@ -679,7 +679,7 @@ FORCEINLINE bool Skip(const char*& s, const char* toSkip) {
 FORCEINLINE const char* SkipChar(const char* s, char toSkip) {
     return SkipChar(Str((char*)s), toSkip).s;
 }
-FORCEINLINE WCHAR* CastToWCHAR(const char* s) {
+FORCEINLINE WStr CastToWCHAR(const char* s) {
     return CastToWCHAR(Str((char*)s));
 }
 FORCEINLINE int SeqStrIndex(SeqStrings strs, const char* toFind) {
