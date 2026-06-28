@@ -1185,9 +1185,8 @@ void PdfDeletePageDialog::DoIt() {
     TempStr srcZ = StrDupTemp(srcPath);
     TempStr destZ = StrDupTemp(destPath);
     TempStr pageRangeZ = StrDupTemp(pageRange);
-    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f",
-                    (char*)"-i", // str-port: mupdf CLI
-                    (char*)"-t",    (char*)"-Z",    srcZ.s,      destZ.s,      pageRangeZ.s};
+    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f", (char*)"-i",
+                    (char*)"-t",    (char*)"-Z",    srcZ.s,      destZ.s,      pageRangeZ.s}; // str-port: mupdf CLI
     int argc = 11;
 
     fz_set_optind(0);

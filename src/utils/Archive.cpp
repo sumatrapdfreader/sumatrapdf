@@ -458,7 +458,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
         if (bytesGot > DataLeft(*buf)) {
             return -1;
         }
-        memcpy(buf->curr, (char*)rarBuffer, bytesGot);
+        memcpy(buf->curr, (char*)rarBuffer, bytesGot); // str-port: Win32 unrar
         buf->curr += bytesGot;
         return 1;
     }
