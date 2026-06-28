@@ -88,10 +88,11 @@ static Str GetCharZ(const ByteSlice& d, size_t off) {
     }
     ReportIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
     u8* str = data + off;
-    if (str::IsEmpty(Str((char*)str))) {
+    Str s = Str((char*)str); // str-port: CHM #STRINGS zero-terminated entry
+    if (str::IsEmpty(s)) {
         return {};
     }
-    return str::Dup(Str((char*)str));
+    return str::Dup(s);
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
@@ -698,7 +699,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     // Convert to UTF-8 (handling UTF-8 BOM and the file's codepage) so gumbo's
     // attribute values come out in a known encoding -- no per-attribute
     // conversion needed in the visit functions.
-    TempStr utf8 = SmartToUtf8Temp(Str((char*)htmlData.data(), (int)htmlData.size()), codepage);
+    TempStr utf8 = SmartToUtf8Temp(AsStr(htmlData), codepage);
     if (!utf8) {
         return false;
     }

@@ -50,13 +50,13 @@ function tagExclusion(line: string, kind: Kind): string | undefined {
   if (/\bextern\s+"C"/.test(t)) {
     return "extern-c";
   }
-  if (/\b(?:printf|fprintf|sprintf|snprintf|sscanf|scanf|str::Parse|logf|logfa)\s*\(/.test(t)) {
+  if (/\b(?:printf|fprintf|sprintf|snprintf|sscanf|scanf|str::Parse|logf|logfa|CliPrintf)\s*\(/.test(t)) {
     return "format-string";
   }
   if (kind === "local" && /\b(?:cursor|p|s|src|dst|start|end|pos|it|iter)\b/.test(t)) {
     return "parse-cursor";
   }
-  if (/\bstr-port:\s*(?:mupdf|api-boundary|Win32|owned heap)/i.test(t)) {
+  if (/\bstr-port:\s*(?:mupdf|api-boundary|Win32|owned heap|CHM|chm_lib|C-string)/i.test(t)) {
     return "api-boundary";
   }
   return undefined;

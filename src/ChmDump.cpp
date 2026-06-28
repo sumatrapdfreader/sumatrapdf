@@ -16,23 +16,23 @@
 #include "EbookBase.h"
 #include "ChmFile.h"
 
-static void CliWrite(const char* s, size_t n = 0) {
+static void CliWrite(Str s, size_t n = 0) {
     if (!s) {
         return;
     }
     if (n == 0) {
-        n = str::Len(s);
+        n = (size_t)s.len;
     }
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     if (h && h != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        WriteFile(h, s, (DWORD)n, &written, nullptr);
+        WriteFile(h, s.s, (DWORD)n, &written, nullptr);
         return;
     }
-    fwrite(s, 1, n, stdout);
+    fwrite(s.s, 1, n, stdout);
 }
 
-static void CliPrint(const char* s) {
+static void CliPrint(Str s) {
     CliWrite(s);
     CliWrite("\n", 1);
 }
@@ -45,7 +45,7 @@ static void CliPrintf(const char* fmt, ...) {
     CliPrint(s.Get());
 }
 
-static const char* ChmSpaceName(int space) {
+static Str ChmSpaceName(int space) {
     switch (space) {
         case CHM_UNCOMPRESSED:
             return "uncompressed";
@@ -55,7 +55,7 @@ static const char* ChmSpaceName(int space) {
     return "unknown";
 }
 
-static const char* ChmEntryKind(const chmUnitInfo* ui) {
+static Str ChmEntryKind(const chmUnitInfo* ui) {
     if (ui->flags & CHM_ENUMERATE_DIRS) {
         return "dir";
     }
@@ -65,7 +65,7 @@ static const char* ChmEntryKind(const chmUnitInfo* ui) {
     return "entry";
 }
 
-static const char* ChmEntryClass(const chmUnitInfo* ui) {
+static Str ChmEntryClass(const chmUnitInfo* ui) {
     if (ui->flags & CHM_ENUMERATE_SPECIAL) {
         return "special";
     }
@@ -177,15 +177,15 @@ static int ChmDumpEntry(struct chmFile* h, struct chmUnitInfo* ui, void* data) {
     }
 
     char sha1Hex[41]{};
-    const char* sha1Str = "-";
+    Str sha1Str = "-";
     if (readResult.sha1Valid) {
         FormatSha1Hex(readResult.sha1, sha1Hex);
-        sha1Str = sha1Hex;
+        sha1Str = Str(sha1Hex, 40);
     }
 
-    CliPrintf("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(ui), ChmEntryClass(ui),
-              ChmSpaceName(ui->space), (unsigned long long)ui->length, (unsigned long long)readResult.bytesRead,
-              sha1Str, unpacked ? "ok" : "failed", ui->path);
+    CliPrintf("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", ChmEntryKind(ui).s,
+              ChmEntryClass(ui).s, ChmSpaceName(ui->space).s, (unsigned long long)ui->length,
+              (unsigned long long)readResult.bytesRead, sha1Str.s, unpacked ? "ok" : "failed", ui->path);
     return CHM_ENUMERATOR_CONTINUE;
 }
 
@@ -209,13 +209,13 @@ class ChmDumpIndexVisitor : public EbookTocVisitor {
     }
 };
 
-static bool DumpChmFileRaw(const char* path) {
-    ByteSlice data = file::ReadFile(Str(path));
+static bool DumpChmFileRaw(Str path) {
+    ByteSlice data = file::ReadFile(path);
     if (data.empty()) {
         CliPrint("error: couldn't read file");
         return false;
     }
-    struct chmFile* h = chm_open((const char*)data.data(), data.size());
+    struct chmFile* h = chm_open((const char*)data.data(), data.size()); // str-port: chm_lib byte buffer API
     if (!h) {
         data.Free();
         CliPrint("error: couldn't open CHM");
@@ -232,7 +232,7 @@ static bool DumpChmFileRaw(const char* path) {
     return ok && ctx.unpackFailures == 0;
 }
 
-static void DumpChmFileMetadata(const char* path) {
+static void DumpChmFileMetadata(Str path) {
     ChmFile* doc = ChmFile::CreateFromFile(path);
     if (!doc) {
         CliPrint("metadata: unavailable");
@@ -257,8 +257,8 @@ static void DumpChmFileMetadata(const char* path) {
     delete doc;
 }
 
-static bool DumpChmFile(const char* path) {
-    CliPrintf("chm path=%s", path);
+static bool DumpChmFile(Str path) {
+    CliPrintf("chm path=%s", path.s);
     bool ok = DumpChmFileRaw(path);
     DumpChmFileMetadata(path);
     CliPrint("end");
@@ -272,7 +272,7 @@ int DumpChm(const Flags& flags) {
     }
 
     bool ok = true;
-    for (char* path : flags.fileNames) {
+    for (Str path : flags.fileNames) {
         if (!DumpChmFile(path)) {
             ok = false;
         }

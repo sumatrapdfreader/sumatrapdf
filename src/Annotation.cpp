@@ -20,13 +20,6 @@ extern "C" {
 
 #include "utils/Log.h"
 
-/*
-Vec<RectF> GetQuadPointsAsRect(Annotation*);
-time_t CreationDate(Annotation*);
-
-const char* AnnotationName(AnnotationType);
-*/
-
 // spot checks the definitions are the same
 static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);
 static_assert((int)AnnotationType::ThreeD == (int)PDF_ANNOT_3D);
@@ -40,41 +33,6 @@ static SeqStrings gAnnotationTextIcons = "Comment\0Help\0Insert\0Key\0NewParagra
 SeqStrings AnnotationTextIcons() {
     return gAnnotationTextIcons;
 }
-
-// clang format-off
-
-#if 0
-// must match the order of enum class AnnotationType
-static const char* gAnnotNames =
-    "Text\0"
-    "Link\0"
-    "FreeText\0"
-    "Line\0"
-    "Square\0"
-    "Circle\0"
-    "Polygon\0"
-    "PolyLine\0"
-    "Highlight\0"
-    "Underline\0"
-    "Squiggly\0"
-    "StrikeOut\0"
-    "Redact\0"
-    "Stamp\0"
-    "Caret\0"
-    "Ink\0"
-    "Popup\0"
-    "FileAttachment\0"
-    "Sound\0"
-    "Movie\0"
-    "RichMedia\0"
-    "Widget\0"
-    "Screen\0"
-    "PrinterMark\0"
-    "TrapNet\0"
-    "Watermark\0"
-    "3D\0"
-    "Projection\0";
-#endif
 
 static SeqStrings gAnnotReadableNames =
     "Text\0"
@@ -105,21 +63,6 @@ static SeqStrings gAnnotReadableNames =
     "Watermark\0"
     "3D\0"
     "Projection\0";
-// clang format-on
-
-/*
-const char* AnnotationName(AnnotationType tp) {
-    int n = (int)tp;
-    ReportIf(n < -1 || n > (int)AnnotationType::ThreeD);
-    if (n < 0) {
-        return "Unknown";
-    }
-    const char* s = SeqStrByIndex(gAnnotNames, n);
-    ReportIf(!s);
-    return s;
-}
-*/
-
 static bool gDebugAnnotDestructor = false;
 Annotation::~Annotation() {
     if (gDebugAnnotDestructor) {
@@ -209,14 +152,14 @@ void SetRect(Annotation* annot, RectF r) {
     MarkNotificationAsModified(e, annot);
 }
 
-static Str MupdfCStrDupTemp(const char* s) {
+static Str MupdfCStrDupTemp(const char* s) { // str-port: mupdf C-string boundary
     if (!s) {
         return {};
     }
     return StrDupTemp(Str(s));
 }
 
-static Str MupdfCStrTemp(const char* s) {
+static Str MupdfCStrTemp(const char* s) { // str-port: mupdf C-string boundary
     if (!s || str::IsEmptyOrWhiteSpace(s)) {
         return {};
     }
