@@ -53,7 +53,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     if (!link) {
         return;
     }
-    char* path = PageDestGetValue(link);
+    Str path = PageDestGetValue(link);
     if (!path) {
         path = tocItem->title;
     }
@@ -504,25 +504,25 @@ static void AddFavoriteFromToc(MainWindow* win, TocItem* dti) {
     if (dti->dest) {
         pageNo = PageDestGetPageNo(dti->dest);
     }
-    char* name = dti->title;
+    Str name = dti->title;
     TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel, name);
 }
 
-static void SaveAttachment(WindowTab* tab, const char* fileName, int attachmentNo) {
+static void SaveAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     ByteSlice data = EngineMupdfLoadAttachment(engine, attachmentNo);
     if (data.empty()) {
         return;
     }
-    char* dir = path::GetDirTemp(tab->filePath);
-    fileName = path::GetBaseNameTemp(Str(fileName));
+    TempStr dir = path::GetDirTemp(tab->filePath);
+    fileName = path::GetBaseNameTemp(fileName);
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
 }
 
-static void OpenAttachment(WindowTab* tab, const char* fileName, int attachmentNo) {
+static void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     ByteSlice data = EngineMupdfLoadAttachment(engine, attachmentNo);
     if (data.empty()) {
@@ -545,8 +545,8 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
     }
     MainWindow* win = tab->win;
     PageDestinationFile *destFile = (PageDestinationFile*)dest;
-    char* path = destFile->path;
-    const char* tabPath = tab->filePath;
+    Str path = destFile->path;
+    Str tabPath = tab->filePath;
     if (!str::StartsWith(path, tabPath)) {
         return;
     }
@@ -555,14 +555,14 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
     LoadDocument(&args);
 }
 
-static void SaveEmbeddedFile(WindowTab* tab, const char* srcPath, const char* fileName) {
+static void SaveEmbeddedFile(WindowTab* tab, Str srcPath, Str fileName) {
     ByteSlice data = LoadEmbeddedPDFFile(srcPath);
     if (data.empty()) {
         // TODO: show an error message
         return;
     }
-    char* dir = path::GetDirTemp(tab->filePath);
-    fileName = path::GetBaseNameTemp(Str(fileName));
+    TempStr dir = path::GetDirTemp(tab->filePath);
+    fileName = path::GetBaseNameTemp(fileName);
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
@@ -620,7 +620,7 @@ static MenuDef menuDefContextToc[] = {
 
 static void TocContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
-    const char* filePath = win->ctrl->GetFilePath();
+    Str filePath = win->ctrl->GetFilePath();
 
     POINT pt{};
 
@@ -639,8 +639,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     WindowTab* tab = win->CurrentTab();
     HMENU popup = BuildMenuFromDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
-    const char* path = nullptr;
-    char* fileName = nullptr;
+    Str path;
+    Str fileName;
     Kind destKind = dest ? dest->GetKind() : nullptr;
 
     // TODO: this is pontentially not used at all
@@ -689,7 +689,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             MenuRemove(popup, CmdFavoriteAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
-            const char* tr = _TRA("Remove page %s from favorites");
+            Str tr = _TRA("Remove page %s from favorites");
             TempStr s = str::FormatTemp(tr, pageLabel);
             MenuSetText(popup, CmdFavoriteDel, s);
         } else {
@@ -842,22 +842,28 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     if (!filter || str::Len(filter) == 0) {
         return;
     }
-    const char* title = tocItem->title;
-    int titleLen = str::Leni(title);
+    Str title = tocItem->title;
+    int titleLen = title.len;
     if (titleLen == 0) {
         return;
     }
 
     // mark which bytes are part of a match
     u8* highlighted = AllocArrayTemp<u8>(titleLen);
-    int filterLen = str::Leni(filter);
-    const char* p = title;
-    while ((p = str::FindI(Str(p), Str(filter)).s) != nullptr) {
-        int off = (int)(p - title);
+    int filterLen = filter.len;
+    Str rest = title;
+    while (rest.len > 0) {
+        Str found = str::FindI(rest, filter);
+        if (!found) {
+            break;
+        }
+        int off = (int)(found.s - title.s);
         for (int k = 0; k < filterLen && off + k < titleLen; k++) {
             highlighted[off + k] = 1;
         }
-        p += filterLen;
+        int skip = (int)(found.s - rest.s) + filterLen;
+        rest.s += skip;
+        rest.len -= skip;
     }
 
     // collect contiguous highlighted ranges (up to 16)
@@ -1196,7 +1202,7 @@ void UnsubclassToc(MainWindow* win) {
 // Recursively build a filtered copy of the TocItem tree.
 // Includes items whose title matches the filter, plus ancestors needed to reach them.
 // Returns nullptr if nothing matches.
-static TocItem* FilterTocItemRec(TocItem* item, const char* filter) {
+static TocItem* FilterTocItemRec(TocItem* item, Str filter) {
     if (!item) {
         return nullptr;
     }
@@ -1236,7 +1242,7 @@ static TocItem* FilterTocItemRec(TocItem* item, const char* filter) {
     return resultFirst;
 }
 
-static void ApplyTocFilter(MainWindow* win, const char* filter) {
+static void ApplyTocFilter(MainWindow* win, Str filter) {
     if (!win->tocLoaded) {
         return;
     }

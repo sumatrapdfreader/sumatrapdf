@@ -469,12 +469,12 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
             EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
             ByteSlice data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
             if (!data.empty()) {
-                const char* fileName = pd->GetValue2();
-                logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName,
+                Str fileName = pd->GetValue2();
+                logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName.s,
                      pd->embedObjNum, (int)data.sz);
                 TempStr tmpDir = GetTempDirTemp();
                 if (tmpDir) {
-                    TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(Str(fileName)));
+                    TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(fileName));
                     if (file::WriteFile(tmpPath, data)) {
                         SumatraLaunchBrowser(tmpPath);
                     }
@@ -526,13 +526,13 @@ void LinkHandler::LaunchURL(Str uri) {
         return;
     }
 
-    char* path = str::DupTemp(uri);
-    char* colon = str::FindChar(path, ':');
-    char* hash = str::FindChar(path, '#');
-    if (!colon || (hash && colon > hash)) {
+    TempStr path = StrDupTemp(uri);
+    Str colon = str::FindChar(path, ':');
+    Str hash = str::FindChar(path, '#');
+    if (!colon || (hash && colon.s > hash.s)) {
         // treat relative URIs as file paths (without fragment identifier)
         if (hash) {
-            *hash = '\0';
+            path.len = (int)(hash.s - path.s);
         }
         str::TransCharsInPlace(path, "/", "\\");
         url::DecodeInPlace(path);
@@ -546,7 +546,7 @@ void LinkHandler::LaunchURL(Str uri) {
 }
 
 // return true if we can load the file based on sniffing file type from content
-static bool IsFileSupportedByContent(const char* filePath) {
+static bool IsFileSupportedByContent(Str filePath) {
     Kind kindSniffed = GuessFileType(filePath, true);
     return IsSupportedFileType(kindSniffed, true);
 }
@@ -639,7 +639,7 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         return;
     }
 
-    char* destName = PageDestGetName(remoteLink);
+    Str destName = PageDestGetName(remoteLink);
     if (destName) {
         IPageDestination* dest = newWin->ctrl->GetNamedDest(CleanRemoteDestName(destName));
         if (dest) {
@@ -652,7 +652,7 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
 }
 
 // normalizes case and whitespace in the string
-static TempStr NormalizeFuzzyTemp(const char* str) {
+static TempStr NormalizeFuzzyTemp(Str str) {
     TempStr dup = str::DupTemp(str);
     str::ToLowerInPlace(dup);
     str::NormalizeWSInPlace(dup);
@@ -660,16 +660,24 @@ static TempStr NormalizeFuzzyTemp(const char* str) {
     return dup;
 }
 
-static bool MatchFuzzy(const char* s1, const char* s2, bool partially) {
+static bool MatchFuzzy(Str s1, Str s2, bool partially) {
     if (!partially) {
         return str::Eq(s1, s2);
     }
 
     // only match at the start of a word (at the beginning and after a space)
-    for (const char* last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
-        if (last == s1 || *(last - 1) == ' ') {
+    Str rest = s1;
+    while (rest.len > 0) {
+        Str found = str::Find(rest, s2);
+        if (!found) {
+            break;
+        }
+        if (found.s == s1.s || *(found.s - 1) == ' ') {
             return true;
         }
+        int off = (int)(found.s - rest.s) + 1;
+        rest.s += off;
+        rest.len -= off;
     }
     return false;
 }
