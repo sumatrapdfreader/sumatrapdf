@@ -130,10 +130,10 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
         if (additionalOnly && gModulesInfo) {
             auto pos = str::FindI(gModulesInfo, pathA).s;
             if (!pos) {
-                s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA);
+                s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.s, pathA.s);
             }
         } else {
-            s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA);
+            s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.s, pathA.s);
         }
         cont = Module32Next(snap, &mod);
     }
@@ -148,7 +148,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
         s.Append("Type: debug report (not crash)\n");
     }
     if (condStr) {
-        s.AppendFmt("Cond: %s @ %s\n", condStr, fileLine);
+        s.AppendFmt("Cond: %s @ %s\n", condStr.s, fileLine.s);
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -204,7 +204,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
         s.Append("Type: debug report (not crash)\n");
     }
     if (condStr) {
-        s.AppendFmt("Cond: %s @ %s\n", condStr, fileLine);
+        s.AppendFmt("Cond: %s @ %s\n", condStr.s, fileLine.s);
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -418,7 +418,7 @@ static TempStr BuildSymbolPathTemp(Str symDir) {
     if (gAddSymbolServer && symDirExists) {
         // this probably won't work as it needs symsrv.dll and that's not included with Windows
         // TODO: maybe try to scan system directories for symsrv.dll and somehow add it?
-        path.AppendFmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir);
+        path.AppendFmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir.s);
     }
 
     // remove ";" from the end
@@ -458,7 +458,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     // in release builds ReportIf()/ReportIfFast() will break if running under
     // the debugger. In other builds it sends a debug report
     if (condStr) {
-        logfa("_uploadDebugReport: %s %s\n", condStr, fileLine);
+        logfa("_uploadDebugReport: %s %s\n", condStr.s, fileLine.s);
     } else {
         loga("_uploadDebugReport\n");
     }
@@ -648,11 +648,11 @@ static void GetOsVersion(StrBuilder& s) {
         arch = IsRunningInWow64() ? "Wow64" : "32-bit";
     }
     if (0 == servicePackMajor) {
-        s.AppendFmt("OS: Windows %s build %d %s\n", os, buildNumber, arch);
+        s.AppendFmt("OS: Windows %s build %d %s\n", os.s, buildNumber, arch);
     } else if (0 == servicePackMinor) {
-        s.AppendFmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, arch);
+        s.AppendFmt("OS: Windows %s SP%d build %d %s\n", os.s, servicePackMajor, buildNumber, arch);
     } else {
-        s.AppendFmt("OS: Windows %s %d.%d build %d %s\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
+        s.AppendFmt("OS: Windows %s %d.%d build %d %s\n", os.s, servicePackMajor, servicePackMinor, buildNumber, arch);
     }
 }
 
@@ -665,7 +665,7 @@ static void GetProcessorName(StrBuilder& s) {
         name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     }
     if (name) {
-        s.AppendFmt("Processor: %s\n", name);
+        s.AppendFmt("Processor: %s\n", name.s);
     }
 }
 
@@ -688,16 +688,16 @@ static void GetGraphicsDriverInfo(StrBuilder& s) {
             break;
         }
         s.AppendFmt("Graphics driver %d\n", i);
-        s.AppendFmt("  DriverDesc:         %s\n", v);
+        s.AppendFmt("  DriverDesc:         %s\n", v.s);
 
         v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverVersion");
         if (v) {
-            s.AppendFmt("  DriverVersion:      %s\n", v);
+            s.AppendFmt("  DriverVersion:      %s\n", v.s);
         }
 
         v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "UserModeDriverName");
         if (v) {
-            s.AppendFmt("  UserModeDriverName: %s\n", v);
+            s.AppendFmt("  UserModeDriverName: %s\n", v.s);
         }
     }
 }
@@ -724,7 +724,7 @@ static void GetSystemInfo(StrBuilder& s) {
         if (str::IsEmpty(ver)) {
             ver = "no WebView2 installed";
         }
-        s.AppendFmt("WebView2: %s\n", ver);
+        s.AppendFmt("WebView2: %s\n", ver.s);
     }
     {
         // get computer name
@@ -734,11 +734,11 @@ static void GetSystemInfo(StrBuilder& s) {
         if (!s1 && !s2) {
             // no-op
         } else if (!s1) {
-            s.AppendFmt("Machine: %s\n", s2);
+            s.AppendFmt("Machine: %s\n", s2.s);
         } else if (!s2 || str::EqI(s1, s2)) {
-            s.AppendFmt("Machine: %s\n", s1);
+            s.AppendFmt("Machine: %s\n", s1.s);
         } else {
-            s.AppendFmt("Machine: %s %s\n", s1, s2);
+            s.AppendFmt("Machine: %s %s\n", s1.s, s2.s);
         }
     }
     {
