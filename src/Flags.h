@@ -133,7 +133,7 @@ struct Flags {
     ~Flags() = default;
 };
 
-void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags&, Str toolNames = {});
+void ParseFlags(Arena* a, WStr cmdLine, Flags&, Str toolNames = {});
 void ShowPrintersDialog();
 
 bool IsValidPageRange(Str ranges);

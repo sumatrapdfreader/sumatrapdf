@@ -43,7 +43,7 @@ enum class Arg {
     Control = 84, UnitTests = 85,
 };
 
-static const char* gArgNames =
+static SeqStrings gArgNames =
     "s\0" "silent\0" "fast-install\0" "print-to-default\0"
     "print-dialog\0" "p\0" "h\0" "?\0"
     "help\0" "exit-when-done\0" "exit-on-print\0" "restrict\0"
@@ -134,7 +134,7 @@ static void ParseViewMode(DisplayMode* mode, Str s) {
     *mode = DisplayModeFromString(s, DisplayMode::Automatic);
 }
 
-static const char* zoomValues =
+static SeqStrings zoomValues =
     "fit page\0fitpage\0fit-page\0fit width\0fitwidth\0fit-width\0fit "
     "content\0fitcontent\0fit-content\0";
 
@@ -323,7 +323,7 @@ FileArgs* ParseFileArgs(Str path) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void ParseFlags(Arena* a, const WCHAR* cmdLine, Flags& i, Str toolNames) {
+void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
     ReportIf(!a);
     // logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
     CmdLineArgsIter args(cmdLine);
