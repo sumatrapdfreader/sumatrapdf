@@ -93,6 +93,8 @@ static bool IsBracketLine(Str data, int off) {
 }
 
 static Str ExtractTrimmed(Str data, int begin, int end) {
+    begin = std::max(0, std::min(begin, data.len));
+    end = std::max(begin, std::min(end, data.len));
     end = SkipWsRev(data, begin, end);
     begin = SkipWs(data, begin);
     return Str(data.s + begin, end - begin);
@@ -200,8 +202,9 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = 
                 return node;
             }
             // trim whitespace around section name (for consistency with GetPrivateProfileString)
+            int closeOff = SkipWsRev(data, valOff, off) - 1;
             int nameStart = SkipWs(data, keyOff + 1);
-            int nameEnd = SkipWsRev(data, nameStart, SkipWsRev(data, valOff, off));
+            int nameEnd = SkipWsRev(data, nameStart, closeOff);
             Str sectionKey = str::Dup(Str(data.s + nameStart, nameEnd - nameStart));
             int sectionChildOff = off;
             node->data.Append(SquareTreeNode::DataItem(sectionKey, ParseSquareTreeRec(data, sectionChildOff)));

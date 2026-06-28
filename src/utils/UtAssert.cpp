@@ -2,9 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/WinDynCalls.h"
+#include "utils/DbgHelpDyn.h"
 
 static int g_nTotal = 0;
 static int g_nFailed = 0;
+static bool gForAi = false;
 
 #define MAX_FAILED_ASSERTS 32
 
@@ -15,6 +18,25 @@ struct FailedAssert {
 };
 
 static FailedAssert g_failedAssert[MAX_FAILED_ASSERTS];
+
+void utassert_set_for_ai(bool enabled) {
+    gForAi = enabled;
+}
+
+static void OutputDebugString(Str s) {
+    if (!s.s) {
+        return;
+    }
+    TempStr s0 = str::Dup(s);
+    OutputDebugStringA(s0.s);
+}
+
+static void PrintStdout(Str s) {
+    if (!s.s) {
+        return;
+    }
+    printf("%.*s", s.len, s.s);
+}
 
 void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
     ++g_nTotal;
@@ -28,10 +50,21 @@ void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
     }
     ++g_nFailed;
     OutputDebugStringA("Assertion failed: ");
-    OutputDebugStringA(exprStr.s);
+    OutputDebugString(exprStr);
     OutputDebugStringA("\n");
-    OutputDebugStringA(file.s);
+    OutputDebugString(file);
     OutputDebugStringA("\n");
+    if (gForAi) {
+        printf("Assertion failed: %.*s\n%.*s@%d\n", exprStr.len, exprStr.s, file.len, file.s, lineNo);
+        StrBuilder s;
+        if (dbghelp::GetCurrentThreadCallstack(s)) {
+            PrintStdout(s.Get());
+        } else {
+            printf("failed to get callstack\n");
+        }
+        fflush(stdout);
+        return;
+    }
     if (IsDebuggerPresent()) {
         DebugBreak();
     }
@@ -46,7 +79,7 @@ int utassert_print_results() {
     fprintf(stderr, "Failed %d (of %d) tests\n", g_nFailed, g_nTotal);
     for (int i = 0; i < g_nFailed && i < MAX_FAILED_ASSERTS; i++) {
         FailedAssert* a = &(g_failedAssert[i]);
-        fprintf(stderr, "'%s' %s@%d\n", a->exprStr.s, a->file.s, a->lineNo);
+        fprintf(stderr, "'%.*s' %.*s@%d\n", a->exprStr.len, a->exprStr.s, a->file.len, a->file.s, a->lineNo);
     }
     return g_nFailed;
 }

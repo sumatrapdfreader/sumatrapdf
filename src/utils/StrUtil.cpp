@@ -258,10 +258,13 @@ static Str WrapAllocated(char* s, size_t cch = (size_t)-1) { // str-port: owned 
 }
 
 Str Dup(Arena* a, Str s, size_t cch) {
-    if (!s) {
+    if (!s.s) {
         return {};
     }
     if (cch == (size_t)-1) {
+        if (s.len < 0) {
+            return {};
+        }
         cch = (size_t)s.len;
     }
     return WrapAllocated((char*)MemDup(a, s.s, cch * sizeof(char), sizeof(char)), cch); // str-port: owned heap
@@ -286,10 +289,13 @@ static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) { // str-port: own
 }
 
 WStr Dup(Arena* a, WStr s, size_t cch) {
-    if (!s) {
+    if (!s.s) {
         return {};
     }
     if (cch == (size_t)-1) {
+        if (s.len < 0) {
+            return {};
+        }
         cch = (size_t)s.len;
     }
     return WrapAllocatedW((WCHAR*)MemDup(a, s.s, cch * sizeof(WCHAR), sizeof(WCHAR)), cch); // str-port: owned heap

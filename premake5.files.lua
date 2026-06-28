@@ -1419,6 +1419,7 @@ function test_util_files()
     "CryptoUtil.*",
     "CssParser.*",
     "Dict.*",
+    "DbgHelpDyn.*",
     "Dpi.*",
     "FileUtil.*",
     "GeomUtil.*",

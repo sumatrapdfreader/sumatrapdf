@@ -163,7 +163,7 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
         // off points at '&'
         int rune = -1;
         Str entEnd = ResolveHtmlEntity(Str(str.s + off + 1, str.len - off - 1), rune);
-        if (!entEnd) {
+        if (!entEnd.s) {
             // unknown entity, just copy the '&'
             MemAppend(res.s, dstOff, Str(str.s + off, 1));
             off++;
@@ -380,6 +380,9 @@ Next:
     int start = currPos;
     if (html.s[currPos] != '<' || currPos + 1 < html.len && !IsValidTagStart(html.s[currPos + 1])) {
         // this must be text between tags
+        if (html.s[currPos] == '<') {
+            ++currPos;
+        }
         if (!SkipUntil(html, currPos, '<') && IsSpaceOnly(Str(html.s + start, currPos - start))) {
             // ignore whitespace after the last tag
             return nullptr;
@@ -404,8 +407,9 @@ Next:
         } else if (!SkipUntil(html, currPos, '>')) {
             currToken.SetError(HtmlToken::UnclosedTag, Str(html.s + start, html.len - start));
             return &currToken;
+        } else {
+            ++currPos;
         }
-        ++currPos;
         goto Next;
     }
 

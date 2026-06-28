@@ -39,9 +39,9 @@ static void HtmlEntities() {
     for (size_t i = 0; i < dimof(entities); i++) {
         Str s = entities[i].s;
         int got;
-        Str entEnd = ResolveHtmlEntity(Str(s.s + 1, str::Len(s) - 1), got);
+        Str entEnd = ResolveHtmlEntity(Str(s.s + 1, str::Leni(s) - 1), got);
         utassert(got == entities[i].rune);
-        utassert((-1 == got) == !entEnd);
+        utassert((-1 == got) == !entEnd.s);
     }
     Arena* ta = GetTempArena();
     Str unchanged[] = {"foo", "", " as;d "};

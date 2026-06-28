@@ -532,9 +532,9 @@ TempStr WslUncToUnixTemp(Str path) {
     int off = 0;
 
     if (str::StartsWithI(path, "\\\\wsl.localhost\\")) {
-        off = str::Len("\\\\wsl.localhost\\");
+        off = str::Leni("\\\\wsl.localhost\\");
     } else if (str::StartsWithI(path, "\\\\wsl$\\")) {
-        off = str::Len("\\\\wsl$\\");
+        off = str::Leni("\\\\wsl$\\");
     } else {
         return {};
     }
