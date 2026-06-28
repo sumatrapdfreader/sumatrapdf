@@ -62,7 +62,7 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
         COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wp == hChild) {
             int urlLen = (int)cds->cbData;
-            char* urlData = (char*)cds->lpData;
+            char* urlData = (char*)cds->lpData; // str-port: Win32 COPYDATA
             if (urlLen > 0 && urlData[urlLen - 1] == 0) {
                 urlLen--;
             }
@@ -86,8 +86,8 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
             hFont = (HFONT)SelectObject(hDC, hFont);
             SetTextColor(hDC, 0x000000);
             SetBkMode(hDC, TRANSPARENT);
-            const WCHAR* text = gPluginTimedOut ? L"Error: SumatraPDF didn't attach" : L"Waiting for SumatraPDF...";
-            DrawText(hDC, text, -1, &rcClient, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+            WStr text = gPluginTimedOut ? WStr(L"Error: SumatraPDF didn't attach") : WStr(L"Waiting for SumatraPDF...");
+            DrawText(hDC, text.s, -1, &rcClient, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
             DeleteObject(SelectObject(hDC, hFont));
             DeleteObject(brushBg);
             EndPaint(hwnd, &ps);

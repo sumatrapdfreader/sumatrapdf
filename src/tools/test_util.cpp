@@ -39,7 +39,7 @@ void MaybeDelayedWarningNotification(Str, ...) {
     // a stub to make this compile
 }
 
-int main(int, char**) {
+int main(int, char**) { // str-port: C main argv
     printf("Running unit tests\n");
 
     InitDynCalls();

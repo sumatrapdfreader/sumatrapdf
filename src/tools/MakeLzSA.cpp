@@ -32,7 +32,9 @@ struct ISzCrtAlloc : ISzAlloc {
 #define LZMA_MAGIC_ID 0x41537a4c
 #define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
-static bool Compress(const char* uncompressed, size_t uncompressedSize, char* compressed, size_t* compressedSize) {
+static bool Compress(const char* uncompressed, size_t uncompressedSize,
+                     char* compressed, // str-port: binary LZMA buffer
+                     size_t* compressedSize) {
     ReportIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1) return false;
 
@@ -73,9 +75,9 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
     return true;
 }
 
-static bool AppendEntry(StrBuilder& data, StrBuilder& content, const char* filePath, const char* inArchiveName,
+static bool AppendEntry(StrBuilder& data, StrBuilder& content, Str filePath, Str inArchiveName,
                         lzma::FileInfo* fi = nullptr) {
-    size_t nameLen = str::Len(inArchiveName);
+    size_t nameLen = (size_t)inArchiveName.len;
     ReportIf(nameLen > UINT32_MAX - 25);
     u32 headerSize = 25 + (u32)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
@@ -93,24 +95,25 @@ static bool AppendEntry(StrBuilder& data, StrBuilder& content, const char* fileP
         meta.Write32(ft.dwHighDateTime);
         ReportIf(meta.Size() != kBufSize);
         data.AppendSlice(meta.AsByteSlice());
-        data.Append(Str(inArchiveName, (int)nameLen + 1));
+        data.Append(inArchiveName);
         return content.Append(fi->compressedData, fi->compressedSize);
     }
 
     ByteSlice fileData = file::ReadFile(filePath);
     if (!fileData.data() || fileData.size() >= UINT32_MAX) {
-        fprintf(stderr, "Failed to read \"%s\" for compression\n", filePath);
+        fprintf(stderr, "Failed to read \"%s\" for compression\n", filePath.s);
         return false;
     }
     u32 fileDataCrc = crc32(0, (const u8*)fileData.data(), (u32)fileData.size());
     if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileData.size()) goto ReusePrevious;
 
     size_t compressedSize = fileData.size() + 1;
-    AutoFree compressed((char*)malloc(compressedSize));
+    AutoFree compressed((char*)malloc(compressedSize)); // str-port: binary LZMA buffer
     if (!compressed.Get()) {
         return false;
     }
-    if (!Compress((const char*)fileData.data(), fileData.size(), compressed, &compressedSize)) {
+    if (!Compress((const char*)fileData.data(), fileData.size(), compressed.Get(),
+                  &compressedSize)) { // str-port: binary buffer
         return false;
     }
 
@@ -123,7 +126,7 @@ static bool AppendEntry(StrBuilder& data, StrBuilder& content, const char* fileP
     meta.Write32(ft.dwHighDateTime);
     ReportIf(meta.Size() != kBufSize);
     data.AppendSlice(meta.AsByteSlice());
-    data.Append(inArchiveName, nameLen + 1);
+    data.Append(inArchiveName);
     return content.Append(compressed, compressedSize);
 }
 
@@ -131,7 +134,7 @@ static bool AppendEntry(StrBuilder& data, StrBuilder& content, const char* fileP
 // file paths may be relative to the current directory or absolute and
 // may end in a colon followed by the desired path in the archive
 // (this is required for absolute paths)
-bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0) {
+bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     ByteSlice prevData(file::ReadFile(archivePath));
     size_t prevDataLen = prevData.size();
     lzma::SimpleArchive prevArchive;
@@ -183,18 +186,19 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
     return file::WriteFile(archivePath, d);
 }
 
-bool CreateArchiveFromDir(const char* archivePath, const char* dir) {
+bool CreateArchiveFromDir(Str archivePath, Str dir) {
     StrVec files;
-    int n = str::Len(dir);
+    int n = dir.len;
     DirIter di{dir};
     di.recurse = true;
     di.includeFiles = true;
     di.includeDirs = false;
     for (DirIterEntry* de : di) {
         Str path = de->filePath;
-        const char* archiveName = path.s + n;
-        if ('\\' == *archiveName) archiveName++;
-        if ('/' == *archiveName) archiveName++;
+        Str archiveName = Str(path.s + n, path.len - n);
+        if (archiveName && (archiveName.s[0] == '\\' || archiveName.s[0] == '/')) {
+            archiveName = Str(archiveName.s + 1, archiveName.len - 1);
+        }
         TempStr s = str::JoinTemp(path, ":", archiveName);
         files.Append(s);
     }
@@ -203,7 +207,7 @@ bool CreateArchiveFromDir(const char* archivePath, const char* dir) {
 
 } // namespace lzsa
 
-void _uploadDebugReportIfFunc(bool, const char*) {
+void _uploadDebugReportIfFunc(bool, const char*) { // str-port: stub callback
     // no-op implementation to satisfy SubmitBugReport()
 }
 
@@ -213,25 +217,25 @@ void _uploadDebugReportIfFunc(bool, const char*) {
         return errorStep;                       \
     }
 
-static void MyParseCmdLine(const WCHAR* cmdLine, StrVec& args) {
+static void MyParseCmdLine(WStr cmdLine, StrVec& args) { // str-port: Win32 GetCommandLine
     int nArgs = 0;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
     for (int i = 0; i < nArgs; i++) {
-        char* arg = ToUtf8Temp(argsArr[i]);
+        Str arg = ToUtf8Temp(argsArr[i]);
         args.Append(arg);
     }
     LocalFree(argsArr);
 }
 
-int mainVerify(const char* archivePath) {
+int mainVerify(Str archivePath) {
     int errorStep = 1;
     ByteSlice fileData = file::ReadFile(archivePath);
-    FailIf(!fileData.data(), "Failed to read \"%s\"", archivePath);
+    FailIf(!fileData.data(), "Failed to read \"%s\"", archivePath.s);
     errorStep++;
 
     lzma::SimpleArchive lzsa;
     bool ok = lzma::ParseSimpleArchive((const u8*)fileData.data(), fileData.size(), &lzsa);
-    FailIf(!ok, "\"%s\" is no valid LzSA file", archivePath);
+    FailIf(!ok, "\"%s\" is no valid LzSA file", archivePath.s);
     errorStep++;
 
     for (int i = 0; i < lzsa.filesCount; i++) {
@@ -244,16 +248,16 @@ int mainVerify(const char* archivePath) {
     return 0;
 }
 
-int printUsage(const char* exeName) {
+int printUsage(Str exeName) {
     int errorStep = 0;
     FailIf(true,
            "Usage:\n  %s <archive.lzsa>\n    verify archive\n  %s <archive.lzsa> <filename>[:<in-archive name>] "
            "[...]\n    "
            "create archive from files\n  %s <archive.lzsa> <dir>\n    create archive from directory",
-           exeName, exeName, exeName);
+           exeName.s, exeName.s, exeName.s);
 }
 
-int main(__unused int argc, __unused char** argv) {
+int main(__unused int argc, __unused char** argv) { // str-port: C main argv
 #ifdef DEBUG
     // report memory leaks on stderr
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
@@ -273,7 +277,7 @@ int main(__unused int argc, __unused char** argv) {
         return printUsage(exeName);
     }
 
-    char* archiveName = args.At(1);
+    Str archiveName = args.At(1);
     if (nArgs == 2 && file::Exists(archiveName)) {
         return mainVerify(archiveName);
     }

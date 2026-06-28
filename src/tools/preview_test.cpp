@@ -29,19 +29,19 @@ LPCOLESTR myGuid = kPdfPreviewClsid;
 
 typedef HRESULT ourDllGetClassObjectT(REFCLSID rclsid, REFIID riid, void** ppv);
 
-void log(const char* s, int) {
-    OutputDebugStringA(s);
-    printf("%s", s);
+void log(Str s, int) {
+    OutputDebugStringA(s.s);
+    printf("%s", s.s);
 }
 
-void log(const char* s, bool) {
+void log(Str s, bool) {
     int cb = (int)str::Len(s);
     log(s, cb);
 }
 
-constexpr const char* kPdfPreviewDllName = "PdfPreview.dll";
+constexpr Str kPdfPreviewDllName = "PdfPreview.dll";
 
-int main(int c, char** v) {
+int main(int c, char** v) { // str-port: C main argv
     GUID clsid{};
     IIDFromString(myGuid, &clsid);
 
@@ -53,7 +53,7 @@ int main(int c, char** v) {
     IStream* pStream = NULL;
     HMODULE dll = NULL;
 
-    dll = LoadLibraryA(kPdfPreviewDllName);
+    dll = LoadLibraryA(kPdfPreviewDllName.s);
     if (!dll) {
         printf("can't open DLL\n");
         return 1;
