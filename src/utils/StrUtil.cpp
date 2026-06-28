@@ -227,22 +227,6 @@ bool IsEqual(const ByteSlice& d1, const ByteSlice& d2) {
 
 namespace str {
 
-size_t Len(const char* s) {
-    return s ? strlen(s) : 0;
-}
-
-int Leni(const char* s) {
-    return s ? (int)strlen(s) : 0;
-}
-
-size_t Len(const WCHAR* s) {
-    return s ? wcslen(s) : 0;
-}
-
-int Leni(const WCHAR* s) {
-    return s ? (int)wcslen(s) : 0;
-}
-
 void Free(const char* s) {
     free((void*)s);
 }

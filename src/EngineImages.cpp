@@ -632,7 +632,7 @@ ByteSlice EngineImages::GetFileData() {
 }
 
 bool EngineImages::SaveFileAs(Str dstPath) {
-    const char* srcPath = FilePath();
+    Str srcPath = FilePath();
     if (srcPath) {
         bool ok = file::Copy(dstPath, srcPath, false);
         if (ok) {
@@ -871,7 +871,7 @@ class EngineImage : public EngineImages {
     void GetProperties(StrVec& keyValOut) override;
     void GetImageProperties(int pageNo, StrVec& keyValOut);
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
     // decoded frames: 1 for normal images, N for multi-page TIFF / animated GIF.
@@ -879,7 +879,7 @@ class EngineImage : public EngineImages {
     Vec<Pixmap*> frames;
     Kind imageFormat = nullptr;
 
-    bool LoadSingleFile(const char* fileName);
+    bool LoadSingleFile(Str fileName);
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
@@ -921,32 +921,32 @@ EngineBase* EngineImage::Clone() {
     return clone;
 }
 
-bool EngineImage::LoadSingleFile(const char* path) {
+bool EngineImage::LoadSingleFile(Str path) {
     if (!path) {
         return false;
     }
     SetFilePath(path);
 
-    ByteSlice data = file::ReadFile(Str(path));
+    ByteSlice data = file::ReadFile(path);
     imageFormat = GuessFileTypeFromContent(data);
     if (imageFormat == nullptr) {
         imageFormat = GuessFileTypeFromName(path);
     }
     if (imageFormat == nullptr) {
-        logfa("EngineImage::LoadSingleFile: '%s'\n", path);
+        logfa("EngineImage::LoadSingleFile: '%s'\n", path.s);
         ReportIf(imageFormat == nullptr);
     }
 
     // TODO: maybe default to file extension and only use detected from content
     // if no extension?
-    const char* fileExt = GfxFileExtFromData(data);
+    const char* fileExt = GfxFileExtFromData(data); // str-port: GfxFileExtFromData
     if (fileExt == nullptr) {
         // imageFormat already holds the Kind we resolved above; skip the
         // redundant GuessFileTypeFromName call.
-        fileExt = GfxFileExtFromKind(imageFormat);
+        fileExt = GfxFileExtFromKind(imageFormat); // str-port: GfxFileExtFromKind
     }
     if (fileExt == nullptr) {
-        fileExt = path::GetExtTemp(Str(path));
+        fileExt = path::GetExtTemp(path);
     }
     if (fileExt == nullptr) {
         fileExt = "";
@@ -1115,11 +1115,11 @@ static Bitmap* BitmapWithExifFromData(const ByteSlice& data) {
     return bmp;
 }
 
-static Bitmap* BitmapWithExifFromFile(const char* path) {
+static Bitmap* BitmapWithExifFromFile(Str path) {
     if (!path) {
         return nullptr;
     }
-    ByteSlice data = file::ReadFile(Str(path));
+    ByteSlice data = file::ReadFile(path);
     Bitmap* bmp = BitmapWithExifFromData(data);
     data.Free();
     return bmp;
@@ -1590,8 +1590,8 @@ RectF EngineImage::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-EngineBase* EngineImage::CreateFromFile(const char* path) {
-    logf("EngineImage::CreateFromFile(%s)\n", path);
+EngineBase* EngineImage::CreateFromFile(Str path) {
+    logf("EngineImage::CreateFromFile(%s)\n", path.s);
     EngineImage* engine = new EngineImage();
     bool ok = engine->LoadSingleFile(path);
     // decoding might run a 3rd-party WIC codec (e.g. CopyTrans HEIC) that
@@ -1657,7 +1657,7 @@ class EngineImageDir : public EngineImages {
     ~EngineImageDir() override { delete tocTree; }
 
     EngineBase* Clone() override {
-        const char* path = FilePath();
+        Str path = FilePath();
         if (path) {
             return CreateFromFile(path);
         }
@@ -1674,7 +1674,7 @@ class EngineImageDir : public EngineImages {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
 
     // protected:
 
@@ -1687,7 +1687,7 @@ class EngineImageDir : public EngineImages {
     TocTree* tocTree = nullptr;
 };
 
-static bool LoadImageDir(EngineImageDir* e, const char* dir) {
+static bool LoadImageDir(EngineImageDir* e, Str dir) {
     e->SetFilePath(dir);
 
     DirIter di{dir};
@@ -1729,8 +1729,8 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
-    const char* path = pageFileNames.At(pageNo - 1);
-    TempStr fileName = path::GetBaseNameTemp(Str(path));
+    Str path = pageFileNames.At(pageNo - 1);
+    TempStr fileName = path::GetBaseNameTemp(path);
     TempStr ext = path::GetExtTemp(Str(fileName));
     if (!ext) {
         return str::DupTemp(fileName);
@@ -1743,14 +1743,14 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
 int EngineImageDir::GetPageByLabel(Str label) const {
     size_t nLabel = str::Len(label);
     for (int i = 0; i < pageFileNames.Size(); i++) {
-        char* pagePath = pageFileNames[i];
+        Str pagePath = pageFileNames[i];
         TempStr fileName = path::GetBaseNameTemp(pagePath);
-        char* ext = path::GetExtTemp(Str(fileName));
+        TempStr ext = path::GetExtTemp(fileName);
         if (!str::StartsWith(fileName, label)) {
             continue;
         }
-        const char* maybeExt = fileName.s + nLabel;
-        if (str::Eq(maybeExt, ext) || fileName.s[nLabel] == 0) {
+        Str maybeExt(fileName.s + nLabel, fileName.len - (int)nLabel);
+        if (str::Eq(maybeExt, ext) || nLabel == (size_t)fileName.len) {
             return i + 1;
         }
     }
@@ -1758,7 +1758,7 @@ int EngineImageDir::GetPageByLabel(Str label) const {
     return EngineBase::GetPageByLabel(label);
 }
 
-static TocItem* newImageDirTocItem(TocItem* parent, char* title, int pageNo) {
+static TocItem* newImageDirTocItem(TocItem* parent, Str title, int pageNo) {
     return new TocItem(parent, title, pageNo);
 };
 
@@ -1787,8 +1787,8 @@ bool EngineImageDir::SaveFileAs(Str dstPath) {
     if (!ok) {
         return false;
     }
-    for (char* pathOld : pageFileNames) {
-        TempStr fileName = path::GetBaseNameTemp(Str(pathOld));
+    for (Str pathOld : pageFileNames) {
+        TempStr fileName = path::GetBaseNameTemp(pathOld);
         TempStr pathNew = path::JoinTemp(dstPath, fileName);
         ok = ok && file::Copy(pathNew, pathOld, true);
     }
@@ -1796,8 +1796,8 @@ bool EngineImageDir::SaveFileAs(Str dstPath) {
 }
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
-    char* path = pageFileNames.At(pageNo - 1);
-    ByteSlice bmpData = file::ReadFile(Str(path));
+    Str path = pageFileNames.At(pageNo - 1);
+    ByteSlice bmpData = file::ReadFile(path);
     if (!bmpData) {
         return nullptr;
     }
@@ -1811,15 +1811,15 @@ ByteSlice EngineImageDir::GetImageData(int pageNo) {
     ScopedCritSec scope(&cacheLock);
     auto pi = pageInfos[pageNo - 1];
     if (pi->rawData.empty()) {
-        char* path = pageFileNames.At(pageNo - 1);
-        pi->rawData = file::ReadFile(Str(path));
+        Str path = pageFileNames.At(pageNo - 1);
+        pi->rawData = file::ReadFile(path);
     }
     return pi->rawData;
 }
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
-    char* path = pageFileNames.At(pageNo - 1);
-    ByteSlice bmpData = file::ReadFile(Str(path));
+    Str path = pageFileNames.At(pageNo - 1);
+    ByteSlice bmpData = file::ReadFile(path);
     if (bmpData) {
         Size size = ImageSizeFromData(bmpData);
         bmpData.Free();
@@ -1828,8 +1828,8 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
     return RectF();
 }
 
-EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
-    ReportIf(!dir::Exists(Str(fileName)));
+EngineBase* EngineImageDir::CreateFromFile(Str fileName) {
+    ReportIf(!dir::Exists(fileName));
     EngineImageDir* engine = new EngineImageDir();
     if (!LoadImageDir(engine, fileName)) {
         SafeEngineRelease(&engine);
@@ -2014,9 +2014,8 @@ class EngineCbx : public EngineImages {
     // realPath: when non-null we actually open the archive from this
     // (local) path but still report `path` via FilePath() so callers
     // (file history, bookmarks, etc.) see the user's original file.
-    static EngineBase* CreateFromFile(const char* path, const char* password = nullptr,
-                                      MultiFormatArchive::Format* formatOut = nullptr, bool* isEncryptedOut = nullptr,
-                                      Kind hintKind = nullptr, const char* realPath = nullptr);
+    static EngineBase* CreateFromFile(Str path, Str password = {}, MultiFormatArchive::Format* formatOut = nullptr,
+                                      bool* isEncryptedOut = nullptr, Kind hintKind = nullptr, Str realPath = {});
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
@@ -2025,7 +2024,7 @@ class EngineCbx : public EngineImages {
     ByteSlice GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(files[pageNo - 1]->name); }
 
-    bool LoadFromFile(const char* fileName);
+    bool LoadFromFile(Str fileName);
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
@@ -2038,7 +2037,7 @@ class EngineCbx : public EngineImages {
     // a cached copy of a network-drive file). FilePath() still returns the
     // original path so file history / bookmarks / state track the user's
     // real file, not our cache.
-    char* physicalPath = nullptr;
+    Str physicalPath;
 
     ComicInfoParser cip;
 };
@@ -2052,7 +2051,7 @@ EngineCbx::EngineCbx(MultiFormatArchive* archive) {
 EngineCbx::~EngineCbx() {
     delete tocTree;
     delete cbxArchive;
-    str::Free(physicalPath);
+    str::Free(physicalPath.s);
 }
 
 EngineBase* EngineCbx::Clone() {
@@ -2067,12 +2066,12 @@ EngineBase* EngineCbx::Clone() {
             return clone;
         }
     }
-    const char* path = FilePath();
+    Str path = FilePath();
     if (path) {
         // keep the cached-local-copy in play on the clone too
-        auto clone = CreateFromFile(path, nullptr, nullptr, nullptr, nullptr, physicalPath);
+        auto clone = CreateFromFile(path, {}, nullptr, nullptr, nullptr, physicalPath);
         if (!clone) {
-            logf("EngineCbx::Clone() failed: CreateFromFile('%s') failed\n", path);
+            logf("EngineCbx::Clone() failed: CreateFromFile('%s') failed\n", path.s);
         }
         return clone;
     }
@@ -2080,7 +2079,7 @@ EngineBase* EngineCbx::Clone() {
     return nullptr;
 }
 
-bool EngineCbx::LoadFromFile(const char* file) {
+bool EngineCbx::LoadFromFile(Str file) {
     if (!file) {
         return false;
     }
@@ -2099,13 +2098,10 @@ bool EngineCbx::LoadFromStream(IStream* stream) {
 }
 
 static bool cmpArchFileInfoByName(MultiFormatArchive::FileInfo* f1, MultiFormatArchive::FileInfo* f2) {
-    const char* s1 = f1->name;
-    const char* s2 = f2->name;
-    int res = str::CmpNatural(s1, s2);
-    return res < 0;
+    return str::CmpNatural(f1->name, f2->name) < 0;
 }
 
-static const char* GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
+static Str GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
     switch (cbxFile->format) {
         case MultiFormatArchive::Format::Zip:
             return ".cbz";
@@ -2119,7 +2115,7 @@ static const char* GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
             break;
     }
     ReportIf(true);
-    return nullptr;
+    return {};
 }
 
 bool EngineCbx::FinishLoading() {
@@ -2140,7 +2136,7 @@ bool EngineCbx::FinishLoading() {
     // TODO: return DpiGetForHwnd(HWND_DESKTOP) instead?
     fileDPI = 96.f;
 
-    const char* ext = GetExtFromArchiveType(cbxArchive);
+    Str ext = GetExtFromArchiveType(cbxArchive);
     SetDefaultExt(defaultExt, ext);
 
     Vec<MultiFormatArchive::FileInfo*> pageFiles;
@@ -2218,7 +2214,7 @@ bool EngineCbx::FinishLoading() {
 
     TocItem* tocBuildRoot = nullptr;
     TocItem* tocBuildCurr = nullptr;
-    auto addTocItem = [&](const char* title, int pageNo) {
+    auto addTocItem = [&](Str title, int pageNo) {
         TocItem* ti = new TocItem(nullptr, title, pageNo);
         if (!tocBuildRoot) {
             tocBuildRoot = ti;
@@ -2246,8 +2242,8 @@ bool EngineCbx::FinishLoading() {
         }
     } else {
         for (int i = 0; i < pageCount; i++) {
-            const char* fname = files[i]->name;
-            TempStr baseName = path::GetBaseNameTemp(Str(fname));
+            Str fname = files[i]->name;
+            TempStr baseName = path::GetBaseNameTemp(fname);
             addTocItem(baseName, i + 1);
         }
     }
@@ -2394,8 +2390,8 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     return RectF(0, 0, 595, 842);
 }
 
-EngineBase* EngineCbx::CreateFromFile(const char* path, const char* password, MultiFormatArchive::Format* formatOut,
-                                      bool* isEncryptedOut, Kind hintKind, const char* realPath) {
+EngineBase* EngineCbx::CreateFromFile(Str path, Str password, MultiFormatArchive::Format* formatOut,
+                                      bool* isEncryptedOut, Kind hintKind, Str realPath) {
     auto timeStart = TimeGet();
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
@@ -2408,12 +2404,12 @@ EngineBase* EngineCbx::CreateFromFile(const char* path, const char* password, Mu
     // realPath is a local copy of a file that lives on a slow drive (see
     // caller in EngineCreate.cpp). We open the archive from there but
     // still surface `path` as the logical file path.
-    const char* openPath = realPath ? realPath : path;
+    Str openPath = realPath ? realPath : path;
 
     // eagerly decompress small archives up front so we don't have to
     // re-open the file for each page's image data.
     constexpr i64 kMaxEagerLoadSize = 32 * 1024 * 1024;
-    i64 fileSize = file::GetSize(Str(openPath));
+    i64 fileSize = file::GetSize(openPath);
     bool eagerLoad = fileSize > 0 && fileSize < kMaxEagerLoadSize;
 
     if (!archive->Open(openPath, eagerLoad, hintKind, gArchiveProgressCb)) {
@@ -2467,7 +2463,7 @@ bool IsEngineCbxSupportedFileType(Kind kind) {
 EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI, Kind hintKind, Str realPath) {
     MultiFormatArchive::Format fmt = MultiFormatArchive::Format::Unknown;
     bool isEncrypted = false;
-    EngineBase* engine = EngineCbx::CreateFromFile(path, nullptr, &fmt, &isEncrypted, hintKind, realPath);
+    EngineBase* engine = EngineCbx::CreateFromFile(path, {}, &fmt, &isEncrypted, hintKind, realPath);
     if (engine || !pwdUI) {
         return engine;
     }
