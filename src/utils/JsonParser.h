@@ -27,7 +27,7 @@ struct ValueVisitor {
     virtual ~ValueVisitor() = default;
 };
 
-// data must be UTF-8 encoded and nullptr-terminated
+// data must be UTF-8 encoded
 // returns false on error
 bool Parse(Str data, ValueVisitor* visitor);
 

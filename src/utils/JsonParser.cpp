@@ -6,18 +6,20 @@
 
 namespace json {
 
-static inline const char* SkipWS(const char* s) {
-    while (str::IsWs(*s)) {
-        s++;
+constexpr int kParseFail = -1;
+
+static inline int SkipWS(Str data, int off) {
+    while (off < data.len && str::IsWs(data.s[off])) {
+        off++;
     }
-    return s;
+    return off;
 }
 
-static inline const char* SkipDigits(const char* s) {
-    while (str::IsDigit(*s)) {
-        s++;
+static inline int SkipDigits(Str data, int off) {
+    while (off < data.len && str::IsDigit(data.s[off])) {
+        off++;
     }
-    return s;
+    return off;
 }
 
 class ParseArgs {
@@ -29,24 +31,32 @@ class ParseArgs {
     explicit ParseArgs(ValueVisitor* visitor) : visitor(visitor) {}
 };
 
-static const char* ParseValue(ParseArgs& args, const char* data);
+static int ParseValue(ParseArgs& args, Str data, int off);
 
-static const char* ExtractString(StrBuilder& string, const char* data) {
-    while (*++data) {
-        if ('"' == *data) {
-            return data + 1;
+static int ExtractString(StrBuilder& string, Str data, int off) {
+    ReportIf(off >= data.len || data.s[off] != '"');
+    off++;
+    while (off < data.len) {
+        char c = data.s[off];
+        if ('"' == c) {
+            return off + 1;
         }
-        if ('\\' != *data) {
-            string.AppendChar(*data);
+        if ('\\' != c) {
+            string.AppendChar(c);
+            off++;
             continue;
         }
         // parse escape sequence
+        off++;
+        if (off >= data.len) {
+            return kParseFail;
+        }
         int i;
-        switch (*++data) {
+        switch (data.s[off]) {
             case '"':
             case '\\':
             case '/':
-                string.AppendChar(*data);
+                string.AppendChar(data.s[off]);
                 break;
             case 'b':
                 string.AppendChar('\b');
@@ -64,149 +74,157 @@ static const char* ExtractString(StrBuilder& string, const char* data) {
                 string.AppendChar('\t');
                 break;
             case 'u':
-                if (str::Parse(data + 1, "%4x", &i) && 0 < i && i < 0x10000) {
+                if (off + 4 < data.len && str::Parse(Str(data.s + off + 1, 4), "%4x", &i) && 0 < i && i < 0x10000) {
                     char buf[5]{};
-                    wchar_t c = (wchar_t)i;
-                    WideCharToMultiByte(CP_UTF8, 0, &c, 1, buf, dimof(buf), nullptr, nullptr);
+                    wchar_t wc = (wchar_t)i;
+                    WideCharToMultiByte(CP_UTF8, 0, &wc, 1, buf, dimof(buf), nullptr, nullptr);
                     string.Append(buf);
-                    data += 4;
+                    off += 4;
                     break;
                 }
-                return nullptr;
+                return kParseFail;
             default:
-                return nullptr;
+                return kParseFail;
         }
+        off++;
     }
-    return nullptr;
+    return kParseFail;
 }
 
-static const char* ParseString(ParseArgs& args, const char* data) {
+static int ParseString(ParseArgs& args, Str data, int off) {
     StrBuilder string;
-    data = ExtractString(string, data);
-    if (data) {
+    int end = ExtractString(string, data, off);
+    if (end >= 0) {
         Str path = args.path.Get();
         Str value = string.Get();
         args.canceled = !args.visitor->Visit(path, value, Type::String);
     }
-    return data;
+    return end;
 }
 
-static const char* ParseNumber(ParseArgs& args, const char* data) {
-    const char* start = data;
+static int ParseNumber(ParseArgs& args, Str data, int off) {
+    int start = off;
     // integer part
-    if ('-' == *data) {
-        data++;
+    if ('-' == data.s[off]) {
+        off++;
     }
-    if ('0' == *data) {
-        data++;
-    } else if (str::IsDigit(*data)) {
-        data = SkipDigits(data + 1);
+    if (off >= data.len) {
+        return kParseFail;
+    }
+    if ('0' == data.s[off]) {
+        off++;
+    } else if (str::IsDigit(data.s[off])) {
+        off = SkipDigits(data, off + 1);
     } else {
-        return nullptr;
+        return kParseFail;
     }
     // fractional part
-    if ('.' == *data) {
-        data = SkipDigits(data + 1);
+    if (off < data.len && '.' == data.s[off]) {
+        off = SkipDigits(data, off + 1);
     }
     // magnitude
-    if ('e' == *data || 'E' == *data) {
-        data++;
-        if ('+' == *data || '-' == *data) {
-            data++;
+    if (off < data.len && ('e' == data.s[off] || 'E' == data.s[off])) {
+        off++;
+        if (off < data.len && ('+' == data.s[off] || '-' == data.s[off])) {
+            off++;
         }
-        data = SkipDigits(data);
+        off = SkipDigits(data, off);
     }
     // validity check
-    if (!str::IsDigit(*(data - 1)) || str::IsDigit(*data)) {
-        return nullptr;
+    if (off <= start || !str::IsDigit(data.s[off - 1]) || (off < data.len && str::IsDigit(data.s[off]))) {
+        return kParseFail;
     }
 
-    TempStr number = str::DupTemp(Str(start, (int)(data - start)));
+    TempStr number = str::DupTemp(Str(data.s + start, off - start));
     Str path = args.path.Get();
     args.canceled = !args.visitor->Visit(path, number, Type::Number);
-    return data;
+    return off;
 }
 
-static const char* ParseObject(ParseArgs& args, const char* data) {
-    data = SkipWS(data + 1);
-    if ('}' == *data) {
-        return data + 1;
+static int ParseObject(ParseArgs& args, Str data, int off) {
+    off = SkipWS(data, off + 1);
+    if (off < data.len && '}' == data.s[off]) {
+        return off + 1;
     }
 
     size_t pathIdx = args.path.size();
     for (;;) {
-        data = SkipWS(data);
-        if ('"' != *data) {
-            return nullptr;
+        off = SkipWS(data, off);
+        if (off >= data.len || '"' != data.s[off]) {
+            return kParseFail;
         }
         args.path.AppendChar('/');
-        data = ExtractString(args.path, data);
-        if (!data) {
-            return nullptr;
+        off = ExtractString(args.path, data, off);
+        if (off < 0) {
+            return kParseFail;
         }
-        data = SkipWS(data);
-        if (':' != *data) {
-            return nullptr;
+        off = SkipWS(data, off);
+        if (off >= data.len || ':' != data.s[off]) {
+            return kParseFail;
         }
 
-        data = ParseValue(args, data + 1);
-        if (args.canceled || !data) {
-            return data;
+        off = ParseValue(args, data, off + 1);
+        if (args.canceled || off < 0) {
+            return off;
         }
         args.path.RemoveAt(pathIdx, args.path.size() - pathIdx);
 
-        data = SkipWS(data);
-        if ('}' == *data) {
-            return data + 1;
+        off = SkipWS(data, off);
+        if (off < data.len && '}' == data.s[off]) {
+            return off + 1;
         }
-        if (',' != *data) {
-            return nullptr;
+        if (off >= data.len || ',' != data.s[off]) {
+            return kParseFail;
         }
-        data++;
+        off++;
     }
 }
 
-static const char* ParseArray(ParseArgs& args, const char* data) {
-    data = SkipWS(data + 1);
-    if (']' == *data) {
-        return data + 1;
+static int ParseArray(ParseArgs& args, Str data, int off) {
+    off = SkipWS(data, off + 1);
+    if (off < data.len && ']' == data.s[off]) {
+        return off + 1;
     }
 
     size_t pathIdx = args.path.size();
     for (int idx = 0;; idx++) {
         args.path.AppendFmt("[%d]", idx);
-        data = ParseValue(args, data);
-        if (args.canceled || !data) {
-            return data;
+        off = ParseValue(args, data, off);
+        if (args.canceled || off < 0) {
+            return off;
         }
         size_t n = args.path.size();
         args.path.RemoveAt(pathIdx, n - pathIdx);
 
-        data = SkipWS(data);
-        if (']' == *data) {
-            return data + 1;
+        off = SkipWS(data, off);
+        if (off < data.len && ']' == data.s[off]) {
+            return off + 1;
         }
-        if (',' != *data) {
-            return nullptr;
+        if (off >= data.len || ',' != data.s[off]) {
+            return kParseFail;
         }
-        data++;
+        off++;
     }
 }
 
-static const char* ParseKeyword(ParseArgs& args, const char* data, const char* keyword, Type type) {
-    if (!str::StartsWith(data, keyword)) {
-        return nullptr;
+static int ParseKeyword(ParseArgs& args, Str data, int off, Str keyword, Type type) {
+    Str rest = Str(data.s + off, data.len - off);
+    if (!str::StartsWith(rest, keyword)) {
+        return kParseFail;
     }
     Str path = args.path.Get();
     args.canceled = !args.visitor->Visit(path, keyword, type);
-    return data + str::Len(keyword);
+    return off + keyword.len;
 }
 
-static const char* ParseValue(ParseArgs& args, const char* data) {
-    data = SkipWS(data);
-    switch (*data) {
+static int ParseValue(ParseArgs& args, Str data, int off) {
+    off = SkipWS(data, off);
+    if (off >= data.len) {
+        return kParseFail;
+    }
+    switch (data.s[off]) {
         case '"':
-            return ParseString(args, data);
+            return ParseString(args, data, off);
         case '0':
         case '1':
         case '2':
@@ -218,34 +236,35 @@ static const char* ParseValue(ParseArgs& args, const char* data) {
         case '8':
         case '9':
         case '-':
-            return ParseNumber(args, data);
+            return ParseNumber(args, data, off);
         case '{':
-            return ParseObject(args, data);
+            return ParseObject(args, data, off);
         case '[':
-            return ParseArray(args, data);
+            return ParseArray(args, data, off);
         case 't':
-            return ParseKeyword(args, data, "true", Type::Bool);
+            return ParseKeyword(args, data, off, Str("true"), Type::Bool);
         case 'f':
-            return ParseKeyword(args, data, "false", Type::Bool);
+            return ParseKeyword(args, data, off, Str("false"), Type::Bool);
         case 'n':
-            return ParseKeyword(args, data, "null", Type::Null);
+            return ParseKeyword(args, data, off, Str("null"), Type::Null);
         default:
-            return nullptr;
+            return kParseFail;
     }
 }
 
 // return false if invalid JSON
 bool Parse(Str data, ValueVisitor* visitor) {
     ParseArgs args(visitor);
-    const char* p = data.s;
-    if (str::StartsWith(p, UTF8_BOM)) {
-        p += 3;
+    int off = 0;
+    if (data.len >= 3 && str::StartsWith(data, Str(UTF8_BOM))) {
+        off = 3;
     }
-    const char* end = ParseValue(args, p);
-    if (!end) {
+    int end = ParseValue(args, data, off);
+    if (end < 0) {
         return false;
     }
-    return args.canceled || !*SkipWS(end);
+    end = SkipWS(data, end);
+    return args.canceled || end >= data.len;
 }
 
 } // namespace json
