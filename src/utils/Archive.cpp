@@ -248,7 +248,7 @@ Vec<MultiFormatArchive::FileInfo*> const& MultiFormatArchive::GetFileInfos() {
 
 size_t getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, Str name) {
     for (auto fileInfo : fileInfos) {
-        if (str::EqI(fileInfo->name, name.s)) {
+        if (str::EqI(fileInfo->name, name)) {
             return fileInfo->fileId;
         }
     }

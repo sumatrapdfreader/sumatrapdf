@@ -2149,8 +2149,8 @@ bool EngineCbx::FinishLoading() {
     size_t n = fileInfos.size();
     for (size_t i = 0; i < n; i++) {
         auto* fileInfo = fileInfos[i];
-        const char* fileName = fileInfo->name;
-        if (str::Len(fileName) == 0) {
+        Str fileName = fileInfo->name;
+        if (!fileName) {
             continue;
         }
         if (MultiFormatArchive::Format::Zip == cbxArchive->format && str::StartsWithI(fileName, "_rels/.rels")) {
@@ -2161,7 +2161,7 @@ bool EngineCbx::FinishLoading() {
         Kind kind = GuessFileTypeFromName(fileName);
         if (IsEngineImageSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
-            !str::StartsWith(path::GetBaseNameTemp(Str(fileName)), ".")) {
+            !str::StartsWith(path::GetBaseNameTemp(fileName), ".")) {
             pageFiles.Append(fileInfo);
         }
     }

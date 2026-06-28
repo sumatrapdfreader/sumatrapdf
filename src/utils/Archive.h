@@ -29,7 +29,7 @@ class MultiFormatArchive {
 
     struct FileInfo {
         size_t fileId = 0;
-        const char* name = nullptr;
+        Str name = {};
         i64 fileTime = 0; // this is typedef'ed as time64_t in unrar.h
         size_t fileSizeUncompressed = 0;
         bool isDir = false;
