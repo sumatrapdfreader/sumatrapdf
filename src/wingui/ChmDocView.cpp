@@ -58,8 +58,8 @@ static Str ChmMimeFromPath(Str path, const ByteSlice& data) {
     }
 
     static const struct {
-        const char* ext;
-        const char* mimetype;
+        Str ext;
+        Str mimetype;
     } mimeTypes[] = {
         {".html", "text/html"},     {".htm", "text/html"},     {".gif", "image/gif"},  {".png", "image/png"},
         {".jpg", "image/jpeg"},     {".jpeg", "image/jpeg"},   {".bmp", "image/bmp"},  {".css", "text/css"},
@@ -345,7 +345,7 @@ void ChmDocView::SetScrollPos(Point pos) {
         pos.y = 0;
     }
     if (backend == Backend::WebView2 && wv) {
-        char* js = str::Format("window.scrollTo(%d, %d);", pos.x, pos.y);
+        Str js = str::Format("window.scrollTo(%d, %d);", pos.x, pos.y);
         wv->Eval(js);
         str::Free(js);
         webviewScrollPos = pos;
