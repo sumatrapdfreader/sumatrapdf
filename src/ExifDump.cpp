@@ -499,7 +499,7 @@ struct TiffParser {
         while (n > 0 && r.Byte(off + n - 1) == 0) {
             n--;
         }
-        return str::DupTemp(Str((const char*)(r.d + off), (int)n));
+        return str::DupTemp(AsStr(ByteSlice(r.d + off, n)));
     }
 
     TempStr FormatRationalPair(u32 num, u32 den, bool asFraction) const {
@@ -1148,7 +1148,7 @@ static void DumpFromGdiplus(const ByteSlice& d, StrVec& lines) {
         PropertyItem* item = (PropertyItem*)buf;
         TempStr val;
         if (item->type == PropertyTagTypeASCII) {
-            val = str::DupTemp(Str((char*)item->value, (int)item->length));
+            val = str::DupTemp(AsStr(ByteSlice((u8*)item->value, item->length)));
         } else if (item->type == PropertyTagTypeShort && item->length >= 2) {
             val = str::FormatTemp("%u", *(u16*)item->value);
         } else if (item->type == PropertyTagTypeLong && item->length >= 4) {
