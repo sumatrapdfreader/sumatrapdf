@@ -168,14 +168,14 @@ bool operator==(Str a, Str b) {
     return StrEq(a, b);
 }
 
-bool operator==(Str a, const char* b) {
+bool operator==(Str a, const char* b) { // str-port: C-string
     if (!b) {
         return IsEmpty(a);
     }
     return StrEq(a, Str(b));
 }
 
-bool operator==(const char* a, Str b) {
+bool operator==(const char* a, Str b) { // str-port: C-string
     return b == a;
 }
 
@@ -183,11 +183,11 @@ bool operator!=(Str a, Str b) {
     return !(a == b);
 }
 
-bool operator!=(Str a, const char* b) {
+bool operator!=(Str a, const char* b) { // str-port: C-string
     return !(a == b);
 }
 
-bool operator!=(const char* a, Str b) {
+bool operator!=(const char* a, Str b) { // str-port: C-string
     return !(a == b);
 }
 
@@ -195,14 +195,14 @@ bool operator==(WStr a, WStr b) {
     return WStrEq(a, b);
 }
 
-bool operator==(WStr a, const wchar_t* b) {
+bool operator==(WStr a, const wchar_t* b) { // str-port: C-string
     if (!b) {
         return IsEmpty(a);
     }
     return WStrEq(a, WStr(b));
 }
 
-bool operator==(const wchar_t* a, WStr b) {
+bool operator==(const wchar_t* a, WStr b) { // str-port: C-string
     return b == a;
 }
 
@@ -210,11 +210,11 @@ bool operator!=(WStr a, WStr b) {
     return !(a == b);
 }
 
-bool operator!=(WStr a, const wchar_t* b) {
+bool operator!=(WStr a, const wchar_t* b) { // str-port: C-string
     return !(a == b);
 }
 
-bool operator!=(const wchar_t* a, WStr b) {
+bool operator!=(const wchar_t* a, WStr b) { // str-port: C-string
     return !(a == b);
 }
 

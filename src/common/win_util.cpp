@@ -18,12 +18,9 @@ void RestoreDCState(SavedDCState* state) {
     ReleaseDC(state->hwnd, state->hdc);
 }
 
-int MeasureStringWidth(HDC hdc, const wchar_t* str) {
+int MeasureStringWidth(HDC hdc, WStr str) {
     SIZE size;
-    int len = 0;
-    const wchar_t* p = str;
-    while (*p++) len++;
-    GetTextExtentPoint32W(hdc, str, len, &size);
+    GetTextExtentPoint32W(hdc, str.s, str.len, &size); // str-port: Win32
     return size.cx;
 }
 

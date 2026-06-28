@@ -436,7 +436,7 @@ struct SavedDCState {
 
 SavedDCState SaveDCState(HWND hwnd);
 void RestoreDCState(SavedDCState* state);
-int MeasureStringWidth(HDC hdc, const wchar_t* str);
+int MeasureStringWidth(HDC hdc, WStr str);
 Str GetWindowTextTemp(HWND hwnd);
 void SetHwndText(HWND hwnd, Str s);
 Str GetLastErrorAsStr(Arena* arena);

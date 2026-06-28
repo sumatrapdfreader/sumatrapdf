@@ -84,13 +84,10 @@ void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
         }
 
         // Convert filename to UTF-8
-        int utf8Len = WideCharToMultiByte(CP_UTF8, 0, fd.cFileName, -1, nullptr, 0, nullptr, nullptr);
-        char* utf8Name = (char*)AllocTemp(utf8Len);
-        WideCharToMultiByte(CP_UTF8, 0, fd.cFileName, -1, utf8Name, utf8Len, nullptr, nullptr);
-        int nameLen = utf8Len - 1; // Exclude null terminator
+        Str utf8Name = ToUtf8Temp(WStr(fd.cFileName));
 
         DirEntry e = {};
-        e.name = Str(utf8Name, nameLen); // Temp allocator, will be duped below
+        e.name = utf8Name; // Temp allocator, will be duped below
         e.createTime = fd.ftCreationTime;
         e.modTime = fd.ftLastWriteTime;
         // Check for real directories, not reparse points (symlinks, junctions)
