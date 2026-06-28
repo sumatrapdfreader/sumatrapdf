@@ -32,41 +32,41 @@ constexpr int kIdResultText = 103;
 constexpr int kIdTranslateBtn = 104;
 constexpr int kIdCloseBtn = 105;
 
-static const char* kSrcLangAuto = "Auto";
+static const Str kSrcLangAuto = StrL("Auto");
 
-static const char* gPopularLanguages[] = {
-    "English",
-    "Chinese (Simplified)",
-    "Chinese (Traditional)",
-    "Spanish",
-    "Arabic",
-    "Hindi",
-    "Portuguese",
-    "Bengali",
-    "Russian",
-    "Japanese",
-    "Punjabi",
-    "German",
-    "French",
-    "Korean",
-    "Turkish",
-    "Vietnamese",
-    "Italian",
-    "Polish",
-    "Ukrainian",
-    "Dutch",
-    "Thai",
-    "Indonesian",
-    "Czech",
-    "Swedish",
-    "Romanian",
-    "Greek",
-    "Hebrew",
-    "Danish",
-    "Finnish",
-    "Norwegian",
-    "Hungarian",
-    "Slovak",
+static const Str gPopularLanguages[] = {
+    StrL("English"),
+    StrL("Chinese (Simplified)"),
+    StrL("Chinese (Traditional)"),
+    StrL("Spanish"),
+    StrL("Arabic"),
+    StrL("Hindi"),
+    StrL("Portuguese"),
+    StrL("Bengali"),
+    StrL("Russian"),
+    StrL("Japanese"),
+    StrL("Punjabi"),
+    StrL("German"),
+    StrL("French"),
+    StrL("Korean"),
+    StrL("Turkish"),
+    StrL("Vietnamese"),
+    StrL("Italian"),
+    StrL("Polish"),
+    StrL("Ukrainian"),
+    StrL("Dutch"),
+    StrL("Thai"),
+    StrL("Indonesian"),
+    StrL("Czech"),
+    StrL("Swedish"),
+    StrL("Romanian"),
+    StrL("Greek"),
+    StrL("Hebrew"),
+    StrL("Danish"),
+    StrL("Finnish"),
+    StrL("Norwegian"),
+    StrL("Hungarian"),
+    StrL("Slovak"),
 };
 
 struct SelectionTranslateDialog {
@@ -222,7 +222,7 @@ static void PopulateLanguageCombo(HWND hwnd, Str initial, bool includeAuto) {
     if (includeAuto) {
         CbAddString(hwnd, kSrcLangAuto);
     }
-    for (const char* lang : gPopularLanguages) {
+    for (Str lang : gPopularLanguages) {
         CbAddString(hwnd, lang);
     }
     if (!str::IsEmptyOrWhiteSpace(initial)) {
@@ -267,20 +267,20 @@ static bool LanguagesAreSameTemp(Str a, Str b) {
     return str::EqI(aa, bb);
 }
 
-static const char* BackendLogName(AIChatBackend backend) {
+static Str BackendLogName(AIChatBackend backend) {
     switch (backend) {
         case AIChatBackend::Grok:
-            return "grok";
+            return StrL("grok");
         case AIChatBackend::Claude:
-            return "claude";
+            return StrL("claude");
         case AIChatBackend::Codex:
-            return "codex";
+            return StrL("codex");
     }
-    return "ai";
+    return StrL("ai");
 }
 
 static void LogTranslation(AIChatBackend backend, Str direction, Str text) {
-    logf("selection-translate %s %s: %s", BackendLogName(backend), direction.s, text ? text.s : "");
+    logf("selection-translate %s %s: %s", BackendLogName(backend).s, direction.s, text ? text.s : "");
 }
 
 static bool TranslationLooksLikeError(Str text) {
@@ -347,8 +347,8 @@ static TempStr NormalizeTextForPromptTemp(Str text) {
         return {};
     }
     StrBuilder buf;
-    for (const char* s = text.s; *s; s++) {
-        char c = *s;
+    for (int i = 0; i < text.len; i++) {
+        char c = text.s[i];
         if (c == '\r' || c == '\n' || c == '\t') {
             if (buf.Size() > 0 && buf.LastChar() != ' ') {
                 buf.AppendChar(' ');
@@ -367,12 +367,12 @@ static TempStr BuildTranslationPromptTemp(Str srcLang, Str dstLang, Str text) {
         return str::FormatTemp(
             "Detect the language of the following text and translate it to %s. Return only the "
             "translation with no explanation, commentary, or quotation marks. Text: %s",
-            dstLang, normalized);
+            dstLang.s, normalized.s);
     }
     return str::FormatTemp(
         "Translate the following text from %s to %s. Return only the translation with no "
         "explanation, commentary, or quotation marks. Text: %s",
-        srcLang, dstLang, normalized);
+        srcLang.s, dstLang.s, normalized.s);
 }
 
 static void ReadPipeToStrBuilder(HANDLE hPipe, StrBuilder& out) {
@@ -453,15 +453,14 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, StrBuilder
     if (str::IsEmptyOrWhiteSpace(output)) {
         return;
     }
-    const char* s = output.s; // str-port: parse cursor
-    const char* end = output.s + output.len;
-    while (s < end) {
-        const char* lineEnd = s;
-        while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
-            lineEnd++;
+    int off = 0;
+    while (off < output.len) {
+        int lineStart = off;
+        while (off < output.len && output.s[off] != '\n' && output.s[off] != '\r') {
+            off++;
         }
-        if (lineEnd > s) {
-            TempStr line = str::DupTemp(s, (int)(lineEnd - s));
+        if (off > lineStart) {
+            TempStr line = str::DupTemp(output.s + lineStart, off - lineStart);
             switch (backend) {
                 case AIChatBackend::Grok:
                     AppendGrokTranslationText(line, translationOut);
@@ -474,9 +473,8 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, StrBuilder
                     break;
             }
         }
-        s = lineEnd;
-        while (s < end && (*s == '\n' || *s == '\r')) {
-            s++;
+        while (off < output.len && (output.s[off] == '\n' || output.s[off] == '\r')) {
+            off++;
         }
     }
     str::TrimWSInPlace(Str(translationOut.Get()), str::TrimOpt::Both);
@@ -557,16 +555,16 @@ static bool IsBackendInstalled(AIChatBackend backend) {
     return false;
 }
 
-static const char* BackendDisplayName(AIChatBackend backend) {
+static Str BackendDisplayName(AIChatBackend backend) {
     switch (backend) {
         case AIChatBackend::Grok:
-            return "Grok Build";
+            return StrL("Grok Build");
         case AIChatBackend::Claude:
-            return "Claude Code";
+            return StrL("Claude Code");
         case AIChatBackend::Codex:
-            return "OpenAI Codex";
+            return StrL("OpenAI Codex");
     }
-    return "AI";
+    return StrL("AI");
 }
 
 static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, AutoFreeStr& msgOut) {
@@ -591,7 +589,7 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
             break;
     }
 
-    LogTranslation(backend, ">>> backend", Str(BackendDisplayName(backend)));
+    LogTranslation(backend, ">>> backend", BackendDisplayName(backend));
     LogTranslation(backend, ">>> srcLang", srcLang);
     LogTranslation(backend, ">>> dstLang", dstLang);
     LogTranslation(backend, ">>> prompt", prompt);
@@ -699,7 +697,7 @@ static void ShowTranslationResult(SelectionTranslateDialog* dlg, Str text, bool 
     int resultDy = DpiScale(hwnd, 120);
     int x = dlg->pad;
     int y = dlg->yAfterLangs;
-    const char* label = isError ? _TRA("Error:") : _TRA("Translation:");
+    Str label = isError ? Str(_TRA("Error:")) : Str(_TRA("Translation:"));
 
     if (!dlg->resultVisible) {
         dlg->hwndResultLabel = CreateWindowExW(0, L"STATIC", ToWStrTemp(label), WS_CHILD | WS_VISIBLE,
