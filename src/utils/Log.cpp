@@ -127,8 +127,8 @@ void logPipe(const char* fmt, ...) {
     if (!gLogToPipe) return;
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args).s;
-    logToPipe(Str(s.Get()));
+    TempStr s = str::FmtVTemp(fmt, args);
+    logToPipe(s);
     va_end(args);
 }
 
@@ -144,8 +144,8 @@ void logv(Str s) {
 void logvf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args).s;
-    logv(Str(s.Get()));
+    TempStr s = str::FmtVTemp(fmt, args);
+    logv(s);
     va_end(args);
 }
 
@@ -236,8 +236,8 @@ void logf(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args).s;
-    log2(Str(s.Get()), false);
+    TempStr s = str::FmtVTemp(fmt, args);
+    log2(s, false);
     va_end(args);
 }
 
@@ -248,9 +248,8 @@ void logfa(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    char* s = str::FmtV(fmt, args).s; // str-port: owned heap
-    log2(Str(s), true);
-    free(s);
+    TempStr s = str::FmtVTemp(fmt, args);
+    log2(s, true);
     va_end(args);
 }
 

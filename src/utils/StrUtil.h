@@ -147,8 +147,7 @@ bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);           // str-port: 
 // formatting functions take the format string as a plain const char* (as an
 // exception to the Str rule): it's almost always a string literal, and a
 // const char* is what vsnprintf needs anyway (no NUL-termination footgun).
-Str FmtVWithArena(Arena* a, const char* fmt, va_list args);
-Str FmtV(const char* fmt, va_list args);
+TempStr FmtVTemp(const char* fmt, va_list args);
 Str Format(const char* fmt, ...);
 TempStr FormatTemp(const char* fmt, ...);
 

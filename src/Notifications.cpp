@@ -804,7 +804,7 @@ static StrNode* AllocStrNode(Str s) {
 void MaybeDelayedWarningNotification(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    Str msg = str::FmtV(fmt, args);
+    TempStr msg = str::FmtVTemp(fmt, args);
     va_end(args);
 
     log(msg);
@@ -816,7 +816,6 @@ void MaybeDelayedWarningNotification(const char* fmt, ...) {
         StrNode* node = AllocStrNode(msg);
         ListInsertFront(&gDelayedNotifications, node);
     }
-    str::Free(msg);
 }
 
 void ShowMaybeDelayedNotifications(HWND hwndParent) {

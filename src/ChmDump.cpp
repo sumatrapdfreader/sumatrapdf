@@ -40,10 +40,9 @@ static void CliPrint(Str s) {
 static void CliPrintf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    Str msg = str::FmtV(fmt, args);
+    TempStr msg = str::FmtVTemp(fmt, args);
     va_end(args);
     CliPrint(msg);
-    str::Free(msg);
 }
 
 static Str ChmSpaceName(int space) {

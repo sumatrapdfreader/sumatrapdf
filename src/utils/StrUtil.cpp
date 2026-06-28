@@ -632,8 +632,6 @@ namespace wstr {
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
 WStr Join(Arena* allocator, WStr s1, WStr s2, WStr s3) {
-    // don't use str::Format(L"%s%s%s", s1, s2, s3) since the strings
-    // might contain non-characters which str::Format fails to handle
     size_t s1Len = (size_t)s1.len, s2Len = (size_t)s2.len, s3Len = (size_t)s3.len;
     size_t len = s1Len + s2Len + s3Len + 1;
     WCHAR* res = (WCHAR*)Alloc(allocator, len * sizeof(WCHAR)); // str-port: owned heap
@@ -777,7 +775,8 @@ bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...) { // str-port: C-string
 }
 
 // TODO: need to finish StrFormat and use it instead.
-Str FmtVWithArena(Arena* a, const char* fmt, va_list args) {
+TempStr FmtVTemp(const char* fmt, va_list args) {
+    Arena* a = GetTempArena();
     char message[512]{};
     va_list argsCopy;
     va_copy(argsCopy, args);
@@ -797,7 +796,7 @@ Str FmtVWithArena(Arena* a, const char* fmt, va_list args) {
         return str::Dup(a, StrL("vsnprintf() returned -1"));
     }
 
-    char* buf = AllocArray<char>(a, count + 1); // str-port: owned heap
+    char* buf = AllocArray<char>(a, count + 1);
     if (!buf) {
         return {};
     }
@@ -807,21 +806,16 @@ Str FmtVWithArena(Arena* a, const char* fmt, va_list args) {
     va_end(argsCopy);
     ReportIf(count2 != count);
     if (count2 < 0) {
-        Free(a, buf);
         return str::Dup(a, StrL("vsnprintf() returned -1"));
     }
     return Str(buf, count);
-}
-
-Str FmtV(const char* fmt, va_list args) {
-    return FmtVWithArena(nullptr, fmt, args);
 }
 
 // caller needs to str::Free()
 Str Format(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    Str res = FmtV(fmt, args);
+    Str res = str::Dup(FmtVTemp(fmt, args));
     va_end(args);
     return res;
 }
@@ -2051,10 +2045,9 @@ bool StrBuilder::AppendSlice(const ByteSlice& d) {
 void StrBuilder::AppendFmt(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    Str res = str::FmtV(fmt, args);
+    TempStr res = str::FmtVTemp(fmt, args);
     if (res) {
         Append(res);
-        str::Free(res);
     }
     va_end(args);
 }
@@ -3379,7 +3372,7 @@ TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
 TempStr FormatTemp(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    Str res = FmtVWithArena(GetTempArena(), fmt, args);
+    TempStr res = FmtVTemp(fmt, args);
     va_end(args);
     return res;
 }

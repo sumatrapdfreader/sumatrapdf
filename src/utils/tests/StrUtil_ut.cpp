@@ -306,10 +306,9 @@ void StrTest() {
     }
 #if 0
     // TODO: this test slows down DEBUG builds significantly
-    str = str::Format("%s", "\uFFFF");
+    str = str::FormatTemp("%s", "\uFFFF");
     // TODO: in VS2015, str matches "\uFFFF" instead of nullptr
     utassert(str::Eq(str, nullptr));
-    free(str);
 #endif
     str = str::Join(buf, buf);
     utassert(str::Len(str) == 2 * str::Len(buf));
