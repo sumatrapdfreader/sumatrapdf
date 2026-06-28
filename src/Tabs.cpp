@@ -41,10 +41,10 @@ static void UpdateTabTitle(WindowTab* tab) {
     }
     MainWindow* win = tab->win;
     int idx = win->GetTabIdx(tab);
-    const char* title = tab->GetTabTitle();
+    Str title = tab->GetTabTitle();
     // respect FullPathInTitle for the tab tooltip too: when the user opted out
     // of showing the full path, don't reveal it on hover either (#3024)
-    const char* tooltip = tab->filePath;
+    Str tooltip = tab->filePath;
     if (tooltip && !gGlobalPrefs->fullPathInTitle) {
         tooltip = path::GetBaseNameTemp(tooltip);
     }
