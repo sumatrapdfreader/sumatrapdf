@@ -71,7 +71,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     }
 
     bool isOk = (k == kindDestinationLaunchURL) || (k == kindDestinationLaunchFile) ||
-                (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k = kindDestinationDjVu) ||
+                (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k == kindDestinationDjVu) ||
                 (k == kindDestinationAttachment);
     ReportIf(!isOk);
 

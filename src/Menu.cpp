@@ -1399,7 +1399,11 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         // check after the submenu is built.
         bool removeMenu = false;
         bool disableMenu = false;
-        if (!isSubMenu) {
+        // a null ctx means "don't auto-gate commands" -- the caller (e.g. the
+        // ToC / Favorites context menus) does its own per-item filtering and
+        // wants all items present. With an empty ctx, GetCommandIdState's
+        // no-document gate would wrongly strip document-dependent commands.
+        if (!isSubMenu && ctx) {
             GetCommandIdState(ctx, cmdId, &removeMenu, &disableMenu);
         }
         if (ctx) {
