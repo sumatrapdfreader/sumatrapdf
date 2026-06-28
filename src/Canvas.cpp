@@ -524,6 +524,7 @@ static const double gSmoothScrollingFactor = 0.2;
 static int gDeltaPerLine = 0;
 // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 static bool gWheelMsgRedirect = false;
+static bool gInMouseWheelScroll = false;
 
 void UpdateDeltaPerLine() {
     ULONG ulScrollLines;
@@ -683,9 +684,14 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
-        if (gGlobalPrefs->smoothScroll) {
-            win->scrollTargetY = si.nPos;
-            SetTimer(win->hwndCanvas, kSmoothScrollTimerID, USER_TIMER_MINIMUM, nullptr);
+        if (gGlobalPrefs->smoothScroll && gInMouseWheelScroll) {
+            if (win->AsFixed()->yOffset() == si.nPos) {
+                win->AsFixed()->ScrollYTo(si.nPos);
+                ReadAloudOnUserViewChanged(win);
+            } else {
+                win->scrollTargetY = si.nPos;
+                SetTimer(win->hwndCanvas, kSmoothScrollTimerID, USER_TIMER_MINIMUM, nullptr);
+            }
         } else {
             win->AsFixed()->ScrollYTo(si.nPos);
             ReadAloudOnUserViewChanged(win);
@@ -2373,6 +2379,12 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         gWheelMsgRedirect = false;
         return res;
     }
+
+    bool wasInMouseWheelScroll = gInMouseWheelScroll;
+    gInMouseWheelScroll = true;
+    defer {
+        gInMouseWheelScroll = wasInMouseWheelScroll;
+    };
 
     // Mouse-wheel on the citation-hover popup (cursor still on the citation
     // link that opened it). Avoids moving the cursor onto the popup itself,
