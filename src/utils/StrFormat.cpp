@@ -305,7 +305,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
     return true;
 }
 
-Str Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5, const Arg& a6) {
+Str Format(Str s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5, const Arg& a6) {
     const Arg* args[6];
     int nArgs = 0;
     args[nArgs++] = &a1;
@@ -326,7 +326,7 @@ Str Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg
     }
 
     Fmt fmt;
-    bool ok = ParseFormat(fmt, s);
+    bool ok = ParseFormat(fmt, s.s);
     if (!ok) {
         return {};
     }
@@ -337,7 +337,7 @@ Str Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg
     return Str(fmt.res.StealData());
 }
 
-TempStr FormatTemp(const char* s, const Arg** args, int nArgs) {
+TempStr FormatTemp(Str s, const Arg** args, int nArgs) {
     // arguments at the end could be empty
     while (nArgs >= 0 && args[nArgs - 1]->t == Type::None) {
         nArgs--;
@@ -349,7 +349,7 @@ TempStr FormatTemp(const char* s, const Arg** args, int nArgs) {
     }
 
     Fmt fmt;
-    bool ok = ParseFormat(fmt, s);
+    bool ok = ParseFormat(fmt, s.s);
     if (!ok) {
         return {};
     }
@@ -362,8 +362,7 @@ TempStr FormatTemp(const char* s, const Arg** args, int nArgs) {
     return str::DupTemp(res, n);
 }
 
-TempStr FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
-                   const Arg& a6) {
+TempStr FormatTemp(Str s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5, const Arg& a6) {
     const Arg* args[6];
     int nArgs = 0;
     args[nArgs++] = &a1;
@@ -376,17 +375,17 @@ TempStr FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, c
     return FormatTemp(s, args, nArgs);
 }
 
-TempStr FormatTemp(const char* s, const Arg a1) {
+TempStr FormatTemp(Str s, const Arg a1) {
     const Arg* args[3] = {&a1};
     return FormatTemp(s, args, 1);
 }
 
-TempStr FormatTemp(const char* s, const Arg a1, const Arg a2) {
+TempStr FormatTemp(Str s, const Arg a1, const Arg a2) {
     const Arg* args[3] = {&a1, &a2};
     return FormatTemp(s, args, 2);
 }
 
-TempStr FormatTemp(const char* s, const Arg a1, const Arg a2, const Arg a3) {
+TempStr FormatTemp(Str s, const Arg a1, const Arg a2, const Arg a3) {
     const Arg* args[3] = {&a1, &a2, &a3};
     return FormatTemp(s, args, 3);
 }

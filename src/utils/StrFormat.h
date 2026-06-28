@@ -99,6 +99,11 @@ struct Arg {
         u.d = d;
     }
 
+    Arg(Str arg) {
+        t = Type::Str;
+        u.s = arg.s;
+    }
+
     Arg(const char* arg) {
         t = Type::Str;
         u.s = arg;
@@ -110,11 +115,11 @@ struct Arg {
     }
 };
 
-Str Format(const char* s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
+Str Format(Str s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
            const Arg& a5 = Arg(), const Arg& a6 = Arg());
 
-TempStr FormatTemp(const char* s, const Arg);
-TempStr FormatTemp(const char* s, const Arg, const Arg);
-TempStr FormatTemp(const char* s, const Arg, const Arg, const Arg);
+TempStr FormatTemp(Str s, const Arg);
+TempStr FormatTemp(Str s, const Arg, const Arg);
+TempStr FormatTemp(Str s, const Arg, const Arg, const Arg);
 
 } // namespace fmt
