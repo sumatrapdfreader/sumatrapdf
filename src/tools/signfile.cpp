@@ -21,8 +21,8 @@
 #define ErrOut(msg, ...) fprintf(stderr, msg "\n", __VA_ARGS__)
 #define ErrOut1(msg) fprintf(stderr, "%s", msg "\n")
 
-void ShowUsage(const char* exeName) {
-    ErrOut("Syntax: %s", path::GetBaseNameTemp(exeName));
+void ShowUsage(Str exeName) {
+    ErrOut("Syntax: %s", path::GetBaseNameTemp(exeName).s);
     ErrOut1("\t[-cert CertName]\t- name of the certificate to use");      // when omitted uses first available
     ErrOut1("\t[-out filename.out]\t- where to save the signature file"); // when omitted uses stdout
     ErrOut1("\t[-comment #]\t\t- comment syntax for signed text files");  // needed when saving the signature into the
