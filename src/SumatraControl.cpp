@@ -130,12 +130,12 @@ struct PacketReader {
 
 static void AppendU16(StrBuilder& s, u16 v) {
     u8 buf[2] = {(u8)(v & 0xff), (u8)((v >> 8) & 0xff)};
-    s.Append(Str((char*)buf, (int)sizeof(buf)));
+    s.AppendSlice(ByteSlice(buf, sizeof(buf)));
 }
 
 static void AppendU32(StrBuilder& s, u32 v) {
     u8 buf[4] = {(u8)(v & 0xff), (u8)((v >> 8) & 0xff), (u8)((v >> 16) & 0xff), (u8)((v >> 24) & 0xff)};
-    s.Append(Str((char*)buf, (int)sizeof(buf)));
+    s.AppendSlice(ByteSlice(buf, sizeof(buf)));
 }
 
 static void AppendArgEnd(StrBuilder& s) {
