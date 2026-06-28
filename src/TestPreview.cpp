@@ -16,7 +16,7 @@
 
 typedef HRESULT DllGetClassObjectFn(REFCLSID rclsid, REFIID riid, void** ppv);
 
-constexpr const char* kPdfPreviewDllName = "PdfPreview.dll";
+#define kPdfPreviewDllName StrL("PdfPreview.dll")
 
 void TestPreview(const WCHAR* cmdLine) {
     StrVec argList;
@@ -36,7 +36,7 @@ void TestPreview(const WCHAR* cmdLine) {
         return;
     }
 
-    const char* filePathA = argList.At(idx + 1);
+    Str filePathA = argList.At(idx + 1);
     TempWStr filePath = ToWStrTemp(filePathA);
 
     // use kPdfPreviewClsid by default
@@ -44,15 +44,15 @@ void TestPreview(const WCHAR* cmdLine) {
     TempWStr clsidW = ToWStrTemp(kPdfPreviewClsid);
     IIDFromString(clsidW, &clsid);
 
-    HMODULE dll = LoadLibraryA(kPdfPreviewDllName);
+    HMODULE dll = LoadLibraryA(kPdfPreviewDllName.s);
     if (!dll) {
-        printf("Can't load %s\n", kPdfPreviewDllName);
+        printf("Can't load %s\n", kPdfPreviewDllName.s);
         return;
     }
 
     auto fn = (DllGetClassObjectFn*)GetProcAddress(dll, "DllGetClassObject");
     if (!fn) {
-        printf("Can't find DllGetClassObject in %s\n", kPdfPreviewDllName);
+        printf("Can't find DllGetClassObject in %s\n", kPdfPreviewDllName.s);
         FreeLibrary(dll);
         return;
     }
@@ -86,7 +86,7 @@ void TestPreview(const WCHAR* cmdLine) {
     IStream* pStream = nullptr;
     hr = SHCreateStreamOnFileEx(filePath, STGM_READ, 0, FALSE, nullptr, &pStream);
     if (hr != S_OK || !pStream) {
-        printf("Can't open file: %s\n", filePathA);
+        printf("Can't open file: %s\n", filePathA.s);
         pProvider->Release();
         pInit->Release();
         FreeLibrary(dll);
