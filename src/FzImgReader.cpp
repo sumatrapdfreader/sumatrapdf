@@ -239,7 +239,7 @@ Vec<Pixmap*> PixmapsFromData(const ByteSlice& bmpData) {
     return res;
 }
 
-RenderedBitmap* LoadRenderedBitmap(const char* path) {
+RenderedBitmap* LoadRenderedBitmap(Str path) {
     if (!path) {
         return nullptr;
     }

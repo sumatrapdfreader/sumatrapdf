@@ -13,4 +13,4 @@ struct Pixmap;
 Pixmap* PixmapFromData(const ByteSlice&);
 // one Pixmap per frame (multi-page TIFF / animated GIF yield >1); caller owns each
 Vec<Pixmap*> PixmapsFromData(const ByteSlice&);
-RenderedBitmap* LoadRenderedBitmap(const char* path);
+RenderedBitmap* LoadRenderedBitmap(Str path);

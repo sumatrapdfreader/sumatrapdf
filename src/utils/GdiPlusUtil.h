@@ -48,4 +48,4 @@ bool ExifOrientationSwapsDimensions(int orientation);
 void ApplyExifOrientation(Gdiplus::Bitmap* bmp, int exifOrientation);
 int WebpExifOrientation(const ByteSlice& d);
 CLSID GetGdiPlusEncoderClsid(const WCHAR* format);
-RenderedBitmap* LoadRenderedBitmapWin(const char* path);
+RenderedBitmap* LoadRenderedBitmapWin(Str path);

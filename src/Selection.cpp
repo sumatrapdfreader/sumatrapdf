@@ -226,7 +226,7 @@ void UpdateTextSelection(MainWindow* win, bool select) {
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to
 // rectangular selection)
 // caller needs to str::Free() the result
-TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnlySelectionOut) {
+TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelectionOut) {
     if (!tab || !tab->selectionOnPage) {
         return {};
     }

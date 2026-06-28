@@ -979,7 +979,7 @@ CLSID GetGdiPlusEncoderClsid(const WCHAR* format) {
     return null;
 }
 
-RenderedBitmap* LoadRenderedBitmapWin(const char* path) {
+RenderedBitmap* LoadRenderedBitmapWin(Str path) {
     if (!path) {
         return nullptr;
     }
