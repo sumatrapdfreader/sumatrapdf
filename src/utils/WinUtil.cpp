@@ -1033,11 +1033,11 @@ bool LaunchFileShell(Str path, Str params, Str verb, bool hidden) {
     BOOL ok = ShellExecuteExW(&sei);
     if (!ok) {
         DWORD err = GetLastError();
-        logf("LaunchFile: ShellExecuteExW path: '%s' params: '%s' verb: '%s'\n", path, params, verb);
+        logf("LaunchFile: ShellExecuteExW path: '%s' params: '%s' verb: '%s'\n", path.s, params.s, verb.s);
         LogLastError(err);
         return false;
     }
-    logf("LaunchFileShell: launched '%s'\n", path);
+    logf("LaunchFileShell: launched '%s'\n", path.s);
     return true;
 }
 
