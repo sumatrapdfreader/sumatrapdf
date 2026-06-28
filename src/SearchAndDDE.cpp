@@ -1438,7 +1438,7 @@ static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
     AbortFinding(win, true);
     win->ctrl->GoToPage(page, true);
     if (!str::IsEmpty(term.Get())) {
-        TempWStr termW = ToWStrTemp(term);
+        TempWStr termW = ToWStrTemp(Str(term.Get()));
         dm->textSearch->SetDirection(TextSearch::Direction::Forward);
         TextSel* sel = dm->textSearch->FindFirstOnPage(page, termW);
         if (sel && sel->len > 0) {

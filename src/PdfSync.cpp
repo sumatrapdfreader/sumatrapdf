@@ -99,7 +99,7 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
     // has the synchronization file been changed on disk?
     struct _stat newstamp;
-    TempWStr path = ToWStrTemp(syncFilePath);
+    TempWStr path = ToWStrTemp(Str(syncFilePath.Get()));
     if (_wstat(path, &newstamp) == 0 && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
         // update time stamp
         memcpy((void*)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
@@ -111,7 +111,7 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
 int Synchronizer::MarkIndexWasRebuilt() {
     needsToRebuildIndex = false;
-    TempWStr path = ToWStrTemp(syncFilePath);
+    TempWStr path = ToWStrTemp(Str(syncFilePath.Get()));
     _wstat(path, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
 }

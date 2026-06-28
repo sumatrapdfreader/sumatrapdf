@@ -44,14 +44,4 @@ FORCEINLINE TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1) {
     }
     return ToUtf8Temp(WStr((wchar_t*)s, (int)cch));
 }
-FORCEINLINE TempWStr ToWStrTemp(const char* s, size_t cb = (size_t)-1) {
-    if (!s) {
-        ReportIf((int)cb > 0);
-        return {};
-    }
-    if (cb == (size_t)-1) {
-        return ::ToWStrTemp(Str(s));
-    }
-    return ::ToWStrTemp(Str((char*)s, (int)cb));
-}
 TempWStr ToWStrTempFromBuilder(const StrBuilder& s);
