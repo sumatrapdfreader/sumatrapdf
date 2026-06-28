@@ -2826,7 +2826,8 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
 // names a file that must sit next to the PDF. Gated by the AllowExternalImages
 // setting and restricted to sibling files (no path separators / drive specs)
 // for security -- Acrobat denies these by default too.
-static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* filespec, void* opaque) {
+static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* filespec,
+                                                void* opaque) { // str-port: mupdf callback
     if (!gAllowExternalImages) {
         return nullptr;
     }
