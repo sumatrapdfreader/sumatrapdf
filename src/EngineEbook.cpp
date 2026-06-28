@@ -741,7 +741,7 @@ static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
     r2->AddSiblingAtEnd(item);
 }
 
-class EbookTocBuilder : public EbookTocVisitor {
+struct EbookTocBuilder : EbookTocVisitor {
     EngineBase* engine = nullptr;
     TocItem* root = nullptr;
     int idCounter = 0;
@@ -1570,7 +1570,7 @@ static uint ExtractHttpCharset(Str html) {
     return cp;
 }
 
-class ChmHtmlCollector : public EbookTocVisitor {
+struct ChmHtmlCollector : EbookTocVisitor {
     ChmFile* doc = nullptr;
     StrVec added;
     StrBuilder html;

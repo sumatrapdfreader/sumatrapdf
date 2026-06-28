@@ -190,7 +190,7 @@ static int ChmDumpEntry(struct chmFile* h, struct chmUnitInfo* ui, void* data) {
     return CHM_ENUMERATOR_CONTINUE;
 }
 
-class ChmDumpTocVisitor : public EbookTocVisitor {
+struct ChmDumpTocVisitor : EbookTocVisitor {
   public:
     bool any = false;
 
@@ -200,7 +200,7 @@ class ChmDumpTocVisitor : public EbookTocVisitor {
     }
 };
 
-class ChmDumpIndexVisitor : public EbookTocVisitor {
+struct ChmDumpIndexVisitor : EbookTocVisitor {
   public:
     bool any = false;
 

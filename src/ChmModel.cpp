@@ -434,7 +434,7 @@ float ChmModel::GetZoomVirtual(bool) const {
     return (float)docView->GetZoomPercent();
 }
 
-class ChmTocBuilder : public EbookTocVisitor {
+struct ChmTocBuilder : EbookTocVisitor {
     ChmFile* doc = nullptr;
 
     StrVec* pages = nullptr;
