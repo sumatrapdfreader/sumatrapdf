@@ -232,7 +232,7 @@ void HtmlToken::SetTag(TokenType new_type, Str slice) {
     int nameEnd = 0;
     SkipName(s, nameEnd);
     nLen = (size_t)nameEnd;
-    tag = FindHtmlTag(s.s, (int)nLen);
+    tag = FindHtmlTag(Str(s.s, (int)nLen));
     nextAttrOff = -1;
 }
 

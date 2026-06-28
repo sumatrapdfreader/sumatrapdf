@@ -19,7 +19,7 @@ memory inside HtmlParser::html, so they don't need to be freed.
 bool HtmlElement::NameIs(Str nameIn) const {
     if (!name) {
         ReportIf(Tag_NotFound == tag);
-        HtmlTag tg = FindHtmlTag(nameIn.s, nameIn.len);
+        HtmlTag tg = FindHtmlTag(nameIn);
         return tg == tag;
     }
     return str::EqI(name, nameIn);

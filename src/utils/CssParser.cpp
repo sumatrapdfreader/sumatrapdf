@@ -173,7 +173,7 @@ const CssSelector* CssPullParser::NextSelector() {
         sel.tag = Tag_Any;
     } else if (c == selStart) {
         size_t tagLen = sel.clazz ? (size_t)(sel.clazz.s - src.s - selStart - 1) : (size_t)sel.s.len;
-        sel.tag = FindHtmlTag(sel.s.s, tagLen);
+        sel.tag = FindHtmlTag(Str(sel.s.s, (int)tagLen));
     }
 
     return &sel;
@@ -216,7 +216,7 @@ GetNextProperty:
     if (currOff >= src.len || src.s[currOff] != ':') {
         goto GetNextProperty;
     }
-    prop.type = FindCssProp(src.s + nameOff, (size_t)(currOff - nameOff));
+    prop.type = FindCssProp(Str(src.s + nameOff, currOff - nameOff));
     currOff++;
     SkipWsAndComments(src, currOff);
 

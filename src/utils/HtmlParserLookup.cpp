@@ -23,7 +23,9 @@
 #define STR3i(s) (STR2i(s) | (lower((s)[2]) << 16))
 #define STR4i(s) (STR3i(s) | (lower((s)[3]) << 24))
 
-HtmlTag FindHtmlTag(const char* name, size_t len) {
+HtmlTag FindHtmlTag(Str nameIn) {
+    const char* name = nameIn.s;
+    size_t len = (size_t)nameIn.len;
     u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
         case CS1('a'):
@@ -2152,7 +2154,9 @@ u32 FindHtmlEntityRune(const char* name, size_t len) {
     return (u32)-1;
 }
 
-CssProp FindCssProp(const char* name, size_t len) {
+CssProp FindCssProp(Str nameIn) {
+    const char* name = nameIn.s;
+    size_t len = (size_t)nameIn.len;
     u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
         case CS4('c', 'o', 'l', 'o'):
