@@ -1145,6 +1145,10 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     bool showHScroll = (viewPort.dx < canvas.dx) && !hideScrollbar;
     if (useOverlay) {
         SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, FALSE);
+        // SetScrollInfo's last arg is redraw, not visibility, and a non-empty
+        // range re-shows the window scrollbar -- hide it explicitly so overlay
+        // mode doesn't show both the window scrollbar and the overlay one
+        ShowScrollBar(win->hwndCanvas, SB_HORZ, FALSE);
         if (!win->overlayScrollH) {
             win->overlayScrollH =
                 OverlayScrollbarCreate(win->hwndCanvas, OverlayScrollbar::Type::Horz, ScrollbarsOverlayMode());
@@ -1192,6 +1196,8 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
 
     if (useOverlay || hideScrollbar) {
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, FALSE);
+        // hide the window scrollbar explicitly (see SB_HORZ note above)
+        ShowScrollBar(win->hwndCanvas, SB_VERT, FALSE);
     } else {
         ShowScrollBar(win->hwndCanvas, SB_VERT, showWinScrollbar);
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, showWinScrollbar);
@@ -3061,6 +3067,13 @@ void UpdateFixedPageScrollbarsVisibility() {
         OverlayScrollbarSetMode(w->overlayScrollH, mode);
         OverlayScrollbarShow(w->overlayScrollV, showOverlayScrollbar);
         OverlayScrollbarShow(w->overlayScrollH, showOverlayScrollbar);
+        // changing the scrollbar mode changes whether window scrollbars reserve
+        // canvas space, so the usable viewport changes. Relayout the document
+        // (recomputes page layout and window-scrollbar visibility for the new
+        // mode), the same way a resize does; RerenderFixedPage() then redraws.
+        if (DisplayModel* dm = w->AsFixed()) {
+            dm->SetViewPortSize(w->GetViewPortSize());
+        }
     }
     RerenderFixedPage();
 }
