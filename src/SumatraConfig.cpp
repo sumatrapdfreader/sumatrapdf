@@ -25,23 +25,23 @@ bool gIsPreReleaseBuild = false;
 #endif
 
 #if defined(BUILT_ON)
-const char* builtOn = QM(BUILT_ON);
+Str builtOn = Str(QM(BUILT_ON));
 #else
-const char* builtOn = nullptr;
+Str builtOn;
 #endif
 
-const char* currentVersion = CURR_VERSION_STRA;
+Str currentVersion = Str(CURR_VERSION_STRA);
 
 #if defined(PRE_RELEASE_VER)
-const char* preReleaseVersion = QM(PRE_RELEASE_VER);
+Str preReleaseVersion = Str(QM(PRE_RELEASE_VER));
 #else
-const char* preReleaseVersion = nullptr;
+Str preReleaseVersion;
 #endif
 
 #if defined(GIT_COMMIT_ID)
-const char* gitCommidId = QM(GIT_COMMIT_ID);
+Str gitCommidId = Str(QM(GIT_COMMIT_ID));
 #else
-const char* gitCommidId = nullptr;
+Str gitCommidId;
 #endif
 
 #ifdef DISABLE_DOCUMENT_RESTRICTIONS

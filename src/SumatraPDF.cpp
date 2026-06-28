@@ -10590,13 +10590,13 @@ void GetProgramInfo(StrBuilder& s) {
     }
     TempStr signer = GetExecutableSignerTemp(exePath);
     s.AppendFmt("Signer: %s\r\n", signer ? signer.s : "(not signed)");
-    if (builtOn != nullptr) {
-        s.AppendFmt("BuiltOn: %s\n", builtOn);
+    if (builtOn) {
+        s.AppendFmt("BuiltOn: %s\n", builtOn.s);
     }
     Str exeType = IsDllBuild() ? "dll" : "static";
     Str instType = IsRunningInPortableMode() ? "portable" : "installed";
     s.AppendFmt("ExeType: %s, %s\r\n", exeType.s, instType.s);
-    s.AppendFmt("Ver: %s", currentVersion);
+    s.AppendFmt("Ver: %s", currentVersion.s);
     if (gIsPreReleaseBuild) {
         s.AppendFmt(" pre-release");
     }
@@ -10618,8 +10618,8 @@ void GetProgramInfo(StrBuilder& s) {
     }
     s.Append("\r\n");
 
-    if (gitCommidId != nullptr) {
-        s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId, gitCommidId);
+    if (gitCommidId) {
+        s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId.s, gitCommidId.s);
     }
 }
 
