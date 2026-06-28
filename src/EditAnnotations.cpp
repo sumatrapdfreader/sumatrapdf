@@ -1019,7 +1019,7 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
     TempStr baseName = path::GetBaseNameTemp(fileName);
     TempStr dstPath = path::JoinTemp(dir, baseName);
     SaveDataToFile(ew->hwnd, dstPath, data);
-    str::Free(data.data());
+    data.Free();
 }
 
 static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {

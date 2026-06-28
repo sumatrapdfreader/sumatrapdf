@@ -22,7 +22,7 @@ bool PdbReader::Parse(const ByteSlice& d) {
 }
 
 PdbReader::~PdbReader() {
-    str::Free(data);
+    free((void*)data);
 }
 
 static bool DecodePdbHeader(ByteOrderDecoder& dec, PdbHeader* hdr) {

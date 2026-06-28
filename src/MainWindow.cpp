@@ -479,7 +479,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
                         SumatraLaunchBrowser(tmpPath);
                     }
                 }
-                str::Free(data.data());
+                data.Free();
             }
         }
         return;

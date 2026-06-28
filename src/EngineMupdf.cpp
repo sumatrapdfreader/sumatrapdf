@@ -2355,7 +2355,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
         fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.data(), d.size());
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
-        str::Free(d);
+        d.Free();
         TempStr nameHint = str::JoinTemp(path, ".html");
         if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;
@@ -2372,7 +2372,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
         fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.data(), d.size());
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
-        str::Free(d);
+        d.Free();
         TempStr nameHint = str::JoinTemp(path, ".html");
         if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;

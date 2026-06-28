@@ -805,7 +805,7 @@ ChmThumbnailTask::~ChmThumbnailTask() {
     DestroyWindow(hwnd);
     delete doc;
     for (auto&& d : data) {
-        str::Free(d.data());
+        d.Free();
     }
     LeaveCriticalSection(&docAccess);
     DeleteCriticalSection(&docAccess);

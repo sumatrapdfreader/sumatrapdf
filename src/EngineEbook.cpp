@@ -1348,8 +1348,8 @@ class ChmDataCache {
 
     ~ChmDataCache() {
         for (auto&& img : images) {
-            str::Free(img.base);
-            str::Free(img.fileName.s);
+            img.base.Free();
+            str::Free(img.fileName);
         }
         html.Free();
     }

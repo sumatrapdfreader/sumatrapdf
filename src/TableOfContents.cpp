@@ -519,7 +519,7 @@ static void SaveAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     fileName = path::GetBaseNameTemp(fileName);
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
-    str::Free(data.data());
+    data.Free();
 }
 
 static void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
@@ -535,7 +535,7 @@ static void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     args->SetDisplayName(fileName);
     args->ctrl = ctrl;
     LoadDocumentFinish(args);
-    str::Free(data.data());
+    data.Free();
 }
 
 static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
@@ -565,7 +565,7 @@ static void SaveEmbeddedFile(WindowTab* tab, Str srcPath, Str fileName) {
     fileName = path::GetBaseNameTemp(fileName);
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
-    str::Free(data.data());
+    data.Free();
 }
 
 // clang-format off

@@ -102,7 +102,7 @@ struct AutoFree {
         }
     }
 
-    ~AutoFree() { str::Free(data); }
+    ~AutoFree() { free(data); }
 
     AutoFree& operator=(AutoFree& other) = delete;
     AutoFree& operator=(AutoFree&& other) noexcept {
@@ -176,7 +176,7 @@ struct AutoFreeWStr {
         data = p;
     }
 
-    ~AutoFreeWStr() { str::Free(data); }
+    ~AutoFreeWStr() { free(data); }
 
     AutoFreeWStr& operator=(AutoFreeWStr& other) = delete;
     AutoFreeWStr& operator=(AutoFreeWStr&& other) noexcept {
@@ -203,13 +203,13 @@ struct AutoFreeWStr {
     }
 
     void Set(const WCHAR* newPtr) {
-        str::Free(data);
+        free(data);
         data = (WCHAR*)newPtr;
     }
 
     void SetCopy(WStr newVal) {
         WStr w = str::Dup(newVal);
-        str::FreePtr(&data);
+        free(data);
         data = w.s;
     }
 

@@ -338,7 +338,7 @@ void DumpThumbnail(EngineBase* engine) {
     } else {
         Out1("\t<Thumbnail />\n");
     }
-    str::Free(data);
+    imgData.Free();
     delete bmp;
 }
 
@@ -437,13 +437,13 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
             ByteSlice imgData = SerializeBitmap(bmp->hbmp);
             if (!imgData.empty()) {
                 file::WriteFile(pageBmpPath, imgData);
-                str::Free(imgData.data());
+                imgData.Free();
             }
         } else { // render as TGA for all other file extensions
             ByteSlice imgData = tga::SerializeBitmap(bmp->hbmp);
             if (!imgData.empty()) {
                 file::WriteFile(pageBmpPath, imgData);
-                str::Free(imgData.data());
+                imgData.Free();
             }
         }
         FreePixmap(bmp);

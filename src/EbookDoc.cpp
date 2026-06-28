@@ -277,8 +277,8 @@ EpubDoc::~EpubDoc() {
     EnterCriticalSection(&zipAccess);
 
     for (auto&& img : images) {
-        str::Free(img.base);
-        str::Free(img.fileName.s);
+        img.base.Free();
+        str::Free(img.fileName);
     }
 
     LeaveCriticalSection(&zipAccess);
@@ -807,8 +807,8 @@ Fb2Doc::Fb2Doc(IStream* stream) : stream(stream) {
 
 Fb2Doc::~Fb2Doc() {
     for (auto&& img : images) {
-        str::Free(img.base);
-        str::Free(img.fileName.s);
+        img.base.Free();
+        str::Free(img.fileName);
     }
     if (stream) {
         stream->Release();
@@ -1300,8 +1300,8 @@ HtmlDoc::HtmlDoc(Str path) : fileName(str::Dup(path).s) {}
 
 HtmlDoc::~HtmlDoc() {
     for (auto&& img : images) {
-        str::Free(img.base);
-        str::Free(img.fileName.s);
+        img.base.Free();
+        str::Free(img.fileName);
     }
     htmlData.Free();
 }

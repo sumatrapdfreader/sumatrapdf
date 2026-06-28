@@ -599,8 +599,8 @@ bool SaveSettings() {
     Str prevPrefsData = AsStr(prevPrefs);
     ByteSlice prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {
-        str::Free(prevPrefs.data());
-        str::Free(prefs.data());
+        prevPrefs.Free();
+        prefs.Free();
     };
     ReportIf(prefs.empty());
     if (prefs.empty()) {

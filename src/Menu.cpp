@@ -2030,7 +2030,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                         fileName = path::GetBaseNameTemp(fileName);
                         TempStr dstPath = path::JoinTemp(dir, fileName);
                         SaveDataToFile(win->hwndFrame, dstPath, data);
-                        str::Free(data.data());
+                        data.Free();
                     }
                 }
             }
