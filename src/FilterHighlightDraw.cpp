@@ -125,7 +125,13 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
         }
         HBRUSH hbrHighlight = CreateSolidBrush(highlightCol);
         for (int i = 0; i < nRanges; i++) {
-            FillRect(hdc, &highlightRects[i], hbrHighlight);
+            // highlightRects are computed from the full (untruncated) string, but
+            // the text is drawn clipped/ellipsized to rc. Clip to rc so a match
+            // in the truncated-away tail doesn't paint a stray box outside the label.
+            RECT clipped;
+            if (IntersectRect(&clipped, &highlightRects[i], &rc)) {
+                FillRect(hdc, &clipped, hbrHighlight);
+            }
         }
         DeleteObject(hbrHighlight);
     }
