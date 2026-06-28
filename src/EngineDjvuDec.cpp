@@ -26,20 +26,21 @@ extern "C" {
 extern Kind kindEngineDjVu;
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
-static int ParseDjvuDecLink(const char* link) {
+static int ParseDjvuDecLink(Str link) {
     if (!link) {
         return -1;
     }
-    if (link[0] == '#') {
-        ++link;
+    int off = 0;
+    if (link.s[0] == '#') {
+        off = 1;
     }
-    if (link[0] == ' ') {
-        ++link;
+    if (off < link.len && link.s[off] == ' ') {
+        off++;
     }
-    return atoi(link);
+    return ParseInt(Str(link.s + off, link.len - off));
 }
 
-static bool DjvuDecCouldBeURL(const char* link) {
+static bool DjvuDecCouldBeURL(Str link) {
     if (!link) {
         return false;
     }
@@ -50,19 +51,19 @@ static bool DjvuDecCouldBeURL(const char* link) {
 }
 
 struct PageDestinationDjvuDec : IPageDestination {
-    char* link = nullptr;
+    Str link;
     Str value;
 
-    PageDestinationDjvuDec(const char* l, const char* comment) {
+    PageDestinationDjvuDec(Str l, Str comment) {
         kind = kindDestinationDjVu;
         link = str::Dup(l);
         if (comment) {
-            value = Str(str::Dup(comment));
+            value = str::Dup(comment);
         }
     }
     ~PageDestinationDjvuDec() override {
         str::Free(link);
-        str::Free(value.s);
+        str::Free(value);
     }
 
     Str GetValue2() override {
@@ -72,14 +73,14 @@ struct PageDestinationDjvuDec : IPageDestination {
         if (!DjvuDecCouldBeURL(link)) {
             return {};
         }
-        value = Str(str::Dup(link));
-        url::DecodeInPlace(value.s);
+        value = str::Dup(link);
+        url::DecodeInPlace(value);
         return value;
     }
 };
 
-static IPageDestination* NewDjvuDecDestination(const char* link, const char* comment) {
-    if (str::IsEmpty(link) || str::Eq(link, "#")) {
+static IPageDestination* NewDjvuDecDestination(Str link, Str comment) {
+    if (!link || str::Eq(link, "#")) {
         return nullptr;
     }
     auto res = new PageDestinationDjvuDec(link, comment);
@@ -88,7 +89,7 @@ static IPageDestination* NewDjvuDecDestination(const char* link, const char* com
     return res;
 }
 
-static IPageElement* NewDjvuDecLink(int pageNo, Rect rect, const char* link, const char* comment) {
+static IPageElement* NewDjvuDecLink(int pageNo, Rect rect, Str link, Str comment) {
     auto dest = NewDjvuDecDestination(link, comment);
     if (!dest) {
         return nullptr;
@@ -99,9 +100,9 @@ static IPageElement* NewDjvuDecLink(int pageNo, Rect rect, const char* link, con
     return res;
 }
 
-static TocItem* NewDjvuDecTocItem(TocItem* parent, const char* title, const char* link) {
+static TocItem* NewDjvuDecTocItem(TocItem* parent, Str title, Str link) {
     auto res = new TocItem(parent, title, 0);
-    res->dest = NewDjvuDecDestination(link, nullptr);
+    res->dest = NewDjvuDecDestination(link, {});
     if (res->dest) {
         res->pageNo = PageDestGetPageNo(res->dest);
     }
@@ -148,7 +149,7 @@ class EngineDjvuDec : public EngineBase {
     IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
     bool Load(IStream* stream);
 
   protected:
@@ -197,16 +198,16 @@ EngineBase* EngineDjvuDec::Clone() {
     if (stream != nullptr) {
         return CreateEngineDjvuDecFromStream(stream);
     }
-    const char* path = FilePath();
+    Str path = FilePath();
     if (path) {
         return CreateEngineDjvuDecFromFile(path);
     }
     return nullptr;
 }
 
-bool EngineDjvuDec::Load(const char* fileName) {
+bool EngineDjvuDec::Load(Str fileName) {
     SetFilePath(fileName);
-    fileData = file::ReadFile(Str(fileName));
+    fileData = file::ReadFile(fileName);
     return FinishLoading();
 }
 
@@ -219,7 +220,7 @@ bool EngineDjvuDec::Load(IStream* stm) {
     return FinishLoading();
 }
 
-static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) {
+static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) { // str-port: djvu C callback
     if (sev >= DJVU_SEVERITY_ERROR) {
         logf("djvudec: %s\n", msg);
     }
@@ -292,8 +293,8 @@ bool EngineDjvuDec::FinishLoading() {
         pi->pageType = djvu_page_get_type(doc, i);
         pages.Append(pi);
 
-        const char* title = djvu_doc_page_title(doc, i);
-        const char* id = djvu_doc_page_id(doc, i);
+        Str title = Str(djvu_doc_page_title(doc, i)); // str-port: djvu C API
+        Str id = Str(djvu_doc_page_id(doc, i));       // str-port: djvu C API
         if (title && id && !str::Eq(title, id)) {
             hasPageLabels = true;
         }
@@ -657,7 +658,7 @@ bool EngineDjvuDec::SaveFileAs(Str dstPath) {
             return true;
         }
     }
-    const char* srcPath = FilePath();
+    Str srcPath = FilePath();
     if (!srcPath) {
         return false;
     }
@@ -734,12 +735,11 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
     Rect* wcoords = AllocArray<Rect>(wlen);
     // walk utf8 and wchar in lockstep, assigning the coord of each utf8 lead
     // byte to its decoded wchar(s)
-    const char* s = u.text.s;
     int wi = 0;
     int bi = 0;
-    while (*s && wi < wlen) {
+    while (bi < u.text.len && wi < wlen) {
         int nb = 1;
-        u8 c = (u8)*s;
+        u8 c = (u8)u.text.s[bi];
         if (c >= 0xF0) {
             nb = 4;
         } else if (c >= 0xE0) {
@@ -753,7 +753,6 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
         if (nb == 4 && wi < wlen) {
             wcoords[wi++] = r;
         }
-        s += nb;
         bi += nb;
     }
     res.coords = wcoords;
@@ -764,11 +763,12 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
 }
 
 // returns a numeric DjVu link to a named page (if the name resolves)
-static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, const char* name) {
-    if (str::IsEmpty(name)) {
+static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, Str name) {
+    if (!name) {
         return {};
     }
-    int pageNo = djvu_doc_page_by_name(doc, name);
+    TempStr nameZ = StrDupTemp(name); // str-port: djvu C API
+    int pageNo = djvu_doc_page_by_name(doc, nameZ);
     if (pageNo < 0) {
         return {};
     }
@@ -795,15 +795,16 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     float dpiF = GetFileDPI() / (float)pi->dpi;
     for (int i = 0; i < links->nlinks; i++) {
         djvu_link& l = links->links[i];
-        if (str::IsEmpty(l.url)) {
+        Str url = Str(l.url); // str-port: djvu C API
+        if (!url) {
             continue;
         }
         Rect rect((int)(l.x * dpiF), (int)(l.y * dpiF), (int)(l.w * dpiF), (int)(l.h * dpiF));
-        TempStr link = ResolveNamedDestDjvuDecTemp(doc, l.url);
+        TempStr link = ResolveNamedDestDjvuDecTemp(doc, url);
         if (!link) {
-            link = l.url;
+            link = url;
         }
-        auto el = NewDjvuDecLink(pageNo, rect, link, l.comment);
+        auto el = NewDjvuDecLink(pageNo, rect, link, Str(l.comment));
         if (el) {
             els.Append(el);
         }
@@ -829,7 +830,7 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
         return false;
     }
     auto ddest = (PageDestinationDjvuDec*)dest;
-    const char* link = ddest->link;
+    Str link = ddest->link;
     auto ctrl = linkHandler->GetDocController();
     if (str::Eq(link, "#+1")) {
         ctrl->GoToNextPage();
@@ -859,13 +860,13 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
 }
 
 IPageDestination* EngineDjvuDec::GetNamedDest(Str name) {
-    const char* n = name;
+    Str n = name;
     if (str::StartsWith(n, "#")) {
-        n = n + 1;
+        n = Str(n.s + 1, n.len - 1);
     }
     TempStr link = ResolveNamedDestDjvuDecTemp(doc, n);
     if (link) {
-        return NewDjvuDecDestination(link, nullptr);
+        return NewDjvuDecDestination(link, {});
     }
     return nullptr;
 }
@@ -874,8 +875,8 @@ TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, 
     TocItem* node = nullptr;
     for (int i = 0; i < n; i++) {
         djvu_outline_item& it = items[i];
-        const char* title = it.title ? it.title : "";
-        const char* url = it.url ? it.url : "";
+        Str title = Str(it.title); // str-port: djvu C API
+        Str url = Str(it.url);     // str-port: djvu C API
         TempStr link = url;
         TempStr resolved = ResolveNamedDestDjvuDecTemp(doc, url);
         if (resolved) {
