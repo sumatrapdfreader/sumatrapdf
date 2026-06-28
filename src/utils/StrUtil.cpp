@@ -635,53 +635,36 @@ bool IsWs(char c) {
     return false;
 }
 
-Str FindChar(Str str, char c) {
-    if (!str) {
-        return {};
-    }
-    const char* p = strchr(str.s, c);
-    if (!p) {
-        return {};
-    }
-    int off = (int)(p - str.s);
-    return Str((char*)p, str.len - off);
-}
-
 int FindCharIdx(Str str, char c) {
     if (!str) {
         return -1;
     }
-    const char* start = str.s;
-    for (const char* p = start; *p; p++) {
-        if (*p == c) {
-            return (int)(p - start);
+    for (int i = 0; i < str.len; i++) {
+        if (str.s[i] == c) {
+            return i;
         }
     }
     return -1;
+}
+
+Str FindChar(Str str, char c) {
+    int idx = FindCharIdx(str, c);
+    if (idx < 0) {
+        return {};
+    }
+    return Str(str.s + idx, str.len - idx);
 }
 
 Str FindCharLast(Str str, char c) {
     if (!str) {
         return {};
     }
-    const char* p = strrchr(str.s, c);
-    if (!p) {
-        return {};
+    for (int i = str.len - 1; i >= 0; i--) {
+        if (str.s[i] == c) {
+            return Str(str.s + i, str.len - i);
+        }
     }
-    int off = (int)(p - str.s);
-    return Str((char*)p, str.len - off);
-}
-
-Str Find(Str str, Str find) {
-    if (!str || !find) {
-        return {};
-    }
-    const char* p = strstr(str.s, find.s);
-    if (!p) {
-        return {};
-    }
-    int off = (int)(p - str.s);
-    return Str((char*)p, str.len - off);
+    return {};
 }
 
 int BufFind(Str buf, Str toFind) {
@@ -693,17 +676,21 @@ int BufFind(Str buf, Str toFind) {
         return -1;
     }
     char c = toFind.s[0];
-    const char* end = buf.s + (buf.len - toFindLen);
-    const char* s = buf.s;
-    while (s < end) {
-        if (*s == c) {
-            if (memeq((const void*)s, (const void*)toFind.s, (size_t)toFindLen)) {
-                return (int)(s - buf.s);
-            }
+    int end = buf.len - toFindLen;
+    for (int i = 0; i <= end; i++) {
+        if (buf.s[i] == c && memeq(buf.s + i, toFind.s, (size_t)toFindLen)) {
+            return i;
         }
-        s++;
     }
     return -1;
+}
+
+Str Find(Str str, Str find) {
+    int idx = BufFind(str, find);
+    if (idx < 0) {
+        return {};
+    }
+    return Str(str.s + idx, str.len - idx);
 }
 
 // format string to a buffer provided by the caller
