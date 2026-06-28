@@ -1595,7 +1595,7 @@ bool TxtDoc::Load() {
 
     TempStr text;
     Str raw = AsStr(fileContent);
-    if (str::EndsWithI(fileName, ".tcr") && str::StartsWith(raw, TCR_HEADER)) {
+    if (str::EndsWithI(Str(fileName.Get()), ".tcr") && str::StartsWith(raw, TCR_HEADER)) {
         text = DecompressTcrTextTemp(raw);
     } else {
         text = DecodeTextToUtf8Temp(raw);
