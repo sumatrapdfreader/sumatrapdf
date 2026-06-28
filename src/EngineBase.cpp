@@ -510,8 +510,12 @@ WStr EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
         *coordsOut = pt->coords;
     }
     WStr text = pt->text;
-    if (text.s && pt->len > 0) {
+    if (text.s) {
         text.len = pt->len;
+        // WStrBuilder-backed buffers reserve a NUL slot at .len
+        if (text.len >= 0) {
+            text.s[text.len] = 0;
+        }
     }
     return text;
 }

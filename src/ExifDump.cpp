@@ -156,16 +156,16 @@ static const TagDef kInteropTags[] = {
     {0x1002, "RelatedImageLength"},
 };
 
-static const char* LookupTagName(const TagDef* tags, int n, u16 id) {
+static Str LookupTagName(const TagDef* tags, int n, u16 id) {
     for (int i = 0; i < n; i++) {
         if (tags[i].id == id) {
-            return tags[i].name;
+            return Str(tags[i].name);
         }
     }
-    return nullptr;
+    return {};
 }
 
-static const char* GroupPrefix(IfdGroup g) {
+static Str GroupPrefix(IfdGroup g) {
     switch (g) {
         case IfdGroup::Image:
             return "Image";
@@ -183,7 +183,7 @@ static const char* GroupPrefix(IfdGroup g) {
     return "";
 }
 
-static const char* TypeName(u16 type) {
+static Str TypeName(u16 type) {
     switch (type) {
         case TiffType::Byte:
             return "Byte";
@@ -404,16 +404,13 @@ struct TiffParser {
         return 0;
     }
 
-    const char* TagName(IfdGroup g, u16 tag) const {
+    Str TagName(IfdGroup g, u16 tag) const {
         const TagDef* tags = TagsForGroup(g);
         int n = TagCountForGroup(g);
         if (tags) {
-            const char* name = LookupTagName(tags, n, tag);
-            if (name) {
-                return name;
-            }
+            return LookupTagName(tags, n, tag);
         }
-        return nullptr;
+        return {};
     }
 
     u16 ReadWord(size_t off) const { return r.Word(off, isBE); }
@@ -476,14 +473,14 @@ struct TiffParser {
     }
 
     void AppendLine(IfdGroup g, u16 tag, u16 type, TempStr value) {
-        const char* prefix = GroupPrefix(g);
-        const char* name = TagName(g, tag);
+        Str prefix = GroupPrefix(g);
+        Str name = TagName(g, tag);
         char tagNameBuf[32];
         if (!name) {
             snprintf(tagNameBuf, sizeof(tagNameBuf), "Tag 0x%04X", tag);
-            name = tagNameBuf;
+            name = Str(tagNameBuf);
         }
-        TempStr line = str::FormatTemp("%s %s (%s): %s", prefix, name, TypeName(type), value ? value.s : "");
+        TempStr line = str::FormatTemp("%s %s (%s): %s", prefix.s, name.s, TypeName(type).s, value ? value.s : "");
         lines.Append(str::Dup(line));
     }
 
