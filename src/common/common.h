@@ -306,7 +306,7 @@ void FormatFileSizeToWstrBuf(u64 size, WStr buf);
 int FormatSizeHumanIntoBuf(u64 size, Str buf);
 void FormatSizeHumanIntoWBuf(u64 size, WStr wbuf);
 Str PathJoinTemp(Str dir, Str name);
-Str StrFmt(Arena* arena, const char* fmt, ...);
+Str StrFmt(Arena* arena, Str fmt, ...);
 #define StrFmtTemp(fmt, ...) StrFmt(GetTempArena(), fmt, __VA_ARGS__)
 int StrLastIndexOfChar(Str s, char c);
 

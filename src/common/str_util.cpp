@@ -494,7 +494,7 @@ void StrCopyUtf8(char* dst, Str src, int maxBytes) {
 }
 
 // Format string with allocator
-Str StrFmt(Arena* arena, const char* fmt, ...) {
+Str StrFmt(Arena* arena, Str fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
@@ -505,7 +505,7 @@ Str StrFmt(Arena* arena, const char* fmt, ...) {
     if (availBuf && availSize > 0) {
         va_list args2;
         va_copy(args2, args);
-        int len = vsnprintf(availBuf, availSize, fmt, args2);
+        int len = vsnprintf(availBuf, availSize, fmt.s, args2);
         va_end(args2);
 
         if (len >= 0 && len < availSize) {
@@ -519,7 +519,7 @@ Str StrFmt(Arena* arena, const char* fmt, ...) {
         if (len >= 0) {
             char* buf = (char*)Alloc(arena, len + 1);
             AtomicIntInc(&gStrFmtSecondAlloc);
-            vsnprintf(buf, len + 1, fmt, args);
+            vsnprintf(buf, len + 1, fmt.s, args);
             va_end(args);
             return Str(buf, len);
         }
@@ -528,7 +528,7 @@ Str StrFmt(Arena* arena, const char* fmt, ...) {
     // Fallback: determine required size first
     va_list args2;
     va_copy(args2, args);
-    int len = vsnprintf(nullptr, 0, fmt, args2);
+    int len = vsnprintf(nullptr, 0, fmt.s, args2);
     va_end(args2);
 
     if (len < 0) {
@@ -539,7 +539,7 @@ Str StrFmt(Arena* arena, const char* fmt, ...) {
     // Allocate and format
     AtomicIntInc(&gStrFmtSecondAlloc);
     char* buf = (char*)Alloc(arena, len + 1);
-    vsnprintf(buf, len + 1, fmt, args);
+    vsnprintf(buf, len + 1, fmt.s, args);
     va_end(args);
 
     return Str(buf, len);
