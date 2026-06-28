@@ -186,21 +186,26 @@ static bool IsLatinS(WCHAR c) {
 // how many WCHARs were consumed from each side (1:1 normally, but 1:2 / 2:1 for
 // the ß <-> ss equivalence). Safe to call at a string end (reads at most h[1]
 // / n[1], which is the NUL terminator at worst).
-static bool MatchSearchUnit(const WCHAR* h, const WCHAR* n, int& hAdv, int& nAdv) {
+static bool MatchSearchUnit(WStr h, int hIdx, WStr n, int nIdx, int& hAdv, int& nAdv) {
+    if (hIdx >= h.len || nIdx >= n.len) {
+        return false;
+    }
+    WCHAR hc = h.s[hIdx];
+    WCHAR nc = n.s[nIdx];
     // ß in the needle matches "ss" in the text
-    if (IsSharpS(*n) && IsLatinS(h[0]) && IsLatinS(h[1])) {
+    if (IsSharpS(nc) && hIdx + 1 < h.len && IsLatinS(h.s[hIdx]) && IsLatinS(h.s[hIdx + 1])) {
         hAdv = 2;
         nAdv = 1;
         return true;
     }
     // "ss" in the needle matches ß in the text
-    if (IsLatinS(n[0]) && IsLatinS(n[1]) && IsSharpS(*h)) {
+    if (nIdx + 1 < n.len && IsLatinS(n.s[nIdx]) && IsLatinS(n.s[nIdx + 1]) && IsSharpS(hc)) {
         hAdv = 1;
         nAdv = 2;
         return true;
     }
     // everything else (including ß~ß and ss~ss) matches one-to-one
-    if (FoldCaseForSearch(*h) == FoldCaseForSearch(*n)) {
+    if (FoldCaseForSearch(hc) == FoldCaseForSearch(nc)) {
         hAdv = 1;
         nAdv = 1;
         return true;
@@ -213,22 +218,21 @@ static WStr StrStrFoldCase(WStr haystack, WStr needle) {
         return haystack;
     }
     for (int i = 0; i < haystack.len && haystack.s[i]; i++) {
-        const WCHAR* s = haystack.s + i;
-        const WCHAR* h = s;
-        const WCHAR* n = needle.s;
+        int hIdx = i;
+        int nIdx = 0;
         bool isMatch = true;
-        while (*n) {
-            if (!*h) {
+        while (nIdx < needle.len && needle.s[nIdx]) {
+            if (hIdx >= haystack.len || !haystack.s[hIdx]) {
                 isMatch = false;
                 break;
             }
             int hAdv, nAdv;
-            if (!MatchSearchUnit(h, n, hAdv, nAdv)) {
+            if (!MatchSearchUnit(haystack, hIdx, needle, nIdx, hAdv, nAdv)) {
                 isMatch = false;
                 break;
             }
-            h += hAdv;
-            n += nAdv;
+            hIdx += hAdv;
+            nIdx += nAdv;
         }
         if (isMatch) {
             return WStr(haystack.s + i, haystack.len - i);
@@ -260,36 +264,31 @@ static WStr StrRStr(WStr text, int endOff, WStr needle) {
 }
 
 static WStr StrRStrFoldCase(WStr text, int endOff, WStr needle) {
-    if (!text || !needle || endOff <= 0) {
-        return {};
-    }
-    const WCHAR* start = text.s;
-    const WCHAR* end = text.s + endOff;
-    if (!needle || start >= end) {
+    if (!text || !needle || endOff <= 0 || endOff > text.len) {
         return {};
     }
     // ß <-> ss makes the matched length variable, so scan forward within
     // [start, end) and remember the last start position that matches.
     WStr result;
-    for (const WCHAR* s = start; s < end && *s; s++) {
-        const WCHAR* h = s;
-        const WCHAR* n = needle.s;
+    for (int i = 0; i < endOff && text.s[i]; i++) {
+        int hIdx = i;
+        int nIdx = 0;
         bool isMatch = true;
-        while (*n) {
-            if (h >= end || !*h) {
+        while (nIdx < needle.len && needle.s[nIdx]) {
+            if (hIdx >= endOff || !text.s[hIdx]) {
                 isMatch = false;
                 break;
             }
             int hAdv, nAdv;
-            if (!MatchSearchUnit(h, n, hAdv, nAdv)) {
+            if (!MatchSearchUnit(text, hIdx, needle, nIdx, hAdv, nAdv)) {
                 isMatch = false;
                 break;
             }
-            h += hAdv;
-            n += nAdv;
+            hIdx += hAdv;
+            nIdx += nAdv;
         }
         if (isMatch) {
-            result = WStr((wchar_t*)s, (int)(end - s));
+            result = WStr(text.s + i, endOff - i);
         }
     }
     return result;
