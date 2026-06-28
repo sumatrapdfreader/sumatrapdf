@@ -482,8 +482,8 @@ Printer* NewPrinter(Str printerName) {
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr); // str-port: Win32
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);       // str-port: Win32
-        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes,
-                            nullptr); // str-port: Win32
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes,    // str-port: Win32
+                            nullptr);
 
         for (int i = 0; i < (int)n; i++) {
             TempStr name = ToUtf8Temp(WStr(paperNamesSeq + i * paperNameSize));

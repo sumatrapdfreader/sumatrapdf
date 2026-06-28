@@ -264,7 +264,7 @@ Str Dup(Arena* a, Str s, size_t cch) {
     if (cch == (size_t)-1) {
         cch = (size_t)s.len;
     }
-    return WrapAllocated((char*)MemDup(a, s.s, cch * sizeof(char), sizeof(char)), cch);
+    return WrapAllocated((char*)MemDup(a, s.s, cch * sizeof(char), sizeof(char)), cch); // str-port: owned heap
 }
 
 Str Dup(Str s, size_t cch) {
@@ -292,7 +292,7 @@ WStr Dup(Arena* a, WStr s, size_t cch) {
     if (cch == (size_t)-1) {
         cch = (size_t)s.len;
     }
-    return WrapAllocatedW((WCHAR*)MemDup(a, s.s, cch * sizeof(WCHAR), sizeof(WCHAR)), cch);
+    return WrapAllocatedW((WCHAR*)MemDup(a, s.s, cch * sizeof(WCHAR), sizeof(WCHAR)), cch); // str-port: owned heap
 }
 
 WStr Dup(WStr s, size_t cch) {
@@ -632,7 +632,7 @@ void Utf8Encode(char* buf, int& off, int c) { // str-port: owned heap
         *tmp++ = 0x80 + (u8)((c >> 6) & 0x3F);
         *tmp++ = 0x80 + (u8)(c & 0x3F);
     }
-    off = (int)((char*)tmp - buf);
+    off = (int)((char*)tmp - buf); // str-port: C-string
 }
 
 // Note: I tried an optimization: return (unsigned)(c - '0') < 10;

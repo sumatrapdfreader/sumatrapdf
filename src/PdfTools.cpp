@@ -603,11 +603,8 @@ void PdfCompressDialog::DoCompress() {
     // equivalent of: clean -gggg -e 100 -f -i -t -Z input output
     TempStr srcZ = StrDupTemp(srcPath);
     TempStr destZ = StrDupTemp(destPath);
-    char* argv[] = {
-        // str-port: mupdf CLI
-        (char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f",
-        (char*)"-i",    (char*)"-t",    (char*)"-Z", srcZ.s,       destZ.s,
-    };
+    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f",
+                    (char*)"-i",    (char*)"-t",    (char*)"-Z", srcZ.s,       destZ.s}; // str-port: mupdf CLI
     int argc = 10;
 
     fz_set_optind(0);
@@ -1188,11 +1185,9 @@ void PdfDeletePageDialog::DoIt() {
     TempStr srcZ = StrDupTemp(srcPath);
     TempStr destZ = StrDupTemp(destPath);
     TempStr pageRangeZ = StrDupTemp(pageRange);
-    char* argv[] = {
-        // str-port: mupdf CLI
-        (char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f",  (char*)"-i",
-        (char*)"-t",    (char*)"-Z",    srcZ.s,      destZ.s,      pageRangeZ.s,
-    };
+    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100", (char*)"-f",
+                    (char*)"-i", // str-port: mupdf CLI
+                    (char*)"-t",    (char*)"-Z",    srcZ.s,      destZ.s,      pageRangeZ.s};
     int argc = 11;
 
     fz_set_optind(0);
@@ -1477,10 +1472,8 @@ void PdfEncryptDialog::DoEncrypt() {
     TempStr pwdZ = StrDupTemp(pwd);
     TempStr srcZ = StrDupTemp(srcPath);
     TempStr destZ = StrDupTemp(destPath);
-    char* argv[] = {
-        // str-port: mupdf CLI
-        (char*)"clean", (char*)"-E", (char*)"aes-256", (char*)"-U", pwdZ.s, (char*)"-O", pwdZ.s, srcZ.s, destZ.s,
-    };
+    char* argv[] = {(char*)"clean", (char*)"-E", (char*)"aes-256", (char*)"-U", pwdZ.s,
+                    (char*)"-O",    pwdZ.s,      srcZ.s,           destZ.s}; // str-port: mupdf CLI
     int argc = 9;
 
     fz_set_optind(0);
@@ -1718,10 +1711,7 @@ void PdfDecryptDialog::DoDecrypt() {
     TempStr pwdZ = StrDupTemp(password);
     TempStr srcZ = StrDupTemp(srcPath);
     TempStr destZ = StrDupTemp(destPath);
-    char* argv[] = {
-        // str-port: mupdf CLI
-        (char*)"clean", (char*)"-p", pwdZ.s, (char*)"-D", srcZ.s, destZ.s,
-    };
+    char* argv[] = {(char*)"clean", (char*)"-p", pwdZ.s, (char*)"-D", srcZ.s, destZ.s}; // str-port: mupdf CLI
     int argc = 6;
 
     fz_set_optind(0);

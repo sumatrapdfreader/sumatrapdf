@@ -549,7 +549,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (wLen == 0) {
         return {};
     }
-    AutoFreeWStr wBuf((wchar_t*)malloc(wLen * sizeof(wchar_t)));
+    AutoFreeWStr wBuf((wchar_t*)malloc(wLen * sizeof(wchar_t))); // str-port: owned heap
     if (!wBuf) {
         return {};
     }

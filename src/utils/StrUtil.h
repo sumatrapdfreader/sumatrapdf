@@ -63,7 +63,7 @@ struct ByteSlice {
 bool IsEqual(const ByteSlice&, const ByteSlice&);
 
 FORCEINLINE Str AsStr(ByteSlice bs) {
-    return Str((char*)bs.data(), bs.Size());
+    return Str((char*)bs.data(), bs.Size()); // str-port: byte slice view
 }
 
 namespace str {

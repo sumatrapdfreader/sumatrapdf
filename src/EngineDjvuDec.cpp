@@ -220,7 +220,7 @@ bool EngineDjvuDec::Load(IStream* stm) {
     return FinishLoading();
 }
 
-static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) { // str-port: djvu C callback
+static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) { // str-port: api-boundary djvu C callback
     if (sev >= DJVU_SEVERITY_ERROR) {
         logf("djvudec: %s\n", msg);
     }

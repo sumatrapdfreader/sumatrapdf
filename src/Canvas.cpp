@@ -178,7 +178,7 @@ class TextDataObject : public IDataObject {
         if (hText) {
             void* p = GlobalLock(hText);
             memcpy(p, text.s, text.len * sizeof(WCHAR));
-            ((WCHAR*)p)[text.len] = 0;
+            ((WCHAR*)p)[text.len] = 0; // str-port: Win32 clipboard
             GlobalUnlock(hText);
         }
     }

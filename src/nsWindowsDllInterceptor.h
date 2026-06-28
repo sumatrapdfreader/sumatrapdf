@@ -68,7 +68,7 @@ class WindowsDllInterceptor {
   public:
     WindowsDllInterceptor() : mModule(0) {}
 
-    WindowsDllInterceptor(const char* modulename, int nhooks = 0) { Init(modulename, nhooks); }
+    WindowsDllInterceptor(const char* modulename, int nhooks = 0) { Init(modulename, nhooks); } // str-port: Win32
 
     ~WindowsDllInterceptor() {
         int i;
@@ -103,7 +103,7 @@ class WindowsDllInterceptor {
         }
     }
 
-    void Init(const char* modulename, int nhooks = 0) {
+    void Init(const char* modulename, int nhooks = 0) { // str-port: Win32
         if (mModule) return;
 
         mModule = LoadLibraryExA(modulename, nullptr, 0);
@@ -136,7 +136,7 @@ class WindowsDllInterceptor {
         mModule = 0;
     }
 
-    bool AddHook(const char* pname, intptr_t hookDest, void** origFunc) {
+    bool AddHook(const char* pname, intptr_t hookDest, void** origFunc) { // str-port: Win32
         if (!mModule) return false;
 
         void* pAddr = (void*)GetProcAddress(mModule, pname);

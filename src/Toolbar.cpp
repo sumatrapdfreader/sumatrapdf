@@ -1444,7 +1444,7 @@ void CreateToolbar(MainWindow* win) {
         rbBand.fStyle |= RBBS_CHILDEDGE;
     }
     rbBand.hbmBack = nullptr;
-    rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT
+    rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT str-port: Win32
     rbBand.hwndChild = hwndToolbar;
     rbBand.cxMinChild = (rc.right - rc.left) * kButtonsCount;
     rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;

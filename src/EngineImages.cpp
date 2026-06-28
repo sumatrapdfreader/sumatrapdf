@@ -1079,7 +1079,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     }
     PropertyItem* item = (PropertyItem*)malloc(size);
     if (!item) return {};
-    AutoFree freeItem((char*)item);
+    AutoFree freeItem((char*)item); // str-port: GDI+ binary buffer
     Status ok = bmp->GetPropertyItem(id, size, item);
     if (Ok != ok) {
         /* property didn't exist */;
@@ -1087,8 +1087,8 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     } else if (PropertyTagTypeASCII == item->type) {
         value = strconv::AnsiToUtf8Temp(AsStr(ByteSlice((u8*)item->value, size)));
     } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
-               !((WCHAR*)item->value)[item->length / 2 - 1]) {
-        value = ToUtf8Temp((WCHAR*)item->value);
+               !((WCHAR*)item->value)[item->length / 2 - 1]) { // str-port: GDI+
+        value = ToUtf8Temp((WCHAR*)item->value);               // str-port: GDI+
     }
     if (str::IsEmptyOrWhiteSpace(value)) {
         return altId == 0 ? nullptr : GetImagePropertyTemp(bmp, altId);
@@ -1478,7 +1478,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
                 }
                 // Unicode
                 else if (memcmp(item->value, "UNICODE\0", 8) == 0) {
-                    val = ToUtf8Temp(WStr((WCHAR*)commentData.s, commentData.len / 2));
+                    val = ToUtf8Temp(WStr((WCHAR*)commentData.s, commentData.len / 2)); // str-port: GDI+
                     if (val && !str::IsEmpty(val)) {
                         AddProp(keyValOut, kPropUserComment, val);
                     }
