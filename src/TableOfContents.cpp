@@ -473,10 +473,11 @@ next:
     }
     if (node->title) {
         TempWStr ws = ToWStrTemp(node->title);
-        for (const WCHAR* c = ws; *c; c++) {
-            if (isLeftToRightChar(*c)) {
+        for (int i = 0; i < ws.len; i++) {
+            WCHAR c = ws.s[i];
+            if (isLeftToRightChar(c)) {
                 l2r++;
-            } else if (isRightToLeftChar(*c)) {
+            } else if (isRightToLeftChar(c)) {
                 r2l++;
             }
         }
