@@ -91,7 +91,7 @@ static void SetMaxWidthForText(HWND hwnd, Str s, bool multiline) {
 
 static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, Str s, bool multiline) {
     // avoid flickering
-    char* s2 = TooltipGetTextTemp(hwnd, owner, id);
+    TempStr s2 = TooltipGetTextTemp(hwnd, owner, id);
     if (str::Eq(s, s2)) {
         return false;
     }
