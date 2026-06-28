@@ -38,15 +38,18 @@ constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
 
 // clang-format off
-static const char *gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
-static const char *gSoundIcons = "Speaker\0Mic\0";
-static const char *gStampIcons = "Approved\0AsIs\0Confidential\0Departmental\0Draft\0Experimental\0Expired\0Final\0ForComment\0ForPublicRelease\0NotApproved\0NotForPublicRelease\0Sold\0TopSecret\0";
+static SeqStrings gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
+static SeqStrings gSoundIcons = "Speaker\0Mic\0";
+static SeqStrings gStampIcons =
+    "Approved\0AsIs\0Confidential\0Departmental\0Draft\0Experimental\0Expired\0Final\0ForComment\0ForPublicRelease\0NotApproved\0NotForPublicRelease\0Sold\0TopSecret\0";
 // those are in order of pdf_line_ending enum in annot.h
-static const char *gLineEndingStyles = "None\0Square\0Circle\0Diamond\0OpenArrow\0ClosedArrow\0Butt\0ROpenArrow\0RClosedArrow\0Slash\0";
-static const char* gColors = "Transparent\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
-static const char *gFontNames = "Cour\0Helv\0TiRo\0";
-static const char *gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
-static const char* gQuaddingNames = "Left\0Center\0Right\0";
+static SeqStrings gLineEndingStyles =
+    "None\0Square\0Circle\0Diamond\0OpenArrow\0ClosedArrow\0Butt\0ROpenArrow\0RClosedArrow\0Slash\0";
+static SeqStrings gColors =
+    "Transparent\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
+static SeqStrings gFontNames = "Cour\0Helv\0TiRo\0";
+static SeqStrings gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
+static SeqStrings gQuaddingNames = "Left\0Center\0Right\0";
 
 static PdfColor gColorsValues[] = {
 	0x00000000, /* transparent */
@@ -478,7 +481,7 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-static void ItemsFromSeqstrings(StrVec& items, const char* strings) {
+static void ItemsFromSeqstrings(StrVec& items, SeqStrings strings) {
     while (strings) {
         items.Append(strings);
         SeqStrNext(strings);
@@ -500,7 +503,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, StrBuilder& customColo
     w->SetCurrentSelection(idx);
 }
 
-static PdfColor GetDropDownColor(const char* sv) {
+static PdfColor GetDropDownColor(Str sv) {
     int idx = SeqStrIndex(gColors, sv);
     if (idx >= 0) {
         int nMaxColors = (int)dimof(gColorsValues);
@@ -592,7 +595,7 @@ static void DoTextAlignment(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     int itemNo = Quadding(annot);
-    const char* items = gQuaddingNames;
+    SeqStrings items = gQuaddingNames;
     ew->dropDownTextAlignment->SetItemsSeqStrings(items);
     ew->dropDownTextAlignment->SetCurrentSelection(itemNo);
     ew->staticTextAlignment->SetIsVisible(true);
@@ -684,7 +687,7 @@ static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto idx = ew->dropDownTextColor->GetCurrentSelection();
-    char* item = ew->dropDownTextColor->items.At(idx);
+    Str item = ew->dropDownTextColor->items.At(idx);
     auto col = GetDropDownColor(item);
     SetDefaultAppearanceTextColor(annot, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -999,20 +1002,20 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
         return;
     }
 
-    const char* fileName = nullptr;
+    Str fileName;
     pdf_obj* fs = pdf_annot_filespec(ctx, pdfannot);
     if (fs) {
         pdf_filespec_params fileParams = {};
         pdf_get_filespec_params(ctx, fs, &fileParams);
-        fileName = fileParams.filename;
+        fileName = StrDupTemp(Str(fileParams.filename));
     }
-    if (str::IsEmpty(fileName)) {
-        fileName = "attachment";
+    if (!fileName) {
+        fileName = Str("attachment");
     }
 
     TempStr dir = path::GetDirTemp(ew->tab->filePath);
-    fileName = path::GetBaseNameTemp(Str(fileName));
-    TempStr dstPath = path::JoinTemp(dir, fileName);
+    TempStr baseName = path::GetBaseNameTemp(fileName);
+    TempStr dstPath = path::JoinTemp(dir, baseName);
     SaveDataToFile(ew->hwnd, dstPath, data);
     str::Free(data.data());
 }
@@ -1139,7 +1142,7 @@ void EditAnnotationsWindow::OnSize(UINT msg, UINT, SIZE size) {
     LayoutToSize(mainLayout, {dx, dy});
 }
 
-static Static* CreateStatic(HWND parent, const char* s = nullptr) {
+static Static* CreateStatic(HWND parent, Str s = nullptr) {
     auto w = new Static();
     Static::CreateArgs args;
     args.parent = parent;
