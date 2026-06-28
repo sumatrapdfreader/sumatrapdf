@@ -47,8 +47,8 @@ void Edit::SetSelection(int start, int end) {
 }
 
 void Edit::SelectAll() {
-    WCHAR* s = HwndGetTextWTemp(hwnd);
-    int pos = str::Len(s);
+    TempWStr s = HwndGetTextWTemp(hwnd);
+    int pos = (int)str::Len(s);
     Edit_SetSel(hwnd, 0, pos);
 }
 
@@ -57,8 +57,8 @@ void Edit::SetCursorPosition(int pos) {
 }
 
 void Edit::SetCursorPositionAtEnd() {
-    WCHAR* s = HwndGetTextWTemp(hwnd);
-    int pos = str::Len(s);
+    TempWStr s = HwndGetTextWTemp(hwnd);
+    int pos = (int)str::Len(s);
     SetCursorPosition(pos);
 }
 
@@ -131,7 +131,7 @@ Size Edit::GetIdealSize() {
     HFONT hfont = HwndGetFont(hwnd);
     Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
     // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
-    char* txt = HwndGetTextTemp(hwnd);
+    TempStr txt = HwndGetTextTemp(hwnd);
     Size s2 = HwndMeasureText(hwnd, txt, hfont);
     // logf("Edit::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
