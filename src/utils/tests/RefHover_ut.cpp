@@ -20,9 +20,10 @@ constexpr int kLineH = 12;
 
 // Helper: append the WCHARs of `s` starting at (x, y) with fixed-width glyphs.
 // Caller passes pre-allocated text/coords buffers and the current length.
-static void AddText(WCHAR* text, Rect* coords, int& len, int cap, const WCHAR* s, int x, int y) {
-    for (int i = 0; s[i] && len < cap; i++) {
-        text[len] = s[i];
+static void AddText(WCHAR* text, Rect* coords, int& len, int cap, WStr s, int x,
+                    int y) { // str-port: glyph output buffer
+    for (int i = 0; i < s.len && len < cap; i++) {
+        text[len] = s.s[i];
         coords[len] = Rect{x + i * kCharW, y, kCharW, kLineH};
         len++;
     }
@@ -312,8 +313,8 @@ static void FrenchCaptionDetected() {
 // (8b) Italian / Portuguese caption words ("Tabella 2", "Tabela 2") are in
 // the dictionary, as the es/it/pt comment claims.
 static void ItalianPortugueseCaptionDetected() {
-    const WCHAR* captions[] = {L"Tabella 2: Dati", L"Tabela 2: Dados"};
-    for (const WCHAR* caption : captions) {
+    WStr captions[] = {L"Tabella 2: Dati", L"Tabela 2: Dados"};
+    for (WStr caption : captions) {
         WCHAR text[512];
         Rect coords[512];
         int len = 0;
@@ -624,9 +625,9 @@ static void VariableGlyphTopsEntryNotHijacked() {
     int len = 0;
     // Previous entry's trailing line "1622292." at baseline 313: digits top
     // 305 (h 8), final period top 310 (h 3) — same baseline, body column x.
-    const WCHAR* tail = L"1622292";
-    for (int i = 0; tail[i]; i++) {
-        text[len] = tail[i];
+    WStr tail = L"1622292";
+    for (int i = 0; i < tail.len; i++) {
+        text[len] = tail.s[i];
         coords[len] = Rect{130 + i * 6, 305, 6, 8};
         len++;
     }
@@ -634,22 +635,22 @@ static void VariableGlyphTopsEntryNotHijacked() {
     coords[len] = Rect{130 + 7 * 6, 310, 4, 3};
     len++;
     // Entry "[Buc+23]" label (x=72) + body (x=130) at baseline ~327 (top 316).
-    const WCHAR* label = L"[Buc+23]";
-    for (int i = 0; label[i]; i++) {
-        text[len] = label[i];
+    WStr label = L"[Buc+23]";
+    for (int i = 0; i < label.len; i++) {
+        text[len] = label.s[i];
         coords[len] = Rect{72 + i * 6, 316, 6, 11};
         len++;
     }
-    const WCHAR* body = L"Georg Buchgeher et al. Using ADRs in Open Source.";
-    for (int i = 0; body[i]; i++) {
-        text[len] = body[i];
+    WStr body = L"Georg Buchgeher et al. Using ADRs in Open Source.";
+    for (int i = 0; i < body.len; i++) {
+        text[len] = body.s[i];
         coords[len] = Rect{130 + i * 6, 316, 6, 9};
         len++;
     }
     // Next entry "[JB05]" below at top 352.
-    const WCHAR* nb = L"[JB05] A. Jansen and J. Bosch.";
-    for (int i = 0; nb[i]; i++) {
-        text[len] = nb[i];
+    WStr nb = L"[JB05] A. Jansen and J. Bosch.";
+    for (int i = 0; i < nb.len; i++) {
+        text[len] = nb.s[i];
         coords[len] = Rect{72 + i * 6, 352, 6, 10};
         len++;
     }

@@ -92,9 +92,9 @@ void VecTest() {
         v.AppendChar('a');
         utassert(v.size() == 4);
         utassert(str::Eq("bopa", v.LendData()));
-        char* s = v.StealData();
+        Str s = v.StealData();
         utassert(str::Eq("bopa", s));
-        free(s);
+        str::Free(s);
         utassert(v.size() == 0);
     }
 

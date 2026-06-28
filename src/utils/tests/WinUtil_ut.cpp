@@ -12,27 +12,28 @@ void WinUtilTest() {
     ScopedCom comScope;
 
     {
-        const char* string = "abcde";
-        size_t stringSize = str::Len(string);
-        auto strm = CreateStreamFromData({(u8*)string, stringSize});
+        Str string = "abcde";
+        size_t stringSize = string.len;
+        auto strm = CreateStreamFromData({(u8*)string.s, stringSize});
         ScopedComPtr<IStream> stream(strm);
         utassert(stream);
         ByteSlice data = GetDataFromStream(stream, nullptr);
         utassert(data.Get());
         utassert(stringSize == data.size());
-        const char* s = data;
+        Str s = AsStr(data);
         utassert(str::Eq(s, string));
         data.Free();
     }
 
     {
-        const WCHAR* string = L"abcde";
-        size_t stringSize = str::Len(string) * sizeof(WCHAR);
-        auto strm = CreateStreamFromData({(u8*)string, stringSize});
+        WStr string = L"abcde";
+        size_t stringSize = string.len * sizeof(WCHAR);
+        auto strm = CreateStreamFromData({(u8*)string.s, stringSize});
         ScopedComPtr<IStream> stream(strm);
         utassert(stream);
         ByteSlice dataTmp = GetDataFromStream(stream, nullptr);
-        WCHAR* data = (WCHAR*)dataTmp.Get();
+        WStr data =
+            WStr((WCHAR*)dataTmp.Get(), (int)(dataTmp.size() / sizeof(WCHAR))); // str-port: binary UTF-16 buffer view
         utassert(data && stringSize == dataTmp.size() && str::Eq(data, string));
         dataTmp.Free();
     }

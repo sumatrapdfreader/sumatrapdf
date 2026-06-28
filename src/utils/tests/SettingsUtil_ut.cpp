@@ -56,7 +56,7 @@ struct SutStruct {
     Vec<Str>* emptyStrArray;
     Point point;
     Vec<SutStructItem*>* sutStructItems;
-    char* internalString;
+    Str internalString;
 };
 
 static const FieldInfo gSutStructFields[] = {
@@ -147,13 +147,13 @@ Key = Value";
     for (int i = 0; i < 3; i++) {
         data = (SutStruct*)DeserializeStruct(&gSutStructInfo, serialized, data);
         utassert(data->internal == i);
-        const char* s = serialized;
+        Str s = serialized;
         if (i < 2) {
             s = unknownOnly;
         }
-        char* reserialized = (char*)SerializeStruct(&gSutStructInfo, data, s).data();
-        utassert(str::Eq(serialized, reserialized));
-        free(reserialized);
+        ByteSlice reserializedBs = SerializeStruct(&gSutStructInfo, data, s);
+        utassert(str::Eq(serialized, AsStr(reserializedBs)));
+        reserializedBs.Free();
         data->internal++;
     }
     utassert(str::Eq(data->color, "#abcdef"));
@@ -174,13 +174,13 @@ Key = Value";
     utassert(!data->internalString);
     {
         ByteSlice res = SerializeStruct(&gSutStructInfo, data);
-        utassert(!str::Eq(serialized, Str((char*)res.data(), (int)res.size())));
+        utassert(!str::Eq(serialized, AsStr(res)));
         res.Free();
     }
     data->sutStructItems->at(0)->nested.point.x++;
     {
         ByteSlice res = SerializeStruct(&gSutStructInfo, data, unknownOnly);
-        utassert(!str::Eq(serialized, Str((char*)res.data(), (int)res.size())));
+        utassert(!str::Eq(serialized, AsStr(res)));
         res.Free();
     }
     FreeStruct(&gSutStructInfo, data);

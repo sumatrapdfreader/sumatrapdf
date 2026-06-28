@@ -211,7 +211,7 @@ static void HtmlParser11() {
 }
 
 static void HtmlParserFile() {
-    const char* fileName = "HtmlParseTest00.html";
+    Str fileName = "HtmlParseTest00.html";
     // We assume we're being run from obj-[dbg|rel], so the test
     // files are in ..\src\utils directory relative to exe's dir
     TempStr exePath = GetSelfExePathTemp();

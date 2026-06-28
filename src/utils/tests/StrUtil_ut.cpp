@@ -12,11 +12,11 @@ static void StrReplaceTestOne(Str s, Str toReplace, Str replaceWith, Str expecte
 }
 
 static void StrReplaceTest() {
-    const char* d[] = {
-        "golagon", "gon",   "rabato", "golarabato", "a",   "a",      "bor", "bor", "abora", "a",
-        "",        "bor",   "aaaaaa", "a",          "b",   "bbbbbb", "aba", "a",   "ccc",   "cccbccc",
-        "Aba",     "a",     "c",      "Abc",        "abc", "abc",    "",    "",    nullptr, "a",
-        "b",       nullptr, "a",      "",           "b",   nullptr,  "a",   "b",   nullptr, nullptr,
+    Str d[] = {
+        "golagon", "gon", "rabato", "golarabato", "a",   "a",      "bor", "bor", "abora", "a",
+        "",        "bor", "aaaaaa", "a",          "b",   "bbbbbb", "aba", "a",   "ccc",   "cccbccc",
+        "Aba",     "a",   "c",      "Abc",        "abc", "abc",    "",    "",    {},      "a",
+        "b",       {},    "a",      "",           "b",   {},       "a",   "b",   {},      {},
     };
     size_t n = dimof(d) / 4;
     for (size_t i = 0; i < n; i++) {
@@ -79,7 +79,7 @@ static void StrSeqNumTest() {
 
 static void StrSeqTest() {
     static const char seqData[] = "foo\0a\0bar\0";
-    Str s((char*)seqData, (int)(sizeof(seqData) - 1));
+    Str s(seqData, (int)(sizeof(seqData) - 1));
     utassert(0 == SeqStrIndex(s.s, "foo"));
     utassert(1 == SeqStrIndex(s.s, "a"));
     utassert(2 == SeqStrIndex(s.s, "bar"));
@@ -171,7 +171,7 @@ void strStrTest() {
     {
         // verify that we use buf for initial allocations
         StrBuilder str;
-        char* buf = str.Get();
+        uintptr_t buf = (uintptr_t)str.begin();
         str.Append("blah");
         utassert(str.Contains(Str("blah")));
         utassert(str.Contains(Str("ah")));
@@ -180,12 +180,12 @@ void strStrTest() {
         utassert(!str.Contains(Str("blahd")));
         utassert(!str.Contains(Str("blas")));
 
-        char* buf2 = str.Get();
+        uintptr_t buf2 = (uintptr_t)str.begin();
         utassert(buf == buf2);
-        utassert(str::Eq(buf2, "blah"));
+        utassert(str::Eq(str.Get(), "blah"));
         str.Append("lost");
-        buf2 = str.Get();
-        utassert(str::Eq(buf2, "blahlost"));
+        buf2 = (uintptr_t)str.begin();
+        utassert(str::Eq(str.Get(), "blahlost"));
         utassert(str.Contains(Str("blahlost")));
         utassert(str.Contains(Str("ahlo")));
         utassert(buf == buf2);
@@ -193,7 +193,7 @@ void strStrTest() {
         for (int i = 0; i < StrBuilder::kBufChars + 4; i++) {
             str.AppendChar((char)i);
         }
-        buf2 = str.Get();
+        buf2 = (uintptr_t)str.begin();
         // we should have allocated buf on the heap
         utassert(buf != buf2);
         for (int i = 0; i < StrBuilder::kBufChars + 4; i++) {
@@ -205,19 +205,19 @@ void strStrTest() {
     {
         // verify that initialCapacity hint works
         StrBuilder str(1024);
-        char* buf = nullptr;
+        uintptr_t buf = 0;
 
         for (int i = 0; i < 50; i++) {
             str.Append("01234567890123456789");
             if (i == 2) {
                 // we filled Str::buf (32 bytes) by putting 20 bytes
                 // and allocated heap for 1024 bytes. Remember the
-                buf = str.Get();
+                buf = (uintptr_t)str.begin();
             }
         }
         // we've appended 100*10 = 1000 chars, which is less than 1024
         // so Str::buf should be the same as buf
-        char* buf2 = str.Get();
+        uintptr_t buf2 = (uintptr_t)str.begin();
         utassert(buf == buf2);
     }
 }
@@ -226,47 +226,47 @@ void strStrTest() {
 // ASCII (issue #5717: TOC "*" palette search was case-sensitive for Cyrillic)
 static void StrFindITest() {
     // ASCII still works (fast path, regression guard)
-    const char* hello = "Hello World";
+    Str hello = "Hello World";
     utassert(str::ContainsI(hello, "hello"));
     utassert(str::ContainsI(hello, "WORLD"));
     utassert(!str::ContainsI(hello, "xyz"));
-    utassert(str::FindI(hello, "WORLD") == (hello + 6));
+    utassert(str::FindI(hello, "WORLD").s == hello.s + 6);
 
     // Cyrillic: "Привет" (capitalized) vs "привет" (lowercase needle)
-    const char* privetCap = "\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
-    const char* privetLow = "\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
+    Str privetCap = "\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
+    Str privetLow = "\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
     utassert(str::Contains(privetCap, privetCap));
     utassert(!str::Contains(privetCap, privetLow)); // case-sensitive: no match
     utassert(str::ContainsI(privetCap, privetLow)); // case-insensitive: matches
     utassert(str::ContainsI(privetLow, privetCap)); // and the reverse
-    utassert(str::FindI(privetCap, privetLow) == privetCap);
+    utassert(str::FindI(privetCap, privetLow).s == privetCap.s);
 
     // mixed ASCII + Cyrillic: the returned pointer must be the correct byte
     // offset into the original UTF-8 string ("abc " is 4 bytes)
-    const char* mixed = "abc \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
-    utassert(str::FindI(mixed, privetLow) == (mixed + 4));
+    Str mixed = "abc \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
+    utassert(str::FindI(mixed, privetLow).s == mixed.s + 4);
     utassert(!str::FindI(mixed, "xyz"));
 
     // Greek: "ΛΟΓΟΣ" vs "λογος"
-    const char* logosCap = "\xCE\x9B\xCE\x9F\xCE\x93\xCE\x9F\xCE\xA3";
-    const char* logosLow = "\xCE\xBB\xCE\xBF\xCE\xB3\xCE\xBF\xCF\x83";
+    Str logosCap = "\xCE\x9B\xCE\x9F\xCE\x93\xCE\x9F\xCE\xA3";
+    Str logosLow = "\xCE\xBB\xCE\xBF\xCE\xB3\xCE\xBF\xCF\x83";
     utassert(str::ContainsI(logosCap, logosLow));
 }
 
 void StrTest() {
     char buf[32];
-    const char* str = "a string";
-    utassert(str::Len(str) == 8);
+    Str str = "a string";
+    utassert(str.len == 8);
     utassert(str::Eq(str, "a string") && str::Eq(str, str));
-    utassert(!str::Eq(str, nullptr) && !str::Eq(str, "A String"));
+    utassert(!str::Eq(str, Str{}) && !str::Eq(str, "A String"));
     utassert(str::EqI(str, "A String") && str::EqI(str, str));
-    utassert(!str::EqI(str, nullptr) && str::EqI((char*)nullptr, (char*)nullptr));
+    utassert(!str::EqI(str, Str{}) && str::EqI(Str{}, Str{}));
     utassert(str::EqN("abcd", "abce", 3) && !str::EqN("abcd", "Abcd", 3));
     utassert(str::StartsWith(str, "a s") && str::StartsWithI(str, "A Str"));
     utassert(!str::StartsWith(str, "Astr"));
     utassert(str::EndsWith(str, "ing") && str::EndsWithI(str, "ING"));
     utassert(!str::EndsWith(str, "ung"));
-    utassert(str::IsEmpty((char*)nullptr) && str::IsEmpty((char*)nullptr) && str::IsEmpty("") && !str::IsEmpty(str));
+    utassert(str::IsEmpty(Str{}) && str::IsEmpty("") && !str::IsEmpty(str));
     utassert(str::FindChar(str, 's') && !str::FindChar(str, 'S'));
     size_t len = str::BufSet(buf, dimof(buf), str);
     utassert(len == str::Len(buf) && str::Eq(buf, str));
@@ -298,11 +298,11 @@ void StrTest() {
                      "a\xE2\x80\x99"
                      "a.pdf"));
     {
-        char* str2;
+        Str str2;
         AutoFreeStr large(AllocArray<char>(2000));
         memset(large, 0x11, 1998);
-        str2 = str::Format("%s", large.Get());
-        utassert(str::Eq(Str(str2), Str(large.Get())));
+        str2 = str::Format("%s", Str(large.Get()));
+        utassert(str::Eq(str2, Str(large.Get())));
         str::Free(str2);
     }
 #if 0
@@ -354,7 +354,7 @@ void StrTest() {
     utassert(str::Eq(buf, "one two three"));
 
     {
-        const char* str2 = "[Open(\"filename.pdf\",0,1,0)]";
+        Str str2 = "[Open(\"filename.pdf\",0,1,0)]";
         {
             uint u1 = 0;
             AutoFreeStr str1;
@@ -412,8 +412,8 @@ void StrTest() {
     utassert(!str::Parse(StrL("abcd"), 3, "abcd").s);
 
     {
-        const char* str1 = "string";
-        utassert(str::Parse(Str(str1, 4), "str").s == str1 + 3);
+        Str str1 = "string";
+        utassert(str::Parse(Str(str1.s, 4), "str").s == str1.s + 3);
 
         float f1, f2;
         Str end = str::Parse(StrL("%1.23y -2e-3z"), "%%%fy%fz%$", &f1, &f2);
@@ -453,7 +453,7 @@ void StrTest() {
     }
 
     {
-        const char* path =
+        Str path =
             "M10 80 C 40 10, 65\r\n10,\t95\t80 S 150 150, 180 80\nA 45 45, 0, 1, 0, 125 125\nA 1 2 3\n0\n1\n20  -20";
         float f[6];
         int b[2];
@@ -499,7 +499,7 @@ void StrTest() {
     // clang-format off
     struct {
         size_t number;
-        const char* result;
+        Str result;
     } formatNumData[] = {
         {1, "1"},
         {12, "12"},
@@ -513,14 +513,14 @@ void StrTest() {
     // clang-format on
 
     for (int i = 0; i < dimof(formatNumData); i++) {
-        char* tmp = str::FormatNumWithThousandSepTemp(formatNumData[i].number, LOCALE_INVARIANT);
+        TempStr tmp = str::FormatNumWithThousandSepTemp(formatNumData[i].number, LOCALE_INVARIANT);
         utassert(str::Eq(tmp, formatNumData[i].result));
     }
 
     // clang-format off
     struct {
         double number;
-        const char* result;
+        Str result;
     } formatFloatData[] = {
         {1, "1.0"},
         {1.2, "1.2"},
@@ -533,7 +533,7 @@ void StrTest() {
     // clang-format on
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
-        char* tmp = str::FormatFloatWithThousandSepTemp(formatFloatData[i].number, LOCALE_INVARIANT);
+        TempStr tmp = str::FormatFloatWithThousandSepTemp(formatFloatData[i].number, LOCALE_INVARIANT);
         utassert(str::Eq(tmp, formatFloatData[i].result));
     }
 
@@ -546,7 +546,7 @@ void StrTest() {
     // clang-format off
     struct {
         int number;
-        const char* result;
+        Str result;
     } formatRomanData[] = {
         {1, "I"},
         {3, "III"},
@@ -558,8 +558,8 @@ void StrTest() {
         {1666, "MDCLXVI"},
         {2011, "MMXI"},
         {12345, "MMMMMMMMMMMMCCCXLV"},
-        {0, nullptr},
-        {-133, nullptr},
+        {0, {}},
+        {-133, {}},
     };
     // clang-format on
 
@@ -570,7 +570,7 @@ void StrTest() {
 
     {
         size_t trimmed;
-        char* s = str::Dup("");
+        Str s = str::Dup("");
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Both);
         utassert(trimmed == 0);
         utassert(str::Eq(s, ""));
@@ -581,61 +581,61 @@ void StrTest() {
         utassert(trimmed == 0);
         utassert(str::Eq(s, ""));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("  \n\t  ");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Both);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Both);
         utassert(trimmed == 6);
         utassert(str::Eq(s, ""));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("  \n\t  ");
-        trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Right);
+        trimmed = str::TrimWSInPlace(s, str::TrimOpt::Right);
         utassert(trimmed == 6);
         utassert(str::Eq(s, ""));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("  \n\t  ");
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Left);
         utassert(trimmed == 6);
         utassert(str::Eq(s, ""));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("  lola");
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Both);
         utassert(trimmed == 2);
         utassert(str::Eq(s, "lola"));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("  lola");
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Left);
         utassert(trimmed == 2);
         utassert(str::Eq(s, "lola"));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("  lola");
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Right);
         utassert(trimmed == 0);
         utassert(str::Eq(s, "  lola"));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("lola\r\t");
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Both);
         utassert(trimmed == 2);
         utassert(str::Eq(s, "lola"));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("lola\r\t");
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Right);
         utassert(trimmed == 2);
         utassert(str::Eq(s, "lola"));
 
-        free(s);
+        str::Free(s);
         s = str::Dup("lola\r\t");
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Left);
         utassert(trimmed == 0);
         utassert(str::Eq(s, "lola\r\t"));
 
-        free(s);
+        str::Free(s);
     }
 
     {

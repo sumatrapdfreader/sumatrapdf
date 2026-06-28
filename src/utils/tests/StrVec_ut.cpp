@@ -17,20 +17,20 @@ static void ValidateSize(StrVec* v) {
     utassert(size1 == size2);
 }
 
-static void ValidateAtStr(StrVec* v, int idx, const char* s) {
+static void ValidateAtStr(StrVec* v, int idx, Str s) {
     Str sp = v->At(idx);
-    ReportIf(!str::Eq(s, sp.s));
-    ReportIf(str::Leni(s) != sp.len);
+    ReportIf(!str::Eq(s, sp));
+    ReportIf(s.len != sp.len);
 }
 
-static void strEq(const char* s1, const char* s2) {
+static void strEq(Str s1, Str s2) {
     bool ok = str::Eq(s1, s2);
     utassert(ok);
 }
 
 static void TestRemoveFromStart(StrVec* v) {
     while (!v->IsEmpty()) {
-        const char* s = v->At(0);
+        Str s = v->At(0);
         bool ok = v->Remove(s);
         utassert(ok);
     }
@@ -46,7 +46,7 @@ static void TestRandomRemove(StrVec* v) {
     int idx;
     while (!v->IsEmpty()) {
         idx = randIdx(v);
-        const char* s = v->At(idx);
+        Str s = v->At(idx);
         bool ok = v->Remove(s);
         utassert(ok);
     }
@@ -54,7 +54,7 @@ static void TestRandomRemove(StrVec* v) {
 
 static void TestFind(const StrVec* v) {
     int n = v->Size();
-    char *s, *s2;
+    Str s, s2;
     for (int i = 0; i < n; i++) {
         s = v->At(i);
         int i2 = v->Find(s);
@@ -95,19 +95,19 @@ static void TestRemoveAt(StrVec* v) {
     delete v3;
 }
 
-static void StrVecCheckIter(StrVec* v, const char** strings, int start = 0) {
+static void StrVecCheckIter(StrVec* v, Str* strings, int start = 0) {
     TestFind(v);
 
     int i = 0;
-    for (char* s : *v) {
+    for (Str s : *v) {
         if (i < start) {
             i++;
             continue;
         }
-        char* s2 = v->At(i);
+        Str s2 = v->At(i);
         utassert(str::Eq(s, s2));
         if (strings) {
-            const char* s3 = strings[i - start];
+            Str s3 = strings[i - start];
             utassert(str::Eq(s, s3));
         }
         i++;
@@ -121,13 +121,13 @@ static void StrVecCheckIter(StrVec* v, const char** strings, int start = 0) {
     auto end = v->end();
     i = 0;
     for (; it != end; it++, i++) {
-        char* s = *it;
-        const char* s2 = strings[i];
+        Str s = *it;
+        Str s2 = strings[i];
         utassert(str::Eq(s, s2));
     }
 }
 
-static void AppendStrings(StrVec* v, const char** strings, int nStrings) {
+static void AppendStrings(StrVec* v, Str* strings, int nStrings) {
     int initialSize = v->Size();
     for (int i = 0; i < nStrings; i++) {
         v->Append(strings[i]);
@@ -136,14 +136,14 @@ static void AppendStrings(StrVec* v, const char** strings, int nStrings) {
     StrVecCheckIter(v, strings, initialSize);
 }
 
-static const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
+static Str strs[] = {"foo", "bar", "Blast", {}, "this is a large string, my friend"};
 // order in strs
 static int unsortedOrder[] = {0, 1, 2, 3, 4};
 static int sortedOrder[]{3, 2, 1, 0, 4};
 static int sortedNoCaseOrder[]{3, 1, 2, 0, 4};
 
 static void StrVecTest1_1(StrVec* v) {
-    const char* s = "lolda";
+    Str s = "lolda";
     v->InsertAt(0, s);
     utassert(v->Size() == 1);
     utassert(str::Eq(v->At(0), s));
@@ -160,7 +160,7 @@ static void StrVecTest1_2(StrVec* v) {
 static void StrVecTest1_3(StrVec* v) {
     int n = v->Size();
     // allocate a bunch to test allocating
-    const char* str = strs[4];
+    Str str = strs[4];
     for (int i = 0; i < 1024; i++) {
         v->Append(str);
     }
@@ -180,7 +180,7 @@ static void StrVecTest1_3(StrVec* v) {
 
 static void StrVecTest1_4(StrVec* v) {
     v->SetAt(3, nullptr);
-    utassert(nullptr == v->At(3));
+    utassert(!v->At(3));
     TestRemoveAt(v);
 }
 
@@ -219,7 +219,7 @@ static void StrVecTest1() {
 
     int n = dimofi(strs);
     for (int i = 0; i < n; i++) {
-        char* got = sortedView.At(i);
+        Str got = sortedView.At(i);
         auto exp = strs[sortedOrder[i]];
         strEq(got, exp);
     }
@@ -238,14 +238,14 @@ static void StrVecTest1() {
 
     Sort(&v);
     for (int i = 0; i < n; i++) {
-        char* got = v.At(i);
+        Str got = v.At(i);
         auto exp = strs[sortedOrder[i]];
         strEq(got, exp);
     }
     StrVecCheckIter(&v, nullptr);
     SortNoCase(&v);
     for (int i = 0; i < n; i++) {
-        char* got = v.At(i);
+        Str got = v.At(i);
         auto exp = strs[sortedNoCaseOrder[i]];
         strEq(got, exp);
     }
@@ -256,15 +256,13 @@ static void StrVecTest1() {
 static void StrVecTest2_1(StrVec* v) {
     v->Append("foo");
     v->Append("bar");
-    char* s = Join(v);
+    Str s = Join(v);
     utassert(v->Size() == 2);
     utassert(str::Eq("foobar", s));
-    str::Free(s);
 
     s = Join(v, ";");
     utassert(v->Size() == 2);
     utassert(str::Eq("foo;bar", s));
-    str::Free(s);
 
     v->Append(nullptr);
     utassert(v->Size() == 3);
@@ -279,17 +277,15 @@ static void StrVecTest2_1(StrVec* v) {
 
 static void StrVecTest2_2(StrVec* v) {
     Sort(v);
-    const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
+    Str strsSorted[] = {{}, "bar", "foo", "glee"};
     StrVecCheckIter(v, strsSorted);
 
     auto s = Join(v, "++");
     utassert(v->Size() == 4);
     utassert(str::Eq("bar++foo++glee", s));
-    str::Free(s);
 
     s = Join(v);
     utassert(str::Eq("barfooglee", s));
-    str::Free(s);
 }
 
 static void StrVecTest2_3(StrVec* v2) {
@@ -316,7 +312,7 @@ static void StrVecTest2_4(StrVec* v2) {
 
 static void StrVecTest2_5(StrVec* v2) {
     int n = Split(v2, "a,b,,c,d", ",", true, 3);
-    const char* s = JoinTemp(v2, "__");
+    Str s = JoinTemp(v2, "__");
     utassert(n == 3);
     utassert(str::Eq(s, "a__b__c,d"));
 
@@ -341,7 +337,7 @@ static void StrVecTest2_5(StrVec* v2) {
 }
 
 static void StrVecTest2() {
-    char* s;
+    Str s;
 
     StrVec v;
     StrVecTest2_1(&v);
@@ -428,7 +424,7 @@ static void StrVecTest4_1(StrVec* v) {
     v->SetAt(idx, s);
     utassert(str::Eq(s, v->At(idx)));
     v->SetAt(idx, nullptr);
-    utassert(str::Eq(nullptr, v->At(idx)));
+    utassert(!v->At(idx));
     v->SetAt(idx, "");
     utassert(str::Eq("", v->At(idx)));
     // StrVec: force allocating in side strings
@@ -451,7 +447,7 @@ static void StrVecTest4_1(StrVec* v) {
 
     // should be replaced  by next value
     s2 = v->At(idx);
-    const char* s3 = strs[idx + 1];
+    Str s3 = strs[idx + 1];
     utassert(str::Eq(s2, s3));
 
     // StrVec: test multiple side strings
@@ -492,7 +488,7 @@ static void StrVecTest4() {
 
 static void StrVecTest5_1(StrVec* v) {
     AppendStrings(v, strs, dimofi(strs));
-    const char* s = "first";
+    Str s = "first";
     v->InsertAt(0, s);
     auto s2 = v->At(0);
     utassert(str::Eq(s, s2));
@@ -519,7 +515,7 @@ static void StrVecTest5() {
 static void StrVecTest6_1(StrVec* v) {
     Split(v, " CmdCreateAnnotHighlight   #00ff00 openEdit", " ", true, 2);
     utassert(v->Size() == 2);
-    const char* s = v->At(0);
+    Str s = v->At(0);
     utassert(str::Eq(s, "CmdCreateAnnotHighlight"));
     s = v->At(1);
     utassert(str::Eq(s, "#00ff00 openEdit"));
@@ -539,8 +535,8 @@ static void StrVecTest6() {
 static void StrVecTest7_1(StrVec* v) {
     Split(v, "", " ", true, 2);
     utassert(v->Size() == 1);
-    const char* s = v->At(0);
-    utassert(*s == 0);
+    Str s = v->At(0);
+    utassert(!s || s.s[0] == 0);
 }
 
 static void StrVecTest7() {
@@ -557,23 +553,23 @@ static void StrVecTest7() {
 static StrVec* stringsForNum;
 static constexpr int kMaxStringN = 1000;
 
-static const char* StrForN(int n) {
+static Str StrForN(int n) {
     ReportIf(n > kMaxStringN);
     if (!stringsForNum) {
         stringsForNum = new StrVec();
         for (int i = 0; i < kMaxStringN + 1; i++) {
-            char* s = str::Format("%d", i);
+            Str s = str::Format("%d", i);
             stringsForNum->Append(s);
             str::Free(s);
         }
     }
-    return (const char*)stringsForNum->At(n);
+    return stringsForNum->At(n);
 }
 
 template <typename T>
 static void InsertRandData(StrVecWithData<T>* v) {
     for (int i = 0; i < kMaxStringN; i++) {
-        const char* s = StrForN(i);
+        Str s = StrForN(i);
         T data{};
         data.n = (decltype(data.n))i;
         v->Append(s, data);
@@ -586,7 +582,7 @@ template <typename T>
 static void validateStringMatchesData(StrVecWithData<T>* v) {
     int nStrings = v->Size();
     Str got;
-    const char* exp;
+    Str exp;
     T* d;
     int n;
     for (int i = 0; i < nStrings; i++) {
@@ -606,7 +602,7 @@ static void InsertRandData2(StrVecWithData<T>* v) {
         if (op <= 5) {
             T data{};
             data.n = (decltype(data.n))i;
-            const char* s = StrForN(i);
+            Str s = StrForN(i);
             int idx = v->Append(s, data);
             ValidateAtStr(v, idx, s);
             T* d = v->AtData(idx);
@@ -614,7 +610,7 @@ static void InsertRandData2(StrVecWithData<T>* v) {
         } else if (op <= 7) {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
-                const char* s = StrForN(idx);
+                Str s = StrForN(idx);
                 v->InsertAt(idx, s);
                 ValidateAtStr(v, idx, s);
                 T* d = v->AtData(idx);
@@ -623,7 +619,7 @@ static void InsertRandData2(StrVecWithData<T>* v) {
         } else if (op <= 9) {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
-                const char* s = StrForN(idx);
+                Str s = StrForN(idx);
                 v->SetAt(idx, s);
                 ValidateAtStr(v, idx, s);
                 T* d = v->AtData(idx);
@@ -647,7 +643,7 @@ static void InsertRandData2(StrVecWithData<T>* v) {
 
 static void InsertRandData3(StrVec* v) {
     for (int i = 0; i < kMaxStringN; i++) {
-        const char* s = StrForN(i);
+        Str s = StrForN(i);
         int op = rand() % 12;
         if (op <= 5) {
             v->Append(s);
@@ -681,10 +677,10 @@ static void RemoveRandData(StrVecWithData<T>* v) {
     int idx;
     while (v->Size() > 0) {
         idx = randIdx(v);
-        const char* got = v->At(idx);
+        Str got = v->At(idx);
         T* d = v->AtData(idx);
         int n = (int)d->n;
-        const char* exp = StrForN(n);
+        Str exp = StrForN(n);
         utassert(str::Eq(got, exp));
         int op = idx % 3;
         int sizeExp = v->Size() - 1;
