@@ -118,8 +118,7 @@ void Wnd::SetText(Str s) {
 }
 
 TempStr Wnd::GetTextTemp() {
-    char* s = HwndGetTextTemp(hwnd);
-    return s;
+    return HwndGetTextTemp(hwnd);
 }
 
 void Wnd::SetVisibility(Visibility newVisibility) {
