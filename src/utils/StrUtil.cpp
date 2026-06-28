@@ -2547,7 +2547,7 @@ size_t NormalizeWSInPlace(WStr s) {
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
-int BufSet(char* dst, int cchDst, Str src) {
+int BufSet(char* dst, int cchDst, Str src) { // str-port: caller-owned out-buffer
     ReportIf(0 == cchDst || !dst);
     if (!src) {
         *dst = 0;
@@ -2562,7 +2562,7 @@ int BufSet(char* dst, int cchDst, Str src) {
     return toCopy;
 }
 
-int BufSet(WCHAR* dst, int cchDst, WStr src) {
+int BufSet(WCHAR* dst, int cchDst, WStr src) { // str-port: caller-owned out-buffer
     ReportIf(0 == cchDst || !dst);
     if (!src) {
         *dst = 0;
@@ -2576,13 +2576,13 @@ int BufSet(WCHAR* dst, int cchDst, WStr src) {
     return toCopy;
 }
 
-int BufSet(WCHAR* dst, int dstCchSize, Str src) {
+int BufSet(WCHAR* dst, int dstCchSize, Str src) { // str-port: caller-owned out-buffer
     return BufSet(dst, dstCchSize, ToWStrTemp(src));
 }
 
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
-int BufAppend(char* dst, int dstCch, Str s) {
+int BufAppend(char* dst, int dstCch, Str s) { // str-port: caller-owned out-buffer
     ReportIf(0 == dstCch);
 
     int currDstCchLen = str::Leni(dst);
@@ -2806,10 +2806,10 @@ static bool ParseDoubleAtW(WStr str, int off, double* val, int* endOff) {
         return false;
     }
     int rem = str.len - off;
-    WCHAR* sliceZ = AllocArrayTemp<WCHAR>(rem + 1);
+    WCHAR* sliceZ = AllocArrayTemp<WCHAR>(rem + 1); // str-port: wcstod NUL-term boundary
     memcpy(sliceZ, str.s + off, rem * sizeof(WCHAR));
     sliceZ[rem] = 0;
-    WCHAR* endPtr = nullptr;
+    WCHAR* endPtr = nullptr; // str-port: wcstod out-param
     *val = wcstod(sliceZ, &endPtr);
     if (!endPtr || endPtr == sliceZ) {
         return false;
@@ -3093,7 +3093,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
         if (keep < 0) {
             keep = 0;
         }
-        char* ret = AllocArrayTemp<char>(keep + 4);
+        char* ret = AllocArrayTemp<char>(keep + 4); // str-port: temp arena slice
         memcpy(ret, s.s, keep);
         ret[keep] = '.';
         ret[keep + 1] = '.';

@@ -21,7 +21,7 @@ class FileWriteStream : public ISequentialStream {
     LONG refCount;
 
   public:
-    explicit FileWriteStream(const char* filePath) : refCount(1) {
+    explicit FileWriteStream(Str filePath) : refCount(1) {
         TempWStr path = ToWStrTemp(filePath);
         hFile =
             CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -111,7 +111,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
 
     u16 method = Z_DEFLATED;
     uLongf compressedSize = (u32)size;
-    char* compressed = AllocArrayTemp<char>(size);
+    char* compressed = AllocArrayTemp<char>(size); // str-port: binary deflate buffer
     if (!compressed) {
         return false;
     }
@@ -136,8 +136,8 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
     local.Write16(0); // extra field length
     ReportIf(local.d.size() != kHdrSize);
 
-    char* localHeader = local.d.Get();
-    bool ok = WriteData(localHeader, kHdrSize);
+    Str localHeader = local.d.Get();
+    bool ok = WriteData(localHeader.s, kHdrSize);
     ok = ok && WriteData(nameUtf8, namelen);
     ok = ok && WriteData(compressed, compressedSize);
 
@@ -189,8 +189,8 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
         nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : Str(path);
     }
 
-    char* name = str::Dup(nameInZip);
-    str::TransCharsInPlace(Str(name), "\\", "/");
+    Str name = str::Dup(nameInZip);
+    str::TransCharsInPlace(name, "\\", "/");
 
     bool res = AddFileData(name, fileData.Get(), fileData.size(), dosdatetime);
     fileData.Free();
@@ -202,10 +202,10 @@ bool ZipCreator::AddFileFromDir(Str filePath, Str dir) {
     if (str::IsEmpty(dir) || !str::StartsWith(filePath, dir)) {
         return false;
     }
-    const char* nameInZip = filePath.s + dir.len + 1;
-    if (!path::IsSep(nameInZip[-1])) {
+    if (!path::IsSep(filePath.s[dir.len])) {
         return false;
     }
+    Str nameInZip = Str(filePath.s + dir.len + 1, filePath.len - dir.len - 1);
     return AddFile(filePath, nameInZip);
 }
 
