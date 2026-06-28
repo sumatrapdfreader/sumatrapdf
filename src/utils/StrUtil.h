@@ -253,10 +253,10 @@ TempStr GetFileNameTemp(Str url);
 
 } // namespace url
 
-using SeqStrings = const char*;
+using SeqStrings = const char*; // str-port: packed generated string table base
 
-void SeqStrNext(const char*& s);
-void SeqStrNext(const char*& s, int* idxInOut);
+Str SeqStrAt(SeqStrings strs, int off);
+bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut = nullptr);
 int SeqStrIndex(SeqStrings strs, Str toFind);
 int SeqStrIndexIS(SeqStrings strs, Str toFind);
 Str SeqStrByIndex(SeqStrings strs, int idx);

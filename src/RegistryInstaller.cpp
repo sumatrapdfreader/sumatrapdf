@@ -49,12 +49,13 @@ static bool HasOurOpenWithEntry(HKEY hkey, Str ext) {
 }
 
 static bool HasAllOurOpenWithEntries(HKEY hkey) {
-    auto exts = gSupportedExts;
-    while (exts) {
-        if (!HasOurOpenWithEntry(hkey, Str(exts))) {
+    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
+        if (!HasOurOpenWithEntry(hkey, SeqStrAt(gSupportedExts, off))) {
             return false;
         }
-        SeqStrNext(exts);
+        if (!SeqStrAdvance(gSupportedExts, off)) {
+            break;
+        }
     }
     return true;
 }
@@ -147,14 +148,16 @@ static bool RegisterForDefaultPrograms(HKEY hkey, Str installedExePath) {
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
     TempStr keyAssoc = str::JoinTemp(appCapabilityPath, "\\FileAssociations");
 
-    auto ext = gSupportedExts;
-    while (ext) {
+    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
+        Str ext = SeqStrAt(gSupportedExts, off);
         // must match the per-extension ProgID created by RegisterForOpenWith
         // (e.g. "SumatraPDF.pdf"); Default Apps UI hides the app if the
         // FileAssociations ProgID can't be resolved under HKCR
-        TempStr progIDName = str::JoinTemp(kAppName, Str(ext));
-        ok &= LoggedWriteRegStr(hkey, keyAssoc, Str(ext), progIDName);
-        SeqStrNext(ext);
+        TempStr progIDName = str::JoinTemp(kAppName, ext);
+        ok &= LoggedWriteRegStr(hkey, keyAssoc, ext, progIDName);
+        if (!SeqStrAdvance(gSupportedExts, off)) {
+            break;
+        }
     }
 
     ok &= LoggedWriteRegStr(hkey, "SOFTWARE\\RegisteredApplications", kAppName, appCapabilityPath);
@@ -188,10 +191,9 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     TempStr cmdPrint = str::JoinTemp(exePathQuoted, " -print-to-default \"%1\"");
     TempStr cmdPrintTo = str::JoinTemp(exePathQuoted, " -print-to \"%2\" \"%1\"");
     TempStr key;
-    auto exts = gSupportedExts;
     bool ok = true;
-    while (exts) {
-        Str ext = exts;
+    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
+        Str ext = SeqStrAt(gSupportedExts, off);
         TempStr progIDName = str::JoinTemp(kAppName, ext);
         TempStr progIDKey = str::JoinTemp("Software\\Classes\\", progIDName);
         // ok &= CreateRegKey(hkey, progIDKey);
@@ -245,7 +247,9 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
         key = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
         ok &= LoggedWriteRegNone(hkey, key, progIDName);
 
-        SeqStrNext(exts);
+        if (!SeqStrAdvance(gSupportedExts, off)) {
+            break;
+        }
     }
     return ok;
 }
@@ -267,12 +271,13 @@ bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     bool ok = true;
 
     TempWStr openWithVal = str::JoinTemp(L"\\OpenWithList\\", kExeName);
-    auto exts = gSupportedExts;
-    while (exts) {
-        TempWStr ext = ToWStrTemp(exts);
+    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
+        TempWStr ext = ToWStrTemp(SeqStrAt(gSupportedExts, off));
         TempWStr name = str::JoinTemp(L"Software\\Classes\\", ext, openWithVal);
         ok &= CreateRegKey(hkey, name);
-        SeqStrNext(exts);
+        if (!SeqStrAdvance(gSupportedExts, off)) {
+            break;
+        }
     }
     return ok;
 }
@@ -476,10 +481,9 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     }
 
     // those are registry keys written before 3.4
-    SeqStrings exts = gSupportedExts;
     TempStr openWithVal = str::JoinTemp("\\OpenWithList\\", kExeName);
-    while (exts) {
-        Str ext = exts;
+    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
+        Str ext = SeqStrAt(gSupportedExts, off);
         TempStr keyname = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
         LoggedDeleteRegValue(hkey, keyname, kAppName);
         DeleteEmptyRegKey(hkey, keyname);
@@ -495,21 +499,25 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
                 DeleteEmptyRegKey(hkey, keyname);
             }
         }
-        SeqStrNext(exts);
+        if (!SeqStrAdvance(gSupportedExts, off)) {
+            break;
+        }
     }
 
     // those were introduced in 3.4
-    exts = gSupportedExts;
-    while (exts) {
-        TempStr progIDName = str::JoinTemp(kAppName, exts);
+    for (int off = 0; SeqStrAt(gSupportedExts, off);) {
+        Str ext = SeqStrAt(gSupportedExts, off);
+        TempStr progIDName = str::JoinTemp(kAppName, ext);
         TempStr key = str::JoinTemp("Software\\Classes\\", progIDName);
 
         LoggedDeleteRegKey(hkey, key);
 
-        key = str::JoinTemp("Software\\Classes\\", exts, "\\OpenWithProgids");
+        key = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
         LoggedDeleteRegValue(hkey, key, progIDName);
 
-        SeqStrNext(exts);
+        if (!SeqStrAdvance(gSupportedExts, off)) {
+            break;
+        }
     }
 
     // delete keys written in ListAsDefaultProgramWin10()

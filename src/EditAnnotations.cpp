@@ -482,9 +482,11 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
 }
 
 static void ItemsFromSeqstrings(StrVec& items, SeqStrings strings) {
-    while (strings) {
-        items.Append(strings);
-        SeqStrNext(strings);
+    for (int off = 0; SeqStrAt(strings, off);) {
+        items.Append(SeqStrAt(strings, off));
+        if (!SeqStrAdvance(strings, off)) {
+            break;
+        }
     }
 }
 

@@ -120,13 +120,14 @@ static bool IsCaptionLabelAt(WStr text, int idx) {
     if (idx > 0 && IsAsciiAlnum(text.s[idx - 1])) {
         return false;
     }
-    SeqStrings words = gCaptionWords;
-    while (words) {
-        TempWStr w = ToWStrTemp(words);
+    for (int off = 0; SeqStrAt(gCaptionWords, off);) {
+        TempWStr w = ToWStrTemp(SeqStrAt(gCaptionWords, off));
         if (MatchWordAt(text, idx, w, /*requireTrailingDigit=*/true)) {
             return true;
         }
-        SeqStrNext(words);
+        if (!SeqStrAdvance(gCaptionWords, off)) {
+            break;
+        }
     }
     return false;
 }
@@ -1253,11 +1254,12 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     WCHAR firstC = text.s[startIdx];
     bool digitStart = (firstC >= L'0' && firstC <= L'9');
     bool labelStart = false;
-    SeqStrings words = gHeadingPrefixWords;
-    while (!labelStart && words) {
-        TempWStr w = ToWStrTemp(words);
+    for (int off = 0; !labelStart && SeqStrAt(gHeadingPrefixWords, off);) {
+        TempWStr w = ToWStrTemp(SeqStrAt(gHeadingPrefixWords, off));
         labelStart = MatchWordAt(text, startIdx, w, /*requireTrailingDigit=*/false);
-        SeqStrNext(words);
+        if (!SeqStrAdvance(gHeadingPrefixWords, off)) {
+            break;
+        }
     }
     if (digitStart || labelStart) {
         return LandscapeBox(mediabox, destX, destY, text, coords);

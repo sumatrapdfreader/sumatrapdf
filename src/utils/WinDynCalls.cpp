@@ -218,10 +218,11 @@ static const char* dllsToPreload =
 // try to mitigate dll hijacking by pre-loading all the dlls that we delay load or might
 // be loaded indirectly
 void NoDllHijacking() {
-    const char* dll = dllsToPreload;
-    while (dll) {
-        SafeLoadLibrary(dll);
-        SeqStrNext(dll);
+    for (int off = 0; SeqStrAt(dllsToPreload, off);) {
+        SafeLoadLibrary(SeqStrAt(dllsToPreload, off));
+        if (!SeqStrAdvance(dllsToPreload, off)) {
+            break;
+        }
     }
 }
 

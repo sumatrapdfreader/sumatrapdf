@@ -1340,28 +1340,30 @@ void DecodeInPlace(Str url) {
 // that are critial for performance. On the other hand, it's
 // not that bad: linear scanning of memory is fast due to the magic
 // of L1 cache
-void SeqStrNext(const char*& s, int* idxInOut) {
-    int idx = *idxInOut;
-    if (!s || !*s || idx < 0) {
-        s = nullptr;
-        *idxInOut = -1;
-        return;
+Str SeqStrAt(SeqStrings strs, int off) {
+    if (!strs || off < 0 || !strs[off]) {
+        return {};
     }
-    while (*s) {
-        s++;
-    }
-    s++; // skip terminating 0
-    if (!*s) {
-        s = nullptr;
-        return;
-    }
-    idx++;
-    *idxInOut = idx;
+    return Str((char*)strs + off);
 }
 
-void SeqStrNext(const char*& s) {
-    int idxDummy = 0;
-    SeqStrNext(s, &idxDummy);
+bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut) {
+    if (!strs || off < 0 || !strs[off]) {
+        off = -1;
+        if (idxInOut) {
+            *idxInOut = -1;
+        }
+        return false;
+    }
+    off += str::Leni(strs + off) + 1;
+    if (!strs[off]) {
+        off = -1;
+        return false;
+    }
+    if (idxInOut) {
+        (*idxInOut)++;
+    }
+    return true;
 }
 
 // Returns nullptr if s is the same as toFind
@@ -1427,15 +1429,14 @@ int SeqStrIndexIS(SeqStrings strs, Str toFind) {
 // returns a strings at that index.
 Str SeqStrByIndex(SeqStrings strs, int idx) {
     ReportIf(idx < 0);
-    const char* s = strs;
+    int off = 0;
     while (idx > 0) {
-        SeqStrNext(s);
-        if (!s) {
+        if (!SeqStrAdvance(strs, off)) {
             return {};
         }
-        --idx;
+        idx--;
     }
-    return Str(s);
+    return SeqStrAt(strs, off);
 }
 
 // unsigned LEB128 of zigzag-encoded i64
