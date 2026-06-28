@@ -268,13 +268,13 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena*
     }
 
     bool ok = false;
-    char* filePath = path::Join(allocator, dstDir, fi->name);
+    Str filePath = path::Join(allocator, dstDir, fi->name);
     if (filePath) {
         ByteSlice d = {(u8*)uncompressed, fi->uncompressedSize};
         ok = file::WriteFile(filePath, d);
     }
 
-    Free(allocator, filePath);
+    Free(allocator, filePath.s);
     Free(allocator, uncompressed);
 
     return ok;

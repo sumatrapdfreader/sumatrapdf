@@ -465,7 +465,7 @@ static void SerializeUnknownFields(StrBuilder& out, SquareTreeNode* node, int in
 static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const void* data, SquareTreeNode* prevNode,
                                int indent = 0) {
     const u8* base = (const u8*)data;
-    const char* fieldName = info->fieldNames;
+    const char* fieldName = info->fieldNames; // str-port: generated packed field-name table cursor
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         Str fieldNameStr = Str(fieldName);
@@ -529,7 +529,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
         base = AllocArray<u8>(info->structSize);
     }
 
-    const char* fieldName = info->fieldNames;
+    const char* fieldName = info->fieldNames; // str-port: generated packed field-name table cursor
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         u8* fieldPtr = base + field.offset;

@@ -88,7 +88,7 @@ bool IsSpaceOnly(Str s) {
     return off == s.len;
 }
 
-static void MemAppend(char* buf, int& off, Str src) {
+static void MemAppend(char* buf, int& off, Str src) { // str-port: owned heap write buffer
     if (!src) {
         return;
     }
@@ -205,9 +205,9 @@ bool AttrInfo::NameIs(Str s) const {
 // return true if nameToCheck is the same as s after skipping namespace preifix
 static bool IsNameWithNS(Str s, Str nameToCheck) {
     Str name = s;
-    const char* colon = (const char*)memchr(s.s, ':', s.len);
+    Str colon = str::FindChar(s, ':');
     if (colon) {
-        int prefixLen = (int)(colon + 1 - s.s);
+        int prefixLen = (int)(colon.s - s.s) + 1;
         name = Str(s.s + prefixLen, s.len - prefixLen);
     }
     return str::EqNIx(name, name.len, nameToCheck);

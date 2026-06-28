@@ -248,7 +248,7 @@ void logfa(Str fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    char* s = str::FmtV(fmt, args);
+    char* s = str::FmtV(fmt, args); // str-port: owned heap
     log2(Str(s), true);
     str::Free(s);
     va_end(args);

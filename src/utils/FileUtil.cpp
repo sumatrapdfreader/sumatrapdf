@@ -191,7 +191,7 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
     if (fileName && IsSep(fileName.s[0])) {
         fileName = WStr(fileName.s + 1, fileName.len - 1);
     }
-    const WCHAR* sepStr = nullptr;
+    WStr sepStr;
     if (path.len > 0) {
         if (!IsSep(path.s[path.len - 1])) {
             sepStr = L"\\";

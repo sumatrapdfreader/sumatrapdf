@@ -158,7 +158,7 @@ NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
     if (symLen < 4) {
         return false;
     }
-    char* name = symInfo->Name;
+    char* name = symInfo->Name; // str-port: dbghelp SYMBOL_INFO
     return *name != 0;
 }
 
@@ -252,7 +252,8 @@ void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, 
 
 // note: without NO_INLINE it would be mis-compiled to return false in release builds
 // making GetAddressInfo() not provide info about address
-NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen, DWORD& sectionOut,
+NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen,
+                                  DWORD& sectionOut, // str-port: Win32 out-buffer
                                   DWORD_PTR& offsetOut) {
     MEMORY_BASIC_INFORMATION mbi;
     if (0 == VirtualQuery(addr, &mbi, sizeof(mbi))) {
@@ -309,7 +310,7 @@ void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
     symInfo->MaxNameLen = MAX_SYM_LEN;
 
     DWORD64 symDisp = 0;
-    char* symName = nullptr;
+    char* symName = nullptr; // str-port: dbghelp SYMBOL_INFO
     BOOL ok = DynSymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
     if (ok) {
         symName = &(symInfo->Name[0]);
@@ -321,7 +322,7 @@ void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
     ok = GetAddrInfo((void*)addr, moduleName, sizeof(moduleName), section, offset);
     if (ok) {
         str::ToLowerInPlace(moduleName);
-        const char* moduleShort = path::GetBaseNameTemp(moduleName);
+        TempStr moduleShort = path::GetBaseNameTemp(moduleName);
         if (compact) {
             s.Append(moduleShort);
         } else {
@@ -497,7 +498,7 @@ ByteSlice GetCallstacks() {
     if (!gCallstackLogs) {
         return {};
     }
-    char* s = str::Dup(gCallstackLogs->Get());
+    char* s = str::Dup(gCallstackLogs->Get()); // str-port: owned heap
     return ToByteSlice(s);
 }
 
