@@ -168,7 +168,7 @@ bool gRedrawLog = false;
 static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sidebarDx = -1);
 static void UpdateOverlayScrollbarPositions(MainWindow* win);
 
-static const char* HwndName(HWND hwnd) {
+static Str HwndName(HWND hwnd) {
     WCHAR cls[64]{};
     GetClassNameW(hwnd, cls, dimof(cls));
     if (str::Eq(cls, FRAME_CLASS_NAME)) {
@@ -181,15 +181,15 @@ static const char* HwndName(HWND hwnd) {
     return "other";
 }
 
-static void LogRedraw(const char* what, HWND hwnd, const RECT* rc = nullptr) {
+static void LogRedraw(Str what, HWND hwnd, const RECT* rc = nullptr) {
     if (!gRedrawLog) {
         return;
     }
     if (rc) {
-        logf("redraw: %s hwnd=0x%p (%s) rc=(%d,%d,%d,%d)\n", what, hwnd, HwndName(hwnd), rc->left, rc->top, rc->right,
-             rc->bottom);
+        logf("redraw: %s hwnd=0x%p (%s) rc=(%d,%d,%d,%d)\n", what.s, hwnd, HwndName(hwnd).s, rc->left, rc->top,
+             rc->right, rc->bottom);
     } else {
-        logf("redraw: %s hwnd=0x%p (%s)\n", what, hwnd, HwndName(hwnd));
+        logf("redraw: %s hwnd=0x%p (%s)\n", what.s, hwnd, HwndName(hwnd).s);
     }
 }
 
@@ -6559,7 +6559,7 @@ void RemoveDeletedFilesFromHistory(MainWindow* win) {
     // iterate from the end because removing changes indices
     for (int i = states->Size() - 1; i >= 0; i--) {
         FileState* fs = states->at(i);
-        const char* path = fs->filePath;
+        Str path = fs->filePath;
         if (!path) {
             continue;
         }
@@ -6668,8 +6668,8 @@ void DeleteManualBrowserWindow() {
     gManualBrowserWindow = nullptr;
 }
 
-static char* ManualMimeFromPath(const char* path) {
-    const char* ext = str::FindCharLast(path, '.');
+static Str ManualMimeFromPath(Str path) {
+    Str ext = str::FindCharLast(path, '.');
     if (!ext) {
         return str::Dup("text/html");
     }
@@ -6692,7 +6692,7 @@ static char* ManualMimeFromPath(const char* path) {
     return str::Dup("text/html");
 }
 
-static bool IsManualDocHtmlPage(const char* path) {
+static bool IsManualDocHtmlPage(Str path) {
     if (str::IsEmpty(path) || !str::EndsWithI(path, ".html")) {
         return false;
     }
@@ -6702,7 +6702,7 @@ static bool IsManualDocHtmlPage(const char* path) {
     return true;
 }
 
-static TempStr ManualArchiveLookupPathTemp(const char* path) {
+static TempStr ManualArchiveLookupPathTemp(Str path) {
     TempStr lookupPath = str::DupTemp(path);
     // manual.dat stores names with backslashes (MakeLZSA convention) but WebView
     // requests use URL-style forward slashes.
@@ -6716,7 +6716,7 @@ static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
         return false;
     }
 
-    const char* mimePath = path;
+    Str mimePath = path;
     // Doc pages are rendered on demand from .md sources in WebView2.
     if (IsManualDocHtmlPage(path)) {
         path = "manual.shell.html";
@@ -6737,7 +6737,7 @@ static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
     lzma::FileInfo* fi = &archive->files[idx];
     res->data = (char*)data;
     res->dataLen = fi->uncompressedSize;
-    res->contentType = ManualMimeFromPath(mimePath);
+    res->contentType = ManualMimeFromPath(mimePath).s;
     res->ownsData = true;
     return true;
 }
@@ -6770,21 +6770,21 @@ static bool EnsureManualArchiveLoaded() {
     return gManualArchive.filesCount > 0;
 }
 
-static TempStr DocURIToLocalManualUrlTemp(const char* docURI) {
+static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
     if (str::IsEmpty(docURI)) {
         docURI = kManualDefaultDocURI;
     }
 
-    const char* fragment = str::FindChar(docURI, '#');
-    const char* pathStart = docURI;
-    if (*pathStart == '/') {
-        pathStart++;
+    Str fragment = str::FindChar(docURI, '#');
+    Str pathStart = docURI;
+    if (pathStart.len > 0 && pathStart.s[0] == '/') {
+        pathStart = Str(pathStart.s + 1, pathStart.len - 1);
     }
-    int pathLen = fragment ? (int)(fragment - pathStart) : str::Len(pathStart);
+    int pathLen = fragment ? (int)(fragment.s - pathStart.s) : pathStart.len;
     if (pathLen <= 0) {
-        pathStart = kManualDefaultDocURI + 1;
-        pathLen = str::Len(pathStart);
-        fragment = nullptr;
+        pathStart = Str(kManualDefaultDocURI + 1);
+        pathLen = pathStart.len;
+        fragment = {};
     }
 
     TempStr htmlFile = str::DupTemp(pathStart, pathLen);
@@ -6799,14 +6799,14 @@ static TempStr DocURIToLocalManualUrlTemp(const char* docURI) {
     return url;
 }
 
-static TempStr DocURIToWebUrlTemp(const char* docURI) {
+static TempStr DocURIToWebUrlTemp(Str docURI) {
     if (str::IsEmpty(docURI)) {
         docURI = kManualDefaultDocURI;
     }
-    if (*docURI == '/') {
-        return str::FormatTemp("https://www.sumatrapdfreader.org/docs%s", docURI);
+    if (docURI.len > 0 && docURI.s[0] == '/') {
+        return str::FormatTemp("https://www.sumatrapdfreader.org/docs%s", docURI.s);
     }
-    return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", docURI);
+    return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", docURI.s);
 }
 
 void LaunchDocumentation(Str docURI) {
@@ -10570,8 +10570,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     return 0;
 }
 
-static TempStr GetFileSizeAsStrTemp(const char* path) {
-    i64 fileSize = file::GetSize(Str(path));
+static TempStr GetFileSizeAsStrTemp(Str path) {
+    i64 fileSize = file::GetSize(path);
     return str::FormatFileSizeTemp(fileSize);
 }
 
@@ -10580,14 +10580,14 @@ void GetProgramInfo(StrBuilder& s) {
 
     TempStr exePath = GetSelfExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
-    s.AppendFmt("Exe: %s %s\r\n", exePath, fileSizeExe);
+    s.AppendFmt("Exe: %s %s\r\n", exePath.s, fileSizeExe.s);
     if (IsDllBuild()) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
-        char* dir = path::GetDirTemp(exePath);
-        char* dllPath = path::JoinTemp(dir, "libmupdf.dll");
+        TempStr dir = path::GetDirTemp(exePath);
+        TempStr dllPath = path::JoinTemp(dir, "libmupdf.dll");
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
-        s.AppendFmt("Dll: %s %s\r\n", dllPath, fileSizeDll);
+        s.AppendFmt("Dll: %s %s\r\n", dllPath.s, fileSizeDll.s);
     }
     TempStr signer = GetExecutableSignerTemp(exePath);
     s.AppendFmt("Signer: %s\r\n", signer ? signer.s : "(not signed)");
