@@ -82,18 +82,45 @@ enum class TrimOpt {
     Both
 };
 
-void Free(const char*);
-void Free(const u8*);
-void Free(const Str& s);
+void Free(Str s);
+void Free(WStr s);
+FORCEINLINE void Free(const char* s) {
+    Free(Str(s));
+} // str-port shim
+FORCEINLINE void Free(char* s) {
+    Free(Str(s));
+} // str-port shim
+FORCEINLINE void Free(const u8* s) {
+    Free(Str((const char*)s));
+} // str-port shim
+FORCEINLINE void Free(u8* s) {
+    Free(Str((char*)s));
+} // str-port shim
+FORCEINLINE void Free(const WCHAR* s) {
+    Free(WStr(s));
+} // str-port shim
+FORCEINLINE void Free(WCHAR* s) {
+    Free(WStr(s));
+} // str-port shim
 
-void Free(const WCHAR* s);
-
-void FreePtr(const char** s);
-void FreePtr(char** s);
-void FreePtr(const WCHAR** s);
-void FreePtr(WCHAR** s);
 void FreePtr(Str* s);
 void FreePtr(WStr* s);
+FORCEINLINE void FreePtr(const char** s) { // str-port shim
+    Free(Str(*s));
+    *s = nullptr;
+}
+FORCEINLINE void FreePtr(char** s) { // str-port shim
+    Free(Str(*s));
+    *s = nullptr;
+}
+FORCEINLINE void FreePtr(const WCHAR** s) { // str-port shim
+    Free(WStr(*s));
+    *s = nullptr;
+}
+FORCEINLINE void FreePtr(WCHAR** s) { // str-port shim
+    Free(WStr(*s));
+    *s = nullptr;
+}
 
 Str Dup(Arena*, Str str, size_t cch = (size_t)-1);
 Str Dup(Str s, size_t cch = (size_t)-1);

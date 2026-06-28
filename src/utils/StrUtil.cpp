@@ -227,40 +227,12 @@ bool IsEqual(const ByteSlice& d1, const ByteSlice& d2) {
 
 namespace str {
 
-void Free(const char* s) {
-    free((void*)s);
-}
-
-void Free(const u8* s) {
-    free((void*)s);
-}
-
-void Free(const WCHAR* s) {
-    free((void*)s);
-}
-
-void Free(const Str& s) {
+void Free(Str s) {
     free(s.s);
 }
 
-void FreePtr(const char** s) {
-    str::Free(*s);
-    *s = nullptr;
-}
-
-void FreePtr(char** s) {
-    str::Free(*s);
-    *s = nullptr;
-}
-
-void FreePtr(const WCHAR** s) {
-    str::Free(*s);
-    *s = nullptr;
-}
-
-void FreePtr(WCHAR** s) {
-    str::Free(*s);
-    *s = nullptr;
+void Free(WStr s) {
+    free(s.s);
 }
 
 void FreePtr(Str* s) {
@@ -269,7 +241,7 @@ void FreePtr(Str* s) {
 }
 
 void FreePtr(WStr* s) {
-    str::Free(s->s);
+    str::Free(*s);
     *s = {};
 }
 
