@@ -45,7 +45,7 @@ static AutoFreeStr gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
 static const WCHAR* GetDefaultFontName() {
-    char* s = gDefaultFontName.Get();
+    Str s = gDefaultFontName.Get();
     if (s) {
         return ToWStrTemp(s);
     }
@@ -166,11 +166,6 @@ static IPageElement* NewEbookLink(DrawInstr* link, Rect rect, IPageDestination* 
     res->pageNo = pageNo;
     res->rect = ToRectF(rect);
 
-#if 0 // TODO: figure out
-    if (showUrl) {
-        res->value = strconv::FromHtmlUtf8(Str((char*)link->str.s, (int)link->str.len));
-    }
-#endif
     return res;
 }
 
@@ -404,7 +399,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    AutoFreeWStr s(strconv::FromHtmlUtf8(Str((char*)i.str.s, (int)i.str.len)).s);
+                    AutoFreeWStr s(strconv::FromHtmlUtf8(i.str).s);
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
@@ -428,7 +423,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    AutoFreeWStr s(strconv::FromHtmlUtf8(Str((char*)i.str.s, (int)i.str.len)).s);
+                    AutoFreeWStr s(strconv::FromHtmlUtf8(i.str).s);
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
@@ -457,7 +452,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
 }
 
 PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
-    const char* lineSep = "\n";
+    Str lineSep = "\n";
     ScopedCritSec scope(&pagesAccess);
 
     InterlockedIncrement(&gAllowAllocFailure);
@@ -478,7 +473,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(str::Len(lineSep));
-                    ReportIf(*lineSep && !coords.Last().IsEmpty());
+                    ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
                     if (swidth > 0) {
@@ -488,7 +483,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    TempStr s = strconv::FromHtmlUtf8Temp(Str((char*)i.str.s, (int)i.str.len));
+                    TempStr s = strconv::FromHtmlUtf8Temp(i.str);
                     size_t len = str::Len(s);
                     content.Append(s);
                     if (len > 0) {
@@ -504,7 +499,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(str::Len(lineSep));
-                    ReportIf(*lineSep && !coords.Last().IsEmpty());
+                    ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
                     if (swidth > 0) {
@@ -514,7 +509,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    TempStr s = strconv::FromHtmlUtf8Temp(Str((char*)i.str.s, (int)i.str.len));
+                    TempStr s = strconv::FromHtmlUtf8Temp(i.str);
                     size_t len = str::Len(s);
                     content.Append(s);
                     if (len > 0) {
@@ -532,7 +527,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 break;
         }
     }
-    if (content.size() > 0 && !str::EndsWith(content.Get(), lineSep)) {
+    if (content.size() > 0 && !str::EndsWith(Str(content.Get()), lineSep)) {
         content.Append(lineSep);
         coords.AppendBlanks(str::Len(lineSep));
     }
@@ -546,7 +541,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
 }
 
 IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
-    ::Str linkStr{(char*)link->str.s, (int)link->str.len};
+    Str linkStr = link->str;
     TempStr url = strconv::FromHtmlUtf8Temp(linkStr);
     if (url::IsAbsolute(url)) {
         return NewEbookLink(link, rect, nullptr, pageNo);
@@ -554,7 +549,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
 
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
     if (baseAnchor) {
-        TempStr basePath = str::DupTemp(Str((char*)baseAnchor->str.s, (int)baseAnchor->str.len));
+        TempStr basePath = str::DupTemp(baseAnchor->str);
         TempStr relPath = ResolveHtmlEntitiesTemp(linkStr);
         AutoFreeStr absPath(NormalizeURL(relPath, basePath).s);
         url = str::DupTemp(absPath.Get());
@@ -630,9 +625,10 @@ IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
 }
 
 IPageDestination* EngineEbook::GetNamedDest(Str name) {
-    const char* id = name;
-    if (str::FindChar(id, '#')) {
-        id = str::FindChar(id, '#') + 1;
+    Str id = name;
+    Str hash = str::FindChar(name, '#');
+    if (hash) {
+        id = Str(hash.s + 1, hash.len - 1);
     }
 
     // if the name consists of both path and ID,
@@ -641,11 +637,11 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
     // for the same ID to be reused on different pages
     DrawInstr* baseAnchor = nullptr;
     int basePageNo = 0;
-    if (id > name.s + 1) {
-        size_t base_len = (size_t)(id - name.s - 1);
+    if (hash && hash.s > name.s) {
+        size_t base_len = (size_t)(hash.s - name.s - 1);
         for (size_t i = 0; i < baseAnchors.size(); i++) {
             DrawInstr* anchor = baseAnchors.at(i);
-            if (anchor && base_len == (size_t)anchor->str.len && str::EqNI(name.s, anchor->str.s, base_len)) {
+            if (anchor && base_len == (size_t)anchor->str.len && str::EqNI(name, anchor->str, base_len)) {
                 baseAnchor = anchor;
                 basePageNo = (int)i + 1;
                 break;
@@ -653,7 +649,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
         }
     }
 
-    size_t id_len = str::Len(id);
+    size_t id_len = id.len;
     for (size_t i = 0; i < anchors.size(); i++) {
         PageAnchor* anchor = &anchors.at(i);
         if (baseAnchor) {
@@ -663,7 +659,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
             continue;
         }
         // note: at least CHM treats URLs as case-independent
-        if (id_len == anchor->instr->str.len && str::EqNI(id, anchor->instr->str.s, id_len)) {
+        if (id_len == (size_t)anchor->instr->str.len && str::EqNI(id, anchor->instr->str, id_len)) {
             RectF rect(0, anchor->instr->bbox.y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
             return NewSimpleDest(anchor->pageNo, rect);
@@ -713,7 +709,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
             if (ok != Ok) {
                 continue;
             }
-            char* fontName = ToUtf8Temp(fontNameW);
+            TempStr fontName = ToUtf8Temp(fontNameW);
             AppendIfNotExists(&fonts, fontName);
         }
     }
@@ -1180,7 +1176,7 @@ IPageDestination* EngineMobi::GetNamedDest(Str name) {
 
     ByteSlice htmlData = doc->GetHtmlData();
     size_t htmlLen = htmlData.size();
-    const char* start = (const char*)htmlData.data();
+    Str start = AsStr(htmlData);
     if ((size_t)filePos > htmlLen) {
         return nullptr;
     }
@@ -1191,8 +1187,8 @@ IPageDestination* EngineMobi::GetNamedDest(Str name) {
     // beyond the last visible DrawInstr of a page
     float currY = (float)pageRect.dy;
     for (DrawInstr& i : *pageInstrs) {
-        if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && i.str.s >= start &&
-            i.str.s <= start + htmlLen && i.str.s - start >= filePos) {
+        if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && i.str.s >= start.s &&
+            i.str.s <= start.s + htmlLen && i.str.s - start.s >= filePos) {
             currY = i.bbox.y;
             break;
         }
@@ -1414,7 +1410,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(Str((char*)attr->val, (int)attr->valLen));
+        HandleText(Str(attr->val, (int)attr->valLen));
     }
 }
 
@@ -1425,7 +1421,7 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
-        currPage->instructions.Append(DrawInstr::Anchor(Str((char*)attr->val, (int)attr->valLen), bbox));
+        currPage->instructions.Append(DrawInstr::Anchor(Str(attr->val, (int)attr->valLen), bbox));
         pagePath.Set(str::Dup(attr->val, attr->valLen));
         // reset CSS style rules for the new document
         styleRules.Reset();
@@ -1454,7 +1450,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
     url::DecodeInPlace(src);
     ByteSlice data = chmDoc->GetFileData(src, Str(pagePath));
     if (data.Get()) {
-        ParseStyleSheet(Str((char*)data.data(), (int)data.size()));
+        ParseStyleSheet(AsStr(data));
     }
     data.Free();
 }
@@ -1504,9 +1500,9 @@ class EngineChm : public EngineEbook {
     IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
 };
 
-static uint CharsetNameToCodepage(const char* charset) {
+static uint CharsetNameToCodepage(Str charset) {
     static struct {
-        const char* name;
+        Str name;
         uint codepage;
     } codepages[] = {
         {"ISO-8859-1", 1252}, {"Latin1", 1252}, {"CP1252", 1252},       {"Windows-1252", 1252}, {"ISO-8859-2", 28592},
@@ -1536,7 +1532,7 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
                 const GumboAttribute* content = gumbo_get_attribute(&n->v.element.attributes, "content");
                 AutoFree mimetype, charset;
                 if (content && str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset)) {
-                    uint cp = CharsetNameToCodepage(charset);
+                    uint cp = CharsetNameToCodepage(Str(charset.Get()));
                     if (cp) {
                         return cp;
                     }
@@ -1560,13 +1556,13 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
 }
 
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
-static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
-    if (!strstr(html, "charset=")) {
+static uint ExtractHttpCharset(Str html) {
+    if (!str::Find(html, "charset=")) {
         return 0;
     }
-    size_t parseLen = std::min(htmlLen, (size_t)1024);
+    size_t parseLen = std::min((size_t)html.len, (size_t)1024);
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, html, parseLen);
+    GumboOutput* output = gumbo_parse_with_options(&opts, html.s, parseLen);
     if (!output) {
         return 0;
     }
@@ -1628,11 +1624,12 @@ class ChmHtmlCollector : public EbookTocVisitor {
             return;
         }
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl.s);
-        uint charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
+        Str pageHtmlStr = AsStr(pageHtml);
+        uint charset = ExtractHttpCharset(pageHtmlStr);
         if (!charset) {
             charset = doc->codepage;
         }
-        TempStr s = SmartToUtf8Temp(Str((char*)pageHtml.data(), (int)pageHtml.size()), charset);
+        TempStr s = SmartToUtf8Temp(pageHtmlStr, charset);
         html.Append(s);
         added.Append(plainUrl);
         pageHtml.Free();
@@ -1810,10 +1807,10 @@ bool EngineHtml::Load(Str fileName) {
 
 static IPageDestination* newRemoteHtmlDest(Str relativeURL) {
     auto* res = new PageDestination();
-    const char* id = str::FindChar(relativeURL, '#');
-    if (id) {
-        res->value = str::Dup(relativeURL.s, (size_t)(id - relativeURL.s));
-        res->name = str::Dup(id);
+    Str hash = str::FindChar(relativeURL, '#');
+    if (hash) {
+        res->value = str::Dup(relativeURL, (size_t)(hash.s - relativeURL.s));
+        res->name = str::Dup(hash);
     } else {
         res->value = str::Dup(relativeURL);
     }
@@ -1826,7 +1823,7 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
         return nullptr;
     }
 
-    TempStr url = strconv::FromHtmlUtf8Temp(Str((char*)link->str.s, (int)link->str.len));
+    TempStr url = strconv::FromHtmlUtf8Temp(link->str);
     if (url::IsAbsolute(url) || '#' == url.s[0]) {
         return EngineEbook::CreatePageLink(link, rect, pageNo);
     }
