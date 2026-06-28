@@ -41,9 +41,9 @@ class EpubFormatter : public HtmlFormatter {
 
 /* formatting extensions for FictionBook */
 
-class Fb2Doc;
+struct Fb2Doc;
 
-class Fb2Formatter : public HtmlFormatter {
+struct Fb2Formatter : HtmlFormatter {
     int section;
     int titleCount;
 
@@ -55,31 +55,26 @@ class Fb2Formatter : public HtmlFormatter {
 
     Fb2Doc* fb2Doc;
 
-  public:
     Fb2Formatter(HtmlFormatterArgs* args, Fb2Doc* doc);
 };
 
 /* formatting extensions for standalone HTML */
 
-class HtmlDoc;
+struct HtmlDoc;
 
-class HtmlFileFormatter : public HtmlFormatter {
-  protected:
+struct HtmlFileFormatter : HtmlFormatter {
     void HandleTagImg(HtmlToken* t) override;
     void HandleTagLink(HtmlToken* t) override;
 
     HtmlDoc* htmlDoc;
 
-  public:
     HtmlFileFormatter(HtmlFormatterArgs* args, HtmlDoc* doc) : HtmlFormatter(args), htmlDoc(doc) {}
 };
 
 /* formatting extensions for TXT */
 
-class TxtFormatter : public HtmlFormatter {
-  protected:
+struct TxtFormatter : HtmlFormatter {
     void HandleTagPagebreak(HtmlToken*) override { ForceNewPage(); }
 
-  public:
     explicit TxtFormatter(HtmlFormatterArgs* args) : HtmlFormatter(args) {}
 };

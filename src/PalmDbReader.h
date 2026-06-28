@@ -27,7 +27,7 @@ struct PdbRecordHeader {
     char uniqueID[3]{};
 };
 
-class PdbReader {
+struct PdbReader {
     // content of pdb file
     const u8* data = nullptr;
     size_t dataSize = 0;
@@ -38,7 +38,6 @@ class PdbReader {
 
     bool ParseHeader();
 
-  public:
     PdbHeader hdr;
 
     PdbReader() = default;

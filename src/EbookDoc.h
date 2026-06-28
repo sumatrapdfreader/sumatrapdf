@@ -59,8 +59,7 @@ class EpubDoc {
 
 #define FB2_TOC_ENTRY_MARK "ToC!Entry!"
 
-class Fb2Doc {
-  public:
+struct Fb2Doc {
     AutoFreeStr fileName;
     IStream* stream = nullptr;
 
@@ -98,16 +97,15 @@ class Fb2Doc {
 
 /* ********** PalmDOC (and TealDoc) ********** */
 
-class PdbReader;
+struct PdbReader;
 
-class PalmDoc {
+struct PalmDoc {
     AutoFreeStr fileName;
     StrBuilder htmlData;
     StrVec tocEntries;
 
     bool Load();
 
-  public:
     explicit PalmDoc(Str path);
     ~PalmDoc();
 
@@ -125,7 +123,7 @@ class PalmDoc {
 
 /* ********** Plain HTML ********** */
 
-class HtmlDoc {
+struct HtmlDoc {
     AutoFreeStr fileName;
     ByteSlice htmlData;
     AutoFreeStr pagePath;
@@ -135,7 +133,6 @@ class HtmlDoc {
     bool Load();
     ByteSlice LoadURL(Str url);
 
-  public:
     explicit HtmlDoc(Str path);
     ~HtmlDoc();
 
@@ -153,14 +150,13 @@ class HtmlDoc {
 
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
-class TxtDoc {
+struct TxtDoc {
     AutoFreeStr fileName;
     StrBuilder htmlData;
     bool isRFC = false;
 
     bool Load();
 
-  public:
     explicit TxtDoc(Str fileName);
 
     ByteSlice GetHtmlData() const;

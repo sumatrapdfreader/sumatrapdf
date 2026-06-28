@@ -188,7 +188,7 @@ static_assert(kCdicHeaderLen == sizeof(CdicHeader), "wrong size of CdicHeader st
 
 #define kCdicsMax 32
 
-class HuffDicDecompressor {
+struct HuffDicDecompressor {
     u32 cacheTable[kCacheItemCount]{};
     u32 baseTable[kBaseTableItemCount]{};
 
@@ -201,7 +201,6 @@ class HuffDicDecompressor {
 
     int recursionDepth = 0;
 
-  public:
     HuffDicDecompressor();
 
     bool SetHuffData(u8* huffData, size_t huffDataLen);

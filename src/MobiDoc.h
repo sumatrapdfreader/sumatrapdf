@@ -1,8 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-class HuffDicDecompressor;
-class PdbReader;
+struct HuffDicDecompressor;
+struct PdbReader;
 
 struct MobiDoc {
     Str fileName;
@@ -36,7 +36,6 @@ struct MobiDoc {
     bool LoadForPdbReader(PdbReader* pdbReader);
     bool DecodeExthHeader(const u8* data, size_t dataLen);
 
-  public:
     StrBuilder* doc = nullptr;
 
     size_t imagesCount = 0;
