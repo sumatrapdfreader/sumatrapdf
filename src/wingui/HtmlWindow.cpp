@@ -334,48 +334,49 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWStr* urlRest) {
-    WStr rest = str::Parse(WStr(url), HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
-    return rest.s && !*rest.s;
+static bool ParseProtoUrl(WStr url, int* htmlWindowId, AutoFreeWStr* urlRest) {
+    WStr rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
+    return !rest;
 }
 
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(const char* url, int* htmlWindowId, AutoFreeStr* urlRest) {
-    Str rest = str::Parse(Str(url), HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
-    return rest.s && !rest.s[0];
+static bool ParseProtoUrl(Str url, int* htmlWindowId, AutoFreeStr* urlRest) {
+    Str rest = str::Parse(url, HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
+    return !rest;
 }
 
 #define kDefaultMimeType "text/html"
 
-// caller must free() the result
-static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
-    const char* ext = str::FindCharLast(url, '.');
-    if (!ext) {
-        return str::Dup(kDefaultMimeType);
+// caller must str::Free() the result
+static Str MimeFromUrl(Str url, Str imgExt = {}) {
+    Str ext = str::FindCharLast(url, '.');
+    if (!ext.s) {
+        return str::Dup(Str(kDefaultMimeType));
     }
 
-    if (str::FindChar(ext, ';')) {
+    Str semi = str::FindChar(ext, ';');
+    if (semi.s) {
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension
-        char* newUrl = str::DupTemp(url, str::FindChar(ext, ';') - url);
-        return MimeFromUrl(newUrl, imgExt);
+        int urlLen = (int)(semi.s - url.s);
+        return MimeFromUrl(Str(url.s, urlLen), imgExt);
     }
 
     static const struct {
-        const char* ext;
-        const char* mimetype;
+        Str ext;
+        Str mimetype;
     } mimeTypes[] = {
-        {".html", "text/html"}, {".htm", "text/html"},  {".gif", "image/gif"},
-        {".png", "image/png"},  {".jpg", "image/jpeg"}, {".jpeg", "image/jpeg"},
-        {".bmp", "image/bmp"},  {".css", "text/css"},   {".txt", "text/plain"},
+        {Str(".html"), Str("text/html")}, {Str(".htm"), Str("text/html")},  {Str(".gif"), Str("image/gif")},
+        {Str(".png"), Str("image/png")},  {Str(".jpg"), Str("image/jpeg")}, {Str(".jpeg"), Str("image/jpeg")},
+        {Str(".bmp"), Str("image/bmp")},  {Str(".css"), Str("text/css")},   {Str(".txt"), Str("text/plain")},
     };
 
     for (int i = 0; i < dimof(mimeTypes); i++) {
         if (str::EqI(ext, mimeTypes[i].ext)) {
             // trust an image's data more than its extension
-            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, "image/")) {
+            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, Str("image/"))) {
                 for (int j = 0; j < dimof(mimeTypes); j++) {
                     if (str::Eq(imgExt, mimeTypes[j].ext)) {
                         return str::Dup(mimeTypes[j].mimetype);
@@ -391,7 +392,7 @@ static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
         return str::Dup(contentType);
     }
 
-    return str::Dup(kDefaultMimeType);
+    return str::Dup(Str(kDefaultMimeType));
 }
 
 // TODO: return an error page html in case of errors?
@@ -425,14 +426,14 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     if (!win->htmlWinCb) {
         return INET_E_OBJECT_NOT_FOUND;
     }
-    char* urlRestA = ToUtf8Temp(urlRest);
+    TempStr urlRestA = ToUtf8Temp(urlRest);
     data = win->htmlWinCb->GetDataForUrl(urlRestA);
     if (data.empty()) {
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
-    const char* imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
-    char* mime = MimeFromUrl(urlRestA, imgExt);
+    Str imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
+    Str mime = MimeFromUrl(urlRestA, imgExt);
     TempWStr mimeW = ToWStrTemp(mime);
     str::Free(mime);
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
@@ -955,7 +956,7 @@ class HW_IDownloadManager : public IDownloadManager {
         if (!win || !win->htmlWinCb) {
             return INET_E_OBJECT_NOT_FOUND;
         }
-        char* urlRestA = ToUtf8Temp(urlRest);
+        TempStr urlRestA = ToUtf8Temp(urlRest);
         auto data = win->htmlWinCb->GetDataForUrl(urlRestA);
         if (data.empty()) {
             return INET_E_DATA_NOT_AVAILABLE;
@@ -1721,7 +1722,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* urlW, bool newWindow) {
     if (!htmlWinCb) {
         return true;
     }
-    char* url = ToUtf8Temp(urlW);
+    TempStr url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
         return true;
     }
@@ -1744,7 +1745,7 @@ void HtmlWindow::FreeHtmlSetInProgressData() {
 }
 
 void HtmlWindow::OnDocumentComplete(const WCHAR* urlW) {
-    char* url = ToUtf8Temp(urlW);
+    TempStr url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
         if (htmlSetInProgress) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
