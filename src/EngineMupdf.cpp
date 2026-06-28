@@ -1100,7 +1100,7 @@ static LinkRectList* LinkifyText(WStr pageText, Rect* coords) {
         } else if (start > pageBase && ('/' == start[-1] || iswalnum(start[-1]))) {
             // hyperlinks must not be preceded by a slash (indicates a different protocol)
             // or an alphanumeric character (indicates part of a different protocol)
-        } else if ('h' == *start && str::Parse(start, L"http%?s://")) {
+        } else if ('h' == *start && str::Parse(WStr(start), L"http%?s://")) {
             end = LinkifyFindEnd(start, start > pageBase ? start[-1] : ' ', pageEnd);
             multiline = LinkifyCheckMultiline(pageText, end, coords);
         } else if ('w' == *start && str::StartsWith(start, L"www.")) {

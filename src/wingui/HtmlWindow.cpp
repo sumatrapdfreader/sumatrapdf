@@ -335,8 +335,8 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
 static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWStr* urlRest) {
-    const WCHAR* rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
-    return rest && !*rest;
+    WStr rest = str::Parse(WStr(url), HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
+    return rest.s && !*rest.s;
 }
 
 // given url in the form "its://$htmlWindowId/$urlRest, parses

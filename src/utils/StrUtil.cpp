@@ -2703,19 +2703,18 @@ static const WCHAR* ParseLimitedNumber(const WCHAR* str, const WCHAR* format, co
 }
 
 static WCHAR* ExtractUntil(const WCHAR* pos, WCHAR c, const WCHAR** endOut) {
-    *endOut = FindChar(pos, c);
-    if (!*endOut) {
+    WStr found = FindChar(WStr(pos), c);
+    *endOut = found.s;
+    if (!found.s) {
         return nullptr;
     }
-    return str::Dup(pos, *endOut - pos);
+    return str::Dup(WStr((WCHAR*)pos, (int)(found.s - pos))).s;
 }
 
-const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...) {
+static const WCHAR* ParseWCursors(const WCHAR* str, const WCHAR* format, va_list args) {
     if (!str) {
         return nullptr;
     }
-    va_list args;
-    va_start(args, format);
     for (const WCHAR* f = format; *f; f++) {
         if (*f != '%') {
             if (*f != *str) {
@@ -2769,12 +2768,28 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...) {
         }
         str = end;
     }
-    va_end(args);
     return str;
 
 Failure:
-    va_end(args);
     return nullptr;
+}
+
+WStr Parse(WStr str, const WCHAR* format, ...) {
+    if (!str) {
+        return {};
+    }
+    va_list args;
+    va_start(args, format);
+    const WCHAR* p = ParseWCursors(str.s, format, args);
+    va_end(args);
+    if (!p) {
+        return {};
+    }
+    int rem = str.len - (int)(p - str.s);
+    if (rem < 0) {
+        rem = 0;
+    }
+    return WStr((WCHAR*)p, rem);
 }
 
 } // namespace str
