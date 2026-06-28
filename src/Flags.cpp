@@ -100,11 +100,11 @@ bool ParsePageRanges(Str ranges, Vec<PageRange>& result) {
 
     for (Str rangeStr : rangeList) {
         int start, end;
-        if (str::Parse(rangeStr, "%d-%d%$", &start, &end) && 0 < start && start <= end) {
+        if (!str::IsNull(str::Parse(rangeStr, "%d-%d%$", &start, &end)) && 0 < start && start <= end) {
             result.Append(PageRange{start, end});
-        } else if (str::Parse(rangeStr, "%d-%$", &start) && 0 < start) {
+        } else if (!str::IsNull(str::Parse(rangeStr, "%d-%$", &start)) && 0 < start) {
             result.Append(PageRange{start, INT_MAX});
-        } else if (str::Parse(rangeStr, "%d%$", &start) && 0 < start) {
+        } else if (!str::IsNull(str::Parse(rangeStr, "%d%$", &start)) && 0 < start) {
             result.Append(PageRange{start, start});
         } else {
             return false;
@@ -177,7 +177,7 @@ static void ParseZoomValue(float* zoom, Str txtOrig) {
 // -scroll x,y
 static void ParseScrollValue(Point* scroll, Str txt) {
     int x, y;
-    if (str::Parse(txt, "%d,%d%$", &x, &y)) {
+    if (!str::IsNull(str::Parse(txt, "%d,%d%$", &x, &y))) {
         *scroll = Point(x, y);
     }
 }
@@ -637,7 +637,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
                 s = args.AdditionalParam(1);
             }
             int num;
-            if (s && str::Parse(s, "%dx%$", &num) && num > 0) {
+            if (s && !str::IsNull(str::Parse(s, "%dx%$", &num)) && num > 0) {
                 i.stressTestCycles = num;
                 args.EatParam();
             }

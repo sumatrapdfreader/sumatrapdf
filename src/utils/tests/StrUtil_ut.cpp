@@ -361,7 +361,7 @@ void StrTest() {
             uint u1 = 0;
             AutoFreeStr str1;
             Str end = str::Parse(Str(str2), "[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
-            utassert(end.s && !end.s[0]);
+            utassert(!str::IsNull(end) && !end.s[0]);
             utassert(u1 == 1 && str::Eq(Str(str1.Get()), "filename.pdf"));
         }
 
@@ -369,7 +369,7 @@ void StrTest() {
             uint u1 = 0;
             AutoFreeStr str1;
             Str end = str::Parse(Str(str2), "[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
-            utassert(end.s && !end.s[0]);
+            utassert(!str::IsNull(end) && !end.s[0]);
             utassert(u1 == 1 && str::Eq(Str(str1.Get()), "filename.pdf"));
 
             utassert(str::Parse(StrL("0xABCD"), "%x", &u1).s);
@@ -381,10 +381,10 @@ void StrTest() {
     {
         int i1, i2;
         Str end = str::Parse(StrL("1, 2+3"), "%d,%d", &i1, &i2);
-        utassert(end.s && str::Eq(end, "+3"));
+        utassert(!str::IsNull(end) && str::Eq(end, "+3"));
         utassert(i1 == 1 && i2 == 2);
         end = str::Parse(end, "+3");
-        utassert(end.s && !end.s[0]);
+        utassert(!str::IsNull(end) && !end.s[0]);
 
         utassert(str::Parse(StrL(" -2"), "%d", &i1).s);
         utassert(i1 == -2);
@@ -407,7 +407,7 @@ void StrTest() {
     utassert(!str::Parse(StrL("a\r\nb"), "a% b").s);
     utassert(str::Parse(StrL("a\r\nb"), "a% %_b").s);
     utassert(!str::Parse(StrL("ab"), "a% b").s);
-    utassert(!str::Parse(StrL("%+"), "+").s && !str::Parse(StrL("%+"), "%+").s);
+    utassert(str::IsNull(str::Parse(StrL("%+"), "+")) && str::IsNull(str::Parse(StrL("%+"), "%+")));
 
     utassert(str::Parse(StrL("abcd"), 3, "abc%$").s);
     utassert(str::Parse(StrL("abc"), 3, "a%?bc%?d%$").s);
@@ -419,12 +419,12 @@ void StrTest() {
 
         float f1, f2;
         Str end = str::Parse(StrL("%1.23y -2e-3z"), "%%%fy%fz%$", &f1, &f2);
-        utassert(end.s && !end.s[0]);
+        utassert(!str::IsNull(end) && !end.s[0]);
         utassert(f1 == 1.23f && f2 == -2e-3f);
         f1 = 0;
         f2 = 0;
         Str end2 = str::Parse(StrL("%1.23y -2e-3zlah"), 13, "%%%fy%fz%$", &f1, &f2);
-        utassert(end2.s && str::Eq(end2, "lah"));
+        utassert(!str::IsNull(end2) && str::Eq(end2, "lah"));
         utassert(f1 == 1.23f && f2 == -2e-3f);
     }
 
@@ -460,17 +460,19 @@ void StrTest() {
         float f[6];
         int b[2];
         Str s = str::Parse(Str(path), "M%f%_%f", &f[0], &f[1]);
-        utassert(s.s && f[0] == 10 && f[1] == 80);
+        utassert(!str::IsNull(s) && f[0] == 10 && f[1] == 80);
         s = str::Parse(Str(s.s + 1), "C%f%_%f,%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4], &f[5]);
-        utassert(s.s && f[0] == 40 && f[1] == 10 && f[2] == 65 && f[3] == 10 && f[4] == 95 && f[5] == 80);
+        utassert(!str::IsNull(s) && f[0] == 40 && f[1] == 10 && f[2] == 65 && f[3] == 10 && f[4] == 95 && f[5] == 80);
         s = str::Parse(Str(s.s + 1), "S%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4]);
-        utassert(s.s && f[0] == 150 && f[1] == 150 && f[2] == 180 && f[3] == 80);
+        utassert(!str::IsNull(s) && f[0] == 150 && f[1] == 150 && f[2] == 180 && f[3] == 80);
         s = str::Parse(Str(s.s + 1), "A%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f", &f[0], &f[1], &f[2], &b[0], &b[1], &f[4],
                        &f[5]);
-        utassert(s.s && f[0] == 45 && f[1] == 45 && f[2] == 0 && b[0] == 1 && b[1] == 0 && f[4] == 125 && f[5] == 125);
+        utassert(!str::IsNull(s) && f[0] == 45 && f[1] == 45 && f[2] == 0 && b[0] == 1 && b[1] == 0 && f[4] == 125 &&
+                 f[5] == 125);
         s = str::Parse(Str(s.s + 1), "A%f%_%f%?,%f%?,%d%?,%d%?,%f%_%f", &f[0], &f[1], &f[2], &b[0], &b[1], &f[4],
                        &f[5]);
-        utassert(s.s && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 && f[5] == -20);
+        utassert(!str::IsNull(s) && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 &&
+                 f[5] == -20);
     }
 
     {

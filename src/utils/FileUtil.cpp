@@ -327,7 +327,7 @@ static bool IsSameFileHandleInformation(BY_HANDLE_FILE_INFORMATION& fi1, BY_HAND
 // http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
 bool IsSame(Str path1, Str path2) {
-    if (!path1.s || !path2.s) {
+    if (str::IsNull(path1) || str::IsNull(path2)) {
         return false;
     }
     if (str::EqI(path1, path2)) {

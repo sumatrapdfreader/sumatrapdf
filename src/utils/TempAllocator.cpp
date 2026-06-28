@@ -88,13 +88,13 @@ TempStr FormatTemp(Str fmt, ...) {
 }
 
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
-    if (!s || str::IsEmpty(toReplace) || !replaceWith) {
+    if (str::IsNull(s) || str::IsEmpty(toReplace) || str::IsNull(replaceWith)) {
         return {};
     }
 
     Str curr = s;
     Str end = str::Find(curr, toReplace);
-    if (!end) {
+    if (str::IsNull(end)) {
         // optimization: nothing to replace so do nothing
         return s;
     }
@@ -109,7 +109,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     size_t capHint = (size_t)s.len + 1 + (lenDiff * 6);
     StrBuilder result(capHint);
     bool ok;
-    while (end) {
+    while (!str::IsNull(end)) {
         ok = result.Append(Str(curr.s, (int)(end.s - curr.s)));
         if (!ok) {
             return {};

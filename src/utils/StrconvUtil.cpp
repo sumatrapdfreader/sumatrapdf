@@ -21,7 +21,7 @@ static Str WrapAllocatedStr(char* s, int len) { // str-port: owned heap
 
 WStr Utf8ToWStr(Str s, Arena* a) {
     // subtle: if s.s is nullptr, we return empty. if empty string => we return empty string
-    if (!s.s) {
+    if (str::IsNull(s)) {
         return {};
     }
     if (s.len == 0) {
@@ -44,7 +44,7 @@ WStr Utf8ToWStr(Str s, Arena* a) {
 
 Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
     // subtle: if s.s is nullptr, we return empty. if empty string => we return empty string
-    if (!s.s) {
+    if (str::IsNull(s)) {
         return {};
     }
     if (s.len == 0) {
@@ -71,8 +71,8 @@ Str WStrToUtf8(WStr s, Arena* a) {
 
 // caller needs to free() the result
 WStr StrCPToWStr(Str src, uint codePage) {
-    ReportIf(!src.s);
-    if (!src.s) {
+    ReportIf(str::IsNull(src));
+    if (str::IsNull(src)) {
         return {};
     }
 
@@ -89,8 +89,8 @@ WStr StrCPToWStr(Str src, uint codePage) {
 }
 
 TempWStr StrCPToWStrTemp(Str src, uint codePage) {
-    ReportIf(!src.s);
-    if (!src.s) {
+    ReportIf(str::IsNull(src));
+    if (str::IsNull(src)) {
         return {};
     }
 
@@ -107,8 +107,8 @@ TempWStr StrCPToWStrTemp(Str src, uint codePage) {
 }
 
 TempStr ToMultiByteTemp(Str src, uint codePageSrc, uint codePageDest) {
-    ReportIf(!src.s);
-    if (!src.s) {
+    ReportIf(str::IsNull(src));
+    if (str::IsNull(src)) {
         return {};
     }
 

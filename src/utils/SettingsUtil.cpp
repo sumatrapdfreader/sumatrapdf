@@ -50,7 +50,7 @@ static void EscapeStr(StrBuilder& out, Str s) {
 }
 
 static Str UnescapeStr(Str s) {
-    if (!s) {
+    if (str::IsNull(s)) {
         return {};
     }
     if (!str::FindChar(s, '$')) {
@@ -290,7 +290,7 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
 
 // boolean true are "true", "yes" and any non-zero integer
 static bool parseBool(Str value) {
-    if (!value) {
+    if (str::IsNull(value)) {
         return false;
     }
     if (str::StartsWithI(value, "true") && (value.len <= 4 || str::IsWs(value.s[4]))) {
@@ -310,7 +310,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
     switch (field.type) {
         case SettingType::Bool: {
             bool* boolPtr = (bool*)fieldPtr;
-            if (value) {
+            if (!str::IsNull(value)) {
                 *boolPtr = parseBool(value);
             } else {
                 *boolPtr = field.value != 0;
@@ -320,7 +320,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
 
         case SettingType::Int: {
             int* intPtr = (int*)fieldPtr;
-            if (value) {
+            if (!str::IsNull(value)) {
                 *intPtr = ParseInt(value);
             } else {
                 *intPtr = (int)field.value;
@@ -328,7 +328,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
         } break;
 
         case SettingType::Float: {
-            Str s = value ? value : FieldDefaultStr(field);
+            Str s = !str::IsNull(value) ? value : FieldDefaultStr(field);
             str::Parse(s, "%f", (float*)fieldPtr);
             break;
         }
@@ -336,7 +336,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
         case SettingType::Color: {
             Str* strPtr = (Str*)fieldPtr;
             str::Free(strPtr->s);
-            if (value) {
+            if (!str::IsNull(value)) {
                 *strPtr = UnescapeStr(value);
             } else {
                 *strPtr = str::Dup(FieldDefaultStr(field));
@@ -346,7 +346,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
         case SettingType::String: {
             Str* strPtr = (Str*)fieldPtr;
             str::Free(strPtr->s);
-            if (value) {
+            if (!str::IsNull(value)) {
                 *strPtr = UnescapeStr(value);
             } else {
                 *strPtr = str::Dup(FieldDefaultStr(field));
@@ -359,12 +359,12 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
                 int off = 0;
                 for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
                     Str token;
-                    if (value) {
+                    if (!str::IsNull(value)) {
                         off = SkipWhitespaceOff(value, off);
                         token = off < value.len ? Str(value.s + off, value.len - off) : Str{};
                     }
                     deserializeField(GetSubstruct(field)->fields[i], fieldPtr, token);
-                    if (value) {
+                    if (!str::IsNull(value)) {
                         off = SkipNonWhitespaceOff(value, off);
                     }
                 }
@@ -372,7 +372,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             break;
         case SettingType::FloatArray:
         case SettingType::IntArray: {
-            Str src = value ? value : FieldDefaultStr(field);
+            Str src = !str::IsNull(value) ? value : FieldDefaultStr(field);
             Vec<int>* v = *(Vec<int>**)fieldPtr;
             delete v;
             v = new Vec<int>();
@@ -403,7 +403,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             FreeUtf8StringArray(v);
             v = new Vec<Str>();
             *(Vec<Str>**)fieldPtr = v;
-            if (value) {
+            if (!str::IsNull(value)) {
                 DeserializeUtf8StringArray(v, UnescapeStr(value));
             } else if (field.value) {
                 DeserializeUtf8StringArray(v, FieldDefaultStr(field));
@@ -436,8 +436,11 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
             node->data.RemoveAt(off - 1);
             off--;
         }
-    } else if (node->GetValue(fieldName, &off)) {
-        node->data.RemoveAt(off - 1);
+    } else {
+        Str value = node->GetValue(fieldName, &off);
+        if (!str::IsNull(value)) {
+            node->data.RemoveAt(off - 1);
+        }
     }
 }
 
@@ -562,7 +565,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
             }
         } else if (field.type != SettingType::Comment) {
             Str value = node ? node->GetValue(fieldNameStr) : Str{};
-            if (useDefaults || value) {
+            if (useDefaults || !str::IsNull(value)) {
                 deserializeField(field, base, value);
             }
         }

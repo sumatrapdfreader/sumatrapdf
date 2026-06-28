@@ -96,7 +96,9 @@ static Str ExtractTrimmed(Str data, int begin, int end) {
     begin = std::max(0, std::min(begin, data.len));
     end = std::max(begin, std::min(end, data.len));
     end = SkipWsRev(data, begin, end);
-    begin = SkipWs(data, begin);
+    while (begin < end && str::IsWs(data.s[begin])) {
+        begin++;
+    }
     return Str(data.s + begin, end - begin);
 }
 
@@ -265,11 +267,11 @@ Str SerializeSquareTreeNode(SquareTreeNode* node) {
 }
 
 SquareTreeNode* ParseSquareTree(Str s) {
-    if (!s) {
+    if (str::IsNull(s)) {
         return nullptr;
     }
     TempStr data = strconv::UnknownToUtf8Temp(s);
-    if (!data) {
+    if (str::IsNull(data)) {
         return nullptr;
     }
     int off = 0;

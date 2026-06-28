@@ -192,8 +192,9 @@ Key = Value";
     }
     utassert(data->boolean && str::Eq("0xffcc9933", data->color));
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
-    utassert(str::Eq(data->string, "String") && !data->nullString.s && str::Eq(data->escapedString, "$\nstring "));
-    utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String.s &&
+    utassert(str::Eq(data->string, "String") && str::IsNull(data->nullString) &&
+             str::Eq(data->escapedString, "$\nstring "));
+    utassert(str::Eq(data->utf8String, "Utf-8 String") && str::IsNull(data->nullUtf8String) &&
              str::Eq(data->escapedUtf8String, "$\nstring "));
     utassert(data->intArray);
     utassert(3 == data->intArray->size() && 1 == data->intArray->at(0));

@@ -138,7 +138,7 @@ static u32* OffsetsForString(const StrVecPage* p, int idx) {
 
 // must have enough space
 static Str AppendJustString(StrVecPage* p, Str s, int idx) {
-    ReportIf(!s.s);
+    ReportIf(str::IsNull(s));
     int sLen = s.len;
     u32* offsets = OffsetsForString(p, idx);
     u8* dst = p->currEnd - sLen - 1; // 1 for zero termination
@@ -153,7 +153,7 @@ static Str AppendJustString(StrVecPage* p, Str s, int idx) {
 
 PageOpResult StrVecPage::SetAt(int idx, Str s) {
     u32* offsets = OffsetsForString(this, idx);
-    if (!s.s) {
+    if (str::IsNull(s)) {
         // fast path for null, doesn't require new space at all
         offsets[0] = kNullOffset;
         offsets[1] = 0;
@@ -188,7 +188,7 @@ PageOpResult StrVecPage::InsertAt(int idx, Str s) {
 
     int cbIndex = cbIndexSize(dataSize);
     int cbNeeded = cbIndex;
-    if (s.s) {
+    if (!str::IsNull(s)) {
         cbNeeded += s.len + 1; // +1 for zero termination
     }
     int cbLeft = BytesLeft();
@@ -206,7 +206,7 @@ PageOpResult StrVecPage::InsertAt(int idx, Str s) {
     }
 
     PageOpResult res;
-    if (s.s) {
+    if (!str::IsNull(s)) {
         res = {AppendJustString(this, s, idx), false};
     } else {
         offsets[0] = kNullOffset;
@@ -432,7 +432,7 @@ static StrVecPage* AllocatePage(StrVec* v, StrVecPage* last, int nBytesNeeded) {
 Str StrVec::Append(Str s) {
     int cbIndex = cbIndexSize(dataSize);
     int cbNeeded = cbIndex;
-    if (s.s) {
+    if (!str::IsNull(s)) {
         cbNeeded += (s.len + 1); // +1 for zero termination
     }
     auto last = first;
@@ -775,7 +775,7 @@ int Split(StrVec* v, Str s, Str separator, bool collapse, int max) {
         }
         Str rest = Str(s.s + off, s.len - off);
         Str next = str::Find(rest, separator);
-        if (!next.s) {
+        if (str::IsNull(next)) {
             break;
         }
         if (!collapse || next.s > s.s + off) {
@@ -822,7 +822,7 @@ static void JoinInner(const StrVec* v, Str joint, StrBuilder& res) {
     int i = 0;
     for (auto it = v->begin(); it != v->end(); it++) {
         Str s = *it;
-        if (!s.s) {
+        if (str::IsNull(s)) {
             firstForJoint++;
             i++;
             continue;
@@ -846,5 +846,5 @@ TempStr JoinTemp(StrVec* v, Str joint) {
     int capHint = CalcCapForJoin(v, joint);
     StrBuilder tmp(capHint, GetTempArena());
     JoinInner(v, joint, tmp);
-    return tmp.Get();
+    return tmp.StealData(GetTempArena());
 }

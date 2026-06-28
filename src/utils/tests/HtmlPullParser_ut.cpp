@@ -41,7 +41,7 @@ static void HtmlEntities() {
         int got;
         Str entEnd = ResolveHtmlEntity(Str(s.s + 1, str::Leni(s) - 1), got);
         utassert(got == entities[i].rune);
-        utassert((-1 == got) == !entEnd.s);
+        utassert((-1 == got) == str::IsNull(entEnd));
     }
     Arena* ta = GetTempArena();
     Str unchanged[] = {"foo", "", " as;d "};

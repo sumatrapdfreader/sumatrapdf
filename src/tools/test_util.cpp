@@ -41,7 +41,7 @@ void MaybeDelayedWarningNotification(Str, ...) {
 }
 
 static void PrintStdout(Str s) {
-    if (!s.s) {
+    if (str::IsNull(s)) {
         return;
     }
     printf("%.*s", s.len, s.s);

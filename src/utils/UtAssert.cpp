@@ -24,7 +24,7 @@ void utassert_set_for_ai(bool enabled) {
 }
 
 static void OutputDebugString(Str s) {
-    if (!s.s) {
+    if (str::IsNull(s)) {
         return;
     }
     TempStr s0 = str::Dup(s);
@@ -32,7 +32,7 @@ static void OutputDebugString(Str s) {
 }
 
 static void PrintStdout(Str s) {
-    if (!s.s) {
+    if (str::IsNull(s)) {
         return;
     }
     printf("%.*s", s.len, s.s);

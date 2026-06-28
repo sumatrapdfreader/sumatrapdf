@@ -74,7 +74,8 @@ WStr DecodeHtmlEntitites(Str string, uint codepage) {
         src++;
         // numeric entities
         int unicode;
-        if (str::Parse(WStr(src), L"#%d;", &unicode) || str::Parse(WStr(src), L"#x%x;", &unicode)) {
+        if (!str::IsNull(str::Parse(WStr(src), L"#%d;", &unicode)) ||
+            !str::IsNull(str::Parse(WStr(src), L"#x%x;", &unicode))) {
             *dst++ = IntToChar(unicode);
             WStr semi = str::FindChar(WStr(src), L';');
             src = semi.s + 1;

@@ -103,6 +103,7 @@ bool EqI(Str s1, Str s2);
 bool EqIS(Str s1, Str s2);
 bool EqN(Str s1, Str s2, size_t len);
 bool EqNI(Str s1, Str s2, size_t len);
+bool IsNull(const Str& s);
 bool IsEmpty(Str s);
 bool StartsWith(Str str, Str prefix);
 
@@ -177,6 +178,7 @@ WStr Join(Arena*, WStr, WStr, WStr s3);
 bool Eq(WStr s1, WStr s2);
 bool EqI(WStr s1, WStr s2);
 bool EqN(WStr s1, WStr s2, size_t len);
+bool IsNull(const WStr& s);
 bool IsEmpty(WStr s);
 bool StartsWith(WStr str, WStr prefix);
 bool StartsWithI(WStr str, WStr prefix);

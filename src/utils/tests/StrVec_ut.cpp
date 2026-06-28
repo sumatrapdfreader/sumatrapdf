@@ -356,7 +356,7 @@ static void StrVecTest2() {
         v2 = v;
         utassert(v2.Size() == 4);
         // copies should be same values but at different addresses
-        utassert(v2.At(1) != v.At(1));
+        utassert(v2.At(1).s != v.At(1).s);
         utassert(str::Eq(v2.At(1), v.At(1)));
         s = v2.At(2);
         utassert(str::Eq(s, "foo"));

@@ -100,11 +100,11 @@ static void MemAppend(char* buf, int& off, Str src) { // str-port: owned heap wr
 // returns a slice starting after the entity, or empty on failure
 Str ResolveHtmlEntity(Str str, int& rune) {
     Str entEnd = str::Parse(str, str.len, "#%d%?;", &rune);
-    if (entEnd.s) {
+    if (!str::IsNull(entEnd)) {
         return entEnd;
     }
     entEnd = str::Parse(str, str.len, "#x%x%?;", &rune);
-    if (entEnd.s) {
+    if (!str::IsNull(entEnd)) {
         return entEnd;
     }
 
@@ -145,14 +145,14 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
     for (;;) {
         bool found = SkipUntil(str, off, '&');
         if (!found) {
-            if (!res) {
+            if (str::IsNull(res)) {
                 return str;
             }
             // copy the remaining string
             MemAppend(res.s, dstOff, Str(str.s + chunkStart, str.len - chunkStart));
             break;
         }
-        if (!res) {
+        if (str::IsNull(res)) {
             // allocate memory for the result string
             // I'm banking that text after resolving entities will
             // be smaller than the original
@@ -163,7 +163,7 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
         // off points at '&'
         int rune = -1;
         Str entEnd = ResolveHtmlEntity(Str(str.s + off + 1, str.len - off - 1), rune);
-        if (!entEnd.s) {
+        if (str::IsNull(entEnd)) {
             // unknown entity, just copy the '&'
             MemAppend(res.s, dstOff, Str(str.s + off, 1));
             off++;

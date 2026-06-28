@@ -258,7 +258,7 @@ static Str WrapAllocated(char* s, size_t cch = (size_t)-1) { // str-port: owned 
 }
 
 Str Dup(Arena* a, Str s, size_t cch) {
-    if (!s.s) {
+    if (str::IsNull(s)) {
         return {};
     }
     if (cch == (size_t)-1) {
@@ -289,7 +289,7 @@ static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) { // str-port: own
 }
 
 WStr Dup(Arena* a, WStr s, size_t cch) {
-    if (!s.s) {
+    if (str::IsNull(s)) {
         return {};
     }
     if (cch == (size_t)-1) {
@@ -307,7 +307,27 @@ WStr Dup(WStr s, size_t cch) {
 
 // return true if s1 == s2, case sensitive
 bool Eq(Str s1, Str s2) {
-    return StrEq(s1, s2);
+    if (s1.s == s2.s) {
+        return true;
+    }
+    int len1 = 0;
+    while (!str::IsNull(s1) && len1 < s1.len && s1.s[len1]) {
+        len1++;
+    }
+    int len2 = 0;
+    while (!str::IsNull(s2) && len2 < s2.len && s2.s[len2]) {
+        len2++;
+    }
+    if (len1 != len2) {
+        return false;
+    }
+    if (len1 == 0) {
+        return true;
+    }
+    if (str::IsNull(s1) || str::IsNull(s2)) {
+        return false;
+    }
+    return memeq(s1.s, s2.s, (size_t)len1);
 }
 
 bool Eq(const ByteSlice& sp1, const ByteSlice& sp2) {
@@ -331,7 +351,7 @@ bool EqI(Str s1, Str s2) {
     if (s1.len == 0) {
         return true;
     }
-    if (!s1.s || !s2.s) {
+    if (str::IsNull(s1) || str::IsNull(s2)) {
         return false;
     }
     return 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len);
@@ -404,8 +424,12 @@ bool EqNI(Str s1, Str s2, size_t len) {
     return true;
 }
 
+bool IsNull(const Str& s) {
+    return !s.s;
+}
+
 bool IsEmpty(Str s) {
-    return !s || s.len == 0 || (0 == *s.s);
+    return str::IsNull(s) || s.len == 0 || (0 == *s.s);
 }
 
 bool StartsWith(Str s, Str prefix) {
@@ -812,7 +836,7 @@ size_t TransCharsInPlace(Str str, Str oldChars, Str newChars) {
 // Trim whitespace characters, in-place, inside s.
 // Returns number of trimmed characters.
 size_t TrimWSInPlace(Str s, TrimOpt opt) {
-    if (!s) {
+    if (str::IsNull(s)) {
         return 0;
     }
     int start = 0;
@@ -1007,7 +1031,7 @@ static Str ExtractUntil(Str str, int off, char c, int* endOffOut) {
     }
     Str slice = Str(str.s + off, str.len - off);
     Str found = FindChar(slice, c);
-    if (!found) {
+    if (str::IsNull(found)) {
         return {};
     }
     int endOff = (int)(found.s - str.s);
@@ -1020,11 +1044,11 @@ static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* en
     char f2[] = "% ";
     Str formatAt = Str(format.s + formatOff);
     Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
-    if (endF && FindChar(Str("udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
+    if (!str::IsNull(endF) && !str::IsNull(FindChar(Str("udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str(str.s + p, (int)width));
         Str end = Parse(Str(limited), f2, valueOut);
-        if (end.s && !end.s[0]) {
+        if (!str::IsNull(end) && !end.s[0]) {
             *endOffOut = p + (int)width;
             return (int)(endF.s - format.s) - 1;
         }
@@ -1038,6 +1062,12 @@ static bool ParseULongAt(Str str, int off, int base, unsigned long* val, int* en
     }
     unsigned long v = 0;
     int i = off;
+    while (i < str.len && str::IsWs(str.s[i])) {
+        i++;
+    }
+    if (base == 16 && i + 1 < str.len && str.s[i] == '0' && (str.s[i + 1] == 'x' || str.s[i + 1] == 'X')) {
+        i += 2;
+    }
     bool any = false;
     while (i < str.len) {
         char c = str.s[i];
@@ -1068,6 +1098,12 @@ static bool ParseLongAt(Str str, int off, int base, long* val, int* endOff) {
     }
     bool neg = false;
     int i = off;
+    while (i < str.len && str::IsWs(str.s[i])) {
+        i++;
+    }
+    if (i >= str.len) {
+        return false;
+    }
     if (str.s[i] == '-') {
         neg = true;
         i++;
@@ -1125,7 +1161,7 @@ static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
    and doesn't parse "123" at all).
 */
 static Str ParseV(Str str, Str format, va_list args) {
-    if (!str || !format) {
+    if (str::IsNull(str) || str::IsNull(format)) {
         return {};
     }
     int p = 0;
@@ -1182,10 +1218,12 @@ static Str ParseV(Str str, Str format, va_list args) {
             *va_arg(args, char*) = str.s[p];
             end = p + 1;
         } else if ('s' == spec || 'S' == spec) {
-            if (fi + 1 >= format.len) {
-                return {};
+            if (fi + 1 < format.len) {
+                va_arg(args, AutoFree*)->Set(ExtractUntil(str, p, format.s[fi + 1], &end).s);
+            } else {
+                va_arg(args, AutoFree*)->Set(str::Dup(Str(str.s + p, str.len - p)).s);
+                end = str.len;
             }
-            va_arg(args, AutoFree*)->Set(ExtractUntil(str, p, format.s[fi + 1], &end).s);
         } else if ('$' == spec && p >= str.len) {
             continue; // don't fail, if we're indeed at the end of the string
         } else if ('%' == spec) {
@@ -1208,10 +1246,10 @@ static Str ParseV(Str str, Str format, va_list args) {
         } else if ('?' == spec && fi + 1 < format.len) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (p >= str.len || str.s[p] != format.s[fi + 1]) {
+            fi++;
+            if (p >= str.len || str.s[p] != format.s[fi]) {
                 continue;
             }
-            fi++;
             end = p + 1;
         } else if (str::IsDigit(spec)) {
             int formatIdx = ParseLimitedNumber(str, p, fi, format, &end, va_arg(args, void*));
@@ -1229,7 +1267,7 @@ static Str ParseV(Str str, Str format, va_list args) {
 }
 
 Str Parse(Str str, Str fmt, ...) {
-    if (!str || !fmt) {
+    if (str::IsNull(str) || str::IsNull(fmt)) {
         return {};
     }
 
@@ -1241,7 +1279,7 @@ Str Parse(Str str, Str fmt, ...) {
 }
 
 Str Parse(Str str, size_t len, Str fmt, ...) {
-    if (!str.s || !fmt) {
+    if (str::IsNull(str) || str::IsNull(fmt)) {
         return {};
     }
 
@@ -1253,7 +1291,7 @@ Str Parse(Str str, size_t len, Str fmt, ...) {
     Str res = ParseV(bounded, fmt, args);
     va_end(args);
 
-    if (!res.s) {
+    if (str::IsNull(res)) {
         return {};
     }
     int off = (int)(res.s - bounded.s);
@@ -1407,13 +1445,14 @@ Str SkipChar(Str s, char toSkip) {
 namespace url {
 
 void DecodeInPlace(Str url) {
-    if (!url) {
+    if (str::IsNull(url)) {
         return;
     }
     int dst = 0;
     for (int src = 0; src < url.len; src++) {
         int val;
-        if (url.s[src] == '%' && src + 2 < url.len && str::Parse(Str(url.s + src, url.len - src), "%%%2x", &val)) {
+        if (url.s[src] == '%' && src + 2 < url.len &&
+            !str::IsNull(str::Parse(Str(url.s + src, url.len - src), "%%%2x", &val))) {
             url.s[dst++] = (char)val;
             src += 2;
         } else {
@@ -1472,7 +1511,9 @@ int SeqStrIndex(SeqStrings strs, Str toFind) {
         if (str::Eq(SeqStrAt(strs, off), toFind)) {
             return idx;
         }
-        SeqStrAdvance(strs, off);
+        if (!SeqStrAdvance(strs, off)) {
+            break;
+        }
         idx++;
     }
     return -1;
@@ -1489,7 +1530,9 @@ int SeqStrIndexIS(SeqStrings strs, Str toFind) {
         if (str::EqIS(SeqStrAt(strs, off), toFind)) {
             return idx;
         }
-        SeqStrAdvance(strs, off);
+        if (!SeqStrAdvance(strs, off)) {
+            break;
+        }
         idx++;
     }
     return -1;
@@ -1868,7 +1911,7 @@ bool StrBuilder::Append(Str src, size_t count) {
     if ((size_t)-1 == count) {
         count = (size_t)src.len;
     }
-    if (!src.s || 0 == count) {
+    if (str::IsNull(src) || 0 == count) {
         return true;
     }
     char* dst = MakeSpaceAt(this, len, count); // str-port: owned heap
@@ -2224,7 +2267,7 @@ bool WStrBuilder::Append(WStr src, size_t count) {
     if ((size_t)-1 == count) {
         count = (size_t)src.len;
     }
-    if (!src.s || 0 == count) {
+    if (str::IsNull(src) || 0 == count) {
         return true;
     }
     WCHAR* dst = MakeSpaceAt(this, len, count); // str-port: owned heap
@@ -2376,7 +2419,7 @@ bool EqI(WStr s1, WStr s2) {
     if (s1.len == 0) {
         return true;
     }
-    if (!s1.s || !s2.s) {
+    if (str::IsNull(s1) || str::IsNull(s2)) {
         return false;
     }
     return 0 == _wcsnicmp(s1.s, s2.s, (size_t)s1.len);
@@ -2392,8 +2435,12 @@ bool EqN(WStr s1, WStr s2, size_t len) {
     return 0 == wcsncmp(s1.s, s2.s, len);
 }
 
+bool IsNull(const WStr& s) {
+    return !s.s;
+}
+
 bool IsEmpty(WStr s) {
-    return !s || s.len == 0;
+    return str::IsNull(s) || s.len == 0;
 }
 
 bool StartsWith(WStr str, WStr prefix) {
@@ -2748,7 +2795,7 @@ static WStr ExtractUntilW(WStr str, int off, WCHAR c, int* endOffOut) {
     }
     WStr slice = WStr(str.s + off, str.len - off);
     WStr found = FindChar(slice, c);
-    if (!found) {
+    if (str::IsNull(found)) {
         return {};
     }
     int endOff = (int)(found.s - str.s);
@@ -2761,11 +2808,11 @@ static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int*
     WCHAR f2[] = L"% ";
     WStr formatAt = WStr(format.s + formatOff, format.len - formatOff);
     WStr endF = Parse(formatAt, L"%u%c", &width, &f2[1]);
-    if (endF && FindChar(WStr(L"udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
+    if (!str::IsNull(endF) && !str::IsNull(FindChar(WStr(L"udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
         WStr end = Parse(WStr(limited), f2, valueOut);
-        if (end.s && !end.s[0]) {
+        if (!str::IsNull(end) && !end.s[0]) {
             *endOffOut = p + (int)width;
             return (int)(endF.s - format.s) - 1;
         }
@@ -2779,6 +2826,12 @@ static bool ParseULongAtW(WStr str, int off, int base, unsigned long* val, int* 
     }
     unsigned long v = 0;
     int i = off;
+    while (i < str.len && str::IsWs(str.s[i])) {
+        i++;
+    }
+    if (base == 16 && i + 1 < str.len && str.s[i] == L'0' && (str.s[i + 1] == L'x' || str.s[i + 1] == L'X')) {
+        i += 2;
+    }
     bool any = false;
     while (i < str.len) {
         WCHAR wc = str.s[i];
@@ -2809,6 +2862,12 @@ static bool ParseLongAtW(WStr str, int off, int base, long* val, int* endOff) {
     }
     bool neg = false;
     int i = off;
+    while (i < str.len && str::IsWs(str.s[i])) {
+        i++;
+    }
+    if (i >= str.len) {
+        return false;
+    }
     if (str.s[i] == L'-') {
         neg = true;
         i++;
@@ -2843,7 +2902,7 @@ static bool ParseDoubleAtW(WStr str, int off, double* val, int* endOff) {
 }
 
 static WStr ParseVW(WStr str, WStr format, va_list args) {
-    if (!str || !format) {
+    if (str::IsNull(str) || str::IsNull(format)) {
         return {};
     }
     int p = 0;
@@ -2894,10 +2953,12 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
             *va_arg(args, WCHAR*) = str.s[p];
             end = p + 1;
         } else if (L's' == spec || L'S' == spec) {
-            if (fi + 1 >= format.len) {
-                return {};
+            if (fi + 1 < format.len) {
+                va_arg(args, AutoFreeWStr*)->Set(ExtractUntilW(str, p, format.s[fi + 1], &end).s);
+            } else {
+                va_arg(args, AutoFreeWStr*)->Set(str::Dup(WStr(str.s + p, str.len - p)).s);
+                end = str.len;
             }
-            va_arg(args, AutoFreeWStr*)->Set(ExtractUntilW(str, p, format.s[fi + 1], &end).s);
         } else if (L'$' == spec && p >= str.len) {
             continue; // don't fail, if we're indeed at the end of the string
         } else if (L'%' == spec) {
@@ -2920,10 +2981,10 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
         } else if (L'?' == spec && fi + 1 < format.len) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (p >= str.len || str.s[p] != format.s[fi + 1]) {
+            fi++;
+            if (p >= str.len || str.s[p] != format.s[fi]) {
                 continue;
             }
-            fi++;
             end = p + 1;
         } else if (str::IsDigit(spec)) {
             int formatIdx = ParseLimitedNumberW(str, p, fi, format, &end, va_arg(args, void*));
@@ -2941,7 +3002,7 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
 }
 
 WStr Parse(WStr str, WStr format, ...) {
-    if (!str || !format) {
+    if (str::IsNull(str) || str::IsNull(format)) {
         return {};
     }
     va_list args;
@@ -2964,6 +3025,7 @@ bool IsAbsolute(Str url) {
 TempStr GetFullPathTemp(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
+    path.len = str::Leni(path.s);
     DecodeInPlace(path);
     return path;
 }
@@ -2971,6 +3033,7 @@ TempStr GetFullPathTemp(Str url) {
 TempStr GetFileNameTemp(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
+    path.len = str::Leni(path.s);
     int base = path.len;
     for (; base > 0; base--) {
         if ('/' == path.s[base - 1] || '\\' == path.s[base - 1]) {
@@ -2978,7 +3041,7 @@ TempStr GetFileNameTemp(Str url) {
         }
     }
     Str baseStr(path.s + base, path.len - base);
-    if (!baseStr) {
+    if (str::IsEmpty(baseStr)) {
         return {};
     }
     TempStr res = str::DupTemp(baseStr);
