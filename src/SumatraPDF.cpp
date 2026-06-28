@@ -459,7 +459,7 @@ WindowTab* FindTabByFile(Str file) {
 
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
-            const char* fp = tab->filePath;
+            Str fp = tab->filePath;
             if (!fp || !path::IsSame(fp, normFile)) {
                 continue;
             }
@@ -665,7 +665,7 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
     MainWindow* win = tab->win;
     // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
-    const char* fp = tab->filePath;
+    Str fp = tab->filePath;
     FileState* fs = gFileHistory.FindByName(fp, nullptr);
     if (!fs) {
         return;
@@ -1815,7 +1815,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     }
 
     HwndPasswordUI pwdUI(win->hwndFrame);
-    const char* path = tab->filePath;
+    Str path = tab->filePath;
     if (str::IsEmpty(path)) {
         logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
         return;
@@ -3186,7 +3186,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // HwndSetFocus(win->hwndFrame);
 }
 
-static void ShowSavedAnnotationsNotification(HWND hwndParent, const char* path) {
+static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
     StrBuilder msg;
     msg.AppendFmt(_TRA("Saved annotations to '%s'"), path);
     NotificationCreateArgs nargs;
@@ -3197,7 +3197,7 @@ static void ShowSavedAnnotationsNotification(HWND hwndParent, const char* path) 
     ShowNotification(nargs);
 }
 
-static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* path, const char* mupdfErr) {
+static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, Str path, Str mupdfErr) {
     StrBuilder msg;
     msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'"), path, mupdfErr);
     ShowWarningNotification(hwndParent, msg.Get(), 0);
@@ -3205,7 +3205,7 @@ static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* 
 
 struct ShowErrorData {
     WindowTab* tab;
-    const char* path;
+    Str path;
 };
 
 static void ShowSaveAnnotationError(ShowErrorData* d, Str err) {
@@ -3226,7 +3226,7 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     if (!engine) {
         return false;
     }
-    const char* path = engine->FilePath();
+    Str path = engine->FilePath();
     tab->ignoreNextAutoReload = true;
     ShowErrorData data{tab, path};
     auto fn = MkFunc1(ShowSaveAnnotationError, &data);
@@ -3278,8 +3278,9 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    char* srcFileName = str::Dup(engine->FilePath());
-    str::BufSet(dstFileName, dimof(dstFileName), srcFileName);
+    TempStr srcFileName = str::Dup(engine->FilePath());
+    TempWStr srcFileNameW = ToWStrTemp(srcFileName);
+    str::BufSet(dstFileName, dimof(dstFileName), srcFileNameW);
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = tab->win->hwndFrame;
@@ -3297,7 +3298,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
         str::Free(srcFileName);
         return false;
     }
-    char* dstFilePath = ToUtf8Temp(dstFileName);
+    TempStr dstFilePath = ToUtf8Temp(dstFileName);
     bool savingToExisting = str::Eq(dstFilePath, srcFileName);
     if (savingToExisting) {
         str::Free(srcFileName);
@@ -3346,8 +3347,8 @@ enum class SaveChoice {
     Cancel,
 };
 
-SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
-    TempStr fileName = path::GetBaseNameTemp(Str(filePath));
+SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
+    TempStr fileName = path::GetBaseNameTemp(filePath);
     TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'"), fileName);
     TempWStr mainInstr = ToWStrTemp(mainInstrA);
     auto content = _TRA("Save changes?");
@@ -3442,8 +3443,8 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
     // don't try to access it - engine uses memory-mapped I/O and accessing
     // pages of a gone file causes EXCEPTION_IN_PAGE_ERROR
     auto filePath = dm->GetFilePath();
-    if (!file::Exists(Str(filePath))) {
-        logf("MaybeSaveAnnotations: file '%s' no longer exists, skipping\n", filePath);
+    if (!file::Exists(filePath)) {
+        logf("MaybeSaveAnnotations: file '%s' no longer exists, skipping\n", filePath.s);
         return true;
     }
     bool shouldConfirm = EngineHasUnsavedAnnotations(engine);
