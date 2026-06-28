@@ -986,27 +986,75 @@ bool HexToMem(Str s, u8* buf, size_t bufLen) {
     return s.len == (int)needed || (s.len > (int)needed && s.s[needed] == '\0');
 }
 
-static Str ExtractUntil(const char* pos, char c, const char** endOut) {
-    *endOut = FindChar(pos, c);
-    if (!*endOut) {
+static Str ExtractUntil(Str str, int off, char c, int* endOffOut) {
+    if (off < 0 || off > str.len) {
         return {};
     }
-    return str::Dup(Str((char*)pos, (int)(*endOut - pos)));
+    Str slice = Str(str.s + off, str.len - off);
+    Str found = FindChar(slice, c);
+    if (!found) {
+        return {};
+    }
+    int endOff = (int)(found.s - str.s);
+    *endOffOut = endOff;
+    return str::Dup(Str(str.s + off, endOff - off));
 }
 
-static const char* ParseLimitedNumber(const char* str, const char* format, const char** endOut, void* valueOut) {
+static const char* ParseLimitedNumber(Str str, int p, const char* format, int* endOffOut, void* valueOut) {
     unsigned int width;
     char f2[] = "% ";
-    Str endF = Parse(Str((char*)format), "%u%c", &width, &f2[1]);
-    if (endF && FindChar(Str("udx"), f2[1]) && width <= Len(Str(str))) {
+    Str endF = Parse(Str(format), "%u%c", &width, &f2[1]);
+    if (endF && FindChar(Str("udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str((char*)str));
+        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str(str.s + p, (int)width));
         Str end = Parse(Str(limited), f2, valueOut);
         if (end && !end.s[0]) {
-            *endOut = str + width;
+            *endOffOut = p + (int)width;
         }
     }
     return endF ? endF.s : nullptr;
+}
+
+static bool ParseULongAt(Str str, int off, int base, unsigned long* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
+    }
+    TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
+    char* ep = nullptr;
+    *val = strtoul(sliceZ.s, &ep, base);
+    if (!ep || ep == sliceZ.s) {
+        return false;
+    }
+    *endOff = off + (int)(ep - sliceZ.s);
+    return true;
+}
+
+static bool ParseLongAt(Str str, int off, int base, long* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
+    }
+    TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
+    char* ep = nullptr;
+    *val = strtol(sliceZ.s, &ep, base);
+    if (!ep || ep == sliceZ.s) {
+        return false;
+    }
+    *endOff = off + (int)(ep - sliceZ.s);
+    return true;
+}
+
+static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
+    }
+    TempStr sliceZ = StrDupTemp(Str(str.s + off, str.len - off));
+    char* ep = nullptr;
+    *val = strtod(sliceZ.s, &ep);
+    if (!ep || ep == sliceZ.s) {
+        return false;
+    }
+    *endOff = off + (int)(ep - sliceZ.s);
+    return true;
 }
 
 /* Parses a string into several variables sscanf-style (i.e. pass in pointers
@@ -1035,11 +1083,10 @@ static Str ParseV(Str str, Str format, va_list args) {
     if (!str || !format) {
         return {};
     }
-    const char* start = str.s;
-    const char* p = str.s;
+    int p = 0;
     for (const char* f = format.s; *f; f++) {
         if (*f != '%') {
-            if (*f != *p) {
+            if (p >= str.len || *f != str.s[p]) {
                 return {};
             }
             p++;
@@ -1047,53 +1094,82 @@ static Str ParseV(Str str, Str format, va_list args) {
         }
         f++;
 
-        const char* end = nullptr;
+        int end = -1;
         if ('u' == *f) {
-            *va_arg(args, unsigned int*) = strtoul(p, (char**)&end, 10);
+            unsigned long v = 0;
+            if (!ParseULongAt(str, p, 10, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, unsigned int*) = (unsigned int)v;
         } else if ('d' == *f) {
-            *va_arg(args, int*) = strtol(p, (char**)&end, 10);
+            long v = 0;
+            if (!ParseLongAt(str, p, 10, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, int*) = (int)v;
         } else if ('x' == *f) {
-            *va_arg(args, unsigned int*) = strtoul(p, (char**)&end, 16);
+            unsigned long v = 0;
+            if (!ParseULongAt(str, p, 16, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, unsigned int*) = (unsigned int)v;
         } else if ('f' == *f) {
-            *va_arg(args, float*) = (float)strtod(p, (char**)&end);
+            double v = 0;
+            if (!ParseDoubleAt(str, p, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, float*) = (float)v;
         } else if ('g' == *f) {
-            *va_arg(args, float*) = (float)strtod(p, (char**)&end);
+            double v = 0;
+            if (!ParseDoubleAt(str, p, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, float*) = (float)v;
         } else if ('c' == *f) {
-            *va_arg(args, char*) = *p, end = p + 1;
-        } else if ('s' == *f) {
-            *va_arg(args, char**) = ExtractUntil(p, *(f + 1), &end).s;
-        } else if ('S' == *f) {
-            va_arg(args, AutoFree*)->Set(ExtractUntil(p, *(f + 1), &end).s);
-        } else if ('$' == *f && !*p) {
-            continue; // don't fail, if we're indeed at the end of the string
-        } else if ('%' == *f && *f == *p) {
+            if (p >= str.len) {
+                return {};
+            }
+            *va_arg(args, char*) = str.s[p];
             end = p + 1;
-        } else if (' ' == *f && str::IsWs(*p)) {
+        } else if ('s' == *f) {
+            *va_arg(args, char**) = ExtractUntil(str, p, *(f + 1), &end).s;
+        } else if ('S' == *f) {
+            va_arg(args, AutoFree*)->Set(ExtractUntil(str, p, *(f + 1), &end).s);
+        } else if ('$' == *f && p >= str.len) {
+            continue; // don't fail, if we're indeed at the end of the string
+        } else if ('%' == *f) {
+            if (p >= str.len || *f != str.s[p]) {
+                return {};
+            }
+            end = p + 1;
+        } else if (' ' == *f) {
+            if (p >= str.len || !str::IsWs(str.s[p])) {
+                return {};
+            }
             end = p + 1;
         } else if ('_' == *f) {
-            if (!str::IsWs(*p)) {
+            if (p >= str.len || !str::IsWs(str.s[p])) {
                 continue; // don't fail, if there's no whitespace at all
             }
-            for (end = p + 1; str::IsWs(*end); end++) {
+            for (end = p + 1; end < str.len && str::IsWs(str.s[end]); end++) {
                 // do nothing
             }
         } else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (*p != *++f) {
+            if (p >= str.len || str.s[p] != *++f) {
                 continue;
             }
-            end = (char*)p + 1;
+            end = p + 1;
         } else if (str::IsDigit(*f)) {
-            f = ParseLimitedNumber(p, f, &end, va_arg(args, void*)) - 1;
+            f = ParseLimitedNumber(str, p, f, &end, va_arg(args, void*)) - 1;
         }
-        if (!end || end == p) {
+        if (end < 0 || end == p) {
             return {};
         }
         p = end;
     }
-    int off = (int)(p - start);
-    return Str((char*)p, str.len - off);
+    return Str(str.s + p, str.len - p);
 }
 
 Str Parse(Str str, Str fmt, ...) {
