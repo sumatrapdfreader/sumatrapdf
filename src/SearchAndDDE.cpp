@@ -2151,10 +2151,10 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
             return FALSE;
         }
         auto* data = (const SumatraOpenCopyData*)cds->lpData;
-        const char* pathZ = (const char*)(data + 1);
         size_t pathMax = cds->cbData - sizeof(SumatraOpenCopyData);
+        Str pathZ = AsStr(ByteSlice((const u8*)(data + 1), pathMax));
         // require null-terminator within bounds
-        if (strnlen_s(pathZ, pathMax) >= pathMax) {
+        if (strnlen_s(pathZ.s, pathMax) >= pathMax) {
             return FALSE;
         }
         auto* d = new OpenCopyDataAsync;
@@ -2166,10 +2166,11 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
     }
 
     if (cds->dwData == kCopyDataDdeW) {
-        const WCHAR* cmdW = (const WCHAR*)cds->lpData;
-        if (cmdW[cds->cbData / sizeof(WCHAR) - 1]) {
+        int cmdCch = (int)(cds->cbData / sizeof(WCHAR));
+        if (cmdCch == 0 || ((wchar_t*)cds->lpData)[cmdCch - 1] != 0) { // str-port: Win32 COPYDATASTRUCT
             return FALSE;
         }
+        WStr cmdW((const wchar_t*)cds->lpData, cmdCch - 1);
         // Legacy DDE grammar — callers expect synchronous handling.
         TempStr cmd = ToUtf8Temp(cmdW);
         bool didHandle = HandleExecuteCmds(hwnd, cmd);
