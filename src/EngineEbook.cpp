@@ -228,7 +228,7 @@ RectF EngineEbook::PageContentBox(int pageNo, RenderTarget) {
 }
 
 ByteSlice EngineEbook::GetFileData() {
-    const char* fileName = FilePath();
+    Str fileName = FilePath();
     if (!fileName) {
         return {};
     }
@@ -236,7 +236,7 @@ ByteSlice EngineEbook::GetFileData() {
 }
 
 bool EngineEbook::SaveFileAs(Str dstPath) {
-    const char* srcPath = FilePath();
+    Str srcPath = FilePath();
     if (!srcPath) {
         return false;
     }
@@ -806,7 +806,7 @@ class EngineEpub : public EngineEbook {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
@@ -814,7 +814,7 @@ class EngineEpub : public EngineEbook {
     IStream* stream = nullptr;
     TocTree* tocTree = nullptr;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
     bool Load(IStream* stream);
     bool FinishLoading();
 };
@@ -840,11 +840,11 @@ EngineBase* EngineEpub::Clone() {
         }
         return res;
     }
-    const char* path = FilePath();
+    Str path = FilePath();
     if (path) {
         auto res = CreateFromFile(path);
         if (!res) {
-            logf("EngineEpub::Clone() failed: CreateFromFile('%s') failed\n", path);
+            logf("EngineEpub::Clone() failed: CreateFromFile('%s') failed\n", path.s);
         }
         return res;
     }
@@ -852,9 +852,9 @@ EngineBase* EngineEpub::Clone() {
     return nullptr;
 }
 
-bool EngineEpub::Load(const char* fileName) {
+bool EngineEpub::Load(Str fileName) {
     SetFilePath(fileName);
-    if (dir::Exists(Str(fileName))) {
+    if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
         ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
         if (!zipStream) {
@@ -904,7 +904,7 @@ bool EngineEpub::FinishLoading() {
 }
 
 ByteSlice EngineEpub::GetFileData() {
-    const char* path = FilePath();
+    Str path = FilePath();
     return GetStreamOrFileData(stream, path);
 }
 
@@ -917,7 +917,7 @@ bool EngineEpub::SaveFileAs(Str dstPath) {
             return true;
         }
     }
-    const char* srcPath = FilePath();
+    Str srcPath = FilePath();
     if (!srcPath) {
         return false;
     }
@@ -940,7 +940,7 @@ TocTree* EngineEpub::GetToc() {
     return tocTree;
 }
 
-EngineBase* EngineEpub::CreateFromFile(const char* fileName) {
+EngineBase* EngineEpub::CreateFromFile(Str fileName) {
     EngineEpub* engine = new EngineEpub();
     if (!engine->Load(fileName)) {
         SafeEngineRelease(&engine);
@@ -979,7 +979,7 @@ class EngineFb2 : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePath();
+        Str fileName = FilePath();
         if (!fileName) {
             return {};
         }
@@ -995,19 +995,19 @@ class EngineFb2 : public EngineEbook {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     Fb2Doc* doc = nullptr;
     TocTree* tocTree = nullptr;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
     bool Load(IStream* stream);
     bool FinishLoading();
 };
 
-bool EngineFb2::Load(const char* fileName) {
+bool EngineFb2::Load(Str fileName) {
     SetFilePath(fileName);
     doc = Fb2Doc::CreateFromFile(fileName);
     return FinishLoading();
@@ -1061,7 +1061,7 @@ TocTree* EngineFb2::GetToc() {
     return tocTree;
 }
 
-EngineBase* EngineFb2::CreateFromFile(const char* fileName) {
+EngineBase* EngineFb2::CreateFromFile(Str fileName) {
     EngineFb2* engine = new EngineFb2();
     if (!engine->Load(fileName)) {
         SafeEngineRelease(&engine);
@@ -1102,7 +1102,7 @@ class EngineMobi : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePath();
+        Str fileName = FilePath();
         if (!fileName) {
             return {};
         }
@@ -1119,19 +1119,19 @@ class EngineMobi : public EngineEbook {
     IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     MobiDoc* doc = nullptr;
     TocTree* tocTree = nullptr;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
     bool Load(IStream* stream);
     bool FinishLoading();
 };
 
-bool EngineMobi::Load(const char* fileName) {
+bool EngineMobi::Load(Str fileName) {
     SetFilePath(fileName);
     doc = MobiDoc::CreateFromFile(fileName);
     return FinishLoading();
@@ -1218,7 +1218,7 @@ TocTree* EngineMobi::GetToc() {
     return tocTree;
 }
 
-EngineBase* EngineMobi::CreateFromFile(const char* fileName) {
+EngineBase* EngineMobi::CreateFromFile(Str fileName) {
     EngineMobi* engine = new EngineMobi();
     if (!engine->Load(fileName)) {
         SafeEngineRelease(&engine);
@@ -1257,7 +1257,7 @@ class EnginePdb : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePath();
+        Str fileName = FilePath();
         if (!fileName) {
             return {};
         }
@@ -1273,16 +1273,16 @@ class EnginePdb : public EngineEbook {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
 
   protected:
     PalmDoc* doc = nullptr;
     TocTree* tocTree = nullptr;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
 };
 
-bool EnginePdb::Load(const char* fileName) {
+bool EnginePdb::Load(Str fileName) {
     SetFilePath(fileName);
 
     doc = PalmDoc::CreateFromFile(fileName);
@@ -1325,7 +1325,7 @@ TocTree* EnginePdb::GetToc() {
     return tocTree;
 }
 
-EngineBase* EnginePdb::CreateFromFile(const char* fileName) {
+EngineBase* EnginePdb::CreateFromFile(Str fileName) {
     EnginePdb* engine = new EnginePdb();
     if (!engine->Load(fileName)) {
         SafeEngineRelease(&engine);
@@ -1475,7 +1475,7 @@ class EngineChm : public EngineEbook {
         delete tocTree;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePath();
+        Str fileName = FilePath();
         if (!fileName) {
             return {};
         }
@@ -1492,14 +1492,14 @@ class EngineChm : public EngineEbook {
     IPageDestination* GetNamedDest(Str name) override;
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
 
   protected:
     ChmFile* doc = nullptr;
     ChmDataCache* dataCache = nullptr;
     TocTree* tocTree = nullptr;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
 
     IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
 };
@@ -1640,7 +1640,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
     }
 };
 
-bool EngineChm::Load(const char* fileName) {
+bool EngineChm::Load(Str fileName) {
     SetFilePath(fileName);
     doc = ChmFile::CreateFromFile(fileName);
     if (!doc) {
@@ -1733,7 +1733,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
     return NewEbookLink(link, rect, dest, pageNo);
 }
 
-EngineBase* EngineChm::CreateFromFile(const char* fileName) {
+EngineBase* EngineChm::CreateFromFile(Str fileName) {
     EngineChm* engine = new EngineChm();
     if (!engine->Load(fileName)) {
         SafeEngineRelease(&engine);
@@ -1758,7 +1758,7 @@ class EngineHtml : public EngineEbook {
     }
     ~EngineHtml() override { delete doc; }
     EngineBase* Clone() override {
-        const char* fileName = FilePath();
+        Str fileName = FilePath();
         if (!fileName) {
             return {};
         }
@@ -1772,17 +1772,17 @@ class EngineHtml : public EngineEbook {
         return doc->GetPropertyTemp(name);
     }
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
 
   protected:
     HtmlDoc* doc = nullptr;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
 
     IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
 };
 
-bool EngineHtml::Load(const char* fileName) {
+bool EngineHtml::Load(Str fileName) {
     SetFilePath(fileName);
 
     doc = HtmlDoc::CreateFromFile(fileName);
@@ -1836,7 +1836,7 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
     return NewEbookLink(link, rect, dest, pageNo, true);
 }
 
-EngineBase* EngineHtml::CreateFromFile(const char* fileName) {
+EngineBase* EngineHtml::CreateFromFile(Str fileName) {
     EngineHtml* engine = new EngineHtml();
     if (!engine->Load(fileName)) {
         SafeEngineRelease(&engine);
@@ -1864,7 +1864,7 @@ class EngineTxt : public EngineEbook {
         delete doc;
     }
     EngineBase* Clone() override {
-        const char* fileName = FilePath();
+        Str fileName = FilePath();
         if (!fileName) {
             return {};
         }
@@ -1880,16 +1880,16 @@ class EngineTxt : public EngineEbook {
 
     TocTree* GetToc() override;
 
-    static EngineBase* CreateFromFile(const char* fileName);
+    static EngineBase* CreateFromFile(Str fileName);
 
   protected:
     TxtDoc* doc = nullptr;
     TocTree* tocTree = nullptr;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
 };
 
-bool EngineTxt::Load(const char* fileName) {
+bool EngineTxt::Load(Str fileName) {
     if (!fileName) {
         return false;
     }
@@ -1941,7 +1941,7 @@ TocTree* EngineTxt::GetToc() {
     return tocTree;
 }
 
-EngineBase* EngineTxt::CreateFromFile(const char* fileName) {
+EngineBase* EngineTxt::CreateFromFile(Str fileName) {
     EngineTxt* engine = new EngineTxt();
     if (!engine->Load(fileName)) {
         SafeEngineRelease(&engine);
