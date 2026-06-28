@@ -105,7 +105,7 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
 }
 
 // Parse args after -test-plugin: [<SumatraPDF.exe>] [<URL>] <filename.ext>
-void TestPlugin(const WCHAR* cmdLine) {
+void TestPlugin(WStr cmdLine) {
     StrVec argList;
     ParseCmdLine(cmdLine, argList);
 

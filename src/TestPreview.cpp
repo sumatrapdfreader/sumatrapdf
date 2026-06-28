@@ -18,7 +18,7 @@ typedef HRESULT DllGetClassObjectFn(REFCLSID rclsid, REFIID riid, void** ppv);
 
 #define kPdfPreviewDllName StrL("PdfPreview.dll")
 
-void TestPreview(const WCHAR* cmdLine) {
+void TestPreview(WStr cmdLine) {
     StrVec argList;
     ParseCmdLine(cmdLine, argList);
 

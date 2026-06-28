@@ -111,12 +111,11 @@ static bool RegisterWinClass() {
     ATOM atom;
 
     HMODULE h = GetModuleHandleW(nullptr);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     HBRUSH bgBrush = CreateSolidBrush(ThemeMainWindowBackgroundColor());
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcSumatraFrame);
     // remove CS_HREDRAW | CS_VREDRAW to avoid full invalidation on every resize
     wcex.style = 0;
-    wcex.hIcon = LoadIconW(h, iconName);
+    wcex.hIcon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
     wcex.hbrBackground = bgBrush;
     atom = RegisterClassEx(&wcex);
 
@@ -859,8 +858,7 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
                                                    LONG_PTR lpRefData) {
     switch (msg) {
         case TDN_HYPERLINK_CLICKED: {
-            WCHAR* s = (WCHAR*)lParam;
-            LaunchBrowser(ToUtf8Temp(s));
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
             break;
         }
         case TDN_BUTTON_CLICKED:
@@ -982,8 +980,7 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
                                                       LONG_PTR lpRefData) {
     switch (msg) {
         case TDN_HYPERLINK_CLICKED:
-            WCHAR* s = (WCHAR*)lParam;
-            LaunchBrowser(ToUtf8Temp(s));
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
             break;
     }
     return S_OK;
@@ -1084,7 +1081,6 @@ static void ShowInstallerHelp() {
         return;
     }
 
-    const WCHAR* title = L"SumatraPDF installer usage";
     TASKDIALOGCONFIG dialogConfig{};
 
     DWORD flags =
@@ -1093,7 +1089,7 @@ static void ShowInstallerHelp() {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = title;
+    dialogConfig.pszWindowTitle = L"SumatraPDF installer usage";
     dialogConfig.pszMainInstruction = ToWStrTemp(msg);
     dialogConfig.pszContent =
         LR"(<a href="https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments">Read more on website</a>)";
@@ -1377,11 +1373,11 @@ static int WineDpiFromEnv() {
     static Str scaleVars[] = {Str("GDK_SCALE"), Str("QT_SCALE_FACTOR"), Str("ELM_SCALE")};
     int bestDpi = 0;
     for (Str var : scaleVars) {
-        const char* val = getenv(var.s); // str-port: CRT getenv
-        if (!val || !*val) {
+        Str val = Str(getenv(var.s)); // str-port: CRT getenv
+        if (!val) {
             continue;
         }
-        float scale = (float)atof(val);
+        float scale = (float)atof(val.s);
         if (scale < 1.f) {
             continue;
         }
@@ -1619,27 +1615,29 @@ static bool IsRunningTool() {
 // (our own program path), i.e. the args to forward to the child. Mirrors how
 // CommandLineToArgvW parses argv[0]: if quoted, up to the closing quote;
 // otherwise up to the first whitespace.
-static const WCHAR* SkipFirstArg(const WCHAR* s) {
-    while (*s == L' ' || *s == L'\t') {
+static WStr SkipFirstArg(WStr cmdLine) {
+    const wchar_t* s = cmdLine.s;
+    const wchar_t* end = cmdLine.s + cmdLine.len;
+    while (s < end && (*s == L' ' || *s == L'\t')) {
         s++;
     }
-    if (*s == L'"') {
+    if (s < end && *s == L'"') {
         s++;
-        while (*s && *s != L'"') {
+        while (s < end && *s != L'"') {
             s++;
         }
-        if (*s == L'"') {
+        if (s < end && *s == L'"') {
             s++;
         }
     } else {
-        while (*s && *s != L' ' && *s != L'\t') {
+        while (s < end && *s != L' ' && *s != L'\t') {
             s++;
         }
     }
-    while (*s == L' ' || *s == L'\t') {
+    while (s < end && (*s == L' ' || *s == L'\t')) {
         s++;
     }
-    return s;
+    return WStr((wchar_t*)s, (int)(end - s));
 }
 
 // When this is SumatraPDF-dll.exe (carries embedded installer resources) and is
@@ -1681,7 +1679,7 @@ static int MaybeDelegateToToolExe() {
         hErr = GetStdHandle(STD_ERROR_HANDLE);
     }
 
-    const WCHAR* rest = SkipFirstArg(GetCommandLineW());
+    WStr rest = SkipFirstArg(WStr(GetCommandLineW()));
     TempStr cmd = str::FormatTemp("\"%s\" %s", toolExe, ToUtf8Temp(rest));
     TempWStr cmdW = ToWStrTemp(cmd);
     TempWStr toolExeW = ToWStrTemp(toolExe);
@@ -2059,14 +2057,14 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
     if (flags.testPlugin) {
         // in TestPlugin.cpp
-        extern void TestPlugin(const WCHAR* cmdLine);
-        TestPlugin(GetCommandLineW());
+        extern void TestPlugin(WStr cmdLine);
+        TestPlugin(WStr(GetCommandLineW()));
         return 0;
     }
     if (flags.testPreview) {
         // in TestPreview.cpp
-        extern void TestPreview(const WCHAR* cmdLine);
-        TestPreview(GetCommandLineW());
+        extern void TestPreview(WStr cmdLine);
+        TestPreview(WStr(GetCommandLineW()));
         return 0;
     }
 #endif
