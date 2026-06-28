@@ -193,7 +193,7 @@ bool EndsWith(WStr txt, WStr end);
 bool EndsWithI(WStr txt, WStr end);
 WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
-WStr Parse(WStr str, const WCHAR* format, ...);
+WStr Parse(WStr str, WStr format, ...);
 int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
 size_t NormalizeWSInPlace(WStr str);

@@ -2647,11 +2647,11 @@ static WCHAR* ExtractUntil(const WCHAR* pos, WCHAR c, const WCHAR** endOut) {
     return str::Dup(WStr((WCHAR*)pos, (int)(found.s - pos))).s;
 }
 
-static const WCHAR* ParseWCursors(const WCHAR* str, const WCHAR* format, va_list args) {
-    if (!str) {
+static const WCHAR* ParseWCursors(const WCHAR* str, WStr format, va_list args) {
+    if (!str || !format) {
         return nullptr;
     }
-    for (const WCHAR* f = format; *f; f++) {
+    for (const WCHAR* f = format.s; *f; f++) {
         if (*f != '%') {
             if (*f != *str) {
                 goto Failure;
@@ -2710,8 +2710,8 @@ Failure:
     return nullptr;
 }
 
-WStr Parse(WStr str, const WCHAR* format, ...) {
-    if (!str) {
+WStr Parse(WStr str, WStr format, ...) {
+    if (!str || !format) {
         return {};
     }
     va_list args;
