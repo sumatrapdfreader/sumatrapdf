@@ -39,25 +39,29 @@ class HasherComparator {
     virtual ~HasherComparator() = default;
 };
 
+static Str KeyAsStr(uintptr_t key) {
+    // interned hash table keys are NUL-terminated
+    return Str((char*)key);
+}
+
+static WStr KeyAsWStr(uintptr_t key) {
+    return WStr((wchar_t*)key);
+}
+
 class StrKeyHasherComparator : public HasherComparator {
-    size_t Hash(uintptr_t key) override { return MurmurHash2((const void*)key, str::Len((const char*)key)); }
-    bool Equal(uintptr_t k1, uintptr_t k2) override {
-        const char* s1 = (const char*)k1;
-        const char* s2 = (const char*)k2;
-        return str::Eq(s1, s2);
+    size_t Hash(uintptr_t key) override {
+        Str s = KeyAsStr(key);
+        return MurmurHash2((const void*)s.s, s.len);
     }
+    bool Equal(uintptr_t k1, uintptr_t k2) override { return str::Eq(KeyAsStr(k1), KeyAsStr(k2)); }
 };
 
 class WStrKeyHasherComparator : public HasherComparator {
     size_t Hash(uintptr_t key) override {
-        size_t cbLen = str::Len((const WCHAR*)key) * sizeof(WCHAR);
-        return MurmurHash2((const void*)key, cbLen);
+        WStr s = KeyAsWStr(key);
+        return MurmurHash2((const void*)s.s, (size_t)s.len * sizeof(wchar_t));
     }
-    bool Equal(uintptr_t k1, uintptr_t k2) override {
-        const WCHAR* s1 = (const WCHAR*)k1;
-        const WCHAR* s2 = (const WCHAR*)k2;
-        return str::Eq(s1, s2);
-    }
+    bool Equal(uintptr_t k1, uintptr_t k2) override { return str::Eq(KeyAsWStr(k1), KeyAsWStr(k2)); }
 };
 
 static StrKeyHasherComparator gStrKeyHasherComparator;
@@ -231,21 +235,20 @@ bool MapStrToInt::Insert(Str key, int val, int* existingValOut, Str* existingKey
     }
     TempStr keyZ = StrDupTemp(key);
     bool newEntry;
-    HashTableEntry* e =
-        GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)(const char*)keyZ, allocator, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)keyZ.s, allocator, newEntry);
     if (!newEntry) {
         if (existingValOut) {
             *existingValOut = (int)e->val;
         }
         if (existingKeyOut) {
-            *existingKeyOut = Str((const char*)e->key);
+            *existingKeyOut = KeyAsStr(e->key);
         }
         return false;
     }
     e->key = (intptr_t)StrDup(allocator, key).s;
     e->val = (intptr_t)val;
     if (existingKeyOut) {
-        *existingKeyOut = Str((const char*)e->key);
+        *existingKeyOut = KeyAsStr(e->key);
     }
 
     HashTableResizeIfNeeded(h, &gStrKeyHasherComparator);
@@ -258,7 +261,7 @@ bool MapStrToInt::Remove(Str key, int* removedValOut) const {
     }
     TempStr keyZ = StrDupTemp(key);
     uintptr_t removedVal;
-    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)(const char*)keyZ, &removedVal);
+    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)keyZ.s, &removedVal);
     if (removed && removedValOut) {
         *removedValOut = (int)removedVal;
     }
@@ -272,7 +275,7 @@ bool MapStrToInt::Get(Str key, int* valOut) const {
     TempStr keyZ = StrDupTemp(key);
     StrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)(const char*)keyZ, nullptr, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)keyZ.s, nullptr, newEntry);
     if (!e) {
         return false;
     }
