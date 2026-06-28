@@ -1902,7 +1902,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, kImageEditWinClassName, WndProcImageEdit);
     wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
     wcex.hIcon = LoadIconW(h, iconName);
     RegisterClassEx(&wcex);
 
