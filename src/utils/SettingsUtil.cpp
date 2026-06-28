@@ -9,6 +9,10 @@ static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
     return (const StructInfo*)field.value;
 }
 
+static Str FieldDefaultStr(const FieldInfo& field) {
+    return Str((const char*)field.value); // str-port: generated default literal
+}
+
 // only escape characters which are significant to SquareTreeParser:
 // newlines and leading/trailing whitespace (and escape characters)
 static bool NeedsEscaping(Str s) {
@@ -324,7 +328,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
         } break;
 
         case SettingType::Float: {
-            Str s = value ? value : Str((const char*)field.value);
+            Str s = value ? value : FieldDefaultStr(field);
             str::Parse(s, "%f", (float*)fieldPtr);
             break;
         }
@@ -335,7 +339,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             if (value) {
                 *strPtr = UnescapeStr(value);
             } else {
-                *strPtr = str::Dup(Str((const char*)field.value));
+                *strPtr = str::Dup(FieldDefaultStr(field));
             }
         } break;
 
@@ -345,7 +349,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             if (value) {
                 *strPtr = UnescapeStr(value);
             } else {
-                *strPtr = str::Dup(Str((const char*)field.value));
+                *strPtr = str::Dup(FieldDefaultStr(field));
             }
         } break;
 
@@ -368,7 +372,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             break;
         case SettingType::FloatArray:
         case SettingType::IntArray: {
-            Str src = value ? value : Str((const char*)field.value);
+            Str src = value ? value : FieldDefaultStr(field);
             Vec<int>* v = *(Vec<int>**)fieldPtr;
             delete v;
             v = new Vec<int>();
@@ -402,7 +406,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             if (value) {
                 DeserializeUtf8StringArray(v, UnescapeStr(value));
             } else if (field.value) {
-                DeserializeUtf8StringArray(v, Str((const char*)field.value));
+                DeserializeUtf8StringArray(v, FieldDefaultStr(field));
             }
         } break;
         default:
@@ -500,7 +504,7 @@ static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const vo
             if (field.value) {
                 Indent(out, indent);
                 out.Append("# ");
-                out.Append((const char*)field.value);
+                out.Append(FieldDefaultStr(field));
             }
             out.Append("\r\n");
         } else {
