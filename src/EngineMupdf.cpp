@@ -1752,7 +1752,7 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, const 
 struct PageLabelInfo {
     int startAt = 0;
     int countFrom = 0;
-    const char* type = nullptr;
+    Str type;
     pdf_obj* prefix = nullptr;
 };
 
@@ -1760,14 +1760,14 @@ int CmpPageLabelInfo(const void* a, const void* b) {
     return ((PageLabelInfo*)a)->startAt - ((PageLabelInfo*)b)->startAt;
 }
 
-static TempStr FormatPageLabelTemp(const char* type, int pageNo, const char* prefix) {
+static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     if (str::Eq(type, "D")) {
         return str::FormatTemp("%s%d", prefix, pageNo);
     }
     if (str::EqI(type, "R")) {
         // roman numbering style
         TempStr number = str::FormatRomanNumeralTemp(pageNo);
-        if (*type == 'r') {
+        if (type.len > 0 && type.s[0] == 'r') {
             str::ToLowerInPlace(number);
         }
         return str::FormatTemp("%s%s", prefix, number);
@@ -1779,7 +1779,7 @@ static TempStr FormatPageLabelTemp(const char* type, int pageNo, const char* pre
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
             number.AppendChar(number.at(0));
         }
-        if (*type == 'a') {
+        if (type.len > 0 && type.s[0] == 'a') {
             str::ToLowerInPlace(number.Get());
         }
         return str::FormatTemp("%s%s", prefix, number.Get());
@@ -4328,9 +4328,9 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
     return res;
 };
 
-static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, const char* key) {
+static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     char buf[1024]{};
-    int n = fz_lookup_metadata(ctx, doc, key, buf, (int)dimof(buf));
+    int n = fz_lookup_metadata(ctx, doc, key.s, buf, (int)dimof(buf));
     if (n <= 0) {
         return {};
     }
