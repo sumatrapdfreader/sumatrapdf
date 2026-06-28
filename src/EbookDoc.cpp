@@ -428,15 +428,15 @@ bool EpubDoc::Load() {
 
     // EPUB 2 ToC
     TempStr tocId = node->GetAttributeTemp("toc");
-    if (tocId && !tocPath && idList.Contains(tocId)) {
-        auto idx = idList.Find(tocId);
-        auto s = pathList.At(idx);
+    int tocIdx = (tocId && !tocPath) ? idList.Find(tocId) : -1;
+    if (tocIdx >= 0) {
+        Str s = pathList.At(tocIdx);
         tocPath.Set(str::Join(contentPath, s).s);
         isNcxToc = true;
     }
-    AutoFreeWStr readingDir(node->GetAttribute(StrL("page-progression-direction")).s);
+    TempStr readingDir = node->GetAttributeTemp("page-progression-direction");
     if (readingDir) {
-        isRtlDoc = str::EqI(WStr(readingDir.Get()), WStr(L"rtl"));
+        isRtlDoc = str::EqI(readingDir, "rtl");
     }
 
     for (node = node->down; node; node = node->next) {
@@ -444,11 +444,13 @@ bool EpubDoc::Load() {
             continue;
         }
         TempStr idref = node->GetAttributeTemp("idref");
-        if (!idref || !idList.Contains(idref)) {
+        if (!idref) {
             continue;
         }
-
-        auto idx = idList.Find(idref);
+        int idx = idList.Find(idref);
+        if (idx < 0) {
+            continue;
+        }
         Str fname = pathList.At(idx);
         TempStr fullPath = str::JoinTemp(contentPath, fname);
         auto* htmlFi = archive->GetFileDataByName(fullPath);
