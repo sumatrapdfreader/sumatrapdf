@@ -64,9 +64,9 @@ HRESULT EpubFilter::OnInit() {
 }
 
 // copied from SumatraProperties.cpp
-static bool IsoDateParse(const char* isoDate, SYSTEMTIME* timeOut) {
+static bool IsoDateParse(Str isoDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    Str end = str::Parse(Str(isoDate), "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    Str end = str::Parse(isoDate, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end.s) {
         // time is optional
         str::Parse(end, "T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
@@ -75,7 +75,7 @@ static bool IsoDateParse(const char* isoDate, SYSTEMTIME* timeOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
-static WCHAR* ExtractHtmlText(EpubDoc* doc) {
+static WStr ExtractHtmlText(EpubDoc* doc) {
     log("ExtractHtmlText()\n");
 
     ByteSlice d = doc->GetHtmlData();
@@ -126,14 +126,14 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
         }
     }
 
-    return ToWStr(text.Get());
+    return ToWStr(Str(text.Get()));
 }
 
 HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     log("EpubFilter::GetNextChunkValue()\n");
 
     TempStr str = nullptr;
-    WCHAR* ws = nullptr;
+    WStr ws;
 
     switch (m_state) {
         case STATE_EPUB_START:
@@ -185,7 +185,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             m_state = STATE_EPUB_END;
             ws = ExtractHtmlText(m_epubDoc);
             if (!str::IsEmpty(ws)) {
-                chunkValue.SetTextValue(PKEY_Search_Contents, ws, CHUNK_TEXT);
+                chunkValue.SetTextValue(PKEY_Search_Contents, ws.s, CHUNK_TEXT);
                 str::Free(ws);
                 return S_OK;
             }
