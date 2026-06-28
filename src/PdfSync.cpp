@@ -85,10 +85,15 @@ class SyncTex : public Synchronizer {
 };
 
 Synchronizer::Synchronizer(Str syncFilePathIn, Str pdfPathIn) {
-    syncFilePath = str::Dup(syncFilePathIn).s;
-    pdfPath = str::Dup(pdfPathIn).s;
+    syncFilePath = str::Dup(syncFilePathIn);
+    pdfPath = str::Dup(pdfPathIn);
     TempWStr path = ToWStrTemp(syncFilePathIn);
     _wstat(path, &syncfileTimestamp);
+}
+
+Synchronizer::~Synchronizer() {
+    str::Free(syncFilePath);
+    str::Free(pdfPath);
 }
 
 bool Synchronizer::NeedsToRebuildIndex() const {
@@ -99,7 +104,7 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
     // has the synchronization file been changed on disk?
     struct _stat newstamp;
-    TempWStr path = ToWStrTemp(Str(syncFilePath.Get()));
+    TempWStr path = ToWStrTemp(syncFilePath);
     if (_wstat(path, &newstamp) == 0 && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
         // update time stamp
         memcpy((void*)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
@@ -111,13 +116,13 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
 int Synchronizer::MarkIndexWasRebuilt() {
     needsToRebuildIndex = false;
-    TempWStr path = ToWStrTemp(Str(syncFilePath.Get()));
+    TempWStr path = ToWStrTemp(syncFilePath);
     _wstat(path, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
 }
 
 Str Synchronizer::PrependDir(Str filename) const {
-    TempStr dir = path::GetDirTemp(Str(syncFilePath));
+    TempStr dir = path::GetDirTemp(syncFilePath);
     return path::Join(dir, filename);
 }
 
@@ -187,7 +192,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
         return PDFSYNCERR_SUCCESS;
     }
 
-    ByteSlice data = file::ReadFile(Str(syncFilePath));
+    ByteSlice data = file::ReadFile(syncFilePath);
     if (!data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
@@ -398,7 +403,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
 
     Str path = srcfiles.At((int)found->file);
     filename.SetCopy(path::NormalizeTemp(path));
-    TryRecoverMovedSourceFile(filename, Str(pdfPath.Get()));
+    TryRecoverMovedSourceFile(filename, pdfPath);
 
     *line = (int)found->line;
     *col = (int)found->column;
@@ -719,8 +724,8 @@ int SyncTex::RebuildIndexIfNeeded() {
     TempStr pathBase;   //  abc
     TempStr pathSync;   //  abc.synctex
     TempStr pathSyncGz; //  abc.synctex.gz
-    pathSync = str::DupTemp(syncFilePath.Get());
-    pathBase = path::GetPathNoExtTemp(Str(syncFilePath));
+    pathSync = str::DupTemp(syncFilePath);
+    pathBase = path::GetPathNoExtTemp(syncFilePath);
     pathSyncGz = str::JoinTemp(pathBase, ".synctex.gz");
 
     i64 fsize;
@@ -803,7 +808,7 @@ static bool IsUnixSourcePath(Str syncFilePath, Str resolvedSrcPath) {
 }
 
 int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
-    logfa("SyncTex::DocToSource: '%s', pageNo: %d\n", syncFilePath.Get(), pageNo);
+    logfa("SyncTex::DocToSource: '%s', pageNo: %d\n", syncFilePath.s, pageNo);
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
         ReportDebugIf(true);
@@ -835,12 +840,12 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     // Unescape SyncTeX's space encoding: * represents a space in filenames
     str::TransCharsInPlace(Str(filename), "*", " ");
 
-    if (IsUnixSourcePath(Str(syncFilePath.Get()), Str(filename.Get()))) {
+    if (IsUnixSourcePath(syncFilePath, Str(filename.Get()))) {
         // Treat filename as unix path
 
         // Resolve relative Unix paths relative to the sync file's directory
         if (filename.Get()[0] != '/') {
-            TempStr unixSyncFilePath = path::WslUncToUnixTemp(syncFilePath.Get());
+            TempStr unixSyncFilePath = path::WslUncToUnixTemp(syncFilePath);
             TempStr dir = path::GetDirTemp(unixSyncFilePath);
             filename.Set(path::Join(dir, Str(filename)).s);
         }
@@ -853,7 +858,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
             filename.Set(PrependDir(Str(filename.Get())).s);
         }
         filename.SetCopy(path::NormalizeTemp(filename.Get()));
-        TryRecoverMovedSourceFile(filename, Str(pdfPath.Get()));
+        TryRecoverMovedSourceFile(filename, pdfPath);
     }
 
     *line = synctex_node_line(node);

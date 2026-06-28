@@ -32,11 +32,12 @@ struct EpubFormatter : HtmlFormatter {
     void HandleTagSvgImage(HtmlToken* t);
 
     EpubDoc* epubDoc;
-    AutoFreeStr pagePath;
+    Str pagePath;
     size_t hiddenDepth;
 
   public:
     EpubFormatter(HtmlFormatterArgs* args, EpubDoc* doc) : HtmlFormatter(args), epubDoc(doc), hiddenDepth(0) {}
+    ~EpubFormatter() override;
 };
 
 /* formatting extensions for FictionBook */

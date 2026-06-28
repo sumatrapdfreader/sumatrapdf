@@ -1883,18 +1883,27 @@ EngineBase* CreateEngineImageDirFromFile(Str fileName) {
 
 struct ComicInfoParser : json::ValueVisitor {
     // extracted metadata
-    AutoFreeStr propTitle;
+    Str propTitle;
     StrVec propAuthors;
-    AutoFreeStr propDate;
-    AutoFreeStr propModDate;
-    AutoFreeStr propCreator;
-    AutoFreeStr propSummary;
+    Str propDate;
+    Str propModDate;
+    Str propCreator;
+    Str propSummary;
     // temporary state needed for extracting metadata
-    AutoFreeStr propAuthorTmp;
+    Str propAuthorTmp;
 
     // ComicInfo.xml <Page Image="N" Bookmark="..."/> entries (Image is 0-based)
     Vec<int> bookmarkImageIdx;
     StrVec bookmarkTitles;
+
+    ~ComicInfoParser() override {
+        str::Free(propTitle);
+        str::Free(propDate);
+        str::Free(propModDate);
+        str::Free(propCreator);
+        str::Free(propSummary);
+        str::Free(propAuthorTmp);
+    }
 
     // json::ValueVisitor
     bool Visit(Str path, Str value, json::Type type) override;
@@ -2002,34 +2011,44 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
 // https://code.google.com/archive/p/comicbookinfo/
 bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
     if (json::Type::String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
-        propTitle.Set(str::Dup(value).s);
+        str::Free(propTitle);
+        propTitle = str::Dup(value);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
-        propDate.Set(str::Format("%s/%d", propDate ? propDate.Get() : "", ParseInt(value)).s);
+        Str newDate = str::Format("%s/%d", str::IsEmpty(propDate) ? "" : propDate.s, ParseInt(value));
+        str::Free(propDate);
+        propDate = newDate;
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
-        propDate.Set(str::Format("%d%s", ParseInt(value), propDate ? propDate.Get() : "").s);
+        Str newDate = str::Format("%d%s", ParseInt(value), str::IsEmpty(propDate) ? "" : propDate.s);
+        str::Free(propDate);
+        propDate = newDate;
     } else if (json::Type::String == type && str::Eq(path, "/appID")) {
-        propCreator.Set(str::Dup(value).s);
+        str::Free(propCreator);
+        propCreator = str::Dup(value);
     } else if (json::Type::String == type && str::Eq(path, "/lastModified")) {
-        propModDate.Set(str::Dup(value).s);
+        str::Free(propModDate);
+        propModDate = str::Dup(value);
     } else if (json::Type::String == type && str::Eq(path, "/X-summary")) {
-        propSummary.Set(str::Dup(value).s);
+        str::Free(propSummary);
+        propSummary = str::Dup(value);
     } else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
         int idx = -1;
         Str prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
             if (json::Type::String == type && str::Eq(prop, "person")) {
-                propAuthorTmp.Set(str::Dup(value).s);
-            } else if (json::Type::Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
-                       !propAuthors.Contains(Str(propAuthorTmp))) {
-                propAuthors.Append(propAuthorTmp.Get());
+                str::Free(propAuthorTmp);
+                propAuthorTmp = str::Dup(value);
+            } else if (json::Type::Bool == type && str::Eq(prop, "primary") && !str::IsEmpty(propAuthorTmp) &&
+                       !propAuthors.Contains(propAuthorTmp)) {
+                propAuthors.Append(propAuthorTmp);
             }
         }
         return true;
     }
     // stop parsing once we have all desired information
-    Str dateStr(propDate.Get());
+    Str dateStr = propDate;
     Str slash = str::FindChar(dateStr, '/');
-    return !propTitle || propAuthors.Size() == 0 || !propCreator || !propDate || !slash || slash.s <= dateStr.s;
+    return str::IsEmpty(propTitle) || propAuthors.Size() == 0 || str::IsEmpty(propCreator) || str::IsEmpty(propDate) ||
+           !slash || slash.s <= dateStr.s;
 }
 
 class EngineCbx : public EngineImages {
@@ -2305,7 +2324,7 @@ ByteSlice EngineCbx::GetImageData(int pageNo) {
 
 TempStr EngineCbx::GetPropertyTemp(Str name) {
     if (str::Eq(name, kPropTitle)) {
-        return Str(cip.propTitle);
+        return cip.propTitle;
     }
 
     if (str::Eq(name, kPropAuthor)) {
@@ -2316,17 +2335,17 @@ TempStr EngineCbx::GetPropertyTemp(Str name) {
     }
 
     if (str::Eq(name, kPropCreationDate)) {
-        return Str(cip.propDate);
+        return cip.propDate;
     }
     if (str::Eq(name, kPropModificationDate)) {
-        return Str(cip.propModDate);
+        return cip.propModDate;
     }
     if (str::Eq(name, kPropCreatorApp)) {
-        return Str(cip.propCreator);
+        return cip.propCreator;
     }
     if (str::Eq(name, kPropSubject)) {
         // TODO: replace with Prop_Summary
-        return Str(cip.propSummary);
+        return cip.propSummary;
     }
 
     return {};

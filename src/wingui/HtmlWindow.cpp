@@ -1380,6 +1380,7 @@ HtmlWindow::~HtmlWindow() {
     FreeWindowId(windowId);
     UnregisterInternetProtocolFactory();
     FreeHtmlSetInProgressData();
+    str::Free(currentURL);
 }
 
 void HtmlWindow::OnSize(Size size) {
@@ -1418,7 +1419,8 @@ void HtmlWindow::NavigateToUrl(Str urlA) {
     TempWStr url = ToWStrTemp(urlA);
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
-    currentURL.Reset();
+    str::Free(currentURL);
+    currentURL = {};
     webBrowser->Navigate2(&urlVar, nullptr, nullptr, nullptr, nullptr);
     VariantClear(&urlVar);
 }
@@ -1718,7 +1720,8 @@ HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
 // called before an url is shown. If returns false, will cancel
 // the navigation.
 bool HtmlWindow::OnBeforeNavigate(WStr urlW, bool newWindow) {
-    currentURL.Reset();
+    str::Free(currentURL);
+    currentURL = {};
     if (!htmlWinCb) {
         return true;
     }
@@ -1772,9 +1775,10 @@ void HtmlWindow::OnDocumentComplete(WStr urlW) {
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     ReportIf(ok && (protoWindowId != windowId));
 
-    currentURL.Set(urlReal.StealData());
+    str::Free(currentURL);
+    currentURL = urlReal.StealData();
     if (htmlWinCb) {
-        htmlWinCb->OnDocumentComplete(Str(currentURL.Get()));
+        htmlWinCb->OnDocumentComplete(currentURL);
     }
     SetScrollbarToAuto();
 }

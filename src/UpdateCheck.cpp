@@ -551,7 +551,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     }
 #endif
 
-    Str url = Str(rsp->url.Get());
+    Str url = rsp->url;
 
     if (rsp->error != 0) {
         logf("ShowAutoUpdateDialog: http get of '%s' failed with %d\n", url.s, (int)rsp->error);
@@ -713,14 +713,14 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
     BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
     Str uri = url.Get();
     HttpRsp* rsp = new HttpRsp;
-    rsp->url.SetCopy(uri);
+    str::ReplaceWithCopy(&rsp->url, uri);
     bool ok = HttpGet(uri, rsp);
     if (!ok) {
         delete rsp;
         BuildUpdateURL(url, kUpdateInfoURL2, updateCheckType);
         uri = url.Get();
         rsp = new HttpRsp;
-        rsp->url.SetCopy(uri);
+        str::ReplaceWithCopy(&rsp->url, uri);
         HttpGet(uri, rsp);
     }
     data->rsp = rsp;

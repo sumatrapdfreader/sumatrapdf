@@ -23,7 +23,7 @@ class EngineBase;
 class Synchronizer {
   public:
     explicit Synchronizer(Str syncfilepath, Str pdffilename);
-    virtual ~Synchronizer() = default;
+    virtual ~Synchronizer();
 
     // Inverse-search:
     //  - pageNo: page number in the PDF (starting from 1)
@@ -50,8 +50,8 @@ class Synchronizer {
     int MarkIndexWasRebuilt();
     Str PrependDir(Str filename) const;
 
-    AutoFreeStr syncFilePath; // path to the synchronization file
-    AutoFreeStr pdfPath;
+    Str syncFilePath; // path to the synchronization file
+    Str pdfPath;
 
   public:
     static int Create(Str pdffilename, EngineBase* engine, Synchronizer** sync);

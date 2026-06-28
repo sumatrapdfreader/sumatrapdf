@@ -135,6 +135,10 @@ void MobiFormatter::HandleHtmlTag(HtmlToken* t) {
 
 /* EPUB-specific formatting methods */
 
+EpubFormatter::~EpubFormatter() {
+    str::Free(pagePath);
+}
+
 void EpubFormatter::HandleTagImg(HtmlToken* t) {
     ReportIf(!epubDoc);
     if (t->IsEndTag()) {
@@ -145,7 +149,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         TempStr src = str::DupTemp(attr->val);
         url::DecodeInPlace(src);
-        ByteSlice* img = epubDoc->GetImageData(src, Str(pagePath));
+        ByteSlice* img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
@@ -155,13 +159,13 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
 
 void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("page_path");
-    if (!attr || pagePath) {
+    if (!attr || !str::IsEmpty(pagePath)) {
         ForceNewPage();
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, bbox));
-        pagePath.SetCopy(attr->val);
+        str::ReplaceWithCopy(&pagePath, attr->val);
         // reset CSS style rules for the new document
         styleRules.Reset();
     }
@@ -187,7 +191,7 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
 
     TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
-    ByteSlice data = epubDoc->GetFileData(src, Str(pagePath));
+    ByteSlice data = epubDoc->GetFileData(src, pagePath);
     if (data) {
         ParseStyleSheet(AsStr(data));
         data.Free();
@@ -208,7 +212,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     }
     TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
-    ByteSlice* img = epubDoc->GetImageData(src, Str(pagePath));
+    ByteSlice* img = epubDoc->GetImageData(src, pagePath);
     if (img) {
         EmitImage(img);
     }

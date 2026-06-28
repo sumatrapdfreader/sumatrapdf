@@ -2,12 +2,13 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct HttpRsp {
-    AutoFreeStr url;
+    Str url;
     StrBuilder data;
     DWORD error = (DWORD)-1;
     DWORD httpStatusCode = (DWORD)-1;
 
     HttpRsp() = default;
+    ~HttpRsp();
 };
 
 struct HttpProgress {
