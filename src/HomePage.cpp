@@ -58,7 +58,7 @@ Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 )";
 
 // TODO: leaks if set
-const char* promoFromServer = nullptr;
+static Str promoFromServer;
 
 static bool IsTipWhitespace(char c) {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
@@ -358,12 +358,12 @@ static int gParsedPromoCount = 0;
 static bool gSelectedIsPromo = false;
 static int gSelectedTipIdx = -1;
 
-static int ParseTipsFromString(const char* src, const char* prefix, ParsedTip*& outTips) {
+static int ParseTipsFromString(Str src, Str prefix, ParsedTip*& outTips) {
     StrVec lines;
     Split(&lines, src, "\n");
     int n = 0;
     for (int i = 0; i < lines.Size(); i++) {
-        const char* line = lines.At(i);
+        Str line = lines.At(i);
         if (!str::IsEmptyOrWhiteSpace(line)) {
             n++;
         }
@@ -374,12 +374,12 @@ static int ParseTipsFromString(const char* src, const char* prefix, ParsedTip*& 
     outTips = new ParsedTip[n];
     int count = 0;
     for (int i = 0; i < lines.Size(); i++) {
-        const char* line = lines.At(i);
+        Str line = lines.At(i);
         if (str::IsEmptyOrWhiteSpace(line)) {
             continue;
         }
         if (prefix) {
-            TempStr prefixed = str::FormatTemp("%s%s", prefix, line);
+            TempStr prefixed = str::JoinTemp(prefix, line);
             ParseTip(outTips[count], prefixed);
         } else {
             ParseTip(outTips[count], line);
@@ -405,7 +405,7 @@ static void EnsureTipsParsed() {
         return;
     }
     gParsedTipCount = ParseTipsFromString(sumatraTips, "Tip: ", gParsedTips);
-    gParsedPromoCount = ParseTipsFromString(sumatraPromos, nullptr, gParsedPromos);
+    gParsedPromoCount = ParseTipsFromString(sumatraPromos, {}, gParsedPromos);
     PickRandomTipOrPromo();
 }
 
@@ -447,9 +447,9 @@ static Str gClickedURL;
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
-    const char* leftTxt;
-    const char* rightTxt;
-    const char* url;
+    Str leftTxt;
+    Str rightTxt;
+    Str url;
 
     /* data calculated by the layout */
     Rect leftPos;
@@ -508,7 +508,7 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
 
     SetBkMode(hdc, TRANSPARENT);
 
-    const char* txt = kAppName;
+    Str txt = kAppName;
     Size txtSize = HdcMeasureText(hdc, txt, fmt, fontSumatraTxt);
     Rect mainRect(rect.x + (rect.dx - txtSize.dx) / 2, rect.y + (rect.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
 
@@ -539,10 +539,10 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
 }
 
 // draw on the bottom right
-static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
+static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, Str txt) {
     HFONT fontLeftTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
 
-    VirtWndText w(hwnd, txt, fontLeftTxt);
+    VirtWndText w(hwnd, txt.s, fontLeftTxt); // str-port: VirtWndText
     w.isRtl = IsUIRtl();
     w.withUnderline = true;
     Size txtSize = w.GetIdealSize(true);
@@ -583,11 +583,11 @@ static Size CalcSumatraVersionSize(HDC hdc) {
     return sz;
 }
 
-static TempStr TrimGitTemp(char* s) {
+static TempStr TrimGitTemp(Str s) {
     if (gitCommidId && str::EndsWith(s, gitCommidId)) {
         auto sLen = str::Len(s);
         auto gitLen = str::Len(gitCommidId);
-        s = str::DupTemp(s, sLen - gitLen - 7);
+        return str::DupTemp(s, sLen - gitLen - 7);
     }
     return s;
 }
@@ -660,8 +660,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
             col = ThemeWindowTextColor();
         }
         SetTextColor(hdc, col);
-        char* s = (char*)el->rightTxt;
-        s = TrimGitTemp(s);
+        TempStr s = TrimGitTemp(el->rightTxt);
         auto& pos = el->rightPos;
         HdcDrawText(hdc, s, pos, fmt);
 
@@ -709,8 +708,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     int rightLargestDx = 0;
     int rightDy = 0;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        char* s = (char*)el->rightTxt;
-        s = TrimGitTemp(s);
+        TempStr s = TrimGitTemp(el->rightTxt);
         Size txtSize = HdcMeasureText(hdc, s, fmt, fontRightTxt);
         el->rightPos.dx = txtSize.dx;
         el->rightPos.dy = txtSize.dy;
@@ -1115,12 +1113,12 @@ void PickAnotherRandomPromotion() {
 }
 
 // thumbnail tooltip: the file path, then two spaces and a human-readable size
-static TempStr HomeThumbTooltipTemp(const char* path) {
-    i64 size = file::GetSize(Str(path));
+static TempStr HomeThumbTooltipTemp(Str path) {
+    i64 size = file::GetSize(path);
     if (size < 0) {
         return str::DupTemp(path);
     }
-    return str::FormatTemp("%s  %s", path, str::FormatSizeShortTemp(size, nullptr));
+    return str::FormatTemp("%s  %s", path.s, str::FormatSizeShortTemp(size, nullptr));
 }
 
 void LayoutHomePage(HomePageLayout& l) {
@@ -1198,11 +1196,11 @@ void LayoutHomePage(HomePageLayout& l) {
     Rect rcIconView(0, 0, 0, 0);
     ImageList_GetIconSize(l.himlOpen, &rcIconView.dx, &rcIconView.dy);
 
-    const char* txt = _TRA("Recently Opened");
+    Str txt = _TRA("Recently Opened");
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
     }
-    VirtWndText* hdr = new VirtWndText(hwnd, txt, hdrFont);
+    VirtWndText* hdr = new VirtWndText(hwnd, txt.s, hdrFont); // str-port: VirtWndText
     l.freqRead = hdr;
     hdr->isRtl = isRtl;
     Size txtSize = hdr->GetIdealSize(true);
@@ -1381,12 +1379,12 @@ void LayoutHomePage(HomePageLayout& l) {
             if (thumbImg) {
                 thumb.szThumb = thumbImg->GetSize();
             }
-            char* path = fs->filePath;
+            Str path = fs->filePath;
             Rect slRect = rcRow.Intersect(l.rcThumbsArea);
             if (!slRect.IsEmpty()) {
                 TempStr removeTarget = str::JoinTemp(kLinkHomeRemoveFilePrefix, path);
                 TempStr pinTarget = str::JoinTemp(kLinkHomePinFilePrefix, path);
-                const char* pinTip = fs->isPinned ? _TRA("Unpin") : _TRA("Pin");
+                Str pinTip = fs->isPinned ? _TRA("Unpin") : _TRA("Pin");
                 win->staticLinks.Append(new StaticLink(rcRemove.Intersect(l.rcThumbsArea), removeTarget,
                                                        _TRA("Remove from Frequently Read")));
                 win->staticLinks.Append(new StaticLink(rcPin.Intersect(l.rcThumbsArea), pinTarget, pinTip));
@@ -1427,7 +1425,7 @@ void LayoutHomePage(HomePageLayout& l) {
                     rcText.x -= iconSpace;
                 }
                 thumb.rcText = rcText;
-                char* path = fs->filePath;
+                Str path = fs->filePath;
                 Rect slRect = rcText.Union(rcPage).Intersect(l.rcThumbsArea);
                 if (!slRect.IsEmpty()) {
                     thumb.sl = new StaticLink(slRect, path, HomeThumbTooltipTemp(path));
@@ -1501,7 +1499,7 @@ static void GetFileStateIcon(FileState* fs) {
 
 struct HomeCloseBtn {
     MainWindow* win = nullptr; // window the button currently belongs to
-    char* filePath = nullptr;  // file removed when the button is clicked
+    Str filePath;              // file removed when the button is clicked
     Rect rc;                   // button rect (canvas client coords)
     Rect thumbRc;              // thumbnail rect (canvas client coords)
     bool isHover = false;
@@ -1581,7 +1579,8 @@ static void ResetHomeCloseBtn() {
     HomeCloseBtn& b = gHomeCloseBtn;
     b.visible = false;
     b.isHover = false;
-    str::FreePtr(&b.filePath);
+    str::Free(b.filePath.s);
+    b.filePath = {};
     gHomeCloseBtnPaintedRc = {};
 }
 
@@ -1594,7 +1593,8 @@ void HomePageHideCloseButton() {
     EraseHomeCloseGlyph(win);
     b.visible = false;
     b.isHover = false;
-    str::FreePtr(&b.filePath);
+    str::Free(b.filePath.s);
+    b.filePath = {};
 }
 
 // compute the button rect (canvas client coords) for a thumbnail link
@@ -1692,8 +1692,8 @@ static Rect FitRectInRect(Size src, Rect dst) {
     return r;
 }
 
-static TempStr FileSizeForHomeListTemp(const char* path) {
-    i64 size = file::GetSize(Str(path));
+static TempStr FileSizeForHomeListTemp(Str path) {
+    i64 size = file::GetSize(path);
     if (size < 0) {
         return str::DupTemp("");
     }
@@ -1721,8 +1721,8 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
     }
     RoundRect(hdc, thumbBox.x, thumbBox.y, thumbBox.x + thumbBox.dx, thumbBox.y + thumbBox.dy, 4, 4);
 
-    char* path = fs->filePath;
-    TempStr fileName = path::GetBaseNameTemp(Str(path));
+    Str path = fs->filePath;
+    TempStr fileName = path::GetBaseNameTemp(path);
     UINT nameFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
     SelectObject(hdc, fontText);
     {
@@ -1735,7 +1735,7 @@ static void DrawHomeListRow(HomePageLayout& l, const ThumbnailLayout& thumb, HFO
     SetTextColor(hdc, ThemeWindowTextColor());
     RECT rcSize = ToRECT(thumb.rcListSize);
     UINT sizeFmt = DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_LEFT : DT_RIGHT);
-    DrawTextA(hdc, fileSize, -1, &rcSize, sizeFmt);
+    DrawTextA(hdc, fileSize.s, -1, &rcSize, sizeFmt);
 
     ImageList_Draw(l.himlOpen, (int)TbIcon::Close, hdc, thumb.rcListRemove.x, thumb.rcListRemove.y, ILD_NORMAL);
     if (fs->isPinned) {
@@ -1829,8 +1829,8 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
         const Rect& rect = thumb.rcText;
-        char* path = fs->filePath;
-        TempStr fileName = path::GetBaseNameTemp(Str(path));
+        Str path = fs->filePath;
+        TempStr fileName = path::GetBaseNameTemp(path);
         UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
 
         SelectObject(hdc, fontText);
