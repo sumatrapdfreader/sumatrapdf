@@ -319,27 +319,33 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         return res;
     }
 
-    TempStr localPath;
-    Str localFragment;
-    if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
-        auto res = new PageDestinationFile(localPath, localFragment);
-        res->rect = FzGetRectF(link, outline);
-        return res;
+    // Try to resolve the URI as an internal document location first. EPUB
+    // chapter links (e.g. "OEBPS/ch1.htm") point inside the same document and
+    // must navigate internally, not launch an external file. Only when the URI
+    // doesn't resolve internally do we treat a relative href to a supported file
+    // as a sibling file to launch (e.g. markdown "[other](other.md)").
+    float x = 0, y = 0, z = 0;
+    int pageNo = ResolveLink(ctx, doc, uri, &x, &y, &z);
+
+    if (pageNo <= 0) {
+        TempStr localPath;
+        Str localFragment;
+        if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
+            auto res = new PageDestinationFile(localPath, localFragment);
+            res->rect = FzGetRectF(link, outline);
+            return res;
+        }
     }
 
     auto dest = new PageDestinationMupdf(link, outline);
     dest->rect = FzGetRectF(link, outline);
-    {
-        float x = 0, y = 0, z = 0;
-        Str destUri = FzGetURL(link, outline);
-        dest->pageNo = ResolveLink(ctx, doc, destUri, &x, &y, &z);
-        if (dest->pageNo > 0) {
-            dest->destX = x;
-            dest->destY = y;
-            dest->destZoom = z;
-        }
-        // when not resolved destX / destY keep their -1 sentinel
+    dest->pageNo = pageNo;
+    if (pageNo > 0) {
+        dest->destX = x;
+        dest->destY = y;
+        dest->destZoom = z;
     }
+    // when not resolved destX / destY keep their -1 sentinel
     return dest;
 }
 
