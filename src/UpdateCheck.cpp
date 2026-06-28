@@ -69,19 +69,19 @@ static const char* kNotifUpdateAvailable = "notifUpdateAvailable";
 
 struct UpdateInfo {
     HWND hwndParent = nullptr;
-    const char* latestVer = nullptr;
+    Str latestVer;
 
-    const char* installer64 = nullptr;
-    const char* portable64 = nullptr;
+    Str installer64;
+    Str portable64;
 
-    const char* installer32 = nullptr;
-    const char* portable32 = nullptr;
+    Str installer32;
+    Str portable32;
 
-    const char* installerArm64 = nullptr;
-    const char* portableArm64 = nullptr;
+    Str installerArm64;
+    Str portableArm64;
 
-    const char* dlURL = nullptr;
-    const char* installerPath = nullptr;
+    Str dlURL;
+    Str installerPath;
 
     UpdateInfo() = default;
     ~UpdateInfo() {
@@ -120,11 +120,15 @@ PortableZip32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prere
     Info = Bookmarking web application
 ]
 */
-static UpdateInfo* ParseUpdateInfo(const char* d) {
+static UpdateInfo* ParseUpdateInfo(Str d) {
     // if a user configures os-wide proxy that is not a regular ie proxy
     // (which we pick up) we might get garbage http response
     // check if response looks valid
-    if (!str::StartsWith(d, '[' == d[0] ? "[SumatraPDF]" : "SumatraPDF")) {
+    if (!d) {
+        return nullptr;
+    }
+    Str prefix = (d.s[0] == '[') ? StrL("[SumatraPDF]") : StrL("SumatraPDF");
+    if (!str::StartsWith(d, prefix)) {
         return nullptr;
     }
 
@@ -162,7 +166,7 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
     res->portable32 = str::Dup(node->GetValue("PortableExe32"));
 
     // figure out which executable to download
-    const char* dlURL = nullptr;
+    Str dlURL;
     bool isDll = IsDllBuild();
     if (IsArmBuild()) {
         dlURL = isDll ? res->installerArm64 : res->portableArm64;
@@ -475,12 +479,12 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheck
         // I assume store will take care of updates
         return false;
     }
-    auto latestVer = updateInfo->latestVer;
-    const char* myVer = UPDATE_CHECK_VERA;
+    Str latestVer = updateInfo->latestVer;
+    Str myVer = StrL(UPDATE_CHECK_VERA);
     if (gIsDebugBuild) {
         // in debug build we compare against pre-rel version, like "17616"
         // but our version is like "3.6" so it triggers update
-        myVer = "50000";
+        myVer = StrL("50000");
     }
     bool hasUpdate = CompareProgramVersion(latestVer, myVer) > 0;
     return hasUpdate;
@@ -497,7 +501,7 @@ static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND hwnd, UINT msg, WPARAM 
 
 constexpr const char* kExpectedDlHost = "https://www.sumatrapdfreader.org/";
 
-static void NotifySuspiciousUpdate(HWND hwndParent, const char* dlURL) {
+static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
     logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL);
     ReportIfFast(true);
     auto title = _TRA("SumatraPDF Update");
@@ -546,7 +550,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     }
 #endif
 
-    const char* url = rsp->url.Get();
+    Str url = Str(rsp->url.Get());
 
     if (rsp->error != 0) {
         logf("ShowAutoUpdateDialog: http get of '%s' failed with %d\n", url, (int)rsp->error);
@@ -583,7 +587,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     }
     HWND hwndForNotif = win->hwndCanvas;
     if (!ShouldDownloadUpdate(updateInfo, updateCheckType)) {
-        const char* myVer = UPDATE_CHECK_VERA;
+        Str myVer = StrL(UPDATE_CHECK_VERA);
         logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, updateInfo->latestVer);
         /* if automated => don't notify that there is no new version */
         if (updateCheckType == UpdateCheck::UserInitiated) {
@@ -634,21 +638,21 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     return 0;
 }
 
-static void BuildUpdateURL(StrBuilder& url, const char* baseURL, UpdateCheck updateCheckType) {
+static void BuildUpdateURL(StrBuilder& url, Str baseURL, UpdateCheck updateCheckType) {
     url = baseURL;
     url.Append("?v=");
     url.Append(UPDATE_CHECK_VERA);
-    char* osVerTemp = GetWindowsVerTemp();
+    TempStr osVerTemp = GetWindowsVerTemp();
     url.Append("&os=");
     url.Append(osVerTemp);
     url.Append("&64bit=");
     url.Append(IsProcess64() ? "yes" : "no");
     url.Append("&arm=");
     url.Append(IsArmBuild() ? "yes" : "no");
-    const char* lang = trans::GetCurrentLangCode();
+    Str lang = trans::GetCurrentLangCode();
     url.Append("&lang=");
     url.Append(lang);
-    char* webView2ver = GetWebView2VersionTemp();
+    TempStr webView2ver = GetWebView2VersionTemp();
     if (webView2ver) {
         url.Append("&webview=");
         url.Append(webView2ver);
