@@ -4,8 +4,8 @@
 // must be #included from Regress.cpp
 
 // test that a given epub file loads correctly. crash otherwise
-static void RegressTestEpubLoading(const char* fileName) {
-    char* filePath = path::Join(TestFilesDir(), fileName);
+static void RegressTestEpubLoading(Str fileName) {
+    TempStr filePath = path::JoinTemp(TestFilesDir(), fileName);
     VerifyFileExists(filePath);
     Kind kind = GuessFileType(fileName, true);
     ReportIf(!EpubDoc::IsSupportedFileType(kind));
@@ -26,7 +26,7 @@ static void Regress01() {
 
 // https://code.google.com/archive/p/sumatrapdf/issues/1926
 static void Regress00() {
-    char* filePath = path::Join(TestFilesDir(), "epub\\widget-figure-gallery-20120405.epub");
+    TempStr filePath = path::JoinTemp(TestFilesDir(), "epub\\widget-figure-gallery-20120405.epub");
     VerifyFileExists(filePath);
     Kind kind = GuessFileType(filePath, true);
     ReportIf(!EpubDoc::IsSupportedFileType(kind));

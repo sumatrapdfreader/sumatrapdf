@@ -42,9 +42,9 @@ To write new regression test:
 #include "TextSelection.h"
 #include "TextSearch.h"
 
-static const char* gTestFilesDir;
+static Str gTestFilesDir;
 
-static const char* TestFilesDir() {
+static Str TestFilesDir() {
     return gTestFilesDir;
 }
 
@@ -55,8 +55,8 @@ static int Usage() {
     return 1;
 }
 
-static void printflush(const char* s) {
-    printf(s);
+static void printflush(Str s) {
+    printf("%s", s.s);
     fflush(stdout);
 }
 
@@ -67,17 +67,17 @@ static bool FindTestFilesDir() {
                                  "C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
     for (size_t i = 0; i < dimof(dirsToCheck); i++) {
         const char* dir = dirsToCheck[i];
-        if (dir::Exists(dir)) {
-            gTestFilesDir = dir;
+        if (dir::Exists(Str(dir))) {
+            gTestFilesDir = Str(dir);
             return true;
         }
     }
     return false;
 }
 
-static void VerifyFileExists(const char* filePath) {
+static void VerifyFileExists(Str filePath) {
     if (!file::Exists(filePath)) {
-        printf("File '%s' doesn't exist!\n", filePath);
+        printf("File '%s' doesn't exist!\n", filePath.s);
         system("pause");
         exit(1);
     }

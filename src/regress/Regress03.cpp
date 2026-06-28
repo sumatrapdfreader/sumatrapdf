@@ -3,9 +3,9 @@
    https://drive.google.com/file/d/0B2EXZJHDEYllMnkzMUZWWGdueDA/view?usp=sharing
  */
 
-void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const TextSearch::Direction direction,
-                       const TextSel* expected, const int expectedLen) {
-    EngineBase* engine = CreateEngineFromFile(searchFileA, nullptr, true);
+void SearchTestWithDir(Str searchFile, WStr searchTerm, const TextSearch::Direction direction, const TextSel* expected,
+                       const int expectedLen) {
+    EngineBase* engine = CreateEngineFromFile(searchFile, nullptr, true);
     TextSearch* tsrch = new TextSearch(engine);
     tsrch->SetDirection(direction);
     int findCount = 0;
@@ -23,11 +23,11 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
     for (auto tsel = tsrch->FindFirst(startPage, searchTerm); nullptr != tsel;
          tsel = tsrch->FindNext(), ++findCount, expIndex += expIncr) {
         if (0 == expected[expIndex].len) {
-            wprintf(L"Found %s %i times, not expecting another match\n", searchTerm, expIndex);
+            wprintf(L"Found %s %i times, not expecting another match\n", searchTerm.s, expIndex);
             ReportIf(true);
         }
         if (expected[expIndex].len != tsel->len) {
-            wprintf(L"Text selection length mismatch for %s at occurrence %i: got %i, wanted %i\n", searchTerm,
+            wprintf(L"Text selection length mismatch for %s at occurrence %i: got %i, wanted %i\n", searchTerm.s,
                     findCount, expected[expIndex].len, tsel->len);
             ReportIf(true);
         }
@@ -37,7 +37,7 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
                     L"Text selection page or rectangle mismatch for %s, "
                     L"expected pg %d rx=%d ry=%d rdx=%d rdy=%d "
                     L"got pg %d rx=%d ry=%d rdx=%d rdy=%d\n",
-                    searchTerm, expected[expIndex].pages[i], expected[expIndex].rects[i].x,
+                    searchTerm.s, expected[expIndex].pages[i], expected[expIndex].rects[i].x,
                     expected[expIndex].rects[i].y, expected[expIndex].rects[i].dx, expected[expIndex].rects[i].dy,
                     tsel->pages[i], tsel->rects[i].x, tsel->rects[i].y, tsel->rects[i].dx, tsel->rects[i].dy);
                 ReportIf(true);
@@ -46,12 +46,12 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
     }
     if (TextSearch::Direction::Forward == direction) {
         if (findCount != expectedLen) {
-            wprintf(L"Found only %d matches of '%s', expected %d\n", expIndex, searchTerm, expectedLen);
+            wprintf(L"Found only %d matches of '%s', expected %d\n", expIndex, searchTerm.s, expectedLen);
             ReportIf(true);
         }
     } else {
         if (findCount != expectedLen) {
-            wprintf(L"Found only %d matches of '%s', expected %d\n", expectedLen - expIndex - 1, searchTerm,
+            wprintf(L"Found only %d matches of '%s', expected %d\n", expectedLen - expIndex - 1, searchTerm.s,
                     expectedLen);
             ReportIf(true);
         }
@@ -76,8 +76,8 @@ const TextSel* BuildTextSelList(RegressSearchInfo& info) {
     return result;
 }
 
-void RegressSearch(const char* filePath, RegressSearchInfo& info) {
-    const WCHAR* searchTerm = info.searchPhrase;
+void RegressSearch(Str filePath, RegressSearchInfo& info) {
+    WStr searchTerm = info.searchPhrase;
     const TextSel* expected = BuildTextSelList(info);
     SearchTestWithDir(filePath, searchTerm, TextSearch::Direction::Forward, expected, info.count);
     SearchTestWithDir(filePath, searchTerm, TextSearch::Direction::Backward, expected, info.count);
@@ -85,7 +85,7 @@ void RegressSearch(const char* filePath, RegressSearchInfo& info) {
 }
 
 void Regress03() {
-    char* filePath = path::Join(TestFilesDir(), "sumatra-search-across-pages-20170615.pdf");
+    TempStr filePath = path::JoinTemp(TestFilesDir(), "sumatra-search-across-pages-20170615.pdf");
     VerifyFileExists(filePath);
     // searches with hits that are all located completely in one page
     RegressSearch(filePath, data_suspendisse);
