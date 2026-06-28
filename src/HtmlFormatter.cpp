@@ -716,21 +716,20 @@ void HtmlFormatter::EmitTextRun(Str s) {
         }
 
         TempWStr buf = ToWStrTemp(run);
-        size_t strLen = str::Len(buf);
         // soft hyphens should not be displayed
-        strLen -= str::RemoveCharsInPlace(buf, L"\xad");
-        if (0 == strLen) {
+        buf.len -= (int)str::RemoveCharsInPlace(buf, L"\xad");
+        if (buf.len == 0) {
             break;
         }
         textMeasure->SetFont(CurrFont());
-        RectF bbox = textMeasure->Measure(buf, strLen);
+        RectF bbox = textMeasure->Measure(buf);
         if (bbox.dx <= pageDx - currX) {
             AppendInstr(DrawInstr::Text(run, bbox, dirRtl));
             currX += bbox.dx;
             break;
         }
         // get len That Fits the remaining space in the line
-        size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx - currX);
+        size_t lenThatFits = StringLenForWidth(textMeasure, buf, pageDx - currX);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
             if (!CanBreakWordOnChar(buf.s[lenThatFits])) {
@@ -759,7 +758,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
         }
 
         textMeasure->SetFont(CurrFont());
-        bbox = ToGdipRectF(textMeasure->Measure(buf, lenThatFits));
+        bbox = ToGdipRectF(textMeasure->Measure(WStr(buf.s, (int)lenThatFits)));
         ReportIf(bbox.dx > pageDx);
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char
@@ -782,12 +781,11 @@ void HtmlFormatter::EmitTextMarker(Str s) {
         return;
     }
     TempWStr buf = ToWStrTemp(s);
-    size_t strLen = str::Len(buf);
-    if (strLen == 0) {
+    if (buf.len == 0) {
         return;
     }
     textMeasure->SetFont(CurrFont());
-    RectF bbox = textMeasure->Measure(buf, strLen);
+    RectF bbox = textMeasure->Measure(buf);
     AppendInstr(DrawInstr::Text(s, bbox, dirRtl));
     currX += bbox.dx;
 }
@@ -1451,10 +1449,9 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
             TempWStr buf = ToWStrTemp(i.str);
-            size_t strLen = str::Len(buf);
             // soft hyphens should not be displayed
-            strLen -= str::RemoveCharsInPlace(buf, L"\xad");
-            textDraw->Draw(buf, strLen, ToGdipRectF(bbox), DrawInstrType::RtlString == i.type);
+            buf.len -= (int)str::RemoveCharsInPlace(buf, L"\xad");
+            textDraw->Draw(buf, ToGdipRectF(bbox), DrawInstrType::RtlString == i.type);
         } else if (DrawInstrType::SetFont == i.type) {
             textDraw->SetFont(i.font);
         }
