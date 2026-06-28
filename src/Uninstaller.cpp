@@ -34,7 +34,7 @@ static Button* gButtonExit = nullptr;
 static Button* gButtonUninstaller = nullptr;
 static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
-static char* gUninstallerLogPath = nullptr;
+static Str gUninstallerLogPath;
 
 #if 0
 // The following list is used to verify that all the required files have been
@@ -83,24 +83,24 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     }
 
     StrBuilder newPath;
-    size_t installDirLen = str::Len(installDir);
-    const char* p = currPath; // str-port: PATH entry parse cursor
-    while (*p) {
-        const char* semi = str::FindChar(p, ';'); // str-port: PATH entry parse cursor
-        size_t entryLen = semi ? (size_t)(semi - p) : str::Len(p);
+    Str rest = currPath;
+    while (rest) {
+        Str semi = str::FindChar(rest, ';');
+        Str entry;
+        if (semi) {
+            int idx = str::FindCharIdx(rest, ';');
+            entry = Str(rest.s, idx);
+            rest = Str(semi.s + 1, semi.len - 1);
+        } else {
+            entry = rest;
+            rest = {};
+        }
         // skip this entry if it matches installDir (case-insensitive)
-        bool match = (entryLen == installDirLen) && str::EqNI(Str((char*)p, (int)entryLen), installDir, entryLen);
-        if (!match && entryLen > 0) {
+        if (!str::EqI(entry, installDir) && entry) {
             if (newPath.Size() > 0) {
                 newPath.Append(";");
             }
-            newPath.Append(p, entryLen);
-        }
-        p += entryLen;
-        if (semi) {
-            p++; // skip ';'
-        } else {
-            break;
+            newPath.Append(entry);
         }
     }
 
@@ -128,7 +128,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
 static void RemoveInstalledFiles() {
     // can't use GetExistingInstallationDir() anymore because we
     // delete registry entries
-    char* dir = gCli->installDir;
+    Str dir = gCli->installDir;
     if (!dir) {
         log("RemoveInstalledFiles(): dir is empty\n");
     }
@@ -145,7 +145,7 @@ static void RemoveInstalledFiles() {
     }
 #endif
     bool ok = dir::RemoveAll(dir);
-    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
+    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir.s, (int)ok);
 }
 
 static TempStr GetInstalledExePathTemp() {
@@ -390,7 +390,7 @@ static TempStr GetUninstallerPathInTemp() {
     WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     ReportIf(res == 0 || res >= dimof(tempDir));
-    char* dirA = ToUtf8Temp(tempDir);
+    TempStr dirA = ToUtf8Temp(tempDir);
     return path::Join(dirA, "Sumatra-Uninstaller.exe");
 }
 
@@ -404,8 +404,8 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
         return;
     }
 
-    char* installerTempPath = GetUninstallerPathInTemp();
-    char* ownPath = GetSelfExePathTemp();
+    TempStr installerTempPath = GetUninstallerPathInTemp();
+    TempStr ownPath = GetSelfExePathTemp();
     if (str::EqI(installerTempPath, ownPath)) {
         if (!gCli->allUsers) {
             log("  already running from temp dir\n");
@@ -417,7 +417,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
         }
     }
 
-    logf("  copying installer '%s' to '%s'\n", ownPath, installerTempPath);
+    logf("  copying installer '%s' to '%s'\n", ownPath.s, installerTempPath.s);
     bool ok = file::Copy(installerTempPath, ownPath, false);
     if (!ok) {
         logf("  failed to copy installer\n");
@@ -436,24 +436,24 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     if (cli->allUsers) {
         cmdLine.Append(" -all-users");
     }
-    char* cl = cmdLine.CStr();
+    Str cl = cmdLine.Get();
     if (cli->allUsers) {
-        logf("LaunchElevated('%s', '%s')\n", installerTempPath, cl);
+        logf("LaunchElevated('%s', '%s')\n", installerTempPath.s, cl.s);
         ok = LaunchElevated(installerTempPath, cl);
         if (!ok) {
-            logf("LaunchElevated() failed to launch '%s' '%s'\n", installerTempPath, cl);
+            logf("LaunchElevated() failed to launch '%s' '%s'\n", installerTempPath.s, cl.s);
             LogLastError();
         } else {
-            logf("LaunchElevated() launched '%s' '%s' ok!\n", installerTempPath, cl);
+            logf("LaunchElevated() launched '%s' '%s' ok!\n", installerTempPath.s, cl.s);
         }
     } else {
-        logf("LaunchProcessWithCmdLine('%s' '%s')\n", installerTempPath, cl);
+        logf("LaunchProcessWithCmdLine('%s' '%s')\n", installerTempPath.s, cl.s);
         HANDLE h = LaunchProcessWithCmdLine(installerTempPath, cl);
         if (!h) {
-            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", installerTempPath, cl);
+            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", installerTempPath.s, cl.s);
             LogLastError();
         } else {
-            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", installerTempPath, cl);
+            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", installerTempPath.s, cl.s);
         }
     }
     ::ExitProcess(0);
@@ -463,7 +463,7 @@ static TempStr GetSelfDeleteBatchPathInTemp() {
     WCHAR tempDir[MAX_PATH + 14]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     ReportIf(res == 0 || res >= dimof(tempDir));
-    char* tempDirA = ToUtf8Temp(tempDir);
+    TempStr tempDirA = ToUtf8Temp(tempDir);
     return path::JoinTemp(tempDirA, "sumatra-self-del.bat");
 }
 
@@ -483,19 +483,19 @@ static void InitSelfDelete() {
     // https://stackoverflow.com/questions/2888976/how-to-make-bat-file-delete-it-self-after-completion
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
 
-    char* scriptPath = GetSelfDeleteBatchPathInTemp();
+    TempStr scriptPath = GetSelfDeleteBatchPathInTemp();
     bool ok = file::WriteFile(scriptPath, script.AsByteSlice());
     if (!ok) {
-        logf("Failed to write '%s'\n", scriptPath);
+        logf("Failed to write '%s'\n", scriptPath.s);
         return;
     }
-    logf("Created self-delete batch script '%s'\n", scriptPath);
+    logf("Created self-delete batch script '%s'\n", scriptPath.s);
     TempStr cmdLine = str::FormatTemp("cmd.exe /C \"%s\"", scriptPath);
     LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
 }
 
 int RunUninstaller() {
-    const char* uninstallerLogPath = nullptr;
+    Str uninstallerLogPath;
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
     if (gCli->log) {
@@ -509,21 +509,21 @@ int RunUninstaller() {
 
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
-    char* instDir = gCli->installDir;
+    Str instDir = gCli->installDir;
     TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
     TempStr exePath = GetSelfExePathTemp();
-    logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
+    logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath.s, cmdLine.s, instDir.s);
 
     if (false) {
-        const char* path = "C:\\Users\\kjk\\AppData\\Local\\Temp\\Sumatra-Uninstaller.exe";
-        const char* cl = "-uninstall";
-        logf("LaunchProcessWithCmdLine('%s' '%s')\n", path, cl);
+        Str path = "C:\\Users\\kjk\\AppData\\Local\\Temp\\Sumatra-Uninstaller.exe";
+        Str cl = "-uninstall";
+        logf("LaunchProcessWithCmdLine('%s' '%s')\n", path.s, cl.s);
         HANDLE h = LaunchProcessWithCmdLine(path, cl);
         if (!h) {
-            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", path, cl);
+            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", path.s, cl.s);
             LogLastError();
         } else {
-            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", path, cl);
+            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", path.s, cl.s);
         }
     }
 
