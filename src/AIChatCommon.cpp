@@ -206,7 +206,7 @@ constexpr int kBtnIdAIChatLearnMore = 100;
 
 static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                                          LONG_PTR lpRefData) {
-    Str docUri = (const char*)lpRefData;
+    Str docUri = lpRefData ? *(Str*)lpRefData : Str{};
     switch (msg) {
         case TDN_HYPERLINK_CLICKED:
             LaunchDocumentation(docUri);
@@ -243,7 +243,7 @@ void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
     dialogConfig.nDefaultButton = IDOK;
     dialogConfig.dwFlags = flags;
     dialogConfig.pfCallback = AIChatNotInstalledDialogCallback;
-    dialogConfig.lpCallbackData = (LONG_PTR)args.docUri.s;
+    dialogConfig.lpCallbackData = (LONG_PTR)&args.docUri;
     dialogConfig.pButtons = buttons;
     dialogConfig.cButtons = dimof(buttons);
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
@@ -324,7 +324,7 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
     if (!str::EqI(path, "/marked.min.js") && !str::EqI(path, "marked.min.js")) {
         return false;
     }
-    res->data = (char*)data->data;
+    res->data = (char*)data->data; // str-port: binary WebView2 resource payload, not a string
     res->dataLen = data->dataSize;
     res->contentType = str::Dup("text/javascript").s;
     res->ownsData = false;
@@ -450,9 +450,10 @@ bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunch
 
     PROCESS_INFORMATION pi = {};
     TempWStr cmdLineW = ToWStrTemp(cmdLine);
-    WCHAR* dirW = cwd ? ToWStrTemp(cwd) : nullptr;
+    TempWStr dirW = cwd ? ToWStrTemp(cwd) : TempWStr{};
 
-    BOOL ok = CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, dirW, &si, &pi);
+    BOOL ok = CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, cwd ? dirW : nullptr,
+                             &si, &pi);
     CloseHandle(hWritePipe);
 
     if (!ok) {
