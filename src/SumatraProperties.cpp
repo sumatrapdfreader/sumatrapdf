@@ -185,7 +185,7 @@ static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
         return AddTimeZone(res, timeZone);
     }
 
-    WCHAR* tmp = bufW + ret;
+    WCHAR* tmp = bufW + ret; // str-port: Win32 format buffer cursor
     tmp[-1] = ' ';
     ret = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &date, nullptr, tmp, cchBufLen - ret);
     if (ret < 2) { // GetTimeFormat() failed or returned an empty result

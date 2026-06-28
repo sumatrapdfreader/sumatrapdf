@@ -494,7 +494,7 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheck
 static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                                     LONG_PTR lpRefData) {
     if (msg == TDN_HYPERLINK_CLICKED) {
-        WCHAR* url = (WCHAR*)lParam;
+        WCHAR* url = (WCHAR*)lParam; // str-port: Win32 TaskDialog callback
         SumatraLaunchBrowser(ToUtf8Temp(url));
     }
     return S_OK;

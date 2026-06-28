@@ -2170,7 +2170,7 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
         if (cmdCch == 0 || ((wchar_t*)cds->lpData)[cmdCch - 1] != 0) { // str-port: Win32 COPYDATASTRUCT
             return FALSE;
         }
-        WStr cmdW((const wchar_t*)cds->lpData, cmdCch - 1);
+        WStr cmdW((const wchar_t*)cds->lpData, cmdCch - 1); // str-port: Win32 COPYDATASTRUCT
         // Legacy DDE grammar — callers expect synchronous handling.
         TempStr cmd = ToUtf8Temp(cmdW);
         bool didHandle = HandleExecuteCmds(hwnd, cmd);

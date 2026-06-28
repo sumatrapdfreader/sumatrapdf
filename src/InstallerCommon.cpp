@@ -206,7 +206,7 @@ static bool IsProcessUsingFiles(DWORD procId, Str file1, Str file2) {
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        WCHAR* exePathW = mod.szExePath;
+        WCHAR* exePathW = mod.szExePath; // str-port: Win32 MODULEENTRY32
         TempStr exePath = ToUtf8Temp(exePathW);
         if (file1 && path::IsSame(file1, exePath)) {
             return true;
@@ -740,7 +740,7 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     float x2 = 15;
     float y2 = -34;
 
-    const WCHAR* ver_s = L"v" CURR_VERSION_STR;
+    const WCHAR* ver_s = L"v" CURR_VERSION_STR; // str-port: C-string literal
     if (kDrawTextShadow) {
         SolidBrush b1(Color(0, 0, 0));
         g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - 2, y2 - 1), &b1);

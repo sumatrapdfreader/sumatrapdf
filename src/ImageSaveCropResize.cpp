@@ -354,7 +354,7 @@ static bool TriggerImageEditMnemonic(ImageEditWindow* ew, WCHAR key) {
         }
         WCHAR buf[256]{};
         GetWindowTextW(btn->hwnd, buf, dimof(buf) - 1);
-        WCHAR* amp = wcschr(buf, L'&');
+        WCHAR* amp = wcschr(buf, L'&'); // str-port: Win32
         if (!amp || amp[1] == L'\0') {
             continue;
         }
