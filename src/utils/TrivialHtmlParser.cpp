@@ -12,8 +12,8 @@ Html parser that is good enough for parsing html files
 inside CHM archives (and XML files in EPUB documents).
 Not really meant for general use.
 
-name/val pointers inside Element/Attr structs refer to
-memory inside HtmlParser::s, so they don't need to be freed.
+name/val Str slices inside Element/Attr structs refer to
+memory inside HtmlParser::html, so they don't need to be freed.
 */
 
 bool HtmlElement::NameIs(Str nameIn) const {
@@ -30,15 +30,14 @@ bool HtmlElement::NameIs(Str nameIn) const {
 // TODO: add proper namespace support
 bool HtmlElement::NameIsNS(Str nameIn, Str) const {
     // ReportIf(!ns);
-    const char* nameStart = nullptr;
-    if (name) {
-        nameStart = str::FindChar(name, ':');
-    }
-    if (!nameStart) {
+    if (!name) {
         return NameIs(nameIn);
     }
-    ++nameStart;
-    return str::EqI(nameStart, nameIn);
+    Str colon = str::FindChar(name, ':');
+    if (!colon) {
+        return NameIs(nameIn);
+    }
+    return str::EqI(Str(colon.s + 1, colon.len - 1), nameIn);
 }
 
 HtmlElement* HtmlElement::GetChildByTag(HtmlTag tag, int idx) const {
@@ -135,16 +134,16 @@ void HtmlParser::Reset() {
     rootElement = currElement = nullptr;
     elementsCount = attributesCount = 0;
     error = ErrParsingNoError;
-    errorContext = nullptr;
+    errorContext = {};
     if (allocator) {
         allocator->Reset();
     }
 }
 
-HtmlAttr* HtmlParser::AllocAttr(char* name, HtmlAttr* next) {
+HtmlAttr* HtmlParser::AllocAttr(Str name, HtmlAttr* next) {
     HtmlAttr* attr = AllocArray<HtmlAttr>(allocator);
     attr->name = name;
-    attr->val = nullptr;
+    attr->val = {};
     attr->next = next;
     ++attributesCount;
     return attr;
@@ -154,7 +153,7 @@ HtmlAttr* HtmlParser::AllocAttr(char* name, HtmlAttr* next) {
 WStr HtmlElement::GetAttribute(Str name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name)) {
-            return DecodeHtmlEntitites(Str(attr->val), codepage);
+            return DecodeHtmlEntitites(attr->val, codepage);
         }
     }
     return {};
@@ -163,13 +162,13 @@ WStr HtmlElement::GetAttribute(Str name) const {
 Str HtmlElement::GetAttributeTemp(Str name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name)) {
-            return DecodeHtmlEntititesTemp(Str(attr->val), codepage);
+            return DecodeHtmlEntititesTemp(attr->val, codepage);
         }
     }
     return {};
 }
 
-HtmlElement* HtmlParser::AllocElement(HtmlTag tag, char* name, HtmlElement* parent) {
+HtmlElement* HtmlParser::AllocElement(HtmlTag tag, Str name, HtmlElement* parent) {
     HtmlElement* el = AllocArray<HtmlElement>(allocator);
     el->tag = tag;
     el->name = name;
@@ -196,11 +195,10 @@ HtmlElement* HtmlParser::FindParent(HtmlToken* tok) {
 }
 
 void HtmlParser::StartTag(HtmlToken* tok) {
-    char* tagName = nullptr;
+    Str tagName;
     if (Tag_NotFound == tok->tag) {
-        tagName = (char*)tok->s;
-        char* tagEnd = tagName + tok->nLen;
-        *tagEnd = '\0';
+        tagName = Str(tok->s.s, (int)tok->nLen);
+        tagName.s[tok->nLen] = '\0';
     }
 
     HtmlElement* parent = FindParent(tok);
@@ -226,17 +224,18 @@ void HtmlParser::StartTag(HtmlToken* tok) {
 }
 
 void HtmlParser::CloseTag(HtmlToken* tok) {
-    char* tagName = nullptr;
+    Str tagName;
+    bool hasTagName = false;
     if (Tag_NotFound == tok->tag) {
-        tagName = (char*)tok->s;
-        char* tagEnd = tagName + tok->nLen;
-        *tagEnd = '\0';
+        tagName = Str(tok->s.s, (int)tok->nLen);
+        tagName.s[tok->nLen] = '\0';
+        hasTagName = true;
     }
 
     // to allow for lack of closing tags, e.g. in case like
     // <a><b><c></a>, we look for the first parent with matching name
     for (HtmlElement* el = currElement; el; el = el->up) {
-        if (tagName ? el->NameIs(tagName) : tok->tag == el->tag) {
+        if (hasTagName ? el->NameIs(tagName) : tok->tag == el->tag) {
             currElement = el->up;
             return;
         }
@@ -244,7 +243,7 @@ void HtmlParser::CloseTag(HtmlToken* tok) {
     // ignore the unexpected closing tag
 }
 
-void HtmlParser::AppendAttr(char* name, char* value) {
+void HtmlParser::AppendAttr(Str name, Str value) {
     currElement->firstAttr = AllocAttr(name, currElement->firstAttr);
     currElement->firstAttr->val = value;
 }
@@ -292,13 +291,12 @@ HtmlElement* HtmlParser::ParseInPlace(const ByteSlice& d, uint codepage) {
             StartTag(tok);
 
             while (attr) {
-                char* name = (char*)attr->name.s;
-                char* nameEnd = name + attr->name.len;
-                char* value = (char*)attr->val.s;
-                char* valueEnd = value + attr->val.len;
+                Str name = attr->name;
+                Str value = attr->val;
                 attr = tok->NextAttr();
 
-                *nameEnd = *valueEnd = '\0';
+                name.s[name.len] = '\0';
+                value.s[value.len] = '\0';
                 AppendAttr(name, value);
             }
         }

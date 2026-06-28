@@ -15,14 +15,14 @@ enum HtmlParseError {
 struct HtmlToken;
 
 struct HtmlAttr {
-    char* name;
-    char* val;
+    Str name;
+    Str val;
     HtmlAttr* next;
 };
 
 struct HtmlElement {
     HtmlTag tag;
-    char* name; // name is nullptr whenever tag != Tag_NotFound
+    Str name; // empty whenever tag != Tag_NotFound
     HtmlAttr* firstAttr;
     HtmlElement *up, *down, *next;
     uint codepage;
@@ -52,12 +52,12 @@ class HtmlParser {
     HtmlElement* rootElement = nullptr;
     HtmlElement* currElement = nullptr;
 
-    HtmlElement* AllocElement(HtmlTag tag, char* name, HtmlElement* parent);
-    HtmlAttr* AllocAttr(char* name, HtmlAttr* next);
+    HtmlElement* AllocElement(HtmlTag tag, Str name, HtmlElement* parent);
+    HtmlAttr* AllocAttr(Str name, HtmlAttr* next);
 
     void CloseTag(HtmlToken* tok);
     void StartTag(HtmlToken* tok);
-    void AppendAttr(char* name, char* value);
+    void AppendAttr(Str name, Str value);
 
     HtmlElement* FindParent(HtmlToken* tok);
     HtmlElement* ParseError(HtmlParseError err) {
@@ -69,7 +69,7 @@ class HtmlParser {
 
   public:
     HtmlParseError error{ErrParsingNoError}; // parsing error, a static string
-    const char* errorContext = nullptr;      // pointer within html showing which part we failed to parse
+    Str errorContext;                        // slice within html showing which part we failed to parse
 
     HtmlParser();
     ~HtmlParser();
