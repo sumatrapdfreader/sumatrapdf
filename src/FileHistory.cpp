@@ -173,7 +173,7 @@ bool FileHistory::MarkFileInexistent(Str filePath, bool hide) const {
     state->thumbnail = nullptr;
     state->openCount >>= 2;
     state->isMissing = hide;
-    logf("MarkFileInexistent: '%s', isMissing: %d\n", filePath, (int)hide);
+    logf("MarkFileInexistent: '%s', isMissing: %d\n", filePath.s, (int)hide);
     return true;
 }
 
@@ -345,13 +345,13 @@ void CleanUpThumbnailCache() {
         }
         ok = filePaths.Remove(path);
         if (!ok) {
-            logf("CleanUpThumbnailCache: failed to remove '%s'\n", path);
+            logf("CleanUpThumbnailCache: failed to remove '%s'\n", path.s);
         }
     }
 
     for (Str path : filePaths) {
         if (shouldDeleteThumbnail) {
-            logf("CleanUpThumbnailCache: deleting '%s'\n", path);
+            logf("CleanUpThumbnailCache: deleting '%s'\n", path.s);
             file::Delete(path);
         }
     }
@@ -414,7 +414,7 @@ static void CheckFilesExistAsync(CheckFilesExistData* d) {
             continue;
         }
         d->missing.Append(path);
-        logf("FileExistenceChecker: missing '%s' at %d\n", path, i + 1);
+        logf("FileExistenceChecker: missing '%s' at %d\n", path.s, i + 1);
     }
 
     Func0 fn = MkFunc0<CheckFilesExistData>(HideMissingFiles, d);
