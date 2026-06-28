@@ -87,7 +87,7 @@ HtmlTag FindHtmlTag(Str name);
 bool IsTagSelfClosing(HtmlTag item);
 bool IsInlineTag(HtmlTag item);
 AlignAttr FindAlignAttr(Str name);
-u32 FindHtmlEntityRune(const char* name, size_t len);
+u32 FindHtmlEntityRune(Str name);
 
 enum CssProp {
     Css_Color,

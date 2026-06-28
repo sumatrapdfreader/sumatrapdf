@@ -7,7 +7,7 @@
 
 // returns -1 if didn't find
 int HtmlEntityNameToRune(Str name) {
-    return FindHtmlEntityRune(name.s, name.len);
+    return FindHtmlEntityRune(name);
 }
 
 #define MAX_ENTITY_NAME_LEN 8
@@ -28,7 +28,7 @@ int HtmlEntityNameToRune(WStr name) {
         }
         asciiName[i] = (char)name.s[i];
     }
-    return FindHtmlEntityRune(asciiName, name.len);
+    return FindHtmlEntityRune(Str(asciiName, name.len));
 }
 
 bool SkipUntil(Str s, int& off, char c) {
