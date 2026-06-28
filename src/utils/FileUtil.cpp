@@ -222,15 +222,15 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
 // e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
 //    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
-static TempWStr NormalizeTemp(const WCHAR* path) {
+static TempWStr NormalizeTemp(WStr path) {
     // convert to absolute path, change slashes into backslashes
-    DWORD cch = GetFullPathNameW(path, 0, nullptr, nullptr);
+    DWORD cch = GetFullPathNameW(path.s, 0, nullptr, nullptr);
     if (!cch) {
         return str::DupTemp(path);
     }
 
     TempWStr fullPath = WStr(AllocArrayTemp<WCHAR>(cch), (int)cch);
-    GetFullPathNameW(path, cch, fullPath.s, nullptr);
+    GetFullPathNameW(path.s, cch, fullPath.s, nullptr);
 
     TempWStr normPath = fullPath;
     // convert to long form
@@ -250,12 +250,12 @@ static TempWStr NormalizeTemp(const WCHAR* path) {
     if (cch && cch <= MAX_PATH) {
         TempWStr shortPath = WStr(AllocArrayTemp<WCHAR>(cch), (int)cch);
         GetShortPathNameW(fullPath.s, shortPath.s, cch);
-        WCHAR* shortPathName = (WCHAR*)GetBaseNameTemp(shortPath.s);
-        WCHAR* normPathName = (WCHAR*)GetBaseNameTemp(normPath.s);
-        if (str::Len(normPathName) + (shortPathName - shortPath.s) < MAX_PATH) {
+        WStr shortPathName = GetBaseNameTemp(shortPath);
+        WStr normPathName = GetBaseNameTemp(normPath);
+        if (normPathName.len + (int)(shortPathName.s - shortPath.s) < MAX_PATH) {
             // keep the long filename if possible
-            *shortPathName = 0;
-            return str::JoinTemp(shortPath.s, GetBaseNameTemp(normPath.s));
+            *shortPathName.s = 0;
+            return str::JoinTemp(shortPath, GetBaseNameTemp(normPath));
         }
         return shortPath;
     }
@@ -264,13 +264,9 @@ static TempWStr NormalizeTemp(const WCHAR* path) {
         return normPath;
     }
     if (str::Len(normPath) >= MAX_PATH) {
-        return str::JoinTemp(L"\\\\?\\", normPath.s);
+        return str::JoinTemp(L"\\\\?\\", normPath);
     }
     return normPath;
-}
-
-static TempWStr NormalizeTemp(WStr path) {
-    return NormalizeTemp(path.s);
 }
 
 TempStr NormalizeTemp(Str path) {
@@ -365,8 +361,8 @@ bool IsSame(Str path1, Str path2) {
         return isSame;
     }
 
-    TempStr npath1 = NormalizeTemp(path1.s);
-    TempStr npath2 = NormalizeTemp(path2.s);
+    TempStr npath1 = NormalizeTemp(path1);
+    TempStr npath2 = NormalizeTemp(path2);
     // consider the files different, if their paths can't be normalized
     return npath1 && str::EqI(npath1, npath2);
 }
