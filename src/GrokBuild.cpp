@@ -202,13 +202,13 @@ static void UpdateGrokPanelForCurrentTab(MainWindow* win) {
 
     if (win->grokInput) {
         EnableWindow(win->grokInput->hwnd, enableInput);
-        const WCHAR* cue = L"Ask about this document...";
+        WStr cue = WStrL(L"Ask about this document...");
         if (!supported) {
-            cue = L"Not available for this file type";
+            cue = WStrL(L"Not available for this file type");
         } else if (working) {
-            cue = L"Agent is working...";
+            cue = WStrL(L"Agent is working...");
         }
-        SendMessageW(win->grokInput->hwnd, EM_SETCUEBANNER, TRUE, (LPARAM)cue);
+        SendMessageW(win->grokInput->hwnd, EM_SETCUEBANNER, TRUE, (LPARAM)cue.s);
     }
     if (win->hwndGrokSessionCombo) {
         EnableWindow(win->hwndGrokSessionCombo, enableInput);
@@ -911,10 +911,8 @@ static void SendGrokMessage(MainWindow* win) {
         return; // this tab already has a running request
     }
 
-    WCHAR* inputW = AllocArray<WCHAR>(inputLen + 1);
-    GetWindowTextW(hwndInput, inputW, inputLen + 1);
+    TempWStr inputW = HwndGetTextWTemp(hwndInput);
     TempStr input = ToUtf8Temp(inputW);
-    free(inputW);
     SetWindowTextW(hwndInput, L"");
 
     WebViewAddUser(win, input);
