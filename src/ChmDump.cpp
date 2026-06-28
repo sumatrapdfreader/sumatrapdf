@@ -37,12 +37,13 @@ static void CliPrint(Str s) {
     CliWrite("\n", 1);
 }
 
-static void CliPrintf(const char* fmt, ...) {
+static void CliPrintf(Str fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args).s;
+    Str msg = str::FmtV(fmt, args);
     va_end(args);
-    CliPrint(s.Get());
+    CliPrint(msg);
+    str::Free(msg.s);
 }
 
 static Str ChmSpaceName(int space) {
