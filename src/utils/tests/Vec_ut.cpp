@@ -73,7 +73,7 @@ void VecTest() {
         char* s = v.LendData();
         utassert(str::Eq("abcdefg", s));
         utassert(7 == v.size());
-        v.Set("helo");
+        v.Set(Str("helo"));
         utassert(4 == v.size());
         utassert(str::Eq("helo", v.LendData()));
     }

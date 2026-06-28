@@ -262,7 +262,6 @@ struct StrBuilder {
     StrBuilder(const StrBuilder& that);
     StrBuilder& operator=(const StrBuilder& that);
     StrBuilder(Str s);
-    StrBuilder(const char* s) : StrBuilder(Str(s)) {} // NOLINT str-port shim
 
     ~StrBuilder();
 
@@ -296,11 +295,7 @@ struct StrBuilder {
     bool AppendSlice(const ByteSlice& d);
     void AppendFmt(const char* fmt, ...);
     void Set(Str s);
-    void Set(const char* s) { Set(Str(s)); } // str-port shim
     Str Get() const;
-    bool Contains(const char* s, size_t sLen = 0) {
-        return Contains(sLen ? Str(s, (int)sLen) : Str(s));
-    } // str-port shim
     char* CStr() const;
     char LastChar() const;
 
@@ -329,7 +324,6 @@ struct WStrBuilder {
     explicit WStrBuilder(size_t capHint = 0, Arena* allocator = nullptr);
     WStrBuilder(const WStrBuilder&);
     WStrBuilder(WStr s);
-    WStrBuilder(const WCHAR* s) : WStrBuilder(WStr(s)) {} // NOLINT str-port shim
     WStrBuilder& operator=(const WStrBuilder& that);
     ~WStrBuilder();
     void Reset();
@@ -359,7 +353,6 @@ struct WStrBuilder {
     int Remove(const WCHAR& el);
     bool IsEmpty() const;
     void Set(WStr s);
-    void Set(const WCHAR* s) { Set(WStr(s)); } // str-port shim
     WStr Get() const;
     WCHAR LastChar() const;
 

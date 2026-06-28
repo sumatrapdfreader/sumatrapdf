@@ -2019,7 +2019,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     StrBuilder str;
     bool didHandle = HandleRequestCmds(hwnd, cmd, str);
     if (!didHandle) {
-        str.Set("error: unknown command");
+        str.Set(Str("error: unknown command"));
     }
 
     void* data;

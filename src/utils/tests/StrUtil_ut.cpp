@@ -172,12 +172,12 @@ void strStrTest() {
         StrBuilder str;
         char* buf = str.Get();
         str.Append("blah");
-        utassert(str.Contains("blah"));
-        utassert(str.Contains("ah"));
-        utassert(str.Contains("h"));
-        utassert(!str.Contains("lahd"));
-        utassert(!str.Contains("blahd"));
-        utassert(!str.Contains("blas"));
+        utassert(str.Contains(Str("blah")));
+        utassert(str.Contains(Str("ah")));
+        utassert(str.Contains(Str("h")));
+        utassert(!str.Contains(Str("lahd")));
+        utassert(!str.Contains(Str("blahd")));
+        utassert(!str.Contains(Str("blas")));
 
         char* buf2 = str.Get();
         utassert(buf == buf2);
@@ -185,8 +185,8 @@ void strStrTest() {
         str.Append("lost");
         buf2 = str.Get();
         utassert(str::Eq(buf2, "blahlost"));
-        utassert(str.Contains("blahlost"));
-        utassert(str.Contains("ahlo"));
+        utassert(str.Contains(Str("blahlost")));
+        utassert(str.Contains(Str("ahlo")));
         utassert(buf == buf2);
         str.Reset();
         for (int i = 0; i < StrBuilder::kBufChars + 4; i++) {
