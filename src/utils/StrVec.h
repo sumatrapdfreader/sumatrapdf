@@ -31,7 +31,7 @@ struct StrVec {
     int Size() const;
     bool IsEmpty() const;
     Str At(int i) const;
-    void* AtDataRaw(int i) const;
+    void* AtDataRaw(int i) const; // str-port: typed sidecar storage, not a string API
     Str operator[](int) const;
 
     Str Append(Str s);

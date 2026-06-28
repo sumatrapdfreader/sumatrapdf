@@ -56,7 +56,7 @@ struct StructInfo {
     const FieldInfo* fields = nullptr;
     // one string of fieldCount zero-terminated names of all fields
     // in the order of fields (str-port: generated metadata table, not a runtime Str)
-    const char* fieldNames = nullptr;
+    const char* fieldNames = nullptr; // str-port: generated packed field-name table
 };
 
 ByteSlice SerializeStruct(const StructInfo* info, const void* strct, Str prevData = {});
