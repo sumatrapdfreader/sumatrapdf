@@ -931,7 +931,7 @@ CommandArg* FindArg(CommandArg* first, Str name, CommandArg::Type type) {
             if (curr->type == type) {
                 return curr;
             }
-            logf("FindArgByName: found arg of name '%s' by different type (wanted: %d, is: %d)\n", name, type,
+            logf("FindArgByName: found arg of name '%s' by different type (wanted: %d, is: %d)\n", name.s, type,
                  curr->type);
         }
         curr = curr->next;
@@ -1036,7 +1036,7 @@ static CommandArg* ParseArgOfType(Str argName, CommandArg::Type type, Str val) {
         ParseColor(col, val);
         if (!col.parsedOk) {
             // invalid value, skip it
-            logf("parseArgOfType: invalid color value '%s'\n", val);
+            logf("parseArgOfType: invalid color value '%s'\n", val.s);
             return nullptr;
         }
         auto arg = NewArg(type, argName);
@@ -1266,7 +1266,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     }
     if (firstArgIdx < 0) {
         // shouldn't happen, we already filtered commands without arguments
-        logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", definition,
+        logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", definition.s,
              cmdId, argCmdId);
         ReportIf(true);
         return nullptr;
@@ -1295,7 +1295,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         Str s = firstArg->strVal;
         static SeqStrings validModes = ">\0#\0@\0:\0*\0$\0"; // TODO: "@@\0" ?
         if (SeqStrIndex(validModes, s) < 0) {
-            logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", definition);
+            logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", definition.s);
             FreeCommandArgs(firstArg);
             firstArg = nullptr;
         }
