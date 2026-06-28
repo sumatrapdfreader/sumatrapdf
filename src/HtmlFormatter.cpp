@@ -84,7 +84,7 @@ DrawInstr DrawInstr::FixedSpace(float dx) {
 
 DrawInstr DrawInstr::Image(const ByteSlice& img, RectF bbox) {
     DrawInstr di(DrawInstrType::Image);
-    di.str = Str((char*)img.data(), (int)img.size());
+    di.str = AsStr(img);
     di.bbox = bbox;
     return di;
 }
@@ -153,7 +153,7 @@ void StyleRule::Merge(StyleRule& source) {
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     : pageDx(args->pageDx), pageDy(args->pageDy), textAllocator(args->textAllocator) {
     currReparseIdx = args->reparseIdx;
-    htmlParser = new HtmlPullParser((const char*)args->htmlStr.data(), args->htmlStr.size());
+    htmlParser = new HtmlPullParser(args->htmlStr);
     htmlParser->SetCurrPosOff(currReparseIdx);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
@@ -699,25 +699,23 @@ static bool CanBreakWordOnChar(WCHAR c) {
 
 // a text run is a string of consecutive text with uniform style
 void HtmlFormatter::EmitTextRun(Str s) {
-    const char* start = s.s;
-    const char* end = s.s + s.len;
-    currReparseIdx = start - htmlParser->Start();
+    Str run = s;
+    currReparseIdx = (int)(run.s - htmlParser->Start());
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
-    ReportIf(IsSpaceOnly(start, end) && !preFormatted);
+    ReportIf(IsSpaceOnly(run.s, run.s + run.len) && !preFormatted);
     ::Str tmp = ResolveHtmlEntities(s, textAllocator);
-    bool resolved = tmp.s != start;
+    bool resolved = tmp.s != s.s;
     if (resolved) {
-        start = tmp.s;
-        end = start + tmp.len;
+        run = tmp;
     }
 
-    while (start < end) {
-        // don't update the reparseIdx if start doesn't point into the original source
+    while (run) {
+        // don't update the reparseIdx if run doesn't point into the original source
         if (!resolved) {
-            currReparseIdx = start - htmlParser->Start();
+            currReparseIdx = (int)(run.s - htmlParser->Start());
         }
 
-        TempWStr buf = ToWStrTemp(start, end - start);
+        TempWStr buf = ToWStrTemp(run);
         size_t strLen = str::Len(buf);
         // soft hyphens should not be displayed
         strLen -= str::RemoveCharsInPlace(buf, L"\xad");
@@ -727,7 +725,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
         textMeasure->SetFont(CurrFont());
         RectF bbox = textMeasure->Measure(buf, strLen);
         if (bbox.dx <= pageDx - currX) {
-            AppendInstr(DrawInstr::Text(Str((char*)start, (int)(end - start)), bbox, dirRtl));
+            AppendInstr(DrawInstr::Text(run, bbox, dirRtl));
             currX += bbox.dx;
             break;
         }
@@ -769,9 +767,9 @@ void HtmlFormatter::EmitTextRun(Str s) {
         for (size_t i = lenThatFits; i > 0; i--) {
             lenThatFits += buf.s[i - 1] < 0x80 ? 0 : buf.s[i - 1] < 0x800 ? 1 : 2;
         }
-        AppendInstr(DrawInstr::Text(Str((char*)start, (int)lenThatFits), bbox, dirRtl));
+        AppendInstr(DrawInstr::Text(Str(run.s, (int)lenThatFits), bbox, dirRtl));
         currX += bbox.dx;
-        start += lenThatFits;
+        run = Str(run.s + lenThatFits, run.len - (int)lenThatFits);
     }
 }
 
@@ -1066,16 +1064,16 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
         return;
     }
 
-    const char* start = t->s + t->sLen + 1;
+    Str start = Str(t->s + t->sLen + 1);
     while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
         t = htmlParser->Next();
     }
     if (!t || !t->IsEndTag() || Tag_Style != t->tag) {
         return;
     }
-    const char* end = t->s - 2;
-    ReportIf(start > end);
-    ParseStyleSheet(Str((char*)start, (int)(end - start)));
+    Str end = Str(t->s - 2);
+    ReportIf(start.s > end.s);
+    ParseStyleSheet(Str(start.s, (int)(end.s - start.s)));
     UpdateTagNesting(t);
 }
 
@@ -1234,9 +1232,9 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         if (t->IsStartTag() && listInfos.size() > 0) {
             ListInfo& li = listInfos.Last();
             if (li.ordered) {
-                const char* marker = str::Dup(textAllocator, str::FormatTemp("%d. ", li.nextNum));
+                Str marker = str::Dup(textAllocator, str::FormatTemp("%d. ", li.nextNum));
                 li.nextNum++;
-                EmitTextMarker(Str((char*)marker));
+                EmitTextMarker(marker);
             } else {
                 EmitTextMarker(StrL("\xe2\x80\xa2  ")); // U+2022 bullet + 2 spaces
             }
@@ -1325,16 +1323,16 @@ void HtmlFormatter::HandleText(Str s) {
     // whitespace or all non-whitespace
     while (curr) {
         currReparseIdx = (int)(curr.s - htmlParser->Start());
-        const char* p = curr.s;
+        const char* p = curr.s; // str-port: HtmlPullParser SkipWs cursor
         const char* e = curr.s + curr.len;
         if (SkipWs(p, e)) {
             EmitElasticSpace();
         }
 
-        const char* text = p;
+        Str text = Str(p, (int)(e - p));
         currReparseIdx = (int)(p - htmlParser->Start());
         if (SkipNonWs(p, e)) {
-            EmitTextRun(Str(text, (int)(p - text)));
+            EmitTextRun(Str(text.s, (int)(p - text.s)));
         }
         curr = Str(p, (int)(e - p));
     }
