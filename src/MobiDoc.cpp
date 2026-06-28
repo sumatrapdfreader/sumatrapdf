@@ -335,7 +335,7 @@ bool HuffDicDecompressor::SetHuffData(u8* huffData, size_t huffDataLen) {
     HuffHeader huffHdr;
     ReadHuffReader(huffHdr, d);
 
-    if (!str::EqN(huffHdr.id, "HUFF", 4)) {
+    if (!str::EqN(Str(huffHdr.id, 4), StrL("HUFF"), 4)) {
         return false;
     }
 
@@ -367,7 +367,7 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     if (cdicDataLen < kCdicHeaderLen) {
         return false;
     }
-    if (!str::EqN("CDIC", (char*)cdicData, 4)) {
+    if (!str::EqN(StrL("CDIC"), Str((char*)cdicData, 4), 4)) {
         return false;
     }
     u32 hdrLen = UInt32BE(cdicData + 4);
@@ -529,7 +529,7 @@ bool MobiDoc::ParseHeader() {
     MobiHeader mobiHdr;
     size_t mobiDataLen = recSize - kPalmDocHeaderLen;
     DecodeMobiDocHeader(firstRecData + kPalmDocHeaderLen, mobiDataLen, &mobiHdr);
-    if (!str::EqN("MOBI", mobiHdr.id, 4)) {
+    if (!str::EqN(StrL("MOBI"), Str(mobiHdr.id, 4), 4)) {
         logf("MobiHeader.id is not 'MOBI'\n");
         return false;
     }
@@ -537,9 +537,9 @@ bool MobiDoc::ParseHeader() {
         logf("DRM is unsupported\n");
         // load an empty document and display a warning
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
-        char* v = strconv::WStrToCodePage(mobiHdr.textEncoding, L"DRM");
+        Str v = strconv::WStrToCodePage(mobiHdr.textEncoding, WStrL(L"DRM"));
         AddProp(props, kPropUnsupportedFeatures, v);
-        str::Free(v);
+        str::Free(v.s);
     }
     textEncoding = mobiHdr.textEncoding;
 
@@ -637,7 +637,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
         }
         d.Skip(length - 8);
 
-        const char* prop;
+        Str prop;
         switch (type) {
             case 100:
                 prop = kPropAuthor;
@@ -666,7 +666,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
             default:
                 continue;
         }
-        TempStr value = str::DupTemp((char*)(data + d.Offset() - length + 8), length - 8);
+        TempStr value = str::DupTemp(Str((char*)(data + d.Offset() - length + 8), (int)length - 8));
         if (!str::IsEmpty(value)) {
             AddProp(props, prop, value);
         }
@@ -878,7 +878,8 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 
     // replace unexpected \0 with spaces
     // https://code.google.com/archive/p/sumatrapdf/issues/2529
-    char* s = doc->Get();
+    Str docStr = doc->Get();
+    char* s = docStr.s;
     char* end = s + doc->size();
     while ((s = (char*)memchr(s, '\0', end - s)) != nullptr) {
         *s = ' ';
@@ -921,7 +922,7 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
         }
         if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "reference")) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
-            if (type && str::EqI(type->value, "toc")) {
+            if (type && str::EqI(Str(type->value), StrL("toc"))) {
                 return node;
             }
         }
@@ -958,7 +959,7 @@ bool MobiDoc::HasToc() {
         const GumboAttribute* filepos = gumbo_get_attribute(&ref->v.element.attributes, "filepos");
         if (filepos) {
             unsigned int pos;
-            if (str::Parse(filepos->value, "%u%$", &pos)) {
+            if (str::Parse(Str(filepos->value), "%u%$", &pos)) {
                 docTocIndex = pos;
             }
         }
@@ -1034,7 +1035,7 @@ void MobiTocWalker::Walk(const GumboNode* root) {
                     StrBuilder text;
                     AppendDeepText(node, text);
                     if (!text.IsEmpty()) {
-                        visitor->Visit(text.LendData(), attr->value, level);
+                        visitor->Visit(text.Get(), Str(attr->value), level);
                     }
                 }
                 continue; // don't descend into the <a>'s children
@@ -1061,9 +1062,9 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     // there doesn't seem to be a standard for Mobi ToCs, so we try to
     // determine the author's intentions by looking at commonly used tags
     GumboOptions opts = GumboMakeOptions();
-    const char* tocStart = doc->Get().s + docTocIndex;
-    size_t tocLen = doc->size() - docTocIndex;
-    GumboOutput* output = gumbo_parse_with_options(&opts, tocStart, tocLen);
+    Str docStr = doc->Get();
+    Str tocSlice(docStr.s + docTocIndex, (int)(doc->size() - docTocIndex));
+    GumboOutput* output = gumbo_parse_with_options(&opts, tocSlice.s, (size_t)tocSlice.len);
     if (!output) {
         return false;
     }
