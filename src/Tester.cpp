@@ -47,7 +47,7 @@ static int Usage() {
 // we assume this is called from main sumatradirectory, e.g. as:
 // ./obj-dbg/tester.exe, so we use the known files
 void ZipCreateTest() {
-    const char* zipFileName = "tester-tmp.zip";
+    Str zipFileName = "tester-tmp.zip";
     file::Delete(zipFileName);
     ZipCreator zc(zipFileName);
     auto ok = zc.AddFile("premake5.lua");
@@ -69,7 +69,7 @@ void ZipCreateTest() {
 int TesterMain() {
     RedirectIOToConsole();
 
-    WCHAR* cmdLine = GetCommandLine();
+    WCHAR* cmdLine = GetCommandLine(); // str-port: Win32 API
 
     CmdLineArgsIter argv(cmdLine);
     int nArgs = argv.nArgs;
@@ -77,8 +77,6 @@ int TesterMain() {
     // InitAllCommonControls();
     // ScopedGdiPlus gdi;
     // mui::Initialize();
-
-    char* dirOrFile = nullptr;
 
     int i = 2; // skip program name and "/tester"
     while (i < nArgs) {

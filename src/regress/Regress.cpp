@@ -63,12 +63,12 @@ static void printflush(Str s) {
 /* Auto-detect the location of test files. Ultimately we might add a cmd-line
 option to specify this directory, for now just add your location(s) to the list */
 static bool FindTestFilesDir() {
-    const char* dirsToCheck[] = {"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
-                                 "C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
+    Str dirsToCheck[] = {"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
+                         "C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
     for (size_t i = 0; i < dimof(dirsToCheck); i++) {
-        const char* dir = dirsToCheck[i];
-        if (dir::Exists(Str(dir))) {
-            gTestFilesDir = Str(dir);
+        Str dir = dirsToCheck[i];
+        if (dir::Exists(dir)) {
+            gTestFilesDir = dir;
             return true;
         }
     }
