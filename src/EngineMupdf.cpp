@@ -745,8 +745,8 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, WStrBuilder& s, Vec<R
     }
 }
 
-static void AddLineSep(WStrBuilder& s, Vec<Rect>& rects, const WCHAR* lineSep, size_t lineSepLen) {
-    if (lineSepLen == 0) {
+static void AddLineSep(WStrBuilder& s, Vec<Rect>& rects, WStr lineSep) {
+    if (!lineSep) {
         return;
     }
     // remove trailing spaces
@@ -756,7 +756,7 @@ static void AddLineSep(WStrBuilder& s, Vec<Rect>& rects, const WCHAR* lineSep, s
     }
 
     s.Append(lineSep);
-    for (size_t i = 0; i < lineSepLen; i++) {
+    for (int i = 0; i < lineSep.len; i++) {
         rects.Append(Rect());
     }
 }
@@ -849,9 +849,7 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
 }
 
 static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
-    const WCHAR* lineSep = L"\n";
-
-    size_t lineSepLen = str::Len(lineSep);
+    const WStr lineSep = WStrL(L"\n");
     WStrBuilder content;
     // coordsOut is optional but we ask for it by default so we simplify the code
     // by always calculating it
@@ -871,7 +869,7 @@ static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
                 AddChar(line, c, content, rects, seen);
                 c = c->next;
             }
-            AddLineSep(content, rects, lineSep, lineSepLen);
+            AddLineSep(content, rects, lineSep);
             line = line->next;
         }
 
@@ -897,20 +895,18 @@ static fz_stext_options NewTextPageOptions(int flags = 0) {
     return opts;
 }
 
-static bool LinkifyCheckMultiline(WStr pageText, const WCHAR* pos, Rect* coords) {
-    const WCHAR* pageBase = pageText.s;
-    const WCHAR* pageEnd = pageText.s + pageText.len;
+static bool LinkifyCheckMultiline(WStr pageText, int posOff, Rect* coords) {
+    int pageLen = pageText.len;
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
     // (and that doesn't start with http or a footnote numeral)
-    return pos >= pageBase && pos < pageEnd && '\n' == *pos && pos > pageBase && (pos + 1) < pageEnd &&
-           !iswalnum(pos[-1]) && !str::IsWs(pos[1]) &&
-           coords[pos - pageBase + 1].BR().y > coords[pos - pageBase - 1].y &&
-           coords[pos - pageBase + 1].y <= coords[pos - pageBase - 1].BR().y + coords[pos - pageBase - 1].dy * 0.35 &&
-           coords[pos - pageBase + 1].x < coords[pos - pageBase - 1].BR().x &&
-           coords[pos - pageBase + 1].dy >= coords[pos - pageBase - 1].dy * 0.85 &&
-           coords[pos - pageBase + 1].dy <= coords[pos - pageBase - 1].dy * 1.2 &&
-           !str::StartsWith(WStr(pos + 1, (int)(pageEnd - pos - 1)), L"http");
+    return posOff > 0 && posOff < pageLen && L'\n' == pageText.s[posOff] && (posOff + 1) < pageLen &&
+           !iswalnum(pageText.s[posOff - 1]) && !str::IsWs(pageText.s[posOff + 1]) &&
+           coords[posOff + 1].BR().y > coords[posOff - 1].y &&
+           coords[posOff + 1].y <= coords[posOff - 1].BR().y + coords[posOff - 1].dy * 0.35 &&
+           coords[posOff + 1].x < coords[posOff - 1].BR().x && coords[posOff + 1].dy >= coords[posOff - 1].dy * 0.85 &&
+           coords[posOff + 1].dy <= coords[posOff - 1].dy * 1.2 &&
+           !str::StartsWith(WStr(pageText.s + posOff + 1, pageLen - posOff - 1), L"http");
 }
 
 static bool EndsURL(WCHAR c) {
@@ -929,69 +925,73 @@ static bool EndsURL(WCHAR c) {
 // the link. `trimChars` lists chars to strip; when trimRepeat is false, at most
 // one char is removed. When trimCloseParen is true, a trailing ')' is also
 // stripped unless the span contains an opening '(' before it.
-static const WCHAR* LinkifyTrimTrailingPunct(const WCHAR* start, const WCHAR* end, const WCHAR* trimChars,
-                                             bool trimRepeat, bool trimCloseParen) {
+static int LinkifyTrimTrailingPunctOff(int startOff, int endOff, WStr trimChars, bool trimRepeat, bool trimCloseParen,
+                                       WStr pageText) {
     for (;;) {
-        if (end <= start) {
+        if (endOff <= startOff) {
             break;
         }
-        WCHAR c = end[-1];
+        wchar_t c = pageText.s[endOff - 1];
         if (str::FindChar(trimChars, c)) {
-            end--;
+            endOff--;
             if (!trimRepeat) {
                 break;
             }
             continue;
         }
-        if (trimCloseParen && ')' == c && (!str::FindChar(start, '(') || str::FindChar(start, '(') >= end)) {
-            end--;
-            if (!trimRepeat) {
-                break;
+        if (trimCloseParen && L')' == c) {
+            WStr span = WStr(pageText.s + startOff, endOff - startOff);
+            WStr openParen = str::FindChar(span, L'(');
+            if (!openParen || openParen.s >= pageText.s + endOff) {
+                endOff--;
+                if (!trimRepeat) {
+                    break;
+                }
+                continue;
             }
-            continue;
         }
         break;
     }
-    return end;
+    return endOff;
 }
 
-static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar, const WCHAR* pageEnd) {
-    const WCHAR* quote = nullptr;
-
-    // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-    const WCHAR* end = start;
-    while (end < pageEnd && !EndsURL(*end)) {
-        end++;
+static int LinkifyFindEndOff(int startOff, wchar_t prevChar, WStr pageText) {
+    int pageEnd = pageText.len;
+    int endOff = startOff;
+    while (endOff < pageEnd && !EndsURL(pageText.s[endOff])) {
+        endOff++;
     }
-    end = LinkifyTrimTrailingPunct(start, end, L",.?!", false, true);
+    endOff = LinkifyTrimTrailingPunctOff(startOff, endOff, WStrL(L",.?!"), false, true, pageText);
 
     // cut the link at the first quotation mark, if it's also preceded by one
-    if (('"' == prevChar || '\'' == prevChar) && (quote = str::FindChar(start, prevChar)) != nullptr && quote < end) {
-        end = quote;
+    if (L'"' == prevChar || L'\'' == prevChar) {
+        WStr span = WStr(pageText.s + startOff, endOff - startOff);
+        WStr quote = str::FindChar(span, prevChar);
+        if (quote && quote.s < pageText.s + endOff) {
+            endOff = (int)(quote.s - pageText.s);
+        }
     }
 
-    return end;
+    return endOff;
 }
 
-static const WCHAR* LinkifyMultilineText(LinkRectList* list, WStr pageText, const WCHAR* start, const WCHAR* next,
-                                         Rect* coords) {
-    const WCHAR* pageBase = pageText.s;
-    const WCHAR* pageEnd = pageText.s + pageText.len;
+static int LinkifyMultilineText(LinkRectList* list, WStr pageText, int startOff, int nextOff, Rect* coords) {
     int lastIx = list->coords.Size() - 1;
     TempStr uri = list->links.At(lastIx);
-    const WCHAR* end = next;
+    int endOff = nextOff;
     bool multiline = false;
 
     do {
-        end = LinkifyFindEnd(next, start > pageBase ? start[-1] : ' ', pageEnd);
-        multiline = LinkifyCheckMultiline(pageText, end, coords);
+        wchar_t prevChar = startOff > 0 ? pageText.s[startOff - 1] : L' ';
+        endOff = LinkifyFindEndOff(nextOff, prevChar, pageText);
+        multiline = LinkifyCheckMultiline(pageText, endOff, coords);
 
-        TempStr part = ToUtf8Temp(next, (int)(end - next));
+        TempStr part = ToUtf8Temp(pageText.s + nextOff, endOff - nextOff);
         uri = str::JoinTemp(uri, part);
-        Rect bbox = coords[next - pageBase].Union(coords[end - pageBase - 1]);
+        Rect bbox = coords[nextOff].Union(coords[endOff - 1]);
         list->coords.Append(ToFzRect(ToRectF(bbox)));
 
-        next = end + 1;
+        nextOff = endOff + 1;
     } while (multiline);
 
     // update the link URL for all partial links
@@ -1000,7 +1000,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, WStr pageText, cons
         list->links.Append(uri);
     }
 
-    return end;
+    return endOff;
 }
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
@@ -1013,35 +1013,38 @@ inline bool IsEmailDomainChar(WCHAR c) {
     return iswalnum(c) || '-' == c;
 }
 
-static const WCHAR* LinkifyFindEmail(WStr pageText, const WCHAR* at) {
-    const WCHAR* pageBase = pageText.s;
-    const WCHAR* start;
-    for (start = at; start > pageBase && IsEmailUsernameChar(*(start - 1)); start--) {
-        // do nothing
+static int LinkifyFindEmailOff(WStr pageText, int atOff) {
+    int startOff = atOff;
+    while (startOff > 0 && IsEmailUsernameChar(pageText.s[startOff - 1])) {
+        startOff--;
     }
-    return start != at ? start : nullptr;
+    return startOff != atOff ? startOff : -1;
 }
 
-static const WCHAR* LinkifyEmailAddress(const WCHAR* start, const WCHAR* pageEnd) {
-    const WCHAR* end;
-    for (end = start; end < pageEnd && IsEmailUsernameChar(*end); end++) {
+static int LinkifyEmailAddressOff(int startOff, WStr pageText) {
+    int pageEnd = pageText.len;
+    int endOff = startOff;
+    while (endOff < pageEnd && IsEmailUsernameChar(pageText.s[endOff])) {
+        endOff++;
+    }
+    if (endOff == startOff || endOff >= pageEnd || pageText.s[endOff] != L'@' || (endOff + 1) >= pageEnd ||
+        !IsEmailDomainChar(pageText.s[endOff + 1])) {
+        return -1;
+    }
+    for (endOff++; endOff < pageEnd && IsEmailDomainChar(pageText.s[endOff]); endOff++) {
         ;
     }
-    if (end == start || end >= pageEnd || *end != '@' || (end + 1) >= pageEnd || !IsEmailDomainChar(*(end + 1))) {
-        return nullptr;
-    }
-    for (end++; end < pageEnd && IsEmailDomainChar(*end); end++) {
-        ;
-    }
-    if (end >= pageEnd || '.' != *end || (end + 1) >= pageEnd || !IsEmailDomainChar(*(end + 1))) {
-        return nullptr;
+    if (endOff >= pageEnd || L'.' != pageText.s[endOff] || (endOff + 1) >= pageEnd ||
+        !IsEmailDomainChar(pageText.s[endOff + 1])) {
+        return -1;
     }
     do {
-        for (end++; end < pageEnd && IsEmailDomainChar(*end); end++) {
+        for (endOff++; endOff < pageEnd && IsEmailDomainChar(pageText.s[endOff]); endOff++) {
             ;
         }
-    } while (end < pageEnd && '.' == *end && (end + 1) < pageEnd && IsEmailDomainChar(*(end + 1)));
-    return end;
+    } while (endOff < pageEnd && L'.' == pageText.s[endOff] && (endOff + 1) < pageEnd &&
+             IsEmailDomainChar(pageText.s[endOff + 1]));
+    return endOff;
 }
 
 // Detect a printed DOI ("10." + 4-9 digit registrant + "/" + non-empty suffix),
@@ -1049,30 +1052,33 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start, const WCHAR* pageEnd
 // the end ptr (exclusive) past the suffix, or nullptr if `start` is not a DOI.
 // The suffix runs to the first EndsURL() terminator (whitespace, fullwidth
 // comma) or quote/angle bracket; trailing sentence punctuation is trimmed.
-static const WCHAR* LinkifyFindDoiEnd(const WCHAR* start, const WCHAR* pageEnd) {
-    if (!str::StartsWith(start, L"10.")) {
-        return nullptr;
+static int LinkifyFindDoiEndOff(int startOff, WStr pageText) {
+    WStr startSlice = WStr(pageText.s + startOff, pageText.len - startOff);
+    if (!str::StartsWith(startSlice, L"10.")) {
+        return -1;
     }
-    const WCHAR* p = start + 3;
-    const WCHAR* regStart = p;
-    while (p < pageEnd && iswdigit(*p)) {
+    int p = startOff + 3;
+    int regStart = p;
+    int pageEnd = pageText.len;
+    while (p < pageEnd && iswdigit(pageText.s[p])) {
         p++;
     }
-    int regLen = (int)(p - regStart);
-    if (regLen < 4 || regLen > 9 || p >= pageEnd || *p != '/') {
-        return nullptr;
+    int regLen = p - regStart;
+    if (regLen < 4 || regLen > 9 || p >= pageEnd || pageText.s[p] != L'/') {
+        return -1;
     }
     p++; // skip '/'
-    const WCHAR* suffixStart = p;
-    while (p < pageEnd && !EndsURL(*p) && *p != '"' && *p != '<' && *p != '>') {
+    int suffixStart = p;
+    while (p < pageEnd && !EndsURL(pageText.s[p]) && pageText.s[p] != L'"' && pageText.s[p] != L'<' &&
+           pageText.s[p] != L'>') {
         p++;
     }
     if (p == suffixStart) {
-        return nullptr;
+        return -1;
     }
-    p = LinkifyTrimTrailingPunct(suffixStart, p, L".,;:!)]}'", true, false);
+    p = LinkifyTrimTrailingPunctOff(suffixStart, p, WStrL(L".,;:!)]}'"), true, false, pageText);
     if (p == suffixStart) {
-        return nullptr;
+        return -1;
     }
     return p;
 }
@@ -1081,61 +1087,70 @@ static const WCHAR* LinkifyFindDoiEnd(const WCHAR* start, const WCHAR* pageEnd) 
 // TODO: return Vec<IPageElement*> directly
 static LinkRectList* LinkifyText(WStr pageText, Rect* coords) {
     LinkRectList* list = new LinkRectList;
-    const WCHAR* pageBase = pageText.s;
-    const WCHAR* pageEnd = pageText.s + pageText.len;
+    int pageEnd = pageText.len;
 
-    for (const WCHAR* start = pageBase; start < pageEnd;) {
-        const WCHAR* end = nullptr;
+    for (int startOff = 0; startOff < pageEnd;) {
+        int endOff = -1;
         bool multiline = false;
-        const WCHAR* protocol = nullptr;
+        WStr protocol;
 
-        if ('@' == *start) {
+        if (L'@' == pageText.s[startOff]) {
             // potential email address without mailto:
-            const WCHAR* email = LinkifyFindEmail(pageText, start);
-            end = email ? LinkifyEmailAddress(email, pageEnd) : nullptr;
-            protocol = L"mailto:";
-            if (end != nullptr) {
-                start = email;
+            int emailOff = LinkifyFindEmailOff(pageText, startOff);
+            endOff = emailOff >= 0 ? LinkifyEmailAddressOff(emailOff, pageText) : -1;
+            protocol = WStrL(L"mailto:");
+            if (endOff >= 0) {
+                startOff = emailOff;
             }
-        } else if (start > pageBase && ('/' == start[-1] || iswalnum(start[-1]))) {
+        } else if (startOff > 0 && (L'/' == pageText.s[startOff - 1] || iswalnum(pageText.s[startOff - 1]))) {
             // hyperlinks must not be preceded by a slash (indicates a different protocol)
             // or an alphanumeric character (indicates part of a different protocol)
-        } else if ('h' == *start && str::Parse(WStr(start), L"http%?s://")) {
-            end = LinkifyFindEnd(start, start > pageBase ? start[-1] : ' ', pageEnd);
-            multiline = LinkifyCheckMultiline(pageText, end, coords);
-        } else if ('w' == *start && str::StartsWith(start, L"www.")) {
-            end = LinkifyFindEnd(start, start > pageBase ? start[-1] : ' ', pageEnd);
-            multiline = LinkifyCheckMultiline(pageText, end, coords);
-            protocol = L"http://";
+        } else if (L'h' == pageText.s[startOff] &&
+                   str::Parse(WStr(pageText.s + startOff, pageEnd - startOff), L"http%?s://")) {
+            wchar_t prevChar = startOff > 0 ? pageText.s[startOff - 1] : L' ';
+            endOff = LinkifyFindEndOff(startOff, prevChar, pageText);
+            multiline = LinkifyCheckMultiline(pageText, endOff, coords);
+        } else if (L'w' == pageText.s[startOff] &&
+                   str::StartsWith(WStr(pageText.s + startOff, pageEnd - startOff), L"www.")) {
+            wchar_t prevChar = startOff > 0 ? pageText.s[startOff - 1] : L' ';
+            endOff = LinkifyFindEndOff(startOff, prevChar, pageText);
+            multiline = LinkifyCheckMultiline(pageText, endOff, coords);
+            protocol = WStrL(L"http://");
             // ignore www. links without a top-level domain
-            if (end - start <= 4 || !multiline && (!wcschr(start + 5, '.') || wcschr(start + 5, '.') >= end)) {
-                end = nullptr;
+            WStr afterWww = WStr(pageText.s + startOff + 5, endOff - startOff - 5);
+            WStr dot = str::FindChar(afterWww, L'.');
+            if (endOff - startOff <= 4 || !multiline && (!dot || dot.s >= pageText.s + endOff)) {
+                endOff = -1;
             }
-        } else if ('m' == *start && str::StartsWith(start, L"mailto:")) {
-            end = LinkifyEmailAddress(start + 7, pageEnd);
-        } else if ('1' == *start && (end = LinkifyFindDoiEnd(start, pageEnd)) != nullptr) {
-            // a plain-text DOI ("10.1109/...") -> https://doi.org/<doi>
-            protocol = L"https://doi.org/";
+        } else if (L'm' == pageText.s[startOff] &&
+                   str::StartsWith(WStr(pageText.s + startOff, pageEnd - startOff), L"mailto:")) {
+            endOff = LinkifyEmailAddressOff(startOff + 7, pageText);
+        } else if (L'1' == pageText.s[startOff]) {
+            endOff = LinkifyFindDoiEndOff(startOff, pageText);
+            if (endOff >= 0) {
+                // a plain-text DOI ("10.1109/...") -> https://doi.org/<doi>
+                protocol = WStrL(L"https://doi.org/");
+            }
         }
-        if (!end) {
-            start++;
+        if (endOff < 0) {
+            startOff++;
             continue;
         }
 
-        TempStr part = ToUtf8Temp(start, (int)(end - start));
+        TempStr part = ToUtf8Temp(pageText.s + startOff, endOff - startOff);
         TempStr uri = part;
         if (protocol) {
             TempStr proto = ToUtf8Temp(protocol);
             uri = str::JoinTemp(proto, part);
         }
         list->links.Append(uri);
-        Rect bbox = coords[start - pageBase].Union(coords[end - pageBase - 1]);
+        Rect bbox = coords[startOff].Union(coords[endOff - 1]);
         list->coords.Append(ToFzRect(ToRectF(bbox)));
         if (multiline) {
-            end = LinkifyMultilineText(list, pageText, start, end + 1, coords);
+            endOff = LinkifyMultilineText(list, pageText, startOff, endOff + 1, coords);
         }
 
-        start = end;
+        startOff = endOff;
     }
 
     return list;
