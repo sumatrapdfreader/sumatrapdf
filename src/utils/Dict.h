@@ -16,7 +16,7 @@ enum {
     DEFAULT_HASH_TABLE_INITIAL_SIZE = 16 * 1024
 };
 
-// a dictionary whose keys are char * strings and the values are integers
+// a dictionary whose keys are strings and the values are integers
 // note: StrToInt would be more natural name but it's re-#define'd in <shlwapi.h>
 class MapStrToInt {
   public:
@@ -28,10 +28,10 @@ class MapStrToInt {
 
     size_t Count() const;
 
-    bool Insert(const char* key, int val, int* existingValOut = nullptr, const char** existingKeyOut = nullptr);
+    bool Insert(Str key, int val, int* existingValOut = nullptr, Str* existingKeyOut = nullptr);
 
-    bool Remove(const char* key, int* removedValOut) const;
-    bool Get(const char* key, int* valOut) const;
+    bool Remove(Str key, int* removedValOut) const;
+    bool Get(Str key, int* valOut) const;
 };
 
 } // namespace dict

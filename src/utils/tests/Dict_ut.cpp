@@ -30,28 +30,28 @@ void DictTestMapStrToInt() {
     int val;
 
     utassert(0 == d.Count());
-    ok = d.Get("foo", &val);
+    ok = d.Get(StrL("foo"), &val);
     utassert(!ok);
-    ok = d.Remove("foo", nullptr);
+    ok = d.Remove(StrL("foo"), nullptr);
     utassert(!ok);
 
-    ok = d.Insert("foo", 5, nullptr);
+    ok = d.Insert(StrL("foo"), 5, nullptr);
     utassert(ok);
     utassert(1 == d.Count());
-    ok = d.Get("foo", &val);
+    ok = d.Get(StrL("foo"), &val);
     utassert(ok);
     utassert(val == 5);
-    ok = d.Insert("foo", 8, &val);
+    ok = d.Insert(StrL("foo"), 8, &val);
     utassert(!ok);
     utassert(val == 5);
-    ok = d.Get("foo", &val);
+    ok = d.Get(StrL("foo"), &val);
     utassert(ok);
     utassert(val == 5);
-    ok = d.Get("bar", &val);
+    ok = d.Get(StrL("bar"), &val);
     utassert(!ok);
 
     val = 0;
-    ok = d.Remove("foo", &val);
+    ok = d.Remove(StrL("foo"), &val);
     utassert(ok);
     utassert(val == 5);
     utassert(0 == d.Count());
@@ -60,17 +60,17 @@ void DictTestMapStrToInt() {
     Vec<char*> toRemove;
     for (int i = 0; i < 1024; i++) {
         char* k = GenRandomString();
-        ok = d.Insert(k, i, nullptr);
+        ok = d.Insert(Str(k), i, nullptr);
         // no guarantee that the string is unique, so Insert() doesn't always succeeds
         if (!ok) continue;
         toRemove.Append(str::Dup(k));
         utassert(toRemove.size() == d.Count());
-        ok = d.Get(k, &val);
+        ok = d.Get(Str(k), &val);
         ReportIf(!ok);
         ReportIf(i != val);
     }
     for (const char* k : toRemove) {
-        ok = d.Remove(k, nullptr);
+        ok = d.Remove(Str(k), nullptr);
         utassert(ok);
     }
     toRemove.FreeMembers();

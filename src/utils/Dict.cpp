@@ -225,41 +225,54 @@ size_t MapStrToInt::Count() const {
 //   * returns true
 //   * inserts a copy of the key allocated with allocator
 //   * sets existingKeyOut to (interned) key
-bool MapStrToInt::Insert(const char* key, int val, int* existingValOut, const char** existingKeyOut) {
+bool MapStrToInt::Insert(Str key, int val, int* existingValOut, Str* existingKeyOut) {
+    if (!key.s || key.len == 0) {
+        return false;
+    }
+    TempStr keyZ = StrDupTemp(key);
     bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
+    HashTableEntry* e =
+        GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)(const char*)keyZ, allocator, newEntry);
     if (!newEntry) {
         if (existingValOut) {
             *existingValOut = (int)e->val;
         }
         if (existingKeyOut) {
-            *existingKeyOut = (const char*)e->key;
+            *existingKeyOut = Str((const char*)e->key);
         }
         return false;
     }
-    e->key = (intptr_t)str::Dup(allocator, key).s;
+    e->key = (intptr_t)StrDup(allocator, key).s;
     e->val = (intptr_t)val;
     if (existingKeyOut) {
-        *existingKeyOut = (const char*)e->key;
+        *existingKeyOut = Str((const char*)e->key);
     }
 
     HashTableResizeIfNeeded(h, &gStrKeyHasherComparator);
     return true;
 }
 
-bool MapStrToInt::Remove(const char* key, int* removedValOut) const {
+bool MapStrToInt::Remove(Str key, int* removedValOut) const {
+    if (!key.s || key.len == 0) {
+        return false;
+    }
+    TempStr keyZ = StrDupTemp(key);
     uintptr_t removedVal;
-    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
+    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)(const char*)keyZ, &removedVal);
     if (removed && removedValOut) {
         *removedValOut = (int)removedVal;
     }
     return removed;
 }
 
-bool MapStrToInt::Get(const char* key, int* valOut) const {
+bool MapStrToInt::Get(Str key, int* valOut) const {
+    if (!key.s || key.len == 0) {
+        return false;
+    }
+    TempStr keyZ = StrDupTemp(key);
     StrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)(const char*)keyZ, nullptr, newEntry);
     if (!e) {
         return false;
     }
