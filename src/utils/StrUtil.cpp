@@ -615,7 +615,7 @@ Str ToLower(Str s) {
 
 // Encode unicode character as utf8 to dst buffer and advance dst pointer.
 // The caller must ensure there is enough free space (4 bytes) in dst
-void Utf8Encode(char*& dst, int c) {
+void Utf8Encode(char*& dst, int c) { // str-port: parse-cursor
     u8* tmp = (u8*)dst;
     if (c < 0x00080) {
         *tmp++ = (u8)(c & 0xFF);
@@ -802,27 +802,25 @@ size_t TrimWSInPlace(Str s, TrimOpt opt) {
     if (!s) {
         return 0;
     }
-    char* str = s.s;
-    size_t sLen = (size_t)s.len;
-    char* ns = str;
-    char* e = str + sLen;
-    char* ne = e;
+    int start = 0;
+    int end = s.len;
     if ((TrimOpt::Left == opt) || (TrimOpt::Both == opt)) {
-        while (IsWs(*ns)) {
-            ++ns;
+        while (start < end && IsWs(s.s[start])) {
+            start++;
         }
     }
 
     if ((TrimOpt::Right == opt) || (TrimOpt::Both == opt)) {
-        while (((ne - 1) >= ns) && IsWs(ne[-1])) {
-            --ne;
+        while (end > start && IsWs(s.s[end - 1])) {
+            end--;
         }
     }
-    *ne = 0;
-    size_t trimmed = (size_t)(ns - str) + (size_t)(e - ne);
-    if (ns != str) {
-        size_t toCopy = sLen - trimmed + 1; // +1 for terminating 0
-        memmove(str, ns, toCopy);
+    if (end < s.len) {
+        s.s[end] = 0;
+    }
+    size_t trimmed = (size_t)start + (size_t)(s.len - end);
+    if (start != 0) {
+        memmove(s.s, s.s + start, (size_t)(end - start) + 1);
     }
     return trimmed;
 }
@@ -834,29 +832,25 @@ size_t NormalizeWSInPlace(Str s) {
     if (!s) {
         return 0;
     }
-    char* str = s.s;
-    char* src = str;
-    char* dst = str;
-    char* end = str + s.len;
+    int dst = 0;
     bool addedSpace = true;
 
-    while (src < end) {
-        if (!IsWs(*src)) {
-            *dst++ = *src;
+    for (int src = 0; src < s.len; src++) {
+        if (!IsWs(s.s[src])) {
+            s.s[dst++] = s.s[src];
             addedSpace = false;
         } else if (!addedSpace) {
-            *dst++ = ' ';
+            s.s[dst++] = ' ';
             addedSpace = true;
         }
-        src++;
     }
 
-    if (dst > str && IsWs(*(dst - 1))) {
+    if (dst > 0 && IsWs(s.s[dst - 1])) {
         dst--;
     }
-    *dst = '\0';
+    s.s[dst] = '\0';
 
-    return (size_t)(src - dst);
+    return (size_t)(s.len - dst);
 }
 
 static bool isNl(char c) {
@@ -869,35 +863,34 @@ size_t NormalizeNewlinesInPlace(Str s, Str endExclusive) {
         return 0;
     }
     char* start = s.s;
-    char* dst = s.s;
-    char* e = endExclusive.s ? endExclusive.s : s.s + s.len;
-    // remove newlines at the beginning
-    while (s.s < e && isNl(*s.s)) {
-        ++s.s;
+    int endOff = endExclusive.s ? (int)(endExclusive.s - s.s) : s.len;
+    int read = 0;
+    while (read < endOff && isNl(start[read])) {
+        read++;
     }
 
+    int dst = 0;
     bool inNewline = false;
-    while (s.s < e) {
-        if (isNl(*s.s)) {
+    while (read < endOff) {
+        if (isNl(start[read])) {
             if (!inNewline) {
-                *dst++ = '\n';
+                start[dst++] = '\n';
             }
             inNewline = true;
-            ++s.s;
+            read++;
         } else {
-            *dst++ = *s.s++;
+            start[dst++] = start[read++];
             inNewline = false;
         }
     }
-    if (dst < e) {
-        *dst = 0;
+    if (dst < endOff) {
+        start[dst] = 0;
     }
-    // remove newlines from the end
-    while (dst > start && dst[-1] == '\n') {
-        --dst;
-        *dst = 0;
+    while (dst > 0 && start[dst - 1] == '\n') {
+        dst--;
+        start[dst] = 0;
     }
-    return (size_t)(dst - start);
+    return (size_t)dst;
 }
 
 size_t NormalizeNewlinesInPlace(Str s) {
@@ -911,18 +904,16 @@ size_t RemoveCharsInPlace(Str str, Str toRemove) {
         return 0;
     }
     size_t removed = 0;
-    char* dst = str.s;
-    char* src = str.s;
-    char* end = str.s + str.len;
-    while (src < end) {
-        char c = *src++;
+    int dst = 0;
+    for (int src = 0; src < str.len; src++) {
+        char c = str.s[src];
         if (!str::FindChar(toRemove, c)) {
-            *dst++ = c;
+            str.s[dst++] = c;
         } else {
             ++removed;
         }
     }
-    *dst = '\0';
+    str.s[dst] = '\0';
     return removed;
 }
 
@@ -933,18 +924,16 @@ size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
         return 0;
     }
     size_t removed = 0;
-    WCHAR* dst = str.s;
-    WCHAR* src = str.s;
-    WCHAR* end = str.s + str.len;
-    while (src < end) {
-        WCHAR c = *src++;
+    int dst = 0;
+    for (int src = 0; src < str.len; src++) {
+        WCHAR c = str.s[src];
         if (!str::FindChar(toRemove, c)) {
-            *dst++ = c;
+            str.s[dst++] = c;
         } else {
             ++removed;
         }
     }
-    *dst = '\0';
+    str.s[dst] = '\0';
     return removed;
 }
 
