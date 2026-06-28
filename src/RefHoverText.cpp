@@ -307,7 +307,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
     }
     int srcLen = 0;
     Rect* srcCoords = nullptr;
-    const WCHAR* srcText = engine->GetTextForPage(srcPage, &srcLen, &srcCoords);
+    WStr srcText = engine->GetTextForPage(srcPage, &srcLen, &srcCoords);
     if (!srcText || srcLen <= 0 || !srcCoords) {
         return -1.f;
     }
@@ -326,7 +326,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
         if (r.y + r.dy < srcT || r.y > srcB) {
             continue;
         }
-        rawText[rawLen++] = srcText[i];
+        rawText[rawLen++] = srcText.s[i];
     }
 
     auto isAlnum = [](WCHAR c) {
@@ -380,7 +380,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
 
     int destLen = 0;
     Rect* destCoords = nullptr;
-    const WCHAR* destText = engine->GetTextForPage(destPage, &destLen, &destCoords);
+    WStr destText = engine->GetTextForPage(destPage, &destLen, &destCoords);
     if (!destText || destLen <= 0 || !destCoords) {
         return -1.f;
     }
@@ -394,7 +394,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
             if (destCoords[i].y != sy) {
                 continue;
             }
-            WCHAR c = destText[i];
+            WCHAR c = destText.s[i];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
                 continue;
             }
@@ -413,7 +413,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
                 return false;
             }
             for (int j = 0; j < bestLen; j++) {
-                WCHAR a = destText[idx + j];
+                WCHAR a = destText.s[idx + j];
                 WCHAR b = rawText[bestStart + j];
                 if (a >= L'A' && a <= L'Z') {
                     a = (WCHAR)(a + 32);
@@ -425,10 +425,10 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
                     return false;
                 }
             }
-            if (idx > 0 && isAlnum(destText[idx - 1])) {
+            if (idx > 0 && isAlnum(destText.s[idx - 1])) {
                 return false;
             }
-            if (idx + bestLen < destLen && isAlnum(destText[idx + bestLen])) {
+            if (idx + bestLen < destLen && isAlnum(destText.s[idx + bestLen])) {
                 return false;
             }
             return true;
