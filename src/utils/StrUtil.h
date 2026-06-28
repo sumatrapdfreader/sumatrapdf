@@ -169,8 +169,8 @@ size_t NormalizeNewlinesInPlace(char* s, char* e);
 size_t NormalizeNewlinesInPlace(char* s);
 size_t RemoveCharsInPlace(char* str, const char* toRemove);
 
-int BufSet(char* dst, int dstCchSize, const char* src);
-int BufAppend(char* dst, int dstCchSize, const char* s);
+int BufSet(char* dst, int dstCchSize, Str src);
+int BufAppend(char* dst, int dstCchSize, Str s);
 
 Str MemToHex(const u8* buf, size_t len);
 bool HexToMem(Str s, u8* buf, size_t bufLen);
@@ -206,8 +206,8 @@ bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 WCHAR* ToLower(const WCHAR*);
 WCHAR* ToLowerInPlace(WCHAR*);
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
-int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src);
-int BufSet(WCHAR* dst, int dstCchSize, const char* src);
+int BufSet(WCHAR* dst, int dstCchSize, WStr src);
+int BufSet(WCHAR* dst, int dstCchSize, Str src);
 size_t NormalizeWSInPlace(WCHAR* str);
 size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 const WCHAR* FindChar(const WCHAR* str, WCHAR c);
@@ -528,14 +528,21 @@ FORCEINLINE size_t TransCharsInPlace(WStr s, const WCHAR* oldChars, const WCHAR*
 FORCEINLINE size_t TrimWSInPlace(Str s, TrimOpt opt) {
     return TrimWSInPlace(s.s, opt);
 }
-FORCEINLINE int BufSet(char* dst, int dstCchSize, Str src) {
-    return BufSet(dst, dstCchSize, src.s);
+// str-port: char*/WCHAR* shims; remove when callers use Str/WStr
+FORCEINLINE int BufSet(char* dst, int dstCchSize, const char* src) {
+    return BufSet(dst, dstCchSize, Str(src));
 }
-FORCEINLINE int BufSet(WCHAR* dst, int dstCchSize, WStr src) {
-    return BufSet(dst, dstCchSize, src.s);
+FORCEINLINE int BufAppend(char* dst, int dstCchSize, const char* s) {
+    return BufAppend(dst, dstCchSize, Str(s));
+}
+FORCEINLINE int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src) {
+    return BufSet(dst, dstCchSize, WStr(src));
+}
+FORCEINLINE int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
+    return BufSet(dst, dstCchSize, Str(src));
 }
 FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
-    return BufSet(dst.s, dstCchSize, src.s);
+    return BufSet(dst.s, dstCchSize, src);
 }
 FORCEINLINE Str Dup(Arena* a, const char* s, size_t cch = (size_t)-1) {
     if (!s) {

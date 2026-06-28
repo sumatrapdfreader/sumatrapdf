@@ -2470,44 +2470,42 @@ size_t NormalizeWSInPlace(WCHAR* str) {
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
-int BufSet(char* dst, int cchDst, const char* src) {
+int BufSet(char* dst, int cchDst, Str src) {
     ReportIf(0 == cchDst || !dst);
     if (!src) {
         *dst = 0;
         return 0;
     }
 
-    int srcCchSize = (int)str::Len(src);
-    int toCopy = std::min(cchDst - 1, srcCchSize);
+    int toCopy = std::min(cchDst - 1, src.len);
 
-    errno_t err = strncpy_s(dst, (size_t)cchDst, src, (size_t)toCopy);
+    errno_t err = strncpy_s(dst, (size_t)cchDst, src.s, (size_t)toCopy);
     ReportIf(err || dst[toCopy] != '\0');
 
     return toCopy;
 }
 
-int BufSet(WCHAR* dst, int cchDst, const WCHAR* src) {
+int BufSet(WCHAR* dst, int cchDst, WStr src) {
     ReportIf(0 == cchDst || !dst);
     if (!src) {
         *dst = 0;
         return 0;
     }
 
-    int srcCchSize = str::Leni(src);
-    int toCopy = std::min(cchDst - 1, srcCchSize);
+    int toCopy = std::min(cchDst - 1, src.len);
 
     memset(dst, 0, cchDst * sizeof(WCHAR));
-    memcpy(dst, src, toCopy * sizeof(WCHAR));
+    memcpy(dst, src.s, toCopy * sizeof(WCHAR));
     return toCopy;
 }
 
-int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
+int BufSet(WCHAR* dst, int dstCchSize, Str src) {
     return BufSet(dst, dstCchSize, ToWStrTemp(src));
 }
 
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
-int BufAppend(char* dst, int dstCch, const char* s) {
+int BufAppend(char* dst, int dstCch, Str s) {
     ReportIf(0 == dstCch);
 
     int currDstCchLen = str::Leni(dst);
@@ -2515,10 +2513,9 @@ int BufAppend(char* dst, int dstCch, const char* s) {
         return 0;
     }
     int left = dstCch - currDstCchLen - 1;
-    int srcCchSize = str::Leni(s);
-    int toCopy = std::min(left, srcCchSize);
+    int toCopy = std::min(left, s.len);
 
-    errno_t err = strncat_s(dst, dstCch, s, toCopy);
+    errno_t err = strncat_s(dst, dstCch, s.s, toCopy);
     ReportIf(err || dst[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
