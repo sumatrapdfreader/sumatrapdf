@@ -705,7 +705,7 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
     auto updateCheckType = data->updateCheckType;
     StrBuilder url;
     BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
-    char* uri = url.Get();
+    Str uri = url.Get();
     HttpRsp* rsp = new HttpRsp;
     rsp->url.SetCopy(uri);
     bool ok = HttpGet(uri, rsp);

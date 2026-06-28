@@ -27,7 +27,7 @@ bool IsHttpRspOk(const HttpRsp* rsp) {
 
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
-bool HttpGet(const char* urlA, HttpRsp* rspOut) {
+bool HttpGet(Str urlA, HttpRsp* rspOut) {
     logf("HttpGet: url: '%s'\n", urlA);
     HINTERNET hReq = nullptr;
     DWORD infoLevel;
@@ -101,7 +101,7 @@ Error:
 constexpr const int kBufSize = 256 * 1024;
 
 // Download content of a url to a file
-bool HttpGetToFile(const char* urlA, const char* destFilePath, const Func1<HttpProgress*>& cbProgress) {
+bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbProgress) {
     logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
@@ -181,10 +181,10 @@ Exit:
     return ok;
 }
 
-bool HttpPost(const char* serverA, int port, const char* urlA, StrBuilder* headers, StrBuilder* data) {
+bool HttpPost(Str serverA, int port, Str urlA, StrBuilder* headers, StrBuilder* data) {
     StrBuilder resp(2048);
     bool ok = false;
-    char* hdr = nullptr;
+    char* hdr = nullptr; // str-port: Win32 HttpSendRequestA header buffer
     DWORD hdrLen = 0;
     HINTERNET hConn = nullptr, hReq = nullptr;
     void* d = nullptr;
@@ -220,11 +220,11 @@ bool HttpPost(const char* serverA, int port, const char* urlA, StrBuilder* heade
     }
 
     if (headers && headers->size() > 0) {
-        hdr = headers->Get();
+        hdr = headers->CStr();
         hdrLen = (DWORD)headers->size();
     }
     if (data && data->size() > 0) {
-        d = data->Get();
+        d = data->CStr();
         dLen = (DWORD)data->size();
     }
 
