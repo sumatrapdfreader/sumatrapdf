@@ -18,13 +18,9 @@ struct ByteSlice {
 
     ByteSlice() = default;
     ~ByteSlice() = default;
-    explicit ByteSlice(const char* str) {
-        d = (u8*)str;
-        sz = strlen(str);
-    }
-    explicit ByteSlice(char* str) {
-        d = (u8*)str;
-        sz = strlen(str);
+    explicit ByteSlice(Str str) {
+        d = (u8*)str.s;
+        sz = (size_t)str.len;
     }
     ByteSlice(const u8* data, size_t size) {
         d = (u8*)data;
@@ -41,10 +37,6 @@ struct ByteSlice {
     }
     void Set(u8* data, size_t size) {
         d = data;
-        sz = size;
-    }
-    void Set(char* data, size_t size) {
-        d = (u8*)data;
         sz = size;
     }
     u8* data() const { return d; }
@@ -65,7 +57,7 @@ struct ByteSlice {
         d = nullptr;
         sz = 0;
     }
-    operator const char*() { return (const char*)d; }
+    operator const char*() { return (const char*)d; } // str-port: C-string
 };
 
 bool IsEqual(const ByteSlice&, const ByteSlice&);
