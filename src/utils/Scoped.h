@@ -129,7 +129,7 @@ struct AutoFree {
 
     char* Get() const { return data; }
 
-    char* CStr() const { return data; }
+    Str CStr() const { return Str(data); }
 
     operator char*() const { // NOLINT
         return data;
