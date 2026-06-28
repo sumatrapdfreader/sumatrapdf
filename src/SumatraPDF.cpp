@@ -1468,7 +1468,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     SetWindowStyle(win->hwndPageEdit, ES_NUMBER, onlyNumbers);
 }
 
-static bool showTocByDefault(const char* path) {
+static bool showTocByDefault(Str path) {
     if (!gGlobalPrefs->showToc) {
         return false;
     }
@@ -1501,7 +1501,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
     if (!fs && gGlobalPrefs->rememberStatePerDocument) {
-        const char* fn = args->FilePath();
+        Str fn = args->FilePath();
         fs = gFileHistory.FindByPath(fn);
         if (fs) {
             if (fs->windowPos.IsEmpty()) {
@@ -1518,7 +1518,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     ScrollState ss(1, -1, -1);
     int rotation = 0;
-    const char* path = args->FilePath();
+    Str path = args->FilePath();
     bool showToc = showTocByDefault(path);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState;
     int showType = SW_NORMAL;
@@ -2245,8 +2245,8 @@ void UpdateAfterThemeChange() {
     UpdateDocumentColors();
 }
 
-static void RenameFileInHistory(const char* oldPath, const char* newPath) {
-    logf("RenameFileInHistory: oldPath: '%s', newPath: '%s'\n", oldPath, newPath);
+static void RenameFileInHistory(Str oldPath, Str newPath) {
+    logf("RenameFileInHistory: oldPath: '%s', newPath: '%s'\n", oldPath.s, newPath.s);
     if (path::IsSame(oldPath, newPath)) {
         return;
     }
@@ -2297,7 +2297,7 @@ static void ScheduleReloadTab(WindowTab* tab) {
 
 // return true if adjustd path
 static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
-    const char* path = args->FilePath();
+    Str path = args->FilePath();
     if (DocumentPathExists(path)) {
         return false;
     }
@@ -2316,7 +2316,7 @@ static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
     return false;
 }
 
-static void LoadDocumentMarkNotExist(MainWindow* win, const char* path, bool noSavePrefs) {
+static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs) {
     ShowWindow(win->hwndFrame, SW_SHOW);
 
     // display the notification ASAP (SaveSettings() can introduce a notable delay)
@@ -2335,7 +2335,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, const char* path, bool noS
     }
 }
 
-static void ShowFileNotFound(MainWindow* win, const char* path, bool noSavePrefs) {
+static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.warning = true;
@@ -2368,7 +2368,7 @@ static void SaveSettingsVoid() {
 
 MainWindow* LoadDocumentFinish(LoadArgs* args) {
     MainWindow* win = args->win;
-    const char* fullPath = args->FilePath();
+    Str fullPath = args->FilePath();
 
     bool openNewTab = SettingsUseTabs() && !args->forceReuse;
     ReportIf(openNewTab && args->forceReuse);
@@ -2431,7 +2431,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     }
 
     auto currTab = win->CurrentTab();
-    const char* path = currTab->filePath;
+    Str path = currTab->filePath;
 #if 0
     int nPages = 0;
     if (currTab->ctrl) {
@@ -2493,11 +2493,11 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     return win;
 }
 
-static NotificationWnd* ShowLoadingNotif(MainWindow* win, const char* path) {
+static NotificationWnd* ShowLoadingNotif(MainWindow* win, Str path) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
-    nargs.groupId = path;
-    nargs.msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(Str(path)));
+    nargs.groupId = path.s;
+    nargs.msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(path));
     return ShowNotification(nargs);
 }
 
@@ -2555,7 +2555,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     if (win->isBeingClosed) {
         return;
     }
-    const char* path = args->FilePath();
+    Str path = args->FilePath();
     if (!args->ctrl) {
         ShowErrorLoadingNotification(win, path, args->noSavePrefs);
         // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
@@ -2575,18 +2575,18 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
 // uitask runs posted tasks in FIFO order on the UI thread.
 struct ExtractProgressUITask {
     NotificationWnd* wnd;
-    char* path; // owned by the task; duped on the worker thread
+    Str path; // owned by the task; duped on the worker thread
     int nDecoded;
     int nTotal;
 };
 
 static void UpdateLoadingNotifUI(ExtractProgressUITask* task) {
     AutoDelete delTask(task);
-    AutoFreeStr delPath(task->path);
+    str::Free(task->path);
     if (!task->wnd) {
         return;
     }
-    const char* basename = path::GetBaseNameTemp(task->path);
+    TempStr basename = path::GetBaseNameTemp(task->path);
     TempStr msg;
     if (task->nTotal > 0) {
         msg = str::FormatTemp(_TRA("Loading %s %d of %d"), basename, task->nDecoded, task->nTotal);
@@ -2598,7 +2598,7 @@ static void UpdateLoadingNotifUI(ExtractProgressUITask* task) {
 
 struct ExtractProgressState {
     NotificationWnd* wnd;
-    const char* path;
+    Str path;
     DWORD lastUpdate;
 };
 
@@ -2628,18 +2628,18 @@ static void OnExtractProgress(ExtractProgressState* s, ArchiveExtractProgress* p
 // counts; this task carries byte totals instead.
 struct CopyProgressUITask {
     NotificationWnd* wnd;
-    char* path;
+    Str path;
     i64 bytesCopied;
     i64 bytesTotal;
 };
 
 static void UpdateCopyNotifUI(CopyProgressUITask* task) {
     AutoDelete delTask(task);
-    AutoFreeStr delPath(task->path);
+    str::Free(task->path);
     if (!task->wnd) {
         return;
     }
-    const char* basename = path::GetBaseNameTemp(task->path);
+    TempStr basename = path::GetBaseNameTemp(task->path);
     TempStr copied = str::FormatSizeShortTemp(task->bytesCopied, nullptr);
     TempStr msg;
     if (task->bytesTotal > 0) {
@@ -2653,7 +2653,7 @@ static void UpdateCopyNotifUI(CopyProgressUITask* task) {
 
 struct CopyProgressState {
     NotificationWnd* wnd;
-    const char* path;
+    Str path;
 };
 
 static void OnFileCopyProgress(CopyProgressState* s, file::CopyProgress* p) {
@@ -2672,7 +2672,7 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     DocController* ctrl = nullptr;
     MainWindow* win = args->win;
     HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
-    const char* path = args->FilePath();
+    Str path = args->FilePath();
     EngineBase* engine = args->engine;
 
     // wire up the archive extraction progress callback so eager-load
@@ -2714,7 +2714,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
 
     MainWindow* win = argsIn->win;
     bool failEarly = AdjustPathForMaybeMovedFile(argsIn);
-    const char* path = argsIn->FilePath();
+    Str path = argsIn->FilePath();
     if (failEarly) {
         ShowFileNotFound(win, path, argsIn->noSavePrefs);
         return;
@@ -2783,7 +2783,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
         CrashMe();
     }
 
-    const char* path = args->FilePath();
+    Str path = args->FilePath();
     if (args->activateExisting) {
         MainWindow* existing = FindMainWindowByFile(path, true);
         if (existing) {
