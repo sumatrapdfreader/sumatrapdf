@@ -148,15 +148,15 @@ static ISpObjectToken* SapiFindVoiceTokenById(Str voiceId) {
     return result;
 }
 
-static char* SapiGetVoiceLanguage(ISpObjectToken* token) {
+static Str SapiGetVoiceLanguage(ISpObjectToken* token) {
     if (!token) {
-        return nullptr;
+        return {};
     }
 
     ISpDataKey* attributes = nullptr;
     HRESULT hr = token->OpenKey(L"Attributes", &attributes);
     if (FAILED(hr) || !attributes) {
-        return nullptr;
+        return {};
     }
 
     WCHAR* langW = nullptr;
@@ -164,10 +164,10 @@ static char* SapiGetVoiceLanguage(ISpObjectToken* token) {
     attributes->Release();
 
     if (FAILED(hr) || !langW) {
-        return nullptr;
+        return {};
     }
 
-    char* lang = str::Dup(ToUtf8Temp(langW));
+    Str lang = str::Dup(ToUtf8Temp(langW));
     CoTaskMemFree(langW);
     return lang;
 }
@@ -452,7 +452,7 @@ static SynthAsyncOp* gWinSynthOp = nullptr;
 // playback of the synthesized WAV stream
 static HWAVEOUT gWinWaveOut = nullptr;
 static WAVEHDR gWinWaveHdr{};
-static char* gWinWavData = nullptr; // the whole WAV file
+static u8* gWinWavData = nullptr; // the whole WAV file (binary)
 static DWORD gWinAvgBytesPerSec = 0;
 static DWORD gWinSamplesPerSec = 0;
 static LONG gWinWaveDone = 0; // set from the waveOut callback thread
@@ -465,11 +465,11 @@ struct WinTtsCue {
 };
 static Vec<WinTtsCue> gWinCues;
 
-static char* HStringToUtf8Dup(HSTRING hs) {
+static Str HStringToUtf8Dup(HSTRING hs) {
     UINT32 len = 0;
     PCWSTR s = pWindowsGetStringRawBuffer(hs, &len);
     if (!s) {
-        return nullptr;
+        return {};
     }
     return str::Dup(ToUtf8Temp(s, (size_t)len));
 }
@@ -890,7 +890,7 @@ static bool WinTtsReadStreamBytes(WMSS::ISpeechSynthesisStream* stream) {
         constexpr ULONGLONG kMaxWavSize = 512 * 1024 * 1024;
         ULONGLONG size = st.cbSize.QuadPart;
         if (size > 0 && size < kMaxWavSize) {
-            char* buf = (char*)malloc((size_t)size);
+            u8* buf = (u8*)malloc((size_t)size);
             if (buf) {
                 LARGE_INTEGER zero{};
                 istm->Seek(zero, STREAM_SEEK_SET, nullptr);
@@ -920,32 +920,33 @@ static bool WinTtsReadStreamBytes(WMSS::ISpeechSynthesisStream* stream) {
     return ok;
 }
 
-static DWORD WavGetU32(const char* d) {
+static DWORD WavGetU32(const u8* d) {
     DWORD res;
     memcpy(&res, d, 4);
     return res;
 }
 
 // finds "fmt " and "data" chunks in a RIFF WAVE file
-static bool WinTtsParseWav(const char* d, size_t n, WAVEFORMATEX* wfx, const char** dataOut, DWORD* dataSizeOut) {
-    if (n < 12 + 8 || !str::EqN(d, "RIFF", 4) || !str::EqN(d + 8, "WAVE", 4)) {
+static bool WinTtsParseWav(const u8* d, size_t n, WAVEFORMATEX* wfx, const u8** dataOut, DWORD* dataSizeOut) {
+    if (n < 12 + 8 || !str::EqN(Str((const char*)d, 4), StrL("RIFF"), 4) ||
+        !str::EqN(Str((const char*)d + 8, 4), StrL("WAVE"), 4)) {
         return false;
     }
 
     bool haveFmt = false;
-    const char* data = nullptr;
+    const u8* data = nullptr;
     DWORD dataSize = 0;
 
     size_t off = 12;
     while (off + 8 <= n) {
-        const char* chunkId = d + off;
+        Str chunkId((const char*)d + off, 4);
         DWORD chunkSize = WavGetU32(d + off + 4);
         off += 8;
         if (chunkSize > n - off) {
             break;
         }
 
-        if (str::EqN(chunkId, "fmt ", 4) && chunkSize >= 16) {
+        if (str::EqN(chunkId, StrL("fmt "), 4) && chunkSize >= 16) {
             size_t toCopy = (size_t)chunkSize;
             if (toCopy > sizeof(WAVEFORMATEX)) {
                 toCopy = sizeof(WAVEFORMATEX);
@@ -954,7 +955,7 @@ static bool WinTtsParseWav(const char* d, size_t n, WAVEFORMATEX* wfx, const cha
             memcpy(wfx, d + off, toCopy);
             wfx->cbSize = 0;
             haveFmt = true;
-        } else if (str::EqN(chunkId, "data", 4)) {
+        } else if (str::EqN(chunkId, StrL("data"), 4)) {
             data = d + off;
             dataSize = chunkSize;
         }
@@ -984,7 +985,7 @@ static bool WinTtsStartPlayback() {
     gWinWaveHdr = {};
 
     WAVEFORMATEX wfx{};
-    const char* data = nullptr;
+    const u8* data = nullptr;
     DWORD dataSize = 0;
     if (!WinTtsParseWav(gWinWavData, wavSize, &wfx, &data, &dataSize)) {
         logf("WinTtsStartPlayback: failed to parse WAV, size: %d\n", (int)wavSize);

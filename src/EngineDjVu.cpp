@@ -313,8 +313,7 @@ class EngineDjVu : public EngineBase {
 
     Vec<ddjvu_fileinfo_t> fileInfos;
 
-    RenderedBitmap* CreateRenderedBitmap(const char* bmpData, Size size,
-                                         bool grayscale) const; // str-port: pixmap bytes
+    RenderedBitmap* CreateRenderedBitmap(const u8* bmpData, Size size, bool grayscale) const;
     bool ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rect>& coords);
     bool ExtractPageTextUtf8(miniexp_t item, StrBuilder& extracted, Vec<Rect>& coords);
     TempStr ResolveNamedDestTemp(Str name);
@@ -582,7 +581,7 @@ bool EngineDjVu::FinishLoading() {
     return true;
 }
 
-RenderedBitmap* EngineDjVu::CreateRenderedBitmap(const char* bmpData, Size size, bool grayscale) const {
+RenderedBitmap* EngineDjVu::CreateRenderedBitmap(const u8* bmpData, Size size, bool grayscale) const {
     int stride = ((size.dx * (grayscale ? 1 : 3) + 3) / 4) * 4;
 
     BITMAPINFO* bmi = (BITMAPINFO*)calloc(1, sizeof(BITMAPINFOHEADER) + (grayscale ? 256 * sizeof(RGBQUAD) : 0));
@@ -687,7 +686,7 @@ Pixmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     size_t dy = (size_t)screen.dy;
     size_t stride = ((dx * bytesPerPixel + 3) / 4) * 4;
     size_t nBytes = stride * (dy + 5);
-    char* bmpData = (char*)calloc(nBytes, 1); // str-port: pixmap byte buffer
+    u8* bmpData = (u8*)calloc(nBytes, 1);
     if (!bmpData) {
         LeaveCriticalSection(&gDjVuContext->lock);
         ddjvu_format_release(fmt);
@@ -696,7 +695,7 @@ Pixmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     }
 
     ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
-    int ok = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, bmpData);
+    int ok = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, (char*)bmpData);
     if (!ok) {
         // nothing was rendered, leave the page blank (same as WinDjView)
         memset(bmpData, 0xFF, stride * dy);
@@ -744,7 +743,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
     ddjvu_rect_t prect = {full.x, full.y, (uint)full.dx, (uint)full.dy};
     ddjvu_rect_t rrect = prect;
 
-    char* bmpData = AllocArrayTemp<char>(full.dx * full.dy + 1); // str-port: pixmap byte buffer
+    u8* bmpData = AllocArrayTemp<u8>(full.dx * full.dy + 1);
     if (!bmpData) {
         // release the lock before releasing djvu objects to avoid deadlock:
         // ddjvu_page_release can trigger DjVuFile::~DjVuFile -> GMonitor::~GMonitor
@@ -755,7 +754,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
         return pageRc;
     }
 
-    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData);
+    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, (char*)bmpData);
     if (!ok) {
         LeaveCriticalSection(&gDjVuContext->lock);
         ddjvu_format_release(fmt);
