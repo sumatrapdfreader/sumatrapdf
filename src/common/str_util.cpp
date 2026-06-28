@@ -4,7 +4,7 @@
 AtomicInt gStrFmtFirstAlloc = 0;  // Formatted into available space
 AtomicInt gStrFmtSecondAlloc = 0; // Needed separate allocation
 
-void WStrCopy(wchar_t* dst, const wchar_t* src, int maxLen) {
+void WStrCopy(wchar_t* dst, const wchar_t* src, int maxLen) { // str-port: C-string
     int i = 0;
     while (src[i] && i < maxLen - 1) {
         dst[i] = src[i];
@@ -84,7 +84,7 @@ Str ToUtf8(Arena* arena, WStr wide) {
     }
     // Use explicit length instead of -1 (null-terminated)
     int len = WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, nullptr, 0, nullptr, nullptr);
-    char* utf8 = (char*)Alloc(arena, len + 1);
+    char* utf8 = (char*)Alloc(arena, len + 1); // str-port: owned heap
     WideCharToMultiByte(CP_UTF8, 0, wide.s, wide.len, utf8, len, nullptr, nullptr);
     utf8[len] = 0;
     return Str(utf8, len);
@@ -107,7 +107,7 @@ WStr ToWStrTemp(Str s) {
     }
     // Use explicit length instead of -1 (null-terminated)
     int wideLen = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
-    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
+    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t)); // str-port: owned heap
     MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, wide, wideLen);
     wide[wideLen] = 0;
     return WStr(wide, wideLen);
@@ -118,7 +118,7 @@ static Str StrDupInternal(Arena* arena, Str src) {
     if (!src.s || src.len <= 0) {
         return Str();
     }
-    char* dst = (char*)Alloc(arena, src.len + 1);
+    char* dst = (char*)Alloc(arena, src.len + 1); // str-port: owned heap
     for (int i = 0; i < src.len; i++) {
         dst[i] = src.s[i];
     }
@@ -169,11 +169,14 @@ bool operator==(Str a, Str b) {
 }
 
 bool operator==(Str a, const char* b) {
-    return a.s == b;
+    if (!b) {
+        return IsEmpty(a);
+    }
+    return StrEq(a, Str(b));
 }
 
 bool operator==(const char* a, Str b) {
-    return a == b.s;
+    return b == a;
 }
 
 bool operator!=(Str a, Str b) {
@@ -193,11 +196,14 @@ bool operator==(WStr a, WStr b) {
 }
 
 bool operator==(WStr a, const wchar_t* b) {
-    return a.s == b;
+    if (!b) {
+        return IsEmpty(a);
+    }
+    return WStrEq(a, WStr(b));
 }
 
 bool operator==(const wchar_t* a, WStr b) {
-    return a == b.s;
+    return b == a;
 }
 
 bool operator!=(WStr a, WStr b) {
@@ -476,7 +482,7 @@ Str PathJoinTemp(Str dir, Str name) {
 }
 
 // Copy UTF-8 string with max bytes
-void StrCopyUtf8(char* dst, Str src, int maxBytes) {
+void StrCopyUtf8(char* dst, Str src, int maxBytes) { // str-port: C-string
     int n = src.len;
     if (n > maxBytes - 1) {
         n = maxBytes - 1;
@@ -489,31 +495,32 @@ void StrCopyUtf8(char* dst, Str src, int maxBytes) {
 
 // Format string with allocator
 Str StrFmt(Arena* arena, Str fmt, ...) {
+    Str fmtZ = StrDupTemp(fmt);
     va_list args;
     va_start(args, fmt);
 
     // Try formatting into available space first (avoids double vsnprintf)
     int availSize = 0;
-    char* availBuf = arena ? (char*)arena->GetAvailableSpace(&availSize) : nullptr;
+    char* availBuf = arena ? (char*)arena->GetAvailableSpace(&availSize) : nullptr; // str-port: arena
 
     if (availBuf && availSize > 0) {
         va_list args2;
         va_copy(args2, args);
-        int len = vsnprintf(availBuf, availSize, fmt.s, args2);
+        int len = vsnprintf(availBuf, availSize, fmtZ.s, args2);
         va_end(args2);
 
         if (len >= 0 && len < availSize) {
             // Fits in available space - commit the allocation
-            char* buf = (char*)arena->CommitReserved(availBuf, len + 1);
+            char* buf = (char*)arena->CommitReserved(availBuf, len + 1); // str-port: owned heap
             AtomicIntInc(&gStrFmtFirstAlloc);
             va_end(args);
             return Str(buf ? buf : availBuf, len);
         }
         // Doesn't fit - fall through to normal allocation with known length
         if (len >= 0) {
-            char* buf = (char*)Alloc(arena, len + 1);
+            char* buf = (char*)Alloc(arena, len + 1); // str-port: owned heap
             AtomicIntInc(&gStrFmtSecondAlloc);
-            vsnprintf(buf, len + 1, fmt.s, args);
+            vsnprintf(buf, len + 1, fmtZ.s, args);
             va_end(args);
             return Str(buf, len);
         }
@@ -522,7 +529,7 @@ Str StrFmt(Arena* arena, Str fmt, ...) {
     // Fallback: determine required size first
     va_list args2;
     va_copy(args2, args);
-    int len = vsnprintf(nullptr, 0, fmt.s, args2);
+    int len = vsnprintf(nullptr, 0, fmtZ.s, args2);
     va_end(args2);
 
     if (len < 0) {
@@ -532,8 +539,8 @@ Str StrFmt(Arena* arena, Str fmt, ...) {
 
     // Allocate and format
     AtomicIntInc(&gStrFmtSecondAlloc);
-    char* buf = (char*)Alloc(arena, len + 1);
-    vsnprintf(buf, len + 1, fmt.s, args);
+    char* buf = (char*)Alloc(arena, len + 1); // str-port: owned heap
+    vsnprintf(buf, len + 1, fmtZ.s, args);
     va_end(args);
 
     return Str(buf, len);
