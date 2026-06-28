@@ -2277,16 +2277,16 @@ WCHAR WStrBuilder::LastChar() const {
 namespace str {
 
 // returns true if was replaced
-bool Replace(WStrBuilder& s, const WCHAR* toReplace, const WCHAR* replaceWith) {
+bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith) {
     // fast path: nothing to replace
-    if (!str::Find(s.els, toReplace)) {
+    if (!str::Find(s.els, toReplace.s)) {
         return false;
     }
-    WCHAR* newStr = str::Replace(s.els, toReplace, replaceWith);
+    WStr newStr = str::Replace(WStr(s.els), toReplace, replaceWith);
     s.Reset();
     if (newStr) {
-        s.Append(newStr);
-        str::Free(newStr);
+        s.Append(newStr.s);
+        str::Free(newStr.s);
     }
     return true;
 }
@@ -2407,16 +2407,18 @@ Str ToUpperInPlace(Str s) {
     return s;
 }
 
-WCHAR* ToLowerInPlace(WCHAR* s) {
-    WCHAR* res = s;
-    for (; s && *s; s++) {
-        *s = towlower(*s);
+WStr ToLowerInPlace(WStr s) {
+    if (!s) {
+        return {};
     }
-    return res;
+    for (int i = 0; i < s.len; i++) {
+        s.s[i] = towlower(s.s[i]);
+    }
+    return s;
 }
 
-WCHAR* ToLower(const WCHAR* s) {
-    WCHAR* s2 = str::Dup(s);
+WStr ToLower(WStr s) {
+    WStr s2 = str::Dup(s);
     return ToLowerInPlace(s2);
 }
 
@@ -2438,22 +2440,24 @@ size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
     return nReplaced;
 }
 
-// free() the result
-WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith) {
+// free() the result via str::Free(s.s) or str::FreePtr(&s)
+WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     if (!s || str::IsEmpty(toReplace) || !replaceWith) {
-        return nullptr;
+        return {};
     }
 
-    WStrBuilder result(str::Len(s));
-    size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
-    const WCHAR *start = s, *end;
-    while ((end = str::Find(start, toReplace)) != nullptr) {
-        result.Append(start, end - start);
-        result.Append(replaceWith, replLen);
+    WStrBuilder result((size_t)s.len);
+    size_t findLen = (size_t)toReplace.len;
+    size_t replLen = (size_t)replaceWith.len;
+    const WCHAR* start = s.s;
+    const WCHAR* end;
+    while ((end = str::Find(start, toReplace.s)) != nullptr) {
+        result.Append(start, (size_t)(end - start));
+        result.Append(replaceWith.s, replLen);
         start = end + findLen;
     }
     result.Append(start);
-    return result.StealData();
+    return WStr(result.StealData());
 }
 
 // replaces all whitespace characters with spaces, collapses several

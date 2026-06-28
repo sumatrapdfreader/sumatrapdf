@@ -199,8 +199,8 @@ bool StartsWith(const WCHAR* str, const WCHAR* prefix);
 bool StartsWithI(const WCHAR* str, const WCHAR* prefix);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
-WCHAR* ToLower(const WCHAR*);
-WCHAR* ToLowerInPlace(WCHAR*);
+WStr ToLower(WStr s);
+WStr ToLowerInPlace(WStr s);
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
@@ -213,7 +213,7 @@ bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
 size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars);
-WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
+WStr Replace(WStr s, WStr toReplace, WStr replaceWith);
 
 WCHAR* CastToWCHAR(Str s);
 } // namespace str
@@ -386,7 +386,7 @@ struct WStrBuilder {
 
 namespace str {
 
-bool Replace(WStrBuilder& s, const WCHAR* toReplace, const WCHAR* replaceWith);
+bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith);
 
 FORCEINLINE size_t Len(Str s) {
     return (size_t)s.len;
@@ -514,9 +514,6 @@ FORCEINLINE Str ToLowerInPlace(const char* s) {
 }
 FORCEINLINE Str ToUpperInPlace(const char* s) {
     return ToUpperInPlace(Str((char*)s));
-}
-FORCEINLINE WCHAR* ToLowerInPlace(WStr s) {
-    return ToLowerInPlace(s.s);
 }
 
 FORCEINLINE size_t TrimWSInPlace(char* s, TrimOpt opt) {
