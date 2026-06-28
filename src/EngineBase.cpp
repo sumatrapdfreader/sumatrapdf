@@ -60,7 +60,7 @@ static void EnsurePageText(PageText* pageText) {
     if (pageText->text) {
         return;
     }
-    pageText->text = WStr(str::Dup(L""));
+    pageText->text = {};
     pageText->len = 0;
 }
 

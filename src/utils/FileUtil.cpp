@@ -282,7 +282,7 @@ TempStr NormalizeTemp(Str path) {
 // Normalizes the file path and the converts it into a short form that
 // can be used for interaction with non-UNICODE aware applications
 TempStr ShortPathTemp(Str path) {
-    TempWStr pathW = ToWStrTemp(path.s);
+    TempWStr pathW = ToWStrTemp(path);
     TempWStr normPath = NormalizeTemp(pathW);
     DWORD cch = GetShortPathNameW(normPath.s, nullptr, 0);
     if (!cch) {

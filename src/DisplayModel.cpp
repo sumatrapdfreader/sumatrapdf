@@ -1944,8 +1944,7 @@ void DisplayModel::RotateBy(int newRotation) {
     GoToPage(currPageNo, 0);
 }
 
-/* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
- * into a newly allocated buffer (which the caller needs to free()). */
+/* Given <region> (in user coordinates) on page <pageNo>, returns text in that region. */
 Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
     WStr pageText = engine->GetTextForPage(pageNo, nullptr, &coords);
@@ -1956,9 +1955,11 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     WStrBuilder result;
     Rect regionI = region.Round();
     const WCHAR* srcBase = pageText.s;
-    for (const WCHAR* src = srcBase; *src; src++) {
+    int nChars = pageText.len;
+    for (int i = 0; i < nChars; i++) {
+        const WCHAR* src = srcBase + i;
         if (*src != '\n') {
-            Rect rect = coords[src - srcBase];
+            Rect rect = coords[i];
             Rect isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
                 result.AppendChar(*src);
