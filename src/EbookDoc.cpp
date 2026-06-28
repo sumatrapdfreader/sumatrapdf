@@ -634,7 +634,7 @@ bool EpubDoc::HasToc() const {
     return tocPath != nullptr;
 }
 
-bool EpubDoc::ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
+static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     HtmlPullParser parser(data);
     HtmlToken* tok;
     // skip to the start of the <nav epub:type="toc">

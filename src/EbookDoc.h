@@ -32,7 +32,6 @@ class EpubDoc {
 
     bool Load();
     void ParseMetadata(Str content);
-    bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor);
 
   public:
     explicit EpubDoc(Str fileName);
