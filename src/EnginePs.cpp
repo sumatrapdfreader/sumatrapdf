@@ -104,7 +104,6 @@ TryAgain64Bit:
 struct AutoDeleteFile {
     AutoFreeStr filePath;
 
-    explicit AutoDeleteFile(const WCHAR* path) { filePath.Set(ToUtf8(path)); }
     explicit AutoDeleteFile(Str path) { filePath.SetCopy(path); }
     ~AutoDeleteFile() {
         if (filePath) {

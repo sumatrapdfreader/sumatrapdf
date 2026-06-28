@@ -326,7 +326,7 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
     }
     res->data = (char*)data->data; // str-port: binary WebView2 resource payload, not a string
     res->dataLen = data->dataSize;
-    res->contentType = str::Dup("text/javascript").s;
+    res->contentType = str::Dup("text/javascript");
     res->ownsData = false;
     return res->dataLen > 0;
 }

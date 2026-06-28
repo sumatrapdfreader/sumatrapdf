@@ -11,9 +11,9 @@ typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 using WebViewMsgCb = Func1<Str>;
 
 struct WebViewResourceResult {
-    char* data = nullptr;
+    char* data = nullptr; // str-port: binary WebView2 resource payload, not a string
     size_t dataLen = 0;
-    char* contentType = nullptr;
+    Str contentType;
     bool ownsData = true;
 };
 

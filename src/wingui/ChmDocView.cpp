@@ -97,7 +97,7 @@ bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
     }
     res->data = (char*)data.data();
     res->dataLen = data.size();
-    res->contentType = ChmMimeFromPath(path, data).s;
+    res->contentType = ChmMimeFromPath(path, data);
     res->ownsData = false;
     return true;
 }
