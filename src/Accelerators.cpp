@@ -317,7 +317,7 @@ ACCEL gBuiltInAccelerators[] = {
 ACCEL* gAccels = nullptr;
 int gAccelsCount = 0;
 
-static void skipWS(const char*& s) {
+static void skipWS(char*& s) {
     while (*s) {
         if (!str::IsWs(*s)) {
             return;
@@ -326,7 +326,7 @@ static void skipWS(const char*& s) {
     }
 }
 
-static void skipPlusOrMinus(const char*& s) {
+static void skipPlusOrMinus(char*& s) {
     if (*s == '+') {
         s++;
         return;
@@ -337,11 +337,11 @@ static void skipPlusOrMinus(const char*& s) {
     }
 }
 
-static bool skipVirtKey(const char*& s, const char* key) {
-    if (!str::StartsWithI(s, key)) {
+static bool skipVirtKey(char*& s, Str key) {
+    if (!str::StartsWithI(Str(s), key)) {
         return false;
     }
-    s += str::Leni(key);
+    s += key.len;
     skipWS(s);
     skipPlusOrMinus(s);
     skipWS(s);
@@ -364,20 +364,23 @@ static Str getVirt(BYTE key, bool isEng) {
 
 // Parses a string like Ctrl+Shift+A into ACCEL structure
 // We accept variants: "Ctrl+A", "Ctrl-A", "Ctrl + A"
-static bool parseShortcut(const char* shortcut, ACCEL& accel) {
+static bool parseShortcut(Str shortcut, ACCEL& accel) {
+    TempStr shortcutZ = StrDupTemp(shortcut);
+    char* cursor = shortcutZ.s;
+
     BYTE fVirt = 0;
 
 again:
-    skipWS(shortcut);
-    if (skipVirtKey(shortcut, "alt")) {
+    skipWS(cursor);
+    if (skipVirtKey(cursor, "alt")) {
         fVirt |= (FALT | FVIRTKEY);
         goto again;
     }
-    if (skipVirtKey(shortcut, "shift")) {
+    if (skipVirtKey(cursor, "shift")) {
         fVirt |= (FSHIFT | FVIRTKEY);
         goto again;
     }
-    if (skipVirtKey(shortcut, "ctrl")) {
+    if (skipVirtKey(cursor, "ctrl")) {
         fVirt |= (FCONTROL | FVIRTKEY);
         goto again;
     }
@@ -386,9 +389,9 @@ again:
     // when user puts e.g. "~" it's actually "`" but with SHIFT
     static const char* shiftKeys = "~`,<.>/?;:'\"-_=+[{]}\\|";
     char buf[2] = {};
-    const char* toFind = shortcut;
-    if (str::Len(shortcut) == 1) {
-        int idx = str::FindCharIdx(shiftKeys, *shortcut);
+    const char* toFind = cursor;
+    if (str::Len(cursor) == 1) {
+        int idx = str::FindCharIdx(shiftKeys, *cursor);
         if ((idx >= 0) && (idx % 2 == 1)) {
             buf[0] = shiftKeys[idx - 1];
             toFind = &buf[0];
@@ -405,14 +408,14 @@ again:
         accel.fVirt |= FVIRTKEY;
         return true;
     }
-    if (toFind != shortcut) {
+    if (toFind != cursor) {
         return true;
     }
 
     // now we expect a character like 'a' or 'P'
-    TempStr s = shortcut;
+    TempStr s = cursor;
     if (str::Leni(s) > 1) {
-        s = str::DupTemp(shortcut);
+        s = str::DupTemp(cursor);
         str::TrimWSInPlace(s, str::TrimOpt::Both);
     }
     if (str::Leni(s) > 1) {
