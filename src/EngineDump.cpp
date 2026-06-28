@@ -234,16 +234,16 @@ void DumpToc(EngineBase* engine) {
     }
 }
 
-const char* ElementTypeToStr(IPageElement* el) {
+Str ElementTypeToStr(IPageElement* el) {
     Kind kind = el->GetKind();
     if (kind) {
-        return kind;
+        return Str(kind);
     }
-    return "unknown";
+    return Str("unknown");
 }
 
-const char* PageDestToStr(Kind kind) {
-    return kind;
+Str PageDestToStr(Kind kind) {
+    return Str(kind);
 }
 
 void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
@@ -282,7 +282,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
         Out1("\t\t<PageElements>\n");
         for (auto& el : els) {
             RectF rect = el->GetRect();
-            Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", ElementTypeToStr(el), rect.x,
+            Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", ElementTypeToStr(el).s, rect.x,
                 rect.y, rect.dx, rect.dy);
             IPageDestination* dest = el->AsLink();
             if (dest) {
