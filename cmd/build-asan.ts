@@ -6,10 +6,7 @@ import { clearDirPreserveSettings } from "./clean";
 const asanDllName = "clang_rt.asan_dynamic-x86_64.dll";
 
 function findAsanDll(vsRoot: string): string {
-  const candidates = [
-    join(vsRoot, String.raw`VC\Tools\MSVC`),
-    join(vsRoot, String.raw`VC\Tools\Llvm\x64\lib\clang`),
-  ];
+  const candidates = [join(vsRoot, String.raw`VC\Tools\MSVC`), join(vsRoot, String.raw`VC\Tools\Llvm\x64\lib\clang`)];
   for (const base of candidates) {
     if (!existsSync(base)) continue;
     const walk = (dir: string): string | undefined => {
@@ -42,11 +39,12 @@ function copyAsanRuntime(vsRoot: string, outDir: string): void {
 //
 // Usage:
 //   bun cmd/build-asan.ts            # Debug ASan build
-//   bun cmd/build-asan.ts --release  # Release ASan build
-//   bun cmd/build-asan.ts --clean
+//   bun cmd/build-asan.ts  -rel  # Release ASan build
+//   bun cmd/build-asan.ts -clean
 
-const isRelease = process.argv.includes("--release");
-const clean = process.argv.includes("--clean");
+let argv = process.argv;
+const isRelease = argv.includes("-release") || argv.includes("-rel");
+const clean = argv.includes("--clean");
 const config = isRelease ? "Release" : "Debug";
 const outDir = isRelease ? join("out", "rel64_asan") : join("out", "dbg64_asan");
 
