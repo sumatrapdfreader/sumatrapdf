@@ -4984,7 +4984,7 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
         }
     }
 
-    const char* allFilesLabel = "For all &PDF files";
+    Str allFilesLabel = "For all &PDF files";
     if (isCbx) {
         allFilesLabel = "For all &comic books";
     } else if (isImage) {
@@ -4998,7 +4998,7 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
         return;
     }
 
-    const char* colorStr;
+    Str colorStr;
     if (result.isCheckered) {
         colorStr = "checkered";
     } else {
@@ -5050,14 +5050,14 @@ static void OnMenuChangeScrollbar(HWND hwnd) {
 }
 
 #if 0 // note: was used in OpenAdvancedOptions()
-static void OpenFileWithTextEditor(const char* path) {
+static void OpenFileWithTextEditor(Str path) {
     Vec<TextEditor*> editors;
     DetectTextEditors(editors);
-    const char* cmd = editors[0]->openFileCmd;
+    Str cmd = editors[0]->openFileCmd;
 
     Str cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
     logf("OpenFileWithTextEditor: '%s'\n", cmdLine.s);
-    char* appDir = GetSelfExeDirTemp();
+    TempStr appDir = GetSelfExeDirTemp();
     AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
 }
 #endif
@@ -5250,7 +5250,7 @@ static void ShowViewModeNotification(MainWindow* win, int cmdId) {
     if (wnd) {
         return;
     }
-    const char* viewName = nullptr;
+    Str viewName;
     switch (cmdId) {
         case CmdSinglePageView:
             viewName = _TRA("Single Page");
@@ -5264,7 +5264,7 @@ static void ShowViewModeNotification(MainWindow* win, int cmdId) {
         default:
             return;
     }
-    TempStr msg = str::FormatTemp("%s: %s", _TRA("View"), viewName);
+    TempStr msg = str::FormatTemp("%s: %s", _TRA("View").s, viewName.s);
     NotificationCreateArgs args;
     args.groupId = kNotifZoomOrView;
     args.timeoutMs = 2000;
@@ -7385,9 +7385,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleDjvuEngine: {
             bool useDjvuDec = !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
-            const char* next = useDjvuDec ? "libdjvu" : "djvudec";
+            Str next = useDjvuDec ? "libdjvu" : "djvudec";
             str::ReplaceWithCopy(&gGlobalPrefs->djvuEngine, next);
-            logf("CmdToggleDjvuEngine: DjvuEngine = %s\n", next);
+            logf("CmdToggleDjvuEngine: DjvuEngine = %s\n", next.s);
             // reload the current document so the new engine takes effect
             if (win->IsDocLoaded()) {
                 ReloadDocument(win, false);
@@ -10593,9 +10593,9 @@ void GetProgramInfo(StrBuilder& s) {
     if (builtOn != nullptr) {
         s.AppendFmt("BuiltOn: %s\n", builtOn);
     }
-    const char* exeType = IsDllBuild() ? "dll" : "static";
-    const char* instType = IsRunningInPortableMode() ? "portable" : "installed";
-    s.AppendFmt("ExeType: %s, %s\r\n", exeType, instType);
+    Str exeType = IsDllBuild() ? "dll" : "static";
+    Str instType = IsRunningInPortableMode() ? "portable" : "installed";
+    s.AppendFmt("ExeType: %s, %s\r\n", exeType.s, instType.s);
     s.AppendFmt("Ver: %s", currentVersion);
     if (gIsPreReleaseBuild) {
         s.AppendFmt(" pre-release");
