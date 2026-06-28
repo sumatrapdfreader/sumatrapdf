@@ -163,7 +163,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     defaultFontSize = args->fontSize;
 
     DrawStyle style;
-    style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
+    style.font = mui::GetCachedFont(WStr(defaultFontName.Get()), defaultFontSize, FontStyleRegular);
     style.align = AlignAttr::Justify;
     style.dirRtl = false;
     styleStack.Append(style);
@@ -213,7 +213,7 @@ void HtmlFormatter::SetFont(WStr fontName, FontStyle fs, float fontSize) {
 }
 
 void HtmlFormatter::SetFontBasedOn(mui::CachedFont* font, FontStyle fs, float fontSize) {
-    WStr fontName = WStr(font->GetName());
+    WStr fontName = font->GetName();
     if (!fontName) {
         fontName = WStr(defaultFontName.Get());
     }
@@ -883,7 +883,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     }
 
     AttrInfo* attr = t->GetAttrByName("face");
-    WStr faceName = WStr(CurrFont()->GetName());
+    WStr faceName = CurrFont()->GetName();
     if (attr) {
         TempWStr buf = ToWStrTemp(attr->val);
         // multiple font names can be comma separated

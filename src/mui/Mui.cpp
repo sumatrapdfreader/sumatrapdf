@@ -68,7 +68,7 @@ class ScopedMuiCritSec {
 
 class FontListItem {
   public:
-    FontListItem(const WCHAR* name, float sizePt, FontStyle style, Font* font, HFONT hFont) : next(nullptr) {
+    FontListItem(WStr name, float sizePt, FontStyle style, Font* font, HFONT hFont) : next(nullptr) {
         cf.name = str::Dup(name);
         cf.sizePt = sizePt;
         cf.style = style;
@@ -166,7 +166,7 @@ void Destroy() {
     DeleteCriticalSection(&gMuiCs);
 }
 
-bool CachedFont::SameAs(const WCHAR* otherName, float otherSizePt, FontStyle otherStyle) const {
+bool CachedFont::SameAs(WStr otherName, float otherSizePt, FontStyle otherStyle) const {
     if (sizePt != otherSizePt) {
         return false;
     }
@@ -197,7 +197,7 @@ HFONT CachedFont::GetHFont() {
 // convenience function: given cached style, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
-CachedFont* GetCachedFont(const WCHAR* name, float sizePt, FontStyle style) {
+CachedFont* GetCachedFont(WStr name, float sizePt, FontStyle style) {
     ScopedMuiCritSec muiCs;
 
     for (FontListItem* item = gFontsCache; item; item = item->next) {
@@ -206,7 +206,7 @@ CachedFont* GetCachedFont(const WCHAR* name, float sizePt, FontStyle style) {
         }
     }
 
-    Font* font = new Font(name, sizePt, style);
+    Font* font = new Font(name.s, sizePt, style);
     if (font->GetLastStatus() != Status::Ok) {
         delete font;
         font = new Font(L"Times New Roman", sizePt, style);
