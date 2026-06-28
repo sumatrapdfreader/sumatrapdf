@@ -456,30 +456,7 @@ FORCEINLINE int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
 FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src);
 }
-FORCEINLINE Str Dup(Arena* a, const char* s, size_t cch = (size_t)-1) {
-    if (!s) {
-        return {};
-    }
-    if (cch == (size_t)-1) {
-        return Dup(a, Str(s));
-    }
-    return Dup(a, Str((char*)s, (int)cch));
-}
-FORCEINLINE Str Dup(const char* s, size_t cch = (size_t)-1) {
-    return Dup(nullptr, s, cch);
-}
-FORCEINLINE WStr Dup(Arena* a, const WCHAR* s, size_t cch = (size_t)-1) {
-    if (!s) {
-        return {};
-    }
-    if (cch == (size_t)-1) {
-        return Dup(a, WStr(s));
-    }
-    return Dup(a, WStr((WCHAR*)s, (int)cch));
-}
-FORCEINLINE WStr Dup(const WCHAR* s, size_t cch = (size_t)-1) {
-    return Dup(nullptr, s, cch);
-}
+
 FORCEINLINE Str Find(const Str& str, const char* find) {
     return Find(str, Str(find));
 }

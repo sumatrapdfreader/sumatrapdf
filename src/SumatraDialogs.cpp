@@ -1698,7 +1698,7 @@ bool Dialog_SetTabColor(HWND hwnd, COLORREF currentColor, bool isUnset, COLORREF
 bool Dialog_AddFavorite(HWND hwnd, Str pageNo, AutoFreeStr& favName) {
     Dialog_AddFav_Data data;
     data.pageNo = str::Dup(pageNo);
-    data.favName = str::Dup(favName);
+    data.favName = str::Dup(Str(favName.Get()));
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FAV_ADD, hwnd, Dialog_AddFav_Proc, (LPARAM)&data);
     if (IDCANCEL == res) {
