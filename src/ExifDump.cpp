@@ -210,14 +210,14 @@ static const char* TypeName(u16 type) {
     }
 }
 
-static const char* LookupEnum(const char** names, int n, u32 val) {
+static Str LookupEnum(const char** names, int n, u32 val) {
     if (val < (u32)n) {
-        return names[val];
+        return Str(names[val]);
     }
-    return nullptr;
+    return {};
 }
 
-static const char* FormatOrientation(u32 val) {
+static Str FormatOrientation(u32 val) {
     static const char* names[] = {
         "", // 0 unused
         "Horizontal (normal)",
@@ -232,7 +232,7 @@ static const char* FormatOrientation(u32 val) {
     return LookupEnum(names, dimof(names), val);
 }
 
-static const char* FormatExposureProgram(u32 val) {
+static Str FormatExposureProgram(u32 val) {
     static const char* names[] = {
         "Unidentified",     "Manual",         "Program Normal", "Aperture Priority", "Shutter Priority",
         "Program Creative", "Program Action", "Portrait Mode",  "Landscape Mode",
@@ -240,52 +240,52 @@ static const char* FormatExposureProgram(u32 val) {
     return LookupEnum(names, dimof(names), val);
 }
 
-static const char* FormatMeteringMode(u32 val) {
+static Str FormatMeteringMode(u32 val) {
     static const char* names[] = {
         "Unidentified", "Average", "CenterWeightedAverage", "Spot", "MultiSpot", "Pattern", "Partial",
     };
     return LookupEnum(names, dimof(names), val);
 }
 
-static const char* FormatColorSpace(u32 val) {
+static Str FormatColorSpace(u32 val) {
     if (val == 1) {
         return "sRGB";
     }
     if (val == 0xFFFF) {
         return "Uncalibrated";
     }
-    return nullptr;
+    return {};
 }
 
-static const char* FormatWhiteBalance(u32 val) {
+static Str FormatWhiteBalance(u32 val) {
     return val == 0 ? "Auto" : "Manual";
 }
 
-static const char* FormatExposureMode(u32 val) {
+static Str FormatExposureMode(u32 val) {
     static const char* names[] = {"Auto Exposure", "Manual Exposure", "Auto Bracket"};
     return LookupEnum(names, dimof(names), val);
 }
 
-static const char* FormatSceneCaptureType(u32 val) {
+static Str FormatSceneCaptureType(u32 val) {
     static const char* names[] = {"Standard", "Landscape", "Portrait", "Night"};
     return LookupEnum(names, dimof(names), val);
 }
 
-static const char* FormatGainControl(u32 val) {
+static Str FormatGainControl(u32 val) {
     static const char* names[] = {"None", "Low gain up", "High gain up", "Low gain down", "High gain down"};
     return LookupEnum(names, dimof(names), val);
 }
 
-static const char* FormatContrastSatSharp(u32 val) {
+static Str FormatContrastSatSharp(u32 val) {
     static const char* names[] = {"Normal", "Soft", "Hard"};
     return LookupEnum(names, dimof(names), val);
 }
 
-static const char* FormatCustomRendered(u32 val) {
+static Str FormatCustomRendered(u32 val) {
     return val == 0 ? "Normal" : "Custom";
 }
 
-static const char* FormatSensitivityType(u32 val) {
+static Str FormatSensitivityType(u32 val) {
     static const char* names[] = {
         "Unknown",
         "Standard Output Sensitivity",
@@ -299,46 +299,46 @@ static const char* FormatSensitivityType(u32 val) {
     return LookupEnum(names, dimof(names), val);
 }
 
-static const char* FormatResolutionUnit(u32 val) {
+static Str FormatResolutionUnit(u32 val) {
     if (val == 2) {
         return "Pixels/Inch";
     }
     if (val == 3) {
         return "Pixels/Centimeter";
     }
-    return nullptr;
+    return {};
 }
 
-static const char* FormatYCbCrPositioning(u32 val) {
+static Str FormatYCbCrPositioning(u32 val) {
     return val == 1 ? "Centered" : "Co-sited";
 }
 
-static const char* FormatCompression(u32 val) {
+static Str FormatCompression(u32 val) {
     if (val == 6) {
         return "JPEG (old-style)";
     }
     if (val == 7) {
         return "JPEG";
     }
-    return nullptr;
+    return {};
 }
 
-static const char* FormatFileSource(u8 val) {
+static Str FormatFileSource(u8 val) {
     if (val == 3) {
         return "Digital Camera";
     }
-    return nullptr;
+    return {};
 }
 
-static const char* FormatSceneType(u8 val) {
+static Str FormatSceneType(u8 val) {
     if (val == 1) {
         return "Directly Photographed";
     }
-    return nullptr;
+    return {};
 }
 
 // Flash values per exif-py
-static const char* FormatFlash(u32 val) {
+static Str FormatFlash(u32 val) {
     switch (val) {
         case 0:
             return "Flash did not fire";
@@ -357,7 +357,7 @@ static const char* FormatFlash(u32 val) {
         case 25:
             return "Flash fired, auto mode";
         default:
-            return nullptr;
+            return {};
     }
 }
 
@@ -588,7 +588,7 @@ struct TiffParser {
         // enum overrides
         if (type == TiffType::Short && count == 1) {
             u32 val = off + 2 <= r.len ? ReadWord(off) : 0;
-            const char* s = nullptr;
+            Str s;
             if (g == IfdGroup::Image || g == IfdGroup::Thumbnail) {
                 if (tag == 0x0112) {
                     s = FormatOrientation(val);
@@ -625,7 +625,7 @@ struct TiffParser {
                 }
             }
             if (s) {
-                return str::DupTemp(s);
+                return s;
             }
         }
 
@@ -638,15 +638,15 @@ struct TiffParser {
                 return FormatComponentsConfig(off, count);
             }
             if (tag == 0xA300 && count >= 1) {
-                const char* s = FormatFileSource(r.Byte(off));
+                Str s = FormatFileSource(r.Byte(off));
                 if (s) {
-                    return str::DupTemp(s);
+                    return s;
                 }
             }
             if (tag == 0xA301 && count >= 1) {
-                const char* s = FormatSceneType(r.Byte(off));
+                Str s = FormatSceneType(r.Byte(off));
                 if (s) {
-                    return str::DupTemp(s);
+                    return s;
                 }
             }
             if (tag == 0x9286 && count > 8) {
@@ -741,9 +741,9 @@ struct TiffParser {
                 } else {
                     u32 v = ReadWord(eoff);
                     if (g == IfdGroup::Exif && tag == 0x9208 && count == 1) {
-                        const char* fs = FormatFlash(v);
+                        Str fs = FormatFlash(v);
                         if (fs) {
-                            return str::DupTemp(fs);
+                            return fs;
                         }
                     }
                     s.AppendFmt("%u", v);
