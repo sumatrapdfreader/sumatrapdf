@@ -296,7 +296,7 @@ static bool parseBool(Str value) {
         return true;
     }
 
-    int i = ParseInt(value.s);
+    int i = ParseInt(value);
     return i != 0;
 }
 

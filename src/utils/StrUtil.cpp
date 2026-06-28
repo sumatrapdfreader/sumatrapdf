@@ -2805,15 +2805,19 @@ TempStr GetFileNameTemp(Str url) {
 
 } // namespace url
 
-int ParseInt(const char* s) {
-    bool negative = *s == '-';
+int ParseInt(Str s) {
+    if (!s) {
+        return 0;
+    }
+    int off = 0;
+    bool negative = s.s[0] == '-';
     if (negative) {
-        s++;
+        off = 1;
     }
     int value = 0;
     int overflowCheck = negative ? 1 : 0;
-    for (; str::IsDigit(*s); s++) {
-        value = value * 10 + (*s - '0');
+    for (; off < s.len && str::IsDigit(s.s[off]); off++) {
+        value = value * 10 + (s.s[off] - '0');
         // return 0 on overflow
         if (value - overflowCheck < 0) {
             return 0;
@@ -2822,14 +2826,18 @@ int ParseInt(const char* s) {
     return negative ? -value : value;
 }
 
-i64 ParseInt64(const char* s) {
-    bool negative = *s == '-';
+i64 ParseInt64(Str s) {
+    if (!s) {
+        return 0;
+    }
+    int off = 0;
+    bool negative = s.s[0] == '-';
     if (negative) {
-        s++;
+        off = 1;
     }
     i64 value = 0;
-    for (; str::IsDigit(*s); s++) {
-        value = value * 10 + (*s - '0');
+    for (; off < s.len && str::IsDigit(s.s[off]); off++) {
+        value = value * 10 + (s.s[off] - '0');
     }
     return negative ? -value : value;
 }
@@ -2837,22 +2845,23 @@ i64 ParseInt64(const char* s) {
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
-bool IsValidProgramVersion(const char* txt) {
-    if (!str::IsDigit(*txt)) {
+bool IsValidProgramVersion(Str txt) {
+    if (!txt || !str::IsDigit(txt.s[0])) {
         return false;
     }
 
-    for (; *txt; txt++) {
-        if (str::IsDigit(*txt)) {
+    for (int i = 0; i < txt.len; i++) {
+        char c = txt.s[i];
+        if (str::IsDigit(c)) {
             continue;
         }
-        if (*txt == '.' && str::IsDigit(*(txt + 1))) {
+        if (c == '.' && i + 1 < txt.len && str::IsDigit(txt.s[i + 1])) {
             continue;
         }
-        if (*txt == '\r' && *(txt + 1) == '\n') {
+        if (c == '\r' && i + 1 < txt.len && txt.s[i + 1] == '\n') {
             continue;
         }
-        if (*txt == '\n' && !*(txt + 1)) {
+        if (c == '\n' && i + 1 == txt.len) {
             continue;
         }
         return false;
@@ -2861,10 +2870,15 @@ bool IsValidProgramVersion(const char* txt) {
     return true;
 }
 
-static unsigned int ExtractNextNumber(const char** txt) {
+static unsigned int ExtractNextNumber(Str txt, int& off) {
     unsigned int val = 0;
-    const char* next = str::Parse(*txt, "%u%?.", &val);
-    *txt = next ? next : *txt + str::Leni(*txt);
+    Str slice = off < txt.len ? Str(txt.s + off, txt.len - off) : Str{};
+    Str next = str::Parse(slice, "%u%?.", &val);
+    if (next) {
+        off += (int)(next.s - slice.s);
+    } else {
+        off = txt.len;
+    }
     return val;
 }
 
@@ -2874,18 +2888,14 @@ static unsigned int ExtractNextNumber(const char** txt) {
 //   0.9.3.900 is greater than 0.9.3
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 //   1.2.0 is the same as 1.2
-int CompareProgramVersion(const char* txt1, const char* txt2) {
-    if (!txt1) {
-        txt1 = "";
-    }
-    if (!txt2) {
-        txt2 = "";
-    }
-    while (*txt1 || *txt2) {
-        unsigned int v1 = ExtractNextNumber(&txt1);
-        unsigned int v2 = ExtractNextNumber(&txt2);
+int CompareProgramVersion(Str txt1, Str txt2) {
+    int off1 = 0;
+    int off2 = 0;
+    while (off1 < txt1.len || off2 < txt2.len) {
+        unsigned int v1 = ExtractNextNumber(txt1, off1);
+        unsigned int v2 = ExtractNextNumber(txt2, off2);
         if (v1 != v2) {
-            return v1 - v2;
+            return (int)v1 - (int)v2;
         }
     }
     return 0;

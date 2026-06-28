@@ -145,7 +145,7 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
         return nullptr;
     }
 
-    const char* latestVer = node->GetValue("Latest");
+    Str latestVer = node->GetValue("Latest");
     if (!IsValidProgramVersion(latestVer)) {
         return nullptr;
     }

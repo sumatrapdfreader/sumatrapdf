@@ -723,10 +723,22 @@ FORCEINLINE void SeqStrNumAppend(StrBuilder* b, const char* s, i64 num) {
 
 } // namespace str
 
-int ParseInt(const char* bytes);
-i64 ParseInt64(const char* s);
-bool IsValidProgramVersion(const char* ver);
-int CompareProgramVersion(const char* ver1, const char* ver2);
+int ParseInt(Str s);
+i64 ParseInt64(Str s);
+bool IsValidProgramVersion(Str ver);
+int CompareProgramVersion(Str ver1, Str ver2);
+FORCEINLINE int ParseInt(const char* s) {
+    return ParseInt(Str(s));
+} // str-port shim
+FORCEINLINE i64 ParseInt64(const char* s) {
+    return ParseInt64(Str(s));
+} // str-port shim
+FORCEINLINE bool IsValidProgramVersion(const char* ver) {
+    return IsValidProgramVersion(Str(ver));
+} // str-port shim
+FORCEINLINE int CompareProgramVersion(const char* ver1, const char* ver2) {
+    return CompareProgramVersion(Str(ver1), Str(ver2));
+} // str-port shim
 TempStr ShortenStringUtf8Temp(Str s, int maxRunes);
 FORCEINLINE TempStr ShortenStringUtf8Temp(const char* s, int maxRunes) {
     return ShortenStringUtf8Temp(Str(s), maxRunes);
