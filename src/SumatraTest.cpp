@@ -508,7 +508,7 @@ Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     // lastText, so SetLastResult() inside GoToFindMatch() sees a text change
     AutoFreeWStr typedW;
     typedW.SetCopy(ToWStr(typed).s);
-    dm->textSearch->SetText(typedW);
+    dm->textSearch->SetText(WStr(typedW.Get()));
 
     // make sure the match isn't already on screen, so navigating to it is
     // observable: scroll back to the first page and clear any selection

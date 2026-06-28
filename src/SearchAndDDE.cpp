@@ -601,7 +601,7 @@ static void CountThread(CountThreadData* d) {
         ts.SetMatchWholeWord(d->matchWholeWord);
         ts.SetDirection(TextSearch::Direction::Forward);
         ts.progressCb = MkFunc1<CountThreadData, ProgressUpdateData*>(CountProgress, d);
-        TextSel* m = ts.FindFirst(1, d->text.s);
+        TextSel* m = ts.FindFirst(1, d->text);
         // check the epoch at the top so a cancel (AbortCount, which joins us on
         // the UI thread) bails before the expensive snippet build / next scan
         while (m && win->findCountEpoch == d->epoch) {
@@ -812,7 +812,7 @@ static void FindThread(FindThreadData* ftd) {
     textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||
         !dm->GetPageInfo(textSearch->GetCurrentPageNo())->visibleRatio) {
-        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text);
+        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), WStr(ftd->text.Get()));
     } else {
         rect = textSearch->FindNext();
     }
@@ -823,7 +823,7 @@ static void FindThread(FindThreadData* ftd) {
         int startPage = (TextSearch::Direction::Forward == ftd->direction) ? 1 : ctrl->PageCount();
         if (!ftd->wasModified || ctrl->CurrentPageNo() != startPage) {
             loopedAround = true;
-            rect = textSearch->FindFirst(startPage, ftd->text);
+            rect = textSearch->FindFirst(startPage, WStr(ftd->text.Get()));
         }
     }
 

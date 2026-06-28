@@ -14,9 +14,9 @@ struct TextSearch : public TextSelection {
     void SetMatchWholeWord(bool wholeWord);
     void SetDirection(Direction direction);
     void SetLastResult(TextSelection* sel);
-    TextSel* FindFirst(int page, const WCHAR* text);
+    TextSel* FindFirst(int page, WStr text);
     // like FindFirst but searches only the given page (issue #3085)
-    TextSel* FindFirstOnPage(int page, const WCHAR* text);
+    TextSel* FindFirstOnPage(int pageNo, WStr text);
     TextSel* FindNext();
 
     int GetCurrentPageNo() const;
@@ -46,15 +46,15 @@ struct TextSearch : public TextSelection {
     bool matchWordStart = false;
     bool matchWordEnd = false;
 
-    void SetText(const WCHAR* text);
+    void SetText(WStr text);
     bool FindTextInPage(int pageNo, PageAndOffset* finalGlyph);
     bool FindStartingAtPage(int pageNo);
-    PageAndOffset MatchEnd(const WCHAR* start) const;
+    PageAndOffset MatchEnd(WStr start) const;
 
     void Clear();
     void Reset();
 
-    const WCHAR* pageText = nullptr;
+    WStr pageText;
     int findIndex = 0;
 
     WStr lastText;

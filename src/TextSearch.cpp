@@ -40,7 +40,7 @@ void TextSearch::Clear() {
 }
 
 void TextSearch::Reset() {
-    pageText = nullptr;
+    pageText = {};
     TextSelection::Reset();
 }
 
@@ -53,50 +53,53 @@ int TextSearch::GetSearchHitStartPageNo() const {
     return searchHitStartAt;
 }
 
-void TextSearch::SetText(const WCHAR* text) {
+void TextSearch::SetText(WStr text) {
     // search text starting with a single space enables the 'Match word start'
     // and search text ending in a single space enables the 'Match word end' option
     // (that behavior already "kind of" exists without special treatment, but
     // usually is not quite what a user expects, so let's try to be cleverer)
     // "match whole word" forces both word-boundary checks on; otherwise they're
     // driven by a leading / trailing single space in the search text
-    this->matchWordStart = matchWholeWord || (text[0] == ' ' && text[1] != ' ');
-    this->matchWordEnd = matchWholeWord || (str::EndsWith(text, L" ") && !str::EndsWith(text, L"  "));
+    this->matchWordStart = matchWholeWord || (text.len > 0 && text.s[0] == L' ' && (text.len < 2 || text.s[1] != L' '));
+    this->matchWordEnd = matchWholeWord || (str::EndsWith(text, WStrL(L" ")) && !str::EndsWith(text, WStrL(L"  ")));
 
-    if (text[0] == ' ') {
-        text++;
+    WStr searchText = text;
+    if (searchText.len > 0 && searchText.s[0] == L' ') {
+        searchText = WStr(searchText.s + 1, searchText.len - 1);
     }
 
     // don't reset anything if the search text hasn't changed at all
-    if (str::Eq(this->lastText, text)) {
+    if (str::Eq(this->lastText, searchText)) {
         return;
     }
 
     this->Clear();
-    this->lastText = WStr(str::Dup(text));
-    this->findText = WStr(str::Dup(text));
+    this->lastText = WStr(str::Dup(searchText));
+    this->findText = WStr(str::Dup(searchText));
 
     // extract anchor string (the first word or the first symbol) for faster searching
-    if (isnoncjkwordchar(*text)) {
-        const WCHAR* end;
-        for (end = text; isnoncjkwordchar(*end); end++) {
+    if (searchText && isnoncjkwordchar(searchText.s[0])) {
+        int end = 0;
+        for (; end < searchText.len && isnoncjkwordchar(searchText.s[end]); end++) {
             ;
         }
-        anchor = WStr(str::Dup(text, end - text));
+        anchor = WStr(str::Dup(searchText.s, (size_t)end));
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
     // cf. https://web.archive.org/web/20140201013717/http://forums.fofou.org:80/sumatrapdf/topic?id=2432337&comments=3
-    else if (*text == '-' || *text == '\'' || *text == '"') {
+    else if (searchText && (searchText.s[0] == L'-' || searchText.s[0] == L'\'' || searchText.s[0] == L'"')) {
         anchor = {};
+    } else if (searchText) {
+        anchor = WStr(str::Dup(searchText.s, 1));
     } else {
-        anchor = WStr(str::Dup(text, 1));
+        anchor = {};
     }
 
     if (str::Len(this->findText) >= INT_MAX) {
         this->findText.s[(unsigned)INT_MAX - 1] = '\0';
     }
-    if (str::EndsWith(this->findText, L" ")) {
+    if (str::EndsWith(this->findText, WStrL(L" "))) {
         this->findText.s[str::Len(this->findText) - 1] = '\0';
     }
 
@@ -144,7 +147,7 @@ void TextSearch::SetLastResult(TextSelection* sel) {
 
     AutoFreeWStr selection(ExtractText(" ").s);
     str::NormalizeWSInPlace(selection);
-    SetText(selection);
+    SetText(WStr(selection.Get()));
 
     searchHitStartAt = findPage = std::min(startPage, endPage);
     findPage = std::max(startPage, endPage);
@@ -205,13 +208,14 @@ static bool MatchSearchUnit(const WCHAR* h, const WCHAR* n, int& hAdv, int& nAdv
     return false;
 }
 
-static const WCHAR* StrStrFoldCase(const WCHAR* haystack, const WCHAR* needle) {
-    if (!haystack || !needle || !*needle) {
+static WStr StrStrFoldCase(WStr haystack, WStr needle) {
+    if (!haystack || !needle) {
         return haystack;
     }
-    for (const WCHAR* s = haystack; *s; s++) {
+    for (int i = 0; i < haystack.len && haystack.s[i]; i++) {
+        const WCHAR* s = haystack.s + i;
         const WCHAR* h = s;
-        const WCHAR* n = needle;
+        const WCHAR* n = needle.s;
         bool isMatch = true;
         while (*n) {
             if (!*h) {
@@ -227,39 +231,49 @@ static const WCHAR* StrStrFoldCase(const WCHAR* haystack, const WCHAR* needle) {
             n += nAdv;
         }
         if (isMatch) {
-            return s;
+            return WStr(haystack.s + i, haystack.len - i);
         }
     }
-    return nullptr;
+    return {};
 }
 
-static const WCHAR* StrRStr(const WCHAR* start, const WCHAR* end, const WCHAR* needle) {
-    if (!start || !end || !needle || !*needle || start >= end) {
-        return nullptr;
+static WStr StrRStr(WStr text, int endOff, WStr needle) {
+    if (!text || !needle || endOff <= 0) {
+        return {};
+    }
+    const WCHAR* start = text.s;
+    const WCHAR* end = text.s + endOff;
+    if (!needle || start >= end) {
+        return {};
     }
     size_t needleLen = str::Len(needle);
     if (needleLen > (size_t)(end - start)) {
-        return nullptr;
+        return {};
     }
     const WCHAR* s = end - needleLen;
     for (; s >= start; s--) {
-        if (memcmp(s, needle, needleLen * sizeof(WCHAR)) == 0) {
-            return s;
+        if (memcmp(s, needle.s, needleLen * sizeof(WCHAR)) == 0) {
+            return WStr((wchar_t*)s, (int)(end - s));
         }
     }
-    return nullptr;
+    return {};
 }
 
-static const WCHAR* StrRStrFoldCase(const WCHAR* start, const WCHAR* end, const WCHAR* needle) {
-    if (!start || !end || !needle || !*needle || start >= end) {
-        return nullptr;
+static WStr StrRStrFoldCase(WStr text, int endOff, WStr needle) {
+    if (!text || !needle || endOff <= 0) {
+        return {};
+    }
+    const WCHAR* start = text.s;
+    const WCHAR* end = text.s + endOff;
+    if (!needle || start >= end) {
+        return {};
     }
     // ß <-> ss makes the matched length variable, so scan forward within
     // [start, end) and remember the last start position that matches.
-    const WCHAR* result = nullptr;
+    WStr result;
     for (const WCHAR* s = start; s < end && *s; s++) {
         const WCHAR* h = s;
-        const WCHAR* n = needle;
+        const WCHAR* n = needle.s;
         bool isMatch = true;
         while (*n) {
             if (h >= end || !*h) {
@@ -275,7 +289,7 @@ static const WCHAR* StrRStrFoldCase(const WCHAR* start, const WCHAR* end, const 
             n += nAdv;
         }
         if (isMatch) {
-            result = s;
+            result = WStr((wchar_t*)s, (int)(end - s));
         }
     }
     return result;
@@ -283,15 +297,15 @@ static const WCHAR* StrRStrFoldCase(const WCHAR* start, const WCHAR* end, const 
 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
-TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
+TextSearch::PageAndOffset TextSearch::MatchEnd(WStr start) const {
     const WCHAR* match = findText.s;
-    const WCHAR* end = start;
+    const WCHAR* end = start.s;
     const PageAndOffset notFound = {-1, -1};
     int currentPage = findPage;
-    const WCHAR* currentPageText = pageText;
+    WStr currentPageText = pageText;
     bool lookingAtWs;
 
-    if (matchWordStart && start > pageText && isWordChar(start[-1]) && isWordChar(start[0])) {
+    if (matchWordStart && start.s > pageText.s && isWordChar(start.s[-1]) && isWordChar(start.s[0])) {
         return notFound;
     }
 
@@ -357,7 +371,8 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
             // ... or because we were looking at whitespace in the pattern and we were at a page break
             // -> skip to next page
             ++currentPage;
-            end = currentPageText = engine->GetTextForPage(currentPage);
+            currentPageText = engine->GetTextForPage(currentPage);
+            end = currentPageText.s;
         }
         // treat "??" and "? ?" differently, since '?' could have been a word
         // character that's just missing an encoding (and '?' is the replacement
@@ -369,25 +384,37 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
             while ((!*end) && (currentPage < nPages)) {
                 // treat page break as whitespace, too
                 ++currentPage;
-                end = currentPageText = engine->GetTextForPage(currentPage);
+                currentPageText = engine->GetTextForPage(currentPage);
+                end = currentPageText.s;
                 SkipWhitespace(end);
             }
         }
     }
-    if (matchWordEnd && end > currentPageText && isWordChar(end[-1]) && isWordChar(end[0])) {
+    if (matchWordEnd && end > currentPageText.s && isWordChar(end[-1]) && isWordChar(end[0])) {
         return notFound;
     }
 
-    int off = (int)(end - currentPageText);
+    int off = (int)(end - currentPageText.s);
     return {currentPage, off};
 }
 
-static const WCHAR* GetNextIndex(const WCHAR* base, int offset, bool forward) {
-    const WCHAR* c = base + offset + (forward ? 0 : -1);
-    if (c < base || !*c) {
-        return nullptr;
+static WStr WStrStr(WStr haystack, WStr needle) {
+    if (!haystack || !needle) {
+        return {};
     }
-    return c;
+    const WCHAR* p = wcsstr(haystack.s, needle.s);
+    if (!p) {
+        return {};
+    }
+    return WStr((wchar_t*)p, haystack.len - (int)(p - haystack.s));
+}
+
+static WStr GetNextIndex(WStr base, int offset, bool forward) {
+    int idx = offset + (forward ? 0 : -1);
+    if (idx < 0 || idx >= base.len || !base.s[idx]) {
+        return {};
+    }
+    return WStr(base.s + idx, base.len - idx);
 }
 
 bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyph) {
@@ -402,33 +429,33 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     // a findText = engine->GetTextForPage(findPage) here.
     findPage = pageNo;
 
-    const WCHAR* found;
+    WStr found;
     PageAndOffset fg;
     do {
         if (!anchor) {
             found = GetNextIndex(pageText, findIndex, forward);
         } else if (forward) {
-            const WCHAR* s = pageText + findIndex;
+            WStr s(pageText.s + findIndex, pageText.len - findIndex);
             if (matchCase) {
-                found = StrStr(s, anchor.s);
+                found = WStrStr(s, anchor);
             } else {
-                found = StrStrFoldCase(s, anchor.s);
+                found = StrStrFoldCase(s, anchor);
             }
         } else {
             if (matchCase) {
-                found = StrRStr(pageText, pageText + findIndex, anchor.s);
+                found = StrRStr(pageText, findIndex, anchor);
             } else {
-                found = StrRStrFoldCase(pageText, pageText + findIndex, anchor.s);
+                found = StrRStrFoldCase(pageText, findIndex, anchor);
             }
         }
         if (!found) {
             return false;
         }
-        findIndex = (int)(found - pageText) + (forward ? 1 : 0);
+        findIndex = (int)(found.s - pageText.s) + (forward ? 1 : 0);
         fg = MatchEnd(found);
     } while (fg.page <= 0);
 
-    int offset = (int)(found - pageText);
+    int offset = (int)(found.s - pageText.s);
     searchHitStartAt = pageNo;
     StartAt(pageNo, offset);
     SelectUpTo(fg.page, fg.offset);
@@ -489,7 +516,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
     return false;
 }
 
-TextSel* TextSearch::FindFirst(int page, const WCHAR* text) {
+TextSel* TextSearch::FindFirst(int page, WStr text) {
     SetText(text);
 
     if (FindStartingAtPage(page)) {
@@ -500,7 +527,7 @@ TextSel* TextSearch::FindFirst(int page, const WCHAR* text) {
 
 // search only `pageNo` (no wrapping to other pages), mirroring the per-page step
 // inside FindStartingAtPage. Used for page-constrained search (issue #3085)
-TextSel* TextSearch::FindFirstOnPage(int pageNo, const WCHAR* text) {
+TextSel* TextSearch::FindFirstOnPage(int pageNo, WStr text) {
     SetText(text);
     if (str::IsEmpty(findText) || pageNo < 1 || pageNo > nPages) {
         return nullptr;
