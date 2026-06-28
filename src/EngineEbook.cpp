@@ -1348,7 +1348,7 @@ class ChmDataCache {
     Vec<ImageData> images;
 
   public:
-    ChmDataCache(ChmFile* doc, char* html) : doc(doc), html(html) {}
+    ChmDataCache(ChmFile* doc, Str html) : doc(doc), html(html.s) {}
 
     ~ChmDataCache() {
         for (auto&& img : images) {
@@ -1360,8 +1360,8 @@ class ChmDataCache {
 
     ByteSlice GetHtmlData() { return html; }
 
-    ByteSlice* GetImageData(const char* id, const char* pagePath) {
-        AutoFreeStr url(NormalizeURL(Str(id), Str(pagePath)).s);
+    ByteSlice* GetImageData(Str id, Str pagePath) {
+        AutoFreeStr url(NormalizeURL(id, pagePath).s);
         for (size_t i = 0; i < images.size(); i++) {
             if (str::Eq(images.at(i).fileName, url)) {
                 return &images.at(i).base;
@@ -1381,8 +1381,8 @@ class ChmDataCache {
         return &images.Last().base;
     }
 
-    ByteSlice GetFileData(const char* relPath, const char* pagePath) {
-        AutoFreeStr url(NormalizeURL(Str(relPath), Str(pagePath)).s);
+    ByteSlice GetFileData(Str relPath, Str pagePath) {
+        AutoFreeStr url(NormalizeURL(relPath, pagePath).s);
         return doc->GetData(url.Get());
     }
 };
@@ -1408,9 +1408,9 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFreeStr src = str::Dup(attr->val, attr->valLen).s;
+        Str src = str::Dup(attr->val, attr->valLen);
         url::DecodeInPlace(src);
-        ByteSlice* img = chmDoc->GetImageData(src, pagePath);
+        ByteSlice* img = chmDoc->GetImageData(src, Str(pagePath));
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
@@ -1450,9 +1450,9 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    char* src = str::DupTemp(attr->val, attr->valLen);
+    TempStr src = str::DupTemp(attr->val, attr->valLen);
     url::DecodeInPlace(src);
-    ByteSlice data = chmDoc->GetFileData(src, pagePath);
+    ByteSlice data = chmDoc->GetFileData(src, Str(pagePath));
     if (data.Get()) {
         ParseStyleSheet(Str((char*)data.data(), (int)data.size()));
     }
@@ -1585,11 +1585,11 @@ class ChmHtmlCollector : public EbookTocVisitor {
         // can be big
     }
 
-    char* GetHtml() {
+    TempStr GetHtml() {
         // first add the homepage
         TempStr index = doc->GetHomePath();
         TempWStr urlW = strconv::StrCPToWStrTemp(index, doc->codepage);
-        char* url = ToUtf8Temp(urlW);
+        TempStr url = ToUtf8Temp(urlW);
         Visit(nullptr, url, 0);
 
         // then add all pages linked to from the table of contents
@@ -1598,14 +1598,13 @@ class ChmHtmlCollector : public EbookTocVisitor {
         // finally add all the remaining HTML files
         StrVec paths;
         doc->GetAllPaths(&paths);
-        for (char* path : paths) {
+        for (Str path : paths) {
             if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
-                if (*path == '/') {
-                    path++;
+                if (path.s[0] == '/') {
+                    path = Str(path.s + 1, path.len - 1);
                 }
-                urlW = ToWStr(path);
+                urlW = ToWStrTemp(path);
                 url = ToUtf8Temp(urlW);
-                str::Free(urlW);
                 Visit({}, url, -1);
             }
         }
@@ -1616,7 +1615,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         if (!url || url::IsAbsolute(url)) {
             return;
         }
-        char* plainUrl = url::GetFullPathTemp(url);
+        TempStr plainUrl = url::GetFullPathTemp(url);
         if (added.FindI(plainUrl) != -1) {
             return;
         }
@@ -1628,7 +1627,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         if (!pageHtml) {
             return;
         }
-        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl);
+        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl.s);
         uint charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
         if (!charset) {
             charset = doc->codepage;
@@ -1647,7 +1646,7 @@ bool EngineChm::Load(Str fileName) {
         return false;
     }
 
-    char* html = ChmHtmlCollector(doc).GetHtml();
+    TempStr html = ChmHtmlCollector(doc).GetHtml();
     dataCache = new ChmDataCache(doc, html);
 
     HtmlFormatterArgs args;
@@ -1708,10 +1707,10 @@ TocTree* EngineChm::GetToc() {
     return tocTree;
 }
 
-static IPageDestination* newChmEmbeddedDest(const char* path) {
+static IPageDestination* newChmEmbeddedDest(Str path) {
     auto res = new PageDestination();
     res->kind = kindDestinationLaunchEmbedded;
-    res->value = Str(str::Dup(path::GetBaseNameTemp(Str(path))));
+    res->value = str::Dup(path::GetBaseNameTemp(path));
     return res;
 }
 
@@ -1729,7 +1728,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
         return nullptr;
     }
 
-    IPageDestination* dest = newChmEmbeddedDest(url);
+    IPageDestination* dest = newChmEmbeddedDest(Str(url));
     return NewEbookLink(link, rect, dest, pageNo);
 }
 
@@ -1809,14 +1808,14 @@ bool EngineHtml::Load(Str fileName) {
     return pageCount > 0;
 }
 
-static IPageDestination* newRemoteHtmlDest(const char* relativeURL) {
+static IPageDestination* newRemoteHtmlDest(Str relativeURL) {
     auto* res = new PageDestination();
     const char* id = str::FindChar(relativeURL, '#');
     if (id) {
-        res->value = Str(str::Dup(relativeURL, id - relativeURL));
-        res->name = Str(str::Dup(id));
+        res->value = str::Dup(relativeURL.s, (size_t)(id - relativeURL.s));
+        res->name = str::Dup(id);
     } else {
-        res->value = Str(str::Dup(relativeURL));
+        res->value = str::Dup(relativeURL);
     }
     res->kind = kindDestinationLaunchFile;
     return res;
