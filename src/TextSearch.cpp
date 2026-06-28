@@ -63,11 +63,12 @@ void TextSearch::SetText(WStr text) {
     // usually is not quite what a user expects, so let's try to be cleverer)
     // "match whole word" forces both word-boundary checks on; otherwise they're
     // driven by a leading / trailing single space in the search text
-    this->matchWordStart = matchWholeWord || (text.len > 0 && text.s[0] == L' ' && (text.len < 2 || text.s[1] != L' '));
+    this->matchWordStart =
+        matchWholeWord || (!str::IsEmpty(text) && text.s[0] == L' ' && (text.len < 2 || text.s[1] != L' '));
     this->matchWordEnd = matchWholeWord || (str::EndsWith(text, WStrL(L" ")) && !str::EndsWith(text, WStrL(L"  ")));
 
     WStr searchText = text;
-    if (searchText.len > 0 && searchText.s[0] == L' ') {
+    if (!str::IsEmpty(searchText) && searchText.s[0] == L' ') {
         searchText = WStr(searchText.s + 1, searchText.len - 1);
     }
 
@@ -403,7 +404,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(WStr start) const {
 }
 
 static WStr WStrStr(WStr haystack, WStr needle) {
-    if (!haystack || !needle || needle.len <= 0) {
+    if (!haystack || str::IsEmpty(needle)) {
         return {};
     }
     for (int i = 0; i <= haystack.len - needle.len; i++) {

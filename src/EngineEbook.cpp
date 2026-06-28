@@ -1819,7 +1819,7 @@ static IPageDestination* newRemoteHtmlDest(Str relativeURL) {
 }
 
 IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {
-    if (0 == link->str.len) {
+    if (str::IsEmpty(link->str)) {
         return nullptr;
     }
 

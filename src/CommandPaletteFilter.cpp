@@ -15,6 +15,9 @@ static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matched
     int n = strs.Size();
     for (int i = 0; i < n; i++) {
         Str s = strs.At(i);
+        if (str::IsEmpty(s)) {
+            continue;
+        }
         if (!FilterMatches(s, words)) {
             continue;
         }

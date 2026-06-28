@@ -19,7 +19,7 @@ wchar_t ToLowerW(wchar_t c) {
 }
 
 int WStrFindSubstr(WStr str, WStr substr) {
-    if (substr.len == 0) return -1; // Empty search - no highlight
+    if (IsEmpty(substr)) return -1; // Empty search - no highlight
     if (substr.len > str.len) return -1;
 
     for (int i = 0; i <= str.len - substr.len; i++) {
@@ -79,7 +79,7 @@ WStr ToWStrTemp(const char* utf8) {
 
 // Convert UTF-16 to UTF-8
 Str ToUtf8(Arena* arena, WStr wide) {
-    if (!wide.s || wide.len == 0) {
+    if (IsEmpty(wide)) {
         return Str();
     }
     // Use explicit length instead of -1 (null-terminated)
@@ -102,7 +102,7 @@ static char ToLowerAscii(char c) {
 
 // Convert Str to wide string (optimized - uses known length)
 WStr ToWStrTemp(Str s) {
-    if (!s.s || s.len == 0) {
+    if (IsEmpty(s)) {
         return WStr(&emptyWideStr[0], 0);
     }
     // Use explicit length instead of -1 (null-terminated)
@@ -115,7 +115,7 @@ WStr ToWStrTemp(Str s) {
 
 // Duplicate string with known length (internal helper)
 static Str StrDupInternal(Arena* arena, Str src) {
-    if (!src.s || src.len <= 0) {
+    if (IsEmpty(src)) {
         return Str();
     }
     char* dst = (char*)Alloc(arena, src.len + 1); // str-port: owned heap
@@ -220,7 +220,7 @@ bool operator!=(const wchar_t* a, WStr b) { // str-port: C-string
 
 // Case-insensitive substring search for Str (ASCII case folding)
 bool StrContains(Str str, Str substr) {
-    if (substr.len == 0) return true; // Empty search matches all
+    if (IsEmpty(substr)) return true; // Empty search matches all
     if (substr.len > str.len) return false;
 
     for (int i = 0; i <= str.len - substr.len; i++) {
@@ -281,7 +281,7 @@ bool IsWhiteSpace(char c) {
 }
 
 Str StrTrimSuffixWhitespace(Str s) {
-    while (s.len > 0 && IsWhiteSpace(s.s[s.len - 1])) {
+    while (!IsEmpty(s) && IsWhiteSpace(s.s[s.len - 1])) {
         s.len--;
         s.s[s.len] = 0;
     }
@@ -457,7 +457,7 @@ Str PathJoinTemp(Str dir, Str name) {
         nameLen--;
     }
 
-    int needsSlash = (dir.len > 0 && dir.s[dir.len - 1] != '\\') ? 1 : 0;
+    int needsSlash = (!IsEmpty(dir) && dir.s[dir.len - 1] != '\\') ? 1 : 0;
     int totalLen = dir.len + needsSlash + nameLen;
 
     Str result = AllocStrTemp(totalLen);

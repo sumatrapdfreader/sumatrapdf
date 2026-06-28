@@ -226,6 +226,9 @@ static void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& c
         tabs.Append(_TRA("Home"), data);
     } else {
         auto name = path::GetBaseNameTemp(tab->filePath);
+        if (str::IsEmpty(name)) {
+            return;
+        }
         tabs.Append(name, data);
     }
     if (tab == currTab) {
@@ -282,9 +285,11 @@ static void CollectTocRec(StrVecCP& toc, TocItem* ti, int indent, int currPageNo
         ItemDataCP data;
         data.tocItem = ti;
         data.indent = indent;
-        toc.Append(title, data);
+        if (!str::IsEmpty(title)) {
+            toc.Append(title, data);
+        }
         int pageNo = ti->pageNo;
-        if (pageNo > 0 && pageNo <= currPageNo && pageNo > bestPageNo) {
+        if (!str::IsEmpty(title) && pageNo > 0 && pageNo <= currPageNo && pageNo > bestPageNo) {
             bestPageNo = pageNo;
             bestIdx = toc.Size() - 1;
         }
@@ -324,6 +329,9 @@ static void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCu
         } else {
             TempStr base = path::GetBaseNameTemp(fs->filePath);
             disp = str::FormatTemp("%s : %s", base, rn);
+        }
+        if (str::IsEmpty(disp)) {
+            continue;
         }
         ItemDataCP data;
         data.favFs = fs;
@@ -373,6 +381,9 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     fileHistory.Reset();
     for (FileState* fs : *gGlobalPrefs->fileStates) {
         TempStr s = ConvertPathForDisplayTemp(fs->filePath);
+        if (str::IsEmpty(s)) {
+            continue;
+        }
         ItemDataCP data;
         data.filePath = fs->filePath;
         fileHistory.Append(s, data);

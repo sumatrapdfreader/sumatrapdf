@@ -318,7 +318,7 @@ ACCEL* gAccels = nullptr;
 int gAccelsCount = 0;
 
 static void skipWS(Str& s) {
-    while (s.len > 0) {
+    while (!str::IsEmpty(s)) {
         if (!str::IsWs(*s.s)) {
             return;
         }
@@ -328,12 +328,12 @@ static void skipWS(Str& s) {
 }
 
 static void skipPlusOrMinus(Str& s) {
-    if (s.len > 0 && *s.s == '+') {
+    if (!str::IsEmpty(s) && *s.s == '+') {
         s.s++;
         s.len--;
         return;
     }
-    if (s.len > 0 && *s.s == '-') {
+    if (!str::IsEmpty(s) && *s.s == '-') {
         s.s++;
         s.len--;
         return;
@@ -463,7 +463,7 @@ again:
         accel.key = (WORD)key;
         return true;
     }
-    if (s.len == 0) {
+    if (str::IsEmpty(s)) {
         return false;
     }
     char c = *s.s;

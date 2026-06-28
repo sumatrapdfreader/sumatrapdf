@@ -313,7 +313,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     // the log is newline-separated JS commands
     Str log = tab->grokChatLog->LendData();
     Str rest = log;
-    while (rest.len > 0) {
+    while (!str::IsEmpty(rest)) {
         Str lineEnd = str::FindChar(rest, '\n');
         int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
         if (lineLen > 0) {
@@ -393,7 +393,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     Str rest = content;
     Str result;
 
-    while (rest.len > 0 && !result) {
+    while (!str::IsEmpty(rest) && !result) {
         Str lineEnd = str::FindChar(rest, '\n');
         if (!lineEnd) {
             lineEnd = str::FindChar(rest, '\r');
@@ -410,7 +410,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
             break;
         }
         rest.s = lineEnd.s + 1;
-        while (rest.len > 0 && (*rest.s == '\n' || *rest.s == '\r')) {
+        while (!str::IsEmpty(rest) && (*rest.s == '\n' || *rest.s == '\r')) {
             rest.s++;
             rest.len--;
         }
@@ -614,7 +614,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     Str content = AsStr(data);
     Str rest = content;
 
-    while (rest.len > 0) {
+    while (!str::IsEmpty(rest)) {
         Str lineEnd = str::FindChar(rest, '\n');
         if (!lineEnd) {
             lineEnd = str::FindChar(rest, '\r');
@@ -638,7 +638,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
             break;
         }
         rest.s = lineEnd.s + 1;
-        while (rest.len > 0 && (*rest.s == '\n' || *rest.s == '\r')) {
+        while (!str::IsEmpty(rest) && (*rest.s == '\n' || *rest.s == '\r')) {
             rest.s++;
             rest.len--;
         }

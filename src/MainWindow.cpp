@@ -667,7 +667,7 @@ static bool MatchFuzzy(Str s1, Str s2, bool partially) {
 
     // only match at the start of a word (at the beginning and after a space)
     Str rest = s1;
-    while (rest.len > 0) {
+    while (!str::IsEmpty(rest)) {
         Str found = str::Find(rest, s2);
         if (!found) {
             break;

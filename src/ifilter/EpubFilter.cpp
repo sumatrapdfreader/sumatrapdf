@@ -90,14 +90,14 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
             !tagNesting.Contains(Tag_Style)) {
             // trim whitespace (TODO: also normalize within text?)
             Str tokText = t->s;
-            while (tokText.len > 0 && str::IsWs(tokText.s[0])) {
+            while (!str::IsEmpty(tokText) && str::IsWs(tokText.s[0])) {
                 tokText.s++;
                 tokText.len--;
             }
-            while (tokText.len > 0 && str::IsWs(tokText.s[tokText.len - 1])) {
+            while (!str::IsEmpty(tokText) && str::IsWs(tokText.s[tokText.len - 1])) {
                 tokText.len--;
             }
-            if (tokText.len > 0) {
+            if (!str::IsEmpty(tokText)) {
                 TempStr s = ResolveHtmlEntitiesTemp(tokText);
                 text.Append(s);
                 text.AppendChar(' ');

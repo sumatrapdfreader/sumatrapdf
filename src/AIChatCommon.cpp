@@ -310,7 +310,7 @@ TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay) {
         return str::DupTemp(defaultDisplay ? defaultDisplay : StrL(""));
     }
     TempStr dup = str::DupTemp(model);
-    if (dup.len > 0) {
+    if (!str::IsEmpty(dup)) {
         dup.s[0] = (char)toupper((unsigned char)dup.s[0]);
     }
     return dup;

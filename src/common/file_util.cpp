@@ -16,7 +16,7 @@ bool DirectoryExists(Str s) {
 
 Str FindFirstValidParentDir(Str path) {
     Str current = path;
-    while (current.len > 0) {
+    while (!IsEmpty(current)) {
         if (DirectoryExists(current)) {
             return current;
         }
@@ -119,7 +119,7 @@ Str SmartResolveDirectory(Str dir) {
     }
 
     // Try expanding ~ to home directory
-    if (result.len > 0 && result.s[0] == '~') {
+    if (!IsEmpty(result) && result.s[0] == '~') {
         Str home = GetHomeDir();
         if (!IsEmpty(home)) {
             int newLen = home.len + result.len - 1;

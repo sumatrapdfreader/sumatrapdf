@@ -853,7 +853,7 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     u8* highlighted = AllocArrayTemp<u8>(titleLen);
     int filterLen = filter.len;
     Str rest = title;
-    while (rest.len > 0) {
+    while (!str::IsEmpty(rest)) {
         Str found = str::FindI(rest, filter);
         if (!found) {
             break;

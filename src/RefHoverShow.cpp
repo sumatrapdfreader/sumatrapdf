@@ -57,7 +57,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         Rect* coords = nullptr;
         WStr text = engine->GetTextForPage(destPage, nullptr, &coords);
         Rect* normCoords = coords;
-        if (coords && text.len > 0) {
+        if (coords && !str::IsEmpty(text)) {
             normCoords = AllocArray<Rect>((size_t)text.len);
             NormalizeGlyphLines(coords, normCoords, text.len);
         }

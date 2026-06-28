@@ -85,7 +85,7 @@ TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
         fileName = Str(fileName.s + 1, fileName.len - 1);
     }
     Str sepStr = {};
-    if (path.len > 0) {
+    if (!str::IsEmpty(path)) {
         if (!IsSep(path.s[path.len - 1])) {
             sepStr = Str("\\");
         }
@@ -102,7 +102,7 @@ Str Join(Arena* allocator, Str path, Str fileName) {
         fileName = Str(fileName.s + 1, fileName.len - 1);
     }
     Str sepStr = {};
-    if (path.len > 0) {
+    if (!str::IsEmpty(path)) {
         if (!IsSep(path.s[path.len - 1])) {
             sepStr = Str("\\");
         }
@@ -192,7 +192,7 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
         fileName = WStr(fileName.s + 1, fileName.len - 1);
     }
     WStr sepStr;
-    if (path.len > 0) {
+    if (!str::IsEmpty(path)) {
         if (!IsSep(path.s[path.len - 1])) {
             sepStr = L"\\";
         }
@@ -448,22 +448,22 @@ bool SupportsChangeNotifications(Str pathA) {
 }
 
 static bool MatchWildcardsRec(Str fileName, Str filter) {
-    if (filter.len == 0) {
-        return fileName.len == 0;
+    if (str::IsEmpty(filter)) {
+        return str::IsEmpty(fileName);
     }
     switch (filter.s[0]) {
         case '\0':
         case ';':
-            return fileName.len == 0;
+            return str::IsEmpty(fileName);
         case '*': {
             Str filterRest(filter.s + 1, filter.len - 1);
-            while (fileName.len > 0 && !MatchWildcardsRec(fileName, filterRest)) {
+            while (!str::IsEmpty(fileName) && !MatchWildcardsRec(fileName, filterRest)) {
                 fileName = Str(fileName.s + 1, fileName.len - 1);
             }
-            return fileName.len > 0 || filterRest.len == 0 || filterRest.s[0] == ';';
+            return !str::IsEmpty(fileName) || str::IsEmpty(filterRest) || filterRest.s[0] == ';';
         }
         case '?':
-            return fileName.len > 0 &&
+            return !str::IsEmpty(fileName) &&
                    MatchWildcardsRec(Str(fileName.s + 1, fileName.len - 1), Str(filter.s + 1, filter.len - 1));
         default:
             return tolower(fileName.s[0]) == tolower(filter.s[0]) &&

@@ -230,7 +230,7 @@ size_t MapStrToInt::Count() const {
 //   * inserts a copy of the key allocated with allocator
 //   * sets existingKeyOut to (interned) key
 bool MapStrToInt::Insert(Str key, int val, int* existingValOut, Str* existingKeyOut) {
-    if (!key.s || key.len == 0) {
+    if (str::IsEmpty(key)) {
         return false;
     }
     TempStr keyZ = StrDupTemp(key);
@@ -256,7 +256,7 @@ bool MapStrToInt::Insert(Str key, int val, int* existingValOut, Str* existingKey
 }
 
 bool MapStrToInt::Remove(Str key, int* removedValOut) const {
-    if (!key.s || key.len == 0) {
+    if (str::IsEmpty(key)) {
         return false;
     }
     TempStr keyZ = StrDupTemp(key);
@@ -269,7 +269,7 @@ bool MapStrToInt::Remove(Str key, int* removedValOut) const {
 }
 
 bool MapStrToInt::Get(Str key, int* valOut) const {
-    if (!key.s || key.len == 0) {
+    if (str::IsEmpty(key)) {
         return false;
     }
     TempStr keyZ = StrDupTemp(key);

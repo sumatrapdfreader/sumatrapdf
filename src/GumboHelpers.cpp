@@ -15,7 +15,7 @@ bool GumboTagNameIs(const GumboNode* node, Str name) {
     } else {
         Str orig = AsStr(ByteSlice((const u8*)node->v.element.original_tag.data, node->v.element.original_tag.length));
         int off = 0;
-        if (orig.len > 0 && orig.s[0] == '<') {
+        if (!str::IsEmpty(orig) && orig.s[0] == '<') {
             off = 1;
         }
         int end = off;

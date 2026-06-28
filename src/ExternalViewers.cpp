@@ -445,7 +445,7 @@ bool PathMatchFilter(Str path, Str filter) {
 static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
     Str s = str::SkipChar(cmdLine, ' ');
     StrBuilder exe;
-    if (s.len > 0 && s.s[0] == '"') {
+    if (!str::IsEmpty(s) && s.s[0] == '"') {
         s = Str(s.s + 1, s.len - 1);
         int i = 0;
         for (; i < s.len && s.s[i] != '"'; i++) {

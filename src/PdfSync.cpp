@@ -276,7 +276,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 Str fn = Str(filename.Get());
-                if (fn.len > 0 && fn.s[0] == '"' && fn.s[fn.len - 1] == '"') {
+                if (!str::IsEmpty(fn) && fn.s[0] == '"' && fn.s[fn.len - 1] == '"') {
                     size_t n = (size_t)fn.len - 2;
                     filename.SetCopy(Str(fn.s + 1, (int)n));
                 }

@@ -718,7 +718,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
         TempWStr buf = ToWStrTemp(run);
         // soft hyphens should not be displayed
         buf.len -= (int)str::RemoveCharsInPlace(buf, L"\xad");
-        if (buf.len == 0) {
+        if (str::IsEmpty(buf)) {
             break;
         }
         textMeasure->SetFont(CurrFont());
@@ -781,7 +781,7 @@ void HtmlFormatter::EmitTextMarker(Str s) {
         return;
     }
     TempWStr buf = ToWStrTemp(s);
-    if (buf.len == 0) {
+    if (str::IsEmpty(buf)) {
         return;
     }
     textMeasure->SetFont(CurrFont());
@@ -900,7 +900,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
         int size = 3; // normal size
         str::Parse(attr->val, "%d", &size);
         // sizes can also be relative to the current size
-        if (attr->val.len > 0 && ('-' == attr->val.s[0] || '+' == attr->val.s[0])) {
+        if (!str::IsEmpty(attr->val) && ('-' == attr->val.s[0] || '+' == attr->val.s[0])) {
             size += 3;
         }
         size = limitValue(size, 1, 7);
@@ -1298,7 +1298,7 @@ void HtmlFormatter::HandleText(Str s) {
             Str nl = str::FindChar(curr, '\n');
             if (nl) {
                 text = Str(curr.s, (int)(nl.s - curr.s));
-                if (text.len > 0 && text.s[text.len - 1] == '\r') {
+                if (!str::IsEmpty(text) && text.s[text.len - 1] == '\r') {
                     text = Str(text.s, text.len - 1);
                 }
                 EmitTextRun(text);

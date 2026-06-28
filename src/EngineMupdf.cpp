@@ -249,7 +249,7 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
         fragment = Str(fragment.s + 1);
     }
     // MuPDF uses unix paths; strip a leading slash from relative URIs.
-    while (pathStr.len > 0 && (pathStr.s[0] == '/' || pathStr.s[0] == '\\')) {
+    while (!str::IsEmpty(pathStr) && (pathStr.s[0] == '/' || pathStr.s[0] == '\\')) {
         pathStr = Str(pathStr.s + 1, pathStr.len - 1);
     }
     if (!pathStr) {
@@ -1782,7 +1782,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     if (str::EqI(type, "R")) {
         // roman numbering style
         TempStr number = str::FormatRomanNumeralTemp(pageNo);
-        if (type.len > 0 && type.s[0] == 'r') {
+        if (!str::IsEmpty(type) && type.s[0] == 'r') {
             str::ToLowerInPlace(number);
         }
         return str::FormatTemp("%s%s", prefix, number);
@@ -1794,7 +1794,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
             number.AppendChar(number.at(0));
         }
-        if (type.len > 0 && type.s[0] == 'a') {
+        if (!str::IsEmpty(type) && type.s[0] == 'a') {
             str::ToLowerInPlace(Str(number.Get()));
         }
         return str::FormatTemp("%s%s", prefix, number.Get());

@@ -3339,7 +3339,7 @@ static TempStr FileNameFromUrlTemp(Str url) {
     // find last '/' before any '?' or '#'
     Str lastSlash;
     Str p = path;
-    while (p.len > 0 && p.s[0] != '?' && p.s[0] != '#') {
+    while (!str::IsEmpty(p) && p.s[0] != '?' && p.s[0] != '#') {
         if (p.s[0] == '/') {
             lastSlash = p;
         }

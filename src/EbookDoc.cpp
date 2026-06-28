@@ -124,11 +124,11 @@ Str NormalizeURL(Str url, Str base) {
         basePathLen = hash ? (int)(hash.s - base.s) : base.len;
     } else if (baseEnd && hash && hash.s < baseEnd.s) {
         Str scan = Str(hash.s - 1, base.s + base.len - (hash.s - 1));
-        while (scan.len > 0 && scan.s[0] != '/') {
+        while (!str::IsEmpty(scan) && scan.s[0] != '/') {
             scan.s--;
             scan.len++;
         }
-        basePathLen = scan.len > 0 ? (int)(scan.s - base.s + 1) : 0;
+        basePathLen = !str::IsEmpty(scan) ? (int)(scan.s - base.s + 1) : 0;
     } else if (baseEnd) {
         basePathLen = (int)(baseEnd.s - base.s + 1);
     } else {
@@ -1515,7 +1515,7 @@ inline bool IsEmailDomainChar(char c) {
 static Str TextFindEmailEnd(StrBuilder& htmlData, Str curr) {
     AutoFreeStr beforeAt;
     Str rest = curr;
-    if (curr.len > 0 && '@' == curr.s[0]) {
+    if (!str::IsEmpty(curr) && '@' == curr.s[0]) {
         if (htmlData.size() == 0 || !IsEmailUsernameChar(htmlData.Last())) {
             return {};
         }
@@ -1557,7 +1557,7 @@ static Str TextFindEmailEnd(StrBuilder& htmlData, Str curr) {
              IsEmailDomainChar(rest.s[endIdx + 1]));
 
     Str end = Str(curr.s + (rest.s - curr.s) + endIdx, curr.len - (rest.s - curr.s) - endIdx);
-    Str linkStart = curr.len > 0 && '@' == curr.s[0] ? curr : Str(curr.s + 7, curr.len - 7);
+    Str linkStart = !str::IsEmpty(curr) && '@' == curr.s[0] ? curr : Str(curr.s + 7, curr.len - 7);
 
     if (beforeAt) {
         size_t idx = htmlData.size() - (size_t)Str(beforeAt.Get()).len;

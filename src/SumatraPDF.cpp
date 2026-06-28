@@ -3742,7 +3742,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, StrBuilder& fileFilter) 
         fileFilter.Append(_TRA("Comic books"));
     } else if (type == kindEngineImage) {
         Str imgDefExt = ctrl->GetDefaultFileExt();
-        if (imgDefExt.len > 0 && imgDefExt.s[0] == '.') {
+        if (!str::IsEmpty(imgDefExt) && imgDefExt.s[0] == '.') {
             imgDefExt = Str(imgDefExt.s + 1, imgDefExt.len - 1);
         }
         TempWStr extW = ToWStrTemp(imgDefExt);
@@ -6776,7 +6776,7 @@ static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
 
     Str fragment = str::FindChar(docURI, '#');
     Str pathStart = docURI;
-    if (pathStart.len > 0 && pathStart.s[0] == '/') {
+    if (!str::IsEmpty(pathStart) && pathStart.s[0] == '/') {
         pathStart = Str(pathStart.s + 1, pathStart.len - 1);
     }
     int pathLen = fragment ? (int)(fragment.s - pathStart.s) : pathStart.len;
@@ -6802,7 +6802,7 @@ static TempStr DocURIToWebUrlTemp(Str docURI) {
     if (str::IsEmpty(docURI)) {
         docURI = kManualDefaultDocURI;
     }
-    if (docURI.len > 0 && docURI.s[0] == '/') {
+    if (!str::IsEmpty(docURI) && docURI.s[0] == '/') {
         return str::FormatTemp("https://www.sumatrapdfreader.org/docs%s", docURI.s);
     }
     return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", docURI.s);
