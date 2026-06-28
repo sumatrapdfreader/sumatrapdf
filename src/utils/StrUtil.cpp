@@ -2775,9 +2775,9 @@ WStr Parse(WStr str, const WCHAR* format, ...) {
 namespace url {
 
 bool IsAbsolute(Str url) {
-    const char* colon = str::FindChar(url.s, ':');
-    const char* hash = str::FindChar(url.s, '#');
-    return colon && (!hash || hash > colon);
+    Str colon = str::FindChar(url, ':');
+    Str hash = str::FindChar(url, '#');
+    return colon && (!hash || hash.s > colon.s);
 }
 
 TempStr GetFullPathTemp(Str url) {
@@ -2790,17 +2790,19 @@ TempStr GetFullPathTemp(Str url) {
 TempStr GetFileNameTemp(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
-    char* base = path.s + str::Len(path);
-    for (; base > path.s; base--) {
-        if ('/' == base[-1] || '\\' == base[-1]) {
+    int base = path.len;
+    for (; base > 0; base--) {
+        if ('/' == path.s[base - 1] || '\\' == path.s[base - 1]) {
             break;
         }
     }
-    if (str::IsEmpty(base)) {
+    Str baseStr(path.s + base, path.len - base);
+    if (!baseStr) {
         return {};
     }
-    DecodeInPlace(base);
-    return str::DupTemp(Str(base));
+    TempStr res = str::DupTemp(baseStr);
+    DecodeInPlace(res);
+    return res;
 }
 
 } // namespace url
@@ -3034,14 +3036,15 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
 
 // IsTextRtl is optimized version of checking if a string is rtl
 // we look at max first 40 chars and
-bool IsTextRtl(const WCHAR* s) {
-    if (!s || !*s) return false;
-    int len = str::Leni(s);
-    len = len > 40 ? 40 : len;
+bool IsTextRtl(WStr s) {
+    if (!s) {
+        return false;
+    }
+    int len = s.len > 40 ? 40 : s.len;
     int nRtl = 0;
     int nLtr = 0;
     WORD* charTypes = AllocArray<WORD>(GetTempArena(), len + 1);
-    if (!GetStringTypeExW(LOCALE_INVARIANT, CT_CTYPE2, s, len, charTypes)) {
+    if (!GetStringTypeExW(LOCALE_INVARIANT, CT_CTYPE2, s.s, len, charTypes)) {
         return false; // API failure
     }
     for (int i = 0; i < len; ++i) {
@@ -3055,7 +3058,7 @@ bool IsTextRtl(const WCHAR* s) {
     return nRtl > nLtr;
 }
 
-bool IsTextRtl(const char* s) {
+bool IsTextRtl(Str s) {
     TempWStr ws = ToWStrTemp(s);
     return IsTextRtl(ws);
 }

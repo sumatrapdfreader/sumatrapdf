@@ -747,5 +747,11 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes);
 FORCEINLINE TempStr ShortenStringUtf8InTheMiddleTemp(const char* s, int maxRunes) {
     return ShortenStringUtf8InTheMiddleTemp(Str(s), maxRunes);
 }
-bool IsTextRtl(const WCHAR* s);
-bool IsTextRtl(const char* s);
+bool IsTextRtl(WStr s);
+bool IsTextRtl(Str s);
+FORCEINLINE bool IsTextRtl(const WCHAR* s) {
+    return IsTextRtl(WStr(s));
+} // str-port shim
+FORCEINLINE bool IsTextRtl(const char* s) {
+    return IsTextRtl(Str(s));
+} // str-port shim
