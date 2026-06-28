@@ -12,9 +12,9 @@
 #define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
 
 struct PluginStartData {
-    const char* sumatraPath;
-    const char* filePath;
-    const char* fileOriginUrl;
+    Str sumatraPath;
+    Str filePath;
+    Str fileOriginUrl;
 };
 
 constexpr UINT_PTR kPluginCheckTimerID = 1;
@@ -61,7 +61,13 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
         COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wp == hChild) {
-            auto url(ToWStrTemp((const char*)cds->lpData));
+            int urlLen = (int)cds->cbData;
+            char* urlData = (char*)cds->lpData;
+            if (urlLen > 0 && urlData[urlLen - 1] == 0) {
+                urlLen--;
+            }
+            Str urlZ(urlData, urlLen);
+            auto url(ToWStrTemp(urlZ));
             ShellExecute(hChild, L"open", url, nullptr, nullptr, SW_SHOW);
             return TRUE;
         }
