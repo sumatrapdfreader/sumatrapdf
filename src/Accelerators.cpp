@@ -317,31 +317,35 @@ ACCEL gBuiltInAccelerators[] = {
 ACCEL* gAccels = nullptr;
 int gAccelsCount = 0;
 
-static void skipWS(char*& s) {
-    while (*s) {
-        if (!str::IsWs(*s)) {
+static void skipWS(Str& s) {
+    while (s.len > 0) {
+        if (!str::IsWs(*s.s)) {
             return;
         }
-        s++;
+        s.s++;
+        s.len--;
     }
 }
 
-static void skipPlusOrMinus(char*& s) {
-    if (*s == '+') {
-        s++;
+static void skipPlusOrMinus(Str& s) {
+    if (s.len > 0 && *s.s == '+') {
+        s.s++;
+        s.len--;
         return;
     }
-    if (*s == '-') {
-        s++;
+    if (s.len > 0 && *s.s == '-') {
+        s.s++;
+        s.len--;
         return;
     }
 }
 
-static bool skipVirtKey(char*& s, Str key) {
-    if (!str::StartsWithI(Str(s), key)) {
+static bool skipVirtKey(Str& s, Str key) {
+    if (!str::StartsWithI(s, key)) {
         return false;
     }
-    s += key.len;
+    s.s += key.len;
+    s.len -= key.len;
     skipWS(s);
     skipPlusOrMinus(s);
     skipWS(s);
@@ -366,7 +370,7 @@ static Str getVirt(BYTE key, bool isEng) {
 // We accept variants: "Ctrl+A", "Ctrl-A", "Ctrl + A"
 static bool parseShortcut(Str shortcut, ACCEL& accel) {
     TempStr shortcutZ = StrDupTemp(shortcut);
-    char* cursor = shortcutZ.s;
+    Str cursor = shortcutZ;
 
     BYTE fVirt = 0;
 
@@ -387,16 +391,18 @@ again:
     accel.fVirt = fVirt;
 
     // when user puts e.g. "~" it's actually "`" but with SHIFT
-    static const char* shiftKeys = "~`,<.>/?;:'\"-_=+[{]}\\|";
+    static Str shiftKeys = Str("~`,<.>/?;:'\"-_=+[{]}\\|");
     char buf[2] = {};
-    const char* toFind = cursor;
-    if (str::Len(cursor) == 1) {
-        int idx = str::FindCharIdx(shiftKeys, *cursor);
+    Str toFind = cursor;
+    bool usedShiftKeyMap = false;
+    if (cursor.len == 1) {
+        int idx = str::FindCharIdx(shiftKeys, *cursor.s);
         if ((idx >= 0) && (idx % 2 == 1)) {
-            buf[0] = shiftKeys[idx - 1];
-            toFind = &buf[0];
+            buf[0] = shiftKeys.s[idx - 1];
+            toFind = Str(buf, 1);
             accel.key = buf[0];
             accel.fVirt |= (FSHIFT | FVIRTKEY);
+            usedShiftKeyMap = true;
         }
     }
 
@@ -408,7 +414,7 @@ again:
         accel.fVirt |= FVIRTKEY;
         return true;
     }
-    if (toFind != cursor) {
+    if (usedShiftKeyMap) {
         return true;
     }
 
@@ -457,14 +463,13 @@ again:
         accel.key = (WORD)key;
         return true;
     }
-    char* sp = s.s;
-    char c = *sp++;
-    if (!c) {
+    if (s.len == 0) {
         return false;
     }
+    char c = *s.s;
 
     // those correspond to 0...9 keys and require SHIFT
-    static const char* shift09 = ")!@#$%^&*(";
+    static Str shift09 = Str(")!@#$%^&*(");
     idx = str::FindCharIdx(shift09, c);
     if (idx >= 0) {
         accel.key = ('0' + idx);
@@ -510,21 +515,21 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     str.Append("\t"); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
     if (virt & FALT) {
-        const char* s = "Alt + ";
+        Str s = "Alt + ";
         if (isGerman) {
             s = "Größe + ";
         }
         str.Append(s);
     }
     if (virt & FCONTROL) {
-        const char* s = "Ctrl + ";
+        Str s = "Ctrl + ";
         if (isGerman) {
             s = "Strg + ";
         }
         str.Append(s);
     }
     if (virt & FSHIFT) {
-        const char* s = "Shift + ";
+        Str s = "Shift + ";
         if (isGerman) {
             s = "Umschalt + ";
         }
@@ -554,8 +559,8 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     // virtual codes overlap with some ascii chars like '-' is VK_INSERT
     // so for non-virtual assume it's a single char
     isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
-    static const char* otherAscii = "[]'`~@#$%^&*(){}/\\|?<>!,.+-=_;:\"";
-    if (str::FindChar(otherAscii, key)) {
+    static Str otherAscii = Str("[]'`~@#$%^&*(){}/\\|?<>!,.+-=_;:\"");
+    if (str::FindChar(otherAscii, (char)key)) {
         isAscii = true;
     }
     if (isAscii) {
