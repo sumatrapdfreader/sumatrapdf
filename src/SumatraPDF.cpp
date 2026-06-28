@@ -6673,8 +6673,8 @@ static Str ManualMimeFromPath(Str path) {
     }
 
     static const struct {
-        const char* ext;
-        const char* mimetype;
+        Str ext;
+        Str mimetype;
     } mimeTypes[] = {
         {".html", "text/html"},        {".htm", "text/html"},     {".gif", "image/gif"},  {".png", "image/png"},
         {".jpg", "image/jpeg"},        {".jpeg", "image/jpeg"},   {".bmp", "image/bmp"},  {".css", "text/css"},

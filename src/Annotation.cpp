@@ -1242,14 +1242,19 @@ void SetOpacity(Annotation* annot, int newOpacity) {
 }
 
 static Str GetUserTemp() {
-    const char* u = getenv("USER");
+    Str u;
+    if (const char* env = getenv("USER")) {
+        u = Str(env);
+    }
     if (!u) {
-        u = getenv("USERNAME");
+        if (const char* env = getenv("USERNAME")) {
+            u = Str(env);
+        }
     }
     if (!u) {
         return Str("user");
     }
-    return Str(u);
+    return u;
 }
 
 static Str GetAnnotationTextIconTemp() {
