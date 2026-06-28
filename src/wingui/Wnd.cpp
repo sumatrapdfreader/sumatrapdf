@@ -63,7 +63,7 @@ const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCre
 
 //- Window.h / Window.cpp
 
-const WCHAR* kDefaultClassName = L"SumatraWgDefaultWinClass";
+const WStr kDefaultClassName = L"SumatraWgDefaultWinClass";
 
 static LRESULT CALLBACK WndWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     // seen crashes in TabCtrl::WndProc() which might be caused by handling drag&drop messages
@@ -798,12 +798,12 @@ void Wnd::Cleanup() {
     subclassId = 0;
 }
 
-static void WndRegisterClass(const WCHAR* className) {
+static void WndRegisterClass(WStr className) {
     WNDCLASSEX wc = {};
     wc.cbSize = sizeof(wc);
     wc.hInstance = GetInstance();
     wc.style = CS_DBLCLKS;
-    wc.lpszClassName = className;
+    wc.lpszClassName = className.s; // str-port: Win32
     wc.lpfnWndProc = WndWindowProc;
     wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
@@ -833,7 +833,6 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     if (args.isRtl) {
         exStyle |= WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
     }
-    const WCHAR* className = args.className;
     int x = args.pos.x;
     int y = args.pos.y;
     int dx = args.pos.dx;
@@ -842,7 +841,8 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     HMENU id = args.ctrlId;
     HINSTANCE inst = GetInstance();
     void* createParams = this;
-    hwnd = ::CreateWindowExW(exStyle, className, L"", style, x, y, dx, dy, parent, id, inst, createParams);
+    hwnd = ::CreateWindowExW(exStyle, args.className.s, L"", style, x, y, dx, dy, parent, id, inst,
+                             createParams); // str-port: Win32
     ReportIf(!hwnd);
     if (!hwnd) {
         return nullptr;
@@ -864,11 +864,8 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
 HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     font = args.font;
 
-    const WCHAR* className = args.className;
+    WStr className = args.className ? args.className : kDefaultClassName;
     // TODO: validate className is not win32 control class
-    if (className == nullptr) {
-        className = kDefaultClassName;
-    }
     WndRegisterClass(className);
     HWND parent = args.parent;
 
@@ -912,7 +909,8 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     void* createParams = this;
     TempWStr titleW = ToWStrTemp(args.title);
 
-    HWND hwndTmp = ::CreateWindowExW(exStyle, className, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
+    HWND hwndTmp = ::CreateWindowExW(exStyle, className.s, titleW.s, style, x, y, dx, dy, parent, m, inst,
+                                     createParams); // str-port: Win32
 
     ReportIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE

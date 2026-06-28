@@ -34,7 +34,7 @@ using ContextMenuHandler = Func1<ContextMenuEvent*>;
 
 struct CreateControlArgs {
     HWND parent = nullptr;
-    const WCHAR* className = nullptr;
+    WStr className;
     DWORD style = 0;
     DWORD exStyle = 0;
     Rect pos = {};
@@ -47,7 +47,7 @@ struct CreateControlArgs {
 
 struct CreateCustomArgs {
     HWND parent = nullptr;
-    const WCHAR* className = nullptr;
+    WStr className;
     Str title;
     DWORD style = 0;
     DWORD exStyle = 0;
