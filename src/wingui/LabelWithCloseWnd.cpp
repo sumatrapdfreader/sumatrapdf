@@ -39,7 +39,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     if (HwndIsRtl(w->hwnd)) {
         fmt |= DT_RTLREADING;
     }
-    char* s = HwndGetTextTemp(w->hwnd);
+    TempStr s = HwndGetTextTemp(w->hwnd);
     RECT rs{x, y, x + cr.dx, y + cr.dy};
     HdcDrawText(hdc, s, &rs, fmt);
 
@@ -139,7 +139,7 @@ DoDefault:
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-void LabelWithCloseWnd::SetLabel(const char* label) {
+void LabelWithCloseWnd::SetLabel(Str label) {
     HwndSetText(this->hwnd, label);
     this->Layout();
     HwndScheduleRepaint(this->hwnd);
@@ -188,7 +188,7 @@ HWND LabelWithCloseWnd::Create(const LabelWithCloseWnd::CreateArgs& args) {
 }
 
 Size LabelWithCloseWnd::GetIdealSize() {
-    char* s = HwndGetTextTemp(this->hwnd);
+    TempStr s = HwndGetTextTemp(this->hwnd);
     Size size = HwndMeasureText(this->hwnd, s);
     int btnDx = DpiScale(this->hwnd, kCloseBtnDx);
     int btnDy = DpiScale(this->hwnd, kCloseBtnDy);
