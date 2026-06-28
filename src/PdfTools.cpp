@@ -50,7 +50,7 @@ static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int pad
 
 // shared "Save As" browse used by the layout-based PDF tool dialogs below.
 // Seeds the dialog with the edit's current text and writes the chosen path back.
-static void BrowseForDest(HWND owner, Edit* edit, const WCHAR* filter, const WCHAR* defExt) {
+static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     WCHAR dstFileName[MAX_PATH + 1]{};
     GetWindowTextW(edit->hwnd, dstFileName, MAX_PATH);
 
@@ -59,9 +59,9 @@ static void BrowseForDest(HWND owner, Edit* edit, const WCHAR* filter, const WCH
     ofn.hwndOwner = owner;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = filter;
+    ofn.lpstrFilter = filter.s;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = defExt;
+    ofn.lpstrDefExt = defExt.s;
 
     if (GetSaveFileNameW(&ofn)) {
         edit->SetText(ToUtf8Temp(dstFileName));
