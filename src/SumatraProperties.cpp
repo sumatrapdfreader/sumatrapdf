@@ -282,7 +282,7 @@ static void AppendProp(StrBuilder& out, Str key, Str value) {
     if (!value) {
         return;
     }
-    out.AppendFmt("%s %s\n", key, value);
+    out.AppendFmt("%s %s\n", key.s, value.s);
 }
 
 // clang-format off
@@ -347,7 +347,7 @@ static void AppendPropTranslated(StrBuilder& out, Str propName, Str val) {
     }
     Str s = GetMatchingString(propToName, propName);
     if (!s) {
-        TempStr label = str::FormatTemp("%s:", propName);
+        TempStr label = str::FormatTemp("%s:", propName.s);
         AppendProp(out, label, val);
         return;
     }

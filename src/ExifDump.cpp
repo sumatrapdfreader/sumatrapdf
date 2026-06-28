@@ -1160,7 +1160,7 @@ static void DumpFromGdiplus(const ByteSlice& d, StrVec& lines) {
         } else {
             val = str::FormatTemp("[%u bytes]", item->length);
         }
-        TempStr line = str::FormatTemp("EXIF Tag 0x%04X (%s): %s", (u16)ids[i], TypeName(item->type), val);
+        TempStr line = str::FormatTemp("EXIF Tag 0x%04X (%s): %s", (u16)ids[i], TypeName(item->type).s, val.s);
         lines.Append(str::Dup(line));
         free(buf);
     }

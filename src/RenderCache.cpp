@@ -1149,7 +1149,7 @@ static void SerializeRequest(StrBuilder& s, Str label, PageRenderRequest* r, DWO
     SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
     if (r->dm && r->dm->GetEngine()) {
         TempStr name = path::GetBaseNameTemp(r->dm->GetEngine()->FilePath());
-        s.AppendFmt("  %s", name);
+        s.AppendFmt("  %s", name.s);
     }
     s.Append("\r\n");
 }

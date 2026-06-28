@@ -1032,7 +1032,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.noClose = true;
                         Str name = annot ? AnnotationReadableNameTemp(annot->type) : Str("none");
                         Str fmt = _TRA("%s annotation. Ctrl+click to edit.");
-                        args.msg = str::FormatTemp(fmt, name);
+                        args.msg = str::FormatTemp(fmt, name.s);
                         ShowNotification(args);
                     }
                 }
@@ -3059,7 +3059,7 @@ static void OnPaintError(MainWindow* win) {
     auto tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(filePath));
+        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(filePath).s);
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
@@ -3402,7 +3402,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         TempStr ext = path::GetExtTemp(destPath);
         TempStr base = str::DupTemp(fileName, str::Leni(fileName) - str::Leni(ext));
         for (int i = 1; i < 1000; i++) {
-            TempStr newName = str::FormatTemp("%s_%d%s", base, i, ext);
+            TempStr newName = str::FormatTemp("%s_%d%s", base.s, i, ext.s);
             destPath = path::JoinTemp(downloadsDir.s, newName.s);
             if (!file::Exists(destPath)) {
                 break;

@@ -80,15 +80,15 @@ static DWORD GetDirSize(Str dir, bool recur) {
 }
 
 bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
-    logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey),
-         (int)allUsers, installDir);
+    logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey).s,
+         (int)allUsers, installDir.s);
     bool ok = true;
 
     TempStr installedExePath = path::JoinTemp(installDir, kExeName);
     TempStr installDate = GetInstallDateTemp();
     // uninstaller is the same executable with a different flag
     Str uninstallerPath = installedExePath;
-    TempStr uninstallCmdLine = str::FormatTemp("\"%s\" -uninstall", uninstallerPath);
+    TempStr uninstallCmdLine = str::FormatTemp("\"%s\" -uninstall", uninstallerPath.s);
     if (allUsers) {
         uninstallCmdLine = str::JoinTemp(uninstallCmdLine, " -all-users");
     }
@@ -350,17 +350,17 @@ bool OldWriteFileAssoc(HKEY hkey) {
         key = str::JoinTemp(regPath, L"\\DefaultIcon");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, iconPath);
     }
-    AutoFreeWStr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath);
+    AutoFreeWStr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.s);
     {
         key = str::JoinTemp(regPath, L"\\Shell\\Open\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, cmdPath);
     }
-    AutoFreeWStr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath);
+    AutoFreeWStr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.s);
     {
         key = str::JoinTemp(regPath, L"\\Shell\\Print\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printPath);
     }
-    AutoFreeWStr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath);
+    AutoFreeWStr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.s);
     {
         key = str::JoinTemp(regPath, L"\\Shell\\PrintTo\\Command");
         ok &= LoggedWriteRegStr(hkey, key, nullptr, printToPath);
@@ -371,7 +371,7 @@ bool OldWriteFileAssoc(HKEY hkey) {
 
 // http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
-    logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
+    logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey).s);
     bool ok = true;
     TempStr key;
 
@@ -396,7 +396,7 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
 }
 
 bool RemoveUninstallerRegistryInfo(HKEY hkey) {
-    logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
+    logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey).s);
     TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
     bool ok1 = LoggedDeleteRegKey(hkey, regPathUninst);
     // legacy, this key was added by installers up to version 1.8
@@ -462,7 +462,7 @@ static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
 }
 
 void RemoveInstallRegistryKeys(HKEY hkey) {
-    logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
+    logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey).s);
     UnregisterFromBeingDefaultViewer(hkey);
 
     // those are registry keys written before 3.4

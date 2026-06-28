@@ -353,7 +353,7 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
         s.Reset();
         s.AppendFmt(_TRA("page %d,"), annot->pageNo);
         Str name = AnnotationReadableNameTemp(annot->type);
-        s.AppendFmt(" %s", name);
+        s.AppendFmt(" %s", name.s);
         model->strings.Append(s.Get());
     }
 
@@ -545,7 +545,7 @@ static void DoAuthor(EditAnnotationsWindow* ew, Annotation* annot) {
         return;
     }
     StrBuilder s;
-    s.AppendFmt(_TRA("Author: %s"), author);
+    s.AppendFmt(_TRA("Author: %s"), author.s);
     ew->staticAuthor->SetText(s.Get());
     ew->staticAuthor->SetIsVisible(true);
 }

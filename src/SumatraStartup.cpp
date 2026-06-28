@@ -1680,7 +1680,7 @@ static int MaybeDelegateToToolExe() {
     }
 
     WStr rest = SkipFirstArg(WStr(GetCommandLineW()));
-    TempStr cmd = str::FormatTemp("\"%s\" %s", toolExe, ToUtf8Temp(rest));
+    TempStr cmd = str::FormatTemp("\"%s\" %s", toolExe.s, ToUtf8Temp(rest).s);
     TempWStr cmdW = ToWStrTemp(cmd);
     TempWStr toolExeW = ToWStrTemp(toolExe);
 

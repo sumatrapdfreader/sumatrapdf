@@ -260,7 +260,7 @@ void StartInstallerAutoUpgrade(Str installerPath) {
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.AppendFmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp());
+        cmd.AppendFmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp().s);
     }
     logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", cmd.Get());
     CreateProcessHelper(installerPath, cmd.Get());
@@ -375,10 +375,10 @@ static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
 
 static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
     TempStr size = FormatFileSizeTransTemp(data->nDownloaded);
-    logf("UpdateDownloadProgressNotif: %s\n", size);
+    logf("UpdateDownloadProgressNotif: %s\n", size.s);
     auto wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
     if (wnd) {
-        TempStr msg = str::FormatTemp("Downloading update: %s\n", size);
+        TempStr msg = str::FormatTemp("Downloading update: %s\n", size.s);
         NotificationUpdateMessage(wnd, msg, 0, true);
     } else {
         logf("UpdateDownloadProgressNotif: no wnd\n");
@@ -407,7 +407,7 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     pd.hwndForNotif = hwndForNotif;
     auto cb = MkFunc1<UpdateProgressData, HttpProgress*>(UpdateProgressCb, &pd);
     bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, cb);
-    logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
+    logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath.s);
     if (ok) {
         updateInfo->installerPath = str::Dup(installerPath);
     } else {
@@ -425,9 +425,9 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     if (!win || !updateInfo) {
         return;
     }
-    TempStr link = str::FormatTemp("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update"));
+    TempStr link = str::FormatTemp("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update").s);
     TempStr msg = str::FormatTemp(_TRA("Update %s available (you have %s) available. %s"), updateInfo->latestVer,
-                                  CURR_VERSION_STRA, link);
+                                  CURR_VERSION_STRA, link.s);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = msg;
@@ -503,7 +503,7 @@ static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND hwnd, UINT msg, WPARAM 
 static const Str kExpectedDlHost = StrL("https://www.sumatrapdfreader.org/");
 
 static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
-    logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL);
+    logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL.s);
     ReportIfFast(true);
     auto title = _TRA("SumatraPDF Update");
     auto content = str::FormatTemp(R"(Suspicious update.

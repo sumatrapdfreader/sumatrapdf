@@ -125,7 +125,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         free(uncompressed);
 
         if (!ok) {
-            TempStr msg = str::FormatTemp(_TRA("Couldn't write %s to disk"), filePath);
+            TempStr msg = str::FormatTemp(_TRA("Couldn't write %s to disk"), filePath.s);
             NotifyFailed(msg);
             return false;
         }

@@ -303,7 +303,7 @@ void StrTest() {
         Str str2;
         AutoFreeStr large(AllocArray<char>(2000));
         memset(large, 0x11, 1998);
-        str2 = str::Format("%s", Str(large.Get()));
+        str2 = str::Format("%s", large.Get());
         utassert(str::Eq(str2, Str(large.Get())));
         str::Free(str2);
     }

@@ -90,7 +90,7 @@ TempStr AIChatJsEscapeTemp(Str s) {
 }
 
 TempStr AIChatJsonStrTemp(Str json, Str key) {
-    TempStr pattern = str::FormatTemp("\"%s\":\"", key);
+    TempStr pattern = str::FormatTemp("\"%s\":\"", key.s);
     Str found = str::Find(json, pattern);
     if (!found) {
         return {};
@@ -180,7 +180,7 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
     GetLocalTime(&st);
     StrBuilder entry;
     entry.AppendFmt("[%04d-%02d-%02d %02d:%02d:%02d] %s: ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
-                    st.wSecond, direction);
+                    st.wSecond, direction.s);
     entry.Append(text);
     if (entry.LastChar() != '\n') {
         entry.AppendChar('\n');

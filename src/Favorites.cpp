@@ -315,23 +315,23 @@ TempStr FavReadableNameTemp(Favorite* fn) {
         label = str::FormatTemp("%d", fn->pageNo);
     }
     if (fn->name) {
-        TempStr pageNo = str::FormatTemp(_TRA("(page %s)"), label);
+        TempStr pageNo = str::FormatTemp(_TRA("(page %s)"), label.s);
         return str::JoinTemp(fn->name, " ", pageNo);
     }
-    return str::FormatTemp(_TRA("Page %s"), label);
+    return str::FormatTemp(_TRA("Page %s"), label.s);
 }
 
 // caller has to free() the result
 static TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isCurrent = false) {
     TempStr rn = FavReadableNameTemp(fn);
     if (isCurrent) {
-        return str::FormatTemp("%s : %s", _TRA("Current file"), rn);
+        return str::FormatTemp("%s : %s", _TRA("Current file").s, rn.s);
     }
     TempStr fp = path::GetBaseNameTemp(fav->filePath);
     // show the favorite's name first, then the file name, so that a long file
     // name doesn't push the user's description out of view in the favorites
     // pane / menu (fixes #829, #2236)
-    return str::FormatTemp("%s : %s", rn, fp);
+    return str::FormatTemp("%s : %s", rn.s, fp.s);
 }
 
 static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, bool isCurrent) {
@@ -466,11 +466,11 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
         bool isBookmarked = IsPageInFavorites(win->ctrl->GetFilePath(), win->currPageNo);
         if (isBookmarked) {
             MenuSetEnabled(menu, CmdFavoriteAdd, false);
-            TempStr s = str::FormatTemp(_TRA("Remove page %s from favorites"), label);
+            TempStr s = str::FormatTemp(_TRA("Remove page %s from favorites"), label.s);
             MenuSetText(menu, CmdFavoriteDel, s);
         } else {
             MenuSetEnabled(menu, CmdFavoriteDel, false);
-            TempStr s = str::FormatTemp(_TRA("Add page %s to favorites"), label);
+            TempStr s = str::FormatTemp(_TRA("Add page %s to favorites"), label.s);
             s = AppendAccelKeyToMenuStringTemp(s, CmdFavoriteAdd);
             MenuSetText(menu, CmdFavoriteAdd, s);
         }

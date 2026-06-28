@@ -217,7 +217,7 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, ByteSlice data) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    TempStr fileFilterA = str::FormatTemp("%s\1*.*\1", _TRA("All files"));
+    TempStr fileFilterA = str::FormatTemp("%s\1*.*\1", _TRA("All files").s);
     TempWStr fileFilter = ToWStrTemp(fileFilterA);
     str::TransCharsInPlace(fileFilter, L"\1", L"\0");
     ofn.lpstrFilter = fileFilter;

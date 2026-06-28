@@ -642,7 +642,7 @@ TempStr MakeUniqueFilePathTemp(Str path) {
     TempStr noExt = path::GetPathNoExtTemp(path);
     TempStr ext = path::GetExtTemp(path);
     for (int i = 1; i < 10000; i++) {
-        TempStr candidate = str::FormatTemp("%s.%d%s", noExt, i, ext);
+        TempStr candidate = str::FormatTemp("%s.%d%s", noExt.s, i, ext.s);
         if (!file::Exists(candidate)) {
             return candidate;
         }

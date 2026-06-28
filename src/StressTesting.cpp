@@ -530,7 +530,7 @@ static void Finished(StressTest* st, bool success) {
     if (success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
         TempStr tm = FormatTimeTemp(secs);
-        TempStr s = str::FormatTemp("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm);
+        TempStr s = str::FormatTemp("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm.s);
         printf("%s\n", s.s);
         fflush(stdout);
         NotificationCreateArgs args;
@@ -678,7 +678,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
     int secs = SecsSinceSystemTime(st->stressStartTime);
     TempStr tm = FormatTimeTemp(secs);
     int nTotalFiles = st->fileProvider->GetFilesCount();
-    TempStr s = str::FormatTemp("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm);
+    TempStr s = str::FormatTemp("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName.s, tm.s);
     NotificationCreateArgs nargs;
     nargs.hwndParent = st->win->hwndCanvas;
     nargs.msg = s;

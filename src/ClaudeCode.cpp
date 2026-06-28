@@ -770,12 +770,12 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                                 desc.AppendFmt(" (%s)", fp.s);
                             } else if (cmd) {
                                 if (str::Leni(cmd) > 60) {
-                                    desc.AppendFmt(" $ %.60s...", cmd);
+                                    desc.AppendFmt(" $ %.60s...", cmd.s);
                                 } else {
-                                    desc.AppendFmt(" $ %s", cmd);
+                                    desc.AppendFmt(" $ %s", cmd.s);
                                 }
                             } else if (pat) {
-                                desc.AppendFmt(" /%s/", pat);
+                                desc.AppendFmt(" /%s/", pat.s);
                             }
                             PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
                         }

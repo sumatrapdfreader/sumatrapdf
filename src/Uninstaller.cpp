@@ -78,7 +78,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
         return;
     }
     if (!str::FindI(currPath, installDir)) {
-        logf("RemoveInstallDirFromPath: '%s' not found in PATH\n", installDir);
+        logf("RemoveInstallDirFromPath: '%s' not found in PATH\n", installDir.s);
         return;
     }
 
@@ -120,7 +120,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
         logf("RemoveInstallDirFromPath: RegSetValueExW failed with %d\n", (int)res);
         return;
     }
-    logf("RemoveInstallDirFromPath: removed '%s' from PATH\n", installDir);
+    logf("RemoveInstallDirFromPath: removed '%s' from PATH\n", installDir.s);
     // notify other processes that environment has changed
     SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, nullptr);
 }
@@ -478,7 +478,7 @@ static void InitSelfDelete() {
     // https://stackoverflow.com/questions/1672338/how-to-sleep-for-five-seconds-in-a-batch-file-cmd
     script.Append("timeout /t 2 /nobreak >nul\r\n");
     // delete our executable
-    script.AppendFmt("del \"%s\"\r\n", exePath);
+    script.AppendFmt("del \"%s\"\r\n", exePath.s);
     // del itself
     // https://stackoverflow.com/questions/2888976/how-to-make-bat-file-delete-it-self-after-completion
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
@@ -490,7 +490,7 @@ static void InitSelfDelete() {
         return;
     }
     logf("Created self-delete batch script '%s'\n", scriptPath.s);
-    TempStr cmdLine = str::FormatTemp("cmd.exe /C \"%s\"", scriptPath);
+    TempStr cmdLine = str::FormatTemp("cmd.exe /C \"%s\"", scriptPath.s);
     LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
 }
 

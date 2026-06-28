@@ -35,8 +35,8 @@ static TempStr FindGrokExecutableTemp() {
     StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
-        candidates.Append(str::FormatTemp("%s\\.grok\\bin\\grok.exe", userProfile));
-        candidates.Append(str::FormatTemp("%s\\.local\\bin\\grok.exe", userProfile));
+        candidates.Append(str::FormatTemp("%s\\.grok\\bin\\grok.exe", userProfile.s));
+        candidates.Append(str::FormatTemp("%s\\.local\\bin\\grok.exe", userProfile.s));
     }
     return AIChatFindExecutableTemp(candidates, WStr(L"grok.exe"), WStr(L"grok"));
 }
@@ -942,7 +942,7 @@ static void SendGrokMessage(MainWindow* win) {
 
     GrokBuildLog(">>> user", input);
     GrokBuildLog(">>> session",
-                 str::FormatTemp("%s (%s)", tab->grokSessionId ? tab->grokSessionId : kGrokPendingSessionId(),
+                 str::FormatTemp("%s (%s)", tab->grokSessionId ? tab->grokSessionId.s : kGrokPendingSessionId().s,
                                  isNewSession ? "new" : "resume"));
     GrokBuildLog(">>> cwd", dir);
 
@@ -1195,7 +1195,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     auto webView = new WebviewWnd();
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA);
     // use unique data dir per process to avoid locking conflicts
-    webView->dataDir = str::Format("%s\\SumatraPDF\\GrokWebView_%d", userProfile, (int)GetCurrentProcessId());
+    webView->dataDir = str::Format("%s\\SumatraPDF\\GrokWebView_%d", userProfile.s, (int)GetCurrentProcessId());
     if (!LockDataResource(IDR_CLAUDE_MARKED_JS, &gGrokMarkedJs)) {
         delete webView;
         return;

@@ -27,9 +27,9 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         // run SumatraPDF.exe with the -plugin command line argument
         PluginStartData* data = (PluginStartData*)((CREATESTRUCT*)lp)->lpCreateParams;
         auto path = data->filePath;
-        TempStr cmdLine = str::FormatTemp("-plugin %d \"%s\"", hwnd, path);
+        TempStr cmdLine = str::FormatTemp("-plugin %d \"%s\"", hwnd, path.s);
         if (data->fileOriginUrl) {
-            cmdLine = str::FormatTemp("-plugin \"%s\" %d \"%s\"", data->fileOriginUrl.s, hwnd, path);
+            cmdLine = str::FormatTemp("-plugin \"%s\" %d \"%s\"", data->fileOriginUrl.s, hwnd, path.s);
         }
         ShellExecute(hwnd, L"open", ToWStrTemp(data->sumatraPath), ToWStrTemp(cmdLine), nullptr, SW_SHOW);
     } else if (WM_SIZE == msg) {
@@ -93,7 +93,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
     if (argList.Size() == 1) {
         TempStr name = path::GetBaseNameTemp(argList.At(0));
-        TempStr msg = str::FormatTemp("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
+        TempStr msg = str::FormatTemp("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name.s);
         MsgBox(nullptr, msg, PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }

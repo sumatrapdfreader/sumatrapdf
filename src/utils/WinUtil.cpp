@@ -430,7 +430,7 @@ void LogLastError(DWORD err) {
         msg = "";
     }
     str::TrimWSInPlace(msg, str::TrimOpt::Both);
-    logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg);
+    logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg.s);
 }
 
 void DbgOutLastError(DWORD err) {
@@ -2707,10 +2707,10 @@ bool SafeCloseHandle(HANDLE* hPtr) {
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
 void RunNonElevated(Str exePath) {
     if (!file::Exists(exePath)) {
-        logf("RunNonElevated: file '%s' doesn't exist\n", exePath);
+        logf("RunNonElevated: file '%s' doesn't exist\n", exePath.s);
         return;
     }
-    logf("RunNonElevated: '%s'\n", exePath);
+    logf("RunNonElevated: '%s'\n", exePath.s);
     TempStr cmd;
     TempStr explorerPath;
     WCHAR buf[MAX_PATH] = {};
@@ -2723,7 +2723,7 @@ void RunNonElevated(Str exePath) {
     if (!file::Exists(explorerPath)) {
         goto Run;
     }
-    cmd = str::FormatTemp("\"%s\" \"%s\"", explorerPath, exePath);
+    cmd = str::FormatTemp("\"%s\" \"%s\"", explorerPath.s, exePath.s);
 Run:
     HANDLE h = LaunchProcessInDir(IsEmpty(cmd) ? exePath : cmd);
     SafeCloseHandle(&h);

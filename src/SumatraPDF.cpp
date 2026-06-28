@@ -1222,10 +1222,10 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
         pageNo = ctrl->CurrentPageNo();
     }
     int nPages = ctrl->PageCount();
-    TempStr pageInfo = str::FormatTemp("%s %d / %d", _TRA("Page:"), pageNo, nPages);
+    TempStr pageInfo = str::FormatTemp("%s %d / %d", _TRA("Page:").s, pageNo, nPages);
     if (ctrl->HasPageLabels()) {
         TempStr label = ctrl->GetPageLabeTemp(pageNo);
-        pageInfo = str::FormatTemp("%s %s (%d / %d)", _TRA("Page:"), label, pageNo, nPages);
+        pageInfo = str::FormatTemp("%s %s (%d / %d)", _TRA("Page:").s, label.s, pageNo, nPages);
     }
     float zoomLevel = ctrl->GetZoomVirtual();
     auto zoomStr = BuildZoomString(zoomLevel);
@@ -1410,24 +1410,24 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
             str::NormalizeWSInPlace(title);
             docTitle = str::DupTemp(title);
             if (!str::IsEmpty(title)) {
-                docTitle = str::FormatTemp("- [%s] ", title);
+                docTitle = str::FormatTemp("- [%s] ", title.s);
             }
         }
     }
 
     TempStr s = nullptr;
     if (!IsUIRtl()) {
-        s = str::FormatTemp("%s %s- %s", titlePath, docTitle, kSumatraWindowTitle);
+        s = str::FormatTemp("%s %s- %s", titlePath.s, docTitle.s, kSumatraWindowTitle);
     } else {
         // explicitly revert the title, so that filenames aren't garbled
-        s = str::FormatTemp("%s %s- %s", kSumatraWindowTitle, docTitle, titlePath);
+        s = str::FormatTemp("%s %s- %s", kSumatraWindowTitle, docTitle.s, titlePath.s);
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
         // base the prefix on the freshly-built title 's', not tab->frameTitle:
         // the latter may already carry the prefix from a previous refresh, so
         // reusing it stacks "[..] [..] [..] file.pdf" on repeated changes (#5690)
-        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s"), s);
+        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s"), s.s);
     }
     str::ReplaceWithCopy(&tab->frameTitle, s);
 }
@@ -2337,7 +2337,7 @@ static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.warning = true;
-    nargs.msg = str::FormatTemp(_TRA("File %s not found"), path);
+    nargs.msg = str::FormatTemp(_TRA("File %s not found"), path.s);
     ShowNotification(nargs);
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
@@ -2347,7 +2347,7 @@ void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs) {
     // new translation. Find a better message e.g. why failed.
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
-    nargs.msg = str::FormatTemp(_TRA("Error loading %s"), path);
+    nargs.msg = str::FormatTemp(_TRA("Error loading %s"), path.s);
     nargs.warning = true;
     nargs.timeoutMs = 1000 * 5;
     ShowNotification(nargs);
@@ -2495,7 +2495,7 @@ static NotificationWnd* ShowLoadingNotif(MainWindow* win, Str path) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.groupId = path.s;
-    nargs.msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(path));
+    nargs.msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(path).s);
     return ShowNotification(nargs);
 }
 
@@ -2587,9 +2587,9 @@ static void UpdateLoadingNotifUI(ExtractProgressUITask* task) {
     TempStr basename = path::GetBaseNameTemp(task->path);
     TempStr msg;
     if (task->nTotal > 0) {
-        msg = str::FormatTemp(_TRA("Loading %s %d of %d"), basename, task->nDecoded, task->nTotal);
+        msg = str::FormatTemp(_TRA("Loading %s %d of %d"), basename.s, task->nDecoded, task->nTotal);
     } else {
-        msg = str::FormatTemp(_TRA("Loading %s %d"), basename, task->nDecoded);
+        msg = str::FormatTemp(_TRA("Loading %s %d"), basename.s, task->nDecoded);
     }
     NotificationUpdateMessage(task->wnd, msg);
 }
@@ -2642,9 +2642,9 @@ static void UpdateCopyNotifUI(CopyProgressUITask* task) {
     TempStr msg;
     if (task->bytesTotal > 0) {
         TempStr total = str::FormatSizeShortTemp(task->bytesTotal, nullptr);
-        msg = str::FormatTemp(_TRA("Copying %s: %s / %s"), basename, copied, total);
+        msg = str::FormatTemp(_TRA("Copying %s: %s / %s"), basename.s, copied.s, total.s);
     } else {
-        msg = str::FormatTemp(_TRA("Copying %s: %s"), basename, copied);
+        msg = str::FormatTemp(_TRA("Copying %s: %s"), basename.s, copied.s);
     }
     NotificationUpdateMessage(task->wnd, msg);
 }
@@ -3345,7 +3345,7 @@ enum class SaveChoice {
 
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
     TempStr fileName = path::GetBaseNameTemp(filePath);
-    TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'"), fileName);
+    TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'"), fileName.s);
     TempWStr mainInstr = ToWStrTemp(mainInstrA);
     auto content = _TRA("Save changes?");
 
@@ -3745,8 +3745,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, StrBuilder& fileFilter) 
         if (!str::IsEmpty(imgDefExt) && imgDefExt.s[0] == '.') {
             imgDefExt = Str(imgDefExt.s + 1, imgDefExt.len - 1);
         }
-        TempWStr extW = ToWStrTemp(imgDefExt);
-        fileFilter.AppendFmt(_TRA("Image files (*.%s)"), extW);
+        fileFilter.AppendFmt(_TRA("Image files (*.%s)"), imgDefExt.s);
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {
@@ -3806,7 +3805,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // methods too early on)
     StrBuilder fileFilter(256);
     if (AppendFileFilterForDoc(ctrl, fileFilter)) {
-        fileFilter.AppendFmt("\1*%s\1", defExt);
+        fileFilter.AppendFmt("\1*%s\1", defExt.s);
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
@@ -3921,7 +3920,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         } else {
             TempStr s = GetLastErrorStrTemp();
             if (str::Leni(s) > 0) {
-                errorMsg = str::FormatTemp("%s\n\n%s", _TRA("Failed to save a file"), s);
+                errorMsg = str::FormatTemp("%s\n\n%s", _TRA("Failed to save a file").s, s.s);
             }
         }
     }
@@ -3929,7 +3928,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // than MAX_PATH) can report success while nothing was actually written, so
     // the user has no way to tell the save silently failed (issue #1016).
     if (ok && !file::Exists(realDstFileName)) {
-        logf("SaveCurrentFileAs(): '%s' doesn't exist after a reportedly successful save\n", realDstFileName);
+        logf("SaveCurrentFileAs(): '%s' doesn't exist after a reportedly successful save\n", realDstFileName.s);
         ok = false;
     }
     if (!ok) {
@@ -4016,7 +4015,7 @@ static void RenameCurrentFile(MainWindow* win) {
     StrBuilder fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
-    fileFilter.AppendFmt("\1*%s\1", defExt);
+    fileFilter.AppendFmt("\1*%s\1", defExt.s);
     str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
 
     WCHAR dstFilePathW[MAX_PATH];
@@ -4109,7 +4108,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     StrBuilder fileFilter;
-    fileFilter.AppendFmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts"));
+    fileFilter.AppendFmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts").s);
     str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
     TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
@@ -6609,7 +6608,7 @@ static void DownloadDebugSymbols() {
         msg = "Failed to download symbols";
         goto ShowMessage;
     }
-    msg = str::FormatTemp("Downloaded symbols to %s", gSymbolsDir);
+    msg = str::FormatTemp("Downloaded symbols to %s", gSymbolsDir.s);
     {
         bool didInitializeDbgHelp = InitializeDbgHelp(false);
         ReportIfFast(!didInitializeDbgHelp);
@@ -10041,7 +10040,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
         }
 
         TempStr localeName = TtsLangIdToLocaleNameTemp(voice.lang);
-        TempStr label = str::FormatTemp("%s - %s", voice.name, localeName);
+        TempStr label = str::FormatTemp("%s - %s", voice.name.s, localeName.s);
         AppendMenuW(voiceMenu, flags, cmd, ToWStrTemp(label));
 
         lastLang = lang;

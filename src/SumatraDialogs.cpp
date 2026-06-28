@@ -188,7 +188,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         }
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
-        TempStr txt = str::FormatTemp(_TRA("Enter password for %s"), data->fileName);
+        TempStr txt = str::FormatTemp(_TRA("Enter password for %s"), data->fileName.s);
         HwndSetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         HwndSetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, "");
         HwndSetDlgItemText(hDlg, IDC_STATIC, _TRA("&Password:"));
@@ -1157,7 +1157,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
             DarkMode::setDarkWndSafe(hDlg);
         }
         HwndSetText(hDlg, _TRA("Add Favorite"));
-        TempStr s = str::FormatTemp(_TRA("Add page %s to favorites with (optional) name:"), data->pageNo);
+        TempStr s = str::FormatTemp(_TRA("Add page %s to favorites with (optional) name:"), data->pageNo.s);
         HwndSetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
         HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));

@@ -1165,7 +1165,7 @@ static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
 
     TempStr fileName = MenuToSafeStringTemp(menuString);
     int menuIdx = (int)((index + 1) % 10);
-    menuString = str::FormatTemp("&%d) %s", menuIdx, fileName);
+    menuString = str::FormatTemp("&%d) %s", menuIdx, fileName.s);
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
     InsertMenuW(menuFile, CmdExit, flags, menuId, ToWStrTemp(menuString));
@@ -1888,7 +1888,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         // change from generic "Edit Annotations" to more specific
         // "Edit ${annotType} Annotation"
         Str t = AnnotationReadableNameTemp(ctx->annotationUnderCursor->type);
-        TempStr s = str::FormatTemp(_TRA("Edit %s Annotation"), t);
+        TempStr s = str::FormatTemp(_TRA("Edit %s Annotation"), t.s);
         MenuSetText(popup, CmdEditAnnotations, s);
     }
 
@@ -1903,13 +1903,13 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
                 // %s and not %d because re-using translation from RebuildFavMenu()
                 Str tr = _TRA("Remove page %s from favorites");
-                TempStr s = str::FormatTemp(tr, pageLabel);
+                TempStr s = str::FormatTemp(tr, pageLabel.s);
                 MenuSetText(popup, CmdFavoriteDel, s);
             } else {
                 MenuRemove(popup, CmdFavoriteDel);
 
                 // %s and not %d because re-using translation from RebuildFavMenu()
-                TempStr s = str::FormatTemp(_TRA("Add page %s to favorites"), pageLabel);
+                TempStr s = str::FormatTemp(_TRA("Add page %s to favorites"), pageLabel.s);
                 s = AppendAccelKeyToMenuStringTemp(s, CmdFavoriteAdd);
                 MenuSetText(popup, CmdFavoriteAdd, s);
             }
@@ -1985,7 +1985,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                     TempStr dir = path::GetDirTemp(Str(filePath));
                     TempStr base = path::GetBaseNameTemp(Str(filePath));
                     TempStr noExt = path::GetPathNoExtTemp(base);
-                    TempStr destPath = path::JoinTemp(dir, str::FormatTemp("%s_page_%d.png", noExt, pageNoUnderCursor));
+                    TempStr destPath =
+                        path::JoinTemp(dir, str::FormatTemp("%s_page_%d.png", noExt.s, pageNoUnderCursor));
                     ImageEditMode m = ImageEditMode::Save;
                     bool selectPdf = false;
                     if (cmdId == CmdCropImage) {

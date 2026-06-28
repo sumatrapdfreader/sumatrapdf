@@ -28,7 +28,7 @@ bool IsHttpRspOk(const HttpRsp* rsp) {
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
 bool HttpGet(Str urlA, HttpRsp* rspOut) {
-    logf("HttpGet: url: '%s'\n", urlA);
+    logf("HttpGet: url: '%s'\n", urlA.s);
     HINTERNET hReq = nullptr;
     DWORD infoLevel;
     DWORD headerBuffSize = sizeof(DWORD);
@@ -102,7 +102,7 @@ constexpr const int kBufSize = 256 * 1024;
 
 // Download content of a url to a file
 bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbProgress) {
-    logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
+    logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA.s, destFilePath.s);
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
     DWORD dwRead = 0;
@@ -117,7 +117,7 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
     HANDLE hf =
         CreateFileW(pathW, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (INVALID_HANDLE_VALUE == hf) {
-        logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePath);
+        logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePath.s);
         LogLastError();
         goto Exit;
     }

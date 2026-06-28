@@ -50,7 +50,7 @@ void ShowUsage(Str exeName) {
             hasCert = true;
         }
         // fprintf(stderr, "\"%s\"\n", name);
-        fprintf(stderr, "%s\n", ToUtf8Temp(name));
+        fprintf(stderr, "%s\n", ToUtf8Temp(name).s);
     }
     if (!hasCert) ErrOut1("Warning: Failed to find a signature certificate in store \"My\"!");
     CertCloseStore(hStore, 0);

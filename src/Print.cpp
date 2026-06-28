@@ -1952,7 +1952,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     }
 
     if (!printer) {
-        TempStr msg = str::FormatTemp(_TRA("Printer '%s' doesn't exist"), printerName);
+        TempStr msg = str::FormatTemp(_TRA("Printer '%s' doesn't exist"), printerName.s);
         MessageBoxWarningCond(displayErrors, msg, _TRA("Printing problem."));
         return PrintResult::PrinterNotFound;
     }
@@ -2009,7 +2009,7 @@ PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str set
     fileName = path::NormalizeTemp(Str(fileName));
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
-        TempStr msg = str::FormatTemp("Couldn't open file '%s' for printing", fileName);
+        TempStr msg = str::FormatTemp("Couldn't open file '%s' for printing", fileName.s);
         MessageBoxWarningCond(displayErrors, msg, _TRA("Error"));
         return PrintResult::CannotLoadFile;
     }

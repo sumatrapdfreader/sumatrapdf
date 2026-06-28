@@ -459,7 +459,7 @@ static void ProcessesUsingInstallation(StrVec& names) {
         if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
             // TODO: this kils ReadableProcName logic
             TempStr s = ToUtf8Temp(proc.szExeFile);
-            TempStr name = str::FormatTemp("%s (%d)", s, (int)procID);
+            TempStr name = str::FormatTemp("%s (%d)", s.s, (int)procID);
             names.Append(name);
         }
         proc.dwSize = sizeof(proc);

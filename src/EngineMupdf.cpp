@@ -1782,7 +1782,7 @@ int CmpPageLabelInfo(const void* a, const void* b) {
 
 static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     if (str::Eq(type, "D")) {
-        return str::FormatTemp("%s%d", prefix, pageNo);
+        return str::FormatTemp("%s%d", prefix.s, pageNo);
     }
     if (str::EqI(type, "R")) {
         // roman numbering style
@@ -1790,7 +1790,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
         if (!str::IsEmpty(type) && type.s[0] == 'r') {
             str::ToLowerInPlace(number);
         }
-        return str::FormatTemp("%s%s", prefix, number);
+        return str::FormatTemp("%s%s", prefix.s, number.s);
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
@@ -1802,7 +1802,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
         if (!str::IsEmpty(type) && type.s[0] == 'a') {
             str::ToLowerInPlace(Str(number.Get()));
         }
-        return str::FormatTemp("%s%s", prefix, number.Get());
+        return str::FormatTemp("%s%s", prefix.s, number.Get().s);
     }
     return str::DupTemp(prefix);
 }
@@ -3044,7 +3044,7 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     // page is really a stream number
     Str title = outline->title ? Str(outline->title) : Str("");
     AutoFreeStr nameHex(str::MemToHex((const u8*)title.s, title.len));
-    dest->value = Str(str::Format("%s:%d:attachname=%s", engine->FilePath(), outline->page.page, nameHex.Get()));
+    dest->value = Str(str::Format("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.Get()));
     dest->pageNo = outline->page.page;
     return dest;
 }
@@ -4201,10 +4201,10 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
             info.Append(" (");
             if (!str::IsEmpty(type)) {
-                info.AppendFmt("%s; ", type);
+                info.AppendFmt("%s; ", type.s);
             }
             if (!str::IsEmpty(encoding)) {
-                info.AppendFmt("%s; ", encoding);
+                info.AppendFmt("%s; ", encoding.s);
             }
             if (embedded) {
                 info.Append("embedded; ");
