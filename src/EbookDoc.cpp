@@ -93,7 +93,7 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
     if (str::StartsWith(s, UTF16BE_BOM)) {
         // convert from utf16 big endian to utf16
         s = Str(s.s + 2, s.len - 2);
-        int n = str::Leni((WCHAR*)s.s);
+        int n = str::CastToWCHAR(s).len;
         for (int i = 0; i < n; i++) {
             int idx = i * 2;
             std::swap(s.s[idx], s.s[idx + 1]);
@@ -1153,10 +1153,10 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
         // <BOOKMARK NAME="Contents">
         AttrInfo* attr = tok->GetAttrByName("NAME");
         if (attr && attr->val) {
-            WCHAR* ws = strconv::FromHtmlUtf8(attr->val);
-            TempStr s = ToUtf8Temp(ws);
+            WStr ws = strconv::FromHtmlUtf8(Str(attr->val));
+            TempStr s = ToUtf8Temp(ws.s);
             tocEntries.Append(s);
-            str::Free(ws);
+            str::FreePtr(&ws);
             builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size());
             return Str(tok->s + tok->sLen, text.s + text.len - (tok->s + tok->sLen));
         }
@@ -1707,9 +1707,9 @@ bool TxtDoc::HasToc() const {
     return isRFC;
 }
 
-static inline const WCHAR* SkipDigits(const WCHAR* s) {
-    while (str::IsDigit(*s)) {
-        s++;
+static inline WStr SkipDigits(WStr s) {
+    while (s && str::IsDigit(*s.s)) {
+        s = WStr(s.s + 1, s.len - 1);
     }
     return s;
 }
@@ -1727,10 +1727,10 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
         AutoFreeWStr id(el->GetAttribute(Str("id")).s);
         int level = 1;
         if (str::IsDigit(*title)) {
-            const WCHAR* dot = SkipDigits(title);
-            while ('.' == *dot && str::IsDigit(*(dot + 1))) {
+            WStr dot = SkipDigits(WStr(title));
+            while (dot && *dot.s == '.' && str::IsDigit(*(dot.s + 1))) {
                 level++;
-                dot = SkipDigits(dot + 1);
+                dot = SkipDigits(WStr(dot.s + 1, dot.len - 1));
             }
         }
         TempStr titleA = ToUtf8Temp(title);
