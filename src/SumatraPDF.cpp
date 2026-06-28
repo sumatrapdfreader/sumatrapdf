@@ -1751,7 +1751,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     DisplayModel* dmErr = win->AsFixed();
     EngineBase* engineErr = dmErr ? dmErr->GetEngine() : nullptr;
     if (engineErr && engineErr->errors.Size() > 0) {
-        TempStr msg = str::FormatTemp("[%s](CmdShowErrors) %s", _TRA("Errors"), _TRA("in PDF"));
+        TempStr msg = str::FormatTemp("[%s](CmdShowErrors) %s", _TRA("Errors").s, _TRA("in PDF").s);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;

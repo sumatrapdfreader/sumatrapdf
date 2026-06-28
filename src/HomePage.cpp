@@ -66,6 +66,10 @@ static bool IsTipWhitespace(char c) {
 
 static void AdvanceTipText(Str& s, int n = 1) {
     ReportIf(n < 0 || n > s.len);
+    if (n >= s.len) {
+        s = {};
+        return;
+    }
     s.s += n;
     s.len -= n;
 }
@@ -171,7 +175,7 @@ void ParseTip(ParsedTip& tip, Str s) {
     StrBuilder expanded;
     Str sp = s;
     // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands)
-    while (sp) {
+    while (!str::IsEmpty(sp)) {
         if (sp.s[0] == '(' && sp.len > 5 && str::StartsWith(Str(sp.s + 1, sp.len - 1), "Key/")) {
             Str end = str::FindChar(sp, ')');
             if (end) {
@@ -190,9 +194,9 @@ void ParseTip(ParsedTip& tip, Str s) {
 
     // second pass: split into words, detecting [text](link) markdown links
     Str p = expanded.Get();
-    while (p) {
+    while (!str::IsEmpty(p)) {
         SkipTipWhitespace(p);
-        if (!p) {
+        if (str::IsEmpty(p)) {
             break;
         }
 
@@ -260,7 +264,7 @@ void ParseTip(ParsedTip& tip, Str s) {
 }
 
 void MeasureTipWords(ParsedTip& tip, HDC hdc, HFONT font) {
-    uint fmt = DT_LEFT | DT_NOCLIP;
+    uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
     for (auto& w : tip.words) {
         Size sz = HdcMeasureText(hdc, w.text, fmt, font);
         w.dx = sz.dx;
@@ -296,7 +300,7 @@ void LayoutTip(ParsedTip& tip, int areaWidth, int startX, int startY) {
 }
 
 void DrawTipWords(HDC hdc, ParsedTip& tip, HFONT font, COLORREF textCol, COLORREF linkCol) {
-    uint fmt = DT_LEFT | DT_NOCLIP;
+    uint fmt = DT_LEFT | DT_NOCLIP | DT_NOPREFIX | DT_SINGLELINE;
     for (auto& w : tip.words) {
         Point pt = {w.x, w.y};
         SetTextColor(hdc, w.isLink ? linkCol : textCol);
