@@ -124,7 +124,7 @@ StyleRule StyleRule::Parse(CssPullParser* parser) {
     while ((prop = parser->NextProperty()) != nullptr) {
         switch (prop->type) {
             case Css_Text_Align:
-                rule.textAlign = FindAlignAttr(prop->s.s, (size_t)prop->s.len);
+                rule.textAlign = FindAlignAttr(prop->s);
                 break;
             // TODO: some documents use Css_Padding_Left for indentation
             case Css_Text_Indent:
@@ -811,7 +811,7 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     RectF bbox(0, currY, pageDx, 0);
     // append at the start of the line to prevent the anchor
     // from being flushed to the next page (with wrong currY value)
-    currPage->instructions.Append(DrawInstr::Anchor(Str((char*)attr->val, (int)attr->valLen), bbox));
+    currPage->instructions.Append(DrawInstr::Anchor(attr->val, bbox));
 }
 
 void HtmlFormatter::HandleDirAttr(HtmlToken* t) {
@@ -838,7 +838,7 @@ static AlignAttr GetAlignAttr(HtmlToken* t, AlignAttr defVal) {
     if (!attr) {
         return defVal;
     }
-    AlignAttr align = FindAlignAttr(attr->val, attr->valLen);
+    AlignAttr align = FindAlignAttr(attr->val);
     if (AlignAttr::NotFound == align) {
         return defVal;
     }
@@ -889,7 +889,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("face");
     const WCHAR* faceName = CurrFont()->GetName();
     if (attr) {
-        TempWStr buf = ToWStrTemp(attr->val, attr->valLen);
+        TempWStr buf = ToWStrTemp(attr->val);
         size_t strLen = str::Len(buf);
         // multiple font names can be comma separated
         if (strLen > 0 && *buf.s != ',') {
@@ -903,9 +903,9 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     if (attr) {
         // the sizes are in the range from 1 (tiny) to 7 (huge)
         int size = 3; // normal size
-        str::Parse(attr->val, attr->valLen, "%d", &size);
+        str::Parse(attr->val, "%d", &size);
         // sizes can also be relative to the current size
-        if (attr->valLen > 0 && ('-' == *attr->val || '+' == *attr->val)) {
+        if (attr->val.len > 0 && ('-' == attr->val.s[0] || '+' == attr->val.s[0])) {
             size += 3;
         }
         size = limitValue(size, 1, 7);
@@ -920,7 +920,7 @@ bool HtmlFormatter::HandleTagA(HtmlToken* t, Str linkAttr, Str attrNS) {
     if (t->IsStartTag() && !currLinkIdx) {
         AttrInfo* attr = attrNS ? t->GetAttrByNameNS(linkAttr, attrNS) : t->GetAttrByName(linkAttr);
         if (attr) {
-            AppendInstr(DrawInstr::LinkStart(Str((char*)attr->val, (int)attr->valLen)));
+            AppendInstr(DrawInstr::LinkStart(attr->val));
             currLinkIdx = currLineInstr.size();
             return true;
         }
@@ -1017,7 +1017,7 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
     // TODO: support multiple class names
     AttrInfo* attr = t->GetAttrByName("class");
     if (attr) {
-        Str clazz((char*)attr->val, (int)attr->valLen);
+        Str clazz = attr->val;
         prevRule = FindStyleRule(Tag_Any, clazz);
         if (prevRule) {
             rule.Merge(*prevRule);
@@ -1029,7 +1029,7 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
     }
     attr = t->GetAttrByName("style");
     if (attr) {
-        StyleRule newRule = StyleRule::Parse(Str((char*)attr->val, (int)attr->valLen));
+        StyleRule newRule = StyleRule::Parse(attr->val);
         rule.Merge(newRule);
     }
     return rule;
@@ -1222,7 +1222,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
                 // honor <ol start="N">
                 AttrInfo* attr = t->GetAttrByName("start");
                 if (attr) {
-                    li.nextNum = atoi(str::DupTemp(attr->val, attr->valLen));
+                    li.nextNum = atoi(str::DupTemp(attr->val));
                 }
             }
             listInfos.Append(li);

@@ -1404,13 +1404,13 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        Str src = str::Dup(attr->val, attr->valLen);
+        Str src = str::Dup(attr->val);
         url::DecodeInPlace(src);
         ByteSlice* img = chmDoc->GetImageData(src, Str(pagePath));
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(Str(attr->val, (int)attr->valLen));
+        HandleText(attr->val);
     }
 }
 
@@ -1421,8 +1421,8 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
-        currPage->instructions.Append(DrawInstr::Anchor(Str(attr->val, (int)attr->valLen), bbox));
-        pagePath.Set(str::Dup(attr->val, attr->valLen));
+        currPage->instructions.Append(DrawInstr::Anchor(attr->val, bbox));
+        pagePath.SetCopy(attr->val);
         // reset CSS style rules for the new document
         styleRules.Reset();
     }
@@ -1446,7 +1446,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    TempStr src = str::DupTemp(attr->val, attr->valLen);
+    TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
     ByteSlice data = chmDoc->GetFileData(src, Str(pagePath));
     if (data.Get()) {

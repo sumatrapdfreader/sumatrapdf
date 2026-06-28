@@ -2,10 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct AttrInfo {
-    const char* name;
-    size_t nameLen;
-    const char* val;
-    size_t valLen;
+    Str name;
+    Str val;
 
     bool NameIs(Str s) const;
     bool NameIsNS(Str nameToCheck, Str ns) const;

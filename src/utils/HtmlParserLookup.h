@@ -86,7 +86,7 @@ enum class AlignAttr {
 HtmlTag FindHtmlTag(const char* name, size_t len);
 bool IsTagSelfClosing(HtmlTag item);
 bool IsInlineTag(HtmlTag item);
-AlignAttr FindAlignAttr(const char* name, size_t len);
+AlignAttr FindAlignAttr(Str name);
 u32 FindHtmlEntityRune(const char* name, size_t len);
 
 enum CssProp {

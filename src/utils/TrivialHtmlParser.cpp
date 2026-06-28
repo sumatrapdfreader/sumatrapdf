@@ -292,10 +292,10 @@ HtmlElement* HtmlParser::ParseInPlace(const ByteSlice& d, uint codepage) {
             StartTag(tok);
 
             while (attr) {
-                char* name = (char*)attr->name;
-                char* nameEnd = name + attr->nameLen;
-                char* value = (char*)attr->val;
-                char* valueEnd = value + attr->valLen;
+                char* name = (char*)attr->name.s;
+                char* nameEnd = name + attr->name.len;
+                char* value = (char*)attr->val.s;
+                char* valueEnd = value + attr->val.len;
                 attr = tok->NextAttr();
 
                 *nameEnd = *valueEnd = '\0';

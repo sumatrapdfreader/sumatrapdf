@@ -315,16 +315,18 @@ bool IsInlineTag(HtmlTag item) {
     }
 }
 
-AlignAttr FindAlignAttr(const char* name, size_t len) {
-    u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
+AlignAttr FindAlignAttr(Str name) {
+    size_t len = name.len;
+    const char* s = name.s;
+    u32 key = 0 == len ? 0 : 1 == len ? STR1i(s) : 2 == len ? STR2i(s) : 3 == len ? STR3i(s) : STR4i(s);
     switch (key) {
         case CS4('c', 'e', 'n', 't'):
-            if (6 == len && CS2('e', 'r') == STR2i(name + 4)) {
+            if (6 == len && CS2('e', 'r') == STR2i(s + 4)) {
                 return AlignAttr::Center;
             }
             break;
         case CS4('j', 'u', 's', 't'):
-            if (7 == len && CS3('i', 'f', 'y') == STR3i(name + 4)) {
+            if (7 == len && CS3('i', 'f', 'y') == STR3i(s + 4)) {
                 return AlignAttr::Justify;
             }
             break;
@@ -334,7 +336,7 @@ AlignAttr FindAlignAttr(const char* name, size_t len) {
             }
             break;
         case CS4('r', 'i', 'g', 'h'):
-            if (5 == len && CS1('t') == STR1i(name + 4)) {
+            if (5 == len && CS1('t') == STR1i(s + 4)) {
                 return AlignAttr::Right;
             }
             break;

@@ -202,22 +202,22 @@ Str ResolveHtmlEntitiesTemp(Str s) {
 }
 
 bool AttrInfo::NameIs(Str s) const {
-    return str::EqNIx(Str((char*)name, (int)nameLen), nameLen, s);
+    return str::EqNIx(name, name.len, s);
 }
 
 // return true if nameToCheck is the same as s after skipping namespace preifix
-static bool IsNameWithNS(const char* s, size_t sLen, const char* nameToCheck) {
-    const char* sRealStart = s;
-    size_t len = sLen;
+static bool IsNameWithNS(Str s, Str nameToCheck) {
+    const char* sRealStart = s.s;
+    int len = s.len;
     // skip (potential) namespace prefix i.e. "foo:bar" = "bar"
-    const char* tmp = (const char*)memchr(s, ':', len);
+    const char* tmp = (const char*)memchr(s.s, ':', len);
     if (tmp) {
         sRealStart = tmp + 1;
-        size_t prefixLen = sRealStart - s;
+        int prefixLen = (int)(sRealStart - s.s);
         ReportIf(prefixLen > len);
         len -= prefixLen;
     }
-    return str::EqNIx(sRealStart, len, nameToCheck);
+    return str::EqNIx(Str(sRealStart, len), len, nameToCheck);
 }
 
 // for now just ignores any namespace qualifier
@@ -225,11 +225,11 @@ static bool IsNameWithNS(const char* s, size_t sLen, const char* nameToCheck) {
 // TODO: add proper namespace support
 bool AttrInfo::NameIsNS(Str nameToCheck, Str) const {
     // ReportIf(!ns);
-    return IsNameWithNS(name, nameLen, nameToCheck.s);
+    return IsNameWithNS(name, nameToCheck);
 }
 
 bool AttrInfo::ValIs(Str s) const {
-    return str::EqNIx(Str((char*)val, (int)valLen), valLen, s);
+    return str::EqNIx(val, val.len, s);
 }
 
 void HtmlToken::SetTag(TokenType new_type, const char* new_s, const char* end) {
@@ -264,7 +264,7 @@ bool HtmlToken::NameIs(Str nameToFind) const {
 bool HtmlToken::NameIsNS(Str nameToCheck, Str) const {
     // ReportIf(!ns);
     //  nLen is 'nameLen' i.e. first nLen characters of s is a name
-    return IsNameWithNS(s, nLen, nameToCheck.s);
+    return IsNameWithNS(Str(s, (int)nLen), nameToCheck);
 }
 
 // reparse point is an address within html that we can
@@ -321,17 +321,16 @@ AttrInfo* HtmlToken::NextAttr() {
         nextAttr = nullptr;
         return nullptr;
     }
-    attrInfo.name = curr;
+    const char* nameStart = curr;
     SkipName(curr, end);
-    attrInfo.nameLen = curr - attrInfo.name;
-    if (0 == attrInfo.nameLen) {
+    attrInfo.name = Str(nameStart, (int)(curr - nameStart));
+    if (!attrInfo.name) {
         goto NoNextAttr;
     }
     SkipWs(curr, end);
     if ((curr == end) || ('=' != *curr)) {
         // attributes without values get their names as value in HTML
         attrInfo.val = attrInfo.name;
-        attrInfo.valLen = attrInfo.nameLen;
         nextAttr = curr;
         return &attrInfo;
     }
@@ -341,21 +340,20 @@ AttrInfo* HtmlToken::NextAttr() {
     SkipWs(curr, end);
     if (curr == end) {
         // attribute with implicit empty value
-        attrInfo.val = curr;
-        attrInfo.valLen = 0;
+        attrInfo.val = Str(curr, 0);
     } else if (('\'' == *curr) || ('\"' == *curr)) {
         // attribute with quoted value
         ++curr;
-        attrInfo.val = curr;
+        const char* valStart = curr;
         if (!SkipUntil(curr, end, *(curr - 1))) {
             goto NoNextAttr;
         }
-        attrInfo.valLen = curr - attrInfo.val;
+        attrInfo.val = Str(valStart, (int)(curr - valStart));
         ++curr;
     } else {
-        attrInfo.val = curr;
+        const char* valStart = curr;
         SkipNonWs(curr, end);
-        attrInfo.valLen = curr - attrInfo.val;
+        attrInfo.val = Str(valStart, (int)(curr - valStart));
     }
     nextAttr = curr;
     return &attrInfo;

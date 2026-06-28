@@ -40,10 +40,6 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc) : HtmlFormat
     }
 }
 
-static Str AttrVal(const AttrInfo* attr) {
-    return Str(attr->val, (int)attr->valLen);
-}
-
 // parses size in the form "1em" or "3pt". To interpret ems we need emInPoints
 // to be passed by the caller
 static float ParseSizeAsPixels(Str s, float emInPoints) {
@@ -74,7 +70,7 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
     // 3pt top padding (the same seems to apply for <blockquote>)
     AttrInfo* attr = t->GetAttrByName("width");
     if (attr) {
-        float lineIndent = ParseSizeAsPixels(AttrVal(attr), CurrFont()->GetSize());
+        float lineIndent = ParseSizeAsPixels(attr->val, CurrFont()->GetSize());
         // there are files with negative width which produces partially invisible
         // text, so don't allow that
         if (lineIndent > 0) {
@@ -85,7 +81,7 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
     attr = t->GetAttrByName("height");
     if (attr) {
         // for use it in FlushCurrLine()
-        currLineTopPadding = ParseSizeAsPixels(AttrVal(attr), CurrFont()->GetSize());
+        currLineTopPadding = ParseSizeAsPixels(attr->val, CurrFont()->GetSize());
     }
 }
 
@@ -103,13 +99,13 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("recindex");
     if (attr) {
         int n;
-        if (str::Parse(AttrVal(attr), "%d", &n)) {
+        if (str::Parse(attr->val, "%d", &n)) {
             ByteSlice* img = doc->GetImage(n);
             needAlt = !img || !EmitImage(img);
         }
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(AttrVal(attr));
+        HandleText(attr->val);
     }
 }
 
@@ -147,13 +143,13 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        TempStr src = str::DupTemp(attr->val, attr->valLen);
+        TempStr src = str::DupTemp(attr->val);
         url::DecodeInPlace(src);
         ByteSlice* img = epubDoc->GetImageData(src, Str(pagePath));
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(AttrVal(attr));
+        HandleText(attr->val);
     }
 }
 
@@ -164,8 +160,8 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
-        currPage->instructions.Append(DrawInstr::Anchor(AttrVal(attr), bbox));
-        pagePath.SetCopy(AttrVal(attr));
+        currPage->instructions.Append(DrawInstr::Anchor(attr->val, bbox));
+        pagePath.SetCopy(attr->val);
         // reset CSS style rules for the new document
         styleRules.Reset();
     }
@@ -189,7 +185,7 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    TempStr src = str::DupTemp(attr->val, attr->valLen);
+    TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
     ByteSlice data = epubDoc->GetFileData(src, Str(pagePath));
     if (data) {
@@ -210,7 +206,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     if (!attr) {
         return;
     }
-    TempStr src = str::DupTemp(attr->val, attr->valLen);
+    TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
     ByteSlice* img = epubDoc->GetImageData(src, Str(pagePath));
     if (img) {
@@ -272,7 +268,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
     ByteSlice* img = nullptr;
     AttrInfo* attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
-        TempStr src = str::DupTemp(attr->val, attr->valLen);
+        TempStr src = str::DupTemp(attr->val);
         url::DecodeInPlace(src);
         img = fb2Doc->GetImageData(src);
     }
@@ -345,13 +341,13 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        TempStr src = str::DupTemp(attr->val, attr->valLen);
+        TempStr src = str::DupTemp(attr->val);
         url::DecodeInPlace(src);
         ByteSlice* img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
-        HandleText(AttrVal(attr));
+        HandleText(attr->val);
     }
 }
 
@@ -373,7 +369,7 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
         return;
     }
 
-    TempStr src = str::DupTemp(attr->val, attr->valLen);
+    TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
     ByteSlice data = htmlDoc->GetFileData(src);
     if (data) {
