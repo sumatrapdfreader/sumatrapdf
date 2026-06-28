@@ -85,7 +85,7 @@ static DWORD gDumpThreadId = 0;
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
-static bool TryStartCrashHandling(const char* handlerName) {
+static bool TryStartCrashHandling(Str handlerName) {
     if (InterlockedCompareExchange(&gCrashHandlerStarted, 1, 0) == 0) {
         gCrashThreadId = GetCurrentThreadId();
         gReducedLogging = true;
@@ -658,7 +658,7 @@ static void GetOsVersion(StrBuilder& s) {
 
 static void GetProcessorName(StrBuilder& s) {
     auto key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
-    char* name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
+    TempStr name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     if (!name) {
         // if more than one processor
         key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
@@ -682,7 +682,7 @@ static void GetGraphicsDriverInfo(StrBuilder& s) {
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i = 0;; i++) {
         TempStr key = str::FormatTemp(GFX_DRIVER_KEY_FMT, i);
-        char* v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverDesc");
+        TempStr v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverDesc");
         // I assume that if I can't read the value, there are no more drivers
         if (!v) {
             break;
@@ -728,8 +728,8 @@ static void GetSystemInfo(StrBuilder& s) {
     }
     {
         // get computer name
-        char* s1 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemFamily");
-        char* s2 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemVersion");
+        TempStr s1 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemFamily");
+        TempStr s2 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemVersion");
 
         if (!s1 && !s2) {
             // no-op
@@ -837,18 +837,19 @@ int __cdecl _purecall() {
 }
 
 static Str BuildSymbolsUrl() {
-    const char* urlBase = "https://www.sumatrapdfreader.org/dl/";
+    Str urlBase = "https://www.sumatrapdfreader.org/dl/";
     if (gIsPreReleaseBuild) {
-        const char* ver = preReleaseVersion;
-        urlBase = str::JoinTemp(urlBase, "prerel/", ver, "/SumatraPDF-prerel");
+        urlBase = str::JoinTemp(urlBase, "prerel/", preReleaseVersion, "/SumatraPDF-prerel");
     } else {
         // assuming this is release version
-        const char* ver = QM(CURR_VERSION);
+        Str ver = QM(CURR_VERSION);
         urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);
     }
     // TODO: ugly it's different between release and pre-release
-    const char* suff = ".pdb.lzsa";
-    if (gIsPreReleaseBuild) suff = "-32.pdb.lzsa";
+    Str suff = ".pdb.lzsa";
+    if (gIsPreReleaseBuild) {
+        suff = "-32.pdb.lzsa";
+    }
 
 #if IS_ARM_64 == 1
     suff = "-arm64.pdb.lzsa";
@@ -909,12 +910,12 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
         ByteSlice prefsData = file::ReadFile(Str(path));
         if (!prefsData.empty()) {
             // serialize without FileStates info because it's the largest
-            GlobalPrefs* gp = NewGlobalPrefs(Str((char*)prefsData.data(), (int)prefsData.size()));
+            GlobalPrefs* gp = NewGlobalPrefs(AsStr(prefsData));
             DeleteFileStates(gp->fileStates);
             gp->fileStates = new Vec<FileState*>();
             // TODO: also sessionData?
             ByteSlice d = SerializeGlobalPrefs(gp, nullptr);
-            gSettingsFile = Str((char*)d.data(), (int)d.size());
+            gSettingsFile = AsStr(d);
             DeleteGlobalPrefs(gp);
             prefsData.Free();
         }
@@ -1015,7 +1016,7 @@ static void TestCrashPureCall()
 static int TestBigNew()
 {
     size_t size = 1024*1024*1024*1;  // 1 GB should be out of reach
-    char *mem = (char*)1;
+    char* mem = (char*)1; // str-port: raw allocation test, not a string
     while (mem) {
         mem = new char[size];
     }
