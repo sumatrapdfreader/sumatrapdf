@@ -186,7 +186,7 @@ void SetCurrentLangByCode(Str langCode) {
 
     int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
-        logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode);
+        logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode.s);
         // set to English
         idx = 0;
     }

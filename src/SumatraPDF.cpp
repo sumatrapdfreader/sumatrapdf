@@ -265,7 +265,7 @@ void SetCurrentLang(Str langCode) {
         return;
     }
     str::ReplaceWithCopy(&gGlobalPrefs->uiLanguage, langCode);
-    trans::SetCurrentLangByCode(langCode);
+    trans::SetCurrentLangByCode(gGlobalPrefs->uiLanguage);
 }
 
 #define DEFAULT_FILE_PERCEIVED_TYPES "audio,video,webpage"
