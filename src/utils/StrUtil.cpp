@@ -311,9 +311,7 @@ bool Eq(const ByteSlice& sp1, const ByteSlice& sp2) {
     if (sp1.empty()) {
         return true;
     }
-    const char* s1 = (const char*)sp1.data();
-    const char* s2 = (const char*)sp2.data();
-    return 0 == strcmp(s1, s2);
+    return memeq(sp1.data(), sp2.data(), sp1.size());
 }
 
 // return true if s1 == s2, case insensitive
@@ -336,44 +334,62 @@ bool EqIS(Str s1, Str s2) {
         return false;
     }
 
-    const char* p1 = s1.s;
-    const char* p2 = s2.s;
-    while (*p1 && *p2) {
-        for (; IsWs(*p1); p1++) {
+    int i1 = 0;
+    int i2 = 0;
+    while (i1 < s1.len && i2 < s2.len) {
+        while (i1 < s1.len && IsWs(s1.s[i1])) {
+            i1++;
         }
-        for (; IsWs(*p2); p2++) {
+        while (i2 < s2.len && IsWs(s2.s[i2])) {
+            i2++;
         }
-
-        if (tolower(*p1) != tolower(*p2)) {
+        if (i1 >= s1.len || i2 >= s2.len) {
+            break;
+        }
+        if (tolower(s1.s[i1]) != tolower(s2.s[i2])) {
             return false;
         }
-        if (*p1) {
-            p1++;
-            p2++;
-        }
+        i1++;
+        i2++;
     }
-
-    return !*p1 && !*p2;
+    while (i1 < s1.len && IsWs(s1.s[i1])) {
+        i1++;
+    }
+    while (i2 < s2.len && IsWs(s2.s[i2])) {
+        i2++;
+    }
+    return i1 >= s1.len && i2 >= s2.len;
 }
 
 bool EqN(Str s1, Str s2, size_t len) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2) {
+    if (!s1 || !s2 || len == 0) {
+        return len == 0;
+    }
+    if ((size_t)s1.len < len || (size_t)s2.len < len) {
         return false;
     }
-    return 0 == strncmp(s1.s, s2.s, len);
+    return memeq(s1.s, s2.s, len);
 }
 
 bool EqNI(Str s1, Str s2, size_t len) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2) {
+    if (!s1 || !s2 || len == 0) {
+        return len == 0;
+    }
+    if ((size_t)s1.len < len || (size_t)s2.len < len) {
         return false;
     }
-    return 0 == _strnicmp(s1.s, s2.s, len);
+    for (size_t i = 0; i < len; i++) {
+        if (tolower(s1.s[i]) != tolower(s2.s[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool IsEmpty(Str s) {
