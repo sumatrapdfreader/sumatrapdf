@@ -1620,8 +1620,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     ew->onClose = MkFunc1Void(OnClose);
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-    args.icon = LoadIconW(h, iconName);
+    args.icon = LoadIconW(h, MAKEINTRESOURCEW(GetAppIconID()));
     // mainWindow->isDialog = true;
     if (UseDarkModeLib()) {
         args.bgColor = DarkMode::isEnabled() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
