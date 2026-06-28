@@ -164,7 +164,7 @@ void TrimWsEnd(char* s, char*& e);
 
 size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars);
 
-size_t NormalizeWSInPlace(char* str);
+size_t NormalizeWSInPlace(Str str);
 size_t NormalizeNewlinesInPlace(char* s, char* e);
 size_t NormalizeNewlinesInPlace(char* s);
 size_t RemoveCharsInPlace(char* str, const char* toRemove);
@@ -208,7 +208,7 @@ WCHAR* ToLowerInPlace(WCHAR*);
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
-size_t NormalizeWSInPlace(WCHAR* str);
+size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 const WCHAR* FindChar(const WCHAR* str, WCHAR c);
 WCHAR* FindChar(WCHAR* str, WCHAR c);
@@ -527,6 +527,12 @@ FORCEINLINE size_t TransCharsInPlace(WStr s, const WCHAR* oldChars, const WCHAR*
 }
 FORCEINLINE size_t TrimWSInPlace(char* s, TrimOpt opt) {
     return TrimWSInPlace(Str(s), opt);
+}
+FORCEINLINE size_t NormalizeWSInPlace(char* str) {
+    return NormalizeWSInPlace(Str(str));
+}
+FORCEINLINE size_t NormalizeWSInPlace(WCHAR* str) {
+    return NormalizeWSInPlace(WStr(str));
 }
 // str-port: char*/WCHAR* shims; remove when callers use Str/WStr
 FORCEINLINE int BufSet(char* dst, int dstCchSize, const char* src) {

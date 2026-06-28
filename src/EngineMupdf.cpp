@@ -446,8 +446,8 @@ static void PdfCleanStringInPlace(WStr& ws) {
             break;
         }
     }
-    str::NormalizeWSInPlace(ws.s);
-    ws.len = (int)str::Len(ws.s);
+    str::NormalizeWSInPlace(ws);
+    ws.len = (int)str::Len(ws);
 }
 
 struct istream_filter {

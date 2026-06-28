@@ -870,11 +870,17 @@ size_t TrimWSInPlace(Str s, TrimOpt opt) {
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
-size_t NormalizeWSInPlace(char* str) {
-    char *src = str, *dst = str;
+size_t NormalizeWSInPlace(Str s) {
+    if (!s) {
+        return 0;
+    }
+    char* str = s.s;
+    char* src = str;
+    char* dst = str;
+    char* end = str + s.len;
     bool addedSpace = true;
 
-    for (; *src; src++) {
+    while (src < end) {
         if (!IsWs(*src)) {
             *dst++ = *src;
             addedSpace = false;
@@ -882,6 +888,7 @@ size_t NormalizeWSInPlace(char* str) {
             *dst++ = ' ';
             addedSpace = true;
         }
+        src++;
     }
 
     if (dst > str && IsWs(*(dst - 1))) {
@@ -889,7 +896,7 @@ size_t NormalizeWSInPlace(char* str) {
     }
     *dst = '\0';
 
-    return src - dst;
+    return (size_t)(src - dst);
 }
 
 static bool isNl(char c) {
@@ -2446,14 +2453,17 @@ WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith)
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
-size_t NormalizeWSInPlace(WCHAR* str) {
-    if (!str) {
+size_t NormalizeWSInPlace(WStr s) {
+    if (!s) {
         return 0;
     }
-    WCHAR *src = str, *dst = str;
+    WCHAR* str = s.s;
+    WCHAR* src = str;
+    WCHAR* dst = str;
+    WCHAR* end = str + s.len;
     bool addedSpace = true;
 
-    for (; *src; src++) {
+    while (src < end) {
         if (!IsWs(*src)) {
             *dst++ = *src;
             addedSpace = false;
@@ -2461,6 +2471,7 @@ size_t NormalizeWSInPlace(WCHAR* str) {
             *dst++ = ' ';
             addedSpace = true;
         }
+        src++;
     }
 
     if (dst > str && IsWs(*(dst - 1))) {
@@ -2468,7 +2479,7 @@ size_t NormalizeWSInPlace(WCHAR* str) {
     }
     *dst = '\0';
 
-    return src - dst;
+    return (size_t)(src - dst);
 }
 
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
