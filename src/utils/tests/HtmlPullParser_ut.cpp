@@ -8,8 +8,8 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
-static void Test00(const char* s, HtmlToken::TokenType expectedType) {
-    HtmlPullParser parser{Str(s)};
+static void Test00(Str s, HtmlToken::TokenType expectedType) {
+    HtmlPullParser parser{s};
     HtmlToken* t = parser.Next();
     utassert(t->type == expectedType);
     utassert(t->NameIs("p"));
@@ -31,29 +31,29 @@ static void Test00(const char* s, HtmlToken::TokenType expectedType) {
 
 static void HtmlEntities() {
     struct {
-        const char* s;
+        Str s;
         int rune;
     } entities[] = {{"&Uuml;", 220}, {"&uuml;", 252},     {"&times;", 215}, {"&AElig;", 198},    {"&zwnj;", 8204},
                     {"&#58;", 58},   {"&#32783;", 32783}, {"&#x20;", 32},   {"&#xAf34;", 44852}, {"&Auml;", 196},
                     {"&a3;", -1},    {"&#xz312;", -1},    {"&aer;", -1}};
     for (size_t i = 0; i < dimof(entities); i++) {
-        const char* s = entities[i].s;
+        Str s = entities[i].s;
         int got;
-        Str entEnd = ResolveHtmlEntity(Str(s + 1, str::Len(s) - 1), got);
+        Str entEnd = ResolveHtmlEntity(Str(s.s + 1, str::Len(s) - 1), got);
         utassert(got == entities[i].rune);
         utassert((-1 == got) == !entEnd);
     }
     Arena* ta = GetTempArena();
-    const char* unchanged[] = {"foo", "", " as;d "};
+    Str unchanged[] = {"foo", "", " as;d "};
     for (size_t i = 0; i < dimof(unchanged); i++) {
-        const char* s = unchanged[i];
-        Str res = ResolveHtmlEntities(Str(s), ta);
-        utassert(res.s == s);
+        Str s = unchanged[i];
+        Str res = ResolveHtmlEntities(s, ta);
+        utassert(res.s == s.s);
     }
 
     struct {
-        const char* s;
-        const char* res;
+        Str s;
+        Str res;
     } changed[] = {
         // implementation detail: if there is '&' in the string
         // we always allocate, even if it isn't a valid entity
@@ -67,7 +67,7 @@ static void HtmlEntities() {
         {"&nbsp test&auml ;&ouml;&#64&#x50go", "\xC2\xA0 test\xC3\xA4 ;\xC3\xB6@Pgo"},
     };
     for (size_t i = 0; i < dimof(changed); i++) {
-        const char* s = changed[i].s;
+        Str s = changed[i].s;
         Str res = ResolveHtmlEntities(Str(s), ta);
         utassert(str::Eq(res, changed[i].res));
     }
@@ -85,8 +85,8 @@ static void Test01() {
 }
 
 static void Test02() {
-    const char* s = "<p>Last paragraph";
-    HtmlPullParser parser{Str(s)};
+    Str s = "<p>Last paragraph";
+    HtmlPullParser parser{s};
     HtmlToken* t = parser.Next();
     utassert(t && t->IsTag() && t->IsStartTag() && Tag_P == t->tag);
     t = parser.Next();
@@ -94,8 +94,8 @@ static void Test02() {
 }
 
 static void Test03() {
-    const char* s = "a < b > c <> d <";
-    HtmlPullParser parser{Str(s)};
+    Str s = "a < b > c <> d <";
+    HtmlPullParser parser{s};
     HtmlToken* t = parser.Next();
     utassert(t && t->IsText() && str::EqI(t->s, "a "));
     t = parser.Next();

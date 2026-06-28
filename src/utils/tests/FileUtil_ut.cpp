@@ -8,7 +8,7 @@
 #include "utils/UtAssert.h"
 
 void FileUtilTest() {
-    const char* path1 = "C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
+    Str path1 = "C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
 
     TempStr baseName = path::GetBaseNameTemp(path1);
     utassert(str::Eq(baseName, "SumatraPDF.exe"));
@@ -30,15 +30,15 @@ void FileUtilTest() {
     utassert(str::Eq(dirName, "/"));
 
     path1 = "C:\\Program Files";
-    char* path2 = path::Join("C:\\", "Program Files");
+    Str path2 = path::Join("C:\\", "Program Files");
     utassert(str::Eq(path1, path2));
-    free(path2);
+    str::Free(path2.s);
     path2 = path::Join(path1, "SumatraPDF");
     utassert(str::Eq(path2, "C:\\Program Files\\SumatraPDF"));
-    free(path2);
+    str::Free(path2.s);
     path2 = path::Join("C:\\", "\\Windows");
     utassert(str::Eq(path2, "C:\\Windows"));
-    free(path2);
+    str::Free(path2.s);
 
     utassert(path::Match("C:\\file.pdf", "*.pdf"));
     utassert(path::Match("C:\\file.pdf", "file.*"));
@@ -50,7 +50,7 @@ void FileUtilTest() {
     utassert(!path::Match("C:\\file.pdf", "f??f.p?f"));
     utassert(!path::Match("C:\\.pdf", "?.pdf"));
     {
-        char* path = path::JoinTemp("foo", "bar");
+        TempStr path = path::JoinTemp("foo", "bar");
         utassert(str::Eq(path, "foo\\bar"));
 
         path = path::JoinTemp("foo\\", "bar");
@@ -66,24 +66,24 @@ void FileUtilTest() {
         utassert(str::Eq(path, "foo\\bar\\z"));
     }
     {
-        char* path = path::Join("foo", "bar");
+        Str path = path::Join("foo", "bar");
         utassert(str::Eq(path, "foo\\bar"));
-        str::Free(path);
+        str::Free(path.s);
 
         path = path::Join("foo\\", "bar");
         utassert(str::Eq(path, "foo\\bar"));
-        str::Free(path);
+        str::Free(path.s);
 
         path = path::Join("foo", "\\bar");
         utassert(str::Eq(path, "foo\\bar"));
-        str::Free(path);
+        str::Free(path.s);
 
         path = path::Join("foo\\", "\\bar");
         utassert(str::Eq(path, "foo\\bar"));
-        str::Free(path);
+        str::Free(path.s);
 
         // path = path::Join("foo\\", "\\bar\\", "\\z");
         // utassert(str::Eq(path, "foo\\bar\\z"));
-        // str::Free(path);
+        // str::Free(path.s);
     }
 }

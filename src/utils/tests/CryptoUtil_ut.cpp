@@ -7,42 +7,40 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
-static bool TestDigestMD5(const char* data, int size, const char* verify) {
+static bool TestDigestMD5(Str data, Str verify) {
     u8 digest[16];
-    CalcMD5Digest((const u8*)data, size, digest);
+    CalcMD5Digest((const u8*)data.s, data.len, digest);
     AutoFreeStr hash(_MemToHex(&digest).s);
     return str::Eq(Str(hash.Get()), verify);
 }
 
-static bool TestDigestSHA1(const char* data, int size, const char* verify) {
+static bool TestDigestSHA1(Str data, Str verify) {
     u8 digest[20];
-    CalcSHA1Digest((const u8*)data, size, digest);
+    CalcSHA1Digest((const u8*)data.s, data.len, digest);
     AutoFreeStr hash(_MemToHex(&digest).s);
     return str::Eq(Str(hash.Get()), verify);
 }
 
-static bool TestDigestSHA2(const char* data, int size, const char* verify) {
+static bool TestDigestSHA2(Str data, Str verify) {
     u8 digest[32];
-    CalcSHA2Digest((const u8*)data, size, digest);
+    CalcSHA2Digest((const u8*)data.s, data.len, digest);
     AutoFreeStr hash(_MemToHex(&digest).s);
     return str::Eq(Str(hash.Get()), verify);
 }
 
 void CryptoUtilTest() {
-    utassert(TestDigestMD5("", 0, "d41d8cd98f00b204e9800998ecf8427e"));
-    utassert(TestDigestMD5("The quick brown fox jumps over the lazy dog", 43, "9e107d9d372bb6826bd81d3542a419d6"));
-    utassert(TestDigestMD5("The quick brown fox jumps over the lazy dog.", 44, "e4d909c290d0fb1ca068ffaddf22cbd0"));
+    utassert(TestDigestMD5("", "d41d8cd98f00b204e9800998ecf8427e"));
+    utassert(TestDigestMD5("The quick brown fox jumps over the lazy dog", "9e107d9d372bb6826bd81d3542a419d6"));
+    utassert(TestDigestMD5("The quick brown fox jumps over the lazy dog.", "e4d909c290d0fb1ca068ffaddf22cbd0"));
 
-    utassert(TestDigestSHA1("", 0, "da39a3ee5e6b4b0d3255bfef95601890afd80709"));
-    utassert(
-        TestDigestSHA1("The quick brown fox jumps over the lazy dog", 43, "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"));
-    utassert(
-        TestDigestSHA1("The quick brown fox jumps over the lazy cog", 43, "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3"));
+    utassert(TestDigestSHA1("", "da39a3ee5e6b4b0d3255bfef95601890afd80709"));
+    utassert(TestDigestSHA1("The quick brown fox jumps over the lazy dog", "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"));
+    utassert(TestDigestSHA1("The quick brown fox jumps over the lazy cog", "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3"));
 
-    utassert(TestDigestSHA2("", 0, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
-    utassert(TestDigestSHA2("The quick brown fox jumps over the lazy dog", 43,
+    utassert(TestDigestSHA2("", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
+    utassert(TestDigestSHA2("The quick brown fox jumps over the lazy dog",
                             "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"));
-    utassert(TestDigestSHA2("The quick brown fox jumps over the lazy dog.", 44,
+    utassert(TestDigestSHA2("The quick brown fox jumps over the lazy dog.",
                             "ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c"));
 
     // basic sanity for p7m extractor (no real p7m data, just ensure no crash and empty on bad input)
