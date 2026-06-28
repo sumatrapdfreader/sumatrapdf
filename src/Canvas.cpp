@@ -3324,6 +3324,16 @@ static TempStr GetDownloadsDirTemp() {
     return res;
 }
 
+static void AdvanceUrlPathUntilSuffix(Str& p, Str& lastSlash) {
+    while (!str::IsEmpty(p) && p.s[0] != '?' && p.s[0] != '#') {
+        if (p.s[0] == '/') {
+            lastSlash = p;
+        }
+        p.s++;
+        p.len--;
+    }
+}
+
 // Extract a file name from a URL (last path component, without query/fragment)
 static TempStr FileNameFromUrlTemp(Str url) {
     // skip past scheme
@@ -3339,13 +3349,7 @@ static TempStr FileNameFromUrlTemp(Str url) {
     // find last '/' before any '?' or '#'
     Str lastSlash;
     Str p = path;
-    while (!str::IsEmpty(p) && p.s[0] != '?' && p.s[0] != '#') {
-        if (p.s[0] == '/') {
-            lastSlash = p;
-        }
-        p.s++;
-        p.len--;
-    }
+    AdvanceUrlPathUntilSuffix(p, lastSlash);
     if (!lastSlash) {
         return {};
     }

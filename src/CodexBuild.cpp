@@ -400,10 +400,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
             break;
         }
         rest.s = lineEnd.s + 1;
-        while (!str::IsEmpty(rest) && (*rest.s == '\n' || *rest.s == '\r')) {
-            rest.s++;
-            rest.len--;
-        }
+        AIChatSkipNewlines(rest);
     }
     data.Free();
     return result ? result : Str("(no description)");
@@ -753,10 +750,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
             break;
         }
         rest.s = lineEnd.s + 1;
-        while (!str::IsEmpty(rest) && (*rest.s == '\n' || *rest.s == '\r')) {
-            rest.s++;
-            rest.len--;
-        }
+        AIChatSkipNewlines(rest);
     }
 
     data.Free();

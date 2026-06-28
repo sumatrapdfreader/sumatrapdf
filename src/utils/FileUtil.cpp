@@ -40,6 +40,13 @@ bool IsSep(char c) {
     return '\\' == c || '/' == c;
 }
 
+static void SkipLeadingPathSep(Str& path) {
+    if (path && IsSep(path.s[0])) {
+        path.s++;
+        path.len--;
+    }
+}
+
 // do not free, returns view inside <path>
 TempStr GetBaseNameTemp(Str path) {
     int end = path.len;
@@ -81,9 +88,7 @@ TempStr GetPathNoExtTemp(Str path) {
 
 TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
     // TODO: not sure if should allow null path
-    if (fileName && IsSep(fileName.s[0])) {
-        fileName = Str(fileName.s + 1, fileName.len - 1);
-    }
+    SkipLeadingPathSep(fileName);
     Str sepStr = {};
     if (!str::IsEmpty(path)) {
         if (!IsSep(path.s[path.len - 1])) {
@@ -98,9 +103,7 @@ TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
 }
 
 Str Join(Arena* allocator, Str path, Str fileName) {
-    if (fileName && IsSep(fileName.s[0])) {
-        fileName = Str(fileName.s + 1, fileName.len - 1);
-    }
+    SkipLeadingPathSep(fileName);
     Str sepStr = {};
     if (!str::IsEmpty(path)) {
         if (!IsSep(path.s[path.len - 1])) {
@@ -447,6 +450,8 @@ bool SupportsChangeNotifications(Str pathA) {
     return false;
 }
 
+static Str AdvanceUntilWildcardMatch(Str fileName, Str filter);
+
 static bool MatchWildcardsRec(Str fileName, Str filter) {
     if (str::IsEmpty(filter)) {
         return str::IsEmpty(fileName);
@@ -457,9 +462,7 @@ static bool MatchWildcardsRec(Str fileName, Str filter) {
             return str::IsEmpty(fileName);
         case '*': {
             Str filterRest(filter.s + 1, filter.len - 1);
-            while (!str::IsEmpty(fileName) && !MatchWildcardsRec(fileName, filterRest)) {
-                fileName = Str(fileName.s + 1, fileName.len - 1);
-            }
+            fileName = AdvanceUntilWildcardMatch(fileName, filterRest);
             return !str::IsEmpty(fileName) || str::IsEmpty(filterRest) || filterRest.s[0] == ';';
         }
         case '?':
@@ -469,6 +472,14 @@ static bool MatchWildcardsRec(Str fileName, Str filter) {
             return tolower(fileName.s[0]) == tolower(filter.s[0]) &&
                    MatchWildcardsRec(Str(fileName.s + 1, fileName.len - 1), Str(filter.s + 1, filter.len - 1));
     }
+}
+
+static Str AdvanceUntilWildcardMatch(Str fileName, Str filter) {
+    while (!str::IsEmpty(fileName) && !MatchWildcardsRec(fileName, filter)) {
+        fileName.s++;
+        fileName.len--;
+    }
+    return fileName;
 }
 
 /* matches the filename of a path against a list of semicolon

@@ -44,6 +44,7 @@ bool IsAIChatSupportedForTab(WindowTab* tab);
 
 TempStr AIChatJsEscapeTemp(Str s);
 TempStr AIChatJsonStrTemp(Str json, Str key);
+void AIChatSkipNewlines(Str& s);
 
 MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame);
 

@@ -64,6 +64,18 @@ static bool IsTipWhitespace(char c) {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
+static void AdvanceTipText(Str& s, int n = 1) {
+    ReportIf(n < 0 || n > s.len);
+    s.s += n;
+    s.len -= n;
+}
+
+static void SkipTipWhitespace(Str& s) {
+    while (!str::IsEmpty(s) && IsTipWhitespace(s.s[0])) {
+        AdvanceTipText(s);
+    }
+}
+
 // closing ']' for the '[' at (textStart - 1); supports nested brackets in link text
 static Str FindMarkdownLinkTextEnd(Str textStart) {
     int depth = 1;
@@ -167,21 +179,19 @@ void ParseTip(ParsedTip& tip, Str s) {
                 if (GetCommandIdByName(cmdName) > 0) {
                     TempStr shortcut = ResolveKeyShortcutTemp(cmdName);
                     expanded.Append(shortcut);
-                    sp = Str(end.s + 1, sp.len - (int)(end.s - sp.s) - 1);
+                    AdvanceTipText(sp, (int)(end.s - sp.s) + 1);
                     continue;
                 }
             }
         }
         expanded.AppendChar(sp.s[0]);
-        sp = Str(sp.s + 1, sp.len - 1);
+        AdvanceTipText(sp);
     }
 
     // second pass: split into words, detecting [text](link) markdown links
     Str p = expanded.Get();
     while (p) {
-        while (!str::IsEmpty(p) && IsTipWhitespace(p.s[0])) {
-            p = Str(p.s + 1, p.len - 1);
-        }
+        SkipTipWhitespace(p);
         if (!p) {
             break;
         }
@@ -205,7 +215,7 @@ void ParseTip(ParsedTip& tip, Str s) {
                         if (link.firstWord < tip.words.Size()) {
                             link.lastWord = tip.words.Size() - 1;
                             tip.links.Append(link);
-                            p = Str(cmdEnd.s + 1, p.len - (int)(cmdEnd.s - p.s) - 1);
+                            AdvanceTipText(p, (int)(cmdEnd.s - p.s) + 1);
                             continue;
                         }
                         str::Free(link.cmd);
@@ -214,7 +224,7 @@ void ParseTip(ParsedTip& tip, Str s) {
                         TipWord w;
                         str::ReplaceWithCopy(&w.text, Str(p.s, (int)(cmdEnd.s - p.s) + 1));
                         tip.words.Append(w);
-                        p = Str(cmdEnd.s + 1, p.len - (int)(cmdEnd.s - p.s) - 1);
+                        AdvanceTipText(p, (int)(cmdEnd.s - p.s) + 1);
                         continue;
                     }
                 }
@@ -242,7 +252,7 @@ void ParseTip(ParsedTip& tip, Str s) {
             tip.words.Append(w);
         }
         if (i < p.len) {
-            p = Str(p.s + i, p.len - i);
+            AdvanceTipText(p, i);
         } else {
             break;
         }

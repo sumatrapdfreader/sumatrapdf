@@ -123,6 +123,13 @@ TempStr AIChatJsonStrTemp(Str json, Str key) {
     return str::DupTemp(buf.LendData());
 }
 
+void AIChatSkipNewlines(Str& s) {
+    while (!str::IsEmpty(s) && (*s.s == '\n' || *s.s == '\r')) {
+        s.s++;
+        s.len--;
+    }
+}
+
 MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame) {
     for (MainWindow* w : gWindows) {
         if (w->hwndFrame == hwndFrame) {
