@@ -466,24 +466,23 @@ void ClearFindMatches(MainWindow* win) {
 }
 
 // build a one-line "...context match context..." snippet (UTF-8) around a match
-static char* BuildSnippet(EngineBase* engine, const FindMatch& m) {
-    const WCHAR* pageText = engine->GetTextForPage(m.startPage);
+static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
+    WStr pageText = engine->GetTextForPage(m.startPage);
     if (!pageText) {
-        return nullptr;
+        return {};
     }
-    int textLen = str::Leni(pageText);
+    int textLen = pageText.len;
     int mStart = limitValue(m.startGlyph, 0, textLen);
     int mEnd = (m.endPage == m.startPage) ? m.endGlyph : textLen;
     mEnd = limitValue(mEnd, mStart, textLen);
     const int kCtx = 40;
     int from = std::max(0, mStart - kCtx);
     int to = std::min(textLen, mEnd + kCtx);
-    WCHAR* sub = str::Dup(pageText + from, (size_t)(to - from));
+    WCHAR* sub = str::Dup(pageText.s + from, (size_t)(to - from));
     str::NormalizeWSInPlace(sub);
     TempStr u = ToUtf8Temp(sub);
     str::Free(sub);
-    TempStr full = str::FormatTemp("%s%s%s", from > 0 ? "..." : "", u, to < textLen ? "..." : "");
-    return str::Dup(full);
+    return str::FormatTemp("%s%s%s", from > 0 ? "..." : "", u, to < textLen ? "..." : "");
 }
 
 struct CountThreadData {
@@ -614,7 +613,7 @@ static void CountThread(CountThreadData* d) {
                 fm.endPage = ts.endPage;
                 fm.endGlyph = ts.endGlyph;
                 if (d->wantSnippets) {
-                    str::ReplaceWithCopy(&fm.snippet, Str(BuildSnippet(engine, fm)));
+                    str::ReplaceWithCopy(&fm.snippet, BuildSnippet(engine, fm));
                 }
                 matches->Append(fm);
             }
@@ -886,8 +885,7 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
 //   if true, starting a search for new term
 //   if false, searching for the next occurrence of previous term
 // TODO: should detect wasModified by comparing with the last search result
-void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified,
-                      bool showProgress) {
+void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified, bool showProgress) {
     AbortFinding(win, false);
     if (str::IsEmpty(text)) {
         return;
