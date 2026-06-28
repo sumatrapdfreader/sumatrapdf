@@ -2580,18 +2580,18 @@ struct ExtractProgressUITask {
 
 static void UpdateLoadingNotifUI(ExtractProgressUITask* task) {
     AutoDelete delTask(task);
+    if (task->wnd) {
+        // basename points into task->path, so free path only after building msg
+        TempStr basename = path::GetBaseNameTemp(task->path);
+        TempStr msg;
+        if (task->nTotal > 0) {
+            msg = str::FormatTemp(_TRA("Loading %s %d of %d"), basename.s, task->nDecoded, task->nTotal);
+        } else {
+            msg = str::FormatTemp(_TRA("Loading %s %d"), basename.s, task->nDecoded);
+        }
+        NotificationUpdateMessage(task->wnd, msg);
+    }
     str::Free(task->path);
-    if (!task->wnd) {
-        return;
-    }
-    TempStr basename = path::GetBaseNameTemp(task->path);
-    TempStr msg;
-    if (task->nTotal > 0) {
-        msg = str::FormatTemp(_TRA("Loading %s %d of %d"), basename.s, task->nDecoded, task->nTotal);
-    } else {
-        msg = str::FormatTemp(_TRA("Loading %s %d"), basename.s, task->nDecoded);
-    }
-    NotificationUpdateMessage(task->wnd, msg);
 }
 
 struct ExtractProgressState {
@@ -2633,20 +2633,20 @@ struct CopyProgressUITask {
 
 static void UpdateCopyNotifUI(CopyProgressUITask* task) {
     AutoDelete delTask(task);
+    if (task->wnd) {
+        // basename points into task->path, so free path only after building msg
+        TempStr basename = path::GetBaseNameTemp(task->path);
+        TempStr copied = str::FormatSizeShortTemp(task->bytesCopied, nullptr);
+        TempStr msg;
+        if (task->bytesTotal > 0) {
+            TempStr total = str::FormatSizeShortTemp(task->bytesTotal, nullptr);
+            msg = str::FormatTemp(_TRA("Copying %s: %s / %s"), basename.s, copied.s, total.s);
+        } else {
+            msg = str::FormatTemp(_TRA("Copying %s: %s"), basename.s, copied.s);
+        }
+        NotificationUpdateMessage(task->wnd, msg);
+    }
     str::Free(task->path);
-    if (!task->wnd) {
-        return;
-    }
-    TempStr basename = path::GetBaseNameTemp(task->path);
-    TempStr copied = str::FormatSizeShortTemp(task->bytesCopied, nullptr);
-    TempStr msg;
-    if (task->bytesTotal > 0) {
-        TempStr total = str::FormatSizeShortTemp(task->bytesTotal, nullptr);
-        msg = str::FormatTemp(_TRA("Copying %s: %s / %s"), basename.s, copied.s, total.s);
-    } else {
-        msg = str::FormatTemp(_TRA("Copying %s: %s"), basename.s, copied.s);
-    }
-    NotificationUpdateMessage(task->wnd, msg);
 }
 
 struct CopyProgressState {
