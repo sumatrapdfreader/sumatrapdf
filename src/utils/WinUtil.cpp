@@ -94,7 +94,7 @@ int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
     HFONT hfont = HwndGetFont(hwnd);
     Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
     // logf("Edit::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
-    char* txt = HwndGetTextTemp(hwnd);
+    TempStr txt = HwndGetTextTemp(hwnd);
     Size s2 = HwndMeasureText(hwnd, txt, hfont);
     int dy = std::min(s1.dy, s2.dy);
     if (dy == 0) {
@@ -605,7 +605,7 @@ const TempStr RegKeyNameWTemp(HKEY key) {
     return str::Dup(k);
 }
 
-static void ResetRegKeyAcl(HKEY hkey, const char* keyName) {
+static void ResetRegKeyAcl(HKEY hkey, Str keyName) {
     TempWStr keyNameW = ToWStrTemp(keyName);
     HKEY hKey;
     LONG res = RegOpenKeyEx(hkey, keyNameW, 0, WRITE_DAC, &hKey);

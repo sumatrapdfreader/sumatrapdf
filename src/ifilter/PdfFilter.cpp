@@ -146,8 +146,8 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                     continue;
                 }
                 ws = pageText.text.s;
-                WCHAR* str = str::Replace(ws, L"\n", L"\r\n");
-                chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
+                WStr str = WStr(str::Replace(ws, L"\n", L"\r\n"));
+                chunkValue.SetTextValue(PKEY_Search_Contents, str.s, CHUNK_TEXT);
                 str::FreePtr(&str);
                 FreePageText(&pageText);
                 return S_OK;
