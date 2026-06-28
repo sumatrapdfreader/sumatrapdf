@@ -31,19 +31,20 @@
 
 #include "utils/Log.h"
 
-static const char* kNotifUpdateCheckInProgress = "notifUpdateCheckInProgress";
+static Kind kNotifUpdateCheckInProgress = StrL("notifUpdateCheckInProgress").s;
 
 // certificate on www.sumatrapdfreader.org is not supported by win7 and win8.1
 // (doesn't have the ciphers they understand) so we have a backup on backblaze
 
 // clang-format off
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
-constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/updatecheck-pre-release.txt";
-constexpr const char* kUpdateInfoURL2 = "https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
+static const Str kUpdateInfoURL = StrL("https://www.sumatrapdfreader.org/updatecheck-pre-release.txt");
+static const Str kUpdateInfoURL2 =
+    StrL("https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt");
 #else
-constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/update-check-rel.txt";
+static const Str kUpdateInfoURL = StrL("https://www.sumatrapdfreader.org/update-check-rel.txt");
 // Note: I don't have backup for this
-constexpr const char* kUpdateInfoURL2 = "https://www.sumatrapdfreader.org/update-check-rel.txt";
+static const Str kUpdateInfoURL2 = StrL("https://www.sumatrapdfreader.org/update-check-rel.txt");
 #endif
 
 #ifndef kWebisteDownloadPageURL
@@ -65,7 +66,7 @@ bool gUpdateCheckInProgress = false;
 static bool gUpdateAutoInstall = false;
 
 // the bottom-left "update available" notification (with the download link)
-static const char* kNotifUpdateAvailable = "notifUpdateAvailable";
+static Kind kNotifUpdateAvailable = StrL("notifUpdateAvailable").s;
 
 struct UpdateInfo {
     HWND hwndParent = nullptr;
@@ -499,7 +500,7 @@ static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND hwnd, UINT msg, WPARAM 
     return S_OK;
 }
 
-constexpr const char* kExpectedDlHost = "https://www.sumatrapdfreader.org/";
+static const Str kExpectedDlHost = StrL("https://www.sumatrapdfreader.org/");
 
 static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
     logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL);
@@ -510,7 +511,7 @@ static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
 Download link should come from <a href="%s">%s</a> but is %s.
 
 Visit <a href="%s">%s</a> to download the latest version.)",
-                                   kExpectedDlHost, kExpectedDlHost, dlURL, kExpectedDlHost, kExpectedDlHost);
+                                   kExpectedDlHost.s, kExpectedDlHost.s, dlURL.s, kExpectedDlHost.s, kExpectedDlHost.s);
 
     TASKDIALOGCONFIG dialogConfig{};
     DWORD flags =
