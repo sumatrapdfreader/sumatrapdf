@@ -2826,8 +2826,8 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
 // names a file that must sit next to the PDF. Gated by the AllowExternalImages
 // setting and restricted to sibling files (no path separators / drive specs)
 // for security -- Acrobat denies these by default too.
-static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* filespec,
-                                                void* opaque) { // str-port: mupdf callback
+static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* filespec, // str-port: mupdf callback
+                                                void* opaque) {
     if (!gAllowExternalImages) {
         return nullptr;
     }
@@ -3184,7 +3184,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     }
 
     IPageDestination* pageDest = nullptr;
-    char* uri = nullptr;
+    char* uri = nullptr; // str-port: mupdf
 
     fz_var(uri);
     fz_try(ctx) {
