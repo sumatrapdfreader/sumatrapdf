@@ -482,13 +482,15 @@ Str PathJoinTemp(Str dir, Str name) {
 }
 
 // Copy UTF-8 string with max bytes
-void StrCopyUtf8(char* dst, const char* src, int maxBytes) {
-    int i = 0;
-    while (src[i] && i < maxBytes - 1) {
-        dst[i] = src[i];
-        i++;
+void StrCopyUtf8(char* dst, Str src, int maxBytes) {
+    int n = src.len;
+    if (n > maxBytes - 1) {
+        n = maxBytes - 1;
     }
-    dst[i] = 0;
+    for (int i = 0; i < n; i++) {
+        dst[i] = src.s[i];
+    }
+    dst[n] = 0;
 }
 
 // Format string with allocator
