@@ -1652,7 +1652,7 @@ constexpr u16 kFontFlagBold = 0x02;
 
 struct CreatedFontInfo {
     CreatedFontInfo* next = nullptr;
-    const char* name = nullptr; // if nullptr, default gui font
+    Str name; // if empty, default gui font
     HFONT font = nullptr;
     u16 size = 0;
     u16 flags = 0;
@@ -1667,7 +1667,7 @@ static CreatedFontInfo* FindCreatedFont(Str name, int size, u16 flags, u16 weigh
     CreatedFontInfo* curr = gFonts;
     while (curr) {
         if (curr->size == (u16)size && curr->flags == flags && curr->weightOffset == weightOffset &&
-            str::Eq(curr->name, name.s)) {
+            str::Eq(curr->name, name)) {
             /* logf("FindCreatedFont: found font '%s', size: %d, flags: %x, weightOffset: %d\n", name, (int)size,
                  (int)flags, (int)weightOffset); */
             return curr;
@@ -1681,7 +1681,7 @@ void DeleteCreatedFonts() {
     CreatedFontInfo* curr = gFonts;
     while (curr) {
         auto next = curr->next;
-        free((void*)curr->name);
+        str::Free(curr->name);
         DeleteFont(curr->font);
         delete curr;
         curr = next;
@@ -1694,7 +1694,7 @@ void DeleteCreatedFonts() {
 
 static HFONT RememberCreatedFont(HFONT font, Str name, int size, u16 flags, u16 weightOffset) {
     auto cf = new CreatedFontInfo();
-    cf->name = str::Dup(name.s);
+    cf->name = str::Dup(name);
     cf->font = font;
     cf->size = (u16)size;
     cf->flags = flags;
@@ -2153,8 +2153,8 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
     }
 
     if (!args) {
-        const char* func = install ? "DllRegisterServer" : "DllUnregisterServer";
-        DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func);
+        Str func = install ? Str("DllRegisterServer") : Str("DllUnregisterServer");
+        DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func.s);
         if (DllRegUnreg) {
             ok = SUCCEEDED(DllRegUnreg());
         }
@@ -2711,8 +2711,8 @@ void RunNonElevated(Str exePath) {
         return;
     }
     logf("RunNonElevated: '%s'\n", exePath);
-    TempStr cmd = nullptr;
-    char* explorerPath = nullptr;
+    TempStr cmd;
+    TempStr explorerPath;
     WCHAR buf[MAX_PATH] = {};
     uint res = GetWindowsDirectoryW(buf, dimof(buf));
     if (0 == res || res >= dimof(buf)) {
