@@ -919,6 +919,7 @@ static bool EndsURL(WCHAR c) {
     return false;
 }
 
+// str-port: Linkify helpers use WStr + int offsets (not const WCHAR* cursors).
 // Trim trailing punctuation that likely belongs to surrounding sentence text, not
 // the link. `trimChars` lists chars to strip; when trimRepeat is false, at most
 // one char is removed. When trimCloseParen is true, a trailing ')' is also
@@ -1758,7 +1759,7 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, Str pa
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        logfa("PdfLoadAttachments() failed for '%s'\n", path);
+        logfa("PdfLoadAttachments() failed for '%s'\n", path.s);
     }
     return root.next;
 }
@@ -2938,7 +2939,7 @@ bool EngineMupdf::FinishLoading() {
         // this information is not critical and checking the
         // error might prevent loading some pdfs that would
         // otherwise get displayed
-        logfa("Couldn't load outline for '%s'\n", FilePath());
+        logfa("Couldn't load outline for '%s'\n", FilePath().s);
     }
 
     attachments = PdfLoadAttachments(ctx, pdfdoc, FilePath());
@@ -3828,7 +3829,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        logfa("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri);
+        logfa("HandleLinkMupdf: fz_resolve_link() for '%s' failed\n", uri.s);
     }
     if (pageNo < 0) {
         TempStr localPath;
