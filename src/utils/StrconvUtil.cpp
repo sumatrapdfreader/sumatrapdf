@@ -151,14 +151,14 @@ TempStr UnknownToUtf8Temp(Str s) {
     if (str::StartsWith(s, Str(UTF16_BOM))) {
         int bomOff = 2;
         int cch = (s.len - bomOff) / 2;
-        return ToUtf8Temp(WStr((WCHAR*)(s.s + bomOff), cch));
+        return ToUtf8Temp(WStr((wchar_t*)(s.s + bomOff), cch)); // str-port: byte slice UTF-16 LE
     }
 
     if (str::StartsWith(s, Str(UTF16BE_BOM))) {
         // convert from utf16 big endian to utf16
         int bomOff = 2;
         int n = (s.len - bomOff) / 2;
-        TempWStr tmpW = str::DupTemp(WStr((WCHAR*)(s.s + bomOff), n), n + 1);
+        TempWStr tmpW = str::DupTemp(WStr((wchar_t*)(s.s + bomOff), n), n + 1); // str-port: byte slice UTF-16 BE
         u8* bytes = (u8*)tmpW.s;
         for (int i = 0; i < n; i++) {
             int idx = i * (int)sizeof(WCHAR);
