@@ -882,9 +882,7 @@ static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
         *coordsOut = rects.StealData();
     }
 
-    int n = content.isize();
-    WCHAR* s = content.StealData();
-    return WStr(s, n);
+    return content.StealData();
 }
 
 static fz_stext_options NewTextPageOptions(int flags = 0) {
@@ -1906,8 +1904,8 @@ static void fz_unlock_context_cs(void* user, int lock) {
     LeaveCriticalSection(&e->fz_locks[lock]);
 }
 
-static void fz_print_cb(void* user, const char* msg) {
-    Str msgStr = Str(msg); // str-port: mupdf callback
+static void fz_print_cb(void* user, const char* msg) { // str-port: api-boundary
+    Str msgStr = Str(msg);
     static AtomicBool seenMsg = 0;
     if (str::Contains(msgStr, "generic error: couldn't find system font")) {
         // this floods the log in some files
@@ -2483,7 +2481,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
        large for non-epub files like .txt or .xml, so for those use larger A4 */
     float ldx = layoutA4DxPt;
     float ldy = layoutA4DyPt;
-    const char* ext = path::GetExtTemp(nameHint);
+    TempStr ext = path::GetExtTemp(nameHint);
     if (str::EqI(ext, ".epub")) {
         ldx = layoutA5DxPt;
         ldy = layoutA5DyPt;
