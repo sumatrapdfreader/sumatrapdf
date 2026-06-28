@@ -84,8 +84,8 @@ static const char* ParseString(ParseArgs& args, const char* data) {
     StrBuilder string;
     data = ExtractString(string, data);
     if (data) {
-        const char* path = args.path.Get();
-        const char* value = string.Get();
+        Str path = args.path.Get();
+        Str value = string.Get();
         args.canceled = !args.visitor->Visit(path, value, Type::String);
     }
     return data;
@@ -121,10 +121,9 @@ static const char* ParseNumber(ParseArgs& args, const char* data) {
         return nullptr;
     }
 
-    char* number = str::Dup(start, data - start);
-    const char* path = args.path.Get();
+    TempStr number = str::DupTemp(Str(start, (int)(data - start)));
+    Str path = args.path.Get();
     args.canceled = !args.visitor->Visit(path, number, Type::Number);
-    free(number);
     return data;
 }
 
@@ -198,7 +197,7 @@ static const char* ParseKeyword(ParseArgs& args, const char* data, const char* k
     if (!str::StartsWith(data, keyword)) {
         return nullptr;
     }
-    const char* path = args.path.Get();
+    Str path = args.path.Get();
     args.canceled = !args.visitor->Visit(path, keyword, type);
     return data + str::Len(keyword);
 }
@@ -236,12 +235,13 @@ static const char* ParseValue(ParseArgs& args, const char* data) {
 }
 
 // return false if invalid JSON
-bool Parse(const char* data, ValueVisitor* visitor) {
+bool Parse(Str data, ValueVisitor* visitor) {
     ParseArgs args(visitor);
-    if (str::StartsWith(data, UTF8_BOM)) {
-        data += 3;
+    const char* p = data.s;
+    if (str::StartsWith(p, UTF8_BOM)) {
+        p += 3;
     }
-    const char* end = ParseValue(args, data);
+    const char* end = ParseValue(args, p);
     if (!end) {
         return false;
     }

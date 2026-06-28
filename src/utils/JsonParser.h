@@ -23,12 +23,12 @@ enum class Type {
 
 struct ValueVisitor {
     // return false to stop parsing
-    virtual bool Visit(const char* path, const char* value, Type type) = 0;
+    virtual bool Visit(Str path, Str value, Type type) = 0;
     virtual ~ValueVisitor() = default;
 };
 
 // data must be UTF-8 encoded and nullptr-terminated
 // returns false on error
-bool Parse(const char* data, ValueVisitor* visitor);
+bool Parse(Str data, ValueVisitor* visitor);
 
 } // namespace json

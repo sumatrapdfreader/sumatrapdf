@@ -1865,14 +1865,14 @@ struct ComicInfoParser : json::ValueVisitor {
     StrVec bookmarkTitles;
 
     // json::ValueVisitor
-    bool Visit(const char* path, const char* value, json::Type type) override;
+    bool Visit(Str path, Str value, json::Type type) override;
 
     void Parse(const ByteSlice& xmlData);
-    void AddBookmark(int imageIdx, const char* title);
+    void AddBookmark(int imageIdx, Str title);
 };
 
-void ComicInfoParser::AddBookmark(int imageIdx, const char* title) {
-    if (!title || !title[0] || imageIdx < 0) {
+void ComicInfoParser::AddBookmark(int imageIdx, Str title) {
+    if (!title || imageIdx < 0) {
         return;
     }
     bookmarkImageIdx.Append(imageIdx);
@@ -1968,7 +1968,7 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
 
 // extract ComicBookInfo metadata
 // https://code.google.com/archive/p/comicbookinfo/
-bool ComicInfoParser::Visit(const char* path, const char* value, json::Type type) {
+bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
     if (json::Type::String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
         propTitle.Set(str::Dup(value));
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
@@ -1983,7 +1983,7 @@ bool ComicInfoParser::Visit(const char* path, const char* value, json::Type type
         propSummary.Set(str::Dup(value));
     } else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
         int idx = -1;
-        const char* prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
+        const char* prop = str::Parse(path.s, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
             if (json::Type::String == type && str::Eq(prop, "person")) {
                 propAuthorTmp.Set(str::Dup(value));
@@ -2173,7 +2173,7 @@ bool EngineCbx::FinishLoading() {
     }
     Str comment = cbxArchive->GetComment();
     if (comment) {
-        json::Parse(comment.s, &cip);
+        json::Parse(comment, &cip);
     }
 
     int nFiles = pageFiles.Size();
