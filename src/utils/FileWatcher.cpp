@@ -203,9 +203,9 @@ SeqStrings gFileActionNames =
     "FILE_ACTION_RENAMED_NEW_NAME\0";
 // clang-format on
 
-const char* GetFileActionName(int actionId) {
+Str GetFileActionName(int actionId) {
     if (actionId < 1 || actionId > 5) {
-        return "(unknown)";
+        return Str("(unknown)");
     }
     int n = actionId - 1;
     return SeqStrByIndex(gFileActionNames, n);
