@@ -53,17 +53,19 @@ TempStr ClaudeCodeExecutablePathTemp() {
 static Mutex gClaudeCodeLogMutex;
 static AIChatLogger gClaudeCodeLogger = {&gClaudeCodeLogMutex, "claude-code-log.txt", "claude-code"};
 
-static void ClaudeCodeLog(const char* direction, const char* text) {
+static void ClaudeCodeLog(Str direction, Str text) {
     AIChatLog(&gClaudeCodeLogger, direction, text);
 }
 
-constexpr const char* kClaudeCodeDocURI = "/AI-Chat-with-document#claude-code";
+static Str kClaudeCodeDocURI() {
+    return Str("/AI-Chat-with-document#claude-code");
+}
 
 static void ShowClaudeCodeNotInstalledDialog() {
     AIChatNotInstalledDialogArgs args;
     args.windowTitle = _TRA("Claude chat");
     args.mainInstruction = _TRA("Claude Code cli must be installed for this functionality");
-    args.docUri = kClaudeCodeDocURI;
+    args.docUri = kClaudeCodeDocURI();
     AIChatShowNotInstalledDialog(args);
 }
 
@@ -82,15 +84,17 @@ bool IsClaudeCodeSupportedForTab(WindowTab* tab) {
 #define IDC_CLAUDE_EFFORT_COMBO 1114
 #define IDC_CLAUDE_STOP_BTN 1115
 
-constexpr const char* kClaudeVirtualHost = "https://sumatrapdf.claude/";
+static Str kClaudeVirtualHost() {
+    return Str("https://sumatrapdf.claude/");
+}
 constexpr const WCHAR* kClaudeVirtualHostW = L"https://sumatrapdf.claude/";
 
 static LoadedDataResource gClaudeMarkedJs;
 
-static const char* ClaudeBgColor() {
-    const char* bg = gGlobalPrefs->claudeCode.bgColor;
+static Str ClaudeBgColor() {
+    Str bg = gGlobalPrefs->claudeCode.bgColor;
     if (str::IsEmpty(bg)) {
-        return "#ffffff";
+        return Str("#ffffff");
     }
     return bg;
 }
@@ -100,7 +104,7 @@ static void BuildClaudeModelsList(StrVec& models) {
     AIChatAppendModelUnique(models, "sonnet");
     AIChatAppendModelUnique(models, "opus");
     AIChatAppendModelUnique(models, "haiku");
-    const char* extra = gGlobalPrefs->claudeCode.models;
+    Str extra = gGlobalPrefs->claudeCode.models;
     if (!str::IsEmpty(extra)) {
         StrVec parts;
         Split(&parts, extra, ",", true);
@@ -110,7 +114,7 @@ static void BuildClaudeModelsList(StrVec& models) {
     }
 }
 
-static const char* ResolveClaudeModel(const StrVec& models, const char* model) {
+static Str ResolveClaudeModel(const StrVec& models, Str model) {
     int idx = AIChatFindModelInList(models, model);
     if (idx >= 0) {
         return models.At(idx);
@@ -119,7 +123,7 @@ static const char* ResolveClaudeModel(const StrVec& models, const char* model) {
     if (idx >= 0) {
         return models.At(idx);
     }
-    return "opus";
+    return Str("opus");
 }
 
 static void PopulateModelCombo(HWND combo) {
@@ -146,7 +150,7 @@ static void ApplyClaudeSettingsToUI(MainWindow* win) {
         PopulateModelCombo(win->hwndClaudeModelCombo);
         StrVec models;
         BuildClaudeModelsList(models);
-        const char* model = ResolveClaudeModel(models, gGlobalPrefs->claudeCode.model);
+        Str model = ResolveClaudeModel(models, gGlobalPrefs->claudeCode.model);
         int modelIdx = AIChatFindModelInList(models, model);
         if (modelIdx < 0) {
             modelIdx = 0;
@@ -186,7 +190,7 @@ static void SyncClaudeSettingsFromUI(MainWindow* win) {
 // Execute JS on the WebView AND record it in the current tab's chat log
 static void LayoutClaudeBox(MainWindow* win);
 static void AutoSelectRecentSession(MainWindow* win);
-static void WebViewAddError(MainWindow* win, const char* text); // forward decl
+static void WebViewAddError(MainWindow* win, Str text); // forward decl
 static void WebViewShowUnsupportedFileType(MainWindow* win);
 
 static void UpdateClaudePanelForCurrentTab(MainWindow* win) {
@@ -248,7 +252,7 @@ static void StopClaude(MainWindow* win) {
     }
 }
 
-static void WebViewEval(MainWindow* win, const char* js, bool record = true) {
+static void WebViewEval(MainWindow* win, Str js, bool record = true) {
     if (win->claudeWebView && win->claudeWebViewReady) {
         win->claudeWebView->Eval(js);
     }
@@ -264,22 +268,22 @@ static void WebViewEval(MainWindow* win, const char* js, bool record = true) {
     }
 }
 
-static void WebViewAppendText(MainWindow* win, const char* text) {
+static void WebViewAppendText(MainWindow* win, Str text) {
     TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
-static void WebViewAddUser(MainWindow* win, const char* text) {
+static void WebViewAddUser(MainWindow* win, Str text) {
     TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
-static void WebViewAddTool(MainWindow* win, const char* text) {
+static void WebViewAddTool(MainWindow* win, Str text) {
     TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
-static void WebViewAddError(MainWindow* win, const char* text) {
+static void WebViewAddError(MainWindow* win, Str text) {
     TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text));
     WebViewEval(win, js);
 }
@@ -294,7 +298,7 @@ static void WebViewClearChat(MainWindow* win) {
 
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
-    const char* msg = "Claude Code is only available for PDF and image files.";
+    Str msg = "Claude Code is only available for PDF and image files.";
     TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg));
     WebViewEval(win, js, false);
 }
@@ -308,18 +312,20 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
         return;
     }
     // the log is newline-separated JS commands
-    const char* s = tab->claudeChatLog->LendData();
-    const char* end = s + tab->claudeChatLog->Size();
-    while (s < end) {
-        const char* lineEnd = s;
-        while (lineEnd < end && *lineEnd != '\n') {
-            lineEnd++;
-        }
-        if (lineEnd > s) {
-            TempStr line = str::DupTemp(s, (int)(lineEnd - s));
+    Str log = Str(tab->claudeChatLog->LendData(), tab->claudeChatLog->Size());
+    Str rest = log;
+    while (rest.len > 0) {
+        Str lineEnd = str::FindChar(rest, '\n');
+        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
+        if (lineLen > 0) {
+            TempStr line = str::DupTemp(Str(rest.s, lineLen));
             win->claudeWebView->Eval(line);
         }
-        s = lineEnd + 1;
+        if (!lineEnd) {
+            break;
+        }
+        rest.s = lineEnd.s + 1;
+        rest.len -= lineLen + 1;
     }
 }
 
@@ -327,16 +333,15 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
 
 // Compute the encoded project dir path that Claude uses:
 // E:\foo_bar -> E--foo-bar (: removed, \ -> -, _ -> -)
-static TempStr EncodeClaudeDirTemp(const char* dir) {
+static TempStr EncodeClaudeDirTemp(Str dir) {
     StrBuilder buf;
-    while (*dir) {
-        char c = *dir;
+    for (int i = 0; i < dir.len; i++) {
+        char c = dir.s[i];
         if (c == ':' || c == '\\' || c == '/' || c == '_' || c == ' ') {
             buf.AppendChar('-');
         } else {
             buf.AppendChar(c);
         }
-        dir++;
     }
     // remove trailing dash if present
     if (buf.Size() > 0 && buf.LendData()[buf.Size() - 1] == '-') {
@@ -347,7 +352,7 @@ static TempStr EncodeClaudeDirTemp(const char* dir) {
 
 // Extract user message text from a JSON line.
 // Handles both "content":"string" and "content":[{"type":"text","text":"..."}] formats.
-static TempStr ExtractUserTextTemp(const char* line) {
+static TempStr ExtractUserTextTemp(Str line) {
     if (!str::Find(line, "\"role\":\"user\"")) {
         return {};
     }
@@ -365,12 +370,12 @@ static TempStr ExtractUserTextTemp(const char* line) {
     // try array format: "content":[{"type":"text","text":"..."}]
     if (str::Find(line, "\"content\":[")) {
         // find the text field inside the first text block
-        const char* textBlock = str::Find(line, "\"type\":\"text\",\"text\":\"");
+        Str textBlock = str::Find(line, "\"type\":\"text\",\"text\":\"");
         if (!textBlock) {
             textBlock = str::Find(line, "\"text\":\"");
         }
         if (textBlock) {
-            TempStr text = AIChatJsonStrTemp(textBlock - 1, "text");
+            TempStr text = AIChatJsonStrTemp(line, "text");
             if (text && str::Len(text) > 0 && !str::Find(text, "<command-")) {
                 return text;
             }
@@ -385,26 +390,30 @@ static Str GetSessionDescription(Str sessionPath) {
     if (data.empty()) {
         return Str("(empty)");
     }
-    const char* s = (const char*)data.data();
-    const char* end = s + data.size();
+    Str content = AsStr(data);
+    Str rest = content;
     Str result;
 
-    while (s < end && !result) {
-        const char* lineEnd = s;
-        while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
-            lineEnd++;
+    while (rest.len > 0 && !result) {
+        Str lineEnd = str::FindChar(rest, '\n');
+        if (!lineEnd) {
+            lineEnd = str::FindChar(rest, '\r');
         }
-        if (lineEnd > s) {
-            int lineLen = (int)(lineEnd - s);
-            TempStr line = str::DupTemp(s, lineLen);
+        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
+        if (lineLen > 0) {
+            TempStr line = str::DupTemp(Str(rest.s, lineLen));
             TempStr userText = ExtractUserTextTemp(line);
             if (userText) {
                 result = str::Dup(userText);
             }
         }
-        s = lineEnd;
-        while (s < end && (*s == '\n' || *s == '\r')) {
-            s++;
+        if (!lineEnd) {
+            break;
+        }
+        rest.s = lineEnd.s + 1;
+        while (rest.len > 0 && (*rest.s == '\n' || *rest.s == '\r')) {
+            rest.s++;
+            rest.len--;
         }
     }
     data.Free();
@@ -489,7 +498,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     int selectedIdx = 0;
     bool foundCurrent = false;
     for (int i = 0; i < sessions.Size(); i++) {
-        const char* display = sessions[i].display;
+        Str display = sessions[i].display;
         if (str::IsEmpty(display)) {
             display = "(no description)";
         }
@@ -505,7 +514,7 @@ static void PopulateSessionCombo(MainWindow* win) {
 
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->claudeSessionId && !foundCurrent) {
-        const char* label = "(current session)";
+        Str label = "(current session)";
         TempWStr labelW = ToWStrTemp(label);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
         selectedIdx = sessions.Size() + 1;
@@ -518,7 +527,7 @@ static void PopulateSessionCombo(MainWindow* win) {
 }
 
 // Load conversation history from a session's JSONL file
-static void LoadSessionHistory(MainWindow* win, const char* sessionId, const char* dir) {
+static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (!userProfile) {
         return;
@@ -535,17 +544,17 @@ static void LoadSessionHistory(MainWindow* win, const char* sessionId, const cha
         return;
     }
 
-    const char* s = (const char*)data.data();
-    const char* end = s + data.size();
+    Str content = AsStr(data);
+    Str rest = content;
 
-    while (s < end) {
-        const char* lineEnd = s;
-        while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
-            lineEnd++;
+    while (rest.len > 0) {
+        Str lineEnd = str::FindChar(rest, '\n');
+        if (!lineEnd) {
+            lineEnd = str::FindChar(rest, '\r');
         }
-        if (lineEnd > s) {
-            int lineLen = (int)(lineEnd - s);
-            TempStr line = str::DupTemp(s, lineLen);
+        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
+        if (lineLen > 0) {
+            TempStr line = str::DupTemp(Str(rest.s, lineLen));
 
             // Session JSONL format:
             // User messages: content can be string or array
@@ -578,9 +587,13 @@ static void LoadSessionHistory(MainWindow* win, const char* sessionId, const cha
                 }
             }
         }
-        s = lineEnd;
-        while (s < end && (*s == '\n' || *s == '\r')) {
-            s++;
+        if (!lineEnd) {
+            break;
+        }
+        rest.s = lineEnd.s + 1;
+        while (rest.len > 0 && (*rest.s == '\n' || *rest.s == '\r')) {
+            rest.s++;
+            rest.len--;
         }
     }
 
@@ -639,8 +652,8 @@ enum class ClaudeUpdateType {
 
 struct ClaudeUpdateData {
     HWND hwndFrame;
-    char* text;
-    char* sessionId; // to identify which tab this belongs to
+    Str text;
+    Str sessionId; // to identify which tab this belongs to
     ClaudeUpdateType updateType;
 };
 
@@ -708,11 +721,11 @@ static void OnClaudeUpdate(ClaudeUpdateData* data) {
     free(data);
 }
 
-static void PostUpdate(HWND hwndFrame, const char* sessionId, const char* text, ClaudeUpdateType type) {
+static void PostUpdate(HWND hwndFrame, Str sessionId, Str text, ClaudeUpdateType type) {
     auto data = (ClaudeUpdateData*)calloc(1, sizeof(ClaudeUpdateData));
     data->hwndFrame = hwndFrame;
-    data->sessionId = sessionId ? str::Dup(sessionId) : nullptr;
-    data->text = text ? str::Dup(text) : nullptr;
+    data->sessionId = sessionId ? str::Dup(sessionId) : Str{};
+    data->text = text ? str::Dup(text) : Str{};
     data->updateType = type;
     uitask::Post(MkFunc0(OnClaudeUpdate, data));
 }
@@ -720,13 +733,13 @@ static void PostUpdate(HWND hwndFrame, const char* sessionId, const char* text, 
 struct ClaudeReadCtx {
     HANDLE hReadPipe;
     HWND hwndFrame;
-    char* sessionId;
+    Str sessionId;
 };
 
 static void ClaudeReadThread(ClaudeReadCtx* ctx) {
     HANDLE hPipe = ctx->hReadPipe;
     HWND hwndFrame = ctx->hwndFrame;
-    char* sessionId = ctx->sessionId;
+    Str sessionId = ctx->sessionId;
     free(ctx);
 
     StrBuilder lineBuf;
@@ -737,8 +750,8 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
         buf[bytesRead] = 0;
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
-                const char* line = lineBuf.LendData();
-                if (line && *line) {
+                Str line = Str(lineBuf.LendData());
+                if (line) {
                     ClaudeCodeLog("<<<", line);
                 }
                 TempStr eventType = AIChatJsonStrTemp(line, "type");
@@ -769,7 +782,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                             } else if (pat) {
                                 desc.AppendFmt(" /%s/", pat);
                             }
-                            PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
+                            PostUpdate(hwndFrame, sessionId, Str(desc.LendData(), desc.Size()), ClaudeUpdateType::Tool);
                         }
                     }
                 } else if (eventType && str::Eq(eventType, "user")) {
@@ -778,7 +791,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                         if (fp) {
                             StrBuilder desc;
                             desc.AppendFmt("Result: %s", fp);
-                            PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
+                            PostUpdate(hwndFrame, sessionId, Str(desc.LendData(), desc.Size()), ClaudeUpdateType::Tool);
                         }
                     }
                 } else if (eventType && str::Eq(eventType, "result")) {
@@ -791,8 +804,8 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                     }
                     // claude emits result before the process exits; don't wait for EOF
                     if (sub && (str::Eq(sub, "success") || str::Eq(sub, "completion") || str::Eq(sub, "error"))) {
-                        PostUpdate(hwndFrame, sessionId, nullptr, ClaudeUpdateType::Flush);
-                        PostUpdate(hwndFrame, sessionId, nullptr, ClaudeUpdateType::Finished);
+                        PostUpdate(hwndFrame, sessionId, {}, ClaudeUpdateType::Flush);
+                        PostUpdate(hwndFrame, sessionId, {}, ClaudeUpdateType::Finished);
                     }
                 }
 
@@ -804,7 +817,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
     }
 
     CloseHandle(hPipe);
-    PostUpdate(hwndFrame, sessionId, nullptr, ClaudeUpdateType::Finished);
+    PostUpdate(hwndFrame, sessionId, {}, ClaudeUpdateType::Finished);
     str::Free(sessionId);
 }
 
@@ -847,24 +860,24 @@ static void SendClaudeMessage(MainWindow* win) {
         str::ReplaceWithCopy(&tab->claudeSessionId, AIChatGenerateSessionId());
     }
 
-    const char* filePath = tab->filePath;
-    TempStr dir = path::GetDirTemp(Str(filePath));
-    TempStr fileName = path::GetBaseNameTemp(Str(filePath));
+    Str filePath = tab->filePath;
+    TempStr dir = path::GetDirTemp(filePath);
+    TempStr fileName = path::GetBaseNameTemp(filePath);
 
     TempStr escapedInput = str::ReplaceTemp(input, "\"", "\\\"");
 
     // sync and save settings from UI
     SyncClaudeSettingsFromUI(win);
 
-    const char* efforts[] = {"low", "medium", "high", "max"};
+    Str efforts[] = {"low", "medium", "high", "max"};
     StrVec modelList;
     BuildClaudeModelsList(modelList);
-    const char* model = ResolveClaudeModel(modelList, gGlobalPrefs->claudeCode.model);
+    Str model = ResolveClaudeModel(modelList, gGlobalPrefs->claudeCode.model);
     int effortIdx = gGlobalPrefs->claudeCode.effort;
     if (effortIdx < 0 || effortIdx > 3) {
         effortIdx = 1;
     }
-    const char* permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? "--dangerously-skip-permissions" : "";
+    Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? "--dangerously-skip-permissions" : "";
 
     TempStr claudePath = FindClaudeExecutableTemp();
     if (!claudePath) {
@@ -916,7 +929,7 @@ static void SendClaudeMessage(MainWindow* win) {
     RunAsync(MkFunc0(StartClaudeReadThread, ctx), "ClaudeReadThread");
 }
 
-static TempStr FitClaudePanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
+static TempStr FitClaudePanelTitleTemp(HWND labelHwnd, HFONT font, Str docName, int maxDx) {
     TempStr prefix = str::JoinTemp(_TRA("Claude chat"), " with ");
     return AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
 }
@@ -925,10 +938,10 @@ static void UpdateClaudePanelTitle(MainWindow* win, int labelDx) {
     if (!win || !win->claudeLabelWithClose) {
         return;
     }
-    const char* docName = "document";
+    Str docName = "document";
     WindowTab* tab = win->CurrentTab();
     if (tab && !tab->IsAboutTab() && tab->filePath) {
-        const char* title = tab->GetTabTitle();
+        Str title = tab->GetTabTitle();
         if (!str::IsEmpty(title)) {
             docName = title;
         }
@@ -1151,7 +1164,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->Create(wvArgs);
 
     if (webView->hwnd) {
-        TempStr chatHtml = AIChatFormatChatHtmlTemp(kClaudeVirtualHost, ClaudeBgColor());
+        TempStr chatHtml = AIChatFormatChatHtmlTemp(kClaudeVirtualHost(), ClaudeBgColor());
         webView->SetHtml(chatHtml);
         win->claudeWebView = webView;
         win->claudeWebViewReady = true;
@@ -1388,7 +1401,7 @@ void DestroyClaudePanel(MainWindow* win) {
     }
 
     // save webview dataDir before deleting so we can clean up
-    char* webViewDataDir = nullptr;
+    Str webViewDataDir;
     WebviewWnd* webView = win->claudeWebView;
     win->claudeWebView = nullptr;
     if (webView) {
