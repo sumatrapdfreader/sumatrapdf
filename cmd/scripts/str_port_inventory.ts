@@ -70,9 +70,23 @@ function tagExclusion(line: string, kind: Kind, contextLines: string[]): string 
   return undefined;
 }
 
-function scanFile(path: string): Entry[] {
-  const rel = relative(repoRoot, path).replaceAll("\\", "/");
-  const lines = readFileSync(path, "utf-8").split(/\r?\n/);
+// Returns true when a line inside a block comment contains the closing star-slash sequence.
+function blockCommentCloses(line: string): boolean {
+  const closeIdx = line.indexOf("*/");
+  if (closeIdx < 0) {
+    return false;
+  }
+  const afterClose = line.slice(closeIdx + 2);
+  if (!afterClose.includes("/*")) {
+    return true;
+  }
+  const openIdx = afterClose.indexOf("/*");
+  const afterOpen = afterClose.slice(openIdx + 2);
+  return afterOpen.includes("*/");
+}
+
+export function scanFileContent(rel: string, content: string): Entry[] {
+  const lines = content.split(/\r?\n/);
   const entries: Entry[] = [];
 
   let inBlockComment = false;
@@ -82,20 +96,21 @@ function scanFile(path: string): Entry[] {
     const line = lines[i];
     const n = i + 1;
 
-    // Track /* */ block comments (including multi-line).
+    // Track /* */ block comments (including multi-line license headers).
     if (inBlockComment) {
-      if (line.includes("*/")) {
-        inBlockComment = !line.includes("/*") || line.indexOf("/*") > line.indexOf("*/");
+      if (blockCommentCloses(line)) {
+        inBlockComment = false;
       }
       continue;
     }
     if (line.includes("/*")) {
-      const after = line.slice(line.indexOf("/*") + 2);
+      const openIdx = line.indexOf("/*");
+      const after = line.slice(openIdx + 2);
       if (!after.includes("*/")) {
         inBlockComment = true;
       }
       // Single-line /* ... */ — skip if entire hit is inside comment.
-      const beforeComment = line.slice(0, line.indexOf("/*")).trim();
+      const beforeComment = line.slice(0, openIdx).trim();
       if (!beforeComment) {
         continue;
       }
@@ -170,10 +185,10 @@ function scanFile(path: string): Entry[] {
 
     if (charPtrRe.test(line) || wcharPtrRe.test(line)) {
       // Match first param (open-paren immediately before char*) and later params (comma before char*).
-      const ptrSig = String.raw`(?:const\s+)?(?:char|WCHAR|wchar_t)\s*\*`;
+      const ptrSig = "(?:const\\s+)?(?:char|WCHAR|wchar_t)\\s*\\*";
       const isParam =
-        new RegExp(String.raw`\w\s*\(\s*${ptrSig}`).test(line) ||
-        new RegExp(String.raw`[(,]\s*${ptrSig}`).test(line);
+        new RegExp("\\w\\s*\\(\\s*" + ptrSig).test(line) ||
+        new RegExp("[(,]\\s*" + ptrSig).test(line);
       if (isParam) {
         const m = line.match(charPtrRe) ?? line.match(wcharPtrRe);
         entries.push({
@@ -191,22 +206,75 @@ function scanFile(path: string): Entry[] {
   return entries;
 }
 
-const files = walk(srcDir).sort();
-const all = files.flatMap(scanFile);
-const mustConvert = all.filter((e) => !e.exclusion);
-
-const lines: string[] = [];
-lines.push(`# Str port inventory — ${new Date().toISOString()}`);
-lines.push(`# scanned ${files.length} files under src/`);
-lines.push(`# total hits: ${all.length}, must-convert (untagged): ${mustConvert.length}`);
-lines.push("");
-
-for (const e of all) {
-  const ex = e.exclusion ? ` exclusion=${e.exclusion}` : "";
-  lines.push(`${e.file}:${e.line}\t${e.kind}\t${e.symbol}${ex}`);
-  lines.push(`  ${e.text}`);
+export function scanFile(path: string): Entry[] {
+  const rel = relative(repoRoot, path).replaceAll("\\", "/");
+  const content = readFileSync(path, "utf-8");
+  return scanFileContent(rel, content);
 }
 
-mkdirSync(dirname(outPath), { recursive: true });
-writeFileSync(outPath, lines.join("\n") + "\n", "utf-8");
-console.log(`Wrote ${all.length} entries (${mustConvert.length} untagged) to ${outPath}`);
+export function countScannedLines(content: string): number {
+  let inBlockComment = false;
+  let if0Depth = 0;
+  let n = 0;
+  for (const line of content.split(/\r?\n/)) {
+    if (inBlockComment) {
+      if (blockCommentCloses(line)) {
+        inBlockComment = false;
+      }
+      continue;
+    }
+    if (line.includes("/*")) {
+      const openIdx = line.indexOf("/*");
+      const after = line.slice(openIdx + 2);
+      if (!after.includes("*/")) {
+        inBlockComment = true;
+      }
+      const beforeComment = line.slice(0, openIdx).trim();
+      if (!beforeComment) {
+        continue;
+      }
+    }
+    const trimmed = line.trim();
+    if (/^#\s*if\s+0\b/.test(trimmed)) {
+      if0Depth++;
+      continue;
+    }
+    if (if0Depth > 0) {
+      if (/^#\s*if(?:def|ndef)?\b/.test(trimmed) || /^#\s*if\s+\d/.test(trimmed)) {
+        if0Depth++;
+      } else if (/^#\s*endif\b/.test(trimmed)) {
+        if0Depth--;
+      }
+      continue;
+    }
+    n++;
+  }
+  return n;
+}
+
+function runInventory(out: string) {
+  const files = walk(srcDir).sort();
+  const all = files.flatMap(scanFile);
+  const mustConvert = all.filter((e) => !e.exclusion);
+
+  const lines: string[] = [];
+  lines.push("# Str port inventory - " + new Date().toISOString());
+  lines.push(`# scanned ${files.length} files under src/`);
+  lines.push(`# total hits: ${all.length}, must-convert (untagged): ${mustConvert.length}`);
+  lines.push("");
+
+  for (const e of all) {
+    const ex = e.exclusion ? ` exclusion=${e.exclusion}` : "";
+    lines.push(`${e.file}:${e.line}\t${e.kind}\t${e.symbol}${ex}`);
+    lines.push(`  ${e.text}`);
+  }
+
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, lines.join("\n") + "\n", "utf-8");
+  console.log(`Wrote ${all.length} entries (${mustConvert.length} untagged) to ${out}`);
+  return { total: all.length, untagged: mustConvert.length, mustConvert };
+}
+
+if (import.meta.main) {
+  runInventory(outPath);
+}
