@@ -263,6 +263,16 @@ void FreePtr(WCHAR** s) {
     *s = nullptr;
 }
 
+void FreePtr(Str* s) {
+    str::Free(*s);
+    *s = {};
+}
+
+void FreePtr(WStr* s) {
+    str::Free(s->s);
+    *s = {};
+}
+
 static Str WrapAllocated(char* s, size_t cch = (size_t)-1) {
     if (!s) {
         return {};
@@ -385,6 +395,10 @@ bool IsEmpty(Str s) {
 
 bool StartsWith(Str s, Str prefix) {
     return EqN(s, prefix, Len(prefix));
+}
+
+bool StartsWith(const u8* str, Str prefix) {
+    return StartsWith(Str((char*)str, prefix.len), prefix);
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */

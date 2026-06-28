@@ -92,6 +92,8 @@ void FreePtr(const char** s);
 void FreePtr(char** s);
 void FreePtr(const WCHAR** s);
 void FreePtr(WCHAR** s);
+void FreePtr(Str* s);
+void FreePtr(WStr* s);
 
 Str Dup(Arena*, Str str, size_t cch = (size_t)-1);
 Str Dup(Str s, size_t cch = (size_t)-1);
@@ -119,6 +121,7 @@ bool EqN(Str s1, Str s2, size_t len);
 bool EqNI(Str s1, Str s2, size_t len);
 bool IsEmpty(Str s);
 bool StartsWith(Str str, Str prefix);
+bool StartsWith(const u8* str, Str prefix);
 
 bool StartsWithI(Str str, Str prefix);
 bool EndsWith(Str txt, Str end);
@@ -460,6 +463,9 @@ FORCEINLINE bool EqI(WStr s1, WStr s2) {
 }
 FORCEINLINE bool IsEmpty(WStr s) {
     return !s || s.len == 0;
+}
+FORCEINLINE bool StartsWith(const u8* str, const char* prefix) {
+    return StartsWith(str, Str(prefix));
 }
 FORCEINLINE bool StartsWith(const char* str, const char* prefix) {
     return StartsWith(Str(str), Str(prefix));

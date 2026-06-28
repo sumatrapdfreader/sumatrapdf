@@ -804,7 +804,7 @@ static bool TiffSizeFromData(ByteReader r, Size& result) {
 }
 
 static bool PngSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 24 && str::StartsWith(r.d + 12, "IHDR")) {
+    if (r.len >= 24 && str::StartsWith(AsStr(ByteSlice(r.d + 12, r.len - 12)), "IHDR")) {
         result.dx = r.DWordBE(16);
         result.dy = r.DWordBE(20);
         return true;
@@ -822,7 +822,7 @@ static bool TgaSizeFromData(ByteReader r, Size& result) {
 }
 
 static bool WebpSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 30 && str::StartsWith(r.d + 12, "VP8 ")) {
+    if (r.len >= 30 && str::StartsWith(AsStr(ByteSlice(r.d + 12, r.len - 12)), "VP8 ")) {
         result.dx = r.WordLE(26) & 0x3fff;
         result.dy = r.WordLE(28) & 0x3fff;
         return true;
