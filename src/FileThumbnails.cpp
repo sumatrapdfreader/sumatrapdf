@@ -141,7 +141,7 @@ void RemoveThumbnail(FileState* fs) {
         return;
     }
 
-    char* bmpPath = GetThumbnailPathTemp(fs->filePath);
+    TempStr bmpPath = GetThumbnailPathTemp(fs->filePath);
     if (bmpPath) {
         file::Delete(bmpPath);
     }
