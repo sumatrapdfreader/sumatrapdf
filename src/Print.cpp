@@ -561,7 +561,7 @@ static Size NormalizePaperSize(Size s) {
     return Size(s.dy, s.dx);
 }
 
-static void MessageBoxWarningCond(bool show, const char* msg, const char* title) {
+static void MessageBoxWarningCond(bool show, Str msg, Str title) {
     logf("%s: %s\n", title, msg);
     if (!show) {
         return;
@@ -1573,7 +1573,7 @@ static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, in
     devMode->dmFields |= DM_PAPERSIZE | DM_PAPERLENGTH | DM_PAPERWIDTH;
 }
 
-static short GetStandardPaperByName(const char* paperName) {
+static short GetStandardPaperByName(Str paperName) {
     if (str::EqI(paperName, "letter")) {
         return DMPAPER_LETTER;
     }
@@ -1605,29 +1605,28 @@ static short GetStandardPaperByName(const char* paperName) {
 }
 
 // wantedName can be a paper name, like "A6" or number for DMPAPER_* contstants like DMPAPER_LETTER
-static short GetPaperByName(Printer* printer, const char* wantedName) {
+static short GetPaperByName(Printer* printer, Str wantedName) {
     auto devMode = printer->devMode;
 
     TempStr name = str::DupTemp(wantedName);
     str::TrimWSInPlace(name, str::TrimOpt::Both);
     size_t nameLen = str::Len(name);
+    Str wanted = name;
     if (nameLen >= 2 && name.s[0] == '"' && name.s[nameLen - 1] == '"') {
         name.s[nameLen - 1] = '\0';
-        wantedName = Str(name.s + 1);
-    } else {
-        wantedName = name;
+        wanted = Str(name.s + 1);
     }
 
     int n = printer->nPaperSizes;
     for (int i = 0; i < n; i++) {
-        char* paperName = printer->paperNames[i];
-        if (str::EqIS(wantedName, paperName)) {
+        Str paperName = printer->paperNames[i];
+        if (str::EqIS(wanted, paperName)) {
             return printer->papers[i];
         }
         // e.g. "A3" matches driver names like "A3 297 x 420 mm"
-        size_t wantedLen = str::Len(wantedName);
-        if (wantedLen > 0 && str::StartsWithI(paperName, wantedName)) {
-            char next = paperName[wantedLen];
+        size_t wantedLen = str::Len(wanted);
+        if (wantedLen > 0 && str::StartsWithI(paperName, wanted)) {
+            char next = paperName.s[wantedLen];
             if (next == '\0' || next == ' ') {
                 return printer->papers[i];
             }
@@ -1647,7 +1646,7 @@ static short GetPaperByName(Printer* printer, const char* wantedName) {
     return devMode->dmPaperSize;
 }
 
-static short GetPaperKind(const char* kindName) {
+static short GetPaperKind(Str kindName) {
     DWORD kind;
     if (str::Parse(kindName, "%u%$", &kind)) {
         return (short)kind;
@@ -1655,12 +1654,12 @@ static short GetPaperKind(const char* kindName) {
     return DMPAPER_USER;
 }
 
-static short GetPaperSourceByName(Printer* printer, const char* binName) {
+static short GetPaperSourceByName(Printer* printer, Str binName) {
     auto devMode = printer->devMode;
     // "auto" lets the printer pick the input tray whose paper matches the
     // document's page size (matches Adobe's "Choose paper source by PDF page
     // size"; issues #349, #534)
-    if (str::EqIS(binName, "auto")) {
+    if (str::EqIS(binName, Str("auto"))) {
         return DMBIN_FORMSOURCE;
     }
     if (!(devMode->dmFields & DM_DEFAULTSOURCE)) {
@@ -1671,7 +1670,7 @@ static short GetPaperSourceByName(Printer* printer, const char* binName) {
         return devMode->dmDefaultSource;
     }
     for (int i = 0; i < n; i++) {
-        char* currName = printer->binNames[i];
+        Str currName = printer->binNames[i];
         if (str::EqIS(currName, binName)) {
             return printer->bins[i];
         }
@@ -1688,13 +1687,13 @@ static short GetPaperSourceByName(Printer* printer, const char* binName) {
 // print defaults (issue #534)
 static const char* kIgnorePdfPrintSettingsToken = "ignore-pdf-print-settings";
 
-static bool PrintSettingsHaveToken(const char* settings, const char* token) {
+static bool PrintSettingsHaveToken(Str settings, Str token) {
     if (!settings) {
         return false;
     }
     StrVec list;
     Split(&list, settings, ",", true);
-    for (char* s : list) {
+    for (Str s : list) {
         if (str::EqI(s, token)) {
             return true;
         }
@@ -1737,7 +1736,7 @@ static void ApplyPdfViewerPrintPrefs(const PdfViewerPrintPrefs& prefs, DEVMODEW*
     }
 }
 
-static void ApplyPrintSettings(Printer* printer, const char* settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
+static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
                                Print_Advanced_Data& advanced) {
     auto devMode = printer->devMode;
 
@@ -1746,7 +1745,7 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
         Split(&rangeList, settings, ",", true);
     }
 
-    for (char* s : rangeList) {
+    for (Str s : rangeList) {
         int val, val2;
         PRINTPAGERANGE pr{};
         if (str::EqI(s, "last")) {
@@ -1795,7 +1794,7 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
         } else if (str::StartsWithI(s, "rotate=")) {
             // extra rotation of the printout in degrees: 90, 180 or 270 (#1246)
             int deg = 0;
-            if (str::Parse(s + 7, "%d%$", &deg)) {
+            if (str::Parse(Str(s.s + 7), "%d%$", &deg)) {
                 deg = ((deg % 360) + 360) % 360;
                 if (deg == 90 || deg == 180 || deg == 270) {
                     advanced.extraRotation = deg;
@@ -1835,31 +1834,31 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             devMode->dmCollate = DMCOLLATE_FALSE;
             devMode->dmFields |= DM_COLLATE;
         } else if (str::StartsWithI(s, "bin=")) {
-            devMode->dmDefaultSource = GetPaperSourceByName(printer, s + 4);
+            devMode->dmDefaultSource = GetPaperSourceByName(printer, Str(s.s + 4));
             devMode->dmFields |= DM_DEFAULTSOURCE;
         } else if (str::StartsWithI(s, "paper=")) {
             float mmW = 0, mmH = 0;
-            if (str::EqI(s + 6, "auto")) {
+            if (str::EqI(Str(s.s + 6), "auto")) {
                 // set the paper size per page from the document's page size, for
                 // mixed page size documents (issue #533)
                 advanced.perPagePaperSize = true;
-            } else if (str::Parse(s + 6, "%fmm x %fmm%$", &mmW, &mmH) && mmW > 0 && mmH > 0) {
+            } else if (str::Parse(Str(s.s + 6), "%fmm x %fmm%$", &mmW, &mmH) && mmW > 0 && mmH > 0) {
                 // custom paper size specified as dimensions e.g. "paper=76mm x 130mm"
                 // SetCustomPaperSize expects tenths of a millimeter
                 SizeF size(mmW * 10.f, mmH * 10.f);
                 SetCustomPaperSize(printer, size);
             } else {
-                devMode->dmPaperSize = GetPaperByName(printer, s + 6);
+                devMode->dmPaperSize = GetPaperByName(printer, Str(s.s + 6));
                 devMode->dmFields |= DM_PAPERSIZE;
             }
         } else if (str::StartsWithI(s, "paperkind=")) {
             // alternatively allow indicating the paper kind directly by number
-            devMode->dmPaperSize = GetPaperKind(s + 10);
+            devMode->dmPaperSize = GetPaperKind(Str(s.s + 10));
             devMode->dmFields |= DM_PAPERSIZE;
         } else if (str::StartsWithI(s, "output=")) {
-            printer->output = Str(str::Dup(s + 7));
+            printer->output = str::Dup(Str(s.s + 7));
         } else if (str::StartsWithI(s, "docname=")) {
-            printer->docName = Str(str::Dup(s + 8));
+            printer->docName = str::Dup(Str(s.s + 8));
         } else if (str::EqI(s, kIgnorePdfPrintSettingsToken)) {
             // handled before ApplyPrintSettings (see PrintFile2); ignore here
         }
@@ -1976,7 +1975,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
         // apply print defaults from the PDF's /ViewerPreferences (issue #534),
         // unless the caller opted out. Done before ApplyPrintSettings so that an
         // explicit -print-settings value overrides the PDF's default.
-        if (!PrintSettingsHaveToken(settings, kIgnorePdfPrintSettingsToken)) {
+        if (!PrintSettingsHaveToken(settings, Str(kIgnorePdfPrintSettingsToken))) {
             PdfViewerPrintPrefs prefs;
             if (GetPdfViewerPrintPrefs(engine, prefs)) {
                 ApplyPdfViewerPrintPrefs(prefs, devMode, advanced);
