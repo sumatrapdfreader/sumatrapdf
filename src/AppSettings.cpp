@@ -239,7 +239,7 @@ bool LoadSettings() {
     {
         ByteSlice prefsData = file::ReadFile(settingsPath);
 
-        gGlobalPrefs = NewGlobalPrefs(Str((char*)prefsData.data(), (int)prefsData.size()));
+        gGlobalPrefs = NewGlobalPrefs(AsStr(prefsData));
         ReportIf(!gGlobalPrefs);
         gprefs = gGlobalPrefs;
         prefsData.Free();
@@ -518,7 +518,7 @@ static void RememberSessionState() {
                 if (src) {
                     windowState->tabStates->Append(CloneTabState(src));
                 } else {
-                    logf("RememberSessionState: didn't find state for file '%s'\n", fp ? (const char*)fp : "(none)");
+                    logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp.s : "(none)");
                 }
                 continue;
             }
@@ -596,7 +596,7 @@ bool SaveSettings() {
         return false;
     }
     ByteSlice prevPrefs = file::ReadFile(Str(path));
-    Str prevPrefsData((char*)prevPrefs.data(), (int)prevPrefs.size());
+    Str prevPrefsData = AsStr(prevPrefs);
     ByteSlice prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {
         str::Free(prevPrefs.data());

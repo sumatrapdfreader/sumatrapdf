@@ -70,6 +70,10 @@ struct ByteSlice {
 
 bool IsEqual(const ByteSlice&, const ByteSlice&);
 
+FORCEINLINE Str AsStr(ByteSlice bs) {
+    return Str((char*)bs.data(), bs.Size());
+}
+
 namespace str {
 
 enum class TrimOpt {
