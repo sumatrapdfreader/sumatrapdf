@@ -36,7 +36,7 @@ void VirtWnd::Paint(HDC) {}
 
 Kind kindVirWndText = "virtWndText";
 
-VirtWndText::VirtWndText(HWND hwnd, const char* s, HFONT font) {
+VirtWndText::VirtWndText(HWND hwnd, Str s, HFONT font) {
     kind = kindVirWndText;
     this->s = str::Dup(s);
     this->hwnd = hwnd;
@@ -44,7 +44,7 @@ VirtWndText::VirtWndText(HWND hwnd, const char* s, HFONT font) {
 }
 
 VirtWndText::~VirtWndText() {
-    str::Free(s);
+    str::Free(s.s);
 }
 
 Size VirtWndText::Layout(const Constraints bc) {

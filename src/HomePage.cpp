@@ -41,7 +41,7 @@
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
 
-constexpr const char* sumatraTips = R"(You can [customize scrollbar](CmdChangeScrollbar).
+static Str sumatraTips = Str(R"tips(You can [customize scrollbar](CmdChangeScrollbar).
 You can [customize keyboard shortcuts](Help/Customizing-keyboard-shortcuts).
 You can [customize toolbar](Help/Customize-toolbar).
 Press (Key/CmdCommandPalette) to open [command palette](CmdCommandPalette).
@@ -51,11 +51,11 @@ You can [toggle menu bar](CmdToggleMenuBar) with (Key/CmdToggleMenuBar).
 You can [toggle toolbar](CmdToggleToolbar) with (Key/CmdToggleToolbar).
 You can [edit PDF annotations](Help/Editing-annotations).
 You can preview where a citation, figure or footnote link points by hovering it - enable in [advanced settings](CmdAdvancedSettings) via CitationHoverDelay.
-)";
+)tips");
 
-constexpr const char* sumatraPromos = R"(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
+static Str sumatraPromos = Str(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
 Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
-)";
+)promos");
 
 // TODO: leaks if set
 static Str promoFromServer;
@@ -432,10 +432,10 @@ constexpr int kAboutRectPadding = 8;
 
 constexpr int kInnerPadding = 8;
 
-constexpr const char* kSumatraTxtFont = "Arial Black";
+static const Str kSumatraTxtFont = StrL("Arial Black");
 constexpr int kSumatraTxtFontSize = 24;
 
-constexpr const char* kVersionTxtFont = "Arial Black";
+static const Str kVersionTxtFont = StrL("Arial Black");
 constexpr int kVersionTxtFontSize = 12;
 
 #define LAYOUT_LTR 0
@@ -542,7 +542,7 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
 static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, Str txt) {
     HFONT fontLeftTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
 
-    VirtWndText w(hwnd, txt.s, fontLeftTxt); // str-port: VirtWndText
+    VirtWndText w(hwnd, txt, fontLeftTxt);
     w.isRtl = IsUIRtl();
     w.withUnderline = true;
     Size txtSize = w.GetIdealSize(true);
@@ -1200,7 +1200,7 @@ void LayoutHomePage(HomePageLayout& l) {
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
     }
-    VirtWndText* hdr = new VirtWndText(hwnd, txt.s, hdrFont); // str-port: VirtWndText
+    VirtWndText* hdr = new VirtWndText(hwnd, txt, hdrFont);
     l.freqRead = hdr;
     hdr->isRtl = isRtl;
     Size txtSize = hdr->GetIdealSize(true);

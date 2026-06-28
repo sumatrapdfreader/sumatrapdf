@@ -28,7 +28,7 @@ struct VirtWnd : LayoutBase {
 };
 
 struct VirtWndText : VirtWnd {
-    const char* s = nullptr;
+    Str s;
     HFONT font = nullptr;
     bool withUnderline = false;
     bool isRtl = false;
@@ -36,7 +36,7 @@ struct VirtWndText : VirtWnd {
 
     Size sz = {0, 0};
 
-    VirtWndText(HWND hwnd, const char* s, HFONT font = nullptr);
+    VirtWndText(HWND hwnd, Str s, HFONT font = nullptr);
     ~VirtWndText();
 
     // ILayout
