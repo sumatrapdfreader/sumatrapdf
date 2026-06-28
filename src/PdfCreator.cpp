@@ -90,8 +90,8 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
     return img;
 }
 
-static void fz_print_cb(void* user, const char* msg) {
-    log(msg);
+static void fz_print_cb(void* user, const char* msg) { // str-port: api-boundary
+    log(Str(msg));
 }
 
 static void installFitzErrorCallbacks(fz_context* ctx) {
@@ -121,7 +121,7 @@ PdfCreator::~PdfCreator() {
     fz_drop_context_windows(ctx);
 }
 
-pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, char* name, fz_image* image) {
+pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, Str name, fz_image* image) {
     pdf_obj *subres, *ref;
 
     subres = pdf_dict_get(ctx, resources, PDF_NAME(XObject));
@@ -131,7 +131,7 @@ pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, c
     }
 
     ref = pdf_add_image(ctx, doc, image);
-    pdf_dict_puts(ctx, subres, name, ref);
+    pdf_dict_puts(ctx, subres, name.s, ref);
     pdf_drop_obj(ctx, ref);
     return ref;
 }
@@ -264,8 +264,6 @@ bool PdfCreator::SetProperty(Str propName, Str value) const {
         return false;
     }
 
-    const char* val = value;
-
     fz_try(ctx) {
         pdf_obj* info = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info));
         if (!info) {
@@ -275,7 +273,8 @@ bool PdfCreator::SetProperty(Str propName, Str value) const {
         }
 
         // TODO: not sure if pdf_new_text_string() handles utf8
-        pdf_obj* valobj = pdf_new_text_string(ctx, val);
+        TempStr val = StrDupTemp(value);
+        pdf_obj* valobj = pdf_new_text_string(ctx, val.s);
         pdf_dict_puts_drop(ctx, info, name, valobj);
     }
     fz_catch(ctx) {
@@ -286,13 +285,13 @@ bool PdfCreator::SetProperty(Str propName, Str value) const {
 }
 
 // clang-format off
-static const char* propsToCopy[] = {
+static const Str propsToCopy[] = {
     kPropTitle,
     kPropAuthor,
     kPropSubject,
     kPropCopyright,
     kPropModificationDate,
-    kPropCreatorApp
+    kPropCreatorApp,
 };
 // clang-format on
 
@@ -343,7 +342,8 @@ bool PdfCreator::SaveToFile(Str filePath) const {
         pdf_write_options opts = pdf_default_write_options2;
         opts.do_compress = 1;
         opts.do_compress_images = 1;
-        pdf_save_document(ctx, doc, (const char*)filePath, &opts);
+        TempStr pathZ = StrDupTemp(filePath);
+        pdf_save_document(ctx, doc, pathZ.s, &opts);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
