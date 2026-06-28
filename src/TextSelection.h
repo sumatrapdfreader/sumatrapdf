@@ -43,7 +43,7 @@ struct TextSelection {
     // the last SelectWordAt) to the word at (x, y)
     void SelectWordsUpTo(int pageNo, double x, double y);
     void CopySelection(TextSelection* orig);
-    WCHAR* ExtractText(const char* lineSep);
+    WStr ExtractText(Str lineSep);
     void Reset();
 
     TextSel result{};

@@ -225,7 +225,6 @@ void UpdateTextSelection(MainWindow* win, bool select) {
 
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to
 // rectangular selection)
-// caller needs to str::Free() the result
 TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelectionOut) {
     if (!tab || !tab->selectionOnPage) {
         return {};
@@ -244,9 +243,9 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
 
     isTextOnlySelectionOut = dm->textSelection->result.len > 0;
     if (isTextOnlySelectionOut) {
-        WCHAR* s = dm->textSelection->ExtractText(lineSep);
+        WStr s = dm->textSelection->ExtractText(lineSep);
         TempStr res = ToUtf8Temp(s);
-        str::Free(s);
+        str::Free(s.s);
         return res;
     }
     StrVec selections;

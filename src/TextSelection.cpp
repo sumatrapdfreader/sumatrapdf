@@ -417,7 +417,7 @@ void TextSelection::CopySelection(TextSelection* orig) {
     SelectUpTo(orig->endPage, orig->endGlyph);
 }
 
-WCHAR* TextSelection::ExtractText(const char* lineSep) {
+WStr TextSelection::ExtractText(Str lineSep) {
     StrVec lines;
 
     int fromPage, fromGlyph, toPage, toGlyph;
@@ -434,7 +434,7 @@ WCHAR* TextSelection::ExtractText(const char* lineSep) {
     }
 
     TempStr res = JoinTemp(&lines, lineSep);
-    return ToWStr(res);
+    return WStr(ToWStr(res));
 }
 
 void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const {

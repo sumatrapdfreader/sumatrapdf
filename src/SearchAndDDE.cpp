@@ -111,7 +111,7 @@ void FindFirst(MainWindow* win) {
     // to find edit only if it's different from current text. Setting the text
     // triggers find-as-you-type via the bar's onTextChanged handler.
     if (!hadFindFocus && dm->textSelection->result.len > 0) {
-        AutoFreeWStr selection(dm->textSelection->ExtractText(" "));
+        AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
         str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection.Get())) {
             TempStr s = ToUtf8Temp(selection);
@@ -257,7 +257,7 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
         return;
     }
 
-    AutoFreeWStr selection(dm->textSelection->ExtractText(" "));
+    AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
     str::NormalizeWSInPlace(selection);
     if (str::IsEmpty(selection.Get())) {
         return;

@@ -603,17 +603,16 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
 }
 
 static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
-    WCHAR* ws = ts.ExtractText(" ");
+    WStr ws = ts.ExtractText(" ");
     TempStr res = ToUtf8Temp(ws);
-    str::Free(ws);
+    str::Free(ws.s);
     return res;
 }
 
 // Headless triple-click line-selection test (issue #5712). Loads the pdf, clicks
 // the middle of <clickWord>, runs the same TextSelection steps as a double-click
 // followed by a triple-click (without the mouse-up trim), and checks the result.
-Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine,
-                                      int* exitCodeOut) {
+Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
