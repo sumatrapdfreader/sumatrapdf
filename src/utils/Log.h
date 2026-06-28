@@ -15,7 +15,6 @@ bool WriteCurrentLogToFile(Str path);
 void log(Str s);
 void logf(const char* fmt, ...);
 
-void logvf(const char* fmt, ...);
 void logv(Str s);
 
 void logValueSize(Str name, i64 v);

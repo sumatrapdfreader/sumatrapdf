@@ -130,14 +130,6 @@ void logv(Str s) {
     logToPipe(s);
 }
 
-void logvf(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    TempStr s = str::FmtVTemp(fmt, args);
-    logv(s);
-    va_end(args);
-}
-
 // logs value that is byte size to pipe
 void logValueSize(Str name, i64 v) {
     TempStr s = fmt(":v %s size %lld\n", name.s, v);

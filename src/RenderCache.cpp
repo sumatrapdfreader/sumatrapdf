@@ -41,11 +41,11 @@ int gMaxRenderThreads = 8;
 // / ...) is noisy, so it's disabled by default. Set gLogRenderCache = true to
 // re-enable it when debugging the cache.
 static bool gLogRenderCache = false;
-#define rcLogf(...)             \
-    do {                        \
-        if (gLogRenderCache) {  \
-            logvf(__VA_ARGS__); \
-        }                       \
+#define rcLogf(...)                 \
+    do {                            \
+        if (gLogRenderCache) {      \
+            log(fmt(__VA_ARGS__));  \
+        }                           \
     } while (0)
 
 struct RenderThreadData {
