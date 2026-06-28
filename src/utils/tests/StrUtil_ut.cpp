@@ -60,7 +60,7 @@ static void StrSeqNumTest() {
     utassert(num == 0x1234);
     utassert(-1 == SeqStrNumIndex(seq, "missing", &num));
 
-    const char* s = SeqStrNumByIndex(seq, 1, &num);
+    Str s = SeqStrNumByIndex(seq, 1, &num);
     utassert(str::Eq(s, "bar"));
     utassert(num == -3);
 

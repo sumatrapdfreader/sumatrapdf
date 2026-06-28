@@ -858,10 +858,10 @@ static char* JoinInner(const StrVec* v, Str joint, StrBuilder& res) {
     return res.StealData();
 }
 
-char* Join(StrVec* v, Str joint) {
+Str Join(StrVec* v, Str joint) {
     int capHint = CalcCapForJoin(v, joint);
     StrBuilder tmp(capHint);
-    return JoinInner(v, joint, tmp);
+    return Str(JoinInner(v, joint, tmp));
 }
 
 TempStr JoinTemp(StrVec* v, Str joint) {

@@ -349,14 +349,14 @@ static bool skipVirtKey(const char*& s, const char* key) {
 }
 
 // used in menu shortcuts
-static const char* getVirt(BYTE key, bool isEng) {
+static Str getVirt(BYTE key, bool isEng) {
     // over-rides for non-english languages
     if (!isEng) {
         switch (key) {
             case VK_LEFT:
-                return "<-";
+                return Str("<-");
             case VK_RIGHT:
-                return "->";
+                return Str("->");
         }
     }
     return SeqStrNumStrByNumber(gVirtKeysNum, key);
@@ -541,7 +541,7 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
             str.AppendFmt("F%d", n);
             goto Exit;
         }
-        const char* s = getVirt(key, isEng);
+        Str s = getVirt(key, isEng);
         if (s) {
             str.Append(s);
             goto Exit;

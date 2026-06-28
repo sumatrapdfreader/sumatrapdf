@@ -266,8 +266,8 @@ void SeqStrNumNext(const char*& s, int* idxInOut);
 void SeqStrNumNext(const char*& s);
 int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut);
 int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut);
-const char* SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
-const char* SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
+Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
+Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
 #define _MemToHex(ptr) str::MemToHex((const u8*)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (u8*)(ptr), sizeof(*ptr))

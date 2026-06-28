@@ -28,10 +28,10 @@ namespace dbghelp {
 
 static char excNameBuf[512];
 
-const char* ExceptionNameFromCode(DWORD excCode) {
+Str ExceptionNameFromCode(DWORD excCode) {
 #define EXC(x) \
     case x:    \
-        return #x;
+        return Str(#x);
 
     switch (excCode) {
         EXC(EXCEPTION_ACCESS_VIOLATION)
@@ -93,7 +93,7 @@ const char* ExceptionNameFromCode(DWORD excCode) {
         excNameBuf[0] = 0;
     }
 
-    return excNameBuf;
+    return Str(excNameBuf);
 }
 
 #if 0

@@ -100,7 +100,7 @@ void SortNoCase(StrVec*);
 void SortNatural(StrVec*);
 
 int Split(StrVec* v, Str s, Str separator, bool collapse = false, int max = -1);
-char* Join(StrVec* v, Str sep = {});
+Str Join(StrVec* v, Str sep = {});
 TempStr JoinTemp(StrVec* v, Str sep);
 
 StrVecPage* StrVecPageNext(StrVecPage*);

@@ -1591,37 +1591,37 @@ int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
     return -1;
 }
 
-const char* SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
+Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
     ReportIf(idx < 0);
     const char* s = strs;
     while (idx > 0) {
         s = SeqStrNumEntryEnd(s);
         if (!s || !*s) {
-            return nullptr;
+            return {};
         }
         --idx;
     }
     if (!s || !*s) {
-        return nullptr;
+        return {};
     }
     if (numOut) {
         SeqStrNumEntryParts(s, &s, numOut);
     }
-    return s;
+    return Str(s);
 }
 
-const char* SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
+Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
     const char* s = strs;
     while (s && *s) {
         i64 n = 0;
         const char* str = s;
         SeqStrNumEntryParts(s, &str, &n);
         if (n == num) {
-            return str;
+            return Str(str);
         }
         s = SeqStrNumEntryEnd(s);
     }
-    return nullptr;
+    return {};
 }
 
 // for compatibility with C string, the last character is always 0
