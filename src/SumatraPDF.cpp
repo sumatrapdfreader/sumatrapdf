@@ -560,13 +560,13 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
 
     if (!triedCliPwd && gCli && gCli->password) {
         triedCliPwd = true;
-        return Str(str::Dup(gCli->password));
+        return str::Dup(gCli->password);
     }
 
     // try the list of default passwords before asking the user
     if (pwdIdx < gGlobalPrefs->defaultPasswords->size()) {
         Str pwd = gGlobalPrefs->defaultPasswords->at(pwdIdx++);
-        return Str(str::Dup(pwd));
+        return str::Dup(pwd);
     }
 
     if (IsStressTesting()) {

@@ -164,7 +164,7 @@ Str PageDestinationMupdf::GetValue2() {
 
     Str uri = FzGetURL(link, outline);
     if (uri && IsExternalLink(uri)) {
-        value = Str(str::Dup(uri.s));
+        value = str::Dup(uri.s);
         url::DecodeInPlace(value);
     }
     return value;
@@ -175,7 +175,7 @@ Str PageDestinationMupdf::GetName2() {
         return name;
     }
     if (outline && outline->title) {
-        name = Str(str::Dup(outline->title));
+        name = str::Dup(outline->title);
     }
     return name;
 }
@@ -2040,7 +2040,7 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
 EngineMupdf::EngineMupdf() {
     InitializeEngineMupdf();
     kind = kindEngineMupdf;
-    defaultExt = Str(str::Dup(".pdf"));
+    defaultExt = str::Dup(".pdf");
     fileDPI = 72.0f;
 
     // pages Vec + its FzPageInfo elements live for the lifetime of the
@@ -3044,11 +3044,11 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationAttachment;
     // WCHAR* path = ToWStr(outline->uri);
-    dest->name = Str(str::Dup(outline->title));
+    dest->name = str::Dup(outline->title);
     // page is really a stream number
     Str title = outline->title ? Str(outline->title) : StrL("");
     AutoFreeStr nameHex(str::MemToHex((const u8*)title.s, title.len).s);
-    dest->value = Str(str::Format("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.Get()));
+    dest->value = str::Format("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.Get());
     dest->pageNo = outline->page.page;
     return dest;
 }
@@ -3288,7 +3288,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
 
         auto dest = new PageDestination();
         dest->kind = kindDestinationLaunchEmbedded;
-        dest->value = Str(str::Dup(attname));
+        dest->value = str::Dup(attname);
         dest->embedObjNum = num;
 
         auto el = new PageElementDestination(dest);

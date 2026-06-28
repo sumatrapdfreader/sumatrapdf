@@ -63,9 +63,9 @@ struct PageDestinationDjVu : IPageDestination {
 
     PageDestinationDjVu(Str l, Str comment) {
         kind = kindDestinationDjVu;
-        link = Str(str::Dup(l));
+        link = str::Dup(l);
         if (comment) {
-            value = Str(str::Dup(comment));
+            value = str::Dup(comment);
         }
     }
     ~PageDestinationDjVu() {
@@ -80,7 +80,7 @@ struct PageDestinationDjVu : IPageDestination {
         if (!CouldBeURL(link)) {
             return {};
         }
-        value = Str(str::Dup(link));
+        value = str::Dup(link);
         url::DecodeInPlace(value.s);
         return value;
     }

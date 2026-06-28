@@ -131,7 +131,7 @@ TempStr CleanupTreeViewControlStringTemp(Str s) {
 }
 
 TocItem::TocItem(TocItem* parent, Str title, int pageNo) {
-    this->title = Str(str::Dup(CleanupTreeViewControlStringTemp(title)));
+    this->title = str::Dup(CleanupTreeViewControlStringTemp(title));
     this->pageNo = pageNo;
     this->parent = parent;
 }

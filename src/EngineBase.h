@@ -29,7 +29,7 @@ bool IsExternalUrl(Str url);
 
 static inline void SetDefaultExt(Str& ext, Str snew) {
     str::Free(ext.s);
-    ext = Str(str::Dup(snew));
+    ext = str::Dup(snew);
 }
 
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
@@ -156,7 +156,7 @@ struct PageDestinationURL : IPageDestination {
     PageDestinationURL(Str u) {
         ReportIf(!u);
         kind = kindDestinationLaunchURL;
-        url = Str(str::Dup(u));
+        url = str::Dup(u);
     }
 
     ~PageDestinationURL() override {
@@ -169,7 +169,7 @@ struct PageDestinationURL : IPageDestination {
             return {};
         }
         if (!displayUrl) {
-            displayUrl = Str(str::Dup(url));
+            displayUrl = str::Dup(url);
             url::DecodeInPlace(displayUrl.s);
         }
         return displayUrl;
@@ -185,8 +185,8 @@ struct PageDestinationFile : IPageDestination {
     PageDestinationFile(Str u, Str dest) {
         ReportIf(!u);
         kind = kindDestinationLaunchFile;
-        path = Str(str::Dup(u));
-        this->dest = Str(str::Dup(dest));
+        path = str::Dup(u);
+        this->dest = str::Dup(dest);
     }
 
     ~PageDestinationFile() override {
@@ -259,7 +259,7 @@ struct PageElementComment : IPageElement {
 
     PageElementComment(Str c) {
         kind = kindPageElementComment;
-        comment = Str(str::Dup(c));
+        comment = str::Dup(c);
     }
 
     ~PageElementComment() override { str::Free(comment.s); }

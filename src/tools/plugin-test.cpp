@@ -82,7 +82,7 @@ WStr GetSumatraExePath() {
     // run SumatraPDF.exe either from plugin-test.exe's or the current directory
     TempStr path = GetPathInExeDirTemp("SumatraPDF.exe");
     if (!file::Exists(path)) {
-        return WStr(str::Dup(L"SumatraPDF.exe"));
+        return str::Dup(L"SumatraPDF.exe");
     }
     return ToWStr(path);
 }

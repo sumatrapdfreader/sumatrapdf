@@ -837,7 +837,7 @@ TempWStr GetSelfExePathW() {
     auto h = GetInstance();
     // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
     GetModuleFileNameW(h, buf, nChars);
-    return WStr(str::Dup(buf));
+    return str::Dup(buf);
 }
 
 // Return the full exe path of my own executable

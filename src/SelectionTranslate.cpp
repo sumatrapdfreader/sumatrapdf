@@ -648,7 +648,7 @@ Str TestSelectionTranslateResult(int backend, Str srcLang, Str dstLang, Str text
     if (exitCode) {
         *exitCode = ok ? 0 : 1;
     }
-    return Str(str::Dup(msg.Get()));
+    return str::Dup(msg.Get());
 }
 
 static void SetDialogClientSize(HWND hwnd, int clientW, int clientH) {

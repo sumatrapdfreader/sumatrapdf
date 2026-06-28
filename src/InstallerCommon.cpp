@@ -89,7 +89,7 @@ TempStr GetRegPathUninstTemp(Str appName) {
 
 void NotifyFailed(Str msg) {
     if (!gFirstError) {
-        gFirstError = Str(str::Dup(msg));
+        gFirstError = str::Dup(msg);
     }
     logf("NotifyFailed: %s\n", msg.s);
 }
@@ -104,7 +104,7 @@ static Str gCachedExistingInstallationDir;
 Str GetExistingInstallationDir() {
     if (gCachedExistingInstallationDir) {
         // no logging if returning cached
-        return Str(str::Dup(gCachedExistingInstallationDir));
+        return str::Dup(gCachedExistingInstallationDir);
     }
     log("GetExistingInstallationDir()\n");
     TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
@@ -116,8 +116,8 @@ Str GetExistingInstallationDir() {
         dir = path::GetDirTemp(Str(dir));
     }
     if (!str::IsEmpty(dir) && dir::Exists(Str(dir))) {
-        gCachedExistingInstallationDir = Str(str::Dup(dir));
-        return Str(str::Dup(dir));
+        gCachedExistingInstallationDir = str::Dup(dir);
+        return str::Dup(dir);
     }
     return {};
 }

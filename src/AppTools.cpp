@@ -139,7 +139,7 @@ void SetAppDataDir(Str dir) {
     // lives for the whole program: allocate from the lifetime arena. SetAppDataDir
     // is called at most a couple of times (default + a -appdata override), so the
     // (rare) replaced value being retained until exit is negligible.
-    gAppDataDir = Str(str::Dup(GetLifetimeArena(), dir));
+    gAppDataDir = str::Dup(GetLifetimeArena(), dir);
 }
 
 TempStr GetAppDataDirTemp() {
@@ -390,8 +390,8 @@ static void FindTextEditors() {
             continue;
         }
 
-        rule.fullPath = Str(str::Dup(exePath));
-        rule.openFileCmd = Str(str::Format("\"%s\" %s", exePath.s, inverseSearchArgs.s));
+        rule.fullPath = str::Dup(exePath);
+        rule.openFileCmd = str::Format("\"%s\" %s", exePath.s, inverseSearchArgs.s);
         found.Append(exePath);
     }
     didFindTextEditors = true;

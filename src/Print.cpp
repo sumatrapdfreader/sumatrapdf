@@ -462,7 +462,7 @@ Printer* NewPrinter(Str printerName) {
     }
 
     printer = new Printer();
-    printer->name = Str(str::Dup(printerName));
+    printer->name = str::Dup(printerName);
     printer->devMode = devMode;
     printer->info = info;
 

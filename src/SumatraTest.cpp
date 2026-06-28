@@ -125,7 +125,7 @@ class TestPasswordUI : public PasswordUI {
             return nullptr;
         }
         triedPassword = true;
-        return Str(str::Dup(password));
+        return str::Dup(password);
     }
 };
 

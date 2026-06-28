@@ -907,7 +907,7 @@ EngineBase* EngineImage::Clone() {
 
     EngineImage* clone = new EngineImage();
     clone->SetFilePath(FilePath());
-    clone->defaultExt = Str(str::Dup(defaultExt));
+    clone->defaultExt = str::Dup(defaultExt);
     clone->imageFormat = imageFormat;
     clone->fileDPI = fileDPI;
     if (fileStream) {

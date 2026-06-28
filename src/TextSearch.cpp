@@ -78,8 +78,8 @@ void TextSearch::SetText(WStr text) {
     }
 
     this->Clear();
-    this->lastText = WStr(str::Dup(searchText));
-    this->findText = WStr(str::Dup(searchText));
+    this->lastText = str::Dup(searchText);
+    this->findText = str::Dup(searchText);
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (searchText && isnoncjkwordchar(searchText.s[0])) {
@@ -87,7 +87,7 @@ void TextSearch::SetText(WStr text) {
         for (; end < searchText.len && isnoncjkwordchar(searchText.s[end]); end++) {
             ;
         }
-        anchor = WStr(str::Dup(searchText.s, (size_t)end));
+        anchor = str::Dup(searchText.s, (size_t)end);
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
@@ -95,7 +95,7 @@ void TextSearch::SetText(WStr text) {
     else if (searchText && (searchText.s[0] == L'-' || searchText.s[0] == L'\'' || searchText.s[0] == L'"')) {
         anchor = {};
     } else if (searchText) {
-        anchor = WStr(str::Dup(searchText.s, 1));
+        anchor = str::Dup(searchText.s, 1);
     } else {
         anchor = {};
     }

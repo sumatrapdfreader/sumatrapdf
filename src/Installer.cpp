@@ -97,7 +97,7 @@ constexpr const char* kLogFileName = "sumatra-install-log.txt";
 Str GetInstallerLogPath() {
     TempStr dir = GetTempDirTemp();
     if (!dir) {
-        return Str(str::Dup(kLogFileName));
+        return str::Dup(kLogFileName);
     }
     return Str(path::Join(dir, kLogFileName));
 }

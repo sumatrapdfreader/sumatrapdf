@@ -119,7 +119,7 @@ Str Join(Str path, Str fileName) {
 
 WStr Join(WStr path, WStr fileName, WStr fileName2) {
     TempWStr res = JoinTemp(path, fileName, fileName2);
-    return WStr(str::Dup(res));
+    return str::Dup(res);
 }
 
 bool IsDirectory(Str path) {
