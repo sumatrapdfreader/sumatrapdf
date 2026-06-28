@@ -29,7 +29,7 @@ bool HasWebView() {
 }
 #else
 TempStr GetWebView2VersionTemp() {
-    WCHAR* ver = nullptr;
+    WCHAR* ver = nullptr; // str-port: Win32 COM out-param
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
     if (FAILED(hr) || (ver == nullptr)) {
         return {};
@@ -40,7 +40,7 @@ TempStr GetWebView2VersionTemp() {
 }
 
 bool HasWebView() {
-    WCHAR* ver = nullptr;
+    WCHAR* ver = nullptr; // str-port: Win32 COM out-param
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
     if (FAILED(hr) || str::IsEmpty(ver)) {
         logf("WebView2 is not available\n");
@@ -241,7 +241,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
     }
 
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2WebMessageReceivedEventArgs* args) {
-        WCHAR* message = nullptr;
+        WCHAR* message = nullptr; // str-port: Win32 COM out-param
         args->TryGetWebMessageAsString(&message);
         if (!message) {
             return S_OK;
@@ -400,7 +400,7 @@ class webview2_navigation_starting_handler : public ICoreWebView2NavigationStart
         if (!args || !m_wnd || !m_wnd->events.navigationStarting) {
             return S_OK;
         }
-        WCHAR* uri = nullptr;
+        WCHAR* uri = nullptr; // str-port: Win32 COM out-param
         if (FAILED(args->get_Uri(&uri)) || !uri) {
             return S_OK;
         }
@@ -450,7 +450,7 @@ class webview2_navigation_completed_handler : public ICoreWebView2NavigationComp
         }
         BOOL success = FALSE;
         args->get_IsSuccess(&success);
-        WCHAR* uri = nullptr;
+        WCHAR* uri = nullptr; // str-port: Win32 COM out-param
         ICoreWebView2* webview = m_wnd->webview;
         if (webview) {
             webview->get_Source(&uri);
@@ -531,7 +531,7 @@ class webview2_new_window_handler : public ICoreWebView2NewWindowRequestedEventH
         if (!args || !m_wnd || !m_wnd->events.navigationStarting) {
             return S_OK;
         }
-        WCHAR* uri = nullptr;
+        WCHAR* uri = nullptr; // str-port: Win32 COM out-param
         if (FAILED(args->get_Uri(&uri)) || !uri) {
             return S_OK;
         }
@@ -602,34 +602,34 @@ static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
     if (!uri || !prefix || !str::StartsWith(uri, prefix)) {
         return {};
     }
-    const WCHAR* path = uri.s + str::Len(prefix);
-    while (*path == L'/') {
-        path++;
+    int pathOff = prefix.len;
+    while (pathOff < uri.len && uri.s[pathOff] == L'/') {
+        pathOff++;
     }
-    if (str::IsEmpty(path)) {
+    if (pathOff >= uri.len) {
         return {};
     }
-    TempWStr pathCopy = str::Dup(path);
-    WStr q = str::FindChar(WStr(pathCopy), L'?');
+    WStr path = WStr(uri.s + pathOff, uri.len - pathOff);
+    WStr q = str::FindChar(path, L'?');
     if (q) {
-        *q.s = 0;
+        path = WStr(path.s, (int)(q.s - path.s));
     }
-    WStr h = str::FindChar(WStr(pathCopy), L'#');
+    WStr h = str::FindChar(path, L'#');
     if (h) {
-        *h.s = 0;
+        path = WStr(path.s, (int)(h.s - path.s));
     }
-    return pathCopy;
+    return str::Dup(path);
 }
 
-static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedEventArgs* args, const char* data,
-                                              size_t dataLen, Str contentType, int statusCode) {
+static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedEventArgs* args, ByteSlice data,
+                                              Str contentType, int statusCode) {
     if (!args || !gSharedEnvironment) {
         return false;
     }
 
     IStream* stream = nullptr;
-    if (data && dataLen > 0) {
-        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, dataLen);
+    if (!data.empty()) {
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, data.size());
         if (!hMem) {
             return false;
         }
@@ -638,7 +638,7 @@ static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedE
             GlobalFree(hMem);
             return false;
         }
-        memcpy(mem, data, dataLen);
+        memcpy(mem, data.data(), data.size());
         GlobalUnlock(hMem);
         HRESULT hr = CreateStreamOnHGlobal(hMem, TRUE, &stream);
         if (FAILED(hr)) {
@@ -697,7 +697,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
             return S_OK;
         }
 
-        WCHAR* uri = nullptr;
+        WCHAR* uri = nullptr; // str-port: Win32 COM out-param
         hr = request->get_Uri(&uri);
         request->Release();
         if (FAILED(hr) || !uri) {
@@ -714,13 +714,13 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
         str::Free(pathW);
         WebViewResourceResult res;
         if (!m_wnd->resourceProvider.getResource(m_wnd->resourceProvider.ctx, path, &res)) {
-            CreateWebResourceResponseFromData(args, nullptr, 0, "text/plain", 404);
+            CreateWebResourceResponseFromData(args, {}, "text/plain", 404);
             return S_OK;
         }
 
-        CreateWebResourceResponseFromData(args, res.data, res.dataLen, res.contentType, 200);
+        CreateWebResourceResponseFromData(args, {(u8*)res.data, res.dataLen}, res.contentType, 200);
         if (res.ownsData) {
-            free(res.data);
+            free((void*)res.data);
         }
         str::Free(res.contentType);
         return S_OK;

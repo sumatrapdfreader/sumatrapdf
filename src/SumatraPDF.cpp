@@ -6733,7 +6733,7 @@ static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
     }
 
     lzma::FileInfo* fi = &archive->files[idx];
-    res->data = (char*)data;
+    res->data = data;
     res->dataLen = fi->uncompressedSize;
     res->contentType = ManualMimeFromPath(mimePath);
     res->ownsData = true;

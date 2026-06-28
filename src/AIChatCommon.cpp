@@ -324,7 +324,7 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
     if (!str::EqI(path, "/marked.min.js") && !str::EqI(path, "marked.min.js")) {
         return false;
     }
-    res->data = (char*)data->data; // str-port: binary WebView2 resource payload, not a string
+    res->data = data->data;
     res->dataLen = data->dataSize;
     res->contentType = str::Dup("text/javascript");
     res->ownsData = false;
