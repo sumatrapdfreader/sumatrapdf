@@ -63,18 +63,18 @@ const char* gInstalledFiles[] = {
 // clang-format on
 #endif
 
-static const char* GetEnvRegKey(bool allUsers) {
+static Str GetEnvRegKey(bool allUsers) {
     if (allUsers) {
         return "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
     }
     return "Environment";
 }
 
-static void RemoveInstallDirFromPath(bool allUsers, const char* installDir) {
+static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     HKEY root = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-    const char* keyName = GetEnvRegKey(allUsers);
-    char* currPath = ReadRegStrTemp(root, keyName, "Path");
-    if (!currPath || !*currPath) {
+    Str keyName = GetEnvRegKey(allUsers);
+    TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
+    if (str::IsEmpty(currPath)) {
         return;
     }
     if (!str::FindI(currPath, installDir)) {
@@ -84,12 +84,12 @@ static void RemoveInstallDirFromPath(bool allUsers, const char* installDir) {
 
     StrBuilder newPath;
     size_t installDirLen = str::Len(installDir);
-    const char* p = currPath;
+    const char* p = currPath; // str-port: PATH entry parse cursor
     while (*p) {
-        const char* semi = str::FindChar(p, ';');
+        const char* semi = str::FindChar(p, ';'); // str-port: PATH entry parse cursor
         size_t entryLen = semi ? (size_t)(semi - p) : str::Len(p);
         // skip this entry if it matches installDir (case-insensitive)
-        bool match = (entryLen == installDirLen) && str::StartsWithI(p, installDir);
+        bool match = (entryLen == installDirLen) && str::EqNI(Str((char*)p, (int)entryLen), installDir, entryLen);
         if (!match && entryLen > 0) {
             if (newPath.Size() > 0) {
                 newPath.Append(";");
