@@ -9,10 +9,10 @@ class ByteOrderDecoder {
         BigEndian
     };
 
-    ByteOrderDecoder(const char* d, size_t len, ByteOrder order);
     ByteOrderDecoder(const u8* d, size_t len, ByteOrder order);
+    ByteOrderDecoder(ByteSlice bs, ByteOrder order);
 
-    void Bytes(char* dst, size_t len);
+    void Bytes(void* dst, size_t len);
 
     u8 UInt8();
     char Char() { return (char)UInt8(); }

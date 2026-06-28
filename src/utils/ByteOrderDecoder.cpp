@@ -20,11 +20,10 @@ u32 UInt32LE(const u8* d) {
     return d[0] | (d[1] << 8) | (d[2] << 16) | (d[3] << 24);
 }
 
-ByteOrderDecoder::ByteOrderDecoder(const char* d, size_t len, ByteOrder order)
-    : ok(true), byteOrder(order), data((const u8*)d), curr(data), left(len) {}
-
 ByteOrderDecoder::ByteOrderDecoder(const u8* d, size_t len, ByteOrder order)
     : ok(true), byteOrder(order), data(d), curr(data), left(len) {}
+
+ByteOrderDecoder::ByteOrderDecoder(ByteSlice bs, ByteOrder order) : ByteOrderDecoder(bs.data(), bs.size(), order) {}
 
 u8 ByteOrderDecoder::UInt8() {
     if (left < 1) {
@@ -95,7 +94,7 @@ u64 ByteOrderDecoder::UInt64() {
     return (v << 32) | v2;
 }
 
-void ByteOrderDecoder::Bytes(char* dst, size_t len) {
+void ByteOrderDecoder::Bytes(void* dst, size_t len) {
     if (left < len) {
         ok = false;
     }
