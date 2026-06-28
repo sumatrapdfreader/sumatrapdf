@@ -109,7 +109,7 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD statusCode = 0;
     TempWStr url = ToWStrTemp(urlA);
-    char* buf = nullptr;
+    char* buf = nullptr; // str-port: binary download buffer
 
     HttpProgress progress{};
 
