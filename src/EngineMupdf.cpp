@@ -2637,7 +2637,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
 
     if (pdfdoc && ok && saveKey) {
         memcpy(digest + 16, pdf_crypt_key(ctx, pdfdoc->crypt), 32);
-        Str hex = _MemToHex(&digest);
+        Str hex = str::MemToHex((const u8*)&digest, sizeof(digest));
         decryptionKey = StrDup(arena, hex);
         str::Free(hex);
     }

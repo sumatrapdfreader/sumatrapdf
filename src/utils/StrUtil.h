@@ -236,9 +236,6 @@ int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut);
 Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
 Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
-#define _MemToHex(ptr) str::MemToHex((const u8*)(ptr), sizeof(*ptr))
-#define _HexToMem(txt, ptr) str::HexToMem(txt, (u8*)(ptr), sizeof(*ptr))
-
 struct StrBuilder {
     // allocator is not owned by Vec and must outlive it
     Arena* allocator = nullptr;
