@@ -96,7 +96,7 @@ bool UninstallPreviewDll() {
     TempStr key;
     for (auto& prev : gPreviewers) {
         if (prev.skip) {
-            logf("UninstallPreviewDll: skipping '%s'\n", prev.ext);
+            logf("UninstallPreviewDll: skipping '%s'\n", prev.ext.s);
             continue;
         }
         Str clsid = prev.clsid;
@@ -130,7 +130,7 @@ bool UninstallPreviewDll() {
             key = str::FormatTemp("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2);
             DeleteOrFail(key, &hr);
         }
-        logf("UninstallPreviewDll: removed '%s'\n", prev.ext);
+        logf("UninstallPreviewDll: removed '%s'\n", prev.ext.s);
     }
     return hr == S_OK ? true : false;
 }
