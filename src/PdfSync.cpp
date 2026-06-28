@@ -168,7 +168,7 @@ static int SyncLineLen(ByteSlice data, int off) {
 }
 
 static Str SyncLineAt(ByteSlice data, int off) {
-    return Str((char*)data.data() + off, SyncLineLen(data, off));
+    return AsStr(ByteSlice(data.data() + off, (size_t)SyncLineLen(data, off)));
 }
 
 // move to the next line in a list of zero-terminated lines
@@ -193,7 +193,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
     }
 
     // convert the file data into a list of zero-terminated strings
-    Str blob = Str((char*)data.data(), (int)data.size());
+    Str blob = AsStr(data);
     str::TransCharsInPlace(blob, "\r\n", "\0\0");
 
     // parse preamble (jobname and version marker)
@@ -614,7 +614,7 @@ TempStr DealPlainSync(TempStr pathSync) {
         logf("DealPlainSync: '%s' failed\n", pathSync);
         return {};
     }
-    TempStr srcZ = StrDupTemp(Str((char*)src.data(), (int)src.size()));
+    TempStr srcZ = StrDupTemp(AsStr(src));
     int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, NULL, 0);
     if (wlen != 0) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
