@@ -767,7 +767,7 @@ void UpdateSelfTo(Str path) {
     }
 
     auto sleepMs = gCli->sleepMs;
-    logf("UpdateSelfTo: '%s', sleep for %d ms\n", path, sleepMs);
+    logf("UpdateSelfTo: '%s', sleep for %d ms\n", path.s, sleepMs);
     // sleeping for a bit to make sure that the program that launched us
     // had time to exit so that we can overwrite it
     ::Sleep(gCli->sleepMs);
