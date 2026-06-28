@@ -47,7 +47,7 @@ enum class AnnotationChange {
 class EngineMupdf;
 extern "C" struct pdf_annot;
 
-extern const char* gAnnotationTextIcons;
+SeqStrings AnnotationTextIcons();
 
 // an user annotation on page
 // It abstracts over pdf_annot so that we don't have to

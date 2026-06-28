@@ -270,7 +270,7 @@ static void HidePerAnnotControls(EditAnnotationsWindow* ew) {
     ew->buttonDelete->SetIsVisible(false);
 }
 
-static int FindStringInArray(const char* items, const char* toFind, int valIfNotFound = -1) {
+static int FindStringInArray(SeqStrings items, Str toFind, int valIfNotFound = -1) {
     int idx = SeqStrIndex(items, toFind);
     if (idx < 0) {
         idx = valIfNotFound;
@@ -764,10 +764,10 @@ static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
 
 static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
     Str itemName = IconName(annot);
-    const char* items = nullptr;
+    SeqStrings items = nullptr;
     switch (Type(annot)) {
         case AnnotationType::Text:
-            items = gAnnotationTextIcons;
+            items = AnnotationTextIcons();
             break;
         case AnnotationType::FileAttachment:
             items = gFileAttachmentUcons;

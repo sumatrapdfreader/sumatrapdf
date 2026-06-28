@@ -34,8 +34,12 @@ static_assert((int)AnnotationType::Sound == (int)PDF_ANNOT_SOUND);
 static_assert((int)AnnotationType::Unknown == (int)PDF_ANNOT_UNKNOWN);
 
 // clang-format off
-const char* gAnnotationTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
+static SeqStrings gAnnotationTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
 // clang-format on
+
+SeqStrings AnnotationTextIcons() {
+    return gAnnotationTextIcons;
+}
 
 // clang format-off
 
@@ -1250,9 +1254,9 @@ static const char* getuser(void) {
 }
 
 static Str GetAnnotationTextIconTemp() {
-    char* s = str::DupTemp(gGlobalPrefs->annotations.textIconType);
+    TempStr s = StrDupTemp(gGlobalPrefs->annotations.textIconType);
     // this way user can use "new paragraph" and we'll match "NewParagraph"
-    str::RemoveCharsInPlace(s, " ");
+    str::RemoveCharsInPlace(s.s, " ");
     int idx = SeqStrIndexIS(gAnnotationTextIcons, s);
     if (idx < 0) {
         return Str("Note");
