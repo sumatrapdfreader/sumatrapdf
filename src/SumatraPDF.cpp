@@ -9416,21 +9416,21 @@ HMENU GetReadAloudContextSubmenu() {
     return gReadAloudContextSubmenu;
 }
 
-static void ReadAloudShowNotif(WindowTab* tab, const char* msg);
+static void ReadAloudShowNotif(WindowTab* tab, Str msg);
 
-static void ReadAloudSaveVoicePref(const char* voiceId) {
+static void ReadAloudSaveVoicePref(Str voiceId) {
     if (!gGlobalPrefs) {
         return;
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, voiceId ? voiceId : "");
+    str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, voiceId);
     SaveSettings();
 }
 
 // WinRT speech synthesis is too slow for whole-document requests; speak in chunks.
 static constexpr int kReadAloudMaxChunkLen = 1024;
 
-static int ReadAloudFindChunkEnd(const char* text, int start, int maxLen) {
-    int textLen = str::Leni(text);
+static int ReadAloudFindChunkEnd(Str text, int start, int maxLen) {
+    int textLen = text.len;
     if (start >= textLen) {
         return textLen;
     }
@@ -9440,7 +9440,7 @@ static int ReadAloudFindChunkEnd(const char* text, int start, int maxLen) {
         return textLen;
     }
 
-    while (end > start && text[end] != ' ') {
+    while (end > start && text.s[end] != ' ') {
         end--;
     }
     if (end <= start) {
@@ -9456,7 +9456,7 @@ static bool ReadAloudHasMoreChunks(WindowTab* tab) {
     if (!tab || str::IsEmpty(tab->readAloudText)) {
         return false;
     }
-    return tab->readAloudChunkEnd < str::Leni(tab->readAloudText);
+    return tab->readAloudChunkEnd < tab->readAloudText.len;
 }
 
 static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
@@ -9492,13 +9492,13 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
     }
 }
 
-static bool ReadAloudSpeakChunk(WindowTab* tab, const char* errMsg) {
+static bool ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
     if (!tab || str::IsEmpty(tab->readAloudText)) {
         return false;
     }
 
     int start = tab->readAloudChunkEnd;
-    int textLen = str::Leni(tab->readAloudText);
+    int textLen = tab->readAloudText.len;
     int end = ReadAloudFindChunkEnd(tab->readAloudText, start, kReadAloudMaxChunkLen);
     if (start >= end) {
         return false;
@@ -9560,7 +9560,7 @@ static bool ReadAloudAppendChar(char** dst, size_t* len, size_t* cap, char c) {
     return true;
 }
 
-static TempStr CleanReadAloudTextTemp(const char* text) {
+static TempStr CleanReadAloudTextTemp(Str text) {
     if (str::IsEmpty(text)) {
         return {};
     }
@@ -9569,29 +9569,29 @@ static TempStr CleanReadAloudTextTemp(const char* text) {
     size_t outLen = 0;
     size_t outCap = 0;
 
-    const char* s = text;
+    int i = 0;
     bool lastWasSpace = false;
 
-    while (*s) {
-        char c = *s;
+    while (i < text.len) {
+        char c = text.s[i];
 
         // Remove likely soft hyphenation caused by PDF line wrapping:
         // "cap-\nturing" -> "capturing"
         //
         // Conservative rule: only join lowercase ASCII on both sides.
         // This avoids damaging many intentional hyphen cases.
-        if (c == '-' && IsReadAloudLineBreak(s[1])) {
-            const char* after = s + 1;
+        if (c == '-' && i + 1 < text.len && IsReadAloudLineBreak(text.s[i + 1])) {
+            int after = i + 1;
 
-            while (IsReadAloudLineBreak(*after)) {
+            while (after < text.len && IsReadAloudLineBreak(text.s[after])) {
                 after++;
             }
 
-            bool prevIsLower = s > text && IsReadAloudLowerAscii(s[-1]);
-            bool nextIsLower = IsReadAloudLowerAscii(*after);
+            bool prevIsLower = i > 0 && IsReadAloudLowerAscii(text.s[i - 1]);
+            bool nextIsLower = after < text.len && IsReadAloudLowerAscii(text.s[after]);
 
             if (prevIsLower && nextIsLower) {
-                s = after;
+                i = after;
                 lastWasSpace = false;
                 continue;
             }
@@ -9601,15 +9601,15 @@ static TempStr CleanReadAloudTextTemp(const char* text) {
         if (IsReadAloudLineBreak(c)) {
             int lineBreaks = 0;
 
-            while (IsReadAloudLineBreak(*s)) {
-                if (*s == '\n') {
+            while (i < text.len && IsReadAloudLineBreak(text.s[i])) {
+                if (text.s[i] == '\n') {
                     lineBreaks++;
                 }
-                s++;
+                i++;
             }
 
-            while (IsReadAloudHorizontalSpace(*s)) {
-                s++;
+            while (i < text.len && IsReadAloudHorizontalSpace(text.s[i])) {
+                i++;
             }
 
             if (!lastWasSpace && outLen > 0) {
@@ -9638,7 +9638,7 @@ static TempStr CleanReadAloudTextTemp(const char* text) {
                 lastWasSpace = true;
             }
 
-            s++;
+            i++;
             continue;
         }
 
@@ -9647,7 +9647,7 @@ static TempStr CleanReadAloudTextTemp(const char* text) {
         }
 
         lastWasSpace = false;
-        s++;
+        i++;
     }
 
     TempStr res = str::DupTemp(out);
@@ -9732,7 +9732,7 @@ static void ReadAloudStopRememberPos() {
         int pos = TtsGetSpokenPosUtf8();
         if (pos >= 0) {
             int absPos = tab->readAloudHighlightBase + tab->readAloudChunkStart + pos;
-            int maxPos = tab->readAloudHighlightBase + str::Leni(tab->readAloudText);
+            int maxPos = tab->readAloudHighlightBase + tab->readAloudText.len;
             if (absPos > 0 && absPos < maxPos) {
                 tab->readAloudResumePos = absPos;
             }
@@ -9778,7 +9778,7 @@ void ReadAloudPlaybackStop() {
     ReadAloudFinishSession(tab, tab->win);
 }
 
-static void ReadAloudShowNotif(WindowTab* tab, const char* msg) {
+static void ReadAloudShowNotif(WindowTab* tab, Str msg) {
     NotificationCreateArgs args;
     args.hwndParent = tab->win->hwndCanvas;
     args.msg = msg;
@@ -9787,15 +9787,15 @@ static void ReadAloudShowNotif(WindowTab* tab, const char* msg) {
 }
 
 // remembers cleaned text on the tab and starts speaking it in TTS-sized chunks
-static void ReadAloudStartText(WindowTab* tab, const char* cleaned, ReadAloudHighlightMap* newMap, int highlightBase,
-                               const char* errMsg) {
+static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMap* newMap, int highlightBase,
+                               Str errMsg) {
     if (str::IsEmpty(cleaned)) {
         logf("ReadAloud: StartText: empty cleaned text\n");
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
 
-    int cleanedLen = str::Leni(cleaned);
+    int cleanedLen = cleaned.len;
     int mapLen = newMap ? newMap->len : -1;
     logf("ReadAloud: StartText: cleanedLen=%d mapLen=%d highlightBase=%d\n", cleanedLen, mapLen, highlightBase);
 
@@ -9836,7 +9836,7 @@ static void ReadAloudStartText(WindowTab* tab, const char* cleaned, ReadAloudHig
     logf("ReadAloud: StartText: started speaking\n");
 }
 
-static void ReadAloudStartFromViewportTop(WindowTab* tab, const char* errMsg) {
+static void ReadAloudStartFromViewportTop(WindowTab* tab, Str errMsg) {
     logf("ReadAloud: StartFromViewportTop\n");
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
@@ -9861,10 +9861,10 @@ static void ReadAloudStartFromViewportTop(WindowTab* tab, const char* errMsg) {
         return;
     }
 
-    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
+    ReadAloudStartText(tab, Str(cleaned.Get(), cleaned.Size()), &map, 0, errMsg);
 }
 
-static void ReadAloudStartFromSelection(WindowTab* tab, const char* errMsg) {
+static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
     DisplayModel* dm = tab->AsFixed();
     if (!dm || dm->textSelection->result.len <= 0) {
         ReadAloudShowNotif(tab, errMsg);
@@ -9881,7 +9881,7 @@ static void ReadAloudStartFromSelection(WindowTab* tab, const char* errMsg) {
         return;
     }
 
-    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
+    ReadAloudStartText(tab, Str(cleaned.Get(), cleaned.Size()), &map, 0, errMsg);
 }
 
 static void ReadAloudInTab(WindowTab* tab) {
@@ -9910,7 +9910,7 @@ static void ReadAloudInTab(WindowTab* tab) {
     }
 }
 
-static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, const char* errMsg) {
+static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg) {
     logf("ReadAloud: StartFromCursor\n");
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
@@ -9935,7 +9935,7 @@ static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, const char*
         return;
     }
 
-    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
+    ReadAloudStartText(tab, Str(cleaned.Get(), cleaned.Size()), &map, 0, errMsg);
 }
 
 static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
@@ -9986,7 +9986,7 @@ bool CanContinueReadAloud(WindowTab* tab) {
         return false;
     }
     int pos = tab->readAloudResumePos;
-    int maxPos = tab->readAloudHighlightBase + str::Leni(tab->readAloudText);
+    int maxPos = tab->readAloudHighlightBase + tab->readAloudText.len;
     return pos > 0 && pos < maxPos;
 }
 
@@ -10015,7 +10015,7 @@ WindowTab* GetReadAloudSourceTab() {
 }
 
 // Voice selection menu
-static TempStr TtsLangIdToLocaleNameTemp(const char* lang) {
+static TempStr TtsLangIdToLocaleNameTemp(Str lang) {
     if (str::IsEmpty(lang)) {
         return str::DupTemp("unknown");
     }
@@ -10026,9 +10026,10 @@ static TempStr TtsLangIdToLocaleNameTemp(const char* lang) {
         return str::DupTemp(lang);
     }
 
+    TempStr langZ = StrDupTemp(lang);
     char* end = nullptr;
-    unsigned long langId = strtoul(lang, &end, 16);
-    if (end == lang || langId == 0) {
+    unsigned long langId = strtoul(langZ.s, &end, 16);
+    if (end == langZ.s || langId == 0) {
         return str::DupTemp(lang);
     }
 
@@ -10058,7 +10059,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
 
     Vec<TtsVoiceInfo> voices = TtsGetVoices();
 
-    const char* lastLang = nullptr;
+    Str lastLang = {};
 
     UINT cmd = CmdTtsVoiceFirst;
     for (TtsVoiceInfo& voice : voices) {
