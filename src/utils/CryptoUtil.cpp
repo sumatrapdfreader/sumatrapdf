@@ -12,7 +12,7 @@
 
 // TODO: could use CryptoNG available starting in Vista
 static NO_INLINE void CalcDigestWin(const void* data, int dataSize, u8* digest, DWORD digestSize, const WCHAR* provider,
-                                    DWORD type, ALG_ID alg) {
+                                    DWORD type, ALG_ID alg) { // str-port: Win32 crypto provider name
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
     BOOL ok = CryptAcquireContextW(&hProv, nullptr, provider, type, CRYPT_VERIFYCONTEXT);
@@ -56,34 +56,36 @@ void CalcSHA2Digest(const void* data, int dataSize, u8 digest[32]) {
     CalcDigestWin(data, dataSize, digest, 32, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CALG_SHA_256);
 }
 
-static bool ExtractSignature(const char* hexSignature, const void* data, size_t& dataLen, ScopedMem<BYTE>& signature,
+static bool ExtractSignature(Str hexSignature, const void* data, size_t& dataLen, ScopedMem<BYTE>& signature,
                              size_t& signatureLen) {
     // verify hexSignature format - must be either
     // * a string starting with "sha1:" followed by the signature (and optionally whitespace and further content)
-    // * nullptr, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
-    if (str::StartsWith(hexSignature, "sha1:")) {
-        hexSignature += 5;
-    } else if (!hexSignature) {
+    // * empty, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
+    Str hex = hexSignature;
+    if (str::StartsWith(hex, "sha1:")) {
+        hex = Str(hex.s + 5, hex.len - 5);
+    } else if (!hex) {
         if (dataLen < 20 || memchr(data, 0, dataLen)) {
             return false;
         }
-        const char* lastLine = (const char*)data + dataLen - 1;
-        while (lastLine > data && *(lastLine - 1) != '\n') {
+        const char* lastLine = (const char*)data + dataLen - 1; // str-port: binary PEM trailer scan
+        while (lastLine > (const char*)data && *(lastLine - 1) != '\n') {
             lastLine--;
         }
-        if (lastLine == data || !str::Find(lastLine, " Signature sha1:")) {
+        if (lastLine == data || !str::Find(Str(lastLine), Str(" Signature sha1:"))) {
             return false;
         }
-        dataLen = lastLine - (const char*)data;
-        hexSignature = str::Find(Str(lastLine), Str(" Signature sha1:")).s + 16;
+        dataLen = (size_t)(lastLine - (const char*)data);
+        Str sigMarker = str::Find(Str(lastLine), Str(" Signature sha1:"));
+        hex = Str(sigMarker.s + 16, sigMarker.len - 16);
     } else {
         return false;
     }
 
     Vec<BYTE> signatureBytes;
-    for (const char* c = hexSignature; *c && !str::IsWs(*c); c += 2) {
+    for (int off = 0; off + 1 < hex.len && !str::IsWs(hex.s[off]); off += 2) {
         unsigned int val;
-        if (1 != sscanf_s(c, "%02x", &val)) {
+        if (1 != sscanf_s(hex.s + off, "%02x", &val)) {
             return false;
         }
         signatureBytes.Append((BYTE)val);
@@ -93,8 +95,7 @@ static bool ExtractSignature(const char* hexSignature, const void* data, size_t&
     return true;
 }
 
-bool VerifySHA1Signature(const void* data, size_t dataLen, const char* hexSignature, const void* pubkey,
-                         size_t pubkeyLen) {
+bool VerifySHA1Signature(const void* data, size_t dataLen, Str hexSignature, const void* pubkey, size_t pubkeyLen) {
     HCRYPTPROV hProv = 0;
     HCRYPTKEY hPubKey = 0;
     HCRYPTHASH hHash = 0;
