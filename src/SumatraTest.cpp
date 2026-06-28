@@ -362,7 +362,7 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
 // window (passed on the command line), so it exercises the real menu code path.
 Str TestContextMenuSelectionResult(Str word1, Str word2, Str cursorWord, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> Str {
+    auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
@@ -433,9 +433,8 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* st
     if (!engine || !word || !startOut || !endOut) {
         return false;
     }
-    int textLen = 0;
-    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen);
-    if (!text || textLen <= 0) {
+    WStr text = engine->GetTextForPage(pageNo);
+    if (!text) {
         return false;
     }
     AutoFreeWStr wordW;
@@ -444,8 +443,8 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* st
     if (wordLen <= 0) {
         return false;
     }
-    for (int i = 0; i <= textLen - wordLen; i++) {
-        if (memcmp(text + i, wordW, (size_t)wordLen * sizeof(WCHAR)) == 0) {
+    for (int i = 0; i <= text.len - wordLen; i++) {
+        if (memcmp(text.s + i, wordW, (size_t)wordLen * sizeof(WCHAR)) == 0) {
             *startOut = i;
             *endOut = i + wordLen;
             return true;
@@ -468,7 +467,7 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* st
 // is scrolled into view.
 Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> Str {
+    auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
@@ -531,18 +530,17 @@ Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     int curEnd = ts->endGlyph;
 
     TempStr matched = nullptr;
-    int textLen = 0;
     Rect* coords = nullptr;
-    const WCHAR* pageTxt = engine->GetTextForPage(pageNo, &textLen, &coords);
-    if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= textLen && curStart < curEnd) {
-        AutoFreeWStr w(str::Dup(WStr(pageTxt + curStart, (int)(curEnd - curStart))).s);
+    WStr pageTxt = engine->GetTextForPage(pageNo, nullptr, &coords);
+    if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTxt.len && curStart < curEnd) {
+        AutoFreeWStr w(str::Dup(WStr(pageTxt.s + curStart, (int)(curEnd - curStart))).s);
         matched = ToUtf8Temp(WStr(w.Get()));
     }
 
     // is the match rect actually within the visible viewport now? (mirrors
     // DisplayModel::ScrollScreenToRect's own visibility test)
     bool visible = false;
-    if (coords && curPage == pageNo && curStart >= 0 && curEnd <= textLen && curStart < curEnd) {
+    if (coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTxt.len && curStart < curEnd) {
         Rect pr = coords[curStart];
         for (int i = curStart + 1; i < curEnd; i++) {
             pr = pr.Union(coords[i]);
@@ -570,10 +568,9 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
     if (!engine || !word || !xOut || !yOut) {
         return false;
     }
-    int textLen = 0;
     Rect* coords = nullptr;
-    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen, &coords);
-    if (!text || textLen <= 0) {
+    WStr text = engine->GetTextForPage(pageNo, nullptr, &coords);
+    if (!text) {
         return false;
     }
     AutoFreeWStr wordW;
@@ -582,17 +579,17 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
     if (wordLen <= 0) {
         return false;
     }
-    for (int i = 0; i <= textLen - wordLen; i++) {
-        if (memcmp(text + i, wordW, (size_t)wordLen * sizeof(WCHAR)) != 0) {
+    for (int i = 0; i <= text.len - wordLen; i++) {
+        if (memcmp(text.s + i, wordW, (size_t)wordLen * sizeof(WCHAR)) != 0) {
             continue;
         }
         int mid = i + wordLen / 2;
-        for (; mid < textLen && !coords[mid].x && !coords[mid].dx; mid++) {
-            if (text[mid] == '\n') {
+        for (; mid < text.len && !coords[mid].x && !coords[mid].dx; mid++) {
+            if (text.s[mid] == L'\n') {
                 return false;
             }
         }
-        if (mid >= textLen) {
+        if (mid >= text.len) {
             return false;
         }
         *xOut = coords[mid].x + coords[mid].dx / 2.0;
@@ -702,7 +699,7 @@ static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
 // left; used by tests/issue-5064.ts (issue #5064).
 Str TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
     StrBuilder out;
-    auto fail = [&](const char* msg) -> Str {
+    auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
         if (exitCodeOut) {
@@ -752,9 +749,9 @@ Str TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
 // Verifies _TRA resolves error-path strings through the translation table.
 Str TestI18nErrorStringResult(int* exitCodeOut) {
     StrBuilder out;
-    const char* err = _TRA("Error");
-    const char* crash = _TRA("SumatraPDF crashed");
-    const char* printers = _TRA("SumatraPDF - Show Printers");
+    Str err = _TRA("Error");
+    Str crash = _TRA("SumatraPDF crashed");
+    Str printers = _TRA("SumatraPDF - Show Printers");
     bool ok = !str::IsEmpty(err) && !str::IsEmpty(crash) && !str::IsEmpty(printers) &&
               str::Eq(err, trans::GetTranslation("Error")) &&
               str::Eq(crash, trans::GetTranslation("SumatraPDF crashed")) &&
@@ -762,8 +759,8 @@ Str TestI18nErrorStringResult(int* exitCodeOut) {
     if (ok) {
         out.AppendFmt("OK error=%s crash=%s printers=%s\n", err, crash, printers);
     } else {
-        out.AppendFmt("FAIL error=%s crash=%s printers=%s\n", err ? err : "(null)", crash ? crash : "(null)",
-                      printers ? printers : "(null)");
+        out.AppendFmt("FAIL error=%s crash=%s printers=%s\n", err ? err.s : "(null)", crash ? crash.s : "(null)",
+                      printers ? printers.s : "(null)");
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
@@ -847,8 +844,8 @@ Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut) {
             continue;
         }
         nLinks++;
-        char* value = PageDestGetValue(dest);
-        out.AppendFmt("kind=%s value=%s\n", dest->GetKind(), value ? value : "");
+        Str value = PageDestGetValue(dest);
+        out.AppendFmt("kind=%s value=%s\n", dest->GetKind(), value ? value.s : "");
     }
     if (nLinks == 0) {
         if (exitCodeOut) {
