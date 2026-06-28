@@ -10,22 +10,22 @@
 static bool TestDigestMD5(Str data, Str verify) {
     u8 digest[16];
     CalcMD5Digest((const u8*)data.s, data.len, digest);
-    AutoFreeStr hash(str::MemToHex((const u8*)&digest, sizeof(digest)).s);
-    return str::Eq(Str(hash.Get()), verify);
+    TempStr hash = str::MemToHexTemp((const u8*)&digest, sizeof(digest));
+    return str::Eq(hash, verify);
 }
 
 static bool TestDigestSHA1(Str data, Str verify) {
     u8 digest[20];
     CalcSHA1Digest((const u8*)data.s, data.len, digest);
-    AutoFreeStr hash(str::MemToHex((const u8*)&digest, sizeof(digest)).s);
-    return str::Eq(Str(hash.Get()), verify);
+    TempStr hash = str::MemToHexTemp((const u8*)&digest, sizeof(digest));
+    return str::Eq(hash, verify);
 }
 
 static bool TestDigestSHA2(Str data, Str verify) {
     u8 digest[32];
     CalcSHA2Digest((const u8*)data.s, data.len, digest);
-    AutoFreeStr hash(str::MemToHex((const u8*)&digest, sizeof(digest)).s);
-    return str::Eq(Str(hash.Get()), verify);
+    TempStr hash = str::MemToHexTemp((const u8*)&digest, sizeof(digest));
+    return str::Eq(hash, verify);
 }
 
 void CryptoUtilTest() {

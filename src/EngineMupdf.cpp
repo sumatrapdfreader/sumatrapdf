@@ -2637,9 +2637,8 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
 
     if (pdfdoc && ok && saveKey) {
         memcpy(digest + 16, pdf_crypt_key(ctx, pdfdoc->crypt), 32);
-        Str hex = str::MemToHex((const u8*)&digest, sizeof(digest));
+        TempStr hex = str::MemToHexTemp((const u8*)&digest, sizeof(digest));
         decryptionKey = StrDup(arena, hex);
-        str::Free(hex);
     }
     // TODO: if !ok,
     return ok;
@@ -3047,8 +3046,8 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     dest->name = str::Dup(outline->title);
     // page is really a stream number
     Str title = outline->title ? Str(outline->title) : StrL("");
-    AutoFreeStr nameHex(str::MemToHex((const u8*)title.s, title.len).s);
-    dest->value = str::Format("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.Get());
+    TempStr nameHex = str::MemToHexTemp((const u8*)title.s, title.len);
+    dest->value = str::Format("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.s);
     dest->pageNo = outline->page.page;
     return dest;
 }

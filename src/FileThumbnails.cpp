@@ -31,14 +31,14 @@ TempStr GetThumbnailPathTemp(Str filePath) {
         path.s[0] = '?';
     }
     CalcMD5Digest((u8*)path.s, str::Leni(path), digest);
-    AutoFreeStr fingerPrint(str::MemToHex(digest, dimof(digest)).s);
+    TempStr fingerPrint = str::MemToHexTemp(digest, dimof(digest));
 
     TempStr thumbsDir = GetThumbnailCacheDirTemp();
     if (!thumbsDir) {
         return {};
     }
 
-    TempStr res = path::JoinTemp(thumbsDir, str::JoinTemp(Str(fingerPrint), StrL(".png")));
+    TempStr res = path::JoinTemp(thumbsDir, str::JoinTemp(fingerPrint, StrL(".png")));
     return res;
 }
 

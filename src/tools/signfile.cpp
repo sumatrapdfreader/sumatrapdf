@@ -203,7 +203,7 @@ int main() {
     QuitIfNot(ok, "%s", "Error: Failed to sign the SHA-1 hash!");
 
     // convert signature to ASCII text
-    hexSignature.Set(str::MemToHex((const u8*)signature.Get(), sigLen));
+    hexSignature.SetCopy(str::MemToHexTemp((const u8*)signature.Get(), sigLen));
     if (inFileCommentSyntax) {
         Str dataStr(data.Get(), (int)dataLen);
         Str lf = str::Find(dataStr, "\r\n") || !str::FindChar(dataStr, '\n') ? "\r\n" : "\n";

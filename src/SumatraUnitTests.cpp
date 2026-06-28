@@ -178,23 +178,23 @@ static void versioncheck_test() {
 static void hexstrTest() {
     u8 buf[6] = {1, 2, 33, 255, 0, 18};
     u8 buf2[6]{};
-    AutoFreeStr s(str::MemToHex((const u8*)&buf, sizeof(buf)).s);
-    utassert(str::Eq(Str(s.Get()), "010221ff0012"));
-    bool ok = str::HexToMem(Str(s.Get()), (u8*)&buf2, sizeof(buf2));
+    TempStr s = str::MemToHexTemp((const u8*)&buf, sizeof(buf));
+    utassert(str::Eq(s, "010221ff0012"));
+    bool ok = str::HexToMem(s, (u8*)&buf2, sizeof(buf2));
     utassert(ok);
     utassert(memeq(buf, buf2, sizeof(buf)));
 
     FILETIME ft1, ft2;
     GetSystemTimeAsFileTime(&ft1);
-    s.Set(str::MemToHex((const u8*)&ft1, sizeof(ft1)).s);
-    str::HexToMem(Str(s.Get()), (u8*)&ft2, sizeof(ft2));
+    s = str::MemToHexTemp((const u8*)&ft1, sizeof(ft1));
+    str::HexToMem(s, (u8*)&ft2, sizeof(ft2));
     DWORD diff = FileTimeDiffInSecs(ft1, ft2);
     utassert(0 == diff);
     utassert(FileTimeEq(ft1, ft2));
 
-    s.Set(str::MemToHex(nullptr, 0).s);
-    utassert(str::Eq(Str(s.Get()), ""));
-    ok = str::HexToMem(Str(s.Get()), nullptr, 0);
+    s = str::MemToHexTemp(nullptr, 0);
+    utassert(str::Eq(s, ""));
+    ok = str::HexToMem(s, nullptr, 0);
     utassert(ok);
 }
 

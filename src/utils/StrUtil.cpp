@@ -974,9 +974,9 @@ size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
 }
 
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
-Str MemToHex(const u8* buf, size_t len) {
+TempStr MemToHexTemp(const u8* buf, size_t len) {
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char* ret = AllocArray<char>(2 * len + 1); // str-port: owned heap
+    char* ret = AllocArrayTemp<char>(2 * len + 1); // str-port: temp arena
     if (!ret) {
         return {};
     }
@@ -991,7 +991,7 @@ Str MemToHex(const u8* buf, size_t len) {
     return Str(ret, dst);
 }
 
-/* Reverse of MemToHex. Convert a 0-terminatd hex-encoded string <s> to
+/* Reverse of MemToHexTemp. Convert a 0-terminatd hex-encoded string <s> to
    binary data pointed by <buf> of max size bufLen.
    Returns false if size of <s> doesn't match bufLen or is not a valid
    hex string. */

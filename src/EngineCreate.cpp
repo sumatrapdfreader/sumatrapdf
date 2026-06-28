@@ -39,13 +39,13 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
     u8 digest[16]{};
     TempStr keyStr = str::FormatTemp("%s|%lld", path.s, (long long)fileSize);
     CalcMD5Digest((const u8*)keyStr.s, str::Leni(keyStr), digest);
-    AutoFreeStr hex(str::MemToHex(digest, dimof(digest)).s);
+    TempStr hex = str::MemToHexTemp(digest, dimof(digest));
 
     TempStr ext = path::GetExtTemp(path);
     if (str::IsEmpty(ext)) {
         ext = StrL(".cbx");
     }
-    TempStr name = str::JoinTemp(Str(hex), ext);
+    TempStr name = str::JoinTemp(hex, ext);
     return path::JoinTemp(cacheDir, name);
 }
 
