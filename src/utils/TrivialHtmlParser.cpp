@@ -151,16 +151,6 @@ HtmlAttr* HtmlParser::AllocAttr(Str name, HtmlAttr* next) {
     return attr;
 }
 
-// caller needs to free() the result
-WStr HtmlElement::GetAttribute(Str name) const {
-    for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
-        if (str::EqI(attr->name, name)) {
-            return DecodeHtmlEntitites(attr->val, codepage);
-        }
-    }
-    return {};
-}
-
 Str HtmlElement::GetAttributeTemp(Str name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name)) {

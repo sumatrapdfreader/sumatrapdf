@@ -345,12 +345,10 @@ bool EpubDoc::Load() {
         (void)parser.ParseInPlace(encryption);
         HtmlElement* cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS());
         while (cr) {
-            WStr uriW = cr->GetAttribute("URI");
-            if (uriW) {
-                TempStr uri = ToUtf8Temp(uriW);
+            TempStr uri = cr->GetAttributeTemp("URI");
+            if (uri) {
                 url::DecodeInPlace(uri);
                 encList.Append(uri);
-                str::Free(uriW.s);
             }
             cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS(), cr);
         }
@@ -1711,9 +1709,9 @@ bool TxtDoc::HasToc() const {
     return isRFC;
 }
 
-static inline WStr SkipDigits(WStr s) {
-    while (s && str::IsDigit(*s.s)) {
-        s = WStr(s.s + 1, s.len - 1);
+static inline Str SkipDigits(Str s) {
+    while (s.len > 0 && str::IsDigit(s.s[0])) {
+        s = Str(s.s + 1, s.len - 1);
     }
     return s;
 }
@@ -1727,19 +1725,17 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
     parser.Parse(htmlData.AsByteSlice(), CP_UTF8);
     HtmlElement* el = nullptr;
     while ((el = parser.FindElementByName(StrL("b"), el)) != nullptr) {
-        AutoFreeWStr title(el->GetAttribute(StrL("title")).s);
-        AutoFreeWStr id(el->GetAttribute(StrL("id")).s);
+        TempStr title = el->GetAttributeTemp(StrL("title"));
+        TempStr id = el->GetAttributeTemp(StrL("id"));
         int level = 1;
-        if (str::IsDigit(*title)) {
-            WStr dot = SkipDigits(WStr(title));
-            while (dot && *dot.s == '.' && str::IsDigit(*(dot.s + 1))) {
+        if (title && str::IsDigit(title.s[0])) {
+            Str dot = SkipDigits(title);
+            while (dot.len > 1 && dot.s[0] == '.' && str::IsDigit(dot.s[1])) {
                 level++;
-                dot = SkipDigits(WStr(dot.s + 1, dot.len - 1));
+                dot = SkipDigits(Str(dot.s + 1, dot.len - 1));
             }
         }
-        TempStr titleA = ToUtf8Temp(WStr(title.Get()));
-        TempStr idA = ToUtf8Temp(WStr(id.Get()));
-        visitor->Visit(titleA, idA, level);
+        visitor->Visit(title, id, level);
     }
 
     return true;

@@ -30,7 +30,6 @@ struct HtmlElement {
     bool NameIs(Str name) const;
     bool NameIsNS(Str name, Str ns) const;
 
-    WStr GetAttribute(Str name) const;
     Str GetAttributeTemp(Str name) const;
     HtmlElement* GetChildByTag(HtmlTag tag, int idx = 0) const;
 };
