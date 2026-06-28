@@ -279,14 +279,11 @@ static const char* BackendLogName(AIChatBackend backend) {
     return "ai";
 }
 
-static void LogTranslation(AIChatBackend backend, const char* direction, const char* text) {
-    if (!text) {
-        text = "";
-    }
-    logf("selection-translate %s %s: %s", BackendLogName(backend), direction, text);
+static void LogTranslation(AIChatBackend backend, Str direction, Str text) {
+    logf("selection-translate %s %s: %s", BackendLogName(backend), direction.s, text ? text.s : "");
 }
 
-static bool TranslationLooksLikeError(const char* text) {
+static bool TranslationLooksLikeError(Str text) {
     if (str::IsEmptyOrWhiteSpace(text)) {
         return true;
     }
@@ -308,7 +305,7 @@ static bool TranslationLooksLikeError(const char* text) {
     return false;
 }
 
-static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, const char* raw) {
+static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str raw) {
     if (str::IsEmptyOrWhiteSpace(raw)) {
         return str::DupTemp(_TRA("Translation failed."));
     }
@@ -345,12 +342,12 @@ static TempStr StripTrailingSlashTemp(TempStr path) {
     return p;
 }
 
-static TempStr NormalizeTextForPromptTemp(const char* text) {
+static TempStr NormalizeTextForPromptTemp(Str text) {
     if (!text) {
         return {};
     }
     StrBuilder buf;
-    for (const char* s = text; *s; s++) {
+    for (const char* s = text.s; *s; s++) {
         char c = *s;
         if (c == '\r' || c == '\n' || c == '\t') {
             if (buf.Size() > 0 && buf.LastChar() != ' ') {
@@ -360,11 +357,11 @@ static TempStr NormalizeTextForPromptTemp(const char* text) {
             buf.AppendChar(c);
         }
     }
-    str::TrimWSInPlace(buf.Get(), str::TrimOpt::Both);
+    str::TrimWSInPlace(Str(buf.Get()), str::TrimOpt::Both);
     return str::DupTemp(buf.Get());
 }
 
-static TempStr BuildTranslationPromptTemp(const char* srcLang, const char* dstLang, const char* text) {
+static TempStr BuildTranslationPromptTemp(Str srcLang, Str dstLang, Str text) {
     TempStr normalized = NormalizeTextForPromptTemp(text);
     if (IsSrcLangAutoTemp(srcLang)) {
         return str::FormatTemp(
@@ -386,7 +383,7 @@ static void ReadPipeToStrBuilder(HANDLE hPipe, StrBuilder& out) {
     }
 }
 
-static void AppendGrokTranslationText(const char* line, StrBuilder& out) {
+static void AppendGrokTranslationText(Str line, StrBuilder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, "type");
     if (eventType && str::Eq(eventType, "text")) {
         TempStr text = AIChatJsonStrTemp(line, "data");
@@ -396,7 +393,7 @@ static void AppendGrokTranslationText(const char* line, StrBuilder& out) {
     }
 }
 
-static void AppendClaudeTranslationText(const char* line, StrBuilder& out) {
+static void AppendClaudeTranslationText(Str line, StrBuilder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, "type");
     if (!eventType) {
         return;
@@ -430,8 +427,8 @@ static void AppendClaudeTranslationText(const char* line, StrBuilder& out) {
     }
 }
 
-static void AppendCodexTranslationText(const char* line, StrBuilder& out) {
-    if (!line || *line != '{') {
+static void AppendCodexTranslationText(Str line, StrBuilder& out) {
+    if (!line || line.s[0] != '{') {
         return;
     }
     TempStr eventType = AIChatJsonStrTemp(line, "type");
@@ -443,21 +440,21 @@ static void AppendCodexTranslationText(const char* line, StrBuilder& out) {
         out.Append(text);
         return;
     }
-    if (str::Find(line, "\"type\":\"agent_message\"")) {
-        const char* p = str::Find(line, "\"type\":\"agent_message\"");
-        text = AIChatJsonStrTemp(p, "text");
+    Str agentMsg = str::Find(line, "\"type\":\"agent_message\"");
+    if (agentMsg) {
+        text = AIChatJsonStrTemp(agentMsg, "text");
         if (text && str::Len(text) > 0) {
             out.Append(text);
         }
     }
 }
 
-static void ParseTranslationOutput(AIChatBackend backend, const char* output, StrBuilder& translationOut) {
+static void ParseTranslationOutput(AIChatBackend backend, Str output, StrBuilder& translationOut) {
     if (str::IsEmptyOrWhiteSpace(output)) {
         return;
     }
-    const char* s = output;
-    const char* end = output + str::Len(output);
+    const char* s = output.s; // str-port: parse cursor
+    const char* end = output.s + output.len;
     while (s < end) {
         const char* lineEnd = s;
         while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
@@ -482,9 +479,9 @@ static void ParseTranslationOutput(AIChatBackend backend, const char* output, St
             s++;
         }
     }
-    str::TrimWSInPlace(translationOut.Get(), str::TrimOpt::Both);
+    str::TrimWSInPlace(Str(translationOut.Get()), str::TrimOpt::Both);
     if (translationOut.Size() == 0 && output && !str::Find(output, "{\"type\":")) {
-        TempStr trimmed = str::DupTemp(output);
+        TempStr trimmed = str::DupTemp(output.s);
         str::TrimWSInPlace(trimmed, str::TrimOpt::Both);
         if (!str::IsEmptyOrWhiteSpace(trimmed)) {
             translationOut.Append(trimmed);
@@ -492,7 +489,7 @@ static void ParseTranslationOutput(AIChatBackend backend, const char* output, St
     }
 }
 
-static TempStr BuildGrokTranslateCmdLineTemp(const char* exePath, const char* prompt, const char* cwd) {
+static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     const char* model = gGlobalPrefs->grokBuild.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = "grok-composer-2.5-fast";
@@ -503,7 +500,7 @@ static TempStr BuildGrokTranslateCmdLineTemp(const char* exePath, const char* pr
                            exePath, escapedPrompt, cwd, model, permsFlag);
 }
 
-static TempStr BuildClaudeTranslateCmdLineTemp(const char* exePath, const char* prompt) {
+static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
     const char* model = gGlobalPrefs->claudeCode.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = "claude-sonnet-4-20250514";
@@ -518,7 +515,7 @@ static TempStr BuildClaudeTranslateCmdLineTemp(const char* exePath, const char* 
                            exePath, model, permsFlag, sessionId, escapedPrompt);
 }
 
-static TempStr BuildCodexTranslateCmdLineTemp(const char* exePath, const char* prompt, const char* cwd) {
+static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     const char* model = gGlobalPrefs->codexBuild.model;
     bool hasModel = !str::IsEmptyOrWhiteSpace(model);
     TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
@@ -575,8 +572,7 @@ static const char* BackendDisplayName(AIChatBackend backend) {
     return "AI";
 }
 
-static bool RunTranslation(AIChatBackend backend, const char* srcLang, const char* dstLang, const char* text,
-                           AutoFreeStr& msgOut) {
+static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, AutoFreeStr& msgOut) {
     TempStr exePath = FindBackendExecutableTemp(backend);
     if (!exePath) {
         msgOut = str::Dup(_TRA("The selected AI CLI is not installed."));
@@ -598,7 +594,7 @@ static bool RunTranslation(AIChatBackend backend, const char* srcLang, const cha
             break;
     }
 
-    LogTranslation(backend, ">>> backend", BackendDisplayName(backend));
+    LogTranslation(backend, ">>> backend", Str(BackendDisplayName(backend)));
     LogTranslation(backend, ">>> srcLang", srcLang);
     LogTranslation(backend, ">>> dstLang", dstLang);
     LogTranslation(backend, ">>> prompt", prompt);
@@ -629,14 +625,14 @@ static bool RunTranslation(AIChatBackend backend, const char* srcLang, const cha
     LogTranslation(backend, "<<< raw", output.Get());
 
     StrBuilder translation(1024);
-    ParseTranslationOutput(backend, output.Get(), translation);
+    ParseTranslationOutput(backend, Str(output.Get()), translation);
     LogTranslation(backend, "<<< parsed", translation.Get());
     if (translation.Size() == 0) {
         msgOut = str::Dup(_TRA("Translation response did not contain text."));
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;
     }
-    if (TranslationLooksLikeError(translation.Get())) {
+    if (TranslationLooksLikeError(Str(translation.Get()))) {
         msgOut.Set(translation.StealData());
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;
@@ -697,7 +693,7 @@ static void LayoutButtons(SelectionTranslateDialog* dlg, int y) {
     SetWindowPos(dlg->hwndCloseBtn, nullptr, x + innerDx - dlg->btnW, y, dlg->btnW, dlg->btnDy, SWP_NOZORDER);
 }
 
-static void ShowTranslationResult(SelectionTranslateDialog* dlg, const char* text, bool isError) {
+static void ShowTranslationResult(SelectionTranslateDialog* dlg, Str text, bool isError) {
     if (!dlg || !dlg->hwnd) {
         return;
     }
@@ -729,7 +725,7 @@ static void ShowTranslationResult(SelectionTranslateDialog* dlg, const char* tex
     if (dlg->hwndResultLabel) {
         SetWindowTextA(dlg->hwndResultLabel, label);
     }
-    SetWindowTextA(dlg->hwndResultText, text);
+    SetWindowTextA(dlg->hwndResultText, text.s);
     ShowWindow(dlg->hwndResultLabel, SW_SHOW);
     ShowWindow(dlg->hwndResultText, SW_SHOW);
 }
