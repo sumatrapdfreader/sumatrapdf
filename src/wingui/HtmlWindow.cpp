@@ -386,7 +386,7 @@ static char* MimeFromUrl(const char* url, const char* imgExt = nullptr) {
         }
     }
 
-    char* contentType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "Content Type");
+    TempStr contentType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "Content Type");
     if (contentType) {
         return str::Dup(contentType);
     }
