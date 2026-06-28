@@ -53,7 +53,7 @@ bool IsValidZoom(float zoom) {
 }
 
 // must match order of enum DisplayMode
-static const char* displayModeNames =
+static SeqStrings displayModeNames =
     "automatic\0"
     "single page\0"
     "facing\0"

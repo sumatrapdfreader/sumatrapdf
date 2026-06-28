@@ -43,8 +43,8 @@ static bool ApplyReadAloudVoiceFromSettings() {
         return false;
     }
 
-    const char* voiceId = gGlobalPrefs->readAloudVoiceId;
-    if (str::IsEmpty(voiceId)) {
+    Str voiceId = gGlobalPrefs->readAloudVoiceId;
+    if (!voiceId) {
         TtsSetVoiceById("");
         return false;
     }
@@ -116,7 +116,7 @@ static void setMin(int& i, int minVal) {
     }
 }
 
-static void SetCommandNameAndShortcut(CustomCommand* cmd, const char* name, const char* key) {
+static void SetCommandNameAndShortcut(CustomCommand* cmd, Str name, Str key) {
     if (!cmd) {
         return;
     }
@@ -340,7 +340,7 @@ bool LoadSettings() {
     }
 
     if (!gprefs->treeFontName) {
-        gprefs->treeFontName = const_cast<char*>("automatic");
+        gprefs->treeFontName = Str("automatic");
     }
 
     // drop file states without a path: they can't be opened, found by path
@@ -423,7 +423,7 @@ Vec<SessionData*>* gInitialSessionData = nullptr;
 // is kept in sync with the live session, this never matches a closed window;
 // per-tab disambiguation (e.g. same file in two windows) comes from the more
 // reliable tab->tabState, which RememberSessionState prefers.
-static TabState* FindSessionTabState(const char* fp) {
+static TabState* FindSessionTabState(Str fp) {
     if (!gInitialSessionData) {
         return nullptr;
     }
@@ -505,7 +505,7 @@ static void RememberSessionState() {
                 // home page tab
                 continue;
             }
-            const char* fp = tab->filePath;
+            Str fp = tab->filePath;
             if (!tab->ctrl) {
                 // file not loaded into a tab (lazy loading, or a placeholder for
                 // a missing file). Prefer the tab's own remembered state -- it's
@@ -518,7 +518,7 @@ static void RememberSessionState() {
                 if (src) {
                     windowState->tabStates->Append(CloneTabState(src));
                 } else {
-                    logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp : "(none)");
+                    logf("RememberSessionState: didn't find state for file '%s'\n", fp ? (const char*)fp : "(none)");
                 }
                 continue;
             }
@@ -652,7 +652,7 @@ static void ReloadSettings() {
         return;
     }
 
-    const char* uiLanguage = str::DupTemp(gGlobalPrefs->uiLanguage);
+    TempStr uiLanguage = StrDupTemp(gGlobalPrefs->uiLanguage);
     bool showToolbar = gGlobalPrefs->showToolbar;
 
     gFileHistory.UpdateStatesSource(nullptr);
@@ -771,7 +771,7 @@ HFONT GetAppTreeFontEx(bool bold, bool italic) {
     if (fntSize < kMinFontSize) {
         fntSize = GetAppMenuFontSize();
     }
-    char* fntNameUser = gGlobalPrefs->treeFontName;
+    Str fntNameUser = gGlobalPrefs->treeFontName;
     gTreeFontEx[idx] = GetUserGuiFontEx(fntNameUser, fntSize, bold, italic);
     return gTreeFontEx[idx];
 }
