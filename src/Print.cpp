@@ -556,7 +556,7 @@ static Size NormalizePaperSize(Size s) {
 }
 
 static void MessageBoxWarningCond(bool show, Str msg, Str title) {
-    logf("%s: %s\n", title, msg);
+    logf("%s: %s\n", title.s, msg.s);
     if (!show) {
         return;
     }
@@ -663,7 +663,7 @@ static bool PrintToDevice(const PrintData& pd) {
         return false;
     }
 
-    logf("PrintToDevice: printer: '%s', file: '%s'\n", pd.printer->name, pd.engine->FilePath());
+    logf("PrintToDevice: printer: '%s', file: '%s'\n", pd.printer->name.s, pd.engine->FilePath().s);
     auto progressCb = pd.progressCb;
     auto abortCookie = pd.abortCookie;
     int res;
@@ -739,7 +739,7 @@ static bool PrintToDevice(const PrintData& pd) {
 
     AutoDeleteDC hdc{CreateDCW(nullptr, printerName, nullptr, devMode)};
     if (!hdc) {
-        logf("PrintToDevice: CreateDCW('%s') failed\n", pd.printer->name);
+        logf("PrintToDevice: CreateDCW('%s') failed\n", pd.printer->name.s);
         return false;
     }
 
@@ -1938,7 +1938,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
         return PrintResult::CannotLoadFile;
     }
 
-    logf("PrintFile2: file: '%s', printer: '%s'\n", engine->FilePath(), printerName);
+    logf("PrintFile2: file: '%s', printer: '%s'\n", engine->FilePath().s, printerName.s);
 
     if (printerName) {
         printer = NewPrinter(printerName);
@@ -2005,7 +2005,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
 }
 
 PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str settings) {
-    logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
+    logf("PrintFile: file: '%s', printer: '%s'\n", fileName.s, printerName.s);
     fileName = path::NormalizeTemp(Str(fileName));
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
