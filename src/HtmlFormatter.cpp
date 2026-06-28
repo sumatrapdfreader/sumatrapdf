@@ -198,7 +198,7 @@ void HtmlFormatter::AppendInstr(const DrawInstr& di) {
     }
 }
 
-void HtmlFormatter::SetFont(const WCHAR* fontName, FontStyle fs, float fontSize) {
+void HtmlFormatter::SetFont(WStr fontName, FontStyle fs, float fontSize) {
     if (fontSize < 0) {
         fontSize = CurrFont()->GetSize();
     }
@@ -213,9 +213,9 @@ void HtmlFormatter::SetFont(const WCHAR* fontName, FontStyle fs, float fontSize)
 }
 
 void HtmlFormatter::SetFontBasedOn(mui::CachedFont* font, FontStyle fs, float fontSize) {
-    const WCHAR* fontName = font->GetName();
-    if (nullptr == fontName) {
-        fontName = defaultFontName;
+    WStr fontName = WStr(font->GetName());
+    if (!fontName) {
+        fontName = WStr(defaultFontName.Get());
     }
     SetFont(fontName, fs, fontSize);
 }
@@ -885,14 +885,13 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     }
 
     AttrInfo* attr = t->GetAttrByName("face");
-    const WCHAR* faceName = CurrFont()->GetName();
+    WStr faceName = WStr(CurrFont()->GetName());
     if (attr) {
         TempWStr buf = ToWStrTemp(attr->val);
-        size_t strLen = str::Len(buf);
         // multiple font names can be comma separated
-        if (strLen > 0 && *buf.s != ',') {
-            str::TransCharsInPlace(buf, L",", L"\0");
-            faceName = buf.s;
+        if (buf && buf.s[0] != L',') {
+            str::TransCharsInPlace(buf, WStrL(L","), WStrL(L"\0"));
+            faceName = buf;
         }
     }
 

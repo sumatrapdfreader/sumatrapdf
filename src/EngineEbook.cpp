@@ -44,12 +44,12 @@ Kind kindEngineTxt = "engineTxt";
 static AutoFreeStr gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
-static const WCHAR* GetDefaultFontName() {
+static WStr GetDefaultFontName() {
     Str s = gDefaultFontName.Get();
     if (s) {
         return ToWStrTemp(s);
     }
-    return L"Georgia";
+    return WStrL(L"Georgia");
 }
 
 static float GetDefaultFontSize() {
@@ -368,7 +368,7 @@ static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {
 }
 
 PageText EngineEbook::ExtractPageText(int pageNo) {
-    const WCHAR* lineSep = L"\n";
+    const WStr lineSep = WStrL(L"\n");
     ScopedCritSec scope(&pagesAccess);
 
     InterlockedIncrement(&gAllowAllocFailure);
@@ -389,7 +389,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(str::Len(lineSep));
-                    ReportIf(*lineSep && !coords.Last().IsEmpty());
+                    ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
                     if (swidth > 0) {
@@ -413,7 +413,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(str::Len(lineSep));
-                    ReportIf(*lineSep && !coords.Last().IsEmpty());
+                    ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
                     if (swidth > 0) {
@@ -452,7 +452,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
 }
 
 PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
-    Str lineSep = "\n";
+    const Str lineSep = StrL("\n");
     ScopedCritSec scope(&pagesAccess);
 
     InterlockedIncrement(&gAllowAllocFailure);

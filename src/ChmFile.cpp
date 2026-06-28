@@ -660,8 +660,8 @@ static const TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     TempWStr ws = ToWStrTemp(s);
     StrBuilder bytes;
     bool hasHigh = false;
-    for (const WCHAR* p = ws; *p; p++) {
-        int b = ChmEntityByte(*p);
+    for (int i = 0; i < ws.len; i++) {
+        int b = ChmEntityByte(ws.s[i]);
         if (b < 0) {
             return s; // real Unicode we can't trace to a byte -> leave as-is
         }

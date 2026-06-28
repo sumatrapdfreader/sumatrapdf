@@ -53,7 +53,7 @@ struct DrawInstr {
     // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString, InstrImage
     ::Str str;
     mui::CachedFont* font = nullptr; // InstrSetFont
-    RectF bbox{}; // common to most instructions
+    RectF bbox{};                    // common to most instructions
 
     DrawInstr() = default;
 
@@ -127,9 +127,9 @@ struct HtmlFormatterArgs {
     float pageDx = 0;
     float pageDy = 0;
 
-    void SetFontName(const WCHAR* s) { fontName.SetCopy(s); }
+    void SetFontName(WStr s) { fontName.SetCopy(s); }
 
-    const WCHAR* GetFontName() const { return fontName; }
+    WStr GetFontName() const { return WStr(fontName.Get()); }
 
     float fontSize = 0;
 
@@ -200,7 +200,7 @@ class HtmlFormatter {
 
     DrawStyle* CurrStyle() { return &styleStack.Last(); }
     mui::CachedFont* CurrFont() { return CurrStyle()->font; }
-    void SetFont(const WCHAR* fontName, FontStyle fs, float fontSize = -1);
+    void SetFont(WStr fontName, FontStyle fs, float fontSize = -1);
     void SetFontBasedOn(mui::CachedFont* origFont, FontStyle fs, float fontSize = -1);
     void ChangeFontStyle(FontStyle fs, bool addStyle);
     void SetAlignment(AlignAttr align);
