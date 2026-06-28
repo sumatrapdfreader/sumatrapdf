@@ -42,9 +42,9 @@ void TextSelection::Reset() {
 // (i.e. when over the right half of a glyph, the returned index will be for the
 // glyph following it, which will be the first glyph (not) to be selected)
 static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
-    int textLen;
     Rect* coords;
-    ts->engine->GetTextForPage(pageNo, &textLen, &coords);
+    WStr text = ts->engine->GetTextForPage(pageNo, nullptr, &coords);
+    int textLen = text.len;
     PointF pt = PointF(x, y);
 
     unsigned int maxDist = UINT_MAX;
@@ -95,9 +95,9 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
 }
 
 static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, StrVec* lines = nullptr) {
-    int len;
     Rect* coords;
-    const WCHAR* text = ts->engine->GetTextForPage(pageNo, &len, &coords);
+    WStr text = ts->engine->GetTextForPage(pageNo, nullptr, &coords);
+    int len = text.len;
     ReportIf(len < glyph + length);
     Rect mediabox = ts->engine->PageMediabox(pageNo).Round();
     Rect *c = &coords[glyph], *end = c + length;
@@ -118,7 +118,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
         }
 
         if (lines) {
-            char* s = ToUtf8Temp(WStr(text + (c0 - coords), c - c0));
+            TempStr s = ToUtf8Temp(WStr(text.s + (c0 - coords), (int)(c - c0)));
             lines->Append(s);
             continue;
         }
@@ -152,15 +152,14 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
 }
 
 bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
-    int textLen;
     Rect* coords;
-    engine->GetTextForPage(pageNo, &textLen, &coords);
+    WStr text = engine->GetTextForPage(pageNo, nullptr, &coords);
 
     int glyphIx = FindClosestGlyph(this, pageNo, x, y);
     Point pt = ToPoint(PointF(x, y));
     // when over the right half of a glyph, FindClosestGlyph returns the
     // index of the next glyph, in which case glyphIx must be decremented
-    if (glyphIx == textLen || !coords[glyphIx].Contains(pt)) {
+    if (glyphIx == text.len || !coords[glyphIx].Contains(pt)) {
         glyphIx--;
     }
     if (-1 == glyphIx) {
@@ -177,9 +176,8 @@ void TextSelection::StartAt(int pageNo, int glyphIx) {
     startPage = pageNo;
     startGlyph = glyphIx;
     if (glyphIx < 0) {
-        int textLen;
-        engine->GetTextForPage(pageNo, &textLen);
-        startGlyph += textLen + 1;
+        WStr text = engine->GetTextForPage(pageNo);
+        startGlyph += text.len + 1;
     }
 }
 
@@ -199,9 +197,8 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
     endPage = pageNo;
     endGlyph = glyphIx;
     if (glyphIx < 0) {
-        int textLen;
-        engine->GetTextForPage(pageNo, &textLen);
-        endGlyph = textLen + glyphIx + 1;
+        WStr text = engine->GetTextForPage(pageNo);
+        endGlyph = text.len + glyphIx + 1;
     }
 
     result.len = 0;
@@ -213,11 +210,10 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
     }
 
     for (int page = fromPage; page <= toPage; page++) {
-        int textLen;
-        engine->GetTextForPage(page, &textLen);
+        WStr text = engine->GetTextForPage(page);
 
         int glyph = page == fromPage ? fromGlyph : 0;
-        int length = (page == toPage ? toGlyph : textLen) - glyph;
+        int length = (page == toPage ? toGlyph : text.len) - glyph;
         if (length > 0) {
             FillResultRects(this, page, glyph, length);
         }
@@ -226,13 +222,13 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
 
 // extend backward across comma-separated digit groups (e.g. "1,234,567")
 // returns the new start position if valid grouping found, otherwise returns curStart
-static int ExtendBackAcrossCommaGroups(const WCHAR* text, int curStart) {
+static int ExtendBackAcrossCommaGroups(WStr text, int curStart) {
     int pos = curStart;
-    while (pos >= 2 && text[pos - 1] == ',') {
+    while (pos >= 2 && text.s[pos - 1] == L',') {
         // count digits before the comma
         int j = pos - 2;
         int nDigits = 0;
-        while (j >= 0 && isDigit(text[j])) {
+        while (j >= 0 && isDigit(text.s[j])) {
             nDigits++;
             j--;
         }
@@ -246,13 +242,13 @@ static int ExtendBackAcrossCommaGroups(const WCHAR* text, int curStart) {
 
 // extend forward across comma-separated digit groups (e.g. ",234,567")
 // returns the new end position
-static int ExtendForwardAcrossCommaGroups(const WCHAR* text, int textLen, int curEnd) {
+static int ExtendForwardAcrossCommaGroups(WStr text, int curEnd) {
     int pos = curEnd;
-    while (pos < textLen && text[pos] == ',') {
+    while (pos < text.len && text.s[pos] == L',') {
         // count digits after the comma
         int j = pos + 1;
         int nDigits = 0;
-        while (j < textLen && isDigit(text[j])) {
+        while (j < text.len && isDigit(text.s[j])) {
             nDigits++;
             j++;
         }
@@ -266,13 +262,12 @@ static int ExtendForwardAcrossCommaGroups(const WCHAR* text, int textLen, int cu
 
 void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordStartOut, int* wordEndOut) {
     int i = FindClosestGlyph(this, pageNo, x, y);
-    int textLen;
-    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen);
+    WStr text = engine->GetTextForPage(pageNo);
 
     bool isAllDigits = true;
     WCHAR c = 0;
     for (; i > 0; i--) {
-        c = text[i - 1];
+        c = text.s[i - 1];
         if (!isWordChar(c)) {
             break;
         }
@@ -288,7 +283,7 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
         int j = i - 2;
         // first skip one group of digits (before the separator we stopped at)
         nDigits = 0;
-        while (j >= 0 && isDigit(text[j])) {
+        while (j >= 0 && isDigit(text.s[j])) {
             nDigits++;
             j--;
         }
@@ -301,8 +296,8 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
         }
     }
 
-    for (; i < textLen; i++) {
-        c = text[i];
+    for (; i < text.len; i++) {
+        c = text.s[i];
         if (!isWordChar(c)) {
             break;
         }
@@ -316,12 +311,12 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
     int wordEnd = i;
     if (isAllDigits) {
         // extend forward across comma groups
-        wordEnd = ExtendForwardAcrossCommaGroups(text, textLen, wordEnd);
+        wordEnd = ExtendForwardAcrossCommaGroups(text, wordEnd);
         // extend forward across decimal point + digits
-        if (wordEnd < textLen && text[wordEnd] == '.') {
+        if (wordEnd < text.len && text.s[wordEnd] == L'.') {
             int j = wordEnd + 1;
             nDigits = 0;
-            while (j < textLen && isDigit(text[j])) {
+            while (j < text.len && isDigit(text.s[j])) {
                 nDigits++;
                 j++;
             }
@@ -351,8 +346,8 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     SelectUpTo(pageNo, wordEnd);
 }
 
-static bool IsLineBreakGlyph(const WCHAR* text, const Rect* coords, int idx, int textLen) {
-    return idx >= 0 && idx < textLen && text[idx] == '\n' && !coords[idx].x && !coords[idx].dx;
+static bool IsLineBreakGlyph(WStr text, const Rect* coords, int idx) {
+    return idx >= 0 && idx < text.len && text.s[idx] == L'\n' && !coords[idx].x && !coords[idx].dx;
 }
 
 void TextSelection::SelectLineAt(int pageNo, double x, double y) {
@@ -360,18 +355,17 @@ void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     if (i < 0) {
         return;
     }
-    int textLen;
     Rect* coords;
-    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen, &coords);
+    WStr text = engine->GetTextForPage(pageNo, nullptr, &coords);
     // line breaks are newline glyphs with zero-size coords. Some whitespace (e.g.
     // spaces with FZ_STEXT_ACCURATE_BBOXES) can also have empty boxes and must not
     // be treated as line ends (issue #5712).
     int lineStart = i;
-    while (lineStart > 0 && !IsLineBreakGlyph(text, coords, lineStart - 1, textLen)) {
+    while (lineStart > 0 && !IsLineBreakGlyph(text, coords, lineStart - 1)) {
         lineStart--;
     }
     int lineEnd = i;
-    while (lineEnd < textLen && !IsLineBreakGlyph(text, coords, lineEnd, textLen)) {
+    while (lineEnd < text.len && !IsLineBreakGlyph(text, coords, lineEnd)) {
         lineEnd++;
     }
     StartAt(pageNo, lineStart);
