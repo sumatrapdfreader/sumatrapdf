@@ -32,21 +32,24 @@ Kind kindEngineDjVu = "engineDjVu";
 
 // parses "123", "#123", "# 123"
 // returns -1 for invalid page
-static int ParseDjVuLink(const char* link) {
+static int ParseDjVuLink(Str link) {
     if (!link) {
         return -1;
     }
-    if (link[0] == '#') {
-        ++link;
+    int off = 0;
+    if (off < link.len && link.s[off] == '#') {
+        off++;
     }
-    if (link[0] == ' ') {
-        ++link;
+    if (off < link.len && link.s[off] == ' ') {
+        off++;
     }
-    int n = atoi(link);
-    return n;
+    if (off >= link.len) {
+        return -1;
+    }
+    return atoi(link.s + off);
 }
 
-static bool CouldBeURL(const char* link) {
+static bool CouldBeURL(Str link) {
     if (!link) {
         return false;
     }
@@ -60,18 +63,18 @@ static bool CouldBeURL(const char* link) {
 }
 
 struct PageDestinationDjVu : IPageDestination {
-    const char* link = nullptr;
+    Str link;
     Str value;
 
-    PageDestinationDjVu(const char* l, const char* comment) {
+    PageDestinationDjVu(Str l, Str comment) {
         kind = kindDestinationDjVu;
-        link = str::Dup(l);
+        link = Str(str::Dup(l));
         if (comment) {
             value = Str(str::Dup(comment));
         }
     }
     ~PageDestinationDjVu() {
-        str::Free(link);
+        str::Free(link.s);
         str::Free(value.s);
     }
 
@@ -93,7 +96,7 @@ struct PageDestinationDjVu : IPageDestination {
 //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
 //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
 //   http://example.net/#hyperlink
-static IPageDestination* NewDjVuDestination(const char* link, const char* comment) {
+static IPageDestination* NewDjVuDestination(Str link, Str comment) {
     if (str::IsEmpty(link) || str::Eq(link, "#")) {
         return nullptr;
     }
@@ -103,7 +106,7 @@ static IPageDestination* NewDjVuDestination(const char* link, const char* commen
     return res;
 }
 
-static IPageElement* NewDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
+static IPageElement* NewDjVuLink(int pageNo, Rect rect, Str link, Str comment) {
     auto dest = NewDjVuDestination(link, comment);
     if (!dest) {
         return nullptr;
@@ -114,7 +117,7 @@ static IPageElement* NewDjVuLink(int pageNo, Rect rect, const char* link, const 
     return res;
 }
 
-static TocItem* NewDjVuTocItem(TocItem* parent, const char* title, const char* link) {
+static TocItem* NewDjVuTocItem(TocItem* parent, Str title, Str link) {
     auto res = new TocItem(parent, title, 0);
     res->dest = NewDjVuDestination(link, nullptr);
     if (res->dest) {
@@ -195,11 +198,12 @@ struct DjVuContext {
         EnterCriticalSection(&lock);
     }
 
-    ddjvu_document_t* OpenFile(const char* fileName) {
+    ddjvu_document_t* OpenFile(Str fileName) {
         ScopedCritSec scope(&lock);
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
         //       https://code.google.com/archive/p/sumatrapdf/issues/1434
-        return ddjvu_document_create_by_filename_utf8(ctx, fileName, /* cache */ FALSE);
+        TempStr fileNameZ = StrDupTemp(fileName);
+        return ddjvu_document_create_by_filename_utf8(ctx, fileNameZ.s, /* cache */ FALSE);
     }
 
     ddjvu_document_t* OpenStream(IStream* stream) {
@@ -295,7 +299,7 @@ class EngineDjVu : public EngineBase {
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
 
-    bool Load(const char* fileName);
+    bool Load(Str fileName);
     bool Load(IStream* stream);
 
   protected:
@@ -309,10 +313,11 @@ class EngineDjVu : public EngineBase {
 
     Vec<ddjvu_fileinfo_t> fileInfos;
 
-    RenderedBitmap* CreateRenderedBitmap(const char* bmpData, Size size, bool grayscale) const;
+    RenderedBitmap* CreateRenderedBitmap(const char* bmpData, Size size,
+                                         bool grayscale) const; // str-port: pixmap bytes
     bool ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rect>& coords);
     bool ExtractPageTextUtf8(miniexp_t item, StrBuilder& extracted, Vec<Rect>& coords);
-    TempStr ResolveNamedDestTemp(const char* name);
+    TempStr ResolveNamedDestTemp(Str name);
     TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
     bool FinishLoading();
     bool LoadMediaboxes();
@@ -359,11 +364,11 @@ EngineBase* EngineDjVu::Clone() {
         }
         return res;
     }
-    const char* path = FilePath();
+    Str path = FilePath();
     if (path) {
         auto res = CreateEngineDjVuFromFile(path);
         if (!res) {
-            logf("EngineDjVu::Clone() failed: CreateEngineDjVuFromFile('%s') failed\n", path);
+            logf("EngineDjVu::Clone() failed: CreateEngineDjVuFromFile('%s') failed\n", path.s);
         }
         return res;
     }
@@ -422,7 +427,7 @@ struct DjVuInfoChunk {
 static_assert(sizeof(DjVuInfoChunk) == 10, "wrong size of DjVuInfoChunk structure");
 
 bool EngineDjVu::LoadMediaboxes() {
-    const char* path = FilePath();
+    Str path = FilePath();
     if (!path) {
         return false;
     }
@@ -478,7 +483,7 @@ bool EngineDjVu::LoadMediaboxes() {
     return true;
 }
 
-bool EngineDjVu::Load(const char* fileName) {
+bool EngineDjVu::Load(Str fileName) {
     SetFilePath(fileName);
     doc = gDjVuContext->OpenFile(fileName);
     return FinishLoading();
@@ -682,7 +687,7 @@ Pixmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     size_t dy = (size_t)screen.dy;
     size_t stride = ((dx * bytesPerPixel + 3) / 4) * 4;
     size_t nBytes = stride * (dy + 5);
-    char* bmpData = (char*)calloc(nBytes, 1);
+    char* bmpData = (char*)calloc(nBytes, 1); // str-port: pixmap byte buffer
     if (!bmpData) {
         LeaveCriticalSection(&gDjVuContext->lock);
         ddjvu_format_release(fmt);
@@ -739,7 +744,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
     ddjvu_rect_t prect = {full.x, full.y, (uint)full.dx, (uint)full.dy};
     ddjvu_rect_t rrect = prect;
 
-    char* bmpData = AllocArrayTemp<char>(full.dx * full.dy + 1);
+    char* bmpData = AllocArrayTemp<char>(full.dx * full.dy + 1); // str-port: pixmap byte buffer
     if (!bmpData) {
         // release the lock before releasing djvu objects to avoid deadlock:
         // ddjvu_page_release can trigger DjVuFile::~DjVuFile -> GMonitor::~GMonitor
@@ -858,14 +863,14 @@ bool EngineDjVu::SaveFileAs(Str dstPath) {
             return true;
         }
     }
-    const char* srcPath = FilePath();
+    Str srcPath = FilePath();
     if (!srcPath) {
         return false;
     }
     return file::Copy(dstPath, srcPath, false);
 }
 
-static void AppendNewline(WStrBuilder& extracted, Vec<Rect>& coords, const WCHAR* lineSep) {
+static void AppendNewline(WStrBuilder& extracted, Vec<Rect>& coords, WStr lineSep) {
     if (extracted.size() > 0 && ' ' == extracted.Last()) {
         extracted.RemoveLast();
         coords.RemoveLast();
@@ -875,7 +880,7 @@ static void AppendNewline(WStrBuilder& extracted, Vec<Rect>& coords, const WCHAR
 }
 
 bool EngineDjVu::ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rect>& coords) {
-    const WCHAR* lineSep = L"\n";
+    const WStr lineSep = WStrL(L"\n");
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type)) {
         return false;
@@ -910,10 +915,10 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rec
             coords.size() > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
             AppendNewline(extracted, coords, lineSep);
         }
-        const char* content = miniexp_to_str(str);
+        Str content = Str(miniexp_to_str(str));
         TempWStr value = ToWStrTemp(content);
         if (value) {
-            size_t len = str::Len(value);
+            size_t len = value.len;
             // TODO: split the rectangle into individual parts per glyph
             for (size_t i = 0; i < len; i++) {
                 coords.Append(Rect(rect.x, rect.y, rect.dx, rect.dy));
@@ -935,7 +940,7 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rec
 }
 
 PageText EngineDjVu::ExtractPageText(int pageNo) {
-    const WCHAR* lineSep = L"\n";
+    const WStr lineSep = WStrL(L"\n");
     ScopedCritSec scope(&gDjVuContext->lock);
 
     miniexp_t pagetext;
@@ -993,7 +998,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     return res;
 }
 
-static void AppendNewlineUtf8(StrBuilder& extracted, Vec<Rect>& coords, const char* lineSep) {
+static void AppendNewlineUtf8(StrBuilder& extracted, Vec<Rect>& coords, Str lineSep) {
     if (extracted.size() > 0 && ' ' == extracted.Last()) {
         extracted.RemoveLast();
         coords.RemoveLast();
@@ -1003,7 +1008,7 @@ static void AppendNewlineUtf8(StrBuilder& extracted, Vec<Rect>& coords, const ch
 }
 
 bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, StrBuilder& extracted, Vec<Rect>& coords) {
-    const char* lineSep = "\n";
+    const Str lineSep = StrL("\n");
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type)) {
         return false;
@@ -1038,11 +1043,10 @@ bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, StrBuilder& extracted, Vec<
             coords.size() > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
             AppendNewlineUtf8(extracted, coords, lineSep);
         }
-        const char* content = miniexp_to_str(str);
+        Str content = Str(miniexp_to_str(str));
         if (content) {
-            size_t len = str::Len(content);
             // TODO: split the rectangle into individual parts per glyph
-            for (size_t i = 0; i < len; i++) {
+            for (int i = 0; i < content.len; i++) {
                 coords.Append(Rect(rect.x, rect.y, rect.dx, rect.dy));
             }
             extracted.Append(content);
@@ -1062,7 +1066,7 @@ bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, StrBuilder& extracted, Vec<
 }
 
 PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
-    const char* lineSep = "\n";
+    const Str lineSep = StrL("\n");
     ScopedCritSec scope(&gDjVuContext->lock);
 
     miniexp_t pagetext;
@@ -1162,22 +1166,22 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
         miniexp_t anno = miniexp_cdr(links[i]);
 
         miniexp_t url = miniexp_car(anno);
-        const char* urlA = nullptr;
+        Str urlA;
         if (miniexp_stringp(url)) {
-            urlA = miniexp_to_str(url);
+            urlA = Str(miniexp_to_str(url));
         } else if (miniexp_consp(url) && miniexp_car(url) == miniexp_symbol("url") &&
                    miniexp_stringp(miniexp_cadr(url)) && miniexp_stringp(miniexp_caddr(url))) {
-            urlA = miniexp_to_str(miniexp_cadr(url));
+            urlA = Str(miniexp_to_str(miniexp_cadr(url)));
         }
-        if (!urlA || !*urlA) {
+        if (!urlA) {
             continue;
         }
 
         anno = miniexp_cdr(anno);
         miniexp_t comment = miniexp_car(anno);
-        const char* commentUtf8 = nullptr;
+        Str commentUtf8;
         if (miniexp_stringp(comment)) {
-            commentUtf8 = miniexp_to_str(comment);
+            commentUtf8 = Str(miniexp_to_str(comment));
         }
 
         anno = miniexp_cdr(anno);
@@ -1257,7 +1261,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
     }
     PageDestinationDjVu* ddest = (PageDestinationDjVu*)dest;
 
-    const char* link = ddest->link;
+    Str link = ddest->link;
 
     auto ctrl = linkHandler->GetDocController();
     if (str::Eq(link, "#+1")) {
@@ -1284,7 +1288,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
         }
     }
     if ((pageNo < 1) || (pageNo > pageCount)) {
-        logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
+        logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link.s, pageNo,
              pageCount);
         ReportIf(true);
         return false;
@@ -1307,13 +1311,14 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
 
 // returns a numeric DjVu link to a named page (if the name resolves)
 // caller needs to free() the result
-TempStr EngineDjVu::ResolveNamedDestTemp(const char* name) {
+TempStr EngineDjVu::ResolveNamedDestTemp(Str name) {
     if (!str::StartsWith(name, "#")) {
         return {};
     }
+    Str nameWithoutHash = name.len > 1 ? Str(name.s + 1, name.len - 1) : Str{};
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& fi = fileInfos[i];
-        if (str::EqI(name + 1, fi.id)) {
+        if (str::EqI(nameWithoutHash, Str(fi.id))) {
             return str::FormatTemp("#%d", fi.pageno + 1);
         }
     }
@@ -1341,17 +1346,18 @@ TocItem* EngineDjVu::BuildTocTree(TocItem* parent, miniexp_t entry, int& idCount
             continue;
         }
 
-        const char* name = miniexp_to_str(miniexp_car(item));
-        const char* link = miniexp_to_str(miniexp_cadr(item));
+        Str name = Str(miniexp_to_str(miniexp_car(item)));
+        Str link = Str(miniexp_to_str(miniexp_cadr(item)));
         if (!name || !link) {
             continue;
         }
 
         TocItem* tocItem = nullptr;
         TempStr linkNo = ResolveNamedDestTemp(link);
+        Str linkWithoutHash = link.len > 1 ? Str(link.s + 1, link.len - 1) : Str{};
         if (!linkNo) {
             tocItem = NewDjVuTocItem(parent, name, link);
-        } else if (!str::IsEmpty(name) && !str::Eq(name, link + 1)) {
+        } else if (!str::IsEmpty(name) && !str::Eq(name, linkWithoutHash)) {
             tocItem = NewDjVuTocItem(parent, name, linkNo);
         } else {
             // ignore generic (name-less) entries
