@@ -3269,7 +3269,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     fileFilter.Append(_TRA("PDF documents"));
     fileFilter.Append("\1*.pdf\1");
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    str::TransCharsInPlace(Str(fileFilter.CStr(), fileFilter.Size()), "\1", "\0");
     TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
@@ -3810,7 +3810,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    str::TransCharsInPlace(Str(fileFilter.CStr(), fileFilter.Size()), "\1", "\0");
 
     WCHAR dstFileName[MAX_PATH];
     TempStr baseName = path::GetBaseNameTemp(srcFileName);
@@ -3820,7 +3820,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         // remove the container document's extension and include
         // the embedding reference in the suggested filename
         WCHAR* colon = (WCHAR*)str::FindChar(dstFileName, ':');
-        str::TransCharsInPlace(colon, L":", L"_");
+        str::TransCharsInPlace(WStr(colon), L":", L"_");
         WCHAR* ext;
         for (ext = colon; ext > dstFileName && *ext != '.'; ext--) {
             // no-op
@@ -4016,7 +4016,7 @@ static void RenameCurrentFile(MainWindow* win) {
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
     fileFilter.AppendFmt("\1*%s\1", defExt);
-    str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
+    str::TransCharsInPlace(Str(fileFilter.Get(), fileFilter.Size()), "\1", "\0");
 
     WCHAR dstFilePathW[MAX_PATH];
     auto baseName = path::GetBaseNameTemp(srcPath);
@@ -4098,7 +4098,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // Remove the extension so that it can be replaced with .lnk
     auto name = path::GetBaseNameTemp(path);
     str::BufSet(dstFileName, dimof(dstFileName), name);
-    str::TransCharsInPlace(dstFileName, L":", L"_");
+    str::TransCharsInPlace(WStr(dstFileName), L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
         int idx = str::Leni(dstFileName) - str::Leni(defExt);
         dstFileName[idx] = '\0';
@@ -4109,7 +4109,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // methods too early on)
     StrBuilder fileFilter;
     fileFilter.AppendFmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts"));
-    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    str::TransCharsInPlace(Str(fileFilter.CStr(), fileFilter.Size()), "\1", "\0");
     TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
     OPENFILENAME ofn{};
@@ -4345,7 +4345,7 @@ static TempWStr GetFileFilterTemp() {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    str::TransCharsInPlace(Str(fileFilter.CStr(), fileFilter.Size()), "\1", "\0");
     return ToWStrTempFromBuilder(fileFilter);
 }
 

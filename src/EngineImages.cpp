@@ -2317,7 +2317,7 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
         filesStr.Append(fi->name);
     }
     // show paths in Windows style (#5543)
-    str::TransCharsInPlace(filesStr.CStr(), "/", "\\");
+    str::TransCharsInPlace(Str(filesStr.CStr(), filesStr.Size()), "/", "\\");
     AddProp(keyValOut, kPropFiles, filesStr.CStr());
 }
 

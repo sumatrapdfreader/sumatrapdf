@@ -811,13 +811,17 @@ Str Format(const char* fmt, ...) {
 /* replace in <str> the chars from <oldChars> with their equivalents
    from <newChars> (similar to UNIX's tr command)
    Returns the number of replaced characters. */
-size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars) {
+size_t TransCharsInPlace(Str str, Str oldChars, Str newChars) {
+    if (!str) {
+        return 0;
+    }
     size_t findCount = 0;
-
-    for (char* c = str; *c; c++) {
-        const char* found = str::FindChar(oldChars, *c);
+    char* end = str.s + str.len;
+    for (char* c = str.s; c < end; c++) {
+        Str found = str::FindChar(oldChars, *c);
         if (found) {
-            *c = newChars[found - oldChars];
+            int idx = (int)(found.s - oldChars.s);
+            *c = newChars.s[idx];
             findCount++;
         }
     }
@@ -2427,14 +2431,17 @@ WCHAR* ToLower(const WCHAR* s) {
     return ToLowerInPlace(s2);
 }
 
-size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars) {
+size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
+    if (!str) {
+        return 0;
+    }
     size_t nReplaced = 0;
-
-    for (WCHAR* c = str; *c; c++) {
-        const WCHAR* pos = str::FindChar(oldChars, *c);
+    WCHAR* end = str.s + str.len;
+    for (WCHAR* c = str.s; c < end; c++) {
+        WCHAR* pos = str::FindChar(oldChars, *c);
         if (pos) {
-            size_t idx = pos - oldChars;
-            *c = newChars[idx];
+            size_t idx = (size_t)(pos - oldChars.s);
+            *c = newChars.s[idx];
             nReplaced++;
         }
     }

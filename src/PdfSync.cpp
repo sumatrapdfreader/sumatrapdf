@@ -182,13 +182,13 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     char* line = (char*)data.Get();
     // convert the file data into a list of zero-terminated strings
-    str::TransCharsInPlace(line, "\r\n", "\0\0");
+    str::TransCharsInPlace(Str(line), "\r\n", "\0\0");
 
     // parse preamble (jobname and version marker)
     char* dataEnd = line + data.size();
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
-    str::TransCharsInPlace(line, "*/", " \\");
+    str::TransCharsInPlace(Str(line), "*/", " \\");
     AutoFreeStr jobName;
     jobName.Set(strconv::AnsiToUtf8(line).s);
     jobName.Set(str::Join(Str(jobName), Str(".tex")).s);
@@ -269,7 +269,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                     filename = str::Dup(filename + 1, n);
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
-                str::TransCharsInPlace(filename, "*/", " \\");
+                str::TransCharsInPlace(Str(filename), "*/", " \\");
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (str::IsEmpty(path::GetExtTemp(Str(filename)))) {
                     filename = str::Join(Str(filename), Str(".tex")).s;
@@ -822,7 +822,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     }
 
     // Unescape SyncTeX's space encoding: * represents a space in filenames
-    str::TransCharsInPlace(filename, "*", " ");
+    str::TransCharsInPlace(Str(filename), "*", " ");
 
     if (IsUnixSourcePath(syncFilePath.Get(), filename)) {
         // Treat filename as unix path
@@ -836,7 +836,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     } else {
         // Treat filename as Windows path
 
-        str::TransCharsInPlace(filename, "/", "\\");
+        str::TransCharsInPlace(Str(filename), "/", "\\");
         // Convert the source filepath to an absolute path
         if (!path::IsAbsolute(Str(filename))) {
             filename.Set(PrependDir(Str(filename.Get())).s);

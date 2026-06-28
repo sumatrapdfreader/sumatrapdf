@@ -566,7 +566,7 @@ ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
     AutoFreeStr url(NormalizeURL(fileName, Str(pagePath)).s);
     // some EPUB producers use wrong path separators
     if (str::FindChar(url, '\\')) {
-        str::TransCharsInPlace(url, "\\", "/");
+        str::TransCharsInPlace(Str(url), "\\", "/");
     }
     for (ImageData& img : images) {
         if (str::Eq(img.fileName, url)) {
@@ -1320,7 +1320,7 @@ bool HtmlDoc::Load() {
     }
 
     pagePath.SetCopy(Str(fileName));
-    str::TransCharsInPlace(pagePath, "\\", "/");
+    str::TransCharsInPlace(Str(pagePath), "\\", "/");
 
     HtmlPullParser parser(htmlData);
     HtmlToken* tok;
@@ -1391,7 +1391,7 @@ ByteSlice HtmlDoc::LoadURL(Str url) {
         return {};
     }
     Str path = str::Dup(url);
-    str::TransCharsInPlace(path.s, "/", "\\");
+    str::TransCharsInPlace(path, "/", "\\");
     return file::ReadFile(path);
 }
 

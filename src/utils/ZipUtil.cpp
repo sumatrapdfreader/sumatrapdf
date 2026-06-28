@@ -190,7 +190,7 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
     }
 
     char* name = str::Dup(nameInZip);
-    str::TransCharsInPlace(name, "\\", "/");
+    str::TransCharsInPlace(Str(name), "\\", "/");
 
     bool res = AddFileData(name, fileData.Get(), fileData.size(), dosdatetime);
     fileData.Free();

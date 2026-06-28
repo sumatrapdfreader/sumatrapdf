@@ -162,7 +162,7 @@ Str Format(const char* fmt, ...);
 size_t TrimWSInPlace(Str s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
 
-size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars);
+size_t TransCharsInPlace(Str str, Str oldChars, Str newChars);
 
 size_t NormalizeWSInPlace(Str str);
 size_t NormalizeNewlinesInPlace(char* s, char* e);
@@ -216,7 +216,7 @@ const WCHAR* Find(const WCHAR* str, const WCHAR* find);
 bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
-size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
+size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars);
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 WCHAR* CastToWCHAR(Str s);
@@ -519,12 +519,7 @@ FORCEINLINE Str ToUpperInPlace(const char* s) {
 FORCEINLINE WCHAR* ToLowerInPlace(WStr s) {
     return ToLowerInPlace(s.s);
 }
-FORCEINLINE size_t TransCharsInPlace(Str s, const char* oldChars, const char* newChars) {
-    return TransCharsInPlace(s.s, oldChars, newChars);
-}
-FORCEINLINE size_t TransCharsInPlace(WStr s, const WCHAR* oldChars, const WCHAR* newChars) {
-    return TransCharsInPlace(s.s, oldChars, newChars);
-}
+
 FORCEINLINE size_t TrimWSInPlace(char* s, TrimOpt opt) {
     return TrimWSInPlace(Str(s), opt);
 }
