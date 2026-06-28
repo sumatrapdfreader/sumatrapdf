@@ -858,7 +858,7 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
                                                    LONG_PTR lpRefData) {
     switch (msg) {
         case TDN_HYPERLINK_CLICKED: {
-            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam))); // str-port: Win32
             break;
         }
         case TDN_BUTTON_CLICKED:
@@ -980,7 +980,7 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
                                                       LONG_PTR lpRefData) {
     switch (msg) {
         case TDN_HYPERLINK_CLICKED:
-            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam))); // str-port: Win32
             break;
     }
     return S_OK;
@@ -1456,31 +1456,31 @@ extern void DeleteManualBrowserWindow();
 
 extern "C" {
 // str-port: mupdf C main entry points
-int muconvert_main(int argc, char* argv[]);
-int mudraw_main(int argc, char* argv[]);
-int mutrace_main(int argc, char* argv[]);
-int murun_main(int argc, char* argv[]);
+int muconvert_main(int argc, char* argv[]); // str-port: mupdf
+int mudraw_main(int argc, char* argv[]);    // str-port: mupdf
+int mutrace_main(int argc, char* argv[]);   // str-port: mupdf
+int murun_main(int argc, char* argv[]);     // str-port: mupdf
 
-int pdfclean_main(int argc, char* argv[]);
-int pdfextract_main(int argc, char* argv[]);
-int pdfinfo_main(int argc, char* argv[]);
-int pdfposter_main(int argc, char* argv[]);
-int pdfshow_main(int argc, char* argv[]);
-int pdfpages_main(int argc, char* argv[]);
-int pdfcreate_main(int argc, char* argv[]);
-int pdfmerge_main(int argc, char* argv[]);
-int pdfsign_main(int argc, char* argv[]);
-int pdfrecolor_main(int argc, char* argv[]);
-int pdftrim_main(int argc, char* argv[]);
-int pdfbake_main(int argc, char* argv[]);
-int mubar_main(int argc, char* argv[]);
-int mugrep_main(int argc, char* argv[]);
+int pdfclean_main(int argc, char* argv[]);   // str-port: mupdf
+int pdfextract_main(int argc, char* argv[]); // str-port: mupdf
+int pdfinfo_main(int argc, char* argv[]);    // str-port: mupdf
+int pdfposter_main(int argc, char* argv[]);  // str-port: mupdf
+int pdfshow_main(int argc, char* argv[]);    // str-port: mupdf
+int pdfpages_main(int argc, char* argv[]);   // str-port: mupdf
+int pdfcreate_main(int argc, char* argv[]);  // str-port: mupdf
+int pdfmerge_main(int argc, char* argv[]);   // str-port: mupdf
+int pdfsign_main(int argc, char* argv[]);    // str-port: mupdf
+int pdfrecolor_main(int argc, char* argv[]); // str-port: mupdf
+int pdftrim_main(int argc, char* argv[]);    // str-port: mupdf
+int pdfbake_main(int argc, char* argv[]);    // str-port: mupdf
+int mubar_main(int argc, char* argv[]);      // str-port: mupdf
+int mugrep_main(int argc, char* argv[]);     // str-port: mupdf
 
-int cmapdump_main(int argc, char* argv[]);
-int pdfaudit_main(int argc, char* argv[]);
+int cmapdump_main(int argc, char* argv[]); // str-port: mupdf
+int pdfaudit_main(int argc, char* argv[]); // str-port: mupdf
 
-char** fz_argv_from_wargv(int argc, wchar_t** wargv); // str-port: mupdf argv conversion
-void fz_free_argv(int argc, char** argv);
+char** fz_argv_from_wargv(int argc, wchar_t** wargv); // str-port: mupdf
+void fz_free_argv(int argc, char** argv);             // str-port: mupdf
 int fz_redirect_io_to_existing_console();
 }
 
@@ -1616,28 +1616,28 @@ static bool IsRunningTool() {
 // CommandLineToArgvW parses argv[0]: if quoted, up to the closing quote;
 // otherwise up to the first whitespace.
 static WStr SkipFirstArg(WStr cmdLine) {
-    const wchar_t* s = cmdLine.s;
-    const wchar_t* end = cmdLine.s + cmdLine.len;
-    while (s < end && (*s == L' ' || *s == L'\t')) {
+    int s = 0;
+    int end = cmdLine.len;
+    while (s < end && (cmdLine.s[s] == L' ' || cmdLine.s[s] == L'\t')) {
         s++;
     }
-    if (s < end && *s == L'"') {
+    if (s < end && cmdLine.s[s] == L'"') {
         s++;
-        while (s < end && *s != L'"') {
+        while (s < end && cmdLine.s[s] != L'"') {
             s++;
         }
-        if (s < end && *s == L'"') {
+        if (s < end && cmdLine.s[s] == L'"') {
             s++;
         }
     } else {
-        while (s < end && *s != L' ' && *s != L'\t') {
+        while (s < end && cmdLine.s[s] != L' ' && cmdLine.s[s] != L'\t') {
             s++;
         }
     }
-    while (s < end && (*s == L' ' || *s == L'\t')) {
+    while (s < end && (cmdLine.s[s] == L' ' || cmdLine.s[s] == L'\t')) {
         s++;
     }
-    return WStr((wchar_t*)s, (int)(end - s));
+    return WStr(cmdLine.s + s, end - s);
 }
 
 // When this is SumatraPDF-dll.exe (carries embedded installer resources) and is
