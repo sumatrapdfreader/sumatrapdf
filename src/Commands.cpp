@@ -787,7 +787,7 @@ SeqStrings gCommandDescriptions =
 
 struct ArgSpec {
     int cmdId;
-    const char* name;
+    Str name;
     CommandArg::Type type;
 };
 
@@ -838,7 +838,7 @@ static const ArgSpec argSpecs[] = {
 CustomCommand* gFirstCustomCommand = nullptr;
 
 // returns -1 if not found
-static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s) {
+static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, Str s) {
     int idx = SeqStrIndexIS(commands, s);
     if (idx < 0) {
         return -1;
@@ -891,14 +891,17 @@ CommandArg::~CommandArg() {
 }
 
 // arg names are case insensitive
-static bool IsArgName(const char* name, const char* argName) {
+static bool IsArgName(Str name, Str argName) {
     if (str::EqI(name, argName)) {
         return true;
     }
     if (!str::StartsWithI(name, argName)) {
         return false;
     }
-    char c = name[str::Len(argName)];
+    if (name.len <= argName.len) {
+        return false;
+    }
+    char c = name.s[argName.len];
     return c == '=';
 }
 
@@ -921,7 +924,7 @@ void FreeCommandArgs(CommandArg* first) {
     }
 }
 
-CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type) {
+CommandArg* FindArg(CommandArg* first, Str name, CommandArg::Type type) {
     CommandArg* curr = first;
     while (curr) {
         if (IsArgName(curr->name, name)) {
@@ -1004,7 +1007,7 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
     commands.Reverse();
 }
 
-static CommandArg* NewArg(CommandArg::Type type, const char* name) {
+static CommandArg* NewArg(CommandArg::Type type, Str name) {
     auto res = new CommandArg();
     res->type = type;
     res->name = str::Dup(name);
@@ -1027,7 +1030,7 @@ CommandArg* NewFloatArg(Str name, float val) {
     return res;
 }
 
-static CommandArg* ParseArgOfType(const char* argName, CommandArg::Type type, const char* val) {
+static CommandArg* ParseArgOfType(Str argName, CommandArg::Type type, Str val) {
     if (type == CommandArg::Type::Color) {
         ParsedColor col;
         ParseColor(col, val);
@@ -1057,13 +1060,13 @@ static CommandArg* ParseArgOfType(const char* argName, CommandArg::Type type, co
     return nullptr;
 }
 
-static int ParseBool(const char* s);
+static int ParseBool(Str s);
 
 CommandArg* TryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
     // first is default value
     const char* valStart = str::SkipChar(*argsInOut, ' ');
     const char* valEnd = str::FindChar(valStart, ' ');
-    const char* argName = argSpecs[defaultArgIdx].name;
+    Str argName = argSpecs[defaultArgIdx].name;
     CommandArg::Type type = argSpecs[defaultArgIdx].type;
     if (type == CommandArg::Type::String) {
         // for strings we eat it all to avoid the need for proper quoting
@@ -1093,7 +1096,7 @@ CommandArg* TryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
 // 0  : false
 // -1 : not a known boolean string
 // returns 1 for a true value, 0 for a false value, -1 if not a recognized bool
-static int ParseBool(const char* s) {
+static int ParseBool(Str s) {
     if (str::EqI(s, "1") || str::EqI(s, "true") || str::EqI(s, "yes") || str::EqI(s, "on")) {
         return 1;
     }
@@ -1110,7 +1113,7 @@ static int ParseBool(const char* s) {
 // for booleans only <name> works as well and represents true
 CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
     const char* valStart = nullptr;
-    const char* argName = nullptr;
+    Str argName;
     CommandArg::Type type = CommandArg::Type::None;
     const char* s = *argsInOut;
     int cmdId = argSpecs[firstArgIdx].cmdId;
@@ -1120,13 +1123,13 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
             return nullptr;
         }
         argName = argSpecs[i].name;
-        if (!str::StartsWithI(s, argName)) {
+        if (!str::StartsWithI(Str(s), argName)) {
             continue;
         }
         type = argSpecs[i].type;
         break;
     }
-    s += str::Len(argName);
+    s += argName.len;
     if (s[0] == 0) {
         if (type == CommandArg::Type::Bool) {
             // name of bool arg followed by nothing is true
@@ -1201,7 +1204,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
 
     StrVec parts;
     Split(&parts, definition, " ", true, 2);
-    const char* cmd = parts[0];
+    Str cmd = parts.At(0);
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
         MaybeDelayedWarningNotification("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n",
@@ -1268,11 +1271,12 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         return nullptr;
     }
 
-    const char* currArg = parts[1];
+    TempStr currArgZ = StrDupTemp(parts.At(1));
+    const char* currArg = currArgZ.s;
 
     CommandArg* firstArg = nullptr;
     CommandArg* arg;
-    for (; currArg;) {
+    for (; currArg && *currArg;) {
         arg = TryParseNamedArg(firstArgIdx, &currArg);
         if (!arg) {
             arg = TryParseDefaultArg(firstArgIdx, &currArg);
@@ -1288,7 +1292,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
 
     if (cmdId == CmdCommandPalette && firstArg) {
         // validate mode
-        const char* s = firstArg->strVal;
+        Str s = firstArg->strVal;
         static SeqStrings validModes = ">\0#\0@\0:\0*\0$\0"; // TODO: "@@\0" ?
         if (SeqStrIndex(validModes, s) < 0) {
             logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", definition);

@@ -513,7 +513,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
             bool canView = HasKnownExternalViewerForCmd(cmdId);
             return canView ? CommandVisibility::Show : CommandVisibility::Hide;
         }
-        const char* filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+        Str filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
         // ctx.filePath can be null for an in-memory doc (loaded but no file on
         // disk); such a doc can't match an external-viewer file filter
         bool matches = ctx.filePath && PathMatchFilter(ctx.filePath, filter);
