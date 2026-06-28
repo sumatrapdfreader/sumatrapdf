@@ -1335,12 +1335,11 @@ Str SkipChar(Str s, char toSkip) {
     if (!s) {
         return {};
     }
-    const char* p = s.s;
-    const char* end = s.s + s.len;
-    while (p < end && *p == toSkip) {
-        p++;
+    int i = 0;
+    while (i < s.len && s.s[i] == toSkip) {
+        i++;
     }
-    return Str((char*)p, s.len - (int)(p - s.s));
+    return Str(s.s + i, s.len - i);
 }
 
 } // namespace str
@@ -1351,18 +1350,18 @@ void DecodeInPlace(Str url) {
     if (!url) {
         return;
     }
-    char* dst = url.s;
-    for (char* src = url.s; *src; src++, dst++) {
+    int dst = 0;
+    for (int src = 0; src < url.len; src++) {
         int val;
-        if (*src == '%' && str::Parse(Str(src), "%%%2x", &val)) {
-            *dst = (char)val;
+        if (url.s[src] == '%' && src + 2 < url.len && str::Parse(Str(url.s + src, url.len - src), "%%%2x", &val)) {
+            url.s[dst++] = (char)val;
             src += 2;
         } else {
-            *dst = *src;
+            url.s[dst++] = url.s[src];
         }
     }
-    *dst = '\0';
-    url.len = (int)strlen(url.s);
+    url.s[dst] = '\0';
+    url.len = dst;
 }
 } // namespace url
 
@@ -1399,28 +1398,6 @@ bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut) {
     return true;
 }
 
-// Returns nullptr if s is the same as toFind
-// If they are not equal, returns end of s + 1
-static inline const char* StrEqWeird(const char* s, const char* toFind) {
-    char c;
-    for (;;) {
-        c = *s++;
-        if (0 == c) {
-            if (0 == *toFind) {
-                return nullptr;
-            }
-            return s;
-        }
-        if (c != *toFind++) {
-            while (*s) {
-                s++;
-            }
-            return s + 1;
-        }
-        // were equal, check another char
-    }
-}
-
 // conceptually strings is an array of 0-terminated strings where, laid
 // out sequentially in memory, terminated with a 0-length string
 // Returns index of toFind string in strings
@@ -1429,14 +1406,14 @@ int SeqStrIndex(SeqStrings strs, Str toFind) {
     if (!toFind) {
         return -1;
     }
-    const char* s = strs;
+    int off = 0;
     int idx = 0;
-    while (*s) {
-        s = StrEqWeird(s, toFind.s);
-        if (nullptr == s) {
+    while (strs[off]) {
+        if (str::Eq(SeqStrAt(strs, off), toFind)) {
             return idx;
         }
-        ++idx;
+        SeqStrAdvance(strs, off);
+        idx++;
     }
     return -1;
 }
@@ -1446,14 +1423,14 @@ int SeqStrIndexIS(SeqStrings strs, Str toFind) {
     if (!toFind) {
         return -1;
     }
-    const char* s = strs;
+    int off = 0;
     int idx = 0;
-    while (*s) {
-        if (str::EqIS(Str(s), toFind)) {
+    while (strs[off]) {
+        if (str::EqIS(SeqStrAt(strs, off), toFind)) {
             return idx;
         }
-        s = s + str::Len(s) + 1;
-        ++idx;
+        SeqStrAdvance(strs, off);
+        idx++;
     }
     return -1;
 }
