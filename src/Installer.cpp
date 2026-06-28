@@ -80,7 +80,7 @@ static void ProgressStep() {
     }
 }
 
-static Checkbox* CreateCheckbox(HWND hwndParent, const char* s, bool isChecked) {
+static Checkbox* CreateCheckbox(HWND hwndParent, Str s, bool isChecked) {
     Checkbox::CreateArgs args;
     args.parent = hwndParent;
     args.text = s;
@@ -102,8 +102,8 @@ Str GetInstallerLogPath() {
     return Str(path::Join(dir, kLogFileName));
 }
 
-static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, const char* destDir) {
-    logf("ExtractFiles(): dir '%s'\n", destDir);
+static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
+    logf("ExtractFiles(): dir '%s'\n", destDir.s);
     lzma::FileInfo* fi;
     u8* uncompressed;
 
@@ -136,8 +136,8 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, const char* dest
     return true;
 }
 
-static bool CopySelfToDir(const char* destDir) {
-    logf("CopySelfToDir(%s)\n", destDir);
+static bool CopySelfToDir(Str destDir) {
+    logf("CopySelfToDir(%s)\n", destDir.s);
     TempStr exePath = GetSelfExePathTemp();
     TempStr dstPath = path::JoinTemp(destDir, kExeName);
     bool failIfExists = false;
@@ -147,10 +147,10 @@ static bool CopySelfToDir(const char* destDir) {
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
     file::DeleteZoneIdentifier(dstPath);
     if (!ok) {
-        logf("  failed to copy '%s' to dir '%s'\n", exePath, destDir);
+        logf("  failed to copy '%s' to dir '%s'\n", exePath.s, destDir.s);
         return false;
     }
-    logf("  copied '%s' to dir '%s'\n", exePath, destDir);
+    logf("  copied '%s' to dir '%s'\n", exePath.s, destDir.s);
     return true;
 }
 
@@ -179,13 +179,13 @@ static void CopySettingsFile() {
     logf("  copied '%s' to '%s'\n", srcPath, dstPath);
 }
 
-static bool CreateAppShortcut(int csidl, const char* installedExePath) {
-    char* shortcutPath = GetShortcutPathTemp(csidl);
+static bool CreateAppShortcut(int csidl, Str installedExePath) {
+    TempStr shortcutPath = GetShortcutPathTemp(csidl);
     if (!shortcutPath) {
         log("CreateAppShortcut() failed\n");
         return false;
     }
-    logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath);
+    logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath.s);
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
@@ -198,7 +198,7 @@ static bool CreateAppShortcut(int csidl, const char* installedExePath) {
 // CSIDL_PROGRAMS - Programs item in Start menu for current user. Settings\username\Start Menu\Programs
 static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_PROGRAMS, CSIDL_DESKTOP, CSIDL_PROGRAMS};
 
-static void CreateAppShortcuts(bool forAllUsers, const char* installedExePath) {
+static void CreateAppShortcuts(bool forAllUsers, Str installedExePath) {
     logf("CreateAppShortcuts(forAllUsers=%d)\n", (int)forAllUsers);
     size_t start = forAllUsers ? 0 : 2;
     size_t end = forAllUsers ? 2 : dimof(shortcutDirs);
@@ -209,12 +209,12 @@ static void CreateAppShortcuts(bool forAllUsers, const char* installedExePath) {
 }
 
 static void RemoveShortcutFile(int csidl) {
-    char* path = GetShortcutPathTemp(csidl);
-    if (!path || !file::Exists(Str(path))) {
+    TempStr path = GetShortcutPathTemp(csidl);
+    if (!path || !file::Exists(path)) {
         return;
     }
-    file::Delete(Str(path));
-    logf("RemoveShortcutFile: deleted '%s'\n", path);
+    file::Delete(path);
+    logf("RemoveShortcutFile: deleted '%s'\n", path.s);
 }
 
 // those are shortcuts created by versions before 3.4
@@ -355,8 +355,8 @@ Exit:
 }
 
 static void RestartElevatedForAllUsers(Flags* cli) {
-    char* exePath = GetSelfExePathTemp();
-    const char* cmdLine = "-run-install-now";
+    TempStr exePath = GetSelfExePathTemp();
+    TempStr cmdLine = "-run-install-now";
     bool allUsersChecked = gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
     bool allUsers = cli->allUsers || allUsersChecked;
     logf("RestartElevatedForAllUsers: cli->allUsers: %d, allUsersChecked: %d, allUsers: %d\n", (int)cli->allUsers,
@@ -379,13 +379,13 @@ static void RestartElevatedForAllUsers(Flags* cli) {
     if (cli->log) {
         cmdLine = str::JoinTemp(cmdLine, " -log");
     }
-    char* dir = cli->installDir;
+    Str dir = cli->installDir;
     cmdLine = str::JoinTemp(cmdLine, " -install-dir \"", dir);
     cmdLine = str::JoinTemp(cmdLine, "\"");
-    logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
+    logf("LaunchElevated('%s', '%s')\n", exePath.s, cmdLine.s);
     bool ok = LaunchElevated(exePath, cmdLine);
     if (!ok) {
-        logf("LaunchElevated('%s', '%s') failed!\n", exePath, cmdLine);
+        logf("LaunchElevated('%s', '%s') failed!\n", exePath.s, cmdLine.s);
         LogLastError();
     } else {
         logf("LaunchElevated() ok!\n");
@@ -468,7 +468,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     // TODO: if needs elevation, this might not have enough prermissions
     {
         /* if the app is running, we have to kill it so that we can over-write the executable */
-        char* exePath = GetInstalledExePathTemp(cli);
+        TempStr exePath = GetInstalledExePathTemp(cli);
         KillProcessesWithModule(exePath, true);
     }
 
@@ -482,7 +482,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     logf("OnButtonInstall: wnd: 0x%p\n", wnd);
     logf("OnButtonInstall: wnd->editInstallationDir: 0x%p\n", wnd->editInstallationDir);
 
-    char* userInstallDir = HwndGetTextTemp(wnd->editInstallationDir->hwnd);
+    TempStr userInstallDir = HwndGetTextTemp(wnd->editInstallationDir->hwnd);
     if (!str::IsEmpty(userInstallDir)) {
         str::ReplaceWithCopy(&cli->installDir, userInstallDir);
     }
@@ -562,7 +562,7 @@ static void ShowAndEnable(Wnd* w, bool enable) {
     }
 }
 
-static Size SetButtonTextAndResize(Button* b, const char* s) {
+static Size SetButtonTextAndResize(Button* b, Str s) {
     b->SetText(s);
     Size size = b->GetIdealSize();
     uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
@@ -573,25 +573,24 @@ static Size SetButtonTextAndResize(Button* b, const char* s) {
 static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) {
     logf("GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
 
-    char* dir;
-    char* dirPrevInstall = gPrevInstall.installationDir;
+    Str dirPrevInstall = gPrevInstall.installationDir;
 
     if (dirPrevInstall && !ignorePrev) {
-        logf("  using %s from previous install\n", dirPrevInstall);
+        logf("  using %s from previous install\n", dirPrevInstall.s);
         return dirPrevInstall;
     }
 
     if (forAllUsers) {
         TempStr dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
-        dir = path::JoinTemp(dirAll, kAppName);
-        logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
+        TempStr dir = path::JoinTemp(dirAll, kAppName);
+        logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir.s);
         return dir;
     }
 
     // %APPLOCALDATA%\SumatraPDF
     TempStr dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
-    dir = path::JoinTemp(dirUser, kAppName);
-    logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
+    TempStr dir = path::JoinTemp(dirUser, kAppName);
+    logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir.s);
     return dir;
 }
 
@@ -672,7 +671,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
     return 0;
 }
 
-static TempStr BrowseForFolderTemp(HWND hwnd, const char* initialFolderA, const char* caption) {
+static TempStr BrowseForFolderTemp(HWND hwnd, Str initialFolderA, Str caption) {
     TempWStr initialFolder = ToWStrTemp(initialFolderA);
     BROWSEINFO bi{};
     bi.hwndOwner = hwnd;
@@ -701,15 +700,15 @@ static TempStr BrowseForFolderTemp(HWND hwnd, const char* initialFolderA, const 
 
 static void OnButtonBrowse(InstallerWnd* wnd) {
     auto editDir = wnd->editInstallationDir;
-    char* installDir = HwndGetTextTemp(editDir->hwnd);
+    TempStr installDir = HwndGetTextTemp(editDir->hwnd);
 
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
-    if (!dir::Exists(Str(installDir))) {
-        installDir = path::GetDirTemp(Str(installDir));
+    if (!dir::Exists(installDir)) {
+        installDir = path::GetDirTemp(installDir);
     }
 
     auto caption = _TRA("Select the folder where SumatraPDF should be installed:");
-    char* installPath = BrowseForFolderTemp(wnd->hwnd, installDir, caption);
+    TempStr installPath = BrowseForFolderTemp(wnd->hwnd, installDir, caption);
     if (!installPath) {
         HwndSetFocus(wnd->btnBrowseDir->hwnd);
         return;
@@ -717,7 +716,7 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
 
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    char* end = str::JoinTemp("\\", kAppName);
+    TempStr end = str::JoinTemp("\\", kAppName);
     if (!str::EndsWithI(installPath, end)) {
         installPath = path::JoinTemp(installPath, kAppName);
     }
@@ -806,7 +805,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     // (assuming that the installer has the same CPU arch as its content!)
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
-        const char* s = _TRA("Let Windows show &previews of PDF documents");
+        Str s = _TRA("Let Windows show &previews of PDF documents");
         bool isChecked = cli->withPreview || IsPreviewInstalled();
         if (isChecked) {
             showOptions = true;
@@ -831,7 +830,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     }
 
     {
-        const char* s = _TRA("Install for all users");
+        Str s = _TRA("Install for all users");
         bool isChecked = cli->allUsers;
         if (isChecked) {
             showOptions = true;
@@ -877,7 +876,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
 
     y -= editDy;
 
-    const char* s2 = _TRA("Install SumatraPDF in &folder:");
+    Str s2 = _TRA("Install SumatraPDF in &folder:");
     rc = {x, y, x + r.dx, y + staticDy};
 
     Static::CreateArgs args;
@@ -1067,7 +1066,7 @@ static int RunApp() {
     }
 }
 
-static void ShowNoEmbeddedFiles(const char* msg) {
+static void ShowNoEmbeddedFiles(Str msg) {
     if (gCli->silent) {
         log(msg);
         return;
@@ -1182,7 +1181,7 @@ static bool ShouldInstallMismatchedArch(HWND hwndParent) {
     TASKDIALOG_BUTTON buttons[2];
 
     buttons[0].nButtonID = kBtnIdDownload;
-    const char* s = _TRA("Download 64-bit version");
+    Str s = _TRA("Download 64-bit version");
     buttons[0].pszButtonText = ToWStrTemp(s);
     buttons[1].nButtonID = kBtnIdContinue;
     s = _TRA("&Continue installing 32-bit version");
@@ -1213,7 +1212,7 @@ static bool ShouldInstallMismatchedArch(HWND hwndParent) {
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
     ReportIf(hr == E_INVALIDARG);
     if (buttonPressedId == kBtnIdDownload) {
-        const char* url = "https://www.sumatrapdfreader.org/download-free-pdf-viewer";
+        Str url = "https://www.sumatrapdfreader.org/download-free-pdf-viewer";
         if (gIsPreReleaseBuild) {
             url = "https://www.sumatrapdfreader.org/prerelease";
         }
@@ -1281,9 +1280,9 @@ int RunInstaller() {
         auto dir = GetDefaultInstallationDirTemp(gCliNew.allUsers, false);
         gCliNew.installDir = str::Dup(dir);
     }
-    char* cmdLine = ToUtf8Temp(GetCommandLineW());
-    logf("RunInstaller: '%s', cmdLine: '%s', installing into dir '%s'\n", GetSelfExePathTemp(), cmdLine,
-         gCliNew.installDir);
+    TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
+    logf("RunInstaller: '%s', cmdLine: '%s', installing into dir '%s'\n", GetSelfExePathTemp().s, cmdLine.s,
+         gCliNew.installDir.s);
 
     int ret = 0;
 
