@@ -247,7 +247,7 @@ void FreePtr(WStr* s) {
     *s = {};
 }
 
-static Str WrapAllocated(char* s, size_t cch = (size_t)-1) {
+static Str WrapAllocated(char* s, size_t cch = (size_t)-1) { // str-port: owned heap
     if (!s) {
         return {};
     }
@@ -275,7 +275,7 @@ Str Dup(const ByteSlice& d) {
     return Dup(Str((char*)d.data(), (int)d.size()));
 }
 
-static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) {
+static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) { // str-port: owned heap
     if (!s) {
         return {};
     }
@@ -2476,12 +2476,11 @@ size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
         return 0;
     }
     size_t nReplaced = 0;
-    WCHAR* end = str.s + str.len;
-    for (WCHAR* c = str.s; c < end; c++) {
-        WStr pos = str::FindChar(oldChars, *c);
+    for (int i = 0; i < str.len; i++) {
+        WStr pos = str::FindChar(oldChars, str.s[i]);
         if (pos) {
             size_t idx = (size_t)(pos.s - oldChars.s);
-            *c = newChars.s[idx];
+            str.s[i] = newChars.s[idx];
             nReplaced++;
         }
     }
@@ -2496,20 +2495,19 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     }
 
     WStrBuilder result((size_t)s.len);
-    size_t findLen = (size_t)toReplace.len;
-    size_t replLen = (size_t)replaceWith.len;
-    const WCHAR* start = s.s;
-    const WCHAR* end = s.s + s.len;
-    while (start < end) {
-        WStr rest(start, (int)(end - start));
+    int findLen = toReplace.len;
+    int start = 0;
+    while (start < s.len) {
+        WStr rest(s.s + start, s.len - start);
         WStr match = str::Find(rest, toReplace);
         if (!match) {
-            result.Append(WStr(start, (int)(end - start)));
+            result.Append(WStr(s.s + start, s.len - start));
             break;
         }
-        result.Append(WStr(start, (int)(match.s - start)));
-        result.Append(WStr(replaceWith.s, (int)replLen));
-        start = match.s + findLen;
+        int matchOff = (int)(match.s - s.s);
+        result.Append(WStr(s.s + start, matchOff - start));
+        result.Append(replaceWith);
+        start = matchOff + findLen;
     }
     return result.StealData();
 }
@@ -2521,27 +2519,25 @@ size_t NormalizeWSInPlace(WStr s) {
     if (!s) {
         return 0;
     }
-    WCHAR* str = s.s;
-    WCHAR* src = str;
-    WCHAR* dst = str;
-    WCHAR* end = str + s.len;
+    int src = 0;
+    int dst = 0;
     bool addedSpace = true;
 
-    while (src < end) {
-        if (!IsWs(*src)) {
-            *dst++ = *src;
+    while (src < s.len) {
+        if (!IsWs(s.s[src])) {
+            s.s[dst++] = s.s[src];
             addedSpace = false;
         } else if (!addedSpace) {
-            *dst++ = ' ';
+            s.s[dst++] = L' ';
             addedSpace = true;
         }
         src++;
     }
 
-    if (dst > str && IsWs(*(dst - 1))) {
+    if (dst > 0 && IsWs(s.s[dst - 1])) {
         dst--;
     }
-    *dst = '\0';
+    s.s[dst] = L'\0';
 
     return (size_t)(src - dst);
 }
@@ -2709,7 +2705,7 @@ TempStr FormatRomanNumeralTemp(int n) {
 
     static struct {
         int value;
-        const char* numeral;
+        Str numeral;
     } romandata[] = {{1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"}, {100, "C"}, {90, "XC"}, {50, "L"},
                      {40, "XL"},  {10, "X"},   {9, "IX"},  {5, "V"},    {4, "IV"},  {1, "I"}};
 
@@ -2723,91 +2719,195 @@ TempStr FormatRomanNumeralTemp(int n) {
     return str::DupTemp(roman.Get());
 }
 
-static const WCHAR* ParseLimitedNumber(const WCHAR* str, const WCHAR* format, const WCHAR** endOut, void* valueOut) {
+static WStr ExtractUntilW(WStr str, int off, WCHAR c, int* endOffOut) {
+    if (off < 0 || off > str.len) {
+        return {};
+    }
+    WStr slice = WStr(str.s + off, str.len - off);
+    WStr found = FindChar(slice, c);
+    if (!found) {
+        return {};
+    }
+    int endOff = (int)(found.s - str.s);
+    *endOffOut = endOff;
+    return str::Dup(WStr(str.s + off, endOff - off));
+}
+
+static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int* endOffOut, void* valueOut) {
     unsigned int width;
     WCHAR f2[] = L"% ";
-    const WCHAR* endF = Parse(format, L"%u%c", &width, &f2[1]);
-    if (endF && FindChar(L"udx", f2[1]) && width <= Len(str)) {
+    WStr formatAt = WStr(format.s + formatOff, format.len - formatOff);
+    WStr endF = Parse(formatAt, L"%u%c", &width, &f2[1]);
+    if (endF && FindChar(WStr(L"udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), str);
-        const WCHAR* end = Parse(limited, f2, valueOut);
-        if (end && !*end) {
-            *endOut = str + width;
+        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
+        WStr end = Parse(WStr(limited), f2, valueOut);
+        if (end && !end.s[0]) {
+            *endOffOut = p + (int)width;
+            return formatOff + (int)(endF.s - format.s) - 1;
         }
     }
-    return endF;
+    return -1;
 }
 
-static WCHAR* ExtractUntil(const WCHAR* pos, WCHAR c, const WCHAR** endOut) {
-    WStr found = FindChar(WStr(pos), c);
-    *endOut = found.s;
-    if (!found.s) {
-        return nullptr;
+static bool ParseULongAtW(WStr str, int off, int base, unsigned long* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
     }
-    return str::Dup(WStr((WCHAR*)pos, (int)(found.s - pos))).s;
+    unsigned long v = 0;
+    int i = off;
+    bool any = false;
+    while (i < str.len) {
+        WCHAR wc = str.s[i];
+        int digit = -1;
+        if (wc >= L'0' && wc <= L'9') {
+            digit = (int)(wc - L'0');
+        } else if (base == 16) {
+            digit = HexDigitVal((char)wc);
+        }
+        if (digit < 0 || (unsigned)digit >= (unsigned)base) {
+            break;
+        }
+        any = true;
+        v = v * (unsigned long)base + (unsigned long)digit;
+        i++;
+    }
+    if (!any) {
+        return false;
+    }
+    *val = v;
+    *endOff = i;
+    return true;
 }
 
-static const WCHAR* ParseWCursors(const WCHAR* str, WStr format, va_list args) {
+static bool ParseLongAtW(WStr str, int off, int base, long* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
+    }
+    bool neg = false;
+    int i = off;
+    if (str.s[i] == L'-') {
+        neg = true;
+        i++;
+    } else if (str.s[i] == L'+') {
+        i++;
+    }
+    unsigned long uv = 0;
+    int end = i;
+    if (!ParseULongAtW(WStr(str.s + i, str.len - i), 0, base, &uv, &end)) {
+        return false;
+    }
+    *val = neg ? -(long)uv : (long)uv;
+    *endOff = i + end;
+    return true;
+}
+
+static bool ParseDoubleAtW(WStr str, int off, double* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
+    }
+    int rem = str.len - off;
+    WCHAR* sliceZ = AllocArrayTemp<WCHAR>(rem + 1);
+    memcpy(sliceZ, str.s + off, rem * sizeof(WCHAR));
+    sliceZ[rem] = 0;
+    WCHAR* endPtr = nullptr;
+    *val = wcstod(sliceZ, &endPtr);
+    if (!endPtr || endPtr == sliceZ) {
+        return false;
+    }
+    *endOff = off + (int)(endPtr - sliceZ);
+    return true;
+}
+
+static WStr ParseVW(WStr str, WStr format, va_list args) {
     if (!str || !format) {
-        return nullptr;
+        return {};
     }
+    int p = 0;
     for (const WCHAR* f = format.s; *f; f++) {
-        if (*f != '%') {
-            if (*f != *str) {
-                goto Failure;
+        if (*f != L'%') {
+            if (p >= str.len || *f != str.s[p]) {
+                return {};
             }
-            str++;
+            p++;
             continue;
         }
         f++;
 
-        const WCHAR* end = nullptr;
-        if ('u' == *f) {
-            *va_arg(args, unsigned int*) = wcstoul(str, (WCHAR**)&end, 10);
-        } else if ('d' == *f) {
-            *va_arg(args, int*) = wcstol(str, (WCHAR**)&end, 10);
-        } else if ('x' == *f) {
-            *va_arg(args, unsigned int*) = wcstoul(str, (WCHAR**)&end, 16);
-        } else if ('f' == *f) {
-            *va_arg(args, float*) = (float)wcstod(str, (WCHAR**)&end);
-        } else if ('c' == *f) {
-            *va_arg(args, WCHAR*) = *str, end = str + 1;
-        } else if ('s' == *f) {
-            *va_arg(args, WCHAR**) = ExtractUntil(str, *(f + 1), &end);
-        } else if ('S' == *f) {
-            va_arg(args, AutoFreeWStr*)->Set(ExtractUntil(str, *(f + 1), &end));
-        } else if ('$' == *f && !*str) {
+        int end = -1;
+        if (L'u' == *f) {
+            unsigned long v = 0;
+            if (!ParseULongAtW(str, p, 10, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, unsigned int*) = (unsigned int)v;
+        } else if (L'd' == *f) {
+            long v = 0;
+            if (!ParseLongAtW(str, p, 10, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, int*) = (int)v;
+        } else if (L'x' == *f) {
+            unsigned long v = 0;
+            if (!ParseULongAtW(str, p, 16, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, unsigned int*) = (unsigned int)v;
+        } else if (L'f' == *f) {
+            double v = 0;
+            if (!ParseDoubleAtW(str, p, &v, &end)) {
+                return {};
+            }
+            *va_arg(args, float*) = (float)v;
+        } else if (L'c' == *f) {
+            if (p >= str.len) {
+                return {};
+            }
+            *va_arg(args, WCHAR*) = str.s[p];
+            end = p + 1;
+        } else if (L's' == *f) {
+            *va_arg(args, WCHAR**) = ExtractUntilW(str, p, *(f + 1), &end).s;
+        } else if (L'S' == *f) {
+            va_arg(args, AutoFreeWStr*)->Set(ExtractUntilW(str, p, *(f + 1), &end).s);
+        } else if (L'$' == *f && p >= str.len) {
             continue; // don't fail, if we're indeed at the end of the string
-        } else if ('%' == *f && *f == *str) {
-            end = str + 1;
-        } else if (' ' == *f && str::IsWs(*str)) {
-            end = str + 1;
-        } else if ('_' == *f) {
-            if (!str::IsWs(*str)) {
+        } else if (L'%' == *f) {
+            if (p >= str.len || *f != str.s[p]) {
+                return {};
+            }
+            end = p + 1;
+        } else if (L' ' == *f) {
+            if (p >= str.len || !str::IsWs(str.s[p])) {
+                return {};
+            }
+            end = p + 1;
+        } else if (L'_' == *f) {
+            if (p >= str.len || !str::IsWs(str.s[p])) {
                 continue; // don't fail, if there's no whitespace at all
             }
-            for (end = str + 1; str::IsWs(*end); end++) {
+            for (end = p + 1; end < str.len && str::IsWs(str.s[end]); end++) {
                 // do nothing
             }
-        } else if ('?' == *f && *(f + 1)) {
+        } else if (L'?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (*str != *++f) {
+            if (p >= str.len || str.s[p] != *++f) {
                 continue;
             }
-            end = str + 1;
+            end = p + 1;
         } else if (str::IsDigit(*f)) {
-            f = ParseLimitedNumber(str, f, &end, va_arg(args, void*)) - 1;
+            int formatIdx = ParseLimitedNumberW(str, p, (int)(f - format.s), format, &end, va_arg(args, void*));
+            if (formatIdx < 0) {
+                return {};
+            }
+            f = format.s + formatIdx;
         }
-        if (!end || end == str) {
-            goto Failure;
+        if (end < 0 || end == p) {
+            return {};
         }
-        str = end;
+        p = end;
     }
-    return str;
-
-Failure:
-    return nullptr;
+    return WStr(str.s + p, str.len - p);
 }
 
 WStr Parse(WStr str, WStr format, ...) {
@@ -2816,16 +2916,9 @@ WStr Parse(WStr str, WStr format, ...) {
     }
     va_list args;
     va_start(args, format);
-    const WCHAR* p = ParseWCursors(str.s, format, args);
+    WStr res = ParseVW(str, format, args);
     va_end(args);
-    if (!p) {
-        return {};
-    }
-    int rem = str.len - (int)(p - str.s);
-    if (rem < 0) {
-        rem = 0;
-    }
-    return WStr((WCHAR*)p, rem);
+    return res;
 }
 
 } // namespace str
