@@ -439,14 +439,14 @@ bool EqNIx(Str s, size_t len, Str s2) {
 // way as our full-text search (see TextSearch.cpp's FoldCaseForSearch), so the
 // two stay consistent. Folding is 1:1 in WCHAR count, so it doesn't change
 // character offsets.
-static void FoldCaseForFindW(WCHAR* s, int n) {
-    if (n <= 0) {
+static void FoldCaseForFindW(WStr s) {
+    if (!s) {
         return;
     }
-    CharLowerBuffW(s, (DWORD)n);
-    for (int i = 0; i < n; i++) {
-        if (s[i] == 0x0130) {
-            s[i] = L'i';
+    CharLowerBuffW(s.s, (DWORD)s.len);
+    for (int i = 0; i < s.len; i++) {
+        if (s.s[i] == 0x0130) {
+            s.s[i] = L'i';
         }
     }
 }
@@ -456,7 +456,10 @@ Str FindI(Str s, Str toFind) {
         return {};
     }
 
-    char first = (char)tolower(*toFind.s);
+    if (toFind.len <= 0) {
+        return s;
+    }
+    char first = (char)tolower(toFind.s[0]);
     if (!first) {
         return s;
     }
@@ -498,13 +501,12 @@ Str FindI(Str s, Str toFind) {
     TempWStr ws = ToWStrTemp(s); // unfolded, used to map the match back to bytes
     TempWStr wsLo = str::DupTemp(ws);
     TempWStr wfLo = ToWStrTemp(toFind);
-    FoldCaseForFindW(wsLo.s, str::Leni(wsLo));
-    FoldCaseForFindW(wfLo.s, str::Leni(wfLo));
+    FoldCaseForFindW(wsLo);
+    FoldCaseForFindW(wfLo);
 
     Str res = {};
-    const WCHAR* m = wcsstr(wsLo.s, wfLo.s);
-    if (m) {
-        int idx = (int)(m - wsLo.s); // WCHAR index, 1:1 with the unfolded ws
+    int idx = WStrFindSubstr(wsLo, wfLo); // common/str_util.cpp
+    if (idx >= 0) {
         int nbytes = 0;
         if (idx > 0) {
             nbytes = WideCharToMultiByte(CP_UTF8, 0, ws.s, idx, nullptr, 0, nullptr, nullptr);
