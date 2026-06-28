@@ -189,7 +189,7 @@ static int ParseArray(ParseArgs& args, Str data, int off) {
 
     size_t pathIdx = args.path.size();
     for (int idx = 0;; idx++) {
-        args.path.AppendFmt("[%d]", idx);
+        args.path.Append(fmt("[%d]", idx));
         off = ParseValue(args, data, off);
         if (args.canceled || off < 0) {
             return off;

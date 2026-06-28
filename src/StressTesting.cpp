@@ -286,12 +286,12 @@ static TempStr FormatTimeTemp(int totalSecs) {
     int mins = totalMins % 60;
     int hrs = totalMins / 60;
     if (hrs > 0) {
-        return str::FormatTemp("%d hrs %d mins %d secs", hrs, mins, secs);
+        return fmt("%d hrs %d mins %d secs", hrs, mins, secs);
     }
     if (mins > 0) {
-        return str::FormatTemp("%d mins %d secs", mins, secs);
+        return fmt("%d mins %d secs", mins, secs);
     }
-    return str::FormatTemp("%d secs", secs);
+    return fmt("%d secs", secs);
 }
 
 static void FormatTime(int totalSecs, StrBuilder* s) {
@@ -300,12 +300,12 @@ static void FormatTime(int totalSecs, StrBuilder* s) {
     int mins = totalMins % 60;
     int hrs = totalMins / 60;
     if (hrs > 0) {
-        s->AppendFmt("%d hrs %d mins %d secs", hrs, mins, secs);
+        s->Append(fmt("%d hrs %d mins %d secs", hrs, mins, secs));
     }
     if (mins > 0) {
-        s->AppendFmt("%d mins %d secs", mins, secs);
+        s->Append(fmt("%d mins %d secs", mins, secs));
     }
-    s->AppendFmt("%d secs", secs);
+    s->Append(fmt("%d secs", secs));
 }
 
 static void MakeRandomSelection(MainWindow* win, int pageNo) {
@@ -530,7 +530,7 @@ static void Finished(StressTest* st, bool success) {
     if (success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
         TempStr tm = FormatTimeTemp(secs);
-        TempStr s = str::FormatTemp("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm.s);
+        TempStr s = fmt("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm.s);
         printf("%s\n", s.s);
         fflush(stdout);
         NotificationCreateArgs args;
@@ -555,7 +555,7 @@ static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) 
         ParsePageRanges(ranges, st->fileRanges);
         Start(st, dirFileProvider, cycles);
     } else {
-        TempStr s = str::FormatTemp("Path '%s' doesn't exist", path.s);
+        TempStr s = fmt("Path '%s' doesn't exist", path.s);
         NotificationCreateArgs args;
         args.hwndParent = st->win->hwndCanvas;
         args.msg = s;
@@ -678,7 +678,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
     int secs = SecsSinceSystemTime(st->stressStartTime);
     TempStr tm = FormatTimeTemp(secs);
     int nTotalFiles = st->fileProvider->GetFilesCount();
-    TempStr s = str::FormatTemp("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName.s, tm.s);
+    TempStr s = fmt("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName.s, tm.s);
     NotificationCreateArgs nargs;
     nargs.hwndParent = st->win->hwndCanvas;
     nargs.msg = s;
@@ -764,7 +764,7 @@ static bool GoToNextFile(StressTest* st) {
 
 static bool GoToNextPage(StressTest* st) {
     double pageRenderTime = TimeSinceInMs(st->currPageRenderTime);
-    TempStr s = str::FormatTemp("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime);
+    TempStr s = fmt("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime);
     NotificationCreateArgs args;
     args.hwndParent = st->win->hwndCanvas;
     args.msg = s;
@@ -884,9 +884,9 @@ Next:
 
 // note: used from CrashHandler, shouldn't allocate memory
 static void GetLogInfo(StressTest* st, StrBuilder* s) {
-    s->AppendFmt(", stress test rendered %d files in ", st->nFilesProcessed);
+    s->Append(fmt(", stress test rendered %d files in ", st->nFilesProcessed));
     FormatTime(SecsSinceSystemTime(st->stressStartTime), s);
-    s->AppendFmt(", currPage: %d", st->currPageNo);
+    s->Append(fmt(", currPage: %d", st->currPageNo));
 }
 
 // note: used from CrashHandler.cpp, should not allocate memory

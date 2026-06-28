@@ -35,7 +35,7 @@ void GetPrintersInfo(struct StrBuilder&) {
     /* stub: do nothing */
 }
 
-void MaybeDelayedWarningNotification(const char*, ...) {
+void MaybeDelayedWarningNotification(Str) {
     // a stub to make this compile
 }
 

@@ -218,10 +218,10 @@ static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& fie
             out.Append(*(bool*)fieldPtr ? "true" : "false");
             return true;
         case SettingType::Int:
-            out.AppendFmt("%d", *(int*)fieldPtr);
+            out.Append(fmt("%d", *(int*)fieldPtr));
             return true;
         case SettingType::Float:
-            out.AppendFmt("%g", *(float*)fieldPtr);
+            out.Append(fmt("%g", *(float*)fieldPtr));
             return true;
         case SettingType::String: {
             Str str = *(Str*)fieldPtr;

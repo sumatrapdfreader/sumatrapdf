@@ -260,7 +260,7 @@ void StartInstallerAutoUpgrade(Str installerPath) {
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.AppendFmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp().s);
+        cmd.Append(fmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp().s));
     }
     logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", cmd.Get());
     CreateProcessHelper(installerPath, cmd.Get());
@@ -285,8 +285,8 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 
     auto mainInstr = _TRA("New version available");
     auto ver = updateInfo->latestVer;
-    auto fmt = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install new version?");
-    auto content = str::Dup(str::FormatTemp(fmt.s, CURR_VERSION_STRA, ver));
+    auto fmtStr = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install new version?");
+    auto content = str::Dup(fmt(fmtStr.s, CURR_VERSION_STRA, ver));
 
     auto installerPath = updateInfo->installerPath;
     bool didDownloadInstaller = file::Exists(installerPath);
@@ -378,7 +378,7 @@ static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
     logf("UpdateDownloadProgressNotif: %s\n", size.s);
     auto wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
     if (wnd) {
-        TempStr msg = str::FormatTemp("Downloading update: %s\n", size.s);
+        TempStr msg = fmt("Downloading update: %s\n", size.s);
         NotificationUpdateMessage(wnd, msg, 0, true);
     } else {
         logf("UpdateDownloadProgressNotif: no wnd\n");
@@ -425,9 +425,9 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     if (!win || !updateInfo) {
         return;
     }
-    TempStr link = str::FormatTemp("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update").s);
-    TempStr msg = str::FormatTemp(_TRA("Update %s available (you have %s) available. %s").s, updateInfo->latestVer,
-                                  CURR_VERSION_STRA, link.s);
+    TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update").s);
+    TempStr msg = fmt(_TRA("Update %s available (you have %s) available. %s").s, updateInfo->latestVer,
+                      CURR_VERSION_STRA, link.s);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = msg;
@@ -506,12 +506,12 @@ static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
     logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL.s);
     ReportIfFast(true);
     auto title = _TRA("SumatraPDF Update");
-    auto content = str::FormatTemp(R"(Suspicious update.
+    auto content = fmt(R"(Suspicious update.
 
 Download link should come from <a href="%s">%s</a> but is %s.
 
 Visit <a href="%s">%s</a> to download the latest version.)",
-                                   kExpectedDlHost.s, kExpectedDlHost.s, dlURL.s, kExpectedDlHost.s, kExpectedDlHost.s);
+                       kExpectedDlHost.s, kExpectedDlHost.s, dlURL.s, kExpectedDlHost.s, kExpectedDlHost.s);
 
     TASKDIALOGCONFIG dialogConfig{};
     DWORD flags =
@@ -702,7 +702,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
     if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         // notify the user about network error during a manual update check
-        TempStr msg = str::FormatTemp(_TRA("Can't connect to the Internet (error %#x).").s, err);
+        TempStr msg = fmt(_TRA("Can't connect to the Internet (error %#x).").s, err);
         MessageBoxWarning(hwnd, msg, _TRA("SumatraPDF Update"));
     }
 }
@@ -783,6 +783,6 @@ void UpdateSelfTo(Str path) {
     }
     logf("UpdateSelfTo: copied self to file\n");
 
-    TempStr args = str::FormatTemp(R"(-sleep-ms 500 -delete-file "%s")", srcPath.s);
+    TempStr args = fmt(R"(-sleep-ms 500 -delete-file "%s")", srcPath.s);
     CreateProcessHelper(path, args);
 }

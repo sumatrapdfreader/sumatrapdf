@@ -35,8 +35,8 @@ static TempStr FindGrokExecutableTemp() {
     StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
-        candidates.Append(str::FormatTemp("%s\\.grok\\bin\\grok.exe", userProfile.s));
-        candidates.Append(str::FormatTemp("%s\\.local\\bin\\grok.exe", userProfile.s));
+        candidates.Append(fmt("%s\\.grok\\bin\\grok.exe", userProfile.s));
+        candidates.Append(fmt("%s\\.local\\bin\\grok.exe", userProfile.s));
     }
     return AIChatFindExecutableTemp(candidates, WStr(L"grok.exe"), WStr(L"grok"));
 }
@@ -267,23 +267,23 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
 }
 
 static void WebViewAppendText(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text).s);
+    TempStr js = fmt("appendText('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddUser(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text).s);
+    TempStr js = fmt("addUser('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddTool(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text).s);
+    TempStr js = fmt("addTool('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddError(MainWindow* win, Str text) {
     GrokBuildLog("error", text);
-    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text).s);
+    TempStr js = fmt("addError('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
@@ -298,7 +298,7 @@ static void WebViewClearChat(MainWindow* win) {
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     Str msg = "Grok Build is only available for PDF and image files.";
-    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg).s);
+    TempStr js = fmt("addError('%s')", AIChatJsEscapeTemp(msg).s);
     WebViewEval(win, js, false);
 }
 
@@ -339,7 +339,7 @@ static TempStr EncodeGrokDirTemp(Str dir) {
             c == '.' || c == '~') {
             buf.AppendChar((char)c);
         } else {
-            buf.AppendFmt("%%%02X", c);
+            buf.Append(fmt("%%%02X", c));
         }
     }
     return str::DupTemp(buf.LendData());
@@ -372,7 +372,7 @@ static TempStr GrokSessionsProjectDirTemp(Str dir) {
         return {};
     }
     TempStr encodedDir = EncodeGrokDirTemp(dir);
-    return str::FormatTemp("%s\\.grok\\sessions\\%s", userProfile.s, encodedDir.s);
+    return fmt("%s\\.grok\\sessions\\%s", userProfile.s, encodedDir.s);
 }
 
 static TempStr ExtractGrokPromptFromHistoryLineTemp(Str line, Str sessionId) {
@@ -384,7 +384,7 @@ static TempStr ExtractGrokPromptFromHistoryLineTemp(Str line, Str sessionId) {
 }
 
 static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
-    TempStr historyPath = str::FormatTemp("%s\\prompt_history.jsonl", projectDir.s);
+    TempStr historyPath = fmt("%s\\prompt_history.jsonl", projectDir.s);
     ByteSlice data = file::ReadFile(historyPath);
     if (data.empty()) {
         return StrL("(no description)");
@@ -423,7 +423,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
 
-    TempStr pattern = str::FormatTemp("%s\\*", projectDir.s);
+    TempStr pattern = fmt("%s\\*", projectDir.s);
     WIN32_FIND_DATAW fd;
     TempWStr patternW = ToWStrTemp(pattern);
     HANDLE hFind = FindFirstFileW(patternW, &fd);
@@ -582,7 +582,7 @@ static void AppendGrokHistoryTools(MainWindow* win, Str line) {
         }
         if (nameBuf.Size() > 0) {
             StrBuilder desc;
-            desc.AppendFmt("Tool: %s", nameBuf.LendData().s);
+            desc.Append(fmt("Tool: %s", nameBuf.LendData().s));
             WebViewAddTool(win, desc.LendData());
         }
         if (j + 1 >= rest.len) {
@@ -598,7 +598,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     if (!projectDir) {
         return;
     }
-    TempStr sessionPath = str::FormatTemp("%s\\%s\\chat_history.jsonl", projectDir.s, sessionId.s);
+    TempStr sessionPath = fmt("%s\\%s\\chat_history.jsonl", projectDir.s, sessionId.s);
     if (!file::Exists(sessionPath)) {
         return;
     }
@@ -780,7 +780,7 @@ static void OnGrokUpdate(GrokUpdateData* data) {
                     if (WaitForSingleObject(tab->grokProcess, 0) == WAIT_OBJECT_0) {
                         DWORD exitCode = 0;
                         GetExitCodeProcess(tab->grokProcess, &exitCode);
-                        GrokBuildLog("exit", str::FormatTemp("%lu", exitCode));
+                        GrokBuildLog("exit", fmt("%lu", exitCode));
                     }
                     CloseGrokProcess(tab, false);
                 }
@@ -929,7 +929,7 @@ static void SendGrokMessage(MainWindow* win) {
         effortIdx = 1;
     }
     Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? StrL("--always-approve") : Str{};
-    TempStr rules = str::FormatTemp("The user is currently reading the file: %s", filePath.s);
+    TempStr rules = fmt("The user is currently reading the file: %s", filePath.s);
 
     TempStr grokPath = FindGrokExecutableTemp();
     if (!grokPath) {
@@ -940,21 +940,20 @@ static void SendGrokMessage(MainWindow* win) {
     }
 
     GrokBuildLog(">>> user", input);
-    GrokBuildLog(">>> session",
-                 str::FormatTemp("%s (%s)", tab->grokSessionId ? tab->grokSessionId.s : kGrokPendingSessionId().s,
-                                 isNewSession ? "new" : "resume"));
+    GrokBuildLog(">>> session", fmt("%s (%s)", tab->grokSessionId ? tab->grokSessionId.s : kGrokPendingSessionId().s,
+                                    isNewSession ? "new" : "resume"));
     GrokBuildLog(">>> cwd", dir);
 
     TempStr cmdLine;
     if (isNewSession) {
-        cmdLine = str::FormatTemp(
-            "\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s --rules \"%s\"",
-            grokPath, escapedInput, dir, model, efforts[effortIdx], permsFlag, rules);
+        cmdLine =
+            fmt("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s --rules \"%s\"",
+                grokPath, escapedInput, dir, model, efforts[effortIdx], permsFlag, rules);
     } else {
-        cmdLine = str::FormatTemp(
-            "\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s -r %s --rules "
-            "\"%s\"",
-            grokPath, escapedInput, dir, model, efforts[effortIdx], permsFlag, tab->grokSessionId, rules);
+        cmdLine =
+            fmt("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s -r %s --rules "
+                "\"%s\"",
+                grokPath, escapedInput, dir, model, efforts[effortIdx], permsFlag, tab->grokSessionId, rules);
     }
 
     GrokBuildLog(">>> cmd", cmdLine);
@@ -968,7 +967,7 @@ static void SendGrokMessage(MainWindow* win) {
     }
 
     tab->grokProcess = launch.hProcess;
-    GrokBuildLog(">>> start", str::FormatTemp("pid %lu", launch.processId));
+    GrokBuildLog(">>> start", fmt("pid %lu", launch.processId));
 
     auto ctx = (GrokReadCtx*)calloc(1, sizeof(GrokReadCtx));
     ctx->hReadPipe = launch.hReadPipe;
@@ -1194,8 +1193,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     auto webView = new WebviewWnd();
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA);
     // use unique data dir per process to avoid locking conflicts
-    webView->dataDir =
-        str::Dup(str::FormatTemp("%s\\SumatraPDF\\GrokWebView_%d", userProfile.s, (int)GetCurrentProcessId()));
+    webView->dataDir = str::Dup(fmt("%s\\SumatraPDF\\GrokWebView_%d", userProfile.s, (int)GetCurrentProcessId()));
     if (!LockDataResource(IDR_CLAUDE_MARKED_JS, &gGrokMarkedJs)) {
         delete webView;
         return;

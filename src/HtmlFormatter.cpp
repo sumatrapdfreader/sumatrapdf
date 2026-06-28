@@ -1230,7 +1230,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
         if (t->IsStartTag() && listInfos.size() > 0) {
             ListInfo& li = listInfos.Last();
             if (li.ordered) {
-                Str marker = str::Dup(textAllocator, str::FormatTemp("%d. ", li.nextNum));
+                Str marker = str::Dup(textAllocator, fmt("%d. ", li.nextNum));
                 li.nextNum++;
                 EmitTextMarker(marker);
             } else {

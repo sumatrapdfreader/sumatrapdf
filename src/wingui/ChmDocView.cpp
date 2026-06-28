@@ -345,7 +345,7 @@ void ChmDocView::SetScrollPos(Point pos) {
         pos.y = 0;
     }
     if (backend == Backend::WebView2 && wv) {
-        TempStr js = str::FormatTemp("window.scrollTo(%d, %d);", pos.x, pos.y);
+        TempStr js = fmt("window.scrollTo(%d, %d);", pos.x, pos.y);
         wv->Eval(js);
         webviewScrollPos = pos;
         return;

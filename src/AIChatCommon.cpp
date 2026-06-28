@@ -90,7 +90,7 @@ TempStr AIChatJsEscapeTemp(Str s) {
 }
 
 TempStr AIChatJsonStrTemp(Str json, Str key) {
-    TempStr pattern = str::FormatTemp("\"%s\":\"", key.s);
+    TempStr pattern = fmt("\"%s\":\"", key.s);
     Str found = str::Find(json, pattern);
     if (!found) {
         return {};
@@ -179,8 +179,8 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
     SYSTEMTIME st;
     GetLocalTime(&st);
     StrBuilder entry;
-    entry.AppendFmt("[%04d-%02d-%02d %02d:%02d:%02d] %s: ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
-                    st.wSecond, direction.s);
+    entry.Append(fmt("[%04d-%02d-%02d %02d:%02d:%02d] %s: ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
+                     st.wSecond, direction.s));
     entry.Append(text);
     if (entry.LastChar() != '\n') {
         entry.AppendChar('\n');
@@ -230,7 +230,7 @@ static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND hwnd, UINT msg, WP
 
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
     Str linkLabel = _TRA("AI Chat documentation");
-    TempStr content = str::FormatTemp(_TRA("See <a href=\"#\">%s</a> for setup instructions.").s, linkLabel.s);
+    TempStr content = fmt(_TRA("See <a href=\"#\">%s</a> for setup instructions.").s, linkLabel.s);
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
@@ -417,7 +417,7 @@ function scrollToBottom() {
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
     Str host = virtualHost ? virtualHost : StrL("");
     Str bg = bgColor ? bgColor : StrL("#ffffff");
-    return str::FormatTemp(kAIChatHtmlFmt.s, host.s, bg.s);
+    return fmt(kAIChatHtmlFmt.s, host.s, bg.s);
 }
 
 void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning) {
@@ -525,9 +525,8 @@ TempStr AIChatGenerateSessionIdTemp() {
     if (FAILED(CoCreateGuid(&guid))) {
         return nullptr;
     }
-    return str::FormatTemp("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3,
-                           guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5],
-                           guid.Data4[6], guid.Data4[7]);
+    return fmt("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3, guid.Data4[0],
+               guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 }
 
 static AIChatBackend BackendFromTabStorage(int v) {

@@ -1314,7 +1314,7 @@ TempStr EngineDjVu::ResolveNamedDestTemp(Str name) {
     for (size_t i = 0; i < fileInfos.size(); i++) {
         ddjvu_fileinfo_t& fi = fileInfos[i];
         if (str::EqI(nameWithoutHash, Str(fi.id))) {
-            return str::FormatTemp("#%d", fi.pageno + 1);
+            return fmt("#%d", fi.pageno + 1);
         }
     }
     return {};

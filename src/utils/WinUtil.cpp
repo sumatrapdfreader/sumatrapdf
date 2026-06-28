@@ -290,11 +290,11 @@ TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
     if (ver.dwMajorVersion == 10) {
         // ver.dwMinorVersion seems to always be 0
         int buildNo = (int)(ver.dwBuildNumber & 0xFFFF);
-        return str::FormatTemp("10.%d", buildNo);
+        return fmt("10.%d", buildNo);
     }
 
     // either a newer or an older NT version, neither of which we support
-    return str::FormatTemp("NT %u.%u", ver.dwMajorVersion, ver.dwMinorVersion);
+    return fmt("NT %u.%u", ver.dwMajorVersion, ver.dwMinorVersion);
 }
 
 TempStr GetWindowsVerTemp() {
@@ -1073,7 +1073,7 @@ void OpenPathInDefaultFileManager(Str path) {
     TempStr explorer = ToUtf8Temp(winDir);
     explorer = path::JoinTemp(explorer, "explorer.exe");
     if (file::Exists(explorer)) return;
-    TempStr args = str::FormatTemp("/select,\"%s\"", path.s);
+    TempStr args = fmt("/select,\"%s\"", path.s);
     CreateProcessHelper(explorer, args);
 }
 
@@ -1083,7 +1083,7 @@ HANDLE LaunchProcessWithCmdLine(Str exe, Str cmdLine) {
     si.cb = sizeof(si);
 
     // first cmd-line argument should be the exe name
-    TempStr cmd = str::FormatTemp("\"%s\" %s", exe.s, cmdLine.s);
+    TempStr cmd = fmt("\"%s\" %s", exe.s, cmdLine.s);
     TempWStr cmdLineW = ToWStrTemp(cmd);
 
     TempWStr exeW = ToWStrTemp(exe);
@@ -1119,7 +1119,7 @@ bool CreateProcessHelper(Str exe, Str args) {
     if (!args) {
         args = "";
     }
-    TempStr cmd = str::FormatTemp("\"%s\" %s", exe.s, args.s);
+    TempStr cmd = fmt("\"%s\" %s", exe.s, args.s);
     AutoCloseHandle process = LaunchProcessInDir(cmd);
     return process != nullptr;
 }
@@ -2723,7 +2723,7 @@ void RunNonElevated(Str exePath) {
     if (!file::Exists(explorerPath)) {
         goto Run;
     }
-    cmd = str::FormatTemp("\"%s\" \"%s\"", explorerPath.s, exePath.s);
+    cmd = fmt("\"%s\" \"%s\"", explorerPath.s, exePath.s);
 Run:
     HANDLE h = LaunchProcessInDir(IsEmpty(cmd) ? exePath : cmd);
     SafeCloseHandle(&h);

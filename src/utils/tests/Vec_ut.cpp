@@ -12,7 +12,7 @@ static size_t VecTestAppendFmt() {
     StrBuilder v(256);
     i64 val = 1;
     for (int i = 0; i < 10000; i++) {
-        v.AppendFmt("i%" PRId64 "e", val);
+        v.Append(fmt("i%" PRId64 "e", val));
         val = (val * 3) / 2; // somewhat exponential growth
         val += 15;
     }

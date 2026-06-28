@@ -391,7 +391,7 @@ static void FindTextEditors() {
         }
 
         rule.fullPath = str::Dup(exePath);
-        rule.openFileCmd = str::Dup(str::FormatTemp("\"%s\" %s", exePath.s, inverseSearchArgs.s));
+        rule.openFileCmd = str::Dup(fmt("\"%s\" %s", exePath.s, inverseSearchArgs.s));
         found.Append(exePath);
     }
     didFindTextEditors = true;
@@ -433,9 +433,9 @@ Str BuildOpenFileCmd(Str pattern, Str path, int line, int col) {
         if (spec == 'f') {
             cmdline.Append(path);
         } else if (spec == 'l') {
-            cmdline.AppendFmt("%d", line);
+            cmdline.Append(fmt("%d", line));
         } else if (spec == 'c') {
-            cmdline.AppendFmt("%d", col);
+            cmdline.Append(fmt("%d", col));
         } else if (spec == '%') {
             cmdline.AppendChar('%');
         } else {
@@ -625,11 +625,11 @@ TempStr FormatSizeShortTransTemp(i64 size) {
 // as "1.29 MB (1,348,258 Bytes)"
 TempStr FormatFileSizeTransTemp(i64 size) {
     if (size <= 0) {
-        return fmt::FormatTemp("%d", size);
+        return strfmt::FormatTemp("%d", size);
     }
     TempStr n1 = FormatSizeShortTransTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
-    return fmt::FormatTemp("%s (%s %s)", n1.s, n2.s, _TRA("Bytes").s);
+    return strfmt::FormatTemp("%s (%s %s)", n1.s, n2.s, _TRA("Bytes").s);
 }
 
 // returns true if file exists

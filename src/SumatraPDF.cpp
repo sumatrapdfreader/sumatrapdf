@@ -1220,7 +1220,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
 static TempStr BuildZoomString(float zoomLevel) {
     TempStr zoomLevelStr = ZoomLevelStr(zoomLevel);
     Str zoomStr = _TRA("Zoom");
-    return str::FormatTemp("%s: %s", zoomStr.s, zoomLevelStr.s);
+    return fmt("%s: %s", zoomStr.s, zoomLevelStr.s);
 }
 
 static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo) {
@@ -1228,10 +1228,10 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
         pageNo = ctrl->CurrentPageNo();
     }
     int nPages = ctrl->PageCount();
-    TempStr pageInfo = str::FormatTemp("%s %d / %d", _TRA("Page:").s, pageNo, nPages);
+    TempStr pageInfo = fmt("%s %d / %d", _TRA("Page:").s, pageNo, nPages);
     if (ctrl->HasPageLabels()) {
         TempStr label = ctrl->GetPageLabeTemp(pageNo);
-        pageInfo = str::FormatTemp("%s %s (%d / %d)", _TRA("Page:").s, label.s, pageNo, nPages);
+        pageInfo = fmt("%s %s (%d / %d)", _TRA("Page:").s, label.s, pageNo, nPages);
     }
     float zoomLevel = ctrl->GetZoomVirtual();
     auto zoomStr = BuildZoomString(zoomLevel);
@@ -1416,24 +1416,24 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
             str::NormalizeWSInPlace(title);
             docTitle = str::DupTemp(title);
             if (!str::IsEmpty(title)) {
-                docTitle = str::FormatTemp("- [%s] ", title.s);
+                docTitle = fmt("- [%s] ", title.s);
             }
         }
     }
 
     TempStr s = nullptr;
     if (!IsUIRtl()) {
-        s = str::FormatTemp("%s %s- %s", titlePath.s, docTitle.s, kSumatraWindowTitle);
+        s = fmt("%s %s- %s", titlePath.s, docTitle.s, kSumatraWindowTitle);
     } else {
         // explicitly revert the title, so that filenames aren't garbled
-        s = str::FormatTemp("%s %s- %s", kSumatraWindowTitle, docTitle.s, titlePath.s);
+        s = fmt("%s %s- %s", kSumatraWindowTitle, docTitle.s, titlePath.s);
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
         // base the prefix on the freshly-built title 's', not tab->frameTitle:
         // the latter may already carry the prefix from a previous refresh, so
         // reusing it stacks "[..] [..] [..] file.pdf" on repeated changes (#5690)
-        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s").s, s.s);
+        s = fmt(_TRA("[Changes detected; refreshing] %s").s, s.s);
     }
     str::ReplaceWithCopy(&tab->frameTitle, s);
 }
@@ -1736,7 +1736,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     TempStr unsupported = win->ctrl->GetPropertyTemp(kPropUnsupportedFeatures);
     if (unsupported) {
         Str s = _TRA("%s not supported");
-        TempStr msg = str::FormatTemp(s.s, unsupported.s);
+        TempStr msg = fmt(s.s, unsupported.s);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;
@@ -1757,7 +1757,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     DisplayModel* dmErr = win->AsFixed();
     EngineBase* engineErr = dmErr ? dmErr->GetEngine() : nullptr;
     if (engineErr && engineErr->errors.Size() > 0) {
-        TempStr msg = str::FormatTemp("[%s](CmdShowErrors) %s", _TRA("Errors").s, _TRA("in PDF").s);
+        TempStr msg = fmt("[%s](CmdShowErrors) %s", _TRA("Errors").s, _TRA("in PDF").s);
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;
@@ -2343,7 +2343,7 @@ static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.warning = true;
-    nargs.msg = str::FormatTemp(_TRA("File %s not found").s, path.s);
+    nargs.msg = fmt(_TRA("File %s not found").s, path.s);
     ShowNotification(nargs);
     LoadDocumentMarkNotExist(win, path, noSavePrefs);
 }
@@ -2353,7 +2353,7 @@ void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs) {
     // new translation. Find a better message e.g. why failed.
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
-    nargs.msg = str::FormatTemp(_TRA("Error loading %s").s, path.s);
+    nargs.msg = fmt(_TRA("Error loading %s").s, path.s);
     nargs.warning = true;
     nargs.timeoutMs = 1000 * 5;
     ShowNotification(nargs);
@@ -2501,7 +2501,7 @@ static NotificationWnd* ShowLoadingNotif(MainWindow* win, Str path) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.groupId = path.s;
-    nargs.msg = str::FormatTemp(_TRA("Loading %s ...").s, path::GetBaseNameTemp(path).s);
+    nargs.msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(path).s);
     return ShowNotification(nargs);
 }
 
@@ -2591,9 +2591,9 @@ static void UpdateLoadingNotifUI(ExtractProgressUITask* task) {
         TempStr basename = path::GetBaseNameTemp(task->path);
         TempStr msg;
         if (task->nTotal > 0) {
-            msg = str::FormatTemp(_TRA("Loading %s %d of %d").s, basename.s, task->nDecoded, task->nTotal);
+            msg = fmt(_TRA("Loading %s %d of %d").s, basename.s, task->nDecoded, task->nTotal);
         } else {
-            msg = str::FormatTemp(_TRA("Loading %s %d").s, basename.s, task->nDecoded);
+            msg = fmt(_TRA("Loading %s %d").s, basename.s, task->nDecoded);
         }
         NotificationUpdateMessage(task->wnd, msg);
     }
@@ -2646,9 +2646,9 @@ static void UpdateCopyNotifUI(CopyProgressUITask* task) {
         TempStr msg;
         if (task->bytesTotal > 0) {
             TempStr total = str::FormatSizeShortTemp(task->bytesTotal, nullptr);
-            msg = str::FormatTemp(_TRA("Copying %s: %s / %s").s, basename.s, copied.s, total.s);
+            msg = fmt(_TRA("Copying %s: %s / %s").s, basename.s, copied.s, total.s);
         } else {
-            msg = str::FormatTemp(_TRA("Copying %s: %s").s, basename.s, copied.s);
+            msg = fmt(_TRA("Copying %s: %s").s, basename.s, copied.s);
         }
         NotificationUpdateMessage(task->wnd, msg);
     }
@@ -2855,7 +2855,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (gGlobalPrefs->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsAboutTab()) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
-        args.msg = str::FormatTemp(_TRA("Please wait - loading...").s);
+        args.msg = fmt(_TRA("Please wait - loading...").s);
         args.warning = true;
         ShowNotification(args);
         ShowWindow(win->hwndFrame, SW_SHOW);
@@ -2984,7 +2984,7 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
             yPos.len--;
         }
     }
-    return fmt::FormatTemp("%s x %s %s", xPos.s, yPos.s, unitName.s);
+    return strfmt::FormatTemp("%s x %s %s", xPos.s, yPos.s, unitName.s);
 }
 
 static auto cursorPosUnit = MeasurementUnit::pt;
@@ -2999,9 +2999,9 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
         selStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
     }
 
-    TempStr posInfo = fmt::FormatTemp("%s %s", _TRA("Cursor position:").s, posStr.s);
+    TempStr posInfo = strfmt::FormatTemp("%s %s", _TRA("Cursor position:").s, posStr.s);
     if (selStr) {
-        posInfo = fmt::FormatTemp("%s - %s %s", posInfo.s, _TRA("Selection:").s, selStr.s);
+        posInfo = strfmt::FormatTemp("%s - %s %s", posInfo.s, _TRA("Selection:").s, selStr.s);
     }
     NotificationUpdateMessage(wnd, posInfo);
 }
@@ -3197,7 +3197,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
 
 static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
     StrBuilder msg;
-    msg.AppendFmt(_TRA("Saved annotations to '%s'").s, path.s);
+    msg.Append(fmt(_TRA("Saved annotations to '%s'").s, path.s));
     NotificationCreateArgs nargs;
     nargs.hwndParent = hwndParent;
     nargs.font = GetDefaultGuiFont();
@@ -3208,7 +3208,7 @@ static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
 
 static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, Str path, Str mupdfErr) {
     StrBuilder msg;
-    msg.AppendFmt(_TRA("Saving of '%s' failed with: '%s'").s, path.s, mupdfErr.s);
+    msg.Append(fmt(_TRA("Saving of '%s' failed with: '%s'").s, path.s, mupdfErr.s));
     ShowWarningNotification(hwndParent, msg.Get(), 0);
 }
 
@@ -3358,7 +3358,7 @@ enum class SaveChoice {
 
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
     TempStr fileName = path::GetBaseNameTemp(filePath);
-    TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved changes in '%s'").s, fileName.s);
+    TempStr mainInstrA = fmt(_TRA("Unsaved changes in '%s'").s, fileName.s);
     TempWStr mainInstr = ToWStrTemp(mainInstrA);
     auto content = _TRA("Save changes?");
 
@@ -3758,7 +3758,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, StrBuilder& fileFilter) 
         if (!str::IsEmpty(imgDefExt) && imgDefExt.s[0] == '.') {
             imgDefExt = Str(imgDefExt.s + 1, imgDefExt.len - 1);
         }
-        fileFilter.AppendFmt(_TRA("Image files (*.%s)").s, imgDefExt.s);
+        fileFilter.Append(fmt(_TRA("Image files (*.%s)").s, imgDefExt.s));
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {
@@ -3818,7 +3818,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // methods too early on)
     StrBuilder fileFilter(256);
     if (AppendFileFilterForDoc(ctrl, fileFilter)) {
-        fileFilter.AppendFmt("\1*%s\1", defExt.s);
+        fileFilter.Append(fmt("\1*%s\1", defExt.s));
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
@@ -3933,7 +3933,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         } else {
             TempStr s = GetLastErrorStrTemp();
             if (str::Leni(s) > 0) {
-                errorMsg = str::FormatTemp("%s\n\n%s", _TRA("Failed to save a file").s, s.s);
+                errorMsg = fmt("%s\n\n%s", _TRA("Failed to save a file").s, s.s);
             }
         }
     }
@@ -4028,7 +4028,7 @@ static void RenameCurrentFile(MainWindow* win) {
     StrBuilder fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
-    fileFilter.AppendFmt("\1*%s\1", defExt.s);
+    fileFilter.Append(fmt("\1*%s\1", defExt.s));
     str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
 
     WCHAR dstFilePathW[MAX_PATH];
@@ -4121,7 +4121,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     StrBuilder fileFilter;
-    fileFilter.AppendFmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts").s);
+    fileFilter.Append(fmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts").s));
     str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
     TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
@@ -4149,7 +4149,7 @@ static void CreateLnkShortcut(MainWindow* win) {
         ss = win->AsFixed()->GetScrollState();
     }
     Str viewMode = DisplayModeToString(ctrl->GetDisplayMode());
-    TempStr zoomVirtual = str::FormatTemp("%.2f", ctrl->GetZoomVirtual());
+    TempStr zoomVirtual = fmt("%.2f", ctrl->GetZoomVirtual());
     if (kZoomFitPage == ctrl->GetZoomVirtual()) {
         zoomVirtual = "fitpage";
     } else if (kZoomFitWidth == ctrl->GetZoomVirtual()) {
@@ -4158,10 +4158,10 @@ static void CreateLnkShortcut(MainWindow* win) {
         zoomVirtual = "fitcontent";
     }
 
-    TempStr args = str::FormatTemp("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path.s, ss.page, viewMode.s,
-                                   zoomVirtual.s, (int)ss.x, (int)ss.y);
+    TempStr args = fmt("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path.s, ss.page, viewMode.s,
+                       zoomVirtual.s, (int)ss.x, (int)ss.y);
     TempStr label = ctrl->GetPageLabeTemp(ss.page);
-    TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s").s, label.s, path.s);
+    TempStr desc = fmt(_TRA("Bookmark shortcut to page %s of %s").s, label.s, path.s);
     auto exePath = GetSelfExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
@@ -5277,7 +5277,7 @@ static void ShowViewModeNotification(MainWindow* win, int cmdId) {
         default:
             return;
     }
-    TempStr msg = str::FormatTemp("%s: %s", _TRA("View").s, viewName.s);
+    TempStr msg = fmt("%s: %s", _TRA("View").s, viewName.s);
     NotificationCreateArgs args;
     args.groupId = kNotifZoomOrView;
     args.timeoutMs = 2000;
@@ -6502,7 +6502,7 @@ static void ClearHistoryFinish(ClearHistoryData* d) {
     }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifClearHistory);
     HwndRepaintNow(win->hwndCanvas);
-    TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails.").s, d->nFiles);
+    TempStr msg2 = fmt(_TRA("Cleared history of %d files, deleted thumbnails.").s, d->nFiles);
     ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
 }
 
@@ -6596,7 +6596,7 @@ void RemoveDeletedFilesFromHistory(MainWindow* win) {
         SaveSettings();
         MaybeRedrawHomePage();
     }
-    TempStr msg = str::FormatTemp(_TRA("Deleted files removed from history: %d").s, nRemoved);
+    TempStr msg = fmt(_TRA("Deleted files removed from history: %d").s, nRemoved);
     ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 }
 
@@ -6621,7 +6621,7 @@ static void DownloadDebugSymbols() {
         msg = "Failed to download symbols";
         goto ShowMessage;
     }
-    msg = str::FormatTemp("Downloaded symbols to %s", gSymbolsDir.s);
+    msg = fmt("Downloaded symbols to %s", gSymbolsDir.s);
     {
         bool didInitializeDbgHelp = InitializeDbgHelp(false);
         ReportIfFast(!didInitializeDbgHelp);
@@ -6815,9 +6815,9 @@ static TempStr DocURIToWebUrlTemp(Str docURI) {
         docURI = kManualDefaultDocURI;
     }
     if (!str::IsEmpty(docURI) && docURI.s[0] == '/') {
-        return str::FormatTemp("https://www.sumatrapdfreader.org/docs%s", docURI.s);
+        return fmt("https://www.sumatrapdfreader.org/docs%s", docURI.s);
     }
-    return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", docURI.s);
+    return fmt("https://www.sumatrapdfreader.org/docs/%s", docURI.s);
 }
 
 void LaunchDocumentation(Str docURI) {
@@ -7848,7 +7848,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             TempStr notifMsg = nullptr;
             if (enabled) {
                 TempStr dir = GetPdfPreviewLogDirTemp();
-                notifMsg = str::FormatTemp("PDF preview logging enabled.\nLogs: %s", dir ? dir.s : "(unknown)");
+                notifMsg = fmt("PDF preview logging enabled.\nLogs: %s", dir ? dir.s : "(unknown)");
             } else {
                 notifMsg = str::DupTemp("PDF preview logging disabled.");
             }
@@ -10068,7 +10068,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
         }
 
         TempStr localeName = TtsLangIdToLocaleNameTemp(voice.lang);
-        TempStr label = str::FormatTemp("%s - %s", voice.name.s, localeName.s);
+        TempStr label = fmt("%s - %s", voice.name.s, localeName.s);
         AppendMenuW(voiceMenu, flags, cmd, ToWStrTemp(label));
 
         lastLang = lang;
@@ -10566,30 +10566,30 @@ static TempStr GetFileSizeAsStrTemp(Str path) {
 }
 
 void GetProgramInfo(StrBuilder& s) {
-    s.AppendFmt("Crash file: %s\r\n", gCrashFilePath.s);
+    s.Append(fmt("Crash file: %s\r\n", gCrashFilePath.s));
 
     TempStr exePath = GetSelfExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
-    s.AppendFmt("Exe: %s %s\r\n", exePath.s, fileSizeExe.s);
+    s.Append(fmt("Exe: %s %s\r\n", exePath.s, fileSizeExe.s));
     if (IsDllBuild()) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
         TempStr dir = path::GetDirTemp(exePath);
         TempStr dllPath = path::JoinTemp(dir, "libmupdf.dll");
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
-        s.AppendFmt("Dll: %s %s\r\n", dllPath.s, fileSizeDll.s);
+        s.Append(fmt("Dll: %s %s\r\n", dllPath.s, fileSizeDll.s));
     }
     TempStr signer = GetExecutableSignerTemp(exePath);
-    s.AppendFmt("Signer: %s\r\n", signer ? signer.s : "(not signed)");
+    s.Append(fmt("Signer: %s\r\n", signer ? signer.s : "(not signed)"));
     if (builtOn) {
-        s.AppendFmt("BuiltOn: %s\n", builtOn.s);
+        s.Append(fmt("BuiltOn: %s\n", builtOn.s));
     }
     Str exeType = IsDllBuild() ? "dll" : "static";
     Str instType = IsRunningInPortableMode() ? "portable" : "installed";
-    s.AppendFmt("ExeType: %s, %s\r\n", exeType.s, instType.s);
-    s.AppendFmt("Ver: %s", currentVersion.s);
+    s.Append(fmt("ExeType: %s, %s\r\n", exeType.s, instType.s));
+    s.Append(fmt("Ver: %s", currentVersion.s));
     if (gIsPreReleaseBuild) {
-        s.AppendFmt(" pre-release");
+        s.Append(fmt(" pre-release"));
     }
     if (IsProcess64()) {
         s.Append(" 64-bit");
@@ -10610,8 +10610,8 @@ void GetProgramInfo(StrBuilder& s) {
     s.Append("\r\n");
 
     if (gitCommidId) {
-        s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId.s,
-                    gitCommidId.s);
+        s.Append(fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitCommidId.s,
+                     gitCommidId.s));
     }
 }
 
@@ -10692,7 +10692,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
     }
     TempStr msg = NotificationGetMessageTemp(wnd);
     if (!str::Find(msg, "/ 2")) {
-        out.AppendFmt("FAIL before-reload msg=%s\n", msg.s);
+        out.Append(fmt("FAIL before-reload msg=%s\n", msg.s));
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
@@ -10721,9 +10721,9 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
     msg = NotificationGetMessageTemp(wnd);
     bool ok = str::Find(msg, "/ 1") != nullptr && !str::Find(msg, "/ 2");
     if (ok) {
-        out.AppendFmt("OK msg=%s\n", msg.s);
+        out.Append(fmt("OK msg=%s\n", msg.s));
     } else {
-        out.AppendFmt("FAIL after-reload msg=%s\n", msg.s);
+        out.Append(fmt("FAIL after-reload msg=%s\n", msg.s));
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;

@@ -546,7 +546,7 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
         }
         if (key >= VK_F1 && key <= VK_F24) {
             int n = key - VK_F1 + 1;
-            str.AppendFmt("F%d", n);
+            str.Append(fmt("F%d", n));
             goto Exit;
         }
         Str s = getVirt(key, isEng);

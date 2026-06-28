@@ -44,15 +44,23 @@ format string is almost always a string literal, and a `const char*` is what
 the underlying `vsnprintf` needs anyway — so taking `Str` only added a wasted
 `strlen` and a NUL-termination footgun.
 
-Functions following this rule: `str::FormatTemp`,
-`str::FmtVTemp`, `StrBuilder::AppendFmt`, `logf`, `logfa`, `logvf`,
-`logPipe`, `logConsole`, `dbglayoutf`, `CliPrintf`,
-`MaybeDelayedWarningNotification`, `VscprintfUtf8`. (Note this is only the
-**format string** — the variadic args are unchanged.)
+The most-used formatter, `str::FormatTemp`, is renamed `fmt()` and exposed
+unqualified (a global `using str::fmt;` in StrUtil.h), so call sites read
+`fmt("page %d", n)`. It formats into the temp arena and returns a `TempStr`.
+
+Other functions following the `const char*` rule: `str::FmtVTemp`, `logf`,
+`logfa`, `logvf`, `logPipe`, `logConsole`, `CliPrintf`, `VscprintfUtf8`. (Note
+this is only the **format string** — the variadic args are unchanged.)
+
+Functions that take an already-formatted `Str` (so the caller formats with
+`fmt(...)`): `StrBuilder::Append`, `dbglayout`, `MaybeDelayedWarningNotification`.
 
 When the format string is a `Str` rather than a literal (most commonly a
 `_TRA("...")` translation, which returns a `Str`), pass its `.s` to get the
-underlying NUL-terminated `char*`, e.g. `str::FormatTemp(_TRA("page %d").s, n)`.
+underlying NUL-terminated `char*`, e.g. `fmt(_TRA("page %d").s, n)`.
+
+Note: `strfmt::` (in StrFormat.h, the `{0}`-style type-safe formatter) is a
+separate, older system — unrelated to `fmt()`.
 
 ## Adding a new advanced setting
 

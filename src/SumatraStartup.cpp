@@ -217,26 +217,26 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
     }
 
     StrBuilder cmd;
-    cmd.AppendFmt("[Open(\"%s\", %d, 1, 0)]", fullPath.s, newWindow);
+    cmd.Append(fmt("[Open(\"%s\", %d, 1, 0)]", fullPath.s, newWindow));
     if (i.namedDest && isFirstWin) {
-        cmd.AppendFmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath.s, i.namedDest.s);
+        cmd.Append(fmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath.s, i.namedDest.s));
     } else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.AppendFmt("[GotoPage(\"%s\", %d)]", fullPath.s, i.pageNumber);
+        cmd.Append(fmt("[GotoPage(\"%s\", %d)]", fullPath.s, i.pageNumber));
     }
     if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         Str viewModeStr = DisplayModeToString(i.startView);
-        cmd.AppendFmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath.s, viewModeStr.s, i.startZoom,
-                      i.startScroll.x, i.startScroll.y);
+        cmd.Append(fmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath.s, viewModeStr.s, i.startZoom,
+                       i.startScroll.x, i.startScroll.y));
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         TempStr srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
-        cmd.AppendFmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath.s, srcPath.s, i.forwardSearchLine);
+        cmd.Append(fmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath.s, srcPath.s, i.forwardSearchLine));
     }
     if (i.search) {
         // TODO: quote if i.search has '"' in it
-        cmd.AppendFmt("[Search(\"%s\",\"%s\")]", fullPath.s, i.search.s);
+        cmd.Append(fmt("[Search(\"%s\",\"%s\")]", fullPath.s, i.search.s));
     }
 
     if (i.reuseDdeInstance) {
@@ -521,7 +521,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex, bool* openInNewWindow) {
     TempStr combinedPath = str::JoinTemp(GetSelfExePathTemp(), "|", GetAppDataDirTemp());
     str::ToLowerInPlace(combinedPath);
     u32 hash = MurmurHash2(combinedPath.s, str::Len(combinedPath));
-    TempStr mapId = str::FormatTemp("SumatraPDF-%08x", hash);
+    TempStr mapId = fmt("SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
     HANDLE hMap = nullptr;
@@ -942,12 +942,12 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         return false;
     }
 
-    TempStr msg = str::FormatTemp(R"(SumatraPDF.exe failed to load libmupdf.dll.
+    TempStr msg = fmt(R"(SumatraPDF.exe failed to load libmupdf.dll.
 Error code: %d
 Error message: %s
 We can't proceed.
 For more information see <a href="%s">SumatraPDF docs</a>.)",
-                                  (int)err, errStr ? errStr.s : "unknown", kFailedToLoadURL);
+                      (int)err, errStr ? errStr.s : "unknown", kFailedToLoadURL);
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
@@ -1680,7 +1680,7 @@ static int MaybeDelegateToToolExe() {
     }
 
     WStr rest = SkipFirstArg(WStr(GetCommandLineW()));
-    TempStr cmd = str::FormatTemp("\"%s\" %s", toolExe.s, ToUtf8Temp(rest).s);
+    TempStr cmd = fmt("\"%s\" %s", toolExe.s, ToUtf8Temp(rest).s);
     TempWStr cmdW = ToWStrTemp(cmd);
     TempWStr toolExeW = ToWStrTemp(toolExe);
 

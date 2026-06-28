@@ -483,7 +483,7 @@ struct TiffParser {
             snprintf(tagNameBuf, sizeof(tagNameBuf), "Tag 0x%04X", tag);
             name = Str(tagNameBuf);
         }
-        TempStr line = str::FormatTemp("%s %s (%s): %s", prefix.s, name.s, TypeName(type).s, value ? value.s : "");
+        TempStr line = fmt("%s %s (%s): %s", prefix.s, name.s, TypeName(type).s, value ? value.s : "");
         lines.Append(str::Dup(line));
     }
 
@@ -507,15 +507,15 @@ struct TiffParser {
             return str::DupTemp("0");
         }
         if (asFraction && num == 1) {
-            return str::FormatTemp("1/%u", den);
+            return fmt("1/%u", den);
         }
         if (asFraction && num != 0 && den != 1) {
-            return str::FormatTemp("%u/%u", num, den);
+            return fmt("%u/%u", num, den);
         }
         if (den == 1) {
-            return str::FormatTemp("%u", num);
+            return fmt("%u", num);
         }
-        return str::FormatTemp("%u/%u", num, den);
+        return fmt("%u/%u", num, den);
     }
 
     TempStr FormatComponentsConfig(size_t off, u32 count) const {
@@ -562,7 +562,7 @@ struct TiffParser {
             return FormatAscii(off, count);
         }
         if (!asList) {
-            return str::FormatTemp("[%u bytes]", count);
+            return fmt("[%u bytes]", count);
         }
         StrBuilder s;
         s.Append("[");
@@ -571,7 +571,7 @@ struct TiffParser {
             if (i > 0) {
                 s.Append(", ");
             }
-            s.AppendFmt("%u", r.Byte(off + i));
+            s.Append(fmt("%u", r.Byte(off + i)));
         }
         if (count > show) {
             s.Append(", ... ");
@@ -677,9 +677,9 @@ struct TiffParser {
                         if (i == 0) {
                             s.Append("[");
                         }
-                        s.AppendFmt("%d", snum);
+                        s.Append(fmt("%d", snum));
                         if (sden != 1) {
-                            s.AppendFmt("/%d", sden);
+                            s.Append(fmt("/%d", sden));
                         }
                         if (i < count - 1) {
                             s.Append(", ");
@@ -687,9 +687,9 @@ struct TiffParser {
                             s.Append("]");
                         }
                     } else {
-                        s.AppendFmt("%d", snum);
+                        s.Append(fmt("%d", snum));
                         if (sden != 0 && sden != 1) {
-                            s.AppendFmt("/%d", sden);
+                            s.Append(fmt("/%d", sden));
                         }
                     }
                 } else {
@@ -737,7 +737,7 @@ struct TiffParser {
                     s.Append(", ");
                 }
                 if (type == TiffType::SShort) {
-                    s.AppendFmt("%d", (i16)ReadWord(eoff));
+                    s.Append(fmt("%d", (i16)ReadWord(eoff)));
                 } else {
                     u32 v = ReadWord(eoff);
                     if (g == IfdGroup::Exif && tag == 0x9208 && count == 1) {
@@ -746,11 +746,11 @@ struct TiffParser {
                             return fs;
                         }
                     }
-                    s.AppendFmt("%u", v);
+                    s.Append(fmt("%u", v));
                 }
             }
             if (count > 1 && tag == 0x9214) {
-                return str::FormatTemp("[%s]", s.Get());
+                return fmt("[%s]", s.Get());
             }
             return str::DupTemp(s.Get());
         }
@@ -763,9 +763,9 @@ struct TiffParser {
                     s.Append(", ");
                 }
                 if (type == TiffType::SLong) {
-                    s.AppendFmt("%d", ReadSDWord(eoff));
+                    s.Append(fmt("%d", ReadSDWord(eoff)));
                 } else {
-                    s.AppendFmt("%u", ReadDWord(eoff));
+                    s.Append(fmt("%u", ReadDWord(eoff)));
                 }
             }
             return str::DupTemp(s.Get());
@@ -778,7 +778,7 @@ struct TiffParser {
                 if (i > 0) {
                     s.Append(", ");
                 }
-                s.AppendFmt("%u", r.Byte(off + i));
+                s.Append(fmt("%u", r.Byte(off + i)));
             }
             s.Append("]");
             return str::DupTemp(s.Get());
@@ -1150,17 +1150,17 @@ static void DumpFromGdiplus(const ByteSlice& d, StrVec& lines) {
         if (item->type == PropertyTagTypeASCII) {
             val = str::DupTemp(AsStr(ByteSlice((u8*)item->value, item->length)));
         } else if (item->type == PropertyTagTypeShort && item->length >= 2) {
-            val = str::FormatTemp("%u", *(u16*)item->value);
+            val = fmt("%u", *(u16*)item->value);
         } else if (item->type == PropertyTagTypeLong && item->length >= 4) {
-            val = str::FormatTemp("%u", *(u32*)item->value);
+            val = fmt("%u", *(u32*)item->value);
         } else if (item->type == PropertyTagTypeRational && item->length >= 8) {
             u32 numr = ((u32*)item->value)[0];
             u32 den = ((u32*)item->value)[1];
-            val = den ? str::FormatTemp("%u/%u", numr, den) : str::FormatTemp("%u", numr);
+            val = den ? fmt("%u/%u", numr, den) : fmt("%u", numr);
         } else {
-            val = str::FormatTemp("[%u bytes]", item->length);
+            val = fmt("[%u bytes]", item->length);
         }
-        TempStr line = str::FormatTemp("EXIF Tag 0x%04X (%s): %s", (u16)ids[i], TypeName(item->type).s, val.s);
+        TempStr line = fmt("EXIF Tag 0x%04X (%s): %s", (u16)ids[i], TypeName(item->type).s, val.s);
         lines.Append(str::Dup(line));
         free(buf);
     }
@@ -1196,7 +1196,7 @@ bool DumpExifFile(Str path) {
     if (!path) {
         return false;
     }
-    CliPrint(str::FormatTemp("Opening: %s", path.s));
+    CliPrint(fmt("Opening: %s", path.s));
     ByteSlice data = file::ReadFile(path);
     if (data.empty()) {
         CliPrint(StrL("No EXIF information found"));

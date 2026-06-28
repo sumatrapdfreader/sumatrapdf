@@ -188,7 +188,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         }
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
-        TempStr txt = str::FormatTemp(_TRA("Enter password for %s").s, data->fileName.s);
+        TempStr txt = fmt(_TRA("Enter password for %s").s, data->fileName.s);
         HwndSetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         HwndSetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, "");
         HwndSetDlgItemText(hDlg, IDC_STATIC, _TRA("&Password:"));
@@ -296,7 +296,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
         }
         ReportIf(!data->currPageLabel);
         HwndSetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
-        TempStr totalCount = str::FormatTemp(_TRA("(of %d)").s, data->pageCount);
+        TempStr totalCount = fmt(_TRA("(of %d)").s, data->pageCount);
         HwndSetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
 
         EditSelectAll(editPageNo);
@@ -573,7 +573,7 @@ TempStr ZoomLevelStr(float zoom) {
     if (zoom == 0) {
         return "-";
     }
-    TempStr res = str::FormatTemp("%.f%%", zoom);
+    TempStr res = fmt("%.f%%", zoom);
     return res;
 }
 
@@ -658,7 +658,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
     }
 
     if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
-        TempStr customZoom = str::FormatTemp("%.0f%%", currZoom);
+        TempStr customZoom = fmt("%.0f%%", currZoom);
         SetDlgItemTextW(hDlg, idComboBox, ToWStrTemp(customZoom));
     }
     delete gCurrZoomLevels;
@@ -1157,7 +1157,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
             DarkMode::setDarkWndSafe(hDlg);
         }
         HwndSetText(hDlg, _TRA("Add Favorite"));
-        TempStr s = str::FormatTemp(_TRA("Add page %s to favorites with (optional) name:").s, data->pageNo.s);
+        TempStr s = fmt(_TRA("Add page %s to favorites with (optional) name:").s, data->pageNo.s);
         HwndSetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
         HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));

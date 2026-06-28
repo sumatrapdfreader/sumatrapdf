@@ -61,7 +61,7 @@ TryAgain64Bit:
     for (int i = nVers; i > 0; i--) {
         for (Str gsProd : gsProducts) {
             Str ver = versions.At(i - 1);
-            TempStr keyName = str::FormatTemp("Software\\%s\\%s", gsProd.s, ver.s);
+            TempStr keyName = fmt("Software\\%s\\%s", gsProd.s, ver.s);
             TempStr gsDLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
             if (!gsDLL) {
                 continue;
@@ -149,10 +149,10 @@ static EngineBase* ps2pdf(Str path) {
 
     // Ghostscript 9.54+ removed .setpdfwrite, so we no longer pass PageSize via
     // -c ".setpdfwrite << /PageSize ... >> setpagedevice" (see issues #1923).
-    TempStr cmdLine = str::FormatTemp(
-        "\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
-        "-f \"%s\"",
-        gswin32c.s, tmpFile.s, shortPath.s);
+    TempStr cmdLine =
+        fmt("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
+            "-f \"%s\"",
+            gswin32c.s, tmpFile.s, shortPath.s);
 
     {
         TempStr fileName = path::GetBaseNameTemp(__FILE__);

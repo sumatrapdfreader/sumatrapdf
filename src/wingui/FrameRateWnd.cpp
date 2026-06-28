@@ -32,7 +32,7 @@ static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT&) {
     SetTextColor(hdc, COL_WHITE);
 
     ScopedSelectObject selFont(hdc, w->font);
-    TempStr txt = str::FormatTemp("%d", w->frameRate);
+    TempStr txt = fmt("%d", w->frameRate);
     DrawCenteredText(hdc, rc, txt);
 }
 
@@ -44,7 +44,7 @@ static void PositionWindow(FrameRateWnd* w, SIZE s) {
 }
 
 static SIZE GetIdealSize(FrameRateWnd* w) {
-    TempStr txt = str::FormatTemp("%d", w->frameRate);
+    TempStr txt = fmt("%d", w->frameRate);
     Size s = HwndMeasureText(w->hwnd, txt);
 
     // add padding

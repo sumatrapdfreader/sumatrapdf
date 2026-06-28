@@ -165,7 +165,7 @@ static TempStr ResolveLinkCmdTemp(Str cmd) {
         // cmd is a non-NUL-terminated view into the tip line, so %s must get a
         // zero-terminated copy of exactly the remainder -- otherwise it reads
         // past the link, pulling in trailing chars like ")."
-        return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", CStrTemp(Str(cmd.s + 5, cmd.len - 5)));
+        return fmt("https://www.sumatrapdfreader.org/docs/%s", CStrTemp(Str(cmd.s + 5, cmd.len - 5)));
     }
     // Cmd* - use as-is, will be resolved to command ID on click
     return str::DupTemp(cmd);
@@ -797,7 +797,7 @@ static void OnSizeAbout(HWND hwnd) {
 static void CopyAboutInfoToClipboard() {
     StrBuilder info(512);
     TempStr ver = GetAppVersionTemp();
-    info.AppendFmt("%s %s\r\n", kAppName, ver.s);
+    info.Append(fmt("%s %s\r\n", kAppName, ver.s));
     for (int i = info.Size() - 2; i > 0; i--) {
         info.AppendChar('-');
     }
@@ -812,7 +812,7 @@ static void CopyAboutInfoToClipboard() {
         for (int i = maxLen - str::Leni(el->leftTxt); i > 0; i--) {
             info.AppendChar(' ');
         }
-        info.AppendFmt("%s: %s\r\n", el->leftTxt.s, el->url ? el->url.s : el->rightTxt.s);
+        info.Append(fmt("%s: %s\r\n", el->leftTxt.s, el->url ? el->url.s : el->rightTxt.s));
     }
     CopyTextToClipboard(info.LendData());
 }
@@ -1138,7 +1138,7 @@ static TempStr HomeThumbTooltipTemp(Str path) {
     if (size < 0) {
         return str::DupTemp(path);
     }
-    return str::FormatTemp("%s  %s", path.s, str::FormatSizeShortTemp(size, nullptr).s);
+    return fmt("%s  %s", path.s, str::FormatSizeShortTemp(size, nullptr).s);
 }
 
 void LayoutHomePage(HomePageLayout& l) {

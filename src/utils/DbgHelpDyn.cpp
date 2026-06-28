@@ -296,7 +296,7 @@ NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen,
 
 static void AppendAddress(StrBuilder& s, DWORD64 addr) {
     void* p = reinterpret_cast<void*>(addr);
-    s.AppendFmt("%p", p);
+    s.Append(fmt("%p", p));
 }
 
 void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
@@ -327,21 +327,21 @@ void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
             s.Append(moduleShort);
         } else {
             AppendAddress(s, addr);
-            s.AppendFmt(" %02X:", section);
+            s.Append(fmt(" %02X:", section));
             AppendAddress(s, offset);
-            s.AppendFmt(" %s", moduleShort);
+            s.Append(fmt(" %s", moduleShort));
         }
 
         if (symName) {
-            s.AppendFmt("!%s+0x%x", symName, (int)symDisp);
+            s.Append(fmt("!%s+0x%x", symName, (int)symDisp));
         } else {
-            s.AppendFmt("+0x%x", (int)offset);
+            s.Append(fmt("+0x%x", (int)offset));
         }
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
         DWORD disp;
         if (DynSymGetLineFromAddr64(GetCurrentProcess(), addr, &disp, &line)) {
-            s.AppendFmt(" %s+%d", line.FileName, line.LineNumber);
+            s.Append(fmt(" %s+%d", line.FileName, line.LineNumber));
         }
     } else {
         AppendAddress(s, addr);
@@ -421,7 +421,7 @@ void GetThreadCallstack(StrBuilder& s, DWORD threadId) {
         return;
     }
 
-    s.AppendFmt("\nThread: %x\n", threadId);
+    s.Append(fmt("\nThread: %x\n", threadId));
 
     DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
     HANDLE hThread = OpenThread(access, false, threadId);
@@ -547,9 +547,9 @@ void GetExceptionInfo(StrBuilder& s, EXCEPTION_POINTERS* excPointers) {
 
     EXCEPTION_RECORD* excRecord = excPointers->ExceptionRecord;
     DWORD excCode = excRecord->ExceptionCode;
-    s.AppendFmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode));
+    s.Append(fmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode)));
 
-    s.AppendFmt("Faulting IP: ");
+    s.Append(fmt("Faulting IP: "));
     GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress, false);
     if ((EXCEPTION_ACCESS_VIOLATION == excCode) || (EXCEPTION_IN_PAGE_ERROR == excCode)) {
         int readWriteFlag = (int)excRecord->ExceptionInformation[0];
@@ -570,27 +570,27 @@ void GetExceptionInfo(StrBuilder& s, EXCEPTION_POINTERS* excPointers) {
     }
 
     PCONTEXT ctx = excPointers->ContextRecord;
-    s.AppendFmt("\nRegisters:\n");
+    s.Append(fmt("\nRegisters:\n"));
 #if IS_INTEL_64 == 1
-    s.AppendFmt(
-        "RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\n"
-        "R8: %016I64X\nR9: "
-        "%016I64X\nR10:%016I64X\nR11:%016I64X\nR12:%016I64X\nR13:%016I64X\nR14:%016I64X\nR15:%016I64X\n",
-        ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi, ctx->R8, ctx->R9, ctx->R10, ctx->R11, ctx->R12,
-        ctx->R13, ctx->R14, ctx->R15);
-    s.AppendFmt("CS:RIP:%04X:%016I64X\n", ctx->SegCs, ctx->Rip);
-    s.AppendFmt("SS:RSP:%04X:%016X  RBP:%08X\n", ctx->SegSs, (unsigned int)ctx->Rsp, (unsigned int)ctx->Rbp);
-    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
-    s.AppendFmt("Flags:%08X\n", ctx->EFlags);
+    s.Append(
+        fmt("RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\n"
+            "R8: %016I64X\nR9: "
+            "%016I64X\nR10:%016I64X\nR11:%016I64X\nR12:%016I64X\nR13:%016I64X\nR14:%016I64X\nR15:%016I64X\n",
+            ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi, ctx->R8, ctx->R9, ctx->R10, ctx->R11, ctx->R12,
+            ctx->R13, ctx->R14, ctx->R15));
+    s.Append(fmt("CS:RIP:%04X:%016I64X\n", ctx->SegCs, ctx->Rip));
+    s.Append(fmt("SS:RSP:%04X:%016X  RBP:%08X\n", ctx->SegSs, (unsigned int)ctx->Rsp, (unsigned int)ctx->Rbp));
+    s.Append(fmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs));
+    s.Append(fmt("Flags:%08X\n", ctx->EFlags));
 #elif IS_INTEL_32 == 1
-    s.AppendFmt("EAX:%08X  EBX:%08X  ECX:%08X\nEDX:%08X  ESI:%08X  EDI:%08X\n", ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx,
-                ctx->Esi, ctx->Edi);
-    s.AppendFmt("CS:EIP:%04X:%08X\n", ctx->SegCs, ctx->Eip);
-    s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
-    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
-    s.AppendFmt("Flags:%08X\n", ctx->EFlags);
+    s.Append(fmt("EAX:%08X  EBX:%08X  ECX:%08X\nEDX:%08X  ESI:%08X  EDI:%08X\n", ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx,
+                 ctx->Esi, ctx->Edi));
+    s.Append(fmt("CS:EIP:%04X:%08X\n", ctx->SegCs, ctx->Eip));
+    s.Append(fmt("SS:ESP:%04X:%08X  EBP:%08X\n", ctx->SegSs, ctx->Esp, ctx->Ebp));
+    s.Append(fmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs));
+    s.Append(fmt("Flags:%08X\n", ctx->EFlags));
 #elif IS_ARM_64 == 1
-    s.AppendFmt("Fp:%016I64X\nLr:%016I64X\nSp:%016I64X\nPc:%016I64X\n", ctx->Fp, ctx->Lr, ctx->Sp, ctx->Pc);
+    s.Append(fmt("Fp:%016I64X\nLr:%016I64X\nSp:%016I64X\nPc:%016I64X\n", ctx->Fp, ctx->Lr, ctx->Sp, ctx->Pc));
 #else
 #error "Unsupported CPU architecture"
 #endif

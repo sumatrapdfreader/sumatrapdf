@@ -1212,8 +1212,8 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     Str cmd = parts.At(0);
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
-        MaybeDelayedWarningNotification("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n",
-                                        definition);
+        MaybeDelayedWarningNotification(
+            fmt("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n", definition));
         return nullptr;
     }
     if (parts.Size() == 1) {
@@ -1259,8 +1259,8 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         int id = argSpecs[i].cmdId;
         if (id == CmdNone) {
             // the command doesn't accept any arguments
-            MaybeDelayedWarningNotification("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n",
-                                            definition.s);
+            MaybeDelayedWarningNotification(
+                fmt("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n", definition.s));
             return CreateCustomCommand(definition, cmdId, nullptr);
         }
         if (id != argCmdId) {
@@ -1291,7 +1291,8 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         }
     }
     if (!firstArg) {
-        MaybeDelayedWarningNotification("Error parsing Shortcuts: failed to parse arguments for '%s'\n", definition.s);
+        MaybeDelayedWarningNotification(
+            fmt("Error parsing Shortcuts: failed to parse arguments for '%s'\n", definition.s));
         return nullptr;
     }
 
@@ -1312,8 +1313,8 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         float zoomVal = ZoomFromString(firstArg->strVal, 0);
         if (0 == zoomVal) {
             FreeCommandArgs(firstArg);
-            MaybeDelayedWarningNotification("CreateCommandFromDefinition: failed to parse arguments in '%s'\n",
-                                            definition);
+            MaybeDelayedWarningNotification(
+                fmt("CreateCommandFromDefinition: failed to parse arguments in '%s'\n", definition));
             return nullptr;
         }
         firstArg->type = CommandArg::Type::Float;

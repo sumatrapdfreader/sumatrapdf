@@ -172,7 +172,7 @@ static bool LookupOrSearch(RefHoverState* s, EngineBase* engine, int srcPage, St
 // line starting with "[num]".
 static bool LookupOrSearchNumeric(RefHoverState* s, EngineBase* engine, int srcPage, int num, int& destPageOut,
                                   float& destXOut, float& destYOut) {
-    TempStr key = str::FormatTemp("[%d]", num);
+    TempStr key = fmt("[%d]", num);
     const CitationCacheEntry* hit = CacheLookup(s->lookupCache, key, num, srcPage);
     if (hit) {
         if (hit->destPage > 0) {

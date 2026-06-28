@@ -1622,7 +1622,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
         if (!pageHtml) {
             return;
         }
-        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl.s);
+        html.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl.s));
         Str pageHtmlStr = AsStr(pageHtml);
         uint charset = ExtractHttpCharset(pageHtmlStr);
         if (!charset) {

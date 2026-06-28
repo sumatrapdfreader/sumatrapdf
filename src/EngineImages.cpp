@@ -490,7 +490,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         sf.SetAlignment(Gdiplus::StringAlignmentCenter);
         sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
         Gdiplus::RectF layoutRect(0, 0, (float)screen.dx, (float)screen.dy);
-        TempStr msg = str::FormatTemp("Failed to load page %d", pageNo);
+        TempStr msg = fmt("Failed to load page %d", pageNo);
         TempWStr msgW = ToWStrTemp(msg);
         g.DrawString(msgW, -1, &font, layoutRect, &sf, &textBrush);
         DropPage(page, false);
@@ -1154,7 +1154,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     uint w = bmp->GetWidth();
     uint h = bmp->GetHeight();
     if (w > 0 && h > 0) {
-        val = str::FormatTemp("%u x %u", w, h);
+        val = fmt("%u x %u", w, h);
         AddProp(keyValOut, kPropImageSize, val);
     }
 
@@ -1163,9 +1163,9 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     float dpiY = bmp->GetVerticalResolution();
     if (dpiX > 0 && dpiY > 0) {
         if (dpiX == dpiY) {
-            val = str::FormatTemp("%.0f", dpiX);
+            val = fmt("%.0f", dpiX);
         } else {
-            val = str::FormatTemp("%.0f x %.0f", dpiX, dpiY);
+            val = fmt("%.0f x %.0f", dpiX, dpiY);
         }
         AddProp(keyValOut, kPropDpi, val);
     }
@@ -1203,9 +1203,9 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     if (GetImagePropertyRational(bmp, PropertyTagExifExposureTime, num, den)) {
         if (den > 0 && num > 0) {
             if (num == 1) {
-                val = str::FormatTemp("1/%u s", den);
+                val = fmt("1/%u s", den);
             } else {
-                val = str::FormatTemp("%u/%u s", num, den);
+                val = fmt("%u/%u s", num, den);
             }
             AddProp(keyValOut, kPropExposureTime, val);
         }
@@ -1215,7 +1215,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     if (GetImagePropertyRational(bmp, PropertyTagExifFNumber, num, den)) {
         if (den > 0) {
             float fNum = (float)num / (float)den;
-            val = str::FormatTemp("f/%.1f", fNum);
+            val = fmt("f/%.1f", fNum);
             AddProp(keyValOut, kPropFNumber, val);
         }
     }
@@ -1223,7 +1223,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // ISO speed
     ULONG isoVal;
     if (GetImagePropertyLong(bmp, PropertyTagExifISOSpeed, isoVal)) {
-        val = str::FormatTemp("ISO %u", isoVal);
+        val = fmt("ISO %u", isoVal);
         AddProp(keyValOut, kPropIsoSpeed, val);
     }
 
@@ -1231,7 +1231,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     if (GetImagePropertyRational(bmp, PropertyTagExifFocalLength, num, den)) {
         if (den > 0) {
             float fl = (float)num / (float)den;
-            val = str::FormatTemp("%.1f mm", fl);
+            val = fmt("%.1f mm", fl);
             AddProp(keyValOut, kPropFocalLength, val);
         }
     }
@@ -1239,7 +1239,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // focal length in 35mm equivalent
     ULONG fl35;
     if (GetImagePropertyLong(bmp, PropertyTagExifFocalLengthIn35mmFilm, fl35)) {
-        val = str::FormatTemp("%u mm", fl35);
+        val = fmt("%u mm", fl35);
         AddProp(keyValOut, kPropFocalLength35mm, val);
     }
 
@@ -1253,7 +1253,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // orientation
     ULONG orient;
     if (GetImagePropertyLong(bmp, PropertyTagOrientation, orient)) {
-        val = str::FormatTemp("%u", orient);
+        val = fmt("%u", orient);
         AddProp(keyValOut, kPropOrientation, val);
     }
 
@@ -1296,7 +1296,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     if (GetImagePropertyRational(bmp, PropertyTagExifExposureBias, num, den)) {
         if (den > 0) {
             float bias = (float)(LONG)num / (float)(LONG)den;
-            val = str::FormatTemp("%+.1f EV", bias);
+            val = fmt("%+.1f EV", bias);
             AddProp(keyValOut, kPropExposureBias, val);
         }
     }
@@ -1304,7 +1304,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // bits per sample
     ULONG bps;
     if (GetImagePropertyLong(bmp, PropertyTagBitsPerSample, bps)) {
-        val = str::FormatTemp("%u", bps);
+        val = fmt("%u", bps);
         AddProp(keyValOut, kPropBitsPerSample, val);
     }
 
@@ -1395,9 +1395,9 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         if (den > 0) {
             float cbpp = (float)num / (float)den;
             if (den == 1) {
-                val = str::FormatTemp("%u", num);
+                val = fmt("%u", num);
             } else {
-                val = str::FormatTemp("%.2f", cbpp);
+                val = fmt("%.2f", cbpp);
             }
             AddProp(keyValOut, kPropCompressedBpp, val);
         }
@@ -1407,7 +1407,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     if (GetImagePropertyRational(bmp, PropertyTagExifAperture, num, den)) {
         if (den > 0) {
             float aperture = (float)num / (float)den;
-            val = str::FormatTemp("%.2f", aperture);
+            val = fmt("%.2f", aperture);
             AddProp(keyValOut, kPropMaxAperture, val);
         }
     }
@@ -1511,14 +1511,14 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
     // pixel X dimension
     ULONG pixX;
     if (GetImagePropertyLong(bmp, PropertyTagExifPixXDim, pixX)) {
-        val = str::FormatTemp("%u", pixX);
+        val = fmt("%u", pixX);
         AddProp(keyValOut, kPropPixelXDimension, val);
     }
 
     // pixel Y dimension
     ULONG pixY;
     if (GetImagePropertyLong(bmp, PropertyTagExifPixYDim, pixY)) {
-        val = str::FormatTemp("%u", pixY);
+        val = fmt("%u", pixY);
         AddProp(keyValOut, kPropPixelYDimension, val);
     }
 
@@ -1556,7 +1556,7 @@ static void GetExifPropertiesFromData(const ByteSlice& data, StrVec& keyValOut) 
     if (data.empty()) {
         return;
     }
-    TempStr sizeStr = str::FormatTemp("%d", (int)data.size());
+    TempStr sizeStr = fmt("%d", (int)data.size());
     AddProp(keyValOut, kPropImageFileSize, sizeStr);
     Bitmap* bmp = BitmapWithExifFromData(data);
     if (bmp) {
@@ -2014,11 +2014,11 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
         str::Free(propTitle);
         propTitle = str::Dup(value);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
-        Str newDate = str::Dup(str::FormatTemp("%s/%d", str::IsEmpty(propDate) ? "" : propDate.s, ParseInt(value)));
+        Str newDate = str::Dup(fmt("%s/%d", str::IsEmpty(propDate) ? "" : propDate.s, ParseInt(value)));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
-        Str newDate = str::Dup(str::FormatTemp("%d%s", ParseInt(value), str::IsEmpty(propDate) ? "" : propDate.s));
+        Str newDate = str::Dup(fmt("%d%s", ParseInt(value), str::IsEmpty(propDate) ? "" : propDate.s));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::String == type && str::Eq(path, "/appID")) {

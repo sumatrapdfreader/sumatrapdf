@@ -14,7 +14,7 @@
 Kind kindWnd = "wnd";
 
 TempStr WinMsgNameTemp(UINT msg) {
-    return str::FormatTemp("0x%x", (int)msg);
+    return fmt("0x%x", (int)msg);
 }
 
 // TODO:
@@ -325,7 +325,7 @@ Size Wnd::GetIdealSize() {
 }
 
 Size Wnd::Layout(const Constraints bc) {
-    dbglayoutf("WindowBase::Layout() %s ", GetKind());
+    dbglayout(fmt("WindowBase::Layout() %s ", GetKind()));
     LogConstraints(bc, "\n");
 
     auto hinset = insets.left + insets.right;
@@ -374,7 +374,8 @@ void Wnd::SetPos(RECT* r) {
 }
 
 void Wnd::SetBounds(Rect bounds) {
-    dbglayoutf("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", GetKind(), bounds.x, bounds.y, bounds.dx, bounds.dy);
+    dbglayout(
+        fmt("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", GetKind(), bounds.x, bounds.y, bounds.dx, bounds.dy));
 
     lastBounds = bounds;
 

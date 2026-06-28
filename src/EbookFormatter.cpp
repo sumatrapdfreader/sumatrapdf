@@ -291,13 +291,13 @@ void Fb2Formatter::HandleTagAsHtml(HtmlToken* t, Str name) {
 void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
     if (Tag_Title == t->tag || Tag_Subtitle == t->tag) {
         bool isSubtitle = Tag_Subtitle == t->tag;
-        TempStr name = str::FormatTemp("h%d", section + (isSubtitle ? 1 : 0));
+        TempStr name = fmt("h%d", section + (isSubtitle ? 1 : 0));
         HtmlToken tok;
         tok.SetTag(t->type, name);
         HandleTagHx(&tok);
         HandleAnchorAttr(t);
         if (!isSubtitle && t->IsStartTag()) {
-            TempStr link = str::FormatTemp(FB2_TOC_ENTRY_MARK "%d", ++titleCount);
+            TempStr link = fmt(FB2_TOC_ENTRY_MARK "%d", ++titleCount);
             currPage->instructions.Append(DrawInstr::Anchor(link, Gdiplus::RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {

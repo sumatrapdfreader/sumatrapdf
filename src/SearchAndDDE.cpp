@@ -447,7 +447,7 @@ static void ShowMatchCount(MainWindow* win) {
         u64 key = MatchKey(dm->textSearch->startPage, dm->textSearch->startGlyph);
         n = MatchIndexInCache(win, key);
     }
-    TempStr s = str::FormatTemp("%d / %d", n, total);
+    TempStr s = fmt("%d / %d", n, total);
     FindBarSetStatus(win, s);
 }
 
@@ -482,7 +482,7 @@ static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
     wstr::NormalizeWSInPlace(sub);
     TempStr u = ToUtf8Temp(sub.s);
     wstr::FreePtr(&sub);
-    return str::FormatTemp("%s%s%s", from > 0 ? "..." : "", u.s, to < textLen ? "..." : "");
+    return fmt("%s%s%s", from > 0 ? "..." : "", u.s, to < textLen ? "..." : "");
 }
 
 struct CountThreadData {
@@ -1274,17 +1274,17 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
         args.msg = _TRA("Synchronization file cannot be opened");
     } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
-        buf = str::FormatTemp(_TRA("Page number %u nonexistent").s, page);
+        buf = fmt(_TRA("Page number %u nonexistent").s, page);
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
         args.msg = _TRA("No synchronization info at this position");
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-        buf = str::FormatTemp(_TRA("Unknown source file (%s)").s, fileName.s);
+        buf = fmt(_TRA("Unknown source file (%s)").s, fileName.s);
     } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
-        buf = str::FormatTemp(_TRA("Source file %s has no synchronization point").s, fileName.s);
+        buf = fmt(_TRA("Source file %s has no synchronization point").s, fileName.s);
     } else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE) {
-        buf = str::FormatTemp(_TRA("No result found around line %u in file %s").s, line, fileName.s);
+        buf = fmt(_TRA("No result found around line %u in file %s").s, line, fileName.s);
     } else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
-        buf = str::FormatTemp(_TRA("No result found around line %u in file %s").s, line, fileName.s);
+        buf = fmt(_TRA("No result found around line %u in file %s").s, line, fileName.s);
     }
     if (buf) {
         args.msg = buf;
@@ -1809,12 +1809,12 @@ static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, StrBuilder& res)
     // -2 = fit width, -3 = fit content
     float zoom = ctrl->GetZoomVirtual();
     Str view = DisplayModeToString(ctrl->GetDisplayMode());
-    res.AppendFmt("path: %s\n", docPath.s);
-    res.AppendFmt("page: %d\n", ctrl->CurrentPageNo());
-    res.AppendFmt("pageCount: %d\n", ctrl->PageCount());
-    res.AppendFmt("zoom: %g\n", zoom);
-    res.AppendFmt("view: %s\n", view.s);
-    res.AppendFmt("sumver: %s\n", CURR_VERSION_STRA);
+    res.Append(fmt("path: %s\n", docPath.s));
+    res.Append(fmt("page: %d\n", ctrl->CurrentPageNo()));
+    res.Append(fmt("pageCount: %d\n", ctrl->PageCount()));
+    res.Append(fmt("zoom: %g\n", zoom));
+    res.Append(fmt("view: %s\n", view.s));
+    res.Append(fmt("sumver: %s\n", CURR_VERSION_STRA));
     return next;
 }
 
@@ -1831,7 +1831,7 @@ static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, StrBuilder& res) {
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             if (!str::IsEmpty(tab->filePath)) {
-                res.AppendFmt("%s\n", tab->filePath.s);
+                res.Append(fmt("%s\n", tab->filePath.s));
             }
         }
     }
@@ -1870,13 +1870,13 @@ static Str HandleGetMousePosCmd(Str cmd, bool* ack, StrBuilder& res) {
     float y = pt.y < 0 ? 0 : pt.y;
     double xPt = (double)x / dpi * 72.0;
     double yPt = (double)y / dpi * 72.0;
-    res.AppendFmt("page: %d\n", validPage ? pageNo : 0);
-    res.AppendFmt("x: %.2f\n", xPt);
-    res.AppendFmt("y: %.2f\n", yPt); // MuPDF convention: origin top-left, y down
+    res.Append(fmt("page: %d\n", validPage ? pageNo : 0));
+    res.Append(fmt("x: %.2f\n", xPt));
+    res.Append(fmt("y: %.2f\n", yPt)); // MuPDF convention: origin top-left, y down
     if (validPage) {
         // also provide PDF/Adobe coordinates: origin bottom-left, y up (#1411)
         double pageHeightPt = (double)engine->PageMediabox(pageNo).dy / dpi * 72.0;
-        res.AppendFmt("ypdf: %.2f\n", pageHeightPt - yPt);
+        res.Append(fmt("ypdf: %.2f\n", pageHeightPt - yPt));
     }
     return next;
 }

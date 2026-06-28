@@ -125,7 +125,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         free(uncompressed);
 
         if (!ok) {
-            TempStr msg = str::FormatTemp(_TRA("Couldn't write %s to disk").s, filePath.s);
+            TempStr msg = fmt(_TRA("Couldn't write %s to disk").s, filePath.s);
             NotifyFailed(msg);
             return false;
         }
@@ -986,7 +986,7 @@ static bool CreateInstallerWnd(Flags* cli) {
         RegisterClassExW(&wcex);
     }
 
-    TempStr title = str::FormatTemp(_TRA("SumatraPDF %s Installer").s, CURR_VERSION_STRA);
+    TempStr title = fmt(_TRA("SumatraPDF %s Installer").s, CURR_VERSION_STRA);
     DWORD exStyle = 0;
     if (trans::IsCurrLangRtl()) {
         exStyle = WS_EX_LAYOUTRTL;

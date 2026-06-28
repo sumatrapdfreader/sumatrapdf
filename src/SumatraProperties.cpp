@@ -168,7 +168,7 @@ static TempStr AddTimeZone(TempStr s, int timeZone) {
     int abs = (timeZone > 0) ? timeZone : -timeZone;
     int hours = abs / 100;
     int mins = abs % 100;
-    return str::FormatTemp("%s %s%02d:%02d", s.s, tzSign.s, hours, mins);
+    return fmt("%s %s%02d:%02d", s.s, tzSign.s, hours, mins);
 }
 
 static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
@@ -256,7 +256,7 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
     TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
 
-    return str::FormatTemp("%s x %s %s%s", strWidth.s, strHeight.s, unit.s, formatName.s);
+    return fmt("%s x %s %s%s", strWidth.s, strHeight.s, unit.s, formatName.s);
 }
 
 // returns a list of permissions denied by this document
@@ -282,7 +282,7 @@ static void AppendProp(StrBuilder& out, Str key, Str value) {
     if (!value) {
         return;
     }
-    out.AppendFmt("%s %s\n", key.s, value.s);
+    out.Append(fmt("%s %s\n", key.s, value.s));
 }
 
 // clang-format off
@@ -347,7 +347,7 @@ static void AppendPropTranslated(StrBuilder& out, Str propName, Str val) {
     }
     Str s = GetMatchingString(propToName, propName);
     if (!s) {
-        TempStr label = str::FormatTemp("%s:", propName.s);
+        TempStr label = fmt("%s:", propName.s);
         AppendProp(out, label, val);
         return;
     }
@@ -428,7 +428,7 @@ static void AddImageProperties(EngineBase* engine, int pageNo, StrBuilder& out) 
     int nImageProps = PropsCount(imageProps);
     if (nImageProps == 0) return;
     out.AppendChar('\n');
-    TempStr header = str::FormatTemp(_TRA("Current Image (%d):").s, pageNo);
+    TempStr header = fmt(_TRA("Current Image (%d):").s, pageNo);
     out.Append(header);
     out.AppendChar('\n');
     for (int i = 0; i < nImageProps; i++) {
@@ -489,7 +489,7 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
         isImages = IsEngineImages(engine);
     }
 
-    strTemp = str::FormatTemp("%d", ctrl->PageCount());
+    strTemp = fmt("%d", ctrl->PageCount());
     if (isImages) {
         AppendProp(out, _TRA("Number of Images:"), strTemp);
     } else {
@@ -498,7 +498,7 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
 
     if (dm && !isImages) { // we show image size below
         strTemp = FormatPageSizeTemp(dm->GetEngine(), pageNo, dm->GetRotation());
-        auto s = fmt::FormatTemp(_TRA("Current Page (%d) Size:"), pageNo);
+        auto s = strfmt::FormatTemp(_TRA("Current Page (%d) Size:"), pageNo);
         AppendProp(out, s, strTemp);
     }
     if (isImages) AddImageProperties(dm->GetEngine(), pageNo, out);

@@ -108,7 +108,7 @@ static void logToPipe(Str s) {
 
     if (didConnect) {
         // logview accepts logging from anyone, so announce ourselves
-        TempStr initialMsg = str::FormatTemp("app: %s\n", gLogAppName.s);
+        TempStr initialMsg = fmt("app: %s\n", gLogAppName.s);
         WriteFile(hLogPipe, initialMsg.s, (DWORD)initialMsg.len, &cbWritten, nullptr);
     }
 
@@ -151,7 +151,7 @@ void logvf(const char* fmt, ...) {
 
 // logs value that is byte size to pipe
 void logValueSize(Str name, i64 v) {
-    TempStr s = str::FormatTemp(":v %s size %lld\n", name.s, v);
+    TempStr s = fmt(":v %s size %lld\n", name.s, v);
     logToPipe(s);
 }
 

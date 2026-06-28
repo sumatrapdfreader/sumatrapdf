@@ -458,13 +458,13 @@ static TempStr GetWindowProcessNameTemp(HWND hwnd) {
 }
 
 static TempStr MakeUniquePathTemp(Str dir, Str base) {
-    TempStr name = str::FormatTemp("%s.png", base.s);
+    TempStr name = fmt("%s.png", base.s);
     TempStr path = path::JoinTemp(dir, name);
     if (!file::Exists(Str(path))) {
         return path;
     }
     for (int i = 1; i < 10000; i++) {
-        name = str::FormatTemp("%s.%d.png", base.s, i);
+        name = fmt("%s.%d.png", base.s, i);
         path = path::JoinTemp(dir, name);
         if (!file::Exists(Str(path))) {
             return path;
@@ -773,7 +773,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
         SetBkMode(hdcTemp, TRANSPARENT);
         TempWStr nameW = ToWStrTemp(cs.processName);
         DrawTextW(hdcTemp, nameW, -1, &labelRect, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
-        TempStr dimStr = str::FormatTemp("%dx%d", cs.origW, cs.origH);
+        TempStr dimStr = fmt("%dx%d", cs.origW, cs.origH);
         TempWStr dimW = ToWStrTemp(dimStr);
         DrawTextW(hdcTemp, dimW, -1, &labelRect, DT_RIGHT | DT_SINGLELINE);
 
@@ -1154,7 +1154,7 @@ void RegisterScreenshotHotkey(HWND hwnd) {
     }
     BOOL ok = RegisterHotKey(hwnd, kScreenshotHotkeyId, mod, vk);
     if (!ok && !IsOtherSumatraProcessRunning()) {
-        MaybeDelayedWarningNotification("Couldn't register '%s' global hotkey for taking screenshots", shortcut);
+        MaybeDelayedWarningNotification(fmt("Couldn't register '%s' global hotkey for taking screenshots", shortcut));
     }
 }
 
@@ -1177,7 +1177,7 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
         s.Append("Shift+");
     }
     if (vk >= VK_F1 && vk <= VK_F24) {
-        s.AppendFmt("F%d", (int)(vk - VK_F1 + 1));
+        s.Append(fmt("F%d", (int)(vk - VK_F1 + 1)));
     } else if (vk >= 'A' && vk <= 'Z') {
         s.AppendChar((char)vk);
     } else if (vk >= '0' && vk <= '9') {
@@ -1203,7 +1203,7 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
     } else if (vk == VK_SCROLL) {
         s.Append("ScrollLock");
     } else if (vk >= VK_NUMPAD0 && vk <= VK_NUMPAD9) {
-        s.AppendFmt("Numpad%d", (int)(vk - VK_NUMPAD0));
+        s.Append(fmt("Numpad%d", (int)(vk - VK_NUMPAD0)));
     } else {
         // unknown key
         return {};

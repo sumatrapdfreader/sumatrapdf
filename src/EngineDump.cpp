@@ -151,7 +151,7 @@ static TempStr DestRectToStrTemp(EngineBase* engine, IPageDestination* dest) {
     Str destName = PageDestGetName(dest);
     if (destName) {
         TempStr name = EscapeTemp(destName);
-        return str::FormatTemp("Name=\"%s\"", name.s);
+        return fmt("Name=\"%s\"", name.s);
     }
     // as handled by LinkHandler::ScrollTo in MainWindow.cpp
     int pageNo = PageDestGetPageNo(dest);
@@ -161,15 +161,15 @@ static TempStr DestRectToStrTemp(EngineBase* engine, IPageDestination* dest) {
     RectF rect = PageDestGetRect(dest);
     if (rect.IsEmpty()) {
         PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
-        return str::FormatTemp("Point=\"%.0f %.0f\"", pt.x, pt.y);
+        return fmt("Point=\"%.0f %.0f\"", pt.x, pt.y);
     }
     if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         Rect rc = engine->Transform(rect, pageNo, 1.0, 0).Round();
-        return str::FormatTemp("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
+        return fmt("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
     }
     if (rect.y != DEST_USE_DEFAULT) {
         PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
-        return str::FormatTemp("Point=\"x %.0f\"", pt.y);
+        return fmt("Point=\"x %.0f\"", pt.y);
     }
     return nullptr;
 }
@@ -409,7 +409,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
         if (silent) {
             return true;
         }
-        TempStr txtFilePath = str::FormatTemp(renderPath.s, 0);
+        TempStr txtFilePath = fmt(renderPath.s, 0);
         TempStr textCrLf = str::ReplaceTemp(text.Get(), "\n", "\r\n");
         TempStr textUTF8BOM = str::JoinTemp(UTF8_BOM, textCrLf);
         return file::WriteFile(txtFilePath, ToByteSlice(textUTF8BOM));
@@ -427,7 +427,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
             FreePixmap(bmp);
             continue;
         }
-        TempStr pageBmpPath = str::FormatTemp(renderPath.s, pageNo);
+        TempStr pageBmpPath = fmt(renderPath.s, pageNo);
         if (str::EndsWithI(pageBmpPath, ".png")) {
             Gdiplus::Bitmap gbmp(bmp->hbmp, nullptr);
             CLSID pngEncId = GetGdiPlusEncoderClsid(L"image/png");

@@ -1787,7 +1787,7 @@ int CmpPageLabelInfo(const void* a, const void* b) {
 
 static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     if (str::Eq(type, "D")) {
-        return str::FormatTemp("%s%d", prefix.s, pageNo);
+        return fmt("%s%d", prefix.s, pageNo);
     }
     if (str::EqI(type, "R")) {
         // roman numbering style
@@ -1795,7 +1795,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
         if (!str::IsEmpty(type) && type.s[0] == 'r') {
             str::ToLowerInPlace(number);
         }
-        return str::FormatTemp("%s%s", prefix.s, number.s);
+        return fmt("%s%s", prefix.s, number.s);
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
@@ -1807,7 +1807,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
         if (!str::IsEmpty(type) && type.s[0] == 'a') {
             str::ToLowerInPlace(Str(number.Get()));
         }
-        return str::FormatTemp("%s%s", prefix.s, number.Get().s);
+        return fmt("%s%s", prefix.s, number.Get().s);
     }
     return str::DupTemp(prefix);
 }
@@ -3047,7 +3047,7 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     // page is really a stream number
     Str title = outline->title ? Str(outline->title) : StrL("");
     TempStr nameHex = str::MemToHexTemp((const u8*)title.s, title.len);
-    dest->value = str::Dup(str::FormatTemp("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.s));
+    dest->value = str::Dup(fmt("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.s));
     dest->pageNo = outline->page.page;
     return dest;
 }
@@ -4154,7 +4154,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
                 needAnonName = !name;
             }
             if (needAnonName) {
-                name = str::FormatTemp("<#%d>", pdf_obj_parent_num(ctx, font2));
+                name = fmt("<#%d>", pdf_obj_parent_num(ctx, font2));
             }
             embedded = false;
             pdf_obj* desc = pdf_dict_gets(ctx, font2, "FontDescriptor");
@@ -4203,10 +4203,10 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
             info.Append(" (");
             if (!str::IsEmpty(type)) {
-                info.AppendFmt("%s; ", type.s);
+                info.Append(fmt("%s; ", type.s));
             }
             if (!str::IsEmpty(encoding)) {
-                info.AppendFmt("%s; ", encoding.s);
+                info.Append(fmt("%s; ", encoding.s));
             }
             if (embedded) {
                 info.Append("embedded; ");
@@ -4268,13 +4268,13 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
         pdf_crypt* crypt = pdfdoc->crypt;
         if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
             if (pdf_crypt_revision(ctx, crypt) == 5) {
-                return str::FormatTemp("%d.%d Adobe Extension Level %d", major, minor, 3);
+                return fmt("%d.%d Adobe Extension Level %d", major, minor, 3);
             }
             if (pdf_crypt_revision(ctx, crypt) == 6) {
-                return str::FormatTemp("%d.%d Adobe Extension Level %d", major, minor, 8);
+                return fmt("%d.%d Adobe Extension Level %d", major, minor, 8);
             }
         }
-        return str::FormatTemp("%d.%d", major, minor);
+        return fmt("%d.%d", major, minor);
     }
 
     if (str::Eq(kPropPdfFileStructure, name)) {
@@ -4373,7 +4373,7 @@ static void AppendSigDictText(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, 
         val = nullptr;
     }
     if (val && *val) {
-        s.AppendFmt("  %s: %s\n", label.s, val);
+        s.Append(fmt("  %s: %s\n", label.s, val));
     }
 }
 
@@ -4397,7 +4397,7 @@ static void AppendSigDictDate(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, 
     gmtime_s(&tm, &t);
     char buf[64];
     strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", &tm);
-    s.AppendFmt("  %s: %s\n", label.s, buf);
+    s.Append(fmt("  %s: %s\n", label.s, buf));
 }
 
 static void AppendSignatureInfo(fz_context* ctx, StrBuilder& s, pdf_pkcs7_verifier* verifier, pdf_document* pdfdoc,
@@ -4405,7 +4405,7 @@ static void AppendSignatureInfo(fz_context* ctx, StrBuilder& s, pdf_pkcs7_verifi
     if (!s.IsEmpty()) {
         s.AppendChar('\n');
     }
-    s.AppendFmt("Signature %d (page %d):\n", sigNo, pageNo);
+    s.Append(fmt("Signature %d (page %d):\n", sigNo, pageNo));
     pdf_obj* sigObj = pdf_annot_obj(ctx, widget);
     if (!pdf_signature_is_signed(ctx, pdfdoc, sigObj)) {
         s.Append("  not signed\n");
@@ -4425,7 +4425,7 @@ static void AppendSignatureInfo(fz_context* ctx, StrBuilder& s, pdf_pkcs7_verifi
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    s.AppendFmt("  signer: %s\n", name ? name : "(unknown)");
+    s.Append(fmt("  signer: %s\n", name ? name : "(unknown)"));
     fz_free(ctx, name);
     pdf_signature_drop_distinguished_name(ctx, dn);
 
@@ -4448,7 +4448,7 @@ static void AppendSignatureInfo(fz_context* ctx, StrBuilder& s, pdf_pkcs7_verifi
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    s.AppendFmt("  certificate: %s\n", pdf_signature_error_description(certErr));
+    s.Append(fmt("  certificate: %s\n", pdf_signature_error_description(certErr)));
 
     pdf_signature_error digErr = PDF_SIGNATURE_ERROR_UNKNOWN;
     int edits = 0;
@@ -4460,7 +4460,7 @@ static void AppendSignatureInfo(fz_context* ctx, StrBuilder& s, pdf_pkcs7_verifi
         fz_report_error(ctx);
     }
     if (digErr) {
-        s.AppendFmt("  digest: %s\n", pdf_signature_error_description(digErr));
+        s.Append(fmt("  digest: %s\n", pdf_signature_error_description(digErr)));
     } else if (edits) {
         s.Append("  document edited after signing\n");
     } else {

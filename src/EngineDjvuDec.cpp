@@ -766,7 +766,7 @@ static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, Str name) {
     if (pageNo < 0) {
         return {};
     }
-    return str::FormatTemp("#%d", pageNo + 1);
+    return fmt("#%d", pageNo + 1);
 }
 
 Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
@@ -876,7 +876,7 @@ TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, 
         if (resolved) {
             link = resolved;
         } else if (it.page_no >= 0) {
-            link = str::FormatTemp("#%d", it.page_no + 1);
+            link = fmt("#%d", it.page_no + 1);
         }
         TocItem* tocItem = NewDjvuDecTocItem(parent, title, link);
         tocItem->id = ++idCounter;

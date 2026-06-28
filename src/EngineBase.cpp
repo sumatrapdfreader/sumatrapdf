@@ -581,7 +581,7 @@ bool EngineBase::HasPageLabels() const {
 }
 
 TempStr EngineBase::GetPageLabeTemp(int pageNo) const {
-    return str::FormatTemp("%d", pageNo);
+    return fmt("%d", pageNo);
 }
 
 int EngineBase::GetPageByLabel(Str label) const {

@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 #include "StrFormat.h"
 
-namespace fmt {
+namespace strfmt {
 
 // formatting instruction
 struct Inst {
@@ -390,4 +390,4 @@ TempStr FormatTemp(Str s, const Arg a1, const Arg a2, const Arg a3) {
     return FormatTemp(s, args, 3);
 }
 
-} // namespace fmt
+} // namespace strfmt

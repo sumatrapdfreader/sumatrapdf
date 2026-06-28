@@ -63,7 +63,7 @@ static bool HasAllOurOpenWithEntries(HKEY hkey) {
 static TempStr GetInstallDateTemp() {
     SYSTEMTIME st;
     GetSystemTime(&st);
-    return str::FormatTemp("%04d%02d%02d", st.wYear, st.wMonth, st.wDay);
+    return fmt("%04d%02d%02d", st.wYear, st.wMonth, st.wDay);
 }
 
 // Note: doesn't handle (total) sizes above 4GB
@@ -88,7 +88,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     TempStr installDate = GetInstallDateTemp();
     // uninstaller is the same executable with a different flag
     Str uninstallerPath = installedExePath;
-    TempStr uninstallCmdLine = str::FormatTemp("\"%s\" -uninstall", uninstallerPath.s);
+    TempStr uninstallCmdLine = fmt("\"%s\" -uninstall", uninstallerPath.s);
     if (allUsers) {
         uninstallCmdLine = str::JoinTemp(uninstallCmdLine, " -all-users");
     }
@@ -485,7 +485,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
     // delete keys written in ListAsDefaultProgramWin10()
     LoggedDeleteRegValue(hkey, "SOFTWARE\\RegisteredApplications", kAppName);
-    TempStr keyName = str::FormatTemp("SOFTWARE\\%s\\Capabilities", kAppName);
+    TempStr keyName = fmt("SOFTWARE\\%s\\Capabilities", kAppName);
     LoggedDeleteRegKey(hkey, keyName);
 
     ShellNotifyAssociationsChanged();

@@ -393,7 +393,7 @@ static TempStr FormatParamTemp(Str arg, WindowTab* tab) {
                 i++;
                 break;
             case 'p':
-                out.AppendFmt("%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0);
+                out.Append(fmt("%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
                 i++;
                 break;
             default:
@@ -486,8 +486,8 @@ bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
     }
     // TODO: this should be in ViewWithCustomExternalViewer()
     if (!file::Exists(exePath)) {
-        TempStr msg = str::FormatTemp(
-            "External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
+        TempStr msg =
+            fmt("External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
         auto caption = _TRA("Error");
         MsgBox(nullptr, msg, caption, MB_OK | MB_ICONERROR);
         return false;

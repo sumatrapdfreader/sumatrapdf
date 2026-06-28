@@ -35,9 +35,9 @@ static TempStr FindClaudeExecutableTemp() {
     StrVec candidates;
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     if (userProfile) {
-        candidates.Append(str::FormatTemp("%s\\.local\\bin\\claude.exe", userProfile.s));
-        candidates.Append(str::FormatTemp("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile.s));
-        candidates.Append(str::FormatTemp("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile.s));
+        candidates.Append(fmt("%s\\.local\\bin\\claude.exe", userProfile.s));
+        candidates.Append(fmt("%s\\AppData\\Local\\Programs\\claude-code\\claude.exe", userProfile.s));
+        candidates.Append(fmt("%s\\AppData\\Roaming\\npm\\claude.cmd", userProfile.s));
     }
     return AIChatFindExecutableTemp(candidates, WStr(L"claude.exe"), WStr(L"claude"));
 }
@@ -269,22 +269,22 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
 }
 
 static void WebViewAppendText(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("appendText('%s')", AIChatJsEscapeTemp(text).s);
+    TempStr js = fmt("appendText('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddUser(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addUser('%s')", AIChatJsEscapeTemp(text).s);
+    TempStr js = fmt("addUser('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddTool(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addTool('%s')", AIChatJsEscapeTemp(text).s);
+    TempStr js = fmt("addTool('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
 static void WebViewAddError(MainWindow* win, Str text) {
-    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(text).s);
+    TempStr js = fmt("addError('%s')", AIChatJsEscapeTemp(text).s);
     WebViewEval(win, js);
 }
 
@@ -299,7 +299,7 @@ static void WebViewClearChat(MainWindow* win) {
 static void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     Str msg = "Claude Code is only available for PDF and image files.";
-    TempStr js = str::FormatTemp("addError('%s')", AIChatJsEscapeTemp(msg).s);
+    TempStr js = fmt("addError('%s')", AIChatJsEscapeTemp(msg).s);
     WebViewEval(win, js, false);
 }
 
@@ -424,10 +424,10 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
     TempStr encodedDir = EncodeClaudeDirTemp(dir);
-    TempStr projectDir = str::FormatTemp("%s\\.claude\\projects\\%s", userProfile.s, encodedDir.s);
+    TempStr projectDir = fmt("%s\\.claude\\projects\\%s", userProfile.s, encodedDir.s);
 
     // scan for *.jsonl files in the project directory
-    TempStr pattern = str::FormatTemp("%s\\*.jsonl", projectDir.s);
+    TempStr pattern = fmt("%s\\*.jsonl", projectDir.s);
     WIN32_FIND_DATAW fd;
     TempWStr patternW = ToWStrTemp(pattern);
     HANDLE hFind = FindFirstFileW(patternW, &fd);
@@ -445,7 +445,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         // extract session ID (remove .jsonl extension)
         TempStr sessionId = str::DupTemp(Str(fileName.s, (int)(nameLen - 6)));
 
-        TempStr fullPath = str::FormatTemp("%s\\%s", projectDir.s, fileName.s);
+        TempStr fullPath = fmt("%s\\%s", projectDir.s, fileName.s);
         Str desc = GetSessionDescription(fullPath);
 
         // use file modification time as timestamp
@@ -530,8 +530,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         return;
     }
     TempStr encodedDir = EncodeClaudeDirTemp(dir);
-    TempStr sessionPath =
-        str::FormatTemp("%s\\.claude\\projects\\%s\\%s.jsonl", userProfile.s, encodedDir.s, sessionId.s);
+    TempStr sessionPath = fmt("%s\\.claude\\projects\\%s\\%s.jsonl", userProfile.s, encodedDir.s, sessionId.s);
 
     if (!file::Exists(sessionPath)) {
         return;
@@ -576,9 +575,9 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                     if (toolName) {
                         TempStr fp = AIChatJsonStrTemp(line, "file_path");
                         StrBuilder desc;
-                        desc.AppendFmt("Tool: %s", toolName.s);
+                        desc.Append(fmt("Tool: %s", toolName.s));
                         if (fp) {
-                            desc.AppendFmt(" (%s)", fp.s);
+                            desc.Append(fmt(" (%s)", fp.s));
                         }
                         WebViewAddTool(win, desc.LendData());
                     }
@@ -765,17 +764,17 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                             TempStr cmd = AIChatJsonStrTemp(line, "command");
                             TempStr pat = AIChatJsonStrTemp(line, "pattern");
                             StrBuilder desc;
-                            desc.AppendFmt("Tool: %s", toolName.s);
+                            desc.Append(fmt("Tool: %s", toolName.s));
                             if (fp) {
-                                desc.AppendFmt(" (%s)", fp.s);
+                                desc.Append(fmt(" (%s)", fp.s));
                             } else if (cmd) {
                                 if (str::Leni(cmd) > 60) {
-                                    desc.AppendFmt(" $ %.60s...", cmd.s);
+                                    desc.Append(fmt(" $ %.60s...", cmd.s));
                                 } else {
-                                    desc.AppendFmt(" $ %s", cmd.s);
+                                    desc.Append(fmt(" $ %s", cmd.s));
                                 }
                             } else if (pat) {
-                                desc.AppendFmt(" /%s/", pat.s);
+                                desc.Append(fmt(" /%s/", pat.s));
                             }
                             PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
                         }
@@ -785,7 +784,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                         TempStr fp = AIChatJsonStrTemp(line, "filePath");
                         if (fp) {
                             StrBuilder desc;
-                            desc.AppendFmt("Result: %s", fp.s);
+                            desc.Append(fmt("Result: %s", fp.s));
                             PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
                         }
                     }
@@ -880,28 +879,28 @@ static void SendClaudeMessage(MainWindow* win) {
         return;
     }
 
-    TempStr sessionName = str::FormatTemp("%s", fileName.s);
+    TempStr sessionName = fmt("%s", fileName.s);
 
     ClaudeCodeLog(">>> user", input);
-    ClaudeCodeLog(">>> session", str::FormatTemp("%s (%s)", tab->claudeSessionId.s, isNewSession ? "new" : "resume"));
+    ClaudeCodeLog(">>> session", fmt("%s (%s)", tab->claudeSessionId.s, isNewSession ? "new" : "resume"));
     ClaudeCodeLog(">>> cwd", dir);
 
     TempStr cmdLine;
     if (isNewSession) {
-        cmdLine = str::FormatTemp(
-            "\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --session-id %s "
-            "--name \"%s\" "
-            "--append-system-prompt \"The user is currently reading the file: %s\" "
-            "\"%s\"",
-            claudePath.s, model.s, efforts[effortIdx].s, permsFlag.s, tab->claudeSessionId.s, sessionName.s, filePath.s,
-            escapedInput.s);
+        cmdLine =
+            fmt("\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --session-id %s "
+                "--name \"%s\" "
+                "--append-system-prompt \"The user is currently reading the file: %s\" "
+                "\"%s\"",
+                claudePath.s, model.s, efforts[effortIdx].s, permsFlag.s, tab->claudeSessionId.s, sessionName.s,
+                filePath.s, escapedInput.s);
     } else {
-        cmdLine = str::FormatTemp(
-            "\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --resume %s "
-            "--append-system-prompt \"The user is currently reading the file: %s\" "
-            "\"%s\"",
-            claudePath.s, model.s, efforts[effortIdx].s, permsFlag.s, tab->claudeSessionId.s, filePath.s,
-            escapedInput.s);
+        cmdLine =
+            fmt("\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --resume %s "
+                "--append-system-prompt \"The user is currently reading the file: %s\" "
+                "\"%s\"",
+                claudePath.s, model.s, efforts[effortIdx].s, permsFlag.s, tab->claudeSessionId.s, filePath.s,
+                escapedInput.s);
     }
 
     ClaudeCodeLog(">>> cmd", cmdLine);
@@ -1141,8 +1140,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     auto webView = new WebviewWnd();
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA);
     // use unique data dir per process to avoid locking conflicts
-    webView->dataDir =
-        str::Dup(str::FormatTemp("%s\\SumatraPDF\\ClaudeWebView_%d", userProfile.s, (int)GetCurrentProcessId()));
+    webView->dataDir = str::Dup(fmt("%s\\SumatraPDF\\ClaudeWebView_%d", userProfile.s, (int)GetCurrentProcessId()));
     if (!LockDataResource(IDR_CLAUDE_MARKED_JS, &gClaudeMarkedJs)) {
         delete webView;
         return;

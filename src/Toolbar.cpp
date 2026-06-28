@@ -324,7 +324,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         TempStr s = trans::GetTranslation(bi.toolTip);
         if (accelStr) {
             Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-            TempStr s2 = str::FormatTemp(" (%s)", accel.s);
+            TempStr s2 = fmt(" (%s)", accel.s);
             s = str::JoinTemp(s, s2);
         }
 
@@ -344,7 +344,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
             TempStr s = bi.toolTip;
             if (accelStr) {
                 Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-                TempStr s2 = str::FormatTemp(" (%s)", accel.s);
+                TempStr s2 = fmt(" (%s)", accel.s);
                 s = str::JoinTemp(s, s2);
             }
 
@@ -371,7 +371,7 @@ static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, Str s) {
     TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, cmdId);
     if (accelStr) {
         Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-        TempStr s2 = str::FormatTemp(" (%s)", accel.s);
+        TempStr s2 = fmt(" (%s)", accel.s);
         s = str::JoinTemp(s, s2);
     }
     TBBUTTONINFOW bi{};
@@ -969,12 +969,12 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         minSize.dx = 0;
         size2.dx = 0;
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
-        txt = str::FormatTemp(" / %d", pageCount);
+        txt = fmt(" / %d", pageCount);
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
         minSize.dx = size2.dx;
     } else {
-        txt = str::FormatTemp("%d / %d", win->ctrl->CurrentPageNo(), pageCount);
-        // TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
+        txt = fmt("%d / %d", win->ctrl->CurrentPageNo(), pageCount);
+        // TempStr txt2 = fmt(" (%d / %d)", pageCount, pageCount);
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
     labelDx = size2.dx;

@@ -9,23 +9,18 @@
 
 bool gEnableDebugLayout = false;
 
-void dbglayoutf(const char* fmt, ...) {
+void dbglayout(Str s) {
     if (!gEnableDebugLayout) {
         return;
     }
-
-    va_list args;
-    va_start(args, fmt);
-    TempStr s = str::FmtVTemp(fmt, args);
     OutputDebugStringA(s.s);
-    va_end(args);
 }
 
 static void LogAppendNum(StrBuilder& s, int n, Str suffix) {
     if (n == Inf) {
         s.Append("Inf");
     } else {
-        s.AppendFmt("%d", n);
+        s.Append(fmt("%d", n));
     }
     if (suffix) {
         s.Append(suffix);
@@ -35,23 +30,23 @@ static void LogAppendNum(StrBuilder& s, int n, Str suffix) {
 void LogConstraints(Constraints c, Str suffix) {
     StrBuilder s;
     if (c.min.dx == c.max.dx) {
-        dbglayoutf("dx: ");
+        dbglayout("dx: ");
         LogAppendNum(s, c.min.dx, " ");
     } else {
-        dbglayoutf("dx: ");
+        dbglayout("dx: ");
         LogAppendNum(s, c.min.dx, " - ");
         LogAppendNum(s, c.max.dx, " ");
     }
     if (c.min.dy == c.max.dy) {
-        dbglayoutf("dy: ");
+        dbglayout("dy: ");
         LogAppendNum(s, c.min.dy, " ");
     } else {
-        dbglayoutf("dy: ");
+        dbglayout("dy: ");
         LogAppendNum(s, c.min.dy, " - ");
         LogAppendNum(s, c.max.dy, " ");
     }
     s.Append(suffix);
-    dbglayoutf("%s", s.Get());
+    dbglayout(fmt("%s", s.Get()));
 }
 
 bool IsCollapsed(ILayout* l) {
@@ -305,7 +300,7 @@ Padding::~Padding() {
 }
 
 Size Padding::Layout(const Constraints bc) {
-    dbglayoutf("Padding::Layout() ");
+    dbglayout("Padding::Layout() ");
     LogConstraints(bc, "\n");
 
     auto hinset = insets.left + insets.right;
@@ -330,7 +325,7 @@ int Padding::MinIntrinsicWidth(int height) {
 }
 
 void Padding::SetBounds(Rect bounds) {
-    dbglayoutf("Padding:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy);
+    dbglayout(fmt("Padding:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy));
     lastBounds = bounds;
     bounds.x += insets.left;
     bounds.y += insets.top;
@@ -397,7 +392,7 @@ Size VBox::Layout(const Constraints bc) {
     }
     totalFlex = updateFlex(children, alignMain);
 
-    dbglayoutf("VBox::Layout() %d children, %d totalFlex ", n, totalFlex);
+    dbglayout(fmt("VBox::Layout() %d children, %d totalFlex ", n, totalFlex));
     LogConstraints(bc, "\n");
 
     // Determine the constraints for layout of child elements.
@@ -553,7 +548,7 @@ void VBox::SetBounds(Rect bounds) {
     if (n == 0) {
         return;
     }
-    dbglayoutf("VBox:SetBounds() %d,%d - %d, %d %d children\n", bounds.x, bounds.y, bounds.dx, bounds.dy, n);
+    dbglayout(fmt("VBox:SetBounds() %d,%d - %d, %d %d children\n", bounds.x, bounds.y, bounds.dx, bounds.dy, n));
 
     if (alignMain == MainAxisAlign::Homogeneous) {
         auto gap = CalculateVGap(nullptr, nullptr);
@@ -701,7 +696,7 @@ Size HBox::Layout(const Constraints bc) {
         return bc.Constrain(Size{});
     }
     totalFlex = updateFlex(children, alignMain);
-    dbglayoutf("HBox::Layout() %d children, %d totalFlex ", n, totalFlex);
+    dbglayout(fmt("HBox::Layout() %d children, %d totalFlex ", n, totalFlex));
     LogConstraints(bc, "\n");
 
     // Determine the constraints for layout of child elements.
@@ -861,7 +856,7 @@ int HBox::MinIntrinsicWidth(int height) {
 }
 
 void HBox::SetBounds(Rect bounds) {
-    dbglayoutf("HBox:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy);
+    dbglayout(fmt("HBox:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy));
     lastBounds = bounds;
     auto n = ChildrenCount();
     if (n == 0) {
@@ -992,7 +987,7 @@ Align::~Align() {
 }
 
 Size Align::Layout(const Constraints bc) {
-    dbglayoutf("Align::Layout() ");
+    dbglayout("Align::Layout() ");
     LogConstraints(bc, "\n");
 
     Size size = Child->Layout(bc.Loosen());
@@ -1027,7 +1022,7 @@ int Align::MinIntrinsicWidth(int height) {
 }
 
 void Align::SetBounds(Rect bounds) {
-    dbglayoutf("Align:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy);
+    dbglayout(fmt("Align:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy));
 
     lastBounds = bounds;
     int bminx = bounds.x;
@@ -1045,7 +1040,7 @@ void Align::SetBounds(Rect bounds) {
 }
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
-    dbglayoutf("\nLayoutAndSizeToContent() %d,%d\n", minDx, minDy);
+    dbglayout(fmt("\nLayoutAndSizeToContent() %d,%d\n", minDx, minDy));
 
     Constraints c = ExpandInf();
     c.min = {minDx, minDy};
@@ -1059,7 +1054,7 @@ void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
 }
 
 Size LayoutToSize(ILayout* layout, const Size size) {
-    dbglayoutf("\nLayoutToSize() %d,%d\n", size.dx, size.dy);
+    dbglayout(fmt("\nLayoutToSize() %d,%d\n", size.dx, size.dy));
     auto c = Tight(size);
     auto newSize = layout->Layout(c);
     Rect bounds{0, 0, newSize.dx, newSize.dy};

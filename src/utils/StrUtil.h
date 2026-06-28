@@ -148,7 +148,8 @@ bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);           // str-port: 
 // exception to the Str rule): it's almost always a string literal, and a
 // const char* is what vsnprintf needs anyway (no NUL-termination footgun).
 TempStr FmtVTemp(const char* fmt, va_list args);
-TempStr FormatTemp(const char* fmt, ...);
+// frequently-used, so exposed globally as fmt() (see `using str::fmt` below)
+TempStr fmt(const char* fmt, ...);
 
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
@@ -188,6 +189,9 @@ int BufSet(WCHAR* dst, int dstCchSize, Str src); // str-port: Win32 (wide dst, u
 
 WStr CastToWCHAR(Str s);
 } // namespace str
+
+// str::fmt (the renamed FormatTemp) is used pervasively, so expose it unqualified
+using str::fmt;
 
 // wide (WStr/WCHAR) counterparts of the str:: functions above
 namespace wstr {
@@ -308,7 +312,6 @@ struct StrBuilder {
     ByteSlice StealAsByteSlice();
     bool Append(const u8* src, size_t size = -1);
     bool AppendSlice(const ByteSlice& d);
-    void AppendFmt(const char* fmt, ...);
     void Set(Str s);
     Str Get() const;
     Str CStr() const;

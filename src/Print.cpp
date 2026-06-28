@@ -142,7 +142,7 @@ static void AppendPrinterAttributes(StrBuilder& out, DWORD attr) {
     };
     for (auto& f : flags) {
         if (attr & f.flag) {
-            out.AppendFmt("\n    %s", f.name.s);
+            out.Append(fmt("\n    %s", f.name.s));
         }
     }
 }
@@ -181,7 +181,7 @@ static void AppendPrinterStatus(StrBuilder& out, DWORD status) {
     bool any = false;
     for (auto& f : flags) {
         if (status & f.flag) {
-            out.AppendFmt("\n    %s", f.name.s);
+            out.Append(fmt("\n    %s", f.name.s));
             any = true;
         }
     }
@@ -198,7 +198,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
     if (0 == bins) {
         out.Append("  no paper bins available\n");
     } else if (bins == (DWORD)-1) {
-        out.AppendFmt("  error: call to DeviceCapabilities failed with error %#x\n", GetLastError());
+        out.Append(fmt("  error: call to DeviceCapabilities failed with error %#x\n", GetLastError()));
     } else {
         ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
         DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr); // str-port: Win32
@@ -206,7 +206,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
         for (DWORD j = 0; j < bins; j++) {
             TempStr s = ToUtf8Temp(WStr(binNameValues.Get() + 24 * (size_t)j));
-            out.AppendFmt("  bin %d: '%s' (%d)\n", (int)j, s.s, binValues.Get()[j]);
+            out.Append(fmt("  bin %d: '%s' (%d)\n", (int)j, s.s, binValues.Get()[j]));
         }
     }
 
@@ -226,7 +226,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         for (DWORD j = 0; j < papers; j++) {
             TempStr s = ToUtf8Temp(WStr(paperNameValues.Get() + 64 * (size_t)j));
             POINT sz = paperSizes.Get()[j];
-            out.AppendFmt("    '%s' (id %d, %.1f x %.1f mm)\n", s.s, paperValues.Get()[j], sz.x / 10.0, sz.y / 10.0);
+            out.Append(fmt("    '%s' (id %d, %.1f x %.1f mm)\n", s.s, paperValues.Get()[j], sz.x / 10.0, sz.y / 10.0));
         }
     }
 
@@ -236,32 +236,32 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         DWORD maxRes = DeviceCapabilitiesW(nameW, portW, DC_MAXEXTENT, nullptr, nullptr);
         int minW = LOWORD(minRes), minH = HIWORD(minRes);
         int maxW = LOWORD(maxRes), maxH = HIWORD(maxRes);
-        out.AppendFmt("  custom paper size range: %.1f x %.1f mm to %.1f x %.1f mm\n", minW / 10.0, minH / 10.0,
-                      maxW / 10.0, maxH / 10.0);
+        out.Append(fmt("  custom paper size range: %.1f x %.1f mm to %.1f x %.1f mm\n", minW / 10.0, minH / 10.0,
+                       maxW / 10.0, maxH / 10.0));
     }
 
     // duplex
     DWORD duplex = DeviceCapabilitiesW(nameW, portW, DC_DUPLEX, nullptr, nullptr);
-    out.AppendFmt("  duplex: %s\n", duplex == 1 ? "yes" : "no");
+    out.Append(fmt("  duplex: %s\n", duplex == 1 ? "yes" : "no"));
 
     // color
     DWORD color = DeviceCapabilitiesW(nameW, portW, DC_COLORDEVICE, nullptr, nullptr);
-    out.AppendFmt("  color: %s\n", color == 1 ? "yes" : "no");
+    out.Append(fmt("  color: %s\n", color == 1 ? "yes" : "no"));
 
     // copies
     DWORD copies = DeviceCapabilitiesW(nameW, portW, DC_COPIES, nullptr, nullptr);
     if (copies != (DWORD)-1) {
-        out.AppendFmt("  max copies: %d\n", (int)copies);
+        out.Append(fmt("  max copies: %d\n", (int)copies));
     }
 
     // collate
     DWORD collate = DeviceCapabilitiesW(nameW, portW, DC_COLLATE, nullptr, nullptr);
-    out.AppendFmt("  collation: %s\n", collate == 1 ? "yes" : "no");
+    out.Append(fmt("  collation: %s\n", collate == 1 ? "yes" : "no"));
 
     // orientation
     DWORD orient = DeviceCapabilitiesW(nameW, portW, DC_ORIENTATION, nullptr, nullptr);
     if (orient != (DWORD)-1 && orient != 0) {
-        out.AppendFmt("  landscape rotation: %d degrees\n", (int)orient);
+        out.Append(fmt("  landscape rotation: %d degrees\n", (int)orient));
     }
 
     // resolutions
@@ -273,7 +273,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         for (DWORD j = 0; j < nRes; j++) {
             LONG xDpi = resPairs.Get()[j * 2];
             LONG yDpi = resPairs.Get()[j * 2 + 1];
-            out.AppendFmt(" %dx%d", (int)xDpi, (int)yDpi);
+            out.Append(fmt(" %dx%d", (int)xDpi, (int)yDpi));
         }
         out.Append("\n");
     }
@@ -285,7 +285,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues.Get(), nullptr); // str-port: Win32
         out.Append("  pages per sheet (N-up):");
         for (DWORD j = 0; j < nup; j++) {
-            out.AppendFmt(" %d", (int)nupValues.Get()[j]);
+            out.Append(fmt(" %d", (int)nupValues.Get()[j]));
         }
         out.Append("\n");
     }
@@ -301,7 +301,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         out.Append("  media types:\n");
         for (DWORD j = 0; j < nMedia; j++) {
             TempStr s = ToUtf8Temp(WStr(mediaNames.Get() + 64 * (size_t)j));
-            out.AppendFmt("    '%s' (%d)\n", s.s, (int)mediaValues.Get()[j]);
+            out.Append(fmt("    '%s' (%d)\n", s.s, (int)mediaValues.Get()[j]));
         }
     }
 }
@@ -313,29 +313,29 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
     out.Append("  devmode defaults:\n");
     if (dm->dmFields & DM_ORIENTATION) {
         Str s = dm->dmOrientation == DMORIENT_PORTRAIT ? StrL("portrait") : StrL("landscape");
-        out.AppendFmt("    orientation: %s\n", s.s);
+        out.Append(fmt("    orientation: %s\n", s.s));
     }
     if (dm->dmFields & DM_PAPERSIZE) {
-        out.AppendFmt("    paper size id: %d\n", (int)dm->dmPaperSize);
+        out.Append(fmt("    paper size id: %d\n", (int)dm->dmPaperSize));
     }
     if (dm->dmFields & DM_PAPERLENGTH) {
-        out.AppendFmt("    paper length: %.1f mm\n", dm->dmPaperLength / 10.0);
+        out.Append(fmt("    paper length: %.1f mm\n", dm->dmPaperLength / 10.0));
     }
     if (dm->dmFields & DM_PAPERWIDTH) {
-        out.AppendFmt("    paper width: %.1f mm\n", dm->dmPaperWidth / 10.0);
+        out.Append(fmt("    paper width: %.1f mm\n", dm->dmPaperWidth / 10.0));
     }
     if (dm->dmFields & DM_COPIES) {
-        out.AppendFmt("    copies: %d\n", (int)dm->dmCopies);
+        out.Append(fmt("    copies: %d\n", (int)dm->dmCopies));
     }
     if (dm->dmFields & DM_PRINTQUALITY) {
-        out.AppendFmt("    print quality: %d dpi\n", (int)dm->dmPrintQuality);
+        out.Append(fmt("    print quality: %d dpi\n", (int)dm->dmPrintQuality));
     }
     if (dm->dmFields & DM_YRESOLUTION) {
-        out.AppendFmt("    y resolution: %d dpi\n", (int)dm->dmYResolution);
+        out.Append(fmt("    y resolution: %d dpi\n", (int)dm->dmYResolution));
     }
     if (dm->dmFields & DM_COLOR) {
         Str s = dm->dmColor == DMCOLOR_COLOR ? StrL("color") : StrL("monochrome");
-        out.AppendFmt("    color: %s\n", s.s);
+        out.Append(fmt("    color: %s\n", s.s));
     }
     if (dm->dmFields & DM_DUPLEX) {
         Str s = "unknown";
@@ -346,10 +346,10 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
         } else if (dm->dmDuplex == DMDUP_VERTICAL) {
             s = "vertical";
         }
-        out.AppendFmt("    duplex: %s\n", s.s);
+        out.Append(fmt("    duplex: %s\n", s.s));
     }
     if (dm->dmFields & DM_COLLATE) {
-        out.AppendFmt("    collate: %s\n", dm->dmCollate == DMCOLLATE_TRUE ? "yes" : "no");
+        out.Append(fmt("    collate: %s\n", dm->dmCollate == DMCOLLATE_TRUE ? "yes" : "no"));
     }
 }
 
@@ -366,12 +366,12 @@ void GetPrintersInfo(StrBuilder& out) {
         }
     }
     if (ok == 0 || !info2Arr) {
-        out.AppendFmt("Call to EnumPrinters failed with error %#x", GetLastError());
+        out.Append(fmt("Call to EnumPrinters failed with error %#x", GetLastError()));
         free(info2Arr);
         return;
     }
     TempStr defName = GetDefaultPrinterNameTemp();
-    out.AppendFmt("Default printer: \"%s\"\n", defName.s);
+    out.Append(fmt("Default printer: \"%s\"\n", defName.s));
     for (DWORD i = 0; i < printersCount; i++) {
         PRINTER_INFO_2& info = info2Arr[i];
         WStr nameW = info.pPrinterName;
@@ -379,35 +379,35 @@ void GetPrintersInfo(StrBuilder& out) {
         DWORD attr = info.Attributes;
         TempStr name = ToUtf8Temp(nameW);
         TempStr port = ToUtf8Temp(portW);
-        out.AppendFmt("Printer: \"%s\"\n", name.s);
-        out.AppendFmt("  port: %s\n", port.s);
+        out.Append(fmt("Printer: \"%s\"\n", name.s));
+        out.Append(fmt("  port: %s\n", port.s));
 
         if (info.pDriverName) {
-            out.AppendFmt("  driver: %s\n", ToUtf8Temp(info.pDriverName).s);
+            out.Append(fmt("  driver: %s\n", ToUtf8Temp(info.pDriverName).s));
         }
         if (info.pShareName && info.pShareName[0]) {
-            out.AppendFmt("  share name: %s\n", ToUtf8Temp(info.pShareName).s);
+            out.Append(fmt("  share name: %s\n", ToUtf8Temp(info.pShareName).s));
         }
         if (info.pComment && info.pComment[0]) {
-            out.AppendFmt("  comment: %s\n", ToUtf8Temp(info.pComment).s);
+            out.Append(fmt("  comment: %s\n", ToUtf8Temp(info.pComment).s));
         }
         if (info.pLocation && info.pLocation[0]) {
-            out.AppendFmt("  location: %s\n", ToUtf8Temp(info.pLocation).s);
+            out.Append(fmt("  location: %s\n", ToUtf8Temp(info.pLocation).s));
         }
         if (info.pPrintProcessor) {
-            out.AppendFmt("  print processor: %s\n", ToUtf8Temp(info.pPrintProcessor).s);
+            out.Append(fmt("  print processor: %s\n", ToUtf8Temp(info.pPrintProcessor).s));
         }
         if (info.pDatatype) {
-            out.AppendFmt("  datatype: %s\n", ToUtf8Temp(info.pDatatype).s);
+            out.Append(fmt("  datatype: %s\n", ToUtf8Temp(info.pDatatype).s));
         }
 
-        out.AppendFmt("  queued jobs: %d\n", (int)info.cJobs);
+        out.Append(fmt("  queued jobs: %d\n", (int)info.cJobs));
 
-        out.AppendFmt("  status: %#x", info.Status);
+        out.Append(fmt("  status: %#x", info.Status));
         AppendPrinterStatus(out, info.Status);
         out.Append("\n");
 
-        out.AppendFmt("  attributes: %#x", attr);
+        out.Append(fmt("  attributes: %#x", attr));
         AppendPrinterAttributes(out, attr);
         out.Append("\n");
 
@@ -984,7 +984,7 @@ struct UpdatePrintProgressData {
 
 static void UpdatePrintProgress(UpdatePrintProgressData* d) {
     int perc = CalcPerc(d->current, d->total);
-    TempStr msg = str::FormatTemp(_TRA("Printing page %d of %d...").s, d->current, d->total);
+    TempStr msg = fmt(_TRA("Printing page %d of %d...").s, d->current, d->total);
     UpdateNotificationProgress(d->wnd, msg, perc);
     delete d;
 }
@@ -1952,7 +1952,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     }
 
     if (!printer) {
-        TempStr msg = str::FormatTemp(_TRA("Printer '%s' doesn't exist").s, printerName.s);
+        TempStr msg = fmt(_TRA("Printer '%s' doesn't exist").s, printerName.s);
         MessageBoxWarningCond(displayErrors, msg, _TRA("Printing problem."));
         return PrintResult::PrinterNotFound;
     }
@@ -2009,7 +2009,7 @@ PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str set
     fileName = path::NormalizeTemp(Str(fileName));
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
-        TempStr msg = str::FormatTemp("Couldn't open file '%s' for printing", fileName.s);
+        TempStr msg = fmt("Couldn't open file '%s' for printing", fileName.s);
         MessageBoxWarningCond(displayErrors, msg, _TRA("Error"));
         return PrintResult::CannotLoadFile;
     }

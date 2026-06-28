@@ -1132,24 +1132,24 @@ static void SerializePredictive(StrBuilder& s, int originPageNo, int nPred, cons
     if (nPred <= 0) {
         return;
     }
-    s.AppendFmt("  pred[origin=%d:", originPageNo);
+    s.Append(fmt("  pred[origin=%d:", originPageNo));
     for (int j = 0; j < nPred; j++) {
-        s.AppendFmt(" %d", pred[j]);
+        s.Append(fmt(" %d", pred[j]));
     }
     s.Append("]");
 }
 
 static void SerializeRequest(StrBuilder& s, Str label, PageRenderRequest* r, DWORD now) {
     int ageMs = (int)(now - r->timestamp);
-    s.AppendFmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label.s, r->pageNo,
-                r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs);
+    s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label.s, r->pageNo,
+                 r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs));
     if (r->abort) {
         s.Append("  ABORT");
     }
     SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
     if (r->dm && r->dm->GetEngine()) {
         TempStr name = path::GetBaseNameTemp(r->dm->GetEngine()->FilePath());
-        s.AppendFmt("  %s", name.s);
+        s.Append(fmt("  %s", name.s));
     }
     s.Append("\r\n");
 }
@@ -1158,11 +1158,11 @@ static void SerializeFinished(StrBuilder& s, FinishedRequestInfo* r, DWORD now) 
     int durMs = (int)(r->finishedAt - r->timestamp);
     int agoMs = (int)(now - r->finishedAt);
     Str label = r->aborted ? StrL("ABORTED") : StrL("DONE");
-    s.AppendFmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  took %5dms  %6dms ago", label.s,
-                r->pageNo, r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, durMs, agoMs);
+    s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  took %5dms  %6dms ago", label.s,
+                 r->pageNo, r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, durMs, agoMs));
     SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
     if (r->fileName[0]) {
-        s.AppendFmt("  %s", r->fileName);
+        s.Append(fmt("  %s", r->fileName));
     }
     s.Append("\r\n");
 }
@@ -1201,8 +1201,8 @@ void RenderCache::SerializeQueueState(StrBuilder& s) {
             nInProgress++;
         }
     }
-    s.AppendFmt("Render queue: %d rendering, %d queued (%d threads)\r\n\r\n", nInProgress, requestCount,
-                nRenderThreads);
+    s.Append(
+        fmt("Render queue: %d rendering, %d queued (%d threads)\r\n\r\n", nInProgress, requestCount, nRenderThreads));
 
     for (int i = 0; i < nRenderThreads; i++) {
         if (curReqs[i]) {
@@ -1216,7 +1216,7 @@ void RenderCache::SerializeQueueState(StrBuilder& s) {
 
     // recently finished requests, most recently finished first
     if (finishedHistoryCount > 0) {
-        s.AppendFmt("\r\nLast %d finished:\r\n", finishedHistoryCount);
+        s.Append(fmt("\r\nLast %d finished:\r\n", finishedHistoryCount));
         int idx = finishedHistoryNext - 1;
         for (int n = 0; n < finishedHistoryCount; n++) {
             if (idx < 0) {

@@ -569,7 +569,7 @@ TempStr WindowsToWslMountTemp(Str path) {
 
     TempStr rest = str::DupTemp(Str(path.s + 3, path.len - 3));
     str::TransCharsInPlace(rest, "\\", "/");
-    return str::FormatTemp("/mnt/%c/%s", drive, rest.s);
+    return fmt("/mnt/%c/%s", drive, rest.s);
 }
 
 // When running in App Store, Windows virtualizes %APPDATA% etc., so to get a real path
@@ -642,7 +642,7 @@ TempStr MakeUniqueFilePathTemp(Str path) {
     TempStr noExt = path::GetPathNoExtTemp(path);
     TempStr ext = path::GetExtTemp(path);
     for (int i = 1; i < 10000; i++) {
-        TempStr candidate = str::FormatTemp("%s.%d%s", noExt.s, i, ext.s);
+        TempStr candidate = fmt("%s.%d%s", noExt.s, i, ext.s);
         if (!file::Exists(candidate)) {
             return candidate;
         }
@@ -944,7 +944,7 @@ int GetZoneIdentifier(Str filePath) {
 
 bool SetZoneIdentifier(Str filePath, int zoneId) {
     TempStr path = str::JoinTemp(filePath, ":Zone.Identifier");
-    TempStr id = str::FormatTemp("%d", zoneId);
+    TempStr id = fmt("%d", zoneId);
     TempWStr idw = ToWStrTemp(id);
     TempWStr pathW = ToWStrTemp(path);
     return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", idw.s, pathW.s);

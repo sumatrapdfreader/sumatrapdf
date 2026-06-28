@@ -239,7 +239,7 @@ static bool UninstallerOnWmCommand(WPARAM wp) {
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
 static void CreateUninstallerWindow() {
-    TempStr title = str::FormatTemp(_TRA("SumatraPDF %s Uninstaller").s, CURR_VERSION_STRA);
+    TempStr title = fmt(_TRA("SumatraPDF %s Uninstaller").s, CURR_VERSION_STRA);
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
     int dx = GetInstallerWinDx();
@@ -260,11 +260,11 @@ static void CreateUninstallerWindow() {
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
     TempStr caption = str::JoinTemp(kAppName, " Uninstaller Usage");
-    TempStr msg = str::FormatTemp(R"(uninstall.exe [/s][/d <path>]
+    TempStr msg = fmt(R"(uninstall.exe [/s][/d <path>]
 
 /s	uninstalls %s silently (without user interaction).
 /d	changes the directory from where %s will be uninstalled.)",
-                                  kAppName, kAppName);
+                      kAppName, kAppName);
     MsgBox(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 
@@ -478,7 +478,7 @@ static void InitSelfDelete() {
     // https://stackoverflow.com/questions/1672338/how-to-sleep-for-five-seconds-in-a-batch-file-cmd
     script.Append("timeout /t 2 /nobreak >nul\r\n");
     // delete our executable
-    script.AppendFmt("del \"%s\"\r\n", exePath.s);
+    script.Append(fmt("del \"%s\"\r\n", exePath.s));
     // del itself
     // https://stackoverflow.com/questions/2888976/how-to-make-bat-file-delete-it-self-after-completion
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
@@ -490,7 +490,7 @@ static void InitSelfDelete() {
         return;
     }
     logf("Created self-delete batch script '%s'\n", scriptPath.s);
-    TempStr cmdLine = str::FormatTemp("cmd.exe /C \"%s\"", scriptPath.s);
+    TempStr cmdLine = fmt("cmd.exe /C \"%s\"", scriptPath.s);
     LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
 }
 

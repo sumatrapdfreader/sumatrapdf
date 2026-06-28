@@ -78,9 +78,9 @@ TempStr SerializeColorTemp(COLORREF c) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
     if (a > 0) {
-        return str::FormatTemp("#%02x%02x%02x%02x", a, r, g, b);
+        return fmt("#%02x%02x%02x%02x", a, r, g, b);
     }
-    return str::FormatTemp("#%02x%02x%02x", r, g, b);
+    return fmt("#%02x%02x%02x", r, g, b);
 }
 
 void ParseColor(ParsedColor& parsed, Str txt) {
@@ -140,7 +140,7 @@ bool ParseColor(COLORREF* destColor, Str s) {
 void SerializePdfColor(PdfColor c, StrBuilder& out) {
     u8 r, g, b, a;
     UnpackPdfColor(c, r, g, b, a);
-    out.AppendFmt("#%02x%02x%02x", r, g, b);
+    out.Append(fmt("#%02x%02x%02x", r, g, b));
 }
 
 COLORREF ParseColor(Str s, COLORREF defCol) {

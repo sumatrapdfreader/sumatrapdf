@@ -559,7 +559,7 @@ Str scrollMsgStr(USHORT msg) {
         case SB_PAGEUP:
             return StrL("SB_PAGEUP");
     }
-    return str::FormatTemp("%d", (int)msg);
+    return fmt("%d", (int)msg);
 }
 
 static void OnVScroll(MainWindow* win, WPARAM wp) {
@@ -1031,8 +1031,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.delayInMs = 1000;
                         args.noClose = true;
                         Str name = annot ? AnnotationReadableNameTemp(annot->type) : StrL("none");
-                        Str fmt = _TRA("%s annotation. Ctrl+click to edit.");
-                        args.msg = str::FormatTemp(fmt.s, name.s);
+                        Str fmtStr = _TRA("%s annotation. Ctrl+click to edit.");
+                        args.msg = fmt(fmtStr.s, name.s);
                         ShowNotification(args);
                     }
                 }
@@ -2063,7 +2063,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
                     // set shouldPaint and gNoFlickerRender skips flushing the buffer.
                     shouldPaint = true;
                     SetTextColor(hdc, colDocTxt);
-                    TempStr msg = str::FormatTemp(_TRA("Rendering page %d...").s, pageNo);
+                    TempStr msg = fmt(_TRA("Rendering page %d...").s, pageNo);
                     DrawCenteredText(hdc, bounds, msg, isRtl);
                 }
                 rendering = true;
@@ -3059,7 +3059,7 @@ static void OnPaintError(MainWindow* win) {
     auto tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = str::FormatTemp(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath).s);
+        TempStr msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath).s);
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
@@ -3402,7 +3402,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         TempStr ext = path::GetExtTemp(destPath);
         TempStr base = str::DupTemp(Str(fileName.s, (int)(str::Leni(fileName) - str::Leni(ext))));
         for (int i = 1; i < 1000; i++) {
-            TempStr newName = str::FormatTemp("%s_%d%s", base.s, i, ext.s);
+            TempStr newName = fmt("%s_%d%s", base.s, i, ext.s);
             destPath = path::JoinTemp(downloadsDir.s, newName.s);
             if (!file::Exists(destPath)) {
                 break;

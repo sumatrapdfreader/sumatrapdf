@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 /*
-fmt::Fmt is type-safe printf()-like system with support for both %-style formatting
+strfmt::Fmt is type-safe printf()-like system with support for both %-style formatting
 directives and C#-like positional directives ({0}, {1} etc.).
 
 Type safety is achieved by using strongly typed methods for adding arguments
@@ -22,7 +22,7 @@ We should serialize all values ourselves.
 TODO: similar approach could be used for type-safe scanf() replacement.
 
 Idiomatic usage:
-fmt::Fmt fmt("%d = %s");
+strfmt::Fmt fmt("%d = %s");
 char *s = fmt.i(5).s("5").Get(); // returns "5 = 5"
 // s is valid until fmt is valid
 // use .GetDup() to get a copy that must be free()d
@@ -35,7 +35,7 @@ but it's easy to mis-count when adding {} to the mix.
 
 */
 
-namespace fmt {
+namespace strfmt {
 
 enum class Type {
     // concrete types for Arg
@@ -118,4 +118,4 @@ TempStr FormatTemp(Str s, const Arg);
 TempStr FormatTemp(Str s, const Arg, const Arg);
 TempStr FormatTemp(Str s, const Arg, const Arg, const Arg);
 
-} // namespace fmt
+} // namespace strfmt

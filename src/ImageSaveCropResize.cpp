@@ -454,7 +454,7 @@ static void OnFormatChanged(ImageEditWindow* ew) {
         TempStr oldExt = path::GetExtTemp(dest);
         int baseLen = str::Leni(dest) - str::Leni(oldExt);
         TempStr base = str::DupTemp(Str(dest.s, (int)baseLen));
-        TempStr newDest = str::FormatTemp("%s%s", base.s, newExt.s);
+        TempStr newDest = fmt("%s%s", base.s, newExt.s);
         SetWindowTextW(ew->hwndDestEdit, ToWStrTemp(newDest));
     }
     SetFocus(ew->hwnd);
@@ -471,19 +471,19 @@ static void UpdateSaveButtonText(ImageEditWindow* ew) {
 }
 
 static TempStr FormatCropInfoTemp(int srcW, int srcH, int cropW, int cropH, int cropX, int cropY) {
-    return str::FormatTemp("%d x %d => %d x %d @ %d , %d", srcW, srcH, cropW, cropH, cropX, cropY);
+    return fmt("%d x %d => %d x %d @ %d , %d", srcW, srcH, cropW, cropH, cropX, cropY);
 }
 
 static TempStr FormatResizeInfoTemp(int srcW, int srcH, int newW, int newH) {
     float pctW = (srcW > 0) ? (float)newW * 100.0f / srcW : 0.0f;
     float pctH = (srcH > 0) ? (float)newH * 100.0f / srcH : 0.0f;
-    return str::FormatTemp("%d x %d => %d x %d (%.2f%% x %.2f%%)", srcW, srcH, newW, newH, pctW, pctH);
+    return fmt("%d x %d => %d x %d (%.2f%% x %.2f%%)", srcW, srcH, newW, newH, pctW, pctH);
 }
 
 static void UpdateInfoLabel(ImageEditWindow* ew) {
     TempStr s;
     if (ew->mode == ImageEditMode::Save) {
-        s = str::FormatTemp("%d x %d", ew->imgW, ew->imgH);
+        s = fmt("%d x %d", ew->imgW, ew->imgH);
     } else if (ew->mode == ImageEditMode::Crop) {
         s = FormatCropInfoTemp(ew->imgW, ew->imgH, ew->cropW, ew->cropH, ew->cropX, ew->cropY);
     } else {
@@ -1142,8 +1142,8 @@ static TempStr FormatPdfDateTemp() {
     }
     int offH = off / 60;
     int offM = off % 60;
-    return str::FormatTemp("D:%04d%02d%02d%02d%02d%02d%c%02d'%02d'", (int)lt.wYear, (int)lt.wMonth, (int)lt.wDay,
-                           (int)lt.wHour, (int)lt.wMinute, (int)lt.wSecond, sign, offH, offM);
+    return fmt("D:%04d%02d%02d%02d%02d%02d%c%02d'%02d'", (int)lt.wYear, (int)lt.wMonth, (int)lt.wDay, (int)lt.wHour,
+               (int)lt.wMinute, (int)lt.wSecond, sign, offH, offM);
 }
 
 // Create a single-page PDF from a bitmap using PdfCreator. The image is
@@ -1194,7 +1194,7 @@ static void OnSave(ImageEditWindow* ew) {
     } else {
         int baseLen = str::Leni(rawDest) - str::Leni(destExt);
         TempStr base = str::DupTemp(Str(rawDest.s, (int)baseLen));
-        dest = str::FormatTemp("%s%s", base.s, fmtExt.s);
+        dest = fmt("%s%s", base.s, fmtExt.s);
     }
 
     Bitmap* result = nullptr;
@@ -1979,7 +1979,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     // row 3: info label
     TempStr infoStr;
     if (mode == ImageEditMode::Save) {
-        infoStr = str::FormatTemp("%d x %d", imgW, imgH);
+        infoStr = fmt("%d x %d", imgW, imgH);
     } else if (mode == ImageEditMode::Crop) {
         infoStr = FormatCropInfoTemp(imgW, imgH, imgW, imgH, 0, 0);
     } else {
@@ -2098,14 +2098,14 @@ Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
     SendMessageW(ew->hwndDestEdit, WM_KEYDOWN, VK_RIGHT, 0);
     int wAfter = ew->newW;
     if (wAfter != wBefore + 1) {
-        out.AppendFmt("FAIL before=%d after=%d\n", wBefore, wAfter);
+        out.Append(fmt("FAIL before=%d after=%d\n", wBefore, wAfter));
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
         DestroyWindow(ew->hwnd);
         return out.StealData();
     }
-    out.AppendFmt("OK newW=%d\n", wAfter);
+    out.Append(fmt("OK newW=%d\n", wAfter));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }

@@ -479,7 +479,7 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
         eargs.parent = hwnd;
         eargs.withBorder = true;
         eargs.font = hFont;
-        eargs.text = str::FormatTemp("1-%d", pageCount);
+        eargs.text = fmt("1-%d", pageCount);
         eargs.isRtl = isRtl;
         pagesEdit = new Edit();
         pagesEdit->Create(eargs);
@@ -1076,9 +1076,9 @@ static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete)
                     s.AppendChar(',');
                 }
                 if (rangeStart == rangeEnd) {
-                    s.AppendFmt("%d", rangeStart);
+                    s.Append(fmt("%d", rangeStart));
                 } else {
-                    s.AppendFmt("%d-%d", rangeStart, rangeEnd);
+                    s.Append(fmt("%d-%d", rangeStart, rangeEnd));
                 }
                 rangeStart = -1;
             }
@@ -1094,9 +1094,9 @@ static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete)
             s.AppendChar(',');
         }
         if (rangeStart == rangeEnd) {
-            s.AppendFmt("%d", rangeStart);
+            s.Append(fmt("%d", rangeStart));
         } else {
-            s.AppendFmt("%d-%d", rangeStart, rangeEnd);
+            s.Append(fmt("%d-%d", rangeStart, rangeEnd));
         }
     }
     return str::DupTemp(s.Get());
@@ -1117,9 +1117,9 @@ static TempStr FormatPageRange(const Vec<int>& pages) {
             s.AppendChar(',');
         }
         if (start == end) {
-            s.AppendFmt("%d", start);
+            s.Append(fmt("%d", start));
         } else {
-            s.AppendFmt("%d-%d", start, end);
+            s.Append(fmt("%d-%d", start, end));
         }
         i++;
     }
@@ -1284,7 +1284,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
         eargs.parent = hwnd;
         eargs.withBorder = true;
         eargs.font = hFont;
-        eargs.text = str::FormatTemp("%d", currentPage);
+        eargs.text = fmt("%d", currentPage);
         eargs.isRtl = isRtl;
         pagesEdit = new Edit();
         pagesEdit->Create(eargs);
@@ -1293,7 +1293,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
         Static::CreateArgs targs;
         targs.parent = hwnd;
         targs.font = hFont;
-        targs.text = str::FormatTemp("of %d", pageCount);
+        targs.text = fmt("of %d", pageCount);
         targs.isRtl = isRtl;
         totalLabel = new Static();
         totalLabel->Create(targs);

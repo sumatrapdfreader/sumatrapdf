@@ -2033,16 +2033,6 @@ bool StrBuilder::AppendSlice(const ByteSlice& d) {
     return this->Append(AsStr(d));
 }
 
-void StrBuilder::AppendFmt(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    TempStr res = str::FmtVTemp(fmt, args);
-    if (res) {
-        Append(res);
-    }
-    va_end(args);
-}
-
 #if 0
 // returns true if was replaced
 bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
@@ -2701,7 +2691,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
     }
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
-    TempStr buf = fmt::FormatTemp(StrL("%d"), num);
+    TempStr buf = strfmt::FormatTemp(StrL("%d"), num);
 
     StrBuilder res;
     int i = 3 - (buf.len % 3);
@@ -2734,7 +2724,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     }
 
     // add between one and two decimals after the point
-    TempStr buf = fmt::FormatTemp(StrL("%s%s%02d"), tmp, Str(decimal), num % 100);
+    TempStr buf = strfmt::FormatTemp(StrL("%s%s%02d"), tmp, Str(decimal), num % 100);
     if (stripTrailingZero && str::EndsWith(buf, StrL("0"))) {
         buf.s[buf.len - 1] = '\0';
         buf.len--;
@@ -2777,18 +2767,18 @@ TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
     if (!unit) {
         return sizestr;
     }
-    return fmt::FormatTemp(StrL("%s %s"), sizestr, unit);
+    return strfmt::FormatTemp(StrL("%s %s"), sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 TempStr FormatFileSizeTemp(i64 size) {
     if (size <= 0) {
-        return str::FormatTemp("%d", (int)size);
+        return fmt("%d", (int)size);
     }
     TempStr n1 = str::FormatSizeShortTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
-    return fmt::FormatTemp(StrL("%s (%s %s)"), n1, n2, StrL("Bytes"));
+    return strfmt::FormatTemp(StrL("%s (%s %s)"), n1, n2, StrL("Bytes"));
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
@@ -3360,7 +3350,7 @@ TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
     return wstr::Join(GetTempArena(), s1, s2, s3);
 }
 
-TempStr FormatTemp(const char* fmt, ...) {
+TempStr fmt(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     TempStr res = FmtVTemp(fmt, args);

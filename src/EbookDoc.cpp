@@ -470,7 +470,7 @@ bool EpubDoc::Load() {
         // an anchor with the file name at the top (for internal links)
         ReportIf(str::FindChar(fullPath, '"'));
         str::TransCharsInPlace(fullPath, "\"", "'");
-        htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", fullPath.s);
+        htmlData.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", fullPath.s));
         htmlData.Append(decoded);
     }
 
@@ -1087,7 +1087,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
                 wstr::NormalizeWSInPlace(WStr(itemText.Get()));
             }
             if (!wstr::IsEmpty(itemText.Get())) {
-                TempStr url = str::FormatTemp(FB2_TOC_ENTRY_MARK "%d", titleCount);
+                TempStr url = fmt(FB2_TOC_ENTRY_MARK "%d", titleCount);
                 TempStr txt = ToUtf8Temp(WStr(itemText.Get()));
                 visitor->Visit(txt, url, level);
                 itemText.Reset();
@@ -1166,7 +1166,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
             TempStr s = ToUtf8Temp(ws);
             tocEntries.Append(s);
             wstr::FreePtr(&ws);
-            builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size());
+            builder.Append(fmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size()));
             return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
         }
     } else if (tok->NameIs("HEADER")) {
@@ -1178,9 +1178,9 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
         }
         attr = tok->GetAttrByName("TEXT");
         if (attr) {
-            builder.AppendFmt("<h%d>", hx);
+            builder.Append(fmt("<h%d>", hx));
             builder.Append(attr->val);
-            builder.AppendFmt("</h%d>", hx);
+            builder.Append(fmt("</h%d>", hx));
             return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
         }
     } else if (tok->NameIs("HRULE")) {
@@ -1282,7 +1282,7 @@ bool PalmDoc::HasToc() const {
 
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     for (int i = 0; i < tocEntries.Size(); i++) {
-        TempStr url = str::FormatTemp(PDB_TOC_ENTRY_MARK "%d", i + 1);
+        TempStr url = fmt(PDB_TOC_ENTRY_MARK "%d", i + 1);
         Str name = tocEntries.At(i);
         visitor->Visit(name, url, 1);
     }
@@ -1597,7 +1597,7 @@ static Str TextFindRfcEnd(StrBuilder& htmlData, Str curr, char prevChar) {
     if (!end) {
         return {};
     }
-    htmlData.AppendFmt("<a href='http://www.rfc-editor.org/rfc/rfc%d.txt'>", rfc);
+    htmlData.Append(fmt("<a href='http://www.rfc-editor.org/rfc/rfc%d.txt'>", rfc));
     return end;
 }
 
@@ -1676,7 +1676,7 @@ bool TxtDoc::Load() {
         if (isRFC && i > 0 && '\n' == text.s[i - 1] && (str::IsDigit(c) || str::StartsWith(curr, "APPENDIX"))) {
             Str lineEnd = str::FindChar(curr, '\n');
             if (lineEnd && str::Parse(Str(lineEnd.s + 1, curr.len - (lineEnd.s - curr.s) - 1), "%?\r\n")) {
-                htmlData.AppendFmt("<b id='section%d' title=\"", ++sectionCount);
+                htmlData.Append(fmt("<b id='section%d' title=\"", ++sectionCount));
                 for (int j = 0; j < (int)(lineEnd.s - curr.s); j++) {
                     char ch = curr.s[j];
                     if ('\r' == ch || '\n' == ch) {

@@ -1411,7 +1411,7 @@ void HtmlWindow::SetVisible(bool visible) {
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
 // (will be called from OnBeforeNavigate())
 void HtmlWindow::NavigateToDataUrl(Str url) {
-    TempStr fullUrl = str::FormatTemp("its://%d/%s", windowId, url.s);
+    TempStr fullUrl = fmt("its://%d/%s", windowId, url.s);
     NavigateToUrl(fullUrl);
 }
 
@@ -1499,7 +1499,7 @@ void HtmlWindow::SetHtmlReal(const ByteSlice& d) {
     }
     htmlContent = new HtmlMoniker();
     htmlContent->SetHtml(d);
-    TempStr baseUrl = str::FormatTemp(HW_PROTO_PREFIXA "://%d/", windowId);
+    TempStr baseUrl = fmt(HW_PROTO_PREFIXA "://%d/", windowId);
     htmlContent->SetBaseUrl(ToWStrTemp(baseUrl));
 
     ScopedComPtr<IDispatch> docDispatch;
