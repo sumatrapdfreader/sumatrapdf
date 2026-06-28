@@ -164,11 +164,11 @@ static bool IsoDateParse(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
 static TempStr AddTimeZone(TempStr s, int timeZone) {
     if (timeZone == 0) return {};
 
-    const char* tzSign = (timeZone > 0) ? "+" : "-";
+    Str tzSign = (timeZone > 0) ? Str("+") : Str("-");
     int abs = (timeZone > 0) ? timeZone : -timeZone;
     int hours = abs / 100;
     int mins = abs % 100;
-    return str::FormatTemp("%s %s%02d:%02d", s, tzSign, hours, mins);
+    return str::FormatTemp("%s %s%02d:%02d", s.s, tzSign.s, hours, mins);
 }
 
 static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
@@ -209,40 +209,40 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     float zoom = 1.0f / engine->GetFileDPI();
     SizeF size = engine->Transform(mediabox, pageNo, zoom, rotation).Size();
 
-    const char* formatName = "";
+    Str formatName;
     switch (GetPaperFormatFromSizeApprox(size)) {
         case PaperFormat::A2:
-            formatName = " (A2)";
+            formatName = Str(" (A2)");
             break;
         case PaperFormat::A3:
-            formatName = " (A3)";
+            formatName = Str(" (A3)");
             break;
         case PaperFormat::A4:
-            formatName = " (A4)";
+            formatName = Str(" (A4)");
             break;
         case PaperFormat::A5:
-            formatName = " (A5)";
+            formatName = Str(" (A5)");
             break;
         case PaperFormat::A6:
-            formatName = " (A6)";
+            formatName = Str(" (A6)");
             break;
         case PaperFormat::Letter:
-            formatName = " (Letter)";
+            formatName = Str(" (Letter)");
             break;
         case PaperFormat::Legal:
-            formatName = " (Legal)";
+            formatName = Str(" (Legal)");
             break;
         case PaperFormat::Tabloid:
-            formatName = " (Tabloid)";
+            formatName = Str(" (Tabloid)");
             break;
         case PaperFormat::Statement:
-            formatName = " (Statement)";
+            formatName = Str(" (Statement)");
             break;
     }
 
     bool isMetric = GetMeasurementSystem() == 0;
     double unitsPerInch = isMetric ? 2.54 : 1.0;
-    const char* unit = isMetric ? "cm" : "in";
+    Str unit = isMetric ? Str("cm") : Str("in");
 
     double width = size.dx * unitsPerInch;
     double height = size.dy * unitsPerInch;
@@ -256,7 +256,7 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
     TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
 
-    return str::FormatTemp("%s x %s %s%s", strWidth, strHeight, unit, formatName);
+    return str::FormatTemp("%s x %s %s%s", strWidth.s, strHeight.s, unit.s, formatName.s);
 }
 
 // returns a list of permissions denied by this document
@@ -555,44 +555,43 @@ static int GetPropertyLabelWidth(Str line, int* labelBytesOut) {
 static void AlignPropertiesText(StrBuilder& text) {
     int maxLabelWidth = 0;
     Str content = text.Get();
-    const char* start = content.s;
-    const char* end = content.s + content.len;
-    while (start < end) {
-        const char* nl = str::FindChar(start, '\n');
-        int lineLen = nl ? (int)(nl - start) : (int)(end - start);
+    for (int off = 0; off < content.len;) {
+        Str rest = Str(content.s + off, content.len - off);
+        Str nl = str::FindChar(rest, '\n');
+        int lineLen = nl.s ? (int)(nl.s - rest.s) : rest.len;
         int labelBytes = 0;
-        int labelWidth = GetPropertyLabelWidth(Str(start, lineLen), &labelBytes);
+        int labelWidth = GetPropertyLabelWidth(Str(rest.s, lineLen), &labelBytes);
         if (labelWidth > maxLabelWidth) {
             maxLabelWidth = labelWidth;
         }
-        start = nl ? nl + 1 : end;
+        off += lineLen + (nl.s ? 1 : 0);
     }
     if (maxLabelWidth == 0) {
         return;
     }
 
     StrBuilder aligned;
-    start = content.s;
-    while (start < end) {
-        const char* nl = str::FindChar(start, '\n');
-        int lineLen = nl ? (int)(nl - start) : (int)(end - start);
+    for (int off = 0; off < content.len;) {
+        Str rest = Str(content.s + off, content.len - off);
+        Str nl = str::FindChar(rest, '\n');
+        int lineLen = nl.s ? (int)(nl.s - rest.s) : rest.len;
         int labelBytes = 0;
-        int labelWidth = GetPropertyLabelWidth(Str(start, lineLen), &labelBytes);
+        int labelWidth = GetPropertyLabelWidth(Str(rest.s, lineLen), &labelBytes);
         if (labelWidth >= 0) {
             int nSpacesBefore = maxLabelWidth - labelWidth;
             for (int i = 0; i < nSpacesBefore; i++) {
                 aligned.AppendChar(' ');
             }
-            aligned.Append(start, (size_t)labelBytes);
+            aligned.Append(Str(rest.s, labelBytes));
             aligned.Append("  ");
-            aligned.Append(start + labelBytes + 1, (size_t)lineLen - labelBytes - 1);
+            aligned.Append(Str(rest.s + labelBytes + 1, lineLen - labelBytes - 1));
         } else {
-            aligned.Append(start, (size_t)lineLen);
+            aligned.Append(Str(rest.s, lineLen));
         }
-        if (nl) {
+        if (nl.s) {
             aligned.AppendChar('\n');
         }
-        start = nl ? nl + 1 : end;
+        off += lineLen + (nl.s ? 1 : 0);
     }
     text.Set(aligned.Get());
 }
@@ -628,19 +627,18 @@ static void SizeToContent(PropertiesLayout* pl) {
     int maxLineDx = 0;
     int nLines = 0;
     Str text = pl->propsText.Get();
-    const char* p = text.s;
-    const char* textEnd = text.s + text.len;
-    while (p < textEnd) {
-        const char* nl = str::FindChar(p, '\n');
-        int lineLen = nl ? (int)(nl - p) : (int)(textEnd - p);
+    for (int off = 0; off < text.len;) {
+        Str rest = Str(text.s + off, text.len - off);
+        Str nl = str::FindChar(rest, '\n');
+        int lineLen = nl.s ? (int)(nl.s - rest.s) : rest.len;
         SIZE sz{};
-        TempWStr lineW = ToWStrTemp(p, (size_t)lineLen);
+        TempWStr lineW = ToWStrTemp(Str(rest.s, lineLen));
         GetTextExtentPoint32W(hdcEdit, lineW.s, lineW.len, &sz);
         if (sz.cx > maxLineDx) {
             maxLineDx = sz.cx;
         }
         nLines++;
-        p = nl ? nl + 1 : textEnd;
+        off += lineLen + (nl.s ? 1 : 0);
     }
     maxLineDx += 16;
 
