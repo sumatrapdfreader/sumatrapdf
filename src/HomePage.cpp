@@ -42,7 +42,7 @@
 #define ABOUT_LINE_SEP_SIZE 1
 
 static Str sumatraTips = Str(R"tips(You can [customize scrollbar](CmdChangeScrollbar).
-You can [customize keyboard shortcuts](Help/Customizing-keyboard-shortcuts).
+You can [customize keyboard shortcuts](Help/Customize-keyboard-shortcuts).
 You can [customize toolbar](Help/Customize-toolbar).
 Press (Key/CmdCommandPalette) to open [command palette](CmdCommandPalette).
 To open file from history open [command palette](CmdCommandPalette) with (Key/CmdCommandPalette) and type `#`.
@@ -349,7 +349,10 @@ void ExecuteTipLink(HWND hwnd, Str cmd) {
         return;
     }
     if (str::StartsWith(cmd, "http://") || str::StartsWith(cmd, "https://")) {
-        SumatraLaunchBrowser(cmd);
+        // documentation links open in the embedded manual browser
+        if (!MaybeLaunchDocumentation(cmd)) {
+            SumatraLaunchBrowser(cmd);
+        }
     }
 }
 

@@ -6854,6 +6854,21 @@ void LaunchDocumentation(Str docURI) {
     SumatraLaunchBrowser(webUrl);
 }
 
+// If url is a documentation URL (https://www.sumatrapdfreader.org/docs/<page>),
+// open it in the embedded manual browser via LaunchDocumentation (which falls
+// back to the external browser when WebView is unavailable) and return true.
+// Returns false for non-docs URLs so the caller opens them externally. Used by
+// the home-page and notification tip links.
+bool MaybeLaunchDocumentation(Str url) {
+    Str docsPrefix = StrL("https://www.sumatrapdfreader.org/docs");
+    if (!str::StartsWith(url, docsPrefix)) {
+        return false;
+    }
+    // remainder is "/<page>" (LaunchDocumentation's docURI convention)
+    LaunchDocumentation(Str(url.s + docsPrefix.len, url.len - docsPrefix.len));
+    return true;
+}
+
 static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* cmd) {
     args.copyToClipboard = GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false);
     args.setContentToSelection = GetCommandBoolArg(cmd, kCmdArgSetContent, false);

@@ -130,6 +130,7 @@ bool AnnotationsAreDisabled();
 bool IsUIRtl();
 bool SumatraLaunchBrowser(Str url);
 void LaunchDocumentation(Str docURI);
+bool MaybeLaunchDocumentation(Str url);
 bool OpenFileExternally(Str path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);

@@ -128,7 +128,10 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
             HwndSendCommand(win->hwndFrame, cmdId);
         }
     } else if (IsLink(url)) {
-        SumatraLaunchBrowser(url);
+        // documentation links open in the embedded manual browser
+        if (!MaybeLaunchDocumentation(url)) {
+            SumatraLaunchBrowser(url);
+        }
     } else {
         // assume it's a thumbnail of a document
         auto path = url;
