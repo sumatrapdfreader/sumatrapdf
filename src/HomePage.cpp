@@ -162,7 +162,10 @@ static TempStr ResolveLinkCmdTemp(Str cmd) {
         return str::DupTemp(cmd);
     }
     if (str::StartsWith(cmd, "Help/")) {
-        return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", Str(cmd.s + 5, cmd.len - 5).s);
+        // cmd is a non-NUL-terminated view into the tip line, so %s must get a
+        // zero-terminated copy of exactly the remainder -- otherwise it reads
+        // past the link, pulling in trailing chars like ")."
+        return str::FormatTemp("https://www.sumatrapdfreader.org/docs/%s", CStrTemp(Str(cmd.s + 5, cmd.len - 5)));
     }
     // Cmd* - use as-is, will be resolved to command ID on click
     return str::DupTemp(cmd);

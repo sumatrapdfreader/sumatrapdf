@@ -43,6 +43,12 @@ static void ParseTip_UnitTests() {
     ParseTipExpectLinkCmd("[text](https://example.com/foo(bar))", "https://example.com/foo(bar)");
     ParseTipExpectWordsLinks("[text](https://example.com/foo(bar))", 1, 1);
 
+    // Help/ link followed by trailing punctuation: the resolved URL must stop at
+    // the link's ')' and not pull in the following ")." (the link cmd is a
+    // non-NUL-terminated view into the tip line)
+    ParseTipExpectLinkCmd("You can [extract text from PDF file](Help/Tool-x-extract-text-from-pdf).",
+                          "https://www.sumatrapdfreader.org/docs/Tool-x-extract-text-from-pdf");
+
     // nested brackets in link text
     ParseTipExpectWordsLinks("[foo [bar]](CmdFoo)", 2, 1);
     ParseTipExpectPlainContains("[foo [bar]](CmdFoo)", "foo");
