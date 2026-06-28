@@ -317,7 +317,7 @@ TempStr GetWindowsVerTemp() {
 // returns nullptr if not set
 TempStr GetEnvVariableTemp(Str name) {
     WCHAR bufStatic[256];
-    WCHAR* buf = &bufStatic[0];
+    WCHAR* buf = &bufStatic[0]; // str-port: stack buffer
     DWORD cchBufSize = dimof(bufStatic);
     TempWStr nameW = ToWStrTemp(name);
     DWORD res = GetEnvironmentVariableW(nameW, buf, cchBufSize);
@@ -2885,7 +2885,7 @@ static int GetCursorIndex(LPWSTR cursorId) {
 static const char* cursorNames =
     "IDC_ARROW\0IDC_BEAM\0IDC_HAND\0IDC_SIZEALL\0IDC_SIZEWE\0IDC_SIZENS\0IDC_SIZENWSE\0IDC_SIZENESW\0IDC_NO\0IDC_CROSS\0";
 
-static const char* GetCursorName(LPWSTR cursorId) {
+static const char* GetCursorName(LPWSTR cursorId) { // str-port: Win32 debug-only
     int i = GetCursorIndex(cursorId);
     if (i == -1) {
         return "unknown";
@@ -2895,7 +2895,7 @@ static const char* GetCursorName(LPWSTR cursorId) {
 
 static void LogCursor(LPWSTR cursorId) {
     static int n = 0;
-    const char* name = GetCursorName(cursorId);
+    const char* name = GetCursorName(cursorId); // str-port: Win32 debug-only
     logf("SetCursor %s 0x%x %d\n", name, (int)(intptr_t)cursorId, n);
     n++;
 }
@@ -3394,9 +3394,9 @@ TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
 
     TempStr res;
     if (isUnicode) {
-        res = ToUtf8Temp(WStr((WCHAR*)mem));
+        res = ToUtf8Temp(WStr((WCHAR*)mem)); // str-port: Win32 clipboard
     } else {
-        res = str::DupTemp(Str((char*)mem));
+        res = str::DupTemp(Str((char*)mem)); // str-port: Win32 clipboard
     }
     GlobalUnlock(h);
     return res;
