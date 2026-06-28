@@ -130,11 +130,11 @@ ParsedColor* GetParsedColor(Str s, ParsedColor& parsed) {
 }
 
 COLORREF GetParsedCOLORREF(Str s, ParsedColor& parsed, COLORREF def) {
-    if (parsed.wasParsed) {
+    if (parsed.wasParsed && parsed.parsedOk) {
         return parsed.col;
     }
     ParseColor(parsed, s);
-    if (parsed.wasParsed) {
+    if (parsed.parsedOk) {
         return parsed.col;
     }
     return def;

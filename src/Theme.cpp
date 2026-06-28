@@ -284,9 +284,13 @@ void SetCurrentThemeFromSettings() {
     bool isDefault = IsDefaultMainWinColor(bgParsed);
     if (isDefault) {
         gThemeLight->colorizeControls = false;
+        gThemeLight->controlBackgroundColorParsed.wasParsed = true;
+        gThemeLight->controlBackgroundColorParsed.parsedOk = true;
         gThemeLight->controlBackgroundColorParsed.col = kColWhite;
-    } else {
+    } else if (bgParsed->parsedOk) {
         gThemeLight->colorizeControls = true;
+        gThemeLight->controlBackgroundColorParsed.wasParsed = true;
+        gThemeLight->controlBackgroundColorParsed.parsedOk = true;
         gThemeLight->controlBackgroundColorParsed.col = bgParsed->col;
     }
 }
@@ -377,7 +381,7 @@ COLORREF ThemeMainWindowBackgroundColor() {
     if (gCurrThemeIndex == 0) {
         // Special behavior for light theme.
         ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
-        if (!IsDefaultMainWinColor(bgParsed)) {
+        if (bgParsed->parsedOk && !IsDefaultMainWinColor(bgParsed)) {
             bgColor = bgParsed->col;
         }
     }

@@ -76,7 +76,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
     int nLangCode = langCodePref.len;
 
     StrVec lines;
-    Split(&lines, d.s, "\n", true);
+    Split(&lines, d, "\n", true);
     int nStrings = 0;
     for (Str l : lines) {
         if (l && l.s[0] == ':') {

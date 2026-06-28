@@ -319,10 +319,13 @@ bool EqI(Str s1, Str s2) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2) {
+    if (s1.len != s2.len) {
         return false;
     }
-    if (s1.len != s2.len) {
+    if (s1.len == 0) {
+        return true;
+    }
+    if (!s1.s || !s2.s) {
         return false;
     }
     return 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len);
@@ -1015,9 +1018,9 @@ static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* en
         char limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str(str.s + p, (int)width));
         Str end = Parse(Str(limited), f2, valueOut);
-        if (end && !end.s[0]) {
+        if (end.s && !end.s[0]) {
             *endOffOut = p + (int)width;
-            return formatOff + (int)(endF.s - format.s) - 1;
+            return (int)(endF.s - format.s) - 1;
         }
     }
     return -1;
@@ -1244,7 +1247,7 @@ Str Parse(Str str, size_t len, Str fmt, ...) {
     Str res = ParseV(bounded, fmt, args);
     va_end(args);
 
-    if (!res) {
+    if (!res.s) {
         return {};
     }
     int off = (int)(res.s - bounded.s);
@@ -2361,10 +2364,13 @@ bool EqI(WStr s1, WStr s2) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (!s1 || !s2) {
+    if (s1.len != s2.len) {
         return false;
     }
-    if (s1.len != s2.len) {
+    if (s1.len == 0) {
+        return true;
+    }
+    if (!s1.s || !s2.s) {
         return false;
     }
     return 0 == _wcsnicmp(s1.s, s2.s, (size_t)s1.len);
@@ -2753,9 +2759,9 @@ static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int*
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
         WStr end = Parse(WStr(limited), f2, valueOut);
-        if (end && !end.s[0]) {
+        if (end.s && !end.s[0]) {
             *endOffOut = p + (int)width;
-            return formatOff + (int)(endF.s - format.s) - 1;
+            return (int)(endF.s - format.s) - 1;
         }
     }
     return -1;

@@ -155,10 +155,27 @@ static void ListTest() {
     }
 }
 
+static void ColorTest() {
+    ParsedColor parsed;
+    ParseColor(parsed, "#f2f2f2");
+    utassert(parsed.parsedOk);
+    utassert(parsed.col == MkColor(0xf2, 0xf2, 0xf2));
+
+    parsed = {};
+    ParseColor(parsed, "#80f2f2f2");
+    utassert(parsed.parsedOk);
+    utassert(parsed.col == MkColor(0xf2, 0xf2, 0xf2, 0x80));
+
+    parsed = {};
+    ParseColor(parsed, "#f2f2f");
+    utassert(!parsed.parsedOk);
+}
+
 void BaseUtilTest() {
     ListTest();
     Func0Test();
     Func1Test();
+    ColorTest();
 
     size_t n = dimof(roundUpTestCases) / 2;
     for (size_t i = 0; i < n; i++) {
