@@ -292,7 +292,7 @@ struct StrBuilder {
     ByteSlice StealAsByteSlice();
     bool Append(const u8* src, size_t size = -1);
     bool AppendSlice(const ByteSlice& d);
-    void AppendFmt(const char* fmt, ...);
+    void AppendFmt(Str fmt, ...);
     void Set(Str s);
     Str Get() const;
     Str CStr() const;
@@ -345,7 +345,7 @@ struct WStrBuilder {
     WCHAR RemoveLast();
     WCHAR& Last() const;
     WStr StealData();
-    WCHAR* LendData() const;
+    WStr LendData() const;
     int Find(const WCHAR& el, size_t startAt = 0) const;
     bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);

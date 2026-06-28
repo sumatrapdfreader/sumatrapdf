@@ -1872,10 +1872,10 @@ bool StrBuilder::AppendSlice(const ByteSlice& d) {
     return this->Append(Str((const char*)d.data(), (int)d.size()));
 }
 
-void StrBuilder::AppendFmt(const char* fmt, ...) {
+void StrBuilder::AppendFmt(Str fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    Str res = str::FmtV(fmt, args);
+    Str res = str::FmtV(fmt.s, args);
     if (res) {
         Append(res);
         str::Free(res);
@@ -2160,8 +2160,8 @@ WStr WStrBuilder::StealData() {
     return WStr(res, n);
 }
 
-WCHAR* WStrBuilder::LendData() const {
-    return els;
+WStr WStrBuilder::LendData() const {
+    return Get();
 }
 
 int WStrBuilder::Find(const WCHAR& el, size_t startAt) const {
