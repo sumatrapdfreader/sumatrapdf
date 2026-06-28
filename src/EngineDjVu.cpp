@@ -36,17 +36,12 @@ static int ParseDjVuLink(Str link) {
     if (!link) {
         return -1;
     }
-    int off = 0;
-    if (off < link.len && link.s[off] == '#') {
-        off++;
-    }
-    if (off < link.len && link.s[off] == ' ') {
-        off++;
-    }
-    if (off >= link.len) {
+    str::SkipChar(link, '#');
+    str::SkipChar(link, ' ');
+    if (!link) {
         return -1;
     }
-    return ParseInt(Str(link.s + off, link.len - off));
+    return ParseInt(link);
 }
 
 static bool CouldBeURL(Str link) {

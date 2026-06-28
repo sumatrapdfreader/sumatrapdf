@@ -1429,15 +1429,15 @@ bool Skip(Str& s, Str toSkip) {
     return false;
 }
 
-Str SkipChar(Str s, char toSkip) {
-    if (!s) {
-        return {};
-    }
+// advances s past any leading toSkip chars (in place); returns whether it skipped any
+bool SkipChar(Str& s, char toSkip) {
     int i = 0;
     while (i < s.len && s.s[i] == toSkip) {
         i++;
     }
-    return Str(s.s + i, s.len - i);
+    s.s += i;
+    s.len -= i;
+    return i > 0;
 }
 
 } // namespace str

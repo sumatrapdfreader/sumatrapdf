@@ -443,7 +443,8 @@ bool PathMatchFilter(Str path, Str filter) {
 // extract the executable (first token) from cmdLine, honoring a leading quote,
 // and set *restOut to the remaining command line (after the exe and any spaces)
 static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
-    Str s = str::SkipChar(cmdLine, ' ');
+    Str s = cmdLine;
+    str::SkipChar(s, ' ');
     StrBuilder exe;
     if (!str::IsEmpty(s) && s.s[0] == '"') {
         s = Str(s.s + 1, s.len - 1);
@@ -459,7 +460,8 @@ static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
         }
         s = Str(s.s + i, s.len - i);
     }
-    *restOut = str::SkipChar(s, ' ');
+    str::SkipChar(s, ' ');
+    *restOut = s;
     return str::DupTemp(exe.Get());
 }
 

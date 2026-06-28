@@ -169,7 +169,7 @@ TempStr FormatRomanNumeralTemp(int number);
 
 bool IsEmptyOrWhiteSpace(Str s);
 bool Skip(Str& s, Str toSkip);
-Str SkipChar(Str s, char toSkip);
+bool SkipChar(Str& s, char toSkip);
 
 WStr Dup(Arena*, WStr str, size_t cch = (size_t)-1);
 WStr Dup(WStr s, size_t cch = (size_t)-1);
