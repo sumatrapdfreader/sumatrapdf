@@ -77,8 +77,8 @@ static void ParseTranslationsTxt(Str d, const char* langCode) {
     StrVec lines;
     Split(&lines, d.s, "\n", true);
     int nStrings = 0;
-    for (char* l : lines) {
-        if (l[0] == ':') {
+    for (Str l : lines) {
+        if (l && l.s[0] == ':') {
             nStrings++;
         }
     }
@@ -90,21 +90,20 @@ static void ParseTranslationsTxt(Str d, const char* langCode) {
     auto c = gTranslationCache;
     int nUntranslated = 0;
 
-    char* orig;
-    char* trans;
-    char* line;
+    char* orig = nullptr;
+    char* trans = nullptr;
     int i = 2; // skip first 2 header lines
     while (i < nLines) {
-        orig = lines[i];
-        ReportDebugIf(*orig != ':');
-        orig += 1; // skip the ':' at the beginning
+        Str origLine = lines.At(i);
+        ReportDebugIf(!origLine || origLine.s[0] != ':');
+        orig = origLine.s + 1; // skip the ':' at the beginning
         i++;
         trans = nullptr;
         while (i < nLines && lines.At(i) && lines.At(i).s[0] != ':') {
             if (!trans) {
-                line = lines[i];
+                Str line = lines.At(i);
                 if (str::StartsWith(line, langCode)) {
-                    trans = line + nLangCode;
+                    trans = line.s + nLangCode;
                 }
             }
             i++;
