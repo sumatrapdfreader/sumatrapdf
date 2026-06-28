@@ -77,13 +77,10 @@ Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c) {
 TempStr SerializeColorTemp(COLORREF c) {
     u8 r, g, b, a;
     UnpackColor(c, r, g, b, a);
-    char* s = nullptr;
     if (a > 0) {
-        s = str::FormatTemp("#%02x%02x%02x%02x", a, r, g, b);
-    } else {
-        s = str::FormatTemp("#%02x%02x%02x", r, g, b);
+        return str::FormatTemp("#%02x%02x%02x%02x", a, r, g, b);
     }
-    return s;
+    return str::FormatTemp("#%02x%02x%02x", r, g, b);
 }
 
 void ParseColor(ParsedColor& parsed, Str txt) {
@@ -102,15 +99,16 @@ void ParseColor(ParsedColor& parsed, Str txt) {
         parsed.parsedOk = true;
         return;
     }
-    char* p = s.s;
-    if (str::StartsWith(p, "0x")) {
-        p += 2;
-    } else if (str::StartsWith(p, "#")) {
-        p += 1;
+    int off = 0;
+    if (str::StartsWith(s, "0x")) {
+        off = 2;
+    } else if (str::StartsWith(s, "#")) {
+        off = 1;
     }
-    size_t n = str::Len(p);
+    Str p = Str(s.s + off, s.len - off);
+    size_t n = (size_t)p.len;
     unsigned int r, g, b, a;
-    bool ok = str::Parse(Str(p, (int)n), n, "%2x%2x%2x%2x", &a, &r, &g, &b).s != nullptr;
+    bool ok = str::Parse(p, n, "%2x%2x%2x%2x", &a, &r, &g, &b).s != nullptr;
     if (ok) {
         parsed.col = MkColor((u8)r, (u8)g, (u8)b, (u8)a);
         parsed.pdfCol = MkPdfColor((u8)r, (u8)g, (u8)b, (u8)a);
@@ -118,7 +116,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
         return;
     }
 
-    ok = str::Parse(Str(p, (int)n), n, "%2x%2x%2x", &r, &g, &b).s != nullptr;
+    ok = str::Parse(p, n, "%2x%2x%2x", &r, &g, &b).s != nullptr;
     if (!ok) {
         return;
     }
