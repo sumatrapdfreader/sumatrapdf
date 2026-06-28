@@ -3,10 +3,10 @@
 
 namespace dbghelp {
 
-bool Initialize(const WCHAR* symPath, bool force);
+bool Initialize(WStr symPath, bool force);
 bool HasSymbols();
 void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact);
-void WriteMiniDump(const WCHAR* crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump);
+void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump);
 void GetThreadCallstack(StrBuilder& s, DWORD threadId);
 bool GetCurrentThreadCallstack(StrBuilder& s);
 void LogCallstack();

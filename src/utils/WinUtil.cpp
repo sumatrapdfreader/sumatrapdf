@@ -3324,8 +3324,14 @@ void DrawCenteredText(HDC hdc, const Rect r, Str txt, bool isRTL) {
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-static Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
-    if (!txt || !*txt) {
+/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
+Size HwndMeasureText(HWND hwnd, Str txt, HFONT font) {
+    if (IsEmpty(txt)) {
+        return Size{};
+    }
+    TempWStr sw = ToWStrTemp(txt);
+    WStr ws = sw;
+    if (!ws) {
         return Size{};
     }
     AutoReleaseDC dc(hwnd);
@@ -3340,21 +3346,11 @@ static Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     // TODO: DT_EDITCONTROL is probably not correct here
     // TODO: what about DT_NOPREFIX?
     uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
-    size_t txtLen = str::Len(txt);
-    DrawTextExW(dc, (WCHAR*)txt, (int)txtLen, &r, fmt, nullptr);
+    DrawTextExW(dc, ws.s, ws.len, &r, fmt, nullptr);
 
     int dx = RectDx(r);
     int dy = RectDy(r);
     return {dx, dy};
-}
-
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-Size HwndMeasureText(HWND hwnd, Str txt, HFONT font) {
-    if (IsEmpty(txt)) {
-        return Size{};
-    }
-    TempWStr sw = ToWStrTemp(txt);
-    return HwndMeasureText(hwnd, sw.s, font);
 }
 
 // return approximate height of font in pixels

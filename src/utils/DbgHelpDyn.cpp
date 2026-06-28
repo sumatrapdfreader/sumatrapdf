@@ -174,7 +174,7 @@ bool HasSymbols() {
 // work the first time, unless force is true, in which case we re-initialize
 // the library (needed in crash dump where we re-initialize dbghelp.dll after
 // downloading symbols)
-bool Initialize(const WCHAR* symPathW, bool force) {
+bool Initialize(WStr symPathW, bool force) {
     if (gSymInitializeOk && !force) {
         return true;
     }
@@ -190,7 +190,7 @@ bool Initialize(const WCHAR* symPathW, bool force) {
         DynSymCleanup(GetCurrentProcess());
     }
 
-    gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW, TRUE);
+    gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW.s, TRUE);
 
     if (!gSymInitializeOk) {
         log("dbghelp::Initialize(): DynSymInitializeW() failed");
@@ -227,13 +227,13 @@ static BOOL CALLBACK OpenMiniDumpCallback(void*, PMINIDUMP_CALLBACK_INPUT input,
     }
 }
 
-void WriteMiniDump(const WCHAR* crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump) {
-    if (!Initialize(nullptr, false) || !DynMiniDumpWriteDump) {
+void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump) {
+    if (!Initialize({}, false) || !DynMiniDumpWriteDump) {
         return;
     }
 
-    HANDLE hFile = CreateFile(crashDumpFilePath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
-                              FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
+    HANDLE hFile = CreateFileW(crashDumpFilePath.s, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+                               FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
     if (INVALID_HANDLE_VALUE == hFile) {
         return;
     }
