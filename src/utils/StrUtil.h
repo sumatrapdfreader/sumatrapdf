@@ -126,7 +126,7 @@ Str ToLower(Str s);
 
 Str ToUpperInPlace(Str s);
 
-void Utf8Encode(char*& dst, int c);
+void Utf8Encode(char*& dst, int c); // str-port: parse-cursor
 
 bool IsDigit(char c);
 bool IsWs(char c);
@@ -142,8 +142,8 @@ int BufFind(Str buf, Str toFind);
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);
 
-bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args);
-bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);
+bool BufFmtV(char* buf, size_t bufCchSize, Str fmt, va_list args); // str-port: C-string
+bool BufFmt(char* buf, size_t bufCchSize, Str fmt, ...);           // str-port: C-string
 Str FmtVWithArena(Arena* a, Str fmt, va_list args);
 Str FmtV(Str fmt, va_list args);
 Str Format(Str fmt, ...);
@@ -157,8 +157,8 @@ size_t NormalizeNewlinesInPlace(Str s, Str endExclusive);
 size_t NormalizeNewlinesInPlace(Str s);
 size_t RemoveCharsInPlace(Str str, Str toRemove);
 
-int BufSet(char* dst, int dstCchSize, Str src);
-int BufAppend(char* dst, int dstCchSize, Str s);
+int BufSet(char* dst, int dstCchSize, Str src);  // str-port: C-string
+int BufAppend(char* dst, int dstCchSize, Str s); // str-port: C-string
 
 Str MemToHex(const u8* buf, size_t len);
 bool HexToMem(Str s, u8* buf, size_t bufLen);
@@ -194,8 +194,8 @@ bool EndsWithI(WStr txt, WStr end);
 WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
 WStr Parse(WStr str, WStr format, ...);
-int BufSet(WCHAR* dst, int dstCchSize, WStr src);
-int BufSet(WCHAR* dst, int dstCchSize, Str src);
+int BufSet(WCHAR* dst, int dstCchSize, WStr src); // str-port: Win32
+int BufSet(WCHAR* dst, int dstCchSize, Str src);  // str-port: Win32
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
 WStr FindChar(WStr str, WCHAR c);
@@ -249,7 +249,7 @@ struct StrBuilder {
     // allocator is not owned by Vec and must outlive it
     Arena* allocator = nullptr;
     // TODO: to save space (8 bytes), combine els and buf?
-    char* els = nullptr;
+    char* els = nullptr; // str-port: owned heap
     u32 len = 0;
     u32 cap = 0;
     char buf[32];
@@ -300,7 +300,7 @@ struct StrBuilder {
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
-    using iterator = char*;
+    using iterator = char*; // str-port: owned heap
 
     iterator begin() const { return &(els[0]); }
     iterator end() const { return &(els[len]); }
@@ -312,7 +312,7 @@ void SeqStrNumFinish(StrBuilder* b);
 struct WStrBuilder {
     // allocator is not owned by Vec and must outlive it
     Arena* allocator = nullptr;
-    WCHAR* els = nullptr;
+    WCHAR* els = nullptr; // str-port: owned heap
     u32 len = 0;
     u32 cap = 0;
     WCHAR buf[32];
@@ -356,7 +356,7 @@ struct WStrBuilder {
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
-    using iterator = WCHAR*;
+    using iterator = WCHAR*; // str-port: owned heap
 
     iterator begin() const { return &(els[0]); }
     iterator end() const { return &(els[len]); }

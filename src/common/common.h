@@ -311,7 +311,7 @@ Str StrFmt(Arena* arena, Str fmt, ...);
 int StrLastIndexOfChar(Str s, char c);
 
 // UTF-8 string utilities (legacy, for null-terminated strings)
-void StrCopyUtf8(char* dst, Str src, int maxBytes);
+void StrCopyUtf8(char* dst, Str src, int maxBytes); // str-port: C-string
 Str StrTrimSuffixWhitespace(Str s);
 
 // Counters for StrFmt optimization tracking
