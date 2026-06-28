@@ -192,7 +192,7 @@ static const TempStr DefaultDestinationLanguageTemp() {
     return OsDefaultDestinationLanguageTemp();
 }
 
-static TempStr NormalizeLangNameTemp(const char* lang) {
+static TempStr NormalizeLangNameTemp(Str lang) {
     if (str::IsEmptyOrWhiteSpace(lang)) {
         return {};
     }
@@ -201,7 +201,7 @@ static TempStr NormalizeLangNameTemp(const char* lang) {
     return normalized;
 }
 
-static void MaybeSaveTranslateToLang(const char* dstLang) {
+static void MaybeSaveTranslateToLang(Str dstLang) {
     if (!gGlobalPrefs || str::IsEmptyOrWhiteSpace(dstLang)) {
         return;
     }
@@ -213,11 +213,11 @@ static void MaybeSaveTranslateToLang(const char* dstLang) {
     if (saved && str::EqI(saved, normalized)) {
         return;
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->translateToLang, normalized);
+    str::ReplaceWithCopy(&gGlobalPrefs->translateToLang, str::Dup(normalized));
     SaveSettings();
 }
 
-static void PopulateLanguageCombo(HWND hwnd, const char* initial, bool includeAuto) {
+static void PopulateLanguageCombo(HWND hwnd, Str initial, bool includeAuto) {
     SendMessageW(hwnd, CB_RESETCONTENT, 0, 0);
     if (includeAuto) {
         CbAddString(hwnd, kSrcLangAuto);
@@ -227,14 +227,14 @@ static void PopulateLanguageCombo(HWND hwnd, const char* initial, bool includeAu
     }
     if (!str::IsEmptyOrWhiteSpace(initial)) {
         SetWindowTextA(hwnd, initial);
-        LRESULT idx = SendMessageW(hwnd, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)initial);
+        LRESULT idx = SendMessageW(hwnd, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)initial.s);
         if (idx != CB_ERR) {
             SendMessageW(hwnd, CB_SETCURSEL, (WPARAM)idx, 0);
         }
     }
 }
 
-static bool IsSrcLangAutoTemp(const char* srcLang) {
+static bool IsSrcLangAutoTemp(Str srcLang) {
     if (str::IsEmptyOrWhiteSpace(srcLang)) {
         return false;
     }
@@ -253,7 +253,7 @@ static TempStr GetWindowTextUtf8Temp(HWND hwnd) {
     return ToUtf8Temp(ws);
 }
 
-static bool LanguagesAreSameTemp(const char* a, const char* b) {
+static bool LanguagesAreSameTemp(Str a, Str b) {
     if (IsSrcLangAutoTemp(a) || IsSrcLangAutoTemp(b)) {
         return false;
     }
