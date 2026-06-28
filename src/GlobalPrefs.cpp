@@ -147,7 +147,7 @@ void SetFileStatePath(FileState* fs, Str path) {
     str::ReplaceWithCopy(&fs->filePath, path);
 }
 
-void SetFileStatePath(FileState* fs, const WCHAR* path) {
+void SetFileStatePath(FileState* fs, WStr path) {
     SetFileStatePath(fs, ToUtf8Temp(path));
 }
 

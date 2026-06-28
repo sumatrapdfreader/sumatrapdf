@@ -23,6 +23,7 @@ ParsedColor* GetParsedColor(Str s, ParsedColor& parsed);
 COLORREF GetParsedCOLORREF(Str s, ParsedColor& parsed, COLORREF def);
 
 void SetFileStatePath(FileState* fs, Str path);
+void SetFileStatePath(FileState* fs, WStr path);
 
 Themes* ParseThemes(Str);
 void FreeParsedThemes(Themes*);
