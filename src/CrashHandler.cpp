@@ -355,16 +355,16 @@ bool CrashHandlerDownloadSymbols() {
 bool AreSymbolsDownloaded(Str symDir) {
     TempStr path = path::JoinTemp(symDir, "SumatraPDF.pdb");
     if (file::Exists(Str(path))) {
-        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path, symDir);
+        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path.s, symDir.s);
         return true;
     }
     TempStr exePath = GetSelfExePathTemp();
     exePath = str::ReplaceTemp(exePath, ".exe", ".pdb");
     if (file::Exists(exePath)) {
-        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", exePath, symDir);
+        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", exePath.s, symDir.s);
         return true;
     }
-    logf("AreSymbolsDownloaded(): not downloaded, symDir: '%s'\n", symDir);
+    logf("AreSymbolsDownloaded(): not downloaded, symDir: '%s'\n", symDir.s);
     return false;
 }
 
@@ -430,20 +430,20 @@ bool InitializeDbgHelp(bool force) {
     TempStr symPath = BuildSymbolPathTemp(gSymbolsDir);
     TempWStr ws = ToWStrTemp(symPath);
     if (!dbghelp::Initialize(ws, force)) {
-        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", symPath, (int)force);
+        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", symPath.s, (int)force);
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symPath: '%s' force: %d failed\n", symPath, (int)force);
+        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symPath: '%s' force: %d failed\n", symPath.s, (int)force);
         return false;
     }
-    logf("InitializeDbgHelp(): did initialize ok, symPath: '%s'\n", symPath);
+    logf("InitializeDbgHelp(): did initialize ok, symPath: '%s'\n", symPath.s);
     return true;
 }
 
 static bool DownloadSymbolsIfNeededAndInitializeDbgHelp() {
-    logf("DownloadSymbolsIfNeeded(), gSymbolsDir: '%s'\n", gSymbolsDir);
+    logf("DownloadSymbolsIfNeeded(), gSymbolsDir: '%s'\n", gSymbolsDir.s);
     if (!AreSymbolsDownloaded(gSymbolsDir)) {
         bool ok = CrashHandlerDownloadSymbols();
         if (!ok) {
@@ -531,7 +531,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     }
 
     logfa("_uploadDebugReport: isCrash: %d, captureCallstack: %d, gSymbolsDir: '%s'\n", (int)isCrash,
-          (int)captureCallstack, gSymbolsDir);
+          (int)captureCallstack, gSymbolsDir.s);
 
     if (captureCallstack && downloadSymbols) {
         // we proceed even if we fail to download symbols
