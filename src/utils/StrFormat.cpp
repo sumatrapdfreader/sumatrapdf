@@ -305,7 +305,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
     return true;
 }
 
-char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5, const Arg& a6) {
+Str Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5, const Arg& a6) {
     const Arg* args[6];
     int nArgs = 0;
     args[nArgs++] = &a1;
@@ -328,14 +328,13 @@ char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const A
     Fmt fmt;
     bool ok = ParseFormat(fmt, s);
     if (!ok) {
-        return nullptr;
+        return {};
     }
     ok = fmt.Eval(args, nArgs);
     if (!ok) {
-        return nullptr;
+        return {};
     }
-    char* res = fmt.res.StealData();
-    return res;
+    return Str(fmt.res.StealData());
 }
 
 TempStr FormatTemp(const char* s, const Arg** args, int nArgs) {

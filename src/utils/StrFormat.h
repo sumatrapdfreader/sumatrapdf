@@ -110,8 +110,8 @@ struct Arg {
     }
 };
 
-char* Format(const char* s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
-             const Arg& a5 = Arg(), const Arg& a6 = Arg());
+Str Format(const char* s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
+           const Arg& a5 = Arg(), const Arg& a6 = Arg());
 
 TempStr FormatTemp(const char* s, const Arg);
 TempStr FormatTemp(const char* s, const Arg, const Arg);

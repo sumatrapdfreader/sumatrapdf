@@ -7,12 +7,12 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
-void check(const char* got, const char* expected) {
+void check(Str got, const char* expected) {
     utassert(str::Eq(got, expected));
 }
 
 void StrFormatTest() {
-    char* s;
+    Str s;
     AutoFreeStr s2;
 
     {
