@@ -340,7 +340,7 @@ bool LoadSettings() {
     }
 
     if (!gprefs->treeFontName) {
-        gprefs->treeFontName = Str("automatic");
+        gprefs->treeFontName = StrL("automatic");
     }
 
     // drop file states without a path: they can't be opened, found by path

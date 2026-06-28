@@ -149,7 +149,7 @@ static void AppendArgInt(StrBuilder& s, i32 v) {
 
 static void AppendArgString(StrBuilder& s, Str str) {
     if (!str) {
-        str = Str("");
+        str = StrL("");
     }
     size_t len = (size_t)str.len;
     AppendU16(s, (u16)ControlArgType::String);

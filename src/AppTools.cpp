@@ -114,7 +114,7 @@ bool IsDllBuild() {
 // (e.g. SumatraPDF-prerel-64-install.exe)
 bool IsInstallerOrUninstallerExe() {
     TempStr exeName = path::GetBaseNameTemp(GetSelfExePathTemp());
-    return str::FindI(exeName, Str("uninstall")).s || str::FindI(exeName, Str("install")).s;
+    return str::FindI(exeName, StrL("uninstall")).s || str::FindI(exeName, StrL("install")).s;
 }
 
 static Str gAppDataDir;

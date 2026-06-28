@@ -321,7 +321,7 @@ static bool NotificationCloseHitTest(HWND hwnd, const Rect& rClose, Point pt) {
 
 void NotificationWnd::Layout(Str message) {
     if (!message) {
-        message = Str("");
+        message = StrL("");
     }
     int padX = DpiScale(hwnd, 12);
     int padY = DpiScale(hwnd, 8);

@@ -238,7 +238,7 @@ Str ElementTypeToStr(IPageElement* el) {
     if (kind) {
         return Str(kind);
     }
-    return Str("unknown");
+    return StrL("unknown");
 }
 
 Str PageDestToStr(Kind kind) {

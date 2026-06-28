@@ -1012,7 +1012,7 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
         fileName = StrDupTemp(Str(fileParams.filename));
     }
     if (!fileName) {
-        fileName = Str("attachment");
+        fileName = StrL("attachment");
     }
 
     TempStr dir = path::GetDirTemp(ew->tab->filePath);

@@ -239,7 +239,7 @@ static ByteSlice DecodeDataURI(Str url) {
         return {};
     }
     Str data = Str(comma.s + 1, url.s + url.len - (comma.s + 1));
-    if ((int)(comma.s - url.s) >= 12 && str::EqN(Str(comma.s - 7, 7), Str(";base64"), 7)) {
+    if ((int)(comma.s - url.s) >= 12 && str::EqN(Str(comma.s - 7, 7), StrL(";base64"), 7)) {
         ByteSlice d{(u8*)data.s, (size_t)data.len};
         return Base64Decode(d);
     }
@@ -250,16 +250,16 @@ static ByteSlice DecodeDataURI(Str url) {
 /* ********** EPUB ********** */
 
 static Str EPUB_CONTAINER_NS() {
-    return Str("urn:oasis:names:tc:opendocument:xmlns:container");
+    return StrL("urn:oasis:names:tc:opendocument:xmlns:container");
 }
 static Str EPUB_OPF_NS() {
-    return Str("http://www.idpf.org/2007/opf");
+    return StrL("http://www.idpf.org/2007/opf");
 }
 static Str EPUB_NCX_NS() {
-    return Str("http://www.daisy.org/z3986/2005/ncx/");
+    return StrL("http://www.daisy.org/z3986/2005/ncx/");
 }
 static Str EPUB_ENC_NS() {
-    return Str("http://www.w3.org/2001/04/xmlenc#");
+    return StrL("http://www.w3.org/2001/04/xmlenc#");
 }
 
 EpubDoc::EpubDoc(Str fileName) {
@@ -434,7 +434,7 @@ bool EpubDoc::Load() {
         tocPath.Set(str::Join(contentPath, s).s);
         isNcxToc = true;
     }
-    AutoFreeWStr readingDir(node->GetAttribute(Str("page-progression-direction")).s);
+    AutoFreeWStr readingDir(node->GetAttribute(StrL("page-progression-direction")).s);
     if (readingDir) {
         isRtlDoc = str::EqI(WStr(readingDir.Get()), WStr(L"rtl"));
     }
@@ -793,10 +793,10 @@ EpubDoc* EpubDoc::CreateFromStream(IStream* stream) {
 /* ********** FictionBook (FB2) ********** */
 
 static Str FB2_MAIN_NS() {
-    return Str("http://www.gribuser.ru/xml/fictionbook/2.0");
+    return StrL("http://www.gribuser.ru/xml/fictionbook/2.0");
 }
 static Str FB2_XLINK_NS() {
-    return Str("http://www.w3.org/1999/xlink");
+    return StrL("http://www.w3.org/1999/xlink");
 }
 
 Fb2Doc::Fb2Doc(Str fileName) : fileName(str::Dup(fileName).s) {}
@@ -940,7 +940,7 @@ bool Fb2Doc::Load() {
                 if (tok->IsText()) {
                     TempStr author = ResolveHtmlEntitiesTemp(tok->s);
                     if (docAuthor) {
-                        docAuthor = str::JoinTemp(Str(docAuthor), Str(" "), Str(author));
+                        docAuthor = str::JoinTemp(Str(docAuthor), StrL(" "), Str(author));
                     } else {
                         docAuthor = author;
                     }
@@ -1017,7 +1017,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     if (data.base.empty()) {
         return;
     }
-    data.fileName = str::Join(Str("#"), Str(id));
+    data.fileName = str::Join(StrL("#"), Str(id));
     data.fileId = images.size();
     images.Append(data);
 }
@@ -1724,9 +1724,9 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
     HtmlParser parser;
     parser.Parse(htmlData.AsByteSlice(), CP_UTF8);
     HtmlElement* el = nullptr;
-    while ((el = parser.FindElementByName(Str("b"), el)) != nullptr) {
-        AutoFreeWStr title(el->GetAttribute(Str("title")).s);
-        AutoFreeWStr id(el->GetAttribute(Str("id")).s);
+    while ((el = parser.FindElementByName(StrL("b"), el)) != nullptr) {
+        AutoFreeWStr title(el->GetAttribute(StrL("title")).s);
+        AutoFreeWStr id(el->GetAttribute(StrL("id")).s);
         int level = 1;
         if (str::IsDigit(*title)) {
             WStr dot = SkipDigits(WStr(title));

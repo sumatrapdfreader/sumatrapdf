@@ -801,7 +801,7 @@ void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, Str text) {
     }
     PendingWebViewOp op;
     op.kind = kind;
-    op.text = str::Dup(text ? text : Str(""));
+    op.text = str::Dup(text ? text : StrL(""));
     pendingOps.Append(op);
 }
 

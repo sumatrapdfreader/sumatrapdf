@@ -111,7 +111,7 @@ Kind Wnd::GetKind() {
 
 void Wnd::SetText(Str s) {
     if (!s) {
-        s = Str("");
+        s = StrL("");
     }
     HwndSetText(hwnd, s);
     HwndRepaintNow(hwnd); // TODO: move inside HwndSetText()?

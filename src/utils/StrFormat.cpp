@@ -284,12 +284,12 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
             } break;
             case Type::Float:
                 // Note: %G, unlike %f, avoid trailing '0'
-                str::BufFmt(buf, dimof(buf), Str("%G"), arg.f);
+                str::BufFmt(buf, dimof(buf), StrL("%G"), arg.f);
                 res.Append(buf);
                 break;
             case Type::Double:
                 // Note: %G, unlike %f, avoid trailing '0'
-                str::BufFmt(buf, dimof(buf), Str("%G"), arg.d);
+                str::BufFmt(buf, dimof(buf), StrL("%G"), arg.d);
                 res.Append(buf);
                 break;
             case Type::Str:

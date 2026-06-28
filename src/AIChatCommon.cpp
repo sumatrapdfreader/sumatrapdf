@@ -415,8 +415,8 @@ function scrollToBottom() {
 </script></body></html>)";
 
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
-    Str host = virtualHost ? virtualHost : Str("");
-    Str bg = bgColor ? bgColor : Str("#ffffff");
+    Str host = virtualHost ? virtualHost : StrL("");
+    Str bg = bgColor ? bgColor : StrL("#ffffff");
     return str::FormatTemp(kAIChatHtmlFmt.s, host.s, bg.s);
 }
 

@@ -547,17 +547,17 @@ void UpdateDeltaPerLine() {
 Str scrollMsgStr(USHORT msg) {
     switch (msg) {
         case SB_LINEDOWN:
-            return Str("SB_LINEDOWN");
+            return StrL("SB_LINEDOWN");
         case SB_LINEUP:
-            return Str("SB_LINEUP");
+            return StrL("SB_LINEUP");
         case SB_HALF_PAGEDOWN:
-            return Str("SB_HALF_PAGEDOWN");
+            return StrL("SB_HALF_PAGEDOWN");
         case SB_HALF_PAGEUP:
-            return Str("SB_HALF_PAGEUP");
+            return StrL("SB_HALF_PAGEUP");
         case SB_PAGEDOWN:
-            return Str("SB_PAGEDOWN");
+            return StrL("SB_PAGEDOWN");
         case SB_PAGEUP:
-            return Str("SB_PAGEUP");
+            return StrL("SB_PAGEUP");
     }
     return str::FormatTemp("%d", (int)msg);
 }
@@ -1015,8 +1015,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             bool hasInternalLink = citationHoverEnabled && RefHoverIsInternalLink(el, dm);
             if (annot != prev) {
 #if 0
-                Str name = annot ? AnnotationReadableNameTemp(annot->type) : Str("none");
-                Str prevName = prev ? AnnotationReadableNameTemp(prev->type) : Str("none");
+                Str name = annot ? AnnotationReadableNameTemp(annot->type) : StrL("none");
+                Str prevName = prev ? AnnotationReadableNameTemp(prev->type) : StrL("none");
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
 #endif
                 if (gShowAnnotationNotification && !hasInternalLink) {
@@ -1030,7 +1030,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.timeoutMs = 3000;
                         args.delayInMs = 1000;
                         args.noClose = true;
-                        Str name = annot ? AnnotationReadableNameTemp(annot->type) : Str("none");
+                        Str name = annot ? AnnotationReadableNameTemp(annot->type) : StrL("none");
                         Str fmt = _TRA("%s annotation. Ctrl+click to edit.");
                         args.msg = str::FormatTemp(fmt, name.s);
                         ShowNotification(args);
@@ -2641,17 +2641,17 @@ static u32 LowerU64(ULONGLONG v) {
 Str GiFlagsToStr(DWORD flags) {
     switch (flags) {
         case 0:
-            return Str("");
+            return StrL("");
         case GF_BEGIN:
-            return Str("GF_BEGIN");
+            return StrL("GF_BEGIN");
         case GF_INERTIA:
-            return Str("GF_INERTIA");
+            return StrL("GF_INERTIA");
         case GF_END:
-            return Str("GF_END");
+            return StrL("GF_END");
         case GF_INERTIA | GF_END:
-            return Str("GF_INERTIA  | GF_END");
+            return StrL("GF_INERTIA  | GF_END");
     }
-    return Str("unknown");
+    return StrL("unknown");
 }
 
 static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {

@@ -315,7 +315,7 @@ void DetectExternalViewers() {
 }
 
 static bool filterMatchesEverything(Str ext) {
-    return str::IsEmptyOrWhiteSpace(ext) || str::EqIS(ext, Str("*"));
+    return str::IsEmptyOrWhiteSpace(ext) || str::EqIS(ext, StrL("*"));
 }
 
 bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
@@ -364,7 +364,7 @@ bool CouldBePDFDoc(WindowTab* tab) {
 // Note: substituted values (path, dir) are inserted literally and not
 // re-scanned, so a '%' inside a file path can't trigger another substitution.
 static TempStr FormatParamTemp(Str arg, WindowTab* tab) {
-    Str path = tab->filePath ? tab->filePath : Str("");
+    Str path = tab->filePath ? tab->filePath : StrL("");
 
     StrBuilder out;
     for (int i = 0; i < arg.len; i++) {

@@ -205,7 +205,7 @@ SeqStrings gFileActionNames =
 
 Str GetFileActionName(int actionId) {
     if (actionId < 1 || actionId > 5) {
-        return Str("(unknown)");
+        return StrL("(unknown)");
     }
     int n = actionId - 1;
     return SeqStrByIndex(gFileActionNames, n);

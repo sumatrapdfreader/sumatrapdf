@@ -67,7 +67,7 @@ Str DisplayModeToString(DisplayMode mode) {
     Str s = SeqStrByIndex(displayModeNames, idx);
     if (!s) {
         ReportIf(true);
-        return Str("unknown display mode");
+        return StrL("unknown display mode");
     }
     return s;
 }

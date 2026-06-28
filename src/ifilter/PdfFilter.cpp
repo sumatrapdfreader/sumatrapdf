@@ -86,7 +86,7 @@ static bool PdfDateParse(Str pdfDate, SYSTEMTIME* timeOut) {
 
 static Str PdfFilterStateToStr(PdfFilterState state) {
     Str res = SeqStrByIndex(kPdfFilterStateStrs, (int)state);
-    return res ? res : Str("unknown");
+    return res ? res : StrL("unknown");
 }
 
 HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {

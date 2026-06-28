@@ -229,7 +229,7 @@ static bool IsPdfFileContent(const ByteSlice& d) {
         if (!found) {
             return false;
         }
-        if (str::EqN(found, Str("%PDF-"), 5)) {
+        if (str::EqN(found, StrL("%PDF-"), 5)) {
             return true;
         }
         int off = (int)(found.s - data.s) + 1;
@@ -598,11 +598,11 @@ Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
     };
 
     if (str::IsEmpty(path) || str::IsEmpty(expectedKindName)) {
-        return fail(Str("ERROR missing path or expectedKind"));
+        return fail(StrL("ERROR missing path or expectedKind"));
     }
     Kind kind = GuessFileTypeFromName(path);
     if (!kind) {
-        return fail(Str("ERROR unknown-kind"));
+        return fail(StrL("ERROR unknown-kind"));
     }
     if (!str::Eq(kind, expectedKindName)) {
         out.AppendFmt("FAIL path=%s got=%s expected=%s\n", path.s, kind, expectedKindName.s);

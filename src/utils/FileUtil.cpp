@@ -73,7 +73,7 @@ static int GetExtPos(Str path) {
 TempStr GetExtTemp(Str path) {
     int ext = GetExtPos(path);
     if (ext < 0) {
-        return Str("");
+        return StrL("");
     }
     return str::DupTemp(path.s + ext, path.len - ext);
 }
@@ -92,7 +92,7 @@ TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
     Str sepStr = {};
     if (!str::IsEmpty(path)) {
         if (!IsSep(path.s[path.len - 1])) {
-            sepStr = Str("\\");
+            sepStr = StrL("\\");
         }
     }
     TempStr res = str::JoinTemp(path, sepStr, fileName);
@@ -107,7 +107,7 @@ Str Join(Arena* allocator, Str path, Str fileName) {
     Str sepStr = {};
     if (!str::IsEmpty(path)) {
         if (!IsSep(path.s[path.len - 1])) {
-            sepStr = Str("\\");
+            sepStr = StrL("\\");
         }
     }
     return str::Join(allocator, path, sepStr, fileName);

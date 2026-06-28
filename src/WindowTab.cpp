@@ -130,9 +130,9 @@ Str WindowTab::GetTabTitle() const {
     }
     if (!filePath) {
         if (IsAboutTab()) {
-            return Str("Home");
+            return StrL("Home");
         }
-        return Str("");
+        return StrL("");
     }
     TempStr embeddedFileName = GetEmbeddedFileNameTemp(filePath);
     if (embeddedFileName) {

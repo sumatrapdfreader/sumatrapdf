@@ -66,7 +66,7 @@ void SetDefaultEbookFont(Str name, float size) {
     if (str::Eq(name, "default")) {
         // "default" is used for mupdf engine to indicate
         // we should use the font as given in css
-        name = Str("Georgia");
+        name = StrL("Georgia");
     }
     gDefaultFontName.SetCopy(name);
     // use a somewhat smaller size than in the EbookUI, since fit page/width

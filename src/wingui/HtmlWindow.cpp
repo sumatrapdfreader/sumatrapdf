@@ -368,15 +368,16 @@ static Str MimeFromUrl(Str url, Str imgExt = {}) {
         Str ext;
         Str mimetype;
     } mimeTypes[] = {
-        {Str(".html"), Str("text/html")}, {Str(".htm"), Str("text/html")},  {Str(".gif"), Str("image/gif")},
-        {Str(".png"), Str("image/png")},  {Str(".jpg"), Str("image/jpeg")}, {Str(".jpeg"), Str("image/jpeg")},
-        {Str(".bmp"), Str("image/bmp")},  {Str(".css"), Str("text/css")},   {Str(".txt"), Str("text/plain")},
+        {StrL(".html"), StrL("text/html")}, {StrL(".htm"), StrL("text/html")},  {StrL(".gif"), StrL("image/gif")},
+        {StrL(".png"), StrL("image/png")},  {StrL(".jpg"), StrL("image/jpeg")}, {StrL(".jpeg"), StrL("image/jpeg")},
+        {StrL(".bmp"), StrL("image/bmp")},  {StrL(".css"), StrL("text/css")},   {StrL(".txt"), StrL("text/plain")},
     };
 
     for (int i = 0; i < dimof(mimeTypes); i++) {
         if (str::EqI(ext, mimeTypes[i].ext)) {
             // trust an image's data more than its extension
-            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, Str("image/"))) {
+            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) &&
+                str::StartsWith(mimeTypes[i].mimetype, StrL("image/"))) {
                 for (int j = 0; j < dimof(mimeTypes); j++) {
                     if (str::Eq(imgExt, mimeTypes[j].ext)) {
                         return str::Dup(mimeTypes[j].mimetype);

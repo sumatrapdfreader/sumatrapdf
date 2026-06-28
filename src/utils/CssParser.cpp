@@ -89,7 +89,7 @@ bool CssPullParser::NextRule() {
 
     if (currOff == 0) {
         SkipWsAndComments(src, currOff);
-        if (currOff + 4 < src.len && str::StartsWith(Str(src.s + currOff, src.len - currOff), Str("<!--"))) {
+        if (currOff + 4 < src.len && str::StartsWith(Str(src.s + currOff, src.len - currOff), StrL("<!--"))) {
             currOff += 4;
         }
     }

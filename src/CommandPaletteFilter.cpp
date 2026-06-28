@@ -28,7 +28,7 @@ static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matched
 void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
     strings.Reset();
     if (!filter) {
-        filter = Str("");
+        filter = StrL("");
     }
 
     bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false;

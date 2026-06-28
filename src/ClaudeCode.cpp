@@ -58,7 +58,7 @@ static void ClaudeCodeLog(Str direction, Str text) {
 }
 
 static Str kClaudeCodeDocURI() {
-    return Str("/AI-Chat-with-document#claude-code");
+    return StrL("/AI-Chat-with-document#claude-code");
 }
 
 static void ShowClaudeCodeNotInstalledDialog() {
@@ -85,7 +85,7 @@ bool IsClaudeCodeSupportedForTab(WindowTab* tab) {
 #define IDC_CLAUDE_STOP_BTN 1115
 
 static Str kClaudeVirtualHost() {
-    return Str("https://sumatrapdf.claude/");
+    return StrL("https://sumatrapdf.claude/");
 }
 constexpr const WCHAR* kClaudeVirtualHostW = L"https://sumatrapdf.claude/";
 
@@ -94,7 +94,7 @@ static LoadedDataResource gClaudeMarkedJs;
 static Str ClaudeBgColor() {
     Str bg = gGlobalPrefs->claudeCode.bgColor;
     if (str::IsEmpty(bg)) {
-        return Str("#ffffff");
+        return StrL("#ffffff");
     }
     return bg;
 }
@@ -123,7 +123,7 @@ static Str ResolveClaudeModel(const StrVec& models, Str model) {
     if (idx >= 0) {
         return models.At(idx);
     }
-    return Str("opus");
+    return StrL("opus");
 }
 
 static void PopulateModelCombo(HWND combo) {
@@ -245,7 +245,7 @@ static void CloseClaudeProcess(WindowTab* tab, bool terminateIfRunning) {
 static void StopClaude(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     if (tab && tab->claudeProcess) {
-        ClaudeCodeLog("stop", tab->claudeSessionId ? tab->claudeSessionId : Str("(no session)"));
+        ClaudeCodeLog("stop", tab->claudeSessionId ? tab->claudeSessionId : StrL("(no session)"));
         CloseClaudeProcess(tab, true);
         WebViewAddError(win, "Stopped by user.");
         SetClaudeWorking(win, false);
@@ -388,7 +388,7 @@ static TempStr ExtractUserTextTemp(Str line) {
 static Str GetSessionDescription(Str sessionPath) {
     ByteSlice data = file::ReadFile(sessionPath);
     if (data.empty()) {
-        return Str("(empty)");
+        return StrL("(empty)");
     }
     Str content = AsStr(data);
     Str rest = content;
@@ -414,7 +414,7 @@ static Str GetSessionDescription(Str sessionPath) {
         AIChatSkipNewlines(rest);
     }
     data.Free();
-    return result ? result : Str("(no description)");
+    return result ? result : StrL("(no description)");
 }
 
 // Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files

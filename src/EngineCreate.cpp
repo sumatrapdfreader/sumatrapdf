@@ -43,7 +43,7 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
 
     TempStr ext = path::GetExtTemp(path);
     if (str::IsEmpty(ext)) {
-        ext = Str(".cbx");
+        ext = StrL(".cbx");
     }
     TempStr name = str::JoinTemp(Str(hex), ext);
     return path::JoinTemp(cacheDir, name);

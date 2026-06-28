@@ -781,7 +781,7 @@ Str FmtVWithArena(Arena* a, Str fmt, va_list args) {
     // when %S string had certain Unicode characters
     ReportIf(count == -1);
     if (count < 0) {
-        return str::Dup(a, Str("vsnprintf() returned -1"));
+        return str::Dup(a, StrL("vsnprintf() returned -1"));
     }
 
     char* buf = AllocArray<char>(a, count + 1); // str-port: owned heap
@@ -795,7 +795,7 @@ Str FmtVWithArena(Arena* a, Str fmt, va_list args) {
     ReportIf(count2 != count);
     if (count2 < 0) {
         Free(a, buf);
-        return str::Dup(a, Str("vsnprintf() returned -1"));
+        return str::Dup(a, StrL("vsnprintf() returned -1"));
     }
     return Str(buf, count);
 }
@@ -1044,7 +1044,7 @@ static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* en
     char f2[] = "% ";
     Str formatAt = Str(format.s + formatOff);
     Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
-    if (!str::IsNull(endF) && !str::IsNull(FindChar(Str("udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
+    if (!str::IsNull(endF) && !str::IsNull(FindChar(StrL("udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str(str.s + p, (int)width));
         Str end = Parse(Str(limited), f2, valueOut);
@@ -2677,7 +2677,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
     }
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
-    TempStr buf = fmt::FormatTemp(Str("%d"), num);
+    TempStr buf = fmt::FormatTemp(StrL("%d"), num);
 
     StrBuilder res;
     int i = 3 - (buf.len % 3);
@@ -2710,7 +2710,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     }
 
     // add between one and two decimals after the point
-    TempStr buf = fmt::FormatTemp(Str("%s%s%02d"), tmp, Str(decimal), num % 100);
+    TempStr buf = fmt::FormatTemp(StrL("%s%s%02d"), tmp, Str(decimal), num % 100);
     if (stripTrailingZero && str::EndsWith(buf, StrL("0"))) {
         buf.s[buf.len - 1] = '\0';
         buf.len--;
@@ -2723,7 +2723,7 @@ constexpr double KB = 1024;
 constexpr double MB = (double)1024 * (double)1024;
 constexpr double GB = (double)1024 * (double)1024 * (double)1024;
 
-static Str sizeUnitsEnglish[3] = {Str("GB"), Str("MB"), Str("KB")};
+static Str sizeUnitsEnglish[3] = {StrL("GB"), StrL("MB"), StrL("KB")};
 
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
@@ -2753,7 +2753,7 @@ TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
     if (!unit) {
         return sizestr;
     }
-    return fmt::FormatTemp(Str("%s %s"), sizestr, unit);
+    return fmt::FormatTemp(StrL("%s %s"), sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -2764,7 +2764,7 @@ TempStr FormatFileSizeTemp(i64 size) {
     }
     TempStr n1 = str::FormatSizeShortTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
-    return fmt::FormatTemp(Str("%s (%s %s)"), n1, n2, StrL("Bytes"));
+    return fmt::FormatTemp(StrL("%s (%s %s)"), n1, n2, StrL("Bytes"));
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B

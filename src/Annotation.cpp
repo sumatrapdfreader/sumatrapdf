@@ -73,7 +73,7 @@ Annotation::~Annotation() {
 Str AnnotationReadableNameTemp(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {
-        return Str("Unknown");
+        return StrL("Unknown");
     }
     Str s = SeqStrByIndex(gAnnotReadableNames, n);
     ReportIf(!s);
@@ -346,7 +346,7 @@ bool ToggleFormButton(Annotation* annot) {
                 bool isOn = curAS && !pdf_name_eq(ctx, curAS, PDF_NAME(Off));
                 bool noToggleOff = (flags & PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF) != 0;
                 Str onName = Str(pdf_to_name(ctx, pdf_button_field_on_state(ctx, kid)));
-                pdf_set_field_value(ctx, e->pdfdoc, grp, CStrTemp((isOn && !noToggleOff) ? Str("Off") : onName), 0);
+                pdf_set_field_value(ctx, e->pdfdoc, grp, CStrTemp((isOn && !noToggleOff) ? StrL("Off") : onName), 0);
                 pdf_update_annot(ctx, a);
                 UpdateFormFieldPage(ctx, a); // refresh all radio-group siblings
                 changed = true;
@@ -1187,7 +1187,7 @@ static Str GetUserTemp() {
         u = Str(getenv("USERNAME"));
     }
     if (!u) {
-        return Str("user");
+        return StrL("user");
     }
     return u;
 }
@@ -1198,7 +1198,7 @@ static Str GetAnnotationTextIconTemp() {
     str::RemoveCharsInPlace(s, " ");
     int idx = SeqStrIndexIS(gAnnotationTextIcons, s);
     if (idx < 0) {
-        return Str("Note");
+        return StrL("Note");
     }
     return SeqStrByIndex(gAnnotationTextIcons, idx);
 }

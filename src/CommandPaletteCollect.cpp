@@ -182,13 +182,13 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     }
 
     if (cmdId == CmdToggleToolbarPosition) {
-        Str next = ToolbarAtBottom() ? Str("top") : Str("bottom");
+        Str next = ToolbarAtBottom() ? StrL("top") : StrL("bottom");
         return str::JoinTemp(s, ": set to ", next);
     }
 
     if (cmdId == CmdToggleDjvuEngine) {
         bool useDjvuDec = !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
-        Str next = useDjvuDec ? Str("libdjvu") : Str("djvudec");
+        Str next = useDjvuDec ? StrL("libdjvu") : StrL("djvudec");
         return str::JoinTemp(s, ": set to ", next);
     }
 
@@ -281,7 +281,7 @@ void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) 
 
 static void CollectTocRec(StrVecCP& toc, TocItem* ti, int indent, int currPageNo, int& bestIdx, int& bestPageNo) {
     while (ti) {
-        Str title = ti->title ? ti->title : Str("");
+        Str title = ti->title ? ti->title : StrL("");
         ItemDataCP data;
         data.tocItem = ti;
         data.indent = indent;

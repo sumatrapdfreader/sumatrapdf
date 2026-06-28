@@ -358,9 +358,9 @@ static Str getVirt(BYTE key, bool isEng) {
     if (!isEng) {
         switch (key) {
             case VK_LEFT:
-                return Str("<-");
+                return StrL("<-");
             case VK_RIGHT:
-                return Str("->");
+                return StrL("->");
         }
     }
     return SeqStrNumStrByNumber(gVirtKeysNum, key);
@@ -469,7 +469,7 @@ again:
     char c = *s.s;
 
     // those correspond to 0...9 keys and require SHIFT
-    static Str shift09 = Str(")!@#$%^&*(");
+    static Str shift09 = StrL(")!@#$%^&*(");
     idx = str::FindCharIdx(shift09, c);
     if (idx >= 0) {
         accel.key = ('0' + idx);

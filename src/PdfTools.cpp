@@ -1166,7 +1166,7 @@ void PdfDeletePageDialog::DoIt() {
         pageRange = BuildKeepPagesRange(pageCount, parsedPages);
     }
 
-    Str op = isExtract ? Str("extract") : Str("delete");
+    Str op = isExtract ? StrL("extract") : StrL("delete");
     logf("PdfDeletePageDoIt: %s pages '%s' from '%s' to '%s', range for pdfclean: %s\n", op.s, pages.s, srcPath.s,
          destPath.s, pageRange.s);
 
@@ -1191,7 +1191,7 @@ void PdfDeletePageDialog::DoIt() {
     } else {
         logf("PdfDeletePageDoIt: pdfclean_main failed with %d for %s\n", res, op.s);
         Str msg =
-            isExtract ? Str("Failed to extract pages from PDF file.") : Str("Failed to delete pages from PDF file.");
+            isExtract ? StrL("Failed to extract pages from PDF file.") : StrL("Failed to delete pages from PDF file.");
         Str title = isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
         MessageBoxWarning(hwnd, msg, title);
     }

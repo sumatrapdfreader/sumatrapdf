@@ -426,7 +426,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
 
     // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
     // item, which is path to the executable
-    StrBuilder cmdLine(Str("-uninstall"));
+    StrBuilder cmdLine(StrL("-uninstall"));
     if (cli->silent) {
         cmdLine.Append(" -silent");
     }

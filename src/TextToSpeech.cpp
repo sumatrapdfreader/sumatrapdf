@@ -54,7 +54,7 @@ static void TtsPostNotifyMsg() {
 }
 
 static Str TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
-    return str::IsEmpty(voice.lang) ? Str("ffff") : voice.lang;
+    return str::IsEmpty(voice.lang) ? StrL("ffff") : voice.lang;
 }
 
 static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {

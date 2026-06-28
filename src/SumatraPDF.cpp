@@ -1319,8 +1319,8 @@ static NO_INLINE void VerifyController(DocController* ctrl, Str path) {
     if (str::Eq(ctrlFilePath, path)) {
         return;
     }
-    Str s1 = ctrlFilePath ? ctrlFilePath : Str("<null>");
-    Str s2 = path ? path : Str("<null>");
+    Str s1 = ctrlFilePath ? ctrlFilePath : StrL("<null>");
+    Str s2 = path ? path : StrL("<null>");
     logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1.s, s2.s);
     ReportIf(true);
 }
@@ -10041,7 +10041,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
             break;
         }
 
-        Str lang = str::IsEmpty(voice.lang) ? Str("") : voice.lang;
+        Str lang = str::IsEmpty(voice.lang) ? StrL("") : voice.lang;
 
         if (lastLang && !str::EqI(lastLang, lang)) {
             AppendMenuW(voiceMenu, MF_SEPARATOR, 0, nullptr);

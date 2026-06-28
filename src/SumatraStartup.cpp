@@ -807,16 +807,16 @@ static void UpdateGlobalPrefs(const Flags& i) {
 static bool ExeHasNameOfInstaller() {
     TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindI(exeName, Str("uninstall")).s) {
+    if (str::FindI(exeName, StrL("uninstall")).s) {
         return false;
     }
-    return str::FindI(exeName, Str("install")).s != nullptr;
+    return str::FindI(exeName, StrL("install")).s != nullptr;
 }
 
 static bool ExeHasNameOfStoreInstaller() {
     TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
-    return str::FindI(exeName, Str("install-store")).s != nullptr;
+    return str::FindI(exeName, StrL("install-store")).s != nullptr;
 }
 
 static bool HasDataResource(int id) {
@@ -850,7 +850,7 @@ static bool IsInstallerButNotInstalled() {
 // if not, at least I can add logging to figure out why it fails
 constexpr int kBtnIdLearnMore = 100;
 static Str kFailedToLoadURL() {
-    return Str("https://www.sumatrapdfreader.org/docs/Failed-to-load-libmpdf");
+    return StrL("https://www.sumatrapdfreader.org/docs/Failed-to-load-libmpdf");
 }
 
 static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
@@ -1370,7 +1370,7 @@ static bool IsNoAdminToAdmin(HWND hPrevWnd) {
 }
 
 static int WineDpiFromEnv() {
-    static Str scaleVars[] = {Str("GDK_SCALE"), Str("QT_SCALE_FACTOR"), Str("ELM_SCALE")};
+    static Str scaleVars[] = {StrL("GDK_SCALE"), StrL("QT_SCALE_FACTOR"), StrL("ELM_SCALE")};
     int bestDpi = 0;
     for (Str var : scaleVars) {
         Str val = Str(getenv(var.s)); // str-port: CRT getenv

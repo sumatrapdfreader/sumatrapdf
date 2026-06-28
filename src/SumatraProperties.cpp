@@ -164,7 +164,7 @@ static bool IsoDateParse(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
 static TempStr AddTimeZone(TempStr s, int timeZone) {
     if (timeZone == 0) return {};
 
-    Str tzSign = (timeZone > 0) ? Str("+") : Str("-");
+    Str tzSign = (timeZone > 0) ? StrL("+") : StrL("-");
     int abs = (timeZone > 0) ? timeZone : -timeZone;
     int hours = abs / 100;
     int mins = abs % 100;
@@ -212,37 +212,37 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     Str formatName;
     switch (GetPaperFormatFromSizeApprox(size)) {
         case PaperFormat::A2:
-            formatName = Str(" (A2)");
+            formatName = StrL(" (A2)");
             break;
         case PaperFormat::A3:
-            formatName = Str(" (A3)");
+            formatName = StrL(" (A3)");
             break;
         case PaperFormat::A4:
-            formatName = Str(" (A4)");
+            formatName = StrL(" (A4)");
             break;
         case PaperFormat::A5:
-            formatName = Str(" (A5)");
+            formatName = StrL(" (A5)");
             break;
         case PaperFormat::A6:
-            formatName = Str(" (A6)");
+            formatName = StrL(" (A6)");
             break;
         case PaperFormat::Letter:
-            formatName = Str(" (Letter)");
+            formatName = StrL(" (Letter)");
             break;
         case PaperFormat::Legal:
-            formatName = Str(" (Legal)");
+            formatName = StrL(" (Legal)");
             break;
         case PaperFormat::Tabloid:
-            formatName = Str(" (Tabloid)");
+            formatName = StrL(" (Tabloid)");
             break;
         case PaperFormat::Statement:
-            formatName = Str(" (Statement)");
+            formatName = StrL(" (Statement)");
             break;
     }
 
     bool isMetric = GetMeasurementSystem() == 0;
     double unitsPerInch = isMetric ? 2.54 : 1.0;
-    Str unit = isMetric ? Str("cm") : Str("in");
+    Str unit = isMetric ? StrL("cm") : StrL("in");
 
     double width = size.dx * unitsPerInch;
     double height = size.dy * unitsPerInch;
@@ -442,7 +442,7 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
     ReportIf(!ctrl);
 
     Str path = gPluginMode ? gPluginURL : Str(ctrl->GetFilePath());
-    AppendProp(out, _TRA("File:"), IsEmpty(path) ? Str("(not available)") : path);
+    AppendProp(out, _TRA("File:"), IsEmpty(path) ? StrL("(not available)") : path);
 
     DisplayModel* dm = ctrl->AsFixed();
     i64 fileSize = file::GetSize(Str(path)); // can be gPluginURL

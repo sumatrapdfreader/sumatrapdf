@@ -57,7 +57,7 @@ static void GrokBuildLog(Str direction, Str text) {
 }
 
 static Str kGrokBuildDocURI() {
-    return Str("/AI-Chat-with-document#grok-build");
+    return StrL("/AI-Chat-with-document#grok-build");
 }
 
 static void ShowGrokBuildNotInstalledDialog() {
@@ -84,7 +84,7 @@ bool IsGrokBuildSupportedForTab(WindowTab* tab) {
 #define IDC_GROK_STOP_BTN 1125
 
 static Str kGrokVirtualHost() {
-    return Str("https://sumatrapdf.grok/");
+    return StrL("https://sumatrapdf.grok/");
 }
 constexpr const WCHAR* kGrokVirtualHostW = L"https://sumatrapdf.grok/";
 
@@ -93,7 +93,7 @@ static LoadedDataResource gGrokMarkedJs;
 static Str GrokBgColor() {
     Str bg = gGlobalPrefs->grokBuild.bgColor;
     if (str::IsEmpty(bg)) {
-        return Str("#ffffff");
+        return StrL("#ffffff");
     }
     return bg;
 }
@@ -121,7 +121,7 @@ static Str ResolveGrokModel(const StrVec& models, Str model) {
     if (idx >= 0) {
         return models.At(idx);
     }
-    return Str("grok-composer-2.5-fast");
+    return StrL("grok-composer-2.5-fast");
 }
 
 static void PopulateModelCombo(HWND combo) {
@@ -243,7 +243,7 @@ static void CloseGrokProcess(WindowTab* tab, bool terminateIfRunning) {
 static void StopGrok(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     if (tab && tab->grokProcess) {
-        GrokBuildLog("stop", tab->grokSessionId ? tab->grokSessionId : Str("(no session)"));
+        GrokBuildLog("stop", tab->grokSessionId ? tab->grokSessionId : StrL("(no session)"));
         CloseGrokProcess(tab, true);
         WebViewAddError(win, "Stopped by user.");
         SetGrokWorking(win, false);
@@ -387,7 +387,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     TempStr historyPath = str::FormatTemp("%s\\prompt_history.jsonl", projectDir.s);
     ByteSlice data = file::ReadFile(historyPath);
     if (data.empty()) {
-        return Str("(no description)");
+        return StrL("(no description)");
     }
     Str content = AsStr(data);
     Str rest = content;
@@ -413,7 +413,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
         AIChatSkipNewlines(rest);
     }
     data.Free();
-    return result ? result : Str("(no description)");
+    return result ? result : StrL("(no description)");
 }
 
 // Scan ~/.grok/sessions/<url-encoded-dir>/ for session subdirectories
@@ -695,7 +695,7 @@ enum class GrokUpdateType {
 };
 
 static Str kGrokPendingSessionId() {
-    return Str("pending");
+    return StrL("pending");
 }
 
 struct GrokUpdateData {
@@ -921,7 +921,7 @@ static void SendGrokMessage(MainWindow* win) {
 
     SyncGrokSettingsFromUI(win);
 
-    Str efforts[] = {Str("low"), Str("medium"), Str("high"), Str("xhigh"), Str("max")};
+    Str efforts[] = {StrL("low"), StrL("medium"), StrL("high"), StrL("xhigh"), StrL("max")};
     StrVec modelList;
     BuildGrokModelsList(modelList);
     Str model = ResolveGrokModel(modelList, gGlobalPrefs->grokBuild.model);
@@ -929,7 +929,7 @@ static void SendGrokMessage(MainWindow* win) {
     if (effortIdx < 0 || effortIdx > 4) {
         effortIdx = 1;
     }
-    Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? Str("--always-approve") : Str{};
+    Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? StrL("--always-approve") : Str{};
     TempStr rules = str::FormatTemp("The user is currently reading the file: %s", filePath.s);
 
     TempStr grokPath = FindGrokExecutableTemp();

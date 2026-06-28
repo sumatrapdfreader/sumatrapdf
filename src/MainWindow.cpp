@@ -556,7 +556,7 @@ static bool IsFileSupportedByContent(Str filePath) {
 // prefix must be stripped or the lookup becomes "#nameddest=nameddest=<name>"
 // and fails, leaving the remote PDF on page 1 (issue #5642).
 Str CleanRemoteDestName(Str destName) {
-    if (destName && str::StartsWithI(destName, Str("nameddest="))) {
+    if (destName && str::StartsWithI(destName, StrL("nameddest="))) {
         return Str(destName.s + 10, destName.len - 10);
     }
     return destName;

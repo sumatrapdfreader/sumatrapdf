@@ -312,7 +312,7 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
     }
     out.Append("  devmode defaults:\n");
     if (dm->dmFields & DM_ORIENTATION) {
-        Str s = dm->dmOrientation == DMORIENT_PORTRAIT ? Str("portrait") : Str("landscape");
+        Str s = dm->dmOrientation == DMORIENT_PORTRAIT ? StrL("portrait") : StrL("landscape");
         out.AppendFmt("    orientation: %s\n", s.s);
     }
     if (dm->dmFields & DM_PAPERSIZE) {
@@ -334,7 +334,7 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
         out.AppendFmt("    y resolution: %d dpi\n", (int)dm->dmYResolution);
     }
     if (dm->dmFields & DM_COLOR) {
-        Str s = dm->dmColor == DMCOLOR_COLOR ? Str("color") : Str("monochrome");
+        Str s = dm->dmColor == DMCOLOR_COLOR ? StrL("color") : StrL("monochrome");
         out.AppendFmt("    color: %s\n", s.s);
     }
     if (dm->dmFields & DM_DUPLEX) {
@@ -1653,7 +1653,7 @@ static short GetPaperSourceByName(Printer* printer, Str binName) {
     // "auto" lets the printer pick the input tray whose paper matches the
     // document's page size (matches Adobe's "Choose paper source by PDF page
     // size"; issues #349, #534)
-    if (str::EqIS(binName, Str("auto"))) {
+    if (str::EqIS(binName, StrL("auto"))) {
         return DMBIN_FORMSOURCE;
     }
     if (!(devMode->dmFields & DM_DEFAULTSOURCE)) {

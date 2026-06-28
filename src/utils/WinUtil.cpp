@@ -1947,7 +1947,7 @@ void MenuSetText(HMENU m, int id, WStr s) {
     if (!ok) {
         // setting text on a menu item that isn't present is benign (e.g. the
         // item was filtered out by command visibility): log it, don't assert
-        TempStr tmp = IsEmpty(s) ? Str("(null)") : ToUtf8Temp(s);
+        TempStr tmp = IsEmpty(s) ? StrL("(null)") : ToUtf8Temp(s);
         logf("MenuSetText(): id=%d, s='%s'\n", id, tmp.s);
         LogLastError();
     }
@@ -2152,7 +2152,7 @@ bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
     }
 
     if (!args) {
-        Str func = install ? Str("DllRegisterServer") : Str("DllUnregisterServer");
+        Str func = install ? StrL("DllRegisterServer") : StrL("DllUnregisterServer");
         DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func.s);
         if (DllRegUnreg) {
             ok = SUCCEEDED(DllRegUnreg());

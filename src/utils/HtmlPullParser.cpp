@@ -399,7 +399,7 @@ Next:
         if ('!' == html.s[start] && start + 2 < html.len &&
             str::StartsWith(Str(html.s + start, html.len - start), "!--")) {
             currPos = start + 3;
-            if (!SkipUntil(html, currPos, Str("-->"))) {
+            if (!SkipUntil(html, currPos, StrL("-->"))) {
                 currToken.SetError(HtmlToken::UnclosedTag, Str(html.s + start, html.len - start));
                 return &currToken;
             }

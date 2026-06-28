@@ -826,7 +826,7 @@ static void AddLineSepUtf8(StrBuilder& s, Vec<Rect>& rects, Str lineSep) {
 }
 
 static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
-    Str lineSep = Str("\n");
+    Str lineSep = StrL("\n");
     StrBuilder content;
     Vec<Rect> rects;
     Vec<SeenGlyph> seen;
@@ -3046,7 +3046,7 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     // WCHAR* path = ToWStr(outline->uri);
     dest->name = Str(str::Dup(outline->title));
     // page is really a stream number
-    Str title = outline->title ? Str(outline->title) : Str("");
+    Str title = outline->title ? Str(outline->title) : StrL("");
     AutoFreeStr nameHex(str::MemToHex((const u8*)title.s, title.len).s);
     dest->value = Str(str::Format("%s:%d:attachname=%s", engine->FilePath().s, outline->page.page, nameHex.Get()));
     dest->pageNo = outline->page.page;

@@ -505,7 +505,7 @@ void FindBarSetStatus(MainWindow* win, Str s) {
         return;
     }
     if (win->findBar && win->findBar->status) {
-        HwndSetText(win->findBar->status->hwnd, s ? s : Str(""));
+        HwndSetText(win->findBar->status->hwnd, s ? s : StrL(""));
     }
 }
 

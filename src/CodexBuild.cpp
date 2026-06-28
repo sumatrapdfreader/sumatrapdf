@@ -57,7 +57,7 @@ static void CodexBuildLog(Str direction, Str text) {
 }
 
 static Str kCodexBuildDocURI() {
-    return Str("/AI-Chat-with-document#openai-codex");
+    return StrL("/AI-Chat-with-document#openai-codex");
 }
 
 static void ShowCodexBuildNotInstalledDialog() {
@@ -84,7 +84,7 @@ bool IsCodexBuildSupportedForTab(WindowTab* tab) {
 #define IDC_CODEX_STOP_BTN 1135
 
 static Str kCodexVirtualHost() {
-    return Str("https://sumatrapdf.codex/");
+    return StrL("https://sumatrapdf.codex/");
 }
 constexpr const WCHAR* kCodexVirtualHostW = L"https://sumatrapdf.codex/";
 
@@ -93,7 +93,7 @@ static LoadedDataResource gCodexMarkedJs;
 static Str CodexBgColor() {
     Str bg = gGlobalPrefs->codexBuild.bgColor;
     if (str::IsEmpty(bg)) {
-        return Str("#ffffff");
+        return StrL("#ffffff");
     }
     return bg;
 }
@@ -122,7 +122,7 @@ static Str ResolveCodexModel(const StrVec& models, Str model) {
     if (idx >= 0) {
         return models.At(idx);
     }
-    return Str("gpt-5.5");
+    return StrL("gpt-5.5");
 }
 
 static void PopulateModelCombo(HWND combo) {
@@ -244,7 +244,7 @@ static void CloseCodexProcess(WindowTab* tab, bool terminateIfRunning) {
 static void StopCodex(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     if (tab && tab->codexProcess) {
-        CodexBuildLog("stop", tab->codexSessionId ? tab->codexSessionId : Str("(no session)"));
+        CodexBuildLog("stop", tab->codexSessionId ? tab->codexSessionId : StrL("(no session)"));
         CloseCodexProcess(tab, true);
         WebViewAddError(win, "Stopped by user.");
         SetCodexWorking(win, false);
@@ -373,11 +373,11 @@ static Str GetCodexSessionDescription(Str sessionId) {
     TempStr userProfile = GetSpecialFolderTemp(CSIDL_PROFILE);
     TempStr historyPath = userProfile ? str::FormatTemp("%s\\.codex\\history.jsonl", userProfile.s) : nullptr;
     if (!historyPath) {
-        return Str("(no description)");
+        return StrL("(no description)");
     }
     ByteSlice data = file::ReadFile(historyPath);
     if (data.empty()) {
-        return Str("(no description)");
+        return StrL("(no description)");
     }
     Str content = AsStr(data);
     Str rest = content;
@@ -403,7 +403,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
         AIChatSkipNewlines(rest);
     }
     data.Free();
-    return result ? result : Str("(no description)");
+    return result ? result : StrL("(no description)");
 }
 
 static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut) {
@@ -810,7 +810,7 @@ enum class CodexUpdateType {
 };
 
 static Str kCodexPendingSessionId() {
-    return Str("pending");
+    return StrL("pending");
 }
 
 struct CodexUpdateData {
@@ -1038,7 +1038,7 @@ static void SendCodexMessage(MainWindow* win) {
 
     SyncCodexSettingsFromUI(win);
 
-    Str sandboxes[] = {Str("read-only"), Str("workspace-write"), Str("danger-full-access")};
+    Str sandboxes[] = {StrL("read-only"), StrL("workspace-write"), StrL("danger-full-access")};
     StrVec modelList;
     BuildCodexModelsList(modelList);
     Str model = ResolveCodexModel(modelList, gGlobalPrefs->codexBuild.model);
@@ -1046,7 +1046,7 @@ static void SendCodexMessage(MainWindow* win) {
     if (sandboxIdx < 0 || sandboxIdx > 2) {
         sandboxIdx = 1;
     }
-    Str skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? Str("--dangerously-bypass-approvals-and-sandbox") : Str{};
+    Str skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? StrL("--dangerously-bypass-approvals-and-sandbox") : Str{};
 
     TempStr codexPath = FindCodexExecutableTemp();
     if (!codexPath) {

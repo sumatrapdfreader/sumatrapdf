@@ -243,11 +243,11 @@ static int ParseValue(ParseArgs& args, Str data, int off) {
         case '[':
             return ParseArray(args, data, off);
         case 't':
-            return ParseKeyword(args, data, off, Str("true"), Type::Bool);
+            return ParseKeyword(args, data, off, StrL("true"), Type::Bool);
         case 'f':
-            return ParseKeyword(args, data, off, Str("false"), Type::Bool);
+            return ParseKeyword(args, data, off, StrL("false"), Type::Bool);
         case 'n':
-            return ParseKeyword(args, data, off, Str("null"), Type::Null);
+            return ParseKeyword(args, data, off, StrL("null"), Type::Null);
         default:
             return kParseFail;
     }

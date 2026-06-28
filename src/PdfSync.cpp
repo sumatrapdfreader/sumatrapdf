@@ -201,7 +201,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
     str::TransCharsInPlace(blob, "*/", " \\");
     AutoFreeStr jobName;
     jobName.Set(strconv::AnsiToUtf8(SyncLineAt(data, 0)).s);
-    jobName.Set(str::Join(Str(jobName), Str(".tex")).s);
+    jobName.Set(str::Join(Str(jobName), StrL(".tex")).s);
     jobName.Set(PrependDir(Str(jobName.Get())).s);
 
     int lineOff = SyncAdvanceLine(data, 0);
@@ -284,7 +284,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 str::TransCharsInPlace(Str(filename), "*/", " \\");
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (str::IsEmpty(path::GetExtTemp(Str(filename)))) {
-                    filename = str::Join(Str(filename), Str(".tex")).s;
+                    filename = str::Join(Str(filename), StrL(".tex")).s;
                 }
                 // ensure that the path is absolute
                 if (!path::IsAbsolute(Str(filename))) {

@@ -2222,7 +2222,7 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
         return;
     }
 
-    Str text = modi && modi->text ? modi->text : Str("Dummy");
+    Str text = modi && modi->text ? modi->text : StrL("Dummy");
     HFONT font = GetAppMenuFont();
     Str shortcutText = {};
     TempStr menuText = ParseMenuTextTemp(text, &shortcutText);

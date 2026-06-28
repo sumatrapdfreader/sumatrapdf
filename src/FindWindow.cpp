@@ -787,7 +787,7 @@ bool IsFindWindowVisible(MainWindow* win) {
 
 void FindWindowSetStatus(MainWindow* win, Str s) {
     if (win->findWindow && win->findWindow->status) {
-        HwndSetText(win->findWindow->status->hwnd, s ? s : Str(""));
+        HwndSetText(win->findWindow->status->hwnd, s ? s : StrL(""));
     }
 }
 
