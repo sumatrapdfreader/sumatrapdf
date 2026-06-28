@@ -24,13 +24,12 @@ Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp);
 // is done via GDI+, so this lives here rather than in the portable Pixmap.h.
 Pixmap* PixmapApplyExifOrientation(Pixmap* px, int orientation);
 
-typedef RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
+typedef RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
 
-RectF MeasureTextAccurate(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
-RectF MeasureTextStandard(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
-RectF MeasureTextQuick(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
-RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, size_t len = -1,
-                  TextMeasureAlgorithm algo = nullptr);
+RectF MeasureTextAccurate(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
+RectF MeasureTextStandard(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
+RectF MeasureTextQuick(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
+RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s, TextMeasureAlgorithm algo = nullptr);
 // float     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=nullptr);
 // size_t   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm
 // algo=nullptr);
@@ -47,5 +46,5 @@ Size ImageSizeFromHeader(const ByteSlice&);
 bool ExifOrientationSwapsDimensions(int orientation);
 void ApplyExifOrientation(Gdiplus::Bitmap* bmp, int exifOrientation);
 int WebpExifOrientation(const ByteSlice& d);
-CLSID GetGdiPlusEncoderClsid(const WCHAR* format);
+CLSID GetGdiPlusEncoderClsid(WStr format);
 RenderedBitmap* LoadRenderedBitmapWin(Str path);

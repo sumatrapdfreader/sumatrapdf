@@ -45,7 +45,8 @@ Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
 #define PER_STR_DX_ADJUST 1.f
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
-RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
+RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
+    int len = s.len;
     if (0 == len) {
         return RectF(0, 0, 0, 0); // TODO: should set height to font's height
     }
@@ -58,13 +59,11 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
     CharacterRange cr(0, len);
     sf.SetMeasurableCharacterRanges(1, &cr);
     Region r;
-    Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
+    Status status = g->MeasureCharacterRanges(s.s, len, f, layoutRect, &sf, 1, &r);
     if (status != Ok) {
         // TODO: remove whem we figure out why we crash
-        if (!s) {
-            s = L"<null>";
-        }
-        TempStr s2 = ToUtf8Temp(WStr(s, (int)len));
+        WStr logW = s ? s : WStr(L"<null>");
+        TempStr s2 = ToUtf8Temp(logW);
         Str logStr = s2.len > 256 ? Str(s2.s, 256) : s2;
         logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, logStr.s);
         // ReportIf(status != Ok);
@@ -78,21 +77,22 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
 }
 
 // this usually reports size that is too large
-RectF MeasureTextStandard(Graphics* g, Font* f, const WCHAR* s, int len) {
+RectF MeasureTextStandard(Graphics* g, Font* f, WStr s) {
     Gdiplus::RectF bbox;
     Gdiplus::PointF pz(0, 0);
-    g->MeasureString(s, len, f, pz, &bbox);
+    g->MeasureString(s.s, s.len, f, pz, &bbox);
     return RectF{bbox};
 }
 
-RectF MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
+RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
+    int len = s.len;
     ReportIf(0 >= len);
 
     static Vec<Font*> fontCache;
     static Vec<bool> fixCache;
 
     Gdiplus::RectF bbox;
-    g->MeasureString(s, len, f, Gdiplus::PointF(0, 0), &bbox);
+    g->MeasureString(s.s, len, f, Gdiplus::PointF(0, 0), &bbox);
     int idx = fontCache.Find(f);
     if (-1 == idx) {
         LOGFONTW lfw;
@@ -108,7 +108,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
     if (!fixCache.at(idx)) {
         float correct = 0;
         for (int i = 0; i < len; i++) {
-            switch (s[i]) {
+            switch (s.s[i]) {
                 case 'i':
                 case 'l':
                     correct += 0.2f;
@@ -131,19 +131,15 @@ RectF MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
     return RectF{bbox};
 }
 
-RectF MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, TextMeasureAlgorithm algo) {
+RectF MeasureText(Graphics* g, Font* f, WStr s, TextMeasureAlgorithm algo) {
     // TODO: ideally we should not be here with len == 0. This
     // might indicate a problem with fromatter code. See internals-en.epub
     // for a repro
-    if (-1 == len || 0 == len) {
-        len = str::Len(s);
-    }
-    ReportIf((len == 0) || (len > INT_MAX));
+    ReportIf((s.len == 0) || (s.len > INT_MAX));
     if (algo) {
-        return algo(g, f, s, (int)len);
+        return algo(g, f, s);
     }
-    auto bbox = MeasureTextAccurate(g, f, s, static_cast<int>(len));
-    return bbox;
+    return MeasureTextAccurate(g, f, s);
 }
 
 // returns number of characters of string s that fits in a given width dx
@@ -152,15 +148,16 @@ RectF MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, TextMeasureA
 // this shouldn't happen often, so that's fine. It's also possible that
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
-size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float dx, TextMeasureAlgorithm algo) {
-    auto r = MeasureText(g, f, s, len, algo);
+size_t StringLenForWidth(Graphics* g, Font* f, WStr s, float dx, TextMeasureAlgorithm algo) {
+    size_t len = (size_t)s.len;
+    auto r = MeasureText(g, f, s, algo);
     if (r.dx <= dx) {
         return len;
     }
     // make the best guess of the length that fits
     size_t n = (size_t)((dx / r.dx) * (float)len);
     ReportIf((0 == n) || (n > len));
-    r = MeasureText(g, f, s, n, algo);
+    r = MeasureText(g, f, WStr(s.s, (int)n), algo);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
     if (r.dx > dx) {
@@ -168,7 +165,7 @@ size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float
     }
     for (;;) {
         n += dir;
-        r = MeasureText(g, f, s, n, algo);
+        r = MeasureText(g, f, WStr(s.s, (int)n), algo);
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one
@@ -196,9 +193,9 @@ float GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
 #else
     // this method seems to return (much) smaller size that measuring
     // the space itself
-    bbox = MeasureText(g, f, L"wa", 2, algo);
+    bbox = MeasureText(g, f, WStr(L"wa", 2), algo);
     float l1 = bbox.dx;
-    bbox = MeasureText(g, f, L"w a", 3, algo);
+    bbox = MeasureText(g, f, WStr(L"w a", 3), algo);
     float l2 = bbox.dx;
     float spaceDx2 = l2 - l1;
     return spaceDx2;
@@ -957,7 +954,7 @@ Size ImageSizeFromHeader(const ByteSlice& d) {
     return {};
 }
 
-CLSID GetGdiPlusEncoderClsid(const WCHAR* format) {
+CLSID GetGdiPlusEncoderClsid(WStr format) {
     CLSID null{};
     uint numEncoders, size;
     Status ok = Gdiplus::GetImageEncodersSize(&numEncoders, &size);
@@ -970,7 +967,7 @@ CLSID GetGdiPlusEncoderClsid(const WCHAR* format) {
     }
     GetImageEncoders(numEncoders, size, codecInfo);
     for (uint j = 0; j < numEncoders; j++) {
-        if (str::Eq(codecInfo[j].MimeType, format)) {
+        if (str::Eq(WStr(codecInfo[j].MimeType), format)) {
             return codecInfo[j].Clsid;
         }
     }
