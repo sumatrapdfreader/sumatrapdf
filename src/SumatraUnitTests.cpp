@@ -40,7 +40,7 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5", i);
         utassert(i.globalPrefArgs.Size() == 2);
-        const char* s = i.globalPrefArgs.At(0);
+        Str s = i.globalPrefArgs.At(0);
         utassert(str::Eq(s, "-fwdsearch-width"));
         s = i.globalPrefArgs.At(1);
         utassert(str::Eq(s, "5"));
@@ -198,7 +198,7 @@ static void hexstrTest() {
     utassert(ok);
 }
 
-static void assertSerializedColor(COLORREF c, const char* s) {
+static void assertSerializedColor(COLORREF c, Str s) {
     TempStr s2 = SerializeColorTemp(c);
     utassert(str::Eq(s2, s));
 }
@@ -272,8 +272,8 @@ void parseCommandsTest() {
         }
     }
     {
-        const char* argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
-        const char* s = str::JoinTemp("CmdExec   ", argStr);
+        Str argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
+        Str s = str::JoinTemp("CmdExec   ", argStr);
         auto cmd = CreateCommandFromDefinition(s);
         utassert(cmd->origId == CmdExec);
         auto cmd2 = FindCustomCommand(cmd->id);
@@ -282,8 +282,8 @@ void parseCommandsTest() {
         utassert(str::Eq(arg->strVal, argStr));
     }
     {
-        const char* argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
-        const char* s = str::JoinTemp("CmdExec  filter: *.jpeg ", argStr);
+        Str argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
+        Str s = str::JoinTemp("CmdExec  filter: *.jpeg ", argStr);
         auto cmd = CreateCommandFromDefinition(s);
         utassert(cmd->origId == CmdExec);
         auto cmd2 = FindCustomCommand(cmd->id);
