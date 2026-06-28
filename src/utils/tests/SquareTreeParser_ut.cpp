@@ -8,7 +8,7 @@
 #include "utils/UtAssert.h"
 
 void SquareTreeTest() {
-    static const char* keyValueData[] = {
+    static Str keyValueData[] = {
         UTF8_BOM "key = value",  UTF8_BOM "key = value",    UTF8_BOM "key=value",
         UTF8_BOM " key =value ", UTF8_BOM "  key= value  ", UTF8_BOM "key: value",
         UTF8_BOM "key : value",  UTF8_BOM "key :value",     UTF8_BOM "# key and value:\n\tkey value\n",
@@ -16,7 +16,7 @@ void SquareTreeTest() {
     };
 
     for (size_t i = 0; i < dimof(keyValueData); i++) {
-        const char* data = keyValueData[i];
+        Str data = keyValueData[i];
         SquareTreeNode* root = ParseSquareTree(data);
         utassert(root && 1 == root->data.size());
         SquareTreeNode::DataItem& item = root->data.at(0);
@@ -29,7 +29,7 @@ void SquareTreeTest() {
         delete root;
     }
 
-    static const char* nodeData[] = {
+    static Str nodeData[] = {
         UTF8_BOM "node [\nkey = value\n]",      UTF8_BOM "node[ # ignore comment\n\tkey: value\n] # end of node\n",
         UTF8_BOM "node\n[\nkey:value",          UTF8_BOM "node\n# node content:\n\t[\n\tkey: value\n\t]\n",
         UTF8_BOM "node [\n  key : value\n]\n]", UTF8_BOM "node[\nkey=value\n]]]",
@@ -37,7 +37,7 @@ void SquareTreeTest() {
     };
 
     for (size_t i = 0; i < dimof(nodeData); i++) {
-        const char* s = nodeData[i];
+        Str s = nodeData[i];
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 1 == root->data.size());
         SquareTreeNode::DataItem& item = root->data.at(0);
@@ -50,7 +50,7 @@ void SquareTreeTest() {
         delete root;
     }
 
-    static const char* arrayData[] = {
+    static Str arrayData[] = {
         UTF8_BOM "array [\n item = 0 \n] [\n item = 1 \n]",
         UTF8_BOM "array [\n item = 0 \n]\n array [\n item = 1 \n]",
         UTF8_BOM "[array]\n item = 0 \n[array]\n item = 1 \n",
@@ -58,7 +58,7 @@ void SquareTreeTest() {
     };
 
     for (size_t i = 0; i < dimof(arrayData); i++) {
-        const char* s = arrayData[i];
+        Str s = arrayData[i];
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 2 == root->data.size());
         size_t off = 0;
@@ -71,7 +71,7 @@ void SquareTreeTest() {
         delete root;
     }
 
-    static const char* serArrayData[] = {
+    static Str serArrayData[] = {
         UTF8_BOM "array [\n[\n item = 0 \n]\n[\n item = 1 \n]\n]\n",
         UTF8_BOM "array [\n[\n item = 0 \n] [\n item = 1 \n]]",
         UTF8_BOM
@@ -83,7 +83,7 @@ void SquareTreeTest() {
         UTF8_BOM "[array]\n[\n item = 0 \n] [\n item = 1 \n]",
     };
 
-    for (const char* s : serArrayData) {
+    for (Str s : serArrayData) {
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 1 == root->data.size());
         SquareTreeNode* array = root->GetChild("array");
@@ -98,13 +98,13 @@ void SquareTreeTest() {
         delete root;
     }
 
-    static const char* valueArrayData[] = {
+    static Str valueArrayData[] = {
         UTF8_BOM "count = 0\ncount = 1",
         UTF8_BOM "count:0\ncount:1\n",
         UTF8_BOM "# first:\n count : 0 \n#second:\n count : 1 \n",
     };
 
-    for (const char* s : valueArrayData) {
+    for (Str s : valueArrayData) {
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 2 == root->data.size());
         size_t off = 0;
@@ -117,12 +117,12 @@ void SquareTreeTest() {
         delete root;
     }
 
-    static const char* emptyNodeData[] = {
+    static Str emptyNodeData[] = {
         UTF8_BOM "node [\n]", UTF8_BOM "node \n [ \n ] \n", UTF8_BOM "node [", UTF8_BOM "[node] \n",
         UTF8_BOM "[node]",    UTF8_BOM "  [  node  ]  ",
     };
 
-    for (const char* s : emptyNodeData) {
+    for (Str s : emptyNodeData) {
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 1 == root->data.size());
         utassert(root->GetChild("node"));
@@ -130,14 +130,14 @@ void SquareTreeTest() {
         delete root;
     }
 
-    static const char* halfBrokenData[] = {
+    static Str halfBrokenData[] = {
         "node [\n child = \n]\n key = value",
         "node [\nchild\n]\n]\n key = value",
         "node[\n[node\nchild\nchild [ node\n]\n key = value",
         "node [\r key = value\n node [\nchild\r\n] key = value",
     };
 
-    for (const char* s : halfBrokenData) {
+    for (Str s : halfBrokenData) {
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 2 == root->data.size());
         utassert(root->GetChild("node") == root->data.at(0).child);
@@ -149,26 +149,26 @@ void SquareTreeTest() {
     }
 
     {
-        const char* s = nullptr;
+        Str s;
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(!root);
     }
     {
-        const char* s = "";
+        Str s = "";
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 0 == root->data.size());
         delete root;
     }
 
     {
-        const char* s = UTF8_BOM;
+        Str s = UTF8_BOM;
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && 0 == root->data.size());
         delete root;
     }
 
     {
-        const char* s = UTF8_BOM "node [\n node [\n node [\n node [\n node [\n depth 5 \n]\n]\n]\n]\n]";
+        Str s = UTF8_BOM "node [\n node [\n node [\n node [\n node [\n depth 5 \n]\n]\n]\n]\n]";
         SquareTreeNode* root = ParseSquareTree(s);
         SquareTreeNode* node = root;
         for (size_t i = 0; i < 5; i++) {
@@ -180,7 +180,7 @@ void SquareTreeTest() {
     }
 
     {
-        const char* s = UTF8_BOM "node1 [\n [node2] \n key:value";
+        Str s = UTF8_BOM "node1 [\n [node2] \n key:value";
         SquareTreeNode* root = ParseSquareTree(s);
         utassert(root && root->GetChild("node1") && root->GetChild("node2"));
         utassert(0 == root->GetChild("node1")->data.size());

@@ -7,7 +7,7 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
-void check(Str got, const char* expected) {
+void check(Str got, Str expected) {
     utassert(str::Eq(got, expected));
 }
 
@@ -23,7 +23,7 @@ void StrFormatTest() {
 
     s = fmt::FormatTemp("%04d", 34);
     s2 = str::Format("%04d", 34);
-    check(s, s2);
+    check(s, Str(s2.Get()));
 
     {
         s = fmt::Format("int: %d, s: %s", 5, "foo");

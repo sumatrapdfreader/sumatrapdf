@@ -6,7 +6,7 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
-static void StrReplaceTestOne(const char* s, const char* toReplace, const char* replaceWith, const char* expected) {
+static void StrReplaceTestOne(Str s, Str toReplace, Str replaceWith, Str expected) {
     TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);
     utassert(str::Eq(res, expected));
 }
@@ -24,7 +24,7 @@ static void StrReplaceTest() {
     }
 
     struct {
-        const char *string, *find, *replace, *result;
+        Str string, find, replace, result;
     } data[] = {
         {"golagon", "gon", "rabato", "golarabato"},
         {"a", "a", "bor", "bor"},
@@ -78,28 +78,29 @@ static void StrSeqNumTest() {
 }
 
 static void StrSeqTest() {
-    const char* s = "foo\0a\0bar\0";
-    utassert(0 == SeqStrIndex(s, "foo"));
-    utassert(1 == SeqStrIndex(s, "a"));
-    utassert(2 == SeqStrIndex(s, "bar"));
+    static const char seqData[] = "foo\0a\0bar\0";
+    Str s((char*)seqData, (int)(sizeof(seqData) - 1));
+    utassert(0 == SeqStrIndex(s.s, "foo"));
+    utassert(1 == SeqStrIndex(s.s, "a"));
+    utassert(2 == SeqStrIndex(s.s, "bar"));
 
-    utassert(str::Eq("foo", SeqStrByIndex(s, 0)));
-    utassert(str::Eq("a", SeqStrByIndex(s, 1)));
-    utassert(str::Eq("bar", SeqStrByIndex(s, 2)));
+    utassert(str::Eq("foo", SeqStrByIndex(s.s, 0)));
+    utassert(str::Eq("a", SeqStrByIndex(s.s, 1)));
+    utassert(str::Eq("bar", SeqStrByIndex(s.s, 2)));
 
-    utassert(0 == SeqStrIndex(s, "foo"));
-    utassert(1 == SeqStrIndex(s, "a"));
-    utassert(2 == SeqStrIndex(s, "bar"));
-    utassert(-1 == SeqStrIndex(s, "fo"));
-    utassert(-1 == SeqStrIndex(s, ""));
-    utassert(-1 == SeqStrIndex(s, "ab"));
-    utassert(-1 == SeqStrIndex(s, "baro"));
-    utassert(-1 == SeqStrIndex(s, "ba"));
+    utassert(0 == SeqStrIndex(s.s, "foo"));
+    utassert(1 == SeqStrIndex(s.s, "a"));
+    utassert(2 == SeqStrIndex(s.s, "bar"));
+    utassert(-1 == SeqStrIndex(s.s, "fo"));
+    utassert(-1 == SeqStrIndex(s.s, ""));
+    utassert(-1 == SeqStrIndex(s.s, "ab"));
+    utassert(-1 == SeqStrIndex(s.s, "baro"));
+    utassert(-1 == SeqStrIndex(s.s, "ba"));
 }
 
 static void StrIsDigitTest() {
-    const char* nonDigits = "/:.bz{}";
-    const char* digits = "0123456789";
+    Str nonDigits = "/:.bz{}";
+    Str digits = "0123456789";
     for (size_t i = 0; i < str::Len(nonDigits); i++) {
 #if 0
         if (str::IsDigit(nonDigits[i])) {
@@ -107,19 +108,19 @@ static void StrIsDigitTest() {
             printf("%c is incorrectly determined as a digit\n", c);
         }
 #endif
-        utassert(!str::IsDigit(nonDigits[i]));
+        utassert(!str::IsDigit(nonDigits.s[i]));
     }
     for (size_t i = 0; i < str::Len(digits); i++) {
-        utassert(str::IsDigit(digits[i]));
+        utassert(str::IsDigit(digits.s[i]));
     }
 
-    const WCHAR* nonDigitsW = L"/:.bz{}";
-    const WCHAR* digitsW = L"0123456789";
+    WStr nonDigitsW = L"/:.bz{}";
+    WStr digitsW = L"0123456789";
     for (size_t i = 0; i < str::Len(nonDigitsW); i++) {
-        utassert(!str::IsDigit(nonDigitsW[i]));
+        utassert(!str::IsDigit(nonDigitsW.s[i]));
     }
     for (size_t i = 0; i < str::Len(digitsW); i++) {
-        utassert(str::IsDigit(digitsW[i]));
+        utassert(str::IsDigit(digitsW.s[i]));
     }
 }
 
