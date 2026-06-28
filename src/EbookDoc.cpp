@@ -695,7 +695,7 @@ bool EpubDoc::ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     return true;
 }
 
-bool EpubDoc::ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
+static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     HtmlPullParser parser(data);
     HtmlToken* tok;
     // skip to the start of the navMap
