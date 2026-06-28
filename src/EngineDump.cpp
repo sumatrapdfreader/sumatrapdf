@@ -18,11 +18,11 @@
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
-static void Out1(const char* msg) {
-    printf("%s", msg);
+static void Out1(Str msg) {
+    printf("%s", msg.s);
 }
 
-static bool NeedsEscape(const char* s) {
+static bool NeedsEscape(Str s) {
     // TODO: optimize to do a single loop over s
     if (str::FindChar(s, '<')) {
         return true;
@@ -36,7 +36,7 @@ static bool NeedsEscape(const char* s) {
     return false;
 }
 
-static TempStr EscapeTemp(const char* str) {
+static TempStr EscapeTemp(Str str) {
     if (str::IsEmpty(str)) {
         return {};
     }
@@ -46,8 +46,8 @@ static TempStr EscapeTemp(const char* str) {
     }
 
     StrBuilder escaped(256);
-    for (const char* s = str; *s; s++) {
-        switch (*s) {
+    for (int i = 0; i < str.len; i++) {
+        switch (str.s[i]) {
             case '&':
                 escaped.Append("&amp;");
                 break;
@@ -64,7 +64,7 @@ static TempStr EscapeTemp(const char* str) {
                 escaped.Append("&amp;");
                 break;
             default:
-                escaped.AppendChar(*s);
+                escaped.AppendChar(str.s[i]);
                 break;
         }
     }
@@ -147,9 +147,8 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     }
 }
 
-// caller must free() the result
-static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
-    char* destName = PageDestGetName(dest);
+static Str DestRectToStr(EngineBase* engine, IPageDestination* dest) {
+    Str destName = PageDestGetName(dest);
     if (destName) {
         TempStr name = EscapeTemp(destName);
         return str::Format("Name=\"%s\"", name);
@@ -197,9 +196,9 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
             if (item->pageNo != PageDestGetPageNo(dest)) {
                 Out(" TargetPage=\"%d\"", PageDestGetPageNo(dest));
             }
-            AutoFreeStr rectStr = DestRectToStr(engine, dest);
+            Str rectStr = DestRectToStr(engine, dest);
             if (rectStr) {
-                Out(" Target%s", rectStr.Get());
+                Out(" Target%s", rectStr.s);
             }
         }
         if (!item->child) {
@@ -296,9 +295,9 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                 if (PageDestGetPageNo(dest)) {
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", PageDestGetPageNo(dest));
                 }
-                AutoFreeStr rectStr = DestRectToStr(engine, dest);
+                Str rectStr = DestRectToStr(engine, dest);
                 if (rectStr) {
-                    Out("\t\t\t\tLinked%s\n", rectStr.Get());
+                    Out("\t\t\t\tLinked%s\n", rectStr.s);
                 }
             }
             TempStr name = EscapeTemp(el->GetValue());
@@ -361,29 +360,39 @@ void DumpData(EngineBase* engine, bool fullDump) {
 #define ErrOut(msg, ...) fprintf(stderr, msg "\n", __VA_ARGS__)
 #define ErrOut1(msg) fprintf(stderr, "%s", msg "\n")
 
-static bool CheckRenderPath(const char* path) {
+static bool CheckRenderPath(Str path) {
     ReportIf(!path);
     bool hasArg = false;
-    const char* p = path - 1;
-    while ((p = str::FindChar(p + 1, '%')) != nullptr) {
-        p++;
-        if (*p == '%') {
+    int i = 0;
+    while (i < path.len) {
+        Str rest(path.s + i, path.len - i);
+        Str p = str::FindChar(rest, '%');
+        if (!p) {
+            break;
+        }
+        i = (int)(p.s - path.s) + 1;
+        if (i >= path.len) {
+            break;
+        }
+        if (path.s[i] == '%') {
+            i++;
             continue;
         }
-        if (*p == '0' && '1' <= *(p + 1) && *(p + 1) <= '9') {
-            p += 2;
+        if (path.s[i] == '0' && i + 1 < path.len && '1' <= path.s[i + 1] && path.s[i + 1] <= '9') {
+            i += 2;
         }
-        if (hasArg || *p != 'd') {
+        if (hasArg || i >= path.len || path.s[i] != 'd') {
             ErrOut1("Error: Render path may contain '%%d' only once, other '%%' signs must be doubled!");
             return false;
         }
         hasArg = true;
+        i++;
     }
     return true;
 }
 
 // static
-bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f, bool silent = false) {
+bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool silent = false) {
     if (!CheckRenderPath(renderPath)) {
         return false;
     }
@@ -402,8 +411,8 @@ bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f
         }
         TempStr txtFilePath = str::FormatTemp(renderPath, 0);
         TempStr textCrLf = str::ReplaceTemp(text.Get(), "\n", "\r\n");
-        char* textUTF8BOM = str::JoinTemp(UTF8_BOM, textCrLf);
-        return file::WriteFile(txtFilePath, textUTF8BOM);
+        TempStr textUTF8BOM = str::JoinTemp(UTF8_BOM, textCrLf);
+        return file::WriteFile(txtFilePath, ToByteSlice(textUTF8BOM));
     }
 
     bool success = true;
@@ -444,11 +453,11 @@ bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f
 }
 
 class PasswordHolder : public PasswordUI {
-    const char* password;
+    Str password;
 
   public:
-    explicit PasswordHolder(const char* password) : password(password) {}
-    Str GetPassword(Str, u8*, __unused u8 decryptionKeyOut[32], bool*) override { return Str(str::Dup(password)); }
+    explicit PasswordHolder(Str password) : password(password) {}
+    Str GetPassword(Str, u8*, __unused u8 decryptionKeyOut[32], bool*) override { return str::Dup(password); }
 };
 
 void EngineDump(const Flags& flags) {
@@ -466,10 +475,10 @@ void EngineDump(const Flags& flags) {
         return 2;
     }
 
-    char* filePath = nullptr;
-    char* password = nullptr;
+    Str filePath = {};
+    Str password = {};
     bool fullDump = true;
-    char* renderPath = nullptr;
+    Str renderPath = {};
     float renderZoom = 1.f;
     bool loadOnly = false, silent = false;
 
@@ -520,8 +529,8 @@ void EngineDump(const Flags& flags) {
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")
     if (INVALID_HANDLE_VALUE != hfind) {
-        char* dir = path::GetDirTemp(Str(filePath));
-        char* name = ToUtf8Temp(fdata.cFileName);
+        TempStr dir = path::GetDirTemp(filePath);
+        TempStr name = ToUtf8Temp(fdata.cFileName);
         filePath = path::JoinTemp(dir, name);
         FindClose(hfind);
     }
