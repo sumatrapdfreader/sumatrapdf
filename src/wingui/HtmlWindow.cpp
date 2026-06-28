@@ -1479,8 +1479,8 @@ void HtmlWindow::NavigateToAboutBlank() {
 
 void HtmlWindow::SetHtml(const ByteSlice& d, Str url) {
     FreeHtmlSetInProgressData();
-    str::ReplaceWithCopy(&htmlSetInProgress, str::Dup(d));
-    str::ReplaceWithCopy(&htmlSetInProgressUrl, str::Dup(url));
+    str::ReplacePtr(&htmlSetInProgress, str::Dup(d));
+    str::ReplacePtr(&htmlSetInProgressUrl, str::Dup(url));
     NavigateToAboutBlank();
     // the real work will happen in OnDocumentComplete()
 }

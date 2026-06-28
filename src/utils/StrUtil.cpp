@@ -541,9 +541,10 @@ void ReplacePtr(Str* s, Str snew) {
 }
 
 void ReplaceWithCopy(Str* s, Str snew) {
-    if (s->s != snew.s) {
+    Str dup = str::Dup(snew);
+    if (s->s != dup.s) {
         str::Free(s->s);
-        *s = snew;
+        *s = dup;
     }
 }
 

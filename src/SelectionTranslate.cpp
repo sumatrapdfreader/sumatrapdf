@@ -213,7 +213,7 @@ static void MaybeSaveTranslateToLang(Str dstLang) {
     if (saved && str::EqI(saved, normalized)) {
         return;
     }
-    str::ReplaceWithCopy(&gGlobalPrefs->translateToLang, str::Dup(normalized));
+    str::ReplacePtr(&gGlobalPrefs->translateToLang, str::Dup(normalized));
     SaveSettings();
 }
 

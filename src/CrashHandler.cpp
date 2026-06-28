@@ -811,7 +811,7 @@ bool SetSymbolsDir(Str symDir) {
     if (!symDir) {
         return false;
     }
-    str::ReplaceWithCopy(&gSymbolsDir, str::Dup(symDir));
+    str::ReplacePtr(&gSymbolsDir, str::Dup(symDir));
     return true;
 }
 

@@ -1229,7 +1229,7 @@ bool TtsSetVoiceById(Str voiceId) {
         return false;
     }
 
-    str::ReplaceWithCopy(&gTtsVoiceId, voiceId ? str::Dup(voiceId) : Str{});
+    str::ReplacePtr(&gTtsVoiceId, voiceId ? str::Dup(voiceId) : Str{});
     return true;
 }
 
