@@ -435,7 +435,7 @@ bool EngineDjVu::LoadMediaboxes() {
         return false;
     }
     char buffer[16];
-    ByteReader r(buffer, sizeof(buffer));
+    ByteReader r(Str(buffer, (int)sizeof(buffer)));
     if (!ReadBytes(h, 0, buffer, 16) || r.DWordBE(0) != DJVU_MARK_MAGIC || r.DWordBE(4) != DJVU_MARK_FORM) {
         return false;
     }

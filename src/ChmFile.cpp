@@ -316,7 +316,7 @@ bool ChmFile::Load(Str path) {
     char header[24]{};
     int n = file::ReadN(path, header, sizeof(header));
     if (n < (int)sizeof(header)) {
-        ByteReader r(header, sizeof(header));
+        ByteReader r(Str(header, (int)sizeof(header)));
         DWORD lcid = r.DWordLE(20);
         fileCodepage = LcidToCodepage(lcid);
     }
