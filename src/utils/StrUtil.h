@@ -191,14 +191,14 @@ WStr Dup(Arena*, WStr str, size_t cch = (size_t)-1);
 WStr Dup(WStr s, size_t cch = (size_t)-1);
 WStr Join(WStr, WStr, WStr s3 = {});
 WStr Join(Arena*, WStr, WStr, WStr s3);
-bool Eq(const WCHAR*, const WCHAR*);
-bool EqI(const WCHAR*, const WCHAR*);
-bool EqN(const WCHAR*, const WCHAR*, size_t);
-bool IsEmpty(const WCHAR*);
-bool StartsWith(const WCHAR* str, const WCHAR* prefix);
-bool StartsWithI(const WCHAR* str, const WCHAR* prefix);
-bool EndsWith(const WCHAR* txt, const WCHAR* end);
-bool EndsWithI(const WCHAR* txt, const WCHAR* end);
+bool Eq(WStr s1, WStr s2);
+bool EqI(WStr s1, WStr s2);
+bool EqN(WStr s1, WStr s2, size_t len);
+bool IsEmpty(WStr s);
+bool StartsWith(WStr str, WStr prefix);
+bool StartsWithI(WStr str, WStr prefix);
+bool EndsWith(WStr txt, WStr end);
+bool EndsWithI(WStr txt, WStr end);
 WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
@@ -434,14 +434,14 @@ FORCEINLINE bool Eq(Str s1, const char* s2) {
 FORCEINLINE bool Eq(const char* s1, Str s2) {
     return Eq(Str(s1), s2);
 }
+FORCEINLINE bool Eq(const WCHAR* s1, const WCHAR* s2) {
+    return Eq(WStr(s1), WStr(s2));
+}
 FORCEINLINE bool Eq(WStr s1, const WCHAR* s2) {
-    return Eq(s1.s, s2);
+    return Eq(s1, WStr(s2));
 }
 FORCEINLINE bool Eq(const WCHAR* s1, WStr s2) {
-    return Eq(s1, s2.s);
-}
-FORCEINLINE bool Eq(WStr s1, WStr s2) {
-    return WStrEq(s1, s2);
+    return Eq(WStr(s1), s2);
 }
 FORCEINLINE bool EqI(const char* s1, const char* s2) {
     return EqI(Str(s1), Str(s2));
@@ -452,17 +452,17 @@ FORCEINLINE bool EqI(Str s1, const char* s2) {
 FORCEINLINE bool EqI(const char* s1, Str s2) {
     return EqI(Str(s1), s2);
 }
+FORCEINLINE bool EqI(const WCHAR* s1, const WCHAR* s2) {
+    return EqI(WStr(s1), WStr(s2));
+}
 FORCEINLINE bool EqI(WStr s1, const WCHAR* s2) {
-    return EqI(s1.s, s2);
+    return EqI(s1, WStr(s2));
 }
 FORCEINLINE bool EqI(const WCHAR* s1, WStr s2) {
-    return EqI(s1, s2.s);
+    return EqI(WStr(s1), s2);
 }
-FORCEINLINE bool EqI(WStr s1, WStr s2) {
-    return EqI(s1.s, s2.s);
-}
-FORCEINLINE bool IsEmpty(WStr s) {
-    return !s || s.len == 0;
+FORCEINLINE bool IsEmpty(const WCHAR* s) {
+    return !s || !*s;
 }
 FORCEINLINE bool StartsWith(const u8* str, const char* prefix) {
     return StartsWith(str, Str(prefix));
@@ -473,8 +473,14 @@ FORCEINLINE bool StartsWith(const char* str, const char* prefix) {
 FORCEINLINE bool StartsWith(Str str, const char* prefix) {
     return StartsWith(str, Str(prefix));
 }
+FORCEINLINE bool StartsWith(const WCHAR* str, const WCHAR* prefix) {
+    return StartsWith(WStr(str), WStr(prefix));
+}
 FORCEINLINE bool StartsWith(WStr str, const WCHAR* prefix) {
-    return StartsWith(str.s, prefix);
+    return StartsWith(str, WStr(prefix));
+}
+FORCEINLINE bool StartsWith(const WCHAR* str, WStr prefix) {
+    return StartsWith(WStr(str), prefix);
 }
 FORCEINLINE bool StartsWithI(const char* str, const char* prefix) {
     return StartsWithI(Str(str), Str(prefix));
@@ -482,8 +488,14 @@ FORCEINLINE bool StartsWithI(const char* str, const char* prefix) {
 FORCEINLINE bool StartsWithI(Str str, const char* prefix) {
     return StartsWithI(str, Str(prefix));
 }
+FORCEINLINE bool StartsWithI(const WCHAR* str, const WCHAR* prefix) {
+    return StartsWithI(WStr(str), WStr(prefix));
+}
 FORCEINLINE bool StartsWithI(WStr str, const WCHAR* prefix) {
-    return StartsWithI(str.s, prefix);
+    return StartsWithI(str, WStr(prefix));
+}
+FORCEINLINE bool StartsWithI(const WCHAR* str, WStr prefix) {
+    return StartsWithI(WStr(str), prefix);
 }
 FORCEINLINE bool EndsWith(const char* txt, const char* end) {
     return EndsWith(Str(txt), Str(end));
@@ -491,8 +503,14 @@ FORCEINLINE bool EndsWith(const char* txt, const char* end) {
 FORCEINLINE bool EndsWith(Str txt, const char* end) {
     return EndsWith(txt, Str(end));
 }
+FORCEINLINE bool EndsWith(const WCHAR* txt, const WCHAR* end) {
+    return EndsWith(WStr(txt), WStr(end));
+}
 FORCEINLINE bool EndsWith(WStr txt, const WCHAR* end) {
-    return EndsWith(txt.s, end);
+    return EndsWith(txt, WStr(end));
+}
+FORCEINLINE bool EndsWith(const WCHAR* txt, WStr end) {
+    return EndsWith(WStr(txt), end);
 }
 FORCEINLINE bool EndsWithI(const char* txt, const char* end) {
     return EndsWithI(Str(txt), Str(end));
@@ -502,6 +520,15 @@ FORCEINLINE bool EndsWithI(Str txt, const char* end) {
 }
 FORCEINLINE bool EndsWithI(const char* txt, Str end) {
     return EndsWithI(Str(txt), end);
+}
+FORCEINLINE bool EndsWithI(const WCHAR* txt, const WCHAR* end) {
+    return EndsWithI(WStr(txt), WStr(end));
+}
+FORCEINLINE bool EndsWithI(WStr txt, const WCHAR* end) {
+    return EndsWithI(txt, WStr(end));
+}
+FORCEINLINE bool EndsWithI(const WCHAR* txt, WStr end) {
+    return EndsWithI(WStr(txt), end);
 }
 FORCEINLINE bool Contains(const char* s, const char* txt) {
     return Contains(Str(s), Str(txt));

@@ -2311,78 +2311,80 @@ WCHAR* CastToWCHAR(Str s) {
 }
 
 // return true if s1 == s2, case sensitive
-bool Eq(const WCHAR* s1, const WCHAR* s2) {
-    if (s1 == s2) {
-        return true;
-    }
-    if (!s1 || !s2) {
-        return false;
-    }
-    return 0 == wcscmp(s1, s2);
+bool Eq(WStr s1, WStr s2) {
+    return WStrEq(s1, s2);
 }
 
 // return true if s1 == s2, case insensitive
-bool EqI(const WCHAR* s1, const WCHAR* s2) {
-    if (s1 == s2) {
+bool EqI(WStr s1, WStr s2) {
+    if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2) {
         return false;
     }
-    return 0 == _wcsicmp(s1, s2);
+    if (s1.len != s2.len) {
+        return false;
+    }
+    return 0 == _wcsnicmp(s1.s, s2.s, (size_t)s1.len);
 }
 
-bool EqN(const WCHAR* s1, const WCHAR* s2, size_t len) {
-    if (s1 == s2) {
+bool EqN(WStr s1, WStr s2, size_t len) {
+    if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2) {
         return false;
     }
-    return 0 == wcsncmp(s1, s2, len);
+    return 0 == wcsncmp(s1.s, s2.s, len);
 }
 
-bool IsEmpty(const WCHAR* s) {
-    return !s || (0 == *s);
+bool IsEmpty(WStr s) {
+    return !s || s.len == 0;
 }
 
-bool StartsWith(const WCHAR* str, const WCHAR* prefix) {
-    return EqN(str, prefix, Len(prefix));
+bool StartsWith(WStr str, WStr prefix) {
+    if (!prefix) {
+        return true;
+    }
+    if (!str || prefix.len > str.len) {
+        return false;
+    }
+    return EqN(str, prefix, (size_t)prefix.len);
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-bool StartsWithI(const WCHAR* str, const WCHAR* prefix) {
-    if (str == prefix) {
+bool StartsWithI(WStr str, WStr prefix) {
+    if (str.s == prefix.s) {
         return true;
     }
-    if (!str || !prefix) {
+    if (!prefix) {
+        return true;
+    }
+    if (!str || prefix.len > str.len) {
         return false;
     }
-    return 0 == _wcsnicmp(str, prefix, str::Len(prefix));
+    return 0 == _wcsnicmp(str.s, prefix.s, (size_t)prefix.len);
 }
 
-bool EndsWith(const WCHAR* txt, const WCHAR* end) {
+bool EndsWith(WStr txt, WStr end) {
     if (!txt || !end) {
         return false;
     }
-    size_t txtLen = str::Len(txt);
-    size_t endLen = str::Len(end);
-    if (endLen > txtLen) {
+    if (end.len > txt.len) {
         return false;
     }
-    return str::Eq(txt + txtLen - endLen, end);
+    return Eq(WStr(txt.s + txt.len - end.len, (int)end.len), end);
 }
 
-bool EndsWithI(const WCHAR* txt, const WCHAR* end) {
+bool EndsWithI(WStr txt, WStr end) {
     if (!txt || !end) {
         return false;
     }
-    size_t txtLen = str::Len(txt);
-    size_t endLen = str::Len(end);
-    if (endLen > txtLen) {
+    if (end.len > txt.len) {
         return false;
     }
-    return str::EqI(txt + txtLen - endLen, end);
+    return EqI(WStr(txt.s + txt.len - end.len, (int)end.len), end);
 }
 
 const WCHAR* FindChar(const WCHAR* str, WCHAR c) {
