@@ -34,7 +34,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     for (int w = 0; w < nWords; w++) {
         Str word = filterWords.At(w);
         int wordLen = word.len;
-        if (wordLen == 0) {
+        if (str::IsEmpty(word)) {
             continue;
         }
         Str rest = text;
@@ -138,6 +138,9 @@ bool FilterMatches(Str str, const StrVec& words) {
     int nWords = words.Size();
     for (int i = 0; i < nWords; i++) {
         Str word = words.At(i);
+        if (str::IsEmpty(word)) {
+            continue;
+        }
         if (!str::ContainsI(str, word)) {
             return false;
         }
@@ -147,17 +150,20 @@ bool FilterMatches(Str str, const StrVec& words) {
 
 void SplitFilterToWords(Str filter, StrVec& words) {
     int i = 0;
-    while (i < filter.len) {
+    while (i < filter.len && filter.s[i]) {
         while (i < filter.len && str::IsWs(filter.s[i])) {
             i++;
         }
-        if (i >= filter.len) {
+        if (i >= filter.len || !filter.s[i]) {
             break;
         }
         int start = i;
-        while (i < filter.len && !str::IsWs(filter.s[i])) {
+        while (i < filter.len && filter.s[i] && !str::IsWs(filter.s[i])) {
             i++;
         }
-        AppendIfNotExists(&words, Str(filter.s + start, i - start));
+        Str word(filter.s + start, i - start);
+        if (!str::IsEmpty(word)) {
+            AppendIfNotExists(&words, word);
+        }
     }
 }

@@ -2186,22 +2186,23 @@ size_t HwndGetTextLen(HWND hwnd) {
 // return text of window or edit control, nullptr in case of an error
 TempWStr HwndGetTextWTemp(HWND hwnd) {
     size_t cch = HwndGetTextLen(hwnd);
-    TempWStr txt = WStr(AllocArrayTemp<WCHAR>(cch + 2), (int)cch + 2); // +2 for extra room
-    if (nullptr == txt) {
+    WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 2); // +2 for extra room
+    if (!buf) {
         return {};
     }
-    SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)txt.s);
-    return txt;
+    LRESULT copied = SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)buf);
+    return WStr(buf, (int)copied);
 }
 
 // return text of window or edit control, nullptr in case of an error
 TempStr HwndGetTextTemp(HWND hwnd) {
     size_t cch = HwndGetTextLen(hwnd);
-    TempWStr txt = WStr(AllocArrayTemp<WCHAR>(cch + 2), (int)cch + 2); // +2 jic
-    if (nullptr == txt) {
+    WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 2); // +2 jic
+    if (!buf) {
         return {};
     }
-    SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)txt.s);
+    LRESULT copied = SendMessageW(hwnd, WM_GETTEXT, cch + 1, (LPARAM)buf);
+    WStr txt(buf, (int)copied);
     return ToUtf8Temp(txt);
 }
 
