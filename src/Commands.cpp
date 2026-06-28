@@ -1062,26 +1062,25 @@ static CommandArg* ParseArgOfType(Str argName, CommandArg::Type type, Str val) {
 
 static int ParseBool(Str s);
 
-CommandArg* TryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
+CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
     // first is default value
-    const char* valStart = str::SkipChar(*argsInOut, ' ');
-    const char* valEnd = str::FindChar(valStart, ' ');
+    Str rest = str::SkipChar(*argsInOut, ' ');
+    Str valEnd = str::FindChar(rest, ' ');
     Str argName = argSpecs[defaultArgIdx].name;
     CommandArg::Type type = argSpecs[defaultArgIdx].type;
     if (type == CommandArg::Type::String) {
         // for strings we eat it all to avoid the need for proper quoting
         // creates a problem: all named args must be before default string arg
-        valEnd = nullptr;
+        valEnd = {};
     }
     TempStr val = nullptr;
-    if (valEnd == nullptr) {
-        val = str::Dup(valStart);
+    if (!valEnd) {
+        val = str::Dup(rest);
+        *argsInOut = {};
     } else {
-        val = str::Dup(valStart, valEnd - valStart);
-        valEnd = str::SkipChar(valEnd, ' ');
+        val = str::Dup(Str(rest.s, (int)(valEnd.s - rest.s)));
+        *argsInOut = str::SkipChar(valEnd, ' ');
     }
-    // no matter what, we advance past the value
-    *argsInOut = valEnd;
 
     if (type == CommandArg::Type::Bool) {
         // a default (positional) bool, e.g. [CmdToggleFullscreen on] (issue #5067)
@@ -1111,11 +1110,11 @@ static int ParseBool(Str s) {
 //   <name>: <value>
 //   <name>=<value>
 // for booleans only <name> works as well and represents true
-CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
-    const char* valStart = nullptr;
+CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
+    Str valStart;
     Str argName;
     CommandArg::Type type = CommandArg::Type::None;
-    const char* s = *argsInOut;
+    Str rest = *argsInOut;
     int cmdId = argSpecs[firstArgIdx].cmdId;
     for (int i = firstArgIdx;; i++) {
         if (argSpecs[i].cmdId != cmdId) {
@@ -1123,57 +1122,59 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
             return nullptr;
         }
         argName = argSpecs[i].name;
-        if (!str::StartsWithI(Str(s), argName)) {
+        if (!str::StartsWithI(rest, argName)) {
             continue;
         }
         type = argSpecs[i].type;
         break;
     }
-    s += argName.len;
-    if (s[0] == 0) {
+    rest = Str(rest.s + argName.len, rest.len - argName.len);
+    if (!rest) {
         if (type == CommandArg::Type::Bool) {
             // name of bool arg followed by nothing is true
-            *argsInOut = nullptr;
+            *argsInOut = {};
             auto arg = NewArg(type, argName);
             arg->boolVal = true;
             return arg;
         }
-    } else if (s[0] == ' ') {
+    } else if (rest.s[0] == ' ') {
         if (type == CommandArg::Type::Bool) {
             // name of bool arg followed by nothing is true
-            s = str::SkipChar(s, ' ');
-            *argsInOut = s;
+            rest = str::SkipChar(rest, ' ');
+            *argsInOut = rest;
             auto arg = NewArg(type, argName);
             arg->boolVal = true;
             return arg;
         }
-        valStart = str::SkipChar(s, ' ');
-    } else if (s[0] == ':' && s[1] == ' ') {
-        valStart = str::SkipChar(s + 1, ' ');
-    } else if (s[0] == '=') {
-        valStart = s + 1;
+        valStart = str::SkipChar(rest, ' ');
+    } else if (rest.len >= 2 && rest.s[0] == ':' && rest.s[1] == ' ') {
+        valStart = str::SkipChar(Str(rest.s + 1, rest.len - 1), ' ');
+    } else if (rest.s[0] == '=') {
+        valStart = Str(rest.s + 1, rest.len - 1);
     }
-    if (valStart == nullptr) {
+    if (!valStart) {
         // <args> doesn't start with any of the available commands for this command
         return nullptr;
     }
-    const char* valEnd = str::FindChar(valStart, ' ');
+    Str valEnd = str::FindChar(valStart, ' ');
     TempStr val = nullptr;
-    if (valEnd == nullptr) {
+    Str afterVal;
+    if (!valEnd) {
         val = str::DupTemp(valStart);
+        afterVal = {};
     } else {
-        val = str::DupTemp(valStart, valEnd - valStart);
-        valEnd++;
+        val = str::DupTemp(Str(valStart.s, (int)(valEnd.s - valStart.s)));
+        afterVal = Str(valEnd.s + 1, valEnd.len - 1);
     }
     if (type == CommandArg::Type::Bool) {
         auto bv = ParseBool(val);
         bool b;
         if (bv == 0) {
             b = false;
-            *argsInOut = valEnd;
+            *argsInOut = afterVal;
         } else if (bv == 1) {
             b = true;
-            *argsInOut = valEnd;
+            *argsInOut = afterVal;
         } else {
             // bv is -1, which means not a recognized bool value, so assume
             // it wasn't given
@@ -1186,7 +1187,7 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
         return arg;
     }
 
-    *argsInOut = valEnd;
+    *argsInOut = afterVal;
     return ParseArgOfType(argName, type, val);
 }
 
@@ -1271,12 +1272,11 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         return nullptr;
     }
 
-    TempStr currArgZ = StrDupTemp(parts.At(1));
-    const char* currArg = currArgZ.s;
+    Str currArg = StrDupTemp(parts.At(1));
 
     CommandArg* firstArg = nullptr;
     CommandArg* arg;
-    for (; currArg && *currArg;) {
+    for (; currArg;) {
         arg = TryParseNamedArg(firstArgIdx, &currArg);
         if (!arg) {
             arg = TryParseDefaultArg(firstArgIdx, &currArg);
