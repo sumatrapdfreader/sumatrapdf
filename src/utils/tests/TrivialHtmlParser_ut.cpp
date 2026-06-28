@@ -159,7 +159,7 @@ static void HtmlParser07() {
 }
 
 static void HtmlParser08() {
-    AutoFreeWStr val(DecodeHtmlEntitites("&auml&test;&&ouml-", CP_ACP).s);
+    AutoFreeWStr val(DecodeHtmlEntities("&auml&test;&&ouml-", CP_ACP).s);
     utassert(str::Eq(WStr(val.Get()), WStr(L"\xE4&test;&\xF6-")));
 }
 

@@ -83,18 +83,18 @@ class HtmlParser {
     HtmlElement* FindElementByNameNS(Str name, Str ns, HtmlElement* from = nullptr);
 };
 
-WStr DecodeHtmlEntitites(Str string, uint codepage);
-Str DecodeHtmlEntititesTemp(Str string, uint codepage);
+WStr DecodeHtmlEntities(Str string, uint codepage);
+Str DecodeHtmlEntitiesTemp(Str string, uint codepage);
 
 namespace strconv {
 
 inline WStr FromHtmlUtf8(Str s) {
     TempStr tmp = str::DupTemp(s);
-    return DecodeHtmlEntitites(tmp, CP_UTF8);
+    return DecodeHtmlEntities(tmp, CP_UTF8);
 }
 
 inline Str FromHtmlUtf8Temp(Str s) {
     TempStr tmp = str::DupTemp(s);
-    return DecodeHtmlEntititesTemp(tmp, CP_UTF8);
+    return DecodeHtmlEntitiesTemp(tmp, CP_UTF8);
 }
 } // namespace strconv

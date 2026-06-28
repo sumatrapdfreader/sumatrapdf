@@ -60,7 +60,7 @@ static WCHAR IntToChar(int codepoint) {
 }
 
 // caller needs to free() the result
-WStr DecodeHtmlEntitites(Str string, uint codepage) {
+WStr DecodeHtmlEntities(Str string, uint codepage) {
     TempWStr fixedTemp = strconv::StrCPToWStrTemp(string, codepage);
     WStr fixed = str::Dup(fixedTemp);
     WCHAR* dst = fixed.s;       // str-port: owned heap write cursor
@@ -109,8 +109,8 @@ WStr DecodeHtmlEntitites(Str string, uint codepage) {
 }
 
 // TODO: optimize
-Str DecodeHtmlEntititesTemp(Str s, uint codepage) {
-    WStr ws = DecodeHtmlEntitites(s, codepage);
+Str DecodeHtmlEntitiesTemp(Str s, uint codepage) {
+    WStr ws = DecodeHtmlEntities(s, codepage);
     Str res = ToUtf8Temp(ws);
     str::Free(ws.s);
     return res;
@@ -154,7 +154,7 @@ HtmlAttr* HtmlParser::AllocAttr(Str name, HtmlAttr* next) {
 Str HtmlElement::GetAttributeTemp(Str name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name)) {
-            return DecodeHtmlEntititesTemp(attr->val, codepage);
+            return DecodeHtmlEntitiesTemp(attr->val, codepage);
         }
     }
     return {};
