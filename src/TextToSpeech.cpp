@@ -38,7 +38,7 @@ static bool gTtsActive = false;
 
 // copy of the text passed to last speak request and the position (in WCHARs)
 // of the last word boundary reached, for resuming stopped speech
-static WCHAR* gTtsSpokenText = nullptr;
+static WStr gTtsSpokenText;
 
 static Str gTtsVoiceId;
 
@@ -1166,8 +1166,8 @@ bool TtsSpeakUtf8(Str text) {
         return false;
     }
 
-    str::Free(gTtsSpokenText);
-    gTtsSpokenText = str::Dup(textW);
+    str::Free(gTtsSpokenText.s);
+    gTtsSpokenText = WStr(str::Dup(textW));
     gTtsActive = true;
     return true;
 }
@@ -1184,7 +1184,7 @@ int TtsGetSpokenPosUtf8() {
         wpos = (int)gSapiLastWordPos;
     }
 
-    if (!gTtsSpokenText || wpos < 0) {
+    if (!gTtsSpokenText.s || wpos < 0) {
         return -1;
     }
     if (wpos == 0) {
@@ -1193,7 +1193,7 @@ int TtsGetSpokenPosUtf8() {
         }
         return 0;
     }
-    int n = WideCharToMultiByte(CP_UTF8, 0, gTtsSpokenText, wpos, nullptr, 0, nullptr, nullptr);
+    int n = WideCharToMultiByte(CP_UTF8, 0, gTtsSpokenText.s, wpos, nullptr, 0, nullptr, nullptr);
     return n > 0 ? n : -1;
 }
 

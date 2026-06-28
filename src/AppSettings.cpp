@@ -51,7 +51,7 @@ static bool ApplyReadAloudVoiceFromSettings() {
 
     if (!TtsSetVoiceById(voiceId)) {
         logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId);
-        str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, nullptr);
+        str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, Str{});
         TtsSetVoiceById("");
         return true;
     }
