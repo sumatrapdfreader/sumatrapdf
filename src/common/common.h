@@ -254,6 +254,7 @@ struct WStr {
     WStr(const wchar_t* s_) : s((wchar_t*)s_), len(0) {
         while (s_ && s_[len]) len++;
     }
+    explicit WStr(const wchar_t* s_, int len_) : s((wchar_t*)s_), len(len_) {}
     explicit WStr(wchar_t* s_) : s(s_), len(0) {
         while (s && s[len]) len++;
     }

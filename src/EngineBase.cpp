@@ -509,7 +509,11 @@ WStr EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     if (coordsOut) {
         *coordsOut = pt->coords;
     }
-    return pt->text;
+    WStr text = pt->text;
+    if (text.s && pt->len > 0) {
+        text.len = pt->len;
+    }
+    return text;
 }
 
 int EngineBase::PageCount() const {
