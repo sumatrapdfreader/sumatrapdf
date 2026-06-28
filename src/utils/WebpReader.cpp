@@ -17,8 +17,8 @@ bool HasSignature(const ByteSlice& d) {
     if (d.size() <= 12) {
         return false;
     }
-    char* data = (char*)d.data();
-    return str::StartsWith(data, "RIFF") && str::StartsWith(data + 8, "WEBP");
+    Str data = AsStr(d);
+    return str::StartsWith(data, "RIFF") && str::StartsWith(Str(data.s + 8, data.len - 8), "WEBP");
 }
 
 Size SizeFromData(const ByteSlice& d) {

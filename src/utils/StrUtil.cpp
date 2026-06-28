@@ -384,10 +384,6 @@ bool StartsWith(Str s, Str prefix) {
     return EqN(s, prefix, Len(prefix));
 }
 
-bool StartsWith(const u8* str, Str prefix) {
-    return StartsWith(Str((char*)str, prefix.len), prefix);
-}
-
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(Str s, Str prefix) {
     if (s.s == prefix.s) {
@@ -471,23 +467,20 @@ Str FindI(Str s, Str toFind) {
     // case-fold a non-ASCII needle (e.g. Cyrillic), so that case-insensitive
     // search works for non-Latin text too (issue #5717).
     bool asciiNeedle = true;
-    for (const char* p = toFind.s; *p; p++) {
-        if ((u8)*p >= 0x80) {
+    for (int i = 0; i < toFind.len; i++) {
+        if ((u8)toFind.s[i] >= 0x80) {
             asciiNeedle = false;
             break;
         }
     }
     if (asciiNeedle) {
-        const char* p = s.s;
-        while (*p) {
-            char c = (char)tolower(*p);
+        for (int off = 0; off < s.len && s.s[off]; off++) {
+            char c = (char)tolower(s.s[off]);
             if (c == first) {
-                if (str::StartsWithI(Str((char*)p), toFind)) {
-                    int off = (int)(p - s.s);
+                if (str::StartsWithI(Str(s.s + off, s.len - off), toFind)) {
                     return Str(s.s + off, s.len - off);
                 }
             }
-            p++;
         }
         return {};
     }

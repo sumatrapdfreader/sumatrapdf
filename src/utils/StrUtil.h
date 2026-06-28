@@ -113,7 +113,6 @@ bool EqN(Str s1, Str s2, size_t len);
 bool EqNI(Str s1, Str s2, size_t len);
 bool IsEmpty(Str s);
 bool StartsWith(Str str, Str prefix);
-bool StartsWith(const u8* str, Str prefix);
 
 bool StartsWithI(Str str, Str prefix);
 bool EndsWith(Str txt, Str end);

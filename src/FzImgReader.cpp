@@ -207,7 +207,7 @@ static Pixmap* FzImageFromData(const ByteSlice& d) {
     }
 
     Pixmap* result = nullptr;
-    if (str::StartsWith(data, "\xFF\xD8")) {
+    if (str::StartsWith(AsStr(d), "\xFF\xD8")) {
         result = PixmapFromJpegData(ctx, data, (int)len);
     } else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
         result = PixmapFromJp2Data(ctx, data, (int)len);
