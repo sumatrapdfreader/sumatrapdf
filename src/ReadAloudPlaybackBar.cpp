@@ -50,9 +50,9 @@ constexpr int kBarPadY = 6;
 constexpr int kBtnGap = 8;
 constexpr int kBtnPadX = 10;
 
-static const char* ReadAloudScopeLabel(WindowTab* tab) {
+static Str ReadAloudScopeLabel(WindowTab* tab) {
     if (!tab) {
-        return "";
+        return {};
     }
     switch (tab->readAloudScope) {
         case WindowTab::ReadAloudScopeSelection:
@@ -72,7 +72,7 @@ static TempStr ReadAloudPlaybackBarTextTemp(WindowTab* tab) {
         return {};
     }
 
-    const char* docName = tab->GetTabTitle();
+    Str docName = tab->GetTabTitle();
     if (str::IsEmpty(docName)) {
         docName = _TRA("document");
     }
@@ -80,13 +80,13 @@ static TempStr ReadAloudPlaybackBarTextTemp(WindowTab* tab) {
     int pageNo = 0;
     int pageCount = 0;
     bool hasPage = ReadAloudGetProgressPage(tab, &pageNo, &pageCount);
-    const char* scope = ReadAloudScopeLabel(tab);
+    Str scope = ReadAloudScopeLabel(tab);
 
     if (hasPage && pageCount > 0) {
-        return str::FormatTemp(_TRA("Reading \xC2\xB7 %s \xC2\xB7 page %d of %d \xC2\xB7 %s"), docName, pageNo,
-                               pageCount, scope);
+        return str::FormatTemp(_TRA("Reading \xC2\xB7 %s \xC2\xB7 page %d of %d \xC2\xB7 %s"), docName.s, pageNo,
+                               pageCount, scope.s);
     }
-    return str::FormatTemp(_TRA("Reading \xC2\xB7 %s \xC2\xB7 %s"), docName, scope);
+    return str::FormatTemp(_TRA("Reading \xC2\xB7 %s \xC2\xB7 %s"), docName.s, scope.s);
 }
 
 static bool ReadAloudPlaybackBarHitTest(const Rect& r, Point pt) {
@@ -132,8 +132,8 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     int btnGap = DpiScale(hwnd, kBtnGap);
     int btnPadX = DpiScale(hwnd, kBtnPadX);
 
-    const char* pauseLabel = showResume ? _TRA("Resume") : _TRA("Pause");
-    const char* stopLabel = _TRA("Stop");
+    Str pauseLabel = showResume ? _TRA("Resume") : _TRA("Pause");
+    Str stopLabel = _TRA("Stop");
     TempStr status = ReadAloudPlaybackBarTextTemp(sessionTab);
 
     HDC hdc = GetDC(hwnd);
@@ -219,7 +219,7 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     HdcDrawText(hdc, status, &rTmp, txtFmt);
 
     Point curPos = HwndGetCursorPos(hwnd);
-    auto drawBtn = [&](const Rect& r, const char* label) {
+    auto drawBtn = [&](const Rect& r, Str label) {
         if (r.IsEmpty()) {
             return;
         }
@@ -233,7 +233,7 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         DrawCenteredText(hdc, r, label);
     };
 
-    const char* pauseLabel = showResume ? _TRA("Resume") : _TRA("Pause");
+    Str pauseLabel = showResume ? _TRA("Resume") : _TRA("Pause");
     drawBtn(rPause, pauseLabel);
     drawBtn(rStop, _TRA("Stop"));
 
