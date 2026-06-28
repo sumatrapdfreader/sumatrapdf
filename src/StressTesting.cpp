@@ -94,12 +94,12 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
 
 static void BenchChmLoadOnly(Str filePath) {
     auto total = TimeGet();
-    logf("Starting: %s\n", filePath);
+    logf("Starting: %s\n", filePath.s);
 
     auto t = TimeGet();
     ChmModel* chmModel = ChmModel::Create(filePath, nullptr);
     if (!chmModel) {
-        logf("Error: failed to load %s\n", filePath);
+        logf("Error: failed to load %s\n", filePath.s);
         return;
     }
 
@@ -113,7 +113,7 @@ static void BenchChmLoadOnly(Str filePath) {
 
     delete chmModel;
 
-    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
+    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath.s);
 }
 
 static void BenchFile(Str path, Str pagesSpec) {
@@ -136,12 +136,12 @@ static void BenchFile(Str path, Str pagesSpec) {
     }
 
     auto total = TimeGet();
-    logf("Starting: %s\n", path);
+    logf("Starting: %s\n", path.s);
 
     auto t = TimeGet();
     EngineBase* engine = CreateEngineFromFile(path, nullptr, true);
     if (!engine) {
-        logf("Error: failed to load %s\n", path);
+        logf("Error: failed to load %s\n", path.s);
         return;
     }
 
@@ -177,7 +177,7 @@ static void BenchFile(Str path, Str pagesSpec) {
 
     SafeEngineRelease(&engine);
 
-    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), path);
+    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), path.s);
 }
 
 static bool IsFileToBench(Str path) {
@@ -219,7 +219,7 @@ void BenchFileOrDir(StrVec& pathsToBench) {
         } else if (dir::Exists(path)) {
             BenchDir(path);
         } else {
-            logf("Error: file or dir %s doesn't exist", path);
+            logf("Error: file or dir %s doesn't exist", path.s);
         }
     }
 }
