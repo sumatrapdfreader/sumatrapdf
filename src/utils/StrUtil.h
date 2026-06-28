@@ -206,9 +206,8 @@ int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
-const WCHAR* FindChar(const WCHAR* str, WCHAR c);
-WCHAR* FindChar(WCHAR* str, WCHAR c);
-const WCHAR* Find(const WCHAR* str, const WCHAR* find);
+WStr FindChar(WStr str, WCHAR c);
+WStr Find(WStr str, WStr find);
 bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
@@ -631,8 +630,11 @@ FORCEINLINE const char* FindChar(const char* str, char c) {
     Str res = FindChar(Str((char*)str), c);
     return res.s;
 }
-FORCEINLINE WCHAR* FindChar(WStr str, WCHAR c) {
-    return FindChar(str.s, c);
+FORCEINLINE const WCHAR* FindChar(const WCHAR* str, WCHAR c) {
+    return FindChar(WStr(str), c).s;
+}
+FORCEINLINE WCHAR* FindChar(WCHAR* str, WCHAR c) {
+    return FindChar(WStr(str), c).s;
 }
 FORCEINLINE char* FindCharLast(char* str, char c) {
     Str res = FindCharLast(Str(str), c);
@@ -645,8 +647,14 @@ FORCEINLINE const char* FindCharLast(const char* str, char c) {
 FORCEINLINE int FindCharIdx(const char* str, char c) {
     return FindCharIdx(Str((char*)str), c);
 }
+FORCEINLINE const WCHAR* Find(const WCHAR* str, const WCHAR* find) {
+    return Find(WStr(str), WStr(find)).s;
+}
 FORCEINLINE const WCHAR* Find(const WStr& str, const WCHAR* find) {
-    return Find(str.s, find);
+    return Find(str, WStr(find)).s;
+}
+FORCEINLINE const WCHAR* Find(const WCHAR* str, WStr find) {
+    return Find(WStr(str), find).s;
 }
 FORCEINLINE bool HexToMem(const char* s, u8* buf, size_t bufLen) {
     return HexToMem(Str((char*)s), buf, bufLen);

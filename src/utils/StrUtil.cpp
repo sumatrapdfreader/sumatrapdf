@@ -2279,7 +2279,7 @@ namespace str {
 // returns true if was replaced
 bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith) {
     // fast path: nothing to replace
-    if (!str::Find(s.els, toReplace.s)) {
+    if (!str::Find(WStr(s.els), toReplace)) {
         return false;
     }
     WStr newStr = str::Replace(WStr(s.els), toReplace, replaceWith);
@@ -2387,16 +2387,28 @@ bool EndsWithI(WStr txt, WStr end) {
     return EqI(WStr(txt.s + txt.len - end.len, (int)end.len), end);
 }
 
-const WCHAR* FindChar(const WCHAR* str, WCHAR c) {
-    return (const WCHAR*)wcschr(str, c);
+WStr FindChar(WStr str, WCHAR c) {
+    if (!str) {
+        return {};
+    }
+    for (int i = 0; i < str.len; i++) {
+        if (str.s[i] == c) {
+            return WStr(str.s + i, str.len - i);
+        }
+    }
+    return {};
 }
 
-WCHAR* FindChar(WCHAR* str, WCHAR c) {
-    return (WCHAR*)wcschr(str, c);
-}
-
-const WCHAR* Find(const WCHAR* str, const WCHAR* find) {
-    return wcsstr(str, find);
+WStr Find(WStr str, WStr find) {
+    if (!str || !find || find.len > str.len) {
+        return {};
+    }
+    for (int i = 0; i <= str.len - find.len; i++) {
+        if (0 == wcsncmp(str.s + i, find.s, (size_t)find.len)) {
+            return WStr(str.s + i, str.len - i);
+        }
+    }
+    return {};
 }
 
 Str ToUpperInPlace(Str s) {
@@ -2431,9 +2443,9 @@ size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
     size_t nReplaced = 0;
     WCHAR* end = str.s + str.len;
     for (WCHAR* c = str.s; c < end; c++) {
-        WCHAR* pos = str::FindChar(oldChars, *c);
+        WStr pos = str::FindChar(oldChars, *c);
         if (pos) {
-            size_t idx = (size_t)(pos - oldChars.s);
+            size_t idx = (size_t)(pos.s - oldChars.s);
             *c = newChars.s[idx];
             nReplaced++;
         }
@@ -2452,13 +2464,18 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
     size_t findLen = (size_t)toReplace.len;
     size_t replLen = (size_t)replaceWith.len;
     const WCHAR* start = s.s;
-    const WCHAR* end;
-    while ((end = str::Find(start, toReplace.s)) != nullptr) {
-        result.Append(start, (size_t)(end - start));
+    const WCHAR* end = s.s + s.len;
+    while (start < end) {
+        WStr rest(start, (int)(end - start));
+        WStr match = str::Find(rest, toReplace);
+        if (!match) {
+            result.Append(start, (size_t)(end - start));
+            break;
+        }
+        result.Append(start, (size_t)(match.s - start));
         result.Append(replaceWith.s, replLen);
-        start = end + findLen;
+        start = match.s + findLen;
     }
-    result.Append(start);
     return WStr(result.StealData());
 }
 
