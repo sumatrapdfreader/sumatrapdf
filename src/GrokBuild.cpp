@@ -349,7 +349,7 @@ static bool IsGrokSessionDirName(Str name) {
     if (!name) {
         return false;
     }
-    int n = str::Leni(name);
+    int n = len(name);
     if (n != 36) {
         return false;
     }

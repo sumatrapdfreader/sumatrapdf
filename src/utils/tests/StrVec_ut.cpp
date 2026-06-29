@@ -429,7 +429,7 @@ static void StrVecTest4_1(StrVec* v) {
     utassert(str::Eq("", v->At(idx)));
     // StrVec: force allocating in side strings
     // first page is 256 bytes so this should force allocation in sideStrings
-    int n = 256 / str::Leni(s);
+    int n = 256 / len(s);
     for (int i = 0; i < n; i++) {
         v->SetAt(idx, s);
     }

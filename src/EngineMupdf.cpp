@@ -457,7 +457,7 @@ static void PdfCleanStringInPlace(WStr& ws) {
         }
     }
     wstr::NormalizeWSInPlace(ws);
-    ws.len = wstr::Leni(ws);
+    ws.len = len(ws);
 }
 
 struct istream_filter {
@@ -3174,7 +3174,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     ScopedCritSec scope1(&pagesLock);
     ScopedCritSec scope2(&docLock);
 
-    int nameLen = str::Leni(name);
+    int nameLen = len(name);
     pdf_obj* dest = nullptr;
 
     fz_var(dest);

@@ -100,11 +100,11 @@ void TextSearch::SetText(WStr text) {
         anchor = {};
     }
 
-    if (wstr::Leni(this->findText) >= INT_MAX) {
+    if (len(this->findText) >= INT_MAX) {
         this->findText.s[(unsigned)INT_MAX - 1] = '\0';
     }
     if (wstr::EndsWith(this->findText, WStrL(L" "))) {
-        this->findText.s[wstr::Leni(this->findText) - 1] = '\0';
+        this->findText.s[len(this->findText) - 1] = '\0';
     }
 
     markAllPagesNonSkip(pagesToSkip);
@@ -137,7 +137,7 @@ void TextSearch::SetDirection(TextSearch::Direction direction) {
     }
     forward = fwd;
     if (findText) {
-        int n = wstr::Leni(findText);
+        int n = len(findText);
         if (fwd) {
             findIndex += n;
         } else {

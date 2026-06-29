@@ -336,8 +336,8 @@ static TempStr StripTrailingSlashTemp(TempStr path) {
         return {};
     }
     TempStr p = str::DupTemp(path);
-    while (str::Leni(p) > 0 && (p.s[str::Leni(p) - 1] == '\\' || p.s[str::Leni(p) - 1] == '/')) {
-        p.s[str::Leni(p) - 1] = 0;
+    while (len(p) > 0 && (p.s[len(p) - 1] == '\\' || p.s[len(p) - 1] == '/')) {
+        p.s[len(p) - 1] = 0;
     }
     return p;
 }

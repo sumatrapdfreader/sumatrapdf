@@ -127,7 +127,7 @@ void DeleteAppTools() {
 void SetAppDataDir(Str dir) {
     dir = path::NormalizeTemp(dir);
     // don't try to create root directories like d:\ (CreateAll would fail)
-    bool isRootDir = str::Leni(dir) == 3 && dir.s[1] == ':' && dir.s[2] == '\\';
+    bool isRootDir = len(dir) == 3 && dir.s[1] == ':' && dir.s[2] == '\\';
     if (!isRootDir) {
         bool ok = dir::CreateAll(dir);
         if (!ok) {
@@ -658,7 +658,7 @@ bool AdjustVariableDriveLetter(Str& path) {
         return false;
     }
     // only check absolute path on drives i.e. those that start with "d:\"
-    if (str::Leni(path) < 4 || path.s[1] != ':') {
+    if (len(path) < 4 || path.s[1] != ':') {
         return false;
     }
 
@@ -684,7 +684,7 @@ bool AdjustVariableDriveLetter(Str& path) {
 bool IsUntrustedFile(Str filePath, Str fileURL) {
     AutoFreeStr protocol;
     if (fileURL && str::Parse(fileURL, "%S:", &protocol)) {
-        if (str::Leni(Str(protocol.Get())) > 1 && !str::EqI(Str(protocol.Get()), "file")) {
+        if (len(Str(protocol.Get())) > 1 && !str::EqI(Str(protocol.Get()), "file")) {
             return true;
         }
     }
@@ -695,7 +695,7 @@ bool IsUntrustedFile(Str filePath, Str fileURL) {
 
     // check all parents of embedded files and ADSs as well
     TempStr path = str::DupTemp(filePath);
-    while (str::Leni(path) > 2 && str::FindChar(Str(path.s + 2, path.len - 2), ':')) {
+    while (len(path) > 2 && str::FindChar(Str(path.s + 2, path.len - 2), ':')) {
         Str lastColon = str::FindCharLast(path, ':');
         *lastColon.s = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET) {

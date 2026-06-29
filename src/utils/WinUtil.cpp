@@ -117,7 +117,7 @@ void EditImplementCtrlBack(HWND hwnd) {
     int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
     // remove the rectangle produced by Ctrl+Backspace
     if (selStart > 0 && text.s[selStart - 1] == '\x7F') {
-        memmove(text.s + selStart - 1, text.s + selStart, wstr::Leni(text.s + selStart - 1) * sizeof(WCHAR));
+        memmove(text.s + selStart - 1, text.s + selStart, len(text.s + selStart - 1) * sizeof(WCHAR));
         TempStr s = ToUtf8Temp(text);
         HwndSetText(hwnd, s);
         selStart = selEnd = selStart - 1;
@@ -3418,7 +3418,7 @@ HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
 }
 
 HGLOBAL StrToHGLOBAL(Str s, UINT flags) {
-    int cb = str::Leni(s) + 1;
+    int cb = len(s) + 1;
     return MemToHGLOBAL((void*)s.s, cb, flags);
 }
 

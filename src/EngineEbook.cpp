@@ -388,7 +388,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(wstr::Leni(lineSep));
+                    coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
@@ -412,7 +412,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(wstr::Leni(lineSep));
+                    coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
@@ -440,7 +440,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     }
     if (content.size() > 0 && !wstr::EndsWith(content.Get(), lineSep)) {
         content.Append(lineSep);
-        coords.AppendBlanks(wstr::Leni(lineSep));
+        coords.AppendBlanks(len(lineSep));
     }
     ReportIf(coords.size() != content.size());
 
@@ -472,7 +472,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(str::Leni(lineSep));
+                    coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
@@ -498,7 +498,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(str::Leni(lineSep));
+                    coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
@@ -529,7 +529,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
     }
     if (content.size() > 0 && !str::EndsWith(Str(content.Get()), lineSep)) {
         content.Append(lineSep);
-        coords.AppendBlanks(str::Leni(lineSep));
+        coords.AppendBlanks(len(lineSep));
     }
     ReportIf(coords.size() != content.size());
 

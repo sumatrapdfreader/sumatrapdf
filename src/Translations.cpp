@@ -141,7 +141,7 @@ Str GetTranslation(Str s) {
     int n = c->Size();
     ReportDebugIf(n % 2 != 0);
     n = n / 2;
-    int sLen = str::Leni(s);
+    int sLen = len(s);
     for (int i = 0; i < n; i++) {
         int idx = i * 2;
         Str s2 = c->At(idx);

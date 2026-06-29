@@ -436,7 +436,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     do {
         TempStr fileName = ToUtf8Temp(fd.cFileName);
         // session files are named <uuid>.jsonl
-        int nameLen = str::Leni(fileName);
+        int nameLen = len(fileName);
         if (nameLen < 42) { // uuid (36) + .jsonl (6) = 42
             continue;
         }
@@ -766,7 +766,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                             if (fp) {
                                 desc.Append(fmt(" (%s)", fp.s));
                             } else if (cmd) {
-                                if (str::Leni(cmd) > 60) {
+                                if (len(cmd) > 60) {
                                     desc.Append(fmt(" $ %.60s...", cmd.s));
                                 } else {
                                     desc.Append(fmt(" $ %s", cmd.s));

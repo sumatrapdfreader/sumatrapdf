@@ -179,7 +179,7 @@ void Tooltip::Update(int id, Str s, const Rect& rc, bool multiline) {
 
 // this assumes we only have at most one tool per this tooltip
 int Tooltip::SetSingle(Str s, const Rect& rc, bool multiline) {
-    if (str::Leni(s) > 256) {
+    if (len(s) > 256) {
         // pathological cases make for tooltips that take too long to display
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2814
         s = Str(ShortenStringUtf8InTheMiddleTemp(s, 250));

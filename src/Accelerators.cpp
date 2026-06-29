@@ -420,14 +420,14 @@ again:
 
     // now we expect a character like 'a' or 'P'
     TempStr s = cursor;
-    if (str::Leni(s) > 1) {
+    if (len(s) > 1) {
         s = str::DupTemp(cursor);
         str::TrimWSInPlace(s, str::TrimOpt::Both);
     }
-    if (str::Leni(s) > 1) {
+    if (len(s) > 1) {
         // possibly a unicode character
         TempWStr ws = ToWStrTemp(s);
-        if (wstr::Leni(ws) != 1) {
+        if (len(ws) != 1) {
             return false;
         }
         WCHAR wc = *ws.s;

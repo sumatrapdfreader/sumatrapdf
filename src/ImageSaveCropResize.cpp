@@ -452,7 +452,7 @@ static void OnFormatChanged(ImageEditWindow* ew) {
     TempStr dest = ToUtf8Temp(destW);
     if (!str::IsEmpty(dest)) {
         TempStr oldExt = path::GetExtTemp(dest);
-        int baseLen = str::Leni(dest) - str::Leni(oldExt);
+        int baseLen = len(dest) - len(oldExt);
         TempStr base = str::DupTemp(Str(dest.s, (int)baseLen));
         TempStr newDest = fmt("%s%s", base.s, newExt.s);
         SetWindowTextW(ew->hwndDestEdit, ToWStrTemp(newDest));
@@ -1192,7 +1192,7 @@ static void OnSave(ImageEditWindow* ew) {
     if (str::EqI(destExt, fmtExt)) {
         dest = str::DupTemp(rawDest);
     } else {
-        int baseLen = str::Leni(rawDest) - str::Leni(destExt);
+        int baseLen = len(rawDest) - len(destExt);
         TempStr base = str::DupTemp(Str(rawDest.s, (int)baseLen));
         dest = fmt("%s%s", base.s, fmtExt.s);
     }

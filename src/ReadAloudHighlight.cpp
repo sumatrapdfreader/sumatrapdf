@@ -762,7 +762,7 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
     if (!ReadAloudGetCurrentWordAbsRange(tab, &wordStartAbs, &wordEndAbs)) {
         if (gReadAloudPaintLogState != 4) {
             gReadAloudPaintLogState = 4;
-            logf("ReadAloud: PaintHighlight: no spoken position (textLen=%d)\n", str::Leni(tab->readAloudText));
+            logf("ReadAloud: PaintHighlight: no spoken position (textLen=%d)\n", len(tab->readAloudText));
         }
         return;
     }

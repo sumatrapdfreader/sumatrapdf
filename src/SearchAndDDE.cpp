@@ -901,7 +901,7 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text
 // TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
 TempStr ReverseTextTemp(Str s) {
     TempWStr ws = ToWStrTemp(s);
-    int n = wstr::Leni(ws);
+    int n = len(ws);
     for (int i = 0; i < n / 2; i++) {
         WCHAR c1 = ws.s[i];
         WCHAR c2 = ws.s[n - 1 - i];
@@ -2030,7 +2030,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     } else if (fmt == CF_UNICODETEXT) {
         TempWStr tmp = ToWStrTemp(str.Get());
         data = (void*)tmp;
-        cbData = (wstr::Leni(tmp) + 1) * 2;
+        cbData = (len(tmp) + 1) * 2;
     } else {
         ReportIf(true);
         return 0;

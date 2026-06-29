@@ -137,7 +137,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
         InflateRect(&rcPageNo, -2, -1);
 
         SIZE txtSize;
-        GetTextExtentPoint32(ncd->hdc, label, str::Leni(label), &txtSize);
+        GetTextExtentPoint32(ncd->hdc, label, len(label), &txtSize);
         rcPageNo.left = rcPageNo.right - txtSize.cx;
 
         SetTextColor(ncd->hdc, GetSysColor(COLOR_WINDOWTEXT));
@@ -146,7 +146,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 
         // Reduce the size of the label and cut off the page number
         rcItem.right = std::max(rcItem.right - txtSize.cx, 0);
-        szText[str::Leni(szText) - str::Leni(label)] = '\0';
+        szText[len(szText) - len(label)] = '\0';
     }
 
     SetTextColor(ncd->hdc, ntvcd->clrText);
@@ -827,7 +827,7 @@ static bool HasTocFilter(MainWindow* win) {
         return false;
     }
     TempStr filter = win->tocFilterEdit->GetTextTemp();
-    return filter && str::Leni(filter) > 0;
+    return filter && len(filter) > 0;
 }
 
 static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win) {
@@ -840,7 +840,7 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
         return;
     }
     TempStr filter = edit->GetTextTemp();
-    if (!filter || str::Leni(filter) == 0) {
+    if (!filter || len(filter) == 0) {
         return;
     }
     Str title = tocItem->title;
@@ -908,9 +908,9 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     RECT highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
         TempWStr prefixToStart = ToWStrTemp(Str(title.s, (int)byteRanges[i].start));
-        int wStart = wstr::Leni(prefixToStart);
+        int wStart = len(prefixToStart);
         TempWStr prefixToEnd = ToWStrTemp(Str(title.s, (int)byteRanges[i].end));
-        int wEnd = wstr::Leni(prefixToEnd);
+        int wEnd = len(prefixToEnd);
 
         SIZE szStart, szEnd;
         GetTextExtentPoint32W(hdc, titleW, wStart, &szStart);
@@ -1258,7 +1258,7 @@ static void ApplyTocFilter(MainWindow* win, Str filter) {
     TreeView* treeView = win->tocTreeView;
     TocTree* origTree = tab->currToc;
 
-    if (!filter || str::Leni(filter) == 0) {
+    if (!filter || len(filter) == 0) {
         // restore original tree
         SetInitialExpandState(origTree->root, tab->tocState);
         treeView->SetTreeModel(origTree);
@@ -1295,7 +1295,7 @@ static LRESULT CALLBACK WndProcTocFilterEdit(HWND hwnd, UINT msg, WPARAM wp, LPA
         Edit* edit = win->tocFilterEdit;
         if (edit) {
             TempStr txt = edit->GetTextTemp();
-            if (txt && str::Leni(txt) > 0) {
+            if (txt && len(txt) > 0) {
                 edit->SetText("");
                 // onTextChanged will fire and restore the tree
                 return 0;

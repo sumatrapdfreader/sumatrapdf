@@ -87,7 +87,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     }
 
     TempWStr textW = ToWStrTemp(text);
-    int textWLen = wstr::Leni(textW);
+    int textWLen = len(textW);
 
     // measure total string width for RTL positioning
     int strOriginX = rc.left;
@@ -101,9 +101,9 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     RECT highlightRects[16];
     for (int i = 0; i < nRanges; i++) {
         TempWStr prefixToStart = ToWStrTemp(Str(text.s, byteRanges[i].start));
-        int wStart = wstr::Leni(prefixToStart);
+        int wStart = len(prefixToStart);
         TempWStr prefixToEnd = ToWStrTemp(Str(text.s, byteRanges[i].end));
-        int wEnd = wstr::Leni(prefixToEnd);
+        int wEnd = len(prefixToEnd);
 
         SIZE szStart, szEnd;
         GetTextExtentPoint32W(hdc, textW, wStart, &szStart);

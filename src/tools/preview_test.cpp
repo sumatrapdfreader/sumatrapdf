@@ -35,7 +35,7 @@ void log(Str s, int) {
 }
 
 void log(Str s, bool) {
-    int cb = str::Leni(s);
+    int cb = len(s);
     log(s, cb);
 }
 

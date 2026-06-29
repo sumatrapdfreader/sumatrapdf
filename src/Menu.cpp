@@ -2184,7 +2184,7 @@ void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
         modi->hbmpItem = mii.hbmpItem;
         modi->hbmpChecked = mii.hbmpChecked;
         modi->hbmpUnchecked = mii.hbmpUnchecked;
-        if (str::Leni(buf) > 0) {
+        if (len(buf) > 0) {
             modi->text = ToUtf8(buf);
         }
         mii.dwItemData = (ULONG_PTR)modi;

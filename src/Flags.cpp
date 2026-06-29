@@ -265,7 +265,7 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
         // pagemode=bookmarks, thumbs, none
         // scrollbar=1|0
         if (str::EqI(name, "search")) {
-            if (str::Leni(val) > 0) {
+            if (len(val) > 0) {
                 i.search = str::Dup(val);
             }
             continue;

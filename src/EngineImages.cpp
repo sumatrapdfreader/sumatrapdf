@@ -1775,7 +1775,7 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
 }
 
 int EngineImageDir::GetPageByLabel(Str label) const {
-    int nLabel = str::Leni(label);
+    int nLabel = len(label);
     for (int i = 0; i < pageFileNames.Size(); i++) {
         Str pagePath = pageFileNames[i];
         TempStr fileName = path::GetBaseNameTemp(pagePath);
@@ -1998,7 +1998,7 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
     if (!utf8) {
         return;
     }
-    int utf8Len = str::Leni(utf8);
+    int utf8Len = len(utf8);
 
     GumboOptions opts = GumboMakeOptions();
     GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, utf8Len);

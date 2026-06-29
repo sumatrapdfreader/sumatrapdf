@@ -81,7 +81,7 @@ void CommandPaletteWnd::QueryChanged() {
     int nItemsPrev = m->ItemsCount();
     if (smartTabMode) {
         if (!stickyMode) {
-            if (str::Leni(filter) > 1) {
+            if (len(filter) > 1) {
                 stickyMode = true;
                 currSelIdx = listBox->GetCurrentSelection();
             }

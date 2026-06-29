@@ -367,7 +367,7 @@ bool SumatraLaunchBrowser(Str url) {
         }
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        int urlLen = str::Leni(url);
+        int urlLen = len(url);
         if (!parent || !url || (urlLen > 4096)) {
             return false;
         }
@@ -3841,10 +3841,10 @@ static void SaveCurrentFileAs(MainWindow* win) {
         if (extOff == 0 && dstFileName[0] != L'.') {
             extOff = colonOff;
         }
-        memmove(dstFileName + extOff, colon.s, (wstr::Leni(colon) + 1) * sizeof(WCHAR));
+        memmove(dstFileName + extOff, colon.s, (len(colon) + 1) * sizeof(WCHAR));
     } else if (wstr::EndsWithI(dstFileName, ToWStrTemp(defExt))) {
         // Remove the extension so that it can be re-added depending on the chosen filter
-        int idx = wstr::Leni(dstFileName) - str::Leni(defExt);
+        int idx = len(dstFileName) - len(defExt);
         dstFileName[idx] = '\0';
     }
 
@@ -3856,7 +3856,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter);
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
-    if (str::Leni(defExt) > 0 && defExt.s[0] == '.') {
+    if (len(defExt) > 0 && defExt.s[0] == '.') {
         defExt = Str(defExt.s + 1, defExt.len - 1);
     }
     ofn.lpstrDefExt = ToWStrTemp(defExt);
@@ -3899,7 +3899,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         return;
     }
     defExt = ctrl->GetDefaultFileExt();
-    if (str::Leni(defExt) > 0 && defExt.s[0] == '.') {
+    if (len(defExt) > 0 && defExt.s[0] == '.') {
         defExt = Str(defExt.s + 1, defExt.len - 1);
     }
     dm = win->AsFixed();
@@ -3932,7 +3932,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
             }
         } else {
             TempStr s = GetLastErrorStrTemp();
-            if (str::Leni(s) > 0) {
+            if (len(s) > 0) {
                 errorMsg = fmt("%s\n\n%s", _TRA("Failed to save a file").s, s.s);
             }
         }
@@ -4036,7 +4036,7 @@ static void RenameCurrentFile(MainWindow* win) {
     str::BufSet(dstFilePathW, dimof(dstFilePathW), baseName);
     // Remove the extension so that it can be re-added depending on the chosen filter
     if (wstr::EndsWithI(dstFilePathW, defExtW)) {
-        int idx = wstr::Leni(dstFilePathW) - wstr::Leni(defExtW);
+        int idx = len(dstFilePathW) - len(defExtW);
         dstFilePathW[idx] = '\0';
     }
 
@@ -4113,7 +4113,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     str::BufSet(dstFileName, dimof(dstFileName), name);
     wstr::TransCharsInPlace(WStr(dstFileName), L":", L"_");
     if (wstr::EndsWithI(dstFileName, defExt)) {
-        int idx = wstr::Leni(dstFileName) - wstr::Leni(defExt);
+        int idx = len(dstFileName) - len(defExt);
         dstFileName[idx] = '\0';
     }
 
@@ -4306,7 +4306,7 @@ static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
     while (*file) {
         path = ToUtf8Temp(path::JoinTemp(dir, file));
         filesOut.Append(path);
-        file += wstr::Leni(file) + 1;
+        file += len(file) + 1;
     }
 }
 
@@ -6152,7 +6152,7 @@ static TempStr URLEncodeMayTruncateTemp(Str s) {
     // with increasingly smaller input strings, from 1500 down to 1000
     int maxLen = kMaxURLLen;
     for (int i = 0; i < 10; i++) {
-        if (wstr::Leni(ws) >= maxLen) {
+        if (len(ws) >= maxLen) {
             ws.s[maxLen - 1] = 0;
         }
         DWORD cchSizeInOut = kMaxURLLen;
@@ -9888,7 +9888,7 @@ static void ReadAloudInTab(WindowTab* tab) {
     TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
 
     if (!str::IsEmpty(text) && isTextOnlySelection) {
-        logf("ReadAloud: InTab: using selection path (len=%d)\n", str::Leni(text));
+        logf("ReadAloud: InTab: using selection path (len=%d)\n", len(text));
         tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromSelection(tab, _TRA("No text available to read aloud"));
     } else {

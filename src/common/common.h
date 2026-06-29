@@ -183,15 +183,7 @@ T* New(Arena* arena, Args&&... args) {
     return new (mem) T(std::forward<Args>(args)...);
 }
 
-// works on any struct with len member (Str, WStr, *Vec)
-template <typename T>
-int len(const T& v) {
-    return v.len;
-}
-template <typename T>
-int len(const T* v) {
-    return v->len;
-}
+// len(Str) / len(WStr) are defined below, after the Str/WStr structs
 
 template <typename T>
 void VecExpandTo(Arena* arena, T& v, int wantedSize) {
@@ -254,7 +246,7 @@ struct Str {
 #define StrL(lit) Str((char*)(lit), (int)(sizeof(lit) - 1)) // str-port: C-string
 
 // Compile-time length (as int) of a string literal (or char[]/WCHAR[] array);
-// faster than str::Leni() which does a runtime strlen. Works for both narrow
+// faster than len() which does a runtime strlen. Works for both narrow
 // and wide literals since dimof counts elements. Not for decayed pointers.
 #define LenL(lit) (dimofi(lit) - 1)
 
@@ -283,6 +275,15 @@ struct WStr {
 
 // Create WStr from wide string literal with compile-time length
 #define WStrL(lit) WStr((wchar_t*)(lit), (int)(sizeof(lit) / sizeof(wchar_t) - 1)) // str-port: C-string
+
+// length of a Str / WStr as int. Also accepts a C string (char* / wchar_t*) via
+// Str/WStr's implicit ctor, like the former str::Leni / wstr::Leni it replaces.
+inline int len(Str s) {
+    return s.len;
+}
+inline int len(WStr s) {
+    return s.len;
+}
 
 bool WStrEq(WStr a, WStr b);
 bool operator==(Str a, Str b);

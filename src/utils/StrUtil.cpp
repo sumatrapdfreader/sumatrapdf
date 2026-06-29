@@ -439,7 +439,7 @@ bool IsEmpty(Str s) {
 }
 
 bool StartsWith(Str s, Str prefix) {
-    return EqN(s, prefix, Leni(prefix));
+    return EqN(s, prefix, len(prefix));
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
@@ -450,7 +450,7 @@ bool StartsWithI(Str s, Str prefix) {
     if (!s || !prefix) {
         return false;
     }
-    return 0 == _strnicmp(s.s, prefix.s, str::Leni(prefix));
+    return 0 == _strnicmp(s.s, prefix.s, len(prefix));
 }
 
 bool Contains(Str s, Str txt) {
@@ -466,8 +466,8 @@ bool EndsWith(Str txt, Str end) {
     if (!txt || !end) {
         return false;
     }
-    int txtLen = str::Leni(txt);
-    int endLen = str::Leni(end);
+    int txtLen = len(txt);
+    int endLen = len(end);
     if (endLen > txtLen) {
         return false;
     }
@@ -478,8 +478,8 @@ bool EndsWithI(Str txt, Str end) {
     if (!txt || !end) {
         return false;
     }
-    int txtLen = str::Leni(txt);
-    int endLen = str::Leni(end);
+    int txtLen = len(txt);
+    int endLen = len(end);
     if (endLen > txtLen) {
         return false;
     }
@@ -487,7 +487,7 @@ bool EndsWithI(Str txt, Str end) {
 }
 
 bool EqNIx(Str s, int len, Str s2) {
-    return str::Leni(s2) == len && str::StartsWithI(s, s2);
+    return ::len(s2) == len && str::StartsWithI(s, s2);
 }
 
 // Locale-independent Unicode lowercase folding for case-insensitive matching.
@@ -590,11 +590,11 @@ void ReplaceWithCopy(Str* s, Str snew) {
 }
 
 Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
-    int s1Len = str::Leni(s1);
-    int s2Len = str::Leni(s2);
-    int s3Len = str::Leni(s3);
-    int s4Len = str::Leni(s4);
-    int s5Len = str::Leni(s5);
+    int s1Len = len(s1);
+    int s2Len = len(s2);
+    int s3Len = len(s3);
+    int s4Len = len(s4);
+    int s5Len = len(s5);
     int len = s1Len + s2Len + s3Len + s4Len + s5Len + 1;
     char* res = (char*)Alloc(allocator, len); // str-port: owned heap
 
@@ -1498,7 +1498,7 @@ bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut) {
         }
         return false;
     }
-    off += str::Leni(strs + off) + 1;
+    off += len(strs + off) + 1;
     if (!strs[off]) {
         off = -1;
         return false;
@@ -1602,7 +1602,7 @@ static int SeqStrNumEntryEndOff(SeqStrNum strs, int off) {
     if (!strs || off < 0 || !strs[off]) {
         return off;
     }
-    int next = off + str::Leni(strs + off) + 1;
+    int next = off + len(strs + off) + 1;
     const u8* p = (const u8*)(strs + next);
     while (*p & 0x80) {
         p++;
@@ -1614,7 +1614,7 @@ static void SeqStrNumEntryParts(SeqStrNum strs, int off, Str* strOut, i64* numOu
     if (strOut) {
         *strOut = SeqStrAt(strs, off);
     }
-    const u8* p = (const u8*)(strs + off + str::Leni(strs + off) + 1);
+    const u8* p = (const u8*)(strs + off + len(strs + off) + 1);
     if (numOut) {
         VarIntDecode(p, numOut);
     }
@@ -2678,7 +2678,7 @@ int BufSet(WCHAR* dst, int dstCchSize, Str src) { // str-port: caller-owned out-
 int BufAppend(char* dst, int dstCch, Str s) { // str-port: caller-owned out-buffer
     ReportIf(0 == dstCch);
 
-    int currDstCchLen = str::Leni(dst);
+    int currDstCchLen = len(dst);
     if (currDstCchLen + 1 >= dstCch) {
         return 0;
     }
@@ -3050,7 +3050,7 @@ bool IsAbsolute(Str url) {
 TempStr GetFullPathTemp(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
-    path.len = str::Leni(path.s);
+    path.len = len(path.s);
     DecodeInPlace(path);
     return path;
 }
@@ -3058,7 +3058,7 @@ TempStr GetFullPathTemp(Str url) {
 TempStr GetFileNameTemp(Str url) {
     TempStr path = str::DupTemp(url);
     str::TransCharsInPlace(path, "#?", "\0\0");
-    path.len = str::Leni(path.s);
+    path.len = len(path.s);
     int base = path.len;
     for (; base > 0; base--) {
         if ('/' == path.s[base - 1] || '\\' == path.s[base - 1]) {
@@ -3175,7 +3175,7 @@ int CompareProgramVersion(Str txt1, Str txt2) {
 // shorten a string to maxLen characters, adding ellipsis in the middle
 // ascii version that doesn't handle UTF-8
 static TempStr ShortenStringTemp(Str s, int maxLen) {
-    int sLen = str::Leni(s);
+    int sLen = len(s);
     if (sLen <= maxLen) {
         return s;
     }
@@ -3197,7 +3197,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
     int nRunes = utf8StrLen((u8*)s.s);
     if (nRunes < 0) {
         // not a valid utf8, fall back to byte truncation
-        int sLen = str::Leni(s);
+        int sLen = len(s);
         if (sLen <= maxRunes) {
             return s;
         }

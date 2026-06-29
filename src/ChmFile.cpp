@@ -708,7 +708,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     if (!utf8) {
         return false;
     }
-    int len = str::Leni(utf8);
+    int len = ::len(utf8);
 
     GumboOptions opts = GumboMakeOptions();
     GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, len);

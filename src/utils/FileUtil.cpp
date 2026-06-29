@@ -266,7 +266,7 @@ static TempWStr NormalizeTemp(WStr path) {
     if (wstr::StartsWith(normPath.s, L"\\\\?\\")) {
         return normPath;
     }
-    if (wstr::Leni(normPath) >= MAX_PATH) {
+    if (len(normPath) >= MAX_PATH) {
         return str::JoinTemp(L"\\\\?\\", normPath);
     }
     return normPath;
@@ -664,7 +664,7 @@ FILE* OpenFILE(Str path) {
 ByteSlice ReadFileWithArena(Str filePath, Arena* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
-    strconv::Utf8ToWcharBuf(filePath, str::Leni(filePath), buf, dimof(buf));
+    strconv::Utf8ToWcharBuf(filePath, len(filePath), buf, dimof(buf));
     return ReadFileWithArena(buf, fileSizeOut, allocator);
 #else
     char* d = nullptr;
@@ -820,7 +820,7 @@ bool Delete(Str filePath) {
 
 bool DeleteFileToTrash(Str path) {
     TempWStr pathW = ToWStrTemp(path);
-    int n = wstr::Leni(pathW) + 2;
+    int n = len(pathW) + 2;
     TempWStr pathDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
     wstr::BufSet(pathDoubleTerminated, n, pathW);
     FILEOP_FLAGS flags = FOF_NO_UI | FOF_ALLOWUNDO;
@@ -1031,7 +1031,7 @@ bool RemoveAll(Str dir) {
     TempWStr dirW = ToWStrTemp(dir);
     // path must be doubly terminated
     // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructa#fo_rename
-    int n = wstr::Leni(dirW) + 2;
+    int n = len(dirW) + 2;
     TempWStr dirDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
     wstr::BufSet(dirDoubleTerminated, n, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;

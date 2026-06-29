@@ -399,7 +399,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
             }
             continue;
         }
-        ReportIf(str::Leni(name) == 0);
+        ReportIf(len(name) == 0);
         ItemDataCP data;
         data.cmdId = (i32)cmdId;
         auto nameTranslated = trans::GetTranslation(name);

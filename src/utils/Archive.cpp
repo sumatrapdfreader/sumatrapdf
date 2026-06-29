@@ -468,7 +468,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
         WCHAR* pwdBuf = (WCHAR*)rarBuffer; // str-port: Win32
         int maxLen = (int)bytesProcessed;
         auto pwdW = ToWStrTemp(buf->password);
-        int n = wstr::Leni(pwdW);
+        int n = len(pwdW);
         if (n >= maxLen) {
             n = maxLen - 1;
         }

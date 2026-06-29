@@ -537,7 +537,7 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
     // colorful version
     static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
     char buf[2] = {};
-    for (int i = 0; i < str::Leni(kAppName); i++) {
+    for (int i = 0; i < len(kAppName); i++) {
         SetTextColor(hdc, cols[i % dimofi(cols)]);
         buf[0] = kAppName[i];
         HdcDrawText(hdc, buf, pt, fmt, fontSumatraTxt);
@@ -605,8 +605,8 @@ static Size CalcSumatraVersionSize(HDC hdc) {
 
 static TempStr TrimGitTemp(Str s) {
     if (gitCommidId && str::EndsWith(s, gitCommidId)) {
-        int sLen = str::Leni(s);
-        int gitLen = str::Leni(gitCommidId);
+        int sLen = len(s);
+        int gitLen = len(gitCommidId);
         return str::DupTemp(Str(s.s, sLen - gitLen - 7));
     }
     return s;
@@ -806,10 +806,10 @@ static void CopyAboutInfoToClipboard() {
     // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
     int maxLen = 0;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        maxLen = std::max(maxLen, str::Leni(el->leftTxt));
+        maxLen = std::max(maxLen, len(el->leftTxt));
     }
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        for (int i = maxLen - str::Leni(el->leftTxt); i > 0; i--) {
+        for (int i = maxLen - len(el->leftTxt); i > 0; i--) {
             info.AppendChar(' ');
         }
         info.Append(fmt("%s: %s\r\n", el->leftTxt.s, el->url ? el->url.s : el->rightTxt.s));

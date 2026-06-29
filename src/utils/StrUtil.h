@@ -383,21 +383,9 @@ struct WStrBuilder {
     iterator end() const { return &(els[len]); }
 };
 
-namespace str {
-
-FORCEINLINE int Leni(Str s) {
-    return s.len;
-}
-
-} // namespace str
-
 namespace wstr {
 
 bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith);
-
-FORCEINLINE int Leni(WStr s) {
-    return s.len;
-}
 
 FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src);

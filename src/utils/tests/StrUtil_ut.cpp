@@ -101,7 +101,7 @@ static void StrSeqTest() {
 static void StrIsDigitTest() {
     Str nonDigits = "/:.bz{}";
     Str digits = "0123456789";
-    for (int i = 0; i < str::Leni(nonDigits); i++) {
+    for (int i = 0; i < len(nonDigits); i++) {
 #if 0
         if (str::IsDigit(nonDigits[i])) {
             char c = nonDigits[i];
@@ -110,16 +110,16 @@ static void StrIsDigitTest() {
 #endif
         utassert(!str::IsDigit(nonDigits.s[i]));
     }
-    for (int i = 0; i < str::Leni(digits); i++) {
+    for (int i = 0; i < len(digits); i++) {
         utassert(str::IsDigit(digits.s[i]));
     }
 
     WStr nonDigitsW = L"/:.bz{}";
     WStr digitsW = L"0123456789";
-    for (int i = 0; i < wstr::Leni(nonDigitsW); i++) {
+    for (int i = 0; i < len(nonDigitsW); i++) {
         utassert(!wstr::IsDigit(nonDigitsW.s[i]));
     }
-    for (int i = 0; i < wstr::Leni(digitsW); i++) {
+    for (int i = 0; i < len(digitsW); i++) {
         utassert(wstr::IsDigit(digitsW.s[i]));
     }
 }
@@ -271,7 +271,7 @@ void StrTest() {
     utassert(str::IsEmpty(Str{}) && str::IsEmpty("") && !str::IsEmpty(str));
     utassert(str::FindChar(str, 's') && !str::FindChar(str, 'S'));
     int len = str::BufSet(buf, dimof(buf), str);
-    utassert(len == str::Leni(buf) && str::Eq(buf, str));
+    utassert(len == ::len(buf) && str::Eq(buf, str));
     len = str::BufSet(buf, 6, str);
     utassert(len == 5 && str::Eq(buf, "a str"));
 
@@ -311,7 +311,7 @@ void StrTest() {
     utassert(str::Eq(str, nullptr));
 #endif
     str = str::Join(buf, buf);
-    utassert(str::Leni(str) == 2 * str::Leni(buf));
+    utassert(::len(str) == 2 * ::len(buf));
     str::Free(str);
     str = str::Join(nullptr, "ab");
     utassert(str::Eq(str, "ab"));

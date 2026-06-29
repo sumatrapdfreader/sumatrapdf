@@ -96,7 +96,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
 
         TempWStr itemTextW2 = ToWStrTemp(itemText);
         SIZE szLeft{};
-        GetTextExtentPoint32W(hdc, itemTextW2, str::Leni(itemText), &szLeft);
+        GetTextExtentPoint32W(hdc, itemTextW2, len(itemText), &szLeft);
         int leftEnd = rc.left + szLeft.cx + gap;
 
         RECT rcRight = rc;
