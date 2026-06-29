@@ -388,7 +388,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(wstr::Len(lineSep));
+                    coords.AppendBlanks(wstr::Leni(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
@@ -412,7 +412,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(wstr::Len(lineSep));
+                    coords.AppendBlanks(wstr::Leni(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
@@ -440,7 +440,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     }
     if (content.size() > 0 && !wstr::EndsWith(content.Get(), lineSep)) {
         content.Append(lineSep);
-        coords.AppendBlanks(wstr::Len(lineSep));
+        coords.AppendBlanks(wstr::Leni(lineSep));
     }
     ReportIf(coords.size() != content.size());
 
@@ -472,7 +472,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(str::Len(lineSep));
+                    coords.AppendBlanks(str::Leni(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
@@ -498,7 +498,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 if (coords.size() > 0 &&
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
-                    coords.AppendBlanks(str::Len(lineSep));
+                    coords.AppendBlanks(str::Leni(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
@@ -529,7 +529,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
     }
     if (content.size() > 0 && !str::EndsWith(Str(content.Get()), lineSep)) {
         content.Append(lineSep);
-        coords.AppendBlanks(str::Len(lineSep));
+        coords.AppendBlanks(str::Leni(lineSep));
     }
     ReportIf(coords.size() != content.size());
 
@@ -1556,7 +1556,7 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
 
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
 static uint ExtractHttpCharset(Str html) {
-    if (!str::Find(html, "charset=")) {
+    if (!str::Contains(html, StrL("charset="))) {
         return 0;
     }
     size_t parseLen = std::min((size_t)html.len, (size_t)1024);

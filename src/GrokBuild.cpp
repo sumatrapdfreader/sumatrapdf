@@ -402,7 +402,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
         if (lineLen > 0) {
             TempStr line = str::DupTemp(Str(rest.s, lineLen));
             TempStr prompt = ExtractGrokPromptFromHistoryLineTemp(line, sessionId);
-            if (prompt && str::Len(prompt) > 0) {
+            if (!str::IsEmpty(prompt)) {
                 result = str::Dup(prompt);
             }
         }
@@ -519,26 +519,24 @@ static TempStr StripGrokUserQueryWrapperTemp(Str text) {
     if (!text) {
         return {};
     }
-    Str tag = str::Find(text, "<user_query>");
-    if (!tag) {
+    Str contentStart = str::FindAfter(text, StrL("<user_query>"));
+    if (!contentStart) {
         return {}; // skip injected context (user_info, rules, skills, etc.)
     }
-    int tagLen = str::Len("<user_query>");
-    Str contentStart(tag.s + tagLen, tag.len - tagLen);
-    Str endTag = str::Find(contentStart, "</user_query>");
-    if (!endTag) {
+    int endIdx = str::IndexOf(contentStart, StrL("</user_query>"));
+    if (endIdx < 0) {
         return {};
     }
-    TempStr result = str::DupTemp(Str(contentStart.s, (int)(endTag.s - contentStart.s)));
+    TempStr result = str::DupTemp(Str(contentStart.s, endIdx));
     str::TrimWSInPlace(result, str::TrimOpt::Both);
-    return str::Len(result) > 0 ? result : nullptr;
+    return !str::IsEmpty(result) ? result : nullptr;
 }
 
 static TempStr ExtractGrokChatUserTextTemp(Str line) {
-    if (!str::Find(line, "\"type\":\"user\"")) {
+    if (!str::Contains(line, StrL("\"type\":\"user\""))) {
         return {};
     }
-    if (str::Find(line, "\"type\":\"text\",\"text\":\"")) {
+    if (str::Contains(line, StrL("\"type\":\"text\",\"text\":\""))) {
         TempStr text = AIChatJsonStrTemp(line, "text");
         return StripGrokUserQueryWrapperTemp(text);
     }
@@ -547,16 +545,16 @@ static TempStr ExtractGrokChatUserTextTemp(Str line) {
 }
 
 static void AppendGrokHistoryTools(MainWindow* win, Str line) {
-    Str searchFrom = str::Find(line, "\"tool_calls\":[");
+    Str searchFrom = str::FindFrom(line, StrL("\"tool_calls\":["));
     if (!searchFrom) {
         return;
     }
     while (true) {
-        Str nameKey = str::Find(searchFrom, "\"name\":\"");
+        Str nameKey = str::FindFrom(searchFrom, StrL("\"name\":\""));
         if (!nameKey) {
             break;
         }
-        int prefixLen = str::Len("\"name\":\"");
+        int prefixLen = LenL("\"name\":\"");
         Str rest = Str(nameKey.s + prefixLen, nameKey.len - prefixLen);
         StrBuilder nameBuf;
         int j = 0;
@@ -622,9 +620,9 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
             TempStr userText = ExtractGrokChatUserTextTemp(line);
             if (userText) {
                 WebViewAddUser(win, userText);
-            } else if (str::Find(line, "\"type\":\"assistant\"")) {
+            } else if (str::Contains(line, StrL("\"type\":\"assistant\""))) {
                 TempStr text = AIChatJsonStrTemp(line, "content");
-                if (text && str::Len(text) > 0) {
+                if (!str::IsEmpty(text)) {
                     WebViewAppendText(win, text);
                 }
                 AppendGrokHistoryTools(win, line);
@@ -834,12 +832,12 @@ static void GrokReadThread(GrokReadCtx* ctx) {
 
                 if (eventType && str::Eq(eventType, "thought")) {
                     TempStr thought = AIChatJsonStrTemp(line, "data");
-                    if (thought && str::Len(thought) > 0) {
+                    if (!str::IsEmpty(thought)) {
                         GrokBuildLog("<<< thought", thought);
                     }
                 } else if (eventType && str::Eq(eventType, "text")) {
                     TempStr text = AIChatJsonStrTemp(line, "data");
-                    if (text && str::Len(text) > 0) {
+                    if (!str::IsEmpty(text)) {
                         PostUpdate(hwndFrame, sessionId, text, GrokUpdateType::Text);
                     }
                 } else if (eventType && str::Eq(eventType, "error")) {

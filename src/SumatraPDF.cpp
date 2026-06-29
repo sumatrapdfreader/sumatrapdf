@@ -3841,7 +3841,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         if (extOff == 0 && dstFileName[0] != L'.') {
             extOff = colonOff;
         }
-        memmove(dstFileName + extOff, colon.s, (wstr::Len(colon) + 1) * sizeof(WCHAR));
+        memmove(dstFileName + extOff, colon.s, (wstr::Leni(colon) + 1) * sizeof(WCHAR));
     } else if (wstr::EndsWithI(dstFileName, ToWStrTemp(defExt))) {
         // Remove the extension so that it can be re-added depending on the chosen filter
         int idx = wstr::Leni(dstFileName) - str::Leni(defExt);
@@ -7107,7 +7107,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             // try to auto-fix url
-            bool isValidURL = (str::Find(url, "://") != nullptr);
+            bool isValidURL = (str::Contains(url, StrL("://")));
             if (!isValidURL) {
                 url = str::JoinTemp("https://", url);
             }
@@ -10600,7 +10600,7 @@ void GetProgramInfo(StrBuilder& s) {
         }
     }
     if (gIsDebugBuild) {
-        if (!str::Find(s.Get(), " (dbg)")) {
+        if (!str::Contains(s.Get(), StrL(" (dbg)"))) {
             s.Append(" (dbg)");
         }
     }
@@ -10691,7 +10691,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
         return fail("ERROR no-overlay");
     }
     TempStr msg = NotificationGetMessageTemp(wnd);
-    if (!str::Find(msg, "/ 2")) {
+    if (!str::Contains(msg, StrL("/ 2"))) {
         out.Append(fmt("FAIL before-reload msg=%s\n", msg.s));
         if (exitCodeOut) {
             *exitCodeOut = 1;
@@ -10719,7 +10719,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
         return fail("ERROR overlay-gone");
     }
     msg = NotificationGetMessageTemp(wnd);
-    bool ok = str::Find(msg, "/ 1") != nullptr && !str::Find(msg, "/ 2");
+    bool ok = str::Contains(msg, StrL("/ 1")) && !str::Contains(msg, StrL("/ 2"));
     if (ok) {
         out.Append(fmt("OK msg=%s\n", msg.s));
     } else {

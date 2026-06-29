@@ -1933,7 +1933,7 @@ bool ActivateMenuBarByAccel(MainWindow* win, WCHAR accel) {
         GetMenuItemInfoW(win->menu, i, TRUE, &mii);
 
         // look for &X where X matches accel
-        WStr menuName(name.Get(), (int)wstr::Len(WStr(name.Get())));
+        WStr menuName(name.Get(), wstr::Leni(WStr(name.Get())));
         for (int off = 0; off < menuName.len; off++) {
             if (menuName.s[off] == L'&' && off + 1 < menuName.len) {
                 WCHAR ch = menuName.s[off + 1];

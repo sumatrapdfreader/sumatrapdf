@@ -396,7 +396,7 @@ again:
     Str toFind = cursor;
     bool usedShiftKeyMap = false;
     if (cursor.len == 1) {
-        int idx = str::FindCharIdx(shiftKeys, *cursor.s);
+        int idx = str::CharIndexOf(shiftKeys, *cursor.s);
         if ((idx >= 0) && (idx % 2 == 1)) {
             buf[0] = shiftKeys.s[idx - 1];
             toFind = Str(buf, 1);
@@ -427,7 +427,7 @@ again:
     if (str::Leni(s) > 1) {
         // possibly a unicode character
         TempWStr ws = ToWStrTemp(s);
-        if (wstr::Len(ws) != 1) {
+        if (wstr::Leni(ws) != 1) {
             return false;
         }
         WCHAR wc = *ws.s;
@@ -470,7 +470,7 @@ again:
 
     // those correspond to 0...9 keys and require SHIFT
     static Str shift09 = StrL(")!@#$%^&*(");
-    idx = str::FindCharIdx(shift09, c);
+    idx = str::CharIndexOf(shift09, c);
     if (idx >= 0) {
         accel.key = ('0' + idx);
         accel.fVirt |= (FSHIFT | FVIRTKEY);

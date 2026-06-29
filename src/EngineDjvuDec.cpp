@@ -685,8 +685,8 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, StrBuilder& sb, Vec<
         return;
     }
     Rect r((int)(z->x * dpiF), (int)(z->y * dpiF), (int)(z->w * dpiF), (int)(z->h * dpiF));
-    size_t n = str::Len(z->text);
-    for (size_t i = 0; i < n; i++) {
+    int n = str::Leni(z->text);
+    for (int i = 0; i < n; i++) {
         coords.Append(r);
     }
     sb.Append(z->text);

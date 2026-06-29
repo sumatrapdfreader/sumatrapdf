@@ -605,9 +605,9 @@ static Size CalcSumatraVersionSize(HDC hdc) {
 
 static TempStr TrimGitTemp(Str s) {
     if (gitCommidId && str::EndsWith(s, gitCommidId)) {
-        auto sLen = str::Len(s);
-        auto gitLen = str::Len(gitCommidId);
-        return str::DupTemp(Str(s.s, (int)(sLen - gitLen - 7)));
+        int sLen = str::Leni(s);
+        int gitLen = str::Leni(gitCommidId);
+        return str::DupTemp(Str(s.s, sLen - gitLen - 7));
     }
     return s;
 }

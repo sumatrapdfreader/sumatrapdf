@@ -1767,13 +1767,15 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
     if (!ext) {
         return str::DupTemp(fileName);
     }
-    Str pos = str::Find(fileName, ext);
-    size_t n = pos ? (size_t)(pos.s - fileName.s) : fileName.len;
-    return str::DupTemp(Str(fileName.s, (int)n));
+    int n = str::IndexOf(fileName, ext);
+    if (n < 0) {
+        n = fileName.len;
+    }
+    return str::DupTemp(Str(fileName.s, n));
 }
 
 int EngineImageDir::GetPageByLabel(Str label) const {
-    size_t nLabel = str::Len(label);
+    int nLabel = str::Leni(label);
     for (int i = 0; i < pageFileNames.Size(); i++) {
         Str pagePath = pageFileNames[i];
         TempStr fileName = path::GetBaseNameTemp(pagePath);
@@ -1781,8 +1783,8 @@ int EngineImageDir::GetPageByLabel(Str label) const {
         if (!str::StartsWith(fileName, label)) {
             continue;
         }
-        Str maybeExt(fileName.s + nLabel, fileName.len - (int)nLabel);
-        if (str::Eq(maybeExt, ext) || nLabel == (size_t)fileName.len) {
+        Str maybeExt(fileName.s + nLabel, fileName.len - nLabel);
+        if (str::Eq(maybeExt, ext) || nLabel == fileName.len) {
             return i + 1;
         }
     }
@@ -1996,7 +1998,7 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
     if (!utf8) {
         return;
     }
-    size_t utf8Len = str::Len(utf8);
+    int utf8Len = str::Leni(utf8);
 
     GumboOptions opts = GumboMakeOptions();
     GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, utf8Len);

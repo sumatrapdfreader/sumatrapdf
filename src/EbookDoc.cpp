@@ -26,12 +26,12 @@ static uint GetCodepageFromPI(Str xmlPI) {
     if (!str::StartsWith(xmlPI, "<?xml")) {
         return CP_ACP;
     }
-    Str xmlPIEnd = str::Find(xmlPI, "?>");
-    if (!xmlPIEnd) {
+    int xmlPIEnd = str::IndexOf(xmlPI, StrL("?>"));
+    if (xmlPIEnd < 0) {
         return CP_ACP;
     }
     HtmlToken pi;
-    pi.SetTag(HtmlToken::EmptyElementTag, Str(xmlPI.s + 2, (int)(xmlPIEnd.s - xmlPI.s - 2)));
+    pi.SetTag(HtmlToken::EmptyElementTag, Str(xmlPI.s + 2, xmlPIEnd - 2));
     pi.nLen = 4;
     AttrInfo* enc = pi.GetAttrByName("encoding");
     if (!enc) {
@@ -47,7 +47,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
         // TODO: any other commonly used codepages?
     };
     for (size_t i = 0; i < dimof(encodings); i++) {
-        if (str::Find(encoding, encodings[i].namePart)) {
+        if (str::Contains(encoding, encodings[i].namePart)) {
             return encodings[i].codePage;
         }
     }
@@ -408,7 +408,7 @@ bool EpubDoc::Load() {
             TempStr htmlId = node->GetAttributeTemp("id");
             // EPUB 3 ToC
             TempStr properties = node->GetAttributeTemp("properties");
-            if (properties && str::Find(properties, "nav") && str::Eq(mediaType, "application/xhtml+xml")) {
+            if (properties && str::Contains(properties, StrL("nav")) && str::Eq(mediaType, "application/xhtml+xml")) {
                 str::Free(tocPath);
                 tocPath = str::Join(contentPath, htmlPath);
             }
@@ -1443,7 +1443,7 @@ TxtDoc::~TxtDoc() {
 
 static TempStr DecompressTcrTextTemp(Str data) {
     ReportIf(!str::StartsWith(data, TCR_HEADER));
-    int hdrLen = str::Len(TCR_HEADER);
+    int hdrLen = LenL(TCR_HEADER);
     Str curr = Str(data.s + hdrLen, data.len - hdrLen);
     Str end = Str(data.s + data.len, 0);
 

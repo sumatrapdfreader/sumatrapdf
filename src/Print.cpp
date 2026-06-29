@@ -1604,7 +1604,7 @@ static short GetPaperByName(Printer* printer, Str wantedName) {
 
     TempStr name = str::DupTemp(wantedName);
     str::TrimWSInPlace(name, str::TrimOpt::Both);
-    size_t nameLen = str::Len(name);
+    int nameLen = str::Leni(name);
     Str wanted = name;
     if (nameLen >= 2 && name.s[0] == '"' && name.s[nameLen - 1] == '"') {
         name.s[nameLen - 1] = '\0';
@@ -1618,7 +1618,7 @@ static short GetPaperByName(Printer* printer, Str wantedName) {
             return printer->papers[i];
         }
         // e.g. "A3" matches driver names like "A3 297 x 420 mm"
-        size_t wantedLen = str::Len(wanted);
+        int wantedLen = str::Leni(wanted);
         if (wantedLen > 0 && str::StartsWithI(paperName, wanted)) {
             char next = paperName.s[wantedLen];
             if (next == '\0' || next == ' ') {

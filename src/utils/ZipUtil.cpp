@@ -96,7 +96,7 @@ static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
 
 bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 dosdate) {
     ReportIf(size >= UINT32_MAX);
-    ReportIf(str::Len(nameUtf8) >= UINT16_MAX);
+    ReportIf(str::Leni(nameUtf8) >= UINT16_MAX);
     if (size >= UINT32_MAX) {
         return false;
     }
@@ -104,7 +104,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
     size_t fileOffset = bytesWritten;
     u16 flags = (1 << 11); // filename is UTF-8
     uInt crc = crc32(0, (const Bytef*)data, (uInt)size);
-    size_t namelen = str::Len(nameUtf8);
+    int namelen = str::Leni(nameUtf8);
     if (namelen >= UINT16_MAX) {
         return false;
     }

@@ -118,7 +118,7 @@ bool StartsWith(Str str, Str prefix);
 bool StartsWithI(Str str, Str prefix);
 bool EndsWith(Str txt, Str end);
 bool EndsWithI(Str txt, Str end);
-bool EqNIx(Str s, size_t len, Str s2);
+bool EqNIx(Str s, int len, Str s2);
 
 Str ToLowerInPlace(Str s);
 
@@ -134,10 +134,12 @@ bool IsAlNum(char c);
 
 Str FindChar(Str str, char c);
 Str FindCharLast(Str str, char c);
-int FindCharIdx(Str str, char c);
-Str Find(Str str, Str find);
-Str FindI(Str str, Str find);
-int BufFind(Str buf, Str toFind);
+int CharIndexOf(Str str, char c);
+Str FindFrom(Str str, Str find);
+Str FindFromI(Str str, Str find);
+// like FindFrom but returns the slice right after the match (or {} if not found)
+Str FindAfter(Str s, Str needle);
+int IndexOf(Str buf, Str toFind);
 
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);
@@ -221,9 +223,9 @@ WStr Parse(WStr str, WStr format, ...);
 int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
-int FindCharIdx(WStr str, WCHAR c);
+int CharIndexOf(WStr str, WCHAR c);
 WStr FindChar(WStr str, WCHAR c);
-WStr Find(WStr str, WStr find);
+WStr FindFrom(WStr str, WStr find);
 bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
@@ -383,9 +385,6 @@ struct WStrBuilder {
 
 namespace str {
 
-FORCEINLINE size_t Len(Str s) {
-    return (size_t)s.len;
-}
 FORCEINLINE int Leni(Str s) {
     return s.len;
 }
@@ -396,9 +395,6 @@ namespace wstr {
 
 bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith);
 
-FORCEINLINE size_t Len(WStr s) {
-    return (size_t)s.len;
-}
 FORCEINLINE int Leni(WStr s) {
     return s.len;
 }

@@ -218,7 +218,7 @@ struct AutoFreeWStr {
     // this is size in characters, not bytes
     size_t size() {
         if (len == 0) {
-            len = wstr::Len(WStr(data));
+            len = wstr::Leni(WStr(data));
         }
         return len;
     }

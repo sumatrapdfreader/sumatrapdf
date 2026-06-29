@@ -778,9 +778,8 @@ static void OnGetFontsFinished(GetFontsResult* result) {
         // remove "Getting fonts information..." line
         Str marker = _TRA("Getting fonts information...");
         Str props = pl->propsText.Get();
-        Str found = str::Find(props, marker);
-        if (found) {
-            int pos = (int)(found.s - props.s);
+        int pos = str::IndexOf(props, marker);
+        if (pos >= 0) {
             if (pos > 0 && props.s[pos - 1] == '\n') {
                 pos--;
             }

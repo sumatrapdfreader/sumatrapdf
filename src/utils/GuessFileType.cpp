@@ -259,7 +259,7 @@ static bool IsPSFileContent(const ByteSlice& d) {
     // PJL (Printer Job Language) files containing Postscript data
     // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
     bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
-    if (isPJL && !str::Find(header, "%!PS-Adobe-")) {
+    if (isPJL && !str::Contains(header, StrL("%!PS-Adobe-"))) {
         isPJL = false;
     }
     return isPJL;
@@ -459,14 +459,14 @@ Str FindEmbeddedPdfFileStreamNo(Str path) {
     }
     Str parseEnd = path;
     Str meta;
-    Str pos = str::Find(path, ":attachname=");
+    Str pos = str::FindFrom(path, StrL(":attachname="));
     while (pos) {
         meta = pos;
         int nextOff = (int)(pos.s - path.s) + 1;
         if (nextOff >= path.len) {
             break;
         }
-        pos = str::Find(Str(path.s + nextOff, path.len - nextOff), ":attachname=");
+        pos = str::FindFrom(Str(path.s + nextOff, path.len - nextOff), StrL(":attachname="));
     }
     if (meta) {
         parseEnd = Str(path.s, (int)(meta.s - path.s));

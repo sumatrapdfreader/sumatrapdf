@@ -266,7 +266,7 @@ static TempWStr NormalizeTemp(WStr path) {
     if (wstr::StartsWith(normPath.s, L"\\\\?\\")) {
         return normPath;
     }
-    if (wstr::Len(normPath) >= MAX_PATH) {
+    if (wstr::Leni(normPath) >= MAX_PATH) {
         return str::JoinTemp(L"\\\\?\\", normPath);
     }
     return normPath;
@@ -532,9 +532,9 @@ TempStr WslUncToUnixTemp(Str path) {
     int off = 0;
 
     if (str::StartsWithI(path, "\\\\wsl.localhost\\")) {
-        off = str::Leni("\\\\wsl.localhost\\");
+        off = LenL("\\\\wsl.localhost\\");
     } else if (str::StartsWithI(path, "\\\\wsl$\\")) {
-        off = str::Leni("\\\\wsl$\\");
+        off = LenL("\\\\wsl$\\");
     } else {
         return {};
     }
@@ -664,7 +664,7 @@ FILE* OpenFILE(Str path) {
 ByteSlice ReadFileWithArena(Str filePath, Arena* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
-    strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
+    strconv::Utf8ToWcharBuf(filePath, str::Leni(filePath), buf, dimof(buf));
     return ReadFileWithArena(buf, fileSizeOut, allocator);
 #else
     char* d = nullptr;
@@ -820,9 +820,9 @@ bool Delete(Str filePath) {
 
 bool DeleteFileToTrash(Str path) {
     TempWStr pathW = ToWStrTemp(path);
-    auto n = wstr::Len(pathW) + 2;
-    TempWStr pathDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), (int)n);
-    wstr::BufSet(pathDoubleTerminated, (int)n, pathW);
+    int n = wstr::Leni(pathW) + 2;
+    TempWStr pathDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
+    wstr::BufSet(pathDoubleTerminated, n, pathW);
     FILEOP_FLAGS flags = FOF_NO_UI | FOF_ALLOWUNDO;
     uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, pathDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};
@@ -1031,9 +1031,9 @@ bool RemoveAll(Str dir) {
     TempWStr dirW = ToWStrTemp(dir);
     // path must be doubly terminated
     // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructa#fo_rename
-    auto n = wstr::Len(dirW) + 2;
-    TempWStr dirDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), (int)n);
-    wstr::BufSet(dirDoubleTerminated, (int)n, dirW);
+    int n = wstr::Leni(dirW) + 2;
+    TempWStr dirDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
+    wstr::BufSet(dirDoubleTerminated, n, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};

@@ -774,7 +774,7 @@ int Split(StrVec* v, Str s, Str separator, bool collapse, int max) {
             return nAdded;
         }
         Str rest = Str(s.s + off, s.len - off);
-        Str next = str::Find(rest, separator);
+        Str next = str::FindFrom(rest, separator);
         if (str::IsNull(next)) {
             break;
         }

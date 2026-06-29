@@ -118,7 +118,7 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
 
     // Convert surname to wide string for engine text matching.
     WStr surnameW = ToWStr(surname);
-    if (!surnameW || wstr::Len(surnameW) < 2) {
+    if (!surnameW || wstr::Leni(surnameW) < 2) {
         return false;
     }
     bool found = false;
@@ -282,7 +282,7 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
         // Sort parts by length descending (simple selection sort, n<=8).
         for (int i = 0; i < nParts - 1; i++) {
             for (int j = i + 1; j < nParts; j++) {
-                if (str::Len(parts[j].s) > str::Len(parts[i].s)) {
+                if (str::Leni(parts[j].s) > str::Leni(parts[i].s)) {
                     Part t = parts[i];
                     parts[i] = parts[j];
                     parts[j] = t;

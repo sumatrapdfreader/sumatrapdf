@@ -77,7 +77,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     if (str::IsEmpty(currPath)) {
         return;
     }
-    if (!str::FindI(currPath, installDir)) {
+    if (!str::FindFromI(currPath, installDir)) {
         logf("RemoveInstallDirFromPath: '%s' not found in PATH\n", installDir.s);
         return;
     }
@@ -88,7 +88,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
         Str semi = str::FindChar(rest, ';');
         Str entry;
         if (semi) {
-            int idx = str::FindCharIdx(rest, ';');
+            int idx = str::CharIndexOf(rest, ';');
             entry = Str(rest.s, idx);
             rest = Str(semi.s + 1, semi.len - 1);
         } else {
@@ -107,7 +107,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     // write as REG_EXPAND_SZ since PATH may contain %vars%
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valueW = ToWStrTemp(newPath.CStr());
-    DWORD cbData = (DWORD)(wstr::Len(valueW) + 1) * sizeof(WCHAR);
+    DWORD cbData = (DWORD)(wstr::Leni(valueW) + 1) * sizeof(WCHAR);
     HKEY hKey;
     LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
     if (res != ERROR_SUCCESS) {

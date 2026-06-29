@@ -250,7 +250,7 @@ class Vec {
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
-    T* AppendBlanks(size_t count) { return MakeSpaceAt(len, count); }
+    T* AppendBlanks(int count) { return MakeSpaceAt(len, count); }
 
     void RemoveAt(size_t idx, size_t count = 1) {
         if (len > idx + count) {

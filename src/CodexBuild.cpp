@@ -392,7 +392,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
         if (lineLen > 0) {
             TempStr line = str::DupTemp(Str(rest.s, lineLen));
             TempStr prompt = ExtractCodexPromptFromHistoryLineTemp(line, sessionId);
-            if (prompt && str::Len(prompt) > 0) {
+            if (!str::IsEmpty(prompt)) {
                 result = str::Dup(prompt);
             }
         }
@@ -407,10 +407,10 @@ static Str GetCodexSessionDescription(Str sessionId) {
 }
 
 static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut) {
-    if (!str::Find(line, "\"type\":\"session_meta\"")) {
+    if (!str::Contains(line, StrL("\"type\":\"session_meta\""))) {
         return false;
     }
-    Str payload = str::Find(line, "\"payload\":");
+    Str payload = str::FindFrom(line, StrL("\"payload\":"));
     TempStr cwd = payload ? AIChatJsonStrTemp(payload, "cwd") : nullptr;
     TempStr id = payload ? AIChatJsonStrTemp(payload, "id") : nullptr;
     if (!cwd || !id || !CodexPathsEqual(cwd, matchDir)) {
@@ -644,29 +644,29 @@ static bool IsCodexInjectedUserText(Str text) {
     if (!text) {
         return true;
     }
-    if (str::Find(text, "# AGENTS.md")) {
+    if (str::Contains(text, StrL("# AGENTS.md"))) {
         return true;
     }
-    if (str::Find(text, "<environment_context>")) {
+    if (str::Contains(text, StrL("<environment_context>"))) {
         return true;
     }
-    if (str::Find(text, "<turn_aborted>")) {
+    if (str::Contains(text, StrL("<turn_aborted>"))) {
         return true;
     }
-    if (str::Find(text, "<INSTRUCTIONS>")) {
+    if (str::Contains(text, StrL("<INSTRUCTIONS>"))) {
         return true;
     }
     return false;
 }
 
 static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
-    if (!str::Find(line, "\"type\":\"response_item\"")) {
+    if (!str::Contains(line, StrL("\"type\":\"response_item\""))) {
         return {};
     }
-    if (!str::Find(line, "\"role\":\"user\"")) {
+    if (!str::Contains(line, StrL("\"role\":\"user\""))) {
         return {};
     }
-    Str inputText = str::Find(line, "\"input_text\"");
+    Str inputText = str::FindFrom(line, StrL("\"input_text\""));
     if (!inputText) {
         return {};
     }
@@ -675,17 +675,17 @@ static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
         return {};
     }
     str::TrimWSInPlace(text, str::TrimOpt::Both);
-    return str::Len(text) > 0 ? text : nullptr;
+    return !str::IsEmpty(text) ? text : nullptr;
 }
 
 static TempStr ExtractCodexRolloutAssistantTextTemp(Str line) {
-    if (!str::Find(line, "\"type\":\"response_item\"")) {
+    if (!str::Contains(line, StrL("\"type\":\"response_item\""))) {
         return {};
     }
-    if (!str::Find(line, "\"role\":\"assistant\"")) {
+    if (!str::Contains(line, StrL("\"role\":\"assistant\""))) {
         return {};
     }
-    Str outputText = str::Find(line, "\"output_text\"");
+    Str outputText = str::FindFrom(line, StrL("\"output_text\""));
     if (!outputText) {
         return {};
     }
@@ -693,16 +693,16 @@ static TempStr ExtractCodexRolloutAssistantTextTemp(Str line) {
 }
 
 static void AppendCodexRolloutTools(MainWindow* win, Str line) {
-    if (!str::Find(line, "\"type\":\"response_item\"")) {
+    if (!str::Contains(line, StrL("\"type\":\"response_item\""))) {
         return;
     }
     TempStr name = nullptr;
-    if (str::Find(line, "\"type\":\"function_call\"")) {
+    if (str::Contains(line, StrL("\"type\":\"function_call\""))) {
         name = AIChatJsonStrTemp(line, "name");
-    } else if (str::Find(line, "\"type\":\"custom_tool_call\"")) {
+    } else if (str::Contains(line, StrL("\"type\":\"custom_tool_call\""))) {
         name = AIChatJsonStrTemp(line, "name");
     }
-    if (name && str::Len(name) > 0) {
+    if (!str::IsEmpty(name)) {
         StrBuilder desc;
         desc.Append(fmt("Tool: %s", name.s));
         WebViewAddTool(win, desc.Get());
@@ -738,7 +738,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                 WebViewAddUser(win, userText);
             } else {
                 TempStr assistantText = ExtractCodexRolloutAssistantTextTemp(line);
-                if (assistantText && str::Len(assistantText) > 0) {
+                if (!str::IsEmpty(assistantText)) {
                     WebViewAppendText(win, assistantText);
                     WebViewFlushBlock(win);
                 } else {
@@ -955,16 +955,16 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                             str::ReplaceWithCopy(&sessionId, threadId);
                         }
                     } else if (eventType && str::Eq(eventType, "item.completed")) {
-                        if (str::Find(line, "\"type\":\"agent_message\"")) {
-                            Str p = str::Find(line, "\"type\":\"agent_message\"");
+                        if (str::Contains(line, StrL("\"type\":\"agent_message\""))) {
+                            Str p = str::FindFrom(line, StrL("\"type\":\"agent_message\""));
                             TempStr text = AIChatJsonStrTemp(p, "text");
-                            if (text && str::Len(text) > 0) {
+                            if (!str::IsEmpty(text)) {
                                 PostUpdate(hwndFrame, sessionId, text, CodexUpdateType::Text);
                             }
-                        } else if (str::Find(line, "\"type\":\"command_execution\"")) {
-                            Str p = str::Find(line, "\"type\":\"command_execution\"");
+                        } else if (str::Contains(line, StrL("\"type\":\"command_execution\""))) {
+                            Str p = str::FindFrom(line, StrL("\"type\":\"command_execution\""));
                             TempStr cmd = AIChatJsonStrTemp(p, "command");
-                            if (cmd && str::Len(cmd) > 0) {
+                            if (!str::IsEmpty(cmd)) {
                                 TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);
                                 StrBuilder desc;
                                 desc.Append(fmt("Tool: %s", shortCmd.s));

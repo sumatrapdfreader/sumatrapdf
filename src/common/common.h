@@ -253,6 +253,11 @@ struct Str {
 // Create Str from string literal with compile-time length
 #define StrL(lit) Str((char*)(lit), (int)(sizeof(lit) - 1)) // str-port: C-string
 
+// Compile-time length (as int) of a string literal (or char[]/WCHAR[] array);
+// faster than str::Leni() which does a runtime strlen. Works for both narrow
+// and wide literals since dimof counts elements. Not for decayed pointers.
+#define LenL(lit) (dimofi(lit) - 1)
+
 Str AllocStrTemp(int size);
 
 struct WStr {

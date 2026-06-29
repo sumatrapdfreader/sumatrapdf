@@ -1691,7 +1691,7 @@ void PdfDecryptDialog::DoDecrypt() {
         return;
     }
 
-    logf("PdfDecryptDoIt: decrypting '%s' to '%s', password len: %d\n", srcPath.s, destPath.s, (int)str::Len(password));
+    logf("PdfDecryptDoIt: decrypting '%s' to '%s', password len: %d\n", srcPath.s, destPath.s, str::Leni(password));
 
     // equivalent of: clean -p <pwd> -D input output
     // -p provides the password to open the encrypted input, -D removes encryption from output
@@ -1710,7 +1710,7 @@ void PdfDecryptDialog::DoDecrypt() {
         StartLoadDocument(&args);
     } else {
         logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, srcPath.s,
-             (int)str::Len(password));
+             str::Leni(password));
         MessageBoxWarning(hwnd, "Failed to decrypt PDF file.", _TRA("Decrypt PDF"));
     }
 }
@@ -1851,7 +1851,7 @@ void ShowPdfDecryptDialog(MainWindow* win) {
         logf("ShowPdfDecryptDialog: '%s' is encrypted but no password available\n", tab->filePath.s);
         return;
     }
-    logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath.s, (int)str::Len(pwd));
+    logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath.s, str::Leni(pwd));
 
     auto dlg = new PdfDecryptDialog();
     if (!dlg->Create(win, tab, pwd)) {

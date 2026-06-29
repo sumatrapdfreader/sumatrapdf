@@ -577,7 +577,7 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
 
     TempStr fullPath = path;
     bool isAbsPath = str::StartsWith(path, "\\");
-    if (str::Len(path) >= 2 && path.s[1] == ':') {
+    if (str::Leni(path) >= 2 && path.s[1] == ':') {
         /* technically c: is not abs, only c:\\ */
         isAbsPath = true;
     }
@@ -668,7 +668,7 @@ static bool MatchFuzzy(Str s1, Str s2, bool partially) {
     // only match at the start of a word (at the beginning and after a space)
     Str rest = s1;
     while (!str::IsEmpty(rest)) {
-        Str found = str::Find(rest, s2);
+        Str found = str::FindFrom(rest, s2);
         if (!found) {
             break;
         }

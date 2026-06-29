@@ -114,7 +114,7 @@ bool IsDllBuild() {
 // (e.g. SumatraPDF-prerel-64-install.exe)
 bool IsInstallerOrUninstallerExe() {
     TempStr exeName = path::GetBaseNameTemp(GetSelfExePathTemp());
-    return str::FindI(exeName, StrL("uninstall")).s || str::FindI(exeName, StrL("install")).s;
+    return str::FindFromI(exeName, StrL("uninstall")).s || str::FindFromI(exeName, StrL("install")).s;
 }
 
 static Str gAppDataDir;
@@ -127,7 +127,7 @@ void DeleteAppTools() {
 void SetAppDataDir(Str dir) {
     dir = path::NormalizeTemp(dir);
     // don't try to create root directories like d:\ (CreateAll would fail)
-    bool isRootDir = str::Len(dir) == 3 && dir.s[1] == ':' && dir.s[2] == '\\';
+    bool isRootDir = str::Leni(dir) == 3 && dir.s[1] == ':' && dir.s[2] == '\\';
     if (!isRootDir) {
         bool ok = dir::CreateAll(dir);
         if (!ok) {

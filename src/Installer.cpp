@@ -248,7 +248,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     Str keyName = GetEnvRegKey(allUsers);
     TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
     // check if installDir is already in PATH (case-insensitive)
-    if (currPath && str::FindI(currPath, installDir)) {
+    if (currPath && str::FindFromI(currPath, installDir)) {
         logf("AddInstallDirToPath: '%s' already in PATH\n", installDir.s);
         return;
     }
@@ -264,7 +264,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     // write as REG_EXPAND_SZ since PATH may contain %vars%
     TempWStr keyNameW = ToWStrTemp(keyName);
     TempWStr valueW = ToWStrTemp(newPath.CStr());
-    DWORD cbData = (DWORD)(wstr::Len(valueW) + 1) * sizeof(WCHAR);
+    DWORD cbData = (DWORD)(wstr::Leni(valueW) + 1) * sizeof(WCHAR);
     HKEY hKey;
     LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
     if (res != ERROR_SUCCESS) {

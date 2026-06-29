@@ -287,19 +287,19 @@ static bool TranslationLooksLikeError(Str text) {
     if (str::IsEmptyOrWhiteSpace(text)) {
         return true;
     }
-    if (str::FindI(text, "failed to authenticate")) {
+    if (str::FindFromI(text, "failed to authenticate")) {
         return true;
     }
-    if (str::FindI(text, "authentication_failed")) {
+    if (str::FindFromI(text, "authentication_failed")) {
         return true;
     }
-    if (str::FindI(text, "api error")) {
+    if (str::FindFromI(text, "api error")) {
         return true;
     }
     if (str::StartsWithI(text, "error:")) {
         return true;
     }
-    if (str::FindI(text, "model is not supported")) {
+    if (str::FindFromI(text, "model is not supported")) {
         return true;
     }
     return false;
@@ -309,8 +309,8 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str r
     if (str::IsEmptyOrWhiteSpace(raw)) {
         return str::DupTemp(_TRA("Translation failed."));
     }
-    if (str::FindI(raw, "failed to authenticate") || str::FindI(raw, "authentication_failed") ||
-        str::FindI(raw, "invalid authentication credentials")) {
+    if (str::FindFromI(raw, "failed to authenticate") || str::FindFromI(raw, "authentication_failed") ||
+        str::FindFromI(raw, "invalid authentication credentials")) {
         switch (backend) {
             case AIChatBackend::Claude:
                 return str::DupTemp(
@@ -322,10 +322,10 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str r
                 return str::DupTemp(_TRA("OpenAI Codex is not signed in. Sign in to Codex, then try again."));
         }
     }
-    if (str::FindI(raw, "model is not supported")) {
+    if (str::FindFromI(raw, "model is not supported")) {
         return str::DupTemp(_TRA("The configured AI model is not available for your account."));
     }
-    if (str::FindI(raw, "did not contain text")) {
+    if (str::FindFromI(raw, "did not contain text")) {
         return str::DupTemp(_TRA("Translation response did not contain text."));
     }
     return str::DupTemp(raw);
@@ -336,8 +336,8 @@ static TempStr StripTrailingSlashTemp(TempStr path) {
         return {};
     }
     TempStr p = str::DupTemp(path);
-    while (str::Len(p) > 0 && (p.s[str::Len(p) - 1] == '\\' || p.s[str::Len(p) - 1] == '/')) {
-        p.s[str::Len(p) - 1] = 0;
+    while (str::Leni(p) > 0 && (p.s[str::Leni(p) - 1] == '\\' || p.s[str::Leni(p) - 1] == '/')) {
+        p.s[str::Leni(p) - 1] = 0;
     }
     return p;
 }
@@ -387,7 +387,7 @@ static void AppendGrokTranslationText(Str line, StrBuilder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, "type");
     if (eventType && str::Eq(eventType, "text")) {
         TempStr text = AIChatJsonStrTemp(line, "data");
-        if (text && str::Len(text) > 0) {
+        if (!str::IsEmpty(text)) {
             out.Append(text);
         }
     }
@@ -399,9 +399,9 @@ static void AppendClaudeTranslationText(Str line, StrBuilder& out) {
         return;
     }
     if (str::Eq(eventType, "result")) {
-        bool isError = str::Find(line, "\"is_error\":true") != nullptr;
+        bool isError = str::Contains(line, StrL("\"is_error\":true"));
         TempStr text = AIChatJsonStrTemp(line, "result");
-        if (text && str::Len(text) > 0) {
+        if (!str::IsEmpty(text)) {
             if (isError) {
                 out.Reset();
                 out.Append(text);
@@ -411,17 +411,17 @@ static void AppendClaudeTranslationText(Str line, StrBuilder& out) {
         }
         return;
     }
-    if (str::Find(line, "authentication_failed") || str::Find(line, "\"is_error\":true")) {
+    if (str::Contains(line, StrL("authentication_failed")) || str::Contains(line, StrL("\"is_error\":true"))) {
         return;
     }
-    if (str::Eq(eventType, "assistant") && str::Find(line, "\"type\":\"text\"")) {
+    if (str::Eq(eventType, "assistant") && str::Contains(line, StrL("\"type\":\"text\""))) {
         TempStr text = AIChatJsonStrTemp(line, "text");
-        if (text && str::Len(text) > 0 && !TranslationLooksLikeError(text)) {
+        if (!str::IsEmpty(text) && !TranslationLooksLikeError(text)) {
             out.Append(text);
         }
     } else if (str::Eq(eventType, "content_block_delta")) {
         TempStr text = AIChatJsonStrTemp(line, "text");
-        if (text && str::Len(text) > 0) {
+        if (!str::IsEmpty(text)) {
             out.Append(text);
         }
     }
@@ -436,14 +436,14 @@ static void AppendCodexTranslationText(Str line, StrBuilder& out) {
         return;
     }
     TempStr text = AIChatJsonStrTemp(line, "text");
-    if (text && str::Len(text) > 0) {
+    if (!str::IsEmpty(text)) {
         out.Append(text);
         return;
     }
-    Str agentMsg = str::Find(line, "\"type\":\"agent_message\"");
+    Str agentMsg = str::FindFrom(line, StrL("\"type\":\"agent_message\""));
     if (agentMsg) {
         text = AIChatJsonStrTemp(agentMsg, "text");
-        if (text && str::Len(text) > 0) {
+        if (!str::IsEmpty(text)) {
             out.Append(text);
         }
     }
@@ -478,7 +478,7 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, StrBuilder
         }
     }
     str::TrimWSInPlace(Str(translationOut.Get()), str::TrimOpt::Both);
-    if (translationOut.Size() == 0 && output && !str::Find(output, "{\"type\":")) {
+    if (translationOut.Size() == 0 && output && !str::Contains(output, StrL("{\"type\":"))) {
         TempStr trimmed = str::DupTemp(output.s);
         str::TrimWSInPlace(trimmed, str::TrimOpt::Both);
         if (!str::IsEmptyOrWhiteSpace(trimmed)) {

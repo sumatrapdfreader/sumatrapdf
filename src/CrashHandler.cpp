@@ -128,7 +128,7 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
         }
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
-            auto pos = str::FindI(gModulesInfo, pathA).s;
+            auto pos = str::FindFromI(gModulesInfo, pathA).s;
             if (!pos) {
                 s.Append(fmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.s, pathA.s));
             }

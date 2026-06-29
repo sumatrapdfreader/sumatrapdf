@@ -469,7 +469,7 @@ static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const vo
                                int indent = 0) {
     const u8* base = (const u8*)data;
     const char* fieldName = info->fieldNames; // str-port: generated packed field-name table cursor
-    for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
+    for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Leni(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         Str fieldNameStr = Str(fieldName);
         ReportIf(str::FindChar(fieldNameStr, '=') || str::FindChar(fieldNameStr, ':') ||
@@ -533,7 +533,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
     }
 
     const char* fieldName = info->fieldNames; // str-port: generated packed field-name table cursor
-    for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
+    for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Leni(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         u8* fieldPtr = base + field.offset;
         Str fieldNameStr = Str(fieldName);
@@ -550,7 +550,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
             if (parent && (child = parent->GetChild(fieldNameStr)) != nullptr &&
                 (0 == child->data.size() || child->GetChild(""))) {
                 parent = child;
-                fieldName += str::Len(fieldName);
+                fieldName += str::Leni(fieldName);
                 fieldNameStr = Str(fieldName);
             }
             if (child || useDefaults || !*(Vec<void*>**)fieldPtr) {

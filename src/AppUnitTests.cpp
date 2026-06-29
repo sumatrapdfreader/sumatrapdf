@@ -21,7 +21,7 @@ static void ParseTipExpectPlainContains(Str input, Str needle) {
     ParsedTip tip;
     ParseTip(tip, input);
     TempStr plain = TipPlainTextTemp(tip);
-    utassert(plain && str::Find(plain, needle));
+    utassert(plain && str::Contains(plain, needle));
 }
 
 static void ParseTipExpectLinkCmd(Str input, Str expCmd) {

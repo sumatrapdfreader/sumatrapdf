@@ -101,7 +101,7 @@ static void StrSeqTest() {
 static void StrIsDigitTest() {
     Str nonDigits = "/:.bz{}";
     Str digits = "0123456789";
-    for (size_t i = 0; i < str::Len(nonDigits); i++) {
+    for (int i = 0; i < str::Leni(nonDigits); i++) {
 #if 0
         if (str::IsDigit(nonDigits[i])) {
             char c = nonDigits[i];
@@ -110,16 +110,16 @@ static void StrIsDigitTest() {
 #endif
         utassert(!str::IsDigit(nonDigits.s[i]));
     }
-    for (size_t i = 0; i < str::Len(digits); i++) {
+    for (int i = 0; i < str::Leni(digits); i++) {
         utassert(str::IsDigit(digits.s[i]));
     }
 
     WStr nonDigitsW = L"/:.bz{}";
     WStr digitsW = L"0123456789";
-    for (size_t i = 0; i < wstr::Len(nonDigitsW); i++) {
+    for (int i = 0; i < wstr::Leni(nonDigitsW); i++) {
         utassert(!wstr::IsDigit(nonDigitsW.s[i]));
     }
-    for (size_t i = 0; i < wstr::Len(digitsW); i++) {
+    for (int i = 0; i < wstr::Leni(digitsW); i++) {
         utassert(wstr::IsDigit(digitsW.s[i]));
     }
 }
@@ -230,7 +230,7 @@ static void StrFindITest() {
     utassert(str::ContainsI(hello, "hello"));
     utassert(str::ContainsI(hello, "WORLD"));
     utassert(!str::ContainsI(hello, "xyz"));
-    utassert(str::FindI(hello, "WORLD").s == hello.s + 6);
+    utassert(str::FindFromI(hello, "WORLD").s == hello.s + 6);
 
     // Cyrillic: "Привет" (capitalized) vs "привет" (lowercase needle)
     Str privetCap = "\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
@@ -239,13 +239,13 @@ static void StrFindITest() {
     utassert(!str::Contains(privetCap, privetLow)); // case-sensitive: no match
     utassert(str::ContainsI(privetCap, privetLow)); // case-insensitive: matches
     utassert(str::ContainsI(privetLow, privetCap)); // and the reverse
-    utassert(str::FindI(privetCap, privetLow).s == privetCap.s);
+    utassert(str::FindFromI(privetCap, privetLow).s == privetCap.s);
 
     // mixed ASCII + Cyrillic: the returned pointer must be the correct byte
     // offset into the original UTF-8 string ("abc " is 4 bytes)
     Str mixed = "abc \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
-    utassert(str::FindI(mixed, privetLow).s == mixed.s + 4);
-    utassert(!str::FindI(mixed, "xyz"));
+    utassert(str::FindFromI(mixed, privetLow).s == mixed.s + 4);
+    utassert(!str::FindFromI(mixed, "xyz"));
 
     // Greek: "ΛΟΓΟΣ" vs "λογος"
     Str logosCap = "\xCE\x9B\xCE\x9F\xCE\x93\xCE\x9F\xCE\xA3";
@@ -270,8 +270,8 @@ void StrTest() {
     utassert(!str::EndsWith(str, "ung"));
     utassert(str::IsEmpty(Str{}) && str::IsEmpty("") && !str::IsEmpty(str));
     utassert(str::FindChar(str, 's') && !str::FindChar(str, 'S'));
-    size_t len = str::BufSet(buf, dimof(buf), str);
-    utassert(len == str::Len(buf) && str::Eq(buf, str));
+    int len = str::BufSet(buf, dimof(buf), str);
+    utassert(len == str::Leni(buf) && str::Eq(buf, str));
     len = str::BufSet(buf, 6, str);
     utassert(len == 5 && str::Eq(buf, "a str"));
 
@@ -311,7 +311,7 @@ void StrTest() {
     utassert(str::Eq(str, nullptr));
 #endif
     str = str::Join(buf, buf);
-    utassert(str::Len(str) == 2 * str::Len(buf));
+    utassert(str::Leni(str) == 2 * str::Leni(buf));
     str::Free(str);
     str = str::Join(nullptr, "ab");
     utassert(str::Eq(str, "ab"));

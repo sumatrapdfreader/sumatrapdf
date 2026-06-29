@@ -360,7 +360,7 @@ void NotificationWnd::Layout(Str message) {
         // plain text: render exactly like before (RTL handling, wrapping). Only
         // substitute the parsed text when there were (Key/...) shortcuts to
         // expand, so ordinary messages keep their original whitespace/newlines.
-        if (str::Find(message, "(Key/")) {
+        if (str::Contains(message, StrL("(Key/"))) {
             message = TipPlainTextTemp(parsedMsg);
             HwndSetText(hwnd, message);
         }

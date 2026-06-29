@@ -111,10 +111,10 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         SaveSettings();
         win->RedrawAll(true);
     } else if (str::StartsWith(url, kLinkHomeRemoveFilePrefix)) {
-        int prefixLen = str::Len(kLinkHomeRemoveFilePrefix);
+        int prefixLen = str::Leni(kLinkHomeRemoveFilePrefix);
         ForgetFileFromFrequentlyRead(win, Str(url.s + prefixLen, url.len - prefixLen));
     } else if (str::StartsWith(url, kLinkHomePinFilePrefix)) {
-        int prefixLen = str::Len(kLinkHomePinFilePrefix);
+        int prefixLen = str::Leni(kLinkHomePinFilePrefix);
         FileState* fs = gFileHistory.FindByPath(Str(url.s + prefixLen, url.len - prefixLen));
         if (fs) {
             fs->isPinned = !fs->isPinned;

@@ -39,7 +39,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
         }
         Str rest = text;
         while (rest) {
-            Str found = str::FindI(rest, word);
+            Str found = str::FindFromI(rest, word);
             if (!found) {
                 break;
             }

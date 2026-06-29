@@ -396,8 +396,8 @@ void ChmFile::GetAllPaths(StrVec* v) const {
 // Strip the "ITS protocol" prefix from a CHM URL, e.g.
 // "mk:@MSITStore:foo.chm::/index.html" -> "index.html".
 static Str StripItsProtocol(Str url) {
-    Str p = str::Find(url, "::/");
-    return p ? Str(p.s + 3, p.len - 3) : url;
+    Str p = str::FindAfter(url, StrL("::/"));
+    return p ? p : url;
 }
 
 static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, int level) {
@@ -708,7 +708,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     if (!utf8) {
         return false;
     }
-    size_t len = str::Len(utf8);
+    int len = str::Leni(utf8);
 
     GumboOptions opts = GumboMakeOptions();
     GumboOutput* output = gumbo_parse_with_options(&opts, utf8.s, len);

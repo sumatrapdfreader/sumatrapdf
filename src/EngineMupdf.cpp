@@ -457,7 +457,7 @@ static void PdfCleanStringInPlace(WStr& ws) {
         }
     }
     wstr::NormalizeWSInPlace(ws);
-    ws.len = (int)wstr::Len(ws);
+    ws.len = wstr::Leni(ws);
 }
 
 struct istream_filter {
@@ -597,7 +597,7 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
     if (n < 1024) {
         return nullptr;
     }
-    n = str::BufFind(Str(buf, n), "%PDF-");
+    n = str::IndexOf(Str(buf, n), StrL("%PDF-"));
     if (n <= 0) {
         // not PDF or no garbage at the beginning
         return nullptr;
@@ -950,7 +950,7 @@ static int LinkifyTrimTrailingPunctOff(int startOff, int endOff, WStr trimChars,
         }
         if (trimCloseParen && L')' == c) {
             WStr span = WStr(pageText.s + startOff, endOff - startOff);
-            int openParenOff = wstr::FindCharIdx(span, L'(');
+            int openParenOff = wstr::CharIndexOf(span, L'(');
             if (openParenOff < 0) {
                 endOff--;
                 if (!trimRepeat) {
@@ -975,7 +975,7 @@ static int LinkifyFindEndOff(int startOff, wchar_t prevChar, WStr pageText) {
     // cut the link at the first quotation mark, if it's also preceded by one
     if (L'"' == prevChar || L'\'' == prevChar) {
         WStr span = WStr(pageText.s + startOff, endOff - startOff);
-        int quoteOff = wstr::FindCharIdx(span, prevChar);
+        int quoteOff = wstr::CharIndexOf(span, prevChar);
         if (quoteOff >= 0) {
             endOff = startOff + quoteOff;
         }
@@ -2214,13 +2214,13 @@ TempStr GetEmbeddedFileNameTemp(Str path) {
         return {};
     }
     Str meta;
-    for (Str pos = str::Find(path, ":attachname="); pos; pos = str::Find(Str(pos.s + 1), ":attachname=")) {
+    for (Str pos = str::FindFrom(path, StrL(":attachname=")); pos; pos = str::FindFrom(Str(pos.s + 1), StrL(":attachname="))) {
         meta = pos;
     }
     if (!meta) {
         return {};
     }
-    Str hex = Str(meta.s + str::Len(":attachname="));
+    Str hex = Str(meta.s + LenL(":attachname="));
     size_t hexLen = hex.len;
     if (hexLen == 0 || (hexLen % 2) != 0) {
         return {};
@@ -3174,14 +3174,14 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     ScopedCritSec scope1(&pagesLock);
     ScopedCritSec scope2(&docLock);
 
-    size_t nameLen = str::Len(name);
+    int nameLen = str::Leni(name);
     pdf_obj* dest = nullptr;
 
     fz_var(dest);
     pdf_obj* nameobj = nullptr;
     fz_var(nameobj);
     fz_try(ctx) {
-        nameobj = pdf_new_string(ctx, name, (int)nameLen);
+        nameobj = pdf_new_string(ctx, name, nameLen);
         dest = pdf_lookup_dest(ctx, pdfdoc, nameobj);
         pdf_drop_obj(ctx, nameobj);
     }

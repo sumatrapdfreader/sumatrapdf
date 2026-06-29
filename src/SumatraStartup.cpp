@@ -139,7 +139,7 @@ static void SendMyselfDDE(Str cmdA, HWND targetHwnd) {
     TempWStr cmd = ToWStrTemp(cmdA);
     if (targetHwnd) {
         // try WM_COPYDATA first, as that allows targetting a specific window
-        size_t cbData = (wstr::Len(cmd) + 1) * sizeof(WCHAR);
+        size_t cbData = (wstr::Leni(cmd) + 1) * sizeof(WCHAR);
         COPYDATASTRUCT cds = {kCopyDataDdeW, (DWORD)cbData, (void*)cmd};
         LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res) {
@@ -520,7 +520,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex, bool* openInNewWindow) {
     // (allows independent side-by-side installations)
     TempStr combinedPath = str::JoinTemp(GetSelfExePathTemp(), "|", GetAppDataDirTemp());
     str::ToLowerInPlace(combinedPath);
-    u32 hash = MurmurHash2(combinedPath.s, str::Len(combinedPath));
+    u32 hash = MurmurHash2(combinedPath.s, str::Leni(combinedPath));
     TempStr mapId = fmt("SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
@@ -807,16 +807,16 @@ static void UpdateGlobalPrefs(const Flags& i) {
 static bool ExeHasNameOfInstaller() {
     TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindI(exeName, StrL("uninstall")).s) {
+    if (str::FindFromI(exeName, StrL("uninstall")).s) {
         return false;
     }
-    return str::FindI(exeName, StrL("install")).s != nullptr;
+    return str::FindFromI(exeName, StrL("install")).s != nullptr;
 }
 
 static bool ExeHasNameOfStoreInstaller() {
     TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
-    return str::FindI(exeName, StrL("install-store")).s != nullptr;
+    return str::FindFromI(exeName, StrL("install-store")).s != nullptr;
 }
 
 static bool HasDataResource(int id) {
@@ -1747,7 +1747,7 @@ Run the command from cmd.exe instead, e.g.:
                 HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
                 if (hErr && hErr != INVALID_HANDLE_VALUE) {
                     DWORD written = 0;
-                    WriteFile(hErr, msg.s, (DWORD)str::Len(msg), &written, nullptr);
+                    WriteFile(hErr, msg.s, (DWORD)str::Leni(msg), &written, nullptr);
                 }
                 res = 1;
                 goto Exit;

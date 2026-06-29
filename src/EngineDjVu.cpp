@@ -871,7 +871,7 @@ static void AppendNewline(WStrBuilder& extracted, Vec<Rect>& coords, WStr lineSe
         coords.RemoveLast();
     }
     extracted.Append(lineSep);
-    coords.AppendBlanks(wstr::Len(lineSep));
+    coords.AppendBlanks(wstr::Leni(lineSep));
 }
 
 bool EngineDjVu::ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rect>& coords) {
@@ -960,7 +960,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
 
     PageText res;
 
-    ReportIf(wstr::Len(extracted.Get()) != coords.size());
+    ReportIf(wstr::Leni(extracted.Get()) != coords.Size());
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
@@ -999,7 +999,7 @@ static void AppendNewlineUtf8(StrBuilder& extracted, Vec<Rect>& coords, Str line
         coords.RemoveLast();
     }
     extracted.Append(lineSep);
-    coords.AppendBlanks(str::Len(lineSep));
+    coords.AppendBlanks(str::Leni(lineSep));
 }
 
 bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, StrBuilder& extracted, Vec<Rect>& coords) {
@@ -1086,7 +1086,7 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
 
     PageTextUtf8 res;
 
-    ReportIf(str::Len(extracted.Get()) != coords.size());
+    ReportIf(str::Leni(extracted.Get()) != coords.Size());
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {

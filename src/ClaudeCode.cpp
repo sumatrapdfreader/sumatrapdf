@@ -353,30 +353,28 @@ static TempStr EncodeClaudeDirTemp(Str dir) {
 // Extract user message text from a JSON line.
 // Handles both "content":"string" and "content":[{"type":"text","text":"..."}] formats.
 static TempStr ExtractUserTextTemp(Str line) {
-    if (!str::Find(line, "\"role\":\"user\"")) {
+    if (!str::Contains(line, StrL("\"role\":\"user\""))) {
         return {};
     }
     // skip tool_result messages (they have role:user but contain tool output, not user text)
-    if (str::Find(line, "\"tool_result\"")) {
+    if (str::Contains(line, StrL("\"tool_result\""))) {
         return {};
     }
     // try string format: "content":"text"
-    if (str::Find(line, "\"content\":\"")) {
+    if (str::Contains(line, StrL("\"content\":\""))) {
         TempStr content = AIChatJsonStrTemp(line, "content");
-        if (content && str::Len(content) > 0 && !str::Find(content, "<command-")) {
+        if (!str::Contains(content, StrL("<command-"))) {
             return content;
         }
     }
     // try array format: "content":[{"type":"text","text":"..."}]
-    if (str::Find(line, "\"content\":[")) {
+    if (str::Contains(line, StrL("\"content\":["))) {
         // find the text field inside the first text block
-        Str textBlock = str::Find(line, "\"type\":\"text\",\"text\":\"");
-        if (!textBlock) {
-            textBlock = str::Find(line, "\"text\":\"");
-        }
-        if (textBlock) {
+        bool hasText =
+            str::Contains(line, StrL("\"type\":\"text\",\"text\":\"")) || str::Contains(line, StrL("\"text\":\""));
+        if (hasText) {
             TempStr text = AIChatJsonStrTemp(line, "text");
-            if (text && str::Len(text) > 0 && !str::Find(text, "<command-")) {
+            if (!str::Contains(text, StrL("<command-"))) {
                 return text;
             }
         }
@@ -560,17 +558,17 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
             TempStr userText = ExtractUserTextTemp(line);
             if (userText) {
                 WebViewAddUser(win, userText);
-            } else if (str::Find(line, "\"role\":\"assistant\"")) {
+            } else if (str::Contains(line, StrL("\"role\":\"assistant\""))) {
                 // assistant message
-                if (str::Find(line, "\"type\":\"thinking\"")) {
+                if (str::Contains(line, StrL("\"type\":\"thinking\""))) {
                     // skip thinking blocks
-                } else if (str::Find(line, "\"type\":\"text\"")) {
+                } else if (str::Contains(line, StrL("\"type\":\"text\""))) {
                     TempStr text = AIChatJsonStrTemp(line, "text");
-                    if (text && str::Len(text) > 0) {
+                    if (!str::IsEmpty(text)) {
                         WebViewAppendText(win, text);
                         WebViewFlushBlock(win);
                     }
-                } else if (str::Find(line, "\"type\":\"tool_use\"")) {
+                } else if (str::Contains(line, StrL("\"type\":\"tool_use\""))) {
                     TempStr toolName = AIChatJsonStrTemp(line, "name");
                     if (toolName) {
                         TempStr fp = AIChatJsonStrTemp(line, "file_path");
@@ -751,13 +749,13 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                 TempStr eventType = AIChatJsonStrTemp(line, "type");
 
                 if (eventType && str::Eq(eventType, "assistant")) {
-                    if (str::Find(line, "\"type\":\"text\"")) {
+                    if (str::Contains(line, StrL("\"type\":\"text\""))) {
                         TempStr text = AIChatJsonStrTemp(line, "text");
-                        if (text && str::Len(text) > 0) {
+                        if (!str::IsEmpty(text)) {
                             PostUpdate(hwndFrame, sessionId, text, ClaudeUpdateType::Text);
                         }
                     }
-                    if (str::Find(line, "\"type\":\"tool_use\"")) {
+                    if (str::Contains(line, StrL("\"type\":\"tool_use\""))) {
                         TempStr toolName = AIChatJsonStrTemp(line, "name");
                         if (toolName) {
                             TempStr fp = AIChatJsonStrTemp(line, "file_path");
@@ -780,7 +778,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                         }
                     }
                 } else if (eventType && str::Eq(eventType, "user")) {
-                    if (str::Find(line, "\"tool_use_result\"")) {
+                    if (str::Contains(line, StrL("\"tool_use_result\""))) {
                         TempStr fp = AIChatJsonStrTemp(line, "filePath");
                         if (fp) {
                             StrBuilder desc;
