@@ -278,7 +278,9 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
                 listBox->SetCurrentSelection(currSel);
                 return true;
             }
-            return true;
+            // not in file-history mode: let the edit control process Delete
+            // normally (delete the character to the right of the cursor)
+            return false;
         }
 
         if (msg.wParam == VK_UP) {
