@@ -5681,10 +5681,16 @@ static bool IsChmTab(WindowTab* tab) {
     return dm && dm->GetEngineType() == kindEngineChm;
 }
 
-static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot) {
+static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot, LPARAM lp = 0) {
     DisplayModel* dm = tab->AsFixed();
     if (!dm) return nullptr;
     Point pt = HwndGetCursorPos(tab->win->hwndCanvas);
+    if (lp != 0) {
+        // sent from the context menu: the right-click position is encoded in lp
+        // (the live cursor is now over the menu, not the annotation)
+        pt.x = GET_X_LPARAM(lp);
+        pt.y = GET_Y_LPARAM(lp);
+    }
     if (pt.IsEmpty()) return nullptr;
     int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
     if (pageNoUnderCursor <= 0) {
@@ -8326,7 +8332,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdDeleteAnnotation: {
             if (!tab) return 0;
             Annotation* annot = tab->selectedAnnotation;
-            if (!annot) annot = GetAnnotionUnderCursor(tab, nullptr);
+            if (!annot) annot = GetAnnotionUnderCursor(tab, nullptr, lp);
             if (!annot) return 0;
             DeleteAnnotationAndUpdateUI(tab, annot);
             return 0;
