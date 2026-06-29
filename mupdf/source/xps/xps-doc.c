@@ -232,9 +232,20 @@ xps_drop_page_list(fz_context *ctx, xps_document *doc)
  * Parse the fixed document sequence structure and _rels/.rels to find the start part.
  */
 
+/* SumatraPDF: bound recursion depth to avoid stack overflow on deeply nested
+   XPS metadata XML (bug #5032). Each frame carries kilobyte-sized url buffers,
+   so the C stack overflows long before fitz's FZ_XML_MAX_DEPTH (4096) would
+   trip. The lone caller wraps this in fz_try, so the throw just fails the open
+   instead of crashing. */
+#define XPS_MAX_METADATA_DEPTH 256
+
 static void
-xps_parse_metadata_imp(fz_context *ctx, xps_document *doc, fz_xml *item, xps_fixdoc *fixdoc)
+xps_parse_metadata_imp(fz_context *ctx, xps_document *doc, fz_xml *item, xps_fixdoc *fixdoc, int depth)
 {
+	/* SumatraPDF: bound recursion depth (bug #5032) */
+	if (depth > XPS_MAX_METADATA_DEPTH)
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "too deeply nested xps metadata");
+
 	while (item)
 	{
 		if (fz_xml_is_tag(item, "Relationship"))
@@ -290,7 +301,7 @@ xps_parse_metadata_imp(fz_context *ctx, xps_document *doc, fz_xml *item, xps_fix
 				xps_add_link_target(ctx, doc, name);
 		}
 
-		xps_parse_metadata_imp(ctx, doc, fz_xml_down(item), fixdoc);
+		xps_parse_metadata_imp(ctx, doc, fz_xml_down(item), fixdoc, depth + 1); /* SumatraPDF: bug #5032 */
 
 		item = fz_xml_next(item);
 	}
@@ -323,7 +334,7 @@ xps_parse_metadata(fz_context *ctx, xps_document *doc, xps_part *part, xps_fixdo
 	xml = fz_parse_xml(ctx, part->data, 0);
 	fz_try(ctx)
 	{
-		xps_parse_metadata_imp(ctx, doc, fz_xml_root(xml), fixdoc);
+		xps_parse_metadata_imp(ctx, doc, fz_xml_root(xml), fixdoc, 0); /* SumatraPDF: bug #5032 */
 	}
 	fz_always(ctx)
 	{
