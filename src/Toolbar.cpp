@@ -109,7 +109,14 @@ static void UpdateToolbarButtonStateByIdx(HWND hwnd, int idx, bool set, BYTE fla
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_STATE;
     SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
-    bi.fsState = set ? bi.fsState | flag : bi.fsState & ~flag;
+    BYTE newState = (BYTE)(set ? bi.fsState | flag : bi.fsState & ~flag);
+    if (newState == bi.fsState) {
+        // TB_SETBUTTONINFOW repaints the button even when nothing changes, which
+        // flickers the toolbar (and the page-number controls floating over it)
+        // e.g. on every page change while drag-selecting. Skip the no-op.
+        return;
+    }
+    bi.fsState = newState;
     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
 }
 
