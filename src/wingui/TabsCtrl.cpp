@@ -867,13 +867,15 @@ void TabsCtrl::RemoveAllTabs() {
 }
 
 TabInfo* TabsCtrl::GetTab(int idx) {
-    // defensive: a bad index (e.g. -1 from TabCtrl_GetCurSel when nothing is
-    // selected, or tabUnderMouse/tabHighlighted == -1 during a DDE-triggered
-    // reload) would otherwise read tabs[idx] out of bounds. Report and bail so
-    // call sites fail safe instead of indexing the Vec with a negative index.
-    bool badIdx = idx < 0 || idx >= TabCount();
-    ReportIf(badIdx);
-    if (badIdx) {
+    // This is the fail-safe accessor for tab indices that legitimately go out
+    // of range: -1 ("no tab" - TabCtrl_GetCurSel with nothing selected,
+    // tabUnderMouse/tabHighlighted when not over a tab) and a stale index
+    // >= TabCount() that can briefly occur during teardown / DDE-triggered
+    // reload. Both are expected, so just bail to nullptr (call sites null-check)
+    // without uploading a debug report. Only a clearly corrupt index (< -1, which
+    // no sentinel ever produces) signals a real bug worth reporting.
+    if (idx < 0 || idx >= TabCount()) {
+        ReportIf(idx < -1);
         return nullptr;
     }
     return tabs[idx];
