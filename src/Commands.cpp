@@ -1199,6 +1199,14 @@ CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
 // or DDE commands
 // return null if unkown command
 CustomCommand* CreateCommandFromDefinition(Str definition) {
+    // an empty Shortcuts entry (e.g. a stray "[ ]" block) deserializes to an
+    // empty cmd. ignore it silently instead of reporting a bogus "Unknown cmd
+    // name" with garbage text (the empty default is a non-null-terminated
+    // 0-byte buffer, so formatting it as '%s' reads past it).
+    if (str::IsEmptyOrWhiteSpace(definition)) {
+        return nullptr;
+    }
+
     // the same command can be sent via DDE many times
     // we don't want to create duplicate CustomCommand
     for (auto cmd = gFirstCustomCommand; cmd; cmd = cmd->next) {
