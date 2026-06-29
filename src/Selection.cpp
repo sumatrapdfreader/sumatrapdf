@@ -220,7 +220,6 @@ void UpdateTextSelection(MainWindow* win, bool select) {
     if (win->uiaProvider) {
         win->uiaProvider->OnSelectionChanged();
     }
-    ToolbarUpdateStateForWindow(win, false);
 }
 
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to
@@ -448,5 +447,9 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
         win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
     }
     win->selectingByWord = false;
+    // refresh selection-dependent toolbar buttons once, when the selection is
+    // finalized, rather than on every repaint while dragging (UpdateTextSelection
+    // runs from PaintSelection on each frame, which flickered the toolbar)
+    ToolbarUpdateStateForWindow(win, false);
     ScheduleRepaint(win, 0);
 }
