@@ -222,18 +222,26 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
 //   - the case of the root component is preserved
 //   - the case of rest is set to the way it is stored on the file system
 //
-// e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
+// suppose file "C:\foo\Bar.Pdf" exists on the file system then
 //    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
 static TempWStr NormalizeTemp(WStr path) {
+    // win32 path APIs read a NUL-terminated string; path (a WStr) might be a
+    // non-terminated substring, so make a terminated copy first
+    path = str::DupTemp(path);
     // convert to absolute path, change slashes into backslashes
     DWORD cch = GetFullPathNameW(path.s, 0, nullptr, nullptr);
     if (!cch) {
         return str::DupTemp(path);
     }
 
-    TempWStr fullPath = WStr(AllocArrayTemp<WCHAR>(cch), (int)cch);
-    GetFullPathNameW(path.s, cch, fullPath.s, nullptr);
+    // GetFullPathNameW with a 0 buffer returns the size *including* the
+    // terminating null; the fill call returns the count *excluding* it, which
+    // is the real string length. Using cch as the WStr len leaves it one too
+    // long, so str::Eq() against a correctly-sized path fails to match.
+    WCHAR* fullPathBuf = AllocArrayTemp<WCHAR>(cch);
+    DWORD nChars = GetFullPathNameW(path.s, cch, fullPathBuf, nullptr);
+    TempWStr fullPath = WStr(fullPathBuf, (int)nChars);
 
     TempWStr normPath = fullPath;
     // convert to long form
@@ -241,8 +249,9 @@ static TempWStr NormalizeTemp(WStr path) {
     if (cch > 0) {
         // this sometimes fails for valid long paths
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/4940
-        normPath = WStr(AllocArrayTemp<WCHAR>(cch), (int)cch);
-        GetLongPathNameW(fullPath.s, normPath.s, cch);
+        WCHAR* longBuf = AllocArrayTemp<WCHAR>(cch);
+        DWORD nLong = GetLongPathNameW(fullPath.s, longBuf, cch);
+        normPath = WStr(longBuf, (int)nLong);
         if (cch <= MAX_PATH) {
             return normPath;
         }
@@ -251,8 +260,9 @@ static TempWStr NormalizeTemp(WStr path) {
     // handle overlong paths: first, try to shorten the path
     cch = GetShortPathNameW(fullPath.s, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
-        TempWStr shortPath = WStr(AllocArrayTemp<WCHAR>(cch), (int)cch);
-        GetShortPathNameW(fullPath.s, shortPath.s, cch);
+        WCHAR* shortBuf = AllocArrayTemp<WCHAR>(cch);
+        DWORD nShort = GetShortPathNameW(fullPath.s, shortBuf, cch);
+        TempWStr shortPath = WStr(shortBuf, (int)nShort);
         WStr shortPathName = GetBaseNameTemp(shortPath);
         WStr normPathName = GetBaseNameTemp(normPath);
         if (normPathName.len + (int)(shortPathName.s - shortPath.s) < MAX_PATH) {
@@ -341,8 +351,10 @@ bool IsSame(Str path1, Str path2) {
         return false;
     }
 
-    TempWStr path1W = ToWStrTemp(path1.s);
-    TempWStr path2W = ToWStrTemp(path2.s);
+    // pass the Str (length-aware), not .s: path1/path2 may be non-terminated
+    // substrings, and ToWStrTemp(const char*) would read past their end
+    TempWStr path1W = ToWStrTemp(path1);
+    TempWStr path2W = ToWStrTemp(path2);
     bool isSame = false;
     bool needFallback = true;
     // CreateFile might fail for already opened files
@@ -979,8 +991,11 @@ bool Exists(WStr dir) {
         return false;
     }
 
+    // GetFileAttributesEx reads a NUL-terminated string; dir might be a
+    // non-terminated substring, so make a terminated copy first
+    TempWStr dirZ = str::DupTemp(dir);
     WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    BOOL res = GetFileAttributesEx(dir.s, GetFileExInfoStandard, &fileInfo);
+    BOOL res = GetFileAttributesEx(dirZ.s, GetFileExInfoStandard, &fileInfo);
     if (0 == res) {
         return false;
     }

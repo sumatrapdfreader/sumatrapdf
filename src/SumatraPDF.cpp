@@ -459,11 +459,16 @@ WindowTab* FindTabByFile(Str file) {
 
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
-            Str fp = tab->filePath;
-            if (!fp || !path::IsSame(fp, normFile)) {
+            if (tab->type != WindowTab::Type::Document) {
                 continue;
             }
-            return tab;
+            Str fp = tab->filePath;
+            if (str::IsEmpty(fp)) {
+                continue;
+            }
+            if (path::IsSame(fp, normFile)) {
+                return tab;
+            }
         }
     }
     return nullptr;

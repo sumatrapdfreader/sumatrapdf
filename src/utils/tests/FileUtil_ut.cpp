@@ -86,4 +86,12 @@ void FileUtilTest() {
         // utassert(str::Eq(path, "foo\\bar\\z"));
         // str::Free(path);
     }
+    {
+        // regression: NormalizeTemp() used GetFullPathNameW's 0-buffer size
+        // (which includes the terminating NUL) as the result length, leaving
+        // it one char too long so str::EqI() against the real path didn't match
+        Str p = "C:\\foo\\prince of persia technical doc.pdf";
+        TempStr norm = path::NormalizeTemp(p);
+        utassert(str::EqI(norm, p));
+    }
 }
