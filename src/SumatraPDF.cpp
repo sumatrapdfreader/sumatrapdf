@@ -382,7 +382,7 @@ bool SumatraLaunchBrowser(Str url) {
 
     // check if this URL's protocol is allowed
     AutoFreeStr protocol;
-    if (!str::Parse(url, "%S:", &protocol)) {
+    if (str::IsNull(str::Parse(url, "%S:", &protocol))) {
         return false;
     }
     str::ToLowerInPlace(Str(protocol.Get()));

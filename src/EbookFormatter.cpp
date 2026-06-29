@@ -44,13 +44,13 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc) : HtmlFormat
 // to be passed by the caller
 static float ParseSizeAsPixels(Str s, float emInPoints) {
     float sizeInPoints = 0;
-    if (str::Parse(s, "%fem", &sizeInPoints)) {
+    if (!str::IsNull(str::Parse(s, "%fem", &sizeInPoints))) {
         sizeInPoints *= emInPoints;
-    } else if (str::Parse(s, "%fin", &sizeInPoints)) {
+    } else if (!str::IsNull(str::Parse(s, "%fin", &sizeInPoints))) {
         sizeInPoints *= 72;
-    } else if (str::Parse(s, "%fpt", &sizeInPoints)) {
+    } else if (!str::IsNull(str::Parse(s, "%fpt", &sizeInPoints))) {
         // no conversion needed
-    } else if (str::Parse(s, "%fpx", &sizeInPoints)) {
+    } else if (!str::IsNull(str::Parse(s, "%fpx", &sizeInPoints))) {
         return sizeInPoints;
     } else {
         return 0;
@@ -99,7 +99,7 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("recindex");
     if (attr) {
         int n;
-        if (str::Parse(attr->val, "%d", &n)) {
+        if (!str::IsNull(str::Parse(attr->val, "%d", &n))) {
             ByteSlice* img = doc->GetImage(n);
             needAlt = !img || !EmitImage(img);
         }

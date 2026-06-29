@@ -1039,12 +1039,12 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
             if (str::EqI(startStr, "N")) {
                 start = pageCount;
             } else {
-                start = str::Parse(startStr, "%d%$", &start) ? start : -1;
+                start = !str::IsNull(str::Parse(startStr, "%d%$", &start)) ? start : -1;
             }
             if (endIsEmpty || str::EqI(endStr, "N")) {
                 end = pageCount;
             } else {
-                end = str::Parse(endStr, "%d%$", &end) ? end : -1;
+                end = !str::IsNull(str::Parse(endStr, "%d%$", &end)) ? end : -1;
             }
             if (start < 1 || start > pageCount || end < 1 || end > pageCount || start > end) {
                 return false;
@@ -1058,7 +1058,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
             if (str::EqI(part, "N")) {
                 page = pageCount;
             } else {
-                page = str::Parse(part, "%d%$", &page) ? page : -1;
+                page = !str::IsNull(str::Parse(part, "%d%$", &page)) ? page : -1;
             }
             if (page < 1 || page > pageCount) {
                 return false;

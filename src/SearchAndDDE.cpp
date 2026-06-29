@@ -1309,21 +1309,21 @@ static Str HandleSyncCmd(Str cmd, bool* ack) {
     AutoFreeStr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
     Str next = str::Parse(cmd, "[ForwardSearch(\"%s\",%? \"%s\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
-    if (!next) {
+    if (str::IsNull(next)) {
         next = str::Parse(cmd, "[ForwardSearch(\"%s\",%? \"%s\",%u,%u,%u,%u)]", &pdfFile, &srcFile, &line, &col,
                           &newWindow, &setFocus);
     }
     // allow to omit the pdffile path, so that editors don't have to know about
     // multi-file projects (requires that the PDF has already been opened)
-    if (!next) {
+    if (str::IsNull(next)) {
         pdfFile.Reset();
         next = str::Parse(cmd, "[ForwardSearch(\"%s\",%u,%u)]", &srcFile, &line, &col);
-        if (!next) {
+        if (str::IsNull(next)) {
             next = str::Parse(cmd, "[ForwardSearch(\"%s\",%u,%u,%u,%u)]", &srcFile, &line, &col, &newWindow, &setFocus);
         }
     }
 
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
 
@@ -1378,7 +1378,7 @@ static Str HandleSearchCmd(Str cmd, bool* ack) {
     AutoFreeStr term;
     Str next = str::Parse(cmd, "[Search(\"%s\",\"%s\")]", &pdfFile, &term);
     // TODO: should un-quote text to allow searching text with '"' in them
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
     if (str::IsEmpty(term.Get())) {
@@ -1416,7 +1416,7 @@ static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
     AutoFreeStr term;
     int page = 0;
     Str next = str::Parse(cmd, "[GotoPageWord(\"%s\",%d,\"%s\")]", &pdfFile, &page, &term);
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
     MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
@@ -1475,14 +1475,14 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
     int forceRefresh = 0;
     int inCurrentTab = 0;
     Str next = str::Parse(cmd, "[Open(\"%s\")]", &filePath);
-    if (!next) {
+    if (str::IsNull(next)) {
         next = str::Parse(cmd, "[Open(\"%s\",%u,%u,%u,%u)]", &filePath, &newWindow, &setFocus, &forceRefresh,
                           &inCurrentTab);
     }
-    if (!next) {
+    if (str::IsNull(next)) {
         next = str::Parse(cmd, "[Open(\"%s\",%u,%u,%u)]", &filePath, &newWindow, &setFocus, &forceRefresh);
     }
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
     bool isCtrl = IsCtrlPressed();
@@ -1606,7 +1606,7 @@ e.g.:
 static Str HandleGotoCmd(Str cmd, bool* ack) {
     AutoFreeStr pdfFile, destName;
     Str next = str::Parse(cmd, "[GotoNamedDest(\"%s\",%? \"%s\")]", &pdfFile, &destName);
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
 
@@ -1638,7 +1638,7 @@ static Str HandlePageCmd(HWND, Str cmd, bool* ack) {
     AutoFreeStr pdfFile;
     uint page = 0;
     Str next = str::Parse(cmd, "[GotoPage(\"%S\",%u)]", &pdfFile, &page);
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
 
@@ -1680,11 +1680,11 @@ static Str HandleSetViewCmd(Str cmd, bool* ack) {
     float zoom = kInvalidZoom;
     Point scroll(-1, -1);
     Str next = str::Parse(cmd, "[SetView(\"%s\",%? \"%s\",%f)]", &filePath, &viewMode, &zoom);
-    if (!next) {
+    if (str::IsNull(next)) {
         next =
             str::Parse(cmd, "[SetView(\"%s\",%? \"%s\",%f,%d,%d)]", &filePath, &viewMode, &zoom, &scroll.x, &scroll.y);
     }
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
 
@@ -1768,13 +1768,13 @@ if file doesn't exist or no opened file
 static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, StrBuilder& res) {
     AutoFreeStr filePath;
     Str next = str::Parse(cmd, "[GetFileState(\"%s\")]", &filePath);
-    if (!next) {
+    if (str::IsNull(next)) {
         next = str::Parse(cmd, "[GetFileState()]");
     }
-    if (!next) {
+    if (str::IsNull(next)) {
         next = str::Parse(cmd, "[GetFileState]");
     }
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
 
@@ -1821,10 +1821,10 @@ static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, StrBuilder& res)
 // returns the full path of every open document, one per line (issue #5060)
 static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, StrBuilder& res) {
     Str next = str::Parse(cmd, "[GetOpenFiles()]");
-    if (!next) {
+    if (str::IsNull(next)) {
         next = str::Parse(cmd, "[GetOpenFiles]");
     }
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
     *ack = true;
@@ -1843,10 +1843,10 @@ static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, StrBuilder& res) {
 // (issue #1411). page is 0 if the cursor isn't over a page.
 static Str HandleGetMousePosCmd(Str cmd, bool* ack, StrBuilder& res) {
     Str next = str::Parse(cmd, "[GetMousePos()]");
-    if (!next) {
+    if (str::IsNull(next)) {
         next = str::Parse(cmd, "[GetMousePos]");
     }
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
     *ack = true;
@@ -1888,7 +1888,7 @@ eg: [CmdClose] or [CmdCreateAnnotHighlight #00ff00 openEdit]
 static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     AutoFreeStr cmdContent;
     Str next = str::Parse(cmd, "[%s]", &cmdContent);
-    if (!next) {
+    if (str::IsNull(next)) {
         return {};
     }
     // cmdContent is the full content between [ and ]
@@ -1939,31 +1939,31 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
         }
 
         Str nextCmd = HandleSyncCmd(cmd, &didHandle);
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleOpenCmd(cmd, &didHandle);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleGotoCmd(cmd, &didHandle);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandlePageCmd(hwnd, cmd, &didHandle);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleSetViewCmd(cmd, &didHandle);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleSearchCmd(cmd, &didHandle);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleGotoPageWordCmd(cmd, &didHandle);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleCmdCommand(hwnd, cmd, &didHandle);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleNewWindowCmd(cmd, &didHandle);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             // forwards compatibility: ignore unknown commands (maybe from newer version)
             AutoFreeStr tmp;
             nextCmd = str::Parse(cmd, "%s]", &tmp);
@@ -1981,13 +1981,13 @@ static bool HandleRequestCmds(HWND hwnd, Str cmd, StrBuilder& rsp) {
         }
 
         Str nextCmd = HandleGetFileStateCmd(hwnd, cmd, &didHandle, rsp);
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleGetOpenFilesCmd(cmd, &didHandle, rsp);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             nextCmd = HandleGetMousePosCmd(cmd, &didHandle, rsp);
         }
-        if (!nextCmd) {
+        if (str::IsNull(nextCmd)) {
             AutoFreeStr tmp;
             nextCmd = str::Parse(cmd, "%s]", &tmp);
         }

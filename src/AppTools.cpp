@@ -683,7 +683,7 @@ bool AdjustVariableDriveLetter(Str& path) {
 // an untrusted zone (e.g. by the browser that's downloaded them)
 bool IsUntrustedFile(Str filePath, Str fileURL) {
     AutoFreeStr protocol;
-    if (fileURL && str::Parse(fileURL, "%S:", &protocol)) {
+    if (fileURL && !str::IsNull(str::Parse(fileURL, "%S:", &protocol))) {
         if (len(Str(protocol.Get())) > 1 && !str::EqI(Str(protocol.Get()), "file")) {
             return true;
         }

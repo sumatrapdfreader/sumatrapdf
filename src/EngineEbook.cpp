@@ -1530,7 +1530,7 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
             if (httpEquiv && str::EqI(httpEquiv->value, "Content-Type")) {
                 const GumboAttribute* content = gumbo_get_attribute(&n->v.element.attributes, "content");
                 AutoFree mimetype, charset;
-                if (content && str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset)) {
+                if (content && !str::IsNull(str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset))) {
                     uint cp = CharsetNameToCodepage(Str(charset.Get()));
                     if (cp) {
                         return cp;
@@ -1670,7 +1670,7 @@ IPageDestination* EngineChm::GetNamedDest(Str name) {
         return dest;
     }
     unsigned int topicID;
-    if (str::Parse(name, "%u%$", &topicID)) {
+    if (!str::IsNull(str::Parse(name, "%u%$", &topicID))) {
         TempStr url = doc->ResolveTopicID(topicID);
         if (url) {
             dest = EngineEbook::GetNamedDest(url);

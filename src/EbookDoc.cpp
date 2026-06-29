@@ -43,7 +43,10 @@ static uint GetCodepageFromPI(Str xmlPI) {
         Str namePart;
         uint codePage;
     } static encodings[] = {
-        {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
+        {"UTF", CP_UTF8},
+        {"utf", CP_UTF8},
+        {"1252", 1252},
+        {"1251", 1251},
         // TODO: any other commonly used codepages?
     };
     for (size_t i = 0; i < dimof(encodings); i++) {
@@ -1594,7 +1597,7 @@ static Str TextFindRfcEnd(StrBuilder& htmlData, Str curr, char prevChar) {
     }
     int rfc;
     Str end = str::Parse(curr, "RFC %d", &rfc);
-    if (!end) {
+    if (str::IsNull(end)) {
         return {};
     }
     htmlData.Append(fmt("<a href='http://www.rfc-editor.org/rfc/rfc%d.txt'>", rfc));
@@ -1619,7 +1622,7 @@ bool TxtDoc::Load() {
     }
 
     int rfc;
-    isRFC = str::Parse(path::GetBaseNameTemp(fileName), "rfc%d.txt%$", &rfc) != nullptr;
+    isRFC = !str::IsNull(str::Parse(path::GetBaseNameTemp(fileName), "rfc%d.txt%$", &rfc));
 
     int linkEndPos = -1;
     bool rfcHeader = false;
@@ -1642,7 +1645,7 @@ bool TxtDoc::Load() {
             }
         } else if (i > 0 && ('/' == text.s[i - 1] || isalnum((u8)text.s[i - 1]))) {
             /* don't check for a link at this position */;
-        } else if ('h' == c && str::Parse(curr, "http%?s://")) {
+        } else if ('h' == c && !str::IsNull(str::Parse(curr, "http%?s://"))) {
             Str end = TextFindLinkEnd(htmlData, curr, i > 0 ? text.s[i - 1] : ' ');
             if (end) {
                 linkEndPos = (int)(end.s - text.s);
@@ -1657,7 +1660,7 @@ bool TxtDoc::Load() {
             if (end) {
                 linkEndPos = (int)(end.s - text.s);
             }
-        } else if (isRFC && i > 0 && 'R' == c && str::Parse(curr, "RFC %d", &rfc)) {
+        } else if (isRFC && i > 0 && 'R' == c && !str::IsNull(str::Parse(curr, "RFC %d", &rfc))) {
             Str end = TextFindRfcEnd(htmlData, curr, text.s[i - 1]);
             if (end) {
                 linkEndPos = (int)(end.s - text.s);
@@ -1675,7 +1678,8 @@ bool TxtDoc::Load() {
 
         if (isRFC && i > 0 && '\n' == text.s[i - 1] && (str::IsDigit(c) || str::StartsWith(curr, "APPENDIX"))) {
             Str lineEnd = str::FindChar(curr, '\n');
-            if (lineEnd && str::Parse(Str(lineEnd.s + 1, (int)(curr.len - (lineEnd.s - curr.s) - 1)), "%?\r\n")) {
+            if (lineEnd &&
+                !str::IsNull(str::Parse(Str(lineEnd.s + 1, (int)(curr.len - (lineEnd.s - curr.s) - 1)), "%?\r\n"))) {
                 htmlData.Append(fmt("<b id='section%d' title=\"", ++sectionCount));
                 for (int j = 0; j < (int)(lineEnd.s - curr.s); j++) {
                     char ch = curr.s[j];

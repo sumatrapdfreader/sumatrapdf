@@ -101,7 +101,7 @@ float ZoomFromString(Str s, float defVal) {
         return kZoomFitByOrientation;
     }
     float zoom;
-    if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom)) {
+    if (!str::IsNull(str::Parse(s, "%f", &zoom)) && IsValidZoom(zoom)) {
         return zoom;
     }
     return defVal;

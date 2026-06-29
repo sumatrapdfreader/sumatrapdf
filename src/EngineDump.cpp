@@ -490,7 +490,7 @@ void EngineDump(const Flags& flags) {
         } else if (str::Eq(argList.at(i), "-render") && i + 1 < nArgs && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
-            if (i + 2 < nArgs && str::Parse(argList.at(i + 1), "%f%%%$", &zoom) && zoom > 0.f) {
+            if (i + 2 < nArgs && !str::IsNull(str::Parse(argList.at(i + 1), "%f%%%$", &zoom)) && zoom > 0.f) {
                 renderZoom = zoom / 100.f;
                 i++;
             }

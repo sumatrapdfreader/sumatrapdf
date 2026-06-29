@@ -74,11 +74,12 @@ static bool PdfDateParse(Str pdfDate, SYSTEMTIME* timeOut) {
     if (str::StartsWith(slice, "D:")) {
         slice = Str(slice.s + 2, slice.len - 2);
     }
-    return str::Parse(slice,
-                      "%4d%2d%2d"
-                      "%2d%2d%2d",
-                      &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
-                      &timeOut->wSecond) != nullptr;
+    Str end = str::Parse(slice,
+                         "%4d%2d%2d"
+                         "%2d%2d%2d",
+                         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
+                         &timeOut->wSecond);
+    return !str::IsNull(end);
     // don't bother about the day of week, we won't display it anyway
 }
 

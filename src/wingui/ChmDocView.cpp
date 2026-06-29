@@ -36,7 +36,7 @@ struct ChmWebviewWnd : WebviewWnd {
 void ChmWebviewWnd::OnBrowserMessage(Str msg) {
     int x = 0;
     int y = 0;
-    if (owner && str::Parse(msg, "chmscroll %d %d", &x, &y)) {
+    if (owner && !str::IsNull(str::Parse(msg, "chmscroll %d %d", &x, &y))) {
         if (x < 0) {
             x = 0;
         }

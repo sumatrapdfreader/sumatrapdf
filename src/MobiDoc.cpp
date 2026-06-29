@@ -958,7 +958,7 @@ bool MobiDoc::HasToc() {
         const GumboAttribute* filepos = gumbo_get_attribute(&ref->v.element.attributes, "filepos");
         if (filepos) {
             unsigned int pos;
-            if (str::Parse(Str(filepos->value), "%u%$", &pos)) {
+            if (!str::IsNull(str::Parse(Str(filepos->value), "%u%$", &pos))) {
                 docTocIndex = pos;
             }
         }

@@ -646,7 +646,7 @@ IPageDestination* ChmModel::GetNamedDest(Str name) {
         return NewChmNamedDest(url, 1);
     }
     unsigned int topicID;
-    if (!str::Parse(name, "%u%$", &topicID)) {
+    if (str::IsNull(str::Parse(name, "%u%$", &topicID))) {
         return nullptr;
     }
     TempStr topicURL = doc->ResolveTopicID(topicID);

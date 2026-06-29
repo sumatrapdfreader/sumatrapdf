@@ -452,7 +452,8 @@ static bool SetupPluginMode(Flags& i) {
         for (int k = 0; k < parts.Size(); k++) {
             Str part = parts.At(k);
             int pageNo;
-            if (str::StartsWithI(part, "page=") && str::Parse(Str(part.s + 4, part.len - 4), "=%d%$", &pageNo)) {
+            if (str::StartsWithI(part, "page=") &&
+                !str::IsNull(str::Parse(Str(part.s + 4, part.len - 4), "=%d%$", &pageNo))) {
                 i.pageNumber = pageNo;
             } else if (str::StartsWithI(part, "nameddest=") && part.len > 10) {
                 i.namedDest = str::Dup(Str(part.s + 10, part.len - 10));

@@ -211,7 +211,8 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     int lineOff = SyncAdvanceLine(data, 0);
     UINT versionNumber = 0;
-    if (lineOff < 0 || !str::Parse(SyncLineAt(data, lineOff), "version %u", &versionNumber) || versionNumber != 1) {
+    if (lineOff < 0 || str::IsNull(str::Parse(SyncLineAt(data, lineOff), "version %u", &versionNumber)) ||
+        versionNumber != 1) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
 
@@ -246,9 +247,9 @@ int Pdfsync::RebuildIndexIfNeeded() {
         switch (line.s[0]) {
             case 'l':
                 psline.file = filestack.Last();
-                if (str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column)) {
+                if (!str::IsNull(str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column))) {
                     lines.Append(psline);
-                } else if (str::Parse(line, "l %u %u", &psline.record, &psline.line)) {
+                } else if (!str::IsNull(str::Parse(line, "l %u %u", &psline.record, &psline.line))) {
                     psline.column = 0;
                     lines.Append(psline);
                 }
@@ -256,7 +257,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 break;
 
             case 's':
-                if (str::Parse(line, "s %u", &page)) {
+                if (!str::IsNull(str::Parse(line, "s %u", &page))) {
                     sheetIndex.Append(points.size());
                 }
                 // else dbg("Bad 's' line in the pdfsync file");
@@ -268,9 +269,9 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 pspoint.page = page;
                 if (0 == page || page > maxPageNo) {
                     /* ignore point for invalid page number */;
-                } else if (str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
+                } else if (!str::IsNull(str::Parse(line, "p %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
                     points.Append(pspoint);
-                } else if (str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y)) {
+                } else if (!str::IsNull(str::Parse(line, "p* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
                     points.Append(pspoint);
                 }
                 // else dbg("Bad 'p' line in the pdfsync file");
