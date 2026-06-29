@@ -554,6 +554,9 @@ cd ../out/dbgarm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:l
       <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
 cd ../out/dbg64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
     <ClCompile>
@@ -714,6 +717,9 @@ cd ../out/dbgfullarm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.d
       <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
 cd ../out/dbgfull64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -893,6 +899,9 @@ cd ../out/arm64 &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libm
       <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
 cd ../out/rel64_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <ClCompile>
@@ -1076,6 +1085,9 @@ cd ../out/arm64_prefast &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.
       <Command>..\bin\MakeLZSA.exe ..\translations\translations.txt.lzsa ..\translations\translations-good.txt:translations-good.txt
 cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /y "$(VCToolsInstallDir)bin\Hostx64\x64\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\darkmodelib\include\DarkModeSubclass.h" />

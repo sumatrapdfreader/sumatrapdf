@@ -1100,6 +1100,17 @@ workspace "SumatraPDF"
     dependson { "PdfFilter", "PdfPreview", "test_util", "sumatrapdf-tool" }
     prebuildcommands { "..\\bin\\MakeLZSA.exe ..\\translations\\translations.txt.lzsa ..\\translations\\translations-good.txt:translations-good.txt" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe" }
+    -- /INFERASANLIBS pulls in the *dynamic* ASan runtime, so
+    -- clang_rt.asan_dynamic-x86_64.dll must sit next to the exe or it
+    -- won't launch. Nothing copies it automatically, so do it here.
+    -- $(VCToolsInstallDir) avoids hardcoding the MSVC toolset version.
+    -- libmupdf.dll (also asan, delay-loaded from this exe's dir) is
+    -- covered too since it shares this OutDir.
+    filter "platforms:x64_asan"
+      postbuildcommands {
+        'copy /y "$(VCToolsInstallDir)bin\\Hostx64\\x64\\clang_rt.asan_dynamic-x86_64.dll" "$(OutDir)"'
+      }
+    filter {}
 
 workspace "MakeLZSA"
   configurations { "Debug", "Release" }
