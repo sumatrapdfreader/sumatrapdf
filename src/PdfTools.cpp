@@ -16,6 +16,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "SumatraPDF.h"
+#include "SumatraConfig.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Translations.h"
@@ -46,6 +47,11 @@ static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int pad
     int screenW = GetSystemMetrics(SM_CXSCREEN);
     dlgW = std::min(dlgW, screenW * 80 / 100);
     return dlgW;
+}
+
+// the Sumatra app icon, shown in each tool dialog's title bar / taskbar
+static HICON GetAppIcon() {
+    return LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
 }
 
 // shared "Save As" browse used by the layout-based PDF tool dialogs below.
@@ -162,6 +168,7 @@ bool PdfBakeDialog::Create(MainWindow* w, WindowTab* tab) {
     cargs.font = hFont;
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
+    cargs.icon = GetAppIcon();
     if (UseDarkModeLib() && DarkMode::isEnabled()) {
         cargs.bgColor = ThemeWindowControlBackgroundColor();
     } else {
@@ -408,6 +415,7 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
     cargs.font = hFont;
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
+    cargs.icon = GetAppIcon();
     if (UseDarkModeLib() && DarkMode::isEnabled()) {
         cargs.bgColor = ThemeWindowControlBackgroundColor();
     } else {
@@ -632,6 +640,7 @@ bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
     cargs.font = hFont;
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
+    cargs.icon = GetAppIcon();
     if (UseDarkModeLib() && DarkMode::isEnabled()) {
         cargs.bgColor = ThemeWindowControlBackgroundColor();
     } else {
@@ -827,6 +836,7 @@ bool PdfDecompressDialog::Create(MainWindow* w, WindowTab* tab) {
     cargs.font = hFont;
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
+    cargs.icon = GetAppIcon();
     if (UseDarkModeLib() && DarkMode::isEnabled()) {
         cargs.bgColor = ThemeWindowControlBackgroundColor();
     } else {
@@ -1215,6 +1225,7 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     cargs.font = hFont;
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
+    cargs.icon = GetAppIcon();
     if (UseDarkModeLib() && DarkMode::isEnabled()) {
         cargs.bgColor = ThemeWindowControlBackgroundColor();
     } else {
@@ -1494,6 +1505,7 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
     cargs.font = hFont;
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
+    cargs.icon = GetAppIcon();
     if (UseDarkModeLib() && DarkMode::isEnabled()) {
         cargs.bgColor = ThemeWindowControlBackgroundColor();
     } else {
@@ -1732,6 +1744,7 @@ bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
     cargs.font = hFont;
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     cargs.visible = false;
+    cargs.icon = GetAppIcon();
     if (UseDarkModeLib() && DarkMode::isEnabled()) {
         cargs.bgColor = ThemeWindowControlBackgroundColor();
     } else {
