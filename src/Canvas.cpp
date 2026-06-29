@@ -1226,6 +1226,23 @@ static bool IsTripleClick(int x, int y) {
     return dx <= GetSystemMetrics(SM_CXDOUBLECLK) && dy <= GetSystemMetrics(SM_CYDOUBLECLK);
 }
 
+// a full-page image (e.g. a scanned page) shouldn't start an image drag-out:
+// there click-and-drag is expected to pan the page (issue #5754). detect it by
+// comparing the image's area to the page's.
+static bool IsFullPageImage(DisplayModel* dm, IPageElement* el, int pageNo) {
+    if (!dm->ValidPageNo(pageNo)) {
+        return false;
+    }
+    RectF pageRc = dm->GetEngine()->PageMediabox(pageNo);
+    float pageArea = pageRc.dx * pageRc.dy;
+    if (pageArea <= 0) {
+        return false;
+    }
+    RectF imgRc = el->GetRect();
+    float imgArea = imgRc.dx * imgRc.dy;
+    return imgArea >= 0.8f * pageArea;
+}
+
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (IsRightDragging(win)) {
@@ -1350,10 +1367,12 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    // if clicking on an image, prepare for image drag-out
+    // if clicking on an image, prepare for image drag-out. skip full-page
+    // images (e.g. scanned pages), where click-and-drag should pan instead.
     if (canCopy && !isShift && !isCtrl && !isOverText) {
-        IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
-        if (pageEl && pageEl->Is(kindPageElementImage)) {
+        int elPageNo = -1;
+        IPageElement* pageEl = dm->GetElementAtPos(pt, &elPageNo);
+        if (pageEl && pageEl->Is(kindPageElementImage) && !IsFullPageImage(dm, pageEl, elPageNo)) {
             win->imageDragPending = true;
             win->imageDragElement = pageEl;
             win->linkOnLastButtonDown = nullptr;
