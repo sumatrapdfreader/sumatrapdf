@@ -13,6 +13,7 @@ struct LabelWithCloseWnd;
 struct Splitter;
 struct Tooltip;
 struct TreeView;
+struct ILayout;
 struct TabsCtrl;
 struct TocTree;
 struct FindBarWnd;
@@ -155,6 +156,9 @@ struct MainWindow {
     Edit* tocFilterEdit = nullptr;
     TreeView* tocTreeView = nullptr;
     TocTree* tocFilteredTree = nullptr;
+    // VBox(label, filter edit, tree); owns those three controls and lays them
+    // out in hwndTocBox
+    ILayout* tocLayout = nullptr;
 
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
@@ -167,6 +171,8 @@ struct MainWindow {
     HWND hwndFavBox = nullptr;
     LabelWithCloseWnd* favLabelWithClose = nullptr;
     TreeView* favTreeView = nullptr;
+    // VBox(label, tree); owns those two controls and lays them out in hwndFavBox
+    ILayout* favLayout = nullptr;
     Vec<FileState*> expandedFavorites;
 
     // AI chat sidebars (right side; Claude Code and Grok Build are mutually exclusive)

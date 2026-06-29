@@ -171,13 +171,14 @@ MainWindow::~MainWindow() {
     delete frameRateWnd;
     ReadAloudPlaybackBarDestroy(this);
     delete infotip;
-    delete tocTreeView;
-    delete tocFilterEdit;
+    // tocLayout (VBox) owns tocLabelWithClose, tocFilterEdit and tocTreeView
+    delete tocLayout;
     delete tocFilteredTree;
     if (favTreeView) {
         delete favTreeView->treeModel;
-        delete favTreeView;
     }
+    // favLayout (VBox) owns favLabelWithClose and favTreeView
+    delete favLayout;
 
     DestroyClaudePanel(this);
     DestroyGrokPanel(this);
@@ -185,8 +186,6 @@ MainWindow::~MainWindow() {
 
     delete sidebarSplitter;
     delete favSplitter;
-    delete tocLabelWithClose;
-    delete favLabelWithClose;
 }
 
 void ClearMouseState(MainWindow* win) {

@@ -1121,40 +1121,15 @@ static void TocTreeMsgFilter(WndEvent*) {
 }
 #endif
 
-// Position label with close button and tree window within their parent.
-// Used for toc and favorites.
-void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree) {
-    HWND hwndContainer = GetParent(hwndTree);
-    Size labelSize = l->GetIdealSize();
-    Rect rc = WindowRect(hwndContainer);
-    int dy = rc.dy;
-    int y = 0;
-    MoveWindow(l->hwnd, y, 0, rc.dx, labelSize.dy, TRUE);
-    dy -= labelSize.dy;
-    y += labelSize.dy;
-    MoveWindow(hwndTree, 0, y, rc.dx, dy, TRUE);
-}
-
-// Position label, filter edit, and tree window within toc container.
+// Position label, filter edit, and tree window within toc container using the
+// wingui layout engine (VBox built in CreateToc).
 static void LayoutTocContainer(MainWindow* win) {
-    LabelWithCloseWnd* l = win->tocLabelWithClose;
-    Edit* edit = win->tocFilterEdit;
-    TreeView* treeView = win->tocTreeView;
-    HWND hwndContainer = win->hwndTocBox;
-    Size labelSize = l->GetIdealSize();
-    Rect rc = WindowRect(hwndContainer);
-    int dy = rc.dy;
-    int y = 0;
-    MoveWindow(l->hwnd, 0, y, rc.dx, labelSize.dy, TRUE);
-    dy -= labelSize.dy;
-    y += labelSize.dy;
-    if (edit && edit->hwnd) {
-        Size editSize = edit->GetIdealSize();
-        MoveWindow(edit->hwnd, 0, y, rc.dx, editSize.dy, TRUE);
-        dy -= editSize.dy;
-        y += editSize.dy;
+    if (!win->tocLayout) {
+        return;
     }
-    MoveWindow(treeView->hwnd, 0, y, rc.dx, dy, TRUE);
+    Rect rc = WindowRect(win->hwndTocBox);
+    win->tocLayout->Layout(Tight(Size{rc.dx, rc.dy}));
+    win->tocLayout->SetBounds(Rect{0, 0, rc.dx, rc.dy});
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
@@ -1359,6 +1334,16 @@ void CreateToc(MainWindow* win) {
     treeView->Create(args);
     ReportIf(!treeView->hwnd);
     win->tocTreeView = treeView;
+
+    // stack label, filter edit and tree vertically; the tree flexes to fill the
+    // remaining height. The VBox owns these three controls (freed in ~MainWindow).
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    vbox->AddChild(l);
+    vbox->AddChild(filterEdit);
+    vbox->AddChild(treeView, 1);
+    win->tocLayout = vbox;
 
     SubclassToc(win);
 

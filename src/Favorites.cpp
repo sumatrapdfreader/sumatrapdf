@@ -885,6 +885,17 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
 }
 
 static WNDPROC gWndProcFavBox = nullptr;
+// Position label and tree within favorites container using the wingui layout
+// engine (VBox built in CreateFavorites).
+static void LayoutFavContainer(MainWindow* win) {
+    if (!win->favLayout) {
+        return;
+    }
+    Rect rc = WindowRect(win->hwndFavBox);
+    win->favLayout->Layout(Tight(Size{rc.dx, rc.dy}));
+    win->favLayout->SetBounds(Rect{0, 0, rc.dx, rc.dy});
+}
+
 static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
@@ -896,10 +907,9 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return res;
     }
 
-    TreeView* treeView = win->favTreeView;
     switch (msg) {
         case WM_SIZE:
-            LayoutTreeContainer(win->favLabelWithClose, treeView->hwnd);
+            LayoutFavContainer(win);
             break;
 
         case WM_COMMAND:
@@ -949,6 +959,15 @@ void CreateFavorites(MainWindow* win) {
     ReportIf(!treeView->hwnd);
 
     win->favTreeView = treeView;
+
+    // stack label and tree vertically; the tree flexes to fill the remaining
+    // height. The VBox owns these two controls (freed in ~MainWindow).
+    auto vbox = new VBox();
+    vbox->alignMain = MainAxisAlign::MainStart;
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    vbox->AddChild(l);
+    vbox->AddChild(treeView, 1);
+    win->favLayout = vbox;
 
     if (nullptr == gWndProcFavBox) {
         gWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
