@@ -161,6 +161,23 @@ Size Edit::GetIdealSize() {
     return {dx, dy};
 }
 
+// horizontal offset of the text from the control's left (window) edge: the
+// border (WS_EX_CLIENTEDGE) plus the internal left margin. Useful to align a
+// borderless Static label's text with this edit's text.
+int Edit::GetLeftTextMargin() {
+    int border = 0;
+    if (HasBorder()) {
+        POINT clientOrigin{0, 0};
+        ClientToScreen(hwnd, &clientOrigin);
+        RECT wr{};
+        GetWindowRect(hwnd, &wr);
+        border = clientOrigin.x - wr.left;
+    }
+    DWORD margins = (DWORD)SendMessageW(hwnd, EM_GETMARGINS, 0, 0);
+    int leftMargin = (int)LOWORD(margins);
+    return border + leftMargin;
+}
+
 // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
 bool Edit::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);

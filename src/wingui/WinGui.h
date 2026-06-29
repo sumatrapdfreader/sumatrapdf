@@ -313,6 +313,10 @@ struct Edit : Wnd {
 
     Size GetIdealSize() override;
 
+    // horizontal offset of the text from the control's left edge (border +
+    // internal margin); used to align a borderless label with the edit's text
+    int GetLeftTextMargin();
+
     void SetSelection(int start, int end);
     void SelectAll();
     void SetCursorPosition(int pos);

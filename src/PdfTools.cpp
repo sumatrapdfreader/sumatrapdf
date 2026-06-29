@@ -249,6 +249,9 @@ bool PdfBakeDialog::Create(MainWindow* w, WindowTab* tab) {
         vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
     }
 
+    // align the source path label's text with the destination edit's text,
+    // which is inset by the edit's border + internal left margin
+    pathLabel->insets.left = destEdit->GetLeftTextMargin();
     mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
 
     // size to a width that fits the source path (clamped), let the layout
@@ -526,6 +529,9 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
         vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
     }
 
+    // align the source path label's text with the destination edit's text,
+    // which is inset by the edit's border + internal left margin
+    pathLabel->insets.left = destEdit->GetLeftTextMargin();
     mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
 
     int minClientW = DpiScale(hwnd, 480);
@@ -720,6 +726,9 @@ bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
         vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
     }
 
+    // align the source path label's text with the destination edit's text,
+    // which is inset by the edit's border + internal left margin
+    pathLabel->insets.left = destEdit->GetLeftTextMargin();
     mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
 
     int minClientW = DpiScale(hwnd, 480);
@@ -916,6 +925,9 @@ bool PdfDecompressDialog::Create(MainWindow* w, WindowTab* tab) {
         vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
     }
 
+    // align the source path label's text with the destination edit's text,
+    // which is inset by the edit's border + internal left margin
+    pathLabel->insets.left = destEdit->GetLeftTextMargin();
     mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
 
     int minClientW = DpiScale(hwnd, 480);
@@ -1355,6 +1367,9 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
         vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
     }
 
+    // align the source path label's text with the destination edit's text,
+    // which is inset by the edit's border + internal left margin
+    pathLabel->insets.left = destEdit->GetLeftTextMargin();
     mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
 
     int minClientW = DpiScale(hwnd, 480);
@@ -1612,6 +1627,9 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
         vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
     }
 
+    // align the source path label's text with the destination edit's text,
+    // which is inset by the edit's border + internal left margin
+    pathLabel->insets.left = destEdit->GetLeftTextMargin();
     mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
 
     int minClientW = DpiScale(hwnd, 480);
@@ -1824,6 +1842,9 @@ bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
         vbox->AddChild(new Padding(hbox, DpiScaledInsets(hwnd, 6, 0, 0, 0)));
     }
 
+    // align the source path label's text with the destination edit's text,
+    // which is inset by the edit's border + internal left margin
+    pathLabel->insets.left = destEdit->GetLeftTextMargin();
     mainLayout = new Padding(vbox, DpiScaledInsets(hwnd, 10));
 
     int minClientW = DpiScale(hwnd, 480);
