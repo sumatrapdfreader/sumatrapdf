@@ -13,6 +13,7 @@ struct ItemDataCP {
     Str filePath;
     TocItem* tocItem = nullptr;
     int indent = 0;
+    int pageNo = 0; // toc entry destination page (0 if none), shown in the list
     FileState* favFs = nullptr;
     Favorite* fav = nullptr;
 };

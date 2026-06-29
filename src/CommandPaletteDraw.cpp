@@ -59,6 +59,9 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         if (withAccel && withAccel.s[0] == '\t') {
             rightStr = Str(withAccel.s + 1);
         }
+    } else if (data->pageNo > 0) {
+        // toc entry: show the destination page number on the right, e.g. "p33"
+        rightStr = fmt("p%d", data->pageNo);
     } else if (data->filePath) {
         rightStr = path::GetDirTemp(data->filePath);
     }
@@ -84,37 +87,45 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         }
     }
 
-    {
-        uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
-        drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
-        DrawMaybeHighlightedText(hdc, rc, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
+    // reserve space on the right for rightStr (accel key, dir, or "p34") so it
+    // is always visible; the item text gets the remaining space and is
+    // ellipsized when too long.
+    RECT rcText = rc;
+    TempWStr rightStrW = nullptr;
+    int rightW = 0;
+    if (rightStr && rightStr.s[0]) {
+        rightStrW = ToWStrTemp(rightStr);
+        int gap = DpiScale(lb->hwnd, 8);
+        SIZE szRight{};
+        GetTextExtentPoint32W(hdc, rightStrW, len(rightStrW), &szRight);
+        rightW = szRight.cx;
+        if (isRtl) {
+            rcText.left += rightW + gap;
+        } else {
+            rcText.right -= rightW + gap;
+        }
     }
 
-    if (rightStr && rightStr.s[0]) {
-        TempWStr rightStrW = ToWStrTemp(rightStr);
-        int gap = DpiScale(lb->hwnd, 8);
+    {
+        uint drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
+        drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
+        DrawMaybeHighlightedText(hdc, rcText, itemText, filterWords, highlighted, colBg, isRtl, false, drawFmt);
+    }
 
-        TempWStr itemTextW2 = ToWStrTemp(itemText);
-        SIZE szLeft{};
-        GetTextExtentPoint32W(hdc, itemTextW2, len(itemText), &szLeft);
-        int leftEnd = rc.left + szLeft.cx + gap;
-
+    if (rightStrW) {
         RECT rcRight = rc;
-        uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
+        uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
         if (isRtl) {
-            rcRight.right = rc.right - szLeft.cx - gap;
+            rcRight.right = rc.left + rightW;
             fmt |= DT_LEFT | DT_RTLREADING;
         } else {
-            rcRight.left = leftEnd;
-            rcRight.right -= gap;
+            rcRight.left = rc.right - rightW;
             fmt |= DT_RIGHT;
         }
-        if (rcRight.left < rcRight.right) {
-            COLORREF rightCol = AccentColor(colText, 80);
-            SetTextColor(hdc, rightCol);
-            DrawTextW(hdc, rightStrW, -1, &rcRight, fmt);
-            SetTextColor(hdc, colText);
-        }
+        COLORREF rightCol = AccentColor(colText, 80);
+        SetTextColor(hdc, rightCol);
+        DrawTextW(hdc, rightStrW, -1, &rcRight, fmt);
+        SetTextColor(hdc, colText);
     }
 
     if (oldFont) {

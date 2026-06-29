@@ -285,6 +285,7 @@ static void CollectTocRec(StrVecCP& toc, TocItem* ti, int indent, int currPageNo
         ItemDataCP data;
         data.tocItem = ti;
         data.indent = indent;
+        data.pageNo = ti->pageNo;
         if (!str::IsEmpty(title)) {
             toc.Append(title, data);
         }
