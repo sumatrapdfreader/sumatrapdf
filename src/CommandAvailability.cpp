@@ -522,7 +522,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return matches ? CommandVisibility::Show : CommandVisibility::Hide;
     }
 
-    if ((origCmdId == CmdSelectionHandler) || CmdIdInList(cmdId, disableIfNoSelection)) {
+    if ((cmdId == CmdSelectionHandler) || (origCmdId == CmdSelectionHandler) ||
+        CmdIdInList(cmdId, disableIfNoSelection)) {
         return ctx.hasSelection ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
     }
 
