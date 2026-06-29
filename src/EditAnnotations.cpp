@@ -167,12 +167,38 @@ static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prev
 }
 #endif
 
+// when deleting the selected annotation, pick another annotation on the same
+// page to select next. restricting to the same page avoids jumping the view
+// (the reason the broader auto-select experiments below stayed disabled).
+static Annotation* FindAnnotationOnSamePage(WindowTab* tab, Annotation* annot) {
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return nullptr;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        return nullptr;
+    }
+    int pageNo = annot->pageNo;
+    Vec<Annotation*> annots;
+    EngineGetAnnotations(engine, annots);
+    for (Annotation* a : annots) {
+        if (a != annot && a->pageNo == pageNo) {
+            return a;
+        }
+    }
+    return nullptr;
+}
+
 void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     Annotation* selectNext = nullptr;
     if (annot != tab->selectedAnnotation) {
         // preserve current selection if we're not deleting it
         selectNext = tab->selectedAnnotation;
+    } else {
+        // deleting the selected annotation: select another one on the same page
+        selectNext = FindAnnotationOnSamePage(tab, annot);
     }
 
     DeleteAnnotation(annot);
