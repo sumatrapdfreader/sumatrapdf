@@ -1533,7 +1533,7 @@ static Rect gHomeCloseBtnPaintedRc;
 static void DrawHomeCloseGlyph(HDC hdc, const Rect& rc, bool isHover) {
     Gdiplus::Graphics g(hdc);
     g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-    int a = isHover ? 255 : 215;
+    u8 a = isHover ? 255 : 215;
     int w = rc.dx;
     int h = rc.dy;
     if (isHover) {

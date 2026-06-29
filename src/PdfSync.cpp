@@ -513,7 +513,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
             continue;
         }
         firstPage = *page = (int)p.page;
-        RectF rc(SYNC_TO_PDF_COORDINATE(p.x), SYNC_TO_PDF_COORDINATE(p.y), MARK_SIZE, MARK_SIZE);
+        RectF rc((float)SYNC_TO_PDF_COORDINATE(p.x), (float)SYNC_TO_PDF_COORDINATE(p.y), MARK_SIZE, MARK_SIZE);
         // PdfSync coordinates are y-inversed
         RectF mbox = engine->PageMediabox(firstPage);
         rc.y = mbox.dy - (rc.y + rc.dy);
@@ -937,9 +937,9 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
 
         RectF rc;
         rc.x = synctex_node_box_visible_h(node);
-        rc.y = (double)synctex_node_box_visible_v(node) - (double)synctex_node_box_visible_height(node);
+        rc.y = (float)((double)synctex_node_box_visible_v(node) - (double)synctex_node_box_visible_height(node));
         rc.dx = synctex_node_box_visible_width(node),
-        rc.dy = (double)synctex_node_box_visible_height(node) + (double)synctex_node_box_visible_depth(node);
+        rc.dy = (float)((double)synctex_node_box_visible_height(node) + (double)synctex_node_box_visible_depth(node));
         rects.Append(rc.Round());
     }
 

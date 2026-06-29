@@ -994,7 +994,13 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4244", "4267", "4701", "4702", "4703", "4706", "4819", "6324" }
+    disablewarnings { "4100", "4267", "4701", "4702", "4703", "4706", "4819", "6324" }
+    -- 4244 (possible loss of data) is only needed by the external synctex
+    -- code; keep it fatal for our own sources so silent int64->int truncation
+    -- doesn't slip through.
+    filter { "files:ext/synctex/**" }
+      disablewarnings { "4244" }
+    filter {}
     uses_zlib()
     includedirs { "ext/synctex" }
 
@@ -1068,7 +1074,13 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4244", "4267", "4701", "4702", "4703", "4706", "4819", "6324" }
+    disablewarnings { "4100", "4267", "4701", "4702", "4703", "4706", "4819", "6324" }
+    -- 4244 (possible loss of data) is only needed by the external synctex
+    -- code; keep it fatal for our own sources so silent int64->int truncation
+    -- doesn't slip through.
+    filter { "files:ext/synctex/**" }
+      disablewarnings { "4244" }
+    filter {}
     uses_zlib()
     includedirs { "ext/synctex" }
 

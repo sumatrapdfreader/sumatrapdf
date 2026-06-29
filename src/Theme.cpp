@@ -300,9 +300,9 @@ COLORREF AccentColor(COLORREF col, int light, int dark) {
         dark = light;
     }
     if (IsLightColor(col)) {
-        return AdjustLightness2(col, -light);
+        return AdjustLightness2(col, (float)-light);
     }
-    return AdjustLightness2(col, dark);
+    return AdjustLightness2(col, (float)dark);
 }
 
 #define GetThemeCol(name, def) GetParsedCOLORREF(name, name##Parsed, def)

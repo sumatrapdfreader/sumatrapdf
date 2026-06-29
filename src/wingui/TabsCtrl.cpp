@@ -353,7 +353,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     Font f(hdc, GetFont());
     ReleaseDC(hwnd, hdc);
 
-    Gdiplus::RectF rTxt(0, 0, ti->r.dx, ti->r.dy);
+    Gdiplus::RectF rTxt(0, 0, (float)ti->r.dx, (float)ti->r.dy);
     rTxt.X += 8;
     rTxt.Width -= (8 + 8);
     br.SetColor(GdipCol(textCol));

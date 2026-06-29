@@ -137,7 +137,7 @@ static void SetDlgTemplateExFont(DLGTEMPLATE* tmp, bool isRtl, int fontSize) {
     // WCHAR pointSize;
     WORD* wd = (WORD*)d;
     fontSize = ToFontPointSize(fontSize);
-    *wd = fontSize;
+    *wd = (WORD)fontSize;
 }
 
 DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {

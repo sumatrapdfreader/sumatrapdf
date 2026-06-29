@@ -473,9 +473,9 @@ RectF DisplayModel::PageMediaBox(int pageNo) const {
     if (pi->_mediaBox.IsEmpty()) {
         float fileDPI = engine->GetFileDPI();
         if (0 == GetMeasurementSystem()) {
-            pi->_mediaBox = RectF(0, 0, 21.0 / 2.54 * fileDPI, 29.7 / 2.54 * fileDPI);
+            pi->_mediaBox = RectF(0, 0, (float)(21.0 / 2.54 * fileDPI), (float)(29.7 / 2.54 * fileDPI));
         } else {
-            pi->_mediaBox = RectF(0, 0, 8.5 * fileDPI, 11 * fileDPI);
+            pi->_mediaBox = RectF(0, 0, (float)(8.5 * fileDPI), 11 * fileDPI);
         }
         pi->state = PageInfoState::Error;
     } else {
@@ -679,7 +679,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     } else {
         row = PageSizeAfterRotation(pageNo, fitToContent);
         row.dx *= columns;
-        row.dx += (double)pageSpacing.dx * (double)(columns - 1);
+        row.dx += (float)((double)pageSpacing.dx * (double)(columns - 1));
     }
 
     if (RectF(PointF(), row).IsEmpty()) {
@@ -1181,8 +1181,8 @@ Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     PointF p = engine->Transform(pt, pageNo, zoom, rotation);
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
-    p.x += 0.499 + r.x;
-    p.y += 0.499 + r.y;
+    p.x += 0.499f + r.x;
+    p.y += 0.499f + r.y;
 
     return ToPoint(p);
 }
@@ -1206,7 +1206,7 @@ PointF DisplayModel::CvtFromScreen(Point pt, int pageNo) {
 
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
-    PointF p = PointF(pt.x - 0.499 - r.x, pt.y - 0.499 - r.y);
+    PointF p = PointF(pt.x - 0.499f - r.x, pt.y - 0.499f - r.y);
 
     float zoom = getZoomSafe(this, pageNo, pageInfo);
     return engine->Transform(p, pageNo, zoom, rotation, true);
@@ -2087,7 +2087,7 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
         return;
     }
 
-    PointF newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
+    PointF newPtD((float)std::max(state.x, (double)0), (float)std::max(state.y, (double)0));
     Point newPt = CvtToScreen(state.page, newPtD);
     if (gLogScrollState) {
         logf("  newPtD: %d,%d\n", (int)newPtD.x, (int)newPtD.y);

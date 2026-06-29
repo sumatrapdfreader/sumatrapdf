@@ -34,7 +34,7 @@ void TooltipRemoveAll(HWND hwnd) {
     for (int i = n - 1; i >= 0; i--) {
         TOOLINFOW ti{};
         ti.cbSize = sizeof(ti);
-        BOOL ok = SendMessageW(hwnd, TTM_ENUMTOOLS, i, (LPARAM)&ti);
+        BOOL ok = (BOOL)SendMessageW(hwnd, TTM_ENUMTOOLS, i, (LPARAM)&ti);
         if (ok) {
             SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
         }
@@ -60,7 +60,7 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools) {
         ti.lpszText = (WCHAR*)ws.s; // str-port: Win32
         ti.rect = ToRECT(tti.r);
         ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
-        BOOL ok = SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+        BOOL ok = (BOOL)SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
         ReportIfFast(!ok);
     }
     bool isRtl = nRtl > nLtr;
@@ -157,7 +157,7 @@ int Tooltip::Add(Str s, const Rect& rc, bool multiline) {
     ti.uFlags = TTF_SUBCLASS;
     ti.rect = ToRECT(rc);
     ti.lpszText = (WCHAR*)ws.s; // str-port: Win32
-    BOOL ok = SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+    BOOL ok = (BOOL)SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
     if (!ok) {
         logf("Tooltip::Add: TTM_ADDTOOLW failed\n");
         return -1;

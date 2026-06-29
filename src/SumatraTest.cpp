@@ -412,7 +412,7 @@ Str TestContextMenuSelectionResult(Str word1, Str word2, Str cursorWord, int* ex
 
     // simulate opening the context menu over cursorWord: this is the read-only
     // check the menu performs; it must not change the selection
-    Point screenPt = dm->CvtToScreen(pageNo, PointF(xc, yc));
+    Point screenPt = dm->CvtToScreen(pageNo, PointF((float)xc, (float)yc));
     ReadAloudCanReadFromCursor(dm, screenPt);
 
     TempStr after = GetSelectedTextTemp(tab, " ", isTextOnly);

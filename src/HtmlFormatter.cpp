@@ -1307,7 +1307,7 @@ void HtmlFormatter::HandleText(Str s) {
                 if (nl.s[0] == '\r' && nl.len > 1 && nl.s[1] == '\n') {
                     skip = 2;
                 }
-                curr = Str(nl.s + skip, curr.s + curr.len - (nl.s + skip));
+                curr = Str(nl.s + skip, (int)(curr.s + curr.len - (nl.s + skip)));
                 HandleTagBr();
             } else {
                 EmitTextRun(curr);

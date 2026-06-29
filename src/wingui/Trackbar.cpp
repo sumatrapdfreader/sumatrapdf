@@ -96,12 +96,12 @@ void Trackbar::SetRange(int min, int max) {
 }
 
 int Trackbar::GetRangeMin() {
-    int res = SendMessageW(hwnd, TBM_GETRANGEMIN, 0, 0);
+    int res = (int)SendMessageW(hwnd, TBM_GETRANGEMIN, 0, 0);
     return res;
 }
 
 int Trackbar::getRangeMax() {
-    int res = SendMessageW(hwnd, TBM_GETRANGEMAX, 0, 0);
+    int res = (int)SendMessageW(hwnd, TBM_GETRANGEMAX, 0, 0);
     return res;
 }
 

@@ -1113,7 +1113,7 @@ static MenuDef menuDefContextStart[] = {
 // clang-format on
 
 // clang-format off
-static UINT_PTR disableIfDirectoryOrBrokenPDF[] = {
+static int disableIfDirectoryOrBrokenPDF[] = {
     CmdRenameFile,
     CmdDeleteFile,
     CmdSendByEmail,

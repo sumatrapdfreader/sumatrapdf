@@ -123,7 +123,7 @@ TempStr NormalizeURLTemp(Str url, Str base) {
     if (url.s[0] == '#') {
         basePathLen = hash ? (int)(hash.s - base.s) : base.len;
     } else if (baseEnd && hash && hash.s < baseEnd.s) {
-        Str scan = Str(hash.s - 1, base.s + base.len - (hash.s - 1));
+        Str scan = Str(hash.s - 1, (int)(base.s + base.len - (hash.s - 1)));
         while (!str::IsEmpty(scan) && scan.s[0] != '/') {
             scan.s--;
             scan.len++;
@@ -238,7 +238,7 @@ static ByteSlice DecodeDataURI(Str url) {
     if (!comma) {
         return {};
     }
-    Str data = Str(comma.s + 1, url.s + url.len - (comma.s + 1));
+    Str data = Str(comma.s + 1, (int)(url.s + url.len - (comma.s + 1)));
     if ((int)(comma.s - url.s) >= 12 && str::EqN(Str(comma.s - 7, 7), StrL(";base64"), 7)) {
         ByteSlice d{(u8*)data.s, (size_t)data.len};
         return Base64Decode(d);
@@ -1167,7 +1167,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
             tocEntries.Append(s);
             wstr::FreePtr(&ws);
             builder.Append(fmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size()));
-            return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
+            return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
     } else if (tok->NameIs("HEADER")) {
         // <HEADER TEXT="Contents" ALIGN=CENTER STYLE=UNDERLINE>
@@ -1181,12 +1181,12 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
             builder.Append(fmt("<h%d>", hx));
             builder.Append(attr->val);
             builder.Append(fmt("</h%d>", hx));
-            return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
+            return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
     } else if (tok->NameIs("HRULE")) {
         // <HRULE STYLE=OUTLINE>
         builder.Append("<hr>");
-        return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
+        return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
     } else if (tok->NameIs("LABEL")) {
         // <LABEL NAME="Contents">
         AttrInfo* attr = tok->GetAttrByName("NAME");
@@ -1194,7 +1194,7 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
             builder.Append("<a name=\"");
             builder.Append(attr->val);
             builder.Append("\">");
-            return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
+            return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
     } else if (tok->NameIs("LINK")) {
         // <LINK TEXT="Press Me" TAG="Contents" FILE="My Novels">
@@ -1203,19 +1203,19 @@ static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, s
         if (attrTag && attrText) {
             if (tok->GetAttrByName("FILE")) {
                 // skip links to other files
-                return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
+                return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
             }
             builder.Append("<a href=\"#");
             builder.Append(attrTag->val);
             builder.Append("\">");
             builder.Append(attrText->val);
             builder.Append("</a>");
-            return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
+            return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
     } else if (tok->NameIs("TEALPAINT")) {
         // <TEALPAINT SRC="Pictures" INDEX=0 LINK=SUPERMAP SUPERIMAGE=1 SUPERW=640 SUPERH=480>
         // support removed in r7047
-        return Str(tok->s.s + tok->s.len, text.s + text.len - (tok->s.s + tok->s.len));
+        return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
     }
     goto Fallback;
 }
@@ -1570,7 +1570,7 @@ static Str TextFindEmailEnd(StrBuilder& htmlData, Str curr) {
     } while (endIdx < rest.len && '.' == rest.s[endIdx] && endIdx + 1 < rest.len &&
              IsEmailDomainChar(rest.s[endIdx + 1]));
 
-    Str end = Str(curr.s + (rest.s - curr.s) + endIdx, curr.len - (rest.s - curr.s) - endIdx);
+    Str end = Str(curr.s + (rest.s - curr.s) + endIdx, (int)(curr.len - (rest.s - curr.s) - endIdx));
     Str linkStart = !str::IsEmpty(curr) && '@' == curr.s[0] ? curr : Str(curr.s + 7, curr.len - 7);
 
     if (beforeAt) {
@@ -1675,7 +1675,7 @@ bool TxtDoc::Load() {
 
         if (isRFC && i > 0 && '\n' == text.s[i - 1] && (str::IsDigit(c) || str::StartsWith(curr, "APPENDIX"))) {
             Str lineEnd = str::FindChar(curr, '\n');
-            if (lineEnd && str::Parse(Str(lineEnd.s + 1, curr.len - (lineEnd.s - curr.s) - 1), "%?\r\n")) {
+            if (lineEnd && str::Parse(Str(lineEnd.s + 1, (int)(curr.len - (lineEnd.s - curr.s) - 1)), "%?\r\n")) {
                 htmlData.Append(fmt("<b id='section%d' title=\"", ++sectionCount));
                 for (int j = 0; j < (int)(lineEnd.s - curr.s); j++) {
                     char ch = curr.s[j];

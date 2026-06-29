@@ -13,7 +13,7 @@
 #include "TextSearch.h"
 
 static void SkipWhitespaceIdx(WStr text, int& idx) {
-    for (; idx < text.len && str::IsWs(text.s[idx]); idx++) {
+    for (; idx < text.len && str::IsWs((char)text.s[idx]); idx++) {
     }
 }
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
@@ -318,7 +318,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(WStr start) const {
         }
         WCHAR endCh = atPageEnd ? 0 : currentPageText.s[endIdx];
         /* Going from page n to page n+1 is a space, too.*/
-        lookingAtWs = (atPageEnd && (currentPage < nPages)) || str::IsWs(endCh);
+        lookingAtWs = (atPageEnd && (currentPage < nPages)) || str::IsWs((char)endCh);
         bool isMatch = false;
         // extra advance for the German ß <-> ss equivalence, where one side
         // consumes one WCHAR and the other two (issue #933)
@@ -345,7 +345,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(WStr start) const {
         }
         if (isMatch) {
             /* characters are identical */;
-        } else if (str::IsWs(matchCh) && lookingAtWs) {
+        } else if (str::IsWs((char)matchCh) && lookingAtWs) {
             /* treat all whitespace as identical and end of page as whitespace.
                The end of the document is NOT seen as whitespace */
             ;
@@ -383,7 +383,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(WStr start) const {
         if (matchIdx < findText.len && findText.s[matchIdx] &&
             ((!isnoncjkwordchar(findText.s[matchIdx - 1]) &&
               (findText.s[matchIdx - 1] != L'?' || findText.s[matchIdx] != L'?')) ||
-             (lookingAtWs && str::IsWs(findText.s[matchIdx - 1])))) {
+             (lookingAtWs && str::IsWs((char)findText.s[matchIdx - 1])))) {
             SkipWhitespaceIdx(findText, matchIdx);
             SkipWhitespaceIdx(currentPageText, endIdx);
             while (endIdx >= currentPageText.len && currentPage < nPages) {

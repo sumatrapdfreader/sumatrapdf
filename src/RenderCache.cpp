@@ -435,7 +435,7 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
 
     USHORT res = 0;
     if (factorAvg > 1.5) {
-        res = (USHORT)ceilf(log(factorAvg) / log(2.0f));
+        res = (USHORT)ceilf((float)(log(factorAvg) / log(2.0f)));
     }
     // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
     return std::min(res, (USHORT)30);
@@ -1025,7 +1025,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         bounds = pi->pageOnScreen.Intersect(bounds);
 
         RectF area = ToRectF(bounds);
-        area.Offset(-pi->pageOnScreen.x, -pi->pageOnScreen.y);
+        area.Offset((float)-pi->pageOnScreen.x, (float)-pi->pageOnScreen.y);
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 
         RenderPageArgs args(pageNo, zoom, rotation, &area);

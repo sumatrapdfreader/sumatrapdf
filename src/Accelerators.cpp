@@ -472,7 +472,7 @@ again:
     static Str shift09 = StrL(")!@#$%^&*(");
     idx = str::CharIndexOf(shift09, c);
     if (idx >= 0) {
-        accel.key = ('0' + idx);
+        accel.key = (WORD)('0' + idx);
         accel.fVirt |= (FSHIFT | FVIRTKEY);
         return true;
     }
@@ -536,12 +536,12 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
         str.Append(s);
     }
     bool isVirt = virt & FVIRTKEY;
-    BYTE key = a.key;
+    BYTE key = (BYTE)a.key;
 
     if (isVirt) {
         if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
             WCHAR c = (WCHAR)key - VK_NUMPAD0 + '0';
-            str.AppendChar(c);
+            str.AppendChar((char)c);
             goto Exit;
         }
         if (key >= VK_F1 && key <= VK_F24) {
@@ -747,7 +747,7 @@ void CreateSumatraAcceleratorTable() {
                 continue;
             }
             ACCEL accel{};
-            accel.cmd = curr->id;
+            accel.cmd = (WORD)curr->id;
             if (parseShortcut(curr->key, accel)) {
                 addShortcutIfNotExists(accel);
             }

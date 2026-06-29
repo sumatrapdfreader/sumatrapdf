@@ -542,8 +542,8 @@ Exit:
 static void SetCustomPaperSize(Printer* printer, SizeF size) {
     auto devMode = printer->devMode;
     devMode->dmPaperSize = 0;
-    devMode->dmPaperWidth = size.dx;
-    devMode->dmPaperLength = size.dy;
+    devMode->dmPaperWidth = (short)size.dx;
+    devMode->dmPaperLength = (short)size.dy;
     devMode->dmFields |= DM_PAPERSIZE | DM_PAPERWIDTH | DM_PAPERLENGTH;
 }
 
@@ -1868,7 +1868,7 @@ static short DetectPrinterPaperSize(EngineBase* engine, Printer* printer) {
     // get size of first page in tenths of a millimeter in portrait mode
     RectF mediabox = engine->PageMediabox(1);
     SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
-    Size sizeP = NormalizePaperSize(Size(size.dx, size.dy));
+    Size sizeP = NormalizePaperSize(Size((int)size.dx, (int)size.dy));
 
     int n = printer->nPaperSizes;
     auto sizes = printer->paperSizes;

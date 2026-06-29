@@ -9015,7 +9015,7 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
         COLORREF c = ThemeWindowTextColor();
         u8 r, g, b;
         UnpackColor(c, r, g, b);
-        float width = floor((float)rc.dy / 8.0f);
+        float width = floorf((float)rc.dy / 8.0f);
         Pen p(Color(r, g, b), width);
         rc.Inflate(-int(rc.dx * 0.2f + 0.5f), -int(rc.dy * 0.3f + 0.5f));
         for (int i = 0; i < 3; i++) {
