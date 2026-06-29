@@ -324,7 +324,10 @@ bool ToggleFormButton(Annotation* annot) {
     auto a = annot->pdfannot;
     bool changed = false;
     {
-        auto ctx = e->Ctx();
+        // BaseCtx(), not a Ctx() clone: toggling regenerates the appearance,
+        // which runs the button's format/calculate JS; mupdf executes (and
+        // rethrows errors) on _ctx, so the fz_try must be on that context.
+        auto ctx = e->BaseCtx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
             int wt = pdf_widget_type(ctx, a);
@@ -455,7 +458,10 @@ bool SetWidgetTextValue(Annotation* annot, Str value) {
     bool ok = false;
     TempStr valueZ = StrDupTemp(value);
     {
-        auto ctx = e->Ctx();
+        // BaseCtx(), not a Ctx() clone: regenerating the appearance runs the
+        // field's format/calculate JS, which mupdf executes (and rethrows
+        // errors) on _ctx -- the fz_try must be on that same context.
+        auto ctx = e->BaseCtx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
             ok = pdf_set_text_field_value(ctx, a, IsEmpty(valueZ) ? "" : valueZ.s) != 0;
@@ -506,7 +512,10 @@ bool SetWidgetChoiceValue(Annotation* annot, Str value) {
     bool ok = false;
     TempStr valueZ = StrDupTemp(value);
     {
-        auto ctx = e->Ctx();
+        // BaseCtx(), not a Ctx() clone: regenerating the appearance runs the
+        // field's format/calculate JS, which mupdf executes (and rethrows
+        // errors) on _ctx -- the fz_try must be on that same context.
+        auto ctx = e->BaseCtx();
         ScopedCritSec cs(&e->docLock);
         fz_try(ctx) {
             pdf_set_choice_field_value(ctx, a, IsEmpty(valueZ) ? "" : valueZ.s);

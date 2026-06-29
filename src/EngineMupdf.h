@@ -90,6 +90,16 @@ class EngineMupdf : public EngineBase {
 
     fz_context* Ctx() const;
 
+    // The base context the document and its MuJS engine are bound to (JS is
+    // enabled on _ctx, so doc->js->ctx == _ctx). Operations that can run form
+    // JavaScript -- i.e. field-value changes that regenerate widget appearances
+    // -- MUST use this, NOT a per-thread Ctx() clone. pdf_js_execute() always
+    // runs JS (and rethrows JS errors) on doc->js->ctx == _ctx; if the enclosing
+    // fz_try frames live on a clone instead, a JS error rethrows on _ctx with no
+    // matching handler and hits mupdf's uncaught-error abort. Safe to use from
+    // the UI thread under docLock (nothing else drives _ctx's error stack).
+    fz_context* BaseCtx() const { return _ctx; }
+
     // Lock hierarchy (acquire in this order; never go upward):
     //   pagesLock           - protects the pages[] vector / FzPageInfo lookup
     //   renderLock          - serializes any mupdf call that may run a page
