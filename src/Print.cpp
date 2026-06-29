@@ -1629,7 +1629,7 @@ static short GetPaperByName(Printer* printer, Str wantedName) {
 
     // alternatively allow indicating the paper directly by number
     DWORD paperId = 0;
-    if (str::Parse(wantedName, "%u%$", &paperId)) {
+    if (!str::IsNull(str::Parse(wantedName, "%u%$", &paperId))) {
         return (short)paperId;
     }
 
@@ -1642,7 +1642,7 @@ static short GetPaperByName(Printer* printer, Str wantedName) {
 
 static short GetPaperKind(Str kindName) {
     DWORD kind;
-    if (str::Parse(kindName, "%u%$", &kind)) {
+    if (!str::IsNull(str::Parse(kindName, "%u%$", &kind))) {
         return (short)kind;
     }
     return DMPAPER_USER;
@@ -1671,7 +1671,7 @@ static short GetPaperSourceByName(Printer* printer, Str binName) {
     }
     DWORD count = 0;
     // alternatively allow indicating the paper bin directly by number
-    if (str::Parse(binName, "%u%$", &count)) {
+    if (!str::IsNull(str::Parse(binName, "%u%$", &count))) {
         return (short)count;
     }
     return devMode->dmDefaultSource;
@@ -1733,6 +1733,7 @@ static void ApplyPdfViewerPrintPrefs(const PdfViewerPrintPrefs& prefs, DEVMODEW*
 static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
                                Print_Advanced_Data& advanced) {
     auto devMode = printer->devMode;
+    auto suffix = [](Str s, int n) -> Str { return Str(s.s + n, s.len - n); };
 
     StrVec rangeList;
     if (settings) {
@@ -1745,7 +1746,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
         if (str::EqI(s, "last")) {
             pr.nFromPage = pr.nToPage = (DWORD)pageCount;
             ranges.Append(pr);
-        } else if (str::Parse(s, "%d-%d%$", &val, &val2)) {
+        } else if (!str::IsNull(str::Parse(s, "%d-%d%$", &val, &val2))) {
             int from = val;
             int to = val2;
             if (from < 0) {
@@ -1757,7 +1758,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             pr.nFromPage = limitValue((DWORD)from, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue((DWORD)to, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
-        } else if (str::Parse(s, "%d%$", &val)) {
+        } else if (!str::IsNull(str::Parse(s, "%d%$", &val))) {
             if (val < 0) {
                 val = (int)pageCount + val + 1;
             }
@@ -1788,7 +1789,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
         } else if (str::StartsWithI(s, "rotate=")) {
             // extra rotation of the printout in degrees: 90, 180 or 270 (#1246)
             int deg = 0;
-            if (str::Parse(Str(s.s + 7), "%d%$", &deg)) {
+            if (!str::IsNull(str::Parse(suffix(s, 7), "%d%$", &deg))) {
                 deg = ((deg % 360) + 360) % 360;
                 if (deg == 90 || deg == 180 || deg == 270) {
                     advanced.extraRotation = deg;
@@ -1796,7 +1797,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             }
         } else if (str::EqI(s, "center")) {
             advanced.centerHorizontally = true;
-        } else if (str::Parse(s, "%dx%$", &val)) {
+        } else if (!str::IsNull(str::Parse(s, "%dx%$", &val))) {
             if (val < 0) {
                 val = 1;
             }
@@ -1828,31 +1829,31 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             devMode->dmCollate = DMCOLLATE_FALSE;
             devMode->dmFields |= DM_COLLATE;
         } else if (str::StartsWithI(s, "bin=")) {
-            devMode->dmDefaultSource = GetPaperSourceByName(printer, Str(s.s + 4));
+            devMode->dmDefaultSource = GetPaperSourceByName(printer, suffix(s, 4));
             devMode->dmFields |= DM_DEFAULTSOURCE;
         } else if (str::StartsWithI(s, "paper=")) {
             float mmW = 0, mmH = 0;
-            if (str::EqI(Str(s.s + 6), "auto")) {
+            if (str::EqI(suffix(s, 6), "auto")) {
                 // set the paper size per page from the document's page size, for
                 // mixed page size documents (issue #533)
                 advanced.perPagePaperSize = true;
-            } else if (str::Parse(Str(s.s + 6), "%fmm x %fmm%$", &mmW, &mmH) && mmW > 0 && mmH > 0) {
+            } else if (!str::IsNull(str::Parse(suffix(s, 6), "%fmm x %fmm%$", &mmW, &mmH)) && mmW > 0 && mmH > 0) {
                 // custom paper size specified as dimensions e.g. "paper=76mm x 130mm"
                 // SetCustomPaperSize expects tenths of a millimeter
                 SizeF size(mmW * 10.f, mmH * 10.f);
                 SetCustomPaperSize(printer, size);
             } else {
-                devMode->dmPaperSize = GetPaperByName(printer, Str(s.s + 6));
+                devMode->dmPaperSize = GetPaperByName(printer, suffix(s, 6));
                 devMode->dmFields |= DM_PAPERSIZE;
             }
         } else if (str::StartsWithI(s, "paperkind=")) {
             // alternatively allow indicating the paper kind directly by number
-            devMode->dmPaperSize = GetPaperKind(Str(s.s + 10));
+            devMode->dmPaperSize = GetPaperKind(suffix(s, 10));
             devMode->dmFields |= DM_PAPERSIZE;
         } else if (str::StartsWithI(s, "output=")) {
-            printer->output = str::Dup(Str(s.s + 7));
+            printer->output = str::Dup(suffix(s, 7));
         } else if (str::StartsWithI(s, "docname=")) {
-            printer->docName = str::Dup(Str(s.s + 8));
+            printer->docName = str::Dup(suffix(s, 8));
         } else if (str::EqI(s, kIgnorePdfPrintSettingsToken)) {
             // handled before ApplyPrintSettings (see PrintFile2); ignore here
         }
