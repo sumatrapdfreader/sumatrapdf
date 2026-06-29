@@ -227,10 +227,10 @@ TempWStr JoinTemp(WStr path, WStr fileName, WStr fileName2) {
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
 static TempWStr NormalizeTemp(WStr path) {
     // win32 path APIs read a NUL-terminated string; path (a WStr) might be a
-    // non-terminated substring, so make a terminated copy first
-    path = str::DupTemp(path);
+    // non-terminated substring, so use a terminated copy
+    WCHAR* pathZ = CWStrTemp(path);
     // convert to absolute path, change slashes into backslashes
-    DWORD cch = GetFullPathNameW(path.s, 0, nullptr, nullptr);
+    DWORD cch = GetFullPathNameW(pathZ, 0, nullptr, nullptr);
     if (!cch) {
         return str::DupTemp(path);
     }
@@ -240,7 +240,7 @@ static TempWStr NormalizeTemp(WStr path) {
     // is the real string length. Using cch as the WStr len leaves it one too
     // long, so str::Eq() against a correctly-sized path fails to match.
     WCHAR* fullPathBuf = AllocArrayTemp<WCHAR>(cch);
-    DWORD nChars = GetFullPathNameW(path.s, cch, fullPathBuf, nullptr);
+    DWORD nChars = GetFullPathNameW(pathZ, cch, fullPathBuf, nullptr);
     TempWStr fullPath = WStr(fullPathBuf, (int)nChars);
 
     TempWStr normPath = fullPath;
@@ -992,10 +992,9 @@ bool Exists(WStr dir) {
     }
 
     // GetFileAttributesEx reads a NUL-terminated string; dir might be a
-    // non-terminated substring, so make a terminated copy first
-    TempWStr dirZ = str::DupTemp(dir);
+    // non-terminated substring, so use a terminated copy
     WIN32_FILE_ATTRIBUTE_DATA fileInfo;
-    BOOL res = GetFileAttributesEx(dirZ.s, GetFileExInfoStandard, &fileInfo);
+    BOOL res = GetFileAttributesEx(CWStrTemp(dir), GetFileExInfoStandard, &fileInfo);
     if (0 == res) {
         return false;
     }

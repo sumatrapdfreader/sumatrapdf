@@ -62,6 +62,28 @@ underlying NUL-terminated `char*`, e.g. `fmt(_TRA("page %d").s, n)`.
 Note: `strfmt::` (in StrFormat.h, the `{0}`-style type-safe formatter) is a
 separate, older system — unrelated to `fmt()`.
 
+## NUL-terminate `Str`/`WStr` before C/Win32 APIs
+
+A `Str`/`WStr` is a `{ptr, len}` view and may be a **substring that is not
+NUL-terminated** at `s[len]`. Passing its `.s` to a C runtime or Win32 API that
+reads a NUL-terminated string (e.g. `CreateFileW`, `GetFileAttributesW`,
+`CommandLineToArgvW`, `strlen`, `_wfopen`, `%s` in raw `printf`) can read past
+the intended end.
+
+To get a guaranteed NUL-terminated C-string, use `CStrTemp(Str)` → `char*` or
+`CWStrTemp(WStr)` → `WCHAR*` (both copy into the temp arena). Prefer these over
+`str::DupTemp(x).s` at the call site — the name states the intent:
+
+    BOOL ok = GetFileAttributesEx(CWStrTemp(dir), GetFileExInfoStandard, &fi);
+
+The encoding converters `ToWStrTemp(Str)` / `ToUtf8Temp(WStr)` already return
+length-aware, NUL-terminated output — pass the **object** (`ToWStrTemp(path)`),
+never `.s` (`ToWStrTemp(path.s)` re-introduces the `strlen`/over-read footgun).
+
+Caveat: a `*Temp` result lives in the temp arena (reset each message loop), so
+don't stash its pointer for later use (e.g. a `WNDCLASS::lpszClassName` kept
+across calls) — keep the caller's stable string instead.
+
 ## Adding a new advanced setting
 
 To add a new advanced setting:

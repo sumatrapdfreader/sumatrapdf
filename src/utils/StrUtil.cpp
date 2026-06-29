@@ -1054,7 +1054,7 @@ static Str ExtractUntil(Str str, int off, char c, int* endOffOut) {
 static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* endOffOut, void* valueOut) {
     unsigned int width;
     char f2[] = "% ";
-    Str formatAt = Str(format.s + formatOff);
+    Str formatAt = Str(format.s + formatOff, format.len - formatOff);
     Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
     if (!str::IsNull(endF) && !str::IsNull(FindChar(StrL("udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
         char limited[16]; // 32-bit integers are at most 11 characters long

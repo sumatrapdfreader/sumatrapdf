@@ -46,7 +46,9 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
 #if defined(REMOVE_FIRST_ARG)
 void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
     int nArgs;
-    WCHAR** argsArr = CommandLineToArgvW(cmdLine.s, &nArgs);
+    // CommandLineToArgvW reads a NUL-terminated string; cmdLine (a WStr) may be
+    // a non-terminated view, so use a terminated copy
+    WCHAR** argsArr = CommandLineToArgvW(CWStrTemp(cmdLine), &nArgs);
     for (int i = 0; i < nArgs; i++) {
         TempStr arg = ToUtf8Temp(argsArr[i]);
         // ignore empty quoted strings ("")
@@ -60,7 +62,9 @@ void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
 #else
 void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
     int nArgs;
-    WCHAR** argsArr = CommandLineToArgvW(cmdLine.s, &nArgs);
+    // CommandLineToArgvW reads a NUL-terminated string; cmdLine (a WStr) may be
+    // a non-terminated view, so use a terminated copy
+    WCHAR** argsArr = CommandLineToArgvW(CWStrTemp(cmdLine), &nArgs);
     TempStr exePath = GetSelfExePathTemp();
     for (int i = 0; i < nArgs; i++) {
         TempStr arg = ToUtf8Temp(argsArr[i]);

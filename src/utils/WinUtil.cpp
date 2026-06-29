@@ -134,7 +134,9 @@ void EditImplementCtrlBack(HWND hwnd) {
 }
 
 void ListBox_AppendString_NoSort(HWND hwnd, WStr txt) {
-    ListBox_InsertString(hwnd, -1, txt.s);
+    // LB_INSERTSTRING reads a NUL-terminated string; txt may be a
+    // non-terminated view, so use a terminated copy
+    ListBox_InsertString(hwnd, -1, CWStrTemp(txt));
 }
 
 // https://learn.microsoft.com/en-us/windows/win32/controls/lb-gettopindex
