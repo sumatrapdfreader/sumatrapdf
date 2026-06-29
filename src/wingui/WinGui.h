@@ -856,6 +856,11 @@ struct TabsCtrl : Wnd {
 template <typename T>
 T GetTabsUserData(TabsCtrl* tabs, int idx) {
     TabInfo* tabInfo = tabs->GetTab(idx);
+    if (!tabInfo) {
+        // GetTab returns nullptr for an out-of-range/sentinel idx (e.g. -1 when
+        // nothing is selected); don't dereference it
+        return (T)0;
+    }
     return (T)tabInfo->userData;
 }
 

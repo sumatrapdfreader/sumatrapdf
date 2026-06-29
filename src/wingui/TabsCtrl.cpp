@@ -646,8 +646,11 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 // LoadModelIntoTab() can pump messages; ensure tabs are fully painted.
                 HwndRepaintNow(hwnd);
             }
+            // SetSelected/TriggerSelectionChanged above can pump messages
+            // (LoadModelIntoTab), which may remove tabs and leave tabUnderMouse
+            // stale (>= TabCount()); GetTab then returns nullptr.
             TabInfo* ti = GetTab(tabUnderMouse);
-            if (ti->isPinned) {
+            if (!ti || ti->isPinned) {
                 return 0;
             }
 
@@ -869,12 +872,15 @@ void TabsCtrl::RemoveAllTabs() {
 TabInfo* TabsCtrl::GetTab(int idx) {
     // This is the fail-safe accessor for tab indices that legitimately go out
     // of range: -1 ("no tab" - TabCtrl_GetCurSel with nothing selected,
-    // tabUnderMouse/tabHighlighted when not over a tab) and a stale index
-    // >= TabCount() that can briefly occur during teardown / DDE-triggered
-    // reload. Both are expected, so just bail to nullptr (call sites null-check)
-    // without uploading a debug report. Only a clearly corrupt index (< -1, which
-    // no sentinel ever produces) signals a real bug worth reporting.
-    if (idx < 0 || idx >= TabCount()) {
+    // tabUnderMouse/tabHighlighted when not over a tab) and a stale index that
+    // can briefly occur during teardown / DDE-triggered reload. Both are
+    // expected, so just bail to nullptr (callers must null-check) without
+    // uploading a debug report. Only a clearly corrupt index (< -1, which no
+    // sentinel ever produces) signals a real bug worth reporting.
+    // Bound against the tabs Vec we actually index, not the native control
+    // count: InsertTab adds to the native control before the Vec, so the two
+    // can transiently disagree.
+    if (idx < 0 || idx >= tabs.Size()) {
         ReportIf(idx < -1);
         return nullptr;
     }
