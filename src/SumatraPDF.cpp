@@ -8347,6 +8347,45 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             return 0;
         }
 
+        case CmdSetTabColor: {
+            // lp carries the WindowTab* when forwarded from the tab context menu
+            // (Tabs.cpp); the command palette sends 0, so use the current tab
+            WindowTab* colorTab = lp ? (WindowTab*)lp : tab;
+            if (!colorTab || !colorTab->ctrl) {
+                return 0;
+            }
+            COLORREF curColor = colorTab->tabColor;
+            bool isUnset = (curColor == kColorUnset);
+            if (isUnset) {
+                curColor = ThemeControlBackgroundColor();
+            }
+            COLORREF newColor;
+            bool newIsUnset;
+            if (!Dialog_SetTabColor(win->hwndFrame, curColor, isUnset, newColor, newIsUnset)) {
+                return 0;
+            }
+            colorTab->tabColor = newIsUnset ? kColorUnset : newColor;
+            // update TabInfo
+            TabInfo* ti = win->tabsCtrl->GetTab(win->GetTabIdx(colorTab));
+            if (ti) {
+                ti->tabColor = colorTab->tabColor;
+            }
+            // persist to FileState
+            FileState* fs = gFileHistory.FindByPath(colorTab->filePath);
+            if (fs) {
+                if (newIsUnset) {
+                    str::ReplaceWithCopy(&fs->tabCol, "");
+                } else {
+                    TempStr colorStr = SerializeColorTemp(newColor);
+                    str::ReplaceWithCopy(&fs->tabCol, colorStr);
+                }
+                fs->tabColParsed.wasParsed = false;
+            }
+            SaveSettings();
+            win->tabsCtrl->ScheduleRepaint();
+            return 0;
+        }
+
         case CmdCreateAnnotHighlight:
             [[fallthrough]];
         case CmdCreateAnnotSquiggly:

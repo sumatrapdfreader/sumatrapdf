@@ -513,35 +513,9 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
             return;
         }
         case CmdSetTabColor: {
-            COLORREF curColor = tabUnderMouse->tabColor;
-            bool isUnset = (curColor == kColorUnset);
-            if (isUnset) {
-                curColor = ThemeControlBackgroundColor();
-            }
-            COLORREF newColor;
-            bool newIsUnset;
-            if (!Dialog_SetTabColor(win->hwndFrame, curColor, isUnset, newColor, newIsUnset)) {
-                return;
-            }
-            tabUnderMouse->tabColor = newIsUnset ? kColorUnset : newColor;
-            // update TabInfo
-            TabInfo* ti = tabsCtrl->GetTab(tabIdx);
-            if (ti) {
-                ti->tabColor = tabUnderMouse->tabColor;
-            }
-            // persist to FileState
-            FileState* fs = gFileHistory.FindByPath(tabUnderMouse->filePath);
-            if (fs) {
-                if (newIsUnset) {
-                    str::ReplaceWithCopy(&fs->tabCol, "");
-                } else {
-                    TempStr colorStr = SerializeColorTemp(newColor);
-                    str::ReplaceWithCopy(&fs->tabCol, colorStr);
-                }
-                fs->tabColParsed.wasParsed = false;
-            }
-            SaveSettings();
-            tabsCtrl->ScheduleRepaint();
+            // handled in FrameOnCommand; forward the tab under the mouse encoded
+            // in lp (the command palette invokes it on the current tab, lp == 0)
+            HwndSendCommand(win->hwndFrame, CmdSetTabColor, (LPARAM)tabUnderMouse);
             return;
         }
         case CmdSaveAnnotations: {
