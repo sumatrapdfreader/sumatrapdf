@@ -465,6 +465,27 @@ Size VBox::Layout(const Constraints bc) {
             }
         }
     }
+
+    // Content overflows the available height: shrink flex children so that
+    // fixed-size siblings aren't pushed past the edge and clipped. Symmetric
+    // to the grow case above; non-flex children keep their size, and
+    // Wnd::Layout clamps each flex child to the tightened height.
+    if (totalFlex > 0 && bc.HasBoundedHeight() && totalHeight > bc.max.dy) {
+        int deficit = totalHeight - bc.max.dy;
+        for (auto& v : children) {
+            if (v.flex <= 0 || IsCollapsed(v.layout)) {
+                continue;
+            }
+            int oldHeight = v.size.dy;
+            int nh = std::max(oldHeight - Scale(deficit, v.flex, totalFlex), 0);
+            auto fbc = cbc.TightenHeight(nh);
+            auto size = v.layout->Layout(fbc);
+            v.size = size;
+            totalHeight += size.dy - oldHeight;
+            height += size.dy - oldHeight;
+        }
+    }
+
     if (alignCross == CrossAxisAlign::Stretch) {
         return bc.Constrain(Size{cbc.min.dx, height});
     }
