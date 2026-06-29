@@ -99,7 +99,9 @@ void TabsCtrl::LayoutTabs() {
     int xEnd;
     TooltipInfo* tools = AllocArrayTemp<TooltipInfo>(nTabs);
     for (int i = 0; i < nTabs; i++) {
-        TabInfo* ti = GetTab(i);
+        // bounded loop with a valid index: index tabs directly instead of going
+        // through GetTab (which re-issues TCM_GETITEMCOUNT each call)
+        TabInfo* ti = tabs[i];
         if (isRtl) {
             xEnd = x - dx;
             ti->r = {xEnd, 0, dx, dy};
@@ -252,7 +254,9 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
             tabBgCol = tabBgHighlight;
         }
 
-        ti = GetTab(i);
+        // bounded loop with a valid index: index tabs directly (avoids the
+        // per-iteration TCM_GETITEMCOUNT round-trip GetTab does)
+        ti = tabs[i];
 
         // use per-tab color if explicitly set
         if (!IsSpecialColor(ti->tabColor)) {
