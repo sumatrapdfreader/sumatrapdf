@@ -771,6 +771,27 @@ Size HBox::Layout(const Constraints bc) {
         }
     }
 
+    // Content overflows the available width: shrink flex children so that
+    // fixed-size siblings (e.g. a browse button) aren't pushed past the edge
+    // and clipped. Symmetric to the grow case above; non-flex children keep
+    // their size, and Wnd::Layout clamps each flex child to the tightened width.
+    if (totalFlex > 0 && bc.HasBoundedWidth() && totalWidth > bc.max.dx) {
+        int deficit = totalWidth - bc.max.dx;
+        for (int i = 0; i < n; i++) {
+            auto& v = children[i];
+            if (v.flex <= 0 || IsCollapsed(v.layout)) {
+                continue;
+            }
+            int oldWidth = v.size.dx;
+            int nw = std::max(oldWidth - Scale(deficit, v.flex, totalFlex), 0);
+            auto fbc = cbc.TightenWidth(nw);
+            auto size = v.layout->Layout(fbc);
+            v.size = size;
+            totalWidth += size.dx - oldWidth;
+            width += size.dx - oldWidth;
+        }
+    }
+
     if (alignCross == CrossAxisAlign::Stretch) {
         return bc.Constrain(Size{width, cbc.min.dy});
     }
