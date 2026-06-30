@@ -454,21 +454,30 @@ static WindowTab* FindTabByController(DocController* ctrl) {
     return nullptr;
 }
 
-WindowTab* FindTabByFile(Str file) {
+static WindowTab* FindTabByFileInWindow(Str file, MainWindow* win) {
     TempStr normFile = path::NormalizeTemp(file);
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab->type != WindowTab::Type::Document) {
+            continue;
+        }
+        Str fp = tab->filePath;
+        if (str::IsEmpty(fp)) {
+            continue;
+        }
+        if (path::IsSame(fp, normFile)) {
+            return tab;
+        }
+    }
+    return nullptr;
+}
 
+WindowTab* FindTabByFile(Str file, MainWindow* limitWin) {
+    if (limitWin) {
+        return FindTabByFileInWindow(file, limitWin);
+    }
     for (MainWindow* win : gWindows) {
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab->type != WindowTab::Type::Document) {
-                continue;
-            }
-            Str fp = tab->filePath;
-            if (str::IsEmpty(fp)) {
-                continue;
-            }
-            if (path::IsSame(fp, normFile)) {
-                return tab;
-            }
+        if (WindowTab* tab = FindTabByFileInWindow(file, win)) {
+            return tab;
         }
     }
     return nullptr;
@@ -487,19 +496,19 @@ void SelectTabInWindow(WindowTab* tab) {
 }
 
 // Find the first window showing a given PDF file
-MainWindow* FindMainWindowByFile(Str file, bool focusTab) {
+MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) {
     WindowTab* tab = nullptr;
     if (!file) {
         return nullptr;
     }
-    if (gMostRecentlyOpenedDoc != nullptr) {
+    if (!limitWin && gMostRecentlyOpenedDoc != nullptr) {
         auto lastPath = gMostRecentlyOpenedDoc->GetFilePath();
         if (path::IsSame(lastPath, file)) {
             tab = FindTabByController(gMostRecentlyOpenedDoc);
         }
     }
     if (!tab) {
-        tab = FindTabByFile(file);
+        tab = FindTabByFile(file, limitWin);
     }
     if (!tab) {
         return nullptr;
@@ -2738,7 +2747,8 @@ void StartLoadDocument(LoadArgs* argsIn) {
     }
 
     if (argsIn->activateExisting) {
-        MainWindow* existing = FindMainWindowByFile(path, true);
+        MainWindow* limitWin = argsIn->activateExistingInWindow ? win : nullptr;
+        MainWindow* existing = FindMainWindowByFile(path, true, limitWin);
         if (existing) {
             existing->Focus();
             return;
@@ -2802,7 +2812,8 @@ MainWindow* LoadDocument(LoadArgs* args) {
 
     Str path = args->FilePath();
     if (args->activateExisting) {
-        MainWindow* existing = FindMainWindowByFile(path, true);
+        MainWindow* limitWin = args->activateExistingInWindow ? args->win : nullptr;
+        MainWindow* existing = FindMainWindowByFile(path, true, limitWin);
         if (existing) {
             existing->Focus();
             return existing;
@@ -4418,6 +4429,8 @@ static void OpenFile(MainWindow* win) {
     GetFilesFromGetOpenFileName(&ofn, files);
     for (Str path : files) {
         LoadArgs args(path, win);
+        args.activateExisting = true;
+        args.activateExistingInWindow = true;
         LoadDocument(&args);
     }
 }

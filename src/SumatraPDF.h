@@ -201,9 +201,10 @@ void DuplicateTabInNewWindow(WindowTab* tab);
 void CopyFilePath(WindowTab*);
 
 // note: background tabs are only searched if focusTab is true
-MainWindow* FindMainWindowByFile(Str file, bool focusTab);
+// when limitWin is set, only that window's tabs are considered
+MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin = nullptr);
 MainWindow* FindMainWindowBySyncFile(Str file, bool focusTab);
-WindowTab* FindTabByFile(Str file);
+WindowTab* FindTabByFile(Str file, MainWindow* limitWin = nullptr);
 void SelectTabInWindow(WindowTab*);
 
 class EngineBase;
@@ -241,6 +242,9 @@ struct LoadArgs {
     bool lazyLoad = false;
     bool async = false;
     bool activateExisting = false;
+    // with activateExisting: only switch to an existing tab in args->win (UI
+    // open paths). DDE and other global lookups leave this false.
+    bool activateExistingInWindow = false;
 
     DocController* ctrl = nullptr;
 

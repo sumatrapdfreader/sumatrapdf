@@ -553,6 +553,7 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
     }
     LoadArgs args(path, win);
     args.activateExisting = true;
+    args.activateExistingInWindow = true;
     LoadDocument(&args);
 }
 

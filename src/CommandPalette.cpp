@@ -357,6 +357,8 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     auto filePath = data->filePath;
     if (filePath) {
         LoadArgs args(filePath, win);
+        args.activateExisting = true;
+        args.activateExistingInWindow = true;
         args.forceReuse = false;
         StartLoadDocument(&args);
         ScheduleDeleteAndExecCommand();
