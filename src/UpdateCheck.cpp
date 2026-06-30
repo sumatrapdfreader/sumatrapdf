@@ -286,7 +286,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     auto mainInstr = _TRA("New version available");
     auto ver = updateInfo->latestVer;
     auto fmtStr = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install new version?");
-    auto content = str::Dup(fmt(fmtStr.s, CURR_VERSION_STRA, ver));
+    auto content = str::Dup(fmt(fmtStr.s, CURR_VERSION_STRA, ver.s));
 
     auto installerPath = updateInfo->installerPath;
     bool didDownloadInstaller = file::Exists(installerPath);
@@ -426,7 +426,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
         return;
     }
     TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update").s);
-    TempStr msg = fmt(_TRA("Update %s available (you have %s) available. %s").s, updateInfo->latestVer,
+    TempStr msg = fmt(_TRA("Update %s available (you have %s) available. %s").s, updateInfo->latestVer.s,
                       CURR_VERSION_STRA, link.s);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
@@ -590,7 +590,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     HWND hwndForNotif = win->hwndCanvas;
     if (!ShouldDownloadUpdate(updateInfo, updateCheckType)) {
         Str myVer = StrL(UPDATE_CHECK_VERA);
-        logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, updateInfo->latestVer);
+        logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer.s, updateInfo->latestVer.s);
         /* if automated => don't notify that there is no new version */
         if (updateCheckType == UpdateCheck::UserInitiated) {
             auto wnd = GetNotificationForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
@@ -629,7 +629,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     }
 
     // download the installer to make update feel instant to the user
-    logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
+    logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL.s);
     gUpdateCheckInProgress = true;
 
     auto fnData = new DownloadUpdateAsyncData;
