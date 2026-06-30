@@ -1153,7 +1153,7 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
     logf(
         "getZoomSafe: invalid zoom in doc: %s\npageNo: %d\npageInfo->zoomReal\n%.2f\ndm->zoomReal: %.2f\n"
         "dm->zoomVirtual: %.2f\n",
-        name, pageNo, zoom, pageInfo->zoomReal, dm->zoomReal, dm->zoomVirtual);
+        name.s, pageNo, zoom, pageInfo->zoomReal, dm->zoomReal, dm->zoomVirtual);
     ReportDebugIf(true);
 
     if (dm->zoomReal > 0) {

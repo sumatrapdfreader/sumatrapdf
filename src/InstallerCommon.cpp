@@ -153,7 +153,7 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
         info->typ = PreviousInstallationType::User;
     }
     logf("GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d, needsElevation: %d\n",
-         info->installationDir, (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ,
+         info->installationDir.s, (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ,
          (int)info->allUsers);
 }
 

@@ -948,7 +948,7 @@ Error code: %d
 Error message: %s
 We can't proceed.
 For more information see <a href="%s">SumatraPDF docs</a>.)",
-                      (int)err, errStr ? errStr.s : "unknown", kFailedToLoadURL);
+                      (int)err, errStr ? errStr.s : "unknown", kFailedToLoadURL().s);
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;

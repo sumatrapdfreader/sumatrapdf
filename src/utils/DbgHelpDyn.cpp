@@ -329,7 +329,7 @@ void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
             AppendAddress(s, addr);
             s.Append(fmt(" %02X:", section));
             AppendAddress(s, offset);
-            s.Append(fmt(" %s", moduleShort));
+            s.Append(fmt(" %s", moduleShort.s));
         }
 
         if (symName) {
@@ -547,7 +547,7 @@ void GetExceptionInfo(StrBuilder& s, EXCEPTION_POINTERS* excPointers) {
 
     EXCEPTION_RECORD* excRecord = excPointers->ExceptionRecord;
     DWORD excCode = excRecord->ExceptionCode;
-    s.Append(fmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode)));
+    s.Append(fmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode).s));
 
     s.Append(fmt("Faulting IP: "));
     GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress, false);

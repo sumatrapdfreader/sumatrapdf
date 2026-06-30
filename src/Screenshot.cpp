@@ -1154,7 +1154,8 @@ void RegisterScreenshotHotkey(HWND hwnd) {
     }
     BOOL ok = RegisterHotKey(hwnd, kScreenshotHotkeyId, mod, vk);
     if (!ok && !IsOtherSumatraProcessRunning()) {
-        MaybeDelayedWarningNotification(fmt("Couldn't register '%s' global hotkey for taking screenshots", shortcut));
+        MaybeDelayedWarningNotification(
+            fmt("Couldn't register '%s' global hotkey for taking screenshots", shortcut.s));
     }
 }
 
@@ -1263,7 +1264,7 @@ static void SetHotkeyDoSet(SetHotkeyDialog* dlg) {
     if (!dlg->newHotkey) {
         return;
     }
-    logf("SetHotkeyDoSet: setting screenshot hotkey to '%s'\n", dlg->newHotkey);
+    logf("SetHotkeyDoSet: setting screenshot hotkey to '%s'\n", dlg->newHotkey.s);
 
     Shortcut* sc = FindScreenshotShortcutEntry();
     if (sc) {

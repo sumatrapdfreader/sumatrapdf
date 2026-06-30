@@ -946,12 +946,13 @@ static void SendGrokMessage(MainWindow* win) {
     if (isNewSession) {
         cmdLine =
             fmt("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s --rules \"%s\"",
-                grokPath, escapedInput, dir, model, efforts[effortIdx], permsFlag, rules);
+                grokPath.s, escapedInput.s, dir.s, model.s, efforts[effortIdx].s, permsFlag.s, rules.s);
     } else {
         cmdLine =
             fmt("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort %s %s -r %s --rules "
                 "\"%s\"",
-                grokPath, escapedInput, dir, model, efforts[effortIdx], permsFlag, tab->grokSessionId, rules);
+                grokPath.s, escapedInput.s, dir.s, model.s, efforts[effortIdx].s, permsFlag.s, tab->grokSessionId.s,
+                rules.s);
     }
 
     GrokBuildLog(">>> cmd", cmdLine);

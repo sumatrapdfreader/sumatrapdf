@@ -290,7 +290,7 @@ static void InstallerThread(Flags* cli) {
     TempStr installedExePath = path::JoinTemp(cli->installDir, kExeName);
     auto allUsers = cli->allUsers;
     logf("InstallerThread: cli->allUsers: %d, cli->withFilter: %d, cli->withPreview: %d, installerExePath: '%s'\n",
-         (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath);
+         (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath.s);
     HKEY key = cli->allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
     if (!ExtractInstallerFiles(cli->installDir)) {
@@ -750,7 +750,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     logf(
         "CreateInstallerWindowControls: cli->allUsers: %d, cli->withPreview: %d, cli->withFilter: %d, install dir: "
         "'%s'\n",
-        (int)cli->allUsers, (int)cli->withPreview, (int)cli->withFilter, cli->installDir);
+        (int)cli->allUsers, (int)cli->withPreview, (int)cli->withFilter, cli->installDir.s);
     // show options if user chose non-defaults via cmd-line
     // or if previous install had them enabled
     bool showOptions = false;

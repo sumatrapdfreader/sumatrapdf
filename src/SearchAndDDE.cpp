@@ -2007,7 +2007,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
             // we handle those
             break;
         default:
-            logf("OnDDERequest: invalid fmt '%s'\n", (int)fmt);
+            logf("OnDDERequest: invalid fmt '%d'\n", (int)fmt);
             return 0;
     }
     ATOM a = HIWORD(lp);
