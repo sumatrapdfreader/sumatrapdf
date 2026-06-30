@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/GdiPlusUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/GdiPlus.h"
 #include "FzImgReader.h"
 
 #include "wingui/UIModels.h"
@@ -455,7 +455,7 @@ static void OnFormatChanged(ImageEditWindow* ew) {
         int baseLen = len(dest) - len(oldExt);
         TempStr base = str::DupTemp(Str(dest.s, (int)baseLen));
         TempStr newDest = fmt("%s%s", base, newExt);
-        SetWindowTextW(ew->hwndDestEdit, ToWStrTemp(newDest));
+        HwndSetText(ew->hwndDestEdit, newDest);
     }
     SetFocus(ew->hwnd);
 }
@@ -1005,7 +1005,7 @@ static void OnBrowse(ImageEditWindow* ew) {
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     if (GetSaveFileNameW(&ofn)) {
-        SetWindowTextW(ew->hwndDestEdit, dstFileName);
+        HwndSetText(ew->hwndDestEdit, ToUtf8Temp(dstFileName));
     }
 }
 
@@ -1266,7 +1266,7 @@ static void SwitchToSaveMode(ImageEditWindow* ew) {
     ew->cropH = ew->imgH;
     ew->newW = ew->imgW;
     ew->newH = ew->imgH;
-    SetWindowTextW(ew->hwnd, L"Save Image");
+    HwndSetText(ew->hwnd, "Save Image");
     UpdateModeButtons(ew);
     UpdateSaveButtonText(ew);
     UpdateInfoLabel(ew);
@@ -1365,7 +1365,7 @@ static void SwitchToCropMode(ImageEditWindow* ew) {
     ew->cropY = 0;
     ew->cropW = ew->imgW;
     ew->cropH = ew->imgH;
-    SetWindowTextW(ew->hwnd, L"Crop Image");
+    HwndSetText(ew->hwnd, "Crop Image");
     UpdateModeButtons(ew);
     UpdateSaveButtonText(ew);
     UpdateInfoLabel(ew);
@@ -1382,7 +1382,7 @@ static void SwitchToResizeMode(ImageEditWindow* ew) {
     ew->mode = ImageEditMode::Resize;
     ew->newW = ew->imgW;
     ew->newH = ew->imgH;
-    SetWindowTextW(ew->hwnd, L"Resize Image");
+    HwndSetText(ew->hwnd, "Resize Image");
     UpdateModeButtons(ew);
     UpdateSaveButtonText(ew);
     UpdateInfoLabel(ew);
@@ -1958,13 +1958,13 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     if (!fromRenderedBitmap) {
         pathLabelStyle |= WS_VISIBLE;
     }
-    ew->hwndPathLabel = CreateWindowExW(0, L"STATIC", filePath ? ToWStrTemp(filePath).s : L"", pathLabelStyle, 0, 0, 0,
-                                        0, hwnd, nullptr, h, nullptr);
+    ew->hwndPathLabel = CreateWindowExW(0, L"STATIC", filePath ? CWStrTemp(filePath) : L"", pathLabelStyle, 0, 0, 0, 0,
+                                        hwnd, nullptr, h, nullptr);
     SendMessageW(ew->hwndPathLabel, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
 
     // row 2: dest edit + browse
     TempStr destPath = filePath ? MakeUniqueFilePathTemp(filePath) : str::DupTemp(StrL(""));
-    ew->hwndDestEdit = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, ToWStrTemp(destPath),
+    ew->hwndDestEdit = CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, CWStrTemp(destPath),
                                        WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 0, 0, 0, hwnd, nullptr, h, nullptr);
     SendMessageW(ew->hwndDestEdit, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
     if (!gDestEditSubclassId) {
@@ -1985,7 +1985,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     } else {
         infoStr = FormatResizeInfoTemp(imgW, imgH, imgW, imgH);
     }
-    ew->hwndInfoLabel = CreateWindowExW(0, L"STATIC", ToWStrTemp(infoStr), WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, 0, 0,
+    ew->hwndInfoLabel = CreateWindowExW(0, L"STATIC", CWStrTemp(infoStr), WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, 0, 0,
                                         hwnd, nullptr, h, nullptr);
     SendMessageW(ew->hwndInfoLabel, WM_SETFONT, (WPARAM)ew->hFont, TRUE);
 

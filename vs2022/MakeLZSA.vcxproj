@@ -436,24 +436,24 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\utils\BaseUtil.h" />
-    <ClInclude Include="..\src\utils\ByteOrderDecoder.h" />
-    <ClInclude Include="..\src\utils\ByteWriter.h" />
-    <ClInclude Include="..\src\utils\CmdLineArgsIter.h" />
-    <ClInclude Include="..\src\utils\ColorUtil.h" />
-    <ClInclude Include="..\src\utils\DirIter.h" />
-    <ClInclude Include="..\src\utils\Dpi.h" />
-    <ClInclude Include="..\src\utils\FileUtil.h" />
-    <ClInclude Include="..\src\utils\GeomUtil.h" />
-    <ClInclude Include="..\src\utils\Log.h" />
-    <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
-    <ClInclude Include="..\src\utils\StrFormat.h" />
-    <ClInclude Include="..\src\utils\StrQueue.h" />
-    <ClInclude Include="..\src\utils\StrUtil.h" />
-    <ClInclude Include="..\src\utils\StrVec.h" />
-    <ClInclude Include="..\src\utils\StrconvUtil.h" />
-    <ClInclude Include="..\src\utils\WinDynCalls.h" />
-    <ClInclude Include="..\src\utils\WinUtil.h" />
+    <ClInclude Include="..\src\base\Base.h" />
+    <ClInclude Include="..\src\base\ByteOrderDecoder.h" />
+    <ClInclude Include="..\src\base\ByteWriter.h" />
+    <ClInclude Include="..\src\base\CmdLineArgsIter.h" />
+    <ClInclude Include="..\src\base\Color.h" />
+    <ClInclude Include="..\src\base\DirIter.h" />
+    <ClInclude Include="..\src\base\Dpi.h" />
+    <ClInclude Include="..\src\base\File.h" />
+    <ClInclude Include="..\src\base\Geom.h" />
+    <ClInclude Include="..\src\base\Log.h" />
+    <ClInclude Include="..\src\base\LzmaSimpleArchive.h" />
+    <ClInclude Include="..\src\base\Str.h" />
+    <ClInclude Include="..\src\base\StrFormat.h" />
+    <ClInclude Include="..\src\base\StrQueue.h" />
+    <ClInclude Include="..\src\base\StrVec.h" />
+    <ClInclude Include="..\src\base\Strconv.h" />
+    <ClInclude Include="..\src\base\Win.h" />
+    <ClInclude Include="..\src\base\WinDynCalls.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\zlib\adler32.c" />
@@ -469,25 +469,25 @@
     <ClCompile Include="..\ext\zlib\inftrees.c" />
     <ClCompile Include="..\ext\zlib\trees.c" />
     <ClCompile Include="..\ext\zlib\zutil.c" />
+    <ClCompile Include="..\src\base\Base.cpp" />
+    <ClCompile Include="..\src\base\ByteOrderDecoder.cpp" />
+    <ClCompile Include="..\src\base\ByteWriter.cpp" />
+    <ClCompile Include="..\src\base\CmdLineArgsIter.cpp" />
+    <ClCompile Include="..\src\base\Color.cpp" />
+    <ClCompile Include="..\src\base\DirIter.cpp" />
+    <ClCompile Include="..\src\base\Dpi.cpp" />
+    <ClCompile Include="..\src\base\File.cpp" />
+    <ClCompile Include="..\src\base\Geom.cpp" />
+    <ClCompile Include="..\src\base\Log.cpp" />
+    <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />
+    <ClCompile Include="..\src\base\Str.cpp" />
+    <ClCompile Include="..\src\base\StrFormat.cpp" />
+    <ClCompile Include="..\src\base\StrQueue.cpp" />
+    <ClCompile Include="..\src\base\StrVec.cpp" />
+    <ClCompile Include="..\src\base\Strconv.cpp" />
+    <ClCompile Include="..\src\base\Win.cpp" />
+    <ClCompile Include="..\src\base\WinDynCalls.cpp" />
     <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
-    <ClCompile Include="..\src\utils\BaseUtil.cpp" />
-    <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />
-    <ClCompile Include="..\src\utils\ByteWriter.cpp" />
-    <ClCompile Include="..\src\utils\CmdLineArgsIter.cpp" />
-    <ClCompile Include="..\src\utils\ColorUtil.cpp" />
-    <ClCompile Include="..\src\utils\DirIter.cpp" />
-    <ClCompile Include="..\src\utils\Dpi.cpp" />
-    <ClCompile Include="..\src\utils\FileUtil.cpp" />
-    <ClCompile Include="..\src\utils\GeomUtil.cpp" />
-    <ClCompile Include="..\src\utils\Log.cpp" />
-    <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
-    <ClCompile Include="..\src\utils\StrFormat.cpp" />
-    <ClCompile Include="..\src\utils\StrQueue.cpp" />
-    <ClCompile Include="..\src\utils\StrUtil.cpp" />
-    <ClCompile Include="..\src\utils\StrVec.cpp" />
-    <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
-    <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
-    <ClCompile Include="..\src\utils\WinUtil.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

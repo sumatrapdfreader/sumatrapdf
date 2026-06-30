@@ -1,19 +1,19 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/BitManip.h"
-#include "utils/WinDynCalls.h"
-#include "utils/Dpi.h"
-#include "utils/FileUtil.h"
-#include "utils/Timer.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/ThreadUtil.h"
-#include "utils/HttpUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/GuessFileType.h"
+#include "base/Base.h"
+#include "base/BitManip.h"
+#include "base/WinDynCalls.h"
+#include "base/Dpi.h"
+#include "base/File.h"
+#include "base/Timer.h"
+#include "base/UITask.h"
+#include "base/Win.h"
+#include "base/ScopedWin.h"
+#include "base/Thread.h"
+#include "base/Http.h"
+#include "base/GdiPlus.h"
+#include "base/GuessFileType.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -56,7 +56,7 @@
 
 #include "RefHover.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // if set instead of trying to render pages we don't have, we simply do nothing
 // this reduces the flickering when going quickly through pages but creates

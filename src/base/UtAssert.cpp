@@ -1,0 +1,85 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
+#include "base/Base.h"
+#include "base/WinDynCalls.h"
+#include "base/DbgHelpDyn.h"
+
+static int g_nTotal = 0;
+static int g_nFailed = 0;
+static bool gForAi = false;
+
+#define MAX_FAILED_ASSERTS 32
+
+struct FailedAssert {
+    Str exprStr;
+    Str file;
+    int lineNo;
+};
+
+static FailedAssert g_failedAssert[MAX_FAILED_ASSERTS];
+
+void utassert_set_for_ai(bool enabled) {
+    gForAi = enabled;
+}
+
+static void OutputDebugString(Str s) {
+    if (str::IsNull(s)) {
+        return;
+    }
+    TempStr s0 = str::Dup(s);
+    OutputDebugStringA(s0.s);
+}
+
+static void PrintStdout(Str s) {
+    if (str::IsNull(s)) {
+        return;
+    }
+    printf("%.*s", s.len, s.s);
+}
+
+void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
+    ++g_nTotal;
+    if (ok) {
+        return;
+    }
+    if (g_nFailed < MAX_FAILED_ASSERTS) {
+        g_failedAssert[g_nFailed].exprStr = exprStr;
+        g_failedAssert[g_nFailed].file = file;
+        g_failedAssert[g_nFailed].lineNo = lineNo;
+    }
+    ++g_nFailed;
+    OutputDebugStringA("Assertion failed: ");
+    OutputDebugString(exprStr);
+    OutputDebugStringA("\n");
+    OutputDebugString(file);
+    OutputDebugStringA("\n");
+    if (gForAi) {
+        printf("Assertion failed: %.*s\n%.*s@%d\n", exprStr.len, exprStr.s, file.len, file.s, lineNo);
+        StrBuilder s;
+        if (dbghelp::GetCurrentThreadCallstack(s)) {
+            PrintStdout(s.Get());
+        } else {
+            printf("failed to get callstack\n");
+        }
+        fflush(stdout);
+        return;
+    }
+    if (IsDebuggerPresent()) {
+        DebugBreak();
+    }
+}
+
+int utassert_print_results() {
+    if (0 == g_nFailed) {
+        printf("Passed all %d tests\n", g_nTotal);
+        return 0;
+    }
+
+    fprintf(stderr, "Failed %d (of %d) tests\n", g_nFailed, g_nTotal);
+    for (int i = 0; i < g_nFailed && i < MAX_FAILED_ASSERTS; i++) {
+        FailedAssert* a = &(g_failedAssert[i]);
+        fprintf(stderr, "'%.*s' %.*s@%d\n", a->exprStr.len, a->exprStr.s, a->file.len, a->file.s, a->lineNo);
+    }
+    return g_nFailed;
+}

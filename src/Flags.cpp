@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
+#include "base/Win.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -13,7 +13,7 @@
 #include "Translations.h"
 #endif
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // @gen-start flags
 // clang-format off

@@ -1,5 +1,5 @@
 -Isrc
--Isrc/utils
+-Isrc/base
 -Imupdf/include
 -Iext/libdjvu
 -Iext/CHMLib

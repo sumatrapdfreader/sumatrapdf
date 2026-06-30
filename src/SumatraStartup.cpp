@@ -1,19 +1,19 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
-#include "utils/DbgHelpDyn.h"
-#include "utils/DirIter.h"
-#include "utils/Dpi.h"
-#include "utils/FileUtil.h"
-#include "utils/FileWatcher.h"
-#include "utils/GdiPlusUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/WinDynCalls.h"
+#include "base/DbgHelpDyn.h"
+#include "base/DirIter.h"
+#include "base/Dpi.h"
+#include "base/File.h"
+#include "base/FileWatcher.h"
+#include "base/GdiPlus.h"
 #include "mui/Mui.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
+#include "base/Win.h"
 
 #include "SumatraConfig.h"
 
@@ -66,7 +66,7 @@
 #include "CommandPalette.h"
 #include "SumatraControl.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // return false if failed in a way that should abort the app
 static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
@@ -533,7 +533,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex, bool* openInNewWindow) {
     DWORD lastErr = 0;
 Retry:
     // use a memory mapping containing a process id as mutex
-    hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), ToWStrTemp(mapId));
+    hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), CWStrTemp(mapId));
     if (!hMap) {
         goto Error;
     }
@@ -924,7 +924,7 @@ static bool LoadLibmupdf(bool showErrorDialog) {
     if (!haveDll) {
         logf("LoadLibmupdf: failed to ensure libmupdf.dll\n");
     } else {
-        HMODULE hm = LoadLibraryW(ToWStrTemp(path));
+        HMODULE hm = LoadLibraryW(CWStrTemp(path));
         if (hm) {
             return true;
         }
@@ -964,7 +964,7 @@ For more information see <a href="%s">SumatraPDF docs</a>.)",
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.pszWindowTitle = L"SumatraPDF";
     dialogConfig.pszMainInstruction = L"Failed to load libmupdf.dll";
-    dialogConfig.pszContent = ToWStrTemp(msg);
+    dialogConfig.pszContent = CWStrTemp(msg);
     dialogConfig.nDefaultButton = IDOK;
     dialogConfig.dwFlags = flags;
     dialogConfig.pfCallback = LoadLibmupdfDialogCallback;
@@ -1037,7 +1037,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.pszWindowTitle = title;
-    dialogConfig.pszMainInstruction = ToWStrTemp(corruptedInstallation);
+    dialogConfig.pszMainInstruction = CWStrTemp(corruptedInstallation);
     dialogConfig.pszContent =
         LR"(Learn more at <a href="https://www.sumatrapdfreader.org/docs/Corrupted-installation">www.sumatrapdfreader.org/docs/Corrupted-installation</a>.)";
     dialogConfig.nDefaultButton = IDOK;
@@ -1091,7 +1091,7 @@ static void ShowInstallerHelp() {
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.pszWindowTitle = L"SumatraPDF installer usage";
-    dialogConfig.pszMainInstruction = ToWStrTemp(msg);
+    dialogConfig.pszMainInstruction = CWStrTemp(msg);
     dialogConfig.pszContent =
         LR"(<a href="https://www.sumatrapdfreader.org/docs/Installer-cmd-line-arguments">Read more on website</a>)";
     dialogConfig.nDefaultButton = IDOK;
@@ -1224,7 +1224,7 @@ static bool IsBuildDirName(Str name) {
 // prefers the directory mtime; falls back to the newest file mtime inside.
 static i64 GetDirLastActivityAgeSec(Str dirPath, const ULARGE_INTEGER& now) {
     WIN32_FILE_ATTRIBUTE_DATA fileInfo{};
-    TempWStr dirPathW = ToWStrTemp(dirPath);
+    WCHAR* dirPathW = CWStrTemp(dirPath);
     if (GetFileAttributesExW(dirPathW, GetFileExInfoStandard, &fileInfo)) {
         i64 age = FileTimeAgeSec(fileInfo.ftLastWriteTime, now);
         if (age >= 0) {
@@ -1484,7 +1484,7 @@ void fz_free_argv(int argc, char** argv);
 int fz_redirect_io_to_existing_console();
 }
 
-// in src/common/win_util.cpp (part of the utils lib)
+// in src/base/Win.cpp (part of the base lib)
 bool WasLaunchedByPowershellWithPipeRedirect();
 
 // must match premake5.lua
@@ -1681,8 +1681,8 @@ static int MaybeDelegateToToolExe() {
 
     WStr rest = SkipFirstArg(WStr(GetCommandLineW()));
     TempStr cmd = fmt("\"%s\" %s", toolExe, ToUtf8Temp(rest));
-    TempWStr cmdW = ToWStrTemp(cmd);
-    TempWStr toolExeW = ToWStrTemp(toolExe);
+    WCHAR* cmdW = CWStrTemp(cmd);
+    WCHAR* toolExeW = CWStrTemp(toolExe);
 
     STARTUPINFOW si{};
     si.cb = sizeof(si);

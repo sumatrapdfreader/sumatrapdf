@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include <uiautomationcore.h>
 #ifdef __GNUC__
 // mingw needs explicit UUID declaration for IAccIdentity
@@ -14,7 +14,7 @@ __CRT_UUID_DECL(IAccIdentity, 0x7852B78D, 0x1CFD, 0x41C1, 0xA6, 0x15, 0x9C, 0x0C
 #include "DocController.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
-#include "utils/FileUtil.h"
+#include "base/File.h"
 #include "uia/DocumentProvider.h"
 #include "uia/Constants.h"
 #include "uia/PageProvider.h"
@@ -241,7 +241,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
         // typically filename
         pRetVal->vt = VT_BSTR;
         TempStr s = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
-        pRetVal->bstrVal = SysAllocString(ToWStrTemp(s));
+        pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
         return S_OK;
     } else if (propertyId == UIA_IsTextPatternAvailablePropertyId) {
         pRetVal->vt = VT_BOOL;

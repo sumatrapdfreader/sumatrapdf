@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 
 #include "DocProperties.h"
 
@@ -87,7 +87,7 @@ int GetPropIdx(const Props& props, Str name) {
     int n = PropsCount(props);
     for (int i = 0; i < n; i++) {
         int idx = i * 2;
-        if (StrEq(props.At(idx), name)) {
+        if (str::Eq(props.At(idx), name)) {
             return idx;
         }
     }
@@ -123,7 +123,7 @@ Str GetMatchingString(const Str* strings, Str s) {
     while (*strings) {
         Str str1 = *strings++;
         Str str2 = *strings++;
-        if (str1.s == s.s || StrEq(str1, s)) {
+        if (str1.s == s.s || str::Eq(str1, s)) {
             return str2;
         }
     }

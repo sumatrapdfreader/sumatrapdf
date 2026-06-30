@@ -15,17 +15,17 @@ To write new regression test:
 - call Regress${NN} function from RunTests()
 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
-#include "utils/Archive.h"
-#include "utils/DbgHelpDyn.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/HtmlParserLookup.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/WinDynCalls.h"
+#include "base/Archive.h"
+#include "base/DbgHelpDyn.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/GdiPlus.h"
+#include "base/HtmlParserLookup.h"
 #include "mui/Mui.h"
-#include "utils/WinUtil.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 

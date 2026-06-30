@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Timer.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Timer.h"
+#include "base/Win.h"
 
 #include "wingui/FrameRateWnd.h"
 
@@ -19,7 +19,7 @@
 #include "FileHistory.h"
 #include "AppSettings.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();

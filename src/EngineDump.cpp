@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/TgaReader.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/File.h"
+#include "base/GdiPlus.h"
+#include "base/TgaReader.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -431,7 +431,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
         if (str::EndsWithI(pageBmpPath, ".png")) {
             Gdiplus::Bitmap gbmp(bmp->hbmp, nullptr);
             CLSID pngEncId = GetGdiPlusEncoderClsid(L"image/png");
-            TempWStr pageBmpPathW = ToWStrTemp(pageBmpPath);
+            WCHAR* pageBmpPathW = CWStrTemp(pageBmpPath);
             gbmp.Save(pageBmpPathW, &pngEncId, nullptr);
         } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
             ByteSlice imgData = SerializeBitmap(bmp->hbmp);
@@ -524,7 +524,7 @@ void EngineDump(const Flags& flags) {
     ScopedMui miniMui;
 
     WIN32_FIND_DATA fdata;
-    TempWStr pathW = ToWStrTemp(filePath);
+    WCHAR* pathW = CWStrTemp(filePath);
     HANDLE hfind = FindFirstFileW(pathW, &fdata);
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")

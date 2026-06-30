@@ -1,11 +1,11 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/Dpi.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
-#include "utils/GuessFileType.h"
+#include "base/Base.h"
+#include "base/Dpi.h"
+#include "base/ScopedWin.h"
+#include "base/Win.h"
+#include "base/GuessFileType.h"
 
 #include <mshtml.h>
 #include <mshtmhst.h>
@@ -435,7 +435,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
 
     Str imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
     Str mime = MimeFromUrl(urlRestA, imgExt);
-    TempWStr mimeW = ToWStrTemp(mime);
+    WCHAR* mimeW = CWStrTemp(mime);
     str::Free(mime);
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
 #ifdef _WIN64

@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -43,7 +43,7 @@ static TempStr FindClaudeExecutableTemp() {
 }
 
 bool IsClaudeCodeInstalled() {
-    return FindClaudeExecutableTemp() != nullptr;
+    return !str::IsEmpty(FindClaudeExecutableTemp());
 }
 
 TempStr ClaudeCodeExecutablePathTemp() {
@@ -135,8 +135,8 @@ static void PopulateModelCombo(HWND combo) {
     BuildClaudeModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
         TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Opus");
-        TempWStr displayW = ToWStrTemp(display);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW.s);
+        WCHAR* displayW = CWStrTemp(display);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
     }
 }
 
@@ -427,7 +427,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     // scan for *.jsonl files in the project directory
     TempStr pattern = fmt("%s\\*.jsonl", projectDir);
     WIN32_FIND_DATAW fd;
-    TempWStr patternW = ToWStrTemp(pattern);
+    WCHAR* patternW = CWStrTemp(pattern);
     HANDLE hFind = FindFirstFileW(patternW, &fd);
     if (hFind == INVALID_HANDLE_VALUE) {
         return;
@@ -498,8 +498,8 @@ static void PopulateSessionCombo(MainWindow* win) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
-        TempWStr labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
+        WCHAR* labelW = CWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
 
         if (tab->claudeSessionId && str::Eq(tab->claudeSessionId, sessions[i].sessionId)) {
             selectedIdx = i + 1;
@@ -510,8 +510,8 @@ static void PopulateSessionCombo(MainWindow* win) {
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->claudeSessionId && !foundCurrent) {
         Str label = "(current session)";
-        TempWStr labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
+        WCHAR* labelW = CWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
         selectedIdx = sessions.Size() + 1;
     }
 
@@ -840,12 +840,12 @@ static void SendClaudeMessage(MainWindow* win) {
 
     TempWStr inputW = HwndGetTextWTemp(hwndInput);
     TempStr input = ToUtf8Temp(inputW);
-    SetWindowTextW(hwndInput, L"");
+    HwndSetText(hwndInput, "");
 
     WebViewAddUser(win, input);
     SetClaudeWorking(win, true);
 
-    bool isNewSession = (tab->claudeSessionId == nullptr);
+    bool isNewSession = str::IsEmpty(tab->claudeSessionId);
     if (isNewSession) {
         str::ReplaceWithCopy(&tab->claudeSessionId, AIChatGenerateSessionIdTemp());
     }

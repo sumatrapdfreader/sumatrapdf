@@ -5,9 +5,9 @@ extern "C" {
 #include <mupdf/pdf.h>
 }
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -30,7 +30,7 @@ extern "C" {
 #include "SumatraPDF.h"
 #include "DarkModeSubclass.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 #include "theme.h"
 
@@ -1035,7 +1035,7 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
     if (fs) {
         pdf_filespec_params fileParams = {};
         pdf_get_filespec_params(ctx, fs, &fileParams);
-        fileName = StrDupTemp(Str(fileParams.filename));
+        fileName = str::DupTemp(Str(fileParams.filename));
     }
     if (!fileName) {
         fileName = StrL("attachment");

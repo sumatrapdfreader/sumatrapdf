@@ -4,18 +4,18 @@
 // engines which render flowed ebook formats into fixed pages through the EngineBase API
 // (pages are mostly layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/Archive.h"
-#include "utils/Dpi.h"
-#include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/HtmlParserLookup.h"
-#include "utils/HtmlPullParser.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Archive.h"
+#include "base/Dpi.h"
+#include "base/File.h"
+#include "base/GdiPlus.h"
+#include "base/HtmlParserLookup.h"
+#include "base/HtmlPullParser.h"
 #include "mui/Mui.h"
-#include "utils/TrivialHtmlParser.h"
-#include "utils/WinUtil.h"
-#include "utils/ZipUtil.h"
+#include "base/TrivialHtmlParser.h"
+#include "base/Win.h"
+#include "base/Zip.h"
 
 #include "wingui/UIModels.h"
 
@@ -31,7 +31,7 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 Kind kindEngineEpub = "engineEpub";
 Kind kindEngineFb2 = "engineFb2";
@@ -1019,7 +1019,7 @@ bool EngineFb2::FinishLoading() {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetXmlData();
+    args.htmlStr = AsStr(doc->GetXmlData());
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -1173,9 +1173,9 @@ IPageDestination* EngineMobi::GetNamedDest(Str name) {
     }
     ReportIf(pageNo < 1 || pageNo > PageCount());
 
-    ByteSlice htmlData = doc->GetHtmlData();
-    size_t htmlLen = htmlData.size();
-    Str start = AsStr(htmlData);
+    Str htmlData = doc->GetHtmlData();
+    size_t htmlLen = (size_t)htmlData.len;
+    Str start = htmlData;
     if ((size_t)filePos > htmlLen) {
         return nullptr;
     }
@@ -1353,7 +1353,7 @@ class ChmDataCache {
         html.Free();
     }
 
-    ByteSlice GetHtmlData() { return html; }
+    Str GetHtmlData() { return AsStr(html); }
 
     ByteSlice* GetImageData(Str id, Str pagePath) {
         TempStr url = NormalizeURLTemp(id, pagePath);

@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/CryptoUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/Dpi.h"
-#include "utils/Log.h"
-#include "utils/Timer.h"
+#include "base/Base.h"
+#include "base/Crypto.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/Dpi.h"
+#include "base/Log.h"
+#include "base/Timer.h"
 
 #include "wingui/UIModels.h"
 

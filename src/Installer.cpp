@@ -1,14 +1,14 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/Dpi.h"
-#include "utils/FrameTimeoutCalculator.h"
-#include "utils/WinUtil.h"
-#include "utils/Timer.h"
-#include "utils/LzmaSimpleArchive.h"
-#include "utils/ThreadUtil.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/Dpi.h"
+#include "base/FrameTimeoutCalculator.h"
+#include "base/Win.h"
+#include "base/Timer.h"
+#include "base/LzmaSimpleArchive.h"
+#include "base/Thread.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -27,7 +27,7 @@
 #include "SumatraConfig.h"
 #include "Translations.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 constexpr int kInstallerWinMargin = 8;
 
@@ -262,7 +262,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     newPath.Append(installDir);
 
     // write as REG_EXPAND_SZ since PATH may contain %vars%
-    TempWStr keyNameW = ToWStrTemp(keyName);
+    WCHAR* keyNameW = CWStrTemp(keyName);
     TempWStr valueW = ToWStrTemp(newPath.CStr());
     DWORD cbData = (DWORD)(len(valueW) + 1) * sizeof(WCHAR);
     HKEY hKey;
@@ -672,13 +672,13 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
 }
 
 static TempStr BrowseForFolderTemp(HWND hwnd, Str initialFolderA, Str caption) {
-    TempWStr initialFolder = ToWStrTemp(initialFolderA);
+    WCHAR* initialFolder = CWStrTemp(initialFolderA);
     BROWSEINFO bi{};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-    bi.lpszTitle = ToWStrTemp(caption);
+    bi.lpszTitle = CWStrTemp(caption);
     bi.lpfn = BrowseCallbackProc;
-    bi.lParam = (LPARAM)initialFolder.s;
+    bi.lParam = (LPARAM)initialFolder;
 
     LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
     if (!pidlFolder) {
@@ -998,7 +998,7 @@ static bool CreateInstallerWnd(Flags* cli) {
     int dy = kInstallerWinDy;
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
-    TempWStr titleW = ToWStrTemp(title);
+    WCHAR* titleW = CWStrTemp(title);
     HWND hwnd = CreateWindowExW(exStyle, winCls, titleW, dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     if (!hwnd) {
         return false;
@@ -1182,10 +1182,10 @@ static bool ShouldInstallMismatchedArch(HWND hwndParent) {
 
     buttons[0].nButtonID = kBtnIdDownload;
     Str s = _TRA("Download 64-bit version");
-    buttons[0].pszButtonText = ToWStrTemp(s);
+    buttons[0].pszButtonText = CWStrTemp(s);
     buttons[1].nButtonID = kBtnIdContinue;
     s = _TRA("&Continue installing 32-bit version");
-    buttons[1].pszButtonText = ToWStrTemp(s);
+    buttons[1].pszButtonText = CWStrTemp(s);
 
     DWORD flags = TDF_SIZE_TO_CONTENT | TDF_POSITION_RELATIVE_TO_WINDOW;
     if (trans::IsCurrLangRtl()) {
@@ -1193,10 +1193,10 @@ static bool ShouldInstallMismatchedArch(HWND hwndParent) {
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     s = _TRA("Installing 32-bit SumatraPDF on 64-bit OS");
-    dialogConfig.pszWindowTitle = ToWStrTemp(s);
+    dialogConfig.pszWindowTitle = CWStrTemp(s);
     // dialogConfig.pszMainInstruction = mainInstr;
     s = _TRA("You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?");
-    dialogConfig.pszContent = ToWStrTemp(s);
+    dialogConfig.pszContent = CWStrTemp(s);
     dialogConfig.nDefaultButton = kBtnIdContinue;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;

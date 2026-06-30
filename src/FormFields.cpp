@@ -1,9 +1,9 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
 
 #include <mupdf/pdf.h>
 
@@ -233,7 +233,7 @@ static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     int curIdx = -1;
     for (int i = 0; i < n; i++) {
         Str o = opts.At(i);
-        SendMessageW(hLb, LB_ADDSTRING, 0, (LPARAM)ToWStrTemp(o).s);
+        SendMessageW(hLb, LB_ADDSTRING, 0, (LPARAM)CWStrTemp(o));
         if (curIdx < 0 && str::Eq(o, cur)) {
             curIdx = i;
         }

@@ -6,8 +6,8 @@
 // pattern matchers in RefHoverTextDetect. Split out of RefHover so the popup
 // UI / render machinery stays separate from the citation-resolution logic.
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 

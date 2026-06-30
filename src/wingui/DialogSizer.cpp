@@ -1,7 +1,7 @@
 /* Modified version of DialogSizer_Set.cpp. See DialogSizer.h for the original Copyright */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
 #include "DialogSizer.h"
 
 #include <uxtheme.h>

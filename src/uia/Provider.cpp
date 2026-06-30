@@ -1,8 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinDynCalls.h"
+#include "base/Base.h"
+#include "base/WinDynCalls.h"
 #include "uia/Provider.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"

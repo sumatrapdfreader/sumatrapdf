@@ -1,8 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/Dpi.h"
 
 #include "OverlayScrollbar.h"
 #include "Theme.h"

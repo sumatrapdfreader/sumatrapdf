@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/Archive.h"
-#include "utils/HtmlParserLookup.h"
-#include "utils/HtmlPullParser.h"
+#include "base/Base.h"
+#include "base/GdiPlus.h"
+#include "base/Archive.h"
+#include "base/HtmlParserLookup.h"
+#include "base/HtmlPullParser.h"
 #include "mui/Mui.h"
 
 #include "wingui/UIModels.h"

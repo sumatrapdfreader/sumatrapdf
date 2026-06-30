@@ -1,9 +1,9 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/GuessFileType.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"

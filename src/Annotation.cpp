@@ -5,8 +5,8 @@ extern "C" {
 #include <mupdf/pdf.h>
 }
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
 
 #include "wingui/UIModels.h"
 
@@ -18,7 +18,7 @@ extern "C" {
 #include "GlobalPrefs.h"
 #include "Commands.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // spot checks the definitions are the same
 static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);
@@ -156,14 +156,14 @@ static Str MupdfCStrDupTemp(const char* s) {
     if (!s) {
         return {};
     }
-    return StrDupTemp(Str(s));
+    return str::DupTemp(Str(s));
 }
 
 static Str MupdfCStrTemp(const char* s) {
     if (!s || str::IsEmptyOrWhiteSpace(s)) {
         return {};
     }
-    return StrDupTemp(Str(s));
+    return str::DupTemp(Str(s));
 }
 
 Str Author(Annotation* annot) {
@@ -456,7 +456,7 @@ bool SetWidgetTextValue(Annotation* annot, Str value) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     bool ok = false;
-    TempStr valueZ = StrDupTemp(value);
+    TempStr valueZ = str::DupTemp(value);
     {
         // BaseCtx(), not a Ctx() clone: regenerating the appearance runs the
         // field's format/calculate JS, which mupdf executes (and rethrows
@@ -510,7 +510,7 @@ bool SetWidgetChoiceValue(Annotation* annot, Str value) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     bool ok = false;
-    TempStr valueZ = StrDupTemp(value);
+    TempStr valueZ = str::DupTemp(value);
     {
         // BaseCtx(), not a Ctx() clone: regenerating the appearance runs the
         // field's format/calculate JS, which mupdf executes (and rethrows
@@ -585,10 +585,10 @@ bool SetContents(Annotation* annot, Str sv) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
     Str currValue = Contents(annot);
-    if (StrEq(sv, currValue)) {
+    if (str::Eq(sv, currValue)) {
         return false;
     }
-    TempStr valueZ = StrDupTemp(sv);
+    TempStr valueZ = str::DupTemp(sv);
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
@@ -731,7 +731,7 @@ Str IconName(Annotation* annot) {
 void SetIconName(Annotation* annot, Str iconName) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
-    TempStr nameZ = StrDupTemp(iconName);
+    TempStr nameZ = str::DupTemp(iconName);
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
@@ -992,7 +992,7 @@ Str DefaultAppearanceTextFont(Annotation* annot) {
 void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
     EngineMupdf* e = annot->engine;
     auto a = annot->pdfannot;
-    TempStr fontZ = StrDupTemp(sv);
+    TempStr fontZ = str::DupTemp(sv);
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
@@ -1202,7 +1202,7 @@ static Str GetUserTemp() {
 }
 
 static Str GetAnnotationTextIconTemp() {
-    TempStr s = StrDupTemp(gGlobalPrefs->annotations.textIconType);
+    TempStr s = str::DupTemp(gGlobalPrefs->annotations.textIconType);
     // this way user can use "new paragraph" and we'll match "NewParagraph"
     str::RemoveCharsInPlace(s, " ");
     int idx = SeqStrIndexIS(gAnnotationTextIcons, s);

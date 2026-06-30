@@ -3,7 +3,7 @@
 
 // Pure-function plain-text citation detectors for PDFs without hyperref links.
 // Engine-independent so the heuristics can be unit-tested with synthetic glyph
-// arrays (see src/utils/tests/RefHover_ut.cpp).
+// arrays (see src/base/tests/RefHover_ut.cpp).
 //
 // Both functions take the engine->GetTextForPage out-ptrs:
 //   text     — per-glyph WCHAR array

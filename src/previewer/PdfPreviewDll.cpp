@@ -1,10 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -13,7 +13,7 @@
 #include "RegistryPreview.h"
 #include "PdfPreview.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 long g_lRefCount = 0;
 
@@ -42,7 +42,7 @@ class PreviewClassFactory : public IClassFactory {
 
     bool IsClsid(Str s) {
         CLSID clsid;
-        TempWStr ws = ToWStrTemp(s);
+        WCHAR* ws = CWStrTemp(s);
         return SUCCEEDED(CLSIDFromString(ws, &clsid)) && IsEqualCLSID(m_clsid, clsid);
     }
 

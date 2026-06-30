@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -42,7 +42,7 @@ static TempStr FindGrokExecutableTemp() {
 }
 
 bool IsGrokBuildInstalled() {
-    return FindGrokExecutableTemp() != nullptr;
+    return !str::IsEmpty(FindGrokExecutableTemp());
 }
 
 TempStr GrokBuildExecutablePathTemp() {
@@ -133,8 +133,8 @@ static void PopulateModelCombo(HWND combo) {
     BuildGrokModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
         TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Grok-composer-2.5-fast");
-        TempWStr displayW = ToWStrTemp(display);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW.s);
+        WCHAR* displayW = CWStrTemp(display);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
     }
 }
 
@@ -425,7 +425,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
 
     TempStr pattern = fmt("%s\\*", projectDir);
     WIN32_FIND_DATAW fd;
-    TempWStr patternW = ToWStrTemp(pattern);
+    WCHAR* patternW = CWStrTemp(pattern);
     HANDLE hFind = FindFirstFileW(patternW, &fd);
     if (hFind == INVALID_HANDLE_VALUE) {
         return;
@@ -492,8 +492,8 @@ static void PopulateSessionCombo(MainWindow* win) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
-        TempWStr labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
+        WCHAR* labelW = CWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
 
         if (tab->grokSessionId && str::Eq(tab->grokSessionId, sessions[i].sessionId)) {
             selectedIdx = i + 1;
@@ -504,8 +504,8 @@ static void PopulateSessionCombo(MainWindow* win) {
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->grokSessionId && !foundCurrent) {
         Str label = "(current session)";
-        TempWStr labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
+        WCHAR* labelW = CWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
         selectedIdx = sessions.Size() + 1;
     }
 
@@ -904,12 +904,12 @@ static void SendGrokMessage(MainWindow* win) {
 
     TempWStr inputW = HwndGetTextWTemp(hwndInput);
     TempStr input = ToUtf8Temp(inputW);
-    SetWindowTextW(hwndInput, L"");
+    HwndSetText(hwndInput, "");
 
     WebViewAddUser(win, input);
     SetGrokWorking(win, true);
 
-    bool isNewSession = (tab->grokSessionId == nullptr);
+    bool isNewSession = str::IsEmpty(tab->grokSessionId);
 
     Str filePath = tab->filePath;
     TempStr dir = path::GetDirTemp(filePath);

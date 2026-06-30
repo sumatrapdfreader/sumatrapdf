@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include "Settings.h"
 #include "Translations.h"
 #include "Commands.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // http://www.kbdedit.com/manual/low_level_vk_list.html
 // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
@@ -369,7 +369,7 @@ static Str getVirt(BYTE key, bool isEng) {
 // Parses a string like Ctrl+Shift+A into ACCEL structure
 // We accept variants: "Ctrl+A", "Ctrl-A", "Ctrl + A"
 static bool parseShortcut(Str shortcut, ACCEL& accel) {
-    TempStr shortcutZ = StrDupTemp(shortcut);
+    TempStr shortcutZ = str::DupTemp(shortcut);
     Str cursor = shortcutZ;
 
     BYTE fVirt = 0;

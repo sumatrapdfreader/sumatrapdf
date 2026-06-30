@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include <synctex_parser.h>
-#include "utils/WinUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/ZipUtil.h"
+#include "base/Win.h"
+#include "base/File.h"
+#include "base/Zip.h"
 
 #include "wingui/UIModels.h"
 
@@ -13,7 +13,7 @@
 #include "EngineBase.h"
 #include "PdfSync.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // size of the mark highlighting the location calculated by forward-search
 #define MARK_SIZE 10
@@ -87,7 +87,7 @@ class SyncTex : public Synchronizer {
 Synchronizer::Synchronizer(Str syncFilePathIn, Str pdfPathIn) {
     syncFilePath = str::Dup(syncFilePathIn);
     pdfPath = str::Dup(pdfPathIn);
-    TempWStr path = ToWStrTemp(syncFilePathIn);
+    WCHAR* path = CWStrTemp(syncFilePathIn);
     _wstat(path, &syncfileTimestamp);
 }
 
@@ -104,7 +104,7 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
     // has the synchronization file been changed on disk?
     struct _stat newstamp;
-    TempWStr path = ToWStrTemp(syncFilePath);
+    WCHAR* path = CWStrTemp(syncFilePath);
     if (_wstat(path, &newstamp) == 0 && difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
         // update time stamp
         memcpy((void*)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
@@ -116,7 +116,7 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
 int Synchronizer::MarkIndexWasRebuilt() {
     needsToRebuildIndex = false;
-    TempWStr path = ToWStrTemp(syncFilePath);
+    WCHAR* path = CWStrTemp(syncFilePath);
     _wstat(path, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
 }
@@ -620,7 +620,7 @@ TempStr DealPlainSync(TempStr pathSync) {
         logf("DealPlainSync: '%s' failed\n", pathSync);
         return {};
     }
-    TempStr srcZ = StrDupTemp(AsStr(src));
+    TempStr srcZ = str::DupTemp(AsStr(src));
     int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, NULL, 0);
     if (wlen != 0) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);

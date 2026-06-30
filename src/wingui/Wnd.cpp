@@ -1,10 +1,10 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 
@@ -842,8 +842,7 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     HMENU id = args.ctrlId;
     HINSTANCE inst = GetInstance();
     void* createParams = this;
-    hwnd = ::CreateWindowExW(exStyle, args.className.s, L"", style, x, y, dx, dy, parent, id, inst,
-                             createParams);
+    hwnd = ::CreateWindowExW(exStyle, args.className.s, L"", style, x, y, dx, dy, parent, id, inst, createParams);
     ReportIf(!hwnd);
     if (!hwnd) {
         return nullptr;
@@ -908,10 +907,9 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     }
     HINSTANCE inst = GetInstance();
     void* createParams = this;
-    TempWStr titleW = ToWStrTemp(args.title);
+    WCHAR* titleW = CWStrTemp(args.title);
 
-    HWND hwndTmp = ::CreateWindowExW(exStyle, className.s, titleW.s, style, x, y, dx, dy, parent, m, inst,
-                                     createParams);
+    HWND hwndTmp = ::CreateWindowExW(exStyle, className.s, titleW, style, x, y, dx, dy, parent, m, inst, createParams);
 
     ReportIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE

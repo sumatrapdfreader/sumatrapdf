@@ -1,14 +1,14 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 
 #include "AppTools.h"
 
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/StrFormat.h"
-#include "utils/ScopedWin.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/StrFormat.h"
+#include "base/ScopedWin.h"
 
 #include "wingui/UIModels.h"
 
@@ -23,7 +23,7 @@
 #include <math.h>
 
 // must be last to over-write assert()
-#include "utils/UtAssert.h"
+#include "base/UtAssert.h"
 
 #define utassert_fequal(a, b) utassert(fabs(a - b) < FLT_EPSILON);
 
@@ -33,7 +33,7 @@ static void ParseCommandLineTest() {
         ParseFlags(GetLifetimeArena(), L"SumatraPDF.exe -bench foo.pdf", i);
         utassert(2 == i.pathsToBenchmark.Size());
         utassert(str::Eq("foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(nullptr == i.pathsToBenchmark.At(1));
+        utassert(str::IsEmpty(i.pathsToBenchmark.At(1)));
     }
 
     {
@@ -46,7 +46,7 @@ static void ParseCommandLineTest() {
         utassert(str::Eq(s, "5"));
         utassert(2 == i.pathsToBenchmark.Size());
         utassert(str::Eq("foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(nullptr == i.pathsToBenchmark.At(1));
+        utassert(str::IsEmpty(i.pathsToBenchmark.At(1)));
     }
 
     {

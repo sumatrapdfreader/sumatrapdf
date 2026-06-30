@@ -6,8 +6,8 @@
 // TODO: remove this
 // #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 
-#include "utils/BaseUtil.h"
-#include "utils/Archive.h"
+#include "base/Base.h"
+#include "base/Archive.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"

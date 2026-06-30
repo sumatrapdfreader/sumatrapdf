@@ -189,7 +189,7 @@ function fetchVkIdsFromCompiler(cmdDir: string): Record<string, number> {
     return map;
 }
 
-// unsigned LEB128 of zigzag-encoded i64 (matches StrUtil.cpp VarIntEncode)
+// unsigned LEB128 of zigzag-encoded i64 (matches Str.cpp VarIntEncode)
 function varIntEncode(val: number): number[] {
     const bytes: number[] = [];
     let n = BigInt(val);

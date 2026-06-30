@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Dpi.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
-#include "utils/Log.h"
+#include "base/Base.h"
+#include "base/Dpi.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
+#include "base/Log.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -24,7 +24,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 
-#include "utils/GuessFileType.h"
+#include "base/GuessFileType.h"
 
 #include "AIChatCommon.h"
 #include "EngineAll.h"
@@ -233,9 +233,9 @@ void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
-    buttons[0].pszButtonText = ToWStrTemp(_TRA("OK"));
+    buttons[0].pszButtonText = CWStrTemp(_TRA("OK"));
     buttons[1].nButtonID = kBtnIdAIChatLearnMore;
-    buttons[1].pszButtonText = ToWStrTemp(_TRA("Learn more"));
+    buttons[1].pszButtonText = CWStrTemp(_TRA("Learn more"));
 
     TASKDIALOGCONFIG dialogConfig{};
     DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
@@ -243,9 +243,9 @@ void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = ToWStrTemp(args.windowTitle);
-    dialogConfig.pszMainInstruction = ToWStrTemp(args.mainInstruction);
-    dialogConfig.pszContent = ToWStrTemp(content);
+    dialogConfig.pszWindowTitle = CWStrTemp(args.windowTitle);
+    dialogConfig.pszMainInstruction = CWStrTemp(args.mainInstruction);
+    dialogConfig.pszContent = CWStrTemp(content);
     dialogConfig.nDefaultButton = IDOK;
     dialogConfig.dwFlags = flags;
     dialogConfig.pfCallback = AIChatNotInstalledDialogCallback;
@@ -261,7 +261,9 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchEx
 #ifdef _MSC_VER
     for (int i = 0; i < fullPathCandidates.Size(); i++) {
         if (file::Exists(fullPathCandidates.At(i))) {
-            return fullPathCandidates.At(i);
+            // copy into the temp arena: callers pass a local StrVec that is
+            // destroyed on return, so returning a view into it would dangle
+            return str::DupTemp(fullPathCandidates.At(i));
         }
     }
     WCHAR pathW[MAX_PATH];
@@ -455,8 +457,8 @@ bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunch
     si.dwFlags = STARTF_USESTDHANDLES;
 
     PROCESS_INFORMATION pi = {};
-    TempWStr cmdLineW = ToWStrTemp(cmdLine);
-    TempWStr dirW = cwd ? ToWStrTemp(cwd) : TempWStr{};
+    WCHAR* cmdLineW = CWStrTemp(cmdLine);
+    WCHAR* dirW = cwd ? CWStrTemp(cwd) : nullptr;
 
     BOOL ok = CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, cwd ? dirW : nullptr,
                              &si, &pi);

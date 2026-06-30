@@ -36,7 +36,7 @@ struct EpubDoc {
     explicit EpubDoc(IStream* stream);
     ~EpubDoc();
 
-    ByteSlice GetHtmlData() const;
+    Str GetHtmlData() const;
 
     ByteSlice* GetImageData(Str fileName, Str pagePath);
     ByteSlice GetFileData(Str relPath, Str pagePath);
@@ -108,7 +108,7 @@ struct PalmDoc {
     explicit PalmDoc(Str path);
     ~PalmDoc();
 
-    ByteSlice GetHtmlData() const;
+    Str GetHtmlData() const;
 
     TempStr GetPropertyTemp(Str name) const;
     Str GetFileName() const;
@@ -135,7 +135,7 @@ struct HtmlDoc {
     explicit HtmlDoc(Str path);
     ~HtmlDoc();
 
-    ByteSlice GetHtmlData();
+    Str GetHtmlData();
 
     ByteSlice* GetImageData(Str fileName);
     ByteSlice GetFileData(Str relPath);
@@ -159,7 +159,7 @@ struct TxtDoc {
     explicit TxtDoc(Str fileName);
     ~TxtDoc();
 
-    ByteSlice GetHtmlData() const;
+    Str GetHtmlData() const;
 
     TempStr GetPropertyTemp(Str name) const;
     Str GetFileName() const;

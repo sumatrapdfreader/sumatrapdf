@@ -5,11 +5,11 @@ extern "C" {
 #include <mupdf/fitz.h>
 }
 
-#include "utils/BaseUtil.h"
-#include "utils/WinDynCalls.h"
-#include "utils/Dpi.h"
-#include "utils/WinUtil.h"
-#include "utils/BitManip.h"
+#include "base/Base.h"
+#include "base/WinDynCalls.h"
+#include "base/Dpi.h"
+#include "base/Win.h"
+#include "base/BitManip.h"
 
 #include "wingui/UIModels.h"
 
@@ -44,7 +44,7 @@ extern "C" {
 #include "wingui/WinGui.h"
 #include "TextToSpeech.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 
@@ -311,7 +311,7 @@ static TBBUTTON TbButtonFromButtonInfo(const ToolbarButtonInfo& bi, bool noTrans
         b.fsStyle |= BTNS_AUTOSIZE;
     }
     Str s = noTranslate ? Str(bi.toolTip) : trans::GetTranslation(bi.toolTip);
-    b.iString = (INT_PTR)ToWStrTemp(s).s;
+    b.iString = (INT_PTR)CWStrTemp(s);
     return b;
 }
 
@@ -337,7 +337,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
 
         binfo.cbSize = sizeof(TBBUTTONINFO);
         binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-        binfo.pszText = ToWStrTemp(s);
+        binfo.pszText = CWStrTemp(s);
         WPARAM buttonId = (WPARAM)i;
         TbSetButtonInfoById(hwnd, buttonId, &binfo);
     }
@@ -357,7 +357,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
 
             binfo.cbSize = sizeof(TBBUTTONINFO);
             binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-            binfo.pszText = ToWStrTemp(s);
+            binfo.pszText = CWStrTemp(s);
             WPARAM buttonId = (WPARAM)(kButtonsCount + i);
             TbSetButtonInfoById(hwnd, buttonId, &binfo);
         }
@@ -384,7 +384,7 @@ static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, Str s) {
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_TEXT;
-    bi.pszText = ToWStrTemp(s);
+    bi.pszText = CWStrTemp(s);
     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
 }
 

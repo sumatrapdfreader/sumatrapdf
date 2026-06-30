@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
 #include <uiautomationcore.h>
-#include "utils/Dpi.h"
-#include "utils/WinUtil.h"
+#include "base/Dpi.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 

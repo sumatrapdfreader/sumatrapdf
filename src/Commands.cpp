@@ -1,14 +1,14 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 
 #include "Commands.h"
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "Notifications.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // @gen-start cmd-c
 // clang-format off
@@ -1291,7 +1291,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         return nullptr;
     }
 
-    Str currArg = StrDupTemp(parts.At(1));
+    Str currArg = str::DupTemp(parts.At(1));
 
     CommandArg* firstArg = nullptr;
     CommandArg* arg;

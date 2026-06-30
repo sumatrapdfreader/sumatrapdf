@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
-#include "utils/Log.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
+#include "base/Log.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
@@ -699,7 +699,7 @@ static void ShowTranslationResult(SelectionTranslateDialog* dlg, Str text, bool 
     Str label = isError ? Str(_TRA("Error:")) : Str(_TRA("Translation:"));
 
     if (!dlg->resultVisible) {
-        dlg->hwndResultLabel = CreateWindowExW(0, L"STATIC", ToWStrTemp(label), WS_CHILD | WS_VISIBLE,
+        dlg->hwndResultLabel = CreateWindowExW(0, L"STATIC", CWStrTemp(label), WS_CHILD | WS_VISIBLE,
                                                x + dlg->labelShift, y, dlg->contentDx - dlg->labelShift, labelDy, hwnd,
                                                nullptr, GetModuleHandleW(nullptr), nullptr);
         SetWindowFont(dlg->hwndResultLabel, dlg->hFont, TRUE);
@@ -897,7 +897,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
 
     TempStr title = fmt(_TRA("Translate with %s").s, BackendDisplayName(backend));
 
-    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kSelectionTranslateWinClass, ToWStrTemp(title),
+    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kSelectionTranslateWinClass, CWStrTemp(title),
                                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
                                 100, 100, hwndOwner, nullptr, GetModuleHandleW(nullptr), dlg);
     if (!hwnd) {
@@ -918,7 +918,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     int colDx = (dlg->contentDx - dlg->gap) / 2;
 
     auto createLabel = [&](Str text, int lx, int ly, int ldx) {
-        HWND h = CreateWindowExW(0, L"STATIC", ToWStrTemp(text.s), WS_CHILD | WS_VISIBLE, lx, ly, ldx, labelDy, hwnd,
+        HWND h = CreateWindowExW(0, L"STATIC", CWStrTemp(text.s), WS_CHILD | WS_VISIBLE, lx, ly, ldx, labelDy, hwnd,
                                  nullptr, GetModuleHandleW(nullptr), nullptr);
         SetWindowFont(h, dlg->hFont, TRUE);
         return h;
@@ -928,7 +928,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     y += labelDy + dlg->gap;
     int srcTextDy = DpiScale(hwnd, 140);
     dlg->hwndSrcText =
-        CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", ToWStrTemp(selText),
+        CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", CWStrTemp(selText),
                         WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL, x, y, dlg->contentDx,
                         srcTextDy, hwnd, (HMENU)(INT_PTR)kIdSrcText, GetModuleHandleW(nullptr), nullptr);
     SetWindowFont(dlg->hwndSrcText, dlg->hFont, TRUE);
@@ -969,12 +969,12 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     y += comboRowDy + dlg->gap;
     dlg->yAfterLangs = y;
 
-    dlg->hwndTranslateBtn = CreateWindowExW(0, L"BUTTON", ToWStrTemp(_TRA("Translate")),
+    dlg->hwndTranslateBtn = CreateWindowExW(0, L"BUTTON", CWStrTemp(_TRA("Translate")),
                                             WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 0, y, dlg->btnW, dlg->btnDy, hwnd,
                                             (HMENU)(INT_PTR)kIdTranslateBtn, GetModuleHandleW(nullptr), nullptr);
     SetWindowFont(dlg->hwndTranslateBtn, dlg->hFont, TRUE);
     dlg->hwndCloseBtn =
-        CreateWindowExW(0, L"BUTTON", ToWStrTemp(_TRA("Close")), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, y, dlg->btnW,
+        CreateWindowExW(0, L"BUTTON", CWStrTemp(_TRA("Close")), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 0, y, dlg->btnW,
                         dlg->btnDy, hwnd, (HMENU)(INT_PTR)kIdCloseBtn, GetModuleHandleW(nullptr), nullptr);
     SetWindowFont(dlg->hwndCloseBtn, dlg->hFont, TRUE);
     LayoutButtons(dlg, y);

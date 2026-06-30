@@ -1,18 +1,18 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Archive.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/Pixmap.h"
-#include "utils/GdiPlusUtil.h"
+#include "base/Base.h"
+#include "base/Archive.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/Pixmap.h"
+#include "base/GdiPlus.h"
 #include "GumboHelpers.h"
-#include "utils/JsonParser.h"
-#include "utils/WinUtil.h"
-#include "utils/Timer.h"
-#include "utils/DirIter.h"
+#include "base/JsonParser.h"
+#include "base/Win.h"
+#include "base/Timer.h"
+#include "base/DirIter.h"
 
 #include "wingui/UIModels.h"
 
@@ -25,7 +25,7 @@ extern "C" {
 #include "DocController.h"
 #include "EngineBase.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
@@ -491,7 +491,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
         sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
         Gdiplus::RectF layoutRect(0, 0, (float)screen.dx, (float)screen.dy);
         TempStr msg = fmt("Failed to load page %d", pageNo);
-        TempWStr msgW = ToWStrTemp(msg);
+        WCHAR* msgW = CWStrTemp(msg);
         g.DrawString(msgW, -1, &font, layoutRect, &sf, &textBrush);
         DropPage(page, false);
         DeleteDC(hDC);

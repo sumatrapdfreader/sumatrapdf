@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
+#include "base/Base.h"
+#include "base/File.h"
 
 #include "Settings.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 bool IsSingle(DisplayMode mode) {
     return DisplayMode::SinglePage == mode || DisplayMode::Continuous == mode;

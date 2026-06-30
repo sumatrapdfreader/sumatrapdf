@@ -1,10 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/Win.h"
 
 #include "FilterBase.h"
 #include "RegistrySearchFilter.h"
@@ -16,7 +16,7 @@
 #include "EpubFilter.h"
 #endif
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 long g_lRefCount = 0;
 

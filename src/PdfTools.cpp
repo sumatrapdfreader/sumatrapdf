@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Dpi.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Log.h"
+#include "base/Base.h"
+#include "base/Dpi.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/Log.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -381,8 +381,7 @@ void PdfExtractTextDialog::DoExtract() {
     bool isPdf = tab && CouldBePDFDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
-        char* argv[] = {(char*)"convert", (char*)"-o", CStrTemp(destPath), CStrTemp(srcPath),
-                        CStrTemp(pages)};
+        char* argv[] = {(char*)"convert", (char*)"-o", CStrTemp(destPath), CStrTemp(srcPath), CStrTemp(pages)};
         int argc = 5;
         fz_set_optind(0);
         ok = muconvert_main(argc, argv) == 0;
@@ -611,8 +610,8 @@ void PdfCompressDialog::DoCompress() {
     logf("PdfCompressDoIt: compressing '%s' to '%s'\n", srcPath, destPath);
 
     // equivalent of: clean -gggg -e 100 -f -i -t -Z input output
-    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e",       (char*)"100",      (char*)"-f", (char*)"-i",
-                    (char*)"-t",    (char*)"-Z",    CStrTemp(srcPath), CStrTemp(destPath)};
+    char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e", (char*)"100",      (char*)"-f",
+                    (char*)"-i",    (char*)"-t",    (char*)"-Z", CStrTemp(srcPath), CStrTemp(destPath)};
     int argc = 10;
 
     fz_set_optind(0);

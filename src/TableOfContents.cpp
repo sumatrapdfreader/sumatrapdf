@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/BitManip.h"
-#include "utils/FileUtil.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/BitManip.h"
+#include "base/File.h"
+#include "base/UITask.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -902,7 +902,7 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     HDC hdc = tvcd->nmcd.hdc;
 
-    TempWStr titleW = ToWStrTemp(title);
+    WCHAR* titleW = CWStrTemp(title);
 
     // compute pixel rectangles for each highlighted range
     RECT highlightRects[16];

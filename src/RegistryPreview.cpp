@@ -1,14 +1,14 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/CryptoUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/File.h"
+#include "base/Crypto.h"
 
 #include "RegistryPreview.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 #define kThumbnailProviderClsid "{e357fccd-a995-4576-b01f-234630154e96}"
 #define kExtractImageClsid "{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}"
@@ -192,7 +192,7 @@ TempStr GetPdfPreviewLogDirTemp() {
         return {};
     }
     u8 sha1[20]{};
-    CalcSHA1Digest(d.data(), d.Size(), sha1);
+    CalcSHA1Digest(d.data(), len(d), sha1);
     d.Free();
     char id[7];
     for (int i = 0; i < 3; i++) { // first 6 hex chars (3 bytes), matches GetBuildDirNameTemp

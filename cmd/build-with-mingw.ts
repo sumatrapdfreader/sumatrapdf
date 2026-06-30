@@ -1471,7 +1471,7 @@ const mupdf: LibDef = {
 
 // utils static library (mixed debug/release)
 const utils: LibDef = {
-  name: "utils",
+  name: "base",
   alwaysOptimize: false,
   defines: ["LIBHEIF_STATIC_BUILD", "LIBARCHIVE_STATIC"],
   includes: [
@@ -1487,34 +1487,36 @@ const utils: LibDef = {
   ],
   files: [
     {
-      dir: "src/utils",
+      dir: "src/base",
       patterns: [
         "AvifReader.*",
         "ApiHook.*",
         "Archive.*",
-        "BaseUtil.*",
+        "Arena.*",
+        "Base.*",
         "BitReader.*",
         "ByteOrderDecoder.*",
         "ByteReader.*",
         "ByteWriter.*",
         "CmdLineArgsIter.*",
-        "ColorUtil.*",
-        "CryptoUtil.*",
+        "Color.*",
+        "Crypto.*",
         "CssParser.*",
         "DbgHelpDyn.*",
         "Dict.*",
         "DirIter.*",
+        "DirScan.*",
         "Dpi.*",
-        "GeomUtil.*",
+        "Geom.*",
         "GuessFileType.*",
-        "FileUtil.*",
+        "File.*",
         "FileWatcher.*",
         "FzImgReader.*",
-        "GdiPlusUtil.*",
+        "GdiPlus.*",
         "HtmlParserLookup.*",
         "HtmlPullParser.*",
         "HtmlPrettyPrint.*",
-        "HttpUtil.*",
+        "Http.*",
         "JxlReader.*",
         "JsonParser.*",
         "Log.*",
@@ -1522,32 +1524,28 @@ const utils: LibDef = {
         "RegistryPaths.*",
         "SettingsUtil.*",
         "SquareTreeParser.*",
-        "StrconvUtil.*",
+        "Strconv.*",
         "StrFormat.*",
-        "StrUtil.*",
+        "Str.*",
         "StrVec.*",
         "StrQueue.*",
         "TempAllocator.*",
-        "ThreadUtil.*",
+        "Thread.*",
         "TgaReader.*",
         "TrivialHtmlParser.*",
         "TxtParser.*",
         "UITask.*",
         "WebpReader.*",
         "WinDynCalls.*",
-        "WinUtil.*",
-        "ZipUtil.*",
+        "Win.*",
+        "Zip.*",
       ],
-    },
-    {
-      dir: "src/common",
-      patterns: ["arena.cpp", "base.cpp", "dir_scan.cpp", "file_util.cpp", "str_util.cpp", "win_util.cpp"],
     },
   ],
 };
 
 // Debug-only extra files for utils
-const utilsDebugExtra: FileGroup[] = [{ dir: "src/utils", patterns: ["windrawlib.*"] }];
+const utilsDebugExtra: FileGroup[] = [{ dir: "src/base", patterns: ["windrawlib.*"] }];
 
 // SumatraPDF main executable sources (mixed debug/release)
 // Combines: darkmodelib_files, synctex_files, mui_files, wingui_files,
@@ -1702,8 +1700,8 @@ const sumatraDebugExtra: FileGroup[] = [
     dir: "src/testcode",
     patterns: ["TestApp.cpp", "TestTab.cpp", "TestLayout.cpp"],
   },
-  // note: src/utils/tests/*.cpp omitted for mingw (not essential, may pull extra headers)
-  { dir: "src/utils", patterns: ["UtAssert.*"] },
+  // note: src/base/tests/*.cpp omitted for mingw (not essential, may pull extra headers)
+  { dir: "src/base", patterns: ["UtAssert.*"] },
 ];
 
 // ── Font files to embed (from premake fonts() function) ─────────────────────
@@ -1963,7 +1961,7 @@ namespace _com_util {
   const ttsStubSrc = join(outDir, "obj", "_tts_stub.cpp");
   const ttsStubObj = join(outDir, "obj", "_tts_stub.o");
   await writeFile(ttsStubSrc, `
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include "TextToSpeech.h"
 
 bool TtsSpeakUtf8(const char*) { return false; }
@@ -2142,7 +2140,7 @@ async function build(isRelease: boolean, clean: boolean, outDir: string): Promis
   for (const lib of ALL_LIBS) {
     // For utils, add debug extra files
     const libCopy = { ...lib };
-    if (lib.name === "utils" && !isRelease) {
+    if (lib.name === "base" && !isRelease) {
       libCopy.files = [...lib.files, ...utilsDebugExtra];
     }
     const result = await buildLibrary(libCopy, outDir, isRelease);

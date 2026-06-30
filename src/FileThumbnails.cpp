@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/CryptoUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Crypto.h"
+#include "base/File.h"
+#include "base/GdiPlus.h"
+#include "base/Win.h"
 
 #include "Settings.h"
 #include "FzImgReader.h"
@@ -13,7 +13,7 @@
 #include "AppTools.h"
 #include "FileThumbnails.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 TempStr GetThumbnailPathTemp(Str filePath) {
     // create a fingerprint of a (normalized) path for the file name
@@ -132,7 +132,7 @@ void SaveThumbnail(FileState* fs) {
     }
     Gdiplus::Bitmap bmp(thumbnail->GetBitmap(), nullptr);
     CLSID tmpClsid = GetGdiPlusEncoderClsid(L"image/png");
-    TempWStr pathW = ToWStrTemp(thumbnailPath);
+    WCHAR* pathW = CWStrTemp(thumbnailPath);
     bmp.Save(pathW, &tmpClsid, nullptr);
 }
 

@@ -4,7 +4,7 @@
 // Pure-function region detectors used by RefHover to decide what slice of the
 // destination page to render into the hover popup. Kept engine-independent so
 // the heuristics can be unit-tested with synthetic glyph arrays (see
-// src/utils/tests/RefHover_ut.cpp).
+// src/base/tests/RefHover_ut.cpp).
 //
 // All three functions take:
 //   text     — per-glyph WCHAR array (engine->GetTextForPage's first out-ptr)

@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/BitReader.h"
-#include "utils/ByteOrderDecoder.h"
-#include "utils/GuessFileType.h"
-#include "utils/GdiPlusUtil.h"
+#include "base/Base.h"
+#include "base/BitReader.h"
+#include "base/ByteOrderDecoder.h"
+#include "base/GuessFileType.h"
+#include "base/GdiPlus.h"
 
 #include "wingui/UIModels.h"
 
@@ -17,7 +17,7 @@
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 constexpr size_t kInvalidSize = (size_t)-1;
 
@@ -717,7 +717,7 @@ bool MobiDoc::LoadImage(size_t imageNo) {
     size_t imageRec = imageFirstRec + imageNo;
 
     auto rec = pdbReader->GetRecord(imageRec);
-    if (rec.Size() < 4) {
+    if (len(rec) < 4) {
         return false;
     }
     if (IsEofRecord(rec)) {
@@ -894,9 +894,9 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 }
 
 // don't free the result
-ByteSlice MobiDoc::GetHtmlData() const {
+Str MobiDoc::GetHtmlData() const {
     if (doc) {
-        return doc->AsByteSlice();
+        return AsStr(doc->AsByteSlice());
     }
     return {};
 }

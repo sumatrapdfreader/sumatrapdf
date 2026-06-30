@@ -123,9 +123,7 @@ struct HtmlPage {
 // just to pack args to HtmlFormatter
 struct HtmlFormatterArgs {
     HtmlFormatterArgs() = default;
-    ~HtmlFormatterArgs() {
-        wstr::Free(fontName);
-    }
+    ~HtmlFormatterArgs() { wstr::Free(fontName); }
 
     float pageDx = 0;
     float pageDy = 0;
@@ -147,7 +145,7 @@ struct HtmlFormatterArgs {
 
     mui::TextRenderMethod textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
-    ByteSlice htmlStr;
+    Str htmlStr;
 
     // we start parsing from htmlStr + reparseIdx
     int reparseIdx = 0;

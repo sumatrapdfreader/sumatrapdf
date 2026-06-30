@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/Dpi.h"
-#include "utils/UITask.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/ScopedWin.h"
+#include "base/Dpi.h"
+#include "base/UITask.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -19,7 +19,7 @@
 #include "TipText.h"
 #include "Theme.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 using Gdiplus::Graphics;
 using Gdiplus::Pen;

@@ -43,9 +43,9 @@
   those pages to a bitmap and display those bitmaps.
 */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Timer.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/Timer.h"
 
 #include "wingui/UIModels.h"
 
@@ -62,11 +62,11 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "RenderCache.h"
-#include "utils/UITask.h"
+#include "base/UITask.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // if true, we pre-render the pages right before and after the visible pages
 bool gPredictiveRender = true;

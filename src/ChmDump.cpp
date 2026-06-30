@@ -1,14 +1,14 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include <chm_lib.h>
 #include <wincrypt.h>
 
-#include "utils/CryptoUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/WinUtil.h"
+#include "base/Crypto.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/Win.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"

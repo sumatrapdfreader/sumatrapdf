@@ -21,7 +21,7 @@
 * William Blum (william.blum at gmail.com, https://william.famille-blum.org/)
 
 Most code under src is licensed as GPL v3 (see COPYING) with the main
-exception of code in src/utils and src/mui which has a BSD license
+exception of code in src/base and src/mui which has a BSD license
 (see COPYING.BSD). Due to mupdf/COPYING, section 13 of the AGPL v3
 applies to SumatraPDF as well.
 

@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
-#include "utils/ThreadUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/UITask.h"
+#include "base/Win.h"
+#include "base/Thread.h"
 
 #include "wingui/UIModels.h"
 
@@ -35,7 +35,7 @@
 #include "Translations.h"
 #include "Version.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;

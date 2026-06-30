@@ -1,9 +1,9 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -32,8 +32,7 @@ static void SetCurrentUrl(SimpleBrowserWindow* w, Str url) {
     if (!w || !w->hwndUrl) {
         return;
     }
-    TempWStr urlW = ToWStrTemp(url);
-    SetWindowTextW(w->hwndUrl, urlW ? urlW.s : L"");
+    HwndSetText(w->hwndUrl, url);
 }
 
 static void UpdateNavButtons(SimpleBrowserWindow* w) {

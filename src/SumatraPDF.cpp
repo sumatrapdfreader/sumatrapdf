@@ -1,23 +1,23 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/StrFormat.h"
-#include "utils/WinDynCalls.h"
-#include "utils/DirIter.h"
-#include "utils/Dpi.h"
-#include "utils/FileUtil.h"
-#include "utils/FileWatcher.h"
-#include "utils/GuessFileType.h"
-#include "utils/SquareTreeParser.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/Archive.h"
-#include "utils/Timer.h"
-#include "utils/LzmaSimpleArchive.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/StrFormat.h"
+#include "base/WinDynCalls.h"
+#include "base/DirIter.h"
+#include "base/Dpi.h"
+#include "base/File.h"
+#include "base/FileWatcher.h"
+#include "base/GuessFileType.h"
+#include "base/SquareTreeParser.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
+#include "base/Win.h"
+#include "base/GdiPlus.h"
+#include "base/Archive.h"
+#include "base/Timer.h"
+#include "base/LzmaSimpleArchive.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -102,7 +102,7 @@
 #include "ReadAloudHighlight.h"
 #include "ReadAloudPlaybackBar.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 using Gdiplus::Color;
 using Gdiplus::Graphics;
@@ -371,7 +371,7 @@ bool SumatraLaunchBrowser(Str url) {
         if (!parent || !url || (urlLen > 4096)) {
             return false;
         }
-        TempStr urlZ = StrDupTemp(url);
+        TempStr urlZ = str::DupTemp(url);
         COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlZ.len + 1, urlZ.s};
         return SendMessageW(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
@@ -1417,7 +1417,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     TempStr docTitle = "";
     if (tab->ctrl) {
         TempStr title = tab->ctrl->GetPropertyTemp(kPropTitle);
-        if (title != nullptr) {
+        if (!str::IsEmpty(title)) {
             str::NormalizeWSInPlace(title);
             docTitle = str::DupTemp(title);
             if (!str::IsEmpty(title)) {
@@ -2989,7 +2989,7 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
             yPos.len--;
         }
     }
-    return strfmt::FormatTemp("%s x %s %s", xPos, yPos, unitName);
+    return fmt("%s x %s %s", xPos, yPos, unitName);
 }
 
 static auto cursorPosUnit = MeasurementUnit::pt;
@@ -3004,9 +3004,9 @@ void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd
         selStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
     }
 
-    TempStr posInfo = strfmt::FormatTemp("%s %s", _TRA("Cursor position:"), posStr);
+    TempStr posInfo = fmt("%s %s", _TRA("Cursor position:"), posStr);
     if (selStr) {
-        posInfo = strfmt::FormatTemp("%s - %s %s", posInfo, _TRA("Selection:"), selStr);
+        posInfo = fmt("%s - %s %s", posInfo, _TRA("Selection:"), selStr);
     }
     NotificationUpdateMessage(wnd, posInfo);
 }
@@ -3364,7 +3364,7 @@ enum class SaveChoice {
 SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
     TempStr fileName = path::GetBaseNameTemp(filePath);
     TempStr mainInstrA = fmt(_TRA("Unsaved changes in '%s'").s, fileName);
-    TempWStr mainInstr = ToWStrTemp(mainInstrA);
+    WCHAR* mainInstr = CWStrTemp(mainInstrA);
     auto content = _TRA("Save changes?");
 
     constexpr int kBtnIdDiscard = 100;
@@ -3376,16 +3376,16 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
 
     buttons[0].nButtonID = kBtnIdSaveToExisting;
     auto s = _TRA("&Save to existing PDF");
-    buttons[0].pszButtonText = ToWStrTemp(s);
+    buttons[0].pszButtonText = CWStrTemp(s);
     buttons[1].nButtonID = kBtnIdSaveToNew;
     s = _TRA("Save to &new PDF");
-    buttons[1].pszButtonText = ToWStrTemp(s);
+    buttons[1].pszButtonText = CWStrTemp(s);
     buttons[2].nButtonID = kBtnIdDiscard;
     s = _TRA("&Discard changes");
-    buttons[2].pszButtonText = ToWStrTemp(s);
+    buttons[2].pszButtonText = CWStrTemp(s);
     buttons[3].nButtonID = IDCANCEL;
     s = _TRA("&Cancel");
-    buttons[3].pszButtonText = ToWStrTemp(s);
+    buttons[3].pszButtonText = CWStrTemp(s);
 
     DWORD flags =
         TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
@@ -3394,9 +3394,9 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     s = _TRA("Unsaved changes");
-    dialogConfig.pszWindowTitle = ToWStrTemp(s);
+    dialogConfig.pszWindowTitle = CWStrTemp(s);
     dialogConfig.pszMainInstruction = mainInstr;
-    dialogConfig.pszContent = ToWStrTemp(content);
+    dialogConfig.pszContent = CWStrTemp(content);
     dialogConfig.nDefaultButton = IDCANCEL;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;
@@ -3864,7 +3864,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     if (len(defExt) > 0 && defExt.s[0] == '.') {
         defExt = Str(defExt.s + 1, defExt.len - 1);
     }
-    ofn.lpstrDefExt = ToWStrTemp(defExt);
+    ofn.lpstrDefExt = CWStrTemp(defExt);
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     // note: explicitly not setting lpstrInitialDir so that the OS
     // picks a reasonable default (in particular, we don't want this
@@ -4057,7 +4057,7 @@ static void RenameCurrentFile(MainWindow* win) {
     ofn.nFilterIndex = 1;
     // note: the other two dialogs are named "Open" and "Save As"
     auto s = _TRA("Rename To");
-    ofn.lpstrTitle = ToWStrTemp(s);
+    ofn.lpstrTitle = CWStrTemp(s);
     ofn.lpstrInitialDir = initDir.s;
     ofn.lpstrDefExt = defExtW.s + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
@@ -6325,7 +6325,7 @@ TempStr GetCrashInfoDirTemp() {
 
 void ShowLogFileSmart() {
     TempStr path = gLogFilePath;
-    if (path == nullptr) {
+    if (str::IsEmpty(path)) {
         path = GetLogFilePathTemp();
     }
     WriteCurrentLogToFile(path);
@@ -6987,7 +6987,7 @@ static void PasteImageFromClipboard(MainWindow* win) {
 
     // save as PNG
     CLSID pngClsid = GetGdiPlusEncoderClsid(L"image/png");
-    TempWStr destW = ToWStrTemp(destPath);
+    WCHAR* destW = CWStrTemp(destPath);
     Gdiplus::Status status = gdipBmp.Save(destW, &pngClsid, nullptr);
     if (status != Gdiplus::Ok) {
         return;
@@ -7129,7 +7129,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdExec: {
             auto filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
             auto cmdLine = GetCommandStringArg(cmd, kCmdArgExe, nullptr);
-            if (cmdLine == nullptr) {
+            if (str::IsEmpty(cmdLine)) {
                 return 0;
             }
             RunWithExe(tab, cmdLine, filter);
@@ -10128,7 +10128,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
 
         TempStr localeName = TtsLangIdToLocaleNameTemp(voice.lang);
         TempStr label = fmt("%s - %s", voice.name, localeName);
-        AppendMenuW(voiceMenu, flags, cmd, ToWStrTemp(label));
+        AppendMenuW(voiceMenu, flags, cmd, CWStrTemp(label));
 
         lastLang = lang;
         cmd++;
@@ -10146,27 +10146,27 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
         currTab && win->showSelection && currTab->selectionOnPage && currTab->selectionOnPage->size() > 0;
 
     if (isSpeaking) {
-        AppendMenuW(menu, MF_STRING, CmdTtsMenuPauseReading, ToWStrTemp(_TRA("Pause Reading")));
-        AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, ToWStrTemp(_TRA("Stop Reading")));
+        AppendMenuW(menu, MF_STRING, CmdTtsMenuPauseReading, CWStrTemp(_TRA("Pause Reading")));
+        AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, CWStrTemp(_TRA("Stop Reading")));
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     } else if (canContinue) {
-        AppendMenuW(menu, MF_STRING, CmdTtsMenuContinueReading, ToWStrTemp(_TRA("Continue Reading")));
-        AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, ToWStrTemp(_TRA("Stop Reading")));
+        AppendMenuW(menu, MF_STRING, CmdTtsMenuContinueReading, CWStrTemp(_TRA("Continue Reading")));
+        AppendMenuW(menu, MF_STRING, CmdTtsMenuStopReading, CWStrTemp(_TRA("Stop Reading")));
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     }
-    AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, ToWStrTemp(_TRA("Start Reading From Top")));
+    AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, CWStrTemp(_TRA("Start Reading From Top")));
     if (includeCursorItem) {
         AppendMenuW(menu, canReadFromCursor ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadFromCursor,
-                    ToWStrTemp(_TRA("Start Reading From Cursor Position")));
+                    CWStrTemp(_TRA("Start Reading From Cursor Position")));
     }
     AppendMenuW(menu, hasSelection ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadSelection,
-                ToWStrTemp(_TRA("Start Reading Selection")));
+                CWStrTemp(_TRA("Start Reading Selection")));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
 
     HMENU voiceMenu = CreatePopupMenu();
     if (voiceMenu) {
         BuildReadAloudVoiceMenuItems(voiceMenu);
-        AppendMenuW(menu, MF_POPUP | MF_STRING, (UINT_PTR)voiceMenu, ToWStrTemp(_TRA("Voice")));
+        AppendMenuW(menu, MF_POPUP | MF_STRING, (UINT_PTR)voiceMenu, CWStrTemp(_TRA("Voice")));
     }
 }
 

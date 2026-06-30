@@ -5,13 +5,13 @@
    executable and related makefile additions for each test, we have one test
    driver which dispatches desired test based on cmd-line arguments. */
 
-#include "utils/BaseUtil.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
+#include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
+#include "base/File.h"
+#include "base/GdiPlus.h"
 #include "mui/Mui.h"
-#include "utils/WinUtil.h"
-#include "utils/ZipUtil.h"
+#include "base/Win.h"
+#include "base/Zip.h"
 
 #include "wingui/UIModels.h"
 

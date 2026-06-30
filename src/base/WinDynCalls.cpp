@@ -1,0 +1,242 @@
+/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+License: Simplified BSD (see COPYING.BSD) */
+
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Win.h"
+#include "base/WinDynCalls.h"
+
+#define API_DECLARATION(name) Sig_##name Dyn##name = nullptr;
+
+KERNEL32_API_LIST(API_DECLARATION)
+NTDLL_API_LIST(API_DECLARATION)
+UXTHEME_API_LIST(API_DECLARATION)
+NORMALIZ_API_LIST(API_DECLARATION)
+USER32_API_LIST(API_DECLARATION)
+DWMAPI_API_LIST(API_DECLARATION)
+DBGHELP_API_LIST(API_DECLARATION)
+
+#undef API_DECLARATION
+
+// manual definitions for functions not in API lists
+Sig_GetProcessInformation DynGetProcessInformation = nullptr;
+Sig_SetProcessMitigationPolicy DynSetProcessMitigationPolicy = nullptr;
+Sig_GetDpiForWindow DynGetDpiForWindow = nullptr;
+Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext = nullptr;
+Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext = nullptr;
+Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext = nullptr;
+Sig_GetDpiForMonitor DynGetDpiForMonitor = nullptr;
+
+#define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
+
+// Loads a DLL explicitly from the system's library collection
+static HMODULE SafeLoadLibrary(Str dllName) {
+    WCHAR dllPath[MAX_PATH];
+    uint res = GetSystemDirectoryW(dllPath, dimof(dllPath));
+    if (!res || res >= dimof(dllPath)) {
+        return nullptr;
+    }
+    auto dllNameW = ToWStrTemp(dllName);
+    BOOL ok = PathAppendW(dllPath, dllNameW);
+    if (!ok) {
+        return nullptr;
+    }
+    return LoadLibraryW(dllPath);
+}
+
+void InitDynCalls() {
+    HMODULE h = SafeLoadLibrary("kernel32.dll");
+    ReportIf(!h);
+    KERNEL32_API_LIST(API_LOAD);
+    DynGetProcessInformation = (Sig_GetProcessInformation)GetProcAddress(h, "GetProcessInformation");
+    DynSetProcessMitigationPolicy = (Sig_SetProcessMitigationPolicy)GetProcAddress(h, "SetProcessMitigationPolicy");
+
+    h = SafeLoadLibrary("ntdll.dll");
+    ReportIf(!h);
+    NTDLL_API_LIST(API_LOAD);
+
+    h = SafeLoadLibrary("user32.dll");
+    ReportIf(!h);
+    USER32_API_LIST(API_LOAD);
+    DynGetDpiForWindow = (Sig_GetDpiForWindow)GetProcAddress(h, "GetDpiForWindow");
+    DynGetThreadDpiAwarenessContext =
+        (Sig_GetThreadDpiAwarenessContext)GetProcAddress(h, "GetThreadDpiAwarenessContext");
+    DynGetAwarenessFromDpiAwarenessContext =
+        (Sig_GetAwarenessFromDpiAwarenessContext)GetProcAddress(h, "GetAwarenessFromDpiAwarenessContext");
+    DynSetThreadDpiAwarenessContext =
+        (Sig_SetThreadDpiAwarenessContext)GetProcAddress(h, "SetThreadDpiAwarenessContext");
+
+    h = SafeLoadLibrary("shcore.dll");
+    if (h) {
+        DynGetDpiForMonitor = (Sig_GetDpiForMonitor)GetProcAddress(h, "GetDpiForMonitor");
+    }
+
+    h = SafeLoadLibrary("uxtheme.dll");
+    if (h) {
+        UXTHEME_API_LIST(API_LOAD);
+    }
+
+    h = SafeLoadLibrary("dwmapi.dll");
+    if (h) {
+        DWMAPI_API_LIST(API_LOAD);
+    }
+
+    h = SafeLoadLibrary("normaliz.dll");
+    if (h) {
+        NORMALIZ_API_LIST(API_LOAD);
+    }
+
+#if 0
+    WCHAR *dbghelpPath = L"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll";
+    h = LoadLibrary(dbghelpPath);
+#else
+    h = SafeLoadLibrary("dbghelp.dll");
+#endif
+    if (h) {
+        DBGHELP_API_LIST(API_LOAD)
+    }
+}
+
+#undef API_LOAD
+
+namespace touch {
+
+bool SupportsGestures() {
+    return DynGetGestureInfo && DynCloseGestureInfoHandle;
+}
+
+BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo) {
+    if (!DynGetGestureInfo) {
+        return FALSE;
+    }
+    return DynGetGestureInfo(hGestureInfo, pGestureInfo);
+}
+
+BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo) {
+    if (!DynCloseGestureInfoHandle) {
+        return FALSE;
+    }
+    return DynCloseGestureInfoHandle(hGestureInfo);
+}
+
+BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize) {
+    if (!DynSetGestureConfig) {
+        return FALSE;
+    }
+    return DynSetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize);
+}
+} // namespace touch
+
+namespace theme {
+
+bool IsAppThemed() {
+    return DynIsAppThemed && DynIsAppThemed();
+}
+
+HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList) {
+    if (DynOpenThemeData) {
+        return DynOpenThemeData(hwnd, pszClassList);
+    }
+    return nullptr;
+}
+
+HRESULT CloseThemeData(HTHEME hTheme) {
+    if (DynCloseThemeData) {
+        return DynCloseThemeData(hTheme);
+    }
+    return E_NOTIMPL;
+}
+
+HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect) {
+    if (DynDrawThemeBackground) {
+        return DynDrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
+    }
+    return E_NOTIMPL;
+}
+
+BOOL IsThemeActive() {
+    if (DynIsThemeActive) {
+        return DynIsThemeActive();
+    }
+    return FALSE;
+}
+
+BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId) {
+    if (DynIsThemeBackgroundPartiallyTransparent) {
+        return DynIsThemeBackgroundPartiallyTransparent(hTheme, iPartId, iStateId);
+    }
+    return FALSE;
+}
+
+HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF* pColor) {
+    if (DynGetThemeColor) {
+        return DynGetThemeColor(hTheme, iPartId, iStateId, iPropId, pColor);
+    }
+    return E_NOTIMPL;
+}
+}; // namespace theme
+
+namespace dwm {
+
+HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS* pMarInset) {
+    if (!DynDwmExtendFrameIntoClientArea) {
+        return E_NOTIMPL;
+    }
+    return DynDwmExtendFrameIntoClientArea(hwnd, pMarInset);
+}
+
+HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute) {
+    if (!DynDwmGetWindowAttribute) {
+        return E_NOTIMPL;
+    }
+    return DynDwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
+}
+
+HRESULT SetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute) {
+    if (!DynDwmSetWindowAttribute) {
+        return E_NOTIMPL;
+    }
+    return DynDwmSetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
+}
+
+void SetWindowBorderColor(HWND hwnd, COLORREF color) {
+    SetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &color, sizeof(color));
+}
+
+void SetWindowRoundedCorners(HWND hwnd, bool rounded) {
+    auto cornerPref = rounded ? DWMWCP_ROUND : DWMWCP_DONOTROUND;
+    SetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
+    COLORREF borderColor = rounded ? DWMWA_COLOR_DEFAULT : DWMWA_COLOR_NONE;
+    SetWindowBorderColor(hwnd, borderColor);
+}
+
+}; // namespace dwm
+
+static const char* dllsToPreload =
+    "gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0";
+
+// try to mitigate dll hijacking by pre-loading all the dlls that we delay load or might
+// be loaded indirectly
+void NoDllHijacking() {
+    for (int off = 0; SeqStrAt(dllsToPreload, off);) {
+        SafeLoadLibrary(SeqStrAt(dllsToPreload, off));
+        if (!SeqStrAdvance(dllsToPreload, off)) {
+            break;
+        }
+    }
+}
+
+// https://github.com/videolan/vlc/blob/8663561d3f71595ebf116f17279a495b67cac713/bin/winvlc.c#L84
+// https://msdn.microsoft.com/en-us/library/windows/desktop/hh769088(v=vs.85).aspx
+// Note: dlls we explicitly link to (like version.dll) get loaded before main is called
+// so this only works for explicit LoadLibrary calls or delay loaded libraries
+void PrioritizeSystemDirectoriesForDllLoad() {
+    if (!DynSetProcessMitigationPolicy) {
+        return;
+    }
+    // Only supported since Win 10
+    PROCESS_MITIGATION_IMAGE_LOAD_POLICY m{};
+    m.PreferSystem32Images = 1;
+    DynSetProcessMitigationPolicy(ProcessImageLoadPolicy, &m, sizeof(m));
+    DbgOutLastError();
+}

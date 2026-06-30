@@ -3,12 +3,12 @@
 
 #if defined(DEBUG)
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include "TipText.h"
 #include "Commands.h"
 
 // must be last to over-write assert()
-#include "utils/UtAssert.h"
+#include "base/UtAssert.h"
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
     ParsedTip tip;

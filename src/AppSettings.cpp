@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/FileWatcher.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
-#include "utils/Timer.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/FileWatcher.h"
+#include "base/UITask.h"
+#include "base/Win.h"
+#include "base/Timer.h"
 
 #include "wingui/UIModels.h"
 
@@ -31,7 +31,7 @@
 #include "Theme.h"
 #include "TextToSpeech.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 #include <Notifications.h>
 
 // workaround for OnMenuExit
@@ -652,7 +652,7 @@ static void ReloadSettings() {
         return;
     }
 
-    TempStr uiLanguage = StrDupTemp(gGlobalPrefs->uiLanguage);
+    TempStr uiLanguage = str::DupTemp(gGlobalPrefs->uiLanguage);
     bool showToolbar = gGlobalPrefs->showToolbar;
 
     gFileHistory.UpdateStatesSource(nullptr);

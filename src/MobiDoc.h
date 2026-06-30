@@ -42,7 +42,7 @@ struct MobiDoc {
 
     ~MobiDoc();
 
-    ByteSlice GetHtmlData() const;
+    Str GetHtmlData() const;
     ByteSlice* GetCoverImage();
     ByteSlice* GetImage(size_t imgRecIndex) const;
     Str GetFileName() const { return fileName; }

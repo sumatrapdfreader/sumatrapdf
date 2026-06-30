@@ -5,9 +5,9 @@
 // render, region detection, canvas wiring, and plain-text lookup live in
 // sibling RefHover*.cpp files.
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 

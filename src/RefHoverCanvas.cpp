@@ -4,8 +4,8 @@
 // Canvas integration for citation hover: keeps RefHover orchestration out of
 // Canvas.cpp so the WM handler stays wiring-only.
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 

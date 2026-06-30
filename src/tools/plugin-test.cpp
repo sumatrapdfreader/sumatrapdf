@@ -3,10 +3,10 @@
 
 // this is a minimal example for how to use SumatraPDF in plugin mode
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/FileUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/CmdLineArgsIter.h"
+#include "base/File.h"
 
 #define PLUGIN_TEST_NAMEA "SumatraPDF Plugin Test"
 #define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
@@ -31,7 +31,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         if (data->fileOriginUrl) {
             cmdLine = fmt("-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, path);
         }
-        ShellExecute(hwnd, L"open", ToWStrTemp(data->sumatraPath), ToWStrTemp(cmdLine), nullptr, SW_SHOW);
+        ShellExecute(hwnd, L"open", CWStrTemp(data->sumatraPath), CWStrTemp(cmdLine), nullptr, SW_SHOW);
     } else if (WM_SIZE == msg) {
         // resize the SumatraPDF window
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
@@ -47,7 +47,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
         COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wp == hChild) {
-            auto url(ToWStrTemp(Str((const char*)cds->lpData)));
+            WCHAR* url = CWStrTemp(Str((const char*)cds->lpData));
             ShellExecute(hChild, L"open", url, nullptr, nullptr, SW_SHOW);
             return TRUE;
         }

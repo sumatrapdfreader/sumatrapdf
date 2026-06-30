@@ -5,9 +5,9 @@ extern "C" {
 #include <mupdf/pdf.h>
 }
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -18,7 +18,7 @@ extern "C" {
 #include "FzImgReader.h"
 #include "PdfCreator.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 static AutoFreeStr gPdfProducer;
 

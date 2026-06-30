@@ -1,8 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 
@@ -13,7 +13,7 @@
 #include "DisplayModel.h"
 #include "TextSelection.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 #include "TextToSpeech.h"
 #include "WindowTab.h"
 #include "MainWindow.h"

@@ -1,10 +1,10 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinDynCalls.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/WinDynCalls.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -270,7 +270,7 @@ LRESULT FindBarWnd::OnNotify(int, NMHDR* nmh) {
         auto di = (NMTTDISPINFOW*)nmh;
         TempStr s = FindBarButtonTooltip((int)nmh->idFrom);
         if (s) {
-            lstrcpynW(di->szText, ToWStrTemp(s), dimof(di->szText));
+            lstrcpynW(di->szText, CWStrTemp(s), dimof(di->szText));
             di->lpszText = di->szText;
         }
     }

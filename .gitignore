@@ -12,7 +12,7 @@ mupdf/generated/
 .vs/
 .vscode/db/
 .vscode/ipch/
-# src/utils/BuildConfig.h
+# src/base/BuildConfig.h
 artifacts/
 .idea/
 src/.vscode

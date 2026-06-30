@@ -1,10 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/UITask.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -352,7 +352,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
             s = FavReadableNameTemp(fn);
         }
         auto safeStr = MenuToSafeStringTemp(s);
-        TempWStr ws = ToWStrTemp(safeStr);
+        WCHAR* ws = CWStrTemp(safeStr);
         AppendMenuW(m, MF_STRING, (UINT_PTR)fn->menuId, ws);
     }
 }
@@ -444,7 +444,7 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
             if (f != currFileFav) {
                 s = MenuToSafeStringTemp(path::GetBaseNameTemp(filePath));
             }
-            AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWStrTemp(s));
+            AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, CWStrTemp(s));
         }
     }
 }

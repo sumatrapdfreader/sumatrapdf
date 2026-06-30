@@ -6,9 +6,9 @@
 // Activated with -test-preview <filename.ext>
 // Only available in debug builds.
 
-#include "utils/BaseUtil.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/GdiPlusUtil.h"
+#include "base/Base.h"
+#include "base/CmdLineArgsIter.h"
+#include "base/GdiPlus.h"
 
 #include "RegistryPreview.h"
 
@@ -37,11 +37,11 @@ void TestPreview(WStr cmdLine) {
     }
 
     Str filePathA = argList.At(idx + 1);
-    TempWStr filePath = ToWStrTemp(filePathA);
+    WCHAR* filePath = CWStrTemp(filePathA);
 
     // use kPdfPreviewClsid by default
     GUID clsid{};
-    TempWStr clsidW = ToWStrTemp(kPdfPreviewClsid);
+    WCHAR* clsidW = CWStrTemp(kPdfPreviewClsid);
     IIDFromString(clsidW, &clsid);
 
     HMODULE dll = LoadLibraryA(kPdfPreviewDllName.s);

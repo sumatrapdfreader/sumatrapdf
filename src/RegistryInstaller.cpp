@@ -1,16 +1,16 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/DirIter.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/DirIter.h"
 
 #include "SumatraConfig.h"
 #include "Version.h"
 #include "Installer.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // All registry manipulation needed for installer / uninstaller
 
@@ -33,8 +33,8 @@ static void ShellNotifyAssociationsChanged() {
 }
 
 static bool HasRegistryValue(HKEY hkey, Str keyName, Str valName) {
-    TempWStr keyW = ToWStrTemp(keyName);
-    TempWStr valW = ToWStrTemp(valName);
+    WCHAR* keyW = CWStrTemp(keyName);
+    WCHAR* valW = CWStrTemp(valName);
     DWORD type = 0;
     DWORD cb = 0;
     LSTATUS res = SHGetValueW(hkey, keyW, valW, &type, nullptr, &cb);
@@ -402,7 +402,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
 // delete registry key but only if it's empty
 static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
     HKEY hkey;
-    TempWStr keyNameW = ToWStrTemp(keyName);
+    WCHAR* keyNameW = CWStrTemp(keyName);
     LSTATUS status = RegOpenKeyExW(root, keyNameW, 0, KEY_READ, &hkey);
     if (status != ERROR_SUCCESS) {
         return true;

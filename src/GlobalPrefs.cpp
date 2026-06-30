@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/SettingsUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/SettingsUtil.h"
 
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"

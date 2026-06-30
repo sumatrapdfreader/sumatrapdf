@@ -3,10 +3,10 @@
 
 // Pure-function popup-region detectors used by RefHover. Kept in a separate
 // translation unit so the heuristics can be unit-tested with synthetic glyph
-// arrays (see src/utils/tests/RefHover_ut.cpp) without pulling in the engine,
+// arrays (see src/base/tests/RefHover_ut.cpp) without pulling in the engine,
 // HWND, or rendering layers.
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 
 #include <wctype.h>
 

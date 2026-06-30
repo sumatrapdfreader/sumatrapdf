@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -42,7 +42,7 @@ static TempStr FindCodexExecutableTemp() {
 }
 
 bool IsCodexBuildInstalled() {
-    return FindCodexExecutableTemp() != nullptr;
+    return !str::IsEmpty(FindCodexExecutableTemp());
 }
 
 TempStr CodexBuildExecutablePathTemp() {
@@ -134,8 +134,8 @@ static void PopulateModelCombo(HWND combo) {
     BuildCodexModelsList(models);
     for (int i = 0; i < models.Size(); i++) {
         TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Gpt-5.5");
-        TempWStr displayW = ToWStrTemp(display);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW.s);
+        WCHAR* displayW = CWStrTemp(display);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
     }
 }
 
@@ -470,7 +470,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
     TempStr result = nullptr;
     TempStr yearPat = fmt("%s\\*", root);
     WIN32_FIND_DATAW fdY;
-    HANDLE hY = FindFirstFileW(ToWStrTemp(yearPat), &fdY);
+    HANDLE hY = FindFirstFileW(CWStrTemp(yearPat), &fdY);
     if (hY == INVALID_HANDLE_VALUE) {
         return {};
     }
@@ -484,7 +484,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
         }
         TempStr monthPat = fmt("%s\\%s\\*", root, year);
         WIN32_FIND_DATAW fdM;
-        HANDLE hM = FindFirstFileW(ToWStrTemp(monthPat), &fdM);
+        HANDLE hM = FindFirstFileW(CWStrTemp(monthPat), &fdM);
         if (hM == INVALID_HANDLE_VALUE) {
             continue;
         }
@@ -498,7 +498,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
             }
             TempStr dayPat = fmt("%s\\%s\\%s\\*", root, year, month);
             WIN32_FIND_DATAW fdD;
-            HANDLE hD = FindFirstFileW(ToWStrTemp(dayPat), &fdD);
+            HANDLE hD = FindFirstFileW(CWStrTemp(dayPat), &fdD);
             if (hD == INVALID_HANDLE_VALUE) {
                 continue;
             }
@@ -532,7 +532,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
 
     TempStr yearPat = fmt("%s\\*", root);
     WIN32_FIND_DATAW fdY;
-    HANDLE hY = FindFirstFileW(ToWStrTemp(yearPat), &fdY);
+    HANDLE hY = FindFirstFileW(CWStrTemp(yearPat), &fdY);
     if (hY == INVALID_HANDLE_VALUE) {
         return;
     }
@@ -546,7 +546,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         }
         TempStr monthPat = fmt("%s\\%s\\*", root, year);
         WIN32_FIND_DATAW fdM;
-        HANDLE hM = FindFirstFileW(ToWStrTemp(monthPat), &fdM);
+        HANDLE hM = FindFirstFileW(CWStrTemp(monthPat), &fdM);
         if (hM == INVALID_HANDLE_VALUE) {
             continue;
         }
@@ -560,7 +560,7 @@ static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
             }
             TempStr dayPat = fmt("%s\\%s\\%s\\*", root, year, month);
             WIN32_FIND_DATAW fdD;
-            HANDLE hD = FindFirstFileW(ToWStrTemp(dayPat), &fdD);
+            HANDLE hD = FindFirstFileW(CWStrTemp(dayPat), &fdD);
             if (hD == INVALID_HANDLE_VALUE) {
                 continue;
             }
@@ -617,8 +617,8 @@ static void PopulateSessionCombo(MainWindow* win) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
-        TempWStr labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
+        WCHAR* labelW = CWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
 
         if (tab->codexSessionId && str::Eq(tab->codexSessionId, sessions[i].sessionId)) {
             selectedIdx = i + 1;
@@ -629,8 +629,8 @@ static void PopulateSessionCombo(MainWindow* win) {
     // if current tab has a session but it wasn't found on disk, add it anyway
     if (tab->codexSessionId && !foundCurrent) {
         Str label = "(current session)";
-        TempWStr labelW = ToWStrTemp(label);
-        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW.s);
+        WCHAR* labelW = CWStrTemp(label);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
         selectedIdx = sessions.Size() + 1;
     }
 
@@ -1022,12 +1022,12 @@ static void SendCodexMessage(MainWindow* win) {
 
     TempWStr inputW = HwndGetTextWTemp(hwndInput);
     TempStr input = ToUtf8Temp(inputW);
-    SetWindowTextW(hwndInput, L"");
+    HwndSetText(hwndInput, "");
 
     WebViewAddUser(win, input);
     SetCodexWorking(win, true);
 
-    bool isNewSession = (tab->codexSessionId == nullptr);
+    bool isNewSession = str::IsEmpty(tab->codexSessionId);
 
     Str filePath = tab->filePath;
     TempStr dir = path::GetDirTemp(filePath);

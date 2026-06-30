@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Dpi.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Dpi.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -294,7 +294,7 @@ static void DrawTabGroupItem(TabGroupsDialog* d, ListBox::DrawItemEvent* ev) {
 
     // draw group name on the left
     Str name = d->model->Item(ev->itemIndex);
-    TempWStr nameW = ToWStrTemp(name);
+    WCHAR* nameW = CWStrTemp(name);
     uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_LEFT;
     DrawTextW(hdc, nameW, -1, &rc, fmt);
 
@@ -302,7 +302,7 @@ static void DrawTabGroupItem(TabGroupsDialog* d, ListBox::DrawItemEvent* ev) {
     int nTabs = d->model->TabCount(ev->itemIndex);
     char buf[32];
     snprintf(buf, sizeof(buf), "%d tabs", nTabs);
-    TempWStr countW = ToWStrTemp(buf);
+    WCHAR* countW = CWStrTemp(buf);
     COLORREF rightCol = AccentColor(colText, 80);
     SetTextColor(hdc, rightCol);
     RECT rcRight = rc;
@@ -326,8 +326,7 @@ static void OnListDoubleClick(TabGroupsDialog* d) {
         if (sel >= 0 && d->hwndEdit) {
             auto* groups = gGlobalPrefs->tabGroups;
             if (groups && sel < groups->Size()) {
-                auto ws = ToWStrTemp(groups->At(sel)->name);
-                SetWindowTextW(d->hwndEdit, ws);
+                HwndSetText(d->hwndEdit, groups->At(sel)->name);
                 SendMessageW(d->hwndEdit, EM_SETSEL, 0, -1);
                 SetFocus(d->hwndEdit);
             }
@@ -428,7 +427,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     bool isRtl = IsUIRtl();
 
     Str titleStr = (mode == TabGroupDialogMode::Save) ? Str(_TRA("Save Tab Group")) : Str(_TRA("Restore Tab Group"));
-    auto title = ToWStrTemp(titleStr);
+    WCHAR* title = CWStrTemp(titleStr);
 
     DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     HWND hwnd = CreateWindowExW(0, kTabGroupsWinClassName, title, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, 400, 350,
@@ -462,8 +461,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
         }
         char buf[64];
         snprintf(buf, sizeof(buf), "group #%d", groupNum);
-        auto ws = ToWStrTemp(buf);
-        SetWindowTextW(d->hwndEdit, ws);
+        HwndSetText(d->hwndEdit, buf);
         SendMessageW(d->hwndEdit, EM_SETSEL, 0, -1);
         SetWindowSubclass(d->hwndEdit, EditSubclassProc, 0, (DWORD_PTR)d);
     }

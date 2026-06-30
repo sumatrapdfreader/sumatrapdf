@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include "SvgIcons.h"
 
 // https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg

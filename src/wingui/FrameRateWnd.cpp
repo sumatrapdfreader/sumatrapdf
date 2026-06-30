@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include "FrameRateWnd.h"
 
-#include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
+#include "base/ScopedWin.h"
+#include "base/Win.h"
 
 /*
 Frame rate window is a debugging tool that shows the frame rate, most likely

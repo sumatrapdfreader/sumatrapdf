@@ -52,7 +52,7 @@ async function runCppCheck(all: boolean): Promise<void> {
     );
   }
 
-  args.push("--check-level=exhaustive", "--inline-suppr", "-I", "src", "-I", "src/utils", "src");
+  args.push("--check-level=exhaustive", "--inline-suppr", "-I", "src", "-I", "src/base", "src");
 
   const cppcheckExe = detectCppcheckExe();
   console.log(`using '${cppcheckExe}'`);

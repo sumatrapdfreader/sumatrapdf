@@ -9,10 +9,10 @@ extern "C" {
 #include "djvu.h"
 }
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -20,7 +20,7 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // reuse the same Kind so DjVu-specific code paths treat both engines alike
 extern Kind kindEngineDjVu;

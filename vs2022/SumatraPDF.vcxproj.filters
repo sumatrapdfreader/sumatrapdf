@@ -19,6 +19,12 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\base">
+      <UniqueIdentifier>{F7972DCF-E364-88DA-0C7E-7682F8A9BD68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\base\tests">
+      <UniqueIdentifier>{19604212-052E-3618-EEC1-A63EDA2E127D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mui">
       <UniqueIdentifier>{A71E30A9-13FE-AE44-1C16-3A1B887415A6}</UniqueIdentifier>
     </Filter>
@@ -30,12 +36,6 @@
     </Filter>
     <Filter Include="src\uia">
       <UniqueIdentifier>{1B3F30A9-871E-AF44-9036-3A1BFC9415A6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\utils">
-      <UniqueIdentifier>{6DAA42B6-D914-F72C-2253-A8D28EFCD481}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\utils\tests">
-      <UniqueIdentifier>{0FF3B448-7B7E-220D-848F-A501F0997E0D}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\wingui">
       <UniqueIdentifier>{0FE57D82-FB9C-BFCF-64A4-982B507B5AC0}</UniqueIdentifier>
@@ -363,6 +363,12 @@
     <ClInclude Include="..\src\WindowTab.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\Archive.h">
+      <Filter>src\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\UtAssert.h">
+      <Filter>src\base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\mui\Mui.h">
       <Filter>src\mui</Filter>
     </ClInclude>
@@ -389,12 +395,6 @@
     </ClInclude>
     <ClInclude Include="..\src\uia\TextRange.h">
       <Filter>src\uia</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\Archive.h">
-      <Filter>src\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\UtAssert.h">
-      <Filter>src\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\ChmDocView.h">
       <Filter>src\wingui</Filter>
@@ -794,6 +794,69 @@
     <ClCompile Include="..\src\WindowTab.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\Archive.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\UtAssert.cpp">
+      <Filter>src\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\Base_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\ByteOrderDecoder_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\Crypto_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\CssParser_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\Dict_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\File_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\HtmlPrettyPrint_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\HtmlPullParser_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\JsonParser_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\RefHover_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\SettingsUtil_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\SimpleLog_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\SquareTreeParser_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\StrFormat_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\StrVec_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\Str_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\TrivialHtmlParser_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\Vec_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\tests\Win_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">
       <Filter>src\mui</Filter>
     </ClCompile>
@@ -826,69 +889,6 @@
     </ClCompile>
     <ClCompile Include="..\src\uia\TextRange.cpp">
       <Filter>src\uia</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\Archive.cpp">
-      <Filter>src\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\UtAssert.cpp">
-      <Filter>src\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\BaseUtil_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\ByteOrderDecoder_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\CryptoUtil_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\CssParser_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\Dict_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\FileUtil_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\HtmlPrettyPrint_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\HtmlPullParser_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\JsonParser_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\RefHover_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\SettingsUtil_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\SimpleLog_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\SquareTreeParser_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\StrFormat_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\StrUtil_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\StrVec_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\TrivialHtmlParser_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\Vec_ut.cpp">
-      <Filter>src\utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\WinUtil_ut.cpp">
-      <Filter>src\utils\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Button.cpp">
       <Filter>src\wingui</Filter>

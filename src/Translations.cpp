@@ -1,16 +1,16 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/LzmaSimpleArchive.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/LzmaSimpleArchive.h"
 
 #include "SumatraConfig.h"
 
 #include "Translations.h"
 #include "resource.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 namespace trans {
 

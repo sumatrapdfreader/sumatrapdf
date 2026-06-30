@@ -1,8 +1,8 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 

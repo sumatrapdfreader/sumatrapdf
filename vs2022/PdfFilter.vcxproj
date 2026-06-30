@@ -959,12 +959,12 @@
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
+    <ClInclude Include="..\src\base\Archive.h" />
+    <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\ifilter\EpubFilter.h" />
     <ClInclude Include="..\src\ifilter\FilterBase.h" />
     <ClInclude Include="..\src\ifilter\PdfFilter.h" />
     <ClInclude Include="..\src\ifilter\TeXFilter.h" />
-    <ClInclude Include="..\src\utils\Archive.h" />
-    <ClInclude Include="..\src\utils\Log.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
@@ -977,6 +977,8 @@
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PalmDbReader.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
+    <ClCompile Include="..\src\base\Archive.cpp" />
+    <ClCompile Include="..\src\base\Log.cpp" />
     <ClCompile Include="..\src\ifilter\EpubFilter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -999,15 +1001,13 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\utils\Archive.cpp" />
-    <ClCompile Include="..\src\utils\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\ifilter\PdfFilter.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="utils.vcxproj">
-      <Project>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</Project>
+    <ProjectReference Include="base.vcxproj">
+      <Project>{8078947C-6CAF-950D-159C-7B1001B2110F}</Project>
     </ProjectReference>
     <ProjectReference Include="unrar.vcxproj">
       <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>

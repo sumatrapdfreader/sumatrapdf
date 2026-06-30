@@ -9,25 +9,25 @@ function files_in_dir(dir, files_in_dir)
 end
 
 function makelzsa_files()
-  files_in_dir("src/utils", {
-    "BaseUtil.*",
+  files_in_dir("src/base", {
+    "Base.*",
     "ByteOrderDecoder.*",
     "ByteWriter.*",
     "CmdLineArgsIter.*",
-    "ColorUtil.*",
+    "Color.*",
     "DirIter.*",
     "Dpi.*",
-    "FileUtil.*",
-    "GeomUtil.*",
+    "File.*",
+    "Geom.*",
     "Log.*",
     "LzmaSimpleArchive.*",
-    "StrconvUtil.*",
+    "Strconv.*",
     "StrFormat.*",
     "StrQueue.*",
-    "StrUtil.*",
+    "Str.*",
     "StrVec.*",
     "WinDynCalls.*",
-    "WinUtil.*",
+    "Win.*",
   })
 
   files {
@@ -911,10 +911,10 @@ function sumatrapdf_files()
     --"TestLice.cpp",
     "TestTab.cpp",
   })
-  files_in_dir("src/utils/tests", {
+  files_in_dir("src/base/tests", {
     "*.cpp",
   })
-  files_in_dir("src/utils", {
+  files_in_dir("src/base", {
     "UtAssert.*",
     "Archive.*",
   })
@@ -949,35 +949,37 @@ function darkmodelib_files()
   })
 end
 
-function utils_files()
-  files_in_dir("src/utils", {
+function base_files()
+  files_in_dir("src/base", {
     "ApiHook.*",
     "Archive.*",
+    "Arena.*",
     "AvifReader.*",
-    "BaseUtil.*",
+    "Base.*",
     "BitReader.*",
     "BuildConfig.h",
     "ByteOrderDecoder.*",
     "ByteReader.*",
     "ByteWriter.*",
     "CmdLineArgsIter.*",
-    "ColorUtil.*",
-    "CryptoUtil.*",
+    "Color.*",
+    "Crypto.*",
     "CssParser.*",
     "DbgHelpDyn.*",
     "Dict.*",
     "DirIter.*",
+    "DirScan.*",
     "Dpi.*",
-    "FileUtil.*",
+    "File.*",
     "FileWatcher.*",
     "FzImgReader.*",
-    "GdiPlusUtil.*",
-    "GeomUtil.*",
+    "GdiPlus.*",
+    "Geom.*",
     "GuessFileType.*",
     "HtmlParserLookup.*",
     "HtmlPrettyPrint.*",
     "HtmlPullParser.*",
-    "HttpUtil.*",
+    "Http.*",
     "JsonParser.*",
     "Log.*",
     "LzmaSimpleArchive.*",
@@ -986,13 +988,13 @@ function utils_files()
     "ScopedWin.h",
     "SettingsUtil.*",
     "SquareTreeParser.*",
-    "StrconvUtil.*",
+    "Strconv.*",
     "StrFormat.*",
     "StrQueue.*",
-    "StrUtil.*",
+    "Str.*",
     "StrVec.*",
     "TgaReader.*",
-    "ThreadUtil.*",
+    "Thread.*",
     "TrivialHtmlParser.*",
     "TxtParser.*",
     "UITask.*",
@@ -1000,20 +1002,11 @@ function utils_files()
     "WebpReader.*",
     "JxlReader.*",
     "WinDynCalls.*",
-    "WinUtil.*",
-    "ZipUtil.*",
-  })
-  files_in_dir("src/common", {
-    "arena.cpp",
-    "base.cpp",
-    "dir_scan.cpp",
-    "file_util.cpp",
-    "str_util.cpp",
-    "win_util.cpp",
-    "common.h",
+    "Win.*",
+    "Zip.*",
   })
   filter { "configurations:Debug or DebugFull" }
-      files_in_dir("src/utils", {
+      files_in_dir("src/base", {
         "windrawlib.*",
       })
   filter {}
@@ -1389,10 +1382,10 @@ end
 function efi_files()
   files {
     "CrashHandlerNoOp.cpp",
-    "src/utils/BaseUtil*",
-    "src/utils/BitManip.h",
-    "src/utils/Dict*",
-    "src/utils/StrUtil.*",
+    "src/base/Base*",
+    "src/base/BitManip.h",
+    "src/base/Dict*",
+    "src/base/Str.*",
     "tools/efi/*.cpp",
     "tools/efi/*.h",
   }
@@ -1400,27 +1393,23 @@ end
 
 function test_util_files()
   files_in_dir("src/common", {
-    "arena.cpp",
-    "base.cpp",
-    "dir_scan.cpp",
-    "file_util.cpp",
     "log.cpp",
-    "str_util.cpp",
-    "win_util.cpp",
   })
-  files_in_dir("src/utils", {
-    "BaseUtil.*",
+  files_in_dir("src/base", {
+    "Arena.*",
+    "Base.*",
     "BitManip.*",
     "ByteOrderDecoder.*",
     "CmdLineArgsIter.*",
-    "ColorUtil.*",
-    "CryptoUtil.*",
+    "Color.*",
+    "Crypto.*",
     "CssParser.*",
     "Dict.*",
     "DbgHelpDyn.*",
+    "DirScan.*",
     "Dpi.*",
-    "FileUtil.*",
-    "GeomUtil.*",
+    "File.*",
+    "Geom.*",
     "HtmlParserLookup.*",
     "HtmlPrettyPrint.*",
     "HtmlPullParser.*",
@@ -1429,17 +1418,17 @@ function test_util_files()
     "Scoped.*",
     "SettingsUtil.*",
     "SquareTreeParser.*",
-    "StrconvUtil.*",
+    "Strconv.*",
     "StrFormat.*",
     "StrQueue.*",
-    "StrUtil.*",
+    "Str.*",
     "StrVec.*",
     "tests/*",
     "TrivialHtmlParser.*",
     "UtAssert.*",
     "Vec.*",
     "WinDynCalls.*",
-    "WinUtil.*",
+    "Win.*",
   })
   files_in_dir("src", {
     --"AppTools.*",
@@ -1462,7 +1451,7 @@ function pdf_preview_files()
     "PdfPreview.*",
     "PdfPreviewDll.cpp",
   })
-  files_in_dir("src/utils", {
+  files_in_dir("src/base", {
     "Archive.*",
   })
   files_in_dir("src", {
@@ -1490,7 +1479,7 @@ function pdf_preview_files()
     "PdfCreator.*",
     "RegistryPreview.*",
     "SumatraConfig.*",
-    "utils/Log.*",
+    "base/Log.*",
   })
 end
 
@@ -1501,7 +1490,7 @@ function search_filter_files()
     "PdfFilter.*",
     "SearchFilterDll.cpp",
   })
-  files_in_dir("src/utils", {
+  files_in_dir("src/base", {
     "Archive.*",
   })
   files_in_dir("src", {
@@ -1517,7 +1506,7 @@ function search_filter_files()
     "MUPDF_Exports.cpp",
     "PalmDbReader.*",
     "RegistrySearchFilter.*",
-    "utils/Log.*",
+    "base/Log.*",
   })
 
   filter { "configurations:Debug or DebugFull" }
@@ -1544,18 +1533,18 @@ function pdf_preview2_files()
     "mui/Mui.*",
     "RegistryPreview.*",
     "SumatraConfig.*",
-    "utils/BaseUtil.*",
-    "utils/ColorUtil.*",
-    "utils/Dpi.*",
-    "utils/FileUtil.*",
-    "utils/GeomUtil.*",
-    "utils/Log.*",
-    "utils/StrconvUtil.*",
-    "utils/StrFormat.*",
-    "utils/StrUtil.*",
-    "utils/StrVec.*",
-    "utils/WinDynCalls.*",
-    "utils/WinUtil.*",
+    "base/Base.*",
+    "base/Color.*",
+    "base/Dpi.*",
+    "base/File.*",
+    "base/Geom.*",
+    "base/Log.*",
+    "base/Strconv.*",
+    "base/StrFormat.*",
+    "base/Str.*",
+    "base/StrVec.*",
+    "base/WinDynCalls.*",
+    "base/Win.*",
   })
 end
 
@@ -1571,18 +1560,18 @@ function search_filter2_files()
     "mui/Mui.*",
     "RegistrySearchFilter.*",
     "SumatraConfig.*",
-    "utils/BaseUtil.*",
-    "utils/ColorUtil.*",
-    "utils/Dpi.*",
-    "utils/FileUtil.*",
-    "utils/GeomUtil.*",
-    "utils/Log.*",
-    "utils/StrconvUtil.*",
-    "utils/StrFormat.*",
-    "utils/StrUtil.*",
-    "utils/StrVec.*",
-    "utils/WinDynCalls.*",
-    "utils/WinUtil.*",
+    "base/Base.*",
+    "base/Color.*",
+    "base/Dpi.*",
+    "base/File.*",
+    "base/Geom.*",
+    "base/Log.*",
+    "base/Strconv.*",
+    "base/StrFormat.*",
+    "base/Str.*",
+    "base/StrVec.*",
+    "base/WinDynCalls.*",
+    "base/Win.*",
   })
 end
 

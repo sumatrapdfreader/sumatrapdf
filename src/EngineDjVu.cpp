@@ -8,12 +8,12 @@
 #include <ddjvuapi.h>
 #include <miniexp.h>
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/ByteReader.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/ByteReader.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -21,7 +21,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 Kind kindEngineDjVu = "engineDjVu";
 
@@ -689,8 +689,7 @@ Pixmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     }
 
     ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
-    int ok =
-        ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, (char*)bmpData);
+    int ok = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, (char*)bmpData);
     if (!ok) {
         // nothing was rendered, leave the page blank (same as WinDjView)
         memset(bmpData, 0xFF, stride * dy);
@@ -749,8 +748,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
         return pageRc;
     }
 
-    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx,
-                               (char*)bmpData);
+    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, (char*)bmpData);
     if (!ok) {
         LeaveCriticalSection(&gDjVuContext->lock);
         ddjvu_format_release(fmt);

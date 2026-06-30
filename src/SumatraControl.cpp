@@ -1,10 +1,10 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
+#include "base/Win.h"
 
 #include "Settings.h"
 #include "Flags.h"
@@ -12,10 +12,10 @@
 #include "SumatraPDF.h"
 #include "SelectionTranslate.h"
 #include "ImageSaveCropResize.h"
-#include "utils/GuessFileType.h"
+#include "base/GuessFileType.h"
 #include "FindWindow.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 extern Flags* gCli;
 

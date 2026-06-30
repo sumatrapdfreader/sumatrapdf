@@ -13,7 +13,7 @@
 
 #pragma comment(lib, "gdiplus.lib")
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 
 #define kPdfPreviewClsid L"{3D3B1846-CC43-42AE-BFF9-D914083C2BA3}"
 #define kXpsPreviewClsid L"{D427A82C-6545-4FBE-8E87-030EDB3BE46D}"

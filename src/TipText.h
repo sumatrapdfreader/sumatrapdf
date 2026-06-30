@@ -7,7 +7,7 @@
 //   [text](Help/Page)   a link that opens a docs page in the browser
 //   [text](https://..)  a link that opens a url in the browser
 //   (Key/Cmd...)        expanded inline to the command's keyboard shortcut
-// note: include BaseUtil.h before this
+// note: include Base.h before this
 
 // a word in a parsed tip; can be part of a link
 struct TipWord {

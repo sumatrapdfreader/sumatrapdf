@@ -3,10 +3,10 @@
 
 // Pure-function plain-text citation detectors used by RefHoverText for PDFs
 // without hyperref links. Split out of RefHoverDetect so the heuristics can be
-// unit-tested with synthetic glyph arrays (see src/utils/tests/RefHover_ut.cpp)
+// unit-tested with synthetic glyph arrays (see src/base/tests/RefHover_ut.cpp)
 // without pulling in the engine, HWND, or rendering layers.
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include "RefHoverTextDetect.h"
 
 #include <wctype.h>

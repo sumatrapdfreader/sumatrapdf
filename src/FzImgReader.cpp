@@ -8,11 +8,11 @@ extern "C" {
 #include "../mupdf/source/fitz/image-imp.h"
 }
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/WinUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/FileUtil.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/Win.h"
+#include "base/GdiPlus.h"
+#include "base/File.h"
 
 #include "FzImgReader.h"
 

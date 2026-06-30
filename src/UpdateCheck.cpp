@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
-#include "utils/SquareTreeParser.h"
-#include "utils/HttpUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/FileUtil.h"
+#include "base/Base.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
+#include "base/SquareTreeParser.h"
+#include "base/Http.h"
+#include "base/Win.h"
+#include "base/File.h"
 
 #include "wingui/Layout.h"
 #include "wingui/UIModels.h"
@@ -29,7 +29,7 @@
 #include "Installer.h"
 #include "UpdateCheck.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 static Kind kNotifUpdateCheckInProgress = StrL("notifUpdateCheckInProgress").s;
 
@@ -299,14 +299,14 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 
     buttons[0].nButtonID = kBtnIdDontInstall;
     auto s = _TRA("Don't install");
-    buttons[0].pszButtonText = ToWStrTemp(s);
+    buttons[0].pszButtonText = CWStrTemp(s);
     buttons[1].nButtonID = kBtnIdInstall;
     if (didDownloadInstaller) {
         s = _TRA("Install and relaunch");
     } else {
         s = _TRA("Download update");
     }
-    buttons[1].pszButtonText = ToWStrTemp(s);
+    buttons[1].pszButtonText = CWStrTemp(s);
 
     DWORD flags =
         TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
@@ -314,9 +314,9 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = ToWStrTemp(title);
-    dialogConfig.pszMainInstruction = ToWStrTemp(mainInstr);
-    dialogConfig.pszContent = ToWStrTemp(content);
+    dialogConfig.pszWindowTitle = CWStrTemp(title);
+    dialogConfig.pszMainInstruction = CWStrTemp(mainInstr);
+    dialogConfig.pszContent = CWStrTemp(content);
     dialogConfig.nDefaultButton = kBtnIdInstall;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;
@@ -523,11 +523,11 @@ Visit <a href="%s">%s</a> to download the latest version.)",
     constexpr int kBtnIdVisitWebsite = 100;
     TASKDIALOG_BUTTON buttons[1];
     buttons[0].nButtonID = kBtnIdVisitWebsite;
-    buttons[0].pszButtonText = ToWStrTemp(_TRA("Visit &Website"));
+    buttons[0].pszButtonText = CWStrTemp(_TRA("Visit &Website"));
 
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = ToWStrTemp(title);
-    dialogConfig.pszContent = ToWStrTemp(content);
+    dialogConfig.pszWindowTitle = CWStrTemp(title);
+    dialogConfig.pszContent = CWStrTemp(content);
     dialogConfig.dwFlags = flags;
     dialogConfig.dwCommonButtons = TDCBF_CLOSE_BUTTON;
     dialogConfig.cButtons = dimof(buttons);

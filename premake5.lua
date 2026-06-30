@@ -837,7 +837,7 @@ workspace "SumatraPDF"
       "oleAut32", "shlwapi", "version", "crypt32"
     }
 
-  project "utils"
+  project "base"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
@@ -856,7 +856,7 @@ workspace "SumatraPDF"
     defines { "LIBHEIF_STATIC_BUILD", "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/lzma/C" }
     includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/dav1d/include", "ext/libarchive", "mupdf/include", "ext/libjxl/lib/include" }
-    utils_files()
+    base_files()
 
 ---- executables
 
@@ -907,7 +907,7 @@ workspace "SumatraPDF"
     filter {}
     includedirs { "src", "src/wingui", "mupdf/include", "ext/libarchive" }
     search_filter_files()
-    links { "utils", "unrar", "libmupdf", "libarchive" }
+    links { "base", "unrar", "libmupdf", "libarchive" }
     links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- project "PdfFilter2"
@@ -949,7 +949,7 @@ workspace "SumatraPDF"
     pdf_preview_files()
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "utils", "unrar", "libmupdf", "libarchive", "chm", "djvudec" }
+    links { "base", "unrar", "libmupdf", "libarchive", "chm", "djvudec" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   -- a single static executable
@@ -1009,7 +1009,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "utils", "unrar", "chm"
+      "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "base", "unrar", "chm"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -1094,7 +1094,7 @@ workspace "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "libmupdf", "unrar", "libarchive", "utils", "chm"
+      "libmupdf", "unrar", "libarchive", "base", "chm"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

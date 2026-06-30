@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/Archive.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/HtmlParserLookup.h"
-#include "utils/HtmlPullParser.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Archive.h"
+#include "base/GdiPlus.h"
+#include "base/HtmlParserLookup.h"
+#include "base/HtmlPullParser.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -21,7 +21,7 @@
 #include "RegistrySearchFilter.h"
 #include "EpubFilter.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 VOID EpubFilter::CleanUp() {
     log("EpubFilter::Cleanup()\n");
@@ -88,8 +88,8 @@ static void TrimHtmlTextToken(Str& tokText) {
 static WStr ExtractHtmlText(EpubDoc* doc) {
     log("ExtractHtmlText()\n");
 
-    ByteSlice d = doc->GetHtmlData();
-    size_t len = d.size();
+    Str d = doc->GetHtmlData();
+    size_t len = (size_t)d.len;
 
     StrBuilder text(len / 2);
     HtmlPullParser p(d);

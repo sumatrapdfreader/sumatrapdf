@@ -1,8 +1,8 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/Dict.h"
+#include "base/Base.h"
+#include "base/Dict.h"
 
 #include "Dia2Subset.h"
 #include "Util.h"

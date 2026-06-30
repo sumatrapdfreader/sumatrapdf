@@ -1,4 +1,5 @@
-#include "common.h"
+#include "base/Base.h"
+#include "base/Win.h"
 #include "log.h"
 
 static char* gLogFilePath = nullptr;
@@ -98,7 +99,7 @@ void logConsole(const char* fmt, ...) {
         WriteFile(gOriginalStdout, buf, len, &written, nullptr);
         BOOL ok = WriteFile(gOriginalStdout, buf, len, &written, nullptr);
         if (!ok) {
-            logf("error: %s\n", GetLastErrorAsStr(GetTempArena()));
+            logStr(fmt("error: %s\n", GetLastErrorAsStr(GetTempArena())));
         }
     } else {
         // Writing to console
@@ -174,7 +175,7 @@ void logStr(Str s) {
 
     // If running under debugger, output there too
     if (IsDebuggerPresent()) {
-        Str s2 = StrDupTemp(s);
+        Str s2 = str::DupTemp(s);
         OutputDebugStringA(s2.s);
     }
 }

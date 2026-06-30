@@ -1,9 +1,9 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 
@@ -12,7 +12,7 @@
 
 #include "Theme.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // Forward declaration - defined in MainWindow.cpp
 struct MainWindow;
@@ -294,7 +294,7 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
         }
         rTxt.Width -= (8 + r.dx + 8);
         br.SetColor(GdipCol(textColor));
-        TempWStr ws = ToWStrTemp(ti->text);
+        WCHAR* ws = CWStrTemp(ti->text);
         gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);
 
         // draw red dot after tab text for dirty (unsaved) tabs
@@ -361,7 +361,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     rTxt.X += 8;
     rTxt.Width -= (8 + 8);
     br.SetColor(GdipCol(textCol));
-    TempWStr ws = ToWStrTemp(ti->text);
+    WCHAR* ws = CWStrTemp(ti->text);
     gfx->DrawString(ws, -1, &f, rTxt, &sf, &br);
 
     HBITMAP ret;
@@ -803,7 +803,7 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
     ReportIf(idx < 0);
     TCITEMW item{};
     item.mask = TCIF_TEXT;
-    item.pszText = ToWStrTemp(tab->text);
+    item.pszText = CWStrTemp(tab->text);
     int res = TabCtrl_InsertItem(hwnd, idx, &item);
     if (res < 0) {
         return res;

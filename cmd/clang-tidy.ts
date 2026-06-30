@@ -9,7 +9,7 @@ const includes = [
   "-I",
   "src",
   "-I",
-  "src/utils",
+  "src/base",
   "-I",
   "src/wingui",
   "-I",
@@ -130,7 +130,7 @@ async function main() {
   const patterns = [
     "src/*.cpp",
     "src/mui/*.cpp",
-    "src/utils/*.cpp",
+    "src/base/*.cpp",
     "src/wingui/*.cpp",
     "src/uia/*.cpp",
     "src/previewer/*.cpp",

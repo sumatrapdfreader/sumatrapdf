@@ -6,16 +6,16 @@
 // best results for installer payloads. See ../makefile.msvc for a use case.
 
 #define __STDC_LIMIT_MACROS
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include <LzmaEnc.h>
 #include <Bra.h>
 #include <zlib.h> // for crc32
-#include "utils/ByteWriter.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/FileUtil.h"
-#include "utils/DirIter.h"
-#include "utils/WinUtil.h"
-#include "utils/LzmaSimpleArchive.h"
+#include "base/ByteWriter.h"
+#include "base/CmdLineArgsIter.h"
+#include "base/File.h"
+#include "base/DirIter.h"
+#include "base/Win.h"
+#include "base/LzmaSimpleArchive.h"
 
 namespace lzsa {
 
@@ -32,9 +32,7 @@ struct ISzCrtAlloc : ISzAlloc {
 #define LZMA_MAGIC_ID 0x41537a4c
 #define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
-static bool Compress(const char* uncompressed, size_t uncompressedSize,
-                     char* compressed,
-                     size_t* compressedSize) {
+static bool Compress(const char* uncompressed, size_t uncompressedSize, char* compressed, size_t* compressedSize) {
     ReportIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1) return false;
 
@@ -112,8 +110,7 @@ static bool AppendEntry(StrBuilder& data, StrBuilder& content, Str filePath, Str
     if (!compressed.Get()) {
         return false;
     }
-    if (!Compress((const char*)fileData.data(), fileData.size(), compressed.Get(),
-                  &compressedSize)) {
+    if (!Compress((const char*)fileData.data(), fileData.size(), compressed.Get(), &compressedSize)) {
         return false;
     }
 

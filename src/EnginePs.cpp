@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include <zlib.h>
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/WinUtil.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -15,7 +15,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 Kind kindEnginePostScript = "enginePostScript";
 
@@ -34,7 +34,7 @@ TryAgain64Bit:
     for (Str gsProd : gsProducts) {
         HKEY hkey;
         TempStr keyName = str::JoinTemp("Software\\", gsProd);
-        TempWStr keyNameW = ToWStrTemp(keyName);
+        WCHAR* keyNameW = CWStrTemp(keyName);
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyNameW, 0, access, &hkey) != ERROR_SUCCESS) {
             continue;
         }
@@ -204,13 +204,13 @@ static EngineBase* psgz2pdf(Str fileName) {
         return nullptr;
     }
 
-    TempWStr path = ToWStrTemp(fileName);
+    WCHAR* path = CWStrTemp(fileName);
     gzFile inFile = gzopen_w(path, "rb");
     if (!inFile) {
         return nullptr;
     }
     FILE* outFile = nullptr;
-    TempWStr tmpFileW = ToWStrTemp(tmpFile);
+    WCHAR* tmpFileW = CWStrTemp(tmpFile);
     errno_t err = _wfopen_s(&outFile, tmpFileW, L"wb");
     if (err != 0 || !outFile) {
         gzclose(inFile);
@@ -346,7 +346,7 @@ class EnginePs : public EngineBase {
         fileDPI = pdfEngine->GetFileDPI();
         allowsPrinting = pdfEngine->AllowsPrinting();
         allowsCopyingText = pdfEngine->AllowsCopyingText();
-        decryptionKey = StrDup(arena, pdfEngine->decryptionKey);
+        decryptionKey = str::Dup(arena, pdfEngine->decryptionKey);
         pageCount = pdfEngine->PageCount();
 
         return true;
@@ -364,7 +364,7 @@ EngineBase* CreateEnginePsFromFile(Str fileName) {
 
 bool IsEnginePsAvailable() {
     TempStr gswin32c = GetGhostscriptPathTemp();
-    return gswin32c != nullptr;
+    return !str::IsEmpty(gswin32c);
 }
 
 bool IsEnginePsSupportedFileType(Kind kind) {

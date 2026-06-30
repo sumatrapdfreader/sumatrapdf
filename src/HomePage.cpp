@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/Dpi.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Dpi.h"
+#include "base/File.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -952,7 +952,7 @@ void ShowAboutWindow(MainWindow* win) {
         ReportIf(!gAtomAbout);
     }
 
-    TempWStr title = ToWStrTemp(_TRA("About SumatraPDF"));
+    WCHAR* title = CWStrTemp(_TRA("About SumatraPDF"));
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
@@ -1499,7 +1499,7 @@ static void GetFileStateIcon(FileState* fs) {
     SHFILEINFO sfi{};
     sfi.iIcon = -1;
     uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-    TempWStr filePathW = ToWStrTemp(fs->filePath);
+    WCHAR* filePathW = CWStrTemp(fs->filePath);
     fs->himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
     fs->iconIdx = sfi.iIcon;
 }

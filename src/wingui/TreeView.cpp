@@ -1,10 +1,10 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/BitManip.h"
-#include "utils/WinUtil.h"
-#include "utils/WinDynCalls.h"
+#include "base/Base.h"
+#include "base/BitManip.h"
+#include "base/Win.h"
+#include "base/WinDynCalls.h"
 
 #include "wingui/UIModels.h"
 
@@ -319,7 +319,7 @@ static void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
     tvitem->stateMask = stateMask;
     tvitem->lParam = static_cast<LPARAM>(ti);
     Str title = tm->Text(ti);
-    tvitem->pszText = ToWStrTemp(title);
+    tvitem->pszText = CWStrTemp(title);
 }
 
 // inserting in front is faster:

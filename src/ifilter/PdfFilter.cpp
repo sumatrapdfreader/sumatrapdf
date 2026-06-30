@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -16,7 +16,7 @@
 #include "RegistrySearchFilter.h"
 #include "PdfFilter.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 struct EBookUI;
 EBookUI* GetEBookUI() {

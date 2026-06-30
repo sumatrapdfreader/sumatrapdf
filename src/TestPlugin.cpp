@@ -5,9 +5,9 @@
 // Activated with -test-plugin [<SumatraPDF.exe>] [<URL>] <filename.ext>
 // Only available in debug builds.
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/CmdLineArgsIter.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/CmdLineArgsIter.h"
 
 #define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
 
@@ -34,7 +34,7 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
         STARTUPINFOW si{};
         si.cb = sizeof(si);
         PROCESS_INFORMATION pi{};
-        CreateProcessW(nullptr, ToWStrTemp(fullCmd), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi);
+        CreateProcessW(nullptr, CWStrTemp(fullCmd), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi);
         if (pi.hProcess) {
             CloseHandle(pi.hProcess);
         }
@@ -66,7 +66,7 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
                 urlLen--;
             }
             Str urlZ(urlData, urlLen);
-            auto url(ToWStrTemp(urlZ));
+            WCHAR* url = CWStrTemp(urlZ);
             ShellExecute(hChild, L"open", url, nullptr, nullptr, SW_SHOW);
             return TRUE;
         }

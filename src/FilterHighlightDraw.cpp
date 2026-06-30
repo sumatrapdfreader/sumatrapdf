@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
 
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
@@ -22,7 +22,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
                               COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt) {
     int nWords = filterWords.Size();
     if (nWords == 0) {
-        TempWStr textW = ToWStrTemp(text);
+        WCHAR* textW = CWStrTemp(text);
         DrawTextW(hdc, textW, -1, &rc, drawFmt);
         return;
     }

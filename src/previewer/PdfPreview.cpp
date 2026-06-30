@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/ScopedWin.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/ScopedWin.h"
+#include "base/GdiPlus.h"
+#include "base/Win.h"
 #include "mui/Mui.h"
 
 #include "wingui/UIModels.h"
@@ -19,7 +19,7 @@
 
 #include "PdfPreview.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;

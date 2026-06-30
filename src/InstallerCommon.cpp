@@ -3,11 +3,11 @@
 
 // code used in both Installer.cpp and Uninstaller.cpp
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/FrameTimeoutCalculator.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/FrameTimeoutCalculator.h"
 
 #include "Translations.h"
 
@@ -20,7 +20,7 @@
 #include "Version.h"
 #include "Installer.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // set to true to enable shadow effect
 constexpr bool kDrawTextShadow = true;
@@ -679,7 +679,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
 }
 
 static float DrawMessage(Graphics& g, Str msg, float y, float dx, Color color) {
-    TempWStr s = ToWStrTemp(msg);
+    WCHAR* s = CWStrTemp(msg);
 
     Font f(L"Impact", 16, FontStyleRegular);
     Gdiplus::RectF maxbox(0, y, dx, 0);

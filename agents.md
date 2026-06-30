@@ -1,6 +1,6 @@
 This is a C++ program for Windows, using mostly win32 windows API functions
 
-We don't use STL but our own string / helper / container functions implemented in src\utils directory
+We don't use STL but our own string / helper / container functions implemented in src\base directory
 
 Assume that Visual Studio command-line tools are available in the PATH environment variable (cl.exe, msbuild.exe etc.)
 
@@ -28,10 +28,10 @@ When committing work done with AI assistance, append the user prompt(s) that pro
 
 We rely on a controlled include order rather than self-sufficient headers (this is the inverse of the common "own header first" advice). In a `.cpp`/`.c` file:
 
-- `#include "utils/BaseUtil.h"` comes **first**. It pulls in `<windows.h>` plus many common C/C++ headers and our base string / container / `ByteSlice` helpers, which most other headers assume are already available.
-- Then the remaining includes (other `utils/` headers, then the rest of the project headers).
-- The file's **own header goes at the end** of the include list (after the headers it depends on, since headers are not self-sufficient) — only `utils/Log.h` may come after it.
-- `utils/Log.h`, if present, is the **last** include.
+- `#include "base/Base.h"` comes **first**. It pulls in `<windows.h>` plus many common C/C++ headers and our base string / container / `ByteSlice` helpers, which most other headers assume are already available.
+- Then the remaining includes (other `base/` headers, then the rest of the project headers).
+- The file's **own header goes at the end** of the include list (after the headers it depends on, since headers are not self-sufficient) — only `base/Log.h` may come after it.
+- `base/Log.h`, if present, is the **last** include.
 
 Do **not** use `#pragma once` in `.h` files.
 
@@ -45,7 +45,7 @@ the underlying `vsnprintf` needs anyway — so taking `Str` only added a wasted
 `strlen` and a NUL-termination footgun.
 
 The most-used formatter, `str::FormatTemp`, is renamed `fmt()` and exposed
-unqualified (a global `using str::fmt;` in StrUtil.h), so call sites read
+unqualified (a global `using str::fmt;` in Str.h), so call sites read
 `fmt("page %d", n)`. It formats into the temp arena and returns a `TempStr`.
 
 Other functions following the `const char*` rule: `str::FmtVTemp`, `logf`,

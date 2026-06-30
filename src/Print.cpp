@@ -1,13 +1,13 @@
 /* Copyright 2025 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/UITask.h"
-#include "utils/ThreadUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/UITask.h"
+#include "base/Thread.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -29,7 +29,7 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 class AbortCookieManager {
     CRITICAL_SECTION cookieAccess;
@@ -423,7 +423,7 @@ Printer* NewPrinter(Str printerName) {
     HANDLE hPrinter = nullptr;
     LONG ret = 0;
     Printer* printer = nullptr;
-    TempWStr printerNameW = ToWStrTemp(printerName);
+    WCHAR* printerNameW = CWStrTemp(printerName);
     BOOL ok = OpenPrinterW(printerNameW, &hPrinter, nullptr);
     if (!ok) {
         return nullptr;
@@ -482,8 +482,7 @@ Printer* NewPrinter(Str printerName) {
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
-        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes,
-                            nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
 
         for (int i = 0; i < (int)n; i++) {
             TempStr name = ToUtf8Temp(WStr(paperNamesSeq + i * paperNameSize));
@@ -678,22 +677,22 @@ static bool PrintToDevice(const PrintData& pd) {
     DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);
     if (pd.printer->docName) {
-        di.lpszDocName = ToWStrTemp(pd.printer->docName);
+        di.lpszDocName = CWStrTemp(pd.printer->docName);
     } else if (gPluginMode) {
         TempStr fileName = url::GetFileNameTemp(gPluginURL);
         // fall back to a generic "filename" instead of the more confusing temporary filename
         if (!fileName) {
             fileName = "filename";
         }
-        di.lpszDocName = ToWStrTemp(fileName);
+        di.lpszDocName = CWStrTemp(fileName);
     } else {
         // use just the file name (not the full path) as the print job name:
         // other apps do the same, and some printer drivers/spoolers choke on
         // long or non-ASCII full paths as the job name (issue #2166)
-        di.lpszDocName = ToWStrTemp(path::GetBaseNameTemp(engine.FilePath()));
+        di.lpszDocName = CWStrTemp(path::GetBaseNameTemp(engine.FilePath()));
     }
     if (pd.printer->output) {
-        di.lpszOutput = ToWStrTemp(pd.printer->output);
+        di.lpszOutput = CWStrTemp(pd.printer->output);
     }
 
     int current = 1, total = 0;
@@ -722,7 +721,7 @@ static bool PrintToDevice(const PrintData& pd) {
 
     auto devMode = pd.printer->devMode;
     // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
-    TempWStr printerName = ToWStrTemp(pd.printer->name);
+    WCHAR* printerName = CWStrTemp(pd.printer->name);
 
     {
         // validate printer settings as per
@@ -1887,7 +1886,7 @@ static short DetectPrinterPaperSize(EngineBase* engine, Printer* printer) {
 // let the driver validate and canonicalize the devmode; returns false if the
 // driver rejects it (e.g. doesn't support a custom paper size, see issue #2188)
 static bool ValidateDevMode(Printer* printer) {
-    TempWStr nameW = ToWStrTemp(printer->name);
+    WCHAR* nameW = CWStrTemp(printer->name);
     HANDLE hPrinter = nullptr;
     if (!OpenPrinterW(nameW, &hPrinter, nullptr)) {
         return false;

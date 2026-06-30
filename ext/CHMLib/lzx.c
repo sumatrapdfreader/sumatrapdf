@@ -262,15 +262,15 @@ int LZXreset(struct LZXstate* pState) {
         bitbuf = 0;    \
     } while (0)
 
-#define ENSURE_BITS(n)                                                          \
-    while (bitsleft < (n)) {                                                    \
-        ULONG next_bits = 0;                                                    \
-        if ((UBYTE*)inpos < (UBYTE*)endinp) next_bits = inpos[0];             \
+#define ENSURE_BITS(n)                                                             \
+    while (bitsleft < (n)) {                                                       \
+        ULONG next_bits = 0;                                                       \
+        if ((UBYTE*)inpos < (UBYTE*)endinp) next_bits = inpos[0];                  \
         if ((UBYTE*)inpos + 1 < (UBYTE*)endinp) next_bits |= (ULONG)inpos[1] << 8; \
-        if ((UBYTE*)inpos > (UBYTE*)endinp + 2) return DECR_ILLEGALDATA;        \
-        bitbuf |= next_bits << (ULONG_BITS - 16 - bitsleft);                    \
-        bitsleft += 16;                                                         \
-        inpos += 2;                                                             \
+        if ((UBYTE*)inpos > (UBYTE*)endinp + 2) return DECR_ILLEGALDATA;           \
+        bitbuf |= next_bits << (ULONG_BITS - 16 - bitsleft);                       \
+        bitsleft += 16;                                                            \
+        inpos += 2;                                                                \
     }
 
 #define PEEK_BITS(n) (bitbuf >> (ULONG_BITS - (n)))

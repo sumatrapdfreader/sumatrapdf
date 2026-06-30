@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/UITask.h"
-#include "utils/Timer.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/ScopedWin.h"
+#include "base/Win.h"
+#include "base/File.h"
+#include "base/UITask.h"
+#include "base/Timer.h"
 
 #include "wingui/UIModels.h"
 
@@ -17,7 +17,7 @@
 #include "DisplayModel.h"
 #include "RenderCache.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 #pragma warning(disable : 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'
 

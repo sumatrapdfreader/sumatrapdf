@@ -1,17 +1,17 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 
 #pragma warning(disable : 4668)
 #include <signal.h>
 
-#include "utils/WinDynCalls.h"
-#include "utils/DbgHelpDyn.h"
-#include "utils/FileUtil.h"
-#include "utils/HttpUtil.h"
-#include "utils/LzmaSimpleArchive.h"
-#include "utils/WinUtil.h"
+#include "base/WinDynCalls.h"
+#include "base/DbgHelpDyn.h"
+#include "base/File.h"
+#include "base/Http.h"
+#include "base/LzmaSimpleArchive.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -25,7 +25,7 @@
 #include "SumatraConfig.h"
 #include "AppSettings.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // logf()/logfa() are now macros that format with fmt() and route through
 // log()/loga(), so they keep logging (to at least the debugger) even when

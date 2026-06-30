@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/Timer.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/Timer.h"
 
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
-#include "utils/FrameTimeoutCalculator.h"
-#include "utils/ThreadUtil.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
+#include "base/FrameTimeoutCalculator.h"
+#include "base/Thread.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -25,7 +25,7 @@
 #include "RegistryPreview.h"
 #include "RegistrySearchFilter.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
@@ -105,7 +105,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     }
 
     // write as REG_EXPAND_SZ since PATH may contain %vars%
-    TempWStr keyNameW = ToWStrTemp(keyName);
+    WCHAR* keyNameW = CWStrTemp(keyName);
     TempWStr valueW = ToWStrTemp(newPath.CStr());
     DWORD cbData = (DWORD)(len(valueW) + 1) * sizeof(WCHAR);
     HKEY hKey;
@@ -247,7 +247,7 @@ static void CreateUninstallerWindow() {
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     auto winCls = kInstallerWindowClassName;
-    gHwndFrame = CreateWindowW(winCls, ToWStrTemp(title), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+    gHwndFrame = CreateWindowW(winCls, CWStrTemp(title), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 
     DpiScale(gHwndFrame, dx, dy);
     HwndResizeClientSize(gHwndFrame, dx, dy);

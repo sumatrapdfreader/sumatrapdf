@@ -1,19 +1,19 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
 License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/DirIter.h"
-#include "utils/FileUtil.h"
-#include "utils/ThreadUtil.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/DirIter.h"
+#include "base/File.h"
+#include "base/Thread.h"
+#include "base/UITask.h"
+#include "base/Win.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "FileThumbnails.h"
 #include "FileHistory.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 /* Handling of file history list.
 
@@ -261,7 +261,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         FileState* state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
-        if (state->isPinned || state->decryptionKey != nullptr || state->favorites->size() > 0) {
+        if (state->isPinned || !str::IsEmpty(state->decryptionKey) || state->favorites->size() > 0) {
             continue;
         }
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {

@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include "wingui/DialogSizer.h"
-#include "utils/WinUtil.h"
+#include "base/Win.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -659,7 +659,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
 
     if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
         TempStr customZoom = fmt("%.0f%%", currZoom);
-        SetDlgItemTextW(hDlg, idComboBox, ToWStrTemp(customZoom));
+        SetDlgItemTextW(hDlg, idComboBox, CWStrTemp(customZoom));
     }
     delete gCurrZoomLevels;
     gCurrZoomLevels = currZoomLevels;
@@ -809,8 +809,8 @@ static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
     if (!cmdLine) {
         return;
     }
-    TempWStr cmdLineW = ToWStrTemp(cmdLine);
-    LRESULT ind = SendMessageW(hwndComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cmdLineW.s);
+    WCHAR* cmdLineW = CWStrTemp(cmdLine);
+    LRESULT ind = SendMessageW(hwndComboBox, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cmdLineW);
     if (CB_ERR == ind) {
         HwndSetText(hwndComboBox, cmdLine);
     } else {
@@ -1129,7 +1129,7 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem
     psp.pfnDlgProc = Sheet_Print_Advanced_Proc;
     psp.lParam = (LPARAM)data;
     auto s = _TRA("Advanced");
-    psp.pszTitle = ToWStrTemp(s);
+    psp.pszTitle = CWStrTemp(s);
 
     if (IsUIRtl()) {
         dlgTemplate.Set(GetRtLDlgTemplate(IDD_PROPSHEET_PRINT_ADVANCED));

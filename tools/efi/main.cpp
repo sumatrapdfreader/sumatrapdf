@@ -1,10 +1,10 @@
 /* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/BitManip.h"
-#include "utils/Dict.h"
-#include "utils/ScopedWin.h"
+#include "base/Base.h"
+#include "base/BitManip.h"
+#include "base/Dict.h"
+#include "base/ScopedWin.h"
 
 #include "Dia2Subset.h"
 // #include <Dia2.h>

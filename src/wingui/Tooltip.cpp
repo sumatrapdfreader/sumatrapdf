@@ -1,15 +1,15 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 //--- Tooltip
 
@@ -103,7 +103,7 @@ static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, Str s, bool multili
     ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
     ti.lpszText = (WCHAR*)ws.s;
-    ti.uFlags = TTF_SUBCLASS;   // TODO: do I need this ?
+    ti.uFlags = TTF_SUBCLASS; // TODO: do I need this ?
     SendMessageW(hwnd, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
     bool isRtl = IsTextRtl(ws);
     HwndSetRtl(hwnd, isRtl);

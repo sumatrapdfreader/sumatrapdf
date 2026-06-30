@@ -1,13 +1,13 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
-#include "utils/Log.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/WinDynCalls.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
+#include "base/Log.h"
 
 #include "Notifications.h"
 #include "AppTools.h"
@@ -771,10 +771,10 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
         labelRect.bottom = rc.bottom + kLabelGap + kLabelHeight;
         SetTextColor(hdcTemp, RGB(0, 0, 0));
         SetBkMode(hdcTemp, TRANSPARENT);
-        TempWStr nameW = ToWStrTemp(cs.processName);
+        WCHAR* nameW = CWStrTemp(cs.processName);
         DrawTextW(hdcTemp, nameW, -1, &labelRect, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
         TempStr dimStr = fmt("%dx%d", cs.origW, cs.origH);
-        TempWStr dimW = ToWStrTemp(dimStr);
+        WCHAR* dimW = CWStrTemp(dimStr);
         DrawTextW(hdcTemp, dimW, -1, &labelRect, DT_RIGHT | DT_SINGLELINE);
 
         // draw selection border around thumbnail and label
@@ -1255,8 +1255,8 @@ struct SetHotkeyDialog {
 static void SetHotkeyUpdateUI(SetHotkeyDialog* dlg) {
     Str display = dlg->newHotkey ? dlg->newHotkey : (dlg->currentHotkey ? dlg->currentHotkey : StrL("None"));
     SetWindowTextA(dlg->hwndHotkeyLabel, display.s);
-    EnableWindow(dlg->hwndSetBtn, dlg->newHotkey != nullptr);
-    EnableWindow(dlg->hwndRemoveBtn, dlg->currentHotkey != nullptr || dlg->newHotkey != nullptr);
+    EnableWindow(dlg->hwndSetBtn, !str::IsEmpty(dlg->newHotkey));
+    EnableWindow(dlg->hwndRemoveBtn, !str::IsEmpty(dlg->currentHotkey) || !str::IsEmpty(dlg->newHotkey));
 }
 
 static void SetHotkeyDoSet(SetHotkeyDialog* dlg) {
@@ -1445,7 +1445,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     // row 2: hotkey display
     Str display = dlg->currentHotkey ? dlg->currentHotkey : StrL("None");
     dlg->hwndHotkeyLabel =
-        CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", ToWStrTemp(display),
+        CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", CWStrTemp(display),
                         WS_CHILD | WS_VISIBLE | SS_LEFT | SS_CENTERIMAGE, x, y, w, rowH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndHotkeyLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
     y += rowH + rowGap;
@@ -1467,7 +1467,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     SendMessageW(dlg->hwndSetBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
 
     EnableWindow(dlg->hwndSetBtn, FALSE);
-    EnableWindow(dlg->hwndRemoveBtn, dlg->currentHotkey != nullptr);
+    EnableWindow(dlg->hwndRemoveBtn, !str::IsEmpty(dlg->currentHotkey));
 
     CenterDialog(hwnd, hwndOwner);
 

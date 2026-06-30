@@ -2,17 +2,17 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/ThreadUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Thread.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
 #include "DocController.h"
 #include "EngineBase.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 Kind kindPageElementDest = "dest";
 Kind kindPageElementImage = "image";
@@ -565,7 +565,7 @@ void EngineBase::GetProperties(StrVec& keyValueOut) {
             break;
         }
         // font list is loaded asynchronously in ShowProperties()
-        if (StrEq(key, kPropFontList)) {
+        if (str::Eq(key, kPropFontList)) {
             continue;
         }
         TempStr val = GetPropertyTemp(key);
@@ -602,7 +602,7 @@ RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
 }
 
 void EngineBase::SetFilePath(Str s) {
-    fileNameBase = s ? StrDup(arena, s) : Str();
+    fileNameBase = s ? str::Dup(arena, s) : Str();
 }
 
 PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {

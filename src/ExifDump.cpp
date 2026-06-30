@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ByteReader.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/WebpReader.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ByteReader.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/WebpReader.h"
+#include "base/Win.h"
 
 #include "Settings.h"
 #include "Flags.h"

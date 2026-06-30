@@ -1,10 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
-#include "utils/UITask.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
+#include "base/UITask.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -29,7 +29,7 @@
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // clang-format off
 static i32 gCommandsNoActivate[] = {

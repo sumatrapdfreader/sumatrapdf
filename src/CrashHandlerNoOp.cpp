@@ -1,7 +1,7 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 
 void _uploadDebugReport(Str, Str, bool, bool) {
     // outside of SumatraPDF binary, this only breaks if running under debugger

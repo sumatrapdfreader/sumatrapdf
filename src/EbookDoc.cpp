@@ -1,15 +1,15 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/Archive.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/HtmlParserLookup.h"
-#include "utils/HtmlPullParser.h"
-#include "utils/TrivialHtmlParser.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/Archive.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/HtmlParserLookup.h"
+#include "base/HtmlPullParser.h"
+#include "base/TrivialHtmlParser.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -43,10 +43,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
         Str namePart;
         uint codePage;
     } static encodings[] = {
-        {"UTF", CP_UTF8},
-        {"utf", CP_UTF8},
-        {"1252", 1252},
-        {"1251", 1251},
+        {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
         // TODO: any other commonly used codepages?
     };
     for (size_t i = 0; i < dimof(encodings); i++) {
@@ -539,8 +536,8 @@ static void ParseMetadata(Str content, Props& props) {
     }
 }
 
-ByteSlice EpubDoc::GetHtmlData() const {
-    return htmlData.AsByteSlice();
+Str EpubDoc::GetHtmlData() const {
+    return htmlData.Get();
 }
 
 ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
@@ -1240,9 +1237,9 @@ bool PalmDoc::Load() {
             return false;
     }
 
-    ByteSlice text = mobiDoc->GetHtmlData();
-    uint codePage = GuessTextCodepage(AsStr(text), CP_ACP);
-    TempStr textUtf8 = strconv::ToMultiByteTemp(AsStr(text), codePage, CP_UTF8);
+    Str text = mobiDoc->GetHtmlData();
+    uint codePage = GuessTextCodepage(text, CP_ACP);
+    TempStr textUtf8 = strconv::ToMultiByteTemp(text, codePage, CP_UTF8);
 
     Str rest = textUtf8;
     // TODO: speedup by not calling htmlData.Append() for every byte
@@ -1267,8 +1264,8 @@ bool PalmDoc::Load() {
     return true;
 }
 
-ByteSlice PalmDoc::GetHtmlData() const {
-    return htmlData.AsByteSlice();
+Str PalmDoc::GetHtmlData() const {
+    return htmlData.Get();
 }
 
 TempStr PalmDoc::GetPropertyTemp(Str) const {
@@ -1368,8 +1365,8 @@ bool HtmlDoc::Load() {
     return true;
 }
 
-ByteSlice HtmlDoc::GetHtmlData() {
-    return htmlData;
+Str HtmlDoc::GetHtmlData() {
+    return AsStr(htmlData);
 }
 
 ByteSlice* HtmlDoc::GetImageData(Str fileName) {
@@ -1707,8 +1704,8 @@ bool TxtDoc::Load() {
     return true;
 }
 
-ByteSlice TxtDoc::GetHtmlData() const {
-    return htmlData.AsByteSlice();
+Str TxtDoc::GetHtmlData() const {
+    return htmlData.Get();
 }
 
 TempStr TxtDoc::GetPropertyTemp(Str) const {

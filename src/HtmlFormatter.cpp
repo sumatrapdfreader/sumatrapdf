@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/HtmlParserLookup.h"
-#include "utils/CssParser.h"
-#include "utils/HtmlPullParser.h"
+#include "base/Base.h"
+#include "base/GdiPlus.h"
+#include "base/HtmlParserLookup.h"
+#include "base/CssParser.h"
+#include "base/HtmlPullParser.h"
 #include "mui/Mui.h"
 
 #include "FzImgReader.h"

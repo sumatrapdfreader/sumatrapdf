@@ -1,5 +1,5 @@
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
 
 #include <roapi.h>
 #include <windows.media.speechsynthesis.h>
@@ -9,7 +9,7 @@
 
 #include <TextToSpeech.h>
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 #pragma comment(lib, "sapi.lib")
 #pragma comment(lib, "winmm.lib")
@@ -94,7 +94,7 @@ static ISpObjectToken* SapiFindVoiceTokenById(Str voiceId) {
         return nullptr;
     }
 
-    TempWStr wantedId = ToWStrTemp(voiceId);
+    WCHAR* wantedId = CWStrTemp(voiceId);
     if (!wantedId) {
         return nullptr;
     }

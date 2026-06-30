@@ -1,12 +1,12 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
 
 #include "RegistrySearchFilter.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 bool InstallSearchFilter(Str dllPath, bool allUsers) {
     struct {

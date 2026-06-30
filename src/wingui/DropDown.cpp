@@ -1,9 +1,9 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 
@@ -25,7 +25,7 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
     int n = items.Size();
     for (int i = 0; i < n; i++) {
         Str s = items[i];
-        TempWStr ws = ToWStrTemp(s);
+        WCHAR* ws = CWStrTemp(s);
         ComboBox_AddString(hwnd, ws);
     }
 }
@@ -78,8 +78,8 @@ void DropDown::SetCurrentSelection(int n) {
 }
 
 void DropDown::SetCueBanner(Str sv) {
-    auto ws = ToWStrTemp(sv);
-    ComboBox_SetCueBannerText(hwnd, ws.s);
+    WCHAR* ws = CWStrTemp(sv);
+    ComboBox_SetCueBannerText(hwnd, ws);
 }
 
 void DropDown::SetItems(StrVec& newItems) {

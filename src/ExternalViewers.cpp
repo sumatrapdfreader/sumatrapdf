@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -17,7 +17,7 @@
 #include "Commands.h"
 #include "Translations.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 struct ExternalViewerInfo {
     Str name; // shown to the user
@@ -576,9 +576,9 @@ bool SendAsEmailAttachmentWithMapi(HWND hwndParent, Str filePath) {
         return false;
     }
 
-    TempWStr filePathW = ToWStrTemp(filePath);
+    WCHAR* filePathW = CWStrTemp(filePath);
     TempStr fileName = path::GetBaseNameTemp(filePath);
-    TempWStr fileNameW = ToWStrTemp(fileName);
+    WCHAR* fileNameW = CWStrTemp(fileName);
 
     MapiFileDescW fileDesc{};
     fileDesc.nPosition = (ULONG)-1;

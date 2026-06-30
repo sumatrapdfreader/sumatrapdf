@@ -1,14 +1,14 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/Pixmap.h"
-#include "utils/DirIter.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/Timer.h"
-#include "utils/WinUtil.h"
-#include "utils/StrQueue.h"
+#include "base/Base.h"
+#include "base/Pixmap.h"
+#include "base/DirIter.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/Timer.h"
+#include "base/Win.h"
+#include "base/StrQueue.h"
 
 #include "wingui/UIModels.h"
 
@@ -31,7 +31,7 @@
 #include "Flags.h"
 #include "SearchAndDDE.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 #define FIRST_STRESS_TIMER_ID 101
 
@@ -795,7 +795,7 @@ static bool GoToNextPage(StressTest* st) {
         ctrl->GetToc();
         for (int i = 0; gAllProps[i]; i++) {
             Str prop = gAllProps[i];
-            if (StrEq(prop, kPropFontList)) {
+            if (str::Eq(prop, kPropFontList)) {
                 // this can be expensive so skip
                 continue;
             }

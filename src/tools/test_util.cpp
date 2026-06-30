@@ -1,9 +1,9 @@
-#include "utils/BaseUtil.h"
-#include "utils/WinDynCalls.h"
-#include "utils/DbgHelpDyn.h"
+#include "base/Base.h"
+#include "base/WinDynCalls.h"
+#include "base/DbgHelpDyn.h"
 
 // must be last due to assert() over-write
-#include "utils/UtAssert.h"
+#include "base/UtAssert.h"
 
 // in src/util/tests/UtilTests.cpp
 extern void BaseUtils_UnitTests();

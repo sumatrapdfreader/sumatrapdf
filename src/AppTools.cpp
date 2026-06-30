@@ -1,13 +1,13 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/StrFormat.h"
-#include "utils/WinDynCalls.h"
-#include "utils/DbgHelpDyn.h"
-#include "utils/FileUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/CryptoUtil.h"
+#include "base/Base.h"
+#include "base/StrFormat.h"
+#include "base/WinDynCalls.h"
+#include "base/DbgHelpDyn.h"
+#include "base/File.h"
+#include "base/Win.h"
+#include "base/Crypto.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -20,7 +20,7 @@
 
 bool NeedsWindowEmbeddingHacks();
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
@@ -54,7 +54,7 @@ static bool PathStripBaseNameInPlace(Str& path) {
 
 // return true if path is in a given dir, even if dir is a junction etc.
 static bool IsPathInDirSmart(Str path, Str dir) {
-    TempStr work = StrDupTemp(path);
+    TempStr work = str::DupTemp(path);
     Str p = work;
     while (p) {
         if (path::IsSame(dir, p)) {
@@ -590,7 +590,7 @@ Str Sha1OfAppExe() {
     }
 
     u8 sha1[20]{};
-    CalcSHA1Digest(d.data(), d.Size(), sha1);
+    CalcSHA1Digest(d.data(), len(d), sha1);
     d.Free();
 
     for (size_t i = 0; i < 20; i++) {
@@ -625,11 +625,11 @@ TempStr FormatSizeShortTransTemp(i64 size) {
 // as "1.29 MB (1,348,258 Bytes)"
 TempStr FormatFileSizeTransTemp(i64 size) {
     if (size <= 0) {
-        return strfmt::FormatTemp("%d", size);
+        return fmt("%d", size);
     }
     TempStr n1 = FormatSizeShortTransTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
-    return strfmt::FormatTemp("%s (%s %s)", n1, n2, _TRA("Bytes"));
+    return fmt("%s (%s %s)", n1, n2, _TRA("Bytes"));
 }
 
 // returns true if file exists

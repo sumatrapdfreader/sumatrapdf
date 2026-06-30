@@ -1,14 +1,14 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/CmdLineArgsIter.h"
-#include "utils/FileUtil.h"
-#include "utils/BitManip.h"
-#include "utils/Dpi.h"
-#include "utils/GdiPlusUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/ScopedWin.h"
+#include "base/CmdLineArgsIter.h"
+#include "base/File.h"
+#include "base/BitManip.h"
+#include "base/Dpi.h"
+#include "base/GdiPlus.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -1168,7 +1168,7 @@ static void AddFileMenuItem(HMENU menuFile, Str filePath, int index) {
     menuString = fmt("&%d) %s", menuIdx, fileName);
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
-    InsertMenuW(menuFile, CmdExit, flags, menuId, ToWStrTemp(menuString));
+    InsertMenuW(menuFile, CmdExit, flags, menuId, CWStrTemp(menuString));
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
@@ -1214,7 +1214,7 @@ static void AppendCommandsToMenu(HMENU m, const Vec<CustomCommand*>& cmds, bool 
         menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
         UINT flags = MF_STRING;
         flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
-        TempWStr ws = ToWStrTemp(menuString);
+        WCHAR* ws = CWStrTemp(menuString);
         AppendMenuW(m, flags, (UINT_PTR)cmd->id, ws);
     }
 }
@@ -1266,7 +1266,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, Str filePath) {
         TempStr menuString = name;
         int cmdId = cmd->id;
         menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
-        TempWStr ws = ToWStrTemp(menuString);
+        WCHAR* ws = CWStrTemp(menuString);
         InsertMenuW(menuFile, cmdId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, (UINT_PTR)cmdId, ws);
         if (!filePath) {
             MenuSetEnabled(menuFile, cmdId, false);
@@ -1438,12 +1438,12 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             if (subMenuDef == menuDefContextReadAloud) {
                 SetReadAloudContextSubmenu(subMenu);
             }
-            TempWStr ws = ToWStrTemp(title);
+            WCHAR* ws = CWStrTemp(title);
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, ws);
         } else {
             title = AppendAccelKeyToMenuStringTemp(title, cmdId);
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
-            TempWStr ws = ToWStrTemp(title);
+            WCHAR* ws = CWStrTemp(title);
             AppendMenuW(menu, flags, md.idOrSubmenu, ws);
         }
     }
@@ -1497,7 +1497,7 @@ static void BuildMenuZoom(HMENU m) {
         title = ZoomLevelStr(zl);
         title = AppendAccelKeyToMenuStringTemp(title, cmdId);
         UINT flags = MF_STRING | MF_ENABLED;
-        TempWStr ws = ToWStrTemp(title);
+        WCHAR* ws = CWStrTemp(title);
         AppendMenuW(m, flags, cmdId, ws);
     }
 }
@@ -1565,7 +1565,7 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
             printItem = AppendAccelKeyToMenuStringTemp(printItem, CmdPrint);
         }
         if (!filePrintAllowed || !disableOnly) {
-            TempWStr ws = ToWStrTemp(printItem);
+            WCHAR* ws = CWStrTemp(printItem);
             ModifyMenuW(menu, CmdPrint, MF_BYCOMMAND | MF_STRING, (UINT_PTR)CmdPrint, ws);
         }
         MenuSetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
@@ -1806,7 +1806,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     bool isFullScreen = win->isFullScreen || win->presentation;
     if (isFullScreen) {
         HMENU menuBarCopy = BuildMenuFromDef(menuDefMenubar, CreatePopupMenu(), ctx);
-        TempWStr menuLabel = ToWStrTemp(_TRA("Menu"));
+        WCHAR* menuLabel = CWStrTemp(_TRA("Menu"));
         MENUITEMINFOW mii{};
         mii.cbSize = sizeof(mii);
         mii.fMask = MIIM_STRING | MIIM_SUBMENU;
@@ -2359,10 +2359,10 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // DrawTextEx handles & => underscore drawing
     rc.top += padY;
     rc.left += cxCheckMark;
-    TempWStr ws = ToWStrTemp(menuText);
+    WCHAR* ws = CWStrTemp(menuText);
     DrawTextExW(hdc, ws, -1, &rc, DT_LEFT, nullptr);
     if (shortcutText) {
-        ws = ToWStrTemp(shortcutText);
+        ws = CWStrTemp(shortcutText);
         rc = dis->rcItem;
         rc.top += padY;
         rc.right -= (padX + cxCheckMark / 2);

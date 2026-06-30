@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include "wingui/UIModels.h"
 
 int ListBoxModelStrings::ItemsCount() {
@@ -20,7 +20,7 @@ void FillWithItems(HWND hwnd, ListBoxModel* model) {
         SendMessageW(hwnd, LB_INITSTORAGE, (WPARAM)n, 0);
         for (int i = 0; i < n; i++) {
             auto sv = model->Item(i);
-            auto ws = ToWStrTemp(sv);
+            WCHAR* ws = CWStrTemp(sv);
             ListBox_AddString(hwnd, ws);
         }
     }

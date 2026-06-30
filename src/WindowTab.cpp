@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "utils/FileUtil.h"
-#include "utils/FileWatcher.h"
+#include "base/Base.h"
+#include "base/File.h"
+#include "base/FileWatcher.h"
 
 #include "wingui/UIModels.h"
 
@@ -22,7 +22,7 @@
 #include "Translations.h"
 #include "EditAnnotations.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 WindowTab::WindowTab(MainWindow* win) {
     this->win = win;

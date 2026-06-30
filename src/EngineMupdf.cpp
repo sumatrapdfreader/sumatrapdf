@@ -7,13 +7,13 @@ extern "C" {
 #include "../mupdf/source/fitz/color-imp.h"
 }
 
-#include "utils/BaseUtil.h"
-#include "utils/Archive.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
-#include "utils/GuessFileType.h"
-#include "utils/WinUtil.h"
-#include "utils/Timer.h"
+#include "base/Base.h"
+#include "base/Archive.h"
+#include "base/ScopedWin.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/Win.h"
+#include "base/Timer.h"
 
 #include "wingui/UIModels.h"
 
@@ -27,7 +27,7 @@ extern "C" {
 #include "EbookDoc.h"
 #include "Settings.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 // A5
 static float layoutA5DxPt = 420.F;
@@ -578,7 +578,7 @@ static fz_stream* FzReadFileIfSmall(fz_context* ctx, Str path) {
         return nullptr;
     }
 
-    stm = FzStreamFromData(ctx, d.data(), d.Size());
+    stm = FzStreamFromData(ctx, d.data(), len(d));
     d.Free();
     return stm;
 }
@@ -611,7 +611,7 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
 
     // strip garbage
     const u8* data = d.data() + n;
-    int size = d.Size() - n;
+    int size = len(d) - n;
     stm = FzStreamFromData(ctx, data, size);
     d.Free();
     return stm;
@@ -622,7 +622,7 @@ static fz_stream* FzOpenOrReadFile(fz_context* ctx, Str path) {
     if (stm) {
         return stm;
     }
-    TempWStr pathW = ToWStrTemp(path);
+    WCHAR* pathW = CWStrTemp(path);
     fz_try(ctx) {
         stm = fz_open_file_w(ctx, pathW);
     }
@@ -2330,13 +2330,13 @@ static ByteSlice TxtFileToHTML(Str path) {
     return {(u8*)stolen.s, sz};
 }
 
-static ByteSlice PalmDocToHTML(Str path) {
+static Str PalmDocToHTML(Str path) {
     auto doc = PalmDoc::CreateFromFile(path);
     if (!doc) {
         return {};
     }
-    ByteSlice html = doc->GetHtmlData();
-    return html.Clone();
+    Str html = doc->GetHtmlData();
+    return str::Dup(html);
 }
 
 bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
@@ -2376,14 +2376,14 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
 
     if (str::EqI(ext, ".pdb")) {
         // synthesize a .html file from pdb file
-        ByteSlice d = PalmDocToHTML(path);
-        if (d.empty()) {
+        Str d = PalmDocToHTML(path);
+        if (str::IsEmpty(d)) {
             return false;
         }
-        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.data(), d.size());
+        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.s, d.len);
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
-        d.Free();
+        str::Free(d);
         TempStr nameHint = str::JoinTemp(path, ".html");
         if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;
@@ -2638,7 +2638,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     if (pdfdoc && ok && saveKey) {
         memcpy(digest + 16, pdf_crypt_key(ctx, pdfdoc->crypt), 32);
         TempStr hex = str::MemToHexTemp((const u8*)&digest, sizeof(digest));
-        decryptionKey = StrDup(arena, hex);
+        decryptionKey = str::Dup(arena, hex);
     }
     // TODO: if !ok,
     return ok;
@@ -2837,8 +2837,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
 // names a file that must sit next to the PDF. Gated by the AllowExternalImages
 // setting and restricted to sibling files (no path separators / drive specs)
 // for security -- Acrobat denies these by default too.
-static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* filespec,
-                                                void* opaque) {
+static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* filespec, void* opaque) {
     if (!gAllowExternalImages) {
         return nullptr;
     }

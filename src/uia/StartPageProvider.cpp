@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 #include <uiautomationcore.h>
 #include "uia/StartPageProvider.h"
 #include "uia/Constants.h"

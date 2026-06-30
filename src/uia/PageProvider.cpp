@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "utils/BaseUtil.h"
+#include "base/Base.h"
 
 #include <uiautomationcore.h>
 
@@ -187,7 +187,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetPropertyValue(PROP
     if (propertyId == UIA_NamePropertyId) {
         pRetVal->vt = VT_BSTR;
         TempStr s = fmt("Page %d", pageNum);
-        pRetVal->bstrVal = SysAllocString(ToWStrTemp(s));
+        pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
         return S_OK;
     } else if (propertyId == UIA_IsValuePatternAvailablePropertyId) {
         pRetVal->vt = VT_BOOL;

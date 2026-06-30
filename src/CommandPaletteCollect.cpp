@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
-#include "utils/FileUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
+#include "base/File.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -32,7 +32,7 @@
 #include "CommandPalette.h"
 #include "CommandPaletteInternal.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 static bool AllowCommand(const AppCommandCtx& ctx, i32 cmdId) {
     return CommandShouldShow(GetCommandVisibility(cmdId, ctx, CommandSurface::Palette));

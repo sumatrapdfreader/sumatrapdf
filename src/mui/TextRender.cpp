@@ -1,8 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/GdiPlusUtil.h"
+#include "base/Base.h"
+#include "base/GdiPlus.h"
 #include "Mui.h"
 
 /*

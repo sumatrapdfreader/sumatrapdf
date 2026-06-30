@@ -1,10 +1,10 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/BitManip.h"
-#include "utils/WinUtil.h"
-#include "utils/Dpi.h"
+#include "base/Base.h"
+#include "base/BitManip.h"
+#include "base/Win.h"
+#include "base/Dpi.h"
 
 #include "wingui/UIModels.h"
 
@@ -29,8 +29,8 @@ static bool EditSetCueText(HWND hwnd, Str s) {
     if (!hwnd) {
         return false;
     }
-    TempWStr ws = ToWStrTemp(s);
-    bool ok = Edit_SetCueBannerText(hwnd, ws.s) == TRUE;
+    WCHAR* ws = CWStrTemp(s);
+    bool ok = Edit_SetCueBannerText(hwnd, ws) == TRUE;
     return ok;
 }
 

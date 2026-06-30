@@ -1,7 +1,7 @@
 """
 This is a helper library for parsing SquareTree files into a Python tree
 for data extraction and for reserializing such data trees. See
-../src/utils/SquareTreeParser.cpp for the full specification of the format.
+../src/base/SquareTreeParser.cpp for the full specification of the format.
 
 Usage:
 	import SquareTree

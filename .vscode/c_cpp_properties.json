@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceRoot}/mupdf/include",
                 "${workspaceRoot}/src",
-                "${workspaceRoot}/src/utils",
+                "${workspaceRoot}/src/base",
                 "${workspaceRoot}/src/wingui",
                 "${workspaceRoot}/ext/synctex",
                 "${workspaceRoot}/ext/unarr",

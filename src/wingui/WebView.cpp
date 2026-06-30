@@ -1,8 +1,8 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "utils/BaseUtil.h"
-#include "utils/WinUtil.h"
+#include "base/Base.h"
+#include "base/Win.h"
 
 #include "wingui/UIModels.h"
 
@@ -16,7 +16,7 @@
 #endif
 #include "wingui/WebView.h"
 
-#include "utils/Log.h"
+#include "base/Log.h"
 
 Kind kindWebView = "webView";
 
@@ -1030,7 +1030,7 @@ void WebviewWnd::Eval(Str js) {
         QueuePendingOp(PendingWebViewOp::Eval, js);
         return;
     }
-    TempWStr ws = ToWStrTemp(js);
+    WCHAR* ws = CWStrTemp(js);
     webview->ExecuteScript(ws, nullptr);
 }
 
@@ -1042,7 +1042,7 @@ void WebviewWnd::SetHtml(Str html) {
         QueuePendingOp(PendingWebViewOp::SetHtml, html);
         return;
     }
-    TempWStr html2 = ToWStrTemp(html);
+    WCHAR* html2 = CWStrTemp(html);
     webview->NavigateToString(html2);
 }
 
@@ -1054,7 +1054,7 @@ void WebviewWnd::Init(Str js) {
         QueuePendingOp(PendingWebViewOp::Init, js);
         return;
     }
-    TempWStr ws = ToWStrTemp(js);
+    WCHAR* ws = CWStrTemp(js);
     webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
 }
 
@@ -1066,7 +1066,7 @@ void WebviewWnd::Navigate(Str url) {
         QueuePendingOp(PendingWebViewOp::Navigate, url);
         return;
     }
-    TempWStr ws = ToWStrTemp(url);
+    WCHAR* ws = CWStrTemp(url);
     webview->Navigate(ws);
 }
 
