@@ -4191,7 +4191,9 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             fz_report_error(ctx);
             continue;
         }
-        ReportIf(!name || !type || !encoding);
+        // check pointers, not Str's bool operator: empty type/encoding are
+        // legitimate (e.g. a font with no Encoding) and handled below
+        ReportIf(!name.s || !type.s || !encoding.s);
 
         StrBuilder info;
         if (name.s[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name.s, -1, nullptr, 0)) {
