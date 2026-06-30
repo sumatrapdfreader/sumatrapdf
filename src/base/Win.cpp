@@ -1107,7 +1107,10 @@ HANDLE LaunchProcessInDir(Str cmdLine, Str currDir, DWORD flags) {
     // CreateProcess() might modify cmd line argument, so make a copy
     // in case caller provides a read-only string
     WCHAR* cmdLineW = CWStrTemp(cmdLine);
-    WCHAR* dirW = CWStrTemp(currDir);
+    // lpCurrentDirectory must be nullptr (inherit caller's dir) when no dir is
+    // given. CWStrTemp() of an empty Str returns a non-null L"" which
+    // CreateProcessW rejects (ERROR_DIRECTORY), so map empty -> nullptr.
+    WCHAR* dirW = IsEmpty(currDir) ? nullptr : CWStrTemp(currDir);
     if (!CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, FALSE, flags, nullptr, dirW, &si, &pi)) {
         return nullptr;
     }
