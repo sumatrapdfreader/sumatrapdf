@@ -1144,6 +1144,41 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
     PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha);
 }
 
+// Replace in 'pattern' the macros %f %l %c by 'path', 'line' and 'col'
+static TempStr BuildOpenFileCmdTemp(Str pattern, Str path, int line, int col) {
+    StrBuilder cmdline(256);
+
+    logf("BuildOpenFileCmdTemp: path: '%s', pattern: '%s'\n", path, pattern);
+    Str s = pattern;
+    while (s) {
+        Str perc = str::FindChar(s, '%');
+        if (!perc) {
+            cmdline.Append(s);
+            break;
+        }
+        cmdline.Append(Str(s.s, (int)(perc.s - s.s)));
+        if (perc.len < 2) {
+            cmdline.Append(perc);
+            break;
+        }
+        char spec = perc.s[1];
+        if (spec == 'f') {
+            cmdline.Append(path);
+        } else if (spec == 'l') {
+            cmdline.Append(fmt("%d", line));
+        } else if (spec == 'c') {
+            cmdline.Append(fmt("%d", col));
+        } else if (spec == '%') {
+            cmdline.AppendChar('%');
+        } else {
+            cmdline.Append(Str(perc.s, 2));
+        }
+        s = Str(perc.s + 2, s.len - (int)(perc.s - s.s) - 2);
+    }
+
+    return cmdline.StealData(GetTempArena());
+}
+
 // returns true if inverse search was performed
 bool OnInverseSearch(MainWindow* win, int x, int y) {
     if (!CanAccessDisk() || gPluginMode) {
@@ -1210,7 +1245,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 
     Str cmdLine;
     if (inverseSearch) {
-        cmdLine = BuildOpenFileCmd(inverseSearch, Str(srcfilepath), line, col);
+        cmdLine = BuildOpenFileCmdTemp(inverseSearch, Str(srcfilepath), line, col);
     }
 
     NotificationCreateArgs args;

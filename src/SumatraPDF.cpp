@@ -5120,19 +5120,6 @@ static void OnMenuChangeScrollbar(HWND hwnd) {
     }
 }
 
-#if 0 // note: was used in OpenAdvancedOptions()
-static void OpenFileWithTextEditor(Str path) {
-    Vec<TextEditor*> editors;
-    DetectTextEditors(editors);
-    Str cmd = editors[0]->openFileCmd;
-
-    Str cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
-    logf("OpenFileWithTextEditor: '%s'\n", cmdLine);
-    TempStr appDir = GetSelfExeDirTemp();
-    AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
-}
-#endif
-
 static void OpenAdvancedOptions() {
     if (!CanAccessDisk() || !HasPermission(Perm::SavePreferences)) {
         return;

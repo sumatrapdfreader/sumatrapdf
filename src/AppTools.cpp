@@ -411,42 +411,6 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
     }
 }
 
-// Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
-// the caller must free() the result
-Str BuildOpenFileCmd(Str pattern, Str path, int line, int col) {
-    StrBuilder cmdline(256);
-
-    logf("BuildOpenFileCmd: path: '%s', pattern: '%s'\n", path, pattern);
-    Str s = pattern;
-    while (s) {
-        Str perc = str::FindChar(s, '%');
-        if (!perc) {
-            cmdline.Append(s);
-            break;
-        }
-        cmdline.Append(Str(s.s, (int)(perc.s - s.s)));
-        if (perc.len < 2) {
-            cmdline.Append(perc);
-            break;
-        }
-        char spec = perc.s[1];
-        if (spec == 'f') {
-            cmdline.Append(path);
-        } else if (spec == 'l') {
-            cmdline.Append(fmt("%d", line));
-        } else if (spec == 'c') {
-            cmdline.Append(fmt("%d", col));
-        } else if (spec == '%') {
-            cmdline.AppendChar('%');
-        } else {
-            cmdline.Append(Str(perc.s, 2));
-        }
-        s = Str(perc.s + 2, s.len - (int)(perc.s - s.s) - 2);
-    }
-
-    return cmdline.StealData();
-}
-
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
 
 // selects all text in an edit box if it's selected either

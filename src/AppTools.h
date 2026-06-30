@@ -36,7 +36,6 @@ TempStr GetAppDataDirTemp();
 TempStr GetPathInAppDataDirTemp(Str fileName);
 
 void DetectTextEditors(Vec<TextEditor*>&);
-Str BuildOpenFileCmd(Str pattern, Str path, int line, int col);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
