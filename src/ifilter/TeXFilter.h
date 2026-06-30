@@ -35,6 +35,6 @@ class TeXFilter : public FilterBase {
 
   private:
     TEX_FILTER_STATE m_state;
-    WCHAR *m_pData, *m_pPtr, *m_pBuffer; // str-port: owned/cursor wchar buffers
+    WCHAR *m_pData, *m_pPtr, *m_pBuffer;
     int m_iDepth;
 };

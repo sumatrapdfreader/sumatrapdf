@@ -5,14 +5,14 @@
 
 namespace strconv {
 
-static WStr WrapAllocatedWStr(WCHAR* s, int len) { // str-port: owned heap
+static WStr WrapAllocatedWStr(WCHAR* s, int len) {
     if (!s) {
         return {};
     }
     return WStr(s, len);
 }
 
-static Str WrapAllocatedStr(char* s, int len) { // str-port: owned heap
+static Str WrapAllocatedStr(char* s, int len) {
     if (!s) {
         return {};
     }
@@ -25,12 +25,12 @@ WStr Utf8ToWStr(Str s, Arena* a) {
         return {};
     }
     if (s.len == 0) {
-        WCHAR* res = AllocArray<WCHAR>(a, 1); // str-port: owned heap
+        WCHAR* res = AllocArray<WCHAR>(a, 1);
         return WrapAllocatedWStr(res, 0);
     }
     // ask for the size of buffer needed for converted string
     int cchNeeded = MultiByteToWideChar(CP_UTF8, 0, s.s, s.len, nullptr, 0);
-    WCHAR* res = AllocArray<WCHAR>(a, cchNeeded + 1); // str-port: owned heap
+    WCHAR* res = AllocArray<WCHAR>(a, cchNeeded + 1);
     if (!res) {
         return {};
     }
@@ -48,7 +48,7 @@ Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
         return {};
     }
     if (s.len == 0) {
-        char* res = AllocArray<char>(a, 1); // str-port: owned heap
+        char* res = AllocArray<char>(a, 1);
         return WrapAllocatedStr(res, 0);
     }
     // ask for the size of buffer needed for converted string
@@ -56,7 +56,7 @@ Str WStrToCodePage(uint codePage, WStr s, Arena* a) {
     if (cbNeeded == 0) {
         return {};
     }
-    char* res = AllocArray<char>(a, cbNeeded + 1); // str-port: owned heap
+    char* res = AllocArray<char>(a, cbNeeded + 1);
     if (!res) {
         return {};
     }
@@ -80,7 +80,7 @@ WStr StrCPToWStr(Str src, uint codePage) {
     if (0 == requiredBufSize) {
         return {};
     }
-    WCHAR* res = AllocArray<WCHAR>((size_t)requiredBufSize + 1); // str-port: owned heap
+    WCHAR* res = AllocArray<WCHAR>((size_t)requiredBufSize + 1);
     if (!res) {
         return {};
     }
@@ -98,7 +98,7 @@ TempWStr StrCPToWStrTemp(Str src, uint codePage) {
     if (0 == requiredBufSize) {
         return {};
     }
-    WCHAR* res = AllocArrayTemp<WCHAR>((size_t)requiredBufSize + 1); // str-port: owned heap
+    WCHAR* res = AllocArrayTemp<WCHAR>((size_t)requiredBufSize + 1);
     if (!res) {
         return {};
     }
@@ -151,14 +151,14 @@ TempStr UnknownToUtf8Temp(Str s) {
     if (str::StartsWith(s, Str(UTF16_BOM))) {
         int bomOff = 2;
         int cch = (s.len - bomOff) / 2;
-        return ToUtf8Temp(WStr((wchar_t*)(s.s + bomOff), cch)); // str-port: byte slice UTF-16 LE
+        return ToUtf8Temp(WStr((wchar_t*)(s.s + bomOff), cch));
     }
 
     if (str::StartsWith(s, Str(UTF16BE_BOM))) {
         // convert from utf16 big endian to utf16
         int bomOff = 2;
         int n = (s.len - bomOff) / 2;
-        TempWStr tmpW = str::DupTemp(WStr((wchar_t*)(s.s + bomOff), n)); // str-port: byte slice UTF-16 BE
+        TempWStr tmpW = str::DupTemp(WStr((wchar_t*)(s.s + bomOff), n));
         u8* bytes = (u8*)tmpW.s;
         for (int i = 0; i < n; i++) {
             int idx = i * (int)sizeof(WCHAR);
@@ -168,7 +168,7 @@ TempStr UnknownToUtf8Temp(Str s) {
     }
 
     // if s is valid utf8, leave it alone
-    const u8* scan = (const u8*)s.s; // str-port: utf8 validator cursor
+    const u8* scan = (const u8*)s.s;
     const u8* end = scan + s.len;
     if (isLegalUTF8String(&scan, end)) {
         return str::DupTemp(s);

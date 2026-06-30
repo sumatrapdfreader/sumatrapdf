@@ -178,7 +178,7 @@ class TextDataObject : public IDataObject {
         if (hText) {
             void* p = GlobalLock(hText);
             memcpy(p, text.s, text.len * sizeof(WCHAR));
-            ((WCHAR*)p)[text.len] = 0; // str-port: Win32 clipboard
+            ((WCHAR*)p)[text.len] = 0;
             GlobalUnlock(hText);
         }
     }
@@ -1038,7 +1038,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         args.noClose = true;
                         Str name = annot ? AnnotationReadableNameTemp(annot->type) : StrL("none");
                         Str fmtStr = _TRA("%s annotation. Ctrl+click to edit.");
-                        args.msg = fmt(fmtStr.s, name.s);
+                        args.msg = fmt(fmtStr.s, name);
                         ShowNotification(args);
                     }
                 }
@@ -2244,7 +2244,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     Str text = pageEl->GetValue();
     if (!dm->ValidPageNo(pageNo)) {
         Kind kind = pageEl->GetKind();
-        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", text.s, kind, pageNo);
+        logf("OnSetCursorMouseIdle: page element '%s' of kind '%s' on invalid page %d\n", Str(text), Str(kind), pageNo);
         ReportIf(true);
         return TRUE;
     }
@@ -3090,7 +3090,7 @@ static void OnPaintError(MainWindow* win) {
     auto tab = win->CurrentTab();
     Str filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath).s);
+        TempStr msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(filePath));
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
@@ -3344,7 +3344,7 @@ static bool IsImageUrl(Str url) {
 
 // Get the user's Downloads folder path
 static TempStr GetDownloadsDirTemp() {
-    WCHAR* pathW = nullptr; // str-port: Win32 out-param
+    WCHAR* pathW = nullptr;
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_Downloads, 0, nullptr, &pathW);
     if (FAILED(hr) || !pathW) {
         CoTaskMemFree(pathW);
@@ -3433,7 +3433,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         TempStr ext = path::GetExtTemp(destPath);
         TempStr base = str::DupTemp(Str(fileName.s, (int)(len(fileName) - len(ext))));
         for (int i = 1; i < 1000; i++) {
-            TempStr newName = fmt("%s_%d%s", base.s, i, ext.s);
+            TempStr newName = fmt("%s_%d%s", base, i, ext);
             destPath = path::JoinTemp(downloadsDir.s, newName.s);
             if (!file::Exists(destPath)) {
                 break;
@@ -3441,12 +3441,12 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
         }
     }
 
-    logf("DownloadAndOpenUrl: downloading '%s' to '%s'\n", url.s, destPath.s);
+    logf("DownloadAndOpenUrl: downloading '%s' to '%s'\n", url, destPath);
 
     Func1<HttpProgress*> emptyProgress;
     bool ok = HttpGetToFile(url, destPath, emptyProgress);
     if (!ok) {
-        logf("DownloadAndOpenUrl: download failed for '%s'\n", url.s);
+        logf("DownloadAndOpenUrl: download failed for '%s'\n", url);
         str::Free(data->url);
         delete data;
         return;
@@ -3455,7 +3455,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     // verify the downloaded file is a supported image type
     Kind kind = GuessFileTypeFromContent(destPath);
     if (!IsEngineImageSupportedFileType(kind)) {
-        logf("DownloadAndOpenUrl: downloaded file is not a supported image type: '%s'\n", destPath.s);
+        logf("DownloadAndOpenUrl: downloaded file is not a supported image type: '%s'\n", destPath);
         file::Delete(destPath);
         str::Free(data->url);
         delete data;
@@ -3490,13 +3490,13 @@ static TempStr GetTextFromDataObject(IDataObject* dataObj) {
     HRESULT hr = dataObj->GetData(&fmtUnicode, &medium);
     TempStr res;
     if (SUCCEEDED(hr) && medium.hGlobal) {
-        WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal); // str-port: Win32 clipboard
+        WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal);
         res = w ? ToUtf8Temp(w) : nullptr;
         goto Cleanup;
     }
     hr = dataObj->GetData(&fmtAnsi, &medium);
     if (SUCCEEDED(hr) && medium.hGlobal) {
-        char* s = (char*)GlobalLock(medium.hGlobal); // str-port: Win32 clipboard
+        char* s = (char*)GlobalLock(medium.hGlobal);
         res = s ? str::DupTemp(Str(s)) : nullptr;
         goto Cleanup;
     }
@@ -3516,7 +3516,7 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
         STGMEDIUM medium{};
         HRESULT hr = dataObj->GetData(&fmt, &medium);
         if (SUCCEEDED(hr) && medium.hGlobal) {
-            WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal); // str-port: Win32 clipboard
+            WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal);
             TempStr res = w ? ToUtf8Temp(w) : nullptr;
             GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);
@@ -3532,7 +3532,7 @@ static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
         STGMEDIUM medium{};
         HRESULT hr = dataObj->GetData(&fmt, &medium);
         if (SUCCEEDED(hr) && medium.hGlobal) {
-            char* s = (char*)GlobalLock(medium.hGlobal); // str-port: Win32 clipboard
+            char* s = (char*)GlobalLock(medium.hGlobal);
             TempStr res = s ? str::DupTemp(Str(s)) : nullptr;
             GlobalUnlock(medium.hGlobal);
             ReleaseStgMedium(&medium);

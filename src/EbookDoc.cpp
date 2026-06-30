@@ -473,7 +473,7 @@ bool EpubDoc::Load() {
         // an anchor with the file name at the top (for internal links)
         ReportIf(str::FindChar(fullPath, '"'));
         str::TransCharsInPlace(fullPath, "\"", "'");
-        htmlData.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", fullPath.s));
+        htmlData.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", fullPath));
         htmlData.Append(decoded);
     }
 

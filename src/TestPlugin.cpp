@@ -26,11 +26,11 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
     if (WM_CREATE == msg) {
         PluginStartData* data = (PluginStartData*)((CREATESTRUCT*)lp)->lpCreateParams;
         auto path = data->filePath;
-        TempStr cmdLine = fmt("-plugin %lld \"%s\"", (long long)(INT_PTR)hwnd, path.s);
+        TempStr cmdLine = fmt("-plugin %lld \"%s\"", (long long)(INT_PTR)hwnd, path);
         if (data->fileOriginUrl) {
-            cmdLine = fmt("-plugin \"%s\" %lld \"%s\"", data->fileOriginUrl.s, (long long)(INT_PTR)hwnd, path.s);
+            cmdLine = fmt("-plugin \"%s\" %lld \"%s\"", data->fileOriginUrl, (long long)(INT_PTR)hwnd, path);
         }
-        TempStr fullCmd = fmt("\"%s\" %s", data->sumatraPath.s, cmdLine.s);
+        TempStr fullCmd = fmt("\"%s\" %s", data->sumatraPath, cmdLine);
         STARTUPINFOW si{};
         si.cb = sizeof(si);
         PROCESS_INFORMATION pi{};
@@ -61,7 +61,7 @@ static LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
         COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wp == hChild) {
             int urlLen = (int)cds->cbData;
-            char* urlData = (char*)cds->lpData; // str-port: Win32 COPYDATA
+            char* urlData = (char*)cds->lpData;
             if (urlLen > 0 && urlData[urlLen - 1] == 0) {
                 urlLen--;
             }

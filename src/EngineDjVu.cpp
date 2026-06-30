@@ -361,7 +361,7 @@ EngineBase* EngineDjVu::Clone() {
     if (path) {
         auto res = CreateEngineDjVuFromFile(path);
         if (!res) {
-            logf("EngineDjVu::Clone() failed: CreateEngineDjVuFromFile('%s') failed\n", path.s);
+            logf("EngineDjVu::Clone() failed: CreateEngineDjVuFromFile('%s') failed\n", path);
         }
         return res;
     }
@@ -690,7 +690,7 @@ Pixmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
 
     ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
     int ok =
-        ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, (char*)bmpData); // str-port: libdjvu
+        ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, (char*)bmpData);
     if (!ok) {
         // nothing was rendered, leave the page blank (same as WinDjView)
         memset(bmpData, 0xFF, stride * dy);
@@ -750,7 +750,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
     }
 
     int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx,
-                               (char*)bmpData); // str-port: libdjvu
+                               (char*)bmpData);
     if (!ok) {
         LeaveCriticalSection(&gDjVuContext->lock);
         ddjvu_format_release(fmt);
@@ -1221,7 +1221,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
         }
         auto el = NewDjVuLink(pageNo, rect, link, commentUtf8);
         if (!el || el->GetKind() == kindDestinationNone) {
-            logf("invalid link '%s', pages in document: %d\n", link ? link.s : "", PageCount());
+            logf("invalid link '%s', pages in document: %d\n", link ? link : StrL(""), PageCount());
             ReportIf(true);
             delete el; // not appended to els, so we own it
             continue;
@@ -1283,7 +1283,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
         }
     }
     if ((pageNo < 1) || (pageNo > pageCount)) {
-        logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link.s, pageNo,
+        logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
              pageCount);
         ReportIf(true);
         return false;

@@ -75,21 +75,21 @@ struct AutoRun {
 // typical usage:
 // AutoFree toFree = str::Dup("foo");
 struct AutoFree {
-    char* data = nullptr; // str-port: owned heap
+    char* data = nullptr;
 
     AutoFree() = default;
     AutoFree(AutoFree& other) = delete;
     AutoFree(AutoFree&& other) = delete;
 
-    AutoFree(char* p) { // NOLINT str-port: owned heap
+    AutoFree(char* p) { // NOLINT
         data = p;
     }
 
-    AutoFree(const u8* p) { // NOLINT str-port: owned heap
-        data = (char*)p;    // str-port: owned heap
+    AutoFree(const u8* p) { // NOLINT
+        data = (char*)p;
     }
 
-    void Set(char* newPtr) { // str-port: owned heap
+    void Set(char* newPtr) {
         free(data);
         data = newPtr;
     }
@@ -115,7 +115,7 @@ struct AutoFree {
         return *this;
     }
     // takes ownership of the data
-    AutoFree& operator=(char* d) noexcept { // str-port: owned heap
+    AutoFree& operator=(char* d) noexcept {
         if (data == d) {
             return *this;
         }
@@ -127,11 +127,11 @@ struct AutoFree {
     // AutoFree& operator=(const AutoFree& other) = delete;
     // AutoFree& operator=(const AutoFree&& other) = delete;
 
-    char* Get() const { return data; } // str-port: owned heap
+    char* Get() const { return data; }
 
     Str CStr() const { return Str(data); }
 
-    operator char*() const { // NOLINT str-port: owned heap
+    operator char*() const { // NOLINT
         return data;
     }
 
@@ -142,20 +142,20 @@ struct AutoFree {
         data = nullptr;
     }
 
-    char* Release() {     // str-port: owned heap
-        char* res = data; // str-port: owned heap
+    char* Release() {
+        char* res = data;
         data = nullptr;
         return res;
     }
 
-    char* StealData() { return this->Release(); } // str-port: owned heap
+    char* StealData() { return this->Release(); }
 };
 
 // TODO: replace most of AutoFree with AutoFreeStr
 using AutoFreeStr = AutoFree;
 
 struct AutoFreeWStr {
-    WCHAR* data = nullptr; // str-port: owned heap
+    WCHAR* data = nullptr;
 
   protected:
     // must be accessed via size() as it might
@@ -168,11 +168,11 @@ struct AutoFreeWStr {
     AutoFreeWStr(AutoFreeWStr& other) = delete;
     AutoFreeWStr(AutoFreeWStr&& other) = delete;
 
-    AutoFreeWStr(const WCHAR* p) { // NOLINT str-port: owned heap
-        data = (WCHAR*)p;          // str-port: owned heap
+    AutoFreeWStr(const WCHAR* p) { // NOLINT
+        data = (WCHAR*)p;
     }
 
-    AutoFreeWStr(WCHAR* p) { // NOLINT str-port: owned heap
+    AutoFreeWStr(WCHAR* p) { // NOLINT
         data = p;
     }
 
@@ -196,15 +196,15 @@ struct AutoFreeWStr {
     AutoFreeWStr& operator=(const AutoFreeWStr&& other) = delete;
 #endif
 
-    WCHAR* Get() const { return data; } // str-port: owned heap
+    WCHAR* Get() const { return data; }
 
-    operator WCHAR*() const { // NOLINT str-port: owned heap
+    operator WCHAR*() const { // NOLINT
         return data;
     }
 
-    void Set(const WCHAR* newPtr) { // str-port: owned heap
+    void Set(const WCHAR* newPtr) {
         free(data);
-        data = (WCHAR*)newPtr; // str-port: owned heap
+        data = (WCHAR*)newPtr;
     }
 
     void SetCopy(WStr newVal) {
@@ -225,8 +225,8 @@ struct AutoFreeWStr {
 
     bool empty() { return (data == nullptr) || (size() == 0); }
 
-    WCHAR* StealData() {   // str-port: owned heap
-        WCHAR* res = data; // str-port: owned heap
+    WCHAR* StealData() {
+        WCHAR* res = data;
         data = nullptr;
         len = 0;
         return res;

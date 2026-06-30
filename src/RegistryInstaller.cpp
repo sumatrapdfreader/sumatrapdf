@@ -68,7 +68,7 @@ static TempStr GetInstallDateTemp() {
 
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(Str dir, bool recur) {
-    logf("GetDirSize(%s)\n", dir.s);
+    logf("GetDirSize(%s)\n", dir);
     i64 totalSize = 0;
     DirIter di{dir};
     di.recurse = recur;
@@ -80,15 +80,15 @@ static DWORD GetDirSize(Str dir, bool recur) {
 }
 
 bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
-    logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey).s,
-         (int)allUsers, installDir.s);
+    logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey),
+         (int)allUsers, installDir);
     bool ok = true;
 
     TempStr installedExePath = path::JoinTemp(installDir, kExeName);
     TempStr installDate = GetInstallDateTemp();
     // uninstaller is the same executable with a different flag
     Str uninstallerPath = installedExePath;
-    TempStr uninstallCmdLine = fmt("\"%s\" -uninstall", uninstallerPath.s);
+    TempStr uninstallCmdLine = fmt("\"%s\" -uninstall", uninstallerPath);
     if (allUsers) {
         uninstallCmdLine = str::JoinTemp(uninstallCmdLine, " -all-users");
     }
@@ -334,7 +334,7 @@ TempStr GetRegClassesAppsTemp(Str appName) {
 
 // http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
-    logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey).s);
+    logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
     bool ok = true;
     TempStr key;
 
@@ -359,7 +359,7 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
 }
 
 bool RemoveUninstallerRegistryInfo(HKEY hkey) {
-    logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey).s);
+    logf("RemoveUninstallerRegistryInfo(%s)\n", RegKeyNameTemp(hkey));
     TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
     bool ok1 = LoggedDeleteRegKey(hkey, regPathUninst);
     // legacy, this key was added by installers up to version 1.8
@@ -425,7 +425,7 @@ static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
 }
 
 void RemoveInstallRegistryKeys(HKEY hkey) {
-    logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey).s);
+    logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
     UnregisterFromBeingDefaultViewer(hkey);
 
     // those are registry keys written before 3.4
@@ -454,10 +454,10 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
         keyname = str::JoinTemp("Software\\Classes\\", ext, openWithVal);
         if (LoggedDeleteRegKey(hkey, keyname)) {
             // remove empty keys that the installer might have created
-            Str p = str::FindCharLast(keyname, '\\'); // str-port: mutable registry key path trim
+            Str p = str::FindCharLast(keyname, '\\');
             *p.s = 0;
             if (DeleteEmptyRegKey(hkey, keyname)) {
-                p = str::FindCharLast(keyname, '\\'); // str-port: mutable registry key path trim
+                p = str::FindCharLast(keyname, '\\');
                 *p.s = 0;
                 DeleteEmptyRegKey(hkey, keyname);
             }
@@ -485,7 +485,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
     // delete keys written in ListAsDefaultProgramWin10()
     LoggedDeleteRegValue(hkey, "SOFTWARE\\RegisteredApplications", kAppName);
-    TempStr keyName = fmt("SOFTWARE\\%s\\Capabilities", kAppName);
+    TempStr keyName = fmt("SOFTWARE\\%s\\Capabilities", Str(kAppName));
     LoggedDeleteRegKey(hkey, keyName);
 
     ShellNotifyAssociationsChanged();

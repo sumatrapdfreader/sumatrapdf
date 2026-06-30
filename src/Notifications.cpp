@@ -797,7 +797,7 @@ static StrNode* AllocStrNode(Str s) {
     memcpy(dst, s.s, s.len);
     dst[s.len] = 0;
     node->next = nullptr;
-    node->s = Str((char*)dst, (int)s.len); // str-port: co-allocated UTF-8 buffer
+    node->s = Str((char*)dst, (int)s.len);
     return node;
 }
 

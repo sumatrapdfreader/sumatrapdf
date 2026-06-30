@@ -24,7 +24,7 @@
 #define STR4i(s) (STR3i(s) | (lower((s)[3]) << 24))
 
 HtmlTag FindHtmlTag(Str nameIn) {
-    const char* name = nameIn.s; // str-port: Str data view for macro lookup
+    const char* name = nameIn.s;
     size_t len = (size_t)nameIn.len;
     u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
@@ -319,7 +319,7 @@ bool IsInlineTag(HtmlTag item) {
 
 AlignAttr FindAlignAttr(Str name) {
     size_t len = name.len;
-    const char* s = name.s; // str-port: Str data view for macro lookup
+    const char* s = name.s;
     u32 key = 0 == len ? 0 : 1 == len ? STR1i(s) : 2 == len ? STR2i(s) : 3 == len ? STR3i(s) : STR4i(s);
     switch (key) {
         case CS4('c', 'e', 'n', 't'):
@@ -351,7 +351,7 @@ AlignAttr FindAlignAttr(Str name) {
 // and http://www.w3.org/TR/MathML2/bycodes.html
 
 u32 FindHtmlEntityRune(Str name) {
-    const char* n = name.s; // str-port: Str data view for macro lookup
+    const char* n = name.s;
     size_t len = (size_t)name.len;
     u32 key = 0 == len ? 0 : 1 == len ? STR1(n) : 2 == len ? STR2(n) : 3 == len ? STR3(n) : STR4(n);
     switch (key) {
@@ -2157,7 +2157,7 @@ u32 FindHtmlEntityRune(Str name) {
 }
 
 CssProp FindCssProp(Str nameIn) {
-    const char* name = nameIn.s; // str-port: Str data view for macro lookup
+    const char* name = nameIn.s;
     size_t len = (size_t)nameIn.len;
     u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {

@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#pragma once
+
 /*
 strfmt::Fmt is type-safe printf()-like system with support for both %-style formatting
 directives and C#-like positional directives ({0}, {1} etc.).
@@ -41,6 +43,7 @@ enum class Type {
     // concrete types for Arg
     Char,
     Int,
+    Ptr,
     Float,
     Double,
     Str,
@@ -64,54 +67,96 @@ struct Arg {
     i64 i = 0;
     float f = 0;
     double d = 0;
+    const void* ptr = nullptr;
 
     Arg() = default;
 
-    Arg(char c_) {
+    // All single-argument constructors are explicit so values never implicitly
+    // convert to Arg (e.g. a stray pointer or bool). FormatTemp() is a variadic
+    // template that constructs each Arg explicitly, so call sites stay terse.
+
+    explicit Arg(char c_) {
         t = Type::Char;
         c = c_;
     }
 
-    Arg(int arg) {
+    // integer family: a constructor per fundamental type so e.g. unsigned int
+    // (UINT/DWORD), unsigned long, size_t etc. are not ambiguous between
+    // Arg(int)/Arg(i64)/Arg(size_t). The conversion char (%d vs %u vs %x)
+    // decides the rendering; we just carry the value as i64.
+    explicit Arg(int arg) {
+        t = Type::Int;
+        i = (i64)arg;
+    }
+    explicit Arg(unsigned int arg) {
+        t = Type::Int;
+        i = (i64)arg;
+    }
+    explicit Arg(long arg) {
+        t = Type::Int;
+        i = (i64)arg;
+    }
+    explicit Arg(unsigned long arg) {
+        t = Type::Int;
+        i = (i64)arg;
+    }
+    explicit Arg(long long arg) {
+        t = Type::Int;
+        i = (i64)arg;
+    }
+    explicit Arg(unsigned long long arg) {
         t = Type::Int;
         i = (i64)arg;
     }
 
-    Arg(size_t arg) {
-        t = Type::Int;
-        i = (i64)arg;
-    }
-
-    Arg(i64 arg) {
-        t = Type::Int;
-        i = arg;
-    }
-
-    Arg(float f_) {
+    explicit Arg(float f_) {
         t = Type::Float;
         f = f_;
     }
 
-    Arg(double d_) {
+    explicit Arg(double d_) {
         t = Type::Double;
         d = d_;
     }
 
-    Arg(Str arg) {
+    explicit Arg(Str arg) {
         t = Type::Str;
         str = arg;
     }
 
-    Arg(WStr arg) {
+    explicit Arg(WStr arg) {
         t = Type::WStr;
         wstr = arg;
     }
 
-    Arg(const char* s_) : Arg(Str(s_)) {}     // str-port: C-string variadic adapter
-    Arg(const WCHAR* ws_) : Arg(WStr(ws_)) {} // str-port: Win32 variadic adapter
+    explicit Arg(const void* p) { // for %p
+        t = Type::Ptr;
+        ptr = p;
+    }
+
+    // raw C strings are not allowed: pass Str / WStr explicitly so we never
+    // depend on a NUL-terminated char*/wchar_t*
+    Arg(char*) = delete;
+    Arg(const char*) = delete;
+    Arg(wchar_t*) = delete;
+    Arg(const wchar_t*) = delete;
 };
 
-TempStr FormatTemp(const char* fmt, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(),
-                   const Arg& a4 = Arg(), const Arg& a5 = Arg(), const Arg& a6 = Arg());
+TempStr FormatTempArgs(const char* fmt, const Arg** args, int nArgs);
+
+inline TempStr FormatTemp(const char* fmt) {
+    return FormatTempArgs(fmt, nullptr, 0);
+}
+
+template <typename... TArgs>
+TempStr FormatTemp(const char* fmt, const TArgs&... args) {
+    const Arg argv[] = {Arg(args)...};
+    const Arg* argp[sizeof...(TArgs)];
+    int n = (int)sizeof...(TArgs);
+    for (int i = 0; i < n; i++) {
+        argp[i] = &argv[i];
+    }
+    return FormatTempArgs(fmt, argp, n);
+}
 
 } // namespace strfmt

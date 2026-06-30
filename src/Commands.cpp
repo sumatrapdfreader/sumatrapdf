@@ -931,8 +931,8 @@ CommandArg* FindArg(CommandArg* first, Str name, CommandArg::Type type) {
             if (curr->type == type) {
                 return curr;
             }
-            logf("FindArgByName: found arg of name '%s' by different type (wanted: %d, is: %d)\n", name.s, type,
-                 curr->type);
+            logf("FindArgByName: found arg of name '%s' by different type (wanted: %d, is: %d)\n", name, (int)type,
+                 (int)curr->type);
         }
         curr = curr->next;
     }
@@ -1036,7 +1036,7 @@ static CommandArg* ParseArgOfType(Str argName, CommandArg::Type type, Str val) {
         ParseColor(col, val);
         if (!col.parsedOk) {
             // invalid value, skip it
-            logf("parseArgOfType: invalid color value '%s'\n", val.s);
+            logf("parseArgOfType: invalid color value '%s'\n", val);
             return nullptr;
         }
         auto arg = NewArg(type, argName);
@@ -1227,7 +1227,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
         MaybeDelayedWarningNotification(
-            fmt("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n", defSafe.s));
+            fmt("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n", defSafe));
         return nullptr;
     }
     if (parts.Size() == 1) {
@@ -1274,7 +1274,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         if (id == CmdNone) {
             // the command doesn't accept any arguments
             MaybeDelayedWarningNotification(
-                fmt("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n", defSafe.s));
+                fmt("Error parsing Shortcuts: cmd '%s' doesn't accept arguments\n", defSafe));
             return CreateCustomCommand(definition, cmdId, nullptr);
         }
         if (id != argCmdId) {
@@ -1285,7 +1285,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     }
     if (firstArgIdx < 0) {
         // shouldn't happen, we already filtered commands without arguments
-        logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", defSafe.s,
+        logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", defSafe,
              cmdId, argCmdId);
         ReportIf(true);
         return nullptr;
@@ -1305,8 +1305,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         }
     }
     if (!firstArg) {
-        MaybeDelayedWarningNotification(
-            fmt("Error parsing Shortcuts: failed to parse arguments for '%s'\n", defSafe.s));
+        MaybeDelayedWarningNotification(fmt("Error parsing Shortcuts: failed to parse arguments for '%s'\n", defSafe));
         return nullptr;
     }
 
@@ -1315,7 +1314,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         Str s = firstArg->strVal;
         static SeqStrings validModes = ">\0#\0@\0:\0*\0$\0"; // TODO: "@@\0" ?
         if (SeqStrIndex(validModes, s) < 0) {
-            logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", defSafe.s);
+            logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", defSafe);
             FreeCommandArgs(firstArg);
             firstArg = nullptr;
         }
@@ -1328,7 +1327,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         if (0 == zoomVal) {
             FreeCommandArgs(firstArg);
             MaybeDelayedWarningNotification(
-                fmt("CreateCommandFromDefinition: failed to parse arguments in '%s'\n", defSafe.s));
+                fmt("CreateCommandFromDefinition: failed to parse arguments in '%s'\n", defSafe));
             return nullptr;
         }
         firstArg->type = CommandArg::Type::Float;

@@ -469,7 +469,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
             ByteSlice data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
             if (!data.empty()) {
                 Str fileName = pd->GetValue2();
-                logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName.s,
+                logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName,
                      pd->embedObjNum, (int)data.sz);
                 TempStr tmpDir = GetTempDirTemp();
                 if (tmpDir) {
@@ -494,7 +494,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
 
-    logf("LinkHandler::GotoLink: unhandled kind %s\n", kind);
+    logf("LinkHandler::GotoLink: unhandled kind %s\n", Str(kind));
     ReportIf(true);
 }
 

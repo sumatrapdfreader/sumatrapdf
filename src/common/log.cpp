@@ -31,7 +31,7 @@ void LogInit(Str logFilePath) {
     if (gLogFilePath) {
         free(gLogFilePath);
     }
-    gLogFilePath = (char*)malloc(logFilePath.len + 1); // str-port: owned heap
+    gLogFilePath = (char*)malloc(logFilePath.len + 1);
     memcpy(gLogFilePath, logFilePath.s, logFilePath.len);
     gLogFilePath[logFilePath.len] = 0;
 
@@ -98,7 +98,7 @@ void logConsole(const char* fmt, ...) {
         WriteFile(gOriginalStdout, buf, len, &written, nullptr);
         BOOL ok = WriteFile(gOriginalStdout, buf, len, &written, nullptr);
         if (!ok) {
-            logf("error: %s\n", GetLastErrorAsStr(GetTempArena()).s);
+            logf("error: %s\n", GetLastErrorAsStr(GetTempArena()));
         }
     } else {
         // Writing to console
@@ -115,7 +115,7 @@ void WaitForConsoleClose() {
     if (!gAllocatedConsole) return;
 
     // Print message and wait for Enter
-    const char* msg = "press Enter to exit"; // str-port: C-string literal
+    const char* msg = "press Enter to exit";
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hConsole != INVALID_HANDLE_VALUE) {
         DWORD written;

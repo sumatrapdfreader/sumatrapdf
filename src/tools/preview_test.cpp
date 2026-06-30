@@ -41,7 +41,7 @@ void log(Str s, bool) {
 
 constexpr Str kPdfPreviewDllName = "PdfPreview.dll";
 
-int main(int c, char** v) { // str-port: C main argv
+int main(int c, char** v) {
     GUID clsid{};
     IIDFromString(myGuid, &clsid);
 

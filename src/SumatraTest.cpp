@@ -50,7 +50,7 @@ Str TestSynctexResult(Str pdfPath, Str srcPath, int line) {
     StrBuilder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
-        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath.s));
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
         Synchronizer* sync = nullptr;
         int err = Synchronizer::Create(pdfPath, engine, &sync);
@@ -60,7 +60,7 @@ Str TestSynctexResult(Str pdfPath, Str srcPath, int line) {
             int page = 0;
             Vec<Rect> rects;
             int ret = sync->SourceToDoc(srcPath, line, 0, &page, rects);
-            out.Append(fmt("ret=%d page=%d nrects=%d src=%s line=%d", ret, page, rects.Size(), srcPath.s, line));
+            out.Append(fmt("ret=%d page=%d nrects=%d src=%s line=%d", ret, page, rects.Size(), srcPath, line));
             if (rects.Size() > 0) {
                 Rect r = rects.at(0);
                 out.Append(fmt(" rect_x=%d rect_y=%d rect_dx=%d rect_dy=%d", r.x, r.y, r.dx, r.dy));
@@ -84,7 +84,7 @@ Str TestInverseSearchResult(Str pdfPath, int pageNo, int x, int y) {
     StrBuilder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
-        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath.s));
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
         Synchronizer* sync = nullptr;
         int err = Synchronizer::Create(pdfPath, engine, &sync);
@@ -98,7 +98,7 @@ Str TestInverseSearchResult(Str pdfPath, int pageNo, int x, int y) {
             if (ret != PDFSYNCERR_SUCCESS) {
                 out.Append(fmt("ERROR doctosource-failed err=%d\n", ret));
             } else {
-                out.Append(fmt("ret=%d srcfile=%s line=%d col=%d\n", ret, srcfilepath.Get(), line, col));
+                out.Append(fmt("ret=%d srcfile=%s line=%d col=%d\n", ret, Str(srcfilepath.Get()), line, col));
             }
             delete sync;
         }
@@ -137,7 +137,7 @@ Str TestSearchResult(Str pdfPath, Str needle, Str password) {
     TestPasswordUI pwdUI(password);
     EngineBase* engine = CreateEngineFromFile(pdfPath, password ? &pwdUI : nullptr, false);
     if (!engine) {
-        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath.s));
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
         TempWStr needleW = ToWStrTemp(needle);
         auto ts = new TextSearch(engine);
@@ -145,9 +145,9 @@ Str TestSearchResult(Str pdfPath, Str needle, Str password) {
         ts->SetMatchCase(false);
         TextSel* sel = ts->FindFirst(1, needleW);
         if (sel && sel->len > 0) {
-            out.Append(fmt("FOUND needle=%s page=%d\n", needle.s, sel->pages[0]));
+            out.Append(fmt("FOUND needle=%s page=%d\n", needle, sel->pages[0]));
         } else {
-            out.Append(fmt("NOTFOUND needle=%s\n", needle.s));
+            out.Append(fmt("NOTFOUND needle=%s\n", needle));
         }
         delete ts;
         SafeEngineRelease(&engine);
@@ -185,7 +185,7 @@ Str TestDestResult(Str pdfPath, int destNo) {
     StrBuilder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
-        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath.s));
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
         TocTree* toc = engine->GetToc();
         IPageDestination* dest = nullptr;
@@ -216,15 +216,15 @@ Str TestNamedDestResult(Str pdfPath, Str destName) {
     StrBuilder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
-        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath.s));
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
         Str name = CleanRemoteDestName(destName);
         IPageDestination* dest = engine->GetNamedDest(name);
         if (dest) {
-            out.Append(fmt("name=%s page=%d\n", destName.s, PageDestGetPageNo(dest)));
+            out.Append(fmt("name=%s page=%d\n", destName, PageDestGetPageNo(dest)));
             delete dest;
         } else {
-            out.Append(fmt("name=%s NOTFOUND\n", destName.s));
+            out.Append(fmt("name=%s NOTFOUND\n", destName));
         }
         SafeEngineRelease(&engine);
     }
@@ -262,12 +262,12 @@ Str TestChmResult(Str chmPath, int* exitCodeOut) {
 
     ByteSlice fileData = file::ReadFile(chmPath);
     if (!fileData) {
-        out.Append(fmt("open=FAILED path=%s\n", chmPath.s));
+        out.Append(fmt("open=FAILED path=%s\n", chmPath));
         ok = false;
     } else {
-        struct chmFile* h = chm_open((const char*)fileData.data(), fileData.size()); // str-port: chm_lib API
+        struct chmFile* h = chm_open((const char*)fileData.data(), fileData.size());
         if (!h) {
-            out.Append(fmt("chm_open=FAILED path=%s\n", chmPath.s));
+            out.Append(fmt("chm_open=FAILED path=%s\n", chmPath));
             ok = false;
         } else {
             out.Append("chm_open=OK\n");
@@ -418,9 +418,9 @@ Str TestContextMenuSelectionResult(Str word1, Str word2, Str cursorWord, int* ex
     TempStr after = GetSelectedTextTemp(tab, " ", isTextOnly);
     bool ok = str::Eq(original, after);
     if (ok) {
-        out.Append(fmt("OK selected=%s\n", original.s));
+        out.Append(fmt("OK selected=%s\n", original));
     } else {
-        out.Append(fmt("FAIL original=%s after=%s\n", original.s, after.s));
+        out.Append(fmt("FAIL original=%s after=%s\n", original, after));
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
@@ -553,10 +553,10 @@ Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
     bool matchOk = (curPage == pageNo) && (curStart == startGlyph) && (curEnd == endGlyph) && str::Eq(matched, word);
     bool ok = matchOk && visible;
     if (ok) {
-        out.Append(fmt("OK match=%s page=%d visible=1\n", matched.s, pageNo));
+        out.Append(fmt("OK match=%s page=%d visible=1\n", matched, pageNo));
     } else {
-        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d\n", word.s, matched ? matched.s : "(none)", pageNo,
-                       visible ? 1 : 0));
+        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d\n", Str(word), matched ? matched : StrL("(none)"),
+                       pageNo, visible ? 1 : 0));
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
@@ -625,7 +625,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
 
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
-        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath.s));
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
@@ -636,7 +636,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
     double x = 0;
     double y = 0;
     if (!FindWordCenter(engine, pageNo, clickWord, &x, &y)) {
-        out.Append(fmt("ERROR word-not-found word=%s\n", clickWord.s));
+        out.Append(fmt("ERROR word-not-found word=%s\n", clickWord));
         SafeEngineRelease(&engine);
         if (exitCodeOut) {
             *exitCodeOut = 1;
@@ -656,7 +656,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
     trimmed.SelectUpTo(pageNo, x, y);
     TempStr trimmedText = ExtractSelectionTextTemp(trimmed);
     if (str::Eq(trimmedText, expectedLine)) {
-        out.Append(fmt("ERROR trim-check-failed trimmed=%s\n", trimmedText.s));
+        out.Append(fmt("ERROR trim-check-failed trimmed=%s\n", trimmedText));
         SafeEngineRelease(&engine);
         if (exitCodeOut) {
             *exitCodeOut = 1;
@@ -666,9 +666,9 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
 
     bool ok = str::Eq(selected, expectedLine);
     if (ok) {
-        out.Append(fmt("OK selected=%s\n", selected.s));
+        out.Append(fmt("OK selected=%s\n", selected));
     } else {
-        out.Append(fmt("FAIL selected=%s expected=%s\n", selected.s, expectedLine.s));
+        out.Append(fmt("FAIL selected=%s expected=%s\n", selected, expectedLine));
     }
 
     SafeEngineRelease(&engine);
@@ -757,10 +757,10 @@ Str TestI18nErrorStringResult(int* exitCodeOut) {
               str::Eq(crash, trans::GetTranslation("SumatraPDF crashed")) &&
               str::Eq(printers, trans::GetTranslation("SumatraPDF - Show Printers"));
     if (ok) {
-        out.Append(fmt("OK error=%s crash=%s printers=%s\n", err.s, crash.s, printers.s));
+        out.Append(fmt("OK error=%s crash=%s printers=%s\n", err, crash, printers));
     } else {
-        out.Append(fmt("FAIL error=%s crash=%s printers=%s\n", err ? err.s : "(null)", crash ? crash.s : "(null)",
-                       printers ? printers.s : "(null)"));
+        out.Append(fmt("FAIL error=%s crash=%s printers=%s\n", err ? err : StrL("(null)"),
+                       crash ? crash : StrL("(null)"), printers ? printers : StrL("(null)")));
     }
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
@@ -771,7 +771,7 @@ Str TestI18nErrorStringResult(int* exitCodeOut) {
 static void AppendTocItems(StrBuilder& out, TocItem* item) {
     for (; item; item = item->next) {
         if (item->title) {
-            out.Append(fmt("%s|page=%d\n", item->title.s, item->pageNo));
+            out.Append(fmt("%s|page=%d\n", item->title, item->pageNo));
         }
         AppendTocItems(out, item->child);
     }
@@ -789,7 +789,7 @@ Str TestGetTocResult(Str path, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        out.Append(fmt("ERROR engine-create-failed path=%s\n", path.s));
+        out.Append(fmt("ERROR engine-create-failed path=%s\n", path));
     } else {
         TocTree* toc = engine->GetToc();
         if (!toc || !toc->root || !toc->root->child) {
@@ -820,7 +820,7 @@ Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        out.Append(fmt("ERROR engine-create-failed path=%s\n", path.s));
+        out.Append(fmt("ERROR engine-create-failed path=%s\n", path));
         return out.StealData();
     }
 
@@ -845,7 +845,7 @@ Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut) {
         }
         nLinks++;
         Str value = PageDestGetValue(dest);
-        out.Append(fmt("kind=%s value=%s\n", dest->GetKind(), value ? value.s : ""));
+        out.Append(fmt("kind=%s value=%s\n", Str(dest->GetKind()), value));
     }
     if (nLinks == 0) {
         if (exitCodeOut) {

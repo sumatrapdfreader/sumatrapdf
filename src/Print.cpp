@@ -80,7 +80,7 @@ struct PrintData {
         if (!this->engine) {
             // re-create engine from file to avoid sharing with render cache
             Str path = engine->FilePath();
-            logf("PrintData: engine->Clone() failed for '%s', re-creating\n", path ? path.s : "(null)");
+            logf("PrintData: engine->Clone() failed for '%s', re-creating\n", path ? path : StrL("(null)"));
             if (path) {
                 this->engine = CreateEngineFromFile(path, nullptr, false);
             }
@@ -142,7 +142,7 @@ static void AppendPrinterAttributes(StrBuilder& out, DWORD attr) {
     };
     for (auto& f : flags) {
         if (attr & f.flag) {
-            out.Append(fmt("\n    %s", f.name.s));
+            out.Append(fmt("\n    %s", f.name));
         }
     }
 }
@@ -181,7 +181,7 @@ static void AppendPrinterStatus(StrBuilder& out, DWORD status) {
     bool any = false;
     for (auto& f : flags) {
         if (status & f.flag) {
-            out.Append(fmt("\n    %s", f.name.s));
+            out.Append(fmt("\n    %s", f.name));
             any = true;
         }
     }
@@ -201,12 +201,12 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         out.Append(fmt("  error: call to DeviceCapabilities failed with error %#x\n", GetLastError()));
     } else {
         ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
-        DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr); // str-port: Win32
+        DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
         ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
         DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
         for (DWORD j = 0; j < bins; j++) {
             TempStr s = ToUtf8Temp(WStr(binNameValues.Get() + 24 * (size_t)j));
-            out.Append(fmt("  bin %d: '%s' (%d)\n", (int)j, s.s, binValues.Get()[j]));
+            out.Append(fmt("  bin %d: '%s' (%d)\n", (int)j, s, binValues.Get()[j]));
         }
     }
 
@@ -215,18 +215,18 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
     DWORD paperNames = DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, nullptr, nullptr);
     if (papers > 0 && papers != (DWORD)-1) {
         ScopedMem<WORD> paperValues(AllocArray<WORD>(papers));
-        DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues.Get(), nullptr); // str-port: Win32
+        DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues.Get(), nullptr);
         // paper names are 64 WCHARs each
         ScopedMem<WCHAR> paperNameValues(AllocArray<WCHAR>(64 * (size_t)paperNames));
         DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues.Get(), nullptr);
         // paper sizes in tenths of a millimeter
         ScopedMem<POINT> paperSizes(AllocArray<POINT>(papers));
-        DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes.Get(), nullptr); // str-port: Win32
+        DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes.Get(), nullptr);
         out.Append("  paper sizes:\n");
         for (DWORD j = 0; j < papers; j++) {
             TempStr s = ToUtf8Temp(WStr(paperNameValues.Get() + 64 * (size_t)j));
             POINT sz = paperSizes.Get()[j];
-            out.Append(fmt("    '%s' (id %d, %.1f x %.1f mm)\n", s.s, paperValues.Get()[j], sz.x / 10.0, sz.y / 10.0));
+            out.Append(fmt("    '%s' (id %d, %.1f x %.1f mm)\n", s, paperValues.Get()[j], sz.x / 10.0, sz.y / 10.0));
         }
     }
 
@@ -242,11 +242,11 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
 
     // duplex
     DWORD duplex = DeviceCapabilitiesW(nameW, portW, DC_DUPLEX, nullptr, nullptr);
-    out.Append(fmt("  duplex: %s\n", duplex == 1 ? "yes" : "no"));
+    out.Append(fmt("  duplex: %s\n", Str(duplex == 1 ? "yes" : "no")));
 
     // color
     DWORD color = DeviceCapabilitiesW(nameW, portW, DC_COLORDEVICE, nullptr, nullptr);
-    out.Append(fmt("  color: %s\n", color == 1 ? "yes" : "no"));
+    out.Append(fmt("  color: %s\n", Str(color == 1 ? "yes" : "no")));
 
     // copies
     DWORD copies = DeviceCapabilitiesW(nameW, portW, DC_COPIES, nullptr, nullptr);
@@ -256,7 +256,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
 
     // collate
     DWORD collate = DeviceCapabilitiesW(nameW, portW, DC_COLLATE, nullptr, nullptr);
-    out.Append(fmt("  collation: %s\n", collate == 1 ? "yes" : "no"));
+    out.Append(fmt("  collation: %s\n", Str(collate == 1 ? "yes" : "no")));
 
     // orientation
     DWORD orient = DeviceCapabilitiesW(nameW, portW, DC_ORIENTATION, nullptr, nullptr);
@@ -268,7 +268,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
     DWORD nRes = DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, nullptr, nullptr);
     if (nRes > 0 && nRes != (DWORD)-1) {
         ScopedMem<LONG> resPairs(AllocArray<LONG>(2 * (size_t)nRes));
-        DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs.Get(), nullptr); // str-port: Win32
+        DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs.Get(), nullptr);
         out.Append("  resolutions:");
         for (DWORD j = 0; j < nRes; j++) {
             LONG xDpi = resPairs.Get()[j * 2];
@@ -282,7 +282,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
     DWORD nup = DeviceCapabilitiesW(nameW, portW, DC_NUP, nullptr, nullptr);
     if (nup > 0 && nup != (DWORD)-1) {
         ScopedMem<DWORD> nupValues(AllocArray<DWORD>(nup));
-        DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues.Get(), nullptr); // str-port: Win32
+        DeviceCapabilitiesW(nameW, portW, DC_NUP, (WCHAR*)nupValues.Get(), nullptr);
         out.Append("  pages per sheet (N-up):");
         for (DWORD j = 0; j < nup; j++) {
             out.Append(fmt(" %d", (int)nupValues.Get()[j]));
@@ -297,11 +297,11 @@ static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
         ScopedMem<WCHAR> mediaNames(AllocArray<WCHAR>(64 * (size_t)nMedia));
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, mediaNames.Get(), nullptr);
         ScopedMem<DWORD> mediaValues(AllocArray<DWORD>(nMedia));
-        DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr); // str-port: Win32
+        DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr);
         out.Append("  media types:\n");
         for (DWORD j = 0; j < nMedia; j++) {
             TempStr s = ToUtf8Temp(WStr(mediaNames.Get() + 64 * (size_t)j));
-            out.Append(fmt("    '%s' (%d)\n", s.s, (int)mediaValues.Get()[j]));
+            out.Append(fmt("    '%s' (%d)\n", s, (int)mediaValues.Get()[j]));
         }
     }
 }
@@ -313,7 +313,7 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
     out.Append("  devmode defaults:\n");
     if (dm->dmFields & DM_ORIENTATION) {
         Str s = dm->dmOrientation == DMORIENT_PORTRAIT ? StrL("portrait") : StrL("landscape");
-        out.Append(fmt("    orientation: %s\n", s.s));
+        out.Append(fmt("    orientation: %s\n", s));
     }
     if (dm->dmFields & DM_PAPERSIZE) {
         out.Append(fmt("    paper size id: %d\n", (int)dm->dmPaperSize));
@@ -335,7 +335,7 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
     }
     if (dm->dmFields & DM_COLOR) {
         Str s = dm->dmColor == DMCOLOR_COLOR ? StrL("color") : StrL("monochrome");
-        out.Append(fmt("    color: %s\n", s.s));
+        out.Append(fmt("    color: %s\n", s));
     }
     if (dm->dmFields & DM_DUPLEX) {
         Str s = "unknown";
@@ -346,10 +346,10 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
         } else if (dm->dmDuplex == DMDUP_VERTICAL) {
             s = "vertical";
         }
-        out.Append(fmt("    duplex: %s\n", s.s));
+        out.Append(fmt("    duplex: %s\n", s));
     }
     if (dm->dmFields & DM_COLLATE) {
-        out.Append(fmt("    collate: %s\n", dm->dmCollate == DMCOLLATE_TRUE ? "yes" : "no"));
+        out.Append(fmt("    collate: %s\n", Str(dm->dmCollate == DMCOLLATE_TRUE ? "yes" : "no")));
     }
 }
 
@@ -371,7 +371,7 @@ void GetPrintersInfo(StrBuilder& out) {
         return;
     }
     TempStr defName = GetDefaultPrinterNameTemp();
-    out.Append(fmt("Default printer: \"%s\"\n", defName.s));
+    out.Append(fmt("Default printer: \"%s\"\n", defName));
     for (DWORD i = 0; i < printersCount; i++) {
         PRINTER_INFO_2& info = info2Arr[i];
         WStr nameW = info.pPrinterName;
@@ -379,26 +379,26 @@ void GetPrintersInfo(StrBuilder& out) {
         DWORD attr = info.Attributes;
         TempStr name = ToUtf8Temp(nameW);
         TempStr port = ToUtf8Temp(portW);
-        out.Append(fmt("Printer: \"%s\"\n", name.s));
-        out.Append(fmt("  port: %s\n", port.s));
+        out.Append(fmt("Printer: \"%s\"\n", name));
+        out.Append(fmt("  port: %s\n", port));
 
         if (info.pDriverName) {
-            out.Append(fmt("  driver: %s\n", ToUtf8Temp(info.pDriverName).s));
+            out.Append(fmt("  driver: %s\n", ToUtf8Temp(info.pDriverName)));
         }
         if (info.pShareName && info.pShareName[0]) {
-            out.Append(fmt("  share name: %s\n", ToUtf8Temp(info.pShareName).s));
+            out.Append(fmt("  share name: %s\n", ToUtf8Temp(info.pShareName)));
         }
         if (info.pComment && info.pComment[0]) {
-            out.Append(fmt("  comment: %s\n", ToUtf8Temp(info.pComment).s));
+            out.Append(fmt("  comment: %s\n", ToUtf8Temp(info.pComment)));
         }
         if (info.pLocation && info.pLocation[0]) {
-            out.Append(fmt("  location: %s\n", ToUtf8Temp(info.pLocation).s));
+            out.Append(fmt("  location: %s\n", ToUtf8Temp(info.pLocation)));
         }
         if (info.pPrintProcessor) {
-            out.Append(fmt("  print processor: %s\n", ToUtf8Temp(info.pPrintProcessor).s));
+            out.Append(fmt("  print processor: %s\n", ToUtf8Temp(info.pPrintProcessor)));
         }
         if (info.pDatatype) {
-            out.Append(fmt("  datatype: %s\n", ToUtf8Temp(info.pDatatype).s));
+            out.Append(fmt("  datatype: %s\n", ToUtf8Temp(info.pDatatype)));
         }
 
         out.Append(fmt("  queued jobs: %d\n", (int)info.cJobs));
@@ -477,12 +477,12 @@ Printer* NewPrinter(Str printerName) {
         printer->nPaperSizes = (int)n;
         size_t paperNameSize = 64;
         printer->papers = AllocArray<WORD>(n);
-        WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1); // str-port: Win32 DC_PAPERNAMES buffer
+        WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1);
         printer->paperSizes = AllocArray<POINT>(n);
 
-        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr); // str-port: Win32
-        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);       // str-port: Win32
-        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes,    // str-port: Win32
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERNAMES, paperNamesSeq, nullptr);
+        DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes,
                             nullptr);
 
         for (int i = 0; i < (int)n; i++) {
@@ -504,8 +504,8 @@ Printer* NewPrinter(Str printerName) {
         if (n > 0) {
             size_t binNameSize = 24;
             printer->bins = AllocArray<WORD>(n);
-            WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * n + 1); // str-port: Win32 DC_BINNAMES buffer
-            DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr); // str-port: Win32
+            WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * n + 1);
+            DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
             for (int i = 0; i < (int)n; i++) {
                 TempStr name = ToUtf8Temp(WStr(binNamesSeq + i * binNameSize));
@@ -556,7 +556,7 @@ static Size NormalizePaperSize(Size s) {
 }
 
 static void MessageBoxWarningCond(bool show, Str msg, Str title) {
-    logf("%s: %s\n", title.s, msg.s);
+    logf("%s: %s\n", title, msg);
     if (!show) {
         return;
     }
@@ -663,7 +663,7 @@ static bool PrintToDevice(const PrintData& pd) {
         return false;
     }
 
-    logf("PrintToDevice: printer: '%s', file: '%s'\n", pd.printer->name.s, pd.engine->FilePath().s);
+    logf("PrintToDevice: printer: '%s', file: '%s'\n", pd.printer->name, pd.engine->FilePath());
     auto progressCb = pd.progressCb;
     auto abortCookie = pd.abortCookie;
     int res;
@@ -739,7 +739,7 @@ static bool PrintToDevice(const PrintData& pd) {
 
     AutoDeleteDC hdc{CreateDCW(nullptr, printerName, nullptr, devMode)};
     if (!hdc) {
-        logf("PrintToDevice: CreateDCW('%s') failed\n", pd.printer->name.s);
+        logf("PrintToDevice: CreateDCW('%s') failed\n", pd.printer->name);
         return false;
     }
 
@@ -1337,7 +1337,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         DEVNAMES* devNames = (DEVNAMES*)GlobalLock(pdex.hDevNames);
         if (devNames) {
             // printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
-            WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset; // str-port: Win32 DEVNAMES offset
+            WCHAR* printerName = (WCHAR*)devNames + devNames->wDeviceOffset;
             TempStr name = ToUtf8Temp(printerName);
             printer = NewPrinter(name);
             // printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
@@ -1905,7 +1905,7 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
 
     auto devMode = printer->devMode;
     size_t devModeSize = devMode->dmSize + devMode->dmDriverExtra;
-    AutoFree backup((char*)memdup(devMode, devModeSize)); // str-port: Win32 binary buffer
+    AutoFree backup((char*)memdup(devMode, devModeSize));
     SetCustomPaperSize(printer, size);
     if (ValidateDevMode(printer)) {
         return true;
@@ -1939,7 +1939,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
         return PrintResult::CannotLoadFile;
     }
 
-    logf("PrintFile2: file: '%s', printer: '%s'\n", engine->FilePath().s, printerName.s);
+    logf("PrintFile2: file: '%s', printer: '%s'\n", engine->FilePath(), printerName);
 
     if (printerName) {
         printer = NewPrinter(printerName);
@@ -1953,7 +1953,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     }
 
     if (!printer) {
-        TempStr msg = fmt(_TRA("Printer '%s' doesn't exist").s, printerName.s);
+        TempStr msg = fmt(_TRA("Printer '%s' doesn't exist").s, printerName);
         MessageBoxWarningCond(displayErrors, msg, _TRA("Printing problem."));
         return PrintResult::PrinterNotFound;
     }
@@ -2006,11 +2006,11 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
 }
 
 PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str settings) {
-    logf("PrintFile: file: '%s', printer: '%s'\n", fileName.s, printerName.s);
+    logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     fileName = path::NormalizeTemp(Str(fileName));
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
-        TempStr msg = fmt("Couldn't open file '%s' for printing", fileName.s);
+        TempStr msg = fmt("Couldn't open file '%s' for printing", fileName);
         MessageBoxWarningCond(displayErrors, msg, _TRA("Error"));
         return PrintResult::CannotLoadFile;
     }

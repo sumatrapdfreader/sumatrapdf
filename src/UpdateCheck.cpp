@@ -260,7 +260,7 @@ void StartInstallerAutoUpgrade(Str installerPath) {
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
-        cmd.Append(fmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp().s));
+        cmd.Append(fmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp()));
     }
     logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", cmd.Get());
     CreateProcessHelper(installerPath, cmd.Get());
@@ -286,7 +286,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     auto mainInstr = _TRA("New version available");
     auto ver = updateInfo->latestVer;
     auto fmtStr = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install new version?");
-    auto content = str::Dup(fmt(fmtStr.s, CURR_VERSION_STRA, ver.s));
+    auto content = str::Dup(fmt(fmtStr.s, StrL(CURR_VERSION_STRA), ver));
 
     auto installerPath = updateInfo->installerPath;
     bool didDownloadInstaller = file::Exists(installerPath);
@@ -375,10 +375,10 @@ static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
 
 static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
     TempStr size = FormatFileSizeTransTemp(data->nDownloaded);
-    logf("UpdateDownloadProgressNotif: %s\n", size.s);
+    logf("UpdateDownloadProgressNotif: %s\n", size);
     auto wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
     if (wnd) {
-        TempStr msg = fmt("Downloading update: %s\n", size.s);
+        TempStr msg = fmt("Downloading update: %s\n", size);
         NotificationUpdateMessage(wnd, msg, 0, true);
     } else {
         logf("UpdateDownloadProgressNotif: no wnd\n");
@@ -407,7 +407,7 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     pd.hwndForNotif = hwndForNotif;
     auto cb = MkFunc1<UpdateProgressData, HttpProgress*>(UpdateProgressCb, &pd);
     bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, cb);
-    logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath.s);
+    logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
     if (ok) {
         updateInfo->installerPath = str::Dup(installerPath);
     } else {
@@ -425,9 +425,9 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     if (!win || !updateInfo) {
         return;
     }
-    TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update").s);
-    TempStr msg = fmt(_TRA("Update %s available (you have %s) available. %s").s, updateInfo->latestVer.s,
-                      CURR_VERSION_STRA, link.s);
+    TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", _TRA("Download and update"));
+    TempStr msg = fmt(_TRA("Update %s available (you have %s) available. %s").s, updateInfo->latestVer,
+                      StrL(CURR_VERSION_STRA), link);
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = msg;
@@ -494,7 +494,7 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheck
 static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
                                                     LONG_PTR lpRefData) {
     if (msg == TDN_HYPERLINK_CLICKED) {
-        WCHAR* url = (WCHAR*)lParam; // str-port: Win32 TaskDialog callback
+        WCHAR* url = (WCHAR*)lParam;
         SumatraLaunchBrowser(ToUtf8Temp(url));
     }
     return S_OK;
@@ -503,7 +503,7 @@ static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND hwnd, UINT msg, WPARAM 
 static const Str kExpectedDlHost = StrL("https://www.sumatrapdfreader.org/");
 
 static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
-    logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL.s);
+    logf("NotifySuspiciousUpdate: suspicious download url '%s'\n", dlURL);
     ReportIfFast(true);
     auto title = _TRA("SumatraPDF Update");
     auto content = fmt(R"(Suspicious update.
@@ -511,7 +511,7 @@ static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
 Download link should come from <a href="%s">%s</a> but is %s.
 
 Visit <a href="%s">%s</a> to download the latest version.)",
-                       kExpectedDlHost.s, kExpectedDlHost.s, dlURL.s, kExpectedDlHost.s, kExpectedDlHost.s);
+                       kExpectedDlHost, kExpectedDlHost, dlURL, kExpectedDlHost, kExpectedDlHost);
 
     TASKDIALOGCONFIG dialogConfig{};
     DWORD flags =
@@ -554,29 +554,28 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     Str url = rsp->url;
 
     if (rsp->error != 0) {
-        logf("ShowAutoUpdateDialog: http get of '%s' failed with %d\n", url.s, (int)rsp->error);
+        logf("ShowAutoUpdateDialog: http get of '%s' failed with %d\n", url, (int)rsp->error);
         return rsp->error;
     }
     if (rsp->httpStatusCode != 200) {
-        logf("ShowAutoUpdateDialog: http get of '%s' failed with code %d\n", url.s, (int)rsp->httpStatusCode);
+        logf("ShowAutoUpdateDialog: http get of '%s' failed with code %d\n", url, (int)rsp->httpStatusCode);
         return ERROR_INTERNET_INVALID_URL;
     }
 
     bool isValidURL = str::StartsWith(url, kUpdateInfoURL) || str::StartsWith(url, kUpdateInfoURL2);
     if (!isValidURL) {
-        logf("ShowAutoUpdateDialog: '%s' is not a valid url\n", url.s);
+        logf("ShowAutoUpdateDialog: '%s' is not a valid url\n", url);
         return ERROR_INTERNET_INVALID_URL;
     }
     StrBuilder* data = &rsp->data;
     if (0 == data->size()) {
-        logf("ShowAutoUpdateDialog: empty response from url '%s'\n", url.s);
+        logf("ShowAutoUpdateDialog: empty response from url '%s'\n", url);
         return ERROR_INTERNET_CONNECTION_ABORTED;
     }
 
     UpdateInfo* updateInfo = ParseUpdateInfo(data->Get());
     if (!updateInfo) {
-        logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n", url.s,
-             data->Get().s);
+        logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n", url, data->Get());
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
     updateInfo->hwndParent = hwndParent;
@@ -590,7 +589,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     HWND hwndForNotif = win->hwndCanvas;
     if (!ShouldDownloadUpdate(updateInfo, updateCheckType)) {
         Str myVer = StrL(UPDATE_CHECK_VERA);
-        logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer.s, updateInfo->latestVer.s);
+        logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, updateInfo->latestVer);
         /* if automated => don't notify that there is no new version */
         if (updateCheckType == UpdateCheck::UserInitiated) {
             auto wnd = GetNotificationForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
@@ -604,7 +603,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
 
     if (!updateInfo->dlURL) {
         // currently for release builds we don't set this and redirecto to a website instead
-        logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get().s);
+        logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         delete updateInfo;
@@ -629,7 +628,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     }
 
     // download the installer to make update feel instant to the user
-    logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL.s);
+    logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
     gUpdateCheckInProgress = true;
 
     auto fnData = new DownloadUpdateAsyncData;
@@ -768,7 +767,7 @@ void UpdateSelfTo(Str path) {
     }
 
     auto sleepMs = gCli->sleepMs;
-    logf("UpdateSelfTo: '%s', sleep for %d ms\n", path.s, sleepMs);
+    logf("UpdateSelfTo: '%s', sleep for %d ms\n", path, sleepMs);
     // sleeping for a bit to make sure that the program that launched us
     // had time to exit so that we can overwrite it
     ::Sleep(gCli->sleepMs);
@@ -783,6 +782,6 @@ void UpdateSelfTo(Str path) {
     }
     logf("UpdateSelfTo: copied self to file\n");
 
-    TempStr args = fmt(R"(-sleep-ms 500 -delete-file "%s")", srcPath.s);
+    TempStr args = fmt(R"(-sleep-ms 500 -delete-file "%s")", srcPath);
     CreateProcessHelper(path, args);
 }

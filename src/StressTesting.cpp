@@ -94,12 +94,12 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
 
 static void BenchChmLoadOnly(Str filePath) {
     auto total = TimeGet();
-    logf("Starting: %s\n", filePath.s);
+    logf("Starting: %s\n", filePath);
 
     auto t = TimeGet();
     ChmModel* chmModel = ChmModel::Create(filePath, nullptr);
     if (!chmModel) {
-        logf("Error: failed to load %s\n", filePath.s);
+        logf("Error: failed to load %s\n", filePath);
         return;
     }
 
@@ -109,11 +109,11 @@ static void BenchChmLoadOnly(Str filePath) {
     // build the table of contents (exercises ChmFile's ToC/index parsing)
     auto tToc = TimeGet();
     TocTree* toc = chmModel->GetToc();
-    logf("toc: %.2f ms (%s)\n", TimeSinceInMs(tToc), toc ? "present" : "none");
+    logf("toc: %.2f ms (%s)\n", TimeSinceInMs(tToc), Str(toc ? "present" : "none"));
 
     delete chmModel;
 
-    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath.s);
+    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);
 }
 
 static void BenchFile(Str path, Str pagesSpec) {
@@ -136,12 +136,12 @@ static void BenchFile(Str path, Str pagesSpec) {
     }
 
     auto total = TimeGet();
-    logf("Starting: %s\n", path.s);
+    logf("Starting: %s\n", path);
 
     auto t = TimeGet();
     EngineBase* engine = CreateEngineFromFile(path, nullptr, true);
     if (!engine) {
-        logf("Error: failed to load %s\n", path.s);
+        logf("Error: failed to load %s\n", path);
         return;
     }
 
@@ -155,7 +155,7 @@ static void BenchFile(Str path, Str pagesSpec) {
     // plain render path below doesn't reach
     auto tToc = TimeGet();
     TocTree* toc = engine->GetToc();
-    logf("toc: %.2f ms (%s)\n", TimeSinceInMs(tToc), toc ? "present" : "none");
+    logf("toc: %.2f ms (%s)\n", TimeSinceInMs(tToc), Str(toc ? "present" : "none"));
 
     if (!pagesSpec) {
         for (int i = 1; i <= pages; i++) {
@@ -177,7 +177,7 @@ static void BenchFile(Str path, Str pagesSpec) {
 
     SafeEngineRelease(&engine);
 
-    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), path.s);
+    logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), path);
 }
 
 static bool IsFileToBench(Str path) {
@@ -219,7 +219,7 @@ void BenchFileOrDir(StrVec& pathsToBench) {
         } else if (dir::Exists(path)) {
             BenchDir(path);
         } else {
-            logf("Error: file or dir %s doesn't exist", path.s);
+            logf("Error: file or dir %s doesn't exist", path);
         }
     }
 }
@@ -530,7 +530,7 @@ static void Finished(StressTest* st, bool success) {
     if (success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
         TempStr tm = FormatTimeTemp(secs);
-        TempStr s = fmt("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm.s);
+        TempStr s = fmt("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm);
         printf("%s\n", s.s);
         fflush(stdout);
         NotificationCreateArgs args;
@@ -555,7 +555,7 @@ static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) 
         ParsePageRanges(ranges, st->fileRanges);
         Start(st, dirFileProvider, cycles);
     } else {
-        TempStr s = fmt("Path '%s' doesn't exist", path.s);
+        TempStr s = fmt("Path '%s' doesn't exist", path);
         NotificationCreateArgs args;
         args.hwndParent = st->win->hwndCanvas;
         args.msg = s;
@@ -569,7 +569,7 @@ static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) 
 
 static bool OpenFile(StressTest* st, Str fileName) {
     if (IsBlacklistedForStressTest(fileName)) {
-        logf("Skipping blacklisted file: %s\n", fileName.s);
+        logf("Skipping blacklisted file: %s\n", fileName);
         return false;
     }
     int fileNo = AtomicIntInc(&gStressTestFileNo);
@@ -678,7 +678,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
     int secs = SecsSinceSystemTime(st->stressStartTime);
     TempStr tm = FormatTimeTemp(secs);
     int nTotalFiles = st->fileProvider->GetFilesCount();
-    TempStr s = fmt("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName.s, tm.s);
+    TempStr s = fmt("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm);
     NotificationCreateArgs nargs;
     nargs.hwndParent = st->win->hwndCanvas;
     nargs.msg = s;

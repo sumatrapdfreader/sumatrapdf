@@ -106,7 +106,7 @@ Str SmartResolveDirectory(Str dir) {
     auto* ta = GetTempArena();
 
     // Replace / with backslash
-    char* normalized = (char*)Alloc(ta, dir.len + 1); // str-port: arena buffer
+    char* normalized = (char*)Alloc(ta, dir.len + 1);
     for (int i = 0; i < dir.len; i++) {
         normalized[i] = (dir.s[i] == '/') ? '\\' : dir.s[i];
     }
@@ -123,7 +123,7 @@ Str SmartResolveDirectory(Str dir) {
         Str home = GetHomeDir();
         if (!IsEmpty(home)) {
             int newLen = home.len + result.len - 1;
-            char* expanded = (char*)Alloc(ta, newLen + 1); // str-port: arena buffer
+            char* expanded = (char*)Alloc(ta, newLen + 1);
             int pos = 0;
             for (int i = 0; i < home.len; i++) {
                 expanded[pos++] = home.s[i];
@@ -142,7 +142,7 @@ Str SmartResolveDirectory(Str dir) {
 
     // Expand environment variables: $FOO and %FOO%
     // Look for $VAR or %VAR% patterns
-    char* expanded = (char*)Alloc(ta, MAX_PATH); // str-port: arena buffer
+    char* expanded = (char*)Alloc(ta, MAX_PATH);
     int outPos = 0;
     int i = 0;
     while (i < result.len && outPos < MAX_PATH - 1) {

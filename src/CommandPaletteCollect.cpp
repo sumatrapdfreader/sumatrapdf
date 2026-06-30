@@ -329,7 +329,7 @@ static void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCu
             disp = rn;
         } else {
             TempStr base = path::GetBaseNameTemp(fs->filePath);
-            disp = fmt("%s : %s", base.s, rn.s);
+            disp = fmt("%s : %s", base, rn);
         }
         if (str::IsEmpty(disp)) {
             continue;

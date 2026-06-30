@@ -33,7 +33,7 @@ void WinUtilTest() {
         utassert(stream);
         ByteSlice dataTmp = GetDataFromStream(stream, nullptr);
         WStr data =
-            WStr((WCHAR*)dataTmp.Get(), (int)(dataTmp.size() / sizeof(WCHAR))); // str-port: binary UTF-16 buffer view
+            WStr((WCHAR*)dataTmp.Get(), (int)(dataTmp.size() / sizeof(WCHAR)));
         utassert(data && stringSize == dataTmp.size() && wstr::Eq(data, string));
         dataTmp.Free();
     }

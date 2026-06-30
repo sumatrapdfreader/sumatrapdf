@@ -458,13 +458,13 @@ static TempStr GetWindowProcessNameTemp(HWND hwnd) {
 }
 
 static TempStr MakeUniquePathTemp(Str dir, Str base) {
-    TempStr name = fmt("%s.png", base.s);
+    TempStr name = fmt("%s.png", base);
     TempStr path = path::JoinTemp(dir, name);
     if (!file::Exists(Str(path))) {
         return path;
     }
     for (int i = 1; i < 10000; i++) {
-        name = fmt("%s.%d.png", base.s, i);
+        name = fmt("%s.%d.png", base, i);
         path = path::JoinTemp(dir, name);
         if (!file::Exists(Str(path))) {
             return path;
@@ -1154,8 +1154,7 @@ void RegisterScreenshotHotkey(HWND hwnd) {
     }
     BOOL ok = RegisterHotKey(hwnd, kScreenshotHotkeyId, mod, vk);
     if (!ok && !IsOtherSumatraProcessRunning()) {
-        MaybeDelayedWarningNotification(
-            fmt("Couldn't register '%s' global hotkey for taking screenshots", shortcut.s));
+        MaybeDelayedWarningNotification(fmt("Couldn't register '%s' global hotkey for taking screenshots", shortcut));
     }
 }
 
@@ -1264,7 +1263,7 @@ static void SetHotkeyDoSet(SetHotkeyDialog* dlg) {
     if (!dlg->newHotkey) {
         return;
     }
-    logf("SetHotkeyDoSet: setting screenshot hotkey to '%s'\n", dlg->newHotkey.s);
+    logf("SetHotkeyDoSet: setting screenshot hotkey to '%s'\n", dlg->newHotkey);
 
     Shortcut* sc = FindScreenshotShortcutEntry();
     if (sc) {

@@ -151,7 +151,7 @@ static TempStr DestRectToStrTemp(EngineBase* engine, IPageDestination* dest) {
     Str destName = PageDestGetName(dest);
     if (destName) {
         TempStr name = EscapeTemp(destName);
-        return fmt("Name=\"%s\"", name.s);
+        return fmt("Name=\"%s\"", name);
     }
     // as handled by LinkHandler::ScrollTo in MainWindow.cpp
     int pageNo = PageDestGetPageNo(dest);

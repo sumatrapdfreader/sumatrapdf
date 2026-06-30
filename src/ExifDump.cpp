@@ -483,7 +483,7 @@ struct TiffParser {
             snprintf(tagNameBuf, sizeof(tagNameBuf), "Tag 0x%04X", tag);
             name = Str(tagNameBuf);
         }
-        TempStr line = fmt("%s %s (%s): %s", prefix.s, name.s, TypeName(type).s, value ? value.s : "");
+        TempStr line = fmt("%s %s (%s): %s", Str(prefix), Str(name), TypeName(type), value);
         lines.Append(str::Dup(line));
     }
 
@@ -1160,7 +1160,7 @@ static void DumpFromGdiplus(const ByteSlice& d, StrVec& lines) {
         } else {
             val = fmt("[%u bytes]", item->length);
         }
-        TempStr line = fmt("EXIF Tag 0x%04X (%s): %s", (u16)ids[i], TypeName(item->type).s, val.s);
+        TempStr line = fmt("EXIF Tag 0x%04X (%s): %s", (u16)ids[i], TypeName(item->type), val);
         lines.Append(str::Dup(line));
         free(buf);
     }
@@ -1196,7 +1196,7 @@ bool DumpExifFile(Str path) {
     if (!path) {
         return false;
     }
-    CliPrint(fmt("Opening: %s", path.s));
+    CliPrint(fmt("Opening: %s", path));
     ByteSlice data = file::ReadFile(path);
     if (data.empty()) {
         CliPrint(StrL("No EXIF information found"));

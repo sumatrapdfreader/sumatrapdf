@@ -27,9 +27,9 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         // run SumatraPDF.exe with the -plugin command line argument
         PluginStartData* data = (PluginStartData*)((CREATESTRUCT*)lp)->lpCreateParams;
         auto path = data->filePath;
-        TempStr cmdLine = fmt("-plugin %d \"%s\"", hwnd, path.s);
+        TempStr cmdLine = fmt("-plugin %d \"%s\"", hwnd, path);
         if (data->fileOriginUrl) {
-            cmdLine = fmt("-plugin \"%s\" %d \"%s\"", data->fileOriginUrl.s, hwnd, path.s);
+            cmdLine = fmt("-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, path);
         }
         ShellExecute(hwnd, L"open", ToWStrTemp(data->sumatraPath), ToWStrTemp(cmdLine), nullptr, SW_SHOW);
     } else if (WM_SIZE == msg) {
@@ -47,7 +47,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
         COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wp == hChild) {
-            auto url(ToWStrTemp(Str((const char*)cds->lpData))); // str-port: Win32 COPYDATA
+            auto url(ToWStrTemp(Str((const char*)cds->lpData)));
             ShellExecute(hChild, L"open", url, nullptr, nullptr, SW_SHOW);
             return TRUE;
         }
@@ -93,7 +93,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
 
     if (argList.Size() == 1) {
         TempStr name = path::GetBaseNameTemp(argList.At(0));
-        TempStr msg = fmt("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name.s);
+        TempStr msg = fmt("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
         MsgBox(nullptr, msg, PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }

@@ -331,7 +331,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         TempStr s = trans::GetTranslation(bi.toolTip);
         if (accelStr) {
             Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-            TempStr s2 = fmt(" (%s)", accel.s);
+            TempStr s2 = fmt(" (%s)", accel);
             s = str::JoinTemp(s, s2);
         }
 
@@ -351,7 +351,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
             TempStr s = bi.toolTip;
             if (accelStr) {
                 Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-                TempStr s2 = fmt(" (%s)", accel.s);
+                TempStr s2 = fmt(" (%s)", accel);
                 s = str::JoinTemp(s, s2);
             }
 
@@ -378,7 +378,7 @@ static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, Str s) {
     TempStr accelStr = AppendAccelKeyToMenuStringTemp(nullptr, cmdId);
     if (accelStr) {
         Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-        TempStr s2 = fmt(" (%s)", accel.s);
+        TempStr s2 = fmt(" (%s)", accel);
         s = str::JoinTemp(s, s2);
     }
     TBBUTTONINFOW bi{};
@@ -1451,7 +1451,7 @@ void CreateToolbar(MainWindow* win) {
         rbBand.fStyle |= RBBS_CHILDEDGE;
     }
     rbBand.hbmBack = nullptr;
-    rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT str-port: Win32
+    rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT
     rbBand.hwndChild = hwndToolbar;
     rbBand.cxMinChild = (rc.right - rc.left) * kButtonsCount;
     rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;

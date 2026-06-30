@@ -152,14 +152,14 @@ void SetRect(Annotation* annot, RectF r) {
     MarkNotificationAsModified(e, annot);
 }
 
-static Str MupdfCStrDupTemp(const char* s) { // str-port: mupdf C-string boundary
+static Str MupdfCStrDupTemp(const char* s) {
     if (!s) {
         return {};
     }
     return StrDupTemp(Str(s));
 }
 
-static Str MupdfCStrTemp(const char* s) { // str-port: mupdf C-string boundary
+static Str MupdfCStrTemp(const char* s) {
     if (!s || str::IsEmptyOrWhiteSpace(s)) {
         return {};
     }
@@ -418,7 +418,7 @@ float GetWidgetFontSize(Annotation* annot) {
     ScopedCritSec cs(&e->docLock);
     float size = 0;
     fz_try(ctx) {
-        const char* fontZ = nullptr; // str-port: mupdf out-param
+        const char* fontZ = nullptr;
         int nColor = 0;
         float color[4] = {0};
         pdf_annot_default_appearance(ctx, a, &fontZ, &size, &nColor, color);
@@ -490,7 +490,7 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
     fz_try(ctx) {
         int n = pdf_choice_widget_options(ctx, a, 0, nullptr);
         if (n > 0) {
-            const char** opts = (const char**)fz_malloc(ctx, n * sizeof(char*)); // str-port: mupdf out-param
+            const char** opts = (const char**)fz_malloc(ctx, n * sizeof(char*));
             pdf_choice_widget_options(ctx, a, 0, opts);
             for (int i = 0; i < n; i++) {
                 out.Append(opts[i] ? opts[i] : "");
@@ -976,7 +976,7 @@ Str DefaultAppearanceTextFont(Annotation* annot) {
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    const char* fontNameZ = nullptr; // str-port: mupdf out-param
+    const char* fontNameZ = nullptr;
     float sizeF{0.0};
     int n = 0;
     float textColor[4]{};
@@ -996,7 +996,7 @@ void SetDefaultAppearanceTextFont(Annotation* annot, Str sv) {
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
-        const char* fontNameZ = nullptr; // str-port: mupdf out-param
+        const char* fontNameZ = nullptr;
         float sizeF{0.0};
         int n = 0;
         float textColor[4]{};
@@ -1017,7 +1017,7 @@ int DefaultAppearanceTextSize(Annotation* annot) {
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    const char* fontNameZ = nullptr; // str-port: mupdf out-param
+    const char* fontNameZ = nullptr;
     float sizeF{0.0};
     int n = 0;
     float textColor[4]{};
@@ -1036,7 +1036,7 @@ void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
-        const char* fontNameZ = nullptr; // str-port: mupdf out-param
+        const char* fontNameZ = nullptr;
         float sizeF{0.0};
         int n = 0;
         float textColor[4]{};
@@ -1057,7 +1057,7 @@ PdfColor DefaultAppearanceTextColor(Annotation* annot) {
     auto a = annot->pdfannot;
     auto ctx = e->Ctx();
     ScopedCritSec cs(&e->docLock);
-    const char* fontNameZ = nullptr; // str-port: mupdf out-param
+    const char* fontNameZ = nullptr;
     float sizeF{0.0};
     int n = 0;
     float textColor[4]{};
@@ -1077,7 +1077,7 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
-        const char* fontNameZ = nullptr; // str-port: mupdf out-param
+        const char* fontNameZ = nullptr;
         float sizeF{0.0};
         int n = 0;
         float textColor[4]{}; // must be at least 4

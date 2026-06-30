@@ -212,7 +212,7 @@ static bool ParseArg(PacketReader& r, ControlArg** argOut) {
             DeleteControlArg(arg);
             return false;
         }
-        char* strBuf = AllocArray<char>((size_t)len + 1); // str-port: owned heap
+        char* strBuf = AllocArray<char>((size_t)len + 1);
         if (!r.ReadBytes((u8*)strBuf, len)) {
             DeleteControlArg(arg);
             return false;

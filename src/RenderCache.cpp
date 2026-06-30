@@ -41,11 +41,11 @@ int gMaxRenderThreads = 8;
 // / ...) is noisy, so it's disabled by default. Set gLogRenderCache = true to
 // re-enable it when debugging the cache.
 static bool gLogRenderCache = false;
-#define rcLogf(...)                 \
-    do {                            \
-        if (gLogRenderCache) {      \
-            log(fmt(__VA_ARGS__));  \
-        }                           \
+#define rcLogf(...)                \
+    do {                           \
+        if (gLogRenderCache) {     \
+            log(fmt(__VA_ARGS__)); \
+        }                          \
     } while (0)
 
 struct RenderThreadData {
@@ -898,7 +898,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         auto durMs = TimeSinceInMs(timeStart);
         if (durMs > 100) {
             auto path = engine->FilePath();
-            logfa("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path.s);
+            logfa("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
         }
 
         req.bmp = bmp;
@@ -1141,15 +1141,15 @@ static void SerializePredictive(StrBuilder& s, int originPageNo, int nPred, cons
 
 static void SerializeRequest(StrBuilder& s, Str label, PageRenderRequest* r, DWORD now) {
     int ageMs = (int)(now - r->timestamp);
-    s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label.s, r->pageNo,
-                 r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs));
+    s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label, r->pageNo, r->zoom,
+                 r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs));
     if (r->abort) {
         s.Append("  ABORT");
     }
     SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
     if (r->dm && r->dm->GetEngine()) {
         TempStr name = path::GetBaseNameTemp(r->dm->GetEngine()->FilePath());
-        s.Append(fmt("  %s", name.s));
+        s.Append(fmt("  %s", name));
     }
     s.Append("\r\n");
 }
@@ -1158,11 +1158,11 @@ static void SerializeFinished(StrBuilder& s, FinishedRequestInfo* r, DWORD now) 
     int durMs = (int)(r->finishedAt - r->timestamp);
     int agoMs = (int)(now - r->finishedAt);
     Str label = r->aborted ? StrL("ABORTED") : StrL("DONE");
-    s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  took %5dms  %6dms ago", label.s,
+    s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  took %5dms  %6dms ago", label,
                  r->pageNo, r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, durMs, agoMs));
     SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
     if (r->fileName[0]) {
-        s.Append(fmt("  %s", r->fileName));
+        s.Append(fmt("  %s", Str(r->fileName)));
     }
     s.Append("\r\n");
 }

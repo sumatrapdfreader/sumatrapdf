@@ -111,7 +111,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
 
     u16 method = Z_DEFLATED;
     uLongf compressedSize = (u32)size;
-    char* compressed = AllocArrayTemp<char>(size); // str-port: binary deflate buffer
+    char* compressed = AllocArrayTemp<char>(size);
     if (!compressed) {
         return false;
     }

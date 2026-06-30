@@ -33,7 +33,7 @@ struct ISzCrtAlloc : ISzAlloc {
 #define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
 static bool Compress(const char* uncompressed, size_t uncompressedSize,
-                     char* compressed, // str-port: binary LZMA buffer
+                     char* compressed,
                      size_t* compressedSize) {
     ReportIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1) return false;
@@ -108,12 +108,12 @@ static bool AppendEntry(StrBuilder& data, StrBuilder& content, Str filePath, Str
     if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileData.size()) goto ReusePrevious;
 
     size_t compressedSize = fileData.size() + 1;
-    AutoFree compressed((char*)malloc(compressedSize)); // str-port: binary LZMA buffer
+    AutoFree compressed((char*)malloc(compressedSize));
     if (!compressed.Get()) {
         return false;
     }
     if (!Compress((const char*)fileData.data(), fileData.size(), compressed.Get(),
-                  &compressedSize)) { // str-port: binary buffer
+                  &compressedSize)) {
         return false;
     }
 
@@ -207,7 +207,7 @@ bool CreateArchiveFromDir(Str archivePath, Str dir) {
 
 } // namespace lzsa
 
-void _uploadDebugReportIfFunc(bool, const char*) { // str-port: stub callback
+void _uploadDebugReportIfFunc(bool, const char*) {
     // no-op implementation to satisfy SubmitBugReport()
 }
 
@@ -217,7 +217,7 @@ void _uploadDebugReportIfFunc(bool, const char*) { // str-port: stub callback
         return errorStep;                       \
     }
 
-static void MyParseCmdLine(WStr cmdLine, StrVec& args) { // str-port: Win32 GetCommandLine
+static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
     int nArgs = 0;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
     for (int i = 0; i < nArgs; i++) {
@@ -257,7 +257,7 @@ int printUsage(Str exeName) {
            exeName.s, exeName.s, exeName.s);
 }
 
-int main(__unused int argc, __unused char** argv) { // str-port: C main argv
+int main(__unused int argc, __unused char** argv) {
 #ifdef DEBUG
     // report memory leaks on stderr
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);

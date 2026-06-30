@@ -168,7 +168,7 @@ static TempStr AddTimeZone(TempStr s, int timeZone) {
     int abs = (timeZone > 0) ? timeZone : -timeZone;
     int hours = abs / 100;
     int mins = abs % 100;
-    return fmt("%s %s%02d:%02d", s.s, tzSign.s, hours, mins);
+    return fmt("%s %s%02d:%02d", s, tzSign, hours, mins);
 }
 
 static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
@@ -185,7 +185,7 @@ static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
         return AddTimeZone(res, timeZone);
     }
 
-    WCHAR* tmp = bufW + ret; // str-port: Win32 format buffer cursor
+    WCHAR* tmp = bufW + ret;
     tmp[-1] = ' ';
     ret = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &date, nullptr, tmp, cchBufLen - ret);
     if (ret < 2) { // GetTimeFormat() failed or returned an empty result
@@ -256,7 +256,7 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     TempStr strWidth = str::FormatFloatWithThousandSepTemp(width);
     TempStr strHeight = str::FormatFloatWithThousandSepTemp(height);
 
-    return fmt("%s x %s %s%s", strWidth.s, strHeight.s, unit.s, formatName.s);
+    return fmt("%s x %s %s%s", strWidth, strHeight, unit, formatName);
 }
 
 // returns a list of permissions denied by this document
@@ -282,7 +282,7 @@ static void AppendProp(StrBuilder& out, Str key, Str value) {
     if (!value) {
         return;
     }
-    out.Append(fmt("%s %s\n", key.s, value.s));
+    out.Append(fmt("%s %s\n", key, value));
 }
 
 // clang-format off
@@ -347,7 +347,7 @@ static void AppendPropTranslated(StrBuilder& out, Str propName, Str val) {
     }
     Str s = GetMatchingString(propToName, propName);
     if (!s) {
-        TempStr label = fmt("%s:", propName.s);
+        TempStr label = fmt("%s:", propName);
         AppendProp(out, label, val);
         return;
     }
@@ -835,7 +835,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, kPropertiesWinClassName, WndProcProperties);
     wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, iconName);
     ReportIf(!wcex.hIcon);
     RegisterClassEx(&wcex);

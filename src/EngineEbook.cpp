@@ -839,7 +839,7 @@ EngineBase* EngineEpub::Clone() {
     if (path) {
         auto res = CreateFromFile(path);
         if (!res) {
-            logf("EngineEpub::Clone() failed: CreateFromFile('%s') failed\n", path.s);
+            logf("EngineEpub::Clone() failed: CreateFromFile('%s') failed\n", path);
         }
         return res;
     }
@@ -1622,7 +1622,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
         if (!pageHtml) {
             return;
         }
-        html.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl.s));
+        html.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl));
         Str pageHtmlStr = AsStr(pageHtml);
         uint charset = ExtractHttpCharset(pageHtmlStr);
         if (!charset) {

@@ -68,7 +68,7 @@ static TempStr AppendCmdAccel(Str base, int cmd) {
     if (!accel) {
         return base;
     }
-    return str::JoinTemp(base, fmt(" (%s)", accel.s + 1)); // +1 skips the leading \t
+    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, accel.len - 1))); // +1 skips the leading \t
 }
 
 static TempStr FindBarButtonTooltip(int cmd) {

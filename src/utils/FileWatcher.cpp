@@ -167,7 +167,7 @@ static void NotifyAboutFile(WatchedDir* d, Str fileName) {
 
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->ignore) {
-            logf("NotifyAboutFile: ignoring '%s'\n", wf->filePath.s);
+            logf("NotifyAboutFile: ignoring '%s'\n", wf->filePath);
             continue;
         }
         if (wf->watchedDir != d) {
@@ -178,7 +178,7 @@ static void NotifyAboutFile(WatchedDir* d, Str fileName) {
         if (!str::EqI(fileName, path)) {
             continue;
         }
-        logf("NotifyAboutFile(): i=%d '%s' '%s'\n", i, wf->filePath.s, fileName.s);
+        logf("NotifyAboutFile(): i=%d '%s' '%s'\n", i, wf->filePath, fileName);
         i++;
 
         // NOTE: It is not recommended to check whether the timestamp has changed
@@ -257,7 +257,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         if (!nextOff) {
             break;
         }
-        notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff); // str-port: Win32
+        notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff);
     }
 
     StartMonitoringDirForChanges(wd);
@@ -277,7 +277,7 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
     // this is called after reading change notification and we're only
     // interested in logging the first time a dir is registered for monitoring
     if (wd->startMonitoring) {
-        logf("StartMonitoringDirForChangesAPC() %s\n", wd->dirPath.s);
+        logf("StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
     }
 
     DWORD dwNotifyFilter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME;
@@ -476,12 +476,12 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool e
     // logf("FileWatcherSubscribe() path: %s\n", path);
 
     if (!file::Exists(path)) {
-        logf("FileWatcherSubscribe: '%s' doesn't exist\n", path.s);
+        logf("FileWatcherSubscribe: '%s' doesn't exist\n", path);
         return nullptr;
     }
 
     if (path::IsSame(gLogFilePath, path)) {
-        logf("FileWatcherSubscribe: '%s' is our own log file\n", path.s);
+        logf("FileWatcherSubscribe: '%s' is our own log file\n", path);
         return nullptr;
     }
 #if 0

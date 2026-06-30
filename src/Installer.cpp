@@ -103,7 +103,7 @@ Str GetInstallerLogPath() {
 }
 
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
-    logf("ExtractFiles(): dir '%s'\n", destDir.s);
+    logf("ExtractFiles(): dir '%s'\n", destDir);
     lzma::FileInfo* fi;
     u8* uncompressed;
 
@@ -125,11 +125,11 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         free(uncompressed);
 
         if (!ok) {
-            TempStr msg = fmt(_TRA("Couldn't write %s to disk").s, filePath.s);
+            TempStr msg = fmt(_TRA("Couldn't write %s to disk").s, filePath);
             NotifyFailed(msg);
             return false;
         }
-        logf("  extracted '%s'\n", filePath.s);
+        logf("  extracted '%s'\n", filePath);
         ProgressStep();
     }
 
@@ -137,7 +137,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
 }
 
 static bool CopySelfToDir(Str destDir) {
-    logf("CopySelfToDir(%s)\n", destDir.s);
+    logf("CopySelfToDir(%s)\n", destDir);
     TempStr exePath = GetSelfExePathTemp();
     TempStr dstPath = path::JoinTemp(destDir, kExeName);
     bool failIfExists = false;
@@ -147,10 +147,10 @@ static bool CopySelfToDir(Str destDir) {
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
     file::DeleteZoneIdentifier(dstPath);
     if (!ok) {
-        logf("  failed to copy '%s' to dir '%s'\n", exePath.s, destDir.s);
+        logf("  failed to copy '%s' to dir '%s'\n", exePath, destDir);
         return false;
     }
-    logf("  copied '%s' to dir '%s'\n", exePath.s, destDir.s);
+    logf("  copied '%s' to dir '%s'\n", exePath, destDir);
     return true;
 }
 
@@ -176,7 +176,7 @@ static void CopySettingsFile() {
     bool failIfExists = true;
     // don't care if it fails or not
     file::Copy(dstPath, srcPath, failIfExists);
-    logf("  copied '%s' to '%s'\n", srcPath.s, dstPath.s);
+    logf("  copied '%s' to '%s'\n", srcPath, dstPath);
 }
 
 static bool CreateAppShortcut(int csidl, Str installedExePath) {
@@ -185,7 +185,7 @@ static bool CreateAppShortcut(int csidl, Str installedExePath) {
         log("CreateAppShortcut() failed\n");
         return false;
     }
-    logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath.s);
+    logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath);
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
@@ -214,7 +214,7 @@ static void RemoveShortcutFile(int csidl) {
         return;
     }
     file::Delete(path);
-    logf("RemoveShortcutFile: deleted '%s'\n", path.s);
+    logf("RemoveShortcutFile: deleted '%s'\n", path);
 }
 
 // those are shortcuts created by versions before 3.4
@@ -249,7 +249,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
     // check if installDir is already in PATH (case-insensitive)
     if (currPath && str::FindFromI(currPath, installDir)) {
-        logf("AddInstallDirToPath: '%s' already in PATH\n", installDir.s);
+        logf("AddInstallDirToPath: '%s' already in PATH\n", installDir);
         return;
     }
     StrBuilder newPath;
@@ -277,7 +277,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
         logf("AddInstallDirToPath: RegSetValueExW failed with %d\n", (int)res);
         return;
     }
-    logf("AddInstallDirToPath: added '%s' to PATH\n", installDir.s);
+    logf("AddInstallDirToPath: added '%s' to PATH\n", installDir);
     // notify other processes that environment has changed
     SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, nullptr);
 }
@@ -290,7 +290,7 @@ static void InstallerThread(Flags* cli) {
     TempStr installedExePath = path::JoinTemp(cli->installDir, kExeName);
     auto allUsers = cli->allUsers;
     logf("InstallerThread: cli->allUsers: %d, cli->withFilter: %d, cli->withPreview: %d, installerExePath: '%s'\n",
-         (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath.s);
+         (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath);
     HKEY key = cli->allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
     if (!ExtractInstallerFiles(cli->installDir)) {
@@ -382,10 +382,10 @@ static void RestartElevatedForAllUsers(Flags* cli) {
     Str dir = cli->installDir;
     cmdLine = str::JoinTemp(cmdLine, " -install-dir \"", dir);
     cmdLine = str::JoinTemp(cmdLine, "\"");
-    logf("LaunchElevated('%s', '%s')\n", exePath.s, cmdLine.s);
+    logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
     bool ok = LaunchElevated(exePath, cmdLine);
     if (!ok) {
-        logf("LaunchElevated('%s', '%s') failed!\n", exePath.s, cmdLine.s);
+        logf("LaunchElevated('%s', '%s') failed!\n", exePath, cmdLine);
         LogLastError();
     } else {
         logf("LaunchElevated() ok!\n");
@@ -576,21 +576,21 @@ static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) 
     Str dirPrevInstall = gPrevInstall.installationDir;
 
     if (dirPrevInstall && !ignorePrev) {
-        logf("  using %s from previous install\n", dirPrevInstall.s);
+        logf("  using %s from previous install\n", dirPrevInstall);
         return dirPrevInstall;
     }
 
     if (forAllUsers) {
         TempStr dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
         TempStr dir = path::JoinTemp(dirAll, kAppName);
-        logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir.s);
+        logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
         return dir;
     }
 
     // %APPLOCALDATA%\SumatraPDF
     TempStr dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     TempStr dir = path::JoinTemp(dirUser, kAppName);
-    logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir.s);
+    logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
     return dir;
 }
 
@@ -649,7 +649,7 @@ static void OnButtonOptions(InstallerWnd* wnd) {
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lpData) {
     switch (msg) {
         case BFFM_INITIALIZED:
-            if (!wstr::IsEmpty(WStr((wchar_t*)lpData))) { // str-port: Win32 BFFM callback
+            if (!wstr::IsEmpty(WStr((wchar_t*)lpData))) {
                 SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, lpData);
             }
             break;
@@ -750,7 +750,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     logf(
         "CreateInstallerWindowControls: cli->allUsers: %d, cli->withPreview: %d, cli->withFilter: %d, install dir: "
         "'%s'\n",
-        (int)cli->allUsers, (int)cli->withPreview, (int)cli->withFilter, cli->installDir.s);
+        (int)cli->allUsers, (int)cli->withPreview, (int)cli->withFilter, cli->installDir);
     // show options if user chose non-defaults via cmd-line
     // or if previous install had them enabled
     bool showOptions = false;
@@ -980,13 +980,13 @@ static bool CreateInstallerWnd(Flags* cli) {
 
         FillWndClassEx(wcex, kInstallerWindowClassName, WndProcInstallerFrame);
         auto h = GetModuleHandleW(nullptr);
-        WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
+        WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID());
         wcex.hIcon = LoadIconW(h, resName);
 
         RegisterClassExW(&wcex);
     }
 
-    TempStr title = fmt(_TRA("SumatraPDF %s Installer").s, CURR_VERSION_STRA);
+    TempStr title = fmt(_TRA("SumatraPDF %s Installer").s, StrL(CURR_VERSION_STRA));
     DWORD exStyle = 0;
     if (trans::IsCurrLangRtl()) {
         exStyle = WS_EX_LAYOUTRTL;
@@ -1133,7 +1133,7 @@ bool ExtractLibmupdfDll(Str destDir) {
     }
     if (!dir::CreateAll(destDir)) {
         free(uncompressed);
-        logf("ExtractLibmupdfDll: couldn't create directory '%s'\n", destDir.s);
+        logf("ExtractLibmupdfDll: couldn't create directory '%s'\n", destDir);
         return false;
     }
     TempStr filePath = path::JoinTemp(destDir, fi->name);
@@ -1141,15 +1141,15 @@ bool ExtractLibmupdfDll(Str destDir) {
     bool ok = file::WriteFile(filePath, d);
     free(uncompressed);
     if (!ok) {
-        logf("ExtractLibmupdfDll: failed to write '%s'\n", filePath.s);
+        logf("ExtractLibmupdfDll: failed to write '%s'\n", filePath);
         return false;
     }
-    logf("ExtractLibmupdfDll: extracted '%s'\n", filePath.s);
+    logf("ExtractLibmupdfDll: extracted '%s'\n", filePath);
     return true;
 }
 
 bool ExtractInstallerFiles(Str dir) {
-    logf("ExtractInstallerFiles() to '%s'\n", dir.s);
+    logf("ExtractInstallerFiles() to '%s'\n", dir);
     bool ok = dir::CreateAll(Str(dir));
     if (!ok) {
         log("  dir::CreateAll() failed\n");
@@ -1244,7 +1244,7 @@ int RunInstaller() {
         DWORD parentPid = 0;
         TempStr path = GetParentProcessPath(&parentPid);
         if (path) {
-            logf("Parent process: pid=%d, path='%s'\n", (int)parentPid, path.s);
+            logf("Parent process: pid=%d, path='%s'\n", (int)parentPid, path);
         } else if (parentPid != 0) {
             logf("Parent process: pid=%d, path unknown\n", (int)parentPid);
         } else {
@@ -1281,8 +1281,8 @@ int RunInstaller() {
         gCliNew.installDir = str::Dup(dir);
     }
     TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
-    logf("RunInstaller: '%s', cmdLine: '%s', installing into dir '%s'\n", GetSelfExePathTemp().s, cmdLine.s,
-         gCliNew.installDir.s);
+    logf("RunInstaller: '%s', cmdLine: '%s', installing into dir '%s'\n", GetSelfExePathTemp(), cmdLine,
+         gCliNew.installDir);
 
     int ret = 0;
 

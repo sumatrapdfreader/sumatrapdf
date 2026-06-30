@@ -130,10 +130,10 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
         if (additionalOnly && gModulesInfo) {
             auto pos = str::FindFromI(gModulesInfo, pathA).s;
             if (!pos) {
-                s.Append(fmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.s, pathA.s));
+                s.Append(fmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
             }
         } else {
-            s.Append(fmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.s, pathA.s));
+            s.Append(fmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
         }
         cont = Module32Next(snap, &mod);
     }
@@ -148,7 +148,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
         s.Append("Type: debug report (not crash)\n");
     }
     if (condStr) {
-        s.Append(fmt("Cond: %s @ %s\n", condStr.s, fileLine.s));
+        s.Append(fmt("Cond: %s @ %s\n", condStr, fileLine));
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -204,7 +204,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
         s.Append("Type: debug report (not crash)\n");
     }
     if (condStr) {
-        s.Append(fmt("Cond: %s @ %s\n", condStr.s, fileLine.s));
+        s.Append(fmt("Cond: %s @ %s\n", condStr, fileLine));
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -234,7 +234,7 @@ void SaveCrashInfo(const ByteSlice& d) {
         logf("SaveCrashInfo: skipping because !gCrashFilePath");
         return;
     }
-    logf("SaveCrashInfo: gCrashFilePath='%s'\n", gCrashFilePath.s);
+    logf("SaveCrashInfo: gCrashFilePath='%s'\n", gCrashFilePath);
     dir::CreateForFile(gCrashFilePath);
     file::WriteFile(gCrashFilePath, d);
 }
@@ -267,7 +267,7 @@ void UploadCrashReport(const ByteSlice& d) {
 }
 
 static bool ExtractSymbols(const u8* archiveData, size_t dataSize, Str dstDir, Arena* allocator) {
-    logf("ExtractSymbols: dir '%s', size: %d\n", dstDir.s, (int)dataSize);
+    logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
     lzma::SimpleArchive archive;
     bool ok = ParseSimpleArchive(archiveData, dataSize, &archive);
     if (!ok) {
@@ -278,7 +278,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, Str dstDir, A
     for (int i = 0; i < archive.filesCount; i++) {
         lzma::FileInfo* fi = &(archive.files[i]);
         Str name = fi->name;
-        logf("ExtractSymbols: file %d is '%s'\n", i, name.s);
+        logf("ExtractSymbols: file %d is '%s'\n", i, name);
         u8* uncompressed = GetFileDataByIdx(&archive, i, allocator);
         if (!uncompressed) {
             return false;
@@ -291,7 +291,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, Str dstDir, A
         ok = file::WriteFile(filePath, d);
         if (!ok) {
             DWORD err = GetLastError();
-            logf("ExtractSymbols: failed to write '%s'\n", filePath.s);
+            logf("ExtractSymbols: failed to write '%s'\n", filePath);
             LogLastError(err);
         }
         Free(allocator, uncompressed);
@@ -316,11 +316,11 @@ static bool DownloadAndUnzipSymbols(Str symDir) {
     }
 
     if (!dir::CreateAll(symDir)) {
-        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", symDir.s);
+        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", symDir);
         return false;
     }
 
-    logf("DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir.s, gSymbolsUrl.s);
+    logf("DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
     if (!symDir || !dir::Exists(symDir)) {
         log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
         return false;
@@ -355,16 +355,16 @@ bool CrashHandlerDownloadSymbols() {
 bool AreSymbolsDownloaded(Str symDir) {
     TempStr path = path::JoinTemp(symDir, "SumatraPDF.pdb");
     if (file::Exists(Str(path))) {
-        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path.s, symDir.s);
+        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path, symDir);
         return true;
     }
     TempStr exePath = GetSelfExePathTemp();
     exePath = str::ReplaceTemp(exePath, ".exe", ".pdb");
     if (file::Exists(exePath)) {
-        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", exePath.s, symDir.s);
+        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", exePath, symDir);
         return true;
     }
-    logf("AreSymbolsDownloaded(): not downloaded, symDir: '%s'\n", symDir.s);
+    logf("AreSymbolsDownloaded(): not downloaded, symDir: '%s'\n", symDir);
     return false;
 }
 
@@ -418,7 +418,7 @@ static TempStr BuildSymbolPathTemp(Str symDir) {
     if (gAddSymbolServer && symDirExists) {
         // this probably won't work as it needs symsrv.dll and that's not included with Windows
         // TODO: maybe try to scan system directories for symsrv.dll and somehow add it?
-        path.Append(fmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir.s));
+        path.Append(fmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir));
     }
 
     // remove ";" from the end
@@ -430,20 +430,20 @@ bool InitializeDbgHelp(bool force) {
     TempStr symPath = BuildSymbolPathTemp(gSymbolsDir);
     TempWStr ws = ToWStrTemp(symPath);
     if (!dbghelp::Initialize(ws, force)) {
-        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", symPath.s, (int)force);
+        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", symPath, (int)force);
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symPath: '%s' force: %d failed\n", symPath.s, (int)force);
+        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symPath: '%s' force: %d failed\n", symPath, (int)force);
         return false;
     }
-    logf("InitializeDbgHelp(): did initialize ok, symPath: '%s'\n", symPath.s);
+    logf("InitializeDbgHelp(): did initialize ok, symPath: '%s'\n", symPath);
     return true;
 }
 
 static bool DownloadSymbolsIfNeededAndInitializeDbgHelp() {
-    logf("DownloadSymbolsIfNeeded(), gSymbolsDir: '%s'\n", gSymbolsDir.s);
+    logf("DownloadSymbolsIfNeeded(), gSymbolsDir: '%s'\n", gSymbolsDir);
     if (!AreSymbolsDownloaded(gSymbolsDir)) {
         bool ok = CrashHandlerDownloadSymbols();
         if (!ok) {
@@ -458,7 +458,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     // in release builds ReportIf()/ReportIfFast() will break if running under
     // the debugger. In other builds it sends a debug report
     if (condStr) {
-        logfa("_uploadDebugReport: %s %s\n", condStr.s, fileLine.s);
+        logfa("_uploadDebugReport: %s %s\n", condStr, fileLine);
     } else {
         loga("_uploadDebugReport\n");
     }
@@ -531,7 +531,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     }
 
     logfa("_uploadDebugReport: isCrash: %d, captureCallstack: %d, gSymbolsDir: '%s'\n", (int)isCrash,
-          (int)captureCallstack, gSymbolsDir.s);
+          (int)captureCallstack, gSymbolsDir);
 
     if (captureCallstack && downloadSymbols) {
         // we proceed even if we fail to download symbols
@@ -648,12 +648,12 @@ static void GetOsVersion(StrBuilder& s) {
         arch = IsRunningInWow64() ? "Wow64" : "32-bit";
     }
     if (0 == servicePackMajor) {
-        s.Append(fmt("OS: Windows %s build %d %s\n", os.s, buildNumber, arch));
+        s.Append(fmt("OS: Windows %s build %d %s\n", Str(os), buildNumber, Str(arch)));
     } else if (0 == servicePackMinor) {
-        s.Append(fmt("OS: Windows %s SP%d build %d %s\n", os.s, servicePackMajor, buildNumber, arch));
+        s.Append(fmt("OS: Windows %s SP%d build %d %s\n", Str(os), servicePackMajor, buildNumber, Str(arch)));
     } else {
-        s.Append(
-            fmt("OS: Windows %s %d.%d build %d %s\n", os.s, servicePackMajor, servicePackMinor, buildNumber, arch));
+        s.Append(fmt("OS: Windows %s %d.%d build %d %s\n", Str(os), servicePackMajor, servicePackMinor, buildNumber,
+                     Str(arch)));
     }
 }
 
@@ -666,7 +666,7 @@ static void GetProcessorName(StrBuilder& s) {
         name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     }
     if (name) {
-        s.Append(fmt("Processor: %s\n", name.s));
+        s.Append(fmt("Processor: %s\n", name));
     }
 }
 
@@ -689,16 +689,16 @@ static void GetGraphicsDriverInfo(StrBuilder& s) {
             break;
         }
         s.Append(fmt("Graphics driver %d\n", i));
-        s.Append(fmt("  DriverDesc:         %s\n", v.s));
+        s.Append(fmt("  DriverDesc:         %s\n", v));
 
         v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverVersion");
         if (v) {
-            s.Append(fmt("  DriverVersion:      %s\n", v.s));
+            s.Append(fmt("  DriverVersion:      %s\n", v));
         }
 
         v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "UserModeDriverName");
         if (v) {
-            s.Append(fmt("  UserModeDriverName: %s\n", v.s));
+            s.Append(fmt("  UserModeDriverName: %s\n", v));
         }
     }
 }
@@ -725,7 +725,7 @@ static void GetSystemInfo(StrBuilder& s) {
         if (str::IsEmpty(ver)) {
             ver = "no WebView2 installed";
         }
-        s.Append(fmt("WebView2: %s\n", ver.s));
+        s.Append(fmt("WebView2: %s\n", ver));
     }
     {
         // get computer name
@@ -735,11 +735,11 @@ static void GetSystemInfo(StrBuilder& s) {
         if (!s1 && !s2) {
             // no-op
         } else if (!s1) {
-            s.Append(fmt("Machine: %s\n", s2.s));
+            s.Append(fmt("Machine: %s\n", s2));
         } else if (!s2 || str::EqI(s1, s2)) {
-            s.Append(fmt("Machine: %s\n", s1.s));
+            s.Append(fmt("Machine: %s\n", s1));
         } else {
-            s.Append(fmt("Machine: %s %s\n", s1.s, s2.s));
+            s.Append(fmt("Machine: %s %s\n", s1, s2));
         }
     }
     {
@@ -747,7 +747,7 @@ static void GetSystemInfo(StrBuilder& s) {
         char country[32] = {}, lang[32]{};
         GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
         GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
-        s.Append(fmt("Lang: %s %s\n", lang, country));
+        s.Append(fmt("Lang: %s %s\n", Str(lang), Str(country)));
     }
     GetGraphicsDriverInfo(s);
     {
@@ -873,8 +873,8 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
         return;
     }
 
-    logf("InstallCrashHandler:\n  crashDumpPath: '%s'\n  crashFilePath: '%s'\n  symDir: '%s'\n", crashDumpPath.s,
-         crashFilePath.s, symDir.s);
+    logf("InstallCrashHandler:\n  crashDumpPath: '%s'\n  crashFilePath: '%s'\n  symDir: '%s'\n", crashDumpPath,
+         crashFilePath, symDir);
 
     gCrashDumpPath = str::Dup(crashDumpPath);
     gCrashFilePath = str::Dup(crashFilePath);
@@ -1017,7 +1017,7 @@ static void TestCrashPureCall()
 static int TestBigNew()
 {
     size_t size = 1024*1024*1024*1;  // 1 GB should be out of reach
-    char* mem = (char*)1; // str-port: raw allocation test, not a string
+    char* mem = (char*)1;
     while (mem) {
         mem = new char[size];
     }

@@ -125,7 +125,7 @@ static ISpObjectToken* SapiFindVoiceTokenById(Str voiceId) {
     ULONG fetched = 0;
 
     while (enumTokens->Next(1, &token, &fetched) == S_OK && fetched > 0) {
-        WCHAR* idW = nullptr; // str-port: Win32 COM out-param
+        WCHAR* idW = nullptr;
         hr = token->GetId(&idW);
 
         if (SUCCEEDED(hr) && idW && str::EqI(ToUtf8Temp(idW), voiceId)) {
@@ -159,7 +159,7 @@ static Str SapiGetVoiceLanguage(ISpObjectToken* token) {
         return {};
     }
 
-    WCHAR* langW = nullptr; // str-port: Win32 COM out-param
+    WCHAR* langW = nullptr;
     hr = attributes->GetStringValue(L"Language", &langW);
     attributes->Release();
 
@@ -275,8 +275,8 @@ static void SapiGetVoices(Vec<TtsVoiceInfo>& voices) {
     ULONG fetched = 0;
 
     while (enumTokens->Next(1, &token, &fetched) == S_OK && fetched > 0) {
-        WCHAR* idW = nullptr;   // str-port: Win32 COM out-param
-        WCHAR* nameW = nullptr; // str-port: Win32 COM out-param
+        WCHAR* idW = nullptr;
+        WCHAR* nameW = nullptr;
 
         HRESULT idHr = token->GetId(&idW);
         HRESULT nameHr = token->GetStringValue(nullptr, &nameW);

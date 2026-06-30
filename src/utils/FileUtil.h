@@ -64,7 +64,7 @@ FILE* OpenFILE(Str path);
 HANDLE OpenReadOnly(Str path);
 ByteSlice ReadFileWithArena(Str path, Arena*);
 ByteSlice ReadFile(Str path);
-int ReadN(Str path, u8* buf, size_t toRead); // str-port: binary buffer
+int ReadN(Str path, u8* buf, size_t toRead);
 bool WriteFile(Str path, const ByteSlice&);
 
 i64 GetSize(HANDLE h);

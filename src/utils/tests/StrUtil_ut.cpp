@@ -281,12 +281,11 @@ void StrTest() {
     str = str::Dup(Str(buf, 4));
     utassert(str::Eq(str, "a st"));
     str::Free(str);
-    str = fmt("%s", buf);
+    str = fmt("%s", Str(buf));
     utassert(str::Eq(str, buf));
-    str = fmt("%S",
-              L"a"
-              L"\x2019"
-              L"a.pdf");
+    str = fmt("%S", WStrL(L"a"
+                          L"\x2019"
+                          L"a.pdf"));
     utassert(str::Eq(str,
                      "a\xE2\x80\x99"
                      "a.pdf"));
@@ -301,12 +300,12 @@ void StrTest() {
         Str str2;
         AutoFreeStr large(AllocArray<char>(2000));
         memset(large, 0x11, 1998);
-        str2 = fmt("%s", large.Get());
+        str2 = fmt("%s", Str(large.Get()));
         utassert(str::Eq(str2, Str(large.Get())));
     }
 #if 0
     // TODO: this test slows down DEBUG builds significantly
-    str = fmt("%s", "\uFFFF");
+    str = fmt("%s", StrL("\uFFFF"));
     // TODO: in VS2015, str matches "\uFFFF" instead of nullptr
     utassert(str::Eq(str, nullptr));
 #endif

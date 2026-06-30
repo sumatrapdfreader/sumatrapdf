@@ -74,7 +74,7 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
         return true;
     }
     logfa("MakePluginWindow: win: 0x%p, hwndParent: 0x%p (isWindow: %d), gPluginURL: %s\n", win, hwndParent,
-          (int)IsWindow(hwndParent), IsEmpty(gPluginURL) ? "<nulL>" : gPluginURL.s);
+          (int)IsWindow(hwndParent), IsEmpty(gPluginURL) ? "<nulL>" : gPluginURL);
     ReportIf(!gPluginMode);
 
     if (!IsWindow(hwndParent)) {
@@ -217,26 +217,26 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
     }
 
     StrBuilder cmd;
-    cmd.Append(fmt("[Open(\"%s\", %d, 1, 0)]", fullPath.s, newWindow));
+    cmd.Append(fmt("[Open(\"%s\", %d, 1, 0)]", fullPath, newWindow));
     if (i.namedDest && isFirstWin) {
-        cmd.Append(fmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath.s, i.namedDest.s));
+        cmd.Append(fmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath, i.namedDest));
     } else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.Append(fmt("[GotoPage(\"%s\", %d)]", fullPath.s, i.pageNumber));
+        cmd.Append(fmt("[GotoPage(\"%s\", %d)]", fullPath, i.pageNumber));
     }
     if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         Str viewModeStr = DisplayModeToString(i.startView);
-        cmd.Append(fmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath.s, viewModeStr.s, i.startZoom,
-                       i.startScroll.x, i.startScroll.y));
+        cmd.Append(fmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath, viewModeStr, i.startZoom, i.startScroll.x,
+                       i.startScroll.y));
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         TempStr srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
-        cmd.Append(fmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath.s, srcPath.s, i.forwardSearchLine));
+        cmd.Append(fmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath, srcPath, i.forwardSearchLine));
     }
     if (i.search) {
         // TODO: quote if i.search has '"' in it
-        cmd.Append(fmt("[Search(\"%s\",\"%s\")]", fullPath.s, i.search.s));
+        cmd.Append(fmt("[Search(\"%s\",\"%s\")]", fullPath, i.search));
     }
 
     if (i.reuseDdeInstance) {
@@ -376,7 +376,7 @@ void SetTabState(WindowTab* tab, TabState* state) {
 }
 
 static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
-    logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath.s);
+    logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath);
     gFileHistory.MarkFileInexistent(state->filePath, true);
     WindowTab* tab = new WindowTab(win);
     tab->SetFilePath(state->filePath);
@@ -387,7 +387,7 @@ static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
 // TODO: when files are lazy loaded, they do not restore TabState. Need to remember
 // it in LoadArgs and call SetTabState() if present after loading
 static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad = true) {
-    logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath.s);
+    logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
     args.showWin = false;
@@ -697,8 +697,8 @@ static void ResetTempArenaWithLogging() {
         char human[32];
         FormatSizeHumanIntoBuf(gPeakBytes, Str(human, (int)sizeof(human)));
         logf("temp allocator new max: %s allocations, peak %s bytes (%s)\n",
-             str::FormatNumWithThousandSepTemp((i64)gMaxAllocs).s, str::FormatNumWithThousandSepTemp((i64)gPeakBytes).s,
-             human);
+             str::FormatNumWithThousandSepTemp((i64)gMaxAllocs), str::FormatNumWithThousandSepTemp((i64)gPeakBytes),
+             Str(human));
     }
     ResetTempArena();
 }
@@ -713,8 +713,9 @@ static void LogArenaLifetimeStats(Str what, Arena* a) {
     u64 peakBytes = a->peakBytesLifetime;
     char human[32];
     FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
-    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what.s, str::FormatNumWithThousandSepTemp((i64)nAllocs).s,
-         str::FormatNumWithThousandSepTemp((i64)peakBytes).s, human);
+    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", Str(what),
+         str::FormatNumWithThousandSepTemp((i64)nAllocs), str::FormatNumWithThousandSepTemp((i64)peakBytes),
+         Str(human));
 }
 
 static int RunMessageLoop() {
@@ -858,7 +859,7 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
                                                    LONG_PTR lpRefData) {
     switch (msg) {
         case TDN_HYPERLINK_CLICKED: {
-            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam))); // str-port: Win32
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
             break;
         }
         case TDN_BUTTON_CLICKED:
@@ -894,8 +895,7 @@ static bool EnsureLibmupdfDll() {
         return true;
     }
     if (realSize >= 0) {
-        logf("EnsureLibmupdfDll: overwriting '%s' (size %lld, expected %u)\n", path.s, (long long)realSize,
-             expectedSize);
+        logf("EnsureLibmupdfDll: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize, expectedSize);
     }
     return ExtractLibmupdfDll(buildDir);
 }
@@ -928,12 +928,12 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         if (hm) {
             return true;
         }
-        logf("LoadLibmupdf: failed to load %s\n", path.s);
+        logf("LoadLibmupdf: failed to load %s\n", path);
         err = GetLastError();
         logf("last err: 0x%x\n", (int)err);
         if (err != 0) {
             errStr = GetLastErrorStrTemp(err);
-            logf("error string: %s\n", errStr ? errStr.s : "(none)");
+            logf("error string: %s\n", errStr ? errStr : StrL("(none)"));
         }
         ReportIfFast(true);
     }
@@ -948,7 +948,7 @@ Error code: %d
 Error message: %s
 We can't proceed.
 For more information see <a href="%s">SumatraPDF docs</a>.)",
-                      (int)err, errStr ? errStr.s : "unknown", kFailedToLoadURL().s);
+                      (int)err, errStr ? errStr : StrL("unknown"), kFailedToLoadURL());
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
@@ -981,7 +981,7 @@ static HRESULT CALLBACK TaskdialogHandleLinkscallback(HWND hwnd, UINT msg, WPARA
                                                       LONG_PTR lpRefData) {
     switch (msg) {
         case TDN_HYPERLINK_CLICKED:
-            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam))); // str-port: Win32
+            LaunchBrowser(ToUtf8Temp(WStr((wchar_t*)lParam)));
             break;
     }
     return S_OK;
@@ -1192,7 +1192,7 @@ static void DeleteStaleCbxCacheFiles() {
             continue;
         }
         bool ok = file::Delete(de->filePath);
-        logf("DeleteStaleCbxCacheFiles: delete '%s' (age %lld days) -> %d\n", de->filePath.s,
+        logf("DeleteStaleCbxCacheFiles: delete '%s' (age %lld days) -> %d\n", de->filePath,
              (long long)(ageSec / (24 * 60 * 60)), (int)ok);
     }
 }
@@ -1282,7 +1282,7 @@ static void DeleteOldPdfPreviewLogs(int keep) {
     if (n > keep) {
         files.Sort(CmpPreviewLogNewestFirst);
         for (int i = keep; i < n; i++) {
-            logf("DeleteOldPdfPreviewLogs: deleting '%s'\n", files[i].path.s);
+            logf("DeleteOldPdfPreviewLogs: deleting '%s'\n", files[i].path);
             file::Delete(files[i].path);
         }
     }
@@ -1302,7 +1302,7 @@ static void DeleteStaleFilesAsync() {
     if (!dataDir) {
         return;
     }
-    logf("DeleteStaleFilesAsync: dataDir: '%s'\n", dataDir.s);
+    logf("DeleteStaleFilesAsync: dataDir: '%s'\n", dataDir);
 
     FILETIME nowFt;
     GetSystemTimeAsFileTime(&nowFt);
@@ -1323,29 +1323,29 @@ static void DeleteStaleFilesAsync() {
         bool isLegacy = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
         bool isBuildDir = IsBuildDirName(name);
         if (!isLegacy && !isBuildDir) {
-            logf("DeleteStaleFilesAsync: skipping '%s'\n", name.s);
+            logf("DeleteStaleFilesAsync: skipping '%s'\n", name);
             continue;
         }
 
         if (isBuildDir) {
             i64 ageSec = GetDirLastActivityAgeSec(de->filePath, now);
             if (ageSec < 0) {
-                logf("DeleteStaleFilesAsync: skipping '%s', couldn't determine age\n", de->filePath.s);
+                logf("DeleteStaleFilesAsync: skipping '%s', couldn't determine age\n", de->filePath);
                 continue;
             }
             if (ageSec < kMaxAgeSec) {
-                logf("DeleteStaleFilesAsync: skipping '%s' (age %lld days)\n", de->filePath.s,
+                logf("DeleteStaleFilesAsync: skipping '%s' (age %lld days)\n", de->filePath,
                      (long long)(ageSec / (24 * 60 * 60)));
                 continue;
             }
-            logf("DeleteStaleFilesAsync: deleting stale build dir '%s' (age %lld days)\n", de->filePath.s,
+            logf("DeleteStaleFilesAsync: deleting stale build dir '%s' (age %lld days)\n", de->filePath,
                  (long long)(ageSec / (24 * 60 * 60)));
         } else {
-            logf("DeleteStaleFilesAsync: deleting legacy dir '%s'\n", de->filePath.s);
+            logf("DeleteStaleFilesAsync: deleting legacy dir '%s'\n", de->filePath);
         }
 
         bool ok = dir::RemoveAll(de->filePath);
-        logf("DeleteStaleFilesAsync: dir::RemoveAll('%s') returned %d\n", de->filePath.s, ok);
+        logf("DeleteStaleFilesAsync: dir::RemoveAll('%s') returned %d\n", de->filePath, ok);
     }
 }
 
@@ -1374,7 +1374,7 @@ static int WineDpiFromEnv() {
     static Str scaleVars[] = {StrL("GDK_SCALE"), StrL("QT_SCALE_FACTOR"), StrL("ELM_SCALE")};
     int bestDpi = 0;
     for (Str var : scaleVars) {
-        Str val = Str(getenv(var.s)); // str-port: CRT getenv
+        Str val = Str(getenv(var.s));
         if (!val) {
             continue;
         }
@@ -1456,32 +1456,31 @@ extern "C" void destroy_system_font_list();
 extern void DeleteManualBrowserWindow();
 
 extern "C" {
-// str-port: mupdf C main entry points
-int muconvert_main(int argc, char* argv[]); // str-port: mupdf
-int mudraw_main(int argc, char* argv[]);    // str-port: mupdf
-int mutrace_main(int argc, char* argv[]);   // str-port: mupdf
-int murun_main(int argc, char* argv[]);     // str-port: mupdf
+int muconvert_main(int argc, char* argv[]);
+int mudraw_main(int argc, char* argv[]);
+int mutrace_main(int argc, char* argv[]);
+int murun_main(int argc, char* argv[]);
 
-int pdfclean_main(int argc, char* argv[]);   // str-port: mupdf
-int pdfextract_main(int argc, char* argv[]); // str-port: mupdf
-int pdfinfo_main(int argc, char* argv[]);    // str-port: mupdf
-int pdfposter_main(int argc, char* argv[]);  // str-port: mupdf
-int pdfshow_main(int argc, char* argv[]);    // str-port: mupdf
-int pdfpages_main(int argc, char* argv[]);   // str-port: mupdf
-int pdfcreate_main(int argc, char* argv[]);  // str-port: mupdf
-int pdfmerge_main(int argc, char* argv[]);   // str-port: mupdf
-int pdfsign_main(int argc, char* argv[]);    // str-port: mupdf
-int pdfrecolor_main(int argc, char* argv[]); // str-port: mupdf
-int pdftrim_main(int argc, char* argv[]);    // str-port: mupdf
-int pdfbake_main(int argc, char* argv[]);    // str-port: mupdf
-int mubar_main(int argc, char* argv[]);      // str-port: mupdf
-int mugrep_main(int argc, char* argv[]);     // str-port: mupdf
+int pdfclean_main(int argc, char* argv[]);
+int pdfextract_main(int argc, char* argv[]);
+int pdfinfo_main(int argc, char* argv[]);
+int pdfposter_main(int argc, char* argv[]);
+int pdfshow_main(int argc, char* argv[]);
+int pdfpages_main(int argc, char* argv[]);
+int pdfcreate_main(int argc, char* argv[]);
+int pdfmerge_main(int argc, char* argv[]);
+int pdfsign_main(int argc, char* argv[]);
+int pdfrecolor_main(int argc, char* argv[]);
+int pdftrim_main(int argc, char* argv[]);
+int pdfbake_main(int argc, char* argv[]);
+int mubar_main(int argc, char* argv[]);
+int mugrep_main(int argc, char* argv[]);
 
-int cmapdump_main(int argc, char* argv[]); // str-port: mupdf
-int pdfaudit_main(int argc, char* argv[]); // str-port: mupdf
+int cmapdump_main(int argc, char* argv[]);
+int pdfaudit_main(int argc, char* argv[]);
 
-char** fz_argv_from_wargv(int argc, wchar_t** wargv); // str-port: mupdf
-void fz_free_argv(int argc, char** argv);             // str-port: mupdf
+char** fz_argv_from_wargv(int argc, wchar_t** wargv);
+void fz_free_argv(int argc, char** argv);
 int fz_redirect_io_to_existing_console();
 }
 
@@ -1494,7 +1493,7 @@ bool WasLaunchedByPowershellWithPipeRedirect();
 #define FZ_ENABLE_BARCODE 0
 #define FZ_VERSION "1.27.2"
 
-using MutoolFunc = int (*)(int argc, char* argv[]); // str-port: mupdf C main
+using MutoolFunc = int (*)(int argc, char* argv[]);
 
 static MutoolFunc toolFuncs[] = {
 #if FZ_ENABLE_JS
@@ -1681,7 +1680,7 @@ static int MaybeDelegateToToolExe() {
     }
 
     WStr rest = SkipFirstArg(WStr(GetCommandLineW()));
-    TempStr cmd = fmt("\"%s\" %s", toolExe.s, ToUtf8Temp(rest).s);
+    TempStr cmd = fmt("\"%s\" %s", toolExe, ToUtf8Temp(rest));
     TempWStr cmdW = ToWStrTemp(cmd);
     TempWStr toolExeW = ToWStrTemp(toolExe);
 
@@ -1695,7 +1694,7 @@ static int MaybeDelegateToToolExe() {
     PROCESS_INFORMATION pi{};
     BOOL ok = CreateProcessW(toolExeW, cmdW, nullptr, nullptr, TRUE /*inherit handles*/, 0, nullptr, nullptr, &si, &pi);
     if (!ok) {
-        logf("MaybeDelegateToToolExe: CreateProcessW failed for '%s'\n", toolExe.s);
+        logf("MaybeDelegateToToolExe: CreateProcessW failed for '%s'\n", toolExe);
         return kNoMutool; // fall back to running the tool in-process
     }
     WaitForSingleObject(pi.hProcess, INFINITE);
@@ -1728,7 +1727,7 @@ static int MaybeRunMutool() {
 
     argv = fz_argv_from_wargv(argc, wargv);
     {
-        Str toolName = Str(argv[0]); // str-port: mupdf argv
+        Str toolName = Str(argv[0]);
         int idx = SeqStrIndexIS(gToolNames, toolName);
         if (idx >= 0) {
             // PowerShell pipes a GUI app's stdout through a pipe that the CRT
@@ -1774,7 +1773,7 @@ Exit:
 
 static void LogCommandLine() {
     TempStr s = ToUtf8Temp(GetCommandLineW());
-    logf("'%s'\n  ver %s\n", s.s, UPDATE_CHECK_VERA);
+    logf("'%s'\n  ver %s\n", Str(s), StrL(UPDATE_CHECK_VERA));
 }
 
 static void InstallSumatraCrashHandler(bool localOnly) {
@@ -1851,7 +1850,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // TODO: only if AttachConsole() succeeds?
         gLogToConsole = true;
     }
-    logf("wine: %s\n", IsRunningOnWine() ? "true" : "false");
+    logf("wine: %s\n", Str(IsRunningOnWine() ? "true" : "false"));
     LogWineDpiInfo();
 
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
@@ -1875,7 +1874,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         auto di = DirIter{dir};
         di.recurse = true;
         for (DirIterEntry* d : di) {
-            logf("d->filePath: '%s'\n", d->filePath.s);
+            logf("d->filePath: '%s'\n", d->filePath);
         }
     }
     if (false) {
@@ -1906,7 +1905,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         if (logFilePath) {
             StartLogToFile(logFilePath, true);
             LogCommandLine();
-            logf("wine: %s\n", IsRunningOnWine() ? "true" : "false");
+            logf("wine: %s\n", Str(IsRunningOnWine() ? "true" : "false"));
         }
         // gRedrawLog = true;
     }
@@ -1931,7 +1930,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     if (flags.updateSelfTo) {
-        logf(" flags.updateSelfTo: '%s'\n", flags.updateSelfTo.s);
+        logf(" flags.updateSelfTo: '%s'\n", flags.updateSelfTo);
         RedirectIOToExistingConsole();
         UpdateSelfTo(flags.updateSelfTo);
         if (flags.exitWhenDone) {
@@ -1941,14 +1940,14 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     if (flags.upgradeFrom) {
-        logf(" flags.upgradeFrom: '%s'\n", flags.upgradeFrom.s);
+        logf(" flags.upgradeFrom: '%s'\n", flags.upgradeFrom);
         StartInstallerAutoUpgrade(flags.upgradeFrom);
         fastExit = true;
         goto Exit;
     }
 
     if (flags.deleteFile) {
-        logf(" flags.deleteFile: '%s'\n", flags.deleteFile.s);
+        logf(" flags.deleteFile: '%s'\n", flags.deleteFile);
         RedirectIOToExistingConsole();
         // sleeping for a bit to make sure that the program that launched us
         // had time to exit so that we can overwrite it
@@ -1958,9 +1957,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // TODO: retry if file busy?
         bool ok = file::Delete(flags.deleteFile);
         if (ok) {
-            logf("Deleted '%s'\n", flags.deleteFile.s);
+            logf("Deleted '%s'\n", flags.deleteFile);
         } else {
-            logf("Failed to delete '%s'\n", flags.deleteFile.s);
+            logf("Failed to delete '%s'\n", flags.deleteFile);
         }
         if (flags.exitWhenDone) {
             HandleRedirectedConsoleOnShutdown();
@@ -2206,7 +2205,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     if (flags.dde) {
-        logf("sending flags.dde '%s', hwnd: 0x%p\n", flags.dde.s, existingHwnd);
+        logf("sending flags.dde '%s', hwnd: 0x%p\n", flags.dde, existingHwnd);
         SendMyselfDDE(flags.dde, existingHwnd);
         goto Exit;
     }

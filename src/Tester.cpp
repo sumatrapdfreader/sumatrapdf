@@ -69,7 +69,7 @@ void ZipCreateTest() {
 int TesterMain() {
     RedirectIOToConsole();
 
-    WCHAR* cmdLine = GetCommandLine(); // str-port: Win32 API
+    WCHAR* cmdLine = GetCommandLine();
 
     CmdLineArgsIter argv(cmdLine);
     int nArgs = argv.nArgs;

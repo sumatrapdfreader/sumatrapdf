@@ -88,7 +88,7 @@ bool IsSpaceOnly(Str s) {
     return off == s.len;
 }
 
-static void MemAppend(char* buf, int& off, Str src) { // str-port: owned heap write buffer
+static void MemAppend(char* buf, int& off, Str src) {
     if (!src) {
         return;
     }
@@ -157,7 +157,7 @@ Str ResolveHtmlEntities(Str str, Arena* alloc) {
             // I'm banking that text after resolving entities will
             // be smaller than the original
             resLen = (size_t)str.len + 8;        // +8 just in case
-            res.s = (char*)Alloc(alloc, resLen); // str-port: owned heap
+            res.s = (char*)Alloc(alloc, resLen);
         }
         MemAppend(res.s, dstOff, Str(str.s + chunkStart, off - chunkStart));
         // off points at '&'

@@ -54,9 +54,9 @@ struct ArenaParams {
     u64 reserve_size = 0;
     u64 commit_size = 0;
     void* optional_backing_buffer = nullptr;
-    const char* allocation_site_file = nullptr; // str-port: C-string
+    const char* allocation_site_file = nullptr;
     int allocation_site_line = 0;
-    const char* name = nullptr; // str-port: C-string
+    const char* name = nullptr;
 };
 
 struct Arena;
@@ -76,9 +76,9 @@ struct Arena {
     u64 pos;
     u64 cmt;
     u64 res;
-    const char* allocation_site_file; // str-port: C-string
+    const char* allocation_site_file;
     int allocation_site_line;
-    const char* name; // str-port: C-string
+    const char* name;
     bool uses_external_buffer;
     SRWLOCK lock;
 
@@ -230,20 +230,20 @@ VecIterator<Vec> VecIter(Vec* v) {
 // str_util.cpp
 
 struct Str {
-    char* s; // str-port: owned heap
+    char* s;
     int len;
 
     Str() : s(nullptr), len(0) {}
-    Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; } // str-port: C-string
-    explicit Str(const char* s_, int len_) : s((char*)s_), len(len_) {}            // str-port: C-string
-    explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }       // str-port: owned heap
-    explicit Str(char* s_, int len_) : s(s_), len(len_) {}                         // str-port: owned heap
+    Str(const char* s_) : s((char*)s_), len(0) { len = s_ ? (int)strlen(s_) : 0; }
+    explicit Str(const char* s_, int len_) : s((char*)s_), len(len_) {}
+    explicit Str(char* s_) : s(s_), len(0) { len = s ? (int)strlen(s) : 0; }
+    explicit Str(char* s_, int len_) : s(s_), len(len_) {}
 
     explicit operator bool() const { return len > 0 && s; }
 };
 
 // Create Str from string literal with compile-time length
-#define StrL(lit) Str((char*)(lit), (int)(sizeof(lit) - 1)) // str-port: C-string
+#define StrL(lit) Str((char*)(lit), (int)(sizeof(lit) - 1))
 
 // Compile-time length (as int) of a string literal (or char[]/WCHAR[] array);
 // faster than len() which does a runtime strlen. Works for both narrow
@@ -253,28 +253,27 @@ struct Str {
 Str AllocStrTemp(int size);
 
 struct WStr {
-    wchar_t* s; // str-port: owned heap
+    wchar_t* s;
     int len;
 
     WStr() : s(nullptr), len(0) {}
-    WStr(const wchar_t* s_) : s((wchar_t*)s_), len(0) { // str-port: C-string
+    WStr(const wchar_t* s_) : s((wchar_t*)s_), len(0) {
         while (s_ && s_[len]) len++;
     }
-    explicit WStr(const wchar_t* s_, int len_) : s((wchar_t*)s_), len(len_) {} // str-port: C-string
-    explicit WStr(wchar_t* s_) : s(s_), len(0) {                               // str-port: owned heap
+    explicit WStr(const wchar_t* s_, int len_) : s((wchar_t*)s_), len(len_) {}
+    explicit WStr(wchar_t* s_) : s(s_), len(0) {
         while (s && s[len]) len++;
     }
-    explicit WStr(wchar_t* s_, int len_) : s(s_), len(len_) {} // str-port: owned heap
+    explicit WStr(wchar_t* s_, int len_) : s(s_), len(len_) {}
 
     explicit operator bool() const { return len > 0 && s; }
 
-    // TODO(str-port): remove after all API boundaries use .s / ToWStrTemp explicitly
-    operator const wchar_t*() const { return s; } // str-port: C-string
-    operator wchar_t*() const { return s; }       // str-port: C-string
+    operator const wchar_t*() const { return s; }
+    operator wchar_t*() const { return s; }
 };
 
 // Create WStr from wide string literal with compile-time length
-#define WStrL(lit) WStr((wchar_t*)(lit), (int)(sizeof(lit) / sizeof(wchar_t) - 1)) // str-port: C-string
+#define WStrL(lit) WStr((wchar_t*)(lit), (int)(sizeof(lit) / sizeof(wchar_t) - 1))
 
 // length of a Str / WStr as int. Also accepts a C string (char* / wchar_t*) via
 // Str/WStr's implicit ctor, like the former str::Leni / wstr::Leni it replaces.
@@ -287,18 +286,18 @@ inline int len(WStr s) {
 
 bool WStrEq(WStr a, WStr b);
 bool operator==(Str a, Str b);
-bool operator==(Str a, const char* b); // str-port: C-string
-bool operator==(const char* a, Str b); // str-port: C-string
+bool operator==(Str a, const char* b);
+bool operator==(const char* a, Str b);
 bool operator!=(Str a, Str b);
-bool operator!=(Str a, const char* b); // str-port: C-string
-bool operator!=(const char* a, Str b); // str-port: C-string
+bool operator!=(Str a, const char* b);
+bool operator!=(const char* a, Str b);
 bool operator==(WStr a, WStr b);
-bool operator==(WStr a, const wchar_t* b); // str-port: C-string
-bool operator==(const wchar_t* a, WStr b); // str-port: C-string
+bool operator==(WStr a, const wchar_t* b);
+bool operator==(const wchar_t* a, WStr b);
 bool operator!=(WStr a, WStr b);
-bool operator!=(WStr a, const wchar_t* b);                   // str-port: C-string
-bool operator!=(const wchar_t* a, WStr b);                   // str-port: C-string
-void WStrCopy(wchar_t* dst, const wchar_t* src, int maxLen); // str-port: C-string
+bool operator!=(WStr a, const wchar_t* b);
+bool operator!=(const wchar_t* a, WStr b);
+void WStrCopy(wchar_t* dst, const wchar_t* src, int maxLen);
 wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);
 int WStrCmpNoCase(WStr a, WStr b);
@@ -326,7 +325,7 @@ Str StrFmt(Arena* arena, Str fmt, ...);
 int StrLastIndexOfChar(Str s, char c);
 
 // UTF-8 string utilities (legacy, for null-terminated strings)
-void StrCopyUtf8(char* dst, Str src, int maxBytes); // str-port: C-string
+void StrCopyUtf8(char* dst, Str src, int maxBytes);
 Str StrTrimSuffixWhitespace(Str s);
 
 // Counters for StrFmt optimization tracking

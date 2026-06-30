@@ -325,7 +325,7 @@ Size Wnd::GetIdealSize() {
 }
 
 Size Wnd::Layout(const Constraints bc) {
-    dbglayout(fmt("WindowBase::Layout() %s ", GetKind()));
+    dbglayout(fmt("WindowBase::Layout() %s ", Str(GetKind())));
     LogConstraints(bc, "\n");
 
     auto hinset = insets.left + insets.right;
@@ -374,8 +374,8 @@ void Wnd::SetPos(RECT* r) {
 }
 
 void Wnd::SetBounds(Rect bounds) {
-    dbglayout(
-        fmt("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", GetKind(), bounds.x, bounds.y, bounds.dx, bounds.dy));
+    dbglayout(fmt("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", Str(GetKind()), bounds.x, bounds.y, bounds.dx,
+                  bounds.dy));
 
     lastBounds = bounds;
 
@@ -804,7 +804,7 @@ static void WndRegisterClass(WStr className) {
     wc.cbSize = sizeof(wc);
     wc.hInstance = GetInstance();
     wc.style = CS_DBLCLKS;
-    wc.lpszClassName = className.s; // str-port: Win32
+    wc.lpszClassName = className.s;
     wc.lpfnWndProc = WndWindowProc;
     wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
@@ -843,7 +843,7 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     HINSTANCE inst = GetInstance();
     void* createParams = this;
     hwnd = ::CreateWindowExW(exStyle, args.className.s, L"", style, x, y, dx, dy, parent, id, inst,
-                             createParams); // str-port: Win32
+                             createParams);
     ReportIf(!hwnd);
     if (!hwnd) {
         return nullptr;
@@ -911,7 +911,7 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     TempWStr titleW = ToWStrTemp(args.title);
 
     HWND hwndTmp = ::CreateWindowExW(exStyle, className.s, titleW.s, style, x, y, dx, dy, parent, m, inst,
-                                     createParams); // str-port: Win32
+                                     createParams);
 
     ReportIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE

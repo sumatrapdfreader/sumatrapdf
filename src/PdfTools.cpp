@@ -130,10 +130,10 @@ void PdfBakeDialog::DoBake() {
         return;
     }
 
-    logf("PdfBakeDoIt: baking '%s' to '%s'\n", srcPath.s, destPath.s);
+    logf("PdfBakeDoIt: baking '%s' to '%s'\n", srcPath, destPath);
 
     // build argv for pdfbake_main: "bake" input output
-    char* argv[] = {(char*)"bake", CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
+    char* argv[] = {(char*)"bake", CStrTemp(srcPath), CStrTemp(destPath)};
     int argc = 3;
 
     fz_set_optind(0);
@@ -284,7 +284,7 @@ void ShowPdfBakeDialog(MainWindow* win) {
     if (!CouldBePDFDoc(tab)) {
         return;
     }
-    logf("ShowPdfBakeDialog: opening for '%s'\n", tab->filePath.s);
+    logf("ShowPdfBakeDialog: opening for '%s'\n", tab->filePath);
 
     auto dlg = new PdfBakeDialog();
     if (!dlg->Create(win, tab)) {
@@ -374,7 +374,7 @@ void PdfExtractTextDialog::DoExtract() {
         return;
     }
 
-    logf("PdfExtractTextDoIt: extracting text from '%s' to '%s', pages: %s\n", srcPath.s, destPath.s, pages.s);
+    logf("PdfExtractTextDoIt: extracting text from '%s' to '%s', pages: %s\n", srcPath, destPath, pages);
 
     bool ok = false;
     WindowTab* tab = win ? win->CurrentTab() : nullptr;
@@ -382,7 +382,7 @@ void PdfExtractTextDialog::DoExtract() {
     if (isPdf) {
         // use muconvert for PDF
         char* argv[] = {(char*)"convert", (char*)"-o", CStrTemp(destPath), CStrTemp(srcPath),
-                        CStrTemp(pages)}; // str-port: mupdf CLI
+                        CStrTemp(pages)};
         int argc = 5;
         fz_set_optind(0);
         ok = muconvert_main(argc, argv) == 0;
@@ -559,7 +559,7 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
     if (!tab || !tab->filePath) {
         return;
     }
-    logf("ShowPdfExtractTextDialog: opening for '%s'\n", tab->filePath.s);
+    logf("ShowPdfExtractTextDialog: opening for '%s'\n", tab->filePath);
 
     auto dlg = new PdfExtractTextDialog();
     if (!dlg->Create(win, tab)) {
@@ -608,11 +608,11 @@ void PdfCompressDialog::DoCompress() {
         return;
     }
 
-    logf("PdfCompressDoIt: compressing '%s' to '%s'\n", srcPath.s, destPath.s);
+    logf("PdfCompressDoIt: compressing '%s' to '%s'\n", srcPath, destPath);
 
     // equivalent of: clean -gggg -e 100 -f -i -t -Z input output
     char* argv[] = {(char*)"clean", (char*)"-gggg", (char*)"-e",       (char*)"100",      (char*)"-f", (char*)"-i",
-                    (char*)"-t",    (char*)"-Z",    CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
+                    (char*)"-t",    (char*)"-Z",    CStrTemp(srcPath), CStrTemp(destPath)};
     int argc = 10;
 
     fz_set_optind(0);
@@ -759,7 +759,7 @@ void ShowPdfCompressDialog(MainWindow* win) {
     if (!CouldBePDFDoc(tab)) {
         return;
     }
-    logf("ShowPdfCompressDialog: opening for '%s'\n", tab->filePath.s);
+    logf("ShowPdfCompressDialog: opening for '%s'\n", tab->filePath);
 
     auto dlg = new PdfCompressDialog();
     if (!dlg->Create(win, tab)) {
@@ -808,10 +808,10 @@ void PdfDecompressDialog::DoDecompress() {
         return;
     }
 
-    logf("PdfDecompressDoIt: decompressing '%s' to '%s'\n", srcPath.s, destPath.s);
+    logf("PdfDecompressDoIt: decompressing '%s' to '%s'\n", srcPath, destPath);
 
     // equivalent of: clean -d input output
-    char* argv[] = {(char*)"clean", (char*)"-d", CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
+    char* argv[] = {(char*)"clean", (char*)"-d", CStrTemp(srcPath), CStrTemp(destPath)};
     int argc = 4;
 
     fz_set_optind(0);
@@ -958,7 +958,7 @@ void ShowPdfDecompressDialog(MainWindow* win) {
     if (!CouldBePDFDoc(tab)) {
         return;
     }
-    logf("ShowPdfDecompressDialog: opening for '%s'\n", tab->filePath.s);
+    logf("ShowPdfDecompressDialog: opening for '%s'\n", tab->filePath);
 
     auto dlg = new PdfDecompressDialog();
     if (!dlg->Create(win, tab)) {
@@ -1189,8 +1189,8 @@ void PdfDeletePageDialog::DoIt() {
     }
 
     Str op = isExtract ? StrL("extract") : StrL("delete");
-    logf("PdfDeletePageDoIt: %s pages '%s' from '%s' to '%s', range for pdfclean: %s\n", op.s, pages.s, srcPath.s,
-         destPath.s, pageRange.s);
+    logf("PdfDeletePageDoIt: %s pages '%s' from '%s' to '%s', range for pdfclean: %s\n", op, pages, srcPath, destPath,
+         pageRange);
 
     // equivalent of: clean -gggg -e 100 -f -i -t -Z input.pdf output.pdf <page-range>
     // use the same compression flags as Compress PDF so the result is re-written
@@ -1198,20 +1198,20 @@ void PdfDeletePageDialog::DoIt() {
     // and the output is nearly as big as the source
     char* argv[] = {(char*)"clean",    (char*)"-gggg",     (char*)"-e",        (char*)"100",
                     (char*)"-f",       (char*)"-i",        (char*)"-t",        (char*)"-Z",
-                    CStrTemp(srcPath), CStrTemp(destPath), CStrTemp(pageRange)}; // str-port: mupdf CLI
+                    CStrTemp(srcPath), CStrTemp(destPath), CStrTemp(pageRange)};
     int argc = 11;
 
     fz_set_optind(0);
     int res = pdfclean_main(argc, argv);
     if (res == 0) {
-        logf("PdfDeletePageDoIt: %s pages successfully\n", op.s);
+        logf("PdfDeletePageDoIt: %s pages successfully\n", op);
         MainWindow* w = win;
         TempStr path = str::DupTemp(destPath);
         Close();
         LoadArgs args(path, w);
         StartLoadDocument(&args);
     } else {
-        logf("PdfDeletePageDoIt: pdfclean_main failed with %d for %s\n", res, op.s);
+        logf("PdfDeletePageDoIt: pdfclean_main failed with %d for %s\n", res, op);
         Str msg =
             isExtract ? StrL("Failed to extract pages from PDF file.") : StrL("Failed to delete pages from PDF file.");
         Str title = isExtract ? _TRA("Extract Pages From PDF") : _TRA("Delete Pages From PDF");
@@ -1410,8 +1410,8 @@ static void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     if (pageCount < 2) {
         return;
     }
-    logf("ShowPdfPageRangeDialog: opening %s dialog for '%s', %d pages\n", isExtract ? "extract" : "delete",
-         tab->filePath.s, pageCount);
+    logf("ShowPdfPageRangeDialog: opening %s dialog for '%s', %d pages\n", Str(isExtract ? "extract" : "delete"),
+         tab->filePath, pageCount);
 
     auto dlg = new PdfDeletePageDialog();
     if (!dlg->Create(win, tab, isExtract)) {
@@ -1481,12 +1481,12 @@ void PdfEncryptDialog::DoEncrypt() {
         return;
     }
 
-    logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", srcPath.s, destPath.s);
+    logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", srcPath, destPath);
 
     // equivalent of: clean -E aes-256 -U <pwd> -O <pwd> input output
     char* pwdZ = CStrTemp(pwd);
     char* argv[] = {(char*)"clean", (char*)"-E", (char*)"aes-256",  (char*)"-U",       pwdZ,
-                    (char*)"-O",    pwdZ,        CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
+                    (char*)"-O",    pwdZ,        CStrTemp(srcPath), CStrTemp(destPath)};
     int argc = 9;
 
     fz_set_optind(0);
@@ -1667,10 +1667,10 @@ void ShowPdfEncryptDialog(MainWindow* win) {
     }
     EngineBase* engine = tab->GetEngine();
     if (EngineMupdfIsEncrypted(engine)) {
-        logf("ShowPdfEncryptDialog: '%s' is already encrypted, skipping\n", tab->filePath.s);
+        logf("ShowPdfEncryptDialog: '%s' is already encrypted, skipping\n", tab->filePath);
         return;
     }
-    logf("ShowPdfEncryptDialog: opening for '%s'\n", tab->filePath.s);
+    logf("ShowPdfEncryptDialog: opening for '%s'\n", tab->filePath);
 
     auto dlg = new PdfEncryptDialog();
     if (!dlg->Create(win, tab)) {
@@ -1721,12 +1721,12 @@ void PdfDecryptDialog::DoDecrypt() {
         return;
     }
 
-    logf("PdfDecryptDoIt: decrypting '%s' to '%s', password len: %d\n", srcPath.s, destPath.s, len(password));
+    logf("PdfDecryptDoIt: decrypting '%s' to '%s', password len: %d\n", srcPath, destPath, len(password));
 
     // equivalent of: clean -p <pwd> -D input output
     // -p provides the password to open the encrypted input, -D removes encryption from output
     char* argv[] = {(char*)"clean", (char*)"-p",       CStrTemp(password),
-                    (char*)"-D",    CStrTemp(srcPath), CStrTemp(destPath)}; // str-port: mupdf CLI
+                    (char*)"-D",    CStrTemp(srcPath), CStrTemp(destPath)};
     int argc = 6;
 
     fz_set_optind(0);
@@ -1739,7 +1739,7 @@ void PdfDecryptDialog::DoDecrypt() {
         LoadArgs args(path, w);
         StartLoadDocument(&args);
     } else {
-        logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, srcPath.s,
+        logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, srcPath,
              len(password));
         MessageBoxWarning(hwnd, "Failed to decrypt PDF file.", _TRA("Decrypt PDF"));
     }
@@ -1877,15 +1877,15 @@ void ShowPdfDecryptDialog(MainWindow* win) {
     }
     EngineBase* engine = tab->GetEngine();
     if (!EngineMupdfIsEncrypted(engine)) {
-        logf("ShowPdfDecryptDialog: '%s' is not encrypted, skipping\n", tab->filePath.s);
+        logf("ShowPdfDecryptDialog: '%s' is not encrypted, skipping\n", tab->filePath);
         return;
     }
     Str pwd = EngineMupdfGetPassword(engine);
     if (str::IsEmpty(pwd)) {
-        logf("ShowPdfDecryptDialog: '%s' is encrypted but no password available\n", tab->filePath.s);
+        logf("ShowPdfDecryptDialog: '%s' is encrypted but no password available\n", tab->filePath);
         return;
     }
-    logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath.s, len(pwd));
+    logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath, len(pwd));
 
     auto dlg = new PdfDecryptDialog();
     if (!dlg->Create(win, tab, pwd)) {

@@ -20,7 +20,7 @@ void RestoreDCState(SavedDCState* state) {
 
 int MeasureStringWidth(HDC hdc, WStr str) {
     SIZE size;
-    GetTextExtentPoint32W(hdc, str.s, str.len, &size); // str-port: Win32
+    GetTextExtentPoint32W(hdc, str.s, str.len, &size);
     return size.cx;
 }
 
@@ -29,8 +29,8 @@ Str GetWindowTextTemp(HWND hwnd) {
     if (wideLen == 0) {
         return Str();
     }
-    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t)); // str-port: owned heap
-    GetWindowTextW(hwnd, wide, wideLen + 1);                              // str-port: Win32
+    wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
+    GetWindowTextW(hwnd, wide, wideLen + 1);
     return ToUtf8Temp(WStr(wide, wideLen));
 }
 
@@ -44,7 +44,7 @@ Str GetLastErrorAsStr(Arena* arena) {
     if (!err) {
         return StrDup(arena, StrL("no error"));
     }
-    wchar_t* msgBuf = nullptr; // str-port: Win32 out-param
+    wchar_t* msgBuf = nullptr;
     FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
                    err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&msgBuf, 0, nullptr);
     if (!msgBuf) {
@@ -115,7 +115,7 @@ bool WasLaunchedByPowershellWithPipeRedirect() {
 }
 
 Str GetAppLocalDataDirTemp() {
-    wchar_t* path = nullptr; // str-port: Win32 COM out-param
+    wchar_t* path = nullptr;
     HRESULT hr = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path);
     if (FAILED(hr) || !path) {
         return Str();

@@ -91,7 +91,7 @@ void NotifyFailed(Str msg) {
     if (!gFirstError) {
         gFirstError = str::Dup(msg);
     }
-    logf("NotifyFailed: %s\n", msg.s);
+    logf("NotifyFailed: %s\n", msg);
 }
 
 void SetMsg(Str msg, Color color) {
@@ -153,7 +153,7 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
         info->typ = PreviousInstallationType::User;
     }
     logf("GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d, needsElevation: %d\n",
-         info->installationDir.s, (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ,
+         info->installationDir, (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ,
          (int)info->allUsers);
 }
 
@@ -167,7 +167,7 @@ static TempStr GetExistingInstallationFilePathTemp(Str name) {
 
 TempStr GetInstallationFilePathTemp(Str installDir, Str name) {
     TempStr res = path::JoinTemp(installDir, name);
-    logf("GetInstallationFilePath(%s) = > %s\n", name.s, res.s);
+    logf("GetInstallationFilePath(%s) = > %s\n", name, res);
     return res;
 }
 
@@ -206,7 +206,7 @@ static bool IsProcessUsingFiles(DWORD procId, Str file1, Str file2) {
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        WCHAR* exePathW = mod.szExePath; // str-port: Win32 MODULEENTRY32
+        WCHAR* exePathW = mod.szExePath;
         TempStr exePath = ToUtf8Temp(exePathW);
         if (file1 && path::IsSame(file1, exePath)) {
             return true;
@@ -244,7 +244,7 @@ constexpr const char* kSearchFilterDllName = "PdfFilter.dll";
 
 void RegisterSearchFilter(bool allUsers, Str installDir) {
     TempStr dllPath = GetInstallationFilePathTemp(installDir, kSearchFilterDllName);
-    logf("RegisterSearchFilter() dllPath=%s\n", dllPath.s);
+    logf("RegisterSearchFilter() dllPath=%s\n", dllPath);
     bool ok = InstallSearchFilter(dllPath, allUsers);
     if (ok) {
         log("  did register\n");
@@ -256,7 +256,7 @@ void RegisterSearchFilter(bool allUsers, Str installDir) {
 
 void UnRegisterSearchFilter() {
     TempStr dllPath = GetExistingInstallationFilePathTemp(kSearchFilterDllName);
-    logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath.s);
+    logf("UnRegisterSearchFilter() dllPath=%s\n", dllPath);
     bool ok = UninstallSearchFilter();
     if (ok) {
         log("  did unregister\n");
@@ -270,7 +270,7 @@ constexpr const char* kPreviewDllName = "PdfPreview.dll";
 
 void RegisterPreviewer(bool allUsers, Str installDir) {
     TempStr dllPath = GetInstallationFilePathTemp(installDir, kPreviewDllName);
-    logf("RegisterPreviewer() dllPath=%s\n", dllPath.s);
+    logf("RegisterPreviewer() dllPath=%s\n", dllPath);
     bool ok = InstallPreviewDll(dllPath, allUsers);
     if (ok) {
         log("  did register\n");
@@ -282,7 +282,7 @@ void RegisterPreviewer(bool allUsers, Str installDir) {
 
 void UnRegisterPreviewer() {
     TempStr dllPath = GetExistingInstallationFilePathTemp(kPreviewDllName);
-    logf("UnRegisterPreviewer() dllPath=%s\n", dllPath.s);
+    logf("UnRegisterPreviewer() dllPath=%s\n", dllPath);
     bool ok = UninstallPreviewDll();
     if (ok) {
         log("  did unregister\n");
@@ -340,7 +340,7 @@ static bool KillProcWithIdAndModule(DWORD processId, Str modulePath, bool waitUn
     if (!IsProcWithModule(processId, modulePath)) {
         return false;
     }
-    logf("KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath.s);
+    logf("KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
 
     BOOL inheritHandle = FALSE;
     // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
@@ -366,7 +366,7 @@ static bool KillProcWithIdAndModule(DWORD processId, Str modulePath, bool waitUn
 // modulePath
 // returns -1 on error, 0 if no matching processes
 int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated) {
-    logf("KillProcessesWithModule: '%s'\n", modulePath.s);
+    logf("KillProcessesWithModule: '%s'\n", modulePath);
     AutoCloseHandle hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == hProcSnapshot) {
         return -1;
@@ -422,7 +422,7 @@ static bool KillProcessesUsingInstallation() {
         DWORD procID = proc.th32ProcessID;
         if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
             TempStr s = ToUtf8Temp(proc.szExeFile);
-            logf("  attempting to kill process %d '%s'\n", (int)procID, s.s);
+            logf("  attempting to kill process %d '%s'\n", (int)procID, s);
             bool didKill = KillProcWithId(procID, true);
             logf("  KillProcWithId(%d) returned %d\n", procID, (int)didKill);
             if (!didKill) {
@@ -459,7 +459,7 @@ static void ProcessesUsingInstallation(StrVec& names) {
         if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
             // TODO: this kils ReadableProcName logic
             TempStr s = ToUtf8Temp(proc.szExeFile);
-            TempStr name = fmt("%s (%d)", s.s, (int)procID);
+            TempStr name = fmt("%s (%d)", s, (int)procID);
             names.Append(name);
         }
         proc.dwSize = sizeof(proc);
@@ -500,7 +500,7 @@ static void SetCloseProcessMsg() {
             procNames = str::JoinTemp(procNames, " and ", name);
         }
     }
-    TempStr s = fmt(_TRA("Please close %s to proceed!").s, procNames.s);
+    TempStr s = fmt(_TRA("Please close %s to proceed!").s, procNames);
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
@@ -740,7 +740,7 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     float x2 = 15;
     float y2 = -34;
 
-    const WCHAR* ver_s = L"v" CURR_VERSION_STR; // str-port: C-string literal
+    const WCHAR* ver_s = L"v" CURR_VERSION_STR;
     if (kDrawTextShadow) {
         SolidBrush b1(Color(0, 0, 0));
         g.DrawString(ver_s, -1, fVer, Gdiplus::PointF(x2 - 2, y2 - 1), &b1);

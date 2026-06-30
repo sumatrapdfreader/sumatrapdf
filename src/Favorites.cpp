@@ -315,23 +315,23 @@ TempStr FavReadableNameTemp(Favorite* fn) {
         label = fmt("%d", fn->pageNo);
     }
     if (fn->name) {
-        TempStr pageNo = fmt(_TRA("(page %s)").s, label.s);
+        TempStr pageNo = fmt(_TRA("(page %s)").s, label);
         return str::JoinTemp(fn->name, " ", pageNo);
     }
-    return fmt(_TRA("Page %s").s, label.s);
+    return fmt(_TRA("Page %s").s, label);
 }
 
 // caller has to free() the result
 static TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isCurrent = false) {
     TempStr rn = FavReadableNameTemp(fn);
     if (isCurrent) {
-        return fmt("%s : %s", _TRA("Current file").s, rn.s);
+        return fmt("%s : %s", _TRA("Current file"), rn);
     }
     TempStr fp = path::GetBaseNameTemp(fav->filePath);
     // show the favorite's name first, then the file name, so that a long file
     // name doesn't push the user's description out of view in the favorites
     // pane / menu (fixes #829, #2236)
-    return fmt("%s : %s", rn.s, fp.s);
+    return fmt("%s : %s", rn, fp);
 }
 
 static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, bool isCurrent) {
@@ -466,11 +466,11 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
         bool isBookmarked = IsPageInFavorites(win->ctrl->GetFilePath(), win->currPageNo);
         if (isBookmarked) {
             MenuSetEnabled(menu, CmdFavoriteAdd, false);
-            TempStr s = fmt(_TRA("Remove page %s from favorites").s, label.s);
+            TempStr s = fmt(_TRA("Remove page %s from favorites").s, label);
             MenuSetText(menu, CmdFavoriteDel, s);
         } else {
             MenuSetEnabled(menu, CmdFavoriteDel, false);
-            TempStr s = fmt(_TRA("Add page %s to favorites").s, label.s);
+            TempStr s = fmt(_TRA("Add page %s to favorites").s, label);
             s = AppendAccelKeyToMenuStringTemp(s, CmdFavoriteAdd);
             MenuSetText(menu, CmdFavoriteAdd, s);
         }

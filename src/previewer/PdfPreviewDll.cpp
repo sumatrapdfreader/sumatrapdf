@@ -119,7 +119,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void*) {
         ReportIf(hInstance != GetInstance());
     }
     gLogAppName = StrL("PdfPreview");
-    logf("PdfPreview: DllMain %s\n", GetReason(dwReason).s);
+    logf("PdfPreview: DllMain %s\n", GetReason(dwReason));
     return TRUE;
 }
 
@@ -145,7 +145,7 @@ STDAPI DllRegisterServer() {
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
     }
-    logf("DllRegisterServer: dllPath=%s\n", dllPath.s);
+    logf("DllRegisterServer: dllPath=%s\n", dllPath);
 
     // for compat with SumatraPDF 3.3 and lower
     // in 3.4 we call this code from the installer
@@ -171,7 +171,7 @@ STDAPI DllUnregisterServer() {
 }
 
 // TODO: maybe remove, is anyone using this functionality?
-STDAPI DllInstall(BOOL bInstall, const WCHAR* pszCmdLine) { // str-port: Win32 DLL export API
+STDAPI DllInstall(BOOL bInstall, const WCHAR* pszCmdLine) {
     TempStr s = ToUtf8Temp(pszCmdLine);
     DisablePreviewInstallExts(s);
     if (!bInstall) {

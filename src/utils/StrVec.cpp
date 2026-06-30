@@ -74,7 +74,7 @@ struct StrVecPage {
     int pageSize;
     int nStrings;
     int dataSize;
-    u8* currEnd = nullptr; // str-port: page allocation cursor, not a string
+    u8* currEnd = nullptr;
     // now follows:
     // struct { size u32; offset u32}[nStrings] }
     // ... free space
@@ -148,7 +148,7 @@ static Str AppendJustString(StrVecPage* p, Str s, int idx) {
     memcpy(dst, s.s, (size_t)sLen);
     dst[sLen] = 0; // zero-terminate for C compat
     p->currEnd = dst;
-    return Str((char*)dst, sLen); // str-port: owned heap
+    return Str((char*)dst, sLen);
 }
 
 PageOpResult StrVecPage::SetAt(int idx, Str s) {
@@ -170,7 +170,7 @@ PageOpResult StrVecPage::SetAt(int idx, Str s) {
             memcpy(dst, s.s, (size_t)sLen);
             dst[sLen] = 0; // zero-terminate for C compat
             offsets[1] = (u32)sLen;
-            return {Str((char*)dst, sLen), false}; // str-port: owned heap
+            return {Str((char*)dst, sLen), false};
         }
     }
 
@@ -230,7 +230,7 @@ Str StrVecPage::AtStr(int idx) const {
         ReportIf(sLen != 0);
         return {};
     }
-    return Str((char*)(start + off), sLen); // str-port: owned heap
+    return Str((char*)(start + off), sLen);
 }
 
 void* StrVecPage::AtDataRaw(int idx) const {
@@ -699,8 +699,8 @@ static void SortNoData(StrVec* v, StrLessFunc lessFn) {
     std::sort(b, e, [pageStart, lessFn](u64 offLen1, u64 offLen2) -> bool {
         u32 off1 = (u32)(offLen1 & 0xffffffff);
         u32 off2 = (u32)(offLen2 & 0xffffffff);
-        Str s1 = (off1 == kNullOffset) ? Str{} : Str((char*)(pageStart + off1)); // str-port: owned heap
-        Str s2 = (off2 == kNullOffset) ? Str{} : Str((char*)(pageStart + off2)); // str-port: owned heap
+        Str s1 = (off1 == kNullOffset) ? Str{} : Str((char*)(pageStart + off1));
+        Str s2 = (off2 == kNullOffset) ? Str{} : Str((char*)(pageStart + off2));
         bool ret = lessFn(s1, s2);
         return ret;
     });

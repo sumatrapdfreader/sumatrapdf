@@ -32,9 +32,9 @@ static StrVec* gTranslationCache = nullptr;
 
 static TempStr UnescapeTemp(Str sOrig) {
     TempStr s = str::DupTemp(sOrig);
-    char* unescaped = s.s; // str-port: in-place parse cursor
-    char* dst = s.s;       // str-port: in-place parse cursor
-    char* src = s.s;       // str-port: in-place parse cursor
+    char* unescaped = s.s;
+    char* dst = s.s;
+    char* src = s.s;
     char c, c2;
     while (*src) {
         c = *src++;
@@ -123,7 +123,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
     }
     ReportDebugIf(c->Size() != nStrings * 2);
     if (nUntranslated > 0 && !str::Eq(langCodePref, StrL("en:"))) {
-        logf("Untranslated strings: %d for lang '%s'\n", nUntranslated, langCodePref.s);
+        logf("Untranslated strings: %d for lang '%s'\n", nUntranslated, langCodePref);
     }
 }
 
@@ -148,7 +148,7 @@ Str GetTranslation(Str s) {
         if (s2.len == sLen && str::Eq(s, s2)) {
             Str tr = c->At(idx + 1);
             if (!tr) {
-                logf("Didn't find translation for '%s'\n", s.s);
+                logf("Didn't find translation for '%s'\n", s);
                 return s;
             }
             // special case of "Change Language"
@@ -186,7 +186,7 @@ void SetCurrentLangByCode(Str langCode) {
 
     int idx = SeqStrIndex(gLangCodes, langCode);
     if (idx < 0) {
-        logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode.s);
+        logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode);
         // set to English
         idx = 0;
     }

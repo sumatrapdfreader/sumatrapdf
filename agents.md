@@ -62,6 +62,15 @@ underlying NUL-terminated `char*`, e.g. `fmt(_TRA("page %d").s, n)`.
 Note: `strfmt::` (in StrFormat.h, the `{0}`-style type-safe formatter) is a
 separate, older system — unrelated to `fmt()`.
 
+## Make a `Str`/`WStr` from a string literal with `StrL` / `WStrL`
+
+When constructing a `Str`/`WStr` from a **string literal**, use `StrL("...")` /
+`WStrL(L"...")`, not `Str("...")` / `WStr(L"...")`. `StrL`/`WStrL` compute the
+length at compile time (`sizeof(lit) - 1`), while `Str("...")` / `WStr(L"...")`
+do a runtime `strlen`/`wcslen`. So e.g. `fmt("%s", StrL("done"))`, not
+`fmt("%s", Str("done"))`. Use `Str(x)` / `WStr(x)` only when `x` is a runtime
+`char*` / `wchar_t*` whose length isn't known at compile time.
+
 ## NUL-terminate `Str`/`WStr` before C/Win32 APIs
 
 A `Str`/`WStr` is a `{ptr, len}` view and may be a **substring that is not

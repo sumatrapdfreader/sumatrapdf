@@ -482,7 +482,7 @@ static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
     wstr::NormalizeWSInPlace(sub);
     TempStr u = ToUtf8Temp(sub.s);
     wstr::FreePtr(&sub);
-    return fmt("%s%s%s", from > 0 ? "..." : "", u.s, to < textLen ? "..." : "");
+    return fmt("%s%s%s", Str(from > 0 ? "..." : ""), u, Str(to < textLen ? "..." : ""));
 }
 
 struct CountThreadData {
@@ -1278,13 +1278,13 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
         args.msg = _TRA("No synchronization info at this position");
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-        buf = fmt(_TRA("Unknown source file (%s)").s, fileName.s);
+        buf = fmt(_TRA("Unknown source file (%s)").s, fileName);
     } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
-        buf = fmt(_TRA("Source file %s has no synchronization point").s, fileName.s);
+        buf = fmt(_TRA("Source file %s has no synchronization point").s, fileName);
     } else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE) {
-        buf = fmt(_TRA("No result found around line %u in file %s").s, line, fileName.s);
+        buf = fmt(_TRA("No result found around line %u in file %s").s, line, fileName);
     } else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
-        buf = fmt(_TRA("No result found around line %u in file %s").s, line, fileName.s);
+        buf = fmt(_TRA("No result found around line %u in file %s").s, line, fileName);
     }
     if (buf) {
         args.msg = buf;
@@ -1528,7 +1528,7 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
     if (!win) {
         win = FindMainWindowByFile(Str(filePath), focusTab);
         if (win) {
-            logf("HandleOpenCmd: found existing window with file '%s'\n", filePath.Get());
+            logf("HandleOpenCmd: found existing window with file '%s'\n", Str(filePath.Get()));
             doLoad = false;
             if (!win->IsDocLoaded()) {
                 ReloadDocument(win, false);
@@ -1573,7 +1573,7 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
              (int)args.activateExisting, (int)args.forceReuse);
         win = LoadDocument(&args);
         if (!win) {
-            logf("HandleOpenCmd: LoadDocument() for '%s' failed\n", filePath.Get());
+            logf("HandleOpenCmd: LoadDocument() for '%s' failed\n", Str(filePath.Get()));
         }
     }
 
@@ -1809,12 +1809,12 @@ static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, StrBuilder& res)
     // -2 = fit width, -3 = fit content
     float zoom = ctrl->GetZoomVirtual();
     Str view = DisplayModeToString(ctrl->GetDisplayMode());
-    res.Append(fmt("path: %s\n", docPath.s));
+    res.Append(fmt("path: %s\n", docPath));
     res.Append(fmt("page: %d\n", ctrl->CurrentPageNo()));
     res.Append(fmt("pageCount: %d\n", ctrl->PageCount()));
     res.Append(fmt("zoom: %g\n", zoom));
-    res.Append(fmt("view: %s\n", view.s));
-    res.Append(fmt("sumver: %s\n", CURR_VERSION_STRA));
+    res.Append(fmt("view: %s\n", view));
+    res.Append(fmt("sumver: %s\n", StrL(CURR_VERSION_STRA)));
     return next;
 }
 
@@ -1831,7 +1831,7 @@ static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, StrBuilder& res) {
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             if (!str::IsEmpty(tab->filePath)) {
-                res.Append(fmt("%s\n", tab->filePath.s));
+                res.Append(fmt("%s\n", tab->filePath));
             }
         }
     }
@@ -1922,7 +1922,7 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
         }
     }
 
-    logfa("HandleCmdCommand: sending %d (%s) command\n", idToSend, cmdContent.Get());
+    logfa("HandleCmdCommand: sending %d (%s) command\n", idToSend, Str(cmdContent.Get()));
     SendMessageW(win->hwndFrame, WM_COMMAND, idToSend, 0);
     *ack = true;
     return next;
@@ -1935,7 +1935,7 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
     bool didHandle = false;
     while (cmd) {
         {
-            logf("HandleExecuteCmds: '%s'\n", cmd.s);
+            logf("HandleExecuteCmds: '%s'\n", cmd);
         }
 
         Str nextCmd = HandleSyncCmd(cmd, &didHandle);
@@ -1977,7 +1977,7 @@ static bool HandleRequestCmds(HWND hwnd, Str cmd, StrBuilder& rsp) {
     bool didHandle = false;
     while (cmd) {
         {
-            logf("HandleRequestCmds: '%s'\n", cmd.s);
+            logf("HandleRequestCmds: '%s'\n", cmd);
         }
 
         Str nextCmd = HandleGetFileStateCmd(hwnd, cmd, &didHandle, rsp);
@@ -2167,10 +2167,10 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
 
     if (cds->dwData == kCopyDataDdeW) {
         int cmdCch = (int)(cds->cbData / sizeof(WCHAR));
-        if (cmdCch == 0 || ((wchar_t*)cds->lpData)[cmdCch - 1] != 0) { // str-port: Win32 COPYDATASTRUCT
+        if (cmdCch == 0 || ((wchar_t*)cds->lpData)[cmdCch - 1] != 0) {
             return FALSE;
         }
-        WStr cmdW((const wchar_t*)cds->lpData, cmdCch - 1); // str-port: Win32 COPYDATASTRUCT
+        WStr cmdW((const wchar_t*)cds->lpData, cmdCch - 1);
         // Legacy DDE grammar — callers expect synchronous handling.
         TempStr cmd = ToUtf8Temp(cmdW);
         bool didHandle = HandleExecuteCmds(hwnd, cmd);

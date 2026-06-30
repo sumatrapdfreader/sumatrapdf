@@ -184,7 +184,7 @@ void CreateThemeCommands() {
         Str themeName = theme->name;
         auto args = NewStringArg(kCmdArgTheme, themeName);
         cmd = CreateCustomCommand(themeName, CmdSetTheme, args);
-        cmd->name = str::Dup(fmt(_TRA("Set theme '%s'").s, themeName.s));
+        cmd->name = str::Dup(fmt(_TRA("Set theme '%s'").s, themeName));
         if (i == 0) {
             gFirstSetThemeCmdId = cmd->id;
         } else if (i == gThemeCount - 1) {
@@ -461,11 +461,11 @@ void dumpThemes() {
     for (ThemeOld* theme : gThemes) {
         auto w = *theme;
         logf("    [\n");
-        logf("        Name = %s\n", w.name.s);
-        logf("        TextColor = %s\n", SerializeColorTemp(w.textColor).s);
-        logf("        BackgroundColor = %s\n", SerializeColorTemp(w.backgroundColor).s);
-        logf("        ControlBackgroundColor = %s\n", SerializeColorTemp(w.controlBackgroundColor).s);
-        logf("        LinkColor = %s\n", SerializeColorTemp(w.linkColor).s);
+        logf("        Name = %s\n", w.name);
+        logf("        TextColor = %s\n", SerializeColorTemp(w.textColor));
+        logf("        BackgroundColor = %s\n", SerializeColorTemp(w.backgroundColor));
+        logf("        ControlBackgroundColor = %s\n", SerializeColorTemp(w.controlBackgroundColor));
+        logf("        LinkColor = %s\n", SerializeColorTemp(w.linkColor));
         logf("        ColorizeControls = %s\n", w.colorizeControls ? "true" : "false");
         logf("    ]\n");
     }

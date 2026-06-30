@@ -22,7 +22,7 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
         auto func = (Func0*)lp;
         bool shouldLog = (kind != nullptr) && !str::Eq(Str(kind), StrL("RenderFinished"));
         if (shouldLog) {
-            logf("uitask::WndProcTaskDispatch: will execute '%s', func 0x%p\n", kind, (void*)func);
+            logf("uitask::WndProcTaskDispatch: will execute '%s', func 0x%p\n", Str(kind), (void*)func);
         }
         func->Call();
         if (shouldLog) {

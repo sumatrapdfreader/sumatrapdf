@@ -90,7 +90,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     }
 
     if (kindDestinationLaunchEmbedded == k || kindDestinationAttachment == k) {
-        TempStr tmp = fmt(_TRA("Attachment: %s").s, path.s);
+        TempStr tmp = fmt(_TRA("Attachment: %s").s, path);
         infotip.Append(tmp);
     } else {
         infotip.Append(path);
@@ -691,12 +691,12 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             Str tr = _TRA("Remove page %s from favorites");
-            TempStr s = fmt(tr.s, pageLabel.s);
+            TempStr s = fmt(tr.s, pageLabel);
             MenuSetText(popup, CmdFavoriteDel, s);
         } else {
             MenuRemove(popup, CmdFavoriteDel);
             // %s and not %d because re-using translation from RebuildFavMenu()
-            TempStr s = fmt(_TRA("Add page %s to favorites").s, pageLabel.s);
+            TempStr s = fmt(_TRA("Add page %s to favorites").s, pageLabel);
             s = AppendAccelKeyToMenuStringTemp(s, CmdFavoriteAdd);
             MenuSetText(popup, CmdFavoriteAdd, s);
         }

@@ -50,27 +50,27 @@ bool InstallPreviewDll(Str dllPath, bool allUsers) {
         Str ext2 = prev.ext2;
         ok = true;
 
-        TempStr displayName = fmt("SumatraPDF Preview (*%s)", ext.s);
+        TempStr displayName = fmt("SumatraPDF Preview (*%s)", ext);
         // register class
-        TempStr key = fmt("Software\\Classes\\CLSID\\%s", clsid.s);
+        TempStr key = fmt("Software\\Classes\\CLSID\\%s", clsid);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, displayName);
         ok &= LoggedWriteRegStr(hkey, key, "AppId", IsRunningInWow64() ? kAppIdPrevHostExeWow64 : kAppIdPrevHostExe);
         ok &= LoggedWriteRegStr(hkey, key, "DisplayName", displayName);
-        key = fmt("Software\\Classes\\CLSID\\%s\\InProcServer32", clsid.s);
+        key = fmt("Software\\Classes\\CLSID\\%s\\InProcServer32", clsid);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, dllPath);
         ok &= LoggedWriteRegStr(hkey, key, "ThreadingModel", "Apartment");
         // IThumbnailProvider
-        key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext.s);
+        key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         if (ext2) {
-            key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2.s);
+            key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2);
             ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         }
         // IPreviewHandler
-        key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext.s);
+        key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext);
         ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         if (ext2) {
-            key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2.s);
+            key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2);
             ok &= LoggedWriteRegStr(hkey, key, nullptr, clsid);
         }
         ok &= LoggedWriteRegStr(hkey, kRegKeyPreviewHandlers, clsid, displayName);
@@ -96,7 +96,7 @@ bool UninstallPreviewDll() {
     TempStr key;
     for (auto& prev : gPreviewers) {
         if (prev.skip) {
-            logf("UninstallPreviewDll: skipping '%s'\n", prev.ext.s);
+            logf("UninstallPreviewDll: skipping '%s'\n", prev.ext);
             continue;
         }
         Str clsid = prev.clsid;
@@ -107,30 +107,30 @@ bool UninstallPreviewDll() {
         DeleteRegValue(HKEY_LOCAL_MACHINE, kRegKeyPreviewHandlers, clsid);
         DeleteRegValue(HKEY_CURRENT_USER, kRegKeyPreviewHandlers, clsid);
         // remove class data
-        key = fmt("Software\\Classes\\CLSID\\%s", clsid.s);
+        key = fmt("Software\\Classes\\CLSID\\%s", clsid);
         DeleteOrFail(key, &hr);
         // IThumbnailProvider
-        key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext.s);
+        key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext);
         DeleteOrFail(key, &hr);
         if (ext2) {
-            key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2.s);
+            key = fmt("Software\\Classes\\%s\\shellex\\" kThumbnailProviderClsid, ext2);
             DeleteOrFail(key, &hr);
         }
         // IExtractImage (for Windows XP)
-        key = fmt("Software\\Classes\\%s\\shellex\\" kExtractImageClsid, ext.s);
+        key = fmt("Software\\Classes\\%s\\shellex\\" kExtractImageClsid, ext);
         DeleteOrFail(key, &hr);
         if (ext2) {
-            key = fmt("Software\\Classes\\%s\\shellex\\" kExtractImageClsid, ext2.s);
+            key = fmt("Software\\Classes\\%s\\shellex\\" kExtractImageClsid, ext2);
             DeleteOrFail(key, &hr);
         }
         // IPreviewHandler
-        key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext.s);
+        key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext);
         DeleteOrFail(key, &hr);
         if (ext2) {
-            key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2.s);
+            key = fmt("Software\\Classes\\%s\\shellex\\" kPreviewHandlerClsid, ext2);
             DeleteOrFail(key, &hr);
         }
-        logf("UninstallPreviewDll: removed '%s'\n", prev.ext.s);
+        logf("UninstallPreviewDll: removed '%s'\n", prev.ext);
     }
     return hr == S_OK ? true : false;
 }
@@ -217,7 +217,7 @@ static TempStr GetNewPdfPreviewLogFilePathTemp() {
     // unique part: pid plus low bits of tick, so concurrent preview hosts that
     // start in the same minute don't collide
     DWORD uniq = (GetCurrentProcessId() << 16) ^ (GetTickCount() & 0xffff);
-    TempStr name = fmt("%s%02d-%02d.%02d-%02d.%08x.txt", kPdfPreviewLogPrefix, (int)st.wMonth, (int)st.wDay,
+    TempStr name = fmt("%s%02d-%02d.%02d-%02d.%08x.txt", Str(kPdfPreviewLogPrefix), (int)st.wMonth, (int)st.wDay,
                        (int)st.wHour, (int)st.wMinute, uniq);
     return path::JoinTemp(dir.s, name.s);
 }
@@ -236,5 +236,5 @@ void StartPdfPreviewLoggingIfEnabled() {
     // already buffered (e.g. DllMain); StartLogToFile appends subsequent lines.
     WriteCurrentLogToFile(path);
     StartLogToFile(path, false);
-    logf("PdfPreview: logging to '%s'\n", path.s);
+    logf("PdfPreview: logging to '%s'\n", path);
 }

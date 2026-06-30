@@ -119,7 +119,7 @@ static TempStr AppendCmdAccel(Str base, int cmd) {
     if (!accel) {
         return base;
     }
-    return str::JoinTemp(base, fmt(" (%s)", accel.s + 1)); // +1 skips the leading \t
+    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, accel.len - 1))); // +1 skips the leading \t
 }
 
 static TempStr FindWindowButtonTooltip(int cmd) {
@@ -363,7 +363,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     // page number in a fixed right column so it can't overlap the snippet while
     // the window is being resized (issue #5692)
     const FindMatch& fm = win->findMatches[ev->itemIndex];
-    TempStr pageStr = fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage).s);
+    TempStr pageStr = fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
     TempWStr pageW = ToWStrTemp(pageStr);
     SIZE pSz{};
     GetTextExtentPoint32W(hdc, pageW, len(pageW), &pSz);

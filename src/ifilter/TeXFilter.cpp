@@ -17,7 +17,7 @@ HRESULT TeXFilter::OnInit() {
             return res;
         }
 
-        m_pData = strconv::StrCPToWStr(Str((char*)data.data(), (int)data.size()), CP_ACP); // str-port: byte buffer
+        m_pData = strconv::StrCPToWStr(Str((char*)data.data(), (int)data.size()), CP_ACP);
         m_pBuffer = AllocArray<WCHAR>(data.size() + 1);
         data.Free();
 
@@ -39,14 +39,14 @@ HRESULT TeXFilter::OnInit() {
 #define skipcomment(pc) while (*(pc) && *(pc)++ != '\n')
 
 // appends a new line, if the last character isn't one already
-static inline void addsingleNL(WCHAR* base, WCHAR** cur) { // str-port: internal wchar write cursor
+static inline void addsingleNL(WCHAR* base, WCHAR** cur) {
     if (*cur > base && *(*cur - 1) != '\n') {
         *(*cur)++ = '\n';
     }
 }
 
 // appends a space, if the last character isn't one already
-static inline void addsinglespace(WCHAR* base, WCHAR** cur) { // str-port: internal wchar write cursor
+static inline void addsinglespace(WCHAR* base, WCHAR** cur) {
     if (*cur > base && !wstr::IsWs(*(*cur - 1))) {
         *(*cur)++ = ' ';
     }
@@ -57,8 +57,8 @@ static inline void addsinglespace(WCHAR* base, WCHAR** cur) { // str-port: inter
 WStr TeXFilter::ExtractBracedBlock() {
     m_iDepth++;
 
-    WCHAR* result = m_pBuffer + (m_pPtr - m_pData); // str-port: internal wchar write cursor
-    WCHAR* rptr = result;                           // str-port: internal wchar write cursor
+    WCHAR* result = m_pBuffer + (m_pPtr - m_pData);
+    WCHAR* rptr = result;
 
     int currDepth = m_iDepth;
 

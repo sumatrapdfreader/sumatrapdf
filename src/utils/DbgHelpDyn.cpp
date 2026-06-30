@@ -158,7 +158,7 @@ NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
     if (symLen < 4) {
         return false;
     }
-    char* name = symInfo->Name; // str-port: dbghelp SYMBOL_INFO
+    char* name = symInfo->Name;
     return *name != 0;
 }
 
@@ -253,7 +253,7 @@ void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, 
 // note: without NO_INLINE it would be mis-compiled to return false in release builds
 // making GetAddressInfo() not provide info about address
 NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen,
-                                  DWORD& sectionOut, // str-port: Win32 out-buffer
+                                  DWORD& sectionOut,
                                   DWORD_PTR& offsetOut) {
     MEMORY_BASIC_INFORMATION mbi;
     if (0 == VirtualQuery(addr, &mbi, sizeof(mbi))) {
@@ -310,7 +310,7 @@ void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
     symInfo->MaxNameLen = MAX_SYM_LEN;
 
     DWORD64 symDisp = 0;
-    char* symName = nullptr; // str-port: dbghelp SYMBOL_INFO
+    char* symName = nullptr;
     BOOL ok = DynSymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
     if (ok) {
         symName = &(symInfo->Name[0]);
@@ -329,11 +329,11 @@ void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
             AppendAddress(s, addr);
             s.Append(fmt(" %02X:", section));
             AppendAddress(s, offset);
-            s.Append(fmt(" %s", moduleShort.s));
+            s.Append(fmt(" %s", moduleShort));
         }
 
         if (symName) {
-            s.Append(fmt("!%s+0x%x", symName, (int)symDisp));
+            s.Append(fmt("!%s+0x%x", Str(symName), (int)symDisp));
         } else {
             s.Append(fmt("+0x%x", (int)offset));
         }
@@ -341,7 +341,7 @@ void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
         DWORD disp;
         if (DynSymGetLineFromAddr64(GetCurrentProcess(), addr, &disp, &line)) {
-            s.Append(fmt(" %s+%d", line.FileName, line.LineNumber));
+            s.Append(fmt(" %s+%d", Str(line.FileName), line.LineNumber));
         }
     } else {
         AppendAddress(s, addr);
@@ -498,7 +498,7 @@ ByteSlice GetCallstacks() {
     if (!gCallstackLogs) {
         return {};
     }
-    char* s = str::Dup(gCallstackLogs->Get()).s; // str-port: owned heap
+    char* s = str::Dup(gCallstackLogs->Get()).s;
     return ToByteSlice(s);
 }
 
@@ -547,7 +547,7 @@ void GetExceptionInfo(StrBuilder& s, EXCEPTION_POINTERS* excPointers) {
 
     EXCEPTION_RECORD* excRecord = excPointers->ExceptionRecord;
     DWORD excCode = excRecord->ExceptionCode;
-    s.Append(fmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode).s));
+    s.Append(fmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode)));
 
     s.Append(fmt("Faulting IP: "));
     GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress, false);

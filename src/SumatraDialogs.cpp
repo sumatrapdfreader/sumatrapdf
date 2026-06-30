@@ -73,7 +73,7 @@ static u8* SkipSzOrOrd(u8* d) {
         pw++;
     } else {
         // anything else: zero-terminated WCHAR*
-        WCHAR* s = (WCHAR*)pw; // str-port: Win32 MENU resource
+        WCHAR* s = (WCHAR*)pw;
         while (*s) {
             s++;
         }
@@ -84,7 +84,7 @@ static u8* SkipSzOrOrd(u8* d) {
 }
 
 static u8* SkipSz(u8* d) {
-    WCHAR* s = (WCHAR*)d; // str-port: Win32 MENU resource
+    WCHAR* s = (WCHAR*)d;
     while (*s) {
         s++;
     }
@@ -188,7 +188,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         }
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
-        TempStr txt = fmt(_TRA("Enter password for %s").s, data->fileName.s);
+        TempStr txt = fmt(_TRA("Enter password for %s").s, data->fileName);
         HwndSetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         HwndSetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, "");
         HwndSetDlgItemText(hDlg, IDC_STATIC, _TRA("&Password:"));
@@ -1157,7 +1157,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
             DarkMode::setDarkWndSafe(hDlg);
         }
         HwndSetText(hDlg, _TRA("Add Favorite"));
-        TempStr s = fmt(_TRA("Add page %s to favorites with (optional) name:").s, data->pageNo.s);
+        TempStr s = fmt(_TRA("Add page %s to favorites with (optional) name:").s, data->pageNo);
         HwndSetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
         HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));

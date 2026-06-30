@@ -32,7 +32,7 @@ bool IsHttpRspOk(const HttpRsp* rsp) {
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
 bool HttpGet(Str urlA, HttpRsp* rspOut) {
-    logf("HttpGet: url: '%s'\n", urlA.s);
+    logf("HttpGet: url: '%s'\n", urlA);
     HINTERNET hReq = nullptr;
     DWORD infoLevel;
     DWORD headerBuffSize = sizeof(DWORD);
@@ -106,14 +106,14 @@ constexpr const int kBufSize = 256 * 1024;
 
 // Download content of a url to a file
 bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbProgress) {
-    logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA.s, destFilePath.s);
+    logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
     DWORD dwRead = 0;
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD statusCode = 0;
     TempWStr url = ToWStrTemp(urlA);
-    char* buf = nullptr; // str-port: binary download buffer
+    char* buf = nullptr;
 
     HttpProgress progress{};
 
@@ -121,7 +121,7 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
     HANDLE hf =
         CreateFileW(pathW, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (INVALID_HANDLE_VALUE == hf) {
-        logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePath.s);
+        logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePath);
         LogLastError();
         goto Exit;
     }
@@ -188,7 +188,7 @@ Exit:
 bool HttpPost(Str serverA, int port, Str urlA, StrBuilder* headers, StrBuilder* data) {
     StrBuilder resp(2048);
     bool ok = false;
-    char* hdr = nullptr; // str-port: Win32 HttpSendRequestA header buffer
+    char* hdr = nullptr;
     DWORD hdrLen = 0;
     HINTERNET hConn = nullptr, hReq = nullptr;
     void* d = nullptr;

@@ -12,7 +12,7 @@ void SimpleLogTest() {
     {
         log("Test1\n");
         log("ML\n");
-        logf("%s : %d\n", "filename.pdf", 25);
+        logf("%s : %d\n", StrL("filename.pdf"), 25);
 
         Str got = gLogBuf->Get();
         Str exp = "Test1\nML\nfilename.pdf : 25\n";

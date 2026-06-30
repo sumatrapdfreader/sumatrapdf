@@ -36,7 +36,7 @@ IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* 
         return E_FAIL;
     }
 
-    logf("PdfPreview::GetThumbnail(cx=%d, engine: %s\n", (int)cx, engine->kind);
+    logf("PdfPreview::GetThumbnail(cx=%d, engine: %s\n", (int)cx, Str(engine->kind));
 
     RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;

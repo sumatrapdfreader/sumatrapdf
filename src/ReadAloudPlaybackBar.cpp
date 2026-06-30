@@ -83,10 +83,9 @@ static TempStr ReadAloudPlaybackBarTextTemp(WindowTab* tab) {
     Str scope = ReadAloudScopeLabel(tab);
 
     if (hasPage && pageCount > 0) {
-        return fmt(_TRA("Reading \xC2\xB7 %s \xC2\xB7 page %d of %d \xC2\xB7 %s").s, docName.s, pageNo, pageCount,
-                   scope.s);
+        return fmt(_TRA("Reading \xC2\xB7 %s \xC2\xB7 page %d of %d \xC2\xB7 %s").s, docName, pageNo, pageCount, scope);
     }
-    return fmt(_TRA("Reading \xC2\xB7 %s \xC2\xB7 %s").s, docName.s, scope.s);
+    return fmt(_TRA("Reading \xC2\xB7 %s \xC2\xB7 %s").s, docName, scope);
 }
 
 static bool ReadAloudPlaybackBarHitTest(const Rect& r, Point pt) {

@@ -362,7 +362,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         ScheduleDeleteAndExecCommand();
         return;
     }
-    logf("CommandPaletteWnd::ExecuteCurrentSelection: no match for selection '%s'\n", m->strings.At(idx).s);
+    logf("CommandPaletteWnd::ExecuteCurrentSelection: no match for selection '%s'\n", m->strings.At(idx));
     ReportIf(true);
     ScheduleDeleteAndExecCommand();
 }

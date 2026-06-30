@@ -93,7 +93,7 @@ static Str GetCharZ(const ByteSlice& d, size_t off) {
     }
     ReportIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
     u8* str = data + off;
-    Str s = Str((char*)str); // str-port: CHM #STRINGS zero-terminated entry
+    Str s = Str((char*)str);
     if (str::IsEmpty(s)) {
         return {};
     }

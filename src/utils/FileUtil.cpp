@@ -581,7 +581,7 @@ TempStr WindowsToWslMountTemp(Str path) {
 
     TempStr rest = str::DupTemp(Str(path.s + 3, path.len - 3));
     str::TransCharsInPlace(rest, "\\", "/");
-    return fmt("/mnt/%c/%s", drive, rest.s);
+    return fmt("/mnt/%c/%s", drive, rest);
 }
 
 // When running in App Store, Windows virtualizes %APPDATA% etc., so to get a real path
@@ -654,7 +654,7 @@ TempStr MakeUniqueFilePathTemp(Str path) {
     TempStr noExt = path::GetPathNoExtTemp(path);
     TempStr ext = path::GetExtTemp(path);
     for (int i = 1; i < 10000; i++) {
-        TempStr candidate = fmt("%s.%d%s", noExt.s, i, ext.s);
+        TempStr candidate = fmt("%s.%d%s", noExt, i, ext);
         if (!file::Exists(candidate)) {
             return candidate;
         }
@@ -710,7 +710,7 @@ ByteSlice ReadFileWithArena(Str filePath, Arena* allocator) {
     if (nRead != size) {
         int err = ferror(fp);
         int isEof = feof(fp);
-        logf("ReadFileWithArena: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath.s,
+        logf("ReadFileWithArena: fread() failed, path: '%s', size: %d, nRead: %d, err: %d, isEof: %d\n", filePath,
              (int)size, (int)nRead, err, isEof);
         // we should either get eof or err
         // either way shouldn't happen because we're reading the exact size of file

@@ -341,7 +341,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
         if (ev->engineKind != nullptr) {
             if (ev->engineKind != engineKind) {
                 logfa("CanViewWithKnownExternalViewer cmd: %d, ev->engineKind '%s' != engineKind '%s'\n", cmdId,
-                      ev->engineKind, engineKind);
+                      Str(ev->engineKind), Str(engineKind));
                 return false;
             }
         }
@@ -487,7 +487,7 @@ bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
     // TODO: this should be in ViewWithCustomExternalViewer()
     if (!file::Exists(exePath)) {
         TempStr msg =
-            fmt("External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath.s);
+            fmt("External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
         auto caption = _TRA("Error");
         MsgBox(nullptr, msg, caption, MB_OK | MB_ICONERROR);
         return false;

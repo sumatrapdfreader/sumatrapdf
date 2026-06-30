@@ -8,7 +8,7 @@
 
 namespace trans {
 
-using SeqStrings = const char*; // str-port: generated packed string table base
+using SeqStrings = const char*;
 
 constexpr int kLangsCount = 73;
 
@@ -86,7 +86,7 @@ SeqStrings gLangCodes =
     "uz\0"
     "vn\0"
     "cy\0"
-    "\0"; // str-port: generated packed string table
+    "\0";
 
 SeqStrings gLangNames =
     "English\0"
@@ -162,7 +162,7 @@ SeqStrings gLangNames =
     "Uzbek (O'zbek)\0"
     "Vietnamese (Vi\341\273\207t Nam)\0"
     "Welsh (Cymraeg)\0"
-    "\0"; // str-port: generated packed string table
+    "\0";
 
 // from https://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses

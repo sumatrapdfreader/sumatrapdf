@@ -29,20 +29,6 @@ static int VsnprintfUtf8(char* buf, size_t bufCchSize, const char* fmt, va_list 
     return vsnprintf(buf, bufCchSize, fmt, args);
 }
 
-static int VscprintfUtf8(const char* fmt, va_list args) {
-#if defined(_MSC_VER)
-    _locale_t loc = GetUtf8FormatLocale();
-    if (loc) {
-        return _vscprintf_l(fmt, loc, args);
-    }
-#endif
-    va_list argsCopy;
-    va_copy(argsCopy, args);
-    int res = vsnprintf(nullptr, 0, fmt, argsCopy);
-    va_end(argsCopy);
-    return res;
-}
-
 // --- copyright for utf8 code below
 
 /*
@@ -257,7 +243,7 @@ void FreePtr(WStr* s) {
 } // namespace wstr
 namespace str {
 
-static Str WrapAllocated(char* s, size_t cch = (size_t)-1) { // str-port: owned heap
+static Str WrapAllocated(char* s, size_t cch = (size_t)-1) {
     if (!s) {
         return {};
     }
@@ -272,7 +258,7 @@ Str Dup(Arena* a, Str s) {
         return {};
     }
     size_t cch = (size_t)s.len;
-    return WrapAllocated((char*)MemDup(a, s.s, cch * sizeof(char), sizeof(char)), cch); // str-port: owned heap
+    return WrapAllocated((char*)MemDup(a, s.s, cch * sizeof(char), sizeof(char)), cch);
 }
 
 Str Dup(Str s) {
@@ -286,7 +272,7 @@ Str Dup(const ByteSlice& d) {
 } // namespace str
 namespace wstr {
 
-static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) { // str-port: owned heap
+static WStr WrapAllocatedW(WCHAR* s, size_t cch = (size_t)-1) {
     if (!s) {
         return {};
     }
@@ -301,7 +287,7 @@ WStr Dup(Arena* a, WStr s) {
         return {};
     }
     size_t cch = (size_t)s.len;
-    return WrapAllocatedW((WCHAR*)MemDup(a, s.s, cch * sizeof(WCHAR), sizeof(WCHAR)), cch); // str-port: owned heap
+    return WrapAllocatedW((WCHAR*)MemDup(a, s.s, cch * sizeof(WCHAR), sizeof(WCHAR)), cch);
 }
 
 WStr Dup(WStr s) {
@@ -596,9 +582,9 @@ Str Join(Arena* allocator, Str s1, Str s2, Str s3, Str s4, Str s5) {
     int s4Len = len(s4);
     int s5Len = len(s5);
     int len = s1Len + s2Len + s3Len + s4Len + s5Len + 1;
-    char* res = (char*)Alloc(allocator, len); // str-port: owned heap
+    char* res = (char*)Alloc(allocator, len);
 
-    char* s = res; // str-port: owned heap
+    char* s = res;
     memcpy(s, s1.s, s1Len);
     s += s1Len;
     memcpy(s, s2.s, s2Len);
@@ -632,7 +618,7 @@ namespace wstr {
 WStr Join(Arena* allocator, WStr s1, WStr s2, WStr s3) {
     size_t s1Len = (size_t)s1.len, s2Len = (size_t)s2.len, s3Len = (size_t)s3.len;
     size_t len = s1Len + s2Len + s3Len + 1;
-    WCHAR* res = (WCHAR*)Alloc(allocator, len * sizeof(WCHAR)); // str-port: owned heap
+    WCHAR* res = (WCHAR*)Alloc(allocator, len * sizeof(WCHAR));
     memcpy(res, s1.s, s1Len * sizeof(WCHAR));
     memcpy(res + s1Len, s2.s, s2Len * sizeof(WCHAR));
     memcpy(res + s1Len + s2Len, s3.s, s3Len * sizeof(WCHAR));
@@ -661,7 +647,7 @@ Str ToLower(Str s) {
 
 // Encode unicode character as utf8 to buf at off and advance off.
 // The caller must ensure there is enough free space (4 bytes) in buf
-void Utf8Encode(char* buf, int& off, int c) { // str-port: owned heap
+void Utf8Encode(char* buf, int& off, int c) {
     u8* tmp = (u8*)(buf + off);
     if (c < 0x00080) {
         *tmp++ = (u8)(c & 0xFF);
@@ -678,7 +664,7 @@ void Utf8Encode(char* buf, int& off, int c) { // str-port: owned heap
         *tmp++ = 0x80 + (u8)((c >> 6) & 0x3F);
         *tmp++ = 0x80 + (u8)(c & 0x3F);
     }
-    off = (int)((char*)tmp - buf); // str-port: C-string
+    off = (int)((char*)tmp - buf);
 }
 
 // Note: I tried an optimization: return (unsigned)(c - '0') < 10;
@@ -780,43 +766,6 @@ bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
     auto res = BufFmtV(buf, bufCchSize, fmt, args);
     va_end(args);
     return res;
-}
-
-// TODO: need to finish StrFormat and use it instead.
-TempStr FmtVTemp(const char* fmt, va_list args) {
-    Arena* a = GetTempArena();
-    char message[512]{};
-    va_list argsCopy;
-    va_copy(argsCopy, args);
-    int count = VsnprintfUtf8(message, dimof(message), fmt, argsCopy);
-    va_end(argsCopy);
-    if ((count >= 0) && (count < dimofi(message))) {
-        return str::Dup(a, Str(message, count));
-    }
-
-    va_copy(argsCopy, args);
-    count = VscprintfUtf8(fmt, argsCopy);
-    va_end(argsCopy);
-    // happened in https://github.com/sumatrapdfreader/sumatrapdf/issues/878
-    // when %S string had certain Unicode characters
-    ReportIf(count == -1);
-    if (count < 0) {
-        return str::Dup(a, StrL("vsnprintf() returned -1"));
-    }
-
-    char* buf = AllocArray<char>(a, count + 1);
-    if (!buf) {
-        return {};
-    }
-
-    va_copy(argsCopy, args);
-    int count2 = VsnprintfUtf8(buf, (size_t)count + 1, fmt, argsCopy);
-    va_end(argsCopy);
-    ReportIf(count2 != count);
-    if (count2 < 0) {
-        return str::Dup(a, StrL("vsnprintf() returned -1"));
-    }
-    return Str(buf, count);
 }
 
 /* replace in <str> the chars from <oldChars> with their equivalents
@@ -988,7 +937,7 @@ namespace str {
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
 TempStr MemToHexTemp(const u8* buf, size_t len) {
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char* ret = AllocArrayTemp<char>(2 * len + 1); // str-port: temp arena
+    char* ret = AllocArrayTemp<char>(2 * len + 1);
     if (!ret) {
         return {};
     }
@@ -1139,7 +1088,7 @@ static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
     char* sliceZ = CStrTemp(Str(str.s + off, str.len - off));
     ptrdiff_t consumed = 0;
     {
-        char* endPtr = nullptr; // str-port: C-string
+        char* endPtr = nullptr;
         *val = strtod(sliceZ, &endPtr);
         if (!endPtr || endPtr == sliceZ) {
             return false;
@@ -1735,7 +1684,7 @@ Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 // kPadding is number of characters needed for terminating character
 static constexpr size_t kPadding = 1;
 
-static char* EnsureCap(StrBuilder* s, size_t needed) { // str-port: owned heap
+static char* EnsureCap(StrBuilder* s, size_t needed) {
     if (needed + kPadding <= StrBuilder::kBufChars) {
         s->els = s->buf; // TODO: not needed?
         return s->buf;
@@ -1765,14 +1714,14 @@ static char* EnsureCap(StrBuilder* s, size_t needed) { // str-port: owned heap
     s->nReallocs++;
 
     size_t allocSize = newElCount;
-    char* newEls; // str-port: owned heap
+    char* newEls;
     if (s->buf == s->els) {
-        newEls = (char*)Alloc(s->allocator, allocSize); // str-port: owned heap
+        newEls = (char*)Alloc(s->allocator, allocSize);
         if (newEls) {
             memcpy(newEls, s->buf, s->len + 1);
         }
     } else {
-        newEls = (char*)Realloc(s->allocator, s->els, allocSize); // str-port: owned heap
+        newEls = (char*)Realloc(s->allocator, s->els, allocSize);
     }
     if (!newEls) {
         ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
@@ -1783,19 +1732,19 @@ static char* EnsureCap(StrBuilder* s, size_t needed) { // str-port: owned heap
     return newEls;
 }
 
-static char* MakeSpaceAt(StrBuilder* s, size_t idx, size_t count) { // str-port: owned heap
+static char* MakeSpaceAt(StrBuilder* s, size_t idx, size_t count) {
     ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
-    char* buf = EnsureCap(s, newLen); // str-port: owned heap
+    char* buf = EnsureCap(s, newLen);
     if (!buf) {
         return nullptr;
     }
     buf[newLen] = 0;
-    char* res = &(buf[idx]); // str-port: owned heap
+    char* res = &(buf[idx]);
     if (s->len > idx) {
         // inserting in the middle of string, have to copy
-        char* src = buf + idx;         // str-port: owned heap
-        char* dst = buf + idx + count; // str-port: owned heap
+        char* src = buf + idx;
+        char* dst = buf + idx + count;
         memmove(dst, src, s->len - idx);
     }
     s->len = newLen;
@@ -1839,7 +1788,7 @@ StrBuilder::StrBuilder(size_t capHint, Arena* a) {
 // note: we don't inherit allocator as it's not needed for our use cases
 StrBuilder::StrBuilder(const StrBuilder& that) {
     Reset();
-    char* s = EnsureCap(this, that.len); // str-port: owned heap
+    char* s = EnsureCap(this, that.len);
     Str sOrig = that.Get();
     len = that.len;
     size_t n = len + kPadding;
@@ -1856,7 +1805,7 @@ StrBuilder& StrBuilder::operator=(const StrBuilder& that) {
         return *this;
     }
     Reset();
-    char* s = EnsureCap(this, that.len); // str-port: owned heap
+    char* s = EnsureCap(this, that.len);
     Str sOrig = that.Get();
     len = that.len;
     size_t n = len + kPadding;
@@ -1907,7 +1856,7 @@ int StrBuilder::Size() const {
 }
 
 bool StrBuilder::InsertAt(size_t idx, char el) {
-    char* p = MakeSpaceAt(this, idx, 1); // str-port: owned heap
+    char* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
     }
@@ -1926,7 +1875,7 @@ bool StrBuilder::Append(Str src, size_t count) {
     if (str::IsNull(src) || 0 == count) {
         return true;
     }
-    char* dst = MakeSpaceAt(this, len, count); // str-port: owned heap
+    char* dst = MakeSpaceAt(this, len, count);
     if (!dst) {
         return false;
     }
@@ -1941,8 +1890,8 @@ bool StrBuilder::Append(const StrBuilder& s) {
 char StrBuilder::RemoveAt(size_t idx, size_t count) {
     char res = at(idx);
     if (len > idx + count) {
-        char* dst = els + idx;         // str-port: owned heap
-        char* src = els + idx + count; // str-port: owned heap
+        char* dst = els + idx;
+        char* src = els + idx + count;
         size_t nToMove = len - idx - count;
         memmove(dst, src, nToMove);
     }
@@ -1969,14 +1918,14 @@ char& StrBuilder::Last() const {
 // it doesn't matter
 Str StrBuilder::StealData(Arena* a) {
     int n = (int)len;
-    char* res = els; // str-port: owned heap
+    char* res = els;
     if (a) {
         // if allocator is specified, have to duplicate
-        res = (char*)MemDup(a, els, len + kPadding); // str-port: owned heap
+        res = (char*)MemDup(a, els, len + kPadding);
     } else {
         if (els == buf) {
             a = (a != nullptr) ? a : this->allocator;
-            res = (char*)MemDup(a, els, len + kPadding); // str-port: owned heap
+            res = (char*)MemDup(a, els, len + kPadding);
         } else {
             // we're returning els, so reset to small buf
             els = buf;
@@ -2029,7 +1978,7 @@ ByteSlice StrBuilder::StealAsByteSlice() {
 
 bool StrBuilder::Append(const u8* src, size_t size) {
     if ((size_t)-1 == size) {
-        return this->Append(Str((const char*)src)); // str-port: C-string
+        return this->Append(Str((const char*)src));
     }
     return AppendSlice(ByteSlice(src, size));
 }
@@ -2076,7 +2025,7 @@ char StrBuilder::LastChar() const {
     return at(n - 1);
 }
 
-static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) { // str-port: owned heap
+static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) {
     if (needed + kPadding <= StrBuilder::kBufChars) {
         s->els = s->buf; // TODO: not needed?
         return s->buf;
@@ -2104,14 +2053,14 @@ static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) { // str-port: owned heap
     size_t newElCount = newCap + kPadding;
 
     size_t allocSize = newElCount * WStrBuilder::kElSize;
-    WCHAR* newEls; // str-port: owned heap
+    WCHAR* newEls;
     if (s->buf == s->els) {
-        newEls = (WCHAR*)Alloc(s->allocator, allocSize); // str-port: owned heap
+        newEls = (WCHAR*)Alloc(s->allocator, allocSize);
         if (newEls) {
             memcpy(newEls, s->buf, WStrBuilder::kElSize * (s->len + 1));
         }
     } else {
-        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize); // str-port: owned heap
+        newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize);
     }
 
     if (!newEls) {
@@ -2123,18 +2072,18 @@ static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) { // str-port: owned heap
     return newEls;
 }
 
-static WCHAR* MakeSpaceAt(WStrBuilder* s, size_t idx, size_t count) { // str-port: owned heap
+static WCHAR* MakeSpaceAt(WStrBuilder* s, size_t idx, size_t count) {
     ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
-    WCHAR* buf = EnsureCap(s, newLen); // str-port: owned heap
+    WCHAR* buf = EnsureCap(s, newLen);
     if (!buf) {
         return nullptr;
     }
     buf[newLen] = 0;
-    WCHAR* res = &(buf[idx]); // str-port: owned heap
+    WCHAR* res = &(buf[idx]);
     if (s->len > idx) {
-        WCHAR* src = buf + idx;         // str-port: owned heap
-        WCHAR* dst = buf + idx + count; // str-port: owned heap
+        WCHAR* src = buf + idx;
+        WCHAR* dst = buf + idx + count;
         memmove(dst, src, (s->len - idx) * WStrBuilder::kElSize);
     }
     s->len = newLen;
@@ -2177,7 +2126,7 @@ WStrBuilder::WStrBuilder(size_t capHint, Arena* a) {
 // note: we don't inherit allocator as it's not needed for our use cases
 WStrBuilder::WStrBuilder(const WStrBuilder& that) {
     Reset();
-    WCHAR* s = EnsureCap(this, that.cap); // str-port: owned heap
+    WCHAR* s = EnsureCap(this, that.cap);
     WStr sOrig = that.Get();
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
@@ -2194,7 +2143,7 @@ WStrBuilder& WStrBuilder::operator=(const WStrBuilder& that) {
         return *this;
     }
     Reset();
-    WCHAR* s = EnsureCap(this, that.cap); // str-port: owned heap
+    WCHAR* s = EnsureCap(this, that.cap);
     WStr sOrig = that.Get();
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
@@ -2252,7 +2201,7 @@ int WStrBuilder::isize() const {
 }
 
 bool WStrBuilder::InsertAt(size_t idx, const WCHAR& el) {
-    WCHAR* p = MakeSpaceAt(this, idx, 1); // str-port: owned heap
+    WCHAR* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
     }
@@ -2271,7 +2220,7 @@ bool WStrBuilder::Append(WStr src, size_t count) {
     if (wstr::IsNull(src) || 0 == count) {
         return true;
     }
-    WCHAR* dst = MakeSpaceAt(this, len, count); // str-port: owned heap
+    WCHAR* dst = MakeSpaceAt(this, len, count);
     if (!dst) {
         return false;
     }
@@ -2282,8 +2231,8 @@ bool WStrBuilder::Append(WStr src, size_t count) {
 WCHAR WStrBuilder::RemoveAt(size_t idx, size_t count) {
     WCHAR res = at(idx);
     if (len > idx + count) {
-        WCHAR* dst = els + idx;         // str-port: owned heap
-        WCHAR* src = els + idx + count; // str-port: owned heap
+        WCHAR* dst = els + idx;
+        WCHAR* src = els + idx + count;
         memmove(dst, src, (len - idx - count) * kElSize);
     }
     len -= (u32)count;
@@ -2311,7 +2260,7 @@ WStr WStrBuilder::StealData() {
     int n = (int)len;
     WCHAR* res = els;
     if (els == buf) {
-        res = (WCHAR*)MemDup(allocator, buf, (len + kPadding) * kElSize); // str-port: owned heap
+        res = (WCHAR*)MemDup(allocator, buf, (len + kPadding) * kElSize);
     }
     els = buf;
     Reset();
@@ -2404,7 +2353,7 @@ WStr CastToWCHAR(Str s) {
     if (!s) {
         return {};
     }
-    return WStr((WCHAR*)s.s, s.len / (int)sizeof(WCHAR)); // str-port: byte reinterpret
+    return WStr((WCHAR*)s.s, s.len / (int)sizeof(WCHAR));
 }
 
 } // namespace str
@@ -2634,7 +2583,7 @@ namespace str {
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
-int BufSet(char* dst, int cchDst, Str src) { // str-port: caller-owned out-buffer
+int BufSet(char* dst, int cchDst, Str src) {
     ReportIf(0 == cchDst || !dst);
     if (!src) {
         *dst = 0;
@@ -2652,7 +2601,7 @@ int BufSet(char* dst, int cchDst, Str src) { // str-port: caller-owned out-buffe
 } // namespace str
 namespace wstr {
 
-int BufSet(WCHAR* dst, int cchDst, WStr src) { // str-port: caller-owned out-buffer
+int BufSet(WCHAR* dst, int cchDst, WStr src) {
     ReportIf(0 == cchDst || !dst);
     if (!src) {
         *dst = 0;
@@ -2669,13 +2618,13 @@ int BufSet(WCHAR* dst, int cchDst, WStr src) { // str-port: caller-owned out-buf
 } // namespace wstr
 namespace str {
 
-int BufSet(WCHAR* dst, int dstCchSize, Str src) { // str-port: caller-owned out-buffer
+int BufSet(WCHAR* dst, int dstCchSize, Str src) {
     return wstr::BufSet(dst, dstCchSize, ToWStrTemp(src));
 }
 
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
-int BufAppend(char* dst, int dstCch, Str s) { // str-port: caller-owned out-buffer
+int BufAppend(char* dst, int dstCch, Str s) {
     ReportIf(0 == dstCch);
 
     int currDstCchLen = len(dst);
@@ -2914,10 +2863,10 @@ static bool ParseDoubleAtW(WStr str, int off, double* val, int* endOff) {
         return false;
     }
     int rem = str.len - off;
-    WCHAR* sliceZ = AllocArrayTemp<WCHAR>(rem + 1); // str-port: wcstod NUL-term boundary
+    WCHAR* sliceZ = AllocArrayTemp<WCHAR>(rem + 1);
     memcpy(sliceZ, str.s + off, rem * sizeof(WCHAR));
     sliceZ[rem] = 0;
-    WCHAR* endPtr = nullptr; // str-port: wcstod out-param
+    WCHAR* endPtr = nullptr;
     *val = wcstod(sliceZ, &endPtr);
     if (!endPtr || endPtr == sliceZ) {
         return false;
@@ -3179,7 +3128,7 @@ static TempStr ShortenStringTemp(Str s, int maxLen) {
     if (sLen <= maxLen) {
         return s;
     }
-    char* ret = AllocArrayTemp<char>(maxLen + 2); // str-port: owned heap
+    char* ret = AllocArrayTemp<char>(maxLen + 2);
     const int half = maxLen / 2;
     // copy first N/2 characters, move last N/2 characters to the halfway point
     for (int i = 0; i < half; i++) {
@@ -3205,7 +3154,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
         if (keep < 0) {
             keep = 0;
         }
-        char* ret = AllocArrayTemp<char>(keep + 4); // str-port: temp arena slice
+        char* ret = AllocArrayTemp<char>(keep + 4);
         memcpy(ret, s.s, keep);
         ret[keep] = '.';
         ret[keep + 1] = '.';
@@ -3221,7 +3170,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
         keep = 0;
     }
     // over-allocate the result by 4x to be always safe
-    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1); // str-port: owned heap
+    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1);
     int src = 0;
     int tmp = 0;
     int n;
@@ -3266,7 +3215,7 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
     int toRemove = (nRunes - maxRunes) + 3; // 3 for "..."
     int removeStartingAt = (nRunes / 2) - (toRemove / 2);
     // over-allocate the result by 4x to be always safe
-    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1); // str-port: owned heap
+    char* ret = AllocArrayTemp<char>(maxRunes * 4 + 1);
     int src = 0;
     int tmp = 0;
     int n;
@@ -3356,14 +3305,6 @@ TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4, Str s5) {
 
 TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
     return wstr::Join(GetTempArena(), s1, s2, s3);
-}
-
-TempStr fmt(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    TempStr res = FmtVTemp(fmt, args);
-    va_end(args);
-    return res;
 }
 
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {

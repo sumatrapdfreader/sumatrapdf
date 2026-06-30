@@ -61,7 +61,7 @@ TryAgain64Bit:
     for (int i = nVers; i > 0; i--) {
         for (Str gsProd : gsProducts) {
             Str ver = versions.At(i - 1);
-            TempStr keyName = fmt("Software\\%s\\%s", gsProd.s, ver.s);
+            TempStr keyName = fmt("Software\\%s\\%s", gsProd, ver);
             TempStr gsDLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
             if (!gsDLL) {
                 continue;
@@ -152,12 +152,12 @@ static EngineBase* ps2pdf(Str path) {
     TempStr cmdLine =
         fmt("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
             "-f \"%s\"",
-            gswin32c.s, tmpFile.s, shortPath.s);
+            gswin32c, tmpFile, shortPath);
 
     {
         TempStr fileName = path::GetBaseNameTemp(__FILE__);
         TempStr tmpFileName = path::GetBaseNameTemp(tmpFile);
-        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName.s, __LINE__, gswin32c.s, tmpFileName.s);
+        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin32c, tmpFileName);
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds

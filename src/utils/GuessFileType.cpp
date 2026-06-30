@@ -359,7 +359,7 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
         return false;
     }
 
-    char* mt = mimeType->data; // str-port: archive byte buffer
+    char* mt = mimeType->data;
     // trailing whitespace is allowed for the mimetype file
     size_t n = mimeType->fileSizeUncompressed;
     for (size_t i = n; i > 0; i--) {
@@ -605,13 +605,13 @@ Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
         return fail(StrL("ERROR unknown-kind"));
     }
     if (!str::Eq(kind, expectedKindName)) {
-        out.Append(fmt("FAIL path=%s got=%s expected=%s\n", path.s, kind, expectedKindName.s));
+        out.Append(fmt("FAIL path=%s got=%s expected=%s\n", path, Str(kind), expectedKindName));
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
         return out.StealData();
     }
-    out.Append(fmt("OK path=%s kind=%s\n", path.s, kind));
+    out.Append(fmt("OK path=%s kind=%s\n", path, Str(kind)));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }

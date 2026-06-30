@@ -92,7 +92,7 @@ static Str PdfFilterStateToStr(PdfFilterState state) {
 
 HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     Str stateStr = PdfFilterStateToStr(m_state);
-    logf("PdfFilter::GetNextChunkValue(), state: %s (%d)\n", stateStr.s, (int)m_state);
+    logf("PdfFilter::GetNextChunkValue(), state: %s (%d)\n", stateStr, (int)m_state);
     Str prop;
     WStr ws;
     switch (m_state) {

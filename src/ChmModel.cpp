@@ -272,7 +272,7 @@ void ChmModel::ScrollTo(int pageNo, RectF rect, float zoom) {
 bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler*) {
     Kind k = link->GetKind();
     if (k != kindDestinationScrollTo) {
-        logf("ChmModel::HandleLink: unsupported kind '%s'\n", k);
+        logf("ChmModel::HandleLink: unsupported kind '%s'\n", Str(k));
         ReportIfFast(link->GetKind() != kindDestinationScrollTo);
     }
     Str url = PageDestGetName(link);
@@ -843,7 +843,7 @@ void ChmThumbnailTask::OnDocumentComplete(Str url) {
     if (!str::Eq(url, homeUrl)) {
         return;
     }
-    logf("ChmThumbnailTask::OnDocumentComplete: '%s'\n", url.s);
+    logf("ChmThumbnailTask::OnDocumentComplete: '%s'\n", url);
     if (didSave) {
         // don't crash creating .chm thumbnail
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/4519

@@ -901,7 +901,7 @@ EngineImage::~EngineImage() {
 
 EngineBase* EngineImage::Clone() {
     if (frames.empty() || !frames[0]) {
-        logf("EngineImage::Clone() failed: no frames for '%s'\n", FilePath() ? FilePath().s : "(null)");
+        logf("EngineImage::Clone() failed: no frames for '%s'\n", FilePath() ? FilePath() : StrL("(null)"));
         return nullptr;
     }
 
@@ -933,7 +933,7 @@ bool EngineImage::LoadSingleFile(Str path) {
         imageFormat = GuessFileTypeFromName(path);
     }
     if (imageFormat == nullptr) {
-        logfa("EngineImage::LoadSingleFile: '%s'\n", path.s);
+        logfa("EngineImage::LoadSingleFile: '%s'\n", path);
         ReportIf(imageFormat == nullptr);
     }
 
@@ -1079,7 +1079,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     }
     PropertyItem* item = (PropertyItem*)malloc(size);
     if (!item) return {};
-    AutoFree freeItem((char*)item); // str-port: GDI+ binary buffer
+    AutoFree freeItem((char*)item);
     Status ok = bmp->GetPropertyItem(id, size, item);
     if (Ok != ok) {
         /* property didn't exist */;
@@ -1087,8 +1087,8 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     } else if (PropertyTagTypeASCII == item->type) {
         value = strconv::AnsiToUtf8Temp(AsStr(ByteSlice((u8*)item->value, size)));
     } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
-               !((WCHAR*)item->value)[item->length / 2 - 1]) { // str-port: GDI+
-        value = ToUtf8Temp((WCHAR*)item->value);               // str-port: GDI+
+               !((WCHAR*)item->value)[item->length / 2 - 1]) {
+        value = ToUtf8Temp((WCHAR*)item->value);
     }
     if (str::IsEmptyOrWhiteSpace(value)) {
         return altId == 0 ? nullptr : GetImagePropertyTemp(bmp, altId);
@@ -1478,7 +1478,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
                 }
                 // Unicode
                 else if (memcmp(item->value, "UNICODE\0", 8) == 0) {
-                    val = ToUtf8Temp(WStr((WCHAR*)commentData.s, commentData.len / 2)); // str-port: GDI+
+                    val = ToUtf8Temp(WStr((WCHAR*)commentData.s, commentData.len / 2));
                     if (val && !str::IsEmpty(val)) {
                         AddProp(keyValOut, kPropUserComment, val);
                     }
@@ -1623,7 +1623,7 @@ RectF EngineImage::LoadMediabox(int pageNo) {
 }
 
 EngineBase* EngineImage::CreateFromFile(Str path) {
-    logf("EngineImage::CreateFromFile(%s)\n", path.s);
+    logf("EngineImage::CreateFromFile(%s)\n", path);
     EngineImage* engine = new EngineImage();
     bool ok = engine->LoadSingleFile(path);
     // decoding might run a 3rd-party WIC codec (e.g. CopyTrans HEIC) that
@@ -1664,7 +1664,7 @@ bool IsEngineImageSupportedFileType(Kind kind) {
 }
 
 EngineBase* CreateEngineImageFromFile(Str path) {
-    logf("CreateEngineImageFromFile(%s)\n", path.s);
+    logf("CreateEngineImageFromFile(%s)\n", path);
     return EngineImage::CreateFromFile(path);
 }
 
@@ -2016,11 +2016,11 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
         str::Free(propTitle);
         propTitle = str::Dup(value);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
-        Str newDate = str::Dup(fmt("%s/%d", str::IsEmpty(propDate) ? "" : propDate.s, ParseInt(value)));
+        Str newDate = str::Dup(fmt("%s/%d", str::IsEmpty(propDate) ? "" : propDate, ParseInt(value)));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
-        Str newDate = str::Dup(fmt("%d%s", ParseInt(value), str::IsEmpty(propDate) ? "" : propDate.s));
+        Str newDate = str::Dup(fmt("%d%s", ParseInt(value), str::IsEmpty(propDate) ? "" : propDate));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::String == type && str::Eq(path, "/appID")) {
@@ -2125,7 +2125,7 @@ EngineBase* EngineCbx::Clone() {
         // keep the cached-local-copy in play on the clone too
         auto clone = CreateFromFile(path, {}, nullptr, nullptr, nullptr, physicalPath);
         if (!clone) {
-            logf("EngineCbx::Clone() failed: CreateFromFile('%s') failed\n", path.s);
+            logf("EngineCbx::Clone() failed: CreateFromFile('%s') failed\n", path);
         }
         return clone;
     }

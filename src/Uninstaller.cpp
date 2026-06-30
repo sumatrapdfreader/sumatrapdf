@@ -78,7 +78,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
         return;
     }
     if (!str::FindFromI(currPath, installDir)) {
-        logf("RemoveInstallDirFromPath: '%s' not found in PATH\n", installDir.s);
+        logf("RemoveInstallDirFromPath: '%s' not found in PATH\n", installDir);
         return;
     }
 
@@ -120,7 +120,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
         logf("RemoveInstallDirFromPath: RegSetValueExW failed with %d\n", (int)res);
         return;
     }
-    logf("RemoveInstallDirFromPath: removed '%s' from PATH\n", installDir.s);
+    logf("RemoveInstallDirFromPath: removed '%s' from PATH\n", installDir);
     // notify other processes that environment has changed
     SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, nullptr);
 }
@@ -145,7 +145,7 @@ static void RemoveInstalledFiles() {
     }
 #endif
     bool ok = dir::RemoveAll(dir);
-    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir.s, (int)ok);
+    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
 
 static TempStr GetInstalledExePathTemp() {
@@ -239,7 +239,7 @@ static bool UninstallerOnWmCommand(WPARAM wp) {
 #define kInstallerWindowClassName L"SUMATRA_PDF_INSTALLER_FRAME"
 
 static void CreateUninstallerWindow() {
-    TempStr title = fmt(_TRA("SumatraPDF %s Uninstaller").s, CURR_VERSION_STRA);
+    TempStr title = fmt(_TRA("SumatraPDF %s Uninstaller").s, StrL(CURR_VERSION_STRA));
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
     int dx = GetInstallerWinDx();
@@ -264,7 +264,7 @@ static void ShowUsage() {
 
 /s	uninstalls %s silently (without user interaction).
 /d	changes the directory from where %s will be uninstalled.)",
-                      kAppName, kAppName);
+                      Str(kAppName), Str(kAppName));
     MsgBox(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 
@@ -328,7 +328,7 @@ static bool RegisterWinClass() {
 
     FillWndClassEx(wcex, kInstallerWindowClassName, WndProcUninstallerFrame);
     auto h = GetModuleHandle(nullptr);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, iconName);
 
     RegisterClassExW(&wcex);
@@ -417,7 +417,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
         }
     }
 
-    logf("  copying installer '%s' to '%s'\n", ownPath.s, installerTempPath.s);
+    logf("  copying installer '%s' to '%s'\n", ownPath, installerTempPath);
     bool ok = file::Copy(installerTempPath, ownPath, false);
     if (!ok) {
         logf("  failed to copy installer\n");
@@ -438,22 +438,22 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     }
     Str cl = cmdLine.Get();
     if (cli->allUsers) {
-        logf("LaunchElevated('%s', '%s')\n", installerTempPath.s, cl.s);
+        logf("LaunchElevated('%s', '%s')\n", installerTempPath, cl);
         ok = LaunchElevated(installerTempPath, cl);
         if (!ok) {
-            logf("LaunchElevated() failed to launch '%s' '%s'\n", installerTempPath.s, cl.s);
+            logf("LaunchElevated() failed to launch '%s' '%s'\n", installerTempPath, cl);
             LogLastError();
         } else {
-            logf("LaunchElevated() launched '%s' '%s' ok!\n", installerTempPath.s, cl.s);
+            logf("LaunchElevated() launched '%s' '%s' ok!\n", installerTempPath, cl);
         }
     } else {
-        logf("LaunchProcessWithCmdLine('%s' '%s')\n", installerTempPath.s, cl.s);
+        logf("LaunchProcessWithCmdLine('%s' '%s')\n", installerTempPath, cl);
         HANDLE h = LaunchProcessWithCmdLine(installerTempPath, cl);
         if (!h) {
-            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", installerTempPath.s, cl.s);
+            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", installerTempPath, cl);
             LogLastError();
         } else {
-            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", installerTempPath.s, cl.s);
+            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", installerTempPath, cl);
         }
     }
     ::ExitProcess(0);
@@ -478,7 +478,7 @@ static void InitSelfDelete() {
     // https://stackoverflow.com/questions/1672338/how-to-sleep-for-five-seconds-in-a-batch-file-cmd
     script.Append("timeout /t 2 /nobreak >nul\r\n");
     // delete our executable
-    script.Append(fmt("del \"%s\"\r\n", exePath.s));
+    script.Append(fmt("del \"%s\"\r\n", exePath));
     // del itself
     // https://stackoverflow.com/questions/2888976/how-to-make-bat-file-delete-it-self-after-completion
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
@@ -486,11 +486,11 @@ static void InitSelfDelete() {
     TempStr scriptPath = GetSelfDeleteBatchPathInTemp();
     bool ok = file::WriteFile(scriptPath, script.AsByteSlice());
     if (!ok) {
-        logf("Failed to write '%s'\n", scriptPath.s);
+        logf("Failed to write '%s'\n", scriptPath);
         return;
     }
-    logf("Created self-delete batch script '%s'\n", scriptPath.s);
-    TempStr cmdLine = fmt("cmd.exe /C \"%s\"", scriptPath.s);
+    logf("Created self-delete batch script '%s'\n", scriptPath);
+    TempStr cmdLine = fmt("cmd.exe /C \"%s\"", scriptPath);
     LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
 }
 
@@ -512,18 +512,18 @@ int RunUninstaller() {
     Str instDir = gCli->installDir;
     TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
     TempStr exePath = GetSelfExePathTemp();
-    logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath.s, cmdLine.s, instDir.s);
+    logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
 
     if (false) {
         Str path = "C:\\Users\\kjk\\AppData\\Local\\Temp\\Sumatra-Uninstaller.exe";
         Str cl = "-uninstall";
-        logf("LaunchProcessWithCmdLine('%s' '%s')\n", path.s, cl.s);
+        logf("LaunchProcessWithCmdLine('%s' '%s')\n", path, cl);
         HANDLE h = LaunchProcessWithCmdLine(path, cl);
         if (!h) {
-            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", path.s, cl.s);
+            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", path, cl);
             LogLastError();
         } else {
-            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", path.s, cl.s);
+            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", path, cl);
         }
     }
 

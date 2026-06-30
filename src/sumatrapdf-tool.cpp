@@ -18,32 +18,31 @@
 
 // implemented in (and exported from) libmupdf.dll - see src/libmupdf.def
 extern "C" {
-// str-port: mupdf C main entry points
-int muconvert_main(int argc, char* argv[]); // str-port: mupdf
-int mudraw_main(int argc, char* argv[]);    // str-port: mupdf
-int mutrace_main(int argc, char* argv[]);   // str-port: mupdf
-int murun_main(int argc, char* argv[]);     // str-port: mupdf
+int muconvert_main(int argc, char* argv[]);
+int mudraw_main(int argc, char* argv[]);
+int mutrace_main(int argc, char* argv[]);
+int murun_main(int argc, char* argv[]);
 
-int pdfclean_main(int argc, char* argv[]);   // str-port: mupdf
-int pdfextract_main(int argc, char* argv[]); // str-port: mupdf
-int pdfinfo_main(int argc, char* argv[]);    // str-port: mupdf
-int pdfposter_main(int argc, char* argv[]);  // str-port: mupdf
-int pdfshow_main(int argc, char* argv[]);    // str-port: mupdf
-int pdfpages_main(int argc, char* argv[]);   // str-port: mupdf
-int pdfcreate_main(int argc, char* argv[]);  // str-port: mupdf
-int pdfmerge_main(int argc, char* argv[]);   // str-port: mupdf
-int pdfsign_main(int argc, char* argv[]);    // str-port: mupdf
-int pdfrecolor_main(int argc, char* argv[]); // str-port: mupdf
-int pdftrim_main(int argc, char* argv[]);    // str-port: mupdf
-int pdfbake_main(int argc, char* argv[]);    // str-port: mupdf
-int mubar_main(int argc, char* argv[]);      // str-port: mupdf
-int mugrep_main(int argc, char* argv[]);     // str-port: mupdf
-int pdfaudit_main(int argc, char* argv[]);   // str-port: mupdf
+int pdfclean_main(int argc, char* argv[]);
+int pdfextract_main(int argc, char* argv[]);
+int pdfinfo_main(int argc, char* argv[]);
+int pdfposter_main(int argc, char* argv[]);
+int pdfshow_main(int argc, char* argv[]);
+int pdfpages_main(int argc, char* argv[]);
+int pdfcreate_main(int argc, char* argv[]);
+int pdfmerge_main(int argc, char* argv[]);
+int pdfsign_main(int argc, char* argv[]);
+int pdfrecolor_main(int argc, char* argv[]);
+int pdftrim_main(int argc, char* argv[]);
+int pdfbake_main(int argc, char* argv[]);
+int mubar_main(int argc, char* argv[]);
+int mugrep_main(int argc, char* argv[]);
+int pdfaudit_main(int argc, char* argv[]);
 
 // convert wide argv (so paths are correct regardless of the ANSI code page)
 // to the UTF-8 char argv the tools expect
-char** fz_argv_from_wargv(int argc, wchar_t** wargv); // str-port: mupdf
-void fz_free_argv(int argc, char** argv);             // str-port: mupdf
+char** fz_argv_from_wargv(int argc, wchar_t** wargv);
+void fz_free_argv(int argc, char** argv);
 }
 
 // must match premake5.lua and src/SumatraStartup.cpp
@@ -51,12 +50,12 @@ void fz_free_argv(int argc, char** argv);             // str-port: mupdf
 #define FZ_ENABLE_PDF 1
 #define FZ_ENABLE_BARCODE 0
 
-using MutoolFunc = int (*)(int argc, char* argv[]); // str-port: mupdf
+using MutoolFunc = int (*)(int argc, char* argv[]);
 
 struct Tool {
-    const char* name; // str-port: C-string
+    const char* name;
     MutoolFunc fn;
-    const char* desc; // str-port: C-string
+    const char* desc;
 };
 
 static Tool gTools[] = {
@@ -87,7 +86,7 @@ static Tool gTools[] = {
 #endif
 };
 
-static const Tool* FindTool(const char* name) { // str-port: C-string
+static const Tool* FindTool(const char* name) {
     for (const Tool& t : gTools) {
         if (_stricmp(t.name, name) == 0) {
             return &t;

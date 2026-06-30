@@ -205,7 +205,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
             cargs.title = "Browser Window";
         }
         HMODULE h = GetModuleHandleW(nullptr);
-        WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
+        WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
         cargs.icon = LoadIconW(h, iconName);
         // TODO: if set, navigate to url doesn't work
         // args.visible = false;

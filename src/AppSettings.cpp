@@ -50,7 +50,7 @@ static bool ApplyReadAloudVoiceFromSettings() {
     }
 
     if (!TtsSetVoiceById(voiceId)) {
-        logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId.s);
+        logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId);
         str::ReplaceWithCopy(&gGlobalPrefs->readAloudVoiceId, Str{});
         TtsSetVoiceById("");
         return true;
@@ -125,8 +125,8 @@ static void SetCommandNameAndShortcut(CustomCommand* cmd, Str name, Str key) {
         return;
     }
     if (!IsValidShortcutString(key)) {
-        logf("SetCommandNameAndShortcut: '%s' is not a valid shortcut for '%s'\n", key.s, cmd->definition.s);
-        MaybeDelayedWarningNotification(fmt("'%s' is not a valid shortcut for '%s'", key.s, cmd->definition.s));
+        logf("SetCommandNameAndShortcut: '%s' is not a valid shortcut for '%s'\n", key, cmd->definition);
+        MaybeDelayedWarningNotification(fmt("'%s' is not a valid shortcut for '%s'", key, cmd->definition));
         return;
     }
     cmd->key = str::Dup(key);
@@ -385,7 +385,7 @@ bool LoadSettings() {
         SaveSettings();
     }
 
-    logf("LoadSettings('%s') took %.2f ms\n", settingsPath.s, TimeSinceInMs(timeStart));
+    logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));
     return true;
 }
 
@@ -518,7 +518,7 @@ static void RememberSessionState() {
                 if (src) {
                     windowState->tabStates->Append(CloneTabState(src));
                 } else {
-                    logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp.s : "(none)");
+                    logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp : StrL("(none)"));
                 }
                 continue;
             }
@@ -640,7 +640,7 @@ static void ReloadSettings() {
             ok = true;
             prefsData.Free();
         } else {
-            logf("ReloadSettings: failed to load '%s', i=%d\n", settingsPath.s, i);
+            logf("ReloadSettings: failed to load '%s', i=%d\n", settingsPath, i);
         }
     }
     if (!ok) {

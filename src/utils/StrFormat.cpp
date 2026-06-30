@@ -9,12 +9,21 @@ namespace strfmt {
 // formatting instruction
 struct Inst {
     Type t = Type::None;
-    int width = 0;  // length, for numbers e.g. %4d, length is 4
-    int prec = 0;   // precision for floating numbers e.g. %.2f, prec is 2
-    char fill = 0;  // filler, for number e.g. '%04d', filler is '0', '% 6d', filler is ' '
     int argNo = 0;  // <0 for strings that come from formatting string
-    int rawOff = 0; // offset into format for Type::RawStr
-    int sLen = 0;
+    int rawOff = 0; // offset into format for Type::RawStr / start of fwp for % spec
+    int sLen = 0;   // length, for Type::RawStr
+
+    // for a % spec: the conversion char and the flags+width+precision range
+    // (everything between '%' and the length-modifier/conversion). We delegate
+    // the actual formatting to snprintf, only normalizing the length modifier so
+    // 32/64-bit semantics match printf exactly.
+    char conv = 0;
+    int intBits = 0; // 32 or 64 for integer-family conversions
+    int fwpOff = 0;  // offset into format of flags+width+precision
+    int fwpLen = 0;
+    int width = 0;     // parsed width (for manual %s padding)
+    int prec = -1;     // parsed precision, -1 if none (for manual %s)
+    bool leftJust = false;
 };
 
 struct Fmt {
@@ -62,21 +71,33 @@ static int parseArgDefPositional(Fmt& fmt, int off) {
     auto& i = fmt.instructions[fmt.nInst++];
     i.t = Type::Any;
     i.argNo = n;
-    i.fill = 0;
-    i.width = 0;
-    i.prec = 0;
     return off + 1;
 }
 
-static Type typeFromChar(char c) {
+static Type typeFromConv(char c) {
     switch (c) {
-        case 'c': // char
+        case 'c':
             return Type::Char;
-        case 'd': // integer in base 10
+        case 'd':
+        case 'i':
+        case 'u':
+        case 'o':
+        case 'x':
+        case 'X':
             return Type::Int;
-        case 'f': // float or double
+        case 'p':
+            return Type::Ptr;
+        case 'f':
+        case 'F':
+        case 'e':
+        case 'E':
+        case 'g':
+        case 'G':
+        case 'a':
+        case 'A':
             return Type::Float;
-        case 's': // string or wstring
+        case 's':
+        case 'S':
             return Type::Str;
         case 'v':
             return Type::Any;
@@ -84,53 +105,88 @@ static Type typeFromChar(char c) {
     return Type::None;
 }
 
-static bool isFmtChar(char c) {
-    if (c >= '0' && c <= '9') {
-        return true;
+static bool startsWith(Str s, int off, const char* prefix) {
+    int i = 0;
+    while (prefix[i]) {
+        if (off + i >= s.len || s.s[off + i] != prefix[i]) {
+            return false;
+        }
+        i++;
     }
-    if (c == '.' || c == ' ') {
-        return true;
-    }
-    return false;
+    return true;
 }
 
-// parse: %[<fmt>][csfd]
+// parse: %[flags][width][.prec][length]<conv>
+// We capture flags+width+precision verbatim (fed to snprintf) and normalize the
+// length modifier into an explicit 32/64-bit width so output matches printf.
 static int parseArgDefPerc(Fmt& fmt, int off) {
-    ReportIf(fmt.format.s[off] != '%');
-    off++;
-    int fmtStart = off;
-    while (off < fmt.format.len && isFmtChar(fmt.format.s[off])) {
+    Str f = fmt.format;
+    ReportIf(f.s[off] != '%');
+    off++; // past '%'
+    int fwpStart = off;
+    bool leftJust = false;
+    // flags
+    while (off < f.len && (f.s[off] == '-' || f.s[off] == '+' || f.s[off] == ' ' || f.s[off] == '0' ||
+                           f.s[off] == '#')) {
+        if (f.s[off] == '-') {
+            leftJust = true;
+        }
         off++;
     }
-    int fmtEnd = off;
-    Type tp = typeFromChar(fmt.format.s[off++]);
+    // width
+    int width = 0;
+    while (off < f.len && str::IsDigit(f.s[off])) {
+        width = width * 10 + (f.s[off] - '0');
+        off++;
+    }
+    // precision
+    int prec = -1;
+    if (off < f.len && f.s[off] == '.') {
+        off++;
+        prec = 0;
+        while (off < f.len && str::IsDigit(f.s[off])) {
+            prec = prec * 10 + (f.s[off] - '0');
+            off++;
+        }
+    }
+    int fwpEnd = off;
+    // length modifier; determine integer width (32/64 on LLP64 / win64)
+    int bits = 32;
+    if (startsWith(f, off, "I64")) {
+        bits = 64;
+        off += 3;
+    } else if (startsWith(f, off, "I32")) {
+        off += 3;
+    } else if (startsWith(f, off, "ll")) {
+        bits = 64;
+        off += 2;
+    } else if (startsWith(f, off, "hh")) {
+        off += 2;
+    } else if (off < f.len && f.s[off] == 'l') {
+        off++; // long is 32-bit on win64
+    } else if (off < f.len && f.s[off] == 'h') {
+        off++;
+    } else if (off < f.len && f.s[off] == 'L') {
+        off++;
+    } else if (off < f.len && (f.s[off] == 'z' || f.s[off] == 'j' || f.s[off] == 't' || f.s[off] == 'I')) {
+        bits = 64; // size_t / intmax_t / ptrdiff_t / MS size_t
+        off++;
+    } else if (off < f.len && f.s[off] == 'w') {
+        off++;
+    }
+    char conv = (off < f.len) ? f.s[off] : 0;
+    off++;
 
-    auto& i = fmt.instructions[fmt.nInst];
-    i.t = tp;
+    auto& i = fmt.instructions[fmt.nInst++];
+    i.t = typeFromConv(conv);
     i.argNo = fmt.currPercArgNo++;
-    i.fill = 0;
-    i.width = 0;
-    ++fmt.nInst;
-    char c;
-    // for now we only support ' ' or 0 for filler and a single digit for nLen
-    int n = fmtEnd - fmtStart;
-    int p = fmtStart;
-    if (n > 0) {
-        c = fmt.format.s[p++];
-        if (c == ' ' || c == '0') {
-            i.fill = c;
-            n--;
-        }
-    }
-    ReportIf(n > 1); // TODO: only support a single digit for nLen
-    if (n > 0) {
-        c = fmt.format.s[p++];
-        if (c >= '0' && c <= '9') {
-            i.width = c - '0';
-        } else {
-            ReportIf(true);
-        }
-    }
+    i.conv = conv;
+    i.intBits = bits;
+    i.fwpOff = fwpStart;
+    i.fwpLen = fwpEnd - fwpStart;
+    i.width = width;
+    i.prec = prec;
+    i.leftJust = leftJust;
     return off;
 }
 
@@ -143,15 +199,19 @@ static bool hasInstructionWithArgNo(Inst* insts, int nInst, int argNo) {
     return false;
 }
 
+static bool isIntLike(Type t) {
+    return t == Type::Char || t == Type::Int || t == Type::Ptr;
+}
+
 static bool validArgTypes(Type instType, Type argType) {
     if (instType == Type::Any || instType == Type::RawStr) {
         return true;
     }
-    if (instType == Type::Char) {
-        return argType == Type::Char;
-    }
-    if (instType == Type::Int) {
-        return argType == Type::Int;
+    // integer-family specs (%c %d %u %x %p ...) accept any integer-like arg
+    // (char / int / pointer), matching printf's leniency -- e.g. an HWND with
+    // %x, or an int with %c.
+    if (instType == Type::Char || instType == Type::Int || instType == Type::Ptr) {
+        return isIntLike(argType);
     }
     if (instType == Type::Float) {
         return argType == Type::Float || argType == Type::Double;
@@ -209,7 +269,7 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
     }
     addRawStr(o, start, off - start);
 
-    int maxArgNo = o.currArgNo;
+    int maxArgNo = -1; // -1 so an escape/literal-only format requires no args
     // check that arg numbers in {$n} makes sense
     for (int i = 0; i < o.nInst; i++) {
         if (o.instructions[i].t == Type::RawStr) {
@@ -233,6 +293,162 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
     return true;
 }
 
+// default formatting for {n} positional and %v: format by the arg's runtime type
+static void evalDefault(Fmt& fmt, const Arg& arg) {
+    TempStr s;
+    switch (arg.t) {
+        case Type::Char:
+            fmt.res.AppendChar(arg.c);
+            break;
+        case Type::Int:
+            str::BufFmt(fmt.buf, dimof(fmt.buf), "%lld", (long long)arg.i);
+            fmt.res.Append(fmt.buf);
+            break;
+        case Type::Ptr:
+            str::BufFmt(fmt.buf, dimof(fmt.buf), "%p", arg.ptr);
+            fmt.res.Append(fmt.buf);
+            break;
+        case Type::Float:
+            // Note: %G, unlike %f, avoids trailing '0'
+            str::BufFmt(fmt.buf, dimof(fmt.buf), "%G", (double)arg.f);
+            fmt.res.Append(fmt.buf);
+            break;
+        case Type::Double:
+            str::BufFmt(fmt.buf, dimof(fmt.buf), "%G", arg.d);
+            fmt.res.Append(fmt.buf);
+            break;
+        case Type::Str:
+            fmt.res.Append(arg.str);
+            break;
+        case Type::WStr:
+            s = ToUtf8Temp(arg.wstr);
+            fmt.res.Append(s);
+            break;
+        default:
+            ReportIf(true);
+            break;
+    }
+}
+
+// extract an integer value from any integer-like arg (char / int / pointer) so
+// %d/%x/%c/%p work with any of them, like printf.
+static i64 argToI64(const Arg& arg) {
+    switch (arg.t) {
+        case Type::Char:
+            return (i64)arg.c;
+        case Type::Ptr:
+            return (i64)(intptr_t)arg.ptr;
+        default:
+            return arg.i;
+    }
+}
+
+// format a typed % spec by reconstructing a single-conversion printf format and
+// delegating to snprintf (str::BufFmt), normalizing the length modifier so the
+// 32/64-bit value width matches printf. %s padding/truncation is done by hand to
+// avoid relying on the Str being NUL-terminated.
+static void evalPercInst(Fmt& fmt, const Inst& inst, const Arg& arg) {
+    char* buf = fmt.buf;
+    int bufSize = (int)dimof(fmt.buf);
+
+    if (inst.conv == 's' || inst.conv == 'S') {
+        Str sv = (arg.t == Type::WStr) ? ToUtf8Temp(arg.wstr) : arg.str;
+        int slen = sv.len;
+        if (inst.prec >= 0 && inst.prec < slen) {
+            slen = inst.prec;
+        }
+        int pad = inst.width - slen;
+        if (pad < 0) {
+            pad = 0;
+        }
+        if (!inst.leftJust) {
+            for (int j = 0; j < pad; j++) {
+                fmt.res.AppendChar(' ');
+            }
+        }
+        fmt.res.Append(Str(sv.s, slen));
+        if (inst.leftJust) {
+            for (int j = 0; j < pad; j++) {
+                fmt.res.AppendChar(' ');
+            }
+        }
+        return;
+    }
+
+    // build "%" + flags+width+precision into fbuf
+    char fbuf[64];
+    int k = 0;
+    fbuf[k++] = '%';
+    for (int j = 0; j < inst.fwpLen && k < (int)dimof(fbuf) - 5; j++) {
+        fbuf[k++] = fmt.format.s[inst.fwpOff + j];
+    }
+    char conv = inst.conv;
+    i64 ival = argToI64(arg);
+    switch (conv) {
+        case 'd':
+        case 'i':
+            if (inst.intBits == 64) {
+                fbuf[k++] = 'l';
+                fbuf[k++] = 'l';
+                fbuf[k++] = 'd';
+                fbuf[k] = 0;
+                str::BufFmt(buf, bufSize, fbuf, (long long)ival);
+            } else {
+                fbuf[k++] = 'd';
+                fbuf[k] = 0;
+                str::BufFmt(buf, bufSize, fbuf, (int)ival);
+            }
+            fmt.res.Append(buf);
+            break;
+        case 'u':
+        case 'o':
+        case 'x':
+        case 'X':
+            if (inst.intBits == 64) {
+                fbuf[k++] = 'l';
+                fbuf[k++] = 'l';
+                fbuf[k++] = conv;
+                fbuf[k] = 0;
+                str::BufFmt(buf, bufSize, fbuf, (unsigned long long)ival);
+            } else {
+                fbuf[k++] = conv;
+                fbuf[k] = 0;
+                str::BufFmt(buf, bufSize, fbuf, (unsigned int)(unsigned long long)ival);
+            }
+            fmt.res.Append(buf);
+            break;
+        case 'c':
+            fbuf[k++] = 'c';
+            fbuf[k] = 0;
+            str::BufFmt(buf, bufSize, fbuf, (int)ival);
+            fmt.res.Append(buf);
+            break;
+        case 'f':
+        case 'F':
+        case 'e':
+        case 'E':
+        case 'g':
+        case 'G':
+        case 'a':
+        case 'A': {
+            fbuf[k++] = conv;
+            fbuf[k] = 0;
+            double dv = (arg.t == Type::Double) ? arg.d : (double)arg.f;
+            str::BufFmt(buf, bufSize, fbuf, dv);
+            fmt.res.Append(buf);
+        } break;
+        case 'p': {
+            // flags/width are uncommon (and platform-specific) for %p; emit plain
+            const void* pv = (arg.t == Type::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
+            str::BufFmt(buf, bufSize, "%p", pv);
+            fmt.res.Append(buf);
+        } break;
+        default:
+            ReportIf(true);
+            break;
+    }
+}
+
 bool Fmt::Eval(const Arg** args, int nArgs) {
     if (!isOk) {
         // if failed parsing format
@@ -243,16 +459,17 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
         ReportIf(n >= dimof(instructions));
 
         auto& inst = instructions[n];
+
+        if (inst.t == Type::RawStr) {
+            res.Append(Str(format.s + inst.rawOff, inst.sLen));
+            continue;
+        }
+
         int argNo = inst.argNo;
         ReportIf(argNo >= nArgs);
         if (argNo >= nArgs) {
             isOk = false;
             return false;
-        }
-
-        if (inst.t == Type::RawStr) {
-            res.Append(Str(format.s + inst.rawOff, inst.sLen));
-            continue;
         }
 
         const Arg& arg = *args[argNo];
@@ -262,60 +479,34 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
             return false;
         }
 
-        TempStr s;
-        switch (arg.t) {
-            case Type::Char:
-                res.AppendChar(arg.c);
-                break;
-            case Type::Int: {
-                // TODO: i64 is potentially bigger than int
-                char f[5] = {'%', 0};
-                int i = 1;
-                if (inst.fill) {
-                    f[i++] = inst.fill;
-                }
-                if (inst.width > 0) {
-                    f[i++] = '0' + (char)inst.width;
-                }
-                f[i++] = 'd';
-                ReportIf(i >= dimof(f));
-                str::BufFmt(buf, dimof(buf), f, (int)arg.i);
-                res.Append(buf);
-            } break;
-            case Type::Float:
-                // Note: %G, unlike %f, avoid trailing '0'
-                str::BufFmt(buf, dimof(buf), "%G", arg.f);
-                res.Append(buf);
-                break;
-            case Type::Double:
-                // Note: %G, unlike %f, avoid trailing '0'
-                str::BufFmt(buf, dimof(buf), "%G", arg.d);
-                res.Append(buf);
-                break;
-            case Type::Str:
-                res.Append(arg.str);
-                break;
-            case Type::WStr:
-                s = ToUtf8Temp(arg.wstr);
-                res.Append(s);
-                break;
-            default:
-                ReportIf(true);
-                break;
-        };
+        if (inst.t == Type::Any) {
+            evalDefault(*this, arg);
+        } else {
+            evalPercInst(*this, inst, arg);
+        }
     }
     return true;
 }
 
-TempStr FormatTemp(const char* fmt, const Arg** args, int nArgs) {
-    // arguments at the end could be empty
-    while (nArgs >= 0 && args[nArgs - 1]->t == Type::None) {
+TempStr FormatTempArgs(const char* fmt, const Arg** args, int nArgs) {
+    // trailing arguments could be empty (unused defaults from the variadic call)
+    while (nArgs > 0 && args[nArgs - 1]->t == Type::None) {
         nArgs--;
     }
 
     if (nArgs == 0) {
-        // TODO: verify that format has no references to args
-        return Str(fmt);
+        // no args: if the format has no directives/escapes, return it verbatim
+        // (fast path); otherwise still run it through so %% and \{ are handled.
+        bool hasDirective = false;
+        for (const char* p = fmt; p && *p; p++) {
+            if (*p == '%' || *p == '{' || *p == '\\') {
+                hasDirective = true;
+                break;
+            }
+        }
+        if (!hasDirective) {
+            return str::DupTemp(Str(fmt));
+        }
     }
 
     Fmt f;
@@ -328,20 +519,6 @@ TempStr FormatTemp(const char* fmt, const Arg** args, int nArgs) {
         return {};
     }
     return str::DupTemp(f.res.Get());
-}
-
-TempStr FormatTemp(const char* fmt, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5,
-                   const Arg& a6) {
-    const Arg* args[6];
-    int nArgs = 0;
-    args[nArgs++] = &a1;
-    args[nArgs++] = &a2;
-    args[nArgs++] = &a3;
-    args[nArgs++] = &a4;
-    args[nArgs++] = &a5;
-    args[nArgs++] = &a6;
-    ReportIf(nArgs > dimofi(args));
-    return FormatTemp(fmt, args, nArgs);
 }
 
 } // namespace strfmt

@@ -108,7 +108,7 @@ static void logToPipe(Str s) {
 
     if (didConnect) {
         // logview accepts logging from anyone, so announce ourselves
-        TempStr initialMsg = fmt("app: %s\n", gLogAppName.s);
+        TempStr initialMsg = fmt("app: %s\n", gLogAppName);
         WriteFile(hLogPipe, initialMsg.s, (DWORD)initialMsg.len, &cbWritten, nullptr);
     }
 
@@ -133,7 +133,7 @@ void logv(Str s) {
 
 // logs value that is byte size to pipe
 void logValueSize(Str name, i64 v) {
-    TempStr s = fmt(":v %s size %lld\n", name.s, v);
+    TempStr s = fmt(":v %s size %lld\n", name, v);
     logToPipe(s);
 }
 
@@ -227,12 +227,12 @@ bool WriteCurrentLogToFile(Str path) {
     }
     bool ok = dir::CreateForFile(path);
     if (!ok) {
-        logf("WriteCurrentLogToFile: dir::CreateForFile('%s') failed\n", path.s);
+        logf("WriteCurrentLogToFile: dir::CreateForFile('%s') failed\n", path);
         return false;
     }
     ok = file::WriteFile(path, slice);
     if (!ok) {
-        logf("WriteCurrentLogToFile: file::WriteFile('%s') failed\n", path.s);
+        logf("WriteCurrentLogToFile: file::WriteFile('%s') failed\n", path);
     }
     return ok;
 }

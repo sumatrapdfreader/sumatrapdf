@@ -844,7 +844,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         int xHi = (int)mediabox.dx;
         if (xHi > xLo + 2) {
             int n = xHi - xLo;
-            char* occ = AllocArray<char>((size_t)n); // str-port: column occupancy bitmap, not a string
+            char* occ = AllocArray<char>((size_t)n);
             for (int i = 0; i < text.len; i++) {
                 WCHAR c = text.s[i];
                 if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {

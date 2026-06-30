@@ -11,7 +11,7 @@ bool GumboTagNameIs(const GumboNode* node, Str name) {
     }
     Str tag;
     if (node->v.element.tag != GUMBO_TAG_UNKNOWN) {
-        tag = Str(gumbo_normalized_tagname(node->v.element.tag)); // str-port: gumbo C-string boundary
+        tag = Str(gumbo_normalized_tagname(node->v.element.tag));
     } else {
         Str orig = AsStr(ByteSlice((const u8*)node->v.element.original_tag.data, node->v.element.original_tag.length));
         int off = 0;
@@ -80,7 +80,7 @@ TempStr GumboTextContentTemp(const GumboNode* node) {
     for (unsigned int i = 0; i < children->length; i++) {
         const GumboNode* child = (const GumboNode*)children->data[i];
         if (child->type == GUMBO_NODE_TEXT || child->type == GUMBO_NODE_WHITESPACE || child->type == GUMBO_NODE_CDATA) {
-            sb.Append(Str(child->v.text.text)); // str-port: gumbo C-string boundary
+            sb.Append(Str(child->v.text.text));
         }
     }
     if (sb.IsEmpty()) {

@@ -37,7 +37,7 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
     TempStr cacheDir = path::JoinTemp(dataDir, "cbx-cache");
 
     u8 digest[16]{};
-    TempStr keyStr = fmt("%s|%lld", path.s, (long long)fileSize);
+    TempStr keyStr = fmt("%s|%lld", path, (long long)fileSize);
     CalcMD5Digest((const u8*)keyStr.s, len(keyStr), digest);
     TempStr hex = str::MemToHexTemp(digest, dimof(digest));
 
@@ -94,11 +94,11 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
         FILETIME now;
         GetSystemTimeAsFileTime(&now);
         file::SetAccessTime(cachePath, now);
-        logf("MaybeCopyCbxToLocalCache: cache hit '%s'\n", cachePath.s);
+        logf("MaybeCopyCbxToLocalCache: cache hit '%s'\n", cachePath);
         return cachePath;
     }
     if (!dir::CreateForFile(cachePath)) {
-        logf("MaybeCopyCbxToLocalCache: dir::CreateForFile('%s') failed\n", cachePath.s);
+        logf("MaybeCopyCbxToLocalCache: dir::CreateForFile('%s') failed\n", cachePath);
         return {};
     }
 
@@ -107,11 +107,11 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
     auto cb = MkFunc1<CbxCopyProgressState, file::CopyProgress*>(OnCbxCopyProgress, &progState);
     bool ok = file::Copy(cachePath, path, false, cb);
     if (!ok) {
-        logf("MaybeCopyCbxToLocalCache: file::Copy('%s' -> '%s') failed\n", path.s, cachePath.s);
+        logf("MaybeCopyCbxToLocalCache: file::Copy('%s' -> '%s') failed\n", path, cachePath);
         file::Delete(cachePath);
         return {};
     }
-    logf("MaybeCopyCbxToLocalCache: copied '%s' -> '%s' in %.2f ms\n", path.s, cachePath.s, TimeSinceInMs(timeStart));
+    logf("MaybeCopyCbxToLocalCache: copied '%s' -> '%s' in %.2f ms\n", path, cachePath, TimeSinceInMs(timeStart));
     return cachePath;
 }
 
@@ -169,7 +169,7 @@ EngineBase* CreateEngineDjVuFromFileDispatch(Str path) {
         if (e) {
             return e;
         }
-        logf("djvudec failed for '%s', falling back to libdjvu\n", path.s);
+        logf("djvudec failed for '%s', falling back to libdjvu\n", path);
         return CreateEngineDjVuFromFile(path);
     }
     EngineBase* e = CreateEngineDjVuFromFile(path);

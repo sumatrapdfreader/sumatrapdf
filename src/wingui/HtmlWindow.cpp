@@ -1411,7 +1411,7 @@ void HtmlWindow::SetVisible(bool visible) {
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
 // (will be called from OnBeforeNavigate())
 void HtmlWindow::NavigateToDataUrl(Str url) {
-    TempStr fullUrl = fmt("its://%d/%s", windowId, url.s);
+    TempStr fullUrl = fmt("its://%d/%s", windowId, url);
     NavigateToUrl(fullUrl);
 }
 

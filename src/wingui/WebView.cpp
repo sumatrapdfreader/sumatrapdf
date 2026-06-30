@@ -29,7 +29,7 @@ bool HasWebView() {
 }
 #else
 TempStr GetWebView2VersionTemp() {
-    WCHAR* ver = nullptr; // str-port: Win32 COM out-param
+    WCHAR* ver = nullptr;
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
     if (FAILED(hr) || (ver == nullptr)) {
         return {};
@@ -40,7 +40,7 @@ TempStr GetWebView2VersionTemp() {
 }
 
 bool HasWebView() {
-    WCHAR* ver = nullptr; // str-port: Win32 COM out-param
+    WCHAR* ver = nullptr;
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
     if (FAILED(hr) || wstr::IsEmpty(ver)) {
         logf("WebView2 is not available\n");
@@ -241,7 +241,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
     }
 
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2WebMessageReceivedEventArgs* args) {
-        WCHAR* message = nullptr; // str-port: Win32 COM out-param
+        WCHAR* message = nullptr;
         args->TryGetWebMessageAsString(&message);
         if (!message) {
             return S_OK;
@@ -400,7 +400,7 @@ class webview2_navigation_starting_handler : public ICoreWebView2NavigationStart
         if (!args || !m_wnd || !m_wnd->events.navigationStarting) {
             return S_OK;
         }
-        WCHAR* uri = nullptr; // str-port: Win32 COM out-param
+        WCHAR* uri = nullptr;
         if (FAILED(args->get_Uri(&uri)) || !uri) {
             return S_OK;
         }
@@ -450,7 +450,7 @@ class webview2_navigation_completed_handler : public ICoreWebView2NavigationComp
         }
         BOOL success = FALSE;
         args->get_IsSuccess(&success);
-        WCHAR* uri = nullptr; // str-port: Win32 COM out-param
+        WCHAR* uri = nullptr;
         ICoreWebView2* webview = m_wnd->webview;
         if (webview) {
             webview->get_Source(&uri);
@@ -531,7 +531,7 @@ class webview2_new_window_handler : public ICoreWebView2NewWindowRequestedEventH
         if (!args || !m_wnd || !m_wnd->events.navigationStarting) {
             return S_OK;
         }
-        WCHAR* uri = nullptr; // str-port: Win32 COM out-param
+        WCHAR* uri = nullptr;
         if (FAILED(args->get_Uri(&uri)) || !uri) {
             return S_OK;
         }
@@ -697,7 +697,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
             return S_OK;
         }
 
-        WCHAR* uri = nullptr; // str-port: Win32 COM out-param
+        WCHAR* uri = nullptr;
         hr = request->get_Uri(&uri);
         request->Release();
         if (FAILED(hr) || !uri) {

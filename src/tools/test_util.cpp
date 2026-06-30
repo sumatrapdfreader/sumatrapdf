@@ -81,7 +81,7 @@ static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* exceptionInfo) {
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-int main(int argc, char** argv) { // str-port: C main argv
+int main(int argc, char** argv) {
     bool forAi = false;
     for (int i = 1; i < argc; i++) {
         if (str::Eq(argv[i], "-for-ai")) {

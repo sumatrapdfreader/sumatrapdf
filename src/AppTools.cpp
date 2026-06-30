@@ -131,7 +131,7 @@ void SetAppDataDir(Str dir) {
     if (!isRootDir) {
         bool ok = dir::CreateAll(dir);
         if (!ok) {
-            logf("SetAppDataDir: failed to create directory '%s'\n", dir.s);
+            logf("SetAppDataDir: failed to create directory '%s'\n", dir);
             LogLastError();
             ReportIf(true);
         }
@@ -153,7 +153,7 @@ TempStr GetAppDataDirTemp() {
         // sometimes people put executable in directory like c:\windows
         // and we can't write to it. in that case we'll fall back to %APPDATA%
         if (!dir::HasWriteAccess(dir)) {
-            logf("GetAppDataDirTemp: no write access to '%s'\n", dir.s);
+            logf("GetAppDataDirTemp: no write access to '%s'\n", dir);
             dir = nullptr;
         }
     }
@@ -166,7 +166,7 @@ TempStr GetAppDataDirTemp() {
         }
         dir = path::JoinTemp(dir, kAppName);
     }
-    logf("GetAppDataDirTemp(): '%s'%s\n", dir.s, isPortable ? " (portable)" : "(installed)");
+    logf("GetAppDataDirTemp(): '%s'%s\n", Str(dir), Str(isPortable ? " (portable)" : "(installed)"));
     SetAppDataDir(dir);
     return gAppDataDir.s;
 }
@@ -391,7 +391,7 @@ static void FindTextEditors() {
         }
 
         rule.fullPath = str::Dup(exePath);
-        rule.openFileCmd = str::Dup(fmt("\"%s\" %s", exePath.s, inverseSearchArgs.s));
+        rule.openFileCmd = str::Dup(fmt("\"%s\" %s", exePath, inverseSearchArgs));
         found.Append(exePath);
     }
     didFindTextEditors = true;
@@ -416,7 +416,7 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
 Str BuildOpenFileCmd(Str pattern, Str path, int line, int col) {
     StrBuilder cmdline(256);
 
-    logf("BuildOpenFileCmd: path: '%s', pattern: '%s'\n", path.s, pattern.s);
+    logf("BuildOpenFileCmd: path: '%s', pattern: '%s'\n", path, pattern);
     Str s = pattern;
     while (s) {
         Str perc = str::FindChar(s, '%');
@@ -629,7 +629,7 @@ TempStr FormatFileSizeTransTemp(i64 size) {
     }
     TempStr n1 = FormatSizeShortTransTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
-    return strfmt::FormatTemp("%s (%s %s)", n1.s, n2.s, _TRA("Bytes").s);
+    return strfmt::FormatTemp("%s (%s %s)", n1, n2, _TRA("Bytes"));
 }
 
 // returns true if file exists
@@ -638,12 +638,12 @@ bool LaunchFileIfExists(Str path) {
         return false;
     }
     if (!file::Exists(path)) {
-        logf("LaunchFileIfExists: !file::Exists('%s')\n", path.s);
+        logf("LaunchFileIfExists: !file::Exists('%s')\n", path);
         return false;
     }
     if (gIsStoreBuild) {
         path = path::GetNonVirtualTemp(path);
-        logf("LaunchFileIfExists: gIsStoreBuild, path='%s'\n", path.s);
+        logf("LaunchFileIfExists: gIsStoreBuild, path='%s'\n", path);
     }
     LaunchFileShell(path, nullptr, "open");
     return true;

@@ -12,7 +12,7 @@
 
 // TODO: could use CryptoNG available starting in Vista
 static NO_INLINE void CalcDigestWin(const void* data, int dataSize, u8* digest, DWORD digestSize, const WCHAR* provider,
-                                    DWORD type, ALG_ID alg) { // str-port: Win32 crypto provider name
+                                    DWORD type, ALG_ID alg) {
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
     BOOL ok = CryptAcquireContextW(&hProv, nullptr, provider, type, CRYPT_VERIFYCONTEXT);
@@ -68,14 +68,14 @@ static bool ExtractSignature(Str hexSignature, const void* data, size_t& dataLen
         if (dataLen < 20 || memchr(data, 0, dataLen)) {
             return false;
         }
-        const char* lastLine = (const char*)data + dataLen - 1;           // str-port: binary PEM trailer scan
-        while (lastLine > (const char*)data && *(lastLine - 1) != '\n') { // str-port: binary PEM scan
+        const char* lastLine = (const char*)data + dataLen - 1;
+        while (lastLine > (const char*)data && *(lastLine - 1) != '\n') {
             lastLine--;
         }
         if (lastLine == data || !str::Contains(Str(lastLine), StrL(" Signature sha1:"))) {
             return false;
         }
-        dataLen = (size_t)(lastLine - (const char*)data); // str-port: binary PEM scan
+        dataLen = (size_t)(lastLine - (const char*)data);
         hex = str::FindAfter(Str(lastLine), StrL(" Signature sha1:"));
     } else {
         return false;

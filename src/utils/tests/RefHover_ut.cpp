@@ -21,7 +21,7 @@ constexpr int kLineH = 12;
 // Helper: append the WCHARs of `s` starting at (x, y) with fixed-width glyphs.
 // Caller passes pre-allocated text/coords buffers and the current length.
 static void AddText(WCHAR* text, Rect* coords, int& len, int cap, WStr s, int x,
-                    int y) { // str-port: glyph output buffer
+                    int y) {
     for (int i = 0; i < s.len && len < cap; i++) {
         text[len] = s.s[i];
         coords[len] = Rect{x + i * kCharW, y, kCharW, kLineH};

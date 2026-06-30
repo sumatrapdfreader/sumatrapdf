@@ -280,7 +280,7 @@ static Str BackendLogName(AIChatBackend backend) {
 }
 
 static void LogTranslation(AIChatBackend backend, Str direction, Str text) {
-    logf("selection-translate %s %s: %s", BackendLogName(backend).s, direction.s, text ? text.s : "");
+    logf("selection-translate %s %s: %s", BackendLogName(backend), direction, text);
 }
 
 static bool TranslationLooksLikeError(Str text) {
@@ -367,12 +367,12 @@ static TempStr BuildTranslationPromptTemp(Str srcLang, Str dstLang, Str text) {
         return fmt(
             "Detect the language of the following text and translate it to %s. Return only the "
             "translation with no explanation, commentary, or quotation marks. Text: %s",
-            dstLang.s, normalized.s);
+            dstLang, normalized);
     }
     return fmt(
         "Translate the following text from %s to %s. Return only the translation with no "
         "explanation, commentary, or quotation marks. Text: %s",
-        srcLang.s, dstLang.s, normalized.s);
+        srcLang, dstLang, normalized);
 }
 
 static void ReadPipeToStrBuilder(HANDLE hPipe, StrBuilder& out) {
@@ -494,8 +494,8 @@ static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     }
     TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
     Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? StrL("--always-approve") : Str{};
-    return fmt("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort low %s", exePath.s,
-               escapedPrompt.s, cwd.s, model.s, permsFlag.s);
+    return fmt("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort low %s", exePath,
+               escapedPrompt, cwd, model, permsFlag);
 }
 
 static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
@@ -506,8 +506,8 @@ static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
     TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
     Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? StrL("--dangerously-skip-permissions") : Str{};
     TempStr sessionId = AIChatGenerateSessionIdTemp();
-    return fmt("\"%s\" -p --verbose --output-format stream-json --model %s %s --session-id %s \"%s\"", exePath.s,
-               model.s, permsFlag.s, sessionId.s, escapedPrompt.s);
+    return fmt("\"%s\" -p --verbose --output-format stream-json --model %s %s --session-id %s \"%s\"", exePath, model,
+               permsFlag, sessionId, escapedPrompt);
 }
 
 static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
@@ -517,18 +517,17 @@ static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) 
     Str skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? StrL("--dangerously-bypass-approvals-and-sandbox") : Str{};
     if (skipFlag) {
         if (hasModel) {
-            return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only %s \"%s\"", exePath.s,
-                       cwd.s, model.s, skipFlag.s, escapedPrompt.s);
+            return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only %s \"%s\"", exePath, cwd,
+                       model, skipFlag, escapedPrompt);
         }
-        return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only %s \"%s\"", exePath.s, cwd.s,
-                   skipFlag.s, escapedPrompt.s);
+        return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only %s \"%s\"", exePath, cwd, skipFlag,
+                   escapedPrompt);
     }
     if (hasModel) {
-        return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only \"%s\"", exePath.s, cwd.s,
-                   model.s, escapedPrompt.s);
+        return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -m %s -s read-only \"%s\"", exePath, cwd, model,
+                   escapedPrompt);
     }
-    return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only \"%s\"", exePath.s, cwd.s,
-               escapedPrompt.s);
+    return fmt("\"%s\" exec --json -C \"%s\" --skip-git-repo-check -s read-only \"%s\"", exePath, cwd, escapedPrompt);
 }
 
 static TempStr FindBackendExecutableTemp(AIChatBackend backend) {
@@ -896,7 +895,7 @@ void ShowSelectionTranslateDialog(WindowTab* tab, AIChatBackend backend) {
     dlg->backend = backend;
     dlg->hFont = GetDefaultGuiFont();
 
-    TempStr title = fmt(_TRA("Translate with %s").s, BackendDisplayName(backend).s);
+    TempStr title = fmt(_TRA("Translate with %s").s, BackendDisplayName(backend));
 
     HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kSelectionTranslateWinClass, ToWStrTemp(title),
                                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,

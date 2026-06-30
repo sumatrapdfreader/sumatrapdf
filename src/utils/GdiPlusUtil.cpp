@@ -65,7 +65,7 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, WStr s) {
         WStr logW = s ? s : WStr(L"<null>");
         TempStr s2 = ToUtf8Temp(logW);
         Str logStr = s2.len > 256 ? Str(s2.s, 256) : s2;
-        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, logStr.s);
+        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, logStr);
         // ReportIf(status != Ok);
     }
     Gdiplus::RectF bbox;
@@ -98,7 +98,8 @@ RectF MeasureTextQuick(Graphics* g, Font* f, WStr s) {
         LOGFONTW lfw;
         Status ok = f->GetLogFontW(g, &lfw);
         bool isItalicOrMonospace = Ok != ok || lfw.lfItalic || wstr::Eq(lfw.lfFaceName, L"Courier New") ||
-                                   wstr::FindFrom(lfw.lfFaceName, L"Consol") || wstr::EndsWith(lfw.lfFaceName, L"Mono") ||
+                                   wstr::FindFrom(lfw.lfFaceName, L"Consol") ||
+                                   wstr::EndsWith(lfw.lfFaceName, L"Mono") ||
                                    wstr::EndsWith(lfw.lfFaceName, L"Typewriter");
         fontCache.Append(f);
         fixCache.Append(isItalicOrMonospace);

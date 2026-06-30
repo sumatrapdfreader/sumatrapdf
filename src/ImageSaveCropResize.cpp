@@ -354,7 +354,7 @@ static bool TriggerImageEditMnemonic(ImageEditWindow* ew, WCHAR key) {
         }
         WCHAR buf[256]{};
         GetWindowTextW(btn->hwnd, buf, dimof(buf) - 1);
-        WCHAR* amp = wcschr(buf, L'&'); // str-port: Win32
+        WCHAR* amp = wcschr(buf, L'&');
         if (!amp || amp[1] == L'\0') {
             continue;
         }
@@ -454,7 +454,7 @@ static void OnFormatChanged(ImageEditWindow* ew) {
         TempStr oldExt = path::GetExtTemp(dest);
         int baseLen = len(dest) - len(oldExt);
         TempStr base = str::DupTemp(Str(dest.s, (int)baseLen));
-        TempStr newDest = fmt("%s%s", base.s, newExt.s);
+        TempStr newDest = fmt("%s%s", base, newExt);
         SetWindowTextW(ew->hwndDestEdit, ToWStrTemp(newDest));
     }
     SetFocus(ew->hwnd);
@@ -1194,7 +1194,7 @@ static void OnSave(ImageEditWindow* ew) {
     } else {
         int baseLen = len(rawDest) - len(destExt);
         TempStr base = str::DupTemp(Str(rawDest.s, (int)baseLen));
-        dest = fmt("%s%s", base.s, fmtExt.s);
+        dest = fmt("%s%s", base, fmtExt);
     }
 
     Bitmap* result = nullptr;
@@ -1902,7 +1902,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, kImageEditWinClassName, WndProcImageEdit);
     wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
-    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID()); // str-port: Win32 resource id
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, iconName);
     RegisterClassEx(&wcex);
 

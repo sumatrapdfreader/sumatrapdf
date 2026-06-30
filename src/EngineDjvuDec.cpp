@@ -215,9 +215,9 @@ bool EngineDjvuDec::Load(IStream* stm) {
     return FinishLoading();
 }
 
-static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) { // str-port: api-boundary djvu C callback
+static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) {
     if (sev >= DJVU_SEVERITY_ERROR) {
-        logf("djvudec: %s\n", msg);
+        logf("djvudec: %s\n", Str(msg));
     }
 }
 
@@ -288,8 +288,8 @@ bool EngineDjvuDec::FinishLoading() {
         pi->pageType = djvu_page_get_type(doc, i);
         pages.Append(pi);
 
-        Str title = Str(djvu_doc_page_title(doc, i)); // str-port: djvu C API
-        Str id = Str(djvu_doc_page_id(doc, i));       // str-port: djvu C API
+        Str title = Str(djvu_doc_page_title(doc, i));
+        Str id = Str(djvu_doc_page_id(doc, i));
         if (title && id && !str::Eq(title, id)) {
             hasPageLabels = true;
         }
@@ -789,7 +789,7 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
     float dpiF = GetFileDPI() / (float)pi->dpi;
     for (int i = 0; i < links->nlinks; i++) {
         djvu_link& l = links->links[i];
-        Str url = Str(l.url); // str-port: djvu C API
+        Str url = Str(l.url);
         if (!url) {
             continue;
         }
@@ -846,7 +846,7 @@ bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler
         }
     }
     if (pageNo < 1 || pageNo > pageCount) {
-        logf("EngineDjvuDec::HandleLink: invalid link '%s'\n", link.s);
+        logf("EngineDjvuDec::HandleLink: invalid link '%s'\n", link);
         return false;
     }
     ctrl->GoToPage(pageNo, true);
@@ -869,8 +869,8 @@ TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, 
     TocItem* node = nullptr;
     for (int i = 0; i < n; i++) {
         djvu_outline_item& it = items[i];
-        Str title = Str(it.title); // str-port: djvu C API
-        Str url = Str(it.url);     // str-port: djvu C API
+        Str title = Str(it.title);
+        Str url = Str(it.url);
         TempStr link = url;
         TempStr resolved = ResolveNamedDestDjvuDecTemp(doc, url);
         if (resolved) {

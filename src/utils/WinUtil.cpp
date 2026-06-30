@@ -319,7 +319,7 @@ TempStr GetWindowsVerTemp() {
 // returns nullptr if not set
 TempStr GetEnvVariableTemp(Str name) {
     WCHAR bufStatic[256];
-    WCHAR* buf = &bufStatic[0]; // str-port: stack buffer
+    WCHAR* buf = &bufStatic[0];
     DWORD cchBufSize = dimof(bufStatic);
     TempWStr nameW = ToWStrTemp(name);
     DWORD res = GetEnvironmentVariableW(nameW, buf, cchBufSize);
@@ -414,7 +414,7 @@ TempStr GetLastErrorStrTemp(DWORD err) {
         buf[4095] = 0;
         return str::DupTemp(buf);
     }
-    char* msgBuf = nullptr; // str-port: Win32 out-param
+    char* msgBuf = nullptr;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
     DWORD ferr = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
@@ -432,7 +432,7 @@ void LogLastError(DWORD err) {
         msg = "";
     }
     str::TrimWSInPlace(msg, str::TrimOpt::Both);
-    logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg.s);
+    logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg);
 }
 
 void DbgOutLastError(DWORD err) {
@@ -495,7 +495,7 @@ TryAgainWOW64:
 
 TempStr LoggedReadRegStrTemp(HKEY hkey, Str keyName, Str valName) {
     auto res = ReadRegStrTemp(hkey, keyName, valName);
-    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(hkey).s, keyName.s, valName.s, res.s);
+    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(hkey), keyName, valName, res);
     return res;
 }
 
@@ -533,12 +533,11 @@ bool LoggedWriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
     DWORD cbData = (DWORD)(valueW.len + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     if (res != ERROR_SUCCESS) {
-        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(hkey).s, keyName.s, valName.s, value.s,
-             res);
+        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, value, res);
         LogLastError();
         return false;
     }
-    logf("WriteRegStr(%s, %s, %s, %s) ok!\n", RegKeyNameTemp(hkey).s, keyName.s, valName.s, value.s);
+    logf("WriteRegStr(%s, %s, %s, %s) ok!\n", RegKeyNameTemp(hkey), keyName, valName, value);
     return true;
 }
 
@@ -562,12 +561,12 @@ bool LoggedWriteRegDWORD(HKEY hkey, Str keyName, Str valName, DWORD value) {
     TempWStr valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     if (res != ERROR_SUCCESS) {
-        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameTemp(hkey).s, keyName.s, valName.s,
-             (int)value, res);
+        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, (int)value,
+             res);
         LogLastError();
         return false;
     }
-    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameTemp(hkey).s, keyName.s, valName.s, (int)value);
+    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameTemp(hkey), keyName, valName, (int)value);
     return true;
 }
 
@@ -575,7 +574,7 @@ bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName) {
     TempWStr keyW = ToWStrTemp(key);
     TempWStr valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
-    logf("LoggedWriteRegNone(%s, %s, %s) => '%d'\n", RegKeyNameTemp(hkey).s, key.s, valName.s, res);
+    logf("LoggedWriteRegNone(%s, %s, %s) => '%d'\n", RegKeyNameTemp(hkey), key, valName, res);
     return (ERROR_SUCCESS == res);
 }
 
@@ -644,7 +643,7 @@ bool LoggedDeleteRegKey(HKEY hkey, Str keyName, bool resetACLFirst) {
     }
     TempWStr keyNameW = ToWStrTemp(keyName);
     LSTATUS res = SHDeleteKeyW(hkey, keyNameW);
-    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey).s, keyName.s, resetACLFirst, res);
+    logf("LoggedDeleteRegKey(%s, %s, %d) => %d\n", RegKeyNameWTemp(hkey), keyName, resetACLFirst, res);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
     if (!ok) {
         LogLastError(res);
@@ -666,7 +665,7 @@ bool LoggedDeleteRegValue(HKEY hkey, Str keyName, Str valName) {
 
     auto res = SHDeleteValueW(hkey, keyNameW, valNameW);
     bool ok = (ERROR_SUCCESS == res) || (ERROR_FILE_NOT_FOUND == res);
-    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(hkey).s, keyName.s, valName.s, res);
+    logf("LoggedDeleteRegValue(%s, %s, %s) => %d\n", RegKeyNameWTemp(hkey), keyName, valName, res);
     if (!ok) {
         LogLastError(res);
     }
@@ -1036,11 +1035,11 @@ bool LaunchFileShell(Str path, Str params, Str verb, bool hidden) {
     BOOL ok = ShellExecuteExW(&sei);
     if (!ok) {
         DWORD err = GetLastError();
-        logf("LaunchFile: ShellExecuteExW path: '%s' params: '%s' verb: '%s'\n", path.s, params.s, verb.s);
+        logf("LaunchFile: ShellExecuteExW path: '%s' params: '%s' verb: '%s'\n", path, params, verb);
         LogLastError(err);
         return false;
     }
-    logf("LaunchFileShell: launched '%s'\n", path.s);
+    logf("LaunchFileShell: launched '%s'\n", path);
     return true;
 }
 
@@ -1075,7 +1074,7 @@ void OpenPathInDefaultFileManager(Str path) {
     TempStr explorer = ToUtf8Temp(winDir);
     explorer = path::JoinTemp(explorer, "explorer.exe");
     if (file::Exists(explorer)) return;
-    TempStr args = fmt("/select,\"%s\"", path.s);
+    TempStr args = fmt("/select,\"%s\"", path);
     CreateProcessHelper(explorer, args);
 }
 
@@ -1085,7 +1084,7 @@ HANDLE LaunchProcessWithCmdLine(Str exe, Str cmdLine) {
     si.cb = sizeof(si);
 
     // first cmd-line argument should be the exe name
-    TempStr cmd = fmt("\"%s\" %s", exe.s, cmdLine.s);
+    TempStr cmd = fmt("\"%s\" %s", exe, cmdLine);
     TempWStr cmdLineW = ToWStrTemp(cmd);
 
     TempWStr exeW = ToWStrTemp(exe);
@@ -1121,7 +1120,7 @@ bool CreateProcessHelper(Str exe, Str args) {
     if (!args) {
         args = "";
     }
-    TempStr cmd = fmt("\"%s\" %s", exe.s, args.s);
+    TempStr cmd = fmt("\"%s\" %s", exe, args);
     AutoCloseHandle process = LaunchProcessInDir(cmd);
     return process != nullptr;
 }
@@ -1540,7 +1539,7 @@ static bool CopyOrAppendTextToClipboard(WStr text, bool appendOnly) {
     int n = text.len + 1;
     HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
     if (handle) {
-        WCHAR* globalText = (WCHAR*)GlobalLock(handle); // str-port: Win32
+        WCHAR* globalText = (WCHAR*)GlobalLock(handle);
         if (globalText) {
             wstr::BufSet(globalText, n, text);
         }
@@ -1785,7 +1784,7 @@ HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     if (!IsEmpty(fontName)) {
-        WCHAR* dest = ncm.lfMessageFont.lfFaceName; // str-port: Win32
+        WCHAR* dest = ncm.lfMessageFont.lfFaceName;
         int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
         TempWStr nameW = ToWStrTemp(fontName);
         wstr::BufSet(dest, cchDestBufSize, nameW);
@@ -1950,7 +1949,7 @@ void MenuSetText(HMENU m, int id, WStr s) {
         // setting text on a menu item that isn't present is benign (e.g. the
         // item was filtered out by command visibility): log it, don't assert
         TempStr tmp = IsEmpty(s) ? StrL("(null)") : ToUtf8Temp(s);
-        logf("MenuSetText(): id=%d, s='%s'\n", id, tmp.s);
+        logf("MenuSetText(): id=%d, s='%s'\n", id, tmp);
         LogLastError();
     }
 }
@@ -2010,7 +2009,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     ULONG n = stat.cbSize.LowPart;
     // zero-terminate the stream's content, so that it could be
     // used directly as either a char* or a WCHAR* string
-    char* d = AllocArray<char>(n + sizeof(WCHAR) + 1); // str-port: binary stream buffer
+    char* d = AllocArray<char>(n + sizeof(WCHAR) + 1);
     if (!d) {
         return E_OUTOFMEMORY;
     }
@@ -2068,7 +2067,7 @@ bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset
             return false;
         }
         len -= ULONG_MAX;
-        buffer = (char*)buffer + ULONG_MAX; // str-port: Win32
+        buffer = (char*)buffer + ULONG_MAX;
     }
 #endif
     res = stream->Read(buffer, (ULONG)len, &read);
@@ -2709,10 +2708,10 @@ bool SafeCloseHandle(HANDLE* hPtr) {
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
 void RunNonElevated(Str exePath) {
     if (!file::Exists(exePath)) {
-        logf("RunNonElevated: file '%s' doesn't exist\n", exePath.s);
+        logf("RunNonElevated: file '%s' doesn't exist\n", exePath);
         return;
     }
-    logf("RunNonElevated: '%s'\n", exePath.s);
+    logf("RunNonElevated: '%s'\n", exePath);
     TempStr cmd;
     TempStr explorerPath;
     WCHAR buf[MAX_PATH] = {};
@@ -2725,7 +2724,7 @@ void RunNonElevated(Str exePath) {
     if (!file::Exists(explorerPath)) {
         goto Run;
     }
-    cmd = fmt("\"%s\" \"%s\"", explorerPath.s, exePath.s);
+    cmd = fmt("\"%s\" \"%s\"", explorerPath, exePath);
 Run:
     HANDLE h = LaunchProcessInDir(IsEmpty(cmd) ? exePath : cmd);
     SafeCloseHandle(&h);
@@ -2889,7 +2888,7 @@ static int GetCursorIndex(LPWSTR cursorId) {
 static const char* cursorNames =
     "IDC_ARROW\0IDC_BEAM\0IDC_HAND\0IDC_SIZEALL\0IDC_SIZEWE\0IDC_SIZENS\0IDC_SIZENWSE\0IDC_SIZENESW\0IDC_NO\0IDC_CROSS\0";
 
-static const char* GetCursorName(LPWSTR cursorId) { // str-port: Win32 debug-only
+static const char* GetCursorName(LPWSTR cursorId) {
     int i = GetCursorIndex(cursorId);
     if (i == -1) {
         return "unknown";
@@ -2899,7 +2898,7 @@ static const char* GetCursorName(LPWSTR cursorId) { // str-port: Win32 debug-onl
 
 static void LogCursor(LPWSTR cursorId) {
     static int n = 0;
-    const char* name = GetCursorName(cursorId); // str-port: Win32 debug-only
+    const char* name = GetCursorName(cursorId);
     logf("SetCursor %s 0x%x %d\n", name, (int)(intptr_t)cursorId, n);
     n++;
 }
@@ -3002,7 +3001,7 @@ bool LockDataResource(int resId, LoadedDataResource* res) {
     }
 
     auto h = GetModuleHandleW(nullptr);
-    WCHAR* name = MAKEINTRESOURCEW(resId); // str-port: Win32 resource id
+    WCHAR* name = MAKEINTRESOURCEW(resId);
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
         res->dataSize = kResourceNotFound;
@@ -3398,9 +3397,9 @@ TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
 
     TempStr res;
     if (isUnicode) {
-        res = ToUtf8Temp(WStr((WCHAR*)mem)); // str-port: Win32 clipboard
+        res = ToUtf8Temp(WStr((WCHAR*)mem));
     } else {
-        res = str::DupTemp(Str((char*)mem)); // str-port: Win32 clipboard
+        res = str::DupTemp(Str((char*)mem));
     }
     GlobalUnlock(h);
     return res;

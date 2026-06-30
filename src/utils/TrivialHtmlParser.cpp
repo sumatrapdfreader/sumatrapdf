@@ -63,8 +63,8 @@ static WCHAR IntToChar(int codepoint) {
 WStr DecodeHtmlEntities(Str string, uint codepage) {
     TempWStr fixedTemp = strconv::StrCPToWStrTemp(string, codepage);
     WStr fixed = wstr::Dup(fixedTemp);
-    WCHAR* dst = fixed.s;       // str-port: owned heap write cursor
-    const WCHAR* src = fixed.s; // str-port: owned heap read cursor
+    WCHAR* dst = fixed.s;
+    const WCHAR* src = fixed.s;
 
     while (*src) {
         if (*src != '&') {
@@ -84,14 +84,14 @@ WStr DecodeHtmlEntities(Str string, uint codepage) {
 
         // named entities
         int rune = -1;
-        const WCHAR* entityEnd = src; // str-port: read cursor
+        const WCHAR* entityEnd = src;
         while (iswalnum(*entityEnd)) {
             entityEnd++;
         }
 
         if (entityEnd != src) {
             size_t entityLen = entityEnd - src;
-            rune = HtmlEntityNameToRune(WStr((wchar_t*)src, (int)entityLen)); // str-port: UTF-16 entity name
+            rune = HtmlEntityNameToRune(WStr((wchar_t*)src, (int)entityLen));
         }
         if (-1 != rune) {
             *dst++ = IntToChar(rune);
