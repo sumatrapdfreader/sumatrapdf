@@ -2699,7 +2699,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
     }
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
-    TempStr buf = strfmt::FormatTemp(StrL("%d"), num);
+    TempStr buf = strfmt::FormatTemp("%d", num);
 
     StrBuilder res;
     int i = 3 - (buf.len % 3);
@@ -2732,7 +2732,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     }
 
     // add between one and two decimals after the point
-    TempStr buf = strfmt::FormatTemp(StrL("%s%s%02d"), tmp, Str(decimal), num % 100);
+    TempStr buf = strfmt::FormatTemp("%s%s%02d", tmp, Str(decimal), num % 100);
     if (stripTrailingZero && str::EndsWith(buf, StrL("0"))) {
         buf.s[buf.len - 1] = '\0';
         buf.len--;
@@ -2775,7 +2775,7 @@ TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
     if (!unit) {
         return sizestr;
     }
-    return strfmt::FormatTemp(StrL("%s %s"), sizestr, unit);
+    return strfmt::FormatTemp("%s %s", sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -2786,7 +2786,7 @@ TempStr FormatFileSizeTemp(i64 size) {
     }
     TempStr n1 = str::FormatSizeShortTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
-    return strfmt::FormatTemp(StrL("%s (%s %s)"), n1, n2, StrL("Bytes"));
+    return strfmt::FormatTemp("%s (%s %s)", n1, n2, StrL("Bytes"));
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B

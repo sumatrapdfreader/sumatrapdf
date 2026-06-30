@@ -111,7 +111,7 @@ struct Arg {
     Arg(const WCHAR* ws_) : Arg(WStr(ws_)) {} // str-port: Win32 variadic adapter
 };
 
-TempStr FormatTemp(Str s, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(), const Arg& a4 = Arg(),
-                   const Arg& a5 = Arg(), const Arg& a6 = Arg());
+TempStr FormatTemp(const char* fmt, const Arg& a1 = Arg(), const Arg& a2 = Arg(), const Arg& a3 = Arg(),
+                   const Arg& a4 = Arg(), const Arg& a5 = Arg(), const Arg& a6 = Arg());
 
 } // namespace strfmt
