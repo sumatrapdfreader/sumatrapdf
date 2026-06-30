@@ -153,9 +153,11 @@ class EngineDjvuDec : public EngineBase {
 
     // After djvu_init(), a djvu_doc is read-only and djvu_page_render /
     // djvu_page_text_get_zones / djvu_page_get_links are re-entrant on the same
-    // doc. cacheLock only guards lazy one-time caches (page links, TOC).
+    // doc. djvuCacheLock is passed to djvudec for per-page layer caching;
+    // cacheLock guards lazy one-time caches (page links, TOC).
     djvu_ctx* ctx = nullptr;
     djvu_doc* doc = nullptr;
+    CRITICAL_SECTION djvuCacheLock;
     CRITICAL_SECTION cacheLock;
 
     Vec<DjvuDecPageInfo*> pages;
@@ -164,12 +166,16 @@ class EngineDjvuDec : public EngineBase {
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool FinishLoading();
     TocItem* BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter);
+
+    static void CacheLockCb(void* user, void* ctx);
+    static void CacheUnlockCb(void* user, void* ctx);
 };
 
 EngineDjvuDec::EngineDjvuDec() {
     kind = kindEngineDjVu;
     SetDefaultExt(defaultExt, ".djvu");
     fileDPI = 300.0f;
+    InitializeCriticalSection(&djvuCacheLock);
     InitializeCriticalSection(&cacheLock);
 }
 
@@ -186,6 +192,7 @@ EngineDjvuDec::~EngineDjvuDec() {
     if (stream) {
         stream->Release();
     }
+    DeleteCriticalSection(&djvuCacheLock);
     DeleteCriticalSection(&cacheLock);
 }
 
@@ -221,6 +228,14 @@ static void DjvuDecErrorCb(void*, djvu_severity sev, const char* msg) {
     }
 }
 
+void EngineDjvuDec::CacheLockCb(void* user, void*) {
+    EnterCriticalSection(&((EngineDjvuDec*)user)->djvuCacheLock);
+}
+
+void EngineDjvuDec::CacheUnlockCb(void* user, void*) {
+    LeaveCriticalSection(&((EngineDjvuDec*)user)->djvuCacheLock);
+}
+
 // djvu_init() must run once before concurrent decode (bilinear scaler table).
 // Engines can be created on multiple threads (async document loads).
 static SRWLOCK gDjvuDecInitLock = SRWLOCK_INIT;
@@ -240,10 +255,12 @@ bool EngineDjvuDec::FinishLoading() {
         return false;
     }
     DjvuDecInitOnce();
-    ctx = djvu_ctx_new(nullptr, nullptr, DjvuDecErrorCb, nullptr);
+    ctx = djvu_ctx_new(nullptr, nullptr, CacheLockCb, CacheUnlockCb, DjvuDecErrorCb, this);
     if (!ctx) {
         return false;
     }
+    djvu_ctx_set_cache_precache_shared(ctx, 1);
+    djvu_ctx_set_cache_per_page(ctx, 1);
     // ask the decoder to emit color output in B,G,R order so it lands in a
     // Windows DIB without a separate RGB->BGR pass (the swap is folded into the
     // decoder's final output copy at no cost).

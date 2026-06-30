@@ -21,6 +21,11 @@ extern "C" {
 typedef void *(*djvu_alloc_cb)(void *user, void *ctx, size_t size);
 typedef void  (*djvu_free_cb)(void *user, void *ctx, void *ptr);
 
+/* Optional mutex hooks for per-page caching (djvu_ctx_set_cache_per_page).
+   Required when per-page caching is enabled. */
+typedef void (*djvu_lock_cb)(void *user, void *ctx);
+typedef void (*djvu_unlock_cb)(void *user, void *ctx);
+
 typedef enum {
     DJVU_SEVERITY_DEBUG,
     DJVU_SEVERITY_INFO,
@@ -41,12 +46,17 @@ typedef struct djvu_doc djvu_doc;
 void djvu_init(void);
 
 /* Pass NULL for alloc/free to use the default malloc/free.
+   Pass NULL for lock/unlock when per-page caching is off.
    Pass NULL for error to silently ignore diagnostics. */
 djvu_ctx *djvu_ctx_new(djvu_alloc_cb alloc, djvu_free_cb free_cb,
+                       djvu_lock_cb lock, djvu_unlock_cb unlock,
                        djvu_error_cb error, void *user);
 void djvu_ctx_free(djvu_ctx *ctx);
 
 /* Per-context decode options (defaults off/zero). Set before djvu_doc_open. */
+void djvu_ctx_set_cache_precache_shared(djvu_ctx *ctx, int enable);
+void djvu_ctx_set_cache_per_page(djvu_ctx *ctx, int enable);
+/* Legacy alias: enable=1 turns on per-page caching. */
 void djvu_ctx_set_lazy_iw44(djvu_ctx *ctx, int enable);
 void djvu_ctx_set_no_compose(djvu_ctx *ctx, int enable);
 void djvu_ctx_set_iw_max_chunks(djvu_ctx *ctx, int max_chunks);
