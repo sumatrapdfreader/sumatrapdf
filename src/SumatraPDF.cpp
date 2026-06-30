@@ -841,6 +841,14 @@ static bool ShouldSaveThumbnail(FileState* ds) {
         return false;
     }
 
+    // don't materialize (hydrate) a cloud-only placeholder file just to make a
+    // thumbnail. opening it would force a slow, possibly multi-minute download
+    // (e.g. OneDrive "Files On-Demand" dehydrated file). issue #5756
+    if (path::IsCloudPlaceholder(ds->filePath)) {
+        logf("ShouldSaveThumbnail: skipping cloud placeholder '%s'\n", ds->filePath);
+        return false;
+    }
+
     // don't create thumbnails for files that won't need them anytime soon
     Vec<FileState*> list;
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
