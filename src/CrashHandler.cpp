@@ -27,9 +27,9 @@
 
 #include "utils/Log.h"
 
-// TODO: when gReducedLogging is set to true, logf() no longer log
-// decide if will risk it and enable logf() calls or convert
-// logf() into a series of log() calls
+// logf()/logfa() are now macros that format with fmt() and route through
+// log()/loga(), so they keep logging (to at least the debugger) even when
+// gReducedLogging is set.
 
 #define kCrashHandlerServer "www.sumatrapdfreader.org"
 #define kCrashHandlerServerPort 443

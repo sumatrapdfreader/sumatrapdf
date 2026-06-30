@@ -6,6 +6,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/FileUtil.h"
+#include "utils/Log.h"
 
 constexpr const WCHAR* kPipeName = L"\\\\.\\pipe\\LOCAL\\ArsLexis-Logger";
 
@@ -208,30 +209,6 @@ void loga(Str s) {
         return;
     }
     log2(s, true);
-}
-
-void logf(const char* fmt, ...) {
-    if (gReducedLogging || gDestroyedLogging) {
-        return;
-    }
-
-    va_list args;
-    va_start(args, fmt);
-    TempStr s = str::FmtVTemp(fmt, args);
-    log2(s, false);
-    va_end(args);
-}
-
-void logfa(const char* fmt, ...) {
-    if (gDestroyedLogging) {
-        return;
-    }
-
-    va_list args;
-    va_start(args, fmt);
-    TempStr s = str::FmtVTemp(fmt, args);
-    log2(s, true);
-    va_end(args);
 }
 
 void StartLogToFile(Str path, bool removeIfExists) {
