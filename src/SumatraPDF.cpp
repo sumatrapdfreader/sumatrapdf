@@ -825,23 +825,55 @@ static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
     return false;
 }
 
+// After the menu changes (e.g. home page -> document), repaint the menu bar so
+// stale caption/rebar pixels are not left behind (issue #5763).
+static void RedrawMenuBarForWindow(MainWindow* win) {
+    if (!win || win->presentation || win->isFullScreen || !IsMenubarVisible()) {
+        return;
+    }
+    if (win->tabsInTitlebar) {
+        if (!IsShowingMenuBarRebar(win)) {
+            return;
+        }
+        RelayoutCaption(win);
+        RECT r = ToRECT(win->captionRect);
+        InvalidateRect(win->hwndFrame, &r, TRUE);
+        RedrawWindow(win->hwndFrame, &r, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_UPDATENOW);
+        if (win->hwndMenuReBar) {
+            RedrawWindow(win->hwndMenuReBar, nullptr, nullptr,
+                         RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+        }
+        if (win->tabsCtrl && win->tabsCtrl->IsVisible()) {
+            RedrawWindow(win->tabsCtrl->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW);
+        }
+    } else if (GetMenu(win->hwndFrame)) {
+        DrawMenuBar(win->hwndFrame);
+    }
+}
+
 void RebuildMenuBarForWindow(MainWindow* win) {
     HMENU oldMenu = win->menu;
     win->menu = BuildMenu(win);
+    bool redrawMenuBar = false;
     if (!win->presentation && !win->isFullScreen && IsMenubarVisible()) {
         if (win->tabsInTitlebar) {
             // use rebar menu bar instead of native menu when tabs are in titlebar
             if (IsShowingMenuBarRebar(win)) {
                 if (MenuBarButtonsNeedRebuild(oldMenu, win->menu)) {
                     RebuildMenuBarButtons(win);
+                    redrawMenuBar = true;
                 }
             }
         } else {
             SetMenu(win->hwndFrame, win->menu);
+            redrawMenuBar = true;
         }
     }
     FreeMenuOwnerDrawInfoData(oldMenu);
     DestroyMenu(oldMenu);
+    if (redrawMenuBar) {
+        RedrawMenuBarForWindow(win);
+    }
 }
 
 static bool ShouldSaveThumbnail(FileState* ds) {

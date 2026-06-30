@@ -1729,6 +1729,23 @@ void RebuildMenuBarButtons(MainWindow* win) {
         b.iString = (INT_PTR)name.Get();
         SendMessageW(hwndMb, TB_ADDBUTTONS, 1, (LPARAM)&b);
     }
+
+    SendMessageW(hwndMb, TB_AUTOSIZE, 0, 0);
+
+    if (win->hwndMenuReBar) {
+        RECT rc;
+        LRESULT res = SendMessageW(hwndMb, TB_GETITEMRECT, 0, (LPARAM)&rc);
+        int menuBarDy = MenuBarToolbarIdealDy(win);
+        if (res && rc.bottom > rc.top) {
+            menuBarDy = (rc.bottom - rc.top) + 2 * rc.top;
+        }
+        REBARBANDINFOW rbBand{};
+        rbBand.cbSize = sizeof(REBARBANDINFOW);
+        rbBand.fMask = RBBIM_CHILDSIZE;
+        rbBand.cyChild = menuBarDy;
+        rbBand.cyMinChild = menuBarDy;
+        SendMessageW(win->hwndMenuReBar, RB_SETBANDINFO, 0, (LPARAM)&rbBand);
+    }
 }
 
 void CreateMenuBarRebar(MainWindow* win) {
