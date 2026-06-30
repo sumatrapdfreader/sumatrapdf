@@ -5,3 +5,5 @@ cmd/**/*.ts           text eol=lf
 src/**/*.cpp           text eol=lf
 src/**/*.h             text eol=lf
 src/**/*.c             text eol=lf
+vs2022/*.vcxproj       text eol=crlf
+vs2022/*.sln           text eol=crlf
