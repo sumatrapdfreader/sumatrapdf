@@ -444,8 +444,9 @@ static bool SetupPluginMode(Flags& i) {
 
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
-    if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        TempStr args = str::DupTemp(str::FindChar(i.pluginURL, '#').s + 1);
+    int hashIdx = i.pluginURL ? str::IndexOfChar(i.pluginURL, '#') : -1;
+    if (hashIdx >= 0) {
+        TempStr args = str::DupTemp(i.pluginURL.s + hashIdx + 1);
         str::TransCharsInPlace(args, "#", "&");
         StrVec parts;
         Split(&parts, args, "&", true);
@@ -457,7 +458,7 @@ static bool SetupPluginMode(Flags& i) {
                 i.pageNumber = pageNo;
             } else if (str::StartsWithI(part, "nameddest=") && part.len > 10) {
                 i.namedDest = str::Dup(Str(part.s + 10, part.len - 10));
-            } else if (!str::FindChar(part, '=') && part) {
+            } else if (!str::ContainsChar(part, '=') && part) {
                 i.namedDest = str::Dup(part);
             }
         }

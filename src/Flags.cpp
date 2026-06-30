@@ -628,7 +628,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
             i.stressTestPath = str::Dup(a, param);
             Str s = args.AdditionalParam(1);
-            if (s && str::FindChar(s, '*')) {
+            if (str::ContainsChar(s, '*')) {
                 i.stressTestFilter = str::Dup(a, args.EatParam());
                 s = args.AdditionalParam(1);
             }

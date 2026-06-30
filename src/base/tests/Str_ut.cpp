@@ -269,7 +269,11 @@ void StrTest() {
     utassert(str::EndsWith(str, "ing") && str::EndsWithI(str, "ING"));
     utassert(!str::EndsWith(str, "ung"));
     utassert(str::IsEmpty(Str{}) && str::IsEmpty("") && !str::IsEmpty(str));
-    utassert(str::FindChar(str, 's') && !str::FindChar(str, 'S'));
+    utassert(str::ContainsChar(str, 's') && !str::ContainsChar(str, 'S'));
+    utassert(str::IndexOfChar(str, 's') == 2);
+    utassert(str::IndexOfChar(str, 'g') == 6);
+    utassert(!str::ContainsChar(str, 'x'));
+    utassert(!str::ContainsChar(Str{}, 'a'));
     int len = str::BufSet(buf, dimof(buf), str);
     utassert(len == ::len(buf) && str::Eq(buf, str));
     len = str::BufSet(buf, 6, str);

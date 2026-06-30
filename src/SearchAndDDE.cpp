@@ -1151,17 +1151,17 @@ static TempStr BuildOpenFileCmdTemp(Str pattern, Str path, int line, int col) {
     logf("BuildOpenFileCmdTemp: path: '%s', pattern: '%s'\n", path, pattern);
     Str s = pattern;
     while (s) {
-        Str perc = str::FindChar(s, '%');
-        if (!perc) {
+        int percIdx = str::IndexOfChar(s, '%');
+        if (percIdx < 0) {
             cmdline.Append(s);
             break;
         }
-        cmdline.Append(Str(s.s, (int)(perc.s - s.s)));
-        if (perc.len < 2) {
-            cmdline.Append(perc);
+        cmdline.Append(Str(s.s, percIdx));
+        if (percIdx + 1 >= s.len) {
+            cmdline.Append(Str(s.s + percIdx, s.len - percIdx));
             break;
         }
-        char spec = perc.s[1];
+        char spec = s.s[percIdx + 1];
         if (spec == 'f') {
             cmdline.Append(path);
         } else if (spec == 'l') {
@@ -1171,9 +1171,9 @@ static TempStr BuildOpenFileCmdTemp(Str pattern, Str path, int line, int col) {
         } else if (spec == '%') {
             cmdline.AppendChar('%');
         } else {
-            cmdline.Append(Str(perc.s, 2));
+            cmdline.Append(Str(s.s + percIdx, 2));
         }
-        s = Str(perc.s + 2, s.len - (int)(perc.s - s.s) - 2);
+        s = Str(s.s + percIdx + 2, s.len - percIdx - 2);
     }
 
     return cmdline.StealData(GetTempArena());
@@ -1930,10 +1930,10 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     // it might be just "CmdClose" or "CmdCreateAnnotHighlight #00ff00 openEdit"
     // extract the command name (first space-delimited token)
     Str content = Str(cmdContent.Get());
-    Str spacePos = str::FindChar(content, ' ');
+    int spaceIdx = str::IndexOfChar(content, ' ');
     TempStr name;
-    if (spacePos) {
-        name = str::DupTemp(Str(content.s, (int)((size_t)(spacePos.s - content.s))));
+    if (spaceIdx >= 0) {
+        name = str::DupTemp(Str(content.s, spaceIdx));
     } else {
         name = str::DupTemp(content);
     }
@@ -1950,7 +1950,7 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
 
     // if there are arguments after the command name, create a custom command with those args
     int idToSend = cmdId;
-    if (spacePos) {
+    if (spaceIdx >= 0) {
         CustomCommand* customCmd = CreateCommandFromDefinition(Str(cmdContent));
         if (customCmd) {
             idToSend = customCmd->id;

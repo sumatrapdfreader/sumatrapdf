@@ -526,12 +526,12 @@ void LinkHandler::LaunchURL(Str uri) {
     }
 
     TempStr path = str::DupTemp(uri);
-    Str colon = str::FindChar(path, ':');
-    Str hash = str::FindChar(path, '#');
-    if (!colon || (hash && colon.s > hash.s)) {
+    int colon = str::IndexOfChar(path, ':');
+    int hash = str::IndexOfChar(path, '#');
+    if (colon < 0 || (hash >= 0 && colon > hash)) {
         // treat relative URIs as file paths (without fragment identifier)
-        if (hash) {
-            path.len = (int)(hash.s - path.s);
+        if (hash >= 0) {
+            path.len = hash;
         }
         str::TransCharsInPlace(path, "/", "\\");
         url::DecodeInPlace(path);

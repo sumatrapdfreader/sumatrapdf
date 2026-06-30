@@ -10110,7 +10110,7 @@ static TempStr TtsLangIdToLocaleNameTemp(Str lang) {
 
     // Windows.Media.SpeechSynthesis voices report a locale name like "en-US",
     // SAPI voices a hex language id like "409"
-    if (str::FindChar(lang, '-')) {
+    if (str::ContainsChar(lang, '-')) {
         return str::DupTemp(lang);
     }
 

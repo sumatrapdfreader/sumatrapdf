@@ -82,7 +82,7 @@ static const int MULTILINE_INFOTIP_WIDTH_PX = 500;
 
 static void SetMaxWidthForText(HWND hwnd, Str s, bool multiline) {
     int dx = -1;
-    if (multiline || str::FindChar(s, '\n')) {
+    if (multiline || str::ContainsChar(s, '\n')) {
         // TODO: dpi scale
         dx = MULTILINE_INFOTIP_WIDTH_PX;
     }

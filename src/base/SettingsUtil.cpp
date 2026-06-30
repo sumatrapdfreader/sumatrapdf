@@ -19,8 +19,8 @@ static bool NeedsEscaping(Str s) {
     if (!s) {
         return false;
     }
-    return str::IsWs(s.s[0]) || str::IsWs(s.s[s.len - 1]) || str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
-           str::FindChar(s, '$');
+    return str::IsWs(s.s[0]) || str::IsWs(s.s[s.len - 1]) || str::ContainsChar(s, '\n') || str::ContainsChar(s, '\r') ||
+           str::ContainsChar(s, '$');
 }
 
 static void EscapeStr(StrBuilder& out, Str s) {
@@ -53,7 +53,7 @@ static Str UnescapeStr(Str s) {
     if (str::IsNull(s)) {
         return {};
     }
-    if (!str::FindChar(s, '$')) {
+    if (!str::ContainsChar(s, '$')) {
         return str::Dup(s);
     }
 
@@ -472,8 +472,9 @@ static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const vo
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         Str fieldNameStr = Str(fieldName);
-        ReportIf(str::FindChar(fieldNameStr, '=') || str::FindChar(fieldNameStr, ':') ||
-                 str::FindChar(fieldNameStr, '[') || str::FindChar(fieldNameStr, ']') || NeedsEscaping(fieldNameStr));
+        ReportIf(str::ContainsChar(fieldNameStr, '=') || str::ContainsChar(fieldNameStr, ':') ||
+                 str::ContainsChar(fieldNameStr, '[') || str::ContainsChar(fieldNameStr, ']') ||
+                 NeedsEscaping(fieldNameStr));
         if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
 #if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
             if (SettingType::Prerelease == field.type) {

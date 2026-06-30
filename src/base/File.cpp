@@ -504,11 +504,12 @@ bool Match(Str path, Str filter) {
     if (!baseName) {
         return false;
     }
-    while (str::FindChar(filter, ';')) {
+    while (str::ContainsChar(filter, ';')) {
         if (MatchWildcardsRec(baseName, filter)) {
             return true;
         }
-        filter = Str(str::FindChar(filter, ';').s + 1);
+        int semiIdx = str::IndexOfChar(filter, ';');
+        filter = Str(filter.s + semiIdx + 1, filter.len - semiIdx - 1);
     }
     return MatchWildcardsRec(baseName, filter);
 }

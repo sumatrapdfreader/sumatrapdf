@@ -144,7 +144,7 @@ bool IsAlNum(char c);
 
 Str FindChar(Str str, char c);
 Str FindCharLast(Str str, char c);
-int CharIndexOf(Str str, char c);
+int IndexOfChar(Str s, char c);
 Str FindFrom(Str str, Str find);
 Str FindFromI(Str str, Str find);
 // like FindFrom but returns the slice right after the match (or {} if not found)
@@ -153,6 +153,7 @@ int IndexOf(Str buf, Str toFind);
 
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);
+bool ContainsChar(Str s, char c);
 
 // merged from former global Str* helpers (common/str_util.cpp)
 Str TrimSuffix(Str s, Str suffix);
@@ -234,7 +235,7 @@ WStr Parse(WStr str, WStr format, ...);
 int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
-int CharIndexOf(WStr str, WCHAR c);
+int IndexOfChar(WStr s, WCHAR c);
 WStr FindChar(WStr str, WCHAR c);
 WStr FindFrom(WStr str, WStr find);
 bool IsWs(WCHAR c);

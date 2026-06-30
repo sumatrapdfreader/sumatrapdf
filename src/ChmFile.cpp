@@ -47,7 +47,7 @@ ByteSlice ChmFile::GetData(Str fileName) const {
 
     struct chmUnitInfo info;
     int res = chm_resolve_object(chmHandle, fileName.s, &info);
-    if (CHM_RESOLVE_SUCCESS != res && str::FindChar(fileName, '\\')) {
+    if (CHM_RESOLVE_SUCCESS != res && str::ContainsChar(fileName, '\\')) {
         // Microsoft's HTML Help CHM viewer tolerates backslashes in URLs
         auto fileNameTemp = str::DupTemp(fileName);
         str::TransCharsInPlace(fileNameTemp, "\\", "/");

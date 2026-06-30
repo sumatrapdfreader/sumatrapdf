@@ -713,20 +713,24 @@ bool IsWs(char c) {
     return false;
 }
 
-int CharIndexOf(Str str, char c) {
-    if (!str) {
+int IndexOfChar(Str s, char c) {
+    if (!s) {
         return -1;
     }
-    for (int i = 0; i < str.len; i++) {
-        if (str.s[i] == c) {
+    for (int i = 0; i < s.len; i++) {
+        if (s.s[i] == c) {
             return i;
         }
     }
     return -1;
 }
 
+bool ContainsChar(Str s, char c) {
+    return IndexOfChar(s, c) >= 0;
+}
+
 Str FindChar(Str str, char c) {
-    int idx = CharIndexOf(str, c);
+    int idx = IndexOfChar(str, c);
     if (idx < 0) {
         return {};
     }
@@ -807,9 +811,8 @@ size_t TransCharsInPlace(Str str, Str oldChars, Str newChars) {
     }
     size_t findCount = 0;
     for (int i = 0; i < str.len; i++) {
-        Str found = str::FindChar(oldChars, str.s[i]);
-        if (found) {
-            int idx = (int)(found.s - oldChars.s);
+        int idx = str::IndexOfChar(oldChars, str.s[i]);
+        if (idx >= 0) {
             str.s[i] = newChars.s[idx];
             findCount++;
         }
@@ -928,7 +931,7 @@ size_t RemoveCharsInPlace(Str str, Str toRemove) {
     int dst = 0;
     for (int src = 0; src < str.len; src++) {
         char c = str.s[src];
-        if (!str::FindChar(toRemove, c)) {
+        if (!str::ContainsChar(toRemove, c)) {
             str.s[dst++] = c;
         } else {
             ++removed;
@@ -1035,7 +1038,7 @@ static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* en
     char f2[] = "% ";
     Str formatAt = Str(format.s + formatOff, format.len - formatOff);
     Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
-    if (!str::IsNull(endF) && !str::IsNull(FindChar(StrL("udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
+    if (!str::IsNull(endF) && str::ContainsChar(StrL("udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str(str.s + p, (int)width));
         Str end = Parse(Str(limited), f2, valueOut);
@@ -2481,12 +2484,12 @@ bool EndsWithI(WStr txt, WStr end) {
     return EqI(WStr(txt.s + txt.len - end.len, (int)end.len), end);
 }
 
-int CharIndexOf(WStr str, WCHAR c) {
-    if (!str) {
+int IndexOfChar(WStr s, WCHAR c) {
+    if (!s) {
         return -1;
     }
-    for (int i = 0; i < str.len; i++) {
-        if (str.s[i] == c) {
+    for (int i = 0; i < s.len; i++) {
+        if (s.s[i] == c) {
             return i;
         }
     }
@@ -2494,7 +2497,7 @@ int CharIndexOf(WStr str, WCHAR c) {
 }
 
 WStr FindChar(WStr str, WCHAR c) {
-    int idx = CharIndexOf(str, c);
+    int idx = IndexOfChar(str, c);
     if (idx < 0) {
         return {};
     }
@@ -3029,9 +3032,12 @@ WStr Parse(WStr str, WStr format, ...) {
 namespace url {
 
 bool IsAbsolute(Str url) {
-    Str colon = str::FindChar(url, ':');
-    Str hash = str::FindChar(url, '#');
-    return colon && (!hash || hash.s > colon.s);
+    int colon = str::IndexOfChar(url, ':');
+    if (colon < 0) {
+        return false;
+    }
+    int hash = str::IndexOfChar(url, '#');
+    return hash < 0 || hash > colon;
 }
 
 TempStr GetFullPathTemp(Str url) {

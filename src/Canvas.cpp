@@ -3321,14 +3321,14 @@ static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
 // returns true if url looks like it could be an image URL
 static bool IsImageUrl(Str url) {
     // strip query string / fragment for extension check
-    Str q = str::FindChar(url, '?');
-    Str h = str::FindChar(url, '#');
+    int qIdx = str::IndexOfChar(url, '?');
+    int hIdx = str::IndexOfChar(url, '#');
     int len = url.len;
-    if (q && (int)(q.s - url.s) < len) {
-        len = (int)(q.s - url.s);
+    if (qIdx >= 0 && qIdx < len) {
+        len = qIdx;
     }
-    if (h && (int)(h.s - url.s) < len) {
-        len = (int)(h.s - url.s);
+    if (hIdx >= 0 && hIdx < len) {
+        len = hIdx;
     }
     // check for common image extensions
     Str exts[] = {".png",  ".jpg",  ".jpeg", ".gif", ".bmp", ".tiff", ".tif",

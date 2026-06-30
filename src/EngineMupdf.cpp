@@ -949,7 +949,7 @@ static int LinkifyTrimTrailingPunctOff(int startOff, int endOff, WStr trimChars,
         }
         if (trimCloseParen && L')' == c) {
             WStr span = WStr(pageText.s + startOff, endOff - startOff);
-            int openParenOff = wstr::CharIndexOf(span, L'(');
+            int openParenOff = wstr::IndexOfChar(span, L'(');
             if (openParenOff < 0) {
                 endOff--;
                 if (!trimRepeat) {
@@ -974,7 +974,7 @@ static int LinkifyFindEndOff(int startOff, wchar_t prevChar, WStr pageText) {
     // cut the link at the first quotation mark, if it's also preceded by one
     if (L'"' == prevChar || L'\'' == prevChar) {
         WStr span = WStr(pageText.s + startOff, endOff - startOff);
-        int quoteOff = wstr::CharIndexOf(span, prevChar);
+        int quoteOff = wstr::IndexOfChar(span, prevChar);
         if (quoteOff >= 0) {
             endOff = startOff + quoteOff;
         }
@@ -2849,7 +2849,7 @@ static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* fil
     }
     // sibling-only: reject anything with a path separator or drive spec so the
     // PDF can only pull a file from its own directory
-    if (str::FindChar(spec, '/') || str::FindChar(spec, '\\') || str::FindChar(spec, ':')) {
+    if (str::ContainsChar(spec, '/') || str::ContainsChar(spec, '\\') || str::ContainsChar(spec, ':')) {
         return nullptr;
     }
     TempStr full = path::JoinTemp(path::GetDirTemp(pdfPath), spec);

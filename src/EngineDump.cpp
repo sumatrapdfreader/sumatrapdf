@@ -24,13 +24,13 @@ static void Out1(Str msg) {
 
 static bool NeedsEscape(Str s) {
     // TODO: optimize to do a single loop over s
-    if (str::FindChar(s, '<')) {
+    if (str::ContainsChar(s, '<')) {
         return true;
     }
-    if (str::FindChar(s, '&')) {
+    if (str::ContainsChar(s, '&')) {
         return true;
     }
-    if (str::FindChar(s, '"')) {
+    if (str::ContainsChar(s, '"')) {
         return true;
     }
     return false;
@@ -366,11 +366,11 @@ static bool CheckRenderPath(Str path) {
     int i = 0;
     while (i < path.len) {
         Str rest(path.s + i, path.len - i);
-        Str p = str::FindChar(rest, '%');
-        if (!p) {
+        int pIdx = str::IndexOfChar(rest, '%');
+        if (pIdx < 0) {
             break;
         }
-        i = (int)(p.s - path.s) + 1;
+        i = i + pIdx + 1;
         if (i >= path.len) {
             break;
         }

@@ -85,12 +85,11 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     StrBuilder newPath;
     Str rest = currPath;
     while (rest) {
-        Str semi = str::FindChar(rest, ';');
+        int semiIdx = str::IndexOfChar(rest, ';');
         Str entry;
-        if (semi) {
-            int idx = str::CharIndexOf(rest, ';');
-            entry = Str(rest.s, idx);
-            rest = Str(semi.s + 1, semi.len - 1);
+        if (semiIdx >= 0) {
+            entry = Str(rest.s, semiIdx);
+            rest = Str(rest.s + semiIdx + 1, rest.len - semiIdx - 1);
         } else {
             entry = rest;
             rest = {};

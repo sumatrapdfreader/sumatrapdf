@@ -43,7 +43,10 @@ static uint GetCodepageFromPI(Str xmlPI) {
         Str namePart;
         uint codePage;
     } static encodings[] = {
-        {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
+        {"UTF", CP_UTF8},
+        {"utf", CP_UTF8},
+        {"1252", 1252},
+        {"1251", 1251},
         // TODO: any other commonly used codepages?
     };
     for (size_t i = 0; i < dimof(encodings); i++) {
@@ -113,7 +116,7 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
 
 TempStr NormalizeURLTemp(Str url, Str base) {
     ReportIf(!url || !base);
-    if (url.s[0] == '/' || str::FindChar(url, ':')) {
+    if (url.s[0] == '/' || str::ContainsChar(url, ':')) {
         return str::DupTemp(url);
     }
 
@@ -468,7 +471,7 @@ bool EpubDoc::Load() {
         }
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
-        ReportIf(str::FindChar(fullPath, '"'));
+        ReportIf(str::ContainsChar(fullPath, '"'));
         str::TransCharsInPlace(fullPath, "\"", "'");
         htmlData.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", fullPath));
         htmlData.Append(decoded);
@@ -571,7 +574,7 @@ ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
 
     TempStr url = NormalizeURLTemp(fileName, pagePath);
     // some EPUB producers use wrong path separators
-    if (str::FindChar(url, '\\')) {
+    if (str::ContainsChar(url, '\\')) {
         str::TransCharsInPlace(url, "\\", "/");
     }
     for (ImageData& img : images) {
@@ -1399,7 +1402,7 @@ ByteSlice HtmlDoc::LoadURL(Str url) {
         auto res = DecodeDataURI(url);
         return res;
     }
-    if (str::FindChar(url, ':')) {
+    if (str::ContainsChar(url, ':')) {
         return {};
     }
     Str path = str::Dup(url);
@@ -1487,21 +1490,24 @@ static Str TextFindLinkEnd(StrBuilder& htmlData, Str curr, char prevChar, bool f
         }
     }
     if (endIdx > 0 && ')' == curr.s[endIdx - 1]) {
-        Str openParen = str::FindChar(curr, '(');
-        if (!openParen || openParen.s >= curr.s + endIdx) {
+        int openParenIdx = str::IndexOfChar(curr, '(');
+        if (openParenIdx < 0 || openParenIdx >= endIdx) {
             endIdx--;
         }
     }
     if (('"' == prevChar || '\'' == prevChar)) {
-        Str quote = str::FindChar(curr, prevChar);
-        if (quote && quote.s < curr.s + endIdx) {
-            endIdx = (int)(quote.s - curr.s);
+        int quoteIdx = str::IndexOfChar(curr, prevChar);
+        if (quoteIdx >= 0 && quoteIdx < endIdx) {
+            endIdx = quoteIdx;
         }
     }
 
-    if (fromWww && (endIdx <= 4 || !str::FindChar(Str(curr.s + 5, curr.len - 5), '.') ||
-                    str::FindChar(Str(curr.s + 5, curr.len - 5), '.').s >= curr.s + endIdx)) {
-        return {};
+    if (fromWww) {
+        Str afterWww = Str(curr.s + 5, curr.len - 5);
+        int dotIdx = str::IndexOfChar(afterWww, '.');
+        if (endIdx <= 4 || dotIdx < 0 || dotIdx + 5 >= endIdx) {
+            return {};
+        }
     }
 
     htmlData.Append("<a href=\"");
@@ -1520,7 +1526,7 @@ static Str TextFindLinkEnd(StrBuilder& htmlData, Str curr, char prevChar, bool f
 inline bool IsEmailUsernameChar(char c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
-    return isalnum((u8)c) || c && str::FindChar(".!#$%&'*+=?^_`{|}~-", c);
+    return isalnum((u8)c) || c && str::ContainsChar(StrL(".!#$%&'*+=?^_`{|}~-"), c);
 }
 inline bool IsEmailDomainChar(char c) {
     return isalnum((u8)c) || '-' == c;

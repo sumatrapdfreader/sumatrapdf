@@ -396,7 +396,7 @@ again:
     Str toFind = cursor;
     bool usedShiftKeyMap = false;
     if (cursor.len == 1) {
-        int idx = str::CharIndexOf(shiftKeys, *cursor.s);
+        int idx = str::IndexOfChar(shiftKeys, *cursor.s);
         if ((idx >= 0) && (idx % 2 == 1)) {
             buf[0] = shiftKeys.s[idx - 1];
             toFind = Str(buf, 1);
@@ -470,7 +470,7 @@ again:
 
     // those correspond to 0...9 keys and require SHIFT
     static Str shift09 = StrL(")!@#$%^&*(");
-    idx = str::CharIndexOf(shift09, c);
+    idx = str::IndexOfChar(shift09, c);
     if (idx >= 0) {
         accel.key = (WORD)('0' + idx);
         accel.fVirt |= (FSHIFT | FVIRTKEY);
@@ -560,7 +560,7 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     // so for non-virtual assume it's a single char
     isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
     static Str otherAscii = Str("[]'`~@#$%^&*(){}/\\|?<>!,.+-=_;:\"");
-    if (str::FindChar(otherAscii, (char)key)) {
+    if (str::ContainsChar(otherAscii, (char)key)) {
         isAscii = true;
     }
     if (isAscii) {

@@ -225,15 +225,14 @@ static bool IsPdfFileContent(const ByteSlice& d) {
     }
     Str data = AsStr(ByteSlice(d.data(), d.size() - 5));
     while (data.len >= 5) {
-        Str found = str::FindChar(data, '%');
-        if (!found) {
+        int idx = str::IndexOfChar(data, '%');
+        if (idx < 0) {
             return false;
         }
-        if (str::EqN(found, StrL("%PDF-"), 5)) {
+        if (str::EqN(Str(data.s + idx, data.len - idx), StrL("%PDF-"), 5)) {
             return true;
         }
-        int off = (int)(found.s - data.s) + 1;
-        data = Str(data.s + off, data.len - off);
+        data = Str(data.s + idx + 1, data.len - idx - 1);
     }
     return false;
 }
