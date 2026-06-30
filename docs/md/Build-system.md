@@ -30,7 +30,7 @@ Mode                LastWriteTime         Length Name
 
 Sometimes we want to customize the build with `#ifdef`. We could do it by adding additional configurations, but that can spiral out of control quickly.
 
-Instead we have `src\utils\BuildConfig.h` file. It's empty by default but you can change it to add your `#define` customization.
+Instead we have `src\base\BuildConfig.h` file. It's empty by default but you can change it to add your `#define` customization.
 
 ## Build variants
 
