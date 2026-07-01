@@ -1821,33 +1821,9 @@ str::Builder::Builder(int capHint, Arena* a) {
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
 
-// ensure that a Vec never shares its els buffer with another after a clone/copy
-// note: we don't inherit allocator as it's not needed for our use cases
-str::Builder::Builder(const str::Builder& that) {
-    Reset();
-    char* s = EnsureCap(this, that.len);
-    Str sOrig = ToStr(that);
-    len = that.len;
-    size_t n = len + kPadding;
-    memcpy(s, sOrig.s, n);
-}
-
 str::Builder::Builder(Str s) {
     Reset();
     Append(s);
-}
-
-str::Builder& str::Builder::operator=(const str::Builder& that) {
-    if (this == &that) {
-        return *this;
-    }
-    Reset();
-    char* s = EnsureCap(this, that.len);
-    Str sOrig = ToStr(that);
-    len = that.len;
-    size_t n = len + kPadding;
-    memcpy(s, sOrig.s, n);
-    return *this;
 }
 
 str::Builder::~Builder() {
@@ -1886,10 +1862,6 @@ bool str::Builder::Append(Str src) {
     }
     memcpy(dst, src.s, src.len);
     return true;
-}
-
-bool str::Builder::Append(const str::Builder& s) {
-    return Append(s.LendData());
 }
 
 char str::Builder::RemoveAt(int idx, int count) {

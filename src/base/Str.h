@@ -240,8 +240,6 @@ struct Builder {
     static constexpr size_t kBufChars = dimof(buf);
 
     explicit Builder(int capHint = 0, Arena* allocator = nullptr);
-    Builder(const Builder& that);
-    Builder& operator=(const Builder& that);
     Builder(Str s);
 
     ~Builder();
@@ -251,7 +249,6 @@ struct Builder {
     bool InsertAt(int idx, char el);
     bool AppendChar(char c);
     bool Append(Str src);
-    bool Append(const Builder& s);
     char RemoveAt(int idx, int count = 1);
     char RemoveLast();
     char& Last() const;
