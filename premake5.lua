@@ -307,6 +307,11 @@ workspace "SumatraPDF"
     symbols "Full"
   filter {}
 
+  -- enable string pooling (/GF) in all configs; optimized builds get it via
+  -- optimize, but debug builds don't, which would duplicate identical string
+  -- literals (e.g. StrL("...")) per use site instead of merging them
+  stringpooling "On"
+
   staticruntime "On"
   -- https://github.com/premake/premake-core/wiki/flags
   multiprocessorcompile("On")
