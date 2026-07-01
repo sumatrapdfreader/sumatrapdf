@@ -527,7 +527,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 break;
         }
     }
-    if (len(content) > 0 && !str::EndsWith(Str(ToStr(content)), lineSep)) {
+    if (len(content) > 0 && !str::EndsWith(ToStr(content), lineSep)) {
         content.Append(lineSep);
         coords.AppendBlanks(len(lineSep));
     }

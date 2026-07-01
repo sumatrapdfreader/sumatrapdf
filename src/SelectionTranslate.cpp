@@ -357,7 +357,7 @@ static TempStr NormalizeTextForPromptTemp(Str text) {
             buf.AppendChar(c);
         }
     }
-    str::TrimWSInPlace(Str(ToStr(buf)), str::TrimOpt::Both);
+    str::TrimWSInPlace(ToStr(buf), str::TrimOpt::Both);
     return str::DupTemp(ToStr(buf));
 }
 
@@ -477,7 +477,7 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
             off++;
         }
     }
-    str::TrimWSInPlace(Str(ToStr(translationOut)), str::TrimOpt::Both);
+    str::TrimWSInPlace(ToStr(translationOut), str::TrimOpt::Both);
     if (len(translationOut) == 0 && output && !str::Contains(output, StrL("{\"type\":"))) {
         TempStr trimmed = str::DupTemp(output.s);
         str::TrimWSInPlace(trimmed, str::TrimOpt::Both);
@@ -619,14 +619,14 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
     LogTranslation(backend, "<<< raw", ToStr(output));
 
     str::Builder translation(1024);
-    ParseTranslationOutput(backend, Str(ToStr(output)), translation);
+    ParseTranslationOutput(backend, ToStr(output), translation);
     LogTranslation(backend, "<<< parsed", ToStr(translation));
     if (len(translation) == 0) {
         msgOut = str::Dup(_TRA("Translation response did not contain text.")).s;
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;
     }
-    if (TranslationLooksLikeError(Str(ToStr(translation)))) {
+    if (TranslationLooksLikeError(ToStr(translation))) {
         msgOut.Set(translation.StealData().s);
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;

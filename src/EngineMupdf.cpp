@@ -1822,7 +1822,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
             number.AppendChar(number[0]);
         }
         if (!str::IsEmpty(type) && type.s[0] == 'a') {
-            str::ToLowerInPlace(Str(ToStr(number)));
+            str::ToLowerInPlace(ToStr(number));
         }
         return fmt("%s%s", prefix, ToStr(number));
     }

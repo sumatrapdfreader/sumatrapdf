@@ -428,7 +428,7 @@ WStr TextSelection::ExtractText(Str lineSep) {
     }
 
     TempStr res = JoinTemp(&lines, lineSep);
-    return WStr(ToWStr(res));
+    return ToWStr(res);
 }
 
 void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const {
