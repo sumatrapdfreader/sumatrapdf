@@ -361,13 +361,6 @@ void StrTest() {
     utassert(str::Eq(str,
                      "a\xE2\x80\x99"
                      "a.pdf"));
-    utassert(str::BufFmt(buf, dimof(buf), "%S",
-                         L"a"
-                         L"\x2019"
-                         L"a.pdf"));
-    utassert(str::Eq(buf,
-                     "a\xE2\x80\x99"
-                     "a.pdf"));
     {
         Str str2;
         AutoFreeStr large(AllocArray<char>(2000));

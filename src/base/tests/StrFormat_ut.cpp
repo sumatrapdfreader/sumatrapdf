@@ -106,6 +106,12 @@ static void testStrings() {
     check(FormatTemp("[%s]", StrL("")), "[]");
     check(FormatTemp("%s%s%s", StrL("a"), StrL("b"), StrL("c")), "abc");
     check(FormatTemp("%s", WStrL(L"wide")), "wide"); // WStr -> utf8
+    // %S with a non-ASCII wide string (U+2019 -> utf8 e2 80 99)
+    check(FormatTemp("%S", WStrL(L"a"
+                                 L"\x2019"
+                                 L"a.pdf")),
+          "a\xE2\x80\x99"
+          "a.pdf");
     // width / left-justify / precision (truncation, byte-based like printf)
     check(FormatTemp("%-16s", StrL("hi")), fmtRef("%-16s", "hi"));
     check(FormatTemp("%-16s", StrL("hi")), "hi              ");

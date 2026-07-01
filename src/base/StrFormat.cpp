@@ -319,28 +319,39 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
     return true;
 }
 
+// format a single value into a caller-provided buffer via snprintf, NUL-terminating
+// even on truncation. Avoids allocating (assuming vsnprintf doesn't allocate).
+static void bufFmt(Str buf, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    str::VsnprintfUtf8(buf, fmt, args);
+    va_end(args);
+    buf.s[buf.len - 1] = 0;
+}
+
 // default formatting for {n} positional and %v: format by the arg's runtime type
 static void evalDefault(Fmt& fmt, const Arg& arg) {
     TempStr s;
+    Str buf(fmt.buf, (int)dimof(fmt.buf));
     switch (arg.t) {
         case Type::Char:
             fmt.res.AppendChar(arg.c);
             break;
         case Type::Int:
-            str::BufFmt(fmt.buf, dimof(fmt.buf), "%lld", (long long)arg.i);
+            bufFmt(buf, "%lld", (long long)arg.i);
             fmt.res.Append(fmt.buf);
             break;
         case Type::Ptr:
-            str::BufFmt(fmt.buf, dimof(fmt.buf), "%p", arg.ptr);
+            bufFmt(buf, "%p", arg.ptr);
             fmt.res.Append(fmt.buf);
             break;
         case Type::Float:
             // Note: %G, unlike %f, avoids trailing '0'
-            str::BufFmt(fmt.buf, dimof(fmt.buf), "%G", (double)arg.f);
+            bufFmt(buf, "%G", (double)arg.f);
             fmt.res.Append(fmt.buf);
             break;
         case Type::Double:
-            str::BufFmt(fmt.buf, dimof(fmt.buf), "%G", arg.d);
+            bufFmt(buf, "%G", arg.d);
             fmt.res.Append(fmt.buf);
             break;
         case Type::Str:
@@ -370,12 +381,12 @@ static i64 argToI64(const Arg& arg) {
 }
 
 // format a typed % spec by reconstructing a single-conversion printf format and
-// delegating to snprintf (str::BufFmt), normalizing the length modifier so the
+// delegating to snprintf (bufFmt), normalizing the length modifier so the
 // 32/64-bit value width matches printf. %s padding/truncation is done by hand to
 // avoid relying on the Str being NUL-terminated.
 static void evalPercInst(Fmt& fmt, const Inst& inst, const Arg& arg) {
     char* buf = fmt.buf;
-    int bufSize = (int)dimof(fmt.buf);
+    Str bufS(fmt.buf, (int)dimof(fmt.buf));
 
     if (inst.conv == 's' || inst.conv == 'S') {
         Str sv = (arg.t == Type::WStr) ? ToUtf8Temp(arg.wstr) : arg.str;
@@ -418,11 +429,11 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const Arg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                str::BufFmt(buf, bufSize, fbuf, (long long)ival);
+                bufFmt(bufS, fbuf, (long long)ival);
             } else {
                 fbuf[k++] = 'd';
                 fbuf[k] = 0;
-                str::BufFmt(buf, bufSize, fbuf, (int)ival);
+                bufFmt(bufS, fbuf, (int)ival);
             }
             fmt.res.Append(buf);
             break;
@@ -435,18 +446,18 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const Arg& arg) {
                 fbuf[k++] = 'l';
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                str::BufFmt(buf, bufSize, fbuf, (unsigned long long)ival);
+                bufFmt(bufS, fbuf, (unsigned long long)ival);
             } else {
                 fbuf[k++] = conv;
                 fbuf[k] = 0;
-                str::BufFmt(buf, bufSize, fbuf, (unsigned int)(unsigned long long)ival);
+                bufFmt(bufS, fbuf, (unsigned int)(unsigned long long)ival);
             }
             fmt.res.Append(buf);
             break;
         case 'c':
             fbuf[k++] = 'c';
             fbuf[k] = 0;
-            str::BufFmt(buf, bufSize, fbuf, (int)ival);
+            bufFmt(bufS, fbuf, (int)ival);
             fmt.res.Append(buf);
             break;
         case 'f':
@@ -460,13 +471,13 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const Arg& arg) {
             fbuf[k++] = conv;
             fbuf[k] = 0;
             double dv = (arg.t == Type::Double) ? arg.d : (double)arg.f;
-            str::BufFmt(buf, bufSize, fbuf, dv);
+            bufFmt(bufS, fbuf, dv);
             fmt.res.Append(buf);
         } break;
         case 'p': {
             // flags/width are uncommon (and platform-specific) for %p; emit plain
             const void* pv = (arg.t == Type::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
-            str::BufFmt(buf, bufSize, "%p", pv);
+            bufFmt(bufS, "%p", pv);
             fmt.res.Append(buf);
         } break;
         default:

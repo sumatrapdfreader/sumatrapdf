@@ -107,8 +107,7 @@ Str TrimSuffix(Str s, Str suffix);
 int LastIndexOfChar(Str s, char c);
 Str TrimSuffixWhitespace(Str s); // trims trailing whitespace in place
 
-bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
-bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...);
+int VsnprintfUtf8(Str buf, const char* fmt, va_list args);
 // formatting functions take the format string as a plain const char* (as an
 // exception to the Str rule): it's almost always a string literal, and a
 // const char* is what vsnprintf needs anyway (no NUL-termination footgun).

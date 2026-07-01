@@ -18,14 +18,14 @@ static _locale_t GetUtf8FormatLocale() {
 }
 #endif
 
-static int VsnprintfUtf8(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
+int str::VsnprintfUtf8(Str buf, const char* fmt, va_list args) {
 #if defined(_MSC_VER)
     _locale_t loc = GetUtf8FormatLocale();
     if (loc) {
-        return _vsnprintf_l(buf, bufCchSize, fmt, loc, args);
+        return _vsnprintf_l(buf.s, (size_t)buf.len, fmt, loc, args);
     }
 #endif
-    return vsnprintf(buf, bufCchSize, fmt, args);
+    return vsnprintf(buf.s, (size_t)buf.len, fmt, args);
 }
 
 // --- copyright for utf8 code below
@@ -804,23 +804,6 @@ bool NextLine(Str s, Str& line, Str& rest) {
     }
     rest = Str(s.s + off, s.len - off);
     return true;
-}
-
-// format string to a buffer provided by the caller
-// the hope here is to avoid allocating memory (assuming vsnprintf
-// doesn't allocate)
-bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
-    int count = VsnprintfUtf8(buf, bufCchSize, fmt, args);
-    buf[bufCchSize - 1] = 0;
-    return (count >= 0) && ((size_t)count < bufCchSize);
-}
-
-bool BufFmt(char* buf, size_t bufCchSize, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    auto res = BufFmtV(buf, bufCchSize, fmt, args);
-    va_end(args);
-    return res;
 }
 
 /* replace in <str> the chars from <oldChars> with their equivalents
