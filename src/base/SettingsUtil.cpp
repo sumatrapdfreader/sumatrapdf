@@ -512,7 +512,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
             }
             out.Append("\r\n");
         } else {
-            size_t offset = len(out);
+            int offset = len(out);
             Indent(out, indent);
             out.Append(fieldNameStr);
             out.Append(" = ");

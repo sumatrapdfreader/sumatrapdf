@@ -109,7 +109,7 @@ void VecTest() {
                 v.AppendChar('a');
         }
 
-        for (size_t i = 1; i <= 16; i++) {
+        for (int i = 1; i <= 16; i++) {
             v.RemoveAt((16 - i) * 6, 6);
             utassert(len(v) == (32 - i) * 6);
         }

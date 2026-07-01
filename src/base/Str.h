@@ -299,11 +299,11 @@ struct Builder {
 
     void Reset();
     char& operator[](int idx) const;
-    bool InsertAt(size_t idx, char el);
+    bool InsertAt(int idx, char el);
     bool AppendChar(char c);
     bool Append(Str src);
     bool Append(const Builder& s);
-    char RemoveAt(size_t idx, size_t count = 1);
+    char RemoveAt(int idx, int count = 1);
     char RemoveLast();
     char& Last() const;
     Str StealData(Arena* a = nullptr);
@@ -312,7 +312,7 @@ struct Builder {
     bool IsEmpty() const;
     ByteSlice AsByteSlice() const;
     ByteSlice StealAsByteSlice();
-    bool Append(const u8* src, size_t size = -1);
+    bool Append(const u8* src, int size = -1);
     bool AppendSlice(const ByteSlice& d);
     void Set(Str s);
     Str CStr() const;
@@ -349,15 +349,15 @@ struct Builder {
     ~Builder();
     void Reset();
     WCHAR& operator[](int idx) const;
-    bool InsertAt(size_t idx, const WCHAR& el);
+    bool InsertAt(int idx, const WCHAR& el);
     bool AppendChar(WCHAR);
     bool Append(WStr src);
-    WCHAR RemoveAt(size_t idx, size_t count = 1);
+    WCHAR RemoveAt(int idx, int count = 1);
     WCHAR RemoveLast();
     WCHAR& Last() const;
     WStr StealData();
     WStr LendData() const;
-    int Find(const WCHAR& el, size_t startAt = 0) const;
+    int Find(const WCHAR& el, int startAt = 0) const;
     bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);
     bool IsEmpty() const;

@@ -1875,7 +1875,7 @@ int len(const str::Builder& b) {
     return (int)b.len;
 }
 
-bool str::Builder::InsertAt(size_t idx, char el) {
+bool str::Builder::InsertAt(int idx, char el) {
     char* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
@@ -1885,7 +1885,7 @@ bool str::Builder::InsertAt(size_t idx, char el) {
 }
 
 bool str::Builder::AppendChar(char c) {
-    return InsertAt(len, c);
+    return InsertAt((int)len, c);
 }
 
 bool str::Builder::Append(Str src) {
@@ -1904,12 +1904,12 @@ bool str::Builder::Append(const str::Builder& s) {
     return Append(s.LendData());
 }
 
-char str::Builder::RemoveAt(size_t idx, size_t count) {
+char str::Builder::RemoveAt(int idx, int count) {
     char res = els[idx];
-    if (len > idx + count) {
+    if ((int)len > idx + count) {
         char* dst = els + idx;
         char* src = els + idx + count;
-        size_t nToMove = len - idx - count;
+        int nToMove = (int)len - idx - count;
         memmove(dst, src, nToMove);
     }
     len -= (u32)count;
@@ -1921,7 +1921,7 @@ char str::Builder::RemoveLast() {
     if (len == 0) {
         return 0;
     }
-    return RemoveAt(len - 1);
+    return RemoveAt((int)len - 1);
 }
 
 char& str::Builder::Last() const {
@@ -1993,8 +1993,8 @@ ByteSlice str::Builder::StealAsByteSlice() {
     return {(u8*)d.s, n};
 }
 
-bool str::Builder::Append(const u8* src, size_t size) {
-    if ((size_t)-1 == size) {
+bool str::Builder::Append(const u8* src, int size) {
+    if (-1 == size) {
         return this->Append(Str((const char*)src));
     }
     return AppendSlice(ByteSlice(src, size));
@@ -2177,7 +2177,7 @@ int len(const wstr::Builder& b) {
     return (int)b.len;
 }
 
-bool wstr::Builder::InsertAt(size_t idx, const WCHAR& el) {
+bool wstr::Builder::InsertAt(int idx, const WCHAR& el) {
     WCHAR* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
@@ -2187,7 +2187,7 @@ bool wstr::Builder::InsertAt(size_t idx, const WCHAR& el) {
 }
 
 bool wstr::Builder::AppendChar(WCHAR c) {
-    return InsertAt(len, c);
+    return InsertAt((int)len, c);
 }
 
 bool wstr::Builder::Append(WStr src) {
@@ -2202,12 +2202,12 @@ bool wstr::Builder::Append(WStr src) {
     return true;
 }
 
-WCHAR wstr::Builder::RemoveAt(size_t idx, size_t count) {
+WCHAR wstr::Builder::RemoveAt(int idx, int count) {
     WCHAR res = els[idx];
-    if (len > idx + count) {
+    if ((int)len > idx + count) {
         WCHAR* dst = els + idx;
         WCHAR* src = els + idx + count;
-        memmove(dst, src, (len - idx - count) * kElSize);
+        memmove(dst, src, ((int)len - idx - count) * kElSize);
     }
     len -= (u32)count;
     memset(els + len, 0, count * kElSize);
@@ -2218,7 +2218,7 @@ WCHAR wstr::Builder::RemoveLast() {
     if (len == 0) {
         return 0;
     }
-    return RemoveAt(len - 1);
+    return RemoveAt((int)len - 1);
 }
 
 WCHAR& wstr::Builder::Last() const {
@@ -2245,10 +2245,10 @@ WStr wstr::Builder::LendData() const {
     return WStr(els, (int)len);
 }
 
-int wstr::Builder::Find(const WCHAR& el, size_t startAt) const {
-    for (size_t i = startAt; i < len; i++) {
+int wstr::Builder::Find(const WCHAR& el, int startAt) const {
+    for (int i = startAt; i < (int)len; i++) {
         if (els[i] == el) {
-            return (int)i;
+            return i;
         }
     }
     return -1;

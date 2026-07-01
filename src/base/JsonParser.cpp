@@ -148,7 +148,7 @@ static int ParseObject(ParseArgs& args, Str data, int off) {
         return off + 1;
     }
 
-    size_t pathIdx = len(args.path);
+    int pathIdx = len(args.path);
     for (;;) {
         off = SkipWS(data, off);
         if (off >= data.len || '"' != data.s[off]) {
@@ -187,14 +187,14 @@ static int ParseArray(ParseArgs& args, Str data, int off) {
         return off + 1;
     }
 
-    size_t pathIdx = len(args.path);
+    int pathIdx = len(args.path);
     for (int idx = 0;; idx++) {
         args.path.Append(fmt("[%d]", idx));
         off = ParseValue(args, data, off);
         if (args.canceled || off < 0) {
             return off;
         }
-        size_t n = len(args.path);
+        int n = len(args.path);
         args.path.RemoveAt(pathIdx, n - pathIdx);
 
         off = SkipWS(data, off);
