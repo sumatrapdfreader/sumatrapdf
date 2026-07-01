@@ -96,6 +96,28 @@ TempStr FormatTemp(const char* fmt, const TArgs&... args) {
     return FormatTempArgs(fmt, argp, n);
 }
 
+// Format into an explicit arena; the returned Str lives in `a`. Use this
+// instead of fmt()/FormatTemp when the result must outlive the temp allocator's
+// scope, or on paths that must not touch the temp allocator / heap at all (e.g.
+// the crash handler, which pre-allocates its arena). FormatTempArgs() is just
+// this with GetTempArena().
+Str FormatArgs(Arena* a, const char* fmt, const Arg** args, int nArgs);
+
+inline Str Format(Arena* a, const char* fmt) {
+    return FormatArgs(a, fmt, nullptr, 0);
+}
+
+template <typename... TArgs>
+Str Format(Arena* a, const char* fmt, const TArgs&... args) {
+    const Arg argv[] = {Arg(args)...};
+    const Arg* argp[sizeof...(TArgs)];
+    int n = (int)sizeof...(TArgs);
+    for (int i = 0; i < n; i++) {
+        argp[i] = &argv[i];
+    }
+    return FormatArgs(a, fmt, argp, n);
+}
+
 } // namespace strfmt
 
 // fmt() is the type-safe positional/printf-style formatter from StrFormat.h.

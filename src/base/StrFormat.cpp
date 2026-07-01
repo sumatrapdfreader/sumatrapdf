@@ -514,7 +514,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
     return true;
 }
 
-TempStr FormatTempArgs(const char* fmt, const Arg** args, int nArgs) {
+Str FormatArgs(Arena* a, const char* fmt, const Arg** args, int nArgs) {
     // trailing arguments could be empty (unused defaults from the variadic call)
     while (nArgs > 0 && args[nArgs - 1]->t == Type::None) {
         nArgs--;
@@ -531,11 +531,15 @@ TempStr FormatTempArgs(const char* fmt, const Arg** args, int nArgs) {
             }
         }
         if (!hasDirective) {
-            return str::DupTemp(Str(fmt));
+            return str::Dup(a, Str(fmt));
         }
     }
 
     Fmt f;
+    // format directly into the caller's arena so there are no temp-allocator /
+    // heap allocations at all (matters for the crash handler's pre-allocated
+    // arena). StealData() then returns that arena buffer without a second copy.
+    f.res.allocator = a;
     bool ok = ParseFormat(f, fmt);
     if (!ok) {
         return {};
@@ -544,7 +548,11 @@ TempStr FormatTempArgs(const char* fmt, const Arg** args, int nArgs) {
     if (!ok) {
         return {};
     }
-    return str::DupTemp(f.res.Get());
+    return f.res.StealData();
+}
+
+TempStr FormatTempArgs(const char* fmt, const Arg** args, int nArgs) {
+    return FormatArgs(GetTempArena(), fmt, args, nArgs);
 }
 
 } // namespace strfmt

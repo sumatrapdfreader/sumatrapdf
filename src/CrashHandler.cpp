@@ -92,7 +92,7 @@ static bool TryStartCrashHandling(Str handlerName) {
         return true;
     }
 
-    OutputDebugStringA(handlerName.s);
+    OutputDebugStringA(CStrTemp(handlerName));
     OutputDebugStringA(": ignoring nested crash\n");
 
     DWORD threadId = GetCurrentThreadId();
@@ -130,10 +130,12 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
         if (additionalOnly && gModulesInfo) {
             auto pos = str::FindFromI(gModulesInfo, pathA).s;
             if (!pos) {
-                s.Append(fmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
+                s.Append(strfmt::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize,
+                                        nameA, pathA));
             }
         } else {
-            s.Append(fmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
+            s.Append(strfmt::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA,
+                                    pathA));
         }
         cont = Module32Next(snap, &mod);
     }
@@ -148,7 +150,8 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
         s.Append("Type: debug report (not crash)\n");
     }
     if (condStr) {
-        s.Append(fmt("Cond: %s @ %s\n", condStr, fileLine));
+        // format into the pre-allocated crash arena, not the temp allocator
+        s.Append(strfmt::Format(s.allocator, "Cond: %s @ %s\n", condStr, fileLine));
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -204,7 +207,8 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
         s.Append("Type: debug report (not crash)\n");
     }
     if (condStr) {
-        s.Append(fmt("Cond: %s @ %s\n", condStr, fileLine));
+        // format into the pre-allocated crash arena, not the temp allocator
+        s.Append(strfmt::Format(s.allocator, "Cond: %s @ %s\n", condStr, fileLine));
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -258,7 +262,7 @@ void UploadCrashReport(const ByteSlice& d) {
     }
 
     StrBuilder headers(256, gCrashHandlerAllocator);
-    headers.Append(fmt("Content-Type: text/plain"));
+    headers.Append("Content-Type: text/plain");
 
     StrBuilder data(16 * 1024, gCrashHandlerAllocator);
     data.AppendSlice(d);
@@ -482,7 +486,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
             loga("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n");
             return;
         }
-        ByteSlice d{(u8*)s.s, (size_t)s.len};
+        ByteSlice d(s);
         SaveCrashInfo(d);
         WriteCrashInfoToStdErr(d);
         loga(s);
@@ -500,7 +504,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
                 loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
                 return;
             }
-            ByteSlice d{(u8*)s.s, (size_t)s.len};
+            ByteSlice d(s);
             SaveCrashInfo(d);
             log(s);
         }
@@ -543,7 +547,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
         loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
-    ByteSlice d{(u8*)s.s, (size_t)s.len};
+    ByteSlice d(s);
     SaveCrashInfo(d);
 
     UploadCrashReport(d);
@@ -670,7 +674,9 @@ static void GetProcessorName(StrBuilder& s) {
     }
 }
 
-#define GFX_DRIVER_KEY_FMT "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
+// note: don't build this with fmt() - its format grammar treats the '\{' before
+// the GUID as an escape and would drop the backslash, corrupting the key
+#define GFX_DRIVER_KEY_PREFIX "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\"
 
 static void GetGraphicsDriverInfo(StrBuilder& s) {
     // the info is in registry in:
@@ -682,7 +688,7 @@ static void GetGraphicsDriverInfo(StrBuilder& s) {
     //
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i = 0;; i++) {
-        TempStr key = fmt(GFX_DRIVER_KEY_FMT, i);
+        TempStr key = str::JoinTemp(GFX_DRIVER_KEY_PREFIX, fmt("%04d", i));
         TempStr v = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "DriverDesc");
         // I assume that if I can't read the value, there are no more drivers
         if (!v) {
@@ -812,7 +818,7 @@ bool SetSymbolsDir(Str symDir) {
     if (!symDir) {
         return false;
     }
-    str::ReplacePtr(&gSymbolsDir, str::Dup(symDir));
+    str::ReplaceWithCopy(&gSymbolsDir, symDir);
     return true;
 }
 
@@ -838,24 +844,24 @@ int __cdecl _purecall() {
 }
 
 static Str BuildSymbolsUrl() {
-    Str urlBase = "https://www.sumatrapdfreader.org/dl/";
+    Str urlBase = StrL("https://www.sumatrapdfreader.org/dl/");
     if (gIsPreReleaseBuild) {
         urlBase = str::JoinTemp(urlBase, "prerel/", preReleaseVersion, "/SumatraPDF-prerel");
     } else {
         // assuming this is release version
-        Str ver = QM(CURR_VERSION);
+        Str ver = StrL(QM(CURR_VERSION));
         urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);
     }
     // TODO: ugly it's different between release and pre-release
-    Str suff = ".pdb.lzsa";
+    Str suff = StrL(".pdb.lzsa");
     if (gIsPreReleaseBuild) {
-        suff = "-32.pdb.lzsa";
+        suff = StrL("-32.pdb.lzsa");
     }
 
 #if IS_ARM_64 == 1
-    suff = "-arm64.pdb.lzsa";
+    suff = StrL("-arm64.pdb.lzsa");
 #elif IS_INTEL_64 == 1
-    suff = "-64.pdb.lzsa";
+    suff = StrL("-64.pdb.lzsa");
 #endif
     return str::Join(urlBase, suff);
 }
@@ -959,21 +965,14 @@ void UninstallCrashHandler() {
     CloseHandle(gDumpThread);
     CloseHandle(gDumpEvent);
 
-    str::Free(gCrashDumpPath);
-    gCrashDumpPath = {};
-    str::Free(gSymbolsUrl);
-    gSymbolsUrl = {};
-    str::Free(gSymbolsDir);
-    gSymbolsDir = {};
+    str::FreePtr(&gCrashDumpPath);
+    str::FreePtr(&gSymbolsUrl);
+    str::FreePtr(&gSymbolsDir);
 
-    str::Free(gSystemInfo);
-    gSystemInfo = {};
-    str::Free(gSettingsFile);
-    gSettingsFile = {};
-    str::Free(gModulesInfo);
-    gModulesInfo = {};
-    str::Free(gCrashFilePath);
-    gCrashFilePath = {};
+    str::FreePtr(&gSystemInfo);
+    str::FreePtr(&gSettingsFile);
+    str::FreePtr(&gModulesInfo);
+    str::FreePtr(&gCrashFilePath);
     ArenaDelete(gCrashHandlerAllocator);
     gCrashThreadId = 0;
     gDumpThreadId = 0;
