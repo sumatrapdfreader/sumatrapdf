@@ -1717,7 +1717,7 @@ void RebuildMenuBarButtons(MainWindow* win) {
             continue;
         }
         mii.cch++;
-        AutoFreeWStr name(AllocArray<WCHAR>(mii.cch));
+        WCHAR* name = AllocArrayTemp<WCHAR>(mii.cch);
         mii.dwTypeData = name;
         GetMenuItemInfoW(menu, i, TRUE, &mii);
 
@@ -1726,7 +1726,7 @@ void RebuildMenuBarButtons(MainWindow* win) {
         b.idCommand = kMenuBarCmdFirst + i;
         b.fsState = TBSTATE_ENABLED;
         b.fsStyle = BTNS_AUTOSIZE | BTNS_SHOWTEXT;
-        b.iString = (INT_PTR)name.Get();
+        b.iString = (INT_PTR)name;
         SendMessageW(hwndMb, TB_ADDBUTTONS, 1, (LPARAM)&b);
     }
 
@@ -1945,12 +1945,12 @@ bool ActivateMenuBarByAccel(MainWindow* win, WCHAR accel) {
             continue;
         }
         mii.cch++;
-        AutoFreeWStr name(AllocArray<WCHAR>(mii.cch));
+        WCHAR* name = AllocArrayTemp<WCHAR>(mii.cch);
         mii.dwTypeData = name;
         GetMenuItemInfoW(win->menu, i, TRUE, &mii);
 
         // look for &X where X matches accel
-        WStr menuName(name.Get(), len(WStr(name.Get())));
+        WStr menuName(name, len(WStr(name)));
         for (int off = 0; off < menuName.len; off++) {
             if (menuName.s[off] == L'&' && off + 1 < menuName.len) {
                 WCHAR ch = menuName.s[off + 1];

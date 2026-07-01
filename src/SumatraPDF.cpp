@@ -812,13 +812,13 @@ static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
 
         oldMii.cch++;
         newMii.cch++;
-        AutoFreeWStr oldName(AllocArray<WCHAR>(oldMii.cch));
-        AutoFreeWStr newName(AllocArray<WCHAR>(newMii.cch));
+        WCHAR* oldName = AllocArrayTemp<WCHAR>(oldMii.cch);
+        WCHAR* newName = AllocArrayTemp<WCHAR>(newMii.cch);
         oldMii.dwTypeData = oldName;
         newMii.dwTypeData = newName;
         GetMenuItemInfoW(oldMenu, i, TRUE, &oldMii);
         GetMenuItemInfoW(newMenu, i, TRUE, &newMii);
-        if (!wstr::Eq(WStr(oldName.Get()), WStr(newName.Get()))) {
+        if (!wstr::Eq(WStr(oldName), WStr(newName))) {
             return true;
         }
     }
@@ -8709,7 +8709,7 @@ static void MenuBarAsPopupMenu(MainWindow* win, Rect btnRect) {
             continue;
         }
         mii.cch++;
-        AutoFreeWStr subMenuName(AllocArray<WCHAR>(mii.cch));
+        WCHAR* subMenuName = AllocArrayTemp<WCHAR>(mii.cch);
         mii.dwTypeData = subMenuName;
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
         AppendMenuW(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);

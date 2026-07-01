@@ -555,14 +555,14 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (wLen == 0) {
         return {};
     }
-    AutoFreeWStr wBuf((wchar_t*)malloc(wLen * sizeof(wchar_t)));
+    WCHAR* wBuf = AllocArrayTemp<WCHAR>(wLen);
     if (!wBuf) {
         return {};
     }
-    if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, wBuf.Get(), wLen) == 0) {
+    if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr.s, -1, wBuf, wLen) == 0) {
         return {};
     }
-    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf.Get(), -1, NULL, 0, NULL, NULL);
+    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, NULL, 0, NULL, NULL);
     if (utf8Len == 0) {
         return {};
     }
@@ -570,7 +570,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (!utf8Buf) {
         return {};
     }
-    if (WideCharToMultiByte(CP_UTF8, 0, wBuf.Get(), -1, utf8Buf.Get(), utf8Len, NULL, NULL) == 0) {
+    if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf.Get(), utf8Len, NULL, NULL) == 0) {
         return {};
     }
     return Str(utf8Buf.StealData(), utf8Len - 1);

@@ -2120,12 +2120,12 @@ TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
     // according to MSDN the estimate may be off somewhat:
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
     sizeEst = sizeEst * 2;
-    AutoFreeWStr res(AllocArray<WCHAR>(sizeEst));
+    WCHAR* res = AllocArrayTemp<WCHAR>(sizeEst);
     sizeEst = DynNormalizeString(form, str.s, str.len, res, sizeEst);
     if (sizeEst <= 0) {
         return nullptr;
     }
-    return ToUtf8Temp(WStr(res.Get()));
+    return ToUtf8Temp(WStr(res));
 }
 
 bool RegisterOrUnregisterServerDLL(Str dllPath, bool install, Str args) {
