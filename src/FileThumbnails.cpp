@@ -30,7 +30,7 @@ TempStr GetThumbnailPathTemp(Str filePath) {
         // ignore the drive letter, if it might change
         path.s[0] = '?';
     }
-    CalcMD5Digest((u8*)path.s, len(path), digest);
+    CalcMD5Digest(path, digest);
     TempStr fingerPrint = str::MemToHexTemp(digest, dimof(digest));
 
     TempStr thumbsDir = GetThumbnailCacheDirTemp();

@@ -85,7 +85,7 @@ struct ChmObjectReadResult {
 
 static bool ReadChmObject(struct chmFile* h, chmUnitInfo* ui, ChmObjectReadResult* result) {
     if (ui->length == 0) {
-        CalcSHA1Digest(nullptr, 0, result->sha1);
+        CalcSHA1Digest({}, result->sha1);
         result->bytesRead = 0;
         result->sha1Valid = true;
         return true;

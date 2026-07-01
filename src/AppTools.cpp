@@ -554,7 +554,7 @@ Str Sha1OfAppExe() {
     }
 
     u8 sha1[20]{};
-    CalcSHA1Digest((u8*)d.s, d.len, sha1);
+    CalcSHA1Digest(d, sha1);
     str::Free(d);
 
     for (size_t i = 0; i < 20; i++) {

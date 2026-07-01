@@ -192,7 +192,7 @@ TempStr GetPdfPreviewLogDirTemp() {
         return {};
     }
     u8 sha1[20]{};
-    CalcSHA1Digest((u8*)d.s, d.len, sha1);
+    CalcSHA1Digest(d, sha1);
     str::Free(d);
     char id[7];
     for (int i = 0; i < 3; i++) { // first 6 hex chars (3 bytes), matches GetBuildDirNameTemp
