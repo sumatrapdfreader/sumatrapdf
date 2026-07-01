@@ -258,11 +258,8 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
     if (record) {
         WindowTab* tab = win->CurrentTab();
         if (tab) {
-            if (!tab->codexChatLog) {
-                tab->codexChatLog = new str::Builder();
-            }
-            tab->codexChatLog->Append(js);
-            tab->codexChatLog->AppendChar('\n');
+            tab->codexChatLog.Append(js);
+            tab->codexChatLog.AppendChar('\n');
         }
     }
 }
@@ -305,14 +302,14 @@ static void WebViewShowUnsupportedFileType(MainWindow* win) {
 
 // Replay a tab's chat log into the WebView
 static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
-    if (!tab->codexChatLog || tab->codexChatLog->IsEmpty()) {
+    if (tab->codexChatLog.IsEmpty()) {
         return;
     }
     if (!win->codexWebView || !win->codexWebViewReady) {
         return;
     }
     // the log is newline-separated JS commands
-    Str log = ToStr(*tab->codexChatLog);
+    Str log = ToStr(tab->codexChatLog);
     Str rest = log;
     Str line;
     while (str::NextLine(rest, line, rest)) {
@@ -746,8 +743,7 @@ static void OnSessionComboChange(MainWindow* win) {
         // "New Session" — clear current session
         CodexBuildLog("session", "new");
         str::ReplaceWithCopy(&tab->codexSessionId, Str{});
-        delete tab->codexChatLog;
-        tab->codexChatLog = nullptr;
+        tab->codexChatLog.Reset();
         WebViewClearChat(win);
         return;
     }
@@ -761,8 +757,7 @@ static void OnSessionComboChange(MainWindow* win) {
     if (sessionIdx >= 0 && sessionIdx < sessions.Size()) {
         CodexBuildLog("session", sessions[sessionIdx].sessionId);
         str::ReplaceWithCopy(&tab->codexSessionId, sessions[sessionIdx].sessionId);
-        delete tab->codexChatLog;
-        tab->codexChatLog = nullptr;
+        tab->codexChatLog.Reset();
         WebViewClearChat(win);
         LoadSessionHistory(win, tab->codexSessionId, dir);
         // LoadSessionHistory calls WebViewEval which rebuilds codexChatLog
@@ -1503,7 +1498,7 @@ void OnCodexTabChanged(MainWindow* win) {
     SetCodexWorking(win, tab->codexProcess != nullptr);
 
     // if tab has in-memory chat log, replay it (fast, includes current session)
-    if (tab->codexChatLog && !tab->codexChatLog->IsEmpty()) {
+    if (!tab->codexChatLog.IsEmpty()) {
         ReplayChatLog(win, tab);
     } else if (tab->filePath && tab->codexSessionId) {
         // fallback: load from disk

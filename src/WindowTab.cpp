@@ -78,21 +78,18 @@ WindowTab::~WindowTab() {
     }
     str::Free(claudeSessionId);
     claudeSessionId = {};
-    delete claudeChatLog;
     if (claudeProcess) {
         TerminateProcess(claudeProcess, 0);
         CloseHandle(claudeProcess);
     }
     str::Free(grokSessionId);
     grokSessionId = {};
-    delete grokChatLog;
     if (grokProcess) {
         TerminateProcess(grokProcess, 0);
         CloseHandle(grokProcess);
     }
     str::Free(codexSessionId);
     codexSessionId = {};
-    delete codexChatLog;
     if (codexProcess) {
         TerminateProcess(codexProcess, 0);
         CloseHandle(codexProcess);

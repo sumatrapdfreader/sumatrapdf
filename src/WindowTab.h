@@ -72,17 +72,17 @@ struct WindowTab {
 
     // Claude Code session for this tab
     Str claudeSessionId;
-    str::Builder* claudeChatLog = nullptr;
+    str::Builder claudeChatLog;
     HANDLE claudeProcess = nullptr;
 
     // Grok Build session for this tab
     Str grokSessionId;
-    str::Builder* grokChatLog = nullptr;
+    str::Builder grokChatLog;
     HANDLE grokProcess = nullptr;
 
     // OpenAI Codex session for this tab
     Str codexSessionId;
-    str::Builder* codexChatLog = nullptr;
+    str::Builder codexChatLog;
     HANDLE codexProcess = nullptr;
 
     // which AI chat sidebar is open for this tab (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex)

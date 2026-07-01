@@ -259,11 +259,8 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
     if (record) {
         WindowTab* tab = win->CurrentTab();
         if (tab) {
-            if (!tab->claudeChatLog) {
-                tab->claudeChatLog = new str::Builder();
-            }
-            tab->claudeChatLog->Append(js);
-            tab->claudeChatLog->AppendChar('\n');
+            tab->claudeChatLog.Append(js);
+            tab->claudeChatLog.AppendChar('\n');
         }
     }
 }
@@ -305,14 +302,14 @@ static void WebViewShowUnsupportedFileType(MainWindow* win) {
 
 // Replay a tab's chat log into the WebView
 static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
-    if (!tab->claudeChatLog || tab->claudeChatLog->IsEmpty()) {
+    if (tab->claudeChatLog.IsEmpty()) {
         return;
     }
     if (!win->claudeWebView || !win->claudeWebViewReady) {
         return;
     }
     // the log is newline-separated JS commands
-    Str log = ToStr(*tab->claudeChatLog);
+    Str log = ToStr(tab->claudeChatLog);
     Str rest = log;
     Str line;
     while (str::NextLine(rest, line, rest)) {
@@ -584,8 +581,7 @@ static void OnSessionComboChange(MainWindow* win) {
     if (sel == 0) {
         // "New Session" — clear current session
         str::ReplaceWithCopy(&tab->claudeSessionId, Str{});
-        delete tab->claudeChatLog;
-        tab->claudeChatLog = nullptr;
+        tab->claudeChatLog.Reset();
         WebViewClearChat(win);
         return;
     }
@@ -598,8 +594,7 @@ static void OnSessionComboChange(MainWindow* win) {
     int sessionIdx = sel - 1;
     if (sessionIdx >= 0 && sessionIdx < sessions.Size()) {
         str::ReplaceWithCopy(&tab->claudeSessionId, sessions[sessionIdx].sessionId);
-        delete tab->claudeChatLog;
-        tab->claudeChatLog = nullptr;
+        tab->claudeChatLog.Reset();
         WebViewClearChat(win);
         LoadSessionHistory(win, tab->claudeSessionId, dir);
         // LoadSessionHistory calls WebViewEval which rebuilds claudeChatLog
@@ -1330,7 +1325,7 @@ void OnClaudeTabChanged(MainWindow* win) {
     SetClaudeWorking(win, tab->claudeProcess != nullptr);
 
     // if tab has in-memory chat log, replay it (fast, includes current session)
-    if (tab->claudeChatLog && !tab->claudeChatLog->IsEmpty()) {
+    if (!tab->claudeChatLog.IsEmpty()) {
         ReplayChatLog(win, tab);
     } else if (tab->filePath && tab->claudeSessionId) {
         // fallback: load from disk

@@ -257,11 +257,8 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
     if (record) {
         WindowTab* tab = win->CurrentTab();
         if (tab) {
-            if (!tab->grokChatLog) {
-                tab->grokChatLog = new str::Builder();
-            }
-            tab->grokChatLog->Append(js);
-            tab->grokChatLog->AppendChar('\n');
+            tab->grokChatLog.Append(js);
+            tab->grokChatLog.AppendChar('\n');
         }
     }
 }
@@ -304,14 +301,14 @@ static void WebViewShowUnsupportedFileType(MainWindow* win) {
 
 // Replay a tab's chat log into the WebView
 static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
-    if (!tab->grokChatLog || tab->grokChatLog->IsEmpty()) {
+    if (tab->grokChatLog.IsEmpty()) {
         return;
     }
     if (!win->grokWebView || !win->grokWebViewReady) {
         return;
     }
     // the log is newline-separated JS commands
-    Str log = ToStr(*tab->grokChatLog);
+    Str log = ToStr(tab->grokChatLog);
     Str rest = log;
     Str line;
     while (str::NextLine(rest, line, rest)) {
@@ -630,8 +627,7 @@ static void OnSessionComboChange(MainWindow* win) {
         // "New Session" — clear current session
         GrokBuildLog("session", "new");
         str::ReplaceWithCopy(&tab->grokSessionId, Str{});
-        delete tab->grokChatLog;
-        tab->grokChatLog = nullptr;
+        tab->grokChatLog.Reset();
         WebViewClearChat(win);
         return;
     }
@@ -645,8 +641,7 @@ static void OnSessionComboChange(MainWindow* win) {
     if (sessionIdx >= 0 && sessionIdx < sessions.Size()) {
         GrokBuildLog("session", sessions[sessionIdx].sessionId);
         str::ReplaceWithCopy(&tab->grokSessionId, sessions[sessionIdx].sessionId);
-        delete tab->grokChatLog;
-        tab->grokChatLog = nullptr;
+        tab->grokChatLog.Reset();
         WebViewClearChat(win);
         LoadSessionHistory(win, tab->grokSessionId, dir);
         // LoadSessionHistory calls WebViewEval which rebuilds grokChatLog
@@ -1383,7 +1378,7 @@ void OnGrokTabChanged(MainWindow* win) {
     SetGrokWorking(win, tab->grokProcess != nullptr);
 
     // if tab has in-memory chat log, replay it (fast, includes current session)
-    if (tab->grokChatLog && !tab->grokChatLog->IsEmpty()) {
+    if (!tab->grokChatLog.IsEmpty()) {
         ReplayChatLog(win, tab);
     } else if (tab->filePath && tab->grokSessionId) {
         // fallback: load from disk
