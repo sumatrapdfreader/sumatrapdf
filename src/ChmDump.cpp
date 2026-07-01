@@ -203,14 +203,14 @@ struct ChmDumpIndexVisitor : EbookTocVisitor {
 };
 
 static bool DumpChmFileRaw(Str path) {
-    ByteSlice data = file::ReadFile(path);
-    if (data.empty()) {
+    Str data = file::ReadFile(path);
+    if (str::IsEmpty(data)) {
         CliPrint("error: couldn't read file");
         return false;
     }
-    struct chmFile* h = chm_open((const char*)data.data(), data.size());
+    struct chmFile* h = chm_open(data.s, (size_t)data.len);
     if (!h) {
-        data.Free();
+        str::Free(data);
         CliPrint("error: couldn't open CHM");
         return false;
     }
@@ -222,7 +222,7 @@ static bool DumpChmFileRaw(Str path) {
                  Str(ok ? "ok" : "failed")));
 
     chm_close(h);
-    data.Free();
+    str::Free(data);
     return ok && ctx.unpackFailures == 0;
 }
 

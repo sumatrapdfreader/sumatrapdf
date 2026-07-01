@@ -221,8 +221,8 @@ void StartLogToFile(Str path, bool removeIfExists) {
 
 bool WriteCurrentLogToFile(Str path) {
     if (!gLogBuf) return false;
-    ByteSlice slice = gLogBuf->AsByteSlice();
-    if (slice.empty()) {
+    Str slice = ToStr(*gLogBuf);
+    if (str::IsEmpty(slice)) {
         return false;
     }
     bool ok = dir::CreateForFile(path);

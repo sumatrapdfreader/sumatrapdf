@@ -260,12 +260,12 @@ Str TestChmResult(Str chmPath, int* exitCodeOut) {
         ok = false;
     }
 
-    ByteSlice fileData = file::ReadFile(chmPath);
+    Str fileData = file::ReadFile(chmPath);
     if (!fileData) {
         out.Append(fmt("open=FAILED path=%s\n", chmPath));
         ok = false;
     } else {
-        struct chmFile* h = chm_open((const char*)fileData.data(), fileData.size());
+        struct chmFile* h = chm_open((const char*)(u8*)fileData.s, (size_t)fileData.len);
         if (!h) {
             out.Append(fmt("chm_open=FAILED path=%s\n", chmPath));
             ok = false;

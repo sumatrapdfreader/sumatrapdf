@@ -64,7 +64,7 @@ class EngineMupdf : public EngineBase {
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    ByteSlice GetFileData() override;
+    Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
@@ -165,7 +165,7 @@ class EngineMupdf : public EngineBase {
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
     TempStr ExtractFontListTemp();
 
-    ByteSlice LoadStreamFromPDFFile(Str filePath);
+    Str LoadStreamFromPDFFile(Str filePath);
 };
 
 EngineMupdf* AsEngineMupdf(EngineBase* engine);

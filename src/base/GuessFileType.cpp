@@ -219,11 +219,11 @@ static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 #undef MK_SIG
 
 // PDF files have %PDF-${ver} somewhere in the beginning of the file
-static bool IsPdfFileContent(const ByteSlice& d) {
-    if (d.size() < 8) {
+static bool IsPdfFileContent(Str d) {
+    if ((size_t)d.len < 8) {
         return false;
     }
-    Str data = AsStr(ByteSlice(d.data(), d.size() - 5));
+    Str data = Str((char*)((u8*)d.s), (int)((size_t)d.len - 5));
     while (data.len >= 5) {
         int idx = str::IndexOfChar(data, '%');
         if (idx < 0) {
@@ -237,9 +237,9 @@ static bool IsPdfFileContent(const ByteSlice& d) {
     return false;
 }
 
-static bool IsPSFileContent(const ByteSlice& d) {
-    Str header = AsStr(d);
-    size_t n = d.size();
+static bool IsPSFileContent(Str d) {
+    Str header = d;
+    size_t n = (size_t)d.len;
     if (n < 64) {
         return false;
     }
@@ -267,11 +267,11 @@ static bool IsPSFileContent(const ByteSlice& d) {
 // https://github.com/file/file/blob/7449263e1d6167233b3b6abfc3e4c13407d6432c/magic/Magdir/animation#L265
 // https://nokiatech.github.io/heif/technical.html
 // TODO: need to figure out heif vs. heic
-static Kind DetectHicAndAvif(const ByteSlice& d) {
-    if (d.size() < 0x18) {
+static Kind DetectHicAndAvif(Str d) {
+    if ((size_t)d.len < 0x18) {
         return nullptr;
     }
-    Str s = AsStr(d);
+    Str s = d;
     Str hdr = Str(s.s + 4, s.len - 4);
     // ftyp values per https://github.com/strukturag/libheif/issues/83
     /*
@@ -306,10 +306,10 @@ static Kind DetectHicAndAvif(const ByteSlice& d) {
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(const ByteSlice& d) {
+Kind GuessFileTypeFromContent(Str d) {
     // TODO: sniff .fb2 content
-    u8* data = d.data();
-    size_t len = d.size();
+    u8* data = (u8*)d.s;
+    size_t len = (size_t)d.len;
     int n = (int)dimof(gFileSigs);
 
     for (int i = 0; i < n; i++) {
@@ -410,7 +410,7 @@ static bool IsFb2Archive(MultiFormatArchive* archive) {
 }
 
 // detect file type based on file content
-Kind GuessFileTypeFromContent(Str path) {
+Kind GuessFileTypeFromFile(Str path) {
     ReportIf(!path);
     if (path::IsDirectory(path)) {
         TempStr mimetypePath = path::JoinTemp(path, "mimetype");
@@ -428,7 +428,7 @@ Kind GuessFileTypeFromContent(Str path) {
         return nullptr;
     }
 
-    ByteSlice d = {(u8*)buf, (size_t)n};
+    Str d = Str((char*)(buf), (int)(n));
     auto res = GuessFileTypeFromContent(d);
     if (res == kindFileZip) {
         ArchiveExtractProgressCb emptyCb;
@@ -531,7 +531,7 @@ Kind GuessFileTypeFromName(Str path) {
 
 Kind GuessFileType(Str path, bool sniff) {
     if (sniff) {
-        Kind kind = GuessFileTypeFromContent(path);
+        Kind kind = GuessFileTypeFromFile(path);
         if (kind) {
             return kind;
         }
@@ -594,7 +594,7 @@ Str GfxFileExtFromKind(Kind kind) {
     return {};
 }
 
-Str GfxFileExtFromData(const ByteSlice& d) {
+Str GfxFileExtFromData(Str d) {
     Kind kind = GuessFileTypeFromContent(d);
     return GfxFileExtFromKind(kind);
 }

@@ -1025,8 +1025,8 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
     }
 
     int objNum = pdf_to_num(ctx, pdf_annot_obj(ctx, pdfannot));
-    ByteSlice data = EngineMupdfLoadAnnotAttachment((EngineBase*)engine, objNum);
-    if (data.empty()) {
+    Str data = EngineMupdfLoadAnnotAttachment((EngineBase*)engine, objNum);
+    if (str::IsEmpty(data)) {
         return;
     }
 
@@ -1045,7 +1045,7 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
     TempStr baseName = path::GetBaseNameTemp(fileName);
     TempStr dstPath = path::JoinTemp(dir, baseName);
     SaveDataToFile(ew->hwnd, dstPath, data);
-    data.Free();
+    str::Free(data);
 }
 
 static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {

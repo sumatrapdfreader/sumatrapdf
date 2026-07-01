@@ -11,7 +11,7 @@ Favorite* NewFavorite(int pageNo, Str name, Str pageLabel);
 void DeleteFavorite(Favorite* fav);
 
 GlobalPrefs* NewGlobalPrefs(Str);
-ByteSlice SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData);
+Str SerializeGlobalPrefs(GlobalPrefs* prefs, Str prevData);
 void DeleteGlobalPrefs(GlobalPrefs*);
 
 SessionData* NewSessionData();

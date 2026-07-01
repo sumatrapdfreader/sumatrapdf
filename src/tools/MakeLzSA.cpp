@@ -92,37 +92,37 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
         meta.Write32(ft.dwLowDateTime);
         meta.Write32(ft.dwHighDateTime);
         ReportIf(meta.Size() != kBufSize);
-        data.AppendSlice(meta.AsByteSlice());
+        data.Append(meta.AsByteSlice());
         data.Append(inArchiveName);
         return content.Append(fi->compressedData, fi->compressedSize);
     }
 
-    ByteSlice fileData = file::ReadFile(filePath);
-    if (!fileData.data() || fileData.size() >= UINT32_MAX) {
+    Str fileData = file::ReadFile(filePath);
+    if (!(u8*)fileData.s || (size_t)fileData.len >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%s\" for compression\n", filePath.s);
         return false;
     }
-    u32 fileDataCrc = crc32(0, (const u8*)fileData.data(), (u32)fileData.size());
-    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileData.size()) goto ReusePrevious;
+    u32 fileDataCrc = crc32(0, (const u8*)fileData.s, (u32)fileData.len);
+    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == (size_t)fileData.len) goto ReusePrevious;
 
-    size_t compressedSize = fileData.size() + 1;
+    size_t compressedSize = (size_t)fileData.len + 1;
     AutoFree compressed((char*)malloc(compressedSize));
     if (!compressed.Get()) {
         return false;
     }
-    if (!Compress((const char*)fileData.data(), fileData.size(), compressed.Get(), &compressedSize)) {
+    if (!Compress((const char*)fileData.s, (size_t)fileData.len, compressed.Get(), &compressedSize)) {
         return false;
     }
 
     ByteWriterLE meta(kBufSize);
     meta.Write32(headerSize);
     meta.Write32((u32)compressedSize);
-    meta.Write32((u32)fileData.size());
+    meta.Write32((u32)fileData.len);
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
     ReportIf(meta.Size() != kBufSize);
-    data.AppendSlice(meta.AsByteSlice());
+    data.Append(meta.AsByteSlice());
     data.Append(inArchiveName);
     return content.Append(compressed, compressedSize);
 }
@@ -132,10 +132,10 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
 // may end in a colon followed by the desired path in the archive
 // (this is required for absolute paths)
 bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
-    ByteSlice prevData(file::ReadFile(archivePath));
-    size_t prevDataLen = prevData.size();
+    Str prevData = file::ReadFile(archivePath);
+    size_t prevDataLen = (size_t)prevData.len;
     lzma::SimpleArchive prevArchive;
-    if (!lzma::ParseSimpleArchive((const u8*)prevData.data(), prevDataLen, &prevArchive)) {
+    if (!lzma::ParseSimpleArchive((const u8*)prevData.s, prevDataLen, &prevArchive)) {
         prevArchive.filesCount = 0;
     }
 
@@ -147,7 +147,7 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     lzsaHeader.Write32(LZMA_MAGIC_ID);
     lzsaHeader.Write32((u32)(files.Size() - skipFiles));
     ReportIf(lzsaHeader.Size() != kBufSize);
-    data.AppendSlice(lzsaHeader.AsByteSlice());
+    data.Append(lzsaHeader.AsByteSlice());
 
     for (int i = skipFiles; i < files.Size(); i++) {
         AutoFreeStr filePath(str::Dup(files.At(i)));
@@ -176,10 +176,10 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     ByteWriterLE buf(4);
     buf.Write32(headerCrc32);
     ReportIf(buf.Size() != 4);
-    data.AppendSlice(buf.AsByteSlice());
+    data.Append(buf.AsByteSlice());
     if (!data.Append(content.Get())) return false;
 
-    ByteSlice d = data.AsByteSlice();
+    Str d = ToStr(data);
     return file::WriteFile(archivePath, d);
 }
 
@@ -226,12 +226,12 @@ static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
 
 int mainVerify(Str archivePath) {
     int errorStep = 1;
-    ByteSlice fileData = file::ReadFile(archivePath);
-    FailIf(!fileData.data(), "Failed to read \"%s\"", archivePath.s);
+    Str fileData = file::ReadFile(archivePath);
+    FailIf(!(u8*)fileData.s, "Failed to read \"%s\"", archivePath.s);
     errorStep++;
 
     lzma::SimpleArchive lzsa;
-    bool ok = lzma::ParseSimpleArchive((const u8*)fileData.data(), fileData.size(), &lzsa);
+    bool ok = lzma::ParseSimpleArchive((const u8*)fileData.s, (size_t)fileData.len, &lzsa);
     FailIf(!ok, "\"%s\" is no valid LzSA file", archivePath.s);
     errorStep++;
 

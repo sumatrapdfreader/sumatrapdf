@@ -329,16 +329,16 @@ void DumpThumbnail(EngineBase* engine) {
         return;
     }
 
-    ByteSlice imgData = tga::SerializeBitmap(bmp->hbmp);
-    size_t len = imgData.size();
-    u8* data = imgData.data();
+    Str imgData = tga::SerializeBitmap(bmp->hbmp);
+    size_t len = (size_t)imgData.len;
+    u8* data = (u8*)imgData.s;
     TempStr hexData = data ? str::MemToHexTemp(data, len) : Str{};
     if (hexData) {
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.s);
     } else {
         Out1("\t<Thumbnail />\n");
     }
-    imgData.Free();
+    str::Free(imgData);
     delete bmp;
 }
 
@@ -412,7 +412,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
         TempStr txtFilePath = fmt(renderPath.s, 0);
         TempStr textCrLf = str::ReplaceTemp(ToStr(text), StrL("\n"), StrL("\r\n"));
         TempStr textUTF8BOM = str::JoinTemp(UTF8_BOM, textCrLf);
-        return file::WriteFile(txtFilePath, ToByteSlice(textUTF8BOM));
+        return file::WriteFile(txtFilePath, textUTF8BOM);
     }
 
     bool success = true;
@@ -434,16 +434,16 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
             WCHAR* pageBmpPathW = CWStrTemp(pageBmpPath);
             gbmp.Save(pageBmpPathW, &pngEncId, nullptr);
         } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
-            ByteSlice imgData = SerializeBitmap(bmp->hbmp);
-            if (!imgData.empty()) {
+            Str imgData = SerializeBitmap(bmp->hbmp);
+            if (!str::IsEmpty(imgData)) {
                 file::WriteFile(pageBmpPath, imgData);
-                imgData.Free();
+                str::Free(imgData);
             }
         } else { // render as TGA for all other file extensions
-            ByteSlice imgData = tga::SerializeBitmap(bmp->hbmp);
-            if (!imgData.empty()) {
+            Str imgData = tga::SerializeBitmap(bmp->hbmp);
+            if (!str::IsEmpty(imgData)) {
                 file::WriteFile(pageBmpPath, imgData);
-                imgData.Free();
+                str::Free(imgData);
             }
         }
         FreePixmap(bmp);

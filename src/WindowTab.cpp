@@ -197,7 +197,7 @@ LinkSaver::LinkSaver(WindowTab* tab, HWND parentHwnd, const WCHAR* fileName) {
 }
 #endif
 
-bool SaveDataToFile(HWND hwndParent, Str fileName, ByteSlice data) {
+bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
     if (!CanAccessDisk()) {
         return false;
     }

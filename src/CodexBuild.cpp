@@ -368,11 +368,11 @@ static Str GetCodexSessionDescription(Str sessionId) {
     if (!historyPath) {
         return StrL("(no description)");
     }
-    ByteSlice data = file::ReadFile(historyPath);
-    if (data.empty()) {
+    Str data = file::ReadFile(historyPath);
+    if (str::IsEmpty(data)) {
         return StrL("(no description)");
     }
-    Str content = AsStr(data);
+    Str content = data;
     Str rest = content;
     Str result;
     Str line;
@@ -386,7 +386,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
             result = str::Dup(prompt);
         }
     }
-    data.Free();
+    str::Free(data);
     return result ? result : StrL("(no description)");
 }
 
@@ -406,20 +406,20 @@ static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut)
 }
 
 static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir, Vec<AIChatSessionInfo>& sessions) {
-    ByteSlice data = file::ReadFile(rolloutPath);
-    if (data.empty()) {
+    Str data = file::ReadFile(rolloutPath);
+    if (str::IsEmpty(data)) {
         return;
     }
-    Str content = AsStr(data);
+    Str content = data;
     Str firstLine, rest;
     if (!str::NextLine(content, firstLine, rest) || str::IsEmpty(firstLine)) {
-        data.Free();
+        str::Free(data);
         return;
     }
     TempStr line = str::DupTemp(firstLine);
     Str sessionId;
     if (!ParseCodexRolloutMetaLine(line, matchDir, &sessionId)) {
-        data.Free();
+        str::Free(data);
         return;
     }
     i64 ts = AIChatFileTimeToMs(ft);
@@ -429,7 +429,7 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
                 sessions[i].timestamp = ts;
             }
             str::Free(sessionId);
-            data.Free();
+            str::Free(data);
             return;
         }
     }
@@ -439,7 +439,7 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
     si.project = str::Dup(matchDir);
     si.timestamp = ts;
     sessions.Append(si);
-    data.Free();
+    str::Free(data);
 }
 
 static TempStr FindCodexRolloutPathTemp(Str sessionId) {
@@ -698,12 +698,12 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         return;
     }
 
-    ByteSlice data = file::ReadFile(sessionPath);
-    if (data.empty()) {
+    Str data = file::ReadFile(sessionPath);
+    if (str::IsEmpty(data)) {
         return;
     }
 
-    Str content = AsStr(data);
+    Str content = data;
     Str rest = content;
     Str lineRaw;
 
@@ -725,7 +725,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         }
     }
 
-    data.Free();
+    str::Free(data);
 }
 
 // handle combo selection change

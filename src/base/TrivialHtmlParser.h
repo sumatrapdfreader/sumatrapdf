@@ -73,8 +73,8 @@ class HtmlParser {
     HtmlParser();
     ~HtmlParser();
 
-    HtmlElement* Parse(const ByteSlice& d, uint codepage = CP_ACP);
-    HtmlElement* ParseInPlace(const ByteSlice& d, uint codepage = CP_ACP);
+    HtmlElement* Parse(Str d, uint codepage = CP_ACP);
+    HtmlElement* ParseInPlace(Str d, uint codepage = CP_ACP);
 
     size_t ElementsCount() const;
     size_t TotalAttrCount() const;

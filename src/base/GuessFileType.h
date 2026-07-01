@@ -52,11 +52,11 @@ struct EmbeddedPdfName {
 };
 EmbeddedPdfName ParseEmbeddedPdfName(Str path);
 
-Kind GuessFileTypeFromContent(Str path);
-Kind GuessFileTypeFromContent(const ByteSlice& d);
+Kind GuessFileTypeFromFile(Str path);
+Kind GuessFileTypeFromContent(Str d);
 Kind GuessFileTypeFromName(Str path);
 Kind GuessFileType(Str path, bool sniff);
-Str GfxFileExtFromData(const ByteSlice&);
+Str GfxFileExtFromData(Str);
 Str GfxFileExtFromKind(Kind);
 Str GetExtForKind(Kind kind);
 

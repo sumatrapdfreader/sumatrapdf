@@ -237,12 +237,12 @@ bool LoadSettings() {
     GlobalPrefs* gprefs = nullptr;
     TempStr settingsPath = GetSettingsPathTemp();
     {
-        ByteSlice prefsData = file::ReadFile(settingsPath);
+        Str prefsData = file::ReadFile(settingsPath);
 
-        gGlobalPrefs = NewGlobalPrefs(AsStr(prefsData));
+        gGlobalPrefs = NewGlobalPrefs(prefsData);
         ReportIf(!gGlobalPrefs);
         gprefs = gGlobalPrefs;
-        prefsData.Free();
+        str::Free(prefsData);
     }
 
     // takes effect for PDFs loaded after this (startup, and on settings reload)
@@ -595,20 +595,20 @@ bool SaveSettings() {
     if (!path) {
         return false;
     }
-    ByteSlice prevPrefs = file::ReadFile(Str(path));
-    Str prevPrefsData = AsStr(prevPrefs);
-    ByteSlice prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
+    Str prevPrefs = file::ReadFile(Str(path));
+    Str prevPrefsData = prevPrefs;
+    Str prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {
-        prevPrefs.Free();
-        prefs.Free();
+        str::Free(prevPrefs);
+        str::Free(prefs);
     };
-    ReportIf(prefs.empty());
-    if (prefs.empty()) {
+    ReportIf(str::IsEmpty(prefs));
+    if (str::IsEmpty(prefs)) {
         return false;
     }
 
     // only save if anything's changed at all
-    if (prevPrefs.size() == prefs.size() && str::Eq(prefs, prevPrefs)) {
+    if (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs)) {
         return true;
     }
 
@@ -635,10 +635,10 @@ static void ReloadSettings() {
     bool ok = false;
     for (int i = 0; !ok && i < 5; i++) {
         Sleep(200);
-        ByteSlice prefsData = file::ReadFile(settingsPath);
-        if (prefsData.size() > 0) {
+        Str prefsData = file::ReadFile(settingsPath);
+        if (prefsData.len > 0) {
             ok = true;
-            prefsData.Free();
+            str::Free(prefsData);
         } else {
             logf("ReloadSettings: failed to load '%s', i=%d\n", settingsPath, i);
         }

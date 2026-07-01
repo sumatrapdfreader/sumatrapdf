@@ -59,10 +59,10 @@ bool Exists(Str path);
 
 FILE* OpenFILE(Str path);
 HANDLE OpenReadOnly(Str path);
-ByteSlice ReadFileWithArena(Str path, Arena*);
-ByteSlice ReadFile(Str path);
+Str ReadFileWithArena(Str path, Arena*);
+Str ReadFile(Str path);
 int ReadN(Str path, u8* buf, size_t toRead);
-bool WriteFile(Str path, const ByteSlice&);
+bool WriteFile(Str path, Str);
 
 i64 GetSize(HANDLE h);
 i64 GetSize(Str path);

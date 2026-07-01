@@ -14,27 +14,27 @@ void WinUtilTest() {
     {
         Str string = "abcde";
         size_t stringSize = string.len;
-        auto strm = CreateStreamFromData({(u8*)string.s, stringSize});
+        auto strm = CreateStreamFromData(Str((char*)string.s, (int)stringSize));
         ScopedComPtr<IStream> stream(strm);
         utassert(stream);
-        ByteSlice data = GetDataFromStream(stream, nullptr);
-        utassert(data.Get());
-        utassert(stringSize == data.size());
-        Str s = AsStr(data);
+        Str data = GetDataFromStream(stream, nullptr);
+        utassert((u8*)data.s);
+        utassert(stringSize == (size_t)data.len);
+        Str s = data;
         utassert(str::Eq(s, string));
-        data.Free();
+        str::Free(data);
     }
 
     {
         WStr string = L"abcde";
         size_t stringSize = string.len * sizeof(WCHAR);
-        auto strm = CreateStreamFromData({(u8*)string.s, stringSize});
+        auto strm = CreateStreamFromData(Str((char*)string.s, (int)stringSize));
         ScopedComPtr<IStream> stream(strm);
         utassert(stream);
-        ByteSlice dataTmp = GetDataFromStream(stream, nullptr);
-        WStr data = WStr((WCHAR*)dataTmp.Get(), (int)(dataTmp.size() / sizeof(WCHAR)));
-        utassert(data && stringSize == dataTmp.size() && wstr::Eq(data, string));
-        dataTmp.Free();
+        Str dataTmp = GetDataFromStream(stream, nullptr);
+        WStr data = WStr((WCHAR*)(u8*)dataTmp.s, (int)((size_t)dataTmp.len / sizeof(WCHAR)));
+        utassert(data && stringSize == (size_t)dataTmp.len && wstr::Eq(data, string));
+        str::Free(dataTmp);
     }
 
     {

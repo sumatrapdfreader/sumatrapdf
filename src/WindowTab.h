@@ -133,4 +133,4 @@ struct WindowTab {
     void ToggleZoom() const;
 };
 
-bool SaveDataToFile(HWND hwndParent, Str fileName, ByteSlice data);
+bool SaveDataToFile(HWND hwndParent, Str fileName, Str data);

@@ -76,13 +76,13 @@ void ShowPrintersDialog() {
     RedirectIOToExistingConsole();
 
     GetPrintersInfo(out);
-    log(out.CStr());
+    log(ToStr(out));
 
     gLogToConsole = false;
 #ifndef SUMATRA_TEST_UTIL
-    ShowTextInWindowDialog(_TRA("SumatraPDF - Show Printers"), out.CStr());
+    ShowTextInWindowDialog(_TRA("SumatraPDF - Show Printers"), ToStr(out));
 #else
-    ShowTextInWindowDialog("SumatraPDF - Show Printers", out.CStr());
+    ShowTextInWindowDialog("SumatraPDF - Show Printers", ToStr(out));
 #endif
 }
 

@@ -14,7 +14,7 @@ struct ChmFile {
     Str indexPath;
     Str homePath;
     Str creator;
-    AutoFree data;
+    Str data;
     uint codepage = 0;
 
     void ParseWindowsData();
@@ -28,7 +28,7 @@ struct ChmFile {
     ~ChmFile();
 
     bool HasData(Str fileName) const;
-    ByteSlice GetData(Str fileName) const;
+    Str GetData(Str fileName) const;
     TempStr ResolveTopicID(unsigned int id) const;
 
     TempStr GetPropertyTemp(Str name) const;

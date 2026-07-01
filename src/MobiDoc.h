@@ -21,7 +21,7 @@ struct MobiDoc {
     size_t imageFirstRec = 0; // 0 if no images
     size_t coverImageRec = 0; // 0 if no cover image
 
-    ByteSlice* images = nullptr;
+    Str* images = nullptr;
 
     HuffDicDecompressor* huffDic = nullptr;
 
@@ -43,8 +43,8 @@ struct MobiDoc {
     ~MobiDoc();
 
     Str GetHtmlData() const;
-    ByteSlice* GetCoverImage();
-    ByteSlice* GetImage(size_t imgRecIndex) const;
+    Str* GetCoverImage();
+    Str* GetImage(size_t imgRecIndex) const;
     Str GetFileName() const { return fileName; }
     TempStr GetPropertyTemp(Str name);
     PdbDocType GetDocType() const { return docType; }

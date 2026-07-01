@@ -49,7 +49,7 @@ void ChmWebviewWnd::OnBrowserMessage(Str msg) {
     WebviewWnd::OnBrowserMessage(msg);
 }
 
-static Str ChmMimeFromPath(Str path, const ByteSlice& data) {
+static Str ChmMimeFromPath(Str path, Str data) {
     Str ext = str::FindCharLast(path, '.');
     if (str::ContainsChar(ext, ';')) {
         Str semi = str::FindChar(ext, ';');
@@ -91,12 +91,12 @@ bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
     if (!view || !view->cb || !res || str::IsEmpty(path)) {
         return false;
     }
-    ByteSlice data = view->cb->GetDataForUrl(path);
-    if (data.empty()) {
+    Str data = view->cb->GetDataForUrl(path);
+    if (str::IsEmpty(data)) {
         return false;
     }
-    res->data = data.data();
-    res->dataLen = data.size();
+    res->data = (u8*)data.s;
+    res->dataLen = (size_t)data.len;
     res->contentType = ChmMimeFromPath(path, data);
     res->ownsData = false;
     return true;

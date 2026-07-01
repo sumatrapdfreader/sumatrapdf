@@ -10,7 +10,7 @@ class ByteOrderDecoder {
     };
 
     ByteOrderDecoder(const u8* d, size_t len, ByteOrder order);
-    ByteOrderDecoder(ByteSlice bs, ByteOrder order);
+    ByteOrderDecoder(Str bs, ByteOrder order);
 
     void Bytes(void* dst, size_t len);
 

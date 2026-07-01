@@ -64,8 +64,8 @@ struct ChmModel : DocController {
     bool OnBeforeNavigate(Str url, bool newWindow);
     void OnDocumentComplete(Str url);
     void OnLButtonDown();
-    ByteSlice GetDataForUrl(Str url);
-    void DownloadData(Str url, const ByteSlice& data);
+    Str GetDataForUrl(Str url);
+    void DownloadData(Str url, Str data);
 
     static bool IsSupportedFileType(Kind);
 

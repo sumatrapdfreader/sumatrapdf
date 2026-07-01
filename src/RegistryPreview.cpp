@@ -187,13 +187,13 @@ TempStr GetPdfPreviewLogDirTemp() {
         return {};
     }
     TempStr exePath = path::JoinTemp(exeDir, "SumatraPDF.exe");
-    ByteSlice d = file::ReadFile(exePath);
-    if (d.empty()) {
+    Str d = file::ReadFile(exePath);
+    if (str::IsEmpty(d)) {
         return {};
     }
     u8 sha1[20]{};
-    CalcSHA1Digest(d.data(), len(d), sha1);
-    d.Free();
+    CalcSHA1Digest((u8*)d.s, d.len, sha1);
+    str::Free(d);
     char id[7];
     for (int i = 0; i < 3; i++) { // first 6 hex chars (3 bytes), matches GetBuildDirNameTemp
         sprintf_s(&id[2 * i], 3, "%02x", sha1[i]);

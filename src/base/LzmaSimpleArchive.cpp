@@ -270,7 +270,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena*
     bool ok = false;
     Str filePath = path::Join(allocator, dstDir, fi->name);
     if (filePath) {
-        ByteSlice d = {(u8*)uncompressed, fi->uncompressedSize};
+        Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
         ok = file::WriteFile(filePath, d);
     }
 
@@ -282,16 +282,16 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena*
 
 bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* allocator) {
     auto d = file::ReadFileWithArena(archivePath, allocator);
-    if (d.empty()) {
+    if (str::IsEmpty(d)) {
         return false;
     }
 
     defer {
-        Free(allocator, (void*)d.data());
+        Free(allocator, (void*)d.s);
     };
 
     SimpleArchive archive;
-    bool ok = ParseSimpleArchive(d.data(), d.size(), &archive);
+    bool ok = ParseSimpleArchive((u8*)d.s, (size_t)d.len, &archive);
     if (!ok) {
         return false;
     }

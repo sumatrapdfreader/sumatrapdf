@@ -41,13 +41,13 @@ HRESULT PdfFilter::OnInit() {
 
     // load content of PDF document into a seekable stream
     HRESULT res;
-    ByteSlice data = GetDataFromStream(m_pStream, &res);
-    if (data.empty()) {
+    Str data = GetDataFromStream(m_pStream, &res);
+    if (str::IsEmpty(data)) {
         return res;
     }
 
     IStream* strm = CreateStreamFromData(data);
-    data.Free();
+    str::Free(data);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return E_FAIL;

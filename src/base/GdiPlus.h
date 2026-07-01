@@ -23,12 +23,12 @@ RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s, TextMeasureAlg
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);
 
-Pixmap* PixmapFromDataWin(const ByteSlice& bmpData);
-Vec<Pixmap*> PixmapsFromDataWin(const ByteSlice& bmpData);
-Size ImageSizeFromData(const ByteSlice&);
-Size ImageSizeFromHeader(const ByteSlice&);
+Pixmap* PixmapFromDataWin(Str bmpData);
+Vec<Pixmap*> PixmapsFromDataWin(Str bmpData);
+Size ImageSizeFromData(Str);
+Size ImageSizeFromHeader(Str);
 bool ExifOrientationSwapsDimensions(int orientation);
 void ApplyExifOrientation(Gdiplus::Bitmap* bmp, int exifOrientation);
-int WebpExifOrientation(const ByteSlice& d);
+int WebpExifOrientation(Str d);
 CLSID GetGdiPlusEncoderClsid(WStr format);
 RenderedBitmap* LoadRenderedBitmapWin(Str path);

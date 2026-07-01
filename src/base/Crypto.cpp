@@ -128,12 +128,12 @@ CleanUp:
     return ok;
 }
 
-ByteSlice ExtractP7m(ByteSlice d) {
-    if (d.empty()) {
+Str ExtractP7m(Str d) {
+    if (str::IsEmpty(d)) {
         return {};
     }
-    const u8* data = d.data();
-    DWORD dataLen = (DWORD)d.size();
+    const u8* data = (u8*)d.s;
+    DWORD dataLen = (DWORD)d.len;
 
     HCRYPTMSG hMsg = CryptMsgOpenToDecode(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, 0, 0, nullptr, nullptr);
     if (!hMsg) {
@@ -160,5 +160,5 @@ ByteSlice ExtractP7m(ByteSlice d) {
         free(content);
         return {};
     }
-    return {content, cbContent};
+    return Str((char*)(content), (int)(cbContent));
 }

@@ -466,11 +466,11 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         PageDestination* pd = (PageDestination*)dest;
         if (pd->embedObjNum > 0) {
             EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
-            ByteSlice data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
-            if (!data.empty()) {
+            Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+            if (!str::IsEmpty(data)) {
                 Str fileName = pd->GetValue2();
                 logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName,
-                     pd->embedObjNum, (int)data.sz);
+                     pd->embedObjNum, (int)data.len);
                 TempStr tmpDir = GetTempDirTemp();
                 if (tmpDir) {
                     TempStr tmpPath = path::JoinTemp(tmpDir, path::GetBaseNameTemp(fileName));
@@ -478,7 +478,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
                         SumatraLaunchBrowser(tmpPath);
                     }
                 }
-                data.Free();
+                str::Free(data);
             }
         }
         return;

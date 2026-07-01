@@ -9,8 +9,6 @@ bool StrLess(Str s1, Str s2);
 bool StrLessNoCase(Str s1, Str s2);
 bool StrLessNatural(Str s1, Str s2);
 
-ByteSlice ToByteSlice(Str s);
-
 struct StrVecPage;
 
 struct StrVec {

@@ -5,8 +5,8 @@ struct Pixmap;
 
 namespace jxl {
 
-bool HasSignature(const ByteSlice&);
-Size SizeFromData(const ByteSlice&);
-Pixmap* PixmapFromData(const ByteSlice&);
+bool HasSignature(Str);
+Size SizeFromData(Str);
+Pixmap* PixmapFromData(Str);
 
 } // namespace jxl

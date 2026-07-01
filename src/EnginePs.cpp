@@ -181,13 +181,13 @@ static EngineBase* ps2pdf(Str path) {
         return nullptr;
     }
 
-    ByteSlice pdfData = file::ReadFile(tmpFile);
-    if (pdfData.empty()) {
+    Str pdfData = file::ReadFile(tmpFile);
+    if (str::IsEmpty(pdfData)) {
         return nullptr;
     }
 
     IStream* strm = CreateStreamFromData(pdfData);
-    pdfData.Free();
+    str::Free(pdfData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return nullptr;
@@ -271,7 +271,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
-    ByteSlice GetFileData() override { return file::ReadFile(FilePath()); }
+    Str GetFileData() override { return file::ReadFile(FilePath()); }
 
     bool SaveFileAs(Str dstPath) override {
         Str srcPath = FilePath();

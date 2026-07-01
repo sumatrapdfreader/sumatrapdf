@@ -19,14 +19,14 @@ struct HtmlWindowCallback {
 
     // allows for providing data for a given url.
     // returning nullptr means data wasn't provided.
-    virtual ByteSlice GetDataForUrl(Str url) = 0;
+    virtual Str GetDataForUrl(Str url) = 0;
 
     // called when left mouse button is clicked in the web control window.
     // we use it to maintain proper focus (since it's stolen by left click)
     virtual void OnLButtonDown() = 0;
 
     // called when a file can't be displayed and has to be downloaded instead
-    virtual void DownloadData(Str url, const ByteSlice& data) = 0;
+    virtual void DownloadData(Str url, Str data) = 0;
 
     virtual ~HtmlWindowCallback() = default;
 };
@@ -62,7 +62,7 @@ class HtmlWindow {
     void SubclassHwnd();
     void UnsubclassHwnd();
     void SetScrollbarToAuto();
-    void SetHtmlReal(const ByteSlice&);
+    void SetHtmlReal(Str);
     void FreeHtmlSetInProgressData();
 
     ~HtmlWindow();
@@ -71,7 +71,7 @@ class HtmlWindow {
     void SetVisible(bool visible);
     void NavigateToUrl(Str url);
     void NavigateToDataUrl(Str url);
-    void SetHtml(const ByteSlice&, Str url = nullptr);
+    void SetHtml(Str, Str url = nullptr);
     void GoBack();
     void GoForward();
     void PrintCurrentPage(bool showUI);

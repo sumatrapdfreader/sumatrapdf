@@ -198,18 +198,6 @@ int utf8StrLen(const u8* s) {
 
 // --- end of Unicode, Inc. utf8 code
 
-bool IsEqual(const ByteSlice& d1, const ByteSlice& d2) {
-    if (d1.sz != d2.sz) {
-        return false;
-    }
-    if (d1.sz == 0) {
-        return true;
-    }
-    ReportIf(!d1.d || !d2.d);
-    int res = memcmp(d1.d, d2.d, d1.sz);
-    return res == 0;
-}
-
 namespace str {
 
 void Free(Str s) {
@@ -264,10 +252,6 @@ Str Dup(Str s) {
     return Dup(nullptr, s);
 }
 
-Str Dup(const ByteSlice& d) {
-    return Dup(AsStr(d));
-}
-
 } // namespace str
 namespace wstr {
 
@@ -319,16 +303,6 @@ bool Eq(Str s1, Str s2) {
         return false;
     }
     return memeq(s1.s, s2.s, (size_t)len1);
-}
-
-bool Eq(const ByteSlice& sp1, const ByteSlice& sp2) {
-    if (sp1.size() != sp2.size()) {
-        return false;
-    }
-    if (sp1.empty()) {
-        return true;
-    }
-    return memeq(sp1.data(), sp2.data(), sp1.size());
 }
 
 // return true if s1 == s2, case insensitive
@@ -1654,7 +1628,7 @@ void SeqStrNumAppend(str::Builder* b, Str s, i64 num) {
     b->AppendChar('\0');
     u8 buf[12];
     size_t n = VarIntEncode(buf, num);
-    b->AppendSlice(ByteSlice(buf, n));
+    b->Append(Str((char*)buf, (int)n));
 }
 
 void SeqStrNumFinish(str::Builder* b) {
@@ -2014,28 +1988,11 @@ bool str::Builder::IsEmpty() const {
     return len == 0;
 }
 
-ByteSlice str::Builder::AsByteSlice() const {
-    return {(u8*)els, len};
-}
-
-ByteSlice str::Builder::StealAsByteSlice() {
-    size_t n = len;
-    Str d = StealData();
-    return {(u8*)d.s, n};
-}
-
 bool str::Builder::Append(const u8* src, int size) {
     if (-1 == size) {
         return this->Append(Str((const char*)src));
     }
-    return AppendSlice(ByteSlice(src, size));
-}
-
-bool str::Builder::AppendSlice(const ByteSlice& d) {
-    if (d.empty()) {
-        return true;
-    }
-    return this->Append(AsStr(d));
+    return this->Append(Str((char*)src, size));
 }
 
 #if 0
@@ -2055,10 +2012,6 @@ bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
 void str::Builder::Set(Str s) {
     Reset();
     Append(s);
-}
-
-Str str::Builder::CStr() const {
-    return Str(els, (int)len);
 }
 
 char str::Builder::LastChar() const {

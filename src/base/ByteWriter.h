@@ -16,7 +16,7 @@ struct ByteWriter {
     void Write64(u64 val);
 
     size_t Size() const;
-    ByteSlice AsByteSlice() const;
+    Str AsByteSlice() const;
 };
 
 struct ByteWriterLE : ByteWriter {

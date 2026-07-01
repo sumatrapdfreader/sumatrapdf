@@ -320,7 +320,7 @@ static void MaybeFlipBitmap(Bitmap* bmp) {
     ApplyExifOrientation(bmp, propValPtr[0]);
 }
 
-static Bitmap* DecodeWithWIC(const ByteSlice& bmpData) {
+static Bitmap* DecodeWithWIC(Str bmpData) {
     auto strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
@@ -330,7 +330,7 @@ static Bitmap* DecodeWithWIC(const ByteSlice& bmpData) {
     return bmp;
 }
 
-static Bitmap* DecodeWithGdiplus(const ByteSlice& bmpData) {
+static Bitmap* DecodeWithGdiplus(Str bmpData) {
     auto strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
@@ -458,7 +458,7 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
 }
 
 // Decode an image to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
-Pixmap* PixmapFromDataWin(const ByteSlice& bmpData) {
+Pixmap* PixmapFromDataWin(Str bmpData) {
     Kind kind = GuessFileTypeFromContent(bmpData);
     if (kindFileTga == kind) {
         Pixmap* px = tga::PixmapFromData(bmpData);
@@ -509,7 +509,7 @@ Pixmap* PixmapFromDataWin(const ByteSlice& bmpData) {
 
 // Decode an image to one Pixmap per frame: multi-page TIFF and animated GIF yield more
 // than one, everything else exactly one. Empty on failure. Caller owns each Pixmap.
-Vec<Pixmap*> PixmapsFromDataWin(const ByteSlice& bmpData) {
+Vec<Pixmap*> PixmapsFromDataWin(Str bmpData) {
     Vec<Pixmap*> res;
     Kind kind = GuessFileTypeFromContent(bmpData);
     if (kindFileTiff == kind || kindFileGif == kind) {
@@ -721,7 +721,7 @@ bool ExifOrientationSwapsDimensions(int orientation) {
     return orientation >= 5 && orientation <= 8;
 }
 
-int WebpExifOrientation(const ByteSlice& d) {
+int WebpExifOrientation(Str d) {
     if (!webp::HasSignature(d)) {
         return 0;
     }
@@ -821,7 +821,7 @@ static bool TiffSizeFromData(ByteReader r, Size& result) {
 }
 
 static bool PngSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 24 && str::StartsWith(AsStr(ByteSlice(r.d + 12, r.len - 12)), "IHDR")) {
+    if (r.len >= 24 && str::StartsWith(Str((char*)(r.d + 12), (int)(r.len - 12)), "IHDR")) {
         result.dx = r.DWordBE(16);
         result.dy = r.DWordBE(20);
         return true;
@@ -839,12 +839,12 @@ static bool TgaSizeFromData(ByteReader r, Size& result) {
 }
 
 static bool WebpSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 30 && str::StartsWith(AsStr(ByteSlice(r.d + 12, r.len - 12)), "VP8 ")) {
+    if (r.len >= 30 && str::StartsWith(Str((char*)(r.d + 12), (int)(r.len - 12)), "VP8 ")) {
         result.dx = r.WordLE(26) & 0x3fff;
         result.dy = r.WordLE(28) & 0x3fff;
         return true;
     } else {
-        ByteSlice bs(r.d, r.len);
+        Str bs((char*)(r.d), (int)(r.len));
         result = webp::SizeFromData(bs);
         return !result.IsEmpty();
     }
@@ -887,13 +887,13 @@ static bool Jp2SizeFromData(ByteReader r, Size& result) {
 }
 
 static bool AvifSizeFromData(ByteReader r, Size& result) {
-    ByteSlice bs(r.d, r.len);
+    Str bs((char*)(r.d), (int)(r.len));
     result = AvifSizeFromData(bs);
     return !result.IsEmpty();
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Size ImageSizeFromData(const ByteSlice& d) {
+Size ImageSizeFromData(Str d) {
     Size result;
     bool ok = false;
     Kind kind = GuessFileTypeFromContent(d);
@@ -939,7 +939,7 @@ Size ImageSizeFromData(const ByteSlice& d) {
 }
 
 // like ImageSizeFromData but only parses headers, no full decode fallback
-Size ImageSizeFromHeader(const ByteSlice& d) {
+Size ImageSizeFromHeader(Str d) {
     Size result;
     bool ok = false;
     Kind kind = GuessFileTypeFromContent(d);
@@ -1000,12 +1000,12 @@ RenderedBitmap* LoadRenderedBitmapWin(Str path) {
     if (!path) {
         return nullptr;
     }
-    ByteSlice data = file::ReadFile(path);
+    Str data = file::ReadFile(path);
     if (!data) {
         return nullptr;
     }
     Gdiplus::Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromDataWin(data));
-    data.Free();
+    str::Free(data);
 
     if (!bmp) {
         return nullptr;

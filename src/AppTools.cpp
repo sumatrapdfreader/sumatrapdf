@@ -522,13 +522,13 @@ Rect GetDefaultWindowPos() {
 }
 
 void SaveCallstackLogs() {
-    ByteSlice s = dbghelp::GetCallstacks();
-    if (s.empty()) {
+    Str s = dbghelp::GetCallstacks();
+    if (str::IsEmpty(s)) {
         return;
     }
     TempStr filePath = GetPathInAppDataDirTemp("callstacks.txt");
     file::WriteFile(filePath, s);
-    s.Free();
+    str::Free(s);
 }
 
 // TODO: this can be used for extracting other data
@@ -548,14 +548,14 @@ Str Sha1OfAppExe() {
     if (!appPath) {
         return nullptr;
     }
-    ByteSlice d = file::ReadFile(appPath);
-    if (d.empty()) {
+    Str d = file::ReadFile(appPath);
+    if (str::IsEmpty(d)) {
         return nullptr;
     }
 
     u8 sha1[20]{};
-    CalcSHA1Digest(d.data(), len(d), sha1);
-    d.Free();
+    CalcSHA1Digest((u8*)d.s, d.len, sha1);
+    str::Free(d);
 
     for (size_t i = 0; i < 20; i++) {
         sprintf_s(&gAppSha1[2 * i], 3, "%02x", sha1[i]);

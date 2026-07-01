@@ -126,7 +126,7 @@ static bool PalmdocUncompress(const u8* src, size_t srcLen, str::Builder& dst) {
             if (src + c > srcEnd) {
                 return false;
             }
-            dst.Append(AsStr(ByteSlice(src, (size_t)c)));
+            dst.Append(Str((char*)src, (int)c));
             src += c;
         } else if (c < 128) {
             dst.AppendChar((char)c);
@@ -248,7 +248,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
             logf("symLen too big\n");
             return false;
         }
-        dst.Append(AsStr(ByteSlice(p, (size_t)symLen)));
+        dst.Append(Str((char*)p, (int)symLen));
     }
     return true;
 }
@@ -366,7 +366,7 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     if (cdicDataLen < kCdicHeaderLen) {
         return false;
     }
-    if (!str::EqN(StrL("CDIC"), AsStr(ByteSlice(cdicData, 4)), 4)) {
+    if (!str::EqN(StrL("CDIC"), Str((char*)cdicData, 4), 4)) {
         return false;
     }
     u32 hdrLen = UInt32BE(cdicData + 4);
@@ -484,8 +484,8 @@ bool MobiDoc::ParseHeader() {
     }
 
     auto rec = pdbReader->GetRecord(0);
-    u8* firstRecData = rec.data();
-    size_t recSize = rec.size();
+    u8* firstRecData = (u8*)rec.s;
+    size_t recSize = (size_t)rec.len;
     if (!firstRecData || recSize < kPalmDocHeaderLen) {
         log("failed to read record 0\n");
         return false;
@@ -570,8 +570,8 @@ bool MobiDoc::ParseHeader() {
     if (COMPRESSION_HUFF == compressionType) {
         ReportIf(PdbDocType::Mobipocket != docType);
         rec = pdbReader->GetRecord(mobiHdr.huffmanFirstRec);
-        size_t huffRecSize = rec.size();
-        u8* recData = rec.data();
+        size_t huffRecSize = (size_t)rec.len;
+        u8* recData = (u8*)rec.s;
         if (!recData) {
             return false;
         }
@@ -588,8 +588,8 @@ bool MobiDoc::ParseHeader() {
         }
         for (size_t i = 0; i < cdicsCount; i++) {
             rec = pdbReader->GetRecord(mobiHdr.huffmanFirstRec + 1 + i);
-            recData = rec.data();
-            huffRecSize = rec.size();
+            recData = (u8*)rec.s;
+            huffRecSize = (size_t)rec.len;
             if (!recData) {
                 return false;
             }
@@ -664,7 +664,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
             default:
                 continue;
         }
-        TempStr value = str::DupTemp(AsStr(ByteSlice(data + d.Offset() - length + 8, (size_t)length - 8)));
+        TempStr value = str::DupTemp(Str((char*)(data + d.Offset() - length + 8), (int)((size_t)length - 8)));
         if (!str::IsEmpty(value)) {
             AddProp(props, prop, value);
         }
@@ -682,15 +682,15 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
 #define VIDE_REC 0x56494445 // 'VIDE'
 #define RESC_REC 0x52455343 // 'RESC'
 
-static bool IsEofRecord(const ByteSlice& d) {
-    return (4 == d.size()) && (EOF_REC == UInt32BE(d.data()));
+static bool IsEofRecord(Str d) {
+    return (4 == (size_t)d.len) && (EOF_REC == UInt32BE((u8*)d.s));
 }
 
-static bool KnownNonImageRec(const ByteSlice& d) {
-    if (d.size() < 4) {
+static bool KnownNonImageRec(Str d) {
+    if ((size_t)d.len < 4) {
         return false;
     }
-    u32 sig = UInt32BE(d.data());
+    u32 sig = UInt32BE((u8*)d.s);
 
     switch (sig) {
         case FLIS_REC:
@@ -705,7 +705,7 @@ static bool KnownNonImageRec(const ByteSlice& d) {
     return false;
 }
 
-static bool KnownImageFormat(const ByteSlice& d) {
+static bool KnownImageFormat(Str d) {
     Kind kind = GuessFileTypeFromContent(d);
     return kind != nullptr;
 }
@@ -726,7 +726,7 @@ bool MobiDoc::LoadImage(size_t imageNo) {
         return true;
     }
     if (!KnownImageFormat(rec)) {
-        u32 sig = UInt32BE(rec.data());
+        u32 sig = UInt32BE((u8*)rec.s);
         logf("MobiDoc::LoadImage: unknown record type 0x%08X\n", sig);
         return true;
     }
@@ -738,7 +738,7 @@ void MobiDoc::LoadImages() {
     if (0 == imagesCount) {
         return;
     }
-    images = AllocArray<ByteSlice>(imagesCount);
+    images = AllocArray<Str>(imagesCount);
 
     for (size_t i = 0; i < imagesCount; i++) {
         if (!LoadImage(i)) {
@@ -751,23 +751,23 @@ void MobiDoc::LoadImages() {
 // as far as I can tell, this means: it starts at 1
 // returns nullptr if there is no image (e.g. it's not a format we
 // recognize)
-ByteSlice* MobiDoc::GetImage(size_t imgRecIndex) const {
+Str* MobiDoc::GetImage(size_t imgRecIndex) const {
     if ((imgRecIndex > imagesCount) || (imgRecIndex < 1)) {
         return nullptr;
     }
     --imgRecIndex;
-    if (images[imgRecIndex].empty()) {
+    if (str::IsEmpty(images[imgRecIndex])) {
         return nullptr;
     }
     return &images[imgRecIndex];
 }
 
-ByteSlice* MobiDoc::GetCoverImage() {
+Str* MobiDoc::GetCoverImage() {
     if (!coverImageRec || coverImageRec < imageFirstRec) {
         return nullptr;
     }
     size_t imageNo = coverImageRec - imageFirstRec;
-    if (imageNo >= imagesCount || images[imageNo].empty()) {
+    if (imageNo >= imagesCount || str::IsEmpty(images[imageNo])) {
         return nullptr;
     }
     return &images[imageNo];
@@ -812,17 +812,17 @@ static size_t GetRealRecordSize(const u8* recData, size_t recLen, size_t trailer
 // Returns false if error.
 bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Builder& strOut) {
     auto rec = pdbReader->GetRecord(recNo);
-    u8* recData = rec.data();
+    u8* recData = (u8*)rec.s;
     if (nullptr == recData) {
         return false;
     }
-    size_t recSize = GetRealRecordSize((const u8*)recData, rec.size(), trailersCount, multibyte);
+    size_t recSize = GetRealRecordSize((const u8*)recData, (size_t)rec.len, trailersCount, multibyte);
     if (kInvalidSize == recSize) {
         return false;
     }
 
     if (COMPRESSION_NONE == compressionType) {
-        strOut.Append(AsStr(ByteSlice(recData, recSize)));
+        strOut.Append(Str((char*)recData, (int)recSize));
         return true;
     }
     if (COMPRESSION_PALM == compressionType) {
@@ -895,7 +895,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 // don't free the result
 Str MobiDoc::GetHtmlData() const {
     if (len(doc) > 0) {
-        return AsStr(doc.AsByteSlice());
+        return ToStr(doc);
     }
     return {};
 }

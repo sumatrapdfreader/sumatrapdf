@@ -194,9 +194,9 @@ static Pixmap* PixmapFromJp2Data(fz_context* ctx, const u8* data, int len) {
     return px;
 }
 
-static Pixmap* FzImageFromData(const ByteSlice& d) {
-    const u8* data = (const u8*)d.data();
-    size_t len = d.size();
+static Pixmap* FzImageFromData(Str d) {
+    const u8* data = (const u8*)d.s;
+    size_t len = (size_t)d.len;
     if (len > INT_MAX || len < 12) {
         return nullptr;
     }
@@ -207,7 +207,7 @@ static Pixmap* FzImageFromData(const ByteSlice& d) {
     }
 
     Pixmap* result = nullptr;
-    if (str::StartsWith(AsStr(d), "\xFF\xD8")) {
+    if (str::StartsWith(d, "\xFF\xD8")) {
         result = PixmapFromJpegData(ctx, data, (int)len);
     } else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
         result = PixmapFromJp2Data(ctx, data, (int)len);
@@ -218,7 +218,7 @@ static Pixmap* FzImageFromData(const ByteSlice& d) {
     return result;
 }
 
-Pixmap* PixmapFromData(const ByteSlice& bmpData) {
+Pixmap* PixmapFromData(Str bmpData) {
     Pixmap* px = PixmapFromDataWin(bmpData);
     if (px) {
         return px;
@@ -226,7 +226,7 @@ Pixmap* PixmapFromData(const ByteSlice& bmpData) {
     return FzImageFromData(bmpData);
 }
 
-Vec<Pixmap*> PixmapsFromData(const ByteSlice& bmpData) {
+Vec<Pixmap*> PixmapsFromData(Str bmpData) {
     Vec<Pixmap*> res = PixmapsFromDataWin(bmpData);
     if (res.Size() > 0) {
         return res;
@@ -245,12 +245,12 @@ RenderedBitmap* LoadRenderedBitmap(Str path) {
     }
     Gdiplus::Bitmap* bmp;
     {
-        ByteSlice data = file::ReadFile(Str(path));
+        Str data = file::ReadFile(Str(path));
         if (!data) {
             return nullptr;
         }
         bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(data));
-        data.Free();
+        str::Free(data);
         if (!bmp) {
             return nullptr;
         }

@@ -151,9 +151,9 @@ Key = Value";
         if (i < 2) {
             s = unknownOnly;
         }
-        ByteSlice reserializedBs = SerializeStruct(&gSutStructInfo, data, s);
-        utassert(str::Eq(serialized, AsStr(reserializedBs)));
-        reserializedBs.Free();
+        Str reserializedBs = SerializeStruct(&gSutStructInfo, data, s);
+        utassert(str::Eq(serialized, reserializedBs));
+        str::Free(reserializedBs);
         data->internal++;
     }
     utassert(str::Eq(data->color, "#abcdef"));
@@ -173,15 +173,15 @@ Key = Value";
     utassert(str::Eq("#987654", data->sutStructItems->at(1)->nested.colorArray->at(1)));
     utassert(!data->internalString);
     {
-        ByteSlice res = SerializeStruct(&gSutStructInfo, data);
-        utassert(!str::Eq(serialized, AsStr(res)));
-        res.Free();
+        Str res = SerializeStruct(&gSutStructInfo, data);
+        utassert(!str::Eq(serialized, res));
+        str::Free(res);
     }
     data->sutStructItems->at(0)->nested.point.x++;
     {
-        ByteSlice res = SerializeStruct(&gSutStructInfo, data, unknownOnly);
-        utassert(!str::Eq(serialized, AsStr(res)));
-        res.Free();
+        Str res = SerializeStruct(&gSutStructInfo, data, unknownOnly);
+        utassert(!str::Eq(serialized, res));
+        str::Free(res);
     }
     FreeStruct(&gSutStructInfo, data);
 

@@ -130,12 +130,12 @@ struct PacketReader {
 
 static void AppendU16(str::Builder& s, u16 v) {
     u8 buf[2] = {(u8)(v & 0xff), (u8)((v >> 8) & 0xff)};
-    s.AppendSlice(ByteSlice(buf, sizeof(buf)));
+    s.Append(Str((char*)(buf), (int)(sizeof(buf))));
 }
 
 static void AppendU32(str::Builder& s, u32 v) {
     u8 buf[4] = {(u8)(v & 0xff), (u8)((v >> 8) & 0xff), (u8)((v >> 16) & 0xff), (u8)((v >> 24) & 0xff)};
-    s.AppendSlice(ByteSlice(buf, sizeof(buf)));
+    s.Append(Str((char*)(buf), (int)(sizeof(buf))));
 }
 
 static void AppendArgEnd(str::Builder& s) {
@@ -529,15 +529,15 @@ static bool ReadExact(HANDLE h, void* data, DWORD len) {
     return true;
 }
 
-static bool WriteExact(HANDLE h, const void* data, DWORD len) {
-    const u8* d = (const u8*)data;
-    DWORD total = 0;
-    while (total < len) {
+static bool WriteExact(HANDLE h, Str data) {
+    const u8* d = (const u8*)data.s;
+    int total = 0;
+    while (total < data.len) {
         DWORD nWritten = 0;
-        if (!WriteFile(h, d + total, len - total, &nWritten, nullptr) || nWritten == 0) {
+        if (!WriteFile(h, d + total, (DWORD)(data.len - total), &nWritten, nullptr) || nWritten == 0) {
             return false;
         }
-        total += nWritten;
+        total += (int)nWritten;
     }
     return true;
 }
@@ -571,12 +571,12 @@ static ControlRequest* ReadControlRequest(HANDLE h) {
 static bool WriteControlResponse(HANDLE h, ControlRequest* req) {
     str::Builder payload;
     AppendU16(payload, req->reqId);
-    payload.AppendSlice(req->results.AsByteSlice());
+    payload.Append(ToStr(req->results));
 
     str::Builder packet;
     AppendU32(packet, (u32)len(payload));
-    packet.AppendSlice(payload.AsByteSlice());
-    return WriteExact(h, packet.LendData().s, (DWORD)len(packet));
+    packet.Append(ToStr(payload));
+    return WriteExact(h, packet.LendData());
 }
 
 static void ProcessControlConnection(HANDLE h) {

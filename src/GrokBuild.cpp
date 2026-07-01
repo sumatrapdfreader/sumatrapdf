@@ -378,11 +378,11 @@ static TempStr ExtractGrokPromptFromHistoryLineTemp(Str line, Str sessionId) {
 
 static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     TempStr historyPath = fmt("%s\\prompt_history.jsonl", projectDir);
-    ByteSlice data = file::ReadFile(historyPath);
-    if (data.empty()) {
+    Str data = file::ReadFile(historyPath);
+    if (str::IsEmpty(data)) {
         return StrL("(no description)");
     }
-    Str content = AsStr(data);
+    Str content = data;
     Str rest = content;
     Str result;
     Str line;
@@ -396,7 +396,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
             result = str::Dup(prompt);
         }
     }
-    data.Free();
+    str::Free(data);
     return result ? result : StrL("(no description)");
 }
 
@@ -583,12 +583,12 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         return;
     }
 
-    ByteSlice data = file::ReadFile(sessionPath);
-    if (data.empty()) {
+    Str data = file::ReadFile(sessionPath);
+    if (str::IsEmpty(data)) {
         return;
     }
 
-    Str content = AsStr(data);
+    Str content = data;
     Str rest = content;
     Str lineRaw;
 
@@ -609,7 +609,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         }
     }
 
-    data.Free();
+    str::Free(data);
 }
 
 // handle combo selection change

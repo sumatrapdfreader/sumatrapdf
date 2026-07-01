@@ -677,7 +677,7 @@ FILE* OpenFILE(Str path) {
     return _wfopen(pathW, L"rb");
 }
 
-ByteSlice ReadFileWithArena(Str filePath, Arena* allocator) {
+Str ReadFileWithArena(Str filePath, Arena* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
     strconv::Utf8ToWcharBuf(filePath, len(filePath), buf, dimof(buf));
@@ -724,21 +724,21 @@ ByteSlice ReadFileWithArena(Str filePath, Arena* allocator) {
         goto Error;
     }
 
-    return {(u8*)d, size};
+    return Str(d, (int)size);
 Error:
     Free(allocator, (void*)d);
     return {};
 #endif
 }
 
-ByteSlice ReadFile(Str path) {
+Str ReadFile(Str path) {
     return ReadFileWithArena(path, nullptr);
 }
 
-bool WriteFile(Str path, const ByteSlice& d) {
+bool WriteFile(Str path, Str d) {
     WCHAR* pathW = CWStrTemp(path);
-    const void* data = d.data();
-    size_t dataLen = d.size();
+    const void* data = (const void*)d.s;
+    size_t dataLen = (size_t)d.len;
     DWORD access = GENERIC_WRITE;
     DWORD share = FILE_SHARE_READ;
     DWORD flags = FILE_ATTRIBUTE_NORMAL;

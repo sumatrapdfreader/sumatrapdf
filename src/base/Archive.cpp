@@ -136,7 +136,7 @@ bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const Arc
         char buf[2048 + 1]{};
         int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
         if (n > 0) {
-            ByteSlice d = {(u8*)buf, (size_t)n};
+            Str d = Str((char*)((u8*)buf), (int)((size_t)n));
             kind = GuessFileTypeFromContent(d);
         }
     }
@@ -353,7 +353,7 @@ void MultiFormatArchive::LoadFileDataByIdLibarchive(size_t fileId) {
     fileInfo->failed = true;
 }
 
-ByteSlice MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint) {
+Str MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint) {
     if (fileId == (size_t)-1) {
         return {};
     }
@@ -368,7 +368,7 @@ ByteSlice MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint
             return {};
         }
         memcpy(data, fileInfo->data, n);
-        return {data, n};
+        return Str((char*)(data), (int)(n));
     }
 
     if (LoadedUsingUnrarDll()) {
@@ -407,7 +407,7 @@ ByteSlice MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint
                 free(data);
                 return {};
             }
-            return {data, (size_t)n};
+            return Str((char*)(data), (int)((size_t)n));
         }
         archive_read_data_skip(a);
         idx++;
@@ -582,7 +582,7 @@ Exit:
     fileInfo->data = data;
 }
 
-ByteSlice MultiFormatArchive::GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint) {
+Str MultiFormatArchive::GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint) {
     ReportIf(!rarFilePath_);
 
     auto* fileInfo = fileInfos_[fileId];
@@ -594,7 +594,7 @@ ByteSlice MultiFormatArchive::GetFileDataPartByIdUnrarDll(size_t fileId, size_t 
             return {};
         }
         memcpy(data, fileInfo->data, n);
-        return {data, n};
+        return Str((char*)(data), (int)(n));
     }
 
     WCHAR* rarPath = CWStrTemp(rarFilePath_);
@@ -649,7 +649,7 @@ Exit:
         return {};
     }
     size_t got = (size_t)(uncompressedBuf.curr - uncompressedBuf.d);
-    return {(u8*)data, got};
+    return Str((char*)((u8*)data), (int)(got));
 }
 
 // asan build crashes in UnRAR code

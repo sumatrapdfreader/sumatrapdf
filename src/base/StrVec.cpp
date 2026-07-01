@@ -3,10 +3,6 @@
 
 #include "Base.h"
 
-ByteSlice ToByteSlice(Str s) {
-    return {(u8*)s.s, (size_t)s.len};
-}
-
 // represents null string
 constexpr u32 kNullOffset = (u32)-2;
 

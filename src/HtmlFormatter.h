@@ -58,14 +58,14 @@ struct DrawInstr {
     DrawInstr() = default;
 
     explicit DrawInstr(DrawInstrType t, RectF bbox = {}) : type(t), bbox(bbox) {}
-    ByteSlice GetImage() {
+    Str GetImage() {
         ReportIf(type != DrawInstrType::Image);
-        return {(u8*)str.s, (size_t)str.len};
+        return Str((char*)str.s, (int)str.len);
     }
 
     // helper constructors for instructions that need additional arguments
     static DrawInstr Text(::Str s, RectF bbox, bool rtl = false);
-    static DrawInstr Image(const ByteSlice&, RectF bbox);
+    static DrawInstr Image(Str, RectF bbox);
     static DrawInstr SetFont(mui::CachedFont* font);
     static DrawInstr FixedSpace(float dx);
     static DrawInstr LinkStart(::Str s);
@@ -190,7 +190,7 @@ struct HtmlFormatter {
     bool FlushCurrLine(bool isParagraphBreak);
     void UpdateLinkBboxes(HtmlPage* page);
 
-    bool EmitImage(const ByteSlice* img);
+    bool EmitImage(Str* img);
     void EmitHr();
     void EmitTextRun(::Str s);
     // emits a synthetic, persistent string (e.g. a list bullet/number)

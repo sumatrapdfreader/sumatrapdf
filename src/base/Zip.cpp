@@ -94,17 +94,18 @@ static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
     return newdstlen;
 }
 
-bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 dosdate) {
+bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
+    size_t size = (size_t)data.len;
     ReportIf(size >= UINT32_MAX);
-    ReportIf(len(nameUtf8) >= UINT16_MAX);
+    ReportIf(len(name) >= UINT16_MAX);
     if (size >= UINT32_MAX) {
         return false;
     }
 
     size_t fileOffset = bytesWritten;
     u16 flags = (1 << 11); // filename is UTF-8
-    uInt crc = crc32(0, (const Bytef*)data, (uInt)size);
-    int namelen = len(nameUtf8);
+    uInt crc = crc32(0, (const Bytef*)data.s, (uInt)size);
+    int namelen = len(name);
     if (namelen >= UINT16_MAX) {
         return false;
     }
@@ -115,10 +116,10 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
     if (!compressed) {
         return false;
     }
-    compressedSize = zip_compress(compressed, (u32)size, data, (u32)size);
+    compressedSize = zip_compress(compressed, (u32)size, data.s, (u32)size);
     if (!compressedSize) {
         method = 0; // Store
-        memcpy(compressed, data, size);
+        memcpy(compressed, data.s, size);
         compressedSize = (u32)size;
     }
 
@@ -138,7 +139,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
 
     Str localHeader = ToStr(local.d);
     bool ok = WriteData(localHeader.s, kHdrSize);
-    ok = ok && WriteData(nameUtf8.s, namelen);
+    ok = ok && WriteData(name.s, namelen);
     ok = ok && WriteData(compressed, compressedSize);
 
     constexpr size_t kCentralSize = 46;
@@ -162,7 +163,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
     ReportIf(len(central.d) != kCentralSize);
 
     centraldir.Append(Str(central.d.LendData().s, (int)kCentralSize));
-    centraldir.Append(nameUtf8);
+    centraldir.Append(name);
 
     fileCount++;
     return ok;
@@ -170,7 +171,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
 
 // add a given file under (optional) nameInZip
 bool ZipCreator::AddFile(Str path, Str nameInZip) {
-    ByteSlice fileData = file::ReadFile(path);
+    Str fileData = file::ReadFile(path);
     if (!fileData) {
         return false;
     }
@@ -192,8 +193,8 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
     Str name = str::Dup(nameInZip);
     str::TransCharsInPlace(name, StrL("\\"), StrL("/"));
 
-    bool res = AddFileData(name, fileData.Get(), fileData.size(), dosdatetime);
-    fileData.Free();
+    bool res = AddFileData(name, fileData, dosdatetime);
+    str::Free(fileData);
     return res;
 }
 
@@ -274,9 +275,9 @@ IStream* OpenDirAsZipStream(Str dirPath, bool recursive) {
 // the returned data will have 2 zero bytes at end to make sure it's also
 // a 0-terminated char* or WCHA* string
 // those 2 bytes are not reported as
-ByteSlice Ungzip(const ByteSlice& d) {
-    size_t len = d.size();
-    u8* dataCompr = d.d;
+Str Ungzip(const Str& d) {
+    size_t len = (size_t)d.len;
+    u8* dataCompr = (u8*)d.s;
     // aggressive growth for uncompressed buffer because I use this
     // for .syntex files and they compress really well
     size_t lenUncr = len * 2;
@@ -336,5 +337,5 @@ ByteSlice Ungzip(const ByteSlice& d) {
     // also make it a valid 0-terminated char* or WCHAR* string
     dataUncr[lenUncr] = 0;
     dataUncr[lenUncr + 1] = 0;
-    return {dataUncr, lenUncr};
+    return Str((char*)dataUncr, (int)lenUncr);
 }

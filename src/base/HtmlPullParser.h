@@ -73,7 +73,6 @@ class HtmlPullParser {
 
   public:
     explicit HtmlPullParser(Str s) : html(s) {}
-    explicit HtmlPullParser(const ByteSlice& d) : html(AsStr(d)) {}
 
     void SetCurrPosOff(ptrdiff_t off) { currPos = (int)off; }
     size_t Len() const { return (size_t)html.len; }

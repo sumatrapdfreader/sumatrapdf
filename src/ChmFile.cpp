@@ -21,6 +21,7 @@ ChmFile::~ChmFile() {
     str::Free(indexPath);
     str::Free(homePath);
     str::Free(creator);
+    str::Free(data);
 }
 
 bool ChmFile::HasData(Str fileName) const {
@@ -38,7 +39,7 @@ bool ChmFile::HasData(Str fileName) const {
     return chm_resolve_object(chmHandle, fileName.s, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-ByteSlice ChmFile::GetData(Str fileName) const {
+Str ChmFile::GetData(Str fileName) const {
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp(StrL("/"), fileName);
     } else if (str::StartsWith(fileName, "///")) {
@@ -72,7 +73,7 @@ ByteSlice ChmFile::GetData(Str fileName) const {
         return {};
     }
 
-    return {d, len};
+    return Str((char*)(d), (int)(len));
 }
 
 TempStr SmartToUtf8Temp(Str s, uint codepage) {
@@ -85,9 +86,9 @@ TempStr SmartToUtf8Temp(Str s, uint codepage) {
     return strconv::ToMultiByteTemp(s, codepage, CP_UTF8);
 }
 
-static Str GetCharZ(const ByteSlice& d, size_t off) {
-    u8* data = d.data();
-    size_t len = d.size();
+static Str GetCharZ(Str d, size_t off) {
+    u8* data = (u8*)d.s;
+    size_t len = (size_t)d.len;
     if (off >= len) {
         return {};
     }
@@ -102,20 +103,20 @@ static Str GetCharZ(const ByteSlice& d, size_t off) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
 void ChmFile::ParseWindowsData() {
-    ByteSlice windowsData = GetData("/#WINDOWS");
-    ByteSlice stringsData = GetData("/#STRINGS");
+    Str windowsData = GetData("/#WINDOWS");
+    Str stringsData = GetData("/#STRINGS");
 
     defer {
-        stringsData.Free();
+        str::Free(stringsData);
     };
     defer {
-        windowsData.Free();
+        str::Free(windowsData);
     };
 
-    if (windowsData.empty() || stringsData.empty()) {
+    if (str::IsEmpty(windowsData) || str::IsEmpty(stringsData)) {
         return;
     }
-    size_t windowsLen = windowsData.size();
+    size_t windowsLen = (size_t)windowsData.len;
     if (windowsLen <= 8) {
         return;
     }
@@ -197,16 +198,16 @@ static uint LcidToCodepage(DWORD lcid) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
 bool ChmFile::ParseSystemData() {
-    ByteSlice d = GetData("/#SYSTEM");
-    if (d.empty()) {
+    Str d = GetData("/#SYSTEM");
+    if (str::IsEmpty(d)) {
         return false;
     }
-    AutoFree dataFree = d.Get();
+    AutoFree dataFree = (u8*)d.s;
 
     ByteReader r(d);
     DWORD len = 0;
     // Note: skipping DWORD version at offset 0. It's supposed to be 2 or 3.
-    for (size_t off = 4; off + 4 < d.size(); off += len + (size_t)4) {
+    for (size_t off = 4; off + 4 < (size_t)d.len; off += len + (size_t)4) {
         // Note: at some point we seem to get off-sync i.e. I'm seeing
         // many entries with type == 0 and len == 0. Seems harmless.
         len = r.WordLE(off + 2);
@@ -258,9 +259,9 @@ bool ChmFile::ParseSystemData() {
 }
 
 TempStr ChmFile::ResolveTopicID(unsigned int id) const {
-    ByteSlice ivbData = GetData("/#IVB");
-    AutoFree f = ivbData.Get();
-    size_t ivbLen = ivbData.size();
+    Str ivbData = GetData("/#IVB");
+    AutoFree f = (u8*)ivbData.s;
+    size_t ivbLen = (size_t)ivbData.len;
     ByteReader br(ivbData);
     if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
         return {};
@@ -268,9 +269,9 @@ TempStr ChmFile::ResolveTopicID(unsigned int id) const {
 
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
-            ByteSlice stringsData = GetData("/#STRINGS");
+            Str stringsData = GetData("/#STRINGS");
             Str res = GetCharZ(stringsData, br.DWordLE(off + 4));
-            stringsData.Free();
+            str::Free(stringsData);
             if (!res) {
                 return {};
             }
@@ -305,9 +306,8 @@ void ChmFile::FixPathCodepage(Str& path, uint& fileCP) {
 }
 
 bool ChmFile::Load(Str path) {
-    ByteSlice fileContent = file::ReadFile(path);
-    data = fileContent.Get();
-    chmHandle = chm_open(fileContent, fileContent.size());
+    data = file::ReadFile(path);
+    chmHandle = chm_open(data.s, (size_t)data.len);
     if (!chmHandle) {
         return false;
     }
@@ -697,15 +697,15 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     if (!path) {
         return false;
     }
-    ByteSlice htmlData = GetData(path);
-    if (htmlData.empty()) {
+    Str htmlData = GetData(path);
+    if (str::IsEmpty(htmlData)) {
         return false;
     }
-    AutoFreeStr htmlFree = htmlData.Get();
+    AutoFreeStr htmlFree = htmlData.s;
     // Convert to UTF-8 (handling UTF-8 BOM and the file's codepage) so gumbo's
     // attribute values come out in a known encoding -- no per-attribute
     // conversion needed in the visit functions.
-    TempStr utf8 = SmartToUtf8Temp(AsStr(htmlData), codepage);
+    TempStr utf8 = SmartToUtf8Temp(htmlData, codepage);
     if (!utf8) {
         return false;
     }

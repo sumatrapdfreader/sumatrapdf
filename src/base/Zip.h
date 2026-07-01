@@ -8,7 +8,7 @@ class ZipCreator {
     size_t fileCount;
 
     bool WriteData(const void* data, size_t size);
-    bool AddFileData(Str nameUtf8, const void* data, size_t size, u32 dosdate = 0);
+    bool AddFileData(Str name, Str data, u32 dosdate = 0);
 
   public:
     explicit ZipCreator(Str zipFilePath);
@@ -26,4 +26,4 @@ class ZipCreator {
 
 IStream* OpenDirAsZipStream(Str dirPath, bool recursive = false);
 
-ByteSlice Ungzip(const ByteSlice&);
+Str Ungzip(const Str&);

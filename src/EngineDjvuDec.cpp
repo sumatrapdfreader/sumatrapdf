@@ -128,7 +128,7 @@ class EngineDjvuDec : public EngineBase {
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    ByteSlice GetFileData() override;
+    Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
@@ -149,7 +149,7 @@ class EngineDjvuDec : public EngineBase {
 
   protected:
     IStream* stream = nullptr;
-    ByteSlice fileData; // must outlive all docs
+    Str fileData; // must outlive all docs
 
     // After djvu_init(), a djvu_doc is read-only and djvu_page_render /
     // djvu_page_text_get_zones / djvu_page_get_links are re-entrant on the same
@@ -188,7 +188,7 @@ EngineDjvuDec::~EngineDjvuDec() {
     if (ctx) {
         djvu_ctx_free(ctx);
     }
-    fileData.Free();
+    str::Free(fileData);
     if (stream) {
         stream->Release();
     }
@@ -215,7 +215,7 @@ bool EngineDjvuDec::Load(Str fileName) {
 
 bool EngineDjvuDec::Load(IStream* stm) {
     fileData = GetDataFromStream(stm, nullptr);
-    if (!fileData.empty()) {
+    if (!str::IsEmpty(fileData)) {
         stream = stm;
         stream->AddRef();
     }
@@ -251,7 +251,7 @@ static void DjvuDecInitOnce() {
 }
 
 bool EngineDjvuDec::FinishLoading() {
-    if (fileData.empty()) {
+    if (str::IsEmpty(fileData)) {
         return false;
     }
     DjvuDecInitOnce();
@@ -265,7 +265,7 @@ bool EngineDjvuDec::FinishLoading() {
     // Windows DIB without a separate RGB->BGR pass (the swap is folded into the
     // decoder's final output copy at no cost).
     djvu_ctx_set_bgr(ctx, 1);
-    doc = djvu_doc_open(ctx, fileData.data(), fileData.size());
+    doc = djvu_doc_open(ctx, (u8*)fileData.s, (size_t)fileData.len);
     if (!doc) {
         return false;
     }
@@ -657,15 +657,15 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     return PixmapFromRenderedBitmap(StretchDibToScreen(srcBmp, srcMap, rdx, rdy, screen, full, isBitonal));
 }
 
-ByteSlice EngineDjvuDec::GetFileData() {
+Str EngineDjvuDec::GetFileData() {
     return GetStreamOrFileData(stream, FilePath());
 }
 
 bool EngineDjvuDec::SaveFileAs(Str dstPath) {
     if (stream) {
-        ByteSlice d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(dstPath, d);
-        d.Free();
+        Str d = GetDataFromStream(stream, nullptr);
+        bool ok = !str::IsEmpty(d) && file::WriteFile(dstPath, d);
+        str::Free(d);
         if (ok) {
             return true;
         }

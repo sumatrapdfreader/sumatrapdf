@@ -87,7 +87,7 @@ struct AnnotCreateArgs {
     Str content;
     // for Stamp annotations: encoded image bytes (e.g. BMP from the clipboard).
     // when set, the Stamp is created as an image stamp sized to the image.
-    ByteSlice stampImage;
+    Str stampImage;
 };
 
 int PageNo(Annotation*);

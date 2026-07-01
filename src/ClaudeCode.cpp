@@ -377,11 +377,11 @@ static TempStr ExtractUserTextTemp(Str line) {
 
 // Read the first user message from a session JSONL as description
 static Str GetSessionDescription(Str sessionPath) {
-    ByteSlice data = file::ReadFile(sessionPath);
-    if (data.empty()) {
+    Str data = file::ReadFile(sessionPath);
+    if (str::IsEmpty(data)) {
         return StrL("(empty)");
     }
-    Str content = AsStr(data);
+    Str content = data;
     Str rest = content;
     Str result;
     Str line;
@@ -395,7 +395,7 @@ static Str GetSessionDescription(Str sessionPath) {
             result = str::Dup(userText);
         }
     }
-    data.Free();
+    str::Free(data);
     return result ? result : StrL("(no description)");
 }
 
@@ -518,12 +518,12 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         return;
     }
 
-    ByteSlice data = file::ReadFile(sessionPath);
-    if (data.empty()) {
+    Str data = file::ReadFile(sessionPath);
+    if (str::IsEmpty(data)) {
         return;
     }
 
-    Str content = AsStr(data);
+    Str content = data;
     Str rest = content;
     Str lineRaw;
 
@@ -564,7 +564,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         }
     }
 
-    data.Free();
+    str::Free(data);
 }
 
 // handle combo selection change

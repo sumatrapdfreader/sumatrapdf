@@ -284,14 +284,14 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     ReportIf(str::IsEmpty(path));
 
     if (str::EndsWithI(path, ".p7m")) {
-        ByteSlice fileData = file::ReadFile(path);
-        ByteSlice extracted = ExtractP7m(fileData);
-        fileData.Free();
-        if (!extracted.empty()) {
+        Str fileData = file::ReadFile(path);
+        Str extracted = ExtractP7m(fileData);
+        str::Free(fileData);
+        if (!str::IsEmpty(extracted)) {
             Kind kind = GuessFileTypeFromContent(extracted);
             if (kind == kindFilePDF) {
                 EngineBase* engine = CreateEngineMupdfFromData(extracted, "file.pdf", pwdUI);
-                extracted.Free();
+                str::Free(extracted);
                 if (engine) {
                     engine->SetFilePath(path);
                     engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
@@ -299,7 +299,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
                     return engine;
                 }
             } else {
-                extracted.Free();
+                str::Free(extracted);
             }
         }
     }
@@ -314,7 +314,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     // engines the hint is unused.
     Kind contentHint = nullptr;
     if (IsEngineCbxSupportedFileType(kind)) {
-        contentHint = GuessFileTypeFromContent(path);
+        contentHint = GuessFileTypeFromFile(path);
     }
 
     EngineBase* engine = CreateEngineForKind(kind, contentHint, path, pwdUI, enableChmEngine);
@@ -329,7 +329,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     }
 
     if (!contentHint) {
-        contentHint = GuessFileTypeFromContent(path);
+        contentHint = GuessFileTypeFromFile(path);
     }
     // avoid trying the same engine type twice (e.g. kindFileCbz vs kindFileZip
     // both use the cbx engine, causing duplicate password prompts)

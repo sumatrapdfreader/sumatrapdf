@@ -15,9 +15,9 @@
 #define kPdbRecordHeaderLen 8
 
 // Takes ownership of d
-bool PdbReader::Parse(const ByteSlice& d) {
-    data = d.data();
-    dataSize = d.size();
+bool PdbReader::Parse(Str d) {
+    data = (u8*)d.s;
+    dataSize = (size_t)d.len;
     return ParseHeader();
 }
 
@@ -100,7 +100,7 @@ size_t PdbReader::GetRecordCount() {
 }
 
 // don't free, memory is owned by us
-ByteSlice PdbReader::GetRecord(size_t recNo) {
+Str PdbReader::GetRecord(size_t recNo) {
     size_t nRecs = recInfos.size();
     ReportIf(recNo >= nRecs);
     if (recNo >= nRecs) {
@@ -115,11 +115,11 @@ ByteSlice PdbReader::GetRecord(size_t recNo) {
         return {};
     }
     size_t size = nextOff - off;
-    return {(u8*)data + off, size};
+    return Str((char*)((u8*)data + off), (int)size);
 }
 
-PdbReader* PdbReader::CreateFromData(const ByteSlice& d) {
-    if (d.empty()) {
+PdbReader* PdbReader::CreateFromData(Str d) {
+    if (str::IsEmpty(d)) {
         return nullptr;
     }
     PdbReader* reader = new PdbReader();
@@ -131,12 +131,12 @@ PdbReader* PdbReader::CreateFromData(const ByteSlice& d) {
 }
 
 PdbReader* PdbReader::CreateFromFile(Str path) {
-    ByteSlice d = file::ReadFile(path);
+    Str d = file::ReadFile(path);
     return CreateFromData(d);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    ByteSlice d = GetDataFromStream(stream, nullptr);
+    Str d = GetDataFromStream(stream, nullptr);
     return CreateFromData(d);
 }
 

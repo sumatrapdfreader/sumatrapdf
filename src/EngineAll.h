@@ -59,8 +59,8 @@ using ShowErrorCb = Func1<Str>;
 bool IsEngineMupdfSupportedFileType(Kind);
 EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMupdfFromStream(IStream* stream, Str nameHint, PasswordUI* pwdUI = nullptr);
-EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, Str nameHint, PasswordUI* pwdUI);
-ByteSlice LoadEmbeddedPDFFile(Str path);
+EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI);
+Str LoadEmbeddedPDFFile(Str path);
 TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut);
 Annotation* EngineMupdfCreateAnnotation(EngineBase*, int pageNo, PointF pos, AnnotCreateArgs* args);
 void EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>&);
@@ -77,8 +77,8 @@ void EngineMupdfSetDisableJavaScript(bool disable);
 // allow PDFs to load images from an external sibling file (#3731), for PDFs
 // loaded after this call; set from gGlobalPrefs->allowExternalImages
 void EngineMupdfSetAllowExternalImages(bool allow);
-ByteSlice EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
-ByteSlice EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
+Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
+Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 TempStr EngineMupdfGetPdfInfo(Str path);
 TempStr EngineMupdfGetPdfOutline(Str path);
 

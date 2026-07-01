@@ -1985,13 +1985,13 @@ TempStr MenuToSafeStringTemp(Str s) {
     return safe;
 }
 
-IStream* CreateStreamFromData(const ByteSlice& d) {
-    if (d.empty()) {
+IStream* CreateStreamFromData(const Str& d) {
+    if (str::IsEmpty(d)) {
         return nullptr;
     }
 
-    const void* data = d.data();
-    size_t len = d.size();
+    const void* data = (u8*)d.s;
+    size_t len = (size_t)d.len;
     ScopedComPtr<IStream> stream;
     if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
         return nullptr;
@@ -2045,7 +2045,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     return S_OK;
 }
 
-ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt) {
+Str GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     void* data = nullptr;
     ULONG size = 0;
     HRESULT res = GetDataFromStream(stream, &data, &size);
@@ -2056,10 +2056,10 @@ ByteSlice GetDataFromStream(IStream* stream, HRESULT* resOpt) {
         free(data);
         return {};
     }
-    return {(u8*)data, (size_t)size};
+    return Str((char*)data, (int)size);
 }
 
-ByteSlice GetStreamOrFileData(IStream* stream, Str filePath) {
+Str GetStreamOrFileData(IStream* stream, Str filePath) {
     if (stream) {
         return GetDataFromStream(stream, nullptr);
     }
@@ -2433,7 +2433,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
 // can be deserialized with LoadImage(nullptr, ..., LD_LOADFROMFILE) and its
 // dimensions determined again with GetBitmapSize(...))
-ByteSlice SerializeBitmap(HBITMAP hbmp) {
+Str SerializeBitmap(HBITMAP hbmp) {
     Size size = GetBitmapSize(hbmp);
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
@@ -2462,18 +2462,18 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     }
     ReleaseDC(nullptr, hDC);
 
-    return {(u8*)bmpData, bmpBytes};
+    return Str((char*)bmpData, (int)bmpBytes);
 }
 
 // returns the clipboard image (if any) serialized as BMP file bytes, or empty
-ByteSlice GetClipboardImageBmp() {
+Str GetClipboardImageBmp() {
     if (!IsClipboardFormatAvailable(CF_BITMAP)) {
         return {};
     }
     if (!OpenClipboard(nullptr)) {
         return {};
     }
-    ByteSlice res;
+    Str res;
     // CF_BITMAP is synthesized by Windows from CF_DIB and vice versa, so it's
     // available whenever any bitmap is on the clipboard. The returned HBITMAP is
     // owned by the clipboard - don't delete it.
@@ -3544,7 +3544,7 @@ static HWND CreateTextViewWindow(WStr className, Str title, Str text) {
         }
         crlfText.AppendChar(c);
     }
-    HwndSetText(hwndEdit, crlfText.CStr());
+    HwndSetText(hwndEdit, ToStr(crlfText));
     SendMessageW(hwndEdit, EM_SETSEL, 0, 0);
 
     ShowWindow(hwnd, SW_SHOW);

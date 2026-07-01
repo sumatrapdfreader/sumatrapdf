@@ -512,21 +512,21 @@ static void AddFavoriteFromToc(MainWindow* win, TocItem* dti) {
 
 static void SaveAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    ByteSlice data = EngineMupdfLoadAttachment(engine, attachmentNo);
-    if (data.empty()) {
+    Str data = EngineMupdfLoadAttachment(engine, attachmentNo);
+    if (str::IsEmpty(data)) {
         return;
     }
     TempStr dir = path::GetDirTemp(tab->filePath);
     fileName = path::GetBaseNameTemp(fileName);
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
-    data.Free();
+    str::Free(data);
 }
 
 static void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    ByteSlice data = EngineMupdfLoadAttachment(engine, attachmentNo);
-    if (data.empty()) {
+    Str data = EngineMupdfLoadAttachment(engine, attachmentNo);
+    if (str::IsEmpty(data)) {
         return;
     }
     MainWindow* win = tab->win;
@@ -536,7 +536,7 @@ static void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     args->SetDisplayName(fileName);
     args->ctrl = ctrl;
     LoadDocumentFinish(args);
-    data.Free();
+    str::Free(data);
 }
 
 static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
@@ -558,8 +558,8 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
 }
 
 static void SaveEmbeddedFile(WindowTab* tab, Str srcPath, Str fileName) {
-    ByteSlice data = LoadEmbeddedPDFFile(srcPath);
-    if (data.empty()) {
+    Str data = LoadEmbeddedPDFFile(srcPath);
+    if (str::IsEmpty(data)) {
         // TODO: show an error message
         return;
     }
@@ -567,7 +567,7 @@ static void SaveEmbeddedFile(WindowTab* tab, Str srcPath, Str fileName) {
     fileName = path::GetBaseNameTemp(fileName);
     TempStr dstPath = path::JoinTemp(dir, fileName);
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
-    data.Free();
+    str::Free(data);
 }
 
 // clang-format off

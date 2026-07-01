@@ -116,9 +116,9 @@ struct ImagePageInfo {
     // raw image bytes; populated lazily by GetImageData for file-backed
     // engines (EngineImage, EngineImageDir). Unused by EngineCbx (which
     // returns a view into the archive's cache).
-    ByteSlice rawData;
+    Str rawData;
     ImagePageInfo() = default;
-    ~ImagePageInfo() { rawData.Free(); }
+    ~ImagePageInfo() { str::Free(rawData); }
 };
 
 class EngineImages : public EngineBase {
@@ -132,7 +132,7 @@ class EngineImages : public EngineBase {
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    ByteSlice GetFileData() override;
+    Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int) override { return {}; }
     bool HasClipOptimizations(int) override { return false; }
@@ -185,7 +185,7 @@ class EngineImages : public EngineBase {
     virtual RectF LoadMediabox(int pageNo) = 0;
     // Returns a non-owning view into engine-owned storage; the caller must
     // not free. Bytes stay valid until the engine is destroyed.
-    virtual ByteSlice GetImageData(int pageNo) = 0;
+    virtual Str GetImageData(int pageNo) = 0;
     virtual TempStr GetImagePathTemp(int pageNo) { return {}; }
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
@@ -259,8 +259,8 @@ EngineImages::~EngineImages() {
 // The actual JPEG/PNG decode happens later in RenderPage at near-target
 // scale, much cheaper than decoding at full resolution up front.
 fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
-    ByteSlice data = GetImageData(pageNo);
-    if (data.empty()) {
+    Str data = GetImageData(pageNo);
+    if (str::IsEmpty(data)) {
         return nullptr;
     }
     fz_image* img = nullptr;
@@ -271,7 +271,7 @@ fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
         // fz_new_buffer_from_copied_data takes ownership of the copy; the
         // resulting fz_image keeps a ref to the buffer, so it's safe to drop
         // the local buffer ref in fz_always.
-        buf = fz_new_buffer_from_copied_data(ctx, data.data(), data.size());
+        buf = fz_new_buffer_from_copied_data(ctx, (u8*)data.s, (size_t)data.len);
         img = fz_new_image_from_buffer(ctx, buf);
     }
     fz_always(ctx) {
@@ -627,7 +627,7 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
     return new RenderedBitmap(hbmp, s);
 }
 
-ByteSlice EngineImages::GetFileData() {
+Str EngineImages::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FilePath());
 }
 
@@ -639,8 +639,8 @@ bool EngineImages::SaveFileAs(Str dstPath) {
             return true;
         }
     }
-    ByteSlice d = GetFileData();
-    if (d.empty()) {
+    Str d = GetFileData();
+    if (str::IsEmpty(d)) {
         return false;
     }
     return file::WriteFile(dstPath, d);
@@ -886,7 +886,7 @@ class EngineImage : public EngineImages {
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     fz_image* LoadFzImageForPage(fz_context* ctx, int pageNo) override;
     RectF LoadMediabox(int pageNo) override;
-    ByteSlice GetImageData(int pageNo) override;
+    Str GetImageData(int pageNo) override;
 };
 
 EngineImage::EngineImage() {
@@ -927,7 +927,7 @@ bool EngineImage::LoadSingleFile(Str path) {
     }
     SetFilePath(path);
 
-    ByteSlice data = file::ReadFile(path);
+    Str data = file::ReadFile(path);
     imageFormat = GuessFileTypeFromContent(data);
     if (imageFormat == nullptr) {
         imageFormat = GuessFileTypeFromName(path);
@@ -957,7 +957,7 @@ bool EngineImage::LoadSingleFile(Str path) {
     if (ok) {
         pageInfos[0]->rawData = data;
     } else {
-        data.Free();
+        str::Free(data);
     }
     return ok;
 }
@@ -972,7 +972,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     Str fileExt;
     u8 header[18];
     if (ReadDataFromStream(stream, header, sizeof(header))) {
-        ByteSlice d = {header, sizeof(header)};
+        Str d = Str((char*)header, (int)sizeof(header));
         fileExt = GfxFileExtFromData(d);
     }
     if (!fileExt) {
@@ -980,13 +980,13 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     }
     SetDefaultExt(defaultExt, path::GetExtTemp(fileExt));
 
-    ByteSlice data = GetDataFromStream(stream, nullptr);
+    Str data = GetDataFromStream(stream, nullptr);
     frames = PixmapsFromData(data);
     bool ok = FinishLoading();
     if (ok) {
         pageInfos[0]->rawData = data;
     } else {
-        data.Free();
+        str::Free(data);
     }
     return ok;
 }
@@ -1085,7 +1085,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
         /* property didn't exist */;
         return altId == 0 ? nullptr : GetImagePropertyTemp(bmp, altId);
     } else if (PropertyTagTypeASCII == item->type) {
-        value = strconv::AnsiToUtf8Temp(AsStr(ByteSlice((u8*)item->value, size)));
+        value = strconv::AnsiToUtf8Temp(Str((char*)(item->value), (int)(size)));
     } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
                !((WCHAR*)item->value)[item->length / 2 - 1]) {
         value = ToUtf8Temp((WCHAR*)item->value);
@@ -1098,8 +1098,8 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
 
 // load bitmap using GDI+ Bitmap::FromStream which preserves EXIF metadata
 // PixmapFromData() uses WIC which decodes to raw pixels, losing EXIF
-static Bitmap* BitmapWithExifFromData(const ByteSlice& data) {
-    if (data.empty()) {
+static Bitmap* BitmapWithExifFromData(Str data) {
+    if (str::IsEmpty(data)) {
         return nullptr;
     }
     IStream* strm = CreateStreamFromData(data);
@@ -1119,9 +1119,9 @@ static Bitmap* BitmapWithExifFromFile(Str path) {
     if (!path) {
         return nullptr;
     }
-    ByteSlice data = file::ReadFile(path);
+    Str data = file::ReadFile(path);
     Bitmap* bmp = BitmapWithExifFromData(data);
-    data.Free();
+    str::Free(data);
     return bmp;
 }
 
@@ -1348,7 +1348,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         PropertyItem* item = nullptr;
         if (GetImagePropertyItem(bmp, PropertyTagExifVer, &item)) {
             if (item->length >= 4) {
-                Str exifVer = AsStr(ByteSlice((u8*)item->value, item->length));
+                Str exifVer = Str((char*)(item->value), (int)(item->length));
                 val = str::DupTemp(exifVer);
                 AddProp(keyValOut, kPropExifVersion, val);
             }
@@ -1468,7 +1468,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         if (GetImagePropertyItem(bmp, PropertyTagExifUserComment, &item)) {
             // first 8 bytes are character code identifier
             if (item->length > 8) {
-                Str commentData = AsStr(ByteSlice((u8*)item->value + 8, item->length - 8));
+                Str commentData = Str((char*)((u8*)item->value + 8), (int)(item->length - 8));
                 // check if it's ASCII
                 if (memcmp(item->value, "ASCII\0\0\0", 8) == 0) {
                     val = str::DupTemp(commentData);
@@ -1493,7 +1493,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         PropertyItem* item = nullptr;
         if (GetImagePropertyItem(bmp, PropertyTagExifFPXVer, &item)) {
             if (item->length >= 4) {
-                Str fpVer = AsStr(ByteSlice((u8*)item->value, item->length));
+                Str fpVer = Str((char*)(item->value), (int)(item->length));
                 val = str::DupTemp(fpVer);
                 AddProp(keyValOut, kPropFlashpixVersion, val);
             }
@@ -1552,11 +1552,11 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
 }
 
 // decode image data with GDI+ (preserving EXIF), extract properties, add file size
-static void GetExifPropertiesFromData(const ByteSlice& data, StrVec& keyValOut) {
-    if (data.empty()) {
+static void GetExifPropertiesFromData(Str data, StrVec& keyValOut) {
+    if (str::IsEmpty(data)) {
         return;
     }
-    TempStr sizeStr = fmt("%d", (int)data.size());
+    TempStr sizeStr = fmt("%d", (int)data.len);
     AddProp(keyValOut, kPropImageFileSize, sizeStr);
     Bitmap* bmp = BitmapWithExifFromData(data);
     if (bmp) {
@@ -1574,14 +1574,14 @@ void EngineImages::GetImageProperties(int pageNo, StrVec& keyValOut) {
     if (imgPath) {
         AddProp(keyValOut, kPropImagePath, imgPath);
     }
-    ByteSlice data = GetImageData(pageNo);
+    Str data = GetImageData(pageNo);
     GetExifPropertiesFromData(data, keyValOut);
 }
 
 void EngineImage::GetImageProperties(int pageNo, StrVec& keyValOut) {
-    ByteSlice data = file::ReadFile(FilePath());
+    Str data = file::ReadFile(FilePath());
     GetExifPropertiesFromData(data, keyValOut);
-    data.Free();
+    str::Free(data);
 }
 
 Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
@@ -1595,10 +1595,10 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     return WrapPixmapGdiplus(frames[idx]);
 }
 
-ByteSlice EngineImage::GetImageData(int) {
+Str EngineImage::GetImageData(int) {
     ScopedCritSec scope(&cacheLock);
     auto pi = pageInfos[0];
-    if (pi->rawData.empty()) {
+    if (str::IsEmpty(pi->rawData)) {
         pi->rawData = file::ReadFile(FilePath());
     }
     return pi->rawData;
@@ -1696,7 +1696,7 @@ class EngineImageDir : public EngineImages {
         return nullptr;
     }
 
-    ByteSlice GetFileData() override { return {}; }
+    Str GetFileData() override { return {}; }
     bool SaveFileAs(Str copyFileName) override;
 
     TempStr GetPropertyTemp(Str) override { return nullptr; }
@@ -1712,7 +1712,7 @@ class EngineImageDir : public EngineImages {
 
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
-    ByteSlice GetImageData(int pageNo) override;
+    Str GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(pageFileNames.At(pageNo - 1)); }
 
     StrVec pageFileNames;
@@ -1831,20 +1831,20 @@ bool EngineImageDir::SaveFileAs(Str dstPath) {
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     Str path = pageFileNames.At(pageNo - 1);
-    ByteSlice bmpData = file::ReadFile(path);
+    Str bmpData = file::ReadFile(path);
     if (!bmpData) {
         return nullptr;
     }
     deleteAfterUse = true;
     Bitmap* res = NewGdiplusBitmapFromPixmap(PixmapFromData(bmpData));
-    bmpData.Free();
+    str::Free(bmpData);
     return res;
 }
 
-ByteSlice EngineImageDir::GetImageData(int pageNo) {
+Str EngineImageDir::GetImageData(int pageNo) {
     ScopedCritSec scope(&cacheLock);
     auto pi = pageInfos[pageNo - 1];
-    if (pi->rawData.empty()) {
+    if (str::IsEmpty(pi->rawData)) {
         Str path = pageFileNames.At(pageNo - 1);
         pi->rawData = file::ReadFile(path);
     }
@@ -1853,10 +1853,10 @@ ByteSlice EngineImageDir::GetImageData(int pageNo) {
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
     Str path = pageFileNames.At(pageNo - 1);
-    ByteSlice bmpData = file::ReadFile(path);
+    Str bmpData = file::ReadFile(path);
     if (bmpData) {
         Size size = ImageSizeFromData(bmpData);
-        bmpData.Free();
+        str::Free(bmpData);
         return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
     return RectF();
@@ -1910,7 +1910,7 @@ struct ComicInfoParser : json::ValueVisitor {
     // json::ValueVisitor
     bool Visit(Str path, Str value, json::Type type) override;
 
-    void Parse(const ByteSlice& xmlData);
+    void Parse(Str xmlData);
     void AddBookmark(int imageIdx, Str title);
 };
 
@@ -1987,14 +1987,14 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
 
 // extract ComicInfo.xml metadata
 // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
-void ComicInfoParser::Parse(const ByteSlice& xmlData) {
-    if (xmlData.empty()) {
+void ComicInfoParser::Parse(Str xmlData) {
+    if (str::IsEmpty(xmlData)) {
         return;
     }
     // Detect the encoding from a leading BOM and produce UTF-8 (gumbo expects
     // UTF-8 input). Handles UTF-8, UTF-16 LE, and UTF-16 BE BOMs; if there's
     // no BOM the data is treated as UTF-8 (ComicInfo.xml's spec encoding).
-    TempStr utf8 = strconv::UnknownToUtf8Temp(AsStr(xmlData));
+    TempStr utf8 = strconv::UnknownToUtf8Temp(xmlData);
     if (!utf8) {
         return;
     }
@@ -2075,7 +2075,7 @@ class EngineCbx : public EngineImages {
   protected:
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
-    ByteSlice GetImageData(int pageNo) override;
+    Str GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(files[pageNo - 1]->name); }
 
     bool LoadFromFile(Str fileName);
@@ -2218,7 +2218,7 @@ bool EngineCbx::FinishLoading() {
 
     auto* metadataFi = cbxArchive->GetFileDataByName("ComicInfo.xml");
     if (metadataFi && metadataFi->data) {
-        ByteSlice metadata{(u8*)metadataFi->data, metadataFi->fileSizeUncompressed};
+        Str metadata = Str((char*)(metadataFi->data), (int)(metadataFi->fileSizeUncompressed));
         cip.Parse(metadata);
     }
     Str comment = cbxArchive->GetComment();
@@ -2314,14 +2314,14 @@ TocTree* EngineCbx::GetToc() {
     return tocTree;
 }
 
-ByteSlice EngineCbx::GetImageData(int pageNo) {
+Str EngineCbx::GetImageData(int pageNo) {
     ReportIf((pageNo < 1) || (pageNo > PageCount()));
     size_t fileId = files[pageNo - 1]->fileId;
     auto* fi = cbxArchive->GetFileDataById(fileId);
     if (!fi || !fi->data) {
         return {};
     }
-    return {(u8*)fi->data, fi->fileSizeUncompressed};
+    return Str((char*)(fi->data), (int)(fi->fileSizeUncompressed));
 }
 
 TempStr EngineCbx::GetPropertyTemp(Str name) {
@@ -2378,8 +2378,8 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
 Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     auto timeStart = TimeGet();
     defer{};
-    ByteSlice img = GetImageData(pageNo);
-    if (img.empty()) {
+    Str img = GetImageData(pageNo);
+    if (str::IsEmpty(img)) {
         logf("EngineCbx::LoadBitmapForPage(page: %d) failed\n", pageNo);
         return nullptr;
     }
@@ -2394,18 +2394,18 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     size_t fileId = files[pageNo - 1]->fileId;
 
     // try to get image size from just the file header (first 1024 bytes)
-    ByteSlice header = cbxArchive->GetFileDataPartById(fileId, 1024);
-    if (!header.empty()) {
+    Str header = cbxArchive->GetFileDataPartById(fileId, 1024);
+    if (!str::IsEmpty(header)) {
         Size size = ImageSizeFromHeader(header);
-        header.Free();
+        str::Free(header);
         if (!size.IsEmpty()) {
             return RectF(0, 0, (float)size.dx, (float)size.dy);
         }
     }
 
     // fall back to getting the full image data
-    ByteSlice img = GetImageData(pageNo);
-    if (!img.empty()) {
+    Str img = GetImageData(pageNo);
+    if (!str::IsEmpty(img)) {
         Size size = ImageSizeFromData(img);
         if (!size.IsEmpty()) {
             return RectF(0, 0, (float)size.dx, (float)size.dy);
@@ -2450,7 +2450,7 @@ EngineBase* EngineCbx::CreateFromFile(Str path, Str password, MultiFormatArchive
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
     // we only need the archive format (zip/rar/7z), not the sub-type
-    // (epub/xps/fb2z), so use the ByteSlice overload to avoid
+    // (epub/xps/fb2z), so use the Str overload to avoid
     // opening a full archive just for type detection
     MultiFormatArchive* archive = new MultiFormatArchive();
     archive->password = str::Dup(password);

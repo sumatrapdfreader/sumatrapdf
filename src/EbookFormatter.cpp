@@ -27,7 +27,7 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc) : HtmlFormat
         return;
     }
 
-    ByteSlice* img = doc->GetCoverImage();
+    Str* img = doc->GetCoverImage();
     if (!img) {
         return;
     }
@@ -100,7 +100,7 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         int n;
         if (!str::IsNull(str::Parse(attr->val, "%d", &n))) {
-            ByteSlice* img = doc->GetImage(n);
+            Str* img = doc->GetImage(n);
             needAlt = !img || !EmitImage(img);
         }
     }
@@ -149,7 +149,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         TempStr src = str::DupTemp(attr->val);
         url::DecodeInPlace(src);
-        ByteSlice* img = epubDoc->GetImageData(src, pagePath);
+        Str* img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
@@ -191,10 +191,10 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
 
     TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
-    ByteSlice data = epubDoc->GetFileData(src, pagePath);
+    Str data = epubDoc->GetFileData(src, pagePath);
     if (data) {
-        ParseStyleSheet(AsStr(data));
-        data.Free();
+        ParseStyleSheet(data);
+        str::Free(data);
     }
 }
 
@@ -212,7 +212,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     }
     TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
-    ByteSlice* img = epubDoc->GetImageData(src, pagePath);
+    Str* img = epubDoc->GetImageData(src, pagePath);
     if (img) {
         EmitImage(img);
     }
@@ -248,7 +248,7 @@ Fb2Formatter::Fb2Formatter(HtmlFormatterArgs* args, Fb2Doc* doc)
     if (args->reparseIdx != 0) {
         return;
     }
-    ByteSlice* cover = doc->GetCoverImage();
+    Str* cover = doc->GetCoverImage();
     if (!cover) {
         return;
     }
@@ -269,7 +269,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    ByteSlice* img = nullptr;
+    Str* img = nullptr;
     AttrInfo* attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
         TempStr src = str::DupTemp(attr->val);
@@ -347,7 +347,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         TempStr src = str::DupTemp(attr->val);
         url::DecodeInPlace(src);
-        ByteSlice* img = htmlDoc->GetImageData(src);
+        Str* img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
@@ -375,9 +375,9 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
 
     TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
-    ByteSlice data = htmlDoc->GetFileData(src);
+    Str data = htmlDoc->GetFileData(src);
     if (data) {
-        ParseStyleSheet(AsStr(data));
+        ParseStyleSheet(data);
     }
-    data.Free();
+    str::Free(data);
 }

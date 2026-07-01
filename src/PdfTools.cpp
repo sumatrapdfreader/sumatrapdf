@@ -361,7 +361,7 @@ static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, Str destPath, Str pa
             FreePageTextUtf8(&pt);
         }
     }
-    return file::WriteFile(destPath, text.AsByteSlice());
+    return file::WriteFile(destPath, ToStr(text));
 }
 
 void PdfExtractTextDialog::DoExtract() {

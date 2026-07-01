@@ -448,11 +448,11 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
     i64 fileSize = file::GetSize(Str(path)); // can be gPluginURL
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
-        ByteSlice d = engine->GetFileData();
-        if (!d.empty()) {
-            fileSize = d.size();
+        Str d = engine->GetFileData();
+        if (!str::IsEmpty(d)) {
+            fileSize = d.len;
         }
-        d.Free();
+        str::Free(d);
     }
     TempStr strTemp;
     if (-1 != fileSize) {
@@ -614,7 +614,7 @@ static void CopyPropertiesToClipboard(PropertiesLayout* pl) {
     if (!pl) {
         return;
     }
-    CopyTextToClipboard(pl->propsText.CStr());
+    CopyTextToClipboard(ToStr(pl->propsText));
 }
 
 static void SizeToContent(PropertiesLayout* pl) {

@@ -493,12 +493,12 @@ void FreeCallstackLogs() {
     gCallstackLogs = nullptr;
 }
 
-ByteSlice GetCallstacks() {
+Str GetCallstacks() {
     if (!gCallstackLogs) {
         return {};
     }
     char* s = str::Dup(ToStr(*gCallstackLogs)).s;
-    return ToByteSlice(s);
+    return s;
 }
 
 void LogCallstack() {

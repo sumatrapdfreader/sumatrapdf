@@ -224,11 +224,11 @@ bool HttpPost(Str serverA, int port, Str urlA, str::Builder* headers, str::Build
     }
 
     if (headers && len(*headers) > 0) {
-        hdr = headers->CStr().s;
+        hdr = ToStr(*headers).s;
         hdrLen = (DWORD)len(*headers);
     }
     if (data && len(*data) > 0) {
-        d = data->CStr().s;
+        d = ToStr(*data).s;
         dLen = (DWORD)len(*data);
     }
 

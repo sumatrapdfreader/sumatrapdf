@@ -120,7 +120,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
         }
         TempStr filePath = path::JoinTemp(destDir, fi->name);
 
-        ByteSlice d = {uncompressed, fi->uncompressedSize};
+        Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
         bool ok = file::WriteFile(filePath, d);
         free(uncompressed);
 
@@ -1124,7 +1124,7 @@ bool ExtractLibmupdfDll(Str destDir) {
         return false;
     }
     TempStr filePath = path::JoinTemp(destDir, fi->name);
-    ByteSlice d = {uncompressed, fi->uncompressedSize};
+    Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
     bool ok = file::WriteFile(filePath, d);
     free(uncompressed);
     if (!ok) {

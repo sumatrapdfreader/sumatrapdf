@@ -13,23 +13,23 @@
 namespace webp {
 
 // checks whether this could be data for a WebP image
-bool HasSignature(const ByteSlice& d) {
-    if (d.size() <= 12) {
+bool HasSignature(const Str& d) {
+    if ((size_t)d.len <= 12) {
         return false;
     }
-    Str data = AsStr(d);
+    Str data = d;
     return str::StartsWith(data, "RIFF") && str::StartsWith(Str(data.s + 8, data.len - 8), "WEBP");
 }
 
-Size SizeFromData(const ByteSlice& d) {
+Size SizeFromData(const Str& d) {
     Size size;
-    WebPGetInfo((const u8*)d.data(), d.size(), &size.dx, &size.dy);
+    WebPGetInfo((const u8*)d.s, (size_t)d.len, &size.dx, &size.dy);
     return size;
 }
 
-Pixmap* PixmapFromData(const ByteSlice& d) {
+Pixmap* PixmapFromData(const Str& d) {
     int w, h;
-    if (!WebPGetInfo((const u8*)d.data(), d.size(), &w, &h)) {
+    if (!WebPGetInfo((const u8*)d.s, (size_t)d.len, &w, &h)) {
         return nullptr;
     }
 
@@ -38,7 +38,7 @@ Pixmap* PixmapFromData(const ByteSlice& d) {
     if (!px) {
         return nullptr;
     }
-    if (!WebPDecodeBGRAInto((const u8*)d.data(), d.size(), px->data, (size_t)px->stride * h, px->stride)) {
+    if (!WebPDecodeBGRAInto((const u8*)d.s, (size_t)d.len, px->data, (size_t)px->stride * h, px->stride)) {
         FreePixmap(px);
         return nullptr;
     }
@@ -49,13 +49,13 @@ Pixmap* PixmapFromData(const ByteSlice& d) {
 
 #else
 namespace webp {
-bool HasSignature(const ByteSlice&) {
+bool HasSignature(const Str&) {
     return false;
 }
-Size SizeFromData(const ByteSlice&) {
+Size SizeFromData(const Str&) {
     return Size();
 }
-Pixmap* PixmapFromData(const ByteSlice&) {
+Pixmap* PixmapFromData(const Str&) {
     return nullptr;
 }
 } // namespace webp

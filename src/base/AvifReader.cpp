@@ -9,14 +9,14 @@
 
 #include <libheif/heif.h>
 
-Size AvifSizeFromData(const ByteSlice& d) {
+Size AvifSizeFromData(Str d) {
     Size res;
     struct heif_image_handle* hdl = nullptr;
 
     heif_context* ctx = heif_context_alloc();
 
     // TODO: can I provide a subset of the image?
-    auto err = heif_context_read_from_memory_without_copy(ctx, (const void*)d.Get(), d.size(), nullptr);
+    auto err = heif_context_read_from_memory_without_copy(ctx, (const void*)(u8*)d.s, (size_t)d.len, nullptr);
     if (err.code != heif_error_Ok) {
         goto Exit;
     }
@@ -35,7 +35,7 @@ Exit:
     return res;
 }
 
-Pixmap* PixmapFromAvifData(const ByteSlice& d) {
+Pixmap* PixmapFromAvifData(Str d) {
     Pixmap* px = nullptr;
     struct heif_image_handle* hdl = nullptr;
     struct heif_image* img = nullptr;
@@ -46,7 +46,7 @@ Pixmap* PixmapFromAvifData(const ByteSlice& d) {
     heif_colorspace cs;
 
     heif_context* ctx = heif_context_alloc();
-    auto err = heif_context_read_from_memory_without_copy(ctx, (const void*)d.Get(), d.size(), nullptr);
+    auto err = heif_context_read_from_memory_without_copy(ctx, (const void*)(u8*)d.s, (size_t)d.len, nullptr);
 
     if (err.code != heif_error_Ok) {
         goto Exit;
@@ -109,7 +109,7 @@ Exit:
     return px;
 }
 
-bool AvifExifBlobFromData(const ByteSlice& d, u8** outData, size_t* outSize) {
+bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize) {
     *outData = nullptr;
     *outSize = 0;
     heif_context* ctx = heif_context_alloc();
@@ -119,7 +119,7 @@ bool AvifExifBlobFromData(const ByteSlice& d, u8** outData, size_t* outSize) {
     bool ok = false;
     heif_image_handle* hdl = nullptr;
     u8* buf = nullptr;
-    auto err = heif_context_read_from_memory_without_copy(ctx, d.Get(), d.size(), nullptr);
+    auto err = heif_context_read_from_memory_without_copy(ctx, (u8*)d.s, (size_t)d.len, nullptr);
     if (err.code == heif_error_Ok) {
         err = heif_context_get_primary_image_handle(ctx, &hdl);
     }
@@ -154,13 +154,13 @@ bool AvifExifBlobFromData(const ByteSlice& d, u8** outData, size_t* outSize) {
     return ok;
 }
 #else
-Size AvifSizeFromData(const ByteSlice&) {
+Size AvifSizeFromData(Str) {
     return {};
 }
-Pixmap* PixmapFromAvifData(const ByteSlice&) {
+Pixmap* PixmapFromAvifData(Str) {
     return nullptr;
 }
-bool AvifExifBlobFromData(const ByteSlice&, u8**, size_t*) {
+bool AvifExifBlobFromData(Str, u8**, size_t*) {
     return false;
 }
 #endif

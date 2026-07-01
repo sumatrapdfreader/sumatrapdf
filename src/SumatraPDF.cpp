@@ -292,8 +292,8 @@ void InitializePolicies(bool restrict) {
         return;
     }
 
-    ByteSlice restrictData = file::ReadFile(restrictPath);
-    SquareTreeNode* root = ParseSquareTree(AsStr(restrictData));
+    Str restrictData = file::ReadFile(restrictPath);
+    SquareTreeNode* root = ParseSquareTree(restrictData);
     AutoDelete delRoot(root);
     SquareTreeNode* polsec = root ? root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction
@@ -925,7 +925,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered*) override;
     void GotoLink(IPageDestination* dest) override { win->linkHandler->GotoLink(dest); }
     void FocusFrame(bool always) override;
-    void SaveDownload(Str url, const ByteSlice&) override;
+    void SaveDownload(Str url, Str) override;
 };
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {
@@ -1086,7 +1086,7 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
     }
 }
 
-void ControllerCallbackHandler::SaveDownload(Str url, const ByteSlice& data) {
+void ControllerCallbackHandler::SaveDownload(Str url, Str data) {
     TempStr path = url::GetFileNameTemp(url);
     // LinkSaver linkSaver(win->CurrentTab(), win->hwndFrame, fileName);
     SaveDataToFile(win->hwndFrame, path, data);
@@ -3341,7 +3341,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     fileFilter.Append(_TRA("PDF documents"));
     fileFilter.Append("\1*.pdf\1");
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
+    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
     WCHAR* fileFilterW = CWStrTemp(ToStr(fileFilter));
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
@@ -3881,7 +3881,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
+    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
 
     WCHAR dstFileName[MAX_PATH];
     TempStr baseName = path::GetBaseNameTemp(srcFileName);
@@ -4181,7 +4181,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // methods too early on)
     str::Builder fileFilter;
     fileFilter.Append(fmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts")));
-    str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
+    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
     WCHAR* fileFilterW = CWStrTemp(ToStr(fileFilter));
 
     OPENFILENAME ofn{};
@@ -4417,7 +4417,7 @@ static TempWStr GetFileFilterTemp() {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
+    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
     return ToWStrTemp(ToStr(fileFilter));
 }
 
@@ -6519,7 +6519,7 @@ static void ListPrintersShowResult(ListPrintersResult* d) {
 static void ListPrintersThread(HWND* hwndPtr) {
     str::Builder out;
     GetPrintersInfo(out);
-    auto d = new ListPrintersResult{*hwndPtr, str::Dup(out.CStr())};
+    auto d = new ListPrintersResult{*hwndPtr, str::Dup(ToStr(out))};
     delete hwndPtr;
     uitask::Post(MkFunc0<ListPrintersResult>(ListPrintersShowResult, d));
 }
@@ -7968,7 +7968,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     if (tocTree && tocTree->root) {
                         str::Builder s;
                         TocItemToText(s, tocTree->root, 0);
-                        tab->hwndPDFOutline = ShowTextInWindow("Document Outline", s.CStr(), &tab->hwndPDFOutline);
+                        tab->hwndPDFOutline = ShowTextInWindow("Document Outline", ToStr(s), &tab->hwndPDFOutline);
                     }
                 }
             }
@@ -8512,8 +8512,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!engine || !EngineSupportsAnnotations(engine)) {
                 return 0;
             }
-            ByteSlice img = GetClipboardImageBmp();
-            if (img.empty()) {
+            Str img = GetClipboardImageBmp();
+            if (str::IsEmpty(img)) {
                 NotificationCreateArgs nargs;
                 nargs.hwndParent = win->hwndCanvas;
                 nargs.timeoutMs = 3000;
@@ -8536,14 +8536,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 pageNoUnderCursor = dm->GetPageNoByPoint(pt);
             }
             if (pageNoUnderCursor < 0) {
-                img.Free();
+                str::Free(img);
                 return 0;
             }
             PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             AnnotCreateArgs args{AnnotationType::Stamp};
             args.stampImage = img;
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
-            img.Free();
+            str::Free(img);
         } break;
 
         case CmdSelectNextTheme:

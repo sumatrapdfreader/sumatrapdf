@@ -499,7 +499,7 @@ struct TiffParser {
         while (n > 0 && r.Byte(off + n - 1) == 0) {
             n--;
         }
-        return str::DupTemp(AsStr(ByteSlice(r.d + off, n)));
+        return str::DupTemp(Str((char*)(r.d + off), (int)(n)));
     }
 
     TempStr FormatRationalPair(u32 num, u32 den, bool asFraction) const {
@@ -936,7 +936,7 @@ struct TiffParser {
     }
 };
 
-static bool ExtractJpegExif(const ByteSlice& d, ByteSlice& out) {
+static bool ExtractJpegExif(Str d, Str& out) {
     ByteReader r(d);
     if (r.len < 4 || r.Byte(0) != 0xFF || r.Byte(1) != 0xD8) {
         return false;
@@ -961,7 +961,7 @@ static bool ExtractJpegExif(const ByteSlice& d, ByteSlice& out) {
                 if (payload + total - 4 > r.len) {
                     return false;
                 }
-                out = ByteSlice(r.d + payload, total - 4);
+                out = Str((char*)(r.d + payload), (int)(total - 4));
                 return true;
             }
         }
@@ -973,7 +973,7 @@ static bool ExtractJpegExif(const ByteSlice& d, ByteSlice& out) {
     }
 }
 
-static bool ExtractWebpExif(const ByteSlice& d, ByteSlice& out) {
+static bool ExtractWebpExif(Str d, Str& out) {
     if (!webp::HasSignature(d)) {
         return false;
     }
@@ -984,7 +984,7 @@ static bool ExtractWebpExif(const ByteSlice& d, ByteSlice& out) {
             size_t size = (size_t)r.DWordLE(idx + 4);
             size_t payload = idx + 8;
             if (payload + size <= r.len && size >= 8) {
-                out = ByteSlice(r.d + payload, size);
+                out = Str((char*)(r.d + payload), (int)(size));
                 return true;
             }
         }
@@ -1019,7 +1019,7 @@ static bool LooksLikeTiffExif(const u8* p, size_t len) {
     return nTags > 0 && nTags < 512;
 }
 
-static bool CopyTiffBlob(const u8* data, size_t len, size_t tiffOff, ByteSlice& out, u8** ownedOut) {
+static bool CopyTiffBlob(const u8* data, size_t len, size_t tiffOff, Str& out, u8** ownedOut) {
     size_t blobLen = len - tiffOff;
     constexpr size_t kMaxExifBytes = 256 * 1024;
     if (blobLen > kMaxExifBytes) {
@@ -1031,15 +1031,15 @@ static bool CopyTiffBlob(const u8* data, size_t len, size_t tiffOff, ByteSlice& 
     }
     memcpy(copy, data + tiffOff, blobLen);
     *ownedOut = copy;
-    out = ByteSlice(copy, blobLen);
+    out = Str((char*)(copy), (int)(blobLen));
     return true;
 }
 
 // Scan HEIF/AVIF container for TIFF EXIF (avoids libheif metadata API hang/slowness).
-static bool ExtractHeifExifFromBytes(const ByteSlice& d, ByteSlice& out, u8** ownedOut) {
+static bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
     *ownedOut = nullptr;
-    const u8* data = d.Get();
-    size_t len = d.size();
+    const u8* data = (u8*)d.s;
+    size_t len = (size_t)d.len;
     if (!data || len < 16) {
         return false;
     }
@@ -1072,7 +1072,7 @@ static bool ExtractHeifExifFromBytes(const ByteSlice& d, ByteSlice& out, u8** ow
         }
         memcpy(copy, data + tiffOff, blobLen);
         *ownedOut = copy;
-        out = ByteSlice(copy, blobLen);
+        out = Str((char*)(copy), (int)(blobLen));
         return true;
     }
     for (size_t i = 0; i + 8 < len; i++) {
@@ -1084,7 +1084,7 @@ static bool ExtractHeifExifFromBytes(const ByteSlice& d, ByteSlice& out, u8** ow
     return false;
 }
 
-static bool ExtractExifBlob(const ByteSlice& d, ByteSlice& out, u8** ownedOut) {
+static bool ExtractExifBlob(Str d, Str& out, u8** ownedOut) {
     *ownedOut = nullptr;
     Kind kind = GuessFileTypeFromContent(d);
     if (kind == kindFileJpeg) {
@@ -1103,8 +1103,8 @@ static bool ExtractExifBlob(const ByteSlice& d, ByteSlice& out, u8** ownedOut) {
         }
     }
     // TIFF magic anywhere
-    if (d.size() >= 4) {
-        const u8* p = d.Get();
+    if ((size_t)d.len >= 4) {
+        const u8* p = (u8*)d.s;
         if ((p[0] == 'I' && p[1] == 'I') || (p[0] == 'M' && p[1] == 'M')) {
             out = d;
             return true;
@@ -1113,7 +1113,7 @@ static bool ExtractExifBlob(const ByteSlice& d, ByteSlice& out, u8** ownedOut) {
     return false;
 }
 
-static void DumpFromGdiplus(const ByteSlice& d, StrVec& lines) {
+static void DumpFromGdiplus(Str d, StrVec& lines) {
     IStream* strm = CreateStreamFromData(d);
     if (!strm) {
         return;
@@ -1148,7 +1148,7 @@ static void DumpFromGdiplus(const ByteSlice& d, StrVec& lines) {
         PropertyItem* item = (PropertyItem*)buf;
         TempStr val;
         if (item->type == PropertyTagTypeASCII) {
-            val = str::DupTemp(AsStr(ByteSlice((u8*)item->value, item->length)));
+            val = str::DupTemp(Str((char*)(item->value), (int)(item->length)));
         } else if (item->type == PropertyTagTypeShort && item->length >= 2) {
             val = fmt("%u", *(u16*)item->value);
         } else if (item->type == PropertyTagTypeLong && item->length >= 4) {
@@ -1197,13 +1197,13 @@ bool DumpExifFile(Str path) {
         return false;
     }
     CliPrint(fmt("Opening: %s", path));
-    ByteSlice data = file::ReadFile(path);
-    if (data.empty()) {
+    Str data = file::ReadFile(path);
+    if (str::IsEmpty(data)) {
         CliPrint(StrL("No EXIF information found"));
         return false;
     }
 
-    ByteSlice exifBlob;
+    Str exifBlob;
     u8* ownedExif = nullptr;
     bool hasBlob = ExtractExifBlob(data, exifBlob, &ownedExif);
     TiffParser parser{ByteReader(exifBlob)};
@@ -1221,7 +1221,7 @@ bool DumpExifFile(Str path) {
     if (!found) {
         CliPrint(StrL("No EXIF information found"));
         free(ownedExif);
-        data.Free();
+        str::Free(data);
         return false;
     }
 
@@ -1234,7 +1234,7 @@ bool DumpExifFile(Str path) {
     }
 
     free(ownedExif);
-    data.Free();
+    str::Free(data);
     return true;
 }
 

@@ -163,24 +163,24 @@ int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
 
 // PDFSYNC synchronizer
 
-static int SyncLineLen(ByteSlice data, int off) {
+static int SyncLineLen(Str data, int off) {
     int end = off;
-    int n = (int)data.size();
-    while (end < n && data.data()[end]) {
+    int n = (int)data.len;
+    while (end < n && ((u8*)data.s)[end]) {
         end++;
     }
     return end - off;
 }
 
-static Str SyncLineAt(ByteSlice data, int off) {
-    return AsStr(ByteSlice(data.data() + off, (size_t)SyncLineLen(data, off)));
+static Str SyncLineAt(Str data, int off) {
+    return Str((char*)((u8*)data.s + off), (int)SyncLineLen(data, off));
 }
 
 // move to the next line in a list of zero-terminated lines
-static int SyncAdvanceLine(ByteSlice data, int off) {
+static int SyncAdvanceLine(Str data, int off) {
     off += SyncLineLen(data, off);
-    int n = (int)data.size();
-    while (off < n && !data.data()[off]) {
+    int n = (int)data.len;
+    while (off < n && !((u8*)data.s)[off]) {
         off++;
     }
     return off < n ? off : -1;
@@ -192,13 +192,13 @@ int Pdfsync::RebuildIndexIfNeeded() {
         return PDFSYNCERR_SUCCESS;
     }
 
-    ByteSlice data = file::ReadFile(syncFilePath);
+    Str data = file::ReadFile(syncFilePath);
     if (!data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
 
     // convert the file data into a list of zero-terminated strings
-    Str blob = AsStr(data);
+    Str blob = data;
     str::TransCharsInPlace(blob, StrL("\r\n"), StrL("\0\0"));
 
     // parse preamble (jobname and version marker)
@@ -544,7 +544,7 @@ static bool PathHasNonAscii(Str s) {
  * Convert a string encoded in the local character page (system ANSI code page) to UTF-8 encoding.
  *
  * @param localStr  A null-terminated string encoded in the local character page
- * @return          A heap-allocated UTF-8 string (caller must free via ByteSlice/str::Free), or empty on failure
+ * @return          A heap-allocated UTF-8 string (caller must free via str::Free), or empty on failure
  */
 static Str ConvertLocalToUTF8(Str localStr) {
     if (!localStr) {
@@ -581,19 +581,19 @@ TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
         return {};
     }
     // use file::ReadFile which uses CreateFileW (handles Unicode)
-    ByteSlice data = file::ReadFile(pathSync);
-    if (data.IsEmpty()) {
+    Str data = file::ReadFile(pathSync);
+    if (str::IsEmpty(data)) {
         logfa("CopyPlainSyncToTempFile: source file '.synctex' '%s' is empty.\n", pathSync);
         // return {};
     }
     TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
     if (!tempPath) {
-        data.Free();
+        str::Free(data);
         logfa("CopyPlainSyncToTempFile: unable to get temp file path. error: %d.\n", errno);
         return {};
     }
     bool ok = file::WriteFile(tempPath, data);
-    data.Free();
+    str::Free(data);
     if (!ok) {
         logfa("CopyPlainSyncToTempFile: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
         return {};
@@ -615,12 +615,12 @@ TempStr DealPlainSync(TempStr pathSync) {
     if (!pathSync) {
         return {};
     }
-    ByteSlice src = file::ReadFile(pathSync);
-    if (src.IsEmpty()) {
+    Str src = file::ReadFile(pathSync);
+    if (str::IsEmpty(src)) {
         logf("DealPlainSync: '%s' failed\n", pathSync);
         return {};
     }
-    TempStr srcZ = str::DupTemp(AsStr(src));
+    TempStr srcZ = str::DupTemp(src);
     int wlen = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, srcZ.s, -1, NULL, 0);
     if (wlen != 0) {
         logf("DealPlainSync: '%s' is utf-8 (created by lualatex)\n", pathSync);
@@ -632,20 +632,20 @@ TempStr DealPlainSync(TempStr pathSync) {
             logfa("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
             return {};
         }
-        ByteSlice dst(converted.s);
+        Str dst = converted;
 
-        if (dst.IsEmpty()) {
+        if (str::IsEmpty(dst)) {
             logfa("DealPlainSync: decoded content is empty.\n", pathSync);
             return {};
         }
         TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
         if (!tempPath) {
-            dst.Free();
+            str::Free(dst);
             logfa("DealPlainSync: unable to get temp file path. error: %d.\n", errno);
             return {};
         }
         bool ok = file::WriteFile(tempPath, dst);
-        dst.Free();
+        str::Free(dst);
         if (!ok) {
             logfa("DealPlainSync: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
             return {};
@@ -676,26 +676,26 @@ TempStr ungzipToTempSync(Str gzPath) {
     if (!gzPath) {
         return {};
     }
-    ByteSlice compr = file::ReadFile(gzPath);
-    if (compr.IsEmpty()) {
+    Str compr = file::ReadFile(gzPath);
+    if (str::IsEmpty(compr)) {
         logf("ungzipToTempSync: file::ReadFile() '%s' failed\n", gzPath);
         return {};
     }
     logf("ungzipToTempSync: file::ReadFile() did read '%s'\n", gzPath);
-    ByteSlice uncompr = Ungzip(compr);
-    if (uncompr.IsEmpty()) {
-        compr.Free();
+    Str uncompr = Ungzip(compr);
+    if (str::IsEmpty(uncompr)) {
+        str::Free(compr);
         return {};
     }
 
     TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
     if (!tempPath) {
-        uncompr.Free();
+        str::Free(uncompr);
         logfa("ungzipToTempSync: unable to get temp file path. error: %d.\n", errno);
         return {};
     }
     bool ok = file::WriteFile(tempPath, uncompr);
-    uncompr.Free();
+    str::Free(uncompr);
     if (!ok) {
         logfa("ungzipToTempSync: unable to write temp file '%s'. error: %d.\n", tempPath, errno);
         return {};

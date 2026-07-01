@@ -26,56 +26,6 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);
 int utf8RuneLen(const u8* s);
 
-struct ByteSlice {
-    u8* d = nullptr;
-    size_t sz = 0;
-
-    ByteSlice() = default;
-    ~ByteSlice() = default;
-    explicit ByteSlice(Str str) {
-        d = (u8*)str.s;
-        sz = (size_t)str.len;
-    }
-    ByteSlice(const u8* data, size_t size) {
-        d = (u8*)data;
-        sz = size;
-    }
-    ByteSlice(const ByteSlice& data) {
-        d = data.d;
-        sz = data.sz;
-    }
-    ByteSlice& operator=(const ByteSlice& other) {
-        d = other.d;
-        sz = other.sz;
-        return *this;
-    }
-    void Set(u8* data, size_t size) {
-        d = data;
-        sz = size;
-    }
-    u8* data() const { return d; }
-    u8* Get() const { return d; }
-    size_t size() const { return sz; }
-    bool empty() const { return !d; }
-    bool IsEmpty() const { return !d; }
-    void Free() {
-        free(d);
-        d = nullptr;
-        sz = 0;
-    }
-    operator const char*() { return (const char*)d; }
-};
-
-inline int len(const ByteSlice s) {
-    return (int)s.sz;
-}
-
-bool IsEqual(const ByteSlice&, const ByteSlice&);
-
-FORCEINLINE Str AsStr(ByteSlice bs) {
-    return Str((char*)bs.data(), (int)bs.sz);
-}
-
 namespace str {
 
 enum class TrimOpt {
@@ -93,7 +43,6 @@ void FreePtr(Str* s);
 
 Str Dup(Arena*, Str str);
 Str Dup(Str s);
-Str Dup(const ByteSlice&);
 TempStr DupTemp(Str s);
 TempWStr DupTemp(WStr s);
 
@@ -116,7 +65,6 @@ TempStr JoinTemp(Str s1, Str s2, Str s3, Str s4, Str s5);
 TempWStr JoinTemp(WStr s1, WStr s2, WStr s3 = {});
 
 bool Eq(Str s1, Str s2);
-bool Eq(const ByteSlice& sp1, const ByteSlice& sp2);
 bool EqI(Str s1, Str s2);
 bool EqIS(Str s1, Str s2);
 bool EqN(Str s1, Str s2, size_t len);
@@ -312,12 +260,8 @@ struct Builder {
     Str LendData() const;
     bool Contains(Str s);
     bool IsEmpty() const;
-    ByteSlice AsByteSlice() const;
-    ByteSlice StealAsByteSlice();
     bool Append(const u8* src, int size = -1);
-    bool AppendSlice(const ByteSlice& d);
     void Set(Str s);
-    Str CStr() const;
     char LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html

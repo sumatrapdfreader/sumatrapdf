@@ -3,7 +3,7 @@
 
 struct Pixmap;
 
-Size AvifSizeFromData(const ByteSlice&);
-Pixmap* PixmapFromAvifData(const ByteSlice&);
+Size AvifSizeFromData(Str);
+Pixmap* PixmapFromAvifData(Str);
 // Returns TIFF EXIF payload (caller frees *outData). Skips 4-byte HEIF Exif prefix.
-bool AvifExifBlobFromData(const ByteSlice& d, u8** outData, size_t* outSize);
+bool AvifExifBlobFromData(Str d, u8** outData, size_t* outSize);

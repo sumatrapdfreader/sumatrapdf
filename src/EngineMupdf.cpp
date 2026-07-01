@@ -572,14 +572,14 @@ static fz_stream* FzReadFileIfSmall(fz_context* ctx, Str path) {
         return nullptr;
     }
 
-    ByteSlice d = file::ReadFile(path);
-    if (d.empty()) {
+    Str d = file::ReadFile(path);
+    if (str::IsEmpty(d)) {
         // failed to read
         return nullptr;
     }
 
-    stm = FzStreamFromData(ctx, d.data(), len(d));
-    d.Free();
+    stm = FzStreamFromData(ctx, (u8*)d.s, len(d));
+    str::Free(d);
     return stm;
 }
 
@@ -603,17 +603,17 @@ static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, Str path) {
         return nullptr;
     }
 
-    ByteSlice d = file::ReadFile(path);
-    if (d.empty()) {
+    Str d = file::ReadFile(path);
+    if (str::IsEmpty(d)) {
         // failed to read
         return nullptr;
     }
 
     // strip garbage
-    const u8* data = d.data() + n;
+    const u8* data = (u8*)d.s + n;
     int size = len(d) - n;
     stm = FzStreamFromData(ctx, data, size);
-    d.Free();
+    str::Free(d);
     return stm;
 }
 
@@ -661,7 +661,7 @@ static void FzStreamFingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) 
     fz_md5_final(&md5, digest);
 }
 
-static ByteSlice FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
+static Str FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
     fz_seek(ctx, stream, 0, 2);
     i64 fileLen = fz_tell(ctx, stream);
     fz_seek(ctx, stream, 0, 0);
@@ -678,7 +678,7 @@ static ByteSlice FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
     // this was allocated inside mupdf, make a copy that can be free()d
     u8* res = (u8*)memdup(data, size);
     fz_free(ctx, data);
-    return {res, size};
+    return Str((char*)(res), (int)(size));
 }
 
 static inline int WcharsPerRune(int rune) {
@@ -1682,10 +1682,10 @@ pdf_obj* PdfCopyStrDict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
 
 // Note: make sure to only call with docLock
 // PdfLoadAttachment && PdfLoadAttachments must traverse in the same order
-static ByteSlice PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
+static Str PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
     pdf_obj* dict;
     fz_var(dict);
-    ByteSlice res;
+    Str res;
 
     fz_try(ctx) {
         dict = pdf_load_name_tree(ctx, doc, PDF_NAME(EmbeddedFiles));
@@ -1703,8 +1703,8 @@ static ByteSlice PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
             }
             if (no == i + 1) {
                 fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
-                res.d = (u8*)memdup(buf->data, buf->len);
-                res.sz = buf->len;
+                res.s = (char*)memdup(buf->data, buf->len);
+                res.len = (int)buf->len;
                 fz_drop_buffer(ctx, buf);
                 i = n + 1; // exit for loop
             }
@@ -1721,8 +1721,8 @@ static ByteSlice PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
 }
 
 // load embedded file data from a file attachment annotation by PDF object number
-static ByteSlice PdfLoadAnnotationAttachment(fz_context* ctx, pdf_document* doc, int objNum) {
-    ByteSlice res;
+static Str PdfLoadAnnotationAttachment(fz_context* ctx, pdf_document* doc, int objNum) {
+    Str res;
     fz_try(ctx) {
         pdf_obj* obj = pdf_new_indirect(ctx, doc, objNum, 0);
         pdf_obj* fs = pdf_dict_get(ctx, obj, PDF_NAME(FS));
@@ -1732,8 +1732,8 @@ static ByteSlice PdfLoadAnnotationAttachment(fz_context* ctx, pdf_document* doc,
         }
         fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
         if (buf) {
-            res.d = (u8*)memdup(buf->data, buf->len);
-            res.sz = buf->len;
+            res.s = (char*)memdup(buf->data, buf->len);
+            res.len = (int)buf->len;
             fz_drop_buffer(ctx, buf);
         }
         pdf_drop_obj(ctx, obj);
@@ -2226,7 +2226,7 @@ TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     return path2;
 }
 
-ByteSlice EngineMupdf::LoadStreamFromPDFFile(Str filePath) {
+Str EngineMupdf::LoadStreamFromPDFFile(Str filePath) {
     auto ctx = Ctx();
     int streamNo = -1;
     TempStr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
@@ -2259,21 +2259,21 @@ ByteSlice EngineMupdf::LoadStreamFromPDFFile(Str filePath) {
     auto data = (u8*)memdup(buffer->data, dataSize);
     fz_drop_buffer(ctx, buffer);
 
-    return {data, dataSize};
+    return Str((char*)(data), (int)(dataSize));
 }
 
 // <filePath> should end with embed marks, which is a stream number
 // inside pdf file
-ByteSlice LoadEmbeddedPDFFile(Str filePath) {
+Str LoadEmbeddedPDFFile(Str filePath) {
     EngineMupdf* engine = new EngineMupdf();
     auto res = engine->LoadStreamFromPDFFile(filePath);
     SafeEngineRelease(&engine);
     return res;
 }
 
-static ByteSlice TxtFileToHTML(Str path) {
-    ByteSlice fd = file::ReadFileWithArena(path, GetTempArena());
-    if (fd.empty()) {
+static Str TxtFileToHTML(Str path) {
+    Str fd = file::ReadFileWithArena(path, GetTempArena());
+    if (str::IsEmpty(fd)) {
         return {};
     }
 
@@ -2282,7 +2282,7 @@ static ByteSlice TxtFileToHTML(Str path) {
         InterlockedDecrement(&gAllowAllocFailure);
     };
 
-    TempStr data = AsStr(fd);
+    TempStr data = fd;
     data = str::ReplaceTemp(data, StrL("&"), StrL("&amp;"));
     if (!data) {
         return {};
@@ -2319,7 +2319,7 @@ static ByteSlice TxtFileToHTML(Str path) {
 </html>)");
     size_t sz = len(d);
     Str stolen = d.StealData();
-    return {(u8*)stolen.s, sz};
+    return Str((char*)(stolen.s), (int)(sz));
 }
 
 static Str PalmDocToHTML(Str path) {
@@ -2351,14 +2351,14 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     // using html engine
     if (kind == kindFileTxt) {
         // synthesize a .html file from text file
-        ByteSlice d = TxtFileToHTML(path);
-        if (d.empty()) {
+        Str d = TxtFileToHTML(path);
+        if (str::IsEmpty(d)) {
             return false;
         }
-        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.data(), d.size());
+        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.s, (size_t)d.len);
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
-        d.Free();
+        str::Free(d);
         TempStr nameHint = str::JoinTemp(path, StrL(".html"));
         if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;
@@ -2848,18 +2848,18 @@ static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* fil
     if (!file::Exists(full)) {
         return nullptr;
     }
-    ByteSlice data = file::ReadFile(full);
-    if (data.empty()) {
+    Str data = file::ReadFile(full);
+    if (str::IsEmpty(data)) {
         return nullptr;
     }
     fz_buffer* buf = nullptr;
     fz_try(ctx) {
-        buf = fz_new_buffer_from_copied_data(ctx, data.data(), data.size());
+        buf = fz_new_buffer_from_copied_data(ctx, (u8*)data.s, (size_t)data.len);
     }
     fz_catch(ctx) {
         buf = nullptr;
     }
-    data.Free();
+    str::Free(data);
     return buf;
 }
 
@@ -4211,7 +4211,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         if (info.IsEmpty()) {
             continue;
         }
-        AppendIfNotExists(&fonts, info.CStr());
+        AppendIfNotExists(&fonts, ToStr(info));
     }
     if (fonts.Size() == 0) {
         return {};
@@ -4511,7 +4511,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
             fz_report_error(ctx);
         }
         if (!sigs.IsEmpty()) {
-            AddProp(keyValOut, kPropSignatures, sigs.CStr());
+            AddProp(keyValOut, kPropSignatures, ToStr(sigs));
         }
     }
 
@@ -4532,20 +4532,20 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
                 filesStr.AppendChar('\n');
                 filesStr.Append(fi->name);
             }
-            AddProp(keyValOut, kPropFiles, filesStr.CStr());
+            AddProp(keyValOut, kPropFiles, ToStr(filesStr));
             delete zip;
         }
     }
 }
 
-ByteSlice EngineMupdf::GetFileData() {
+Str EngineMupdf::GetFileData() {
     auto ctx = Ctx();
 
     if (!pdfdoc) {
         return {};
     }
 
-    ByteSlice res;
+    Str res;
     ScopedCritSec scope(&docLock);
 
     fz_var(res);
@@ -4557,7 +4557,7 @@ ByteSlice EngineMupdf::GetFileData() {
         res = {};
     }
 
-    if (!res.empty()) {
+    if (!str::IsEmpty(res)) {
         return res;
     }
 
@@ -4569,10 +4569,10 @@ ByteSlice EngineMupdf::GetFileData() {
 }
 
 bool EngineMupdf::SaveFileAs(Str dstPath) {
-    ByteSlice d = GetFileData();
-    if (!d.empty()) {
+    Str d = GetFileData();
+    if (!str::IsEmpty(d)) {
         bool ok = file::WriteFile(dstPath, d);
-        d.Free();
+        str::Free(d);
         return ok;
     }
     auto srcPath = FilePath();
@@ -4779,7 +4779,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
         if (!fi || !fi->data) {
             return {};
         }
-        ByteSlice d{(u8*)fi->data, fi->fileSizeUncompressed};
+        Str d = Str((char*)(fi->data), (int)(fi->fileSizeUncompressed));
         IStream* strm = CreateStreamFromData(d);
         ScopedComPtr<IStream> stream(strm);
         if (!stream) {
@@ -4822,7 +4822,7 @@ EngineBase* CreateEngineMupdfFromStream(IStream* stream, Str nameHint, PasswordU
     return engine;
 }
 
-EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, Str nameHint, PasswordUI* pwdUI) {
+EngineBase* CreateEngineMupdfFromData(Str data, Str nameHint, PasswordUI* pwdUI) {
     EngineMupdf* engine = new EngineMupdf();
     IStream* stream = CreateStreamFromData(data);
     if (!engine->Load(stream, nameHint, pwdUI)) {
@@ -4867,17 +4867,17 @@ bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
 }
 
 // caller must free
-ByteSlice EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
+Str EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
         return {};
     }
 
-    ByteSlice res = PdfLoadAttachment(epdf->Ctx(), epdf->pdfdoc, attachmentNo);
+    Str res = PdfLoadAttachment(epdf->Ctx(), epdf->pdfdoc, attachmentNo);
     return res;
 }
 
-ByteSlice EngineMupdfLoadAnnotAttachment(EngineBase* engine, int objNum) {
+Str EngineMupdfLoadAnnotAttachment(EngineBase* engine, int objNum) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
         return {};
@@ -5151,7 +5151,7 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
             fz_close_output(ctx, out);
             unsigned char* data;
             size_t len = fz_buffer_storage(ctx, buf, &data);
-            res = str::DupTemp(AsStr(ByteSlice(data, len)));
+            res = str::DupTemp(Str((char*)(data), (int)(len)));
         }
     }
     fz_catch(ctx) {
@@ -5177,7 +5177,7 @@ TempStr EngineMupdfGetPdfInfo(Str path) {
         buf = pdfinfo_to_buffer(ctx, path.s);
         unsigned char* data;
         size_t len = fz_buffer_storage(ctx, buf, &data);
-        res = str::DupTemp(AsStr(ByteSlice(data, len)));
+        res = str::DupTemp(Str((char*)(data), (int)(len)));
     }
     fz_catch(ctx) {
         fz_report_error(ctx);

@@ -621,15 +621,15 @@ static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
     return wstr::Dup(path);
 }
 
-static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedEventArgs* args, ByteSlice data,
+static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedEventArgs* args, Str data,
                                               Str contentType, int statusCode) {
     if (!args || !gSharedEnvironment) {
         return false;
     }
 
     IStream* stream = nullptr;
-    if (!data.empty()) {
-        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, data.size());
+    if (!str::IsEmpty(data)) {
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, (size_t)data.len);
         if (!hMem) {
             return false;
         }
@@ -638,7 +638,7 @@ static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedE
             GlobalFree(hMem);
             return false;
         }
-        memcpy(mem, data.data(), data.size());
+        memcpy(mem, (u8*)data.s, (size_t)data.len);
         GlobalUnlock(hMem);
         HRESULT hr = CreateStreamOnHGlobal(hMem, TRUE, &stream);
         if (FAILED(hr)) {
@@ -718,7 +718,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
             return S_OK;
         }
 
-        CreateWebResourceResponseFromData(args, {(u8*)res.data, res.dataLen}, res.contentType, 200);
+        CreateWebResourceResponseFromData(args, Str((char*)res.data, (int)res.dataLen), res.contentType, 200);
         if (res.ownsData) {
             free((void*)res.data);
         }

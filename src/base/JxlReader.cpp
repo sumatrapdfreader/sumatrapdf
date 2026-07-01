@@ -13,8 +13,8 @@
 namespace jxl {
 
 // libjxl detects both the raw JPEG XL codestream and the ISOBMFF container form
-bool HasSignature(const ByteSlice& d) {
-    JxlSignature sig = JxlSignatureCheck(d.data(), d.size());
+bool HasSignature(Str d) {
+    JxlSignature sig = JxlSignatureCheck((u8*)d.s, (size_t)d.len);
     return sig == JXL_SIG_CODESTREAM || sig == JXL_SIG_CONTAINER;
 }
 
@@ -39,8 +39,8 @@ static Pixmap* RgbaToPixmap(const u8* rgba, int w, int h) {
     return px;
 }
 
-Pixmap* PixmapFromData(const ByteSlice& d) {
-    if (d.empty()) {
+Pixmap* PixmapFromData(Str d) {
+    if (str::IsEmpty(d)) {
         return nullptr;
     }
     JxlDecoder* dec = JxlDecoderCreate(nullptr);
@@ -52,7 +52,7 @@ Pixmap* PixmapFromData(const ByteSlice& d) {
     uint32_t w = 0, h = 0;
 
     bool ok = JxlDecoderSubscribeEvents(dec, JXL_DEC_BASIC_INFO | JXL_DEC_FULL_IMAGE) == JXL_DEC_SUCCESS &&
-              JxlDecoderSetInput(dec, d.data(), d.size()) == JXL_DEC_SUCCESS;
+              JxlDecoderSetInput(dec, (u8*)d.s, (size_t)d.len) == JXL_DEC_SUCCESS;
     if (ok) {
         JxlDecoderCloseInput(dec);
         bool done = false;
@@ -104,9 +104,9 @@ Pixmap* PixmapFromData(const ByteSlice& d) {
     return result;
 }
 
-Size SizeFromData(const ByteSlice& d) {
+Size SizeFromData(Str d) {
     Size size;
-    if (d.empty()) {
+    if (str::IsEmpty(d)) {
         return size;
     }
     JxlDecoder* dec = JxlDecoderCreate(nullptr);
@@ -114,7 +114,7 @@ Size SizeFromData(const ByteSlice& d) {
         return size;
     }
     if (JxlDecoderSubscribeEvents(dec, JXL_DEC_BASIC_INFO) == JXL_DEC_SUCCESS &&
-        JxlDecoderSetInput(dec, d.data(), d.size()) == JXL_DEC_SUCCESS) {
+        JxlDecoderSetInput(dec, (u8*)d.s, (size_t)d.len) == JXL_DEC_SUCCESS) {
         JxlDecoderCloseInput(dec);
         if (JxlDecoderProcessInput(dec) == JXL_DEC_BASIC_INFO) {
             JxlBasicInfo info;
@@ -132,13 +132,13 @@ Size SizeFromData(const ByteSlice& d) {
 #else
 
 namespace jxl {
-bool HasSignature(const ByteSlice&) {
+bool HasSignature(Str) {
     return false;
 }
-Size SizeFromData(const ByteSlice&) {
+Size SizeFromData(Str) {
     return Size();
 }
-Pixmap* PixmapFromData(const ByteSlice&) {
+Pixmap* PixmapFromData(Str) {
     return nullptr;
 }
 } // namespace jxl

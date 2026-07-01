@@ -183,9 +183,9 @@ static ImageAlpha GetAlphaType(const u8* data, size_t len) {
 }
 
 // checks whether this could be data for a TGA image
-bool HasSignature(const ByteSlice& d) {
-    size_t len = d.size();
-    const u8* data = (const u8*)d.data();
+bool HasSignature(Str d) {
+    size_t len = (size_t)d.len;
+    const u8* data = (const u8*)d.s;
     if (HasVersion2Footer(data, len)) {
         return true;
     }
@@ -273,16 +273,16 @@ static void ReadPixel(ReadState& s, u8* dst) {
     }
 }
 
-Pixmap* PixmapFromData(const ByteSlice& d) {
-    size_t len = d.size();
-    const u8* data = (const u8*)d.data();
+Pixmap* PixmapFromData(Str d) {
+    size_t len = (size_t)d.len;
+    const u8* data = (const u8*)d.s;
 
     if (len < sizeof(TgaHeader)) {
         return nullptr;
     }
 
     ReadState s = {nullptr};
-    const TgaHeader* headerLE = (const TgaHeader*)d.data();
+    const TgaHeader* headerLE = (const TgaHeader*)d.s;
     s.data = data + sizeof(TgaHeader) + headerLE->idLength;
     s.end = data + len;
     if (1 == headerLE->cmapType) {
@@ -334,7 +334,7 @@ inline bool memeq3(const char* pix1, const char* pix2) {
     return *(WORD*)pix1 == *(WORD*)pix2 && pix1[2] == pix2[2];
 }
 
-ByteSlice SerializeBitmap(HBITMAP hbmp) {
+Str SerializeBitmap(HBITMAP hbmp) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
     if ((ULONG)bmpInfo.bmWidth > USHRT_MAX || (ULONG)bmpInfo.bmHeight > USHRT_MAX) {
@@ -372,7 +372,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     TgaFooter footerLE = {0, 0, TGA_FOOTER_SIGNATURE};
 
     str::Builder tgaData;
-    tgaData.AppendSlice(ByteSlice((u8*)&headerLE, sizeof(headerLE)));
+    tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
     for (int k = 0; k < h; k++) {
         const char* line = bmpData + k * stride;
         for (int i = 0, j = 1; i < w; i += j, j = 1) {
@@ -396,21 +396,21 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
             }
         }
     }
-    tgaData.AppendSlice(ByteSlice((u8*)&footerLE, sizeof(footerLE)));
+    tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
 
     // don't compress the image data if that increases the file size
     if (len(tgaData) > sizeof(headerLE) + w * h * 3 + sizeof(footerLE)) {
         tgaData.RemoveAt(0, len(tgaData));
         headerLE.imageType = Type_Truecolor;
-        tgaData.AppendSlice(ByteSlice((u8*)&headerLE, sizeof(headerLE)));
+        tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));
         for (int k = 0; k < h; k++) {
             tgaData.Append(Str(bmpData + k * stride, w * 3));
         }
-        tgaData.AppendSlice(ByteSlice((u8*)&footerLE, sizeof(footerLE)));
+        tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
     }
 
     size_t sz = len(tgaData);
     Str stolen = tgaData.StealData();
-    return {(u8*)stolen.s, sz};
+    return Str((char*)stolen.s, (int)sz);
 }
 } // namespace tga

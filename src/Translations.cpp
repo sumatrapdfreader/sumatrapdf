@@ -225,7 +225,7 @@ void SetCurrentLangByCode(Str langCode) {
         return;
     }
     int dataSize = (int)(archive.files[fileIdx].uncompressedSize);
-    Str d = AsStr(ByteSlice(data, dataSize));
+    Str d = Str((char*)(data), (int)(dataSize));
     ParseTranslationsTxt(d, langCode);
     free(data);
 }

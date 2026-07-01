@@ -13,7 +13,7 @@ bool GumboTagNameIs(const GumboNode* node, Str name) {
     if (node->v.element.tag != GUMBO_TAG_UNKNOWN) {
         tag = Str(gumbo_normalized_tagname(node->v.element.tag));
     } else {
-        Str orig = AsStr(ByteSlice((const u8*)node->v.element.original_tag.data, node->v.element.original_tag.length));
+        Str orig = Str((char*)node->v.element.original_tag.data, (int)node->v.element.original_tag.length);
         int off = 0;
         if (!str::IsEmpty(orig) && orig.s[0] == '<') {
             off = 1;

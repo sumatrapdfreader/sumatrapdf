@@ -2028,14 +2028,14 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 IPageDestination* elDest = pageEl->AsLink();
                 PageDestination* pd = (PageDestination*)elDest;
                 if (pd && pd->embedObjNum > 0) {
-                    ByteSlice data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
-                    if (!data.empty()) {
+                    Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+                    if (!str::IsEmpty(data)) {
                         Str fileName = pd->GetValue2();
                         TempStr dir = path::GetDirTemp(filePath);
                         fileName = path::GetBaseNameTemp(fileName);
                         TempStr dstPath = path::JoinTemp(dir, fileName);
                         SaveDataToFile(win->hwndFrame, dstPath, data);
-                        data.Free();
+                        str::Free(data);
                     }
                 }
             }

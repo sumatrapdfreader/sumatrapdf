@@ -3455,7 +3455,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
     }
 
     // verify the downloaded file is a supported image type
-    Kind kind = GuessFileTypeFromContent(destPath);
+    Kind kind = GuessFileTypeFromFile(destPath);
     if (!IsEngineImageSupportedFileType(kind)) {
         logf("DownloadAndOpenUrl: downloaded file is not a supported image type: '%s'\n", destPath);
         file::Delete(destPath);

@@ -1376,7 +1376,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     pdf_set_annot_line(ctx, annot, a, b);
                 } break;
             }
-            if (typ == AnnotationType::Stamp && !args->stampImage.empty()) {
+            if (typ == AnnotationType::Stamp && !str::IsEmpty(args->stampImage)) {
                 // image stamp (e.g. pasted from the clipboard): embed the image
                 // and size the rect to the image's natural size, anchored at pos
                 fz_image* img = nullptr;
@@ -1384,7 +1384,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 fz_var(img);
                 fz_var(buf);
                 fz_try(ctx) {
-                    buf = fz_new_buffer_from_copied_data(ctx, args->stampImage.data(), args->stampImage.size());
+                    buf = fz_new_buffer_from_copied_data(ctx, (u8*)args->stampImage.s, (size_t)args->stampImage.len);
                     img = fz_new_image_from_buffer(ctx, buf);
                     pdf_set_annot_stamp_image(ctx, annot, img);
                     int xres = img->xres > 0 ? img->xres : 96;

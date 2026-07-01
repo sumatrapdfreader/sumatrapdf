@@ -574,13 +574,13 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
     return base;
 }
 
-ByteSlice SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
+Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
     str::Builder out;
     out.Append(UTF8_BOM);
     SquareTreeNode* root = ParseSquareTree(prevData);
     SerializeStructRec(out, info, strct, root);
     delete root;
-    return out.StealAsByteSlice();
+    return out.StealData();
 }
 
 void* DeserializeStruct(const StructInfo* info, Str data, void* strct) {

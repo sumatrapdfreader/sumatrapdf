@@ -57,8 +57,8 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     bool OnBeforeNavigate(Str url, bool newWindow) override { return cm->OnBeforeNavigate(url, newWindow); }
     void OnDocumentComplete(Str url) override { cm->OnDocumentComplete(url); }
     void OnLButtonDown() override { cm->OnLButtonDown(); }
-    ByteSlice GetDataForUrl(Str url) override { return cm->GetDataForUrl(url); }
-    void DownloadData(Str url, const ByteSlice& data) override { cm->DownloadData(url, data); }
+    Str GetDataForUrl(Str url) override { return cm->GetDataForUrl(url); }
+    void DownloadData(Str url, Str data) override { cm->DownloadData(url, data); }
 };
 
 struct ChmTocTraceItem {
@@ -510,10 +510,10 @@ bool ChmModel::Load(Str fileName) {
 struct ChmCacheEntry {
     // owned by ChmModel::poolAllocator
     Str url;
-    ByteSlice data;
+    Str data;
 
     explicit ChmCacheEntry(Str url);
-    ~ChmCacheEntry() { data.Free(); };
+    ~ChmCacheEntry() { str::Free(data); };
 };
 
 ChmCacheEntry::ChmCacheEntry(Str url) {
@@ -605,7 +605,7 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
 }
 
 // Load and cache data for a given url inside CHM file.
-ByteSlice ChmModel::GetDataForUrl(Str url) {
+Str ChmModel::GetDataForUrl(Str url) {
     ScopedCritSec scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
@@ -613,7 +613,7 @@ ByteSlice ChmModel::GetDataForUrl(Str url) {
         Str s = str::Dup(poolAlloc, plainUrl);
         e = new ChmCacheEntry(s);
         e->data = doc->GetData(plainUrl);
-        if (e->data.empty()) {
+        if (str::IsEmpty(e->data)) {
             delete e;
             return {};
         }
@@ -622,7 +622,7 @@ ByteSlice ChmModel::GetDataForUrl(Str url) {
     return e->data;
 }
 
-void ChmModel::DownloadData(Str url, const ByteSlice& data) {
+void ChmModel::DownloadData(Str url, Str data) {
     if (!cb) {
         return;
     }
@@ -774,7 +774,7 @@ struct ChmThumbnailTask : HtmlWindowCallback {
     Size size;
     const OnBitmapRendered* saveThumbnail = nullptr;
     Str homeUrl;
-    Vec<ByteSlice> data;
+    Vec<Str> data;
     CRITICAL_SECTION docAccess;
 
     ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const OnBitmapRendered* saveThumbnail);
@@ -782,9 +782,9 @@ struct ChmThumbnailTask : HtmlWindowCallback {
     void StartCreateThumbnail(HtmlWindow* hw);
     bool OnBeforeNavigate(Str, bool newWindow) override;
     void OnDocumentComplete(Str url) override;
-    ByteSlice GetDataForUrl(Str url) override;
+    Str GetDataForUrl(Str url) override;
     void OnLButtonDown() override;
-    void DownloadData(Str, const ByteSlice&) override;
+    void DownloadData(Str, Str) override;
 };
 
 static void SafeDeleteChmThumbnailTask(ChmThumbnailTask* d) {
@@ -807,7 +807,7 @@ ChmThumbnailTask::~ChmThumbnailTask() {
     DestroyWindow(hwnd);
     delete doc;
     for (auto&& d : data) {
-        d.Free();
+        str::Free(d);
     }
     LeaveCriticalSection(&docAccess);
     DeleteCriticalSection(&docAccess);
@@ -828,7 +828,7 @@ void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
     hw->NavigateToDataUrl(homeUrl);
 }
 
-ByteSlice ChmThumbnailTask::GetDataForUrl(Str url) {
+Str ChmThumbnailTask::GetDataForUrl(Str url) {
     ScopedCritSec scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     auto d = doc->GetData(plainUrl);
@@ -866,7 +866,7 @@ void ChmThumbnailTask::OnDocumentComplete(Str url) {
 
 void ChmThumbnailTask::OnLButtonDown() {}
 
-void ChmThumbnailTask::DownloadData(Str, const ByteSlice&) {}
+void ChmThumbnailTask::DownloadData(Str, Str) {}
 
 static void CreateChmThumbnail(Str path, const Size& size, const OnBitmapRendered* saveThumbnail) {
     // doc and window will be destroyed by the callback once it's invoked

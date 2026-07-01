@@ -72,7 +72,7 @@ class MultiFormatArchive {
     // be nullptr in that case.
     FileInfo* GetFileDataByName(Str filename);
     FileInfo* GetFileDataById(size_t fileId);
-    ByteSlice GetFileDataPartById(size_t fileId, size_t sizeHint);
+    Str GetFileDataPartById(size_t fileId, size_t sizeHint);
 
     Str GetComment();
 
@@ -100,7 +100,7 @@ class MultiFormatArchive {
     // ->failed when extraction didn't produce the expected bytes.
     void LoadFileDataByIdUnrarDll(size_t fileId);
     void LoadFileDataByIdLibarchive(size_t fileId);
-    ByteSlice GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint);
+    Str GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint);
     bool LoadedUsingUnrarDll() const { return (bool)rarFilePath_; }
 };
 

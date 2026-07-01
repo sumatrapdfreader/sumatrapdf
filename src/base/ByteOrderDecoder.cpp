@@ -23,7 +23,7 @@ u32 UInt32LE(const u8* d) {
 ByteOrderDecoder::ByteOrderDecoder(const u8* d, size_t len, ByteOrder order)
     : ok(true), byteOrder(order), data(d), curr(data), left(len) {}
 
-ByteOrderDecoder::ByteOrderDecoder(ByteSlice bs, ByteOrder order) : ByteOrderDecoder(bs.data(), bs.size(), order) {}
+ByteOrderDecoder::ByteOrderDecoder(Str bs, ByteOrder order) : ByteOrderDecoder((u8*)bs.s, (size_t)bs.len, order) {}
 
 u8 ByteOrderDecoder::UInt8() {
     if (left < 1) {

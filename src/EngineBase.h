@@ -469,7 +469,7 @@ class EngineBase {
     // returns the binary data for the current file
     // (e.g. for saving again when the file has already been deleted)
     // caller needs to free() the result
-    virtual ByteSlice GetFileData() = 0;
+    virtual Str GetFileData() = 0;
 
     // saves a copy of the current file under a different name (overwriting an existing file)
     virtual bool SaveFileAs(Str copyFileName) = 0;

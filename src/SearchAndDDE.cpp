@@ -2196,7 +2196,7 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
         }
         auto* data = (const SumatraOpenCopyData*)cds->lpData;
         size_t pathMax = cds->cbData - sizeof(SumatraOpenCopyData);
-        Str pathZ = AsStr(ByteSlice((const u8*)(data + 1), pathMax));
+        Str pathZ = Str((char*)(const u8*)(data + 1), (int)pathMax);
         // require null-terminator within bounds
         if (strnlen_s(pathZ.s, pathMax) >= pathMax) {
             return FALSE;

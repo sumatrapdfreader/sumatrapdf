@@ -13,7 +13,7 @@ void LogCallstack();
 void RememberCallstackLogs();
 TempStr GetCurrentThreadCallstackTemp();
 void FreeCallstackLogs();
-ByteSlice GetCallstacks();
+Str GetCallstacks();
 void GetAllThreadsCallstacks(str::Builder& s);
 void GetAllThreadsCallstacksExcept(str::Builder& s, DWORD skipThreadId);
 void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers);

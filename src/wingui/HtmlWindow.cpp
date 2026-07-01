@@ -311,7 +311,7 @@ class HW_IInternetProtocol : public IInternetProtocol {
 
     // those are filled in Start() and represent data to be sent
     // for a given url
-    ByteSlice data{};
+    Str data{};
     size_t dataCurrPos = 0;
 };
 
@@ -429,30 +429,30 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     }
     TempStr urlRestA = ToUtf8Temp(WStr(urlRest.Get()));
     data = win->htmlWinCb->GetDataForUrl(urlRestA);
-    if (data.empty()) {
+    if (str::IsEmpty(data)) {
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
-    Str imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
+    Str imgExt = GfxFileExtFromData(data);
     Str mime = MimeFromUrl(urlRestA, imgExt);
     WCHAR* mimeW = CWStrTemp(mime);
     str::Free(mime);
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
 #ifdef _WIN64
     // not going to report data in parts for unexpectedly huge webpages
-    ReportIf(data.size() > ULONG_MAX);
+    ReportIf((size_t)data.len > ULONG_MAX);
 #endif
     pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE,
-                           (ULONG)data.size(), (ULONG)data.size());
+                           (ULONG)data.len, (ULONG)data.len);
     pIProtSink->ReportResult(S_OK, 200, nullptr);
     return S_OK;
 }
 
 STDMETHODIMP HW_IInternetProtocol::Read(void* pv, ULONG cb, ULONG* pcbRead) {
-    if (data.empty()) {
+    if (str::IsEmpty(data)) {
         return S_FALSE;
     }
-    size_t dataAvail = data.size() - dataCurrPos;
+    size_t dataAvail = (size_t)data.len - dataCurrPos;
     if (0 == dataAvail) {
         return S_FALSE;
     }
@@ -460,7 +460,7 @@ STDMETHODIMP HW_IInternetProtocol::Read(void* pv, ULONG cb, ULONG* pcbRead) {
     if (toRead > dataAvail) {
         toRead = (ULONG)dataAvail;
     }
-    u8* dataToRead = data.data() + dataCurrPos;
+    u8* dataToRead = (u8*)data.s + dataCurrPos;
     memcpy(pv, dataToRead, toRead);
     dataCurrPos += toRead;
     *pcbRead = toRead;
@@ -959,7 +959,7 @@ class HW_IDownloadManager : public IDownloadManager {
         }
         TempStr urlRestA = ToUtf8Temp(WStr(urlRest.Get()));
         auto data = win->htmlWinCb->GetDataForUrl(urlRestA);
-        if (data.empty()) {
+        if (str::IsEmpty(data)) {
             return INET_E_DATA_NOT_AVAILABLE;
         }
         // ask the UI to let the user save the file
@@ -995,7 +995,7 @@ class HtmlMoniker : public IMoniker {
     HtmlMoniker();
     virtual ~HtmlMoniker();
 
-    HRESULT SetHtml(const ByteSlice&);
+    HRESULT SetHtml(Str);
     HRESULT SetBaseUrl(WStr baseUrl);
 
     // IUnknown
@@ -1075,12 +1075,12 @@ HtmlMoniker::~HtmlMoniker() {
     wstr::Free(baseUrl);
 }
 
-HRESULT HtmlMoniker::SetHtml(const ByteSlice& d) {
-    str::ReplaceWithCopy(&htmlData, AsStr(d));
+HRESULT HtmlMoniker::SetHtml(Str d) {
+    str::ReplaceWithCopy(&htmlData, d);
     if (htmlStream) {
         htmlStream->Release();
     }
-    htmlStream = CreateStreamFromData({(u8*)htmlData.s, d.size()});
+    htmlStream = CreateStreamFromData(Str(htmlData.s, htmlData.len));
     return S_OK;
 }
 
@@ -1498,7 +1498,7 @@ void HtmlWindow::NavigateToAboutBlank() {
     NavigateToUrl("about:blank");
 }
 
-void HtmlWindow::SetHtml(const ByteSlice& d, Str url) {
+void HtmlWindow::SetHtml(Str d, Str url) {
     FreeHtmlSetInProgressData();
     str::ReplacePtr(&htmlSetInProgress, str::Dup(d));
     str::ReplacePtr(&htmlSetInProgressUrl, str::Dup(url));
@@ -1512,7 +1512,7 @@ void HtmlWindow::SetHtml(const ByteSlice& d, Str url) {
 // TODO: IHtmlDocument2->write() seems like a simpler method
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
 // https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
-void HtmlWindow::SetHtmlReal(const ByteSlice& d) {
+void HtmlWindow::SetHtmlReal(Str d) {
     if (htmlContent) {
         htmlContent->Release();
     }
@@ -1772,7 +1772,7 @@ void HtmlWindow::OnDocumentComplete(WStr urlW) {
         if (htmlSetInProgress) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
             // which we should ignore?
-            SetHtmlReal(ToByteSlice(htmlSetInProgress));
+            SetHtmlReal(htmlSetInProgress);
             if (htmlWinCb) {
                 if (htmlSetInProgressUrl) {
                     htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);

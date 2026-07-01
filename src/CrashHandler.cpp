@@ -227,7 +227,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
     return s.StealData();
 }
 
-void SaveCrashInfo(const ByteSlice& d) {
+void SaveCrashInfo(Str d) {
     if (!gCrashFilePath) {
         logf("SaveCrashInfo: skipping because !gCrashFilePath");
         return;
@@ -237,8 +237,8 @@ void SaveCrashInfo(const ByteSlice& d) {
     file::WriteFile(gCrashFilePath, d);
 }
 
-static void WriteCrashInfoToStdErr(const ByteSlice& d) {
-    if (d.empty()) {
+static void WriteCrashInfoToStdErr(Str d) {
+    if (str::IsEmpty(d)) {
         return;
     }
     HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
@@ -246,12 +246,12 @@ static void WriteCrashInfoToStdErr(const ByteSlice& d) {
         return;
     }
     DWORD written = 0;
-    WriteFile(h, d.data(), (DWORD)d.size(), &written, nullptr);
+    WriteFile(h, (u8*)d.s, (DWORD)d.len, &written, nullptr);
 }
 
-void UploadCrashReport(const ByteSlice& d) {
+void UploadCrashReport(Str d) {
     log("UploadCrashReport()\n");
-    if (d.empty()) {
+    if (str::IsEmpty(d)) {
         return;
     }
 
@@ -259,15 +259,15 @@ void UploadCrashReport(const ByteSlice& d) {
     headers.Append("Content-Type: text/plain");
 
     str::Builder data(16 * 1024, gCrashHandlerAllocator);
-    data.AppendSlice(d);
+    data.Append(d);
 
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
 }
 
-static bool ExtractSymbols(const u8* archiveData, size_t dataSize, Str dstDir, Arena* allocator) {
-    logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
+static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* allocator) {
+    logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, archiveData.len);
     lzma::SimpleArchive archive;
-    bool ok = ParseSimpleArchive(archiveData, dataSize, &archive);
+    bool ok = ParseSimpleArchive((const u8*)archiveData.s, (size_t)archiveData.len, &archive);
     if (!ok) {
         logf("ExtractSymbols: ParseSimpleArchive failed\n");
         return false;
@@ -285,7 +285,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, Str dstDir, A
         if (!filePath) {
             return false;
         }
-        ByteSlice d = {uncompressed, fi->uncompressedSize};
+        Str d = Str((char*)uncompressed, (int)fi->uncompressedSize);
         ok = file::WriteFile(filePath, d);
         if (!ok) {
             DWORD err = GetLastError();
@@ -335,7 +335,7 @@ static bool DownloadAndUnzipSymbols(Str symDir) {
         log("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
     }
 
-    bool ok = ExtractSymbols((const u8*)ToStr(rsp.data).s, len(rsp.data), symDir, gCrashHandlerAllocator);
+    bool ok = ExtractSymbols(ToStr(rsp.data), symDir, gCrashHandlerAllocator);
     if (!ok) {
         log("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
     }
@@ -480,7 +480,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
             loga("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n");
             return;
         }
-        ByteSlice d(s);
+        Str d = s;
         SaveCrashInfo(d);
         WriteCrashInfoToStdErr(d);
         loga(s);
@@ -498,7 +498,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
                 loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
                 return;
             }
-            ByteSlice d(s);
+            Str d = s;
             SaveCrashInfo(d);
             log(s);
         }
@@ -541,7 +541,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
         loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
-    ByteSlice d(s);
+    Str d = s;
     SaveCrashInfo(d);
 
     UploadCrashReport(d);
@@ -908,17 +908,17 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     if (!IsInstallerOrUninstallerExe()) {
         TempStr path = GetSettingsPathTemp();
         // can be empty on first run but that's fine because then we know it has default values
-        ByteSlice prefsData = file::ReadFile(Str(path));
-        if (!prefsData.empty()) {
+        Str prefsData = file::ReadFile(Str(path));
+        if (!str::IsEmpty(prefsData)) {
             // serialize without FileStates info because it's the largest
-            GlobalPrefs* gp = NewGlobalPrefs(AsStr(prefsData));
+            GlobalPrefs* gp = NewGlobalPrefs(prefsData);
             DeleteFileStates(gp->fileStates);
             gp->fileStates = new Vec<FileState*>();
             // TODO: also sessionData?
-            ByteSlice d = SerializeGlobalPrefs(gp, nullptr);
-            gSettingsFile = AsStr(d);
+            Str d = SerializeGlobalPrefs(gp, nullptr);
+            gSettingsFile = d;
             DeleteGlobalPrefs(gp);
-            prefsData.Free();
+            str::Free(prefsData);
         }
     }
 

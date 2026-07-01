@@ -202,12 +202,12 @@ struct DjVuContext {
 
     ddjvu_document_t* OpenStream(IStream* stream) {
         ScopedCritSec scope(&lock);
-        ByteSlice d = GetDataFromStream(stream, nullptr);
-        AutoFree dFree(d.Get());
-        if (d.empty() || d.size() > ULONG_MAX) {
+        Str d = GetDataFromStream(stream, nullptr);
+        AutoFree dFree((u8*)d.s);
+        if (str::IsEmpty(d) || (size_t)d.len > ULONG_MAX) {
             return {};
         }
-        auto res = ddjvu_document_create_by_data(ctx, d, (ULONG)d.size());
+        auto res = ddjvu_document_create_by_data(ctx, d.s, (ULONG)d.len);
         return res;
     }
 };
@@ -272,7 +272,7 @@ class EngineDjVu : public EngineBase {
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse = false);
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    ByteSlice GetFileData() override;
+    Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
     PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
@@ -843,15 +843,15 @@ RectF EngineDjVu::Transform(const RectF& rect, int pageNo, float zoom, int rotat
     return RectF::FromXY(TL, BR);
 }
 
-ByteSlice EngineDjVu::GetFileData() {
+Str EngineDjVu::GetFileData() {
     return GetStreamOrFileData(stream, FilePath());
 }
 
 bool EngineDjVu::SaveFileAs(Str dstPath) {
     if (stream) {
-        ByteSlice d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(dstPath, d);
-        d.Free();
+        Str d = GetDataFromStream(stream, nullptr);
+        bool ok = !str::IsEmpty(d) && file::WriteFile(dstPath, d);
+        str::Free(d);
         if (ok) {
             return true;
         }

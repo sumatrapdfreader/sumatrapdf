@@ -103,7 +103,7 @@ class EngineEbook : public EngineBase {
 
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    ByteSlice GetFileData() override;
+    Str GetFileData() override;
 
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
@@ -222,7 +222,7 @@ RectF EngineEbook::PageContentBox(int pageNo, RenderTarget) {
     return mbox;
 }
 
-ByteSlice EngineEbook::GetFileData() {
+Str EngineEbook::GetFileData() {
     Str fileName = FilePath();
     if (!fileName) {
         return {};
@@ -588,7 +588,7 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
     return els;
 }
 
-static RenderedBitmap* getImageFromData(const ByteSlice& imageData) {
+static RenderedBitmap* getImageFromData(Str imageData) {
     HBITMAP hbmp = nullptr;
     Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(imageData));
     if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
@@ -789,7 +789,7 @@ class EngineEpub : public EngineEbook {
     ~EngineEpub() override;
     EngineBase* Clone() override;
 
-    ByteSlice GetFileData() override;
+    Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
 
     TempStr GetPropertyTemp(Str name) override {
@@ -898,16 +898,16 @@ bool EngineEpub::FinishLoading() {
     return pageCount > 0;
 }
 
-ByteSlice EngineEpub::GetFileData() {
+Str EngineEpub::GetFileData() {
     Str path = FilePath();
     return GetStreamOrFileData(stream, path);
 }
 
 bool EngineEpub::SaveFileAs(Str dstPath) {
     if (stream) {
-        ByteSlice d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(dstPath, d);
-        d.Free();
+        Str d = GetDataFromStream(stream, nullptr);
+        bool ok = !str::IsEmpty(d) && file::WriteFile(dstPath, d);
+        str::Free(d);
         if (ok) {
             return true;
         }
@@ -1019,7 +1019,7 @@ bool EngineFb2::FinishLoading() {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = AsStr(doc->GetXmlData());
+    args.htmlStr = doc->GetXmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -1339,7 +1339,7 @@ EngineBase* CreateEnginePdbFromFile(Str fileName) {
 
 class ChmDataCache {
     ChmFile* doc = nullptr; // owned by creator
-    ByteSlice html;
+    Str html;
     Vec<ImageData> images;
 
   public:
@@ -1347,15 +1347,15 @@ class ChmDataCache {
 
     ~ChmDataCache() {
         for (auto&& img : images) {
-            img.base.Free();
+            str::Free(img.base);
             str::Free(img.fileName);
         }
-        html.Free();
+        str::Free(html);
     }
 
-    Str GetHtmlData() { return AsStr(html); }
+    Str GetHtmlData() { return html; }
 
-    ByteSlice* GetImageData(Str id, Str pagePath) {
+    Str* GetImageData(Str id, Str pagePath) {
         TempStr url = NormalizeURLTemp(id, pagePath);
         for (size_t i = 0; i < images.size(); i++) {
             if (str::Eq(images.at(i).fileName, url)) {
@@ -1364,7 +1364,7 @@ class ChmDataCache {
         }
 
         auto tmp = doc->GetData(url);
-        if (tmp.empty()) {
+        if (str::IsEmpty(tmp)) {
             return {};
         }
 
@@ -1376,7 +1376,7 @@ class ChmDataCache {
         return &images.Last().base;
     }
 
-    ByteSlice GetFileData(Str relPath, Str pagePath) {
+    Str GetFileData(Str relPath, Str pagePath) {
         TempStr url = NormalizeURLTemp(relPath, pagePath);
         return doc->GetData(url);
     }
@@ -1405,7 +1405,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         Str src = str::Dup(attr->val);
         url::DecodeInPlace(src);
-        ByteSlice* img = chmDoc->GetImageData(src, Str(pagePath));
+        Str* img = chmDoc->GetImageData(src, Str(pagePath));
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
@@ -1447,11 +1447,11 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
 
     TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
-    ByteSlice data = chmDoc->GetFileData(src, Str(pagePath));
-    if (data.Get()) {
-        ParseStyleSheet(AsStr(data));
+    Str data = chmDoc->GetFileData(src, Str(pagePath));
+    if ((u8*)data.s) {
+        ParseStyleSheet(data);
     }
-    data.Free();
+    str::Free(data);
 }
 
 /* EngineBase for handling CHM documents */
@@ -1618,12 +1618,12 @@ struct ChmHtmlCollector : EbookTocVisitor {
         defer {
             InterlockedDecrement(&gAllowAllocFailure);
         };
-        ByteSlice pageHtml = doc->GetData(plainUrl);
+        Str pageHtml = doc->GetData(plainUrl);
         if (!pageHtml) {
             return;
         }
         html.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl));
-        Str pageHtmlStr = AsStr(pageHtml);
+        Str pageHtmlStr = pageHtml;
         uint charset = ExtractHttpCharset(pageHtmlStr);
         if (!charset) {
             charset = doc->codepage;
@@ -1631,7 +1631,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
         TempStr s = SmartToUtf8Temp(pageHtmlStr, charset);
         html.Append(s);
         added.Append(plainUrl);
-        pageHtml.Free();
+        str::Free(pageHtml);
     }
 };
 

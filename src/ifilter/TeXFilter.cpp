@@ -12,14 +12,14 @@ HRESULT TeXFilter::OnInit() {
     if (!m_pData) {
         // load content of LaTeX file into m_pData
         HRESULT res;
-        ByteSlice data = GetDataFromStream(m_pStream, &res);
-        if (data.empty()) {
+        Str data = GetDataFromStream(m_pStream, &res);
+        if (str::IsEmpty(data)) {
             return res;
         }
 
-        m_pData = strconv::StrCPToWStr(Str((char*)data.data(), (int)data.size()), CP_ACP).s;
-        m_pBuffer = AllocArray<WCHAR>(data.size() + 1);
-        data.Free();
+        m_pData = strconv::StrCPToWStr(Str((char*)(u8*)data.s, (int)(size_t)data.len), CP_ACP).s;
+        m_pBuffer = AllocArray<WCHAR>((size_t)data.len + 1);
+        str::Free(data);
 
         if (!m_pData || !m_pBuffer) {
             CleanUp();

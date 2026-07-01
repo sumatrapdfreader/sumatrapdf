@@ -43,13 +43,13 @@ struct PdbReader {
     PdbReader() = default;
     ~PdbReader();
 
-    bool Parse(const ByteSlice&);
+    bool Parse(Str);
 
     Str GetDbType();
     size_t GetRecordCount();
-    ByteSlice GetRecord(size_t recNo);
+    Str GetRecord(size_t recNo);
 
-    static PdbReader* CreateFromData(const ByteSlice&);
+    static PdbReader* CreateFromData(Str);
     static PdbReader* CreateFromFile(Str path);
 
     static PdbReader* CreateFromStream(IStream* stream);

@@ -1859,12 +1859,12 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
             }
             filePath = tab->filePath;
         }
-        ByteSlice data = file::ReadFile(filePath);
-        if (data.empty()) {
+        Str data = file::ReadFile(filePath);
+        if (str::IsEmpty(data)) {
             return;
         }
         bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(data));
-        data.Free();
+        str::Free(data);
         if (!bmp) {
             return;
         }

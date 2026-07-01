@@ -9,9 +9,9 @@ struct Pixmap;
 
 namespace tga {
 
-bool HasSignature(const ByteSlice&);
-Pixmap* PixmapFromData(const ByteSlice&);
+bool HasSignature(Str);
+Pixmap* PixmapFromData(Str);
 
-ByteSlice SerializeBitmap(HBITMAP hbmp);
+Str SerializeBitmap(HBITMAP hbmp);
 
 } // namespace tga

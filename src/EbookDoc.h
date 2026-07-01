@@ -5,7 +5,7 @@ class HtmlPullParser;
 struct HtmlToken;
 
 struct ImageData {
-    ByteSlice base;
+    Str base;
     // path by which content refers to this image
     Str fileName;
     // document specific id by whcih to find this image
@@ -38,8 +38,8 @@ struct EpubDoc {
 
     Str GetHtmlData() const;
 
-    ByteSlice* GetImageData(Str fileName, Str pagePath);
-    ByteSlice GetFileData(Str relPath, Str pagePath);
+    Str* GetImageData(Str fileName, Str pagePath);
+    Str GetFileData(Str relPath, Str pagePath);
 
     TempStr GetPropertyTemp(Str name) const;
     Str GetFileName() const;
@@ -76,10 +76,10 @@ struct Fb2Doc {
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
-    ByteSlice GetXmlData() const;
+    Str GetXmlData() const;
 
-    ByteSlice* GetImageData(Str fileName) const;
-    ByteSlice* GetCoverImage() const;
+    Str* GetImageData(Str fileName) const;
+    Str* GetCoverImage() const;
 
     TempStr GetPropertyTemp(Str name) const;
     Str GetFileName() const;
@@ -124,21 +124,21 @@ struct PalmDoc {
 
 struct HtmlDoc {
     Str fileName;
-    ByteSlice htmlData;
+    Str htmlData;
     Str pagePath;
     Vec<ImageData> images;
     Props props;
 
     bool Load();
-    ByteSlice LoadURL(Str url);
+    Str LoadURL(Str url);
 
     explicit HtmlDoc(Str path);
     ~HtmlDoc();
 
     Str GetHtmlData();
 
-    ByteSlice* GetImageData(Str fileName);
-    ByteSlice GetFileData(Str relPath);
+    Str* GetImageData(Str fileName);
+    Str GetFileData(Str relPath);
 
     TempStr GetPropertyTemp(Str name) const;
     Str GetFileName() const;
