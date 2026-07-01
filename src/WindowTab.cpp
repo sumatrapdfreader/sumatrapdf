@@ -220,7 +220,7 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, ByteSlice data) {
     // methods too early on)
     TempStr fileFilterA = fmt("%s\1*.*\1", _TRA("All files"));
     TempWStr fileFilter = ToWStrTemp(fileFilterA);
-    wstr::TransCharsInPlace(fileFilter, L"\1", L"\0");
+    wstr::TransCharsInPlace(fileFilter, WStrL(L"\1"), WStrL(L"\0"));
     ofn.lpstrFilter = fileFilter.s;
 
     ofn.nFilterIndex = 1;

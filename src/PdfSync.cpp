@@ -199,11 +199,11 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     // convert the file data into a list of zero-terminated strings
     Str blob = AsStr(data);
-    str::TransCharsInPlace(blob, "\r\n", "\0\0");
+    str::TransCharsInPlace(blob, StrL("\r\n"), StrL("\0\0"));
 
     // parse preamble (jobname and version marker)
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
-    str::TransCharsInPlace(blob, "*/", " \\");
+    str::TransCharsInPlace(blob, StrL("*/"), StrL(" \\"));
     AutoFreeStr jobName;
     jobName.Set(strconv::AnsiToUtf8(SyncLineAt(data, 0)).s);
     jobName.Set(str::Join(Str(jobName), StrL(".tex")).s);
@@ -287,7 +287,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                     filename.SetCopy(Str(fn.s + 1, (int)n));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
-                str::TransCharsInPlace(Str(filename), "*/", " \\");
+                str::TransCharsInPlace(Str(filename), StrL("*/"), StrL(" \\"));
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (str::IsEmpty(path::GetExtTemp(Str(filename)))) {
                     filename = str::Join(Str(filename), StrL(".tex")).s;
@@ -838,7 +838,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     }
 
     // Unescape SyncTeX's space encoding: * represents a space in filenames
-    str::TransCharsInPlace(Str(filename), "*", " ");
+    str::TransCharsInPlace(Str(filename), StrL("*"), StrL(" "));
 
     if (IsUnixSourcePath(syncFilePath, Str(filename.Get()))) {
         // Treat filename as unix path
@@ -852,7 +852,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     } else {
         // Treat filename as Windows path
 
-        str::TransCharsInPlace(Str(filename), "/", "\\");
+        str::TransCharsInPlace(Str(filename), StrL("/"), StrL("\\"));
         // Convert the source filepath to an absolute path
         if (!path::IsAbsolute(Str(filename))) {
             filename.Set(PrependDir(Str(filename.Get())).s);

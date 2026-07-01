@@ -533,7 +533,7 @@ void LinkHandler::LaunchURL(Str uri) {
         if (hash >= 0) {
             path.len = hash;
         }
-        str::TransCharsInPlace(path, "/", "\\");
+        str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
         url::DecodeInPlace(path);
         // LaunchFile will reject unsupported file types
         this->LaunchFile(path, nullptr);

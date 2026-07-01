@@ -361,12 +361,12 @@ void StrTest() {
 #endif
 
     str::BufSet(buf, dimof(buf), "abc\1efg\1");
-    size_t count = str::TransCharsInPlace(Str(buf), "ace", "ACE");
+    size_t count = str::TransCharsInPlace(Str(buf), StrL("ace"), StrL("ACE"));
     utassert(str::Eq(buf, "AbC\1Efg\1") && count == 3);
-    count = str::TransCharsInPlace(Str(buf), "\1", "\0");
+    count = str::TransCharsInPlace(Str(buf), StrL("\1"), StrL("\0"));
     utassert(count == 2);
     utassert(str::Eq(buf, "AbC") && str::Eq(buf + 4, "Efg") && count == 2);
-    count = str::TransCharsInPlace(Str(buf), "", "X");
+    count = str::TransCharsInPlace(Str(buf), StrL(""), StrL("X"));
     utassert(str::Eq(buf, "AbC") && count == 0);
 
     str::BufSet(buf, dimof(buf), "blogarapato");

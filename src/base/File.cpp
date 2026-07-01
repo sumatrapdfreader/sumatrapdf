@@ -561,7 +561,7 @@ TempStr WslUncToUnixTemp(Str path) {
     }
 
     TempStr unixPath = str::JoinTemp("/", Str(path.s + off + 1, path.len - off - 1));
-    str::TransCharsInPlace(unixPath, "\\", "/");
+    str::TransCharsInPlace(unixPath, StrL("\\"), StrL("/"));
     return unixPath;
 }
 
@@ -581,7 +581,7 @@ TempStr WindowsToWslMountTemp(Str path) {
     }
 
     TempStr rest = str::DupTemp(Str(path.s + 3, path.len - 3));
-    str::TransCharsInPlace(rest, "\\", "/");
+    str::TransCharsInPlace(rest, StrL("\\"), StrL("/"));
     return fmt("/mnt/%c/%s", drive, rest);
 }
 

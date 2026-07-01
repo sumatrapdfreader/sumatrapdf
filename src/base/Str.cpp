@@ -3058,7 +3058,7 @@ bool IsAbsolute(Str url) {
 
 TempStr GetFullPathTemp(Str url) {
     TempStr path = str::DupTemp(url);
-    str::TransCharsInPlace(path, "#?", "\0\0");
+    str::TransCharsInPlace(path, StrL("#?"), StrL("\0\0"));
     path.len = len(path.s);
     DecodeInPlace(path);
     return path;
@@ -3066,7 +3066,7 @@ TempStr GetFullPathTemp(Str url) {
 
 TempStr GetFileNameTemp(Str url) {
     TempStr path = str::DupTemp(url);
-    str::TransCharsInPlace(path, "#?", "\0\0");
+    str::TransCharsInPlace(path, StrL("#?"), StrL("\0\0"));
     path.len = len(path.s);
     int base = path.len;
     for (; base > 0; base--) {

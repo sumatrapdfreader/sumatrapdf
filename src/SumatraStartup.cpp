@@ -447,7 +447,7 @@ static bool SetupPluginMode(Flags& i) {
     int hashIdx = i.pluginURL ? str::IndexOfChar(i.pluginURL, '#') : -1;
     if (hashIdx >= 0) {
         TempStr args = str::DupTemp(i.pluginURL.s + hashIdx + 1);
-        str::TransCharsInPlace(args, "#", "&");
+        str::TransCharsInPlace(args, StrL("#"), StrL("&"));
         StrVec parts;
         Split(&parts, args, "&", true);
         for (int k = 0; k < parts.Size(); k++) {

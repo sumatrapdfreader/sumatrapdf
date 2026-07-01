@@ -321,14 +321,14 @@ void InitializePolicies(bool restrict) {
         if (value) {
             TempStr protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
-            str::TransCharsInPlace(protocols, " :;", ",,,");
+            str::TransCharsInPlace(protocols, StrL(" :;"), StrL(",,,"));
             Split(&gAllowedLinkProtocols, protocols, ",", true);
         }
         value = polsec->GetValue("SafeFileTypes");
         if (value) {
             TempStr protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
-            str::TransCharsInPlace(protocols, " :;", ",,,");
+            str::TransCharsInPlace(protocols, StrL(" :;"), StrL(",,,"));
             Split(&gAllowedFileTypes, protocols, ",", true);
         }
     }
@@ -3338,7 +3338,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     fileFilter.Append(_TRA("PDF documents"));
     fileFilter.Append("\1*.pdf\1");
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
     TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
@@ -3878,7 +3878,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
 
     WCHAR dstFileName[MAX_PATH];
     TempStr baseName = path::GetBaseNameTemp(srcFileName);
@@ -3888,7 +3888,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         // remove the container document's extension and include
         // the embedding reference in the suggested filename
         WStr colon = wstr::FindChar(WStr(dstFileName), L':');
-        wstr::TransCharsInPlace(colon, L":", L"_");
+        wstr::TransCharsInPlace(colon, WStrL(L":"), WStrL(L"_"));
         int colonOff = (int)(colon.s - dstFileName);
         int extOff = colonOff;
         while (extOff > 0 && dstFileName[extOff] != L'.') {
@@ -4085,7 +4085,7 @@ static void RenameCurrentFile(MainWindow* win) {
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
     fileFilter.Append(fmt("\1*%s\1", defExt));
-    str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.Get(), StrL("\1"), StrL("\0"));
 
     WCHAR dstFilePathW[MAX_PATH];
     auto baseName = path::GetBaseNameTemp(srcPath);
@@ -4167,7 +4167,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // Remove the extension so that it can be replaced with .lnk
     auto name = path::GetBaseNameTemp(path);
     str::BufSet(dstFileName, dimof(dstFileName), name);
-    wstr::TransCharsInPlace(WStr(dstFileName), L":", L"_");
+    wstr::TransCharsInPlace(WStr(dstFileName), WStrL(L":"), WStrL(L"_"));
     if (wstr::EndsWithI(dstFileName, defExt)) {
         int idx = len(dstFileName) - len(defExt);
         dstFileName[idx] = '\0';
@@ -4178,7 +4178,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // methods too early on)
     StrBuilder fileFilter;
     fileFilter.Append(fmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts")));
-    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
     TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
 
     OPENFILENAME ofn{};
@@ -4414,7 +4414,7 @@ static TempWStr GetFileFilterTemp() {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
     return ToWStrTempFromBuilder(fileFilter);
 }
 
@@ -6768,7 +6768,7 @@ static TempStr ManualArchiveLookupPathTemp(Str path) {
     TempStr lookupPath = str::DupTemp(path);
     // manual.dat stores names with backslashes (MakeLZSA convention) but WebView
     // requests use URL-style forward slashes.
-    str::TransCharsInPlace(lookupPath, "/", "\\");
+    str::TransCharsInPlace(lookupPath, StrL("/"), StrL("\\"));
     return lookupPath;
 }
 

@@ -141,7 +141,7 @@ void DisablePreviewInstallExts(Str cmdLine) {
     if (str::StartsWithI(cmdLine, "exts:")) {
         TempStr extsList = str::DupTemp(Str(cmdLine.s + 5, cmdLine.len - 5));
         str::ToLowerInPlace(extsList);
-        str::TransCharsInPlace(extsList, ";. :", ",,,\0");
+        str::TransCharsInPlace(extsList, StrL(";. :"), StrL(",,,\0"));
         StrVec exts;
         Split(&exts, extsList, ",", true);
         for (auto& p : gPreviewers) {

@@ -561,7 +561,7 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             // e.g. -print-settings "1-3,5,10-8,odd,fit" or "last" or "-1"
             i.printSettings = str::Dup(a, param);
             str::RemoveCharsInPlace(i.printSettings, " ");
-            str::TransCharsInPlace(i.printSettings, ";", ",");
+            str::TransCharsInPlace(i.printSettings, StrL(";"), StrL(","));
             continue;
         }
         if (arg == Arg::InverseSearch) {

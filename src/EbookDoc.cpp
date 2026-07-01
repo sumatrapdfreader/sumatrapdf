@@ -43,10 +43,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
         Str namePart;
         uint codePage;
     } static encodings[] = {
-        {"UTF", CP_UTF8},
-        {"utf", CP_UTF8},
-        {"1252", 1252},
-        {"1251", 1251},
+        {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
         // TODO: any other commonly used codepages?
     };
     for (size_t i = 0; i < dimof(encodings); i++) {
@@ -472,7 +469,7 @@ bool EpubDoc::Load() {
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
         ReportIf(str::ContainsChar(fullPath, '"'));
-        str::TransCharsInPlace(fullPath, "\"", "'");
+        str::TransCharsInPlace(fullPath, StrL("\""), StrL("'"));
         htmlData.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", fullPath));
         htmlData.Append(decoded);
     }
@@ -575,7 +572,7 @@ ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
     TempStr url = NormalizeURLTemp(fileName, pagePath);
     // some EPUB producers use wrong path separators
     if (str::ContainsChar(url, '\\')) {
-        str::TransCharsInPlace(url, "\\", "/");
+        str::TransCharsInPlace(url, StrL("\\"), StrL("/"));
     }
     for (ImageData& img : images) {
         if (str::Eq(img.fileName, url)) {
@@ -1335,7 +1332,7 @@ bool HtmlDoc::Load() {
     }
 
     str::ReplaceWithCopy(&pagePath, fileName);
-    str::TransCharsInPlace(pagePath, "\\", "/");
+    str::TransCharsInPlace(pagePath, StrL("\\"), StrL("/"));
 
     HtmlPullParser parser(htmlData);
     HtmlToken* tok;
@@ -1406,7 +1403,7 @@ ByteSlice HtmlDoc::LoadURL(Str url) {
         return {};
     }
     Str path = str::Dup(url);
-    str::TransCharsInPlace(path, "/", "\\");
+    str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
     return file::ReadFile(path);
 }
 
