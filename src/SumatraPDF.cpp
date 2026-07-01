@@ -1396,12 +1396,15 @@ static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWi
     // loading one nonetheless); note: this crash should never happen,
     // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
     ReportIf(gPluginMode);
-    // if CLSID_WebBrowser isn't available, fall back on ChmEngine
+    // if the interactive backend (WebView2 / IE CLSID_WebBrowser) isn't
+    // available, fall back on ChmEngine's fixed-page rendering
     DocController* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
+        log("CreateControllerForChm: interactive CHM backend unavailable, falling back to ChmEngine fixed-page view\n");
         delete chmModel;
         EngineBase* engine = CreateEngineFromFile(path, pwdUI, true);
         if (!engine) {
+            log("CreateControllerForChm: ChmEngine fallback also failed, can't display CHM\n");
             return nullptr;
         }
         ReportIf(engine->kind != kindEngineChm);
