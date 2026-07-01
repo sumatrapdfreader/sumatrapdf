@@ -1528,7 +1528,7 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
     Str beforeAt;
     Str rest = curr;
     if (!str::IsEmpty(curr) && '@' == curr.s[0]) {
-        if (len(htmlData) == 0 || !IsEmailUsernameChar(htmlData.Last())) {
+        if (!IsEmailUsernameChar(htmlData.LastChar())) {
             return {};
         }
         int idx = len(htmlData);

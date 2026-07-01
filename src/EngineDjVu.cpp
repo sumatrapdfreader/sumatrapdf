@@ -864,7 +864,7 @@ bool EngineDjVu::SaveFileAs(Str dstPath) {
 }
 
 static void AppendNewline(wstr::Builder& extracted, Vec<Rect>& coords, WStr lineSep) {
-    if (len(extracted) > 0 && ' ' == extracted.Last()) {
+    if (' ' == extracted.LastChar()) {
         extracted.RemoveLast();
         coords.RemoveLast();
     }
@@ -992,7 +992,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
 }
 
 static void AppendNewlineUtf8(str::Builder& extracted, Vec<Rect>& coords, Str lineSep) {
-    if (len(extracted) > 0 && ' ' == extracted.Last()) {
+    if (' ' == extracted.LastChar()) {
         extracted.RemoveLast();
         coords.RemoveLast();
     }

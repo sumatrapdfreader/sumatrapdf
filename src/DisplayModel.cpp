@@ -1962,7 +1962,7 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
                 result.AppendChar(c);
             }
-        } else if (len(result) > 0 && result.Last() != '\n') {
+        } else if (result.LastChar() != '\n') {
             result.Append(WStr(L"\r\n", 2));
         }
     }

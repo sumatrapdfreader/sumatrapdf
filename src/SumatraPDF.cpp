@@ -4405,7 +4405,7 @@ static TempWStr GetFileFilterTemp() {
             fileFilter.AppendChar(';');
         }
     }
-    ReportIf(fileFilter.Last() != ';');
+    ReportIf(fileFilter.LastChar() != ';');
     fileFilter.Last() = '\1';
     for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available && fileFormats[i].name) {

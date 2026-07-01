@@ -255,7 +255,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     str::Builder newPath;
     if (!str::IsEmpty(currPath)) {
         newPath.Append(currPath);
-        if (newPath.Last() != ';') {
+        if (newPath.LastChar() != ';') {
             newPath.Append(";");
         }
     }
