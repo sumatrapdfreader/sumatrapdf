@@ -694,12 +694,30 @@ struct SeenGlyph {
 };
 
 static bool HasSeenGlyph(const Vec<SeenGlyph>& seen, int rune, const Rect& r) {
+    // A "duplicate" glyph is one drawn on top of an earlier one (e.g. faux-bold
+    // double-strike or an overprinted shadow); its box overlaps the earlier one
+    // almost entirely. Two *adjacent* identical letters (e.g. the "ll" in
+    // "Yellow") sit side by side and barely overlap, so they must NOT be treated
+    // as duplicates. Comparing coordinates with a fixed +-1px tolerance can't
+    // tell them apart once the glyph advance rounds to <=1px (small fonts),
+    // which dropped a letter on copy (issue #5766). Require the boxes to overlap
+    // by more than half the smaller glyph instead.
+    i64 area = (i64)r.dx * (i64)r.dy;
+    if (area <= 0) {
+        return false;
+    }
     for (const SeenGlyph& glyph : seen) {
         if (glyph.rune != rune) {
             continue;
         }
-        if (abs(glyph.r.x - r.x) <= 1 && abs(glyph.r.y - r.y) <= 1 && abs(glyph.r.dx - r.dx) <= 1 &&
-            abs(glyph.r.dy - r.dy) <= 1) {
+        Rect inter = glyph.r.Intersect(r);
+        if (inter.IsEmpty()) {
+            continue;
+        }
+        i64 interArea = (i64)inter.dx * (i64)inter.dy;
+        i64 seenArea = (i64)glyph.r.dx * (i64)glyph.r.dy;
+        i64 minArea = std::min(area, seenArea);
+        if (minArea > 0 && interArea * 2 > minArea) {
             return true;
         }
     }
