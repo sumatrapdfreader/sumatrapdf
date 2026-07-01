@@ -16,9 +16,7 @@ RECT ClientRECT(HWND);
 Rect ClientRect(HWND);
 Rect WindowRect(HWND);
 Rect MapRectToWindow(Rect, HWND hwndFrom, HWND hwndTo);
-// map client coords where x=0 is the physical left edge (even on WS_EX_LAYOUTRTL windows)
 Rect MapLtrClientRectToScreen(HWND hwnd, Rect r);
-// for SetWindowPos on a WS_EX_LAYOUTRTL parent: child x as offset from physical left
 int MapChildXForRtlParent(HWND parent, int ltrX, int childDx);
 
 void EditSelectAll(HWND);
@@ -258,16 +256,10 @@ struct BitmapPixels {
 
 struct Pixmap;
 struct RenderedBitmap;
-// Allocate a DIB-section-backed Pixmap (pixels double as a blittable HBITMAP). Win.cpp.
 Pixmap* AllocPixmapDIB(int w, int h);
-// Blit a Pixmap into target (DIB-section fast path, else StretchDIBits from memory).
 bool BlitPixmap(Pixmap* p, HDC hdc, Rect target);
-// Adopt an existing HBITMAP (+ optional mapping) into a Pixmap that owns it; exposes the
-// DIB section's pixels when applicable. Used by engines that render into a DIB section.
 Pixmap* PixmapFromHBITMAP(HBITMAP hbmp, Size size, HANDLE hMap = nullptr);
-// Transfer a RenderedBitmap's handles into a Pixmap (no copy) and free the shell.
 Pixmap* PixmapFromRenderedBitmap(RenderedBitmap* rb);
-// Reverse: move a DIB-section Pixmap's handles into a RenderedBitmap and free the shell.
 RenderedBitmap* RenderedBitmapFromPixmap(Pixmap* px);
 
 // A Windows present-layer bitmap handle: an HBITMAP (+ optional file mapping) that can be
@@ -297,7 +289,6 @@ void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 ByteSlice SerializeBitmap(HBITMAP hbmp);
-// returns the clipboard image (if any) serialized as BMP file bytes, or empty
 ByteSlice GetClipboardImageBmp();
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);

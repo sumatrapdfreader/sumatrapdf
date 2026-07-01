@@ -41,7 +41,6 @@ COLORREF AdjustLightness2(COLORREF c, float units);
 float GetLightness(COLORREF c);
 bool IsLightColor(COLORREF c);
 
-// TODO: use AdjustLightness instead to compensate for the alpha?
 Gdiplus::Color Unblend(COLORREF c, u8 alpha);
 Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c);
 Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c);

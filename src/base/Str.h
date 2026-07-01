@@ -147,11 +147,7 @@ Str FindCharLast(Str str, char c);
 int IndexOfChar(Str s, char c);
 int IndexOf(Str buf, Str toFind);
 int IndexOfI(Str s, Str toFind);
-// offset just past the first match of needle, or -1 if not found
 int IndexOfAfter(Str s, Str needle);
-// Go-style strings.Cut: split s around the first occurrence of sep into
-// *before / *after (either may be null). Returns false (and *before = s,
-// *after = {}) if sep is not found.
 bool Cut(Str s, Str sep, Str* before, Str* after);
 
 bool Contains(Str s, Str txt);
@@ -420,9 +416,6 @@ bool IsTextRtl(Str s);
 // (some C/win32 APIs take non-const), avoiding casts at the call site.
 char* CStrTemp(Str s);
 WCHAR* CWStrTemp(WStr s);
-// converts a UTF-8 Str to a NUL-terminated WCHAR* temp (same intent as the
-// WStr overload, but also transcodes); use when the wide result is only needed
-// as a C/win32 string pointer (never for its length)
 WCHAR* CWStrTemp(Str s);
 
 // like CWStrTemp but also reports the wide-char count (excluding the NUL) via

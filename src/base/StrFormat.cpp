@@ -514,6 +514,11 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
     return true;
 }
 
+// Format into an explicit arena; the returned Str lives in `a`. Use this
+// instead of fmt()/FormatTemp when the result must outlive the temp allocator's
+// scope, or on paths that must not touch the temp allocator / heap at all (e.g.
+// the crash handler, which pre-allocates its arena). FormatTempArgs() is just
+// this with GetTempArena().
 Str FormatArgs(Arena* a, const char* fmt, const Arg** args, int nArgs) {
     // trailing arguments could be empty (unused defaults from the variadic call)
     while (nArgs > 0 && args[nArgs - 1]->t == Type::None) {

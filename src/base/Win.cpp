@@ -192,6 +192,7 @@ Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
     return ToRect(rc);
 }
 
+// map client coords where x=0 is the physical left edge (even on WS_EX_LAYOUTRTL windows)
 Rect MapLtrClientRectToScreen(HWND hwnd, Rect r) {
     RECT rc = ToRECT(r);
     if (HwndIsRtl(hwnd)) {
@@ -207,6 +208,7 @@ Rect MapLtrClientRectToScreen(HWND hwnd, Rect r) {
     return ToRect(rc);
 }
 
+// for SetWindowPos on a WS_EX_LAYOUTRTL parent: child x as offset from physical left
 int MapChildXForRtlParent(HWND parent, int ltrX, int childDx) {
     if (!HwndIsRtl(parent)) {
         return ltrX;
@@ -2463,6 +2465,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     return {(u8*)bmpData, bmpBytes};
 }
 
+// returns the clipboard image (if any) serialized as BMP file bytes, or empty
 ByteSlice GetClipboardImageBmp() {
     if (!IsClipboardFormatAvailable(CF_BITMAP)) {
         return {};

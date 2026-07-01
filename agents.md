@@ -35,6 +35,19 @@ We rely on a controlled include order rather than self-sufficient headers (this 
 
 Do **not** use `#pragma once` in `.h` files.
 
+## Put explanatory comments in `.cpp`, not `.h`
+
+Headers are re-parsed by every translation unit that includes them, so prose
+comments in a `.h` cost compilation time on every include. Keep the header
+declaration terse (ideally a single line) and put the explaining comment on the
+**definition** in the corresponding `.cpp`. For a function declared in `Foo.h`
+and defined in `Foo.cpp`, the doc comment lives above the definition in
+`Foo.cpp`.
+
+Comments that have no `.cpp` counterpart stay in the header: those documenting a
+struct/class, an `enum`, a macro, a constant, or an `inline`/templated function
+that is *defined* in the header (there is nowhere else to put them).
+
 ## `fmt()` is the type-safe formatter
 
 We use our own `Str` value type (a `char*` + `int len`) for strings instead of

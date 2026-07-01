@@ -29,9 +29,6 @@ bool IsSame(Str path1, Str path2);
 bool HasVariableDriveLetter(Str path);
 bool IsOnFixedDrive(Str path);
 bool IsOnNetworkDrive(Str path);
-// OneDrive / iCloud / Dropbox "Files On-Demand" placeholders — cloud-only
-// stubs that hydrate on first read. File I/O is slow and/or bursty, so
-// callers may prefer to slurp the whole file into RAM once.
 bool IsCloudPlaceholder(Str path);
 bool SupportsChangeNotifications(Str path);
 bool IsAbsolute(Str path);

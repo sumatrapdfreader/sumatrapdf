@@ -27,8 +27,6 @@ struct ValueVisitor {
     virtual ~ValueVisitor() = default;
 };
 
-// data must be UTF-8 encoded
-// returns false on error
 bool Parse(Str data, ValueVisitor* visitor);
 
 } // namespace json

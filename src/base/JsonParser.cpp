@@ -253,6 +253,8 @@ static int ParseValue(ParseArgs& args, Str data, int off) {
     }
 }
 
+// data must be UTF-8 encoded
+// returns false on error
 // return false if invalid JSON
 bool Parse(Str data, ValueVisitor* visitor) {
     ParseArgs args(visitor);

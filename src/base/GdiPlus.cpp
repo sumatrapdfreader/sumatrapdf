@@ -368,6 +368,10 @@ struct PixmapBackedBitmap : Gdiplus::Bitmap {
 };
 } // namespace
 
+// Zero-copy: wrap a Pixmap's pixels in a Gdiplus::Bitmap that borrows the buffer and
+// takes ownership of the Pixmap (frees it when the returned bitmap is deleted). The
+// Pixmap must outlive the bitmap, which the returned object guarantees. Returns nullptr
+// (and frees px) on failure. Only BGRA8/BGR8 Pixmaps are supported.
 Gdiplus::Bitmap* NewGdiplusBitmapFromPixmap(Pixmap* px) {
     if (!px) {
         return nullptr;
@@ -382,6 +386,9 @@ Gdiplus::Bitmap* NewGdiplusBitmapFromPixmap(Pixmap* px) {
     return bmp;
 }
 
+// Copy a Gdiplus::Bitmap's pixels out into a freshly allocated BGRA8 Pixmap (used to
+// turn an awkwardly-formatted GDI+ decode - 16bpp TGA, CMYK JPEG - into a uniform
+// Pixmap). Does not take ownership of bmp. Returns nullptr on failure.
 Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp) {
     if (!bmp) {
         return nullptr;
@@ -407,6 +414,9 @@ Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp) {
     return px;
 }
 
+// Apply an EXIF orientation (2..8) to a Pixmap, returning a possibly-rotated Pixmap and
+// freeing the input. orientation 0/1 (or out of range) returns px unchanged. Rotation
+// is done via GDI+, so this lives here rather than in the portable Pixmap.h.
 Pixmap* PixmapApplyExifOrientation(Pixmap* px, int orientation) {
     if (!px || orientation < 2 || orientation > 8) {
         return px;
@@ -430,6 +440,9 @@ Pixmap* PixmapApplyExifOrientation(Pixmap* px, int orientation) {
     return out;
 }
 
+// Zero-copy borrow: wrap a Pixmap's pixels in a Gdiplus::Bitmap that does NOT own the
+// Pixmap. The Pixmap must outlive the returned bitmap. Use when the Pixmap is owned
+// elsewhere (e.g. EngineImage's frame list). Returns nullptr on failure.
 Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
     if (!px) {
         return nullptr;
@@ -444,6 +457,7 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px) {
     return bmp;
 }
 
+// Decode an image to a single (first-frame) Pixmap. Caller owns it (FreePixmap).
 Pixmap* PixmapFromDataWin(const ByteSlice& bmpData) {
     Kind kind = GuessFileTypeFromContent(bmpData);
     if (kindFileTga == kind) {
@@ -493,6 +507,8 @@ Pixmap* PixmapFromDataWin(const ByteSlice& bmpData) {
     return px;
 }
 
+// Decode an image to one Pixmap per frame: multi-page TIFF and animated GIF yield more
+// than one, everything else exactly one. Empty on failure. Caller owns each Pixmap.
 Vec<Pixmap*> PixmapsFromDataWin(const ByteSlice& bmpData) {
     Vec<Pixmap*> res;
     Kind kind = GuessFileTypeFromContent(bmpData);

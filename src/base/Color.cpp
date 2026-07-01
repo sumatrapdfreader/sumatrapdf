@@ -51,6 +51,7 @@ static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha) {
 }
 #endif
 
+// TODO: use AdjustLightness instead to compensate for the alpha?
 // TODO: not sure if that's the exact translation of the original (above)
 Gdiplus::Color Unblend(COLORREF c, u8 alpha) {
     u8 r, g, b, a;

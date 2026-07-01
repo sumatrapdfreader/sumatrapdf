@@ -117,6 +117,14 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
 // unfortunately libarchive's rar support is weak
 static bool gUnrarFirst = true;
 
+// hintKind is the result of a prior GuessFileTypeFromContent() done
+// by the caller. When non-null we skip the internal 2 KiB sniff and
+// use it to drive rar-first vs. libarchive routing.
+// eagerLoad = true: decompress every entry at open time and close
+//   the archive so no re-open will ever happen.
+// cbProgress fires after each entry is processed (see
+// ArchiveExtractProgress). Pass a default-constructed Func1 to skip
+// notifications.
 bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const ArchiveExtractProgressCb& cbProgress) {
     if (!path) {
         return false;
@@ -415,6 +423,16 @@ Str MultiFormatArchive::GetComment() {
 
 ///// format specific handling /////
 
+// Open a file on disk. MultiFormatArchive::Open(path) detects RAR via a
+// content sniff and routes it through unrar.dll; everything else goes
+// through libarchive.
+//
+// eagerLoad: if true, every file is decompressed during Open() and the
+// archive is then closed. GetFileDataById for a file that failed to
+// decompress returns FileInfo with data=nullptr and never re-opens the
+// file; use FileInfo::failed to tell "not yet loaded" from "failed".
+// cbProgress fires once per entry (see ArchiveExtractProgress); pass a
+// default-constructed Func1 to skip notifications.
 MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     auto* archive = new MultiFormatArchive();
     if (!archive->Open(path, eagerLoad, nullptr, cbProgress)) {
@@ -424,6 +442,9 @@ MultiFormatArchive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveE
     return archive;
 }
 
+// Open from an IStream. libarchive auto-detects the container (zip/rar/
+// 7z/tar/etc.). Always eager-loads (can't re-open a stream); no progress
+// reporting.
 MultiFormatArchive* OpenArchiveFromStream(IStream* stream) {
     auto* archive = new MultiFormatArchive();
     if (!archive->Open(stream)) {

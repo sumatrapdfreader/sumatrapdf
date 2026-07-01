@@ -63,6 +63,5 @@ void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv);
 DirEntry* FindEntryByName(DirEntries* dv, Str name);
 DWORD WINAPI DirScanThread(LPVOID param);
 
-// Allocate a DirEntries with fullDir set
 DirEntries* AllocDirEntries(Arena* arena, Str fullDir);
 void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit);

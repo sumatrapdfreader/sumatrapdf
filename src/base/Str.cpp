@@ -3425,6 +3425,9 @@ WCHAR* CWStrTemp(WStr s) {
     return str::DupTemp(s).s;
 }
 
+// converts a UTF-8 Str to a NUL-terminated WCHAR* temp (same intent as the
+// WStr overload, but also transcodes); use when the wide result is only needed
+// as a C/win32 string pointer (never for its length)
 WCHAR* CWStrTemp(Str s) {
     return ToWStrTemp(s).s;
 }

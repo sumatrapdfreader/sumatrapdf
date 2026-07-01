@@ -96,11 +96,6 @@ TempStr FormatTemp(const char* fmt, const TArgs&... args) {
     return FormatTempArgs(fmt, argp, n);
 }
 
-// Format into an explicit arena; the returned Str lives in `a`. Use this
-// instead of fmt()/FormatTemp when the result must outlive the temp allocator's
-// scope, or on paths that must not touch the temp allocator / heap at all (e.g.
-// the crash handler, which pre-allocates its arena). FormatTempArgs() is just
-// this with GetTempArena().
 Str FormatArgs(Arena* a, const char* fmt, const Arg** args, int nArgs);
 
 inline Str Format(Arena* a, const char* fmt) {

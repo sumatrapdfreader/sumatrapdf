@@ -404,6 +404,9 @@ bool IsOnNetworkDrive(Str path) {
     return PathIsNetworkPathW(ws);
 }
 
+// OneDrive / iCloud / Dropbox "Files On-Demand" placeholders — cloud-only
+// stubs that hydrate on first read. File I/O is slow and/or bursty, so
+// callers may prefer to slurp the whole file into RAM once.
 bool IsCloudPlaceholder(Str path) {
     WCHAR* ws = CWStrTemp(path);
     DWORD attrs = GetFileAttributesW(ws);
