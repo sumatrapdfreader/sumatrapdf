@@ -775,6 +775,28 @@ bool Cut(Str s, Str sep, Str* before, Str* after) {
     return true;
 }
 
+// like Cut() but splits on the first occurrence of a single char
+bool CutChar(Str s, char c, Str* before, Str* after) {
+    int idx = IndexOfChar(s, c);
+    if (idx < 0) {
+        if (before) {
+            *before = s;
+        }
+        if (after) {
+            *after = {};
+        }
+        return false;
+    }
+    if (before) {
+        *before = Str(s.s, idx);
+    }
+    if (after) {
+        int off = idx + 1;
+        *after = Str(s.s + off, s.len - off);
+    }
+    return true;
+}
+
 // Extracts the next line from s (up to a CR, LF or CRLF terminator) into line
 // and sets rest to the remainder after the terminator. line excludes the
 // terminator. Returns false when s is empty. Safe to alias s and rest, e.g.

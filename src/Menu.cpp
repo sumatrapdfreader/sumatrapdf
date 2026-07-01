@@ -2089,13 +2089,12 @@ void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
 // They are separated with \t
 static TempStr ParseMenuTextTemp(Str sIn, Str* shortcutOut) {
     *shortcutOut = {};
-    Str tabPos = str::FindChar(sIn, '\t');
-    if (!tabPos) {
+    Str before, after;
+    if (!str::CutChar(sIn, '\t', &before, &after)) {
         return sIn;
     }
-    int n = (int)(tabPos.s - sIn.s);
-    *shortcutOut = Str(tabPos.s + 1, sIn.len - n - 1);
-    return str::DupTemp(Str(sIn.s, n));
+    *shortcutOut = after;
+    return str::DupTemp(before);
 }
 
 void FreeMenuOwnerDrawInfoData(HMENU hmenu) {

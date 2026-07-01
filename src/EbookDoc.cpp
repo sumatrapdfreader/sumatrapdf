@@ -1673,12 +1673,12 @@ bool TxtDoc::Load() {
         }
 
         if (isRFC && i > 0 && '\n' == text.s[i - 1] && (str::IsDigit(c) || str::StartsWith(curr, "APPENDIX"))) {
-            Str lineEnd = str::FindChar(curr, '\n');
-            if (lineEnd &&
-                !str::IsNull(str::Parse(Str(lineEnd.s + 1, (int)(curr.len - (lineEnd.s - curr.s) - 1)), "%?\r\n"))) {
+            Str lineBefore, lineAfter;
+            if (str::CutChar(curr, '\n', &lineBefore, &lineAfter) &&
+                !str::IsNull(str::Parse(lineAfter, "%?\r\n"))) {
                 htmlData.Append(fmt("<b id='section%d' title=\"", ++sectionCount));
-                for (int j = 0; j < (int)(lineEnd.s - curr.s); j++) {
-                    char ch = curr.s[j];
+                for (int j = 0; j < lineBefore.len; j++) {
+                    char ch = lineBefore.s[j];
                     if ('\r' == ch || '\n' == ch) {
                         break;
                     }

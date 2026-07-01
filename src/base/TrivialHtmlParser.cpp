@@ -33,11 +33,11 @@ bool HtmlElement::NameIsNS(Str nameIn, Str) const {
     if (!name) {
         return NameIs(nameIn);
     }
-    Str colon = str::FindChar(name, ':');
-    if (!colon) {
+    Str after;
+    if (!str::CutChar(name, ':', nullptr, &after)) {
         return NameIs(nameIn);
     }
-    return str::EqI(Str(colon.s + 1, colon.len - 1), nameIn);
+    return str::EqI(after, nameIn);
 }
 
 HtmlElement* HtmlElement::GetChildByTag(HtmlTag tag, int idx) const {

@@ -1023,11 +1023,8 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
             return false;
         }
         // check for range "A-B" where A/B can be a number or "N"
-        Str dash = str::FindChar(part, '-');
-        if (dash) {
-            int dashIdx = (int)(dash.s - part.s);
-            Str startStr = Str(part.s, dashIdx);
-            Str endStr = Str(dash.s + 1, part.len - dashIdx - 1);
+        Str startStr, endStr;
+        if (str::CutChar(part, '-', &startStr, &endStr)) {
             str::TrimWSInPlace(startStr, str::TrimOpt::Both);
             str::TrimWSInPlace(endStr, str::TrimOpt::Both);
             if (!startStr) {

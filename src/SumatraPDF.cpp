@@ -9453,9 +9453,9 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 }
                 gMenuAccelPressed = (WCHAR)lp;
                 if (' ' == gMenuAccelPressed) {
-                    Str pos = str::FindChar(_TRA("&Window"), '&');
-                    if (pos) {
-                        char c = pos.s[1];
+                    Str after;
+                    if (str::CutChar(_TRA("&Window"), '&', nullptr, &after) && after.len > 0) {
+                        char c = after.s[0];
                         gMenuAccelPressed = (WCHAR)c;
                     }
                 }
