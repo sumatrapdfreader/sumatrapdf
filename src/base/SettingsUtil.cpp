@@ -549,7 +549,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
         } else if (SettingType::Array == field.type) {
             SquareTreeNode *parent = node, *child = nullptr;
             if (parent && (child = parent->GetChild(fieldNameStr)) != nullptr &&
-                (0 == child->data.size() || child->GetChild(""))) {
+                (0 == child->data.size() || child->GetChild(StrL("")))) {
                 parent = child;
                 fieldName += len(fieldName);
                 fieldNameStr = Str(fieldName);

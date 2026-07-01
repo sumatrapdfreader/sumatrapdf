@@ -30,4 +30,4 @@ struct SquareTreeNode {
 };
 
 SquareTreeNode* ParseSquareTree(Str s);
-Str SerializeSquareTreeNode(SquareTreeNode*);
+TempStr SerializeSquareTreeNodeTemp(SquareTreeNode*);

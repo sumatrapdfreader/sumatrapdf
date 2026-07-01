@@ -257,13 +257,13 @@ static void SerializeRec(SquareTreeNode* node, str::Builder& s, int indent) {
     }
 }
 
-Str SerializeSquareTreeNode(SquareTreeNode* node) {
+TempStr SerializeSquareTreeNodeTemp(SquareTreeNode* node) {
     if (!node) {
         return {};
     }
     str::Builder s;
     SerializeRec(node, s, 0);
-    return s.TakeStr();
+    return ToStrTemp(s);
 }
 
 SquareTreeNode* ParseSquareTree(Str s) {

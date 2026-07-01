@@ -295,7 +295,7 @@ void InitializePolicies(bool restrict) {
     Str restrictData = file::ReadFile(restrictPath);
     SquareTreeNode* root = ParseSquareTree(restrictData);
     AutoDelete delRoot(root);
-    SquareTreeNode* polsec = root ? root->GetChild("Policies") : nullptr;
+    SquareTreeNode* polsec = root ? root->GetChild(StrL("Policies")) : nullptr;
     // if the restriction file is broken, err on the side of full restriction
     if (!polsec) {
         return;
@@ -317,14 +317,14 @@ void InitializePolicies(bool restrict) {
 
     // determine the list of allowed link protocols and perceived file types
     if ((gPolicyRestrictions & Perm::DiskAccess) != (Perm)0) {
-        Str value = polsec->GetValue("LinkProtocols");
+        Str value = polsec->GetValue(StrL("LinkProtocols"));
         if (value) {
             TempStr protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);
             str::TransCharsInPlace(protocols, StrL(" :;"), StrL(",,,"));
             Split(&gAllowedLinkProtocols, protocols, ",", true);
         }
-        value = polsec->GetValue("SafeFileTypes");
+        value = polsec->GetValue(StrL("SafeFileTypes"));
         if (value) {
             TempStr protocols = str::DupTemp(value);
             str::ToLowerInPlace(protocols);

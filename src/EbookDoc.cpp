@@ -331,7 +331,7 @@ bool EpubDoc::Load() {
     if (!node) {
         return false;
     }
-    TempStr contentPath = node->GetAttributeTemp("full-path");
+    TempStr contentPath = node->GetAttributeTemp(StrL("full-path"));
     if (!contentPath) {
         return false;
     }
@@ -345,7 +345,7 @@ bool EpubDoc::Load() {
         (void)parser.ParseInPlace(encryption);
         HtmlElement* cr = parser.FindElementByNameNS(StrL("CipherReference"), EPUB_ENC_NS());
         while (cr) {
-            TempStr uri = cr->GetAttributeTemp("URI");
+            TempStr uri = cr->GetAttributeTemp(StrL("URI"));
             if (uri) {
                 url::DecodeInPlace(uri);
                 encList.Append(uri);
@@ -379,9 +379,9 @@ bool EpubDoc::Load() {
     StrVec idList, pathList;
 
     for (node = node->down; node; node = node->next) {
-        TempStr mediaType = node->GetAttributeTemp("media-type");
+        TempStr mediaType = node->GetAttributeTemp(StrL("media-type"));
         if (isImageMediaType(mediaType)) {
-            TempStr imgPath = node->GetAttributeTemp("href");
+            TempStr imgPath = node->GetAttributeTemp(StrL("href"));
             if (!imgPath) {
                 continue;
             }
@@ -396,14 +396,14 @@ bool EpubDoc::Load() {
             data.fileId = archive->GetFileId(data.fileName);
             images.Append(data);
         } else if (isHtmlMediaType(mediaType)) {
-            TempStr htmlPath = node->GetAttributeTemp("href");
+            TempStr htmlPath = node->GetAttributeTemp(StrL("href"));
             if (!htmlPath) {
                 continue;
             }
             url::DecodeInPlace(htmlPath);
-            TempStr htmlId = node->GetAttributeTemp("id");
+            TempStr htmlId = node->GetAttributeTemp(StrL("id"));
             // EPUB 3 ToC
-            TempStr properties = node->GetAttributeTemp("properties");
+            TempStr properties = node->GetAttributeTemp(StrL("properties"));
             if (properties && str::Contains(properties, StrL("nav")) && str::Eq(mediaType, "application/xhtml+xml")) {
                 str::Free(tocPath);
                 tocPath = str::Join(contentPath, htmlPath);
@@ -426,7 +426,7 @@ bool EpubDoc::Load() {
     }
 
     // EPUB 2 ToC
-    TempStr tocId = node->GetAttributeTemp("toc");
+    TempStr tocId = node->GetAttributeTemp(StrL("toc"));
     int tocIdx = (tocId && str::IsEmpty(tocPath)) ? idList.Find(tocId) : -1;
     if (tocIdx >= 0) {
         Str s = pathList.At(tocIdx);
@@ -434,7 +434,7 @@ bool EpubDoc::Load() {
         tocPath = str::Join(contentPath, s);
         isNcxToc = true;
     }
-    TempStr readingDir = node->GetAttributeTemp("page-progression-direction");
+    TempStr readingDir = node->GetAttributeTemp(StrL("page-progression-direction"));
     if (readingDir) {
         isRtlDoc = str::EqI(readingDir, "rtl");
     }
@@ -443,7 +443,7 @@ bool EpubDoc::Load() {
         if (!node->NameIsNS(StrL("itemref"), EPUB_OPF_NS())) {
             continue;
         }
-        TempStr idref = node->GetAttributeTemp("idref");
+        TempStr idref = node->GetAttributeTemp(StrL("idref"));
         if (!idref) {
             continue;
         }

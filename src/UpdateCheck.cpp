@@ -139,18 +139,14 @@ static UpdateInfo* ParseUpdateInfo(Str d) {
     }
     AutoDelete delRoot(root);
 
-    {
-        auto promoString = SerializeSquareTreeNode(root->GetChild("Promo"));
-        SetPromoString(promoString);
-        str::Free(promoString);
-    }
+    SetPromoString(SerializeSquareTreeNodeTemp(root->GetChild(StrL("Promo"))));
 
-    SquareTreeNode* node = root->GetChild("SumatraPDF");
+    SquareTreeNode* node = root->GetChild(StrL("SumatraPDF"));
     if (!node) {
         return nullptr;
     }
 
-    Str latestVer = node->GetValue("Latest");
+    Str latestVer = node->GetValue(StrL("Latest"));
     if (!IsValidProgramVersion(latestVer)) {
         return nullptr;
     }
@@ -158,13 +154,13 @@ static UpdateInfo* ParseUpdateInfo(Str d) {
     res->latestVer = str::Dup(latestVer);
 
     // those are optional. if missing, we'll just tell the user to go to website to download
-    res->installer64 = str::Dup(node->GetValue("Installer64"));
-    res->installerArm64 = str::Dup(node->GetValue("InstallerArm64"));
-    res->installer32 = str::Dup(node->GetValue("Installer32"));
+    res->installer64 = str::Dup(node->GetValue(StrL("Installer64")));
+    res->installerArm64 = str::Dup(node->GetValue(StrL("InstallerArm64")));
+    res->installer32 = str::Dup(node->GetValue(StrL("Installer32")));
 
-    res->portable64 = str::Dup(node->GetValue("PortableExe64"));
-    res->portableArm64 = str::Dup(node->GetValue("PortableExeArm64"));
-    res->portable32 = str::Dup(node->GetValue("PortableExe32"));
+    res->portable64 = str::Dup(node->GetValue(StrL("PortableExe64")));
+    res->portableArm64 = str::Dup(node->GetValue(StrL("PortableExeArm64")));
+    res->portable32 = str::Dup(node->GetValue(StrL("PortableExe32")));
 
     // figure out which executable to download
     Str dlURL;
