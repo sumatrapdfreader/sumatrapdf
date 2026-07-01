@@ -37,9 +37,10 @@ extern "C" void fz_set_optind(int val);
 static int CalcDlgWidth(HWND hwndParent, HFONT font, Str path, int minW, int padding) {
     HDC hdc = GetDC(nullptr);
     HFONT oldFont = (HFONT)SelectObject(hdc, font);
-    TempWStr pathW = ToWStrTemp(path);
+    int pathCch;
+    WCHAR* pathW = CWStrTemp(path, pathCch);
     SIZE sz{};
-    GetTextExtentPoint32W(hdc, pathW, len(pathW), &sz);
+    GetTextExtentPoint32W(hdc, pathW, pathCch, &sz);
     SelectObject(hdc, oldFont);
     ReleaseDC(nullptr, hdc);
     int dlgW = sz.cx + 2 * padding + DpiScale(hwndParent, 32);

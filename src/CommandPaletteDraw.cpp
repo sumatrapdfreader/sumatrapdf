@@ -97,7 +97,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         rightStrW = ToWStrTemp(rightStr);
         int gap = DpiScale(lb->hwnd, 8);
         SIZE szRight{};
-        GetTextExtentPoint32W(hdc, rightStrW, len(rightStrW), &szRight);
+        GetTextExtentPoint32W(hdc, rightStrW.s, len(rightStrW), &szRight);
         rightW = szRight.cx;
         if (isRtl) {
             rcText.left += rightW + gap;
@@ -124,7 +124,7 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         }
         COLORREF rightCol = AccentColor(colText, 80);
         SetTextColor(hdc, rightCol);
-        DrawTextW(hdc, rightStrW, -1, &rcRight, fmt);
+        DrawTextW(hdc, rightStrW.s, -1, &rcRight, fmt);
         SetTextColor(hdc, colText);
     }
 

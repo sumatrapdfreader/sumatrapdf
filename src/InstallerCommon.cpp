@@ -89,15 +89,16 @@ bool IsDirInPath(Str path, Str dir) {
 bool WriteRegExpandSz(HKEY root, Str keyName, Str valueName, Str value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valueNameW = CWStrTemp(valueName);
-    TempWStr valueW = ToWStrTemp(value);
-    DWORD cbData = (DWORD)(len(valueW) + 1) * sizeof(WCHAR);
+    int cch;
+    WCHAR* valueW = CWStrTemp(value, cch);
+    DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
     HKEY hKey;
     LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
     if (res != ERROR_SUCCESS) {
         logf("WriteRegExpandSz: RegOpenKeyExW('%s') failed with %d\n", keyName, (int)res);
         return false;
     }
-    res = RegSetValueExW(hKey, valueNameW, 0, REG_EXPAND_SZ, (const BYTE*)valueW.s, cbData);
+    res = RegSetValueExW(hKey, valueNameW, 0, REG_EXPAND_SZ, (const BYTE*)valueW, cbData);
     RegCloseKey(hKey);
     if (res != ERROR_SUCCESS) {
         logf("WriteRegExpandSz: RegSetValueExW failed with %d\n", (int)res);

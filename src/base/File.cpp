@@ -837,7 +837,7 @@ bool DeleteFileToTrash(Str path) {
     wstr::BufSet(pathDoubleTerminated, n, pathW);
     FILEOP_FLAGS flags = FOF_NO_UI | FOF_ALLOWUNDO;
     uint op = FO_DELETE;
-    SHFILEOPSTRUCTW shfo = {nullptr, op, pathDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};
+    SHFILEOPSTRUCTW shfo = {nullptr, op, pathDoubleTerminated.s, nullptr, flags, FALSE, nullptr, nullptr};
     int res = SHFileOperationW(&shfo);
     return res == 0;
 }
@@ -1050,7 +1050,7 @@ bool RemoveAll(Str dir) {
     wstr::BufSet(dirDoubleTerminated, n, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;
-    SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated, nullptr, flags, FALSE, nullptr, nullptr};
+    SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated.s, nullptr, flags, FALSE, nullptr, nullptr};
     int res = SHFileOperationW(&shfo);
     return res == 0;
 }

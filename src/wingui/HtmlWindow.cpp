@@ -1101,7 +1101,7 @@ static LPOLESTR OleStrDup(WStr s) {
     size_t cb = sizeof(WCHAR) * (size_t)(s.len + 1);
     LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cb);
     if (ret) {
-        memcpy(ret, s, cb);
+        memcpy(ret, s.s, cb);
     }
     return ret;
 }

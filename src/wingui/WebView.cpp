@@ -649,7 +649,7 @@ static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedE
     TempWStr headers = MimeHeaderFromContentType(contentType);
     ICoreWebView2WebResourceResponse* response = nullptr;
     HRESULT hr = gSharedEnvironment->CreateWebResourceResponse(
-        stream, statusCode, statusCode == 200 ? L"OK" : L"Not Found", headers, &response);
+        stream, statusCode, statusCode == 200 ? L"OK" : L"Not Found", headers.s, &response);
     if (stream) {
         stream->Release();
     }
@@ -954,7 +954,7 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
 
     if (resourceProvider.getResource && resourceUriPrefix) {
         TempWStr filter = str::JoinTemp(resourceUriPrefix, L"*");
-        webview->AddWebResourceRequestedFilter(filter, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
+        webview->AddWebResourceRequestedFilter(filter.s, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
         auto* resourceHandler = new webview2_resource_handler(this);
         ::EventRegistrationToken resourceToken = {};
         if (SUCCEEDED(webview->add_WebResourceRequested(resourceHandler, &resourceToken))) {
@@ -1336,7 +1336,7 @@ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
         auto options = CreateOfflineEnvironmentOptions();
         auto* envHandler = new webview2_env_handler(OnSharedEnvironmentReady);
         HRESULT hr =
-            CreateCoreWebView2EnvironmentWithOptions(nullptr, gSharedUserDataFolder, options.Get(), envHandler);
+            CreateCoreWebView2EnvironmentWithOptions(nullptr, gSharedUserDataFolder.s, options.Get(), envHandler);
         envHandler->Release();
         if (FAILED(hr)) {
             gSharedEnvState = SharedWebViewEnvState::Failed;

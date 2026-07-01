@@ -518,9 +518,9 @@ TempStr LoggedReadRegStr2Temp(Str keyName, Str valName) {
 bool WriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
-    TempWStr valueW = ToWStrTemp(value);
-
-    DWORD cbData = (DWORD)(valueW.len + 1) * sizeof(WCHAR);
+    int cch;
+    WCHAR* valueW = CWStrTemp(value, cch);
+    DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     return ERROR_SUCCESS == res;
 }
@@ -528,9 +528,9 @@ bool WriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
 bool LoggedWriteRegStr(HKEY hkey, Str keyName, Str valName, Str value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
-    TempWStr valueW = ToWStrTemp(value);
-
-    DWORD cbData = (DWORD)(valueW.len + 1) * sizeof(WCHAR);
+    int cch;
+    WCHAR* valueW = CWStrTemp(value, cch);
+    DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     if (res != ERROR_SUCCESS) {
         logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, value, res);
@@ -931,26 +931,26 @@ bool CreateShortcut(Str shortcutPath, Str exePath, Str args, Str description, in
     }
 
     ws = ToWStrTemp(exePath);
-    HRESULT hr = lnk->SetPath(ws);
+    HRESULT hr = lnk->SetPath(ws.s);
     if (FAILED(hr)) {
         return false;
     }
 
-    lnk->SetWorkingDirectory(path::GetDirTemp(ws));
+    lnk->SetWorkingDirectory(path::GetDirTemp(ws).s);
     // lnk->SetShowCmd(SW_SHOWNORMAL);
     // lnk->SetHotkey(0);
-    lnk->SetIconLocation(ws, iconIndex);
+    lnk->SetIconLocation(ws.s, iconIndex);
     if (args) {
         ws = ToWStrTemp(args);
-        lnk->SetArguments(ws);
+        lnk->SetArguments(ws.s);
     }
     if (description) {
         ws = ToWStrTemp(description);
-        lnk->SetDescription(ws);
+        lnk->SetDescription(ws.s);
     }
 
     ws = ToWStrTemp(shortcutPath);
-    hr = file->Save(ws, TRUE);
+    hr = file->Save(ws.s, TRUE);
     return SUCCEEDED(hr);
 }
 

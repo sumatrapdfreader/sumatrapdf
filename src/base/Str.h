@@ -427,6 +427,12 @@ WCHAR* CWStrTemp(WStr s);
 // as a C/win32 string pointer (never for its length)
 WCHAR* CWStrTemp(Str s);
 
+// like CWStrTemp but also reports the wide-char count (excluding the NUL) via
+// cch. Use when a C/win32 API needs both the pointer and a length (e.g. a
+// cbData byte count) — clearer than ToWStrTemp(...).s + .len at the call site.
+WCHAR* CWStrTemp(Str s, int& cch);
+WCHAR* CWStrTemp(WStr s, int& cch);
+
 TempWStr ToWStrTempFromBuilder(const StrBuilder& s);
 
 wchar_t ToLowerW(wchar_t c);

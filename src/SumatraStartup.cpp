@@ -140,7 +140,7 @@ static void SendMyselfDDE(Str cmdA, HWND targetHwnd) {
     if (targetHwnd) {
         // try WM_COPYDATA first, as that allows targetting a specific window
         size_t cbData = (len(cmd) + 1) * sizeof(WCHAR);
-        COPYDATASTRUCT cds = {kCopyDataDdeW, (DWORD)cbData, (void*)cmd};
+        COPYDATASTRUCT cds = {kCopyDataDdeW, (DWORD)cbData, (void*)cmd.s};
         LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res) {
             return;

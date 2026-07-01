@@ -693,7 +693,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             AutoFreeWStr itemSrc;
             if (href) {
                 TempStr normHref = NormalizeURLTemp(href.CStr(), pagePath);
-                itemSrc.Set(strconv::FromHtmlUtf8(normHref));
+                itemSrc.Set(strconv::FromHtmlUtf8(normHref).s);
             }
             TempStr txt = ToUtf8Temp(itemText);
             TempStr src = ToUtf8Temp(WStr(itemSrc.Get()));
@@ -739,13 +739,13 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 break;
             }
             if (tok->IsText()) {
-                itemText.Set(strconv::FromHtmlUtf8(tok->s));
+                itemText.Set(strconv::FromHtmlUtf8(tok->s).s);
             }
         } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS())) {
             AttrInfo* attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
                 TempStr src = NormalizeURLTemp(attrInfo->val, pagePath);
-                itemSrc.Set(strconv::FromHtmlUtf8(src));
+                itemSrc.Set(strconv::FromHtmlUtf8(src).s);
             }
         }
     }

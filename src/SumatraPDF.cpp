@@ -2054,7 +2054,7 @@ static MainWindow* CreateMainWindow() {
     /* position and size determined in OnSize */
     Rect rcFrame = ClientRect(hwndFrame);
     win->hwndCanvas =
-        CreateWindowExW(0, clsName, nullptr, style, 0, 0, rcFrame.dx, rcFrame.dy, hwndFrame, nullptr, h, nullptr);
+        CreateWindowExW(0, clsName.s, nullptr, style, 0, 0, rcFrame.dx, rcFrame.dy, hwndFrame, nullptr, h, nullptr);
     if (!win->hwndCanvas) {
         delete win;
         return nullptr;
@@ -3351,7 +3351,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     ofn.hwndOwner = tab->win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilterW;
+    ofn.lpstrFilter = fileFilterW.s;
     ofn.nFilterIndex = 1;
     // ofn.lpstrTitle = _TRA("Rename To");
     // ofn.lpstrInitialDir = initDir;
@@ -3909,7 +3909,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter);
+    ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter).s;
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
     if (len(defExt) > 0 && defExt.s[0] == '.') {
@@ -4104,7 +4104,7 @@ static void RenameCurrentFile(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFilePathW;
     ofn.nMaxFile = dimof(dstFilePathW);
-    ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter);
+    ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter).s;
     ofn.nFilterIndex = 1;
     // note: the other two dialogs are named "Open" and "Save As"
     auto s = _TRA("Rename To");
@@ -4129,7 +4129,7 @@ static void RenameCurrentFile(MainWindow* win) {
     HwndSetFocus(win->hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
-    BOOL moveOk = MoveFileExW(srcPathW, dstFilePathW, flags);
+    BOOL moveOk = MoveFileExW(srcPathW.s, dstFilePathW, flags);
     if (!moveOk) {
         LogLastError();
         LoadArgs args(srcPath, win);
@@ -4186,7 +4186,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilterW;
+    ofn.lpstrFilter = fileFilterW.s;
     ofn.nFilterIndex = 1;
     ofn.lpstrDefExt = L"lnk";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
@@ -4432,7 +4432,7 @@ static void OpenFile(MainWindow* win) {
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
 
-    ofn.lpstrFilter = GetFileFilterTemp();
+    ofn.lpstrFilter = GetFileFilterTemp().s;
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
 

@@ -151,7 +151,7 @@ static void SaveTabGroup(TabGroupsDialog* d) {
         return;
     }
     TempWStr buf = WStr(AllocArrayTemp<WCHAR>(n + 1), (int)n + 1);
-    GetWindowTextW(d->hwndEdit, buf, n + 1);
+    GetWindowTextW(d->hwndEdit, buf.s, n + 1);
     TempStr name = ToUtf8Temp(buf);
 
     auto* group = AllocStruct<TabGroup>();

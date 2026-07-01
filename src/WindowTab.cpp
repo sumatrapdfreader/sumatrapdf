@@ -221,7 +221,7 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, ByteSlice data) {
     TempStr fileFilterA = fmt("%s\1*.*\1", _TRA("All files"));
     TempWStr fileFilter = ToWStrTemp(fileFilterA);
     wstr::TransCharsInPlace(fileFilter, L"\1", L"\0");
-    ofn.lpstrFilter = fileFilter;
+    ofn.lpstrFilter = fileFilter.s;
 
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;

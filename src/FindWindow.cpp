@@ -364,9 +364,10 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     // the window is being resized (issue #5692)
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     TempStr pageStr = fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage));
-    TempWStr pageW = ToWStrTemp(pageStr);
+    int pageCch;
+    WCHAR* pageW = CWStrTemp(pageStr, pageCch);
     SIZE pSz{};
-    GetTextExtentPoint32W(hdc, pageW, len(pageW), &pSz);
+    GetTextExtentPoint32W(hdc, pageW, pageCch, &pSz);
     int pageGap = DpiScale(lb->hwnd, 10);
     int pageColDx = std::max((int)pSz.cx, DpiScale(lb->hwnd, 32));
     RECT rcPage = rcText;

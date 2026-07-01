@@ -986,7 +986,7 @@ static bool CreateInstallerWnd(Flags* cli) {
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
     WCHAR* titleW = CWStrTemp(title);
-    HWND hwnd = CreateWindowExW(exStyle, winCls, titleW, dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+    HWND hwnd = CreateWindowExW(exStyle, winCls.s, titleW, dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     if (!hwnd) {
         return false;
     }

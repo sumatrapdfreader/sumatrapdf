@@ -84,7 +84,7 @@ TryAgain64Bit:
     if (size == 0) {
         return {};
     }
-    GetEnvironmentVariableW(L"PATH", envpathW, size);
+    GetEnvironmentVariableW(L"PATH", envpathW.s, size);
     TempStr envPath = ToUtf8Temp(envpathW);
     StrVec paths;
     Split(&paths, envPath, ";", true);

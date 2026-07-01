@@ -267,10 +267,10 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchEx
         }
     }
     WCHAR pathW[MAX_PATH];
-    if (searchExeName && SearchPathW(nullptr, searchExeName, nullptr, MAX_PATH, pathW, nullptr) > 0) {
+    if (searchExeName && SearchPathW(nullptr, searchExeName.s, nullptr, MAX_PATH, pathW, nullptr) > 0) {
         return ToUtf8Temp(pathW);
     }
-    if (searchNameNoExt && SearchPathW(nullptr, searchNameNoExt, L".exe", MAX_PATH, pathW, nullptr) > 0) {
+    if (searchNameNoExt && SearchPathW(nullptr, searchNameNoExt.s, L".exe", MAX_PATH, pathW, nullptr) > 0) {
         return ToUtf8Temp(pathW);
     }
 #endif

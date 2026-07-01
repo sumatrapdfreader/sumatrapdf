@@ -2071,9 +2071,10 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
         data = (void*)str.Get().s;
         cbData = str.Size() + 1;
     } else if (fmt == CF_UNICODETEXT) {
-        TempWStr tmp = ToWStrTemp(str.Get());
+        int cch;
+        WCHAR* tmp = CWStrTemp(str.Get(), cch);
         data = (void*)tmp;
-        cbData = (len(tmp) + 1) * 2;
+        cbData = (cch + 1) * 2;
     } else {
         ReportIf(true);
         return 0;

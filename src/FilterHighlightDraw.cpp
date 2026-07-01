@@ -93,7 +93,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     int strOriginX = rc.left;
     if (isRtl) {
         SIZE szTotal;
-        GetTextExtentPoint32W(hdc, textW, textWLen, &szTotal);
+        GetTextExtentPoint32W(hdc, textW.s, textWLen, &szTotal);
         strOriginX = rc.right - szTotal.cx;
     }
 
@@ -106,8 +106,8 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
         int wEnd = len(prefixToEnd);
 
         SIZE szStart, szEnd;
-        GetTextExtentPoint32W(hdc, textW, wStart, &szStart);
-        GetTextExtentPoint32W(hdc, textW, wEnd, &szEnd);
+        GetTextExtentPoint32W(hdc, textW.s, wStart, &szStart);
+        GetTextExtentPoint32W(hdc, textW.s, wEnd, &szEnd);
 
         highlightRects[i].top = rc.top;
         highlightRects[i].bottom = rc.bottom;
@@ -137,7 +137,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
     }
 
     // draw the whole string at once over the highlights
-    DrawTextW(hdc, textW, -1, &rc, drawFmt);
+    DrawTextW(hdc, textW.s, -1, &rc, drawFmt);
 }
 
 bool FilterMatches(Str str, const StrVec& words) {

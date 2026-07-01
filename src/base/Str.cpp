@@ -3436,6 +3436,18 @@ WCHAR* CWStrTemp(Str s) {
     return ToWStrTemp(s).s;
 }
 
+WCHAR* CWStrTemp(Str s, int& cch) {
+    WStr ws = ToWStrTemp(s);
+    cch = ws.len;
+    return ws.s;
+}
+
+WCHAR* CWStrTemp(WStr s, int& cch) {
+    WStr ws = str::DupTemp(s);
+    cch = ws.len;
+    return ws.s;
+}
+
 // handles embedded 0 in the string
 TempWStr ToWStrTempFromBuilder(const StrBuilder& str) {
     if (str.IsEmpty()) {

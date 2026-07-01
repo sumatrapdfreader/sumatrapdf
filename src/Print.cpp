@@ -190,7 +190,7 @@ static void AppendPrinterStatus(StrBuilder& out, DWORD status) {
     }
 }
 
-static void AppendDeviceCapabilities(StrBuilder& out, WStr nameW, WStr portW) {
+static void AppendDeviceCapabilities(StrBuilder& out, const WCHAR* nameW, const WCHAR* portW) {
     // paper bins
     DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
     DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
@@ -374,8 +374,8 @@ void GetPrintersInfo(StrBuilder& out) {
     out.Append(fmt("Default printer: \"%s\"\n", defName));
     for (DWORD i = 0; i < printersCount; i++) {
         PRINTER_INFO_2& info = info2Arr[i];
-        WStr nameW = info.pPrinterName;
-        WStr portW = info.pPortName;
+        const WCHAR* nameW = info.pPrinterName;
+        const WCHAR* portW = info.pPortName;
         DWORD attr = info.Attributes;
         TempStr name = ToUtf8Temp(nameW);
         TempStr port = ToUtf8Temp(portW);

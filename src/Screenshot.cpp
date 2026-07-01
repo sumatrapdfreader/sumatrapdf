@@ -1421,7 +1421,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     int dlgH = 140;
 
     HINSTANCE h = GetModuleHandleW(nullptr);
-    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kSetHotkeyWinClassName, _TRW("Set Screenshot Hotkey"),
+    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kSetHotkeyWinClassName, _TRW("Set Screenshot Hotkey").s,
                                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT,
                                 dlgW, dlgH, hwndOwner, nullptr, h, dlg);
     if (!hwnd) {
@@ -1437,7 +1437,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     int rowGap = 6;
 
     // row 1: "Current hotkey:" label
-    dlg->hwndCurrentLabel = CreateWindowExW(0, L"STATIC", _TRW("Press a key combination:"),
+    dlg->hwndCurrentLabel = CreateWindowExW(0, L"STATIC", _TRW("Press a key combination:").s,
                                             WS_CHILD | WS_VISIBLE | SS_LEFT, x, y, w, rowH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndCurrentLabel, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
     y += rowH + rowGap;
@@ -1454,16 +1454,16 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     int btnW = 75;
     int btnH = 24;
     int bx = x + w - btnW;
-    dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
+    dlg->hwndCancelBtn = CreateWindowExW(0, L"BUTTON", _TRW("Cancel").s, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
                                          btnW, btnH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndCancelBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
     bx -= btnW + 4;
-    dlg->hwndRemoveBtn = CreateWindowExW(0, L"BUTTON", _TRW("Remove"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
+    dlg->hwndRemoveBtn = CreateWindowExW(0, L"BUTTON", _TRW("Remove").s, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, bx, y,
                                          btnW, btnH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndRemoveBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
     bx -= btnW + 4;
-    dlg->hwndSetBtn = CreateWindowExW(0, L"BUTTON", _TRW("Set"), WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, bx, y, btnW,
-                                      btnH, hwnd, nullptr, h, nullptr);
+    dlg->hwndSetBtn = CreateWindowExW(0, L"BUTTON", _TRW("Set").s, WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, bx, y,
+                                      btnW, btnH, hwnd, nullptr, h, nullptr);
     SendMessageW(dlg->hwndSetBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
 
     EnableWindow(dlg->hwndSetBtn, FALSE);

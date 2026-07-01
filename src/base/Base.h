@@ -215,9 +215,6 @@ struct WStr {
     explicit WStr(wchar_t* s_, int len_) : s(s_), len(len_) {}
 
     explicit operator bool() const { return len > 0 && s; }
-
-    operator const wchar_t*() const { return s; }
-    operator wchar_t*() const { return s; }
 };
 
 // exists just to mark the intent, needed by both Str.h and TempAllocator.h

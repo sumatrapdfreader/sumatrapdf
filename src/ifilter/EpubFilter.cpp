@@ -150,7 +150,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             str = m_epubDoc->GetPropertyTemp(kPropAuthor);
             if (!str::IsEmpty(str)) {
                 ws = ToWStrTemp(str);
-                chunkValue.SetTextValue(PKEY_Author, ws);
+                chunkValue.SetTextValue(PKEY_Author, ws.s);
                 return S_OK;
             }
             // fall through
@@ -163,7 +163,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             }
             if (!str::IsEmpty(str)) {
                 ws = ToWStrTemp(str);
-                chunkValue.SetTextValue(PKEY_Title, ws);
+                chunkValue.SetTextValue(PKEY_Title, ws.s);
                 return S_OK;
             }
             // fall through

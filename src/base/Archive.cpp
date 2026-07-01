@@ -472,7 +472,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
         if (n >= maxLen) {
             n = maxLen - 1;
         }
-        memcpy(pwdBuf, pwdW, n * sizeof(WCHAR));
+        memcpy(pwdBuf, pwdW.s, n * sizeof(WCHAR));
         pwdBuf[n] = 0;
         return 1;
     }
