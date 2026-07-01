@@ -1325,7 +1325,26 @@ bool HtmlWindow::CreateBrowser() {
     return true;
 }
 
+// urlmon.dll is delay-loaded. On systems where it (or an export we need) can't
+// be loaded -- e.g. Wine, or a stripped-down Windows install -- calling a
+// delay-loaded urlmon function raises a fatal delay-load exception (0xC06D007E)
+// that we can't catch here. The HtmlWindow ctor calls into urlmon
+// (RegisterInternetProtocolFactory -> CoInternetGetSession), so verify urlmon is
+// usable up front and bail out gracefully (CHM just won't render via the IE
+// backend) instead of crashing.
+static bool IsUrlmonUsable() {
+    static int cached = -1; // -1 unknown, 0 no, 1 yes
+    if (cached < 0) {
+        HMODULE h = LoadLibraryW(L"urlmon.dll");
+        cached = (h && GetProcAddress(h, "CoInternetGetSession")) ? 1 : 0;
+    }
+    return cached == 1;
+}
+
 HtmlWindow* HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback* cb) {
+    if (!IsUrlmonUsable()) {
+        return nullptr;
+    }
     HtmlWindow* htmlWin = new HtmlWindow(hwndParent, cb);
     if (!htmlWin->CreateBrowser()) {
         delete htmlWin;
