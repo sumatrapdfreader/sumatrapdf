@@ -754,8 +754,9 @@ int IndexOfAfter(Str s, Str needle) {
 // found, *before is the text before it and *after the text after it; returns
 // true. When sep is not found, *before is all of s, *after is {} and it returns
 // false. before/after may be null if not needed.
-bool Cut(Str s, Str sep, Str* before, Str* after) {
-    int idx = IndexOf(s, sep);
+// splits s into the part before the separator (found at idx, sepLen chars long)
+// and the part after it. idx < 0 means "not found": before = s, after = {}.
+static bool CutAtIdx(Str s, int idx, int sepLen, Str* before, Str* after) {
     if (idx < 0) {
         if (before) {
             *before = s;
@@ -769,15 +770,24 @@ bool Cut(Str s, Str sep, Str* before, Str* after) {
         *before = Str(s.s, idx);
     }
     if (after) {
-        int off = idx + sep.len;
+        int off = idx + sepLen;
         *after = Str(s.s + off, s.len - off);
     }
     return true;
 }
 
+bool Cut(Str s, Str sep, Str* before, Str* after) {
+    return CutAtIdx(s, IndexOf(s, sep), sep.len, before, after);
+}
+
 // like Cut() but splits on the first occurrence of a single char
 bool CutChar(Str s, char c, Str* before, Str* after) {
     return Cut(s, Str(&c, 1), before, after);
+}
+
+// like CutChar() but splits on the last occurrence of a single char
+bool CutCharLast(Str s, char c, Str* before, Str* after) {
+    return CutAtIdx(s, LastIndexOfChar(s, c), 1, before, after);
 }
 
 // Extracts the next line from s (up to a CR, LF or CRLF terminator) into line

@@ -305,20 +305,18 @@ FileArgs::~FileArgs() {
 // args into FileArgs
 // returns nullptr if there are not args
 FileArgs* ParseFileArgs(Str path) {
-    Str hashPos = str::SliceFromCharLast(path, '?');
-    if (!hashPos) {
+    Str before, after;
+    if (!str::CutCharLast(path, '?', &before, &after)) {
         return nullptr;
     }
     // don't mutilate long file paths that start with "\\?\"
-    int off = (int)(hashPos.s - path.s);
-    if (off == 2) {
+    if (before.len == 2) {
         return nullptr;
     }
     FileArgs* res = new FileArgs();
     res->origPath = str::Dup(path);
-    int n = (int)(hashPos.s - path.s);
-    res->cleanPath = str::Dup(Str(path.s, (int)n));
-    ParseAdobeFlags(*res, Str(hashPos.s + 1, path.len - off - 1));
+    res->cleanPath = str::Dup(before);
+    ParseAdobeFlags(*res, after);
     return res;
 }
 
