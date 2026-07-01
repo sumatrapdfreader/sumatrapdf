@@ -751,26 +751,26 @@ void MobiDoc::LoadImages() {
 // as far as I can tell, this means: it starts at 1
 // returns nullptr if there is no image (e.g. it's not a format we
 // recognize)
-Str* MobiDoc::GetImage(size_t imgRecIndex) const {
-    if ((imgRecIndex > imagesCount) || (imgRecIndex < 1)) {
-        return nullptr;
+Str MobiDoc::GetImage(int imgRecIndex) const {
+    if ((imgRecIndex > (int)imagesCount) || (imgRecIndex < 1)) {
+        return {};
     }
     --imgRecIndex;
     if (str::IsEmpty(images[imgRecIndex])) {
-        return nullptr;
+        return {};
     }
-    return &images[imgRecIndex];
+    return images[imgRecIndex];
 }
 
-Str* MobiDoc::GetCoverImage() {
+Str MobiDoc::GetCoverImage() {
     if (!coverImageRec || coverImageRec < imageFirstRec) {
-        return nullptr;
+        return {};
     }
     size_t imageNo = coverImageRec - imageFirstRec;
     if (imageNo >= imagesCount || str::IsEmpty(images[imageNo])) {
-        return nullptr;
+        return {};
     }
-    return &images[imageNo];
+    return images[imageNo];
 }
 
 // each record can have extra data at the end, which we must discard

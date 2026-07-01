@@ -540,7 +540,7 @@ Str EpubDoc::GetHtmlData() const {
     return ToStr(htmlData);
 }
 
-Str* EpubDoc::GetImageData(Str fileName, Str pagePath) {
+Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
     ScopedCritSec scope(&zipAccess);
 
     if (!pagePath) {
@@ -562,7 +562,7 @@ Str* EpubDoc::GetImageData(Str fileName, Str pagePath) {
                     }
                 }
                 if (!str::IsEmpty(img.base)) {
-                    return &img.base;
+                    return img.base;
                 }
             }
         }
@@ -584,7 +584,7 @@ Str* EpubDoc::GetImageData(Str fileName, Str pagePath) {
                 }
             }
             if (!str::IsEmpty(img.base)) {
-                return &img.base;
+                return img.base;
             }
         }
     }
@@ -599,7 +599,7 @@ Str* EpubDoc::GetImageData(Str fileName, Str pagePath) {
             fi->data = nullptr;
             data.fileName = str::Dup(url);
             images.Append(data);
-            return &images.Last().base;
+            return images.Last().base;
         }
     }
 
@@ -1033,16 +1033,16 @@ Str Fb2Doc::GetXmlData() const {
     return Str((char*)((u8*)s.s), (int)((size_t)len(xmlData)));
 }
 
-Str* Fb2Doc::GetImageData(Str fileName) const {
+Str Fb2Doc::GetImageData(Str fileName) const {
     for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).fileName, fileName)) {
-            return &images.at(i).base;
+            return images.at(i).base;
         }
     }
     return {};
 }
 
-Str* Fb2Doc::GetCoverImage() const {
+Str Fb2Doc::GetCoverImage() const {
     if (!coverImage) {
         return {};
     }
@@ -1368,13 +1368,13 @@ Str HtmlDoc::GetHtmlData() {
     return htmlData;
 }
 
-Str* HtmlDoc::GetImageData(Str fileName) {
+Str HtmlDoc::GetImageData(Str fileName) {
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
 
     TempStr url = NormalizeURLTemp(fileName, pagePath);
     for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).fileName, url)) {
-            return &images.at(i).base;
+            return images.at(i).base;
         }
     }
 
@@ -1385,7 +1385,7 @@ Str* HtmlDoc::GetImageData(Str fileName) {
     }
     data.fileName = str::Dup(url);
     images.Append(data);
-    return &images.Last().base;
+    return images.Last().base;
 }
 
 Str HtmlDoc::GetFileData(Str relPath) {

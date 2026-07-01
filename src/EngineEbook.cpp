@@ -1355,11 +1355,11 @@ class ChmDataCache {
 
     Str GetHtmlData() { return html; }
 
-    Str* GetImageData(Str id, Str pagePath) {
+    Str GetImageData(Str id, Str pagePath) {
         TempStr url = NormalizeURLTemp(id, pagePath);
         for (size_t i = 0; i < images.size(); i++) {
             if (str::Eq(images.at(i).fileName, url)) {
-                return &images.at(i).base;
+                return images.at(i).base;
             }
         }
 
@@ -1373,7 +1373,7 @@ class ChmDataCache {
 
         data.fileName = str::Dup(url);
         images.Append(data);
-        return &images.Last().base;
+        return images.Last().base;
     }
 
     Str GetFileData(Str relPath, Str pagePath) {
@@ -1405,7 +1405,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         Str src = str::Dup(attr->val);
         url::DecodeInPlace(src);
-        Str* img = chmDoc->GetImageData(src, Str(pagePath));
+        Str img = chmDoc->GetImageData(src, Str(pagePath));
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {

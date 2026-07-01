@@ -588,9 +588,9 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
     return imageY != -1;
 }
 
-bool HtmlFormatter::EmitImage(Str* img) {
-    ReportIf(str::IsEmpty(*img));
-    Size imgSize = ImageSizeFromData(*img);
+bool HtmlFormatter::EmitImage(Str img) {
+    ReportIf(str::IsEmpty(img));
+    Size imgSize = ImageSizeFromData(img);
     if (imgSize.IsEmpty()) {
         return false;
     }
@@ -623,7 +623,7 @@ bool HtmlFormatter::EmitImage(Str* img) {
     }
 
     RectF bbox(PointF(currX, 0), newSize);
-    AppendInstr(DrawInstr::Image(*img, bbox));
+    AppendInstr(DrawInstr::Image(img, bbox));
     currX += bbox.dx;
 
     return true;

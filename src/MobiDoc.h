@@ -43,8 +43,8 @@ struct MobiDoc {
     ~MobiDoc();
 
     Str GetHtmlData() const;
-    Str* GetCoverImage();
-    Str* GetImage(size_t imgRecIndex) const;
+    Str GetCoverImage();
+    Str GetImage(int imgRecIndex) const;
     Str GetFileName() const { return fileName; }
     TempStr GetPropertyTemp(Str name);
     PdbDocType GetDocType() const { return docType; }

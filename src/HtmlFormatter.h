@@ -190,7 +190,7 @@ struct HtmlFormatter {
     bool FlushCurrLine(bool isParagraphBreak);
     void UpdateLinkBboxes(HtmlPage* page);
 
-    bool EmitImage(Str* img);
+    bool EmitImage(Str img);
     void EmitHr();
     void EmitTextRun(::Str s);
     // emits a synthetic, persistent string (e.g. a list bullet/number)

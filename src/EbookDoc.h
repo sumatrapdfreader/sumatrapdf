@@ -38,7 +38,7 @@ struct EpubDoc {
 
     Str GetHtmlData() const;
 
-    Str* GetImageData(Str fileName, Str pagePath);
+    Str GetImageData(Str fileName, Str pagePath);
     Str GetFileData(Str relPath, Str pagePath);
 
     TempStr GetPropertyTemp(Str name) const;
@@ -78,8 +78,8 @@ struct Fb2Doc {
 
     Str GetXmlData() const;
 
-    Str* GetImageData(Str fileName) const;
-    Str* GetCoverImage() const;
+    Str GetImageData(Str fileName) const;
+    Str GetCoverImage() const;
 
     TempStr GetPropertyTemp(Str name) const;
     Str GetFileName() const;
@@ -137,7 +137,7 @@ struct HtmlDoc {
 
     Str GetHtmlData();
 
-    Str* GetImageData(Str fileName);
+    Str GetImageData(Str fileName);
     Str GetFileData(Str relPath);
 
     TempStr GetPropertyTemp(Str name) const;
