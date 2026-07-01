@@ -2189,7 +2189,7 @@ EngineBase* EngineMupdf::Clone() {
 TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     int streamNo = -1;
     Str path2 = str::Dup(path);
-    Str streamNoStr = FindEmbeddedPdfFileStreamNo(path2);
+    Str streamNoStr = ParseEmbeddedPdfName(path2).streamNoStr;
     if (streamNoStr) {
         Str rest = str::Parse(streamNoStr, ":%d", &streamNo);
         bool hasAttachmentName = rest && str::StartsWith(rest, ":attachname=");
@@ -2206,39 +2206,6 @@ TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     }
     *streamNoOut = streamNo;
     return path2;
-}
-
-TempStr GetEmbeddedFileNameTemp(Str path) {
-    if (!path) {
-        return {};
-    }
-    Str meta;
-    int searchOff = 0;
-    while (searchOff < path.len) {
-        Str rest = Str(path.s + searchOff, path.len - searchOff);
-        int idx = str::IndexOf(rest, StrL(":attachname="));
-        if (idx < 0) {
-            break;
-        }
-        int matchOff = searchOff + idx;
-        meta = Str(path.s + matchOff, path.len - matchOff);
-        searchOff = matchOff + 1;
-    }
-    if (!meta) {
-        return {};
-    }
-    Str hex = Str(meta.s + LenL(":attachname="));
-    size_t hexLen = hex.len;
-    if (hexLen == 0 || (hexLen % 2) != 0) {
-        return {};
-    }
-    size_t nameLen = hexLen / 2;
-    TempStr name = AllocArrayTemp<char>(nameLen + 1);
-    if (!str::HexToMem(hex, (u8*)name.s, nameLen)) {
-        return {};
-    }
-    name.s[nameLen] = 0;
-    return name;
 }
 
 ByteSlice EngineMupdf::LoadStreamFromPDFFile(Str filePath) {

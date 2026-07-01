@@ -62,7 +62,6 @@ EngineBase* CreateEngineMupdfFromStream(IStream* stream, Str nameHint, PasswordU
 EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, Str nameHint, PasswordUI* pwdUI);
 ByteSlice LoadEmbeddedPDFFile(Str path);
 TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut);
-TempStr GetEmbeddedFileNameTemp(Str path);
 Annotation* EngineMupdfCreateAnnotation(EngineBase*, int pageNo, PointF pos, AnnotCreateArgs* args);
 void EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);

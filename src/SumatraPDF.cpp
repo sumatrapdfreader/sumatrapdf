@@ -1455,7 +1455,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
 
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     Str titlePath = tab->displayName ? Str(tab->displayName) : tab->filePath;
-    TempStr embeddedFileName = GetEmbeddedFileNameTemp(titlePath);
+    TempStr embeddedFileName = ParseEmbeddedPdfName(titlePath).fileName;
     if (embeddedFileName) {
         titlePath = embeddedFileName;
     }

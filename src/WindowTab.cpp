@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/FileWatcher.h"
+#include "base/GuessFileType.h"
 
 #include "wingui/UIModels.h"
 
@@ -134,7 +135,7 @@ Str WindowTab::GetTabTitle() const {
         }
         return StrL("");
     }
-    TempStr embeddedFileName = GetEmbeddedFileNameTemp(filePath);
+    TempStr embeddedFileName = ParseEmbeddedPdfName(filePath).fileName;
     if (embeddedFileName) {
         return embeddedFileName;
     }

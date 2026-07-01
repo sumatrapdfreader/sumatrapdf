@@ -449,14 +449,15 @@ Kind GuessFileTypeFromContent(Str path) {
     return res;
 }
 
-// embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
-// or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}"
-// return pointer starting at ":${pdfStream}"
-Str FindEmbeddedPdfFileStreamNo(Str path) {
+// parse an embedded-PDF path of the form "c:/foo.pdf:${pdfStreamNo}"
+// or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}" into its pieces
+EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
+    EmbeddedPdfName res;
     if (!path) {
-        return {};
+        return res;
     }
-    Str parseEnd = path;
+
+    // find the last ":attachname=" occurrence, if any
     Str meta;
     int searchOff = 0;
     while (searchOff < path.len) {
@@ -469,30 +470,41 @@ Str FindEmbeddedPdfFileStreamNo(Str path) {
         meta = Str(path.s + matchOff, path.len - matchOff);
         searchOff = matchOff + 1;
     }
-    if (meta) {
-        parseEnd = Str(path.s, (int)(meta.s - path.s));
-    }
-    if (!parseEnd) {
-        return {};
-    }
-    int endIdx = parseEnd.len - 1;
 
+    // stream number: ":${digits}" right before the attachname meta (or at the end of path)
+    Str parseEnd = meta ? Str(path.s, (int)(meta.s - path.s)) : path;
+    int endIdx = parseEnd.len - 1;
     int nDigits = 0;
     while (endIdx >= 0) {
         char c = parseEnd.s[endIdx];
         if (c == ':') {
             if (nDigits > 0) {
-                return Str(parseEnd.s + endIdx, parseEnd.len - endIdx);
+                res.streamNoStr = Str(parseEnd.s + endIdx, parseEnd.len - endIdx);
             }
-            return {};
+            break;
         }
         if (!str::IsDigit(c)) {
-            return {};
+            break;
         }
         nDigits++;
         endIdx--;
     }
-    return {};
+
+    // attachment name: hex-decoded utf8 after ":attachname="
+    if (meta) {
+        int prefixLen = LenL(":attachname=");
+        Str hex = Str(meta.s + prefixLen, meta.len - prefixLen);
+        int hexLen = hex.len;
+        if (hexLen > 0 && (hexLen % 2) == 0) {
+            int nameLen = hexLen / 2;
+            char* name = AllocArrayTemp<char>((size_t)nameLen + 1);
+            if (str::HexToMem(hex, (u8*)name, (size_t)nameLen)) {
+                name[nameLen] = 0;
+                res.fileName = Str(name, nameLen);
+            }
+        }
+    }
+    return res;
 }
 
 Kind GuessFileTypeFromName(Str path) {
@@ -510,7 +522,7 @@ Kind GuessFileTypeFromName(Str path) {
     }
 
     // cases that cannot be decided just by looking at file extension
-    if (FindEmbeddedPdfFileStreamNo(path)) {
+    if (ParseEmbeddedPdfName(path).streamNoStr) {
         return kindFilePDF;
     }
 

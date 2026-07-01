@@ -44,7 +44,13 @@ extern Kind kindFileTxt;
 
 extern Kind kindDirectory;
 
-Str FindEmbeddedPdfFileStreamNo(Str path);
+// embedded PDF files have paths like "c:/foo.pdf:${pdfStreamNo}"
+// or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}"
+struct EmbeddedPdfName {
+    Str streamNoStr;  // ":${pdfStreamNo}" substring within path, {} if not an embedded-PDF path
+    TempStr fileName; // hex-decoded attachment name, {} if there's no ":attachname=" part
+};
+EmbeddedPdfName ParseEmbeddedPdfName(Str path);
 
 Kind GuessFileTypeFromContent(Str path);
 Kind GuessFileTypeFromContent(const ByteSlice& d);
