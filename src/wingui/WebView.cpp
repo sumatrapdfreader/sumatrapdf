@@ -610,13 +610,13 @@ static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
         return {};
     }
     WStr path = WStr(uri.s + pathOff, uri.len - pathOff);
-    WStr q = wstr::FindChar(path, L'?');
-    if (q) {
-        path = WStr(path.s, (int)(q.s - path.s));
+    int q = wstr::IndexOfChar(path, L'?');
+    if (q >= 0) {
+        path = WStr(path.s, q);
     }
-    WStr h = wstr::FindChar(path, L'#');
-    if (h) {
-        path = WStr(path.s, (int)(h.s - path.s));
+    int h = wstr::IndexOfChar(path, L'#');
+    if (h >= 0) {
+        path = WStr(path.s, h);
     }
     return wstr::Dup(path);
 }

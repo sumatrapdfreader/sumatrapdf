@@ -970,7 +970,7 @@ size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
     int dst = 0;
     for (int src = 0; src < str.len; src++) {
         WCHAR c = str.s[src];
-        if (!wstr::FindChar(toRemove, c)) {
+        if (wstr::IndexOfChar(toRemove, c) < 0) {
             str.s[dst++] = c;
         } else {
             ++removed;
@@ -1040,13 +1040,13 @@ static Str ExtractUntil(Str str, int off, char c, int* endOffOut) {
         return {};
     }
     Str slice = Str(str.s + off, str.len - off);
-    Str found = FindChar(slice, c);
-    if (str::IsNull(found)) {
+    int foundOff = IndexOfChar(slice, c);
+    if (foundOff < 0) {
         return {};
     }
-    int endOff = (int)(found.s - str.s);
+    int endOff = off + foundOff;
     *endOffOut = endOff;
-    return str::Dup(Str(str.s + off, endOff - off));
+    return str::Dup(Str(str.s + off, foundOff));
 }
 
 static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* endOffOut, void* valueOut) {
@@ -2490,9 +2490,8 @@ size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
     }
     size_t nReplaced = 0;
     for (int i = 0; i < str.len; i++) {
-        WStr pos = wstr::FindChar(oldChars, str.s[i]);
-        if (pos) {
-            size_t idx = (size_t)(pos.s - oldChars.s);
+        int idx = wstr::IndexOfChar(oldChars, str.s[i]);
+        if (idx >= 0) {
             str.s[i] = newChars.s[idx];
             nReplaced++;
         }
@@ -2746,13 +2745,13 @@ static WStr ExtractUntilW(WStr str, int off, WCHAR c, int* endOffOut) {
         return {};
     }
     WStr slice = WStr(str.s + off, str.len - off);
-    WStr found = FindChar(slice, c);
-    if (wstr::IsNull(found)) {
+    int foundOff = IndexOfChar(slice, c);
+    if (foundOff < 0) {
         return {};
     }
-    int endOff = (int)(found.s - str.s);
+    int endOff = off + foundOff;
     *endOffOut = endOff;
-    return wstr::Dup(WStr(str.s + off, endOff - off));
+    return wstr::Dup(WStr(str.s + off, foundOff));
 }
 
 static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int* endOffOut, void* valueOut) {
@@ -2760,7 +2759,7 @@ static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int*
     WCHAR f2[] = L"% ";
     WStr formatAt = WStr(format.s + formatOff, format.len - formatOff);
     WStr endF = Parse(formatAt, L"%u%c", &width, &f2[1]);
-    if (!wstr::IsNull(endF) && !wstr::IsNull(FindChar(WStr(L"udx"), f2[1])) && width <= (unsigned)(str.len - p)) {
+    if (!wstr::IsNull(endF) && IndexOfChar(WStr(L"udx"), f2[1]) >= 0 && width <= (unsigned)(str.len - p)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
         wstr::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
         WStr end = Parse(WStr(limited), f2, valueOut);

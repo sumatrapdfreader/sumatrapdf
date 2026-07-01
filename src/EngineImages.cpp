@@ -2048,9 +2048,9 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
     }
     // stop parsing once we have all desired information
     Str dateStr = propDate;
-    Str slash = str::FindChar(dateStr, '/');
+    int slash = str::IndexOfChar(dateStr, '/');
     return str::IsEmpty(propTitle) || propAuthors.Size() == 0 || str::IsEmpty(propCreator) || str::IsEmpty(propDate) ||
-           !slash || slash.s <= dateStr.s;
+           slash <= 0;
 }
 
 class EngineCbx : public EngineImages {

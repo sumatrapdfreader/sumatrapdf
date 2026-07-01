@@ -428,11 +428,11 @@ static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
 // is none. Returns a properly-sized view (unlike poking a NUL into the buffer,
 // which left .len stale).
 static Str RegKeyParent(Str keyName) {
-    Str sep = str::FindCharLast(keyName, '\\');
-    if (!sep) {
+    int sep = str::LastIndexOfChar(keyName, '\\');
+    if (sep < 0) {
         return {};
     }
-    return Str(keyName.s, (int)(sep.s - keyName.s));
+    return Str(keyName.s, sep);
 }
 
 void RemoveInstallRegistryKeys(HKEY hkey) {

@@ -557,14 +557,14 @@ static void AlignPropertiesText(str::Builder& text) {
     Str content = ToStr(text);
     for (int off = 0; off < content.len;) {
         Str rest = Str(content.s + off, content.len - off);
-        Str nl = str::FindChar(rest, '\n');
-        int lineLen = nl.s ? (int)(nl.s - rest.s) : rest.len;
+        int nl = str::IndexOfChar(rest, '\n');
+        int lineLen = nl >= 0 ? nl : rest.len;
         int labelBytes = 0;
         int labelWidth = GetPropertyLabelWidth(Str(rest.s, lineLen), &labelBytes);
         if (labelWidth > maxLabelWidth) {
             maxLabelWidth = labelWidth;
         }
-        off += lineLen + (nl.s ? 1 : 0);
+        off += lineLen + (nl >= 0 ? 1 : 0);
     }
     if (maxLabelWidth == 0) {
         return;
@@ -573,8 +573,8 @@ static void AlignPropertiesText(str::Builder& text) {
     str::Builder aligned;
     for (int off = 0; off < content.len;) {
         Str rest = Str(content.s + off, content.len - off);
-        Str nl = str::FindChar(rest, '\n');
-        int lineLen = nl.s ? (int)(nl.s - rest.s) : rest.len;
+        int nl = str::IndexOfChar(rest, '\n');
+        int lineLen = nl >= 0 ? nl : rest.len;
         int labelBytes = 0;
         int labelWidth = GetPropertyLabelWidth(Str(rest.s, lineLen), &labelBytes);
         if (labelWidth >= 0) {
@@ -588,10 +588,10 @@ static void AlignPropertiesText(str::Builder& text) {
         } else {
             aligned.Append(Str(rest.s, lineLen));
         }
-        if (nl.s) {
+        if (nl >= 0) {
             aligned.AppendChar('\n');
         }
-        off += lineLen + (nl.s ? 1 : 0);
+        off += lineLen + (nl >= 0 ? 1 : 0);
     }
     text.Set(ToStr(aligned));
 }
@@ -629,8 +629,8 @@ static void SizeToContent(PropertiesLayout* pl) {
     Str text = ToStr(pl->propsText);
     for (int off = 0; off < text.len;) {
         Str rest = Str(text.s + off, text.len - off);
-        Str nl = str::FindChar(rest, '\n');
-        int lineLen = nl.s ? (int)(nl.s - rest.s) : rest.len;
+        int nl = str::IndexOfChar(rest, '\n');
+        int lineLen = nl >= 0 ? nl : rest.len;
         SIZE sz{};
         TempWStr lineW = ToWStrTemp(Str(rest.s, lineLen));
         GetTextExtentPoint32W(hdcEdit, lineW.s, lineW.len, &sz);
@@ -638,7 +638,7 @@ static void SizeToContent(PropertiesLayout* pl) {
             maxLineDx = sz.cx;
         }
         nLines++;
-        off += lineLen + (nl.s ? 1 : 0);
+        off += lineLen + (nl >= 0 ? 1 : 0);
     }
     maxLineDx += 16;
 

@@ -180,13 +180,13 @@ void ParseTip(ParsedTip& tip, Str s) {
     // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands)
     while (!str::IsEmpty(sp)) {
         if (sp.s[0] == '(' && sp.len > 5 && str::StartsWith(Str(sp.s + 1, sp.len - 1), "Key/")) {
-            Str end = str::FindChar(sp, ')');
-            if (end) {
-                Str cmdName(sp.s + 5, (int)(end.s - sp.s) - 5); // skip "(Key/"
+            int end = str::IndexOfChar(sp, ')');
+            if (end >= 0) {
+                Str cmdName(sp.s + 5, end - 5); // skip "(Key/"
                 if (GetCommandIdByName(cmdName) > 0) {
                     TempStr shortcut = ResolveKeyShortcutTemp(cmdName);
                     expanded.Append(shortcut);
-                    AdvanceTipText(sp, (int)(end.s - sp.s) + 1);
+                    AdvanceTipText(sp, end + 1);
                     continue;
                 }
             }

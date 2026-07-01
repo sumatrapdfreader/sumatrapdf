@@ -373,9 +373,9 @@ bool EpubDoc::Load() {
         return false;
     }
 
-    Str slashPos = str::FindCharLast(contentPath, '/');
-    if (slashPos) {
-        contentPath = str::DupTemp(Str(contentPath.s, (int)(slashPos.s - contentPath.s + 1)));
+    int slashPos = str::LastIndexOfChar(contentPath, '/');
+    if (slashPos >= 0) {
+        contentPath = str::DupTemp(Str(contentPath.s, slashPos + 1));
     } else {
         contentPath = {};
     }

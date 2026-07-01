@@ -958,7 +958,7 @@ static int LinkifyTrimTrailingPunctOff(int startOff, int endOff, WStr trimChars,
             break;
         }
         wchar_t c = pageText.s[endOff - 1];
-        if (wstr::FindChar(trimChars, c)) {
+        if (wstr::IndexOfChar(trimChars, c) >= 0) {
             endOff--;
             if (!trimRepeat) {
                 break;
@@ -1033,7 +1033,7 @@ static int LinkifyMultilineText(LinkRectList* list, WStr pageText, int startOff,
 inline bool IsEmailUsernameChar(WCHAR c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
-    return iswalnum(c) || c && wstr::FindChar(WStr(L".!#$%&'*+=?^_`{|}~-"), c);
+    return iswalnum(c) || c && wstr::IndexOfChar(WStr(L".!#$%&'*+=?^_`{|}~-"), c) >= 0;
 }
 inline bool IsEmailDomainChar(WCHAR c) {
     return iswalnum(c) || '-' == c;

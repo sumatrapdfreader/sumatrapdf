@@ -427,11 +427,11 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
         return;
     }
     Str content = AsStr(data);
-    Str lineEnd = str::FindChar(content, '\n');
-    if (!lineEnd) {
-        lineEnd = str::FindChar(content, '\r');
+    int lineEnd = str::IndexOfChar(content, '\n');
+    if (lineEnd < 0) {
+        lineEnd = str::IndexOfChar(content, '\r');
     }
-    int lineLen = lineEnd ? (int)(lineEnd.s - content.s) : content.len;
+    int lineLen = lineEnd >= 0 ? lineEnd : content.len;
     if (lineLen <= 0) {
         data.Free();
         return;

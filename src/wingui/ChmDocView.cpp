@@ -51,7 +51,7 @@ void ChmWebviewWnd::OnBrowserMessage(Str msg) {
 
 static Str ChmMimeFromPath(Str path, const ByteSlice& data) {
     Str ext = str::FindCharLast(path, '.');
-    if (ext && str::FindChar(ext, ';')) {
+    if (ext && str::IndexOfChar(ext, ';') >= 0) {
         Str semi = str::FindChar(ext, ';');
         TempStr trimmed = str::DupTemp(Str(path.s, (int)(semi.s - path.s)));
         return ChmMimeFromPath(trimmed, data);

@@ -1256,9 +1256,9 @@ static void AppendExternalViewersToMenu(HMENU menuFile, Str filePath) {
                 }
                 Str arg0 = args.at(2 + 0);
                 name = path::GetBaseNameTemp(arg0);
-                Str dotPos = str::FindChar(name, '.');
-                if (dotPos) {
-                    name = str::DupTemp(Str(name.s, (int)(dotPos.s - name.s)));
+                int dotPos = str::IndexOfChar(name, '.');
+                if (dotPos >= 0) {
+                    name = str::DupTemp(Str(name.s, dotPos));
                 }
             }
         }

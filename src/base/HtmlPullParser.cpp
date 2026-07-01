@@ -205,9 +205,9 @@ bool AttrInfo::NameIs(Str s) const {
 // return true if nameToCheck is the same as s after skipping namespace preifix
 static bool IsNameWithNS(Str s, Str nameToCheck) {
     Str name = s;
-    Str colon = str::FindChar(s, ':');
-    if (colon) {
-        int prefixLen = (int)(colon.s - s.s) + 1;
+    int colonIdx = str::IndexOfChar(s, ':');
+    if (colonIdx >= 0) {
+        int prefixLen = colonIdx + 1;
         name = Str(s.s + prefixLen, s.len - prefixLen);
     }
     return str::EqNIx(name, name.len, nameToCheck);
