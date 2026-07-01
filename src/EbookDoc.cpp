@@ -177,21 +177,20 @@ inline char decode64(char c) {
     return -1;
 }
 
-static Str Base64Decode(Str data) {
-    size_t sLen = (size_t)data.len;
-    u8* s = (u8*)data.s;
-    u8* end = (u8*)data.s + sLen;
-    u8* result = AllocArray<u8>(sLen * 3 / 4);
-    u8* curr = result;
-    u8 c = 0;
+static TempStr Base64DecodeTemp(Str data) {
+    int sLen = data.len;
+    char* s = data.s;
+    char* end = data.s + sLen;
+    char* result = AllocArrayTemp<char>(sLen * 3 / 4);
+    char* curr = result;
+    char c = 0;
     int step = 0;
     for (; s < end && *s != '='; s++) {
         char n = decode64(*s);
         if (-1 == n) {
-            if (str::IsWs((char)*s)) {
+            if (str::IsWs(*s)) {
                 continue;
             }
-            free(result);
             return {};
         }
         switch (step++ % 4) {
@@ -211,8 +210,8 @@ static Str Base64Decode(Str data) {
                 break;
         }
     }
-    size_t size = curr - result;
-    return Str((char*)((u8*)result), (int)(size));
+    int size = (int)(curr - result);
+    return Str(result, size);
 }
 
 static inline void AppendChar(str::Builder& htmlData, char c) {
@@ -232,19 +231,16 @@ static inline void AppendChar(str::Builder& htmlData, char c) {
     }
 }
 
-// the caller must free
-static Str DecodeDataURI(Str url) {
+static TempStr DecodeDataURITemp(Str url) {
     Str comma = str::FindChar(url, ',');
     if (!comma) {
         return {};
     }
     Str data = Str(comma.s + 1, (int)(url.s + url.len - (comma.s + 1)));
     if ((int)(comma.s - url.s) >= 12 && str::EqN(Str(comma.s - 7, 7), StrL(";base64"), 7)) {
-        Str d = Str((char*)((u8*)data.s), (int)((size_t)data.len));
-        return Base64Decode(d);
+        return Base64DecodeTemp(data);
     }
-    Str dup = str::Dup(data);
-    return Str((char*)((u8*)dup.s), (int)((size_t)(unsigned)dup.len));
+    return str::DupTemp(data);
 }
 
 /* ********** EPUB ********** */
@@ -1018,11 +1014,12 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
         return;
     }
 
-    ImageData data;
-    data.base = Base64Decode(tok->s);
-    if (str::IsEmpty(data.base)) {
+    TempStr decoded = Base64DecodeTemp(tok->s);
+    if (str::IsEmpty(decoded)) {
         return;
     }
+    ImageData data;
+    data.base = str::Dup(decoded);
     data.fileName = str::Join(StrL("#"), Str(id));
     data.fileId = images.size();
     images.Append(data);
@@ -1395,8 +1392,7 @@ Str HtmlDoc::GetFileData(Str relPath) {
 
 Str HtmlDoc::LoadURL(Str url) {
     if (str::StartsWith(url, "data:")) {
-        auto res = DecodeDataURI(url);
-        return res;
+        return str::Dup(DecodeDataURITemp(url));
     }
     if (str::ContainsChar(url, ':')) {
         return {};
