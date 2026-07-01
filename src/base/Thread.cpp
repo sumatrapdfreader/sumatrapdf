@@ -34,7 +34,7 @@ void SetThreadName(Str threadName, DWORD threadId) {
         return;
     }
     if (DynSetThreadDescription && threadId == 0) {
-        TempWStr ws = ToWStrTemp(threadName);
+        WCHAR* ws = CWStrTemp(threadName);
         DynSetThreadDescription(GetCurrentThread(), ws);
         return;
     }

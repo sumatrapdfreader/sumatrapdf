@@ -1082,8 +1082,8 @@ bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
 
 bool FileSystemEntryExists(Str s) {
     if (IsEmpty(s)) return false;
-    WStr wide = ToWStrTemp(s);
-    DWORD attrs = GetFileAttributesW(wide.s);
+    WCHAR* wide = CWStrTemp(s);
+    DWORD attrs = GetFileAttributesW(wide);
     return attrs != INVALID_FILE_ATTRIBUTES;
 }
 
@@ -1129,9 +1129,9 @@ static Str GetHomeDir() {
 }
 
 static Str ExpandEnvVar(Str varName) {
-    WStr wideVar = ToWStrTemp(varName);
+    WCHAR* wideVar = CWStrTemp(varName);
     wchar_t buf[MAX_PATH];
-    DWORD len = GetEnvironmentVariableW(wideVar.s, buf, MAX_PATH);
+    DWORD len = GetEnvironmentVariableW(wideVar, buf, MAX_PATH);
     if (len > 0 && len < MAX_PATH) {
         return ToUtf8Temp(WStr(buf, len));
     }
@@ -1139,9 +1139,9 @@ static Str ExpandEnvVar(Str varName) {
 }
 
 static Str ToAbsolutePath(Str path) {
-    WStr widePath = ToWStrTemp(path);
+    WCHAR* widePath = CWStrTemp(path);
     wchar_t buf[MAX_PATH];
-    DWORD len = GetFullPathNameW(widePath.s, MAX_PATH, buf, nullptr);
+    DWORD len = GetFullPathNameW(widePath, MAX_PATH, buf, nullptr);
     if (len > 0 && len < MAX_PATH) {
         return ToUtf8Temp(WStr(buf, len));
     }

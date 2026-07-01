@@ -22,7 +22,7 @@ class FileWriteStream : public ISequentialStream {
 
   public:
     explicit FileWriteStream(Str filePath) : refCount(1) {
-        TempWStr path = ToWStrTemp(filePath);
+        WCHAR* path = CWStrTemp(filePath);
         hFile =
             CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
