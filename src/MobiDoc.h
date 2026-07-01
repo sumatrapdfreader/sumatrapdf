@@ -36,7 +36,7 @@ struct MobiDoc {
     bool LoadForPdbReader(PdbReader* pdbReader);
     bool DecodeExthHeader(const u8* data, size_t dataLen);
 
-    str::Builder* doc = nullptr;
+    str::Builder doc;
 
     size_t imagesCount = 0;
 

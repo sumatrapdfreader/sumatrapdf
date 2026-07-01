@@ -464,7 +464,6 @@ MobiDoc::~MobiDoc() {
     str::Free(fileName);
     free(images);
     delete huffDic;
-    delete doc;
     delete pdbReader;
 }
 
@@ -858,11 +857,11 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
         return false;
     }
 
-    ReportIf(doc != nullptr);
-    doc = new str::Builder((int)docUncompressedSize);
+    ReportIf(len(doc) != 0);
+    doc = str::Builder((int)docUncompressedSize);
     size_t nFailed = 0;
     for (size_t i = 1; i <= docRecCount; i++) {
-        if (!LoadDocRecordIntoBuffer(i, *doc)) {
+        if (!LoadDocRecordIntoBuffer(i, doc)) {
             nFailed++;
         }
     }
@@ -877,17 +876,17 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 
     // replace unexpected \0 with spaces
     // https://code.google.com/archive/p/sumatrapdf/issues/2529
-    Str docStr = ToStr(*doc);
+    Str docStr = ToStr(doc);
     u8* s = (u8*)docStr.s;
-    u8* end = s + len(*doc);
+    u8* end = s + len(doc);
     while ((s = (u8*)memchr(s, 0, (size_t)(end - s))) != nullptr) {
         *s = ' ';
     }
     if (textEncoding != CP_UTF8) {
-        TempStr docUtf8 = strconv::ToMultiByteTemp(ToStr(*doc), textEncoding, CP_UTF8);
+        TempStr docUtf8 = strconv::ToMultiByteTemp(ToStr(doc), textEncoding, CP_UTF8);
         if (docUtf8) {
-            doc->Reset();
-            doc->Append(docUtf8);
+            doc.Reset();
+            doc.Append(docUtf8);
         }
     }
     return true;
@@ -895,8 +894,8 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 
 // don't free the result
 Str MobiDoc::GetHtmlData() const {
-    if (doc) {
-        return AsStr(doc->AsByteSlice());
+    if (len(doc) > 0) {
+        return AsStr(doc.AsByteSlice());
     }
     return {};
 }
@@ -943,13 +942,13 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
 
 bool MobiDoc::HasToc() {
     if (docTocIndex != kInvalidSize) {
-        return docTocIndex < len(*doc);
+        return docTocIndex < len(doc);
     }
-    docTocIndex = len(*doc); // no ToC
+    docTocIndex = len(doc); // no ToC
 
     // search for <reference type="toc" filepos="N"/>
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, ToStr(*doc).s, len(*doc));
+    GumboOutput* output = gumbo_parse_with_options(&opts, ToStr(doc).s, len(doc));
     if (!output) {
         return false;
     }
@@ -964,7 +963,7 @@ bool MobiDoc::HasToc() {
         }
     }
     gumbo_destroy_output_iter(&opts, output);
-    return docTocIndex < len(*doc);
+    return docTocIndex < len(doc);
 }
 
 static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
@@ -1061,8 +1060,8 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     // there doesn't seem to be a standard for Mobi ToCs, so we try to
     // determine the author's intentions by looking at commonly used tags
     GumboOptions opts = GumboMakeOptions();
-    Str docStr = ToStr(*doc);
-    Str tocSlice(docStr.s + docTocIndex, (int)(len(*doc) - docTocIndex));
+    Str docStr = ToStr(doc);
+    Str tocSlice(docStr.s + docTocIndex, (int)(len(doc) - docTocIndex));
     GumboOutput* output = gumbo_parse_with_options(&opts, tocSlice.s, (size_t)tocSlice.len);
     if (!output) {
         return false;
