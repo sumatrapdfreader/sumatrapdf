@@ -313,18 +313,11 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     // the log is newline-separated JS commands
     Str log = tab->grokChatLog->LendData();
     Str rest = log;
-    while (!str::IsEmpty(rest)) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
-            win->grokWebView->Eval(line);
+    Str line;
+    while (str::NextLine(rest, line, rest)) {
+        if (!str::IsEmpty(line)) {
+            win->grokWebView->Eval(str::DupTemp(line));
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        rest.len -= lineLen + 1;
     }
 }
 
@@ -392,25 +385,16 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     Str content = AsStr(data);
     Str rest = content;
     Str result;
+    Str line;
 
-    while (!str::IsEmpty(rest) && !result) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        if (!lineEnd) {
-            lineEnd = str::FindChar(rest, '\r');
+    while (!result && str::NextLine(rest, line, rest)) {
+        if (str::IsEmpty(line)) {
+            continue;
         }
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
-            TempStr prompt = ExtractGrokPromptFromHistoryLineTemp(line, sessionId);
-            if (!str::IsEmpty(prompt)) {
-                result = str::Dup(prompt);
-            }
+        TempStr prompt = ExtractGrokPromptFromHistoryLineTemp(str::DupTemp(line), sessionId);
+        if (!str::IsEmpty(prompt)) {
+            result = str::Dup(prompt);
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        AIChatSkipNewlines(rest);
     }
     data.Free();
     return result ? result : StrL("(no description)");
@@ -606,15 +590,11 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
 
     Str content = AsStr(data);
     Str rest = content;
+    Str lineRaw;
 
-    while (!str::IsEmpty(rest)) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        if (!lineEnd) {
-            lineEnd = str::FindChar(rest, '\r');
-        }
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
+    while (str::NextLine(rest, lineRaw, rest)) {
+        if (!str::IsEmpty(lineRaw)) {
+            TempStr line = str::DupTemp(lineRaw);
             TempStr userText = ExtractGrokChatUserTextTemp(line);
             if (userText) {
                 WebViewAddUser(win, userText);
@@ -627,11 +607,6 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                 WebViewFlushBlock(win);
             }
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        AIChatSkipNewlines(rest);
     }
 
     data.Free();

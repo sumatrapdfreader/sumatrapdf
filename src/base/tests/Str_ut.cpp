@@ -287,6 +287,40 @@ static void StrCutTest() {
     utassert(str::Eq(before, "a") && str::Eq(after, "b::c"));
 }
 
+static void StrNextLineTest() {
+    Str line, rest;
+
+    // LF, CR and CRLF are all single line terminators
+    rest = "a\nb\rc\r\nd";
+    utassert(str::NextLine(rest, line, rest) && str::Eq(line, "a"));
+    utassert(str::NextLine(rest, line, rest) && str::Eq(line, "b"));
+    utassert(str::NextLine(rest, line, rest) && str::Eq(line, "c"));
+    utassert(str::NextLine(rest, line, rest) && str::Eq(line, "d"));
+    utassert(!str::NextLine(rest, line, rest));
+
+    // empty input -> no line
+    rest = Str{};
+    utassert(!str::NextLine(rest, line, rest));
+
+    // a trailing terminator does not yield an extra empty line
+    rest = "a\n";
+    utassert(str::NextLine(rest, line, rest) && str::Eq(line, "a"));
+    utassert(!str::NextLine(rest, line, rest));
+
+    // empty lines are returned as empty (not skipped)
+    rest = "\n\nx";
+    utassert(str::NextLine(rest, line, rest) && str::IsEmpty(line));
+    utassert(str::NextLine(rest, line, rest) && str::IsEmpty(line));
+    utassert(str::NextLine(rest, line, rest) && str::Eq(line, "x"));
+    utassert(!str::NextLine(rest, line, rest));
+
+    // final line without a terminator
+    rest = "only";
+    utassert(str::NextLine(rest, line, rest) && str::Eq(line, "only"));
+    utassert(str::IsEmpty(rest));
+    utassert(!str::NextLine(rest, line, rest));
+}
+
 void StrTest() {
     char buf[32];
     Str str = "a string";
@@ -716,5 +750,6 @@ void StrTest() {
     StrUrlExtractTest();
     StrFindITest();
     StrCutTest();
+    StrNextLineTest();
     // ParseUntilTest();
 }

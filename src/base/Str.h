@@ -149,6 +149,7 @@ int IndexOf(Str buf, Str toFind);
 int IndexOfI(Str s, Str toFind);
 int IndexOfAfter(Str s, Str needle);
 bool Cut(Str s, Str sep, Str* before, Str* after);
+bool NextLine(Str s, Str& line, Str& rest);
 
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);

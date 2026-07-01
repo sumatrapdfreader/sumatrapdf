@@ -801,6 +801,37 @@ bool Cut(Str s, Str sep, Str* before, Str* after) {
     return true;
 }
 
+// Extracts the next line from s (up to a CR, LF or CRLF terminator) into line
+// and sets rest to the remainder after the terminator. line excludes the
+// terminator. Returns false when s is empty. Safe to alias s and rest, e.g.
+// while (str::NextLine(rest, line, rest)) { ... }
+bool NextLine(Str s, Str& line, Str& rest) {
+    if (str::IsEmpty(s)) {
+        return false;
+    }
+    int idx = -1;
+    for (int i = 0; i < s.len; i++) {
+        char c = s.s[i];
+        if (c == '\n' || c == '\r') {
+            idx = i;
+            break;
+        }
+    }
+    if (idx < 0) {
+        line = s;
+        rest = {};
+        return true;
+    }
+    line = Str(s.s, idx);
+    int off = idx + 1;
+    // treat CRLF as a single line terminator
+    if (s.s[idx] == '\r' && off < s.len && s.s[off] == '\n') {
+        off++;
+    }
+    rest = Str(s.s + off, s.len - off);
+    return true;
+}
+
 // format string to a buffer provided by the caller
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)

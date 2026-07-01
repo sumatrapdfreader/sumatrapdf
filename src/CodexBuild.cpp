@@ -314,18 +314,11 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     // the log is newline-separated JS commands
     Str log = tab->codexChatLog->LendData();
     Str rest = log;
-    while (!str::IsEmpty(rest)) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
-            win->codexWebView->Eval(line);
+    Str line;
+    while (str::NextLine(rest, line, rest)) {
+        if (!str::IsEmpty(line)) {
+            win->codexWebView->Eval(str::DupTemp(line));
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        rest.len -= lineLen + 1;
     }
 }
 
@@ -382,25 +375,16 @@ static Str GetCodexSessionDescription(Str sessionId) {
     Str content = AsStr(data);
     Str rest = content;
     Str result;
+    Str line;
 
-    while (!str::IsEmpty(rest) && !result) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        if (!lineEnd) {
-            lineEnd = str::FindChar(rest, '\r');
+    while (!result && str::NextLine(rest, line, rest)) {
+        if (str::IsEmpty(line)) {
+            continue;
         }
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
-            TempStr prompt = ExtractCodexPromptFromHistoryLineTemp(line, sessionId);
-            if (!str::IsEmpty(prompt)) {
-                result = str::Dup(prompt);
-            }
+        TempStr prompt = ExtractCodexPromptFromHistoryLineTemp(str::DupTemp(line), sessionId);
+        if (!str::IsEmpty(prompt)) {
+            result = str::Dup(prompt);
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        AIChatSkipNewlines(rest);
     }
     data.Free();
     return result ? result : StrL("(no description)");
@@ -427,16 +411,12 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
         return;
     }
     Str content = AsStr(data);
-    int lineEnd = str::IndexOfChar(content, '\n');
-    if (lineEnd < 0) {
-        lineEnd = str::IndexOfChar(content, '\r');
-    }
-    int lineLen = lineEnd >= 0 ? lineEnd : content.len;
-    if (lineLen <= 0) {
+    Str firstLine, rest;
+    if (!str::NextLine(content, firstLine, rest) || str::IsEmpty(firstLine)) {
         data.Free();
         return;
     }
-    TempStr line = str::DupTemp(Str(content.s, lineLen));
+    TempStr line = str::DupTemp(firstLine);
     Str sessionId;
     if (!ParseCodexRolloutMetaLine(line, matchDir, &sessionId)) {
         data.Free();
@@ -725,15 +705,11 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
 
     Str content = AsStr(data);
     Str rest = content;
+    Str lineRaw;
 
-    while (!str::IsEmpty(rest)) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        if (!lineEnd) {
-            lineEnd = str::FindChar(rest, '\r');
-        }
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
+    while (str::NextLine(rest, lineRaw, rest)) {
+        if (!str::IsEmpty(lineRaw)) {
+            TempStr line = str::DupTemp(lineRaw);
             TempStr userText = ExtractCodexRolloutUserTextTemp(line);
             if (userText) {
                 WebViewAddUser(win, userText);
@@ -747,11 +723,6 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                 }
             }
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        AIChatSkipNewlines(rest);
     }
 
     data.Free();

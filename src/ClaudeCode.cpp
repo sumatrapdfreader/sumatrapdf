@@ -314,18 +314,11 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     // the log is newline-separated JS commands
     Str log = tab->claudeChatLog->LendData();
     Str rest = log;
-    while (!str::IsEmpty(rest)) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
-            win->claudeWebView->Eval(line);
+    Str line;
+    while (str::NextLine(rest, line, rest)) {
+        if (!str::IsEmpty(line)) {
+            win->claudeWebView->Eval(str::DupTemp(line));
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        rest.len -= lineLen + 1;
     }
 }
 
@@ -391,25 +384,16 @@ static Str GetSessionDescription(Str sessionPath) {
     Str content = AsStr(data);
     Str rest = content;
     Str result;
+    Str line;
 
-    while (!str::IsEmpty(rest) && !result) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        if (!lineEnd) {
-            lineEnd = str::FindChar(rest, '\r');
+    while (!result && str::NextLine(rest, line, rest)) {
+        if (str::IsEmpty(line)) {
+            continue;
         }
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
-            TempStr userText = ExtractUserTextTemp(line);
-            if (userText) {
-                result = str::Dup(userText);
-            }
+        TempStr userText = ExtractUserTextTemp(str::DupTemp(line));
+        if (userText) {
+            result = str::Dup(userText);
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        AIChatSkipNewlines(rest);
     }
     data.Free();
     return result ? result : StrL("(no description)");
@@ -541,15 +525,11 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
 
     Str content = AsStr(data);
     Str rest = content;
+    Str lineRaw;
 
-    while (!str::IsEmpty(rest)) {
-        Str lineEnd = str::FindChar(rest, '\n');
-        if (!lineEnd) {
-            lineEnd = str::FindChar(rest, '\r');
-        }
-        int lineLen = lineEnd ? (int)(lineEnd.s - rest.s) : rest.len;
-        if (lineLen > 0) {
-            TempStr line = str::DupTemp(Str(rest.s, lineLen));
+    while (str::NextLine(rest, lineRaw, rest)) {
+        if (!str::IsEmpty(lineRaw)) {
+            TempStr line = str::DupTemp(lineRaw);
 
             // Session JSONL format:
             // User messages: content can be string or array
@@ -582,11 +562,6 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                 }
             }
         }
-        if (!lineEnd) {
-            break;
-        }
-        rest.s = lineEnd.s + 1;
-        AIChatSkipNewlines(rest);
     }
 
     data.Free();
