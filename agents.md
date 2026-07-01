@@ -35,32 +35,39 @@ We rely on a controlled include order rather than self-sufficient headers (this 
 
 Do **not** use `#pragma once` in `.h` files.
 
-## String formatting functions take `const char*` fmt
+## `fmt()` is the type-safe formatter
 
 We use our own `Str` value type (a `char*` + `int len`) for strings instead of
-raw `char*` / `std::string`. **Exception:** the `printf`-style formatting
-functions take the format string as a plain `const char*`, not a `Str`. The
-format string is almost always a string literal, and a `const char*` is what
-the underlying `vsnprintf` needs anyway — so taking `Str` only added a wasted
-`strlen` and a NUL-termination footgun.
+raw `char*` / `std::string`. The most-used formatter is `fmt()`, a macro
+`#define fmt(...) strfmt::FormatTemp(__VA_ARGS__)` (StrFormat.h). It formats into
+the temp arena and returns a `TempStr`, so call sites read `fmt("page %d", n)`.
 
-The most-used formatter, `str::FormatTemp`, is renamed `fmt()` and exposed
-unqualified (a global `using str::fmt;` in Str.h), so call sites read
-`fmt("page %d", n)`. It formats into the temp arena and returns a `TempStr`.
+`fmt()` is **type-safe**, not a raw `vsnprintf` wrapper:
 
-Other functions following the `const char*` rule: `str::FmtVTemp`, `logf`,
-`logfa`, `logvf`, `logPipe`, `logConsole`, `CliPrintf`, `VscprintfUtf8`. (Note
-this is only the **format string** — the variadic args are unchanged.)
+- The **format string** is a plain `const char*` (almost always a string
+  literal). When it's a `Str` instead — most commonly a `_TRA("...")`
+  translation, which returns a `Str` — pass its `.s`, e.g.
+  `fmt(_TRA("page %d").s, n)`.
+- Each **variadic arg** is wrapped in a `strfmt::Arg`, which has explicit
+  constructors for `Str`, `WStr`, `char`, the integer/float types, and
+  `const void*`. Raw `char*` / `const char*` / `wchar_t*` constructors are
+  `= delete`d. So for a `%s` you pass the `Str`/`WStr` **object**, never a
+  `char*` — e.g. `fmt("%s", name)` where `name` is a `Str`, and writing
+  `fmt("%s", name.s)` is a compile error, not a footgun. `%s` accepts both
+  `Str` and `WStr` (a `WStr` is auto-converted to UTF-8).
+- Because args carry their own `.len`, a `Str` arg need not be NUL-terminated.
+
+For a `%s` fed a **string literal**, wrap it with `StrL(...)` (see next section)
+so the length is computed at compile time: `fmt("%s", StrL("done"))`.
+
+`logf` / `logfa` (Log.h) are macros that format via `::fmt(...)` and route the
+result through `log()` / `loga()`, so they follow the same type-safe rules.
 
 Functions that take an already-formatted `Str` (so the caller formats with
 `fmt(...)`): `StrBuilder::Append`, `dbglayout`, `MaybeDelayedWarningNotification`.
 
-When the format string is a `Str` rather than a literal (most commonly a
-`_TRA("...")` translation, which returns a `Str`), pass its `.s` to get the
-underlying NUL-terminated `char*`, e.g. `fmt(_TRA("page %d").s, n)`.
-
-Note: `strfmt::` (in StrFormat.h, the `{0}`-style type-safe formatter) is a
-separate, older system — unrelated to `fmt()`.
+Note: `logConsole` (common/log.h) is a separate, genuine `printf`-style varargs
+function (`const char* fmt, ...`) — unrelated to `fmt()`.
 
 ## Make a `Str`/`WStr` from a string literal with `StrL` / `WStrL`
 
