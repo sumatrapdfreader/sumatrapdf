@@ -1797,7 +1797,7 @@ static void StrBuilderFree(str::Builder* s) {
     s->els = nullptr;
 }
 
-void str::Builder::Reset() {
+void str::Builder::Reset(Str s) {
     StrBuilderFree(this);
     len = 0;
     cap = 0;
@@ -1812,6 +1812,7 @@ void str::Builder::Reset() {
 #endif
 
     buf[0] = 0;
+    Append(s); // no-op if s is empty
 }
 
 // allocator is not owned by Vec and must outlive it
@@ -1916,11 +1917,6 @@ bool str::Builder::IsEmpty() const {
     return len == 0;
 }
 
-void str::Builder::Set(Str s) {
-    Reset();
-    Append(s);
-}
-
 char str::Builder::LastChar() const {
     auto n = this->len;
     if (n == 0) {
@@ -2002,7 +1998,7 @@ static void WStrBuilderFree(wstr::Builder* s) {
     s->els = nullptr;
 }
 
-void wstr::Builder::Reset() {
+void wstr::Builder::Reset(WStr s) {
     WStrBuilderFree(this);
     len = 0;
     cap = 0;
@@ -2017,6 +2013,7 @@ void wstr::Builder::Reset() {
 #endif
 
     buf[0] = 0;
+    Append(s); // no-op if s is empty
 }
 
 // allocator is not owned by Vec and must outlive it
@@ -2152,11 +2149,6 @@ int wstr::Builder::Remove(const WCHAR& el) {
 
 bool wstr::Builder::IsEmpty() const {
     return len == 0;
-}
-
-void wstr::Builder::Set(WStr s) {
-    Reset();
-    Append(s);
 }
 
 WCHAR wstr::Builder::LastChar() const {

@@ -593,7 +593,7 @@ static void AlignPropertiesText(str::Builder& text) {
         }
         off += lineLen + (nl >= 0 ? 1 : 0);
     }
-    text.Set(ToStr(aligned));
+    text.Reset(ToStr(aligned));
 }
 
 static void SetEditText(HWND hwndEdit, Str text) {

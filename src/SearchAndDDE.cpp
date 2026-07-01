@@ -2062,7 +2062,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     str::Builder str;
     bool didHandle = HandleRequestCmds(hwnd, cmd, str);
     if (!didHandle) {
-        str.Set(StrL("error: unknown command"));
+        str.Reset(StrL("error: unknown command"));
     }
 
     void* data;

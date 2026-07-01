@@ -244,7 +244,7 @@ struct Builder {
 
     ~Builder();
 
-    void Reset();
+    void Reset(Str s = {});
     char& operator[](int idx) const;
     bool InsertAt(int idx, char el);
     bool AppendChar(char c);
@@ -254,7 +254,6 @@ struct Builder {
     char& Last() const;
     Str TakeStr();
     bool IsEmpty() const;
-    void Set(Str s);
     char LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
@@ -288,7 +287,7 @@ struct Builder {
     Builder(WStr s);
     Builder& operator=(const Builder& that);
     ~Builder();
-    void Reset();
+    void Reset(WStr s = {});
     WCHAR& operator[](int idx) const;
     bool InsertAt(int idx, const WCHAR& el);
     bool AppendChar(WCHAR);
@@ -299,7 +298,6 @@ struct Builder {
     int Find(const WCHAR& el, int startAt = 0) const;
     int Remove(const WCHAR& el);
     bool IsEmpty() const;
-    void Set(WStr s);
     WCHAR LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
