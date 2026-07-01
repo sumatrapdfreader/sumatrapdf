@@ -221,6 +221,109 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
     free(lineId);
 }
 
+// Drop diagonal draft / "under review" watermark glyphs from a page's *raw*
+// glyph arrays before any box detection. A watermark stamp is set far larger
+// than body text and, being rotated, sits roughly one glyph per baseline —
+// each on a sparse row — whereas a heading or title is a horizontal run of
+// same-baseline glyphs. Removing it up front keeps a 2-column gutter empty and
+// the entry bounds tight, instead of special-casing oversized glyphs in every
+// scan. Run this on the engine's raw coords *before* NormalizeGlyphLines:
+// normalization clusters by baseline (±4pt) and could fold a watermark glyph
+// into a body line, hiding its true height.
+//
+// `outText`/`outCoords` are caller-allocated with room for glyphCount entries;
+// returns the number of glyphs kept (written to the front of the out arrays).
+int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* outCoords) {
+    int n = text.len;
+    if (n <= 0 || !coords || !outText || !outCoords) {
+        return 0;
+    }
+    // Typical body glyph height = the most common dy (the watermark, a heading,
+    // and any super/subscripts are all minorities). Histogram over non-space
+    // glyph heights and take the mode.
+    int maxDy = 0;
+    for (int i = 0; i < n; i++) {
+        if (coords[i].dy > maxDy) {
+            maxDy = coords[i].dy;
+        }
+    }
+    int modeDy = 0;
+    if (maxDy > 0) {
+        int* hist = AllocArray<int>((size_t)maxDy + 1);
+        for (int i = 0; i < n; i++) {
+            WCHAR c = text.s[i];
+            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                continue;
+            }
+            int d = coords[i].dy;
+            if (d > 0) {
+                hist[d]++;
+            }
+        }
+        int modeCount = 0;
+        for (int d = 1; d <= maxDy; d++) {
+            if (hist[d] > modeCount) {
+                modeCount = hist[d];
+                modeDy = d;
+            }
+        }
+        free(hist);
+    }
+
+    // Only strip when there's a stable body height to compare against, and only
+    // glyphs clearly taller than it (1.5x) — well above tall "[" labels / caps.
+    constexpr int kMinBodyDy = 4;
+    bool canStrip = modeDy >= kMinBodyDy;
+    int hgtThresh = modeDy + modeDy / 2; // 1.5 * modeDy
+    constexpr int kBaselineTolPt = 4;
+    constexpr int kMinRowGlyphs = 3; // a real text row has at least this many
+
+    int outLen = 0;
+    for (int i = 0; i < n; i++) {
+        WCHAR c = text.s[i];
+        bool isSpace = (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r');
+        bool drop = false;
+        if (canStrip && !isSpace && coords[i].dy > hgtThresh) {
+            // Sparse-row test: count non-space glyphs sharing this glyph's
+            // baseline (y+dy, stable across a visual line) AND of comparable
+            // height. A rotated watermark glyph stands nearly alone on its
+            // baseline; a heading is a dense row of same-size glyphs. Requiring
+            // *similar height* also catches a watermark glyph whose baseline
+            // happens to coincide with a body line — it's then the lone tall
+            // glyph on a row of small body text, not one of a tall row.
+            int bl = coords[i].y + coords[i].dy;
+            int hi = coords[i].dy;
+            int rowGlyphs = 0;
+            for (int j = 0; j < n; j++) {
+                WCHAR cj = text.s[j];
+                if (cj == L' ' || cj == L'\t' || cj == L'\n' || cj == L'\r') {
+                    continue;
+                }
+                if (abs((coords[j].y + coords[j].dy) - bl) > kBaselineTolPt) {
+                    continue;
+                }
+                if (abs(coords[j].dy - hi) * 2 > hi) { // height differs by > 50%
+                    continue;
+                }
+                rowGlyphs++;
+                if (rowGlyphs >= kMinRowGlyphs) {
+                    break;
+                }
+            }
+            if (rowGlyphs < kMinRowGlyphs) {
+                drop = true;
+            }
+        }
+        if (drop) {
+            continue;
+        }
+        outText[outLen] = c;
+        outCoords[outLen] = coords[i];
+        outLen++;
+    }
+    return outLen;
+}
+
 // Used when the link doesn't resolve to a recognizable bibliography entry —
 // TOC targets, topbar/section links, table or figure captions, image-only
 // PDFs. Returns a region that spans the full page width and goes from the

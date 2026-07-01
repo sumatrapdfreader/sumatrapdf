@@ -23,6 +23,13 @@
 // unchanged (each line already has a single top).
 void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount);
 
+// Remove diagonal draft / "under review" watermark glyphs (oversized + sitting
+// on sparse baselines) from a page's raw glyph arrays, so 2-column gutter and
+// entry-bound detection see clean text. Run on the engine's raw coords *before*
+// NormalizeGlyphLines. `outText`/`outCoords` need room for glyphCount entries;
+// returns the kept-glyph count, written to the front of the out arrays.
+int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* outCoords);
+
 // Landscape view: full page width strip anchored at destY, extending downward
 // to the last text glyph or a recognised caption block. Fallback when no
 // recognisable entry or equation is found.
