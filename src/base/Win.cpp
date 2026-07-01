@@ -364,18 +364,30 @@ bool IsRunningOnWine() {
         return cached != 0;
     }
     bool isWine = false;
-    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (snap != INVALID_HANDLE_VALUE) {
-        MODULEENTRY32 mod{};
-        mod.dwSize = sizeof(mod);
-        BOOL cont = Module32First(snap, &mod);
-        while (cont) {
-            auto nameA = ToUtf8Temp(mod.szModule);
-            if (str::EqI(nameA, "winex11.drv")) {
-                isWine = true;
-                break;
+    // Canonical Wine detection: Wine's ntdll.dll exports wine_get_version().
+    // This works regardless of the graphics backend and is what Wine itself
+    // documents as the detection mechanism.
+    HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
+    if (hNtdll && GetProcAddress(hNtdll, "wine_get_version")) {
+        isWine = true;
+    }
+    // Fallback: scan loaded modules for a Wine graphics driver. Covers the X11
+    // (winex11.drv) and Wayland (winewayland.drv) backends, and Wine configs
+    // that hide the wine_get_version export.
+    if (!isWine) {
+        AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+        if (snap != INVALID_HANDLE_VALUE) {
+            MODULEENTRY32 mod{};
+            mod.dwSize = sizeof(mod);
+            BOOL cont = Module32First(snap, &mod);
+            while (cont) {
+                auto nameA = ToUtf8Temp(mod.szModule);
+                if (str::EqI(nameA, "winex11.drv") || str::EqI(nameA, "winewayland.drv")) {
+                    isWine = true;
+                    break;
+                }
+                cont = Module32Next(snap, &mod);
             }
-            cont = Module32Next(snap, &mod);
         }
     }
     cached = isWine ? 1 : 0;

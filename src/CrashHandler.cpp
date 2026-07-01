@@ -109,10 +109,8 @@ static bool TryStartCrashHandling(Str handlerName) {
     return false;
 }
 
-// returns true if running on wine (winex11.drv is present)
-// it's not a logical, but convenient place to do it
+// returns true if running on wine
 static bool GetModules(StrBuilder& s, bool additionalOnly) {
-    bool isWine = false;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE) {
         return true;
@@ -123,9 +121,6 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         auto nameA = ToUtf8Temp(mod.szModule);
-        if (str::EqI(nameA, "winex11.drv")) {
-            isWine = true;
-        }
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
             if (!str::ContainsI(gModulesInfo, pathA)) {
@@ -139,7 +134,7 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
         cont = Module32Next(snap, &mod);
     }
     CloseHandle(snap);
-    return isWine;
+    return IsRunningOnWine();
 }
 
 static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
