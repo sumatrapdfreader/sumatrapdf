@@ -230,7 +230,7 @@ static void StrFindITest() {
     utassert(str::ContainsI(hello, "hello"));
     utassert(str::ContainsI(hello, "WORLD"));
     utassert(!str::ContainsI(hello, "xyz"));
-    utassert(str::FindFromI(hello, "WORLD").s == hello.s + 6);
+    utassert(str::IndexOfI(hello, "WORLD") == 6);
 
     // Cyrillic: "Привет" (capitalized) vs "привет" (lowercase needle)
     Str privetCap = "\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
@@ -239,13 +239,13 @@ static void StrFindITest() {
     utassert(!str::Contains(privetCap, privetLow)); // case-sensitive: no match
     utassert(str::ContainsI(privetCap, privetLow)); // case-insensitive: matches
     utassert(str::ContainsI(privetLow, privetCap)); // and the reverse
-    utassert(str::FindFromI(privetCap, privetLow).s == privetCap.s);
+    utassert(str::IndexOfI(privetCap, privetLow) == 0);
 
-    // mixed ASCII + Cyrillic: the returned pointer must be the correct byte
+    // mixed ASCII + Cyrillic: the returned offset must be the correct byte
     // offset into the original UTF-8 string ("abc " is 4 bytes)
     Str mixed = "abc \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
-    utassert(str::FindFromI(mixed, privetLow).s == mixed.s + 4);
-    utassert(!str::FindFromI(mixed, "xyz"));
+    utassert(str::IndexOfI(mixed, privetLow) == 4);
+    utassert(str::IndexOfI(mixed, "xyz") < 0);
 
     // Greek: "ΛΟΓΟΣ" vs "λογος"
     Str logosCap = "\xCE\x9B\xCE\x9F\xCE\x93\xCE\x9F\xCE\xA3";

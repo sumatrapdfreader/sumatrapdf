@@ -443,8 +443,7 @@ bool Contains(Str s, Str txt) {
 }
 
 bool ContainsI(Str s, Str txt) {
-    Str found = str::FindFromI(s, txt);
-    return (bool)found;
+    return str::IndexOfI(s, txt) >= 0;
 }
 
 bool EndsWith(Str txt, Str end) {
@@ -493,17 +492,19 @@ static void FoldCaseForFindW(WStr s) {
     }
 }
 
-Str FindFromI(Str s, Str toFind) {
+// case-insensitive variant of IndexOf: returns the byte offset of the first
+// match of toFind in s, or -1 if not found
+int IndexOfI(Str s, Str toFind) {
     if (!s || !toFind) {
-        return {};
+        return -1;
     }
 
     if (toFind.len <= 0) {
-        return s;
+        return -1;
     }
     char first = (char)tolower(toFind.s[0]);
     if (!first) {
-        return s;
+        return -1;
     }
 
     // Fast path: an ASCII needle can be matched byte-wise against a UTF-8
@@ -523,21 +524,20 @@ Str FindFromI(Str s, Str toFind) {
             char c = (char)tolower(s.s[off]);
             if (c == first) {
                 if (str::StartsWithI(Str(s.s + off, s.len - off), toFind)) {
-                    return Str(s.s + off, s.len - off);
+                    return off;
                 }
             }
         }
-        return {};
+        return -1;
     }
 
     // Unicode path: case-fold both strings (UTF-16) and search, then map the
     // match position back to a byte offset in the original UTF-8 string so the
-    // returned pointer keeps FindI's contract (a pointer into s).
+    // returned offset keeps IndexOfI's contract (an offset into s).
     //
     // Scratch buffers come from the temporary arena; we restore it to its entry
     // position before returning so repeated calls (e.g. the command palette
-    // filtering every item) don't grow the arena unbounded. The result points
-    // into the caller's original string s, not the arena, so it stays valid.
+    // filtering every item) don't grow the arena unbounded.
     ArenaSavepoint sp = ArenaGetSavepoint(GetTempArena());
 
     TempWStr ws = ToWStrTemp(s); // unfolded, used to map the match back to bytes
@@ -546,14 +546,14 @@ Str FindFromI(Str s, Str toFind) {
     FoldCaseForFindW(wsLo);
     FoldCaseForFindW(wfLo);
 
-    Str res = {};
+    int res = -1;
     int idx = WStrFindSubstr(wsLo, wfLo); // common/str_util.cpp
     if (idx >= 0) {
         int nbytes = 0;
         if (idx > 0) {
             nbytes = WideCharToMultiByte(CP_UTF8, 0, ws.s, idx, nullptr, 0, nullptr, nullptr);
         }
-        res = Str(s.s + nbytes, s.len - nbytes);
+        res = nbytes;
     }
     ArenaRestoreSavepoint(sp);
     return res;
@@ -3394,12 +3394,13 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
 
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
     int n = toReplace.len;
-    Str pos = str::FindFromI(s, toReplace);
-    if (str::IsNull(pos)) {
+    int idx = str::IndexOfI(s, toReplace);
+    if (idx < 0) {
         return s;
     }
-    if (!memeq(pos.s, toReplace.s, n)) {
-        toReplace = str::DupTemp(Str(pos.s, n));
+    char* pos = s.s + idx;
+    if (!memeq(pos, toReplace.s, n)) {
+        toReplace = str::DupTemp(Str(pos, n));
     }
     return str::ReplaceTemp(s, toReplace, replaceWith);
 }

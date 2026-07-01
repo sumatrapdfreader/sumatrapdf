@@ -248,7 +248,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     Str keyName = GetEnvRegKey(allUsers);
     TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
     // check if installDir is already in PATH (case-insensitive)
-    if (currPath && str::FindFromI(currPath, installDir)) {
+    if (currPath && str::ContainsI(currPath, installDir)) {
         logf("AddInstallDirToPath: '%s' already in PATH\n", installDir);
         return;
     }

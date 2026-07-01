@@ -331,7 +331,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
 
     if (!filterMatchesEverything(ev->exts)) {
         TempStr ext = path::GetExtTemp(tab->filePath);
-        if (!str::FindFromI(ev->exts, ext)) {
+        if (!str::ContainsI(ev->exts, ext)) {
             // logfa("CanViewWithKnownExternalViewer cmd: %d, !pos\n", cmd);
             return false;
         }

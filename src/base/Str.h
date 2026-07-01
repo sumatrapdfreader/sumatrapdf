@@ -146,16 +146,14 @@ Str FindChar(Str str, char c);
 Str FindCharLast(Str str, char c);
 int IndexOfChar(Str s, char c);
 Str FindFrom(Str str, Str find);
-Str FindFromI(Str str, Str find);
-// like FindFrom but returns the slice right after the match (or {} if not found)
 Str FindAfter(Str s, Str needle);
 int IndexOf(Str buf, Str toFind);
+int IndexOfI(Str s, Str toFind);
 
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);
 bool ContainsChar(Str s, char c);
 
-// merged from former global Str* helpers (common/str_util.cpp)
 Str TrimSuffix(Str s, Str suffix);
 int LastIndexOfChar(Str s, char c);
 Str TrimSuffixWhitespace(Str s); // trims trailing whitespace in place
@@ -207,7 +205,6 @@ WStr CastToWCHAR(Str s);
 
 void SplitStrByWhitespace(Arena* arena, const Str& s, VecStr& vecOut);
 
-// wide (WStr/WCHAR) counterparts of the str:: functions above
 namespace wstr {
 
 void Free(WStr s);

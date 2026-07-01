@@ -287,19 +287,19 @@ static bool TranslationLooksLikeError(Str text) {
     if (str::IsEmptyOrWhiteSpace(text)) {
         return true;
     }
-    if (str::FindFromI(text, "failed to authenticate")) {
+    if (str::ContainsI(text, StrL("failed to authenticate"))) {
         return true;
     }
-    if (str::FindFromI(text, "authentication_failed")) {
+    if (str::ContainsI(text, StrL("authentication_failed"))) {
         return true;
     }
-    if (str::FindFromI(text, "api error")) {
+    if (str::ContainsI(text, StrL("api error"))) {
         return true;
     }
     if (str::StartsWithI(text, "error:")) {
         return true;
     }
-    if (str::FindFromI(text, "model is not supported")) {
+    if (str::ContainsI(text, StrL("model is not supported"))) {
         return true;
     }
     return false;
@@ -309,8 +309,8 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str r
     if (str::IsEmptyOrWhiteSpace(raw)) {
         return str::DupTemp(_TRA("Translation failed."));
     }
-    if (str::FindFromI(raw, "failed to authenticate") || str::FindFromI(raw, "authentication_failed") ||
-        str::FindFromI(raw, "invalid authentication credentials")) {
+    if (str::ContainsI(raw, StrL("failed to authenticate")) || str::ContainsI(raw, StrL("authentication_failed")) ||
+        str::ContainsI(raw, StrL("invalid authentication credentials"))) {
         switch (backend) {
             case AIChatBackend::Claude:
                 return str::DupTemp(
@@ -322,10 +322,10 @@ static TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str r
                 return str::DupTemp(_TRA("OpenAI Codex is not signed in. Sign in to Codex, then try again."));
         }
     }
-    if (str::FindFromI(raw, "model is not supported")) {
+    if (str::ContainsI(raw, StrL("model is not supported"))) {
         return str::DupTemp(_TRA("The configured AI model is not available for your account."));
     }
-    if (str::FindFromI(raw, "did not contain text")) {
+    if (str::ContainsI(raw, StrL("did not contain text"))) {
         return str::DupTemp(_TRA("Translation response did not contain text."));
     }
     return str::DupTemp(raw);

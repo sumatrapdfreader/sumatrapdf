@@ -77,7 +77,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     if (str::IsEmpty(currPath)) {
         return;
     }
-    if (!str::FindFromI(currPath, installDir)) {
+    if (!str::ContainsI(currPath, installDir)) {
         logf("RemoveInstallDirFromPath: '%s' not found in PATH\n", installDir);
         return;
     }

@@ -855,15 +855,15 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     int filterLen = filter.len;
     Str rest = title;
     while (!str::IsEmpty(rest)) {
-        Str found = str::FindFromI(rest, filter);
-        if (!found) {
+        int idx = str::IndexOfI(rest, filter);
+        if (idx < 0) {
             break;
         }
-        int off = (int)(found.s - title.s);
+        int off = (int)(rest.s - title.s) + idx;
         for (int k = 0; k < filterLen && off + k < titleLen; k++) {
             highlighted[off + k] = 1;
         }
-        int skip = (int)(found.s - rest.s) + filterLen;
+        int skip = idx + filterLen;
         rest.s += skip;
         rest.len -= skip;
     }

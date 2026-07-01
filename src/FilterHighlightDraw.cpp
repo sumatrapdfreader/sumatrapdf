@@ -39,11 +39,11 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
         }
         Str rest = text;
         while (rest) {
-            Str found = str::FindFromI(rest, word);
-            if (!found) {
+            int idx = str::IndexOfI(rest, word);
+            if (idx < 0) {
                 break;
             }
-            int off = (int)(found.s - text.s);
+            int off = (int)(rest.s - text.s) + idx;
             int end = off + wordLen;
             // with "match whole word", skip occurrences that sit inside a larger
             // word so the snippet doesn't highlight non-matching substrings (e.g.
@@ -60,7 +60,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
                     hl[off + k] = 1;
                 }
             }
-            rest = Str(found.s + wordLen, textLen - (int)(found.s + wordLen - text.s));
+            rest = Str(text.s + end, textLen - end);
         }
     }
 

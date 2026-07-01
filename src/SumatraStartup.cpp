@@ -810,16 +810,16 @@ static void UpdateGlobalPrefs(const Flags& i) {
 static bool ExeHasNameOfInstaller() {
     TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindFromI(exeName, StrL("uninstall")).s) {
+    if (str::ContainsI(exeName, StrL("uninstall"))) {
         return false;
     }
-    return str::FindFromI(exeName, StrL("install")).s != nullptr;
+    return str::ContainsI(exeName, StrL("install"));
 }
 
 static bool ExeHasNameOfStoreInstaller() {
     TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
-    return str::FindFromI(exeName, StrL("install-store")).s != nullptr;
+    return str::ContainsI(exeName, StrL("install-store"));
 }
 
 static bool HasDataResource(int id) {
