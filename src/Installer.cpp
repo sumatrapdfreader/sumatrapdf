@@ -99,7 +99,7 @@ Str GetInstallerLogPath() {
     if (!dir) {
         return str::Dup(kLogFileName);
     }
-    return Str(path::Join(dir, kLogFileName));
+    return path::Join(dir, kLogFileName);
 }
 
 static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
@@ -248,7 +248,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     Str keyName = GetEnvRegKey(allUsers);
     TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
     // check if installDir is already in PATH (case-insensitive)
-    if (currPath && str::ContainsI(currPath, installDir)) {
+    if (currPath && IsDirInPath(currPath, installDir)) {
         logf("AddInstallDirToPath: '%s' already in PATH\n", installDir);
         return;
     }
@@ -261,20 +261,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     }
     newPath.Append(installDir);
 
-    // write as REG_EXPAND_SZ since PATH may contain %vars%
-    WCHAR* keyNameW = CWStrTemp(keyName);
-    TempWStr valueW = ToWStrTemp(newPath.CStr());
-    DWORD cbData = (DWORD)(len(valueW) + 1) * sizeof(WCHAR);
-    HKEY hKey;
-    LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
-    if (res != ERROR_SUCCESS) {
-        logf("AddInstallDirToPath: RegOpenKeyExW failed with %d\n", (int)res);
-        return;
-    }
-    res = RegSetValueExW(hKey, L"Path", 0, REG_EXPAND_SZ, (const BYTE*)valueW.s, cbData);
-    RegCloseKey(hKey);
-    if (res != ERROR_SUCCESS) {
-        logf("AddInstallDirToPath: RegSetValueExW failed with %d\n", (int)res);
+    if (!WriteRegExpandSz(root, keyName, L"Path", newPath.Get())) {
         return;
     }
     logf("AddInstallDirToPath: added '%s' to PATH\n", installDir);

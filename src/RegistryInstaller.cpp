@@ -424,6 +424,17 @@ static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
     return isEmpty;
 }
 
+// return keyName's parent key (everything before the last '\\'), or {} if there
+// is none. Returns a properly-sized view (unlike poking a NUL into the buffer,
+// which left .len stale).
+static Str RegKeyParent(Str keyName) {
+    Str sep = str::FindCharLast(keyName, '\\');
+    if (!sep) {
+        return {};
+    }
+    return Str(keyName.s, (int)(sep.s - keyName.s));
+}
+
 void RemoveInstallRegistryKeys(HKEY hkey) {
     logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
     UnregisterFromBeingDefaultViewer(hkey);
@@ -453,13 +464,13 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
         keyname = str::JoinTemp("Software\\Classes\\", ext, openWithVal);
         if (LoggedDeleteRegKey(hkey, keyname)) {
-            // remove empty keys that the installer might have created
-            Str p = str::FindCharLast(keyname, '\\');
-            *p.s = 0;
-            if (DeleteEmptyRegKey(hkey, keyname)) {
-                p = str::FindCharLast(keyname, '\\');
-                *p.s = 0;
-                DeleteEmptyRegKey(hkey, keyname);
+            // remove empty parent keys that the installer might have created
+            keyname = RegKeyParent(keyname);
+            if (keyname && DeleteEmptyRegKey(hkey, keyname)) {
+                keyname = RegKeyParent(keyname);
+                if (keyname) {
+                    DeleteEmptyRegKey(hkey, keyname);
+                }
             }
         }
         if (!SeqStrAdvance(gSupportedExts, off)) {
@@ -485,7 +496,7 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
 
     // delete keys written in ListAsDefaultProgramWin10()
     LoggedDeleteRegValue(hkey, "SOFTWARE\\RegisteredApplications", kAppName);
-    TempStr keyName = fmt("SOFTWARE\\%s\\Capabilities", Str(kAppName));
+    TempStr keyName = fmt("SOFTWARE\\%s\\Capabilities", StrL(kAppName));
     LoggedDeleteRegKey(hkey, keyName);
 
     ShellNotifyAssociationsChanged();

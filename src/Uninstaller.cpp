@@ -77,46 +77,26 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     if (str::IsEmpty(currPath)) {
         return;
     }
-    if (!str::ContainsI(currPath, installDir)) {
+    if (!IsDirInPath(currPath, installDir)) {
         logf("RemoveInstallDirFromPath: '%s' not found in PATH\n", installDir);
         return;
     }
 
     StrBuilder newPath;
-    Str rest = currPath;
-    while (rest) {
-        int semiIdx = str::IndexOfChar(rest, ';');
-        Str entry;
-        if (semiIdx >= 0) {
-            entry = Str(rest.s, semiIdx);
-            rest = Str(rest.s + semiIdx + 1, rest.len - semiIdx - 1);
-        } else {
-            entry = rest;
-            rest = {};
+    StrVec parts;
+    Split(&parts, currPath, ";");
+    for (Str entry : parts) {
+        // skip empty entries and the one matching installDir (case-insensitive)
+        if (!entry || str::EqI(entry, installDir)) {
+            continue;
         }
-        // skip this entry if it matches installDir (case-insensitive)
-        if (!str::EqI(entry, installDir) && entry) {
-            if (newPath.Size() > 0) {
-                newPath.Append(";");
-            }
-            newPath.Append(entry);
+        if (newPath.Size() > 0) {
+            newPath.Append(";");
         }
+        newPath.Append(entry);
     }
 
-    // write as REG_EXPAND_SZ since PATH may contain %vars%
-    WCHAR* keyNameW = CWStrTemp(keyName);
-    TempWStr valueW = ToWStrTemp(newPath.CStr());
-    DWORD cbData = (DWORD)(len(valueW) + 1) * sizeof(WCHAR);
-    HKEY hKey;
-    LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
-    if (res != ERROR_SUCCESS) {
-        logf("RemoveInstallDirFromPath: RegOpenKeyExW failed with %d\n", (int)res);
-        return;
-    }
-    res = RegSetValueExW(hKey, L"Path", 0, REG_EXPAND_SZ, (const BYTE*)valueW.s, cbData);
-    RegCloseKey(hKey);
-    if (res != ERROR_SUCCESS) {
-        logf("RemoveInstallDirFromPath: RegSetValueExW failed with %d\n", (int)res);
+    if (!WriteRegExpandSz(root, keyName, L"Path", newPath.Get())) {
         return;
     }
     logf("RemoveInstallDirFromPath: removed '%s' from PATH\n", installDir);
@@ -263,7 +243,7 @@ static void ShowUsage() {
 
 /s	uninstalls %s silently (without user interaction).
 /d	changes the directory from where %s will be uninstalled.)",
-                      Str(kAppName), Str(kAppName));
+                      StrL(kAppName), StrL(kAppName));
     MsgBox(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 

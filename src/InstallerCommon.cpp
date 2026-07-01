@@ -71,6 +71,40 @@ Flags* gCli = nullptr;
 
 Str gDefaultMsg; // Note: translation, not freeing
 
+// case-insensitive check whether dir is a ';'-delimited component of path.
+// substring matching would wrongly match a longer sibling entry (e.g.
+// "...\SumatraPDFViewer" contains "...\SumatraPDF"), so compare whole entries.
+bool IsDirInPath(Str path, Str dir) {
+    StrVec parts;
+    Split(&parts, path, ";");
+    for (Str part : parts) {
+        if (str::EqI(part, dir)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// write value as REG_EXPAND_SZ (PATH may contain %vars%) under root\keyName:valueName
+bool WriteRegExpandSz(HKEY root, Str keyName, const WCHAR* valueName, Str value) {
+    WCHAR* keyNameW = CWStrTemp(keyName);
+    TempWStr valueW = ToWStrTemp(value);
+    DWORD cbData = (DWORD)(len(valueW) + 1) * sizeof(WCHAR);
+    HKEY hKey;
+    LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
+    if (res != ERROR_SUCCESS) {
+        logf("WriteRegExpandSz: RegOpenKeyExW('%s') failed with %d\n", keyName, (int)res);
+        return false;
+    }
+    res = RegSetValueExW(hKey, valueName, 0, REG_EXPAND_SZ, (const BYTE*)valueW.s, cbData);
+    RegCloseKey(hKey);
+    if (res != ERROR_SUCCESS) {
+        logf("WriteRegExpandSz: RegSetValueExW failed with %d\n", (int)res);
+        return false;
+    }
+    return true;
+}
+
 static AutoFreeStr gMsg;
 static Color gMsgColor;
 
