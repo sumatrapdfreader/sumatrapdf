@@ -349,11 +349,10 @@ static bool ParseProtoUrl(Str url, int* htmlWindowId, AutoFreeStr* urlRest) {
 
 #define kDefaultMimeType "text/html"
 
-// caller must str::Free() the result
-static Str MimeFromUrl(Str url, Str imgExt = {}) {
+static TempStr MimeFromUrlTemp(Str url, Str imgExt = {}) {
     Str ext = str::FindCharLast(url, '.');
     if (!ext.s) {
-        return str::Dup(Str(kDefaultMimeType));
+        return Str(kDefaultMimeType);
     }
 
     Str semi = str::FindChar(ext, ';');
@@ -361,39 +360,20 @@ static Str MimeFromUrl(Str url, Str imgExt = {}) {
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension
         int urlLen = (int)(semi.s - url.s);
-        return MimeFromUrl(Str(url.s, urlLen), imgExt);
+        return MimeFromUrlTemp(Str(url.s, urlLen), imgExt);
     }
 
-    static const struct {
-        Str ext;
-        Str mimetype;
-    } mimeTypes[] = {
-        {StrL(".html"), StrL("text/html")}, {StrL(".htm"), StrL("text/html")},  {StrL(".gif"), StrL("image/gif")},
-        {StrL(".png"), StrL("image/png")},  {StrL(".jpg"), StrL("image/jpeg")}, {StrL(".jpeg"), StrL("image/jpeg")},
-        {StrL(".bmp"), StrL("image/bmp")},  {StrL(".css"), StrL("text/css")},   {StrL(".txt"), StrL("text/plain")},
-    };
-
-    for (int i = 0; i < dimof(mimeTypes); i++) {
-        if (str::EqI(ext, mimeTypes[i].ext)) {
-            // trust an image's data more than its extension
-            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) &&
-                str::StartsWith(mimeTypes[i].mimetype, StrL("image/"))) {
-                for (int j = 0; j < dimof(mimeTypes); j++) {
-                    if (str::Eq(imgExt, mimeTypes[j].ext)) {
-                        return str::Dup(mimeTypes[j].mimetype);
-                    }
-                }
-            }
-            return str::Dup(mimeTypes[i].mimetype);
-        }
+    TempStr mime = MimeTypeFromExtTemp(ext, imgExt);
+    if (mime) {
+        return mime;
     }
 
     TempStr contentType = ReadRegStrTemp(HKEY_CLASSES_ROOT, ext, "Content Type");
     if (contentType) {
-        return str::Dup(contentType);
+        return contentType;
     }
 
-    return str::Dup(Str(kDefaultMimeType));
+    return Str(kDefaultMimeType);
 }
 
 // TODO: return an error page html in case of errors?
@@ -434,9 +414,8 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     }
 
     Str imgExt = GfxFileExtFromData(data);
-    Str mime = MimeFromUrl(urlRestA, imgExt);
+    TempStr mime = MimeFromUrlTemp(urlRestA, imgExt);
     WCHAR* mimeW = CWStrTemp(mime);
-    str::Free(mime);
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
 #ifdef _WIN64
     // not going to report data in parts for unexpectedly huge webpages

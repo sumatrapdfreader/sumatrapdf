@@ -1530,6 +1530,41 @@ Str SeqStrByIndex(SeqStrings strs, int idx) {
     return SeqStrAt(strs, off);
 }
 
+// flat sequence of (extension, mime type) pairs
+static SeqStrings gMimeTypes =
+    ".html\0text/html\0"
+    ".htm\0text/html\0"
+    ".gif\0image/gif\0"
+    ".png\0image/png\0"
+    ".jpg\0image/jpeg\0"
+    ".jpeg\0image/jpeg\0"
+    ".bmp\0image/bmp\0"
+    ".css\0text/css\0"
+    ".js\0text/javascript\0"
+    ".svg\0image/svg+xml\0"
+    ".txt\0text/plain\0"
+    ".md\0text/plain\0"
+    ".json\0application/json\0";
+
+// ext is like ".png"; returns e.g. "image/png", or {} if the extension is not a
+// known type. If the matched type is an image and imgExt (the real extension
+// detected from the file's data) is given, imgExt's type wins over the ext's.
+TempStr MimeTypeFromExtTemp(Str ext, Str imgExt) {
+    int idx = SeqStrIndexIS(gMimeTypes, ext);
+    if (idx < 0) {
+        return {};
+    }
+    Str mime = SeqStrByIndex(gMimeTypes, idx + 1);
+    // trust an image's actual data over its extension
+    if (imgExt && str::StartsWith(mime, StrL("image/"))) {
+        int j = SeqStrIndex(gMimeTypes, imgExt);
+        if (j >= 0) {
+            return SeqStrByIndex(gMimeTypes, j + 1);
+        }
+    }
+    return mime;
+}
+
 // unsigned LEB128 of zigzag-encoded i64
 static size_t VarIntEncode(u8* dst, i64 val) {
     u64 n = ((u64)val << 1) ^ (u64)(val >> 63);

@@ -6733,28 +6733,13 @@ void DeleteManualBrowserWindow() {
     gManualBrowserWindow = nullptr;
 }
 
-static Str ManualMimeFromPath(Str path) {
+static TempStr ManualMimeFromPathTemp(Str path) {
     Str ext = str::FindCharLast(path, '.');
-    if (!ext) {
-        return str::Dup("text/html");
+    TempStr mime = MimeTypeFromExtTemp(ext);
+    if (!mime) {
+        mime = "text/html";
     }
-
-    static const struct {
-        Str ext;
-        Str mimetype;
-    } mimeTypes[] = {
-        {".html", "text/html"},        {".htm", "text/html"},     {".gif", "image/gif"},  {".png", "image/png"},
-        {".jpg", "image/jpeg"},        {".jpeg", "image/jpeg"},   {".bmp", "image/bmp"},  {".css", "text/css"},
-        {".js", "text/javascript"},    {".svg", "image/svg+xml"}, {".txt", "text/plain"}, {".md", "text/plain"},
-        {".json", "application/json"},
-    };
-
-    for (int i = 0; i < dimof(mimeTypes); i++) {
-        if (str::EqI(ext, mimeTypes[i].ext)) {
-            return str::Dup(mimeTypes[i].mimetype);
-        }
-    }
-    return str::Dup("text/html");
+    return mime;
 }
 
 static bool IsManualDocHtmlPage(Str path) {
@@ -6802,7 +6787,7 @@ static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
     lzma::FileInfo* fi = &archive->files[idx];
     res->data = data;
     res->dataLen = fi->uncompressedSize;
-    res->contentType = ManualMimeFromPath(mimePath);
+    res->contentType = str::Dup(ManualMimeFromPathTemp(mimePath));
     res->ownsData = true;
     return true;
 }

@@ -49,41 +49,20 @@ void ChmWebviewWnd::OnBrowserMessage(Str msg) {
     WebviewWnd::OnBrowserMessage(msg);
 }
 
-static Str ChmMimeFromPath(Str path, Str data) {
+static TempStr ChmMimeFromPathTemp(Str path, Str data) {
     Str ext = str::FindCharLast(path, '.');
     if (str::ContainsChar(ext, ';')) {
         Str semi = str::FindChar(ext, ';');
         TempStr trimmed = str::DupTemp(Str(path.s, (int)(semi.s - path.s)));
-        return ChmMimeFromPath(trimmed, data);
+        return ChmMimeFromPathTemp(trimmed, data);
     }
 
-    static const struct {
-        Str ext;
-        Str mimetype;
-    } mimeTypes[] = {
-        {".html", "text/html"},     {".htm", "text/html"},     {".gif", "image/gif"},  {".png", "image/png"},
-        {".jpg", "image/jpeg"},     {".jpeg", "image/jpeg"},   {".bmp", "image/bmp"},  {".css", "text/css"},
-        {".js", "text/javascript"}, {".svg", "image/svg+xml"}, {".txt", "text/plain"},
-    };
-
-    if (ext) {
-        for (int i = 0; i < dimof(mimeTypes); i++) {
-            if (str::EqI(ext, mimeTypes[i].ext)) {
-                if (str::StartsWith(mimeTypes[i].mimetype, "image/")) {
-                    Str imgExt = GfxFileExtFromData(data);
-                    if (imgExt) {
-                        for (int j = 0; j < dimof(mimeTypes); j++) {
-                            if (str::Eq(imgExt, mimeTypes[j].ext)) {
-                                return str::Dup(mimeTypes[j].mimetype);
-                            }
-                        }
-                    }
-                }
-                return str::Dup(mimeTypes[i].mimetype);
-            }
-        }
+    Str imgExt = GfxFileExtFromData(data);
+    TempStr mime = MimeTypeFromExtTemp(ext, imgExt);
+    if (!mime) {
+        mime = "text/html";
     }
-    return str::Dup("text/html");
+    return mime;
 }
 
 bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
@@ -97,7 +76,7 @@ bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
     }
     res->data = (u8*)data.s;
     res->dataLen = (size_t)data.len;
-    res->contentType = ChmMimeFromPath(path, data);
+    res->contentType = str::Dup(ChmMimeFromPathTemp(path, data));
     res->ownsData = false;
     return true;
 }

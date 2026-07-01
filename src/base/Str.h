@@ -208,6 +208,11 @@ int SeqStrIndex(SeqStrings strs, Str toFind);
 int SeqStrIndexIS(SeqStrings strs, Str toFind);
 Str SeqStrByIndex(SeqStrings strs, int idx);
 
+// look up the mime type for a file extension (e.g. ".png" -> "image/png");
+// returns {} for unknown extensions. If the matched type is an image and
+// imgExt (the extension detected from the file's data) is given, it wins.
+TempStr MimeTypeFromExtTemp(Str ext, Str imgExt = {});
+
 // SeqStrNum: like SeqStrings but each entry is <string>\0<varint i64>, sequence ends with \0.
 // Varint is unsigned LEB128 of zigzag-encoded i64 (small for non-negative values).
 // Use when mapping strings to arbitrary numbers (not just sequential indices).
