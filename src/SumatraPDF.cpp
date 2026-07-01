@@ -3886,7 +3886,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     WCHAR dstFileName[MAX_PATH];
     TempStr baseName = path::GetBaseNameTemp(srcFileName);
     str::BufSet(dstFileName, dimof(dstFileName), baseName);
-    if (wstr::IndexOfChar(WStr(dstFileName), L':') >= 0) {
+    if (wstr::ContainsChar(WStr(dstFileName), L':')) {
         // handle embed-marks (for embedded PDF documents):
         // remove the container document's extension and include
         // the embedding reference in the suggested filename

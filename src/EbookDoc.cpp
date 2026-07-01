@@ -1522,7 +1522,7 @@ static Str TextFindLinkEnd(str::Builder& htmlData, Str curr, char prevChar, bool
 inline bool IsEmailUsernameChar(char c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
-    return isalnum((u8)c) || c && str::ContainsChar(StrL(".!#$%&'*+=?^_`{|}~-"), c);
+    return isalnum((u8)c) || str::ContainsChar(StrL(".!#$%&'*+=?^_`{|}~-"), c);
 }
 inline bool IsEmailDomainChar(char c) {
     return isalnum((u8)c) || '-' == c;

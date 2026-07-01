@@ -233,6 +233,7 @@ int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
 int IndexOfChar(WStr s, WCHAR c);
+bool ContainsChar(WStr s, WCHAR c);
 WStr FindChar(WStr str, WCHAR c);
 WStr FindFrom(WStr str, WStr find);
 bool IsWs(WCHAR c);

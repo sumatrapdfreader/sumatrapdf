@@ -970,7 +970,7 @@ size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
     int dst = 0;
     for (int src = 0; src < str.len; src++) {
         WCHAR c = str.s[src];
-        if (wstr::IndexOfChar(toRemove, c) < 0) {
+        if (!wstr::ContainsChar(toRemove, c)) {
             str.s[dst++] = c;
         } else {
             ++removed;
@@ -2433,6 +2433,10 @@ int IndexOfChar(WStr s, WCHAR c) {
     return -1;
 }
 
+bool ContainsChar(WStr s, WCHAR c) {
+    return IndexOfChar(s, c) >= 0;
+}
+
 WStr FindChar(WStr str, WCHAR c) {
     int idx = IndexOfChar(str, c);
     if (idx < 0) {
@@ -2759,7 +2763,7 @@ static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int*
     WCHAR f2[] = L"% ";
     WStr formatAt = WStr(format.s + formatOff, format.len - formatOff);
     WStr endF = Parse(formatAt, L"%u%c", &width, &f2[1]);
-    if (!wstr::IsNull(endF) && IndexOfChar(WStr(L"udx"), f2[1]) >= 0 && width <= (unsigned)(str.len - p)) {
+    if (!wstr::IsNull(endF) && ContainsChar(WStr(L"udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
         wstr::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
         WStr end = Parse(WStr(limited), f2, valueOut);
