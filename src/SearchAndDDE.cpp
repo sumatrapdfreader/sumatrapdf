@@ -62,11 +62,23 @@ static struct {
     int firstPage = 0;
     int lastPage = 0;
     LONG countEpoch = 0;
-    Vec<FindMatchPaintRects> entries;
+    // entries are heap-allocated and owned by the cache. They must NOT be stored
+    // by value: Vec only supports POD types and relocates elements with memcpy
+    // when it grows, which would leave FindMatchPaintRects::rects (a Vec with an
+    // inline buffer) with a dangling els pointer, and would also leak its heap
+    // buffer since Vec never runs element destructors.
+    Vec<FindMatchPaintRects*> entries;
 } gFindMatchPaintCache;
 
-void InvalidateFindMatchPaintCache() {
+static void FreeFindMatchPaintCacheEntries() {
+    for (int i = 0; i < (int)gFindMatchPaintCache.entries.size(); i++) {
+        delete gFindMatchPaintCache.entries[i];
+    }
     gFindMatchPaintCache.entries.Reset();
+}
+
+void InvalidateFindMatchPaintCache() {
+    FreeFindMatchPaintCacheEntries();
     gFindMatchPaintCache.firstPage = 0;
     gFindMatchPaintCache.lastPage = 0;
     gFindMatchPaintCache.countEpoch = 0;
@@ -988,7 +1000,7 @@ static void AppendPageRectsToScreen(DisplayModel* dm, const Rect& clipRc, const 
 }
 
 static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int firstPage, int lastPage) {
-    gFindMatchPaintCache.entries.Reset();
+    FreeFindMatchPaintCacheEntries();
     gFindMatchPaintCache.firstPage = firstPage;
     gFindMatchPaintCache.lastPage = lastPage;
     gFindMatchPaintCache.countEpoch = win->findCountEpoch;
@@ -1002,18 +1014,14 @@ static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int fi
         if (!FindMatchTouchesVisiblePages(fm, firstPage, lastPage)) {
             continue;
         }
-        // Build the cache entry in place: Vec<FindMatchPaintRects> copies its
-        // elements with memcpy, so a temporary with populated nested Vec rects
-        // would double-free when the temp's destructor runs.
-        FindMatchPaintRects placeholder;
-        size_t idx = gFindMatchPaintCache.entries.size();
-        gFindMatchPaintCache.entries.Append(placeholder);
-        FindMatchPaintRects& entry = gFindMatchPaintCache.entries[idx];
-        entry.key = MatchKey(fm.startPage, fm.startGlyph);
-        AppendMatchPageRects(engine, fm, entry.rects);
-        if (entry.rects.size() == 0) {
-            gFindMatchPaintCache.entries.RemoveAt(idx);
+        auto entry = new FindMatchPaintRects();
+        entry->key = MatchKey(fm.startPage, fm.startGlyph);
+        AppendMatchPageRects(engine, fm, entry->rects);
+        if (entry->rects.size() == 0) {
+            delete entry;
+            continue;
         }
+        gFindMatchPaintCache.entries.Append(entry);
     }
 }
 
@@ -1093,11 +1101,11 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
     Vec<Rect> otherRects;
     Vec<Rect> currentRects;
     for (int i = 0; i < (int)gFindMatchPaintCache.entries.size(); i++) {
-        const FindMatchPaintRects& entry = gFindMatchPaintCache.entries[i];
-        if (entry.key == currentKey) {
-            AppendPageRectsToScreen(dm, win->canvasRc, entry.rects, currentRects);
+        const FindMatchPaintRects* entry = gFindMatchPaintCache.entries[i];
+        if (entry->key == currentKey) {
+            AppendPageRectsToScreen(dm, win->canvasRc, entry->rects, currentRects);
         } else {
-            AppendPageRectsToScreen(dm, win->canvasRc, entry.rects, otherRects);
+            AppendPageRectsToScreen(dm, win->canvasRc, entry->rects, otherRects);
         }
     }
 
