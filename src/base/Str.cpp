@@ -2150,10 +2150,6 @@ WStr wstr::Builder::StealData() {
     return WStr(res, n);
 }
 
-WStr wstr::Builder::LendData() const {
-    return WStr(els, (int)len);
-}
-
 int wstr::Builder::Find(const WCHAR& el, int startAt) const {
     for (int i = startAt; i < (int)len; i++) {
         if (els[i] == el) {
