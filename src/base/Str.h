@@ -130,7 +130,7 @@ int BufAppend(char* dst, int dstCchSize, Str s);
 TempStr MemToHexTemp(const u8* buf, size_t len);
 bool HexToMem(Str s, u8* buf, size_t bufLen);
 
-Str Parse(Str str, Str fmt, ...);
+Str Parse(Str str, const char* fmt, ...);
 
 int CmpNatural(Str a, Str b);
 
@@ -175,7 +175,7 @@ bool EndsWith(WStr txt, WStr end);
 bool EndsWithI(WStr txt, WStr end);
 WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
-WStr Parse(WStr str, WStr format, ...);
+WStr Parse(WStr str, const WCHAR* fmt, ...);
 int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);

@@ -1264,8 +1264,8 @@ static Str ParseV(Str str, Str format, va_list args) {
     return Str(str.s + p, str.len - p);
 }
 
-Str Parse(Str str, Str fmt, ...) {
-    if (str::IsNull(str) || str::IsNull(fmt)) {
+Str Parse(Str str, const char* fmt, ...) {
+    if (str::IsNull(str) || !fmt) {
         return {};
     }
 
@@ -2791,13 +2791,13 @@ static WStr ParseVW(WStr str, WStr format, va_list args) {
     return WStr(str.s + p, str.len - p);
 }
 
-WStr Parse(WStr str, WStr format, ...) {
-    if (wstr::IsNull(str) || wstr::IsNull(format)) {
+WStr Parse(WStr str, const WCHAR* fmt, ...) {
+    if (wstr::IsNull(str) || !fmt) {
         return {};
     }
     va_list args;
-    va_start(args, format);
-    WStr res = ParseVW(str, format, args);
+    va_start(args, fmt);
+    WStr res = ParseVW(str, fmt, args);
     va_end(args);
     return res;
 }
