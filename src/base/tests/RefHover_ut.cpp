@@ -488,7 +488,10 @@ static void NumericCitationRangeEnDash() {
     int len = 0;
     // "deploy [2, 9–14]." — en-dash split from "14" so the \x2013 escape does
     // not swallow the following hex digits.
-    AddText(text, coords, len, 256, L"deploy [2, 9\x2013" L"14].", 72, 200);
+    AddText(text, coords, len, 256,
+            L"deploy [2, 9\x2013"
+            L"14].",
+            72, 200);
     int num = 0;
     // Cursor on the '9' (idx 11 → x = 72 + 11*6 = 138).
     bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{141, 206}, &num);
@@ -511,7 +514,7 @@ static void NumericCitationLineBreakList() {
     Rect coords[256];
     int len = 0;
     AddText(text, coords, len, 256, L"in AECO [8, 17,", 72, 200); // '[' at idx 8 (x=120)
-    AddText(text, coords, len, 256, L"18]. These", 72, 220);       // '1' at idx 15 (x=72,y=220)
+    AddText(text, coords, len, 256, L"18]. These", 72, 220);      // '1' at idx 15 (x=72,y=220)
     int num = 0;
     // Cursor on the '8' on line 1 (idx 9 → x = 72 + 9*6 = 126).
     bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{129, 206}, &num);
