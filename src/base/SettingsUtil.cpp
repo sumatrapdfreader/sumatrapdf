@@ -23,7 +23,7 @@ static bool NeedsEscaping(Str s) {
            str::ContainsChar(s, '$');
 }
 
-static void EscapeStr(StrBuilder& out, Str s) {
+static void EscapeStr(str::Builder& out, Str s) {
     ReportIf(!NeedsEscaping(s));
     if (str::IsWs(s.s[0]) && s.s[0] != '\n' && s.s[0] != '\r') {
         out.AppendChar('$');
@@ -57,7 +57,7 @@ static Str UnescapeStr(Str s) {
         return str::Dup(s);
     }
 
-    StrBuilder ret;
+    str::Builder ret;
     int off = 0;
     if (s.s[0] == '$' && s.len > 1 && str::IsWs(s.s[1])) {
         off = 1; // leading whitespace
@@ -95,7 +95,7 @@ static Str UnescapeStr(Str s) {
 // or quotation marks (doubling quotation marks within quotes);
 // this is simpler than full command line serialization as read by ParseCmdLine
 static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
-    StrBuilder serialized;
+    str::Builder serialized;
 
     for (size_t i = 0; i < strArray->size(); i++) {
         if (i > 0) {
@@ -148,7 +148,7 @@ static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {
             return;
         }
         if ('"' == serialized.s[off]) {
-            StrBuilder part;
+            str::Builder part;
             for (off++; off < serialized.len;) {
                 if (serialized.s[off] == '"' && (off + 1 >= serialized.len || serialized.s[off + 1] != '"')) {
                     break;
@@ -210,7 +210,7 @@ bool IsCompactable(const StructInfo* info) {
 static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
               "compact array code can't be simplified if int, float and colorref are of different sizes");
 
-static bool SerializeField(StrBuilder& out, const u8* base, const FieldInfo& field) {
+static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& field) {
     const u8* fieldPtr = base + field.offset;
 
     switch (field.type) {
@@ -414,7 +414,7 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
     }
 }
 
-static inline void Indent(StrBuilder& out, int indent) {
+static inline void Indent(str::Builder& out, int indent) {
     while (indent-- > 0) {
         out.AppendChar('\t');
     }
@@ -444,7 +444,7 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
     }
 }
 
-static void SerializeUnknownFields(StrBuilder& out, SquareTreeNode* node, int indent) {
+static void SerializeUnknownFields(str::Builder& out, SquareTreeNode* node, int indent) {
     if (!node) {
         return;
     }
@@ -465,7 +465,7 @@ static void SerializeUnknownFields(StrBuilder& out, SquareTreeNode* node, int in
     }
 }
 
-static void SerializeStructRec(StrBuilder& out, const StructInfo* info, const void* data, SquareTreeNode* prevNode,
+static void SerializeStructRec(str::Builder& out, const StructInfo* info, const void* data, SquareTreeNode* prevNode,
                                int indent = 0) {
     const u8* base = (const u8*)data;
     const char* fieldName = info->fieldNames;
@@ -575,7 +575,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
 }
 
 ByteSlice SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
-    StrBuilder out;
+    str::Builder out;
     out.Append(UTF8_BOM);
     SquareTreeNode* root = ParseSquareTree(prevData);
     SerializeStructRec(out, info, strct, root);

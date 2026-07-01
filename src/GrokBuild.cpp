@@ -258,7 +258,7 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
         WindowTab* tab = win->CurrentTab();
         if (tab) {
             if (!tab->grokChatLog) {
-                tab->grokChatLog = new StrBuilder();
+                tab->grokChatLog = new str::Builder();
             }
             tab->grokChatLog->Append(js);
             tab->grokChatLog->AppendChar('\n');
@@ -332,7 +332,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
 
 // URL-encode a path the way Grok stores session dirs (e.g. C:\foo -> C%3A%5Cfoo)
 static TempStr EncodeGrokDirTemp(Str dir) {
-    StrBuilder buf;
+    str::Builder buf;
     for (int i = 0; i < dir.len; i++) {
         unsigned char c = (unsigned char)dir.s[i];
         if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_' ||
@@ -554,7 +554,7 @@ static void AppendGrokHistoryTools(MainWindow* win, Str line) {
         if (!str::Cut(searchFrom, StrL("\"name\":\""), nullptr, &rest)) {
             break;
         }
-        StrBuilder nameBuf;
+        str::Builder nameBuf;
         int j = 0;
         while (j < rest.len && rest.s[j] != '"') {
             if (rest.s[j] == '\\' && j + 1 < rest.len) {
@@ -577,7 +577,7 @@ static void AppendGrokHistoryTools(MainWindow* win, Str line) {
             j++;
         }
         if (nameBuf.Size() > 0) {
-            StrBuilder desc;
+            str::Builder desc;
             desc.Append(fmt("Tool: %s", nameBuf.LendData()));
             WebViewAddTool(win, desc.LendData());
         }
@@ -814,7 +814,7 @@ static void GrokReadThread(GrokReadCtx* ctx) {
     Str sessionId = ctx->sessionId;
     free(ctx);
 
-    StrBuilder lineBuf;
+    str::Builder lineBuf;
     char buf[4096];
     DWORD bytesRead;
 

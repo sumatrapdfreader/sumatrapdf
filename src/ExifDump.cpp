@@ -520,7 +520,7 @@ struct TiffParser {
 
     TempStr FormatComponentsConfig(size_t off, u32 count) const {
         static const Str compNames[] = {StrL(""), StrL("Y"), StrL("Cb"), StrL("Cr"), StrL("R"), StrL("G"), StrL("B")};
-        StrBuilder s;
+        str::Builder s;
         for (u32 i = 0; i < count && off + i < r.len; i++) {
             u8 c = r.Byte(off + i);
             if (c == 0) {
@@ -564,7 +564,7 @@ struct TiffParser {
         if (!asList) {
             return fmt("[%u bytes]", count);
         }
-        StrBuilder s;
+        str::Builder s;
         s.Append("[");
         u32 show = count > 20 ? 20 : count;
         for (u32 i = 0; i < show; i++) {
@@ -659,7 +659,7 @@ struct TiffParser {
         }
 
         if (type == TiffType::Rational || type == TiffType::SRational) {
-            StrBuilder s;
+            str::Builder s;
             bool sr = type == TiffType::SRational;
             for (u32 i = 0; i < count; i++) {
                 size_t eoff = off + (size_t)i * 8;
@@ -730,7 +730,7 @@ struct TiffParser {
         }
 
         if (type == TiffType::Short || type == TiffType::SShort) {
-            StrBuilder s;
+            str::Builder s;
             for (u32 i = 0; i < count; i++) {
                 size_t eoff = off + (size_t)i * 2;
                 if (i > 0) {
@@ -756,7 +756,7 @@ struct TiffParser {
         }
 
         if (type == TiffType::Long || type == TiffType::SLong) {
-            StrBuilder s;
+            str::Builder s;
             for (u32 i = 0; i < count; i++) {
                 size_t eoff = off + (size_t)i * 4;
                 if (i > 0) {
@@ -772,7 +772,7 @@ struct TiffParser {
         }
 
         if (type == TiffType::Byte || type == TiffType::SByte) {
-            StrBuilder s;
+            str::Builder s;
             s.Append("[");
             for (u32 i = 0; i < count; i++) {
                 if (i > 0) {

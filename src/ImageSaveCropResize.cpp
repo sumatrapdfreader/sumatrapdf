@@ -2066,7 +2066,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
 }
 
 Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
-    StrBuilder out;
+    str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');

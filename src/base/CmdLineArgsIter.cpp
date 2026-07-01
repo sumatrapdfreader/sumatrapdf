@@ -34,7 +34,7 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
     if (!needsQuote) {
         return arg;
     }
-    StrBuilder res;
+    str::Builder res;
     res.AppendChar('"');
     for (int i = 0; i < n; i++) {
         res.AppendChar(arg.s[i]);

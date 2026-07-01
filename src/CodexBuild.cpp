@@ -259,7 +259,7 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
         WindowTab* tab = win->CurrentTab();
         if (tab) {
             if (!tab->codexChatLog) {
-                tab->codexChatLog = new StrBuilder();
+                tab->codexChatLog = new str::Builder();
             }
             tab->codexChatLog->Append(js);
             tab->codexChatLog->AppendChar('\n');
@@ -704,7 +704,7 @@ static void AppendCodexRolloutTools(MainWindow* win, Str line) {
         name = AIChatJsonStrTemp(line, "name");
     }
     if (!str::IsEmpty(name)) {
-        StrBuilder desc;
+        str::Builder desc;
         desc.Append(fmt("Tool: %s", name));
         WebViewAddTool(win, ToStr(desc));
     }
@@ -934,7 +934,7 @@ static void CodexReadThread(CodexReadCtx* ctx) {
     Str sessionId = ctx->sessionId;
     free(ctx);
 
-    StrBuilder lineBuf;
+    str::Builder lineBuf;
     char buf[4096];
     DWORD bytesRead;
 
@@ -966,7 +966,7 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                             TempStr cmd = AIChatJsonStrTemp(p, "command");
                             if (!str::IsEmpty(cmd)) {
                                 TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);
-                                StrBuilder desc;
+                                str::Builder desc;
                                 desc.Append(fmt("Tool: %s", shortCmd));
                                 PostUpdate(hwndFrame, sessionId, desc.LendData(), CodexUpdateType::Tool);
                                 PostUpdate(hwndFrame, sessionId, {}, CodexUpdateType::Flush);

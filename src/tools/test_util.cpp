@@ -31,7 +31,7 @@ extern void VecTest();
 extern void WinUtilTest();
 extern void StrVecTest();
 
-void GetPrintersInfo(struct StrBuilder&) {
+void GetPrintersInfo(struct str::Builder&) {
     /* stub: do nothing */
 }
 
@@ -73,7 +73,7 @@ static bool InitSymbolsForAi() {
 
 static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* exceptionInfo) {
     printf("test_util crash\n");
-    StrBuilder s;
+    str::Builder s;
     dbghelp::GetExceptionInfo(s, exceptionInfo);
     PrintStdout(ToStr(s));
     fflush(stdout);

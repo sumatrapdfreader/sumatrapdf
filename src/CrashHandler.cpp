@@ -37,10 +37,10 @@
 
 // The following functions allow crash handler to be used by both installer
 // and sumatra proper. They must be implemented for each app.
-extern void GetStressTestInfo(StrBuilder* s);
+extern void GetStressTestInfo(str::Builder* s);
 extern bool CrashHandlerCanUseNet();
 extern void ShowCrashHandlerMessage();
-extern void GetProgramInfo(StrBuilder& s);
+extern void GetProgramInfo(str::Builder& s);
 
 // in DEBUG we don't enable symbols download because they are not uploaded
 #if defined(DEBUG)
@@ -110,7 +110,7 @@ static bool TryStartCrashHandling(Str handlerName) {
 }
 
 // returns true if running on wine
-static bool GetModules(StrBuilder& s, bool additionalOnly) {
+static bool GetModules(str::Builder& s, bool additionalOnly) {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE) {
         return true;
@@ -138,7 +138,7 @@ static bool GetModules(StrBuilder& s, bool additionalOnly) {
 }
 
 static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    StrBuilder s(16 * 1024, gCrashHandlerAllocator);
+    str::Builder s(16 * 1024, gCrashHandlerAllocator);
     if (!isCrash) {
         captureCallstack = true;
         s.Append("Type: debug report (not crash)\n");
@@ -195,7 +195,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
 }
 
 static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    StrBuilder s(16 * 1024, gCrashHandlerAllocator);
+    str::Builder s(16 * 1024, gCrashHandlerAllocator);
     if (!isCrash) {
         captureCallstack = true;
         s.Append("Type: debug report (not crash)\n");
@@ -255,10 +255,10 @@ void UploadCrashReport(const ByteSlice& d) {
         return;
     }
 
-    StrBuilder headers(256, gCrashHandlerAllocator);
+    str::Builder headers(256, gCrashHandlerAllocator);
     headers.Append("Content-Type: text/plain");
 
-    StrBuilder data(16 * 1024, gCrashHandlerAllocator);
+    str::Builder data(16 * 1024, gCrashHandlerAllocator);
     data.AppendSlice(d);
 
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
@@ -384,7 +384,7 @@ static bool gAddSymbolServer = false;
 static bool gAddExeDir = false;
 
 static TempStr BuildSymbolPathTemp(Str symDir) {
-    StrBuilder path(2048, GetTempArena());
+    str::Builder path(2048, GetTempArena());
 
     bool symDirExists = dir::Exists(symDir);
 
@@ -629,7 +629,7 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static void GetOsVersion(StrBuilder& s) {
+static void GetOsVersion(str::Builder& s) {
     OSVERSIONINFOEX ver{};
     bool ok = GetOsVersion(ver);
     ver.dwOSVersionInfoSize = sizeof(ver);
@@ -655,7 +655,7 @@ static void GetOsVersion(StrBuilder& s) {
     }
 }
 
-static void GetProcessorName(StrBuilder& s) {
+static void GetProcessorName(str::Builder& s) {
     auto key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
     TempStr name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     if (!name) {
@@ -672,7 +672,7 @@ static void GetProcessorName(StrBuilder& s) {
 // the GUID as an escape and would drop the backslash, corrupting the key
 #define GFX_DRIVER_KEY_PREFIX "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\"
 
-static void GetGraphicsDriverInfo(StrBuilder& s) {
+static void GetGraphicsDriverInfo(str::Builder& s) {
     // the info is in registry in:
     // HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\
     //   Device Description REG_SZ (same as DriverDesc, so we don't read it)
@@ -703,7 +703,7 @@ static void GetGraphicsDriverInfo(StrBuilder& s) {
     }
 }
 
-static void GetSystemInfo(StrBuilder& s) {
+static void GetSystemInfo(str::Builder& s) {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     s.Append(fmt("Number Of Processors: %d\n", si.dwNumberOfProcessors));
@@ -794,14 +794,14 @@ static void GetSystemInfo(StrBuilder& s) {
 
 // returns true if running on wine
 static bool BuildModulesInfo() {
-    StrBuilder s(1024);
+    str::Builder s(1024);
     bool isWine = GetModules(s, false);
     gModulesInfo = s.StealData();
     return isWine;
 }
 
 static void BuildSystemInfo() {
-    StrBuilder s(1024);
+    str::Builder s(1024);
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);

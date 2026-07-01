@@ -62,7 +62,7 @@ TempStr AIChatJsEscapeTemp(Str s) {
     if (!s) {
         return str::DupTemp("");
     }
-    StrBuilder buf;
+    str::Builder buf;
     for (int i = 0; i < s.len; i++) {
         char c = s.s[i];
         switch (c) {
@@ -95,7 +95,7 @@ TempStr AIChatJsonStrTemp(Str json, Str key) {
     if (!str::Cut(json, pattern, nullptr, &rest)) {
         return {};
     }
-    StrBuilder buf;
+    str::Builder buf;
     for (int i = 0; i < rest.len; i++) {
         char c = rest.s[i];
         if (c == '"') {
@@ -177,7 +177,7 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
 
     SYSTEMTIME st;
     GetLocalTime(&st);
-    StrBuilder entry;
+    str::Builder entry;
     entry.Append(fmt("[%04d-%02d-%02d %02d:%02d:%02d] %s: ", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute,
                      st.wSecond, direction));
     entry.Append(text);

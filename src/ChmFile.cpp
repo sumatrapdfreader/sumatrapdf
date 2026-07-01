@@ -664,7 +664,7 @@ static const TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
         return s;
     }
     TempWStr ws = ToWStrTemp(s);
-    StrBuilder bytes;
+    str::Builder bytes;
     bool hasHigh = false;
     for (int i = 0; i < ws.len; i++) {
         int b = ChmEntityByte(ws.s[i]);

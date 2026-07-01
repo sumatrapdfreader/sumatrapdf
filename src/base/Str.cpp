@@ -1618,7 +1618,7 @@ static void SeqStrNumEntryParts(SeqStrNum strs, int off, Str* strOut, i64* numOu
     }
 }
 
-void SeqStrNumAppend(StrBuilder* b, Str s, i64 num) {
+void SeqStrNumAppend(str::Builder* b, Str s, i64 num) {
     b->Append(s);
     b->AppendChar('\0');
     u8 buf[12];
@@ -1626,7 +1626,7 @@ void SeqStrNumAppend(StrBuilder* b, Str s, i64 num) {
     b->AppendSlice(ByteSlice(buf, n));
 }
 
-void SeqStrNumFinish(StrBuilder* b) {
+void SeqStrNumFinish(str::Builder* b) {
     b->AppendChar('\0');
 }
 
@@ -1733,8 +1733,8 @@ Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 // kPadding is number of characters needed for terminating character
 static constexpr size_t kPadding = 1;
 
-static char* EnsureCap(StrBuilder* s, size_t needed) {
-    if (needed + kPadding <= StrBuilder::kBufChars) {
+static char* EnsureCap(str::Builder* s, size_t needed) {
+    if (needed + kPadding <= str::Builder::kBufChars) {
         s->els = s->buf; // TODO: not needed?
         return s->buf;
     }
@@ -1781,7 +1781,7 @@ static char* EnsureCap(StrBuilder* s, size_t needed) {
     return newEls;
 }
 
-static char* MakeSpaceAt(StrBuilder* s, size_t idx, size_t count) {
+static char* MakeSpaceAt(str::Builder* s, size_t idx, size_t count) {
     ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
     char* buf = EnsureCap(s, newLen);
@@ -1801,7 +1801,7 @@ static char* MakeSpaceAt(StrBuilder* s, size_t idx, size_t count) {
     return res;
 }
 
-static void StrBuilderFree(StrBuilder* s) {
+static void StrBuilderFree(str::Builder* s) {
     if (!s->els || (s->els == s->buf)) {
         return;
     }
@@ -1809,7 +1809,7 @@ static void StrBuilderFree(StrBuilder* s) {
     s->els = nullptr;
 }
 
-void StrBuilder::Reset() {
+void str::Builder::Reset() {
     StrBuilderFree(this);
     len = 0;
     cap = 0;
@@ -1819,7 +1819,7 @@ void StrBuilder::Reset() {
 #define kFillerStr "01234567890123456789012345678901"
     // to catch mistakes earlier, fill the buffer with a known string
     constexpr size_t nFiller = sizeof(kFillerStr) - 1;
-    static_assert(nFiller == StrBuilder::kBufChars);
+    static_assert(nFiller == str::Builder::kBufChars);
     memcpy(buf, kFillerStr, kBufChars);
 #endif
 
@@ -1827,7 +1827,7 @@ void StrBuilder::Reset() {
 }
 
 // allocator is not owned by Vec and must outlive it
-StrBuilder::StrBuilder(size_t capHint, Arena* a) {
+str::Builder::Builder(size_t capHint, Arena* a) {
     allocator = a;
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
@@ -1835,7 +1835,7 @@ StrBuilder::StrBuilder(size_t capHint, Arena* a) {
 
 // ensure that a Vec never shares its els buffer with another after a clone/copy
 // note: we don't inherit allocator as it's not needed for our use cases
-StrBuilder::StrBuilder(const StrBuilder& that) {
+str::Builder::Builder(const str::Builder& that) {
     Reset();
     char* s = EnsureCap(this, that.len);
     Str sOrig = ToStr(that);
@@ -1844,12 +1844,12 @@ StrBuilder::StrBuilder(const StrBuilder& that) {
     memcpy(s, sOrig.s, n);
 }
 
-StrBuilder::StrBuilder(Str s) {
+str::Builder::Builder(Str s) {
     Reset();
     Append(s);
 }
 
-StrBuilder& StrBuilder::operator=(const StrBuilder& that) {
+str::Builder& str::Builder::operator=(const str::Builder& that) {
     if (this == &that) {
         return *this;
     }
@@ -1862,49 +1862,49 @@ StrBuilder& StrBuilder::operator=(const StrBuilder& that) {
     return *this;
 }
 
-StrBuilder::~StrBuilder() {
+str::Builder::~Builder() {
     StrBuilderFree(this);
 }
 
-char& StrBuilder::at(size_t idx) const {
+char& str::Builder::at(size_t idx) const {
     ReportIf(idx >= (u32)len);
     return els[idx];
 }
 
-char& StrBuilder::at(int idx) const {
+char& str::Builder::at(int idx) const {
     ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
-char& StrBuilder::operator[](long idx) const {
+char& str::Builder::operator[](long idx) const {
     ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
-char& StrBuilder::operator[](int idx) const {
+char& str::Builder::operator[](int idx) const {
     ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
 #if defined(_WIN64)
-char& StrBuilder::at(u32 idx) const {
+char& str::Builder::at(u32 idx) const {
     return at((size_t)idx);
 }
 
-char& StrBuilder::operator[](u32 idx) const {
+char& str::Builder::operator[](u32 idx) const {
     return at((size_t)idx);
 }
 #endif
 
-size_t StrBuilder::size() const {
+size_t str::Builder::size() const {
     return len;
 }
 
-int StrBuilder::Size() const {
+int str::Builder::Size() const {
     return (int)len;
 }
 
-bool StrBuilder::InsertAt(size_t idx, char el) {
+bool str::Builder::InsertAt(size_t idx, char el) {
     char* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
@@ -1913,11 +1913,11 @@ bool StrBuilder::InsertAt(size_t idx, char el) {
     return true;
 }
 
-bool StrBuilder::AppendChar(char c) {
+bool str::Builder::AppendChar(char c) {
     return InsertAt(len, c);
 }
 
-bool StrBuilder::Append(Str src, size_t count) {
+bool str::Builder::Append(Str src, size_t count) {
     if ((size_t)-1 == count) {
         count = (size_t)src.len;
     }
@@ -1932,11 +1932,11 @@ bool StrBuilder::Append(Str src, size_t count) {
     return true;
 }
 
-bool StrBuilder::Append(const StrBuilder& s) {
+bool str::Builder::Append(const str::Builder& s) {
     return Append(s.LendData());
 }
 
-char StrBuilder::RemoveAt(size_t idx, size_t count) {
+char str::Builder::RemoveAt(size_t idx, size_t count) {
     char res = at(idx);
     if (len > idx + count) {
         char* dst = els + idx;
@@ -1949,14 +1949,14 @@ char StrBuilder::RemoveAt(size_t idx, size_t count) {
     return res;
 }
 
-char StrBuilder::RemoveLast() {
+char str::Builder::RemoveLast() {
     if (len == 0) {
         return 0;
     }
     return RemoveAt(len - 1);
 }
 
-char& StrBuilder::Last() const {
+char& str::Builder::Last() const {
     ReportIf(0 == len);
     return at(len - 1);
 }
@@ -1965,7 +1965,7 @@ char& StrBuilder::Last() const {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-Str StrBuilder::StealData(Arena* a) {
+Str str::Builder::StealData(Arena* a) {
     int n = (int)len;
     char* res = els;
     if (a) {
@@ -1985,11 +1985,11 @@ Str StrBuilder::StealData(Arena* a) {
     return Str(res, n);
 }
 
-Str StrBuilder::LendData() const {
+Str str::Builder::LendData() const {
     return Str(els, (int)len);
 }
 
-bool StrBuilder::Contains(Str s) {
+bool str::Builder::Contains(Str s) {
     if (!s) {
         return false;
     }
@@ -2011,28 +2011,28 @@ bool StrBuilder::Contains(Str s) {
     return false;
 }
 
-bool StrBuilder::IsEmpty() const {
+bool str::Builder::IsEmpty() const {
     return len == 0;
 }
 
-ByteSlice StrBuilder::AsByteSlice() const {
+ByteSlice str::Builder::AsByteSlice() const {
     return {(u8*)els, size()};
 }
 
-ByteSlice StrBuilder::StealAsByteSlice() {
+ByteSlice str::Builder::StealAsByteSlice() {
     size_t n = size();
     Str d = StealData();
     return {(u8*)d.s, n};
 }
 
-bool StrBuilder::Append(const u8* src, size_t size) {
+bool str::Builder::Append(const u8* src, size_t size) {
     if ((size_t)-1 == size) {
         return this->Append(Str((const char*)src));
     }
     return AppendSlice(ByteSlice(src, size));
 }
 
-bool StrBuilder::AppendSlice(const ByteSlice& d) {
+bool str::Builder::AppendSlice(const ByteSlice& d) {
     if (d.empty()) {
         return true;
     }
@@ -2053,16 +2053,16 @@ bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
 }
 #endif
 
-void StrBuilder::Set(Str s) {
+void str::Builder::Set(Str s) {
     Reset();
     Append(s);
 }
 
-Str StrBuilder::CStr() const {
+Str str::Builder::CStr() const {
     return Str(els, (int)len);
 }
 
-char StrBuilder::LastChar() const {
+char str::Builder::LastChar() const {
     auto n = this->len;
     if (n == 0) {
         return 0;
@@ -2070,8 +2070,8 @@ char StrBuilder::LastChar() const {
     return at(n - 1);
 }
 
-static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) {
-    if (needed + kPadding <= StrBuilder::kBufChars) {
+static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
+    if (needed + kPadding <= str::Builder::kBufChars) {
         s->els = s->buf; // TODO: not needed?
         return s->buf;
     }
@@ -2097,12 +2097,12 @@ static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) {
 
     size_t newElCount = newCap + kPadding;
 
-    size_t allocSize = newElCount * WStrBuilder::kElSize;
+    size_t allocSize = newElCount * wstr::Builder::kElSize;
     WCHAR* newEls;
     if (s->buf == s->els) {
         newEls = (WCHAR*)Alloc(s->allocator, allocSize);
         if (newEls) {
-            memcpy(newEls, s->buf, WStrBuilder::kElSize * (s->len + 1));
+            memcpy(newEls, s->buf, wstr::Builder::kElSize * (s->len + 1));
         }
     } else {
         newEls = (WCHAR*)Realloc(s->allocator, s->els, allocSize);
@@ -2117,7 +2117,7 @@ static WCHAR* EnsureCap(WStrBuilder* s, size_t needed) {
     return newEls;
 }
 
-static WCHAR* MakeSpaceAt(WStrBuilder* s, size_t idx, size_t count) {
+static WCHAR* MakeSpaceAt(wstr::Builder* s, size_t idx, size_t count) {
     ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
     WCHAR* buf = EnsureCap(s, newLen);
@@ -2129,13 +2129,13 @@ static WCHAR* MakeSpaceAt(WStrBuilder* s, size_t idx, size_t count) {
     if (s->len > idx) {
         WCHAR* src = buf + idx;
         WCHAR* dst = buf + idx + count;
-        memmove(dst, src, (s->len - idx) * WStrBuilder::kElSize);
+        memmove(dst, src, (s->len - idx) * wstr::Builder::kElSize);
     }
     s->len = newLen;
     return res;
 }
 
-static void WStrBuilderFree(WStrBuilder* s) {
+static void WStrBuilderFree(wstr::Builder* s) {
     if (!s->els || (s->els == s->buf)) {
         return;
     }
@@ -2143,7 +2143,7 @@ static void WStrBuilderFree(WStrBuilder* s) {
     s->els = nullptr;
 }
 
-void WStrBuilder::Reset() {
+void wstr::Builder::Reset() {
     WStrBuilderFree(this);
     len = 0;
     cap = 0;
@@ -2153,7 +2153,7 @@ void WStrBuilder::Reset() {
 #define kFillerWStr L"01234567890123456789012345678901"
     // to catch mistakes earlier, fill the buffer with a known string
     constexpr size_t nFiller = sizeof(kFillerStr) - 1;
-    static_assert(nFiller == StrBuilder::kBufChars);
+    static_assert(nFiller == str::Builder::kBufChars);
     memcpy(buf, kFillerWStr, nFiller * kElSize);
 #endif
 
@@ -2161,7 +2161,7 @@ void WStrBuilder::Reset() {
 }
 
 // allocator is not owned by Vec and must outlive it
-WStrBuilder::WStrBuilder(size_t capHint, Arena* a) {
+wstr::Builder::Builder(size_t capHint, Arena* a) {
     allocator = a;
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
@@ -2169,7 +2169,7 @@ WStrBuilder::WStrBuilder(size_t capHint, Arena* a) {
 
 // ensure that a Vec never shares its els buffer with another after a clone/copy
 // note: we don't inherit allocator as it's not needed for our use cases
-WStrBuilder::WStrBuilder(const WStrBuilder& that) {
+wstr::Builder::Builder(const wstr::Builder& that) {
     Reset();
     WCHAR* s = EnsureCap(this, that.cap);
     WStr sOrig = ToWStr(that);
@@ -2178,12 +2178,12 @@ WStrBuilder::WStrBuilder(const WStrBuilder& that) {
     memcpy(s, sOrig.s, n);
 }
 
-WStrBuilder::WStrBuilder(WStr s) {
+wstr::Builder::Builder(WStr s) {
     Reset();
     Append(s);
 }
 
-WStrBuilder& WStrBuilder::operator=(const WStrBuilder& that) {
+wstr::Builder& wstr::Builder::operator=(const wstr::Builder& that) {
     if (this == &that) {
         return *this;
     }
@@ -2196,56 +2196,56 @@ WStrBuilder& WStrBuilder::operator=(const WStrBuilder& that) {
     return *this;
 }
 
-WStrBuilder::~WStrBuilder() {
+wstr::Builder::~Builder() {
     WStrBuilderFree(this);
 }
 
-WCHAR& WStrBuilder::at(size_t idx) const {
+WCHAR& wstr::Builder::at(size_t idx) const {
     ReportIf(idx >= len);
     return els[idx];
 }
 
-WCHAR& WStrBuilder::at(int idx) const {
+WCHAR& wstr::Builder::at(int idx) const {
     ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
-WCHAR& WStrBuilder::operator[](size_t idx) const {
+WCHAR& wstr::Builder::operator[](size_t idx) const {
     return at(idx);
 }
 
-WCHAR& WStrBuilder::operator[](long idx) const {
+WCHAR& wstr::Builder::operator[](long idx) const {
     ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
-WCHAR& WStrBuilder::operator[](ULONG idx) const {
+WCHAR& wstr::Builder::operator[](ULONG idx) const {
     return at((size_t)idx);
 }
 
-WCHAR& WStrBuilder::operator[](int idx) const {
+WCHAR& wstr::Builder::operator[](int idx) const {
     ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
 #if defined(_WIN64)
-WCHAR& WStrBuilder::at(u32 idx) const {
+WCHAR& wstr::Builder::at(u32 idx) const {
     return at((size_t)idx);
 }
 
-WCHAR& WStrBuilder::operator[](u32 idx) const {
+WCHAR& wstr::Builder::operator[](u32 idx) const {
     return at((size_t)idx);
 }
 #endif
 
-size_t WStrBuilder::size() const {
+size_t wstr::Builder::size() const {
     return len;
 }
-int WStrBuilder::isize() const {
+int wstr::Builder::isize() const {
     return (int)len;
 }
 
-bool WStrBuilder::InsertAt(size_t idx, const WCHAR& el) {
+bool wstr::Builder::InsertAt(size_t idx, const WCHAR& el) {
     WCHAR* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
@@ -2254,11 +2254,11 @@ bool WStrBuilder::InsertAt(size_t idx, const WCHAR& el) {
     return true;
 }
 
-bool WStrBuilder::AppendChar(WCHAR c) {
+bool wstr::Builder::AppendChar(WCHAR c) {
     return InsertAt(len, c);
 }
 
-bool WStrBuilder::Append(WStr src, size_t count) {
+bool wstr::Builder::Append(WStr src, size_t count) {
     if ((size_t)-1 == count) {
         count = (size_t)src.len;
     }
@@ -2273,7 +2273,7 @@ bool WStrBuilder::Append(WStr src, size_t count) {
     return true;
 }
 
-WCHAR WStrBuilder::RemoveAt(size_t idx, size_t count) {
+WCHAR wstr::Builder::RemoveAt(size_t idx, size_t count) {
     WCHAR res = at(idx);
     if (len > idx + count) {
         WCHAR* dst = els + idx;
@@ -2285,14 +2285,14 @@ WCHAR WStrBuilder::RemoveAt(size_t idx, size_t count) {
     return res;
 }
 
-WCHAR WStrBuilder::RemoveLast() {
+WCHAR wstr::Builder::RemoveLast() {
     if (len == 0) {
         return 0;
     }
     return RemoveAt(len - 1);
 }
 
-WCHAR& WStrBuilder::Last() const {
+WCHAR& wstr::Builder::Last() const {
     ReportIf(0 == len);
     return at(len - 1);
 }
@@ -2301,7 +2301,7 @@ WCHAR& WStrBuilder::Last() const {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-WStr WStrBuilder::StealData() {
+WStr wstr::Builder::StealData() {
     int n = (int)len;
     WCHAR* res = els;
     if (els == buf) {
@@ -2312,11 +2312,11 @@ WStr WStrBuilder::StealData() {
     return WStr(res, n);
 }
 
-WStr WStrBuilder::LendData() const {
+WStr wstr::Builder::LendData() const {
     return WStr(els, (int)len);
 }
 
-int WStrBuilder::Find(const WCHAR& el, size_t startAt) const {
+int wstr::Builder::Find(const WCHAR& el, size_t startAt) const {
     for (size_t i = startAt; i < len; i++) {
         if (els[i] == el) {
             return (int)i;
@@ -2325,12 +2325,12 @@ int WStrBuilder::Find(const WCHAR& el, size_t startAt) const {
     return -1;
 }
 
-bool WStrBuilder::Contains(const WCHAR& el) const {
+bool wstr::Builder::Contains(const WCHAR& el) const {
     return -1 != Find(el);
 }
 
 // returns position of removed element or -1 if not removed
-int WStrBuilder::Remove(const WCHAR& el) {
+int wstr::Builder::Remove(const WCHAR& el) {
     int i = Find(el);
     if (-1 == i) {
         return -1;
@@ -2339,17 +2339,16 @@ int WStrBuilder::Remove(const WCHAR& el) {
     return i;
 }
 
-bool WStrBuilder::IsEmpty() const {
+bool wstr::Builder::IsEmpty() const {
     return len == 0;
 }
 
-void WStrBuilder::Set(WStr s) {
+void wstr::Builder::Set(WStr s) {
     Reset();
     Append(s);
 }
 
-
-WCHAR WStrBuilder::LastChar() const {
+WCHAR wstr::Builder::LastChar() const {
     auto n = this->len;
     if (n == 0) {
         return 0;
@@ -2360,7 +2359,7 @@ WCHAR WStrBuilder::LastChar() const {
 namespace wstr {
 
 // returns true if was replaced
-bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith) {
+bool Replace(wstr::Builder& s, WStr toReplace, WStr replaceWith) {
     // fast path: nothing to replace
     if (!wstr::FindFrom(WStr(s.els), toReplace)) {
         return false;
@@ -2579,7 +2578,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         return {};
     }
 
-    WStrBuilder result((size_t)s.len);
+    wstr::Builder result((size_t)s.len);
     int findLen = toReplace.len;
     int start = 0;
     while (start < s.len) {
@@ -2700,7 +2699,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
     TempStr buf = strfmt::FormatTemp("%d", num);
 
-    StrBuilder res;
+    str::Builder res;
     int i = 3 - (buf.len % 3);
     for (int src = 0; src < buf.len; src++) {
         res.AppendChar(buf.s[src]);
@@ -2800,7 +2799,7 @@ TempStr FormatRomanNumeralTemp(int n) {
     } romandata[] = {{1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"}, {100, "C"}, {90, "XC"}, {50, "L"},
                      {40, "XL"},  {10, "X"},   {9, "IX"},  {5, "V"},    {4, "IV"},  {1, "I"}};
 
-    StrBuilder roman;
+    str::Builder roman;
     for (int i = 0; i < dimof(romandata); i++) {
         auto&& el = romandata[i];
         for (; n >= el.value; n -= el.value) {
@@ -3380,7 +3379,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     }
     // heuristic: allow 6 replacements without reallocating
     size_t capHint = (size_t)s.len + 1 + (size_t)(lenDiff * 6);
-    StrBuilder result(capHint);
+    str::Builder result(capHint);
     bool ok;
     while (idx >= 0) {
         ok = result.Append(Str(curr.s, idx));
@@ -3445,21 +3444,21 @@ WCHAR* CWStrTemp(WStr s, int& cch) {
 }
 
 // handles embedded 0 in the string
-Str ToStr(const StrBuilder& b) {
+Str ToStr(const str::Builder& b) {
     return Str(b.els, (int)b.len);
 }
 
-// StrBuilder always keeps its data NUL-terminated, so we can hand out the
+// str::Builder always keeps its data NUL-terminated, so we can hand out the
 // buffer directly for C/win32 APIs we don't control that want a char*
-char* ToCStr(const StrBuilder& b) {
+char* ToCStr(const str::Builder& b) {
     return b.els;
 }
 
-WStr ToWStr(const WStrBuilder& b) {
+WStr ToWStr(const wstr::Builder& b) {
     return WStr(b.els, (int)b.len);
 }
 
-WCHAR* ToWCStr(const WStrBuilder& b) {
+WCHAR* ToWCStr(const wstr::Builder& b) {
     return b.els;
 }
 

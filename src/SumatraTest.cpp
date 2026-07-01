@@ -47,7 +47,7 @@ Str TestSynctexResult(Str pdfPath, Str srcPath, int line) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
@@ -81,7 +81,7 @@ Str TestInverseSearchResult(Str pdfPath, int pageNo, int x, int y) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
@@ -133,7 +133,7 @@ Str TestSearchResult(Str pdfPath, Str needle, Str password) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     TestPasswordUI pwdUI(password);
     EngineBase* engine = CreateEngineFromFile(pdfPath, password ? &pwdUI : nullptr, false);
     if (!engine) {
@@ -182,7 +182,7 @@ Str TestDestResult(Str pdfPath, int destNo) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
@@ -213,7 +213,7 @@ Str TestNamedDestResult(Str pdfPath, Str destName) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
     if (!engine) {
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
@@ -249,7 +249,7 @@ Str TestChmResult(Str chmPath, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     bool ok = true;
 
     int pretreeRes = LZX_test_pretree_make_decode_table();
@@ -361,7 +361,7 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
 // instead of the selected text. Operates on the document loaded into the first
 // window (passed on the command line), so it exercises the real menu code path.
 Str TestContextMenuSelectionResult(Str word1, Str word2, Str cursorWord, int* exitCodeOut) {
-    StrBuilder out;
+    str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
@@ -466,7 +466,7 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* st
 // verify navigation: the picked match becomes textSearch's current position and
 // is scrolled into view.
 Str TestGoToFindMatchResult(Str word, Str typed, int* exitCodeOut) {
-    StrBuilder out;
+    str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
@@ -613,7 +613,7 @@ Str TestTripleClickLineSelectResult(Str pdfPath, Str clickWord, Str expectedLine
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     if (str::IsEmptyOrWhiteSpace(pdfPath) || str::IsEmptyOrWhiteSpace(clickWord) ||
         str::IsEmptyOrWhiteSpace(expectedLine)) {
         out.Append("ERROR missing pdf, clickWord, or expectedLine\n");
@@ -698,7 +698,7 @@ static IPageDestination* FirstLinkDestOnPage(EngineBase* engine, int pageNo) {
 // Follow the first internal link on page 1 after pinning the viewport to the
 // left; used by tests/issue-5064.ts (issue #5064).
 Str TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
-    StrBuilder out;
+    str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
@@ -748,7 +748,7 @@ Str TestScrollToLinkResult(int minViewportDelta, int* exitCodeOut) {
 
 // Verifies _TRA resolves error-path strings through the translation table.
 Str TestI18nErrorStringResult(int* exitCodeOut) {
-    StrBuilder out;
+    str::Builder out;
     Str err = _TRA("Error");
     Str crash = _TRA("SumatraPDF crashed");
     Str printers = _TRA("SumatraPDF - Show Printers");
@@ -768,7 +768,7 @@ Str TestI18nErrorStringResult(int* exitCodeOut) {
     return out.StealData();
 }
 
-static void AppendTocItems(StrBuilder& out, TocItem* item) {
+static void AppendTocItems(str::Builder& out, TocItem* item) {
     for (; item; item = item->next) {
         if (item->title) {
             out.Append(fmt("%s|page=%d\n", item->title, item->pageNo));
@@ -783,7 +783,7 @@ Str TestGetTocResult(Str path, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
     if (!engine) {
         if (exitCodeOut) {
@@ -814,7 +814,7 @@ Str TestPageLinksResult(Str path, int pageNo, int* exitCodeOut) {
     ScopedGdiPlus gdiPlus;
     EnsureTestGlobalPrefs();
 
-    StrBuilder out;
+    str::Builder out;
     EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
     if (!engine) {
         if (exitCodeOut) {

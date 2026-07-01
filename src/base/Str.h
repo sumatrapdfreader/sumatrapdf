@@ -276,7 +276,8 @@ int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut);
 Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
 Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
-struct StrBuilder {
+namespace str {
+struct Builder {
     // allocator is not owned by Vec and must outlive it
     Arena* allocator = nullptr;
     // TODO: to save space (8 bytes), combine els and buf?
@@ -289,12 +290,12 @@ struct StrBuilder {
 
     static constexpr size_t kBufChars = dimof(buf);
 
-    explicit StrBuilder(size_t capHint = 0, Arena* allocator = nullptr);
-    StrBuilder(const StrBuilder& that);
-    StrBuilder& operator=(const StrBuilder& that);
-    StrBuilder(Str s);
+    explicit Builder(size_t capHint = 0, Arena* allocator = nullptr);
+    Builder(const Builder& that);
+    Builder& operator=(const Builder& that);
+    Builder(Str s);
 
-    ~StrBuilder();
+    ~Builder();
 
     void Reset();
     char& at(size_t idx) const;
@@ -311,7 +312,7 @@ struct StrBuilder {
     bool InsertAt(size_t idx, char el);
     bool AppendChar(char c);
     bool Append(Str src, size_t count = (size_t)-1);
-    bool Append(const StrBuilder& s);
+    bool Append(const Builder& s);
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();
     char& Last() const;
@@ -334,11 +335,13 @@ struct StrBuilder {
     iterator begin() const { return &(els[0]); }
     iterator end() const { return &(els[len]); }
 };
+} // namespace str
 
-void SeqStrNumAppend(StrBuilder* b, Str s, i64 num);
-void SeqStrNumFinish(StrBuilder* b);
+void SeqStrNumAppend(str::Builder* b, Str s, i64 num);
+void SeqStrNumFinish(str::Builder* b);
 
-struct WStrBuilder {
+namespace wstr {
+struct Builder {
     // allocator is not owned by Vec and must outlive it
     Arena* allocator = nullptr;
     WCHAR* els = nullptr;
@@ -349,11 +352,11 @@ struct WStrBuilder {
     static constexpr size_t kBufChars = dimof(buf);
     static constexpr size_t kElSize = sizeof(WCHAR);
 
-    explicit WStrBuilder(size_t capHint = 0, Arena* allocator = nullptr);
-    WStrBuilder(const WStrBuilder&);
-    WStrBuilder(WStr s);
-    WStrBuilder& operator=(const WStrBuilder& that);
-    ~WStrBuilder();
+    explicit Builder(size_t capHint = 0, Arena* allocator = nullptr);
+    Builder(const Builder&);
+    Builder(WStr s);
+    Builder& operator=(const Builder& that);
+    ~Builder();
     void Reset();
     WCHAR& at(size_t idx) const;
     WCHAR& at(int idx) const;
@@ -389,10 +392,11 @@ struct WStrBuilder {
     iterator begin() const { return &(els[0]); }
     iterator end() const { return &(els[len]); }
 };
+} // namespace wstr
 
 namespace wstr {
 
-bool Replace(WStrBuilder& s, WStr toReplace, WStr replaceWith);
+bool Replace(Builder& s, WStr toReplace, WStr replaceWith);
 
 FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src);
@@ -424,14 +428,14 @@ WCHAR* CWStrTemp(Str s);
 WCHAR* CWStrTemp(Str s, int& cch);
 WCHAR* CWStrTemp(WStr s, int& cch);
 
-// StrBuilder/WStrBuilder always keep their data NUL-terminated.
+// str::Builder/wstr::Builder always keep their data NUL-terminated.
 // ToStr() returns a {ptr,len} view (may contain embedded NULs).
 // ToCStr() returns the NUL-terminated buffer, for passing to C/win32 code we
 // don't control that expects a zero-terminated char*/WCHAR*.
-Str ToStr(const StrBuilder&);
-char* ToCStr(const StrBuilder&);
-WStr ToWStr(const WStrBuilder&);
-WCHAR* ToWCStr(const WStrBuilder&);
+Str ToStr(const str::Builder&);
+char* ToCStr(const str::Builder&);
+WStr ToWStr(const wstr::Builder&);
+WCHAR* ToWCStr(const wstr::Builder&);
 
 wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);

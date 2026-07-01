@@ -1154,7 +1154,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
 
 // Replace in 'pattern' the macros %f %l %c by 'path', 'line' and 'col'
 static TempStr BuildOpenFileCmdTemp(Str pattern, Str path, int line, int col) {
-    StrBuilder cmdline(256);
+    str::Builder cmdline(256);
 
     logf("BuildOpenFileCmdTemp: path: '%s', pattern: '%s'\n", path, pattern);
     Str s = pattern;
@@ -1808,7 +1808,7 @@ Returns:
 error: <error message>
 if file doesn't exist or no opened file
 */
-static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, StrBuilder& res) {
+static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, str::Builder& res) {
     AutoFreeStr filePath;
     Str next = str::Parse(cmd, "[GetFileState(\"%s\")]", &filePath);
     if (str::IsNull(next)) {
@@ -1862,7 +1862,7 @@ static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, StrBuilder& res)
 }
 
 // returns the full path of every open document, one per line (issue #5060)
-static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, StrBuilder& res) {
+static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, str::Builder& res) {
     Str next = str::Parse(cmd, "[GetOpenFiles()]");
     if (str::IsNull(next)) {
         next = str::Parse(cmd, "[GetOpenFiles]");
@@ -1884,7 +1884,7 @@ static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, StrBuilder& res) {
 // returns the document position currently under the mouse cursor, in PDF points
 // -- the same unit as the "pt" cursor-position notification and .smx files
 // (issue #1411). page is 0 if the cursor isn't over a page.
-static Str HandleGetMousePosCmd(Str cmd, bool* ack, StrBuilder& res) {
+static Str HandleGetMousePosCmd(Str cmd, bool* ack, str::Builder& res) {
     Str next = str::Parse(cmd, "[GetMousePos()]");
     if (str::IsNull(next)) {
         next = str::Parse(cmd, "[GetMousePos]");
@@ -2016,7 +2016,7 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
     return didHandle;
 }
 
-static bool HandleRequestCmds(HWND hwnd, Str cmd, StrBuilder& rsp) {
+static bool HandleRequestCmds(HWND hwnd, Str cmd, str::Builder& rsp) {
     bool didHandle = false;
     while (cmd) {
         {
@@ -2059,7 +2059,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-    StrBuilder str;
+    str::Builder str;
     bool didHandle = HandleRequestCmds(hwnd, cmd, str);
     if (!didHandle) {
         str.Set(StrL("error: unknown command"));

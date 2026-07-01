@@ -376,7 +376,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         InterlockedDecrement(&gAllowAllocFailure);
     };
 
-    WStrBuilder content;
+    wstr::Builder content;
     Vec<Rect> coords;
     bool insertSpace = false;
 
@@ -460,7 +460,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
         InterlockedDecrement(&gAllowAllocFailure);
     };
 
-    StrBuilder content;
+    str::Builder content;
     Vec<Rect> coords;
     bool insertSpace = false;
 
@@ -1573,7 +1573,7 @@ static uint ExtractHttpCharset(Str html) {
 struct ChmHtmlCollector : EbookTocVisitor {
     ChmFile* doc = nullptr;
     StrVec added;
-    StrBuilder html;
+    str::Builder html;
 
   public:
     explicit ChmHtmlCollector(ChmFile* doc) : doc(doc) {

@@ -229,7 +229,7 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = 
     return node;
 }
 
-static void SerializeRec(SquareTreeNode* node, StrBuilder& s, int indent) {
+static void SerializeRec(SquareTreeNode* node, str::Builder& s, int indent) {
     int n = node->data.Size();
     for (int i = 0; i < n; i++) {
         SquareTreeNode::DataItem& item = node->data.At(i);
@@ -261,7 +261,7 @@ Str SerializeSquareTreeNode(SquareTreeNode* node) {
     if (!node) {
         return {};
     }
-    StrBuilder s;
+    str::Builder s;
     SerializeRec(node, s, 0);
     return s.StealData();
 }

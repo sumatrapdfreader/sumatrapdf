@@ -16,7 +16,7 @@ void dbglayout(Str s) {
     OutputDebugStringA(s.s);
 }
 
-static void LogAppendNum(StrBuilder& s, int n, Str suffix) {
+static void LogAppendNum(str::Builder& s, int n, Str suffix) {
     if (n == Inf) {
         s.Append("Inf");
     } else {
@@ -28,7 +28,7 @@ static void LogAppendNum(StrBuilder& s, int n, Str suffix) {
 }
 
 void LogConstraints(Constraints c, Str suffix) {
-    StrBuilder s;
+    str::Builder s;
     if (c.min.dx == c.max.dx) {
         dbglayout("dx: ");
         LogAppendNum(s, c.min.dx, " ");

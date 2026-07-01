@@ -215,7 +215,7 @@ static ByteSlice Base64Decode(const ByteSlice& data) {
     return {(u8*)result, size};
 }
 
-static inline void AppendChar(StrBuilder& htmlData, char c) {
+static inline void AppendChar(str::Builder& htmlData, char c) {
     switch (c) {
         case '&':
             htmlData.Append("&amp;");
@@ -1141,7 +1141,7 @@ PalmDoc::~PalmDoc() {
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
-static Str HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, Str text, size_t len, uint) {
+static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, size_t len, uint) {
     if (len < 9) {
     Fallback:
         builder.Append("&lt;");
@@ -1457,7 +1457,7 @@ static TempStr DecompressTcrTextTemp(Str data) {
         curr = Str(curr.s + step, curr.len - step);
     }
 
-    StrBuilder text(data.len * 2);
+    str::Builder text(data.len * 2);
     InterlockedIncrement(&gAllowAllocFailure);
     defer {
         InterlockedDecrement(&gAllowAllocFailure);
@@ -1475,7 +1475,7 @@ static TempStr DecompressTcrTextTemp(Str data) {
     return text.StealData(GetTempArena());
 }
 
-static Str TextFindLinkEnd(StrBuilder& htmlData, Str curr, char prevChar, bool fromWww = false) {
+static Str TextFindLinkEnd(str::Builder& htmlData, Str curr, char prevChar, bool fromWww = false) {
     int endIdx = 0;
     while (endIdx < curr.len && !str::IsWs(curr.s[endIdx])) {
         endIdx++;
@@ -1529,7 +1529,7 @@ inline bool IsEmailDomainChar(char c) {
     return isalnum((u8)c) || '-' == c;
 }
 
-static Str TextFindEmailEnd(StrBuilder& htmlData, Str curr) {
+static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
     AutoFreeStr beforeAt;
     Str rest = curr;
     if (!str::IsEmpty(curr) && '@' == curr.s[0]) {
@@ -1591,7 +1591,7 @@ static Str TextFindEmailEnd(StrBuilder& htmlData, Str curr) {
     return end;
 }
 
-static Str TextFindRfcEnd(StrBuilder& htmlData, Str curr, char prevChar) {
+static Str TextFindRfcEnd(str::Builder& htmlData, Str curr, char prevChar) {
     if (isalnum((u8)prevChar)) {
         return {};
     }

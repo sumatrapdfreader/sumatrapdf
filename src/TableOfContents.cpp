@@ -75,7 +75,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
                 (k == kindDestinationAttachment);
     ReportIf(!isOk);
 
-    StrBuilder infotip;
+    str::Builder infotip;
 
     // Display the item's full label, if it's overlong
     RECT rcLine, rcLabel;

@@ -260,7 +260,7 @@ static void WebViewEval(MainWindow* win, Str js, bool record = true) {
         WindowTab* tab = win->CurrentTab();
         if (tab) {
             if (!tab->claudeChatLog) {
-                tab->claudeChatLog = new StrBuilder();
+                tab->claudeChatLog = new str::Builder();
             }
             tab->claudeChatLog->Append(js);
             tab->claudeChatLog->AppendChar('\n');
@@ -334,7 +334,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
 // Compute the encoded project dir path that Claude uses:
 // E:\foo_bar -> E--foo-bar (: removed, \ -> -, _ -> -)
 static TempStr EncodeClaudeDirTemp(Str dir) {
-    StrBuilder buf;
+    str::Builder buf;
     for (int i = 0; i < dir.len; i++) {
         char c = dir.s[i];
         if (c == ':' || c == '\\' || c == '/' || c == '_' || c == ' ') {
@@ -572,7 +572,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                     TempStr toolName = AIChatJsonStrTemp(line, "name");
                     if (toolName) {
                         TempStr fp = AIChatJsonStrTemp(line, "file_path");
-                        StrBuilder desc;
+                        str::Builder desc;
                         desc.Append(fmt("Tool: %s", toolName));
                         if (fp) {
                             desc.Append(fmt(" (%s)", fp));
@@ -734,7 +734,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
     Str sessionId = ctx->sessionId;
     free(ctx);
 
-    StrBuilder lineBuf;
+    str::Builder lineBuf;
     char buf[4096];
     DWORD bytesRead;
 
@@ -761,7 +761,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                             TempStr fp = AIChatJsonStrTemp(line, "file_path");
                             TempStr cmd = AIChatJsonStrTemp(line, "command");
                             TempStr pat = AIChatJsonStrTemp(line, "pattern");
-                            StrBuilder desc;
+                            str::Builder desc;
                             desc.Append(fmt("Tool: %s", toolName));
                             if (fp) {
                                 desc.Append(fmt(" (%s)", fp));
@@ -781,7 +781,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                     if (str::Contains(line, StrL("\"tool_use_result\""))) {
                         TempStr fp = AIChatJsonStrTemp(line, "filePath");
                         if (fp) {
-                            StrBuilder desc;
+                            str::Builder desc;
                             desc.Append(fmt("Result: %s", fp));
                             PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
                         }

@@ -1952,7 +1952,7 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
         return {};
     }
 
-    WStrBuilder result;
+    wstr::Builder result;
     Rect regionI = region.Round();
     for (int i = 0; i < pageText.len; i++) {
         wchar_t c = pageText.s[i];

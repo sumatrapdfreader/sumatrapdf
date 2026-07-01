@@ -5,7 +5,9 @@ struct SelectionOnPage;
 struct WatchedFile;
 struct EditAnnotationsWindow;
 struct MainWindow;
-struct StrBuilder;
+namespace str {
+struct Builder;
+}
 struct ReadAloudHighlightMap;
 
 /* Data related to a single document loaded into a tab/window */
@@ -70,17 +72,17 @@ struct WindowTab {
 
     // Claude Code session for this tab
     Str claudeSessionId;
-    StrBuilder* claudeChatLog = nullptr;
+    str::Builder* claudeChatLog = nullptr;
     HANDLE claudeProcess = nullptr;
 
     // Grok Build session for this tab
     Str grokSessionId;
-    StrBuilder* grokChatLog = nullptr;
+    str::Builder* grokChatLog = nullptr;
     HANDLE grokProcess = nullptr;
 
     // OpenAI Codex session for this tab
     Str codexSessionId;
-    StrBuilder* codexChatLog = nullptr;
+    str::Builder* codexChatLog = nullptr;
     HANDLE codexProcess = nullptr;
 
     // which AI chat sidebar is open for this tab (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex)

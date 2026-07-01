@@ -22,7 +22,7 @@ struct EpubDoc {
     // access to them must be serialized for multi-threaded users
     CRITICAL_SECTION zipAccess;
 
-    StrBuilder htmlData;
+    str::Builder htmlData;
     Vec<ImageData> images;
     Str tocPath;
     Str fileName;
@@ -62,7 +62,7 @@ struct Fb2Doc {
     Str fileName;
     IStream* stream = nullptr;
 
-    StrBuilder xmlData;
+    str::Builder xmlData;
     Vec<ImageData> images;
     AutoFree coverImage;
     Props props;
@@ -100,7 +100,7 @@ struct PdbReader;
 
 struct PalmDoc {
     Str fileName;
-    StrBuilder htmlData;
+    str::Builder htmlData;
     StrVec tocEntries;
 
     bool Load();
@@ -151,7 +151,7 @@ struct HtmlDoc {
 
 struct TxtDoc {
     Str fileName;
-    StrBuilder htmlData;
+    str::Builder htmlData;
     bool isRFC = false;
 
     bool Load();

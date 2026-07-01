@@ -73,7 +73,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
     return true;
 }
 
-static bool AppendEntry(StrBuilder& data, StrBuilder& content, Str filePath, Str inArchiveName,
+static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath, Str inArchiveName,
                         lzma::FileInfo* fi = nullptr) {
     size_t nameLen = (size_t)inArchiveName.len;
     ReportIf(nameLen > UINT32_MAX - 25);
@@ -139,8 +139,8 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
         prevArchive.filesCount = 0;
     }
 
-    StrBuilder data;
-    StrBuilder content;
+    str::Builder data;
+    str::Builder content;
 
     constexpr size_t kBufSize = 8;
     ByteWriterLE lzsaHeader(kBufSize);

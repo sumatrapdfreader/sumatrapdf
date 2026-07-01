@@ -66,7 +66,7 @@ struct Fmt {
 
     int currArgNo = 0;
     int currPercArgNo = 0;
-    StrBuilder res;
+    str::Builder res;
 
     char buf[256] = {};
 };

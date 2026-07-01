@@ -1128,7 +1128,7 @@ bool IsRenderInfoWindowVisible() {
     return gRenderInfoHwnd != nullptr;
 }
 
-static void SerializePredictive(StrBuilder& s, int originPageNo, int nPred, const int* pred) {
+static void SerializePredictive(str::Builder& s, int originPageNo, int nPred, const int* pred) {
     if (nPred <= 0) {
         return;
     }
@@ -1139,7 +1139,7 @@ static void SerializePredictive(StrBuilder& s, int originPageNo, int nPred, cons
     s.Append("]");
 }
 
-static void SerializeRequest(StrBuilder& s, Str label, PageRenderRequest* r, DWORD now) {
+static void SerializeRequest(str::Builder& s, Str label, PageRenderRequest* r, DWORD now) {
     int ageMs = (int)(now - r->timestamp);
     s.Append(fmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label, r->pageNo, r->zoom,
                  r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs));
@@ -1154,7 +1154,7 @@ static void SerializeRequest(StrBuilder& s, Str label, PageRenderRequest* r, DWO
     s.Append("\r\n");
 }
 
-static void SerializeFinished(StrBuilder& s, FinishedRequestInfo* r, DWORD now) {
+static void SerializeFinished(str::Builder& s, FinishedRequestInfo* r, DWORD now) {
     int durMs = (int)(r->finishedAt - r->timestamp);
     int agoMs = (int)(now - r->finishedAt);
     Str label = r->aborted ? StrL("ABORTED") : StrL("DONE");
@@ -1192,7 +1192,7 @@ void RenderCache::RecordFinishedRequest(PageRenderRequest* r) {
     }
 }
 
-void RenderCache::SerializeQueueState(StrBuilder& s) {
+void RenderCache::SerializeQueueState(str::Builder& s) {
     ScopedCritSec scope(&requestAccess);
     DWORD now = GetTickCount();
     int nInProgress = 0;
@@ -1240,7 +1240,7 @@ void RenderCache::UpdateRenderInfo() {
     if (!IsRenderInfoWindowVisible()) {
         return;
     }
-    StrBuilder s;
+    str::Builder s;
     SerializeQueueState(s);
     // marshal to the UI thread: updating the window from a render thread while
     // holding requestAccess could deadlock if the UI thread is blocked on it

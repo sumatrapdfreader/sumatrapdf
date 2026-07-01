@@ -24,7 +24,7 @@ static inline int SkipDigits(Str data, int off) {
 
 class ParseArgs {
   public:
-    StrBuilder path;
+    str::Builder path;
     bool canceled = false;
     ValueVisitor* visitor = nullptr;
 
@@ -33,7 +33,7 @@ class ParseArgs {
 
 static int ParseValue(ParseArgs& args, Str data, int off);
 
-static int ExtractString(StrBuilder& string, Str data, int off) {
+static int ExtractString(str::Builder& string, Str data, int off) {
     ReportIf(off >= data.len || data.s[off] != '"');
     off++;
     while (off < data.len) {
@@ -93,7 +93,7 @@ static int ExtractString(StrBuilder& string, Str data, int off) {
 }
 
 static int ParseString(ParseArgs& args, Str data, int off) {
-    StrBuilder string;
+    str::Builder string;
     int end = ExtractString(string, data, off);
     if (end >= 0) {
         Str path = ToStr(args.path);

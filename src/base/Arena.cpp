@@ -450,7 +450,7 @@ void* Realloc(Arena* arena, void* mem, size_t size) {
     }
     void* newMem = arena->Push((u64)size, 8, false);
     if (newMem && mem) {
-        // we don't know the old size; callers that end up here (Vec/StrBuilder)
+        // we don't know the old size; callers that end up here (Vec/str::Builder)
         // only ever grow, and we can't overread because the arena block is
         // contiguous. Callers requiring exact copy must track old size.
         memcpy(newMem, mem, size);

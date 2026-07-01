@@ -308,8 +308,8 @@ class EngineDjVu : public EngineBase {
     Vec<ddjvu_fileinfo_t> fileInfos;
 
     RenderedBitmap* CreateRenderedBitmap(const u8* bmpData, Size size, bool grayscale) const;
-    bool ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rect>& coords);
-    bool ExtractPageTextUtf8(miniexp_t item, StrBuilder& extracted, Vec<Rect>& coords);
+    bool ExtractPageText(miniexp_t item, wstr::Builder& extracted, Vec<Rect>& coords);
+    bool ExtractPageTextUtf8(miniexp_t item, str::Builder& extracted, Vec<Rect>& coords);
     TempStr ResolveNamedDestTemp(Str name);
     TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
     bool FinishLoading();
@@ -863,7 +863,7 @@ bool EngineDjVu::SaveFileAs(Str dstPath) {
     return file::Copy(dstPath, srcPath, false);
 }
 
-static void AppendNewline(WStrBuilder& extracted, Vec<Rect>& coords, WStr lineSep) {
+static void AppendNewline(wstr::Builder& extracted, Vec<Rect>& coords, WStr lineSep) {
     if (extracted.size() > 0 && ' ' == extracted.Last()) {
         extracted.RemoveLast();
         coords.RemoveLast();
@@ -872,7 +872,7 @@ static void AppendNewline(WStrBuilder& extracted, Vec<Rect>& coords, WStr lineSe
     coords.AppendBlanks(len(lineSep));
 }
 
-bool EngineDjVu::ExtractPageText(miniexp_t item, WStrBuilder& extracted, Vec<Rect>& coords) {
+bool EngineDjVu::ExtractPageText(miniexp_t item, wstr::Builder& extracted, Vec<Rect>& coords) {
     const WStr lineSep = WStrL(L"\n");
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type)) {
@@ -944,7 +944,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
         return {};
     }
 
-    WStrBuilder extracted;
+    wstr::Builder extracted;
     Vec<Rect> coords;
     bool success = ExtractPageText(pagetext, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);
@@ -991,7 +991,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     return res;
 }
 
-static void AppendNewlineUtf8(StrBuilder& extracted, Vec<Rect>& coords, Str lineSep) {
+static void AppendNewlineUtf8(str::Builder& extracted, Vec<Rect>& coords, Str lineSep) {
     if (extracted.size() > 0 && ' ' == extracted.Last()) {
         extracted.RemoveLast();
         coords.RemoveLast();
@@ -1000,7 +1000,7 @@ static void AppendNewlineUtf8(StrBuilder& extracted, Vec<Rect>& coords, Str line
     coords.AppendBlanks(len(lineSep));
 }
 
-bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, StrBuilder& extracted, Vec<Rect>& coords) {
+bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, str::Builder& extracted, Vec<Rect>& coords) {
     const Str lineSep = StrL("\n");
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type)) {
@@ -1070,7 +1070,7 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
         return {};
     }
 
-    StrBuilder extracted;
+    str::Builder extracted;
     Vec<Rect> coords;
     bool success = ExtractPageTextUtf8(pagetext, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);

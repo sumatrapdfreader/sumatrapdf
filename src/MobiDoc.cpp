@@ -118,7 +118,7 @@ static_assert(kMobiHeaderLen == sizeof(MobiHeader), "wrong size of MobiHeader st
 // Uncompress source data compressed with PalmDoc compression into a buffer.
 // http://wiki.mobileread.com/wiki/PalmDOC#Format
 // Returns false on decoding errors
-static bool PalmdocUncompress(const u8* src, size_t srcLen, StrBuilder& dst) {
+static bool PalmdocUncompress(const u8* src, size_t srcLen, str::Builder& dst) {
     const u8* srcEnd = src + srcLen;
     while (src < srcEnd) {
         u8 c = *src++;
@@ -205,13 +205,13 @@ struct HuffDicDecompressor {
 
     bool SetHuffData(u8* huffData, size_t huffDataLen);
     bool AddCdicData(u8* cdicData, u32 cdicDataLen);
-    bool Decompress(u8* src, size_t srcSize, StrBuilder& dst);
-    bool DecodeOne(u32 code, StrBuilder& dst);
+    bool Decompress(u8* src, size_t srcSize, str::Builder& dst);
+    bool DecodeOne(u32 code, str::Builder& dst);
 };
 
 HuffDicDecompressor::HuffDicDecompressor() {}
 
-bool HuffDicDecompressor::DecodeOne(u32 code, StrBuilder& dst) {
+bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
     u16 dict = (u16)(code >> codeLength);
     if (dict >= dictsCount) {
         logf("invalid dict value\n");
@@ -253,7 +253,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, StrBuilder& dst) {
     return true;
 }
 
-bool HuffDicDecompressor::Decompress(u8* src, size_t srcSize, StrBuilder& dst) {
+bool HuffDicDecompressor::Decompress(u8* src, size_t srcSize, str::Builder& dst) {
     u32 bitsConsumed = 0;
     u32 bits = 0;
 
@@ -811,7 +811,7 @@ static size_t GetRealRecordSize(const u8* recData, size_t recLen, size_t trailer
 
 // Load a given record of a document into strOut, uncompressing if necessary.
 // Returns false if error.
-bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, StrBuilder& strOut) {
+bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Builder& strOut) {
     auto rec = pdbReader->GetRecord(recNo);
     u8* recData = rec.data();
     if (nullptr == recData) {
@@ -859,7 +859,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     }
 
     ReportIf(doc != nullptr);
-    doc = new StrBuilder(docUncompressedSize);
+    doc = new str::Builder(docUncompressedSize);
     size_t nFailed = 0;
     for (size_t i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, *doc)) {
@@ -967,7 +967,7 @@ bool MobiDoc::HasToc() {
     return docTocIndex < doc->size();
 }
 
-static void AppendDeepText(const GumboNode* root, StrBuilder& sb) {
+static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
     // iterative pre-order DFS so a deeply nested element can't overflow the stack
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
@@ -1031,7 +1031,7 @@ void MobiTocWalker::Walk(const GumboNode* root) {
                     attr = gumbo_get_attribute(&node->v.element.attributes, "href");
                 }
                 if (attr) {
-                    StrBuilder text;
+                    str::Builder text;
                     AppendDeepText(node, text);
                     if (!text.IsEmpty()) {
                         visitor->Visit(ToStr(text), Str(attr->value), level);

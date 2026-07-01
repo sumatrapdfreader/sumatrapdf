@@ -249,7 +249,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 }
 
 void StartInstallerAutoUpgrade(Str installerPath) {
-    StrBuilder cmd;
+    str::Builder cmd;
     if (IsOurExeInstalled()) {
         // no need for sleep because it shows the installer dialog anyway
         if (gIsPreReleaseBuild) {
@@ -567,7 +567,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         logf("ShowAutoUpdateDialog: '%s' is not a valid url\n", url);
         return ERROR_INTERNET_INVALID_URL;
     }
-    StrBuilder* data = &rsp->data;
+    str::Builder* data = &rsp->data;
     if (0 == data->size()) {
         logf("ShowAutoUpdateDialog: empty response from url '%s'\n", url);
         return ERROR_INTERNET_CONNECTION_ABORTED;
@@ -639,7 +639,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     return 0;
 }
 
-static void BuildUpdateURL(StrBuilder& url, Str baseURL, UpdateCheck updateCheckType) {
+static void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType) {
     url = baseURL;
     url.Append("?v=");
     url.Append(UPDATE_CHECK_VERA);
@@ -708,7 +708,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
 
 static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
     auto updateCheckType = data->updateCheckType;
-    StrBuilder url;
+    str::Builder url;
     BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
     Str uri = ToStr(url);
     HttpRsp* rsp = new HttpRsp;

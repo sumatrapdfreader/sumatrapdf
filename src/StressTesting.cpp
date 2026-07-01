@@ -294,7 +294,7 @@ static TempStr FormatTimeTemp(int totalSecs) {
     return fmt("%d secs", secs);
 }
 
-static void FormatTime(int totalSecs, StrBuilder* s) {
+static void FormatTime(int totalSecs, str::Builder* s) {
     int secs = totalSecs % 60;
     int totalMins = totalSecs / 60;
     int mins = totalMins % 60;
@@ -883,14 +883,14 @@ Next:
 }
 
 // note: used from CrashHandler, shouldn't allocate memory
-static void GetLogInfo(StressTest* st, StrBuilder* s) {
+static void GetLogInfo(StressTest* st, str::Builder* s) {
     s->Append(fmt(", stress test rendered %d files in ", st->nFilesProcessed));
     FormatTime(SecsSinceSystemTime(st->stressStartTime), s);
     s->Append(fmt(", currPage: %d", st->currPageNo));
 }
 
 // note: used from CrashHandler.cpp, should not allocate memory
-void GetStressTestInfo(StrBuilder* s) {
+void GetStressTestInfo(str::Builder* s) {
     // only add paths to files encountered during an explicit stress test
     // (for privacy reasons, users should be able to decide themselves
     // whether they want to share what files they had opened during a crash)

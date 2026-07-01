@@ -600,7 +600,7 @@ Str GfxFileExtFromData(const ByteSlice& d) {
 }
 
 Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
-    StrBuilder out;
+    str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');

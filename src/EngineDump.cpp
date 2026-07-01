@@ -45,7 +45,7 @@ static TempStr EscapeTemp(Str str) {
         return str;
     }
 
-    StrBuilder escaped(256);
+    str::Builder escaped(256);
     for (int i = 0; i < str.len; i++) {
         switch (str.s[i]) {
             case '&':
@@ -398,7 +398,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
     }
 
     if (str::EndsWithI(renderPath, ".txt")) {
-        StrBuilder text(1024);
+        str::Builder text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
             PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
             if (pageText.text) {

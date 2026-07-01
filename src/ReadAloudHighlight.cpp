@@ -89,7 +89,7 @@ static bool IsLineBreakGlyph(WStr text, const Rect* coords, int idx) {
     return idx >= 0 && idx < text.len && text.s[idx] == L'\n' && !coords[idx].x && !coords[idx].dx;
 }
 
-static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map, StrBuilder& cleanedOut) {
+static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map, str::Builder& cleanedOut) {
     if (!map) {
         logf("ReadAloud: CleanRawBytes: null map\n");
         return false;
@@ -186,7 +186,7 @@ void ReadAloudHighlightFree(ReadAloudHighlightMap* map) {
 }
 
 bool ReadAloudHighlightBuildFromPage(EngineBase* engine, int pageNo, ReadAloudHighlightMap* map,
-                                     StrBuilder& cleanedOut) {
+                                     str::Builder& cleanedOut) {
     if (!engine || !map) {
         return false;
     }
@@ -252,7 +252,7 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
     }
 }
 
-bool ReadAloudHighlightBuildFromTextSelection(TextSelection* ts, ReadAloudHighlightMap* map, StrBuilder& cleanedOut) {
+bool ReadAloudHighlightBuildFromTextSelection(TextSelection* ts, ReadAloudHighlightMap* map, str::Builder& cleanedOut) {
     if (!ts || !ts->engine || !map) {
         return false;
     }
@@ -424,7 +424,7 @@ bool ReadAloudGetCursorStart(DisplayModel* dm, Point screenPt, int* startPageOut
 }
 
 bool ReadAloudHighlightBuildFromDocument(DisplayModel* dm, int startPage, int startGlyph, ReadAloudHighlightMap* map,
-                                         StrBuilder& cleanedOut) {
+                                         str::Builder& cleanedOut) {
     if (!dm || !map || !dm->ValidPageNo(startPage)) {
         logf("ReadAloud: BuildFromDocument: invalid args (dm=%p map=%p startPage=%d)\n", dm, map, startPage);
         return false;

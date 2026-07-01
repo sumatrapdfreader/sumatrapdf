@@ -346,7 +346,7 @@ static TempStr NormalizeTextForPromptTemp(Str text) {
     if (!text) {
         return {};
     }
-    StrBuilder buf;
+    str::Builder buf;
     for (int i = 0; i < text.len; i++) {
         char c = text.s[i];
         if (c == '\r' || c == '\n' || c == '\t') {
@@ -375,7 +375,7 @@ static TempStr BuildTranslationPromptTemp(Str srcLang, Str dstLang, Str text) {
         srcLang, dstLang, normalized);
 }
 
-static void ReadPipeToStrBuilder(HANDLE hPipe, StrBuilder& out) {
+static void ReadPipeToStrBuilder(HANDLE hPipe, str::Builder& out) {
     char buf[4096];
     DWORD bytesRead = 0;
     while (ReadFile(hPipe, buf, sizeof(buf) - 1, &bytesRead, nullptr) && bytesRead > 0) {
@@ -383,7 +383,7 @@ static void ReadPipeToStrBuilder(HANDLE hPipe, StrBuilder& out) {
     }
 }
 
-static void AppendGrokTranslationText(Str line, StrBuilder& out) {
+static void AppendGrokTranslationText(Str line, str::Builder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, "type");
     if (eventType && str::Eq(eventType, "text")) {
         TempStr text = AIChatJsonStrTemp(line, "data");
@@ -393,7 +393,7 @@ static void AppendGrokTranslationText(Str line, StrBuilder& out) {
     }
 }
 
-static void AppendClaudeTranslationText(Str line, StrBuilder& out) {
+static void AppendClaudeTranslationText(Str line, str::Builder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, "type");
     if (!eventType) {
         return;
@@ -427,7 +427,7 @@ static void AppendClaudeTranslationText(Str line, StrBuilder& out) {
     }
 }
 
-static void AppendCodexTranslationText(Str line, StrBuilder& out) {
+static void AppendCodexTranslationText(Str line, str::Builder& out) {
     if (!line || line.s[0] != '{') {
         return;
     }
@@ -449,7 +449,7 @@ static void AppendCodexTranslationText(Str line, StrBuilder& out) {
     }
 }
 
-static void ParseTranslationOutput(AIChatBackend backend, Str output, StrBuilder& translationOut) {
+static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Builder& translationOut) {
     if (str::IsEmptyOrWhiteSpace(output)) {
         return;
     }
@@ -601,7 +601,7 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
         return false;
     }
 
-    StrBuilder output(4096);
+    str::Builder output(4096);
     ReadPipeToStrBuilder(launch.hReadPipe, output);
     CloseHandle(launch.hReadPipe);
     launch.hReadPipe = nullptr;
@@ -618,7 +618,7 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
 
     LogTranslation(backend, "<<< raw", ToStr(output));
 
-    StrBuilder translation(1024);
+    str::Builder translation(1024);
     ParseTranslationOutput(backend, Str(ToStr(output)), translation);
     LogTranslation(backend, "<<< parsed", ToStr(translation));
     if (translation.Size() == 0) {

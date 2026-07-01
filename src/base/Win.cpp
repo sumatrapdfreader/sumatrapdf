@@ -3536,7 +3536,7 @@ static HWND CreateTextViewWindow(WStr className, Str title, Str text) {
     SendMessageW(hwndEdit, EM_SETTABSTOPS, 1, (LPARAM)&tabStop);
 
     // edit control needs \r\n line endings
-    StrBuilder crlfText;
+    str::Builder crlfText;
     for (int i = 0; i < text.len; i++) {
         char c = text.s[i];
         if (c == '\n' && (i == 0 || text.s[i - 1] != '\r')) {

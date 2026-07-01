@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 extern Arena* gLogAllocator;
-extern StrBuilder* gLogBuf;
+extern str::Builder* gLogBuf;
 extern bool gLogToConsole;
 extern bool gLogToDebugger;
 extern bool gReducedLogging;

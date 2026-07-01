@@ -118,7 +118,7 @@ Printer::~Printer() {
     free((void*)bins);
 }
 
-static void AppendPrinterAttributes(StrBuilder& out, DWORD attr) {
+static void AppendPrinterAttributes(str::Builder& out, DWORD attr) {
     struct {
         DWORD flag;
         Str name;
@@ -147,7 +147,7 @@ static void AppendPrinterAttributes(StrBuilder& out, DWORD attr) {
     }
 }
 
-static void AppendPrinterStatus(StrBuilder& out, DWORD status) {
+static void AppendPrinterStatus(str::Builder& out, DWORD status) {
     struct {
         DWORD flag;
         Str name;
@@ -190,7 +190,7 @@ static void AppendPrinterStatus(StrBuilder& out, DWORD status) {
     }
 }
 
-static void AppendDeviceCapabilities(StrBuilder& out, const WCHAR* nameW, const WCHAR* portW) {
+static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, const WCHAR* portW) {
     // paper bins
     DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
     DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
@@ -306,7 +306,7 @@ static void AppendDeviceCapabilities(StrBuilder& out, const WCHAR* nameW, const 
     }
 }
 
-static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
+static void AppendDevModeInfo(str::Builder& out, DEVMODEW* dm) {
     if (!dm) {
         return;
     }
@@ -353,7 +353,7 @@ static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
     }
 }
 
-void GetPrintersInfo(StrBuilder& out) {
+void GetPrintersInfo(str::Builder& out) {
     PRINTER_INFO_2* info2Arr = nullptr;
     DWORD bufSize = 0;
     DWORD printersCount = 0;

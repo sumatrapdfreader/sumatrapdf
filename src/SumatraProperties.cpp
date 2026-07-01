@@ -43,7 +43,7 @@ struct PropertiesLayout {
     HWND hwndParent = nullptr;
     HWND hwndEdit = nullptr;
     Button* btnCopyToClipboard = nullptr;
-    StrBuilder propsText;
+    str::Builder propsText;
     Point initialPos;
 
     PropertiesLayout() = default;
@@ -278,7 +278,7 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
     return JoinTemp(&denials, ", ");
 }
 
-static void AppendProp(StrBuilder& out, Str key, Str value) {
+static void AppendProp(str::Builder& out, Str key, Str value) {
     if (!value) {
         return;
     }
@@ -338,7 +338,7 @@ static const Str propToName[] = {
 };
 // clang-format on
 
-static void AppendPropTranslated(StrBuilder& out, Str propName, Str val) {
+static void AppendPropTranslated(str::Builder& out, Str propName, Str val) {
     if (!propName || !val) return;
     if (str::Eq(propName, kPropImageFileSize)) {
         TempStr valFormatted = FormatFileSizeTransTemp(ParseInt64(val));
@@ -355,7 +355,7 @@ static void AppendPropTranslated(StrBuilder& out, Str propName, Str val) {
     AppendProp(out, trans, val);
 }
 
-static void AppendPdfFileStructure(StrBuilder& out, Str fstruct, Str filePath) {
+static void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath) {
     if (str::IsEmpty(fstruct)) {
         bool isPDF = str::EndsWithI(filePath, ".pdf");
         if (isPDF) {
@@ -405,7 +405,7 @@ static void GetAllProps(DocController* ctrl, Props& propsOut) {
     }
 }
 
-void AppendDateProp(StrBuilder& out, Str key, Str val, bool isPdfDate) {
+void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) {
     SYSTEMTIME date;
     int timeZone = 0;
     bool ok = false;
@@ -420,7 +420,7 @@ void AppendDateProp(StrBuilder& out, Str key, Str val, bool isPdfDate) {
     AppendProp(out, key, dateStr);
 }
 
-static void AddImageProperties(EngineBase* engine, int pageNo, StrBuilder& out) {
+static void AddImageProperties(EngineBase* engine, int pageNo, str::Builder& out) {
     // for image engines, show EXIF properties for the current image
     ReportIf(!IsEngineImages(engine));
     Props imageProps;
@@ -438,7 +438,7 @@ static void AddImageProperties(EngineBase* engine, int pageNo, StrBuilder& out) 
     }
 }
 
-static void GetPropsText(DocController* ctrl, StrBuilder& out) {
+static void GetPropsText(DocController* ctrl, str::Builder& out) {
     ReportIf(!ctrl);
 
     Str path = gPluginMode ? gPluginURL : Str(ctrl->GetFilePath());
@@ -552,7 +552,7 @@ static int GetPropertyLabelWidth(Str line, int* labelBytesOut) {
     return -1;
 }
 
-static void AlignPropertiesText(StrBuilder& text) {
+static void AlignPropertiesText(str::Builder& text) {
     int maxLabelWidth = 0;
     Str content = ToStr(text);
     for (int off = 0; off < content.len;) {
@@ -570,7 +570,7 @@ static void AlignPropertiesText(StrBuilder& text) {
         return;
     }
 
-    StrBuilder aligned;
+    str::Builder aligned;
     for (int off = 0; off < content.len;) {
         Str rest = Str(content.s + off, content.len - off);
         Str nl = str::FindChar(rest, '\n');
@@ -598,7 +598,7 @@ static void AlignPropertiesText(StrBuilder& text) {
 
 static void SetEditText(HWND hwndEdit, Str text) {
     // edit control needs \r\n line endings
-    StrBuilder crlfText;
+    str::Builder crlfText;
     for (int i = 0; i < text.len; i++) {
         char c = text.s[i];
         if (c == '\n' && (i == 0 || text.s[i - 1] != '\r')) {
@@ -769,7 +769,7 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 struct GetFontsResult {
     HWND hwnd;
-    StrBuilder fontsText;
+    str::Builder fontsText;
 };
 
 static void OnGetFontsFinished(GetFontsResult* result) {

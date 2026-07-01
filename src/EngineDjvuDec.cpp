@@ -680,7 +680,7 @@ bool EngineDjvuDec::SaveFileAs(Str dstPath) {
 // recursively collect word-level text + coords from the zone tree.
 // zone coords are top-down full-resolution page pixels; dpiF scales them to
 // mediabox (fileDPI) units.
-static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, StrBuilder& sb, Vec<Rect>& coords) {
+static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Vec<Rect>& coords) {
     if (!z) {
         return;
     }
@@ -718,7 +718,7 @@ PageTextUtf8 EngineDjvuDec::ExtractPageTextUtf8(int pageNo) {
         return {};
     }
     float dpiF = GetFileDPI() / (float)pages[pageNo - 1]->dpi;
-    StrBuilder sb;
+    str::Builder sb;
     Vec<Rect> coords;
     CollectZonesUtf8(z->root, dpiF, sb, coords);
     djvu_text_zones_destroy(ctx, z);
@@ -741,7 +741,7 @@ PageText EngineDjvuDec::ExtractPageText(int pageNo) {
     }
     // convert utf8 -> wchar, expanding per-byte coords to per-wchar coords
     PageText res;
-    StrBuilder ignore;
+    str::Builder ignore;
     res.text = strconv::Utf8ToWStr(u.text, nullptr);
     int wlen = res.text.len;
     Rect* wcoords = AllocArray<Rect>(wlen);

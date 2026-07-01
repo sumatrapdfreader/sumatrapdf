@@ -3,7 +3,7 @@
 
 struct ByteWriter {
     bool isLE = false;
-    StrBuilder d;
+    str::Builder d;
 
     ByteWriter(size_t sizeHint = 0);
     ByteWriter(const ByteWriter& o);

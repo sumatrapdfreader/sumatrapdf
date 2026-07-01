@@ -18,7 +18,7 @@ Mutex gLogMutex;
 // where we want to avoid allocator deadlocks by calling malloc()
 Arena* gLogAllocator = nullptr;
 
-StrBuilder* gLogBuf = nullptr;
+str::Builder* gLogBuf = nullptr;
 bool gLogToConsole = false;
 // we always log if IsDebuggerPresent()
 // this forces logging to debuger always
@@ -167,7 +167,7 @@ static void log2(Str s, bool always) {
 
     if (!gLogBuf) {
         gLogAllocator = ArenaNew();
-        gLogBuf = new StrBuilder(32 * 1024, gLogAllocator);
+        gLogBuf = new str::Builder(32 * 1024, gLogAllocator);
     } else {
         if (gLogBuf->Size() > kMaxLogBuf) {
             // TODO: use gLogBuf->Clear(), which doesn't free the allocated space

@@ -221,7 +221,7 @@ struct RenderCache {
     void RecordFinishedRequest(PageRenderRequest* req);
     // serialize the queue (in-progress + queued requests) as plain text, one
     // line per request, for the render-info debug window
-    void SerializeQueueState(StrBuilder& s);
+    void SerializeQueueState(str::Builder& s);
     // if the render-info debug window is shown, refresh it with the current
     // queue state. Cheap no-op when the window is hidden. Safe to call from
     // any thread (and while holding requestAccess).

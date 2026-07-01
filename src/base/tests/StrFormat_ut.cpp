@@ -118,7 +118,7 @@ static void testStrings() {
     // a string longer than the internal numeric buffer must be fine (%s is manual)
     Str long600;
     {
-        StrBuilder sb;
+        str::Builder sb;
         for (int i = 0; i < 600; i++) {
             sb.AppendChar('x');
         }

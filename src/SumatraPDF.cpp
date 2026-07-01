@@ -3255,7 +3255,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
 }
 
 static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
-    StrBuilder msg;
+    str::Builder msg;
     msg.Append(fmt(_TRA("Saved annotations to '%s'").s, path));
     NotificationCreateArgs nargs;
     nargs.hwndParent = hwndParent;
@@ -3266,7 +3266,7 @@ static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
 }
 
 static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, Str path, Str mupdfErr) {
-    StrBuilder msg;
+    str::Builder msg;
     msg.Append(fmt(_TRA("Saving of '%s' failed with: '%s'").s, path, mupdfErr));
     ShowWarningNotification(hwndParent, ToStr(msg), 0);
 }
@@ -3337,7 +3337,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR dstFileName[MAX_PATH + 1]{};
 
     OPENFILENAME ofn{};
-    StrBuilder fileFilter(256);
+    str::Builder fileFilter(256);
     fileFilter.Append(_TRA("PDF documents"));
     fileFilter.Append("\1*.pdf\1");
     fileFilter.Append("\1*.*\1");
@@ -3793,7 +3793,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 }
 
 // returns false if no filter has been appended
-static bool AppendFileFilterForDoc(DocController* ctrl, StrBuilder& fileFilter) {
+static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter) {
     // TODO: use ctrl->GetDefaultFileExt()
     Kind type = nullptr;
     if (ctrl->AsFixed()) {
@@ -3875,7 +3875,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    StrBuilder fileFilter(256);
+    str::Builder fileFilter(256);
     if (AppendFileFilterForDoc(ctrl, fileFilter)) {
         fileFilter.Append(fmt("\1*%s\1", defExt));
     }
@@ -4084,7 +4084,7 @@ static void RenameCurrentFile(MainWindow* win) {
     // methods too early on)
     Str defExt = ctrl->GetDefaultFileExt();
     TempWStr defExtW = ToWStrTemp(defExt);
-    StrBuilder fileFilter(256);
+    str::Builder fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
     fileFilter.Append(fmt("\1*%s\1", defExt));
@@ -4179,7 +4179,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    StrBuilder fileFilter;
+    str::Builder fileFilter;
     fileFilter.Append(fmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts")));
     str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
     WCHAR* fileFilterW = CWStrTemp(ToStr(fileFilter));
@@ -4396,7 +4396,7 @@ static TempWStr GetFileFilterTemp() {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    StrBuilder fileFilter;
+    str::Builder fileFilter;
     fileFilter.Append(_TRA("All supported documents"));
     fileFilter.AppendChar('\1');
     for (int i = 0; i < dimof(fileFormats); i++) {
@@ -6517,7 +6517,7 @@ static void ListPrintersShowResult(ListPrintersResult* d) {
 }
 
 static void ListPrintersThread(HWND* hwndPtr) {
-    StrBuilder out;
+    str::Builder out;
     GetPrintersInfo(out);
     auto d = new ListPrintersResult{*hwndPtr, str::Dup(out.CStr())};
     delete hwndPtr;
@@ -7043,7 +7043,7 @@ static void PasteImageFromClipboard(MainWindow* win) {
     }
 }
 
-static void TocItemToText(StrBuilder& s, TocItem* item, int level) {
+static void TocItemToText(str::Builder& s, TocItem* item, int level) {
     while (item) {
         if (item->title) {
             for (int i = 0; i < level; i++) {
@@ -7966,7 +7966,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 } else {
                     TocTree* tocTree = tab->ctrl->GetToc();
                     if (tocTree && tocTree->root) {
-                        StrBuilder s;
+                        str::Builder s;
                         TocItemToText(s, tocTree->root, 0);
                         tab->hwndPDFOutline = ShowTextInWindow("Document Outline", s.CStr(), &tab->hwndPDFOutline);
                     }
@@ -9667,7 +9667,7 @@ static TempStr CleanReadAloudTextTemp(Str text) {
         return {};
     }
 
-    StrBuilder out;
+    str::Builder out;
     int i = 0;
     bool lastWasSpace = false;
 
@@ -9944,7 +9944,7 @@ static void ReadAloudStartFromViewportTop(WindowTab* tab, Str errMsg) {
         return;
     }
 
-    StrBuilder cleaned;
+    str::Builder cleaned;
     ReadAloudHighlightMap map{};
     if (!ReadAloudHighlightBuildFromDocument(dm, startPage, startGlyph, &map, cleaned)) {
         logf("ReadAloud: StartFromViewportTop: BuildFromDocument failed (page=%d glyph=%d)\n", startPage, startGlyph);
@@ -9962,7 +9962,7 @@ static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
         return;
     }
 
-    StrBuilder cleaned;
+    str::Builder cleaned;
     ReadAloudHighlightMap map{};
     if (!ReadAloudHighlightBuildFromTextSelection(dm->textSelection, &map, cleaned)) {
         bool isTextOnlySelection = false;
@@ -10018,7 +10018,7 @@ static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg)
         return;
     }
 
-    StrBuilder cleaned;
+    str::Builder cleaned;
     ReadAloudHighlightMap map{};
     if (!ReadAloudHighlightBuildFromDocument(dm, startPage, startGlyph, &map, cleaned)) {
         logf("ReadAloud: StartFromCursor: BuildFromDocument failed (page=%d glyph=%d)\n", startPage, startGlyph);
@@ -10667,7 +10667,7 @@ static TempStr GetFileSizeAsStrTemp(Str path) {
     return str::FormatFileSizeTemp(fileSize);
 }
 
-void GetProgramInfo(StrBuilder& s) {
+void GetProgramInfo(str::Builder& s) {
     s.Append(fmt("Crash file: %s\r\n", gCrashFilePath));
 
     TempStr exePath = GetSelfExePathTemp();
@@ -10758,7 +10758,7 @@ void ShowCrashHandlerMessage() {
 }
 
 Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOut) {
-    StrBuilder out;
+    str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');

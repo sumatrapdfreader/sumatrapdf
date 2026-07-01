@@ -216,7 +216,7 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
         // fall through to the DDE grammar path if WM_COPYDATA wasn't handled
     }
 
-    StrBuilder cmd;
+    str::Builder cmd;
     cmd.Append(fmt("[Open(\"%s\", %d, 1, 0)]", fullPath, newWindow));
     if (i.namedDest && isFirstWin) {
         cmd.Append(fmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath, i.namedDest));

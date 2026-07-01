@@ -136,7 +136,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     // matching. Collapse runs of whitespace to a single space so downstream
     // checks (the "et al." literal, walk-back stop conditions) work against
     // normalized text. Line breaks also become a single space.
-    WStrBuilder chunk;
+    wstr::Builder chunk;
     Vec<int> chunkGlyphs;
     int cursorChunkPos = -1;
     int prevY = INT_MIN;
@@ -340,7 +340,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     }
 
     // Build surname string.
-    WStrBuilder surnameW;
+    wstr::Builder surnameW;
     for (int j = surnameStart; j < surnameEnd; j++) {
         surnameW.AppendChar(s.s[j]);
     }
@@ -526,8 +526,8 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     // hyphen, accept the Unicode figure/en/em dash and minus sign, since
     // typeset ranges ("9–14") use an en-dash, not '-'.
     auto isListChar = [](WCHAR c) {
-        return iswdigit(c) || c == L' ' || c == L'\t' || c == L',' || c == L'-' || c == L'\x2012' ||
-               c == L'\x2013' || c == L'\x2014' || c == L'\x2212';
+        return iswdigit(c) || c == L' ' || c == L'\t' || c == L',' || c == L'-' || c == L'\x2012' || c == L'\x2013' ||
+               c == L'\x2014' || c == L'\x2212';
     };
 
     int blTol = (lineTol / 2 > 3) ? lineTol / 2 : 3;

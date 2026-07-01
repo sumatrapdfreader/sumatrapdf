@@ -44,7 +44,7 @@ static void StrReplaceTest() {
 }
 
 static void StrSeqNumTest() {
-    StrBuilder b;
+    str::Builder b;
     SeqStrNumAppend(&b, "foo", 10);
     SeqStrNumAppend(&b, "bar", -3);
     SeqStrNumAppend(&b, "baz", 0x1234);
@@ -170,7 +170,7 @@ static void StrUrlExtractTest() {
 void strStrTest() {
     {
         // verify that we use buf for initial allocations
-        StrBuilder str;
+        str::Builder str;
         uintptr_t buf = (uintptr_t)str.begin();
         str.Append("blah");
         utassert(str.Contains(StrL("blah")));
@@ -190,13 +190,13 @@ void strStrTest() {
         utassert(str.Contains(StrL("ahlo")));
         utassert(buf == buf2);
         str.Reset();
-        for (int i = 0; i < StrBuilder::kBufChars + 4; i++) {
+        for (int i = 0; i < str::Builder::kBufChars + 4; i++) {
             str.AppendChar((char)i);
         }
         buf2 = (uintptr_t)str.begin();
         // we should have allocated buf on the heap
         utassert(buf != buf2);
-        for (int i = 0; i < StrBuilder::kBufChars + 4; i++) {
+        for (int i = 0; i < str::Builder::kBufChars + 4; i++) {
             char c = str.at(i);
             utassert(c == (char)i);
         }
@@ -204,7 +204,7 @@ void strStrTest() {
 
     {
         // verify that initialCapacity hint works
-        StrBuilder str(1024);
+        str::Builder str(1024);
         uintptr_t buf = 0;
 
         for (int i = 0; i < 50; i++) {

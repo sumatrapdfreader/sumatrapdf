@@ -70,7 +70,7 @@ static SeqStrings gArgNames =
 // @gen-end flags
 
 void ShowPrintersDialog() {
-    StrBuilder out;
+    str::Builder out;
 
     gLogToConsole = true;
     RedirectIOToExistingConsole();

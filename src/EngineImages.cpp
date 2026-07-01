@@ -1369,7 +1369,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
             // each byte: 0=does not exist, 1=Y, 2=Cb, 3=Cr, 4=R, 5=G, 6=B
             static const Str compNames[] = {StrL(""),  StrL("Y"), StrL("Cb"), StrL("Cr"),
                                             StrL("R"), StrL("G"), StrL("B")};
-            StrBuilder s;
+            str::Builder s;
             u8* data = (u8*)item->value;
             for (ULONG i = 0; i < item->length; i++) {
                 u8 c = data[i];
@@ -2356,7 +2356,7 @@ TempStr EngineCbx::GetPropertyTemp(Str name) {
 void EngineCbx::GetProperties(StrVec& keyValOut) {
     EngineBase::GetProperties(keyValOut);
 
-    StrBuilder filesStr;
+    str::Builder filesStr;
     auto& fileInfos = cbxArchive->GetFileInfos();
     size_t n = fileInfos.size();
     for (size_t i = 0; i < n; i++) {

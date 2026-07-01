@@ -3,7 +3,7 @@
 
 class ZipCreator {
     ISequentialStream* stream;
-    StrBuilder centraldir;
+    str::Builder centraldir;
     size_t bytesWritten;
     size_t fileCount;
 

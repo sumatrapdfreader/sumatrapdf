@@ -80,7 +80,7 @@ struct ControlRequest {
     u16 cmd = 0;
     u16 reqId = 0;
     Vec<ControlArg*> args;
-    StrBuilder results;
+    str::Builder results;
     HANDLE done = nullptr;
 };
 
@@ -128,26 +128,26 @@ struct PacketReader {
     }
 };
 
-static void AppendU16(StrBuilder& s, u16 v) {
+static void AppendU16(str::Builder& s, u16 v) {
     u8 buf[2] = {(u8)(v & 0xff), (u8)((v >> 8) & 0xff)};
     s.AppendSlice(ByteSlice(buf, sizeof(buf)));
 }
 
-static void AppendU32(StrBuilder& s, u32 v) {
+static void AppendU32(str::Builder& s, u32 v) {
     u8 buf[4] = {(u8)(v & 0xff), (u8)((v >> 8) & 0xff), (u8)((v >> 16) & 0xff), (u8)((v >> 24) & 0xff)};
     s.AppendSlice(ByteSlice(buf, sizeof(buf)));
 }
 
-static void AppendArgEnd(StrBuilder& s) {
+static void AppendArgEnd(str::Builder& s) {
     AppendU16(s, (u16)ControlArgType::End);
 }
 
-static void AppendArgInt(StrBuilder& s, i32 v) {
+static void AppendArgInt(str::Builder& s, i32 v) {
     AppendU16(s, (u16)ControlArgType::Int32);
     AppendU32(s, (u32)v);
 }
 
-static void AppendArgString(StrBuilder& s, Str str) {
+static void AppendArgString(str::Builder& s, Str str) {
     if (!str) {
         str = StrL("");
     }
@@ -569,11 +569,11 @@ static ControlRequest* ReadControlRequest(HANDLE h) {
 }
 
 static bool WriteControlResponse(HANDLE h, ControlRequest* req) {
-    StrBuilder payload;
+    str::Builder payload;
     AppendU16(payload, req->reqId);
     payload.AppendSlice(req->results.AsByteSlice());
 
-    StrBuilder packet;
+    str::Builder packet;
     AppendU32(packet, (u32)payload.size());
     packet.AppendSlice(payload.AsByteSlice());
     return WriteExact(h, packet.LendData().s, (DWORD)packet.size());

@@ -175,7 +175,7 @@ void ParseTip(ParsedTip& tip, Str s) {
     if (!s) {
         return;
     }
-    StrBuilder expanded;
+    str::Builder expanded;
     Str sp = s;
     // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands)
     while (!str::IsEmpty(sp)) {
@@ -361,7 +361,7 @@ bool TipHasLinks(ParsedTip& tip) {
 }
 
 TempStr TipPlainTextTemp(ParsedTip& tip) {
-    StrBuilder sb;
+    str::Builder sb;
     for (int i = 0; i < tip.words.Size(); i++) {
         if (i > 0) {
             sb.AppendChar(' ');
@@ -795,7 +795,7 @@ static void OnSizeAbout(HWND hwnd) {
 }
 
 static void CopyAboutInfoToClipboard() {
-    StrBuilder info(512);
+    str::Builder info(512);
     TempStr ver = GetAppVersionTemp();
     info.Append(fmt("%s %s\r\n", Str(kAppName), Str(ver)));
     for (int i = info.Size() - 2; i > 0; i--) {

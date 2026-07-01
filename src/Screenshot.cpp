@@ -1166,7 +1166,7 @@ void UnregisterScreenshotHotkey(HWND hwnd) {
 
 // serialize VK code + modifiers to a shortcut string like "Ctrl+Shift+F5"
 static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
-    StrBuilder s;
+    str::Builder s;
     if (ctrl) {
         s.Append("Ctrl+");
     }

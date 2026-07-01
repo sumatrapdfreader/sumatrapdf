@@ -710,7 +710,7 @@ static void AddSeenGlyph(Vec<SeenGlyph>& seen, int rune, const Rect& r) {
     seen.Append({rune, r});
 }
 
-static void AddChar(fz_stext_line* line, fz_stext_char* c, WStrBuilder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
+static void AddChar(fz_stext_line* line, fz_stext_char* c, wstr::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
     int rune = c->c;
@@ -755,7 +755,7 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, WStrBuilder& s, Vec<R
     }
 }
 
-static void AddLineSep(WStrBuilder& s, Vec<Rect>& rects, WStr lineSep) {
+static void AddLineSep(wstr::Builder& s, Vec<Rect>& rects, WStr lineSep) {
     if (!lineSep) {
         return;
     }
@@ -773,7 +773,7 @@ static void AddLineSep(WStrBuilder& s, Vec<Rect>& rects, WStr lineSep) {
 
 // UTF-8 variant: append `c` as up to 4 UTF-8 bytes to `s` and the same
 // rect `r` for each byte, so rects.size() == s.size() holds.
-static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, StrBuilder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
+static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
     int rune = c->c;
@@ -809,7 +809,7 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, StrBuilder& s, Vec<Rec
     AddSeenGlyph(seen, rune, r);
 }
 
-static void AddLineSepUtf8(StrBuilder& s, Vec<Rect>& rects, Str lineSep) {
+static void AddLineSepUtf8(str::Builder& s, Vec<Rect>& rects, Str lineSep) {
     size_t lineSepLen = (size_t)lineSep.len;
     if (lineSepLen == 0) {
         return;
@@ -827,7 +827,7 @@ static void AddLineSepUtf8(StrBuilder& s, Vec<Rect>& rects, Str lineSep) {
 
 static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
     Str lineSep = StrL("\n");
-    StrBuilder content;
+    str::Builder content;
     Vec<Rect> rects;
     Vec<SeenGlyph> seen;
 
@@ -860,7 +860,7 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
 
 static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
     const WStr lineSep = WStrL(L"\n");
-    WStrBuilder content;
+    wstr::Builder content;
     // coordsOut is optional but we ask for it by default so we simplify the code
     // by always calculating it
     Vec<Rect> rects;
@@ -1798,7 +1798,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
-        StrBuilder number;
+        str::Builder number;
         number.AppendChar('A' + (pageNo - 1) % 26);
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
             number.AppendChar(number.at(0));
@@ -2278,7 +2278,7 @@ static ByteSlice TxtFileToHTML(Str path) {
         return {};
     }
 
-    StrBuilder d;
+    str::Builder d;
     d.Append(R"(<html>
     <head>
 <style>
@@ -4168,7 +4168,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         // legitimate (e.g. a font with no Encoding) and handled below
         ReportIf(!name.s || !type.s || !encoding.s);
 
-        StrBuilder info;
+        str::Builder info;
         if (name.s[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name.s, -1, nullptr, 0)) {
             TempStr s = strconv::ToMultiByteTemp(name, 936, CP_UTF8);
             info.Append(s);
@@ -4335,7 +4335,7 @@ static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     return str::DupTemp(Str(buf, (int)((size_t)n - 1)));
 }
 
-static void AppendSigDictText(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, Str label, pdf_obj* key) {
+static void AppendSigDictText(fz_context* ctx, str::Builder& s, pdf_obj* sigDict, Str label, pdf_obj* key) {
     const char* val = nullptr;
     fz_try(ctx) {
         pdf_obj* obj = pdf_dict_get(ctx, sigDict, key);
@@ -4352,7 +4352,7 @@ static void AppendSigDictText(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, 
     }
 }
 
-static void AppendSigDictDate(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, Str label, pdf_obj* key) {
+static void AppendSigDictDate(fz_context* ctx, str::Builder& s, pdf_obj* sigDict, Str label, pdf_obj* key) {
     int64_t secs = 0;
     fz_try(ctx) {
         pdf_obj* obj = pdf_dict_get(ctx, sigDict, key);
@@ -4375,7 +4375,7 @@ static void AppendSigDictDate(fz_context* ctx, StrBuilder& s, pdf_obj* sigDict, 
     s.Append(fmt("  %s: %s\n", Str(label), Str(buf)));
 }
 
-static void AppendSignatureInfo(fz_context* ctx, StrBuilder& s, pdf_pkcs7_verifier* verifier, pdf_document* pdfdoc,
+static void AppendSignatureInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier, pdf_document* pdfdoc,
                                 pdf_annot* widget, int sigNo, int pageNo) {
     if (!s.IsEmpty()) {
         s.AppendChar('\n');
@@ -4463,7 +4463,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
     // for each signature widget, pulls signer DN + cert/digest verdict via
     // the Windows CryptoAPI pdf_pkcs7_verifier.
     if (pdfdoc && pdf_count_signatures(ctx, pdfdoc) > 0) {
-        StrBuilder sigs;
+        str::Builder sigs;
         pdf_pkcs7_verifier* verifier = nullptr;
         pdf_page* page = nullptr;
         fz_var(verifier);
@@ -4503,7 +4503,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
         ArchiveExtractProgressCb emptyCb;
         MultiFormatArchive* zip = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
         if (zip) {
-            StrBuilder filesStr;
+            str::Builder filesStr;
             auto& fileInfos = zip->GetFileInfos();
             size_t n = fileInfos.size();
             for (size_t i = 0; i < n; i++) {

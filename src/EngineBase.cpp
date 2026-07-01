@@ -509,7 +509,7 @@ WStr EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     WStr text = pt->text;
     if (text.s) {
         text.len = pt->len;
-        // WStrBuilder-backed buffers reserve a NUL slot at .len
+        // wstr::Builder-backed buffers reserve a NUL slot at .len
         if (text.len >= 0) {
             text.s[text.len] = 0;
         }

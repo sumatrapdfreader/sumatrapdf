@@ -1257,7 +1257,7 @@ static void ParseCustomColors(BgColorDlgData* data) {
 }
 
 static void SaveCustomColors(BgColorDlgData* data) {
-    StrBuilder buf;
+    str::Builder buf;
     for (int i = 0; i < kMaxCustomColors; i++) {
         if (!data->customColorSet[i]) {
             continue;

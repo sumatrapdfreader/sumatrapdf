@@ -5,17 +5,17 @@ namespace dbghelp {
 
 bool Initialize(WStr symPath, bool force);
 bool HasSymbols();
-void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact);
+void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact);
 void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump);
-void GetThreadCallstack(StrBuilder& s, DWORD threadId);
-bool GetCurrentThreadCallstack(StrBuilder& s);
+void GetThreadCallstack(str::Builder& s, DWORD threadId);
+bool GetCurrentThreadCallstack(str::Builder& s);
 void LogCallstack();
 void RememberCallstackLogs();
 TempStr GetCurrentThreadCallstackTemp();
 void FreeCallstackLogs();
 ByteSlice GetCallstacks();
-void GetAllThreadsCallstacks(StrBuilder& s);
-void GetAllThreadsCallstacksExcept(StrBuilder& s, DWORD skipThreadId);
-void GetExceptionInfo(StrBuilder& s, EXCEPTION_POINTERS* excPointers);
+void GetAllThreadsCallstacks(str::Builder& s);
+void GetAllThreadsCallstacksExcept(str::Builder& s, DWORD skipThreadId);
+void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers);
 
 } // namespace dbghelp

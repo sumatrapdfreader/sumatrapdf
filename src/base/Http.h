@@ -3,7 +3,7 @@
 
 struct HttpRsp {
     Str url;
-    StrBuilder data;
+    str::Builder data;
     DWORD error = (DWORD)-1;
     DWORD httpStatusCode = (DWORD)-1;
 
@@ -17,6 +17,6 @@ struct HttpProgress {
 
 bool IsHttpRspOk(const HttpRsp*);
 
-bool HttpPost(Str server, int port, Str url, StrBuilder* headers, StrBuilder* data);
+bool HttpPost(Str server, int port, Str url, str::Builder* headers, str::Builder* data);
 bool HttpGet(Str url, HttpRsp* rspOut);
 bool HttpGetToFile(Str url, Str destFilePath, const Func1<HttpProgress*>& cbProgress);

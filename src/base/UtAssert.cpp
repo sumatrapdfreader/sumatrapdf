@@ -56,7 +56,7 @@ void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
     OutputDebugStringA("\n");
     if (gForAi) {
         printf("Assertion failed: %.*s\n%.*s@%d\n", exprStr.len, exprStr.s, file.len, file.s, lineNo);
-        StrBuilder s;
+        str::Builder s;
         if (dbghelp::GetCurrentThreadCallstack(s)) {
             PrintStdout(ToStr(s));
         } else {

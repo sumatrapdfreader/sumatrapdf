@@ -366,7 +366,7 @@ bool CouldBePDFDoc(WindowTab* tab) {
 static TempStr FormatParamTemp(Str arg, WindowTab* tab) {
     Str path = tab->filePath ? tab->filePath : StrL("");
 
-    StrBuilder out;
+    str::Builder out;
     for (int i = 0; i < arg.len; i++) {
         if (arg.s[i] != '%') {
             out.AppendChar(arg.s[i]);
@@ -445,7 +445,7 @@ bool PathMatchFilter(Str path, Str filter) {
 static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
     Str s = cmdLine;
     str::SkipChar(s, ' ');
-    StrBuilder exe;
+    str::Builder exe;
     if (!str::IsEmpty(s) && s.s[0] == '"') {
         s = Str(s.s + 1, s.len - 1);
         int i = 0;

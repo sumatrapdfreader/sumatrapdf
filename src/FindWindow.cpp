@@ -818,7 +818,7 @@ void UpdateFindWindowTheme(MainWindow* win) {
 }
 
 Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
-    StrBuilder out;
+    str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
         out.AppendChar('\n');
