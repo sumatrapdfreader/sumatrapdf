@@ -96,7 +96,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
         newPath.Append(entry);
     }
 
-    if (!WriteRegExpandSz(root, keyName, StrL("Path"), newPath.Get())) {
+    if (!WriteRegExpandSz(root, keyName, StrL("Path"), ToStr(newPath))) {
         return;
     }
     logf("RemoveInstallDirFromPath: removed '%s' from PATH\n", installDir);
@@ -415,7 +415,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     if (cli->allUsers) {
         cmdLine.Append(" -all-users");
     }
-    Str cl = cmdLine.Get();
+    Str cl = ToStr(cmdLine);
     if (cli->allUsers) {
         logf("LaunchElevated('%s', '%s')\n", installerTempPath, cl);
         ok = LaunchElevated(installerTempPath, cl);

@@ -3258,14 +3258,14 @@ static void ShowSavedAnnotationsNotification(HWND hwndParent, Str path) {
     nargs.hwndParent = hwndParent;
     nargs.font = GetDefaultGuiFont();
     nargs.timeoutMs = 5000;
-    nargs.msg = msg.Get();
+    nargs.msg = ToStr(msg);
     ShowNotification(nargs);
 }
 
 static void ShowSavedAnnotationsFailedNotification(HWND hwndParent, Str path, Str mupdfErr) {
     StrBuilder msg;
     msg.Append(fmt(_TRA("Saving of '%s' failed with: '%s'").s, path, mupdfErr));
-    ShowWarningNotification(hwndParent, msg.Get(), 0);
+    ShowWarningNotification(hwndParent, ToStr(msg), 0);
 }
 
 struct ShowErrorData {
@@ -3339,7 +3339,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     fileFilter.Append("\1*.pdf\1");
     fileFilter.Append("\1*.*\1");
     str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
-    TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
+    WCHAR* fileFilterW = CWStrTemp(ToStr(fileFilter));
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
@@ -3351,7 +3351,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     ofn.hwndOwner = tab->win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilterW.s;
+    ofn.lpstrFilter = fileFilterW;
     ofn.nFilterIndex = 1;
     // ofn.lpstrTitle = _TRA("Rename To");
     // ofn.lpstrInitialDir = initDir;
@@ -3909,7 +3909,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter).s;
+    ofn.lpstrFilter = CWStrTemp(ToStr(fileFilter));
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
     if (len(defExt) > 0 && defExt.s[0] == '.') {
@@ -4085,7 +4085,7 @@ static void RenameCurrentFile(MainWindow* win) {
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     ReportIf(!ok);
     fileFilter.Append(fmt("\1*%s\1", defExt));
-    str::TransCharsInPlace(fileFilter.Get(), StrL("\1"), StrL("\0"));
+    str::TransCharsInPlace(ToStr(fileFilter), StrL("\1"), StrL("\0"));
 
     WCHAR dstFilePathW[MAX_PATH];
     auto baseName = path::GetBaseNameTemp(srcPath);
@@ -4104,7 +4104,7 @@ static void RenameCurrentFile(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFilePathW;
     ofn.nMaxFile = dimof(dstFilePathW);
-    ofn.lpstrFilter = ToWStrTempFromBuilder(fileFilter).s;
+    ofn.lpstrFilter = CWStrTemp(ToStr(fileFilter));
     ofn.nFilterIndex = 1;
     // note: the other two dialogs are named "Open" and "Save As"
     auto s = _TRA("Rename To");
@@ -4179,14 +4179,14 @@ static void CreateLnkShortcut(MainWindow* win) {
     StrBuilder fileFilter;
     fileFilter.Append(fmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts")));
     str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
-    TempWStr fileFilterW = ToWStrTempFromBuilder(fileFilter);
+    WCHAR* fileFilterW = CWStrTemp(ToStr(fileFilter));
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilterW.s;
+    ofn.lpstrFilter = fileFilterW;
     ofn.nFilterIndex = 1;
     ofn.lpstrDefExt = L"lnk";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
@@ -4415,7 +4415,7 @@ static TempWStr GetFileFilterTemp() {
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
     str::TransCharsInPlace(fileFilter.CStr(), StrL("\1"), StrL("\0"));
-    return ToWStrTempFromBuilder(fileFilter);
+    return ToWStrTemp(ToStr(fileFilter));
 }
 
 static void OpenFile(MainWindow* win) {
@@ -9949,7 +9949,7 @@ static void ReadAloudStartFromViewportTop(WindowTab* tab, Str errMsg) {
         return;
     }
 
-    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
+    ReadAloudStartText(tab, ToStr(cleaned), &map, 0, errMsg);
 }
 
 static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
@@ -9969,7 +9969,7 @@ static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
         return;
     }
 
-    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
+    ReadAloudStartText(tab, ToStr(cleaned), &map, 0, errMsg);
 }
 
 static void ReadAloudInTab(WindowTab* tab) {
@@ -10023,7 +10023,7 @@ static void ReadAloudStartFromCursor(WindowTab* tab, Point screenPt, Str errMsg)
         return;
     }
 
-    ReadAloudStartText(tab, cleaned.Get(), &map, 0, errMsg);
+    ReadAloudStartText(tab, ToStr(cleaned), &map, 0, errMsg);
 }
 
 static void ReadAloudFromCursorInTab(WindowTab* tab, Point screenPt) {
@@ -10699,7 +10699,7 @@ void GetProgramInfo(StrBuilder& s) {
         }
     }
     if (gIsDebugBuild) {
-        if (!str::Contains(s.Get(), StrL(" (dbg)"))) {
+        if (!str::Contains(ToStr(s), StrL(" (dbg)"))) {
             s.Append(" (dbg)");
         }
     }

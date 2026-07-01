@@ -49,7 +49,7 @@ static void StrSeqNumTest() {
     SeqStrNumAppend(&b, "bar", -3);
     SeqStrNumAppend(&b, "baz", 0x1234);
     SeqStrNumFinish(&b);
-    SeqStrNum seq = b.Get().s;
+    SeqStrNum seq = ToStr(b).s;
 
     i64 num = 0;
     utassert(0 == SeqStrNumIndex(seq, "foo", &num));
@@ -182,10 +182,10 @@ void strStrTest() {
 
         uintptr_t buf2 = (uintptr_t)str.begin();
         utassert(buf == buf2);
-        utassert(str::Eq(str.Get(), "blah"));
+        utassert(str::Eq(ToStr(str), "blah"));
         str.Append("lost");
         buf2 = (uintptr_t)str.begin();
-        utassert(str::Eq(str.Get(), "blahlost"));
+        utassert(str::Eq(ToStr(str), "blahlost"));
         utassert(str.Contains(StrL("blahlost")));
         utassert(str.Contains(StrL("ahlo")));
         utassert(buf == buf2);

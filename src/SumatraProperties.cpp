@@ -554,7 +554,7 @@ static int GetPropertyLabelWidth(Str line, int* labelBytesOut) {
 
 static void AlignPropertiesText(StrBuilder& text) {
     int maxLabelWidth = 0;
-    Str content = text.Get();
+    Str content = ToStr(text);
     for (int off = 0; off < content.len;) {
         Str rest = Str(content.s + off, content.len - off);
         Str nl = str::FindChar(rest, '\n');
@@ -593,7 +593,7 @@ static void AlignPropertiesText(StrBuilder& text) {
         }
         off += lineLen + (nl.s ? 1 : 0);
     }
-    text.Set(aligned.Get());
+    text.Set(ToStr(aligned));
 }
 
 static void SetEditText(HWND hwndEdit, Str text) {
@@ -606,7 +606,7 @@ static void SetEditText(HWND hwndEdit, Str text) {
         }
         crlfText.AppendChar(c);
     }
-    HwndSetText(hwndEdit, crlfText.Get());
+    HwndSetText(hwndEdit, ToStr(crlfText));
     SendMessageW(hwndEdit, EM_SETSEL, 0, 0);
 }
 
@@ -626,7 +626,7 @@ static void SizeToContent(PropertiesLayout* pl) {
     HGDIOBJ origFont = SelectObject(hdcEdit, font);
     int maxLineDx = 0;
     int nLines = 0;
-    Str text = pl->propsText.Get();
+    Str text = ToStr(pl->propsText);
     for (int off = 0; off < text.len;) {
         Str rest = Str(text.s + off, text.len - off);
         Str nl = str::FindChar(rest, '\n');
@@ -777,7 +777,7 @@ static void OnGetFontsFinished(GetFontsResult* result) {
     if (pl) {
         // remove "Getting fonts information..." line
         Str marker = _TRA("Getting fonts information...");
-        Str props = pl->propsText.Get();
+        Str props = ToStr(pl->propsText);
         int pos = str::IndexOf(props, marker);
         if (pos >= 0) {
             if (pos > 0 && props.s[pos - 1] == '\n') {
@@ -785,8 +785,8 @@ static void OnGetFontsFinished(GetFontsResult* result) {
             }
             pl->propsText.RemoveAt(pos, pl->propsText.Size() - pos);
         }
-        pl->propsText.Append(result->fontsText.Get());
-        SetEditText(pl->hwndEdit, pl->propsText.Get());
+        pl->propsText.Append(ToStr(result->fontsText));
+        SetEditText(pl->hwndEdit, ToStr(pl->propsText));
         SizeToContent(pl);
     }
     delete result;
@@ -890,7 +890,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         b->onClick = MkFunc0(CopyPropertiesToClipboard, layoutData);
     }
 
-    SetEditText(hwndEdit, layoutData->propsText.Get());
+    SetEditText(hwndEdit, ToStr(layoutData->propsText));
 
     SizeToContent(layoutData);
     LayoutButtons(layoutData);

@@ -537,7 +537,7 @@ static void ParseMetadata(Str content, Props& props) {
 }
 
 Str EpubDoc::GetHtmlData() const {
-    return htmlData.Get();
+    return ToStr(htmlData);
 }
 
 ByteSlice* EpubDoc::GetImageData(Str fileName, Str pagePath) {
@@ -1029,7 +1029,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
 }
 
 ByteSlice Fb2Doc::GetXmlData() const {
-    Str s = xmlData.Get();
+    Str s = ToStr(xmlData);
     return {(u8*)s.s, xmlData.size()};
 }
 
@@ -1265,7 +1265,7 @@ bool PalmDoc::Load() {
 }
 
 Str PalmDoc::GetHtmlData() const {
-    return htmlData.Get();
+    return ToStr(htmlData);
 }
 
 TempStr PalmDoc::GetPropertyTemp(Str) const {
@@ -1708,7 +1708,7 @@ bool TxtDoc::Load() {
 }
 
 Str TxtDoc::GetHtmlData() const {
-    return htmlData.Get();
+    return ToStr(htmlData);
 }
 
 TempStr TxtDoc::GetPropertyTemp(Str) const {

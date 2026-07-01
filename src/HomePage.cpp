@@ -196,7 +196,7 @@ void ParseTip(ParsedTip& tip, Str s) {
     }
 
     // second pass: split into words, detecting [text](link) markdown links
-    Str p = expanded.Get();
+    Str p = ToStr(expanded);
     while (!str::IsEmpty(p)) {
         SkipTipWhitespace(p);
         if (str::IsEmpty(p)) {
@@ -368,7 +368,7 @@ TempStr TipPlainTextTemp(ParsedTip& tip) {
         }
         sb.Append(tip.words[i].text);
     }
-    return str::DupTemp(sb.Get());
+    return str::DupTemp(ToStr(sb));
 }
 
 static ParsedTip* gParsedTips = nullptr;

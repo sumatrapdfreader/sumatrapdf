@@ -340,7 +340,7 @@ static bool DownloadAndUnzipSymbols(Str symDir) {
         log("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
     }
 
-    bool ok = ExtractSymbols((const u8*)rsp.data.Get().s, rsp.data.size(), symDir, gCrashHandlerAllocator);
+    bool ok = ExtractSymbols((const u8*)ToStr(rsp.data).s, rsp.data.size(), symDir, gCrashHandlerAllocator);
     if (!ok) {
         log("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
     }

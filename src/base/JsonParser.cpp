@@ -96,8 +96,8 @@ static int ParseString(ParseArgs& args, Str data, int off) {
     StrBuilder string;
     int end = ExtractString(string, data, off);
     if (end >= 0) {
-        Str path = args.path.Get();
-        Str value = string.Get();
+        Str path = ToStr(args.path);
+        Str value = ToStr(string);
         args.canceled = !args.visitor->Visit(path, value, Type::String);
     }
     return end;
@@ -137,7 +137,7 @@ static int ParseNumber(ParseArgs& args, Str data, int off) {
     }
 
     TempStr number = str::DupTemp(Str(data.s + start, off - start));
-    Str path = args.path.Get();
+    Str path = ToStr(args.path);
     args.canceled = !args.visitor->Visit(path, number, Type::Number);
     return off;
 }
@@ -213,7 +213,7 @@ static int ParseKeyword(ParseArgs& args, Str data, int off, Str keyword, Type ty
     if (!str::StartsWith(rest, keyword)) {
         return kParseFail;
     }
-    Str path = args.path.Get();
+    Str path = ToStr(args.path);
     args.canceled = !args.visitor->Visit(path, keyword, type);
     return off + keyword.len;
 }

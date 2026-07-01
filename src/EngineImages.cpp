@@ -1384,7 +1384,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
                 }
             }
             if (s.size() > 0) {
-                AddProp(keyValOut, kPropComponentsConfig, s.Get());
+                AddProp(keyValOut, kPropComponentsConfig, ToStr(s));
             }
             free(item);
         }
@@ -2371,8 +2371,8 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
         filesStr.Append(fi->name);
     }
     // show paths in Windows style (#5543)
-    str::TransCharsInPlace(filesStr.Get(), StrL("/"), StrL("\\"));
-    AddProp(keyValOut, kPropFiles, filesStr.Get());
+    str::TransCharsInPlace(ToStr(filesStr), StrL("/"), StrL("\\"));
+    AddProp(keyValOut, kPropFiles, ToStr(filesStr));
 }
 
 Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {

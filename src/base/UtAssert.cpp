@@ -58,7 +58,7 @@ void utassert_func(bool ok, Str exprStr, Str file, int lineNo) {
         printf("Assertion failed: %.*s\n%.*s@%d\n", exprStr.len, exprStr.s, file.len, file.s, lineNo);
         StrBuilder s;
         if (dbghelp::GetCurrentThreadCallstack(s)) {
-            PrintStdout(s.Get());
+            PrintStdout(ToStr(s));
         } else {
             printf("failed to get callstack\n");
         }

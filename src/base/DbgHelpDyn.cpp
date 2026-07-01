@@ -479,7 +479,7 @@ TempStr GetCurrentThreadCallstackTemp() {
     if (!GetCurrentThreadCallstack(s)) {
         return "";
     }
-    return str::DupTemp(s.Get());
+    return str::DupTemp(ToStr(s));
 }
 
 // start remembering callstack logs done with LogCallstack()
@@ -497,7 +497,7 @@ ByteSlice GetCallstacks() {
     if (!gCallstackLogs) {
         return {};
     }
-    char* s = str::Dup(gCallstackLogs->Get()).s;
+    char* s = str::Dup(ToStr(*gCallstackLogs)).s;
     return ToByteSlice(s);
 }
 
@@ -509,7 +509,7 @@ void LogCallstack() {
 
     s.Append("\n");
     if (gCallstackLogs) {
-        gCallstackLogs->Append(s.Get());
+        gCallstackLogs->Append(ToStr(s));
     }
 }
 

@@ -952,13 +952,13 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     if (!success) {
         return {};
     }
-    if (extracted.size() > 0 && !wstr::EndsWith(extracted.Get(), lineSep)) {
+    if (extracted.size() > 0 && !wstr::EndsWith(ToWStr(extracted), lineSep)) {
         AppendNewline(extracted, coords, lineSep);
     }
 
     PageText res;
 
-    ReportIf(len(extracted.Get()) != coords.Size());
+    ReportIf(len(ToWStr(extracted)) != coords.Size());
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
@@ -1078,13 +1078,13 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
     if (!success) {
         return {};
     }
-    if (extracted.size() > 0 && !str::EndsWith(extracted.Get(), lineSep)) {
+    if (extracted.size() > 0 && !str::EndsWith(ToStr(extracted), lineSep)) {
         AppendNewlineUtf8(extracted, coords, lineSep);
     }
 
     PageTextUtf8 res;
 
-    ReportIf(len(extracted.Get()) != coords.Size());
+    ReportIf(len(ToStr(extracted)) != coords.Size());
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {

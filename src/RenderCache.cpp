@@ -1244,7 +1244,7 @@ void RenderCache::UpdateRenderInfo() {
     SerializeQueueState(s);
     // marshal to the UI thread: updating the window from a render thread while
     // holding requestAccess could deadlock if the UI thread is blocked on it
-    auto dup = new Str(str::Dup(s.Get()));
+    auto dup = new Str(str::Dup(ToStr(s)));
     auto fn = MkFunc0<Str>(SetRenderInfoTextOnUI, dup);
     uitask::Post(fn, "RenderInfo");
 }

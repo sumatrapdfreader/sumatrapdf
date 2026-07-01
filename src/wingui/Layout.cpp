@@ -46,7 +46,7 @@ void LogConstraints(Constraints c, Str suffix) {
         LogAppendNum(s, c.max.dy, " ");
     }
     s.Append(suffix);
-    dbglayout(fmt("%s", s.Get()));
+    dbglayout(fmt("%s", ToStr(s)));
 }
 
 bool IsCollapsed(ILayout* l) {

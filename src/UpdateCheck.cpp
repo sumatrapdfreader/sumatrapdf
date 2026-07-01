@@ -262,8 +262,8 @@ void StartInstallerAutoUpgrade(Str installerPath) {
         // our process to exit
         cmd.Append(fmt(R"( -sleep-ms 500 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp()));
     }
-    logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", cmd.Get());
-    CreateProcessHelper(installerPath, cmd.Get());
+    logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", ToStr(cmd));
+    CreateProcessHelper(installerPath, ToStr(cmd));
 }
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
@@ -573,9 +573,9 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         return ERROR_INTERNET_CONNECTION_ABORTED;
     }
 
-    UpdateInfo* updateInfo = ParseUpdateInfo(data->Get());
+    UpdateInfo* updateInfo = ParseUpdateInfo(ToStr(*data));
     if (!updateInfo) {
-        logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n", url, data->Get());
+        logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n", url, ToStr(*data));
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
     updateInfo->hwndParent = hwndParent;
@@ -603,7 +603,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
 
     if (!updateInfo->dlURL) {
         // currently for release builds we don't set this and redirecto to a website instead
-        logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
+        logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", ToStr(*data));
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         delete updateInfo;
@@ -710,14 +710,14 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
     auto updateCheckType = data->updateCheckType;
     StrBuilder url;
     BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
-    Str uri = url.Get();
+    Str uri = ToStr(url);
     HttpRsp* rsp = new HttpRsp;
     str::ReplaceWithCopy(&rsp->url, uri);
     bool ok = HttpGet(uri, rsp);
     if (!ok) {
         delete rsp;
         BuildUpdateURL(url, kUpdateInfoURL2, updateCheckType);
-        uri = url.Get();
+        uri = ToStr(url);
         rsp = new HttpRsp;
         str::ReplaceWithCopy(&rsp->url, uri);
         HttpGet(uri, rsp);

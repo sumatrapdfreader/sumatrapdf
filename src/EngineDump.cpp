@@ -68,7 +68,7 @@ static TempStr EscapeTemp(Str str) {
                 break;
         }
     }
-    return str::DupTemp(escaped.Get());
+    return str::DupTemp(ToStr(escaped));
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
@@ -410,7 +410,7 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
             return true;
         }
         TempStr txtFilePath = fmt(renderPath.s, 0);
-        TempStr textCrLf = str::ReplaceTemp(text.Get(), "\n", "\r\n");
+        TempStr textCrLf = str::ReplaceTemp(ToStr(text), "\n", "\r\n");
         TempStr textUTF8BOM = str::JoinTemp(UTF8_BOM, textCrLf);
         return file::WriteFile(txtFilePath, ToByteSlice(textUTF8BOM));
     }

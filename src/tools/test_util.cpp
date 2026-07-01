@@ -75,7 +75,7 @@ static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* exceptionInfo) {
     printf("test_util crash\n");
     StrBuilder s;
     dbghelp::GetExceptionInfo(s, exceptionInfo);
-    PrintStdout(s.Get());
+    PrintStdout(ToStr(s));
     fflush(stdout);
     ExitProcess(7);
     return EXCEPTION_EXECUTE_HANDLER;

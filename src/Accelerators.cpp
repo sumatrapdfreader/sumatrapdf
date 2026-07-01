@@ -572,7 +572,7 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     ReportIf(true);
     return menuStr;
 Exit:
-    TempStr res = str::JoinTemp(menuStr, str.Get());
+    TempStr res = str::JoinTemp(menuStr, ToStr(str));
     return res;
 }
 

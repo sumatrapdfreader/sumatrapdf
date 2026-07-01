@@ -169,7 +169,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         return false;
     }
 
-    WStr s = chunk.Get();
+    WStr s = ToWStr(chunk);
     int slen = s.len;
 
     // 3. Find a 4-digit year near the cursor. Prefer a year that comes
@@ -362,7 +362,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         // reposition the popup instead of sharing a line-only y/dy key.
         *srcRectOut = CitationSpanBounds(coords, textLen, chunkGlyphs, surnameStart, bestYearPos + 4);
     }
-    *surnameOut = ToUtf8(surnameW.Get());
+    *surnameOut = ToUtf8(ToWStr(surnameW));
     *yearOut = year;
     return true;
 }

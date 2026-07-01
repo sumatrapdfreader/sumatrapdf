@@ -242,7 +242,7 @@ static void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
     if (i.reuseDdeInstance) {
         targetHwnd = nullptr; // force DDEExecute
     }
-    SendMyselfDDE(cmd.Get(), targetHwnd);
+    SendMyselfDDE(ToStr(cmd), targetHwnd);
 }
 
 static void FlagsEnterFullscreen(const Flags& flags, MainWindow* win) {

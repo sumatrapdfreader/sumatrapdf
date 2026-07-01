@@ -877,14 +877,14 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 
     // replace unexpected \0 with spaces
     // https://code.google.com/archive/p/sumatrapdf/issues/2529
-    Str docStr = doc->Get();
+    Str docStr = ToStr(*doc);
     u8* s = (u8*)docStr.s;
     u8* end = s + doc->size();
     while ((s = (u8*)memchr(s, 0, (size_t)(end - s))) != nullptr) {
         *s = ' ';
     }
     if (textEncoding != CP_UTF8) {
-        TempStr docUtf8 = strconv::ToMultiByteTemp(doc->Get(), textEncoding, CP_UTF8);
+        TempStr docUtf8 = strconv::ToMultiByteTemp(ToStr(*doc), textEncoding, CP_UTF8);
         if (docUtf8) {
             doc->Reset();
             doc->Append(docUtf8);
@@ -949,7 +949,7 @@ bool MobiDoc::HasToc() {
 
     // search for <reference type="toc" filepos="N"/>
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, doc->Get().s, doc->size());
+    GumboOutput* output = gumbo_parse_with_options(&opts, ToStr(*doc).s, doc->size());
     if (!output) {
         return false;
     }
@@ -1034,7 +1034,7 @@ void MobiTocWalker::Walk(const GumboNode* root) {
                     StrBuilder text;
                     AppendDeepText(node, text);
                     if (!text.IsEmpty()) {
-                        visitor->Visit(text.Get(), Str(attr->value), level);
+                        visitor->Visit(ToStr(text), Str(attr->value), level);
                     }
                 }
                 continue; // don't descend into the <a>'s children
@@ -1061,7 +1061,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     // there doesn't seem to be a standard for Mobi ToCs, so we try to
     // determine the author's intentions by looking at commonly used tags
     GumboOptions opts = GumboMakeOptions();
-    Str docStr = doc->Get();
+    Str docStr = ToStr(*doc);
     Str tocSlice(docStr.s + docTocIndex, (int)(doc->size() - docTocIndex));
     GumboOutput* output = gumbo_parse_with_options(&opts, tocSlice.s, (size_t)tocSlice.len);
     if (!output) {

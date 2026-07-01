@@ -380,7 +380,7 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
         s.Append(fmt(_TRA("page %d,").s, annot->pageNo));
         Str name = AnnotationReadableNameTemp(annot->type);
         s.Append(fmt(" %s", name));
-        model->strings.Append(s.Get());
+        model->strings.Append(ToStr(s));
     }
 
     auto topIdx = ListBoxGetTopIndex(ew->listBox->hwnd);
@@ -560,7 +560,7 @@ static void DoRect(EditAnnotationsWindow* ew, Annotation* annot) {
     int dx = (int)rect.dx;
     int dy = (int)rect.dy;
     s.Append(fmt(_TRA("Rect: x=%d y=%d dx=%d dy=%d").s, x, y, dx, dy));
-    ew->staticRect->SetText(s.Get());
+    ew->staticRect->SetText(ToStr(s));
     ew->staticRect->SetIsVisible(true);
 }
 
@@ -572,7 +572,7 @@ static void DoAuthor(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     StrBuilder s;
     s.Append(fmt(_TRA("Author: %s").s, author));
-    ew->staticAuthor->SetText(s.Get());
+    ew->staticAuthor->SetText(ToStr(s));
     ew->staticAuthor->SetIsVisible(true);
 }
 
@@ -593,7 +593,7 @@ static void DoModificationDate(EditAnnotationsWindow* ew, Annotation* annot) {
     s.Append(_TRA("Date:"));
     s.Append(" "); // apptranslator doesn't handle spaces at the end of translated string
     AppendPdfDate(s, ModificationDate(annot));
-    ew->staticModificationDate->SetText(s.Get());
+    ew->staticModificationDate->SetText(ToStr(s));
     ew->staticModificationDate->SetIsVisible(true);
 }
 
@@ -604,7 +604,7 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
     }
     StrBuilder s;
     s.Append(fmt(_TRA("Popup: %d 0 R").s, popupId));
-    ew->staticPopup->SetText(s.Get());
+    ew->staticPopup->SetText(ToStr(s));
     ew->staticPopup->SetIsVisible(true);
 }
 

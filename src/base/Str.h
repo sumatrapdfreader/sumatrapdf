@@ -328,7 +328,6 @@ struct StrBuilder {
     bool Append(const u8* src, size_t size = -1);
     bool AppendSlice(const ByteSlice& d);
     void Set(Str s);
-    Str Get() const;
     Str CStr() const;
     char LastChar() const;
 
@@ -385,7 +384,6 @@ struct WStrBuilder {
     int Remove(const WCHAR& el);
     bool IsEmpty() const;
     void Set(WStr s);
-    WStr Get() const;
     WCHAR LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
@@ -433,7 +431,14 @@ WCHAR* CWStrTemp(Str s);
 WCHAR* CWStrTemp(Str s, int& cch);
 WCHAR* CWStrTemp(WStr s, int& cch);
 
-TempWStr ToWStrTempFromBuilder(const StrBuilder& s);
+// StrBuilder/WStrBuilder always keep their data NUL-terminated.
+// ToStr() returns a {ptr,len} view (may contain embedded NULs).
+// ToCStr() returns the NUL-terminated buffer, for passing to C/win32 code we
+// don't control that expects a zero-terminated char*/WCHAR*.
+Str ToStr(const StrBuilder&);
+char* ToCStr(const StrBuilder&);
+WStr ToWStr(const WStrBuilder&);
+WCHAR* ToWCStr(const WStrBuilder&);
 
 wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);

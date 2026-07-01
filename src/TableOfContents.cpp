@@ -96,7 +96,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
         infotip.Append(path);
     }
 
-    str::BufSet(nm->pszText, nm->cchTextMax, infotip.Get());
+    str::BufSet(nm->pszText, nm->cchTextMax, ToStr(infotip));
 }
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS

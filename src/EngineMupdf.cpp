@@ -1804,9 +1804,9 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
             number.AppendChar(number.at(0));
         }
         if (!str::IsEmpty(type) && type.s[0] == 'a') {
-            str::ToLowerInPlace(Str(number.Get()));
+            str::ToLowerInPlace(Str(ToStr(number)));
         }
-        return fmt("%s%s", prefix, number.Get());
+        return fmt("%s%s", prefix, ToStr(number));
     }
     return str::DupTemp(prefix);
 }

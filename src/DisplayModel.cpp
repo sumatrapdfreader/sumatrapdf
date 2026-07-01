@@ -1967,7 +1967,7 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
         }
     }
 
-    return ToUtf8(WStr(result.Get()));
+    return ToUtf8(WStr(ToWStr(result)));
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)

@@ -2068,11 +2068,11 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     void* data;
     int cbData;
     if (fmt == CF_TEXT) {
-        data = (void*)str.Get().s;
+        data = (void*)ToStr(str).s;
         cbData = str.Size() + 1;
     } else if (fmt == CF_UNICODETEXT) {
         int cch;
-        WCHAR* tmp = CWStrTemp(str.Get(), cch);
+        WCHAR* tmp = CWStrTemp(ToStr(str), cch);
         data = (void*)tmp;
         cbData = (cch + 1) * 2;
     } else {

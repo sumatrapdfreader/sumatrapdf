@@ -1838,7 +1838,7 @@ StrBuilder::StrBuilder(size_t capHint, Arena* a) {
 StrBuilder::StrBuilder(const StrBuilder& that) {
     Reset();
     char* s = EnsureCap(this, that.len);
-    Str sOrig = that.Get();
+    Str sOrig = ToStr(that);
     len = that.len;
     size_t n = len + kPadding;
     memcpy(s, sOrig.s, n);
@@ -1855,7 +1855,7 @@ StrBuilder& StrBuilder::operator=(const StrBuilder& that) {
     }
     Reset();
     char* s = EnsureCap(this, that.len);
-    Str sOrig = that.Get();
+    Str sOrig = ToStr(that);
     len = that.len;
     size_t n = len + kPadding;
     memcpy(s, sOrig.s, n);
@@ -1986,7 +1986,7 @@ Str StrBuilder::StealData(Arena* a) {
 }
 
 Str StrBuilder::LendData() const {
-    return Get();
+    return Str(els, (int)len);
 }
 
 bool StrBuilder::Contains(Str s) {
@@ -2058,12 +2058,8 @@ void StrBuilder::Set(Str s) {
     Append(s);
 }
 
-Str StrBuilder::Get() const {
-    return Str(els, (int)len);
-}
-
 Str StrBuilder::CStr() const {
-    return Get();
+    return Str(els, (int)len);
 }
 
 char StrBuilder::LastChar() const {
@@ -2176,7 +2172,7 @@ WStrBuilder::WStrBuilder(size_t capHint, Arena* a) {
 WStrBuilder::WStrBuilder(const WStrBuilder& that) {
     Reset();
     WCHAR* s = EnsureCap(this, that.cap);
-    WStr sOrig = that.Get();
+    WStr sOrig = ToWStr(that);
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
     memcpy(s, sOrig.s, n);
@@ -2193,7 +2189,7 @@ WStrBuilder& WStrBuilder::operator=(const WStrBuilder& that) {
     }
     Reset();
     WCHAR* s = EnsureCap(this, that.cap);
-    WStr sOrig = that.Get();
+    WStr sOrig = ToWStr(that);
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
     memcpy(s, sOrig.s, n);
@@ -2317,7 +2313,7 @@ WStr WStrBuilder::StealData() {
 }
 
 WStr WStrBuilder::LendData() const {
-    return Get();
+    return WStr(els, (int)len);
 }
 
 int WStrBuilder::Find(const WCHAR& el, size_t startAt) const {
@@ -2352,9 +2348,6 @@ void WStrBuilder::Set(WStr s) {
     Append(s);
 }
 
-WStr WStrBuilder::Get() const {
-    return WStr(els, (int)len);
-}
 
 WCHAR WStrBuilder::LastChar() const {
     auto n = this->len;
@@ -2717,7 +2710,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
         i = (i + 1) % 3;
     }
 
-    return str::DupTemp(res.Get());
+    return str::DupTemp(ToStr(res));
 }
 
 // Format a floating point number with at most two decimal after the point
@@ -2814,7 +2807,7 @@ TempStr FormatRomanNumeralTemp(int n) {
             roman.Append(el.numeral);
         }
     }
-    return str::DupTemp(roman.Get());
+    return str::DupTemp(ToStr(roman));
 }
 
 } // namespace str
@@ -3449,11 +3442,22 @@ WCHAR* CWStrTemp(WStr s, int& cch) {
 }
 
 // handles embedded 0 in the string
-TempWStr ToWStrTempFromBuilder(const StrBuilder& str) {
-    if (str.IsEmpty()) {
-        return {};
-    }
-    return ToWStrTemp(str.CStr());
+Str ToStr(const StrBuilder& b) {
+    return Str(b.els, (int)b.len);
+}
+
+// StrBuilder always keeps its data NUL-terminated, so we can hand out the
+// buffer directly for C/win32 APIs we don't control that want a char*
+char* ToCStr(const StrBuilder& b) {
+    return b.els;
+}
+
+WStr ToWStr(const WStrBuilder& b) {
+    return WStr(b.els, (int)b.len);
+}
+
+WCHAR* ToWCStr(const WStrBuilder& b) {
+    return b.els;
 }
 
 // --- begin: merged from former src/common/str_util.cpp ---

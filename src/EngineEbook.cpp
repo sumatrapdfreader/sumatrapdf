@@ -438,7 +438,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 break;
         }
     }
-    if (content.size() > 0 && !wstr::EndsWith(content.Get(), lineSep)) {
+    if (content.size() > 0 && !wstr::EndsWith(ToWStr(content), lineSep)) {
         content.Append(lineSep);
         coords.AppendBlanks(len(lineSep));
     }
@@ -527,7 +527,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 break;
         }
     }
-    if (content.size() > 0 && !str::EndsWith(Str(content.Get()), lineSep)) {
+    if (content.size() > 0 && !str::EndsWith(Str(ToStr(content)), lineSep)) {
         content.Append(lineSep);
         coords.AppendBlanks(len(lineSep));
     }

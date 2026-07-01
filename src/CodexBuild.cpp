@@ -706,7 +706,7 @@ static void AppendCodexRolloutTools(MainWindow* win, Str line) {
     if (!str::IsEmpty(name)) {
         StrBuilder desc;
         desc.Append(fmt("Tool: %s", name));
-        WebViewAddTool(win, desc.Get());
+        WebViewAddTool(win, ToStr(desc));
     }
 }
 
