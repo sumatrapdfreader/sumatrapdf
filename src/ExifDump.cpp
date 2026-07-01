@@ -536,7 +536,7 @@ struct TiffParser {
         if (len(s) == 0) {
             return str::DupTemp("YCbCr");
         }
-        return str::DupTemp(ToStr(s));
+        return ToStrTemp(s);
     }
 
     TempStr FormatUndefinedBytes(size_t off, u32 count, bool asList) const {
@@ -577,7 +577,7 @@ struct TiffParser {
             s.Append(", ... ");
         }
         s.Append("]");
-        return str::DupTemp(ToStr(s));
+        return ToStrTemp(s);
     }
 
     TempStr FormatValues(IfdGroup g, u16 tag, u16 type, u32 count, size_t off) const {
@@ -726,7 +726,7 @@ struct TiffParser {
                     }
                 }
             }
-            return str::DupTemp(ToStr(s));
+            return ToStrTemp(s);
         }
 
         if (type == TiffType::Short || type == TiffType::SShort) {
@@ -752,7 +752,7 @@ struct TiffParser {
             if (count > 1 && tag == 0x9214) {
                 return fmt("[%s]", ToStr(s));
             }
-            return str::DupTemp(ToStr(s));
+            return ToStrTemp(s);
         }
 
         if (type == TiffType::Long || type == TiffType::SLong) {
@@ -768,7 +768,7 @@ struct TiffParser {
                     s.Append(fmt("%u", ReadDWord(eoff)));
                 }
             }
-            return str::DupTemp(ToStr(s));
+            return ToStrTemp(s);
         }
 
         if (type == TiffType::Byte || type == TiffType::SByte) {
@@ -781,7 +781,7 @@ struct TiffParser {
                 s.Append(fmt("%u", r.Byte(off + i)));
             }
             s.Append("]");
-            return str::DupTemp(ToStr(s));
+            return ToStrTemp(s);
         }
 
         return str::DupTemp("");

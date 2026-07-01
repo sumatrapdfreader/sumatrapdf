@@ -1208,7 +1208,7 @@ static TempStr SerializeHotkeyTemp(UINT vk, bool ctrl, bool shift, bool alt) {
         // unknown key
         return {};
     }
-    return str::DupTemp(ToStr(s));
+    return ToStrTemp(s);
 }
 
 // find existing Shortcut entry for CmdScreenshot, or nullptr

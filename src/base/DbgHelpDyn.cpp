@@ -479,7 +479,7 @@ TempStr GetCurrentThreadCallstackTemp() {
     if (!GetCurrentThreadCallstack(s)) {
         return "";
     }
-    return str::DupTemp(ToStr(s));
+    return ToStrTemp(s);
 }
 
 // start remembering callstack logs done with LogCallstack()

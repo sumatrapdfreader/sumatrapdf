@@ -122,7 +122,7 @@ static void testStrings() {
         for (int i = 0; i < 600; i++) {
             sb.AppendChar('x');
         }
-        long600 = str::DupTemp(ToStr(sb));
+        long600 = ToStrTemp(sb);
     }
     check(FormatTemp("%s", long600), long600);
 }

@@ -1121,7 +1121,7 @@ static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete)
             s.Append(fmt("%d-%d", rangeStart, rangeEnd));
         }
     }
-    return str::DupTemp(ToStr(s));
+    return ToStrTemp(s);
 }
 
 // Format a sorted list of page numbers as a compact range string (e.g. "1-3,5,7-10").
@@ -1145,7 +1145,7 @@ static TempStr FormatPageRange(const Vec<int>& pages) {
         }
         i++;
     }
-    return str::DupTemp(ToStr(s));
+    return ToStrTemp(s);
 }
 
 void PdfDeletePageDialog::UpdateButton() {

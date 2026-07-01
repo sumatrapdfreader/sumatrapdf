@@ -358,7 +358,7 @@ static TempStr NormalizeTextForPromptTemp(Str text) {
         }
     }
     str::TrimWSInPlace(ToStr(buf), str::TrimOpt::Both);
-    return str::DupTemp(ToStr(buf));
+    return ToStrTemp(buf);
 }
 
 static TempStr BuildTranslationPromptTemp(Str srcLang, Str dstLang, Str text) {

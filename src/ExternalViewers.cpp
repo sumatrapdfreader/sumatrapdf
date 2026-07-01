@@ -402,7 +402,7 @@ static TempStr FormatParamTemp(Str arg, WindowTab* tab) {
                 break;
         }
     }
-    return str::DupTemp(ToStr(out));
+    return ToStrTemp(out);
 }
 
 static TempStr GetDocumentPathQuoted(WindowTab* tab) {
@@ -462,7 +462,7 @@ static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
     }
     str::SkipChar(s, ' ');
     *restOut = s;
-    return str::DupTemp(ToStr(exe));
+    return ToStrTemp(exe);
 }
 
 bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {

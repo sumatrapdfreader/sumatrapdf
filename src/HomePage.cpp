@@ -368,7 +368,7 @@ TempStr TipPlainTextTemp(ParsedTip& tip) {
         }
         sb.Append(tip.words[i].text);
     }
-    return str::DupTemp(ToStr(sb));
+    return ToStrTemp(sb);
 }
 
 static ParsedTip* gParsedTips = nullptr;

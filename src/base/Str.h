@@ -416,6 +416,9 @@ char* ToCStr(const str::Builder&);
 WStr ToWStr(const wstr::Builder&);
 WCHAR* ToWCStr(const wstr::Builder&);
 
+// owning temp-arena copy of the builder's content (unlike ToStr()'s view)
+TempStr ToStrTemp(const str::Builder&);
+
 int len(const str::Builder&);
 int len(const wstr::Builder&);
 

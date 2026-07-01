@@ -2638,7 +2638,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
         i = (i + 1) % 3;
     }
 
-    return str::DupTemp(ToStr(res));
+    return ToStrTemp(res);
 }
 
 // Format a floating point number with at most two decimal after the point
@@ -2735,7 +2735,7 @@ TempStr FormatRomanNumeralTemp(int n) {
             roman.Append(el.numeral);
         }
     }
-    return str::DupTemp(ToStr(roman));
+    return ToStrTemp(roman);
 }
 
 } // namespace str
@@ -3375,6 +3375,11 @@ WCHAR* CWStrTemp(WStr s, int& cch) {
 // handles embedded 0 in the string
 Str ToStr(const str::Builder& b) {
     return Str(b.els, (int)b.len);
+}
+
+// NO_INLINE: this is called in many places; keeping it out of line trims code size
+NO_INLINE TempStr ToStrTemp(const str::Builder& b) {
+    return str::DupTemp(ToStr(b));
 }
 
 // str::Builder always keeps its data NUL-terminated, so we can hand out the

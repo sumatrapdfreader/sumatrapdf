@@ -68,7 +68,7 @@ static TempStr EscapeTemp(Str str) {
                 break;
         }
     }
-    return str::DupTemp(ToStr(escaped));
+    return ToStrTemp(escaped);
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
