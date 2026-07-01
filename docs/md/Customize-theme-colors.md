@@ -76,12 +76,12 @@ The above will provide you with a collection of themes: `My Dark Theme`, `Solari
 
 Meaning of the parameters:
 - `TextColor` and `BackgroundColor` are for main window color and color of text.
-- If you use `I` (`CmdInvertColors`) they will also be used to replace white background / black text color when rendering PDF/ePub documents.
+- If you use `Shift + i` (`CmdInvertColors`) they will also be used to replace white background / black text color when rendering PDF/ePub documents.
 - `ControlBackgroundColor` is for background of Windows controls (buttons, window frame, menus, list controls etc.).
 - `LinkColor` is a color for links. Typically it's blue.
 - `ColorizeControls` should be `true`. If `false` we won't try to change colors of standard windows controls (menu, toolbar, buttons etc.) so a lot of UI will not respect theme colors.
 
 Now, once you save the text file above, there are three main ways to choose a theme that you had created:
 1. By changing the value of `Theme = ` in the `SumatraPDF-settings.txt` which we accessed above (e.g. `Theme = Solarized Dark`). Or,
-2. By launching the Command Palette (`Ctrl + K`), and then typing `theme` (afterwards, select the desired theme from the list). Or,
+2. By launching the Command Palette (`Ctrl + k`), and then typing `theme` (afterwards, select the desired theme from the list). Or,
 3. By navigating to `Settings` / `Theme` and then choosing a theme.
