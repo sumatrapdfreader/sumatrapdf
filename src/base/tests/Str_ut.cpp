@@ -469,9 +469,9 @@ void StrTest() {
     utassert(!str::Parse(StrL("ab"), "a% b").s);
     utassert(str::IsNull(str::Parse(StrL("%+"), "+")) && str::IsNull(str::Parse(StrL("%+"), "%+")));
 
-    utassert(str::Parse(StrL("abcd"), 3, "abc%$").s);
-    utassert(str::Parse(StrL("abc"), 3, "a%?bc%?d%$").s);
-    utassert(!str::Parse(StrL("abcd"), 3, "abcd").s);
+    utassert(str::Parse(Str(StrL("abcd").s, 3), "abc%$").s);
+    utassert(str::Parse(Str(StrL("abc").s, 3), "a%?bc%?d%$").s);
+    utassert(!str::Parse(Str(StrL("abcd").s, 3), "abcd").s);
 
     {
         Str str1 = "string";
@@ -483,8 +483,8 @@ void StrTest() {
         utassert(f1 == 1.23f && f2 == -2e-3f);
         f1 = 0;
         f2 = 0;
-        Str end2 = str::Parse(StrL("%1.23y -2e-3zlah"), 13, "%%%fy%fz%$", &f1, &f2);
-        utassert(!str::IsNull(end2) && str::Eq(end2, "lah"));
+        Str end2 = str::Parse(Str(StrL("%1.23y -2e-3zlah").s, 13), "%%%fy%fz%$", &f1, &f2);
+        utassert(!str::IsNull(end2) && end2.len == 0);
         utassert(f1 == 1.23f && f2 == -2e-3f);
     }
 

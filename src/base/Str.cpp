@@ -1276,26 +1276,6 @@ Str Parse(Str str, Str fmt, ...) {
     return res;
 }
 
-Str Parse(Str str, size_t len, Str fmt, ...) {
-    if (str::IsNull(str) || str::IsNull(fmt)) {
-        return {};
-    }
-
-    int useLen = (int)std::min(len, (size_t)str.len);
-    Str bounded = Str(str.s, useLen);
-
-    va_list args;
-    va_start(args, fmt);
-    Str res = ParseV(bounded, fmt, args);
-    va_end(args);
-
-    if (str::IsNull(res)) {
-        return {};
-    }
-    int off = (int)(res.s - bounded.s);
-    return Str(str.s + off, str.len - off);
-}
-
 bool IsAlNum(char c) {
     if (c >= '0' && c <= '9') {
         return true;

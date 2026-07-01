@@ -131,7 +131,6 @@ TempStr MemToHexTemp(const u8* buf, size_t len);
 bool HexToMem(Str s, u8* buf, size_t bufLen);
 
 Str Parse(Str str, Str fmt, ...);
-Str Parse(Str str, size_t len, Str fmt, ...);
 
 int CmpNatural(Str a, Str b);
 

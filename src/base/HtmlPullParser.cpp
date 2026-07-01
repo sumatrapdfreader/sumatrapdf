@@ -99,11 +99,11 @@ static void MemAppend(char* buf, int& off, Str src) {
 // if "&foo;" was the entity, str points at the char after '&'
 // returns a slice starting after the entity, or empty on failure
 Str ResolveHtmlEntity(Str str, int& rune) {
-    Str entEnd = str::Parse(str, str.len, "#%d%?;", &rune);
+    Str entEnd = str::Parse(str, "#%d%?;", &rune);
     if (!str::IsNull(entEnd)) {
         return entEnd;
     }
-    entEnd = str::Parse(str, str.len, "#x%x%?;", &rune);
+    entEnd = str::Parse(str, "#x%x%?;", &rune);
     if (!str::IsNull(entEnd)) {
         return entEnd;
     }

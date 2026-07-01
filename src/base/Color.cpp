@@ -112,7 +112,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
     unsigned int g = 0;
     unsigned int b = 0;
     unsigned int a = 0;
-    bool ok = n == 8 && !str::IsNull(str::Parse(p, n, "%2x%2x%2x%2x%$", &a, &r, &g, &b));
+    bool ok = n == 8 && !str::IsNull(str::Parse(p, "%2x%2x%2x%2x%$", &a, &r, &g, &b));
     if (ok) {
         parsed.col = MkColor((u8)r, (u8)g, (u8)b, (u8)a);
         parsed.pdfCol = MkPdfColor((u8)r, (u8)g, (u8)b, (u8)a);
@@ -120,7 +120,7 @@ void ParseColor(ParsedColor& parsed, Str txt) {
         return;
     }
 
-    ok = n == 6 && !str::IsNull(str::Parse(p, n, "%2x%2x%2x%$", &r, &g, &b));
+    ok = n == 6 && !str::IsNull(str::Parse(p, "%2x%2x%2x%$", &r, &g, &b));
     if (!ok) {
         return;
     }

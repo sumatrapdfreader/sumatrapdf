@@ -104,14 +104,14 @@ DrawInstr DrawInstr::Anchor(::Str s, RectF bbox) {
 
 // parses size in the form "1em", "3pt" or "15px"
 static void ParseSizeWithUnit(Str s, float* size, StyleRule::Unit* unit) {
-    if (!str::IsNull(str::Parse(s.s, s.len, "%fem", size))) {
+    if (!str::IsNull(str::Parse(s, "%fem", size))) {
         *unit = StyleRule::em;
-    } else if (!str::IsNull(str::Parse(s.s, s.len, "%fin", size))) {
+    } else if (!str::IsNull(str::Parse(s, "%fin", size))) {
         *unit = StyleRule::pt;
         *size *= 72; // 1 inch is 72 points
-    } else if (!str::IsNull(str::Parse(s.s, s.len, "%fpt", size))) {
+    } else if (!str::IsNull(str::Parse(s, "%fpt", size))) {
         *unit = StyleRule::pt;
-    } else if (!str::IsNull(str::Parse(s.s, s.len, "%fpx", size))) {
+    } else if (!str::IsNull(str::Parse(s, "%fpx", size))) {
         *unit = StyleRule::px;
     } else {
         *unit = StyleRule::inherit;
