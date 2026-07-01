@@ -2317,9 +2317,7 @@ static Str TxtFileToHTML(Str path) {
     d.Append(R"(</pre>
 </body>
 </html>)");
-    size_t sz = len(d);
-    Str stolen = d.StealData();
-    return Str((char*)(stolen.s), (int)(sz));
+    return d.StealData();
 }
 
 static Str PalmDocToHTML(Str path) {

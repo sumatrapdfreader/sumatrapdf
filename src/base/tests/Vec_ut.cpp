@@ -16,7 +16,7 @@ static size_t VecTestAppendFmt() {
         val = (val * 3) / 2; // somewhat exponential growth
         val += 15;
     }
-    size_t l = len(v);
+    int l = len(v);
     return l;
 }
 

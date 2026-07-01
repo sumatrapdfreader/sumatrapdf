@@ -409,8 +409,6 @@ Str SerializeBitmap(HBITMAP hbmp) {
         tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
     }
 
-    size_t sz = len(tgaData);
-    Str stolen = tgaData.StealData();
-    return Str((char*)stolen.s, (int)sz);
+    return tgaData.StealData();
 }
 } // namespace tga
