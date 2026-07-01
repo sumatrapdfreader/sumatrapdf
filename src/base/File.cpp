@@ -780,8 +780,6 @@ i64 GetSize(HANDLE h) {
     if (h == nullptr || h == INVALID_HANDLE_VALUE) {
         return -1;
     }
-    // Don't use GetFileAttributesEx to retrieve the file size, as
-    // that function doesn't interact well with symlinks, etc.
     LARGE_INTEGER size{};
     BOOL ok = GetFileSizeEx(h, &size);
     if (!ok) {
@@ -790,15 +788,33 @@ i64 GetSize(HANDLE h) {
     return size.QuadPart;
 }
 
+// Query filesystem metadata without opening the file content. Opening a file
+// (even read-only) forces a slow, possibly multi-minute hydration of a cloud
+// placeholder (OneDrive "Files On-Demand", issue #5756) and can trigger a
+// Windows Defender / network re-scan. GetFileAttributesEx avoids all of that.
+static bool GetInfo(Str path, WIN32_FILE_ATTRIBUTE_DATA& fileInfo) {
+    if (!path) {
+        return false;
+    }
+    WCHAR* pathW = CWStrTemp(path);
+    BOOL ok = GetFileAttributesEx(pathW, GetFileExInfoStandard, &fileInfo);
+    return ok != 0;
+}
+
 // returns -1 on error (can't use INVALID_FILE_SIZE because it won't cast right)
 i64 GetSize(Str path) {
     ReportIf(!path);
-    if (!path) {
+    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+    if (!GetInfo(path, fileInfo)) {
         return -1;
     }
-
-    AutoCloseHandle h = OpenReadOnly(path);
-    return GetSize(h);
+    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        return -1;
+    }
+    LARGE_INTEGER size;
+    size.HighPart = (LONG)fileInfo.nFileSizeHigh;
+    size.LowPart = fileInfo.nFileSizeLow;
+    return size.QuadPart;
 }
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
@@ -886,9 +902,9 @@ bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress
 
 FILETIME GetAccessTime(Str path) {
     FILETIME t{};
-    AutoCloseHandle h(OpenReadOnly(path));
-    if (h.IsValid()) {
-        GetFileTime(h, nullptr, &t, nullptr);
+    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+    if (GetInfo(path, fileInfo)) {
+        t = fileInfo.ftLastAccessTime;
     }
     return t;
 }
@@ -906,9 +922,9 @@ bool SetAccessTime(Str path, FILETIME accessTime) {
 
 FILETIME GetModificationTime(Str filePath) {
     FILETIME lastMod{};
-    AutoCloseHandle h(OpenReadOnly(filePath));
-    if (h.IsValid()) {
-        GetFileTime(h, nullptr, nullptr, &lastMod);
+    WIN32_FILE_ATTRIBUTE_DATA fileInfo;
+    if (GetInfo(filePath, fileInfo)) {
+        lastMod = fileInfo.ftLastWriteTime;
     }
     return lastMod;
 }
