@@ -912,7 +912,7 @@ static void SendGrokMessage(MainWindow* win) {
     Str filePath = tab->filePath;
     TempStr dir = path::GetDirTemp(filePath);
 
-    TempStr escapedInput = str::ReplaceTemp(input, "\"", "\\\"");
+    TempStr escapedInput = str::ReplaceTemp(input, StrL("\""), StrL("\\\""));
 
     SyncGrokSettingsFromUI(win);
 
@@ -973,7 +973,7 @@ static void SendGrokMessage(MainWindow* win) {
 }
 
 static TempStr FitGrokPanelTitleTemp(HWND labelHwnd, HFONT font, Str docName, int maxDx) {
-    TempStr prefix = str::JoinTemp(_TRA("Grok chat"), " with ");
+    TempStr prefix = str::JoinTemp(_TRA("Grok chat"), StrL(" with "));
     return AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
 }
 

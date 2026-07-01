@@ -43,7 +43,7 @@ static TempStr ConvertPathForDisplayTemp(Str s) {
 }
 
 static TempStr RemovePrefixFromString(Str s) {
-    return str::ReplaceTemp(s, "&", "");
+    return str::ReplaceTemp(s, StrL("&"), StrL(""));
 }
 
 static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
@@ -171,25 +171,25 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     }
 
     if (isToggle) {
-        return str::JoinTemp(s, newIsOn ? ": set to true" : ": set to false");
+        return str::JoinTemp(s, newIsOn ? StrL(": set to true") : StrL(": set to false"));
     }
 
     if (cmdId == CmdToggleChmUI) {
         if (gGlobalPrefs->chmUI.useFixedPageUI) {
-            return str::JoinTemp(s, ": browser");
+            return str::JoinTemp(s, StrL(": browser"));
         }
-        return str::JoinTemp(s, ": fixed");
+        return str::JoinTemp(s, StrL(": fixed"));
     }
 
     if (cmdId == CmdToggleToolbarPosition) {
         Str next = ToolbarAtBottom() ? StrL("top") : StrL("bottom");
-        return str::JoinTemp(s, ": set to ", next);
+        return str::JoinTemp(s, StrL(": set to "), next);
     }
 
     if (cmdId == CmdToggleDjvuEngine) {
         bool useDjvuDec = !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
         Str next = useDjvuDec ? StrL("libdjvu") : StrL("djvudec");
-        return str::JoinTemp(s, ": set to ", next);
+        return str::JoinTemp(s, StrL(": set to "), next);
     }
 
     if (cmdId == CmdToggleWindowsPreviewer) {

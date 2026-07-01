@@ -196,7 +196,7 @@ bool CreateArchiveFromDir(Str archivePath, Str dir) {
         if (archiveName && (archiveName.s[0] == '\\' || archiveName.s[0] == '/')) {
             archiveName = Str(archiveName.s + 1, archiveName.len - 1);
         }
-        TempStr s = str::JoinTemp(path, ":", archiveName);
+        TempStr s = str::JoinTemp(path, StrL(":"), archiveName);
         files.Append(s);
     }
     return CreateArchive(archivePath, files, 0);

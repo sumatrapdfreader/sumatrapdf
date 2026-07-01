@@ -357,7 +357,7 @@ bool AreSymbolsDownloaded(Str symDir) {
         return true;
     }
     TempStr exePath = GetSelfExePathTemp();
-    exePath = str::ReplaceTemp(exePath, ".exe", ".pdb");
+    exePath = str::ReplaceTemp(exePath, StrL(".exe"), StrL(".pdb"));
     if (file::Exists(exePath)) {
         logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", exePath, symDir);
         return true;
@@ -840,11 +840,11 @@ int __cdecl _purecall() {
 static Str BuildSymbolsUrl() {
     Str urlBase = StrL("https://www.sumatrapdfreader.org/dl/");
     if (gIsPreReleaseBuild) {
-        urlBase = str::JoinTemp(urlBase, "prerel/", preReleaseVersion, "/SumatraPDF-prerel");
+        urlBase = str::JoinTemp(urlBase, StrL("prerel/"), preReleaseVersion, StrL("/SumatraPDF-prerel"));
     } else {
         // assuming this is release version
         Str ver = StrL(QM(CURR_VERSION));
-        urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);
+        urlBase = str::JoinTemp(urlBase, StrL("rel/"), ver, StrL("/SumatraPDF-"), ver);
     }
     // TODO: ugly it's different between release and pre-release
     Str suff = StrL(".pdb.lzsa");

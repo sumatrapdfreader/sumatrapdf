@@ -238,7 +238,7 @@ static void CreateUninstallerWindow() {
 
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
-    TempStr caption = str::JoinTemp(kAppName, " Uninstaller Usage");
+    TempStr caption = str::JoinTemp(kAppName, StrL(" Uninstaller Usage"));
     TempStr msg = fmt(R"(uninstall.exe [/s][/d <path>]
 
 /s	uninstalls %s silently (without user interaction).

@@ -29,7 +29,7 @@ bool ChmFile::HasData(Str fileName) const {
     }
 
     if (!str::StartsWith(fileName, "/")) {
-        fileName = str::JoinTemp("/", fileName);
+        fileName = str::JoinTemp(StrL("/"), fileName);
     } else if (str::StartsWith(fileName, "///")) {
         fileName = Str(fileName.s + 2, fileName.len - 2);
     }
@@ -40,7 +40,7 @@ bool ChmFile::HasData(Str fileName) const {
 
 ByteSlice ChmFile::GetData(Str fileName) const {
     if (!str::StartsWith(fileName, "/")) {
-        fileName = str::JoinTemp("/", fileName);
+        fileName = str::JoinTemp(StrL("/"), fileName);
     } else if (str::StartsWith(fileName, "///")) {
         fileName = Str(fileName.s + 2, fileName.len - 2);
     }

@@ -359,7 +359,7 @@ static void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath)
     if (str::IsEmpty(fstruct)) {
         bool isPDF = str::EndsWithI(filePath, ".pdf");
         if (isPDF) {
-            AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), ":"), _TRA("No"));
+            AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), StrL(":")), _TRA("No"));
         }
         return;
     }
@@ -372,7 +372,7 @@ static void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath)
     if (parts.Contains("linearized")) {
         linearized = _TRA("Yes");
     }
-    AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), ":"), linearized);
+    AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), StrL(":")), linearized);
 
     if (parts.Contains("tagged")) {
         props.Append(_TRA("Tagged PDF"));

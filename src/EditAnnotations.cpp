@@ -611,8 +611,8 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
 static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
     Str s = Contents(annot);
     // don't replace if already is "\r\n"
-    s = str::ReplaceTemp(s, "\r\n", "\n");
-    s = str::ReplaceTemp(s, "\n", "\r\n");
+    s = str::ReplaceTemp(s, StrL("\r\n"), StrL("\n"));
+    s = str::ReplaceTemp(s, StrL("\n"), StrL("\r\n"));
     ew->editContents->SetText(s);
     ew->staticContents->SetIsVisible(true);
     ew->editContents->SetIsVisible(true);
@@ -1127,7 +1127,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto txt = ew->editContents->GetTextTemp();
-    txt = str::ReplaceTemp(txt, "\r\n", "\n");
+    txt = str::ReplaceTemp(txt, StrL("\r\n"), StrL("\n"));
     SetContents(a, txt);
     EnableSaveIfAnnotationsChanged(ew);
 
@@ -1654,7 +1654,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
         args.bgColor = MkGray(0xee);
     }
 
-    args.title = str::JoinTemp(_TRA("Annotations"), ": ", tab->GetTabTitle());
+    args.title = str::JoinTemp(_TRA("Annotations"), StrL(": "), tab->GetTabTitle());
     args.visible = false;
     args.font = GetAppFont();
 

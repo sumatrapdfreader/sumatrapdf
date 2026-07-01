@@ -1289,7 +1289,7 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
     }
     float zoomLevel = ctrl->GetZoomVirtual();
     auto zoomStr = BuildZoomString(zoomLevel);
-    pageInfo = str::JoinTemp(pageInfo, " ", zoomStr);
+    pageInfo = str::JoinTemp(pageInfo, StrL(" "), zoomStr);
     NotificationUpdateMessage(wnd, pageInfo);
 }
 
@@ -4200,7 +4200,7 @@ static void CreateLnkShortcut(MainWindow* win) {
 
     TempStr fileName = ToUtf8Temp(dstFileName);
     if (!str::EndsWithI(fileName, ".lnk")) {
-        fileName = str::JoinTemp(fileName, ".lnk");
+        fileName = str::JoinTemp(fileName, StrL(".lnk"));
     }
 
     ScrollState ss(win->ctrl->CurrentPageNo(), 0, 0);
@@ -6854,7 +6854,7 @@ static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
 
     TempStr htmlFile = str::DupTemp(Str(pathStart.s, pathLen));
     if (!str::EndsWithI(htmlFile, ".html")) {
-        htmlFile = str::JoinTemp(htmlFile, ".html");
+        htmlFile = str::JoinTemp(htmlFile, StrL(".html"));
     }
 
     TempStr url = str::JoinTemp(kManualVirtualHost, htmlFile);
@@ -7163,7 +7163,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             // try to auto-fix url
             bool isValidURL = (str::Contains(url, StrL("://")));
             if (!isValidURL) {
-                url = str::JoinTemp("https://", url);
+                url = str::JoinTemp(StrL("https://"), url);
             }
             LaunchBrowserWithSelection(tab, url);
             return 0;

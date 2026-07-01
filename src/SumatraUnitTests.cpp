@@ -273,7 +273,7 @@ void parseCommandsTest() {
     }
     {
         Str argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
-        Str s = str::JoinTemp("CmdExec   ", argStr);
+        Str s = str::JoinTemp(StrL("CmdExec   "), argStr);
         auto cmd = CreateCommandFromDefinition(s);
         utassert(cmd->origId == CmdExec);
         auto cmd2 = FindCustomCommand(cmd->id);
@@ -283,7 +283,7 @@ void parseCommandsTest() {
     }
     {
         Str argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
-        Str s = str::JoinTemp("CmdExec  filter: *.jpeg ", argStr);
+        Str s = str::JoinTemp(StrL("CmdExec  filter: *.jpeg "), argStr);
         auto cmd = CreateCommandFromDefinition(s);
         utassert(cmd->origId == CmdExec);
         auto cmd2 = FindCustomCommand(cmd->id);

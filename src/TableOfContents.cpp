@@ -130,7 +130,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
     TempStr label = nullptr;
     if (tocItem->pageNo && win && win->IsDocLoaded()) {
         label = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
-        label = str::JoinTemp("  ", label);
+        label = str::JoinTemp(StrL("  "), label);
     }
     if (label && str::EndsWith(item.pszText, label)) {
         RECT rcPageNo = rcFullWidth;

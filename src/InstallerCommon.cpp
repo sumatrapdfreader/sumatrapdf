@@ -120,7 +120,7 @@ PreviousInstallationInfo::~PreviousInstallationInfo() {
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
 TempStr GetRegPathUninstTemp(Str appName) {
-    return str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
+    return str::JoinTemp(StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"), appName);
 }
 
 void NotifyFailed(Str msg) {
@@ -212,7 +212,7 @@ TempStr GetShortcutPathTemp(int csidl) {
     if (!dir) {
         return {};
     }
-    TempStr lnkName = str::JoinTemp(kAppName, ".lnk");
+    TempStr lnkName = str::JoinTemp(kAppName, StrL(".lnk"));
     return path::JoinTemp(dir, lnkName);
 }
 
@@ -531,9 +531,9 @@ static void SetCloseProcessMsg() {
     for (int i = 1; i < n; i++) {
         Str name = ReadableProcName(gProcessesToClose.At(i));
         if (i < n - 1) {
-            procNames = str::JoinTemp(procNames, ", ", name);
+            procNames = str::JoinTemp(procNames, StrL(", "), name);
         } else {
-            procNames = str::JoinTemp(procNames, " and ", name);
+            procNames = str::JoinTemp(procNames, StrL(" and "), name);
         }
     }
     TempStr s = fmt(_TRA("Please close %s to proceed!").s, procNames);

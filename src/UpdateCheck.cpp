@@ -402,7 +402,7 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     TempStr installerPath = GetTempFilePathTemp("sumatra-installer");
     // the installer must be named .exe or it won't be able to self-elevate
     // with "runas"
-    installerPath = str::JoinTemp(installerPath, ".exe");
+    installerPath = str::JoinTemp(installerPath, StrL(".exe"));
     UpdateProgressData pd;
     pd.hwndForNotif = hwndForNotif;
     auto cb = MkFunc1<UpdateProgressData, HttpProgress*>(UpdateProgressCb, &pd);

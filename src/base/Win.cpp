@@ -1981,7 +1981,7 @@ void MenuSetText(HMENU m, int id, Str s) {
    if no change is needed, the string is returned as is,
    else it's also saved in newResult for automatic freeing */
 TempStr MenuToSafeStringTemp(Str s) {
-    TempStr safe = str::ReplaceTemp(s, "&", "&&");
+    TempStr safe = str::ReplaceTemp(s, StrL("&"), StrL("&&"));
     return safe;
 }
 

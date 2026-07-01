@@ -259,7 +259,7 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     if (!pathStr) {
         return false;
     }
-    path = str::ReplaceTemp(pathStr, "/", "\\");
+    path = str::ReplaceTemp(pathStr, StrL("/"), StrL("\\"));
 
     Kind kind = GuessFileTypeFromName(path);
     if (!IsEngineMupdfSupportedFileType(kind)) {
@@ -299,7 +299,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         fz_cleanname(pathNul.s);
 
         // mupdf does unix path, we want windows
-        path = str::ReplaceTemp(pathNul, "/", "\\");
+        path = str::ReplaceTemp(pathNul, StrL("/"), StrL("\\"));
         if (destStr) {
             TempStr destNul = str::DupTemp(destStr);
             fz_urldecode(destNul.s);
@@ -1930,7 +1930,7 @@ static void fz_print_cb(void* user, const char* msg) {
         AtomicBoolSet(&seenMsg, true);
     }
     if (!str::EndsWith(msgStr, "\n")) {
-        msgStr = str::JoinTemp(msgStr, "\n");
+        msgStr = str::JoinTemp(msgStr, StrL("\n"));
     }
     log(msgStr);
     EngineMupdf* engine = (EngineMupdf*)user;
@@ -2265,15 +2265,15 @@ static ByteSlice TxtFileToHTML(Str path) {
     };
 
     TempStr data = AsStr(fd);
-    data = str::ReplaceTemp(data, "&", "&amp;");
+    data = str::ReplaceTemp(data, StrL("&"), StrL("&amp;"));
     if (!data) {
         return {};
     }
-    data = str::ReplaceTemp(data, ">", "&gt;");
+    data = str::ReplaceTemp(data, StrL(">"), StrL("&gt;"));
     if (!data) {
         return {};
     }
-    data = str::ReplaceTemp(data, "<", "&lt;");
+    data = str::ReplaceTemp(data, StrL("<"), StrL("&lt;"));
     if (!data) {
         return {};
     }
@@ -2341,7 +2341,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
         d.Free();
-        TempStr nameHint = str::JoinTemp(path, ".html");
+        TempStr nameHint = str::JoinTemp(path, StrL(".html"));
         if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;
         }
@@ -2358,7 +2358,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
         str::Free(d);
-        TempStr nameHint = str::JoinTemp(path, ".html");
+        TempStr nameHint = str::JoinTemp(path, StrL(".html"));
         if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;
         }
@@ -3126,7 +3126,7 @@ IPageDestination* EngineMupdf::GetNamedDest(Str name) {
     auto ctx = Ctx();
     IPageDestination* pageDest = nullptr;
     ScopedCritSec scope2(&docLock);
-    TempStr uri = str::JoinTemp("#nameddest=", name);
+    TempStr uri = str::JoinTemp(StrL("#nameddest="), name);
     float x, y, zoom = 0;
     int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
     if (pageNo < 0) {

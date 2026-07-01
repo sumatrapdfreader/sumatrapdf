@@ -492,7 +492,7 @@ static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = "grok-composer-2.5-fast";
     }
-    TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
+    TempStr escapedPrompt = str::ReplaceTemp(prompt, StrL("\""), StrL("\\\""));
     Str permsFlag = gGlobalPrefs->grokBuild.alwaysApprove ? StrL("--always-approve") : Str{};
     return fmt("\"%s\" -p \"%s\" --cwd \"%s\" --output-format streaming-json --model %s --effort low %s", exePath,
                escapedPrompt, cwd, model, permsFlag);
@@ -503,7 +503,7 @@ static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = "claude-sonnet-4-20250514";
     }
-    TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
+    TempStr escapedPrompt = str::ReplaceTemp(prompt, StrL("\""), StrL("\\\""));
     Str permsFlag = gGlobalPrefs->claudeCode.skipPermissions ? StrL("--dangerously-skip-permissions") : Str{};
     TempStr sessionId = AIChatGenerateSessionIdTemp();
     return fmt("\"%s\" -p --verbose --output-format stream-json --model %s %s --session-id %s \"%s\"", exePath, model,
@@ -513,7 +513,7 @@ static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
 static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     Str model = gGlobalPrefs->codexBuild.model;
     bool hasModel = !str::IsEmptyOrWhiteSpace(model);
-    TempStr escapedPrompt = str::ReplaceTemp(prompt, "\"", "\\\"");
+    TempStr escapedPrompt = str::ReplaceTemp(prompt, StrL("\""), StrL("\\\""));
     Str skipFlag = gGlobalPrefs->codexBuild.skipSandbox ? StrL("--dangerously-bypass-approvals-and-sandbox") : Str{};
     if (skipFlag) {
         if (hasModel) {

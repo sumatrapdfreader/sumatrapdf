@@ -277,7 +277,7 @@ static TempWStr NormalizeTemp(WStr path) {
         return normPath;
     }
     if (len(normPath) >= MAX_PATH) {
-        return str::JoinTemp(L"\\\\?\\", normPath);
+        return str::JoinTemp(WStrL(L"\\\\?\\"), normPath);
     }
     return normPath;
 }
@@ -563,7 +563,7 @@ TempStr WslUncToUnixTemp(Str path) {
         return {};
     }
 
-    TempStr unixPath = str::JoinTemp("/", Str(path.s + off + 1, path.len - off - 1));
+    TempStr unixPath = str::JoinTemp(StrL("/"), Str(path.s + off + 1, path.len - off - 1));
     str::TransCharsInPlace(unixPath, StrL("\\"), StrL("/"));
     return unixPath;
 }
@@ -968,13 +968,13 @@ bool StartsWith(Str path, Str s) {
 }
 
 int GetZoneIdentifier(Str filePath) {
-    TempStr path = str::JoinTemp(filePath, ":Zone.Identifier");
+    TempStr path = str::JoinTemp(filePath, StrL(":Zone.Identifier"));
     WCHAR* pathW = CWStrTemp(path);
     return GetPrivateProfileIntW(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, pathW);
 }
 
 bool SetZoneIdentifier(Str filePath, int zoneId) {
-    TempStr path = str::JoinTemp(filePath, ":Zone.Identifier");
+    TempStr path = str::JoinTemp(filePath, StrL(":Zone.Identifier"));
     TempStr id = fmt("%d", zoneId);
     WCHAR* idw = CWStrTemp(id);
     WCHAR* pathW = CWStrTemp(path);
@@ -982,7 +982,7 @@ bool SetZoneIdentifier(Str filePath, int zoneId) {
 }
 
 bool DeleteZoneIdentifier(Str filePath) {
-    TempStr path = str::JoinTemp(filePath, ":Zone.Identifier");
+    TempStr path = str::JoinTemp(filePath, StrL(":Zone.Identifier"));
     return Delete(path);
 }
 

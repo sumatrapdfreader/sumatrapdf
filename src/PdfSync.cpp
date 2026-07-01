@@ -141,15 +141,15 @@ int Synchronizer::Create(Str path, EngineBase* engine, Synchronizer** sync) {
     TempStr basePath = path::GetPathNoExtTemp(path);
 
     // Check if a PDFSYNC file is present
-    TempStr syncFile = str::JoinTemp(basePath, ".pdfsync");
+    TempStr syncFile = str::JoinTemp(basePath, StrL(".pdfsync"));
     if (file::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile, path, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
     // check if SYNCTEX or compressed SYNCTEX file is present
-    TempStr texGzFile = str::JoinTemp(basePath, ".synctex.gz");
-    TempStr texFile = str::JoinTemp(basePath, ".synctex");
+    TempStr texGzFile = str::JoinTemp(basePath, StrL(".synctex.gz"));
+    TempStr texFile = str::JoinTemp(basePath, StrL(".synctex"));
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be
@@ -599,8 +599,8 @@ TempStr CopyPlainSyncToTempFile(TempStr pathSync) {
         return {};
     }
 
-    TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);        // stxabcdef
-    TempStr tempPathSync = str::JoinTemp(tempPathNoExt, ".synctex"); // stxabcdef.synctex
+    TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);              // stxabcdef
+    TempStr tempPathSync = str::JoinTemp(tempPathNoExt, StrL(".synctex")); // stxabcdef.synctex
     int ret = rename(tempPath.s, tempPathSync.s);
     if (ret) {
         logfa("CopyPlainSyncToTempFile: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
@@ -652,8 +652,8 @@ TempStr DealPlainSync(TempStr pathSync) {
         }
         logfa("DealPlainSync: utf-8 written to temp file '%s'.\n", tempPath);
 
-        TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);        // stxabcdef
-        TempStr tempPathSync = str::JoinTemp(tempPathNoExt, ".synctex"); // stxabcdef.synctex
+        TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);              // stxabcdef
+        TempStr tempPathSync = str::JoinTemp(tempPathNoExt, StrL(".synctex")); // stxabcdef.synctex
         int ret = rename(tempPath.s, tempPathSync.s);
         if (ret) {
             logfa("DealPlainSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
@@ -701,8 +701,8 @@ TempStr ungzipToTempSync(Str gzPath) {
         return {};
     }
 
-    TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);        // stxabcdef
-    TempStr tempPathSync = str::JoinTemp(tempPathNoExt, ".synctex"); // stxabcdef.synctex
+    TempStr tempPathNoExt = path::GetPathNoExtTemp(tempPath);              // stxabcdef
+    TempStr tempPathSync = str::JoinTemp(tempPathNoExt, StrL(".synctex")); // stxabcdef.synctex
     int ret = rename(tempPath.s, tempPathSync.s);
     if (ret) {
         logfa("ungzipToTempSync: unable rename from '%s' to '%s'. error: %d.\n", tempPath, tempPathSync, errno);
@@ -726,7 +726,7 @@ int SyncTex::RebuildIndexIfNeeded() {
     TempStr pathSyncGz; //  abc.synctex.gz
     pathSync = str::DupTemp(syncFilePath);
     pathBase = path::GetPathNoExtTemp(syncFilePath);
-    pathSyncGz = str::JoinTemp(pathBase, ".synctex.gz");
+    pathSyncGz = str::JoinTemp(pathBase, StrL(".synctex.gz"));
 
     i64 fsize;
     bool path_nonascii = PathHasNonAscii(pathSync);

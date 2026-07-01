@@ -520,7 +520,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex, bool* openInNewWindow) {
     *openInNewWindow = false;
     // create a unique identifier for this executable and appdata combination
     // (allows independent side-by-side installations)
-    TempStr combinedPath = str::JoinTemp(GetSelfExePathTemp(), "|", GetAppDataDirTemp());
+    TempStr combinedPath = str::JoinTemp(GetSelfExePathTemp(), StrL("|"), GetAppDataDirTemp());
     str::ToLowerInPlace(combinedPath);
     u32 hash = MurmurHash2(combinedPath.s, len(combinedPath));
     TempStr mapId = fmt("SumatraPDF-%08x", hash);
@@ -1074,7 +1074,7 @@ static Str kInstallerHelpTmpl() {
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    TempStr msg = str::ReplaceTemp(kInstallerHelpTmpl(), "${appName}", kAppName);
+    TempStr msg = str::ReplaceTemp(kInstallerHelpTmpl(), StrL("${appName}"), kAppName);
 
     bool ok = RedirectIOToExistingConsole();
     if (ok) {

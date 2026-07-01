@@ -316,7 +316,7 @@ TempStr FavReadableNameTemp(Favorite* fn) {
     }
     if (fn->name) {
         TempStr pageNo = fmt(_TRA("(page %s)").s, label);
-        return str::JoinTemp(fn->name, " ", pageNo);
+        return str::JoinTemp(fn->name, StrL(" "), pageNo);
     }
     return fmt(_TRA("Page %s").s, label);
 }

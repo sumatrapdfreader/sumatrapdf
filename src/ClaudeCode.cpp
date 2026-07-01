@@ -854,7 +854,7 @@ static void SendClaudeMessage(MainWindow* win) {
     TempStr dir = path::GetDirTemp(filePath);
     TempStr fileName = path::GetBaseNameTemp(filePath);
 
-    TempStr escapedInput = str::ReplaceTemp(input, "\"", "\\\"");
+    TempStr escapedInput = str::ReplaceTemp(input, StrL("\""), StrL("\\\""));
 
     // sync and save settings from UI
     SyncClaudeSettingsFromUI(win);
@@ -920,7 +920,7 @@ static void SendClaudeMessage(MainWindow* win) {
 }
 
 static TempStr FitClaudePanelTitleTemp(HWND labelHwnd, HFONT font, Str docName, int maxDx) {
-    TempStr prefix = str::JoinTemp(_TRA("Claude chat"), " with ");
+    TempStr prefix = str::JoinTemp(_TRA("Claude chat"), StrL(" with "));
     return AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
 }
 

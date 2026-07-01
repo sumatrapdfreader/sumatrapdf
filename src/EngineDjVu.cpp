@@ -1320,7 +1320,7 @@ TempStr EngineDjVu::ResolveNamedDestTemp(Str name) {
 
 IPageDestination* EngineDjVu::GetNamedDest(Str name) {
     if (!str::StartsWith(name, "#")) {
-        name = str::JoinTemp("#", name);
+        name = str::JoinTemp(StrL("#"), name);
     }
 
     TempStr link = ResolveNamedDestTemp(name);

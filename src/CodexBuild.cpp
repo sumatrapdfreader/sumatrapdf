@@ -1033,7 +1033,7 @@ static void SendCodexMessage(MainWindow* win) {
     TempStr dir = path::GetDirTemp(filePath);
 
     TempStr prompt = fmt("The user is currently reading the file: %s\n\n%s", filePath, input);
-    TempStr escapedInput = str::ReplaceTemp(prompt, "\"", "\\\"");
+    TempStr escapedInput = str::ReplaceTemp(prompt, StrL("\""), StrL("\\\""));
 
     SyncCodexSettingsFromUI(win);
 
@@ -1098,7 +1098,7 @@ static void SendCodexMessage(MainWindow* win) {
 }
 
 static TempStr FitCodexPanelTitleTemp(HWND labelHwnd, HFONT font, Str docName, int maxDx) {
-    TempStr prefix = str::JoinTemp(_TRA("Codex chat"), " with ");
+    TempStr prefix = str::JoinTemp(_TRA("Codex chat"), StrL(" with "));
     return AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
 }
 

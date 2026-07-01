@@ -440,7 +440,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             if (ti && tab && tab->filePath) {
                 Str path = tab->filePath;
                 if (dirty) {
-                    TempStr tooltip = str::JoinTemp(path, " ", _TRA("(unsaved annotations)"));
+                    TempStr tooltip = str::JoinTemp(path, StrL(" "), _TRA("(unsaved annotations)"));
                     str::ReplaceWithCopy(&ti->tooltip, tooltip);
                 } else {
                     str::ReplaceWithCopy(&ti->tooltip, path);
@@ -1177,9 +1177,9 @@ static void PopulateCustomToolbarButtons() {
 static fz_pixmap* RenderSvgIconPixmap(fz_context* ctx, Str svgData, int dx, int dy, COLORREF fgCol, COLORREF bgCol) {
     TempStr strokeCol = SerializeColorTemp(fgCol);
     TempStr fillCol = SerializeColorTemp(bgCol);
-    TempStr fillColRepl = str::JoinTemp("fill=\"", fillCol, "\"");
-    TempStr svg = str::ReplaceTemp(svgData, "currentColor", strokeCol);
-    svg = str::ReplaceTemp(svg, R"(fill="none")", fillColRepl);
+    TempStr fillColRepl = str::JoinTemp(StrL("fill=\""), fillCol, StrL("\""));
+    TempStr svg = str::ReplaceTemp(svgData, StrL("currentColor"), strokeCol);
+    svg = str::ReplaceTemp(svg, StrL(R"(fill="none")"), fillColRepl);
     fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)svg.s, svg.len);
     fz_image* image = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
     image->w = dx;

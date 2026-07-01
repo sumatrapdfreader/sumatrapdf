@@ -446,7 +446,7 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
         hbox->alignCross = CrossAxisAlign::CrossCenter;
 
         TempStr noExt = path::GetPathNoExtTemp(srcPath);
-        TempStr txtPath = str::JoinTemp(noExt, ".txt");
+        TempStr txtPath = str::JoinTemp(noExt, StrL(".txt"));
         Edit::CreateArgs args;
         args.parent = hwnd;
         args.withBorder = true;

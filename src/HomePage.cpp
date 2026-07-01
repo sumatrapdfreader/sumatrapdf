@@ -505,12 +505,12 @@ void SetPromoString(Str s) {
 static TempStr GetAppVersionTemp() {
     TempStr s = str::DupTemp("v" CURR_VERSION_STRA);
     if (IsProcess64()) {
-        s = str::JoinTemp(s, " 64-bit");
+        s = str::JoinTemp(s, StrL(" 64-bit"));
     } else {
-        s = str::JoinTemp(s, " 32-bit");
+        s = str::JoinTemp(s, StrL(" 32-bit"));
     }
     if (gIsDebugBuild) {
-        s = str::JoinTemp(s, " (dbg)");
+        s = str::JoinTemp(s, StrL(" (dbg)"));
     }
     return s;
 }

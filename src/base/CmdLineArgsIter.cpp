@@ -163,7 +163,7 @@ TempStr CmdLineArgsIter::ParamsTemp() {
     // must concat all the
     TempStr s = Str(args[1]);
     for (int i = 2; i < nArgs; i++) {
-        s = str::JoinTemp(s, " ", args[i]);
+        s = str::JoinTemp(s, StrL(" "), args[i]);
     }
     return s;
 }

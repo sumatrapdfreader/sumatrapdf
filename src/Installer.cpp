@@ -349,26 +349,26 @@ static void RestartElevatedForAllUsers(Flags* cli) {
     logf("RestartElevatedForAllUsers: cli->allUsers: %d, allUsersChecked: %d, allUsers: %d\n", (int)cli->allUsers,
          (int)allUsersChecked, (int)allUsers);
     if (allUsers) {
-        cmdLine = str::JoinTemp(cmdLine, " -all-users");
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -all-users"));
     }
     if (cli->withFilter) {
-        cmdLine = str::JoinTemp(cmdLine, " -with-filter");
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -with-filter"));
     }
     if (cli->withPreview) {
-        cmdLine = str::JoinTemp(cmdLine, " -with-preview");
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -with-preview"));
     }
     if (cli->silent) {
-        cmdLine = str::JoinTemp(cmdLine, " -silent");
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -silent"));
     }
     if (cli->fastInstall) {
-        cmdLine = str::JoinTemp(cmdLine, " -fast-install");
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -fast-install"));
     }
     if (cli->log) {
-        cmdLine = str::JoinTemp(cmdLine, " -log");
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -log"));
     }
     Str dir = cli->installDir;
-    cmdLine = str::JoinTemp(cmdLine, " -install-dir \"", dir);
-    cmdLine = str::JoinTemp(cmdLine, "\"");
+    cmdLine = str::JoinTemp(cmdLine, StrL(" -install-dir \""), dir);
+    cmdLine = str::JoinTemp(cmdLine, StrL("\""));
     logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
     bool ok = LaunchElevated(exePath, cmdLine);
     if (!ok) {
@@ -703,7 +703,7 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
 
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    TempStr end = str::JoinTemp("\\", kAppName);
+    TempStr end = str::JoinTemp(StrL("\\"), kAppName);
     if (!str::EndsWithI(installPath, end)) {
         installPath = path::JoinTemp(installPath, kAppName);
     }

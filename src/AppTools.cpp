@@ -26,7 +26,7 @@ bool NeedsWindowEmbeddingHacks();
    created by an installer (and should be updated through an installer) */
 static bool HasBeenInstalled() {
     // see GetDefaultInstallationDir() in Installer.cpp
-    TempStr regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
+    TempStr regPathUninst = str::JoinTemp(StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"), kAppName);
     TempStr installedPath = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!installedPath) {
         return false;

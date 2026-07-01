@@ -33,7 +33,7 @@ static TempStr GetGhostscriptPathTemp() {
 TryAgain64Bit:
     for (Str gsProd : gsProducts) {
         HKEY hkey;
-        TempStr keyName = str::JoinTemp("Software\\", gsProd);
+        TempStr keyName = str::JoinTemp(StrL("Software\\"), gsProd);
         WCHAR* keyNameW = CWStrTemp(keyName);
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyNameW, 0, access, &hkey) != ERROR_SUCCESS) {
             continue;
@@ -193,7 +193,7 @@ static EngineBase* ps2pdf(Str path) {
         return nullptr;
     }
 
-    TempStr nameHint = str::JoinTemp(path, ".pdf");
+    TempStr nameHint = str::JoinTemp(path, StrL(".pdf"));
     return CreateEngineMupdfFromStream(stream, nameHint);
 }
 

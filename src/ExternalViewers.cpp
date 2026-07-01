@@ -407,7 +407,7 @@ static TempStr FormatParamTemp(Str arg, WindowTab* tab) {
 
 static TempStr GetDocumentPathQuoted(WindowTab* tab) {
     auto path = tab->filePath;
-    return str::JoinTemp("\"", path, "\"");
+    return str::JoinTemp(StrL("\""), path, StrL("\""));
 }
 
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {

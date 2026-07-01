@@ -595,7 +595,7 @@ static TempWStr MimeHeaderFromContentType(Str contentType) {
         contentType = "text/html";
     }
     TempWStr contentTypeW = ToWStrTemp(contentType);
-    return str::JoinTemp(L"Content-Type: ", contentTypeW);
+    return str::JoinTemp(WStrL(L"Content-Type: "), contentTypeW);
 }
 
 static TempWStr UriPathFromPrefix(WStr uri, WStr prefix) {
@@ -953,7 +953,7 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
     }
 
     if (resourceProvider.getResource && resourceUriPrefix) {
-        TempWStr filter = str::JoinTemp(resourceUriPrefix, L"*");
+        TempWStr filter = str::JoinTemp(resourceUriPrefix, WStrL(L"*"));
         webview->AddWebResourceRequestedFilter(filter.s, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
         auto* resourceHandler = new webview2_resource_handler(this);
         ::EventRegistrationToken resourceToken = {};

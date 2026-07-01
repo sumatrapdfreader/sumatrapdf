@@ -569,7 +569,7 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         return;
     }
 
-    TempStr path = str::ReplaceTemp(pathOrig, "/", "\\");
+    TempStr path = str::ReplaceTemp(pathOrig, StrL("/"), StrL("\\"));
     if (str::StartsWith(path, ".\\")) {
         path = Str(path.s + 2);
     }
