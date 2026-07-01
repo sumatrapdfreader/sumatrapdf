@@ -96,7 +96,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
         newPath.Append(entry);
     }
 
-    if (!WriteRegExpandSz(root, keyName, L"Path", newPath.Get())) {
+    if (!WriteRegExpandSz(root, keyName, StrL("Path"), newPath.Get())) {
         return;
     }
     logf("RemoveInstallDirFromPath: removed '%s' from PATH\n", installDir);

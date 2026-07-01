@@ -261,7 +261,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
     }
     newPath.Append(installDir);
 
-    if (!WriteRegExpandSz(root, keyName, L"Path", newPath.Get())) {
+    if (!WriteRegExpandSz(root, keyName, StrL("Path"), newPath.Get())) {
         return;
     }
     logf("AddInstallDirToPath: added '%s' to PATH\n", installDir);

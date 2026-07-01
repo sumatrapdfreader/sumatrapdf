@@ -85,7 +85,7 @@ Str GetInstallerLogPath();
 // case-insensitive check whether dir is a ';'-delimited component of a PATH-like string
 bool IsDirInPath(Str path, Str dir);
 // write value as REG_EXPAND_SZ (PATH may contain %vars%) under root\keyName:valueName
-bool WriteRegExpandSz(HKEY root, Str keyName, const WCHAR* valueName, Str value);
+bool WriteRegExpandSz(HKEY root, Str keyName, Str valueName, Str value);
 
 TempStr GetRegPathUninstTemp(Str appName);
 
