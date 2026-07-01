@@ -539,7 +539,7 @@ struct TiffParser {
         return ToStrTemp(s);
     }
 
-    TempStr FormatUndefinedBytes(size_t off, u32 count, bool asList) const {
+    TempStr FormatUndefinedBytesTemp(size_t off, u32 count, bool asList) const {
         if (count == 0) {
             return str::DupTemp("");
         }
@@ -580,7 +580,7 @@ struct TiffParser {
         return ToStrTemp(s);
     }
 
-    TempStr FormatValues(IfdGroup g, u16 tag, u16 type, u32 count, size_t off) const {
+    TempStr FormatValuesTemp(IfdGroup g, u16 tag, u16 type, u32 count, size_t off) const {
         if (count == 0) {
             return str::DupTemp("");
         }
@@ -655,7 +655,7 @@ struct TiffParser {
                     return FormatAscii(off + 8, count - 8);
                 }
             }
-            return FormatUndefinedBytes(off, count, true);
+            return FormatUndefinedBytesTemp(off, count, true);
         }
 
         if (type == TiffType::Rational || type == TiffType::SRational) {
@@ -846,13 +846,13 @@ struct TiffParser {
             if (tag == 0x8769 || tag == 0x8825 || tag == 0xA005) {
                 // pointer tags - still emit
                 size_t dataOff = ValueOffset(type, count, inlineVal, ent);
-                TempStr val = FormatValues(group, tag, type, count, dataOff);
+                TempStr val = FormatValuesTemp(group, tag, type, count, dataOff);
                 AppendLine(group, tag, type, val);
                 continue;
             }
 
             size_t dataOff = ValueOffset(type, count, inlineVal, ent);
-            TempStr val = FormatValues(group, tag, type, count, dataOff);
+            TempStr val = FormatValuesTemp(group, tag, type, count, dataOff);
             AppendLine(group, tag, type, val);
         }
 
@@ -871,7 +871,7 @@ struct TiffParser {
             return;
         }
         // emit raw makernote entry
-        TempStr val = FormatUndefinedBytes(dataOff, count, true);
+        TempStr val = FormatUndefinedBytesTemp(dataOff, count, true);
         AppendLine(IfdGroup::Exif, 0x927C, TiffType::Undefined, val);
 
         // Canon/Olympus TIFF-style makernote at offset 8

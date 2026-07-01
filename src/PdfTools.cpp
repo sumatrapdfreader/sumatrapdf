@@ -1084,7 +1084,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
 }
 
 // Build the page range string of pages to KEEP (complement of pagesToDelete).
-static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete) {
+static TempStr BuildKeepPagesRangeTemp(int pageCount, const Vec<int>& pagesToDelete) {
     str::Builder s;
     int delIdx = 0;
     int rangeStart = -1;
@@ -1125,7 +1125,7 @@ static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete)
 }
 
 // Format a sorted list of page numbers as a compact range string (e.g. "1-3,5,7-10").
-static TempStr FormatPageRange(const Vec<int>& pages) {
+static TempStr FormatPageRangeTemp(const Vec<int>& pages) {
     str::Builder s;
     int i = 0;
     int n = pages.Size();
@@ -1182,10 +1182,10 @@ void PdfDeletePageDialog::DoIt() {
     TempStr pageRange;
     if (isExtract) {
         // for extract: pass the specified pages directly to pdfclean
-        pageRange = FormatPageRange(parsedPages);
+        pageRange = FormatPageRangeTemp(parsedPages);
     } else {
         // for delete: pass the complement (pages to keep) to pdfclean
-        pageRange = BuildKeepPagesRange(pageCount, parsedPages);
+        pageRange = BuildKeepPagesRangeTemp(pageCount, parsedPages);
     }
 
     Str op = isExtract ? StrL("extract") : StrL("delete");
