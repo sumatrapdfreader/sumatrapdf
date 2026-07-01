@@ -1530,7 +1530,7 @@ inline bool IsEmailDomainChar(char c) {
 }
 
 static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
-    AutoFreeStr beforeAt;
+    Str beforeAt;
     Str rest = curr;
     if (!str::IsEmpty(curr) && '@' == curr.s[0]) {
         if (len(htmlData) == 0 || !IsEmailUsernameChar(htmlData.Last())) {
@@ -1540,7 +1540,8 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
         for (; idx > 1 && IsEmailUsernameChar(htmlData[idx - 1]); idx--) {
             ;
         }
-        beforeAt.SetCopy(&htmlData[idx]);
+        // copy (not a view): htmlData is mutated below before beforeAt is appended back
+        beforeAt = str::DupTemp(Str(&htmlData[idx]));
     } else {
         ReportIf(!str::StartsWith(curr, "mailto:"));
         rest = Str(curr.s + 7, curr.len - 7);
@@ -1577,16 +1578,16 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
     Str linkStart = !str::IsEmpty(curr) && '@' == curr.s[0] ? curr : Str(curr.s + 7, curr.len - 7);
 
     if (beforeAt) {
-        size_t idx = len(htmlData) - (size_t)Str(beforeAt.Get()).len;
+        int idx = len(htmlData) - beforeAt.len;
         htmlData.RemoveAt(idx, len(htmlData) - idx);
     }
     htmlData.Append("<a href=\"mailto:");
-    htmlData.Append(Str(beforeAt.Get()));
+    htmlData.Append(beforeAt);
     for (int i = 0; i < (int)(end.s - linkStart.s); i++) {
         AppendChar(htmlData, linkStart.s[i]);
     }
     htmlData.Append("\">");
-    htmlData.Append(Str(beforeAt.Get()));
+    htmlData.Append(beforeAt);
 
     return end;
 }
