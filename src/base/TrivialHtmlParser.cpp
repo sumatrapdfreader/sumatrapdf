@@ -104,7 +104,9 @@ WStr DecodeHtmlEntities(Str string, uint codepage) {
         }
     }
     *dst = '\0';
-
+    // entities compact the string, so the decoded length is shorter than the
+    // allocated buffer; report the actual length
+    fixed.len = (int)(dst - fixed.s);
     return fixed;
 }
 
