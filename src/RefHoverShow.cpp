@@ -56,10 +56,19 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     } else {
         Rect* coords = nullptr;
         WStr text = engine->GetTextForPage(destPage, nullptr, &coords);
+        WCHAR* cleanText = nullptr;
+        Rect* cleanCoords = nullptr;
         Rect* normCoords = coords;
         if (coords && !wstr::IsEmpty(text)) {
-            normCoords = AllocArray<Rect>((size_t)text.len);
-            NormalizeGlyphLines(coords, normCoords, text.len);
+            // Strip the page watermark on the raw glyphs first (its true height
+            // is only visible pre-normalization), then normalize the survivors
+            // so the detectors below see clean, baseline-flattened text.
+            cleanText = AllocArray<WCHAR>((size_t)text.len);
+            cleanCoords = AllocArray<Rect>((size_t)text.len);
+            int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
+            text = WStr(cleanText, cleanLen);
+            normCoords = AllocArray<Rect>((size_t)cleanLen);
+            NormalizeGlyphLines(cleanCoords, normCoords, cleanLen);
         }
         region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
         if (region.dx <= 0.f || region.dy <= 0.f) {
@@ -68,6 +77,8 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         if (normCoords != coords) {
             free(normCoords);
         }
+        free(cleanText);
+        free(cleanCoords);
     }
     s->displayed.userZoom = 1.f;
     float baseZoom = useLinkZoom ? linkZoom : ((pageZoom > 0.f) ? pageZoom : kRefHoverRenderZoom);

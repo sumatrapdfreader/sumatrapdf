@@ -479,6 +479,159 @@ static void NumericCitationSrcRectDistinctOnLine() {
     utassert(first.x != second.x);
 }
 
+// (13c) Numeric citation page range written with an en-dash ("[2, 9–14]"):
+// the en-dash must not break bracket detection, and hovering an endpoint
+// resolves to that endpoint's number.
+static void NumericCitationRangeEnDash() {
+    WCHAR text[256];
+    Rect coords[256];
+    int len = 0;
+    // "deploy [2, 9–14]." — en-dash split from "14" so the \x2013 escape does
+    // not swallow the following hex digits.
+    AddText(text, coords, len, 256, L"deploy [2, 9\x2013" L"14].", 72, 200);
+    int num = 0;
+    // Cursor on the '9' (idx 11 → x = 72 + 11*6 = 138).
+    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{141, 206}, &num);
+    utassert(ok);
+    utassert(num == 9);
+    // Cursor on the '4' of "14" (idx 14 → x = 72 + 14*6 = 156).
+    num = 0;
+    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{159, 206}, &num);
+    utassert(ok);
+    utassert(num == 14);
+}
+
+// (13d) Numeric citation list that wraps across a line break ("[8, 17,\n18]"):
+// bracket detection must span the line break. Hovering a number on either the
+// first or the second line resolves to that number. The 2nd line sits 20pt
+// below (> the 16pt single-line tolerance) so this exercises the multi-line
+// walk, not the within-line tolerance.
+static void NumericCitationLineBreakList() {
+    WCHAR text[256];
+    Rect coords[256];
+    int len = 0;
+    AddText(text, coords, len, 256, L"in AECO [8, 17,", 72, 200); // '[' at idx 8 (x=120)
+    AddText(text, coords, len, 256, L"18]. These", 72, 220);       // '1' at idx 15 (x=72,y=220)
+    int num = 0;
+    // Cursor on the '8' on line 1 (idx 9 → x = 72 + 9*6 = 126).
+    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{129, 206}, &num);
+    utassert(ok);
+    utassert(num == 8);
+    // Cursor on the wrapped "18" on line 2 (idx 15 → x = 72, y = 220).
+    num = 0;
+    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{75, 224}, &num);
+    utassert(ok);
+    utassert(num == 18);
+    // Cursor on "17" on line 1 (idx 12 → x = 144).
+    num = 0;
+    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{147, 206}, &num);
+    utassert(ok);
+    utassert(num == 17);
+}
+
+// (13e) Wrapped citation where the open bracket sits at the END of line 1
+// (high x) and the wrapped numbers are at the START of line 2 (low x) —
+// "...[42,\n43] maintain...". Mirrors the real "[42, 43]" failure: detection
+// walks by reading order (not x), so hovering "43" on line 2 must still find
+// the '[' on line 1 and resolve to 43.
+static void NumericCitationWrapEndOfLine() {
+    WCHAR text[256];
+    Rect coords[256];
+    int len = 0;
+    // Line 1 is a full column line ending in "[42," (the citation wrapped at
+    // the right margin); line 2 begins with "43]" at the left margin. The two
+    // share the column's x-range even though the citation halves do not.
+    AddText(text, coords, len, 256, L"a first line of text ending in [42,", 72, 200);
+    AddText(text, coords, len, 256, L"43] maintain live text here", 72, 224);
+    // '4' of the wrapped "43" is the first glyph of the 2nd line.
+    int idx43 = 0;
+    for (int i = 0; i < len; i++) {
+        if (text[i] == L'4' && coords[i].y == 224 && coords[i].x == 72) {
+            idx43 = i;
+            break;
+        }
+    }
+    utassert(idx43 > 0);
+    int num = 0;
+    // Cursor on the wrapped "43" (x=72, y=224).
+    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{75, 230}, &num);
+    utassert(ok);
+    utassert(num == 43);
+    // Cursor on "42" at the end of line 1.
+    int idx42 = 0;
+    for (int i = 0; i < len; i++) {
+        if (text[i] == L'4' && coords[i].y == 200 && text[i + 1] == L'2') {
+            idx42 = i;
+            break;
+        }
+    }
+    utassert(idx42 > 0);
+    num = 0;
+    ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{coords[idx42].x + 3, 206}, &num);
+    utassert(ok);
+    utassert(num == 42);
+}
+
+// (13f) Wrapped citation whose glyphs are OUT OF READING ORDER in the array:
+// "[42," (line 1) and "43]" (line 2) are visually one line apart, but in the
+// glyph stream "43]" is preceded by unrelated text ~200pt above (mirrors the
+// real PDF: the stream neighbour of "43]" sat 196pt up, not at "[42,"). The
+// detector must reconstruct local reading order spatially and still resolve.
+static void NumericCitationWrapOutOfOrder() {
+    WCHAR text[512];
+    Rect coords[512];
+    int len = 0;
+    // line 1 (y=200): "...) [42," — the '[' sits near the right end.
+    AddText(text, coords, len, 512, L"runtime models [42,", 72, 200);
+    // Unrelated text ~200pt above, inserted BEFORE line 2 in array order so it
+    // becomes "43]"'s stream neighbour (as in the real doc).
+    AddText(text, coords, len, 512, L"unrelated heading text far above", 72, 4);
+    // line 2 (y=220): "43] maintain ..." — visually one line below line 1.
+    AddText(text, coords, len, 512, L"43] maintain live", 72, 220);
+    // '4' of "43" is the first glyph of the 3rd AddText run.
+    int idx43 = 0;
+    for (int i = 0; i < len; i++) {
+        if (text[i] == L'4' && coords[i].y == 220 && coords[i].x == 72) {
+            idx43 = i;
+            break;
+        }
+    }
+    utassert(idx43 > 0);
+    int num = 0;
+    // Cursor on the wrapped "43" (x=72, y=220).
+    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{75, 226}, &num);
+    utassert(ok);
+    utassert(num == 43);
+}
+
+// (13g) Wrapped citation in the LEFT column of a 2-column page, with unrelated
+// right-column text at the same y. Column-limited segment reconstruction must
+// keep the right column out and still bridge "[42,"(line1) → "43]"(line2).
+static void NumericCitationWrapTwoColumn() {
+    WCHAR text[512];
+    Rect coords[512];
+    int len = 0;
+    // Left column (x=72, ends ~x=270). Line 1 ends "[42,", line 2 starts "43]".
+    AddText(text, coords, len, 512, L"left column line one ending [42,", 72, 200);
+    AddText(text, coords, len, 512, L"43] left column line two here", 72, 220);
+    // Right column (x=340) at the same two y's — must be ignored (gutter ~70pt).
+    AddText(text, coords, len, 512, L"right column first line text", 340, 200);
+    AddText(text, coords, len, 512, L"right column second line text", 340, 220);
+    // '4' of the wrapped "43" (left column, x=72, y=220).
+    int idx43 = 0;
+    for (int i = 0; i < len; i++) {
+        if (text[i] == L'4' && coords[i].x == 72 && coords[i].y == 220) {
+            idx43 = i;
+            break;
+        }
+    }
+    utassert(idx43 > 0);
+    int num = 0;
+    bool ok = DetectNumericCitationInPageText(WStr(text, len), coords, len, Point{75, 226}, &num);
+    utassert(ok);
+    utassert(num == 43);
+}
+
 // (10b) Two author-year citations on one line get distinct srcRect x spans.
 static void PlainTextCitationSrcRectDistinctOnLine() {
     WCHAR text[256];
@@ -758,10 +911,89 @@ static void TwoColumnWideSecondLineStaysInColumn() {
     utassert(box.x + box.dx < 300.f);
 }
 
+// (17) StripWatermarkGlyphs: a diagonal draft / "under review" watermark
+// (oversized glyphs, one per baseline) is removed, while body text and a
+// horizontal heading of same-baseline tall glyphs are kept.
+static void StripWatermarkRemovesDiagonalStamp() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Body: 3 lines of normal (dy=12) glyphs.
+    AddText(text, coords, len, 1024, L"normal body text line one here", 72, 200);
+    AddText(text, coords, len, 1024, L"normal body text line two here", 72, 214);
+    AddText(text, coords, len, 1024, L"normal body text line three xx", 72, 228);
+    int bodyGlyphs = len;
+    // Diagonal watermark: oversized (dy=40), each glyph on its own baseline.
+    for (int i = 0; i < 10 && len < 1024; i++) {
+        text[len] = L"UNDERREVIEW"[i];
+        coords[len] = Rect{190 + i * 14, 180 + i * 6, 20, 40};
+        len++;
+    }
+    WCHAR outText[1024];
+    Rect outCoords[1024];
+    int kept = StripWatermarkGlyphs(WStr(text, len), coords, outText, outCoords);
+    // All body glyphs survive; all 10 watermark glyphs are dropped.
+    utassert(kept == bodyGlyphs);
+    for (int i = 0; i < kept; i++) {
+        utassert(outCoords[i].dy == kLineH);
+    }
+
+    // A horizontal heading of tall glyphs (same baseline, many on the row) is
+    // NOT mistaken for a watermark — tall + dense row ⇒ kept.
+    len = 0;
+    AddText(text, coords, len, 1024, L"normal body text line one here", 72, 200);
+    int headStart = len;
+    for (int i = 0; i < 8 && len < 1024; i++) {
+        text[len] = L"HEADING!"[i];
+        coords[len] = Rect{72 + i * 14, 150, 12, 30}; // tall, but all share baseline 180
+        len++;
+    }
+    kept = StripWatermarkGlyphs(WStr(text, len), coords, outText, outCoords);
+    utassert(kept == len); // nothing stripped
+    (void)headStart;
+}
+
+// (18) 2-column reference list overlaid by a diagonal draft / "under review"
+// watermark whose oversized glyphs pass through the column gutter. The caller
+// strips the watermark (StripWatermarkGlyphs) before box detection, so the
+// gutter is empty again and the box stays in the left column. Regresses the
+// "ref spans two columns" bug: the watermark filled the gutter in the column
+// scan, columnRightX ran past it, and the box swept into the right column.
+static void TwoColumnWatermarkStaysInColumn() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Left column entry at x=72 (label+body share line 1, ends ~x=246), 2nd
+    // line at y=215. Right column body at x=340 (gutter ~246..340).
+    AddText(text, coords, len, 1024, L"[12] Sample left column entry", 72, 200);
+    AddText(text, coords, len, 1024, L"more left column entry text..", 72, 215);
+    for (int i = 0; i < 4; i++) {
+        AddText(text, coords, len, 1024, L"right column body text line..", 340, 200 + i * 15);
+    }
+    // Diagonal watermark: oversized (dy=40), wide (dx=20) glyphs stepping right
+    // by 14pt and down by 6pt, sweeping x≈190..360 across the gutter.
+    for (int i = 0; i < 12 && len < 1024; i++) {
+        text[len] = L"UNDERREVIEW.."[i];
+        coords[len] = Rect{190 + i * 14, 180 + i * 6, 20, 40};
+        len++;
+    }
+    // Caller pipeline: strip the watermark, then detect on the survivors.
+    WCHAR cleanText[1024];
+    Rect cleanCoords[1024];
+    int cleanLen = StripWatermarkGlyphs(WStr(text, len), coords, cleanText, cleanCoords);
+    RectF box = DetectEntryBox(WStr(cleanText, cleanLen), cleanCoords, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    utassert(box.x <= 72.f + 6.f);
+    // must not cross the gutter into the right column (x=340)
+    utassert(box.x + box.dx < 340.f);
+}
+
 void RefHoverTest() {
     TwoColumnNumericLeftEntryNotHijacked();
     TwoColumnNumericReferenceFound();
     TwoColumnWideSecondLineStaysInColumn();
+    StripWatermarkRemovesDiagonalStamp();
+    TwoColumnWatermarkStaysInColumn();
     AccentedAllCapsHeadingDetected();
     HangingIndentNarrowLabelFullWidth();
     TwoColumnHangingIndentStaysInColumn();
@@ -792,5 +1024,10 @@ void RefHoverTest() {
     SurnameFoundOnBibPage();
     NumericCitationDetected();
     NumericCitationSrcRectDistinctOnLine();
+    NumericCitationRangeEnDash();
+    NumericCitationLineBreakList();
+    NumericCitationWrapEndOfLine();
+    NumericCitationWrapOutOfOrder();
+    NumericCitationWrapTwoColumn();
     NumericReferenceFoundOnBibPage();
 }

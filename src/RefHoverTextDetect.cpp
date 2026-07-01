@@ -508,75 +508,211 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         return false;
     }
 
-    // 2. The cursor must sit inside a "[ ... ]" bracket on its own line. Walk
-    // left to '[' and right to ']', staying on the cursor's text line and
-    // allowing only the chars that make up a numeric citation list
-    // ("[1]", "[1, 2]", "[3-5]").
     int cursorY = coords[cursorIdx].y;
     int lineTol = coords[cursorIdx].dy + 4;
     if (lineTol < 12) {
         lineTol = 14;
     }
-    auto sameLine = [&](int i) { return abs(coords[i].y - cursorY) <= lineTol; };
-    auto isListChar = [](WCHAR c) { return iswdigit(c) || c == L' ' || c == L'\t' || c == L',' || c == L'-'; };
+    // A numeric citation list may wrap across a line break ("[8, 17,\n18]"), so
+    // the "[ ... ]" walk must span a couple of lines. It can't walk by array
+    // index, though: some PDFs emit a wrapped number far from its '[' in the
+    // glyph stream (observed: the glyph before "43]" sat 196pt above, not at
+    // the "[42," one line up). So reconstruct *local reading order* — gather
+    // glyphs in a vertical band around the cursor and order them
+    // top-to-bottom / left-to-right — then walk that. "[42," (end of one line)
+    // then sits immediately before "43]" (start of the next), while the
+    // out-of-order stream neighbour falls outside the band.
+    // Digits, separators, and dash forms used in page ranges. Beyond the ASCII
+    // hyphen, accept the Unicode figure/en/em dash and minus sign, since
+    // typeset ranges ("9–14") use an en-dash, not '-'.
+    auto isListChar = [](WCHAR c) {
+        return iswdigit(c) || c == L' ' || c == L'\t' || c == L',' || c == L'-' || c == L'\x2012' ||
+               c == L'\x2013' || c == L'\x2014' || c == L'\x2212';
+    };
 
-    int open = -1;
-    for (int i = cursorIdx; i >= 0 && sameLine(i); i--) {
-        WCHAR c = text.s[i];
-        if (c == L'[') {
-            open = i;
-            break;
+    int blTol = (lineTol / 2 > 3) ? lineTol / 2 : 3;
+    int cursorBL = coords[cursorIdx].y + coords[cursorIdx].dy;
+    int cursorX = coords[cursorIdx].x;
+
+    // Build one text line's column-limited segment: glyph indices whose baseline
+    // (y+dy, stable across a line) is within blTol of targetBL, sorted
+    // left-to-right, then restricted to the contiguous x-run (splits at gaps
+    // wider than a column gutter) that overlaps [refLo, refHi]. This keeps the
+    // neighbouring column — and the diagonal watermark, whose glyphs sit on
+    // their own scattered baselines — out of the segment. A whole-Y-band
+    // reconstruction can't: it merges both columns into one logical line and
+    // buries a wrapped citation's "[" behind the other column's text.
+    constexpr int kColGap = 16;
+    auto buildSegment = [&](int targetBL, int refLo, int refHi, int* out, int cap, int* segLo, int* segHi) -> int {
+        int cnt = 0;
+        for (int i = 0; i < textLen && cnt < cap; i++) {
+            if (abs((coords[i].y + coords[i].dy) - targetBL) <= blTol) {
+                out[cnt++] = i;
+            }
         }
-        // Tolerate the cursor landing on the closing ']' itself.
-        if (c == L']' && i == cursorIdx) {
-            continue;
+        for (int a = 1; a < cnt; a++) { // insertion sort by x
+            int v = out[a];
+            int vx = coords[v].x;
+            int b = a - 1;
+            while (b >= 0 && coords[out[b]].x > vx) {
+                out[b + 1] = out[b];
+                b--;
+            }
+            out[b + 1] = v;
         }
-        if (!isListChar(c)) {
-            break;
+        int chosenS = -1, chosenE = -1;
+        int s = 0;
+        while (s < cnt) {
+            int e = s;
+            while (e + 1 < cnt) {
+                int gap = coords[out[e + 1]].x - (coords[out[e]].x + coords[out[e]].dx);
+                if (gap > kColGap) {
+                    break;
+                }
+                e++;
+            }
+            int runLo = coords[out[s]].x;
+            int runHi = coords[out[e]].x + coords[out[e]].dx;
+            if (runHi >= refLo && runLo <= refHi) {
+                chosenS = s;
+                chosenE = e;
+                break;
+            }
+            s = e + 1;
         }
-    }
-    if (open < 0) {
+        if (chosenS < 0) {
+            *segLo = 0;
+            *segHi = -1;
+            return 0;
+        }
+        int n = chosenE - chosenS + 1;
+        for (int t = 0; t < n; t++) {
+            out[t] = out[chosenS + t];
+        }
+        *segLo = coords[out[0]].x;
+        *segHi = coords[out[n - 1]].x + coords[out[n - 1]].dx;
+        return n;
+    };
+
+    constexpr int kSegCap = 512;
+    int curSeg[kSegCap];
+    int curLo = 0, curHi = -1;
+    int curN = buildSegment(cursorBL, cursorX, cursorX, curSeg, kSegCap, &curLo, &curHi);
+    if (curN <= 0) {
         return false;
     }
-    int close = -1;
-    for (int i = open + 1; i < textLen && sameLine(i); i++) {
-        WCHAR c = text.s[i];
+    // Nearest text line above / below in the same column (a glyph overlapping
+    // the cursor line's x-range), so a wrapped citation's other half is
+    // reachable without pulling in the neighbouring column.
+    int prevBL = INT_MIN, nextBL = INT_MAX;
+    for (int i = 0; i < textLen; i++) {
+        int gx = coords[i].x;
+        int gxr = gx + coords[i].dx;
+        if (gxr < curLo - kColGap || gx > curHi + kColGap) {
+            continue;
+        }
+        int bl = coords[i].y + coords[i].dy;
+        if (bl < cursorBL - blTol && bl > prevBL) {
+            prevBL = bl;
+        }
+        if (bl > cursorBL + blTol && bl < nextBL) {
+            nextBL = bl;
+        }
+    }
+    int prevSeg[kSegCap];
+    int nextSeg[kSegCap];
+    int pLo, pHi, nLo, nHi;
+    int prevN = (prevBL != INT_MIN) ? buildSegment(prevBL, curLo, curHi, prevSeg, kSegCap, &pLo, &pHi) : 0;
+    int nextN = (nextBL != INT_MAX) ? buildSegment(nextBL, curLo, curHi, nextSeg, kSegCap, &nLo, &nHi) : 0;
+
+    // Reading order: previous line, cursor line, next line — each sorted by x.
+    int m = prevN + curN + nextN;
+    int* seq = AllocArray<int>((size_t)m);
+    {
+        int w = 0;
+        for (int t = 0; t < prevN; t++) {
+            seq[w++] = prevSeg[t];
+        }
+        for (int t = 0; t < curN; t++) {
+            seq[w++] = curSeg[t];
+        }
+        for (int t = 0; t < nextN; t++) {
+            seq[w++] = nextSeg[t];
+        }
+    }
+    auto cleanup = [&]() { free(seq); };
+    int cursorPos = -1;
+    for (int k = 0; k < m; k++) {
+        if (seq[k] == cursorIdx) {
+            cursorPos = k;
+            break;
+        }
+    }
+    if (cursorPos < 0) {
+        cleanup();
+        return false;
+    }
+
+    // 2. Walk the reconstructed order left to '[' and right to ']', through
+    // citation-list chars only (a letter ends the walk, bounding it).
+    int openPos = -1;
+    for (int k = cursorPos; k >= 0; k--) {
+        WCHAR c = text.s[seq[k]];
+        if (c == L'[') {
+            openPos = k;
+            break;
+        }
+        if (c == L']' && k == cursorPos) {
+            continue; // cursor landed on the closing ']'
+        }
+        if (!isListChar(c)) {
+            break;
+        }
+    }
+    if (openPos < 0) {
+        cleanup();
+        return false;
+    }
+    int closePos = -1;
+    for (int k = openPos + 1; k < m; k++) {
+        WCHAR c = text.s[seq[k]];
         if (c == L']') {
-            close = i;
+            closePos = k;
             break;
         }
         if (!isListChar(c)) {
             break;
         }
     }
-    if (close <= open + 1) {
+    if (closePos <= openPos + 1) {
+        cleanup();
         return false;
     }
 
     // 3. Pick the number token nearest the cursor inside the brackets.
     int bestNum = 0;
     int bestTokDist = INT_MAX;
-    int i = open + 1;
-    while (i < close) {
-        if (!iswdigit(text.s[i])) {
-            i++;
+    int k = openPos + 1;
+    while (k < closePos) {
+        if (!iswdigit(text.s[seq[k]])) {
+            k++;
             continue;
         }
-        int start = i;
+        int start = k;
         int val = 0;
-        while (i < close && iswdigit(text.s[i])) {
-            val = val * 10 + (text.s[i] - L'0');
+        while (k < closePos && iswdigit(text.s[seq[k]])) {
+            val = val * 10 + (text.s[seq[k]] - L'0');
             if (val > 99999) {
                 val = 99999; // guard against pathological runs
             }
-            i++;
+            k++;
         }
-        int end = i - 1;
+        int end = k - 1;
         int dist;
-        if (cursorIdx < start) {
-            dist = start - cursorIdx;
-        } else if (cursorIdx > end) {
-            dist = cursorIdx - end;
+        if (cursorPos < start) {
+            dist = start - cursorPos;
+        } else if (cursorPos > end) {
+            dist = cursorPos - end;
         } else {
             dist = 0;
         }
@@ -586,12 +722,34 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
         }
     }
     if (bestNum <= 0) {
+        cleanup();
         return false;
     }
     if (srcRectOut) {
-        // stable per-occurrence key: the "[N]" bracket span on this line
-        *srcRectOut = GlyphSpanBounds(coords, textLen, open, close);
+        // stable per-occurrence key: bounds of the "[ ... ]" span (may cover
+        // two lines when the list wraps).
+        int xMin = INT_MAX, sMinY = INT_MAX, xMax = INT_MIN, sMaxY = INT_MIN;
+        for (int p = openPos; p <= closePos; p++) {
+            Rect r = coords[seq[p]];
+            if (r.dx <= 0 && r.dy <= 0) {
+                continue;
+            }
+            if (r.x < xMin) {
+                xMin = r.x;
+            }
+            if (r.y < sMinY) {
+                sMinY = r.y;
+            }
+            if (r.x + r.dx > xMax) {
+                xMax = r.x + r.dx;
+            }
+            if (r.y + r.dy > sMaxY) {
+                sMaxY = r.y + r.dy;
+            }
+        }
+        *srcRectOut = (xMin != INT_MAX) ? Rect{xMin, sMinY, xMax - xMin, sMaxY - sMinY} : Rect{};
     }
+    cleanup();
     *numOut = bestNum;
     return true;
 }
