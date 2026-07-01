@@ -1893,20 +1893,15 @@ char& str::Builder::Last() const {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-Str str::Builder::StealData(Arena* a) {
+Str str::Builder::TakeStr() {
     int n = (int)len;
     char* res = els;
-    if (a) {
-        // if allocator is specified, have to duplicate
-        res = (char*)MemDup(a, els, len + kPadding);
+    if (els == buf) {
+        // data is in the inline buffer, so we have to duplicate it
+        res = (char*)MemDup(this->allocator, els, len + kPadding);
     } else {
-        if (els == buf) {
-            a = (a != nullptr) ? a : this->allocator;
-            res = (char*)MemDup(a, els, len + kPadding);
-        } else {
-            // we're returning els, so reset to small buf
-            els = buf;
-        }
+        // we're returning els, so reset to small buf
+        els = buf;
     }
 
     Reset();
@@ -2121,7 +2116,7 @@ WCHAR wstr::Builder::RemoveLast() {
 // without duplicate allocation. Note: since Vec over-allocates, this
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
-WStr wstr::Builder::StealData() {
+WStr wstr::Builder::TakeWStr() {
     int n = (int)len;
     WCHAR* res = els;
     if (els == buf) {
@@ -2412,7 +2407,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
         result.Append(replaceWith);
         start = matchOff + findLen;
     }
-    return result.StealData();
+    return result.TakeWStr();
 }
 
 // replaces all whitespace characters with spaces, collapses several
@@ -3216,7 +3211,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     if (!ok) {
         return {};
     }
-    return result.StealData(GetTempArena());
+    return ToStrTemp(result);
 }
 
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {

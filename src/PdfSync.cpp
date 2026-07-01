@@ -573,7 +573,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf.Get(), utf8Len, NULL, NULL) == 0) {
         return {};
     }
-    return Str(utf8Buf.StealData(), utf8Len - 1);
+    return Str(utf8Buf.Take(), utf8Len - 1);
 }
 
 TempStr CopyPlainSyncToTempFile(TempStr pathSync) {

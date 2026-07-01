@@ -17,7 +17,7 @@ class ScopedMem {
         ptr = newPtr;
     }
     T* Get() const { return ptr; }
-    T* StealData() {
+    T* Take() {
         T* tmp = ptr;
         ptr = nullptr;
         return tmp;
@@ -148,7 +148,7 @@ struct AutoFree {
         return res;
     }
 
-    char* StealData() { return this->Release(); }
+    char* Take() { return this->Release(); }
 };
 
 // TODO: replace most of AutoFree with AutoFreeStr
@@ -225,7 +225,7 @@ struct AutoFreeWStr {
 
     bool empty() { return (data == nullptr) || (size() == 0); }
 
-    WCHAR* StealData() {
+    WCHAR* Take() {
         WCHAR* res = data;
         data = nullptr;
         len = 0;

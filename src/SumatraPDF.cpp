@@ -10757,7 +10757,7 @@ void ShowCrashHandlerMessage() {
     LaunchFileShell(url, nullptr, "open");
 }
 
-Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOut) {
+TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
@@ -10765,7 +10765,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return ToStrTemp(out);
     };
 
     if (str::IsEmpty(pathTwoPages) || str::IsEmpty(pathOnePage)) {
@@ -10798,7 +10798,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return ToStrTemp(out);
     }
 
     EngineBase* engine = CreateEngineFromFile(pathOnePage, nullptr, true);
@@ -10830,7 +10830,7 @@ Str TestPageInfoOverlayResult(Str pathTwoPages, Str pathOnePage, int* exitCodeOu
     if (exitCodeOut) {
         *exitCodeOut = ok ? 0 : 1;
     }
-    return out.StealData();
+    return ToStrTemp(out);
 }
 
 void ShutdownCleanup() {

@@ -263,7 +263,7 @@ Str SerializeSquareTreeNode(SquareTreeNode* node) {
     }
     str::Builder s;
     SerializeRec(node, s, 0);
-    return s.StealData();
+    return s.TakeStr();
 }
 
 SquareTreeNode* ParseSquareTree(Str s) {

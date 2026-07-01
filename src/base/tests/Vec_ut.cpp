@@ -92,7 +92,7 @@ void VecTest() {
         v.AppendChar('a');
         utassert(len(v) == 4);
         utassert(str::Eq("bopa", ToStr(v)));
-        Str s = v.StealData();
+        Str s = v.TakeStr();
         utassert(str::Eq("bopa", s));
         str::Free(s);
         utassert(len(v) == 0);
@@ -118,7 +118,7 @@ void VecTest() {
         utassert(len(v) == 6);
         Str s = ToStr(v);
         utassert(str::Eq(s, "lambda"));
-        s = v.StealData();
+        s = v.TakeStr();
         utassert(str::Eq(s, "lambda"));
         str::Free(s);
         utassert(len(v) == 0);

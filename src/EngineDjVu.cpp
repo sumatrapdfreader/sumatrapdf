@@ -986,8 +986,8 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     }
     ReportIf(coords.Size() != len(extracted));
     res.len = len(extracted);
-    res.text = extracted.StealData();
-    res.coords = coords.StealData();
+    res.text = extracted.TakeWStr();
+    res.coords = coords.Take();
     return res;
 }
 
@@ -1112,8 +1112,8 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
     }
     ReportIf(coords.Size() != len(extracted));
     res.len = len(extracted);
-    res.text = extracted.StealData();
-    res.coords = coords.StealData();
+    res.text = extracted.TakeStr();
+    res.coords = coords.Take();
     return res;
 }
 

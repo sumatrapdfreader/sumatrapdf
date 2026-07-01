@@ -1795,7 +1795,7 @@ void HtmlWindow::OnDocumentComplete(WStr urlW) {
     ReportIf(ok && (protoWindowId != windowId));
 
     str::Free(currentURL);
-    currentURL = urlReal.StealData();
+    currentURL = urlReal.Take();
     if (htmlWinCb) {
         htmlWinCb->OnDocumentComplete(currentURL);
     }

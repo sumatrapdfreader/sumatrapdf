@@ -817,7 +817,7 @@ void UpdateFindWindowTheme(MainWindow* win) {
     }
 }
 
-Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
+TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
@@ -825,7 +825,7 @@ Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return ToStrTemp(out);
     };
 
     if (gWindows.IsEmpty()) {
@@ -888,11 +888,11 @@ Str TestFindResultPageColumnClipResult(int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return ToStrTemp(out);
     }
     out.Append(fmt("OK pixel=0x%06x\n", (unsigned)px));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
-    return out.StealData();
+    return ToStrTemp(out);
 }

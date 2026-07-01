@@ -2065,7 +2065,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     RestoreImageEditFocus(ew);
 }
 
-Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
+TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
@@ -2073,7 +2073,7 @@ Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return ToStrTemp(out);
     };
 
     if (str::IsEmpty(imagePath) || !file::Exists(imagePath)) {
@@ -2103,12 +2103,12 @@ Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut) {
             *exitCodeOut = 1;
         }
         DestroyWindow(ew->hwnd);
-        return out.StealData();
+        return ToStrTemp(out);
     }
     out.Append(fmt("OK newW=%d\n", wAfter));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
     DestroyWindow(ew->hwnd);
-    return out.StealData();
+    return ToStrTemp(out);
 }

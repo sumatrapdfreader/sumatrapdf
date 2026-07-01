@@ -278,7 +278,6 @@ static void AppendTestResult(ControlRequest* req, int exitCode, Str result) {
     AppendArgInt(req->results, exitCode);
     AppendArgString(req->results, result);
     AppendArgEnd(req->results);
-    str::Free(result);
 }
 
 static void ExecuteControlRequest(ControlRequest* req) {
@@ -302,7 +301,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendError(req, "TestSynctex expects string pdf, string source, int line");
                 break;
             }
-            AppendTestResult(req, 0, TestSynctexResult(pdf, src, line));
+            AppendTestResult(req, 0, SynctexResultTemp(pdf, src, line));
             break;
         }
 
@@ -313,7 +312,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendError(req, "TestInverseSearch expects string pdf, int page, int x, int y");
                 break;
             }
-            AppendTestResult(req, 0, TestInverseSearchResult(pdf, page, x, y));
+            AppendTestResult(req, 0, InverseSearchResultTemp(pdf, page, x, y));
             break;
         }
 
@@ -328,7 +327,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             if (!password && gCli) {
                 password = gCli->password;
             }
-            AppendTestResult(req, 0, TestSearchResult(pdf, needle, password));
+            AppendTestResult(req, 0, SearchResultTemp(pdf, needle, password));
             break;
         }
 
@@ -339,7 +338,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendError(req, "TestDest expects string pdf, int destinationNumber");
                 break;
             }
-            AppendTestResult(req, 0, TestDestResult(pdf, destNo));
+            AppendTestResult(req, 0, DestResultTemp(pdf, destNo));
             break;
         }
 
@@ -350,7 +349,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendError(req, "TestNamedDest expects string pdf, string name");
                 break;
             }
-            AppendTestResult(req, 0, TestNamedDestResult(pdf, name));
+            AppendTestResult(req, 0, NamedDestResultTemp(pdf, name));
             break;
         }
 
@@ -361,7 +360,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestChmResult(chm, &exitCode);
+            Str res = ChmResultTemp(chm, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -377,7 +376,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestSelectionTranslateResult(backend, srcLang, dstLang, text, &exitCode);
+            Str res = SelectionTranslateResultTemp(backend, srcLang, dstLang, text, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -391,7 +390,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestTripleClickLineSelectResult(pdf, clickWord, expectedLine, &exitCode);
+            Str res = TripleClickLineSelectResultTemp(pdf, clickWord, expectedLine, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -405,7 +404,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestContextMenuSelectionResult(word1, word2, cursorWord, &exitCode);
+            Str res = ContextMenuSelectionResultTemp(word1, word2, cursorWord, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -418,7 +417,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestGoToFindMatchResult(word, typed, &exitCode);
+            Str res = GoToFindMatchResultTemp(word, typed, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -430,14 +429,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestImageResizeArrowKeyResult(imagePath, &exitCode);
+            Str res = ImageResizeArrowKeyResultTemp(imagePath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestFindResultPageColumnClip: {
             int exitCode = 0;
-            Str res = TestFindResultPageColumnClipResult(&exitCode);
+            Str res = FindResultPageColumnClipResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -450,7 +449,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestFileKindResult(path, expectedKind, &exitCode);
+            Str res = FileKindResultTemp(path, expectedKind, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -459,14 +458,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 minDelta = 50;
             IntArg(req, 0, minDelta);
             int exitCode = 0;
-            Str res = TestScrollToLinkResult(minDelta, &exitCode);
+            Str res = ScrollToLinkResultTemp(minDelta, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
 
         case ControlCmd::TestI18nErrorString: {
             int exitCode = 0;
-            Str res = TestI18nErrorStringResult(&exitCode);
+            Str res = I18nErrorStringResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -479,7 +478,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestPageInfoOverlayResult(pathTwo, pathOne, &exitCode);
+            Str res = PageInfoOverlayResultTemp(pathTwo, pathOne, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -491,7 +490,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestGetTocResult(path, &exitCode);
+            Str res = GetTocResultTemp(path, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
@@ -504,7 +503,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = TestPageLinksResult(path, pageNo, &exitCode);
+            Str res = PageLinksResultTemp(path, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

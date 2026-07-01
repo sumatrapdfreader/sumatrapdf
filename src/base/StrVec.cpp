@@ -834,12 +834,12 @@ Str Join(StrVec* v, Str joint) {
     int capHint = CalcCapForJoin(v, joint);
     str::Builder tmp(capHint);
     JoinInner(v, joint, tmp);
-    return tmp.StealData();
+    return tmp.TakeStr();
 }
 
 TempStr JoinTemp(StrVec* v, Str joint) {
     int capHint = CalcCapForJoin(v, joint);
     str::Builder tmp(capHint, GetTempArena());
     JoinInner(v, joint, tmp);
-    return tmp.StealData(GetTempArena());
+    return ToStrTemp(tmp);
 }

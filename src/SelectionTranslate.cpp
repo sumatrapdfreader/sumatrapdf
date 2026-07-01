@@ -627,15 +627,15 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
         return false;
     }
     if (TranslationLooksLikeError(ToStr(translation))) {
-        msgOut.Set(translation.StealData().s);
+        msgOut.Set(translation.TakeStr().s);
         LogTranslation(backend, "<<< error", msgOut.Get());
         return false;
     }
-    msgOut.Set(translation.StealData().s);
+    msgOut.Set(translation.TakeStr().s);
     return true;
 }
 
-Str TestSelectionTranslateResult(int backend, Str srcLang, Str dstLang, Str text, int* exitCode) {
+TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str text, int* exitCode) {
     AIChatBackend chatBackend = AIChatBackend::Grok;
     if (backend == 0) {
         chatBackend = AIChatBackend::Claude;
@@ -647,7 +647,7 @@ Str TestSelectionTranslateResult(int backend, Str srcLang, Str dstLang, Str text
     if (exitCode) {
         *exitCode = ok ? 0 : 1;
     }
-    return str::Dup(msg.Get());
+    return str::DupTemp(msg.Get());
 }
 
 static void SetDialogClientSize(HWND hwnd, int clientW, int clientH) {

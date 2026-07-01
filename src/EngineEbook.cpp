@@ -446,8 +446,8 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
 
     PageText res;
     res.len = len(content);
-    res.text = content.StealData();
-    res.coords = coords.StealData();
+    res.text = content.TakeWStr();
+    res.coords = coords.Take();
     return res;
 }
 
@@ -535,8 +535,8 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
 
     PageTextUtf8 res;
     res.len = len(content);
-    res.text = content.StealData();
-    res.coords = coords.StealData();
+    res.text = content.TakeStr();
+    res.coords = coords.Take();
     return res;
 }
 
@@ -1603,7 +1603,7 @@ struct ChmHtmlCollector : EbookTocVisitor {
                 Visit({}, url, -1);
             }
         }
-        return html.StealData();
+        return html.TakeStr();
     }
 
     void Visit(Str, Str url, int) override {

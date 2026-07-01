@@ -14,4 +14,4 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath = {},
                          bool selectPdf = false);
 
 // Headless test for issue #5734: arrow keys must resize even when focus is on the dest path edit.
-Str TestImageResizeArrowKeyResult(Str imagePath, int* exitCodeOut = nullptr);
+TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut = nullptr);

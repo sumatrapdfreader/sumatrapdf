@@ -554,7 +554,7 @@ Str FormatArgs(Arena* a, const char* fmt, const Arg** args, int nArgs) {
     Fmt f;
     // format directly into the caller's arena so there are no temp-allocator /
     // heap allocations at all (matters for the crash handler's pre-allocated
-    // arena). StealData() then returns that arena buffer without a second copy.
+    // arena). TakeStr() then returns that arena buffer without a second copy.
     f.res.allocator = a;
     bool ok = ParseFormat(f, fmt);
     if (!ok) {
@@ -564,7 +564,7 @@ Str FormatArgs(Arena* a, const char* fmt, const Arg** args, int nArgs) {
     if (!ok) {
         return {};
     }
-    return f.res.StealData();
+    return f.res.TakeStr();
 }
 
 TempStr FormatTempArgs(const char* fmt, const Arg** args, int nArgs) {

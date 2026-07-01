@@ -311,7 +311,7 @@ class Vec {
     // without duplicate allocation. Note: since Vec over-allocates, this
     // is likely to use more memory than strictly necessary, but in most cases
     // it doesn't matter
-    T* StealData() {
+    T* Take() {
         T* res = els;
         if (els == buf) {
             res = (T*)MemDup(allocator, buf, (len + kPadding) * kElSize);

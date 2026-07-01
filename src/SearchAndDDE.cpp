@@ -1184,7 +1184,7 @@ static TempStr BuildOpenFileCmdTemp(Str pattern, Str path, int line, int col) {
         s = Str(s.s + percIdx + 2, s.len - percIdx - 2);
     }
 
-    return cmdline.StealData(GetTempArena());
+    return ToStrTemp(cmdline);
 }
 
 // returns true if inverse search was performed

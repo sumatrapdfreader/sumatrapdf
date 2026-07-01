@@ -191,7 +191,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
         s.Append("\n");
     }
 
-    return s.StealData();
+    return s.TakeStr();
 }
 
 static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
@@ -224,7 +224,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
         s.Append("\n");
     }
 
-    return s.StealData();
+    return s.TakeStr();
 }
 
 void SaveCrashInfo(Str d) {
@@ -421,7 +421,7 @@ static TempStr BuildSymbolPathTemp(Str symDir) {
 
     // remove ";" from the end
     path.RemoveLast();
-    return path.StealData(GetTempArena());
+    return ToStrTemp(path);
 }
 
 bool InitializeDbgHelp(bool force) {
@@ -796,7 +796,7 @@ static void GetSystemInfo(str::Builder& s) {
 static bool BuildModulesInfo() {
     str::Builder s(1024);
     bool isWine = GetModules(s, false);
-    gModulesInfo = s.StealData();
+    gModulesInfo = s.TakeStr();
     return isWine;
 }
 
@@ -805,7 +805,7 @@ static void BuildSystemInfo() {
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
-    gSystemInfo = s.StealData();
+    gSystemInfo = s.TakeStr();
 }
 
 bool SetSymbolsDir(Str symDir) {

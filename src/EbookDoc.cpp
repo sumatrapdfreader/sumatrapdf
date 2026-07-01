@@ -1467,7 +1467,7 @@ static TempStr DecompressTcrTextTemp(Str data) {
         }
     }
 
-    return text.StealData(GetTempArena());
+    return ToStrTemp(text);
 }
 
 static Str TextFindLinkEnd(str::Builder& htmlData, Str curr, char prevChar, bool fromWww = false) {

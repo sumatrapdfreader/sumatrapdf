@@ -599,7 +599,7 @@ Str GfxFileExtFromData(Str d) {
     return GfxFileExtFromKind(kind);
 }
 
-Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
+TempStr FileKindResultTemp(Str path, Str expectedKindName, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {
         out.Append(msg);
@@ -607,7 +607,7 @@ Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return ToStrTemp(out);
     };
 
     if (str::IsEmpty(path) || str::IsEmpty(expectedKindName)) {
@@ -622,11 +622,11 @@ Str TestFileKindResult(Str path, Str expectedKindName, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 1;
         }
-        return out.StealData();
+        return ToStrTemp(out);
     }
     out.Append(fmt("OK path=%s kind=%s\n", path, Str(kind)));
     if (exitCodeOut) {
         *exitCodeOut = 0;
     }
-    return out.StealData();
+    return ToStrTemp(out);
 }

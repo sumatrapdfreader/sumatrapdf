@@ -40,7 +40,7 @@ TempStr QuoteCmdLineArgTemp(Str arg) {
         res.AppendChar(arg.s[i]);
     }
     res.AppendChar('"');
-    return res.StealData();
+    return ToStrTemp(res);
 }
 
 #if defined(REMOVE_FIRST_ARG)

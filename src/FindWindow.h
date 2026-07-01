@@ -20,4 +20,4 @@ void FindWindowRefreshResults(MainWindow* win);
 void UpdateFindWindowTheme(MainWindow* win);
 
 // Headless draw test for issue #5736: match highlights must not bleed into the page column.
-Str TestFindResultPageColumnClipResult(int* exitCodeOut = nullptr);
+TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut = nullptr);

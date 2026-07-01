@@ -88,7 +88,7 @@ static Str UnescapeStr(Str s) {
                 break;
         }
     }
-    return ret.StealData();
+    return ret.TakeStr();
 }
 
 // string arrays are serialized by quoting strings containing spaces
@@ -122,7 +122,7 @@ static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
         }
     }
 
-    return serialized.StealData();
+    return serialized.TakeStr();
 }
 
 static int SkipNonWhitespaceOff(Str s, int off) {
@@ -159,7 +159,7 @@ static void DeserializeUtf8StringArray(Vec<Str>* strArray, Str serialized) {
                 part.AppendChar(serialized.s[off]);
                 off++;
             }
-            strArray->Append(part.StealData());
+            strArray->Append(part.TakeStr());
             if (off < serialized.len && '"' == serialized.s[off]) {
                 off++;
             }
@@ -580,7 +580,7 @@ Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
     SquareTreeNode* root = ParseSquareTree(prevData);
     SerializeStructRec(out, info, strct, root);
     delete root;
-    return out.StealData();
+    return out.TakeStr();
 }
 
 void* DeserializeStruct(const StructInfo* info, Str data, void* strct) {

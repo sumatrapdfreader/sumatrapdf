@@ -252,7 +252,7 @@ struct Builder {
     char RemoveAt(int idx, int count = 1);
     char RemoveLast();
     char& Last() const;
-    Str StealData(Arena* a = nullptr);
+    Str TakeStr();
     bool IsEmpty() const;
     void Set(Str s);
     char LastChar() const;
@@ -295,7 +295,7 @@ struct Builder {
     bool Append(WStr src);
     WCHAR RemoveAt(int idx, int count = 1);
     WCHAR RemoveLast();
-    WStr StealData();
+    WStr TakeWStr();
     int Find(const WCHAR& el, int startAt = 0) const;
     int Remove(const WCHAR& el);
     bool IsEmpty() const;

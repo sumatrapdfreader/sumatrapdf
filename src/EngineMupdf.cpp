@@ -871,9 +871,9 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
     ReportIf(len(content) != rects.Size());
 
     if (coordsOut) {
-        *coordsOut = rects.StealData();
+        *coordsOut = rects.Take();
     }
-    return content.StealData();
+    return content.TakeStr();
 }
 
 static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
@@ -907,10 +907,10 @@ static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
     ReportIf(len(content) != rects.Size());
 
     if (coordsOut) {
-        *coordsOut = rects.StealData();
+        *coordsOut = rects.Take();
     }
 
-    return content.StealData();
+    return content.TakeWStr();
 }
 
 static fz_stext_options NewTextPageOptions(int flags = 0) {
@@ -2317,7 +2317,7 @@ static Str TxtFileToHTML(Str path) {
     d.Append(R"(</pre>
 </body>
 </html>)");
-    return d.StealData();
+    return d.TakeStr();
 }
 
 static Str PalmDocToHTML(Str path) {
