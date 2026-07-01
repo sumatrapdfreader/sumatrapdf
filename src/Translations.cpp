@@ -176,7 +176,7 @@ Str GetCurrentLangCode() {
 // GetTranslation() doesn't try to use a gTranslationCache that was never built
 static void FallbackToEnglish() {
     gCurrLangIdx = 0;
-    gCurrLangCode = GetLangCodeByIdx(0);
+    gCurrLangCode = GetLangCodeByIdxTemp(0);
 }
 
 void SetCurrentLangByCode(Str langCode) {
@@ -192,7 +192,7 @@ void SetCurrentLangByCode(Str langCode) {
     }
     ReportDebugIf(-1 == idx);
     gCurrLangIdx = idx;
-    gCurrLangCode = GetLangCodeByIdx(idx);
+    gCurrLangCode = GetLangCodeByIdxTemp(idx);
     if (idx == 0 && !gIsDebugBuild) {
         // perf: in release builds we skip parsing translations for english
         // in debug we want to execute this code to catch errors
@@ -236,14 +236,14 @@ Str ValidateLangCode(Str langCode) {
     if (idx < 0) {
         return nullptr;
     }
-    return GetLangCodeByIdx(idx);
+    return GetLangCodeByIdxTemp(idx);
 }
 
-Str GetLangCodeByIdx(int idx) {
+TempStr GetLangCodeByIdxTemp(int idx) {
     return SeqStrByIndex(gLangCodes, idx);
 }
 
-Str GetLangNameByIdx(int idx) {
+TempStr GetLangNameByIdxTemp(int idx) {
     return SeqStrByIndex(gLangNames, idx);
 }
 
@@ -257,7 +257,7 @@ Str DetectUserLang() {
     // try the exact match
     for (int i = 0; i < gLangsCount; i++) {
         if (langId == langIds[i]) {
-            return GetLangCodeByIdx(i);
+            return GetLangCodeByIdxTemp(i);
         }
     }
 
@@ -266,7 +266,7 @@ Str DetectUserLang() {
     LANGID userLangIdNeutral = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
     for (int i = 0; i < gLangsCount; i++) {
         if (userLangIdNeutral == langIds[i]) {
-            return GetLangCodeByIdx(i);
+            return GetLangCodeByIdxTemp(i);
         }
     }
 

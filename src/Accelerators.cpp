@@ -353,7 +353,7 @@ static bool skipVirtKey(Str& s, Str key) {
 }
 
 // used in menu shortcuts
-static Str getVirt(BYTE key, bool isEng) {
+static TempStr getVirtTemp(BYTE key, bool isEng) {
     // over-rides for non-english languages
     if (!isEng) {
         switch (key) {
@@ -549,7 +549,7 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
             str.Append(fmt("F%d", n));
             goto Exit;
         }
-        Str s = getVirt(key, isEng);
+        TempStr s = getVirtTemp(key, isEng);
         if (s) {
             str.Append(s);
             goto Exit;

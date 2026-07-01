@@ -202,11 +202,11 @@ TempStr GetFileNameTemp(Str url);
 
 using SeqStrings = const char*;
 
-Str SeqStrAt(SeqStrings strs, int off);
+TempStr SeqStrAt(SeqStrings strs, int off);
 bool SeqStrAdvance(SeqStrings strs, int& off, int* idxInOut = nullptr);
 int SeqStrIndex(SeqStrings strs, Str toFind);
 int SeqStrIndexIS(SeqStrings strs, Str toFind);
-Str SeqStrByIndex(SeqStrings strs, int idx);
+TempStr SeqStrByIndex(SeqStrings strs, int idx);
 
 // look up the mime type for a file extension (e.g. ".png" -> "image/png");
 // returns {} for unknown extensions. If the matched type is an image and
@@ -222,12 +222,12 @@ TempStr MimeTypeFromExtTemp(Str ext, Str imgExt = {});
 //   permNames, gScrollbarModeNames, gFileActionNames, gAnnotNames, kPdfFilterStateStrs, gLangCodes.
 using SeqStrNum = const char*;
 
-Str SeqStrNumAt(SeqStrNum strs, int off);
+TempStr SeqStrNumAt(SeqStrNum strs, int off);
 bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut = nullptr);
 int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut);
 int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut);
-Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
-Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
+TempStr SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut);
+TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num);
 
 namespace str {
 struct Builder {

@@ -3466,7 +3466,7 @@ static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
 
     // ensure it has a good extension, some urls are like:
     // https://pbs.twimg.com/media/HEwit7bbQAAWiIO?format=jpg&name=large
-    Str ext = GetExtForKind(kind);
+    TempStr ext = GetExtForKindTemp(kind);
     if (!str::EndsWithI(destPath, ext)) {
         TempStr newDest = str::JoinTemp(destPath, ext);
         ok = file::Rename(newDest, destPath);

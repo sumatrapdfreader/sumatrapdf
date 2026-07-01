@@ -203,7 +203,7 @@ SeqStrings gFileActionNames =
     "FILE_ACTION_RENAMED_NEW_NAME\0";
 // clang-format on
 
-Str GetFileActionName(int actionId) {
+TempStr GetFileActionNameTemp(int actionId) {
     if (actionId < 1 || actionId > 5) {
         return StrL("(unknown)");
     }
@@ -246,7 +246,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         // files can get updated either by writing to them directly or
         // by writing to a .tmp file first and then moving that file in place
         // (the latter only yields a RENAMED action with the expected file name)
-        // logf("ReadDirectoryChangesNotification: %s '%s'\n", GetFileActionName(notify->Action), fileName);
+        // logf("ReadDirectoryChangesNotification: %s '%s'\n", GetFileActionNameTemp(notify->Action), fileName);
         if (notify->Action == FILE_ACTION_ADDED || notify->Action == FILE_ACTION_MODIFIED ||
             notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
             AppendIfNotExists(&changedFiles, fileName);

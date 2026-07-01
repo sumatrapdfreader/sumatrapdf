@@ -79,7 +79,7 @@ static AnnotationType gAnnotsIsColorBackground[] = {
 };
 // clang-format on
 
-Str GetKnownColorName(PdfColor c) {
+TempStr GetKnownColorNameTemp(PdfColor c) {
     int n = (int)dimof(gColorsValues);
     for (int i = 0; i < n; i++) {
         if (c == gColorsValues[i]) {
@@ -519,7 +519,7 @@ static void ItemsFromSeqstrings(StrVec& items, SeqStrings strings) {
 static void DropDownFillColors(DropDown* w, PdfColor col, str::Builder& customColor) {
     StrVec items;
     ItemsFromSeqstrings(items, gColors);
-    Str colorName = GetKnownColorName(col);
+    TempStr colorName = GetKnownColorNameTemp(col);
     int idx = SeqStrIndex(gColors, colorName);
     if (idx < 0) {
         customColor.Reset();

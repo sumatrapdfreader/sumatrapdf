@@ -413,7 +413,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
-    Str imgExt = GfxFileExtFromData(data);
+    TempStr imgExt = GfxFileExtFromDataTemp(data);
     TempStr mime = MimeFromUrlTemp(urlRestA, imgExt);
     WCHAR* mimeW = CWStrTemp(mime);
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);

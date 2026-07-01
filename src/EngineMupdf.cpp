@@ -4804,7 +4804,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
         SafeEngineRelease(&engine);
         return nullptr;
     }
-    Str ext = GetExtForKind(kind);
+    TempStr ext = GetExtForKindTemp(kind);
     if (ext) {
         SetDefaultExt(engine->defaultExt, ext);
     }

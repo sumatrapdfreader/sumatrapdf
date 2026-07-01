@@ -56,9 +56,9 @@ Kind GuessFileTypeFromFile(Str path);
 Kind GuessFileTypeFromContent(Str d);
 Kind GuessFileTypeFromName(Str path);
 Kind GuessFileType(Str path, bool sniff);
-Str GfxFileExtFromData(Str);
-Str GfxFileExtFromKind(Kind);
-Str GetExtForKind(Kind kind);
+TempStr GfxFileExtFromDataTemp(Str);
+TempStr GfxFileExtFromKindTemp(Kind);
+TempStr GetExtForKindTemp(Kind kind);
 
 int KindIndexOf(Kind* kinds, int nKinds, Kind kind);
 

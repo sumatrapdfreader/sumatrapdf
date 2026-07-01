@@ -154,7 +154,7 @@ static Kind GetKindByFileExt(Str path) {
     return gExtsKind[idx];
 }
 
-Str GetExtForKind(Kind kind) {
+TempStr GetExtForKindTemp(Kind kind) {
     int idx = KindIndexOf(gExtsKind, dimofi(gExtsKind), kind);
     if (idx >= 0) {
         return SeqStrByIndex(gFileExts, idx);
@@ -586,7 +586,7 @@ static int FindImageKindIdx(Kind kind) {
     return -1;
 }
 
-Str GfxFileExtFromKind(Kind kind) {
+TempStr GfxFileExtFromKindTemp(Kind kind) {
     int idx = FindImageKindIdx(kind);
     if (idx >= 0) {
         return SeqStrByIndex(gImageFormatExts, idx);
@@ -594,9 +594,9 @@ Str GfxFileExtFromKind(Kind kind) {
     return {};
 }
 
-Str GfxFileExtFromData(Str d) {
+TempStr GfxFileExtFromDataTemp(Str d) {
     Kind kind = GuessFileTypeFromContent(d);
-    return GfxFileExtFromKind(kind);
+    return GfxFileExtFromKindTemp(kind);
 }
 
 TempStr FileKindResultTemp(Str path, Str expectedKindName, int* exitCodeOut) {

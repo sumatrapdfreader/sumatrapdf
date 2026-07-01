@@ -1449,7 +1449,7 @@ void DecodeInPlace(Str url) {
 // that are critial for performance. On the other hand, it's
 // not that bad: linear scanning of memory is fast due to the magic
 // of L1 cache
-Str SeqStrAt(SeqStrings strs, int off) {
+TempStr SeqStrAt(SeqStrings strs, int off) {
     if (!strs || off < 0 || !strs[off]) {
         return {};
     }
@@ -1518,7 +1518,7 @@ int SeqStrIndexIS(SeqStrings strs, Str toFind) {
 
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
-Str SeqStrByIndex(SeqStrings strs, int idx) {
+TempStr SeqStrByIndex(SeqStrings strs, int idx) {
     ReportIf(idx < 0);
     int off = 0;
     while (idx > 0) {
@@ -1633,7 +1633,7 @@ void SeqStrNumFinish(str::Builder* b) {
     b->AppendChar('\0');
 }
 
-Str SeqStrNumAt(SeqStrNum strs, int off) {
+TempStr SeqStrNumAt(SeqStrNum strs, int off) {
     return SeqStrAt(strs, off);
 }
 
@@ -1698,7 +1698,7 @@ int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
     return -1;
 }
 
-Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
+TempStr SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
     ReportIf(idx < 0);
     int off = 0;
     while (idx > 0) {
@@ -1716,7 +1716,7 @@ Str SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
     return SeqStrNumAt(strs, off);
 }
 
-Str SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
+TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
     int off = 0;
     while (strs && strs[off]) {
         i64 n = 0;

@@ -939,11 +939,11 @@ bool EngineImage::LoadSingleFile(Str path) {
 
     // TODO: maybe default to file extension and only use detected from content
     // if no extension?
-    Str fileExt = GfxFileExtFromData(data);
+    TempStr fileExt = GfxFileExtFromDataTemp(data);
     if (!fileExt) {
         // imageFormat already holds the Kind we resolved above; skip the
         // redundant GuessFileTypeFromName call.
-        fileExt = GfxFileExtFromKind(imageFormat);
+        fileExt = GfxFileExtFromKindTemp(imageFormat);
     }
     if (!fileExt) {
         fileExt = path::GetExtTemp(path);
@@ -973,7 +973,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     u8 header[18];
     if (ReadDataFromStream(stream, header, sizeof(header))) {
         Str d = Str((char*)header, (int)sizeof(header));
-        fileExt = GfxFileExtFromData(d);
+        fileExt = GfxFileExtFromDataTemp(d);
     }
     if (!fileExt) {
         return false;

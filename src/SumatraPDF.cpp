@@ -6245,7 +6245,7 @@ constexpr const char* kSelectionStr = "${selection}";
 // https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
 // but not fully and it might be incorrect anyway wrt. to other translation websites
 static const char* gLangsMap = "am\0hy\0by\0be\0ca-xv\0ca\0cz\0cs\0kr\0ko\0vn\0vi\0cn\0zh-CN\0tw\0zh-TW\0";
-static Str GetISO639LangCodeFromLang(Str lang) {
+static TempStr GetISO639LangCodeFromLangTemp(Str lang) {
     int idx = SeqStrIndex(gLangsMap, lang);
     if (idx < 0 || idx % 2 != 0) {
         return lang;
@@ -6278,7 +6278,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     if (str::Eq(lang, "kr")) {
         lang = "ko";
     }
-    Str contryCode = GetISO639LangCodeFromLang(lang);
+    TempStr contryCode = GetISO639LangCodeFromLangTemp(lang);
     TempStr uri = str::ReplaceNoCaseTemp(urlPattern, kUserLangStr, contryCode);
     uri = str::ReplaceNoCaseTemp(uri, kSelectionStr, encodedSelection);
     LaunchBrowser(uri);

@@ -446,13 +446,13 @@ static void FilterLangList(HWND hDlg, Str filter, Str currLangCode) {
 
     int itemToSelect = 0;
     for (int i = 0; i < trans::GetLangsCount(); i++) {
-        Str name = trans::GetLangNameByIdx(i);
+        TempStr name = trans::GetLangNameByIdxTemp(i);
         if (filter && !str::ContainsI(name, filter)) {
             continue;
         }
         auto langName = ToWStrTemp(name);
         ListBox_AppendString_NoSort(langList, langName);
-        Str langCode = trans::GetLangCodeByIdx(i);
+        TempStr langCode = trans::GetLangCodeByIdxTemp(i);
         if (str::Eq(langCode, currLangCode)) {
             itemToSelect = gLangListMap->Size();
         }
@@ -513,7 +513,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                 int idx = (int)ListBox_GetCurSel(langList);
                 if (gLangListMap && idx >= 0 && idx < gLangListMap->Size()) {
                     int langIdx = gLangListMap->At(idx);
-                    data->langCode = trans::GetLangCodeByIdx(langIdx);
+                    data->langCode = trans::GetLangCodeByIdxTemp(langIdx);
                     EndDialog(hDlg, IDOK);
                 }
                 return FALSE;
@@ -524,7 +524,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                     int idx = ListBox_GetCurSel(langList);
                     if (gLangListMap && idx >= 0 && idx < gLangListMap->Size()) {
                         int langIdx = gLangListMap->At(idx);
-                        data->langCode = trans::GetLangCodeByIdx(langIdx);
+                        data->langCode = trans::GetLangCodeByIdxTemp(langIdx);
                     }
                     EndDialog(hDlg, IDOK);
                 }

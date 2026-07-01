@@ -57,7 +57,7 @@ static TempStr ChmMimeFromPathTemp(Str path, Str data) {
         return ChmMimeFromPathTemp(trimmed, data);
     }
 
-    Str imgExt = GfxFileExtFromData(data);
+    TempStr imgExt = GfxFileExtFromDataTemp(data);
     TempStr mime = MimeTypeFromExtTemp(ext, imgExt);
     if (!mime) {
         mime = "text/html";

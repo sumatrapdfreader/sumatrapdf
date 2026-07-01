@@ -1201,7 +1201,7 @@ static Str GetUserTemp() {
     return u;
 }
 
-static Str GetAnnotationTextIconTemp() {
+static TempStr GetAnnotationTextIconTemp() {
     TempStr s = str::DupTemp(gGlobalPrefs->annotations.textIconType);
     // this way user can use "new paragraph" and we'll match "NewParagraph"
     str::RemoveCharsInPlace(s, " ");
@@ -1459,7 +1459,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     MarkNotificationAsModified(epdf, res, AnnotationChange::Add);
 
     if (typ == AnnotationType::Text) {
-        Str iconName = GetAnnotationTextIconTemp();
+        TempStr iconName = GetAnnotationTextIconTemp();
         if (!str::EqI(iconName.s, "Note")) {
             SetIconName(res, iconName);
         }
