@@ -796,9 +796,9 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
         return;
     }
 
-    AttrInfo* attr = t->GetAttrByName("id");
+    AttrInfo* attr = t->GetAttrByName(StrL("id"));
     if (!attr && !idsOnly && Tag_A == t->tag) {
-        attr = t->GetAttrByName("name");
+        attr = t->GetAttrByName(StrL("name"));
     }
     if (!attr) {
         return;
@@ -814,7 +814,7 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
 void HtmlFormatter::HandleDirAttr(HtmlToken* t) {
     // only apply reading direction changes to block elements (for now)
     if (t->IsStartTag() && !IsInlineTag(t->tag)) {
-        AttrInfo* attr = t->GetAttrByName("dir");
+        AttrInfo* attr = t->GetAttrByName(StrL("dir"));
         if (attr) {
             dirRtl = CurrStyle()->dirRtl = attr->ValIs("RTL");
         }
@@ -831,7 +831,7 @@ void HtmlFormatter::HandleTagBr() {
 }
 
 static AlignAttr GetAlignAttr(HtmlToken* t, AlignAttr defVal) {
-    AttrInfo* attr = t->GetAttrByName("align");
+    AttrInfo* attr = t->GetAttrByName(StrL("align"));
     if (!attr) {
         return defVal;
     }
@@ -883,7 +883,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
         return;
     }
 
-    AttrInfo* attr = t->GetAttrByName("face");
+    AttrInfo* attr = t->GetAttrByName(StrL("face"));
     WStr faceName = CurrFont()->GetName();
     if (attr) {
         TempWStr buf = ToWStrTemp(attr->val);
@@ -895,7 +895,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
     }
 
     float fontSize = CurrFont()->GetSize();
-    attr = t->GetAttrByName("size");
+    attr = t->GetAttrByName(StrL("size"));
     if (attr) {
         // the sizes are in the range from 1 (tiny) to 7 (huge)
         int size = 3; // normal size
@@ -1011,7 +1011,7 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
         rule.Merge(*prevRule);
     }
     // TODO: support multiple class names
-    AttrInfo* attr = t->GetAttrByName("class");
+    AttrInfo* attr = t->GetAttrByName(StrL("class"));
     if (attr) {
         Str clazz = attr->val;
         prevRule = FindStyleRule(Tag_Any, clazz);
@@ -1023,7 +1023,7 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken* t) {
             rule.Merge(*prevRule);
         }
     }
-    attr = t->GetAttrByName("style");
+    attr = t->GetAttrByName(StrL("style"));
     if (attr) {
         StyleRule newRule = StyleRule::Parse(attr->val);
         rule.Merge(newRule);
@@ -1057,7 +1057,7 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
     if (!t->IsStartTag()) {
         return;
     }
-    AttrInfo* attr = t->GetAttrByName("type");
+    AttrInfo* attr = t->GetAttrByName(StrL("type"));
     if (attr && !attr->ValIs("text/css")) {
         return;
     }
@@ -1216,7 +1216,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken* t) {
             li.ordered = (Tag_Ol == tag);
             if (li.ordered) {
                 // honor <ol start="N">
-                AttrInfo* attr = t->GetAttrByName("start");
+                AttrInfo* attr = t->GetAttrByName(StrL("start"));
                 if (attr) {
                     li.nextNum = ParseInt(attr->val);
                 }

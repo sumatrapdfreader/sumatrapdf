@@ -16,13 +16,13 @@ static void HtmlParser00() {
     utassert(p.ElementsCount() == 1);
     utassert(root);
     utassert(Tag_A == root->tag && !root->name);
-    utassert(root->NameIs("a"));
+    utassert(root->NameIs(StrL("a")));
 
     root = p.Parse("<b></B>");
     utassert(p.ElementsCount() == 1);
     utassert(root);
     utassert(Tag_B == root->tag && !root->name);
-    utassert(root->NameIs("b"));
+    utassert(root->NameIs(StrL("b")));
 }
 
 static void HtmlParser01() {
@@ -34,7 +34,7 @@ static void HtmlParser01() {
     utassert(nullptr == root->next);
     HtmlElement* el = root->down;
     utassert(nullptr == el->firstAttr);
-    utassert(el->NameIs("bah") && el->NameIs("BAH"));
+    utassert(el->NameIs(StrL("bah")) && el->NameIs(StrL("BAH")));
     utassert(Tag_NotFound == el->tag && str::Eq("bAh", el->name));
     utassert(el->up == root);
     utassert(nullptr == el->down);
@@ -48,26 +48,26 @@ static void HtmlParser05() {
         "val=bar></object><ul><li></ul></object></body></Html>");
     utassert(8 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
-    utassert(root->NameIs("html"));
+    utassert(root->NameIs(StrL("html")));
     utassert(nullptr == root->up);
     utassert(nullptr == root->next);
     HtmlElement* el = root->down;
-    utassert(el->NameIs("head"));
+    utassert(el->NameIs(StrL("head")));
     HtmlElement* el2 = el->down;
-    utassert(el2->NameIs("meta"));
+    utassert(el2->NameIs(StrL("meta")));
     utassert(nullptr == el2->next);
     utassert(nullptr == el2->down);
     el2 = el->next;
-    utassert(el2->NameIs("body"));
+    utassert(el2->NameIs(StrL("body")));
     utassert(nullptr == el2->next);
     el2 = el2->down;
-    utassert(el2->NameIs("object"));
-    el = p.FindElementByName("html");
+    utassert(el2->NameIs(StrL("object")));
+    el = p.FindElementByName(StrL("html"));
     utassert(el);
-    el = p.FindElementByName("head", el);
+    el = p.FindElementByName(StrL("head"), el);
     utassert(el);
-    utassert(el->NameIs("head"));
-    el = p.FindElementByName("ul", el);
+    utassert(el->NameIs(StrL("head")));
+    el = p.FindElementByName(StrL("ul"), el);
     utassert(el);
 }
 
@@ -76,7 +76,7 @@ static void HtmlParser04() {
     HtmlElement* root = p.Parse("<el att=  va&apos;l></ el >");
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
-    utassert(root->NameIs("el"));
+    utassert(root->NameIs(StrL("el")));
     utassert(nullptr == root->next);
     utassert(nullptr == root->up);
     utassert(nullptr == root->down);
@@ -90,7 +90,7 @@ static void HtmlParser03() {
     HtmlElement* root = p.Parse("<el   att  =v&quot;al/>");
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
-    utassert(root->NameIs("el"));
+    utassert(root->NameIs(StrL("el")));
     utassert(nullptr == root->next);
     utassert(nullptr == root->up);
     utassert(nullptr == root->down);
@@ -105,16 +105,16 @@ static void HtmlParser02() {
         "<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>");
     utassert(4 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
-    utassert(root->NameIs("a"));
+    utassert(root->NameIs(StrL("a")));
     utassert(nullptr == root->next);
     HtmlElement* el = root->down;
-    utassert(el->NameIs("b"));
+    utassert(el->NameIs(StrL("b")));
     utassert(root == el->up);
     el = el->next;
-    utassert(el->NameIs("c"));
+    utassert(el->NameIs(StrL("c")));
     utassert(root == el->up);
     el = el->next;
-    utassert(el->NameIs("d"));
+    utassert(el->NameIs(StrL("d")));
     utassert(nullptr == el->next);
     utassert(root == el->up);
     TempStr val = el->GetAttributeTemp("at1");
@@ -132,19 +132,19 @@ static void HtmlParser06() {
     HtmlElement* root = p.Parse("<ul><p>ignore<li><br><meta><li><ol><li></ul><dropme>");
     utassert(9 == p.ElementsCount());
     utassert(0 == p.TotalAttrCount());
-    utassert(root->NameIs("ul"));
+    utassert(root->NameIs(StrL("ul")));
     utassert(!root->next);
     HtmlElement* el = root->GetChildByTag(Tag_Li);
     utassert(el);
-    utassert(el->down->NameIs("br"));
-    utassert(el->down->next->NameIs("meta"));
+    utassert(el->down->NameIs(StrL("br")));
+    utassert(el->down->next->NameIs(StrL("meta")));
     utassert(!el->down->next->next);
     el = root->GetChildByTag(Tag_Li, 1);
     utassert(el);
     utassert(!el->next);
     el = el->GetChildByTag(Tag_Ol);
     utassert(!el->next);
-    utassert(el->down->NameIs("li"));
+    utassert(el->down->NameIs(StrL("li")));
     utassert(!el->down->down);
 }
 
@@ -169,14 +169,14 @@ static void HtmlParser09() {
     HtmlElement* root = p.Parse("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />");
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
-    utassert(root->NameIs("root"));
+    utassert(root->NameIs(StrL("root")));
     TempStr val = root->GetAttributeTemp("attr");
     utassert(str::Eq(val, "<!-- comment -->"));
 
     root = p.Parse("<!-- comment with \" and \' --><main />");
     utassert(1 == p.ElementsCount());
     utassert(0 == p.TotalAttrCount());
-    utassert(root->NameIs("main"));
+    utassert(root->NameIs(StrL("main")));
 }
 
 static void HtmlParser10() {
@@ -184,18 +184,18 @@ static void HtmlParser10() {
     HtmlElement* root = p.Parse("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>");
     utassert(2 == p.ElementsCount());
     utassert(2 == p.TotalAttrCount());
-    utassert(root->NameIs("x:a") && root->NameIsNS("a", "http://example.org/ns/x"));
+    utassert(root->NameIs(StrL("x:a")) && root->NameIsNS(StrL("a"), StrL("http://example.org/ns/x")));
 
-    HtmlElement* node = p.FindElementByName("b");
+    HtmlElement* node = p.FindElementByName(StrL("b"));
     utassert(!node);
-    node = p.FindElementByNameNS("b", "http://example.org/ns/x");
+    node = p.FindElementByNameNS(StrL("b"), StrL("http://example.org/ns/x"));
     utassert(node);
-    utassert(node->NameIs("x:b") && node->NameIsNS("b", "http://example.org/ns/x"));
+    utassert(node->NameIs(StrL("x:b")) && node->NameIsNS(StrL("b"), StrL("http://example.org/ns/x")));
     TempStr val = node->GetAttributeTemp("attr");
     utassert(str::Eq(val, "val"));
     // TODO: XML tags are case sensitive (HTML tags aren't)
-    node = p.FindElementByName("X:B");
-    utassert(node && node->NameIs("X:B"));
+    node = p.FindElementByName(StrL("X:B"));
+    utassert(node && node->NameIs(StrL("X:B")));
 }
 
 static void HtmlParser11() {
@@ -203,7 +203,7 @@ static void HtmlParser11() {
     HtmlElement* root = p.Parse("<root/><!-- comment -->");
     utassert(1 == p.ElementsCount());
     utassert(0 == p.TotalAttrCount());
-    utassert(root && root->NameIs("root"));
+    utassert(root && root->NameIs(StrL("root")));
 
     root = p.Parse("<root><!---></root>");
     utassert(!root);
@@ -229,33 +229,33 @@ static void HtmlParserFile() {
     utassert(root);
     utassert(709 == p.ElementsCount());
     utassert(955 == p.TotalAttrCount());
-    utassert(root->NameIs("html"));
+    utassert(root->NameIs(StrL("html")));
     HtmlElement* el = root->down;
-    utassert(el->NameIs("head"));
+    utassert(el->NameIs(StrL("head")));
     el = el->next;
-    utassert(el->NameIs("body"));
+    utassert(el->NameIs(StrL("body")));
     el = el->down;
-    utassert(el->NameIs("object"));
+    utassert(el->NameIs(StrL("object")));
     el = el->next;
-    utassert(el->NameIs("ul"));
+    utassert(el->NameIs(StrL("ul")));
     el = el->down;
-    utassert(el->NameIs("li"));
+    utassert(el->NameIs(StrL("li")));
     el = el->down;
-    utassert(el->NameIs("object"));
+    utassert(el->NameIs(StrL("object")));
     TempStr val = el->GetAttributeTemp("type");
     utassert(str::Eq(val, "text/sitemap"));
     el = el->down;
-    utassert(el->NameIs("param"));
+    utassert(el->NameIs(StrL("param")));
     utassert(!el->down);
-    utassert(el->next->NameIs("param"));
-    el = p.FindElementByName("body");
+    utassert(el->next->NameIs(StrL("param")));
+    el = p.FindElementByName(StrL("body"));
     utassert(el);
-    el = p.FindElementByName("ul", el);
+    el = p.FindElementByName(StrL("ul"), el);
     utassert(el);
     int count = 0;
     while (el) {
         ++count;
-        el = p.FindElementByName("ul", el);
+        el = p.FindElementByName(StrL("ul"), el);
     }
     utassert(18 == count);
 }

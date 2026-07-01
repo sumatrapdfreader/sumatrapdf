@@ -12,17 +12,17 @@ static void Test00(Str s, HtmlToken::TokenType expectedType) {
     HtmlPullParser parser{s};
     HtmlToken* t = parser.Next();
     utassert(t->type == expectedType);
-    utassert(t->NameIs("p"));
+    utassert(t->NameIs(StrL("p")));
     utassert(Tag_P == t->tag);
-    AttrInfo* a = t->GetAttrByName("a1");
-    utassert(a->NameIs("a1"));
+    AttrInfo* a = t->GetAttrByName(StrL("a1"));
+    utassert(a->NameIs(StrL("a1")));
     utassert(a->ValIs(">"));
 
-    a = t->GetAttrByName("foo");
-    utassert(a->NameIs("foo"));
+    a = t->GetAttrByName(StrL("foo"));
+    utassert(a->NameIs(StrL("foo")));
     utassert(a->ValIs("bar"));
 
-    a = t->GetAttrByName("nope");
+    a = t->GetAttrByName(StrL("nope"));
     utassert(!a);
 
     t = parser.Next();

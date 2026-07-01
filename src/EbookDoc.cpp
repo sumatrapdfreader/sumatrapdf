@@ -33,7 +33,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
     HtmlToken pi;
     pi.SetTag(HtmlToken::EmptyElementTag, Str(xmlPI.s + 2, xmlPIEnd - 2));
     pi.nLen = 4;
-    AttrInfo* enc = pi.GetAttrByName("encoding");
+    AttrInfo* enc = pi.GetAttrByName(StrL("encoding"));
     if (!enc) {
         return CP_ACP;
     }
@@ -327,7 +327,7 @@ bool EpubDoc::Load() {
     }
 
     // only consider the first <rootfile> element (default rendition)
-    node = parser.FindElementByNameNS("rootfile", EPUB_CONTAINER_NS());
+    node = parser.FindElementByNameNS(StrL("rootfile"), EPUB_CONTAINER_NS());
     if (!node) {
         return false;
     }
@@ -343,14 +343,14 @@ bool EpubDoc::Load() {
     if (encryptionFi && encryptionFi->data) {
         Str encryption = Str((char*)((u8*)encryptionFi->data), (int)(encryptionFi->fileSizeUncompressed));
         (void)parser.ParseInPlace(encryption);
-        HtmlElement* cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS());
+        HtmlElement* cr = parser.FindElementByNameNS(StrL("CipherReference"), EPUB_ENC_NS());
         while (cr) {
             TempStr uri = cr->GetAttributeTemp("URI");
             if (uri) {
                 url::DecodeInPlace(uri);
                 encList.Append(uri);
             }
-            cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS(), cr);
+            cr = parser.FindElementByNameNS(StrL("CipherReference"), EPUB_ENC_NS(), cr);
         }
     }
 
@@ -364,7 +364,7 @@ bool EpubDoc::Load() {
     if (!node) {
         return false;
     }
-    node = parser.FindElementByNameNS("manifest", EPUB_OPF_NS());
+    node = parser.FindElementByNameNS(StrL("manifest"), EPUB_OPF_NS());
     if (!node) {
         return false;
     }
@@ -420,7 +420,7 @@ bool EpubDoc::Load() {
         }
     }
 
-    node = parser.FindElementByNameNS("spine", EPUB_OPF_NS());
+    node = parser.FindElementByNameNS(StrL("spine"), EPUB_OPF_NS());
     if (!node) {
         return false;
     }
@@ -440,7 +440,7 @@ bool EpubDoc::Load() {
     }
 
     for (node = node->down; node; node = node->next) {
-        if (!node->NameIsNS("itemref", EPUB_OPF_NS())) {
+        if (!node->NameIsNS(StrL("itemref"), EPUB_OPF_NS())) {
             continue;
         }
         TempStr idref = node->GetAttributeTemp("idref");
@@ -491,7 +491,7 @@ static bool IsTokPropName(HtmlToken* tok, Str name) {
     if (Tag_Meta != tok->tag) {
         return false;
     }
-    AttrInfo* attr = tok->GetAttrByName("property");
+    AttrInfo* attr = tok->GetAttrByName(StrL("property"));
     return attr && attr->ValIs(name);
 }
 
@@ -501,9 +501,9 @@ static void ParseMetadata(Str content, Props& props) {
     HtmlToken* tok;
 
     while ((tok = pullParser.Next()) != nullptr) {
-        if (tok->IsStartTag() && tok->NameIsNS("metadata", EPUB_OPF_NS())) {
+        if (tok->IsStartTag() && tok->NameIsNS(StrL("metadata"), EPUB_OPF_NS())) {
             insideMetadata++;
-        } else if (tok->IsEndTag() && tok->NameIsNS("metadata", EPUB_OPF_NS())) {
+        } else if (tok->IsEndTag() && tok->NameIsNS(StrL("metadata"), EPUB_OPF_NS())) {
             insideMetadata--;
         }
         if (!insideMetadata) {
@@ -642,7 +642,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     // skip to the start of the <nav epub:type="toc">
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (tok->IsStartTag() && Tag_Nav == tok->tag) {
-            AttrInfo* attr = tok->GetAttrByName("epub:type");
+            AttrInfo* attr = tok->GetAttrByName(StrL("epub:type"));
             if (attr && attr->ValIs("toc")) {
                 break;
             }
@@ -663,7 +663,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             HtmlTag itemTag = tok->tag;
             AutoFreeStr text, href;
             if (Tag_A == tok->tag) {
-                AttrInfo* attrInfo = tok->GetAttrByName("href");
+                AttrInfo* attrInfo = tok->GetAttrByName(StrL("href"));
                 if (attrInfo) {
                     href.SetCopy(attrInfo->val);
                 }
@@ -702,7 +702,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     HtmlToken* tok;
     // skip to the start of the navMap
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
-        if (tok->IsStartTag() && tok->NameIsNS("navMap", EPUB_NCX_NS())) {
+        if (tok->IsStartTag() && tok->NameIsNS(StrL("navMap"), EPUB_NCX_NS())) {
             break;
         }
     }
@@ -713,8 +713,8 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     WStr itemText, itemSrc;
     int level = 0;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-           (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS()))) {
-        if (tok->IsTag() && tok->NameIsNS("navPoint", EPUB_NCX_NS())) {
+           (!tok->IsEndTag() || !tok->NameIsNS(StrL("navMap"), EPUB_NCX_NS()))) {
+        if (tok->IsTag() && tok->NameIsNS(StrL("navPoint"), EPUB_NCX_NS())) {
             if (itemText) {
                 TempStr txt = ToUtf8Temp(itemText);
                 TempStr src = ToUtf8Temp(itemSrc);
@@ -727,15 +727,15 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             } else if (tok->IsEndTag() && level > 0) {
                 level--;
             }
-        } else if (tok->IsStartTag() && tok->NameIsNS("text", EPUB_NCX_NS())) {
+        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("text"), EPUB_NCX_NS())) {
             if ((tok = parser.Next()) == nullptr || tok->IsError()) {
                 break;
             }
             if (tok->IsText()) {
                 itemText = strconv::HtmlUtf8ToWStrTemp(tok->s);
             }
-        } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS())) {
-            AttrInfo* attrInfo = tok->GetAttrByName("src");
+        } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS(StrL("content"), EPUB_NCX_NS())) {
+            AttrInfo* attrInfo = tok->GetAttrByName(StrL("src"));
             if (attrInfo) {
                 TempStr src = NormalizeURLTemp(attrInfo->val, pagePath);
                 itemSrc = strconv::HtmlUtf8ToWStrTemp(src);
@@ -923,11 +923,11 @@ bool Fb2Doc::Load() {
             hasToc = true;
         } else if (inBody) {
             continue;
-        } else if (inTitleInfo && tok->IsEndTag() && tok->NameIsNS("title-info", FB2_MAIN_NS())) {
+        } else if (inTitleInfo && tok->IsEndTag() && tok->NameIsNS(StrL("title-info"), FB2_MAIN_NS())) {
             inTitleInfo--;
-        } else if (inDocInfo && tok->IsEndTag() && tok->NameIsNS("document-info", FB2_MAIN_NS())) {
+        } else if (inDocInfo && tok->IsEndTag() && tok->NameIsNS(StrL("document-info"), FB2_MAIN_NS())) {
             inDocInfo--;
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("book-title", FB2_MAIN_NS())) {
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("book-title"), FB2_MAIN_NS())) {
             if ((tok = parser.Next()) == nullptr || tok->IsError()) {
                 break;
             }
@@ -935,10 +935,10 @@ bool Fb2Doc::Load() {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddProp(props, kPropTitle, val);
             }
-        } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS("author", FB2_MAIN_NS())) {
+        } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS(StrL("author"), FB2_MAIN_NS())) {
             TempStr docAuthor = nullptr;
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
-                   !(tok->IsEndTag() && tok->NameIsNS("author", FB2_MAIN_NS()))) {
+                   !(tok->IsEndTag() && tok->NameIsNS(StrL("author"), FB2_MAIN_NS()))) {
                 if (tok->IsText()) {
                     TempStr author = ResolveHtmlEntitiesTemp(tok->s);
                     if (docAuthor) {
@@ -956,19 +956,19 @@ bool Fb2Doc::Load() {
                     AddProp(props, kPropAuthor, val, replaceIfExists);
                 }
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS())) {
-            AttrInfo* attr = tok->GetAttrByNameNS("value", FB2_MAIN_NS());
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), FB2_MAIN_NS())) {
+            AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), FB2_MAIN_NS());
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr->val);
                 AddProp(props, kPropCreationDate, val);
             }
-        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS())) {
-            AttrInfo* attr = tok->GetAttrByNameNS("value", FB2_MAIN_NS());
+        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("date"), FB2_MAIN_NS())) {
+            AttrInfo* attr = tok->GetAttrByNameNS(StrL("value"), FB2_MAIN_NS());
             if (attr) {
                 TempStr val = ResolveHtmlEntitiesTemp(attr->val);
                 AddProp(props, kPropModificationDate, val);
             }
-        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS("program-used", FB2_MAIN_NS())) {
+        } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS(StrL("program-used"), FB2_MAIN_NS())) {
             if ((tok = parser.Next()) == nullptr || tok->IsError()) {
                 break;
             }
@@ -976,24 +976,24 @@ bool Fb2Doc::Load() {
                 TempStr val = ResolveHtmlEntitiesTemp(tok->s);
                 AddProp(props, kPropCreatorApp, val);
             }
-        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("coverpage", FB2_MAIN_NS())) {
+        } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS(StrL("coverpage"), FB2_MAIN_NS())) {
             tok = parser.Next();
             if (tok && tok->IsText()) {
                 tok = parser.Next();
             }
             if (tok && tok->IsEmptyElementEndTag() && Tag_Image == tok->tag) {
-                AttrInfo* attr = tok->GetAttrByNameNS("href", FB2_XLINK_NS());
+                AttrInfo* attr = tok->GetAttrByNameNS(StrL("href"), FB2_XLINK_NS());
                 if (attr) {
                     coverImage.SetCopy(attr->val);
                 }
             }
         } else if (inTitleInfo || inDocInfo) {
             continue;
-        } else if (tok->IsStartTag() && tok->NameIsNS("title-info", FB2_MAIN_NS())) {
+        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("title-info"), FB2_MAIN_NS())) {
             inTitleInfo++;
-        } else if (tok->IsStartTag() && tok->NameIsNS("document-info", FB2_MAIN_NS())) {
+        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("document-info"), FB2_MAIN_NS())) {
             inDocInfo++;
-        } else if (tok->IsStartTag() && tok->NameIsNS("binary", FB2_MAIN_NS())) {
+        } else if (tok->IsStartTag() && tok->NameIsNS(StrL("binary"), FB2_MAIN_NS())) {
             ExtractImage(&parser, tok);
         }
     }
@@ -1003,7 +1003,7 @@ bool Fb2Doc::Load() {
 
 void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     AutoFreeStr id;
-    AttrInfo* attrInfo = tok->GetAttrByNameNS("id", FB2_MAIN_NS());
+    AttrInfo* attrInfo = tok->GetAttrByNameNS(StrL("id"), FB2_MAIN_NS());
     if (attrInfo) {
         id.SetCopy(attrInfo->val);
         url::DecodeInPlace(Str(id.Get()));
@@ -1155,9 +1155,9 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         goto Fallback;
     }
 
-    if (tok->NameIs("BOOKMARK")) {
+    if (tok->NameIs(StrL("BOOKMARK"))) {
         // <BOOKMARK NAME="Contents">
-        AttrInfo* attr = tok->GetAttrByName("NAME");
+        AttrInfo* attr = tok->GetAttrByName(StrL("NAME"));
         if (attr && attr->val) {
             WStr ws = strconv::HtmlUtf8ToWStrTemp(Str(attr->val));
             TempStr s = ToUtf8Temp(ws);
@@ -1165,39 +1165,39 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
             builder.Append(fmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size()));
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
-    } else if (tok->NameIs("HEADER")) {
+    } else if (tok->NameIs(StrL("HEADER"))) {
         // <HEADER TEXT="Contents" ALIGN=CENTER STYLE=UNDERLINE>
         int hx = 2;
-        AttrInfo* attr = tok->GetAttrByName("FONT");
+        AttrInfo* attr = tok->GetAttrByName(StrL("FONT"));
         if (attr && attr->val) {
             hx = '0' == attr->val.s[0] ? 5 : '2' == attr->val.s[0] ? 1 : 3;
         }
-        attr = tok->GetAttrByName("TEXT");
+        attr = tok->GetAttrByName(StrL("TEXT"));
         if (attr) {
             builder.Append(fmt("<h%d>", hx));
             builder.Append(attr->val);
             builder.Append(fmt("</h%d>", hx));
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
-    } else if (tok->NameIs("HRULE")) {
+    } else if (tok->NameIs(StrL("HRULE"))) {
         // <HRULE STYLE=OUTLINE>
         builder.Append("<hr>");
         return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
-    } else if (tok->NameIs("LABEL")) {
+    } else if (tok->NameIs(StrL("LABEL"))) {
         // <LABEL NAME="Contents">
-        AttrInfo* attr = tok->GetAttrByName("NAME");
+        AttrInfo* attr = tok->GetAttrByName(StrL("NAME"));
         if (attr && attr->val) {
             builder.Append("<a name=\"");
             builder.Append(attr->val);
             builder.Append("\">");
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
-    } else if (tok->NameIs("LINK")) {
+    } else if (tok->NameIs(StrL("LINK"))) {
         // <LINK TEXT="Press Me" TAG="Contents" FILE="My Novels">
-        AttrInfo* attrTag = tok->GetAttrByName("TAG");
-        AttrInfo* attrText = tok->GetAttrByName("TEXT");
+        AttrInfo* attrTag = tok->GetAttrByName(StrL("TAG"));
+        AttrInfo* attrText = tok->GetAttrByName(StrL("TEXT"));
         if (attrTag && attrText) {
-            if (tok->GetAttrByName("FILE")) {
+            if (tok->GetAttrByName(StrL("FILE"))) {
                 // skip links to other files
                 return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
             }
@@ -1208,7 +1208,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
             builder.Append("</a>");
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
-    } else if (tok->NameIs("TEALPAINT")) {
+    } else if (tok->NameIs(StrL("TEALPAINT"))) {
         // <TEALPAINT SRC="Pictures" INDEX=0 LINK=SUPERMAP SUPERIMAGE=1 SUPERW=640 SUPERH=480>
         // support removed in r7047
         return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
@@ -1341,8 +1341,8 @@ bool HtmlDoc::Load() {
                 AddProp(props, kPropTitle, val);
             }
         } else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {
-            AttrInfo* attrName = tok->GetAttrByName("name");
-            AttrInfo* attrValue = tok->GetAttrByName("content");
+            AttrInfo* attrName = tok->GetAttrByName(StrL("name"));
+            AttrInfo* attrValue = tok->GetAttrByName(StrL("content"));
             if (!attrName || !attrValue) {
                 /* ignore this tag */;
             } else if (attrName->ValIs("author")) {

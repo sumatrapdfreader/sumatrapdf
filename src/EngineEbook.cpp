@@ -1401,20 +1401,20 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
         return;
     }
     bool needAlt = true;
-    AttrInfo* attr = t->GetAttrByName("src");
+    AttrInfo* attr = t->GetAttrByName(StrL("src"));
     if (attr) {
         Str src = str::Dup(attr->val);
         url::DecodeInPlace(src);
         Str img = chmDoc->GetImageData(src, Str(pagePath));
         needAlt = !img || !EmitImage(img);
     }
-    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
+    if (needAlt && (attr = t->GetAttrByName(StrL("alt"))) != nullptr) {
         HandleText(attr->val);
     }
 }
 
 void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
-    AttrInfo* attr = t->GetAttrByName("page_path");
+    AttrInfo* attr = t->GetAttrByName(StrL("page_path"));
     if (!attr || pagePath) {
         ForceNewPage();
     }
@@ -1432,15 +1432,15 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
     if (t->IsEndTag()) {
         return;
     }
-    AttrInfo* attr = t->GetAttrByName("rel");
+    AttrInfo* attr = t->GetAttrByName(StrL("rel"));
     if (!attr || !attr->ValIs("stylesheet")) {
         return;
     }
-    attr = t->GetAttrByName("type");
+    attr = t->GetAttrByName(StrL("type"));
     if (attr && !attr->ValIs("text/css")) {
         return;
     }
-    attr = t->GetAttrByName("href");
+    attr = t->GetAttrByName(StrL("href"));
     if (!attr) {
         return;
     }
