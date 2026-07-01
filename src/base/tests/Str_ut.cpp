@@ -271,7 +271,7 @@ void StrTest() {
     utassert(str::IsEmpty(Str{}) && str::IsEmpty("") && !str::IsEmpty(str));
     utassert(str::ContainsChar(str, 's') && !str::ContainsChar(str, 'S'));
     utassert(str::IndexOfChar(str, 's') == 2);
-    utassert(str::IndexOfChar(str, 'g') == 6);
+    utassert(str::IndexOfChar(str, 'g') == 7);
     utassert(!str::ContainsChar(str, 'x'));
     utassert(!str::ContainsChar(Str{}, 'a'));
     int len = str::BufSet(buf, dimof(buf), str);
