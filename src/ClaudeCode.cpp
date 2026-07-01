@@ -312,7 +312,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
         return;
     }
     // the log is newline-separated JS commands
-    Str log = tab->claudeChatLog->LendData();
+    Str log = ToStr(*tab->claudeChatLog);
     Str rest = log;
     Str line;
     while (str::NextLine(rest, line, rest)) {
@@ -340,7 +340,7 @@ static TempStr EncodeClaudeDirTemp(Str dir) {
     if (len(buf) > 0 && buf.LastChar() == '-') {
         buf.RemoveLast();
     }
-    return str::DupTemp(buf.LendData());
+    return ToStrTemp(buf);
 }
 
 // Extract user message text from a JSON line.
@@ -557,7 +557,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                         if (fp) {
                             desc.Append(fmt(" (%s)", fp));
                         }
-                        WebViewAddTool(win, desc.LendData());
+                        WebViewAddTool(win, ToStr(desc));
                     }
                 }
             }
@@ -717,7 +717,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
         buf[bytesRead] = 0;
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
-                Str line = lineBuf.LendData();
+                Str line = ToStr(lineBuf);
                 if (line) {
                     ClaudeCodeLog("<<<", line);
                 }
@@ -749,7 +749,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                             } else if (pat) {
                                 desc.Append(fmt(" /%s/", pat));
                             }
-                            PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
+                            PostUpdate(hwndFrame, sessionId, ToStr(desc), ClaudeUpdateType::Tool);
                         }
                     }
                 } else if (eventType && str::Eq(eventType, "user")) {
@@ -758,7 +758,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                         if (fp) {
                             str::Builder desc;
                             desc.Append(fmt("Result: %s", fp));
-                            PostUpdate(hwndFrame, sessionId, desc.LendData(), ClaudeUpdateType::Tool);
+                            PostUpdate(hwndFrame, sessionId, ToStr(desc), ClaudeUpdateType::Tool);
                         }
                     }
                 } else if (eventType && str::Eq(eventType, "result")) {

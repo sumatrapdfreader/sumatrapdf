@@ -814,7 +814,7 @@ static void CopyAboutInfoToClipboard() {
         }
         info.Append(fmt("%s: %s\r\n", el->leftTxt, el->url ? el->url.s : el->rightTxt));
     }
-    CopyTextToClipboard(info.LendData());
+    CopyTextToClipboard(ToStr(info));
 }
 
 TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& staticLinks, int x, int y, StaticLink** linkOut) {

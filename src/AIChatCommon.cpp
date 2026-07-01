@@ -86,7 +86,7 @@ TempStr AIChatJsEscapeTemp(Str s) {
                 break;
         }
     }
-    return str::DupTemp(buf.LendData());
+    return ToStrTemp(buf);
 }
 
 TempStr AIChatJsonStrTemp(Str json, Str key) {
@@ -119,7 +119,7 @@ TempStr AIChatJsonStrTemp(Str json, Str key) {
             buf.AppendChar(c);
         }
     }
-    return str::DupTemp(buf.LendData());
+    return ToStrTemp(buf);
 }
 
 MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame) {

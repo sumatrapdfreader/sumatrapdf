@@ -311,7 +311,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
         return;
     }
     // the log is newline-separated JS commands
-    Str log = tab->grokChatLog->LendData();
+    Str log = ToStr(*tab->grokChatLog);
     Str rest = log;
     Str line;
     while (str::NextLine(rest, line, rest)) {
@@ -335,7 +335,7 @@ static TempStr EncodeGrokDirTemp(Str dir) {
             buf.Append(fmt("%%%02X", c));
         }
     }
-    return str::DupTemp(buf.LendData());
+    return ToStrTemp(buf);
 }
 
 static bool IsGrokSessionDirName(Str name) {
@@ -562,8 +562,8 @@ static void AppendGrokHistoryTools(MainWindow* win, Str line) {
         }
         if (len(nameBuf) > 0) {
             str::Builder desc;
-            desc.Append(fmt("Tool: %s", nameBuf.LendData()));
-            WebViewAddTool(win, desc.LendData());
+            desc.Append(fmt("Tool: %s", ToStr(nameBuf)));
+            WebViewAddTool(win, ToStr(desc));
         }
         if (j + 1 >= rest.len) {
             break;
@@ -797,7 +797,7 @@ static void GrokReadThread(GrokReadCtx* ctx) {
         buf[bytesRead] = 0;
         for (DWORD i = 0; i < bytesRead; i++) {
             if (buf[i] == '\n') {
-                Str line = lineBuf.LendData();
+                Str line = ToStr(lineBuf);
                 if (line) {
                     GrokBuildLog("<<<", line);
                 }
@@ -839,7 +839,7 @@ static void GrokReadThread(GrokReadCtx* ctx) {
         }
     }
 
-    Str rem = lineBuf.LendData();
+    Str rem = ToStr(lineBuf);
     if (rem) {
         GrokBuildLog("<<<", rem);
     }

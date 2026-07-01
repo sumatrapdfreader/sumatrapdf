@@ -9743,7 +9743,7 @@ static TempStr CleanReadAloudTextTemp(Str text) {
     if (out.IsEmpty()) {
         return {};
     }
-    return str::DupTemp(out.LendData());
+    return ToStrTemp(out);
 }
 
 // Read-aloud lifetime and commands

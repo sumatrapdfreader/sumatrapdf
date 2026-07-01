@@ -169,7 +169,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
 
     s.Append("\n-------- Log -----------------\n\n");
     if (gLogBuf) {
-        s.Append(gLogBuf->LendData());
+        s.Append(ToStr(*gLogBuf));
     } else {
         s.Append("(no log - crashed before initializing logging)\n");
     }

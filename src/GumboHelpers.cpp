@@ -86,7 +86,7 @@ TempStr GumboTextContentTemp(const GumboNode* node) {
     if (sb.IsEmpty()) {
         return {};
     }
-    return str::DupTemp(sb.LendData());
+    return ToStrTemp(sb);
 }
 
 static void* GumboMallocWrapper(void*, size_t size) {

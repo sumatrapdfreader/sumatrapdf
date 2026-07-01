@@ -576,7 +576,7 @@ static bool WriteControlResponse(HANDLE h, ControlRequest* req) {
     str::Builder packet;
     AppendU32(packet, (u32)len(payload));
     packet.Append(ToStr(payload));
-    return WriteExact(h, packet.LendData());
+    return WriteExact(h, ToStr(packet));
 }
 
 static void ProcessControlConnection(HANDLE h) {

@@ -1913,10 +1913,6 @@ Str str::Builder::StealData(Arena* a) {
     return Str(res, n);
 }
 
-Str str::Builder::LendData() const {
-    return Str(els, (int)len);
-}
-
 bool str::Builder::Contains(Str s) {
     if (!s) {
         return false;

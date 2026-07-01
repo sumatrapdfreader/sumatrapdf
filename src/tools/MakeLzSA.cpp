@@ -175,13 +175,13 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
         if (!AppendEntry(data, content, filePath, utf8Name, fi)) return false;
     }
 
-    Str hdr = data.LendData();
+    Str hdr = ToStr(data);
     u32 headerCrc32 = crc32(0, (const u8*)hdr.s, (u32)hdr.len);
     ByteWriterLE buf(4);
     buf.Write32(headerCrc32);
     ReportIf(buf.Size() != 4);
     data.Append(buf.AsByteSlice());
-    if (!data.Append(content.LendData())) return false;
+    if (!data.Append(ToStr(content))) return false;
 
     Str d = ToStr(data);
     return file::WriteFile(archivePath, d);

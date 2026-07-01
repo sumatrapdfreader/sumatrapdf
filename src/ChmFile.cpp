@@ -679,7 +679,7 @@ static const TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     if (!hasHigh) {
         return s; // pure ASCII -> nothing to remap
     }
-    return SmartToUtf8Temp(bytes.LendData(), cp);
+    return SmartToUtf8Temp(ToStr(bytes), cp);
 }
 
 // Wraps the caller's visitor to repair Latin-1-entity-encoded ToC labels (see

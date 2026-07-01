@@ -524,7 +524,7 @@ static void DropDownFillColors(DropDown* w, PdfColor col, str::Builder& customCo
     if (idx < 0) {
         customColor.Reset();
         SerializePdfColor(col, customColor);
-        items.Append(customColor.LendData());
+        items.Append(ToStr(customColor));
         idx = items.Size() - 1;
     }
     w->SetItems(items);

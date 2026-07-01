@@ -253,7 +253,6 @@ struct Builder {
     char RemoveLast();
     char& Last() const;
     Str StealData(Arena* a = nullptr);
-    Str LendData() const;
     bool Contains(Str s);
     bool IsEmpty() const;
     void Set(Str s);

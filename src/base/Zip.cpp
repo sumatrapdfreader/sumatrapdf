@@ -162,7 +162,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     central.Write32((u32)fileOffset);
     ReportIf(len(central.d) != kCentralSize);
 
-    centraldir.Append(Str(central.d.LendData().s, (int)kCentralSize));
+    centraldir.Append(Str(ToStr(central.d).s, (int)kCentralSize));
     centraldir.Append(name);
 
     fileCount++;
