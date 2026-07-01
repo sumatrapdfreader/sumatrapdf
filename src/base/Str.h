@@ -253,7 +253,6 @@ struct Builder {
     char RemoveLast();
     char& Last() const;
     Str StealData(Arena* a = nullptr);
-    bool Contains(Str s);
     bool IsEmpty() const;
     void Set(Str s);
     char LastChar() const;
@@ -265,6 +264,8 @@ struct Builder {
     iterator begin() const { return &(els[0]); }
     iterator end() const { return &(els[len]); }
 };
+
+bool Contains(const Builder& b, Str s);
 } // namespace str
 
 void SeqStrNumAppend(str::Builder* b, Str s, i64 num);
@@ -296,7 +297,6 @@ struct Builder {
     WCHAR RemoveLast();
     WStr StealData();
     int Find(const WCHAR& el, int startAt = 0) const;
-    bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);
     bool IsEmpty() const;
     void Set(WStr s);
@@ -314,6 +314,7 @@ struct Builder {
 namespace wstr {
 
 bool Replace(Builder& s, WStr toReplace, WStr replaceWith);
+bool ContainsChar(const Builder& b, WCHAR el);
 
 FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
     return BufSet(dst.s, dstCchSize, src);

@@ -1913,26 +1913,8 @@ Str str::Builder::StealData(Arena* a) {
     return Str(res, n);
 }
 
-bool str::Builder::Contains(Str s) {
-    if (!s) {
-        return false;
-    }
-    int sLen = s.len;
-    if (sLen > (int)len) {
-        return false;
-    }
-    // must account for possibility of 0 in the string
-    char c = s.s[0];
-    int nLeft = (int)len - sLen;
-    for (int i = 0; i <= nLeft; i++) {
-        if (c != els[i]) {
-            continue;
-        }
-        if (str::EqN(s.s, els + i, (size_t)sLen)) {
-            return true;
-        }
-    }
-    return false;
+bool str::Contains(const str::Builder& b, Str s) {
+    return str::Contains(ToStr(b), s);
 }
 
 bool str::Builder::IsEmpty() const {
@@ -2159,8 +2141,8 @@ int wstr::Builder::Find(const WCHAR& el, int startAt) const {
     return -1;
 }
 
-bool wstr::Builder::Contains(const WCHAR& el) const {
-    return -1 != Find(el);
+bool wstr::ContainsChar(const wstr::Builder& b, WCHAR el) {
+    return wstr::ContainsChar(ToWStr(b), el);
 }
 
 // returns position of removed element or -1 if not removed

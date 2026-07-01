@@ -138,7 +138,7 @@ void logValueSize(Str name, i64 v) {
 }
 
 static void log2(Str s, bool always) {
-    bool skipLog = !always && gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s);
+    bool skipLog = !always && gSkipDuplicateLines && gLogBuf && str::Contains(*gLogBuf, s);
 
     if (!skipLog) {
         // in reduced logging mode, we do want to log to at least the debugger
