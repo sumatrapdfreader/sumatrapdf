@@ -10,6 +10,7 @@ end
 
 function makelzsa_files()
   files_in_dir("src/base", {
+    "Arena.*",
     "Base.*",
     "ByteOrderDecoder.*",
     "ByteWriter.*",
@@ -26,11 +27,21 @@ function makelzsa_files()
     "StrQueue.*",
     "Str.*",
     "StrVec.*",
+    "Thread.*",
     "WinDynCalls.*",
     "Win.*",
   })
 
+  -- LZMA files needed by LzmaSimpleArchive (decode) and MakeLzSA.cpp (encode)
+  files_in_dir("ext/lzma/C", {
+    "Bra86.c",
+    "LzFind.c",
+    "LzmaDec.c",
+    "LzmaEnc.c",
+  })
+
   files {
+    "src/CrashHandlerNoOp.cpp",
     "src/tools/MakeLzSA.cpp",
   }
 end

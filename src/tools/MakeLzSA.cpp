@@ -94,7 +94,8 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
         ReportIf(meta.Size() != kBufSize);
         data.Append(meta.AsByteSlice());
         data.Append(inArchiveName);
-        return content.Append(fi->compressedData, fi->compressedSize);
+        data.AppendChar('\0');
+        return content.Append(Str((char*)fi->compressedData, (int)fi->compressedSize));
     }
 
     Str fileData = file::ReadFile(filePath);
@@ -124,7 +125,8 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
     ReportIf(meta.Size() != kBufSize);
     data.Append(meta.AsByteSlice());
     data.Append(inArchiveName);
-    return content.Append(compressed, compressedSize);
+    data.AppendChar('\0');
+    return content.Append(Str(compressed.Get(), (int)compressedSize));
 }
 
 // creates an archive from files (starting at index skipFiles);
@@ -150,19 +152,20 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     data.Append(lzsaHeader.AsByteSlice());
 
     for (int i = skipFiles; i < files.Size(); i++) {
-        AutoFreeStr filePath(str::Dup(files.At(i)));
-        Str sep = str::FindCharLast(Str(filePath.Get()), ':');
-        AutoFreeStr utf8Name;
+        TempStr filePath = str::DupTemp(files.At(i));
+        Str sep = str::FindCharLast(filePath, ':');
+        TempStr utf8Name;
         if (sep) {
-            utf8Name = str::Dup(Str(sep.s + 1));
+            utf8Name = str::DupTemp(Str(sep.s + 1));
             *sep.s = '\0';
+            filePath.len = (int)(sep.s - filePath.s);
         } else {
-            utf8Name = str::Dup(filePath);
+            utf8Name = str::DupTemp(filePath);
         }
 
-        str::TransCharsInPlace(Str(utf8Name), StrL("/"), StrL("\\"));
-        if ('/' == *utf8Name || str::Contains(utf8Name, StrL("../"))) {
-            fprintf(stderr, "In-archive name must not be an absolute path: %s\n", utf8Name.Get());
+        str::TransCharsInPlace(utf8Name, StrL("/"), StrL("\\"));
+        if ('/' == utf8Name.s[0] || str::Contains(utf8Name, StrL("../"))) {
+            fprintf(stderr, "In-archive name must not be an absolute path: %s\n", utf8Name.s);
             return false;
         }
 
@@ -172,12 +175,13 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
         if (!AppendEntry(data, content, filePath, utf8Name, fi)) return false;
     }
 
-    u32 headerCrc32 = crc32(0, (const u8*)data.Get(), (u32)data.size());
+    Str hdr = data.LendData();
+    u32 headerCrc32 = crc32(0, (const u8*)hdr.s, (u32)hdr.len);
     ByteWriterLE buf(4);
     buf.Write32(headerCrc32);
     ReportIf(buf.Size() != 4);
     data.Append(buf.AsByteSlice());
-    if (!data.Append(content.Get())) return false;
+    if (!data.Append(content.LendData())) return false;
 
     Str d = ToStr(data);
     return file::WriteFile(archivePath, d);
@@ -204,10 +208,6 @@ bool CreateArchiveFromDir(Str archivePath, Str dir) {
 
 } // namespace lzsa
 
-void _uploadDebugReportIfFunc(bool, const char*) {
-    // no-op implementation to satisfy SubmitBugReport()
-}
-
 #define FailIf(cond, msg, ...)                  \
     if (cond) {                                 \
         fprintf(stderr, msg "\n", __VA_ARGS__); \
@@ -216,7 +216,7 @@ void _uploadDebugReportIfFunc(bool, const char*) {
 
 static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
     int nArgs = 0;
-    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    WCHAR** argsArr = CommandLineToArgvW(cmdLine.s, &nArgs);
     for (int i = 0; i < nArgs; i++) {
         Str arg = ToUtf8Temp(argsArr[i]);
         args.Append(arg);
@@ -296,7 +296,7 @@ int main(__unused int argc, __unused char** argv) {
     errorStep++;
 
     bool ok = lzsa::CreateArchive(archiveName, args, 2);
-    FailIf(!ok, "Failed to create \"%s\"", args.At(1));
+    FailIf(!ok, "Failed to create \"%s\"", args.At(1).s);
 
     return 0;
 }

@@ -1201,11 +1201,15 @@ workspace "MakeLZSA"
 
     makelzsa_files()
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+    -- 4456/4457: local/param shadowing in third-party LZMA C sources
+    disablewarnings { "4456", "4457" }
     includedirs { "src", "ext/lzma/C" }
+    -- build the LZMA encoder single-threaded (avoids LzFindMt/MtCoder/Threads)
+    defines { "_7ZIP_ST" }
 
     -- for zlib
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
     uses_zlib()
 
-    links { "shlwapi", "version", "comctl32", "wininet" }
+    links { "shlwapi", "version", "comctl32", "wininet", "crypt32", "wintrust" }
