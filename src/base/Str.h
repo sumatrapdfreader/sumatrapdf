@@ -307,8 +307,6 @@ struct Builder {
     char& at(u32 idx) const;
     char& operator[](u32 idx) const;
 #endif
-    size_t size() const;
-    int Size() const;
     bool InsertAt(size_t idx, char el);
     bool AppendChar(char c);
     bool Append(Str src, size_t count = (size_t)-1);
@@ -368,8 +366,6 @@ struct Builder {
     WCHAR& at(u32 idx) const;
     WCHAR& operator[](u32 idx) const;
 #endif
-    size_t size() const;
-    int isize() const;
     bool InsertAt(size_t idx, const WCHAR& el);
     bool AppendChar(WCHAR);
     bool Append(WStr src, size_t count = (size_t)-1);
@@ -436,6 +432,9 @@ Str ToStr(const str::Builder&);
 char* ToCStr(const str::Builder&);
 WStr ToWStr(const wstr::Builder&);
 WCHAR* ToWCStr(const wstr::Builder&);
+
+int len(const str::Builder&);
+int len(const wstr::Builder&);
 
 wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);

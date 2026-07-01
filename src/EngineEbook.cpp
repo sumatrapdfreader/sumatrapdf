@@ -438,14 +438,14 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 break;
         }
     }
-    if (content.size() > 0 && !wstr::EndsWith(ToWStr(content), lineSep)) {
+    if (len(content) > 0 && !wstr::EndsWith(ToWStr(content), lineSep)) {
         content.Append(lineSep);
         coords.AppendBlanks(len(lineSep));
     }
-    ReportIf(coords.size() != content.size());
+    ReportIf(coords.Size() != len(content));
 
     PageText res;
-    res.len = (int)content.size();
+    res.len = len(content);
     res.text = content.StealData();
     res.coords = coords.StealData();
     return res;
@@ -527,14 +527,14 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 break;
         }
     }
-    if (content.size() > 0 && !str::EndsWith(Str(ToStr(content)), lineSep)) {
+    if (len(content) > 0 && !str::EndsWith(Str(ToStr(content)), lineSep)) {
         content.Append(lineSep);
         coords.AppendBlanks(len(lineSep));
     }
-    ReportIf(coords.size() != content.size());
+    ReportIf(coords.Size() != len(content));
 
     PageTextUtf8 res;
-    res.len = (int)content.size();
+    res.len = len(content);
     res.text = content.StealData();
     res.coords = coords.StealData();
     return res;

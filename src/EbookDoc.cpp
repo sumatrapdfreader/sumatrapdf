@@ -474,7 +474,7 @@ bool EpubDoc::Load() {
         htmlData.Append(decoded);
     }
 
-    return htmlData.size() > 0;
+    return len(htmlData) > 0;
 }
 
 // clang-format off
@@ -916,7 +916,7 @@ bool Fb2Doc::Load() {
             }
         } else if (inBody && tok->IsEndTag() && Tag_Body == tok->tag) {
             if (!--inBody) {
-                if (xmlData.size() > 0) {
+                if (len(xmlData) > 0) {
                     xmlData.Append("<pagebreak />");
                 }
                 xmlData.AppendChar('<');
@@ -1002,7 +1002,7 @@ bool Fb2Doc::Load() {
         }
     }
 
-    return xmlData.size() > 0;
+    return len(xmlData) > 0;
 }
 
 void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
@@ -1030,7 +1030,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
 
 ByteSlice Fb2Doc::GetXmlData() const {
     Str s = ToStr(xmlData);
-    return {(u8*)s.s, xmlData.size()};
+    return {(u8*)s.s, (size_t)len(xmlData)};
 }
 
 ByteSlice* Fb2Doc::GetImageData(Str fileName) const {
@@ -1533,10 +1533,10 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
     AutoFreeStr beforeAt;
     Str rest = curr;
     if (!str::IsEmpty(curr) && '@' == curr.s[0]) {
-        if (htmlData.size() == 0 || !IsEmailUsernameChar(htmlData.Last())) {
+        if (len(htmlData) == 0 || !IsEmailUsernameChar(htmlData.Last())) {
             return {};
         }
-        size_t idx = htmlData.size();
+        size_t idx = len(htmlData);
         for (; idx > 1 && IsEmailUsernameChar(htmlData.at(idx - 1)); idx--) {
             ;
         }
@@ -1577,8 +1577,8 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
     Str linkStart = !str::IsEmpty(curr) && '@' == curr.s[0] ? curr : Str(curr.s + 7, curr.len - 7);
 
     if (beforeAt) {
-        size_t idx = htmlData.size() - (size_t)Str(beforeAt.Get()).len;
-        htmlData.RemoveAt(idx, htmlData.size() - idx);
+        size_t idx = len(htmlData) - (size_t)Str(beforeAt.Get()).len;
+        htmlData.RemoveAt(idx, len(htmlData) - idx);
     }
     htmlData.Append("<a href=\"mailto:");
     htmlData.Append(Str(beforeAt.Get()));

@@ -512,7 +512,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
             }
             out.Append("\r\n");
         } else {
-            size_t offset = out.size();
+            size_t offset = len(out);
             Indent(out, indent);
             out.Append(fieldNameStr);
             out.Append(" = ");
@@ -520,7 +520,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
             if (keep) {
                 out.Append("\r\n");
             } else {
-                out.RemoveAt(offset, out.size() - offset);
+                out.RemoveAt(offset, len(out) - offset);
             }
         }
         MarkFieldKnown(prevNode, fieldNameStr, field.type);

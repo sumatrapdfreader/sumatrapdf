@@ -344,7 +344,7 @@ static TempStr EncodeClaudeDirTemp(Str dir) {
         }
     }
     // remove trailing dash if present
-    if (buf.Size() > 0 && buf.LastChar() == '-') {
+    if (len(buf) > 0 && buf.LastChar() == '-') {
         buf.RemoveLast();
     }
     return str::DupTemp(buf.LendData());

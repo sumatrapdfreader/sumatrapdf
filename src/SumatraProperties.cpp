@@ -783,7 +783,7 @@ static void OnGetFontsFinished(GetFontsResult* result) {
             if (pos > 0 && props.s[pos - 1] == '\n') {
                 pos--;
             }
-            pl->propsText.RemoveAt(pos, pl->propsText.Size() - pos);
+            pl->propsText.RemoveAt(pos, len(pl->propsText) - pos);
         }
         pl->propsText.Append(ToStr(result->fontsText));
         SetEditText(pl->hwndEdit, ToStr(pl->propsText));

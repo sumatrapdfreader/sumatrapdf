@@ -850,7 +850,7 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
         block = block->next;
     }
 
-    ReportIf(content.size() != rects.size());
+    ReportIf(len(content) != rects.Size());
 
     if (coordsOut) {
         *coordsOut = rects.StealData();
@@ -886,7 +886,7 @@ static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
         block = block->next;
     }
 
-    ReportIf(content.size() != rects.size());
+    ReportIf(len(content) != rects.Size());
 
     if (coordsOut) {
         *coordsOut = rects.StealData();
@@ -2299,7 +2299,7 @@ static ByteSlice TxtFileToHTML(Str path) {
     d.Append(R"(</pre>
 </body>
 </html>)");
-    size_t sz = d.size();
+    size_t sz = len(d);
     Str stolen = d.StealData();
     return {(u8*)stolen.s, sz};
 }
@@ -4186,7 +4186,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             if (embedded) {
                 info.Append("embedded; ");
             }
-            info.RemoveAt(info.size() - 2, 2);
+            info.RemoveAt(len(info) - 2, 2);
             info.Append(")");
         }
 

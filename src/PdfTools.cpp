@@ -1094,7 +1094,7 @@ static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete)
         if (shouldDelete) {
             delIdx++;
             if (rangeStart != -1) {
-                if (s.Size() > 0) {
+                if (len(s) > 0) {
                     s.AppendChar(',');
                 }
                 if (rangeStart == rangeEnd) {
@@ -1112,7 +1112,7 @@ static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete)
         }
     }
     if (rangeStart != -1) {
-        if (s.Size() > 0) {
+        if (len(s) > 0) {
             s.AppendChar(',');
         }
         if (rangeStart == rangeEnd) {
@@ -1135,7 +1135,7 @@ static TempStr FormatPageRange(const Vec<int>& pages) {
         while (i + 1 < n && pages[i + 1] == end + 1) {
             end = pages[++i];
         }
-        if (s.Size() > 0) {
+        if (len(s) > 0) {
             s.AppendChar(',');
         }
         if (start == end) {

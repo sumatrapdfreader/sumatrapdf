@@ -223,13 +223,13 @@ bool HttpPost(Str serverA, int port, Str urlA, str::Builder* headers, str::Build
         goto Exit;
     }
 
-    if (headers && headers->size() > 0) {
+    if (headers && len(*headers) > 0) {
         hdr = headers->CStr().s;
-        hdrLen = (DWORD)headers->size();
+        hdrLen = (DWORD)len(*headers);
     }
-    if (data && data->size() > 0) {
+    if (data && len(*data) > 0) {
         d = data->CStr().s;
-        dLen = (DWORD)data->size();
+        dLen = (DWORD)len(*data);
     }
 
     InternetSetOptionW(hReq, INTERNET_OPTION_SEND_TIMEOUT, &timeoutMs, sizeof(timeoutMs));

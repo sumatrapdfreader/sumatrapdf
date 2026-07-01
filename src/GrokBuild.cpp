@@ -576,7 +576,7 @@ static void AppendGrokHistoryTools(MainWindow* win, Str line) {
             }
             j++;
         }
-        if (nameBuf.Size() > 0) {
+        if (len(nameBuf) > 0) {
             str::Builder desc;
             desc.Append(fmt("Tool: %s", nameBuf.LendData()));
             WebViewAddTool(win, desc.LendData());

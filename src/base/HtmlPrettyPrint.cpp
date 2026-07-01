@@ -10,7 +10,7 @@ static void HtmlAddWithNesting(str::Builder* out, HtmlToken* tok, size_t nesting
     ReportIf(!tok->IsStartTag() && !tok->IsEndTag() && !tok->IsEmptyElementEndTag());
     bool isInline = IsInlineTag(tok->tag);
     // add a newline before block start tags (unless there already is one)
-    bool onNewLine = out->size() == 0 || out->Last() == '\n';
+    bool onNewLine = len(*out) == 0 || out->Last() == '\n';
     if (!onNewLine && !isInline && !tok->IsEndTag()) {
         out->AppendChar('\n');
         onNewLine = true;
@@ -84,7 +84,7 @@ ByteSlice PrettyPrintHtml(const ByteSlice& d) {
             }
         }
     }
-    size_t sz = res.size();
+    size_t sz = len(res);
     Str stolen = res.StealData();
     return {(u8*)stolen.s, sz};
 }

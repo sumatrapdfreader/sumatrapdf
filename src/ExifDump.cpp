@@ -526,14 +526,14 @@ struct TiffParser {
             if (c == 0) {
                 break;
             }
-            if (s.size() > 0) {
+            if (len(s) > 0) {
                 s.Append(", ");
             }
             if (c < dimof(compNames) && compNames[c]) {
                 s.Append(compNames[c]);
             }
         }
-        if (s.size() == 0) {
+        if (len(s) == 0) {
             return str::DupTemp("YCbCr");
         }
         return str::DupTemp(ToStr(s));

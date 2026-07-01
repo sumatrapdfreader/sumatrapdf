@@ -150,7 +150,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         bool isLineBreak = (prevY != INT_MIN && r.y > prevY + 2);
         bool isSpace = isLineBreak || c == L' ' || c == L'\t' || c == L'\n' || c == L'\r';
         if (i == cursorIdx) {
-            cursorChunkPos = (int)chunk.size();
+            cursorChunkPos = len(chunk);
         }
         if (isSpace) {
             if (!lastWasSpace) {
@@ -344,7 +344,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
     for (int j = surnameStart; j < surnameEnd; j++) {
         surnameW.AppendChar(s.s[j]);
     }
-    while (surnameW.size() > 0) {
+    while (len(surnameW) > 0) {
         WCHAR last = surnameW.LastChar();
         if (last == L' ' || last == L'.' || last == L',') {
             surnameW.RemoveLast();
@@ -352,7 +352,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
             break;
         }
     }
-    if (surnameW.size() < 2) {
+    if (len(surnameW) < 2) {
         return false;
     }
 

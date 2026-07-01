@@ -9711,7 +9711,7 @@ static TempStr CleanReadAloudTextTemp(Str text) {
                 i++;
             }
 
-            if (!lastWasSpace && out.size() > 0) {
+            if (!lastWasSpace && len(out) > 0) {
                 out.AppendChar(' ');
                 lastWasSpace = true;
             }
@@ -9726,7 +9726,7 @@ static TempStr CleanReadAloudTextTemp(Str text) {
 
         // Collapse spaces and tabs.
         if (IsReadAloudHorizontalSpace(c)) {
-            if (!lastWasSpace && out.size() > 0) {
+            if (!lastWasSpace && len(out) > 0) {
                 out.AppendChar(' ');
                 lastWasSpace = true;
             }

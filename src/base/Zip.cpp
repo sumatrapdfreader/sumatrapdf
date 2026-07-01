@@ -134,7 +134,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
     local.Write32((u32)size);
     local.Write16((u16)namelen);
     local.Write16(0); // extra field length
-    ReportIf(local.d.size() != kHdrSize);
+    ReportIf(len(local.d) != kHdrSize);
 
     Str localHeader = ToStr(local.d);
     bool ok = WriteData(localHeader.s, kHdrSize);
@@ -159,7 +159,7 @@ bool ZipCreator::AddFileData(Str nameUtf8, const void* data, size_t size, u32 do
     central.Write16(0); // internal file attributes
     central.Write32(0); // external file attributes
     central.Write32((u32)fileOffset);
-    ReportIf(central.d.size() != kCentralSize);
+    ReportIf(len(central.d) != kCentralSize);
 
     centraldir.Append(Str(central.d.LendData().s, (int)kCentralSize));
     centraldir.Append(nameUtf8);
@@ -236,12 +236,12 @@ bool ZipCreator::Finish() {
     eocd.Write16(0);          // disk number of central directory
     eocd.Write16((u16)fileCount);
     eocd.Write16((u16)fileCount);
-    eocd.Write32((u32)centraldir.size());
+    eocd.Write32((u32)len(centraldir));
     eocd.Write32((u32)bytesWritten);
     eocd.Write16(0); // comment len
-    ReportIf(eocd.d.size() != kDirSize);
+    ReportIf(len(eocd.d) != kDirSize);
 
-    bool ok = WriteData(ToStr(centraldir).s, centraldir.size());
+    bool ok = WriteData(ToStr(centraldir).s, len(centraldir));
     ok = ok && WriteData(ToStr(eocd.d).s, kDirSize);
     return ok;
 }

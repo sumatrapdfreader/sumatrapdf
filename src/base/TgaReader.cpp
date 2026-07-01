@@ -399,8 +399,8 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     tgaData.AppendSlice(ByteSlice((u8*)&footerLE, sizeof(footerLE)));
 
     // don't compress the image data if that increases the file size
-    if (tgaData.size() > sizeof(headerLE) + w * h * 3 + sizeof(footerLE)) {
-        tgaData.RemoveAt(0, tgaData.size());
+    if (len(tgaData) > sizeof(headerLE) + w * h * 3 + sizeof(footerLE)) {
+        tgaData.RemoveAt(0, len(tgaData));
         headerLE.imageType = Type_Truecolor;
         tgaData.AppendSlice(ByteSlice((u8*)&headerLE, sizeof(headerLE)));
         for (int k = 0; k < h; k++) {
@@ -409,7 +409,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
         tgaData.AppendSlice(ByteSlice((u8*)&footerLE, sizeof(footerLE)));
     }
 
-    size_t sz = tgaData.size();
+    size_t sz = len(tgaData);
     Str stolen = tgaData.StealData();
     return {(u8*)stolen.s, sz};
 }

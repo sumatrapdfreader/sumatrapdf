@@ -16,7 +16,7 @@ static size_t VecTestAppendFmt() {
         val = (val * 3) / 2; // somewhat exponential growth
         val += 15;
     }
-    size_t l = v.size();
+    size_t l = len(v);
     return l;
 }
 
@@ -72,9 +72,9 @@ void VecTest() {
         }
         Str s = v.LendData();
         utassert(str::Eq("abcdefg", s));
-        utassert(7 == v.size());
+        utassert(7 == len(v));
         v.Set(StrL("helo"));
-        utassert(4 == v.size());
+        utassert(4 == len(v));
         utassert(str::Eq("helo", v.LendData()));
     }
 
@@ -82,26 +82,26 @@ void VecTest() {
         str::Builder v(128);
         v.Append("boo", 3);
         utassert(str::Eq("boo", v.LendData()));
-        utassert(v.size() == 3);
+        utassert(len(v) == 3);
         v.Append("fop");
         utassert(str::Eq("boofop", v.LendData()));
-        utassert(v.size() == 6);
+        utassert(len(v) == 6);
         v.RemoveAt(2, 3);
-        utassert(v.size() == 3);
+        utassert(len(v) == 3);
         utassert(str::Eq("bop", v.LendData()));
         v.AppendChar('a');
-        utassert(v.size() == 4);
+        utassert(len(v) == 4);
         utassert(str::Eq("bopa", v.LendData()));
         Str s = v.StealData();
         utassert(str::Eq("bopa", s));
         str::Free(s);
-        utassert(v.size() == 0);
+        utassert(len(v) == 0);
     }
 
     {
         str::Builder v(0, nullptr);
         for (size_t i = 0; i < 32; i++) {
-            utassert(v.size() == i * 6);
+            utassert(len(v) == i * 6);
             v.Append("lambd", 5);
             if (i % 2 == 0)
                 v.AppendChar('a');
@@ -111,17 +111,17 @@ void VecTest() {
 
         for (size_t i = 1; i <= 16; i++) {
             v.RemoveAt((16 - i) * 6, 6);
-            utassert(v.size() == (32 - i) * 6);
+            utassert(len(v) == (32 - i) * 6);
         }
 
         v.RemoveAt(0, 6 * 15);
-        utassert(v.size() == 6);
+        utassert(len(v) == 6);
         Str s = v.LendData();
         utassert(str::Eq(s, "lambda"));
         s = v.StealData();
         utassert(str::Eq(s, "lambda"));
         str::Free(s);
-        utassert(v.size() == 0);
+        utassert(len(v) == 0);
 
         v.Append("lambda");
         utassert(str::Eq(v.LendData(), "lambda"));
@@ -177,6 +177,6 @@ void VecTest() {
     {
         str::Builder v;
         v.Append("foo");
-        utassert(v.size() == 3);
+        utassert(len(v) == 3);
     }
 }

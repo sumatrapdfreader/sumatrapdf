@@ -89,9 +89,9 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
     log("ExtractHtmlText()\n");
 
     Str d = doc->GetHtmlData();
-    size_t len = (size_t)d.len;
+    size_t dataLen = (size_t)d.len;
 
-    str::Builder text(len / 2);
+    str::Builder text(dataLen / 2);
     HtmlPullParser p(d);
     HtmlToken* t;
     Vec<HtmlTag> tagNesting;
@@ -112,7 +112,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
                 tagNesting.Append(t->tag);
             }
         } else if (t->IsEndTag()) {
-            if (!IsInlineTag(t->tag) && text.size() > 0 && text.Last() == ' ') {
+            if (!IsInlineTag(t->tag) && len(text) > 0 && text.Last() == ' ') {
                 text.RemoveLast();
                 text.Append("\r\n");
             }

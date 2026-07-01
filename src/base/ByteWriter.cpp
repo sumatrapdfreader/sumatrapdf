@@ -61,7 +61,7 @@ void ByteWriter::Write64(u64 val) {
 }
 
 size_t ByteWriter::Size() const {
-    return d.size();
+    return len(d);
 }
 
 ByteSlice ByteWriter::AsByteSlice() const {

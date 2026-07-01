@@ -2069,7 +2069,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     int cbData;
     if (fmt == CF_TEXT) {
         data = (void*)ToStr(str).s;
-        cbData = str.Size() + 1;
+        cbData = len(str) + 1;
     } else if (fmt == CF_UNICODETEXT) {
         int cch;
         WCHAR* tmp = CWStrTemp(ToStr(str), cch);

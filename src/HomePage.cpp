@@ -798,7 +798,7 @@ static void CopyAboutInfoToClipboard() {
     str::Builder info(512);
     TempStr ver = GetAppVersionTemp();
     info.Append(fmt("%s %s\r\n", Str(kAppName), Str(ver)));
-    for (int i = info.Size() - 2; i > 0; i--) {
+    for (int i = len(info) - 2; i > 0; i--) {
         info.AppendChar('-');
     }
     info.Append("\r\n");

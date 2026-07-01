@@ -1376,14 +1376,14 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
                 if (c == 0) {
                     break;
                 }
-                if (s.size() > 0) {
+                if (len(s) > 0) {
                     s.Append(", ");
                 }
                 if (c < dimof(compNames)) {
                     s.Append(compNames[c]);
                 }
             }
-            if (s.size() > 0) {
+            if (len(s) > 0) {
                 AddProp(keyValOut, kPropComponentsConfig, ToStr(s));
             }
             free(item);

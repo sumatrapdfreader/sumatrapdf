@@ -723,12 +723,12 @@ PageTextUtf8 EngineDjvuDec::ExtractPageTextUtf8(int pageNo) {
     CollectZonesUtf8(z->root, dpiF, sb, coords);
     djvu_text_zones_destroy(ctx, z);
 
-    if (sb.size() == 0) {
+    if (len(sb) == 0) {
         return {};
     }
-    ReportIf((size_t)sb.size() != coords.size());
+    ReportIf((size_t)len(sb) != coords.Size());
     PageTextUtf8 res;
-    res.len = (int)sb.size();
+    res.len = len(sb);
     res.text = sb.StealData();
     res.coords = coords.StealData();
     return res;

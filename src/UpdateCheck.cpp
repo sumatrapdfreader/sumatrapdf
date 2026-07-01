@@ -568,7 +568,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         return ERROR_INTERNET_INVALID_URL;
     }
     str::Builder* data = &rsp->data;
-    if (0 == data->size()) {
+    if (0 == len(*data)) {
         logf("ShowAutoUpdateDialog: empty response from url '%s'\n", url);
         return ERROR_INTERNET_CONNECTION_ABORTED;
     }

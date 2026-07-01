@@ -1896,12 +1896,8 @@ char& str::Builder::operator[](u32 idx) const {
 }
 #endif
 
-size_t str::Builder::size() const {
-    return len;
-}
-
-int str::Builder::Size() const {
-    return (int)len;
+int len(const str::Builder& b) {
+    return (int)b.len;
 }
 
 bool str::Builder::InsertAt(size_t idx, char el) {
@@ -2016,11 +2012,11 @@ bool str::Builder::IsEmpty() const {
 }
 
 ByteSlice str::Builder::AsByteSlice() const {
-    return {(u8*)els, size()};
+    return {(u8*)els, len};
 }
 
 ByteSlice str::Builder::StealAsByteSlice() {
-    size_t n = size();
+    size_t n = len;
     Str d = StealData();
     return {(u8*)d.s, n};
 }
@@ -2238,11 +2234,8 @@ WCHAR& wstr::Builder::operator[](u32 idx) const {
 }
 #endif
 
-size_t wstr::Builder::size() const {
-    return len;
-}
-int wstr::Builder::isize() const {
-    return (int)len;
+int len(const wstr::Builder& b) {
+    return (int)b.len;
 }
 
 bool wstr::Builder::InsertAt(size_t idx, const WCHAR& el) {

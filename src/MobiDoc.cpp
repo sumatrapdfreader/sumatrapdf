@@ -136,11 +136,11 @@ static bool PalmdocUncompress(const u8* src, size_t srcLen, str::Builder& dst) {
             }
             u16 c2 = (c << 8) | (u8)*src++;
             u16 back = (c2 >> 3) & 0x07ff;
-            if (back > dst.size() || 0 == back) {
+            if (back > len(dst) || 0 == back) {
                 return false;
             }
             for (u8 n = (c2 & 7) + 3; n > 0; n--) {
-                char ctmp = dst.at(dst.size() - back);
+                char ctmp = dst.at(len(dst) - back);
                 dst.AppendChar(ctmp);
             }
         } else {
@@ -879,7 +879,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     // https://code.google.com/archive/p/sumatrapdf/issues/2529
     Str docStr = ToStr(*doc);
     u8* s = (u8*)docStr.s;
-    u8* end = s + doc->size();
+    u8* end = s + len(*doc);
     while ((s = (u8*)memchr(s, 0, (size_t)(end - s))) != nullptr) {
         *s = ' ';
     }
@@ -943,13 +943,13 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
 
 bool MobiDoc::HasToc() {
     if (docTocIndex != kInvalidSize) {
-        return docTocIndex < doc->size();
+        return docTocIndex < len(*doc);
     }
-    docTocIndex = doc->size(); // no ToC
+    docTocIndex = len(*doc); // no ToC
 
     // search for <reference type="toc" filepos="N"/>
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, ToStr(*doc).s, doc->size());
+    GumboOutput* output = gumbo_parse_with_options(&opts, ToStr(*doc).s, len(*doc));
     if (!output) {
         return false;
     }
@@ -964,7 +964,7 @@ bool MobiDoc::HasToc() {
         }
     }
     gumbo_destroy_output_iter(&opts, output);
-    return docTocIndex < doc->size();
+    return docTocIndex < len(*doc);
 }
 
 static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
@@ -1062,7 +1062,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     // determine the author's intentions by looking at commonly used tags
     GumboOptions opts = GumboMakeOptions();
     Str docStr = ToStr(*doc);
-    Str tocSlice(docStr.s + docTocIndex, (int)(doc->size() - docTocIndex));
+    Str tocSlice(docStr.s + docTocIndex, (int)(len(*doc) - docTocIndex));
     GumboOutput* output = gumbo_parse_with_options(&opts, tocSlice.s, (size_t)tocSlice.len);
     if (!output) {
         return false;

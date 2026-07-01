@@ -90,7 +90,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
         if (!entry || str::EqI(entry, installDir)) {
             continue;
         }
-        if (newPath.Size() > 0) {
+        if (len(newPath) > 0) {
             newPath.Append(";");
         }
         newPath.Append(entry);

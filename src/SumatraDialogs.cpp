@@ -1262,7 +1262,7 @@ static void SaveCustomColors(BgColorDlgData* data) {
         if (!data->customColorSet[i]) {
             continue;
         }
-        if (buf.Size() > 0) {
+        if (len(buf) > 0) {
             buf.AppendChar(' ');
         }
         TempStr cs = SerializeColorTemp(data->customColors[i]);

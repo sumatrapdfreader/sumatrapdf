@@ -864,7 +864,7 @@ bool EngineDjVu::SaveFileAs(Str dstPath) {
 }
 
 static void AppendNewline(wstr::Builder& extracted, Vec<Rect>& coords, WStr lineSep) {
-    if (extracted.size() > 0 && ' ' == extracted.Last()) {
+    if (len(extracted) > 0 && ' ' == extracted.Last()) {
         extracted.RemoveLast();
         coords.RemoveLast();
     }
@@ -952,7 +952,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     if (!success) {
         return {};
     }
-    if (extracted.size() > 0 && !wstr::EndsWith(ToWStr(extracted), lineSep)) {
+    if (len(extracted) > 0 && !wstr::EndsWith(ToWStr(extracted), lineSep)) {
         AppendNewline(extracted, coords, lineSep);
     }
 
@@ -984,15 +984,15 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
             coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
         }
     }
-    ReportIf(coords.size() != extracted.size());
-    res.len = (int)extracted.size();
+    ReportIf(coords.Size() != len(extracted));
+    res.len = len(extracted);
     res.text = extracted.StealData();
     res.coords = coords.StealData();
     return res;
 }
 
 static void AppendNewlineUtf8(str::Builder& extracted, Vec<Rect>& coords, Str lineSep) {
-    if (extracted.size() > 0 && ' ' == extracted.Last()) {
+    if (len(extracted) > 0 && ' ' == extracted.Last()) {
         extracted.RemoveLast();
         coords.RemoveLast();
     }
@@ -1078,7 +1078,7 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
     if (!success) {
         return {};
     }
-    if (extracted.size() > 0 && !str::EndsWith(ToStr(extracted), lineSep)) {
+    if (len(extracted) > 0 && !str::EndsWith(ToStr(extracted), lineSep)) {
         AppendNewlineUtf8(extracted, coords, lineSep);
     }
 
@@ -1110,8 +1110,8 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
             coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
         }
     }
-    ReportIf(coords.size() != extracted.size());
-    res.len = (int)extracted.size();
+    ReportIf(coords.Size() != len(extracted));
+    res.len = len(extracted);
     res.text = extracted.StealData();
     res.coords = coords.StealData();
     return res;
