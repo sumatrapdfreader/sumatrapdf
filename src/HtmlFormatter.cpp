@@ -1296,7 +1296,7 @@ void HtmlFormatter::HandleText(Str s) {
         while (curr) {
             currReparseIdx = htmlParser->PosOf(curr);
             Str text = curr;
-            Str nl = str::FindChar(curr, '\n');
+            Str nl = str::SliceFromChar(curr, '\n');
             if (nl) {
                 text = Str(curr.s, (int)(nl.s - curr.s));
                 if (!str::IsEmpty(text) && text.s[text.len - 1] == '\r') {

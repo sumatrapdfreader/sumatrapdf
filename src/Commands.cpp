@@ -1066,7 +1066,7 @@ CommandArg* TryParseDefaultArg(int defaultArgIdx, Str* argsInOut) {
     // first is default value
     Str rest = *argsInOut;
     str::SkipChar(rest, ' ');
-    Str valEnd = str::FindChar(rest, ' ');
+    Str valEnd = str::SliceFromChar(rest, ' ');
     Str argName = argSpecs[defaultArgIdx].name;
     CommandArg::Type type = argSpecs[defaultArgIdx].type;
     if (type == CommandArg::Type::String) {
@@ -1160,7 +1160,7 @@ CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
         // <args> doesn't start with any of the available commands for this command
         return nullptr;
     }
-    Str valEnd = str::FindChar(valStart, ' ');
+    Str valEnd = str::SliceFromChar(valStart, ' ');
     TempStr val = nullptr;
     Str afterVal;
     if (!valEnd) {

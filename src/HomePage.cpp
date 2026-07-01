@@ -115,7 +115,7 @@ static Str FindMarkdownLinkCmdEnd(Str cmdStart) {
         }
         return {};
     }
-    return str::FindChar(cmdStart, ')');
+    return str::SliceFromChar(cmdStart, ')');
 }
 
 static void AppendTipWordsFromText(ParsedTip& tip, Str text, bool isLink, int linkIdx) {

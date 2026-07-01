@@ -305,7 +305,7 @@ FileArgs::~FileArgs() {
 // args into FileArgs
 // returns nullptr if there are not args
 FileArgs* ParseFileArgs(Str path) {
-    Str hashPos = str::FindCharLast(path, '?');
+    Str hashPos = str::SliceFromCharLast(path, '?');
     if (!hashPos) {
         return nullptr;
     }

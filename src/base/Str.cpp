@@ -703,7 +703,7 @@ bool ContainsChar(Str s, char c) {
     return IndexOfChar(s, c) >= 0;
 }
 
-Str FindChar(Str str, char c) {
+Str SliceFromChar(Str str, char c) {
     int idx = IndexOfChar(str, c);
     if (idx < 0) {
         return {};
@@ -711,7 +711,7 @@ Str FindChar(Str str, char c) {
     return Str(str.s + idx, str.len - idx);
 }
 
-Str FindCharLast(Str str, char c) {
+Str SliceFromCharLast(Str str, char c) {
     if (!str) {
         return {};
     }
@@ -2329,7 +2329,7 @@ bool ContainsChar(WStr s, WCHAR c) {
     return IndexOfChar(s, c) >= 0;
 }
 
-WStr FindChar(WStr str, WCHAR c) {
+WStr SliceFromChar(WStr str, WCHAR c) {
     int idx = IndexOfChar(str, c);
     if (idx < 0) {
         return {};

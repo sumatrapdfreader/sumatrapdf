@@ -153,7 +153,7 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
 
     for (int i = skipFiles; i < files.Size(); i++) {
         TempStr filePath = str::DupTemp(files.At(i));
-        Str sep = str::FindCharLast(filePath, ':');
+        Str sep = str::SliceFromCharLast(filePath, ':');
         TempStr utf8Name;
         if (sep) {
             utf8Name = str::DupTemp(Str(sep.s + 1));

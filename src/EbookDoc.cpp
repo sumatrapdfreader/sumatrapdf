@@ -117,8 +117,8 @@ TempStr NormalizeURLTemp(Str url, Str base) {
         return str::DupTemp(url);
     }
 
-    Str baseEnd = str::FindCharLast(base, '/');
-    Str hash = str::FindChar(base, '#');
+    Str baseEnd = str::SliceFromCharLast(base, '/');
+    Str hash = str::SliceFromChar(base, '#');
     int basePathLen;
     if (url.s[0] == '#') {
         basePathLen = hash ? (int)(hash.s - base.s) : base.len;
@@ -232,7 +232,7 @@ static inline void AppendChar(str::Builder& htmlData, char c) {
 }
 
 static TempStr DecodeDataURITemp(Str url) {
-    Str comma = str::FindChar(url, ',');
+    Str comma = str::SliceFromChar(url, ',');
     if (!comma) {
         return {};
     }

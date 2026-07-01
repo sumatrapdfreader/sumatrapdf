@@ -77,7 +77,7 @@ WStr DecodeHtmlEntities(Str string, uint codepage) {
         if (!wstr::IsNull(wstr::Parse(WStr(src), L"#%d;", &unicode)) ||
             !wstr::IsNull(wstr::Parse(WStr(src), L"#x%x;", &unicode))) {
             *dst++ = IntToChar(unicode);
-            WStr semi = wstr::FindChar(WStr(src), L';');
+            WStr semi = wstr::SliceFromChar(WStr(src), L';');
             src = semi.s + 1;
             continue;
         }

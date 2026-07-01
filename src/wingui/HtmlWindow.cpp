@@ -350,12 +350,12 @@ static bool ParseProtoUrl(Str url, int* htmlWindowId, AutoFreeStr* urlRest) {
 #define kDefaultMimeType "text/html"
 
 static TempStr MimeFromUrlTemp(Str url, Str imgExt = {}) {
-    Str ext = str::FindCharLast(url, '.');
+    Str ext = str::SliceFromCharLast(url, '.');
     if (!ext.s) {
         return Str(kDefaultMimeType);
     }
 
-    Str semi = str::FindChar(ext, ';');
+    Str semi = str::SliceFromChar(ext, ';');
     if (semi.s) {
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension

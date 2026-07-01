@@ -367,7 +367,7 @@ bool DocumentPathExists(Str path) {
     if (file::Exists(path) || dir::Exists(path)) {
         return true;
     }
-    Str pos = str::FindCharLast(Str(path.s + 2, path.len - 2), ':');
+    Str pos = str::SliceFromCharLast(Str(path.s + 2, path.len - 2), ':');
     if (!pos) {
         return false;
     }

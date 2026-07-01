@@ -625,7 +625,7 @@ IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
 
 IPageDestination* EngineEbook::GetNamedDest(Str name) {
     Str id = name;
-    Str hash = str::FindChar(name, '#');
+    Str hash = str::SliceFromChar(name, '#');
     if (hash) {
         id = Str(hash.s + 1, hash.len - 1);
     }
@@ -1804,7 +1804,7 @@ bool EngineHtml::Load(Str fileName) {
 
 static IPageDestination* newRemoteHtmlDest(Str relativeURL) {
     auto* res = new PageDestination();
-    Str hash = str::FindChar(relativeURL, '#');
+    Str hash = str::SliceFromChar(relativeURL, '#');
     if (hash) {
         res->value = str::Dup(Str(relativeURL.s, (int)(hash.s - relativeURL.s)));
         res->name = str::Dup(hash);

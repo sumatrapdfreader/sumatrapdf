@@ -249,7 +249,7 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
 
     TempStr path = str::DupTemp(uri);
     Str pathStr = path;
-    Str fragment = str::FindChar(pathStr, '#');
+    Str fragment = str::SliceFromChar(pathStr, '#');
     if (fragment) {
         pathStr = Str(pathStr.s, (int)(fragment.s - pathStr.s));
         fragment = Str(fragment.s + 1);
@@ -288,7 +288,7 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
 
         TempStr path = str::DupTemp(maybePath);
         Str pathStr = path;
-        Str destStr = str::FindChar(pathStr, '#');
+        Str destStr = str::SliceFromChar(pathStr, '#');
         if (destStr) {
             pathStr = Str(pathStr.s, (int)(destStr.s - pathStr.s));
             destStr = Str(destStr.s + 1);
@@ -1144,7 +1144,7 @@ static LinkRectList* LinkifyText(WStr pageText, Rect* coords) {
             protocol = WStrL(L"http://");
             // ignore www. links without a top-level domain
             WStr afterWww = WStr(pageText.s + startOff + 5, endOff - startOff - 5);
-            WStr dot = wstr::FindChar(afterWww, L'.');
+            WStr dot = wstr::SliceFromChar(afterWww, L'.');
             if (endOff - startOff <= 4 || !multiline && (!dot || dot.s >= pageText.s + endOff)) {
                 endOff = -1;
             }

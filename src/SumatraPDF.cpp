@@ -3890,7 +3890,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         // handle embed-marks (for embedded PDF documents):
         // remove the container document's extension and include
         // the embedding reference in the suggested filename
-        WStr colon = wstr::FindChar(WStr(dstFileName), L':');
+        WStr colon = wstr::SliceFromChar(WStr(dstFileName), L':');
         wstr::TransCharsInPlace(colon, WStrL(L":"), WStrL(L"_"));
         int colonOff = (int)(colon.s - dstFileName);
         int extOff = colonOff;
@@ -6734,7 +6734,7 @@ void DeleteManualBrowserWindow() {
 }
 
 static TempStr ManualMimeFromPathTemp(Str path) {
-    Str ext = str::FindCharLast(path, '.');
+    Str ext = str::SliceFromCharLast(path, '.');
     TempStr mime = MimeTypeFromExtTemp(ext);
     if (!mime) {
         mime = "text/html";
@@ -6825,7 +6825,7 @@ static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
         docURI = kManualDefaultDocURI;
     }
 
-    Str fragment = str::FindChar(docURI, '#');
+    Str fragment = str::SliceFromChar(docURI, '#');
     Str pathStart = docURI;
     if (!str::IsEmpty(pathStart) && pathStart.s[0] == '/') {
         pathStart = Str(pathStart.s + 1, pathStart.len - 1);

@@ -3371,7 +3371,7 @@ static void AdvanceUrlPathUntilSuffix(Str& p, Str& lastSlash) {
 static TempStr FileNameFromUrlTemp(Str url) {
     // skip past scheme
     Str path = url;
-    Str slash = str::FindChar(url, '/');
+    Str slash = str::SliceFromChar(url, '/');
     if (slash) {
         path = slash;
         if (path.len >= 2 && path.s[0] == '/' && path.s[1] == '/') {
