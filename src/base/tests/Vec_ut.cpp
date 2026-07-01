@@ -67,7 +67,7 @@ void VecTest() {
         char buf[2] = {'a', '\0'};
         str::Builder v(0, nullptr);
         for (int i = 0; i < 7; i++) {
-            v.Append(buf, 1);
+            v.Append(Str(buf, 1));
             buf[0] = buf[0] + 1;
         }
         Str s = v.LendData();
@@ -80,7 +80,7 @@ void VecTest() {
 
     {
         str::Builder v(128);
-        v.Append("boo", 3);
+        v.Append("boo");
         utassert(str::Eq("boo", v.LendData()));
         utassert(len(v) == 3);
         v.Append("fop");
@@ -102,7 +102,7 @@ void VecTest() {
         str::Builder v(0, nullptr);
         for (size_t i = 0; i < 32; i++) {
             utassert(len(v) == i * 6);
-            v.Append("lambd", 5);
+            v.Append("lambd");
             if (i % 2 == 0)
                 v.AppendChar('a');
             else

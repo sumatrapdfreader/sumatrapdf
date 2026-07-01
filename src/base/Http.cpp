@@ -77,7 +77,7 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
             break;
         }
         InterlockedIncrement(&gAllowAllocFailure);
-        bool ok = rspOut->data.Append(buf, dwRead);
+        bool ok = rspOut->data.Append(Str(buf, (int)dwRead));
         InterlockedDecrement(&gAllowAllocFailure);
         if (!ok) {
             logf("HttpGet: data.Append failed\n");
@@ -247,7 +247,7 @@ bool HttpPost(Str serverA, int port, Str urlA, str::Builder* headers, str::Build
         if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead)) {
             goto Exit;
         }
-        ok = resp.Append(buf, dwRead);
+        ok = resp.Append(Str(buf, (int)dwRead));
         if (!ok) {
             goto Exit;
         }

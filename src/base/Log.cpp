@@ -180,7 +180,7 @@ static void log2(Str s, bool always) {
     // when skipping, we skip buf (crash reports) and console
     // but write to file and logview
     if (!skipLog) {
-        gLogBuf->Append(s.s, n);
+        gLogBuf->Append(s);
     }
 
     if (!skipLog && gLogToConsole) {

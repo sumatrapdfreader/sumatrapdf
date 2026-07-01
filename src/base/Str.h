@@ -301,7 +301,7 @@ struct Builder {
     char& operator[](int idx) const;
     bool InsertAt(size_t idx, char el);
     bool AppendChar(char c);
-    bool Append(Str src, size_t count = (size_t)-1);
+    bool Append(Str src);
     bool Append(const Builder& s);
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();
@@ -351,7 +351,7 @@ struct Builder {
     WCHAR& operator[](int idx) const;
     bool InsertAt(size_t idx, const WCHAR& el);
     bool AppendChar(WCHAR);
-    bool Append(WStr src, size_t count = (size_t)-1);
+    bool Append(WStr src);
     WCHAR RemoveAt(size_t idx, size_t count = 1);
     WCHAR RemoveLast();
     WCHAR& Last() const;

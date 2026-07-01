@@ -563,7 +563,7 @@ void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
             s.Append("DEP violation at address ");
             AppendAddress(s, dataVirtAddr);
         } else {
-            s.Append("unknown readWriteFlag: %d", readWriteFlag);
+            s.Append(fmt("unknown readWriteFlag: %d", readWriteFlag));
         }
         s.Append("\n");
     }

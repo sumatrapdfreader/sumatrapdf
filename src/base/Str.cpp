@@ -1888,18 +1888,15 @@ bool str::Builder::AppendChar(char c) {
     return InsertAt(len, c);
 }
 
-bool str::Builder::Append(Str src, size_t count) {
-    if ((size_t)-1 == count) {
-        count = (size_t)src.len;
-    }
-    if (str::IsNull(src) || 0 == count) {
+bool str::Builder::Append(Str src) {
+    if (str::IsNull(src) || 0 == src.len) {
         return true;
     }
-    char* dst = MakeSpaceAt(this, len, count);
+    char* dst = MakeSpaceAt(this, len, src.len);
     if (!dst) {
         return false;
     }
-    memcpy(dst, src.s, count);
+    memcpy(dst, src.s, src.len);
     return true;
 }
 
@@ -2193,18 +2190,15 @@ bool wstr::Builder::AppendChar(WCHAR c) {
     return InsertAt(len, c);
 }
 
-bool wstr::Builder::Append(WStr src, size_t count) {
-    if ((size_t)-1 == count) {
-        count = (size_t)src.len;
-    }
-    if (wstr::IsNull(src) || 0 == count) {
+bool wstr::Builder::Append(WStr src) {
+    if (wstr::IsNull(src) || 0 == src.len) {
         return true;
     }
-    WCHAR* dst = MakeSpaceAt(this, len, count);
+    WCHAR* dst = MakeSpaceAt(this, len, src.len);
     if (!dst) {
         return false;
     }
-    memcpy(dst, src.s, count * kElSize);
+    memcpy(dst, src.s, src.len * kElSize);
     return true;
 }
 
