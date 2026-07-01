@@ -66,9 +66,6 @@
     <ClInclude Include="..\src\base\HtmlParserLookup.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\HtmlPrettyPrint.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\HtmlPullParser.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -169,9 +166,6 @@
     <ClCompile Include="..\src\base\HtmlParserLookup.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\HtmlPrettyPrint.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\HtmlPullParser.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -230,9 +224,6 @@
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\File_ut.cpp">
-      <Filter>base\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\tests\HtmlPrettyPrint_ut.cpp">
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\HtmlPullParser_ut.cpp">

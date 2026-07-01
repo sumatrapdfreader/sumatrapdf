@@ -821,9 +821,6 @@
     <ClCompile Include="..\src\base\tests\File_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\tests\HtmlPrettyPrint_ut.cpp">
-      <Filter>src\base\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\tests\HtmlPullParser_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>

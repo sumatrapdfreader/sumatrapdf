@@ -17,7 +17,6 @@ extern void CryptoUtilTest();
 extern void CssParser_UnitTests();
 extern void DictTest();
 extern void FileUtilTest();
-extern void HtmlPrettyPrintTest();
 extern void HtmlPullParser_UnitTests();
 extern void JsonTest();
 extern void RefHoverTest();
@@ -106,7 +105,6 @@ int main(int argc, char** argv) {
     CssParser_UnitTests();
     DictTest();
     FileUtilTest();
-    HtmlPrettyPrintTest();
     HtmlPullParser_UnitTests();
     JsonTest();
     RefHoverTest();
