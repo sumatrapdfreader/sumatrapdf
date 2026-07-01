@@ -2124,27 +2124,8 @@ WStr wstr::Builder::TakeWStr() {
     return WStr(res, n);
 }
 
-int wstr::Builder::Find(const WCHAR& el, int startAt) const {
-    for (int i = startAt; i < (int)len; i++) {
-        if (els[i] == el) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 bool wstr::ContainsChar(const wstr::Builder& b, WCHAR el) {
     return wstr::ContainsChar(ToWStr(b), el);
-}
-
-// returns position of removed element or -1 if not removed
-int wstr::Builder::Remove(const WCHAR& el) {
-    int i = Find(el);
-    if (-1 == i) {
-        return -1;
-    }
-    RemoveAt(i);
-    return i;
 }
 
 bool wstr::Builder::IsEmpty() const {

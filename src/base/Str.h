@@ -295,8 +295,6 @@ struct Builder {
     WCHAR RemoveAt(int idx, int count = 1);
     WCHAR RemoveLast();
     WStr TakeWStr();
-    int Find(const WCHAR& el, int startAt = 0) const;
-    int Remove(const WCHAR& el);
     bool IsEmpty() const;
     WCHAR LastChar() const;
 
