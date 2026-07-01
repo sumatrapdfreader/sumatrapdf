@@ -1943,27 +1943,6 @@ bool str::Builder::IsEmpty() const {
     return len == 0;
 }
 
-bool str::Builder::Append(const u8* src, int size) {
-    if (-1 == size) {
-        return this->Append(Str((const char*)src));
-    }
-    return this->Append(Str((char*)src, size));
-}
-
-#if 0
-// returns true if was replaced
-bool Replace(Str& s, const char* toReplace, const char* replaceWith) {
-    // fast path: nothing to replace
-    if (!str::Contains(s.els, toReplace)) {
-        return false;
-    }
-    char* newStr = str::ReplaceTemp(s.els, toReplace, replaceWith);
-    s.Reset();
-    s.Append(newStr);
-    return true;
-}
-#endif
-
 void str::Builder::Set(Str s) {
     Reset();
     Append(s);

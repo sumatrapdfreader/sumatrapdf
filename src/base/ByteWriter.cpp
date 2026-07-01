@@ -22,7 +22,7 @@ void ByteWriter::Write8(u8 b) {
 
 void ByteWriter::Write8x2(u8 b1, u8 b2) {
     u8 buf[2]{b1, b2};
-    d.Append(buf, 2);
+    d.Append(Str((char*)buf, 2));
 }
 
 void ByteWriter::Write16(u16 val) {

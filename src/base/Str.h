@@ -256,7 +256,6 @@ struct Builder {
     Str LendData() const;
     bool Contains(Str s);
     bool IsEmpty() const;
-    bool Append(const u8* src, int size = -1);
     void Set(Str s);
     char LastChar() const;
 
