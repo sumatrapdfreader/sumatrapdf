@@ -140,7 +140,7 @@ static bool PalmdocUncompress(const u8* src, size_t srcLen, str::Builder& dst) {
                 return false;
             }
             for (u8 n = (c2 & 7) + 3; n > 0; n--) {
-                char ctmp = dst.at(len(dst) - back);
+                char ctmp = dst[len(dst) - back];
                 dst.AppendChar(ctmp);
             }
         } else {

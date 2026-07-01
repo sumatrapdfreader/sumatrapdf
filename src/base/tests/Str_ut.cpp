@@ -197,7 +197,7 @@ void strStrTest() {
         // we should have allocated buf on the heap
         utassert(buf != buf2);
         for (int i = 0; i < str::Builder::kBufChars + 4; i++) {
-            char c = str.at(i);
+            char c = str[i];
             utassert(c == (char)i);
         }
     }

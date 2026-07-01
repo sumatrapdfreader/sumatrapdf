@@ -1536,11 +1536,11 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
         if (len(htmlData) == 0 || !IsEmailUsernameChar(htmlData.Last())) {
             return {};
         }
-        size_t idx = len(htmlData);
-        for (; idx > 1 && IsEmailUsernameChar(htmlData.at(idx - 1)); idx--) {
+        int idx = len(htmlData);
+        for (; idx > 1 && IsEmailUsernameChar(htmlData[idx - 1]); idx--) {
             ;
         }
-        beforeAt.SetCopy(&htmlData.at(idx));
+        beforeAt.SetCopy(&htmlData[idx]);
     } else {
         ReportIf(!str::StartsWith(curr, "mailto:"));
         rest = Str(curr.s + 7, curr.len - 7);

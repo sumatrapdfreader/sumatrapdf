@@ -1801,7 +1801,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
         str::Builder number;
         number.AppendChar('A' + (pageNo - 1) % 26);
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
-            number.AppendChar(number.at(0));
+            number.AppendChar(number[0]);
         }
         if (!str::IsEmpty(type) && type.s[0] == 'a') {
             str::ToLowerInPlace(Str(ToStr(number)));

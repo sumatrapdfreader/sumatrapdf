@@ -1866,35 +1866,10 @@ str::Builder::~Builder() {
     StrBuilderFree(this);
 }
 
-char& str::Builder::at(size_t idx) const {
-    ReportIf(idx >= (u32)len);
+char& str::Builder::operator[](int idx) const {
+    ReportIf(idx < 0 || idx >= (int)len);
     return els[idx];
 }
-
-char& str::Builder::at(int idx) const {
-    ReportIf(idx < 0);
-    return at((size_t)idx);
-}
-
-char& str::Builder::operator[](long idx) const {
-    ReportIf(idx < 0);
-    return at((size_t)idx);
-}
-
-char& str::Builder::operator[](int idx) const {
-    ReportIf(idx < 0);
-    return at((size_t)idx);
-}
-
-#if defined(_WIN64)
-char& str::Builder::at(u32 idx) const {
-    return at((size_t)idx);
-}
-
-char& str::Builder::operator[](u32 idx) const {
-    return at((size_t)idx);
-}
-#endif
 
 int len(const str::Builder& b) {
     return (int)b.len;
@@ -1933,7 +1908,7 @@ bool str::Builder::Append(const str::Builder& s) {
 }
 
 char str::Builder::RemoveAt(size_t idx, size_t count) {
-    char res = at(idx);
+    char res = els[idx];
     if (len > idx + count) {
         char* dst = els + idx;
         char* src = els + idx + count;
@@ -1954,7 +1929,7 @@ char str::Builder::RemoveLast() {
 
 char& str::Builder::Last() const {
     ReportIf(0 == len);
-    return at(len - 1);
+    return els[len - 1];
 }
 
 // perf hack for using as a buffer: client can get accumulated data
@@ -2063,7 +2038,7 @@ char str::Builder::LastChar() const {
     if (n == 0) {
         return 0;
     }
-    return at(n - 1);
+    return els[n - 1];
 }
 
 static WCHAR* EnsureCap(wstr::Builder* s, size_t needed) {
@@ -2196,43 +2171,10 @@ wstr::Builder::~Builder() {
     WStrBuilderFree(this);
 }
 
-WCHAR& wstr::Builder::at(size_t idx) const {
-    ReportIf(idx >= len);
+WCHAR& wstr::Builder::operator[](int idx) const {
+    ReportIf(idx < 0 || idx >= (int)len);
     return els[idx];
 }
-
-WCHAR& wstr::Builder::at(int idx) const {
-    ReportIf(idx < 0);
-    return at((size_t)idx);
-}
-
-WCHAR& wstr::Builder::operator[](size_t idx) const {
-    return at(idx);
-}
-
-WCHAR& wstr::Builder::operator[](long idx) const {
-    ReportIf(idx < 0);
-    return at((size_t)idx);
-}
-
-WCHAR& wstr::Builder::operator[](ULONG idx) const {
-    return at((size_t)idx);
-}
-
-WCHAR& wstr::Builder::operator[](int idx) const {
-    ReportIf(idx < 0);
-    return at((size_t)idx);
-}
-
-#if defined(_WIN64)
-WCHAR& wstr::Builder::at(u32 idx) const {
-    return at((size_t)idx);
-}
-
-WCHAR& wstr::Builder::operator[](u32 idx) const {
-    return at((size_t)idx);
-}
-#endif
 
 int len(const wstr::Builder& b) {
     return (int)b.len;
@@ -2267,7 +2209,7 @@ bool wstr::Builder::Append(WStr src, size_t count) {
 }
 
 WCHAR wstr::Builder::RemoveAt(size_t idx, size_t count) {
-    WCHAR res = at(idx);
+    WCHAR res = els[idx];
     if (len > idx + count) {
         WCHAR* dst = els + idx;
         WCHAR* src = els + idx + count;
@@ -2287,7 +2229,7 @@ WCHAR wstr::Builder::RemoveLast() {
 
 WCHAR& wstr::Builder::Last() const {
     ReportIf(0 == len);
-    return at(len - 1);
+    return els[len - 1];
 }
 
 // perf hack for using as a buffer: client can get accumulated data
@@ -2346,7 +2288,7 @@ WCHAR wstr::Builder::LastChar() const {
     if (n == 0) {
         return 0;
     }
-    return at(n - 1);
+    return els[n - 1];
 }
 
 namespace wstr {
