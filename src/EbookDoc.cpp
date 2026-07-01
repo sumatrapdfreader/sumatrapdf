@@ -687,13 +687,13 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             }
             auto itemText = ToWStrTemp(text.Get());
             wstr::NormalizeWSInPlace(itemText);
-            AutoFreeWStr itemSrc;
+            WStr itemSrc;
             if (href) {
                 TempStr normHref = NormalizeURLTemp(href.CStr(), pagePath);
-                itemSrc.Set(strconv::FromHtmlUtf8(normHref).s);
+                itemSrc = strconv::HtmlUtf8ToWStrTemp(normHref);
             }
             TempStr txt = ToUtf8Temp(itemText);
-            TempStr src = ToUtf8Temp(WStr(itemSrc.Get()));
+            TempStr src = ToUtf8Temp(itemSrc);
             visitor->Visit(txt, src, level);
         }
     }
@@ -714,17 +714,17 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         return false;
     }
 
-    AutoFreeWStr itemText, itemSrc;
+    WStr itemText, itemSrc;
     int level = 0;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
            (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS()))) {
         if (tok->IsTag() && tok->NameIsNS("navPoint", EPUB_NCX_NS())) {
             if (itemText) {
-                TempStr txt = ToUtf8Temp(WStr(itemText.Get()));
-                TempStr src = ToUtf8Temp(WStr(itemSrc.Get()));
+                TempStr txt = ToUtf8Temp(itemText);
+                TempStr src = ToUtf8Temp(itemSrc);
                 visitor->Visit(txt, src, level);
-                itemText.Reset();
-                itemSrc.Reset();
+                itemText = {};
+                itemSrc = {};
             }
             if (tok->IsStartTag()) {
                 level++;
@@ -736,13 +736,13 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
                 break;
             }
             if (tok->IsText()) {
-                itemText.Set(strconv::FromHtmlUtf8(tok->s).s);
+                itemText = strconv::HtmlUtf8ToWStrTemp(tok->s);
             }
         } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS())) {
             AttrInfo* attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
                 TempStr src = NormalizeURLTemp(attrInfo->val, pagePath);
-                itemSrc.Set(strconv::FromHtmlUtf8(src).s);
+                itemSrc = strconv::HtmlUtf8ToWStrTemp(src);
             }
         }
     }
@@ -1094,11 +1094,11 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             }
             inTitle = false;
         } else if (inTitle && tok->IsText()) {
-            AutoFreeWStr text(strconv::FromHtmlUtf8(tok->s).s);
+            WStr text = strconv::HtmlUtf8ToWStrTemp(tok->s);
             if (wstr::IsEmpty(itemText.Get())) {
-                itemText.Set(text.StealData());
+                itemText.SetCopy(text);
             } else {
-                itemText.Set(wstr::Join(WStr(itemText.Get()), WStr(L" "), WStr(text.Get())).s);
+                itemText.Set(wstr::Join(WStr(itemText.Get()), WStr(L" "), text).s);
             }
         }
     }
@@ -1162,10 +1162,9 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         // <BOOKMARK NAME="Contents">
         AttrInfo* attr = tok->GetAttrByName("NAME");
         if (attr && attr->val) {
-            WStr ws = strconv::FromHtmlUtf8(Str(attr->val));
+            WStr ws = strconv::HtmlUtf8ToWStrTemp(Str(attr->val));
             TempStr s = ToUtf8Temp(ws);
             tocEntries.Append(s);
-            wstr::FreePtr(&ws);
             builder.Append(fmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size()));
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }

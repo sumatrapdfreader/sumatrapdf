@@ -88,13 +88,18 @@ Str DecodeHtmlEntitiesTemp(Str string, uint codepage);
 
 namespace strconv {
 
-inline WStr FromHtmlUtf8(Str s) {
-    TempStr tmp = str::DupTemp(s);
-    return DecodeHtmlEntities(tmp, CP_UTF8);
-}
-
-inline Str FromHtmlUtf8Temp(Str s) {
+// decode HTML entities in a UTF-8 string, result lives in the temp arena
+inline TempStr HtmlUtf8ToStrTemp(Str s) {
     TempStr tmp = str::DupTemp(s);
     return DecodeHtmlEntitiesTemp(tmp, CP_UTF8);
+}
+
+// like HtmlUtf8ToStrTemp but returns a wide (UTF-16) temp string
+inline TempWStr HtmlUtf8ToWStrTemp(Str s) {
+    TempStr tmp = str::DupTemp(s);
+    WStr ws = DecodeHtmlEntities(tmp, CP_UTF8); // owning
+    TempWStr res = str::DupTemp(ws);
+    wstr::Free(ws);
+    return res;
 }
 } // namespace strconv
