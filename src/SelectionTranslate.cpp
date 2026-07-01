@@ -440,8 +440,8 @@ static void AppendCodexTranslationText(Str line, StrBuilder& out) {
         out.Append(text);
         return;
     }
-    Str agentMsg = str::FindFrom(line, StrL("\"type\":\"agent_message\""));
-    if (agentMsg) {
+    Str agentMsg;
+    if (str::Cut(line, StrL("\"type\":\"agent_message\""), nullptr, &agentMsg)) {
         text = AIChatJsonStrTemp(agentMsg, "text");
         if (!str::IsEmpty(text)) {
             out.Append(text);

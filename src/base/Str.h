@@ -145,10 +145,14 @@ bool IsAlNum(char c);
 Str FindChar(Str str, char c);
 Str FindCharLast(Str str, char c);
 int IndexOfChar(Str s, char c);
-Str FindFrom(Str str, Str find);
-Str FindAfter(Str s, Str needle);
 int IndexOf(Str buf, Str toFind);
 int IndexOfI(Str s, Str toFind);
+// offset just past the first match of needle, or -1 if not found
+int IndexOfAfter(Str s, Str needle);
+// Go-style strings.Cut: split s around the first occurrence of sep into
+// *before / *after (either may be null). Returns false (and *before = s,
+// *after = {}) if sep is not found.
+bool Cut(Str s, Str sep, Str* before, Str* after);
 
 bool Contains(Str s, Str txt);
 bool ContainsI(Str s, Str txt);

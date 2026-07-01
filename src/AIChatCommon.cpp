@@ -91,8 +91,8 @@ TempStr AIChatJsEscapeTemp(Str s) {
 
 TempStr AIChatJsonStrTemp(Str json, Str key) {
     TempStr pattern = fmt("\"%s\":\"", key);
-    Str rest = str::FindAfter(json, pattern);
-    if (!rest) {
+    Str rest;
+    if (!str::Cut(json, pattern, nullptr, &rest)) {
         return {};
     }
     StrBuilder buf;

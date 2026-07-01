@@ -458,14 +458,16 @@ Str FindEmbeddedPdfFileStreamNo(Str path) {
     }
     Str parseEnd = path;
     Str meta;
-    Str pos = str::FindFrom(path, StrL(":attachname="));
-    while (pos) {
-        meta = pos;
-        int nextOff = (int)(pos.s - path.s) + 1;
-        if (nextOff >= path.len) {
+    int searchOff = 0;
+    while (searchOff < path.len) {
+        Str rest = Str(path.s + searchOff, path.len - searchOff);
+        int idx = str::IndexOf(rest, StrL(":attachname="));
+        if (idx < 0) {
             break;
         }
-        pos = str::FindFrom(Str(path.s + nextOff, path.len - nextOff), StrL(":attachname="));
+        int matchOff = searchOff + idx;
+        meta = Str(path.s + matchOff, path.len - matchOff);
+        searchOff = matchOff + 1;
     }
     if (meta) {
         parseEnd = Str(path.s, (int)(meta.s - path.s));

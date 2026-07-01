@@ -396,7 +396,8 @@ void ChmFile::GetAllPaths(StrVec* v) const {
 // Strip the "ITS protocol" prefix from a CHM URL, e.g.
 // "mk:@MSITStore:foo.chm::/index.html" -> "index.html".
 static Str StripItsProtocol(Str url) {
-    Str p = str::FindAfter(url, StrL("::/"));
+    Str p;
+    str::Cut(url, StrL("::/"), nullptr, &p);
     return p ? p : url;
 }
 

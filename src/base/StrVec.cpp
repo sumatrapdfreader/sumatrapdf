@@ -774,21 +774,20 @@ int Split(StrVec* v, Str s, Str separator, bool collapse, int max) {
             return nAdded;
         }
         Str rest = Str(s.s + off, s.len - off);
-        Str next = str::FindFrom(rest, separator);
-        if (str::IsNull(next)) {
+        int idx = str::IndexOf(rest, separator);
+        if (idx < 0) {
             break;
         }
-        if (!collapse || next.s > s.s + off) {
+        if (!collapse || idx > 0) {
             nAdded++;
             if (reachedMax(nAdded, max)) {
                 // this is the last one
                 v->Append(rest);
                 return nAdded;
             }
-            int sLen = (int)(next.s - (s.s + off));
-            v->Append(Str(s.s + off, sLen));
+            v->Append(Str(rest.s, idx));
         }
-        off = (int)(next.s - s.s) + separator.len;
+        off += idx + separator.len;
     }
     bool shouldAddRest = true;
     if (off >= s.len) {

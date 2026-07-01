@@ -2213,9 +2213,16 @@ TempStr GetEmbeddedFileNameTemp(Str path) {
         return {};
     }
     Str meta;
-    for (Str pos = str::FindFrom(path, StrL(":attachname=")); pos;
-         pos = str::FindFrom(Str(pos.s + 1), StrL(":attachname="))) {
-        meta = pos;
+    int searchOff = 0;
+    while (searchOff < path.len) {
+        Str rest = Str(path.s + searchOff, path.len - searchOff);
+        int idx = str::IndexOf(rest, StrL(":attachname="));
+        if (idx < 0) {
+            break;
+        }
+        int matchOff = searchOff + idx;
+        meta = Str(path.s + matchOff, path.len - matchOff);
+        searchOff = matchOff + 1;
     }
     if (!meta) {
         return {};

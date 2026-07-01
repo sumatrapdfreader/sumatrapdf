@@ -767,22 +767,38 @@ int IndexOf(Str buf, Str toFind) {
     return -1;
 }
 
-Str FindFrom(Str str, Str find) {
-    int idx = IndexOf(str, find);
-    if (idx < 0) {
-        return {};
-    }
-    return Str(str.s + idx, str.len - idx);
-}
-
-// returns the slice of s right after the first occurrence of needle, or {}
-Str FindAfter(Str s, Str needle) {
+// offset just past the first occurrence of needle in s, or -1 if not found
+int IndexOfAfter(Str s, Str needle) {
     int idx = IndexOf(s, needle);
     if (idx < 0) {
-        return {};
+        return -1;
     }
-    int off = idx + needle.len;
-    return Str(s.s + off, s.len - off);
+    return idx + needle.len;
+}
+
+// Splits s around the first occurrence of sep (Go's strings.Cut). When sep is
+// found, *before is the text before it and *after the text after it; returns
+// true. When sep is not found, *before is all of s, *after is {} and it returns
+// false. before/after may be null if not needed.
+bool Cut(Str s, Str sep, Str* before, Str* after) {
+    int idx = IndexOf(s, sep);
+    if (idx < 0) {
+        if (before) {
+            *before = s;
+        }
+        if (after) {
+            *after = {};
+        }
+        return false;
+    }
+    if (before) {
+        *before = Str(s.s, idx);
+    }
+    if (after) {
+        int off = idx + sep.len;
+        *after = Str(s.s + off, s.len - off);
+    }
+    return true;
 }
 
 // format string to a buffer provided by the caller
@@ -3357,33 +3373,33 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     }
 
     Str curr = s;
-    Str end = str::FindFrom(curr, toReplace);
-    if (str::IsNull(end)) {
+    int idx = str::IndexOf(curr, toReplace);
+    if (idx < 0) {
         // optimization: nothing to replace so do nothing
         return s;
     }
 
-    size_t findLen = (size_t)toReplace.len;
-    size_t replLen = (size_t)replaceWith.len;
-    size_t lenDiff = 0;
+    int findLen = toReplace.len;
+    int replLen = replaceWith.len;
+    int lenDiff = 0;
     if (replLen > findLen) {
         lenDiff = replLen - findLen;
     }
     // heuristic: allow 6 replacements without reallocating
-    size_t capHint = (size_t)s.len + 1 + (lenDiff * 6);
+    size_t capHint = (size_t)s.len + 1 + (size_t)(lenDiff * 6);
     StrBuilder result(capHint);
     bool ok;
-    while (!str::IsNull(end)) {
-        ok = result.Append(Str(curr.s, (int)(end.s - curr.s)));
+    while (idx >= 0) {
+        ok = result.Append(Str(curr.s, idx));
         if (!ok) {
             return {};
         }
-        ok = result.Append(Str(replaceWith.s, (int)replLen));
+        ok = result.Append(Str(replaceWith.s, replLen));
         if (!ok) {
             return {};
         }
-        curr = Str(end.s + findLen, s.len - (int)(end.s + findLen - s.s));
-        end = str::FindFrom(curr, toReplace);
+        curr = Str(curr.s + idx + findLen, curr.len - idx - findLen);
+        idx = str::IndexOf(curr, toReplace);
     }
     ok = result.Append(curr);
     if (!ok) {

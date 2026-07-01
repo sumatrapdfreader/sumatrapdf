@@ -410,7 +410,8 @@ static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut)
     if (!str::Contains(line, StrL("\"type\":\"session_meta\""))) {
         return false;
     }
-    Str payload = str::FindFrom(line, StrL("\"payload\":"));
+    Str payload;
+    str::Cut(line, StrL("\"payload\":"), nullptr, &payload);
     TempStr cwd = payload ? AIChatJsonStrTemp(payload, "cwd") : nullptr;
     TempStr id = payload ? AIChatJsonStrTemp(payload, "id") : nullptr;
     if (!cwd || !id || !CodexPathsEqual(cwd, matchDir)) {
@@ -666,8 +667,8 @@ static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
     if (!str::Contains(line, StrL("\"role\":\"user\""))) {
         return {};
     }
-    Str inputText = str::FindFrom(line, StrL("\"input_text\""));
-    if (!inputText) {
+    Str inputText;
+    if (!str::Cut(line, StrL("\"input_text\""), nullptr, &inputText)) {
         return {};
     }
     TempStr text = AIChatJsonStrTemp(inputText, "text");
@@ -685,8 +686,8 @@ static TempStr ExtractCodexRolloutAssistantTextTemp(Str line) {
     if (!str::Contains(line, StrL("\"role\":\"assistant\""))) {
         return {};
     }
-    Str outputText = str::FindFrom(line, StrL("\"output_text\""));
-    if (!outputText) {
+    Str outputText;
+    if (!str::Cut(line, StrL("\"output_text\""), nullptr, &outputText)) {
         return {};
     }
     return AIChatJsonStrTemp(outputText, "text");
@@ -955,14 +956,13 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                             str::ReplaceWithCopy(&sessionId, threadId);
                         }
                     } else if (eventType && str::Eq(eventType, "item.completed")) {
-                        if (str::Contains(line, StrL("\"type\":\"agent_message\""))) {
-                            Str p = str::FindFrom(line, StrL("\"type\":\"agent_message\""));
+                        Str p;
+                        if (str::Cut(line, StrL("\"type\":\"agent_message\""), nullptr, &p)) {
                             TempStr text = AIChatJsonStrTemp(p, "text");
                             if (!str::IsEmpty(text)) {
                                 PostUpdate(hwndFrame, sessionId, text, CodexUpdateType::Text);
                             }
-                        } else if (str::Contains(line, StrL("\"type\":\"command_execution\""))) {
-                            Str p = str::FindFrom(line, StrL("\"type\":\"command_execution\""));
+                        } else if (str::Cut(line, StrL("\"type\":\"command_execution\""), nullptr, &p)) {
                             TempStr cmd = AIChatJsonStrTemp(p, "command");
                             if (!str::IsEmpty(cmd)) {
                                 TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);

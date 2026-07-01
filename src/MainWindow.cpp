@@ -667,14 +667,15 @@ static bool MatchFuzzy(Str s1, Str s2, bool partially) {
     // only match at the start of a word (at the beginning and after a space)
     Str rest = s1;
     while (!str::IsEmpty(rest)) {
-        Str found = str::FindFrom(rest, s2);
-        if (!found) {
+        int idx = str::IndexOf(rest, s2);
+        if (idx < 0) {
             break;
         }
-        if (found.s == s1.s || *(found.s - 1) == ' ') {
+        const char* found = rest.s + idx;
+        if (found == s1.s || *(found - 1) == ' ') {
             return true;
         }
-        int off = (int)(found.s - rest.s) + 1;
+        int off = idx + 1;
         rest.s += off;
         rest.len -= off;
     }

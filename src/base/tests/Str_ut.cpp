@@ -253,6 +253,40 @@ static void StrFindITest() {
     utassert(str::ContainsI(logosCap, logosLow));
 }
 
+static void StrCutTest() {
+    // IndexOfAfter: offset just past the match, or -1
+    Str s = "key=value";
+    utassert(str::IndexOfAfter(s, "=") == 4);
+    utassert(str::IndexOfAfter(s, "key") == 3);
+    utassert(str::IndexOfAfter(s, "xyz") == -1);
+    utassert(str::IndexOfAfter(s, "value") == 9); // match at end -> len
+
+    // Cut: split around first occurrence
+    Str before, after;
+    utassert(str::Cut(s, "=", &before, &after));
+    utassert(str::Eq(before, "key") && str::Eq(after, "value"));
+
+    // only one side requested
+    after = {};
+    utassert(str::Cut(s, "=", nullptr, &after) && str::Eq(after, "value"));
+    before = {};
+    utassert(str::Cut(s, "=", &before, nullptr) && str::Eq(before, "key"));
+
+    // separator not found: returns false, before = whole string, after = {}
+    before = {};
+    after = "sentinel";
+    utassert(!str::Cut(s, "#", &before, &after));
+    utassert(str::Eq(before, s) && str::IsEmpty(after));
+
+    // separator at the very end -> after is empty but Cut returns true
+    utassert(str::Cut(s, "value", &before, &after));
+    utassert(str::Eq(before, "key=") && str::IsEmpty(after));
+
+    // multi-char separator, only first occurrence splits
+    utassert(str::Cut("a::b::c", "::", &before, &after));
+    utassert(str::Eq(before, "a") && str::Eq(after, "b::c"));
+}
+
 void StrTest() {
     char buf[32];
     Str str = "a string";
@@ -681,5 +715,6 @@ void StrTest() {
     StrConvTest();
     StrUrlExtractTest();
     StrFindITest();
+    StrCutTest();
     // ParseUntilTest();
 }

@@ -519,15 +519,15 @@ static TempStr StripGrokUserQueryWrapperTemp(Str text) {
     if (!text) {
         return {};
     }
-    Str contentStart = str::FindAfter(text, StrL("<user_query>"));
-    if (!contentStart) {
+    Str contentStart;
+    if (!str::Cut(text, StrL("<user_query>"), nullptr, &contentStart)) {
         return {}; // skip injected context (user_info, rules, skills, etc.)
     }
-    int endIdx = str::IndexOf(contentStart, StrL("</user_query>"));
-    if (endIdx < 0) {
+    Str content;
+    if (!str::Cut(contentStart, StrL("</user_query>"), &content, nullptr)) {
         return {};
     }
-    TempStr result = str::DupTemp(Str(contentStart.s, endIdx));
+    TempStr result = str::DupTemp(content);
     str::TrimWSInPlace(result, str::TrimOpt::Both);
     return !str::IsEmpty(result) ? result : nullptr;
 }
@@ -545,17 +545,15 @@ static TempStr ExtractGrokChatUserTextTemp(Str line) {
 }
 
 static void AppendGrokHistoryTools(MainWindow* win, Str line) {
-    Str searchFrom = str::FindFrom(line, StrL("\"tool_calls\":["));
-    if (!searchFrom) {
+    Str searchFrom;
+    if (!str::Cut(line, StrL("\"tool_calls\":["), nullptr, &searchFrom)) {
         return;
     }
     while (true) {
-        Str nameKey = str::FindFrom(searchFrom, StrL("\"name\":\""));
-        if (!nameKey) {
+        Str rest;
+        if (!str::Cut(searchFrom, StrL("\"name\":\""), nullptr, &rest)) {
             break;
         }
-        int prefixLen = LenL("\"name\":\"");
-        Str rest = Str(nameKey.s + prefixLen, nameKey.len - prefixLen);
         StrBuilder nameBuf;
         int j = 0;
         while (j < rest.len && rest.s[j] != '"') {
