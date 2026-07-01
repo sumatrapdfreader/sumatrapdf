@@ -89,7 +89,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
     log("ExtractHtmlText()\n");
 
     Str d = doc->GetHtmlData();
-    size_t dataLen = (size_t)d.len;
+    int dataLen = d.len;
 
     str::Builder text(dataLen / 2);
     HtmlPullParser p(d);

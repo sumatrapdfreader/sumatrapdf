@@ -859,7 +859,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     }
 
     ReportIf(doc != nullptr);
-    doc = new str::Builder(docUncompressedSize);
+    doc = new str::Builder((int)docUncompressedSize);
     size_t nFailed = 0;
     for (size_t i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, *doc)) {

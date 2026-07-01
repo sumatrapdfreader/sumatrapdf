@@ -290,7 +290,7 @@ struct Builder {
 
     static constexpr size_t kBufChars = dimof(buf);
 
-    explicit Builder(size_t capHint = 0, Arena* allocator = nullptr);
+    explicit Builder(int capHint = 0, Arena* allocator = nullptr);
     Builder(const Builder& that);
     Builder& operator=(const Builder& that);
     Builder(Str s);
@@ -350,7 +350,7 @@ struct Builder {
     static constexpr size_t kBufChars = dimof(buf);
     static constexpr size_t kElSize = sizeof(WCHAR);
 
-    explicit Builder(size_t capHint = 0, Arena* allocator = nullptr);
+    explicit Builder(int capHint = 0, Arena* allocator = nullptr);
     Builder(const Builder&);
     Builder(WStr s);
     Builder& operator=(const Builder& that);

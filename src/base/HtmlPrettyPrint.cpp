@@ -49,7 +49,7 @@ static bool IsWsText(Str s) {
 
 ByteSlice PrettyPrintHtml(const ByteSlice& d) {
     size_t n = d.size();
-    str::Builder res(n);
+    str::Builder res((int)n);
     HtmlPullParser parser(d);
     Vec<HtmlTag> tagNesting;
     HtmlToken* t;

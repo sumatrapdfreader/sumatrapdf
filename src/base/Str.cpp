@@ -1827,7 +1827,7 @@ void str::Builder::Reset() {
 }
 
 // allocator is not owned by Vec and must outlive it
-str::Builder::Builder(size_t capHint, Arena* a) {
+str::Builder::Builder(int capHint, Arena* a) {
     allocator = a;
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
@@ -2157,7 +2157,7 @@ void wstr::Builder::Reset() {
 }
 
 // allocator is not owned by Vec and must outlive it
-wstr::Builder::Builder(size_t capHint, Arena* a) {
+wstr::Builder::Builder(int capHint, Arena* a) {
     allocator = a;
     Reset();
     cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
@@ -3371,7 +3371,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
         lenDiff = replLen - findLen;
     }
     // heuristic: allow 6 replacements without reallocating
-    size_t capHint = (size_t)s.len + 1 + (size_t)(lenDiff * 6);
+    int capHint = s.len + 1 + lenDiff * 6;
     str::Builder result(capHint);
     bool ok;
     while (idx >= 0) {
