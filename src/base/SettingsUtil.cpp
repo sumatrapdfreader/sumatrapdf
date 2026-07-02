@@ -420,6 +420,15 @@ static inline void Indent(str::Builder& out, int indent) {
     }
 }
 
+// removes the item from node->data, freeing what ~SquareTreeNode would
+static void RemoveDataItemAt(SquareTreeNode* node, size_t idx) {
+    SquareTreeNode::DataItem& item = node->data.at(idx);
+    str::Free(item.key);
+    str::Free(item.str);
+    delete item.child;
+    node->data.RemoveAt((int)idx);
+}
+
 static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type) {
     if (!node) {
         return;
@@ -427,19 +436,17 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
     size_t off = 0;
     if (SettingType::Struct == type || SettingType::Prerelease == type) {
         if (node->GetChild(fieldName, &off)) {
-            delete node->data.at(off - 1).child;
-            node->data.RemoveAt((int)(off - 1));
+            RemoveDataItemAt(node, off - 1);
         }
     } else if (SettingType::Array == type) {
         while (node->GetChild(fieldName, &off)) {
-            delete node->data.at(off - 1).child;
-            node->data.RemoveAt((int)(off - 1));
+            RemoveDataItemAt(node, off - 1);
             off--;
         }
     } else {
         Str value = node->GetValue(fieldName, &off);
         if (!str::IsNull(value)) {
-            node->data.RemoveAt((int)(off - 1));
+            RemoveDataItemAt(node, off - 1);
         }
     }
 }
