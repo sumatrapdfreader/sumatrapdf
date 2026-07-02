@@ -2605,8 +2605,56 @@ struct LoadDocumentAsyncData {
     ~LoadDocumentAsyncData() { delete args; }
 };
 
+static void LoadDocumentAsync(LoadDocumentAsyncData* d);
+
+// When loading many documents at once (e.g. multiple files on the cmd-line or
+// dropped together) we don't want to spawn an unbounded number of loading
+// threads. Cap the number of concurrent background loads and queue the rest;
+// each finished load starts the next queued one. All of this state is only
+// touched on the UI thread (StartLoadDocument and LoadDocumentAsyncFinish),
+// so it needs no locking.
+static int gLoadThreadsActive = 0;
+static int gMaxLoadThreads = 0;
+static Vec<LoadDocumentAsyncData*> gLoadQueue;
+
+static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
+    // show the "Loading ..." notification only now that we're actually
+    // loading, not while the file was sitting in the queue
+    LoadArgs* args = data->args;
+    data->wndNotif = ShowLoadingNotif(args->win, args->FilePath());
+    gLoadThreadsActive++;
+    auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
+    RunAsync(fn, "LoadDocumentThread");
+}
+
+// start a background load now if a thread slot is free, otherwise queue it
+static void StartOrQueueLoadDocument(LoadDocumentAsyncData* data) {
+    if (gMaxLoadThreads == 0) {
+        // between 2 and CpuCoreCount() - 2 concurrent loads
+        int n = CpuCoreCount() - 2;
+        gMaxLoadThreads = n < 2 ? 2 : n;
+    }
+    if (gLoadThreadsActive < gMaxLoadThreads) {
+        StartLoadDocumentThread(data);
+    } else {
+        gLoadQueue.Append(data);
+    }
+}
+
+// called on the UI thread when a background load finishes; frees its slot
+// and starts the next queued load, if any
+static void OnLoadDocumentThreadFinished() {
+    gLoadThreadsActive--;
+    ReportIf(gLoadThreadsActive < 0);
+    if (gLoadQueue.Size() > 0) {
+        LoadDocumentAsyncData* next = gLoadQueue.PopAt(0);
+        StartLoadDocumentThread(next);
+    }
+}
+
 static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     AutoDelete delData(d);
+    OnLoadDocumentThreadFinished();
 
     auto args = d->args;
     RemoveNotification(d->wndNotif);
@@ -2796,7 +2844,6 @@ void StartLoadDocument(LoadArgs* argsIn) {
         return;
     }
 
-    auto wndNotif = ShowLoadingNotif(win, path);
     LoadArgs* args = argsIn->Clone();
 
     // when using mshtml to display CHM files, we can't load in a thread
@@ -2808,6 +2855,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
         bool isChm = ChmModel::IsSupportedFileType(kind);
         if (isChm) {
             // TODO: repeating the code below
+            auto wndNotif = ShowLoadingNotif(win, path);
             DocController* ctrl = nullptr;
             HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
             EngineBase* engine = args->engine;
@@ -2830,10 +2878,8 @@ void StartLoadDocument(LoadArgs* argsIn) {
     }
 
     auto data = new LoadDocumentAsyncData;
-    data->wndNotif = wndNotif;
     data->args = args;
-    auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
-    RunAsync(fn, "LoadDocumentThread");
+    StartOrQueueLoadDocument(data);
 }
 
 // remember which files failed to open so that a failure to

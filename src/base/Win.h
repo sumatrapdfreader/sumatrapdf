@@ -35,6 +35,7 @@ void MoveWindow(HWND hwnd, Rect rect);
 void MoveWindow(HWND hwnd, RECT* r);
 
 bool IsOs64();
+int CpuCoreCount();
 bool IsProcess64();
 bool IsProcess32();
 bool IsArmBuild();

@@ -407,6 +407,14 @@ bool IsArmBuild() {
     return IS_ARM_64 == 1;
 }
 
+// number of logical processors available to the process
+int CpuCoreCount() {
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    int n = (int)si.dwNumberOfProcessors;
+    return n < 1 ? 1 : n;
+}
+
 // return true if OS and our process have the same arch (i.e. both are 32bit
 // or both are 64bit)
 bool IsProcessAndOsArchSame() {
