@@ -437,14 +437,13 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* st
     if (!text) {
         return false;
     }
-    AutoFreeWStr wordW;
-    wordW.SetCopy(ToWStr(word).s);
-    int wordLen = (int)wordW.size();
+    TempWStr wordW = ToWStrTemp(word);
+    int wordLen = wordW.len;
     if (wordLen <= 0) {
         return false;
     }
     for (int i = 0; i <= text.len - wordLen; i++) {
-        if (memcmp(text.s + i, wordW, (size_t)wordLen * sizeof(WCHAR)) == 0) {
+        if (memcmp(text.s + i, wordW.s, (size_t)wordLen * sizeof(WCHAR)) == 0) {
             *startOut = i;
             *endOut = i + wordLen;
             return true;
@@ -505,9 +504,8 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
 
     // mimic a prior find: the typed (lowercase) text becomes textSearch's
     // lastText, so SetLastResult() inside GoToFindMatch() sees a text change
-    AutoFreeWStr typedW;
-    typedW.SetCopy(ToWStr(typed).s);
-    dm->textSearch->SetText(WStr(typedW.Get()));
+    TempWStr typedW = ToWStrTemp(typed);
+    dm->textSearch->SetText(typedW);
 
     // make sure the match isn't already on screen, so navigating to it is
     // observable: scroll back to the first page and clear any selection
@@ -533,8 +531,7 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
     Rect* coords = nullptr;
     WStr pageTxt = engine->GetTextForPage(pageNo, nullptr, &coords);
     if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTxt.len && curStart < curEnd) {
-        AutoFreeWStr w(wstr::Dup(WStr(pageTxt.s + curStart, (int)(curEnd - curStart))).s);
-        matched = ToUtf8Temp(WStr(w.Get()));
+        matched = ToUtf8Temp(WStr(pageTxt.s + curStart, curEnd - curStart));
     }
 
     // is the match rect actually within the visible viewport now? (mirrors
@@ -573,14 +570,13 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
     if (!text) {
         return false;
     }
-    AutoFreeWStr wordW;
-    wordW.SetCopy(ToWStr(word).s);
-    int wordLen = (int)wordW.size();
+    TempWStr wordW = ToWStrTemp(word);
+    int wordLen = wordW.len;
     if (wordLen <= 0) {
         return false;
     }
     for (int i = 0; i <= text.len - wordLen; i++) {
-        if (memcmp(text.s + i, wordW, (size_t)wordLen * sizeof(WCHAR)) != 0) {
+        if (memcmp(text.s + i, wordW.s, (size_t)wordLen * sizeof(WCHAR)) != 0) {
             continue;
         }
         int mid = i + wordLen / 2;
