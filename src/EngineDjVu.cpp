@@ -910,10 +910,16 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::Builder& extracted, Vec<Re
         }
         Str content = Str(miniexp_to_str(str));
         if (content) {
-            // TODO: split the rectangle into individual parts per glyph
+            // the text layer usually only has word-granularity boxes, so
+            // approximate per-glyph rects by evenly splitting the box
+            // horizontally (computed from endpoints so slices tile exactly);
+            // this makes partial-word search hits and selections highlight
+            // roughly just the matched characters
             int nCodepoints = Utf8CodepointCount(content);
             for (int i = 0; i < nCodepoints; i++) {
-                coords.Append(Rect(rect.x, rect.y, rect.dx, rect.dy));
+                int xStart = rect.x + (i * rect.dx) / nCodepoints;
+                int xEnd = rect.x + ((i + 1) * rect.dx) / nCodepoints;
+                coords.Append(Rect(xStart, rect.y, xEnd - xStart, rect.dy));
             }
             extracted.Append(content);
         }

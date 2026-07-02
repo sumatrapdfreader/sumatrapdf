@@ -701,9 +701,15 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
         return;
     }
     Rect r((int)(z->x * dpiF), (int)(z->y * dpiF), (int)(z->w * dpiF), (int)(z->h * dpiF));
+    // zones are usually word-granularity, so approximate per-glyph rects by
+    // evenly splitting the box horizontally (computed from endpoints so slices
+    // tile exactly); this makes partial-word search hits and selections
+    // highlight roughly just the matched characters
     int n = Utf8CodepointCount(z->text);
     for (int i = 0; i < n; i++) {
-        coords.Append(r);
+        int xStart = r.x + (i * r.dx) / n;
+        int xEnd = r.x + ((i + 1) * r.dx) / n;
+        coords.Append(Rect(xStart, r.y, xEnd - xStart, r.dy));
     }
     sb.Append(z->text);
 }
