@@ -123,15 +123,16 @@ void FindFirst(MainWindow* win) {
     // to find edit only if it's different from current text. Setting the text
     // triggers find-as-you-type via the bar's onTextChanged handler.
     if (!hadFindFocus && dm->textSelection->result.len > 0) {
-        AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
-        wstr::NormalizeWSInPlace(WStr(selection.Get()));
-        if (!wstr::IsEmpty(selection.Get())) {
-            TempStr s = ToUtf8Temp(WStr(selection.Get()));
+        WStr sel = dm->textSelection->ExtractText(" ");
+        TempStr selection = ToUtf8Temp(sel);
+        wstr::Free(sel);
+        selection.len -= str::NormalizeWSInPlace(selection);
+        if (!str::IsEmpty(selection)) {
             TempStr current = HwndGetTextTemp(win->hwndFindEdit);
-            if (!str::EqI(s, current)) {
+            if (!str::EqI(selection, current)) {
                 AbortFinding(win, false);
                 dm->textSearch->SetLastResult(dm->textSelection);
-                HwndSetText(win->hwndFindEdit, s);
+                HwndSetText(win->hwndFindEdit, selection);
             }
         }
     }
@@ -269,14 +270,15 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
         return;
     }
 
-    AutoFreeWStr selection(dm->textSelection->ExtractText(" ").s);
-    wstr::NormalizeWSInPlace(WStr(selection.Get()));
-    if (wstr::IsEmpty(selection.Get())) {
+    WStr sel = dm->textSelection->ExtractText(" ");
+    TempStr selection = ToUtf8Temp(sel);
+    wstr::Free(sel);
+    selection.len -= str::NormalizeWSInPlace(selection);
+    if (str::IsEmpty(selection)) {
         return;
     }
 
-    TempStr s = ToUtf8Temp(WStr(selection.Get()));
-    HwndSetText(win->hwndFindEdit, s);
+    HwndSetText(win->hwndFindEdit, selection);
     AbortFinding(win, false); // cancel "find as you type"
     Edit_SetModify(win->hwndFindEdit, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
