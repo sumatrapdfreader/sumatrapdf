@@ -334,14 +334,6 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(WStr url, int* htmlWindowId, WStr* urlRest) {
-    WStr rest = wstr::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
-    return !rest;
-}
-
-// given url in the form "its://$htmlWindowId/$urlRest, parses
-// out $htmlWindowId and $urlRest. Returns false if url doesn't conform
-// to this pattern.
 static bool ParseProtoUrl(Str url, int* htmlWindowId, TempStr* urlRest) {
     Str rest = str::Parse(url, HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
     return !rest;
@@ -386,15 +378,16 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     //       leaked and to DISPID_DOCUMENTCOMPLETE never being fired
 
     int htmlWindowId;
-    WStr urlRest;
-    bool ok = ParseProtoUrl(szUrl, &htmlWindowId, &urlRest);
+    TempStr urlRest;
+    bool ok = ParseProtoUrl(ToUtf8Temp(szUrl), &htmlWindowId, &urlRest);
     if (!ok) {
         return INET_E_INVALID_URL;
     }
 
-    pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRest.s);
-    pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRest.s);
-    pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRest.s);
+    TempWStr urlRestW = ToWStrTemp(urlRest);
+    pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRestW.s);
+    pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRestW.s);
+    pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRestW.s);
 
     HtmlWindow* win = FindHtmlWindowById(htmlWindowId);
     // TODO: this now happens due to events happening on HtmlWindow
@@ -407,14 +400,13 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     if (!win->htmlWinCb) {
         return INET_E_OBJECT_NOT_FOUND;
     }
-    TempStr urlRestA = ToUtf8Temp(urlRest);
-    data = win->htmlWinCb->GetDataForUrl(urlRestA);
+    data = win->htmlWinCb->GetDataForUrl(urlRest);
     if (str::IsEmpty(data)) {
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
     TempStr imgExt = GfxFileExtFromDataTemp(data);
-    TempStr mime = MimeFromUrlTemp(urlRestA, imgExt);
+    TempStr mime = MimeFromUrlTemp(urlRest, imgExt);
     WCHAR* mimeW = CWStrTemp(mime);
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mimeW);
 #ifdef _WIN64
@@ -917,8 +909,8 @@ class HW_IDownloadManager : public IDownloadManager {
         }
         // parse the URL (only internal its:// URLs are supported)
         int htmlWindowId;
-        WStr urlRest;
-        bool ok = ParseProtoUrl(urlToFile, &htmlWindowId, &urlRest);
+        TempStr urlRest;
+        bool ok = ParseProtoUrl(ToUtf8Temp(urlToFile), &htmlWindowId, &urlRest);
         // free urlToFile using IMalloc::Free
         IMalloc* pMalloc = nullptr;
         if (SUCCEEDED(CoGetMalloc(1, &pMalloc))) {
@@ -936,13 +928,12 @@ class HW_IDownloadManager : public IDownloadManager {
         if (!win || !win->htmlWinCb) {
             return INET_E_OBJECT_NOT_FOUND;
         }
-        TempStr urlRestA = ToUtf8Temp(urlRest);
-        auto data = win->htmlWinCb->GetDataForUrl(urlRestA);
+        auto data = win->htmlWinCb->GetDataForUrl(urlRest);
         if (str::IsEmpty(data)) {
             return INET_E_DATA_NOT_AVAILABLE;
         }
         // ask the UI to let the user save the file
-        win->htmlWinCb->DownloadData(urlRestA, data);
+        win->htmlWinCb->DownloadData(urlRest, data);
         return S_OK;
     }
 };
