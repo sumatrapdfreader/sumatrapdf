@@ -449,24 +449,19 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     selection.StartAt(startPage, startGlyph);
     selection.SelectUpTo(endPage, endGlyph);
 
-    AutoFreeWStr selected_text(selection.ExtractText("\r\n").s);
-    size_t selected_text_length = selected_text.size();
+    WStr selected_text = selection.ExtractText("\r\n");
 
     // -1 and [0, inf) are allowed
-    if (maxLength > -2) {
-        if (maxLength != -1 && selected_text_length > (size_t)maxLength) {
-            selected_text[maxLength] = '\0'; // truncate
-        }
-
-        *text = SysAllocString(selected_text);
-        if (*text) {
-            return S_OK;
-        } else {
-            return E_OUTOFMEMORY;
-        }
-    } else {
+    if (maxLength < -1) {
+        wstr::Free(selected_text);
         return E_INVALIDARG;
     }
+    if (maxLength != -1 && selected_text.len > maxLength) {
+        selected_text.s[maxLength] = '\0'; // truncate
+    }
+    *text = SysAllocString(selected_text.s);
+    wstr::Free(selected_text);
+    return *text ? S_OK : E_OUTOFMEMORY;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Move(enum TextUnit unit, int count, int* moved) {
