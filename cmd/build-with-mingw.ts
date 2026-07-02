@@ -1527,6 +1527,7 @@ const utils: LibDef = {
         "Strconv.*",
         "StrFormat.*",
         "Str.*",
+        "StrUtf8.*",
         "StrVec.*",
         "StrQueue.*",
         "TempAllocator.*",

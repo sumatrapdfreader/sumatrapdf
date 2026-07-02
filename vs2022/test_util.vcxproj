@@ -908,6 +908,7 @@
     <ClInclude Include="..\src\base\Str.h" />
     <ClInclude Include="..\src\base\StrFormatParse.h" />
     <ClInclude Include="..\src\base\StrQueue.h" />
+    <ClInclude Include="..\src\base\StrUtf8.h" />
     <ClInclude Include="..\src\base\StrVec.h" />
     <ClInclude Include="..\src\base\Strconv.h" />
     <ClInclude Include="..\src\base\TrivialHtmlParser.h" />
@@ -947,6 +948,7 @@
     <ClCompile Include="..\src\base\Str.cpp" />
     <ClCompile Include="..\src\base\StrFormatParse.cpp" />
     <ClCompile Include="..\src\base\StrQueue.cpp" />
+    <ClCompile Include="..\src\base\StrUtf8.cpp" />
     <ClCompile Include="..\src\base\StrVec.cpp" />
     <ClCompile Include="..\src\base\Strconv.cpp" />
     <ClCompile Include="..\src\base\TrivialHtmlParser.cpp" />

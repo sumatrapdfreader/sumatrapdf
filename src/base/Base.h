@@ -740,6 +740,7 @@ defer { instance->Release(); };
 #include "Geom.h"
 #include "Vec.h"
 #include "Str.h"
+#include "StrUtf8.h"
 #include "StrFormatParse.h"
 #include "StrVec.h"
 #include "Strconv.h"

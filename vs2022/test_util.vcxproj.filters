@@ -93,6 +93,9 @@
     <ClInclude Include="..\src\base\StrQueue.h">
       <Filter>base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\base\StrUtf8.h">
+      <Filter>base</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\base\StrVec.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -188,6 +191,9 @@
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\StrQueue.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\StrUtf8.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\StrVec.cpp">

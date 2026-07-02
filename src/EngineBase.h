@@ -61,14 +61,6 @@ extern Kind kindDestinationLaunchFile;
 extern Kind kindDestinationDjVu;
 extern Kind kindDestinationMupdf;
 
-int Utf8CodepointCount(Str s);
-int Utf8CodepointAtByte(Str s, int byteIdx, int* bytesOut = nullptr);
-int Utf8CodepointNext(Str s, int& byteIdx);
-int Utf8CodepointPrev(Str s, int& byteIdx);
-int Utf8CodepointToByteIndex(Str s, int codepointIdx);
-int Utf8AdvanceCodepoints(Str s, int byteIdx, int nCodepoints);
-Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints);
-
 enum class TextExtractionState {
     NotExtracted,
     Pending,

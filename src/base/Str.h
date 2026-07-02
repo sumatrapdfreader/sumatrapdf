@@ -21,11 +21,6 @@ inline bool IsEmpty(const WStr* v) {
     return !v || v->len == 0 || !v->s;
 }
 
-bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd);
-bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
-int utf8StrLen(const u8* s);
-int utf8RuneLen(const u8* s);
-
 namespace str {
 
 enum class TrimOpt {
@@ -84,8 +79,6 @@ Str ToLower(Str s);
 
 Str ToUpperInPlace(Str s);
 
-void Utf8Encode(char* buf, int& off, int c);
-
 bool IsDigit(char c);
 bool IsWs(char c);
 bool IsAlNum(char c);
@@ -108,11 +101,6 @@ bool ContainsChar(Str s, char c);
 Str TrimSuffix(Str s, Str suffix);
 int LastIndexOfChar(Str s, char c);
 Str TrimSuffixWhitespace(Str s); // trims trailing whitespace in place
-
-int VsnprintfUtf8(Str buf, const char* fmt, va_list args);
-// formatting functions take the format string as a plain const char* (as an
-// exception to the Str rule): it's almost always a string literal, and a
-// const char* is what vsnprintf needs anyway (no NUL-termination footgun).
 
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
@@ -314,8 +302,6 @@ int ParseInt(Str s);
 i64 ParseInt64(Str s);
 bool IsValidProgramVersion(Str ver);
 int CompareProgramVersion(Str ver1, Str ver2);
-TempStr ShortenStringUtf8Temp(Str s, int maxRunes);
-TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes);
 bool IsTextRtl(WStr s);
 bool IsTextRtl(Str s);
 
@@ -326,12 +312,7 @@ bool IsTextRtl(Str s);
 // (some C/win32 APIs take non-const), avoiding casts at the call site.
 char* CStrTemp(Str s);
 WCHAR* CWStrTemp(WStr s);
-WCHAR* CWStrTemp(Str s);
 
-// like CWStrTemp but also reports the wide-char count (excluding the NUL) via
-// cch. Use when a C/win32 API needs both the pointer and a length (e.g. a
-// cbData byte count) — clearer than ToWStrTemp(...).s + .len at the call site.
-WCHAR* CWStrTemp(Str s, int& cch);
 WCHAR* CWStrTemp(WStr s, int& cch);
 
 // str::Builder/wstr::Builder always keep their data NUL-terminated.
@@ -352,10 +333,6 @@ int len(const wstr::Builder&);
 wchar_t ToLowerW(wchar_t c);
 int WStrFindSubstr(WStr str, WStr substr);
 int WStrCmpNoCase(WStr a, WStr b);
-
-WStr ToWStrTemp(Str s);
-Str ToUtf8(Arena* arena, WStr wide);
-Str ToUtf8Temp(WStr wide);
 
 // Str utilities
 Str FormatFileSize(Arena* arena, u64 size);
