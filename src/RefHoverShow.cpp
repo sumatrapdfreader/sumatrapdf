@@ -51,6 +51,10 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     }
 
     RectF region;
+    // Set when a bracket-style entry wraps across a 2-column page break (e.g.
+    // "[63]"): a second crop, stitched below `region` in the delivered
+    // bitmap. Empty (dx/dy <= 0) otherwise.
+    RectF continuation{};
     if (useLinkZoom) {
         region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
     } else {
@@ -72,7 +76,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         }
         region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
         if (region.dx <= 0.f || region.dy <= 0.f) {
-            region = DetectEntryBox(text, normCoords, mediabox, destX, destY);
+            region = DetectEntryBox(text, normCoords, mediabox, destX, destY, &continuation);
         }
         if (normCoords != coords) {
             free(normCoords);
@@ -80,6 +84,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         free(cleanText);
         free(cleanCoords);
     }
+    bool hasContinuation = continuation.dx > 0.f && continuation.dy > 0.f;
     s->displayed.userZoom = 1.f;
     float baseZoom = useLinkZoom ? linkZoom : ((pageZoom > 0.f) ? pageZoom : kRefHoverRenderZoom);
 
@@ -97,9 +102,14 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
             }
         }
     }
+    // Combined content extent (region stacked above continuation, if any) used
+    // for sizing below; req.region itself stays just the primary crop.
+    float contentDy = region.dy + (hasContinuation ? continuation.dy : 0.f);
+    float contentDx = hasContinuation && continuation.dx > region.dx ? continuation.dx : region.dx;
+
     int popupHCap;
     int cursorPad = DpiScale(s->hwndPopup, kRefHoverCursorPad);
-    if (region.dy > 250.f && s->pending.pageScreenRect.dy > 0) {
+    if (contentDy > 250.f && s->pending.pageScreenRect.dy > 0) {
         Rect pr = s->pending.pageScreenRect;
         int curY = s->pending.screenPt.y;
         int spaceAbove = curY - pr.y - cursorPad;
@@ -142,11 +152,11 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         region.dx = wantW;
         region.dy = wantH;
     } else {
-        if (region.dy > 0.f && region.dy * baseZoom > availH) {
-            baseZoom = availH / region.dy;
+        if (contentDy > 0.f && contentDy * baseZoom > availH) {
+            baseZoom = availH / contentDy;
         }
-        if (region.dx > 0.f && region.dx * baseZoom > availW) {
-            baseZoom = availW / region.dx;
+        if (contentDx > 0.f && contentDx * baseZoom > availW) {
+            baseZoom = availW / contentDx;
         }
     }
     if (baseZoom < kRefHoverMinUserZoom) {
@@ -158,6 +168,9 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     req.pageNo = destPage;
     req.zoom = s->displayed.baseZoom * s->displayed.userZoom;
     req.region = region;
+    if (hasContinuation) {
+        req.continuationRegion = continuation;
+    }
     req.showPopup = true;
     req.screenPt = s->pending.screenPt;
     req.destXRaw = s->pending.destX;

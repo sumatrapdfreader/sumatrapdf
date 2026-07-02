@@ -64,6 +64,15 @@ struct RefHoverState {
         int pageNo = -1;
         float zoom = 0.f;
         RectF region{};
+        // Second crop stitched below `region` in the delivered bitmap, for a
+        // bracket-style entry that wraps across a 2-column page break (see
+        // DetectEntryBox's continuationOut). Empty (dx/dy <= 0) when there's
+        // none. Only ever set by the initial DetectEntryBox-driven show —
+        // wheel-zoom/scroll re-renders build a fresh request from just
+        // displayed.region and never populate this, so the stitched strip is
+        // dropped as soon as the user interacts (region-shift math for a
+        // composited bitmap isn't supported).
+        RectF continuationRegion{};
         // initial show: commit displayed.* and show the popup on completion.
         // false for wheel zoom / scroll re-renders, which update displayed.*
         // optimistically and only need the new bitmap.

@@ -675,6 +675,231 @@ static void LineRunExtent(WStr text, const Rect* coords, int anchorIdx, int* lef
     *rightXOut = rightX;
 }
 
+// A bracket-style bibliography entry ("[63]") that runs to the bottom of its
+// 2-column-layout column with no sibling "[" and no blank-line gap closing it
+// may simply continue at the top of the next column (the column break falls
+// mid-entry). Look for that continuation: a block of body text starting at
+// the top of the column right of `oldColumnRightX` that does *not* itself
+// begin with a "[" label (which would mean it's the next real entry, not a
+// continuation). Returns an empty RectF when no such continuation is found.
+static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF mediabox, int oldColumnRightX) {
+    constexpr int kGutterW = 8;
+
+    // 1. Left edge of the next column: leftmost glyph right of the old
+    // column's right edge (skipping the gutter itself).
+    int nextColLeftX = INT_MAX;
+    for (int i = 0; i < text.len; i++) {
+        WCHAR c = text.s[i];
+        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.x > oldColumnRightX + kGutterW && r.x < nextColLeftX) {
+            nextColLeftX = r.x;
+        }
+    }
+    if (nextColLeftX == INT_MAX) {
+        return RectF{};
+    }
+
+    // 2. Topmost line in the next column, and its leftmost X (candidate
+    // continuation start). Skip lines that bridge across the whole page width
+    // (a running header/title above both columns), and skip anything sitting
+    // in the page's top margin — a running header (page number, journal
+    // title) commonly renders as several short, column-confined fragments
+    // rather than one wide line, so the page-width check alone doesn't catch
+    // it. Real column body content essentially never starts this close to
+    // the physical page edge.
+    constexpr int kColWidthMax = 280;
+    constexpr int kMinTopMarginPt = 30;
+    int topY = INT_MAX;
+    for (int i = 0; i < text.len; i++) {
+        WCHAR c = text.s[i];
+        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.x < nextColLeftX - 5 || r.y < kMinTopMarginPt) {
+            continue;
+        }
+        int leftIdx, leftX, rightX;
+        LineRunExtent(text, coords, i, &leftIdx, &leftX, &rightX);
+        if (rightX - leftX > kColWidthMax || leftX < nextColLeftX - 20) {
+            continue;
+        }
+        if (r.y < topY) {
+            topY = r.y;
+        }
+    }
+    if (topY == INT_MAX) {
+        return RectF{};
+    }
+    int topLeftX = INT_MAX;
+    int topDy = 12;
+    for (int i = 0; i < text.len; i++) {
+        WCHAR c = text.s[i];
+        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.x < nextColLeftX - 5 || r.y < topY - 3 || r.y > topY + 3) {
+            continue;
+        }
+        if (r.x < topLeftX) {
+            topLeftX = r.x;
+            topDy = r.dy > 0 ? r.dy : 12;
+        }
+    }
+
+    // 3. Reject: the top line is itself a new entry's "[" label, not a
+    // continuation of the previous one.
+    for (int i = 0; i < text.len; i++) {
+        if (text.s[i] != L'[') {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.y >= topY - 3 && r.y <= topY + 3 && r.x >= topLeftX - 3 && r.x <= topLeftX + 3) {
+            return RectF{};
+        }
+    }
+
+    // 4. Right edge of the new column (gutter-bounded, mirrors the primary
+    // column-right scan in DetectEntryBox).
+    int colRightX = nextColLeftX + 250;
+    {
+        int bandTop = topY - 2;
+        int bandBot = topY + 6 * topDy;
+        int xLo = nextColLeftX - 5;
+        if (xLo < 0) {
+            xLo = 0;
+        }
+        int xHi = (int)mediabox.dx;
+        if (xHi > xLo + 2) {
+            int n = xHi - xLo;
+            char* occ = AllocArray<char>((size_t)n);
+            for (int i = 0; i < text.len; i++) {
+                WCHAR c = text.s[i];
+                if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                    continue;
+                }
+                Rect r = coords[i];
+                if (r.y < bandTop || r.y > bandBot) {
+                    continue;
+                }
+                int a = r.x - xLo;
+                int b = r.x + r.dx - xLo;
+                if (b <= 0 || a >= n) {
+                    continue;
+                }
+                if (a < 0) {
+                    a = 0;
+                }
+                if (b > n) {
+                    b = n;
+                }
+                for (int x = a; x < b; x++) {
+                    occ[x] = 1;
+                }
+            }
+            int lastOcc = nextColLeftX;
+            for (int x = nextColLeftX; x < xHi; x++) {
+                int idx = x - xLo;
+                if (idx >= 0 && idx < n && occ[idx]) {
+                    lastOcc = x + 1;
+                } else if (x - lastOcc >= kGutterW) {
+                    break;
+                }
+            }
+            free(occ);
+            if (lastOcc > nextColLeftX) {
+                colRightX = lastOcc;
+            }
+        }
+    }
+
+    // 5. End of the continuation block. A real wrapped tail is short (finishes
+    // a sentence + a citation line or two), so cap the search tight — much
+    // tighter than a full entry's height cap in the primary scan above.
+    // Content that isn't closed by a sibling "[" (the following real entry)
+    // within that short cap is something else entirely (e.g. running body
+    // text that happens to share the column, ending in an unrelated "["
+    // many lines down) — reject rather than grab an arbitrary slice of it.
+    constexpr int kMaxContinuationPt = 60;
+    int capY = topY + kMaxContinuationPt;
+    int boundaryY = capY;
+    bool closedBySibling = false;
+    for (int i = 0; i < text.len; i++) {
+        if (text.s[i] != L'[') {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.x < nextColLeftX - 5 || r.x > nextColLeftX + 30) {
+            continue;
+        }
+        if (r.y <= topY + topDy / 2 || r.y >= capY) {
+            continue;
+        }
+        if (r.y < boundaryY) {
+            boundaryY = r.y;
+            closedBySibling = true;
+        }
+    }
+    if (!closedBySibling) {
+        // No sibling closed it within the cap. Still acceptable if the column
+        // has no more text at all past the cap (a short trailing tail that's
+        // simply the last thing in the column); reject if text keeps flowing
+        // past the cap, since that's not a short wrap.
+        for (int i = 0; i < text.len; i++) {
+            WCHAR c = text.s[i];
+            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                continue;
+            }
+            Rect r = coords[i];
+            if (r.x < nextColLeftX - 20 || r.x > colRightX) {
+                continue;
+            }
+            if (r.y >= capY - topDy) {
+                return RectF{};
+            }
+        }
+    }
+
+    // 6. Bounding box of the continuation block's glyphs.
+    int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
+    for (int i = 0; i < text.len; i++) {
+        WCHAR c = text.s[i];
+        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.x < nextColLeftX - 20 || r.x > colRightX) {
+            continue;
+        }
+        if (r.y < topY - 5 || r.y >= boundaryY) {
+            continue;
+        }
+        if (r.x < bMinX) {
+            bMinX = r.x;
+        }
+        if (r.y < bMinY) {
+            bMinY = r.y;
+        }
+        if (r.x + r.dx > bMaxX) {
+            bMaxX = r.x + r.dx;
+        }
+        if (r.y + r.dy > bMaxY) {
+            bMaxY = r.y + r.dy;
+        }
+    }
+    if (bMinX == INT_MAX || (bMaxX - bMinX) < 30 || (bMaxY - bMinY) < 8) {
+        return RectF{};
+    }
+    RectF box{(float)bMinX - kEntryPadPt, (float)bMinY - kEntryPadPt, (float)(bMaxX - bMinX) + 2.f * kEntryPadPt,
+              (float)(bMaxY - bMinY) + 2.f * kEntryPadPt};
+    ClipToMediabox(box, mediabox);
+    return box;
+}
+
 // Find the bounding box of a single bibliography entry on the destination
 // page. Uses per-glyph text+coords from the engine's text cache:
 //   1. Locate the leftmost glyph with y in a small band around destY (entry start).
@@ -685,7 +910,10 @@ static void LineRunExtent(WStr text, const Rect* coords, int anchorIdx, int* lef
 // (TOC, topbar, cross-ref, table caption). The landscape box renders a half-
 // page-tall slice of the page anchored on the destination so the user sees
 // surrounding context (e.g. the table rows under a caption).
-RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY) {
+RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY, RectF* continuationOut) {
+    if (continuationOut) {
+        *continuationOut = RectF{};
+    }
     // Sparse-text dest page (image-only or near-image-only — e.g. a
     // children's PDF overview with character thumbnails plus a single
     // heading). Fitting to the heading line gives a thin sliver and hides
@@ -996,6 +1224,11 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     // entry's body lines 2+. The y-range approach is order-independent.
     if (text.s[startIdx] == L'[') {
         int entryYBoundary = (int)mediabox.dy;
+        // Set when a sibling "[" was actually found below this entry — as
+        // opposed to entryYBoundary falling back to the page/cap bound because
+        // this is the column's last entry (see foundSibling use below, which
+        // feeds the column-wrap continuation search).
+        bool foundSibling = false;
         for (int i = 0; i < text.len; i++) {
             if (i == startIdx) {
                 continue;
@@ -1023,6 +1256,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             }
             if (r.y < entryYBoundary) {
                 entryYBoundary = r.y;
+                foundSibling = true;
             }
         }
         // Cap to a reasonable entry height so a last-on-page entry (no next
@@ -1120,6 +1354,54 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                       (float)(bMaxX - bMinX) + 2.f * kEntryPadPt, (float)(bMaxY - bMinY) + 2.f * kEntryPadPt};
             ClipToMediabox(box, mediabox);
             if (box.dx >= 50.f && box.dy >= 20.f) {
+                // No sibling "[" closed this entry, and — checked below — no
+                // more text at all follows in this column: this looks like the
+                // entry ran off the end of the column's content rather than
+                // ending naturally (a real paragraph gap with more text after
+                // it, which the trailing-gap trim above already accounts for).
+                // Distance to the physical page bottom isn't a reliable signal
+                // here: a column's last entry commonly sits well above the
+                // page's bottom margin. Check whether it continues at the top
+                // of the next column instead ("[63]"-style bibliography
+                // entries wrapping across a 2-column page break).
+                if (continuationOut && !foundSibling) {
+                    // A page footer / page number often sits within the same
+                    // x-range as the column, below the entry — that shouldn't
+                    // block the wrap search. Distance alone doesn't separate it
+                    // from a real continuation line (review-manuscript PDFs can
+                    // have the footer just a line or two below the last
+                    // entry), so instead measure each candidate line's full
+                    // width: a page number is a short isolated token, while a
+                    // real paragraph continuation line is (near-)column-width.
+                    constexpr int kMinBodyLineWidthPt = 30;
+                    bool moreBelowInColumn = false;
+                    for (int i = 0; i < text.len && !moreBelowInColumn; i++) {
+                        WCHAR c = text.s[i];
+                        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                            continue;
+                        }
+                        Rect r = coords[i];
+                        if (r.x < firstLineLeftX - 20 || r.x > columnRightX) {
+                            continue;
+                        }
+                        if (r.y <= bMaxY) {
+                            continue;
+                        }
+                        int leftIdx, leftX, rightX;
+                        LineRunExtent(text, coords, i, &leftIdx, &leftX, &rightX);
+                        // Confined to this column: a full-page-width footer
+                        // credit line (journal name / affiliation, common
+                        // below both columns) bridges clean across the gutter
+                        // and would otherwise read as "real" wide body text.
+                        bool confinedToColumn = rightX <= columnRightX + 10;
+                        if (rightX - leftX >= kMinBodyLineWidthPt && confinedToColumn) {
+                            moreBelowInColumn = true;
+                        }
+                    }
+                    if (!moreBelowInColumn) {
+                        *continuationOut = FindColumnWrapContinuation(text, coords, mediabox, columnRightX);
+                    }
+                }
                 return box;
             }
         }

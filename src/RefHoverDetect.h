@@ -44,4 +44,11 @@ RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float des
 // ("[Foo+09]"), hanging-indent author-year, and single-line description-list
 // layouts. Falls back to LandscapeBox when the destination doesn't look like
 // a list entry.
-RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY);
+//
+// continuationOut, if non-null, is set to a second box when a bracket-style
+// entry runs off the bottom of its 2-column-layout column with no natural
+// close and continues at the top of the next column (e.g. "[63]"-style
+// entries wrapping across a column break); empty when there's no such
+// continuation. Ignored (left untouched) by callers that don't need it.
+RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY,
+                     RectF* continuationOut = nullptr);
