@@ -61,7 +61,7 @@ allocate memory. I assume it'll use GetProcessHeap() heap and further assume
 that CRT creates its own heap for malloc()/free() etc. so that while a deadlock
 is still possible, the probability should be greatly reduced. */
 
-static Arena* gCrashHandlerAllocator = nullptr;
+static Arena* gCrashHandlerArena = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
@@ -138,7 +138,7 @@ static bool GetModules(str::Builder& s, bool additionalOnly) {
 }
 
 static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    str::Builder s(16 * 1024, gCrashHandlerAllocator);
+    str::Builder s(16 * 1024, gCrashHandlerArena);
     if (!isCrash) {
         captureCallstack = true;
         s.Append("Type: debug report (not crash)\n");
@@ -195,7 +195,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
 }
 
 static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool captureCallstack) {
-    str::Builder s(16 * 1024, gCrashHandlerAllocator);
+    str::Builder s(16 * 1024, gCrashHandlerArena);
     if (!isCrash) {
         captureCallstack = true;
         s.Append("Type: debug report (not crash)\n");
@@ -255,10 +255,10 @@ void UploadCrashReport(Str d) {
         return;
     }
 
-    str::Builder headers(256, gCrashHandlerAllocator);
+    str::Builder headers(256, gCrashHandlerArena);
     headers.Append("Content-Type: text/plain");
 
-    str::Builder data(16 * 1024, gCrashHandlerAllocator);
+    str::Builder data(16 * 1024, gCrashHandlerArena);
     data.Append(d);
 
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
@@ -335,7 +335,7 @@ static bool DownloadAndUnzipSymbols(Str symDir) {
         log("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
     }
 
-    bool ok = ExtractSymbols(ToStr(rsp.data), symDir, gCrashHandlerAllocator);
+    bool ok = ExtractSymbols(ToStr(rsp.data), symDir, gCrashHandlerArena);
     if (!ok) {
         log("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
     }
@@ -545,7 +545,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     SaveCrashInfo(d);
 
     UploadCrashReport(d);
-    // gCrashHandlerAllocator->Free((const void*)d.data());
+    // gCrashHandlerArena->Free((const void*)d.data());
     loga(s);
     loga("_uploadDebugReport() finished\n");
 }
@@ -794,14 +794,14 @@ static void GetSystemInfo(str::Builder& s) {
 
 // returns true if running on wine
 static bool BuildModulesInfo() {
-    str::Builder s(1024);
+    str::Builder s(1024, gCrashHandlerArena);
     bool isWine = GetModules(s, false);
     gModulesInfo = s.TakeStr();
     return isWine;
 }
 
 static void BuildSystemInfo() {
-    str::Builder s(1024);
+    str::Builder s(1024, gCrashHandlerArena);
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
@@ -812,7 +812,7 @@ bool SetSymbolsDir(Str symDir) {
     if (!symDir) {
         return false;
     }
-    str::ReplaceWithCopy(&gSymbolsDir, symDir);
+    gSymbolsDir = str::Dup(gCrashHandlerArena, symDir);
     return true;
 }
 
@@ -857,7 +857,7 @@ static Str BuildSymbolsUrl() {
 #elif IS_INTEL_64 == 1
     suff = StrL("-64.pdb.lzsa");
 #endif
-    return str::Join(urlBase, suff);
+    return str::Join(gCrashHandlerArena, urlBase, suff, Str());
 }
 
 void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool localOnly) {
@@ -868,6 +868,11 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
         return;
     }
 
+    // we pre-allocate as much as possible to minimize allocations
+    // when crash handler is invoked. It's ok to use standard
+    // allocation functions here.
+    gCrashHandlerArena = ArenaNew();
+
     if (!SetSymbolsDir(symDir)) {
         log("InstallCrashHandler: skipping because !SetSymbolsDir()\n");
         return;
@@ -876,8 +881,8 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     logf("InstallCrashHandler:\n  crashDumpPath: '%s'\n  crashFilePath: '%s'\n  symDir: '%s'\n", crashDumpPath,
          crashFilePath, symDir);
 
-    gCrashDumpPath = str::Dup(crashDumpPath);
-    gCrashFilePath = str::Dup(crashFilePath);
+    gCrashDumpPath = str::Dup(gCrashHandlerArena, crashDumpPath);
+    gCrashFilePath = str::Dup(gCrashHandlerArena, crashFilePath);
     gLocalOnlyCrashHandler = localOnly;
     gCrashThreadId = 0;
     gDumpThreadId = 0;
@@ -897,10 +902,6 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     // at this point list of modules should be complete (except
     // dbghlp.dll which shouldn't be loaded yet)
 
-    // we pre-allocate as much as possible to minimize allocations
-    // when crash handler is invoked. It's ok to use standard
-    // allocation functions here.
-    gCrashHandlerAllocator = ArenaNew();
     gSymbolsUrl = BuildSymbolsUrl();
 
     // installer/uninstaller don't use app settings; reading them here would
@@ -916,7 +917,8 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
             gp->fileStates = new Vec<FileState*>();
             // TODO: also sessionData?
             Str d = SerializeGlobalPrefs(gp, nullptr);
-            gSettingsFile = d;
+            gSettingsFile = str::Dup(gCrashHandlerArena, d);
+            str::Free(d);
             DeleteGlobalPrefs(gp);
             str::Free(prefsData);
         }
@@ -959,15 +961,17 @@ void UninstallCrashHandler() {
     CloseHandle(gDumpThread);
     CloseHandle(gDumpEvent);
 
-    str::FreePtr(&gCrashDumpPath);
-    str::FreePtr(&gSymbolsUrl);
-    str::FreePtr(&gSymbolsDir);
+    // those are allocated from gCrashHandlerArena so are freed by ArenaDelete()
+    gCrashDumpPath = {};
+    gSymbolsUrl = {};
+    gSymbolsDir = {};
 
-    str::FreePtr(&gSystemInfo);
-    str::FreePtr(&gSettingsFile);
-    str::FreePtr(&gModulesInfo);
-    str::FreePtr(&gCrashFilePath);
-    ArenaDelete(gCrashHandlerAllocator);
+    gSystemInfo = {};
+    gSettingsFile = {};
+    gModulesInfo = {};
+    gCrashFilePath = {};
+    ArenaDelete(gCrashHandlerArena);
+    gCrashHandlerArena = nullptr;
     gCrashThreadId = 0;
     gDumpThreadId = 0;
     gLocalOnlyCrashHandler = false;
