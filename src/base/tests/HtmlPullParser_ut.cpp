@@ -71,6 +71,10 @@ static void HtmlEntities() {
         Str res = ResolveHtmlEntities(s, ta);
         utassert(str::Eq(res, changed[i].res));
     }
+
+    WStr val = DecodeHtmlEntities("&auml&test;&&ouml-", CP_ACP);
+    utassert(wstr::Eq(val, WStr(L"\xE4&test;&\xF6-")));
+    wstr::Free(val);
 }
 
 static void Test01() {

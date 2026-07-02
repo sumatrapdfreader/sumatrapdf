@@ -12,10 +12,10 @@
 #include "base/GdiPlus.h"
 #include "base/HtmlParserLookup.h"
 #include "base/HtmlPullParser.h"
-#include "mui/Mui.h"
-#include "base/TrivialHtmlParser.h"
 #include "base/Win.h"
 #include "base/Zip.h"
+
+#include "mui/Mui.h"
 
 #include "wingui/UIModels.h"
 

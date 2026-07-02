@@ -10,12 +10,7 @@ struct AttrInfo {
     bool ValIs(Str s) const;
 };
 
-// TrivialHtmlParser needs to enumerate all attributes of an HtmlToken
-class HtmlParser;
-
 struct HtmlToken {
-    friend HtmlParser;
-
     enum TokenType {
         StartTag,        // <foo>
         EndTag,          // </foo>
@@ -64,7 +59,7 @@ struct HtmlToken {
 
 /* A very simple pull html parser. Call Next() to get the next HtmlToken,
 which can be one one of 3 tag types or error. If a tag has attributes,
-the caller has to parse them out (using HtmlToken::NextAttr()) */
+use HtmlToken::GetAttrByName() / GetAttrByNameNS() to access them. */
 class HtmlPullParser {
     Str html;
     int currPos = 0;
@@ -95,3 +90,21 @@ Str ResolveHtmlEntity(Str str, int& rune);
 Str ResolveHtmlEntities(Str s, Arena* alloc);
 Str ResolveHtmlEntities(Str s);
 Str ResolveHtmlEntitiesTemp(Str s);
+
+WStr DecodeHtmlEntities(Str string, uint codepage);
+Str DecodeHtmlEntitiesTemp(Str string, uint codepage);
+
+namespace strconv {
+inline TempStr HtmlUtf8ToStrTemp(Str s) {
+    TempStr tmp = str::DupTemp(s);
+    return DecodeHtmlEntitiesTemp(tmp, CP_UTF8);
+}
+
+inline TempWStr HtmlUtf8ToWStrTemp(Str s) {
+    TempStr tmp = str::DupTemp(s);
+    WStr ws = DecodeHtmlEntities(tmp, CP_UTF8);
+    TempWStr res = str::DupTemp(ws);
+    wstr::Free(ws);
+    return res;
+}
+} // namespace strconv

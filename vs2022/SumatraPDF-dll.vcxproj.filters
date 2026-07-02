@@ -848,9 +848,6 @@
     <ClCompile Include="..\src\base\tests\Str_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\tests\TrivialHtmlParser_ut.cpp">
-      <Filter>src\base\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\tests\Vec_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>

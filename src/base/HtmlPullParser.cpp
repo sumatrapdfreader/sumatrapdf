@@ -198,6 +198,66 @@ Str ResolveHtmlEntitiesTemp(Str s) {
     return res;
 }
 
+static WCHAR IntToChar(int codepoint) {
+    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(WCHAR)))) {
+        return '?';
+    }
+    return (WCHAR)codepoint;
+}
+
+WStr DecodeHtmlEntities(Str string, uint codepage) {
+    TempWStr fixedTemp = strconv::StrCPToWStrTemp(string, codepage);
+    WStr fixed = wstr::Dup(fixedTemp);
+    WCHAR* dst = fixed.s;
+    const WCHAR* src = fixed.s;
+
+    while (*src) {
+        if (*src != '&') {
+            *dst++ = *src++;
+            continue;
+        }
+        src++;
+        int unicode;
+        if (!wstr::IsNull(wstr::Parse(WStr(src), L"#%d;", &unicode)) ||
+            !wstr::IsNull(wstr::Parse(WStr(src), L"#x%x;", &unicode))) {
+            *dst++ = IntToChar(unicode);
+            WStr semi = wstr::SliceFromChar(WStr(src), L';');
+            src = semi.s + 1;
+            continue;
+        }
+
+        int rune = -1;
+        const WCHAR* entityEnd = src;
+        while (iswalnum(*entityEnd)) {
+            entityEnd++;
+        }
+
+        if (entityEnd != src) {
+            size_t entityLen = entityEnd - src;
+            rune = HtmlEntityNameToRune(WStr((wchar_t*)src, (int)entityLen));
+        }
+        if (-1 != rune) {
+            *dst++ = IntToChar(rune);
+            src = entityEnd;
+            if (*src == ';') {
+                ++src;
+            }
+        } else {
+            *dst++ = '&';
+        }
+    }
+    *dst = '\0';
+    fixed.len = (int)(dst - fixed.s);
+    return fixed;
+}
+
+Str DecodeHtmlEntitiesTemp(Str s, uint codepage) {
+    WStr ws = DecodeHtmlEntities(s, codepage);
+    Str res = ToUtf8Temp(ws);
+    wstr::Free(ws);
+    return res;
+}
+
 bool AttrInfo::NameIs(Str s) const {
     return str::EqNIx(name, name.len, s);
 }

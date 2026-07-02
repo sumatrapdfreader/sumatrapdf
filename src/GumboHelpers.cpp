@@ -34,7 +34,7 @@ bool GumboTagNameIs(const GumboNode* node, Str name) {
 }
 
 bool GumboTagNameIsNS(const GumboNode* node, Str name, Str) {
-    // Preserve HtmlElement::NameIsNS compatibility: namespace URI is ignored,
+    // Preserve the old parser's compatibility: namespace URI is ignored,
     // and a prefix in the source tag name is treated as optional.
     if (!node || node->type != GUMBO_NODE_ELEMENT) {
         return false;

@@ -1533,7 +1533,6 @@ const utils: LibDef = {
         "TempAllocator.*",
         "Thread.*",
         "TgaReader.*",
-        "TrivialHtmlParser.*",
         "TxtParser.*",
         "UITask.*",
         "WebpReader.*",

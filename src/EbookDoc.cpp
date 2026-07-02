@@ -8,7 +8,6 @@
 #include "base/GuessFileType.h"
 #include "base/HtmlParserLookup.h"
 #include "base/HtmlPullParser.h"
-#include "base/TrivialHtmlParser.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"

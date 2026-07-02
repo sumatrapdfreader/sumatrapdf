@@ -888,7 +888,6 @@
     <ClInclude Include="..\src\base\Strconv.h" />
     <ClInclude Include="..\src\base\TgaReader.h" />
     <ClInclude Include="..\src\base\Thread.h" />
-    <ClInclude Include="..\src\base\TrivialHtmlParser.h" />
     <ClInclude Include="..\src\base\UITask.h" />
     <ClInclude Include="..\src\base\Vec.h" />
     <ClInclude Include="..\src\base\WebpReader.h" />
@@ -937,7 +936,6 @@
     <ClCompile Include="..\src\base\Strconv.cpp" />
     <ClCompile Include="..\src\base\TgaReader.cpp" />
     <ClCompile Include="..\src\base\Thread.cpp" />
-    <ClCompile Include="..\src\base\TrivialHtmlParser.cpp" />
     <ClCompile Include="..\src\base\UITask.cpp" />
     <ClCompile Include="..\src\base\WebpReader.cpp" />
     <ClCompile Include="..\src\base\Win.cpp" />

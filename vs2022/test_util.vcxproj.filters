@@ -102,9 +102,6 @@
     <ClInclude Include="..\src\base\Strconv.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\TrivialHtmlParser.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\UtAssert.h">
       <Filter>base</Filter>
     </ClInclude>
@@ -202,9 +199,6 @@
     <ClCompile Include="..\src\base\Strconv.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\TrivialHtmlParser.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\UtAssert.cpp">
       <Filter>base</Filter>
     </ClCompile>
@@ -257,9 +251,6 @@
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Str_ut.cpp">
-      <Filter>base\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\tests\TrivialHtmlParser_ut.cpp">
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\Vec_ut.cpp">

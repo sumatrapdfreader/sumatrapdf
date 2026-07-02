@@ -25,7 +25,6 @@ extern void SimpleLogTest();
 extern void SquareTreeTest();
 extern void StrFormatTest();
 extern void StrTest();
-extern void TrivialHtmlParser_UnitTests();
 extern void VecTest();
 extern void WinUtilTest();
 extern void StrVecTest();
@@ -114,7 +113,6 @@ int main(int argc, char** argv) {
     StrFormatTest();
     StrTest();
     StrVecTest();
-    TrivialHtmlParser_UnitTests();
     VecTest();
     WinUtilTest();
     SumatraPDF_UnitTests();
