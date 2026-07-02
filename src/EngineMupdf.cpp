@@ -3024,7 +3024,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         TempStr name;
         if (outline->title) {
             // must convert to Unicode because PdfCleanString() doesn't work on utf8
-            TempWStr nameW = ToWStr(outline->title);
+            TempWStr nameW = ToWStrTemp(Str(outline->title));
             PdfCleanStringInPlace(nameW);
             name = ToUtf8Temp(nameW);
         }
