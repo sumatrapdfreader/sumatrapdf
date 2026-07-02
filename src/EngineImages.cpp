@@ -297,7 +297,7 @@ RectF EngineImages::PageMediabox(int pageNo) {
 
 // Wrap a fresh fz_pixmap into a RenderedBitmap (DIB section). Converts to
 // 32bpp BGRA which is the GDI-compatible layout. The pixmap argument is
-// consumed (dropped) on success; on failure it's also dropped.
+// not consumed; the caller keeps ownership and must drop it.
 static RenderedBitmap* FzPixmapToRenderedBitmap(fz_context* ctx, fz_pixmap* pixmap) {
     fz_pixmap* bgr = nullptr;
     fz_var(bgr);
