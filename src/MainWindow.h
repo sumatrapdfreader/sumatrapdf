@@ -377,7 +377,7 @@ struct MainWindow {
 
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;
-    AutoFreeStr urlOnLastButtonDown;
+    Str urlOnLastButtonDown;
     Annotation* annotationUnderCursor = nullptr;
     RefHoverState* refHover = nullptr;
     // highlight rectangle for element under cursor during context menu (in page coordinates)

@@ -229,33 +229,35 @@ LoadArgs::LoadArgs(Str origPath, MainWindow* win) {
     if (!str::EqI(path, cleanPath)) {
         logf("LoadArgs: cleanPath='%s', path='%s'\n", cleanPath, path);
     }
-    this->fileName.SetCopy(path);
+    this->fileName = str::Dup(path);
     this->win = win;
 }
 
 LoadArgs::~LoadArgs() {
     delete fileArgs;
+    str::Free(fileName);
+    str::Free(displayName);
 }
 
 Str LoadArgs::FilePath() const {
-    return Str(fileName.Get());
+    return fileName;
 }
 
 void LoadArgs::SetFilePath(Str path) {
-    fileName.SetCopy(path);
+    str::ReplaceWithCopy(&fileName, path);
 }
 
 Str LoadArgs::DisplayName() const {
-    return Str(displayName.Get());
+    return displayName;
 }
 
 void LoadArgs::SetDisplayName(Str name) {
-    displayName.SetCopy(name);
+    str::ReplaceWithCopy(&displayName, name);
 }
 
 LoadArgs* LoadArgs::Clone() {
-    LoadArgs* res = new LoadArgs(Str(fileName.Get()), win);
-    res->SetDisplayName(displayName.Get());
+    LoadArgs* res = new LoadArgs(fileName, win);
+    res->SetDisplayName(displayName);
     res->tabState = this->tabState;
     return res;
 }

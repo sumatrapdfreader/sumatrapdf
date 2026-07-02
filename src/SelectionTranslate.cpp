@@ -95,15 +95,23 @@ struct SelectionTranslateDialog {
 struct SelectionTranslateTaskData {
     SelectionTranslateDialog* dlg = nullptr;
     AIChatBackend backend = AIChatBackend::Grok;
-    AutoFreeStr srcLang;
-    AutoFreeStr dstLang;
-    AutoFreeStr text;
+    Str srcLang;
+    Str dstLang;
+    Str text;
+    ~SelectionTranslateTaskData() {
+        str::Free(srcLang);
+        str::Free(dstLang);
+        str::Free(text);
+    }
 };
 
 struct SelectionTranslateDoneData {
     HWND hwndDlg = nullptr;
     bool ok = false;
-    AutoFreeStr msg;
+    Str msg;
+    ~SelectionTranslateDoneData() {
+        str::Free(msg);
+    }
 };
 
 static Str PrimaryLangIdToEnglishName(WORD primary) {
@@ -749,7 +757,7 @@ static void OnTranslateDone(SelectionTranslateDoneData* data) {
     EnableWindow(dlg->hwndDstLang, TRUE);
     SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translate").s);
     TempStr display =
-        data->ok ? Str(data->msg.Get()) : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg.Get());
+        data->ok ? data->msg : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg);
     ShowTranslationResult(dlg, display, !data->ok);
     if (data->ok) {
         MaybeSaveTranslateToLang(GetWindowTextUtf8Temp(dlg->hwndDstLang));
@@ -760,7 +768,7 @@ static void OnTranslateDone(SelectionTranslateDoneData* data) {
 static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
     AutoDelete del(data);
     AutoFreeStr result;
-    bool ok = RunTranslation(data->backend, data->srcLang.Get(), data->dstLang.Get(), data->text.Get(), result);
+    bool ok = RunTranslation(data->backend, data->srcLang, data->dstLang, data->text, result);
     if (!ok && result.empty()) {
         result = str::Dup(_TRA("Translation failed.")).s;
     }
@@ -768,7 +776,7 @@ static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
     auto done = new SelectionTranslateDoneData();
     done->hwndDlg = data->dlg->hwnd;
     done->ok = ok;
-    done->msg = result.Release();
+    done->msg = Str(result.Release());
     uitask::Post(MkFunc0(OnTranslateDone, done), "SelectionTranslateDone");
 }
 
@@ -797,9 +805,9 @@ static void StartTranslation(SelectionTranslateDialog* dlg) {
     auto task = new SelectionTranslateTaskData();
     task->dlg = dlg;
     task->backend = dlg->backend;
-    task->srcLang.SetCopy(srcLang);
-    task->dstLang.SetCopy(dstLang);
-    task->text.SetCopy(text);
+    task->srcLang = str::Dup(srcLang);
+    task->dstLang = str::Dup(dstLang);
+    task->text = str::Dup(text);
     RunAsync(MkFunc0(SelectionTranslateThread, task), "SelectionTranslate");
 }
 

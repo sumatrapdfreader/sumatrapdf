@@ -253,8 +253,8 @@ struct LoadArgs {
     TabState* tabState = nullptr;
 
   private:
-    AutoFreeStr fileName;
-    AutoFreeStr displayName;
+    Str fileName;
+    Str displayName;
 };
 
 struct PasswordUI;

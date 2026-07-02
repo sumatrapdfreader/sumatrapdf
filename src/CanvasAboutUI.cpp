@@ -52,7 +52,7 @@ static void OnMouseLeftButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
 
     // remember a link under so that on mouse up we only activate
     // link if mouse up is on the same link as mouse down
-    win->urlOnLastButtonDown.SetCopy(GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr));
+    str::ReplaceWithCopy(&win->urlOnLastButtonDown, GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr));
 }
 
 static bool IsLink(Str url) {
@@ -80,12 +80,12 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
     // a click on the thumbnail's ✕ close button removes the file instead of
     // opening it
     if (HomePageOnCloseButtonClick(win, x, y)) {
-        win->urlOnLastButtonDown.Set(nullptr);
+        str::FreePtr(&win->urlOnLastButtonDown);
         return;
     }
     TempStr url = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
-    bool clickedURL = url && str::Eq(url, win->urlOnLastButtonDown.Get());
-    win->urlOnLastButtonDown.Set(nullptr);
+    bool clickedURL = url && str::Eq(url, win->urlOnLastButtonDown);
+    str::FreePtr(&win->urlOnLastButtonDown);
     if (!clickedURL) {
         return;
     }

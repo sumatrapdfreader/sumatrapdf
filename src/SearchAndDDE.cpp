@@ -341,16 +341,19 @@ struct FindThreadData {
     TextSearch::Direction direction = TextSearch::Direction::Forward;
     bool wasModified = false;
     bool showProgress = false;
-    AutoFreeWStr text;
+    WStr text;
     HANDLE thread = nullptr;
 
     FindThreadData(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified) {
         this->win = win;
         this->direction = direction;
-        this->text.SetCopy(ToWStr(text).s);
+        this->text = ToWStr(text);
         this->wasModified = wasModified;
     }
-    ~FindThreadData() { CloseHandle(thread); }
+    ~FindThreadData() {
+        wstr::Free(text);
+        CloseHandle(thread);
+    }
 
     void ShowUI(bool showProgress) {
         // no "Searching n of m..." notification anymore: the find UI's own n/m
@@ -782,7 +785,7 @@ static void FindEndTask(FindEndTaskData* d) {
     } else if (textSel) {
         ShowSearchResult(win, textSel, wasModifiedCanceled);
         ftd->HideUI(true, loopedAround);
-        UpdateMatchCount(win, WStr(ftd->text.Get(), (int)ftd->text.size()));
+        UpdateMatchCount(win, ftd->text);
     } else {
         // nothing found, or find-as-you-type self-canceled before reaching a
         // far match. Still kick the full-document count: it does its own
@@ -791,7 +794,7 @@ static void FindEndTask(FindEndTaskData* d) {
         // find thread has exited, so the two never scan the engine at once.)
         ClearSearchResult(win);
         ftd->HideUI(false, !wasModifiedCanceled);
-        UpdateMatchCount(win, WStr(ftd->text.Get(), (int)ftd->text.size()));
+        UpdateMatchCount(win, ftd->text);
     }
     win->findThread = nullptr;
 }
@@ -824,7 +827,7 @@ static void FindThread(FindThreadData* ftd) {
     textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||
         !dm->GetPageInfo(textSearch->GetCurrentPageNo())->visibleRatio) {
-        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), WStr(ftd->text.Get()));
+        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text);
     } else {
         rect = textSearch->FindNext();
     }
@@ -835,7 +838,7 @@ static void FindThread(FindThreadData* ftd) {
         int startPage = (TextSearch::Direction::Forward == ftd->direction) ? 1 : ctrl->PageCount();
         if (!ftd->wasModified || ctrl->CurrentPageNo() != startPage) {
             loopedAround = true;
-            rect = textSearch->FindFirst(startPage, WStr(ftd->text.Get()));
+            rect = textSearch->FindFirst(startPage, ftd->text);
         }
     }
 

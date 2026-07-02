@@ -110,6 +110,7 @@ MainWindow::~MainWindow() {
     ReportIf(TabCount() > 0);
     // ReportIf(ctrl); // TODO: seen in crash report
     ReportIf(linkOnLastButtonDown);
+    str::Free(urlOnLastButtonDown);
 
     UnsubclassToc(this);
 
