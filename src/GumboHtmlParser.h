@@ -89,27 +89,14 @@ bool SkipUntil(Str s, int& off, Str term);
 bool IsSpaceOnly(Str s);
 
 int HtmlEntityNameToRune(Str name);
-int HtmlEntityNameToRune(WStr name);
 
 Str ResolveHtmlEntity(Str str, int& rune);
 Str ResolveHtmlEntities(Str s, Arena* alloc);
 Str ResolveHtmlEntities(Str s);
 Str ResolveHtmlEntitiesTemp(Str s);
 
-WStr DecodeHtmlEntities(Str string, uint codepage);
-Str DecodeHtmlEntitiesTemp(Str string, uint codepage);
-
 namespace strconv {
 inline TempStr HtmlUtf8ToStrTemp(Str s) {
-    TempStr tmp = str::DupTemp(s);
-    return DecodeHtmlEntitiesTemp(tmp, CP_UTF8);
-}
-
-inline TempWStr HtmlUtf8ToWStrTemp(Str s) {
-    TempStr tmp = str::DupTemp(s);
-    WStr ws = DecodeHtmlEntities(tmp, CP_UTF8);
-    TempWStr res = str::DupTemp(ws);
-    wstr::Free(ws);
-    return res;
+    return ResolveHtmlEntitiesTemp(s);
 }
 } // namespace strconv

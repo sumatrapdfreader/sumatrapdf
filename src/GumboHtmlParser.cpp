@@ -12,25 +12,88 @@ int HtmlEntityNameToRune(Str name) {
     return FindHtmlEntityRune(name);
 }
 
-#define MAX_ENTITY_NAME_LEN 8
+static int HtmlEntityHexDigit(char c) {
+    if (c >= '0' && c <= '9') {
+        return (int)(c - '0');
+    }
+    if (c >= 'a' && c <= 'f') {
+        return (int)(c - 'a') + 10;
+    }
+    if (c >= 'A' && c <= 'F') {
+        return (int)(c - 'A') + 10;
+    }
+    return -1;
+}
 
-// A unicode version of HtmlEntityNameToRune. It's safe because
-// entity names only contain ascii (<127) characters so if a simplistic
-// conversion from unicode to ascii succeeds, we can use ascii
-// version, otherwise it wouldn't match anyway
-// returns -1 if didn't find
-int HtmlEntityNameToRune(WStr name) {
-    char asciiName[MAX_ENTITY_NAME_LEN]{};
-    if ((size_t)name.len > MAX_ENTITY_NAME_LEN) {
-        return -1;
+static int ValidHtmlEntityRuneOrFallback(int rune) {
+    if (rune <= 0 || rune > 0x10ffff || (rune >= 0xd800 && rune <= 0xdfff)) {
+        return '?';
     }
-    for (int i = 0; i < name.len; i++) {
-        if (name.s[i] > 127) {
-            return -1;
+    return rune;
+}
+
+// if str starts with a numeric entity after the leading '&', sets rune and returns a slice after the entity
+static Str ParseHtmlNumericEntity(Str str, int& rune) {
+    if (str.len < 2 || str.s[0] != '#') {
+        return {};
+    }
+
+    int base = 10;
+    int off = 1;
+    if (off < str.len && (str.s[off] == 'x' || str.s[off] == 'X')) {
+        base = 16;
+        off++;
+    }
+
+    int codepoint = 0;
+    bool any = false;
+    bool overflow = false;
+    while (off < str.len) {
+        int digit = base == 16                               ? HtmlEntityHexDigit(str.s[off])
+                    : str.s[off] >= '0' && str.s[off] <= '9' ? (int)(str.s[off] - '0')
+                                                             : -1;
+        if (digit < 0 || digit >= base) {
+            break;
         }
-        asciiName[i] = (char)name.s[i];
+        any = true;
+        if (codepoint > (0x10ffff - digit) / base) {
+            overflow = true;
+        } else if (!overflow) {
+            codepoint = codepoint * base + digit;
+        }
+        off++;
     }
-    return FindHtmlEntityRune(Str(asciiName, name.len));
+    if (!any) {
+        return {};
+    }
+    if (off < str.len && str.s[off] == ';') {
+        off++;
+    }
+
+    rune = ValidHtmlEntityRuneOrFallback(overflow ? -1 : codepoint);
+    return Str(str.s + off, str.len - off);
+}
+
+static Str ResolveHtmlNamedEntity(Str str, int& rune) {
+    int entLen = 0;
+    while (entLen < str.len && isalnum((u8)str.s[entLen])) {
+        entLen++;
+    }
+    if (entLen == 0) {
+        return {};
+    }
+
+    rune = HtmlEntityNameToRune(Str(str.s, entLen));
+    if (-1 == rune) {
+        return {};
+    }
+    rune = ValidHtmlEntityRuneOrFallback(rune);
+
+    int endOff = entLen;
+    if (endOff < str.len && str.s[endOff] == ';') {
+        endOff++;
+    }
+    return Str(str.s + endOff, str.len - endOff);
 }
 
 bool SkipUntil(Str s, int& off, char c) {
@@ -97,31 +160,14 @@ static void MemAppend(char* buf, int& off, Str src) {
 // if "&foo;" was the entity, str points at the char after '&'
 // returns a slice starting after the entity, or empty on failure
 Str ResolveHtmlEntity(Str str, int& rune) {
-    Str entEnd = str::Parse(str, "#%d%?;", &rune);
-    if (!str::IsNull(entEnd)) {
-        return entEnd;
-    }
-    entEnd = str::Parse(str, "#x%x%?;", &rune);
+    Str entEnd = ParseHtmlNumericEntity(str, rune);
     if (!str::IsNull(entEnd)) {
         return entEnd;
     }
 
-    // go to the end of a potential named entity
-    int entLen = 0;
-    while (entLen < str.len && isalnum((u8)str.s[entLen])) {
-        entLen++;
-    }
-    if (entLen > 0) {
-        rune = HtmlEntityNameToRune(Str(str.s, entLen));
-        if (-1 == rune) {
-            return {};
-        }
-        int endOff = entLen;
-        // skip the trailing colon - if there is one
-        if (endOff < str.len && str.s[endOff] == ';') {
-            endOff++;
-        }
-        return Str(str.s + endOff, str.len - endOff);
+    entEnd = ResolveHtmlNamedEntity(str, rune);
+    if (!str::IsNull(entEnd)) {
+        return entEnd;
     }
 
     rune = -1;
@@ -193,110 +239,6 @@ Str ResolveHtmlEntitiesTemp(Str s) {
         // ensure 0-terminated string is returned
         return str::DupTemp(s);
     }
-    return res;
-}
-
-static WCHAR IntToChar(int codepoint) {
-    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(WCHAR)))) {
-        return '?';
-    }
-    return (WCHAR)codepoint;
-}
-
-static int HtmlEntityHexDigit(WCHAR c) {
-    if (c >= L'0' && c <= L'9') {
-        return (int)(c - L'0');
-    }
-    if (c >= L'a' && c <= L'f') {
-        return (int)(c - L'a') + 10;
-    }
-    if (c >= L'A' && c <= L'F') {
-        return (int)(c - L'A') + 10;
-    }
-    return -1;
-}
-
-static bool ParseHtmlNumericEntity(const WCHAR* src, int* codepointOut, const WCHAR** endOut) {
-    if (src[0] != L'#') {
-        return false;
-    }
-    int base = 10;
-    int off = 1;
-    if (src[off] == L'x' || src[off] == L'X') {
-        base = 16;
-        off++;
-    }
-
-    int codepoint = 0;
-    bool any = false;
-    while (src[off]) {
-        int digit = base == 16                             ? HtmlEntityHexDigit(src[off])
-                    : src[off] >= L'0' && src[off] <= L'9' ? (int)(src[off] - L'0')
-                                                           : -1;
-        if (digit < 0 || digit >= base) {
-            break;
-        }
-        any = true;
-        codepoint = codepoint * base + digit;
-        off++;
-    }
-    if (!any || src[off] != L';') {
-        return false;
-    }
-    *codepointOut = codepoint;
-    *endOut = src + off + 1;
-    return true;
-}
-
-WStr DecodeHtmlEntities(Str string, uint codepage) {
-    TempWStr fixedTemp = strconv::StrCPToWStrTemp(string, codepage);
-    WStr fixed = wstr::Dup(fixedTemp);
-    WCHAR* dst = fixed.s;
-    const WCHAR* src = fixed.s;
-
-    while (*src) {
-        if (*src != '&') {
-            *dst++ = *src++;
-            continue;
-        }
-        src++;
-        int unicode;
-        const WCHAR* entityEnd = nullptr;
-        if (ParseHtmlNumericEntity(src, &unicode, &entityEnd)) {
-            *dst++ = IntToChar(unicode);
-            src = entityEnd;
-            continue;
-        }
-
-        int rune = -1;
-        entityEnd = src;
-        while (iswalnum(*entityEnd)) {
-            entityEnd++;
-        }
-
-        if (entityEnd != src) {
-            size_t entityLen = entityEnd - src;
-            rune = HtmlEntityNameToRune(WStr((wchar_t*)src, (int)entityLen));
-        }
-        if (-1 != rune) {
-            *dst++ = IntToChar(rune);
-            src = entityEnd;
-            if (*src == ';') {
-                ++src;
-            }
-        } else {
-            *dst++ = '&';
-        }
-    }
-    *dst = '\0';
-    fixed.len = (int)(dst - fixed.s);
-    return fixed;
-}
-
-Str DecodeHtmlEntitiesTemp(Str s, uint codepage) {
-    WStr ws = DecodeHtmlEntities(s, codepage);
-    Str res = ToUtf8Temp(ws);
-    wstr::Free(ws);
     return res;
 }
 
