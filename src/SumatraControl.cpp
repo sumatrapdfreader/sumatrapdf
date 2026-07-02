@@ -598,7 +598,7 @@ static WStr FullPipeNameOwned(Str pipeName) {
     if (str::StartsWith(pipeName, R"(\\.\pipe\)")) {
         return ToWStr(pipeName);
     }
-    TempStr fullName = str::JoinTemp(Str(R"(\\.\pipe\)"), pipeName);
+    TempStr fullName = str::JoinTemp(StrL(R"(\\.\pipe\)"), pipeName);
     return ToWStr(fullName);
 }
 

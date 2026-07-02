@@ -34,7 +34,7 @@ constexpr COLORREF kColBlack = 0x000000;
 constexpr COLORREF kColWhite = 0xFFFFFF;
 constexpr COLORREF kRedColor = RgbToCOLORREF(0xff0000);
 
-static Str themesTxt = Str(R"(Themes [
+static Str themesTxt = StrL(R"(Themes [
     [
         Name = Light
         TextColor = #000000

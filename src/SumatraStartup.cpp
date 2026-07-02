@@ -1053,7 +1053,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
 }
 
 static Str kInstallerHelpTmpl() {
-    return Str(R"(${appName} installer options:
+    return StrL(R"(${appName} installer options:
 [-s] [-d <path>] [-with-filter] [-with-preview] [-x]
 
 -s

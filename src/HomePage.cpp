@@ -41,7 +41,7 @@
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
 
-static Str sumatraTips = Str(R"tips(You can [customize scrollbar](CmdChangeScrollbar).
+static Str sumatraTips = StrL(R"tips(You can [customize scrollbar](CmdChangeScrollbar).
 You can [customize keyboard shortcuts](Help/Customize-keyboard-shortcuts).
 You can [customize toolbar](Help/Customize-toolbar).
 Press (Key/CmdCommandPalette) to open [command palette](CmdCommandPalette).
@@ -53,7 +53,7 @@ You can [edit PDF annotations](Help/Editing-annotations).
 You can preview where a citation, figure or footnote link points by hovering it - enable in [advanced settings](CmdAdvancedSettings) via CitationHoverDelay.
 )tips");
 
-static Str sumatraPromos = Str(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
+static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
 Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 )promos");
 
