@@ -149,9 +149,10 @@ void TextSearch::SetDirection(TextSearch::Direction direction) {
 void TextSearch::SetLastResult(TextSelection* sel) {
     CopySelection(sel);
 
-    AutoFreeWStr selection(ExtractText(" ").s);
-    wstr::NormalizeWSInPlace(WStr(selection.Get()));
-    SetText(WStr(selection.Get()));
+    WStr selection = ExtractText(" ");
+    selection.len -= wstr::NormalizeWSInPlace(selection);
+    SetText(selection);
+    wstr::Free(selection);
 
     searchHitStartAt = findPage = std::min(startPage, endPage);
     findPage = std::max(startPage, endPage);
