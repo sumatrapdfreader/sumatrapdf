@@ -2660,9 +2660,18 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     RemoveNotification(d->wndNotif);
     MainWindow* win = args->win;
     if (!IsMainWindowValid(win)) {
+        if (args->ctrl) {
+            // the window (and its cbHandler) is gone: null cb so ~DisplayModel
+            // skips cb->CleanUp() (nothing was rendered for this ctrl yet)
+            args->ctrl->cb = nullptr;
+            delete args->ctrl;
+            args->ctrl = nullptr;
+        }
         return;
     }
     if (win->isBeingClosed) {
+        delete args->ctrl;
+        args->ctrl = nullptr;
         return;
     }
     Str path = args->FilePath();
