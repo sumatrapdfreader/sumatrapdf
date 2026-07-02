@@ -93,8 +93,8 @@ class HtmlWindow {
 
     UINT_PTR subclassId = 0;
 
-    bool OnBeforeNavigate(WStr url, bool newWindow);
-    void OnDocumentComplete(WStr url);
+    bool OnBeforeNavigate(Str url, bool newWindow);
+    void OnDocumentComplete(Str url);
     HRESULT OnDragEnter(IDataObject* dataObj);
     HRESULT OnDragDrop(IDataObject* dataObj);
 

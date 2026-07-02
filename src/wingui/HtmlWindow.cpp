@@ -1708,13 +1708,12 @@ HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
 
 // called before an url is shown. If returns false, will cancel
 // the navigation.
-bool HtmlWindow::OnBeforeNavigate(WStr urlW, bool newWindow) {
+bool HtmlWindow::OnBeforeNavigate(Str url, bool newWindow) {
     str::Free(currentURL);
     currentURL = {};
     if (!htmlWinCb) {
         return true;
     }
-    TempStr url = ToUtf8Temp(urlW);
     if (IsBlankUrl(url)) {
         return true;
     }
@@ -1736,8 +1735,7 @@ void HtmlWindow::FreeHtmlSetInProgressData() {
     htmlSetInProgressUrl = {};
 }
 
-void HtmlWindow::OnDocumentComplete(WStr urlW) {
-    TempStr url = ToUtf8Temp(urlW);
+void HtmlWindow::OnDocumentComplete(Str url) {
     if (IsBlankUrl(url)) {
         if (htmlSetInProgress) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
@@ -1968,7 +1966,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
     switch (dispIdMember) {
         case DISPID_BEFORENAVIGATE2: {
             BSTR url = BstrFromVariant(pDispParams->rgvarg[5].pvarVal);
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(WStr(url), false);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ToUtf8Temp(url), false);
             *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }
@@ -1989,7 +1987,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
             // on completion of top-level frame. On the other hand, I haven't
             // encountered problems related to that yet
             BSTR url = BstrFromVariant(pDispParams->rgvarg[0].pvarVal);
-            fs->htmlWindow->OnDocumentComplete(WStr(url));
+            fs->htmlWindow->OnDocumentComplete(ToUtf8Temp(url));
             break;
         }
 
@@ -2011,7 +2009,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
 
         case DISPID_NEWWINDOW3: {
             BSTR url = pDispParams->rgvarg[0].bstrVal;
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(WStr(url), true);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(ToUtf8Temp(url), true);
             *pDispParams->rgvarg[3].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }
