@@ -363,10 +363,10 @@ void StrTest() {
                      "a.pdf"));
     {
         Str str2;
-        AutoFreeStr large(AllocArray<char>(2000));
+        char* large = AllocArrayTemp<char>(2000);
         memset(large, 0x11, 1998);
-        str2 = fmt("%s", Str(large.Get()));
-        utassert(str::Eq(str2, Str(large.Get())));
+        str2 = fmt("%s", Str(large));
+        utassert(str::Eq(str2, Str(large)));
     }
 #if 0
     // TODO: this test slows down DEBUG builds significantly

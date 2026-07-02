@@ -5478,15 +5478,12 @@ static void OnMenuGoToPage(MainWindow* win) {
     if (!pageLabelResult) {
         return;
     }
-    AutoFreeStr newPageLabel = pageLabelResult.s;
-    if (!newPageLabel) {
-        return;
-    }
 
-    int newPageNo = ctrl->GetPageByLabel(newPageLabel.Get());
+    int newPageNo = ctrl->GetPageByLabel(pageLabelResult);
     if (ctrl->ValidPageNo(newPageNo)) {
         ctrl->GoToPage(newPageNo, true);
     }
+    str::Free(pageLabelResult);
 }
 
 void EnterFullScreen(MainWindow* win, bool presentation) {
