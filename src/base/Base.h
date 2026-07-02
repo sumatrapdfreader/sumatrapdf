@@ -265,14 +265,11 @@ inline bool IsEmpty(const T* v) {
 #endif
 
 #define NoOp() ((void)0)
-#define dimof(array) (sizeof(DimofSizeHelper(array)))
-#define dimofi(array) (int)(sizeof(DimofSizeHelper(array)))
 
 template <typename T, size_t N>
 char (&DimofSizeHelper(T (&array)[N]))[N];
-
-// like dimof minus 1 to account for terminating 0
-#define static_strlen(array) (sizeof(DimofSizeHelper(array)) - 1)
+#define dimof(array) (sizeof(DimofSizeHelper(array)))
+#define dimofi(array) (int)(sizeof(DimofSizeHelper(array)))
 
 #if COMPILER_MSVC
 // https://msdn.microsoft.com/en-us/library/4dt9kyhy.aspx
