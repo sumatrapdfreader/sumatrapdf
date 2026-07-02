@@ -126,6 +126,11 @@ Str Synchronizer::PrependDir(Str filename) const {
     return path::Join(dir, filename);
 }
 
+TempStr Synchronizer::PrependDirTemp(Str filename) const {
+    TempStr dir = path::GetDirTemp(syncFilePath);
+    return path::JoinTemp(dir, filename);
+}
+
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
@@ -204,10 +209,9 @@ int Pdfsync::RebuildIndexIfNeeded() {
     // parse preamble (jobname and version marker)
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransCharsInPlace(blob, StrL("*/"), StrL(" \\"));
-    AutoFreeStr jobName;
-    jobName.Set(strconv::AnsiToUtf8(SyncLineAt(data, 0)).s);
-    jobName.Set(str::Join(Str(jobName), StrL(".tex")).s);
-    jobName.Set(PrependDir(Str(jobName.Get())).s);
+    TempStr jobName = strconv::AnsiToUtf8Temp(SyncLineAt(data, 0));
+    jobName = str::JoinTemp(jobName, StrL(".tex"));
+    jobName = PrependDirTemp(jobName);
 
     int lineOff = SyncAdvanceLine(data, 0);
     UINT versionNumber = 0;
@@ -229,7 +233,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
     // add the initial tex file to the source file stack
     filestack.Append((size_t)len(srcfiles));
-    srcfiles.Append(Str(jobName.Get()));
+    srcfiles.Append(jobName);
     PdfsyncFileIndex findex{};
     fileIndex.Append(findex);
 
@@ -278,27 +282,26 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 break;
 
             case '(': {
-                AutoFreeStr filename(strconv::AnsiToUtf8(Str(line.s + 1, line.len - 1)).s);
+                TempStr filename = strconv::AnsiToUtf8Temp(Str(line.s + 1, line.len - 1));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
-                Str fn = Str(filename.Get());
+                Str fn = filename;
                 if (!str::IsEmpty(fn) && fn.s[0] == '"' && fn.s[fn.len - 1] == '"') {
-                    size_t n = (size_t)fn.len - 2;
-                    filename.SetCopy(Str(fn.s + 1, (int)n));
+                    filename = str::DupTemp(Str(fn.s + 1, fn.len - 2));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
-                str::TransCharsInPlace(Str(filename), StrL("*/"), StrL(" \\"));
+                str::TransCharsInPlace(filename, StrL("*/"), StrL(" \\"));
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (str::IsEmpty(path::GetExtTemp(Str(filename)))) {
-                    filename = str::Join(Str(filename), StrL(".tex")).s;
+                if (str::IsEmpty(path::GetExtTemp(filename))) {
+                    filename = str::JoinTemp(filename, StrL(".tex"));
                 }
                 // ensure that the path is absolute
-                if (!path::IsAbsolute(Str(filename))) {
-                    filename.Set(PrependDir(Str(filename.Get())).s);
+                if (!path::IsAbsolute(filename)) {
+                    filename = PrependDirTemp(filename);
                 }
 
                 filestack.Append((size_t)len(srcfiles));
-                srcfiles.Append(Str(filename.Get()));
+                srcfiles.Append(filename);
                 findex.start = findex.end = len(lines);
                 fileIndex.Append(findex);
             } break;
@@ -429,13 +432,8 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-    AutoFreeStr srcfilepath;
     // convert the source file to an absolute path
-    if (!path::IsAbsolute(srcfilename)) {
-        srcfilepath.Set(PrependDir(srcfilename).s);
-    } else {
-        srcfilepath.SetCopy(srcfilename);
-    }
+    TempStr srcfilepath = path::IsAbsolute(srcfilename) ? srcfilename : PrependDirTemp(srcfilename);
     if (!srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
@@ -444,7 +442,7 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
     int isrc;
     for (isrc = 0; isrc < len(srcfiles); isrc++) {
         Str path = srcfiles.At(isrc);
-        if (path::IsSame(Str(srcfilepath), path)) {
+        if (path::IsSame(srcfilepath, path)) {
             break;
         }
     }

@@ -49,6 +49,7 @@ class Synchronizer {
     bool NeedsToRebuildIndex() const;
     int MarkIndexWasRebuilt();
     Str PrependDir(Str filename) const;
+    TempStr PrependDirTemp(Str filename) const;
 
     Str syncFilePath; // path to the synchronization file
     Str pdfPath;
