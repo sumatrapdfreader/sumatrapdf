@@ -112,14 +112,11 @@ static void RemoveInstalledFiles() {
         log("RemoveInstalledFiles(): dir is empty\n");
     }
 #if 0
-    size_t n = dimof(gInstalledFiles);
-    for (size_t i = 0; i < n; i++) {
-        const char* s = gInstalledFiles[i];
-        auto relPath = ToWStrTemp(s);
-        AutoFreeWStr path = path::Join(dir, relPath);
-        BOOL ok = file::Delete(path);
+    for (const char* s : gInstalledFiles) {
+        TempStr path = path::JoinTemp(dir, s);
+        bool ok = file::Delete(path);
         if (ok) {
-            logf(L"RemoveInstalledFiles(): removed '%s'\n", path.Get());
+            logf("RemoveInstalledFiles(): removed '%s'\n", path);
         }
     }
 #endif
