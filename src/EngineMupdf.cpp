@@ -2055,7 +2055,7 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
 EngineMupdf::EngineMupdf() {
     InitializeEngineMupdf();
     kind = kindEngineMupdf;
-    defaultExt = str::Dup(".pdf");
+    defaultExt = str::Dup(StrL(".pdf"));
     fileDPI = 72.0f;
 
     // pages Vec + its FzPageInfo elements live for the lifetime of the

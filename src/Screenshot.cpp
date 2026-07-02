@@ -1270,7 +1270,7 @@ static void SetHotkeyDoSet(SetHotkeyDialog* dlg) {
         str::ReplaceWithCopy(&sc->key, dlg->newHotkey);
     } else {
         sc = new Shortcut();
-        sc->cmd = str::Dup("CmdScreenshot");
+        sc->cmd = str::Dup(StrL("CmdScreenshot"));
         sc->key = str::Dup(dlg->newHotkey);
         sc->name = nullptr;
         sc->toolbarText = nullptr;

@@ -327,7 +327,7 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
     }
     res->data = data->data;
     res->dataLen = data->dataSize;
-    res->contentType = str::Dup("text/javascript");
+    res->contentType = str::Dup(StrL("text/javascript"));
     res->ownsData = false;
     return res->dataLen > 0;
 }

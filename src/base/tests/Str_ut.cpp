@@ -637,7 +637,7 @@ void StrTest() {
 
     {
         size_t trimmed;
-        Str s = str::Dup("");
+        Str s = str::Dup(StrL(""));
         trimmed = str::TrimWSInPlace(Str(s), str::TrimOpt::Both);
         utassert(trimmed == 0);
         utassert(str::Eq(s, ""));

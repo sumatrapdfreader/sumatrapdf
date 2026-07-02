@@ -673,7 +673,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {
         homeTab->type = WindowTab::Type::About;
         homeTab->canvasRc = win->canvasRc;
         TabInfo* newTab = new TabInfo();
-        newTab->text = str::Dup("Home");
+        newTab->text = str::Dup(StrL("Home"));
         newTab->tooltip = nullptr;
         newTab->isPinned = true;
         newTab->canClose = true;

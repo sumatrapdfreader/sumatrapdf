@@ -238,7 +238,7 @@ class EnginePs : public EngineBase {
   public:
     EnginePs() {
         kind = kindEnginePostScript;
-        defaultExt = str::Dup(".ps");
+        defaultExt = str::Dup(StrL(".ps"));
     }
 
     ~EnginePs() override {
@@ -340,7 +340,7 @@ class EnginePs : public EngineBase {
         }
 
         if (str::EndsWithI(FilePath(), ".eps")) {
-            defaultExt = str::Dup(".eps");
+            defaultExt = str::Dup(StrL(".eps"));
         }
 
         preferredLayout = pdfEngine->preferredLayout;
