@@ -105,6 +105,8 @@ static Str ExtractTrimmed(Str data, int begin, int end) {
 SquareTreeNode::~SquareTreeNode() {
     for (int i = 0; i < len(data); i++) {
         DataItem& item = data.at(i);
+        str::Free(item.key);
+        str::Free(item.str);
         delete item.child;
     }
 }
@@ -186,7 +188,9 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = 
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
             while (IsBracketLine(data, (off = SkipWsAndComments(data, off)))) {
                 off++;
-                node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data, off)));
+                // each DataItem owns its key (freed in ~SquareTreeNode), so
+                // repeated array children each need their own copy
+                node->data.Append(SquareTreeNode::DataItem(str::Dup(key), ParseSquareTreeRec(data, off)));
             }
         } else if (data.s[keyOff] == ']') {
             // finish parsing child node
