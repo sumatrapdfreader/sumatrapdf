@@ -405,7 +405,7 @@ struct DirFileProviderAsync : TestFileProvider {
         str::Free(fileFilter);
     }
     TempStr NextFile() override;
-    int GetFilesCount() override { return queue.Size(); }
+    int GetFilesCount() override { return len(queue); }
 
     void Restart() override {
         AtomicIntSet(&nFiles, 0);

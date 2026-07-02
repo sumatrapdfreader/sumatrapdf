@@ -39,10 +39,10 @@ bool StrQueue::IsFinished() {
     return res;
 }
 
-int StrQueue::Size() {
-    Lock();
-    auto res = len(strings);
-    Unlock();
+int len(StrQueue& q) {
+    q.Lock();
+    int res = len(q.strings);
+    q.Unlock();
     return res;
 }
 

@@ -8,7 +8,6 @@ struct StrQueue {
 
     void Lock();
     void Unlock();
-    int Size();
     Str Append(Str s, int len = -1);
     Str PopFront();
     bool IsSentinel(Str s);
@@ -22,3 +21,5 @@ struct StrQueue {
     CRITICAL_SECTION cs;
     HANDLE hEvent = nullptr;
 };
+
+int len(StrQueue& q);
