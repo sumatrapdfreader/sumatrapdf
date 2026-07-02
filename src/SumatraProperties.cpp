@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/StrFormat.h"
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/Dpi.h"
@@ -99,14 +98,20 @@ static bool PdfDateParseA(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
     if (str::StartsWith(slice, "D:")) {
         slice = Str(slice.s + 2, slice.len - 2);
     }
+    int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
     Str end = str::Parse(slice,
                          "%4d%2d%2d"
                          "%2d%2d%2d",
-                         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
-                         &timeOut->wSecond);
+                         &year, &month, &day, &hour, &minute, &second);
     if (!end.s) {
         return false;
     }
+    timeOut->wYear = (WORD)year;
+    timeOut->wMonth = (WORD)month;
+    timeOut->wDay = (WORD)day;
+    timeOut->wHour = (WORD)hour;
+    timeOut->wMinute = (WORD)minute;
+    timeOut->wSecond = (WORD)second;
     // parse optional timezone: Z, +HH'MM', -HH'MM' (or +HH'MM, +HHMM, +HH)
     if (end.s[0] == 'Z') {
         *timeZoneOut = 0;
@@ -137,10 +142,18 @@ static bool IsoDateParse(Str date, SYSTEMTIME* timeOut, int* timeZoneOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     *timeZoneOut = 0;
 
-    Str end = str::Parse(date, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    int year = 0, month = 0, day = 0;
+    Str end = str::Parse(date, "%4d-%2d-%2d", &year, &month, &day);
     if (end.s) { // time is optional
-        Str timeEnd = str::Parse(end, "T%2d:%2d:%2d", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        timeOut->wYear = (WORD)year;
+        timeOut->wMonth = (WORD)month;
+        timeOut->wDay = (WORD)day;
+        int hour = 0, minute = 0, second = 0;
+        Str timeEnd = str::Parse(end, "T%2d:%2d:%2d", &hour, &minute, &second);
         if (timeEnd.s) {
+            timeOut->wHour = (WORD)hour;
+            timeOut->wMinute = (WORD)minute;
+            timeOut->wSecond = (WORD)second;
             // parse optional timezone: Z, +HH:MM, -HH:MM
             if (timeEnd.s[0] == 'Z') {
                 *timeZoneOut = 0;

@@ -124,11 +124,11 @@ static bool GetModules(str::Builder& s, bool additionalOnly) {
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
             if (!str::ContainsI(gModulesInfo, pathA)) {
-                s.Append(strfmt::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize,
+                s.Append(str::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize,
                                         nameA, pathA));
             }
         } else {
-            s.Append(strfmt::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA,
+            s.Append(str::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA,
                                     pathA));
         }
         cont = Module32Next(snap, &mod);
@@ -145,7 +145,7 @@ static Str BuildCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool capt
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
-        s.Append(strfmt::Format(s.allocator, "Cond: %s @ %s\n", condStr, fileLine));
+        s.Append(str::Format(s.allocator, "Cond: %s @ %s\n", condStr, fileLine));
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -202,7 +202,7 @@ static Str BuildLocalCrashInfoText(Str condStr, Str fileLine, bool isCrash, bool
     }
     if (condStr) {
         // format into the pre-allocated crash arena, not the temp allocator
-        s.Append(strfmt::Format(s.allocator, "Cond: %s @ %s\n", condStr, fileLine));
+        s.Append(str::Format(s.allocator, "Cond: %s @ %s\n", condStr, fileLine));
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);

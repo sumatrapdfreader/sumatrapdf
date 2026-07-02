@@ -26,6 +26,8 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);
 int utf8RuneLen(const u8* s);
 
+struct AutoFree; // for str::ParseArg (%s / %S output), defined in Scoped.h
+
 namespace str {
 
 enum class TrimOpt {
@@ -132,7 +134,35 @@ int BufAppend(char* dst, int dstCchSize, Str s);
 TempStr MemToHexTemp(const u8* buf, size_t len);
 bool HexToMem(Str s, u8* buf, size_t bufLen);
 
-Str Parse(Str str, const char* fmt, ...);
+// Type-safe scanf-style parsing (analogous to str::Format). Each output arg
+// is a pointer whose type is captured by ParseArg's explicit constructors, so a
+// format/arg mismatch (e.g. %d into a WORD*) is a compile error, not silent UB.
+// %s / %S write into an AutoFree (owning); the numeric/char specs write via the
+// matching pointer type.
+struct ParseArg {
+    enum class Kind : u8 { None, Int, UInt, Float, Char, StrOut };
+    Kind kind = Kind::None;
+    void* ptr = nullptr;
+
+    ParseArg() = default;
+    explicit ParseArg(int* p) : kind(Kind::Int), ptr(p) {}
+    explicit ParseArg(unsigned int* p) : kind(Kind::UInt), ptr(p) {}
+    explicit ParseArg(float* p) : kind(Kind::Float), ptr(p) {}
+    explicit ParseArg(char* p) : kind(Kind::Char), ptr(p) {}
+    explicit ParseArg(AutoFree* p) : kind(Kind::StrOut), ptr(p) {}
+};
+
+Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs);
+
+inline Str Parse(Str str, const char* fmt) {
+    return ParseArgs(str, fmt, nullptr, 0);
+}
+
+template <typename... TArgs>
+Str Parse(Str str, const char* fmt, TArgs*... args) {
+    const ParseArg argv[] = {ParseArg(args)...};
+    return ParseArgs(str, fmt, argv, (int)sizeof...(TArgs));
+}
 
 int CmpNatural(Str a, Str b);
 

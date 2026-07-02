@@ -1052,7 +1052,7 @@ static Str ExtractUntil(Str str, int off, char c, int* endOffOut) {
     return str::Dup(Str(str.s + off, foundOff));
 }
 
-static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* endOffOut, void* valueOut) {
+static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* endOffOut, const ParseArg& valueOut) {
     unsigned int width;
     char f2[] = "% ";
     Str formatAt = Str(format.s + formatOff, format.len - formatOff);
@@ -1060,7 +1060,7 @@ static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* en
     if (!str::IsNull(endF) && str::ContainsChar(StrL("udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str(str.s + p, (int)width));
-        Str end = Parse(Str(limited), f2, valueOut);
+        Str end = ParseArgs(Str(limited), f2, &valueOut, 1);
         if (!str::IsNull(end) && !end.s[0]) {
             *endOffOut = p + (int)width;
             return (int)(endF.s - format.s) - 1;
@@ -1173,10 +1173,12 @@ static bool ParseDoubleAt(Str str, int off, double* val, int* endOff) {
    characters must be read for parsing the number (e.g. "%4d" parses -123 out of "-12345"
    and doesn't parse "123" at all).
 */
-static Str ParseV(Str str, Str format, va_list args) {
-    if (str::IsNull(str) || str::IsNull(format)) {
+Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs) {
+    if (str::IsNull(str) || !fmt) {
         return {};
     }
+    Str format = fmt;
+    int argIdx = 0;
     int p = 0;
     for (int fi = 0; fi < format.len; fi++) {
         char fc = format.s[fi];
@@ -1199,42 +1201,50 @@ static Str ParseV(Str str, Str format, va_list args) {
             if (!ParseULongAt(str, p, 10, &v, &end)) {
                 return {};
             }
-            *va_arg(args, unsigned int*) = (unsigned int)v;
+            ReportIf(argIdx >= nArgs);
+            *(unsigned int*)args[argIdx++].ptr = (unsigned int)v;
         } else if ('d' == spec) {
             long v = 0;
             if (!ParseLongAt(str, p, 10, &v, &end)) {
                 return {};
             }
-            *va_arg(args, int*) = (int)v;
+            ReportIf(argIdx >= nArgs);
+            *(int*)args[argIdx++].ptr = (int)v;
         } else if ('x' == spec) {
             unsigned long v = 0;
             if (!ParseULongAt(str, p, 16, &v, &end)) {
                 return {};
             }
-            *va_arg(args, unsigned int*) = (unsigned int)v;
+            ReportIf(argIdx >= nArgs);
+            *(unsigned int*)args[argIdx++].ptr = (unsigned int)v;
         } else if ('f' == spec) {
             double v = 0;
             if (!ParseDoubleAt(str, p, &v, &end)) {
                 return {};
             }
-            *va_arg(args, float*) = (float)v;
+            ReportIf(argIdx >= nArgs);
+            *(float*)args[argIdx++].ptr = (float)v;
         } else if ('g' == spec) {
             double v = 0;
             if (!ParseDoubleAt(str, p, &v, &end)) {
                 return {};
             }
-            *va_arg(args, float*) = (float)v;
+            ReportIf(argIdx >= nArgs);
+            *(float*)args[argIdx++].ptr = (float)v;
         } else if ('c' == spec) {
             if (p >= str.len) {
                 return {};
             }
-            *va_arg(args, char*) = str.s[p];
+            ReportIf(argIdx >= nArgs);
+            *(char*)args[argIdx++].ptr = str.s[p];
             end = p + 1;
         } else if ('s' == spec || 'S' == spec) {
+            ReportIf(argIdx >= nArgs);
+            AutoFree* out = (AutoFree*)args[argIdx++].ptr;
             if (fi + 1 < format.len) {
-                va_arg(args, AutoFree*)->Set(ExtractUntil(str, p, format.s[fi + 1], &end).s);
+                out->Set(ExtractUntil(str, p, format.s[fi + 1], &end).s);
             } else {
-                va_arg(args, AutoFree*)->Set(str::Dup(Str(str.s + p, str.len - p)).s);
+                out->Set(str::Dup(Str(str.s + p, str.len - p)).s);
                 end = str.len;
             }
         } else if ('$' == spec && p >= str.len) {
@@ -1265,7 +1275,8 @@ static Str ParseV(Str str, Str format, va_list args) {
             }
             end = p + 1;
         } else if (str::IsDigit(spec)) {
-            int formatIdx = ParseLimitedNumber(str, p, fi, format, &end, va_arg(args, void*));
+            ReportIf(argIdx >= nArgs);
+            int formatIdx = ParseLimitedNumber(str, p, fi, format, &end, args[argIdx++]);
             if (formatIdx < 0) {
                 return {};
             }
@@ -1277,18 +1288,6 @@ static Str ParseV(Str str, Str format, va_list args) {
         p = end;
     }
     return Str(str.s + p, str.len - p);
-}
-
-Str Parse(Str str, const char* fmt, ...) {
-    if (str::IsNull(str) || !fmt) {
-        return {};
-    }
-
-    va_list args;
-    va_start(args, fmt);
-    Str res = ParseV(str, fmt, args);
-    va_end(args);
-    return res;
 }
 
 bool IsAlNum(char c) {
@@ -2514,7 +2513,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
         str::BufSet(thousandSepW, dimof(thousandSepW), ",");
     }
     TempStr thousandSep = ToUtf8Temp(thousandSepW);
-    TempStr buf = strfmt::FormatTemp("%d", num);
+    TempStr buf = str::FormatTemp("%d", num);
 
     str::Builder res;
     int i = 3 - (buf.len % 3);
@@ -2547,7 +2546,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTra
     }
 
     // add between one and two decimals after the point
-    TempStr buf = strfmt::FormatTemp("%s%s%02d", tmp, Str(decimal), num % 100);
+    TempStr buf = str::FormatTemp("%s%s%02d", tmp, Str(decimal), num % 100);
     if (stripTrailingZero && str::EndsWith(buf, StrL("0"))) {
         buf.s[buf.len - 1] = '\0';
         buf.len--;
@@ -2590,18 +2589,18 @@ TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits) {
     if (!unit) {
         return sizestr;
     }
-    return strfmt::FormatTemp("%s %s", sizestr, unit);
+    return str::FormatTemp("%s %s", sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 TempStr FormatFileSizeTemp(i64 size) {
     if (size <= 0) {
-        return strfmt::FormatTemp("%d", (int)size);
+        return str::FormatTemp("%d", (int)size);
     }
     TempStr n1 = str::FormatSizeShortTemp(size);
     TempStr n2 = str::FormatNumWithThousandSepTemp(size);
-    return strfmt::FormatTemp("%s (%s %s)", n1, n2, StrL("Bytes"));
+    return str::FormatTemp("%s (%s %s)", n1, n2, StrL("Bytes"));
 }
 
 // http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B

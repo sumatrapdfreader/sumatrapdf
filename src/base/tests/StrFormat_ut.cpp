@@ -7,7 +7,7 @@
 // must be last due to assert() over-write
 #include "base/UtAssert.h"
 
-using strfmt::FormatTemp;
+using str::FormatTemp;
 
 // printf-based reference implementation of the old fmt(), preserved here so the
 // tests can compare FormatTemp() against real printf semantics even after fmt()

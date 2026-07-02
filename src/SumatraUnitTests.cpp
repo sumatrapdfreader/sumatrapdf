@@ -7,7 +7,6 @@
 
 #include "base/File.h"
 #include "base/Win.h"
-#include "base/StrFormat.h"
 #include "base/ScopedWin.h"
 
 #include "wingui/UIModels.h"

@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
-#include "base/StrFormat.h"
 #include "base/WinDynCalls.h"
 #include "base/DirIter.h"
 #include "base/Dpi.h"

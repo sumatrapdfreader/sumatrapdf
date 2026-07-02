@@ -4,7 +4,7 @@
 #include "Base.h"
 
 /*
-strfmt::Fmt is type-safe printf()-like system with support for both %-style formatting
+str::Fmt is type-safe printf()-like system with support for both %-style formatting
 directives and C#-like positional directives ({0}, {1} etc.).
 
 Type safety is achieved by using strongly typed methods for adding arguments
@@ -16,7 +16,7 @@ because in some languages translation is akward if you can't re-arrange
 the order of arguments.
 
 Idiomatic usage:
-strfmt::Fmt fmt("%d = %s");
+str::Fmt fmt("%d = %s");
 char *s = fmt.i(5).s("5").Get(); // returns "5 = 5"
 // s is valid until fmt is valid
 // use .GetDup() to get a copy that must be free()d
@@ -30,14 +30,14 @@ but it's easy to mis-count when adding {} to the mix.
 TODO: similar approach could be used for type-safe scanf() replacement.
 */
 
-namespace strfmt {
+namespace str {
 
 // formatting instruction
 struct Inst {
-    Type t = Type::None;
+    FmtArg::Kind t = FmtArg::Kind::None;
     int argNo = 0;  // <0 for strings that come from formatting string
-    int rawOff = 0; // offset into format for Type::RawStr / start of fwp for % spec
-    int sLen = 0;   // length, for Type::RawStr
+    int rawOff = 0; // offset into format for FmtArg::Kind::RawStr / start of fwp for % spec
+    int sLen = 0;   // length, for FmtArg::Kind::RawStr
 
     // for a % spec: the conversion char and the flags+width+precision range
     // (everything between '%' and the length-modifier/conversion). We delegate
@@ -56,7 +56,7 @@ struct Fmt {
     Fmt() = default;
     ~Fmt() = default;
 
-    bool Eval(const Arg** args, int nArgs);
+    bool Eval(const FmtArg** args, int nArgs);
 
     bool isOk = true; // true if mismatch between formatting instruction and args
 
@@ -77,7 +77,7 @@ static void addRawStr(Fmt& fmt, int off, size_t len) {
     }
     ReportIf(fmt.nInst >= dimof(fmt.instructions));
     auto& i = fmt.instructions[fmt.nInst++];
-    i.t = Type::RawStr;
+    i.t = FmtArg::Kind::RawStr;
     i.rawOff = off;
     i.sLen = (int)len;
     i.argNo = -1;
@@ -95,24 +95,24 @@ static int parseArgDefPositional(Fmt& fmt, int off) {
         off++;
     }
     auto& i = fmt.instructions[fmt.nInst++];
-    i.t = Type::Any;
+    i.t = FmtArg::Kind::Any;
     i.argNo = n;
     return off + 1;
 }
 
-static Type typeFromConv(char c) {
+static FmtArg::Kind typeFromConv(char c) {
     switch (c) {
         case 'c':
-            return Type::Char;
+            return FmtArg::Kind::Char;
         case 'd':
         case 'i':
         case 'u':
         case 'o':
         case 'x':
         case 'X':
-            return Type::Int;
+            return FmtArg::Kind::Int;
         case 'p':
-            return Type::Ptr;
+            return FmtArg::Kind::Ptr;
         case 'f':
         case 'F':
         case 'e':
@@ -121,14 +121,14 @@ static Type typeFromConv(char c) {
         case 'G':
         case 'a':
         case 'A':
-            return Type::Float;
+            return FmtArg::Kind::Float;
         case 's':
         case 'S':
-            return Type::Str;
+            return FmtArg::Kind::Str;
         case 'v':
-            return Type::Any;
+            return FmtArg::Kind::Any;
     }
-    return Type::None;
+    return FmtArg::Kind::None;
 }
 
 static bool startsWith(Str s, int off, const char* prefix) {
@@ -225,25 +225,25 @@ static bool hasInstructionWithArgNo(Inst* insts, int nInst, int argNo) {
     return false;
 }
 
-static bool isIntLike(Type t) {
-    return t == Type::Char || t == Type::Int || t == Type::Ptr;
+static bool isIntLike(FmtArg::Kind t) {
+    return t == FmtArg::Kind::Char || t == FmtArg::Kind::Int || t == FmtArg::Kind::Ptr;
 }
 
-static bool validArgTypes(Type instType, Type argType) {
-    if (instType == Type::Any || instType == Type::RawStr) {
+static bool validArgTypes(FmtArg::Kind instType, FmtArg::Kind argType) {
+    if (instType == FmtArg::Kind::Any || instType == FmtArg::Kind::RawStr) {
         return true;
     }
     // integer-family specs (%c %d %u %x %p ...) accept any integer-like arg
     // (char / int / pointer), matching printf's leniency -- e.g. an HWND with
     // %x, or an int with %c.
-    if (instType == Type::Char || instType == Type::Int || instType == Type::Ptr) {
+    if (instType == FmtArg::Kind::Char || instType == FmtArg::Kind::Int || instType == FmtArg::Kind::Ptr) {
         return isIntLike(argType);
     }
-    if (instType == Type::Float) {
-        return argType == Type::Float || argType == Type::Double;
+    if (instType == FmtArg::Kind::Float) {
+        return argType == FmtArg::Kind::Float || argType == FmtArg::Kind::Double;
     }
-    if (instType == Type::Str) {
-        return argType == Type::Str || argType == Type::WStr;
+    if (instType == FmtArg::Kind::Str) {
+        return argType == FmtArg::Kind::Str || argType == FmtArg::Kind::WStr;
     }
     return false;
 }
@@ -298,7 +298,7 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
     int maxArgNo = -1; // -1 so an escape/literal-only format requires no args
     // check that arg numbers in {$n} makes sense
     for (int i = 0; i < o.nInst; i++) {
-        if (o.instructions[i].t == Type::RawStr) {
+        if (o.instructions[i].t == FmtArg::Kind::RawStr) {
             continue;
         }
         if (o.instructions[i].argNo > maxArgNo) {
@@ -330,34 +330,34 @@ static void bufFmt(Str buf, const char* fmt, ...) {
 }
 
 // default formatting for {n} positional and %v: format by the arg's runtime type
-static void evalDefault(Fmt& fmt, const Arg& arg) {
+static void evalDefault(Fmt& fmt, const FmtArg& arg) {
     TempStr s;
     Str buf(fmt.buf, (int)dimof(fmt.buf));
     switch (arg.t) {
-        case Type::Char:
+        case FmtArg::Kind::Char:
             fmt.res.AppendChar(arg.c);
             break;
-        case Type::Int:
+        case FmtArg::Kind::Int:
             bufFmt(buf, "%lld", (long long)arg.i);
             fmt.res.Append(fmt.buf);
             break;
-        case Type::Ptr:
+        case FmtArg::Kind::Ptr:
             bufFmt(buf, "%p", arg.ptr);
             fmt.res.Append(fmt.buf);
             break;
-        case Type::Float:
+        case FmtArg::Kind::Float:
             // Note: %G, unlike %f, avoids trailing '0'
             bufFmt(buf, "%G", (double)arg.f);
             fmt.res.Append(fmt.buf);
             break;
-        case Type::Double:
+        case FmtArg::Kind::Double:
             bufFmt(buf, "%G", arg.d);
             fmt.res.Append(fmt.buf);
             break;
-        case Type::Str:
+        case FmtArg::Kind::Str:
             fmt.res.Append(arg.str);
             break;
-        case Type::WStr:
+        case FmtArg::Kind::WStr:
             s = ToUtf8Temp(arg.wstr);
             fmt.res.Append(s);
             break;
@@ -369,11 +369,11 @@ static void evalDefault(Fmt& fmt, const Arg& arg) {
 
 // extract an integer value from any integer-like arg (char / int / pointer) so
 // %d/%x/%c/%p work with any of them, like printf.
-static i64 argToI64(const Arg& arg) {
+static i64 argToI64(const FmtArg& arg) {
     switch (arg.t) {
-        case Type::Char:
+        case FmtArg::Kind::Char:
             return (i64)arg.c;
-        case Type::Ptr:
+        case FmtArg::Kind::Ptr:
             return (i64)(intptr_t)arg.ptr;
         default:
             return arg.i;
@@ -384,12 +384,12 @@ static i64 argToI64(const Arg& arg) {
 // delegating to snprintf (bufFmt), normalizing the length modifier so the
 // 32/64-bit value width matches printf. %s padding/truncation is done by hand to
 // avoid relying on the Str being NUL-terminated.
-static void evalPercInst(Fmt& fmt, const Inst& inst, const Arg& arg) {
+static void evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
     char* buf = fmt.buf;
     Str bufS(fmt.buf, (int)dimof(fmt.buf));
 
     if (inst.conv == 's' || inst.conv == 'S') {
-        Str sv = (arg.t == Type::WStr) ? ToUtf8Temp(arg.wstr) : arg.str;
+        Str sv = (arg.t == FmtArg::Kind::WStr) ? ToUtf8Temp(arg.wstr) : arg.str;
         int slen = sv.len;
         if (inst.prec >= 0 && inst.prec < slen) {
             slen = inst.prec;
@@ -470,13 +470,13 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const Arg& arg) {
         case 'A': {
             fbuf[k++] = conv;
             fbuf[k] = 0;
-            double dv = (arg.t == Type::Double) ? arg.d : (double)arg.f;
+            double dv = (arg.t == FmtArg::Kind::Double) ? arg.d : (double)arg.f;
             bufFmt(bufS, fbuf, dv);
             fmt.res.Append(buf);
         } break;
         case 'p': {
             // flags/width are uncommon (and platform-specific) for %p; emit plain
-            const void* pv = (arg.t == Type::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
+            const void* pv = (arg.t == FmtArg::Kind::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
             bufFmt(bufS, "%p", pv);
             fmt.res.Append(buf);
         } break;
@@ -486,7 +486,7 @@ static void evalPercInst(Fmt& fmt, const Inst& inst, const Arg& arg) {
     }
 }
 
-bool Fmt::Eval(const Arg** args, int nArgs) {
+bool Fmt::Eval(const FmtArg** args, int nArgs) {
     if (!isOk) {
         // if failed parsing format
         return false;
@@ -497,7 +497,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
 
         auto& inst = instructions[n];
 
-        if (inst.t == Type::RawStr) {
+        if (inst.t == FmtArg::Kind::RawStr) {
             res.Append(Str(format.s + inst.rawOff, inst.sLen));
             continue;
         }
@@ -509,14 +509,14 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
             return false;
         }
 
-        const Arg& arg = *args[argNo];
+        const FmtArg& arg = *args[argNo];
         isOk = validArgTypes(inst.t, arg.t);
         ReportIf(!isOk);
         if (!isOk) {
             return false;
         }
 
-        if (inst.t == Type::Any) {
+        if (inst.t == FmtArg::Kind::Any) {
             evalDefault(*this, arg);
         } else {
             evalPercInst(*this, inst, arg);
@@ -530,9 +530,9 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
 // scope, or on paths that must not touch the temp allocator / heap at all (e.g.
 // the crash handler, which pre-allocates its arena). FormatTempArgs() is just
 // this with GetTempArena().
-Str FormatArgs(Arena* a, const char* fmt, const Arg** args, int nArgs) {
+Str FormatArgs(Arena* a, const char* fmt, const FmtArg** args, int nArgs) {
     // trailing arguments could be empty (unused defaults from the variadic call)
-    while (nArgs > 0 && args[nArgs - 1]->t == Type::None) {
+    while (nArgs > 0 && args[nArgs - 1]->t == FmtArg::Kind::None) {
         nArgs--;
     }
 
@@ -567,8 +567,8 @@ Str FormatArgs(Arena* a, const char* fmt, const Arg** args, int nArgs) {
     return f.res.TakeStr();
 }
 
-TempStr FormatTempArgs(const char* fmt, const Arg** args, int nArgs) {
+TempStr FormatTempArgs(const char* fmt, const FmtArg** args, int nArgs) {
     return FormatArgs(GetTempArena(), fmt, args, nArgs);
 }
 
-} // namespace strfmt
+} // namespace str

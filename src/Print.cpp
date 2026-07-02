@@ -1627,7 +1627,7 @@ static short GetPaperByName(Printer* printer, Str wantedName) {
     }
 
     // alternatively allow indicating the paper directly by number
-    DWORD paperId = 0;
+    uint paperId = 0;
     if (!str::IsNull(str::Parse(wantedName, "%u%$", &paperId))) {
         return (short)paperId;
     }
@@ -1640,7 +1640,7 @@ static short GetPaperByName(Printer* printer, Str wantedName) {
 }
 
 static short GetPaperKind(Str kindName) {
-    DWORD kind;
+    uint kind;
     if (!str::IsNull(str::Parse(kindName, "%u%$", &kind))) {
         return (short)kind;
     }
@@ -1668,7 +1668,7 @@ static short GetPaperSourceByName(Printer* printer, Str binName) {
             return printer->bins[i];
         }
     }
-    DWORD count = 0;
+    uint count = 0;
     // alternatively allow indicating the paper bin directly by number
     if (!str::IsNull(str::Parse(binName, "%u%$", &count))) {
         return (short)count;

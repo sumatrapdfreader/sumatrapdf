@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 #include "base/Base.h"
-#include "base/StrFormat.h"
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
