@@ -5,8 +5,20 @@
 
 #if defined(_MSC_VER)
 static _locale_t GetUtf8FormatLocale() {
-    static _locale_t loc = _create_locale(LC_ALL, ".UTF-8");
-    return loc;
+    // wrapped in a struct so the locale is freed at exit (keeps leak
+    // detectors quiet); after the destructor runs, callers see nullptr
+    // and fall back to plain vsnprintf
+    struct Locale {
+        _locale_t loc = _create_locale(LC_ALL, ".UTF-8");
+        ~Locale() {
+            if (loc) {
+                _free_locale(loc);
+                loc = nullptr;
+            }
+        }
+    };
+    static Locale l;
+    return l.loc;
 }
 #endif
 
