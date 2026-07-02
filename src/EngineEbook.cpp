@@ -1321,7 +1321,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName(StrL("src"));
     if (attr) {
-        Str src = str::Dup(attr->val);
+        Str src = str::DupTemp(attr->val);
         url::DecodeInPlace(src);
         Str img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
