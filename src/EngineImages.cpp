@@ -1077,11 +1077,8 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     if (size == 0) {
         return altId == 0 ? nullptr : GetImagePropertyTemp(bmp, altId);
     }
-    PropertyItem* item = (PropertyItem*)malloc(size);
+    PropertyItem* item = (PropertyItem*)AllocArrayTemp<u8>((int)size);
     if (!item) return {};
-    defer {
-        free(item);
-    };
     Status ok = bmp->GetPropertyItem(id, size, item);
     if (Ok != ok) {
         /* property didn't exist */;

@@ -1904,10 +1904,7 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
 
     auto devMode = printer->devMode;
     size_t devModeSize = devMode->dmSize + devMode->dmDriverExtra;
-    char* backup = (char*)memdup(devMode, (int)devModeSize);
-    defer {
-        free(backup);
-    };
+    char* backup = (char*)MemDup(GetTempArena(), devMode, devModeSize);
     SetCustomPaperSize(printer, size);
     if (ValidateDevMode(printer)) {
         return true;

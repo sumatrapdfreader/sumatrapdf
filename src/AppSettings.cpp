@@ -595,11 +595,9 @@ bool SaveSettings() {
     if (!path) {
         return false;
     }
-    Str prevPrefs = file::ReadFile(path);
-    Str prevPrefsData = prevPrefs;
-    Str prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
+    TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());
+    Str prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefs);
     defer {
-        str::Free(prevPrefs);
         str::Free(prefs);
     };
     ReportIf(str::IsEmpty(prefs));
