@@ -342,7 +342,7 @@ static bool ParseProtoUrl(WStr url, int* htmlWindowId, AutoFreeWStr* urlRest) {
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(Str url, int* htmlWindowId, AutoFreeStr* urlRest) {
+static bool ParseProtoUrl(Str url, int* htmlWindowId, TempStr* urlRest) {
     Str rest = str::Parse(url, HW_PROTO_PREFIXA "://%d/%S", htmlWindowId, urlRest);
     return !rest;
 }
@@ -1731,10 +1731,10 @@ bool HtmlWindow::OnBeforeNavigate(WStr urlW, bool newWindow) {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    AutoFreeStr urlReal = str::Dup(url).s;
+    TempStr urlReal = url;
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     ReportIf(ok && (protoWindowId != windowId));
-    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(Str(urlReal.Get()), newWindow);
+    bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
     return shouldNavigate;
 }
 
@@ -1769,12 +1769,12 @@ void HtmlWindow::OnDocumentComplete(WStr urlW) {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    AutoFreeStr urlReal = str::Dup(url).s;
+    TempStr urlReal = url;
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     ReportIf(ok && (protoWindowId != windowId));
 
     str::Free(currentURL);
-    currentURL = urlReal.Take();
+    currentURL = str::Dup(urlReal);
     if (htmlWinCb) {
         htmlWinCb->OnDocumentComplete(currentURL);
     }

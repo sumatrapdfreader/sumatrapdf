@@ -1354,7 +1354,7 @@ if newwindow = 1 then a new window is created even if the file is already open
 if focus = 1 then the focus is set to the window
 */
 static Str HandleSyncCmd(Str cmd, bool* ack) {
-    AutoFreeStr pdfFile, srcFile;
+    TempStr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
     Str next = str::Parse(cmd, "[ForwardSearch(\"%s\",%? \"%s\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
     if (str::IsNull(next)) {
@@ -1364,7 +1364,7 @@ static Str HandleSyncCmd(Str cmd, bool* ack) {
     // allow to omit the pdffile path, so that editors don't have to know about
     // multi-file projects (requires that the PDF has already been opened)
     if (str::IsNull(next)) {
-        pdfFile.Reset();
+        pdfFile = {};
         next = str::Parse(cmd, "[ForwardSearch(\"%s\",%u,%u)]", &srcFile, &line, &col);
         if (str::IsNull(next)) {
             next = str::Parse(cmd, "[ForwardSearch(\"%s\",%u,%u,%u,%u)]", &srcFile, &line, &col, &newWindow, &setFocus);
@@ -1378,17 +1378,17 @@ static Str HandleSyncCmd(Str cmd, bool* ack) {
     MainWindow* win = nullptr;
     if (pdfFile) {
         // check if the PDF is already opened
-        win = FindMainWindowByFile(Str(pdfFile), !newWindow);
+        win = FindMainWindowByFile(pdfFile, !newWindow);
         // if not then open it
         if (newWindow || !win) {
-            LoadArgs args(Str(pdfFile), !newWindow ? win : nullptr);
+            LoadArgs args(pdfFile, !newWindow ? win : nullptr);
             win = LoadDocument(&args);
         } else if (!win->IsDocLoaded()) {
             ReloadDocument(win, false);
         }
     } else {
         // check if any opened PDF has sync information for the source file
-        win = FindMainWindowBySyncFile(Str(srcFile), true);
+        win = FindMainWindowBySyncFile(srcFile, true);
         if (win && newWindow) {
             LoadArgs args(win->CurrentTab()->filePath, nullptr);
             win = LoadDocument(&args);
@@ -1406,8 +1406,8 @@ static Str HandleSyncCmd(Str cmd, bool* ack) {
 
     int page;
     Vec<Rect> rects;
-    int ret = dm->pdfSync->SourceToDoc(Str(srcFile.Get()), line, col, &page, rects);
-    ShowForwardSearchResult(win, Str(srcFile.Get()), line, col, ret, page, rects);
+    int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
+    ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
     if (setFocus) {
         win->Focus();
     }
@@ -1422,20 +1422,20 @@ Search DDE command
 [Search("<pdffile>","<search-term>")]
 */
 static Str HandleSearchCmd(Str cmd, bool* ack) {
-    AutoFreeStr pdfFile;
-    AutoFreeStr term;
+    TempStr pdfFile;
+    TempStr term;
     Str next = str::Parse(cmd, "[Search(\"%s\",\"%s\")]", &pdfFile, &term);
     // TODO: should un-quote text to allow searching text with '"' in them
     if (str::IsNull(next)) {
         return {};
     }
-    if (str::IsEmpty(term.Get())) {
+    if (str::IsEmpty(term)) {
         return next;
     }
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -1447,7 +1447,7 @@ static Str HandleSearchCmd(Str cmd, bool* ack) {
     }
     bool wasModified = true;
     bool showProgress = true;
-    FindTextOnThread(win, TextSearch::Direction::Forward, Str(term.Get()), wasModified, showProgress);
+    FindTextOnThread(win, TextSearch::Direction::Forward, term, wasModified, showProgress);
     win->Focus();
     *ack = true;
     return next;
@@ -1460,14 +1460,14 @@ Go to a page and select the search term, but only if it's found on that page
 [GotoPageWord("<pdffile>",<page>,"<search-term>")]
 */
 static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
-    AutoFreeStr pdfFile;
-    AutoFreeStr term;
+    TempStr pdfFile;
+    TempStr term;
     int page = 0;
     Str next = str::Parse(cmd, "[GotoPageWord(\"%s\",%d,\"%s\")]", &pdfFile, &page, &term);
     if (str::IsNull(next)) {
         return {};
     }
-    MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -1485,8 +1485,8 @@ static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
     // stop any running async search, then go to the page
     AbortFinding(win, true);
     win->ctrl->GoToPage(page, true);
-    if (!str::IsEmpty(term.Get())) {
-        TempWStr termW = ToWStrTemp(Str(term.Get()));
+    if (!str::IsEmpty(term)) {
+        TempWStr termW = ToWStrTemp(term);
         dm->textSearch->SetDirection(TextSearch::Direction::Forward);
         TextSel* sel = dm->textSearch->FindFirstOnPage(page, termW);
         if (sel && sel->len > 0) {
@@ -1517,7 +1517,7 @@ valid formats:
     [Open("c:\file.pdf",1,1,0,1)]
 */
 static Str HandleOpenCmd(Str cmd, bool* ack) {
-    AutoFreeStr filePath;
+    TempStr filePath;
     int newWindow = 0;
     int setFocus = 0;
     int forceRefresh = 0;
@@ -1535,12 +1535,12 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
     }
     bool isCtrl = IsCtrlPressed();
     logf("HandleOpenCmd: '%s', newWindow: %d, setFocus: %d, forceRefresh: %d, inCurrentTab: %d, isCtrl: %d\n",
-         filePath.CStr(), newWindow, setFocus, forceRefresh, inCurrentTab, isCtrl);
+         filePath, newWindow, setFocus, forceRefresh, inCurrentTab, isCtrl);
     // on startup this is called while LoadDocument is in progress, which causes
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
         logf("HandleOpenCmd: gIsStartup, appending to gDdeOpenOnStartup\n");
-        gDdeOpenOnStartup.Append(Str(filePath.Get()));
+        gDdeOpenOnStartup.Append(filePath);
         return next;
     }
 
@@ -1574,9 +1574,9 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
     }
     bool doLoad = true;
     if (!win) {
-        win = FindMainWindowByFile(Str(filePath), focusTab);
+        win = FindMainWindowByFile(filePath, focusTab);
         if (win) {
-            logf("HandleOpenCmd: found existing window with file '%s'\n", Str(filePath.Get()));
+            logf("HandleOpenCmd: found existing window with file '%s'\n", filePath);
             doLoad = false;
             if (!win->IsDocLoaded()) {
                 ReloadDocument(win, false);
@@ -1609,7 +1609,7 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
     }
 
     if (doLoad) {
-        LoadArgs args(Str(filePath), win);
+        LoadArgs args(filePath, win);
         args.activateExisting = !isCtrl;
         if (newWindow) {
             args.activateExisting = false;
@@ -1621,7 +1621,7 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
              (int)args.activateExisting, (int)args.forceReuse);
         win = LoadDocument(&args);
         if (!win) {
-            logf("HandleOpenCmd: LoadDocument() for '%s' failed\n", Str(filePath.Get()));
+            logf("HandleOpenCmd: LoadDocument() for '%s' failed\n", filePath);
         }
     }
 
@@ -1652,13 +1652,13 @@ e.g.:
 [GoToNamedDest("c:\file.pdf", "chapter.1")]
 */
 static Str HandleGotoCmd(Str cmd, bool* ack) {
-    AutoFreeStr pdfFile, destName;
+    TempStr pdfFile, destName;
     Str next = str::Parse(cmd, "[GotoNamedDest(\"%s\",%? \"%s\")]", &pdfFile, &destName);
     if (str::IsNull(next)) {
         return {};
     }
 
-    MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -1669,7 +1669,7 @@ static Str HandleGotoCmd(Str cmd, bool* ack) {
         }
     }
 
-    win->linkHandler->GotoNamedDest(Str(destName.Get()));
+    win->linkHandler->GotoNamedDest(destName);
     win->Focus();
     *ack = true;
     return next;
@@ -1683,7 +1683,7 @@ DDE command: jump to a page in an already opened document.
 eg: [GoToPage("c:\file.pdf",37)]
 */
 static Str HandlePageCmd(HWND, Str cmd, bool* ack) {
-    AutoFreeStr pdfFile;
+    TempStr pdfFile;
     uint page = 0;
     Str next = str::Parse(cmd, "[GotoPage(\"%S\",%u)]", &pdfFile, &page);
     if (str::IsNull(next)) {
@@ -1693,7 +1693,7 @@ static Str HandlePageCmd(HWND, Str cmd, bool* ack) {
     // check if the PDF is already opened
     // TODO: prioritize window with HWND so that if we have the same file
     // opened in multiple tabs / windows, we operate on the one that got the message
-    MainWindow* win = FindMainWindowByFile(Str(pdfFile), true);
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
     if (!win) {
         return next;
     }
@@ -1724,7 +1724,7 @@ eg: [SetView("c:\file.pdf", "book view", -2)]
 use -1 for kZoomFitPage, -2 for kZoomFitWidth and -3 for kZoomFitContent
 */
 static Str HandleSetViewCmd(Str cmd, bool* ack) {
-    AutoFreeStr filePath, viewMode;
+    TempStr filePath, viewMode;
     float zoom = kInvalidZoom;
     Point scroll(-1, -1);
     Str next = str::Parse(cmd, "[SetView(\"%s\",%? \"%s\",%f)]", &filePath, &viewMode, &zoom);
@@ -1736,7 +1736,7 @@ static Str HandleSetViewCmd(Str cmd, bool* ack) {
         return {};
     }
 
-    MainWindow* win = FindMainWindowByFile(Str(filePath), true);
+    MainWindow* win = FindMainWindowByFile(filePath, true);
     if (!win) {
         return next;
     }
@@ -1747,7 +1747,7 @@ static Str HandleSetViewCmd(Str cmd, bool* ack) {
         }
     }
 
-    DisplayMode mode = DisplayModeFromString(Str(viewMode.Get()), DisplayMode::Automatic);
+    DisplayMode mode = DisplayModeFromString(viewMode, DisplayMode::Automatic);
     if (mode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, mode);
     }
@@ -1814,7 +1814,7 @@ error: <error message>
 if file doesn't exist or no opened file
 */
 static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, str::Builder& res) {
-    AutoFreeStr filePath;
+    TempStr filePath;
     Str next = str::Parse(cmd, "[GetFileState(\"%s\")]", &filePath);
     if (str::IsNull(next)) {
         next = str::Parse(cmd, "[GetFileState()]");
@@ -1830,8 +1830,8 @@ static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, str::Builder& re
     *ack = true;
 
     MainWindow* win = nullptr;
-    if (!str::IsEmpty(filePath.Get())) {
-        win = FindMainWindowByFile(Str(filePath), true);
+    if (!str::IsEmpty(filePath)) {
+        win = FindMainWindowByFile(filePath, true);
     } else {
         // no path given: report the currently active document
         win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
@@ -1934,7 +1934,7 @@ Handle all commands as defined in Commands.h
 eg: [CmdClose] or [CmdCreateAnnotHighlight #00ff00 openEdit]
 */
 static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
-    AutoFreeStr cmdContent;
+    TempStr cmdContent;
     Str next = str::Parse(cmd, "[%s]", &cmdContent);
     if (str::IsNull(next)) {
         return {};
@@ -1942,7 +1942,7 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     // cmdContent is the full content between [ and ]
     // it might be just "CmdClose" or "CmdCreateAnnotHighlight #00ff00 openEdit"
     // extract the command name (first space-delimited token)
-    Str content = Str(cmdContent.Get());
+    Str content = cmdContent;
     int spaceIdx = str::IndexOfChar(content, ' ');
     TempStr name;
     if (spaceIdx >= 0) {
@@ -1964,13 +1964,13 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     // if there are arguments after the command name, create a custom command with those args
     int idToSend = cmdId;
     if (spaceIdx >= 0) {
-        CustomCommand* customCmd = CreateCommandFromDefinition(Str(cmdContent));
+        CustomCommand* customCmd = CreateCommandFromDefinition(cmdContent);
         if (customCmd) {
             idToSend = customCmd->id;
         }
     }
 
-    logfa("HandleCmdCommand: sending %d (%s) command\n", idToSend, Str(cmdContent.Get()));
+    logfa("HandleCmdCommand: sending %d (%s) command\n", idToSend, cmdContent);
     SendMessageW(win->hwndFrame, WM_COMMAND, idToSend, 0);
     *ack = true;
     return next;
@@ -2013,7 +2013,7 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
         }
         if (str::IsNull(nextCmd)) {
             // forwards compatibility: ignore unknown commands (maybe from newer version)
-            AutoFreeStr tmp;
+            TempStr tmp;
             nextCmd = str::Parse(cmd, "%s]", &tmp);
         }
         cmd = nextCmd;
@@ -2036,7 +2036,7 @@ static bool HandleRequestCmds(HWND hwnd, Str cmd, str::Builder& rsp) {
             nextCmd = HandleGetMousePosCmd(cmd, &didHandle, rsp);
         }
         if (str::IsNull(nextCmd)) {
-            AutoFreeStr tmp;
+            TempStr tmp;
             nextCmd = str::Parse(cmd, "%s]", &tmp);
         }
         cmd = nextCmd;

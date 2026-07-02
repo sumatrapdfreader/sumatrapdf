@@ -419,23 +419,23 @@ void StrTest() {
         Str str2 = "[Open(\"filename.pdf\",0,1,0)]";
         {
             uint u1 = 0;
-            AutoFreeStr str1;
+            TempStr str1;
             Str end = str::Parse(str2, "[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
             utassert(!str::IsNull(end) && !end.s[0]);
-            utassert(u1 == 1 && str::Eq(Str(str1.Get()), "filename.pdf"));
+            utassert(u1 == 1 && str::Eq(str1, "filename.pdf"));
         }
 
         {
             uint u1 = 0;
-            AutoFreeStr str1;
+            TempStr str1;
             Str end = str::Parse(str2, "[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
             utassert(!str::IsNull(end) && !end.s[0]);
-            utassert(u1 == 1 && str::Eq(Str(str1.Get()), "filename.pdf"));
+            utassert(u1 == 1 && str::Eq(str1, "filename.pdf"));
 
             utassert(str::Parse(StrL("0xABCD"), "%x", &u1).s);
             utassert(u1 == 0xABCD);
             utassert(str::Parse(StrL("ABCD"), "%2x%S", &u1, &str1).s);
-            utassert(u1 == 0xAB && str::Eq(Str(str1.Get()), "CD"));
+            utassert(u1 == 0xAB && str::Eq(str1, "CD"));
         }
     }
     {
@@ -489,29 +489,29 @@ void StrTest() {
     }
 
     {
-        AutoFreeStr str1;
+        TempStr str1;
         char c1;
         utassert(!str::Parse(StrL("no exclamation mark?"), "%s!", &str1).s);
-        utassert(!str1.Get());
+        utassert(!str1);
         utassert(str::Parse(StrL("xyz"), "x%cz", &c1).s);
         utassert(c1 == 'y');
         utassert(!str::Parse(StrL("leaks memory!?"), "%s!%$", &str1).s);
-        utassert(str::Eq(Str(str1.Get()), "leaks memory"));
+        utassert(str::Eq(str1, "leaks memory"));
     }
 
     {
-        AutoFree str1;
+        TempStr str1;
         int i, j;
         float f;
         utassert(str::Parse(StrL("ansi string, -30-20 1.5%"), "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f).s);
-        utassert(str::Eq(Str(str1.Get()), "ansi string") && i == -30 && j == 20 && f == 1.5f);
+        utassert(str::Eq(str1, "ansi string") && i == -30 && j == 20 && f == 1.5f);
     }
     {
-        AutoFreeStr str1;
+        TempStr str1;
         int i, j;
         float f;
         utassert(str::Parse(StrL("wide string, -30-20 1.5%"), "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f).s);
-        utassert(str::Eq(Str(str1.Get()), "wide string") && i == -30 && j == 20 && f == 1.5f);
+        utassert(str::Eq(str1, "wide string") && i == -30 && j == 20 && f == 1.5f);
     }
 
     {

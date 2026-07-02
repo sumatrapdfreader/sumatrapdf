@@ -1,8 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct AutoFree; // for str::ParseArg (%s / %S output), defined in Scoped.h
-
 namespace str {
 
 // argument to a formatting instruction
@@ -117,8 +115,9 @@ Str Format(Arena* a, const char* fmt, const TArgs&... args) {
 // Type-safe scanf-style parsing (analogous to str::Format). Each output arg
 // is a pointer whose type is captured by ParseArg's explicit constructors, so a
 // format/arg mismatch (e.g. %d into a WORD*) is a compile error, not silent UB.
-// %s / %S write into an AutoFree (owning); the numeric/char specs write via the
-// matching pointer type.
+// %s / %S write a TempStr (or TempWStr) into the passed-in pointer -- the result
+// lives in the temp arena, so the caller doesn't free it; the numeric/char specs
+// write via the matching pointer type.
 struct ParseArg {
     enum class Kind : u8 {
         None,
@@ -126,7 +125,8 @@ struct ParseArg {
         UInt,
         Float,
         Char,
-        StrOut
+        StrOut,
+        WStrOut
     };
     Kind kind = Kind::None;
     void* ptr = nullptr;
@@ -136,7 +136,8 @@ struct ParseArg {
     explicit ParseArg(unsigned int* p) : kind(Kind::UInt), ptr(p) {}
     explicit ParseArg(float* p) : kind(Kind::Float), ptr(p) {}
     explicit ParseArg(char* p) : kind(Kind::Char), ptr(p) {}
-    explicit ParseArg(AutoFree* p) : kind(Kind::StrOut), ptr(p) {}
+    explicit ParseArg(Str* p) : kind(Kind::StrOut), ptr(p) {}
+    explicit ParseArg(WStr* p) : kind(Kind::WStrOut), ptr(p) {}
 };
 
 Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs);

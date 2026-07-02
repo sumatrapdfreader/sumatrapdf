@@ -584,7 +584,7 @@ static int HexDigitVal(char c) {
     return -1;
 }
 
-static Str ExtractUntil(Str str, int off, char c, int* endOffOut) {
+static TempStr ExtractUntilTemp(Str str, int off, char c, int* endOffOut) {
     if (off < 0 || off > str.len) {
         return {};
     }
@@ -595,7 +595,7 @@ static Str ExtractUntil(Str str, int off, char c, int* endOffOut) {
     }
     int endOff = off + foundOff;
     *endOffOut = endOff;
-    return str::Dup(Str(str.s + off, foundOff));
+    return str::DupTemp(Str(str.s + off, foundOff));
 }
 
 static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* endOffOut, const ParseArg& valueOut) {
@@ -786,12 +786,18 @@ Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs) {
             end = p + 1;
         } else if ('s' == spec || 'S' == spec) {
             ReportIf(argIdx >= nArgs);
-            AutoFree* out = (AutoFree*)args[argIdx++].ptr;
+            const ParseArg& arg = args[argIdx++];
+            TempStr val;
             if (fi + 1 < format.len) {
-                out->Set(ExtractUntil(str, p, format.s[fi + 1], &end).s);
+                val = ExtractUntilTemp(str, p, format.s[fi + 1], &end);
             } else {
-                out->Set(str::Dup(Str(str.s + p, str.len - p)).s);
+                val = str::DupTemp(Str(str.s + p, str.len - p));
                 end = str.len;
+            }
+            if (arg.kind == ParseArg::Kind::WStrOut) {
+                *(WStr*)arg.ptr = ToWStrTemp(val);
+            } else {
+                *(Str*)arg.ptr = val;
             }
         } else if ('$' == spec && p >= str.len) {
             continue; // don't fail, if we're indeed at the end of the string

@@ -645,9 +645,9 @@ bool AdjustVariableDriveLetter(Str& path) {
 // non-file URL in plugin mode, or if they're marked as being from
 // an untrusted zone (e.g. by the browser that's downloaded them)
 bool IsUntrustedFile(Str filePath, Str fileURL) {
-    AutoFreeStr protocol;
+    TempStr protocol;
     if (fileURL && !str::IsNull(str::Parse(fileURL, "%S:", &protocol))) {
-        if (len(Str(protocol.Get())) > 1 && !str::EqI(Str(protocol.Get()), "file")) {
+        if (len(protocol) > 1 && !str::EqI(protocol, "file")) {
             return true;
         }
     }

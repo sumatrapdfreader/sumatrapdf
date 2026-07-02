@@ -1529,9 +1529,9 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
             const GumboAttribute* httpEquiv = gumbo_get_attribute(&n->v.element.attributes, "http-equiv");
             if (httpEquiv && str::EqI(httpEquiv->value, "Content-Type")) {
                 const GumboAttribute* content = gumbo_get_attribute(&n->v.element.attributes, "content");
-                AutoFree mimetype, charset;
+                TempStr mimetype, charset;
                 if (content && !str::IsNull(str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset))) {
-                    uint cp = CharsetNameToCodepage(Str(charset.Get()));
+                    uint cp = CharsetNameToCodepage(charset);
                     if (cp) {
                         return cp;
                     }
