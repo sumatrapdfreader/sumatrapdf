@@ -484,7 +484,8 @@ int RunUninstaller() {
     }
 
     // TODO: remove dependency on this in the uninstaller
-    gCli->installDir = GetExistingInstallationDir();
+    // dup from the perm arena: flag strings are never individually freed
+    gCli->installDir = str::Dup(GetPermArena(), GetExistingInstallationDirTemp());
     Str instDir = gCli->installDir;
     TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
     TempStr exePath = GetSelfExePathTemp();

@@ -65,7 +65,7 @@ bool ExtractInstallerFiles(Str dir);
 u32 GetLibmupdfDllSize();
 bool ExtractLibmupdfDll(Str destDir);
 
-Str GetExistingInstallationDir();
+TempStr GetExistingInstallationDirTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 bool IsOurExeInstalled();
 

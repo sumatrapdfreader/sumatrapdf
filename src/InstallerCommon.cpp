@@ -137,29 +137,30 @@ void SetMsg(Str msg, Color color) {
 
 static Str gCachedExistingInstallationDir;
 
-Str GetExistingInstallationDir() {
+// the result is borrowed (perm-arena cache): callers must dup to persist it
+TempStr GetExistingInstallationDirTemp() {
     if (gCachedExistingInstallationDir) {
         // no logging if returning cached
-        return str::Dup(gCachedExistingInstallationDir);
+        return gCachedExistingInstallationDir;
     }
     log("GetExistingInstallationDir()\n");
     TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
     TempStr dir = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!dir) {
-        return nullptr;
+        return {};
     }
     if (str::EndsWithI(dir, ".exe")) {
         dir = path::GetDirTemp(dir);
     }
     if (!str::IsEmpty(dir) && dir::Exists(dir)) {
-        gCachedExistingInstallationDir = str::Dup(dir);
-        return str::Dup(dir);
+        gCachedExistingInstallationDir = str::Dup(GetPermArena(), dir);
+        return gCachedExistingInstallationDir;
     }
     return {};
 }
 
 bool IsOurExeInstalled() {
-    Str installedDir = GetExistingInstallationDir();
+    TempStr installedDir = GetExistingInstallationDirTemp();
     if (!installedDir) {
         return false;
     }
@@ -168,7 +169,7 @@ bool IsOurExeInstalled() {
 }
 
 void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
-    info->installationDir = GetExistingInstallationDir();
+    info->installationDir = str::Dup(GetExistingInstallationDirTemp());
     if (!info->installationDir) {
         info->typ = PreviousInstallationType::None;
         log("GetPreviousInstallInfo: not installed\n");
@@ -194,7 +195,7 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
 }
 
 static TempStr GetExistingInstallationFilePathTemp(Str name) {
-    Str dir = GetExistingInstallationDir();
+    TempStr dir = GetExistingInstallationDirTemp();
     if (!dir) {
         return {};
     }
@@ -438,7 +439,7 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated) {
 // returns false if there are processes and we failed to kill them
 static bool KillProcessesUsingInstallation() {
     log("KillProcessesUsingInstallation()\n");
-    Str dir = GetExistingInstallationDir();
+    TempStr dir = GetExistingInstallationDirTemp();
     if (!dir) {
         return true;
     }
@@ -475,7 +476,7 @@ static bool KillProcessesUsingInstallation() {
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(StrVec& names) {
     log("ProcessesUsingInstallation()\n");
-    Str dir = GetExistingInstallationDir();
+    TempStr dir = GetExistingInstallationDirTemp();
     if (!dir) {
         return;
     }
