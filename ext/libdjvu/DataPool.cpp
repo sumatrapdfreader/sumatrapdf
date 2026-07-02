@@ -1175,16 +1175,20 @@ DataPool::get_data(void * buffer, int offset, int sz, int level)
        if (sz<0)
          sz=0;
        
-       GP<OpenFiles_File> f=fstream;
-       if (!f)
-         {
-           GCriticalSectionLock lock(&class_stream_lock);
-           f=fstream;
-           if(!f)
-             {
-               fstream=f=OpenFiles::get()->request_stream(furl, this);
-             }
-         }
+       // Take class_stream_lock even when fstream is already set: reading
+       // the GP<> without it races with clear_stream() zeroing fstream and
+       // dropping the last reference on another thread, which can delete
+       // the OpenFiles_File (and its stream_lock) between our raw pointer
+       // read and the refcount increment.
+       GP<OpenFiles_File> f;
+       {
+         GCriticalSectionLock lock(&class_stream_lock);
+         f=fstream;
+         if(!f)
+           {
+             fstream=f=OpenFiles::get()->request_stream(furl, this);
+           }
+       }
        GCriticalSectionLock lock2(&(f->stream_lock));
        f->stream->seek(start+offset, SEEK_SET); 
        return f->stream->readall(buffer, sz);
