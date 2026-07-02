@@ -12,9 +12,9 @@ template <typename T>
 class Vec {
   public:
     Arena* allocator = nullptr;
-    size_t len = 0;
-    size_t cap = 0;
-    size_t capacityHint = 0;
+    int len = 0;
+    int cap = 0;
+    int capacityHint = 0;
     T* els = nullptr;
     T buf[16];
 
@@ -22,12 +22,14 @@ class Vec {
     // Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
     // not useful for other types, the code is simpler if we always do it
     // (rather than have it an optional behavior).
-    static constexpr size_t kPadding = 1;
+    static constexpr int kPadding = 1;
+    // byte size of a single element; kept size_t because it's used in
+    // allocation-size arithmetic that must not overflow
     static constexpr size_t kElSize = sizeof(T);
 
   private:
-    NO_INLINE bool EnsureCapSlow(size_t needed) {
-        size_t newCap = cap * 2;
+    NO_INLINE bool EnsureCapSlow(int needed) {
+        int newCap = cap * 2;
         if (needed > newCap) {
             newCap = needed;
         }
@@ -35,7 +37,7 @@ class Vec {
             newCap = capacityHint;
         }
 
-        size_t newElCount = newCap + kPadding;
+        size_t newElCount = (size_t)newCap + kPadding;
         if (newElCount >= SIZE_MAX / kElSize) {
             return false;
         }
@@ -45,10 +47,10 @@ class Vec {
         }
 
         size_t allocSize = newElCount * kElSize;
-        size_t newPadding = allocSize - len * kElSize;
+        size_t newPadding = allocSize - (size_t)len * kElSize;
         T* newEls;
         if (buf == els) {
-            newEls = (T*)MemDup(allocator, buf, len * kElSize, newPadding);
+            newEls = (T*)MemDup(allocator, buf, (size_t)len * kElSize, newPadding);
         } else {
             newEls = (T*)Realloc(allocator, els, allocSize);
         }
@@ -63,7 +65,7 @@ class Vec {
     }
 
   public:
-    inline T* EnsureCap(size_t capNeeded) {
+    inline T* EnsureCap(int capNeeded) {
         // this is frequent, fast path that should be inlined
         if (cap >= capNeeded) {
             return els;
@@ -75,8 +77,8 @@ class Vec {
         return els;
     }
 
-    T* MakeSpaceAt(size_t idx, size_t count) {
-        size_t newLen = std::max(len, idx) + count;
+    T* MakeSpaceAt(int idx, int count) {
+        int newLen = std::max(len, idx) + count;
         T* ok = EnsureCap(newLen);
         if (!ok) {
             return nullptr;
@@ -103,7 +105,7 @@ class Vec {
     void Reset() {
         FreeEls();
         len = 0;
-        cap = dimof(buf) - kPadding;
+        cap = dimofi(buf) - kPadding;
         els = buf;
         memset(buf, 0, sizeof(buf));
     }
@@ -115,7 +117,7 @@ class Vec {
         memset(els, 0, cap * kElSize);
     }
 
-    bool SetSize(size_t newSize) {
+    bool SetSize(int newSize) {
         if (newSize <= cap) {
             len = newSize;
             memset(els + len, 0, (cap - len) * kElSize);
@@ -126,7 +128,7 @@ class Vec {
     }
 
     // allocator is not owned by Vec and must outlive it
-    explicit Vec(size_t capHint = 0, Arena* a = nullptr) {
+    explicit Vec(int capHint = 0, Arena* a = nullptr) {
         allocator = a;
         capacityHint = capHint;
         els = buf;
@@ -168,7 +170,7 @@ class Vec {
     // this frees all elements and clears the array.
     // only applicable where T is a pointer. Otherwise will fail to compile
     void FreeMembers() {
-        for (size_t i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             auto s = els[i];
             free(s);
         }
@@ -176,51 +178,53 @@ class Vec {
     }
 
     T& operator[](size_t idx) const {
-        ReportIf(idx >= len);
+        ReportIf(idx >= (size_t)len);
         return els[idx];
     }
 
     T& operator[](long idx) const {
         ReportIf(idx < 0);
-        ReportIf((size_t)idx >= len);
+        ReportIf(idx >= len);
         return els[idx];
     }
 
     T& operator[](ULONG idx) const {
-        ReportIf((size_t)idx >= len);
+        ReportIf(idx >= (ULONG)len);
         return els[idx];
     }
 
     T& operator[](int idx) const {
         ReportIf(idx < 0);
-        ReportIf((size_t)idx >= len);
+        ReportIf(idx >= len);
         return els[idx];
     }
 
     T& at(size_t idx) const {
-        ReportIf(idx >= len);
+        ReportIf(idx >= (size_t)len);
         return els[idx];
     }
 
     T& at(int idx) const {
         ReportIf(idx < 0);
-        ReportIf(idx >= (int)len);
+        ReportIf(idx >= len);
         return els[idx];
     }
 
     T& At(int idx) const {
         ReportIf(idx < 0);
-        ReportIf(idx >= (int)len);
+        ReportIf(idx >= len);
         return els[idx];
     }
 
-    bool isValidIndex(int idx) const { return (idx >= 0) && (idx < (int)len); }
+    bool isValidIndex(int idx) const { return (idx >= 0) && (idx < len); }
 
-    size_t size() const { return len; }
+    // STL-compatible accessor; returns len widened to size_t so existing
+    // `for (size_t i = 0; i < v.size(); i++)` loops keep working
+    size_t size() const { return (size_t)len; }
 
-    int Size() const { return (int)len; }
+    int Size() const { return len; }
 
-    bool InsertAt(size_t idx, const T& el) {
+    bool InsertAt(int idx, const T& el) {
         T* p = MakeSpaceAt(idx, 1);
         if (!p) {
             return false;
@@ -231,7 +235,7 @@ class Vec {
 
     bool Append(const T& el) { return InsertAt(len, el); }
 
-    bool Append(const T* src, size_t count) {
+    bool Append(const T* src, int count) {
         if (0 == count) {
             return true;
         }
@@ -239,12 +243,12 @@ class Vec {
         if (!dst) {
             return false;
         }
-        memcpy(dst, src, count * kElSize);
+        memcpy(dst, src, (size_t)count * kElSize);
         return true;
     }
 
     bool Append(const Vec& other) {
-        size_t n = other.size();
+        int n = other.Size();
         const T* data = other.LendData();
         return this->Append(data, n);
     }
@@ -252,14 +256,14 @@ class Vec {
     // appends count blank (i.e. zeroed-out) elements at the end
     T* AppendBlanks(int count) { return MakeSpaceAt(len, count); }
 
-    void RemoveAt(size_t idx, size_t count = 1) {
+    void RemoveAt(int idx, int count = 1) {
         if (len > idx + count) {
             T* dst = els + idx;
             T* src = els + idx + count;
-            memmove(dst, src, (len - idx - count) * kElSize);
+            memmove(dst, src, (size_t)(len - idx - count) * kElSize);
         }
         len -= count;
-        memset(els + len, 0, count * kElSize);
+        memset(els + len, 0, (size_t)count * kElSize);
     }
 
     void RemoveLast() {
@@ -274,7 +278,7 @@ class Vec {
     // It can only be used if order of elements doesn't matter and elements
     // can be copied via memcpy()
     // TODO: could be extend to take number of elements to remove
-    void RemoveAtFast(size_t idx) {
+    void RemoveAtFast(int idx) {
         ReportIf(idx >= len);
         if (idx >= len) {
             return;
@@ -295,7 +299,7 @@ class Vec {
         return el;
     }
 
-    T PopAt(size_t idx) {
+    T PopAt(int idx) {
         ReportIf(idx >= len);
         T el = at(idx);
         RemoveAt(idx);
@@ -323,10 +327,10 @@ class Vec {
 
     T* LendData() const { return els; }
 
-    int Find(const T& el, size_t startAt = 0) const {
-        for (size_t i = startAt; i < len; i++) {
+    int Find(const T& el, int startAt = 0) const {
+        for (int i = startAt; i < len; i++) {
             if (els[i] == el) {
-                return (int)i;
+                return i;
             }
         }
         return -1;
@@ -360,7 +364,7 @@ class Vec {
     }
 
     void Reverse() {
-        for (size_t i = 0; i < len / 2; i++) {
+        for (int i = 0; i < len / 2; i++) {
             std::swap(els[i], els[len - i - 1]);
         }
     }

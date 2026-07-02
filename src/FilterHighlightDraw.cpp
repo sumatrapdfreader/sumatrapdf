@@ -29,7 +29,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
 
     // find all match ranges in text
     int textLen = text.len;
-    u8* hl = highlighted.EnsureCap((size_t)textLen);
+    u8* hl = highlighted.EnsureCap(textLen);
     memset(hl, 0, textLen);
     for (int w = 0; w < nWords; w++) {
         Str word = filterWords.At(w);

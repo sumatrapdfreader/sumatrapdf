@@ -488,7 +488,7 @@ T RemoveRandomElementFromVec(Vec<T>& v) {
     auto n = v.Size();
     ReportIf(n <= 0);
     int idx = rand() % n;
-    int res = v.PopAt((size_t)idx);
+    int res = v.PopAt(idx);
     return res;
 }
 

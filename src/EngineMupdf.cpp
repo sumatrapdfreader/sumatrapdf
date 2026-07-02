@@ -1509,8 +1509,8 @@ static void BuildElementsInfo(FzPageInfo* pageInfo) {
     pageInfo->elementsNeedRebuilding = false;
     auto& els = pageInfo->allElements;
 
-    size_t total =
-        pageInfo->images.size() + pageInfo->links.size() + pageInfo->autoLinks.size() + pageInfo->comments.size();
+    int total =
+        pageInfo->images.Size() + pageInfo->links.Size() + pageInfo->autoLinks.Size() + pageInfo->comments.Size();
     els.Clear();
     els.EnsureCap(total);
 
@@ -2042,7 +2042,7 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
     Vec<fz_context*> ctxsToDrop;
     {
         ScopedCritSec cs(&gPerThreadContextsCs);
-        for (int i = (int)gPerThreadContexts->Size() - 1; i >= 0; i--) {
+        for (int i = gPerThreadContexts->Size() - 1; i >= 0; i--) {
             auto& el = gPerThreadContexts->at(i);
             if (el.engine == engine) {
                 ctxsToDrop.Append(el.ctx);
