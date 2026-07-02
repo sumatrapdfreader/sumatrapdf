@@ -2428,6 +2428,21 @@ static void SaveSettingsVoid() {
     SaveSettings();
 }
 
+// delete a loaded-but-not-yet-attached controller when its target window went
+// away mid-load. If the window was already destroyed, its cbHandler is gone
+// too, so null cb to keep ~DisplayModel from calling into freed memory
+// (nothing was rendered for the orphan, so skipping cb->CleanUp() is fine).
+static void DeleteOrphanedController(MainWindow* win, DocController*& ctrl) {
+    if (!ctrl) {
+        return;
+    }
+    if (!IsMainWindowValid(win)) {
+        ctrl->cb = nullptr;
+    }
+    delete ctrl;
+    ctrl = nullptr;
+}
+
 MainWindow* LoadDocumentFinish(LoadArgs* args) {
     MainWindow* win = args->win;
     Str fullPath = args->FilePath();
@@ -2459,6 +2474,8 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         win->currentTabTemp = AddTabToWindow(win, tab);
 
         if (!IsMainWindowValid(win) || win->isBeingClosed) {
+            // the ctrl was not attached to the tab yet, don't leak it
+            DeleteOrphanedController(win, args->ctrl);
             return nullptr;
         }
 
@@ -2477,6 +2494,8 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     bool lazyLoad = args->lazyLoad;
     if (!lazyLoad) {
         if (!IsMainWindowValid(win) || win->isBeingClosed) {
+            // the ctrl was not attached to the tab yet, don't leak it
+            DeleteOrphanedController(win, args->ctrl);
             return nullptr;
         }
         ReplaceDocumentInCurrentTab(args, args->ctrl, nullptr);
@@ -2670,19 +2689,8 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     auto args = d->args;
     RemoveNotification(d->wndNotif);
     MainWindow* win = args->win;
-    if (!IsMainWindowValid(win)) {
-        if (args->ctrl) {
-            // the window (and its cbHandler) is gone: null cb so ~DisplayModel
-            // skips cb->CleanUp() (nothing was rendered for this ctrl yet)
-            args->ctrl->cb = nullptr;
-            delete args->ctrl;
-            args->ctrl = nullptr;
-        }
-        return;
-    }
-    if (win->isBeingClosed) {
-        delete args->ctrl;
-        args->ctrl = nullptr;
+    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        DeleteOrphanedController(win, args->ctrl);
         return;
     }
     Str path = args->FilePath();
