@@ -3349,7 +3349,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     TempStr srcFileName = str::Dup(engine->FilePath());
     TempWStr srcFileNameW = ToWStrTemp(srcFileName);
-    wstr::BufSet(dstFileName, dimof(dstFileName), srcFileNameW);
+    wstr::BufSet(WStr(dstFileName, dimof(dstFileName)), srcFileNameW);
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = tab->win->hwndFrame;

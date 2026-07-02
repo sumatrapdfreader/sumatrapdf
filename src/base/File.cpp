@@ -853,7 +853,7 @@ bool DeleteFileToTrash(Str path) {
     TempWStr pathW = ToWStrTemp(path);
     int n = len(pathW) + 2;
     TempWStr pathDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
-    wstr::BufSet(pathDoubleTerminated, n, pathW);
+    wstr::BufSet(pathDoubleTerminated, pathW);
     FILEOP_FLAGS flags = FOF_NO_UI | FOF_ALLOWUNDO;
     uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, pathDoubleTerminated.s, nullptr, flags, FALSE, nullptr, nullptr};
@@ -1066,7 +1066,7 @@ bool RemoveAll(Str dir) {
     // https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shfileopstructa#fo_rename
     int n = len(dirW) + 2;
     TempWStr dirDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
-    wstr::BufSet(dirDoubleTerminated, n, dirW);
+    wstr::BufSet(dirDoubleTerminated, dirW);
     FILEOP_FLAGS flags = FOF_NO_UI;
     uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, dirDoubleTerminated.s, nullptr, flags, FALSE, nullptr, nullptr};

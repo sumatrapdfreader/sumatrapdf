@@ -168,7 +168,7 @@ bool EndsWith(WStr txt, WStr end);
 bool EndsWithI(WStr txt, WStr end);
 WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
-int BufSet(WCHAR* dst, int dstCchSize, WStr src);
+int BufSet(WStr dst, WStr src);
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
 int IndexOfChar(WStr s, WCHAR c);
@@ -307,10 +307,6 @@ namespace wstr {
 
 bool Replace(Builder& s, WStr toReplace, WStr replaceWith);
 bool ContainsChar(const Builder& b, WCHAR el);
-
-FORCEINLINE int BufSet(WStr dst, int dstCchSize, WStr src) {
-    return BufSet(dst.s, dstCchSize, src);
-}
 
 } // namespace wstr
 

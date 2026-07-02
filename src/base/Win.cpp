@@ -1558,7 +1558,7 @@ static bool CopyOrAppendTextToClipboard(WStr text, bool appendOnly) {
     if (handle) {
         WCHAR* globalText = (WCHAR*)GlobalLock(handle);
         if (globalText) {
-            wstr::BufSet(globalText, n, text);
+            wstr::BufSet(WStr(globalText, n), text);
         }
         GlobalUnlock(handle);
 
@@ -1753,7 +1753,7 @@ HFONT CreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH;
-    wstr::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontNameW);
+    wstr::BufSet(WStr(lf.lfFaceName, dimof(lf.lfFaceName)), fontNameW);
     lf.lfWeight = FW_DONTCARE;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfEscapement = 0;
@@ -1804,7 +1804,7 @@ HFONT GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
         WCHAR* dest = ncm.lfMessageFont.lfFaceName;
         int cchDestBufSize = dimof(ncm.lfMessageFont.lfFaceName);
         TempWStr nameW = ToWStrTemp(fontName);
-        wstr::BufSet(dest, cchDestBufSize, nameW);
+        wstr::BufSet(WStr(dest, cchDestBufSize), nameW);
     }
     ncm.lfMessageFont.lfHeight = -size;
     if (bold) {

@@ -2214,17 +2214,18 @@ int BufSet(char* dst, int cchDst, Str src) {
 } // namespace str
 namespace wstr {
 
-int BufSet(WCHAR* dst, int cchDst, WStr src) {
-    ReportIf(0 == cchDst || !dst);
+int BufSet(WStr dst, WStr src) {
+    int cchDst = dst.len;
+    ReportIf(0 == cchDst || !dst.s);
     if (!src) {
-        *dst = 0;
+        *dst.s = 0;
         return 0;
     }
 
     int toCopy = std::min(cchDst - 1, src.len);
 
-    memset(dst, 0, cchDst * sizeof(WCHAR));
-    memcpy(dst, src.s, toCopy * sizeof(WCHAR));
+    memset(dst.s, 0, cchDst * sizeof(WCHAR));
+    memcpy(dst.s, src.s, toCopy * sizeof(WCHAR));
     return toCopy;
 }
 
@@ -2232,7 +2233,7 @@ int BufSet(WCHAR* dst, int cchDst, WStr src) {
 namespace str {
 
 int BufSet(WCHAR* dst, int dstCchSize, Str src) {
-    return wstr::BufSet(dst, dstCchSize, ToWStrTemp(src));
+    return wstr::BufSet(WStr(dst, dstCchSize), ToWStrTemp(src));
 }
 
 // append as much of s at the end of dst (which must be properly null-terminated)

@@ -987,7 +987,7 @@ static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int*
     WStr endF = Parse(formatAt, L"%u%c", &width, &f2[1]);
     if (!wstr::IsNull(endF) && ContainsChar(WStr(L"udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
-        wstr::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
+        wstr::BufSet(WStr(limited, std::min((int)width + 1, dimofi(limited))), WStr(str.s + p, (int)width));
         WStr end = ParseArgs(WStr(limited), f2, &valueOut, 1);
         if (!wstr::IsNull(end) && !end.s[0]) {
             *endOffOut = p + (int)width;
