@@ -32,7 +32,7 @@ class Synchronizer {
     //  - filename: receives the name of the source file
     //  - line: receives the line number
     //  - col: receives the column number
-    virtual int DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) = 0;
+    virtual int DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) = 0;
 
     // Forward-search:
     // The result is returned in page and rects (list of rectangles to highlight).

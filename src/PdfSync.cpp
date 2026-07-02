@@ -48,7 +48,7 @@ class Pdfsync : public Synchronizer {
         ReportIf(!str::EndsWithI(syncfilename, ".pdfsync"));
     }
 
-    int DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) override;
+    int DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) override;
     int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
   private:
@@ -74,7 +74,7 @@ class SyncTex : public Synchronizer {
 
     ~SyncTex() override { synctex_scanner_free(scanner); }
 
-    int DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) override;
+    int DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) override;
     int SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect>& rects) override;
 
   private:
@@ -331,18 +331,18 @@ static int cmpLineRecords(const void* a, const void* b) {
 
 // If `srcfilepath` doesn't exist on disk, checks whether it's been moved to sit
 // next to the PDF document (which happens if all files are moved together)
-static void TryRecoverMovedSourceFile(AutoFreeStr& srcfilepath, Str pdfPath) {
-    if (file::Exists(Str(srcfilepath))) {
+static void TryRecoverMovedSourceFile(Str& srcfilepath, Str pdfPath) {
+    if (file::Exists(srcfilepath)) {
         return;
     }
     TempStr altsrcpath = path::GetDirTemp(pdfPath);
-    altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(Str(srcfilepath)));
-    if (!str::Eq(altsrcpath, Str(srcfilepath.Get())) && file::Exists(altsrcpath)) {
-        srcfilepath.SetCopy(altsrcpath);
+    altsrcpath = path::JoinTemp(altsrcpath, path::GetBaseNameTemp(srcfilepath));
+    if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath)) {
+        str::ReplaceWithCopy(&srcfilepath, altsrcpath);
     }
 }
 
-int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
+int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) {
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
         return res;
@@ -402,7 +402,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     }
 
     Str path = srcfiles.At((int)found->file);
-    filename.SetCopy(path::NormalizeTemp(path));
+    str::ReplaceWithCopy(&filename, path::NormalizeTemp(path));
     TryRecoverMovedSourceFile(filename, pdfPath);
 
     *line = (int)found->line;
@@ -806,7 +806,7 @@ static bool IsUnixSourcePath(Str syncFilePath, Str resolvedSrcPath) {
     return path::IsWslMount(resolvedSrcPath);
 }
 
-int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) {
+int SyncTex::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* col) {
     logfa("SyncTex::DocToSource: '%s', pageNo: %d\n", syncFilePath, pageNo);
     int res = RebuildIndexIfNeeded();
     if (res != PDFSYNCERR_SUCCESS) {
@@ -831,32 +831,36 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 
-    filename.Set(str::Dup(name).s);
+    filename = str::Dup(name);
     if (!filename) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
     // Unescape SyncTeX's space encoding: * represents a space in filenames
-    str::TransCharsInPlace(Str(filename), StrL("*"), StrL(" "));
+    str::TransCharsInPlace(filename, StrL("*"), StrL(" "));
 
-    if (IsUnixSourcePath(syncFilePath, Str(filename.Get()))) {
+    if (IsUnixSourcePath(syncFilePath, filename)) {
         // Treat filename as unix path
 
         // Resolve relative Unix paths relative to the sync file's directory
-        if (filename.Get()[0] != '/') {
+        if (filename.s[0] != '/') {
             TempStr unixSyncFilePath = path::WslUncToUnixTemp(syncFilePath);
             TempStr dir = path::GetDirTemp(unixSyncFilePath);
-            filename.Set(path::Join(dir, Str(filename)).s);
+            Str joined = path::Join(dir, filename);
+            str::Free(filename);
+            filename = joined;
         }
     } else {
         // Treat filename as Windows path
 
-        str::TransCharsInPlace(Str(filename), StrL("/"), StrL("\\"));
+        str::TransCharsInPlace(filename, StrL("/"), StrL("\\"));
         // Convert the source filepath to an absolute path
-        if (!path::IsAbsolute(Str(filename))) {
-            filename.Set(PrependDir(Str(filename.Get())).s);
+        if (!path::IsAbsolute(filename)) {
+            Str abs = PrependDir(filename);
+            str::Free(filename);
+            filename = abs;
         }
-        filename.SetCopy(path::NormalizeTemp(filename.Get()));
+        str::ReplaceWithCopy(&filename, path::NormalizeTemp(filename));
         TryRecoverMovedSourceFile(filename, pdfPath);
     }
 

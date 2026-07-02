@@ -1237,7 +1237,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     }
 
     Point pt = ToPoint(dm->CvtFromScreen(Point(x, y), pageNo));
-    AutoFreeStr srcfilepath;
+    Str srcfilepath;
     int line = 0;
     int col = 0;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
@@ -1260,8 +1260,9 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
 
     Str cmdLine;
     if (inverseSearch) {
-        cmdLine = BuildOpenFileCmdTemp(inverseSearch, Str(srcfilepath), line, col);
+        cmdLine = BuildOpenFileCmdTemp(inverseSearch, srcfilepath, line, col);
     }
+    str::Free(srcfilepath);
 
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;

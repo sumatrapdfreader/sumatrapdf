@@ -91,15 +91,16 @@ TempStr InverseSearchResultTemp(Str pdfPath, int pageNo, int x, int y) {
         if (err != PDFSYNCERR_SUCCESS || !sync) {
             out.Append(fmt("ERROR sync-create-failed err=%d\n", err));
         } else {
-            AutoFreeStr srcfilepath;
+            Str srcfilepath;
             int line = 0, col = 0;
             Point pt(x, y);
             int ret = sync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
             if (ret != PDFSYNCERR_SUCCESS) {
                 out.Append(fmt("ERROR doctosource-failed err=%d\n", ret));
             } else {
-                out.Append(fmt("ret=%d srcfile=%s line=%d col=%d\n", ret, Str(srcfilepath.Get()), line, col));
+                out.Append(fmt("ret=%d srcfile=%s line=%d col=%d\n", ret, srcfilepath, line, col));
             }
+            str::Free(srcfilepath);
             delete sync;
         }
         SafeEngineRelease(&engine);
