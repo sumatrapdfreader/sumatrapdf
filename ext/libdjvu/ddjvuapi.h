@@ -219,8 +219,17 @@ ddjvu_context_create(const char *programname);
    The object itself will be destroyed as soon as no other object
    or thread needs it. */
 
-DDJVUAPI void 
+DDJVUAPI void
 ddjvu_context_release(ddjvu_context_t *context);
+
+
+/* ddjvu_free_port_corpses ---
+   SumatraPDF addition: frees the static list of recently deleted
+   DjVuPort addresses. Call once at program exit, after all other
+   ddjvu objects have been released. */
+
+DDJVUAPI void
+ddjvu_free_port_corpses(void);
 
 
 

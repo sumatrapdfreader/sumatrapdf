@@ -203,6 +203,27 @@ DjVuPort::operator delete(void * addr)
   ::operator delete(addr);
 }
 
+// SumatraPDF: free the static corpse list at program exit
+void
+DjVuPort::cleanup_corpses(void)
+{
+  if (!corpse_lock)
+    return;
+  {
+    GCriticalSectionLock lock(corpse_lock);
+    while (corpse_head)
+    {
+      DjVuPortCorpse * corpse=corpse_head;
+      corpse_head=corpse_head->next;
+      delete corpse;
+    }
+    corpse_tail=0;
+    corpse_num=0;
+  }
+  delete corpse_lock;
+  corpse_lock=0;
+}
+
 DjVuPort::DjVuPort()
 {
   DjVuPortcaster *pcaster = get_portcaster();

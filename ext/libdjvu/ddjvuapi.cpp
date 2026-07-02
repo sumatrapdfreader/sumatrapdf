@@ -385,7 +385,7 @@ ddjvu_context_create(const char *programname)
   return ctx;
 }
 
-void 
+void
 ddjvu_context_release(ddjvu_context_t *ctx)
 {
   G_TRY
@@ -397,6 +397,13 @@ ddjvu_context_release(ddjvu_context_t *ctx)
     {
     }
   G_ENDCATCH;
+}
+
+// SumatraPDF: free the static corpse list at program exit
+void
+ddjvu_free_port_corpses(void)
+{
+  DjVuPort::cleanup_corpses();
 }
 
 

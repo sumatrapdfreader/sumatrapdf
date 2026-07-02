@@ -26,8 +26,7 @@
 Kind kindEngineDjVu = "engineDjVu";
 
 // TODO: libdjvu leaks memory - among others
-//       DjVuPort::corpse_lock, DjVuPort::corpse_head, pcaster,
-//       DataPool::OpenFiles::global_ptr, FCPools::global_ptr
+//       pcaster, DataPool::OpenFiles::global_ptr, FCPools::global_ptr
 //       cf. http://sourceforge.net/projects/djvu/forums/forum/103286/topic/3553602
 
 // parses "123", "#123", "# 123"
@@ -251,6 +250,7 @@ void CleanupEngineDjVu() {
         gDjVuContext = nullptr;
     }
     minilisp_finish();
+    ddjvu_free_port_corpses();
 }
 
 struct DjVuPageInfo {
