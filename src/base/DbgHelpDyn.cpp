@@ -96,38 +96,6 @@ Str ExceptionNameFromCode(DWORD excCode) {
     return Str(excNameBuf);
 }
 
-#if 0
-static bool SetupSymbolPath()
-{
-    if (!DynSymSetSearchPathW && !DynSymSetSearchPath) {
-        plog("SetupSymbolPath(): DynSymSetSearchPathW and DynSymSetSearchPath missing");
-        return false;
-    }
-
-    AutoFreeWStr path(GetSymbolPath());
-    if (!path) {
-        plog("SetupSymbolPath(): GetSymbolPath() returned nullptr");
-        return false;
-    }
-
-    BOOL ok = FALSE;
-    AutoFreeWStr tpath(strconv::FromWStr(path));
-    if (DynSymSetSearchPathW) {
-        ok = DynSymSetSearchPathW(GetCurrentProcess(), path);
-        if (!ok)
-            plog("DynSymSetSearchPathW() failed");
-    } else {
-        AutoFreeStr tmp = strconv::ToAnsi(tpath);
-        ok = DynSymSetSearchPath(GetCurrentProcess(), tmp);
-        if (!ok)
-            plog("DynSymSetSearchPath() failed");
-    }
-
-    DynSymRefreshModuleList(GetCurrentProcess());
-    return ok;
-}
-#endif
-
 static BOOL gSymInitializeOk = FALSE;
 
 static bool CanStackWalk() {
