@@ -11,7 +11,7 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut);
 bool Dialog_ChangeScrollbar(HWND hwnd);
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
 bool Dialog_SetInverseSearch(HWND hwnd, GlobalPrefs* prefs);
-bool Dialog_AddFavorite(HWND hwnd, Str pageNo, AutoFreeStr& favName);
+bool Dialog_AddFavorite(HWND hwnd, Str pageNo, Str& favName);
 
 enum class PrintRangeAdv {
     All = 0,

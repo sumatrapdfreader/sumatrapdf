@@ -1695,16 +1695,16 @@ bool Dialog_SetTabColor(HWND hwnd, COLORREF currentColor, bool isUnset, COLORREF
     return true;
 }
 
-bool Dialog_AddFavorite(HWND hwnd, Str pageNo, AutoFreeStr& favName) {
+bool Dialog_AddFavorite(HWND hwnd, Str pageNo, Str& favName) {
     Dialog_AddFav_Data data;
     data.pageNo = str::Dup(pageNo);
-    data.favName = str::Dup(Str(favName.Get()));
+    data.favName = str::Dup(favName);
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FAV_ADD, hwnd, Dialog_AddFav_Proc, (LPARAM)&data);
     if (IDCANCEL == res) {
         return false;
     }
 
-    favName.SetCopy(data.favName);
+    str::ReplaceWithCopy(&favName, data.favName);
     return true;
 }

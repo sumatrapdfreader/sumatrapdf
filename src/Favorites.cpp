@@ -708,27 +708,26 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
 }
 
 void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str nameIn) {
-    AutoFreeStr name = str::Dup(nameIn).s;
+    Str name = str::Dup(nameIn);
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
-    if (!shouldAdd) {
-        return;
-    }
+    if (shouldAdd) {
+        TempStr plainLabel = fmt("%d", pageNo);
+        bool needsLabel = !str::Eq(plainLabel, pageLabel);
 
-    TempStr plainLabel = fmt("%d", pageNo);
-    bool needsLabel = !str::Eq(plainLabel, pageLabel);
-
-    RememberFavTreeExpansionStateForAllWindows();
-    Str pl = needsLabel ? pageLabel : Str{};
-    WindowTab* tab = win->CurrentTab();
-    Str path = tab->filePath;
-    AddOrReplaceFav(path, pageNo, Str(name), pl);
-    // expand newly added favorites by default
-    FileState* fav = GetFavByFilePath(path);
-    if (fav && len(*fav->favorites) == 2) {
-        win->expandedFavorites.Append(fav);
+        RememberFavTreeExpansionStateForAllWindows();
+        Str pl = needsLabel ? pageLabel : Str{};
+        WindowTab* tab = win->CurrentTab();
+        Str path = tab->filePath;
+        AddOrReplaceFav(path, pageNo, name, pl);
+        // expand newly added favorites by default
+        FileState* fav = GetFavByFilePath(path);
+        if (fav && len(*fav->favorites) == 2) {
+            win->expandedFavorites.Append(fav);
+        }
+        UpdateFavoritesTreeForAllWindows();
+        SaveSettings();
     }
-    UpdateFavoritesTreeForAllWindows();
-    SaveSettings();
+    str::Free(name);
 }
 
 void AddFavoriteForPage(MainWindow* win, int pageNo) {
