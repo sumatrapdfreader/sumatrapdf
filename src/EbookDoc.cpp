@@ -16,6 +16,7 @@
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EbookBase.h"
+#include "GumboHelpers.h"
 #include "EbookDoc.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
@@ -243,6 +244,40 @@ static TempStr DecodeDataURITemp(Str url) {
     return str::DupTemp(data);
 }
 
+struct GumboDoc {
+    GumboOptions opts;
+    GumboOutput* output = nullptr;
+
+    GumboDoc(Str data, bool xmlFragment) {
+        opts = xmlFragment ? GumboMakeXmlFragmentOptions() : GumboMakeOptions();
+        if (!data) {
+            return;
+        }
+        output = gumbo_parse_with_options(&opts, data.s, (size_t)data.len);
+    }
+
+    ~GumboDoc() {
+        if (output) {
+            gumbo_destroy_output_iter(&opts, output);
+        }
+    }
+
+    const GumboNode* Document() const { return output ? output->document : nullptr; }
+};
+
+static const GumboVector* GumboChildrenOf(const GumboNode* node) {
+    if (!node) {
+        return nullptr;
+    }
+    if (node->type == GUMBO_NODE_ELEMENT) {
+        return &node->v.element.children;
+    }
+    if (node->type == GUMBO_NODE_DOCUMENT) {
+        return &node->v.document.children;
+    }
+    return nullptr;
+}
+
 /* ********** EPUB ********** */
 
 static Str EPUB_CONTAINER_NS() {
@@ -311,6 +346,31 @@ static bool isImageMediaType(Str mediatype) {
 
 static void ParseMetadata(Str content, Props& props);
 
+static void CollectEncryptedEpubPaths(const GumboNode* root, StrVec& encList) {
+    Vec<const GumboNode*> toVisit;
+    toVisit.Append(root);
+    while (len(toVisit) > 0) {
+        const GumboNode* node = toVisit.Pop();
+        if (!node) {
+            continue;
+        }
+        if (GumboTagNameIsNS(node, StrL("CipherReference"), EPUB_ENC_NS())) {
+            TempStr uri = GumboAttributeValueTemp(node, "URI");
+            if (uri) {
+                url::DecodeInPlace(uri);
+                encList.Append(uri);
+            }
+        }
+        const GumboVector* children = GumboChildrenOf(node);
+        if (!children) {
+            continue;
+        }
+        for (unsigned int i = children->length; i > 0; i--) {
+            toVisit.Append((const GumboNode*)children->data[i - 1]);
+        }
+    }
+}
+
 bool EpubDoc::Load() {
     if (!archive) {
         return false;
@@ -320,18 +380,18 @@ bool EpubDoc::Load() {
         return false;
     }
     Str container = Str((char*)((u8*)containerFi->data), (int)(containerFi->fileSizeUncompressed));
-    HtmlParser parser;
-    HtmlElement* node = parser.ParseInPlace(container);
+    GumboDoc containerDoc(container, true);
+    const GumboNode* node = containerDoc.Document();
     if (!node) {
         return false;
     }
 
     // only consider the first <rootfile> element (default rendition)
-    node = parser.FindElementByNameNS(StrL("rootfile"), EPUB_CONTAINER_NS());
+    node = GumboFindDescendantByTagNS(node, StrL("rootfile"), EPUB_CONTAINER_NS());
     if (!node) {
         return false;
     }
-    TempStr contentPath = node->GetAttributeTemp(StrL("full-path"));
+    TempStr contentPath = GumboAttributeValueTemp(node, "full-path");
     if (!contentPath) {
         return false;
     }
@@ -342,16 +402,8 @@ bool EpubDoc::Load() {
     auto* encryptionFi = archive->GetFileDataByName("META-INF/encryption.xml");
     if (encryptionFi && encryptionFi->data) {
         Str encryption = Str((char*)((u8*)encryptionFi->data), (int)(encryptionFi->fileSizeUncompressed));
-        (void)parser.ParseInPlace(encryption);
-        HtmlElement* cr = parser.FindElementByNameNS(StrL("CipherReference"), EPUB_ENC_NS());
-        while (cr) {
-            TempStr uri = cr->GetAttributeTemp(StrL("URI"));
-            if (uri) {
-                url::DecodeInPlace(uri);
-                encList.Append(uri);
-            }
-            cr = parser.FindElementByNameNS(StrL("CipherReference"), EPUB_ENC_NS(), cr);
-        }
+        GumboDoc encryptionDoc(encryption, true);
+        CollectEncryptedEpubPaths(encryptionDoc.Document(), encList);
     }
 
     auto* contentFi = archive->GetFileDataByName(contentPath);
@@ -360,11 +412,12 @@ bool EpubDoc::Load() {
     }
     Str content = Str((char*)((u8*)contentFi->data), (int)(contentFi->fileSizeUncompressed));
     ParseMetadata(content, props);
-    node = parser.ParseInPlace(content);
+    GumboDoc contentDoc(content, true);
+    node = contentDoc.Document();
     if (!node) {
         return false;
     }
-    node = parser.FindElementByNameNS(StrL("manifest"), EPUB_OPF_NS());
+    node = GumboFindDescendantByTagNS(node, StrL("manifest"), EPUB_OPF_NS());
     if (!node) {
         return false;
     }
@@ -378,10 +431,16 @@ bool EpubDoc::Load() {
 
     StrVec idList, pathList;
 
-    for (node = node->down; node; node = node->next) {
-        TempStr mediaType = node->GetAttributeTemp(StrL("media-type"));
+    const GumboNode* manifest = node;
+    const GumboVector* manifestChildren = GumboChildrenOf(manifest);
+    for (unsigned int i = 0; manifestChildren && i < manifestChildren->length; i++) {
+        node = (const GumboNode*)manifestChildren->data[i];
+        if (!node || node->type != GUMBO_NODE_ELEMENT) {
+            continue;
+        }
+        TempStr mediaType = GumboAttributeValueTemp(node, "media-type");
         if (isImageMediaType(mediaType)) {
-            TempStr imgPath = node->GetAttributeTemp(StrL("href"));
+            TempStr imgPath = GumboAttributeValueTemp(node, "href");
             if (!imgPath) {
                 continue;
             }
@@ -396,14 +455,14 @@ bool EpubDoc::Load() {
             data.fileId = archive->GetFileId(data.fileName);
             images.Append(data);
         } else if (isHtmlMediaType(mediaType)) {
-            TempStr htmlPath = node->GetAttributeTemp(StrL("href"));
+            TempStr htmlPath = GumboAttributeValueTemp(node, "href");
             if (!htmlPath) {
                 continue;
             }
             url::DecodeInPlace(htmlPath);
-            TempStr htmlId = node->GetAttributeTemp(StrL("id"));
+            TempStr htmlId = GumboAttributeValueTemp(node, "id");
             // EPUB 3 ToC
-            TempStr properties = node->GetAttributeTemp(StrL("properties"));
+            TempStr properties = GumboAttributeValueTemp(node, "properties");
             if (properties && str::Contains(properties, StrL("nav")) && str::Eq(mediaType, "application/xhtml+xml")) {
                 str::Free(tocPath);
                 tocPath = str::Join(contentPath, htmlPath);
@@ -420,13 +479,13 @@ bool EpubDoc::Load() {
         }
     }
 
-    node = parser.FindElementByNameNS(StrL("spine"), EPUB_OPF_NS());
+    node = GumboFindDescendantByTagNS(contentDoc.Document(), StrL("spine"), EPUB_OPF_NS());
     if (!node) {
         return false;
     }
 
     // EPUB 2 ToC
-    TempStr tocId = node->GetAttributeTemp(StrL("toc"));
+    TempStr tocId = GumboAttributeValueTemp(node, "toc");
     int tocIdx = (tocId && str::IsEmpty(tocPath)) ? idList.Find(tocId) : -1;
     if (tocIdx >= 0) {
         Str s = pathList.At(tocIdx);
@@ -434,16 +493,19 @@ bool EpubDoc::Load() {
         tocPath = str::Join(contentPath, s);
         isNcxToc = true;
     }
-    TempStr readingDir = node->GetAttributeTemp(StrL("page-progression-direction"));
+    TempStr readingDir = GumboAttributeValueTemp(node, "page-progression-direction");
     if (readingDir) {
         isRtlDoc = str::EqI(readingDir, "rtl");
     }
 
-    for (node = node->down; node; node = node->next) {
-        if (!node->NameIsNS(StrL("itemref"), EPUB_OPF_NS())) {
+    const GumboNode* spine = node;
+    const GumboVector* spineChildren = GumboChildrenOf(spine);
+    for (unsigned int i = 0; spineChildren && i < spineChildren->length; i++) {
+        node = (const GumboNode*)spineChildren->data[i];
+        if (!GumboTagNameIsNS(node, StrL("itemref"), EPUB_OPF_NS())) {
             continue;
         }
-        TempStr idref = node->GetAttributeTemp(StrL("idref"));
+        TempStr idref = GumboAttributeValueTemp(node, "idref");
         if (!idref) {
             continue;
         }
@@ -1734,12 +1796,25 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
         return false;
     }
 
-    HtmlParser parser;
-    parser.Parse(ToStr(htmlData), CP_UTF8);
-    HtmlElement* el = nullptr;
-    while ((el = parser.FindElementByName(StrL("b"), el)) != nullptr) {
-        TempStr title = el->GetAttributeTemp(StrL("title"));
-        TempStr id = el->GetAttributeTemp(StrL("id"));
+    GumboDoc doc(ToStr(htmlData), false);
+    Vec<const GumboNode*> toVisit;
+    toVisit.Append(doc.Document());
+    while (len(toVisit) > 0) {
+        const GumboNode* node = toVisit.Pop();
+        if (!node) {
+            continue;
+        }
+        const GumboVector* children = GumboChildrenOf(node);
+        if (children) {
+            for (unsigned int i = children->length; i > 0; i--) {
+                toVisit.Append((const GumboNode*)children->data[i - 1]);
+            }
+        }
+        if (!GumboTagNameIs(node, StrL("b"))) {
+            continue;
+        }
+        TempStr title = GumboAttributeValueTemp(node, "title");
+        TempStr id = GumboAttributeValueTemp(node, "id");
         int level = 1;
         if (title && str::IsDigit(title.s[0])) {
             Str dot = SkipDigits(title);
