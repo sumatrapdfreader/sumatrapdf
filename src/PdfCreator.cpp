@@ -24,7 +24,7 @@ static Str gPdfProducer;
 
 void PdfCreator::SetProducerName(Str name) {
     if (!str::Eq(gPdfProducer, name)) {
-        gPdfProducer = str::Dup(GetLifetimeArena(), name);
+        gPdfProducer = str::Dup(GetPermArena(), name);
     }
 }
 

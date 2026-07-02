@@ -68,7 +68,7 @@ void SetDefaultEbookFont(Str name, float size) {
         // we should use the font as given in css
         name = StrL("Georgia");
     }
-    gDefaultFontName = str::Dup(GetLifetimeArena(), name);
+    gDefaultFontName = str::Dup(GetPermArena(), name);
     // use a somewhat smaller size than in the EbookUI, since fit page/width
     // is likely to be above 100% for the paperback page dimensions
     gDefaultFontSize = size * 0.8f;

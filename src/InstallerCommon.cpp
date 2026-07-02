@@ -131,7 +131,7 @@ void NotifyFailed(Str msg) {
 }
 
 void SetMsg(Str msg, Color color) {
-    gMsg = str::Dup(GetLifetimeArena(), msg);
+    gMsg = str::Dup(GetPermArena(), msg);
     gMsgColor = color;
 }
 

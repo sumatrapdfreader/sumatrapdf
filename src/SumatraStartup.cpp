@@ -706,7 +706,7 @@ static void ResetTempArenaWithLogging() {
 
 // Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
 // logging is torn down.
-static void LogArenaLifetimeStats(Str what, Arena* a) {
+static void LogArenaStats(Str what, Arena* a) {
     if (!a) {
         return;
     }
@@ -1831,7 +1831,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         return RunInstaller();
     }
 
-    ParseFlags(GetLifetimeArena(), GetCommandLineW(), flags, gToolNames);
+    ParseFlags(GetPermArena(), GetCommandLineW(), flags, gToolNames);
     gCli = &flags;
     gForTesting = flags.forTesting;
     InstallSumatraCrashHandler(flags.forTesting || flags.controlPipeName);
@@ -2414,8 +2414,8 @@ Exit:
     HandleRedirectedConsoleOnShutdown();
     DeleteManualBrowserWindow();
 
-    LogArenaLifetimeStats("temp allocator", GetTempArena());
-    LogArenaLifetimeStats("lifetime arena", gLifetimeArena);
+    LogArenaStats("temp allocator", GetTempArena());
+    LogArenaStats("perm arena", gPermArena);
 
     if (!logFileBecauseDebug) {
         LaunchFileIfExists(logFilePath);
@@ -2489,7 +2489,7 @@ Exit:
     DeleteAppTools();
     DestroyLogging();
     DestroyTempArena();
-    DestroyLifetimeArena();
+    DestroyPermArena();
 
     return exitCode;
 }

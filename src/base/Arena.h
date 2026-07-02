@@ -95,9 +95,9 @@ void DestroyTempArena();
 // Arena for allocations that live for the whole lifetime of the program (i.e.
 // never freed until exit). Allocating them here avoids per-allocation frees and
 // lets us track how much such memory we use (logged on exit). Never Reset().
-extern Arena* gLifetimeArena;
-Arena* GetLifetimeArena();
-void DestroyLifetimeArena();
+extern Arena* gPermArena;
+Arena* GetPermArena();
+void DestroyPermArena();
 
 template <typename T>
 inline T* push_array_no_zero_aligned(Arena* arena, u64 count, u64 align) {
