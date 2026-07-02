@@ -85,7 +85,7 @@ void RegressSearch(Str filePath, RegressSearchInfo& info) {
 }
 
 void Regress03() {
-    TempStr filePath = path::JoinTemp(TestFilesDir(), "sumatra-search-across-pages-20170615.pdf");
+    TempStr filePath = path::JoinTemp(TestFilesDir(), StrL("sumatra-search-across-pages-20170615.pdf"));
     VerifyFileExists(filePath);
     // searches with hits that are all located completely in one page
     RegressSearch(filePath, data_suspendisse);

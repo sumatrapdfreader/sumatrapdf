@@ -889,7 +889,7 @@ static bool EnsureLibmupdfDll() {
     if (!buildDir) {
         return false;
     }
-    TempStr path = path::JoinTemp(buildDir, "libmupdf.dll");
+    TempStr path = path::JoinTemp(buildDir, StrL("libmupdf.dll"));
     i64 realSize = file::GetSize(path);
     if (realSize == (i64)expectedSize) {
         return true;
@@ -915,7 +915,7 @@ static bool LoadLibmupdf(bool showErrorDialog) {
     TempStr path;
     if (gSingleExe) {
         haveDll = EnsureLibmupdfDll();
-        path = path::JoinTemp(GetBuildDirNameTemp(), "libmupdf.dll");
+        path = path::JoinTemp(GetBuildDirNameTemp(), StrL("libmupdf.dll"));
     } else {
         haveDll = true;
         path = GetPathInExeDirTemp("libmupdf.dll");
@@ -1005,7 +1005,7 @@ static bool ForceRunningAsInstaller() {
     }
 
     TempStr dir = GetSelfExeDirTemp();
-    TempStr path = path::JoinTemp(dir, "libmupdf.dll");
+    TempStr path = path::JoinTemp(dir, StrL("libmupdf.dll"));
     auto realSize = file::GetSize(path);
     if (realSize < 0) {
         return true;
@@ -1160,7 +1160,7 @@ static void DeleteStaleCbxCacheFiles() {
     if (!dataDir) {
         return;
     }
-    TempStr cacheDir = path::JoinTemp(dataDir, "cbx-cache");
+    TempStr cacheDir = path::JoinTemp(dataDir, StrL("cbx-cache"));
     if (path::GetType(cacheDir) != path::Type::Dir) {
         return;
     }
@@ -1782,8 +1782,8 @@ static void InstallSumatraCrashHandler(bool localOnly) {
     }
 
     TempStr crashInfoDir = GetCrashInfoDirTemp();
-    TempStr crashDumpPath = path::JoinTemp(crashInfoDir, "sumatrapdfcrash.dmp");
-    TempStr crashFilePath = path::JoinTemp(crashInfoDir, "sumatrapdfcrash.txt");
+    TempStr crashDumpPath = path::JoinTemp(crashInfoDir, StrL("sumatrapdfcrash.dmp"));
+    TempStr crashFilePath = path::JoinTemp(crashInfoDir, StrL("sumatrapdfcrash.txt"));
     TempStr symDir = localOnly ? GetSelfExeDirTemp() : crashInfoDir;
     InstallCrashHandler(crashDumpPath, crashFilePath, symDir, localOnly);
 }

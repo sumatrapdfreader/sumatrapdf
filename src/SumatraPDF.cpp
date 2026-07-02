@@ -6377,7 +6377,7 @@ TempStr GetNotImportantDataDirTemp() {
     if (!dir) {
         return {};
     }
-    return path::JoinTemp(dir, "SumatraPDF-data");
+    return path::JoinTemp(dir, StrL("SumatraPDF-data"));
 }
 
 TempStr GetBuildDirNameTemp() {
@@ -6399,7 +6399,7 @@ TempStr GetLogFilePathTemp() {
         return {};
     }
     // TODO: maybe use unique name
-    return path::JoinTemp(buildDir, "sumatra-log.txt");
+    return path::JoinTemp(buildDir, StrL("sumatra-log.txt"));
 }
 
 TempStr GetCrashInfoDirTemp() {
@@ -6407,7 +6407,7 @@ TempStr GetCrashInfoDirTemp() {
     if (!buildDir) {
         return {};
     }
-    return path::JoinTemp(buildDir, "crashinfo");
+    return path::JoinTemp(buildDir, StrL("crashinfo"));
 }
 
 void ShowLogFileSmart() {
@@ -7054,7 +7054,7 @@ static void PasteImageFromClipboard(MainWindow* win) {
     CoTaskMemFree(downloadsW);
 
     // generate unique path: clipboard.png, clipboard.1.png, etc.
-    TempStr basePath = path::JoinTemp(downloadsDir, "clipboard.png");
+    TempStr basePath = path::JoinTemp(downloadsDir, StrL("clipboard.png"));
     TempStr destPath = MakeUniqueFilePathTemp(basePath);
 
     // save as PNG
@@ -10705,7 +10705,7 @@ void GetProgramInfo(str::Builder& s) {
         // show the size of the dll so that we can verify it's the
         // correct size for the given version
         TempStr dir = path::GetDirTemp(exePath);
-        TempStr dllPath = path::JoinTemp(dir, "libmupdf.dll");
+        TempStr dllPath = path::JoinTemp(dir, StrL("libmupdf.dll"));
         auto fileSizeDll = GetFileSizeAsStrTemp(dllPath);
         s.Append(fmt("Dll: %s %s\r\n", dllPath, fileSizeDll));
     }

@@ -442,7 +442,7 @@ static bool KillProcessesUsingInstallation() {
     if (!dir) {
         return true;
     }
-    TempStr libmupdf = path::JoinTemp(dir, "libmupdf.dll");
+    TempStr libmupdf = path::JoinTemp(dir, StrL("libmupdf.dll"));
     TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -479,7 +479,7 @@ static void ProcessesUsingInstallation(StrVec& names) {
     if (!dir) {
         return;
     }
-    TempStr libmupdf = path::JoinTemp(dir, "libmupdf.dll");
+    TempStr libmupdf = path::JoinTemp(dir, StrL("libmupdf.dll"));
     TempStr browserPlugin = path::JoinTemp(dir, kBrowserPluginName);
 
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);

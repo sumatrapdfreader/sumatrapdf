@@ -1080,7 +1080,7 @@ bool HasWriteAccess(Str dir) {
     if (!dir) {
         return false;
     }
-    TempStr path = path::JoinTemp(dir, "__sumatra_write_test__.tmp");
+    TempStr path = path::JoinTemp(dir, StrL("__sumatra_write_test__.tmp"));
     WCHAR* pathW = CWStrTemp(path);
     HANDLE h = CreateFileW(pathW, GENERIC_WRITE, 0, nullptr, CREATE_NEW,
                            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, nullptr);

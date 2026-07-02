@@ -351,7 +351,7 @@ bool CrashHandlerDownloadSymbols() {
 }
 
 bool AreSymbolsDownloaded(Str symDir) {
-    TempStr path = path::JoinTemp(symDir, "SumatraPDF.pdb");
+    TempStr path = path::JoinTemp(symDir, StrL("SumatraPDF.pdb"));
     if (file::Exists(path)) {
         logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path, symDir);
         return true;

@@ -67,11 +67,11 @@ TryAgain64Bit:
                 continue;
             }
             TempStr dir = path::GetDirTemp(gsDLL);
-            TempStr exe = path::JoinTemp(dir, "gswin32c.exe");
+            TempStr exe = path::JoinTemp(dir, StrL("gswin32c.exe"));
             if (file::Exists(exe)) {
                 return exe;
             }
-            exe = path::JoinTemp(dir, "gswin64c.exe");
+            exe = path::JoinTemp(dir, StrL("gswin64c.exe"));
             if (file::Exists(exe)) {
                 return exe;
             }
@@ -89,9 +89,9 @@ TryAgain64Bit:
     StrVec paths;
     Split(&paths, envPath, ";", true);
     for (Str path : paths) {
-        TempStr exe = path::JoinTemp(path, "gswin32c.exe");
+        TempStr exe = path::JoinTemp(path, StrL("gswin32c.exe"));
         if (!file::Exists(exe)) {
-            exe = path::JoinTemp(path, "gswin64c.exe");
+            exe = path::JoinTemp(path, StrL("gswin64c.exe"));
         }
         if (!file::Exists(exe)) {
             continue;

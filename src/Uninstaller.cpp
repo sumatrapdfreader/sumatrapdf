@@ -367,7 +367,7 @@ static TempStr GetUninstallerPathInTemp() {
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     ReportIf(res == 0 || res >= dimof(tempDir));
     TempStr dirA = ToUtf8Temp(tempDir);
-    return path::JoinTemp(dirA, "Sumatra-Uninstaller.exe");
+    return path::JoinTemp(dirA, StrL("Sumatra-Uninstaller.exe"));
 }
 
 // to be able to delete installation directory we must copy
@@ -440,7 +440,7 @@ static TempStr GetSelfDeleteBatchPathInTemp() {
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     ReportIf(res == 0 || res >= dimof(tempDir));
     TempStr tempDirA = ToUtf8Temp(tempDir);
-    return path::JoinTemp(tempDirA, "sumatra-self-del.bat");
+    return path::JoinTemp(tempDirA, StrL("sumatra-self-del.bat"));
 }
 
 // a hack to allow deleting our own executable

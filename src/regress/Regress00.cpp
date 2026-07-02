@@ -26,7 +26,7 @@ static void Regress01() {
 
 // https://code.google.com/archive/p/sumatrapdf/issues/1926
 static void Regress00() {
-    TempStr filePath = path::JoinTemp(TestFilesDir(), "epub\\widget-figure-gallery-20120405.epub");
+    TempStr filePath = path::JoinTemp(TestFilesDir(), StrL("epub\\widget-figure-gallery-20120405.epub"));
     VerifyFileExists(filePath);
     Kind kind = GuessFileType(filePath, true);
     ReportIf(!EpubDoc::IsSupportedFileType(kind));

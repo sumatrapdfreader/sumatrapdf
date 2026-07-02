@@ -413,7 +413,7 @@ static bool IsFb2Archive(MultiFormatArchive* archive) {
 Kind GuessFileTypeFromFile(Str path) {
     ReportIf(!path);
     if (path::IsDirectory(path)) {
-        TempStr mimetypePath = path::JoinTemp(path, "mimetype");
+        TempStr mimetypePath = path::JoinTemp(path, StrL("mimetype"));
         if (file::StartsWith(mimetypePath, "application/epub+zip")) {
             return kindFileEpub;
         }

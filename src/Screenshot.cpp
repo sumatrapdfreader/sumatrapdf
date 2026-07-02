@@ -682,7 +682,7 @@ static void SaveSelectedScreenshot(ScreenshotOverlayData* data) {
         return;
     }
     TempStr dataDir = GetAppDataDirTemp();
-    TempStr screenshotDir = path::JoinTemp(dataDir, "Screenshots");
+    TempStr screenshotDir = path::JoinTemp(dataDir, StrL("Screenshots"));
     dir::CreateAll(screenshotDir);
 
     auto& cs = data->captures[data->selected];

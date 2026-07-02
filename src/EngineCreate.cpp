@@ -34,7 +34,7 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
         // local-appdata is also remote (unusual) -- caching wouldn't help
         return {};
     }
-    TempStr cacheDir = path::JoinTemp(dataDir, "cbx-cache");
+    TempStr cacheDir = path::JoinTemp(dataDir, StrL("cbx-cache"));
 
     u8 digest[16]{};
     TempStr keyStr = fmt("%s|%lld", path, (long long)fileSize);

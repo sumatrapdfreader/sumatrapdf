@@ -228,7 +228,7 @@ static TempStr GetFoxitPathTemp() {
     keyName = R"(Software\Foxit Software\Foxit Reader)";
     path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "InstallPath");
     if (path) {
-        path = path::JoinTemp(path, "Foxit Reader.exe");
+        path = path::JoinTemp(path, StrL("Foxit Reader.exe"));
     }
     if (path && file::Exists(path)) {
         return path;
@@ -238,7 +238,7 @@ static TempStr GetFoxitPathTemp() {
     keyName = R"(SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\FoxitPDFReader.exe)";
     path = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "Path");
     if (path) {
-        path = path::JoinTemp(path, "FoxitPDFReader.exe");
+        path = path::JoinTemp(path, StrL("FoxitPDFReader.exe"));
     }
     if (path && file::Exists(path)) {
         return path;
@@ -256,7 +256,7 @@ static TempStr GetPDFXChangePathTemp() {
     if (!path) {
         return {};
     }
-    TempStr exePath = path::JoinTemp(path, "PDFXCview.exe");
+    TempStr exePath = path::JoinTemp(path, StrL("PDFXCview.exe"));
     if (file::Exists(exePath)) {
         return exePath;
     }

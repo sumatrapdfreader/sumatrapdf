@@ -186,7 +186,7 @@ TempStr GetPdfPreviewLogDirTemp() {
     if (!exeDir) {
         return {};
     }
-    TempStr exePath = path::JoinTemp(exeDir, "SumatraPDF.exe");
+    TempStr exePath = path::JoinTemp(exeDir, StrL("SumatraPDF.exe"));
     Str d = file::ReadFile(exePath);
     if (str::IsEmpty(d)) {
         return {};
@@ -202,7 +202,7 @@ TempStr GetPdfPreviewLogDirTemp() {
     if (!local) {
         return {};
     }
-    TempStr dir = path::JoinTemp(local, "SumatraPDF-data");
+    TempStr dir = path::JoinTemp(local, StrL("SumatraPDF-data"));
     return path::JoinTemp(dir, id);
 }
 

@@ -567,14 +567,14 @@ TempStr GetWebViewDataDirTemp() {
     if (!dir) {
         return {};
     }
-    dir = path::JoinTemp(dir, "SumatraPDF-data");
+    dir = path::JoinTemp(dir, StrL("SumatraPDF-data"));
     char id[7] = "000000";
     Str sha1 = Sha1OfAppExe();
     if (sha1) {
         str::BufSet(Str(id, dimof(id)), sha1);
     }
     dir = path::JoinTemp(dir, id);
-    return path::JoinTemp(dir, "webview");
+    return path::JoinTemp(dir, StrL("webview"));
 }
 
 // Format the file size in a short form that rounds to the largest size unit

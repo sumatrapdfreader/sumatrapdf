@@ -1094,7 +1094,7 @@ void OpenPathInDefaultFileManager(Str path) {
     UINT len = GetWindowsDirectoryW(winDir, MAX_PATH);
     if (len == 0 || len >= MAX_PATH) return;
     TempStr explorer = ToUtf8Temp(winDir);
-    explorer = path::JoinTemp(explorer, "explorer.exe");
+    explorer = path::JoinTemp(explorer, StrL("explorer.exe"));
     if (file::Exists(explorer)) return;
     TempStr args = fmt("/select,\"%s\"", path);
     CreateProcessHelper(explorer, args);
@@ -2746,7 +2746,7 @@ void RunNonElevated(Str exePath) {
         goto Run;
     }
     explorerPath = ToUtf8Temp(buf);
-    explorerPath = path::JoinTemp(explorerPath, "explorer.exe");
+    explorerPath = path::JoinTemp(explorerPath, StrL("explorer.exe"));
     if (!file::Exists(explorerPath)) {
         goto Run;
     }
