@@ -53,28 +53,28 @@ struct FindMatchPaintPageRect {
     Rect rect{};
 };
 
+// references a [firstPos, firstPos + len) slice of gFindMatchPaintCache.positions
 struct FindMatchPaintRects {
     u64 key = 0;
-    Vec<FindMatchPaintPageRect> rects;
+    int firstPos = 0;
+    int len = 0;
 };
 
 static struct {
     int firstPage = 0;
     int lastPage = 0;
     LONG countEpoch = 0;
-    // entries are heap-allocated and owned by the cache. They must NOT be stored
-    // by value: Vec only supports POD types and relocates elements with memcpy
-    // when it grows, which would leave FindMatchPaintRects::rects (a Vec with an
-    // inline buffer) with a dangling els pointer, and would also leak its heap
-    // buffer since Vec never runs element destructors.
-    Vec<FindMatchPaintRects*> entries;
+    // all page rects for all entries, laid out contiguously; each entry
+    // references its rects as a [firstPos, firstPos + len) slice. Both entries
+    // and positions are plain POD so they can live in a Vec by value; entries
+    // hold indices (not pointers), so they stay valid as positions reallocates.
+    Vec<FindMatchPaintPageRect> positions;
+    Vec<FindMatchPaintRects> entries;
 } gFindMatchPaintCache;
 
 static void FreeFindMatchPaintCacheEntries() {
-    for (int i = 0; i < (int)gFindMatchPaintCache.entries.size(); i++) {
-        delete gFindMatchPaintCache.entries[i];
-    }
     gFindMatchPaintCache.entries.Reset();
+    gFindMatchPaintCache.positions.Reset();
 }
 
 void InvalidateFindMatchPaintCache() {
@@ -984,9 +984,9 @@ static void AppendMatchPageRects(EngineBase* engine, const FindMatch& fm, Vec<Fi
     }
 }
 
-static void AppendPageRectsToScreen(DisplayModel* dm, const Rect& clipRc, const Vec<FindMatchPaintPageRect>& pageRects,
-                                    Vec<Rect>& out) {
-    for (size_t i = 0; i < pageRects.size(); i++) {
+static void AppendPageRectsToScreen(DisplayModel* dm, const Rect& clipRc, const FindMatchPaintPageRect* pageRects,
+                                    int nRects, Vec<Rect>& out) {
+    for (int i = 0; i < nRects; i++) {
         const FindMatchPaintPageRect& pr = pageRects[i];
         if (!dm->ValidPageNo(pr.pageNo) || !dm->PageVisible(pr.pageNo)) {
             continue;
@@ -1009,18 +1009,22 @@ static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int fi
     if (!engine) {
         return;
     }
+    Vec<FindMatchPaintPageRect>& positions = gFindMatchPaintCache.positions;
     for (int i = 0; i < (int)win->findMatches.size(); i++) {
         const FindMatch& fm = win->findMatches[i];
         if (!FindMatchTouchesVisiblePages(fm, firstPage, lastPage)) {
             continue;
         }
-        auto entry = new FindMatchPaintRects();
-        entry->key = MatchKey(fm.startPage, fm.startGlyph);
-        AppendMatchPageRects(engine, fm, entry->rects);
-        if (entry->rects.size() == 0) {
-            delete entry;
+        int firstPos = positions.Size();
+        AppendMatchPageRects(engine, fm, positions);
+        int len = positions.Size() - firstPos;
+        if (len == 0) {
             continue;
         }
+        FindMatchPaintRects entry;
+        entry.key = MatchKey(fm.startPage, fm.startGlyph);
+        entry.firstPos = firstPos;
+        entry.len = len;
         gFindMatchPaintCache.entries.Append(entry);
     }
 }
@@ -1100,13 +1104,11 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
 
     Vec<Rect> otherRects;
     Vec<Rect> currentRects;
+    Vec<FindMatchPaintPageRect>& positions = gFindMatchPaintCache.positions;
     for (int i = 0; i < (int)gFindMatchPaintCache.entries.size(); i++) {
-        const FindMatchPaintRects* entry = gFindMatchPaintCache.entries[i];
-        if (entry->key == currentKey) {
-            AppendPageRectsToScreen(dm, win->canvasRc, entry->rects, currentRects);
-        } else {
-            AppendPageRectsToScreen(dm, win->canvasRc, entry->rects, otherRects);
-        }
+        const FindMatchPaintRects& entry = gFindMatchPaintCache.entries[i];
+        Vec<Rect>& out = (entry.key == currentKey) ? currentRects : otherRects;
+        AppendPageRectsToScreen(dm, win->canvasRc, &positions[entry.firstPos], entry.len, out);
     }
 
     if (otherRects.size() > 0) {
