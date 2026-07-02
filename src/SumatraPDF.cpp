@@ -2630,9 +2630,9 @@ static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
 // start a background load now if a thread slot is free, otherwise queue it
 static void StartOrQueueLoadDocument(LoadDocumentAsyncData* data) {
     if (gMaxLoadThreads == 0) {
-        // between 2 and CpuCoreCount() - 2 concurrent loads
-        int n = CpuCoreCount() - 2;
-        gMaxLoadThreads = n < 2 ? 2 : n;
+        // at most min(4, CpuCoreCount()) concurrent loads
+        int n = CpuCoreCount();
+        gMaxLoadThreads = n < 4 ? n : 4;
     }
     if (gLoadThreadsActive < gMaxLoadThreads) {
         StartLoadDocumentThread(data);
