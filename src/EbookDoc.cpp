@@ -1063,7 +1063,7 @@ bool Fb2Doc::HasToc() const {
 }
 
 bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
-    AutoFreeWStr itemText;
+    TempStr itemText;
     bool inTitle = false;
     int titleCount = 0;
     int level = 0;
@@ -1080,22 +1080,20 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             inTitle = true;
             titleCount++;
         } else if (tok->IsEndTag() && Tag_Title == tok->tag) {
-            if (itemText) {
-                wstr::NormalizeWSInPlace(WStr(itemText.Get()));
-            }
-            if (!wstr::IsEmpty(itemText.Get())) {
+            // NormalizeWSInPlace shortens the buffer in place; adjust len to match
+            itemText.len -= str::NormalizeWSInPlace(itemText);
+            if (!str::IsEmpty(itemText)) {
                 TempStr url = fmt(FB2_TOC_ENTRY_MARK "%d", titleCount);
-                TempStr txt = ToUtf8Temp(WStr(itemText.Get()));
-                visitor->Visit(txt, url, level);
-                itemText.Reset();
+                visitor->Visit(itemText, url, level);
+                itemText = {};
             }
             inTitle = false;
         } else if (inTitle && tok->IsText()) {
-            WStr text = strconv::HtmlUtf8ToWStrTemp(tok->s);
-            if (wstr::IsEmpty(itemText.Get())) {
-                itemText.SetCopy(text);
+            TempStr text = ToUtf8Temp(strconv::HtmlUtf8ToWStrTemp(tok->s));
+            if (str::IsEmpty(itemText)) {
+                itemText = text;
             } else {
-                itemText.Set(wstr::Join(WStr(itemText.Get()), WStr(L" "), text).s);
+                itemText = str::JoinTemp(itemText, " ", text);
             }
         }
     }
