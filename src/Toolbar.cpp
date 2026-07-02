@@ -1248,11 +1248,11 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
         bmih->biBitCount = bitsCount;
         bmih->biSizeImage = imgSize;
         bmih->biClrUsed = 0;
-        HANDLE hFile = INVALID_HANDLE_VALUE;
-        DWORD fl = PAGE_READWRITE;
-        HANDLE hMap = CreateFileMappingW(hFile, nullptr, fl, 0, imgSize, nullptr);
         uint usage = DIB_RGB_COLORS;
-        hbmp = CreateDIBSection(nullptr, bmi, usage, (void**)&hbmpData, hMap, 0);
+        // no file mapping: nothing shares the section and the bitmap is
+        // deleted right after ImageList_Add, so let CreateDIBSection
+        // allocate (a mapping handle here was leaked)
+        hbmp = CreateDIBSection(nullptr, bmi, usage, (void**)&hbmpData, nullptr, 0);
     }
 
     COLORREF fgCol = ThemeWindowTextColor();

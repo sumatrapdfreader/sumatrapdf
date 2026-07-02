@@ -1347,6 +1347,9 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     }
     fz_drop_pixmap(ctx, bgrPixmap);
     if (!hbmp) {
+        if (hMap) {
+            CloseHandle(hMap);
+        }
         return nullptr;
     }
     // return a RenderedBitmap even if hbmp is nullptr so that callers can
