@@ -183,6 +183,56 @@ static void TwoColumnLeftEntryStaysInColumn() {
     utassert(box.y + box.dy < 240.f);
 }
 
+// (3g) Bracket entry wraps across a 2-column page break ("[63]"-style): the
+// last entry in the left column ends near the page bottom with no sibling
+// "[" or blank-line gap to close it, and continues at the top of the next
+// column. DetectEntryBox must report that continuation via continuationOut
+// without swallowing the following entry ("[64]") in the new column.
+static void ColumnWrapContinuationDetected() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Left column's last entry: single line near the page bottom (kPageH=792).
+    AddText(text, coords, len, 1024, L"[63] Voelter M: DSL Engineering des", 72, 762);
+    // Right column (gutter ~252..340): continuation of [63] at the top (no
+    // bracket label), then the next real entry [64] further down.
+    AddText(text, coords, len, 1024, L"Languages dslbook org Germany 2013", 340, 40);
+    AddText(text, coords, len, 1024, L"[64] Moretti N Xie X et al Title", 340, 65);
+    RectF continuation{};
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 762.f, &continuation);
+    utassert(!IsEmpty(box));
+    // Primary box unaffected: stays in the left column, at the entry's line.
+    utassert(box.x < 246.f);
+    utassert(box.y <= 762.f + 6.f);
+    utassert(!IsEmpty(continuation));
+    // Continuation sits in the right column, above the next entry.
+    utassert(continuation.x > 246.f);
+    utassert(continuation.y <= 40.f + 6.f);
+    utassert(continuation.y + continuation.dy < 65.f);
+}
+
+// (3h) Last entry in the left column ends near the column's content edge, but
+// the top of the next column is unrelated running body text (e.g. a
+// Discussion section sharing the page with References, not a wrap of this
+// entry) that only reaches a bracket many lines down. DetectEntryBox must not
+// mistake that long unrelated block for a short wrapped tail.
+static void ColumnWrapContinuationRejectsUnrelatedBodyText() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    AddText(text, coords, len, 1024, L"[47] Zhang X Wang Y Wang J Title A", 72, 750);
+    // Right column: several lines of unrelated running text, then a sibling
+    // entry far past the short continuation cap.
+    for (int i = 0; i < 6; i++) {
+        AddText(text, coords, len, 1024, L"unrelated running body text here.", 340, 40 + i * 14);
+    }
+    AddText(text, coords, len, 1024, L"[48] Li H Hou L Wang X Guo H Title", 340, 130);
+    RectF continuation{};
+    RectF box = DetectEntryBox(WStr(text, len), coords, Mediabox(), 72.f, 750.f, &continuation);
+    utassert(!IsEmpty(box));
+    utassert(IsEmpty(continuation));
+}
+
 // (3c) All-caps accented Spanish heading "SECCIÓN 2": the heading-prefix
 // dictionary must match case-insensitively beyond ASCII (the process runs in
 // the "C" locale where towlower doesn't fold Ó), so the destination is
@@ -1018,6 +1068,8 @@ void RefHoverTest() {
     SparseTextReturnsWholePage();
     TwoColumnLeftEntryStaysInColumn();
     TwoColumnRightEntryStaysInColumn();
+    ColumnWrapContinuationDetected();
+    ColumnWrapContinuationRejectsUnrelatedBodyText();
     PlainTextCitationDetected();
     PlainTextCitationSrcRectDistinctOnLine();
     PlainTextCitationNoYear();

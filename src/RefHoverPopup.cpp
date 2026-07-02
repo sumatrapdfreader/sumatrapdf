@@ -23,6 +23,15 @@ static bool PopupClientToPagePt(RefHoverState* s, HWND hwnd, int clientX, int cl
         return false;
     }
     int border = DpiScale(hwnd, kRefHoverBorder);
+    // When a column-wrap continuation is stitched below displayed.region in
+    // the bitmap (see RefHoverRender.cpp's StackPixmapsVertically), a click
+    // there falls outside what displayed.region maps to — the formula below
+    // would silently produce a page point in the wrong place. Reject clicks
+    // past the primary crop's rendered height rather than mis-hit-test.
+    float regionPixH = s->displayed.region.dy * zoom;
+    if ((float)(clientY - border) > regionPixH) {
+        return false;
+    }
     ptOut.x = s->displayed.region.x + (float)(clientX - border) / zoom;
     ptOut.y = s->displayed.region.y + (float)(clientY - border) / zoom;
     return true;
