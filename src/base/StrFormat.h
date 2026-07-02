@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+struct AutoFree; // for str::ParseArg (%s / %S output), defined in Scoped.h
+
 namespace str {
 
 // argument to a formatting instruction
@@ -111,6 +113,50 @@ Str Format(Arena* a, const char* fmt, const TArgs&... args) {
     }
     return FormatArgs(a, fmt, argp, n);
 }
+
+// Type-safe scanf-style parsing (analogous to str::Format). Each output arg
+// is a pointer whose type is captured by ParseArg's explicit constructors, so a
+// format/arg mismatch (e.g. %d into a WORD*) is a compile error, not silent UB.
+// %s / %S write into an AutoFree (owning); the numeric/char specs write via the
+// matching pointer type.
+struct ParseArg {
+    enum class Kind : u8 {
+        None,
+        Int,
+        UInt,
+        Float,
+        Char,
+        StrOut
+    };
+    Kind kind = Kind::None;
+    void* ptr = nullptr;
+
+    ParseArg() = default;
+    explicit ParseArg(int* p) : kind(Kind::Int), ptr(p) {}
+    explicit ParseArg(unsigned int* p) : kind(Kind::UInt), ptr(p) {}
+    explicit ParseArg(float* p) : kind(Kind::Float), ptr(p) {}
+    explicit ParseArg(char* p) : kind(Kind::Char), ptr(p) {}
+    explicit ParseArg(AutoFree* p) : kind(Kind::StrOut), ptr(p) {}
+};
+
+Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs);
+
+inline Str Parse(Str str, const char* fmt) {
+    return ParseArgs(str, fmt, nullptr, 0);
+}
+
+template <typename... TArgs>
+Str Parse(Str str, const char* fmt, TArgs*... args) {
+    const ParseArg argv[] = {ParseArg(args)...};
+    return ParseArgs(str, fmt, argv, (int)sizeof...(TArgs));
+}
+
+TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT, bool stripTrailingZero = true);
+TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
+TempStr FormatSizeShortTemp(i64 size);
+TempStr FormatSizeShortTemp(i64 size, Str const* sizeUnits);
+TempStr FormatFileSizeTemp(i64);
+TempStr FormatRomanNumeralTemp(int number);
 
 } // namespace str
 
