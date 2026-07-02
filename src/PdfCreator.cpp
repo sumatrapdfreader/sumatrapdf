@@ -20,11 +20,11 @@ extern "C" {
 
 #include "base/Log.h"
 
-static AutoFreeStr gPdfProducer;
+static Str gPdfProducer;
 
 void PdfCreator::SetProducerName(Str name) {
-    if (!str::Eq(Str(gPdfProducer.Get()), name)) {
-        gPdfProducer.SetCopy(name);
+    if (!str::Eq(gPdfProducer, name)) {
+        gPdfProducer = str::Dup(GetLifetimeArena(), name);
     }
 }
 
@@ -334,7 +334,7 @@ bool PdfCreator::SaveToFile(Str filePath) const {
     }
 
     if (gPdfProducer) {
-        SetProperty(kPropPdfProducer, Str(gPdfProducer.Get()));
+        SetProperty(kPropPdfProducer, gPdfProducer);
     }
 
     fz_try(ctx) {

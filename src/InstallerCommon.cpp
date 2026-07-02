@@ -107,7 +107,7 @@ bool WriteRegExpandSz(HKEY root, Str keyName, Str valueName, Str value) {
     return true;
 }
 
-static AutoFreeStr gMsg;
+static Str gMsg;
 static Color gMsgColor;
 
 static StrVec gProcessesToClose;
@@ -131,7 +131,7 @@ void NotifyFailed(Str msg) {
 }
 
 void SetMsg(Str msg, Color color) {
-    gMsg.SetCopy(msg);
+    gMsg = str::Dup(GetLifetimeArena(), msg);
     gMsgColor = color;
 }
 
@@ -810,7 +810,7 @@ static void DrawFrame2(Graphics& g, Rect r, bool skipMessage) {
 
     float msgY = (float)(r.dy / 2);
     if (gMsg) {
-        msgY += DrawMessage(g, Str(gMsg.Get()), msgY, (float)r.dx, gMsgColor) + 5;
+        msgY += DrawMessage(g, gMsg, msgY, (float)r.dx, gMsgColor) + 5;
     }
     if (gMsgError) {
         DrawMessage(g, gMsgError, msgY, (float)r.dx, COLOR_MSG_FAILED);

@@ -41,11 +41,11 @@ Kind kindEngineChm = "engineChm";
 Kind kindEngineHtml = "engineHtml";
 Kind kindEngineTxt = "engineTxt";
 
-static AutoFreeStr gDefaultFontName;
+static Str gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
 static WStr GetDefaultFontName() {
-    Str s = gDefaultFontName.Get();
+    Str s = gDefaultFontName;
     if (s) {
         return ToWStrTemp(s);
     }
@@ -68,7 +68,7 @@ void SetDefaultEbookFont(Str name, float size) {
         // we should use the font as given in css
         name = StrL("Georgia");
     }
-    gDefaultFontName.SetCopy(name);
+    gDefaultFontName = str::Dup(GetLifetimeArena(), name);
     // use a somewhat smaller size than in the EbookUI, since fit page/width
     // is likely to be above 100% for the paperback page dimensions
     gDefaultFontSize = size * 0.8f;
@@ -1389,10 +1389,11 @@ struct ChmFormatter : HtmlFormatter {
     void HandleTagLink(HtmlToken* t) override;
 
     ChmDataCache* chmDoc = nullptr;
-    AutoFreeStr pagePath;
+    Str pagePath;
 
   public:
     ChmFormatter(HtmlFormatterArgs* args, ChmDataCache* doc) : HtmlFormatter(args), chmDoc(doc) {}
+    ~ChmFormatter() override { str::Free(pagePath); }
 };
 
 void ChmFormatter::HandleTagImg(HtmlToken* t) {
@@ -1405,7 +1406,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     if (attr) {
         Str src = str::Dup(attr->val);
         url::DecodeInPlace(src);
-        Str img = chmDoc->GetImageData(src, Str(pagePath));
+        Str img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName(StrL("alt"))) != nullptr) {
@@ -1421,7 +1422,7 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, bbox));
-        pagePath.SetCopy(attr->val);
+        str::ReplaceWithCopy(&pagePath, attr->val);
         // reset CSS style rules for the new document
         styleRules.Reset();
     }
@@ -1948,5 +1949,5 @@ EngineBase* CreateEngineTxtFromFile(Str fileName) {
 }
 
 void EngineEbookCleanup() {
-    gDefaultFontName.Reset();
+    gDefaultFontName = {};
 }
