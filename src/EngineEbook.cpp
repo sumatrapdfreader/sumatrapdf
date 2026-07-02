@@ -1363,22 +1363,22 @@ class ChmDataCache {
             }
         }
 
-        auto tmp = doc->GetData(url);
+        TempStr tmp = doc->GetDataTemp(url);
         if (str::IsEmpty(tmp)) {
             return {};
         }
 
         ImageData data;
-        data.base = tmp;
+        data.base = str::Dup(tmp);
 
         data.fileName = str::Dup(url);
         images.Append(data);
         return images.Last().base;
     }
 
-    Str GetFileData(Str relPath, Str pagePath) {
+    TempStr GetFileData(Str relPath, Str pagePath) {
         TempStr url = NormalizeURLTemp(relPath, pagePath);
-        return doc->GetData(url);
+        return doc->GetDataTemp(url);
     }
 };
 
@@ -1448,11 +1448,10 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
 
     TempStr src = str::DupTemp(attr->val);
     url::DecodeInPlace(src);
-    Str data = chmDoc->GetFileData(src, Str(pagePath));
+    TempStr data = chmDoc->GetFileData(src, pagePath);
     if ((u8*)data.s) {
         ParseStyleSheet(data);
     }
-    str::Free(data);
 }
 
 /* EngineBase for handling CHM documents */
@@ -1619,20 +1618,18 @@ struct ChmHtmlCollector : EbookTocVisitor {
         defer {
             InterlockedDecrement(&gAllowAllocFailure);
         };
-        Str pageHtml = doc->GetData(plainUrl);
+        TempStr pageHtml = doc->GetDataTemp(plainUrl);
         if (!pageHtml) {
             return;
         }
         html.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl));
-        Str pageHtmlStr = pageHtml;
-        uint charset = ExtractHttpCharset(pageHtmlStr);
+        uint charset = ExtractHttpCharset(pageHtml);
         if (!charset) {
             charset = doc->codepage;
         }
-        TempStr s = SmartToUtf8Temp(pageHtmlStr, charset);
+        TempStr s = SmartToUtf8Temp(pageHtml, charset);
         html.Append(s);
         added.Append(plainUrl);
-        str::Free(pageHtml);
     }
 };
 

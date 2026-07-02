@@ -28,7 +28,7 @@ struct ChmFile {
     ~ChmFile();
 
     bool HasData(Str fileName) const;
-    Str GetData(Str fileName) const;
+    TempStr GetDataTemp(Str fileName) const;
     TempStr ResolveTopicID(unsigned int id) const;
 
     TempStr GetPropertyTemp(Str name) const;

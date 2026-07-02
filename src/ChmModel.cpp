@@ -612,7 +612,7 @@ Str ChmModel::GetDataForUrl(Str url) {
     if (!e) {
         Str s = str::Dup(poolAlloc, plainUrl);
         e = new ChmCacheEntry(s);
-        e->data = doc->GetData(plainUrl);
+        e->data = str::Dup(doc->GetDataTemp(plainUrl));
         if (str::IsEmpty(e->data)) {
             delete e;
             return {};
@@ -831,7 +831,7 @@ void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
 Str ChmThumbnailTask::GetDataForUrl(Str url) {
     ScopedCritSec scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
-    auto d = doc->GetData(plainUrl);
+    Str d = str::Dup(doc->GetDataTemp(plainUrl));
     data.Append(d);
     return d;
 }

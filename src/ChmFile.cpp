@@ -39,7 +39,7 @@ bool ChmFile::HasData(Str fileName) const {
     return chm_resolve_object(chmHandle, fileName.s, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-Str ChmFile::GetData(Str fileName) const {
+TempStr ChmFile::GetDataTemp(Str fileName) const {
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp(StrL("/"), fileName);
     } else if (str::StartsWith(fileName, "///")) {
@@ -65,7 +65,7 @@ Str ChmFile::GetData(Str fileName) const {
     }
 
     // +1 for 0 terminator for C string compatibility
-    u8* d = AllocArray<u8>((int)(len + 1));
+    u8* d = AllocArrayTemp<u8>((int)(len + 1));
     if (!d) {
         return {};
     }
@@ -103,15 +103,8 @@ static Str GetCharZ(Str d, size_t off) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
 void ChmFile::ParseWindowsData() {
-    Str windowsData = GetData("/#WINDOWS");
-    Str stringsData = GetData("/#STRINGS");
-
-    defer {
-        str::Free(stringsData);
-    };
-    defer {
-        str::Free(windowsData);
-    };
+    TempStr windowsData = GetDataTemp("/#WINDOWS");
+    TempStr stringsData = GetDataTemp("/#STRINGS");
 
     if (str::IsEmpty(windowsData) || str::IsEmpty(stringsData)) {
         return;
@@ -196,13 +189,10 @@ static uint LcidToCodepage(DWORD lcid) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
 bool ChmFile::ParseSystemData() {
-    Str d = GetData("/#SYSTEM");
+    TempStr d = GetDataTemp("/#SYSTEM");
     if (str::IsEmpty(d)) {
         return false;
     }
-    defer {
-        str::Free(d);
-    };
 
     ByteReader r(d);
     DWORD len = 0;
@@ -259,10 +249,7 @@ bool ChmFile::ParseSystemData() {
 }
 
 TempStr ChmFile::ResolveTopicID(unsigned int id) const {
-    Str ivbData = GetData("/#IVB");
-    defer {
-        str::Free(ivbData);
-    };
+    TempStr ivbData = GetDataTemp("/#IVB");
     size_t ivbLen = (size_t)ivbData.len;
     ByteReader br(ivbData);
     if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
@@ -271,9 +258,8 @@ TempStr ChmFile::ResolveTopicID(unsigned int id) const {
 
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
-            Str stringsData = GetData("/#STRINGS");
+            TempStr stringsData = GetDataTemp("/#STRINGS");
             Str res = GetCharZ(stringsData, br.DWordLE(off + 4));
-            str::Free(stringsData);
             if (!res) {
                 return {};
             }
@@ -699,7 +685,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     if (!path) {
         return false;
     }
-    Str htmlData = GetData(path);
+    TempStr htmlData = GetDataTemp(path);
     if (str::IsEmpty(htmlData)) {
         return false;
     }
@@ -707,7 +693,6 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     // attribute values come out in a known encoding -- no per-attribute
     // conversion needed in the visit functions.
     TempStr utf8 = SmartToUtf8Temp(htmlData, codepage);
-    str::Free(htmlData);
     if (!utf8) {
         return false;
     }
