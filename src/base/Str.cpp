@@ -302,7 +302,7 @@ bool Eq(Str s1, Str s2) {
     if (str::IsNull(s1) || str::IsNull(s2)) {
         return false;
     }
-    return memeq(s1.s, s2.s, (size_t)len1);
+    return memeq(s1.s, s2.s, len1);
 }
 
 // return true if s1 == s2, case insensitive
@@ -734,7 +734,7 @@ int IndexOf(Str buf, Str toFind) {
     char c = toFind.s[0];
     int end = buf.len - toFindLen;
     for (int i = 0; i <= end; i++) {
-        if (buf.s[i] == c && memeq(buf.s + i, toFind.s, (size_t)toFindLen)) {
+        if (buf.s[i] == c && memeq(buf.s + i, toFind.s, toFindLen)) {
             return i;
         }
     }

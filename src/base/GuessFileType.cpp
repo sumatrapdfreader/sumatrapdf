@@ -318,7 +318,7 @@ Kind GuessFileTypeFromContent(Str d) {
         size_t sigLen = gFileSigs[i].sigLen;
         size_t sigMaxLen = off + sigLen;
         u8* dat = data + off;
-        if ((len > sigMaxLen) && memeq(dat, sig.s, sigLen)) {
+        if ((len > sigMaxLen) && memeq(dat, sig.s, (int)sigLen)) {
             return gFileSigs[i].kind;
         }
     }

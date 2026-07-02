@@ -23,12 +23,12 @@ int AtomicRefCountDec(AtomicRefCount* v) {
 // This exits so that I can add temporary instrumentation
 // to catch allocations of a given size and it won't cause
 // re-compilation of everything caused by changing Base.h
-void* AllocZero(size_t count, size_t size) {
+void* AllocZero(int count, int size) {
     return calloc(count, size);
 }
 
 // extraBytes will be filled with 0. Useful for copying zero-terminated strings
-void* memdup(const void* data, size_t len, size_t extraBytes) {
+void* memdup(const void* data, int len, int extraBytes) {
     // to simplify callers, if data is nullptr, ignore the sizes
     if (!data) {
         return nullptr;
@@ -40,12 +40,8 @@ void* memdup(const void* data, size_t len, size_t extraBytes) {
     return dup;
 }
 
-bool memeq(const void* s1, const void* s2, size_t len) {
+bool memeq(const void* s1, const void* s2, int len) {
     return 0 == memcmp(s1, s2, len);
-}
-
-size_t RoundUp(size_t n, size_t rounding) {
-    return ((n + rounding - 1) / rounding) * rounding;
 }
 
 int RoundUp(int n, int rounding) {
@@ -64,13 +60,13 @@ void* RoundUp(void* d, int rounding) {
     return (void*)n;
 }
 
-size_t RoundToPowerOf2(size_t size) {
-    size_t n = 1;
+int RoundToPowerOf2(int size) {
+    int n = 1;
     while (n < size) {
         n *= 2;
-        if (0 == n) {
-            // TODO: no power of 2
-            return (size_t)-1;
+        if (n <= 0) {
+            // overflow: no power of 2 fits in an int
+            return -1;
         }
     }
     return n;
@@ -88,7 +84,7 @@ size_t RoundToPowerOf2(size_t size) {
  */
 static u32 hash_function_seed = 5381;
 
-u32 MurmurHash2(const void* key, size_t len) {
+u32 MurmurHash2(const void* key, int len) {
     /* 'm' and 'r' are mixing constants generated offline.
      They're not really 'magic', they just happen to work well.  */
     const u32 m = 0x5bd1e995;
@@ -152,7 +148,7 @@ u32 MurmurHashWStrI(WStr str) {
         }
         *dst++ = (u8)c;
     }
-    return MurmurHash2(data, dst - data);
+    return MurmurHash2(data, (int)(dst - data));
 }
 
 // variation of MurmurHash2 which deals with strings that are

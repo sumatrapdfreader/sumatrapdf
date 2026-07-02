@@ -676,7 +676,7 @@ static Str FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
         return {};
     }
     // this was allocated inside mupdf, make a copy that can be free()d
-    u8* res = (u8*)memdup(data, size);
+    u8* res = (u8*)memdup(data, (int)size);
     fz_free(ctx, data);
     return Str((char*)(res), (int)(size));
 }
@@ -1703,7 +1703,7 @@ static Str PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
             }
             if (no == i + 1) {
                 fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
-                res.s = (char*)memdup(buf->data, buf->len);
+                res.s = (char*)memdup(buf->data, (int)buf->len);
                 res.len = (int)buf->len;
                 fz_drop_buffer(ctx, buf);
                 i = n + 1; // exit for loop
@@ -1732,7 +1732,7 @@ static Str PdfLoadAnnotationAttachment(fz_context* ctx, pdf_document* doc, int o
         }
         fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
         if (buf) {
-            res.s = (char*)memdup(buf->data, buf->len);
+            res.s = (char*)memdup(buf->data, (int)buf->len);
             res.len = (int)buf->len;
             fz_drop_buffer(ctx, buf);
         }
@@ -2257,7 +2257,7 @@ Str EngineMupdf::LoadStreamFromPDFFile(Str filePath) {
     if (dataSize == 0) {
         return {};
     }
-    auto data = (u8*)memdup(buffer->data, dataSize);
+    auto data = (u8*)memdup(buffer->data, (int)dataSize);
     fz_drop_buffer(ctx, buffer);
 
     return Str((char*)(data), (int)(dataSize));

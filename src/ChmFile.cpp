@@ -65,7 +65,7 @@ Str ChmFile::GetData(Str fileName) const {
     }
 
     // +1 for 0 terminator for C string compatibility
-    u8* d = AllocArray<u8>(len + 1);
+    u8* d = AllocArray<u8>((int)(len + 1));
     if (!d) {
         return {};
     }

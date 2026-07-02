@@ -738,7 +738,7 @@ void MobiDoc::LoadImages() {
     if (0 == imagesCount) {
         return;
     }
-    images = AllocArray<Str>(imagesCount);
+    images = AllocArray<Str>((int)imagesCount);
 
     for (size_t i = 0; i < imagesCount; i++) {
         if (!LoadImage(i)) {

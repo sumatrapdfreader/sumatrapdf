@@ -59,7 +59,7 @@ class StrKeyHasherComparator : public HasherComparator {
 class WStrKeyHasherComparator : public HasherComparator {
     size_t Hash(uintptr_t key) override {
         WStr s = KeyAsWStr(key);
-        return MurmurHash2((const void*)s.s, (size_t)s.len * sizeof(wchar_t));
+        return MurmurHash2((const void*)s.s, s.len * (int)sizeof(wchar_t));
     }
     bool Equal(uintptr_t k1, uintptr_t k2) override { return wstr::Eq(KeyAsWStr(k1), KeyAsWStr(k2)); }
 };
@@ -90,10 +90,10 @@ static HashTable* NewHashTable(size_t size, Arena* allocator) {
     ReportIf(!allocator); // we'll leak otherwise
     HashTable* h = AllocArray<HashTable>(allocator, 1);
     // number of hash table entries should be power of 2
-    size = RoundToPowerOf2(size);
+    size = RoundToPowerOf2((int)size);
     // entries are not allocated with allocator since those are large blocks
     // and we don't want to waste their memory after
-    h->entries = AllocArray<HashTableEntry*>(size);
+    h->entries = AllocArray<HashTableEntry*>((int)size);
     h->nEntries = size;
     return h;
 }
@@ -104,9 +104,9 @@ static void DeleteHashTable(HashTable* h) {
 }
 
 static void HashTableResize(HashTable* h, HasherComparator* hc) {
-    size_t newSize = RoundToPowerOf2(h->nEntries + 1);
+    size_t newSize = RoundToPowerOf2((int)(h->nEntries + 1));
     ReportIf(newSize <= h->nEntries);
-    HashTableEntry** newEntries = AllocArray<HashTableEntry*>(newSize);
+    HashTableEntry** newEntries = AllocArray<HashTableEntry*>((int)newSize);
     HashTableEntry *e, *next;
     size_t hash, pos;
     for (size_t i = 0; i < h->nEntries; i++) {

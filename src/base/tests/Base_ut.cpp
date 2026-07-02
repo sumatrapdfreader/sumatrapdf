@@ -183,8 +183,6 @@ void BaseUtilTest() {
         int exp = roundUpTestCases[i * 2 + 1];
         int got = RoundUp(v, 8);
         utassert(exp == got);
-        size_t got2 = RoundUp((size_t)v, (size_t)8);
-        utassert(got2 == (size_t)exp);
         void* got3 = RoundUp((void*)(uintptr_t)v, (int)8);
         utassert(got3 == (void*)(uintptr_t)exp);
     }
@@ -195,7 +193,7 @@ void BaseUtilTest() {
     utassert(RoundToPowerOf2(3) == 4);
     utassert(RoundToPowerOf2(15) == 16);
     utassert(RoundToPowerOf2((1 << 13) + 1) == (1 << 14));
-    utassert(RoundToPowerOf2((size_t)-42) == (size_t)-1);
+    utassert(RoundToPowerOf2((1 << 30) + 1) == -1); // overflow: no power of 2 fits in an int
 
     utassert(MurmurHash2(nullptr, 0) == 0x342CE6C);
     utassert(MurmurHash2("test", 4) != MurmurHash2("Test", 4));
