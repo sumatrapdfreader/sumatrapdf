@@ -367,7 +367,7 @@ static TempStr GetUninstallerPathInTemp() {
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     ReportIf(res == 0 || res >= dimof(tempDir));
     TempStr dirA = ToUtf8Temp(tempDir);
-    return path::Join(dirA, "Sumatra-Uninstaller.exe");
+    return path::JoinTemp(dirA, "Sumatra-Uninstaller.exe");
 }
 
 // to be able to delete installation directory we must copy

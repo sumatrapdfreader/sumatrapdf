@@ -598,10 +598,8 @@ static WStr FullPipeNameOwned(Str pipeName) {
     if (str::StartsWith(pipeName, R"(\\.\pipe\)")) {
         return ToWStr(pipeName);
     }
-    Str fullName = str::Join(Str(R"(\\.\pipe\)"), pipeName);
-    WStr res = ToWStr(fullName);
-    str::Free(fullName);
-    return res;
+    TempStr fullName = str::JoinTemp(Str(R"(\\.\pipe\)"), pipeName);
+    return ToWStr(fullName);
 }
 
 struct ControlThreadArg {
