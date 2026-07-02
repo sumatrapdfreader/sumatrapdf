@@ -462,13 +462,13 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToEverything>(this);
             hbox->AddChild(new Padding(c, pad));
         }
-        if (toc.Size() > 0) {
+        if (len(toc) > 0) {
             auto c = CreateStatic(hwnd, font, _TRA("* TOC"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTOC>(this);
             hbox->AddChild(new Padding(c, pad));
         }
-        if (favorites.Size() > 0) {
+        if (len(favorites) > 0) {
             auto c = CreateStatic(hwnd, font, _TRA("$ Favorites"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFavorites>(this);

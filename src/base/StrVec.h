@@ -26,7 +26,6 @@ struct StrVec {
 
     void Reset(StrVecPage* = nullptr);
 
-    int Size() const;
     bool IsEmpty() const;
     Str At(int i) const;
     void* AtDataRaw(int i) const;
@@ -63,6 +62,11 @@ struct StrVec {
     iterator end() const;
 };
 
+// number of strings, as int (matches len() for Str / WStr / Vec)
+inline int len(const StrVec& v) {
+    return v.size;
+}
+
 template <typename T>
 struct StrVecWithData : StrVec {
     StrVecWithData() : StrVec((int)sizeof(T)) {}
@@ -74,7 +78,7 @@ struct StrVecWithData : StrVec {
 
     int Append(Str s, const T& data) {
         StrVec::Append(s);
-        int idx = Size() - 1;
+        int idx = len(*this) - 1;
         T* d = AtData(idx);
         *d = data;
         return idx;

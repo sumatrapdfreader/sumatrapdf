@@ -800,7 +800,7 @@ static void FillInverseSearchCombo(HWND hwndComboBox, Str cmdLine) {
     }
     if (cmdLine) {
         AppendIfNotExists(&detected, cmdLine);
-    } else if (detected.Size() > 0) {
+    } else if (len(detected) > 0) {
         cmdLine = detected.At(0);
     }
     for (Str s : detected) {

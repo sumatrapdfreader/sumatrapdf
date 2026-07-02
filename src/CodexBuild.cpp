@@ -107,7 +107,7 @@ static void BuildCodexModelsList(StrVec& models) {
     if (!str::IsEmpty(extra)) {
         StrVec parts;
         Split(&parts, extra, ",", true);
-        for (int i = 0; i < parts.Size(); i++) {
+        for (int i = 0; i < len(parts); i++) {
             AIChatAppendModelUnique(models, parts.At(i));
         }
     }
@@ -132,7 +132,7 @@ static void PopulateModelCombo(HWND combo) {
     SendMessageW(combo, CB_RESETCONTENT, 0, 0);
     StrVec models;
     BuildCodexModelsList(models);
-    for (int i = 0; i < models.Size(); i++) {
+    for (int i = 0; i < len(models); i++) {
         TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Gpt-5.5");
         WCHAR* displayW = CWStrTemp(display);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
@@ -171,7 +171,7 @@ static void SyncCodexSettingsFromUI(MainWindow* win) {
         int sel = (int)SendMessageW(win->hwndCodexModelCombo, CB_GETCURSEL, 0, 0);
         StrVec models;
         BuildCodexModelsList(models);
-        if (sel >= 0 && sel < models.Size()) {
+        if (sel >= 0 && sel < len(models)) {
             str::ReplaceWithCopy(&gGlobalPrefs->codexBuild.model, models.At(sel));
         }
     }

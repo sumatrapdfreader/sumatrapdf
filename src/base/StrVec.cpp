@@ -376,10 +376,6 @@ StrVec& StrVec::operator=(const StrVec& that) {
     return *this;
 }
 
-int StrVec::Size() const {
-    return size;
-}
-
 bool StrVec::IsEmpty() const {
     return size == 0;
 }
@@ -450,7 +446,7 @@ int AppendIfNotExists(StrVec* v, Str s) {
     if (v->Contains(s)) {
         return -1;
     }
-    int idx = v->Size();
+    int idx = len(*v);
     v->Append(s);
     return idx;
 }
@@ -626,7 +622,7 @@ StrVec::iterator StrVec::begin() const {
 }
 
 StrVec::iterator StrVec::end() const {
-    return StrVec::iterator(this, this->Size());
+    return StrVec::iterator(this, len(*this));
 }
 
 Str StrVec::iterator::operator*() const {
@@ -682,12 +678,12 @@ bool operator!=(const StrVec::iterator& a, const StrVec::iterator& b) {
 
 static void SortNoData(StrVec* v, StrLessFunc lessFn) {
     CompactPages(v, 0);
-    if (v->Size() < 2) {
+    if (len(*v) < 2) {
         return;
     }
     ReportIf(!v->first);
     ReportIf(v->first->next);
-    int n = v->Size();
+    int n = len(*v);
 
     u8* pageStart = (u8*)v->first;
     u64* b = (u64*)(pageStart + kStrVecPageHdrSize);
@@ -704,7 +700,7 @@ static void SortNoData(StrVec* v, StrLessFunc lessFn) {
 
 static int* AllocateSortIndexes(StrVec* v) {
     InvalidateSortIndexes(v);
-    int n = v->Size();
+    int n = len(*v);
     auto res = AllocArray<int>(n);
     for (int i = 0; i < n; i++) {
         res[i] = i;
@@ -713,11 +709,11 @@ static int* AllocateSortIndexes(StrVec* v) {
 }
 
 void SortIndex(StrVec* v, StrLessFunc lessFn) {
-    if (v->Size() < 2) {
+    if (len(*v) < 2) {
         return;
     }
     int* indexes = AllocateSortIndexes(v);
-    int n = v->Size();
+    int n = len(*v);
     int* b = indexes;
     int* e = indexes + n;
     std::sort(b, e, [v, lessFn](int idx1, int idx2) -> bool {
@@ -730,7 +726,7 @@ void SortIndex(StrVec* v, StrLessFunc lessFn) {
 }
 
 void Sort(StrVec* v, StrLessFunc lessFn) {
-    if (v->Size() < 2) {
+    if (len(*v) < 2) {
         return;
     }
     if (v->dataSize == 0) {
@@ -790,7 +786,7 @@ int Split(StrVec* v, Str s, Str separator, bool collapse, int max) {
         // if we're collapsing, we're not adding empty string
         // at the end, unless we haven't added any strings yet
         // i.e. to match other languages, "".split(" ") => [""]
-        shouldAddRest = !collapse || v->Size() == 0;
+        shouldAddRest = !collapse || len(*v) == 0;
     }
     if (shouldAddRest) {
         v->Append(Str(s.s + off, s.len - off));

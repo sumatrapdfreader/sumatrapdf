@@ -23,7 +23,7 @@ void TestRenderPage(const Flags& i) {
         return;
     }
     auto files = i.fileNames;
-    if (files.Size() == 0) {
+    if (len(files) == 0) {
         printf("no file provided\n");
         return;
     }
@@ -80,7 +80,7 @@ void TestExtractPage(const Flags& ci) {
     int pageNo = ci.pageNumber;
 
     auto files = ci.fileNames;
-    if (files.Size() == 0) {
+    if (len(files) == 0) {
         printf("no file provided\n");
         return;
     }

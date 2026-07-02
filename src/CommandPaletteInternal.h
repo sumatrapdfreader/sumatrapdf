@@ -25,7 +25,7 @@ struct ListBoxModelCP : ListBoxModel {
 
     ListBoxModelCP() = default;
     ~ListBoxModelCP() override = default;
-    int ItemsCount() override { return strings.Size(); }
+    int ItemsCount() override { return len(strings); }
     Str Item(int i) override { return strings.At(i); }
     ItemDataCP* Data(int i) { return strings.AtData(i); }
 };

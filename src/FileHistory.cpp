@@ -284,7 +284,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
 StrVec gClosedDocuments;
 
 int RecentlyCloseDocumentsCount() {
-    return gClosedDocuments.Size();
+    return len(gClosedDocuments);
 }
 
 void RememberRecentlyClosedDocument(Str path) {
@@ -295,7 +295,7 @@ void RememberRecentlyClosedDocument(Str path) {
 }
 
 Str PopRecentlyClosedDocument() {
-    int n = gClosedDocuments.Size();
+    int n = len(gClosedDocuments);
     if (n > 0) {
         return Str(gClosedDocuments.RemoveAtFast(n - 1));
     }
@@ -400,7 +400,7 @@ static void CheckFilesExistAsync(CheckFilesExistData* d) {
     // filters all file paths on network drives, removable drives and
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
-    int n = toCheck.Size();
+    int n = len(toCheck);
     for (int i = 0; i < n; i++) {
         Str path = toCheck.At(i);
         if (!path) {
@@ -441,10 +441,10 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
 void RemoveNonExistentFilesAsync() {
     auto d = new CheckFilesExistData();
     GetFilePathsToCheck(d->toCheck);
-    if (d->toCheck.Size() == 0) {
+    if (len(d->toCheck) == 0) {
         return;
     }
-    logf("RemoveNonExistentFilesAsync: starting CheckFilesExistAsync to check %d files\n", d->toCheck.Size());
+    logf("RemoveNonExistentFilesAsync: starting CheckFilesExistAsync to check %d files\n", len(d->toCheck));
     Func0 fn = MkFunc0<CheckFilesExistData>(CheckFilesExistAsync, d);
     RunAsync(fn, "CheckFilesExistAsync");
 }

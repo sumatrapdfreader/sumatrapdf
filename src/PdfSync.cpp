@@ -228,7 +228,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
     sheetIndex.Append(0);
 
     // add the initial tex file to the source file stack
-    filestack.Append((size_t)srcfiles.Size());
+    filestack.Append((size_t)len(srcfiles));
     srcfiles.Append(Str(jobName.Get()));
     PdfsyncFileIndex findex{};
     fileIndex.Append(findex);
@@ -297,7 +297,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
                     filename.Set(PrependDir(Str(filename.Get())).s);
                 }
 
-                filestack.Append((size_t)srcfiles.Size());
+                filestack.Append((size_t)len(srcfiles));
                 srcfiles.Append(Str(filename.Get()));
                 findex.start = findex.end = len(lines);
                 fileIndex.Append(findex);
@@ -442,13 +442,13 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
 
     // find the source file entry
     int isrc;
-    for (isrc = 0; isrc < srcfiles.Size(); isrc++) {
+    for (isrc = 0; isrc < len(srcfiles); isrc++) {
         Str path = srcfiles.At(isrc);
         if (path::IsSame(Str(srcfilepath), path)) {
             break;
         }
     }
-    if (isrc == srcfiles.Size()) {
+    if (isrc == len(srcfiles)) {
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 

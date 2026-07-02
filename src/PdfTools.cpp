@@ -1013,10 +1013,10 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
     }
     StrVec parts;
     Split(&parts, s, ",", true);
-    if (parts.Size() == 0) {
+    if (len(parts) == 0) {
         return false;
     }
-    for (int pi = 0; pi < parts.Size(); pi++) {
+    for (int pi = 0; pi < len(parts); pi++) {
         Str part = parts.At(pi);
         str::TrimWSInPlace(part, str::TrimOpt::Both);
         if (!part) {

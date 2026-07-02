@@ -60,7 +60,7 @@ static void AdvanceDirIter(DirIter::iterator* it, int n) {
 
 NextDir:
     if (!it->pattern) {
-        int nDirs = it->dirsToVisit.Size();
+        int nDirs = len(it->dirsToVisit);
         if (nDirs == 0) {
             goto DidFinish;
         }

@@ -1873,7 +1873,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         }
     }
 
-    if (!engine || engine->errors.Size() == 0) {
+    if (!engine || len(engine->errors) == 0) {
         MenuRemove(popup, CmdShowErrors);
     }
 

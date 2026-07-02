@@ -5,7 +5,7 @@
 #include "wingui/UIModels.h"
 
 int ListBoxModelStrings::ItemsCount() {
-    return strings.Size();
+    return len(strings);
 }
 
 Str ListBoxModelStrings::Item(int i) {

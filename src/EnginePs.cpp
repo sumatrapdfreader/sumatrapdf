@@ -57,7 +57,7 @@ TryAgain64Bit:
     SortNatural(&versions);
 
     // return the path to the newest installation
-    int nVers = versions.Size();
+    int nVers = len(versions);
     for (int i = nVers; i > 0; i--) {
         for (Str gsProd : gsProducts) {
             Str ver = versions.At(i - 1);

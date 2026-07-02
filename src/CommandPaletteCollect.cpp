@@ -232,7 +232,7 @@ static void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& c
         tabs.Append(name, data);
     }
     if (tab == currTab) {
-        currTabIdx = tabs.Size() - 1;
+        currTabIdx = len(tabs) - 1;
         logf("currTabIdx: %d\n", currTabIdx);
     }
 }
@@ -266,7 +266,7 @@ void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) 
     for (MainWindow* w : gWindows) {
         for (WindowTab* tab : w->Tabs()) {
             bool alreadyAdded = false;
-            for (int i = 0; i < tabs.Size(); i++) {
+            for (int i = 0; i < len(tabs); i++) {
                 if (tabs.AtData(i)->tab == tab) {
                     alreadyAdded = true;
                     break;
@@ -292,7 +292,7 @@ static void CollectTocRec(StrVecCP& toc, TocItem* ti, int indent, int currPageNo
         int pageNo = ti->pageNo;
         if (!str::IsEmpty(title) && pageNo > 0 && pageNo <= currPageNo && pageNo > bestPageNo) {
             bestPageNo = pageNo;
-            bestIdx = toc.Size() - 1;
+            bestIdx = len(toc) - 1;
         }
         if (ti->child) {
             CollectTocRec(toc, ti->child, indent + 1, currPageNo, bestIdx, bestPageNo);
@@ -427,7 +427,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 
     SortNoCase(&tempCommands);
-    int n = tempCommands.Size();
+    int n = len(tempCommands);
     commands.Reset();
     for (int i = 0; i < n; i++) {
         commands.AppendFrom(&tempCommands, i);

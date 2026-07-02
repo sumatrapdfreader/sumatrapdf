@@ -12,7 +12,7 @@
 #include "CommandPaletteInternal.h"
 
 static void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matchedOut) {
-    int n = strs.Size();
+    int n = len(strs);
     for (int i = 0; i < n; i++) {
         Str s = strs.At(i);
         if (str::IsEmpty(s)) {
@@ -97,7 +97,7 @@ void CommandPaletteWnd::QueryChanged() {
         CommandPaletteSetCurrentSelection(this, currSelIdx);
         return;
     }
-    if (str::StartsWith(filter, kPalettePrefixTOC) && filterWords.Size() == 0) {
+    if (str::StartsWith(filter, kPalettePrefixTOC) && len(filterWords) == 0) {
         int idx = (currTocIdx >= 0 && currTocIdx < nItems) ? currTocIdx : 0;
         CommandPaletteSetCurrentSelection(this, idx);
         return;

@@ -258,7 +258,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
             selections.Append(text);
         }
     }
-    if (selections.Size() == 0) {
+    if (len(selections) == 0) {
         return {};
     }
     TempStr s = JoinTemp(&selections, lineSep);

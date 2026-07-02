@@ -259,7 +259,7 @@ static bool DumpChmFile(Str path) {
 }
 
 int DumpChm(const Flags& flags) {
-    if (flags.fileNames.Size() == 0) {
+    if (len(flags.fileNames) == 0) {
         CliPrint("No file specified for -dump-chm");
         return 1;
     }

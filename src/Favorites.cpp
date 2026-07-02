@@ -412,7 +412,7 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
         filePathsSorted.InsertAt(0, currFileFav->filePath);
     }
 
-    if (filePathsSorted.Size() == 0) {
+    if (len(filePathsSorted) == 0) {
         return;
     }
 
@@ -421,7 +421,7 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
     ResetFavMenuIds();
     int menuId = CmdFavoriteFirst;
 
-    int menusCount = filePathsSorted.Size();
+    int menusCount = len(filePathsSorted);
     if (menusCount > MAX_FAV_MENUS) {
         menusCount = MAX_FAV_MENUS;
     }
@@ -635,7 +635,7 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win) {
     res->root = new FavTreeItem();
     StrVec filePathsSorted;
     GetSortedFilePaths(filePathsSorted);
-    for (int i = 0; i < filePathsSorted.Size(); i++) {
+    for (int i = 0; i < len(filePathsSorted); i++) {
         Str path = filePathsSorted.At(i);
         FileState* fs = GetFavByFilePath(path);
         ReportIf(!fs);

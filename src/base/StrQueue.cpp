@@ -41,7 +41,7 @@ bool StrQueue::IsFinished() {
 
 int StrQueue::Size() {
     Lock();
-    auto res = strings.Size();
+    auto res = len(strings);
     Unlock();
     return res;
 }
@@ -71,7 +71,7 @@ bool StrQueue::IsSentinel(Str s) {
 Str StrQueue::PopFront() {
 again:
     Lock();
-    if (strings.Size() == 0) {
+    if (len(strings) == 0) {
         bool end = isFinished;
         Unlock();
         if (end) {
@@ -92,7 +92,7 @@ again:
 bool StrQueue::Access(const Func1<StrQueue*>& fn) {
 again:
     Lock();
-    if (strings.Size() == 0) {
+    if (len(strings) == 0) {
         bool end = isFinished;
         Unlock();
         if (end) {

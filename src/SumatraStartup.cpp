@@ -406,7 +406,7 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad 
 }
 
 static bool SetupPluginMode(Flags& i) {
-    if (!IsWindow(i.hwndPluginParent) || i.fileNames.Size() == 0) {
+    if (!IsWindow(i.hwndPluginParent) || len(i.fileNames) == 0) {
         return false;
     }
 
@@ -450,7 +450,7 @@ static bool SetupPluginMode(Flags& i) {
         str::TransCharsInPlace(args, StrL("#"), StrL("&"));
         StrVec parts;
         Split(&parts, args, "&", true);
-        for (int k = 0; k < parts.Size(); k++) {
+        for (int k = 0; k < len(parts); k++) {
             Str part = parts.At(k);
             int pageNo;
             if (str::StartsWithI(part, "page=") &&
@@ -767,7 +767,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
 
     Str arg;
     Str param;
-    for (int n = 0; n < i.globalPrefArgs.Size(); n++) {
+    for (int n = 0; n < len(i.globalPrefArgs); n++) {
         arg = i.globalPrefArgs.At(n);
         if (str::EqI(arg, "-esc-to-exit")) {
             gGlobalPrefs->escToExit = true;
@@ -2128,7 +2128,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         RedirectIOToConsole();
     }
 
-    if (flags.pathsToBenchmark.Size() > 0) {
+    if (len(flags.pathsToBenchmark) > 0) {
         BenchFileOrDir(flags.pathsToBenchmark);
     }
 
@@ -2166,7 +2166,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
     {
         // search only applies if there's 1 file
-        auto nFiles = flags.fileNames.Size();
+        auto nFiles = len(flags.fileNames);
         if (nFiles != 1) {
             flags.search = {};
         }
@@ -2211,7 +2211,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     if (existingHwnd) {
-        int nFiles = flags.fileNames.Size();
+        int nFiles = len(flags.fileNames);
         // we allow -new-window on its own if no files given
         if (nFiles > 0 && IsNoAdminToAdmin(existingHwnd)) {
             goto Exit;
@@ -2262,7 +2262,7 @@ ContinueOpenWindow:
     }
 
     showStartPage =
-        !restoreSession && flags.fileNames.Size() == 0 && SettingsRememberOpenedFiles() && gGlobalPrefs->showStartPage;
+        !restoreSession && len(flags.fileNames) == 0 && SettingsRememberOpenedFiles() && gGlobalPrefs->showStartPage;
 
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
     if (showStartPage) {
@@ -2322,7 +2322,7 @@ ContinueOpenWindow:
         MaybeGoTo(win, flags.namedDest, flags.pageNumber);
     }
 
-    nWithDde = gDdeOpenOnStartup.Size();
+    nWithDde = len(gDdeOpenOnStartup);
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
         for (Str path : gDdeOpenOnStartup) {
@@ -2339,7 +2339,7 @@ ContinueOpenWindow:
 
     gIsStartup = false;
 
-    if (flags.fileNames.Size() > 0 && !win) {
+    if (len(flags.fileNames) > 0 && !win) {
         // failed to create any window, even though there
         // were files to load (or show a failure message for)
         goto Exit;
@@ -2354,7 +2354,7 @@ ContinueOpenWindow:
             goto Exit;
         }
     }
-    if (flags.fileNames.Size() == 0) {
+    if (len(flags.fileNames) == 0) {
         FlagsEnterFullscreen(flags, win);
     }
 

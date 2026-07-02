@@ -932,7 +932,7 @@ struct TiffParser {
         }
         u32 ifd0 = ReadDWord(tiffBase + 4);
         ParseIfd(IfdGroup::Image, ifd0);
-        return lines.Size() > 0;
+        return len(lines) > 0;
     }
 };
 
@@ -1215,7 +1215,7 @@ bool DumpExifFile(Str path) {
 
     if (!found) {
         DumpFromGdiplus(data, parser.lines);
-        found = parser.lines.Size() > 0;
+        found = len(parser.lines) > 0;
     }
 
     if (!found) {
@@ -1240,12 +1240,12 @@ bool DumpExifFile(Str path) {
 
 void DumpExif(const Flags& flags) {
     bool any = false;
-    for (int i = 0; i < flags.fileNames.Size(); i++) {
+    for (int i = 0; i < len(flags.fileNames); i++) {
         if (DumpExifFile(flags.fileNames.At(i))) {
             any = true;
         }
     }
-    if (!any && flags.fileNames.Size() == 0) {
+    if (!any && len(flags.fileNames) == 0) {
         CliPrint("No file specified for -dump-exif");
     }
 }

@@ -37,7 +37,7 @@ static void TestRemoveFromStart(StrVec* v) {
 }
 
 static int randIdx(StrVec* v) {
-    int n = v->Size();
+    int n = len(*v);
     int idx = rand() % n;
     return idx;
 }
@@ -53,7 +53,7 @@ static void TestRandomRemove(StrVec* v) {
 }
 
 static void TestFind(const StrVec* v) {
-    int n = v->Size();
+    int n = len(*v);
     Str s, s2;
     for (int i = 0; i < n; i++) {
         s = v->At(i);
@@ -74,9 +74,9 @@ static void TestRemoveAt(StrVec* v) {
     TestFind(v);
     StrVec* v2 = new StrVec(*v);
     StrVec* v3 = new StrVec(*v);
-    while (v->Size() > 0) {
-        int n = v->Size();
-        int idx = v->Size() / 2;
+    while (len(*v) > 0) {
+        int n = len(*v);
+        int idx = len(*v) / 2;
         Str exp = v->At(idx);
         Str got;
         if (n % 2 == 0) {
@@ -85,7 +85,7 @@ static void TestRemoveAt(StrVec* v) {
             got = v->RemoveAtFast(idx);
         }
         utassert(str::Eq(exp, got));
-        utassert(v->Size() == n - 1);
+        utassert(len(*v) == n - 1);
     }
 
     TestRandomRemove(v2);
@@ -128,10 +128,10 @@ static void StrVecCheckIter(StrVec* v, Str* strings, int start = 0) {
 }
 
 static void AppendStrings(StrVec* v, Str* strings, int nStrings) {
-    int initialSize = v->Size();
+    int initialSize = len(*v);
     for (int i = 0; i < nStrings; i++) {
         v->Append(strings[i]);
-        utassert(v->Size() == initialSize + i + 1);
+        utassert(len(*v) == initialSize + i + 1);
     }
     StrVecCheckIter(v, strings, initialSize);
 }
@@ -145,26 +145,26 @@ static int sortedNoCaseOrder[]{3, 1, 2, 0, 4};
 static void StrVecTest1_1(StrVec* v) {
     Str s = "lolda";
     v->InsertAt(0, s);
-    utassert(v->Size() == 1);
+    utassert(len(*v) == 1);
     utassert(str::Eq(v->At(0), s));
     TestRandomRemove(v);
 }
 
 static void StrVecTest1_2(StrVec* v) {
-    utassert(v->Size() == 0);
+    utassert(len(*v) == 0);
     int n = dimofi(strs);
     AppendStrings(v, strs, n);
     StrVecCheckIter(v, strs, 0);
 }
 
 static void StrVecTest1_3(StrVec* v) {
-    int n = v->Size();
+    int n = len(*v);
     // allocate a bunch to test allocating
     Str str = strs[4];
     for (int i = 0; i < 1024; i++) {
         v->Append(str);
     }
-    utassert(v->Size() == 1024 + n);
+    utassert(len(*v) == 1024 + n);
 
     for (int i = 0; i < n; i++) {
         auto got = v->At(i);
@@ -257,19 +257,19 @@ static void StrVecTest2_1(StrVec* v) {
     v->Append("foo");
     v->Append("bar");
     Str s = Join(v);
-    utassert(v->Size() == 2);
+    utassert(len(*v) == 2);
     utassert(str::Eq("foobar", s));
 
     s = Join(v, ";");
-    utassert(v->Size() == 2);
+    utassert(len(*v) == 2);
     utassert(str::Eq("foo;bar", s));
 
     v->Append(nullptr);
-    utassert(v->Size() == 3);
+    utassert(len(*v) == 3);
 
     v->Append("glee");
     s = JoinTemp(v, "_ _");
-    utassert(v->Size() == 4);
+    utassert(len(*v) == 4);
     utassert(str::Eq("foo_ _bar_ _glee", s));
 
     StrVecCheckIter(v, nullptr);
@@ -281,7 +281,7 @@ static void StrVecTest2_2(StrVec* v) {
     StrVecCheckIter(v, strsSorted);
 
     auto s = Join(v, "++");
-    utassert(v->Size() == 4);
+    utassert(len(*v) == 4);
     utassert(str::Eq("bar++foo++glee", s));
 
     s = Join(v);
@@ -354,7 +354,7 @@ static void StrVecTest2() {
         v2.Append("nobar");
         utassert(str::Eq(v2.At(4), "nobar"));
         v2 = v;
-        utassert(v2.Size() == 4);
+        utassert(len(v2) == 4);
         // copies should be same values but at different addresses
         utassert(v2.At(1).s != v.At(1).s);
         utassert(str::Eq(v2.At(1), v.At(1)));
@@ -387,11 +387,11 @@ static void StrVecTest2() {
 }
 
 static void StrVecTest3_1(StrVec* v) {
-    utassert(v->Size() == 0);
+    utassert(len(*v) == 0);
     v->Append("one");
     v->Append("two");
     v->Append("One");
-    utassert(v->Size() == 3);
+    utassert(len(*v) == 3);
     utassert(str::Eq(v->At(0), "one"));
     utassert(str::EqI(v->At(2), "one"));
     utassert(v->Find("One") == 2);
@@ -451,7 +451,7 @@ static void StrVecTest4_1(StrVec* v) {
     utassert(str::Eq(s2, s3));
 
     // StrVec: test multiple side strings
-    n = v->Size();
+    n = len(*v);
     for (int i = 0; i < n; i++) {
         v->SetAt(i, s);
     }
@@ -463,8 +463,8 @@ static void StrVecTest4_1(StrVec* v) {
     v->SetAt(n / 2, s3);
     s2 = v->At(n / 2);
     utassert(str::Eq(s3, s2));
-    while (v->Size() > 0) {
-        n = v->Size();
+    while (len(*v) > 0) {
+        n = len(*v);
         s2 = v->At(0);
         if (n % 2 == 0) {
             s3 = v->RemoveAtFast(0);
@@ -514,7 +514,7 @@ static void StrVecTest5() {
 
 static void StrVecTest6_1(StrVec* v) {
     Split(v, " CmdCreateAnnotHighlight   #00ff00 openEdit", " ", true, 2);
-    utassert(v->Size() == 2);
+    utassert(len(*v) == 2);
     Str s = v->At(0);
     utassert(str::Eq(s, "CmdCreateAnnotHighlight"));
     s = v->At(1);
@@ -534,7 +534,7 @@ static void StrVecTest6() {
 
 static void StrVecTest7_1(StrVec* v) {
     Split(v, "", " ", true, 2);
-    utassert(v->Size() == 1);
+    utassert(len(*v) == 1);
     Str s = v->At(0);
     utassert(!s || s.s[0] == 0);
 }
@@ -579,7 +579,7 @@ static void InsertRandData(StrVecWithData<T>* v) {
 
 template <typename T>
 static void validateStringMatchesData(StrVecWithData<T>* v) {
-    int nStrings = v->Size();
+    int nStrings = len(*v);
     Str got;
     Str exp;
     T* d;
@@ -674,7 +674,7 @@ static void InsertRandData3(StrVec* v) {
 template <typename T>
 static void RemoveRandData(StrVecWithData<T>* v) {
     int idx;
-    while (v->Size() > 0) {
+    while (len(*v) > 0) {
         idx = randIdx(v);
         Str got = v->At(idx);
         T* d = v->AtData(idx);
@@ -682,7 +682,7 @@ static void RemoveRandData(StrVecWithData<T>* v) {
         Str exp = StrForN(n);
         utassert(str::Eq(got, exp));
         int op = idx % 3;
-        int sizeExp = v->Size() - 1;
+        int sizeExp = len(*v) - 1;
         if (op == 0) {
             bool ok = v->Remove(got);
             utassert(ok);
@@ -691,7 +691,7 @@ static void RemoveRandData(StrVecWithData<T>* v) {
         } else {
             v->RemoveAtFast(idx);
         }
-        utassert(v->Size() == sizeExp);
+        utassert(len(*v) == sizeExp);
     }
 }
 

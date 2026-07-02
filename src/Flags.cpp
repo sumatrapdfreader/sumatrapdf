@@ -221,11 +221,11 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
     // tha args can be separated with `#` or `?` or `:`
     // i.e. `foo#bar` or foo&bar` or `foo:bar`
     Split(&parts, s, "&", true);
-    if (parts.Size() == 1) {
+    if (len(parts) == 1) {
         parts.Reset();
         Split(&parts, s, "#", true);
     }
-    if (parts.Size() == 1) {
+    if (len(parts) == 1) {
         parts.Reset();
         Split(&parts, s, ";", true);
     }
@@ -233,7 +233,7 @@ void ParseAdobeFlags(FileArgs& i, Str s) {
     for (Str part : parts) {
         parts2.Reset();
         Split(&parts2, part, "=", true);
-        if (parts2.Size() != 2) {
+        if (len(parts2) != 2) {
             continue;
         }
         name = parts2[0];
@@ -378,11 +378,11 @@ void ParseFlags(Arena* a, WStr cmdLine, Flags& i, Str toolNames) {
             }
             Str p2 = args.AdditionalParam(1);
             if (p2 && !CouldBeArg(p2)) {
-                if (i.fileNames.Size() == 0 || !str::Eq(i.fileNames.At(i.fileNames.Size() - 1), p1)) {
+                if (len(i.fileNames) == 0 || !str::Eq(i.fileNames.At(len(i.fileNames) - 1), p1)) {
                     i.fileNames.Append(p1);
                 }
                 i.printerName = str::Dup(a, args.EatParam());
-            } else if (i.fileNames.Size() > 0) {
+            } else if (len(i.fileNames) > 0) {
                 i.printerName = str::Dup(a, p1);
             } else {
                 i.fileNames.Append(p1);

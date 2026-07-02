@@ -1230,7 +1230,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
             fmt("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n", defSafe));
         return nullptr;
     }
-    if (parts.Size() == 1) {
+    if (len(parts) == 1) {
         return CreateCustomCommand(definition, cmdId, nullptr);
     }
 

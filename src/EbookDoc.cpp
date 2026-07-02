@@ -1162,7 +1162,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
             WStr ws = strconv::HtmlUtf8ToWStrTemp(Str(attr->val));
             TempStr s = ToUtf8Temp(ws);
             tocEntries.Append(s);
-            builder.Append(fmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Size()));
+            builder.Append(fmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", ::len(tocEntries)));
             return Str(tok->s.s + tok->s.len, (int)(text.s + text.len - (tok->s.s + tok->s.len)));
         }
     } else if (tok->NameIs(StrL("HEADER"))) {
@@ -1273,11 +1273,11 @@ Str PalmDoc::GetFileName() const {
 }
 
 bool PalmDoc::HasToc() const {
-    return tocEntries.Size() > 0;
+    return len(tocEntries) > 0;
 }
 
 bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
-    for (int i = 0; i < tocEntries.Size(); i++) {
+    for (int i = 0; i < len(tocEntries); i++) {
         TempStr url = fmt(PDB_TOC_ENTRY_MARK "%d", i + 1);
         Str name = tocEntries.At(i);
         visitor->Visit(name, url, 1);

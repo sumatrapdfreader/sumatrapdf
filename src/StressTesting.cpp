@@ -205,13 +205,13 @@ static void CollectFilesToBench(Str dir, StrVec& files) {
 static void BenchDir(Str dir) {
     StrVec files;
     CollectFilesToBench(dir, files);
-    for (int i = 0; i < files.Size(); i++) {
+    for (int i = 0; i < len(files); i++) {
         BenchFile(files.At(i), nullptr);
     }
 }
 
 void BenchFileOrDir(StrVec& pathsToBench) {
-    int n = pathsToBench.Size() / 2;
+    int n = len(pathsToBench) / 2;
     for (int i = 0; i < n; i++) {
         Str path = pathsToBench.At(2 * i);
         if (file::Exists(path)) {
@@ -358,19 +358,19 @@ struct FilesProvider : TestFileProvider {
     }
     FilesProvider(StrVec& filesIn, int n, int offset) {
         // get every n-th file starting at offset
-        for (int i = offset; i < filesIn.Size(); i += n) {
+        for (int i = offset; i < len(filesIn); i += n) {
             Str f = filesIn.At(i);
             files.Append(f);
         }
         provided = 0;
     }
 
-    int GetFilesCount() override { return files.Size(); }
+    int GetFilesCount() override { return len(files); }
 
     ~FilesProvider() override {}
 
     TempStr NextFile() override {
-        if (provided >= files.Size()) {
+        if (provided >= len(files)) {
             return {};
         }
         TempStr res = files.At(provided++);
@@ -414,7 +414,7 @@ struct DirFileProviderAsync : TestFileProvider {
 };
 
 static void GetNextFileCb(Str* path, StrQueue* q) {
-    int n = q->strings.Size();
+    int n = len(q->strings);
     int idx = rand() % n;
     *path = q->strings.RemoveAtFast(idx);
 }

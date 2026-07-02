@@ -99,7 +99,7 @@ bool CouldBeArg(Str s) {
 
 CmdLineArgsIter::CmdLineArgsIter(WStr cmdLine) {
     ParseCmdLine(cmdLine, args);
-    nArgs = args.Size();
+    nArgs = len(args);
 #if defined(REMOVE_FIRST_ARG)
     curr = 1;
 #endif

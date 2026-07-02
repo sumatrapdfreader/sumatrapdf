@@ -83,7 +83,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
             nStrings++;
         }
     }
-    int nLines = lines.Size();
+    int nLines = len(lines);
     logf("ParseTranslationsTxt: %d lines, nStrings: %d\n", nLines, nStrings);
 
     delete gTranslationCache;
@@ -121,7 +121,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
         unescaped = UnescapeTemp(trans);
         c->Append(unescaped);
     }
-    ReportDebugIf(c->Size() != nStrings * 2);
+    ReportDebugIf(len(*c) != nStrings * 2);
     if (nUntranslated > 0 && !str::Eq(langCodePref, StrL("en:"))) {
         logf("Untranslated strings: %d for lang '%s'\n", nUntranslated, langCodePref);
     }
@@ -138,7 +138,7 @@ Str GetTranslation(Str s) {
         // translations failed to load (e.g. corrupted resource data)
         return s;
     }
-    int n = c->Size();
+    int n = len(*c);
     ReportDebugIf(n % 2 != 0);
     n = n / 2;
     int sLen = len(s);

@@ -64,12 +64,12 @@ void DictTestMapStrToInt() {
         // no guarantee that the string is unique, so Insert() doesn't always succeeds
         if (!ok) continue;
         toRemove.Append(str::Dup(k));
-        utassert(toRemove.Size() == d.Count());
+        utassert(len(toRemove) == d.Count());
         ok = d.Get(k, &val);
         ReportIf(!ok);
         ReportIf(i != val);
     }
-    for (int i = 0; i < toRemove.Size(); i++) {
+    for (int i = 0; i < len(toRemove); i++) {
         Str k = toRemove.At(i);
         ok = d.Remove(k, nullptr);
         utassert(ok);

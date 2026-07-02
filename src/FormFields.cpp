@@ -202,7 +202,7 @@ static bool StartTextEdit(MainWindow* win, Annotation* widget, Rect rc, int flag
 static bool StartChoiceEdit(MainWindow* win, Annotation* widget, Rect rc) {
     StrVec opts;
     GetWidgetChoiceOptions(widget, opts);
-    int n = opts.Size();
+    int n = len(opts);
     if (n == 0) {
         return false;
     }

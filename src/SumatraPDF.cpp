@@ -275,7 +275,7 @@ void SetCurrentLang(Str langCode) {
 void InitializePolicies(bool restrict) {
     // default configuration should be to restrict everything
     ReportIf(gPolicyRestrictions != Perm::All);
-    ReportIf(gAllowedLinkProtocols.Size() != 0 || gAllowedFileTypes.Size() != 0);
+    ReportIf(len(gAllowedLinkProtocols) != 0 || len(gAllowedFileTypes) != 0);
 
     // the -restrict command line flag overrides any sumatrapdfrestrict.ini configuration
     if (restrict) {
@@ -1814,7 +1814,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // features notification: bottom-right, small margins, 16s timeout)
     DisplayModel* dmErr = win->AsFixed();
     EngineBase* engineErr = dmErr ? dmErr->GetEngine() : nullptr;
-    if (engineErr && engineErr->errors.Size() > 0) {
+    if (engineErr && len(engineErr->errors) > 0) {
         TempStr msg = fmt("[%s](CmdShowErrors) %s", _TRA("Errors"), _TRA("in PDF"));
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
@@ -4544,7 +4544,7 @@ static StrVec& CollectNextPrevFilesIfChanged(Str path) {
     RemoveFailedFiles(files);
 
     // remove unsupported files that have never been successfully loaded
-    int nFiles = files.Size();
+    int nFiles = len(files);
     // remove unsupported files
     // traverse from the end so that removing doesn't change iterator
     for (int i = nFiles - 1; i >= 0; i--) {
@@ -4576,11 +4576,11 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
 again:
     Str path = tab->filePath;
     StrVec files = CollectNextPrevFilesIfChanged(path);
-    if (files.Size() < 2) {
+    if (len(files) < 2) {
         return;
     }
 
-    int nFiles = files.Size();
+    int nFiles = len(files);
     int idx = files.Find(path);
     if (forward) {
         idx = (idx + 1) % nFiles;
@@ -6455,7 +6455,7 @@ static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
 static void TransitionToNoTabs() {
     StrVec paths;
 
-    if (paths.Size() == 0) {
+    if (len(paths) == 0) {
         // check before collecting - if no files, just relayout
         bool hasFiles = false;
         for (MainWindow* w : gWindows) {
@@ -6486,7 +6486,7 @@ static void TransitionToNoTabs() {
     MainWindow* surviving = CollectPathsAndCloseWindows(paths);
 
     // re-open each file in its own window, reuse the surviving window for the first file
-    for (int i = 0; i < paths.Size(); i++) {
+    for (int i = 0; i < len(paths); i++) {
         Str path = paths.At(i);
         MainWindow* win;
         if (i == 0 && surviving) {
@@ -6542,7 +6542,7 @@ static void TransitionToTabs() {
         }
     }
     SetTabsInTitlebar(win, true);
-    for (int i = 0; i < paths.Size(); i++) {
+    for (int i = 0; i < len(paths); i++) {
         Str path = paths.At(i);
         LoadArgs args(path, win);
         args.showWin = true;
@@ -7979,7 +7979,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdShowErrors: {
             EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-            if (engine && engine->errors.Size() > 0) {
+            if (engine && len(engine->errors) > 0) {
                 Str text = Join(&engine->errors, "");
                 ShowTextInWindow("Errors", text);
             }

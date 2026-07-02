@@ -110,7 +110,7 @@ void TestPlugin(WStr cmdLine) {
 
     // find the position of -test-plugin and take args after it
     int pluginIdx = -1;
-    for (int i = 0; i < argList.Size(); i++) {
+    for (int i = 0; i < len(argList); i++) {
         if (str::EqI(argList.At(i), "-test-plugin")) {
             pluginIdx = i;
             break;
@@ -119,28 +119,28 @@ void TestPlugin(WStr cmdLine) {
 
     StrVec args;
     if (pluginIdx >= 0) {
-        for (int i = pluginIdx + 1; i < argList.Size(); i++) {
+        for (int i = pluginIdx + 1; i < len(argList); i++) {
             args.Append(argList.At(i));
         }
     }
 
-    if (args.Size() == 0) {
+    if (len(args) == 0) {
         MsgBox(nullptr, "Syntax: SumatraPDF.exe -test-plugin [<SumatraPDF.exe>] [<URL>] <filename.ext>",
                "SumatraPDF Plugin Test", MB_OK | MB_ICONINFORMATION);
         return;
     }
 
     // if no exe path given or first arg doesn't end with .exe, use our own exe
-    if (args.Size() == 1 || !str::EndsWithI(args.At(0), ".exe")) {
+    if (len(args) == 1 || !str::EndsWithI(args.At(0), ".exe")) {
         TempStr selfPath = GetSelfExePathTemp();
         args.InsertAt(0, selfPath);
     }
     // if no URL given (only exe + file), insert nullptr for URL
-    if (args.Size() == 2) {
+    if (len(args) == 2) {
         args.InsertAt(1, nullptr);
     }
 
-    if (args.Size() < 3) {
+    if (len(args) < 3) {
         MsgBox(nullptr, "Syntax: SumatraPDF.exe -test-plugin [<SumatraPDF.exe>] [<URL>] <filename.ext>",
                "SumatraPDF Plugin Test", MB_OK | MB_ICONINFORMATION);
         return;

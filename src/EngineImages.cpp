@@ -1731,7 +1731,7 @@ static bool LoadImageDir(EngineImageDir* e, Str dir) {
         }
     }
 
-    int nFiles = e->pageFileNames.Size();
+    int nFiles = len(e->pageFileNames);
     if (nFiles == 0) {
         return false;
     }
@@ -1776,7 +1776,7 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
 
 int EngineImageDir::GetPageByLabel(Str label) const {
     int nLabel = len(label);
-    for (int i = 0; i < pageFileNames.Size(); i++) {
+    for (int i = 0; i < len(pageFileNames); i++) {
         Str pagePath = pageFileNames[i];
         TempStr fileName = path::GetBaseNameTemp(pagePath);
         TempStr ext = path::GetExtTemp(fileName);
@@ -2049,7 +2049,7 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
     // stop parsing once we have all desired information
     Str dateStr = propDate;
     int slash = str::IndexOfChar(dateStr, '/');
-    return str::IsEmpty(propTitle) || propAuthors.Size() == 0 || str::IsEmpty(propCreator) || str::IsEmpty(propDate) ||
+    return str::IsEmpty(propTitle) || len(propAuthors) == 0 || str::IsEmpty(propCreator) || str::IsEmpty(propDate) ||
            slash <= 0;
 }
 
@@ -2330,7 +2330,7 @@ TempStr EngineCbx::GetPropertyTemp(Str name) {
     }
 
     if (str::Eq(name, kPropAuthor)) {
-        if (cip.propAuthors.Size() == 0) {
+        if (len(cip.propAuthors) == 0) {
             return {};
         }
         return JoinTemp(&cip.propAuthors, ", ");

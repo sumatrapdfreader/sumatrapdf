@@ -22,7 +22,7 @@ DropDown::DropDown() {
 
 static void SetDropDownItems(HWND hwnd, StrVec& items) {
     ComboBox_ResetContent(hwnd);
-    int n = items.Size();
+    int n = len(items);
     for (int i = 0; i < n; i++) {
         Str s = items[i];
         WCHAR* ws = CWStrTemp(s);
@@ -72,7 +72,7 @@ void DropDown::SetCurrentSelection(int n) {
         ComboBox_SetCurSel(hwnd, -1);
         return;
     }
-    int nItems = items.Size();
+    int nItems = len(items);
     ReportIf(n >= nItems);
     ComboBox_SetCurSel(hwnd, n);
 }
@@ -84,7 +84,7 @@ void DropDown::SetCueBanner(Str sv) {
 
 void DropDown::SetItems(StrVec& newItems) {
     items.Reset();
-    int n = newItems.Size();
+    int n = len(newItems);
     for (int i = 0; i < n; i++) {
         Str s = newItems[i];
         items.Append(s);
@@ -112,7 +112,7 @@ Size DropDown::GetIdealSize() {
     HFONT hfont = GetWindowFont(hwnd);
     Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
 
-    int n = items.Size();
+    int n = len(items);
     for (int i = 0; i < n; i++) {
         Str s = items[i];
         Size s2 = HwndMeasureText(hwnd, s, hfont);

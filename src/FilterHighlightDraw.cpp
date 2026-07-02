@@ -20,7 +20,7 @@ static bool IsWordByte(u8 b) {
 
 void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted,
                               COLORREF colBg, bool isRtl, bool matchWholeWord, uint drawFmt) {
-    int nWords = filterWords.Size();
+    int nWords = len(filterWords);
     if (nWords == 0) {
         WCHAR* textW = CWStrTemp(text);
         DrawTextW(hdc, textW, -1, &rc, drawFmt);
@@ -141,7 +141,7 @@ void DrawMaybeHighlightedText(HDC hdc, RECT rc, Str text, const StrVec& filterWo
 }
 
 bool FilterMatches(Str str, const StrVec& words) {
-    int nWords = words.Size();
+    int nWords = len(words);
     for (int i = 0; i < nWords; i++) {
         Str word = words.At(i);
         if (str::IsEmpty(word)) {

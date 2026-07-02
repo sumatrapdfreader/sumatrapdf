@@ -106,7 +106,7 @@ static void BuildGrokModelsList(StrVec& models) {
     if (!str::IsEmpty(extra)) {
         StrVec parts;
         Split(&parts, extra, ",", true);
-        for (int i = 0; i < parts.Size(); i++) {
+        for (int i = 0; i < len(parts); i++) {
             AIChatAppendModelUnique(models, parts.At(i));
         }
     }
@@ -131,7 +131,7 @@ static void PopulateModelCombo(HWND combo) {
     SendMessageW(combo, CB_RESETCONTENT, 0, 0);
     StrVec models;
     BuildGrokModelsList(models);
-    for (int i = 0; i < models.Size(); i++) {
+    for (int i = 0; i < len(models); i++) {
         TempStr display = AIChatModelDisplayNameTemp(models.At(i), "Grok-composer-2.5-fast");
         WCHAR* displayW = CWStrTemp(display);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
@@ -170,7 +170,7 @@ static void SyncGrokSettingsFromUI(MainWindow* win) {
         int sel = (int)SendMessageW(win->hwndGrokModelCombo, CB_GETCURSEL, 0, 0);
         StrVec models;
         BuildGrokModelsList(models);
-        if (sel >= 0 && sel < models.Size()) {
+        if (sel >= 0 && sel < len(models)) {
             str::ReplaceWithCopy(&gGlobalPrefs->grokBuild.model, models.At(sel));
         }
     }

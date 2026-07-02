@@ -382,7 +382,7 @@ static int ParseTipsFromString(Str src, Str prefix, ParsedTip*& outTips) {
     StrVec lines;
     Split(&lines, src, "\n");
     int n = 0;
-    for (int i = 0; i < lines.Size(); i++) {
+    for (int i = 0; i < len(lines); i++) {
         Str line = lines.At(i);
         if (!str::IsEmptyOrWhiteSpace(line)) {
             n++;
@@ -393,7 +393,7 @@ static int ParseTipsFromString(Str src, Str prefix, ParsedTip*& outTips) {
     }
     outTips = new ParsedTip[n];
     int count = 0;
-    for (int i = 0; i < lines.Size(); i++) {
+    for (int i = 0; i < len(lines); i++) {
         Str line = lines.At(i);
         if (str::IsEmptyOrWhiteSpace(line)) {
             continue;

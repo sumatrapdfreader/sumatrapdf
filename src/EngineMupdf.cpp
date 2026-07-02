@@ -1544,7 +1544,7 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     LinkRectList* list = LinkifyText(pageText, coords);
     wstr::Free(pageText);
 
-    for (int i = 0; i < list->links.Size(); i++) {
+    for (int i = 0; i < len(list->links); i++) {
         fz_rect bbox = list->coords.at(i);
         bool overlaps = false;
         for (auto pel : pageInfo->links) {
@@ -4211,7 +4211,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         }
         AppendIfNotExists(&fonts, ToStr(info));
     }
-    if (fonts.Size() == 0) {
+    if (len(fonts) == 0) {
         return {};
     }
 
@@ -4285,7 +4285,7 @@ TempStr EngineMupdf::GetPropertyTemp(Str name) {
                 fstruct.Append(Str(intentName + 4));
             }
         }
-        if (fstruct.Size() == 0) {
+        if (len(fstruct) == 0) {
             return {};
         }
         return JoinTemp(&fstruct, ",");

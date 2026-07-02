@@ -526,7 +526,7 @@ static Str ReadableProcName(Str procPath) {
 }
 
 static void SetCloseProcessMsg() {
-    int n = gProcessesToClose.Size();
+    int n = len(gProcessesToClose);
     Str procNames = ReadableProcName(gProcessesToClose.At(0));
     for (int i = 1; i < n; i++) {
         Str name = ReadableProcName(gProcessesToClose.At(i));
@@ -560,7 +560,7 @@ bool CheckInstallUninstallPossible(HWND hwnd, bool silent) {
     gProcessesToClose.Reset();
     ProcessesUsingInstallation(gProcessesToClose);
 
-    bool possible = gProcessesToClose.Size() == 0;
+    bool possible = len(gProcessesToClose) == 0;
     if (possible) {
         SetDefaultMsg();
     } else {

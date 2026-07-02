@@ -24,14 +24,14 @@ void TestPreview(WStr cmdLine) {
 
     // find args after -test-preview
     int idx = -1;
-    for (int i = 0; i < argList.Size(); i++) {
+    for (int i = 0; i < len(argList); i++) {
         if (str::EqI(argList.At(i), "-test-preview")) {
             idx = i;
             break;
         }
     }
 
-    if (idx < 0 || idx + 1 >= argList.Size()) {
+    if (idx < 0 || idx + 1 >= len(argList)) {
         printf("Usage: SumatraPDF.exe -test-preview <filename>\n");
         return;
     }

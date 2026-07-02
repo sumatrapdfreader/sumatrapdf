@@ -78,7 +78,7 @@ Str gAllProps[] = {
 // clang-format off
 
 int PropsCount(const Props& props) {
-    int n = props.Size();
+    int n = len(props);
     ReportIf(n < 0 || (n % 2) != 0);
     return n / 2;
 }

@@ -277,7 +277,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
             StrVec paths;
             chm_enumerate(h, CHM_ENUMERATE_ALL, ChmTestEnumerate, &paths);
 
-            for (int i = 0; i < paths.Size(); i++) {
+            for (int i = 0; i < len(paths); i++) {
                 Str path = paths.At(i);
                 struct chmUnitInfo ui{};
                 if (chm_resolve_object(h, path.s, &ui) != CHM_RESOLVE_SUCCESS) {
@@ -313,7 +313,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
                 out.Append("payload_retrieve=NOTFOUND\n");
             }
 
-            out.Append(fmt("paths=%d retrieve_ok=%d retrieve_fail=%d\n", paths.Size(), retrieveOk, retrieveFail));
+            out.Append(fmt("paths=%d retrieve_ok=%d retrieve_fail=%d\n", len(paths), retrieveOk, retrieveFail));
             chm_close(h);
         }
     }
@@ -323,7 +323,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
         out.Append("chmfile=OK\n");
         StrVec allPaths;
         doc->GetAllPaths(&allPaths);
-        out.Append(fmt("chmfile_paths=%d\n", allPaths.Size()));
+        out.Append(fmt("chmfile_paths=%d\n", len(allPaths)));
         if (doc->HasToc()) {
             out.Append("chmfile_toc=YES\n");
         }
