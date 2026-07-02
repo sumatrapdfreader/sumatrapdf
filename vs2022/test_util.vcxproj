@@ -898,8 +898,7 @@
     <ClInclude Include="..\src\base\Dpi.h" />
     <ClInclude Include="..\src\base\File.h" />
     <ClInclude Include="..\src\base\Geom.h" />
-    <ClInclude Include="..\src\base\HtmlParserLookup.h" />
-    <ClInclude Include="..\src\base\HtmlPullParser.h" />
+    <ClInclude Include="..\src\base\HtmlTags.h" />
     <ClInclude Include="..\src\base\JsonParser.h" />
     <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\base\Scoped.h" />
@@ -938,8 +937,7 @@
     <ClCompile Include="..\src\base\Dpi.cpp" />
     <ClCompile Include="..\src\base\File.cpp" />
     <ClCompile Include="..\src\base\Geom.cpp" />
-    <ClCompile Include="..\src\base\HtmlParserLookup.cpp" />
-    <ClCompile Include="..\src\base\HtmlPullParser.cpp" />
+    <ClCompile Include="..\src\base\HtmlTags.cpp" />
     <ClCompile Include="..\src\base\JsonParser.cpp" />
     <ClCompile Include="..\src\base\Log.cpp" />
     <ClCompile Include="..\src\base\SettingsUtil.cpp" />
@@ -959,7 +957,6 @@
     <ClCompile Include="..\src\base\tests\CssParser_ut.cpp" />
     <ClCompile Include="..\src\base\tests\Dict_ut.cpp" />
     <ClCompile Include="..\src\base\tests\File_ut.cpp" />
-    <ClCompile Include="..\src\base\tests\HtmlPullParser_ut.cpp" />
     <ClCompile Include="..\src\base\tests\JsonParser_ut.cpp" />
     <ClCompile Include="..\src\base\tests\RefHover_ut.cpp" />
     <ClCompile Include="..\src\base\tests\SettingsUtil_ut.cpp" />

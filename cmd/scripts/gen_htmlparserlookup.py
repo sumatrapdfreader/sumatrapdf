@@ -5,7 +5,14 @@ Given a string, see if it belongs to a known set of strings. If it does,
 return a value corresponding to that string.
 """
 
-import util
+import os
+
+def group(items, count):
+	return [items[i:i + count] for i in range(0, len(items), count)]
+
+def chdir_top():
+	script_dir = os.path.dirname(os.path.abspath(__file__))
+	os.chdir(os.path.abspath(os.path.join(script_dir, "..", "..")))
 
 Template_Defines = """\
 #define CS1(c1)             (c1)
@@ -27,9 +34,11 @@ Template_Defines = """\
 """
 
 Template_Find_Function = """\
-%s Find%s(const char *name, size_t len)
+%s Find%s(Str nameIn)
 {
-	uint32_t key = 0 == len ? 0 : 1 == len ? STR1i(name) :
+	const char *name = nameIn.s;
+	size_t len = (size_t)nameIn.len;
+	u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) :
 	               2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
 	switch (key) {
 	%s
@@ -40,6 +49,12 @@ Template_Find_Function = """\
 
 Template_Enumeration = """\
 enum %s {
+	%s
+};
+"""
+
+Template_Enum_Class = """\
+enum class %s {
 	%s
 };
 """
@@ -112,12 +127,17 @@ def createFastFinder(list, type, default, caseInsensitive, funcName=None):
 # (which would allow to "internalize" a string)
 def createTypeEnum(list, type, default):
 	list = sorted(list, key=lambda a: a[0])
-	parts = util.group([item[1] for item in list] + [default], 5)
+	parts = group([item[1] for item in list] + [default], 5)
 	return unTab(Template_Enumeration % (type, ",\n	".join([", ".join(part) for part in parts])))
+
+def createTypeEnumClass(list, type, default):
+	list = sorted(list, key=lambda a: a[0])
+	parts = group([item[1] for item in list] + [default], 5)
+	return unTab(Template_Enum_Class % (type, ",\n	".join([", ".join(part) for part in parts])))
 
 def createFastSelector(fullList, nameList, funcName, type):
 	cases = ["case %s:" % value for (name, value) in fullList if name in nameList]
-	return unTab(Template_Selector % (funcName, type, "\n	".join([" ".join(part) for part in util.group(cases, 4)])))
+	return unTab(Template_Selector % (funcName, type, "\n	".join([" ".join(part) for part in group(cases, 4)])))
 
 ########## HTML tags and attributes ##########
 
@@ -145,11 +165,11 @@ Template_Entities_Comment = """\
 # selection of MathML2 entities that aren't HTML entities
 List_MathML2_Entities = [("DoubleDot", 168), ("OverBar", 175), ("PlusMinus", 177), ("Cedilla", 184), ("Amacr", 256), ("amacr", 257), ("Abreve", 258), ("abreve", 259), ("Aogon", 260), ("aogon", 261), ("Cacute", 262), ("cacute", 263), ("Ccirc", 264), ("ccirc", 265), ("Cdot", 266), ("cdot", 267), ("Ccaron", 268), ("ccaron", 269), ("Dcaron", 270), ("dcaron", 271), ("Dstrok", 272), ("dstrok", 273), ("Emacr", 274), ("emacr", 275), ("Edot", 278), ("edot", 279), ("Eogon", 280), ("eogon", 281), ("Ecaron", 282), ("ecaron", 283), ("Gcirc", 284), ("gcirc", 285), ("Gbreve", 286), ("gbreve", 287), ("Gdot", 288), ("gdot", 289), ("Gcedil", 290), ("Hcirc", 292), ("hcirc", 293), ("Hstrok", 294), ("hstrok", 295), ("Itilde", 296), ("itilde", 297), ("Imacr", 298), ("imacr", 299), ("Iogon", 302), ("iogon", 303), ("Idot", 304), ("IJlig", 306), ("ijlig", 307), ("Jcirc", 308), ("jcirc", 309), ("Kcedil", 310), ("kcedil", 311), ("kgreen", 312), ("Lacute", 313), ("lacute", 314), ("Lcedil", 315), ("lcedil", 316), ("Lcaron", 317), ("lcaron", 318), ("Lmidot", 319), ("lmidot", 320), ("Lstrok", 321), ("lstrok", 322), ("Nacute", 323), ("nacute", 324), ("Ncedil", 325), ("ncedil", 326), ("Ncaron", 327), ("ncaron", 328), ("napos", 329), ("ENG", 330), ("eng", 331), ("Omacr", 332), ("omacr", 333), ("Odblac", 336), ("odblac", 337), ("Racute", 340), ("racute", 341), ("Rcedil", 342), ("rcedil", 343), ("Rcaron", 344), ("rcaron", 345), ("Sacute", 346), ("sacute", 347), ("Scirc", 348), ("scirc", 349), ("Scedil", 350), ("scedil", 351), ("Tcedil", 354), ("tcedil", 355), ("Tcaron", 356), ("tcaron", 357), ("Tstrok", 358), ("tstrok", 359), ("Utilde", 360), ("utilde", 361), ("Umacr", 362), ("umacr", 363), ("Ubreve", 364), ("ubreve", 365), ("Uring", 366), ("uring", 367), ("Udblac", 368), ("udblac", 369), ("Uogon", 370), ("uogon", 371), ("Wcirc", 372), ("wcirc", 373), ("Ycirc", 374), ("ycirc", 375), ("Zacute", 377), ("zacute", 378), ("Zdot", 379), ("zdot", 380), ("Zcaron", 381), ("zcaron", 382), ("imped", 437), ("gacute", 501), ("Hacek", 711), ("Breve", 728), ("DiacriticalDot", 729), ("ring", 730), ("ogon", 731), ("DiacriticalTilde", 732), ("DiacriticalDoubleAcute", 733), ("DownBreve", 785), ("UnderBar", 818), ("varepsilon", 949), ("varsigma", 962), ("varphi", 966), ("vartheta", 977), ("Upsi", 978), ("straightphi", 981), ("varpi", 982), ("Gammad", 988), ("digamma", 989), ("varkappa", 1008), ("varrho", 1009), ("straightepsilon", 1013), ("backepsilon", 1014)]
 
-from htmlentitydefs import entitydefs
+from html.entities import entitydefs
 entitydefs['apos'] = "'" # only XML entity that isn't an HTML entity as well
 List_HTML_Entities = []
 for name, value in entitydefs.items():
-	List_HTML_Entities.append((name, value[2:-1] or str(ord(value))))
+	List_HTML_Entities.append((name, str(ord(value))))
 for (name, value) in List_MathML2_Entities:
 	assert name not in entitydefs
 	List_HTML_Entities.append((name, str(value)))
@@ -184,14 +204,14 @@ Template_Lookup_Header = """\
 
 %(enum_htmltag)s
 %(enum_alignattr)s
-HtmlTag         FindHtmlTag(const char *name, size_t len);
+HtmlTag         FindHtmlTag(Str name);
 bool            IsTagSelfClosing(HtmlTag item);
 bool            IsInlineTag(HtmlTag item);
-AlignAttr       FindAlignAttr(const char *name, size_t len);
-uint32_t        FindHtmlEntityRune(const char *name, size_t len);
+AlignAttr       FindAlignAttr(Str name);
+u32             FindHtmlEntityRune(Str name);
 
 %(enum_cssprop)s
-CssProp         FindCssProp(const char *name, size_t len);
+CssProp         FindCssProp(Str name);
 """
 
 Template_Lookup_Code = """\
@@ -201,7 +221,7 @@ Template_Lookup_Code = """\
 // This file is auto-generated by gen_htmlparserlookup.py
 
 #include "Base.h"
-#include "HtmlParserLookup.h"
+#include "HtmlTags.h"
 
 %(code_defines)s
 %(code_htmltag)s
@@ -213,17 +233,18 @@ Template_Lookup_Code = """\
 """
 
 def main():
-	util.chdir_top()
+	chdir_top()
 
 	tags = [(name, getEnumName(name, "Tag")) for name in sorted(List_HTML_Tags.split() + List_Other_Tags.split())]
 	attrs = [(name, getEnumName(name, "Attr")) for name in sorted(List_HTML_Attrs.split() + List_Other_Attrs.split())]
-	aligns = [(name, getEnumName(name, "Align")) for name in sorted(List_Align_Values.split())]
+	aligns = [(name, "AlignAttr::" + getEnumName(name, "Align")[len("Align_"):]) for name in sorted(List_Align_Values.split())]
 	cssProps = [(name, getEnumName(name, "Css")) for name in sorted(List_CSS_Props.split())]
 	cssColors = [(name, "MKRGB(%s)" % value) for (name, value) in sorted(List_CSS_Colors)]
 
 	enum_htmltag = createTypeEnum(tags, "HtmlTag", "Tag_NotFound")
 	enum_htmlattr = createTypeEnum(attrs, "HtmlAttr", "Attr_NotFound")
-	enum_alignattr = createTypeEnum(aligns, "AlignAttr", "Align_NotFound")
+	enum_alignattr = createTypeEnumClass(
+		[(name, value[len("AlignAttr::"):]) for (name, value) in aligns], "AlignAttr", "NotFound")
 	enum_cssprop = createTypeEnum(cssProps, "CssProp", "Css_Unknown")
 
 	code_defines = Template_Defines
@@ -231,15 +252,15 @@ def main():
 	code_htmlattr = createFastFinder(attrs, "HtmlAttr", "Attr_NotFound", True)
 	code_selfclosing = createFastSelector(tags, List_Self_Closing_Tags.split(), "IsTagSelfClosing", "HtmlTag")
 	code_inlinetag = createFastSelector(tags, List_Inline_Tags.split(), "IsInlineTag", "HtmlTag")
-	code_alignattr = createFastFinder(aligns, "AlignAttr", "Align_NotFound", True)
-	code_htmlentity = Template_Entities_Comment + "\n" + createFastFinder(List_HTML_Entities, "uint32_t", "(uint32_t)-1", False, "HtmlEntityRune")
+	code_alignattr = createFastFinder(aligns, "AlignAttr", "AlignAttr::NotFound", True)
+	code_htmlentity = Template_Entities_Comment + "\n" + createFastFinder(List_HTML_Entities, "u32", "(u32)-1", False, "HtmlEntityRune")
 	code_cssprop = createFastFinder(cssProps, "CssProp", "Css_Unknown", True)
 	code_csscolor = createFastFinder(cssColors, "ARGB", "MKRGBA(0,0,0,0)", True, "CssColor")
 
 	content = Template_Lookup_Header % locals()
-	open("src/base/HtmlParserLookup.h", "wb").write(content.replace("\n", "\r\n"))
+	open("src/base/HtmlTags.h", "wb").write(content.replace("\n", "\r\n").encode("utf-8"))
 	content = Template_Lookup_Code[:-1] % locals()
-	open("src/base/HtmlParserLookup.cpp", "wb").write(content.replace("\n", "\r\n"))
+	open("src/base/HtmlTags.cpp", "wb").write(content.replace("\n", "\r\n").encode("utf-8"))
 
 if __name__ == "__main__":
 	main()

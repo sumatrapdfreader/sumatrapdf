@@ -869,8 +869,7 @@
     <ClInclude Include="..\src\base\GdiPlus.h" />
     <ClInclude Include="..\src\base\Geom.h" />
     <ClInclude Include="..\src\base\GuessFileType.h" />
-    <ClInclude Include="..\src\base\HtmlParserLookup.h" />
-    <ClInclude Include="..\src\base\HtmlPullParser.h" />
+    <ClInclude Include="..\src\base\HtmlTags.h" />
     <ClInclude Include="..\src\base\Http.h" />
     <ClInclude Include="..\src\base\JsonParser.h" />
     <ClInclude Include="..\src\base\JxlReader.h" />
@@ -919,8 +918,7 @@
     <ClCompile Include="..\src\base\GdiPlus.cpp" />
     <ClCompile Include="..\src\base\Geom.cpp" />
     <ClCompile Include="..\src\base\GuessFileType.cpp" />
-    <ClCompile Include="..\src\base\HtmlParserLookup.cpp" />
-    <ClCompile Include="..\src\base\HtmlPullParser.cpp" />
+    <ClCompile Include="..\src\base\HtmlTags.cpp" />
     <ClCompile Include="..\src\base\Http.cpp" />
     <ClCompile Include="..\src\base\JsonParser.cpp" />
     <ClCompile Include="..\src\base\JxlReader.cpp" />

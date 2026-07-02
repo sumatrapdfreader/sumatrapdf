@@ -6,8 +6,7 @@
 #include "base/Archive.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
-#include "base/HtmlParserLookup.h"
-#include "base/HtmlPullParser.h"
+#include "base/HtmlTags.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -15,10 +14,64 @@
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EbookBase.h"
+#include "GumboHtmlParser.h"
 #include "GumboHelpers.h"
 #include "EbookDoc.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
+
+static void SkipXmlPIAttrName(Str s, int& off) {
+    while (off < s.len) {
+        char c = s.s[off];
+        if (str::IsWs(c) || c == '=' || c == '?' || c == '>') {
+            return;
+        }
+        off++;
+    }
+}
+
+static TempStr GetXmlPIAttrTemp(Str xmlPI, Str attrName) {
+    int off = 2; // skip "<?"
+    SkipNonWs(xmlPI, off);
+    while (off < xmlPI.len) {
+        SkipWs(xmlPI, off);
+        if (off >= xmlPI.len || xmlPI.s[off] == '?' || xmlPI.s[off] == '>') {
+            return {};
+        }
+
+        int nameStart = off;
+        SkipXmlPIAttrName(xmlPI, off);
+        Str name(xmlPI.s + nameStart, off - nameStart);
+        SkipWs(xmlPI, off);
+        if (off >= xmlPI.len || xmlPI.s[off] != '=') {
+            continue;
+        }
+        off++;
+        SkipWs(xmlPI, off);
+        if (off >= xmlPI.len) {
+            return {};
+        }
+
+        Str val;
+        if (xmlPI.s[off] == '"' || xmlPI.s[off] == '\'') {
+            char quote = xmlPI.s[off++];
+            int valStart = off;
+            if (!SkipUntil(xmlPI, off, quote)) {
+                return {};
+            }
+            val = Str(xmlPI.s + valStart, off - valStart);
+            off++;
+        } else {
+            int valStart = off;
+            SkipNonWs(xmlPI, off);
+            val = Str(xmlPI.s + valStart, off - valStart);
+        }
+        if (str::EqI(name, attrName)) {
+            return str::DupTemp(val);
+        }
+    }
+    return {};
+}
 
 // tries to extract an encoding from <?xml encoding="..."?>
 // returns CP_ACP on failure
@@ -30,15 +83,11 @@ static uint GetCodepageFromPI(Str xmlPI) {
     if (xmlPIEnd < 0) {
         return CP_ACP;
     }
-    HtmlToken pi;
-    pi.SetTag(HtmlToken::EmptyElementTag, Str(xmlPI.s + 2, xmlPIEnd - 2));
-    pi.nLen = 4;
-    AttrInfo* enc = pi.GetAttrByName(StrL("encoding"));
-    if (!enc) {
+    TempStr encoding = GetXmlPIAttrTemp(Str(xmlPI.s, xmlPIEnd + 2), StrL("encoding"));
+    if (!encoding) {
         return CP_ACP;
     }
 
-    TempStr encoding = str::DupTemp(enc->val);
     struct {
         Str namePart;
         uint codePage;
@@ -557,7 +606,7 @@ static bool IsTokPropName(HtmlToken* tok, Str name) {
 }
 
 static void ParseMetadata(Str content, Props& props) {
-    HtmlPullParser pullParser(content);
+    GumboHtmlParser pullParser(content);
     int insideMetadata = 0;
     HtmlToken* tok;
 
@@ -698,7 +747,7 @@ bool EpubDoc::HasToc() const {
 }
 
 static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
-    HtmlPullParser parser(data);
+    GumboHtmlParser parser(data);
     HtmlToken* tok;
     // skip to the start of the <nav epub:type="toc">
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
@@ -759,7 +808,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
 }
 
 static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
-    HtmlPullParser parser(data);
+    GumboHtmlParser parser(data);
     HtmlToken* tok;
     // skip to the start of the navMap
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
@@ -963,7 +1012,7 @@ bool Fb2Doc::Load() {
 
     Str data2 = Str((char*)((u8*)tmp.s), (int)((size_t)tmp.len));
 
-    HtmlPullParser parser(data2);
+    GumboHtmlParser parser(data2);
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     Str bodyStart;
@@ -1063,7 +1112,7 @@ bool Fb2Doc::Load() {
     return len(xmlData) > 0;
 }
 
-void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
+void Fb2Doc::ExtractImage(GumboHtmlParser* parser, HtmlToken* tok) {
     TempStr id;
     AttrInfo* attrInfo = tok->GetAttrByNameNS(StrL("id"), FB2_MAIN_NS());
     if (attrInfo) {
@@ -1132,7 +1181,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
     int level = 0;
 
     auto xmlData2 = GetXmlData();
-    HtmlPullParser parser(xmlData2);
+    GumboHtmlParser parser(xmlData2);
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (tok->IsStartTag() && Tag_Section == tok->tag) {
@@ -1210,7 +1259,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         !str::StartsWithI(text, "<TEALPAINT")) {
         goto Fallback;
     }
-    HtmlPullParser parser(Str(text.s, (int)len));
+    GumboHtmlParser parser(Str(text.s, (int)len));
     HtmlToken* tok = parser.Next();
     if (!tok || !tok->IsStartTag()) {
         goto Fallback;
@@ -1391,7 +1440,7 @@ bool HtmlDoc::Load() {
     str::ReplaceWithCopy(&pagePath, fileName);
     str::TransCharsInPlace(pagePath, StrL("\\"), StrL("/"));
 
-    HtmlPullParser parser(htmlData);
+    GumboHtmlParser parser(htmlData);
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
            (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {

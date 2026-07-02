@@ -10,8 +10,7 @@
 #include "base/Dpi.h"
 #include "base/File.h"
 #include "base/GdiPlus.h"
-#include "base/HtmlParserLookup.h"
-#include "base/HtmlPullParser.h"
+#include "base/HtmlTags.h"
 #include "base/Win.h"
 #include "base/Zip.h"
 
@@ -19,6 +18,7 @@
 
 #include "wingui/UIModels.h"
 
+#include "GumboHtmlParser.h"
 #include "GumboHelpers.h"
 
 #include "DocProperties.h"

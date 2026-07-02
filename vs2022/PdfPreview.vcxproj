@@ -967,6 +967,7 @@
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\FzImgReader.h" />
     <ClInclude Include="..\src\GumboHelpers.h" />
+    <ClInclude Include="..\src\GumboHtmlParser.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PalmDbReader.h" />
@@ -993,6 +994,7 @@
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\FzImgReader.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
+    <ClCompile Include="..\src\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />

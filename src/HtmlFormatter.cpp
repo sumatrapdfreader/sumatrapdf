@@ -3,9 +3,9 @@
 
 #include "base/Base.h"
 #include "base/GdiPlus.h"
-#include "base/HtmlParserLookup.h"
+#include "base/HtmlTags.h"
 #include "base/CssParser.h"
-#include "base/HtmlPullParser.h"
+#include "GumboHtmlParser.h"
 #include "mui/Mui.h"
 
 #include "FzImgReader.h"
@@ -60,7 +60,7 @@ Control objects further to make allocating hundreds of them cheaper or introduce
 other base element(s) with less functionality and less overhead).
 */
 
-bool ValidReparseIdx(ptrdiff_t idx, HtmlPullParser* parser) {
+bool ValidReparseIdx(ptrdiff_t idx, GumboHtmlParser* parser) {
     return !((idx < 0) || (idx > (int)parser->Len()));
 }
 
@@ -153,7 +153,7 @@ void StyleRule::Merge(StyleRule& source) {
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     : pageDx(args->pageDx), pageDy(args->pageDy), textAllocator(args->textAllocator) {
     currReparseIdx = args->reparseIdx;
-    htmlParser = new HtmlPullParser(args->htmlStr);
+    htmlParser = new GumboHtmlParser(args->htmlStr);
     htmlParser->SetCurrPosOff(currReparseIdx);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 

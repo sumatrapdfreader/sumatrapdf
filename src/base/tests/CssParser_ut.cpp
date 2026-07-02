@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/HtmlParserLookup.h"
+#include "base/HtmlTags.h"
 #include "base/CssParser.h"
 
 // must be last due to assert() over-write

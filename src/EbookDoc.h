@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-class HtmlPullParser;
+class GumboHtmlParser;
 struct HtmlToken;
 
 struct ImageData {
@@ -70,7 +70,7 @@ struct Fb2Doc {
     bool hasToc = false;
 
     bool Load();
-    void ExtractImage(HtmlPullParser* parser, HtmlToken* tok);
+    void ExtractImage(GumboHtmlParser* parser, HtmlToken* tok);
 
     explicit Fb2Doc(Str fileName);
     explicit Fb2Doc(IStream* stream);

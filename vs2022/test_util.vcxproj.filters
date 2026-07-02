@@ -63,10 +63,7 @@
     <ClInclude Include="..\src\base\Geom.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\HtmlParserLookup.h">
-      <Filter>base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\base\HtmlPullParser.h">
+    <ClInclude Include="..\src\base\HtmlTags.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\JsonParser.h">
@@ -163,10 +160,7 @@
     <ClCompile Include="..\src\base\Geom.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\HtmlParserLookup.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\HtmlPullParser.cpp">
+    <ClCompile Include="..\src\base\HtmlTags.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\JsonParser.cpp">
@@ -224,9 +218,6 @@
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\File_ut.cpp">
-      <Filter>base\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\base\tests\HtmlPullParser_ut.cpp">
       <Filter>base\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\tests\JsonParser_ut.cpp">

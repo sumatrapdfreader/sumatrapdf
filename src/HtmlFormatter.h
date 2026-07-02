@@ -153,7 +153,7 @@ struct HtmlFormatterArgs {
     WStr fontName;
 };
 
-class HtmlPullParser;
+class GumboHtmlParser;
 struct HtmlToken;
 struct CssSelector;
 
@@ -272,7 +272,7 @@ struct HtmlFormatter {
     // reparse point for the current HtmlToken
     ptrdiff_t currReparseIdx = 0;
 
-    HtmlPullParser* htmlParser = nullptr;
+    GumboHtmlParser* htmlParser = nullptr;
 
     // list of pages that we've created but haven't yet sent to client
     Vec<HtmlPage*> pagesToSend;

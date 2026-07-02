@@ -23,7 +23,7 @@ To write new regression test:
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/GdiPlus.h"
-#include "base/HtmlParserLookup.h"
+#include "base/HtmlTags.h"
 #include "mui/Mui.h"
 #include "base/Win.h"
 

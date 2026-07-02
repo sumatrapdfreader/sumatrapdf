@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "GumboHelpers.h"
+
 struct AttrInfo {
     Str name;
     Str val;
@@ -12,18 +14,11 @@ struct AttrInfo {
 
 struct HtmlToken {
     enum TokenType {
-        StartTag,        // <foo>
-        EndTag,          // </foo>
-        EmptyElementTag, // <foo/>
-        Text,            // <foo>text</foo> => "text"
+        StartTag,
+        EndTag,
+        EmptyElementTag,
+        Text,
         Error
-    };
-
-    enum ParsingError {
-        NoError,
-        ExpectedElement,
-        UnclosedTag,
-        InvalidTag
     };
 
     bool IsStartTag() const { return type == StartTag; }
@@ -34,45 +29,55 @@ struct HtmlToken {
     bool IsError() const { return type == Error; }
 
     Str GetReparsePoint() const;
-    void SetTag(TokenType new_type, Str slice);
-    void SetError(ParsingError err, Str errContext);
+    void SetTag(TokenType newType, Str name);
     void SetText(Str slice);
 
     TokenType type = Error;
-    ParsingError error = NoError;
     Str s;
-
-    // only for tags: type and name length
+    Str name;
+    Str reparsePoint;
     HtmlTag tag = Tag_NotFound;
-    size_t nLen = 0;
+    const GumboNode* node = nullptr;
 
-    bool NameIs(Str name) const;
-    bool NameIsNS(Str name, Str ns) const;
+    bool NameIs(Str nameToFind) const;
+    bool NameIsNS(Str nameToCheck, Str ns) const;
     AttrInfo* GetAttrByName(Str name);
     AttrInfo* GetAttrByNameNS(Str name, Str attrNS);
 
-  protected:
-    AttrInfo* NextAttr();
-    int nextAttrOff = -1;
+  private:
     AttrInfo attrInfo;
 };
 
-/* A very simple pull html parser. Call Next() to get the next HtmlToken,
-which can be one one of 3 tag types or error. If a tag has attributes,
-use HtmlToken::GetAttrByName() / GetAttrByNameNS() to access them. */
-class HtmlPullParser {
+class GumboHtmlParser {
+    struct Event {
+        HtmlToken::TokenType type = HtmlToken::Error;
+        const GumboNode* node = nullptr;
+        Str s;
+        Str name;
+        Str reparsePoint;
+        ptrdiff_t off = 0;
+    };
+
     Str html;
-    int currPos = 0;
+    GumboOptions opts{};
+    GumboOutput* output = nullptr;
+    Vec<Event> events;
+    size_t eventIdx = 0;
+    ptrdiff_t textStartOff = -1;
 
     HtmlToken currToken{};
 
-  public:
-    explicit HtmlPullParser(Str s) : html(s) {}
+    void BuildEvents();
+    HtmlToken* TokenFromEvent(Event& ev);
 
-    void SetCurrPosOff(ptrdiff_t off) { currPos = (int)off; }
+  public:
+    explicit GumboHtmlParser(Str s);
+    ~GumboHtmlParser();
+
+    void SetCurrPosOff(ptrdiff_t off);
     size_t Len() const { return (size_t)html.len; }
     Str Html() const { return html; }
-    int PosOf(Str p) const { return (int)(p.s - html.s); }
+    int PosOf(Str p) const;
 
     HtmlToken* Next();
 };

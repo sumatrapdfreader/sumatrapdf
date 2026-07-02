@@ -4,8 +4,8 @@
 #include "base/Base.h"
 #include "base/GdiPlus.h"
 #include "base/Archive.h"
-#include "base/HtmlParserLookup.h"
-#include "base/HtmlPullParser.h"
+#include "base/HtmlTags.h"
+#include "GumboHtmlParser.h"
 #include "mui/Mui.h"
 
 #include "wingui/UIModels.h"

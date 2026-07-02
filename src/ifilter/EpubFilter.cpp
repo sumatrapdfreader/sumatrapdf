@@ -5,8 +5,7 @@
 #include "base/ScopedWin.h"
 #include "base/Archive.h"
 #include "base/GdiPlus.h"
-#include "base/HtmlParserLookup.h"
-#include "base/HtmlPullParser.h"
+#include "base/HtmlTags.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -16,6 +15,7 @@
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
+#include "GumboHtmlParser.h"
 
 #include "FilterBase.h"
 #include "RegistrySearchFilter.h"
@@ -101,7 +101,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
     int dataLen = d.len;
 
     str::Builder text(dataLen / 2);
-    HtmlPullParser p(d);
+    GumboHtmlParser p(d);
     HtmlToken* t;
     Vec<HtmlTag> tagNesting;
     while ((t = p.Next()) != nullptr && !t->IsError()) {
