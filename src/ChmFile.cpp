@@ -402,7 +402,7 @@ static Str StripItsProtocol(Str url) {
 static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, int level) {
     ReportIf(!GumboTagNameIs(objNode, "object"));
 
-    AutoFreeStr name, local;
+    TempStr name, local;
     const GumboVector* children = &objNode->v.element.children;
     for (unsigned int i = 0; i < children->length; i++) {
         const GumboNode* child = (const GumboNode*)children->data[i];
@@ -415,15 +415,15 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, const GumboNode* objNode, 
             continue;
         }
         if (str::EqI(attrName->value, "Name")) {
-            name.Set(str::Dup(attrVal->value).s);
+            name = str::DupTemp(attrVal->value);
         } else if (str::EqI(attrName->value, "Local")) {
-            local.Set(str::Dup(StripItsProtocol(Str(attrVal->value))).s);
+            local = str::DupTemp(StripItsProtocol(Str(attrVal->value)));
         }
     }
     if (!name) {
         return false;
     }
-    visitor->Visit(name.Get(), local.Get(), level);
+    visitor->Visit(name, local, level);
     return true;
 }
 
@@ -699,11 +699,11 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
     if (str::IsEmpty(htmlData)) {
         return false;
     }
-    AutoFreeStr htmlFree = htmlData.s;
     // Convert to UTF-8 (handling UTF-8 BOM and the file's codepage) so gumbo's
     // attribute values come out in a known encoding -- no per-attribute
     // conversion needed in the visit functions.
     TempStr utf8 = SmartToUtf8Temp(htmlData, codepage);
+    str::Free(htmlData);
     if (!utf8) {
         return false;
     }

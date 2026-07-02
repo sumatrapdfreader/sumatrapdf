@@ -661,31 +661,31 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         }
         if (tok->IsStartTag() && (Tag_A == tok->tag || Tag_Span == tok->tag)) {
             HtmlTag itemTag = tok->tag;
-            AutoFreeStr text, href;
+            TempStr text, href;
             if (Tag_A == tok->tag) {
                 AttrInfo* attrInfo = tok->GetAttrByName(StrL("href"));
                 if (attrInfo) {
-                    href.SetCopy(attrInfo->val);
+                    href = str::DupTemp(attrInfo->val);
                 }
             }
             while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
                 if (tok->IsText()) {
-                    AutoFreeStr part = str::Dup(tok->s).s;
+                    TempStr part = str::DupTemp(tok->s);
                     if (!text) {
-                        text.Set(part.Release());
+                        text = part;
                     } else {
-                        text.Set(str::Join(Str(text.Get()), Str(part.Get())).s);
+                        text = str::JoinTemp(text, part);
                     }
                 }
             }
             if (!text) {
                 continue;
             }
-            auto itemText = ToWStrTemp(text.Get());
+            auto itemText = ToWStrTemp(text);
             wstr::NormalizeWSInPlace(itemText);
             WStr itemSrc;
             if (href) {
-                TempStr normHref = NormalizeURLTemp(href.CStr(), pagePath);
+                TempStr normHref = NormalizeURLTemp(href, pagePath);
                 itemSrc = strconv::HtmlUtf8ToWStrTemp(normHref);
             }
             TempStr txt = ToUtf8Temp(itemText);
@@ -1002,11 +1002,12 @@ bool Fb2Doc::Load() {
 }
 
 void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
-    AutoFreeStr id;
+    TempStr id;
     AttrInfo* attrInfo = tok->GetAttrByNameNS(StrL("id"), FB2_MAIN_NS());
     if (attrInfo) {
-        id.SetCopy(attrInfo->val);
-        url::DecodeInPlace(Str(id.Get()));
+        id = str::DupTemp(attrInfo->val);
+        url::DecodeInPlace(id);
+        id = Str(id.s); // DecodeInPlace shortens the buffer in place; re-read its length
     }
 
     tok = parser->Next();
@@ -1020,7 +1021,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     }
     ImageData data;
     data.base = str::Dup(decoded);
-    data.fileName = str::Join(StrL("#"), Str(id));
+    data.fileName = str::Join(StrL("#"), id);
     data.fileId = len(images);
     images.Append(data);
 }
