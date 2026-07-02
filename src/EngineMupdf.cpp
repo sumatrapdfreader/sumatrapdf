@@ -2592,7 +2592,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         if (pdfdoc) {
             decryptKey = pdf_crypt_key(ctx, pdfdoc->crypt);
         }
-        AutoFreeStr pwd(pwdUI->GetPassword(FilePath(), digest, decryptKey, &saveKey).s);
+        Str pwd = pwdUI->GetPassword(FilePath(), digest, decryptKey, &saveKey);
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -2600,22 +2600,24 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         }
 
         // MuPDF expects passwords to be UTF-8 encoded
-        TempStr pwdA = pwd.Get();
+        TempStr pwdA = pwd;
         ok = fz_authenticate_password(ctx, _doc, pwdA.s);
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
         if (!ok) {
             // TODO: this is only part of SASLprep
-            pwd.Set(NormalizeString(Str(pwd.Get()), 5 /* NormalizationKC */).s);
+            Str normalized = NormalizeString(pwd, 5 /* NormalizationKC */);
+            str::Free(pwd);
+            pwd = normalized;
             if (pwd) {
-                pwdA = pwd.Get();
+                pwdA = pwd;
                 ok = fz_authenticate_password(ctx, _doc, pwdA.s);
             }
         }
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
-            TempStr pwd_ansi = pwd.Get();
+            TempStr pwd_ansi = pwd;
             TempWStr pwdCp1252 = strconv::StrCPToWStrTemp(pwd_ansi, 1252);
             pwdA = ToUtf8Temp(pwdCp1252);
             ok = fz_authenticate_password(ctx, _doc, pwdA.s);
@@ -2623,6 +2625,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         if (ok) {
             str::ReplaceWithCopy(&pdfPassword, pwdA);
         }
+        str::Free(pwd);
     }
 
     if (pdfdoc && ok && saveKey) {

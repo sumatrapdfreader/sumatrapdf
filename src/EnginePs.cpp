@@ -102,13 +102,14 @@ TryAgain64Bit:
 }
 
 struct AutoDeleteFile {
-    AutoFreeStr filePath;
+    Str filePath;
 
-    explicit AutoDeleteFile(Str path) { filePath.SetCopy(path); }
+    explicit AutoDeleteFile(Str path) { filePath = str::Dup(path); }
     ~AutoDeleteFile() {
         if (filePath) {
-            file::Delete(Str(filePath));
+            file::Delete(filePath);
         }
+        str::Free(filePath);
     }
 };
 
