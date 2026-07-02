@@ -51,7 +51,7 @@ static WStr KeyAsWStr(uintptr_t key) {
 class StrKeyHasherComparator : public HasherComparator {
     size_t Hash(uintptr_t key) override {
         Str s = KeyAsStr(key);
-        return MurmurHash2((const void*)s.s, s.len);
+        return MurmurHash2(s);
     }
     bool Equal(uintptr_t k1, uintptr_t k2) override { return str::Eq(KeyAsStr(k1), KeyAsStr(k2)); }
 };
@@ -59,7 +59,7 @@ class StrKeyHasherComparator : public HasherComparator {
 class WStrKeyHasherComparator : public HasherComparator {
     size_t Hash(uintptr_t key) override {
         WStr s = KeyAsWStr(key);
-        return MurmurHash2((const void*)s.s, s.len * (int)sizeof(wchar_t));
+        return MurmurHash2(s);
     }
     bool Equal(uintptr_t k1, uintptr_t k2) override { return wstr::Eq(KeyAsWStr(k1), KeyAsWStr(k2)); }
 };

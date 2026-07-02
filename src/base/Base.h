@@ -425,6 +425,8 @@ bool memeq(const void* s1, const void* s2, int len);
 
 int RoundToPowerOf2(int size);
 u32 MurmurHash2(const void* key, int len);
+u32 MurmurHash2(Str s);
+u32 MurmurHash2(WStr s);
 u32 MurmurHashWStrI(WStr str);
 u32 MurmurHashStrI(Str s);
 

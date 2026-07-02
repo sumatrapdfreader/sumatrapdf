@@ -85,6 +85,9 @@ int RoundToPowerOf2(int size) {
 static u32 hash_function_seed = 5381;
 
 u32 MurmurHash2(const void* key, int len) {
+    if (len <= 0) {
+        return 0;
+    }
     /* 'm' and 'r' are mixing constants generated offline.
      They're not really 'magic', they just happen to work well.  */
     const u32 m = 0x5bd1e995;
@@ -130,6 +133,14 @@ u32 MurmurHash2(const void* key, int len) {
     return h;
 }
 
+u32 MurmurHash2(Str s) {
+    return MurmurHash2(s.s, s.len);
+}
+
+u32 MurmurHash2(WStr s) {
+    return MurmurHash2(s.s, s.len * (int)sizeof(wchar_t));
+}
+
 // variation of MurmurHash2 which deals with strings that are
 // mostly ASCII and should be treated case independently
 u32 MurmurHashWStrI(WStr str) {
@@ -161,7 +172,7 @@ u32 MurmurHashStrI(Str s) {
             dst.s[i] = (char)(c + 'a' - 'A');
         }
     }
-    return MurmurHash2(dst.s, dst.len);
+    return MurmurHash2(dst);
 }
 
 int limitValue(int val, int min, int max) {

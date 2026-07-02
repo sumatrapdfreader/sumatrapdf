@@ -522,7 +522,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex, bool* openInNewWindow) {
     // (allows independent side-by-side installations)
     TempStr combinedPath = str::JoinTemp(GetSelfExePathTemp(), StrL("|"), GetAppDataDirTemp());
     str::ToLowerInPlace(combinedPath);
-    u32 hash = MurmurHash2(combinedPath.s, len(combinedPath));
+    u32 hash = MurmurHash2(combinedPath);
     TempStr mapId = fmt("SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
