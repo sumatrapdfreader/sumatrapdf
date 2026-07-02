@@ -161,6 +161,48 @@ TempStr FormatRomanNumeralTemp(int number);
 
 } // namespace str
 
+namespace wstr {
+
+// Type-safe scanf-style parsing, the wide-char analogue of str::Parse. Each
+// output arg is a pointer whose type is captured by ParseArg's explicit
+// constructors, so a format/arg mismatch is a compile error, not silent UB.
+// %s / %S write a TempWStr into the passed-in WStr* -- the result lives in the
+// temp arena, so the caller doesn't free it; the numeric/char specs write via
+// the matching pointer type.
+struct ParseArg {
+    enum class Kind : u8 {
+        None,
+        Int,
+        UInt,
+        Float,
+        Char,
+        WStrOut
+    };
+    Kind kind = Kind::None;
+    void* ptr = nullptr;
+
+    ParseArg() = default;
+    explicit ParseArg(int* p) : kind(Kind::Int), ptr(p) {}
+    explicit ParseArg(unsigned int* p) : kind(Kind::UInt), ptr(p) {}
+    explicit ParseArg(float* p) : kind(Kind::Float), ptr(p) {}
+    explicit ParseArg(WCHAR* p) : kind(Kind::Char), ptr(p) {}
+    explicit ParseArg(WStr* p) : kind(Kind::WStrOut), ptr(p) {}
+};
+
+WStr ParseArgs(WStr str, const WCHAR* fmt, const ParseArg* args, int nArgs);
+
+inline WStr Parse(WStr str, const WCHAR* fmt) {
+    return ParseArgs(str, fmt, nullptr, 0);
+}
+
+template <typename... TArgs>
+WStr Parse(WStr str, const WCHAR* fmt, TArgs*... args) {
+    const ParseArg argv[] = {ParseArg(args)...};
+    return ParseArgs(str, fmt, argv, (int)sizeof...(TArgs));
+}
+
+} // namespace wstr
+
 // fmt() is the type-safe positional/printf-style formatter from StrFormat.h.
 // A function-like macro (not a function) so only fmt(...) call syntax is
 // rewritten -- identifiers named `fmt` (params, locals like `Format fmt`) are

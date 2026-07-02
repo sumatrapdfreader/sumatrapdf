@@ -334,7 +334,7 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(WStr url, int* htmlWindowId, AutoFreeWStr* urlRest) {
+static bool ParseProtoUrl(WStr url, int* htmlWindowId, WStr* urlRest) {
     WStr rest = wstr::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
     return !rest;
 }
@@ -386,15 +386,15 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     //       leaked and to DISPID_DOCUMENTCOMPLETE never being fired
 
     int htmlWindowId;
-    AutoFreeWStr urlRest;
+    WStr urlRest;
     bool ok = ParseProtoUrl(szUrl, &htmlWindowId, &urlRest);
     if (!ok) {
         return INET_E_INVALID_URL;
     }
 
-    pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRest);
-    pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRest);
-    pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRest);
+    pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRest.s);
+    pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRest.s);
+    pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRest.s);
 
     HtmlWindow* win = FindHtmlWindowById(htmlWindowId);
     // TODO: this now happens due to events happening on HtmlWindow
@@ -407,7 +407,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     if (!win->htmlWinCb) {
         return INET_E_OBJECT_NOT_FOUND;
     }
-    TempStr urlRestA = ToUtf8Temp(WStr(urlRest.Get()));
+    TempStr urlRestA = ToUtf8Temp(urlRest);
     data = win->htmlWinCb->GetDataForUrl(urlRestA);
     if (str::IsEmpty(data)) {
         return INET_E_DATA_NOT_AVAILABLE;
@@ -917,7 +917,7 @@ class HW_IDownloadManager : public IDownloadManager {
         }
         // parse the URL (only internal its:// URLs are supported)
         int htmlWindowId;
-        AutoFreeWStr urlRest;
+        WStr urlRest;
         bool ok = ParseProtoUrl(urlToFile, &htmlWindowId, &urlRest);
         // free urlToFile using IMalloc::Free
         IMalloc* pMalloc = nullptr;
@@ -936,7 +936,7 @@ class HW_IDownloadManager : public IDownloadManager {
         if (!win || !win->htmlWinCb) {
             return INET_E_OBJECT_NOT_FOUND;
         }
-        TempStr urlRestA = ToUtf8Temp(WStr(urlRest.Get()));
+        TempStr urlRestA = ToUtf8Temp(urlRest);
         auto data = win->htmlWinCb->GetDataForUrl(urlRestA);
         if (str::IsEmpty(data)) {
             return INET_E_DATA_NOT_AVAILABLE;

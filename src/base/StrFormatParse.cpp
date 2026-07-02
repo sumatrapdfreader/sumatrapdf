@@ -963,3 +963,240 @@ TempStr FormatRomanNumeralTemp(int n) {
 }
 
 } // namespace str
+
+namespace wstr {
+
+static TempWStr ExtractUntilWTemp(WStr str, int off, WCHAR c, int* endOffOut) {
+    if (off < 0 || off > str.len) {
+        return {};
+    }
+    WStr slice = WStr(str.s + off, str.len - off);
+    int foundOff = IndexOfChar(slice, c);
+    if (foundOff < 0) {
+        return {};
+    }
+    int endOff = off + foundOff;
+    *endOffOut = endOff;
+    return str::DupTemp(WStr(str.s + off, foundOff));
+}
+
+static int ParseLimitedNumberW(WStr str, int p, int formatOff, WStr format, int* endOffOut, const ParseArg& valueOut) {
+    unsigned int width;
+    WCHAR f2[] = L"% ";
+    WStr formatAt = WStr(format.s + formatOff, format.len - formatOff);
+    WStr endF = Parse(formatAt, L"%u%c", &width, &f2[1]);
+    if (!wstr::IsNull(endF) && ContainsChar(WStr(L"udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
+        WCHAR limited[16]; // 32-bit integers are at most 11 characters long
+        wstr::BufSet(limited, std::min((int)width + 1, dimofi(limited)), WStr(str.s + p, (int)width));
+        WStr end = ParseArgs(WStr(limited), f2, &valueOut, 1);
+        if (!wstr::IsNull(end) && !end.s[0]) {
+            *endOffOut = p + (int)width;
+            return (int)(endF.s - format.s) - 1;
+        }
+    }
+    return -1;
+}
+
+static bool ParseULongAtW(WStr str, int off, int base, unsigned long* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
+    }
+    unsigned long v = 0;
+    int i = off;
+    while (i < str.len && wstr::IsWs(str.s[i])) {
+        i++;
+    }
+    if (base == 16 && i + 1 < str.len && str.s[i] == L'0' && (str.s[i + 1] == L'x' || str.s[i + 1] == L'X')) {
+        i += 2;
+    }
+    bool any = false;
+    while (i < str.len) {
+        WCHAR wc = str.s[i];
+        int digit = -1;
+        if (wc >= L'0' && wc <= L'9') {
+            digit = (int)(wc - L'0');
+        } else if (base == 16) {
+            digit = str::HexDigitVal((char)wc);
+        }
+        if (digit < 0 || (unsigned)digit >= (unsigned)base) {
+            break;
+        }
+        any = true;
+        v = v * (unsigned long)base + (unsigned long)digit;
+        i++;
+    }
+    if (!any) {
+        return false;
+    }
+    *val = v;
+    *endOff = i;
+    return true;
+}
+
+static bool ParseLongAtW(WStr str, int off, int base, long* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
+    }
+    bool neg = false;
+    int i = off;
+    while (i < str.len && wstr::IsWs(str.s[i])) {
+        i++;
+    }
+    if (i >= str.len) {
+        return false;
+    }
+    if (str.s[i] == L'-') {
+        neg = true;
+        i++;
+    } else if (str.s[i] == L'+') {
+        i++;
+    }
+    unsigned long uv = 0;
+    int end = i;
+    if (!ParseULongAtW(WStr(str.s + i, str.len - i), 0, base, &uv, &end)) {
+        return false;
+    }
+    *val = neg ? -(long)uv : (long)uv;
+    *endOff = i + end;
+    return true;
+}
+
+static bool ParseDoubleAtW(WStr str, int off, double* val, int* endOff) {
+    if (off >= str.len) {
+        return false;
+    }
+    int rem = str.len - off;
+    WCHAR* sliceZ = AllocArrayTemp<WCHAR>(rem + 1);
+    memcpy(sliceZ, str.s + off, rem * sizeof(WCHAR));
+    sliceZ[rem] = 0;
+    WCHAR* endPtr = nullptr;
+    *val = wcstod(sliceZ, &endPtr);
+    if (!endPtr || endPtr == sliceZ) {
+        return false;
+    }
+    *endOff = off + (int)(endPtr - sliceZ);
+    return true;
+}
+
+// wide-char analogue of str::ParseArgs; see the doc comment there for the
+// supported format specifiers.
+WStr ParseArgs(WStr str, const WCHAR* fmt, const ParseArg* args, int nArgs) {
+    if (wstr::IsNull(str) || !fmt) {
+        return {};
+    }
+    WStr format = fmt;
+    int argIdx = 0;
+    int p = 0;
+    for (int fi = 0; fi < format.len; fi++) {
+        WCHAR fc = format.s[fi];
+        if (fc != L'%') {
+            if (p >= str.len || fc != str.s[p]) {
+                return {};
+            }
+            p++;
+            continue;
+        }
+        fi++;
+        if (fi >= format.len) {
+            return {};
+        }
+        WCHAR spec = format.s[fi];
+
+        int end = -1;
+        if (L'u' == spec) {
+            unsigned long v = 0;
+            if (!ParseULongAtW(str, p, 10, &v, &end)) {
+                return {};
+            }
+            ReportIf(argIdx >= nArgs);
+            *(unsigned int*)args[argIdx++].ptr = (unsigned int)v;
+        } else if (L'd' == spec) {
+            long v = 0;
+            if (!ParseLongAtW(str, p, 10, &v, &end)) {
+                return {};
+            }
+            ReportIf(argIdx >= nArgs);
+            *(int*)args[argIdx++].ptr = (int)v;
+        } else if (L'x' == spec) {
+            unsigned long v = 0;
+            if (!ParseULongAtW(str, p, 16, &v, &end)) {
+                return {};
+            }
+            ReportIf(argIdx >= nArgs);
+            *(unsigned int*)args[argIdx++].ptr = (unsigned int)v;
+        } else if (L'f' == spec) {
+            double v = 0;
+            if (!ParseDoubleAtW(str, p, &v, &end)) {
+                return {};
+            }
+            ReportIf(argIdx >= nArgs);
+            *(float*)args[argIdx++].ptr = (float)v;
+        } else if (L'g' == spec) {
+            double v = 0;
+            if (!ParseDoubleAtW(str, p, &v, &end)) {
+                return {};
+            }
+            ReportIf(argIdx >= nArgs);
+            *(float*)args[argIdx++].ptr = (float)v;
+        } else if (L'c' == spec) {
+            if (p >= str.len) {
+                return {};
+            }
+            ReportIf(argIdx >= nArgs);
+            *(WCHAR*)args[argIdx++].ptr = str.s[p];
+            end = p + 1;
+        } else if (L's' == spec || L'S' == spec) {
+            ReportIf(argIdx >= nArgs);
+            const ParseArg& arg = args[argIdx++];
+            TempWStr val;
+            if (fi + 1 < format.len) {
+                val = ExtractUntilWTemp(str, p, format.s[fi + 1], &end);
+            } else {
+                val = str::DupTemp(WStr(str.s + p, str.len - p));
+                end = str.len;
+            }
+            *(WStr*)arg.ptr = val;
+        } else if (L'$' == spec && p >= str.len) {
+            continue; // don't fail, if we're indeed at the end of the string
+        } else if (L'%' == spec) {
+            if (p >= str.len || spec != str.s[p]) {
+                return {};
+            }
+            end = p + 1;
+        } else if (L' ' == spec) {
+            if (p >= str.len || !wstr::IsWs(str.s[p])) {
+                return {};
+            }
+            end = p + 1;
+        } else if (L'_' == spec) {
+            if (p >= str.len || !wstr::IsWs(str.s[p])) {
+                continue; // don't fail, if there's no whitespace at all
+            }
+            for (end = p + 1; end < str.len && wstr::IsWs(str.s[end]); end++) {
+                // do nothing
+            }
+        } else if (L'?' == spec && fi + 1 < format.len) {
+            // skip the next format character, advance the string,
+            // if it the optional character is the next character to parse
+            fi++;
+            if (p >= str.len || str.s[p] != format.s[fi]) {
+                continue;
+            }
+            end = p + 1;
+        } else if (wstr::IsDigit(spec)) {
+            ReportIf(argIdx >= nArgs);
+            int formatIdx = ParseLimitedNumberW(str, p, fi, format, &end, args[argIdx++]);
+            if (formatIdx < 0) {
+                return {};
+            }
+            fi = formatIdx;
+        }
+        if (end < 0 || end == p) {
+            return {};
+        }
+        p = end;
+    }
+    return WStr(str.s + p, str.len - p);
+}
+
+} // namespace wstr

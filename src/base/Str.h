@@ -26,7 +26,6 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);
 int utf8RuneLen(const u8* s);
 
-
 namespace str {
 
 enum class TrimOpt {
@@ -169,7 +168,6 @@ bool EndsWith(WStr txt, WStr end);
 bool EndsWithI(WStr txt, WStr end);
 WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
-WStr Parse(WStr str, const WCHAR* fmt, ...);
 int BufSet(WCHAR* dst, int dstCchSize, WStr src);
 size_t NormalizeWSInPlace(WStr str);
 size_t RemoveCharsInPlace(WStr str, WStr toRemove);
