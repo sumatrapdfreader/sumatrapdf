@@ -1887,7 +1887,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     // in debug build, default
     if (gIsDebugBuild) {
         if (!flags.logFile) {
-            flags.logFile = str::Dup(StrL("sumlog.txt"));
+            // from the perm arena like all other flag strings (~Flags frees nothing)
+            flags.logFile = str::Dup(GetPermArena(), StrL("sumlog.txt"));
             flags.log = true;
             logFileBecauseDebug = true;
         }
@@ -2420,6 +2421,7 @@ Exit:
     if (!logFileBecauseDebug) {
         LaunchFileIfExists(logFilePath);
     }
+    str::FreePtr(&logFilePath);
     if (AreDangerousThreadsPending()) {
         fastExit = true;
     }
