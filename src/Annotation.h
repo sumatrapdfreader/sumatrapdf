@@ -64,7 +64,7 @@ struct Annotation {
     pdf_annot* pdfannot = nullptr; // not owned
 
     Annotation() = default;
-    ~Annotation();
+    ~Annotation() = default;
 };
 
 struct AnnotCreateArgs {

@@ -63,13 +63,6 @@ static SeqStrings gAnnotReadableNames =
     "Watermark\0"
     "3D\0"
     "Projection\0";
-static bool gDebugAnnotDestructor = false;
-Annotation::~Annotation() {
-    if (gDebugAnnotDestructor) {
-        logf("deleting an annotation\n");
-    }
-}
-
 Str AnnotationReadableNameTemp(AnnotationType tp) {
     int n = (int)tp;
     if (n < 0) {

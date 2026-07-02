@@ -2073,6 +2073,8 @@ EngineMupdf::~EngineMupdf() {
         DeleteVecMembers(pi->autoLinks);
         DeleteVecMembers(pi->comments);
         DeleteVecMembers(pi->images);
+        DeleteVecMembers(pi->annotations);
+        DeleteVecMembers(pi->widgets);
         if (pi->retainedLinks) {
             fz_drop_link(ctx, pi->retainedLinks);
         }
