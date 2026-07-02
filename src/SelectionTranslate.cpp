@@ -574,10 +574,10 @@ static Str BackendDisplayName(AIChatBackend backend) {
     return StrL("AI");
 }
 
-static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, AutoFreeStr& msgOut) {
+static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, Str& msgOut) {
     TempStr exePath = FindBackendExecutableTemp(backend);
     if (!exePath) {
-        msgOut = str::Dup(_TRA("The selected AI CLI is not installed.")).s;
+        msgOut = str::Dup(_TRA("The selected AI CLI is not installed."));
         return false;
     }
 
@@ -604,8 +604,8 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
 
     AIChatProcessLaunchResult launch;
     if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, cwd, &launch)) {
-        msgOut = str::Dup(_TRA("Failed to launch the AI CLI.")).s;
-        LogTranslation(backend, "<<< error", msgOut.Get());
+        msgOut = str::Dup(_TRA("Failed to launch the AI CLI."));
+        LogTranslation(backend, "<<< error", msgOut);
         return false;
     }
 
@@ -618,8 +618,8 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
     if (waitRes == WAIT_TIMEOUT) {
         TerminateProcess(launch.hProcess, 1);
         AIChatCloseProcess(&launch.hProcess, false);
-        msgOut = str::Dup(_TRA("Translation timed out.")).s;
-        LogTranslation(backend, "<<< error", msgOut.Get());
+        msgOut = str::Dup(_TRA("Translation timed out."));
+        LogTranslation(backend, "<<< error", msgOut);
         return false;
     }
     AIChatCloseProcess(&launch.hProcess, false);
@@ -630,16 +630,16 @@ static bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str 
     ParseTranslationOutput(backend, ToStr(output), translation);
     LogTranslation(backend, "<<< parsed", ToStr(translation));
     if (len(translation) == 0) {
-        msgOut = str::Dup(_TRA("Translation response did not contain text.")).s;
-        LogTranslation(backend, "<<< error", msgOut.Get());
+        msgOut = str::Dup(_TRA("Translation response did not contain text."));
+        LogTranslation(backend, "<<< error", msgOut);
         return false;
     }
     if (TranslationLooksLikeError(ToStr(translation))) {
-        msgOut.Set(translation.TakeStr().s);
-        LogTranslation(backend, "<<< error", msgOut.Get());
+        msgOut = translation.TakeStr();
+        LogTranslation(backend, "<<< error", msgOut);
         return false;
     }
-    msgOut.Set(translation.TakeStr().s);
+    msgOut = translation.TakeStr();
     return true;
 }
 
@@ -650,12 +650,14 @@ TempStr SelectionTranslateResultTemp(int backend, Str srcLang, Str dstLang, Str 
     } else if (backend == 2) {
         chatBackend = AIChatBackend::Codex;
     }
-    AutoFreeStr msg;
+    Str msg;
     bool ok = RunTranslation(chatBackend, srcLang, dstLang, text, msg);
     if (exitCode) {
         *exitCode = ok ? 0 : 1;
     }
-    return str::DupTemp(msg.Get());
+    TempStr res = str::DupTemp(msg);
+    str::Free(msg);
+    return res;
 }
 
 static void SetDialogClientSize(HWND hwnd, int clientW, int clientH) {
@@ -767,16 +769,16 @@ static void OnTranslateDone(SelectionTranslateDoneData* data) {
 
 static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
     AutoDelete del(data);
-    AutoFreeStr result;
+    Str result;
     bool ok = RunTranslation(data->backend, data->srcLang, data->dstLang, data->text, result);
-    if (!ok && result.empty()) {
-        result = str::Dup(_TRA("Translation failed.")).s;
+    if (!ok && str::IsEmpty(result)) {
+        result = str::Dup(_TRA("Translation failed."));
     }
 
     auto done = new SelectionTranslateDoneData();
     done->hwndDlg = data->dlg->hwnd;
     done->ok = ok;
-    done->msg = Str(result.Release());
+    done->msg = result; // transfer ownership; freed in ~SelectionTranslateDoneData
     uitask::Post(MkFunc0(OnTranslateDone, done), "SelectionTranslateDone");
 }
 
