@@ -55,7 +55,7 @@ void TestRenderPage(const Flags& i) {
 }
 
 static void extractPageText(EngineBase* engine, int pageNo) {
-    PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
+    PageText pageText = engine->ExtractPageText(pageNo);
     if (!pageText.text) {
         return;
     }
@@ -69,7 +69,7 @@ static void extractPageText(EngineBase* engine, int pageNo) {
         printf("%02x ", (u8)c);
     }
     printf("'\n");
-    FreePageTextUtf8(&pageText);
+    FreePageText(&pageText);
 }
 
 void TestExtractPage(const Flags& ci) {

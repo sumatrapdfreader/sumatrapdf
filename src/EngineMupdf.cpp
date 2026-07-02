@@ -681,13 +681,6 @@ static Str FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
     return res;
 }
 
-static inline int WcharsPerRune(int rune) {
-    if (rune & 0x1F0000) {
-        return 2;
-    }
-    return 1;
-}
-
 struct SeenGlyph {
     int rune;
     Rect r;
@@ -728,69 +721,6 @@ static void AddSeenGlyph(Vec<SeenGlyph>& seen, int rune, const Rect& r) {
     seen.Append({rune, r});
 }
 
-static void AddChar(fz_stext_line* line, fz_stext_char* c, wstr::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
-    fz_rect bbox = fz_rect_from_quad(c->quad);
-    Rect r = ToRectF(bbox).Round();
-    int rune = c->c;
-    if (HasSeenGlyph(seen, rune, r)) {
-        return;
-    }
-
-    int n = WcharsPerRune(rune);
-    if (n == 2) {
-        WCHAR tmp[2];
-        tmp[0] = 0xD800 | ((rune - 0x10000) >> 10) & 0x3FF;
-        tmp[1] = 0xDC00 | (rune - 0x10000) & 0x3FF;
-        s.Append(WStr(tmp, 2));
-        rects.Append(r);
-        rects.Append(r);
-        AddSeenGlyph(seen, rune, r);
-        return;
-    }
-    WCHAR wc = rune;
-    bool isNonPrintable = (wc <= 32) || wstr::IsNonCharacter(wc);
-    if (!isNonPrintable) {
-        s.AppendChar(wc);
-        rects.Append(r);
-        AddSeenGlyph(seen, rune, r);
-        return;
-    }
-
-    // non-printable or whitespace
-    if (!str::IsWs(wc)) {
-        s.AppendChar(L'?');
-        rects.Append(r);
-        AddSeenGlyph(seen, rune, r);
-        return;
-    }
-
-    // collapse multiple whitespace characters into one
-    WCHAR prev = s.LastChar();
-    if (!str::IsWs(prev)) {
-        s.AppendChar(L' ');
-        rects.Append(r);
-        AddSeenGlyph(seen, rune, r);
-    }
-}
-
-static void AddLineSep(wstr::Builder& s, Vec<Rect>& rects, WStr lineSep) {
-    if (!lineSep) {
-        return;
-    }
-    // remove trailing spaces
-    if (str::IsWs(s.LastChar())) {
-        s.RemoveLast();
-        rects.RemoveLast();
-    }
-
-    s.Append(lineSep);
-    for (int i = 0; i < lineSep.len; i++) {
-        rects.Append(Rect());
-    }
-}
-
-// UTF-8 variant: append `c` as up to 4 UTF-8 bytes to `s` and the same
-// rect `r` for each byte, so len(rects) == len(s) holds.
 static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
@@ -799,8 +729,8 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<R
         return;
     }
 
-    bool isWhitespace = rune > 0 && rune <= 0x7f && str::IsWs((WCHAR)rune);
-    bool isNonPrintable = rune <= 32 || wstr::IsNonCharacter((WCHAR)rune);
+    bool isWhitespace = rune > 0 && rune <= 0x7f && str::IsWs((char)rune);
+    bool isNonPrintable = rune <= 32 || (rune <= 0xffff && wstr::IsNonCharacter((WCHAR)rune));
     if (isNonPrintable && !isWhitespace) {
         s.AppendChar('?');
         rects.Append(r);
@@ -821,9 +751,7 @@ static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<R
     char buf[4];
     int n = fz_runetochar(buf, rune);
     s.Append(Str(buf, n));
-    for (int i = 0; i < n; i++) {
-        rects.Append(r);
-    }
+    rects.Append(r);
     AddSeenGlyph(seen, rune, r);
 }
 
@@ -868,49 +796,12 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
         block = block->next;
     }
 
-    ReportIf(len(content) != len(rects));
+    ReportIf(Utf8CodepointCount(ToStr(content)) != len(rects));
 
     if (coordsOut) {
         *coordsOut = rects.Take();
     }
     return content.TakeStr();
-}
-
-static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
-    const WStr lineSep = WStrL(L"\n");
-    wstr::Builder content;
-    // coordsOut is optional but we ask for it by default so we simplify the code
-    // by always calculating it
-    Vec<Rect> rects;
-    Vec<SeenGlyph> seen;
-
-    fz_stext_block* block = text->first_block;
-    while (block) {
-        if (block->type != FZ_STEXT_BLOCK_TEXT) {
-            block = block->next;
-            continue;
-        }
-        fz_stext_line* line = block->u.t.first_line;
-        while (line) {
-            fz_stext_char* c = line->first_char;
-            while (c) {
-                AddChar(line, c, content, rects, seen);
-                c = c->next;
-            }
-            AddLineSep(content, rects, lineSep);
-            line = line->next;
-        }
-
-        block = block->next;
-    }
-
-    ReportIf(len(content) != len(rects));
-
-    if (coordsOut) {
-        *coordsOut = rects.Take();
-    }
-
-    return content.TakeWStr();
 }
 
 static fz_stext_options NewTextPageOptions(int flags = 0) {
@@ -921,27 +812,107 @@ static fz_stext_options NewTextPageOptions(int flags = 0) {
     return opts;
 }
 
-static bool LinkifyCheckMultiline(WStr pageText, int posOff, Rect* coords) {
+struct Utf8PageText {
+    Str text;
+    int len = 0;
+    int* codepoints = nullptr;
+    int* byteOffsets = nullptr;
+};
+
+static Utf8PageText MakeUtf8PageTextTemp(Str text) {
+    Utf8PageText res;
+    res.text = text;
+    int maxCodepoints = text ? text.len : 0;
+    res.codepoints = AllocArrayTemp<int>(maxCodepoints + 1);
+    res.byteOffsets = AllocArrayTemp<int>(maxCodepoints + 1);
+    int byteIdx = 0;
+    while (text && byteIdx < text.len) {
+        int n = 0;
+        res.byteOffsets[res.len] = byteIdx;
+        res.codepoints[res.len] = Utf8CodepointAtByte(text, byteIdx, &n);
+        byteIdx += n > 0 ? n : 1;
+        res.len++;
+    }
+    res.byteOffsets[res.len] = text ? text.len : 0;
+    return res;
+}
+
+static int RuneAt(Utf8PageText pageText, int off) {
+    if (off < 0 || off >= pageText.len) {
+        return 0;
+    }
+    return pageText.codepoints[off];
+}
+
+static Str SliceByRuneOff(Utf8PageText pageText, int startOff, int endOff) {
+    startOff = limitValue(startOff, 0, pageText.len);
+    endOff = limitValue(endOff, startOff, pageText.len);
+    int startByte = pageText.byteOffsets[startOff];
+    int endByte = pageText.byteOffsets[endOff];
+    return Str(pageText.text.s + startByte, endByte - startByte);
+}
+
+static bool StartsWithAscii(Utf8PageText pageText, int off, const char* s) {
+    for (; *s; s++, off++) {
+        if (RuneAt(pageText, off) != (u8)*s) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool ContainsAsciiChar(Str chars, int c) {
+    if (c < 0 || c > 0x7f) {
+        return false;
+    }
+    for (int i = 0; i < chars.len; i++) {
+        if ((u8)chars.s[i] == c) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static int IndexOfRune(Utf8PageText pageText, int startOff, int endOff, int c) {
+    for (int i = startOff; i < endOff; i++) {
+        if (RuneAt(pageText, i) == c) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static bool IsAlphaNumRune(int c) {
+    return c >= 0 && c <= 0xffff && iswalnum((wint_t)c);
+}
+
+static bool IsWhitespaceRune(int c) {
+    if (c >= 0 && c <= 0x7f) {
+        return str::IsWs((char)c);
+    }
+    return c <= 0xffff && iswspace((wint_t)c);
+}
+
+static bool LinkifyCheckMultiline(Utf8PageText pageText, int posOff, Rect* coords) {
     int pageLen = pageText.len;
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
     // (and that doesn't start with http or a footnote numeral)
-    return posOff > 0 && posOff < pageLen && L'\n' == pageText.s[posOff] && (posOff + 1) < pageLen &&
-           !iswalnum(pageText.s[posOff - 1]) && !str::IsWs(pageText.s[posOff + 1]) &&
+    return posOff > 0 && posOff < pageLen && '\n' == RuneAt(pageText, posOff) && (posOff + 1) < pageLen &&
+           !IsAlphaNumRune(RuneAt(pageText, posOff - 1)) && !IsWhitespaceRune(RuneAt(pageText, posOff + 1)) &&
            coords[posOff + 1].BR().y > coords[posOff - 1].y &&
            coords[posOff + 1].y <= coords[posOff - 1].BR().y + coords[posOff - 1].dy * 0.35 &&
            coords[posOff + 1].x < coords[posOff - 1].BR().x && coords[posOff + 1].dy >= coords[posOff - 1].dy * 0.85 &&
-           coords[posOff + 1].dy <= coords[posOff - 1].dy * 1.2 &&
-           !wstr::StartsWith(WStr(pageText.s + posOff + 1, pageLen - posOff - 1), L"http");
+           coords[posOff + 1].dy <= coords[posOff - 1].dy * 1.2 && !StartsWithAscii(pageText, posOff + 1, "http");
 }
 
-static bool EndsURL(WCHAR c) {
-    if (c == 0 || str::IsWs(c)) {
+static bool EndsURL(int c) {
+    if (c == 0 || IsWhitespaceRune(c)) {
         return true;
     }
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1313
     // 0xff0c is ","
-    if (c == (WCHAR)0xff0c) {
+    if (c == 0xff0c) {
         return true;
     }
     return false;
@@ -951,24 +922,22 @@ static bool EndsURL(WCHAR c) {
 // the link. `trimChars` lists chars to strip; when trimRepeat is false, at most
 // one char is removed. When trimCloseParen is true, a trailing ')' is also
 // stripped unless the span contains an opening '(' before it.
-static int LinkifyTrimTrailingPunctOff(int startOff, int endOff, WStr trimChars, bool trimRepeat, bool trimCloseParen,
-                                       WStr pageText) {
+static int LinkifyTrimTrailingPunctOff(int startOff, int endOff, Str trimChars, bool trimRepeat, bool trimCloseParen,
+                                       Utf8PageText pageText) {
     for (;;) {
         if (endOff <= startOff) {
             break;
         }
-        wchar_t c = pageText.s[endOff - 1];
-        if (wstr::ContainsChar(trimChars, c)) {
+        int c = RuneAt(pageText, endOff - 1);
+        if (ContainsAsciiChar(trimChars, c)) {
             endOff--;
             if (!trimRepeat) {
                 break;
             }
             continue;
         }
-        if (trimCloseParen && L')' == c) {
-            WStr span = WStr(pageText.s + startOff, endOff - startOff);
-            int openParenOff = wstr::IndexOfChar(span, L'(');
-            if (openParenOff < 0) {
+        if (trimCloseParen && ')' == c) {
+            if (IndexOfRune(pageText, startOff, endOff, '(') < 0) {
                 endOff--;
                 if (!trimRepeat) {
                     break;
@@ -981,38 +950,37 @@ static int LinkifyTrimTrailingPunctOff(int startOff, int endOff, WStr trimChars,
     return endOff;
 }
 
-static int LinkifyFindEndOff(int startOff, wchar_t prevChar, WStr pageText) {
+static int LinkifyFindEndOff(int startOff, int prevChar, Utf8PageText pageText) {
     int pageEnd = pageText.len;
     int endOff = startOff;
-    while (endOff < pageEnd && !EndsURL(pageText.s[endOff])) {
+    while (endOff < pageEnd && !EndsURL(RuneAt(pageText, endOff))) {
         endOff++;
     }
-    endOff = LinkifyTrimTrailingPunctOff(startOff, endOff, WStrL(L",.?!"), false, true, pageText);
+    endOff = LinkifyTrimTrailingPunctOff(startOff, endOff, StrL(",.?!"), false, true, pageText);
 
     // cut the link at the first quotation mark, if it's also preceded by one
-    if (L'"' == prevChar || L'\'' == prevChar) {
-        WStr span = WStr(pageText.s + startOff, endOff - startOff);
-        int quoteOff = wstr::IndexOfChar(span, prevChar);
+    if ('"' == prevChar || '\'' == prevChar) {
+        int quoteOff = IndexOfRune(pageText, startOff, endOff, prevChar);
         if (quoteOff >= 0) {
-            endOff = startOff + quoteOff;
+            endOff = quoteOff;
         }
     }
 
     return endOff;
 }
 
-static int LinkifyMultilineText(LinkRectList* list, WStr pageText, int startOff, int nextOff, Rect* coords) {
+static int LinkifyMultilineText(LinkRectList* list, Utf8PageText pageText, int startOff, int nextOff, Rect* coords) {
     int lastIx = len(list->coords) - 1;
     TempStr uri = list->links.At(lastIx);
     int endOff = nextOff;
     bool multiline = false;
 
     do {
-        wchar_t prevChar = startOff > 0 ? pageText.s[startOff - 1] : L' ';
+        int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
         endOff = LinkifyFindEndOff(nextOff, prevChar, pageText);
         multiline = LinkifyCheckMultiline(pageText, endOff, coords);
 
-        TempStr part = ToUtf8Temp(WStr(pageText.s + nextOff, (int)(endOff - nextOff)));
+        Str part = SliceByRuneOff(pageText, nextOff, endOff);
         uri = str::JoinTemp(uri, part);
         Rect bbox = coords[nextOff].Union(coords[endOff - 1]);
         list->coords.Append(ToFzRect(ToRectF(bbox)));
@@ -1030,46 +998,46 @@ static int LinkifyMultilineText(LinkRectList* list, WStr pageText, int startOff,
 }
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
-inline bool IsEmailUsernameChar(WCHAR c) {
+inline bool IsEmailUsernameChar(int c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
-    return iswalnum(c) || wstr::ContainsChar(WStr(L".!#$%&'*+=?^_`{|}~-"), c);
+    return IsAlphaNumRune(c) || ContainsAsciiChar(StrL(".!#$%&'*+=?^_`{|}~-"), c);
 }
-inline bool IsEmailDomainChar(WCHAR c) {
-    return iswalnum(c) || '-' == c;
+inline bool IsEmailDomainChar(int c) {
+    return IsAlphaNumRune(c) || '-' == c;
 }
 
-static int LinkifyFindEmailOff(WStr pageText, int atOff) {
+static int LinkifyFindEmailOff(Utf8PageText pageText, int atOff) {
     int startOff = atOff;
-    while (startOff > 0 && IsEmailUsernameChar(pageText.s[startOff - 1])) {
+    while (startOff > 0 && IsEmailUsernameChar(RuneAt(pageText, startOff - 1))) {
         startOff--;
     }
     return startOff != atOff ? startOff : -1;
 }
 
-static int LinkifyEmailAddressOff(int startOff, WStr pageText) {
+static int LinkifyEmailAddressOff(int startOff, Utf8PageText pageText) {
     int pageEnd = pageText.len;
     int endOff = startOff;
-    while (endOff < pageEnd && IsEmailUsernameChar(pageText.s[endOff])) {
+    while (endOff < pageEnd && IsEmailUsernameChar(RuneAt(pageText, endOff))) {
         endOff++;
     }
-    if (endOff == startOff || endOff >= pageEnd || pageText.s[endOff] != L'@' || (endOff + 1) >= pageEnd ||
-        !IsEmailDomainChar(pageText.s[endOff + 1])) {
+    if (endOff == startOff || endOff >= pageEnd || RuneAt(pageText, endOff) != '@' || (endOff + 1) >= pageEnd ||
+        !IsEmailDomainChar(RuneAt(pageText, endOff + 1))) {
         return -1;
     }
-    for (endOff++; endOff < pageEnd && IsEmailDomainChar(pageText.s[endOff]); endOff++) {
+    for (endOff++; endOff < pageEnd && IsEmailDomainChar(RuneAt(pageText, endOff)); endOff++) {
         ;
     }
-    if (endOff >= pageEnd || L'.' != pageText.s[endOff] || (endOff + 1) >= pageEnd ||
-        !IsEmailDomainChar(pageText.s[endOff + 1])) {
+    if (endOff >= pageEnd || '.' != RuneAt(pageText, endOff) || (endOff + 1) >= pageEnd ||
+        !IsEmailDomainChar(RuneAt(pageText, endOff + 1))) {
         return -1;
     }
     do {
-        for (endOff++; endOff < pageEnd && IsEmailDomainChar(pageText.s[endOff]); endOff++) {
+        for (endOff++; endOff < pageEnd && IsEmailDomainChar(RuneAt(pageText, endOff)); endOff++) {
             ;
         }
-    } while (endOff < pageEnd && L'.' == pageText.s[endOff] && (endOff + 1) < pageEnd &&
-             IsEmailDomainChar(pageText.s[endOff + 1]));
+    } while (endOff < pageEnd && '.' == RuneAt(pageText, endOff) && (endOff + 1) < pageEnd &&
+             IsEmailDomainChar(RuneAt(pageText, endOff + 1)));
     return endOff;
 }
 
@@ -1078,31 +1046,30 @@ static int LinkifyEmailAddressOff(int startOff, WStr pageText) {
 // the end ptr (exclusive) past the suffix, or nullptr if `start` is not a DOI.
 // The suffix runs to the first EndsURL() terminator (whitespace, fullwidth
 // comma) or quote/angle bracket; trailing sentence punctuation is trimmed.
-static int LinkifyFindDoiEndOff(int startOff, WStr pageText) {
-    WStr startSlice = WStr(pageText.s + startOff, pageText.len - startOff);
-    if (!wstr::StartsWith(startSlice, L"10.")) {
+static int LinkifyFindDoiEndOff(int startOff, Utf8PageText pageText) {
+    if (!StartsWithAscii(pageText, startOff, "10.")) {
         return -1;
     }
     int p = startOff + 3;
     int regStart = p;
     int pageEnd = pageText.len;
-    while (p < pageEnd && iswdigit(pageText.s[p])) {
+    while (p < pageEnd && isdigit(RuneAt(pageText, p))) {
         p++;
     }
     int regLen = p - regStart;
-    if (regLen < 4 || regLen > 9 || p >= pageEnd || pageText.s[p] != L'/') {
+    if (regLen < 4 || regLen > 9 || p >= pageEnd || RuneAt(pageText, p) != '/') {
         return -1;
     }
     p++; // skip '/'
     int suffixStart = p;
-    while (p < pageEnd && !EndsURL(pageText.s[p]) && pageText.s[p] != L'"' && pageText.s[p] != L'<' &&
-           pageText.s[p] != L'>') {
+    while (p < pageEnd && !EndsURL(RuneAt(pageText, p)) && RuneAt(pageText, p) != '"' && RuneAt(pageText, p) != '<' &&
+           RuneAt(pageText, p) != '>') {
         p++;
     }
     if (p == suffixStart) {
         return -1;
     }
-    p = LinkifyTrimTrailingPunctOff(suffixStart, p, WStrL(L".,;:!)]}'"), true, false, pageText);
+    p = LinkifyTrimTrailingPunctOff(suffixStart, p, StrL(".,;:!)]}'"), true, false, pageText);
     if (p == suffixStart) {
         return -1;
     }
@@ -1111,51 +1078,50 @@ static int LinkifyFindDoiEndOff(int startOff, WStr pageText) {
 
 // caller needs to delete the result
 // TODO: return Vec<IPageElement*> directly
-static LinkRectList* LinkifyText(WStr pageText, Rect* coords) {
+static LinkRectList* LinkifyText(Utf8PageText pageText, Rect* coords) {
     LinkRectList* list = new LinkRectList;
     int pageEnd = pageText.len;
 
     for (int startOff = 0; startOff < pageEnd;) {
         int endOff = -1;
         bool multiline = false;
-        WStr protocol;
+        Str protocol;
 
-        if (L'@' == pageText.s[startOff]) {
+        int startChar = RuneAt(pageText, startOff);
+        if ('@' == startChar) {
             // potential email address without mailto:
             int emailOff = LinkifyFindEmailOff(pageText, startOff);
             endOff = emailOff >= 0 ? LinkifyEmailAddressOff(emailOff, pageText) : -1;
-            protocol = WStrL(L"mailto:");
+            protocol = StrL("mailto:");
             if (endOff >= 0) {
                 startOff = emailOff;
             }
-        } else if (startOff > 0 && (L'/' == pageText.s[startOff - 1] || iswalnum(pageText.s[startOff - 1]))) {
+        } else if (startOff > 0 &&
+                   (RuneAt(pageText, startOff - 1) == '/' || IsAlphaNumRune(RuneAt(pageText, startOff - 1)))) {
             // hyperlinks must not be preceded by a slash (indicates a different protocol)
             // or an alphanumeric character (indicates part of a different protocol)
-        } else if (L'h' == pageText.s[startOff] &&
-                   wstr::Parse(WStr(pageText.s + startOff, pageEnd - startOff), L"http%?s://")) {
-            wchar_t prevChar = startOff > 0 ? pageText.s[startOff - 1] : L' ';
+        } else if ('h' == startChar && (StartsWithAscii(pageText, startOff, "http://") ||
+                                        StartsWithAscii(pageText, startOff, "https://"))) {
+            int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
             endOff = LinkifyFindEndOff(startOff, prevChar, pageText);
             multiline = LinkifyCheckMultiline(pageText, endOff, coords);
-        } else if (L'w' == pageText.s[startOff] &&
-                   wstr::StartsWith(WStr(pageText.s + startOff, pageEnd - startOff), L"www.")) {
-            wchar_t prevChar = startOff > 0 ? pageText.s[startOff - 1] : L' ';
+        } else if ('w' == startChar && StartsWithAscii(pageText, startOff, "www.")) {
+            int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
             endOff = LinkifyFindEndOff(startOff, prevChar, pageText);
             multiline = LinkifyCheckMultiline(pageText, endOff, coords);
-            protocol = WStrL(L"http://");
+            protocol = StrL("http://");
             // ignore www. links without a top-level domain
-            WStr afterWww = WStr(pageText.s + startOff + 5, endOff - startOff - 5);
-            WStr dot = wstr::SliceFromChar(afterWww, L'.');
-            if (endOff - startOff <= 4 || !multiline && (!dot || dot.s >= pageText.s + endOff)) {
+            int dotOff = IndexOfRune(pageText, startOff + 5, endOff, '.');
+            if (endOff - startOff <= 4 || (!multiline && dotOff < 0)) {
                 endOff = -1;
             }
-        } else if (L'm' == pageText.s[startOff] &&
-                   wstr::StartsWith(WStr(pageText.s + startOff, pageEnd - startOff), L"mailto:")) {
+        } else if ('m' == startChar && StartsWithAscii(pageText, startOff, "mailto:")) {
             endOff = LinkifyEmailAddressOff(startOff + 7, pageText);
-        } else if (L'1' == pageText.s[startOff]) {
+        } else if ('1' == startChar) {
             endOff = LinkifyFindDoiEndOff(startOff, pageText);
             if (endOff >= 0) {
                 // a plain-text DOI ("10.1109/...") -> https://doi.org/<doi>
-                protocol = WStrL(L"https://doi.org/");
+                protocol = StrL("https://doi.org/");
             }
         }
         if (endOff < 0) {
@@ -1163,11 +1129,10 @@ static LinkRectList* LinkifyText(WStr pageText, Rect* coords) {
             continue;
         }
 
-        TempStr part = ToUtf8Temp(WStr(pageText.s + startOff, (int)(endOff - startOff)));
-        TempStr uri = part;
+        Str part = SliceByRuneOff(pageText, startOff, endOff);
+        Str uri = part;
         if (protocol) {
-            TempStr proto = ToUtf8Temp(protocol);
-            uri = str::JoinTemp(proto, part);
+            uri = str::JoinTemp(protocol, part);
         }
         list->links.Append(uri);
         Rect bbox = coords[startOff].Union(coords[endOff - 1]);
@@ -1536,13 +1501,15 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     }
 
     Rect* coords;
-    WStr pageText = FzTextPageToWStr(stext, &coords);
-    if (!pageText) {
+    Str pageTextUtf8 = FzTextPageToUtf8(stext, &coords);
+    if (!pageTextUtf8) {
+        str::Free(pageTextUtf8);
         return;
     }
 
+    Utf8PageText pageText = MakeUtf8PageTextTemp(pageTextUtf8);
     LinkRectList* list = LinkifyText(pageText, coords);
-    wstr::Free(pageText);
+    str::Free(pageTextUtf8);
 
     for (int i = 0; i < len(list->links); i++) {
         fz_rect bbox = list->coords.at(i);
@@ -3987,7 +3954,6 @@ PageText EngineMupdf::ExtractPageText(int pageNo) {
         return {};
     }
 
-    // page-running operation: serialize on per-page lock instead of global docLock
     ScopedCritSec scope(&renderLock);
 
     fz_stext_page* stext = nullptr;
@@ -4003,38 +3969,10 @@ PageText EngineMupdf::ExtractPageText(int pageNo) {
         return {};
     }
     PageText res;
-    res.text = FzTextPageToWStr(stext, &res.coords);
-    fz_drop_stext_page(ctx, stext);
-    res.len = res.text.len;
-    return res;
-}
-
-PageTextUtf8 EngineMupdf::ExtractPageTextUtf8(int pageNo) {
-    auto ctx = Ctx();
-
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
-    if (!pageInfo) {
-        return {};
-    }
-
-    ScopedCritSec scope(&renderLock);
-
-    fz_stext_page* stext = nullptr;
-    fz_var(stext);
-    fz_stext_options opts = NewTextPageOptions();
-    fz_try(ctx) {
-        stext = fz_new_stext_page_from_whole_page(ctx, pageInfo->page, &opts);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
-    if (!stext) {
-        return {};
-    }
-    PageTextUtf8 res;
     res.text = FzTextPageToUtf8(stext, &res.coords);
     fz_drop_stext_page(ctx, stext);
     res.len = res.text.len;
+    res.nCodepoints = Utf8CodepointCount(res.text);
     return res;
 }
 

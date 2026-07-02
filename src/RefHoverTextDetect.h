@@ -5,8 +5,9 @@
 // Engine-independent so the heuristics can be unit-tested with synthetic glyph
 // arrays (see src/base/tests/RefHover_ut.cpp).
 //
-// Both functions take the engine->GetTextForPage out-ptrs:
-//   text     — per-glyph WCHAR array
+// Both functions take page text converted to one WCHAR per engine text
+// codepoint:
+//   text     — per-glyph WCHAR view
 //   coords   — per-glyph Rect array, parallel to `text`
 //   textLen  — glyph count
 

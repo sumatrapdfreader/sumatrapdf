@@ -30,8 +30,10 @@ struct TextSearch : public TextSelection {
         int offset;
     };
 
-    WStr findText;
-    WStr anchor;
+    Str findText;
+    Str anchor;
+    int findTextLen = 0;
+    int anchorLen = 0;
     int findPage = 0;
     int searchHitStartAt = 0; // when text found spans several pages, searchHitStartAt < findPage
     bool forward = true;
@@ -47,17 +49,19 @@ struct TextSearch : public TextSelection {
     bool matchWordEnd = false;
 
     void SetText(WStr text);
+    void SetText(Str text);
     bool FindTextInPage(int pageNo, PageAndOffset* finalGlyph);
     bool FindStartingAtPage(int pageNo);
-    PageAndOffset MatchEnd(WStr start) const;
+    PageAndOffset MatchEnd(int startOff) const;
 
     void Clear();
     void Reset();
 
-    WStr pageText;
+    Str pageText;
+    int pageTextLen = 0;
     int findIndex = 0;
 
-    WStr lastText;
+    Str lastText;
     int nPages = 0;
     Vec<bool> pagesToSkip;
 };

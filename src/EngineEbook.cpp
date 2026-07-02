@@ -107,7 +107,6 @@ class EngineEbook : public EngineBase {
 
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
-    PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
 
@@ -368,90 +367,6 @@ static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {
 }
 
 PageText EngineEbook::ExtractPageText(int pageNo) {
-    const WStr lineSep = WStrL(L"\n");
-    ScopedCritSec scope(&pagesAccess);
-
-    InterlockedIncrement(&gAllowAllocFailure);
-    defer {
-        InterlockedDecrement(&gAllowAllocFailure);
-    };
-
-    wstr::Builder content;
-    Vec<Rect> coords;
-    bool insertSpace = false;
-
-    Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
-    for (DrawInstr& i : *pageInstrs) {
-        Rect bbox = GetInstrBbox(i, pageBorder);
-        switch (i.type) {
-            case DrawInstrType::String:
-                if (len(coords) > 0 &&
-                    (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
-                    content.Append(lineSep);
-                    coords.AppendBlanks(len(lineSep));
-                    ReportIf(lineSep && !coords.Last().IsEmpty());
-                } else if (insertSpace && len(coords) > 0) {
-                    int swidth = bbox.x - coords.Last().BR().x;
-                    if (swidth > 0) {
-                        content.AppendChar(' ');
-                        coords.Append(Rect(bbox.x - swidth, bbox.y, swidth, bbox.dy));
-                    }
-                }
-                insertSpace = false;
-                {
-                    WStr s = strconv::HtmlUtf8ToWStrTemp(i.str);
-                    content.Append(s);
-                    int len = s.len;
-                    double cwidth = 1.0 * bbox.dx / len;
-                    for (int k = 0; k < len; k++) {
-                        coords.Append(Rect((int)(bbox.x + k * cwidth), bbox.y, (int)cwidth, bbox.dy));
-                    }
-                }
-                break;
-            case DrawInstrType::RtlString:
-                if (len(coords) > 0 &&
-                    (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
-                    content.Append(lineSep);
-                    coords.AppendBlanks(len(lineSep));
-                    ReportIf(lineSep && !coords.Last().IsEmpty());
-                } else if (insertSpace && len(coords) > 0) {
-                    int swidth = coords.Last().x - bbox.BR().x;
-                    if (swidth > 0) {
-                        content.AppendChar(' ');
-                        coords.Append(Rect(bbox.BR().x, bbox.y, swidth, bbox.dy));
-                    }
-                }
-                insertSpace = false;
-                {
-                    WStr s = strconv::HtmlUtf8ToWStrTemp(i.str);
-                    content.Append(s);
-                    int len = s.len;
-                    double cwidth = 1.0 * bbox.dx / len;
-                    for (int k = 0; k < len; k++) {
-                        coords.Append(Rect((int)(bbox.x + (len - k - 1) * cwidth), bbox.y, (int)cwidth, bbox.dy));
-                    }
-                }
-                break;
-            case DrawInstrType::ElasticSpace:
-            case DrawInstrType::FixedSpace:
-                insertSpace = true;
-                break;
-        }
-    }
-    if (len(content) > 0 && !wstr::EndsWith(ToWStr(content), lineSep)) {
-        content.Append(lineSep);
-        coords.AppendBlanks(len(lineSep));
-    }
-    ReportIf(len(coords) != len(content));
-
-    PageText res;
-    res.len = len(content);
-    res.text = content.TakeWStr();
-    res.coords = coords.Take();
-    return res;
-}
-
-PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
     const Str lineSep = StrL("\n");
     ScopedCritSec scope(&pagesAccess);
 
@@ -484,11 +399,11 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 insertSpace = false;
                 {
                     TempStr s = strconv::HtmlUtf8ToStrTemp(i.str);
-                    int len = s.len;
+                    int nCodepoints = Utf8CodepointCount(s);
                     content.Append(s);
-                    if (len > 0) {
-                        double cwidth = 1.0 * bbox.dx / (double)len;
-                        for (int k = 0; k < len; k++) {
+                    if (nCodepoints > 0) {
+                        double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
+                        for (int k = 0; k < nCodepoints; k++) {
                             coords.Append(Rect((int)(bbox.x + (double)k * cwidth), bbox.y, (int)cwidth, bbox.dy));
                         }
                     }
@@ -510,13 +425,13 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 insertSpace = false;
                 {
                     TempStr s = strconv::HtmlUtf8ToStrTemp(i.str);
-                    int len = s.len;
+                    int nCodepoints = Utf8CodepointCount(s);
                     content.Append(s);
-                    if (len > 0) {
-                        double cwidth = 1.0 * bbox.dx / (double)len;
-                        for (int k = 0; k < len; k++) {
-                            coords.Append(
-                                Rect((int)(bbox.x + (double)(len - k - 1) * cwidth), bbox.y, (int)cwidth, bbox.dy));
+                    if (nCodepoints > 0) {
+                        double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
+                        for (int k = 0; k < nCodepoints; k++) {
+                            coords.Append(Rect((int)(bbox.x + (double)(nCodepoints - k - 1) * cwidth), bbox.y,
+                                               (int)cwidth, bbox.dy));
                         }
                     }
                 }
@@ -531,10 +446,12 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
         content.Append(lineSep);
         coords.AppendBlanks(len(lineSep));
     }
-    ReportIf(len(coords) != len(content));
+    int nCodepoints = Utf8CodepointCount(ToStr(content));
+    ReportIf(len(coords) != nCodepoints);
 
-    PageTextUtf8 res;
+    PageText res;
     res.len = len(content);
+    res.nCodepoints = nCodepoints;
     res.text = content.TakeStr();
     res.coords = coords.Take();
     return res;

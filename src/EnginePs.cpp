@@ -283,7 +283,6 @@ class EnginePs : public EngineBase {
     }
 
     PageText ExtractPageText(int pageNo) override { return pdfEngine->ExtractPageText(pageNo); }
-    PageTextUtf8 ExtractPageTextUtf8(int pageNo) override { return pdfEngine->ExtractPageTextUtf8(pageNo); }
 
     bool HasClipOptimizations(int pageNo) override { return pdfEngine->HasClipOptimizations(pageNo); }
 

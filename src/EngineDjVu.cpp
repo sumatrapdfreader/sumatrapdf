@@ -277,7 +277,6 @@ class EngineDjVu : public EngineBase {
     Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
-    PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
 
     TempStr GetPropertyTemp(Str name) override;
@@ -310,8 +309,7 @@ class EngineDjVu : public EngineBase {
     Vec<ddjvu_fileinfo_t> fileInfos;
 
     RenderedBitmap* CreateRenderedBitmap(const u8* bmpData, Size size, bool grayscale) const;
-    bool ExtractPageText(miniexp_t item, wstr::Builder& extracted, Vec<Rect>& coords);
-    bool ExtractPageTextUtf8(miniexp_t item, str::Builder& extracted, Vec<Rect>& coords);
+    bool ExtractPageText(miniexp_t item, str::Builder& extracted, Vec<Rect>& coords);
     TempStr ResolveNamedDestTemp(Str name);
     TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
     bool FinishLoading();
@@ -865,134 +863,6 @@ bool EngineDjVu::SaveFileAs(Str dstPath) {
     return file::Copy(dstPath, srcPath, false);
 }
 
-static void AppendNewline(wstr::Builder& extracted, Vec<Rect>& coords, WStr lineSep) {
-    if (' ' == extracted.LastChar()) {
-        extracted.RemoveLast();
-        coords.RemoveLast();
-    }
-    extracted.Append(lineSep);
-    coords.AppendBlanks(len(lineSep));
-}
-
-bool EngineDjVu::ExtractPageText(miniexp_t item, wstr::Builder& extracted, Vec<Rect>& coords) {
-    const WStr lineSep = WStrL(L"\n");
-    miniexp_t type = miniexp_car(item);
-    if (!miniexp_symbolp(type)) {
-        return false;
-    }
-    item = miniexp_cdr(item);
-
-    if (!miniexp_numberp(miniexp_car(item))) {
-        return false;
-    }
-    int x0 = miniexp_to_int(miniexp_car(item));
-    item = miniexp_cdr(item);
-    if (!miniexp_numberp(miniexp_car(item))) {
-        return false;
-    }
-    int y0 = miniexp_to_int(miniexp_car(item));
-    item = miniexp_cdr(item);
-    if (!miniexp_numberp(miniexp_car(item))) {
-        return false;
-    }
-    int x1 = miniexp_to_int(miniexp_car(item));
-    item = miniexp_cdr(item);
-    if (!miniexp_numberp(miniexp_car(item))) {
-        return false;
-    }
-    int y1 = miniexp_to_int(miniexp_car(item));
-    item = miniexp_cdr(item);
-    Rect rect = Rect::FromXY(x0, y0, x1, y1);
-
-    miniexp_t str = miniexp_car(item);
-    if (miniexp_stringp(str) && !miniexp_cdr(item)) {
-        if (type != miniexp_symbol("char") && type != miniexp_symbol("word") ||
-            len(coords) > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
-            AppendNewline(extracted, coords, lineSep);
-        }
-        Str content = Str(miniexp_to_str(str));
-        TempWStr value = ToWStrTemp(content);
-        if (value) {
-            size_t len = value.len;
-            // TODO: split the rectangle into individual parts per glyph
-            for (size_t i = 0; i < len; i++) {
-                coords.Append(Rect(rect.x, rect.y, rect.dx, rect.dy));
-            }
-            extracted.Append(value);
-        }
-        if (miniexp_symbol("word") == type) {
-            extracted.AppendChar(' ');
-            coords.Append(Rect(rect.x + rect.dx, rect.y, 2, rect.dy));
-        }
-        item = miniexp_cdr(item);
-    }
-    while (miniexp_consp(str)) {
-        ExtractPageText(str, extracted, coords);
-        item = miniexp_cdr(item);
-        str = miniexp_car(item);
-    }
-    return !item;
-}
-
-PageText EngineDjVu::ExtractPageText(int pageNo) {
-    const WStr lineSep = WStrL(L"\n");
-    ScopedCritSec scope(&gDjVuContext->lock);
-
-    miniexp_t pagetext;
-    while ((pagetext = ddjvu_document_get_pagetext(doc, pageNo - 1, nullptr)) == miniexp_dummy) {
-        gDjVuContext->SpinMessageLoopWithUnlock();
-    }
-    if (miniexp_nil == pagetext) {
-        return {};
-    }
-
-    wstr::Builder extracted;
-    Vec<Rect> coords;
-    bool success = ExtractPageText(pagetext, extracted, coords);
-    ddjvu_miniexp_release(doc, pagetext);
-    minilisp_gc();
-    if (!success) {
-        return {};
-    }
-    if (len(extracted) > 0 && !wstr::EndsWith(ToWStr(extracted), lineSep)) {
-        AppendNewline(extracted, coords, lineSep);
-    }
-
-    PageText res;
-
-    ReportIf(len(ToWStr(extracted)) != len(coords));
-    ddjvu_status_t status;
-    ddjvu_pageinfo_t info;
-    while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
-        gDjVuContext->SpinMessageLoopWithUnlock();
-    }
-    float dpiFactor = 1.0;
-    if (DDJVU_JOB_OK == status) {
-        dpiFactor = GetFileDPI() / info.dpi;
-    }
-
-    // TODO: the coordinates aren't completely correct yet
-    Rect page = PageMediabox(pageNo).Round();
-    for (int i = 0; i < len(coords); i++) {
-        if (!coords.at(i).IsEmpty()) {
-            if (dpiFactor != 1.0) {
-                RectF pageF = ToRectF(coords.at(i));
-                pageF.x *= dpiFactor;
-                pageF.dx *= dpiFactor;
-                pageF.y *= dpiFactor;
-                pageF.dy *= dpiFactor;
-                coords.at(i) = pageF.Round();
-            }
-            coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
-        }
-    }
-    ReportIf(len(coords) != len(extracted));
-    res.len = len(extracted);
-    res.text = extracted.TakeWStr();
-    res.coords = coords.Take();
-    return res;
-}
-
 static void AppendNewlineUtf8(str::Builder& extracted, Vec<Rect>& coords, Str lineSep) {
     if (' ' == extracted.LastChar()) {
         extracted.RemoveLast();
@@ -1002,7 +872,7 @@ static void AppendNewlineUtf8(str::Builder& extracted, Vec<Rect>& coords, Str li
     coords.AppendBlanks(len(lineSep));
 }
 
-bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, str::Builder& extracted, Vec<Rect>& coords) {
+bool EngineDjVu::ExtractPageText(miniexp_t item, str::Builder& extracted, Vec<Rect>& coords) {
     const Str lineSep = StrL("\n");
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type)) {
@@ -1041,7 +911,8 @@ bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, str::Builder& extracted, Ve
         Str content = Str(miniexp_to_str(str));
         if (content) {
             // TODO: split the rectangle into individual parts per glyph
-            for (int i = 0; i < content.len; i++) {
+            int nCodepoints = Utf8CodepointCount(content);
+            for (int i = 0; i < nCodepoints; i++) {
                 coords.Append(Rect(rect.x, rect.y, rect.dx, rect.dy));
             }
             extracted.Append(content);
@@ -1053,14 +924,14 @@ bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, str::Builder& extracted, Ve
         item = miniexp_cdr(item);
     }
     while (miniexp_consp(str)) {
-        ExtractPageTextUtf8(str, extracted, coords);
+        ExtractPageText(str, extracted, coords);
         item = miniexp_cdr(item);
         str = miniexp_car(item);
     }
     return !item;
 }
 
-PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
+PageText EngineDjVu::ExtractPageText(int pageNo) {
     const Str lineSep = StrL("\n");
     ScopedCritSec scope(&gDjVuContext->lock);
 
@@ -1074,7 +945,7 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
 
     str::Builder extracted;
     Vec<Rect> coords;
-    bool success = ExtractPageTextUtf8(pagetext, extracted, coords);
+    bool success = ExtractPageText(pagetext, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);
     minilisp_gc();
     if (!success) {
@@ -1084,9 +955,10 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
         AppendNewlineUtf8(extracted, coords, lineSep);
     }
 
-    PageTextUtf8 res;
+    PageText res;
 
-    ReportIf(len(ToStr(extracted)) != len(coords));
+    int nCodepoints = Utf8CodepointCount(ToStr(extracted));
+    ReportIf(nCodepoints != len(coords));
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
@@ -1112,8 +984,9 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
             coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
         }
     }
-    ReportIf(len(coords) != len(extracted));
+    ReportIf(len(coords) != nCodepoints);
     res.len = len(extracted);
+    res.nCodepoints = nCodepoints;
     res.text = extracted.TakeStr();
     res.coords = coords.Take();
     return res;

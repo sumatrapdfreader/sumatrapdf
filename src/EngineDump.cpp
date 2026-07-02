@@ -266,14 +266,14 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     Out1("\t>\n");
 
     if (fullDump) {
-        PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
+        PageText pageText = engine->ExtractPageText(pageNo);
         if (pageText.text) {
             TempStr text = EscapeTemp(pageText.text.s);
             if (text) {
                 Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.s);
             }
         }
-        FreePageTextUtf8(&pageText);
+        FreePageText(&pageText);
     }
 
     Vec<IPageElement*> els = engine->GetElements(pageNo);
@@ -398,11 +398,11 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
     if (str::EndsWithI(renderPath, ".txt")) {
         str::Builder text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
-            PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
+            PageText pageText = engine->ExtractPageText(pageNo);
             if (pageText.text) {
                 text.Append(pageText.text.s);
             }
-            FreePageTextUtf8(&pageText);
+            FreePageText(&pageText);
         }
         if (silent) {
             return true;

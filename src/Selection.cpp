@@ -242,9 +242,9 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
 
     isTextOnlySelectionOut = dm->textSelection->result.len > 0;
     if (isTextOnlySelectionOut) {
-        WStr s = dm->textSelection->ExtractText(lineSep);
-        TempStr res = ToUtf8Temp(s);
-        wstr::Free(s);
+        Str s = dm->textSelection->ExtractText(lineSep);
+        TempStr res = str::DupTemp(s);
+        str::Free(s);
         return res;
     }
     StrVec selections;

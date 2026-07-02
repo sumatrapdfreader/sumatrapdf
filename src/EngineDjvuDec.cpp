@@ -131,7 +131,6 @@ class EngineDjvuDec : public EngineBase {
     Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
-    PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
 
     TempStr GetPropertyTemp(Str name) override;
@@ -702,14 +701,14 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
         return;
     }
     Rect r((int)(z->x * dpiF), (int)(z->y * dpiF), (int)(z->w * dpiF), (int)(z->h * dpiF));
-    int n = len(z->text);
+    int n = Utf8CodepointCount(z->text);
     for (int i = 0; i < n; i++) {
         coords.Append(r);
     }
     sb.Append(z->text);
 }
 
-PageTextUtf8 EngineDjvuDec::ExtractPageTextUtf8(int pageNo) {
+PageText EngineDjvuDec::ExtractPageText(int pageNo) {
     djvu_page_text_zones* z = djvu_page_text_get_zones(doc, pageNo - 1);
     if (!z || !z->root) {
         if (z) {
@@ -726,51 +725,13 @@ PageTextUtf8 EngineDjvuDec::ExtractPageTextUtf8(int pageNo) {
     if (len(sb) == 0) {
         return {};
     }
-    ReportIf((size_t)len(sb) != len(coords));
-    PageTextUtf8 res;
+    int nCodepoints = Utf8CodepointCount(ToStr(sb));
+    ReportIf(nCodepoints != len(coords));
+    PageText res;
     res.len = len(sb);
+    res.nCodepoints = nCodepoints;
     res.text = sb.TakeStr();
     res.coords = coords.Take();
-    return res;
-}
-
-PageText EngineDjvuDec::ExtractPageText(int pageNo) {
-    PageTextUtf8 u = ExtractPageTextUtf8(pageNo);
-    if (!u.text) {
-        return {};
-    }
-    // convert utf8 -> wchar, expanding per-byte coords to per-wchar coords
-    PageText res;
-    str::Builder ignore;
-    res.text = strconv::Utf8ToWStr(u.text, nullptr);
-    int wlen = res.text.len;
-    Rect* wcoords = AllocArray<Rect>(wlen);
-    // walk utf8 and wchar in lockstep, assigning the coord of each utf8 lead
-    // byte to its decoded wchar(s)
-    int wi = 0;
-    int bi = 0;
-    while (bi < u.text.len && wi < wlen) {
-        int nb = 1;
-        u8 c = (u8)u.text.s[bi];
-        if (c >= 0xF0) {
-            nb = 4;
-        } else if (c >= 0xE0) {
-            nb = 3;
-        } else if (c >= 0xC0) {
-            nb = 2;
-        }
-        Rect r = (bi < u.len) ? u.coords[bi] : Rect();
-        wcoords[wi++] = r;
-        // surrogate pair for codepoints > 0xFFFF (nb == 4)
-        if (nb == 4 && wi < wlen) {
-            wcoords[wi++] = r;
-        }
-        bi += nb;
-    }
-    res.coords = wcoords;
-    res.len = wlen;
-    str::Free(u.text);
-    free(u.coords);
     return res;
 }
 

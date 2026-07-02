@@ -13,9 +13,23 @@
 
 #include "DocController.h"
 #include "EngineBase.h"
-#include "RefHover.h"
+#include "RefHoverInternal.h"
 #include "RefHoverText.h"
 #include "RefHoverTextDetect.h"
+
+TempWStr RefHoverPageTextToWStrTemp(Str text) {
+    int nCodepoints = Utf8CodepointCount(text);
+    WCHAR* dst = AllocArrayTemp<WCHAR>(nCodepoints + 1);
+    int byteIdx = 0;
+    for (int i = 0; i < nCodepoints; i++) {
+        int n = 0;
+        int rune = Utf8CodepointAtByte(text, byteIdx, &n);
+        dst[i] = rune > 0xffff ? L'?' : (WCHAR)rune;
+        byteIdx += n > 0 ? n : 1;
+    }
+    dst[nCodepoints] = 0;
+    return WStr(dst, nCodepoints);
+}
 
 // === Plain-text citation lookup cache ===
 // Keyed by (surname, year, srcPage) so the same citation hovered repeatedly
@@ -100,7 +114,8 @@ static bool DetectCitationAtCursor(EngineBase* engine, int srcPage, Point pagePo
     out->year = 0;
     int textLen = 0;
     Rect* coords = nullptr;
-    WStr text = engine->GetTextForPage(srcPage, &textLen, &coords);
+    Str textUtf8 = engine->GetTextForPage(srcPage, &textLen, &coords);
+    TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
     return DetectCitationInPageText(text, coords, textLen, pagePos, &out->surname, &out->year, srcRectOut);
 }
 
@@ -125,7 +140,8 @@ static bool FindReferenceLocation(EngineBase* engine, int srcPage, Str surname, 
     for (int p = pageCount; p >= srcPage; p--) {
         int textLen = 0;
         Rect* coords = nullptr;
-        WStr text = engine->GetTextForPage(p, &textLen, &coords);
+        Str textUtf8 = engine->GetTextForPage(p, &textLen, &coords);
+        TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
         float x = 0, y = 0;
         if (FindSurnameInPageText(text, coords, textLen, surnameW, year, &x, &y)) {
             *destPageOut = p;
@@ -193,7 +209,8 @@ static bool LookupOrSearchNumeric(RefHoverState* s, EngineBase* engine, int srcP
     for (int p = pageCount; p >= srcPage; p--) {
         int textLen = 0;
         Rect* coords = nullptr;
-        WStr text = engine->GetTextForPage(p, &textLen, &coords);
+        Str textUtf8 = engine->GetTextForPage(p, &textLen, &coords);
+        TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
         float x = 0, y = 0;
         if (FindNumericReferenceInPageText(text, coords, textLen, num, &x, &y)) {
             destPage = p;
@@ -230,7 +247,8 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
     {
         int textLen = 0;
         Rect* coords = nullptr;
-        WStr text = engine->GetTextForPage(srcPage, &textLen, &coords);
+        Str textUtf8 = engine->GetTextForPage(srcPage, &textLen, &coords);
+        TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
         int num = 0;
         if (DetectNumericCitationInPageText(text, coords, textLen, pagePos, &num, &srcRect)) {
             if (LookupOrSearchNumeric(s, engine, srcPage, num, destPageOut, destXOut, destYOut)) {
@@ -307,7 +325,8 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
     }
     int srcLen = 0;
     Rect* srcCoords = nullptr;
-    WStr srcText = engine->GetTextForPage(srcPage, &srcLen, &srcCoords);
+    Str srcTextUtf8 = engine->GetTextForPage(srcPage, &srcLen, &srcCoords);
+    TempWStr srcText = RefHoverPageTextToWStrTemp(srcTextUtf8);
     if (!srcText || srcLen <= 0 || !srcCoords) {
         return -1.f;
     }
@@ -380,7 +399,8 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
 
     int destLen = 0;
     Rect* destCoords = nullptr;
-    WStr destText = engine->GetTextForPage(destPage, &destLen, &destCoords);
+    Str destTextUtf8 = engine->GetTextForPage(destPage, &destLen, &destCoords);
+    TempWStr destText = RefHoverPageTextToWStrTemp(destTextUtf8);
     if (!destText || destLen <= 0 || !destCoords) {
         return -1.f;
     }

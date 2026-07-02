@@ -44,28 +44,99 @@ bool IsExternalUrl(Str url) {
     return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
 }
 
-void FreePageText(PageText* pageText) {
-    wstr::Free(pageText->text);
-    free((void*)pageText->coords);
-    pageText->text = {};
-    pageText->coords = nullptr;
-    pageText->len = 0;
+int Utf8CodepointAtByte(Str s, int byteIdx, int* bytesOut) {
+    if (bytesOut) {
+        *bytesOut = 0;
+    }
+    if (!s || byteIdx < 0 || byteIdx >= s.len) {
+        return 0;
+    }
+
+    const u8* p = (const u8*)s.s + byteIdx;
+    int n = utf8RuneLen(p);
+    if (n <= 0 || byteIdx + n > s.len || !isLegalUTF8Sequence(p, p + n)) {
+        if (bytesOut) {
+            *bytesOut = 1;
+        }
+        return *p;
+    }
+    if (bytesOut) {
+        *bytesOut = n;
+    }
+    if (n == 1) {
+        return p[0];
+    }
+    int rune = p[0] & ((1 << (7 - n)) - 1);
+    for (int i = 1; i < n; i++) {
+        rune = (rune << 6) | (p[i] & 0x3f);
+    }
+    return rune;
+}
+
+int Utf8CodepointCount(Str s) {
+    int nCodepoints = 0;
+    for (int byteIdx = 0; s && byteIdx < s.len; nCodepoints++) {
+        int n = 0;
+        Utf8CodepointAtByte(s, byteIdx, &n);
+        byteIdx += n > 0 ? n : 1;
+    }
+    return nCodepoints;
+}
+
+int Utf8CodepointToByteIndex(Str s, int codepointIdx) {
+    if (!s || codepointIdx <= 0) {
+        return 0;
+    }
+    int byteIdx = 0;
+    int cp = 0;
+    while (byteIdx < s.len && cp < codepointIdx) {
+        int n = 0;
+        Utf8CodepointAtByte(s, byteIdx, &n);
+        byteIdx += n > 0 ? n : 1;
+        cp++;
+    }
+    return byteIdx;
+}
+
+int Utf8CodepointAt(Str s, int codepointIdx) {
+    int byteIdx = Utf8CodepointToByteIndex(s, codepointIdx);
+    return Utf8CodepointAtByte(s, byteIdx);
+}
+
+Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints) {
+    if (!s || nCodepoints <= 0) {
+        return {};
+    }
+    if (startCodepoint < 0) {
+        startCodepoint = 0;
+    }
+    int startByte = Utf8CodepointToByteIndex(s, startCodepoint);
+    int endByte = Utf8CodepointToByteIndex(Str(s.s + startByte, s.len - startByte), nCodepoints) + startByte;
+    return Str(s.s + startByte, endByte - startByte);
 }
 
 static void EnsurePageText(PageText* pageText) {
     if (pageText->text) {
+        if (pageText->len == 0) {
+            pageText->len = pageText->text.len;
+        }
+        if (pageText->nCodepoints == 0) {
+            pageText->nCodepoints = Utf8CodepointCount(pageText->text);
+        }
         return;
     }
     pageText->text = {};
     pageText->len = 0;
+    pageText->nCodepoints = 0;
 }
 
-void FreePageTextUtf8(PageTextUtf8* pageText) {
+void FreePageText(PageText* pageText) {
     str::Free(pageText->text);
     free((void*)pageText->coords);
     pageText->text = {};
     pageText->coords = nullptr;
     pageText->len = 0;
+    pageText->nCodepoints = 0;
 }
 
 PageDestination::~PageDestination() {
@@ -367,7 +438,7 @@ EngineBase::~EngineBase() {
         for (int i = 0; i < pageCount; i++) {
             PageText* pt = &pagesText[i];
             free(pt->coords);
-            wstr::Free(pt->text);
+            str::Free(pt->text);
         }
         free(pagesText);
     }
@@ -456,7 +527,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     delete data;
 }
 
-WStr EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
+Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
         if (lenOut) {
@@ -501,15 +572,15 @@ WStr EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     ScopedCritSec scope(&textCacheLock);
     PageText* pt = &pagesText[pageNo - 1];
     if (lenOut) {
-        *lenOut = pt->len;
+        *lenOut = pt->nCodepoints;
     }
     if (coordsOut) {
         *coordsOut = pt->coords;
     }
-    WStr text = pt->text;
+    Str text = pt->text;
     if (text.s) {
         text.len = pt->len;
-        // wstr::Builder-backed buffers reserve a NUL slot at .len
+        // str::Builder-backed buffers reserve a NUL slot at .len
         if (text.len >= 0) {
             text.s[text.len] = 0;
         }

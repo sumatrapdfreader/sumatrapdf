@@ -61,15 +61,11 @@ extern Kind kindDestinationLaunchFile;
 extern Kind kindDestinationDjVu;
 extern Kind kindDestinationMupdf;
 
-// text on a page
-// a character and its bounding box in page coordinates
-struct PageText {
-    WStr text;
-    Rect* coords = nullptr;
-    int len = 0; // number of chars in text and bounding boxes in coords
-};
-
-void FreePageText(PageText*);
+int Utf8CodepointCount(Str s);
+int Utf8CodepointAt(Str s, int codepointIdx);
+int Utf8CodepointAtByte(Str s, int byteIdx, int* bytesOut = nullptr);
+int Utf8CodepointToByteIndex(Str s, int codepointIdx);
+Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints);
 
 enum class TextExtractionState {
     NotExtracted,
@@ -77,16 +73,15 @@ enum class TextExtractionState {
     Finished,
 };
 
-// UTF-8 variant: text is a UTF-8 byte string (len bytes, not including the
-// terminating null), and coords has one entry per UTF-8 byte (the same rect
-// repeated for each byte of a multi-byte codepoint).
-struct PageTextUtf8 {
+// text is a UTF-8 byte string, coords has one entry per Unicode codepoint
+struct PageText {
     Str text;
     Rect* coords = nullptr;
-    int len = 0;
+    int len = 0;         // number of bytes in text, not including the terminating null
+    int nCodepoints = 0; // number of Unicode codepoints and bounding boxes in coords
 };
 
-void FreePageTextUtf8(PageTextUtf8*);
+void FreePageText(PageText*);
 
 // a link destination
 struct IPageDestination : KindBase {
@@ -477,9 +472,7 @@ class EngineBase {
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result and *coordsOut (if coordsOut is non-nullptr)
-    virtual PageText ExtractPageText(int pageNo) = 0;
-    // UTF-8 variant of ExtractPageText. Default implementation returns empty.
-    virtual PageTextUtf8 ExtractPageTextUtf8(int) { return {}; }
+    virtual PageText ExtractPageText(int) { return {}; }
 
     // cached per-page text. First call on a page extracts text and caches it,
     // subsequent calls return the cached copy. The returned pointers are owned
@@ -487,7 +480,7 @@ class EngineBase {
     bool HasTextForPage(int pageNo);
     TextExtractionState GetTextExtractionState(int pageNo);
     void RequestTextExtraction(int pageNo);
-    WStr GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
+    Str GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
     virtual void ReleaseTextExtractionThreadContext() {}
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;

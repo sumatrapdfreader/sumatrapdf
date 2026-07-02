@@ -434,17 +434,17 @@ static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* st
     if (!engine || !word || !startOut || !endOut) {
         return false;
     }
-    WStr text = engine->GetTextForPage(pageNo);
+    int textLen = 0;
+    Str text = engine->GetTextForPage(pageNo, &textLen);
     if (!text) {
         return false;
     }
-    TempWStr wordW = ToWStrTemp(word);
-    int wordLen = wordW.len;
+    int wordLen = Utf8CodepointCount(word);
     if (wordLen <= 0) {
         return false;
     }
-    for (int i = 0; i <= text.len - wordLen; i++) {
-        if (memcmp(text.s + i, wordW.s, (size_t)wordLen * sizeof(WCHAR)) == 0) {
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (str::Eq(Utf8SliceByCodepoints(text, i, wordLen), word)) {
             *startOut = i;
             *endOut = i + wordLen;
             return true;
@@ -530,15 +530,16 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
 
     TempStr matched = nullptr;
     Rect* coords = nullptr;
-    WStr pageTxt = engine->GetTextForPage(pageNo, nullptr, &coords);
-    if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTxt.len && curStart < curEnd) {
-        matched = ToUtf8Temp(WStr(pageTxt.s + curStart, curEnd - curStart));
+    int pageTextLen = 0;
+    Str pageTxt = engine->GetTextForPage(pageNo, &pageTextLen, &coords);
+    if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTextLen && curStart < curEnd) {
+        matched = Utf8SliceByCodepoints(pageTxt, curStart, curEnd - curStart);
     }
 
     // is the match rect actually within the visible viewport now? (mirrors
     // DisplayModel::ScrollScreenToRect's own visibility test)
     bool visible = false;
-    if (coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTxt.len && curStart < curEnd) {
+    if (coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTextLen && curStart < curEnd) {
         Rect pr = coords[curStart];
         for (int i = curStart + 1; i < curEnd; i++) {
             pr = pr.Union(coords[i]);
@@ -567,26 +568,26 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
         return false;
     }
     Rect* coords = nullptr;
-    WStr text = engine->GetTextForPage(pageNo, nullptr, &coords);
+    int textLen = 0;
+    Str text = engine->GetTextForPage(pageNo, &textLen, &coords);
     if (!text) {
         return false;
     }
-    TempWStr wordW = ToWStrTemp(word);
-    int wordLen = wordW.len;
+    int wordLen = Utf8CodepointCount(word);
     if (wordLen <= 0) {
         return false;
     }
-    for (int i = 0; i <= text.len - wordLen; i++) {
-        if (memcmp(text.s + i, wordW.s, (size_t)wordLen * sizeof(WCHAR)) != 0) {
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (!str::Eq(Utf8SliceByCodepoints(text, i, wordLen), word)) {
             continue;
         }
         int mid = i + wordLen / 2;
-        for (; mid < text.len && !coords[mid].x && !coords[mid].dx; mid++) {
-            if (text.s[mid] == L'\n') {
+        for (; mid < textLen && !coords[mid].x && !coords[mid].dx; mid++) {
+            if (Utf8CodepointAt(text, mid) == '\n') {
                 return false;
             }
         }
-        if (mid >= text.len) {
+        if (mid >= textLen) {
             return false;
         }
         *xOut = coords[mid].x + coords[mid].dx / 2.0;
@@ -597,9 +598,9 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
 }
 
 static TempStr ExtractSelectionTextTemp(TextSelection& ts) {
-    WStr ws = ts.ExtractText(" ");
-    TempStr res = ToUtf8Temp(ws);
-    wstr::Free(ws);
+    Str s = ts.ExtractText(" ");
+    TempStr res = str::DupTemp(s);
+    str::Free(s);
     return res;
 }
 

@@ -1947,27 +1947,28 @@ void DisplayModel::RotateBy(int newRotation) {
 /* Given <region> (in user coordinates) on page <pageNo>, returns text in that region. */
 Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
-    WStr pageText = engine->GetTextForPage(pageNo, nullptr, &coords);
+    int textLen = 0;
+    Str pageText = engine->GetTextForPage(pageNo, &textLen, &coords);
     if (!pageText) {
         return {};
     }
 
-    wstr::Builder result;
+    str::Builder result;
     Rect regionI = region.Round();
-    for (int i = 0; i < pageText.len; i++) {
-        wchar_t c = pageText.s[i];
-        if (c != L'\n') {
+    for (int i = 0; i < textLen; i++) {
+        int c = Utf8CodepointAt(pageText, i);
+        if (c != '\n') {
             Rect rect = coords[i];
             Rect isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
-                result.AppendChar(c);
+                result.Append(Utf8SliceByCodepoints(pageText, i, 1));
             }
         } else if (result.LastChar() != '\n') {
-            result.Append(WStr(L"\r\n", 2));
+            result.Append(StrL("\r\n"));
         }
     }
 
-    return ToUtf8(ToWStr(result));
+    return result.TakeStr();
 }
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)

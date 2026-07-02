@@ -7,7 +7,7 @@
 // src/base/tests/RefHover_ut.cpp).
 //
 // All three functions take:
-//   text     — per-glyph WCHAR array (engine->GetTextForPage's first out-ptr)
+//   text     — per-glyph WCHAR view, one WCHAR per engine text codepoint
 //   coords   — per-glyph Rect array, parallel to `text` (second out-ptr)
 //   textLen  — glyph count
 //   mediabox — page bounds in PDF user space

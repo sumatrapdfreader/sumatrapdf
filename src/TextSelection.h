@@ -43,7 +43,7 @@ struct TextSelection {
     // the last SelectWordAt) to the word at (x, y)
     void SelectWordsUpTo(int pageNo, double x, double y);
     void CopySelection(TextSelection* orig);
-    WStr ExtractText(Str lineSep);
+    Str ExtractText(Str lineSep);
     void Reset();
 
     TextSel result{};
@@ -52,4 +52,4 @@ struct TextSelection {
 };
 
 uint distSq(int x, int y);
-bool isWordChar(WCHAR c);
+bool isWordChar(int c);

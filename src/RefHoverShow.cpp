@@ -59,7 +59,9 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
     } else {
         Rect* coords = nullptr;
-        WStr text = engine->GetTextForPage(destPage, nullptr, &coords);
+        int textLen = 0;
+        Str textUtf8 = engine->GetTextForPage(destPage, &textLen, &coords);
+        TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
         WCHAR* cleanText = nullptr;
         Rect* cleanCoords = nullptr;
         Rect* normCoords = coords;
@@ -67,8 +69,8 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
             // Strip the page watermark on the raw glyphs first (its true height
             // is only visible pre-normalization), then normalize the survivors
             // so the detectors below see clean, baseline-flattened text.
-            cleanText = AllocArray<WCHAR>((size_t)text.len);
-            cleanCoords = AllocArray<Rect>((size_t)text.len);
+            cleanText = AllocArray<WCHAR>((size_t)textLen);
+            cleanCoords = AllocArray<Rect>((size_t)textLen);
             int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
             text = WStr(cleanText, cleanLen);
             normCoords = AllocArray<Rect>((size_t)cleanLen);

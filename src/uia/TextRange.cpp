@@ -120,18 +120,18 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
     // based on TextSelection::SelectWordAt
     int textLen;
     auto engine = document->GetDM()->GetEngine();
-    WStr pageText = engine->GetTextForPage(pageno, &textLen);
+    Str pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx > 0; idx--) {
-            if (isWordChar(pageText.s[idx - 1])) {
+            if (isWordChar(Utf8CodepointAt(pageText, idx - 1))) {
                 break;
             }
         }
     }
 
     for (; idx > 0; idx--) {
-        if (!isWordChar(pageText.s[idx - 1])) {
+        if (!isWordChar(Utf8CodepointAt(pageText, idx - 1))) {
             break;
         }
     }
@@ -141,18 +141,18 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
 int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
     auto engine = document->GetDM()->GetEngine();
-    WStr pageText = engine->GetTextForPage(pageno, &textLen);
+    Str pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx < textLen; idx++) {
-            if (isWordChar(pageText.s[idx])) {
+            if (isWordChar(Utf8CodepointAt(pageText, idx))) {
                 break;
             }
         }
     }
 
     for (; idx < textLen; idx++) {
-        if (!isWordChar(pageText.s[idx])) {
+        if (!isWordChar(Utf8CodepointAt(pageText, idx))) {
             break;
         }
     }
@@ -162,18 +162,18 @@ int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool
 int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
     auto engine = document->GetDM()->GetEngine();
-    WStr pageText = engine->GetTextForPage(pageno, &textLen);
+    Str pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx > 0; idx--) {
-            if (pageText.s[idx - 1] != L'\n') {
+            if (Utf8CodepointAt(pageText, idx - 1) != '\n') {
                 break;
             }
         }
     }
 
     for (; idx > 0; idx--) {
-        if (pageText.s[idx - 1] == L'\n') {
+        if (Utf8CodepointAt(pageText, idx - 1) == '\n') {
             break;
         }
     }
@@ -183,18 +183,18 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
 int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
     auto engine = document->GetDM()->GetEngine();
-    WStr pageText = engine->GetTextForPage(pageno, &textLen);
+    Str pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx < textLen; idx++) {
-            if (pageText.s[idx] != L'\n') {
+            if (Utf8CodepointAt(pageText, idx) != '\n') {
                 break;
             }
         }
     }
 
     for (; idx < textLen; idx++) {
-        if (pageText.s[idx] == L'\n') {
+        if (Utf8CodepointAt(pageText, idx) == '\n') {
             break;
         }
     }
@@ -449,18 +449,21 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     selection.StartAt(startPage, startGlyph);
     selection.SelectUpTo(endPage, endGlyph);
 
-    WStr selected_text = selection.ExtractText("\r\n");
+    Str selected_text = selection.ExtractText("\r\n");
 
     // -1 and [0, inf) are allowed
     if (maxLength < -1) {
-        wstr::Free(selected_text);
+        str::Free(selected_text);
         return E_INVALIDARG;
     }
-    if (maxLength != -1 && selected_text.len > maxLength) {
-        selected_text.s[maxLength] = '\0'; // truncate
+    if (maxLength != -1 && Utf8CodepointCount(selected_text) > maxLength) {
+        int byteIdx = Utf8CodepointToByteIndex(selected_text, maxLength);
+        selected_text.s[byteIdx] = '\0';
+        selected_text.len = byteIdx;
     }
-    *text = SysAllocString(selected_text.s);
-    wstr::Free(selected_text);
+    TempWStr selectedTextW = ToWStrTemp(selected_text);
+    *text = SysAllocString(selectedTextW.s);
+    str::Free(selected_text);
     return *text ? S_OK : E_OUTOFMEMORY;
 }
 

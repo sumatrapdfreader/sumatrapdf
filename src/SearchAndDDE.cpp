@@ -123,9 +123,9 @@ void FindFirst(MainWindow* win) {
     // to find edit only if it's different from current text. Setting the text
     // triggers find-as-you-type via the bar's onTextChanged handler.
     if (!hadFindFocus && dm->textSelection->result.len > 0) {
-        WStr sel = dm->textSelection->ExtractText(" ");
-        TempStr selection = ToUtf8Temp(sel);
-        wstr::Free(sel);
+        Str sel = dm->textSelection->ExtractText(" ");
+        TempStr selection = str::DupTemp(sel);
+        str::Free(sel);
         selection.len -= str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection)) {
             TempStr current = HwndGetTextTemp(win->hwndFindEdit);
@@ -270,9 +270,9 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
         return;
     }
 
-    WStr sel = dm->textSelection->ExtractText(" ");
-    TempStr selection = ToUtf8Temp(sel);
-    wstr::Free(sel);
+    Str sel = dm->textSelection->ExtractText(" ");
+    TempStr selection = str::DupTemp(sel);
+    str::Free(sel);
     selection.len -= str::NormalizeWSInPlace(selection);
     if (str::IsEmpty(selection)) {
         return;
@@ -484,21 +484,21 @@ void ClearFindMatches(MainWindow* win) {
 
 // build a one-line "...context match context..." snippet (UTF-8) around a match
 static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
-    WStr pageText = engine->GetTextForPage(m.startPage);
+    int textLen = 0;
+    Str pageText = engine->GetTextForPage(m.startPage, &textLen);
     if (!pageText) {
         return {};
     }
-    int textLen = pageText.len;
     int mStart = limitValue(m.startGlyph, 0, textLen);
     int mEnd = (m.endPage == m.startPage) ? m.endGlyph : textLen;
     mEnd = limitValue(mEnd, mStart, textLen);
     const int kCtx = 40;
     int from = std::max(0, mStart - kCtx);
     int to = std::min(textLen, mEnd + kCtx);
-    WStr sub = wstr::Dup(WStr(pageText.s + from, (int)(to - from)));
-    wstr::NormalizeWSInPlace(sub);
-    TempStr u = ToUtf8Temp(sub.s);
-    wstr::FreePtr(&sub);
+    Str sub = str::Dup(Utf8SliceByCodepoints(pageText, from, to - from));
+    str::NormalizeWSInPlace(sub);
+    TempStr u = str::DupTemp(sub);
+    str::FreePtr(&sub);
     return fmt("%s%s%s", Str(from > 0 ? "..." : ""), u, Str(to < textLen ? "..." : ""));
 }
 
@@ -939,16 +939,16 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool sho
         // but the per-tab textSearch still has the old search text cached
         DisplayModel* dm = win->AsFixed();
         if (dm && dm->textSearch) {
-            TempWStr ws = ToWStrTemp(s);
             // compare with lastText, not findText: SetText strips a trailing
             // space (match word end) from findText but keeps it in lastText, and
-            // strips a leading space (match word start) from both. Normalize ws
+            // strips a leading space (match word start) from both. Normalize s
             // the same way (drop one leading space) so trailing/leading/whole-word
             // searches don't always look "modified" and find-next can advance.
-            if (ws.s[0] == ' ') {
-                ws = WStr(ws.s + 1);
+            Str searchText = s;
+            if (searchText && searchText.s[0] == ' ') {
+                searchText = Str(searchText.s + 1, searchText.len - 1);
             }
-            if (!wstr::Eq(ws, dm->textSearch->lastText)) {
+            if (!str::Eq(searchText, dm->textSearch->lastText)) {
                 wasModified = true;
             }
         }

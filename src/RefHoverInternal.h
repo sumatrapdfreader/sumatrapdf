@@ -29,6 +29,7 @@ bool RefHoverIsLiveState(RefHoverState* s);
 void RefHoverRegisterLiveState(RefHoverState* s);
 void RefHoverUnregisterLiveState(RefHoverState* s);
 void RefHoverDropQueuedRender(RefHoverState* s);
+TempWStr RefHoverPageTextToWStrTemp(Str text);
 
 bool RefHoverPopupCreate(RefHoverState* s, HWND hwndCanvas);
 

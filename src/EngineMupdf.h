@@ -67,7 +67,6 @@ class EngineMupdf : public EngineBase {
     Str GetFileData() override;
     bool SaveFileAs(Str copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
-    PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     void ReleaseTextExtractionThreadContext() override;
 
     bool HasClipOptimizations(int pageNo) override;
