@@ -85,8 +85,8 @@ static Rect ReadAloudByteLocToRect(const ReadAloudByteLoc& loc) {
     return Rect(loc.x, loc.y, loc.dx, loc.dy);
 }
 
-static bool IsLineBreakGlyph(Str text, int textLen, const Rect* coords, int idx) {
-    return idx >= 0 && idx < textLen && Utf8CodepointAt(text, idx) == '\n' && !coords[idx].x && !coords[idx].dx;
+static bool IsLineBreakGlyph(const Rect* coords, int idx, int c) {
+    return c == '\n' && !coords[idx].x && !coords[idx].dx;
 }
 
 static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map, str::Builder& cleanedOut) {
@@ -235,8 +235,11 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
     }
 
     ReadAloudByteLoc noLoc;
+    int byteIdx = Utf8CodepointToByteIndex(text, startGlyph);
     for (int g = startGlyph; g < endGlyph; g++) {
-        if (IsLineBreakGlyph(text, textLen, coords, g)) {
+        int charStart = byteIdx;
+        int c = Utf8CodepointNext(text, byteIdx);
+        if (IsLineBreakGlyph(coords, g, c)) {
             ReadAloudHighlightAppendRaw(raw, '\r', noLoc);
             ReadAloudHighlightAppendRaw(raw, '\n', noLoc);
             continue;
@@ -248,7 +251,7 @@ static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* en
             ReadAloudByteLocSetFromRect(loc, pageNo, r);
         }
 
-        Str utf8 = Utf8SliceByCodepoints(text, g, 1);
+        Str utf8(text.s + charStart, byteIdx - charStart);
         if (str::IsEmpty(utf8)) {
             continue;
         }
@@ -310,8 +313,15 @@ bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGl
         }
 
         int g = 0;
+        int byteIdx = 0;
         while (g < textLen) {
-            while (g < textLen && IsLineBreakGlyph(text, textLen, coords, g)) {
+            while (g < textLen) {
+                int nextByte = byteIdx;
+                int c = Utf8CodepointNext(text, nextByte);
+                if (!IsLineBreakGlyph(coords, g, c)) {
+                    break;
+                }
+                byteIdx = nextByte;
                 g++;
             }
             if (g >= textLen) {
@@ -319,7 +329,13 @@ bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGl
             }
 
             int lineStart = g;
-            while (g < textLen && !IsLineBreakGlyph(text, textLen, coords, g)) {
+            while (g < textLen) {
+                int nextByte = byteIdx;
+                int c = Utf8CodepointNext(text, nextByte);
+                if (IsLineBreakGlyph(coords, g, c)) {
+                    break;
+                }
+                byteIdx = nextByte;
                 g++;
             }
 

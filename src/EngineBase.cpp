@@ -76,11 +76,34 @@ int Utf8CodepointAtByte(Str s, int byteIdx, int* bytesOut) {
 int Utf8CodepointCount(Str s) {
     int nCodepoints = 0;
     for (int byteIdx = 0; s && byteIdx < s.len; nCodepoints++) {
-        int n = 0;
-        Utf8CodepointAtByte(s, byteIdx, &n);
-        byteIdx += n > 0 ? n : 1;
+        Utf8CodepointNext(s, byteIdx);
     }
     return nCodepoints;
+}
+
+int Utf8CodepointNext(Str s, int& byteIdx) {
+    if (!s || byteIdx < 0 || byteIdx >= s.len) {
+        return 0;
+    }
+    int n = 0;
+    int c = Utf8CodepointAtByte(s, byteIdx, &n);
+    byteIdx += n > 0 ? n : 1;
+    return c;
+}
+
+int Utf8CodepointPrev(Str s, int& byteIdx) {
+    if (!s || byteIdx <= 0) {
+        return 0;
+    }
+    if (byteIdx > s.len) {
+        byteIdx = s.len;
+    }
+    int prevByte = byteIdx - 1;
+    while (prevByte > 0 && (((u8)s.s[prevByte] & 0xc0) == 0x80)) {
+        prevByte--;
+    }
+    byteIdx = prevByte;
+    return Utf8CodepointAtByte(s, byteIdx);
 }
 
 int Utf8CodepointToByteIndex(Str s, int codepointIdx) {
@@ -90,17 +113,23 @@ int Utf8CodepointToByteIndex(Str s, int codepointIdx) {
     int byteIdx = 0;
     int cp = 0;
     while (byteIdx < s.len && cp < codepointIdx) {
-        int n = 0;
-        Utf8CodepointAtByte(s, byteIdx, &n);
-        byteIdx += n > 0 ? n : 1;
+        Utf8CodepointNext(s, byteIdx);
         cp++;
     }
     return byteIdx;
 }
 
-int Utf8CodepointAt(Str s, int codepointIdx) {
-    int byteIdx = Utf8CodepointToByteIndex(s, codepointIdx);
-    return Utf8CodepointAtByte(s, byteIdx);
+int Utf8AdvanceCodepoints(Str s, int byteIdx, int nCodepoints) {
+    if (!s || byteIdx < 0) {
+        return 0;
+    }
+    if (byteIdx > s.len) {
+        return s.len;
+    }
+    for (int i = 0; i < nCodepoints && byteIdx < s.len; i++) {
+        Utf8CodepointNext(s, byteIdx);
+    }
+    return byteIdx;
 }
 
 Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints) {
@@ -111,7 +140,7 @@ Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints) {
         startCodepoint = 0;
     }
     int startByte = Utf8CodepointToByteIndex(s, startCodepoint);
-    int endByte = Utf8CodepointToByteIndex(Str(s.s + startByte, s.len - startByte), nCodepoints) + startByte;
+    int endByte = Utf8AdvanceCodepoints(s, startByte, nCodepoints);
     return Str(s.s + startByte, endByte - startByte);
 }
 

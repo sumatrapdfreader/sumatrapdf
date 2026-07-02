@@ -1955,13 +1955,15 @@ Str DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
 
     str::Builder result;
     Rect regionI = region.Round();
+    int byteIdx = 0;
     for (int i = 0; i < textLen; i++) {
-        int c = Utf8CodepointAt(pageText, i);
+        int charStart = byteIdx;
+        int c = Utf8CodepointNext(pageText, byteIdx);
         if (c != '\n') {
             Rect rect = coords[i];
             Rect isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
-                result.Append(Utf8SliceByCodepoints(pageText, i, 1));
+                result.Append(Str(pageText.s + charStart, byteIdx - charStart));
             }
         } else if (result.LastChar() != '\n') {
             result.Append(StrL("\r\n"));

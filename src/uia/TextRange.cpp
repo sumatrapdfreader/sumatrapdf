@@ -122,18 +122,27 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
     auto engine = document->GetDM()->GetEngine();
     Str pageText = engine->GetTextForPage(pageno, &textLen);
 
+    int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
     if (dontReturnInitial) {
-        for (; idx > 0; idx--) {
-            if (isWordChar(Utf8CodepointAt(pageText, idx - 1))) {
+        while (idx > 0) {
+            int prevByte = byteIdx;
+            int c = Utf8CodepointPrev(pageText, prevByte);
+            if (isWordChar(c)) {
                 break;
             }
+            byteIdx = prevByte;
+            idx--;
         }
     }
 
-    for (; idx > 0; idx--) {
-        if (!isWordChar(Utf8CodepointAt(pageText, idx - 1))) {
+    while (idx > 0) {
+        int prevByte = byteIdx;
+        int c = Utf8CodepointPrev(pageText, prevByte);
+        if (!isWordChar(c)) {
             break;
         }
+        byteIdx = prevByte;
+        idx--;
     }
     return idx;
 }
@@ -143,18 +152,27 @@ int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool
     auto engine = document->GetDM()->GetEngine();
     Str pageText = engine->GetTextForPage(pageno, &textLen);
 
+    int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
     if (dontReturnInitial) {
-        for (; idx < textLen; idx++) {
-            if (isWordChar(Utf8CodepointAt(pageText, idx))) {
+        while (idx < textLen) {
+            int nextByte = byteIdx;
+            int c = Utf8CodepointNext(pageText, nextByte);
+            if (isWordChar(c)) {
                 break;
             }
+            byteIdx = nextByte;
+            idx++;
         }
     }
 
-    for (; idx < textLen; idx++) {
-        if (!isWordChar(Utf8CodepointAt(pageText, idx))) {
+    while (idx < textLen) {
+        int nextByte = byteIdx;
+        int c = Utf8CodepointNext(pageText, nextByte);
+        if (!isWordChar(c)) {
             break;
         }
+        byteIdx = nextByte;
+        idx++;
     }
     return idx;
 }
@@ -164,18 +182,27 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
     auto engine = document->GetDM()->GetEngine();
     Str pageText = engine->GetTextForPage(pageno, &textLen);
 
+    int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
     if (dontReturnInitial) {
-        for (; idx > 0; idx--) {
-            if (Utf8CodepointAt(pageText, idx - 1) != '\n') {
+        while (idx > 0) {
+            int prevByte = byteIdx;
+            int c = Utf8CodepointPrev(pageText, prevByte);
+            if (c != '\n') {
                 break;
             }
+            byteIdx = prevByte;
+            idx--;
         }
     }
 
-    for (; idx > 0; idx--) {
-        if (Utf8CodepointAt(pageText, idx - 1) == '\n') {
+    while (idx > 0) {
+        int prevByte = byteIdx;
+        int c = Utf8CodepointPrev(pageText, prevByte);
+        if (c == '\n') {
             break;
         }
+        byteIdx = prevByte;
+        idx--;
     }
     return idx;
 }
@@ -185,18 +212,27 @@ int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool
     auto engine = document->GetDM()->GetEngine();
     Str pageText = engine->GetTextForPage(pageno, &textLen);
 
+    int byteIdx = Utf8CodepointToByteIndex(pageText, idx);
     if (dontReturnInitial) {
-        for (; idx < textLen; idx++) {
-            if (Utf8CodepointAt(pageText, idx) != '\n') {
+        while (idx < textLen) {
+            int nextByte = byteIdx;
+            int c = Utf8CodepointNext(pageText, nextByte);
+            if (c != '\n') {
                 break;
             }
+            byteIdx = nextByte;
+            idx++;
         }
     }
 
-    for (; idx < textLen; idx++) {
-        if (Utf8CodepointAt(pageText, idx) == '\n') {
+    while (idx < textLen) {
+        int nextByte = byteIdx;
+        int c = Utf8CodepointNext(pageText, nextByte);
+        if (c == '\n') {
             break;
         }
+        byteIdx = nextByte;
+        idx++;
     }
     return idx;
 }

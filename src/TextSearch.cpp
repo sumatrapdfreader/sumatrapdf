@@ -12,8 +12,15 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 
-static void SkipWhitespaceIdx(Str text, int textLen, int& idx) {
-    for (; idx < textLen && str::IsWs((char)Utf8CodepointAt(text, idx)); idx++) {
+static void SkipWhitespace(Str text, int textLen, int& idx, int& byteIdx) {
+    while (idx < textLen) {
+        int nextByte = byteIdx;
+        int c = Utf8CodepointNext(text, nextByte);
+        if (!str::IsWs((char)c)) {
+            break;
+        }
+        byteIdx = nextByte;
+        idx++;
     }
 }
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
@@ -85,23 +92,31 @@ void TextSearch::SetText(Str text) {
     this->findTextLen = Utf8CodepointCount(this->findText);
 
     // extract anchor string (the first word or the first symbol) for faster searching
-    int firstChar = Utf8CodepointAt(searchText, 0);
     int searchTextLen = Utf8CodepointCount(searchText);
-    if (searchText && isnoncjkwordchar(firstChar)) {
-        int end = 0;
-        for (; end < searchTextLen && isnoncjkwordchar(Utf8CodepointAt(searchText, end)); end++) {
-            ;
+    int firstCharEndByte = 0;
+    int firstChar = Utf8CodepointNext(searchText, firstCharEndByte);
+    if (searchTextLen > 0 && isnoncjkwordchar(firstChar)) {
+        int end = 1;
+        int endByte = firstCharEndByte;
+        while (end < searchTextLen) {
+            int nextByte = endByte;
+            int c = Utf8CodepointNext(searchText, nextByte);
+            if (!isnoncjkwordchar(c)) {
+                break;
+            }
+            endByte = nextByte;
+            end++;
         }
-        anchor = str::Dup(Utf8SliceByCodepoints(searchText, 0, end));
+        anchor = str::Dup(Str(searchText.s, endByte));
         anchorLen = end;
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
     // cf. https://web.archive.org/web/20140201013717/http://forums.fofou.org:80/sumatrapdf/topic?id=2432337&comments=3
-    else if (searchText && (firstChar == '-' || firstChar == '\'' || firstChar == '"')) {
+    else if (searchTextLen > 0 && (firstChar == '-' || firstChar == '\'' || firstChar == '"')) {
         anchor = {};
-    } else if (searchText) {
-        anchor = str::Dup(Utf8SliceByCodepoints(searchText, 0, 1));
+    } else if (searchTextLen > 0) {
+        anchor = str::Dup(Str(searchText.s, firstCharEndByte));
         anchorLen = 1;
     } else {
         anchor = {};
@@ -200,30 +215,46 @@ static bool IsLatinS(int c) {
 // how many codepoints were consumed from each side (1:1 normally, but 1:2 / 2:1 for
 // the ß <-> ss equivalence). Safe to call at a string end (reads at most h[1]
 // / n[1], which is the NUL terminator at worst).
-static bool MatchSearchUnit(Str h, int hLen, int hIdx, Str n, int nLen, int nIdx, int& hAdv, int& nAdv) {
+static bool MatchSearchUnit(Str h, int hLen, int hIdx, int hByteIdx, Str n, int nLen, int nIdx, int nByteIdx, int& hAdv,
+                            int& nAdv, int& hByteAdv, int& nByteAdv) {
+    hAdv = nAdv = hByteAdv = nByteAdv = 0;
     if (hIdx >= hLen || nIdx >= nLen) {
         return false;
     }
-    int hc = Utf8CodepointAt(h, hIdx);
-    int nc = Utf8CodepointAt(n, nIdx);
+    int hNextByte = hByteIdx;
+    int hc = Utf8CodepointNext(h, hNextByte);
+    int nNextByte = nByteIdx;
+    int nc = Utf8CodepointNext(n, nNextByte);
     // ß in the needle matches "ss" in the text
-    if (IsSharpS(nc) && hIdx + 1 < hLen && IsLatinS(Utf8CodepointAt(h, hIdx)) &&
-        IsLatinS(Utf8CodepointAt(h, hIdx + 1))) {
-        hAdv = 2;
-        nAdv = 1;
-        return true;
+    if (IsSharpS(nc) && hIdx + 1 < hLen && IsLatinS(hc)) {
+        int hAfterNextByte = hNextByte;
+        int hNextChar = Utf8CodepointNext(h, hAfterNextByte);
+        if (IsLatinS(hNextChar)) {
+            hAdv = 2;
+            nAdv = 1;
+            hByteAdv = hAfterNextByte - hByteIdx;
+            nByteAdv = nNextByte - nByteIdx;
+            return true;
+        }
     }
     // "ss" in the needle matches ß in the text
-    if (nIdx + 1 < nLen && IsLatinS(Utf8CodepointAt(n, nIdx)) && IsLatinS(Utf8CodepointAt(n, nIdx + 1)) &&
-        IsSharpS(hc)) {
-        hAdv = 1;
-        nAdv = 2;
-        return true;
+    if (nIdx + 1 < nLen && IsLatinS(nc) && IsSharpS(hc)) {
+        int nAfterNextByte = nNextByte;
+        int nNextChar = Utf8CodepointNext(n, nAfterNextByte);
+        if (IsLatinS(nNextChar)) {
+            hAdv = 1;
+            nAdv = 2;
+            hByteAdv = hNextByte - hByteIdx;
+            nByteAdv = nAfterNextByte - nByteIdx;
+            return true;
+        }
     }
     // everything else (including ß~ß and ss~ss) matches one-to-one
     if (FoldCaseForSearch(hc) == FoldCaseForSearch(nc)) {
         hAdv = 1;
         nAdv = 1;
+        hByteAdv = hNextByte - hByteIdx;
+        nByteAdv = nNextByte - nByteIdx;
         return true;
     }
     return false;
@@ -233,28 +264,40 @@ static int StrStrFoldCase(Str haystack, int haystackLen, int startOff, Str needl
     if (!haystack || !needle) {
         return startOff;
     }
+    int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
     for (int i = startOff; i < haystackLen; i++) {
         int hIdx = i;
+        int hByteIdx = byteIdx;
         int nIdx = 0;
+        int nByteIdx = 0;
         bool isMatch = true;
         while (nIdx < needleLen) {
             if (hIdx >= haystackLen) {
                 isMatch = false;
                 break;
             }
-            int hAdv, nAdv;
-            if (!MatchSearchUnit(haystack, haystackLen, hIdx, needle, needleLen, nIdx, hAdv, nAdv)) {
+            int hAdv, nAdv, hByteAdv, nByteAdv;
+            if (!MatchSearchUnit(haystack, haystackLen, hIdx, hByteIdx, needle, needleLen, nIdx, nByteIdx, hAdv, nAdv,
+                                 hByteAdv, nByteAdv)) {
                 isMatch = false;
                 break;
             }
             hIdx += hAdv;
             nIdx += nAdv;
+            hByteIdx += hByteAdv;
+            nByteIdx += nByteAdv;
         }
         if (isMatch) {
             return i;
         }
+        Utf8CodepointNext(haystack, byteIdx);
     }
     return -1;
+}
+
+static bool StartsWithAtByte(Str text, int byteIdx, Str prefix) {
+    return text && prefix && byteIdx >= 0 && byteIdx + prefix.len <= text.len &&
+           memcmp(text.s + byteIdx, prefix.s, prefix.len) == 0;
 }
 
 static int StrRStr(Str text, int textLen, int endOff, Str needle, int needleLen) {
@@ -264,13 +307,15 @@ static int StrRStr(Str text, int textLen, int endOff, Str needle, int needleLen)
     if (needleLen <= 0 || needleLen > endOff) {
         return -1;
     }
-    for (int i = endOff - needleLen; i >= 0; i--) {
-        Str s = Utf8SliceByCodepoints(text, i, needleLen);
-        if (str::Eq(s, needle)) {
-            return i;
+    int result = -1;
+    int byteIdx = 0;
+    for (int i = 0; i <= endOff - needleLen; i++) {
+        if (StartsWithAtByte(text, byteIdx, needle)) {
+            result = i;
         }
+        Utf8CodepointNext(text, byteIdx);
     }
-    return -1;
+    return result;
 }
 
 static int StrRStrFoldCase(Str text, int textLen, int endOff, Str needle, int needleLen) {
@@ -280,26 +325,33 @@ static int StrRStrFoldCase(Str text, int textLen, int endOff, Str needle, int ne
     // ß <-> ss makes the matched length variable, so scan forward within
     // [start, end) and remember the last start position that matches.
     int result = -1;
+    int byteIdx = 0;
     for (int i = 0; i < endOff; i++) {
         int hIdx = i;
+        int hByteIdx = byteIdx;
         int nIdx = 0;
+        int nByteIdx = 0;
         bool isMatch = true;
         while (nIdx < needleLen) {
             if (hIdx >= endOff) {
                 isMatch = false;
                 break;
             }
-            int hAdv, nAdv;
-            if (!MatchSearchUnit(text, textLen, hIdx, needle, needleLen, nIdx, hAdv, nAdv)) {
+            int hAdv, nAdv, hByteAdv, nByteAdv;
+            if (!MatchSearchUnit(text, textLen, hIdx, hByteIdx, needle, needleLen, nIdx, nByteIdx, hAdv, nAdv, hByteAdv,
+                                 nByteAdv)) {
                 isMatch = false;
                 break;
             }
             hIdx += hAdv;
             nIdx += nAdv;
+            hByteIdx += hByteAdv;
+            nByteIdx += nByteAdv;
         }
         if (isMatch) {
             result = i;
         }
+        Utf8CodepointNext(text, byteIdx);
     }
     return result;
 }
@@ -313,23 +365,32 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
     int currentPageTextLen = pageTextLen;
     bool lookingAtWs;
 
-    if (matchWordStart && startOff > 0 && isWordChar(Utf8CodepointAt(pageText, startOff - 1)) &&
-        isWordChar(Utf8CodepointAt(pageText, startOff))) {
-        return notFound;
-    }
-
     if (!findText) {
         return notFound;
     }
 
     int matchIdx = 0;
+    int matchByteIdx = 0;
     int endIdx = startOff;
+    int endByteIdx = Utf8CodepointToByteIndex(currentPageText, endIdx);
+
+    if (matchWordStart && startOff > 0) {
+        int prevByteIdx = endByteIdx;
+        int prevCh = Utf8CodepointPrev(pageText, prevByteIdx);
+        int nextByteIdx = endByteIdx;
+        int curCh = Utf8CodepointNext(pageText, nextByteIdx);
+        if (isWordChar(prevCh) && isWordChar(curCh)) {
+            return notFound;
+        }
+    }
+
     while (matchIdx < findTextLen) {
         bool atPageEnd = endIdx >= currentPageTextLen;
         if (atPageEnd && currentPage >= nPages) {
             return notFound;
         }
-        int endCh = atPageEnd ? 0 : Utf8CodepointAt(currentPageText, endIdx);
+        int endNextByteIdx = endByteIdx;
+        int endCh = atPageEnd ? 0 : Utf8CodepointNext(currentPageText, endNextByteIdx);
         /* Going from page n to page n+1 is a space, too.*/
         lookingAtWs = (atPageEnd && (currentPage < nPages)) || str::IsWs((char)endCh);
         bool isMatch = false;
@@ -337,22 +398,31 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
         // consumes one codepoint and the other two (issue #933)
         int extraMatchAdv = 0;
         int extraEndAdv = 0;
-        int matchCh = Utf8CodepointAt(findText, matchIdx);
+        int matchNextByteIdx = matchByteIdx;
+        int matchCh = Utf8CodepointNext(findText, matchNextByteIdx);
         if (matchCase) {
             isMatch = matchCh == endCh;
         } else {
             isMatch = FoldCaseForSearch(matchCh) == FoldCaseForSearch(endCh);
             if (!isMatch) {
-                if (IsSharpS(matchCh) && !atPageEnd && endIdx + 1 < currentPageTextLen && IsLatinS(endCh) &&
-                    IsLatinS(Utf8CodepointAt(currentPageText, endIdx + 1))) {
-                    // ß in the search text matches "ss" in the page
-                    isMatch = true;
-                    extraEndAdv = 1;
-                } else if (matchIdx + 1 < findTextLen && IsLatinS(Utf8CodepointAt(findText, matchIdx)) &&
-                           IsLatinS(Utf8CodepointAt(findText, matchIdx + 1)) && IsSharpS(endCh)) {
-                    // "ss" in the search text matches ß in the page
-                    isMatch = true;
-                    extraMatchAdv = 1;
+                if (IsSharpS(matchCh) && !atPageEnd && endIdx + 1 < currentPageTextLen && IsLatinS(endCh)) {
+                    int endAfterNextByteIdx = endNextByteIdx;
+                    int nextEndCh = Utf8CodepointNext(currentPageText, endAfterNextByteIdx);
+                    if (IsLatinS(nextEndCh)) {
+                        // ß in the search text matches "ss" in the page
+                        isMatch = true;
+                        extraEndAdv = 1;
+                        endNextByteIdx = endAfterNextByteIdx;
+                    }
+                } else if (matchIdx + 1 < findTextLen && IsLatinS(matchCh) && IsSharpS(endCh)) {
+                    int matchAfterNextByteIdx = matchNextByteIdx;
+                    int nextMatchCh = Utf8CodepointNext(findText, matchAfterNextByteIdx);
+                    if (IsLatinS(nextMatchCh)) {
+                        // "ss" in the search text matches ß in the page
+                        isMatch = true;
+                        extraMatchAdv = 1;
+                        matchNextByteIdx = matchAfterNextByteIdx;
+                    }
                 }
             }
         }
@@ -376,42 +446,51 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
             return notFound;
         }
         // consume the extra char on whichever side of a ß <-> ss match is longer
-        matchIdx += extraMatchAdv;
-        endIdx += extraEndAdv;
-        matchIdx++;
+        int matchAdv = 1 + extraMatchAdv;
+        matchByteIdx = matchNextByteIdx;
+        matchIdx += matchAdv;
         // We might get here either ...
         if (!atPageEnd && endCh) {
             // ... because there's a genuine match -> consider next character in next loop iteration
-            endIdx++;
+            int endAdv = 1 + extraEndAdv;
+            endByteIdx = endNextByteIdx;
+            endIdx += endAdv;
         } else {
             // ... or because we were looking at whitespace in the pattern and we were at a page break
             // -> skip to next page
             ++currentPage;
             currentPageText = engine->GetTextForPage(currentPage, &currentPageTextLen);
             endIdx = 0;
+            endByteIdx = 0;
         }
         // treat "??" and "? ?" differently, since '?' could have been a word
         // character that's just missing an encoding (and '?' is the replacement
         // character); cf. https://code.google.com/archive/p/sumatrapdf/issues/1574
-        if (matchIdx < findTextLen &&
-            ((!isnoncjkwordchar(Utf8CodepointAt(findText, matchIdx - 1)) &&
-              (Utf8CodepointAt(findText, matchIdx - 1) != '?' || Utf8CodepointAt(findText, matchIdx) != '?')) ||
-             (lookingAtWs && str::IsWs((char)Utf8CodepointAt(findText, matchIdx - 1))))) {
-            SkipWhitespaceIdx(findText, findTextLen, matchIdx);
-            SkipWhitespaceIdx(currentPageText, currentPageTextLen, endIdx);
+        int prevMatchByteIdx = matchByteIdx;
+        int prevMatchCh = Utf8CodepointPrev(findText, prevMatchByteIdx);
+        int curMatchCh = Utf8CodepointAtByte(findText, matchByteIdx);
+        if (matchIdx < findTextLen && ((!isnoncjkwordchar(prevMatchCh) && (prevMatchCh != '?' || curMatchCh != '?')) ||
+                                       (lookingAtWs && str::IsWs((char)prevMatchCh)))) {
+            SkipWhitespace(findText, findTextLen, matchIdx, matchByteIdx);
+            SkipWhitespace(currentPageText, currentPageTextLen, endIdx, endByteIdx);
             while (endIdx >= currentPageTextLen && currentPage < nPages) {
                 // treat page break as whitespace, too
                 ++currentPage;
                 currentPageText = engine->GetTextForPage(currentPage, &currentPageTextLen);
                 endIdx = 0;
-                SkipWhitespaceIdx(currentPageText, currentPageTextLen, endIdx);
+                endByteIdx = 0;
+                SkipWhitespace(currentPageText, currentPageTextLen, endIdx, endByteIdx);
             }
         }
     }
-    if (matchWordEnd && endIdx > 0 && endIdx < currentPageTextLen &&
-        isWordChar(Utf8CodepointAt(currentPageText, endIdx - 1)) &&
-        isWordChar(Utf8CodepointAt(currentPageText, endIdx))) {
-        return notFound;
+    if (matchWordEnd && endIdx > 0 && endIdx < currentPageTextLen) {
+        int prevByteIdx = endByteIdx;
+        int prevCh = Utf8CodepointPrev(currentPageText, prevByteIdx);
+        int nextByteIdx = endByteIdx;
+        int curCh = Utf8CodepointNext(currentPageText, nextByteIdx);
+        if (isWordChar(prevCh) && isWordChar(curCh)) {
+            return notFound;
+        }
     }
 
     return {currentPage, endIdx};
@@ -421,10 +500,12 @@ static int StrStr(Str haystack, int haystackLen, int startOff, Str needle, int n
     if (!haystack || str::IsEmpty(needle)) {
         return -1;
     }
+    int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
     for (int i = startOff; i <= haystackLen - needleLen; i++) {
-        if (str::Eq(Utf8SliceByCodepoints(haystack, i, needleLen), needle)) {
+        if (StartsWithAtByte(haystack, byteIdx, needle)) {
             return i;
         }
+        Utf8CodepointNext(haystack, byteIdx);
     }
     return -1;
 }

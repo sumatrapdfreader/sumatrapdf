@@ -228,18 +228,32 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
 // returns the new start position if valid grouping found, otherwise returns curStart
 static int ExtendBackAcrossCommaGroups(Str text, int curStart) {
     int pos = curStart;
-    while (pos >= 2 && Utf8CodepointAt(text, pos - 1) == ',') {
+    int posByte = Utf8CodepointToByteIndex(text, pos);
+    while (pos >= 2) {
+        int commaByte = posByte;
+        int c = Utf8CodepointPrev(text, commaByte);
+        if (c != ',') {
+            break;
+        }
         // count digits before the comma
         int j = pos - 2;
+        int jByte = commaByte;
         int nDigits = 0;
-        while (j >= 0 && isDigit(Utf8CodepointAt(text, j))) {
+        while (j >= 0) {
+            int prevByte = jByte;
+            int digit = Utf8CodepointPrev(text, prevByte);
+            if (!isDigit(digit)) {
+                break;
+            }
             nDigits++;
+            jByte = prevByte;
             j--;
         }
         if (nDigits == 0) {
             break;
         }
         pos = j + 1;
+        posByte = jByte;
     }
     return pos;
 }
@@ -248,18 +262,32 @@ static int ExtendBackAcrossCommaGroups(Str text, int curStart) {
 // returns the new end position
 static int ExtendForwardAcrossCommaGroups(Str text, int textLen, int curEnd) {
     int pos = curEnd;
-    while (pos < textLen && Utf8CodepointAt(text, pos) == ',') {
+    int posByte = Utf8CodepointToByteIndex(text, pos);
+    while (pos < textLen) {
+        int commaEndByte = posByte;
+        int c = Utf8CodepointNext(text, commaEndByte);
+        if (c != ',') {
+            break;
+        }
         // count digits after the comma
         int j = pos + 1;
+        int jByte = commaEndByte;
         int nDigits = 0;
-        while (j < textLen && isDigit(Utf8CodepointAt(text, j))) {
+        while (j < textLen) {
+            int nextByte = jByte;
+            int digit = Utf8CodepointNext(text, nextByte);
+            if (!isDigit(digit)) {
+                break;
+            }
             nDigits++;
+            jByte = nextByte;
             j++;
         }
         if (nDigits == 0) {
             break;
         }
         pos = j;
+        posByte = jByte;
     }
     return pos;
 }
@@ -271,14 +299,20 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
 
     bool isAllDigits = true;
     int c = 0;
-    for (; i > 0; i--) {
-        c = Utf8CodepointAt(text, i - 1);
+    int iByte = Utf8CodepointToByteIndex(text, i);
+    int cByte = iByte;
+    for (; i > 0;) {
+        int prevByte = iByte;
+        c = Utf8CodepointPrev(text, prevByte);
         if (!isWordChar(c)) {
+            cByte = prevByte;
             break;
         }
         if (!isDigit(c)) {
             isAllDigits = false;
         }
+        iByte = prevByte;
+        i--;
     }
     int wordStart = i;
     int maybeNumberStart = i;
@@ -286,10 +320,17 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
     if (isAllDigits && (c == '.' || c == ',')) {
         // walk backward across a pattern like "1,234." or "1,234,567,"
         int j = i - 2;
+        int jByte = cByte;
         // first skip one group of digits (before the separator we stopped at)
         nDigits = 0;
-        while (j >= 0 && isDigit(Utf8CodepointAt(text, j))) {
+        while (j >= 0) {
+            int prevByte = jByte;
+            int digit = Utf8CodepointPrev(text, prevByte);
+            if (!isDigit(digit)) {
+                break;
+            }
             nDigits++;
+            jByte = prevByte;
             j--;
         }
         if (nDigits > 0) {
@@ -301,14 +342,17 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
         }
     }
 
-    for (; i < textLen; i++) {
-        c = Utf8CodepointAt(text, i);
+    for (; i < textLen;) {
+        int nextByte = iByte;
+        c = Utf8CodepointNext(text, nextByte);
         if (!isWordChar(c)) {
             break;
         }
         if (!isDigit(c)) {
             isAllDigits = false;
         }
+        iByte = nextByte;
+        i++;
     }
 
     // try to select numbers with commas and decimal points
@@ -318,11 +362,20 @@ void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordSta
         // extend forward across comma groups
         wordEnd = ExtendForwardAcrossCommaGroups(text, textLen, wordEnd);
         // extend forward across decimal point + digits
-        if (wordEnd < textLen && Utf8CodepointAt(text, wordEnd) == '.') {
+        int wordEndByte = Utf8CodepointToByteIndex(text, wordEnd);
+        int dotEndByte = wordEndByte;
+        if (wordEnd < textLen && Utf8CodepointNext(text, dotEndByte) == '.') {
             int j = wordEnd + 1;
+            int jByte = dotEndByte;
             nDigits = 0;
-            while (j < textLen && isDigit(Utf8CodepointAt(text, j))) {
+            while (j < textLen) {
+                int nextByte = jByte;
+                int digit = Utf8CodepointNext(text, nextByte);
+                if (!isDigit(digit)) {
+                    break;
+                }
                 nDigits++;
+                jByte = nextByte;
                 j++;
             }
             if (nDigits > 0) {
@@ -351,10 +404,6 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     SelectUpTo(pageNo, wordEnd);
 }
 
-static bool IsLineBreakGlyph(Str text, int textLen, const Rect* coords, int idx) {
-    return idx >= 0 && idx < textLen && Utf8CodepointAt(text, idx) == '\n' && !coords[idx].x && !coords[idx].dx;
-}
-
 void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     int i = FindClosestGlyph(this, pageNo, x, y);
     if (i < 0) {
@@ -367,12 +416,27 @@ void TextSelection::SelectLineAt(int pageNo, double x, double y) {
     // spaces with FZ_STEXT_ACCURATE_BBOXES) can also have empty boxes and must not
     // be treated as line ends (issue #5712).
     int lineStart = i;
-    while (lineStart > 0 && !IsLineBreakGlyph(text, textLen, coords, lineStart - 1)) {
+    int lineStartByte = Utf8CodepointToByteIndex(text, lineStart);
+    while (lineStart > 0) {
+        int prevByte = lineStartByte;
+        int c = Utf8CodepointPrev(text, prevByte);
+        int prevGlyph = lineStart - 1;
+        if (c == '\n' && !coords[prevGlyph].x && !coords[prevGlyph].dx) {
+            break;
+        }
         lineStart--;
+        lineStartByte = prevByte;
     }
     int lineEnd = i;
-    while (lineEnd < textLen && !IsLineBreakGlyph(text, textLen, coords, lineEnd)) {
+    int lineEndByte = Utf8CodepointToByteIndex(text, lineEnd);
+    while (lineEnd < textLen) {
+        int nextByte = lineEndByte;
+        int c = Utf8CodepointNext(text, nextByte);
+        if (c == '\n' && !coords[lineEnd].x && !coords[lineEnd].dx) {
+            break;
+        }
         lineEnd++;
+        lineEndByte = nextByte;
     }
     StartAt(pageNo, lineStart);
     SelectUpTo(pageNo, lineEnd);

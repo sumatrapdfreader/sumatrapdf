@@ -580,10 +580,13 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
             continue;
         }
         int mid = i + wordLen / 2;
+        int midByte = Utf8CodepointToByteIndex(text, mid);
         for (; mid < textLen && !coords[mid].x && !coords[mid].dx; mid++) {
-            if (Utf8CodepointAt(text, mid) == '\n') {
+            int nextByte = midByte;
+            if (Utf8CodepointNext(text, nextByte) == '\n') {
                 return false;
             }
+            midByte = nextByte;
         }
         if (mid >= textLen) {
             return false;
