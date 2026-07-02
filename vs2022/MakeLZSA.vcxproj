@@ -449,7 +449,7 @@
     <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\base\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\base\Str.h" />
-    <ClInclude Include="..\src\base\StrFormat.h" />
+    <ClInclude Include="..\src\base\StrFormatParse.h" />
     <ClInclude Include="..\src\base\StrQueue.h" />
     <ClInclude Include="..\src\base\StrVec.h" />
     <ClInclude Include="..\src\base\Strconv.h" />
@@ -489,7 +489,7 @@
     <ClCompile Include="..\src\base\Log.cpp" />
     <ClCompile Include="..\src\base\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\base\Str.cpp" />
-    <ClCompile Include="..\src\base\StrFormat.cpp" />
+    <ClCompile Include="..\src\base\StrFormatParse.cpp" />
     <ClCompile Include="..\src\base\StrQueue.cpp" />
     <ClCompile Include="..\src\base\StrVec.cpp" />
     <ClCompile Include="..\src\base\Strconv.cpp" />

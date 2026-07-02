@@ -87,7 +87,7 @@
     <ClInclude Include="..\src\base\Str.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\StrFormat.h">
+    <ClInclude Include="..\src\base\StrFormatParse.h">
       <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="..\src\base\StrQueue.h">
@@ -184,7 +184,7 @@
     <ClCompile Include="..\src\base\Str.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\StrFormat.cpp">
+    <ClCompile Include="..\src\base\StrFormatParse.cpp">
       <Filter>base</Filter>
     </ClCompile>
     <ClCompile Include="..\src\base\StrQueue.cpp">
