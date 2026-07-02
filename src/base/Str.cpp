@@ -358,30 +358,30 @@ bool EqIS(Str s1, Str s2) {
     return i1 >= s1.len && i2 >= s2.len;
 }
 
-bool EqN(Str s1, Str s2, size_t len) {
+bool EqN(Str s1, Str s2, int len) {
     if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2 || len == 0) {
         return len == 0;
     }
-    if ((size_t)s1.len < len || (size_t)s2.len < len) {
+    if (s1.len < len || s2.len < len) {
         return false;
     }
     return memeq(s1.s, s2.s, len);
 }
 
-bool EqNI(Str s1, Str s2, size_t len) {
+bool EqNI(Str s1, Str s2, int len) {
     if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2 || len == 0) {
         return len == 0;
     }
-    if ((size_t)s1.len < len || (size_t)s2.len < len) {
+    if (s1.len < len || s2.len < len) {
         return false;
     }
-    for (size_t i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
         if (tolower(s1.s[i]) != tolower(s2.s[i])) {
             return false;
         }
@@ -824,11 +824,11 @@ bool NextLine(Str s, Str& line, Str& rest) {
 /* replace in <str> the chars from <oldChars> with their equivalents
    from <newChars> (similar to UNIX's tr command)
    Returns the number of replaced characters. */
-size_t TransCharsInPlace(Str str, Str oldChars, Str newChars) {
+int TransCharsInPlace(Str str, Str oldChars, Str newChars) {
     if (!str) {
         return 0;
     }
-    size_t findCount = 0;
+    int findCount = 0;
     for (int i = 0; i < str.len; i++) {
         int idx = str::IndexOfChar(oldChars, str.s[i]);
         if (idx >= 0) {
@@ -842,7 +842,7 @@ size_t TransCharsInPlace(Str str, Str oldChars, Str newChars) {
 
 // Trim whitespace characters, in-place, inside s.
 // Returns number of trimmed characters.
-size_t TrimWSInPlace(Str s, TrimOpt opt) {
+int TrimWSInPlace(Str s, TrimOpt opt) {
     if (str::IsNull(s)) {
         return 0;
     }
@@ -862,7 +862,7 @@ size_t TrimWSInPlace(Str s, TrimOpt opt) {
     if (end < s.len) {
         s.s[end] = 0;
     }
-    size_t trimmed = (size_t)start + (size_t)(s.len - end);
+    int trimmed = start + (s.len - end);
     if (start != 0) {
         memmove(s.s, s.s + start, (size_t)(end - start) + 1);
     }
@@ -872,7 +872,7 @@ size_t TrimWSInPlace(Str s, TrimOpt opt) {
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
-size_t NormalizeWSInPlace(Str s) {
+int NormalizeWSInPlace(Str s) {
     if (!s) {
         return 0;
     }
@@ -894,7 +894,7 @@ size_t NormalizeWSInPlace(Str s) {
     }
     s.s[dst] = '\0';
 
-    return (size_t)(s.len - dst);
+    return s.len - dst;
 }
 
 static bool isNl(char c) {
@@ -902,7 +902,7 @@ static bool isNl(char c) {
 }
 
 // replaces '\r\n' and '\r' with just '\n' and removes empty lines
-size_t NormalizeNewlinesInPlace(Str s, Str endExclusive) {
+int NormalizeNewlinesInPlace(Str s, Str endExclusive) {
     if (!s) {
         return 0;
     }
@@ -933,20 +933,20 @@ size_t NormalizeNewlinesInPlace(Str s, Str endExclusive) {
         dst--;
         s.s[dst] = 0;
     }
-    return (size_t)dst;
+    return dst;
 }
 
-size_t NormalizeNewlinesInPlace(Str s) {
+int NormalizeNewlinesInPlace(Str s) {
     return NormalizeNewlinesInPlace(s, Str(s.s + s.len, 0));
 }
 
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
-size_t RemoveCharsInPlace(Str str, Str toRemove) {
+int RemoveCharsInPlace(Str str, Str toRemove) {
     if (!str) {
         return 0;
     }
-    size_t removed = 0;
+    int removed = 0;
     int dst = 0;
     for (int src = 0; src < str.len; src++) {
         char c = str.s[src];
@@ -965,11 +965,11 @@ size_t RemoveCharsInPlace(Str str, Str toRemove) {
 } // namespace str
 namespace wstr {
 
-size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
+int RemoveCharsInPlace(WStr str, WStr toRemove) {
     if (!str) {
         return 0;
     }
-    size_t removed = 0;
+    int removed = 0;
     int dst = 0;
     for (int src = 0; src < str.len; src++) {
         WCHAR c = str.s[src];
@@ -1993,14 +1993,14 @@ bool EqI(WStr s1, WStr s2) {
     return 0 == _wcsnicmp(s1.s, s2.s, (size_t)s1.len);
 }
 
-bool EqN(WStr s1, WStr s2, size_t len) {
+bool EqN(WStr s1, WStr s2, int len) {
     if (s1.s == s2.s) {
         return true;
     }
     if (!s1 || !s2) {
         return false;
     }
-    return 0 == wcsncmp(s1.s, s2.s, len);
+    return 0 == wcsncmp(s1.s, s2.s, (size_t)len);
 }
 
 bool IsNull(const WStr& s) {
@@ -2122,11 +2122,11 @@ WStr ToLower(WStr s) {
     return ToLowerInPlace(s2);
 }
 
-size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
+int TransCharsInPlace(WStr str, WStr oldChars, WStr newChars) {
     if (!str) {
         return 0;
     }
-    size_t nReplaced = 0;
+    int nReplaced = 0;
     for (int i = 0; i < str.len; i++) {
         int idx = wstr::IndexOfChar(oldChars, str.s[i]);
         if (idx >= 0) {
@@ -2165,7 +2165,7 @@ WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
-size_t NormalizeWSInPlace(WStr s) {
+int NormalizeWSInPlace(WStr s) {
     if (!s) {
         return 0;
     }
@@ -2189,7 +2189,7 @@ size_t NormalizeWSInPlace(WStr s) {
     }
     s.s[dst] = L'\0';
 
-    return (size_t)(src - dst);
+    return src - dst;
 }
 
 } // namespace wstr

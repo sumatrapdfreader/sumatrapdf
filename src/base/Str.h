@@ -67,8 +67,8 @@ TempWStr JoinTemp(WStr s1, WStr s2, WStr s3 = {});
 bool Eq(Str s1, Str s2);
 bool EqI(Str s1, Str s2);
 bool EqIS(Str s1, Str s2);
-bool EqN(Str s1, Str s2, size_t len);
-bool EqNI(Str s1, Str s2, size_t len);
+bool EqN(Str s1, Str s2, int len);
+bool EqNI(Str s1, Str s2, int len);
 bool IsNull(const Str& s);
 bool IsEmpty(Str s);
 bool StartsWith(Str str, Str prefix);
@@ -117,14 +117,14 @@ int VsnprintfUtf8(Str buf, const char* fmt, va_list args);
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith);
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith);
 
-size_t TrimWSInPlace(Str s, TrimOpt opt);
+int TrimWSInPlace(Str s, TrimOpt opt);
 
-size_t TransCharsInPlace(Str str, Str oldChars, Str newChars);
+int TransCharsInPlace(Str str, Str oldChars, Str newChars);
 
-size_t NormalizeWSInPlace(Str str);
-size_t NormalizeNewlinesInPlace(Str s, Str endExclusive);
-size_t NormalizeNewlinesInPlace(Str s);
-size_t RemoveCharsInPlace(Str str, Str toRemove);
+int NormalizeWSInPlace(Str str);
+int NormalizeNewlinesInPlace(Str s, Str endExclusive);
+int NormalizeNewlinesInPlace(Str s);
+int RemoveCharsInPlace(Str str, Str toRemove);
 
 int BufSet(Str dst, Str src);
 int BufAppend(Str dst, Str s);
@@ -159,7 +159,7 @@ WStr Join(WStr, WStr, WStr s3 = {});
 WStr Join(Arena*, WStr, WStr, WStr s3);
 bool Eq(WStr s1, WStr s2);
 bool EqI(WStr s1, WStr s2);
-bool EqN(WStr s1, WStr s2, size_t len);
+bool EqN(WStr s1, WStr s2, int len);
 bool IsNull(const WStr& s);
 bool IsEmpty(WStr s);
 bool StartsWith(WStr str, WStr prefix);
@@ -169,8 +169,8 @@ bool EndsWithI(WStr txt, WStr end);
 WStr ToLower(WStr s);
 WStr ToLowerInPlace(WStr s);
 int BufSet(WStr dst, WStr src);
-size_t NormalizeWSInPlace(WStr str);
-size_t RemoveCharsInPlace(WStr str, WStr toRemove);
+int NormalizeWSInPlace(WStr str);
+int RemoveCharsInPlace(WStr str, WStr toRemove);
 int IndexOfChar(WStr s, WCHAR c);
 bool ContainsChar(WStr s, WCHAR c);
 WStr SliceFromChar(WStr str, WCHAR c);
@@ -178,7 +178,7 @@ WStr FindFrom(WStr str, WStr find);
 bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
-size_t TransCharsInPlace(WStr str, WStr oldChars, WStr newChars);
+int TransCharsInPlace(WStr str, WStr oldChars, WStr newChars);
 WStr Replace(WStr s, WStr toReplace, WStr replaceWith);
 
 } // namespace wstr

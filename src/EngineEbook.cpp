@@ -637,10 +637,10 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
     DrawInstr* baseAnchor = nullptr;
     int basePageNo = 0;
     if (hash && hash.s > name.s) {
-        size_t base_len = (size_t)(hash.s - name.s - 1);
+        int base_len = (int)(hash.s - name.s - 1);
         for (size_t i = 0; i < baseAnchors.size(); i++) {
             DrawInstr* anchor = baseAnchors.at(i);
-            if (anchor && base_len == (size_t)anchor->str.len && str::EqNI(name, anchor->str, base_len)) {
+            if (anchor && base_len == anchor->str.len && str::EqNI(name, anchor->str, base_len)) {
                 baseAnchor = anchor;
                 basePageNo = (int)i + 1;
                 break;
@@ -648,7 +648,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
         }
     }
 
-    size_t id_len = id.len;
+    int id_len = id.len;
     for (size_t i = 0; i < anchors.size(); i++) {
         PageAnchor* anchor = &anchors.at(i);
         if (baseAnchor) {
@@ -658,7 +658,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
             continue;
         }
         // note: at least CHM treats URLs as case-independent
-        if (id_len == (size_t)anchor->instr->str.len && str::EqNI(id, anchor->instr->str, id_len)) {
+        if (id_len == anchor->instr->str.len && str::EqNI(id, anchor->instr->str, id_len)) {
             RectF rect(0, anchor->instr->bbox.y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
             return NewSimpleDest(anchor->pageNo, rect);
