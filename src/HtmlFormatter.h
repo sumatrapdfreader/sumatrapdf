@@ -43,6 +43,9 @@ enum class DrawInstrType {
     LinkEnd,
     // marks an anchor an internal link might refer to
     Anchor,
+    // an Anchor that marks the beginning of a sub-document within
+    // a merged document (str is the sub-document's path)
+    PageMarkerAnchor,
     // same as InstrString but for RTL text
     RtlString,
 };
@@ -70,6 +73,7 @@ struct DrawInstr {
     static DrawInstr FixedSpace(float dx);
     static DrawInstr LinkStart(::Str s);
     static DrawInstr Anchor(::Str s, RectF bbox);
+    static DrawInstr PageMarkerAnchor(::Str s, RectF bbox);
 };
 
 class CssPullParser;
@@ -137,10 +141,11 @@ struct HtmlFormatterArgs {
 
     float fontSize = 0;
 
-    /* Most of the time string DrawInstr point to original html text
-       that is read-only and outlives us. Sometimes (e.g. when resolving
-       html entities) we need a modified text. This allocator is
-       used to allocate this text. */
+    /* Strings stored in DrawInstr must outlive the formatter (they are
+       used for the lifetime of the engine). Strings that don't point into
+       the original html text (e.g. resolved html entities or attribute
+       values, which are owned by the gumbo parse tree destroyed with the
+       formatter) are copied into this allocator. */
     Arena* textAllocator = nullptr;
 
     mui::TextRenderMethod textRenderMethod = mui::TextRenderMethod::Gdiplus;

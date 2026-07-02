@@ -105,7 +105,7 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
         }
     }
     if (needAlt && (attr = t->GetAttrByName(StrL("alt"))) != nullptr) {
-        HandleText(attr->val);
+        HandleText(str::Dup(textAllocator, attr->val));
     }
 }
 
@@ -153,7 +153,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName(StrL("alt"))) != nullptr) {
-        HandleText(attr->val);
+        HandleText(str::Dup(textAllocator, attr->val));
     }
 }
 
@@ -164,7 +164,9 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
-        currPage->instructions.Append(DrawInstr::Anchor(attr->val, bbox));
+        // attr->val is owned by the gumbo parse tree which doesn't outlive
+        // the formatter, so copy it into textAllocator
+        currPage->instructions.Append(DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
         str::ReplaceWithCopy(&pagePath, attr->val);
         // reset CSS style rules for the new document
         styleRules.Reset();
@@ -297,7 +299,8 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         HandleTagHx(&tok);
         HandleAnchorAttr(t);
         if (!isSubtitle && t->IsStartTag()) {
-            TempStr link = fmt(FB2_TOC_ENTRY_MARK "%d", ++titleCount);
+            // the anchor must outlive the formatter, so not a TempStr
+            Str link = str::Dup(textAllocator, fmt(FB2_TOC_ENTRY_MARK "%d", ++titleCount));
             currPage->instructions.Append(DrawInstr::Anchor(link, Gdiplus::RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {
@@ -351,7 +354,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName(StrL("alt"))) != nullptr) {
-        HandleText(attr->val);
+        HandleText(str::Dup(textAllocator, attr->val));
     }
 }
 

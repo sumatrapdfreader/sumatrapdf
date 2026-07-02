@@ -279,11 +279,11 @@ bool EngineEbook::ExtractPageAnchors() {
 
         for (int k = 0; k < len(*pageInstrs); k++) {
             DrawInstr* i = &pageInstrs->at(k);
-            if (DrawInstrType::Anchor != i->type) {
+            if (DrawInstrType::Anchor != i->type && DrawInstrType::PageMarkerAnchor != i->type) {
                 continue;
             }
             anchors.Append(PageAnchor(i, pageNo));
-            if (k < 2 && str::StartsWith(i->str.s + i->str.len, "\" page_marker />")) {
+            if (k < 2 && DrawInstrType::PageMarkerAnchor == i->type) {
                 baseAnchor = i;
             }
         }
@@ -1327,7 +1327,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
         needAlt = !img || !EmitImage(img);
     }
     if (needAlt && (attr = t->GetAttrByName(StrL("alt"))) != nullptr) {
-        HandleText(attr->val);
+        HandleText(str::Dup(textAllocator, attr->val));
     }
 }
 
@@ -1338,7 +1338,9 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
     }
     if (attr) {
         Gdiplus::RectF bbox(0, currY, pageDx, 0);
-        currPage->instructions.Append(DrawInstr::Anchor(attr->val, bbox));
+        // attr->val is owned by the gumbo parse tree which doesn't outlive
+        // the formatter, so copy it into textAllocator
+        currPage->instructions.Append(DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr->val), bbox));
         str::ReplaceWithCopy(&pagePath, attr->val);
         // reset CSS style rules for the new document
         styleRules.Reset();

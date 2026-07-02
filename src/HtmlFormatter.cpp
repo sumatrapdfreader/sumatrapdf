@@ -102,6 +102,13 @@ DrawInstr DrawInstr::Anchor(::Str s, RectF bbox) {
     return di;
 }
 
+DrawInstr DrawInstr::PageMarkerAnchor(::Str s, RectF bbox) {
+    DrawInstr di(DrawInstrType::PageMarkerAnchor);
+    di.str = s;
+    di.bbox = bbox;
+    return di;
+}
+
 // parses size in the form "1em", "3pt" or "15px"
 static void ParseSizeWithUnit(Str s, float* size, StyleRule::Unit* unit) {
     if (!str::IsNull(str::Parse(s, "%fem", size))) {
@@ -808,7 +815,9 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     RectF bbox(0, currY, pageDx, 0);
     // append at the start of the line to prevent the anchor
     // from being flushed to the next page (with wrong currY value)
-    currPage->instructions.Append(DrawInstr::Anchor(attr->val, bbox));
+    // attr->val is owned by the gumbo parse tree which doesn't outlive
+    // the formatter, so copy it into textAllocator
+    currPage->instructions.Append(DrawInstr::Anchor(str::Dup(textAllocator, attr->val), bbox));
 }
 
 void HtmlFormatter::HandleDirAttr(HtmlToken* t) {
@@ -916,7 +925,9 @@ bool HtmlFormatter::HandleTagA(HtmlToken* t, Str linkAttr, Str attrNS) {
     if (t->IsStartTag() && !currLinkIdx) {
         AttrInfo* attr = attrNS ? t->GetAttrByNameNS(linkAttr, attrNS) : t->GetAttrByName(linkAttr);
         if (attr) {
-            AppendInstr(DrawInstr::LinkStart(attr->val));
+            // attr->val is owned by the gumbo parse tree which doesn't
+            // outlive the formatter, so copy it into textAllocator
+            AppendInstr(DrawInstr::LinkStart(str::Dup(textAllocator, attr->val)));
             currLinkIdx = len(currLineInstr);
             return true;
         }
@@ -1508,7 +1519,8 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         } else if (DrawInstrType::LinkEnd == i.type) {
             // TODO: set text color back again
         } else if ((DrawInstrType::ElasticSpace == i.type) || (DrawInstrType::FixedSpace == i.type) ||
-                   (DrawInstrType::SetFont == i.type) || (DrawInstrType::Anchor == i.type)) {
+                   (DrawInstrType::SetFont == i.type) || (DrawInstrType::Anchor == i.type) ||
+                   (DrawInstrType::PageMarkerAnchor == i.type)) {
             // ignore
         } else {
             ReportIf(true);
