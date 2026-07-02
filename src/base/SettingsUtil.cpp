@@ -279,6 +279,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
             } else {
                 EscapeStr(out, serialized);
             }
+            str::Free(serialized);
             // prevent empty arrays from being replaced with the defaults
             return len(**(Vec<Str>**)fieldPtr) > 0 || field.value != 0;
         }
