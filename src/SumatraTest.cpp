@@ -140,11 +140,10 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
     if (!engine) {
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
     } else {
-        TempWStr needleW = ToWStrTemp(needle);
         auto ts = new TextSearch(engine);
         ts->SetDirection(TextSearch::Direction::Forward);
         ts->SetMatchCase(false);
-        TextSel* sel = ts->FindFirst(1, needleW);
+        TextSel* sel = ts->FindFirst(1, needle);
         if (sel && sel->len > 0) {
             out.Append(fmt("FOUND needle=%s page=%d\n", needle, sel->pages[0]));
         } else {
@@ -505,8 +504,7 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
 
     // mimic a prior find: the typed (lowercase) text becomes textSearch's
     // lastText, so SetLastResult() inside GoToFindMatch() sees a text change
-    TempWStr typedW = ToWStrTemp(typed);
-    dm->textSearch->SetText(typedW);
+    dm->textSearch->SetText(typed);
 
     // make sure the match isn't already on screen, so navigating to it is
     // observable: scroll back to the first page and clear any selection

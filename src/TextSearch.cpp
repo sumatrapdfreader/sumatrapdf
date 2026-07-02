@@ -59,11 +59,6 @@ int TextSearch::GetSearchHitStartPageNo() const {
     return searchHitStartAt;
 }
 
-void TextSearch::SetText(WStr text) {
-    TempStr utf8 = ToUtf8Temp(text);
-    SetText(utf8);
-}
-
 void TextSearch::SetText(Str text) {
     // search text starting with a single space enables the 'Match word start'
     // and search text ending in a single space enables the 'Match word end' option
@@ -541,7 +536,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
     return false;
 }
 
-TextSel* TextSearch::FindFirst(int page, WStr text) {
+TextSel* TextSearch::FindFirst(int page, Str text) {
     SetText(text);
 
     if (FindStartingAtPage(page)) {
@@ -552,7 +547,7 @@ TextSel* TextSearch::FindFirst(int page, WStr text) {
 
 // search only `pageNo` (no wrapping to other pages), mirroring the per-page step
 // inside FindStartingAtPage. Used for page-constrained search (issue #3085)
-TextSel* TextSearch::FindFirstOnPage(int pageNo, WStr text) {
+TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     SetText(text);
     if (str::IsEmpty(findText) || pageNo < 1 || pageNo > nPages) {
         return nullptr;

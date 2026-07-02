@@ -343,17 +343,17 @@ struct FindThreadData {
     TextSearch::Direction direction = TextSearch::Direction::Forward;
     bool wasModified = false;
     bool showProgress = false;
-    WStr text;
+    Str text;
     HANDLE thread = nullptr;
 
     FindThreadData(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified) {
         this->win = win;
         this->direction = direction;
-        this->text = ToWStr(text);
+        this->text = str::Dup(text);
         this->wasModified = wasModified;
     }
     ~FindThreadData() {
-        wstr::Free(text);
+        str::Free(text);
         CloseHandle(thread);
     }
 
@@ -505,7 +505,7 @@ static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
 struct CountThreadData {
     MainWindow* win = nullptr;
     EngineBase* engine = nullptr; // AddRef'd by the caller, released by the thread
-    WStr text;
+    Str text;
     bool matchCase = false;
     bool matchWholeWord = false;
     bool wantMatchList = false; // build findMatches (for all-match painting or the results list)
@@ -513,11 +513,11 @@ struct CountThreadData {
     LONG epoch = 0;
     HANDLE thread = nullptr;
 
-    CountThreadData(MainWindow* win, EngineBase* engine, WStr text, bool matchCase, bool matchWholeWord,
+    CountThreadData(MainWindow* win, EngineBase* engine, Str text, bool matchCase, bool matchWholeWord,
                     bool wantMatchList, bool wantSnippets, LONG epoch) {
         this->win = win;
         this->engine = engine;
-        this->text = wstr::Dup(text);
+        this->text = str::Dup(text);
         this->matchCase = matchCase;
         this->matchWholeWord = matchWholeWord;
         this->wantMatchList = wantMatchList;
@@ -525,7 +525,7 @@ struct CountThreadData {
         this->epoch = epoch;
     }
     ~CountThreadData() {
-        wstr::Free(text);
+        str::Free(text);
         CloseHandle(thread);
     }
 };
@@ -552,7 +552,7 @@ struct CountEndTaskData {
     }
 };
 
-static void StartFindCount(MainWindow* win, WStr text, bool matchCase, bool matchWholeWord);
+static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool matchWholeWord);
 
 static void CountEndTask(CountEndTaskData* d) {
     AutoDelete delData(d);
@@ -567,7 +567,7 @@ static void CountEndTask(CountEndTaskData* d) {
     win->findCountThread = nullptr;
     if (win->findCountEpoch == ctd->epoch) {
         // not canceled: install the freshly built cache (steal text from ctd)
-        wstr::FreePtr(&win->findCountText);
+        str::FreePtr(&win->findCountText);
         win->findCountText = ctd->text;
         ctd->text = {};
         win->findCountMatchCase = ctd->matchCase;
@@ -593,10 +593,10 @@ static void CountEndTask(CountEndTaskData* d) {
     }
     // a newer term arrived while we were scanning: run it now (no worker running)
     if (win->findCountPendingText) {
-        WStr pending = win->findCountPendingText;
+        Str pending = win->findCountPendingText;
         win->findCountPendingText = {};
         StartFindCount(win, pending, win->findCountPendingMatchCase, win->findCountPendingMatchWholeWord);
-        wstr::Free(pending);
+        str::Free(pending);
     }
 }
 
@@ -661,7 +661,7 @@ static void CountThread(CountThreadData* d) {
 // the epoch after every match, so it exits within one page's work.
 static void AbortCount(MainWindow* win) {
     InterlockedIncrement(&win->findCountEpoch);
-    wstr::FreePtr(&win->findCountPendingText);
+    str::FreePtr(&win->findCountPendingText);
     HANDLE th = win->findCountThread;
     if (th) {
         WaitForSingleObject(th, INFINITE);
@@ -673,7 +673,7 @@ static void AbortCount(MainWindow* win) {
 // scan is already running, remember only the latest request and let the running
 // worker start it when it finishes, so rapid typing never piles up scans and
 // the UI thread never blocks waiting on a scan.
-static void StartFindCount(MainWindow* win, WStr text, bool matchCase, bool matchWholeWord) {
+static void StartFindCount(MainWindow* win, Str text, bool matchCase, bool matchWholeWord) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
@@ -689,8 +689,8 @@ static void StartFindCount(MainWindow* win, WStr text, bool matchCase, bool matc
         // a scan is in flight: cancel it and queue this request; the running
         // worker's CountEndTask will start it once it exits
         InterlockedIncrement(&win->findCountEpoch);
-        wstr::FreePtr(&win->findCountPendingText);
-        win->findCountPendingText = wstr::Dup(text);
+        str::FreePtr(&win->findCountPendingText);
+        win->findCountPendingText = str::Dup(text);
         win->findCountPendingMatchCase = matchCase;
         win->findCountPendingMatchWholeWord = matchWholeWord;
         return;
@@ -711,12 +711,12 @@ static void StartFindCount(MainWindow* win, WStr text, bool matchCase, bool matc
 
 // update the n/m counter after a search settles on a match: instant from cache
 // when the term/match-case/document are unchanged, otherwise rebuild it
-static void UpdateMatchCount(MainWindow* win, WStr text) {
+static void UpdateMatchCount(MainWindow* win, Str text) {
     DisplayModel* dm = win->AsFixed();
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
     bool wantSnippets = gGlobalPrefs->searchUIFloating && IsFindWindowVisible(win);
     bool wantMatchList = wantSnippets || gShowAllMatches;
-    bool cacheHit = win->findCountValid && win->findCountText && wstr::Eq(win->findCountText, text) &&
+    bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
                     win->findCountMatchCase == win->findMatchCase &&
                     win->findCountMatchWholeWord == win->findMatchWholeWord && win->findCountEngine == engine &&
                     (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : len(win->findMatches) > 0));
@@ -1489,9 +1489,8 @@ static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
     AbortFinding(win, true);
     win->ctrl->GoToPage(page, true);
     if (!str::IsEmpty(term)) {
-        TempWStr termW = ToWStrTemp(term);
         dm->textSearch->SetDirection(TextSearch::Direction::Forward);
-        TextSel* sel = dm->textSearch->FindFirstOnPage(page, termW);
+        TextSel* sel = dm->textSearch->FindFirstOnPage(page, term);
         if (sel && sel->len > 0) {
             ShowSearchResult(win, sel, false);
         } else {

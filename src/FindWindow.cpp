@@ -311,7 +311,7 @@ void FindWindowWnd::RefreshResults() {
     }
     // rebuild the highlight terms from the current search text
     filterWords.Reset();
-    TempStr term = win->findCountText ? ToUtf8Temp(win->findCountText.s) : nullptr;
+    Str term = win->findCountText;
     if (str::IsEmpty(term)) {
         term = win->hwndFindEdit ? HwndGetTextTemp(win->hwndFindEdit) : nullptr;
     }

@@ -359,7 +359,7 @@ struct MainWindow {
     // thread (re)builds the cache when the search term or match-case changes.
     HANDLE findCountThread = nullptr;
     LONG findCountEpoch = 0;
-    WStr findCountText;
+    Str findCountText;
     bool findCountMatchCase = false;
     bool findCountMatchWholeWord = false;
     bool findCountValid = false;
@@ -367,7 +367,7 @@ struct MainWindow {
     Vec<u64> findCountPositions;     // sorted (page<<32 | startOffset) of each match
     // a newer count request that arrived while a scan was running; the running
     // worker picks it up when it finishes (coalesces rapid typing to one scan)
-    WStr findCountPendingText;
+    Str findCountPendingText;
     bool findCountPendingMatchCase = false;
     bool findCountPendingMatchWholeWord = false;
     // per-match positions (and optional snippets for the floating results list);

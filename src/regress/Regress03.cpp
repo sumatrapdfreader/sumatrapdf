@@ -3,7 +3,7 @@
    https://drive.google.com/file/d/0B2EXZJHDEYllMnkzMUZWWGdueDA/view?usp=sharing
  */
 
-void SearchTestWithDir(Str searchFile, WStr searchTerm, const TextSearch::Direction direction, const TextSel* expected,
+void SearchTestWithDir(Str searchFile, Str searchTerm, const TextSearch::Direction direction, const TextSel* expected,
                        const int expectedLen) {
     EngineBase* engine = CreateEngineFromFile(searchFile, nullptr, true);
     TextSearch* tsrch = new TextSearch(engine);
@@ -23,21 +23,21 @@ void SearchTestWithDir(Str searchFile, WStr searchTerm, const TextSearch::Direct
     for (auto tsel = tsrch->FindFirst(startPage, searchTerm); nullptr != tsel;
          tsel = tsrch->FindNext(), ++findCount, expIndex += expIncr) {
         if (0 == expected[expIndex].len) {
-            wprintf(L"Found %s %i times, not expecting another match\n", searchTerm.s, expIndex);
+            printf("Found %.*s %i times, not expecting another match\n", searchTerm.len, searchTerm.s, expIndex);
             ReportIf(true);
         }
         if (expected[expIndex].len != tsel->len) {
-            wprintf(L"Text selection length mismatch for %s at occurrence %i: got %i, wanted %i\n", searchTerm.s,
-                    findCount, expected[expIndex].len, tsel->len);
+            printf("Text selection length mismatch for %.*s at occurrence %i: got %i, wanted %i\n", searchTerm.len,
+                   searchTerm.s, findCount, expected[expIndex].len, tsel->len);
             ReportIf(true);
         }
         for (int i = 0; i < tsel->len; ++i) {
             if ((expected[expIndex].pages[i] != tsel->pages[i]) || (expected[expIndex].rects[i] != tsel->rects[i])) {
-                wprintf(
-                    L"Text selection page or rectangle mismatch for %s, "
-                    L"expected pg %d rx=%d ry=%d rdx=%d rdy=%d "
-                    L"got pg %d rx=%d ry=%d rdx=%d rdy=%d\n",
-                    searchTerm.s, expected[expIndex].pages[i], expected[expIndex].rects[i].x,
+                printf(
+                    "Text selection page or rectangle mismatch for %.*s, "
+                    "expected pg %d rx=%d ry=%d rdx=%d rdy=%d "
+                    "got pg %d rx=%d ry=%d rdx=%d rdy=%d\n",
+                    searchTerm.len, searchTerm.s, expected[expIndex].pages[i], expected[expIndex].rects[i].x,
                     expected[expIndex].rects[i].y, expected[expIndex].rects[i].dx, expected[expIndex].rects[i].dy,
                     tsel->pages[i], tsel->rects[i].x, tsel->rects[i].y, tsel->rects[i].dx, tsel->rects[i].dy);
                 ReportIf(true);
@@ -46,13 +46,14 @@ void SearchTestWithDir(Str searchFile, WStr searchTerm, const TextSearch::Direct
     }
     if (TextSearch::Direction::Forward == direction) {
         if (findCount != expectedLen) {
-            wprintf(L"Found only %d matches of '%s', expected %d\n", expIndex, searchTerm.s, expectedLen);
+            printf("Found only %d matches of '%.*s', expected %d\n", expIndex, searchTerm.len, searchTerm.s,
+                   expectedLen);
             ReportIf(true);
         }
     } else {
         if (findCount != expectedLen) {
-            wprintf(L"Found only %d matches of '%s', expected %d\n", expectedLen - expIndex - 1, searchTerm.s,
-                    expectedLen);
+            printf("Found only %d matches of '%.*s', expected %d\n", expectedLen - expIndex - 1, searchTerm.len,
+                   searchTerm.s, expectedLen);
             ReportIf(true);
         }
     }
@@ -77,7 +78,7 @@ const TextSel* BuildTextSelList(RegressSearchInfo& info) {
 }
 
 void RegressSearch(Str filePath, RegressSearchInfo& info) {
-    WStr searchTerm = info.searchPhrase;
+    TempStr searchTerm = ToUtf8Temp(info.searchPhrase);
     const TextSel* expected = BuildTextSelList(info);
     SearchTestWithDir(filePath, searchTerm, TextSearch::Direction::Forward, expected, info.count);
     SearchTestWithDir(filePath, searchTerm, TextSearch::Direction::Backward, expected, info.count);
