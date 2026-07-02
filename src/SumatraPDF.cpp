@@ -2646,9 +2646,20 @@ static void StartOrQueueLoadDocument(LoadDocumentAsyncData* data) {
 static void OnLoadDocumentThreadFinished() {
     gLoadThreadsActive--;
     ReportIf(gLoadThreadsActive < 0);
-    if (len(gLoadQueue) > 0) {
+    while (len(gLoadQueue) > 0) {
         LoadDocumentAsyncData* next = gLoadQueue.PopAt(0);
+        MainWindow* win = next->args->win;
+        if (!IsMainWindowValid(win) || win->isBeingClosed) {
+            // the target window is gone, e.g. it was closed or the app is
+            // shutting down (uitask::Destroy drains queued finish tasks after
+            // all windows were deleted). Starting the load would leak it: its
+            // finish task would be posted to the already-destroyed dispatch
+            // window and never run.
+            delete next;
+            continue;
+        }
         StartLoadDocumentThread(next);
+        break;
     }
 }
 
