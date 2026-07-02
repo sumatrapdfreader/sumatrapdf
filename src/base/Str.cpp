@@ -2196,17 +2196,18 @@ namespace str {
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
-int BufSet(char* dst, int cchDst, Str src) {
-    ReportIf(0 == cchDst || !dst);
+int BufSet(Str dst, Str src) {
+    int cchDst = dst.len;
+    ReportIf(0 == cchDst || !dst.s);
     if (!src) {
-        *dst = 0;
+        *dst.s = 0;
         return 0;
     }
 
     int toCopy = std::min(cchDst - 1, src.len);
 
-    errno_t err = strncpy_s(dst, (size_t)cchDst, src.s, (size_t)toCopy);
-    ReportIf(err || dst[toCopy] != '\0');
+    errno_t err = strncpy_s(dst.s, (size_t)cchDst, src.s, (size_t)toCopy);
+    ReportIf(err || dst.s[toCopy] != '\0');
 
     return toCopy;
 }
@@ -2238,18 +2239,19 @@ int BufSet(WCHAR* dst, int dstCchSize, Str src) {
 
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
-int BufAppend(char* dst, int dstCch, Str s) {
+int BufAppend(Str dst, Str s) {
+    int dstCch = dst.len;
     ReportIf(0 == dstCch);
 
-    int currDstCchLen = len(dst);
+    int currDstCchLen = len(dst.s);
     if (currDstCchLen + 1 >= dstCch) {
         return 0;
     }
     int left = dstCch - currDstCchLen - 1;
     int toCopy = std::min(left, s.len);
 
-    errno_t err = strncat_s(dst, dstCch, s.s, toCopy);
-    ReportIf(err || dst[currDstCchLen + toCopy] != '\0');
+    errno_t err = strncat_s(dst.s, dstCch, s.s, toCopy);
+    ReportIf(err || dst.s[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
 }

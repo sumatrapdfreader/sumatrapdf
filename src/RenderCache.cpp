@@ -1184,7 +1184,7 @@ void RenderCache::RecordFinishedRequest(PageRenderRequest* r) {
     fi.fileName[0] = 0;
     if (r->dm && r->dm->GetEngine()) {
         TempStr name = path::GetBaseNameTemp(r->dm->GetEngine()->FilePath());
-        str::BufSet(fi.fileName, dimof(fi.fileName), name);
+        str::BufSet(Str(fi.fileName, dimof(fi.fileName)), name);
     }
     finishedHistoryNext = (finishedHistoryNext + 1) % kFinishedHistorySize;
     if (finishedHistoryCount < kFinishedHistorySize) {

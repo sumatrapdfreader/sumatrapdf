@@ -342,9 +342,9 @@ void StrTest() {
     utassert(str::IndexOfChar(str, 'g') == 7);
     utassert(!str::ContainsChar(str, 'x'));
     utassert(!str::ContainsChar(Str{}, 'a'));
-    int len = str::BufSet(buf, dimof(buf), str);
+    int len = str::BufSet(Str(buf, dimof(buf)), str);
     utassert(len == ::len(buf) && str::Eq(buf, str));
-    len = str::BufSet(buf, 6, str);
+    len = str::BufSet(Str(buf, 6), str);
     utassert(len == 5 && str::Eq(buf, "a str"));
 
     str = str::Dup(buf);
@@ -387,7 +387,7 @@ void StrTest() {
     str::Free(str);
 #endif
 
-    str::BufSet(buf, dimof(buf), "abc\1efg\1");
+    str::BufSet(Str(buf, dimof(buf)), "abc\1efg\1");
     size_t count = str::TransCharsInPlace(Str(buf), StrL("ace"), StrL("ACE"));
     utassert(str::Eq(buf, "AbC\1Efg\1") && count == 3);
     count = str::TransCharsInPlace(Str(buf), StrL("\1"), StrL("\0"));
@@ -396,17 +396,17 @@ void StrTest() {
     count = str::TransCharsInPlace(Str(buf), StrL(""), StrL("X"));
     utassert(str::Eq(buf, "AbC") && count == 0);
 
-    str::BufSet(buf, dimof(buf), "blogarapato");
+    str::BufSet(Str(buf, dimof(buf)), "blogarapato");
     count = str::RemoveCharsInPlace(buf, "bo");
     utassert(3 == count);
     utassert(str::Eq(buf, "lgarapat"));
 
-    str::BufSet(buf, dimof(buf), "one\r\ntwo\t\v\f\tthree");
+    str::BufSet(Str(buf, dimof(buf)), "one\r\ntwo\t\v\f\tthree");
     count = str::NormalizeWSInPlace(Str(buf));
     utassert(4 == count);
     utassert(str::Eq(buf, "one two three"));
 
-    str::BufSet(buf, dimof(buf), " one    two three ");
+    str::BufSet(Str(buf, dimof(buf)), " one    two three ");
     count = str::NormalizeWSInPlace(Str(buf));
     utassert(5 == count);
     utassert(str::Eq(buf, "one two three"));
@@ -712,15 +712,15 @@ void StrTest() {
 
     {
         char buf1[6]{};
-        size_t cnt = str::BufAppend(buf1, dimof(buf1), "");
+        size_t cnt = str::BufAppend(Str(buf1, dimof(buf1)), "");
         utassert(0 == cnt);
-        cnt = str::BufAppend(buf1, dimof(buf1), "1234");
+        cnt = str::BufAppend(Str(buf1, dimof(buf1)), "1234");
         utassert(4 == cnt);
         utassert(str::Eq("1234", buf1));
-        cnt = str::BufAppend(buf1, dimof(buf1), "56");
+        cnt = str::BufAppend(Str(buf1, dimof(buf1)), "56");
         utassert(1 == cnt);
         utassert(str::Eq("12345", buf1));
-        cnt = str::BufAppend(buf1, dimof(buf1), "6");
+        cnt = str::BufAppend(Str(buf1, dimof(buf1)), "6");
         utassert(0 == cnt);
         utassert(str::Eq("12345", buf1));
     }

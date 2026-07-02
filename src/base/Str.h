@@ -126,8 +126,8 @@ size_t NormalizeNewlinesInPlace(Str s, Str endExclusive);
 size_t NormalizeNewlinesInPlace(Str s);
 size_t RemoveCharsInPlace(Str str, Str toRemove);
 
-int BufSet(char* dst, int dstCchSize, Str src);
-int BufAppend(char* dst, int dstCchSize, Str s);
+int BufSet(Str dst, Str src);
+int BufAppend(Str dst, Str s);
 
 TempStr MemToHexTemp(const u8* buf, size_t len);
 bool HexToMem(Str s, u8* buf, size_t bufLen);

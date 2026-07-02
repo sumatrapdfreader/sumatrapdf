@@ -6345,7 +6345,7 @@ TempStr GetBuildDirNameTemp() {
     char id[7] = "000000";
     Str sha1 = Sha1OfAppExe();
     if (sha1) {
-        str::BufSet(id, dimof(id), sha1.s);
+        str::BufSet(Str(id, dimof(id)), sha1.s);
     }
     return path::JoinTemp(dataDir, id);
 }

@@ -605,7 +605,7 @@ static int ParseLimitedNumber(Str str, int p, int formatOff, Str format, int* en
     Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
     if (!str::IsNull(endF) && str::ContainsChar(StrL("udx"), f2[1]) && width <= (unsigned)(str.len - p)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min((int)width + 1, dimofi(limited)), Str(str.s + p, (int)width));
+        str::BufSet(Str(limited, std::min((int)width + 1, dimofi(limited))), Str(str.s + p, (int)width));
         Str end = ParseArgs(Str(limited), f2, &valueOut, 1);
         if (!str::IsNull(end) && !end.s[0]) {
             *endOffOut = p + (int)width;
