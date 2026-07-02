@@ -2293,8 +2293,10 @@ static Str PalmDocToHTML(Str path) {
     if (!doc) {
         return {};
     }
-    Str html = doc->GetHtmlData();
-    return str::Dup(html);
+    // GetHtmlData() is a view into doc, dup before deleting it
+    Str html = str::Dup(doc->GetHtmlData());
+    delete doc;
+    return html;
 }
 
 bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
