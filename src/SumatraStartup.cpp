@@ -2433,6 +2433,9 @@ Exit:
     if (fastExit) {
         // leave all the remaining clean-up to the OS
         // (as recommended for a quick exit)
+        // note: this intentionally skips freeing engines/windows, so leak
+        // trackers will report everything still allocated
+        log("fast exit: skipping cleanup, leak reports are expected\n");
         ::ExitProcess(exitCode);
     }
 
