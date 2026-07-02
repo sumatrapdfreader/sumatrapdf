@@ -456,7 +456,7 @@ static bool IsValidCompression(int comprType) {
 }
 
 MobiDoc::MobiDoc(Str filePath) {
-    docTocIndex = kInvalidSize;
+    docTocIndex = -1;
     str::ReplaceWithCopy(&fileName, filePath);
 }
 
@@ -547,7 +547,7 @@ bool MobiDoc::ParseHeader() {
             // I don't think this should ever happen but I've seen it
             imagesCount = 0;
         } else {
-            imagesCount = pdbReader->GetRecordCount() - imageFirstRec;
+            imagesCount = (int)(pdbReader->GetRecordCount() - imageFirstRec);
         }
     }
     if (kPalmDocHeaderLen + (size_t)mobiHdr.hdrLen > recSize) {
@@ -604,14 +604,14 @@ bool MobiDoc::ParseHeader() {
 
     if ((mobiHdr.exthFlags & 0x40)) {
         u32 offset = kPalmDocHeaderLen + mobiHdr.hdrLen;
-        DecodeExthHeader(firstRecData + offset, recSize - offset);
+        DecodeExthHeader(firstRecData + offset, (int)(recSize - offset));
     }
 
     LoadImages();
     return true;
 }
 
-bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
+bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
     if (dataLen < 12 || !memeq(data, "EXTH", 4)) {
         return false;
     }
@@ -620,7 +620,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
     d.Skip(4);
     u32 hdrLen = d.UInt32();
     u32 count = d.UInt32();
-    if (hdrLen > dataLen) {
+    if (hdrLen > (u32)dataLen) {
         return false;
     }
 
@@ -712,7 +712,7 @@ static bool KnownImageFormat(Str d) {
 
 // return false if we should stop loading images (because we
 // encountered eof record or ran out of memory)
-bool MobiDoc::LoadImage(size_t imageNo) {
+bool MobiDoc::LoadImage(int imageNo) {
     size_t imageRec = imageFirstRec + imageNo;
 
     auto rec = pdbReader->GetRecord(imageRec);
@@ -740,7 +740,7 @@ void MobiDoc::LoadImages() {
     }
     images = AllocArray<Str>((int)imagesCount);
 
-    for (size_t i = 0; i < imagesCount; i++) {
+    for (int i = 0; i < imagesCount; i++) {
         if (!LoadImage(i)) {
             return;
         }
@@ -810,7 +810,7 @@ static size_t GetRealRecordSize(const u8* recData, size_t recLen, size_t trailer
 
 // Load a given record of a document into strOut, uncompressing if necessary.
 // Returns false if error.
-bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Builder& strOut) {
+bool MobiDoc::LoadDocRecordIntoBuffer(int recNo, str::Builder& strOut) {
     auto rec = pdbReader->GetRecord(recNo);
     u8* recData = (u8*)rec.s;
     if (nullptr == recData) {
@@ -860,7 +860,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     ReportIf(len(doc) != 0);
     doc = str::Builder((int)docUncompressedSize);
     size_t nFailed = 0;
-    for (size_t i = 1; i <= docRecCount; i++) {
+    for (int i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, doc)) {
             nFailed++;
         }
@@ -941,7 +941,7 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
 }
 
 bool MobiDoc::HasToc() {
-    if (docTocIndex != kInvalidSize) {
+    if (docTocIndex != -1) {
         return docTocIndex < len(doc);
     }
     docTocIndex = len(doc); // no ToC

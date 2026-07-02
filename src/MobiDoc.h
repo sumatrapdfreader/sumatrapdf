@@ -10,16 +10,16 @@ struct MobiDoc {
     PdbReader* pdbReader = nullptr;
 
     PdbDocType docType = PdbDocType::Unknown;
-    size_t docRecCount = 0;
+    int docRecCount = 0;
     int compressionType = 0;
-    size_t docUncompressedSize = 0;
+    int docUncompressedSize = 0;
     int textEncoding = CP_UTF8;
-    size_t docTocIndex = 0;
+    int docTocIndex = 0;
 
     bool multibyte = false;
-    size_t trailersCount = 0;
-    size_t imageFirstRec = 0; // 0 if no images
-    size_t coverImageRec = 0; // 0 if no cover image
+    int trailersCount = 0;
+    int imageFirstRec = 0; // 0 if no images
+    int coverImageRec = 0; // 0 if no cover image
 
     Str* images = nullptr;
 
@@ -30,15 +30,15 @@ struct MobiDoc {
     explicit MobiDoc(Str filePath);
 
     bool ParseHeader();
-    bool LoadDocRecordIntoBuffer(size_t recNo, str::Builder& strOut);
+    bool LoadDocRecordIntoBuffer(int recNo, str::Builder& strOut);
     void LoadImages();
-    bool LoadImage(size_t imageNo);
+    bool LoadImage(int imageNo);
     bool LoadForPdbReader(PdbReader* pdbReader);
-    bool DecodeExthHeader(const u8* data, size_t dataLen);
+    bool DecodeExthHeader(const u8* data, int dataLen);
 
     str::Builder doc;
 
-    size_t imagesCount = 0;
+    int imagesCount = 0;
 
     ~MobiDoc();
 
