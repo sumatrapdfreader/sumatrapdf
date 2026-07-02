@@ -46,10 +46,9 @@ int len(StrQueue& q) {
     return res;
 }
 
-Str StrQueue::Append(Str s, int len) {
+Str StrQueue::append(Str s) {
     Lock();
-    Str str = len < 0 ? s : Str(s.s, len);
-    auto res = strings.Append(str);
+    auto res = strings.Append(s);
     Unlock();
     SetEvent(hEvent);
     return res;

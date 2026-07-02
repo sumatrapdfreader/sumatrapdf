@@ -8,7 +8,7 @@ struct StrQueue {
 
     void Lock();
     void Unlock();
-    Str Append(Str s, int len = -1);
+    Str append(Str s);
     Str PopFront();
     bool IsSentinel(Str s);
     void MarkFinished();

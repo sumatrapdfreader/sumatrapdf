@@ -183,7 +183,7 @@ static void DirTraverseThread(DirTraverseThreadData* td) {
     di.includeDirs = false;
     di.recurse = td->recurse;
     for (DirIterEntry* de : di) {
-        td->queue->Append(de->filePath);
+        td->queue->append(de->filePath);
     }
     td->queue->MarkFinished();
     delete td;
