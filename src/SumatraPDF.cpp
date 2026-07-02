@@ -4500,8 +4500,8 @@ static void OpenFile(MainWindow* win) {
     }
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 
-    AutoFreeWStr file = AllocArray<WCHAR>(ofn.nMaxFile);
-    ofn.lpstrFile = file;
+    TempWStr file = AllocArrayTemp<WCHAR>(ofn.nMaxFile);
+    ofn.lpstrFile = file.s;
 
     if (!GetOpenFileNameW(&ofn)) {
         return;
