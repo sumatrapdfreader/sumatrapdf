@@ -2071,7 +2071,9 @@ repaired:
 			if (!doc->struct_tree_repaired)
 			{
 				fz_free(ctx, line_a);
+				line_a = NULL; /* SumatraPDF: prevent double free in fz_always if the retry throws */
 				fz_free(ctx, line_b);
+				line_b = NULL; /* SumatraPDF */
 				(void)pdf_check_structure_tree(ctx, doc);
 				goto repaired;
 			}
