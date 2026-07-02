@@ -59,7 +59,7 @@ struct DeferredGoToFindMatchData {
 struct FindResultsModel : ListBoxModel {
     MainWindow* win = nullptr;
     explicit FindResultsModel(MainWindow* win) { this->win = win; }
-    int ItemsCount() override { return (int)win->findMatches.size(); }
+    int ItemsCount() override { return len(win->findMatches); }
     Str Item(int i) override { return win->findMatches[i].snippet; }
 };
 
@@ -326,7 +326,7 @@ void FindWindowWnd::RefreshResults() {
         // the document already sits on a match (find-as-you-type found it): just
         // mirror it in the list, no navigation
         results->SetCurrentSelection(sel);
-    } else if (win->findMatches.size() > 0) {
+    } else if (len(win->findMatches) > 0) {
         // find-as-you-type gave up (it self-cancels for matches on far pages),
         // so the document isn't on a match. Drive selection + navigation off the
         // full count instead: go to the first match at/after the current page,
@@ -339,7 +339,7 @@ void FindWindowWnd::RefreshResults() {
 
 void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
     ListBox* lb = ev->listBox;
-    if (ev->itemIndex < 0 || ev->itemIndex >= (int)win->findMatches.size()) {
+    if (ev->itemIndex < 0 || ev->itemIndex >= len(win->findMatches)) {
         return;
     }
     HDC hdc = ev->hdc;
@@ -408,7 +408,7 @@ void FindWindowWnd::DrawResultItem(ListBox::DrawItemEvent* ev) {
 
 void FindWindowWnd::OnResultSelected() {
     int idx = results ? results->GetCurrentSelection() : -1;
-    if (idx < 0 || idx >= (int)win->findMatches.size()) {
+    if (idx < 0 || idx >= len(win->findMatches)) {
         return;
     }
     const FindMatch& fm = win->findMatches[idx];
@@ -439,7 +439,7 @@ int FindWindowWnd::CurrentMatchIndex() {
     }
     int page = dm->textSearch->startPage;
     int glyph = dm->textSearch->startGlyph;
-    int n = (int)win->findMatches.size();
+    int n = len(win->findMatches);
     for (int i = 0; i < n; i++) {
         const FindMatch& fm = win->findMatches[i];
         if (fm.startPage == page && fm.startGlyph == glyph) {
@@ -452,7 +452,7 @@ int FindWindowWnd::CurrentMatchIndex() {
 // first match at/after the current page (matches are in page order); wraps to
 // the first match if none follow. Mirrors find-as-you-type's FindFirst(curPage).
 int FindWindowWnd::FirstMatchFromCurrentPage() {
-    int n = (int)win->findMatches.size();
+    int n = len(win->findMatches);
     if (n == 0) {
         return -1;
     }
@@ -473,7 +473,7 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
     if (!results) {
         return false;
     }
-    int n = (int)win->findMatches.size();
+    int n = len(win->findMatches);
     if (n == 0) {
         return false;
     }

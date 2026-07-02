@@ -511,7 +511,7 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
     // recursive walk exactly (parent frame resumes after its child completes).
     Vec<ChmUlFrame> stack;
     stack.Append({ulNode, level, 0});
-    while (stack.size() > 0) {
+    while (len(stack) > 0) {
         ChmUlFrame& top = stack.Last();
         const GumboVector* lis = &top.ul->v.element.children;
         if (top.i >= lis->length) {
@@ -572,7 +572,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
-    while (toVisit.size() > 0) {
+    while (len(toVisit) > 0) {
         const GumboNode* node = toVisit.Pop();
         if (!node) {
             continue;

@@ -203,7 +203,7 @@ HtmlWindow* FindHtmlWindowById(int windowId) {
 }
 
 static int GenNewWindowId(HtmlWindow* htmlWin) {
-    int newWindowId = (int)gHtmlWindows.size();
+    int newWindowId = len(gHtmlWindows);
     gHtmlWindows.Append(htmlWin);
     ReportIf(htmlWin != FindHtmlWindowById(newWindowId));
     return newWindowId;

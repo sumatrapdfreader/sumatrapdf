@@ -235,7 +235,7 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
         auto ctx = e->Ctx();
         ScopedCritSec cs(&e->docLock);
         fz_quad quads[512];
-        int n = rects.Size();
+        int n = len(rects);
         if (n == 0) {
             return;
         }
@@ -607,7 +607,7 @@ bool SetContents(Annotation* annot, Str sv) {
 static bool IsAnnotationInEngine(EngineMupdf* e, Annotation* annot) {
     int pageNo = annot->pageNo;
     int pageIdx = pageNo - 1;
-    if (pageIdx < 0 || pageIdx >= e->pages.Size()) {
+    if (pageIdx < 0 || pageIdx >= len(e->pages)) {
         return false;
     }
     ScopedCritSec scope(&e->pagesLock);

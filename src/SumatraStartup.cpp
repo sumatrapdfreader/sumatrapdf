@@ -1278,7 +1278,7 @@ static void DeleteOldPdfPreviewLogs(int keep) {
         PreviewLogFile lf{str::Dup(de->filePath), de->fd->ftLastWriteTime};
         files.Append(lf);
     }
-    int n = files.Size();
+    int n = len(files);
     if (n > keep) {
         files.Sort(CmpPreviewLogNewestFirst);
         for (int i = keep; i < n; i++) {
@@ -2253,7 +2253,7 @@ ContinueOpenWindow:
     gInitialSessionData = gGlobalPrefs->sessionData;
     gGlobalPrefs->sessionData = new Vec<SessionData*>();
 
-    restoreSession = SettingsRestoreSession() && (gInitialSessionData->Size() > 0) && !NeedsWindowEmbeddingHacks();
+    restoreSession = SettingsRestoreSession() && (len(*gInitialSessionData) > 0) && !NeedsWindowEmbeddingHacks();
     if (!SettingsUseTabs() && (existingInstanceHwnd != nullptr)) {
         // do not restore a session if tabs are disabled and SumatraPDF is already running
         // TODO: maybe disable restoring if tabs are disabled?
@@ -2435,7 +2435,7 @@ Exit:
         gInitialSessionData = nullptr;
     }
     FreeExternalViewers();
-    while (gWindows.size() > 0) {
+    while (len(gWindows) > 0) {
         DeleteMainWindow(gWindows.at(0));
     }
 

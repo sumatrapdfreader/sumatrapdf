@@ -913,7 +913,7 @@ static const GumboNode* FindMobiTocReference(const GumboNode* root) {
     // document (e.g. a huge MOBI dictionary) can't overflow the stack
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
-    while (toVisit.size() > 0) {
+    while (len(toVisit) > 0) {
         const GumboNode* node = toVisit.Pop();
         if (!node) {
             continue;
@@ -970,7 +970,7 @@ static void AppendDeepText(const GumboNode* root, str::Builder& sb) {
     // iterative pre-order DFS so a deeply nested element can't overflow the stack
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
-    while (toVisit.size() > 0) {
+    while (len(toVisit) > 0) {
         const GumboNode* node = toVisit.Pop();
         if (!node) {
             continue;
@@ -1009,7 +1009,7 @@ struct MobiTocWalkItem {
 void MobiTocWalker::Walk(const GumboNode* root) {
     Vec<MobiTocWalkItem> stack;
     stack.Append({root, 0});
-    while (stack.size() > 0) {
+    while (len(stack) > 0) {
         MobiTocWalkItem it = stack.Pop();
         const GumboNode* node = it.node;
         int level = it.level;

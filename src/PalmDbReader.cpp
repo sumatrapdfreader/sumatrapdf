@@ -47,7 +47,7 @@ static bool DecodePdbHeader(ByteOrderDecoder& dec, PdbHeader* hdr) {
 }
 
 bool PdbReader::ParseHeader() {
-    ReportIf(recInfos.size() > 0);
+    ReportIf(len(recInfos) > 0);
 
     ByteOrderDecoder dec(data, dataSize, ByteOrderDecoder::BigEndian);
     bool ok = DecodePdbHeader(dec, &hdr);
@@ -96,12 +96,12 @@ Str PdbReader::GetDbType() {
 }
 
 size_t PdbReader::GetRecordCount() {
-    return recInfos.size();
+    return len(recInfos);
 }
 
 // don't free, memory is owned by us
 Str PdbReader::GetRecord(size_t recNo) {
-    size_t nRecs = recInfos.size();
+    int nRecs = len(recInfos);
     ReportIf(recNo >= nRecs);
     if (recNo >= nRecs) {
         return {};

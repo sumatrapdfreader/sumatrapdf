@@ -905,7 +905,7 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, wstr::Builder& extracted, Vec<R
     miniexp_t str = miniexp_car(item);
     if (miniexp_stringp(str) && !miniexp_cdr(item)) {
         if (type != miniexp_symbol("char") && type != miniexp_symbol("word") ||
-            coords.size() > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
+            len(coords) > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
             AppendNewline(extracted, coords, lineSep);
         }
         Str content = Str(miniexp_to_str(str));
@@ -958,7 +958,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
 
     PageText res;
 
-    ReportIf(len(ToWStr(extracted)) != coords.Size());
+    ReportIf(len(ToWStr(extracted)) != len(coords));
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
@@ -971,7 +971,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
 
     // TODO: the coordinates aren't completely correct yet
     Rect page = PageMediabox(pageNo).Round();
-    for (size_t i = 0; i < coords.size(); i++) {
+    for (int i = 0; i < len(coords); i++) {
         if (!coords.at(i).IsEmpty()) {
             if (dpiFactor != 1.0) {
                 RectF pageF = ToRectF(coords.at(i));
@@ -984,7 +984,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
             coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
         }
     }
-    ReportIf(coords.Size() != len(extracted));
+    ReportIf(len(coords) != len(extracted));
     res.len = len(extracted);
     res.text = extracted.TakeWStr();
     res.coords = coords.Take();
@@ -1033,7 +1033,7 @@ bool EngineDjVu::ExtractPageTextUtf8(miniexp_t item, str::Builder& extracted, Ve
     miniexp_t str = miniexp_car(item);
     if (miniexp_stringp(str) && !miniexp_cdr(item)) {
         if (type != miniexp_symbol("char") && type != miniexp_symbol("word") ||
-            coords.size() > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
+            len(coords) > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
             AppendNewlineUtf8(extracted, coords, lineSep);
         }
         Str content = Str(miniexp_to_str(str));
@@ -1084,7 +1084,7 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
 
     PageTextUtf8 res;
 
-    ReportIf(len(ToStr(extracted)) != coords.Size());
+    ReportIf(len(ToStr(extracted)) != len(coords));
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
@@ -1097,7 +1097,7 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
 
     // TODO: the coordinates aren't completely correct yet
     Rect page = PageMediabox(pageNo).Round();
-    for (size_t i = 0; i < coords.size(); i++) {
+    for (int i = 0; i < len(coords); i++) {
         if (!coords.at(i).IsEmpty()) {
             if (dpiFactor != 1.0) {
                 RectF pageF = ToRectF(coords.at(i));
@@ -1110,7 +1110,7 @@ PageTextUtf8 EngineDjVu::ExtractPageTextUtf8(int pageNo) {
             coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
         }
     }
-    ReportIf(coords.Size() != len(extracted));
+    ReportIf(len(coords) != len(extracted));
     res.len = len(extracted);
     res.text = extracted.TakeStr();
     res.coords = coords.Take();
@@ -1235,7 +1235,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
 IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*> els = GetElements(pageNo);
 
-    int n = els.Size();
+    int n = len(els);
     // elements are extracted bottom-to-top but are accessed
     // in top-to-bottom order, so search bacwards
     for (int i = n - 1; i >= 0; i--) {
@@ -1309,7 +1309,7 @@ TempStr EngineDjVu::ResolveNamedDestTemp(Str name) {
         return {};
     }
     Str nameWithoutHash = name.len > 1 ? Str(name.s + 1, name.len - 1) : Str{};
-    for (size_t i = 0; i < fileInfos.size(); i++) {
+    for (int i = 0; i < len(fileInfos); i++) {
         ddjvu_fileinfo_t& fi = fileInfos[i];
         if (str::EqI(nameWithoutHash, Str(fi.id))) {
             return fmt("#%d", fi.pageno + 1);
@@ -1393,7 +1393,7 @@ TocTree* EngineDjVu::GetToc() {
 }
 
 TempStr EngineDjVu::GetPageLabeTemp(int pageNo) const {
-    for (size_t i = 0; i < fileInfos.size(); i++) {
+    for (int i = 0; i < len(fileInfos); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id)) {
             return str::DupTemp(info.title);
@@ -1403,7 +1403,7 @@ TempStr EngineDjVu::GetPageLabeTemp(int pageNo) const {
 }
 
 int EngineDjVu::GetPageByLabel(Str label) const {
-    for (size_t i = 0; i < fileInfos.size(); i++) {
+    for (int i = 0; i < len(fileInfos); i++) {
         ddjvu_fileinfo_t& info = fileInfos.at(i);
         if (str::EqI(info.title, label) && !str::Eq(info.title, info.id)) {
             return info.pageno + 1;

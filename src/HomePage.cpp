@@ -216,11 +216,11 @@ void ParseTip(ParsedTip& tip, Str s) {
 
                         TipLink link;
                         str::ReplaceWithCopy(&link.cmd, ResolveLinkCmdTemp(linkCmd));
-                        link.firstWord = tip.words.Size();
-                        AppendTipWordsFromText(tip, linkText, true, tip.links.Size());
+                        link.firstWord = len(tip.words);
+                        AppendTipWordsFromText(tip, linkText, true, len(tip.links));
 
-                        if (link.firstWord < tip.words.Size()) {
-                            link.lastWord = tip.words.Size() - 1;
+                        if (link.firstWord < len(tip.words)) {
+                            link.lastWord = len(tip.words) - 1;
                             tip.links.Append(link);
                             AdvanceTipText(p, (int)(cmdEnd.s - p.s) + 1);
                             continue;
@@ -357,12 +357,12 @@ void ExecuteTipLink(HWND hwnd, Str cmd) {
 }
 
 bool TipHasLinks(ParsedTip& tip) {
-    return tip.links.Size() > 0;
+    return len(tip.links) > 0;
 }
 
 TempStr TipPlainTextTemp(ParsedTip& tip) {
     str::Builder sb;
-    for (int i = 0; i < tip.words.Size(); i++) {
+    for (int i = 0; i < len(tip.words); i++) {
         if (i > 0) {
             sb.AppendChar(' ');
         }
@@ -823,7 +823,7 @@ TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& staticLinks, int x, int y, StaticL
     }
 
     Point pt(x, y);
-    for (int i = 0; i < staticLinks.Size(); i++) {
+    for (int i = 0; i < len(staticLinks); i++) {
         if (staticLinks.at(i)->rect.Contains(pt)) {
             auto link = staticLinks.At(i);
             if (linkOut) {
@@ -1165,7 +1165,7 @@ void LayoutHomePage(HomePageLayout& l) {
         SplitFilterToWords(searchQuery, l.filterWords);
     }
     Vec<FileState*> fileStates;
-    for (int i = 0; i < allFileStates.Size(); i++) {
+    for (int i = 0; i < len(allFileStates); i++) {
         FileState* fs = allFileStates.at(i);
         // a state without a path can't be opened or thumbnailed - don't show it
         if (str::IsEmpty(fs->filePath)) {
@@ -1196,7 +1196,7 @@ void LayoutHomePage(HomePageLayout& l) {
 
     // --- Pre-compute thumbnail grid x offset so header can align with it ---
     // use unfiltered count so layout stays stable when search filters results
-    int nFilesForLayout = allFileStates.Size();
+    int nFilesForLayout = len(allFileStates);
     int colsForLayout =
         (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);
     int thumbsColsForLayout = std::max(colsForLayout, 1);
@@ -1334,7 +1334,7 @@ void LayoutHomePage(HomePageLayout& l) {
 
     l.rcThumbsArea = {0, thumbsTopY, rc.dx, thumbsVisibleDy};
 
-    int nFiles = fileStates.Size();
+    int nFiles = len(fileStates);
     bool showList = gGlobalPrefs->homePageShowList;
     int thumbsRows = 0;
     int thumbsContentDy = 0;

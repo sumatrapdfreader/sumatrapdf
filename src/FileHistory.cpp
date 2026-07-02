@@ -65,8 +65,8 @@ void FileHistory::Clear(bool keepFavorites) const {
         return;
     }
     Vec<FileState*> keep;
-    for (size_t i = 0; i < states->size(); i++) {
-        if (keepFavorites && states->at(i)->favorites->size() > 0) {
+    for (int i = 0; i < len(*states); i++) {
+        if (keepFavorites && len(*states->at(i)->favorites) > 0) {
             states->at(i)->openCount = 0;
             keep.Append(states->at(i));
         } else {
@@ -77,7 +77,7 @@ void FileHistory::Clear(bool keepFavorites) const {
 }
 
 FileState* FileHistory::Get(size_t index) const {
-    if (index < states->size()) {
+    if (index < len(*states)) {
         return states->at(index);
     }
     return nullptr;
@@ -85,7 +85,7 @@ FileState* FileHistory::Get(size_t index) const {
 
 FileState* FileHistory::FindByPath(Str filePath) const {
     int idxExact = -1;
-    int n = states->Size();
+    int n = len(*states);
     for (int i = 0; i < n; i++) {
         FileState* fs = states->at(i);
         if (str::EqI(fs->filePath, filePath)) {
@@ -104,7 +104,7 @@ FileState* FileHistory::FindByName(Str filePath, size_t* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
     TempStr fileName = path::GetBaseNameTemp(filePath);
-    int n = states->Size();
+    int n = len(*states);
     for (int i = 0; i < n; i++) {
         FileState* fs = states->at(i);
         if (str::EqI(fs->filePath, filePath)) {
@@ -161,7 +161,7 @@ bool FileHistory::MarkFileInexistent(Str filePath, bool hide) const {
     int idx = states->Find(state);
     if (idx < newIdx && state != states->Last()) {
         states->Remove(state);
-        if (states->size() <= (size_t)newIdx) {
+        if (len(*states) <= newIdx) {
             states->Append(state);
         } else {
             states->InsertAt(newIdx, state);
@@ -202,7 +202,7 @@ static int cmpOpenCount(const void* a, const void* b) {
 // and with all missing states filtered out
 // caller needs to delete the result (but not the contained states)
 void FileHistory::GetFrequencyOrder(Vec<FileState*>& list) const {
-    ReportIf(list.size() > 0);
+    ReportIf(len(list) > 0);
     size_t i = 0;
     for (FileState* ds : *states) {
         ds->index = i++;
@@ -230,7 +230,7 @@ static int cmpRecentlyOpened(const void* a, const void* b) {
 }
 
 void FileHistory::GetRecentlyOpenedOrder(Vec<FileState*>& list) const {
-    ReportIf(list.size() > 0);
+    ReportIf(len(list) > 0);
     size_t i = 0;
     for (FileState* ds : *states) {
         ds->index = i++;
@@ -251,17 +251,17 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
     if (alwaysUseDefaultState) {
         Vec<FileState*> frequencyList;
         GetFrequencyOrder(frequencyList);
-        if (frequencyList.size() > kFileHistoryMaxFrequent) {
+        if (len(frequencyList) > kFileHistoryMaxFrequent) {
             auto el = frequencyList.at(kFileHistoryMaxFrequent);
             minOpenCount = el->openCount / 2;
         }
     }
 
-    for (int j = states->Size(); j > 0; j--) {
+    for (int j = len(*states); j > 0; j--) {
         FileState* state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
-        if (state->isPinned || !str::IsEmpty(state->decryptionKey) || state->favorites->size() > 0) {
+        if (state->isPinned || !str::IsEmpty(state->decryptionKey) || len(*state->favorites) > 0) {
             continue;
         }
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {
@@ -431,7 +431,7 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
     // add missing paths from the list of most frequently opened documents
     Vec<FileState*> frequencyList;
     gFileHistory.GetFrequencyOrder(frequencyList);
-    size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
+    size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, len(frequencyList));
     for (size_t i = 0; i < iMax; i++) {
         fs = frequencyList.at(i);
         AppendIfNotExists(&toCheck, fs->filePath);

@@ -255,7 +255,7 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt)
 // tabIndex can come from settings file so must be sanitized
 void TabsSelect(MainWindow* win, int tabIndex) {
     auto tabs = win->Tabs();
-    int nTabs = tabs.Size();
+    int nTabs = len(tabs);
     logf("TabsSelect: tabIndex: %d, nTabs: %d\n", tabIndex, nTabs);
     if (nTabs == 0) {
         logf("TabsSelect: skipping because nTabs = %d\n", nTabs);

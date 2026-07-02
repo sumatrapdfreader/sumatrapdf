@@ -1482,7 +1482,7 @@ static struct {
 static void BuildMenuZoom(HMENU m) {
     auto prefs = gGlobalPrefs;
     auto customZoomLevels = prefs->zoomLevels;
-    int n = customZoomLevels->Size();
+    int n = len(*customZoomLevels);
     if (n <= 0) {
         return;
     }
@@ -1582,7 +1582,7 @@ static void RebuildFileMenu(WindowTab* tab, HMENU menu) {
 }
 
 static bool IsFileCloseMenuEnabled() {
-    for (size_t i = 0; i < gWindows.size(); i++) {
+    for (int i = 0; i < len(gWindows); i++) {
         if (gWindows.at(i)->IsDocLoaded()) {
             return true;
         }
@@ -2071,7 +2071,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 Vec<MenuOwnerDrawInfo*> g_menuDrawInfos;
 
 void FreeAllMenuDrawInfos() {
-    while (g_menuDrawInfos.size() != 0) {
+    while (len(g_menuDrawInfos) != 0) {
         // Note: could be faster
         FreeMenuOwnerDrawInfo(g_menuDrawInfos[0]);
     }

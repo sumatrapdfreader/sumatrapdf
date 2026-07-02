@@ -67,7 +67,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
     }
     sel->Reverse();
 
-    if (sel->size() == 0) {
+    if (len(*sel) == 0) {
         delete sel;
         return nullptr;
     }
@@ -83,7 +83,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
     }
     sel->Reverse();
 
-    if (sel->size() == 0) {
+    if (len(*sel) == 0) {
         delete sel;
         return nullptr;
     }
@@ -110,7 +110,7 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
     // create path from rectangles
     Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
     screenRc.Inflate(pad, pad);
-    for (size_t i = 0; i < rects.size(); i++) {
+    for (int i = 0; i < len(rects); i++) {
         Rect rc = rects.at(i);
         if (pad > 0) {
             rc.Inflate(pad, pad);
@@ -228,7 +228,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
     if (!tab || !tab->selectionOnPage) {
         return {};
     }
-    if (tab->selectionOnPage->size() == 0) {
+    if (len(*tab->selectionOnPage) == 0) {
         return {};
     }
     DisplayModel* dm = tab->AsFixed();
@@ -267,7 +267,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
 
 void CopySelectionToClipboard(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
-    ReportIf(tab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
+    ReportIf(len(*tab->selectionOnPage) == 0 && win->mouseAction != MouseAction::SelectingText);
 
     if (!OpenClipboard(nullptr)) {
         return;
@@ -298,7 +298,7 @@ void CopySelectionToClipboard(MainWindow* win) {
         return;
     }
 
-    if (!dm || !tab->selectionOnPage || tab->selectionOnPage->size() == 0) {
+    if (!dm || !tab->selectionOnPage || len(*tab->selectionOnPage) == 0) {
         return;
     }
     /* also copy a screenshot of the current selection to the clipboard */

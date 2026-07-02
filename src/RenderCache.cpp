@@ -1049,7 +1049,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
     int renderDelayMin = RENDER_DELAY_UNDEFINED;
     bool neededScaling = false;
 
-    while (queue.size() > 0) {
+    while (len(queue) > 0) {
         TilePosition tile = queue.PopAt(0);
         Rect tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, rotation, zoom, tile, pi->pageOnScreen);
         if (tileOnScreen.IsEmpty()) {
@@ -1081,7 +1081,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
             renderDelayMin = std::min(renderDelay, renderDelayMin);
         }
         // paint tiles from left to right from top to bottom
-        if (tile.res > 0 && queue.size() > 0 && tile.res < queue.at(0).res) {
+        if (tile.res > 0 && len(queue) > 0 && tile.res < queue.at(0).res) {
             queue.Sort(cmpTilePosition);
         }
     }

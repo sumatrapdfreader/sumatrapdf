@@ -349,7 +349,7 @@ VBox::~VBox() {
 }
 
 int VBox::ChildrenCount() const {
-    return children.Size();
+    return len(children);
 }
 
 int VBox::NonCollapsedChildrenCount() {
@@ -679,7 +679,7 @@ boxElementInfo& VBox::AddChild(ILayout* child, int flex) {
     v.layout = child;
     v.flex = flex;
     children.Append(v);
-    auto n = children.size();
+    auto n = len(children);
     return children[n - 1];
 }
 
@@ -697,7 +697,7 @@ HBox::~HBox() {
 }
 
 int HBox::ChildrenCount() const {
-    return children.Size();
+    return len(children);
 }
 
 int HBox::NonCollapsedChildrenCount() {
@@ -1007,7 +1007,7 @@ boxElementInfo& HBox::AddChild(ILayout* child, int flex) {
     v.layout = child;
     v.flex = flex;
     children.Append(v);
-    auto n = children.size();
+    auto n = len(children);
     return children[n - 1];
 }
 

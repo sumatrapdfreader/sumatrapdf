@@ -47,7 +47,7 @@ const GumboNode* GumboFindDescendantByTag(const GumboNode* node, Str name) {
     // stack (gumbo builds the tree iteratively, but recursing over it doesn't)
     Vec<const GumboNode*> toVisit;
     toVisit.Append(node);
-    while (toVisit.size() > 0) {
+    while (len(toVisit) > 0) {
         const GumboNode* n = toVisit.Pop();
         if (!n) {
             continue;

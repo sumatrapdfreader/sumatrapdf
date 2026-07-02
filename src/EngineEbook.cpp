@@ -278,7 +278,7 @@ bool EngineEbook::ExtractPageAnchors() {
             return false;
         }
 
-        for (size_t k = 0; k < pageInstrs->size(); k++) {
+        for (int k = 0; k < len(*pageInstrs); k++) {
             DrawInstr* i = &pageInstrs->at(k);
             if (DrawInstrType::Anchor != i->type) {
                 continue;
@@ -291,7 +291,7 @@ bool EngineEbook::ExtractPageAnchors() {
         baseAnchors.Append(baseAnchor);
     }
 
-    ReportIf(baseAnchors.size() != pages->size());
+    ReportIf(len(baseAnchors) != len(*pages));
     return true;
 }
 
@@ -385,12 +385,12 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         Rect bbox = GetInstrBbox(i, pageBorder);
         switch (i.type) {
             case DrawInstrType::String:
-                if (coords.size() > 0 &&
+                if (len(coords) > 0 &&
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
-                } else if (insertSpace && coords.size() > 0) {
+                } else if (insertSpace && len(coords) > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
@@ -409,12 +409,12 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 break;
             case DrawInstrType::RtlString:
-                if (coords.size() > 0 &&
+                if (len(coords) > 0 &&
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
-                } else if (insertSpace && coords.size() > 0) {
+                } else if (insertSpace && len(coords) > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
@@ -442,7 +442,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         content.Append(lineSep);
         coords.AppendBlanks(len(lineSep));
     }
-    ReportIf(coords.Size() != len(content));
+    ReportIf(len(coords) != len(content));
 
     PageText res;
     res.len = len(content);
@@ -469,12 +469,12 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
         Rect bbox = GetInstrBbox(i, pageBorder);
         switch (i.type) {
             case DrawInstrType::String:
-                if (coords.size() > 0 &&
+                if (len(coords) > 0 &&
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
-                } else if (insertSpace && coords.size() > 0) {
+                } else if (insertSpace && len(coords) > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
@@ -495,12 +495,12 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
                 }
                 break;
             case DrawInstrType::RtlString:
-                if (coords.size() > 0 &&
+                if (len(coords) > 0 &&
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(len(lineSep));
                     ReportIf(lineSep && !coords.Last().IsEmpty());
-                } else if (insertSpace && coords.size() > 0) {
+                } else if (insertSpace && len(coords) > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
                     if (swidth > 0) {
                         content.AppendChar(' ');
@@ -531,7 +531,7 @@ PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
         content.Append(lineSep);
         coords.AppendBlanks(len(lineSep));
     }
-    ReportIf(coords.Size() != len(content));
+    ReportIf(len(coords) != len(content));
 
     PageTextUtf8 res;
     res.len = len(content);
@@ -570,7 +570,7 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
     Vec<IPageElement*>& els = pi->elements;
 
     Vec<DrawInstr>* pageInstrs = &pi->instructions;
-    size_t n = pageInstrs->size();
+    int n = len(*pageInstrs);
     for (size_t idx = 0; idx < n; idx++) {
         DrawInstr& i = pageInstrs->at(idx);
         if (DrawInstrType::Image == i.type) {
@@ -638,7 +638,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
     int basePageNo = 0;
     if (hash && hash.s > name.s) {
         int base_len = (int)(hash.s - name.s - 1);
-        for (size_t i = 0; i < baseAnchors.size(); i++) {
+        for (int i = 0; i < len(baseAnchors); i++) {
             DrawInstr* anchor = baseAnchors.at(i);
             if (anchor && base_len == anchor->str.len && str::EqNI(name, anchor->str, base_len)) {
                 baseAnchor = anchor;
@@ -649,7 +649,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
     }
 
     int id_len = id.len;
-    for (size_t i = 0; i < anchors.size(); i++) {
+    for (int i = 0; i < len(anchors); i++) {
         PageAnchor* anchor = &anchors.at(i);
         if (baseAnchor) {
             if (anchor->instr == baseAnchor) {
@@ -885,7 +885,7 @@ bool EngineEpub::FinishLoading() {
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
 
     // must set pageCount before ExtractPageAnchors
-    pageCount = (int)pages->size();
+    pageCount = len(*pages);
     if (!ExtractPageAnchors()) {
         return false;
     }
@@ -1033,7 +1033,7 @@ bool EngineFb2::FinishLoading() {
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors
-    pageCount = (int)pages->size();
+    pageCount = len(*pages);
     if (!ExtractPageAnchors()) {
         return false;
     }
@@ -1153,7 +1153,7 @@ bool EngineMobi::FinishLoading() {
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
     // must set pageCount before ExtractPageAnchors
-    pageCount = (int)pages->size();
+    pageCount = len(*pages);
     if (!ExtractPageAnchors()) {
         return false;
     }
@@ -1296,7 +1296,7 @@ bool EnginePdb::Load(Str fileName) {
 
     pages = HtmlFormatter(&args).FormatAllPages();
     // must set pageCount before ExtractPageAnchors
-    pageCount = (int)pages->size();
+    pageCount = len(*pages);
     if (!ExtractPageAnchors()) {
         return false;
     }
@@ -1357,7 +1357,7 @@ class ChmDataCache {
 
     Str GetImageData(Str id, Str pagePath) {
         TempStr url = NormalizeURLTemp(id, pagePath);
-        for (size_t i = 0; i < images.size(); i++) {
+        for (int i = 0; i < len(images); i++) {
             if (str::Eq(images.at(i).fileName, url)) {
                 return images.at(i).base;
             }
@@ -1520,7 +1520,7 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
     toVisit.Append(node);
-    while (toVisit.size() > 0) {
+    while (len(toVisit) > 0) {
         const GumboNode* n = toVisit.Pop();
         if (!n) {
             continue;
@@ -1656,7 +1656,7 @@ bool EngineChm::Load(Str fileName) {
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors
-    pageCount = (int)pages->size();
+    pageCount = len(*pages);
     if (!ExtractPageAnchors()) {
         return false;
     }
@@ -1794,7 +1794,7 @@ bool EngineHtml::Load(Str fileName) {
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors
-    pageCount = (int)pages->size();
+    pageCount = len(*pages);
     if (!ExtractPageAnchors()) {
         return false;
     }
@@ -1912,7 +1912,7 @@ bool EngineTxt::Load(Str fileName) {
 
     pages = TxtFormatter(&args).FormatAllPages(false);
     // must set pageCount before ExtractPageAnchors
-    pageCount = (int)pages->size();
+    pageCount = len(*pages);
     if (!ExtractPageAnchors()) {
         return false;
     }

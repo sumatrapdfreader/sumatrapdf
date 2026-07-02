@@ -579,7 +579,7 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     }
 
     // try the list of default passwords before asking the user
-    if (pwdIdx < gGlobalPrefs->defaultPasswords->size()) {
+    if (pwdIdx < len(*gGlobalPrefs->defaultPasswords)) {
         Str pwd = gGlobalPrefs->defaultPasswords->at(pwdIdx++);
         return str::Dup(pwd);
     }
@@ -2019,7 +2019,7 @@ static MainWindow* CreateMainWindow() {
         windowPos = GetDefaultWindowPos();
     }
     // we don't want the windows to overlap so shift each window by a bit
-    int nShift = (int)gWindows.size();
+    int nShift = len(gWindows);
     windowPos.x += (nShift * 15); // TODO: DPI scale
 
     WStr clsName = WStrL(FRAME_CLASS_NAME);
@@ -2193,7 +2193,7 @@ void ShowMainWindow(MainWindow* win, int windowState) {
              win->captionRect.dy);
     }
 
-    if (gWindows.Size() == 1 && (true || IsDebuggerPresent())) {
+    if (len(gWindows) == 1 && (true || IsDebuggerPresent())) {
         HwndToForeground(win->hwndFrame);
     }
 
@@ -2245,7 +2245,7 @@ MainWindow* CreateAndShowMainWindow(SessionData* data, bool showWin) {
 void DeleteMainWindow(MainWindow* win) {
     int winIdx = gWindows.Remove(win);
 
-    int nWindowsLeft = gWindows.Size();
+    int nWindowsLeft = len(gWindows);
     logf("DeleteMainWindow: win: 0x%p, hwndFrame: 0x%p, hwndCanvas: 0x%p, winIdx : %d, nWindowsLeft: %d\n", win,
          win->hwndFrame, win->hwndCanvas, winIdx, nWindowsLeft);
     if (winIdx < 0) {
@@ -2320,7 +2320,7 @@ static void RenameFileInHistory(Str oldPath, Str newPath) {
         oldOpenCount = fs->openCount;
         gFileHistory.Remove(fs);
         // TODO: merge favorites as well?
-        if (fs->favorites->size() > 0) {
+        if (len(*fs->favorites) > 0) {
             UpdateFavoritesTreeForAllWindows();
         }
         DeleteFileState(fs);
@@ -2392,7 +2392,7 @@ static void LoadDocumentMarkNotExist(MainWindow* win, Str path, bool noSavePrefs
         SaveSettings();
     }
     // update the Frequently Read list
-    if (1 == gWindows.size() && gWindows.at(0)->IsCurrentTabAbout()) {
+    if (1 == len(gWindows) && gWindows.at(0)->IsCurrentTabAbout()) {
         gWindows.at(0)->RedrawAll(true);
     }
 }
@@ -2576,7 +2576,7 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
         }
     }
 
-    if (!win && 1 == gWindows.size() && gWindows.at(0)->IsCurrentTabAbout()) {
+    if (!win && 1 == len(gWindows) && gWindows.at(0)->IsCurrentTabAbout()) {
         win = gWindows.at(0);
         args->win = win;
         args->isNewWindow = false;
@@ -2646,7 +2646,7 @@ static void StartOrQueueLoadDocument(LoadDocumentAsyncData* data) {
 static void OnLoadDocumentThreadFinished() {
     gLoadThreadsActive--;
     ReportIf(gLoadThreadsActive < 0);
-    if (gLoadQueue.Size() > 0) {
+    if (len(gLoadQueue) > 0) {
         LoadDocumentAsyncData* next = gLoadQueue.PopAt(0);
         StartLoadDocumentThread(next);
     }
@@ -3664,7 +3664,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     if (lastTab && lastTab->type == WindowTab::Type::About) {
         // showing only home page tab so remove it
         // if there are other windows, close this one
-        if (gWindows.size() > 1) {
+        if (len(gWindows) > 1) {
             CloseWindow(win, false, false);
         } else {
             tab = win->GetTab(0);
@@ -3786,7 +3786,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 
     // Stop eventual TTS reading
     StopReadAloudIfSourceWindow(win);
-    bool lastWindow = (1 == gWindows.size());
+    bool lastWindow = (1 == len(gWindows));
     // if not the last window, save after the window is removed from gWindows
     // (so its now-closed state isn't re-saved); via defer so it also runs on the
     // reentrant early-return path below (#5418, #5668)
@@ -3832,7 +3832,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     }
 
     if (lastWindow && quitIfLast) {
-        int nWindows = gWindows.size();
+        int nWindows = len(gWindows);
         logf("Calling PostQuitMessage() in CloseWindow() because closing lastWindow, nWindows: %d\n", nWindows);
         ReportDebugIf(nWindows != 0);
         PostQuitMessage(0);
@@ -6446,7 +6446,7 @@ static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
     }
 
     // the last window survives as an empty/about window
-    if (gWindows.size() > 0) {
+    if (len(gWindows) > 0) {
         return gWindows.at(0);
     }
     return nullptr;
@@ -6625,7 +6625,7 @@ void ClearHistory(MainWindow* win) {
     // TODO: what is relation between gFileHistory and gGlobalPrefs->fileStates?
     int nFiles = 0;
     if (gFileHistory.states) {
-        nFiles = gFileHistory.states->Size();
+        nFiles = len(*gFileHistory.states);
     }
     gFileHistory.Clear(false);
 
@@ -6669,7 +6669,7 @@ void RemoveDeletedFilesFromHistory(MainWindow* win) {
     int nRemoved = 0;
     Vec<FileState*>* states = gFileHistory.states;
     // iterate from the end because removing changes indices
-    for (int i = states->Size() - 1; i >= 0; i--) {
+    for (int i = len(*states) - 1; i >= 0; i--) {
         FileState* fs = states->at(i);
         Str path = fs->filePath;
         if (!path) {
@@ -10217,8 +10217,7 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
     WindowTab* currTab = win ? win->CurrentTab() : nullptr;
     bool isSpeaking = TtsIsSpeaking();
     bool canContinue = CanContinueReadAloud(currTab);
-    bool hasSelection =
-        currTab && win->showSelection && currTab->selectionOnPage && currTab->selectionOnPage->size() > 0;
+    bool hasSelection = currTab && win->showSelection && currTab->selectionOnPage && len(*currTab->selectionOnPage) > 0;
 
     if (isSpeaking) {
         AppendMenuW(menu, MF_STRING, CmdTtsMenuPauseReading, CWStrTemp(_TRA("Pause Reading")));
@@ -10297,7 +10296,7 @@ static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
     } else if (selected >= CmdTtsVoiceFirst && selected <= CmdTtsVoiceLast) {
         Vec<TtsVoiceInfo> voices = TtsGetVoices();
         int voiceIndex = (int)(selected - CmdTtsVoiceFirst);
-        if (voiceIndex >= 0 && voiceIndex < voices.Size()) {
+        if (voiceIndex >= 0 && voiceIndex < len(voices)) {
             if (TtsSetVoiceById(voices[voiceIndex].id)) {
                 ReadAloudSaveVoicePref(voices[voiceIndex].id);
             }

@@ -434,7 +434,7 @@ static u64 MatchKey(int page, int offset) {
 // 1-based index of `key` within the sorted positions cache, or 0 if not found
 static int MatchIndexInCache(MainWindow* win, u64 key) {
     Vec<u64>& pos = win->findCountPositions;
-    int n = (int)pos.size();
+    int n = len(pos);
     int lo = 0, hi = n;
     while (lo < hi) {
         int mid = (lo + hi) / 2;
@@ -455,7 +455,7 @@ static void ShowMatchCount(MainWindow* win) {
     if (!win->findCountValid) {
         return; // count not ready yet; leave whatever status is showing
     }
-    int total = (int)win->findCountPositions.size();
+    int total = len(win->findCountPositions);
     int n = 0;
     DisplayModel* dm = win->AsFixed();
     if (dm && dm->textSearch) {
@@ -471,7 +471,7 @@ static void ShowMatchCount(MainWindow* win) {
 constexpr int kMaxFindResults = 5000;
 
 void ClearFindMatches(MainWindow* win) {
-    int n = (int)win->findMatches.size();
+    int n = len(win->findMatches);
     for (int i = 0; i < n; i++) {
         str::Free(win->findMatches[i].snippet);
     }
@@ -532,7 +532,7 @@ static void FreeMatchSnippets(Vec<FindMatch>* matches) {
     if (!matches) {
         return;
     }
-    for (int i = 0; i < (int)matches->size(); i++) {
+    for (int i = 0; i < len(*matches); i++) {
         str::Free((*matches)[i].snippet);
     }
 }
@@ -577,7 +577,7 @@ static void CountEndTask(CountEndTaskData* d) {
             // install the snippet list (steal ownership of the snippet strings)
             ClearFindMatches(win);
             win->findMatches = *d->matches;
-            for (int i = 0; i < (int)d->matches->size(); i++) {
+            for (int i = 0; i < len(*d->matches); i++) {
                 (*d->matches)[i].snippet = Str(); // transferred to win->findMatches
             }
             win->findCountHasSnippets = ctd->wantSnippets;
@@ -621,7 +621,7 @@ static void CountThread(CountThreadData* d) {
         // the UI thread) bails before the expensive snippet build / next scan
         while (m && win->findCountEpoch == d->epoch) {
             positions->Append(MatchKey(ts.startPage, ts.startGlyph));
-            if (matches && (int)matches->size() < kMaxFindResults) {
+            if (matches && len(*matches) < kMaxFindResults) {
                 FindMatch fm;
                 fm.startPage = ts.startPage;
                 fm.startGlyph = ts.startGlyph;
@@ -717,7 +717,7 @@ static void UpdateMatchCount(MainWindow* win, WStr text) {
     bool cacheHit = win->findCountValid && win->findCountText && wstr::Eq(win->findCountText, text) &&
                     win->findCountMatchCase == win->findMatchCase &&
                     win->findCountMatchWholeWord == win->findMatchWholeWord && win->findCountEngine == engine &&
-                    (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : win->findMatches.size() > 0));
+                    (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : len(win->findMatches) > 0));
     if (cacheHit) {
         // matches are unchanged: just refresh n/m. Don't rebuild the results
         // list here -- it's already populated and rebuilding clears the user's
@@ -1013,14 +1013,14 @@ static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int fi
         return;
     }
     Vec<FindMatchPaintPageRect>& positions = gFindMatchPaintCache.positions;
-    for (int i = 0; i < (int)win->findMatches.size(); i++) {
+    for (int i = 0; i < len(win->findMatches); i++) {
         const FindMatch& fm = win->findMatches[i];
         if (!FindMatchTouchesVisiblePages(fm, firstPage, lastPage)) {
             continue;
         }
-        int firstPos = positions.Size();
+        int firstPos = len(positions);
         AppendMatchPageRects(engine, fm, positions);
-        int len = positions.Size() - firstPos;
+        int len = positions.len - firstPos;
         if (len == 0) {
             continue;
         }
@@ -1062,7 +1062,7 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
 
     DisplayModel* dm = win->AsFixed();
     TextSearch* ts = dm->textSearch;
-    if (!win->findCountValid && win->findMatches.size() == 0) {
+    if (!win->findCountValid && len(win->findMatches) == 0) {
         // count still running: at least highlight the current match
         if (!ts || ts->result.len == 0) {
             return;
@@ -1074,12 +1074,12 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
         }
         Vec<Rect> currentRects;
         AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
-        if (currentRects.size() > 0) {
+        if (len(currentRects) > 0) {
             PaintTransparentRectangles(hdc, win->canvasRc, currentRects, parsedCol->col, alpha);
         }
         return;
     }
-    if (win->findMatches.size() == 0) {
+    if (len(win->findMatches) == 0) {
         return;
     }
     int firstPage = 0;
@@ -1108,19 +1108,19 @@ void PaintAllFindMatches(MainWindow* win, HDC hdc) {
     Vec<Rect> otherRects;
     Vec<Rect> currentRects;
     Vec<FindMatchPaintPageRect>& positions = gFindMatchPaintCache.positions;
-    for (int i = 0; i < (int)gFindMatchPaintCache.entries.size(); i++) {
+    for (int i = 0; i < len(gFindMatchPaintCache.entries); i++) {
         const FindMatchPaintRects& entry = gFindMatchPaintCache.entries[i];
         Vec<Rect>& out = (entry.key == currentKey) ? currentRects : otherRects;
         AppendPageRectsToScreen(dm, win->canvasRc, &positions[entry.firstPos], entry.len, out);
     }
 
-    if (otherRects.size() > 0) {
+    if (len(otherRects) > 0) {
         PaintTransparentRectangles(hdc, win->canvasRc, otherRects, kFindOtherMatchColor, alpha);
     }
-    if (currentRects.size() == 0 && ts && ts->result.len > 0) {
+    if (len(currentRects) == 0 && ts && ts->result.len > 0) {
         AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
     }
-    if (currentRects.size() > 0) {
+    if (len(currentRects) > 0) {
         PaintTransparentRectangles(hdc, win->canvasRc, currentRects, parsedCol->col, alpha);
     }
 }
@@ -1139,7 +1139,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
 
     // Draw the rectangles highlighting the forward search results
     Vec<Rect> rects;
-    for (size_t i = 0; i < win->fwdSearchMark.rects.size(); i++) {
+    for (int i = 0; i < len(win->fwdSearchMark.rects); i++) {
         Rect rect = win->fwdSearchMark.rects.at(i);
         rect = dm->CvtToScreen(pageNo, ToRectF(rect));
         if (hiLiOff > 0) {
@@ -1251,7 +1251,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     if (!inverseSearch) {
         Vec<TextEditor*> editors;
         DetectTextEditors(editors);
-        if (editors.Size() > 0) {
+        if (len(editors) > 0) {
             inverseSearch = str::DupTemp(editors[0]->openFileCmd);
         }
     }
@@ -1285,7 +1285,7 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
     DisplayModel* dm = win->AsFixed();
     win->fwdSearchMark.rects.Reset();
     const PageInfo* pi = dm->GetPageInfo(page);
-    if ((ret == PDFSYNCERR_SUCCESS) && (rects.size() > 0) && (nullptr != pi)) {
+    if ((ret == PDFSYNCERR_SUCCESS) && (len(rects) > 0) && (nullptr != pi)) {
         // remember the position of the search result for drawing the rect later on
         win->fwdSearchMark.rects = rects;
         win->fwdSearchMark.page = page;
@@ -1298,7 +1298,7 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
         // Scroll to show the overall highlighted zone
         int pageNo = page;
         Rect overallrc = rects.at(0);
-        for (size_t i = 1; i < rects.size(); i++) {
+        for (int i = 1; i < len(rects); i++) {
             overallrc = overallrc.Union(rects.at(i));
         }
         TextSel res = {1, 1, &pageNo, &overallrc};
@@ -1534,8 +1534,8 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
         return {};
     }
     bool isCtrl = IsCtrlPressed();
-    logf("HandleOpenCmd: '%s', newWindow: %d, setFocus: %d, forceRefresh: %d, inCurrentTab: %d, isCtrl: %d\n",
-         filePath, newWindow, setFocus, forceRefresh, inCurrentTab, isCtrl);
+    logf("HandleOpenCmd: '%s', newWindow: %d, setFocus: %d, forceRefresh: %d, inCurrentTab: %d, isCtrl: %d\n", filePath,
+         newWindow, setFocus, forceRefresh, inCurrentTab, isCtrl);
     // on startup this is called while LoadDocument is in progress, which causes
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
@@ -1554,7 +1554,7 @@ static Str HandleOpenCmd(Str cmd, bool* ack) {
     // intelligently pick a window or create one
     MainWindow* win = nullptr;
     MainWindow* emptyExistingWin = nullptr;
-    auto nWindows = gWindows.Size();
+    auto nWindows = len(gWindows);
     for (auto& w : gWindows) {
         if (!w->HasDocsLoaded()) {
             emptyExistingWin = w;
@@ -1835,7 +1835,7 @@ static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, str::Builder& re
     } else {
         // no path given: report the currently active document
         win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
-        if (!win && gWindows.Size() > 0) {
+        if (!win && len(gWindows) > 0) {
             win = gWindows[0];
         }
     }
@@ -1899,7 +1899,7 @@ static Str HandleGetMousePosCmd(Str cmd, bool* ack, str::Builder& res) {
     }
     *ack = true;
     MainWindow* win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
-    if (!win && gWindows.Size() > 0) {
+    if (!win && len(gWindows) > 0) {
         win = gWindows[0];
     }
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
@@ -2167,7 +2167,7 @@ static void OpenCopyDataAsyncRun(OpenCopyDataAsync* d) {
         if (!win) {
             win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
         }
-        if (!win && gWindows.Size() > 0) {
+        if (!win && len(gWindows) > 0) {
             win = gWindows[0];
         }
     }

@@ -88,7 +88,7 @@ int FavTreeModel::ChildCount(TreeItem ti) {
     if (!fti) {
         return 0;
     }
-    size_t n = fti->children.size();
+    int n = len(fti->children);
     return (int)n;
 }
 
@@ -122,7 +122,7 @@ HTREEITEM FavTreeModel::GetHandle(TreeItem ti) {
 static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
     FileState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
-        for (size_t j = 0; j < ds->favorites->size(); j++) {
+        for (int j = 0; j < len(*ds->favorites); j++) {
             if (menuId == ds->favorites->at(j)->menuId) {
                 if (dsOut) {
                     *dsOut = ds;
@@ -147,7 +147,7 @@ static FileState* GetByFavorite(Favorite* fn) {
 static void ResetFavMenuIds() {
     FileState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
-        for (size_t j = 0; j < ds->favorites->size(); j++) {
+        for (int j = 0; j < len(*ds->favorites); j++) {
             ds->favorites->at(j)->menuId = 0;
         }
     }
@@ -170,7 +170,7 @@ bool IsPageInFavorites(Str filePath, int pageNo) {
     if (!fav) {
         return false;
     }
-    for (size_t i = 0; i < fav->favorites->size(); i++) {
+    for (int i = 0; i < len(*fav->favorites); i++) {
         if (pageNo == fav->favorites->at(i)->pageNo) {
             return true;
         }
@@ -183,14 +183,14 @@ void GoToNextFavorite(MainWindow* win, bool forward) {
         return;
     }
     FileState* fs = GetFavByFilePath(win->ctrl->GetFilePath());
-    if (!fs || fs->favorites->size() == 0) {
+    if (!fs || len(*fs->favorites) == 0) {
         return;
     }
     int cur = win->currPageNo;
     // pick the favorite page closest to the current page in the requested
     // direction (no wrap-around)
     int best = -1;
-    for (size_t i = 0; i < fs->favorites->size(); i++) {
+    for (int i = 0; i < len(*fs->favorites); i++) {
         int p = fs->favorites->at(i)->pageNo;
         if (forward) {
             if (p > cur && (best == -1 || p < best)) {
@@ -213,7 +213,7 @@ static Favorite* FindByPage(FileState* ds, int pageNo, Str pageLabel = {}) {
         return nullptr;
     }
     auto favs = ds->favorites;
-    int n = favs->Size();
+    int n = len(*favs);
     if (pageLabel) {
         for (int i = 0; i < n; i++) {
             auto fav = favs->at(i);
@@ -271,7 +271,7 @@ static void RemoveFav(Str filePath, int pageNo) {
     fav->favorites->Remove(fn);
     DeleteFavorite(fn);
 
-    if (!SettingsRememberOpenedFiles() && 0 == fav->favorites->size()) {
+    if (!SettingsRememberOpenedFiles() && 0 == len(*fav->favorites)) {
         gFileHistory.Remove(fav);
         DeleteFileState(fav);
     }
@@ -283,7 +283,7 @@ static void RemoveAllFavForFile(Str filePath) {
         return;
     }
 
-    for (size_t i = 0; i < fav->favorites->size(); i++) {
+    for (int i = 0; i < len(*fav->favorites); i++) {
         DeleteFavorite(fav->favorites->at(i));
     }
     fav->favorites->Reset();
@@ -301,7 +301,7 @@ static void RemoveAllFavForFile(Str filePath) {
 bool HasFavorites() {
     FileState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
-        if (ds->favorites->size() > 0) {
+        if (len(*ds->favorites) > 0) {
             return true;
         }
     }
@@ -339,7 +339,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
     if (!f) {
         return;
     }
-    for (size_t i = 0; i < f->favorites->size(); i++) {
+    for (int i = 0; i < len(*f->favorites); i++) {
         if (i >= MAX_FAV_MENUS) {
             return;
         }
@@ -376,7 +376,7 @@ static bool SortByBaseFileName(Str s1, Str s2) {
 static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore = nullptr) {
     FileState* fs;
     for (size_t i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
-        if (fs->favorites->size() > 0 && fs != toIgnore) {
+        if (len(*fs->favorites) > 0 && fs != toIgnore) {
             filePathsSortedOut.Append(fs->filePath);
         }
     }
@@ -408,7 +408,7 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
         // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(filePathsSorted, currFileFav);
     }
-    if (currFileFav && currFileFav->favorites->size() > 0) {
+    if (currFileFav && len(*currFileFav->favorites) > 0) {
         filePathsSorted.InsertAt(0, currFileFav->filePath);
     }
 
@@ -434,7 +434,7 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
             continue;
         }
         HMENU sub = m;
-        bool combined = (f->favorites->Size() == 1);
+        bool combined = (len(*f->favorites) == 1);
         if (!combined) {
             sub = CreateMenu();
         }
@@ -595,14 +595,14 @@ static void GoToFavForTVItem(MainWindow* win, TreeCtrl* treeView, HTREEITEM hIte
 #endif
 
 static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
-    if (!fs->favorites || fs->favorites->Size() == 0) {
+    if (!fs->favorites || len(*fs->favorites) == 0) {
         return nullptr;
     }
     auto* res = new FavTreeItem();
     Favorite* fn = fs->favorites->at(0);
     res->favorite = fn;
 
-    bool isCollapsed = fs->favorites->size() == 1;
+    bool isCollapsed = len(*fs->favorites) == 1;
     if (isCollapsed) {
         isExpanded = false;
     }
@@ -619,7 +619,7 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
 }
 
 static void MakeFavSecondLevel(FavTreeItem* parent, FileState* f) {
-    size_t n = f->favorites->size();
+    int n = len(*f->favorites);
     for (size_t i = 0; i < n; i++) {
         Favorite* fn = f->favorites->at(i);
         auto* ti = new FavTreeItem();
@@ -648,7 +648,7 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win) {
             continue;
         }
         res->root->children.Append(ti);
-        if (fs->favorites->size() > 1) {
+        if (len(*fs->favorites) > 1) {
             MakeFavSecondLevel(ti, fs);
         }
     }
@@ -724,7 +724,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, Str pageLabel, Str
     AddOrReplaceFav(path, pageNo, Str(name), pl);
     // expand newly added favorites by default
     FileState* fav = GetFavByFilePath(path);
-    if (fav && fav->favorites->size() == 2) {
+    if (fav && len(*fav->favorites) == 2) {
         win->expandedFavorites.Append(fav);
     }
     UpdateFavoritesTreeForAllWindows();
@@ -789,7 +789,7 @@ void RememberFavTreeExpansionState(MainWindow* win) {
 }
 
 void RememberFavTreeExpansionStateForAllWindows() {
-    for (size_t i = 0; i < gWindows.size(); i++) {
+    for (int i = 0; i < len(gWindows); i++) {
         RememberFavTreeExpansionState(gWindows.at(i));
     }
 }

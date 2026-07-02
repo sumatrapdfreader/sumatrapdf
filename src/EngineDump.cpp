@@ -277,7 +277,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     }
 
     Vec<IPageElement*> els = engine->GetElements(pageNo);
-    if (els.size() > 0) {
+    if (len(els) > 0) {
         Out1("\t\t<PageElements>\n");
         for (auto& el : els) {
             RectF rect = el->GetRect();

@@ -13,8 +13,8 @@
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
     ParsedTip tip;
     ParseTip(tip, input);
-    utassert(tip.words.Size() == expWords);
-    utassert(tip.links.Size() == expLinks);
+    utassert(len(tip.words) == expWords);
+    utassert(len(tip.links) == expLinks);
 }
 
 static void ParseTipExpectPlainContains(Str input, Str needle) {
@@ -27,7 +27,7 @@ static void ParseTipExpectPlainContains(Str input, Str needle) {
 static void ParseTipExpectLinkCmd(Str input, Str expCmd) {
     ParsedTip tip;
     ParseTip(tip, input);
-    utassert(tip.links.Size() == 1);
+    utassert(len(tip.links) == 1);
     utassert(str::Eq(tip.links[0].cmd, expCmd));
 }
 

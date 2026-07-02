@@ -790,7 +790,7 @@ static void AddLineSep(wstr::Builder& s, Vec<Rect>& rects, WStr lineSep) {
 }
 
 // UTF-8 variant: append `c` as up to 4 UTF-8 bytes to `s` and the same
-// rect `r` for each byte, so rects.size() == s.size() holds.
+// rect `r` for each byte, so len(rects) == len(s) holds.
 static void AddCharUtf8(fz_stext_line*, fz_stext_char* c, str::Builder& s, Vec<Rect>& rects, Vec<SeenGlyph>& seen) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     Rect r = ToRectF(bbox).Round();
@@ -868,7 +868,7 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
         block = block->next;
     }
 
-    ReportIf(len(content) != rects.Size());
+    ReportIf(len(content) != len(rects));
 
     if (coordsOut) {
         *coordsOut = rects.Take();
@@ -904,7 +904,7 @@ static WStr FzTextPageToWStr(fz_stext_page* text, Rect** coordsOut) {
         block = block->next;
     }
 
-    ReportIf(len(content) != rects.Size());
+    ReportIf(len(content) != len(rects));
 
     if (coordsOut) {
         *coordsOut = rects.Take();
@@ -1002,7 +1002,7 @@ static int LinkifyFindEndOff(int startOff, wchar_t prevChar, WStr pageText) {
 }
 
 static int LinkifyMultilineText(LinkRectList* list, WStr pageText, int startOff, int nextOff, Rect* coords) {
-    int lastIx = list->coords.Size() - 1;
+    int lastIx = len(list->coords) - 1;
     TempStr uri = list->links.At(lastIx);
     int endOff = nextOff;
     bool multiline = false;
@@ -1022,7 +1022,7 @@ static int LinkifyMultilineText(LinkRectList* list, WStr pageText, int startOff,
 
     // update the link URL for all partial links
     list->links.SetAt(lastIx, uri);
-    for (int i = lastIx + 1; i < list->coords.Size(); i++) {
+    for (int i = lastIx + 1; i < len(list->coords); i++) {
         list->links.Append(uri);
     }
 
@@ -1407,7 +1407,7 @@ static bool RectFullyContains(RectF r1, RectF r2) {
 
 // if an elements fully obscures another, remove it from the list
 static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
-    int n = els.Size();
+    int n = len(els);
     ReportIf(n < 2);
     for (int i = 0; i < n; i++) {
         RectF r1 = els[i]->GetRect();
@@ -1430,7 +1430,7 @@ static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
 // that is fully obscured by all other elements
 // if not fully obscured, return the first one
 static IPageElement* PickBestElement(Vec<IPageElement*>& els) {
-    int n = els.Size();
+    int n = len(els);
     if (n == 0) {
         return nullptr;
     }
@@ -1448,8 +1448,8 @@ static IPageElement* PickBestElement(Vec<IPageElement*>& els) {
 Encore:
     bool didRemove = RemoveHeWhoFullyContains(els);
     if (didRemove) {
-        ReportIf(els.Size() != n - 1);
-        n = els.Size();
+        ReportIf(len(els) != n - 1);
+        n = len(els);
         if (n == 1) {
             return els[0];
         }
@@ -1509,8 +1509,7 @@ static void BuildElementsInfo(FzPageInfo* pageInfo) {
     pageInfo->elementsNeedRebuilding = false;
     auto& els = pageInfo->allElements;
 
-    int total =
-        pageInfo->images.Size() + pageInfo->links.Size() + pageInfo->autoLinks.Size() + pageInfo->comments.Size();
+    int total = len(pageInfo->images) + len(pageInfo->links) + len(pageInfo->autoLinks) + len(pageInfo->comments);
     els.Clear();
     els.EnsureCap(total);
 
@@ -1590,7 +1589,7 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageI
             auto pel = new PageElementImage();
             pel->pageNo = pageNo;
             pel->rect = ToRectF(block->bbox);
-            pel->imageID = images.Size();
+            pel->imageID = len(images);
             img->imageElement = pel;
             images.Append(img);
         }
@@ -1868,7 +1867,7 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
     BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
 
-    size_t n = data.size();
+    int n = len(data);
     if (n == 0) {
         return nullptr;
     }
@@ -2022,7 +2021,7 @@ void ReleasePerThreadContext(EngineMupdf* engine) {
     fz_context* ctxToDrop = nullptr;
     {
         ScopedCritSec cs(&gPerThreadContextsCs);
-        auto n = gPerThreadContexts->Size();
+        auto n = len(*gPerThreadContexts);
         for (int i = 0; i < n; i++) {
             auto& el = gPerThreadContexts->at(i);
             if (el.engine == engine && el.threadID == threadID) {
@@ -2042,7 +2041,7 @@ static void ReleaseAllPerThreadContexts(EngineMupdf* engine) {
     Vec<fz_context*> ctxsToDrop;
     {
         ScopedCritSec cs(&gPerThreadContextsCs);
-        for (int i = gPerThreadContexts->Size() - 1; i >= 0; i--) {
+        for (int i = len(*gPerThreadContexts) - 1; i >= 0; i--) {
             auto& el = gPerThreadContexts->at(i);
             if (el.engine == engine) {
                 ctxsToDrop.Append(el.ctx);
@@ -3905,7 +3904,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         return nullptr;
     }
     const auto& images = pageInfo->images;
-    bool outOfBounds = imageIdx >= images.Size();
+    bool outOfBounds = imageIdx >= len(images);
     fz_rect imgRect = images.at(imageIdx)->rect;
     bool badRect = ToRectF(imgRect) != rect;
     ReportIf(outOfBounds);
@@ -4127,7 +4126,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     ScopedCritSec scope(&docLock);
 
     StrVec fonts;
-    for (size_t i = 0; i < fontList.size(); i++) {
+    for (int i = 0; i < len(fontList); i++) {
         Str name, type, encoding;
         bool embedded = false;
         fz_try(ctx) {
@@ -4522,7 +4521,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
         if (zip) {
             str::Builder filesStr;
             auto& fileInfos = zip->GetFileInfos();
-            size_t n = fileInfos.size();
+            int n = len(fileInfos);
             for (size_t i = 0; i < n; i++) {
                 auto* fi = fileInfos[i];
                 if (str::IsEmpty(fi->name)) {
@@ -4771,7 +4770,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
             return {};
         }
         auto files = archive->GetFileInfos();
-        if (files.size() != 1) {
+        if (len(files) != 1) {
             return {};
         }
         auto* fi = archive->GetFileDataById(0);
@@ -4906,7 +4905,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
         }
         els.Append(annot);
     }
-    if (els.Size() == 0) {
+    if (len(els) == 0) {
         return nullptr;
     }
     for (const auto& a : els) {
@@ -4921,7 +4920,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     Annotation* best = els[0];
     RectF br = best->bounds;
     float bestArea = br.dx * br.dy;
-    for (int i = 1; i < els.Size(); i++) {
+    for (int i = 1; i < len(els); i++) {
         RectF r = els[i]->bounds;
         float area = r.dx * r.dy;
         if (area < bestArea) {
@@ -4974,7 +4973,7 @@ Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bo
         return nullptr;
     }
     Vec<Annotation*>& ws = pi->widgets;
-    int n = ws.Size();
+    int n = len(ws);
     int idx = ws.Find(cur);
     if (n == 0 || idx < 0) {
         return nullptr;
@@ -5042,18 +5041,18 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     FzPageInfo* pageInfo = e->pages[pageIdx];
 
     if (change == AnnotationChange::Remove) {
-        int sizeBefore = pageInfo->annotations.Size();
+        int sizeBefore = len(pageInfo->annotations);
         int removedPos = pageInfo->annotations.Remove(annot);
         ReportIf(removedPos < 0); // must exist
-        int sizeNow = pageInfo->annotations.Size();
+        int sizeNow = len(pageInfo->annotations);
         ReportIf(sizeBefore != sizeNow + 1);
         ValidateAnnotationsInSync(e, pageInfo);
     } else if (change == AnnotationChange::Add) {
-        int sizeBefore = pageInfo->annotations.Size();
+        int sizeBefore = len(pageInfo->annotations);
         int pos = pageInfo->annotations.Find(annot);
         ReportIf(pos >= 0); // shouldn't exist
         pageInfo->annotations.Append(annot);
-        int sizeNow = pageInfo->annotations.Size();
+        int sizeNow = len(pageInfo->annotations);
         ReportIf(sizeBefore != sizeNow - 1);
         ValidateAnnotationsInSync(e, pageInfo);
     } else {

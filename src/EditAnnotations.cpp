@@ -371,7 +371,7 @@ void NotifyAnnotationsChanged(EditAnnotationsWindow* ew) {
 static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     auto model = new ListBoxModelStrings();
     int n = 0;
-    n = ew->annotations.Size();
+    n = len(ew->annotations);
 
     str::Builder s;
     for (int i = 0; i < n; i++) {
@@ -1106,8 +1106,8 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
         return;
     }
     if (!annotations.isValidIndex(itemNo)) {
-        logfa("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, annotations.size()=%d\n", itemNo,
-              annotations.Size());
+        logfa("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, len(annotations)=%d\n", itemNo,
+              len(annotations));
         ReportDebugIf(true);
         return;
     }

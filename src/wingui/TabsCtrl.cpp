@@ -882,7 +882,7 @@ TabInfo* TabsCtrl::GetTab(int idx) {
     // Bound against the tabs Vec we actually index, not the native control
     // count: InsertTab adds to the native control before the Vec, so the two
     // can transiently disagree.
-    if (idx < 0 || idx >= tabs.Size()) {
+    if (idx < 0 || idx >= len(tabs)) {
         if (idx < -1) {
             // no sentinel ever produces an index below -1: treat as corruption
             ReportIf(true);
@@ -891,7 +891,7 @@ TabInfo* TabsCtrl::GetTab(int idx) {
             // or a caller off-by-one. Log a breadcrumb so genuine caller bugs stay
             // diagnosable, without uploading a debug report. -1 ("no tab" sentinel)
             // is ubiquitous, so stay silent for it.
-            logf("TabsCtrl::GetTab: out-of-range idx=%d (tabs=%d)\n", idx, tabs.Size());
+            logf("TabsCtrl::GetTab: out-of-range idx=%d (tabs=%d)\n", idx, len(tabs));
         }
         return nullptr;
     }

@@ -726,7 +726,7 @@ PageTextUtf8 EngineDjvuDec::ExtractPageTextUtf8(int pageNo) {
     if (len(sb) == 0) {
         return {};
     }
-    ReportIf((size_t)len(sb) != coords.Size());
+    ReportIf((size_t)len(sb) != len(coords));
     PageTextUtf8 res;
     res.len = len(sb);
     res.text = sb.TakeStr();
@@ -826,7 +826,7 @@ Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
 
 IPageElement* EngineDjvuDec::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*> els = GetElements(pageNo);
-    int n = els.Size();
+    int n = len(els);
     for (int i = n - 1; i >= 0; i--) {
         auto el = els.at(i);
         if (el->GetRect().Contains(pt)) {

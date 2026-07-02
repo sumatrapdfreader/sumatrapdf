@@ -97,7 +97,7 @@ static Str UnescapeStr(Str s) {
 static Str SerializeUtf8StringArray(const Vec<Str>* strArray) {
     str::Builder serialized;
 
-    for (size_t i = 0; i < strArray->size(); i++) {
+    for (int i = 0; i < len(*strArray); i++) {
         if (i > 0) {
             serialized.AppendChar(' ');
         }
@@ -175,7 +175,7 @@ static void FreeUtf8StringArray(Vec<Str>* strArray) {
     if (!strArray) {
         return;
     }
-    for (size_t i = 0; i < strArray->size(); i++) {
+    for (int i = 0; i < len(*strArray); i++) {
         str::Free(strArray->at(i));
     }
     delete strArray;
@@ -258,7 +258,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
             return true;
         case SettingType::FloatArray:
         case SettingType::IntArray:
-            for (size_t i = 0; i < (*(Vec<int>**)fieldPtr)->size(); i++) {
+            for (int i = 0; i < len(**(Vec<int>**)fieldPtr); i++) {
                 FieldInfo info{};
                 info.type = SettingType::Int;
                 if (field.type == SettingType::FloatArray) {
@@ -270,7 +270,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
                 SerializeField(out, (const u8*)&(*(Vec<int>**)fieldPtr)->at(i), info);
             }
             // prevent empty arrays from being replaced with the defaults
-            return (*(Vec<int>**)fieldPtr)->size() > 0 || field.value != 0;
+            return len(**(Vec<int>**)fieldPtr) > 0 || field.value != 0;
         case SettingType::ColorArray:
         case SettingType::StringArray: {
             Str serialized = SerializeUtf8StringArray(*(Vec<Str>**)fieldPtr);
@@ -280,7 +280,7 @@ static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& f
                 EscapeStr(out, serialized);
             }
             // prevent empty arrays from being replaced with the defaults
-            return (*(Vec<Str>**)fieldPtr)->size() > 0 || field.value != 0;
+            return len(**(Vec<Str>**)fieldPtr) > 0 || field.value != 0;
         }
         default:
             ReportIf(true);
@@ -428,18 +428,18 @@ static void MarkFieldKnown(SquareTreeNode* node, Str fieldName, SettingType type
     if (SettingType::Struct == type || SettingType::Prerelease == type) {
         if (node->GetChild(fieldName, &off)) {
             delete node->data.at(off - 1).child;
-            node->data.RemoveAt(off - 1);
+            node->data.RemoveAt((int)(off - 1));
         }
     } else if (SettingType::Array == type) {
         while (node->GetChild(fieldName, &off)) {
             delete node->data.at(off - 1).child;
-            node->data.RemoveAt(off - 1);
+            node->data.RemoveAt((int)(off - 1));
             off--;
         }
     } else {
         Str value = node->GetValue(fieldName, &off);
         if (!str::IsNull(value)) {
-            node->data.RemoveAt(off - 1);
+            node->data.RemoveAt((int)(off - 1));
         }
     }
 }
@@ -448,7 +448,7 @@ static void SerializeUnknownFields(str::Builder& out, SquareTreeNode* node, int 
     if (!node) {
         return;
     }
-    for (size_t i = 0; i < node->data.size(); i++) {
+    for (int i = 0; i < len(node->data); i++) {
         SquareTreeNode::DataItem& item = node->data.at(i);
         Indent(out, indent);
         out.Append(item.key);
@@ -493,8 +493,8 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
             out.Append(fieldNameStr);
             out.Append(" [\r\n");
             Vec<void*>* array = *(Vec<void*>**)(base + field.offset);
-            if (array && array->size() > 0) {
-                for (size_t j = 0; j < array->size(); j++) {
+            if (array && len(*array) > 0) {
+                for (int j = 0; j < len(*array); j++) {
                     Indent(out, indent + 1);
                     out.Append("[\r\n");
                     SerializeStructRec(out, GetSubstruct(field), array->at(j), nullptr, indent + 2);
@@ -549,7 +549,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
         } else if (SettingType::Array == field.type) {
             SquareTreeNode *parent = node, *child = nullptr;
             if (parent && (child = parent->GetChild(fieldNameStr)) != nullptr &&
-                (0 == child->data.size() || child->GetChild(StrL("")))) {
+                (0 == len(child->data) || child->GetChild(StrL("")))) {
                 parent = child;
                 fieldName += len(fieldName);
                 fieldNameStr = Str(fieldName);

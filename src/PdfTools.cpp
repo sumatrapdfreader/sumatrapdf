@@ -1063,7 +1063,7 @@ static bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete) {
             pagesToDelete.Append(page);
         }
     }
-    if (pagesToDelete.Size() == 0) {
+    if (len(pagesToDelete) == 0) {
         return false;
     }
     // sort and deduplicate
@@ -1087,7 +1087,7 @@ static TempStr BuildKeepPagesRangeTemp(int pageCount, const Vec<int>& pagesToDel
     int rangeStart = -1;
     int rangeEnd = -1;
     for (int p = 1; p <= pageCount; p++) {
-        bool shouldDelete = (delIdx < pagesToDelete.Size() && pagesToDelete[delIdx] == p);
+        bool shouldDelete = (delIdx < len(pagesToDelete) && pagesToDelete[delIdx] == p);
         if (shouldDelete) {
             delIdx++;
             if (rangeStart != -1) {
@@ -1125,7 +1125,7 @@ static TempStr BuildKeepPagesRangeTemp(int pageCount, const Vec<int>& pagesToDel
 static TempStr FormatPageRangeTemp(const Vec<int>& pages) {
     str::Builder s;
     int i = 0;
-    int n = pages.Size();
+    int n = len(pages);
     while (i < n) {
         int start = pages[i];
         int end = start;
@@ -1150,7 +1150,7 @@ void PdfDeletePageDialog::UpdateButton() {
     Vec<int> parsedPages;
     bool valid = ParseDeletePages(pages, pageCount, parsedPages);
     // for delete mode, can't delete all pages
-    if (valid && !isExtract && parsedPages.Size() >= pageCount) {
+    if (valid && !isExtract && len(parsedPages) >= pageCount) {
         valid = false;
     }
     actionBtn->SetIsEnabled(valid);
@@ -1172,7 +1172,7 @@ void PdfDeletePageDialog::DoIt() {
     if (!ParseDeletePages(pages, pageCount, parsedPages)) {
         return;
     }
-    if (!isExtract && parsedPages.Size() >= pageCount) {
+    if (!isExtract && len(parsedPages) >= pageCount) {
         return;
     }
 

@@ -833,7 +833,7 @@ void HighlightTab(MainWindow* win, WindowTab* tab) {
 }
 
 HWND GetHwndForNotification() {
-    if (gWindows.Size() == 0) {
+    if (len(gWindows) == 0) {
         return nullptr;
     }
     return gWindows[0]->hwndCanvas;

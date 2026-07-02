@@ -60,8 +60,8 @@ TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line) {
             int page = 0;
             Vec<Rect> rects;
             int ret = sync->SourceToDoc(srcPath, line, 0, &page, rects);
-            out.Append(fmt("ret=%d page=%d nrects=%d src=%s line=%d", ret, page, rects.Size(), srcPath, line));
-            if (rects.Size() > 0) {
+            out.Append(fmt("ret=%d page=%d nrects=%d src=%s line=%d", ret, page, len(rects), srcPath, line));
+            if (len(rects) > 0) {
                 Rect r = rects.at(0);
                 out.Append(fmt(" rect_x=%d rect_y=%d rect_dx=%d rect_dy=%d", r.x, r.y, r.dx, r.dy));
             }

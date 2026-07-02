@@ -420,7 +420,7 @@ static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir
         return;
     }
     i64 ts = AIChatFileTimeToMs(ft);
-    for (int i = 0; i < sessions.Size(); i++) {
+    for (int i = 0; i < len(sessions); i++) {
         if (str::Eq(sessions[i].sessionId, sessionId)) {
             if (ts > sessions[i].timestamp) {
                 sessions[i].timestamp = ts;
@@ -589,7 +589,7 @@ static void PopulateSessionCombo(MainWindow* win) {
 
     int selectedIdx = 0;
     bool foundCurrent = false;
-    for (int i = 0; i < sessions.Size(); i++) {
+    for (int i = 0; i < len(sessions); i++) {
         Str display = sessions[i].display;
         if (str::IsEmpty(display)) {
             display = "(no description)";
@@ -609,7 +609,7 @@ static void PopulateSessionCombo(MainWindow* win) {
         Str label = "(current session)";
         WCHAR* labelW = CWStrTemp(label);
         SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)labelW);
-        selectedIdx = sessions.Size() + 1;
+        selectedIdx = len(sessions) + 1;
     }
 
     SendMessageW(combo, CB_SETCURSEL, selectedIdx, 0);
@@ -754,7 +754,7 @@ static void OnSessionComboChange(MainWindow* win) {
     CollectSessions(dir, sessions);
 
     int sessionIdx = sel - 1;
-    if (sessionIdx >= 0 && sessionIdx < sessions.Size()) {
+    if (sessionIdx >= 0 && sessionIdx < len(sessions)) {
         CodexBuildLog("session", sessions[sessionIdx].sessionId);
         str::ReplaceWithCopy(&tab->codexSessionId, sessions[sessionIdx].sessionId);
         tab->codexChatLog.Reset();
@@ -1416,7 +1416,7 @@ static void AutoSelectRecentSession(MainWindow* win) {
     Vec<AIChatSessionInfo> sessions;
     CollectSessions(dir, sessions);
 
-    if (sessions.Size() > 0) {
+    if (len(sessions) > 0) {
         // sessions are sorted by timestamp desc, so [0] is most recent
         str::ReplaceWithCopy(&tab->codexSessionId, sessions[0].sessionId);
 

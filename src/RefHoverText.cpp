@@ -38,7 +38,7 @@ static const CitationCacheEntry* CacheLookup(RefLookupCache* c, Str surname, int
     if (!c) {
         return nullptr;
     }
-    for (size_t i = 0; i < c->entries.size(); i++) {
+    for (int i = 0; i < len(c->entries); i++) {
         const CitationCacheEntry& e = c->entries[i];
         if (e.year == year && e.srcPage == srcPage && str::Eq(e.surname, surname)) {
             return &e;
@@ -65,7 +65,7 @@ static void CacheFree(RefLookupCache* c) {
     if (!c) {
         return;
     }
-    for (size_t i = 0; i < c->entries.size(); i++) {
+    for (int i = 0; i < len(c->entries); i++) {
         str::Free(c->entries[i].surname);
     }
     delete c;

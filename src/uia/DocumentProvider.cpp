@@ -323,24 +323,24 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     // return all pages' ranges that are even partially visible
     Vec<SumatraUIAutomationTextRange*> rangeArray;
     SumatraUIAutomationPageProvider* it = child_first;
-    while (it && rangeArray.size() < (ULONG_MAX / 2)) {
+    while (it && len(rangeArray) < (ULONG_MAX / 2)) {
         PageInfo* pi = it->dm->GetPageInfo(it->pageNum);
         if (pi && pi->isShown && pi->visibleRatio > 0.0f) {
             rangeArray.Append(new SumatraUIAutomationTextRange(this, it->pageNum));
         }
         it = it->sibling_next;
     }
-    ReportIf((ULONG_MAX / 2) == rangeArray.size());
+    ReportIf((ULONG_MAX / 2) == len(rangeArray));
 
-    SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)rangeArray.size());
+    SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)len(rangeArray));
     if (!psa) {
-        for (size_t i = 0; i < rangeArray.size(); i++) {
+        for (int i = 0; i < len(rangeArray); i++) {
             rangeArray[i]->Release();
         }
         return E_OUTOFMEMORY;
     }
 
-    for (LONG i = 0; i < (LONG)rangeArray.size(); i++) {
+    for (LONG i = 0; i < (LONG)len(rangeArray); i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, rangeArray[i]);
         ReportIf(FAILED(hr));
         rangeArray[i]->Release();

@@ -90,7 +90,7 @@ static bool ExtractSignature(Str hexSignature, Str& data, ScopedMem<BYTE>& signa
         }
         signatureBytes.Append((BYTE)val);
     }
-    signatureLen = signatureBytes.size();
+    signatureLen = len(signatureBytes);
     signature.Set(signatureBytes.Take());
     return true;
 }

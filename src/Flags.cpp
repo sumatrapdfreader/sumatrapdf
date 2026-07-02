@@ -111,7 +111,7 @@ bool ParsePageRanges(Str ranges, Vec<PageRange>& result) {
         }
     }
 
-    return result.size() > 0;
+    return len(result) > 0;
 }
 
 // a valid page range is a non-empty, comma separated list of either

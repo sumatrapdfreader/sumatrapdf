@@ -454,11 +454,11 @@ static void FilterLangList(HWND hDlg, Str filter, Str currLangCode) {
         ListBox_AppendString_NoSort(langList, langName);
         TempStr langCode = trans::GetLangCodeByIdxTemp(i);
         if (str::Eq(langCode, currLangCode)) {
-            itemToSelect = gLangListMap->Size();
+            itemToSelect = len(*gLangListMap);
         }
         gLangListMap->Append(i);
     }
-    if (gLangListMap->Size() > 0) {
+    if (len(*gLangListMap) > 0) {
         ListBox_SetCurSel(langList, itemToSelect);
     }
 }
@@ -511,7 +511,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 ReportIf(langList != (HWND)lp);
                 int idx = (int)ListBox_GetCurSel(langList);
-                if (gLangListMap && idx >= 0 && idx < gLangListMap->Size()) {
+                if (gLangListMap && idx >= 0 && idx < len(*gLangListMap)) {
                     int langIdx = gLangListMap->At(idx);
                     data->langCode = trans::GetLangCodeByIdxTemp(langIdx);
                     EndDialog(hDlg, IDOK);
@@ -522,7 +522,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                 case IDOK: {
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                     int idx = ListBox_GetCurSel(langList);
-                    if (gLangListMap && idx >= 0 && idx < gLangListMap->Size()) {
+                    if (gLangListMap && idx >= 0 && idx < len(*gLangListMap)) {
                         int langIdx = gLangListMap->At(idx);
                         data->langCode = trans::GetLangCodeByIdxTemp(langIdx);
                     }
@@ -625,7 +625,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
     auto prefs = gGlobalPrefs;
     auto customZoomLevels = prefs->zoomLevels;
     auto currZoomLevels = new Vec<float>();
-    int n = customZoomLevels->Size();
+    int n = len(*customZoomLevels);
     if (n > 0) {
         if (!forChm) {
             float* zoomLevels = gZoomLevels;
@@ -649,7 +649,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
         }
     }
 
-    n = currZoomLevels->Size();
+    n = len(*currZoomLevels);
     for (int i = 0; i < n; i++) {
         float zl = currZoomLevels->At(i);
         if (zl == currZoom) {

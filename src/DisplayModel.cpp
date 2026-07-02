@@ -1855,7 +1855,7 @@ float* GetDefaultZoomLevels(int* nZoomLevelsOut) {
     float* zoomLevels = defaultZoomLevels;
     int nZoomLevels = dimofi(defaultZoomLevels);
 
-    int nCustomZooms = gGlobalPrefs->zoomLevels->Size();
+    int nCustomZooms = len(*gGlobalPrefs->zoomLevels);
     if (nCustomZooms > 0) {
         // ReportIf((defaultZooms->at(0) < kZoomMin || defaultZooms->Last() > kZoomMax));
         // ReportIf(defaultZooms->at(0) > defaultZooms->Last());
@@ -2120,8 +2120,8 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
 void DisplayModel::AddNavPoint() {
     ScrollState ss = GetScrollState();
     // remove the current and all Forward history entries
-    if (navHistoryIdx < navHistory.size()) {
-        navHistory.RemoveAt(navHistoryIdx, navHistory.size() - navHistoryIdx);
+    if (navHistoryIdx < len(navHistory)) {
+        navHistory.RemoveAt(navHistoryIdx, len(navHistory) - navHistoryIdx);
     }
     // don't add another entry for the exact same position
     if (navHistoryIdx > 0 && ss == navHistory.at(navHistoryIdx - 1)) {
@@ -2139,11 +2139,11 @@ void DisplayModel::AddNavPoint() {
 }
 
 bool DisplayModel::CanNavigate(int dir) const {
-    ReportIf(navHistoryIdx > navHistory.size());
+    ReportIf(navHistoryIdx > len(navHistory));
     if (dir < 0) {
         return navHistoryIdx >= (size_t)-dir;
     }
-    return navHistoryIdx + dir < navHistory.size();
+    return navHistoryIdx + dir < len(navHistory);
 }
 
 /* Navigates |dir| steps forward or backwards. */
@@ -2153,7 +2153,7 @@ void DisplayModel::Navigate(int dir) {
     }
     // update the current history entry
     ScrollState ss = GetScrollState();
-    if (navHistoryIdx < navHistory.size()) {
+    if (navHistoryIdx < len(navHistory)) {
         navHistory.at(navHistoryIdx) = ss;
     } else {
         navHistory.Append(ss);
@@ -2166,7 +2166,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
     navHistory = orig.navHistory;
     navHistoryIdx = orig.navHistoryIdx;
     // remove navigation history entries for all no longer valid pages
-    for (size_t i = navHistory.size(); i > 0; i--) {
+    for (int i = len(navHistory); i > 0; i--) {
         if (!ValidPageNo(navHistory.at(i - 1).page)) {
             navHistory.RemoveAt(i - 1);
             if (i - 1 < navHistoryIdx) {

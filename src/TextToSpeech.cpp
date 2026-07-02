@@ -67,7 +67,7 @@ static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
 }
 
 static void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices) {
-    for (int i = 1; i < voices.Size(); i++) {
+    for (int i = 1; i < len(voices); i++) {
         TtsVoiceInfo value = voices[i];
         int j = i - 1;
 
@@ -865,7 +865,7 @@ static void WinTtsExtractCues(WMSS::ISpeechSynthesisStream* stream) {
     tracks->Release();
 
     // sort by time (insertion sort, the cues are mostly sorted already)
-    for (int i = 1; i < gWinCues.Size(); i++) {
+    for (int i = 1; i < len(gWinCues); i++) {
         WinTtsCue value = gWinCues[i];
         int j = i - 1;
         while (j >= 0 && gWinCues[j].timeMs > value.timeMs) {
@@ -1012,7 +1012,7 @@ static bool WinTtsStartPlayback() {
     }
 
     logf("WinTtsStartPlayback: playing %d bytes, %d Hz, %d word cues\n", (int)dataSize, (int)wfx.nSamplesPerSec,
-         gWinCues.Size());
+         len(gWinCues));
     return true;
 }
 
@@ -1077,7 +1077,7 @@ static int WinTtsLastWordPosWide() {
     if (!gWinWaveOut) {
         return -1;
     }
-    if (gWinCues.Size() == 0) {
+    if (len(gWinCues) == 0) {
         return 0;
     }
 

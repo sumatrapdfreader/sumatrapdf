@@ -577,7 +577,7 @@ static void CaptureAllScreenshots(ScreenshotOverlayData* data, HWND overlayHwnd)
 
 // Compute grid layout and overlay window size
 static void ComputeLayout(ScreenshotOverlayData* data) {
-    int n = data->captures.Size();
+    int n = len(data->captures);
     if (n == 0) {
         return;
     }
@@ -664,7 +664,7 @@ static RECT GetThumbRect(ScreenshotOverlayData* data, int idx) {
 
 // Hit test: returns index of thumbnail under point, or -1
 static int HitTestThumb(ScreenshotOverlayData* data, int mx, int my) {
-    int n = data->captures.Size();
+    int n = len(data->captures);
     for (int i = 0; i < n; i++) {
         RECT rc = GetThumbRect(data, i);
         // expand hit area to include the label
@@ -678,7 +678,7 @@ static int HitTestThumb(ScreenshotOverlayData* data, int mx, int my) {
 }
 
 static void SaveSelectedScreenshot(ScreenshotOverlayData* data) {
-    if (data->selected < 0 || data->selected >= data->captures.Size()) {
+    if (data->selected < 0 || data->selected >= len(data->captures)) {
         return;
     }
     TempStr dataDir = GetAppDataDirTemp();
@@ -691,7 +691,7 @@ static void SaveSelectedScreenshot(ScreenshotOverlayData* data) {
         return;
     }
 
-    MainWindow* win = gWindows.Size() > 0 ? gWindows[0] : nullptr;
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
     if (!win) {
         return;
     }
@@ -751,7 +751,7 @@ static void PaintOverlayLayered(HWND hwnd, ScreenshotOverlayData* data) {
     FillRect(hdcTemp, &fullRect, brWhite);
     DeleteObject(brWhite);
 
-    int n = data->captures.Size();
+    int n = len(data->captures);
     for (int i = 0; i < n; i++) {
         auto& cs = data->captures[i];
         RECT rc = GetThumbRect(data, i);
@@ -953,7 +953,7 @@ static LRESULT CALLBACK WndProcScreenshotOverlay(HWND hwnd, UINT msg, WPARAM wp,
                     }
                     return 0;
                 case VK_RIGHT:
-                    if (data->selected < data->captures.Size() - 1) {
+                    if (data->selected < len(data->captures) - 1) {
                         data->selected++;
                         PaintOverlayLayered(hwnd, data);
                     }
@@ -965,7 +965,7 @@ static LRESULT CALLBACK WndProcScreenshotOverlay(HWND hwnd, UINT msg, WPARAM wp,
                     }
                     return 0;
                 case VK_DOWN:
-                    if (data->selected + data->cols < data->captures.Size()) {
+                    if (data->selected + data->cols < len(data->captures)) {
                         data->selected += data->cols;
                         PaintOverlayLayered(hwnd, data);
                     }
@@ -1060,7 +1060,7 @@ void TakeScreenshots() {
     // Select the previously active window's thumbnail, or first if not found
     data->selected = 0;
     if (hwndForeground) {
-        int n = data->captures.Size();
+        int n = len(data->captures);
         for (int i = 0; i < n; i++) {
             if (data->captures[i].srcHwnd == hwndForeground) {
                 data->selected = i;

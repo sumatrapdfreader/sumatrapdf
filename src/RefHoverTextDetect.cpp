@@ -58,7 +58,7 @@ static Rect CitationSpanBounds(const Rect* coords, int textLen, const Vec<int>& 
                                int spanEnd) {
     int gStart = -1;
     int gEnd = -1;
-    for (int ci = spanStart; ci < spanEnd && ci < (int)chunkGlyphs.size(); ci++) {
+    for (int ci = spanStart; ci < spanEnd && ci < len(chunkGlyphs); ci++) {
         int gi = chunkGlyphs[ci];
         if (gi < 0 || gi >= textLen) {
             continue;

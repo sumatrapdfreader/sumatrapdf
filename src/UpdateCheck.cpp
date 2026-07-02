@@ -685,7 +685,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
     if (IsMainWindowValid(data->win)) {
         win = data->win;
     } else {
-        if (gWindows.Size() > 0) {
+        if (len(gWindows) > 0) {
             win = gWindows.At(0);
         }
     }

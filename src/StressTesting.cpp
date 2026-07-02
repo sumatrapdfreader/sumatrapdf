@@ -60,7 +60,7 @@ static bool IsInRange(Vec<PageRange>& ranges, int pageNo) {
 }
 
 static bool IsFullRange(Vec<PageRange>& ranges) {
-    if (ranges.size() != 1) {
+    if (len(ranges) != 1) {
         return false;
     }
     auto&& range = ranges[0];
@@ -166,7 +166,7 @@ static void BenchFile(Str path, Str pagesSpec) {
     ReportIf(pagesSpec && !IsBenchPagesInfo(pagesSpec));
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
-        for (size_t i = 0; i < ranges.size(); i++) {
+        for (int i = 0; i < len(ranges); i++) {
             for (int j = ranges.at(i).start; j <= ranges.at(i).end; j++) {
                 if (1 <= j && j <= pages) {
                     BenchLoadRender(engine, j);
@@ -485,7 +485,7 @@ struct StressTest {
 
 template <typename T>
 T RemoveRandomElementFromVec(Vec<T>& v) {
-    auto n = v.Size();
+    auto n = len(v);
     ReportIf(n <= 0);
     int idx = rand() % n;
     int res = v.PopAt(idx);
@@ -514,10 +514,10 @@ static void Start(StressTest* st, TestFileProvider* fileProvider, int cycles) {
     st->fileProvider = fileProvider;
     st->cycles = cycles;
 
-    if (st->pageRanges.size() == 0) {
+    if (len(st->pageRanges) == 0) {
         st->pageRanges.Append(PageRange());
     }
-    if (st->fileRanges.size() == 0) {
+    if (len(st->fileRanges) == 0) {
         st->fileRanges.Append(PageRange());
     }
 
@@ -640,7 +640,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
         for (int n = 1; n <= nPages; n++) {
             allPages.Append(n);
         }
-        while ((st->pagesToRender.size() < nMaxPages) && (allPages.size() > 0)) {
+        while ((len(st->pagesToRender) < nMaxPages) && (len(allPages) > 0)) {
             int nRandom = RemoveRandomElementFromVec(allPages);
             st->pagesToRender.Append(nRandom);
         }
@@ -655,12 +655,12 @@ static bool OpenFile(StressTest* st, Str fileName) {
                 st->pagesToRender.Append(n);
             }
         }
-        if (st->pagesToRender.size() == 0) {
+        if (len(st->pagesToRender) == 0) {
             return false;
         }
     }
 
-    int randomPageIdx = rand() % st->pagesToRender.Size();
+    int randomPageIdx = rand() % len(st->pagesToRender);
     st->pageForSearchStart = st->pagesToRender[randomPageIdx];
 
     st->currPageNo = st->pagesToRender.PopAt(0);
@@ -773,7 +773,7 @@ static bool GoToNextPage(StressTest* st) {
     if (pageRenderTime > 700) {
         st->nSlowPages += 1;
     }
-    bool goToNextFile = st->pagesToRender.size() == 0;
+    bool goToNextFile = len(st->pagesToRender) == 0;
     if (st->nSlowPages >= 3) {
         // some files are scanned .jpx images that are slow to render
         // not much to learn from rendering them so we skip those if
@@ -898,7 +898,7 @@ void GetStressTestInfo(str::Builder* s) {
         return;
     }
 
-    for (size_t i = 0; i < gWindows.size(); i++) {
+    for (int i = 0; i < len(gWindows); i++) {
         MainWindow* w = gWindows.at(i);
         if (!w || !w->CurrentTab() || !w->CurrentTab()->filePath) {
             continue;

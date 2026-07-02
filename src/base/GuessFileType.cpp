@@ -401,7 +401,7 @@ static bool IsXpsArchive(MultiFormatArchive* archive) {
 // we expect 1 file ending with .fb2
 static bool IsFb2Archive(MultiFormatArchive* archive) {
     auto files = archive->GetFileInfos();
-    if (files.size() != 1) {
+    if (len(files) != 1) {
         return false;
     }
     auto fi = files[0];

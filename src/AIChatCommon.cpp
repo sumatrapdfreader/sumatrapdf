@@ -132,7 +132,7 @@ MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame) {
 }
 
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions) {
-    for (int i = 0; i < sessions.Size(); i++) {
+    for (int i = 0; i < len(sessions); i++) {
         str::Free(sessions[i].sessionId);
         str::Free(sessions[i].display);
         str::Free(sessions[i].project);
@@ -141,7 +141,7 @@ void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions) {
 }
 
 void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions) {
-    int n = sessions.Size();
+    int n = len(sessions);
     for (int i = 0; i < n - 1; i++) {
         for (int j = 0; j < n - 1 - i; j++) {
             if (sessions[j].timestamp < sessions[j + 1].timestamp) {

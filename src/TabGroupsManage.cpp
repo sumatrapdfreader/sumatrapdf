@@ -46,13 +46,13 @@ struct TabGroupsListBoxModel : ListBoxModel {
         }
     }
 
-    int ItemsCount() override { return groups.Size(); }
+    int ItemsCount() override { return len(groups); }
 
     Str Item(int i) override { return groups.At(i)->name; }
 
     int TabCount(int i) {
         auto* tf = groups.At(i)->tabFiles;
-        return tf ? tf->Size() : 0;
+        return tf ? len(*tf) : 0;
     }
 };
 
@@ -184,11 +184,11 @@ static void OpenTabGroup(TabGroupsDialog* d) {
         return;
     }
     auto* groups = gGlobalPrefs->tabGroups;
-    if (!groups || sel >= groups->Size()) {
+    if (!groups || sel >= len(*groups)) {
         return;
     }
     TabGroup* group = groups->At(sel);
-    if (!group->tabFiles || group->tabFiles->Size() == 0) {
+    if (!group->tabFiles || len(*group->tabFiles) == 0) {
         return;
     }
 
@@ -251,7 +251,7 @@ static void DeleteTabGroup(TabGroupsDialog* d) {
         return;
     }
     auto* groups = gGlobalPrefs->tabGroups;
-    if (!groups || sel >= groups->Size()) {
+    if (!groups || sel >= len(*groups)) {
         return;
     }
     TabGroup* group = groups->At(sel);
@@ -325,7 +325,7 @@ static void OnListDoubleClick(TabGroupsDialog* d) {
         int sel = d->listBox ? d->listBox->GetCurrentSelection() : -1;
         if (sel >= 0 && d->hwndEdit) {
             auto* groups = gGlobalPrefs->tabGroups;
-            if (groups && sel < groups->Size()) {
+            if (groups && sel < len(*groups)) {
                 HwndSetText(d->hwndEdit, groups->At(sel)->name);
                 SendMessageW(d->hwndEdit, EM_SETSEL, 0, -1);
                 SetFocus(d->hwndEdit);
@@ -457,7 +457,7 @@ static void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
         // pre-populate with "group #<n>"
         int groupNum = 1;
         if (gGlobalPrefs->tabGroups) {
-            groupNum = gGlobalPrefs->tabGroups->Size() + 1;
+            groupNum = len(*gGlobalPrefs->tabGroups) + 1;
         }
         char buf[64];
         snprintf(buf, sizeof(buf), "group #%d", groupNum);

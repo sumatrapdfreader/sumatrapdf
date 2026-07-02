@@ -171,7 +171,7 @@ void CreateThemeCommands() {
         gThemes->Append(theme);
     }
 
-    gThemeCount = gThemes->Size();
+    gThemeCount = len(*gThemes);
     if (gCurrThemeIndex >= gThemeCount) {
         gCurrThemeIndex = 0;
     }

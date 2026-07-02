@@ -838,7 +838,7 @@ static Str loadFromFile(Fb2Doc* doc) {
     // we have archive with more than 1 file
     doc->isZipped = true;
     auto& fileInfos = archive->GetFileInfos();
-    size_t nFiles = fileInfos.size();
+    int nFiles = len(fileInfos);
 
     if (nFiles == 0) {
         return {};
@@ -873,7 +873,7 @@ static Str loadFromStream(Fb2Doc* doc) {
     }
 
     AutoDelete delArchive(archive);
-    size_t nFiles = archive->GetFileInfos().size();
+    int nFiles = len(archive->GetFileInfos());
     if (nFiles != 1) {
         return {};
     }
@@ -1021,7 +1021,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     ImageData data;
     data.base = str::Dup(decoded);
     data.fileName = str::Join(StrL("#"), Str(id));
-    data.fileId = images.size();
+    data.fileId = len(images);
     images.Append(data);
 }
 
@@ -1031,7 +1031,7 @@ Str Fb2Doc::GetXmlData() const {
 }
 
 Str Fb2Doc::GetImageData(Str fileName) const {
-    for (size_t i = 0; i < images.size(); i++) {
+    for (int i = 0; i < len(images); i++) {
         if (str::Eq(images.at(i).fileName, fileName)) {
             return images.at(i).base;
         }
@@ -1369,7 +1369,7 @@ Str HtmlDoc::GetImageData(Str fileName) {
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
 
     TempStr url = NormalizeURLTemp(fileName, pagePath);
-    for (size_t i = 0; i < images.size(); i++) {
+    for (int i = 0; i < len(images); i++) {
         if (str::Eq(images.at(i).fileName, url)) {
             return images.at(i).base;
         }

@@ -218,12 +218,6 @@ class Vec {
 
     bool isValidIndex(int idx) const { return (idx >= 0) && (idx < len); }
 
-    // STL-compatible accessor; returns len widened to size_t so existing
-    // `for (size_t i = 0; i < v.size(); i++)` loops keep working
-    size_t size() const { return (size_t)len; }
-
-    int Size() const { return len; }
-
     bool InsertAt(int idx, const T& el) {
         T* p = MakeSpaceAt(idx, 1);
         if (!p) {
@@ -248,7 +242,7 @@ class Vec {
     }
 
     bool Append(const Vec& other) {
-        int n = other.Size();
+        int n = other.len;
         const T* data = other.LendData();
         return this->Append(data, n);
     }
@@ -384,6 +378,12 @@ class Vec {
     iterator end() { return &(els[len]); }
     const_iterator end() const { return &(els[len]); }
 };
+
+// number of elements, as int (matches len() for Str / WStr)
+template <typename T>
+inline int len(const Vec<T>& v) {
+    return v.len;
+}
 
 // only suitable for T that are pointers to C++ objects
 template <typename T>

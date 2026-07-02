@@ -241,7 +241,7 @@ EngineImages::~EngineImages() {
     threadCtxs.Reset();
 
     EnterCriticalSection(&cacheLock);
-    while (pageCache.size() > 0) {
+    while (len(pageCache) > 0) {
         ImagePage* lastPage = pageCache.Last();
         ReportIf(lastPage->refs != 1);
         DropPage(lastPage, true);
@@ -563,7 +563,7 @@ static IPageElement* NewImageElement(int pageNo, float dx, float dy) {
 Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     auto* pi = pageInfos[pageNo - 1];
-    if (pi->allElements.size() > 0) {
+    if (len(pi->allElements) > 0) {
         return pi->allElements;
     }
     auto mbox = PageMediabox(pageNo);
@@ -581,7 +581,7 @@ IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
         return nullptr;
     }
     auto els = GetElements(pageNo);
-    if (els.size() == 0) {
+    if (len(els) == 0) {
         return nullptr;
     }
     IPageElement* el = els[0];
@@ -654,7 +654,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
     {
         ScopedCritSec scope(&cacheLock);
 
-        for (size_t i = 0; i < pageCache.size(); i++) {
+        for (int i = 0; i < len(pageCache); i++) {
             if (pageCache.at(i)->pageNo == pageNo) {
                 result = pageCache.at(i);
                 break;
@@ -666,8 +666,8 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
 
         if (!result) {
             // TODO: drop most memory intensive pages first
-            if (pageCache.size() >= MAX_IMAGE_PAGE_CACHE) {
-                ReportIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
+            if (len(pageCache) >= MAX_IMAGE_PAGE_CACHE) {
+                ReportIf(len(pageCache) != MAX_IMAGE_PAGE_CACHE);
                 DropPage(pageCache.Last(), true);
             }
             // insert a loading placeholder; do the actual decode without
@@ -1004,10 +1004,10 @@ bool EngineImage::FinishLoading() {
     pi->state = PageInfoState::Known;
 
     // one page per decoded frame (multi-page TIFFs and animated GIFs have >1)
-    for (size_t i = 1; i < frames.size(); i++) {
+    for (int i = 1; i < len(frames); i++) {
         pageInfos.Append(new ImagePageInfo());
     }
-    pageCount = pageInfos.Size();
+    pageCount = len(pageInfos);
 
     return pageCount > 0;
 }
@@ -1586,7 +1586,7 @@ void EngineImage::GetImageProperties(int pageNo, StrVec& keyValOut) {
 
 Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     int idx = pageNo - 1;
-    if (idx < 0 || idx >= (int)frames.size()) {
+    if (idx < 0 || idx >= len(frames)) {
         return nullptr;
     }
     // zero-copy: borrow the frame's pixels. The Pixmap stays owned by `frames`;
@@ -1616,7 +1616,7 @@ fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
 
 RectF EngineImage::LoadMediabox(int pageNo) {
     int idx = pageNo - 1;
-    if (idx >= 0 && idx < (int)frames.size() && frames[idx]) {
+    if (idx >= 0 && idx < len(frames) && frames[idx]) {
         return RectF(0, 0, (float)frames[idx]->width, (float)frames[idx]->height);
     }
     return RectF();
@@ -1926,7 +1926,7 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
     toVisit.Append(root);
-    while (toVisit.size() > 0) {
+    while (len(toVisit) > 0) {
         const GumboNode* node = toVisit.Pop();
         if (!node) {
             continue;
@@ -2196,7 +2196,7 @@ bool EngineCbx::FinishLoading() {
     Vec<MultiFormatArchive::FileInfo*> pageFiles;
 
     auto& fileInfos = cbxArchive->GetFileInfos();
-    size_t n = fileInfos.size();
+    int n = len(fileInfos);
     for (size_t i = 0; i < n; i++) {
         auto* fileInfo = fileInfos[i];
         Str fileName = fileInfo->name;
@@ -2226,7 +2226,7 @@ bool EngineCbx::FinishLoading() {
         json::Parse(comment, &cip);
     }
 
-    int nFiles = pageFiles.Size();
+    int nFiles = len(pageFiles);
     if (nFiles == 0) {
         delete cbxArchive;
         cbxArchive = nullptr;
@@ -2278,7 +2278,7 @@ bool EngineCbx::FinishLoading() {
         tocBuildCurr = ti;
     };
 
-    int nBookmarks = cip.bookmarkImageIdx.Size();
+    int nBookmarks = len(cip.bookmarkImageIdx);
     if (nBookmarks > 0) {
         Vec<int> order;
         for (int i = 0; i < nBookmarks; i++) {
@@ -2358,7 +2358,7 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
 
     str::Builder filesStr;
     auto& fileInfos = cbxArchive->GetFileInfos();
-    size_t n = fileInfos.size();
+    int n = len(fileInfos);
     for (size_t i = 0; i < n; i++) {
         auto* fi = fileInfos[i];
         if (str::IsEmpty(fi->name)) {
@@ -2417,7 +2417,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
         logf("EngineCbx::LoadMediabox: empty media box from header for page: %d\n", pageNo);
     }
 
-    ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
+    ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == len(pageCache));
     if (page) {
         int w = 0, h = 0;
         if (page->img) {

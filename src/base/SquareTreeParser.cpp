@@ -103,7 +103,7 @@ static Str ExtractTrimmed(Str data, int begin, int end) {
 }
 
 SquareTreeNode::~SquareTreeNode() {
-    for (size_t i = 0; i < data.size(); i++) {
+    for (int i = 0; i < len(data); i++) {
         DataItem& item = data.at(i);
         delete item.child;
     }
@@ -111,7 +111,7 @@ SquareTreeNode::~SquareTreeNode() {
 
 Str SquareTreeNode::GetValue(Str key, size_t* startIdx) const {
     int start = startIdx ? (int)*startIdx : 0;
-    int n = data.Size();
+    int n = len(data);
     for (int i = start; i < n; i++) {
         DataItem& item = data.At(i);
         if (str::EqI(key, item.key) && !item.child) {
@@ -126,7 +126,7 @@ Str SquareTreeNode::GetValue(Str key, size_t* startIdx) const {
 
 SquareTreeNode* SquareTreeNode::GetChild(Str key, size_t* startIdx) const {
     int start = startIdx ? (int)*startIdx : 0;
-    int n = data.Size();
+    int n = len(data);
     for (int i = start; i < n; i++) {
         DataItem& item = data.At(i);
         if (str::EqI(key, item.key) && item.child) {
@@ -230,7 +230,7 @@ static SquareTreeNode* ParseSquareTreeRec(Str data, int& off, bool isTopLevel = 
 }
 
 static void SerializeRec(SquareTreeNode* node, str::Builder& s, int indent) {
-    int n = node->data.Size();
+    int n = len(node->data);
     for (int i = 0; i < n; i++) {
         SquareTreeNode::DataItem& item = node->data.At(i);
         for (int j = 0; j < indent; j++) {

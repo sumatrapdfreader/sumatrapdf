@@ -133,7 +133,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
                     tagNesting.Pop();
                 }
             }
-            if (tagNesting.size() > 0 && tagNesting.Last() == t->tag) {
+            if (len(tagNesting) > 0 && tagNesting.Last() == t->tag) {
                 tagNesting.Pop();
             }
         }

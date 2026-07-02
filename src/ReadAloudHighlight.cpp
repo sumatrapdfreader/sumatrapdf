@@ -99,21 +99,21 @@ static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map
     map->len = 0;
 
     bool lastWasSpace = false;
-    for (size_t i = 0; i < raw.size();) {
+    for (int i = 0; i < len(raw);) {
         char c = raw[i].c;
         ReadAloudByteLoc loc = raw[i].loc;
 
-        if (c == '-' && i + 1 < raw.size() && IsReadAloudLineBreak(raw[i + 1].c)) {
+        if (c == '-' && i + 1 < len(raw) && IsReadAloudLineBreak(raw[i + 1].c)) {
             size_t after = i + 1;
-            while (after < raw.size() && IsReadAloudLineBreak(raw[after].c)) {
+            while (after < len(raw) && IsReadAloudLineBreak(raw[after].c)) {
                 after++;
             }
-            while (after < raw.size() && IsReadAloudHorizontalSpace(raw[after].c)) {
+            while (after < len(raw) && IsReadAloudHorizontalSpace(raw[after].c)) {
                 after++;
             }
 
             bool prevIsLower = i > 0 && IsReadAloudLowerAscii(raw[i - 1].c);
-            bool nextIsLower = after < raw.size() && IsReadAloudLowerAscii(raw[after].c);
+            bool nextIsLower = after < len(raw) && IsReadAloudLowerAscii(raw[after].c);
             if (prevIsLower && nextIsLower) {
                 i = after;
                 lastWasSpace = false;
@@ -123,13 +123,13 @@ static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map
 
         if (IsReadAloudLineBreak(c)) {
             int lineBreaks = 0;
-            while (i < raw.size() && IsReadAloudLineBreak(raw[i].c)) {
+            while (i < len(raw) && IsReadAloudLineBreak(raw[i].c)) {
                 if (raw[i].c == '\n') {
                     lineBreaks++;
                 }
                 i++;
             }
-            while (i < raw.size() && IsReadAloudHorizontalSpace(raw[i].c)) {
+            while (i < len(raw) && IsReadAloudHorizontalSpace(raw[i].c)) {
                 i++;
             }
 
@@ -444,18 +444,17 @@ bool ReadAloudHighlightBuildFromDocument(DisplayModel* dm, int startPage, int st
         ReadAloudAppendPageGlyphs(raw, engine, page, glyph, -1);
     }
 
-    if (raw.size() == 0) {
+    if (len(raw) == 0) {
         logf("ReadAloud: BuildFromDocument: no raw bytes extracted\n");
         return false;
     }
 
     if (!CleanRawBytes(raw, map, cleanedOut)) {
-        logf("ReadAloud: BuildFromDocument: CleanRawBytes failed (raw.size=%zu)\n", raw.size());
+        logf("ReadAloud: BuildFromDocument: CleanRawBytes failed (raw.size=%zu)\n", len(raw));
         return false;
     }
 
-    logf("ReadAloud: BuildFromDocument: ok raw=%zu cleanedLen=%d mapLen=%d\n", raw.size(), (int)cleanedOut.len,
-         map->len);
+    logf("ReadAloud: BuildFromDocument: ok raw=%zu cleanedLen=%d mapLen=%d\n", len(raw), (int)cleanedOut.len, map->len);
     return true;
 }
 
@@ -810,7 +809,7 @@ void PaintReadAloudHighlight(MainWindow* win, HDC hdc) {
         }
     }
 
-    if (screenRects.size() == 0) {
+    if (len(screenRects) == 0) {
         ReadAloudPaintLogOnce(7, "ReadAloud: PaintHighlight: no screen rects for current word");
         return;
     }

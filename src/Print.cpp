@@ -564,7 +564,7 @@ static void MessageBoxWarningCond(bool show, Str msg, Str title) {
 
 static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
     RectF bounds;
-    for (size_t i = 0; i < sel.size(); i++) {
+    for (int i = 0; i < len(sel); i++) {
         if (sel.at(i).pageNo == pageNo) {
             bounds = bounds.Union(sel.at(i).rect);
         }
@@ -696,8 +696,8 @@ static bool PrintToDevice(const PrintData& pd) {
     }
 
     int current = 1, total = 0;
-    if (pd.sel.size() == 0) {
-        for (size_t i = 0; i < pd.ranges.size(); i++) {
+    if (len(pd.sel) == 0) {
+        for (int i = 0; i < len(pd.ranges); i++) {
             if (pd.ranges.at(i).nToPage < pd.ranges.at(i).nFromPage) {
                 total += pd.ranges.at(i).nFromPage - pd.ranges.at(i).nToPage + 1;
             } else {
@@ -778,7 +778,7 @@ static bool PrintToDevice(const PrintData& pd) {
     };
     computeGeometry();
 
-    if (pd.sel.size() > 0) {
+    if (len(pd.sel) > 0) {
         for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
             RectF bounds = BoundSelectionOnPage(pd.sel, pageNo);
             if (bounds.IsEmpty()) {
@@ -799,7 +799,7 @@ static bool PrintToDevice(const PrintData& pd) {
                 zoom = dpiFactor;
             }
 
-            for (size_t i = 0; i < pd.sel.size(); i++) {
+            for (int i = 0; i < len(pd.sel); i++) {
                 if (pd.sel.at(i).pageNo != pageNo) {
                     continue;
                 }
@@ -836,7 +836,7 @@ static bool PrintToDevice(const PrintData& pd) {
     }
 
     // print all the pages the user requested
-    for (size_t i = 0; i < pd.ranges.size(); i++) {
+    for (int i = 0; i < len(pd.ranges); i++) {
         int dir = pd.ranges.at(i).nFromPage > pd.ranges.at(i).nToPage ? -1 : 1;
         for (DWORD pageNo = pd.ranges.at(i).nFromPage; pageNo != pd.ranges.at(i).nToPage + dir; pageNo += dir) {
             if ((PrintRangeAdv::Even == pd.advData.range && pageNo % 2 != 0) ||
@@ -1858,7 +1858,7 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
         }
     }
 
-    if (ranges.size() == 0) {
+    if (len(ranges) == 0) {
         PRINTPAGERANGE pr = {1, (DWORD)pageCount};
         ranges.Append(pr);
     }

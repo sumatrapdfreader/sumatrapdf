@@ -228,7 +228,7 @@ Pixmap* PixmapFromData(Str bmpData) {
 
 Vec<Pixmap*> PixmapsFromData(Str bmpData) {
     Vec<Pixmap*> res = PixmapsFromDataWin(bmpData);
-    if (res.Size() > 0) {
+    if (len(res) > 0) {
         return res;
     }
     // formats only the fz path decodes (JPEG/JP2) are single-frame

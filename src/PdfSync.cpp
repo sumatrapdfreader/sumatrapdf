@@ -258,7 +258,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
             case 's':
                 if (!str::IsNull(str::Parse(line, "s %u", &page))) {
-                    sheetIndex.Append(points.size());
+                    sheetIndex.Append(len(points));
                 }
                 // else dbg("Bad 's' line in the pdfsync file");
                 // if (0 == page || page > maxPageNo)
@@ -299,13 +299,13 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
                 filestack.Append((size_t)srcfiles.Size());
                 srcfiles.Append(Str(filename.Get()));
-                findex.start = findex.end = lines.size();
+                findex.start = findex.end = len(lines);
                 fileIndex.Append(findex);
             } break;
 
             case ')':
-                if (filestack.size() > 1) {
-                    fileIndex.at(filestack.Pop()).end = lines.size();
+                if (len(filestack) > 1) {
+                    fileIndex.at(filestack.Pop()).end = len(lines);
                 }
                 // else dbg("Unbalanced ')' line in the pdfsync file");
                 break;
@@ -316,8 +316,8 @@ int Pdfsync::RebuildIndexIfNeeded() {
         }
     }
 
-    fileIndex.at(0).end = lines.size();
-    ReportIf(filestack.size() != 1);
+    fileIndex.at(0).end = len(lines);
+    ReportIf(len(filestack) != 1);
 
     return MarkIndexWasRebuilt();
 }
@@ -350,7 +350,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
 
     // find the entry in the index corresponding to this page
     int nPages = engine->PageCount();
-    if (pageNo == 0 || pageNo >= sheetIndex.Size() || pageNo > nPages) {
+    if (pageNo == 0 || pageNo >= len(sheetIndex) || pageNo > nPages) {
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
     }
 
@@ -369,7 +369,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     UINT closest_ydist_record = UINT_MAX; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (size_t i = sheetIndex.at((size_t)pageNo); i < points.size() && points.at(i).page == (uint)pageNo; i++) {
+    for (size_t i = sheetIndex.at((size_t)pageNo); i < len(points) && points.at(i).page == (uint)pageNo; i++) {
         // check whether it is closer than the closest point found so far
         UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points.at(i).x));
         UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points.at(i).y));
@@ -395,8 +395,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     // We have a record number, we need to find its declaration ('l ...') in the syncfile
     PdfsyncLine cmp;
     cmp.record = selected_record;
-    PdfsyncLine* found =
-        (PdfsyncLine*)bsearch(&cmp, lines.LendData(), lines.size(), sizeof(PdfsyncLine), cmpLineRecords);
+    PdfsyncLine* found = (PdfsyncLine*)bsearch(&cmp, lines.LendData(), len(lines), sizeof(PdfsyncLine), cmpLineRecords);
     ReportIf(!found);
     if (!found) {
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
@@ -482,7 +481,7 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
     }
 
     // we read all the consecutive records until we reach a record belonging to another line
-    for (size_t i = lineIx; i < lines.size() && lines.at(i).line == lines.at(lineIx).line; i++) {
+    for (size_t i = lineIx; i < len(lines) && lines.at(i).line == lines.at(lineIx).line; i++) {
         records.Append(lines.at(i).record);
     }
 
@@ -497,7 +496,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
 
     Vec<size_t> found_records;
     UINT ret = SourceToRecord(srcfilename, line, col, found_records);
-    if (ret != PDFSYNCERR_SUCCESS || found_records.size() == 0) {
+    if (ret != PDFSYNCERR_SUCCESS || len(found_records) == 0) {
         return ret;
     }
 
@@ -521,7 +520,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
         rects.Append(rc.Round());
     }
 
-    if (rects.size() > 0) {
+    if (len(rects) > 0) {
         return PDFSYNCERR_SUCCESS;
     }
     // the record does not correspond to any point in the PDF: this is possible...

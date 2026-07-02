@@ -21,7 +21,7 @@ static void SkipWhitespaceIdx(WStr text, int& idx) {
 #define isnoncjkwordchar(c) (isWordChar(c) && (unsigned short)(c) < 0x2E80)
 
 static void markAllPagesNonSkip(Vec<bool>& pagesToSkip) {
-    for (size_t i = 0; i < pagesToSkip.size(); i++) {
+    for (int i = 0; i < len(pagesToSkip); i++) {
         pagesToSkip[i] = false;
     }
 }

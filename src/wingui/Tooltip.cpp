@@ -197,7 +197,7 @@ int Tooltip::SetSingle(Str s, const Rect& rc, bool multiline) {
 
 int Tooltip::Count() {
     int n = TooltipGetCount(hwnd);
-    int n2 = tooltipIds.Size();
+    int n2 = len(tooltipIds);
     ReportIf(n != n2);
     return n;
 }

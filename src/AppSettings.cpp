@@ -181,7 +181,7 @@ static void CreateExternalViewersCommands() {
 static void CreateZoomCommands() {
     auto prefs = gGlobalPrefs;
     delete prefs->zoomLevelsCmdIds;
-    int n = prefs->zoomLevels->Size();
+    int n = len(*prefs->zoomLevels);
     if (n <= 0) {
         return;
     }
@@ -275,10 +275,10 @@ bool LoadSettings() {
 
     // make sure that zoom levels are in the order expected by DisplayModel
     gprefs->zoomLevels->Sort(cmpFloat);
-    while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->at(0) < kZoomMin) {
+    while (len(*gprefs->zoomLevels) > 0 && gprefs->zoomLevels->at(0) < kZoomMin) {
         gprefs->zoomLevels->PopAt(0);
     }
-    while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->Last() > kZoomMax) {
+    while (len(*gprefs->zoomLevels) > 0 && gprefs->zoomLevels->Last() > kZoomMax) {
         gprefs->zoomLevels->Pop();
     }
 
@@ -348,7 +348,7 @@ bool LoadSettings() {
     // thumbnails on the home page
     {
         Vec<FileState*>* fileStates = gprefs->fileStates;
-        for (int i = fileStates->Size() - 1; i >= 0; i--) {
+        for (int i = len(*fileStates) - 1; i >= 0; i--) {
             FileState* fs = fileStates->at(i);
             if (str::IsEmpty(fs->filePath)) {
                 fileStates->RemoveAt(i);
@@ -456,7 +456,7 @@ static void RefreshLazyTabStatePointers() {
         if (!hasFileTab) {
             continue;
         }
-        if (sdIdx >= gInitialSessionData->Size()) {
+        if (sdIdx >= len(*gInitialSessionData)) {
             break;
         }
         SessionData* sd = gInitialSessionData->At(sdIdx++);
@@ -465,7 +465,7 @@ static void RefreshLazyTabStatePointers() {
             if (!tab->filePath) {
                 continue;
             }
-            if (tsIdx >= sd->tabStates->Size()) {
+            if (tsIdx >= len(*sd->tabStates)) {
                 break;
             }
             if (!tab->ctrl && tab->tabState) {
@@ -530,7 +530,7 @@ static void RememberSessionState() {
             windowState->tabStates->Append(ts);
             DeleteFileState(fs);
         }
-        if (windowState->tabStates->Size() == 0) {
+        if (len(*windowState->tabStates) == 0) {
             FreeSessionData(windowState);
             continue;
         }
@@ -662,7 +662,7 @@ static void ReloadSettings() {
     ReportIf(!ok || !gGlobalPrefs);
 
     // TODO: about window doesn't have to be at position 0
-    if (gWindows.size() > 0 && gWindows.at(0)->IsCurrentTabAbout()) {
+    if (len(gWindows) > 0 && gWindows.at(0)->IsCurrentTabAbout()) {
         MainWindow* win = gWindows.at(0);
         win->DeleteToolTip();
         DeleteVecMembers(win->staticLinks);

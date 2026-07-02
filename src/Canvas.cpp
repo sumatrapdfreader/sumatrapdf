@@ -1960,7 +1960,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
 
     bool shouldPaint = false;
     auto* gcols = gGlobalPrefs->fixedPageUI.gradientColors;
-    auto nGCols = gcols->size();
+    auto nGCols = len(*gcols);
     auto paintBgOrCheckerboard = [&](COLORREF col, RECT* rc) {
         if (col == kColorUnset) {
             PaintCheckerboard(hdc, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top);
