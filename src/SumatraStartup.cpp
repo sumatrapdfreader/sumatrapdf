@@ -106,12 +106,17 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
     return true;
 }
 
+// background brush shared by the frame and canvas window classes; must stay
+// valid for as long as windows of those classes exist, deleted at exit
+static HBRUSH gWinClassBgBrush = nullptr;
+
 static bool RegisterWinClass() {
     WNDCLASSEX wcex;
     ATOM atom;
 
     HMODULE h = GetModuleHandleW(nullptr);
     HBRUSH bgBrush = CreateSolidBrush(ThemeMainWindowBackgroundColor());
+    gWinClassBgBrush = bgBrush;
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcSumatraFrame);
     // remove CS_HREDRAW | CS_VREDRAW to avoid full invalidation on every resize
     wcex.style = 0;
@@ -2444,6 +2449,8 @@ Exit:
     DeleteCachedCursors();
     DeleteCreatedFonts();
     DeleteBitmap(gBitmapReloadingCue);
+    // all frame/canvas windows are destroyed by now
+    DeleteBrush(gWinClassBgBrush);
 
     CleanupEngineDjVu();
     destroy_system_font_list();
