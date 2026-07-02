@@ -24,38 +24,36 @@ ChmFile::~ChmFile() {
     str::Free(data);
 }
 
-bool ChmFile::HasData(Str fileName) const {
+// Resolve a CHM object by its path, normalizing the leading slash and
+// tolerating backslashes in URLs the way Microsoft's HTML Help viewer does.
+// Returns true and fills `info` on success.
+static bool ChmResolveObject(struct chmFile* chmHandle, Str fileName, struct chmUnitInfo* info) {
     if (!fileName) {
         return false;
     }
-
     if (!str::StartsWith(fileName, "/")) {
         fileName = str::JoinTemp(StrL("/"), fileName);
     } else if (str::StartsWith(fileName, "///")) {
         fileName = Str(fileName.s + 2, fileName.len - 2);
     }
 
+    int res = chm_resolve_object(chmHandle, fileName.s, info);
+    if (CHM_RESOLVE_SUCCESS != res && str::ContainsChar(fileName, '\\')) {
+        TempStr fileNameTemp = str::DupTemp(fileName);
+        str::TransCharsInPlace(fileNameTemp, StrL("\\"), StrL("/"));
+        res = chm_resolve_object(chmHandle, fileNameTemp.s, info);
+    }
+    return CHM_RESOLVE_SUCCESS == res;
+}
+
+bool ChmFile::HasData(Str fileName) const {
     struct chmUnitInfo info{};
-    return chm_resolve_object(chmHandle, fileName.s, &info) == CHM_RESOLVE_SUCCESS;
+    return ChmResolveObject(chmHandle, fileName, &info);
 }
 
 TempStr ChmFile::GetDataTemp(Str fileName) const {
-    if (!str::StartsWith(fileName, "/")) {
-        fileName = str::JoinTemp(StrL("/"), fileName);
-    } else if (str::StartsWith(fileName, "///")) {
-        fileName = Str(fileName.s + 2, fileName.len - 2);
-    }
-
-    struct chmUnitInfo info;
-    int res = chm_resolve_object(chmHandle, fileName.s, &info);
-    if (CHM_RESOLVE_SUCCESS != res && str::ContainsChar(fileName, '\\')) {
-        // Microsoft's HTML Help CHM viewer tolerates backslashes in URLs
-        auto fileNameTemp = str::DupTemp(fileName);
-        str::TransCharsInPlace(fileNameTemp, StrL("\\"), StrL("/"));
-        res = chm_resolve_object(chmHandle, fileNameTemp.s, &info);
-    }
-
-    if (CHM_RESOLVE_SUCCESS != res) {
+    struct chmUnitInfo info{};
+    if (!ChmResolveObject(chmHandle, fileName, &info)) {
         return {};
     }
     size_t len = (size_t)info.length;
