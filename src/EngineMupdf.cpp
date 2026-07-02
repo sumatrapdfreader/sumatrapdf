@@ -1506,6 +1506,8 @@ static void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     Rect* coords;
     Str pageTextUtf8 = FzTextPageToUtf8(stext, &coords);
     if (!pageTextUtf8) {
+        // even for empty text FzTextPageToUtf8 allocates coords via Vec::Take
+        free(coords);
         str::Free(pageTextUtf8);
         return;
     }
@@ -2171,10 +2173,9 @@ EngineBase* EngineMupdf::Clone() {
 
 // File names ending in :<digits> are interpreted as containing
 // embedded PDF documents (the digits is stream number of the embedded file stream)
-// the caller must free()
 TempStr ParseEmbeddedStreamNumber(Str path, int* streamNoOut) {
     int streamNo = -1;
-    Str path2 = str::Dup(path);
+    Str path2 = str::DupTemp(path);
     Str streamNoStr = ParseEmbeddedPdfName(path2).streamNoStr;
     if (streamNoStr) {
         Str rest = str::Parse(streamNoStr, ":%d", &streamNo);
