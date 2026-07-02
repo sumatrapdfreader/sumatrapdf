@@ -1,4 +1,3 @@
-#pragma once
 
 struct TtsVoiceInfo {
     Str id;

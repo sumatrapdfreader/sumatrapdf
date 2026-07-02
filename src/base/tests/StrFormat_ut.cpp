@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
-#include "base/StrFormat.h"
 
 // must be last due to assert() over-write
 #include "base/UtAssert.h"

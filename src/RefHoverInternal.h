@@ -4,8 +4,6 @@
 // Shared internals for the RefHover module split across multiple .cpp files.
 // Not part of the public API — include only from RefHover*.cpp.
 
-#pragma once
-
 #include "RefHover.h"
 
 #define REF_HOVER_CLASS L"SumatraPDFRefHover"

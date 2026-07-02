@@ -109,9 +109,7 @@ struct SelectionTranslateDoneData {
     HWND hwndDlg = nullptr;
     bool ok = false;
     Str msg;
-    ~SelectionTranslateDoneData() {
-        str::Free(msg);
-    }
+    ~SelectionTranslateDoneData() { str::Free(msg); }
 };
 
 static Str PrimaryLangIdToEnglishName(WORD primary) {
@@ -758,8 +756,7 @@ static void OnTranslateDone(SelectionTranslateDoneData* data) {
     EnableWindow(dlg->hwndSrcLang, TRUE);
     EnableWindow(dlg->hwndDstLang, TRUE);
     SetWindowTextA(dlg->hwndTranslateBtn, _TRA("Translate").s);
-    TempStr display =
-        data->ok ? data->msg : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg);
+    TempStr display = data->ok ? data->msg : FormatTranslationErrorForDisplayTemp(dlg->backend, data->msg);
     ShowTranslationResult(dlg, display, !data->ok);
     if (data->ok) {
         MaybeSaveTranslateToLang(GetWindowTextUtf8Temp(dlg->hwndDstLang));

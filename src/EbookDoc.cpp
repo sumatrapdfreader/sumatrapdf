@@ -1674,8 +1674,7 @@ bool TxtDoc::Load() {
 
         if (isRFC && i > 0 && '\n' == text.s[i - 1] && (str::IsDigit(c) || str::StartsWith(curr, "APPENDIX"))) {
             Str lineBefore, lineAfter;
-            if (str::CutChar(curr, '\n', &lineBefore, &lineAfter) &&
-                !str::IsNull(str::Parse(lineAfter, "%?\r\n"))) {
+            if (str::CutChar(curr, '\n', &lineBefore, &lineAfter) && !str::IsNull(str::Parse(lineAfter, "%?\r\n"))) {
                 htmlData.Append(fmt("<b id='section%d' title=\"", ++sectionCount));
                 for (int j = 0; j < lineBefore.len; j++) {
                     char ch = lineBefore.s[j];

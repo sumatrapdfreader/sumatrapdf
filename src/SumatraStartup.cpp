@@ -714,9 +714,8 @@ static void LogArenaLifetimeStats(Str what, Arena* a) {
     u64 peakBytes = a->peakBytesLifetime;
     char human[32];
     FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
-    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what,
-         str::FormatNumWithThousandSepTemp((i64)nAllocs), str::FormatNumWithThousandSepTemp((i64)peakBytes),
-         Str(human));
+    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what, str::FormatNumWithThousandSepTemp((i64)nAllocs),
+         str::FormatNumWithThousandSepTemp((i64)peakBytes), Str(human));
 }
 
 static int RunMessageLoop() {

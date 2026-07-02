@@ -124,12 +124,12 @@ static bool GetModules(str::Builder& s, bool additionalOnly) {
         auto pathA = ToUtf8Temp(mod.szExePath);
         if (additionalOnly && gModulesInfo) {
             if (!str::ContainsI(gModulesInfo, pathA)) {
-                s.Append(str::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize,
-                                        nameA, pathA));
+                s.Append(str::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA,
+                                     pathA));
             }
         } else {
-            s.Append(str::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA,
-                                    pathA));
+            s.Append(
+                str::Format(s.allocator, "Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA, pathA));
         }
         cont = Module32Next(snap, &mod);
     }
@@ -650,8 +650,8 @@ static void GetOsVersion(str::Builder& s) {
     } else if (0 == servicePackMinor) {
         s.Append(fmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, Str(arch)));
     } else {
-        s.Append(fmt("OS: Windows %s %d.%d build %d %s\n", os, servicePackMajor, servicePackMinor, buildNumber,
-                     Str(arch)));
+        s.Append(
+            fmt("OS: Windows %s %d.%d build %d %s\n", os, servicePackMajor, servicePackMinor, buildNumber, Str(arch)));
     }
 }
 

@@ -140,7 +140,14 @@ bool HexToMem(Str s, u8* buf, size_t bufLen);
 // %s / %S write into an AutoFree (owning); the numeric/char specs write via the
 // matching pointer type.
 struct ParseArg {
-    enum class Kind : u8 { None, Int, UInt, Float, Char, StrOut };
+    enum class Kind : u8 {
+        None,
+        Int,
+        UInt,
+        Float,
+        Char,
+        StrOut
+    };
     Kind kind = Kind::None;
     void* ptr = nullptr;
 
