@@ -245,7 +245,7 @@ RenderedBitmap* LoadRenderedBitmap(Str path) {
     }
     Gdiplus::Bitmap* bmp;
     {
-        Str data = file::ReadFile(Str(path));
+        Str data = file::ReadFile(path);
         if (!data) {
             return nullptr;
         }

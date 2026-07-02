@@ -1763,7 +1763,7 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
 
     Str path = pageFileNames.At(pageNo - 1);
     TempStr fileName = path::GetBaseNameTemp(path);
-    TempStr ext = path::GetExtTemp(Str(fileName));
+    TempStr ext = path::GetExtTemp(fileName);
     if (!ext) {
         return str::DupTemp(fileName);
     }
@@ -1817,7 +1817,7 @@ TocTree* EngineImageDir::GetToc() {
 
 bool EngineImageDir::SaveFileAs(Str dstPath) {
     // only copy the files if the target directory doesn't exist yet
-    bool ok = dir::CreateAll(Str(dstPath));
+    bool ok = dir::CreateAll(dstPath);
     if (!ok) {
         return false;
     }

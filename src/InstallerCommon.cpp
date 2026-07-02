@@ -149,9 +149,9 @@ Str GetExistingInstallationDir() {
         return nullptr;
     }
     if (str::EndsWithI(dir, ".exe")) {
-        dir = path::GetDirTemp(Str(dir));
+        dir = path::GetDirTemp(dir);
     }
-    if (!str::IsEmpty(dir) && dir::Exists(Str(dir))) {
+    if (!str::IsEmpty(dir) && dir::Exists(dir)) {
         gCachedExistingInstallationDir = str::Dup(dir);
         return str::Dup(dir);
     }

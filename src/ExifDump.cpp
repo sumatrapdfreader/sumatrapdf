@@ -483,7 +483,7 @@ struct TiffParser {
             snprintf(tagNameBuf, sizeof(tagNameBuf), "Tag 0x%04X", tag);
             name = Str(tagNameBuf);
         }
-        TempStr line = fmt("%s %s (%s): %s", Str(prefix), Str(name), TypeName(type), value);
+        TempStr line = fmt("%s %s (%s): %s", prefix, name, TypeName(type), value);
         lines.Append(str::Dup(line));
     }
 

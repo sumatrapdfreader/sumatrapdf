@@ -187,7 +187,7 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
     }
 
     if (!nameInZip) {
-        nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : Str(path);
+        nameInZip = path::IsAbsolute(path) ? path::GetBaseNameTemp(path) : path;
     }
 
     Str name = str::Dup(nameInZip);

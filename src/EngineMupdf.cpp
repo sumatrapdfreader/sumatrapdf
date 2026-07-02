@@ -4364,7 +4364,7 @@ static void AppendSigDictText(fz_context* ctx, str::Builder& s, pdf_obj* sigDict
         val = nullptr;
     }
     if (val && *val) {
-        s.Append(fmt("  %s: %s\n", Str(label), Str(val)));
+        s.Append(fmt("  %s: %s\n", label, Str(val)));
     }
 }
 
@@ -4388,7 +4388,7 @@ static void AppendSigDictDate(fz_context* ctx, str::Builder& s, pdf_obj* sigDict
     gmtime_s(&tm, &t);
     char buf[64];
     strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", &tm);
-    s.Append(fmt("  %s: %s\n", Str(label), Str(buf)));
+    s.Append(fmt("  %s: %s\n", label, Str(buf)));
 }
 
 static void AppendSignatureInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier, pdf_document* pdfdoc,
@@ -4563,7 +4563,7 @@ Str EngineMupdf::GetFileData() {
     if (!path) {
         return {};
     }
-    return file::ReadFile(Str(path));
+    return file::ReadFile(path);
 }
 
 bool EngineMupdf::SaveFileAs(Str dstPath) {

@@ -595,7 +595,7 @@ bool SaveSettings() {
     if (!path) {
         return false;
     }
-    Str prevPrefs = file::ReadFile(Str(path));
+    Str prevPrefs = file::ReadFile(path);
     Str prevPrefsData = prevPrefs;
     Str prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
     defer {

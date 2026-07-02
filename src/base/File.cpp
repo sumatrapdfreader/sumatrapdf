@@ -592,14 +592,14 @@ TempStr WindowsToWslMountTemp(Str path) {
 // for settings etc., we need to un-virtualize
 TempStr GetNonVirtualTemp(Str virtualPath) {
     if (!DynGetFinalPathNameByHandleW) {
-        return Str(virtualPath);
+        return virtualPath;
     }
     WCHAR* pathW = CWStrTemp(virtualPath);
     HANDLE hFile = CreateFileW(pathW, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
                                FILE_ATTRIBUTE_NORMAL, nullptr);
 
     if (hFile == INVALID_HANDLE_VALUE) {
-        return Str(virtualPath);
+        return virtualPath;
     }
 
     WCHAR realPath[MAX_PATH * 4];
@@ -607,7 +607,7 @@ TempStr GetNonVirtualTemp(Str virtualPath) {
 
     CloseHandle(hFile);
     if (ret <= 0) {
-        return Str(virtualPath);
+        return virtualPath;
     }
 
     TempStr res = ToUtf8Temp(realPath);

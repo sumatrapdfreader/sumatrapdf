@@ -772,7 +772,7 @@ int SyncTex::RebuildIndexIfNeeded() {
         logfa("SyncTex::RebuildIndexIfNeeded: temp file for origin file '%s' not found\n", pathSync);
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
-    fsize = file::GetSize(Str(tempsync2));
+    fsize = file::GetSize(tempsync2);
     logf("SyncTex::RebuildIndexIfNeeded: org path: %s\n; final file path: %s, final file size: %lld.\n", pathSync,
          tempsync2, fsize);
 

@@ -177,7 +177,7 @@ static int ChmDumpEntry(struct chmFile* h, struct chmUnitInfo* ui, void* data) {
 
     CliPrint(fmt("%s class=%s space=%s size=%llu read=%llu sha1=%s status=%s path=%s", Str(ChmEntryKind(ui)),
                  Str(ChmEntryClass(ui)), Str(ChmSpaceName(ui->space)), (unsigned long long)ui->length,
-                 (unsigned long long)readResult.bytesRead, Str(sha1Str), Str(unpacked ? "ok" : "failed"),
+                 (unsigned long long)readResult.bytesRead, sha1Str, Str(unpacked ? "ok" : "failed"),
                  Str(ui->path)));
     return CHM_ENUMERATOR_CONTINUE;
 }

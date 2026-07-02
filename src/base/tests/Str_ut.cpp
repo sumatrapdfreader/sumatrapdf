@@ -420,7 +420,7 @@ void StrTest() {
         {
             uint u1 = 0;
             AutoFreeStr str1;
-            Str end = str::Parse(Str(str2), "[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
+            Str end = str::Parse(str2, "[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
             utassert(!str::IsNull(end) && !end.s[0]);
             utassert(u1 == 1 && str::Eq(Str(str1.Get()), "filename.pdf"));
         }
@@ -428,7 +428,7 @@ void StrTest() {
         {
             uint u1 = 0;
             AutoFreeStr str1;
-            Str end = str::Parse(Str(str2), "[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
+            Str end = str::Parse(str2, "[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
             utassert(!str::IsNull(end) && !end.s[0]);
             utassert(u1 == 1 && str::Eq(Str(str1.Get()), "filename.pdf"));
 
@@ -519,7 +519,7 @@ void StrTest() {
             "M10 80 C 40 10, 65\r\n10,\t95\t80 S 150 150, 180 80\nA 45 45, 0, 1, 0, 125 125\nA 1 2 3\n0\n1\n20  -20";
         float f[6];
         int b[2];
-        Str s = str::Parse(Str(path), "M%f%_%f", &f[0], &f[1]);
+        Str s = str::Parse(path, "M%f%_%f", &f[0], &f[1]);
         utassert(!str::IsNull(s) && f[0] == 10 && f[1] == 80);
         s = str::Parse(Str(s.s + 1), "C%f%_%f,%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4], &f[5]);
         utassert(!str::IsNull(s) && f[0] == 40 && f[1] == 10 && f[2] == 65 && f[3] == 10 && f[4] == 95 && f[5] == 80);

@@ -538,7 +538,7 @@ void EngineDump(const Flags& flags) {
     PasswordHolder pwdUI(password);
     EngineBase* engine = CreateEngineFromFile(filePath, &pwdUI, false);
     if (!engine) {
-        ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(Str(filePath)).s);
+        ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameTemp(filePath).s);
         return 1;
     }
     if (!loadOnly) {

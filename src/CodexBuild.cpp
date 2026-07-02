@@ -504,7 +504,7 @@ static TempStr FindCodexRolloutPathTemp(Str sessionId) {
 // Scan ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl for sessions with matching cwd
 static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr root = CodexSessionsRootTemp();
-    if (!root || !dir::Exists(Str(root))) {
+    if (!root || !dir::Exists(root)) {
         return;
     }
 

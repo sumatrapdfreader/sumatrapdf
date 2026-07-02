@@ -227,7 +227,7 @@ Str EngineEbook::GetFileData() {
     if (!fileName) {
         return {};
     }
-    return file::ReadFile(Str(fileName));
+    return file::ReadFile(fileName);
 }
 
 bool EngineEbook::SaveFileAs(Str dstPath) {
@@ -1889,7 +1889,7 @@ bool EngineTxt::Load(Str fileName) {
 
     SetFilePath(fileName);
 
-    SetDefaultExt(defaultExt, path::GetExtTemp(Str(fileName)));
+    SetDefaultExt(defaultExt, path::GetExtTemp(fileName));
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc) {

@@ -555,7 +555,7 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
     if (ok) {
         out.Append(fmt("OK match=%s page=%d visible=1\n", matched, pageNo));
     } else {
-        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d\n", Str(word), matched ? matched : StrL("(none)"),
+        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d\n", word, matched ? matched : StrL("(none)"),
                        pageNo, visible ? 1 : 0));
     }
     if (exitCodeOut) {

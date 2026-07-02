@@ -166,7 +166,7 @@ TempStr GetAppDataDirTemp() {
         }
         dir = path::JoinTemp(dir, kAppName);
     }
-    logf("GetAppDataDirTemp(): '%s'%s\n", Str(dir), Str(isPortable ? " (portable)" : "(installed)"));
+    logf("GetAppDataDirTemp(): '%s'%s\n", dir, Str(isPortable ? " (portable)" : "(installed)"));
     SetAppDataDir(dir);
     return gAppDataDir.s;
 }

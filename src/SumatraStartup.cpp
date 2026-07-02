@@ -714,7 +714,7 @@ static void LogArenaLifetimeStats(Str what, Arena* a) {
     u64 peakBytes = a->peakBytesLifetime;
     char human[32];
     FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
-    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", Str(what),
+    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what,
          str::FormatNumWithThousandSepTemp((i64)nAllocs), str::FormatNumWithThousandSepTemp((i64)peakBytes),
          Str(human));
 }
@@ -891,7 +891,7 @@ static bool EnsureLibmupdfDll() {
         return false;
     }
     TempStr path = path::JoinTemp(buildDir, "libmupdf.dll");
-    i64 realSize = file::GetSize(Str(path));
+    i64 realSize = file::GetSize(path);
     if (realSize == (i64)expectedSize) {
         return true;
     }
@@ -1007,7 +1007,7 @@ static bool ForceRunningAsInstaller() {
 
     TempStr dir = GetSelfExeDirTemp();
     TempStr path = path::JoinTemp(dir, "libmupdf.dll");
-    auto realSize = file::GetSize(Str(path));
+    auto realSize = file::GetSize(path);
     if (realSize < 0) {
         return true;
     }
@@ -1265,7 +1265,7 @@ static int CmpPreviewLogNewestFirst(const void* a, const void* b) {
 }
 static void DeleteOldPdfPreviewLogs(int keep) {
     TempStr dir = GetPdfPreviewLogDirTemp();
-    if (!dir || !dir::Exists(Str(dir))) {
+    if (!dir || !dir::Exists(dir)) {
         return;
     }
     Vec<PreviewLogFile> files;

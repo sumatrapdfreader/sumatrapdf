@@ -2006,7 +2006,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
 
 PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str settings) {
     logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
-    fileName = path::NormalizeTemp(Str(fileName));
+    fileName = path::NormalizeTemp(fileName);
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
         TempStr msg = fmt("Couldn't open file '%s' for printing", fileName);

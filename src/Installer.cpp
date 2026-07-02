@@ -1137,7 +1137,7 @@ bool ExtractLibmupdfDll(Str destDir) {
 
 bool ExtractInstallerFiles(Str dir) {
     logf("ExtractInstallerFiles() to '%s'\n", dir);
-    bool ok = dir::CreateAll(Str(dir));
+    bool ok = dir::CreateAll(dir);
     if (!ok) {
         log("  dir::CreateAll() failed\n");
         LogLastError();

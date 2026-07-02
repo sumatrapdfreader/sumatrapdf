@@ -400,7 +400,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
 // Scan ~/.grok/sessions/<url-encoded-dir>/ for session subdirectories
 static void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr projectDir = GrokSessionsProjectDirTemp(dir);
-    if (!projectDir || !dir::Exists(Str(projectDir))) {
+    if (!projectDir || !dir::Exists(projectDir)) {
         return;
     }
 

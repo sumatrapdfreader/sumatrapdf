@@ -1987,8 +1987,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             if (pageEl && pageEl->Is(kindPageElementImage)) {
                 RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {
-                    TempStr dir = path::GetDirTemp(Str(filePath));
-                    TempStr base = path::GetBaseNameTemp(Str(filePath));
+                    TempStr dir = path::GetDirTemp(filePath);
+                    TempStr base = path::GetBaseNameTemp(filePath);
                     TempStr noExt = path::GetPathNoExtTemp(base);
                     TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d.png", noExt, pageNoUnderCursor));
                     ImageEditMode m = ImageEditMode::Save;

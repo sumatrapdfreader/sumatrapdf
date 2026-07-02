@@ -352,7 +352,7 @@ bool CrashHandlerDownloadSymbols() {
 
 bool AreSymbolsDownloaded(Str symDir) {
     TempStr path = path::JoinTemp(symDir, "SumatraPDF.pdb");
-    if (file::Exists(Str(path))) {
+    if (file::Exists(path)) {
         logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path, symDir);
         return true;
     }
@@ -646,11 +646,11 @@ static void GetOsVersion(str::Builder& s) {
         arch = IsRunningInWow64() ? "Wow64" : "32-bit";
     }
     if (0 == servicePackMajor) {
-        s.Append(fmt("OS: Windows %s build %d %s\n", Str(os), buildNumber, Str(arch)));
+        s.Append(fmt("OS: Windows %s build %d %s\n", os, buildNumber, Str(arch)));
     } else if (0 == servicePackMinor) {
-        s.Append(fmt("OS: Windows %s SP%d build %d %s\n", Str(os), servicePackMajor, buildNumber, Str(arch)));
+        s.Append(fmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, Str(arch)));
     } else {
-        s.Append(fmt("OS: Windows %s %d.%d build %d %s\n", Str(os), servicePackMajor, servicePackMinor, buildNumber,
+        s.Append(fmt("OS: Windows %s %d.%d build %d %s\n", os, servicePackMajor, servicePackMinor, buildNumber,
                      Str(arch)));
     }
 }
@@ -908,7 +908,7 @@ void InstallCrashHandler(Str crashDumpPath, Str crashFilePath, Str symDir, bool 
     if (!IsInstallerOrUninstallerExe()) {
         TempStr path = GetSettingsPathTemp();
         // can be empty on first run but that's fine because then we know it has default values
-        Str prefsData = file::ReadFile(Str(path));
+        Str prefsData = file::ReadFile(path);
         if (!str::IsEmpty(prefsData)) {
             // serialize without FileStates info because it's the largest
             GlobalPrefs* gp = NewGlobalPrefs(prefsData);

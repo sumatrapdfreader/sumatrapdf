@@ -392,7 +392,7 @@ bool EpubDoc::Load() {
             }
             // load the image lazily
             ImageData data;
-            data.fileName = str::Dup(Str(imgPath));
+            data.fileName = str::Dup(imgPath);
             data.fileId = archive->GetFileId(data.fileName);
             images.Append(data);
         } else if (isHtmlMediaType(mediaType)) {
@@ -942,7 +942,7 @@ bool Fb2Doc::Load() {
                 if (tok->IsText()) {
                     TempStr author = ResolveHtmlEntitiesTemp(tok->s);
                     if (docAuthor) {
-                        docAuthor = str::JoinTemp(Str(docAuthor), StrL(" "), Str(author));
+                        docAuthor = str::JoinTemp(docAuthor, StrL(" "), author);
                     } else {
                         docAuthor = author;
                     }

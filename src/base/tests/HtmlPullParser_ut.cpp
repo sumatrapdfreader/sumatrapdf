@@ -68,7 +68,7 @@ static void HtmlEntities() {
     };
     for (size_t i = 0; i < dimof(changed); i++) {
         Str s = changed[i].s;
-        Str res = ResolveHtmlEntities(Str(s), ta);
+        Str res = ResolveHtmlEntities(s, ta);
         utassert(str::Eq(res, changed[i].res));
     }
 }
