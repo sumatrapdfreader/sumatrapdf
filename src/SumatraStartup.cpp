@@ -2428,7 +2428,19 @@ Exit:
     }
     str::FreePtr(&logFilePath);
     if (AreDangerousThreadsPending()) {
-        fastExit = true;
+        if (gIsDebugBuild) {
+            // in debug builds wait for the threads instead of fast-exiting so
+            // that full cleanup runs and leak trackers only report real leaks.
+            // Safe: windows are deleted below, so the threads' MainWindow*
+            // stay valid while we wait; their queued finish tasks are drained
+            // (and orphaned controllers freed) later in uitask::Destroy()
+            log("waiting for dangerous threads to finish instead of fast exit\n");
+            while (AreDangerousThreadsPending()) {
+                ::Sleep(100);
+            }
+        } else {
+            fastExit = true;
+        }
     }
     if (fastExit) {
         // leave all the remaining clean-up to the OS
