@@ -200,7 +200,9 @@ bool ChmFile::ParseSystemData() {
     if (str::IsEmpty(d)) {
         return false;
     }
-    AutoFree dataFree = (u8*)d.s;
+    defer {
+        str::Free(d);
+    };
 
     ByteReader r(d);
     DWORD len = 0;
@@ -258,7 +260,9 @@ bool ChmFile::ParseSystemData() {
 
 TempStr ChmFile::ResolveTopicID(unsigned int id) const {
     Str ivbData = GetData("/#IVB");
-    AutoFree f = (u8*)ivbData.s;
+    defer {
+        str::Free(ivbData);
+    };
     size_t ivbLen = (size_t)ivbData.len;
     ByteReader br(ivbData);
     if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {

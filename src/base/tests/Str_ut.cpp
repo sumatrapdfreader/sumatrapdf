@@ -539,9 +539,12 @@ void StrTest() {
 // the test string should only contain ASCII characters,
 // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-        AutoFree strA(strconv::WStrToAnsi(TEXT(TEST_STRING)).s);
-        utassert(str::Eq(strA.Get(), TEST_STRING));
-        auto res = strconv::AnsiToWStrTemp(Str(strA.Get()));
+        char* strA = strconv::WStrToAnsi(TEXT(TEST_STRING)).s;
+        defer {
+            free(strA);
+        };
+        utassert(str::Eq(strA, TEST_STRING));
+        auto res = strconv::AnsiToWStrTemp(Str(strA));
         utassert(wstr::Eq(res, TEXT(TEST_STRING)));
 #undef TEST_STRING
     }

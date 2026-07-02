@@ -1904,7 +1904,10 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
 
     auto devMode = printer->devMode;
     size_t devModeSize = devMode->dmSize + devMode->dmDriverExtra;
-    AutoFree backup((char*)memdup(devMode, devModeSize));
+    char* backup = (char*)memdup(devMode, (int)devModeSize);
+    defer {
+        free(backup);
+    };
     SetCustomPaperSize(printer, size);
     if (ValidateDevMode(printer)) {
         return true;
@@ -1912,7 +1915,7 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
     // the driver doesn't support this custom paper size; many printers
     // (e.g. laser printers with fixed paper trays) don't and would create
     // a print job that never prints (issue #2188)
-    memcpy(devMode, backup.Get(), devModeSize);
+    memcpy(devMode, backup, devModeSize);
     return false;
 }
 

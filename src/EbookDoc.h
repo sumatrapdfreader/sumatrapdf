@@ -64,7 +64,7 @@ struct Fb2Doc {
 
     str::Builder xmlData;
     Vec<ImageData> images;
-    AutoFree coverImage;
+    Str coverImage;
     Props props;
     bool isZipped = false;
     bool hasToc = false;

@@ -807,6 +807,7 @@ Fb2Doc::Fb2Doc(IStream* stream) : stream(stream) {
 }
 
 Fb2Doc::~Fb2Doc() {
+    str::Free(coverImage);
     for (auto&& img : images) {
         str::Free(img.base);
         str::Free(img.fileName);
@@ -984,7 +985,7 @@ bool Fb2Doc::Load() {
             if (tok && tok->IsEmptyElementEndTag() && Tag_Image == tok->tag) {
                 AttrInfo* attr = tok->GetAttrByNameNS(StrL("href"), FB2_XLINK_NS());
                 if (attr) {
-                    coverImage.SetCopy(attr->val);
+                    str::ReplaceWithCopy(&coverImage, attr->val);
                 }
             }
         } else if (inTitleInfo || inDocInfo) {
@@ -1041,10 +1042,10 @@ Str Fb2Doc::GetImageData(Str fileName) const {
 }
 
 Str Fb2Doc::GetCoverImage() const {
-    if (!coverImage) {
+    if (str::IsEmpty(coverImage)) {
         return {};
     }
-    return GetImageData(Str(coverImage));
+    return GetImageData(coverImage);
 }
 
 TempStr Fb2Doc::GetPropertyTemp(Str name) const {

@@ -203,7 +203,9 @@ struct DjVuContext {
     ddjvu_document_t* OpenStream(IStream* stream) {
         ScopedCritSec scope(&lock);
         Str d = GetDataFromStream(stream, nullptr);
-        AutoFree dFree((u8*)d.s);
+        defer {
+            str::Free(d);
+        };
         if (str::IsEmpty(d) || (size_t)d.len > ULONG_MAX) {
             return {};
         }

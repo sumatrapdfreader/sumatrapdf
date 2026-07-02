@@ -563,14 +563,15 @@ static Str ConvertLocalToUTF8(Str localStr) {
     if (utf8Len == 0) {
         return {};
     }
-    AutoFree utf8Buf((char*)malloc(utf8Len));
+    char* utf8Buf = (char*)malloc(utf8Len);
     if (!utf8Buf) {
         return {};
     }
-    if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf.Get(), utf8Len, NULL, NULL) == 0) {
+    if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf, utf8Len, NULL, NULL) == 0) {
+        free(utf8Buf);
         return {};
     }
-    return Str(utf8Buf.Take(), utf8Len - 1);
+    return Str(utf8Buf, utf8Len - 1);
 }
 
 TempStr CopyPlainSyncToTempFile(TempStr pathSync) {

@@ -1079,7 +1079,9 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     }
     PropertyItem* item = (PropertyItem*)malloc(size);
     if (!item) return {};
-    AutoFree freeItem((char*)item);
+    defer {
+        free(item);
+    };
     Status ok = bmp->GetPropertyItem(id, size, item);
     if (Ok != ok) {
         /* property didn't exist */;

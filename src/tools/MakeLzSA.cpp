@@ -107,11 +107,14 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
     if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == (size_t)fileData.len) goto ReusePrevious;
 
     size_t compressedSize = (size_t)fileData.len + 1;
-    AutoFree compressed((char*)malloc(compressedSize));
-    if (!compressed.Get()) {
+    char* compressed = (char*)malloc(compressedSize);
+    defer {
+        free(compressed);
+    };
+    if (!compressed) {
         return false;
     }
-    if (!Compress((const char*)fileData.s, (size_t)fileData.len, compressed.Get(), &compressedSize)) {
+    if (!Compress((const char*)fileData.s, (size_t)fileData.len, compressed, &compressedSize)) {
         return false;
     }
 
@@ -236,7 +239,10 @@ int mainVerify(Str archivePath) {
     errorStep++;
 
     for (int i = 0; i < lzsa.filesCount; i++) {
-        AutoFree data(lzma::GetFileDataByIdx(&lzsa, i, nullptr));
+        auto data = lzma::GetFileDataByIdx(&lzsa, i, nullptr);
+        defer {
+            free(data);
+        };
         FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name.s);
         errorStep++;
     }
