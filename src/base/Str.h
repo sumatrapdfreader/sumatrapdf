@@ -129,8 +129,8 @@ size_t RemoveCharsInPlace(Str str, Str toRemove);
 int BufSet(Str dst, Str src);
 int BufAppend(Str dst, Str s);
 
-TempStr MemToHexTemp(const u8* buf, size_t len);
-bool HexToMem(Str s, u8* buf, size_t bufLen);
+TempStr MemToHexTemp(Str buf);
+bool HexToMem(Str s, Str buf);
 
 int CmpNatural(Str a, Str b);
 

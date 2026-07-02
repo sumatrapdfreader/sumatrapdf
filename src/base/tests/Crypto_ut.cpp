@@ -10,21 +10,21 @@
 static bool TestDigestMD5(Str data, Str verify) {
     u8 digest[16];
     CalcMD5Digest(data, digest);
-    TempStr hash = str::MemToHexTemp((const u8*)&digest, sizeof(digest));
+    TempStr hash = str::MemToHexTemp(Str((const char*)digest, dimofi(digest)));
     return str::Eq(hash, verify);
 }
 
 static bool TestDigestSHA1(Str data, Str verify) {
     u8 digest[20];
     CalcSHA1Digest(data, digest);
-    TempStr hash = str::MemToHexTemp((const u8*)&digest, sizeof(digest));
+    TempStr hash = str::MemToHexTemp(Str((const char*)digest, dimofi(digest)));
     return str::Eq(hash, verify);
 }
 
 static bool TestDigestSHA2(Str data, Str verify) {
     u8 digest[32];
     CalcSHA2Digest(data, digest);
-    TempStr hash = str::MemToHexTemp((const u8*)&digest, sizeof(digest));
+    TempStr hash = str::MemToHexTemp(Str((const char*)digest, dimofi(digest)));
     return str::Eq(hash, verify);
 }
 

@@ -498,7 +498,7 @@ EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
         if (hexLen > 0 && (hexLen % 2) == 0) {
             int nameLen = hexLen / 2;
             char* name = AllocArrayTemp<char>((size_t)nameLen + 1);
-            if (str::HexToMem(hex, (u8*)name, (size_t)nameLen)) {
+            if (str::HexToMem(hex, Str(name, nameLen))) {
                 name[nameLen] = 0;
                 res.fileName = Str(name, nameLen);
             }

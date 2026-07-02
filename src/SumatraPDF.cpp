@@ -564,9 +564,9 @@ class HwndPasswordUI : public PasswordUI {
 Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
     FileState* fileFromHistory = gFileHistory.FindByName(path, nullptr);
     if (fileFromHistory && fileFromHistory->decryptionKey && fileDigest && decryptionKeyOut) {
-        TempStr fingerprint = str::MemToHexTemp(fileDigest, 16);
+        TempStr fingerprint = str::MemToHexTemp(Str((const char*)fileDigest, 16));
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint);
-        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey.s + 32, decryptionKeyOut, 32)) {
+        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey.s + 32, Str((char*)decryptionKeyOut, 32))) {
             return {};
         }
     }

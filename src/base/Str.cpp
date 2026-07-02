@@ -986,8 +986,9 @@ size_t RemoveCharsInPlace(WStr str, WStr toRemove) {
 } // namespace wstr
 namespace str {
 
-/* Convert binary data in <buf> of size <len> to a hex-encoded string */
-TempStr MemToHexTemp(const u8* buf, size_t len) {
+/* Convert binary data in <buf> to a hex-encoded string */
+TempStr MemToHexTemp(Str buf) {
+    size_t len = (size_t)buf.len;
     /* 2 hex chars per byte, +1 for terminating 0 */
     char* ret = AllocArrayTemp<char>(2 * len + 1);
     if (!ret) {
@@ -996,7 +997,7 @@ TempStr MemToHexTemp(const u8* buf, size_t len) {
     static const char hex[] = "0123456789abcdef";
     int dst = 0;
     for (size_t i = 0; i < len; i++) {
-        u8 b = buf[i];
+        u8 b = (u8)buf.s[i];
         ret[dst++] = hex[b >> 4];
         ret[dst++] = hex[b & 0x0f];
     }
@@ -1021,7 +1022,8 @@ static int HexDigitVal(char c) {
     return -1;
 }
 
-bool HexToMem(Str s, u8* buf, size_t bufLen) {
+bool HexToMem(Str s, Str buf) {
+    size_t bufLen = (size_t)buf.len;
     size_t needed = bufLen * 2;
     if (s.len < (int)needed) {
         return false;
@@ -1033,7 +1035,7 @@ bool HexToMem(Str s, u8* buf, size_t bufLen) {
         if (hi < 0 || lo < 0) {
             return false;
         }
-        buf[i] = (u8)((hi << 4) | lo);
+        buf.s[i] = (char)((hi << 4) | lo);
     }
     return s.len == (int)needed || (s.len > (int)needed && s.s[needed] == '\0');
 }

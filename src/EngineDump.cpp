@@ -330,9 +330,7 @@ void DumpThumbnail(EngineBase* engine) {
     }
 
     Str imgData = tga::SerializeBitmap(bmp->hbmp);
-    size_t len = (size_t)imgData.len;
-    u8* data = (u8*)imgData.s;
-    TempStr hexData = data ? str::MemToHexTemp(data, len) : Str{};
+    TempStr hexData = imgData.s ? str::MemToHexTemp(imgData) : Str{};
     if (hexData) {
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.s);
     } else {

@@ -177,23 +177,23 @@ static void versioncheck_test() {
 static void hexstrTest() {
     u8 buf[6] = {1, 2, 33, 255, 0, 18};
     u8 buf2[6]{};
-    TempStr s = str::MemToHexTemp((const u8*)&buf, sizeof(buf));
+    TempStr s = str::MemToHexTemp(Str((const char*)buf, dimofi(buf)));
     utassert(str::Eq(s, "010221ff0012"));
-    bool ok = str::HexToMem(s, (u8*)&buf2, sizeof(buf2));
+    bool ok = str::HexToMem(s, Str((char*)buf2, dimofi(buf2)));
     utassert(ok);
     utassert(memeq(buf, buf2, sizeof(buf)));
 
     FILETIME ft1, ft2;
     GetSystemTimeAsFileTime(&ft1);
-    s = str::MemToHexTemp((const u8*)&ft1, sizeof(ft1));
-    str::HexToMem(s, (u8*)&ft2, sizeof(ft2));
+    s = str::MemToHexTemp(Str((const char*)&ft1, (int)sizeof(ft1)));
+    str::HexToMem(s, Str((char*)&ft2, (int)sizeof(ft2)));
     DWORD diff = FileTimeDiffInSecs(ft1, ft2);
     utassert(0 == diff);
     utassert(FileTimeEq(ft1, ft2));
 
-    s = str::MemToHexTemp(nullptr, 0);
+    s = str::MemToHexTemp(Str());
     utassert(str::Eq(s, ""));
-    ok = str::HexToMem(s, nullptr, 0);
+    ok = str::HexToMem(s, Str());
     utassert(ok);
 }
 

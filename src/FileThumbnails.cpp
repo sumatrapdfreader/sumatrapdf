@@ -31,7 +31,7 @@ TempStr GetThumbnailPathTemp(Str filePath) {
         path.s[0] = '?';
     }
     CalcMD5Digest(path, digest);
-    TempStr fingerPrint = str::MemToHexTemp(digest, dimof(digest));
+    TempStr fingerPrint = str::MemToHexTemp(Str((const char*)digest, dimofi(digest)));
 
     TempStr thumbsDir = GetThumbnailCacheDirTemp();
     if (!thumbsDir) {
