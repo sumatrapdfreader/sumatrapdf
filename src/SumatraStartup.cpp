@@ -895,26 +895,30 @@ static void FreeLibmupdfDll() {
     }
 }
 
-static bool EnsureLibmupdfDll() {
+static TempStr ExtractLibmupdfDllToBuildDir() {
     u32 expectedSize = GetLibmupdfDllSize();
     ReportIf(0 == expectedSize);
     if (0 == expectedSize) {
-        return false;
+        return {};
     }
 
     TempStr buildDir = GetBuildDirNameTemp();
     if (!buildDir) {
-        return false;
+        return {};
     }
     TempStr path = path::JoinTemp(buildDir, StrL("libmupdf.dll"));
     i64 realSize = file::GetSize(path);
     if (realSize == (i64)expectedSize) {
-        return true;
+        return path;
     }
     if (realSize >= 0) {
-        logf("EnsureLibmupdfDll: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize, expectedSize);
+        logf("ExtractLibmupdfDllToBuildDir: overwriting '%s' (size %lld, expected %u)\n", path, (long long)realSize, expectedSize);
     }
-    return ExtractLibmupdfDll(buildDir);
+    bool ok= ExtractLibmupdfDll(buildDir);
+    if (!ok) {
+        return {};
+    }
+    return path;
 }
 
 static bool LoadLibmupdf(bool showErrorDialog) {
@@ -922,38 +926,31 @@ static bool LoadLibmupdf(bool showErrorDialog) {
         // this is not a version that needs libmupdf.dll
         return true;
     }
-    DWORD err = 0;
-    TempStr errStr = nullptr;
 
     // gSingleExe: extract libmupdf.dll to the build data dir and load from there.
     // otherwise (installer build) load the libmupdf.dll the installer placed next
     // to the exe.
-    bool haveDll;
     TempStr path;
     if (gSingleExe) {
-        haveDll = EnsureLibmupdfDll();
-        path = path::JoinTemp(GetBuildDirNameTemp(), StrL("libmupdf.dll"));
+        path = ExtractLibmupdfDllToBuildDir();
     } else {
-        haveDll = true;
         path = GetPathInExeDirTemp("libmupdf.dll");
     }
-
-    if (!haveDll) {
-        logf("LoadLibmupdf: failed to ensure libmupdf.dll\n");
-    } else {
-        gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
-        if (gLibmupdfDll) {
-            return true;
-        }
-        logf("LoadLibmupdf: failed to load %s\n", path);
-        err = GetLastError();
-        logf("last err: 0x%x\n", (int)err);
-        if (err != 0) {
-            errStr = GetLastErrorStrTemp(err);
-            logf("error string: %s\n", errStr ? errStr : StrL("(none)"));
-        }
+    if (len(path) == 0) {
+        log("LoadLibmupdf: failed to get path to libmupdf.dll\n");
         ReportIfFast(true);
+        return false;
     }
+    gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
+    if (gLibmupdfDll) {
+        return true;
+    }
+    logf("LoadLibmupdf: failed to load %s\n", path);
+    DWORD err = GetLastError();
+    LogLastError(err);
+    ReportIfFast(true);
+
+    logf("LoadLibmupdf: failed to ensure libmupdf.dll\n");
     if (!showErrorDialog) {
         // e.g. -print-to ... -silent invoked by another program:
         // a modal dialog would hang the caller
@@ -962,10 +959,9 @@ static bool LoadLibmupdf(bool showErrorDialog) {
 
     TempStr msg = fmt(R"(SumatraPDF.exe failed to load libmupdf.dll.
 Error code: %d
-Error message: %s
 We can't proceed.
 For more information see <a href="%s">SumatraPDF docs</a>.)",
-                      (int)err, errStr ? errStr : StrL("unknown"), kFailedToLoadURL());
+                      (int)err, kFailedToLoadURL());
 
     TASKDIALOG_BUTTON buttons[2];
     buttons[0].nButtonID = IDOK;
