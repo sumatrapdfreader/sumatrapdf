@@ -33,7 +33,7 @@ struct EpubFormatter : HtmlFormatter {
 
     EpubDoc* epubDoc;
     Str pagePath;
-    size_t hiddenDepth;
+    int hiddenDepth;
 
   public:
     EpubFormatter(HtmlFormatterArgs* args, EpubDoc* doc) : HtmlFormatter(args), epubDoc(doc), hiddenDepth(0) {}

@@ -1857,7 +1857,7 @@ static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) 
         labels->Append("");
     }
 
-    for (size_t i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         pli = data.at(i);
         if (pli.startAt > pageCount) {
             break;
@@ -4473,7 +4473,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
             str::Builder filesStr;
             auto& fileInfos = zip->GetFileInfos();
             int n = len(fileInfos);
-            for (size_t i = 0; i < n; i++) {
+            for (int i = 0; i < n; i++) {
                 auto* fi = fileInfos[i];
                 if (str::IsEmpty(fi->name)) {
                     continue;

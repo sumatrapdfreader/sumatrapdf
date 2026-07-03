@@ -253,7 +253,7 @@ struct DisplayModel : DocController {
     Vec<ScrollState> navHistory;
     /* index of the "current" history entry (to be updated on navigation),
        resp. number of Back history entries */
-    size_t navHistoryIdx = 0;
+    int navHistoryIdx = 0;
 
     /* Stable-view nav point tracking (see DisplayModel.cpp): a view the user
        dwelled on is committed into navHistory by the next view change, so

@@ -507,7 +507,7 @@ bool MobiDoc::ParseHeader() {
         }
     }
     docRecCount = palmDocHdr.recordsCount;
-    if (docRecCount == pdbReader->GetRecordCount()) {
+    if (docRecCount == (int)pdbReader->GetRecordCount()) {
         // catch the case where a broken document has an off-by-one error
         // cf. https://code.google.com/archive/p/sumatrapdf/issues/2529
         docRecCount--;
@@ -625,7 +625,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
     }
 
     for (u32 i = 0; i < count; i++) {
-        if (d.Offset() > dataLen - 8) {
+        if (d.Offset() > (size_t)(dataLen - 8)) {
             return false;
         }
         u32 type = d.UInt32();
@@ -766,7 +766,7 @@ Str MobiDoc::GetCoverImage() {
     if (!coverImageRec || coverImageRec < imageFirstRec) {
         return {};
     }
-    size_t imageNo = coverImageRec - imageFirstRec;
+    int imageNo = coverImageRec - imageFirstRec;
     if (imageNo >= imagesCount || str::IsEmpty(images[imageNo])) {
         return {};
     }
@@ -859,7 +859,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 
     ReportIf(len(doc) != 0);
     doc = str::Builder((int)docUncompressedSize);
-    size_t nFailed = 0;
+    int nFailed = 0;
     for (int i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, doc)) {
             nFailed++;

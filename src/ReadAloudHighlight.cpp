@@ -104,7 +104,7 @@ static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map
         ReadAloudByteLoc loc = raw[i].loc;
 
         if (c == '-' && i + 1 < len(raw) && IsReadAloudLineBreak(raw[i + 1].c)) {
-            size_t after = i + 1;
+            int after = i + 1;
             while (after < len(raw) && IsReadAloudLineBreak(raw[after].c)) {
                 after++;
             }

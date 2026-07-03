@@ -243,7 +243,7 @@ static bool ParseArg(PacketReader& r, ControlArg** argOut) {
 }
 
 static ControlArg* ArgAt(ControlRequest* req, size_t idx, ControlArgType type) {
-    if (idx >= len(req->args)) {
+    if (idx >= (size_t)len(req->args)) {
         return nullptr;
     }
     ControlArg* arg = req->args.at(idx);

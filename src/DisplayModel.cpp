@@ -2144,7 +2144,7 @@ void DisplayModel::AddNavPoint() {
 bool DisplayModel::CanNavigate(int dir) const {
     ReportIf(navHistoryIdx > len(navHistory));
     if (dir < 0) {
-        return navHistoryIdx >= (size_t)-dir;
+        return navHistoryIdx >= -dir;
     }
     return navHistoryIdx + dir < len(navHistory);
 }

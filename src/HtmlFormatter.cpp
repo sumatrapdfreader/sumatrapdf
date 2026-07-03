@@ -463,12 +463,12 @@ static RectF RectFUnion(RectF& r1, RectF& r2) {
 void HtmlFormatter::UpdateLinkBboxes(HtmlPage* page) {
     Vec<DrawInstr>& a = page->instructions;
     int n = len(a);
-    for (size_t i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         DrawInstr& instr = a[i];
         if (DrawInstrType::LinkStart != instr.type) {
             continue;
         }
-        for (size_t j = i + 1; j < n; j++) {
+        for (int j = i + 1; j < n; j++) {
             DrawInstr& linkInstr = a[j];
             if (DrawInstrType::LinkEnd != linkInstr.type) {
                 continue;

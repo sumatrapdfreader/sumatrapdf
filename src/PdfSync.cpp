@@ -372,7 +372,8 @@ int Pdfsync::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
     UINT closest_ydist_record = UINT_MAX; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (size_t i = sheetIndex.at((size_t)pageNo); i < len(points) && points.at(i).page == (uint)pageNo; i++) {
+    for (size_t i = sheetIndex.at((size_t)pageNo); i < (size_t)len(points) && points.at(i).page == (uint)pageNo;
+         i++) {
         // check whether it is closer than the closest point found so far
         UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points.at(i).x));
         UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points.at(i).y));
@@ -479,7 +480,7 @@ UINT Pdfsync::SourceToRecord(Str srcfilename, int line, int, Vec<size_t>& record
     }
 
     // we read all the consecutive records until we reach a record belonging to another line
-    for (size_t i = lineIx; i < len(lines) && lines.at(i).line == lines.at(lineIx).line; i++) {
+    for (size_t i = lineIx; i < (size_t)len(lines) && lines.at(i).line == lines.at(lineIx).line; i++) {
         records.Append(lines.at(i).record);
     }
 

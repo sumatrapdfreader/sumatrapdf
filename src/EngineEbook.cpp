@@ -488,11 +488,11 @@ Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
 
     Vec<DrawInstr>* pageInstrs = &pi->instructions;
     int n = len(*pageInstrs);
-    for (size_t idx = 0; idx < n; idx++) {
+    for (int idx = 0; idx < n; idx++) {
         DrawInstr& i = pageInstrs->at(idx);
         if (DrawInstrType::Image == i.type) {
             auto box = GetInstrBbox(i, pageBorder);
-            auto el = NewImageDataElement(pageNo, box, (int)idx);
+            auto el = NewImageDataElement(pageNo, box, idx);
             els.Append(el);
         } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmpty()) {
             IPageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);

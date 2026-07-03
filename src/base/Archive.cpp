@@ -280,7 +280,7 @@ MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataById(size_t fileId)
     if (fileId == (size_t)-1) {
         return nullptr;
     }
-    ReportIf(fileId >= len(fileInfos_));
+    ReportIf(fileId >= (size_t)len(fileInfos_));
 
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
@@ -357,7 +357,7 @@ Str MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint) {
     if (fileId == (size_t)-1) {
         return {};
     }
-    ReportIf(fileId >= len(fileInfos_));
+    ReportIf(fileId >= (size_t)len(fileInfos_));
 
     auto* fileInfo = fileInfos_[fileId];
     // if full data is cached, return a copy of the prefix

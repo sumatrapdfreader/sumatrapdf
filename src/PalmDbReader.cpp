@@ -101,7 +101,7 @@ size_t PdbReader::GetRecordCount() {
 
 // don't free, memory is owned by us
 Str PdbReader::GetRecord(size_t recNo) {
-    int nRecs = len(recInfos);
+    size_t nRecs = (size_t)len(recInfos);
     ReportIf(recNo >= nRecs);
     if (recNo >= nRecs) {
         return {};

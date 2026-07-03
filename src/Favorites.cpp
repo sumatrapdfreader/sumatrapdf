@@ -620,7 +620,7 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
 
 static void MakeFavSecondLevel(FavTreeItem* parent, FileState* f) {
     int n = len(*f->favorites);
-    for (size_t i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         Favorite* fn = f->favorites->at(i);
         auto* ti = new FavTreeItem();
         ti->text = str::Dup(FavReadableNameTemp(fn));

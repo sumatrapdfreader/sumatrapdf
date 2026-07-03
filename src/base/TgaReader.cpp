@@ -399,7 +399,7 @@ Str SerializeBitmap(HBITMAP hbmp) {
     tgaData.Append(Str((char*)&footerLE, (int)sizeof(footerLE)));
 
     // don't compress the image data if that increases the file size
-    if (len(tgaData) > sizeof(headerLE) + w * h * 3 + sizeof(footerLE)) {
+    if ((size_t)len(tgaData) > sizeof(headerLE) + (size_t)(w * h * 3) + sizeof(footerLE)) {
         tgaData.RemoveAt(0, len(tgaData));
         headerLE.imageType = Type_Truecolor;
         tgaData.Append(Str((char*)&headerLE, (int)sizeof(headerLE)));

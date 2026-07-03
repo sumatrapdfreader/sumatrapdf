@@ -522,7 +522,7 @@ ChmCacheEntry::ChmCacheEntry(Str url) {
 
 ChmCacheEntry* ChmModel::FindDataForUrl(Str url) const {
     int n = len(urlDataCache);
-    for (size_t i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         ChmCacheEntry* e = urlDataCache.at(i);
         if (str::Eq(url, e->url)) {
             return e;
@@ -687,7 +687,7 @@ TocTree* ChmModel::GetToc() {
         item->id = ++idCounter;
         // append the item at the correct level
         ReportIf(ti.level < 1);
-        if ((size_t)ti.level <= len(levels)) {
+        if (ti.level <= len(levels)) {
             levels.RemoveAt(ti.level, len(levels) - ti.level);
             levels.Last()->AddSiblingAtEnd(item);
         } else {

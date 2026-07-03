@@ -549,7 +549,7 @@ bool gShowPassword = false;
 
 class HwndPasswordUI : public PasswordUI {
     HWND hwnd;
-    size_t pwdIdx;
+    int pwdIdx;
     bool triedCliPwd = false;
 
   public:

@@ -77,7 +77,7 @@ void FileHistory::Clear(bool keepFavorites) const {
 }
 
 FileState* FileHistory::Get(size_t index) const {
-    if (index < len(*states)) {
+    if (index < (size_t)len(*states)) {
         return states->at(index);
     }
     return nullptr;

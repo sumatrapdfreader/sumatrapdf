@@ -2195,7 +2195,7 @@ bool EngineCbx::FinishLoading() {
 
     auto& fileInfos = cbxArchive->GetFileInfos();
     int n = len(fileInfos);
-    for (size_t i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         auto* fileInfo = fileInfos[i];
         Str fileName = fileInfo->name;
         if (!fileName) {
@@ -2357,7 +2357,7 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
     str::Builder filesStr;
     auto& fileInfos = cbxArchive->GetFileInfos();
     int n = len(fileInfos);
-    for (size_t i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         auto* fi = fileInfos[i];
         if (str::IsEmpty(fi->name)) {
             continue;
