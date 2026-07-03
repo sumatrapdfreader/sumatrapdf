@@ -1891,15 +1891,6 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     UpdateDisplayStateWindowRect(win, fs);
     UpdateSidebarDisplayState(tab, fs);
 
-    // DjVu: libdjvulibre caches file info by path, so we must close the old
-    // engine before opening the new one to avoid stale cached data (issue #1298)
-    bool isDjVu = str::EndsWithI(path, ".djvu") || str::EndsWithI(path, ".djv");
-    if (isDjVu) {
-        delete tab->ctrl;
-        tab->ctrl = nullptr;
-        win->ctrl = nullptr;
-    }
-
     DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
