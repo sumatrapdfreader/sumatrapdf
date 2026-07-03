@@ -2070,7 +2070,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
             HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             auto prevCol = SetTextColor(hdc, colDocTxt);
-            DrawCenteredText(hdc, bounds, _TRA("Couldn't render the page"), isRtl);
+            TempStr msg = fmt(_TRA("Couldn't render page %d").s, pageNo);
+            DrawCenteredText(hdc, bounds, msg, isRtl);
             SetTextColor(hdc, prevCol);
             SelectObject(hdc, hPrevFont);
             continue;
@@ -2102,7 +2103,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
             } else {
                 shouldPaint = true;
                 auto prevCol = SetTextColor(hdc, colDocTxt);
-                DrawCenteredText(hdc, bounds, _TRA("Couldn't render the page"), isRtl);
+                TempStr msg = fmt(_TRA("Couldn't render page %d").s, pageNo);
+                DrawCenteredText(hdc, bounds, msg, isRtl);
                 SetTextColor(hdc, prevCol);
             }
             SelectObject(hdc, hPrevFont);
