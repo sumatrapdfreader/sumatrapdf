@@ -2028,8 +2028,9 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 IPageDestination* elDest = pageEl->AsLink();
                 PageDestination* pd = (PageDestination*)elDest;
                 if (pd && pd->embedObjNum > 0) {
+                    // attachments are arbitrary binary, don't use str::IsEmpty()
                     Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
-                    if (!str::IsEmpty(data)) {
+                    if (len(data) > 0) {
                         Str fileName = pd->GetValue2();
                         TempStr dir = path::GetDirTemp(filePath);
                         fileName = path::GetBaseNameTemp(fileName);

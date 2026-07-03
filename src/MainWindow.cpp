@@ -468,8 +468,9 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         PageDestination* pd = (PageDestination*)dest;
         if (pd->embedObjNum > 0) {
             EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
+            // attachments are arbitrary binary, don't use str::IsEmpty()
             Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
-            if (!str::IsEmpty(data)) {
+            if (len(data) > 0) {
                 Str fileName = pd->GetValue2();
                 logf("GotoLink: opening file attachment annotation '%s', objNum: %d, size: %d\n", fileName,
                      pd->embedObjNum, (int)data.len);

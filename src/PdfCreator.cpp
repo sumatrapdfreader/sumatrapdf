@@ -217,7 +217,7 @@ bool PdfCreator::AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi) {
 
 bool PdfCreator::AddPageFromImageData(Str data, float imgDpi) const {
     ReportIf(!ctx || !doc);
-    if (!ctx || !doc || str::IsEmpty(data)) {
+    if (!ctx || !doc || len(data) == 0) {
         return false;
     }
 

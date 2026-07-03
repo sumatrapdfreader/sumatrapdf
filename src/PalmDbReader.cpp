@@ -119,7 +119,7 @@ Str PdbReader::GetRecord(size_t recNo) {
 }
 
 PdbReader* PdbReader::CreateFromData(Str d) {
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return nullptr;
     }
     PdbReader* reader = new PdbReader();

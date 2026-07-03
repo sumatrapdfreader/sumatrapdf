@@ -2827,7 +2827,7 @@ static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* fil
         return nullptr;
     }
     Str data = file::ReadFile(full);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return nullptr;
     }
     fz_buffer* buf = nullptr;

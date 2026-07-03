@@ -433,13 +433,14 @@ bool RenderDocument(EngineBase* engine, Str renderPath, float zoom = 1.f, bool s
             gbmp.Save(pageBmpPathW, &pngEncId, nullptr);
         } else if (str::EndsWithI(pageBmpPath, ".bmp")) {
             Str imgData = SerializeBitmap(bmp->hbmp);
-            if (!str::IsEmpty(imgData)) {
+            if (len(imgData) > 0) {
                 file::WriteFile(pageBmpPath, imgData);
                 str::Free(imgData);
             }
         } else { // render as TGA for all other file extensions
+            // a serialized TGA starts with a 0 byte, don't use str::IsEmpty()
             Str imgData = tga::SerializeBitmap(bmp->hbmp);
-            if (!str::IsEmpty(imgData)) {
+            if (len(imgData) > 0) {
                 file::WriteFile(pageBmpPath, imgData);
                 str::Free(imgData);
             }

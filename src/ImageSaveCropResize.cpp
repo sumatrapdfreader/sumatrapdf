@@ -1860,7 +1860,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
             filePath = tab->filePath;
         }
         Str data = file::ReadFile(filePath);
-        if (str::IsEmpty(data)) {
+        if (len(data) == 0) {
             return;
         }
         bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(data));

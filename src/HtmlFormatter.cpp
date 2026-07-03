@@ -596,7 +596,7 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
 }
 
 bool HtmlFormatter::EmitImage(Str img) {
-    ReportIf(str::IsEmpty(img));
+    ReportIf(len(img) == 0);
     Size imgSize = ImageSizeFromData(img);
     if (imgSize.IsEmpty()) {
         return false;

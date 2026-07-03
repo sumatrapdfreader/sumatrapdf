@@ -265,8 +265,10 @@ EngineImages::~EngineImages() {
 // The actual JPEG/PNG decode happens later in RenderPage at near-target
 // scale, much cheaper than decoding at full resolution up front.
 fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
+    // don't use str::IsEmpty(): these are binary bytes and formats like JP2
+    // legitimately start with a 0 byte
     Str data = GetImageData(pageNo);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return nullptr;
     }
     fz_image* img = nullptr;
@@ -639,7 +641,7 @@ bool EngineImages::SaveFileAs(Str dstPath) {
         }
     }
     Str d = GetFileData();
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return false;
     }
     return file::WriteFile(dstPath, d);
@@ -1097,7 +1099,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
 // load bitmap using GDI+ Bitmap::FromStream which preserves EXIF metadata
 // PixmapFromData() uses WIC which decodes to raw pixels, losing EXIF
 static Bitmap* BitmapWithExifFromData(Str data) {
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return nullptr;
     }
     IStream* strm = CreateStreamFromData(data);
@@ -1551,7 +1553,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
 
 // decode image data with GDI+ (preserving EXIF), extract properties, add file size
 static void GetExifPropertiesFromData(Str data, StrVec& keyValOut) {
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return;
     }
     TempStr sizeStr = fmt("%d", (int)data.len);
@@ -1596,7 +1598,7 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 Str EngineImage::GetImageData(int) {
     ScopedCritSec scope(&cacheLock);
     auto pi = pageInfos[0];
-    if (str::IsEmpty(pi->rawData)) {
+    if (len(pi->rawData) == 0) {
         pi->rawData = file::ReadFile(FilePath());
     }
     return pi->rawData;
@@ -1842,7 +1844,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 Str EngineImageDir::GetImageData(int pageNo) {
     ScopedCritSec scope(&cacheLock);
     auto pi = pageInfos[pageNo - 1];
-    if (str::IsEmpty(pi->rawData)) {
+    if (len(pi->rawData) == 0) {
         Str path = pageFileNames.At(pageNo - 1);
         pi->rawData = file::ReadFile(path);
     }
@@ -2377,7 +2379,7 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     auto timeStart = TimeGet();
     defer{};
     Str img = GetImageData(pageNo);
-    if (str::IsEmpty(img)) {
+    if (len(img) == 0) {
         logf("EngineCbx::LoadBitmapForPage(page: %d) failed\n", pageNo);
         return nullptr;
     }
@@ -2393,7 +2395,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
 
     // try to get image size from just the file header (first 1024 bytes)
     Str header = cbxArchive->GetFileDataPartById(fileId, 1024);
-    if (!str::IsEmpty(header)) {
+    if (len(header) > 0) {
         Size size = ImageSizeFromHeader(header);
         str::Free(header);
         if (!size.IsEmpty()) {
@@ -2403,7 +2405,7 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
 
     // fall back to getting the full image data
     Str img = GetImageData(pageNo);
-    if (!str::IsEmpty(img)) {
+    if (len(img) > 0) {
         Size size = ImageSizeFromData(img);
         if (!size.IsEmpty()) {
             return RectF(0, 0, (float)size.dx, (float)size.dy);

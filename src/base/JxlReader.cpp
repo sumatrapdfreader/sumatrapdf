@@ -40,7 +40,8 @@ static Pixmap* RgbaToPixmap(const u8* rgba, int w, int h) {
 }
 
 Pixmap* PixmapFromData(Str d) {
-    if (str::IsEmpty(d)) {
+    // JXL container format starts with a 0 byte, don't use str::IsEmpty()
+    if (len(d) == 0) {
         return nullptr;
     }
     JxlDecoder* dec = JxlDecoderCreate(nullptr);
@@ -106,7 +107,8 @@ Pixmap* PixmapFromData(Str d) {
 
 Size SizeFromData(Str d) {
     Size size;
-    if (str::IsEmpty(d)) {
+    // JXL container format starts with a 0 byte, don't use str::IsEmpty()
+    if (len(d) == 0) {
         return size;
     }
     JxlDecoder* dec = JxlDecoderCreate(nullptr);
