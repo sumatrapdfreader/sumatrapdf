@@ -153,6 +153,7 @@ struct DjVuContext {
     ~DjVuContext() {
         EnterCriticalSection(&lock);
         if (ctx) {
+            ddjvu_cache_clear(ctx);
             ddjvu_context_release(ctx);
         }
         LeaveCriticalSection(&lock);
@@ -246,6 +247,9 @@ static void ReleaseDjVuContext() {
 void CleanupEngineDjVu() {
     if (gDjVuContext) {
         ReportIf(gDjVuContext->refCount != 0);
+        if (gDjVuContext->ctx) {
+            ddjvu_cache_clear(gDjVuContext->ctx);
+        }
         delete gDjVuContext;
         gDjVuContext = nullptr;
     }
@@ -339,12 +343,18 @@ EngineDjVu::~EngineDjVu() {
 
     if (outline != miniexp_nil) {
         ddjvu_miniexp_release(doc, outline);
+        outline = miniexp_nil;
     }
     if (doc) {
+        ddjvu_job_stop(ddjvu_document_job(doc));
+        gDjVuContext->SpinMessageLoop(false);
         ddjvu_document_release(doc);
+        doc = nullptr;
+        gDjVuContext->SpinMessageLoop(false);
     }
     if (stream) {
         stream->Release();
+        stream = nullptr;
     }
     ReleaseDjVuContext();
 }

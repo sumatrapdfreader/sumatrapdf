@@ -814,6 +814,7 @@ EXPORTS
 ; djvu exports (required for DjVuEngine)
 
 	ddjvu_anno_get_hyperlinks
+	ddjvu_cache_clear
 	ddjvu_context_create
 	ddjvu_context_release
 	ddjvu_document_create_by_data
@@ -828,6 +829,7 @@ EXPORTS
 	ddjvu_document_job
 	ddjvu_format_create
 	ddjvu_format_release
+	ddjvu_job_stop
 	ddjvu_format_set_row_order
 	ddjvu_free
 	ddjvu_free_port_corpses
