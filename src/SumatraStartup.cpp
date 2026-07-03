@@ -1889,12 +1889,14 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 #endif
 
-    // in debug build, default to logging. Leave logFile unset so the log goes
-    // to GetLogFilePathTemp() (the build dir) rather than a relative
-    // "sumlog.txt" resolved against the cwd — which, when a PDF is opened via
-    // Explorer, is the PDF's own directory, littering a log file there.
+    // in debug build, default to logging into the build dir. Use the full path
+    // from GetLogFilePathTemp() rather than a relative "sumlog.txt", which is
+    // resolved against the cwd — when a PDF is opened via Explorer, that is the
+    // PDF's own directory, littering a log file there.
     if (gIsDebugBuild) {
         if (!flags.logFile) {
+            // from the perm arena like all other flag strings (~Flags frees nothing)
+            flags.logFile = str::Dup(GetPermArena(), GetLogFilePathTemp());
             flags.log = true;
             logFileBecauseDebug = true;
         }
