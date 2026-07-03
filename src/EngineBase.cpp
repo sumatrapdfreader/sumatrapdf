@@ -485,7 +485,10 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
             pagesTextState = AllocArray<TextExtractionState>(pageCount);
         }
         PageText* pt = &pagesText[pageNo - 1];
-        if (pagesTextState[pageNo - 1] == TextExtractionState::NotExtracted) {
+        // Finished covers textless pages too (pt->text can stay empty). Pending
+        // means a background thread was started by RequestTextExtraction but
+        // selection still needs a synchronous extract here.
+        if (pagesTextState[pageNo - 1] != TextExtractionState::Finished) {
             pagesTextState[pageNo - 1] = TextExtractionState::Pending;
             extract = true;
         }

@@ -1597,6 +1597,9 @@ bool OpenClipboardForUpdate() {
         return false;
     }
     EmptyClipboard();
+    // EmptyClipboard should post WM_DESTROYCLIPBOARD to the previous owner, but
+    // our HWND_MESSAGE owner can miss it; free any handles we still track.
+    FreeClipboardOwnedResources();
     return true;
 }
 
