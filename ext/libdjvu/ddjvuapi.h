@@ -231,6 +231,9 @@ ddjvu_context_release(ddjvu_context_t *context);
 DDJVUAPI void
 ddjvu_free_port_corpses(void);
 
+DDJVUAPI void
+ddjvu_free_portcaster(void);
+
 
 
 

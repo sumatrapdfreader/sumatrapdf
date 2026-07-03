@@ -64,6 +64,8 @@ EXPORTS
 	ddjvu_job_stop
 	ddjvu_format_set_row_order
 	ddjvu_free
+	ddjvu_free_portcaster
+	ddjvu_free_port_corpses
 	ddjvu_job_release
 	ddjvu_job_status
 	ddjvu_message_peek

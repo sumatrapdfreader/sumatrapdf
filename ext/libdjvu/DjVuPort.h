@@ -262,6 +262,7 @@ public:
    class DjVuPortCorpse;
    // SumatraPDF: free the static corpse list at program exit
    static void cleanup_corpses(void);
+   static void cleanup_portcaster(void);
 private:
    static GCriticalSection	* corpse_lock;
    static DjVuPortCorpse	* corpse_head;

@@ -90,6 +90,13 @@ DjVuPort::get_portcaster(void)
    return pcaster;
 }
 
+void
+DjVuPort::cleanup_portcaster(void)
+{
+   delete pcaster;
+   pcaster = 0;
+}
+
 class DjVuPort::DjVuPortCorpse
 {
 public:
@@ -729,4 +736,3 @@ DjVuMemoryPort::add_data(const GURL & url, const GP<DataPool> & pool)
 using namespace DJVU;
 # endif
 #endif
-
