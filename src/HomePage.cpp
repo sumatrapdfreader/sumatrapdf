@@ -429,6 +429,16 @@ static void EnsureTipsParsed() {
     PickRandomTipOrPromo();
 }
 
+void FreeHomePageTips() {
+    delete[] gParsedTips;
+    gParsedTips = nullptr;
+    gParsedTipCount = 0;
+    delete[] gParsedPromos;
+    gParsedPromos = nullptr;
+    gParsedPromoCount = 0;
+    str::Free(promoFromServer);
+}
+
 static void PickAnotherRandomTip() {
     bool prevIsPromo = gSelectedIsPromo;
     int prev = gSelectedTipIdx;

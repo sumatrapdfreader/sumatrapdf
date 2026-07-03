@@ -10891,6 +10891,7 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
 
 void ShutdownCleanup() {
     TtsRelease();
+    FreeHomePageTips();
 
     gAllowedFileTypes.Reset();
     gAllowedLinkProtocols.Reset();
