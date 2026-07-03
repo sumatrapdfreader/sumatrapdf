@@ -17,6 +17,7 @@ CmdClose,"Ctrl + W, Ctrl + F4",Close Document,
 CmdCloseCurrentDocument,q,Close Current Document,
 CmdCommandPalette,Ctrl + K,Command Palette,
 CmdCommandPaletteTOC,Shift + F12,Command Palette: Table Of Contents,"Jump to a table of contents entry of the current document, ver 3.7+"
+CmdCommandPaletteFavorites,,Command Palette: Favorites,"Jump to a favorite, ver 3.7+"
 CmdDuplicateInNewWindow,Shift + Ctrl + N,Open Current Document In New Window,
 CmdDuplicateInNewTab,,Open Current Document In New Tab,ver 3.6+
 CmdExit,Ctrl + Q,Exit Application,
@@ -505,8 +506,15 @@ Argument:
   - `@` for opened files (tabs)
   - `#` for history of files
   - `>` for commands
+  - `*` for table of contents (`CmdCommandPaletteTOC`, `Shift + F12`)
+  - `$` for favorites (`CmdCommandPaletteFavorites`)
 
 Without an argument it defaults to `>`.
+
+To bind a keyboard shortcut to a palette mode, prefer the dedicated commands
+(`CmdCommandPaletteTOC`, `CmdCommandPaletteFavorites`) over `CmdCommandPalette`
+with a `mode` argument. A literal `$` in settings must be written as `$$` (see
+[customize keyboard shortcuts](Customize-keyboard-shortcuts.md#escaping-in-settings-values)).
 
 Example:
 
@@ -515,6 +523,10 @@ Shortcuts [
     [
         Cmd = CmdCommandPalette #
         Key = Ctrl + h
+    ]
+    [
+        Cmd = CmdCommandPaletteFavorites
+        Key = b
     ]
 ]
 ```

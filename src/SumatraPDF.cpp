@@ -7307,6 +7307,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             RunCommandPalette(win, kPalettePrefixTOC, 0);
             break;
 
+        case CmdCommandPaletteFavorites:
+            // alias for `CmdCommandPalette $`: open the palette in favorites mode
+            RunCommandPalette(win, kPalettePrefixFavorites, 0);
+            break;
+
         case CmdAIChatWithClaudeCode:
             OnAIChatWithClaudeCode(win);
             break;

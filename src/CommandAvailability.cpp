@@ -232,6 +232,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenWithKnownExternalViewerLast,
     CmdCommandPalette,
     CmdCommandPaletteTOC,
+    CmdCommandPaletteFavorites,
     CmdNextTabSmart,
     CmdPrevTabSmart,
     CmdSetTheme,

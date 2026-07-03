@@ -27,19 +27,23 @@ Favorites from the current document are listed first. Favorites from other docum
 
 ## Bind favorites command palette to `b`
 
-You can bind `CmdCommandPalette $` to a key in [advanced settings](Advanced-options-settings.md).
+You can bind `CmdCommandPaletteFavorites` to a key in [advanced settings](Advanced-options-settings.md).
 
 Open `Settings` / `Advanced Options...`, find the `Shortcuts` section and add:
 
 ```
 Shortcuts [
     [
-        Cmd = CmdCommandPalette $
+        Cmd = CmdCommandPaletteFavorites
         Key = b
     ]
 ]
 ```
 
 After saving, pressing `b` opens the command palette directly in favorites mode.
+
+You can also use `CmdCommandPalette` with a `$` mode argument, but in settings
+files a literal `$` must be escaped as `$$` (e.g. `Cmd = CmdCommandPalette $$`).
+Prefer `CmdCommandPaletteFavorites` to avoid that.
 
 See [customize keyboard shortcuts](Customize-keyboard-shortcuts.md) for details.

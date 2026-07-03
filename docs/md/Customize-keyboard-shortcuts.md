@@ -58,6 +58,16 @@ Explanation:
 
 You can see a [full list of commands](Commands.md) ([or in the source code](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/Commands.h#L9))
 
+## Escaping in settings values
+
+String values in the advanced settings file use `$` as an escape character.
+A literal `$` must be written as `$$`. A lone `$` at the end of a value is
+treated as a trailing-whitespace marker, not a dollar sign.
+
+This matters for `CmdCommandPalette` mode arguments: use
+`CmdCommandPaletteFavorites` (or `CmdCommandPaletteTOC` for table of contents)
+instead of `CmdCommandPalette $` / `CmdCommandPalette *` when binding shortcuts.
+
 ## Notes
 
 The changes are applied right after you save settings file so that you can test changes without restarting SumatraPDF.

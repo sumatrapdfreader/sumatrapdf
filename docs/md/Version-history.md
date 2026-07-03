@@ -103,7 +103,8 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `CmdChangeBackgroundColor` : "Change Background Color"
 - `CmdChangeScrollbar` : "Change Scrollbar"
 - `CmdCommandPalette *` : command palette table-of-contents mode (`CmdCommandPaletteTOC`, `Shift + F12`)
-- `CmdCommandPalette $` : command palette favorites mode
+- `CmdCommandPalette $` : command palette favorites mode (`CmdCommandPaletteFavorites`)
+- `CmdCommandPaletteFavorites` : "Command Palette: Favorites"
 - `CmdContinueReadAloud` : "Continue Reading"
 - `CmdFindToggleMatchWholeWord` : "Find: Toggle Match Whole Word" — Find bar toggle button
 - `CmdGoToNextFavorite` : "Go to Next Favorite"

@@ -57,6 +57,10 @@ other documents (labeled with the file name). Type to filter, then `Enter` (or
 double-click) to navigate to the selected favorite. Picking a favorite in
 another document opens that document.
 
+You can bind a keyboard shortcut to open the palette directly in favorites mode
+with the `CmdCommandPaletteFavorites` [command](./Commands.md) (see
+[Managing favorites](./Managing-favorites.md)).
+
 ## Combined view
 
 Type `:` for a combined view (replicates 3.4 and 3.5 behavior):
