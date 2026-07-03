@@ -279,6 +279,11 @@ static void StartTextDragDrop(MainWindow* win) {
     DWORD dwEffect = 0;
     DoDragDrop(dataObj, dropSrc, DROPEFFECT_COPY, &dwEffect);
     dropSrc->Release();
+    // DoDragDrop marshals the data object (CoMarshalInterface) for cross-process
+    // targets and never releases the stub's references, which would leak the
+    // object (even past OleUninitialize). The drag is over and we don't support
+    // async data extraction, so no external client can legitimately need it.
+    CoDisconnectObject(dataObj, 0);
     dataObj->Release();
 }
 
@@ -496,6 +501,8 @@ static void StartImageDragDrop(MainWindow* win) {
     DWORD dwEffect = 0;
     DoDragDrop(dataObj, dropSrc, DROPEFFECT_COPY, &dwEffect);
     dropSrc->Release();
+    // see StartTextDragDrop for why this is needed to not leak dataObj
+    CoDisconnectObject(dataObj, 0);
     dataObj->Release();
 }
 
