@@ -387,6 +387,7 @@ static void ExtractTextThread(TextExtractionThreadData* data) {
     data->engine->ReleaseTextExtractionThreadContext();
     data->engine->Release();
     delete data;
+    AtomicIntDec(&gDangerousThreadCount);
 }
 
 bool EngineBase::HasTextForPage(int pageNo) {
@@ -436,6 +437,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
     }
 
     AddRef();
+    AtomicIntInc(&gDangerousThreadCount);
     auto data = new TextExtractionThreadData();
     data->engine = this;
     data->pageNo = pageNo;
@@ -452,6 +454,7 @@ void EngineBase::RequestTextExtraction(int pageNo) {
             pagesTextState[pageNo - 1] = TextExtractionState::NotExtracted;
         }
     }
+    AtomicIntDec(&gDangerousThreadCount);
     Release();
     delete data;
 }
