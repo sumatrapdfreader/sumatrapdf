@@ -234,15 +234,6 @@ EngineImages::~EngineImages() {
     // logged so a leaked engine can be identified: its creation is logged by
     // CreateEngineImageFromFile et al. but this line will be missing
     logf("~EngineImages: '%s'\n", FilePath());
-    // drop per-thread cloned contexts BEFORE pages: workers are no longer
-    // running by the time we destruct, so this just releases their refcounts
-    // on the shared mupdf state. Pages then drop their pixmaps via the root
-    // ctx in DropPage.
-    for (auto& tc : threadCtxs) {
-        fz_drop_context(tc.ctx);
-    }
-    threadCtxs.Reset();
-
     EnterCriticalSection(&cacheLock);
     while (len(pageCache) > 0) {
         ImagePage* lastPage = pageCache.Last();
@@ -252,6 +243,16 @@ EngineImages::~EngineImages() {
     DeleteVecMembers(pageInfos);
     LeaveCriticalSection(&cacheLock);
     DeleteCriticalSection(&cacheLock);
+
+    // Drop pages before per-thread contexts: DropPage() may need Ctx() to
+    // release a page's fz_image, and dropping clones first can make it create
+    // a replacement context during destruction.
+    for (auto& tc : threadCtxs) {
+        logf("EngineImages::~EngineImages: tc.ctx = %p\n", tc.ctx);
+        fz_drop_context(tc.ctx);
+    }
+    threadCtxs.Reset();
+
     if (fz_ctx) {
         fz_drop_context_windows(fz_ctx);
     }

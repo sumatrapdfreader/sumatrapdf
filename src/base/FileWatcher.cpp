@@ -538,10 +538,13 @@ void FileWatcherWaitForShutdown(void) {
     ReportIf(gWatchedDirs != nullptr);
 
     DWORD timeStart = GetTickCount();
-    while (GetRemovalsPending() > 0 && (GetTickCount() - timeStart) < 5000) {
-        Sleep(10);
+    while (GetRemovalsPending() > 0 && (GetTickCount() - timeStart) < 15000) {
+        Sleep(100);
     }
-    ReportIf(GetRemovalsPending() != 0);
+    if (IsDebuggerPresent() && GetRemovalsPending() != 0) {
+        logf("FileWatcherWaitForShutdown: %d removals pending\n", GetRemovalsPending());
+        DebugBreak();
+    }
 
     // signal the thread to exit and wake it up via APC
     QueueUserAPC(SignalExitMonitoringThread, gThreadHandle, (ULONG_PTR)0);
