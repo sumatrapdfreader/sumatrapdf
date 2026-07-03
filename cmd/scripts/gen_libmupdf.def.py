@@ -49,6 +49,7 @@ EXPORTS
 	ddjvu_cache_clear
 	ddjvu_context_create
 	ddjvu_context_release
+	ddjvu_datapool_cleanup
 	ddjvu_document_create_by_data
 	ddjvu_document_create_by_filename_utf8
 	ddjvu_document_get_fileinfo_imp

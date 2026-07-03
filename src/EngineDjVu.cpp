@@ -254,6 +254,7 @@ void CleanupEngineDjVu() {
         gDjVuContext = nullptr;
     }
     minilisp_finish();
+    ddjvu_datapool_cleanup();
     ddjvu_free_portcaster();
     ddjvu_free_port_corpses();
 }

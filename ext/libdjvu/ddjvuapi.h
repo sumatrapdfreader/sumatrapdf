@@ -234,6 +234,9 @@ ddjvu_free_port_corpses(void);
 DDJVUAPI void
 ddjvu_free_portcaster(void);
 
+DDJVUAPI void
+ddjvu_datapool_cleanup(void);
+
 
 
 

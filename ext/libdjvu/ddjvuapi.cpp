@@ -412,6 +412,12 @@ ddjvu_free_portcaster(void)
   DjVuPort::cleanup_portcaster();
 }
 
+void
+ddjvu_datapool_cleanup(void)
+{
+  DataPool::cleanup_statics();
+}
+
 
 // ----------------------------------------
 // Message helpers
@@ -4165,4 +4171,3 @@ void ddjvu_free(void *ptr)
 {
   free(ptr);
 }
-

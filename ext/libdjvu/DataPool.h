@@ -545,6 +545,7 @@ public:
 
       /** This function will remove OpenFiles filelist. */
    static void	close_all(void);
+   static void	cleanup_statics(void);
 
       // Internal. Used by 'OpenFiles'
    void		clear_stream(const bool release = true);

@@ -134,6 +134,8 @@ private:
    GCriticalSection	files_lock;
 public:
    static OpenFiles	* get(void);
+   static OpenFiles	* get_existing(void);
+   static void cleanup(void);
 
       // Opend the specified file if necessary (or finds an already open one)
       // and returns it. The caller (pool) is stored in the list associated
@@ -211,6 +213,19 @@ DataPool::OpenFiles::get(void)
    if (!global_ptr)
      global_ptr=new OpenFiles();
    return global_ptr;
+}
+
+DataPool::OpenFiles *
+DataPool::OpenFiles::get_existing(void)
+{
+   return global_ptr;
+}
+
+void
+DataPool::OpenFiles::cleanup(void)
+{
+   delete global_ptr;
+   global_ptr = 0;
 }
 
 void
@@ -322,6 +337,8 @@ private:
    static FCPools	* global_ptr;
 public:
    static FCPools *	get(void);
+   static FCPools *	get_existing(void);
+   static void cleanup(void);
       // Adds the <furl, pool> pair into the list
    void		add_pool(const GURL &furl, GP<DataPool> pool);
       // Removes the <furl, pool> pair from the list
@@ -473,9 +490,22 @@ FCPools	* FCPools::global_ptr;
 inline FCPools *
 FCPools::get(void)
 {
-   if (!global_ptr)
+  if (!global_ptr)
      global_ptr=new FCPools();
-   return global_ptr;
+  return global_ptr;
+}
+
+FCPools *
+FCPools::get_existing(void)
+{
+  return global_ptr;
+}
+
+void
+FCPools::cleanup(void)
+{
+  delete global_ptr;
+  global_ptr = 0;
 }
 
 //****************************************************************************
@@ -1777,8 +1807,20 @@ PoolByteStream::seek(long offset, int whence, bool nothrow)
 void
 DataPool::close_all(void)
 {
-  OpenFiles::get()->close_all();
-  FCPools::get()->clean();
+  OpenFiles *openFiles = OpenFiles::get_existing();
+  if (openFiles)
+    openFiles->close_all();
+  FCPools *fcPools = FCPools::get_existing();
+  if (fcPools)
+    fcPools->clean();
+}
+
+void
+DataPool::cleanup_statics(void)
+{
+  close_all();
+  OpenFiles::cleanup();
+  FCPools::cleanup();
 }
 
 
