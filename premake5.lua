@@ -465,7 +465,7 @@ workspace "SumatraPDF"
     optimized_conf()
     defines { "SKCMS_DISABLE_HSW", "SKCMS_DISABLE_SKX" }
     includedirs { "ext/skcms" }
-    disablewarnings { "4100", "4244", "4245", "4267", "4310", "4456", "4701", "4702" }
+    disablewarnings { "4100", "4201", "4244", "4245", "4267", "4310", "4456", "4701", "4702" }
     skcms_files()
 
   -- libjxl decoder (ext/libjxl, v0.11.2). Decoder subset only; uses skcms for
