@@ -108,6 +108,7 @@ MainWindow::~MainWindow() {
     FinishStressTest(this);
 
     ReportIf(TabCount() > 0);
+    RemoveNotificationsForHwnd(hwndCanvas);
     // ReportIf(ctrl); // TODO: seen in crash report
     ReportIf(linkOnLastButtonDown);
     str::Free(urlOnLastButtonDown);

@@ -50,6 +50,7 @@ void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS = 
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd);
 void RemoveNotification(NotificationWnd*);
 bool RemoveNotificationsForGroup(HWND, Kind);
+void RemoveNotificationsForHwnd(HWND);
 NotificationWnd* GetNotificationForGroup(HWND, Kind);
 bool UpdateNotificationProgress(NotificationWnd*, Str msg, int perc);
 void RelayoutNotifications(HWND hwnd);

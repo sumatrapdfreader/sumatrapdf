@@ -783,6 +783,14 @@ bool RemoveNotificationsForGroup(HWND hwnd, Kind kind) {
     return n > 0;
 }
 
+void RemoveNotificationsForHwnd(HWND hwnd) {
+    NotificationWnd* toRemove[kMaxNotifs];
+    int nRemove = GetForHwnd(hwnd, toRemove);
+    for (int i = 0; i < nRemove; i++) {
+        NotifsRemoveNotification(toRemove[i]);
+    }
+}
+
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind kind) {
     NotificationWnd* wnds[kMaxNotifs];
     int nWnds = GetForHwnd(hwnd, wnds);
