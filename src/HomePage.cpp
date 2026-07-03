@@ -382,6 +382,8 @@ static bool gTipsParsed = false;
 static bool gSelectedIsPromo = false;
 static int gSelectedTipIdx = -1;
 
+static void ResetHomeCloseBtn();
+
 static int ParseTipsFromString(Str src, Str prefix, ParsedTip* buffer, int bufferCap) {
     StrVec lines;
     Split(&lines, src, "\n");
@@ -447,6 +449,7 @@ void FreeHomePageTips() {
         gTipsParsed = false;
     }
     str::Free(promoFromServer);
+    ResetHomeCloseBtn();
 }
 
 static void PickAnotherRandomTip() {
