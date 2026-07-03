@@ -1549,35 +1549,106 @@ TempStr GetDefaultPrinterNameTemp() {
     return nullptr;
 }
 
+static HGLOBAL gClipboardUnicodeText = nullptr;
+static HBITMAP gClipboardBitmap = nullptr;
+static HWND gClipboardOwnerWnd = nullptr;
+
+static void FreeClipboardOwnedResources() {
+    if (gClipboardUnicodeText) {
+        GlobalFree(gClipboardUnicodeText);
+        gClipboardUnicodeText = nullptr;
+    }
+    if (gClipboardBitmap) {
+        DeleteObject(gClipboardBitmap);
+        gClipboardBitmap = nullptr;
+    }
+}
+
+static LRESULT CALLBACK ClipboardOwnerWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_DESTROYCLIPBOARD) {
+        FreeClipboardOwnedResources();
+        return 0;
+    }
+    return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+static HWND GetClipboardOwnerWnd() {
+    if (gClipboardOwnerWnd && IsWindow(gClipboardOwnerWnd)) {
+        return gClipboardOwnerWnd;
+    }
+    static bool registered = false;
+    static WCHAR className[] = L"SumatraPDFClipboardOwner";
+    if (!registered) {
+        WNDCLASSEX wcex{};
+        wcex.cbSize = sizeof(WNDCLASSEX);
+        wcex.lpfnWndProc = ClipboardOwnerWndProc;
+        wcex.hInstance = GetModuleHandle(nullptr);
+        wcex.lpszClassName = className;
+        RegisterClassExW(&wcex);
+        registered = true;
+    }
+    gClipboardOwnerWnd =
+        CreateWindowExW(0, className, L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, GetModuleHandle(nullptr), nullptr);
+    return gClipboardOwnerWnd;
+}
+
+bool OpenClipboardForUpdate() {
+    if (!OpenClipboard(GetClipboardOwnerWnd())) {
+        return false;
+    }
+    EmptyClipboard();
+    return true;
+}
+
+void CloseClipboardAfterUpdate() {
+    CloseClipboard();
+}
+
 static bool CopyOrAppendTextToClipboard(WStr text, bool appendOnly) {
     if (!text) {
         return false;
     }
 
     if (!appendOnly) {
-        if (!OpenClipboard(nullptr)) {
+        if (!OpenClipboardForUpdate()) {
             return false;
         }
-        EmptyClipboard();
     }
 
     int n = text.len + 1;
     HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
-    if (handle) {
-        WCHAR* globalText = (WCHAR*)GlobalLock(handle);
-        if (globalText) {
-            wstr::BufSet(WStr(globalText, n), text);
+    if (!handle) {
+        if (!appendOnly) {
+            CloseClipboardAfterUpdate();
         }
-        GlobalUnlock(handle);
-
-        SetClipboardData(CF_UNICODETEXT, handle);
+        return false;
     }
+
+    WCHAR* globalText = (WCHAR*)GlobalLock(handle);
+    if (!globalText) {
+        GlobalFree(handle);
+        if (!appendOnly) {
+            CloseClipboardAfterUpdate();
+        }
+        return false;
+    }
+    wstr::BufSet(WStr(globalText, n), text);
+    GlobalUnlock(handle);
+
+    if (!SetClipboardData(CF_UNICODETEXT, handle)) {
+        GlobalFree(handle);
+        if (!appendOnly) {
+            CloseClipboardAfterUpdate();
+        }
+        return false;
+    }
+    gClipboardUnicodeText = handle;
 
     if (!appendOnly) {
-        CloseClipboard();
+        CloseClipboardAfterUpdate();
     }
 
-    return handle != nullptr;
+    return true;
 }
 
 bool CopyTextToClipboard(Str s) {
@@ -1594,31 +1665,39 @@ static bool SetClipboardImage(HBITMAP hbmp) {
     }
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    HANDLE h = nullptr;
+    HBITMAP clipBmp = hbmp;
+    HBITMAP clonedBmp = nullptr;
     if (bmpInfo.bmBits != nullptr) {
         // GDI+ produced HBITMAPs are DIBs instead of DDBs which
         // aren't correctly handled by the clipboard, so create a
         // clipboard-safe clone
-        ScopedGdiObj<HBITMAP> ddbBmp((HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
-        h = SetClipboardData(CF_BITMAP, ddbBmp);
-    } else {
-        h = SetClipboardData(CF_BITMAP, hbmp);
+        clonedBmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0);
+        if (!clonedBmp) {
+            return false;
+        }
+        clipBmp = clonedBmp;
     }
-    return h != nullptr;
+    if (!SetClipboardData(CF_BITMAP, clipBmp)) {
+        if (clonedBmp) {
+            DeleteObject(clonedBmp);
+        }
+        return false;
+    }
+    gClipboardBitmap = clipBmp;
+    return true;
 }
 
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
     if (!appendOnly) {
-        if (!OpenClipboard(nullptr)) {
+        if (!OpenClipboardForUpdate()) {
             return false;
         }
-        EmptyClipboard();
     }
 
     bool ok = SetClipboardImage(hbmp);
 
     if (!appendOnly) {
-        CloseClipboard();
+        CloseClipboardAfterUpdate();
     }
 
     return ok;

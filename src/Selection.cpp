@@ -269,12 +269,11 @@ void CopySelectionToClipboard(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     ReportIf(len(*tab->selectionOnPage) == 0 && win->mouseAction != MouseAction::SelectingText);
 
-    if (!OpenClipboard(nullptr)) {
+    if (!OpenClipboardForUpdate()) {
         return;
     }
-    EmptyClipboard();
     defer {
-        CloseClipboard();
+        CloseClipboardAfterUpdate();
     };
 
     DisplayModel* dm = win->AsFixed();

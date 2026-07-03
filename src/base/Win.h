@@ -152,6 +152,9 @@ void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt);
 
 TempStr GetDefaultPrinterNameTemp();
 
+bool OpenClipboardForUpdate();
+void CloseClipboardAfterUpdate();
+
 bool CopyTextToClipboard(Str s);
 bool AppendTextToClipboard(Str s);
 
