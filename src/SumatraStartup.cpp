@@ -1893,7 +1893,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     if (gIsDebugBuild) {
         if (!flags.logFile) {
             // from the perm arena like all other flag strings (~Flags frees nothing)
-            flags.logFile = str::Dup(GetPermArena(), GetLogFilePathTemp());
+            TempStr dir = GetPathInExeDirTemp(StrL("sumlog.txt"));
+            flags.logFile = str::Dup(GetPermArena(), dir);
             flags.log = true;
             logFileBecauseDebug = true;
         }
