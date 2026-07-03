@@ -54,7 +54,11 @@ static void EnsurePageText(PageText* pageText) {
         }
         return;
     }
+    // TakeStr()/Vec::Take() can allocate backing storage even for empty pages.
+    str::Free(pageText->text);
+    free((void*)pageText->coords);
     pageText->text = {};
+    pageText->coords = nullptr;
     pageText->len = 0;
     pageText->nCodepoints = 0;
 }
@@ -481,7 +485,7 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
             pagesTextState = AllocArray<TextExtractionState>(pageCount);
         }
         PageText* pt = &pagesText[pageNo - 1];
-        if (!pt->text) {
+        if (pagesTextState[pageNo - 1] == TextExtractionState::NotExtracted) {
             pagesTextState[pageNo - 1] = TextExtractionState::Pending;
             extract = true;
         }
@@ -493,11 +497,12 @@ Str EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
 
         ScopedCritSec scope(&textCacheLock);
         PageText* pt = &pagesText[pageNo - 1];
-        if (!pt->text) {
+        if (pagesTextState[pageNo - 1] != TextExtractionState::Finished) {
+            FreePageText(pt);
             *pt = extracted;
             extracted = PageText();
+            pagesTextState[pageNo - 1] = TextExtractionState::Finished;
         }
-        pagesTextState[pageNo - 1] = TextExtractionState::Finished;
         FreePageText(&extracted);
     }
 

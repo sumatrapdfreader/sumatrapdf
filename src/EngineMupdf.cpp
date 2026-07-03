@@ -799,7 +799,11 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut) {
     ReportIf(Utf8CodepointCount(ToStr(content)) != len(rects));
 
     if (coordsOut) {
-        *coordsOut = rects.Take();
+        if (len(rects) > 0) {
+            *coordsOut = rects.Take();
+        } else {
+            *coordsOut = nullptr;
+        }
     }
     return content.TakeStr();
 }
