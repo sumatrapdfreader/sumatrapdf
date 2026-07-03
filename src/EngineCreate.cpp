@@ -154,46 +154,6 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     return false;
 }
 
-// pick the DjVu engine (djvudec or libdjvu) based on the DjvuEngine setting,
-// falling back to the other if the preferred one fails to load
-static bool UseDjvuDec() {
-    if (!gGlobalPrefs || str::IsEmpty(gGlobalPrefs->djvuEngine)) {
-        return false; // default: libdjvu
-    }
-    return !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
-}
-
-EngineBase* CreateEngineDjVuFromFileDispatch(Str path) {
-    if (UseDjvuDec()) {
-        EngineBase* e = CreateEngineDjvuDecFromFile(path);
-        if (e) {
-            return e;
-        }
-        logf("djvudec failed for '%s', falling back to libdjvu\n", path);
-        return CreateEngineDjVuFromFile(path);
-    }
-    EngineBase* e = CreateEngineDjVuFromFile(path);
-    if (e) {
-        return e;
-    }
-    return CreateEngineDjvuDecFromFile(path);
-}
-
-EngineBase* CreateEngineDjVuFromStreamDispatch(IStream* stream) {
-    if (UseDjvuDec()) {
-        EngineBase* e = CreateEngineDjvuDecFromStream(stream);
-        if (e) {
-            return e;
-        }
-        return CreateEngineDjVuFromStream(stream);
-    }
-    EngineBase* e = CreateEngineDjVuFromStream(stream);
-    if (e) {
-        return e;
-    }
-    return CreateEngineDjvuDecFromStream(stream);
-}
-
 static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, Str path, PasswordUI* pwdUI,
                                        bool enableChmEngine) {
     if (!kind) {
@@ -208,7 +168,7 @@ static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, Str path
         return engine;
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
-        engine = CreateEngineDjVuFromFileDispatch(path);
+        engine = CreateEngineDjvuDecFromFile(path);
         return engine;
     }
     if (IsEngineImageSupportedFileType(kind)) {

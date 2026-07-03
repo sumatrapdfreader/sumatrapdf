@@ -186,12 +186,6 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         return str::JoinTemp(s, StrL(": set to "), next);
     }
 
-    if (cmdId == CmdToggleDjvuEngine) {
-        bool useDjvuDec = !str::EqI(gGlobalPrefs->djvuEngine, "libdjvu");
-        Str next = useDjvuDec ? StrL("libdjvu") : StrL("djvudec");
-        return str::JoinTemp(s, StrL(": set to "), next);
-    }
-
     if (cmdId == CmdToggleWindowsPreviewer) {
         if (IsPreviewInstalled()) {
             return _TRA("Un-register Windows Previewer");

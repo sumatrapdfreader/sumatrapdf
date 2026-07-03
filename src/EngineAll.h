@@ -7,19 +7,10 @@ struct PasswordUI;
 struct FileArgs;
 struct AnnotCreateArgs;
 
-/* EngineDjVu.cpp */
-void CleanupEngineDjVu();
+/* EngineDjvuDec.cpp: DjVu engine built on ext/djvudec */
 bool IsEngineDjVuSupportedFileType(Kind kind);
-EngineBase* CreateEngineDjVuFromFile(Str path);
-EngineBase* CreateEngineDjVuFromStream(IStream* stream);
-
-/* EngineDjvuDec.cpp: alternative DjVu engine built on ext/djvudec */
 EngineBase* CreateEngineDjvuDecFromFile(Str path);
 EngineBase* CreateEngineDjvuDecFromStream(IStream* stream);
-
-/* EngineCreate.cpp: dispatch to libdjvu or djvudec per the DjvuEngine setting */
-EngineBase* CreateEngineDjVuFromFileDispatch(Str path);
-EngineBase* CreateEngineDjVuFromStreamDispatch(IStream* stream);
 
 /* EngineEbook.cpp */
 EngineBase* CreateEngineEpubFromFile(Str fileName);

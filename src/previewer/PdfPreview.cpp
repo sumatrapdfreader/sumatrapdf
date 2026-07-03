@@ -397,7 +397,7 @@ EngineBase* PdfPreview::LoadEngine(IStream* stream) {
         case PreviewType::Xps:
             return CreateEngineMupdfFromStream(stream, "foo.xps");
         case PreviewType::DjVu:
-            return CreateEngineDjVuFromStream(stream);
+            return CreateEngineDjvuDecFromStream(stream);
         case PreviewType::Epub:
             return CreateEngineEpubFromStream(stream);
         case PreviewType::Fb2:

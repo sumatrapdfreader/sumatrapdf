@@ -256,7 +256,6 @@ export const commands = [
     "CmdCreateAnnotImageFromClipboard", "Create Image Annotation From Clipboard",
     "CmdSetInverseSearch", "Set Inverse Search Command Line",
     "CmdToggleToolbarPosition", "Toggle Toolbar Position",
-    "CmdToggleDjvuEngine", "Toggle DjVu Engine",
     "CmdCommandPaletteFavorites", "Command Palette: Favorites",
     "CmdNone", "Do nothing",
 ];

@@ -2,8 +2,7 @@
    License: GPLv3 */
 
 // EngineDjvuDec: a DjVu engine built on the small plain-C decoder in
-// ext/djvudec (djvu.h / djvu.c) instead of libdjvu. Selected via the
-// DjvuEngine advanced setting; see EngineCreate.cpp.
+// ext/djvudec (djvu.h / djvu.c).
 
 extern "C" {
 #include "djvu.h"
@@ -12,6 +11,7 @@ extern "C" {
 #include "base/Base.h"
 #include "base/ScopedWin.h"
 #include "base/File.h"
+#include "base/GuessFileType.h"
 #include "base/Win.h"
 
 #include "wingui/UIModels.h"
@@ -22,8 +22,7 @@ extern "C" {
 
 #include "base/Log.h"
 
-// reuse the same Kind so DjVu-specific code paths treat both engines alike
-extern Kind kindEngineDjVu;
+Kind kindEngineDjVu = "engineDjVu";
 
 // parses "123", "#123", "# 123"; returns -1 for invalid page
 static int ParseDjvuDecLink(Str link) {
@@ -896,6 +895,10 @@ TocTree* EngineDjvuDec::GetToc() {
     realRoot->child = rootItem;
     tocTree = new TocTree(realRoot);
     return tocTree;
+}
+
+bool IsEngineDjVuSupportedFileType(Kind kind) {
+    return kind == kindFileDjVu;
 }
 
 EngineBase* CreateEngineDjvuDecFromStream(IStream* stream) {

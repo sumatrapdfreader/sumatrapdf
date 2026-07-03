@@ -2476,7 +2476,6 @@ Exit:
     // all frame/canvas windows are destroyed by now
     DeleteBrush(gWinClassBgBrush);
 
-    CleanupEngineDjVu();
     destroy_system_font_list();
 
     // TODO: if needed, I could replace it with AtomicBool gFileExistenceInProgress

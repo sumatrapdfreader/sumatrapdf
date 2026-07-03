@@ -51,7 +51,6 @@
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
-    <ClCompile Include="..\src\EngineDjVu.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />

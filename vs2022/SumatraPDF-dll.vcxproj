@@ -1281,7 +1281,6 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\EditAnnotations.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineCreate.cpp" />
-    <ClCompile Include="..\src\EngineDjVu.cpp" />
     <ClCompile Include="..\src\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />

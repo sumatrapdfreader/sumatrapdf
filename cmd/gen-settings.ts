@@ -898,15 +898,6 @@ const globalPrefs: Field[] = [
   setVersion(mkField("SmoothScroll", Bool, false, "if true, implements smooth scrolling"), "3.6"),
   setVersion(
     mkField(
-      "DjvuEngine",
-      Str,
-      "libdjvu",
-      "which engine to use for DjVu documents: libdjvu (the default) or djvudec (built-in plain-C decoder)",
-    ),
-    "3.7",
-  ),
-  setVersion(
-    mkField(
       "CitationHoverDelay",
       Int,
       -1,

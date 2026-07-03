@@ -1014,7 +1014,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "libdjvu", "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "base", "unrar", "chm"
+      "djvudec", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "base", "unrar", "chm"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

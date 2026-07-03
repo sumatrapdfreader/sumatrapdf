@@ -261,9 +261,8 @@ enum {
     CmdCreateAnnotImageFromClipboard = 450,
     CmdSetInverseSearch = 451,
     CmdToggleToolbarPosition = 452,
-    CmdToggleDjvuEngine = 453,
-    CmdCommandPaletteFavorites = 454,
-    CmdNone = 455,
+    CmdCommandPaletteFavorites = 453,
+    CmdNone = 454,
 
     /* range for file history */
     CmdFileHistoryFirst,
