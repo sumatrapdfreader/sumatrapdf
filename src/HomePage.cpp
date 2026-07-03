@@ -57,7 +57,6 @@ static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a
 Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 )promos");
 
-// TODO: leaks if set
 static Str promoFromServer;
 
 static bool IsTipWhitespace(char c) {
@@ -371,14 +370,19 @@ TempStr TipPlainTextTemp(ParsedTip& tip) {
     return ToStrTemp(sb);
 }
 
-static ParsedTip* gParsedTips = nullptr;
+// must fit all non-empty lines in sumatraTips / sumatraPromos
+constexpr int kMaxHomeTips = 16;
+constexpr int kMaxHomePromos = 8;
+
+static ParsedTip gParsedTipsStorage[kMaxHomeTips];
 static int gParsedTipCount = 0;
-static ParsedTip* gParsedPromos = nullptr;
+static ParsedTip gParsedPromosStorage[kMaxHomePromos];
 static int gParsedPromoCount = 0;
+static bool gTipsParsed = false;
 static bool gSelectedIsPromo = false;
 static int gSelectedTipIdx = -1;
 
-static int ParseTipsFromString(Str src, Str prefix, ParsedTip*& outTips) {
+static int ParseTipsFromString(Str src, Str prefix, ParsedTip* buffer, int bufferCap) {
     StrVec lines;
     Split(&lines, src, "\n");
     int n = 0;
@@ -391,7 +395,7 @@ static int ParseTipsFromString(Str src, Str prefix, ParsedTip*& outTips) {
     if (n == 0) {
         return 0;
     }
-    outTips = new ParsedTip[n];
+    ReportIf(n > bufferCap);
     int count = 0;
     for (int i = 0; i < len(lines); i++) {
         Str line = lines.At(i);
@@ -400,9 +404,9 @@ static int ParseTipsFromString(Str src, Str prefix, ParsedTip*& outTips) {
         }
         if (prefix) {
             TempStr prefixed = str::JoinTemp(prefix, line);
-            ParseTip(outTips[count], prefixed);
+            ParseTip(buffer[count], prefixed);
         } else {
-            ParseTip(outTips[count], line);
+            ParseTip(buffer[count], line);
         }
         count++;
     }
@@ -421,21 +425,27 @@ static void PickRandomTipOrPromo() {
 }
 
 static void EnsureTipsParsed() {
-    if (gParsedTips || gParsedPromos) {
+    if (gTipsParsed) {
         return;
     }
-    gParsedTipCount = ParseTipsFromString(sumatraTips, "Tip: ", gParsedTips);
-    gParsedPromoCount = ParseTipsFromString(sumatraPromos, {}, gParsedPromos);
+    gParsedTipCount = ParseTipsFromString(sumatraTips, "Tip: ", gParsedTipsStorage, kMaxHomeTips);
+    gParsedPromoCount = ParseTipsFromString(sumatraPromos, {}, gParsedPromosStorage, kMaxHomePromos);
+    gTipsParsed = true;
     PickRandomTipOrPromo();
 }
 
 void FreeHomePageTips() {
-    delete[] gParsedTips;
-    gParsedTips = nullptr;
-    gParsedTipCount = 0;
-    delete[] gParsedPromos;
-    gParsedPromos = nullptr;
-    gParsedPromoCount = 0;
+    if (gTipsParsed) {
+        for (int i = 0; i < gParsedTipCount; i++) {
+            gParsedTipsStorage[i].Reset();
+        }
+        for (int i = 0; i < gParsedPromoCount; i++) {
+            gParsedPromosStorage[i].Reset();
+        }
+        gParsedTipCount = 0;
+        gParsedPromoCount = 0;
+        gTipsParsed = false;
+    }
     str::Free(promoFromServer);
 }
 
@@ -1067,7 +1077,7 @@ struct HomePageLayout {
 
     // tip layout
     Rect rcTip;               // background rect for tip area
-    ParsedTip* tip = nullptr; // points to gParsedTips or gParsedPromos, not owned
+    ParsedTip* tip = nullptr; // points into gParsedTipsStorage or gParsedPromosStorage, not owned
 
     ~HomePageLayout();
 };
@@ -1323,9 +1333,9 @@ void LayoutHomePage(HomePageLayout& l) {
     ParsedTip* tip = nullptr;
     if (gGlobalPrefs->showTips && gSelectedTipIdx >= 0) {
         if (gSelectedIsPromo && gSelectedTipIdx < gParsedPromoCount) {
-            tip = &gParsedPromos[gSelectedTipIdx];
+            tip = &gParsedPromosStorage[gSelectedTipIdx];
         } else if (!gSelectedIsPromo && gSelectedTipIdx < gParsedTipCount) {
-            tip = &gParsedTips[gSelectedTipIdx];
+            tip = &gParsedTipsStorage[gSelectedTipIdx];
         }
     }
     if (tip) {
