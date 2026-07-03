@@ -231,6 +231,9 @@ fz_context* EngineImages::Ctx() {
 }
 
 EngineImages::~EngineImages() {
+    // logged so a leaked engine can be identified: its creation is logged by
+    // CreateEngineImageFromFile et al. but this line will be missing
+    logf("~EngineImages: '%s'\n", FilePath());
     // drop per-thread cloned contexts BEFORE pages: workers are no longer
     // running by the time we destruct, so this just releases their refcounts
     // on the shared mupdf state. Pages then drop their pixmaps via the root
