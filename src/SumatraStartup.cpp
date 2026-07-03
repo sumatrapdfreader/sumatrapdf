@@ -745,9 +745,12 @@ static int RunMessageLoop() {
     return (int)msg.wParam;
 }
 
+static void FreeLibmupdfDll();
+
 static void ShutdownCommon() {
     mui::Destroy();
     uitask::Destroy();
+    FreeLibmupdfDll();
     UninstallCrashHandler();
     dbghelp::FreeCallstackLogs();
 }
@@ -883,6 +886,15 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
 // the installer (see ForceRunningAsInstaller).
 bool gSingleExe = false;
 
+static HMODULE gLibmupdfDll = nullptr;
+
+static void FreeLibmupdfDll() {
+    if (gLibmupdfDll) {
+        FreeLibrary(gLibmupdfDll);
+        gLibmupdfDll = nullptr;
+    }
+}
+
 static bool EnsureLibmupdfDll() {
     u32 expectedSize = GetLibmupdfDllSize();
     ReportIf(0 == expectedSize);
@@ -929,8 +941,8 @@ static bool LoadLibmupdf(bool showErrorDialog) {
     if (!haveDll) {
         logf("LoadLibmupdf: failed to ensure libmupdf.dll\n");
     } else {
-        HMODULE hm = LoadLibraryW(CWStrTemp(path));
-        if (hm) {
+        gLibmupdfDll = LoadLibraryW(CWStrTemp(path));
+        if (gLibmupdfDll) {
             return true;
         }
         logf("LoadLibmupdf: failed to load %s\n", path);
@@ -2515,6 +2527,7 @@ Exit:
     DestroyLogging();
     DestroyTempArena();
     DestroyPermArena();
+    FreeLibmupdfDll();
 
     return exitCode;
 }

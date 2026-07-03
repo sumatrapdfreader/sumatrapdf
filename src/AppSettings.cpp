@@ -706,7 +706,7 @@ void RegisterSettingsForFileChanges() {
 
 void UnregisterSettingsForFileChanges() {
     FileWatcherUnsubscribe(gWatchedSettingsFile);
-    // TODO: memleak of gWatchedSettingsFile
+    gWatchedSettingsFile = nullptr;
 }
 
 constexpr int kMinFontSize = 9;

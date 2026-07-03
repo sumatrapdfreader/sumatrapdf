@@ -524,6 +524,10 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
     QueueUserAPC(StopMonitoringDirAPC, gThreadHandle, (ULONG_PTR)wd);
 }
 
+static LONG GetRemovalsPending() {
+    return InterlockedCompareExchange(&gRemovalsPending, 0, 0);
+}
+
 void FileWatcherWaitForShutdown(void) {
     if (!gThreadHandle) {
         return;
@@ -532,6 +536,12 @@ void FileWatcherWaitForShutdown(void) {
     // have any file watching subscriptions pending
     ReportIf(gWatchedFiles != nullptr);
     ReportIf(gWatchedDirs != nullptr);
+
+    DWORD timeStart = GetTickCount();
+    while (GetRemovalsPending() > 0 && (GetTickCount() - timeStart) < 5000) {
+        Sleep(10);
+    }
+    ReportIf(GetRemovalsPending() != 0);
 
     // signal the thread to exit and wake it up via APC
     QueueUserAPC(SignalExitMonitoringThread, gThreadHandle, (ULONG_PTR)0);
