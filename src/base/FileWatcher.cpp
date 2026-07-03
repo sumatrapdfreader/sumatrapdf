@@ -382,11 +382,6 @@ static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg) {
     SafeCloseHandle(&wd->hDir);
 }
 
-static void CALLBACK SignalExitMonitoringThread(ULONG_PTR arg) {
-    logf("SignalExitMonitoringThread\n");
-    AtomicBoolSet(&gShouldExit, true);
-}
-
 static WatchedDir* NewWatchedDir(Str dirPath) {
     WCHAR* dirW = CWStrTemp(dirPath);
     DWORD access = FILE_LIST_DIRECTORY;
@@ -494,6 +489,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool e
     ScopedCritSec cs(&gFileWatcherMutex);
     if (!gThreadHandle) {
         logf("FileWatcherSubscribe: starting a thread\n");
+        AtomicBoolSet(&gShouldExit, false);
         gThreadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
         auto fn = MkFunc0Void(FileWatcherThread);
@@ -543,16 +539,20 @@ void FileWatcherWaitForShutdown(void) {
     }
     if (IsDebuggerPresent() && GetRemovalsPending() != 0) {
         logf("FileWatcherWaitForShutdown: %d removals pending\n", GetRemovalsPending());
-        DebugBreak();
     }
 
-    // signal the thread to exit and wake it up via APC
-    QueueUserAPC(SignalExitMonitoringThread, gThreadHandle, (ULONG_PTR)0);
+    // Signal from this thread and wake the watcher through the control event.
+    // Relying on an APC to both set the flag and wake the thread is fragile
+    // during shutdown, especially when previous directory-cancel APCs are still
+    // pending or a debugger interrupted the drain above.
+    AtomicBoolSet(&gShouldExit, true);
+    AwakeWatcherThread();
 
     // wait for the thread to actually exit (up to 5 seconds)
     DWORD res = WaitForSingleObject(gThreadHandle, 5000);
     if (res == WAIT_TIMEOUT) {
         logf("FileWatcherWaitForShutdown: thread didn't exit in 5 seconds\n");
+        return;
     }
     SafeCloseHandle(&gThreadHandle);
     SafeCloseHandle(&gThreadControlHandle);
