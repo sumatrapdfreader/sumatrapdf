@@ -111,6 +111,8 @@ struct ImagePage {
 
 struct ImagePageInfo {
     Vec<IPageElement*> allElements;
+    PageElementImage imageElement;
+    bool hasImageElement = false;
     RectF mediabox{};
     PageInfoState state = PageInfoState::Unknown;
     // raw image bytes; populated lazily by GetImageData for file-backed
@@ -555,27 +557,20 @@ RectF EngineImages::Transform(const RectF& rect, int pageNo, float zoom, int rot
     return res;
 }
 
-static IPageElement* NewImageElement(int pageNo, float dx, float dy) {
-    auto res = new PageElementImage();
-    res->pageNo = pageNo;
-    res->rect = RectF(0, 0, dx, dy);
-    res->imageID = pageNo;
-    return res;
-}
-
 // don't delete the result
 Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     auto* pi = pageInfos[pageNo - 1];
-    if (len(pi->allElements) > 0) {
+    if (pi->hasImageElement) {
         return pi->allElements;
     }
     auto mbox = PageMediabox(pageNo);
 
-    float dx = mbox.dx;
-    float dy = mbox.dy;
-    auto el = NewImageElement(pageNo, dx, dy);
-    pi->allElements.Append(el);
+    pi->imageElement.pageNo = pageNo;
+    pi->imageElement.rect = RectF(0, 0, mbox.dx, mbox.dy);
+    pi->imageElement.imageID = pageNo;
+    pi->allElements.Append(&pi->imageElement);
+    pi->hasImageElement = true;
     return pi->allElements;
 }
 
