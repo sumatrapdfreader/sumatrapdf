@@ -138,9 +138,8 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
 // (this is required for absolute paths)
 bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     Str prevData = file::ReadFile(archivePath);
-    size_t prevDataLen = (size_t)prevData.len;
     lzma::SimpleArchive prevArchive;
-    if (!lzma::ParseSimpleArchive((const u8*)prevData.s, prevDataLen, &prevArchive)) {
+    if (!lzma::ParseSimpleArchive((const u8*)prevData.s, prevData.len, &prevArchive)) {
         prevArchive.filesCount = 0;
     }
 
@@ -234,7 +233,7 @@ int mainVerify(Str archivePath) {
     errorStep++;
 
     lzma::SimpleArchive lzsa;
-    bool ok = lzma::ParseSimpleArchive((const u8*)fileData.s, (size_t)fileData.len, &lzsa);
+    bool ok = lzma::ParseSimpleArchive((const u8*)fileData.s, fileData.len, &lzsa);
     FailIf(!ok, "\"%s\" is no valid LzSA file", archivePath.s);
     errorStep++;
 

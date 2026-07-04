@@ -254,7 +254,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
 }
 
 bool HuffDicDecompressor::Decompress(u8* src, int srcSize, str::Builder& dst) {
-    u32 bitsConsumed = 0;
+    int bitsConsumed = 0;
     u32 bits = 0;
 
     BitReader br(src, srcSize);
@@ -302,7 +302,7 @@ bool HuffDicDecompressor::Decompress(u8* src, int srcSize, str::Builder& dst) {
         if (!DecodeOne(code, dst)) {
             return false;
         }
-        bitsConsumed = codeLen;
+        bitsConsumed = (int)codeLen;
     }
 
     if (br.BitsLeft() > 0 && 0 != bits) {
@@ -630,10 +630,11 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
         }
         u32 type = d.UInt32();
         u32 length = d.UInt32();
-        if (length < 8 || length > dataLen - d.Offset() + 8) {
+        int recLen = (int)length;
+        if (recLen < 8 || recLen > dataLen - d.Offset() + 8) {
             return false;
         }
-        d.Skip(length - 8);
+        d.Skip(recLen - 8);
 
         Str prop;
         switch (type) {

@@ -2,17 +2,17 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 class BitReader {
-    u8 GetByte(size_t pos) const;
+    u8 GetByte(int pos) const;
 
   public:
-    BitReader(u8* data, size_t n);
+    BitReader(u8* data, int n);
     ~BitReader();
-    u32 Peek(size_t bitsCount);
-    size_t BitsLeft() const;
-    bool Eat(size_t bitsCount);
+    u32 Peek(int nBits);
+    int BitsLeft() const;
+    bool Eat(int nBits);
 
     u8* data = nullptr;
-    size_t dataLen = 0;
-    size_t currBitPos = 0;
-    size_t bitsCount = 0;
+    int dataLen = 0;
+    int currBitPos = 0;
+    int bitsCount = 0;
 };

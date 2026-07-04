@@ -141,11 +141,8 @@ Integers are little-endian.
 // 4 * u32 + FILETIME + name
 #define FILE_ENTRY_MIN_SIZE (4 * 4 + 8 + 1)
 
-bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* archiveOut) {
+bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* archiveOut) {
     if (dataLen < HEADER_START_SIZE) {
-        return false;
-    }
-    if (dataLen > (u32)-1) {
         return false;
     }
 
@@ -171,7 +168,8 @@ bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* 
         if (fileHeaderSize < FILE_ENTRY_MIN_SIZE || fileHeaderSize > 1024) {
             return false;
         }
-        if (br.Offset() + fileHeaderSize - 4 > dataLen) {
+        int fileHdrSize = (int)fileHeaderSize;
+        if (br.Offset() + fileHdrSize - 4 > dataLen) {
             return false;
         }
 
@@ -182,7 +180,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* 
         fi->ftModified.dwLowDateTime = br.UInt32();
         fi->ftModified.dwHighDateTime = br.UInt32();
         fi->name = Str((char*)archiveHeader + br.Offset());
-        br.Skip(fileHeaderSize - FILE_ENTRY_MIN_SIZE);
+        br.Skip(fileHdrSize - FILE_ENTRY_MIN_SIZE);
         if (br.Char() != '\0') {
             return false;
         }
@@ -192,7 +190,7 @@ bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* 
         return false;
     }
 
-    size_t headerSize = br.Offset();
+    int headerSize = br.Offset();
     u32 headerCrc32 = br.UInt32();
     u32 realCrc = lzma_crc32(0, (const u8*)archiveHeader, (u32)headerSize);
     if (headerCrc32 != realCrc) {
@@ -202,11 +200,12 @@ bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* 
     for (u32 i = 0; i < filesCount; i++) {
         fi = &archiveOut->files[i];
         // overflow check
-        if (fi->compressedSize > dataLen || br.Offset() + fi->compressedSize > dataLen) {
+        int compressedSize = (int)fi->compressedSize;
+        if (compressedSize > dataLen || br.Offset() + compressedSize > dataLen) {
             return false;
         }
         fi->compressedData = archiveHeader + br.Offset();
-        br.Skip(fi->compressedSize);
+        br.Skip(compressedSize);
     }
 
     return br.Offset() == dataLen;
@@ -291,7 +290,7 @@ bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* allocator) {
     };
 
     SimpleArchive archive;
-    bool ok = ParseSimpleArchive((u8*)d.s, (size_t)d.len, &archive);
+    bool ok = ParseSimpleArchive((u8*)d.s, d.len, &archive);
     if (!ok) {
         return false;
     }

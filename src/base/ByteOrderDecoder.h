@@ -9,10 +9,10 @@ class ByteOrderDecoder {
         BigEndian
     };
 
-    ByteOrderDecoder(const u8* d, size_t n, ByteOrder order);
+    ByteOrderDecoder(const u8* d, int n, ByteOrder order);
     ByteOrderDecoder(Str bs, ByteOrder order);
 
-    void Bytes(void* dst, size_t n);
+    void Bytes(void* dst, int n);
 
     u8 UInt8();
     char Char() { return (char)UInt8(); }
@@ -26,10 +26,10 @@ class ByteOrderDecoder {
     u64 UInt64();
     i64 Int64() { return (i64)UInt64(); }
 
-    void Skip(size_t n);
-    void Unskip(size_t n);
+    void Skip(int n);
+    void Unskip(int n);
 
-    size_t Offset() const { return curr - data; }
+    int Offset() const { return (int)(curr - data); }
 
     bool IsOk() const { return ok; };
 
@@ -39,7 +39,7 @@ class ByteOrderDecoder {
     const u8* data;
 
     const u8* curr;
-    size_t left;
+    int left;
 };
 
 // decode a given piece of memory

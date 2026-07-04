@@ -268,7 +268,7 @@ void UploadCrashReport(Str d) {
 static bool ExtractSymbols(Str archiveData, Str dstDir, Arena* allocator) {
     logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, archiveData.len);
     lzma::SimpleArchive archive;
-    bool ok = ParseSimpleArchive((const u8*)archiveData.s, (size_t)archiveData.len, &archive);
+    bool ok = ParseSimpleArchive((const u8*)archiveData.s, archiveData.len, &archive);
     if (!ok) {
         logf("ExtractSymbols: ParseSimpleArchive failed\n");
         return false;

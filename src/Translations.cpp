@@ -206,7 +206,7 @@ void SetCurrentLangByCode(Str langCode) {
         return;
     }
     lzma::SimpleArchive archive;
-    lok = lzma::ParseSimpleArchive(ldr.data, (size_t)ldr.dataSize, &archive);
+    lok = lzma::ParseSimpleArchive(ldr.data, ldr.dataSize, &archive);
     if (!lok) {
         logf("SetCurrentLangByCode: ParseSimpleArchive failed\n");
         FallbackToEnglish();

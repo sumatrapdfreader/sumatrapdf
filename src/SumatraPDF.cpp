@@ -6934,7 +6934,7 @@ static bool EnsureManualArchiveLoaded() {
     }
     auto data = gManualArchiveData.data;
     auto size = gManualArchiveData.dataSize;
-    ok = lzma::ParseSimpleArchive(data, (size_t)size, &gManualArchive);
+    ok = lzma::ParseSimpleArchive(data, size, &gManualArchive);
     if (!ok) {
         logf("EnsureManualArchiveLoaded: lzma::ParseSimpleArchive() failed\n");
         return false;

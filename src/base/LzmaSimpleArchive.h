@@ -21,7 +21,7 @@ struct SimpleArchive {
     FileInfo files[MAX_LZMA_ARCHIVE_FILES];
 };
 
-bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* archiveOut);
+bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* archiveOut);
 int GetIdxFromName(SimpleArchive* archive, Str name);
 u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* allocator);
 u8* GetFileDataByName(SimpleArchive* archive, Str fileName, Arena* allocator);

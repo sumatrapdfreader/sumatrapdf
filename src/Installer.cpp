@@ -1078,7 +1078,7 @@ static bool OpenEmbeddedFilesArchive() {
 
     auto data = gLoadedArchive.data;
     auto size = gLoadedArchive.dataSize;
-    ok = lzma::ParseSimpleArchive(data, (size_t)size, &gArchive);
+    ok = lzma::ParseSimpleArchive(data, size, &gArchive);
     if (!ok) {
         ShowNoEmbeddedFiles("Embedded lzsa archive is corrupted");
         return false;
