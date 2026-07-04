@@ -74,7 +74,7 @@ static void AdvanceTipText(Str& s, int n = 1) {
 }
 
 static void SkipTipWhitespace(Str& s) {
-    while (!str::IsEmpty(s) && IsTipWhitespace(s.s[0])) {
+    while (len(s) > 0 && IsTipWhitespace(s.s[0])) {
         AdvanceTipText(s);
     }
 }
@@ -177,7 +177,7 @@ void ParseTip(ParsedTip& tip, Str s) {
     str::Builder expanded;
     Str sp = s;
     // first pass: expand (Key/CmdXxx) to shortcut strings (only for real commands)
-    while (!str::IsEmpty(sp)) {
+    while (len(sp) > 0) {
         if (sp.s[0] == '(' && sp.len > 5 && str::StartsWith(Str(sp.s + 1, sp.len - 1), "Key/")) {
             int end = str::IndexOfChar(sp, ')');
             if (end >= 0) {
@@ -196,9 +196,9 @@ void ParseTip(ParsedTip& tip, Str s) {
 
     // second pass: split into words, detecting [text](link) markdown links
     Str p = ToStr(expanded);
-    while (!str::IsEmpty(p)) {
+    while (len(p) > 0) {
         SkipTipWhitespace(p);
-        if (str::IsEmpty(p)) {
+        if (len(p) == 0) {
             break;
         }
 
@@ -337,7 +337,7 @@ int HitTestTipLink(ParsedTip& tip, int x, int y) {
 }
 
 void ExecuteTipLink(HWND hwnd, Str cmd) {
-    if (str::IsEmpty(cmd)) {
+    if (len(cmd) == 0) {
         return;
     }
     if (str::StartsWith(cmd, "Cmd")) {
@@ -1191,7 +1191,7 @@ void LayoutHomePage(HomePageLayout& l) {
     for (int i = 0; i < len(allFileStates); i++) {
         FileState* fs = allFileStates[i];
         // a state without a path can't be opened or thumbnailed - don't show it
-        if (str::IsEmpty(fs->filePath)) {
+        if (len(fs->filePath) == 0) {
             continue;
         }
         if (hasFilter) {
@@ -1674,7 +1674,7 @@ void HomePageUpdateCloseButton(MainWindow* win, int x, int y) {
     TempStr target = GetStaticLinkAtTemp(win->staticLinks, x, y, &link);
     // a thumbnail link's target is an absolute file path; everything else (a
     // "<...>" command, a "Cmd..." tip link, a URL) is not, so it gets no button
-    bool isThumb = !str::IsEmpty(target) && link && path::IsAbsolute(target);
+    bool isThumb = len(target) > 0 && link && path::IsAbsolute(target);
     if (!isThumb) {
         HomePageHideCloseButton();
         return;
@@ -1700,7 +1700,7 @@ bool HomePageOnCloseButtonClick(MainWindow* win, int x, int y) {
     }
     TempStr path = str::DupTemp(b.filePath);
     HomePageHideCloseButton();
-    if (win && !str::IsEmpty(path)) {
+    if (win && len(path) > 0) {
         ForgetFileFromFrequentlyRead(win, path);
     }
     return true;

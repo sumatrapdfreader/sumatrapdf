@@ -287,13 +287,13 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 Str fn = filename;
-                if (!str::IsEmpty(fn) && fn.s[0] == '"' && fn.s[fn.len - 1] == '"') {
+                if (len(fn) > 0 && fn.s[0] == '"' && fn.s[fn.len - 1] == '"') {
                     filename = str::DupTemp(Str(fn.s + 1, fn.len - 2));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransCharsInPlace(filename, StrL("*/"), StrL(" \\"));
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (str::IsEmpty(path::GetExtTemp(filename))) {
+                if (len(path::GetExtTemp(filename)) == 0) {
                     filename = str::JoinTemp(filename, StrL(".tex"));
                 }
                 // ensure that the path is absolute

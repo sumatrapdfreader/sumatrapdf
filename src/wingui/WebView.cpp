@@ -591,7 +591,7 @@ class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
 };
 
 static TempWStr MimeHeaderFromContentType(Str contentType) {
-    if (str::IsEmpty(contentType)) {
+    if (len(contentType) == 0) {
         contentType = "text/html";
     }
     TempWStr contentTypeW = ToWStrTemp(contentType);
@@ -1023,7 +1023,7 @@ void WebviewWnd::UpdateWebviewSize() {
 }
 
 void WebviewWnd::Eval(Str js) {
-    if (initFailed || str::IsEmpty(js)) {
+    if (initFailed || len(js) == 0) {
         return;
     }
     if (!webview) {
@@ -1035,7 +1035,7 @@ void WebviewWnd::Eval(Str js) {
 }
 
 void WebviewWnd::SetHtml(Str html) {
-    if (initFailed || str::IsEmpty(html)) {
+    if (initFailed || len(html) == 0) {
         return;
     }
     if (!webview) {
@@ -1047,7 +1047,7 @@ void WebviewWnd::SetHtml(Str html) {
 }
 
 void WebviewWnd::Init(Str js) {
-    if (initFailed || str::IsEmpty(js)) {
+    if (initFailed || len(js) == 0) {
         return;
     }
     if (!webview) {
@@ -1059,7 +1059,7 @@ void WebviewWnd::Init(Str js) {
 }
 
 void WebviewWnd::Navigate(Str url) {
-    if (initFailed || str::IsEmpty(url)) {
+    if (initFailed || len(url) == 0) {
         return;
     }
     if (!webview) {

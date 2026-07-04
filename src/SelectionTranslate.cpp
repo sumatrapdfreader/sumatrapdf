@@ -393,7 +393,7 @@ static void AppendGrokTranslationText(Str line, str::Builder& out) {
     TempStr eventType = AIChatJsonStrTemp(line, "type");
     if (eventType && str::Eq(eventType, "text")) {
         TempStr text = AIChatJsonStrTemp(line, "data");
-        if (!str::IsEmpty(text)) {
+        if (len(text) > 0) {
             out.Append(text);
         }
     }
@@ -407,7 +407,7 @@ static void AppendClaudeTranslationText(Str line, str::Builder& out) {
     if (str::Eq(eventType, "result")) {
         bool isError = str::Contains(line, StrL("\"is_error\":true"));
         TempStr text = AIChatJsonStrTemp(line, "result");
-        if (!str::IsEmpty(text)) {
+        if (len(text) > 0) {
             if (isError) {
                 out.Reset();
                 out.Append(text);
@@ -422,12 +422,12 @@ static void AppendClaudeTranslationText(Str line, str::Builder& out) {
     }
     if (str::Eq(eventType, "assistant") && str::Contains(line, StrL("\"type\":\"text\""))) {
         TempStr text = AIChatJsonStrTemp(line, "text");
-        if (!str::IsEmpty(text) && !TranslationLooksLikeError(text)) {
+        if (len(text) > 0 && !TranslationLooksLikeError(text)) {
             out.Append(text);
         }
     } else if (str::Eq(eventType, "content_block_delta")) {
         TempStr text = AIChatJsonStrTemp(line, "text");
-        if (!str::IsEmpty(text)) {
+        if (len(text) > 0) {
             out.Append(text);
         }
     }
@@ -442,14 +442,14 @@ static void AppendCodexTranslationText(Str line, str::Builder& out) {
         return;
     }
     TempStr text = AIChatJsonStrTemp(line, "text");
-    if (!str::IsEmpty(text)) {
+    if (len(text) > 0) {
         out.Append(text);
         return;
     }
     Str agentMsg;
     if (str::Cut(line, StrL("\"type\":\"agent_message\""), nullptr, &agentMsg)) {
         text = AIChatJsonStrTemp(agentMsg, "text");
-        if (!str::IsEmpty(text)) {
+        if (len(text) > 0) {
             out.Append(text);
         }
     }
@@ -768,7 +768,7 @@ static void SelectionTranslateThread(SelectionTranslateTaskData* data) {
     AutoDelete del(data);
     Str result;
     bool ok = RunTranslation(data->backend, data->srcLang, data->dstLang, data->text, result);
-    if (!ok && str::IsEmpty(result)) {
+    if (!ok && len(result) == 0) {
         result = str::Dup(_TRA("Translation failed."));
     }
 

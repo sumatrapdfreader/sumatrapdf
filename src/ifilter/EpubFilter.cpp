@@ -157,7 +157,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
         case STATE_EPUB_AUTHOR:
             m_state = STATE_EPUB_TITLE;
             str = m_epubDoc->GetPropertyTemp(kPropAuthor);
-            if (!str::IsEmpty(str)) {
+            if (len(str) > 0) {
                 ws = ToWStrTemp(str);
                 chunkValue.SetTextValue(PKEY_Author, ws.s);
                 return S_OK;
@@ -170,7 +170,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             if (!str) {
                 str = m_epubDoc->GetPropertyTemp(kPropSubject);
             }
-            if (!str::IsEmpty(str)) {
+            if (len(str) > 0) {
                 ws = ToWStrTemp(str);
                 chunkValue.SetTextValue(PKEY_Title, ws.s);
                 return S_OK;
@@ -183,7 +183,7 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             if (!str) {
                 str = m_epubDoc->GetPropertyTemp(kPropCreationDate);
             }
-            if (!str::IsEmpty(str)) {
+            if (len(str) > 0) {
                 SYSTEMTIME systime;
                 if (IsoDateParse(str, &systime)) {
                     FILETIME filetime;

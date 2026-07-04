@@ -54,7 +54,7 @@ static void TtsPostNotifyMsg() {
 }
 
 static Str TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
-    return str::IsEmpty(voice.lang) ? StrL("ffff") : voice.lang;
+    return len(voice.lang) == 0 ? StrL("ffff") : voice.lang;
 }
 
 static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
@@ -90,7 +90,7 @@ static ULONG gSapiLastWordPos = 0;
 // Voice token lookup and metadata
 
 static ISpObjectToken* SapiFindVoiceTokenById(Str voiceId) {
-    if (str::IsEmpty(voiceId)) {
+    if (len(voiceId) == 0) {
         return nullptr;
     }
 
@@ -217,7 +217,7 @@ static bool SapiInit() {
         return false;
     }
 
-    if (!str::IsEmpty(gTtsVoiceId)) {
+    if (len(gTtsVoiceId) > 0) {
         ISpObjectToken* token = SapiFindVoiceTokenById(gTtsVoiceId);
         if (token) {
             gSapiVoice->SetVoice(token);
@@ -311,7 +311,7 @@ static bool SapiSetVoiceById(Str voiceId) {
 
     HRESULT hr = E_FAIL;
 
-    if (str::IsEmpty(voiceId)) {
+    if (len(voiceId) == 0) {
         hr = gSapiVoice->SetVoice(nullptr);
     } else {
         ISpObjectToken* token = SapiFindVoiceTokenById(voiceId);
@@ -727,7 +727,7 @@ static bool WinTtsSetVoiceById(Str voiceId) {
         return false;
     }
 
-    if (str::IsEmpty(voiceId)) {
+    if (len(voiceId) == 0) {
         WMSS::IVoiceInformation* def = nullptr;
         if (FAILED(gWinVoicesStatic->get_DefaultVoice(&def)) || !def) {
             return false;
@@ -1118,7 +1118,7 @@ static void WinTtsStop() {
 static bool IsWinRtBackend() {
     if (gTtsBackend == TtsBackend::Unknown) {
         // an escape hatch, also for testing the SAPI implementation
-        bool forceSapi = !str::IsEmpty(GetEnvVariableTemp(StrL("SUMATRA_TTS_FORCE_SAPI")));
+        bool forceSapi = len(GetEnvVariableTemp(StrL("SUMATRA_TTS_FORCE_SAPI"))) > 0;
         if (!forceSapi && WinTtsInit()) {
             gTtsBackend = TtsBackend::WinRt;
             log("Tts: using Windows.Media.SpeechSynthesis\n");
@@ -1148,7 +1148,7 @@ void TtsProcessEvents() {
 }
 
 bool TtsSpeakUtf8(Str text) {
-    if (str::IsEmpty(text)) {
+    if (len(text) == 0) {
         return false;
     }
 
