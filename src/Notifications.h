@@ -17,7 +17,8 @@ constexpr const int kNotifNoTimeout = 0;
 
 // which corner of the canvas the notification is anchored to (multiple
 // notifications in the same corner stack toward the opposite edge)
-enum class NotifCorner {
+// fixed underlying type so it can be forward-declared (e.g. in SumatraPDF.h)
+enum class NotifCorner : int {
     TopLeft, // default; how notifications were always positioned
     TopRight,
     BottomLeft,

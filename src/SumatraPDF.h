@@ -210,6 +210,7 @@ void SelectTabInWindow(WindowTab*);
 class EngineBase;
 struct DocController;
 struct FileArgs;
+enum class NotifCorner : int; // full definition in Notifications.h
 
 // LoadDocument carries a lot of state, this holds them in one place
 struct LoadArgs {
@@ -251,6 +252,12 @@ struct LoadArgs {
     FileArgs* fileArgs = nullptr;
 
     TabState* tabState = nullptr;
+
+    // if set, called on the UI thread when the load finishes,
+    // with true if the document was loaded successfully
+    Func1<bool> onFinished;
+    // corner for the "Loading ..." notification; zero-init is TopLeft
+    NotifCorner loadingNotifCorner{};
 
   private:
     Str fileName;

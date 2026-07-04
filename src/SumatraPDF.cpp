@@ -258,6 +258,10 @@ LoadArgs* LoadArgs::Clone() {
     LoadArgs* res = new LoadArgs(fileName, win);
     res->SetDisplayName(displayName);
     res->tabState = this->tabState;
+    res->forceReuse = this->forceReuse;
+    res->noSavePrefs = this->noSavePrefs;
+    res->onFinished = this->onFinished;
+    res->loadingNotifCorner = this->loadingNotifCorner;
     return res;
 }
 
@@ -1816,7 +1820,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     DisplayModel* dmErr = win->AsFixed();
     EngineBase* engineErr = dmErr ? dmErr->GetEngine() : nullptr;
     if (engineErr && len(engineErr->errors) > 0) {
-        TempStr msg = fmt("[%s](CmdShowErrors) %s", _TRA("Errors"), _TRA("in PDF"));
+        TempStr msg = fmt("[%s](CmdShowErrors) %s", _TRA("Errors"), _TRA("in document"));
         NotificationCreateArgs nargs;
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;
@@ -2566,10 +2570,11 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     return win;
 }
 
-static NotificationWnd* ShowLoadingNotif(MainWindow* win, Str path) {
+static NotificationWnd* ShowLoadingNotif(MainWindow* win, Str path, NotifCorner corner = NotifCorner::TopLeft) {
     NotificationCreateArgs nargs;
     nargs.hwndParent = win->hwndCanvas;
     nargs.groupId = path.s;
+    nargs.corner = corner;
     nargs.msg = fmt(_TRA("Loading %s ...").s, path::GetBaseNameTemp(path));
     return ShowNotification(nargs);
 }
@@ -2632,7 +2637,7 @@ static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
     // show the "Loading ..." notification only now that we're actually
     // loading, not while the file was sitting in the queue
     LoadArgs* args = data->args;
-    data->wndNotif = ShowLoadingNotif(args->win, args->FilePath());
+    data->wndNotif = ShowLoadingNotif(args->win, args->FilePath(), args->loadingNotifCorner);
     gLoadThreadsActive++;
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
     RunAsync(fn, "LoadDocumentThread");
@@ -2666,6 +2671,7 @@ static void OnLoadDocumentThreadFinished() {
             // all windows were deleted). Starting the load would leak it: its
             // finish task would be posted to the already-destroyed dispatch
             // window and never run.
+            next->args->onFinished.Call(false);
             delete next;
             continue;
         }
@@ -2683,6 +2689,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     MainWindow* win = args->win;
     if (!IsMainWindowValid(win) || win->isBeingClosed) {
         DeleteOrphanedController(win, args->ctrl);
+        args->onFinished.Call(false);
         return;
     }
     Str path = args->FilePath();
@@ -2692,10 +2699,12 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
         // which can pump messages and change tab selection
         WindowTab* currTab = win->CurrentTab();
         win->ctrl = currTab ? currTab->ctrl : nullptr;
+        args->onFinished.Call(false);
         return;
     }
     args->activateExisting = false;
     LoadDocumentFinish(args);
+    args->onFinished.Call(true);
 }
 
 // Progress notification payload posted from archive extraction (worker
@@ -2847,6 +2856,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
     Str path = argsIn->FilePath();
     if (failEarly) {
         ShowFileNotFound(win, path, argsIn->noSavePrefs);
+        argsIn->onFinished.Call(false);
         return;
     }
 
@@ -2855,12 +2865,14 @@ void StartLoadDocument(LoadArgs* argsIn) {
         MainWindow* existing = FindMainWindowByFile(path, true, limitWin);
         if (existing) {
             existing->Focus();
+            argsIn->onFinished.Call(true);
             return;
         }
     }
 
     win = MaybeCreateWindowForFileLoad(argsIn);
     if (!win) {
+        argsIn->onFinished.Call(false);
         return;
     }
 
@@ -2875,7 +2887,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
         bool isChm = ChmModel::IsSupportedFileType(kind);
         if (isChm) {
             // TODO: repeating the code below
-            auto wndNotif = ShowLoadingNotif(win, path);
+            auto wndNotif = ShowLoadingNotif(win, path, args->loadingNotifCorner);
             DocController* ctrl = nullptr;
             HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
             EngineBase* engine = args->engine;
@@ -2887,11 +2899,13 @@ void StartLoadDocument(LoadArgs* argsIn) {
                 // which can pump messages and change tab selection
                 WindowTab* currTab = win->CurrentTab();
                 win->ctrl = currTab ? currTab->ctrl : nullptr;
+                args->onFinished.Call(false);
                 delete args;
                 return;
             }
             args->activateExisting = false;
             LoadDocumentFinish(args);
+            args->onFinished.Call(true);
             delete args;
             return;
         }
@@ -4583,6 +4597,41 @@ static StrVec& CollectNextPrevFilesIfChanged(Str path) {
     return files;
 }
 
+static void ShowNoFileToOpenNotif(MainWindow* win) {
+    NotificationCreateArgs nargs;
+    nargs.hwndParent = win->hwndCanvas;
+    nargs.warning = true;
+    nargs.timeoutMs = kNotifDefaultTimeOut;
+    nargs.corner = NotifCorner::BottomRight;
+    nargs.msg = _TRA("No file to open in this folder");
+    ShowNotification(nargs);
+}
+
+static void OpenNextPrevFileInFolder(MainWindow* win, bool forward);
+
+struct NextPrevFileInFolderData {
+    MainWindow* win = nullptr;
+    bool forward = true;
+    Str path; // the file we tried to load; owned
+    ~NextPrevFileInFolderData() { str::Free(path); }
+};
+
+static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
+    AutoDelete delData(d);
+    MainWindow* win = d->win;
+    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        return;
+    }
+    if (ok) {
+        HwndRepaintNow(win->tabsCtrl->hwnd);
+        return;
+    }
+    // remember the failure so CollectNextPrevFilesIfChanged skips this
+    // file, then advance to the one after it in the same direction
+    AppendIfNotExists(&gFilesFailedToOpen, d->path);
+    OpenNextPrevFileInFolder(win, d->forward);
+}
+
 static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     ReportIf(win->IsCurrentTabAbout());
     if (win->IsCurrentTabAbout()) {
@@ -4592,12 +4641,16 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
         return;
     }
 
+    // dismiss document error notifications from the previous document
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifDocErrors);
+
     WindowTab* tab = win->CurrentTab();
     bool didRetry = false;
 again:
     Str path = tab->filePath;
     StrVec files = CollectNextPrevFilesIfChanged(path);
     if (len(files) < 2) {
+        ShowNoFileToOpenNotif(win);
         return;
     }
 
@@ -4611,7 +4664,7 @@ again:
     path = files[idx];
     if (!file::Exists(path)) {
         if (didRetry) {
-            // TODO: can I do something better?
+            ShowNoFileToOpenNotif(win);
             return;
         }
         didRetry = true;
@@ -4622,12 +4675,17 @@ again:
 
     // TODO: check for unsaved modifications
     UpdateTabFileDisplayStateForTab(tab);
-    // TODO: should take onFinish() callback so that if failed
-    // we could automatically go to next file
+    // load on a background thread; if the file fails to load, the
+    // callback marks it as failed and advances to the next/prev file
+    auto d = new NextPrevFileInFolderData;
+    d->win = win;
+    d->forward = forward;
+    d->path = str::Dup(path);
     LoadArgs args(path, win);
     args.forceReuse = true;
-    LoadDocument(&args);
-    HwndRepaintNow(win->tabsCtrl->hwnd);
+    args.loadingNotifCorner = NotifCorner::BottomRight;
+    args.onFinished = MkFunc1<NextPrevFileInFolderData, bool>(OnNextPrevFileInFolderLoaded, d);
+    StartLoadDocument(&args);
 }
 
 constexpr int kSplitterDx = 5;
