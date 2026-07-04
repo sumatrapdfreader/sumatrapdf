@@ -393,7 +393,7 @@ struct DirFileProviderAsync : TestFileProvider {
 
     DirFileProviderAsync(Str path, Str filter, int max = 0, bool random = false) {
         startDir = str::Dup(path);
-        if (filter && !str::Eq(filter, "*")) {
+        if (filter && !str::Eq(filter, StrL("*"))) {
             fileFilter = str::Dup(filter);
         }
         this->max = max;

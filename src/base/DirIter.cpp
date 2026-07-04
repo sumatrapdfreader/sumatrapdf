@@ -66,7 +66,7 @@ NextDir:
         }
         it->currDir = it->dirsToVisit.RemoveAt(nDirs - 1);
         TempWStr ws = ToWStrTemp(it->currDir);
-        it->pattern = wstr::Join(ws, WStr(L"*"));
+        it->pattern = path::Join(ws, WStr(L"*"));
         it->h = FindFirstFileW(it->pattern.s, &it->fd);
         if (!IsValidHandle(it->h)) {
             goto DidFinish;

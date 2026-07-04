@@ -425,7 +425,7 @@ bool OpenFileExternally(Str path) {
         perceivedType = str::DupTemp("webpage");
     }
     str::ToLowerInPlace(perceivedType);
-    if (gAllowedFileTypes.Contains("*")) {
+    if (gAllowedFileTypes.Contains(StrL("*"))) {
         /* allow all file types (not recommended) */;
     } else if (!perceivedType || !gAllowedFileTypes.Contains(perceivedType)) {
         return false;
