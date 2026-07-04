@@ -160,11 +160,11 @@ static void CopySettingsFile() {
 
     // seen a crash when running elevated
     TempStr srcDir = GetSpecialFolderTemp(CSIDL_APPDATA, false);
-    if (str::IsEmpty(srcDir)) {
+    if (len(srcDir) == 0) {
         return;
     }
     TempStr dstDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
-    if (str::IsEmpty(dstDir)) {
+    if (len(dstDir) == 0) {
         return;
     }
 
@@ -253,7 +253,7 @@ static void AddInstallDirToPath(bool allUsers, Str installDir) {
         return;
     }
     str::Builder newPath;
-    if (!str::IsEmpty(currPath)) {
+    if (len(currPath) > 0) {
         newPath.Append(currPath);
         if (newPath.LastChar() != ';') {
             newPath.Append(";");
@@ -470,7 +470,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     logf("OnButtonInstall: wnd->editInstallationDir: 0x%p\n", wnd->editInstallationDir);
 
     TempStr userInstallDir = HwndGetTextTemp(wnd->editInstallationDir->hwnd);
-    if (!str::IsEmpty(userInstallDir)) {
+    if (len(userInstallDir) > 0) {
         str::ReplaceWithCopy(&cli->installDir, userInstallDir);
     }
 

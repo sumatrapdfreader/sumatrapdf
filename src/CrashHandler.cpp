@@ -239,7 +239,7 @@ void SaveCrashInfo(Str d) {
 }
 
 static void WriteCrashInfoToStdErr(Str d) {
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return;
     }
     HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
@@ -252,7 +252,7 @@ static void WriteCrashInfoToStdErr(Str d) {
 
 void UploadCrashReport(Str d) {
     log("UploadCrashReport()\n");
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return;
     }
 
@@ -403,13 +403,13 @@ static TempStr BuildSymbolPathTemp(Str symDir) {
     if (gAddNtSymbolPath) {
         TempStr ntSymPath = GetEnvVariableTemp(StrL("_NT_SYMBOL_PATH"));
         // internet talks about both _NT_ALT_SYMBOL_PATH and _NT_ALTERNATE_SYMBOL_PATH
-        if (str::IsEmpty(ntSymPath)) {
+        if (len(ntSymPath) == 0) {
             ntSymPath = GetEnvVariableTemp(StrL("_NT_ALT_SYMBOL_PATH"));
         }
-        if (str::IsEmpty(ntSymPath)) {
+        if (len(ntSymPath) == 0) {
             ntSymPath = GetEnvVariableTemp(StrL("_NT_ALTERNATE_SYMBOL_PATH"));
         }
-        if (!str::IsEmpty(ntSymPath)) {
+        if (len(ntSymPath) > 0) {
             path.Append(ntSymPath);
             path.Append(";");
         }
@@ -477,7 +477,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     if (gLocalOnlyCrashHandler) {
         InitializeDbgHelp(false);
         auto s = BuildLocalCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
-        if (str::IsEmpty(s)) {
+        if (len(s) == 0) {
             loga("_uploadDebugReport(): skipping because !BuildLocalCrashInfoText()\n");
             return;
         }
@@ -495,7 +495,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
         } else {
             InitializeDbgHelp(false);
             auto s = BuildCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
-            if (str::IsEmpty(s)) {
+            if (len(s) == 0) {
                 loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
                 return;
             }
@@ -538,7 +538,7 @@ void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash, bool captureCal
     }
 
     auto s = BuildCrashInfoText(condStr, fileLine, isCrash, captureCallstack);
-    if (str::IsEmpty(s)) {
+    if (len(s) == 0) {
         loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
@@ -723,7 +723,7 @@ static void GetSystemInfo(str::Builder& s) {
     }
     {
         TempStr ver = GetWebView2VersionTemp();
-        if (str::IsEmpty(ver)) {
+        if (len(ver) == 0) {
             ver = "no WebView2 installed";
         }
         s.Append(fmt("WebView2: %s\n", ver));

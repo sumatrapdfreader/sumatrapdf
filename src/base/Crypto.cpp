@@ -134,7 +134,7 @@ CleanUp:
 }
 
 Str ExtractP7m(Str d) {
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return {};
     }
     const u8* data = (u8*)d.s;

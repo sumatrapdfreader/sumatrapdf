@@ -349,7 +349,7 @@ bool LoadSettings() {
         Vec<FileState*>* fileStates = gprefs->fileStates;
         for (int i = len(*fileStates) - 1; i >= 0; i--) {
             FileState* fs = fileStates->at(i);
-            if (str::IsEmpty(fs->filePath)) {
+            if (len(fs->filePath) == 0) {
                 fileStates->RemoveAt(i);
                 DeleteFileState(fs);
             }
@@ -599,8 +599,8 @@ bool SaveSettings() {
     defer {
         str::Free(prefs);
     };
-    ReportIf(str::IsEmpty(prefs));
-    if (str::IsEmpty(prefs)) {
+    ReportIf(len(prefs) == 0);
+    if (len(prefs) == 0) {
         return false;
     }
 

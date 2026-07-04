@@ -15,7 +15,7 @@ static Str GumboElementTagName(const GumboNode* node) {
     }
     Str orig = Str((char*)node->v.element.original_tag.data, (int)node->v.element.original_tag.length);
     int off = 0;
-    if (!str::IsEmpty(orig) && orig.s[0] == '<') {
+    if (len(orig) > 0 && orig.s[0] == '<') {
         off = 1;
     }
     int end = off;

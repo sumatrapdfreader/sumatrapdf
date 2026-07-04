@@ -37,7 +37,7 @@ static bool NeedsEscape(Str s) {
 }
 
 static TempStr EscapeTemp(Str str) {
-    if (str::IsEmpty(str)) {
+    if (len(str) == 0) {
         return {};
     }
 

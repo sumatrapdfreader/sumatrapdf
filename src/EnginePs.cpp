@@ -183,7 +183,7 @@ static EngineBase* ps2pdf(Str path) {
     }
 
     Str pdfData = file::ReadFile(tmpFile);
-    if (str::IsEmpty(pdfData)) {
+    if (len(pdfData) == 0) {
         return nullptr;
     }
 
@@ -364,7 +364,7 @@ EngineBase* CreateEnginePsFromFile(Str fileName) {
 
 bool IsEnginePsAvailable() {
     TempStr gswin32c = GetGhostscriptPathTemp();
-    return !str::IsEmpty(gswin32c);
+    return len(gswin32c) > 0;
 }
 
 bool IsEnginePsSupportedFileType(Kind kind) {

@@ -115,7 +115,7 @@ void ZoomToString(Str* dst, float zoom, FileState* fileState) {
     if (!IsValidZoom(zoom) && fileState) {
         logf("Invalid ds->zoom: %g\n", zoom);
         TempStr ext = path::GetExtTemp(fileState->filePath);
-        if (!str::IsEmpty(ext)) {
+        if (len(ext) > 0) {
             logf("File type: %s\n", ext);
         }
         logf("DisplayMode: %s\n", fileState->displayMode);

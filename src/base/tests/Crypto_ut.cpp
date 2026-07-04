@@ -44,7 +44,7 @@ void CryptoUtilTest() {
                             "ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c"));
 
     // basic sanity for p7m extractor (no real p7m data, just ensure no crash and empty on bad input)
-    utassert(str::IsEmpty(ExtractP7m(Str())));
-    utassert(str::IsEmpty(ExtractP7m(Str((char*)"not a p7m", 9))));
-    utassert(str::IsEmpty(ExtractP7m(Str((char*)"%PDF-1.4", 8))));
+    utassert(len(ExtractP7m(Str())) == 0);
+    utassert(len(ExtractP7m(Str((char*)"not a p7m", 9))) == 0);
+    utassert(len(ExtractP7m(Str((char*)"%PDF-1.4", 8))) == 0);
 }

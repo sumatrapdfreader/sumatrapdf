@@ -2018,11 +2018,11 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
         str::Free(propTitle);
         propTitle = str::Dup(value);
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
-        Str newDate = str::Dup(fmt("%s/%d", str::IsEmpty(propDate) ? "" : propDate, ParseInt(value)));
+        Str newDate = str::Dup(fmt("%s/%d", len(propDate) == 0 ? "" : propDate, ParseInt(value)));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
-        Str newDate = str::Dup(fmt("%d%s", ParseInt(value), str::IsEmpty(propDate) ? "" : propDate));
+        Str newDate = str::Dup(fmt("%d%s", ParseInt(value), len(propDate) == 0 ? "" : propDate));
         str::Free(propDate);
         propDate = newDate;
     } else if (json::Type::String == type && str::Eq(path, "/appID")) {
@@ -2041,7 +2041,7 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
             if (json::Type::String == type && str::Eq(prop, "person")) {
                 str::Free(propAuthorTmp);
                 propAuthorTmp = str::Dup(value);
-            } else if (json::Type::Bool == type && str::Eq(prop, "primary") && !str::IsEmpty(propAuthorTmp) &&
+            } else if (json::Type::Bool == type && str::Eq(prop, "primary") && len(propAuthorTmp) > 0 &&
                        !propAuthors.Contains(propAuthorTmp)) {
                 propAuthors.Append(propAuthorTmp);
             }
@@ -2051,8 +2051,7 @@ bool ComicInfoParser::Visit(Str path, Str value, json::Type type) {
     // stop parsing once we have all desired information
     Str dateStr = propDate;
     int slash = str::IndexOfChar(dateStr, '/');
-    return str::IsEmpty(propTitle) || len(propAuthors) == 0 || str::IsEmpty(propCreator) || str::IsEmpty(propDate) ||
-           slash <= 0;
+    return len(propTitle) == 0 || len(propAuthors) == 0 || len(propCreator) == 0 || len(propDate) == 0 || slash <= 0;
 }
 
 class EngineCbx : public EngineImages {
@@ -2363,7 +2362,7 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
     int n = len(fileInfos);
     for (int i = 0; i < n; i++) {
         auto* fi = fileInfos[i];
-        if (str::IsEmpty(fi->name)) {
+        if (len(fi->name) == 0) {
             continue;
         }
         if (fi->isDir) {

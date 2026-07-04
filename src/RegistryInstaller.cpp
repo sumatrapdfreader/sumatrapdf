@@ -513,7 +513,7 @@ void ReRegisterFileAssociations() {
         return;
     }
     TempStr exePath = GetSelfExePathTemp();
-    if (str::IsEmpty(exePath)) {
+    if (len(exePath) == 0) {
         return;
     }
 

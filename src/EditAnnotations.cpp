@@ -1026,7 +1026,7 @@ static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
 
     int objNum = pdf_to_num(ctx, pdf_annot_obj(ctx, pdfannot));
     Str data = EngineMupdfLoadAnnotAttachment((EngineBase*)engine, objNum);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return;
     }
 

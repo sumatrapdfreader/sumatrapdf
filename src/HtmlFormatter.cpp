@@ -910,7 +910,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
         int size = 3; // normal size
         str::Parse(attr->val, "%d", &size);
         // sizes can also be relative to the current size
-        if (!str::IsEmpty(attr->val) && ('-' == attr->val.s[0] || '+' == attr->val.s[0])) {
+        if (len(attr->val) > 0 && ('-' == attr->val.s[0] || '+' == attr->val.s[0])) {
             size += 3;
         }
         size = limitValue(size, 1, 7);
@@ -1310,7 +1310,7 @@ void HtmlFormatter::HandleText(Str s) {
             Str nl = str::SliceFromChar(curr, '\n');
             if (nl) {
                 text = Str(curr.s, (int)(nl.s - curr.s));
-                if (!str::IsEmpty(text) && text.s[text.len - 1] == '\r') {
+                if (len(text) > 0 && text.s[text.len - 1] == '\r') {
                     text = Str(text.s, text.len - 1);
                 }
                 EmitTextRun(text);

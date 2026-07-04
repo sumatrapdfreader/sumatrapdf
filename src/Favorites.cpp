@@ -358,13 +358,13 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
 }
 
 static bool SortByBaseFileName(Str s1, Str s2) {
-    if (str::IsEmpty(s1)) {
-        if (str::IsEmpty(s2)) {
+    if (len(s1) == 0) {
+        if (len(s2) == 0) {
             return false;
         }
         return true;
     }
-    if (str::IsEmpty(s2)) {
+    if (len(s2) == 0) {
         return false;
     }
     TempStr base1 = path::GetBaseNameTemp(s1);

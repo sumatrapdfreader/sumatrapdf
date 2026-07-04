@@ -2010,14 +2010,14 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         };
 
         case CmdCopyLinkTarget: {
-            if (!str::IsEmpty(value)) {
+            if (len(value) > 0) {
                 TempStr tmp = CleanupURLForClipbardCopyTemp(value);
                 CopyTextToClipboard(tmp);
             }
             return;
         };
         case CmdCopyComment: {
-            if (!str::IsEmpty(value)) {
+            if (len(value) > 0) {
                 CopyTextToClipboard(value);
             }
             return;

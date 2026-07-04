@@ -628,7 +628,7 @@ static void SumatraControlThread(ControlThreadArg* arg) {
 }
 
 void StartSumatraControl(Str pipeName) {
-    if (str::IsEmpty(pipeName)) {
+    if (len(pipeName) == 0) {
         return;
     }
     auto* arg = new ControlThreadArg{str::Dup(pipeName)};

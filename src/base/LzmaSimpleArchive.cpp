@@ -282,7 +282,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, Str dstDir, Arena*
 
 bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* allocator) {
     auto d = file::ReadFileWithArena(archivePath, allocator);
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return false;
     }
 

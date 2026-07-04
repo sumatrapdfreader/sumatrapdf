@@ -43,7 +43,7 @@ static TempStr FindClaudeExecutableTemp() {
 }
 
 bool IsClaudeCodeInstalled() {
-    return !str::IsEmpty(FindClaudeExecutableTemp());
+    return len(FindClaudeExecutableTemp()) > 0;
 }
 
 TempStr ClaudeCodeExecutablePathTemp() {
@@ -93,7 +93,7 @@ static LoadedDataResource gClaudeMarkedJs;
 
 static Str ClaudeBgColor() {
     Str bg = gGlobalPrefs->claudeCode.bgColor;
-    if (str::IsEmpty(bg)) {
+    if (len(bg) == 0) {
         return StrL("#ffffff");
     }
     return bg;
@@ -105,7 +105,7 @@ static void BuildClaudeModelsList(StrVec& models) {
     AIChatAppendModelUnique(models, "opus");
     AIChatAppendModelUnique(models, "haiku");
     Str extra = gGlobalPrefs->claudeCode.models;
-    if (!str::IsEmpty(extra)) {
+    if (len(extra) > 0) {
         StrVec parts;
         Split(&parts, extra, ",", true);
         for (int i = 0; i < len(parts); i++) {
@@ -313,7 +313,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     Str rest = log;
     Str line;
     while (str::NextLine(rest, line, rest)) {
-        if (!str::IsEmpty(line)) {
+        if (len(line) > 0) {
             win->claudeWebView->Eval(str::DupTemp(line));
         }
     }
@@ -475,7 +475,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     bool foundCurrent = false;
     for (int i = 0; i < len(sessions); i++) {
         Str display = sessions[i].display;
-        if (str::IsEmpty(display)) {
+        if (len(display) == 0) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
@@ -541,7 +541,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                     // skip thinking blocks
                 } else if (str::Contains(line, StrL("\"type\":\"text\""))) {
                     TempStr text = AIChatJsonStrTemp(line, "text");
-                    if (!str::IsEmpty(text)) {
+                    if (len(text) > 0) {
                         WebViewAppendText(win, text);
                         WebViewFlushBlock(win);
                     }
@@ -721,7 +721,7 @@ static void ClaudeReadThread(ClaudeReadCtx* ctx) {
                 if (eventType && str::Eq(eventType, "assistant")) {
                     if (str::Contains(line, StrL("\"type\":\"text\""))) {
                         TempStr text = AIChatJsonStrTemp(line, "text");
-                        if (!str::IsEmpty(text)) {
+                        if (len(text) > 0) {
                             PostUpdate(hwndFrame, sessionId, text, ClaudeUpdateType::Text);
                         }
                     }
@@ -815,7 +815,7 @@ static void SendClaudeMessage(MainWindow* win) {
     WebViewAddUser(win, input);
     SetClaudeWorking(win, true);
 
-    bool isNewSession = str::IsEmpty(tab->claudeSessionId);
+    bool isNewSession = len(tab->claudeSessionId) == 0;
     if (isNewSession) {
         str::ReplaceWithCopy(&tab->claudeSessionId, AIChatGenerateSessionIdTemp());
     }
@@ -902,7 +902,7 @@ static void UpdateClaudePanelTitle(MainWindow* win, int labelDx) {
     WindowTab* tab = win->CurrentTab();
     if (tab && !tab->IsAboutTab() && tab->filePath) {
         Str title = tab->GetTabTitle();
-        if (!str::IsEmpty(title)) {
+        if (len(title) > 0) {
             docName = title;
         }
     }

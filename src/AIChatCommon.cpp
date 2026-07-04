@@ -271,7 +271,7 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, WStr searchEx
 }
 
 void AIChatAppendModelUnique(StrVec& models, Str model) {
-    if (str::IsEmpty(model)) {
+    if (len(model) == 0) {
         return;
     }
     TempStr norm = str::DupTemp(model);
@@ -293,7 +293,7 @@ void AIChatAppendModelUnique(StrVec& models, Str model) {
 }
 
 int AIChatFindModelInList(const StrVec& models, Str model) {
-    if (str::IsEmpty(model)) {
+    if (len(model) == 0) {
         return -1;
     }
     TempStr norm = str::DupTemp(model);
@@ -307,11 +307,11 @@ int AIChatFindModelInList(const StrVec& models, Str model) {
 }
 
 TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay) {
-    if (str::IsEmpty(model)) {
+    if (len(model) == 0) {
         return str::DupTemp(defaultDisplay ? defaultDisplay : StrL(""));
     }
     TempStr dup = str::DupTemp(model);
-    if (!str::IsEmpty(dup)) {
+    if (len(dup) > 0) {
         dup.s[0] = (char)toupper((unsigned char)dup.s[0]);
     }
     return dup;
@@ -319,7 +319,7 @@ TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay) {
 
 bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) {
     auto* data = (LoadedDataResource*)ctx;
-    if (!data || !res || str::IsEmpty(path)) {
+    if (!data || !res || len(path) == 0) {
         return false;
     }
     if (!str::EqI(path, "/marked.min.js") && !str::EqI(path, "marked.min.js")) {
@@ -427,7 +427,7 @@ void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning) {
 }
 
 bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out) {
-    if (!out || str::IsEmpty(cmdLine)) {
+    if (!out || len(cmdLine) == 0) {
         return false;
     }
     *out = {};

@@ -462,7 +462,7 @@ void GumboHtmlParser::BuildEvents() {
 
         if (frame.emitEnd) {
             Str rawEnd = StrFromPiece(node->v.element.original_end_tag);
-            if (!str::IsEmpty(rawEnd)) {
+            if (len(rawEnd) > 0) {
                 Str inner = EndTagInner(rawEnd);
                 events.Append(
                     {HtmlToken::EndTag, node, inner, TagNameFromTagInner(inner), rawEnd, PosOfSource(html, rawEnd)});
@@ -493,7 +493,7 @@ void GumboHtmlParser::BuildEvents() {
 
         if (node->type == GUMBO_NODE_ELEMENT || node->type == GUMBO_NODE_TEMPLATE) {
             Str rawStart = StrFromPiece(node->v.element.original_tag);
-            if (str::IsEmpty(rawStart)) {
+            if (len(rawStart) == 0) {
                 for (unsigned int i = children->length; i > 0; i--) {
                     toVisit.Append({(const GumboNode*)children->data[i - 1], false});
                 }
@@ -506,7 +506,7 @@ void GumboHtmlParser::BuildEvents() {
             events.Append({type, node, inner, TagNameFromTagInner(inner), rawStart, PosOfSource(html, rawStart)});
 
             if (!selfClosing) {
-                if (!str::IsEmpty(StrFromPiece(node->v.element.original_end_tag))) {
+                if (len(StrFromPiece(node->v.element.original_end_tag)) > 0) {
                     toVisit.Append({node, true});
                 }
                 for (unsigned int i = children->length; i > 0; i--) {

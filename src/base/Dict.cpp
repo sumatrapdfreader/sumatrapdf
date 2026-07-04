@@ -230,7 +230,7 @@ size_t MapStrToInt::Count() const {
 //   * inserts a copy of the key allocated with allocator
 //   * sets existingKeyOut to (interned) key
 bool MapStrToInt::Insert(Str key, int val, int* existingValOut, Str* existingKeyOut) {
-    if (str::IsEmpty(key)) {
+    if (len(key) == 0) {
         return false;
     }
     bool newEntry;
@@ -255,7 +255,7 @@ bool MapStrToInt::Insert(Str key, int val, int* existingValOut, Str* existingKey
 }
 
 bool MapStrToInt::Remove(Str key, int* removedValOut) const {
-    if (str::IsEmpty(key)) {
+    if (len(key) == 0) {
         return false;
     }
     uintptr_t removedVal;
@@ -267,7 +267,7 @@ bool MapStrToInt::Remove(Str key, int* removedValOut) const {
 }
 
 bool MapStrToInt::Get(Str key, int* valOut) const {
-    if (str::IsEmpty(key)) {
+    if (len(key) == 0) {
         return false;
     }
     StrKeyHasherComparator hc;

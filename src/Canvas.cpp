@@ -270,7 +270,7 @@ static void StartTextDragDrop(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
     bool isTextOnly = false;
     TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnly);
-    if (str::IsEmpty(text)) {
+    if (len(text) == 0) {
         return;
     }
     TempWStr wtext = ToWStrTemp(text);
@@ -3367,7 +3367,7 @@ static TempStr GetDownloadsDirTemp() {
 }
 
 static void AdvanceUrlPathUntilSuffix(Str& p, Str& lastSlash) {
-    while (!str::IsEmpty(p) && p.s[0] != '?' && p.s[0] != '#') {
+    while (len(p) > 0 && p.s[0] != '?' && p.s[0] != '#') {
         if (p.s[0] == '/') {
             lastSlash = p;
         }

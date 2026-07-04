@@ -152,7 +152,7 @@ TempStr GetExistingInstallationDirTemp() {
     if (str::EndsWithI(dir, ".exe")) {
         dir = path::GetDirTemp(dir);
     }
-    if (!str::IsEmpty(dir) && dir::Exists(dir)) {
+    if (len(dir) > 0 && dir::Exists(dir)) {
         gCachedExistingInstallationDir = str::Dup(GetPermArena(), dir);
         return gCachedExistingInstallationDir;
     }

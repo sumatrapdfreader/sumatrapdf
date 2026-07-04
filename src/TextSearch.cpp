@@ -497,7 +497,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
 }
 
 static int StrStr(Str haystack, int haystackLen, int startOff, Str needle, int needleLen) {
-    if (!haystack || str::IsEmpty(needle)) {
+    if (!haystack || len(needle) == 0) {
         return -1;
     }
     int byteIdx = Utf8CodepointToByteIndex(haystack, startOff);
@@ -519,7 +519,7 @@ static int GetNextIndex(int textLen, int offset, bool forward) {
 }
 
 bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyph) {
-    if (str::IsEmpty(findText)) {
+    if (len(findText) == 0) {
         return false;
     }
     if (!pageNo) {
@@ -573,7 +573,7 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
 }
 
 bool TextSearch::FindStartingAtPage(int pageNo) {
-    if (str::IsEmpty(findText)) {
+    if (len(findText) == 0) {
         return false;
     }
 
@@ -630,7 +630,7 @@ TextSel* TextSearch::FindFirst(int page, Str text) {
 // inside FindStartingAtPage. Used for page-constrained search (issue #3085)
 TextSel* TextSearch::FindFirstOnPage(int pageNo, Str text) {
     SetText(text);
-    if (str::IsEmpty(findText) || pageNo < 1 || pageNo > nPages) {
+    if (len(findText) == 0 || pageNo < 1 || pageNo > nPages) {
         return nullptr;
     }
     Reset();

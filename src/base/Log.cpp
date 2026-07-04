@@ -222,7 +222,7 @@ void StartLogToFile(Str path, bool removeIfExists) {
 bool WriteCurrentLogToFile(Str path) {
     if (!gLogBuf) return false;
     Str slice = ToStr(*gLogBuf);
-    if (str::IsEmpty(slice)) {
+    if (len(slice) == 0) {
         return false;
     }
     bool ok = dir::CreateForFile(path);

@@ -312,10 +312,10 @@ void FindWindowWnd::RefreshResults() {
     // rebuild the highlight terms from the current search text
     filterWords.Reset();
     Str term = win->findCountText;
-    if (str::IsEmpty(term)) {
+    if (len(term) == 0) {
         term = win->hwndFindEdit ? HwndGetTextTemp(win->hwndFindEdit) : nullptr;
     }
-    if (!str::IsEmpty(term)) {
+    if (len(term) > 0) {
         filterWords.Append(term);
     }
     FillWithItems(results->hwnd, results->model);

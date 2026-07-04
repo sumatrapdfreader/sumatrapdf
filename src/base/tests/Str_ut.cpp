@@ -276,11 +276,11 @@ static void StrCutTest() {
     before = {};
     after = "sentinel";
     utassert(!str::Cut(s, "#", &before, &after));
-    utassert(str::Eq(before, s) && str::IsEmpty(after));
+    utassert(str::Eq(before, s) && len(after) == 0);
 
     // separator at the very end -> after is empty but Cut returns true
     utassert(str::Cut(s, "value", &before, &after));
-    utassert(str::Eq(before, "key=") && str::IsEmpty(after));
+    utassert(str::Eq(before, "key=") && len(after) == 0);
 
     // multi-char separator, only first occurrence splits
     utassert(str::Cut("a::b::c", "::", &before, &after));
@@ -309,15 +309,15 @@ static void StrNextLineTest() {
 
     // empty lines are returned as empty (not skipped)
     rest = "\n\nx";
-    utassert(str::NextLine(rest, line, rest) && str::IsEmpty(line));
-    utassert(str::NextLine(rest, line, rest) && str::IsEmpty(line));
+    utassert(str::NextLine(rest, line, rest) && len(line) == 0);
+    utassert(str::NextLine(rest, line, rest) && len(line) == 0);
     utassert(str::NextLine(rest, line, rest) && str::Eq(line, "x"));
     utassert(!str::NextLine(rest, line, rest));
 
     // final line without a terminator
     rest = "only";
     utassert(str::NextLine(rest, line, rest) && str::Eq(line, "only"));
-    utassert(str::IsEmpty(rest));
+    utassert(len(rest) == 0);
     utassert(!str::NextLine(rest, line, rest));
 }
 
@@ -710,7 +710,7 @@ void StrTest() {
     }
     {
         Str tmp = strconv::WStrToCodePage(987654, L"abc");
-        utassert(str::IsEmpty(tmp));
+        utassert(len(tmp) == 0);
     }
 
     {

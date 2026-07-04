@@ -466,7 +466,7 @@ static WindowTab* FindTabByFileInWindow(Str file, MainWindow* win) {
             continue;
         }
         Str fp = tab->filePath;
-        if (str::IsEmpty(fp)) {
+        if (len(fp) == 0) {
             continue;
         }
         if (path::IsSame(fp, normFile)) {
@@ -1474,7 +1474,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     TempStr docTitle = "";
     if (tab->ctrl) {
         TempStr title = tab->ctrl->GetPropertyTemp(kPropTitle);
-        if (!str::IsEmpty(title)) {
+        if (len(title) > 0) {
             str::NormalizeWSInPlace(title);
             docTitle = str::DupTemp(title);
             if (!str::IsEmpty(title)) {
@@ -1869,7 +1869,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
 
     if (!tab->IsDocLoaded()) {
         if (!autoRefresh) {
-            if (str::IsEmpty(tab->filePath)) {
+            if (len(tab->filePath) == 0) {
                 logf("ReloadDocument: tab->filePath is empty, can't reload\n");
                 return;
             }
@@ -1884,7 +1884,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
 
     HwndPasswordUI pwdUI(win->hwndFrame);
     Str path = tab->filePath;
-    if (str::IsEmpty(path)) {
+    if (len(path) == 0) {
         logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
         return;
     }
@@ -3895,7 +3895,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter
         fileFilter.Append(_TRA("Comic books"));
     } else if (type == kindEngineImage) {
         Str imgDefExt = ctrl->GetDefaultFileExt();
-        if (!str::IsEmpty(imgDefExt) && imgDefExt.s[0] == '.') {
+        if (len(imgDefExt) > 0 && imgDefExt.s[0] == '.') {
             imgDefExt = Str(imgDefExt.s + 1, imgDefExt.len - 1);
         }
         fileFilter.Append(fmt(_TRA("Image files (*.%s)").s, imgDefExt));
@@ -6491,7 +6491,7 @@ TempStr GetCrashInfoDirTemp() {
 
 void ShowLogFileSmart() {
     TempStr path = gLogFilePath;
-    if (str::IsEmpty(path)) {
+    if (len(path) == 0) {
         path = GetLogFilePathTemp();
     }
     WriteCurrentLogToFile(path);
@@ -6866,7 +6866,7 @@ static TempStr ManualMimeFromPathTemp(Str path) {
 }
 
 static bool IsManualDocHtmlPage(Str path) {
-    if (str::IsEmpty(path) || !str::EndsWithI(path, ".html")) {
+    if (len(path) == 0 || !str::EndsWithI(path, ".html")) {
         return false;
     }
     if (str::EqI(path, "manual.shell.html")) {
@@ -6885,7 +6885,7 @@ static TempStr ManualArchiveLookupPathTemp(Str path) {
 
 static bool ManualGetResource(void* ctx, Str path, WebViewResourceResult* res) {
     auto* archive = (lzma::SimpleArchive*)ctx;
-    if (!archive || !res || str::IsEmpty(path)) {
+    if (!archive || !res || len(path) == 0) {
         return false;
     }
 
@@ -6944,13 +6944,13 @@ static bool EnsureManualArchiveLoaded() {
 }
 
 static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
-    if (str::IsEmpty(docURI)) {
+    if (len(docURI) == 0) {
         docURI = kManualDefaultDocURI;
     }
 
     Str fragment = str::SliceFromChar(docURI, '#');
     Str pathStart = docURI;
-    if (!str::IsEmpty(pathStart) && pathStart.s[0] == '/') {
+    if (len(pathStart) > 0 && pathStart.s[0] == '/') {
         pathStart = Str(pathStart.s + 1, pathStart.len - 1);
     }
     int pathLen = fragment ? (int)(fragment.s - pathStart.s) : pathStart.len;
@@ -6973,10 +6973,10 @@ static TempStr DocURIToLocalManualUrlTemp(Str docURI) {
 }
 
 static TempStr DocURIToWebUrlTemp(Str docURI) {
-    if (str::IsEmpty(docURI)) {
+    if (len(docURI) == 0) {
         docURI = kManualDefaultDocURI;
     }
-    if (!str::IsEmpty(docURI) && docURI.s[0] == '/') {
+    if (len(docURI) > 0 && docURI.s[0] == '/') {
         return fmt("https://www.sumatrapdfreader.org/docs%s", docURI);
     }
     return fmt("https://www.sumatrapdfreader.org/docs/%s", docURI);
@@ -7280,7 +7280,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdExec: {
             auto filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
             auto cmdLine = GetCommandStringArg(cmd, kCmdArgExe, nullptr);
-            if (str::IsEmpty(cmdLine)) {
+            if (len(cmdLine) == 0) {
                 return 0;
             }
             RunWithExe(tab, cmdLine, filter);
@@ -8614,7 +8614,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             Str img = GetClipboardImageBmp();
-            if (str::IsEmpty(img)) {
+            if (len(img) == 0) {
                 NotificationCreateArgs nargs;
                 nargs.hwndParent = win->hwndCanvas;
                 nargs.timeoutMs = 3000;
@@ -9682,7 +9682,7 @@ static int ReadAloudFindChunkEnd(Str text, int start, int maxLen) {
 }
 
 static bool ReadAloudHasMoreChunks(WindowTab* tab) {
-    if (!tab || str::IsEmpty(tab->readAloudText)) {
+    if (!tab || len(tab->readAloudText) == 0) {
         return false;
     }
     return tab->readAloudChunkEnd < tab->readAloudText.len;
@@ -9722,7 +9722,7 @@ static void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
 }
 
 static bool ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
-    if (!tab || str::IsEmpty(tab->readAloudText)) {
+    if (!tab || len(tab->readAloudText) == 0) {
         return false;
     }
 
@@ -9764,7 +9764,7 @@ static bool IsReadAloudHorizontalSpace(char c) {
 }
 
 static TempStr CleanReadAloudTextTemp(Str text) {
-    if (str::IsEmpty(text)) {
+    if (len(text) == 0) {
         return {};
     }
 
@@ -9981,7 +9981,7 @@ static void ReadAloudShowNotif(WindowTab* tab, Str msg) {
 // remembers cleaned text on the tab and starts speaking it in TTS-sized chunks
 static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMap* newMap, int highlightBase,
                                Str errMsg) {
-    if (str::IsEmpty(cleaned)) {
+    if (len(cleaned) == 0) {
         logf("ReadAloud: StartText: empty cleaned text\n");
         ReadAloudShowNotif(tab, errMsg);
         return;
@@ -10090,12 +10090,12 @@ static void ReadAloudInTab(WindowTab* tab) {
     bool isTextOnlySelection = false;
     TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
 
-    if (!str::IsEmpty(text) && isTextOnlySelection) {
+    if (len(text) > 0 && isTextOnlySelection) {
         logf("ReadAloud: InTab: using selection path (len=%d)\n", len(text));
         tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromSelection(tab, _TRA("No text available to read aloud"));
     } else {
-        logf("ReadAloud: InTab: using viewport-top path (hasSelection=%d isTextOnly=%d)\n", !str::IsEmpty(text),
+        logf("ReadAloud: InTab: using viewport-top path (hasSelection=%d isTextOnly=%d)\n", len(text) > 0,
              isTextOnlySelection);
         tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromViewportTop(tab, _TRA("No text available to read aloud"));
@@ -10174,7 +10174,7 @@ static void ReadAloudSelectionInTab(WindowTab* tab) {
 }
 
 bool CanContinueReadAloud(WindowTab* tab) {
-    if (!tab || str::IsEmpty(tab->readAloudText)) {
+    if (!tab || len(tab->readAloudText) == 0) {
         return false;
     }
     int pos = tab->readAloudResumePos;
@@ -10208,7 +10208,7 @@ WindowTab* GetReadAloudSourceTab() {
 
 // Voice selection menu
 static TempStr TtsLangIdToLocaleNameTemp(Str lang) {
-    if (str::IsEmpty(lang)) {
+    if (len(lang) == 0) {
         return str::DupTemp("unknown");
     }
 
@@ -10242,7 +10242,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
     Str currentVoiceId = TtsGetVoiceId();
 
     UINT defaultFlags = MF_STRING;
-    if (str::IsEmpty(currentVoiceId)) {
+    if (len(currentVoiceId) == 0) {
         defaultFlags |= MF_CHECKED;
     }
 
@@ -10259,7 +10259,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
             break;
         }
 
-        Str lang = str::IsEmpty(voice.lang) ? StrL("") : voice.lang;
+        Str lang = len(voice.lang) == 0 ? StrL("") : voice.lang;
 
         if (lastLang && !str::EqI(lastLang, lang)) {
             AppendMenuW(voiceMenu, MF_SEPARATOR, 0, nullptr);
@@ -10868,7 +10868,7 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
         return ToStrTemp(out);
     };
 
-    if (str::IsEmpty(pathTwoPages) || str::IsEmpty(pathOnePage)) {
+    if (len(pathTwoPages) == 0 || len(pathOnePage) == 0) {
         return fail("ERROR missing-paths");
     }
     if (gWindows.IsEmpty()) {

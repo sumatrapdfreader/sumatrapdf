@@ -93,7 +93,7 @@ static Str GetCharZ(Str d, size_t off) {
     ReportIf(!memchr(data + off, '\0', n - off + 1)); // data is zero-terminated
     u8* str = data + off;
     Str s = Str((char*)str);
-    if (str::IsEmpty(s)) {
+    if (len(s) == 0) {
         return {};
     }
     return str::Dup(s);
@@ -294,7 +294,7 @@ TempStr ChmFile::ResolveTopicID(unsigned int id) const {
 }
 
 void ChmFile::FixPathCodepage(Str& path, uint& fileCP) {
-    if (str::IsEmpty(path) || HasData(path)) {
+    if (len(path) == 0 || HasData(path)) {
         return;
     }
 
@@ -365,9 +365,9 @@ bool ChmFile::Load(Str path) {
 
 TempStr ChmFile::GetPropertyTemp(Str name) const {
     TempStr result;
-    if (str::Eq(kPropTitle, name) && !str::IsEmpty(title)) {
+    if (str::Eq(kPropTitle, name) && len(title) > 0) {
         result = SmartToUtf8Temp(title, codepage);
-    } else if (str::Eq(kPropCreatorApp, name) && !str::IsEmpty(creator)) {
+    } else if (str::Eq(kPropCreatorApp, name) && len(creator) > 0) {
         result = SmartToUtf8Temp(creator, codepage);
     }
     if (!result) {
@@ -382,7 +382,7 @@ TempStr ChmFile::GetHomePath() const {
 }
 
 static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, void* data) {
-    if (str::IsEmpty(info->path)) {
+    if (len(info->path) == 0) {
         return CHM_ENUMERATOR_CONTINUE;
     }
     StrVec* paths = (StrVec*)data;
@@ -750,7 +750,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
 }
 
 bool ChmFile::HasToc() const {
-    return !str::IsEmpty(tocPath);
+    return len(tocPath) > 0;
 }
 
 bool ChmFile::ParseToc(EbookTocVisitor* visitor) const {
@@ -758,7 +758,7 @@ bool ChmFile::ParseToc(EbookTocVisitor* visitor) const {
 }
 
 bool ChmFile::HasIndex() const {
-    return !str::IsEmpty(indexPath);
+    return len(indexPath) > 0;
 }
 
 bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {

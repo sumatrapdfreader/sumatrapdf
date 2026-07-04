@@ -415,7 +415,7 @@ void MainWindow::MoveDocBy(int dx, int dy) const {
 }
 
 void MainWindow::ShowToolTip(Str text, Rect& rc, bool multiline) const {
-    if (str::IsEmpty(text)) {
+    if (len(text) == 0) {
         DeleteToolTip();
         return;
     }
@@ -669,7 +669,7 @@ static bool MatchFuzzy(Str s1, Str s2, bool partially) {
 
     // only match at the start of a word (at the beginning and after a space)
     Str rest = s1;
-    while (!str::IsEmpty(rest)) {
+    while (len(rest) > 0) {
         int idx = str::IndexOf(rest, s2);
         if (idx < 0) {
             break;

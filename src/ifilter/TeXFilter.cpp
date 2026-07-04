@@ -13,7 +13,7 @@ HRESULT TeXFilter::OnInit() {
         // load content of LaTeX file into m_pData
         HRESULT res;
         Str data = GetDataFromStream(m_pStream, &res);
-        if (str::IsEmpty(data)) {
+        if (len(data) == 0) {
             return res;
         }
 

@@ -756,7 +756,7 @@ Str MobiDoc::GetImage(int imgRecIndex) const {
         return {};
     }
     --imgRecIndex;
-    if (str::IsEmpty(images[imgRecIndex])) {
+    if (len(images[imgRecIndex]) == 0) {
         return {};
     }
     return images[imgRecIndex];
@@ -767,7 +767,7 @@ Str MobiDoc::GetCoverImage() {
         return {};
     }
     int imageNo = coverImageRec - imageFirstRec;
-    if (imageNo >= imagesCount || str::IsEmpty(images[imageNo])) {
+    if (imageNo >= imagesCount || len(images[imageNo]) == 0) {
         return {};
     }
     return images[imageNo];

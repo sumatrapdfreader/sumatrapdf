@@ -446,7 +446,7 @@ static TempStr ExtractExePathTemp(Str cmdLine, Str* restOut) {
     Str s = cmdLine;
     str::SkipChar(s, ' ');
     str::Builder exe;
-    if (!str::IsEmpty(s) && s.s[0] == '"') {
+    if (len(s) > 0 && s.s[0] == '"') {
         s = Str(s.s + 1, s.len - 1);
         int i = 0;
         for (; i < s.len && s.s[i] != '"'; i++) {
@@ -481,7 +481,7 @@ bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
     // contain spaces, e.g. "%1".
     Str rest;
     TempStr exePath = ExtractExePathTemp(cmdLine, &rest);
-    if (str::IsEmpty(exePath)) {
+    if (len(exePath) == 0) {
         return false;
     }
     // TODO: this should be in ViewWithCustomExternalViewer()

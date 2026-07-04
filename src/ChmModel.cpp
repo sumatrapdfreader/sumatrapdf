@@ -118,7 +118,7 @@ void ChmModel::GoToPage(int pageNo, bool) {
     }
     // re-display the exact current url (which may be a redirect/anchor not in
     // `pages`) so navigating to the same page preserves it
-    if (pageNo == currentPageNo && !str::IsEmpty(currentPageUrl)) {
+    if (pageNo == currentPageNo && len(currentPageUrl) > 0) {
         DisplayPage(currentPageUrl);
         return;
     }
@@ -212,7 +212,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
     }
 
     TempStr url = url::GetFullPathTemp(pageUrl);
-    bool wasSameUrl = !str::IsEmpty(currentPageUrl) && str::Eq(currentPageUrl, url);
+    bool wasSameUrl = len(currentPageUrl) > 0 && str::Eq(currentPageUrl, url);
     int pageNo = pages.Find(url) + 1;
     // if we're reloading the same url to restore a scroll position, don't
     // clobber that saved position by saving the current (pre-restore) one
@@ -352,7 +352,7 @@ void ChmModel::SaveHtmlScrollPos() {
         return;
     }
     htmlScrollPos = PointF((float)pos.x, (float)pos.y);
-    if (!str::IsEmpty(currentPageUrl)) {
+    if (len(currentPageUrl) > 0) {
         SaveHtmlScrollPosForUrl(currentPageUrl, htmlScrollPos);
         return;
     }

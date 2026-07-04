@@ -42,7 +42,7 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
     TempStr hex = str::MemToHexTemp(Str((const char*)digest, dimofi(digest)));
 
     TempStr ext = path::GetExtTemp(path);
-    if (str::IsEmpty(ext)) {
+    if (len(ext) == 0) {
         ext = StrL(".cbx");
     }
     TempStr name = str::JoinTemp(hex, ext);
@@ -241,7 +241,7 @@ static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, Str path
 }
 
 EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngine) {
-    ReportIf(str::IsEmpty(path));
+    ReportIf(len(path) == 0);
 
     if (str::EndsWithI(path, ".p7m")) {
         Str fileData = file::ReadFile(path);

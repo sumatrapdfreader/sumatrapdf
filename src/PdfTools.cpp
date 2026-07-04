@@ -127,7 +127,7 @@ void PdfBakeDialog::OnBrowse() {
 
 void PdfBakeDialog::DoBake() {
     TempStr destPath = destEdit->GetTextTemp();
-    if (str::IsEmpty(destPath)) {
+    if (len(destPath) == 0) {
         return;
     }
 
@@ -366,12 +366,12 @@ static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, Str destPath, Str pa
 
 void PdfExtractTextDialog::DoExtract() {
     TempStr destPath = destEdit->GetTextTemp();
-    if (str::IsEmpty(destPath)) {
+    if (len(destPath) == 0) {
         return;
     }
 
     TempStr pages = pagesEdit->GetTextTemp();
-    if (str::IsEmpty(pages)) {
+    if (len(pages) == 0) {
         return;
     }
 
@@ -604,7 +604,7 @@ void PdfCompressDialog::OnBrowse() {
 
 void PdfCompressDialog::DoCompress() {
     TempStr destPath = destEdit->GetTextTemp();
-    if (str::IsEmpty(destPath)) {
+    if (len(destPath) == 0) {
         return;
     }
 
@@ -804,7 +804,7 @@ void PdfDecompressDialog::OnBrowse() {
 
 void PdfDecompressDialog::DoDecompress() {
     TempStr destPath = destEdit->GetTextTemp();
-    if (str::IsEmpty(destPath)) {
+    if (len(destPath) == 0) {
         return;
     }
 
@@ -1162,7 +1162,7 @@ void PdfDeletePageDialog::OnBrowse() {
 
 void PdfDeletePageDialog::DoIt() {
     TempStr destPath = destEdit->GetTextTemp();
-    if (str::IsEmpty(destPath)) {
+    if (len(destPath) == 0) {
         return;
     }
 
@@ -1460,7 +1460,7 @@ void PdfEncryptDialog::OnCancel() {
 
 void PdfEncryptDialog::UpdateButton() {
     TempStr pwd = passwordEdit->GetTextTemp();
-    encryptBtn->SetIsEnabled(!str::IsEmpty(pwd));
+    encryptBtn->SetIsEnabled(len(pwd) > 0);
 }
 
 void PdfEncryptDialog::OnBrowse() {
@@ -1469,12 +1469,12 @@ void PdfEncryptDialog::OnBrowse() {
 
 void PdfEncryptDialog::DoEncrypt() {
     TempStr destPath = destEdit->GetTextTemp();
-    if (str::IsEmpty(destPath)) {
+    if (len(destPath) == 0) {
         return;
     }
 
     TempStr pwd = passwordEdit->GetTextTemp();
-    if (str::IsEmpty(pwd)) {
+    if (len(pwd) == 0) {
         return;
     }
 
@@ -1714,7 +1714,7 @@ void PdfDecryptDialog::OnBrowse() {
 
 void PdfDecryptDialog::DoDecrypt() {
     TempStr destPath = destEdit->GetTextTemp();
-    if (str::IsEmpty(destPath)) {
+    if (len(destPath) == 0) {
         return;
     }
 
@@ -1878,7 +1878,7 @@ void ShowPdfDecryptDialog(MainWindow* win) {
         return;
     }
     Str pwd = EngineMupdfGetPassword(engine);
-    if (str::IsEmpty(pwd)) {
+    if (len(pwd) == 0) {
         logf("ShowPdfDecryptDialog: '%s' is encrypted but no password available\n", tab->filePath);
         return;
     }

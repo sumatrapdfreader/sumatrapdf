@@ -261,7 +261,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         FileState* state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
-        if (state->isPinned || !str::IsEmpty(state->decryptionKey) || len(*state->favorites) > 0) {
+        if (state->isPinned || len(state->decryptionKey) > 0 || len(*state->favorites) > 0) {
             continue;
         }
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {

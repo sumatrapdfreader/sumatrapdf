@@ -1255,8 +1255,8 @@ struct SetHotkeyDialog {
 static void SetHotkeyUpdateUI(SetHotkeyDialog* dlg) {
     Str display = dlg->newHotkey ? dlg->newHotkey : (dlg->currentHotkey ? dlg->currentHotkey : StrL("None"));
     SetWindowTextA(dlg->hwndHotkeyLabel, display.s);
-    EnableWindow(dlg->hwndSetBtn, !str::IsEmpty(dlg->newHotkey));
-    EnableWindow(dlg->hwndRemoveBtn, !str::IsEmpty(dlg->currentHotkey) || !str::IsEmpty(dlg->newHotkey));
+    EnableWindow(dlg->hwndSetBtn, len(dlg->newHotkey) > 0);
+    EnableWindow(dlg->hwndRemoveBtn, len(dlg->currentHotkey) > 0 || len(dlg->newHotkey) > 0);
 }
 
 static void SetHotkeyDoSet(SetHotkeyDialog* dlg) {
@@ -1467,7 +1467,7 @@ void ShowSetScreenshotHotkeyDialog(HWND hwndOwner) {
     SendMessageW(dlg->hwndSetBtn, WM_SETFONT, (WPARAM)dlg->hFont, TRUE);
 
     EnableWindow(dlg->hwndSetBtn, FALSE);
-    EnableWindow(dlg->hwndRemoveBtn, !str::IsEmpty(dlg->currentHotkey));
+    EnableWindow(dlg->hwndRemoveBtn, len(dlg->currentHotkey) > 0);
 
     CenterDialog(hwnd, hwndOwner);
 

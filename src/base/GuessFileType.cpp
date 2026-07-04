@@ -610,7 +610,7 @@ TempStr FileKindResultTemp(Str path, Str expectedKindName, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (str::IsEmpty(path) || str::IsEmpty(expectedKindName)) {
+    if (len(path) == 0 || len(expectedKindName) == 0) {
         return fail(StrL("ERROR missing path or expectedKind"));
     }
     Kind kind = GuessFileTypeFromName(path);

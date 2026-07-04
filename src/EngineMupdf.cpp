@@ -233,7 +233,7 @@ static int FzGetPageNo(fz_context* ctx, fz_document* doc, fz_link* link, fz_outl
 // so e.g. [other](other.md) becomes "/other.md". Treat those like the HTML
 // ebook engine: launch a local file Sumatra can open.
 static void SkipLeadingPathSeparators(Str& path) {
-    while (!str::IsEmpty(path) && (path.s[0] == '/' || path.s[0] == '\\')) {
+    while (len(path) > 0 && (path.s[0] == '/' || path.s[0] == '\\')) {
         path.s++;
         path.len--;
     }
@@ -1750,7 +1750,7 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, Str pa
             pdf_filespec_params fileParams = {};
             pdf_get_filespec_params(ctx, fs, &fileParams);
             const char* nameStr = fileParams.filename;
-            if (str::IsEmpty(nameStr) || (fileParams.size < 0)) {
+            if (len(nameStr) == 0 || (fileParams.size < 0)) {
                 continue;
             }
             fz_outline* link = fz_new_outline(ctx);
@@ -1789,7 +1789,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
     if (str::EqI(type, "R")) {
         // roman numbering style
         TempStr number = str::FormatRomanNumeralTemp(pageNo);
-        if (!str::IsEmpty(type) && type.s[0] == 'r') {
+        if (len(type) > 0 && type.s[0] == 'r') {
             str::ToLowerInPlace(number);
         }
         return fmt("%s%s", prefix, number);
@@ -1801,7 +1801,7 @@ static TempStr FormatPageLabelTemp(Str type, int pageNo, Str prefix) {
         for (int i = 0; i < (pageNo - 1) / 26; i++) {
             number.AppendChar(number[0]);
         }
-        if (!str::IsEmpty(type) && type.s[0] == 'a') {
+        if (len(type) > 0 && type.s[0] == 'a') {
             str::ToLowerInPlace(ToStr(number));
         }
         return fmt("%s%s", prefix, ToStr(number));
@@ -2334,7 +2334,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     if (kind == kindFileTxt) {
         // synthesize a .html file from text file
         Str d = TxtFileToHTML(path);
-        if (str::IsEmpty(d)) {
+        if (len(d) == 0) {
             return false;
         }
         fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (const u8*)d.s, (size_t)d.len);
@@ -2517,7 +2517,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     const char* nameHintZ = CStrTemp(nameHint);
     if (kind == kindFileMarkdown) {
         TempStr parentDir = path::GetDirTemp(nameHint);
-        if (!str::IsEmpty(parentDir)) {
+        if (len(parentDir) > 0) {
             fz_try(ctx) {
                 dir = fz_open_directory(ctx, CStrTemp(parentDir));
             }
@@ -3255,7 +3255,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
         pdf_get_filespec_params(ctx, fs, &fileParams);
         const char* attname = fileParams.filename;
         fz_rect rect = pdf_bound_annot(ctx, annot);
-        if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
+        if (len(attname) == 0 || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
             return;
         }
 
@@ -4151,12 +4151,12 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         } else {
             info.Append(name);
         }
-        if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
+        if (len(encoding) > 0 || len(type) > 0 || embedded) {
             info.Append(" (");
-            if (!str::IsEmpty(type)) {
+            if (len(type) > 0) {
                 info.Append(fmt("%s; ", type));
             }
-            if (!str::IsEmpty(encoding)) {
+            if (len(encoding) > 0) {
                 info.Append(fmt("%s; ", encoding));
             }
             if (embedded) {
@@ -4484,7 +4484,7 @@ void EngineMupdf::GetProperties(StrVec& keyValOut) {
             int n = len(fileInfos);
             for (int i = 0; i < n; i++) {
                 auto* fi = fileInfos[i];
-                if (str::IsEmpty(fi->name)) {
+                if (len(fi->name) == 0) {
                     continue;
                 }
                 filesStr.AppendChar('\n');
@@ -4597,7 +4597,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
 
     auto timeStart = TimeGet();
     Str currPath = engine->FilePath();
-    if (str::IsEmpty(path)) {
+    if (len(path) == 0) {
         path = currPath;
     }
     auto ctx = epdf->Ctx();
@@ -4721,7 +4721,7 @@ bool IsEngineMupdfSupportedFileType(Kind kind) {
 }
 
 EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, PasswordUI* pwdUI) {
-    if (str::IsEmpty(path)) {
+    if (len(path) == 0) {
         return nullptr;
     }
     if (kind == kindFileFb2z) {

@@ -73,7 +73,7 @@ static TempStr ReadAloudPlaybackBarTextTemp(WindowTab* tab) {
     }
 
     Str docName = tab->GetTabTitle();
-    if (str::IsEmpty(docName)) {
+    if (len(docName) == 0) {
         docName = _TRA("document");
     }
 
@@ -318,7 +318,7 @@ void ReadAloudPlaybackBarRelayout(HWND hwndCanvas) {
 }
 
 void ReadAloudPlaybackBarUpdateSession(WindowTab* tab) {
-    if (!tab || !tab->win || str::IsEmpty(tab->readAloudText)) {
+    if (!tab || !tab->win || len(tab->readAloudText) == 0) {
         if (tab && tab->win) {
             ReadAloudPlaybackBarHide(tab->win);
         }

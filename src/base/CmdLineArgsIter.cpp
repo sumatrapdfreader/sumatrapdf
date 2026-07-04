@@ -52,7 +52,7 @@ void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
     for (int i = 0; i < nArgs; i++) {
         TempStr arg = ToUtf8Temp(argsArr[i]);
         // ignore empty quoted strings ("")
-        if (str::IsEmpty(arg)) {
+        if (len(arg) == 0) {
             continue;
         }
         argsOut.Append(arg);
@@ -75,7 +75,7 @@ void ParseCmdLine(WStr cmdLine, StrVec& argsOut) {
             continue;
         }
         // ignore empty quoted strings ("")
-        if (str::IsEmpty(arg)) {
+        if (len(arg) == 0) {
             continue;
         }
         argsOut.Append(arg);

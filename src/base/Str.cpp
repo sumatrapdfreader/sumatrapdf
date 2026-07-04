@@ -2077,7 +2077,7 @@ TempStr GetFileNameTemp(Str url) {
         }
     }
     Str baseStr(path.s + base, path.len - base);
-    if (str::IsEmpty(baseStr)) {
+    if (len(baseStr) == 0) {
         return {};
     }
     TempStr res = str::DupTemp(baseStr);
@@ -2242,7 +2242,7 @@ TempWStr JoinTemp(WStr s1, WStr s2, WStr s3) {
 }
 
 TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
-    if (str::IsNull(s) || str::IsEmpty(toReplace) || str::IsNull(replaceWith)) {
+    if (str::IsNull(s) || len(toReplace) == 0 || str::IsNull(replaceWith)) {
         return {};
     }
 

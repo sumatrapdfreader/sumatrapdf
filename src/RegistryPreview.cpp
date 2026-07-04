@@ -188,7 +188,7 @@ TempStr GetPdfPreviewLogDirTemp() {
     }
     TempStr exePath = path::JoinTemp(exeDir, StrL("SumatraPDF.exe"));
     Str d = file::ReadFile(exePath);
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return {};
     }
     u8 sha1[20]{};

@@ -42,7 +42,7 @@ static TempStr FindGrokExecutableTemp() {
 }
 
 bool IsGrokBuildInstalled() {
-    return !str::IsEmpty(FindGrokExecutableTemp());
+    return len(FindGrokExecutableTemp()) > 0;
 }
 
 TempStr GrokBuildExecutablePathTemp() {
@@ -92,7 +92,7 @@ static LoadedDataResource gGrokMarkedJs;
 
 static Str GrokBgColor() {
     Str bg = gGlobalPrefs->grokBuild.bgColor;
-    if (str::IsEmpty(bg)) {
+    if (len(bg) == 0) {
         return StrL("#ffffff");
     }
     return bg;
@@ -103,7 +103,7 @@ static void BuildGrokModelsList(StrVec& models) {
     AIChatAppendModelUnique(models, "grok-composer-2.5-fast");
     AIChatAppendModelUnique(models, "grok-build");
     Str extra = gGlobalPrefs->grokBuild.models;
-    if (!str::IsEmpty(extra)) {
+    if (len(extra) > 0) {
         StrVec parts;
         Split(&parts, extra, ",", true);
         for (int i = 0; i < len(parts); i++) {
@@ -312,7 +312,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     Str rest = log;
     Str line;
     while (str::NextLine(rest, line, rest)) {
-        if (!str::IsEmpty(line)) {
+        if (len(line) > 0) {
             win->grokWebView->Eval(str::DupTemp(line));
         }
     }
@@ -389,7 +389,7 @@ static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
             continue;
         }
         TempStr prompt = ExtractGrokPromptFromHistoryLineTemp(str::DupTemp(line), sessionId);
-        if (!str::IsEmpty(prompt)) {
+        if (len(prompt) > 0) {
             result = str::Dup(prompt);
         }
     }
@@ -469,7 +469,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     bool foundCurrent = false;
     for (int i = 0; i < len(sessions); i++) {
         Str display = sessions[i].display;
-        if (str::IsEmpty(display)) {
+        if (len(display) == 0) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
@@ -510,7 +510,7 @@ static TempStr StripGrokUserQueryWrapperTemp(Str text) {
     }
     TempStr result = str::DupTemp(content);
     str::TrimWSInPlace(result, str::TrimOpt::Both);
-    return !str::IsEmpty(result) ? result : nullptr;
+    return len(result) > 0 ? result : nullptr;
 }
 
 static TempStr ExtractGrokChatUserTextTemp(Str line) {
@@ -597,7 +597,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                 WebViewAddUser(win, userText);
             } else if (str::Contains(line, StrL("\"type\":\"assistant\""))) {
                 TempStr text = AIChatJsonStrTemp(line, "content");
-                if (!str::IsEmpty(text)) {
+                if (len(text) > 0) {
                     WebViewAppendText(win, text);
                 }
                 AppendGrokHistoryTools(win, line);
@@ -800,12 +800,12 @@ static void GrokReadThread(GrokReadCtx* ctx) {
 
                 if (eventType && str::Eq(eventType, "thought")) {
                     TempStr thought = AIChatJsonStrTemp(line, "data");
-                    if (!str::IsEmpty(thought)) {
+                    if (len(thought) > 0) {
                         GrokBuildLog("<<< thought", thought);
                     }
                 } else if (eventType && str::Eq(eventType, "text")) {
                     TempStr text = AIChatJsonStrTemp(line, "data");
-                    if (!str::IsEmpty(text)) {
+                    if (len(text) > 0) {
                         PostUpdate(hwndFrame, sessionId, text, GrokUpdateType::Text);
                     }
                 } else if (eventType && str::Eq(eventType, "error")) {
@@ -877,7 +877,7 @@ static void SendGrokMessage(MainWindow* win) {
     WebViewAddUser(win, input);
     SetGrokWorking(win, true);
 
-    bool isNewSession = str::IsEmpty(tab->grokSessionId);
+    bool isNewSession = len(tab->grokSessionId) == 0;
 
     Str filePath = tab->filePath;
     TempStr dir = path::GetDirTemp(filePath);
@@ -955,7 +955,7 @@ static void UpdateGrokPanelTitle(MainWindow* win, int labelDx) {
     WindowTab* tab = win->CurrentTab();
     if (tab && !tab->IsAboutTab() && tab->filePath) {
         Str title = tab->GetTabTitle();
-        if (!str::IsEmpty(title)) {
+        if (len(title) > 0) {
             docName = title;
         }
     }

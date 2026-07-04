@@ -318,7 +318,7 @@ ACCEL* gAccels = nullptr;
 int gAccelsCount = 0;
 
 static void skipWS(Str& s) {
-    while (!str::IsEmpty(s)) {
+    while (len(s) > 0) {
         if (!str::IsWs(*s.s)) {
             return;
         }
@@ -328,12 +328,12 @@ static void skipWS(Str& s) {
 }
 
 static void skipPlusOrMinus(Str& s) {
-    if (!str::IsEmpty(s) && *s.s == '+') {
+    if (len(s) > 0 && *s.s == '+') {
         s.s++;
         s.len--;
         return;
     }
-    if (!str::IsEmpty(s) && *s.s == '-') {
+    if (len(s) > 0 && *s.s == '-') {
         s.s++;
         s.len--;
         return;
@@ -463,7 +463,7 @@ again:
         accel.key = (WORD)key;
         return true;
     }
-    if (str::IsEmpty(s)) {
+    if (len(s) == 0) {
         return false;
     }
     char c = *s.s;
@@ -507,7 +507,7 @@ bool ParseShortcutString(Str shortcut, ACCEL& accel) {
 
 static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     auto lang = trans::GetCurrentLangCode();
-    bool isEng = str::IsEmpty(lang) || str::Eq(lang, "en");
+    bool isEng = len(lang) == 0 || str::Eq(lang, "en");
     bool isGerman = str::Eq(lang, "de");
     bool isAscii = false;
 

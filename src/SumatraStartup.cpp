@@ -2300,7 +2300,7 @@ ContinueOpenWindow:
             // create window hidden to avoid flashing the about page
             win = CreateAndShowMainWindow(data, false);
             for (TabState* state : *data->tabStates) {
-                if (str::IsEmpty(state->filePath)) {
+                if (len(state->filePath) == 0) {
                     logf("WinMain: skipping RestoreTabOnStartup() because state->filePath is empty\n");
                     continue;
                 }

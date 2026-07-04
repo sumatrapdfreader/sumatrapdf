@@ -200,7 +200,7 @@ bool ZipCreator::AddFile(Str path, Str nameInZip) {
 
 // we use the filePath relative to dir as the zip name
 bool ZipCreator::AddFileFromDir(Str filePath, Str dir) {
-    if (str::IsEmpty(dir) || !str::StartsWith(filePath, dir)) {
+    if (len(dir) == 0 || !str::StartsWith(filePath, dir)) {
         return false;
     }
     if (!path::IsSep(filePath.s[dir.len])) {

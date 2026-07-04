@@ -146,7 +146,7 @@ struct ChmDumpCtx {
 
 static int ChmDumpEntry(struct chmFile* h, struct chmUnitInfo* ui, void* data) {
     ChmDumpCtx* ctx = (ChmDumpCtx*)data;
-    if (str::IsEmpty(ui->path)) {
+    if (len(ui->path) == 0) {
         return CHM_ENUMERATOR_CONTINUE;
     }
 
@@ -203,7 +203,7 @@ struct ChmDumpIndexVisitor : EbookTocVisitor {
 
 static bool DumpChmFileRaw(Str path) {
     Str data = file::ReadFile(path);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         CliPrint("error: couldn't read file");
         return false;
     }
@@ -231,11 +231,11 @@ static void DumpChmFileMetadata(Str path) {
         CliPrint("metadata: unavailable");
         return;
     }
-    CliPrint(fmt("metadata title=%s", Str(!str::IsEmpty(doc->title) ? doc->title.s : "")));
-    CliPrint(fmt("metadata creator=%s", Str(!str::IsEmpty(doc->creator) ? doc->creator.s : "")));
-    CliPrint(fmt("metadata home=%s", Str(!str::IsEmpty(doc->homePath) ? doc->homePath.s : "")));
-    CliPrint(fmt("metadata toc=%s", Str(!str::IsEmpty(doc->tocPath) ? doc->tocPath.s : "")));
-    CliPrint(fmt("metadata index=%s", Str(!str::IsEmpty(doc->indexPath) ? doc->indexPath.s : "")));
+    CliPrint(fmt("metadata title=%s", Str(len(doc->title) > 0 ? doc->title.s : "")));
+    CliPrint(fmt("metadata creator=%s", Str(len(doc->creator) > 0 ? doc->creator.s : "")));
+    CliPrint(fmt("metadata home=%s", Str(len(doc->homePath) > 0 ? doc->homePath.s : "")));
+    CliPrint(fmt("metadata toc=%s", Str(len(doc->tocPath) > 0 ? doc->tocPath.s : "")));
+    CliPrint(fmt("metadata index=%s", Str(len(doc->indexPath) > 0 ? doc->indexPath.s : "")));
     CliPrint(fmt("metadata codepage=%u", doc->codepage));
 
     ChmDumpTocVisitor toc;

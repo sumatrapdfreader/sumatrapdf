@@ -74,7 +74,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
     HKEY root = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
     Str keyName = GetEnvRegKey(allUsers);
     TempStr currPath = ReadRegStrTemp(root, keyName, "Path");
-    if (str::IsEmpty(currPath)) {
+    if (len(currPath) == 0) {
         return;
     }
     if (!IsDirInPath(currPath, installDir)) {

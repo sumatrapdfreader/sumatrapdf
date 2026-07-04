@@ -369,7 +369,7 @@ void RecreateFindBar(MainWindow* win) {
     win->findBar = CreateFindBar(win);
     if (win->findBar && wasVisible) {
         ShowFindBar(win);
-        if (!str::IsEmpty(text)) {
+        if (len(text) > 0) {
             // restore the text without re-running the search (the existing
             // document highlight is preserved across the recreate)
             win->findBar->suppressTextChanged = true;
@@ -482,7 +482,7 @@ void ToggleFloatingFindUI(MainWindow* win) {
         return; // just persist the preference; nothing was open
     }
     ShowFindBar(win); // shows the now-active UI and repoints win->hwndFindEdit
-    if (!str::IsEmpty(text)) {
+    if (len(text) > 0) {
         HwndSetText(win->hwndFindEdit, text); // restore text (re-runs the search)
     }
     HwndSetFocus(win->hwndFindEdit);

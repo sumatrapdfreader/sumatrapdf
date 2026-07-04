@@ -42,7 +42,7 @@ static TempStr FindCodexExecutableTemp() {
 }
 
 bool IsCodexBuildInstalled() {
-    return !str::IsEmpty(FindCodexExecutableTemp());
+    return len(FindCodexExecutableTemp()) > 0;
 }
 
 TempStr CodexBuildExecutablePathTemp() {
@@ -92,7 +92,7 @@ static LoadedDataResource gCodexMarkedJs;
 
 static Str CodexBgColor() {
     Str bg = gGlobalPrefs->codexBuild.bgColor;
-    if (str::IsEmpty(bg)) {
+    if (len(bg) == 0) {
         return StrL("#ffffff");
     }
     return bg;
@@ -104,7 +104,7 @@ static void BuildCodexModelsList(StrVec& models) {
     AIChatAppendModelUnique(models, "gpt-5.4");
     AIChatAppendModelUnique(models, "o3");
     Str extra = gGlobalPrefs->codexBuild.models;
-    if (!str::IsEmpty(extra)) {
+    if (len(extra) > 0) {
         StrVec parts;
         Split(&parts, extra, ",", true);
         for (int i = 0; i < len(parts); i++) {
@@ -313,7 +313,7 @@ static void ReplayChatLog(MainWindow* win, WindowTab* tab) {
     Str rest = log;
     Str line;
     while (str::NextLine(rest, line, rest)) {
-        if (!str::IsEmpty(line)) {
+        if (len(line) > 0) {
             win->codexWebView->Eval(str::DupTemp(line));
         }
     }
@@ -379,7 +379,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
             continue;
         }
         TempStr prompt = ExtractCodexPromptFromHistoryLineTemp(str::DupTemp(line), sessionId);
-        if (!str::IsEmpty(prompt)) {
+        if (len(prompt) > 0) {
             result = str::Dup(prompt);
         }
     }
@@ -591,7 +591,7 @@ static void PopulateSessionCombo(MainWindow* win) {
     bool foundCurrent = false;
     for (int i = 0; i < len(sessions); i++) {
         Str display = sessions[i].display;
-        if (str::IsEmpty(display)) {
+        if (len(display) == 0) {
             display = "(no description)";
         }
         TempStr label = ShortenStringUtf8Temp(display, 50);
@@ -680,7 +680,7 @@ static void AppendCodexRolloutTools(MainWindow* win, Str line) {
     } else if (str::Contains(line, StrL("\"type\":\"custom_tool_call\""))) {
         name = AIChatJsonStrTemp(line, "name");
     }
-    if (!str::IsEmpty(name)) {
+    if (len(name) > 0) {
         str::Builder desc;
         desc.Append(fmt("Tool: %s", name));
         WebViewAddTool(win, ToStr(desc));
@@ -712,7 +712,7 @@ static void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) {
                 WebViewAddUser(win, userText);
             } else {
                 TempStr assistantText = ExtractCodexRolloutAssistantTextTemp(line);
-                if (!str::IsEmpty(assistantText)) {
+                if (len(assistantText) > 0) {
                     WebViewAppendText(win, assistantText);
                     WebViewFlushBlock(win);
                 } else {
@@ -912,7 +912,7 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                 if (line) {
                     CodexBuildLog("<<<", line);
                 }
-                if (!str::IsEmpty(line) && line.s[0] == '{') {
+                if (len(line) > 0 && line.s[0] == '{') {
                     TempStr eventType = AIChatJsonStrTemp(line, "type");
 
                     if (eventType && str::Eq(eventType, "thread.started")) {
@@ -925,12 +925,12 @@ static void CodexReadThread(CodexReadCtx* ctx) {
                         Str p;
                         if (str::Cut(line, StrL("\"type\":\"agent_message\""), nullptr, &p)) {
                             TempStr text = AIChatJsonStrTemp(p, "text");
-                            if (!str::IsEmpty(text)) {
+                            if (len(text) > 0) {
                                 PostUpdate(hwndFrame, sessionId, text, CodexUpdateType::Text);
                             }
                         } else if (str::Cut(line, StrL("\"type\":\"command_execution\""), nullptr, &p)) {
                             TempStr cmd = AIChatJsonStrTemp(p, "command");
-                            if (!str::IsEmpty(cmd)) {
+                            if (len(cmd) > 0) {
                                 TempStr shortCmd = ShortenStringUtf8Temp(cmd, 80);
                                 str::Builder desc;
                                 desc.Append(fmt("Tool: %s", shortCmd));
@@ -993,7 +993,7 @@ static void SendCodexMessage(MainWindow* win) {
     WebViewAddUser(win, input);
     SetCodexWorking(win, true);
 
-    bool isNewSession = str::IsEmpty(tab->codexSessionId);
+    bool isNewSession = len(tab->codexSessionId) == 0;
 
     Str filePath = tab->filePath;
     TempStr dir = path::GetDirTemp(filePath);
@@ -1076,7 +1076,7 @@ static void UpdateCodexPanelTitle(MainWindow* win, int labelDx) {
     WindowTab* tab = win->CurrentTab();
     if (tab && !tab->IsAboutTab() && tab->filePath) {
         Str title = tab->GetTabTitle();
-        if (!str::IsEmpty(title)) {
+        if (len(title) > 0) {
             docName = title;
         }
     }

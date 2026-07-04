@@ -522,7 +522,7 @@ Rect GetDefaultWindowPos() {
 
 void SaveCallstackLogs() {
     Str s = dbghelp::GetCallstacks();
-    if (str::IsEmpty(s)) {
+    if (len(s) == 0) {
         return;
     }
     TempStr filePath = GetPathInAppDataDirTemp("callstacks.txt");
@@ -548,7 +548,7 @@ Str Sha1OfAppExe() {
         return nullptr;
     }
     Str d = file::ReadFile(appPath);
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return nullptr;
     }
 

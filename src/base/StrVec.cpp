@@ -26,13 +26,13 @@ static int StrCmpI(Str s1, Str s2) {
 }
 
 bool StrLess(Str s1, Str s2) {
-    if (str::IsEmpty(s1)) {
-        if (str::IsEmpty(s2)) {
+    if (len(s1) == 0) {
+        if (len(s2) == 0) {
             return false;
         }
         return true;
     }
-    if (str::IsEmpty(s2)) {
+    if (len(s2) == 0) {
         return false;
     }
     int n = StrCmp(s1, s2);
@@ -40,14 +40,14 @@ bool StrLess(Str s1, Str s2) {
 }
 
 bool StrLessNoCase(Str s1, Str s2) {
-    if (str::IsEmpty(s1)) {
+    if (len(s1) == 0) {
         // null / empty string is smallest
-        if (str::IsEmpty(s2)) {
+        if (len(s2) == 0) {
             return false;
         }
         return true;
     }
-    if (str::IsEmpty(s2)) {
+    if (len(s2) == 0) {
         return false;
     }
     int n = StrCmpI(s1, s2);

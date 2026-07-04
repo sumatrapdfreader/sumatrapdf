@@ -233,7 +233,7 @@ TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
 }
 
 static int ChmTestEnumerate(struct chmFile* h, struct chmUnitInfo* ui, void* ctx) {
-    if (!ui || str::IsEmpty(ui->path)) {
+    if (!ui || len(ui->path) == 0) {
         return CHM_ENUMERATOR_CONTINUE;
     }
     auto* paths = (StrVec*)ctx;
@@ -405,7 +405,7 @@ TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int
 
     bool isTextOnly = false;
     TempStr original = GetSelectedTextTemp(tab, " ", isTextOnly);
-    if (str::IsEmpty(original)) {
+    if (len(original) == 0) {
         return fail("ERROR empty-selection");
     }
     original = str::DupTemp(original);
@@ -751,8 +751,7 @@ TempStr I18nErrorStringResultTemp(int* exitCodeOut) {
     Str err = _TRA("Error");
     Str crash = _TRA("SumatraPDF crashed");
     Str printers = _TRA("SumatraPDF - Show Printers");
-    bool ok = !str::IsEmpty(err) && !str::IsEmpty(crash) && !str::IsEmpty(printers) &&
-              str::Eq(err, trans::GetTranslation("Error")) &&
+    bool ok = len(err) > 0 && len(crash) > 0 && len(printers) > 0 && str::Eq(err, trans::GetTranslation("Error")) &&
               str::Eq(crash, trans::GetTranslation("SumatraPDF crashed")) &&
               str::Eq(printers, trans::GetTranslation("SumatraPDF - Show Printers"));
     if (ok) {

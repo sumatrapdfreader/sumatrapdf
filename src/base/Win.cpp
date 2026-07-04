@@ -1043,7 +1043,7 @@ DWORD GetFileVersion(const WCHAR* path) {
 #endif
 
 bool LaunchFileShell(Str path, Str params, Str verb, bool hidden) {
-    if (str::IsEmpty(path)) {
+    if (len(path) == 0) {
         return false;
     }
 

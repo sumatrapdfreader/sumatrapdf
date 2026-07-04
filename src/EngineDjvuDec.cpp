@@ -696,7 +696,7 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
         }
         return;
     }
-    if (str::IsEmpty(z->text)) {
+    if (len(z->text) == 0) {
         return;
     }
     Rect r((int)(z->x * dpiF), (int)(z->y * dpiF), (int)(z->w * dpiF), (int)(z->h * dpiF));

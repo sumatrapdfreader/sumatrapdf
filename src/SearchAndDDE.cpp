@@ -127,7 +127,7 @@ void FindFirst(MainWindow* win) {
         TempStr selection = str::DupTemp(sel);
         str::Free(sel);
         selection.len -= str::NormalizeWSInPlace(selection);
-        if (!str::IsEmpty(selection)) {
+        if (len(selection) > 0) {
             TempStr current = HwndGetTextTemp(win->hwndFindEdit);
             if (!str::EqI(selection, current)) {
                 AbortFinding(win, false);
@@ -165,7 +165,7 @@ void OnFindBarTextChanged(MainWindow* win) {
         return;
     }
     TempStr s = HwndGetTextTemp(win->hwndFindEdit);
-    if (str::IsEmpty(s)) {
+    if (len(s) == 0) {
         AbortFinding(win, true); // also cancels a pending debounce timer
         ClearSearchResult(win);
         FindBarSetStatus(win, "");
@@ -274,7 +274,7 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
     TempStr selection = str::DupTemp(sel);
     str::Free(sel);
     selection.len -= str::NormalizeWSInPlace(selection);
-    if (str::IsEmpty(selection)) {
+    if (len(selection) == 0) {
         return;
     }
 
@@ -904,7 +904,7 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
 // TODO: should detect wasModified by comparing with the last search result
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified, bool showProgress) {
     AbortFinding(win, false);
-    if (str::IsEmpty(text)) {
+    if (len(text) == 0) {
         return;
     }
     FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
@@ -1267,7 +1267,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.msg = _TRA("Cannot start inverse search command. Please check the command line in the settings.");
-    if (!str::IsEmpty(cmdLine)) {
+    if (len(cmdLine) > 0) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         TempStr appDir = GetSelfExeDirTemp();
         AutoCloseHandle process(LaunchProcessInDir(cmdLine, appDir));
@@ -1432,7 +1432,7 @@ static Str HandleSearchCmd(Str cmd, bool* ack) {
     if (str::IsNull(next)) {
         return {};
     }
-    if (str::IsEmpty(term)) {
+    if (len(term) == 0) {
         return next;
     }
     // check if the PDF is already opened
@@ -1488,7 +1488,7 @@ static Str HandleGotoPageWordCmd(Str cmd, bool* ack) {
     // stop any running async search, then go to the page
     AbortFinding(win, true);
     win->ctrl->GoToPage(page, true);
-    if (!str::IsEmpty(term)) {
+    if (len(term) > 0) {
         dm->textSearch->SetDirection(TextSearch::Direction::Forward);
         TextSel* sel = dm->textSearch->FindFirstOnPage(page, term);
         if (sel && sel->len > 0) {
@@ -1832,7 +1832,7 @@ static Str HandleGetFileStateCmd(HWND hwnd, Str cmd, bool* ack, str::Builder& re
     *ack = true;
 
     MainWindow* win = nullptr;
-    if (!str::IsEmpty(filePath)) {
+    if (len(filePath) > 0) {
         win = FindMainWindowByFile(filePath, true);
     } else {
         // no path given: report the currently active document
@@ -1880,7 +1880,7 @@ static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, str::Builder& res) {
     *ack = true;
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
-            if (!str::IsEmpty(tab->filePath)) {
+            if (len(tab->filePath) > 0) {
                 res.Append(fmt("%s\n", tab->filePath));
             }
         }

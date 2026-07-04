@@ -1176,7 +1176,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
         if (IDOK == cmd) {
             TempStr name = HwndGetTextTemp(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
             str::TrimWSInPlace(name, str::TrimOpt::Both);
-            if (!str::IsEmpty(name)) {
+            if (len(name) > 0) {
                 str::ReplaceWithCopy(&data->favName, name);
             } else {
                 str::Free(data->favName);
@@ -1230,7 +1230,7 @@ static void ParseCustomColors(BgColorDlgData* data) {
     }
     data->customColorsChanged = false;
     Str s = gGlobalPrefs->customColors;
-    if (str::IsEmpty(s)) {
+    if (len(s) == 0) {
         return;
     }
     int idx = 0;

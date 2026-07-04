@@ -288,7 +288,7 @@ void CopySelectionToClipboard(MainWindow* win) {
         selText = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelectionOut);
     }
 
-    if (!str::IsEmpty(selText)) {
+    if (len(selText) > 0) {
         AppendTextToClipboard(selText);
     }
 

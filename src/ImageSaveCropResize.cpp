@@ -450,7 +450,7 @@ static void OnFormatChanged(ImageEditWindow* ew) {
     WCHAR destW[MAX_PATH + 1]{};
     GetWindowTextW(ew->hwndDestEdit, destW, MAX_PATH);
     TempStr dest = ToUtf8Temp(destW);
-    if (!str::IsEmpty(dest)) {
+    if (len(dest) > 0) {
         TempStr oldExt = path::GetExtTemp(dest);
         int baseLen = len(dest) - len(oldExt);
         TempStr base = str::DupTemp(Str(dest.s, (int)baseLen));
@@ -1180,7 +1180,7 @@ static void OnSave(ImageEditWindow* ew) {
     WCHAR rawDestW[MAX_PATH + 1]{};
     GetWindowTextW(ew->hwndDestEdit, rawDestW, MAX_PATH);
     TempStr rawDest = ToUtf8Temp(rawDestW);
-    if (str::IsEmpty(rawDest)) {
+    if (len(rawDest) == 0) {
         return;
     }
 
@@ -2076,7 +2076,7 @@ TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
         return ToStrTemp(out);
     };
 
-    if (str::IsEmpty(imagePath) || !file::Exists(imagePath)) {
+    if (len(imagePath) == 0 || !file::Exists(imagePath)) {
         return fail(StrL("ERROR missing-image"));
     }
     if (gWindows.IsEmpty()) {

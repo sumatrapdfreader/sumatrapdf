@@ -577,7 +577,7 @@ static bool ReadAloudGetCurrentWordAbsRange(WindowTab* tab, int* startAbsOut, in
     *endAbsOut = 0;
 
     ReadAloudHighlightMap* map = tab->readAloudHighlight;
-    if (!map || !map->locs || map->len <= 0 || str::IsEmpty(tab->readAloudText)) {
+    if (!map || !map->locs || map->len <= 0 || len(tab->readAloudText) == 0) {
         return false;
     }
 

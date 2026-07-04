@@ -1369,7 +1369,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     pdf_set_annot_line(ctx, annot, a, b);
                 } break;
             }
-            if (typ == AnnotationType::Stamp && !str::IsEmpty(args->stampImage)) {
+            if (typ == AnnotationType::Stamp && len(args->stampImage) > 0) {
                 // image stamp (e.g. pasted from the clipboard): embed the image
                 // and size the rect to the image's natural size, anchored at pos
                 fz_image* img = nullptr;

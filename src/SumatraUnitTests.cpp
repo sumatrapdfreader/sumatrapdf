@@ -32,7 +32,7 @@ static void ParseCommandLineTest() {
         ParseFlags(GetPermArena(), L"SumatraPDF.exe -bench foo.pdf", i);
         utassert(2 == len(i.pathsToBenchmark));
         utassert(str::Eq("foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(str::IsEmpty(i.pathsToBenchmark.At(1)));
+        utassert(len(i.pathsToBenchmark.At(1)) == 0);
     }
 
     {
@@ -45,7 +45,7 @@ static void ParseCommandLineTest() {
         utassert(str::Eq(s, "5"));
         utassert(2 == len(i.pathsToBenchmark));
         utassert(str::Eq("foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(str::IsEmpty(i.pathsToBenchmark.At(1)));
+        utassert(len(i.pathsToBenchmark.At(1)) == 0);
     }
 
     {

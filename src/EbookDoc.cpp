@@ -92,10 +92,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
         Str namePart;
         uint codePage;
     } static encodings[] = {
-        {"UTF", CP_UTF8},
-        {"utf", CP_UTF8},
-        {"1252", 1252},
-        {"1251", 1251},
+        {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
         // TODO: any other commonly used codepages?
     };
     for (size_t i = 0; i < dimof(encodings); i++) {
@@ -537,7 +534,7 @@ bool EpubDoc::Load() {
 
     // EPUB 2 ToC
     TempStr tocId = GumboAttributeValueTemp(node, "toc");
-    int tocIdx = (tocId && str::IsEmpty(tocPath)) ? idList.Find(tocId) : -1;
+    int tocIdx = (tocId && len(tocPath) == 0) ? idList.Find(tocId) : -1;
     if (tocIdx >= 0) {
         Str s = pathList.At(tocIdx);
         str::Free(tocPath);
@@ -746,7 +743,7 @@ bool EpubDoc::IsRTL() const {
 }
 
 bool EpubDoc::HasToc() const {
-    return !str::IsEmpty(tocPath);
+    return len(tocPath) > 0;
 }
 
 static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
@@ -856,7 +853,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
 }
 
 bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
-    if (str::IsEmpty(tocPath)) {
+    if (len(tocPath) == 0) {
         return false;
     }
     Str tocDataStr;
@@ -992,10 +989,10 @@ static Str loadFromStream(Fb2Doc* doc) {
 }
 
 bool Fb2Doc::Load() {
-    ReportIf(!stream && str::IsEmpty(fileName));
+    ReportIf(!stream && len(fileName) == 0);
 
     Str data;
-    if (!str::IsEmpty(fileName)) {
+    if (len(fileName) > 0) {
         data = loadFromFile(this);
     } else if (stream) {
         data = loadFromStream(this);
@@ -1151,7 +1148,7 @@ Str Fb2Doc::GetImageData(Str fileName) const {
 }
 
 Str Fb2Doc::GetCoverImage() const {
-    if (str::IsEmpty(coverImage)) {
+    if (len(coverImage) == 0) {
         return {};
     }
     return GetImageData(coverImage);
@@ -1193,7 +1190,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
         } else if (tok->IsEndTag() && Tag_Title == tok->tag) {
             // NormalizeWSInPlace shortens the buffer in place; adjust len to match
             itemText.len -= str::NormalizeWSInPlace(itemText);
-            if (!str::IsEmpty(itemText)) {
+            if (len(itemText) > 0) {
                 TempStr url = fmt(FB2_TOC_ENTRY_MARK "%d", titleCount);
                 visitor->Visit(itemText, url, level);
                 itemText = {};
@@ -1201,7 +1198,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             inTitle = false;
         } else if (inTitle && tok->IsText()) {
             TempStr text = strconv::HtmlUtf8ToStrTemp(tok->s);
-            if (str::IsEmpty(itemText)) {
+            if (len(itemText) == 0) {
                 itemText = text;
             } else {
                 itemText = str::JoinTemp(itemText, " ", text);
@@ -1635,7 +1632,7 @@ inline bool IsEmailDomainChar(char c) {
 static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
     Str beforeAt;
     Str rest = curr;
-    if (!str::IsEmpty(curr) && '@' == curr.s[0]) {
+    if (len(curr) > 0 && '@' == curr.s[0]) {
         if (!IsEmailUsernameChar(htmlData.LastChar())) {
             return {};
         }
@@ -1678,7 +1675,7 @@ static Str TextFindEmailEnd(str::Builder& htmlData, Str curr) {
              IsEmailDomainChar(rest.s[endIdx + 1]));
 
     Str end = Str(curr.s + (rest.s - curr.s) + endIdx, (int)(curr.len - (rest.s - curr.s) - endIdx));
-    Str linkStart = !str::IsEmpty(curr) && '@' == curr.s[0] ? curr : Str(curr.s + 7, curr.len - 7);
+    Str linkStart = len(curr) > 0 && '@' == curr.s[0] ? curr : Str(curr.s + 7, curr.len - 7);
 
     if (beforeAt) {
         int idx = len(htmlData) - beforeAt.len;

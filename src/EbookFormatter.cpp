@@ -159,7 +159,7 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
 
 void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName(StrL("page_path"));
-    if (!attr || !str::IsEmpty(pagePath)) {
+    if (!attr || len(pagePath) > 0) {
         ForceNewPage();
     }
     if (attr) {

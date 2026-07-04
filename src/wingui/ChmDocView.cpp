@@ -67,7 +67,7 @@ static TempStr ChmMimeFromPathTemp(Str path, Str data) {
 
 bool ChmDocView::ResourceGet(void* ctx, Str path, WebViewResourceResult* res) {
     auto* view = (ChmDocView*)ctx;
-    if (!view || !view->cb || !res || str::IsEmpty(path)) {
+    if (!view || !view->cb || !res || len(path) == 0) {
         return false;
     }
     Str data = view->cb->GetDataForUrl(path);
@@ -91,7 +91,7 @@ bool ChmDocView::NavigationStarting(void* ctx, Str url, bool newWindow) {
 
 void ChmDocView::NavigationCompleted(void* ctx, Str url, bool success) {
     auto* view = (ChmDocView*)ctx;
-    if (!view || !view->cb || !success || str::IsEmpty(url)) {
+    if (!view || !view->cb || !success || len(url) == 0) {
         return;
     }
     // the WebView2 child windows that receive drops are created lazily and can

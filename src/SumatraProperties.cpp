@@ -369,7 +369,7 @@ static void AppendPropTranslated(str::Builder& out, Str propName, Str val) {
 }
 
 static void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath) {
-    if (str::IsEmpty(fstruct)) {
+    if (len(fstruct) == 0) {
         bool isPDF = str::EndsWithI(filePath, ".pdf");
         if (isPDF) {
             AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), StrL(":")), _TRA("No"));
@@ -462,7 +462,7 @@ static void GetPropsText(DocController* ctrl, str::Builder& out) {
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
         Str d = engine->GetFileData();
-        if (!str::IsEmpty(d)) {
+        if (len(d) > 0) {
             fileSize = d.len;
         }
         str::Free(d);

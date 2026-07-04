@@ -90,7 +90,7 @@ TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
     // TODO: not sure if should allow null path
     SkipLeadingPathSep(fileName);
     Str sepStr = {};
-    if (!str::IsEmpty(path)) {
+    if (len(path) > 0) {
         if (!IsSep(path.s[path.len - 1])) {
             sepStr = StrL("\\");
         }
@@ -105,7 +105,7 @@ TempStr JoinTemp(Str path, Str fileName, Str fileName2) {
 Str Join(Arena* allocator, Str path, Str fileName) {
     SkipLeadingPathSep(fileName);
     Str sepStr = {};
-    if (!str::IsEmpty(path)) {
+    if (len(path) > 0) {
         if (!IsSep(path.s[path.len - 1])) {
             sepStr = StrL("\\");
         }
@@ -468,20 +468,20 @@ bool SupportsChangeNotifications(Str pathA) {
 static Str AdvanceUntilWildcardMatch(Str fileName, Str filter);
 
 static bool MatchWildcardsRec(Str fileName, Str filter) {
-    if (str::IsEmpty(filter)) {
-        return str::IsEmpty(fileName);
+    if (len(filter) == 0) {
+        return len(fileName) == 0;
     }
     switch (filter.s[0]) {
         case '\0':
         case ';':
-            return str::IsEmpty(fileName);
+            return len(fileName) == 0;
         case '*': {
             Str filterRest(filter.s + 1, filter.len - 1);
             fileName = AdvanceUntilWildcardMatch(fileName, filterRest);
-            return !str::IsEmpty(fileName) || str::IsEmpty(filterRest) || filterRest.s[0] == ';';
+            return len(fileName) > 0 || len(filterRest) == 0 || filterRest.s[0] == ';';
         }
         case '?':
-            return !str::IsEmpty(fileName) &&
+            return len(fileName) > 0 &&
                    MatchWildcardsRec(Str(fileName.s + 1, fileName.len - 1), Str(filter.s + 1, filter.len - 1));
         default:
             return tolower(fileName.s[0]) == tolower(filter.s[0]) &&
@@ -490,7 +490,7 @@ static bool MatchWildcardsRec(Str fileName, Str filter) {
 }
 
 static Str AdvanceUntilWildcardMatch(Str fileName, Str filter) {
-    while (!str::IsEmpty(fileName) && !MatchWildcardsRec(fileName, filter)) {
+    while (len(fileName) > 0 && !MatchWildcardsRec(fileName, filter)) {
         fileName.s++;
         fileName.len--;
     }
