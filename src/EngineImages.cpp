@@ -1080,7 +1080,7 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     if (size == 0) {
         return altId == 0 ? nullptr : GetImagePropertyTemp(bmp, altId);
     }
-    PropertyItem* item = (PropertyItem*)AllocArrayTemp<u8>((int)size);
+    PropertyItem* item = (PropertyItem*)AllocArrayTemp<u8>(size);
     if (!item) return {};
     Status ok = bmp->GetPropertyItem(id, size, item);
     if (Ok != ok) {
@@ -2219,7 +2219,7 @@ bool EngineCbx::FinishLoading() {
 
     auto* metadataFi = cbxArchive->GetFileDataByName("ComicInfo.xml");
     if (metadataFi && metadataFi->data) {
-        Str metadata = Str((char*)(metadataFi->data), (int)(metadataFi->fileSizeUncompressed));
+        Str metadata = Str((char*)(metadataFi->data), metadataFi->fileSizeUncompressed);
         cip.Parse(metadata);
     }
     Str comment = cbxArchive->GetComment();
@@ -2317,12 +2317,12 @@ TocTree* EngineCbx::GetToc() {
 
 Str EngineCbx::GetImageData(int pageNo) {
     ReportIf((pageNo < 1) || (pageNo > PageCount()));
-    size_t fileId = files[pageNo - 1]->fileId;
+    int fileId = files[pageNo - 1]->fileId;
     auto* fi = cbxArchive->GetFileDataById(fileId);
     if (!fi || !fi->data) {
         return {};
     }
-    return Str((char*)(fi->data), (int)(fi->fileSizeUncompressed));
+    return Str((char*)(fi->data), fi->fileSizeUncompressed);
 }
 
 TempStr EngineCbx::GetPropertyTemp(Str name) {
@@ -2392,7 +2392,7 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 RectF EngineCbx::LoadMediabox(int pageNo) {
-    size_t fileId = files[pageNo - 1]->fileId;
+    int fileId = files[pageNo - 1]->fileId;
 
     // try to get image size from just the file header (first 1024 bytes)
     Str header = cbxArchive->GetFileDataPartById(fileId, 1024);

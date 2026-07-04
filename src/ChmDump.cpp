@@ -16,12 +16,12 @@
 #include "EbookBase.h"
 #include "ChmFile.h"
 
-static void CliWrite(Str s, size_t n = 0) {
+static void CliWrite(Str s, int n = 0) {
     if (!s) {
         return;
     }
     if (n == 0) {
-        n = (size_t)s.len;
+        n = s.len;
     }
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     if (h && h != INVALID_HANDLE_VALUE) {
@@ -29,7 +29,7 @@ static void CliWrite(Str s, size_t n = 0) {
         WriteFile(h, s.s, (DWORD)n, &written, nullptr);
         return;
     }
-    fwrite(s.s, 1, n, stdout);
+    fwrite(s.s, 1, (size_t)n, stdout);
 }
 
 static void CliPrint(Str s) {

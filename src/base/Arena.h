@@ -130,13 +130,13 @@ void* Realloc(struct Arena* arena, void* mem, size_t size);
 void* MemDup(struct Arena* arena, const void* mem, size_t size, size_t extraBytes = 0);
 
 template <typename T>
-inline T* AllocArray(struct Arena* arena, size_t n = 1) {
-    return (T*)AllocZero(arena, n * sizeof(T));
+inline T* AllocArray(struct Arena* arena, int n = 1) {
+    return (T*)AllocZero(arena, (size_t)n * sizeof(T));
 }
 
 // like AllocArray but in the thread-local temp arena (reset each message loop)
 template <typename T>
-inline T* AllocArrayTemp(size_t n = 1) {
+inline T* AllocArrayTemp(int n = 1) {
     return AllocArray<T>(GetTempArena(), n);
 }
 

@@ -56,14 +56,14 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
     if (!ChmResolveObject(chmHandle, fileName, &info)) {
         return {};
     }
-    size_t n = (size_t)info.length;
-    if (n > 128 * 1024 * 1024) {
+    if (info.length > 128 * 1024 * 1024) {
         // limit to 128 MB
         return {};
     }
+    int n = (int)info.length;
 
     // +1 for 0 terminator for C string compatibility
-    u8* d = AllocArrayTemp<u8>((int)(n + 1));
+    u8* d = AllocArrayTemp<u8>(n + 1);
     if (!d) {
         return {};
     }
@@ -71,7 +71,7 @@ TempStr ChmFile::GetDataTemp(Str fileName) const {
         return {};
     }
 
-    return Str((char*)(d), (int)(n));
+    return Str((char*)(d), n);
 }
 
 TempStr SmartToUtf8Temp(Str s, uint codepage) {
@@ -84,13 +84,13 @@ TempStr SmartToUtf8Temp(Str s, uint codepage) {
     return strconv::ToMultiByteTemp(s, codepage, CP_UTF8);
 }
 
-static Str GetCharZ(Str d, size_t off) {
+static Str GetCharZ(Str d, int off) {
     u8* data = (u8*)d.s;
-    size_t n = (size_t)d.len;
+    int n = d.len;
     if (off >= n) {
         return {};
     }
-    ReportIf(!memchr(data + off, '\0', n - off + 1)); // data is zero-terminated
+    ReportIf(!memchr(data + off, '\0', (size_t)(n - off + 1))); // data is zero-terminated
     u8* str = data + off;
     Str s = Str((char*)str);
     if (len(s) == 0) {
@@ -107,35 +107,35 @@ void ChmFile::ParseWindowsData() {
     if (len(windowsData) == 0 || len(stringsData) == 0) {
         return;
     }
-    size_t windowsLen = (size_t)windowsData.len;
+    int windowsLen = windowsData.len;
     if (windowsLen <= 8) {
         return;
     }
 
     ByteReader rw(windowsData);
-    size_t entries = rw.DWordLE(0);
-    size_t entrySize = rw.DWordLE(4);
+    int entries = (int)rw.DWordLE(0);
+    int entrySize = (int)rw.DWordLE(4);
     if (entrySize < 188) {
         return;
     }
 
-    for (size_t i = 0; i < entries && ((i + (size_t)1) * entrySize) <= windowsLen; i++) {
-        size_t off = 8 + i * entrySize;
+    for (int i = 0; i < entries && (i + 1) * entrySize <= windowsLen; i++) {
+        int off = 8 + i * entrySize;
         if (str::IsNull(title)) {
-            DWORD strOff = rw.DWordLE(off + (size_t)0x14);
-            title = GetCharZ(stringsData, strOff);
+            DWORD strOff = rw.DWordLE(off + 0x14);
+            title = GetCharZ(stringsData, (int)strOff);
         }
         if (str::IsNull(tocPath)) {
-            DWORD strOff = rw.DWordLE(off + (size_t)0x60);
-            tocPath = GetCharZ(stringsData, strOff);
+            DWORD strOff = rw.DWordLE(off + 0x60);
+            tocPath = GetCharZ(stringsData, (int)strOff);
         }
         if (str::IsNull(indexPath)) {
-            DWORD strOff = rw.DWordLE(off + (size_t)0x64);
-            indexPath = GetCharZ(stringsData, strOff);
+            DWORD strOff = rw.DWordLE(off + 0x64);
+            indexPath = GetCharZ(stringsData, (int)strOff);
         }
         if (str::IsNull(homePath)) {
-            DWORD strOff = rw.DWordLE(off + (size_t)0x68);
-            homePath = GetCharZ(stringsData, strOff);
+            DWORD strOff = rw.DWordLE(off + 0x68);
+            homePath = GetCharZ(stringsData, (int)strOff);
         }
     }
 }
@@ -202,7 +202,7 @@ static uint LcidToCodepage(DWORD lcid) {
         1251, //
     };
 
-    for (int i = 0; i < dimofi(lcidToCodepage); i += 2) {
+    for (int i = 0; i < dimof(lcidToCodepage); i += 2) {
         if (lcid == lcidToCodepage[i]) {
             return lcidToCodepage[i + 1];
         }
@@ -221,7 +221,7 @@ bool ChmFile::ParseSystemData() {
     ByteReader r(d);
     DWORD n = 0;
     // Note: skipping DWORD version at offset 0. It's supposed to be 2 or 3.
-    for (size_t off = 4; off + 4 < (size_t)d.len; off += n + (size_t)4) {
+    for (int off = 4; off + 4 < d.len; off += (int)n + 4) {
         // Note: at some point we seem to get off-sync i.e. I'm seeing
         // many entries with type == 0 and length == 0. Seems harmless.
         n = r.WordLE(off + 2);
@@ -274,16 +274,16 @@ bool ChmFile::ParseSystemData() {
 
 TempStr ChmFile::ResolveTopicID(unsigned int id) const {
     TempStr ivbData = GetDataTemp("/#IVB");
-    size_t ivbLen = (size_t)ivbData.len;
+    int ivbLen = ivbData.len;
     ByteReader br(ivbData);
-    if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
+    if ((ivbLen % 8) != 4 || ivbLen - 4 != (int)br.DWordLE(0)) {
         return {};
     }
 
-    for (size_t off = 4; off < ivbLen; off += 8) {
+    for (int off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
             TempStr stringsData = GetDataTemp("/#STRINGS");
-            Str res = GetCharZ(stringsData, br.DWordLE(off + 4));
+            Str res = GetCharZ(stringsData, (int)br.DWordLE(off + 4));
             if (!res) {
                 return {};
             }
@@ -333,7 +333,7 @@ bool ChmFile::Load(Str path) {
     char header[24]{};
     int n = file::ReadN(path, (u8*)header, sizeof(header));
     if (n < (int)sizeof(header)) {
-        ByteReader r(Str(header, (int)sizeof(header)));
+        ByteReader r(Str(header, sizeof(header)));
         DWORD lcid = r.DWordLE(20);
         fileCodepage = LcidToCodepage(lcid);
     }

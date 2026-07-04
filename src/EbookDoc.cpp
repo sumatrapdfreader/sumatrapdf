@@ -95,7 +95,7 @@ static uint GetCodepageFromPI(Str xmlPI) {
         {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
         // TODO: any other commonly used codepages?
     };
-    for (size_t i = 0; i < dimof(encodings); i++) {
+    for (int i = 0; i < dimof(encodings); i++) {
         if (str::Contains(encoding, encodings[i].namePart)) {
             return encodings[i].codePage;
         }
@@ -427,7 +427,7 @@ bool EpubDoc::Load() {
     if (!containerFi || !containerFi->data) {
         return false;
     }
-    Str container = Str((char*)((u8*)containerFi->data), (int)(containerFi->fileSizeUncompressed));
+    Str container = Str((char*)((u8*)containerFi->data), containerFi->fileSizeUncompressed);
     GumboDoc containerDoc(container, true);
     const GumboNode* node = containerDoc.Document();
     if (!node) {
@@ -449,7 +449,7 @@ bool EpubDoc::Load() {
     StrVec encList;
     auto* encryptionFi = archive->GetFileDataByName("META-INF/encryption.xml");
     if (encryptionFi && encryptionFi->data) {
-        Str encryption = Str((char*)((u8*)encryptionFi->data), (int)(encryptionFi->fileSizeUncompressed));
+        Str encryption = Str((char*)((u8*)encryptionFi->data), encryptionFi->fileSizeUncompressed);
         GumboDoc encryptionDoc(encryption, true);
         CollectEncryptedEpubPaths(encryptionDoc.Document(), encList);
     }
@@ -458,7 +458,7 @@ bool EpubDoc::Load() {
     if (!contentFi || !contentFi->data) {
         return false;
     }
-    Str content = Str((char*)((u8*)contentFi->data), (int)(contentFi->fileSizeUncompressed));
+    Str content = Str((char*)((u8*)contentFi->data), contentFi->fileSizeUncompressed);
     ParseMetadata(content, props);
     GumboDoc contentDoc(content, true);
     node = contentDoc.Document();
@@ -567,7 +567,7 @@ bool EpubDoc::Load() {
         if (!htmlFi || !htmlFi->data) {
             continue;
         }
-        Str html = Str((char*)((u8*)htmlFi->data), (int)(htmlFi->fileSizeUncompressed));
+        Str html = Str((char*)((u8*)htmlFi->data), htmlFi->fileSizeUncompressed);
         TempStr decoded = DecodeTextToUtf8Temp(html, true);
         if (!decoded) {
             continue;
@@ -663,7 +663,7 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
                 if (str::IsEmpty(img.base)) {
                     auto* fi = archive->GetFileDataById(img.fileId);
                     if (fi && fi->data) {
-                        img.base = Str((char*)((u8*)fi->data), (int)(fi->fileSizeUncompressed));
+                        img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
                         fi->data = nullptr;
                     }
                 }
@@ -685,7 +685,7 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
             if (str::IsEmpty(img.base)) {
                 auto* fi = archive->GetFileDataById(img.fileId);
                 if (fi && fi->data) {
-                    img.base = Str((char*)((u8*)fi->data), (int)(fi->fileSizeUncompressed));
+                    img.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
                     fi->data = nullptr;
                 }
             }
@@ -698,10 +698,10 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
     // try to also load images which aren't registered in the manifest
     ImageData data;
     data.fileId = archive->GetFileId(url);
-    if (data.fileId != (size_t)-1) {
+    if (data.fileId >= 0) {
         auto* fi = archive->GetFileDataById(data.fileId);
         if (fi && fi->data) {
-            data.base = Str((char*)((u8*)fi->data), (int)(fi->fileSizeUncompressed));
+            data.base = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
             fi->data = nullptr;
             data.fileName = str::Dup(url);
             images.Append(data);
@@ -725,7 +725,7 @@ Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
     if (!fi || !fi->data) {
         return {};
     }
-    Str res = Str((char*)((u8*)fi->data), (int)(fi->fileSizeUncompressed));
+    Str res = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
     fi->data = nullptr;
     return res;
 }
@@ -861,7 +861,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
         ScopedCritSec scope(&zipAccess);
         auto* fi = archive->GetFileDataByName(tocPath);
         if (fi && fi->data) {
-            tocDataStr = Str(fi->data, (int)fi->fileSizeUncompressed);
+            tocDataStr = Str(fi->data, fi->fileSizeUncompressed);
         }
     }
     if (!tocDataStr) {
@@ -924,12 +924,12 @@ Fb2Doc::~Fb2Doc() {
     str::Free(fileName);
 }
 
-static Str takeFileData(MultiFormatArchive* archive, size_t fileId) {
+static Str takeFileData(MultiFormatArchive* archive, int fileId) {
     auto* fi = archive->GetFileDataById(fileId);
     if (!fi || !fi->data) {
         return {};
     }
-    Str res = Str((char*)((u8*)fi->data), (int)(fi->fileSizeUncompressed));
+    Str res = Str((char*)((u8*)fi->data), fi->fileSizeUncompressed);
     fi->data = nullptr;
     return res;
 }
@@ -1006,7 +1006,7 @@ bool Fb2Doc::Load() {
         return false;
     }
 
-    Str data2 = Str((char*)((u8*)tmp.s), (int)((size_t)tmp.len));
+    Str data2 = Str((char*)((u8*)tmp.s), tmp.len);
 
     GumboHtmlParser parser(data2);
     HtmlToken* tok;
@@ -1244,7 +1244,7 @@ PalmDoc::~PalmDoc() {
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
-static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, size_t n, uint) {
+static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text, int n, uint) {
     if (n < 9) {
     Fallback:
         builder.Append("&lt;");
@@ -1255,7 +1255,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text,
         !str::StartsWithI(text, "<TEALPAINT")) {
         goto Fallback;
     }
-    GumboHtmlParser parser(Str(text.s, (int)n));
+    GumboHtmlParser parser(Str(text.s, n));
     HtmlToken* tok = parser.Next();
     if (!tok || !tok->IsStartTag()) {
         goto Fallback;
@@ -1428,7 +1428,7 @@ bool HtmlDoc::Load() {
             return false;
         }
         Str dup = str::Dup(decoded);
-        htmlData = Str((char*)((u8*)dup.s), (int)((size_t)dup.len));
+        htmlData = Str((char*)((u8*)dup.s), dup.len);
         str::Free(data);
     }
 

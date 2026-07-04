@@ -200,7 +200,7 @@ static bool ParseArg(PacketReader& r, ControlArg** argOut) {
             DeleteControlArg(arg);
             return false;
         }
-        arg->bytes = AllocArray<u8>(n + 1);
+        arg->bytes = AllocArray<u8>((int)n + 1);
         arg->bytesLen = n;
         if (!r.ReadBytes(arg->bytes, n)) {
             DeleteControlArg(arg);
@@ -212,7 +212,7 @@ static bool ParseArg(PacketReader& r, ControlArg** argOut) {
             DeleteControlArg(arg);
             return false;
         }
-        char* strBuf = AllocArray<char>((size_t)n + 1);
+        char* strBuf = AllocArray<char>((int)n + 1);
         if (!r.ReadBytes((u8*)strBuf, n)) {
             DeleteControlArg(arg);
             return false;

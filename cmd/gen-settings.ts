@@ -656,7 +656,7 @@ const fileSettings: Field[] = [
     ),
   ),
   notSaved(
-    mkField("Index", { name: "", ctype: "size_t" }, "0", "temporary value needed for FileHistory::cmpOpenCount"),
+    mkField("Index", Int, 0, "temporary value needed for FileHistory::cmpOpenCount"),
   ),
   notSaved(mkField("Himl", { name: "", ctype: "HIMAGELIST" }, "NULL", "")),
   notSaved(mkField("IconIdx", Int, -1, "")),

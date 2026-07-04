@@ -9,7 +9,7 @@ struct ImageData {
     // path by which content refers to this image
     Str fileName;
     // document specific id by whcih to find this image
-    size_t fileId{0};
+    int fileId{0};
 };
 
 TempStr NormalizeURLTemp(Str url, Str base);

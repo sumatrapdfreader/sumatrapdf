@@ -4737,7 +4737,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, Kind kind, int displayDPI, Passw
         if (!fi || !fi->data) {
             return {};
         }
-        Str d = Str((char*)(fi->data), (int)(fi->fileSizeUncompressed));
+        Str d = Str((char*)(fi->data), fi->fileSizeUncompressed);
         IStream* strm = CreateStreamFromData(d);
         ScopedComPtr<IStream> stream(strm);
         if (!stream) {

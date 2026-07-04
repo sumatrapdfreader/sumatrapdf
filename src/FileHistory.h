@@ -16,9 +16,9 @@ struct FileHistory {
     void Clear(bool keepFavorites) const;
     void Append(FileState* state) const;
     void Remove(FileState* state) const;
-    FileState* Get(size_t index) const;
+    FileState* Get(int index) const;
     FileState* FindByPath(Str filePath) const;
-    FileState* FindByName(Str filePath, size_t* idxOut) const;
+    FileState* FindByName(Str filePath, int* idxOut) const;
     FileState* MarkFileLoaded(Str filePath) const;
     bool MarkFileInexistent(Str filePath, bool hide = false) const;
     void GetFrequencyOrder(Vec<FileState*>& list) const;

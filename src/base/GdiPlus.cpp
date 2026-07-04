@@ -561,16 +561,16 @@ static bool BmpSizeFromData(ByteReader r, Size& result) {
 
 static bool GifSizeFromData(ByteReader r, Size& result) {
     const u8* data = r.d;
-    size_t n = r.len;
+    int n = r.len;
     if (n < 13) {
         return false;
     }
     // find the first image's actual size instead of using the
     // "logical screen" size which is sometimes too large
-    size_t idx = 13;
+    int idx = 13;
     // skip the global color table
     if ((r.Byte(10) & 0x80)) {
-        idx += (size_t)3 * (size_t)((size_t)1 << ((r.Byte(10) & 0x07) + 1));
+        idx += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
     }
     while (idx + 8 < r.len) {
         if (r.Byte(idx) == 0x2C) {
@@ -581,13 +581,13 @@ static bool GifSizeFromData(ByteReader r, Size& result) {
             idx += 8;
         } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFE) {
             const u8* commentEnd = r.Find(idx + 2, 0x00);
-            idx = commentEnd ? commentEnd - data + 1 : n;
+            idx = commentEnd ? (int)(commentEnd - data) + 1 : n;
         } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0x01 && idx + 15 < n) {
             const u8* textDataEnd = r.Find(idx + 15, 0x00);
-            idx = textDataEnd ? textDataEnd - data + 1 : n;
+            idx = textDataEnd ? (int)(textDataEnd - data) + 1 : n;
         } else if (r.Byte(idx) == 0x21 && r.Byte(idx + 1) == 0xFF && idx + 14 < n) {
             const u8* applicationDataEnd = r.Find(idx + 14, 0x00);
-            idx = applicationDataEnd ? applicationDataEnd - data + 1 : n;
+            idx = applicationDataEnd ? (int)(applicationDataEnd - data) + 1 : n;
         } else {
             return false;
         }
@@ -597,29 +597,29 @@ static bool GifSizeFromData(ByteReader r, Size& result) {
 
 // try to get image dimensions from EXIF sub-IFD (tags 0xA002/0xA003)
 // tiffBase is the offset into r where the TIFF header starts
-static bool JpegSizeFromExif(ByteReader r, size_t tiffBase, Size& result) {
-    size_t n = r.len;
+static bool JpegSizeFromExif(ByteReader r, int tiffBase, Size& result) {
+    int n = r.len;
     if (tiffBase + 8 > n) {
         return false;
     }
     bool isBE = r.Byte(tiffBase) == 'M';
     // read IFD0 offset
-    size_t ifdOff = r.DWord(tiffBase + 4, isBE);
-    size_t ifdAbs = tiffBase + ifdOff;
+    int ifdOff = (int)r.DWord(tiffBase + 4, isBE);
+    int ifdAbs = tiffBase + ifdOff;
     if (ifdAbs + 2 > n) {
         return false;
     }
     WORD count = r.Word(ifdAbs, isBE);
-    size_t exifIfdOff = 0;
+    int exifIfdOff = 0;
     // scan IFD0 for ExifIFD pointer (tag 0x8769)
     for (WORD i = 0; i < count; i++) {
-        size_t entryOff = ifdAbs + 2 + (size_t)i * 12;
+        int entryOff = ifdAbs + 2 + i * 12;
         if (entryOff + 12 > n) {
             break;
         }
         WORD tag = r.Word(entryOff, isBE);
         if (tag == 0x8769) {
-            exifIfdOff = r.DWord(entryOff + 8, isBE);
+            exifIfdOff = (int)r.DWord(entryOff + 8, isBE);
             break;
         }
     }
@@ -627,13 +627,13 @@ static bool JpegSizeFromExif(ByteReader r, size_t tiffBase, Size& result) {
         return false;
     }
     // read EXIF sub-IFD
-    size_t exifAbs = tiffBase + exifIfdOff;
+    int exifAbs = tiffBase + exifIfdOff;
     if (exifAbs + 2 > n) {
         return false;
     }
     count = r.Word(exifAbs, isBE);
     for (WORD i = 0; i < count; i++) {
-        size_t entryOff = exifAbs + 2 + (size_t)i * 12;
+        int entryOff = exifAbs + 2 + i * 12;
         if (entryOff + 12 > n) {
             break;
         }
@@ -660,20 +660,20 @@ static bool JpegSizeFromExif(ByteReader r, size_t tiffBase, Size& result) {
 
 // Read EXIF orientation from IFD0 (tag 0x0112).
 // Returns 1-8 (EXIF orientation value) or 0 if not found.
-static int JpegExifOrientationFromTiff(ByteReader r, size_t tiffBase) {
-    size_t n = r.len;
+static int JpegExifOrientationFromTiff(ByteReader r, int tiffBase) {
+    int n = r.len;
     if (tiffBase + 8 > n) {
         return 0;
     }
     bool isBE = r.Byte(tiffBase) == 'M';
-    size_t ifdOff = r.DWord(tiffBase + 4, isBE);
-    size_t ifdAbs = tiffBase + ifdOff;
+    int ifdOff = (int)r.DWord(tiffBase + 4, isBE);
+    int ifdAbs = tiffBase + ifdOff;
     if (ifdAbs + 2 > n) {
         return 0;
     }
     WORD count = r.Word(ifdAbs, isBE);
     for (WORD i = 0; i < count; i++) {
-        size_t entryOff = ifdAbs + 2 + (size_t)i * 12;
+        int entryOff = ifdAbs + 2 + i * 12;
         if (entryOff + 12 > n) {
             break;
         }
@@ -687,8 +687,8 @@ static int JpegExifOrientationFromTiff(ByteReader r, size_t tiffBase) {
 
 // Read EXIF orientation from JPEG data. Returns 1-8 or 0 if not found.
 static int JpegExifOrientation(ByteReader r) {
-    size_t n = r.len;
-    size_t idx = 2;
+    int n = r.len;
+    int idx = 2;
     for (;;) {
         if (idx + 4 > n) {
             return 0;
@@ -700,7 +700,7 @@ static int JpegExifOrientation(ByteReader r) {
         if (marker == 0xDA) { // start of scan, stop
             return 0;
         }
-        size_t segLen = (size_t)r.WordBE(idx + 2);
+        int segLen = r.WordBE(idx + 2);
         if (marker == 0xE1 && idx + 10 <= n) {
             // APP1 - check for EXIF
             if (r.Byte(idx + 4) == 'E' && r.Byte(idx + 5) == 'x' && r.Byte(idx + 6) == 'i' && r.Byte(idx + 7) == 'f' &&
@@ -708,7 +708,7 @@ static int JpegExifOrientation(ByteReader r) {
                 return JpegExifOrientationFromTiff(r, idx + 10);
             }
         }
-        size_t nextIdx = idx + segLen + 2;
+        int nextIdx = idx + segLen + 2;
         if (nextIdx <= idx) {
             return 0; // overflow protection
         }
@@ -726,11 +726,11 @@ int WebpExifOrientation(Str d) {
         return 0;
     }
     ByteReader r(d);
-    size_t idx = 12;
+    int idx = 12;
     while (idx + 8 <= r.len) {
         if (r.Byte(idx) == 'E' && r.Byte(idx + 1) == 'X' && r.Byte(idx + 2) == 'I' && r.Byte(idx + 3) == 'F') {
-            size_t size = (size_t)r.DWordLE(idx + 4);
-            size_t payload = idx + 8;
+            int size = (int)r.DWordLE(idx + 4);
+            int payload = idx + 8;
             if (payload + size <= r.len && size >= 8) {
                 int orient = JpegExifOrientationFromTiff(r, payload);
                 if (orient != 0) {
@@ -738,8 +738,8 @@ int WebpExifOrientation(Str d) {
                 }
             }
         }
-        size_t size = (size_t)r.DWordLE(idx + 4);
-        size_t chunkSize = size + (size & 1);
+        int size = (int)r.DWordLE(idx + 4);
+        int chunkSize = size + (size & 1);
         if (chunkSize < size) {
             return 0;
         }
@@ -753,8 +753,8 @@ int WebpExifOrientation(Str d) {
 
 static bool JpegSizeFromData(ByteReader r, Size& result) {
     // find the last start of frame marker for non-differential Huffman/arithmetic coding
-    size_t n = r.len;
-    size_t idx = 2;
+    int n = r.len;
+    int idx = 2;
     for (;;) {
         if (idx + 9 >= n) {
             return false;
@@ -769,15 +769,15 @@ static bool JpegSizeFromData(ByteReader r, Size& result) {
             result.dy = r.WordBE(idx + 5);
             return true;
         }
-        size_t segLen = (size_t)r.WordBE(idx + 2);
-        size_t nextIdx = idx + segLen + 2;
+        int segLen = r.WordBE(idx + 2);
+        int nextIdx = idx + segLen + 2;
         if (nextIdx + 9 >= n) {
             // can't read past this segment; if it's APP1/EXIF, try parsing dimensions from EXIF
             if (b == 0xE1 && idx + 10 < n) {
                 // check for "Exif\0\0" signature
                 if (r.Byte(idx + 4) == 'E' && r.Byte(idx + 5) == 'x' && r.Byte(idx + 6) == 'i' &&
                     r.Byte(idx + 7) == 'f' && r.Byte(idx + 8) == 0 && r.Byte(idx + 9) == 0) {
-                    size_t tiffBase = idx + 10; // TIFF header starts after "Exif\0\0"
+                    int tiffBase = idx + 10; // TIFF header starts after "Exif\0\0"
                     if (JpegSizeFromExif(r, tiffBase, result)) {
                         return true;
                     }
@@ -797,7 +797,7 @@ static bool TiffSizeFromData(ByteReader r, Size& result) {
     bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
     ReportIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
     const WORD WIDTH = isJXR ? 0xBC80 : 0x0100, HEIGHT = isJXR ? 0xBC81 : 0x0101;
-    size_t idx = r.DWord(4, isBE);
+    int idx = (int)r.DWord(4, isBE);
     WORD count = idx <= r.len - 2 ? r.Word(idx, isBE) : 0;
     for (idx += 2; count > 0 && idx <= r.len - 12; count--, idx += 12) {
         WORD tag = r.Word(idx, isBE), type = r.Word(idx + 2, isBE);
@@ -821,7 +821,7 @@ static bool TiffSizeFromData(ByteReader r, Size& result) {
 }
 
 static bool PngSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 24 && str::StartsWith(Str((char*)(r.d + 12), (int)(r.len - 12)), "IHDR")) {
+    if (r.len >= 24 && str::StartsWith(Str((char*)(r.d + 12), r.len - 12), "IHDR")) {
         result.dx = r.DWordBE(16);
         result.dy = r.DWordBE(20);
         return true;
@@ -839,12 +839,12 @@ static bool TgaSizeFromData(ByteReader r, Size& result) {
 }
 
 static bool WebpSizeFromData(ByteReader r, Size& result) {
-    if (r.len >= 30 && str::StartsWith(Str((char*)(r.d + 12), (int)(r.len - 12)), "VP8 ")) {
+    if (r.len >= 30 && str::StartsWith(Str((char*)(r.d + 12), r.len - 12), "VP8 ")) {
         result.dx = r.WordLE(26) & 0x3fff;
         result.dy = r.WordLE(28) & 0x3fff;
         return true;
     } else {
-        Str bs((char*)(r.d), (int)(r.len));
+        Str bs((char*)(r.d), r.len);
         result = webp::SizeFromData(bs);
         return !result.IsEmpty();
     }
@@ -852,11 +852,11 @@ static bool WebpSizeFromData(ByteReader r, Size& result) {
 }
 
 static bool Jp2SizeFromData(ByteReader r, Size& result) {
-    size_t n = r.len;
+    int n = r.len;
     if (n < 32) {
         return false;
     }
-    size_t idx = 0;
+    int idx = 0;
     while (idx < n - 32) {
         u32 boxLen = r.DWordBE(idx);
         u32 boxType = r.DWordBE(idx + 4);
@@ -877,7 +877,7 @@ static bool Jp2SizeFromData(ByteReader r, Size& result) {
                 return true;
             }
             break;
-        } else if (boxLen != 0 && idx < UINT32_MAX - boxLen) {
+        } else if (boxLen != 0 && (u32)idx < UINT32_MAX - boxLen) {
             idx += boxLen;
         } else {
             break;
@@ -887,7 +887,7 @@ static bool Jp2SizeFromData(ByteReader r, Size& result) {
 }
 
 static bool AvifSizeFromData(ByteReader r, Size& result) {
-    Str bs((char*)(r.d), (int)(r.len));
+    Str bs((char*)(r.d), r.len);
     result = AvifSizeFromData(bs);
     return !result.IsEmpty();
 }

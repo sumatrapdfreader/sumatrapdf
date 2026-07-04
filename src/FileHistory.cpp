@@ -76,11 +76,11 @@ void FileHistory::Clear(bool keepFavorites) const {
     *states = keep;
 }
 
-FileState* FileHistory::Get(size_t index) const {
-    if (index < (size_t)len(*states)) {
-        return states->at(index);
+FileState* FileHistory::Get(int index) const {
+    if (index < 0 || index >= len(*states)) {
+        return nullptr;
     }
-    return nullptr;
+    return states->at(index);
 }
 
 FileState* FileHistory::FindByPath(Str filePath) const {
@@ -100,7 +100,7 @@ FileState* FileHistory::FindByPath(Str filePath) const {
 
 // returns an exact match by path or match by just file name
 // TODO: audit the uses of FindByName and maybe convert to FindByPath
-FileState* FileHistory::FindByName(Str filePath, size_t* idxOut) const {
+FileState* FileHistory::FindByName(Str filePath, int* idxOut) const {
     int idxExact = -1;
     int idxFileNameMatch = -1;
     TempStr fileName = path::GetBaseNameTemp(filePath);
@@ -121,7 +121,7 @@ FileState* FileHistory::FindByName(Str filePath, size_t* idxOut) const {
         return nullptr;
     }
     if (idxOut) {
-        *idxOut = (size_t)idFound;
+        *idxOut = idFound;
     }
     return states->at(idFound);
 }
@@ -203,7 +203,7 @@ static int cmpOpenCount(const void* a, const void* b) {
 // caller needs to delete the result (but not the contained states)
 void FileHistory::GetFrequencyOrder(Vec<FileState*>& list) const {
     ReportIf(len(list) > 0);
-    size_t i = 0;
+    int i = 0;
     for (FileState* ds : *states) {
         ds->index = i++;
         if (!ds->isMissing || ds->isPinned) {
@@ -231,7 +231,7 @@ static int cmpRecentlyOpened(const void* a, const void* b) {
 
 void FileHistory::GetRecentlyOpenedOrder(Vec<FileState*>& list) const {
     ReportIf(len(list) > 0);
-    size_t i = 0;
+    int i = 0;
     for (FileState* ds : *states) {
         ds->index = i++;
         if (!ds->isMissing || ds->isPinned) {
@@ -423,7 +423,7 @@ static void CheckFilesExistAsync(CheckFilesExistData* d) {
 
 static void GetFilePathsToCheck(StrVec& toCheck) {
     FileState* fs;
-    for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (!fs->isMissing) {
             toCheck.Append(fs->filePath);
         }
@@ -431,8 +431,8 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
     // add missing paths from the list of most frequently opened documents
     Vec<FileState*> frequencyList;
     gFileHistory.GetFrequencyOrder(frequencyList);
-    size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, len(frequencyList));
-    for (size_t i = 0; i < iMax; i++) {
+    int iMax = std::min(2 * kFileHistoryMaxFrequent, len(frequencyList));
+    for (int i = 0; i < iMax; i++) {
         fs = frequencyList.at(i);
         AppendIfNotExists(&toCheck, fs->filePath);
     }

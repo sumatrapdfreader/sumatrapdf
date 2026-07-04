@@ -208,22 +208,22 @@ int KindIndexOf(Kind* kinds, int nKinds, Kind kind) {
 // a file signaure is a sequence of bytes at a specific
 // offset in the file
 struct FileSig {
-    size_t offset;
+    int offset;
     Str sig;
-    size_t sigLen;
+    int sigLen;
     Kind kind;
 };
 
-#define MK_SIG(OFF, SIG, KIND) {OFF, SIG, sizeof(SIG) - 1, KIND},
+#define MK_SIG(OFF, SIG, KIND) {OFF, SIG, (int)(sizeof(SIG) - 1), KIND},
 static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 #undef MK_SIG
 
 // PDF files have %PDF-${ver} somewhere in the beginning of the file
 static bool IsPdfFileContent(Str d) {
-    if ((size_t)d.len < 8) {
+    if (d.len < 8) {
         return false;
     }
-    Str data = Str((char*)((u8*)d.s), (int)((size_t)d.len - 5));
+    Str data = Str((char*)((u8*)d.s), d.len - 5);
     while (data.len >= 5) {
         int idx = str::IndexOfChar(data, '%');
         if (idx < 0) {
@@ -239,14 +239,14 @@ static bool IsPdfFileContent(Str d) {
 
 static bool IsPSFileContent(Str d) {
     Str header = d;
-    size_t n = (size_t)d.len;
+    int n = d.len;
     if (n < 64) {
         return false;
     }
     // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
     if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
         DWORD psStart = ByteReader(d).DWordLE(4);
-        if (psStart >= n - 12) {
+        if ((int)psStart >= n - 12) {
             return true;
         }
         Str sub = Str(header.s + psStart, header.len - (int)psStart);
@@ -268,7 +268,7 @@ static bool IsPSFileContent(Str d) {
 // https://nokiatech.github.io/heif/technical.html
 // TODO: need to figure out heif vs. heic
 static Kind DetectHicAndAvif(Str d) {
-    if ((size_t)d.len < 0x18) {
+    if (d.len < 0x18) {
         return nullptr;
     }
     Str s = d;
@@ -309,16 +309,16 @@ static Kind DetectHicAndAvif(Str d) {
 Kind GuessFileTypeFromContent(Str d) {
     // TODO: sniff .fb2 content
     u8* data = (u8*)d.s;
-    size_t dataLen = (size_t)d.len;
+    int dataLen = d.len;
     int n = (int)dimof(gFileSigs);
 
     for (int i = 0; i < n; i++) {
         Str sig = gFileSigs[i].sig;
-        size_t off = gFileSigs[i].offset;
-        size_t sigLen = gFileSigs[i].sigLen;
-        size_t sigMaxLen = off + sigLen;
+        int off = gFileSigs[i].offset;
+        int sigLen = gFileSigs[i].sigLen;
+        int sigMaxLen = off + sigLen;
         u8* dat = data + off;
-        if ((dataLen > sigMaxLen) && memeq(dat, sig.s, (int)sigLen)) {
+        if ((dataLen > sigMaxLen) && memeq(dat, sig.s, sigLen)) {
             return gFileSigs[i].kind;
         }
     }
@@ -360,8 +360,8 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
 
     char* mt = mimeType->data;
     // trailing whitespace is allowed for the mimetype file
-    size_t n = mimeType->fileSizeUncompressed;
-    for (size_t i = n; i > 0; i--) {
+    int n = mimeType->fileSizeUncompressed;
+    for (int i = n; i > 0; i--) {
         if (!str::IsWs(mt[i - 1])) {
             n = i;
             break;
@@ -380,7 +380,7 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
         return false; 
     }
 #endif
-    Str mtStr = Str(mt, (int)n);
+    Str mtStr = Str(mt, n);
     if (str::Eq(mtStr, "application/epub+zip")) {
         return true;
     }
@@ -392,9 +392,8 @@ static bool IsEpubArchive(MultiFormatArchive* archive) {
 // check if a given file is a likely a .zip archive containing XPS
 // document
 static bool IsXpsArchive(MultiFormatArchive* archive) {
-    bool res = archive->GetFileId("_rels/.rels") != (size_t)-1 ||
-               archive->GetFileId("_rels/.rels/[0].piece") != (size_t)-1 ||
-               archive->GetFileId("_rels/.rels/[0].last.piece") != (size_t)-1;
+    bool res = archive->GetFileId("_rels/.rels") >= 0 || archive->GetFileId("_rels/.rels/[0].piece") >= 0 ||
+               archive->GetFileId("_rels/.rels/[0].last.piece") >= 0;
     return res;
 }
 
@@ -428,7 +427,7 @@ Kind GuessFileTypeFromFile(Str path) {
         return nullptr;
     }
 
-    Str d = Str((char*)(buf), (int)(n));
+    Str d = Str((char*)(buf), n);
     auto res = GuessFileTypeFromContent(d);
     if (res == kindFileZip) {
         ArchiveExtractProgressCb emptyCb;
@@ -497,7 +496,7 @@ EmbeddedPdfName ParseEmbeddedPdfName(Str path) {
         int hexLen = hex.len;
         if (hexLen > 0 && (hexLen % 2) == 0) {
             int nameLen = hexLen / 2;
-            char* name = AllocArrayTemp<char>((size_t)nameLen + 1);
+            char* name = AllocArrayTemp<char>(nameLen + 1);
             if (str::HexToMem(hex, Str(name, nameLen))) {
                 name[nameLen] = 0;
                 res.fileName = Str(name, nameLen);

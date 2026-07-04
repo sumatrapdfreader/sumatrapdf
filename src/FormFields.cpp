@@ -58,7 +58,7 @@ void CommitFormFieldEdit(bool save) {
                 save = false; // nothing selected
             } else {
                 int n = (int)SendMessageW(h, LB_GETTEXTLEN, sel, 0);
-                TempWStr buf = AllocArrayTemp<WCHAR>((size_t)n + 1);
+                TempWStr buf = AllocArrayTemp<WCHAR>(n + 1);
                 SendMessageW(h, LB_GETTEXT, sel, (LPARAM)buf.s);
                 text = ToUtf8Temp(buf);
             }

@@ -423,7 +423,7 @@ struct FileState {
     // thumbnails are saved as PNG files in sumatrapdfcache directory
     RenderedBitmap* thumbnail;
     // temporary value needed for FileHistory::cmpOpenCount
-    size_t index;
+    int index;
     //
     HIMAGELIST himl;
     //

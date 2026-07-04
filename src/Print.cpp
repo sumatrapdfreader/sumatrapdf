@@ -202,7 +202,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     } else {
         ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
         DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
-        ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (size_t)binNames));
+        ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * (int)binNames));
         DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues.Get(), nullptr);
         for (DWORD j = 0; j < bins; j++) {
             TempStr s = ToUtf8Temp(WStr(binNameValues.Get() + 24 * (size_t)j));
@@ -217,7 +217,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         ScopedMem<WORD> paperValues(AllocArray<WORD>(papers));
         DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues.Get(), nullptr);
         // paper names are 64 WCHARs each
-        ScopedMem<WCHAR> paperNameValues(AllocArray<WCHAR>(64 * (size_t)paperNames));
+        ScopedMem<WCHAR> paperNameValues(AllocArray<WCHAR>(64 * (int)paperNames));
         DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues.Get(), nullptr);
         // paper sizes in tenths of a millimeter
         ScopedMem<POINT> paperSizes(AllocArray<POINT>(papers));
@@ -267,7 +267,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     // resolutions
     DWORD nRes = DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, nullptr, nullptr);
     if (nRes > 0 && nRes != (DWORD)-1) {
-        ScopedMem<LONG> resPairs(AllocArray<LONG>(2 * (size_t)nRes));
+        ScopedMem<LONG> resPairs(AllocArray<LONG>(2 * (int)nRes));
         DeviceCapabilitiesW(nameW, portW, DC_ENUMRESOLUTIONS, (WCHAR*)resPairs.Get(), nullptr);
         out.Append("  resolutions:");
         for (DWORD j = 0; j < nRes; j++) {
@@ -294,7 +294,7 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     DWORD nMedia = DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, nullptr, nullptr);
     if (nMedia > 0 && nMedia != (DWORD)-1) {
         // media type names are 64 WCHARs each
-        ScopedMem<WCHAR> mediaNames(AllocArray<WCHAR>(64 * (size_t)nMedia));
+        ScopedMem<WCHAR> mediaNames(AllocArray<WCHAR>(64 * (int)nMedia));
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPENAMES, mediaNames.Get(), nullptr);
         ScopedMem<DWORD> mediaValues(AllocArray<DWORD>(nMedia));
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues.Get(), nullptr);
@@ -475,9 +475,9 @@ Printer* NewPrinter(Str printerName) {
             return nullptr;
         }
         printer->nPaperSizes = (int)n;
-        size_t paperNameSize = 64;
-        printer->papers = AllocArray<WORD>(n);
-        WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (size_t)n + 1);
+        int paperNameSize = 64;
+        printer->papers = AllocArray<WORD>((int)n);
+        WCHAR* paperNamesSeq = AllocArray<WCHAR>(paperNameSize * (int)n + 1);
         printer->paperSizes = AllocArray<POINT>(n);
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);

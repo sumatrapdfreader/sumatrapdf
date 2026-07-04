@@ -307,8 +307,8 @@ static int FindStringInArray(SeqStrings items, Str toFind, int valIfNotFound = -
     return idx;
 }
 
-static bool IsAnnotationTypeInArray(AnnotationType* arr, size_t arrSize, AnnotationType toFind) {
-    for (size_t i = 0; i < arrSize; i++) {
+static bool IsAnnotationTypeInArray(AnnotationType* arr, int arrSize, AnnotationType toFind) {
+    for (int i = 0; i < arrSize; i++) {
         if (toFind == arr[i]) {
             return true;
         }

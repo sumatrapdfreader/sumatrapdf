@@ -286,7 +286,7 @@ TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
                 if (ui.length == 0 || ui.length > 128 * 1024 * 1024) {
                     continue;
                 }
-                u8* buf = AllocArray<u8>((size_t)ui.length + 1);
+                u8* buf = AllocArray<u8>((int)ui.length + 1);
                 if (!buf) {
                     retrieveFail++;
                     continue;

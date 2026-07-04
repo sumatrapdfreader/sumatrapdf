@@ -69,11 +69,11 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
             // Strip the page watermark on the raw glyphs first (its true height
             // is only visible pre-normalization), then normalize the survivors
             // so the detectors below see clean, baseline-flattened text.
-            cleanText = AllocArray<WCHAR>((size_t)textLen);
-            cleanCoords = AllocArray<Rect>((size_t)textLen);
+            cleanText = AllocArray<WCHAR>(textLen);
+            cleanCoords = AllocArray<Rect>(textLen);
             int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
             text = WStr(cleanText, cleanLen);
-            normCoords = AllocArray<Rect>((size_t)cleanLen);
+            normCoords = AllocArray<Rect>(cleanLen);
             NormalizeGlyphLines(cleanCoords, normCoords, cleanLen);
         }
         region = DetectEquationBox(text, normCoords, mediabox, destX, destY);

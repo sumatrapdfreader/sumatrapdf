@@ -18,7 +18,7 @@ HRESULT TeXFilter::OnInit() {
         }
 
         m_pData = strconv::StrCPToWStr(Str((char*)(u8*)data.s, (int)(size_t)data.len), CP_ACP).s;
-        m_pBuffer = AllocArray<WCHAR>((size_t)data.len + 1);
+        m_pBuffer = AllocArray<WCHAR>(data.len + 1);
         str::Free(data);
 
         if (!m_pData || !m_pBuffer) {

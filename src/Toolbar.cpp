@@ -1237,8 +1237,8 @@ static HBITMAP BuildIconsBitmap(int dx, int dy, Str* customSvgs, int customCount
         int imgSize = (int)dstStride * h;
         int bitsCount = n * 8;
 
-        size_t bmiSize = sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD);
-        auto bmi = (BITMAPINFO*)AllocArrayTemp<u8>((int)bmiSize);
+        int bmiSize = (int)(sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD));
+        auto bmi = (BITMAPINFO*)AllocArrayTemp<u8>(bmiSize);
         BITMAPINFOHEADER* bmih = &bmi->bmiHeader;
         bmih->biSize = sizeof(*bmih);
         bmih->biWidth = w;

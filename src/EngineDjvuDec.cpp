@@ -370,7 +370,7 @@ static u8* RotateGray8(const u8* src, int dx, int dy, int rotation, int& dxOut, 
     if (rotation == 0) {
         dxOut = dx;
         dyOut = dy;
-        u8* out = AllocArray<u8>((size_t)dx * dy);
+        u8* out = AllocArray<u8>(dx * dy);
         if (out) {
             memcpy(out, src, (size_t)dx * dy);
         }
@@ -378,7 +378,7 @@ static u8* RotateGray8(const u8* src, int dx, int dy, int rotation, int& dxOut, 
     }
     int ndx = (rotation == 180) ? dx : dy;
     int ndy = (rotation == 180) ? dy : dx;
-    u8* out = AllocArray<u8>((size_t)ndx * ndy);
+    u8* out = AllocArray<u8>(ndx * ndy);
     if (!out) {
         return nullptr;
     }
@@ -410,7 +410,7 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
     if (rotation == 0) {
         dxOut = dx;
         dyOut = dy;
-        u8* out = AllocArray<u8>((size_t)dx * dy * 3);
+        u8* out = AllocArray<u8>(dx * dy * 3);
         if (out) {
             memcpy(out, src, (size_t)dx * dy * 3);
         }
@@ -418,7 +418,7 @@ static u8* RotateBgr(const u8* src, int dx, int dy, int rotation, int& dxOut, in
     }
     int ndx = (rotation == 180) ? dx : dy;
     int ndy = (rotation == 180) ? dy : dx;
-    u8* out = AllocArray<u8>((size_t)ndx * ndy * 3);
+    u8* out = AllocArray<u8>(ndx * ndy * 3);
     if (!out) {
         return nullptr;
     }
@@ -619,7 +619,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     bool isBitonal = pi->pageType == DJVU_PAGE_BITONAL || ri.format == DJVU_FORMAT_GRAY8;
     int comp = (ri.format == DJVU_FORMAT_GRAY8) ? 1 : 3;
     int sdx = ri.width, sdy = ri.height;
-    u8* pixels = AllocArray<u8>((size_t)sdx * sdy * comp);
+    u8* pixels = AllocArray<u8>(sdx * sdy * comp);
     if (!pixels) {
         return nullptr;
     }

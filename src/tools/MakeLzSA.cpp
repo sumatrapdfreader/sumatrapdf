@@ -80,7 +80,7 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
     u32 headerSize = 25 + (u32)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
 
-    constexpr size_t kBufSize = 24;
+    constexpr int kBufSize = 24;
 
     if (fi && FileTimeEq(ft, fi->ftModified)) {
     ReusePrevious:
@@ -147,7 +147,7 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
     str::Builder data;
     str::Builder content;
 
-    constexpr size_t kBufSize = 8;
+    constexpr int kBufSize = 8;
     ByteWriterLE lzsaHeader(kBufSize);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
     lzsaHeader.Write32((u32)(files.Size() - skipFiles));

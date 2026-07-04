@@ -14,7 +14,7 @@ namespace webp {
 
 // checks whether this could be data for a WebP image
 bool HasSignature(const Str& d) {
-    if ((size_t)d.len <= 12) {
+    if (d.len <= 12) {
         return false;
     }
     Str data = d;

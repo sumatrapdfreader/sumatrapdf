@@ -121,7 +121,7 @@ HTREEITEM FavTreeModel::GetHandle(TreeItem ti) {
 
 static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
     FileState* ds;
-    for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
         for (int j = 0; j < len(*ds->favorites); j++) {
             if (menuId == ds->favorites->at(j)->menuId) {
                 if (dsOut) {
@@ -136,7 +136,7 @@ static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
 
 static FileState* GetByFavorite(Favorite* fn) {
     FileState* ds;
-    for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
         if (ds->favorites->Contains(fn)) {
             return ds;
         }
@@ -146,14 +146,14 @@ static FileState* GetByFavorite(Favorite* fn) {
 
 static void ResetFavMenuIds() {
     FileState* ds;
-    for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
         for (int j = 0; j < len(*ds->favorites); j++) {
             ds->favorites->at(j)->menuId = 0;
         }
     }
 }
 
-static size_t idxCache = (size_t)-1;
+static int idxCache = -1;
 
 static FileState* GetFavByFilePath(Str filePath) {
     // it's likely that we'll ask about the info for the same
@@ -300,7 +300,7 @@ static void RemoveAllFavForFile(Str filePath) {
 
 bool HasFavorites() {
     FileState* ds;
-    for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
         if (len(*ds->favorites) > 0) {
             return true;
         }
@@ -375,7 +375,7 @@ static bool SortByBaseFileName(Str s1, Str s2) {
 
 static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore = nullptr) {
     FileState* fs;
-    for (size_t i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
+    for (int i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (len(*fs->favorites) > 0 && fs != toIgnore) {
             filePathsSortedOut.Append(fs->filePath);
         }

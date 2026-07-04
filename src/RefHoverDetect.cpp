@@ -173,7 +173,7 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
     int* lineBaseline = AllocArray<int>(kMaxLines);
     int* lineTop = AllocArray<int>(kMaxLines);
     int* lineBottom = AllocArray<int>(kMaxLines);
-    int* lineId = AllocArray<int>((size_t)glyphCount);
+    int* lineId = AllocArray<int>(glyphCount);
     int nLines = 0;
     for (int i = 0; i < glyphCount; i++) {
         int bl = coords[i].y + coords[i].dy;
@@ -249,7 +249,7 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     }
     int modeDy = 0;
     if (maxDy > 0) {
-        int* hist = AllocArray<int>((size_t)maxDy + 1);
+        int* hist = AllocArray<int>(maxDy + 1);
         for (int i = 0; i < n; i++) {
             WCHAR c = text.s[i];
             if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
@@ -776,7 +776,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         int xHi = (int)mediabox.dx;
         if (xHi > xLo + 2) {
             int n = xHi - xLo;
-            char* occ = AllocArray<char>((size_t)n);
+            char* occ = AllocArray<char>(n);
             for (int i = 0; i < text.len; i++) {
                 WCHAR c = text.s[i];
                 if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
@@ -1175,7 +1175,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         int xHi = (int)mediabox.dx;
         if (xHi > xLo + 2) {
             int n = xHi - xLo;
-            char* occ = AllocArray<char>((size_t)n);
+            char* occ = AllocArray<char>(n);
             for (int i = 0; i < text.len; i++) {
                 WCHAR c = text.s[i];
                 if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {

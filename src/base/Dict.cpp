@@ -93,7 +93,7 @@ static HashTable* NewHashTable(size_t size, Arena* allocator) {
     size = RoundToPowerOf2((int)size);
     // entries are not allocated with allocator since those are large blocks
     // and we don't want to waste their memory after
-    h->entries = AllocArray<HashTableEntry*>((int)size);
+    h->entries = AllocArray<HashTableEntry*>(size);
     h->nEntries = size;
     return h;
 }
@@ -106,7 +106,7 @@ static void DeleteHashTable(HashTable* h) {
 static void HashTableResize(HashTable* h, HasherComparator* hc) {
     size_t newSize = RoundToPowerOf2((int)(h->nEntries + 1));
     ReportIf(newSize <= h->nEntries);
-    HashTableEntry** newEntries = AllocArray<HashTableEntry*>((int)newSize);
+    HashTableEntry** newEntries = AllocArray<HashTableEntry*>(newSize);
     HashTableEntry *e, *next;
     size_t hash, pos;
     for (size_t i = 0; i < h->nEntries; i++) {

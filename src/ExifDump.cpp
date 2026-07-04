@@ -368,7 +368,7 @@ struct TiffParser {
     ByteReader r;
     explicit TiffParser(ByteReader reader) : r(reader) {}
     bool isBE = false;
-    size_t tiffBase = 0;
+    int tiffBase = 0;
     StrVec lines;
     bool hasJpegThumbnail = false;
     int makerNoteEndian = 0; // 0=use main, 'I' or 'M' for makernote
@@ -416,15 +416,15 @@ struct TiffParser {
         return {};
     }
 
-    u16 ReadWord(size_t off) const { return r.Word(off, isBE); }
+    u16 ReadWord(int off) const { return r.Word(off, isBE); }
 
-    u32 ReadDWord(size_t off) const { return r.DWord(off, isBE); }
+    u32 ReadDWord(int off) const { return r.DWord(off, isBE); }
 
-    i32 ReadSWord(size_t off) const { return (i32)ReadWord(off); }
+    i32 ReadSWord(int off) const { return (i32)ReadWord(off); }
 
-    i32 ReadSDWord(size_t off) const { return (i32)ReadDWord(off); }
+    i32 ReadSDWord(int off) const { return (i32)ReadDWord(off); }
 
-    bool ReadRational(size_t off, u32& num, u32& den) const {
+    bool ReadRational(int off, u32& num, u32& den) const {
         if (off + 8 > r.len) {
             return false;
         }
@@ -433,7 +433,7 @@ struct TiffParser {
         return true;
     }
 
-    bool ReadSRational(size_t off, i32& num, i32& den) const {
+    bool ReadSRational(int off, i32& num, i32& den) const {
         if (off + 8 > r.len) {
             return false;
         }
@@ -442,8 +442,8 @@ struct TiffParser {
         return true;
     }
 
-    size_t ValueOffset(u16 type, u32 count, u32 inlineVal, size_t entryOff) const {
-        size_t elemSize = 1;
+    int ValueOffset(u16 type, u32 count, u32 inlineVal, int entryOff) const {
+        int elemSize = 1;
         switch (type) {
             case TiffType::Byte:
             case TiffType::Ascii:
@@ -467,12 +467,12 @@ struct TiffParser {
         if (type == TiffType::Rational || type == TiffType::SRational) {
             elemSize = 8;
         }
-        size_t total = (size_t)count * elemSize;
+        int total = (int)count * elemSize;
         // TIFF stores values that fit in 4 bytes inside the directory entry itself.
         if (total <= 4) {
             return entryOff + 8;
         }
-        return (size_t)inlineVal + tiffBase;
+        return (int)inlineVal + tiffBase;
     }
 
     void AppendLine(IfdGroup g, u16 tag, u16 type, TempStr value) {
@@ -487,11 +487,11 @@ struct TiffParser {
         lines.Append(str::Dup(line));
     }
 
-    TempStr FormatAscii(size_t off, u32 count) const {
+    TempStr FormatAscii(int off, u32 count) const {
         if (off >= r.len) {
             return str::DupTemp("");
         }
-        size_t n = count;
+        int n = (int)count;
         if (off + n > r.len) {
             n = r.len - off;
         }
@@ -499,7 +499,7 @@ struct TiffParser {
         while (n > 0 && r.Byte(off + n - 1) == 0) {
             n--;
         }
-        return str::DupTemp(Str((char*)(r.d + off), (int)(n)));
+        return str::DupTemp(Str((char*)(r.d + off), n));
     }
 
     TempStr FormatRationalPair(u32 num, u32 den, bool asFraction) const {
@@ -518,10 +518,10 @@ struct TiffParser {
         return fmt("%u/%u", num, den);
     }
 
-    TempStr FormatComponentsConfig(size_t off, u32 count) const {
+    TempStr FormatComponentsConfig(int off, u32 count) const {
         static const Str compNames[] = {StrL(""), StrL("Y"), StrL("Cb"), StrL("Cr"), StrL("R"), StrL("G"), StrL("B")};
         str::Builder s;
-        for (u32 i = 0; i < count && off + i < r.len; i++) {
+        for (u32 i = 0; i < count && off + (int)i < r.len; i++) {
             u8 c = r.Byte(off + i);
             if (c == 0) {
                 break;
@@ -539,11 +539,11 @@ struct TiffParser {
         return ToStrTemp(s);
     }
 
-    TempStr FormatUndefinedBytesTemp(size_t off, u32 count, bool asList) const {
+    TempStr FormatUndefinedBytesTemp(int off, u32 count, bool asList) const {
         if (count == 0) {
             return str::DupTemp("");
         }
-        if (off + count > r.len) {
+        if (off + (int)count > r.len) {
             count = (u32)(r.len - off);
         }
         // short ASCII in undefined
@@ -580,7 +580,7 @@ struct TiffParser {
         return ToStrTemp(s);
     }
 
-    TempStr FormatValuesTemp(IfdGroup g, u16 tag, u16 type, u32 count, size_t off) const {
+    TempStr FormatValuesTemp(IfdGroup g, u16 tag, u16 type, u32 count, int off) const {
         if (count == 0) {
             return str::DupTemp("");
         }
@@ -662,7 +662,7 @@ struct TiffParser {
             str::Builder s;
             bool sr = type == TiffType::SRational;
             for (u32 i = 0; i < count; i++) {
-                size_t eoff = off + (size_t)i * 8;
+                int eoff = off + (int)i * 8;
                 u32 num, den;
                 i32 snum, sden;
                 if (sr) {
@@ -732,7 +732,7 @@ struct TiffParser {
         if (type == TiffType::Short || type == TiffType::SShort) {
             str::Builder s;
             for (u32 i = 0; i < count; i++) {
-                size_t eoff = off + (size_t)i * 2;
+                int eoff = off + (int)i * 2;
                 if (i > 0) {
                     s.Append(", ");
                 }
@@ -758,7 +758,7 @@ struct TiffParser {
         if (type == TiffType::Long || type == TiffType::SLong) {
             str::Builder s;
             for (u32 i = 0; i < count; i++) {
-                size_t eoff = off + (size_t)i * 4;
+                int eoff = off + (int)i * 4;
                 if (i > 0) {
                     s.Append(", ");
                 }
@@ -787,8 +787,8 @@ struct TiffParser {
         return str::DupTemp("");
     }
 
-    void ParseIfd(IfdGroup group, size_t ifdRel, bool mnEndian = false) {
-        size_t ifdAbs = tiffBase + ifdRel;
+    void ParseIfd(IfdGroup group, int ifdRel, bool mnEndian = false) {
+        int ifdAbs = tiffBase + ifdRel;
         if (ifdAbs + 2 > r.len) {
             return;
         }
@@ -797,9 +797,9 @@ struct TiffParser {
             isBE = makerNoteEndian == 'M';
         }
         u16 nTags = ReadWord(ifdAbs);
-        size_t nextIfdOff = 0;
+        int nextIfdOff = 0;
         for (u16 i = 0; i < nTags; i++) {
-            size_t ent = ifdAbs + 2 + (size_t)i * 12;
+            int ent = ifdAbs + 2 + i * 12;
             if (ent + 12 > r.len) {
                 break;
             }
@@ -818,46 +818,46 @@ struct TiffParser {
             // sub-IFD pointers
             if (group == IfdGroup::Image || group == IfdGroup::Exif) {
                 if (tag == 0x8769 && type == TiffType::Long && count >= 1) {
-                    size_t subOff = ValueOffset(type, count, inlineVal, ent);
+                    int subOff = ValueOffset(type, count, inlineVal, ent);
                     u32 rel = ReadDWord(subOff);
-                    ParseIfd(IfdGroup::Exif, rel);
+                    ParseIfd(IfdGroup::Exif, (int)rel);
                     continue;
                 }
                 if (tag == 0x8825 && type == TiffType::Long && count >= 1) {
-                    size_t subOff = ValueOffset(type, count, inlineVal, ent);
+                    int subOff = ValueOffset(type, count, inlineVal, ent);
                     u32 rel = ReadDWord(subOff);
-                    ParseIfd(IfdGroup::Gps, rel);
+                    ParseIfd(IfdGroup::Gps, (int)rel);
                     continue;
                 }
                 if (tag == 0xA005 && type == TiffType::Long && count >= 1) {
-                    size_t subOff = ValueOffset(type, count, inlineVal, ent);
+                    int subOff = ValueOffset(type, count, inlineVal, ent);
                     u32 rel = ReadDWord(subOff);
-                    ParseIfd(IfdGroup::Interop, rel);
+                    ParseIfd(IfdGroup::Interop, (int)rel);
                     continue;
                 }
             }
 
             if (group == IfdGroup::Exif && tag == 0x927C) {
-                size_t dataOff = ValueOffset(type, count, inlineVal, ent);
+                int dataOff = ValueOffset(type, count, inlineVal, ent);
                 ParseMakerNote(dataOff, count);
                 continue;
             }
 
             if (tag == 0x8769 || tag == 0x8825 || tag == 0xA005) {
                 // pointer tags - still emit
-                size_t dataOff = ValueOffset(type, count, inlineVal, ent);
+                int dataOff = ValueOffset(type, count, inlineVal, ent);
                 TempStr val = FormatValuesTemp(group, tag, type, count, dataOff);
                 AppendLine(group, tag, type, val);
                 continue;
             }
 
-            size_t dataOff = ValueOffset(type, count, inlineVal, ent);
+            int dataOff = ValueOffset(type, count, inlineVal, ent);
             TempStr val = FormatValuesTemp(group, tag, type, count, dataOff);
             AppendLine(group, tag, type, val);
         }
 
-        if (ifdAbs + 2 + (size_t)nTags * 12 + 4 <= r.len) {
-            nextIfdOff = ReadDWord(ifdAbs + 2 + (size_t)nTags * 12);
+        if (ifdAbs + 2 + nTags * 12 + 4 <= r.len) {
+            nextIfdOff = (int)ReadDWord(ifdAbs + 2 + nTags * 12);
         }
         isBE = savedBE;
 
@@ -866,7 +866,7 @@ struct TiffParser {
         }
     }
 
-    void ParseMakerNote(size_t dataOff, u32 count) {
+    void ParseMakerNote(int dataOff, u32 count) {
         if (dataOff >= r.len || count < 6) {
             return;
         }
@@ -875,7 +875,7 @@ struct TiffParser {
         AppendLine(IfdGroup::Exif, 0x927C, TiffType::Undefined, val);
 
         // Canon/Olympus TIFF-style makernote at offset 8
-        size_t mnBase = dataOff;
+        int mnBase = dataOff;
         int mnOff = 8;
         if (count > 10 && (r.Byte(dataOff) == 'I' || r.Byte(dataOff) == 'M')) {
             mnOff = 0;
@@ -896,16 +896,16 @@ struct TiffParser {
         }
         bool savedBE = isBE;
         isBE = mnBE;
-        size_t ifdRel = 0;
+        int ifdRel = 0;
         if (mnOff == 0) {
-            ifdRel = ReadDWord(dataOff + 4);
+            ifdRel = (int)ReadDWord(dataOff + 4);
             mnBase = dataOff;
         } else {
-            ifdRel = ReadDWord(dataOff + mnOff);
+            ifdRel = (int)ReadDWord(dataOff + mnOff);
             mnBase = dataOff;
         }
         // temporary tiff base shift for makernote IFD
-        size_t savedBase = tiffBase;
+        int savedBase = tiffBase;
         tiffBase = mnBase;
         ParseIfd(IfdGroup::MakerNote, ifdRel, true);
         tiffBase = savedBase;
@@ -931,7 +931,7 @@ struct TiffParser {
             return false;
         }
         u32 ifd0 = ReadDWord(tiffBase + 4);
-        ParseIfd(IfdGroup::Image, ifd0);
+        ParseIfd(IfdGroup::Image, (int)ifd0);
         return len(lines) > 0;
     }
 };
@@ -941,7 +941,7 @@ static bool ExtractJpegExif(Str d, Str& out) {
     if (r.len < 4 || r.Byte(0) != 0xFF || r.Byte(1) != 0xD8) {
         return false;
     }
-    size_t idx = 2;
+    int idx = 2;
     for (;;) {
         if (idx + 4 > r.len) {
             return false;
@@ -953,19 +953,19 @@ static bool ExtractJpegExif(Str d, Str& out) {
         if (marker == 0xDA) {
             return false;
         }
-        size_t segLen = (size_t)r.WordBE(idx + 2);
+        int segLen = r.WordBE(idx + 2);
         if (marker == 0xE1 && idx + 10 <= r.len) {
             if (memcmp(r.d + idx + 4, "Exif\0\0", 6) == 0) {
-                size_t payload = idx + 4;
-                size_t total = segLen + 2;
+                int payload = idx + 4;
+                int total = segLen + 2;
                 if (payload + total - 4 > r.len) {
                     return false;
                 }
-                out = Str((char*)(r.d + payload), (int)(total - 4));
+                out = Str((char*)(r.d + payload), total - 4);
                 return true;
             }
         }
-        size_t next = idx + segLen + 2;
+        int next = idx + segLen + 2;
         if (next <= idx) {
             return false;
         }
@@ -978,18 +978,18 @@ static bool ExtractWebpExif(Str d, Str& out) {
         return false;
     }
     ByteReader r(d);
-    size_t idx = 12;
+    int idx = 12;
     while (idx + 8 <= r.len) {
         if (r.Byte(idx) == 'E' && r.Byte(idx + 1) == 'X' && r.Byte(idx + 2) == 'I' && r.Byte(idx + 3) == 'F') {
-            size_t size = (size_t)r.DWordLE(idx + 4);
-            size_t payload = idx + 8;
+            int size = (int)r.DWordLE(idx + 4);
+            int payload = idx + 8;
             if (payload + size <= r.len && size >= 8) {
-                out = Str((char*)(r.d + payload), (int)(size));
+                out = Str((char*)(r.d + payload), size);
                 return true;
             }
         }
-        size_t size = (size_t)r.DWordLE(idx + 4);
-        size_t chunkSize = size + (size & 1);
+        int size = (int)r.DWordLE(idx + 4);
+        int chunkSize = size + (size & 1);
         if (chunkSize < size) {
             return false;
         }
@@ -1001,7 +1001,7 @@ static bool ExtractWebpExif(Str d, Str& out) {
     return false;
 }
 
-static bool LooksLikeTiffExif(const u8* p, size_t n) {
+static bool LooksLikeTiffExif(const u8* p, int n) {
     if (n < 12) {
         return false;
     }
@@ -1012,26 +1012,26 @@ static bool LooksLikeTiffExif(const u8* p, size_t n) {
     }
     u32 ifdOff = le ? (u32)(p[4] | (p[5] << 8) | (p[6] << 16) | (p[7] << 24))
                     : (u32)((p[4] << 24) | (p[5] << 16) | (p[6] << 8) | p[7]);
-    if (ifdOff < 8 || ifdOff + 2 >= n) {
+    if (ifdOff < 8 || (int)ifdOff + 2 >= n) {
         return false;
     }
     u16 nTags = le ? (u16)(p[ifdOff] | (p[ifdOff + 1] << 8)) : (u16)((p[ifdOff] << 8) | p[ifdOff + 1]);
     return nTags > 0 && nTags < 512;
 }
 
-static bool CopyTiffBlob(const u8* data, size_t n, size_t tiffOff, Str& out, u8** ownedOut) {
-    size_t blobLen = n - tiffOff;
-    constexpr size_t kMaxExifBytes = 256 * 1024;
+static bool CopyTiffBlob(const u8* data, int n, int tiffOff, Str& out, u8** ownedOut) {
+    int blobLen = n - tiffOff;
+    constexpr int kMaxExifBytes = 256 * 1024;
     if (blobLen > kMaxExifBytes) {
         blobLen = kMaxExifBytes;
     }
-    u8* copy = (u8*)malloc(blobLen);
+    u8* copy = (u8*)malloc((size_t)blobLen);
     if (!copy) {
         return false;
     }
-    memcpy(copy, data + tiffOff, blobLen);
+    memcpy(copy, data + tiffOff, (size_t)blobLen);
     *ownedOut = copy;
-    out = Str((char*)(copy), (int)(blobLen));
+    out = Str((char*)(copy), blobLen);
     return true;
 }
 
@@ -1039,15 +1039,15 @@ static bool CopyTiffBlob(const u8* data, size_t n, size_t tiffOff, Str& out, u8*
 static bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
     *ownedOut = nullptr;
     const u8* data = (u8*)d.s;
-    size_t n = (size_t)d.len;
+    int n = d.len;
     if (!data || n < 16) {
         return false;
     }
-    for (size_t i = 0; i + 12 < n; i++) {
+    for (int i = 0; i + 12 < n; i++) {
         if (data[i] != 'E' || data[i + 1] != 'x' || data[i + 2] != 'i' || data[i + 3] != 'f') {
             continue;
         }
-        size_t tiffOff = i + 4;
+        int tiffOff = i + 4;
         if (tiffOff + 6 >= n || data[tiffOff] != 0 || data[tiffOff + 1] != 0) {
             continue;
         }
@@ -1055,27 +1055,27 @@ static bool ExtractHeifExifFromBytes(Str d, Str& out, u8** ownedOut) {
         if (!LooksLikeTiffExif(data + tiffOff, n - tiffOff)) {
             continue;
         }
-        size_t blobLen = n - tiffOff;
+        int blobLen = n - tiffOff;
         if (i >= 4) {
             u32 boxSize =
                 ((u32)data[i - 4] << 24) | ((u32)data[i - 3] << 16) | ((u32)data[i - 2] << 8) | (u32)data[i - 1];
-            if (boxSize >= 8 && (size_t)(i - 4) + boxSize <= n) {
-                size_t boxEnd = (i - 4) + boxSize;
+            if (boxSize >= 8 && (i - 4) + (int)boxSize <= n) {
+                int boxEnd = (i - 4) + (int)boxSize;
                 if (boxEnd > tiffOff) {
                     blobLen = boxEnd - tiffOff;
                 }
             }
         }
-        u8* copy = (u8*)malloc(blobLen);
+        u8* copy = (u8*)malloc((size_t)blobLen);
         if (!copy) {
             return false;
         }
-        memcpy(copy, data + tiffOff, blobLen);
+        memcpy(copy, data + tiffOff, (size_t)blobLen);
         *ownedOut = copy;
-        out = Str((char*)(copy), (int)(blobLen));
+        out = Str((char*)(copy), blobLen);
         return true;
     }
-    for (size_t i = 0; i + 8 < n; i++) {
+    for (int i = 0; i + 8 < n; i++) {
         if (!LooksLikeTiffExif(data + i, n - i)) {
             continue;
         }
@@ -1103,7 +1103,7 @@ static bool ExtractExifBlob(Str d, Str& out, u8** ownedOut) {
         }
     }
     // TIFF magic anywhere
-    if ((size_t)d.len >= 4) {
+    if (d.len >= 4) {
         const u8* p = (u8*)d.s;
         if ((p[0] == 'I' && p[1] == 'I') || (p[0] == 'M' && p[1] == 'M')) {
             out = d;
@@ -1148,7 +1148,7 @@ static void DumpFromGdiplus(Str d, StrVec& lines) {
         PropertyItem* item = (PropertyItem*)buf;
         TempStr val;
         if (item->type == PropertyTagTypeASCII) {
-            val = str::DupTemp(Str((char*)(item->value), (int)(item->length)));
+            val = str::DupTemp(Str((char*)(item->value), (int)item->length));
         } else if (item->type == PropertyTagTypeShort && item->length >= 2) {
             val = fmt("%u", *(u16*)item->value);
         } else if (item->type == PropertyTagTypeLong && item->length >= 4) {
@@ -1171,12 +1171,12 @@ static void DumpFromGdiplus(Str d, StrVec& lines) {
 } // namespace
 
 // GUI-subsystem exes lose CRT stdout when spawned with a pipe (issue #5677).
-static void CliWrite(Str s, size_t n = 0) {
+static void CliWrite(Str s, int n = 0) {
     if (!s) {
         return;
     }
     if (n == 0) {
-        n = (size_t)s.len;
+        n = s.len;
     }
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     if (h && h != INVALID_HANDLE_VALUE) {
@@ -1184,7 +1184,7 @@ static void CliWrite(Str s, size_t n = 0) {
         WriteFile(h, s.s, (DWORD)n, &written, nullptr);
         return;
     }
-    fwrite(s.s, 1, n, stdout);
+    fwrite(s.s, 1, (size_t)n, stdout);
 }
 
 static void CliPrint(Str s) {

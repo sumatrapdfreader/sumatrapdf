@@ -80,7 +80,7 @@ WStr StrCPToWStr(Str src, uint codePage) {
     if (0 == requiredBufSize) {
         return {};
     }
-    WCHAR* res = AllocArray<WCHAR>((size_t)requiredBufSize + 1);
+    WCHAR* res = AllocArray<WCHAR>(requiredBufSize + 1);
     if (!res) {
         return {};
     }
@@ -98,7 +98,7 @@ TempWStr StrCPToWStrTemp(Str src, uint codePage) {
     if (0 == requiredBufSize) {
         return {};
     }
-    WCHAR* res = AllocArrayTemp<WCHAR>((size_t)requiredBufSize + 1);
+    WCHAR* res = AllocArrayTemp<WCHAR>(requiredBufSize + 1);
     if (!res) {
         return {};
     }

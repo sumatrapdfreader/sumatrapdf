@@ -123,7 +123,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
         compressedSize = (u32)size;
     }
 
-    constexpr size_t kHdrSize = 30;
+    constexpr int kHdrSize = 30;
     ByteWriterLE local(kHdrSize);
     local.Write32(0x04034B50); // signature
     local.Write16(20);         // version needed to extract
@@ -142,7 +142,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     ok = ok && WriteData(name.s, namelen);
     ok = ok && WriteData(compressed, compressedSize);
 
-    constexpr size_t kCentralSize = 46;
+    constexpr int kCentralSize = 46;
     ByteWriterLE central(kCentralSize);
     central.Write32(0x02014B50); // signature
     central.Write16(20);         // version made by
@@ -162,7 +162,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     central.Write32((u32)fileOffset);
     ReportIf(len(central.d) != kCentralSize);
 
-    centraldir.Append(Str(ToStr(central.d).s, (int)kCentralSize));
+    centraldir.Append(Str(ToStr(central.d).s, kCentralSize));
     centraldir.Append(name);
 
     fileCount++;
@@ -230,7 +230,7 @@ bool ZipCreator::Finish() {
         return false;
     }
 
-    constexpr size_t kDirSize = 22;
+    constexpr int kDirSize = 22;
     ByteWriterLE eocd(kDirSize);
     eocd.Write32(0x06054B50); // signature
     eocd.Write16(0);          // disk number

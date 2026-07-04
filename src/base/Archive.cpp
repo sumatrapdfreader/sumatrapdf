@@ -59,7 +59,7 @@ MultiFormatArchive::~MultiFormatArchive() {
 
 bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     struct archive_entry* entry;
-    size_t fileId = 0;
+    int fileId = 0;
     ArchiveExtractProgress prog{};
     prog.nTotal = -1; // libarchive streams; total is only known at end
     while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
@@ -73,7 +73,7 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
         }
         FileInfo* i = AllocArray<FileInfo>(allocator_);
         i->fileId = fileId;
-        i->fileSizeUncompressed = (size_t)archive_entry_size(entry);
+        i->fileSizeUncompressed = (int)archive_entry_size(entry);
         i->filePos = (i64)fileId; // use fileId as position identifier
         i->fileTime = (i64)archive_entry_mtime(entry);
         i->name = str::Dup(allocator_, entryName);
@@ -82,12 +82,12 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
         fileInfos_.Append(i);
 
         if (eagerLoad) {
-            size_t size = i->fileSizeUncompressed;
+            int size = i->fileSizeUncompressed;
             if (size > 0) {
-                i->data = AllocArray<char>((int)(size + ZERO_PADDING_COUNT));
+                i->data = AllocArray<char>(size + ZERO_PADDING_COUNT);
                 if (i->data) {
-                    la_ssize_t n = archive_read_data(a, (void*)i->data, size);
-                    if (n < 0 || (size_t)n != size) {
+                    la_ssize_t n = archive_read_data(a, (void*)i->data, (size_t)size);
+                    if (n < 0 || (int)n != size) {
                         free(i->data);
                         i->data = nullptr;
                         i->failed = true;
@@ -101,14 +101,14 @@ bool MultiFormatArchive::ParseEntries(struct archive* a, bool eagerLoad, const A
         }
         fileId++;
         prog.fileInfo = i;
-        prog.nDecoded = (int)fileId;
+        prog.nDecoded = fileId;
         cbProgress.Call(&prog);
     }
     if (fileId > 0) {
         // final callback with total known
         prog.fileInfo = fileInfos_[fileId - 1];
-        prog.nDecoded = (int)fileId;
-        prog.nTotal = (int)fileId;
+        prog.nDecoded = fileId;
+        prog.nTotal = fileId;
         cbProgress.Call(&prog);
     }
     return fileId > 0;
@@ -136,7 +136,7 @@ bool MultiFormatArchive::Open(Str path, bool eagerLoad, Kind hintKind, const Arc
         char buf[2048 + 1]{};
         int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
         if (n > 0) {
-            Str d = Str((char*)((u8*)buf), (int)((size_t)n));
+            Str d = Str((char*)(buf), n);
             kind = GuessFileTypeFromContent(d);
         }
     }
@@ -190,8 +190,8 @@ bool MultiFormatArchive::Open(IStream* stream) {
     if (FAILED(stream->Stat(&stat, STATFLAG_NONAME))) {
         return false;
     }
-    size_t size = (size_t)stat.cbSize.QuadPart;
-    u8* data = AllocArray<u8>((int)size);
+    int size = (int)stat.cbSize.QuadPart;
+    u8* data = AllocArray<u8>(size);
     if (!data) {
         return false;
     }
@@ -199,7 +199,7 @@ bool MultiFormatArchive::Open(IStream* stream) {
     stream->Seek(zero, STREAM_SEEK_SET, nullptr);
     ULONG read = 0;
     HRESULT hr = stream->Read(data, (ULONG)size, &read);
-    if (FAILED(hr) || read != size) {
+    if (FAILED(hr) || (int)read != size) {
         free(data);
         return false;
     }
@@ -254,21 +254,21 @@ Vec<MultiFormatArchive::FileInfo*> const& MultiFormatArchive::GetFileInfos() {
     return fileInfos_;
 }
 
-size_t getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, Str name) {
+int getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, Str name) {
     for (auto fileInfo : fileInfos) {
         if (str::EqI(fileInfo->name, name)) {
             return fileInfo->fileId;
         }
     }
-    return (size_t)-1;
+    return -1;
 }
 
-size_t MultiFormatArchive::GetFileId(Str fileName) {
+int MultiFormatArchive::GetFileId(Str fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
 MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataByName(Str fileName) {
-    size_t fileId = getFileIdByName(fileInfos_, fileName);
+    int fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
 }
 
@@ -276,11 +276,11 @@ MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataByName(Str fileName
 // nullptr / ->failed if extraction failed). The buffer stays owned by
 // this archive; callers that want to keep the data past the archive's
 // lifetime should set ->data = nullptr to transfer ownership.
-MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataById(size_t fileId) {
-    if (fileId == (size_t)-1) {
+MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataById(int fileId) {
+    if (fileId < 0) {
         return nullptr;
     }
-    ReportIf(fileId >= (size_t)len(fileInfos_));
+    ReportIf(fileId >= len(fileInfos_));
 
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
@@ -300,7 +300,7 @@ MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataById(size_t fileId)
     return fileInfo;
 }
 
-void MultiFormatArchive::LoadFileDataByIdLibarchive(size_t fileId) {
+void MultiFormatArchive::LoadFileDataByIdLibarchive(int fileId) {
     auto* fileInfo = fileInfos_[fileId];
     if (!archivePath_) {
         fileInfo->failed = true;
@@ -321,24 +321,24 @@ void MultiFormatArchive::LoadFileDataByIdLibarchive(size_t fileId) {
     }
 
     struct archive_entry* entry;
-    size_t idx = 0;
+    int idx = 0;
     while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
         if (idx == fileId) {
-            size_t size = fileInfo->fileSizeUncompressed;
-            if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
+            int size = fileInfo->fileSizeUncompressed;
+            if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
                 archive_read_free(a);
                 fileInfo->failed = true;
                 return;
             }
-            u8* data = AllocArray<u8>((int)(size + ZERO_PADDING_COUNT));
+            u8* data = AllocArray<u8>(size + ZERO_PADDING_COUNT);
             if (!data) {
                 archive_read_free(a);
                 fileInfo->failed = true;
                 return;
             }
-            la_ssize_t n = archive_read_data(a, data, size);
+            la_ssize_t n = archive_read_data(a, data, (size_t)size);
             archive_read_free(a);
-            if (n < 0 || (size_t)n != size) {
+            if (n < 0 || (int)n != size) {
                 free(data);
                 fileInfo->failed = true;
                 return;
@@ -353,22 +353,22 @@ void MultiFormatArchive::LoadFileDataByIdLibarchive(size_t fileId) {
     fileInfo->failed = true;
 }
 
-Str MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint) {
-    if (fileId == (size_t)-1) {
+Str MultiFormatArchive::GetFileDataPartById(int fileId, int sizeHint) {
+    if (fileId < 0) {
         return {};
     }
-    ReportIf(fileId >= (size_t)len(fileInfos_));
+    ReportIf(fileId >= len(fileInfos_));
 
     auto* fileInfo = fileInfos_[fileId];
     // if full data is cached, return a copy of the prefix
     if (fileInfo->data != nullptr) {
-        size_t n = std::min(fileInfo->fileSizeUncompressed, sizeHint);
-        u8* data = AllocArray<u8>((int)(n + ZERO_PADDING_COUNT));
+        int n = std::min(fileInfo->fileSizeUncompressed, sizeHint);
+        u8* data = AllocArray<u8>(n + ZERO_PADDING_COUNT);
         if (!data) {
             return {};
         }
-        memcpy(data, fileInfo->data, n);
-        return Str((char*)(data), (int)(n));
+        memcpy(data, fileInfo->data, (size_t)n);
+        return Str((char*)(data), n);
     }
 
     if (LoadedUsingUnrarDll()) {
@@ -391,23 +391,23 @@ Str MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint) {
     }
 
     struct archive_entry* entry;
-    size_t idx = 0;
+    int idx = 0;
     while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
         if (idx == fileId) {
-            size_t fullSize = fileInfo->fileSizeUncompressed;
-            size_t toRead = std::min(fullSize, sizeHint);
-            u8* data = AllocArray<u8>((int)(toRead + ZERO_PADDING_COUNT));
+            int fullSize = fileInfo->fileSizeUncompressed;
+            int toRead = std::min(fullSize, sizeHint);
+            u8* data = AllocArray<u8>(toRead + ZERO_PADDING_COUNT);
             if (!data) {
                 archive_read_free(a);
                 return {};
             }
-            la_ssize_t n = archive_read_data(a, data, toRead);
+            la_ssize_t n = archive_read_data(a, data, (size_t)toRead);
             archive_read_free(a);
             if (n < 0) {
                 free(data);
                 return {};
             }
-            return Str((char*)(data), (int)((size_t)n));
+            return Str((char*)(data), (int)n);
         }
         archive_read_data_skip(a);
         idx++;
@@ -456,13 +456,13 @@ MultiFormatArchive* OpenArchiveFromStream(IStream* stream) {
 
 struct UnrarData {
     u8* d = nullptr;
-    size_t sz = 0;
+    int sz = 0;
     u8* curr = nullptr;
     Str password;
 };
 
-static size_t DataLeft(const UnrarData& d) {
-    size_t consumed = (d.curr - d.d);
+static int DataLeft(const UnrarData& d) {
+    int consumed = (int)(d.curr - d.d);
     ReportIf(consumed > d.sz);
     return d.sz - consumed;
 }
@@ -474,7 +474,7 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     }
     UnrarData* buf = (UnrarData*)userData;
     if (msg == UCM_PROCESSDATA) {
-        size_t bytesGot = (size_t)bytesProcessed;
+        int bytesGot = (int)bytesProcessed;
         if (bytesGot > DataLeft(*buf)) {
             return -1;
         }
@@ -516,7 +516,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, WStr fileName) {
     }
 }
 
-void MultiFormatArchive::LoadFileDataByIdUnrarDll(size_t fileId) {
+void MultiFormatArchive::LoadFileDataByIdUnrarDll(int fileId) {
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
     if (fileInfo->data != nullptr) {
@@ -545,7 +545,7 @@ void MultiFormatArchive::LoadFileDataByIdUnrarDll(size_t fileId) {
     }
 
     char* data = nullptr;
-    size_t size = 0;
+    int size = 0;
     auto fileName = ToWStrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
     int res;
@@ -554,13 +554,13 @@ void MultiFormatArchive::LoadFileDataByIdUnrarDll(size_t fileId) {
         goto Exit;
     }
     size = fileInfo->fileSizeUncompressed;
-    ReportIf(size != rarHeader.UnpSize);
-    if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
+    ReportIf(size != (int)rarHeader.UnpSize);
+    if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
         ok = false;
         goto Exit;
     }
 
-    data = AllocArray<char>((int)(size + ZERO_PADDING_COUNT));
+    data = AllocArray<char>(size + ZERO_PADDING_COUNT);
     if (!data) {
         ok = false;
         goto Exit;
@@ -582,19 +582,19 @@ Exit:
     fileInfo->data = data;
 }
 
-Str MultiFormatArchive::GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint) {
+Str MultiFormatArchive::GetFileDataPartByIdUnrarDll(int fileId, int sizeHint) {
     ReportIf(!rarFilePath_);
 
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
     if (fileInfo->data != nullptr) {
-        size_t n = std::min(fileInfo->fileSizeUncompressed, sizeHint);
-        u8* data = AllocArray<u8>((int)(n + ZERO_PADDING_COUNT));
+        int n = std::min(fileInfo->fileSizeUncompressed, sizeHint);
+        u8* data = AllocArray<u8>(n + ZERO_PADDING_COUNT);
         if (!data) {
             return {};
         }
-        memcpy(data, fileInfo->data, n);
-        return Str((char*)(data), (int)(n));
+        memcpy(data, fileInfo->data, (size_t)n);
+        return Str((char*)(data), n);
     }
 
     WCHAR* rarPath = CWStrTemp(rarFilePath_);
@@ -614,7 +614,7 @@ Str MultiFormatArchive::GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHi
     }
 
     char* data = nullptr;
-    size_t size = 0;
+    int size = 0;
     auto fileName = ToWStrTemp(fileInfo->name);
     RARHeaderDataEx rarHeader{};
     bool ok = FindFile(hArc, &rarHeader, fileName);
@@ -623,12 +623,12 @@ Str MultiFormatArchive::GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHi
     }
     // allocate only sizeHint bytes; the callback will stop when the buffer is full
     size = std::min(fileInfo->fileSizeUncompressed, sizeHint);
-    if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
+    if (addOverflows<int>(size, ZERO_PADDING_COUNT)) {
         ok = false;
         goto Exit;
     }
 
-    data = AllocArray<char>((int)(size + ZERO_PADDING_COUNT));
+    data = AllocArray<char>(size + ZERO_PADDING_COUNT);
     if (!data) {
         ok = false;
         goto Exit;
@@ -648,8 +648,8 @@ Exit:
         free(data);
         return {};
     }
-    size_t got = (size_t)(uncompressedBuf.curr - uncompressedBuf.d);
-    return Str((char*)((u8*)data), (int)(got));
+    int got = (int)(uncompressedBuf.curr - uncompressedBuf.d);
+    return Str((char*)((u8*)data), got);
 }
 
 // asan build crashes in UnRAR code
@@ -677,7 +677,7 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
 
     ArchiveExtractProgress prog{};
     prog.nTotal = -1;
-    size_t fileId = 0;
+    int fileId = 0;
     while (true) {
         RARHeaderDataEx rarHeader{};
         int res = RARReadHeaderEx(hArc, &rarHeader);
@@ -694,7 +694,7 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
 
         FileInfo* i = AllocArray<FileInfo>(allocator_);
         i->fileId = fileId;
-        i->fileSizeUncompressed = (size_t)rarHeader.UnpSize;
+        i->fileSizeUncompressed = (int)rarHeader.UnpSize;
         i->filePos = 0;
         i->fileTime = (i64)rarHeader.FileTime;
         i->name = str::Dup(allocator_, name);
@@ -702,7 +702,7 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
         i->data = nullptr;
         if (eagerLoad) {
             // +2 so that it's zero-terminated even when interprted as WCHAR*
-            i->data = AllocArray<char>((int)(i->fileSizeUncompressed + 2));
+            i->data = AllocArray<char>(i->fileSizeUncompressed + 2);
             if (i->data) {
                 uncompressedBuf.d = (u8*)i->data;
                 uncompressedBuf.curr = (u8*)i->data;
@@ -724,7 +724,7 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
             // Unrar treats extraction errors as non-zero return; also
             // require the buffer was fully filled (curr advanced by exactly
             // the declared uncompressed size).
-            bool extracted = (rres == 0) && (size_t)(uncompressedBuf.curr - uncompressedBuf.d) == uncompressedBuf.sz;
+            bool extracted = (rres == 0) && (int)(uncompressedBuf.curr - uncompressedBuf.d) == uncompressedBuf.sz;
             if (!extracted) {
                 free(i->data);
                 i->data = nullptr;
@@ -732,13 +732,13 @@ bool MultiFormatArchive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const Ar
             }
         }
         prog.fileInfo = i;
-        prog.nDecoded = (int)fileId;
+        prog.nDecoded = fileId;
         cbProgress.Call(&prog);
     }
     if (fileId > 0) {
         prog.fileInfo = fileInfos_[fileId - 1];
-        prog.nDecoded = (int)fileId;
-        prog.nTotal = (int)fileId;
+        prog.nDecoded = fileId;
+        prog.nTotal = fileId;
         cbProgress.Call(&prog);
     }
 

@@ -4,7 +4,7 @@
 #include "base/Base.h"
 #include "base/ByteWriter.h"
 
-ByteWriter::ByteWriter(size_t sizeHint) {
+ByteWriter::ByteWriter(int sizeHint) {
     d.cap = (u32)sizeHint;
 }
 
@@ -52,7 +52,7 @@ void ByteWriter::Write64(u64 val) {
     Write32(v1);
 }
 
-size_t ByteWriter::Size() const {
+int ByteWriter::Size() const {
     return len(d);
 }
 
@@ -60,7 +60,7 @@ Str ByteWriter::AsByteSlice() const {
     return ToStr(d);
 }
 
-ByteWriterLE::ByteWriterLE(size_t sizeHint) {
+ByteWriterLE::ByteWriterLE(int sizeHint) {
     d.cap = (u32)sizeHint;
     isLE = true;
 }

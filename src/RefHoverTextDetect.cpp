@@ -627,7 +627,7 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
 
     // Reading order: previous line, cursor line, next line — each sorted by x.
     int m = prevN + curN + nextN;
-    int* seq = AllocArray<int>((size_t)m);
+    int* seq = AllocArray<int>(m);
     {
         int w = 0;
         for (int t = 0; t < prevN; t++) {

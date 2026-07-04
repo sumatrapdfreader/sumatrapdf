@@ -5,7 +5,7 @@ struct ByteWriter {
     bool isLE = false;
     str::Builder d;
 
-    ByteWriter(size_t sizeHint = 0);
+    ByteWriter(int sizeHint = 0);
     ByteWriter(const ByteWriter&) = delete;
     ByteWriter& operator=(const ByteWriter&) = delete;
 
@@ -15,10 +15,10 @@ struct ByteWriter {
     void Write32(u32 val);
     void Write64(u64 val);
 
-    size_t Size() const;
+    int Size() const;
     Str AsByteSlice() const;
 };
 
 struct ByteWriterLE : ByteWriter {
-    ByteWriterLE(size_t sizeHint = 0);
+    ByteWriterLE(int sizeHint = 0);
 };

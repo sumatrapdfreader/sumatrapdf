@@ -1091,9 +1091,9 @@ IPageDestination* EngineMobi::GetNamedDest(Str name) {
     ReportIf(pageNo < 1 || pageNo > PageCount());
 
     Str htmlData = doc->GetHtmlData();
-    size_t htmlLen = (size_t)htmlData.len;
+    int htmlLen = htmlData.len;
     Str start = htmlData;
-    if ((size_t)filePos > htmlLen) {
+    if (filePos > htmlLen) {
         return nullptr;
     }
 
@@ -1478,9 +1478,9 @@ static uint ExtractHttpCharset(Str html) {
     if (!str::Contains(html, StrL("charset="))) {
         return 0;
     }
-    size_t parseLen = std::min((size_t)html.len, (size_t)1024);
+    int parseLen = std::min(html.len, 1024);
     GumboOptions opts = GumboMakeOptions();
-    GumboOutput* output = gumbo_parse_with_options(&opts, html.s, parseLen);
+    GumboOutput* output = gumbo_parse_with_options(&opts, html.s, (size_t)parseLen);
     if (!output) {
         return 0;
     }

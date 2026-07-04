@@ -6,7 +6,7 @@ struct archive_entry;
 
 // forward-declared so ArchiveExtractProgress below can reference
 // MultiFormatArchive::FileInfo, which is defined inside the class body.
-class MultiFormatArchive;
+struct MultiFormatArchive;
 
 struct ArchiveExtractProgress;
 using ArchiveExtractProgressCb = Func1<ArchiveExtractProgress*>;
@@ -17,8 +17,7 @@ using ArchiveExtractProgressCb = Func1<ArchiveExtractProgress*>;
 // MultiFormatArchive::Open without further indirection.
 extern thread_local ArchiveExtractProgressCb gArchiveProgressCb;
 
-class MultiFormatArchive {
-  public:
+struct MultiFormatArchive {
     enum class Format {
         Unknown,
         Zip,
@@ -28,10 +27,10 @@ class MultiFormatArchive {
     };
 
     struct FileInfo {
-        size_t fileId = 0;
+        int fileId = 0;
         Str name = {};
         i64 fileTime = 0; // this is typedef'ed as time64_t in unrar.h
-        size_t fileSizeUncompressed = 0;
+        int fileSizeUncompressed = 0;
         bool isDir = false;
         // set when eagerLoad extraction failed for this entry (bad data,
         // OOM, etc.). `data` will be nullptr in that case.
@@ -54,7 +53,7 @@ class MultiFormatArchive {
 
     Vec<FileInfo*> const& GetFileInfos();
 
-    size_t GetFileId(Str fileName);
+    int GetFileId(Str fileName);
 
     // Return the FileInfo record for a given entry, loading its data into
     // fileInfo->data on demand (on a miss, re-opens the archive unless
@@ -71,8 +70,8 @@ class MultiFormatArchive {
     // entry whose decompression failed check fileInfo->failed — data will
     // be nullptr in that case.
     FileInfo* GetFileDataByName(Str filename);
-    FileInfo* GetFileDataById(size_t fileId);
-    Str GetFileDataPartById(size_t fileId, size_t sizeHint);
+    FileInfo* GetFileDataById(int fileId);
+    Str GetFileDataPartById(int fileId, int sizeHint);
 
     Str GetComment();
 
@@ -82,7 +81,6 @@ class MultiFormatArchive {
     // set after Open() if the archive contains encrypted entries
     bool isEncrypted = false;
 
-  protected:
     // used for allocating strings that are referenced by ArchFileInfo::name
     Arena* allocator_ = nullptr;
     Vec<FileInfo*> fileInfos_;
@@ -98,9 +96,9 @@ class MultiFormatArchive {
     bool OpenUnrarFallback(Str rarPathUtf, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
     // Populate fileInfos_[fileId]->data via the respective backend; set
     // ->failed when extraction didn't produce the expected bytes.
-    void LoadFileDataByIdUnrarDll(size_t fileId);
-    void LoadFileDataByIdLibarchive(size_t fileId);
-    Str GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint);
+    void LoadFileDataByIdUnrarDll(int fileId);
+    void LoadFileDataByIdLibarchive(int fileId);
+    Str GetFileDataPartByIdUnrarDll(int fileId, int sizeHint);
     bool LoadedUsingUnrarDll() const { return (bool)rarFilePath_; }
 };
 

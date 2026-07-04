@@ -3,27 +3,27 @@
 
 struct ByteReader {
     const u8* d = nullptr;
-    size_t len = 0;
+    int len = 0;
 
     // Unpacks a structure from the data according to the given format
     // e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
-    bool Unpack(void* strct, size_t size, Str format, size_t off, bool isBE) const;
+    bool Unpack(void* strct, int size, Str format, int off, bool isBE) const;
 
     explicit ByteReader(Str data);
-    ByteReader(const u8* data, size_t n);
+    ByteReader(const u8* data, int n);
 
-    u8 Byte(size_t off) const;
-    u16 WordLE(size_t off) const;
-    u16 WordBE(size_t off) const;
-    u16 Word(size_t off, bool isBE) const;
-    u32 DWordLE(size_t off) const;
-    u32 DWordBE(size_t off) const;
-    u32 DWord(size_t off, bool isBE) const;
-    u64 QWordLE(size_t off) const;
-    u64 QWordBE(size_t off) const;
-    u64 QWord(size_t off, bool isBE) const;
-    const u8* Find(size_t off, u8 byte) const;
-    bool UnpackLE(void* strct, size_t size, Str format, size_t off = 0) const;
-    bool UnpackBE(void* strct, size_t size, Str format, size_t off = 0) const;
-    bool Unpack(void* strct, size_t size, Str format, bool isBE, size_t off = 0) const;
+    u8 Byte(int off) const;
+    u16 WordLE(int off) const;
+    u16 WordBE(int off) const;
+    u16 Word(int off, bool isBE) const;
+    u32 DWordLE(int off) const;
+    u32 DWordBE(int off) const;
+    u32 DWord(int off, bool isBE) const;
+    u64 QWordLE(int off) const;
+    u64 QWordBE(int off) const;
+    u64 QWord(int off, bool isBE) const;
+    const u8* Find(int off, u8 byte) const;
+    bool UnpackLE(void* strct, int size, Str format, int off = 0) const;
+    bool UnpackBE(void* strct, int size, Str format, int off = 0) const;
+    bool Unpack(void* strct, int size, Str format, bool isBE, int off = 0) const;
 };
