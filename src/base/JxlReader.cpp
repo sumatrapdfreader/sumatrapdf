@@ -80,7 +80,7 @@ Pixmap* PixmapFromData(Str d) {
                         done = true;
                         break;
                     }
-                    pixels = AllocArray<u8>(need);
+                    pixels = AllocArray<u8>((int)need);
                     if (!pixels || JxlDecoderSetImageOutBuffer(dec, &fmt, pixels, need) != JXL_DEC_SUCCESS) {
                         done = true;
                     }

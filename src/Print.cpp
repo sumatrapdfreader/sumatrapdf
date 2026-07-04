@@ -501,9 +501,9 @@ Printer* NewPrinter(Str printerName) {
         printer->nBins = n;
         // it's ok for nBins to be 0, it means there's only one, default bin
         if (n > 0) {
-            size_t binNameSize = 24;
-            printer->bins = AllocArray<WORD>(n);
-            WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * n + 1);
+            int binNameSize = 24;
+            printer->bins = AllocArray<WORD>((int)n);
+            WCHAR* binNamesSeq = AllocArray<WCHAR>(binNameSize * (int)n + 1);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
             for (int i = 0; i < (int)n; i++) {

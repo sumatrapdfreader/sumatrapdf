@@ -78,19 +78,19 @@ struct HashTable {
     HashTableEntry** entries;
     HashTableEntry* freeList;
 
-    size_t nEntries;
-    size_t nUsed; // total number of inserted entries
+    int nEntries;
+    int nUsed; // total number of inserted entries
 
     // for debugging
-    size_t nResizes;
-    size_t nCollisions;
+    int nResizes;
+    int nCollisions;
 };
 
-static HashTable* NewHashTable(size_t size, Arena* allocator) {
+static HashTable* NewHashTable(int size, Arena* allocator) {
     ReportIf(!allocator); // we'll leak otherwise
     HashTable* h = AllocArray<HashTable>(allocator, 1);
     // number of hash table entries should be power of 2
-    size = RoundToPowerOf2((int)size);
+    size = RoundToPowerOf2(size);
     // entries are not allocated with allocator since those are large blocks
     // and we don't want to waste their memory after
     h->entries = AllocArray<HashTableEntry*>(size);
@@ -104,17 +104,18 @@ static void DeleteHashTable(HashTable* h) {
 }
 
 static void HashTableResize(HashTable* h, HasherComparator* hc) {
-    size_t newSize = RoundToPowerOf2((int)(h->nEntries + 1));
+    int newSize = RoundToPowerOf2(h->nEntries + 1);
     ReportIf(newSize <= h->nEntries);
     HashTableEntry** newEntries = AllocArray<HashTableEntry*>(newSize);
     HashTableEntry *e, *next;
-    size_t hash, pos;
-    for (size_t i = 0; i < h->nEntries; i++) {
+    size_t hash;
+    int pos;
+    for (int i = 0; i < h->nEntries; i++) {
         e = h->entries[i];
         while (e) {
             next = e->next;
             hash = hc->Hash(e->key);
-            pos = hash % newSize;
+            pos = (int)(hash % (size_t)newSize);
             e->next = newEntries[pos];
             newEntries[pos] = e;
             e = next;
@@ -144,7 +145,7 @@ static HashTableEntry* GetOrCreateEntry(HashTable* h, HasherComparator* hc, uint
                                         bool& newEntry) {
     bool shouldCreate = (allocator != nullptr);
     size_t hash = hc->Hash(key);
-    size_t pos = hash % h->nEntries;
+    int pos = (int)(hash % (size_t)h->nEntries);
     HashTableEntry* e = h->entries[pos];
     newEntry = false;
     while (e) {
@@ -175,7 +176,7 @@ static HashTableEntry* GetOrCreateEntry(HashTable* h, HasherComparator* hc, uint
 
 static bool RemoveEntry(HashTable* h, HasherComparator* hc, uintptr_t key, uintptr_t* removedValOut) {
     size_t hash = hc->Hash(key);
-    size_t pos = hash % h->nEntries;
+    int pos = (int)(hash % (size_t)h->nEntries);
     HashTableEntry* e = h->entries[pos];
     while (e) {
         if (hc->Equal(key, e->key)) {
@@ -205,7 +206,7 @@ static bool RemoveEntry(HashTable* h, HasherComparator* hc, uintptr_t key, uintp
     return true;
 }
 
-MapStrToInt::MapStrToInt(size_t initialSize) {
+MapStrToInt::MapStrToInt(int initialSize) {
     // arena-allocate HashTableEntry entries and copies of string keys
     allocator = ArenaNew();
     h = NewHashTable(initialSize, allocator);
@@ -216,7 +217,7 @@ MapStrToInt::~MapStrToInt() {
     ArenaDelete(allocator);
 }
 
-size_t MapStrToInt::Count() const {
+int MapStrToInt::Count() const {
     return h->nUsed;
 }
 

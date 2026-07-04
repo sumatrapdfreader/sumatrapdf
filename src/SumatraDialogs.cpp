@@ -47,8 +47,8 @@ DLGTEMPLATE* DupTemplate(int dlgId) {
     HGLOBAL dlgTemplate = LoadResource(nullptr, dialogRC);
     ReportIf(!dlgTemplate);
     void* orig = LockResource(dlgTemplate);
-    size_t size = SizeofResource(nullptr, dialogRC);
-    ReportIf(size == 0);
+    int size = (int)SizeofResource(nullptr, dialogRC);
+    ReportIf(size <= 0);
     DLGTEMPLATE* ret = (DLGTEMPLATE*)memdup(orig, size);
     UnlockResource(orig);
     return ret;

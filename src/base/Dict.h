@@ -23,10 +23,10 @@ class MapStrToInt {
     Arena* allocator = nullptr;
     HashTable* h = nullptr;
 
-    explicit MapStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
+    explicit MapStrToInt(int initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapStrToInt();
 
-    size_t Count() const;
+    int Count() const;
 
     bool Insert(Str key, int val, int* existingValOut = nullptr, Str* existingKeyOut = nullptr);
 

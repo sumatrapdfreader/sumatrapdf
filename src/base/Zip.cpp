@@ -95,7 +95,7 @@ static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
 }
 
 bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
-    size_t size = (size_t)data.len;
+    int size = data.len;
     ReportIf(size >= UINT32_MAX);
     ReportIf(len(name) >= UINT16_MAX);
     if (size >= UINT32_MAX) {
@@ -276,11 +276,11 @@ IStream* OpenDirAsZipStream(Str dirPath, bool recursive) {
 // a 0-terminated char* or WCHA* string
 // those 2 bytes are not reported as
 Str Ungzip(const Str& d) {
-    size_t n = (size_t)d.len;
+    int n = d.len;
     u8* dataCompr = (u8*)d.s;
     // aggressive growth for uncompressed buffer because I use this
     // for .syntex files and they compress really well
-    size_t lenUncr = n * 2;
+    int lenUncr = n * 2;
 
     bool done = false;
     int res;
@@ -304,8 +304,8 @@ Str Ungzip(const Str& d) {
     }
 
     while (!done) {
-        if (strm.total_out >= lenUncr) {
-            size_t newLen = lenUncr * 2;
+        if (strm.total_out >= (uLong)lenUncr) {
+            int newLen = lenUncr * 2;
             u8* dataUncr2 = (u8*)realloc(dataUncr, newLen + 2);
             if (!dataUncr2) {
                 free((void*)dataUncr);

@@ -779,7 +779,7 @@ namespace str {
 
 /* Convert binary data in <buf> to a hex-encoded string */
 TempStr MemToHexTemp(Str buf) {
-    size_t n = (size_t)buf.len;
+    int n = buf.len;
     /* 2 hex chars per byte, +1 for terminating 0 */
     char* ret = AllocArrayTemp<char>(2 * n + 1);
     if (!ret) {
@@ -787,7 +787,7 @@ TempStr MemToHexTemp(Str buf) {
     }
     static const char hex[] = "0123456789abcdef";
     int dst = 0;
-    for (size_t i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         u8 b = (u8)buf.s[i];
         ret[dst++] = hex[b >> 4];
         ret[dst++] = hex[b & 0x0f];

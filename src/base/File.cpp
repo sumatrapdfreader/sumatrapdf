@@ -685,6 +685,7 @@ Str ReadFileWithArena(Str filePath, Arena* allocator) {
 #else
     char* d = nullptr;
     int res;
+    int size = 0;
     FILE* fp = OpenFILE(filePath);
     if (!fp) {
         return {};
@@ -696,11 +697,12 @@ Str ReadFileWithArena(Str filePath, Arena* allocator) {
     if (res != 0) {
         return {};
     }
-    size_t size = ftell(fp);
+    long fileSize = ftell(fp);
     size_t nRead = 0;
-    if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
+    if (fileSize < 0 || fileSize > INT_MAX - ZERO_PADDING_COUNT) {
         goto Error;
     }
+    size = (int)fileSize;
     d = AllocArray<char>(allocator, size + ZERO_PADDING_COUNT);
     if (!d) {
         goto Error;
@@ -724,7 +726,7 @@ Str ReadFileWithArena(Str filePath, Arena* allocator) {
         goto Error;
     }
 
-    return Str(d, (int)size);
+    return Str(d, size);
 Error:
     Free(allocator, (void*)d);
     return {};

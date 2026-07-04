@@ -324,7 +324,7 @@ bool IsValidDelayType(int type);
 
 void HwndResizeClientSize(HWND, int, int);
 
-size_t HwndGetTextLen(HWND hwnd);
+int HwndGetTextLen(HWND hwnd);
 TempWStr HwndGetTextWTemp(HWND hwnd);
 TempStr HwndGetTextTemp(HWND hwnd);
 void HwndSetText(HWND, Str s);

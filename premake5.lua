@@ -856,7 +856,7 @@ workspace "SumatraPDF"
     filter {}
 
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
-    disablewarnings { "4100", "4267", "4457", "4838" }
+    disablewarnings { "4100", "4457", "4838" }
     uses_zlib()
     defines { "LIBHEIF_STATIC_BUILD", "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/lzma/C" }
@@ -1005,12 +1005,12 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4267", "4701", "4702", "4703", "4706", "4819", "6324" }
+    disablewarnings { "4100", "4701", "4702", "4703", "4706", "4819", "6324" }
     -- 4244 (possible loss of data) is only needed by the external synctex
     -- code; keep it fatal for our own sources so silent int64->int truncation
     -- doesn't slip through.
     filter { "files:ext/synctex/**" }
-      disablewarnings { "4244" }
+      disablewarnings { "4244", "4267" }
     filter {}
     uses_zlib()
     includedirs { "ext/synctex" }
@@ -1091,12 +1091,11 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4267", "4701", "4702", "4703", "4706", "4819", "6324" }
-    -- 4244 (possible loss of data) is only needed by the external synctex
-    -- code; keep it fatal for our own sources so silent int64->int truncation
-    -- doesn't slip through.
+    disablewarnings { "4100", "4701", "4702", "4703", "4706", "4819", "6324" }
+    -- 4244/4267 are only needed by the external synctex code; keep them fatal
+    -- for our own sources so silent truncation doesn't slip through.
     filter { "files:ext/synctex/**" }
-      disablewarnings { "4244" }
+      disablewarnings { "4244", "4267" }
     filter {}
     uses_zlib()
     includedirs { "ext/synctex" }

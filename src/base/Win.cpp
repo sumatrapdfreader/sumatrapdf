@@ -2289,13 +2289,13 @@ void HwndToForeground(HWND hwnd) {
     SetForegroundWindow(hwnd);
 }
 
-size_t HwndGetTextLen(HWND hwnd) {
-    return (size_t)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
+int HwndGetTextLen(HWND hwnd) {
+    return (int)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
 }
 
 // return text of window or edit control, nullptr in case of an error
 TempWStr HwndGetTextWTemp(HWND hwnd) {
-    size_t cch = HwndGetTextLen(hwnd);
+    int cch = HwndGetTextLen(hwnd);
     WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 2); // +2 for extra room
     if (!buf) {
         return {};
@@ -2306,7 +2306,7 @@ TempWStr HwndGetTextWTemp(HWND hwnd) {
 
 // return text of window or edit control, nullptr in case of an error
 TempStr HwndGetTextTemp(HWND hwnd) {
-    size_t cch = HwndGetTextLen(hwnd);
+    int cch = HwndGetTextLen(hwnd);
     WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 2); // +2 jic
     if (!buf) {
         return {};
