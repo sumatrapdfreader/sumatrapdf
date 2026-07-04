@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Dict.h"
 #include "base/GdiPlus.h"
 #include "base/HtmlTags.h"
 #include "base/CssParser.h"
@@ -169,6 +170,11 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     defaultFontName = wstr::Dup(args->GetFontName());
     defaultFontSize = args->fontSize;
 
+    // pre-size each font's measured-text cache from the size of the text: text
+    // runs are mostly words (avg. ~6 bytes of html) and many repeat, so guess
+    // one distinct text entry per 16 bytes of html (shared across fonts)
+    measureCacheInitialSize = limitValue(len(args->htmlStr) / 16, 1024, 64 * 1024);
+
     DrawStyle style;
     style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = AlignAttr::Justify;
@@ -195,7 +201,55 @@ HtmlFormatter::~HtmlFormatter() {
     delete textMeasure;
     mui::FreeGraphicsForMeasureText(gfx);
     delete htmlParser;
+    for (int i = 0; i < nMeasureCaches; i++) {
+        delete measureCaches[i].keys;
+    }
     wstr::Free(defaultFontName);
+}
+
+// find (or lazily create) the per-font measured-text cache for the current
+// font. Returns null once we've seen more than kMaxMeasureCacheFonts fonts,
+// in which case the caller measures uncached.
+HtmlFormatter::MeasureCache* HtmlFormatter::GetMeasureCacheForCurrFont() {
+    mui::CachedFont* font = CurrFont();
+    // fast path: same font as last measurement (the common case)
+    if (lastMeasureCache && lastMeasureCache->font == font) {
+        return lastMeasureCache;
+    }
+    for (int i = 0; i < nMeasureCaches; i++) {
+        if (measureCaches[i].font == font) {
+            lastMeasureCache = &measureCaches[i];
+            return lastMeasureCache;
+        }
+    }
+    if (nMeasureCaches >= kMaxMeasureCacheFonts) {
+        return nullptr; // too many fonts, measure uncached
+    }
+    MeasureCache* mc = &measureCaches[nMeasureCaches++];
+    mc->font = font;
+    mc->keys = new dict::MapStrToInt(measureCacheInitialSize);
+    lastMeasureCache = mc;
+    return mc;
+}
+
+// measuring text is expensive and text runs (mostly words) repeat a lot
+// within a document, so cache the measured size per font, keyed by text.
+// The caller must have called textMeasure->SetFont(CurrFont()) already.
+RectF HtmlFormatter::MeasureTextCached(WStr s) {
+    MeasureCache* mc = GetMeasureCacheForCurrFont();
+    if (!mc) {
+        return textMeasure->Measure(s);
+    }
+    // MapStrToInt keys are UTF-8; the WStr text is our key
+    TempStr key = ToUtf8Temp(s);
+    int existingIdx = 0;
+    int idx = len(mc->vals);
+    if (!mc->keys->Insert(key, idx, &existingIdx)) {
+        return mc->vals[existingIdx];
+    }
+    RectF bbox = textMeasure->Measure(s);
+    mc->vals.Append(bbox);
+    return bbox;
 }
 
 void HtmlFormatter::AppendInstr(const DrawInstr& di) {
@@ -730,7 +784,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
             break;
         }
         textMeasure->SetFont(CurrFont());
-        RectF bbox = textMeasure->Measure(buf);
+        RectF bbox = MeasureTextCached(buf);
         if (bbox.dx <= pageDx - currX) {
             AppendInstr(DrawInstr::Text(run, bbox, dirRtl));
             currX += bbox.dx;
@@ -766,7 +820,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
         }
 
         textMeasure->SetFont(CurrFont());
-        bbox = ToGdipRectF(textMeasure->Measure(WStr(buf.s, lenThatFits)));
+        bbox = ToGdipRectF(MeasureTextCached(WStr(buf.s, lenThatFits)));
         ReportIf(bbox.dx > pageDx);
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char
@@ -793,7 +847,7 @@ void HtmlFormatter::EmitTextMarker(Str s) {
         return;
     }
     textMeasure->SetFont(CurrFont());
-    RectF bbox = textMeasure->Measure(buf);
+    RectF bbox = MeasureTextCached(buf);
     AppendInstr(DrawInstr::Text(s, bbox, dirRtl));
     currX += bbox.dx;
 }

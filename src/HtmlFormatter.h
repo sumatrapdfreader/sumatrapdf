@@ -1,6 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+namespace dict {
+class MapStrToInt;
+}
+
 using Gdiplus::ARGB;
 using Gdiplus::Bitmap;
 using Gdiplus::Color;
@@ -223,6 +227,8 @@ struct HtmlFormatter {
     bool IsCurrLineEmpty();
     virtual bool IgnoreText();
 
+    RectF MeasureTextCached(WStr s);
+
     void DumpLineDebugInfo();
 
     // constant during layout process
@@ -235,6 +241,24 @@ struct HtmlFormatter {
     float defaultFontSize = 0;
     Arena* textAllocator = nullptr;
     mui::ITextRender* textMeasure = nullptr;
+
+    // Cache of measured text. We assume few distinct fonts, so each font gets
+    // its own hash table (keyed by text only). If we ever see more than
+    // kMaxMeasureCacheFonts fonts, further fonts measure uncached. Because
+    // measurements come in runs of the same font, we remember the last font
+    // to skip the per-font table lookup.
+    static constexpr int kMaxMeasureCacheFonts = 6;
+    struct MeasureCache {
+        mui::CachedFont* font = nullptr;
+        dict::MapStrToInt* keys = nullptr; // text -> index into vals
+        Vec<RectF> vals;
+    };
+    MeasureCache measureCaches[kMaxMeasureCacheFonts];
+    int nMeasureCaches = 0;
+    int measureCacheInitialSize = 1024;
+    MeasureCache* lastMeasureCache = nullptr;
+
+    MeasureCache* GetMeasureCacheForCurrFont();
 
     // style stack of the current line
     Vec<DrawStyle> styleStack;
