@@ -141,7 +141,6 @@
 #include <cstdint>
 #include <algorithm>
 #include <memory>
-#include <string>
 #include <array>
 #include <limits>
 #include <new>     // for placement new
