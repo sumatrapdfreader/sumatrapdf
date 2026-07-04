@@ -147,6 +147,10 @@ constexpr UINT CmdTtsMenuReadSelection = 0x7202;
 constexpr UINT CmdTtsMenuPauseReading = 0x7203;
 constexpr UINT CmdTtsMenuReadFromCursor = 0x7204;
 constexpr UINT CmdTtsMenuStopReading = 0x7205;
+constexpr UINT CmdTtsSpeedFirst = 0x7300;
+constexpr UINT CmdTtsSpeedLast = 0x730f;
+
+TempStr ReadAloudSpeedLabelTemp(float speed);
 
 void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem = false, bool canReadFromCursor = false);
 bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);

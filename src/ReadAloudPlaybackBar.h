@@ -11,4 +11,5 @@ void ReadAloudPlaybackBarRelayout(HWND hwndCanvas);
 
 void ReadAloudPlaybackPauseOrResume();
 void ReadAloudPlaybackStop();
+void ReadAloudPlaybackCycleSpeed(int dir);
 void ReadAloudPlaybackBarDestroy(MainWindow* win);

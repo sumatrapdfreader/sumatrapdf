@@ -23,3 +23,6 @@ void TtsFreeVoices(Vec<TtsVoiceInfo>& voices);
 
 bool TtsSetVoiceById(Str voiceId);
 Str TtsGetVoiceId();
+
+void TtsSetSpeed(float speed);
+float TtsGetSpeed();

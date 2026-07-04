@@ -9962,6 +9962,67 @@ void ReadAloudPlaybackPauseOrResume() {
     }
 }
 
+// preset playback speeds offered in the Speed menu and cycled by the speed
+// button on the playback bar
+constexpr float kReadAloudSpeeds[] = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 3.0f};
+
+// e.g. "1x", "0.75x", "1.5x"
+TempStr ReadAloudSpeedLabelTemp(float speed) {
+    int hundredths = (int)(speed * 100.0f + 0.5f);
+    int whole = hundredths / 100;
+    int frac = hundredths % 100;
+    if (frac == 0) {
+        return fmt("%dx", whole);
+    }
+    if (frac % 10 == 0) {
+        return fmt("%d.%dx", whole, frac / 10);
+    }
+    return fmt("%d.%02dx", whole, frac);
+}
+
+// index of the preset closest to the current speed (the setting can hold
+// an arbitrary value edited by hand)
+static int ReadAloudClosestSpeedIdx() {
+    float curr = TtsGetSpeed();
+    int idx = 0;
+    float bestDist = -1;
+    for (int i = 0; i < dimofi(kReadAloudSpeeds); i++) {
+        float dist = kReadAloudSpeeds[i] - curr;
+        if (dist < 0) {
+            dist = -dist;
+        }
+        if (bestDist < 0 || dist < bestDist) {
+            bestDist = dist;
+            idx = i;
+        }
+    }
+    return idx;
+}
+
+static void ReadAloudSetSpeed(float speed) {
+    TtsSetSpeed(speed);
+    gGlobalPrefs->readAloudSpeed = TtsGetSpeed();
+    logf("ReadAloud: SetSpeed: %s\n", ReadAloudSpeedLabelTemp(TtsGetSpeed()));
+    SaveSettings();
+
+    // the WinRT backend applies the new speed only to newly synthesized
+    // chunks, so re-speak from the current position
+    WindowTab* tab = GetReadAloudSourceTab();
+    if (tab && TtsIsSpeaking()) {
+        ReadAloudStopRememberPos();
+        if (CanContinueReadAloud(tab)) {
+            ReadAloudContinueInTab(tab);
+        }
+    }
+}
+
+// dir is +1 (next speed) or -1 (previous speed), wraps around
+void ReadAloudPlaybackCycleSpeed(int dir) {
+    int n = dimofi(kReadAloudSpeeds);
+    int idx = (ReadAloudClosestSpeedIdx() + dir + n) % n;
+    ReadAloudSetSpeed(kReadAloudSpeeds[idx]);
+}
+
 void ReadAloudPlaybackStop() {
     WindowTab* tab = gReadAloudSessionTab;
     if (!tab) {
@@ -10317,6 +10378,20 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
         BuildReadAloudVoiceMenuItems(voiceMenu);
         AppendMenuW(menu, MF_POPUP | MF_STRING, (UINT_PTR)voiceMenu, CWStrTemp(_TRA("Voice")));
     }
+
+    HMENU speedMenu = CreatePopupMenu();
+    if (speedMenu) {
+        int currIdx = ReadAloudClosestSpeedIdx();
+        for (int i = 0; i < dimofi(kReadAloudSpeeds); i++) {
+            UINT flags = MF_STRING;
+            if (i == currIdx) {
+                flags |= MF_CHECKED;
+            }
+            TempStr label = ReadAloudSpeedLabelTemp(kReadAloudSpeeds[i]);
+            AppendMenuW(speedMenu, flags, CmdTtsSpeedFirst + (UINT)i, CWStrTemp(label));
+        }
+        AppendMenuW(menu, MF_POPUP | MF_STRING, (UINT_PTR)speedMenu, CWStrTemp(_TRA("Speed")));
+    }
 }
 
 void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem, bool canReadFromCursor) {
@@ -10377,12 +10452,18 @@ static void HandleReadAloudMenuSelection(MainWindow* win, UINT selected) {
             }
         }
         TtsFreeVoices(voices);
+    } else if (selected >= CmdTtsSpeedFirst && selected <= CmdTtsSpeedLast) {
+        int speedIndex = (int)(selected - CmdTtsSpeedFirst);
+        if (speedIndex >= 0 && speedIndex < dimofi(kReadAloudSpeeds)) {
+            ReadAloudSetSpeed(kReadAloudSpeeds[speedIndex]);
+        }
     }
 }
 
 bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId) {
     if (cmdId == CmdTtsVoiceDefault || (cmdId >= CmdTtsMenuReadCurrentPage && cmdId <= CmdTtsMenuStopReading) ||
-        (cmdId >= CmdTtsVoiceFirst && cmdId <= CmdTtsVoiceLast)) {
+        (cmdId >= CmdTtsVoiceFirst && cmdId <= CmdTtsVoiceLast) ||
+        (cmdId >= CmdTtsSpeedFirst && cmdId <= CmdTtsSpeedLast)) {
         HandleReadAloudMenuSelection(win, (UINT)cmdId);
         return true;
     }

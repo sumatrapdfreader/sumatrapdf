@@ -917,6 +917,17 @@ const globalPrefs: Field[] = [
     "3.7",
   ),
   setVersion(
+    setExpert(
+      mkField(
+        "ReadAloudSpeed",
+        Float,
+        1,
+        "playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar",
+      ),
+    ),
+    "3.7",
+  ),
+  setVersion(
     mkField(
       "FastScrollOverScrollbar",
       Bool,

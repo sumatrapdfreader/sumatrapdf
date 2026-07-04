@@ -41,6 +41,7 @@ struct ReadAloudPlaybackBar : Wnd {
     WindowTab* sessionTab = nullptr;
     Rect rPause;
     Rect rStop;
+    Rect rSpeed;
     bool showResume = false;
 };
 
@@ -92,6 +93,10 @@ static bool ReadAloudPlaybackBarHitTest(const Rect& r, Point pt) {
     return !r.IsEmpty() && r.Contains(pt);
 }
 
+static TempStr SpeedLabelTemp() {
+    return ReadAloudSpeedLabelTemp(TtsGetSpeed());
+}
+
 HWND ReadAloudPlaybackBar::Create(HWND parentCanvas) {
     CreateCustomArgs args;
     args.parent = parentCanvas;
@@ -133,17 +138,20 @@ void ReadAloudPlaybackBar::UpdateLayout() {
 
     Str pauseLabel = showResume ? _TRA("Resume") : _TRA("Pause");
     Str stopLabel = _TRA("Stop");
+    TempStr speedLabel = SpeedLabelTemp();
     TempStr status = ReadAloudPlaybackBarTextTemp(sessionTab);
 
     HDC hdc = GetDC(hwnd);
     Size szStatus = HdcMeasureText(hdc, status, DT_SINGLELINE | DT_NOPREFIX, font);
     Size szPause = HdcMeasureText(hdc, pauseLabel, DT_SINGLELINE | DT_NOPREFIX, font);
     Size szStop = HdcMeasureText(hdc, stopLabel, DT_SINGLELINE | DT_NOPREFIX, font);
+    Size szSpeed = HdcMeasureText(hdc, speedLabel, DT_SINGLELINE | DT_NOPREFIX, font);
     ReleaseDC(hwnd, hdc);
 
-    int btnDy = std::max(szPause.dy, szStop.dy) + padY;
+    int btnDy = std::max(std::max(szPause.dy, szStop.dy), szSpeed.dy) + padY;
     int btnPauseDx = szPause.dx + 2 * btnPadX;
     int btnStopDx = szStop.dx + 2 * btnPadX;
+    int btnSpeedDx = szSpeed.dx + 2 * btnPadX;
     int barDy = std::max(szStatus.dy, btnDy) + 2 * padY;
     int barDx = canvas.dx - 2 * margin;
     if (barDx < 0) {
@@ -165,9 +173,11 @@ void ReadAloudPlaybackBar::UpdateLayout() {
     if (isRtl) {
         rPause = {barDx - padX - btnPauseDx, rowY, btnPauseDx, btnDy};
         rStop = {rPause.x - btnGap - btnStopDx, rowY, btnStopDx, btnDy};
+        rSpeed = {rStop.x - btnGap - btnSpeedDx, rowY, btnSpeedDx, btnDy};
     } else {
         rPause = {padX, rowY, btnPauseDx, btnDy};
         rStop = {rPause.x + btnPauseDx + btnGap, rowY, btnStopDx, btnDy};
+        rSpeed = {rStop.x + btnStopDx + btnGap, rowY, btnSpeedDx, btnDy};
     }
 
     uint flags = SWP_NOZORDER | SWP_NOACTIVATE;
@@ -203,9 +213,9 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     int btnGap = DpiScale(hwnd, kBtnGap);
     Rect rTxt;
     if (IsUIRtl()) {
-        rTxt = {padX, rPause.y, rStop.x - padX - btnGap, rPause.dy};
+        rTxt = {padX, rPause.y, rSpeed.x - padX - btnGap, rPause.dy};
     } else {
-        int textX = rStop.x + rStop.dx + btnGap;
+        int textX = rSpeed.x + rSpeed.dx + btnGap;
         rTxt = {textX, rPause.y, rc.dx - textX - padX, rPause.dy};
     }
     RECT rTmp = ToRECT(rTxt);
@@ -235,6 +245,7 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     Str pauseLabel = showResume ? _TRA("Resume") : _TRA("Pause");
     drawBtn(rPause, pauseLabel);
     drawBtn(rStop, _TRA("Stop"));
+    drawBtn(rSpeed, SpeedLabelTemp());
 
     buffer.Flush(hdcIn);
 }
@@ -242,7 +253,8 @@ void ReadAloudPlaybackBar::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
 LRESULT ReadAloudPlaybackBar::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_SETCURSOR == msg) {
         Point pt = HwndGetCursorPos(hwndIn);
-        if (ReadAloudPlaybackBarHitTest(rPause, pt) || ReadAloudPlaybackBarHitTest(rStop, pt)) {
+        if (ReadAloudPlaybackBarHitTest(rPause, pt) || ReadAloudPlaybackBarHitTest(rStop, pt) ||
+            ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
             SetCursorCached(IDC_HAND);
             return TRUE;
         }
@@ -271,6 +283,23 @@ LRESULT ReadAloudPlaybackBar::WndProc(HWND hwndIn, UINT msg, WPARAM wp, LPARAM l
         }
         if (ReadAloudPlaybackBarHitTest(rStop, pt)) {
             ReadAloudPlaybackStop();
+            return 0;
+        }
+        if (ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
+            ReadAloudPlaybackCycleSpeed(+1);
+            UpdateLayout();
+            HwndRepaintNow(hwndIn);
+            return 0;
+        }
+    }
+
+    // right-click on the speed button cycles backwards
+    if (WM_RBUTTONUP == msg) {
+        Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+        if (ReadAloudPlaybackBarHitTest(rSpeed, pt)) {
+            ReadAloudPlaybackCycleSpeed(-1);
+            UpdateLayout();
+            HwndRepaintNow(hwndIn);
             return 0;
         }
     }

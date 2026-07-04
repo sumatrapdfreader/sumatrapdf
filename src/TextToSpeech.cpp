@@ -42,6 +42,11 @@ static WStr gTtsSpokenText;
 
 static Str gTtsVoiceId;
 
+// playback speed multiplier, 1.0 is normal speed
+constexpr float kTtsSpeedMin = 0.5f;
+constexpr float kTtsSpeedMax = 3.0f;
+static float gTtsSpeed = 1.0f;
+
 static HWND gTtsNotifyHwnd = nullptr;
 static UINT gTtsNotifyMsg = 0;
 static WPARAM gTtsNotifyWParam = 0;
@@ -193,6 +198,17 @@ static void SapiSetNotify() {
     eventSource->Release();
 }
 
+// SAPI rate is -10 .. 10 on a logarithmic scale where 10 is ~3x and -10 ~1/3x,
+// so rate = 10 * log3(speed)
+static void SapiApplySpeed() {
+    if (!gSapiVoice) {
+        return;
+    }
+    double rate = 10.0 * log((double)gTtsSpeed) / log(3.0);
+    long rateAdjust = (long)(rate < 0 ? rate - 0.5 : rate + 0.5);
+    gSapiVoice->SetRate(rateAdjust);
+}
+
 static bool SapiInit() {
     if (gSapiVoice) {
         return true;
@@ -225,6 +241,7 @@ static bool SapiInit() {
         }
     }
 
+    SapiApplySpeed();
     SapiSetNotify();
     return true;
 }
@@ -542,6 +559,28 @@ static void WinTtsStopPlayback() {
     InterlockedExchange(&gWinWaveDone, 0);
 }
 
+// takes effect at the next SynthesizeTextToStreamAsync() i.e. the next
+// spoken chunk (needs Windows 10 1709+, no-op on older versions)
+static void WinTtsApplySpeed() {
+    if (!gWinSynth) {
+        return;
+    }
+    WMSS::ISpeechSynthesizer2* synth2 = nullptr;
+    if (FAILED(gWinSynth->QueryInterface(IID_PPV_ARGS(&synth2))) || !synth2) {
+        return;
+    }
+    WMSS::ISpeechSynthesizerOptions* options = nullptr;
+    if (SUCCEEDED(synth2->get_Options(&options)) && options) {
+        WMSS::ISpeechSynthesizerOptions2* options2 = nullptr;
+        if (SUCCEEDED(options->QueryInterface(IID_PPV_ARGS(&options2))) && options2) {
+            options2->put_SpeakingRate((DOUBLE)gTtsSpeed);
+            options2->Release();
+        }
+        options->Release();
+    }
+    synth2->Release();
+}
+
 static bool WinTtsInit() {
     if (gWinSynth) {
         return true;
@@ -647,6 +686,8 @@ static bool WinTtsInit() {
         }
         synth2->Release();
     }
+
+    WinTtsApplySpeed();
 
     gWinInitFailed = false;
     return true;
@@ -1235,6 +1276,25 @@ bool TtsSetVoiceById(Str voiceId) {
 
 Str TtsGetVoiceId() {
     return gTtsVoiceId;
+}
+
+// with the WinRT backend the new speed applies from the next spoken chunk;
+// SAPI adjusts speech in progress
+void TtsSetSpeed(float speed) {
+    if (speed < kTtsSpeedMin) {
+        speed = kTtsSpeedMin;
+    } else if (speed > kTtsSpeedMax) {
+        speed = kTtsSpeedMax;
+    }
+    gTtsSpeed = speed;
+
+    // both no-op if that backend is not initialized
+    WinTtsApplySpeed();
+    SapiApplySpeed();
+}
+
+float TtsGetSpeed() {
+    return gTtsSpeed;
 }
 
 void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {

@@ -43,6 +43,9 @@ static bool ApplyReadAloudVoiceFromSettings() {
         return false;
     }
 
+    float speed = gGlobalPrefs->readAloudSpeed;
+    TtsSetSpeed(speed > 0 ? speed : 1.0f);
+
     Str voiceId = gGlobalPrefs->readAloudVoiceId;
     if (!voiceId) {
         TtsSetVoiceById("");

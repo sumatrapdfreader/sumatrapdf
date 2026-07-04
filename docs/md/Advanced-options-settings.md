@@ -176,6 +176,11 @@ CitationHoverDelay = -1
 ; voice id or SAPI token id) (introduced in version 3.7)
 ReadAloudVoiceId =
 
+; playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is
+; normal speed; can also be changed from the Read Aloud playback bar (introduced
+; in version 3.7)
+ReadAloudSpeed = 1
+
 ; if true, mouse wheel scrolling is faster when mouse is over a scrollbar
 ; (introduced in version 3.6)
 FastScrollOverScrollbar = false
