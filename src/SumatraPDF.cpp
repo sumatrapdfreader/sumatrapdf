@@ -1475,9 +1475,9 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     if (tab->ctrl) {
         TempStr title = tab->ctrl->GetPropertyTemp(kPropTitle);
         if (len(title) > 0) {
-            str::NormalizeWSInPlace(title);
+            title.len -= str::NormalizeWSInPlace(title);
             docTitle = str::DupTemp(title);
-            if (!str::IsEmpty(title)) {
+            if (len(title) > 0) {
                 docTitle = fmt("- [%s] ", title);
             }
         }

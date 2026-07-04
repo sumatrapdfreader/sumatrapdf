@@ -1056,8 +1056,8 @@ bool Fb2Doc::Load() {
                 }
             }
             if (docAuthor) {
-                str::NormalizeWSInPlace(docAuthor);
-                if (!str::IsEmpty(docAuthor)) {
+                docAuthor.len -= str::NormalizeWSInPlace(docAuthor);
+                if (len(docAuthor) > 0) {
                     TempStr val = docAuthor;
                     bool replaceIfExists = inTitleInfo != 0;
                     AddProp(props, kPropAuthor, val, replaceIfExists);

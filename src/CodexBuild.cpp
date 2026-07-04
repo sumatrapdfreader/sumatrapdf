@@ -652,8 +652,8 @@ static TempStr ExtractCodexRolloutUserTextTemp(Str line) {
     if (!text || IsCodexInjectedUserText(text)) {
         return {};
     }
-    str::TrimWSInPlace(text, str::TrimOpt::Both);
-    return !str::IsEmpty(text) ? text : nullptr;
+    text.len -= str::TrimWSInPlace(text, str::TrimOpt::Both);
+    return len(text) > 0 ? text : nullptr;
 }
 
 static TempStr ExtractCodexRolloutAssistantTextTemp(Str line) {

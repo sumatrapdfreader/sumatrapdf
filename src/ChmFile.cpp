@@ -214,7 +214,7 @@ static uint LcidToCodepage(DWORD lcid) {
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
 bool ChmFile::ParseSystemData() {
     TempStr d = GetDataTemp("/#SYSTEM");
-    if (str::IsEmpty(d)) {
+    if (len(d) == 0) {
         return false;
     }
 
@@ -710,7 +710,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, bool isIndex) 
         return false;
     }
     TempStr htmlData = GetDataTemp(path);
-    if (str::IsEmpty(htmlData)) {
+    if (len(htmlData) == 0) {
         return false;
     }
     // Convert to UTF-8 (handling UTF-8 BOM and the file's codepage) so gumbo's

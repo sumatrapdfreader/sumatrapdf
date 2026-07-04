@@ -43,7 +43,7 @@ HRESULT EpubFilter::OnInit() {
     // load content of EPUB document into a seekable stream
     HRESULT res;
     Str data = GetDataFromStream(m_pStream, &res);
-    if (str::IsEmpty(data)) {
+    if (len(data) == 0) {
         return res;
     }
 

@@ -1990,7 +1990,7 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
 // extract ComicInfo.xml metadata
 // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
 void ComicInfoParser::Parse(Str xmlData) {
-    if (str::IsEmpty(xmlData)) {
+    if (len(xmlData) == 0) {
         return;
     }
     // Detect the encoding from a leading BOM and produce UTF-8 (gumbo expects

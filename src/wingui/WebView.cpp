@@ -628,7 +628,7 @@ static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedE
     }
 
     IStream* stream = nullptr;
-    if (!str::IsEmpty(data)) {
+    if (len(data) > 0) {
         HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, (size_t)data.len);
         if (!hMem) {
             return false;
